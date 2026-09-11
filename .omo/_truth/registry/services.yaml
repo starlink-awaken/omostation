@@ -5109,6 +5109,7 @@ services:
     max_stale_hours: 24
   notes: 每日 SSOT 守护
   depends_on: []
+  crontab_token: ssot-guardian
 - id: cron.ssot_sync
   enabled: true
   scheduler: cron
@@ -5122,6 +5123,7 @@ services:
     max_stale_hours: 24
   notes: 每日 SSOT 同步
   depends_on: []
+  crontab_token: ssot-guardian
 - id: cron.ssot_log
   enabled: false
   scheduler: cron
@@ -5163,6 +5165,7 @@ services:
     max_stale_hours: 24
   notes: 每周 worktree 清理
   depends_on: []
+  crontab_token: worktree-prune
 - id: omo.governor
   enabled: false
   scheduler: launchd
@@ -5431,3 +5434,17 @@ services:
     stderr: ~/.agora/logs/daemon-stderr.log
   notes: '2026-09-10 修复 exit 78: 旧手写 plist WorkingDirectory 指向已清理的 T1-12 worktree
     + 裸 python3 无依赖。ADR-0435 模式收编 (wrapper + 注册表 + 生成器)。'
+- id: cron.ops_signal_drift_check
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 20 6 * * *
+  program:
+    interpreter: python3
+    entrypoint: bin/ops/cli.py
+  crontab_token: ops-signal-drift
+  liveness:
+    signal: runtime/cron/ops-signal-drift.log
+    max_stale_hours: 24
+  notes: 每日 ops check-signals 巡检 — enabled 条目 anchor 漂移检测 (BET-Y1Q4-T16)
+  depends_on: []

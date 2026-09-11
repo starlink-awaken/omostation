@@ -907,7 +907,14 @@ def main() -> int:
     recover_p = sub.add_parser("recover", help="Auto-recover failed services")
     recover_p.add_argument("--profile", choices=["minimal", "standard", "full"], default="full",
                            help="Service profile (default: full)")
-    recover_p.set_defaults(func=cmd_recover)
+
+    # ── check-signals ──
+    checksig_p = sub.add_parser(
+        "check-signals",
+        help="Drift 检测: enabled 条目的 cron/launchd/file anchor 与本机现实核验 (BET-Y1Q4-T16)",
+    )
+    checksig_p.add_argument("--json", action="store_true", help="Output as JSON")
+    checksig_p.set_defaults(func=cmd_check_signals)
 
     args = parser.parse_args()
 
@@ -916,6 +923,98 @@ def main() -> int:
         return 1
 
     return args.func(args)
+
+
+def cmd_check_signals(args: argparse.Namespace) -> int:
+    """Drift 检测 (BET-Y1Q4-T16): enabled 条目 anchor 与本机现实核验。
+
+    cron -> crontab 行 (entrypoint basename 词边界 / id 尾段 / crontab_token)
+    launchd -> ~/Library/LaunchAgents/<label>.plist 存在
+    liveness.signal file 类型 -> 路径存在 (freshness 由 status 负责, 此处只查存在性)
+    exit 0 = 零 drift; exit 1 = 有 drift。
+    """
+    import re
+    import subprocess
+
+    services = load_services()
+    enabled = [s for s in services if s.get("enabled", True)]
+    drifts: list[dict[str, Any]] = []
+
+    crontab_text = ""
+    try:
+        crontab_text = subprocess.run(
+            ["crontab", "-l"], capture_output=True, text=True, timeout=10
+        ).stdout
+    except Exception as e:  # noqa: BLE001 - 无 crontab 的机器按空处理
+        crontab_text = ""
+        crontab_error = str(e)[:80]
+    else:
+        crontab_error = None
+
+    launchd_dir = Path.home() / "Library" / "LaunchAgents"
+
+    def _word_hit(token: str, text: str) -> bool:
+        return bool(re.search(rf"(?<![A-Za-z0-9_-]){re.escape(token)}(?![A-Za-z0-9_-])", text))
+
+    for svc in enabled:
+        sid = str(svc.get("id") or "?")
+        scheduler = svc.get("scheduler")
+        anchor: str | None = None
+        if scheduler == "cron":
+            program = svc.get("program") or {}
+            entrypoint = program.get("entrypoint") if isinstance(program, dict) else None
+            tokens = {sid}
+            tail = sid.rsplit(".", 1)[-1]
+            tokens |= {tail, tail.replace("_", "-")}
+            token = svc.get("crontab_token")
+            if isinstance(token, str) and token.strip():
+                tokens.add(token.strip())
+            if isinstance(entrypoint, str) and entrypoint.strip():
+                tokens.add(entrypoint.rsplit("/", 1)[-1])
+            hit = any(
+                _word_hit(t, crontab_text)
+                for t in tokens
+                if isinstance(t, str) and len(t) >= 4
+            )
+            if not hit:
+                anchor = f"crontab 缺匹配行 (tokens={sorted(t for t in tokens if len(t) >= 4)})"
+        elif scheduler == "launchd" and svc.get("generate", True):
+            label = svc.get("label") or f"com.omostation.{sid}"
+            plist = launchd_dir / f"{label}.plist"
+            if not plist.is_file():
+                anchor = f"plist 缺失: {plist}"
+        if anchor is None:
+            liveness = svc.get("liveness") or {}
+            signal = liveness.get("signal")
+            if isinstance(signal, str) and signal.startswith("file"):
+                file_path = signal.split("::", 1)[0]
+                if not (WORKSPACE / file_path).exists():
+                    anchor = f"file signal 缺失: {file_path}"
+        if anchor:
+            drifts.append({"id": sid, "scheduler": scheduler, "anchor": anchor})
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "checked": len(enabled),
+                    "drifts": drifts,
+                    "drift_count": len(drifts),
+                    "crontab_error": crontab_error,
+                },
+                ensure_ascii=False,
+                indent=1,
+            )
+        )
+    else:
+        print(f"ops check-signals — enabled {len(enabled)} 条, drift {len(drifts)} 条")
+        if crontab_error:
+            print(f"  [WARN] crontab 不可读: {crontab_error}")
+        for d in drifts:
+            print(f"  [DRIFT] {d['id']} ({d['scheduler']}): {d['anchor']}")
+        if not drifts:
+            print("  [OK] 所有 enabled 条目 anchor 与本机现实一致")
+    return 1 if drifts else 0
 
 
 def cmd_discover(args: argparse.Namespace) -> int:

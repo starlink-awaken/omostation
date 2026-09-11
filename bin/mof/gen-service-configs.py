@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -70,8 +71,45 @@ def _stable_python3() -> str:
 INTERPRETERS = {"stable-python3": _stable_python3}
 
 
+def _cron_tokens(svc: dict) -> set[str]:
+    """Entry 的可匹配 token 集: id 尾段 (含连字符变体) + 显式 crontab_token。"""
+    service_id = str(svc.get("id") or "")
+    tail = service_id.rsplit(".", 1)[-1]
+    tokens = {tail, tail.replace("_", "-")}
+    token = svc.get("crontab_token")
+    if isinstance(token, str) and token.strip():
+        tokens.add(token.strip())
+    return {t for t in tokens if len(t) >= 4}
+
+
+def _cron_admission_violation(svc: dict) -> str | None:
+    """Cron 准入 (BET-Y1Q4-T16): enabled cron 条目必须携带至少一个能与 crontab
+    行匹配的 token — entrypoint basename 词边界命中 id 尾段, 或显式 crontab_token
+    (显式声明即放行, 现实性由 ops check-signals 对本机 crontab 核验)。
+    拒绝 `projects/omo` 类占位 entrypoint 无 token 混进注册表 (批次 18 误判根因)。
+    仅校验 enabled=true (存量 disabled 占位 grandfather)。"""
+    if not svc.get("enabled", True):
+        return None
+    service_id = str(svc.get("id") or "?")
+    program = svc.get("program") or {}
+    entrypoint = program.get("entrypoint") if isinstance(program, dict) else None
+    if not isinstance(entrypoint, str) or not entrypoint.strip():
+        return f"{service_id}: cron generator requires program.entrypoint"
+    declared = svc.get("crontab_token")
+    if isinstance(declared, str) and declared.strip():
+        return None
+    text = entrypoint.rsplit("/", 1)[-1]
+    for token in _cron_tokens(svc):
+        if re.search(rf"(?<![A-Za-z0-9_-]){re.escape(token)}(?![A-Za-z0-9_-])", text):
+            return None
+    return (
+        f"{service_id}: cron 准入失败 — entrypoint basename 与 id 尾段词边界不匹配且无 crontab_token"
+        f" (entrypoint={entrypoint!r})"
+    )
+
+
 def validate_service_declaration(svc: dict) -> list[str]:
-    """Validate fields required before a launchd plist can be generated."""
+    """Validate fields required before a launchd plist or crontab line can be generated."""
     service_id = str(svc.get("id") or "?")
     violations: list[str] = []
     if not svc.get("id"):
@@ -79,6 +117,11 @@ def validate_service_declaration(svc: dict) -> list[str]:
     scheduler = svc.get("scheduler")
     if not scheduler:
         violations.append("service 缺必填 scheduler")
+    if scheduler == "cron":
+        violation = _cron_admission_violation(svc)
+        if violation:
+            violations.append(violation)
+        return violations
     if scheduler != "launchd" or not svc.get("enabled", True) or not svc.get("generate", True):
         return violations
     if not isinstance(svc.get("label"), str) or not svc["label"].strip():
