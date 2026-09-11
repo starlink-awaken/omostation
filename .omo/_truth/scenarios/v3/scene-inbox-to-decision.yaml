@@ -51,3 +51,13 @@ sample_refs:
 - .omo/state/scene-cards/inbox-to-decision/samples/sample-1.json
 - .omo/state/scene-cards/inbox-to-decision/samples/sample-2.json
 - .omo/state/scene-cards/inbox-to-decision/samples/sample-3.json
+triggers:
+- type: signal
+  signal: email.received
+  connector: netease_mailmaster
+  filter: subject MATCHES notification
+  debounce: 300s
+- type: signal
+  signal: email.received
+  connector: apple_mail
+  debounce: 300s

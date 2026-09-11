@@ -132,3 +132,21 @@ PRs #3191 and #3192 should be merged first, then their worktrees removed.
 - No repeat of T6-15 immutable GaC repair
 - No repeat of T10-122 Documents canary work
 - No force-push or destructive cleanup of unknown work
+
+## Documentation convergence follow-up
+
+The reconciliation surface includes the operator-facing pointers that describe the
+workspace after cleanup. This follow-up therefore covers only two deterministic
+corrections: regenerate the project index from `docs/project-registry.yaml` so
+tracked projects are discoverable, and replace stale Journey validation commands
+with the Makefile's canonical `journey-validate` entrypoint in `CLAUDE.md`.
+
+These edits do not promote `domain-cartridges` to a runtime component or change
+the architecture registry; they keep the project index and session guidance
+aligned with their existing sources of truth.
+
+The same pass records `com.l4.omo.sync` as externally managed when its launchd
+plist is already the authoritative machine-level configuration. This prevents
+the repository generator from treating the unsupported `uv <path> omo-sync`
+shape as a generated command while retaining the service in the registry for
+health and lifecycle observability.

@@ -45,6 +45,8 @@ note: >
 
 `toolbox` 是仓外能力平面（`build_backend: external-capability-runtime`），不要求 `COMP-WS-toolbox.yaml`。
 
+dao_layer 归类指引（2026-09-11 D7 决议）：**可执行的自检/门禁判定属法；不可执行的存在性定义才属道**。判据是组件的实质活动而非命名气质——有 CLI/runtime/例行调度的组件，即便职责是"自我管理"，也是可执行的判定活动，归 `fa`；`dao` 只留给章程/北极星类纯定义资产。全仓唯一 dao 归类曾因命名直觉误置于可执行组件，已纠正（l4-kernel → fa, ecos#74）。
+
 新工作区项目加入方式：新增 `COMP-WS-<name>.yaml`，从既有枚举声明槽位，而不是发明新运行时。registry 有项目、无对应节点 → 检查器 warning（可成长：补节点即可）。缺槽或双 dispatcher → fail-closed。H→B 新调用不得写入 baseline 藏违例。
 
 禁止：第二 dispatcher、第五套本体、把 AGE-v2 / resident / BCOS 当成第二控制面。

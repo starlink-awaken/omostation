@@ -62,3 +62,13 @@ sample_refs:
 - vault://redacted/unified-inbox/sample-1
 - vault://redacted/unified-inbox/sample-2
 - vault://redacted/unified-inbox/sample-3
+triggers:
+- type: signal
+  signal: email.received
+  connector: netease_mailmaster
+  filter: subject MATCHES notification
+  debounce: 300s
+- type: signal
+  signal: email.received
+  connector: apple_mail
+  debounce: 300s

@@ -519,6 +519,14 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
   - .omo/_knowledge/retros/BET-Y1Q3-T6-16.md
+  - docs/INDEX-PROJECTS.md
+  - CLAUDE.md
+  - .omo/_truth/registry/services.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:402fc12e3a081fee14eabfe6302b94a17f187ff3c8357b0aedaa1846da08d8d1
+    decision_ref: decision://accepted/BET-Y1Q3-T6-16
 - accepted_specifications:
   - content_digest: sha256:ae9322ba7019888baadcaf10be6d2751e2db7977e538a145ca477dfdc3eeefe0
     decision_ref: decision://accepted/BET-Y1Q3-T10-105
@@ -27287,11 +27295,11 @@ bets:
     shadow graduation，并为尚未物化的 WP2 提供可审计前置证据。
   depends_on: []
   non_goals:
-  - 1.5.0 仅授权 Wave B4 五个云端 automation 路径，不修改 B3 入口、child、gitlink、runtime 或启动 WP2
+  - 1.8.0 仅授权 Wave E 四个 omo verifier 路径，不写 host runtime、不启动 24h 窗、不写 done、不 bump gitlink、不启动 WP2
   - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
   - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
   - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
-  - 不把工程、CI、shadow 或 Git 成功计入个人价值
+  - 不把工程、CI、shadow 或 Git 成功计入个人价值；verifier 绑定 ≠ host 激活
   done_when:
   - 每个 1.0.0 至 1.7.0 accepted binding 均为完整非 union 替换，旧 run 已关闭且锁归零
   - canonical store、receipt chain、幂等、CAS、high-water、crash-tail、备份轮转与完整 RED matrix
@@ -27315,14 +27323,13 @@ bets:
   - cmd: PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /opt/homebrew/bin/python3
       -B -m pytest -q -p no:cacheprovider tests/test_agent_workflow.py tests/test_clone_lifecycle.py
     expect: exit 0 after Wave B1
-  workflow: bet-execution
+  workflow: submodule-pointer-transaction
   underlying_workflow: project-code-change
   write_surfaces:
-  - .github/workflows/omo-autopilot.yml
-  - .github/workflows/reusable-submodule-bump-pr.yml
-  - .github/workflows/submodule-autobump.yml
-  - .github/workflows/submodule-freshness-gatekeeper.yml
-  - tests/test_github_publication_effect_owner.py
+  - projects/omo/src/omo/workflow/claims_authority.py
+  - projects/omo/src/omo/workflow/claims_verifiers.py
+  - projects/omo/tests/test_claims_verifiers.py
+  - projects/omo/tests/test_workflow_claims_authority_bridge.py
   pasw_required: false
   risk_level: L2
   human_gate: true
@@ -27330,8 +27337,8 @@ bets:
   retro: required
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.5.0
-    content_digest: sha256:e0e0301c934c112cb595b4ed1f02fd28201a1024db9dfaa0fb8e1babc4405e09
+    spec_version: 1.8.0
+    content_digest: sha256:659e293c3ed4cc98a3e8dc5da1e02c27ee3db4c39eb5e543078b3a8e115f74e3
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -27347,12 +27354,9 @@ bets:
         evidence: {}
     overall_state: evaluating
   circuit_breaker: >-
-    1.5.0 WorkPacket 必须只含 Wave B4 五个路径并保持
-    implementation_authorized=true；任一 child/B1/B2/B3/plan/pointer/evidence/WP2/runtime 写面、
-    scope union、旧 WorkPacket hash 复用、云端继续 commit/push/PR、第二 publication owner、
-    自动 rebase/merge/pull 吸收上游、root gitlink bump、v2 effective admission、
-    completion/value 扩张或默认门禁失败都立即停止。1.6.0 只能在 Wave B4 root main/CI
-    可重算、1.5.0 implementation run 关闭且锁归零后通过独立 binding 完整替换。
+    1.8.0 WorkPacket 必须只含四个 Wave E omo verifier 路径并保持 implementation_authorized=true；
+    任一 host 激活、24h 窗启动、done/done_at、gitlink bump、scope union、旧 WorkPacket hash 复用、
+    completion/value 扩张或默认门禁失败都立即停止。Task 16 只能在 verifier 合入且锁归零后单独授权。
 - id: BET-Y1Q4-T10-146
   track: T10-MATURITY
   window: Y1Q4
@@ -27387,7 +27391,8 @@ bets:
   title: 持久化 Queue 实现 — 对齐 Role/Receipt 的 ledger-backed 模式
   appetite: 5 days
   priority: P2
-  status: candidate
+  status: done
+  value_indicator_policy: false
   parent_bet_id: BET-Y1Q4-T10-146
   goal: 2026-09-11 复核发现 omo/sovereignty 下 Role（roles.py）、Receipt （principal_authority.py）均已是基于因果事件账本的持久化实现，但目前
     仓内唯一命中的 Queue（ecos/l1/runtime::MessageQueue）是纯内存优先级 队列，进程重启即丢失。设计并实现一个 ledger-backed
@@ -27419,6 +27424,37 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b0ac46f1b2233db7ab4c18d0ec1d0b5edaded2a6b6ad5bcddf2b8d4acf428519
     decision_ref: decision://accepted/BET-Y1Q4-T10-147
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    decision_ref: decision://accepted/BET-Y1Q4-T10-147
+  done_at: 2026-09-11
 - id: BET-Y1Q4-T10-148
   track: T10-MATURITY
   window: Y1Q4
@@ -27608,7 +27644,7 @@ bets:
   title: A5 AetherForge 门面常驻化恢复 — launchd 服务缺失修复
   appetite: 1 day
   priority: P1
-  status: candidate
+  status: done
   value_indicator_policy: false
   parent_bet_id: BET-Y1Q4-T10-146
   goal: 2026-09-11 排查"本地 agent 工具无法接入 omlxc 算力"时发现真正根因：
@@ -27640,6 +27676,37 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:8d7f260ed6510857fd4d17ac0213e62963357785d4368f9e2d3840423faa9b0d
     decision_ref: decision://accepted/BET-Y1Q4-T10-153
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          merged_reachable_commit:
+            ref: git://origin/main@cf83e34c0472785e138c0a13b6da4b8f8524d7ee
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    decision_ref: decision://accepted/BET-Y1Q4-T10-153
+  done_at: 2026-09-11
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
@@ -27682,7 +27749,8 @@ bets:
   title: ops 注册表防漂移双闸 — check-signals + cron 准入
   appetite: 1 day
   priority: P2
-  status: candidate
+  status: done
+  done_at: 2026-09-11
   goal: >-
     BET-Y1Q4-T14 一次性清理 303 missing 后漂移机制仍在。建双闸:
     1) ops check-signals 常态 drift 检测 (cron/launchd/file anchor 存在性);
@@ -27723,15 +27791,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@cbf5eb98918d2c920d616ed04fd3c9161e153209
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16.md
+            sha256: sha256:798fcf9362582327913093169933c177c347087bdb6e36d9f00f67f4c02bbf8d
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 - id: BET-Y1Q4-T8-24
   track: T8-SURFACE
   window: Y1Q4
@@ -27804,10 +27895,18 @@ bets:
   - projects/cockpit/src/cockpit/observatory/
   - projects/cockpit/src/cockpit/web/
   - projects/cockpit/src/cockpit/dashboard_server.py
+  - projects/cockpit/tests/
+  - .omo/cron/registry.yaml
+  - .omo/_truth/registry/services.yaml
   human_gate: false
   risk_level: L1
   retro: required
   circuit_breaker: 采集逻辑若出现单次请求阻塞超过 500ms，立即熔断降级为缓存快照。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-cockpit-nextgen-architecture-and-six-planes-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:8ee45eb70954907dba8dea308a702800e8d15125fbbe3660445837bf06f2e7a3
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24A
 - id: BET-Y1Q4-T8-24B
   track: T8-SURFACE
   window: Y1Q4
@@ -28276,6 +28375,17 @@ tracks:
     scope: 'maturity-scorecard 口径对齐 / 治理 bet 绑定 / resident promote + 事件源管线 / gaC 机制自进化
       (G10 三方口径: scorecard/health/台账)'
     title: 成熟度收官 (scorecard 0-10, target 9.0)
+  T16-DRIFT-GUARD:
+    agent_profile_hint: governance-agent
+    default_workflow: project-doc-change
+    pasw_required: false
+    primary_write_surfaces:
+    - .omo/_truth/registry/services.yaml
+    - bin/mof/**
+    - bin/ops/**
+    - docs/plans/3y-bet-ledger.yaml
+    scope: 运维服务注册表漂移检测 / cron 准入校验 / ops anchor 一致性
+    title: 运维注册表防漂移
   T2-PERCEPT:
     agent_profile_hint: adapter-agent
     default_workflow: external-adapter-sync

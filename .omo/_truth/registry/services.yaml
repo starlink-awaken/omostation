@@ -375,6 +375,8 @@ services:
   trigger: interval
   interval_sec: 1800
   label: com.l4.omo.sync
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.l4.omo.sync.plist
   program:
     interpreter: uv
     entrypoint: projects/omo
@@ -5443,7 +5445,7 @@ services:
   trigger: schedule
   schedule: 20 6 * * *
   program:
-    interpreter: python3
+    interpreter: stable-python3
     entrypoint: bin/ops/cli.py
   crontab_token: ops-signal-drift
   liveness:
