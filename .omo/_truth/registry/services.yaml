@@ -375,6 +375,8 @@ services:
   trigger: interval
   interval_sec: 1800
   label: com.l4.omo.sync
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.l4.omo.sync.plist
   program:
     interpreter: uv
     entrypoint: projects/omo

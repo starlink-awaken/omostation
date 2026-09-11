@@ -187,7 +187,7 @@ git status --short
 make gac-local-gate
 make ssot-guardian
 make scene-card-check    # scene card 变更时
-make journey-check       # journey spec 变更时
+make journey-validate    # journey spec 变更时
 make adr-number-check    # ADR 变更时
 ```
 

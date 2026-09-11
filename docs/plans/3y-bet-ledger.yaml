@@ -519,6 +519,14 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
   - .omo/_knowledge/retros/BET-Y1Q3-T6-16.md
+  - docs/INDEX-PROJECTS.md
+  - CLAUDE.md
+  - .omo/_truth/registry/services.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-02-local-repository-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:402fc12e3a081fee14eabfe6302b94a17f187ff3c8357b0aedaa1846da08d8d1
+    decision_ref: decision://accepted/BET-Y1Q3-T6-16
 - accepted_specifications:
   - content_digest: sha256:ae9322ba7019888baadcaf10be6d2751e2db7977e538a145ca477dfdc3eeefe0
     decision_ref: decision://accepted/BET-Y1Q3-T10-105
