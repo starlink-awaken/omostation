@@ -27390,7 +27390,8 @@ bets:
   title: 持久化 Queue 实现 — 对齐 Role/Receipt 的 ledger-backed 模式
   appetite: 5 days
   priority: P2
-  status: candidate
+  status: done
+  value_indicator_policy: false
   parent_bet_id: BET-Y1Q4-T10-146
   goal: 2026-09-11 复核发现 omo/sovereignty 下 Role（roles.py）、Receipt （principal_authority.py）均已是基于因果事件账本的持久化实现，但目前
     仓内唯一命中的 Queue（ecos/l1/runtime::MessageQueue）是纯内存优先级 队列，进程重启即丢失。设计并实现一个 ledger-backed
@@ -27422,6 +27423,37 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b0ac46f1b2233db7ab4c18d0ec1d0b5edaded2a6b6ad5bcddf2b8d4acf428519
     decision_ref: decision://accepted/BET-Y1Q4-T10-147
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-147.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    decision_ref: decision://accepted/BET-Y1Q4-T10-147
+  done_at: 2026-09-11
 - id: BET-Y1Q4-T10-148
   track: T10-MATURITY
   window: Y1Q4
