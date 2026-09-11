@@ -27602,6 +27602,44 @@ bets:
     overall_state: delivery_accepted
     decision_ref: decision://accepted/BET-Y1Q4-T10-152
   done_at: 2026-09-11
+- id: BET-Y1Q4-T10-153
+  track: T10-MATURITY
+  window: Y1Q4
+  title: A5 AetherForge 门面常驻化恢复 — launchd 服务缺失修复
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  value_indicator_policy: false
+  parent_bet_id: BET-Y1Q4-T10-146
+  goal: 2026-09-11 排查"本地 agent 工具无法接入 omlxc 算力"时发现真正根因：
+    AetherForge OpenAI 兼容门面(:9290，所有本地客户端应经此认证入口接入)的
+    launchd 服务已被删除，services.yaml 里标 enabled:false，服务根本没在跑。
+    守护脚本/venv/Keychain 密钥均完好，只是没人开。
+  non_goals:
+  - 不修改 aetherforge-gw-guard 脚本或网关代码逻辑
+  - 不新增 Anthropic Messages / Google generateContent 协议转译层
+  - 不处理 omlxc 侧 inventory_drop 告警(另一个独立已知问题)
+  done_when:
+  - 重建 launchd plist 并常驻运行
+  - health/鉴权/真实推理请求三层验证通过
+  verify:
+  - cmd: curl -s -o /dev/null -w '%{http_code}' http://localhost:9290/health
+    expect: '200'
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  human_gate: true
+  risk_level: L1
+  retro: required
+  circuit_breaker: 若现场验证发现服务本身有未修复的功能性 bug(而非单纯缺 plist)，
+    立即停止并改为记录问题而非强行恢复常驻。
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-11-a5-aetherforge-gateway-restore-fix.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-a5-aetherforge-gateway-restore-fix.md
+    spec_version: 1.0.0
+    content_digest: sha256:8d7f260ed6510857fd4d17ac0213e62963357785d4368f9e2d3840423faa9b0d
+    decision_ref: decision://accepted/BET-Y1Q4-T10-153
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
