@@ -62,6 +62,14 @@ def tokenize(line: str) -> list[str]:
     return [t for t in re.split(r'[\s"\'();|&]+', line) if t]
 
 
+def _load(path: Path) -> dict:
+    import yaml
+    try:
+        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return {}
+
+
 def candidates_from(tokens: list[str]) -> list[str]:
     out = []
     for tok in tokens:
@@ -183,6 +191,108 @@ def annotate_tracking(refs: list[dict], ws_root: Path) -> list[dict]:
         if status == "untracked":
             untracked.append(ref)
     return untracked
+
+
+def _is_library_script(rel: str) -> bool:
+    """判定相对路径是否库脚本 (不应要求登记到 script-registry)."""
+    name = Path(rel).name
+    if name.startswith("_") and name != "__main__.py":
+        return True  # _lib.py, _compat.py 等私有模块
+    if name == "__init__.py":
+        return True
+    return False
+
+
+def _script_registry_coverage(refs: list[dict], ws_root: Path) -> list[dict]:
+    """M2 扩展: crontab/hook/launchd 引用的可执行脚本是否在 script-registry 登记.
+
+    返回未登记的可执行脚本子集 (警告级). 库脚本 (_lib.py/__init__.py) 与
+    $HOME 树外路径跳过. 与 annotate_tracking 的 track 字段并列, 不修改原有 status/ok。
+    """
+    reg_dir = ws_root / "bin" / "_registry" / "scripts"
+    registered: set[str] = set()
+    if reg_dir.is_dir():
+        for yf in sorted(reg_dir.rglob("*.yaml")):
+            try:
+                data = _load(yf)
+            except Exception:
+                continue
+            if isinstance(data, dict) and isinstance(data.get("id"), str):
+                rid = data["id"]
+                if rid.startswith("bin/"):
+                    registered.add(rid[4:])  # 去掉 "bin/" 前缀, 与 rel 对齐
+    unregistered: list[dict] = []
+    seen: set[str] = set()
+    ws_str = str(ws_root)
+    for ref in refs:
+        if ref.get("status") != "ok":
+            continue
+        resolved = str(ref.get("resolved", ""))
+        if not resolved.startswith(ws_str):
+            continue
+        try:
+            rel = Path(resolved).relative_to(ws_root / "bin").as_posix()
+        except ValueError:
+            continue
+        if _is_library_script(rel):
+            ref["registry"] = "na"  # 库脚本不要求登记
+            continue
+        suffix = Path(rel).suffix
+        if suffix not in (".py", ".sh"):
+            continue
+        ref["registry"] = "registered" if rel in registered else "unregistered"
+        if rel in registered or rel in seen:
+            continue
+        seen.add(rel)
+        if ref["registry"] == "unregistered":
+            unregistered.append(ref)
+    return unregistered
+
+
+def _submod_ptrs(ws_root: Path, ref: str) -> dict[str, str]:
+    """读取某 ref 的子模块指针映射 {相对路径: sha}."""
+    out: dict[str, str] = {}
+    r = subprocess.run(
+        ["git", "-C", str(ws_root), "ls-tree", "-r", "--name-only", ref],
+        capture_output=True, text=True, timeout=30,
+    )
+    if r.returncode != 0:
+        return out
+    for line in r.stdout.splitlines():
+        parts = line.split("\t")
+        if len(parts) != 2 or not parts[0].endswith(" commit"):
+            continue
+        sha = parts[0].split()[2]  # "<mode> <type> <sha>"
+        out[parts[1]] = sha
+    return out
+
+
+def _submodule_ff_check(ws_root: Path) -> list[dict]:
+    """M3: 子模块指针 fast-forward 检查 — 防 PITFALL-GAT-006 并行回退.
+
+    当前 HEAD 的每个子模块指针必须是 origin/main 对应指针的后代,
+    否则发生了回退 (常由基于旧 main 的 PR 合并引发).
+    返回回退子模块列表 (error 级).
+    """
+    regressions: list[dict] = []
+    cur = _submod_ptrs(ws_root, "HEAD")
+    origin = _submod_ptrs(ws_root, "origin/main")
+    for path, head_sha in cur.items():
+        orig_sha = origin.get(path)
+        if not orig_sha or orig_sha == head_sha:
+            continue
+        ff = subprocess.run(
+            ["git", "-C", str(ws_root), "merge-base", "--is-ancestor", orig_sha, head_sha],
+            capture_output=True, text=True, timeout=10,
+        )
+        if ff.returncode != 0:
+            regressions.append({
+                "submodule": path,
+                "origin_main": orig_sha,
+                "head": head_sha,
+                "issue": "submodule pointer regressed (not fast-forward vs origin/main)",
+            })
+    return regressions
 
 
 def scan_crontab_lines(lines: list[str], source: str, ws_root: Path) -> list[dict]:
@@ -381,6 +491,10 @@ def main(argv: list[str] | None = None) -> int:
     beats = [] if args.refs_only else check_heartbeats(ws_root)
     refs = collect_references(ws_root)
     untracked_refs = annotate_tracking(refs, ws_root)
+    unregistered_scripts = ([] if args.refs_only
+                           else _script_registry_coverage(refs, ws_root))
+    submodule_regressions = ([] if args.refs_only
+                             else _submodule_ff_check(ws_root))
 
     stale_beats = [b for b in beats if not b["ok"]]
     dead_refs = [r for r in refs if r.get("status") == "dead"]
@@ -389,15 +503,20 @@ def main(argv: list[str] | None = None) -> int:
     report = {
         "generated_at": _now().isoformat(timespec="seconds"),
         "workspace": str(ws_root),
-        "ok": not stale_beats and not dead_refs and not ritual_proposals,
+        "ok": (not stale_beats and not dead_refs and not ritual_proposals
+                and not submodule_regressions),
         "heartbeat": beats,
         "references": refs,
         "untracked_refs": untracked_refs,
+        "unregistered_scripts": unregistered_scripts,
+        "submodule_regressions": submodule_regressions,
         "summary": {
             "stale_beats": len(stale_beats),
             "dead_refs": len(dead_refs),
             "ritual_lapsed": len(ritual_proposals),
             "untracked_refs": len(untracked_refs),
+            "unregistered_scripts": len(unregistered_scripts),
+            "submodule_regressions": len(submodule_regressions),
         },
         "debt_proposals": all_proposals,
     }
