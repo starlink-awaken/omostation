@@ -341,6 +341,15 @@ jobs:
     owner: governance-team
     sfop_slot: S
 
+  - name: scene-guardrail-daily
+    schedule: "30 6 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-v3-guardrail.py validate-all --allow-forward-refs >> runtime/cron/scene-guardrail.log 2>&1'
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+
 # ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
 open_decisions:
   - id: D2
