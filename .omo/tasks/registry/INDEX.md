@@ -16,7 +16,7 @@ status: archived
 |----|-------|--------|
 | kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-## Planned Tasks (15 个)
+## Planned Tasks (16 个)
 | ID | Title | Status |
 |----|-------|--------|
 | BET-Y1Q4-T10-141 | Cockpit CLI 命令可用性台账 — 106 命令逐批验证与修复 | candidate |
@@ -25,6 +25,7 @@ status: archived
 | BET-Y1Q4-T13-cli-smoke-test-harness | Cockpit CLI 106 命令 smoke test 接入 Harness — 每 6h | candidate |
 | BET-Y1Q4-T14-ops-services-cleanup | ops services 20 missing 清理 — 注册表与现实同步 | candidate |
 | BET-Y1Q4-T15-import-perf-regression | cockpit import 性能回归 (164ms > 120ms 预算) 排查 | candidate |
+| BET-Y1Q4-T16-ops-drift-guard | ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校 | candidate |
 | TASK-117310A1 | AGE-v2 Agent Cell 违反 SFOP 八律第3条(后端不拥有收件箱): omo c | candidate |
 | TASK-B3229A65 | A4 调度真相收敛: 统一三源声明 + 修复死引用 + 面板刷新退出 token 自动化 | candidate |
 | bet-y3h1-t7-01 | 中试 / 政策申报升 assisted | candidate |
@@ -77,5 +78,5 @@ status: archived
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-09-11 (依据 `omo state sync-tasks` 与真实目录重算: done=293, planned=15, active=1, blocked=1, archived=6 顶层)*
+*Updated: 2026-09-11 (依据 `omo state sync-tasks` 与真实目录重算: done=293, planned=16, active=1, blocked=1, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
