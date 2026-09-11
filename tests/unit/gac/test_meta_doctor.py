@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import re
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -164,3 +165,80 @@ def test_omo_workspace_root_cron_anchor_is_checked(tmp_path, monkeypatch):
             "status": "ok",
         }
     ]
+
+
+def _git_init(path: Path) -> None:
+    subprocess.run(["git", "init", "-q", str(path)], check=True,
+                   capture_output=True)
+
+
+def test_git_track_status_classification(tmp_path):
+    mod = _load()
+    _git_init(tmp_path)
+    (tmp_path / ".gitignore").write_text("gen/\n", encoding="utf-8")
+
+    tracked = tmp_path / "scripts/tracked_job.sh"
+    tracked.parent.mkdir(parents=True)
+    tracked.write_text("#!/bin/sh\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "add", "scripts/tracked_job.sh"],
+                   check=True, capture_output=True)
+
+    untracked = tmp_path / "scripts/untracked_job.sh"
+    untracked.write_text("#!/bin/sh\n", encoding="utf-8")
+
+    ignored = tmp_path / "gen/ephemeral_job.sh"
+    ignored.parent.mkdir(parents=True)
+    ignored.write_text("#!/bin/sh\n", encoding="utf-8")
+
+    assert mod._git_track_status(tracked) == "tracked"
+    assert mod._git_track_status(untracked) == "untracked"
+    assert mod._git_track_status(ignored) == "ignored"
+    assert mod._git_track_status(tmp_path / "no_such_file.sh") == "untracked"
+
+
+def test_git_track_status_outside_repo_returns_none(tmp_path):
+    mod = _load()
+    lone = tmp_path / "plain/lone_job.sh"
+    lone.parent.mkdir(parents=True)
+    lone.write_text("#!/bin/sh\n", encoding="utf-8")
+    assert mod._git_track_status(lone) is None
+
+
+def test_annotate_tracking_flags_untracked_in_workspace(tmp_path):
+    mod = _load()
+    _git_init(tmp_path)
+    ws = tmp_path
+
+    tdir = ws / "scripts"
+    tdir.mkdir()
+    ok_tracked = tdir / "ok_tracked.sh"
+    ok_tracked.write_text("#!/bin/sh\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(ws), "add", "scripts/ok_tracked.sh"],
+                   check=True, capture_output=True)
+    ok_untracked = tdir / "ok_untracked.sh"
+    ok_untracked.write_text("#!/bin/sh\n", encoding="utf-8")
+
+    refs = [
+        {"source": "t", "line": 1, "target": "scripts/ok_tracked.sh",
+         "resolved": str(ok_tracked), "exists": True, "ok": True, "status": "ok"},
+        {"source": "t", "line": 2, "target": "scripts/ok_untracked.sh",
+         "resolved": str(ok_untracked), "exists": True, "ok": True, "status": "ok"},
+        {"source": "t", "line": 3, "target": "scripts/dead.sh",
+         "resolved": str(tdir / "dead.sh"), "exists": False, "ok": False,
+         "status": "dead"},
+        {"source": "t", "line": 4, "target": "/usr/local/ext_job.sh",
+         "resolved": "/usr/local/ext_job.sh", "exists": True, "ok": True,
+         "status": "ok"},
+    ]
+
+    untracked = mod.annotate_tracking(refs, ws)
+
+    assert [r["target"] for r in untracked] == ["scripts/ok_untracked.sh"]
+    by = {r["target"]: r for r in refs}
+    assert by["scripts/ok_tracked.sh"]["track"] == "tracked"
+    assert by["scripts/ok_untracked.sh"]["track"] == "untracked"
+    assert "track" not in by["scripts/dead.sh"]          # dead 不标注
+    assert "track" not in by["/usr/local/ext_job.sh"]    # ws 树外不标注
+    # status/ok 不变 (M2 分类语义保持)
+    assert by["scripts/ok_untracked.sh"]["status"] == "ok"
+    assert by["scripts/ok_untracked.sh"]["ok"] is True
