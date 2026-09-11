@@ -1,12 +1,12 @@
 ---
 schema: bet-retro/v1
 bet_id: BET-Y1Q4-T8-24A
-status: completed
+status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-12
+last-reviewed: 2026-09-11
 type: ephemeral
-completed_at: 2026-09-12
+completed_at: 2026-09-11
 run_id: 20260911T222043Z-bet-execution-62312684
 pr: "omostation-cockpit#160 omostation#3597"
 ---

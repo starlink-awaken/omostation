@@ -27876,30 +27876,30 @@ bets:
         evidence:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
-            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+            sha256: sha256:00b62757269cc3081cd775bef10772355a83df4cfef26231b0b5a66bd468d61e
           merged_reachable_commit:
             ref: git://origin/main@c254601eeefc1981a4fa1946e6a682f111459831
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
-            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+            sha256: sha256:00b62757269cc3081cd775bef10772355a83df4cfef26231b0b5a66bd468d61e
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
-            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+            sha256: sha256:00b62757269cc3081cd775bef10772355a83df4cfef26231b0b5a66bd468d61e
         status: VERIFIED
       operational:
         evidence:
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
-            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+            sha256: sha256:00b62757269cc3081cd775bef10772355a83df4cfef26231b0b5a66bd468d61e
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
-            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+            sha256: sha256:00b62757269cc3081cd775bef10772355a83df4cfef26231b0b5a66bd468d61e
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
-            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+            sha256: sha256:00b62757269cc3081cd775bef10772355a83df4cfef26231b0b5a66bd468d61e
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24A.md
-            sha256: sha256:54112e0c75086571b988d6c715c19f9d5b0047e46edab604357829e4e5f47373
+            sha256: sha256:00b62757269cc3081cd775bef10772355a83df4cfef26231b0b5a66bd468d61e
         status: PROVEN
       value:
         evidence: {}
