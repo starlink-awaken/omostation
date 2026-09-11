@@ -2,8 +2,8 @@
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-10
-last_updated: 2026-09-10
+last-reviewed: 2026-09-11
+last_updated: 2026-09-11
 type: doc
 ---
 
@@ -19,9 +19,9 @@ type: doc
 
 ## Global Constraints
 
-- Canonical Spec: `docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md`, accepted version `1.1.1`, SHA-256 `7a4cdbae6fb4ce5af09b77438cf56c0b57bddc50e94d3db824ad5d79f1104bae`.
+- Canonical Spec: `docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md`, accepted version `1.1.2`, SHA-256 `bc1de057c28ce91aec5120396bcdedebb3b93b1289fcdc8c81387554efd47192`.
 - Parent/child: `BET-Y1Q4-T10-145` is a child of zero-write parent `BET-Y1Q4-T10-143`; `depends_on=[]` is intentional because parent coordination is not a completed execution predecessor.
-- Current WorkPacket `sha256:d844394dcbfb67dcea9e5a770696e12a69b75b36dc88c4fdde2a17140863b4d2` authorizes only the three Wave A child paths listed by Task 2–4. Versions 1.0.0 and 1.1.0 are immutable history, not current execution authority.
+- Current WorkPacket `sha256:73b4d19af02326d33d0969e7c85aba83a4fbffa762615dbb798e1572b0a8e613` authorizes only the three Wave A child paths listed by Tasks 2–4. Versions 1.0.0, 1.1.0 and 1.1.1 are immutable history, not current execution authority.
 - Each later version `1.2.0` through `1.7.0` is a complete replacement, never a union. The prior run must be closed, its locks must be zero, and the new Spec digest and WorkPacket hash must be verified before any new path is claimed.
 - WP1 is shadow-only: `effective_claim_authority=v1`; v2 may return `would_allow`, `would_deny` or `unprovable` but may never grant, deny or publish.
 - v2 never authorizes a valid managed clone during WP1. The managed-clone shadow
@@ -204,6 +204,82 @@ fresh, descriptor-bound and consistent with the fence's expected OID. This is
 cooperative R0 evidence from the sole effect owner, not an independent broker network
 read.
 
+### Auxiliary R0 evidence, activation closure and source authority
+
+Wave A recognizes two evidence schemas without making either one an authority object.
+`claims-operator-authorization/v1` has exactly:
+
+```text
+schema, authority_id, security_level, principal_id, principal_authority_ref,
+principal_receipt_digest, decision_ref, target_kind, target_id,
+unknown_receipt_digest, resolver_operation, authorized_outcome,
+process_identity_digest, issued_at, expires_at, digest
+```
+
+`claims-stopped-process-proof/v1` has exactly:
+
+```text
+schema, authority_id, security_level, observer_kind, observer_receipt_digest,
+target_kind, target_id, unknown_receipt_digest, authorization_digest,
+process_identity_digest, status, observed_at, digest
+```
+
+Both objects are canonical JSON no larger than 16 KiB. They are regular,
+current-UID-owned, link-count-one, non-symlink, create-once `0600` files under
+account-derived `0700` directories rooted at
+`pwd.getpwuid(os.getuid()).pw_dir/agents/_shared/runtime/omo-claims-authority-r0`.
+Authorization expires within 300 seconds, cannot predate `operator_required_at`, and
+the stopped-process observation cannot predate authorization. Target, unknown receipt,
+process identity, resolver and outcome must all match. Environment, cwd, CLI and
+request JSON cannot redirect these paths. Presence and self-digest never grant a
+claim, issue a fence, perform Git or resolve another target.
+
+Version 1.1.2 binds no production principal-decision or process-observer verifier.
+Therefore production `resolve-*-unknown` remains fail-closed even for structurally
+valid files, and production activation rejects missing verifier digests. Only
+`test:<uuid>` stores may exercise positive recovery mechanics. A future accepted
+binding must name and closure-bind both exact verifier implementations before any
+positive production recovery or activation can become possible.
+
+The activation descriptor closure contains the existing descriptor fields plus
+exactly:
+
+```text
+root_commit_oid, policy_blob_digest, child_gitlink_oid,
+critical_dependency_entries, managed_python_receipt_digest,
+managed_python_executable_digest, operator_authorization_verifier_digest,
+stopped_process_verifier_digest
+```
+
+`critical_dependency_entries` is sorted by canonical path and each entry contains
+only `path`, `kind` and `object_oid_or_digest`. Before activation the broker performs
+two independent reads from the passwd-derived integration root and requires root,
+policy, child gitlink, dependency entries, managed Python and both verifier digests to
+match the request and descriptor. The Ledger, accepted Spec, Instruction Pack,
+`bin/plan/bet-ledger.py` helper and the verifier entries belong to the same closure.
+Policy bytes cannot embed their own descriptor digest. Any disagreement fails before
+witness, SQLite or high-water mutation.
+
+Before every production request capable of issuing a receipt/fence or changing
+authority state, the broker loads the fixed integration-root
+`bin/plan/bet-ledger.py`, calls `prepare_bet_execution(...,
+require_startable=False)`, compares BET/packet identity, hash, unique Spec
+version/digest, `implementation_authorized`, sorted write surfaces, required packets,
+candidate/evaluating state and `value_indicator_policy=false`, then executes
+`validate_work_packet_run()`. Clone-local bytes are evidence only. A self-consistent
+clone packet that differs from the integration-root rebuild is `WORK_PACKET_UNBOUND`
+and produces zero authority mutation. The only exception is an identical replay of a
+previously committed request ID/body, which returns the stored response without a new
+source-dependent mutation.
+
+`begin-claim-mutation` and `enter-legacy-publishing` allocate one immutable
+`settlement_request_id`. A lost settlement response may be confirmed only by replaying
+the identical settlement request ID and canonical body. If the first commit happened,
+the stored response is returned; if it did not, exact replay may commit once. The v1
+mutation or Git effect is never repeated. If the broker remains unavailable, the
+object stays `reserved` or `publishing`; callers must not fabricate `unknown` or an
+operator marker. Same ID with different bytes is `REQUEST_ID_REUSE_MISMATCH`.
+
 ### Canonical response envelope
 
 ```json
@@ -266,6 +342,7 @@ CREATE TABLE claim_mutation_batches (
   mutation_id TEXT PRIMARY KEY,
   run_id TEXT NOT NULL,
   operation TEXT NOT NULL CHECK (operation IN ('claim', 'heartbeat', 'close', 'takeover', 'expire')),
+  settlement_request_id TEXT NOT NULL UNIQUE,
   expected_v1_run_digest TEXT NOT NULL,
   expected_v1_lockset_digest TEXT NOT NULL,
   state TEXT NOT NULL CHECK (state IN ('reserved', 'settled', 'unknown')),
@@ -292,6 +369,7 @@ CREATE TABLE legacy_fences (
   epoch INTEGER NOT NULL,
   claim_id TEXT NOT NULL REFERENCES claims(claim_id),
   request_digest TEXT NOT NULL,
+  settlement_request_id TEXT UNIQUE,
   state TEXT NOT NULL,
   expected_remote_oid TEXT NOT NULL,
   remote_ref_digest TEXT NOT NULL,
@@ -319,8 +397,8 @@ CREATE INDEX fences_state ON legacy_fences(epoch, state);
 ## Delivery Dependency Graph
 
 ```text
-plan run close + locks=0
-  -> 1.1.1 binding -> Wave A child PR/main
+plan-convergence run close + locks=0
+  -> 1.1.2 binding -> Wave A child PR/main
   -> 1.2.0 binding -> Wave B1 root PR/main
   -> 1.3.0 binding -> Wave B2 root PR/main
   -> 1.4.0 binding -> Wave B3 root PR/main
@@ -476,22 +554,29 @@ At each stage the orchestrator reports only: current Writer; parallel read-only 
 and bound digest; passed/blocked items; next executable transaction; and remaining
 critical-path time.
 
-### Task 1: Confirm the current version 1.1.1 binding for Wave A
+### Task 1: Confirm the current version 1.1.2 binding and converge this plan
 
-**Status:** completed prerequisite. PR #3513 merged as
-`2b59cdf349ef8a5c0614a62bc8e82be5adedd0fd`; the source/merge objects, Spec digest,
-WorkPacket, Ledger/Portfolio lint, strict GaC and zero-lock closeout were independently
-reproduced. The 1.0.0 and 1.1.0 bindings are historical predecessors and are not
-current execution authority.
+**Status:** binding prerequisite completed; this plan-convergence transaction is in
+progress. PR #3515 merged as
+`da1ef9756b0c3f1bc370d808bfb461d11f3ad630`; its reviewed source and squash trees are
+both `94354073b941b43e93f47d0365064725de82cce1`. The Spec, Ledger and waiver object
+digests, WorkPacket, required checks, post-merge Governance Check and zero-lock
+closeout were reproduced before the binding clone was retired. Versions 1.0.0,
+1.1.0 and 1.1.1 are historical predecessors and are not current execution authority.
 
-**Historical binding files (read-only after #3513):**
+**Current binding files (read-only during plan convergence):**
 - Read: `docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md`
 - Read: `docs/plans/3y-bet-ledger.yaml`
-- Read: `.omo/_truth/governance-evidence/waiver-2026-09-10-claims-authority-bridge-wp1-v111-activation-witness-amendment.md`
+- Read: `.omo/_truth/governance-evidence/waiver-2026-09-10-claims-authority-bridge-wp1-v112-binding.md`
+- Modify: `docs/superpowers/plans/2026-09-10-claims-authority-bridge-wp1-shadow.md`
+- Create: `.omo/_truth/governance-evidence/waiver-2026-09-10-claims-authority-bridge-wp1-v112-plan-convergence.md`
 
 **Interfaces:**
-- Consumes: merged 1.1.1 binding and closed `20260910T091550Z-governance-state-mutation-6ab2e46f`.
-- Produces: exactly one 1.1.1 WorkPacket with the three Wave A child paths and `implementation_authorized=true`.
+- Consumes: merged 1.1.2 binding and closed
+  `20260910T150555Z-governance-state-mutation-3354a087`.
+- Produces: one reviewed plan aligned to the existing 1.1.2 binding plus one scoped
+  waiver. It does not replace or mutate the Spec, Ledger, WorkPacket, implementation
+  or runtime.
 
 - [x] **Step 1: Prove the binding run is closed and all locks are zero**
 
@@ -501,21 +586,23 @@ Run:
 uv run --with pyyaml python bin/agent-workflow.py status --json
 ```
 
-Expected and observed after #3513: no active binding run, `stale_locks=0`, `live_locks=0`.
+Expected and observed after #3515: no active binding run, `stale_locks=0`, `live_locks=0`.
 
 - [x] **Step 2: Use a fresh full clone from a twice-read latest main for the binding transaction**
 
 Historical evidence confirms `AGCP_REQUIREMENT_ITERATION_GATE=0` was used only on the
 binding transaction's fresh unbound start; all claims, verification, Git, CI and
-closeout used the default policy. Do not repeat the binding transaction.
+closeout used the default policy. The plan-convergence transaction repeats that rule
+for its own unbound start and claims exactly the two files above. Do not repeat or
+rewrite the binding transaction.
 
-- [x] **Step 3: Confirm the complete non-union 1.1.1 replacement**
+- [x] **Step 3: Confirm the complete non-union 1.1.2 replacement**
 
 The merged binding has this exact semantic shape:
 
 ```yaml
 # Spec frontmatter
-spec_version: 1.1.1
+spec_version: 1.1.2
 status: accepted
 bet_id: BET-Y1Q4-T10-145
 implementation_authorized: true
@@ -527,24 +614,24 @@ write_surfaces:
   - projects/omo/tests/test_workflow_claims_authority_bridge.py
 accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.1.1
+    spec_version: 1.1.2
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
 underlying_workflow: project-code-change
 ```
 
-The required `content_digest` was computed from the final Spec bytes and reproduced
-after merge. Future replacements must repeat that calculation and fail unless the
-Spec and Ledger values are identical; never hand-enter or predict the digest.
+The required `content_digest` is
+`sha256:bc1de057c28ce91aec5120396bcdedebb3b93b1289fcdc8c81387554efd47192`
+and the recomputed WorkPacket is
+`sha256:73b4d19af02326d33d0969e7c85aba83a4fbffa762615dbb798e1572b0a8e613`.
+Both were computed from merged bytes and reproduced after merge. Future replacements
+must repeat that calculation and fail unless the Spec and Ledger values are identical;
+never hand-enter or predict a new digest. The accepted `12 days` appetite is elapsed
+delivery time including the mandatory 24-hour window, never completion or value
+evidence. This plan transaction must not edit those already-merged facts.
 
-Remove the plan path; do not append the child paths to it. Re-baseline `appetite` to
-`12 days` in the same T10-145 Ledger entry and record in the waiver that this is
-elapsed delivery time, including the mandatory 24-hour window, rather than a value or
-completion claim. This is the selected resolution of the accepted 3-day/D1–D15
-contradiction. If that exact re-baseline is not covered by a live delegated/direct
-decision at execution time, stop.
-
-The 1.1.1 Spec replacement incorporates the frozen clarifications from this
-reviewed plan: production lifecycle calls only the integration-root stdio broker;
+The 1.1.2 Spec replacement retains the frozen clarifications from the reviewed
+1.1.1 plan and closes four additional gaps: production lifecycle calls only the
+integration-root stdio broker;
 claim addition/heartbeat/close/takeover/expiry use durable run-scoped mutation batches
 covering every v1 claim, while versions/epochs remain broker-only and v1 bytes stay
 unchanged; unknown batches/fences have separate operator markers and
@@ -553,7 +640,10 @@ authorization-bound resolution; remote double-read belongs only to descriptor-bo
 `operating_mode=shadow` is distinct from
 `activation_state=shadow-active`; degraded bootstrap publication never counts as v2
 or graduation evidence; and graduation requires three distinct real workflow run IDs,
-not fixtures. These are contract corrections, not extra Wave A write surfaces.
+not fixtures. It also fixes the two auxiliary operator-evidence schemas, complete
+activation closure, integration-root WorkPacket recomputation and idempotent
+settlement confirmation. These are contract corrections, not extra Wave A write
+surfaces.
 
 - [x] **Step 4: Recompute and inspect the WorkPacket**
 
@@ -569,11 +659,15 @@ assert packet["scope"]["write_surfaces"] == sorted([
 assert packet["dependencies"]["required_packets"] == []
 ```
 
-- [x] **Step 5: Verify, review, publish and merge only the binding**
+- [ ] **Step 5: Verify, review, publish and merge only the plan convergence**
 
-Execute every command and assertion in `Binding QA Protocol` with version `1.1.1`,
-the three Wave A paths and the Task 1 waiver. Close the binding run and release all
-locks before Task 2.
+Assert the plan names Spec version `1.1.2`, the exact merged Spec digest and current
+WorkPacket above, and that `git diff --name-only` contains only the plan and this
+transaction's waiver. Run default workflow verify/compliance, documentation checks,
+full GaC and two digest-bound read-only reviews. Publish one normal non-force branch
+and one unique PR. After required checks, squash merge, compare both final objects to
+the reviewed source, run post-merge Governance Check, close the plan run, prove zero
+locks and retire the clean clone. Only then may Task 2 start in a fresh child clone.
 
 ### Task 2: Establish the Wave A RED matrix and canonical models
 
@@ -655,6 +749,40 @@ raise `AUTHORITY_ACTIVATION_WITNESS_INVALID` or `AUTHORITY_STORE_UNSAFE` before 
 write. Prove the witness is read from the account-resolved fixed path and cannot
 grant a claim, issue/settle a receipt or fence, authorize Git, or select a store.
 
+- [ ] **Step 7: Add the auxiliary operator-evidence RED/GREEN matrix**
+
+Add independent tests for the exact allowlisted fields of
+`claims-operator-authorization/v1` and `claims-stopped-process-proof/v1`, 16 KiB
+limits, 300-second authorization lifetime, account-derived fixed directories,
+`0700`/`0600`, owner, regular-file, link-count-one and non-symlink requirements.
+Cover expired, pre-marker, pre-authorization, redirected, copied, changed-digest,
+wrong target/receipt/process/resolver/outcome and cross-target replay cases. Prove
+both objects remain non-authoritative. Production resolution and activation stay RED
+while either verifier is unbound; the only positive mechanics fixture uses a
+`test:<uuid>` store and exact matching evidence.
+
+- [ ] **Step 8: Add activation-closure and integration-root WorkPacket REDs**
+
+Create one negative for every closure member: root commit, policy blob, child gitlink,
+sorted critical dependency entry, managed-Python receipt/executable, operator verifier
+and stopped-process verifier. Add missing-entry, wrong-kind, reordered-entry,
+self-referential policy and two-read race variants; all must perform zero witness,
+SQLite or high-water mutation. Separately construct a clone-local WorkPacket that is
+internally valid but differs from the integration-root Ledger/Spec/Instruction rebuild
+and require `WORK_PACKET_UNBOUND` with zero receipt. An identical replay of an already
+committed request is the sole GREEN source-drift exception and adds no sequence or
+state transition.
+
+- [ ] **Step 9: Add settlement-confirmation RED/GREEN cases**
+
+Test response loss after commit, response loss before commit and continued broker
+unavailability as three independent cases. Only the identical
+`settlement_request_id` and canonical body may be replayed. Assert the first two
+return or commit the same settlement exactly once without re-running a v1 mutation or
+Git effect; the third retains `reserved`/`publishing` and creates neither `unknown`
+nor `operator_required`. Changed bytes under the same ID are
+`REQUEST_ID_REUSE_MISMATCH`.
+
 ### Task 3: Implement the canonical SQLite store, chain and recovery rules
 
 **Files:**
@@ -733,6 +861,12 @@ without authorization, stopped-process proof and two equal complete v1 run/claim
 plus lock-set reads and broker-member versions/epochs; ambiguous or partial reads
 preserve the freeze.
 
+Add exact settlement-request replay tests at the store boundary. A mutation batch
+allocates one non-null unique `settlement_request_id`; a legacy fence allocates one
+when it enters `publishing`. Reusing the same ID/body returns the committed response;
+reusing the ID with changed bytes is rejected. A missing response never causes the
+caller to repeat the underlying v1/Git effect or synthesize an operator marker.
+
 - [ ] **Step 4: Implement `AuthorityStore` with one transaction boundary**
 
 Use `BEGIN IMMEDIATE`; update `authority_meta`, claim/fence/mutation-batch member rows,
@@ -740,7 +874,24 @@ receipt row and idempotency response in the same transaction. Write high-water t
 a same-directory temporary file, `fsync`, mode `0600` and `os.replace`. Never repair
 more than one missing high-water tail.
 
-- [ ] **Step 5: Implement lazy backup rotation**
+- [ ] **Step 5: Implement evidence validation, activation closure and source-truth checks**
+
+Implement the two auxiliary schema validators and fixed-path readers as internal
+helpers in `claims_authority.py`; do not add a producer or path override. Bind every
+field and filesystem invariant named in the frozen contract. In production, return
+the typed missing/unbound-verifier error even when structural evidence is valid;
+positive recovery is test-store-only.
+
+Implement descriptor closure canonicalization and passwd-derived integration-root
+double-read. Validate the exact root, policy, child gitlink, critical dependencies,
+managed Python and both verifier digests before activation. For every production
+request capable of issuing a receipt/fence or changing state, load the fixed root
+helper, call `prepare_bet_execution(..., require_startable=False)`, compare the full
+binding/state tuple and call `validate_work_packet_run()`. Check committed request
+replay before this rebuild so an identical replay is read-only; no other request may
+use clone-local WorkPacket authority.
+
+- [ ] **Step 6: Implement lazy backup rotation**
 
 Before first mutation of a UTC day or serial migration, create a SQLite backup plus
 canonical manifest containing store digest, sequence, previous receipt digest,
@@ -748,7 +899,7 @@ descriptor digest and timestamp. Retain at most the newest three valid pairs. An
 invalid pair is preserved and reported as incident evidence, never counted toward the
 three valid pairs and never selected for automatic restore.
 
-- [ ] **Step 6: Run store tests and corruption negatives to GREEN**
+- [ ] **Step 7: Run store, evidence, closure and corruption negatives to GREEN**
 
 Run the focused test file three times against fresh temporary stores. No test may touch the production authority directory.
 
@@ -819,8 +970,11 @@ operation must call
 exact resulting v1 run bytes are persisted. Begin atomically covers every broker claim
 member of that run; settlement updates only broker-owned versions/epochs and never
 injects them into v1. The mutation batch and fence-entry CAS exclude one another. If
-begin or settlement is unavailable after activation, do not mutate v1 state and leave
-the durable batch/fence for operator resolution.
+begin is unavailable after activation, perform no v1 mutation. If the local v1
+mutation completes and the settlement response is lost, retry only the identical
+settlement request ID/body; never repeat the v1 mutation. Continued broker
+unavailability leaves the durable batch `reserved` and blocks further mutation. It
+does not authorize fabricating `unknown`, an operator marker or a rollback claim.
 Before activation, preserve byte-equivalent bootstrap behavior and record only an
 unprovable shadow observation.
 
@@ -835,12 +989,14 @@ a new broker member only at settlement; fence entry and another batch cannot
 interleave. This changes no existing v1 payload/return fields and does not widen the
 WorkPacket to `lifecycle_locks.py`.
 
-If the local mutation completes but settlement becomes unknown, do not retry the
-mutation. Mark that same batch operator-required and stop. A separately
-authorized `resolve-claim-mutation-unknown` call may only classify the already-observed
-v1 outcome using stopped-process proof and two equal complete run/claims plus lock-set
-reads and broker-member versions/epochs; it
-never performs or reverses the lifecycle mutation.
+If the local mutation completes but the broker durably settles the request as
+`unknown`, do not retry the mutation. Only that durable unknown receipt may be marked
+operator-required. A separately authorized `resolve-claim-mutation-unknown` call may
+classify the already-observed v1 outcome only after a later accepted descriptor binds
+both evidence verifiers and exact evidence plus two equal complete run/claims,
+lock-set and broker-member version/epoch reads pass. Version 1.1.2 production remains
+fail-closed; the positive path is test-store-only. Resolution never performs or
+reverses the lifecycle mutation.
 
 For stale-lock pruning, replace the `lifecycle.py` re-export with a selected-candidate
 wrapper; do not call the existing `prune_stale_locks()`, because it rescans and could
@@ -889,7 +1045,7 @@ If it rejects solely because of the fixed authority root, require a recorded exa
 commit, one-time Human/time-bounded-delegated degraded publication; disclose the gap
 and exclude the publication from graduation evidence. Otherwise stop. Create one
 child PR, wait for post-merge CI and prove the merge commit is reachable from
-authoritative child `main`. Close the current 1.1.1 Wave A run and release every lock. Do not update
+authoritative child `main`. Close the current 1.1.2 Wave A run and release every lock. Do not update
 the root gitlink yet.
 
 ### Task 5: Replace the binding with version 1.2.0 for Wave B1
@@ -900,14 +1056,14 @@ the root gitlink yet.
 - Create: `.omo/_truth/governance-evidence/waiver-2026-09-10-claims-authority-bridge-wp1-v120-wave-b1-binding.md`
 
 **Interfaces:**
-- Consumes: the exact merged Wave A child commit, its post-merge CI receipt and a closed 1.1.1 Wave A run.
+- Consumes: the exact merged Wave A child commit, its post-merge CI receipt and a closed 1.1.2 Wave A run.
 - Produces: one non-union 1.2.0 WorkPacket containing exactly the six Wave B1 root paths.
 
 - [ ] **Step 1: Re-read child main and prove Wave A completion**
 
 Read the authoritative `projects/omo` remote twice. Assert the merged child commit is
 an ancestor of child main, the three child objects match the reviewed PR, child
-post-merge CI succeeded, the 1.1.1 Wave A workflow is closed and every Wave A lock is zero.
+post-merge CI succeeded, the 1.1.2 Wave A workflow is closed and every Wave A lock is zero.
 
 - [ ] **Step 2: Start a fresh binding transaction from then-latest root main**
 
@@ -1251,7 +1407,7 @@ separate and that unknown outcomes are query-only.
 bash tests/integration/test-git-shim.sh
 uv run pytest -q tests/unit/gac/test_immutable_writer_git_policy.py \
   tests/test_swarm_discipline.py tests/test_git_publication_effect_owner.py
-python3 bin/gac/script-registry-lint.py
+python3 bin/ssot/script-registry.py validate
 make gac-local-gate
 git diff --check
 ```
@@ -1384,8 +1540,12 @@ clone of the candidate root tree.
 - [ ] **Step 3: Run root reachability and cross-layer canaries**
 
 ```bash
+BASE_SHA="<exact PR base SHA>"
 git submodule update --init --recursive
-python3 bin/gac/check-submodule-rewind.py --all --require-main
+uv run --with pyyaml python bin/gac/check-submodule-rewind.py \
+  --range "$BASE_SHA" HEAD --no-write-debt
+uv run --with pyyaml python bin/ssot/submodule-reachability-gate.py \
+  --source head --require-main --json
 uv run pytest -q tests/test_agent_workflow.py tests/test_clone_lifecycle.py \
   tests/test_git_publication_effect_owner.py \
   tests/test_github_publication_effect_owner.py
@@ -1443,7 +1603,10 @@ host operation.
 - External operation record: an attempt-local, non-repository decision and receipt bundle.
 
 **Interfaces:**
-- Consumes: exact root main SHA, policy blob, child gitlink, critical closure and managed-Python receipt.
+- Consumes: exact root main SHA, policy blob, child gitlink, sorted critical
+  dependency entries, managed-Python receipt and executable digests, exact
+  operator-authorization and stopped-process verifier digests, plus closure-bound
+  Ledger, accepted Spec, Instruction Pack and `bin/plan/bet-ledger.py` helper.
 - Produces: one activation CAS with descriptor `operating_mode=shadow`, independent
   `activation_state=shadow-active`, and an immutable activation receipt.
 
@@ -1453,6 +1616,13 @@ The repository binding does not authorize host mutation. Record the exact direct
 still-live time-bounded delegated decision, surfaces, rollback and expiry outside the
 repository before invoking activation. If no valid decision exists, stop; do not
 reinterpret the accepted Spec as host authority.
+
+Version 1.1.2 intentionally binds no production evidence verifier. Before this task
+can execute, a later accepted binding must name the exact principal-decision and
+independent stopped-process observer verifier interfaces and closure-bind their
+implementation digests. Missing, placeholder, file-presence-only or self-attested
+verifier identity stops activation. This Task does not itself authorize or invent
+those implementations.
 
 - [ ] **Step 2: Preflight the production path without mutation**
 
@@ -1464,9 +1634,12 @@ valid chain; asymmetric or corrupt state stops without repair.
 - [ ] **Step 3: Build and double-read the descriptor**
 
 Read root main twice and require equality. Compute canonical digests for root commit,
-policy blob, child gitlink, critical closure and managed-Python receipt. Read every
-input again immediately before activation and require byte equality. The policy blob
-does not embed the descriptor's self-digest.
+policy blob, child gitlink, every sorted critical dependency entry, managed-Python
+receipt and executable, both accepted verifier implementations, Ledger, accepted
+Spec, Instruction Pack and `bin/plan/bet-ledger.py`. Read every input again
+immediately before activation and require byte equality. Each entry has only canonical
+`path`, `kind` and `object_oid_or_digest`; the policy blob does not embed the
+descriptor's self-digest.
 
 - [ ] **Step 4: Execute exactly one activation CAS**
 
@@ -1650,7 +1823,7 @@ The JSON report uses stable keys:
 
 The illustrative values above are a schema fixture, never positive evidence. Populate
 only from verified receipts. The retro records deviations, recovery burden, operator
-decisions, mechanism debt and whether the 3-day appetite was re-baselined.
+decisions, mechanism debt and whether the 12-day appetite was re-baselined.
 
 - [ ] **Step 8: Perform independent audit and transition conservatively**
 
@@ -1691,6 +1864,7 @@ means `tests/test_git_publication_effect_owner.py`; `cloud-effects` means
 | actor/attempt/repository/branch/HEAD mismatch | `test_red_identity_tuple_mismatch_is_denied` | A / child |
 | identity/manifest/readiness digest drift | `test_red_identity_receipt_digest_drift_is_denied` | A / child |
 | unbound/stale WorkPacket or scope overflow | `test_red_work_packet_binding_and_scope_are_exact` | A / child |
+| clone-local WorkPacket is self-consistent but integration-root rebuild differs | `test_red_integration_root_work_packet_rebuild_rejects_clone_drift` | A / child |
 | affected graph/path mismatch | `test_red_affected_graph_path_mismatch_is_denied` | A / child |
 | broker claim version/lease race, expiry, takeover or replay | `test_red_claim_cas_lease_and_takeover_races_are_denied` | A / child |
 | local update lock is unlinked after 30 seconds while first batch remains reserved | `test_red_local_lock_timeout_overlap_performs_zero_second_v1_write` | A / child |
@@ -1701,8 +1875,12 @@ means `tests/test_git_publication_effect_owner.py`; `cloud-effects` means
 | legacy epoch closes between v1 snapshot and Git | `test_red_epoch_drain_race_stops_before_git` | B1 / root-b1 |
 | graduation with unresolved fence | `test_red_graduation_rejects_every_unresolved_fence_state` | A / child |
 | request ID reused with changed payload | `test_red_request_id_reuse_with_changed_payload_is_denied` | A / child |
+| settlement response lost after commit | `test_green_settlement_confirmation_after_commit_replays_response_only` | A / child |
+| settlement response lost before commit | `test_green_settlement_confirmation_before_commit_commits_once` | A / child |
+| broker unavailable during settlement confirmation | `test_red_settlement_confirmation_unavailable_preserves_reserved_or_publishing` | A / child |
 | expected remote OID changes before effect | `test_red_remote_oid_drift_stops_before_git` | B1 / root-b1 |
 | descriptor closure or managed-Python receipt drift | `test_red_descriptor_or_python_receipt_drift_is_unprovable` | B1 / root-b1 |
+| root, policy, gitlink, dependency, Python or verifier closure differs | `test_red_activation_closure_binds_every_dependency_and_verifier` | A / child |
 | policy embeds self-referential descriptor digest | `test_red_descriptor_rejects_policy_self_reference` | B1 / root-b1 |
 | two authority reads disagree | `test_red_double_read_disagreement_issues_no_fence` | B1 / root-b1 |
 | store rollback, high-water gap or broken chain | `test_red_store_chain_or_highwater_drift_fails_closed` | A / child |
@@ -1721,6 +1899,9 @@ means `tests/test_git_publication_effect_owner.py`; `cloud-effects` means
 | tracked cloud workflow publishes outside owner | `test_red_cloud_workflows_have_zero_publication_effect` | B4 / cloud-effects |
 | valid legacy claim, exact HEAD and fresh fence | `test_green_legacy_fence_executes_one_canonical_effect` | B1 / root-b1 |
 | identical repeated settlement | `test_green_repeated_settlement_returns_same_receipt` | A / child |
+| operator evidence is expired, redirected, malformed or cross-target replayed | `test_red_operator_evidence_schema_path_time_and_target_are_exact` | A / child |
+| structurally valid production evidence precedes verifier binding | `test_red_production_operator_recovery_requires_bound_verifiers` | A / child |
+| exact test-store evidence settles its own unknown only | `test_green_test_store_operator_recovery_settles_same_unknown_only` | A / child |
 | valid managed clone shadow comparison | `test_green_managed_clone_is_expected_difference_without_publication` | A+B1 / child and root-b1 |
 
 For the two inventory rows, parameterize a case for every exact production path in
@@ -1748,6 +1929,7 @@ refine rather than replace a Spec §11 row:
 | Git worktree is never cast as managed clone | `test_red_worktree_submit_emits_successor_proposal_only` | B2 / local-effects |
 | activation enum/state are distinct | `test_red_shadow_active_is_not_an_operating_mode` | A+B1 / child and root-b1 |
 | backup manifest omits/mismatches descriptor | `test_red_backup_manifest_binds_descriptor_digest` | A / child |
+| committed request replay is read-only despite later source drift | `test_green_committed_request_replay_skips_source_dependent_mutation` | A / child |
 
 ## Full RED-to-Acceptance Traceability
 
@@ -1768,6 +1950,11 @@ refine rather than replace a Spec §11 row:
 | Cooperative R0 and value isolation | every task | AC-10 | schema, registry and Ledger assertions |
 | WP2 non-materialization | every task, 17 | AC-11 | repository/Ledger/run/lock absence scan |
 | Single publication effect owner | 8, 10, 12 | AC-12 | dynamic fake-effect suite plus tracked-source inventory |
+| Deny-only activation witness boundary | 2–4, 16 | AC-14 | all witness states plus activation crash ordering |
+| Auxiliary operator evidence provenance and non-authority | 2–4 | AC-15 | exact schema/path/time/target REDs and test-store-only positive |
+| Complete activation dependency closure | 2–3, 6, 16 | AC-16 | per-entry drift/race negatives, exact pre-activation double-read, and closure-match GREEN proof: not a repeatable pytest fixture — the only positive evidence is the single, non-replayable Task 16 Step 4 host activation CAS |
+| Integration-root WorkPacket authority | 2–4 | AC-17 | clone-local drift RED, canonical rebuild GREEN and committed replay exception |
+| Idempotent settlement confirmation | 2–4, 6 | AC-18 | lost-before/lost-after/unavailable cases with underlying effect count at most one |
 
 ## Verification Matrix
 
@@ -1797,7 +1984,7 @@ Stop the current transaction without expanding scope when any of these occurs:
 - an unfenced post-activation Git/PR effect or any alternate publication owner is observed;
 - a push outcome is unknown, a fence or claim-mutation batch is unresolved, or
   an observer gap exceeds 120 seconds;
-- the current 1.1.1 Spec digest, WorkPacket, three-path scope or accepted 12-day appetite cannot be reproduced exactly.
+- the current 1.1.2 Spec digest, WorkPacket, three-path scope or accepted 12-day appetite cannot be reproduced exactly.
 
 For a moving main, create a new immutable successor from the new exact main; do not
 rebase, merge or rewrite an immutable writer. For a transient network error before an
@@ -1808,15 +1995,26 @@ a success.
 
 ## Rollback Execution Order
 
-1. Record the rollback decision and stop activation/observation/fence issuance.
+1. Record the rollback decision and stop activation/observation/fence issuance. First
+   create a fresh, complete, non-union stop/freeze successor binding with
+   `implementation_authorized=false` and a newly computed safe WorkPacket. That
+   binding authorizes no rollback write; never restore version 1.1.1 as current
+   authority.
 2. Block new publication while any fence or claim-mutation batch is unresolved;
    settle or separately escalate only that same object.
 3. Preserve the production DB, WAL/high-water, backups and observation artifacts read-only.
-4. Revert B4 cloud convergence, then B3 wrappers/API, B2 local entries and B1 root adapter in separate reviewed root PRs.
-5. Revert the root gitlink only to a child commit reachable from authoritative child main.
-6. Revert the Wave A child code in its own child PR, then update the root pointer last if required.
-7. Run the full pre-WP1 regression and publication inventory before restoring legacy effect routes.
-8. Leave WP1 candidate/evaluating and WP2 absent; a future attempt requires fresh bindings and a fresh 24-hour window.
+4. Give each actual rollback partition its own later fresh accepted binding, exact
+   rollback paths, Spec digest and WorkPacket with
+   `implementation_authorized=true`; reject every historical hash and never union
+   forward and rollback surfaces. After the partition closes, replace it with the
+   next rollback-specific binding or a new `implementation_authorized=false`
+   stop/freeze binding before pausing.
+5. Revert B4 cloud convergence, then B3 wrappers/API, B2 local entries and B1 root
+   adapter in separate reviewed root PRs.
+6. Revert the root gitlink only to a child commit reachable from authoritative child main.
+7. Revert the Wave A child code in its own child PR, then update the root pointer last if required.
+8. Run the full pre-WP1 regression and publication inventory before restoring legacy effect routes.
+9. Leave WP1 candidate/evaluating and WP2 absent; a future attempt requires fresh bindings and a fresh 24-hour window.
 
 ## Execution Handoff
 
@@ -1831,3 +2029,13 @@ version/digest, WorkPacket hash, claimed paths, active lock count, expected outp
 rollback and stop condition. After every task, it must archive: actual diff paths,
 RED/GREEN evidence, reviewer verdicts, source/merge SHA, required contexts, exact-object
 comparison, post-merge verification, closeout and clone-retirement disposition.
+
+For Wave A, the immutable handoff is Spec `1.1.2` at
+`sha256:bc1de057c28ce91aec5120396bcdedebb3b93b1289fcdc8c81387554efd47192`
+and WorkPacket
+`sha256:73b4d19af02326d33d0969e7c85aba83a4fbffa762615dbb798e1572b0a8e613`.
+After this plan-convergence PR closes, create a fresh successor from then-current
+authoritative child main and replay only the reviewed three-path patch from blocked
+run `20260910T110304Z-bet-execution-74895d83`. The old clone remains immutable
+evidence. Do not rebase it, resume its run, reuse its WorkPacket receipt or treat its
+passing prototype tests as delivered implementation.
