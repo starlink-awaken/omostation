@@ -1,0 +1,65 @@
+schema: scene-card/v3
+scene_id: scene-meeting-supervision
+version: 3.0.0
+name: Meeting Supervision
+description: 将会议决议收敛为可确认的任务、责任人、时限和升级链，确保闭环跟踪
+scene_class: business
+scene_type: internal_pipeline
+domain: work
+lifecycle: supervised
+activation: active
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q2-T6-04
+runtime:
+  journey_ref: meeting-to-delivery
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - ref://capability/agent-workflow-lifecycle
+    - ref://capability/gac-local-gate
+    permissions:
+    - workflow-read
+    - evidence-write
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 shadow 期间无会议记录被结构化，则场景无价值，回退 draft
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: '会议结束产生决议/纪要 (来源: 手动录入或会议系统导出)'
+input_contract: 会议纪要引用 (evidence:// 或 vault://redacted/), 含决议项和责任人
+result_contract: 任务列表 (title/owner/deadline/priority/status) + 督办记录 + 逾期告警
+outcome_metric: overdue_task_rate / task_completion_rate
+consumer: xiamingxing
+failure_cost: 会议决议遗漏/任务丢失/逾期未督办导致工作失序
+data_classification: internal
+data_scope: meeting-metadata-and-task-references
+operator: meeting-supervision-agent-under-human-review
+permission_ref: permission://internal/meeting-supervision
+downstream_refs:
+- scene: engineering-delivery
+  handoff: evidence://scene/meeting-supervision/output:engineering-task
+  trigger: on_task_assigned
+- scene: periodic-reporting
+  handoff: evidence://scene/meeting-supervision/output:reporting-item
+  trigger: on_status_change
+sample_refs:
+- vault://redacted/meeting-supervision/sample-1
+- vault://redacted/meeting-supervision/sample-2
+- vault://redacted/meeting-supervision/sample-3

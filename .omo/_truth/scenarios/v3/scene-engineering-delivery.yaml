@@ -1,0 +1,58 @@
+schema: scene-card/v3
+scene_id: scene-engineering-delivery
+version: 3.0.0
+name: Engineering Delivery
+description: 将已确认的工程意图转化为可验证、可回滚、可消费的交付证据
+scene_class: business
+scene_type: internal_pipeline
+domain: work
+lifecycle: supervised
+activation: active
+owner: engineering-delivery
+approver: architecture-governance
+approval_state: confirmed
+bet: BET-Y1Q2-T7-01
+runtime:
+  journey_ref: intent-to-evidence
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities: []
+    permissions:
+    - ci-read
+    - workflow-read
+    - evidence-write
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 shadow 期间无一次 delivery evidence 产出，则场景无实际价值，应回退 draft
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers:
+- OMO_admission_evidence
+trigger: 需求、缺陷或治理任务进入已确认的工程执行队列
+input_contract: 具备目标、范围、约束、验收标准和责任人的工程任务引用
+result_contract: 包含实施、测试、审查、合并、结果消费位置和复盘提案的 Workflow Mesh 证据
+outcome_metric: verified_delivery_lead_time
+consumer: delivery-owner-and-reviewer
+failure_cost: 未验证的变更进入主干，造成回滚、重复劳动或业务交付延误
+data_classification: internal
+data_scope: repository-metadata-governed-ci-evidence-and-redacted-task-references
+operator: engineering-agent-under-human-review
+permission_ref: permission://internal/engineering-delivery
+sample_refs:
+- evidence://github/pr/755
+- evidence://github/pr/765
+- evidence://github/pr/766

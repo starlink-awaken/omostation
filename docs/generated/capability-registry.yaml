@@ -14,7 +14,7 @@ totals:
   mcp_tools: 642
   bos_services: 302
   bos_domains: 23
-  cli_commands: 217
+  cli_commands: 214
   skills: 40
   workflows: 25
 mcp_servers:
@@ -2195,8 +2195,6 @@ cli_commands:
   description: 检查三级分层缓存与 Radix 前缀树状态 (含基准压测)
 - name: calendar
   description: 多维日历感知与督办闭环 (T7-02)
-- name: calibrate
-  description: '[v2] 校准场景卡'
 - name: capabilities
   description: 统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance)
 - name: capability
@@ -2285,8 +2283,6 @@ cli_commands:
   description: 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)
 - name: events-watch
   description: 实时监听 SSE 事件流简便入口
-- name: execute
-  description: '[v2] 执行场景卡 (BOS/MCP 驱动)'
 - name: export
   description: 导出研究 (markdown/text/json)
 - name: export-research
@@ -2365,8 +2361,6 @@ cli_commands:
   description: 📚 KOS 知识检索 (search/status/stats)
 - name: knowledge-ref
   description: ADR-0315 引用元数据 (无正文)
-- name: lifecycle
-  description: '[v2] 场景卡生命周期管理 (list/status/promote/demote/validate)'
 - name: list
   description: 查看研究历史
 - name: logs

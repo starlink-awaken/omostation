@@ -1,55 +1,41 @@
 schema: scene-registry/v1
-generated_at: '2026-09-07T02:46:06.853985+00:00'
-total_scenes: 3
+generated_at: '2026-09-11T10:08:46.167728+00:00'
+total_scenes: 67
 domains:
-  work: 2
   knowledge: 1
+  work: 66
 lifecycles:
-  assisted: 3
+  assisted: 4
+  shadow: 5
+  draft: 6
+  routine: 1
+  supervised: 51
 classes:
-  business: 3
+  business: 67
 capabilities:
-- bos://analysis/codeanalyze/scan
 - bos://capability/compute/generate
-- bos://memory/gbrain/sync
-- bos://memory/kos/ingest
-- bos://memory/kos/mcp-v2
 - bos://memory/kos/search
+- doc:generate-draft
+- iris:apple_mail
+- iris:netease_mailmaster
+- iris:obsidian
+- iris:rss
+- iris:seeyon_oa
+- iris:wpsnote
+- iris:wxread
+- iris:zhihu
+- llm:local-classify
+- llm:local-summarize
+- mail:create-draft
+- mail:netease_mailmaster
+- ref://capability/agent-workflow-lifecycle
+- ref://capability/gac-local-gate
+- risk_engine:forward-check
+- risk_engine:send-email-check
+- risk_engine:submit-check
+- storage:local-health-ledger
+- tracker:deadline-register
 scenes:
-- scene_id: scene-document-review
-  name: 公文审查
-  scene_class: business
-  scene_type: inbound
-  domain: work
-  lifecycle: assisted
-  activation: controlled
-  owner: xiamingxing
-  capability_refs:
-  - bos://capability/compute/generate
-  - bos://memory/kos/search
-  upstream:
-  - scene-inbox-to-decision
-  downstream:
-  - scene-knowledge-ingest
-  source_file: .omo/_truth/scenarios/v3/document-review.yaml
-- scene_id: scene-inbox-to-decision
-  name: 收件箱到决策
-  scene_class: business
-  scene_type: inbound
-  domain: work
-  lifecycle: assisted
-  activation: controlled
-  owner: xiamingxing
-  capability_refs:
-  - bos://memory/kos/search
-  - bos://capability/compute/generate
-  - bos://analysis/codeanalyze/scan
-  upstream:
-  - scene-unified-inbox
-  downstream:
-  - scene-knowledge-ingest
-  - scene-document-review
-  source_file: .omo/_truth/scenarios/v3/inbox-to-decision.yaml
 - scene_id: scene-knowledge-ingest
   name: 知识沉淀与检索
   scene_class: business
@@ -59,9 +45,7 @@ scenes:
   activation: controlled
   owner: xiamingxing
   capability_refs:
-  - bos://memory/kos/ingest
-  - bos://memory/kos/mcp-v2
-  - bos://memory/gbrain/sync
+  - bos://memory/kos/search
   - bos://capability/compute/generate
   upstream:
   - scene-inbox-to-decision
@@ -69,3 +53,829 @@ scenes:
   - scene-meeting-supervision
   downstream: []
   source_file: .omo/_truth/scenarios/v3/knowledge-ingest.yaml
+- scene_id: scene-admin-classify
+  name: Admin Classify
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: shadow
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - llm:local-classify
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-admin-classify.yaml
+- scene_id: scene-admin-collect
+  name: Admin Collect
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: shadow
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - tracker:deadline-register
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-admin-collect.yaml
+- scene_id: scene-admin-compile
+  name: Admin Compile
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: shadow
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - doc:generate-draft
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-admin-compile.yaml
+- scene_id: scene-admin-forward
+  name: Admin Forward
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: shadow
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - risk_engine:forward-check
+  - doc:generate-draft
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-admin-forward.yaml
+- scene_id: scene-admin-inbox
+  name: Admin Inbox
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: draft
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - mail:netease_mailmaster
+  - llm:local-classify
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-admin-inbox.yaml
+- scene_id: scene-admin-review
+  name: Admin Review
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: shadow
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - risk_engine:send-email-check
+  - mail:create-draft
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-admin-review.yaml
+- scene_id: scene-admin-submit
+  name: Admin Submit
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: draft
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - risk_engine:submit-check
+  - mail:create-draft
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-admin-submit.yaml
+- scene_id: scene-agora-bos-gateway
+  name: Agora Bos Gateway
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: routine
+  activation: allowed
+  owner: agora-gateway
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-agora-bos-gateway.yaml
+- scene_id: scene-document-review
+  name: Document Review
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - bos://capability/compute/generate
+  - bos://memory/kos/search
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-document-review.yaml
+- scene_id: scene-documents-accepted-release
+  name: Documents Accepted Release
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-accepted-release.yaml
+- scene_id: scene-documents-bridge-preflight
+  name: Documents Bridge Preflight
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-bridge-preflight.yaml
+- scene_id: scene-documents-cockpit-convergence
+  name: Documents Cockpit Convergence
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-cockpit-convergence.yaml
+- scene_id: scene-documents-cockpit-runtime
+  name: Documents Cockpit Runtime
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-cockpit-runtime.yaml
+- scene_id: scene-documents-concept-weave
+  name: Documents Concept Weave
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-concept-weave.yaml
+- scene_id: scene-documents-consumer-audit-modes
+  name: Documents Consumer Audit Modes
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-consumer-audit-modes.yaml
+- scene_id: scene-documents-consumer-audit
+  name: Documents Consumer Audit
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-consumer-audit.yaml
+- scene_id: scene-documents-consumer-tail
+  name: Documents Consumer Tail
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-consumer-tail.yaml
+- scene_id: scene-documents-consumer-tokenization
+  name: Documents Consumer Tokenization
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-consumer-tokenization.yaml
+- scene_id: scene-documents-contract-ocr
+  name: Documents Contract Ocr
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-contract-ocr.yaml
+- scene_id: scene-documents-controller-preflight
+  name: Documents Controller Preflight
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-controller-preflight.yaml
+- scene_id: scene-documents-convergence-preflight
+  name: Documents Convergence Preflight
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-convergence-preflight.yaml
+- scene_id: scene-documents-domain-sync
+  name: Documents Domain Sync
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-domain-sync.yaml
+- scene_id: scene-documents-execution-retirement
+  name: Documents Execution Retirement
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-execution-retirement.yaml
+- scene_id: scene-documents-family-runtime
+  name: Documents Family Runtime
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-family-runtime.yaml
+- scene_id: scene-documents-freshness
+  name: Documents Freshness
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-freshness.yaml
+- scene_id: scene-documents-guizi-scripts
+  name: Documents Guizi Scripts
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-guizi-scripts.yaml
+- scene_id: scene-documents-guizi-symlinks
+  name: Documents Guizi Symlinks
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-guizi-symlinks.yaml
+- scene_id: scene-documents-guizi-tools
+  name: Documents Guizi Tools
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-guizi-tools.yaml
+- scene_id: scene-documents-guozhuan-symlinks
+  name: Documents Guozhuan Symlinks
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-guozhuan-symlinks.yaml
+- scene_id: scene-documents-guozhuan-tools
+  name: Documents Guozhuan Tools
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-guozhuan-tools.yaml
+- scene_id: scene-documents-l4-convergence
+  name: Documents L4 Convergence
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-l4-convergence.yaml
+- scene_id: scene-documents-learning-control
+  name: Documents Learning Control
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-learning-control.yaml
+- scene_id: scene-documents-learning-helpers
+  name: Documents Learning Helpers
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-learning-helpers.yaml
+- scene_id: scene-documents-ocr-cutover
+  name: Documents Ocr Cutover
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-ocr-cutover.yaml
+- scene_id: scene-documents-ocr-preflight
+  name: Documents Ocr Preflight
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-ocr-preflight.yaml
+- scene_id: scene-documents-opc-runtime
+  name: Documents Opc Runtime
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-opc-runtime.yaml
+- scene_id: scene-documents-owner-job
+  name: Documents Owner Job
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-owner-job.yaml
+- scene_id: scene-documents-predictor-preflight
+  name: Documents Predictor Preflight
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-predictor-preflight.yaml
+- scene_id: scene-documents-public-runtime
+  name: Documents Public Runtime
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-public-runtime.yaml
+- scene_id: scene-documents-release-root
+  name: Documents Release Root
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-release-root.yaml
+- scene_id: scene-documents-root-control-tools
+  name: Documents Root Control Tools
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-root-control-tools.yaml
+- scene_id: scene-documents-root-oneoff
+  name: Documents Root Oneoff
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-root-oneoff.yaml
+- scene_id: scene-documents-root-tools
+  name: Documents Root Tools
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-root-tools.yaml
+- scene_id: scene-documents-schedule-cutover
+  name: Documents Schedule Cutover
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-schedule-cutover.yaml
+- scene_id: scene-documents-signals-preflight
+  name: Documents Signals Preflight
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-signals-preflight.yaml
+- scene_id: scene-documents-vault-health
+  name: Documents Vault Health
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-vault-health.yaml
+- scene_id: scene-documents-weijian-cleanup
+  name: Documents Weijian Cleanup
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-weijian-cleanup.yaml
+- scene_id: scene-documents-weijian-control
+  name: Documents Weijian Control
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-weijian-control.yaml
+- scene_id: scene-documents-weijian-runtime
+  name: Documents Weijian Runtime
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-weijian-runtime.yaml
+- scene_id: scene-documents-workspace-watch
+  name: Documents Workspace Watch
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-workspace-watch.yaml
+- scene_id: scene-documents-zcode-config
+  name: Documents Zcode Config
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-zcode-config.yaml
+- scene_id: scene-documents-zcode-state
+  name: Documents Zcode State
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-documents-zcode-state.yaml
+- scene_id: scene-engineering-delivery
+  name: Engineering Delivery
+  scene_class: business
+  scene_type: internal_pipeline
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: engineering-delivery
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-engineering-delivery.yaml
+- scene_id: scene-health-archive
+  name: Health Archive
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: draft
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - storage:local-health-ledger
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-health-archive.yaml
+- scene_id: scene-health-intake
+  name: Health Intake
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: draft
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - llm:local-classify
+  - storage:local-health-ledger
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-health-intake.yaml
+- scene_id: scene-health-visit-prep
+  name: Health Visit Prep
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: draft
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - llm:local-summarize
+  - storage:local-health-ledger
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-health-visit-prep.yaml
+- scene_id: scene-health-visit
+  name: Health Visit
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: draft
+  activation: preview
+  owner: xiamingxing
+  capability_refs:
+  - llm:local-classify
+  - storage:local-health-ledger
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-health-visit.yaml
+- scene_id: scene-inbox-to-decision
+  name: Inbox To Decision
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: assisted
+  activation: controlled
+  owner: governance-team
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-inbox-to-decision.yaml
+- scene_id: scene-knowledge-curation
+  name: Knowledge Curation
+  scene_class: business
+  scene_type: external_resource
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - iris:wpsnote
+  - iris:obsidian
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-knowledge-curation.yaml
+- scene_id: scene-meeting-supervision
+  name: Meeting Supervision
+  scene_class: business
+  scene_type: internal_pipeline
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - ref://capability/agent-workflow-lifecycle
+  - ref://capability/gac-local-gate
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-meeting-supervision.yaml
+- scene_id: scene-meeting-to-delivery
+  name: Meeting To Delivery
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: assisted
+  activation: controlled
+  owner: governance-team
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-meeting-to-delivery.yaml
+- scene_id: scene-periodic-reporting
+  name: Periodic Reporting
+  scene_class: business
+  scene_type: internal_pipeline
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - ref://capability/gac-local-gate
+  - ref://capability/agent-workflow-lifecycle
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-periodic-reporting.yaml
+- scene_id: scene-project-supervision
+  name: Project Supervision
+  scene_class: business
+  scene_type: internal_pipeline
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - ref://capability/gac-local-gate
+  - ref://capability/agent-workflow-lifecycle
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-project-supervision.yaml
+- scene_id: scene-research-pipeline
+  name: Research Pipeline
+  scene_class: business
+  scene_type: external_resource
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - iris:rss
+  - iris:zhihu
+  - iris:wxread
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-research-pipeline.yaml
+- scene_id: scene-research-to-insight
+  name: Research To Insight
+  scene_class: business
+  scene_type: inbound
+  domain: work
+  lifecycle: assisted
+  activation: controlled
+  owner: governance-team
+  capability_refs: []
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-research-to-insight.yaml
+- scene_id: scene-unified-inbox
+  name: Unified Inbox
+  scene_class: business
+  scene_type: external_resource
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - iris:apple_mail
+  - iris:netease_mailmaster
+  - iris:seeyon_oa
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-unified-inbox.yaml

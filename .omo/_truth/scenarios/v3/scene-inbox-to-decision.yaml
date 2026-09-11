@@ -1,0 +1,53 @@
+schema: scene-card/v3
+scene_id: scene-inbox-to-decision
+version: 3.0.0
+name: Inbox To Decision
+description: 统一收件箱消息自动分类、审查、决策、沉淀
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: assisted
+activation: controlled
+owner: governance-team
+approver: governance-agent
+approval_state: confirmed
+bet: BET-Y2Q1-T7-03
+runtime:
+  journey_ref: inbox-to-decision
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities: []
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 30 天内收件箱消息 auto_resolution_rate 持续 <0.6 且无人工复核增益, 场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: 新消息进入 unified-inbox
+input_contract: InboxMessage[] (sender, subject, body, attachments)
+result_contract: Decision | Task | Knowledge | Archived
+outcome_metric: auto_resolution_rate >= 0.6
+failure_cost: low
+data_classification: internal
+data_scope: workspace-inbox
+operator: omo-resident
+permission_ref: bos://resident/inbox/read
+sample_refs:
+- .omo/state/scene-cards/inbox-to-decision/samples/sample-1.json
+- .omo/state/scene-cards/inbox-to-decision/samples/sample-2.json
+- .omo/state/scene-cards/inbox-to-decision/samples/sample-3.json
