@@ -1767,8 +1767,45 @@ bets:
     spec_version: 1.0.0
   appetite: 3 days
   circuit_breaker: 凭据校验失败时自动锁定沙箱并触发警告。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-11-t10-05-offline-sandbox-vault-spec.md
+            sha256: sha256:29a2ca543c5b707f7c478644ad15a6db980d4708b285ac6bf01f27fa722dce4e
+          merged_reachable_commit:
+            ref: git://origin/main@c8e5a84c5b6a6fd8a57cd579bd687922c840a256
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-05.md
+            sha256: sha256:d35fabda1c106fa6872421fc2f46445989cc72d6a813bbbcc3fe30e139fa3c99
+          tests:
+            ref: receipt://bin/security/test_offline_sandbox.py
+            sha256: sha256:b8e86f9aec08e50b1d6cb2f2ec9c82a26483d53f8fd472beae04b74a11efeef2
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-05.md
+            sha256: sha256:d35fabda1c106fa6872421fc2f46445989cc72d6a813bbbcc3fe30e139fa3c99
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-05.md
+            sha256: sha256:d35fabda1c106fa6872421fc2f46445989cc72d6a813bbbcc3fe30e139fa3c99
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-05.md
+            sha256: sha256:d35fabda1c106fa6872421fc2f46445989cc72d6a813bbbcc3fe30e139fa3c99
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-05.md
+            sha256: sha256:d35fabda1c106fa6872421fc2f46445989cc72d6a813bbbcc3fe30e139fa3c99
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T4-06
+  done_at: '2026-09-11'
   done_when:
   - 完成 Local Secure Vault 零明文存储实现
   - 断网离线状态下全套 Spine 拟草与署名演练通过
@@ -1781,10 +1818,11 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: 移动端与桌面端本地离线安全沙箱与主权凭据金库
   track: T10-MATURITY
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: PYTHONPATH=bin python -m security.test_offline_sandbox
     expect: exit 0
