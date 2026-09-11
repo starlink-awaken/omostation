@@ -371,8 +371,8 @@ jobs:
     schedule: "30 6 * * *"
     command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-v3-guardrail.py validate-all --allow-forward-refs >> runtime/cron/scene-guardrail.log 2>&1'
     planes: [crontab]
-    reality: declared_only
-    status: proposed
+    reality: crontab_installed
+    status: active
     owner: governance-team
     sfop_slot: S
 
@@ -380,8 +380,8 @@ jobs:
     schedule: "*/15 9-18 * * 1-5"
     command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-signal-poller.py poll >> runtime/cron/scene-signal-poll.log 2>&1'
     planes: [crontab]
-    reality: declared_only
-    status: proposed
+    reality: crontab_installed
+    status: active
     owner: governance-team
     sfop_slot: S
     note: "工作日 9-18 点每 15 分钟轮询邮件信号并触发场景 (assisted+ live, shadow dry-run)"
