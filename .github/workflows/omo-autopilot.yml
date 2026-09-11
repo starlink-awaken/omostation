@@ -8,48 +8,93 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  actions: write
 
 jobs:
   metabolic_loop:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
         with:
           submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
         continue-on-error: true
+
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
           version: "latest"
-          
+
       - name: Install OMO Tools
         run: |
           uv tool install --force ./projects/omo
           uv tool install --force ./projects/omo  # omo-debt 内包 (ADR-0412)
-          
-      - name: 1. Perception (Sense Debt)
+
+      - name: 1. Perception (Sense Debt, staging only)
+        id: sense
         run: |
-          # ADR-0412: CI installs the omo-bundled omo-debt (uv tool install ./projects/omo),
-          # which does not expose the standalone 'analyze' subcommand. Use the bundled
-          # refresh (refresh debt output state) + dispatch (materialize current debt
-          # output packet) to sense the current debt posture.
-          omo-debt refresh --omo-dir .omo --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          omo-debt dispatch --omo-dir .omo --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          
-      - name: 2. Metabolism (GC)
+          # Mutating debt refresh/dispatch run only against a throwaway .omo copy.
+          STAGE_ROOT=$(mktemp -d)
+          if [ -d .omo ]; then
+            cp -a .omo "$STAGE_ROOT/.omo"
+          else
+            mkdir -p "$STAGE_ROOT/.omo"
+          fi
+          NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          omo-debt refresh --omo-dir "$STAGE_ROOT/.omo" --now "$NOW"
+          omo-debt dispatch --omo-dir "$STAGE_ROOT/.omo" --now "$NOW"
+          echo "stage_root=$STAGE_ROOT" >> "$GITHUB_OUTPUT"
+
+      - name: 2. Metabolism preview (GC dry-run)
         run: |
-          omo gc
-          
-      - name: 3. Ledger Snapshot (Governance Log)
+          # Live governed .omo must stay unmodified under proposal-only.
+          omo gc --dry-run
+
+      - name: 3. Ledger status (read-only)
         run: |
-          omo ledger --message "Automated Daily Metabolic Snapshot"
-          
-      - name: Create Pull Request if changes exist
-        uses: peter-evans/create-pull-request@v6
+          omo ledger status
+
+      - name: Emit publication proposal artifact
+        run: |
+          set -euo pipefail
+          mkdir -p proposal-artifact
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          stage = Path(os.environ["STAGE_ROOT"])
+          proposal = {
+              "schema": "github-publication-proposal/v1",
+              "workflow": "omo-autopilot",
+              "status": "proposal_only",
+              "base_sha": os.environ["BASE_SHA"],
+              "head_sha": os.environ["BASE_SHA"],
+              "base_ref": os.environ["BASE_REF"],
+              "proposed_ref": os.environ["PROPOSED_REF"],
+              "ref": os.environ["PROPOSED_REF"],
+              "instruction": "PUBLICATION_OWNER_REQUIRED",
+              "managed_remediation_entrypoint": "bin/gac/clone-lifecycle.py integrate",
+              "remediation": {
+                  "summary": "OMO metabolic loop sensed debt in staging; no cloud ref/PR write.",
+                  "paths": [".omo"],
+                  "staging_omo_dir": str(stage / ".omo"),
+              },
+          }
+          out = Path("proposal-artifact/publication-proposal.json")
+          out.write_text(json.dumps(proposal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print(out.read_text(encoding="utf-8"))
+          PY
+        env:
+          BASE_SHA: ${{ github.sha }}
+          BASE_REF: ${{ github.ref_name }}
+          PROPOSED_REF: proposal/omo-daily-metabolism
+          STAGE_ROOT: ${{ steps.sense.outputs.stage_root }}
+
+      - name: Upload proposal artifact
+        uses: actions/upload-artifact@v4
         with:
-          commit-message: "chore(omo): daily metabolic evolution"
-          branch: omo-daily-metabolism
-          title: "🤖 OMO Daily Metabolic Evolution"
-          body: "Automated cleanup, debt assessment, and ledger snapshot."
+          name: omo-autopilot-publication-proposal
+          path: proposal-artifact/publication-proposal.json
+          retention-days: 30
