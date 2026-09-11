@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """CR-RESIDENT-BOS-01: resident 接口 BOS 路由 CI 校验.
 
-resident 接口 (status/roles/daemon/decision/execute) 必须通过 bos://resident/* 暴露,
-禁止绕过 BOS 直连 resident 内部数据面. 校验三个来源一致:
+resident 接口 (status/roles/daemon/decision/execute + task_gateway 4 端点) 必须通过
+bos://resident/* 暴露, 禁止绕过 BOS 直连 resident 内部数据面. 校验三个来源一致:
 - SSOT: projects/agora/etc/bos-services.yaml (domain: resident 服务)
 - 注册: .omo/_knowledge/bos-registry.json (domain: resident 条目)
 - 白名单: agora/mcp/resolver/services_types.py (BOS_URI_DOMAINS 含 resident)
 
 rule: resident.call.route == 'bos://resident/*'
-期望 4 条必需 URI (status/roles/daemon/decision); execute 缺失按 advisory warn 报告.
+期望 8 条必需 URI (status/roles/daemon/decision + task/submit/task/status/sediment-trigger/decision-trigger); execute 缺失按 advisory warn 报告.
+T10-125 扩展: 新增 task_gateway 4 端点 (异步任务队列调度中枢).
 """
 
 from __future__ import annotations
@@ -26,11 +27,16 @@ SERVICES_TYPES = (
 )
 
 # 期望 resident 必需 URI (execute 作为可选缺口 advisory 报告)
+# T10-125 新增 task_gateway 4 URI (task/submit, task/status, sediment/trigger, decision/trigger)
 REQUIRED_URIS = [
     "bos://resident/core/status",
     "bos://resident/core/roles",
     "bos://resident/daemon/once",
     "bos://resident/decision/run",
+    "bos://resident/task/submit",
+    "bos://resident/task/status",
+    "bos://resident/sediment/trigger",
+    "bos://resident/decision/trigger",
 ]
 OPTIONAL_URIS = ["bos://resident/execute/run"]
 RESIDENT_URI_PREFIX = "bos://resident/"
