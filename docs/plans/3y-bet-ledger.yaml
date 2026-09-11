@@ -490,9 +490,9 @@ bets:
   appetite: 3 days
   circuit_breaker: 发现不明 owner、不可达 gitlink、失败 required check、scope 外写面或共享树需 destructive
     cleanup 时立即停止并保留原状。
-  completed_at: '2026-09-11'
   depends_on:
   - BET-Y1Q3-T6-15
+  done_at: '2026-09-11'
   done_when:
   - 每个根仓/子仓 dirty surface 被标记为 owner-owned、generated、unknown 或已恢复，并有对应处置。
   - 可证明 child-main 可达且 required checks 通过的用户署名交付按 child-first PR 顺序合入；其余分支保留并记录阻断原因。
