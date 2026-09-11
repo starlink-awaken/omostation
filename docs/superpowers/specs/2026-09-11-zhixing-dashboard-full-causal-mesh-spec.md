@@ -1,13 +1,16 @@
 ---
 id: SPEC-2026-09-11-ZHIXING-DASHBOARD-FULL-CAUSAL-MESH
+schema_version: specification/v1
+spec_version: 1.0.0
 title: 43191 主权控制面全要素因果图谱串联与六面动态闭环规范
 status: accepted
 lifecycle: spec
 owner: governance-team
+bet_id: BET-Y1Q4-T8-25
+binding_bet: BET-Y1Q4-T8-25
 created: 2026-09-11
 last_updated: 2026-09-11
 last-reviewed: 2026-09-11
-binding_bet: BET-Y1Q4-T8-25
 ---
 
 # 43191 主权控制面全要素因果图谱串联与六面动态闭环规范
