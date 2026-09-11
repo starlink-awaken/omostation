@@ -1,4 +1,4 @@
-last_scan: 1789109110.898299
+last_scan: 1789110270.4023879
 services:
   cron-service:
     health_check: healthy
@@ -9,29 +9,29 @@ services:
       last_healthy_seconds: 0
       pid: '8315'
       status: running
-      uptime_seconds: 258514
-    timestamp: 1789109110.898299
+      uptime_seconds: 259673
+    timestamp: 1789110270.4023879
     type: daemon
   gbrain:
     name: gbrain
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1789109110.898299
+    timestamp: 1789110270.4023879
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
       status: scheduled
-    timestamp: 1789109110.898299
+    timestamp: 1789110270.4023879
     type: scheduled
   kos:
     name: kos
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1789109110.898299
+    timestamp: 1789110270.4023879
     type: integrated
   ollama:
     health_check: healthy
@@ -40,12 +40,12 @@ services:
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1789109110.898299
+    timestamp: 1789110270.4023879
     type: integrated
   runtime-mcp:
     name: runtime-mcp
     runtime:
       last_healthy_seconds: 0
       status: unmanaged
-    timestamp: 1789109110.898299
+    timestamp: 1789110270.4023879
     type: mcp
