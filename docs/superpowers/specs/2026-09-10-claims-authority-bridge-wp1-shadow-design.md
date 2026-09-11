@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.6.0
+spec_version: 1.7.0
 status: accepted
 lifecycle: contract
 owner: governance-team
@@ -30,13 +30,13 @@ contract is
 `docs/superpowers/specs/2026-09-09-claims-authority-bridge-design.md` version 1.0.0,
 SHA-256 `a419e2fb3cd67026edebd39b25a1e1b77e6c92978ce1cf1be6b8e4be19cf8c58`.
 Accepted version 1.0.0 allocated `BET-Y1Q4-T10-145` and authorized only its
-implementation plan. Versions 1.1.2–1.5.0 authorized and delivered Waves A and B1–B4.
-Version 1.6.0 is a complete non-union replacement that removes every Wave B4 path from
-the current WorkPacket and authorizes only the root `projects/omo` gitlink pointer
-transaction. It advances the root submodule pointer to an authoritative child main
-OID that already contains Wave A, after B1–B4 are on root main. It preserves v1 as
-the only effective publication authority, keeps `value_indicator_policy=false`, and
-still does not activate production shadow mode or materialize WP2.
+implementation plan. Versions 1.1.2–1.6.0 authorized and delivered Waves A, B1–B4 and
+the root `projects/omo` pointer. Version 1.7.0 is a complete non-union replacement that
+removes the gitlink path from the current WorkPacket and authorizes only the two Wave D
+evidence surfaces. Before the mandatory 24-hour observation completes it may record a
+non-terminal shadow report only; it must not write `done`, expand completion/value
+truth, activate production shadow mode or materialize WP2. It preserves v1 as the only
+effective publication authority and keeps `value_indicator_policy=false`.
 
 ## 2. Problem and current-state audit
 
@@ -909,26 +909,29 @@ complete the parent BET or create WP2.
 
 ## 17. Acceptance record and transition gate
 
-Versions 1.0.0–1.5.0 remain immutable historical authority for plan/Wave-A and
-Waves B1–B4. Version 1.5.0 Wave B4 merged at `73978058c2c908f11c891278ce043dde5f95d1db`
-with reviewed source `03b52b1aaed8de31ed33a74498f79f5881822d39`; its implementation run
-`20260911T123344Z-bet-execution-1f98e263` closed with locks zero. Version 1.6.0
-acceptance requires and records:
+Versions 1.0.0–1.6.0 remain immutable historical authority for plan/Wave-A,
+Waves B1–B4 and Wave C. Version 1.6.0 Wave C merged at
+`74f72d5c5743dc2149ab87dd9fe6079c3ac86ff0` with reviewed source
+`aec9b308759e827aec1a564838e8aef220ec7bcc`; its implementation run
+`20260911T125855Z-bet-execution-5f594d01` closed with locks zero after advancing
+`projects/omo` to `83c27519bf0b574beb192d37a0245d221806d4c2`. Version 1.7.0 acceptance
+requires and records:
 
-1. Waves B1–B4 are on root main with exact reviewed objects and closed runs/locks;
+1. Waves A/B1–B4/C are on authoritative main with exact reviewed objects and closed
+   runs/locks;
 2. the Ledger retains candidate `BET-Y1Q4-T10-145`, one current accepted binding and no
    completion/value expansion;
-3. the current WorkPacket contains exactly `projects/omo` and rejects the 1.5.0 Wave B4
-   WorkPacket hash `sha256:4e7b88d23c8a110181b38b15a183c93f01543243b60276b69daaaa89fce0a2d8`;
-4. `implementation_authorized=true` authorizes only the root pointer transaction under
-   the repository submodule-pointer workflow; this binding changes no source besides
-   Spec/Ledger/waiver;
+3. the current WorkPacket contains exactly the two Wave D evidence paths and rejects
+   the 1.6.0 WorkPacket hash `sha256:cfbfccdadefa05b5882316748a892a79b44a1b3ace44dcfe98c6e90d94ba05e8`;
+4. `implementation_authorized=true` authorizes only Wave D evidence under this
+   WorkPacket; host activation remains a separately recorded host decision (Task 16)
+   and is not authorized by this binding alone;
 5. appetite remains 12 days of elapsed delivery time, including the mandatory
    24-hour observation, and is not a completion or value claim;
 6. every later binding replaces rather than appends `write_surfaces`, keeps one current
    `accepted_specifications` entry and rejects an earlier WorkPacket hash;
-7. the pointer target must be a double-read child main OID containing Wave A and
-   reachable without local-only objects; and
-8. Wave C starts only after this 1.6.0 binding merges, its Spec digest and WorkPacket
-   are verified, the binding run closes and every lock is zero on a fresh managed
-   successor.
+7. before the full 24-hour window completes, Wave D may write only a non-terminal
+   shadow report (`done=false`, no `done_at`, operational/value remain NOT_PROVEN); and
+8. Wave D evidence writing starts only after this 1.7.0 binding merges, its Spec digest
+   and WorkPacket are verified, the binding run closes and every lock is zero on a
+   fresh managed successor.

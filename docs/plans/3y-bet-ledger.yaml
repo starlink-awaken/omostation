@@ -27287,11 +27287,11 @@ bets:
     shadow graduation，并为尚未物化的 WP2 提供可审计前置证据。
   depends_on: []
   non_goals:
-  - 1.6.0 仅授权 root projects/omo gitlink 指针事务，不修改 B4/云端/child 源码、runtime 或启动 WP2
+  - 1.7.0 仅授权 Wave D 两个证据路径，不修改实现/gitlink/host runtime、不提前写 done、不启动 WP2
   - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
   - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
   - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
-  - 不把工程、CI、shadow 或 Git 成功计入个人价值
+  - 不把工程、CI、shadow 或 Git 成功计入个人价值；24h 观察未满不得毕业
   done_when:
   - 每个 1.0.0 至 1.7.0 accepted binding 均为完整非 union 替换，旧 run 已关闭且锁归零
   - canonical store、receipt chain、幂等、CAS、high-water、crash-tail、备份轮转与完整 RED matrix
@@ -27318,7 +27318,8 @@ bets:
   workflow: submodule-pointer-transaction
   underlying_workflow: project-code-change
   write_surfaces:
-  - projects/omo
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+  - .omo/_truth/governance-evidence/claims-authority-bridge-wp1-shadow-graduation.json
   pasw_required: false
   risk_level: L2
   human_gate: true
@@ -27326,8 +27327,8 @@ bets:
   retro: required
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.6.0
-    content_digest: sha256:5d1a34964b57e42cbbd5df99edcb789094e408103052eee63d21d02872e83689
+    spec_version: 1.7.0
+    content_digest: sha256:ad0a40bb9fddcab5b4eb8acb54ad524ccb934280b09a4eb48d74bfeadce58db2
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -27343,11 +27344,10 @@ bets:
         evidence: {}
     overall_state: evaluating
   circuit_breaker: >-
-    1.6.0 WorkPacket 必须只含 projects/omo 并保持 implementation_authorized=true；
-    任一 B4/child 源码/plan/evidence/WP2/runtime 写面、scope union、旧 WorkPacket hash 复用、
-    非 submodule-pointer 事务改 gitlink、第二 publication owner、completion/value 扩张或
-    默认门禁失败都立即停止。1.7.0 只能在 Wave C root/child 可达、1.6.0 run 关闭且锁归零后
-    通过独立 binding 完整替换。
+    1.7.0 WorkPacket 必须只含两个 Wave D 证据路径并保持 implementation_authorized=true；
+    任一实现/gitlink/host 激活、提前写 done/done_at、completion/value 扩张、缩短 24h 窗、
+    scope union、旧 WorkPacket hash 复用或默认门禁失败都立即停止。毕业只能在满窗且独立
+    审计通过后由新一轮授权证据写入。
 - id: BET-Y1Q4-T10-146
   track: T10-MATURITY
   window: Y1Q4
