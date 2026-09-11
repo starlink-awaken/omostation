@@ -27378,6 +27378,56 @@ bets:
   value_indicator_policy: false
   circuit_breaker: 外发内容固定为测试邮件; 频次受 T4-06 网关 daily_send_cap 熔断保护
   retro: required
+- id: BET-Y1Q4-T16
+  track: T16-DRIFT-GUARD
+  window: Y1Q4
+  title: ops 注册表防漂移双闸 — check-signals + cron 准入
+  appetite: 1 day
+  priority: P2
+  status: candidate
+  goal: >-
+    BET-Y1Q4-T14 一次性清理 303 missing 后漂移机制仍在。建双闸:
+    1) ops check-signals 常态 drift 检测 (cron/launchd/file anchor 存在性);
+    2) gen-service-configs --validate 增加 cron 准入规则
+    (拒绝占位 entrypoint, 批次 18 误判根因)。
+  depends_on:
+  - BET-Y1Q4-T14
+  non_goals:
+  - 不重写 ops 工具其它子命令
+  - 不做 268 条 manual 能力项迁出 (另立 BET)
+  - 不在 CI 阻断本机状态
+  done_when:
+  - check-signals 对 T14 清理后注册表输出 0 drift (本机)
+  - --validate 对当前注册表 0 violations (存量 disabled 占位 grandfather)
+  - 测试覆盖批次 18 两类误判回归 (omo/omostation 词边界, 占位 entrypoint)
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --validate
+    expect: exit 0
+  - cmd: python3 bin/ops/cli.py check-signals
+    expect: exit 0 on main after T14 cleanup
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/ops/cli.py
+  - bin/mof/gen-service-configs.py
+  - .omo/_truth/registry/services.yaml
+  - docs/superpowers/specs/2026-09-11-ops-drift-guard-design.md
+  pasw_required: false
+  risk_level: L1
+  human_gate: false
+  value_indicator_policy: false
+  retro: required
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-ops-drift-guard-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3237cf963d27baa31fb7e7ac887e16d917b88390f00920bf0f4a68d99c5fa892
+    decision_ref: decision://accepted/BET-Y1Q4-T16
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -27516,7 +27566,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 383
+  total_bets: 384
   windows:
   - Y1Q1
   - Y1Q2
