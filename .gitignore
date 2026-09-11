@@ -326,3 +326,4 @@ bin/.omo/
 .commandcode/
 runtime/mos/
 .tokensave
+.claude-flow/
