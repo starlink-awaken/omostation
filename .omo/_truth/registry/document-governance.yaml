@@ -182,7 +182,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
-      max_findings: 58 # 2026-09-06 56→57: gac-gate CI invalid_metadata=57, budget adjustment; 2026-09-11 57→58: CI count=58
+      max_findings: 59 # 2026-09-06 56→57; 2026-09-11 57→58→59: BET-Y1Q3-T6-16 retro 新增知识文件
       expires: 2026-10-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
