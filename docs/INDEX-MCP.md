@@ -3,7 +3,7 @@
 > 自动生成于 1970-01-01T00:00:00Z
 > 源: `docs/generated/capability-registry.yaml`
 
-全生态共 **27** 个 MCP 服务器, **640** 个工具。
+全生态共 **27** 个 MCP 服务器, **642** 个工具。
 
 | 服务器 | 层 | 工具数 | 传输 | 端口 | 源文件 |
 |--------|-----|--------|------|------|--------|
@@ -16,8 +16,8 @@
 | `kos` | L2 | 44 | stdio | — | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `kos-stdio` | L2 | 44 | stdio | — | `projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py` |
 | `codeanalyze` | L2 | 25 | stdio | — | `projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py` |
+| `omo` | L2 | 24 | stdio | — | `projects/omo/src/omo/mcp_server.py` |
 | `metaos` | L2 | 24 | stdio | — | `projects/metaos/src/metaos/mcp_server.py` |
-| `omo` | L2 | 22 | stdio | — | `projects/omo/src/omo/mcp_server.py` |
 | `kronos` | L2 | 16 | stdio | — | `projects/knowledge/kairon/packages/kronos/src/kronos/mcp_server.py` |
 | `iris` | L2 | 8 | stdio | — | `projects/knowledge/kairon/packages/iris/src/iris/mcp_server.py` |
 | `sophia` | L2 | 8 | stdio | — | `projects/knowledge/kairon/packages/sophia/src/sophia/server/mcp_server.py` |
@@ -77,13 +77,13 @@
 
 `analyze_project`, `architecture_generate_diagram`, `architecture_get_code_metrics`, `ast_search`, `audit_project`, `cgc_query`, `codegraph_callees`, `codegraph_callers`, `codegraph_context`, `codegraph_get_affected_tests`, `codegraph_get_impact_radius`, `codegraph_get_symbol_graph`, `codegraph_init`, `codegraph_search`, `codegraph_sync`, `crg_build`, `crg_status`, `export_graph`, `extract_policy_docs`, `pack_repo`, `rg_search`, `scan_directory`, `status`, `workflow_impact_analysis`, `workflow_onboarding`
 
+### omo (24 tools)
+
+`acquire_lock`, `agent_host_tick`, `cards_check`, `cards_create`, `cards_search`, `cards_status`, `cards_update`, `check_gac_rule`, `check_lock`, `journey_run_dag`, `list_locks`, `omo_bridge`, `omo_debt_list`, `omo_debt_summary`, `omo_gc`, `omo_metacognition`, `omo_worker_dispatch`, `omo_worker_reclaim`, `omo_yield_task`, `release_lock`, `scene_calibrate`, `scene_card_status`, `scene_execute`, `validate_task`
+
 ### metaos (24 tools)
 
 `handle_day`, `handle_device_orchestrator`, `handle_evening`, `handle_family_brief`, `handle_gate`, `handle_health`, `handle_morning`, `handle_request`, `handle_review`, `handle_ssot`, `handle_status`, `handle_trace`, `metaos-engine`, `metaos_day`, `metaos_device_orchestrator`, `metaos_evening`, `metaos_family_brief`, `metaos_gate`, `metaos_health`, `metaos_morning`, `metaos_review`, `metaos_ssot`, `metaos_status`, `metaos_trace`
-
-### omo (22 tools)
-
-`acquire_lock`, `agent_host_tick`, `cards_check`, `cards_create`, `cards_search`, `cards_status`, `cards_update`, `check_gac_rule`, `check_lock`, `journey_run_dag`, `list_locks`, `omo_bridge`, `omo_debt_list`, `omo_debt_summary`, `omo_gc`, `omo_metacognition`, `omo_worker_dispatch`, `omo_worker_reclaim`, `omo_yield_task`, `release_lock`, `scene_card_status`, `validate_task`
 
 ### kronos (16 tools)
 

@@ -53,3 +53,17 @@ metadata:
   created_at: '2026-09-11T06:49:53Z'
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: session-2026-09-11-age-v2-sfop-law3
+
+# 2026-09-11 补充调研(同一 session 内, worktree ws-age-v2-sfop-law3):
+# 关键细节: SFOP B槽写的 "AGE-v2 Cell" 物理上就在 projects/omo 内部
+# (omo/resident/cell.py), 跟 S槽的 Mesh dispatcher(omo/workflow_mesh.py)
+# 是同一个项目(COMP-WS-omo)里的两个模块, 不是两个独立子仓。
+# 现有 CR-SFOP-05 检查(B_PROJECTS = {aetherforge, omlxc, runtime, metaos},
+# H_PROJECTS = {cockpit, cockpit-ui, family-hub})全部是按"跨项目 import
+# 边界"设计的, 这套逻辑套不到"同一项目内部模块边界"这种情况——omo 既是
+# S槽持有者又内含 B槽组件, 需要一种新的检查思路(扫 cli.py 的命令路由表,
+# 而不是扫跨项目 import 图), 不能直接照抄 CR-SFOP-05 的模式。
+# workflow_mesh.py 本身是一套基于事件溯源的通用 step-dispatch 状态机
+# (admitted→dispatched→running→...), 不是按后端类型(Cell/aetherforge/
+# omlxc/metaos)命名分发的, 具体怎么让 cell.py 的 plan/execute/verify
+# 接入这套 admission/dispatch 语义, 需要专门设计, 不是搬运几行代码。
