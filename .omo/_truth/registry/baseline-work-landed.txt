@@ -62,4 +62,5 @@
 20260825T222712Z-project-code-change-81c6364a  # age=8d
 20260825T231805Z-project-code-change-afc51383  # age=8d
 20260826T025242Z-project-code-change-f31696d0  # age=8d
+20260827T230318Z-bet-execution-aecf5cb2  # age=7d, PR #2376 merged a6a56b47 (shallow clone 无法验证)
 20260828T044529Z-governance-state-mutation-69537635
