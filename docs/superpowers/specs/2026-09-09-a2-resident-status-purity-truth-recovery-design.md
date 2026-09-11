@@ -1,11 +1,12 @@
 ---
 schema_version: specification/v1
-spec_version: 1.1.0
+spec_version: 1.2.0
 status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-09-09
-last-reviewed: 2026-09-09
+last-reviewed: 2026-09-12
+last_updated: 2026-09-12
 title: A2 Resident Status Purity Truth Recovery
 bet_id: BET-Y1Q4-T10-144
 implementation_authorized: true
@@ -20,8 +21,13 @@ human_gate: true
 
 This document is the accepted contract for `BET-Y1Q4-T10-144`. Version 1.0.0
 authorized only the child RED-to-GREEN implementation in §10; that immutable
-stage closed after child PR #152 merged. Under the Principal's time-bounded
-delegated authority, version 1.1.0 authorizes only the fresh WP-A2-ROOT gitlink
+stage closed after child PR #152 merged. Version 1.1.0 authorized only the
+WP-A2-ROOT gitlink integration and is superseded. Version 1.2.0 is a complete
+non-union replacement that authorizes only the genesis-`NULL` probe correction
+in §10 (two child paths). The 1.1.0 gitlink-only surface is revoked for new
+runs. The four original child paths from 1.0.0 remain closed except the two
+named below. Under the Principal's time-bounded delegated authority, version
+1.1.0 previously authorized only the fresh WP-A2-ROOT gitlink
 integration in §10. The four child source/test paths are revoked for new runs,
 not appended to the root scope. Version 1.1.0 does not authorize a host canary,
 recovery command, service/database/process mutation, completion transition or
@@ -329,6 +335,42 @@ run may advance only that mode-160000 gitlink to the already merged,
 authoritative child-main commit or a verified child-main successor containing
 it. The root PR must not carry source code, tests, Ledger/Spec changes, host
 evidence or unrelated gitlinks.
+
+
+## 10.x Wave — Spec 1.2.0 genesis NULL probe correction
+
+Version 1.2.0 authorizes exactly:
+
+```text
+projects/omo/src/omo/resident/status.py
+projects/omo/tests/unit/test_resident_status.py
+```
+
+### Problem
+
+Production `event_log.previous_hash` for sequence 1 is SQL `NULL` (see
+`LedgerBroker.append`: `previous_hash = tip["event_hash"] if tip is not None else None`
+and `verify_chain` which expects `None` at genesis). The read-only status probe
+initialized `prev_hash = ""` and therefore reported a false `chain broken at
+read-only probe` on every healthy production ledger. Host diagnosis
+`a2-t10-144-host-canary-20260909T193729Z/ledger-readonly-diagnosis.json`
+classified this as a probe false negative; `database_repair_required=false`.
+
+### Required change
+
+`_probe_ledger_once()` must treat genesis expected previous hash as `None`,
+matching `LedgerBroker.verify_chain`. Empty-string genesis in synthetic unit
+fixtures remains acceptable by normalizing both `None` and `""` only at the
+genesis position (sequence start), or by using `None` in fixtures. Subsequent
+links continue exact string equality.
+
+### Non-goals for 1.2.0
+
+- No root gitlink bump in this WorkPacket (follow with a separate pointer
+  transaction after child merge).
+- No host/runtime mutation, no ledger rewrite, no WAL checkpoint from status.
+- No completion/value evidence, no T10-142 changes, no A6–A9 work.
+
 
 ## 11. RED-to-GREEN matrix
 
