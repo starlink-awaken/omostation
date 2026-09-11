@@ -339,9 +339,9 @@ services:
   depends_on: []
   disabled_reason: "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
 - id: aetherforge.gateway
-  enabled: false
+  enabled: true
   generate: false
-  config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist — 已移除
+  config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist
   scheduler: launchd
   trigger: keepalive
   label: com.aetherforge.gateway
@@ -361,7 +361,10 @@ services:
   notes: 'aetherforge OpenAI 兼容门面 — LiteLLM :4000 的继任者。 唯一公共推理 URI 是 bos://compute/aetherforge/infer；逻辑模型、认证与公共数据面
     归 AetherForge，本地物理 placement 与执行经 omlxc Unix Socket API。 硬约束: 启动路径不得有外部网络依赖(guard
     直接用项目 venv 解释器, 不走 uv run), 且显式隔离系统代理 —— LiteLLM 曾栽在这两条上。 绑到 loopback 之外(--bind
-    tailnet)必须配 AETHERFORGE_API_KEY, 否则拒绝启动 —— 绑定范围变大和鉴权消失不允许同时发生。'
+    tailnet)必须配 AETHERFORGE_API_KEY, 否则拒绝启动 —— 绑定范围变大和鉴权消失不允许同时发生。 2026-09-11:
+    发现 plist 在此前的工作区路径迁移中丢失，服务实际停跑多时(与同期 ws-t1069 死引用系列同根)，
+    但守护脚本/venv/Keychain 密钥均完好；重建 plist 并 launchctl load 后现场验证 health=200、
+    鉴权/v1/models 200、9 compute engines/20 aliases 正常发现，无需改动脚本或依赖代码。'
   liveness:
     signal: http
     endpoint: http://localhost:9290/health
