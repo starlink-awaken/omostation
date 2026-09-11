@@ -27525,7 +27525,8 @@ bets:
   write_surfaces:
   - bin/gac/orca-r0-verify.py
 - appetite: 10 days
-  circuit_breaker: 任何验证脚本意外触发真实 Multica 派工立即停止，该风险优先于交付进度。
+  circuit_breaker: 1.0.0 WorkPacket 必须只含 bin/gac/multica-as0-verify.py；禁止 union；禁止任何
+    Multica writer 派工/create/update/delete/trigger/daemon start|stop|restart；门禁失败立即停止。
   done_when:
   - 30 个 API 端点逐一有可复算的只读探测命令与预期结果
   - 7 个 topology 关系逐一有可复算的只读验证
@@ -27548,9 +27549,14 @@ bets:
   - cmd: python3 bin/gac/multica-as0-verify.py --json
     expect: exit 0
   window: Y1Q4
-  workflow: bet-execution
+  workflow: project-code-change
   write_surfaces:
   - bin/gac/multica-as0-verify.py
+  accepted_specifications:
+  - content_digest: sha256:fcbd332a7fea213da5953fc9b25fc48c4166b5bd4ceade7b6d03290b6a91ddad
+    decision_ref: decision://accepted/BET-Y1Q4-T10-150
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-multica-as0-verify-design.md
+    spec_version: 1.0.0
 - appetite: 15 days
   circuit_breaker: 复核后发现该事务链已存在但未被发现时，立即停止重复实现，转为补充证据登记。
   done_when:
