@@ -2,4 +2,8 @@
 # 机制 22c: pre-commit 委托给 hook-runner.sh
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
+# 子模块上下文守卫: 主仓 hook-runner 在子模块不存在 (6 个子模块经符号链接
+# 复用本 hook), 治理门禁设计仅适用主仓 — 缺守卫时子模块每次 commit 都
+# 因路径不存在失败, 被迫 --no-verify (2026-09-11 实证, l4-kernel#14)。
+[ -f "$ROOT/bin/gac/hook-runner.sh" ] || exit 0
 bash "$ROOT/bin/gac/hook-runner.sh" --hook pre-commit
