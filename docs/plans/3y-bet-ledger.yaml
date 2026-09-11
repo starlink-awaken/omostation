@@ -28059,6 +28059,39 @@ bets:
   write_surfaces:
   - docs/reports/
   - .omo/_knowledge/retros/
+- appetite: 1 sprint
+  created_at: '2026-09-11'
+  discipline: T10-REPO-HYGIENE
+  id: BET-Y1Q4-T10-154
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P1
+  status: candidate
+  title: 'Diff Lifecycle Closure: 检测孤立未应用代码 diff'
+  track: T10-REPO-HYGIENE
+  window: Y1Q4
+- appetite: 1 sprint
+  created_at: '2026-09-11'
+  discipline: T10-REPO-HYGIENE
+  id: BET-Y1Q4-T10-155
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P2
+  status: candidate
+  title: 'Diff Debt Tracking: 跟踪代码变更中的历史债务'
+  track: T10-REPO-HYGIENE
+  window: Y1Q4
+- appetite: 1 sprint
+  created_at: '2026-09-11'
+  discipline: T10-REPO-HYGIENE
+  id: BET-Y1Q4-T10-156
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P2
+  status: candidate
+  title: 'Diff Growth Detection: 检测单 PR 的代码膨胀'
+  track: T10-REPO-HYGIENE
+  window: Y1Q4
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -28197,7 +28230,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 384
+  total_bets: 387
   windows:
   - Y1Q1
   - Y1Q2
