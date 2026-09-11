@@ -2418,7 +2418,8 @@ bets:
   priority: P0
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: 2026-09-11
   title: Resident BOS 双向任务网关与异步队列调度中枢 (BOS Resident Task Gateway & Async Queue)
   track: T10-MATURITY
   underlying_workflow: project-code-change
