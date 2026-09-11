@@ -49,3 +49,13 @@ failure_cost: 任务类型误判导致流程走错分支
 data_classification: internal
 data_scope: task-metadata-only
 operator: admin-classify-dispatch
+triggers:
+- type: signal
+  signal: email.received
+  connector: netease_mailmaster
+  filter: subject MATCHES notification
+  debounce: 300s
+- type: signal
+  signal: email.received
+  connector: apple_mail
+  debounce: 300s

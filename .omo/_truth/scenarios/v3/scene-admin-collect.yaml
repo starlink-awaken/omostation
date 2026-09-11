@@ -48,3 +48,13 @@ failure_cost: 截止漏登记导致催办缺失
 data_classification: internal
 data_scope: task-deadline-metadata
 operator: admin-collect-dispatch
+triggers:
+- type: signal
+  signal: email.received
+  connector: netease_mailmaster
+  filter: subject MATCHES notification
+  debounce: 300s
+- type: signal
+  signal: email.received
+  connector: apple_mail
+  debounce: 300s

@@ -10,7 +10,7 @@ last-reviewed: 2026-09-09
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-共 **217** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **220** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
@@ -1749,6 +1749,7 @@ cockpit vault --help          # 完整参数面
 | `cockpit batch` | 批量研究模式: 逐个处理多个 topic，汇总结果 |
 | `cockpit cache` | 检查三级分层缓存与 Radix 前缀树状态 (含基准压测) |
 | `cockpit calendar` | 多维日历感知与督办闭环 (T7-02) |
+| `cockpit calibrate` | [v2] 校准场景卡 |
 | `cockpit client` | 以 REPL 模式连接到 MCP server |
 | `cockpit cluster` | 异构三节点智能路由与拓扑诊断 |
 | `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
@@ -1766,6 +1767,7 @@ cockpit vault --help          # 完整参数面
 | `cockpit down` | 停止观测栈 |
 | `cockpit draft` | 从本地主权大模型请求草稿 |
 | `cockpit event` | 导出事件封套 (EventEnvelope) |
+| `cockpit execute` | [v2] 执行场景卡 (BOS/MCP 驱动) |
 | `cockpit export` | 导出研究 (markdown/text/json) |
 | `cockpit export-research` | 将研究对象导出为 WorkspaceObject JSON |
 | `cockpit follow-up` | 查看追问工作台（待追问/已回答统计） |
@@ -1784,6 +1786,7 @@ cockpit vault --help          # 完整参数面
 | `cockpit inspect` | 查看算力网格健康度与节点状态 |
 | `cockpit invoke` | 通过治理网关调用 exact native BOS capability |
 | `cockpit knowledge-ref` | ADR-0315 引用元数据 (无正文) |
+| `cockpit lifecycle` | [v2] 场景卡生命周期管理 (list/status/promote/demote/validate) |
 | `cockpit list` | 查看研究历史 |
 | `cockpit logs` | 查看日志 |
 | `cockpit lora` | 查看与测试端侧在线 LoRA 适配层热插拔 |
