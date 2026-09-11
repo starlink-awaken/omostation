@@ -1,7 +1,10 @@
 ---
 bet_id: BET-Y1Q3-T6-16
 title: "多仓本地分支、脏工作树与未合并交付的保护性收敛"
-status: completed
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-11
 date: 2026-09-05
 ---
 
