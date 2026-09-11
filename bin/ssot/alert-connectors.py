@@ -213,6 +213,22 @@ class WeComWebhookConnector(AlertConnector):
         )
 
 
+class DingtalkWebhookConnector(AlertConnector):
+    """钉钉群机器人 webhook (custom robot, msgtype=text)."""
+
+    provider = "dingtalk"
+
+    def deliver(self, alert: dict[str, Any]) -> dict[str, Any]:
+        return self._post(
+            {
+                "msgtype": "text",
+                "text": {
+                    "content": f"[{alert.get('severity', 'info').upper()}] {alert.get('title', 'alert')}\n{alert.get('body', '')}"
+                },
+            }
+        )
+
+
 class GenericWebhookConnector(AlertConnector):
     provider = "generic"
 
@@ -224,6 +240,7 @@ _CONNECTORS: dict[str, type[AlertConnector]] = {
     "slack": SlackWebhookConnector,
     "feishu": FeishuWebhookConnector,
     "wecom": WeComWebhookConnector,
+    "dingtalk": DingtalkWebhookConnector,
     "generic": GenericWebhookConnector,
 }
 

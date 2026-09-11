@@ -23,6 +23,8 @@ from _shared import ROOT, append_jsonl, load_yaml, read_jsonl, utc_now
 OUTCOME_SCHEMA = "scene-outcome/v1"
 OUTCOME_LOG = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.jsonl"
 VALID_ADJUDICATIONS = {"accepted", "rejected", "revised"}
+VALUE_EVIDENCE_LOG = ROOT / ".omo" / "_delivery" / "ingress" / "value-evidence.jsonl"
+VERDICT_MAP = {"accepted": "accept", "revised": "edit", "rejected": "reject"}
 
 
 def _load_scene_card(path: Path) -> dict[str, Any]:
@@ -40,6 +42,8 @@ def record_outcome(
     actor: str = "operator",
     notes: str = "",
     revision_diff: str = "",
+    review_seconds: int | None = None,
+    saved_seconds: int | None = None,
 ) -> dict[str, Any]:
     """Record one human adjudication outcome."""
     if adjudication not in VALID_ADJUDICATIONS:
@@ -68,8 +72,72 @@ def record_outcome(
     mos_outcome_id = _write_mos_decision_outcome(entry)
     entry["mos_outcome_id"] = mos_outcome_id
 
+    # X3 价值证据桥: adjudication → value-evidence/v1 (裁决词汇 1:1 映射).
+    # estimated_time_saved 以场景自主执行时长为估计值 (真实工作时长, 非合成).
+    _write_value_evidence(entry, review_seconds=review_seconds, saved_seconds=saved_seconds)
+    entry["value_evidence"] = True
+
     entry["status"] = "recorded"
     return entry
+
+
+def _scene_run_duration_seconds(scene_id: str, run_id: str) -> int:
+    """Read execution duration from calibration DB (real measured seconds)."""
+    try:
+        import sqlite3
+
+        db = ROOT / "data" / "scene-metrics.db"
+        if not db.exists():
+            return 0
+        conn = sqlite3.connect(str(db))
+        try:
+            row = conn.execute(
+                "SELECT duration_ms FROM scene_execution WHERE scene_id=? AND run_id=? ORDER BY created_at DESC LIMIT 1",
+                (scene_id, run_id),
+            ).fetchone()
+            return int(row[0] // 1000) if row and row[0] else 0
+        finally:
+            conn.close()
+    except Exception:
+        return 0
+
+
+def _write_value_evidence(entry: dict[str, Any], *, review_seconds: int | None = None,
+                          saved_seconds: int | None = None) -> None:
+    """Bridge scene outcome to value-evidence/v1 (X3 data source).
+
+    verdict: accepted→accept / revised→edit / rejected→reject (1:1).
+    estimated_time_saved_seconds = scene autonomous work duration (from
+    calibration DB) unless explicitly provided; review_duration_seconds
+    is human-provided (0 = unknown).
+    """
+    try:
+        import os
+
+        scene_id = str(entry.get("scene_id", "unknown"))
+        run_id = str(entry.get("run_id", ""))
+        duration_s = _scene_run_duration_seconds(scene_id, run_id)
+        review_s = int(review_seconds or 0)
+        saved_s = int(saved_seconds if saved_seconds is not None else duration_s)
+
+        evidence = {
+            "schema": "value-evidence/v1",
+            "timestamp": entry.get("ts", ""),
+            "principal_id": os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing"),
+            "scene_id": scene_id,
+            "run_id": run_id,
+            "review_duration_seconds": review_s,
+            "estimated_time_saved_seconds": saved_s,
+            "verdict": VERDICT_MAP.get(entry.get("adjudication", ""), "reject"),
+            "net_saved_seconds": max(0, saved_s - review_s),
+            "qualifying": saved_s > review_s
+            and entry.get("adjudication") in ("accepted", "revised"),
+            "source": "scene-outcome-bridge",
+        }
+        VALUE_EVIDENCE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        append_jsonl(VALUE_EVIDENCE_LOG, evidence)
+    except Exception:
+        pass  # value bridge is non-blocking (X3 wiring must not break trust loop)
 
 
 def _write_mos_decision_outcome(entry: dict[str, Any]) -> str | None:
@@ -126,6 +194,10 @@ def main(argv: list[str] | None = None) -> int:
     rec_parser.add_argument("--actor", default="operator")
     rec_parser.add_argument("--notes", default="")
     rec_parser.add_argument("--revision-diff", default="")
+    rec_parser.add_argument("--review-seconds", type=int, default=None,
+                            help="human review duration (X3 evidence; default: DB duration or 0)")
+    rec_parser.add_argument("--saved-seconds", type=int, default=None,
+                            help="estimated time saved (X3 evidence; default: scene work duration)")
 
     list_parser = sub.add_parser("list", help="list recent outcomes")
     list_parser.add_argument("--scene-id", default=None)
@@ -142,6 +214,8 @@ def main(argv: list[str] | None = None) -> int:
             actor=args.actor,
             notes=args.notes,
             revision_diff=args.revision_diff,
+            review_seconds=args.review_seconds,
+            saved_seconds=args.saved_seconds,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0

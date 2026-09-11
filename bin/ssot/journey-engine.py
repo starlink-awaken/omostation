@@ -147,6 +147,23 @@ def _emit_omo_event(event_type: str, payload: dict) -> None:
                        capture_output=True, text=True, timeout=10, check=False, cwd=str(_ROOT))
     except: pass
 
+def _emit_scene_alert(event_type: str, payload: dict, severity: str = "critical") -> None:
+    """Emit to the observability alert plane (drives alert-forwarder connectors).
+
+    scene.escalated → critical; scene.failed → degraded. The forwarder routes
+    via alert-channels.yaml (feishu/dingtalk/wecom/slack) to real channels.
+    """
+    try:
+        subprocess.run(
+            [sys.executable, str(_ROOT / "bin/ssot/observability-events.py"), "emit",
+             "--domain", "scene", "--type", event_type, "--severity", severity,
+             "--source", "journey-engine", "--trace-id", str(payload.get("run_id", "")),
+             "--payload", json.dumps(payload, ensure_ascii=False)],
+            capture_output=True, text=True, timeout=10, check=False, cwd=str(_ROOT),
+        )
+    except Exception:
+        pass  # alert emission is best-effort, never blocks the journey
+
 def _resolve_next_state(spec, current, result, ctx) -> str | None:
     for t in spec.get("transitions", []):
         if t.get("from") != current: continue
@@ -215,7 +232,9 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
             if comp:
                 ctx.compensation_log.push(CompensationAction(comp.get("type","emit_event"), comp.get({})))
             if state_def.get("type") == "human_gate" or state_def.get("requires_human"):
-                ctx.status = "escalated"; _emit_omo_event("scene.escalated", ctx.to_event())
+                ctx.status = "escalated"
+                _emit_omo_event("scene.escalated", ctx.to_event())
+                _emit_scene_alert("scene.escalated", ctx.to_event(), severity="critical")
                 ctx.end_time = datetime.now(UTC); return ctx
             nxt = _resolve_next_state(spec, current, result, ctx)
             if nxt is None: break
@@ -223,6 +242,7 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
         ctx.status = "succeeded"; ctx.confidence = result.get("confidence", 0.8) if result else 0.0; ctx.output = result
     except Exception as exc:
         ctx.status = "failed"; ctx.output = {"error": str(exc), "error_type": type(exc).__name__}
+        _emit_scene_alert("scene.failed", ctx.to_event(), severity="degraded")
         failed = ctx.compensation_log.compensate(ctx)
         if failed: ctx.output["compensation_failures"] = len(failed)
     ctx.end_time = datetime.now(UTC)
