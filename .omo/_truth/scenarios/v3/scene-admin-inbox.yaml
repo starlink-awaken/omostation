@@ -1,0 +1,52 @@
+schema: scene-card/v3
+scene_id: scene-admin-inbox
+version: 3.0.0
+name: Admin Inbox
+description: 读取工作邮箱未读邮件并 LLM 分类, 判定是否存在需要执行的任务
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: draft
+activation: preview
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: admin-notification-workflow
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - mail:netease_mailmaster
+    - llm:local-classify
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: mail-daemon 周期扫描或人工触发 journey run
+input_contract: 触发上下文 (subject/sender 可选), 不含正文原文
+result_contract: 分类结果列表 (subject/sender/category/priority/summary) + has_task 布尔判定
+  + latest_subject
+outcome_metric: admin_task_detection_accuracy
+consumer: xiamingxing
+failure_cost: 任务邮件漏判导致行政工作延误
+data_classification: internal
+data_scope: work-mail-metadata-and-llm-summary
+operator: admin-inbox-dispatch-under-human-review
