@@ -1760,7 +1760,12 @@ bets:
   - projects/omlxc/src/omlxc/dataplane/lora/
   - projects/spine/src/spine/cognitive/
   - .omo/_knowledge/retros/BET-Y2Q2-T3-02.md
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:ecbf01733a5b7be997cd2dd08ff86926bc2e0397335cfa4938cf5062435fac30
+    decision_ref: decision://accepted/BET-Y1Q4-T10-05
+    spec_ref: repo://docs/superpowers/specs/2026-09-11-t10-05-offline-sandbox-vault-spec.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 凭据校验失败时自动锁定沙箱并触发警告。
   depends_on:
   - BET-Y1Q4-T4-06
@@ -1791,6 +1796,7 @@ bets:
   - config/security/
   - bin/security/vault.py
   - .omo/_knowledge/retros/BET-Y1Q4-T10-05.md
+  - docs/superpowers/specs/2026-09-11-t10-05-offline-sandbox-vault-spec.md
 - appetite: 3 days
   circuit_breaker: 公文格式校验不通过时阻止生成并高亮错误条款。
   depends_on:
