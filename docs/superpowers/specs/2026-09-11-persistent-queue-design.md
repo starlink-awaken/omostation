@@ -9,6 +9,8 @@ owner: governance-team
 last-reviewed: 2026-09-11
 ---
 
+
+
 # Persistent Queue — ledger-backed durable queue
 
 ## 1. Problem
@@ -125,16 +127,16 @@ as instance attributes beyond `queue_id` and the broker handle.
 
 ## 5. Acceptance
 
-- [ ] `enqueue`/`dequeue`/`peek`/`pending_count` implemented per §4.3.
-- [ ] Priority ordering verified: three items enqueued priority 1, 5, 3 dequeue
+- [x] `enqueue`/`dequeue`/`peek`/`pending_count` implemented per §4.3.
+- [x] Priority ordering verified: three items enqueued priority 1, 5, 3 dequeue
   in order 5, 3, 1.
-- [ ] FIFO tie-break verified: two items same priority dequeue in enqueue order.
-- [ ] Double-dequeue of the same `item_id` raises `QueueError`.
-- [ ] Malformed row (payload missing `item_id`) raises `QueueReplayError`,
+- [x] FIFO tie-break verified: two items same priority dequeue in enqueue order.
+- [x] Double-dequeue of the same `item_id` raises `QueueError`.
+- [x] Malformed row (payload missing `item_id`) raises `QueueReplayError`,
   not silently skipped.
-- [ ] Kill/reopen durability test: enqueue 3, dequeue 1, close broker
+- [x] Kill/reopen durability test: enqueue 3, dequeue 1, close broker
   (simulating a hard kill — no explicit flush call), reopen a fresh
   `PersistentQueue.open()` against the same file, confirm exactly the 2
   remaining items are pending in the correct order.
-- [ ] Two independent `queue_id`s in the same DB file never leak items into
+- [x] Two independent `queue_id`s in the same DB file never leak items into
   each other's `_pending_items()`.
