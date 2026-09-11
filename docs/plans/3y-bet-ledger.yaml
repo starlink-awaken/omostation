@@ -27342,6 +27342,240 @@ bets:
     root gitlink bump、v2 effective admission、completion/value 扩张或默认门禁
     失败都立即停止。1.3.0 只能在 Wave B1 root main/CI 可重算、1.2.0 implementation
     run 关闭且锁归零后通过独立 binding 完整替换。
+- id: BET-Y1Q4-T10-146
+  track: T10-MATURITY
+  window: Y1Q4
+  title: OMO Agent OS 成熟度差距收口 — Queue/AGE-v2/Orca R0/Multica AS0/A8 外部事务
+  appetite: 40 days
+  priority: P1
+  status: candidate
+  goal: >-
+    收口 2026-09-11 全量复核发现的 OMO Agent OS 剩余成熟度差距：持久化 Queue
+    缺失、AGE-v2 Cell 违反 SFOP 八律第3条（后端不拥有收件箱）、A6 Orca R0 与
+    A7 Multica AS0 缺正式准入验证工具链、A8 OMO 外部事务生命周期未实现、A5
+    残留3处死引用（resident-daemon/pipeline-morning/tailscale-heartbeat 指向
+    已废弃 ws-t1069 路径）。每个差距拆成独立子 BET（T10-147 至 T10-152），
+    本 BET 只做汇总与依赖排序，不直接产出代码。
+  non_goals:
+  - 不重复已经完成的工作（Role/Receipt 已是持久化实现、Claims Authority
+    Bridge WP1 已由并发 agent 完整实现合并、A4 调度真相已收口 PR#3518）
+  - 不与本仓库现有 governance-agent 常驻集群竞争同一份工作——子 BET 认领前
+    先 `bin/plan/bet-ledger.py claim-check` 确认可用，撞车立即退让
+  - 不在子 BET 未过门前对 Orca/Multica 执行任何 writer 操作
+  done_when:
+  - 6 个子 BET（T10-147 至 T10-152）状态不再是 candidate（done 或有明确
+    blocked 原因并记录）
+  - 本 BET 自身状态随子 BET 完成情况推进，不允许单独标 done 而子 BET 未完成
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  human_gate: true
+  risk_level: L2
+  retro: required
+  circuit_breaker: >-
+    任一子 BET 的 writer 操作触及未过门的 Orca/Multica、或与并发 agent 产生
+    write 冲突，立即停止并记录，不强行覆盖。
+- id: BET-Y1Q4-T10-147
+  track: T10-MATURITY
+  window: Y1Q4
+  title: 持久化 Queue 实现 — 对齐 Role/Receipt 的 ledger-backed 模式
+  appetite: 5 days
+  priority: P2
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T10-146
+  goal: >-
+    2026-09-11 复核发现 omo/sovereignty 下 Role（roles.py）、Receipt
+    （principal_authority.py）均已是基于因果事件账本的持久化实现，但目前
+    仓内唯一命中的 Queue（ecos/l1/runtime::MessageQueue）是纯内存优先级
+    队列，进程重启即丢失。设计并实现一个 ledger-backed 持久 Queue，与现有
+    Role/Receipt 模式对齐（同一 LedgerBroker.append 写路径、同一 replay
+    重建语义）。
+  non_goals:
+  - 不改动现有 MessageQueue 的调用方（如仍需要纯内存队列的场景保留原实现）
+  - 不引入外部消息队列中间件（Redis/RabbitMQ 等），沿用仓内既有 ledger 基础设施
+  done_when:
+  - 新 PersistentQueue 支持 enqueue/dequeue/peek，状态可从事件日志完整重放重建
+  - 进程重启后队列内容不丢失（集成测试覆盖：写入 → kill -9 → 重启 → 内容一致）
+  - 至少一个真实调用方从 MessageQueue 迁移或新建功能使用 PersistentQueue
+  verify:
+  - cmd: cd projects/omo && python3 -m pytest tests/test_sovereignty_persistent_queue.py -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/sovereignty/
+  - projects/omo/tests/test_sovereignty_persistent_queue.py
+  human_gate: false
+  risk_level: L1
+  retro: required
+  circuit_breaker: 与既有 LedgerBroker 写路径产生冲突或双写风险时立即停止。
+- id: BET-Y1Q4-T10-148
+  track: T10-MATURITY
+  window: Y1Q4
+  title: AGE-v2 Cell 收口 — 修复 SFOP 八律第3条违规（后端不拥有收件箱）
+  appetite: 8 days
+  priority: P2
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T10-146
+  goal: >-
+    ADR-0401（2026-08-24 accepted）采用 AGE-v2 五角色架构；SFOP v1
+    （docs/architecture/os-operating-pattern-v1.md）将 AGE-v2 Cell 正式分类
+    进 B（后端）槽，八律第3条"后端不拥有收件箱"。2026-09-11 复核确认
+    projects/omo/src/omo/cli.py 的 cell 子命令直连 omo.resident.cell_cli，
+    绕开 Mesh（S槽/workflow_mesh.py）独立当收件箱，且该规则目前无自动化
+    检查。调研详情见 TASK-117310A1（PR#3528）。设计 Mesh 到 B 槽后端的分发
+    路径，把 cell 入口改经 Mesh，并给 check-sfop-slots.py 补一条自动化检查。
+  non_goals:
+  - 不改变 AGE-v2 五角色（Planner/Executor/Verifier/Coordinator/Governor）
+    的职责划分本身
+  - 不破坏现有6个 test_age_v2_*.py 测试文件的既有断言（除非断言本身编码了
+    这个违规行为）
+  done_when:
+  - workflow_mesh.py 或等价机制具备 B 槽后端分发路径
+  - omo cell 子命令改经 Mesh 分发，行为对最终用户 byte-for-byte 等价
+  - check-sfop-slots.py 新增八律第3条自动化检查，能检测出违规改回时 FAIL
+  verify:
+  - cmd: python3 bin/gac/check-sfop-slots.py --json
+    expect: exit 0
+  - cmd: cd projects/omo && python3 -m pytest tests/test_age_v2_production.py -q
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - projects/omo/src/omo/cli.py
+  - projects/omo/src/omo/workflow_mesh.py
+  - bin/gac/check-sfop-slots.py
+  human_gate: false
+  risk_level: L2
+  retro: required
+  circuit_breaker: 任何改动导致既有 test_age_v2_*.py 生产测试回归立即停止。
+- id: BET-Y1Q4-T10-149
+  track: T10-MATURITY
+  window: Y1Q4
+  title: Orca R0 正式准入验证工具链
+  appetite: 10 days
+  priority: P2
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T10-146
+  goal: >-
+    2026-09-11 复核：Orca 版本 1.4.199，running=True，8月已有大量历史 PR
+    （worker start receipts/dispatch ID/coordinator 绑定/supervised evidence
+    collection），但 R0 准入仍缺：3/3 R0 事务证据、历史结算对账、accepted
+    worker_done 与资源归零证明。目前无任何专用验证工具（唯一相关脚本
+    bin/gac/orca-codex-supervisor.py 疑似写入端，本次复核未执行未验证）。
+    第一阶段只建只读验证工具链，不做 writer 接入。
+  non_goals:
+  - 不在本 BET 内让 Orca 获得 writer 准入（仍是 R0 observer，未过门不写入）
+  - 不修改 orca-codex-supervisor.py 的既有行为
+  done_when:
+  - 明确定义 R0 三笔事务的可复算验证命令与预期输出
+  - 历史结算对账脚本产出可复核报告（reconciled/mismatch 计数）
+  - accepted worker_done 与资源归零状态可通过只读命令查询并断言
+  verify:
+  - cmd: python3 bin/gac/orca-r0-verify.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/orca-r0-verify.py
+  human_gate: true
+  risk_level: L2
+  retro: required
+  circuit_breaker: 任何验证脚本意外触发真实 Orca 派工立即停止，该风险优先于交付进度。
+- id: BET-Y1Q4-T10-150
+  track: T10-MATURITY
+  window: Y1Q4
+  title: Multica AS0 正式准入验证工具链
+  appetite: 10 days
+  priority: P2
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T10-146
+  goal: >-
+    2026-09-11 复核：Multica 采样 runtime online=16/16，agents=16，squads=7，
+    AS0 未自动通过。缺：30/30 API 验证、7/7 topology 验证、信任域隔离与隐私
+    边界验证。目前无专用验证工具。第一阶段只建只读验证工具链，不做 writer
+    接入。
+  non_goals:
+  - 不在本 BET 内让 Multica 获得 writer 准入（仍是 AS0 observer，未过门不写入）
+  done_when:
+  - 30 个 API 端点逐一有可复算的只读探测命令与预期结果
+  - 7 个 topology 关系逐一有可复算的只读验证
+  - 信任域隔离与隐私边界有明确的负面测试用例（证明隔离生效）
+  verify:
+  - cmd: python3 bin/gac/multica-as0-verify.py --json
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/gac/multica-as0-verify.py
+  human_gate: true
+  risk_level: L2
+  retro: required
+  circuit_breaker: 任何验证脚本意外触发真实 Multica 派工立即停止，该风险优先于交付进度。
+- id: BET-Y1Q4-T10-151
+  track: T10-MATURITY
+  window: Y1Q4
+  title: A8 OMO 外部事务生命周期实现
+  appetite: 15 days
+  priority: P2
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T10-146
+  goal: >-
+    A8（OMO 外部适配事务）历史评估为"尚未完整实现"：reserve → bind →
+    readback → start → ACK/fence → release/retire 完整事务链缺失。本 BET
+    先做权威实现与证据指针的路径搜索复核（P73：报"零实现"前先查 ADR/
+    archive/mutation-surfaces/ingress delivery 等5类位置），确认真实状态
+    后再设计最小闭环实现。
+  non_goals:
+  - 不预判具体技术方案，先做存在性复核再设计
+  done_when:
+  - 完成 ADR/archive/mutation-surfaces/ingress delivery 五处路径搜索，产出
+    权威现状报告（存在/不存在/部分存在，附证据）
+  - 若确认缺失，产出 reserve→bind→readback→start→ACK/fence→release/retire
+    七段状态机的最小实现与测试
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  human_gate: true
+  risk_level: L2
+  retro: required
+  circuit_breaker: 复核后发现该事务链已存在但未被发现时，立即停止重复实现，转为补充证据登记。
+- id: BET-Y1Q4-T10-152
+  track: T10-MATURITY
+  window: Y1Q4
+  title: A5 残留死引用修复 — 3个 launchd 服务指向已废弃 ws-t1069 路径
+  appetite: 2 days
+  priority: P1
+  status: candidate
+  parent_bet_id: BET-Y1Q4-T10-146
+  goal: >-
+    2026-09-11 A4/A5 收口过程中发现：com.omostation.resident-daemon、
+    com.omostation.pipeline-morning、com.omostation.tailscale-heartbeat
+    三个 launchd 服务的 ProgramArguments/WorkingDirectory 指向
+    /Users/xiamingxing/ws-t1069（该目录存在但不是 git 仓库、无 .venv，是
+    空壳），resident-daemon 因此持续 exit 78。当时判断"疑似有别的工作在
+    处理"未插手，需要先确认真实归属再决定是否本 BET 修复。
+  non_goals:
+  - 不在未确认无并发写入冲突前修改这三个 plist
+  done_when:
+  - 确认这三个服务当前是否有其他 agent/进程正在处理（检查最近 commit/PR）
+  - 若确认无人处理，三个 plist 路径改回正确的 /Users/xiamingxing/Workspace，
+    launchctl 验证服务正常启动
+  verify:
+  - cmd: launchctl list | grep -E "resident-daemon|pipeline-morning|tailscale-heartbeat"
+    expect: exit 0
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  human_gate: true
+  risk_level: L1
+  retro: required
+  circuit_breaker: 发现有其他 agent 正在处理 ws-t1069 归属问题时立即停止，不重复劳动。
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
