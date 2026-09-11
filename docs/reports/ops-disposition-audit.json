@@ -1,0 +1,2753 @@
+{
+ "total": 338,
+ "actions": {
+  "keep": 36,
+  "disable": 307
+ },
+ "decisions": [
+  {
+   "id": "governance.watch",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.governance.watch"
+  },
+  {
+   "id": "evidence-smoke",
+   "scheduler": "gha",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "scheduler=gha 未覆盖, 不动"
+  },
+  {
+   "id": "compass-radar",
+   "scheduler": "gha",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "scheduler=gha 未覆盖, 不动"
+  },
+  {
+   "id": "gen-service-configs",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "lmstudio.server",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.lmstudio.server"
+  },
+  {
+   "id": "omlxc.daemon",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.omlxc.daemon"
+  },
+  {
+   "id": "omlxc.dma_daemon",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "launchd 无 plist 且未加载: com.omostation.omlxc-dma-daemon"
+  },
+  {
+   "id": "omlx.gateway",
+   "scheduler": "launchd",
+   "enabled_before": false,
+   "enabled_after": false,
+   "action": "keep",
+   "reason": "already-disabled"
+  },
+  {
+   "id": "omlx.gateway-ui",
+   "scheduler": "launchd",
+   "enabled_before": false,
+   "enabled_after": false,
+   "action": "keep",
+   "reason": "already-disabled"
+  },
+  {
+   "id": "omlx.autopilot",
+   "scheduler": "launchd",
+   "enabled_before": false,
+   "enabled_after": false,
+   "action": "keep",
+   "reason": "already-disabled"
+  },
+  {
+   "id": "omlx.autostart",
+   "scheduler": "launchd",
+   "enabled_before": false,
+   "enabled_after": false,
+   "action": "keep",
+   "reason": "already-disabled"
+  },
+  {
+   "id": "agora.sse",
+   "scheduler": "launchd",
+   "enabled_before": false,
+   "enabled_after": false,
+   "action": "keep",
+   "reason": "already-disabled"
+  },
+  {
+   "id": "cockpit.dashboard",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.cockpit.dashboard"
+  },
+  {
+   "id": "docker.observability-db",
+   "scheduler": "docker",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "docker.searxng",
+   "scheduler": "docker",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "aetherforge.gateway",
+   "scheduler": "launchd",
+   "enabled_before": false,
+   "enabled_after": false,
+   "action": "keep",
+   "reason": "already-disabled"
+  },
+  {
+   "id": "omo.sync_daemon",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.omo.sync"
+  },
+  {
+   "id": "resident.orchestrator",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.orchestrator"
+  },
+  {
+   "id": "gac.daemon_watchdog",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.gac.watchdog"
+  },
+  {
+   "id": "cron.capability_ownership",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/gac/check-capability-ownership.py, token=capability-ownership)"
+  },
+  {
+   "id": "cron.agent_workflow_status",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/agent-workflow.py, token=agent-workflow-status)"
+  },
+  {
+   "id": "cron.governance_evolution",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/gac/governance-evolution.py, token=governance-evolution)"
+  },
+  {
+   "id": "cron.meta_doctor",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/gac/meta-doctor.py, token=meta-doctor)"
+  },
+  {
+   "id": "cron.debt_refresh",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=debt-refresh)"
+  },
+  {
+   "id": "mcp.agora",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.omo",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.cockpit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.omo",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "resident.sediment",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.sediment"
+  },
+  {
+   "id": "resident.decision",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.decision"
+  },
+  {
+   "id": "resident.execute",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.execute"
+  },
+  {
+   "id": "resident.monitor",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.monitor"
+  },
+  {
+   "id": "resident.heartbeat",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.heartbeat"
+  },
+  {
+   "id": "resident.event_ingest",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.event-ingest"
+  },
+  {
+   "id": "resident.signals",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.signals"
+  },
+  {
+   "id": "resident.inbox",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.inbox"
+  },
+  {
+   "id": "resident.promote",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.resident.promote"
+  },
+  {
+   "id": "cron.observability_events",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/ssot/observability-events.py, token=observability-events)"
+  },
+  {
+   "id": "cron.log_rotate",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "cron 活跃: crontab 含 log-rotate.py"
+  },
+  {
+   "id": "cron.anomaly_detector",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/gac/anomaly-detector.py, token=anomaly-detector)"
+  },
+  {
+   "id": "cron.alert_router",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/gac/alert-router.py, token=alert-router)"
+  },
+  {
+   "id": "cron.m4_health",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/mof/m4-health-score.py, token=m4-health)"
+  },
+  {
+   "id": "cron.agent_workflow_doctor",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/agent-workflow.py, token=agent-workflow-doctor)"
+  },
+  {
+   "id": "cron.uhs_sync",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/gac/unified-health-score.py, token=uhs-sync)"
+  },
+  {
+   "id": "cron.drift_sweep",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/gac/drift-sweep.py, token=drift-sweep)"
+  },
+  {
+   "id": "cron.mof_drift",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/mof/mof-drift, token=mof-drift)"
+  },
+  {
+   "id": "cron.weekly_review",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/ssot/weekly-review.py, token=weekly-review)"
+  },
+  {
+   "id": "cron.proposal_to_adr",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=proposal-to-adr)"
+  },
+  {
+   "id": "cron.system_health",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=bin/ssot/system-health-check.py, token=system-health)"
+  },
+  {
+   "id": "mcp.kos",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.minerva",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.ontoderive",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.kronos",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.iris",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.sophia",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.forge",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.eidos",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.cockpit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.agora",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.aetherforge",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.l4_kernel",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.llm_gateway",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "docker.ecos",
+   "scheduler": "docker",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "docker.aetherforge",
+   "scheduler": "docker",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "docker.kairon",
+   "scheduler": "docker",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "docker.minerva",
+   "scheduler": "docker",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "docker.eidos",
+   "scheduler": "docker",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mail.daemon",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 存在: com.l4.mail.daemon"
+  },
+  {
+   "id": "omo.sse_daemon",
+   "scheduler": "launchd",
+   "enabled_before": false,
+   "enabled_after": false,
+   "action": "keep",
+   "reason": "already-disabled"
+  },
+  {
+   "id": "bos.kos.search",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.eidos.memory",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.minerva.research",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ontoderive.derive",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cockpit.mcp",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.decide",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.audit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.debt",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.resident.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.compute.infer",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.bcos.evolve",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.io",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agora.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.health",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kos.mcp",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kos.graphrag",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kos.ingest",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ontoderive.mcp",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.minerva.mcp",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kronos.mcp",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.iris.mcp",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.sophia.mcp",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.forge.mcp",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.state",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.compass",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.project",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.workflow.bootstrap",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.workflow.compliance",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.evolution.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.metaos.immune",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.codeanalyze.scan",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.codeanalyze.report",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.iris.discover",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent-runtime.execute",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent-runtime.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.runtime.health",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.plan",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.execute",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.verify",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.govern",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.version",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.reason",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.decide",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.graph",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.routes",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.governance",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.schema",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.health",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.kairon",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.kos",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.minerva",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.gbrain",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.ecos",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.gbrain",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.c2g",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.aetherforge",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kos.rest",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kos.mcp_v2",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kos.schema",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kos.query",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kronos.ingest",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kronos.query",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.kronos.schedule",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.gbrain.search",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.gbrain.query",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mos.write",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mos.recall",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mos.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mos.consolidate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.inspect",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.sync",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.ledger_append",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.ledger_read",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.ledger_verify",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.workflow.observe",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.workflow.doctor",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.evolution.validate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.evolution.traces",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.evolution.packages",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.metaos.route",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.metaos.gate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.metaos.register",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.minerva.ask",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.minerva.summarize",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.minerva.draft",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.minerva.audit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ontoderive.validate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ontoderive.explain",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ontoderive.audit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ontoderive.fact_check",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.codeanalyze.analyze",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.codeanalyze.metrics",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.codeanalyze.lint",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.iris.scan",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.iris.recall",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent-runtime.list-tools",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent-runtime.chat",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent-runtime.run-task",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent-runtime.task-status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent-runtime.agent-list",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.swarm.run",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.compute.generate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.bus.data",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.bus.event",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.autonomous",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.act",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.analyze",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.export",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.drift",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.scan",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.assign",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.evolution",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.enforce",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.mof.manage",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.backends.register",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.governance.heartbeat",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.omo.debt",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.discovery.package",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.memory.publish",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.memory.search",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.governance.audit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.config.list",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cell.replay.run",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agora.metrics",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agora.registry",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cockpit.cards_status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.cockpit.test",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.compute.mesh",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.compute.swarm",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.events",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.validate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.update",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.resident.roles",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.resident.daemon",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.resident.decision",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.ecos.mcp_server",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.omo.mcp_server",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.aetherforge.mcp_server",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.c2g.mcp_server",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.kronos.scan",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.omo.debt",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.agent_workflow.verify_plan",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.evolution.golden_paths",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.eidos.validate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.analysis.ontoderive.toolforge.match",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.analysis.ontoderive.toolforge.select",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.analysis.ontoderive.toolforge.guide",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.sot_bridge_persona.recall_entity",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.compute.mesh_status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.local.all_search",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.family_hub.health",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.omo.audit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.omo.ledger_status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.l4_kernel.domains",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.l4_kernel.domains",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.meta.discover",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.vault.search",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.health_profile.summary",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.health_profile.alert",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.bus.control",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.gbrain.sync",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.mos.forget",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.mos.knowledge_ref",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.swarm.orchestrator.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.evolution.loop",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.quality.audit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.analysis.eidos.validate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.analysis.ontoderive.align",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.eidos.pipeline",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow.list",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow.describe",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow.run",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow.logs",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow.cache_status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow.cache_invalidate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow.cb_status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.ecos.workflow.cb_reset",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.backends.list",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.wps_office_mcp.invoke",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.wps_skills.load",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.bos_skill_cli.exec",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.headroom.compress",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.code_review_graph.analyze",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.claude_skills.load",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.last30days_skill.fetch",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.media_crawler.crawl",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.open_montage.render",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.skills_for_fabric.load",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.deer_flow.run",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.datafoundry.analyze",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.knowledge_work_plugins.load",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.capability.evaluator",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.discovery.package.action",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.runtime.workers.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.forge.market.list",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.roles.list",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.analysis.minerva",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.docs.readme",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.system.vault.state",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.governance.tasks",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.governance.circuit_breaker",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.governance.daily_budget",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.governance.quests",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.governance.omo_worker_dispatch",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.fast_track.virtual_doc",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.omo.tasks.active",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.board.execute",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.board.route",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.inbox.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.inbox.search",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.inbox.pending",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.inbox.watch",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.inbox.archive",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.inbox.triage",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.inbox.draft",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.persona.bdsk.evaluate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.kems.status",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.kems.graph",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.memory.kems.ocr_queue",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.analysis.kems.forecast",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.intent.compile",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.shadow.challenge",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.cartridge.list",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.meta_doctor.check",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.scheduler_compile.check",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.governance.session_handoff.emit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.fabric.snapshot.manage",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.pool.submit",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.pool.scale",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.pool.auto_scale",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.pool.metrics",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.dag.execute",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.governance.report",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.config.create",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.pdp.evaluate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.pep.enforce",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.memory.process",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.memory.consolidate",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.replay.shadow",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.agent_cell.replay.eval",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.bcos.signals.route",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "bos.bcos.north_star.measure",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cron.gac_validate",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=gac-validate)"
+  },
+  {
+   "id": "cron.gac_drift",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=gac-drift)"
+  },
+  {
+   "id": "cron.doc_ssot",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=doc-ssot)"
+  },
+  {
+   "id": "cron.ssot_guardian",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "cron 活跃: crontab 含 token ssot-guardian"
+  },
+  {
+   "id": "cron.ssot_sync",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "cron 活跃: crontab 含 token ssot-sync"
+  },
+  {
+   "id": "cron.ssot_log",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=ssot-log)"
+  },
+  {
+   "id": "cron.sync_submodules",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=sync-submodules)"
+  },
+  {
+   "id": "cron.worktree_prune",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "cron 活跃: crontab 含 token worktree-prune"
+  },
+  {
+   "id": "omo.governor",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 无 label (on_demand), 不动"
+  },
+  {
+   "id": "omo.verifier",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 无 label (on_demand), 不动"
+  },
+  {
+   "id": "omo.replay",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 无 label (on_demand), 不动"
+  },
+  {
+   "id": "omo.alert",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 无 label (on_demand), 不动"
+  },
+  {
+   "id": "omo.status",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": true,
+   "action": "keep",
+   "reason": "launchd 无 label (on_demand), 不动"
+  },
+  {
+   "id": "cron.bin_scripts",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=bin-scripts)"
+  },
+  {
+   "id": "cron.evidence_smoke",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=evidence-smoke)"
+  },
+  {
+   "id": "cron.config_check",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=config-check)"
+  },
+  {
+   "id": "cron.state_sync",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=state-sync)"
+  },
+  {
+   "id": "cron.install_hooks",
+   "scheduler": "cron",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=install-hooks)"
+  },
+  {
+   "id": "cli.sophia",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.iris",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.kronos",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "cli.ontoderive",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.ecos",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "mcp.omo_web",
+   "scheduler": "manual",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+  },
+  {
+   "id": "agora.daemon",
+   "scheduler": "launchd",
+   "enabled_before": false,
+   "enabled_after": false,
+   "action": "keep",
+   "reason": "already-disabled"
+  },
+  {
+   "id": "omo.governor",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "on_demand 工具, 无常驻 plist/信号产物 (pass 2)"
+  },
+  {
+   "id": "omo.verifier",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "on_demand 工具, 无常驻 plist/信号产物 (pass 2)"
+  },
+  {
+   "id": "omo.replay",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "on_demand 工具, 无常驻 plist/信号产物 (pass 2)"
+  },
+  {
+   "id": "omo.alert",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "on_demand 工具, 无常驻 plist/信号产物 (pass 2)"
+  },
+  {
+   "id": "omo.status",
+   "scheduler": "launchd",
+   "enabled_before": true,
+   "enabled_after": false,
+   "action": "disable",
+   "reason": "on_demand 工具, 无常驻 plist/信号产物 (pass 2)"
+  }
+ ]
+}
