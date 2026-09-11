@@ -1,6 +1,6 @@
 ---
 bet_id: BET-Y1Q4-T6-29
-status: completed
+status: archived
 completed_at: 2026-09-07
 placeholder: true
 note: |

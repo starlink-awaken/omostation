@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: archived
 lifecycle: history
 owner: engineering-agent
 bet: BET-Y1Q3-T7-02

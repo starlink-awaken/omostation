@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: submodule-pointer-close
 generated_at: 2026-09-11T07:47:01Z
-status: candidate
+status: archived
 counts:
   runs: 11
   failures: 0

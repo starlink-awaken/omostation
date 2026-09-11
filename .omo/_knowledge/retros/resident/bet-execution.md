@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: bet-execution
 generated_at: 2026-09-11T07:47:01Z
-status: candidate
+status: archived
 counts:
   runs: 51
   failures: 0

@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: mof-model-change
 generated_at: 2026-09-11T07:47:01Z
-status: candidate
+status: archived
 counts:
   runs: 4
   failures: 0

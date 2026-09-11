@@ -27271,7 +27271,8 @@ bets:
   priority: P0
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: 2026-09-11
   title: A2 Resident Status Purity Truth Recovery
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
@@ -27288,8 +27289,48 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: submodule-pointer-transaction
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
+            sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          merged_reachable_commit:
+            ref: git://origin/main@629744da6e64459ac1664c52215c2b1f482c8152
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
+            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          replay:
+            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
+            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  value_indicator_policy: false
   write_surfaces:
   - projects/omo
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-09-11-a2-root-canary-evidence.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-144.md
 - accepted_specifications:
   - content_digest: sha256:b643890f3fda5bee575630018b155fb68ba0ce6f58af9c2b6772a2ff29bb0197
     decision_ref: decision://accepted/BET-Y1Q4-T10-145

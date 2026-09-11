@@ -1,6 +1,6 @@
 ---
 bet_id: BET-Y1Q4-T6-20
-status: done
+status: archived
 completed_at: 2026-09-06T01:50:00+00:00
 run_id: 20260906T013733Z-bet-execution-01a20e92
 pr: https://github.com/starlink-awaken/omostation/pull/3265

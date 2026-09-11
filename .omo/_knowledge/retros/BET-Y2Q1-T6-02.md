@@ -3,7 +3,7 @@ bet: BET-Y2Q1-T6-02
 title: 知识层彻底归并首期
 phase: Phase 1 (first PR)
 date: 2026-09-07
-status: in_progress
+status: archived
 ---
 
 # Retro: BET-Y2Q1-T6-02 Phase 1

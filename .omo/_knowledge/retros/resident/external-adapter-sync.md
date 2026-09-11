@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: external-adapter-sync
 generated_at: 2026-09-11T07:47:01Z
-status: candidate
+status: archived
 counts:
   runs: 3
   failures: 0
