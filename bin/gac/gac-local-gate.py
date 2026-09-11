@@ -532,6 +532,10 @@ _DEFAULT_CHECK_TIMEOUTS = {
     # bet-retro-due-check: CI 冷环境 import yaml + 读 378-bet ledger 需 7-8s,
     # gate 内系统负载下超 15s 默认 → false TIMEOUT (2026-09-08 CI 实证, PR #3436)
     "bet-retro-due-check": 60,
+    # pitfall-gat006-check: 内部 git fetch origin main 自身就有 ~10s 超时,
+    # 15s 外层默认给 fetch+log 的余量太薄, CI 负载下反复 false TIMEOUT
+    # (2026-09-11 CI 实证, PR #3518, 与 PR #3436 同一类问题同一个修法)
+    "pitfall-gat006-check": 30,
 }
 _CHECK_TIMEOUTS = {
     g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"], 15)) for g in GATES_LIST
