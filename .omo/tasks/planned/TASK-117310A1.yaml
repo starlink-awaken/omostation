@@ -1,0 +1,69 @@
+id: TASK-117310A1
+title: 'AGE-v2 Agent Cell 违反 SFOP 八律第3条(后端不拥有收件箱): omo cli.py 直连路由需改经 Mesh 分发'
+description: '现状: ADR-0401(2026-08-24 accepted)采用 AGE-v2 五角色架构(Planner/Executor/Verifier/Coordinator/Governor);
+  SFOP v1(2026-08-25, docs/architecture/os-operating-pattern-v1.md)把 AGE-v2 Cell 正式分类进
+  B(后端)槽, S槽(唯一dispatcher)是 COMP-WS-omo/Mesh。八律第3条''后端不拥有收件箱'', B槽''禁止变成''一栏写的就是''收件箱主人''。真实违规:
+  projects/omo/src/omo/cli.py 的 cell 子命令直接路由到 omo.resident.cell_cli, 绕开 Mesh(workflow_mesh.py)独立当收件箱。这条八律目前没有对应的
+  bin/gac/check-sfop-slots.py 自动化检查(不是被重命名成 CR-X3-NS-001, 那是另一条不相关规则——北极星分子污染检测)。任务:
+  1) 设计 Mesh 如何分发到 B 槽后端(现状待查, workflow_mesh.py 是否已有通用后端分发机制); 2) 把 omo cell 入口改经
+  Mesh 分发; 3) 给八律第3条补一条 CR-SFOP-0X 自动化检查。2026-09-11 用户已批准方向。'
+status: candidate
+task_type: architecture-consolidation
+risk_level: L2
+depends_on: []
+source_docs:
+- .omo/_knowledge/decisions/age-v2-dynamic-agent-cell.md
+- docs/architecture/os-operating-pattern-v1.md
+- projects/omo/src/omo/cli.py
+- bin/gac/check-sfop-slots.py
+deliverables:
+- workflow_mesh.py 或等价机制的 B槽后端分发路径
+- omo/cli.py cell 子命令改经 Mesh 分发
+- check-sfop-slots.py 新增八律第3条自动化检查
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-117310A1
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- check-sfop-slots.py 改动前后输出对比
+- test_age_v2_*.py 全量测试结果
+test_plan:
+- python3 bin/gac/check-sfop-slots.py --json 新增检查后 ok=true 且能检测出违规改回时 FAIL
+- omo cell plan '...' 经 Mesh 分发后行为与改动前 byte-for-byte 等价(不破坏现有6个测试文件 test_age_v2_*)
+allowed_operation_level: L1
+human_approval_required: false
+metadata:
+  priority: P2
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-09-11T06:49:53Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: session-2026-09-11-age-v2-sfop-law3
+
+# 2026-09-11 补充调研(同一 session 内, worktree ws-age-v2-sfop-law3):
+# 关键细节: SFOP B槽写的 "AGE-v2 Cell" 物理上就在 projects/omo 内部
+# (omo/resident/cell.py), 跟 S槽的 Mesh dispatcher(omo/workflow_mesh.py)
+# 是同一个项目(COMP-WS-omo)里的两个模块, 不是两个独立子仓。
+# 现有 CR-SFOP-05 检查(B_PROJECTS = {aetherforge, omlxc, runtime, metaos},
+# H_PROJECTS = {cockpit, cockpit-ui, family-hub})全部是按"跨项目 import
+# 边界"设计的, 这套逻辑套不到"同一项目内部模块边界"这种情况——omo 既是
+# S槽持有者又内含 B槽组件, 需要一种新的检查思路(扫 cli.py 的命令路由表,
+# 而不是扫跨项目 import 图), 不能直接照抄 CR-SFOP-05 的模式。
+# workflow_mesh.py 本身是一套基于事件溯源的通用 step-dispatch 状态机
+# (admitted→dispatched→running→...), 不是按后端类型(Cell/aetherforge/
+# omlxc/metaos)命名分发的, 具体怎么让 cell.py 的 plan/execute/verify
+# 接入这套 admission/dispatch 语义, 需要专门设计, 不是搬运几行代码。

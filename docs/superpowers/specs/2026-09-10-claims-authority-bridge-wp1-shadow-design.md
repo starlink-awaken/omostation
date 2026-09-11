@@ -1,11 +1,11 @@
 ---
 schema_version: specification/v1
-spec_version: 1.1.2
+spec_version: 1.2.0
 status: accepted
 lifecycle: contract
 owner: governance-team
 created: 2026-09-09
-last-reviewed: 2026-09-10
+last-reviewed: 2026-09-11
 title: Claims Authority Bridge WP1 R0 Shadow
 bet_id: BET-Y1Q4-T10-145
 implementation_authorized: true
@@ -13,7 +13,7 @@ value_indicator_policy: false
 risk_level: L2
 human_gate: true
 type: ssot
-last_updated: 2026-09-10
+last_updated: 2026-09-11
 ---
 
 # Claims Authority Bridge WP1 R0 Shadow
@@ -30,13 +30,14 @@ contract is
 `docs/superpowers/specs/2026-09-09-claims-authority-bridge-design.md` version 1.0.0,
 SHA-256 `a419e2fb3cd67026edebd39b25a1e1b77e6c92978ce1cf1be6b8e4be19cf8c58`.
 Accepted version 1.0.0 allocated `BET-Y1Q4-T10-145` and authorized only its
-implementation plan. Version 1.1.2 supersedes the blocked 1.1.1 Wave A implementation
-attempt with the same complete non-union three-path partition. It preserves the
-monotonic activation-witness contract and closes four pre-publication ambiguities:
-auxiliary R0 operator evidence, complete activation closure, integration-root
-WorkPacket recomputation and idempotent settlement confirmation. It still does not
-initialize a production store, change Git publication behavior, activate shadow mode
-or materialize WP2 by itself.
+implementation plan. Version 1.1.2 authorized and delivered the Wave A child broker
+partition. Version 1.2.0 is a complete non-union replacement that removes every Wave A
+child path from the current WorkPacket and authorizes only the six Wave B1 root paths
+for the lazy shadow adapter, descriptor-bound claims-authority CLI, agent-clone
+projection and the mandatory legacy-fence wrapper around `clone-lifecycle integrate`.
+It preserves v1 as the only effective publication authority, keeps
+`value_indicator_policy=false`, and still does not bump the root `projects/omo`
+gitlink, activate production shadow mode or materialize WP2.
 
 ## 2. Problem and current-state audit
 
@@ -911,25 +912,26 @@ complete the parent BET or create WP2.
 
 Versions 1.0.0 and 1.1.0 remain immutable historical plan/initial-Wave-A authority.
 Version 1.1.1 remains immutable historical authority for the blocked implementation
-run `20260910T110304Z-bet-execution-74895d83`; it produced no child commit, tag, push
-or PR and released all five locks. Version 1.1.2 acceptance requires and records:
+run `20260910T110304Z-bet-execution-74895d83`. Version 1.1.2 remains immutable
+historical authority for the Wave A child partition that merged to
+`omostation-omo` at `15ee4ab1d26199e361d471963be07f193b6704f9` with exact blobs
+`3f011c43…` / `80e5a279…` / `4e508bc9…`; its implementation run
+`20260911T055655Z-bet-execution-664be1ac` closed with locks zero and without a root
+gitlink bump. Version 1.2.0 acceptance requires and records:
 
-1. the 1.0.0 plan is merged at its reviewed digest, its run is closed and all locks
-   are zero;
-2. fixed-digest review of 1.1.1 found the operator-evidence schema, activation closure,
-   integration-root WorkPacket and settlement-confirmation gaps now closed by 1.1.2;
-3. the Ledger retains candidate `BET-Y1Q4-T10-145`, its parent relation to
+1. Wave A child main contains the reviewed merge, exact objects match, child required
+   checks succeeded, the 1.1.2 implementation run is closed and every Wave A lock is
+   zero;
+2. the Ledger retains candidate `BET-Y1Q4-T10-145`, its parent relation to
    `BET-Y1Q4-T10-143`, one current accepted binding and no completion/value expansion;
-4. the current WorkPacket retains exactly the three Wave A child paths and rejects the
-   1.0.0, 1.1.0 and 1.1.1 WorkPacket hashes;
-5. `implementation_authorized=true` authorizes only Wave A under the new WorkPacket;
+3. the current WorkPacket contains exactly the six Wave B1 root paths and rejects the
+   1.1.2 Wave A WorkPacket hash `sha256:73b4d19af02326d33d0969e7c85aba83a4fbffa762615dbb798e1572b0a8e613`;
+4. `implementation_authorized=true` authorizes only Wave B1 under the new WorkPacket;
    this binding transaction itself changes no implementation, runtime or gitlink;
-6. appetite is re-baselined to 12 days of elapsed delivery time, including the
-   mandatory 24-hour observation, and is not a completion or value claim;
-7. every later binding replaces rather than appends `write_surfaces`, keeps one current
+5. appetite remains 12 days of elapsed delivery time, including the mandatory
+   24-hour observation, and is not a completion or value claim;
+6. every later binding replaces rather than appends `write_surfaces`, keeps one current
    `accepted_specifications` entry and rejects an earlier WorkPacket hash; and
-8. Wave A restarts only after the 1.1.2 binding and its separate plan-convergence PR
-   merge, their exact digests and compiled WorkPacket are verified, both runs close and
-   every lock is zero; and
-9. the prior implementation clone remains immutable evidence while a fresh successor
-   replays only the reviewed three-path patch onto then-current child main.
+7. Wave B1 implementation starts only after this 1.2.0 binding merges, its exact Spec
+   digest and compiled WorkPacket are verified, the binding run closes and every lock
+   is zero on a fresh managed successor.
