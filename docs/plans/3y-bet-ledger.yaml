@@ -27287,7 +27287,7 @@ bets:
     shadow graduation，并为尚未物化的 WP2 提供可审计前置证据。
   depends_on: []
   non_goals:
-  - 1.4.0 仅授权 Wave B3 九个 API/shim bypass-closure 路径，不修改 B2 入口、child、gitlink、runtime 或启动 WP2
+  - 1.5.0 仅授权 Wave B4 五个云端 automation 路径，不修改 B3 入口、child、gitlink、runtime 或启动 WP2
   - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
   - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
   - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
@@ -27318,15 +27318,11 @@ bets:
   workflow: bet-execution
   underlying_workflow: project-code-change
   write_surfaces:
-  - bin/_registry/scripts/governance/gh-api-push.yaml
-  - bin/gac/gh-api-push.sh
-  - bin/gac/git-shim
-  - bin/gac/swarm-git
-  - docs/plans/AGENT-BRIEF.md
-  - tests/integration/test-git-shim.sh
-  - tests/test_git_publication_effect_owner.py
-  - tests/test_swarm_discipline.py
-  - tests/unit/gac/test_immutable_writer_git_policy.py
+  - .github/workflows/omo-autopilot.yml
+  - .github/workflows/reusable-submodule-bump-pr.yml
+  - .github/workflows/submodule-autobump.yml
+  - .github/workflows/submodule-freshness-gatekeeper.yml
+  - tests/test_github_publication_effect_owner.py
   pasw_required: false
   risk_level: L2
   human_gate: true
@@ -27334,8 +27330,8 @@ bets:
   retro: required
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-    spec_version: 1.4.0
-    content_digest: sha256:2733d7b47ebb4cf5e8f221b5964f681b03e2953d90fa348e166e0c8557862851
+    spec_version: 1.5.0
+    content_digest: sha256:e0e0301c934c112cb595b4ed1f02fd28201a1024db9dfaa0fb8e1babc4405e09
     decision_ref: decision://accepted/BET-Y1Q4-T10-145
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -27351,12 +27347,12 @@ bets:
         evidence: {}
     overall_state: evaluating
   circuit_breaker: >-
-    1.4.0 WorkPacket 必须只含 Wave B3 九个路径并保持
-    implementation_authorized=true；任一 child/B1/B2/plan/pointer/evidence/WP2/runtime 写面、
-    scope union、旧 WorkPacket hash 复用、wrapper/API 继续发布、第二 publication owner、
+    1.5.0 WorkPacket 必须只含 Wave B4 五个路径并保持
+    implementation_authorized=true；任一 child/B1/B2/B3/plan/pointer/evidence/WP2/runtime 写面、
+    scope union、旧 WorkPacket hash 复用、云端继续 commit/push/PR、第二 publication owner、
     自动 rebase/merge/pull 吸收上游、root gitlink bump、v2 effective admission、
-    completion/value 扩张或默认门禁失败都立即停止。1.5.0 只能在 Wave B3 root main/CI
-    可重算、1.4.0 implementation run 关闭且锁归零后通过独立 binding 完整替换。
+    completion/value 扩张或默认门禁失败都立即停止。1.6.0 只能在 Wave B4 root main/CI
+    可重算、1.5.0 implementation run 关闭且锁归零后通过独立 binding 完整替换。
 - id: BET-Y1Q4-T10-146
   track: T10-MATURITY
   window: Y1Q4
@@ -27638,6 +27634,44 @@ bets:
     overall_state: delivery_accepted
     decision_ref: decision://accepted/BET-Y1Q4-T10-152
   done_at: 2026-09-11
+- id: BET-Y1Q4-T10-153
+  track: T10-MATURITY
+  window: Y1Q4
+  title: A5 AetherForge 门面常驻化恢复 — launchd 服务缺失修复
+  appetite: 1 day
+  priority: P1
+  status: candidate
+  value_indicator_policy: false
+  parent_bet_id: BET-Y1Q4-T10-146
+  goal: 2026-09-11 排查"本地 agent 工具无法接入 omlxc 算力"时发现真正根因：
+    AetherForge OpenAI 兼容门面(:9290，所有本地客户端应经此认证入口接入)的
+    launchd 服务已被删除，services.yaml 里标 enabled:false，服务根本没在跑。
+    守护脚本/venv/Keychain 密钥均完好，只是没人开。
+  non_goals:
+  - 不修改 aetherforge-gw-guard 脚本或网关代码逻辑
+  - 不新增 Anthropic Messages / Google generateContent 协议转译层
+  - 不处理 omlxc 侧 inventory_drop 告警(另一个独立已知问题)
+  done_when:
+  - 重建 launchd plist 并常驻运行
+  - health/鉴权/真实推理请求三层验证通过
+  verify:
+  - cmd: curl -s -o /dev/null -w '%{http_code}' http://localhost:9290/health
+    expect: '200'
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  human_gate: true
+  risk_level: L1
+  retro: required
+  circuit_breaker: 若现场验证发现服务本身有未修复的功能性 bug(而非单纯缺 plist)，
+    立即停止并改为记录问题而非强行恢复常驻。
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-11-a5-aetherforge-gateway-restore-fix.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-153.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-11-a5-aetherforge-gateway-restore-fix.md
+    spec_version: 1.0.0
+    content_digest: sha256:8d7f260ed6510857fd4d17ac0213e62963357785d4368f9e2d3840423faa9b0d
+    decision_ref: decision://accepted/BET-Y1Q4-T10-153
 - id: BET-Y1Q4-T4-07
   track: T4-OUTCOME
   window: Y1Q4
