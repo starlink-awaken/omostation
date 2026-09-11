@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
-# bin/sync-submodules.sh — 推送子模块新 commit 并更新根仓库指针
+# bin/sync-submodules.sh — 检测子模块未推送/不可达 commit (WP1 Wave B2: detection-only)
 #
-# 在 worktree 中修改子模块后，子模块的 commit 需要先推送到远程，
+# 在 worktree 中修改子模块后，子模块的 commit 需要先由托管交付事务推送到远程，
 # 否则 CI 在 checkout 时无法获取该 commit（"not our ref" 错误）。
 #
 # 用法:
-#   bash bin/sync-submodules.sh              # 推送所有有未推送 commit 的子模块
-#   bash bin/sync-submodules.sh --dry-run    # 只检查，不推送
-#   bash bin/sync-submodules.sh --status     # 只显示状态，不推送
+#   bash bin/sync-submodules.sh              # 检测未推送 commit；有则 exit 1
+#   bash bin/sync-submodules.sh --dry-run    # 同上 (兼容别名)
+#   bash bin/sync-submodules.sh --status     # 同上 (兼容别名)
 #
-# 集成到 gac-worktree.sh submit 流程：
-#   在 git push 根仓库之前，先跑此脚本，确保子模块 commit 已推送。
+# WP1 Wave B2: 不再 push；仅报告并非零退出。
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DRY_RUN=false
-STATUS_ONLY=false
 
 for arg in "$@"; do
   case "$arg" in
-    --dry-run) DRY_RUN=true ;;
-    --status) STATUS_ONLY=true ;;
+    --dry-run|--status) ;;
+    *)
+      echo "未知参数: $arg (仅支持 --dry-run / --status；默认即为 detection-only)" >&2
+      exit 2
+      ;;
   esac
 done
 
@@ -37,9 +37,8 @@ if [ -z "$SUBMODULES" ]; then
 fi
 
 HAS_UNPUSHED=false
-PUSHED_COUNT=0
 
-echo "── 检查子模块未推送的 commit ──────────────────────────"
+echo "── 检查子模块未推送的 commit (detection-only) ──────────"
 
 for submodule in $SUBMODULES; do
   if [ ! -d "$submodule" ] || [ ! -d "$submodule/.git" ] && [ ! -f "$submodule/.git" ]; then
@@ -71,17 +70,7 @@ for submodule in $SUBMODULES; do
     echo "$UNPUSHED" | while read -r line; do
       echo "      $line"
     done
-
-    if [ "$STATUS_ONLY" = true ]; then
-      popd > /dev/null 2>&1 || true
-      continue
-    fi
-
-    if [ "$DRY_RUN" = false ]; then
-      echo "  → 推送 $submodule ..."
-      git push origin HEAD:main --no-verify 2>&1 || echo "  ⚠️  推送失败（可能是非 fast-forward），尝试 force push 被拒绝，请手动处理"
-      PUSHED_COUNT=$((PUSHED_COUNT + 1))
-    fi
+    echo "  → 需要托管交付事务发布 (本脚本不再 push)"
   else
     echo "  ✅  $submodule: 已同步"
   fi
@@ -95,15 +84,5 @@ if [ "$HAS_UNPUSHED" = false ]; then
   exit 0
 fi
 
-if [ "$STATUS_ONLY" = true ]; then
-  echo "⚠️  发现未推送的 commit，请运行 bash bin/sync-submodules.sh 推送"
-  exit 1
-fi
-
-if [ "$DRY_RUN" = false ]; then
-  echo "✅ 已推送 $PUSHED_COUNT 个子模块的 commit"
-  echo ""
-  echo "  下一步: 如果根仓库的子模块指针已更新，请提交根仓库变更:"
-  echo "    git add projects/<submodule>"
-  echo "    git commit -m \"fix: update <submodule> submodule pointer\""
-fi
+echo "❌ 发现未推送的子模块 commit；detection-only，拒绝自动 push"
+exit 1

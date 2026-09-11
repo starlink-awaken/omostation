@@ -7,8 +7,8 @@
 # 用法:
 #   gac-worktree.sh claim <session>      # 创建 worktree + 分支 work/<session>
 #                                         # --actor-id <id> → agent/<id>/<session>
-#   gac-worktree.sh submit [--strict] <session>  # push 分支 + 开 PR (base main)
-#                                         # --strict: 子模块 pointer 不可达时阻止提交
+#   gac-worktree.sh submit [--strict] <session>  # proposal-only → MANAGED_SUCCESSOR_REQUIRED
+#                                         # --strict: 子模块 pointer 不可达时阻止提案
 #   gac-worktree.sh merge <session>      # squash 合并 PR + release worktree + 删分支
 #   gac-worktree.sh release <session>    # 清理 worktree (手动, 合并后)
 #   gac-worktree.sh bump-fast <submodule-path> [--sha <sha>|--latest-main]
@@ -328,23 +328,47 @@ case "$cmd" in
       # .gitignore 含 .subtrees/ → git add 撞上被忽略路径会返回 1
       # (实测 ':!.subtrees' / ':!.subtrees/' / ':(exclude).subtrees/*' 都是 1),
       # 但非忽略文件其实已暂存成功。set -euo pipefail 下必须吞掉这个返回码,
-      # 否则 submit 在此静默中断 —— 后面的 push / 开 PR / CI 校验一个都不执行。
+      # 否则 submit 在此静默中断 —— 后面的提案准备一个都不执行。
       git add -- ':!.subtrees' . || true
       git commit -m "wip: $session worktree 提交" 2>&1 | tail -2
     fi
-    # 多 agent 并发 main 高速前进: push 前自动 rebase (PITFALL-GAT-007 预防层;
-    # 陈旧 base → gitlink-ancestry 拦回退 / registry drift 假阳性, 实测一晚 5 次)
-    if git fetch origin main 2>/dev/null; then
-      _ahead="$(git rev-list --count HEAD..origin/main 2>/dev/null || echo 0)"
-      if [ "$_ahead" -gt 0 ]; then
-        echo "⬆ origin/main 前进 $_ahead commits, auto-rebase (PITFALL-GAT-007 预防)"
-        if ! git rebase origin/main; then
-          echo "❌ auto-rebase 冲突: 手动解决后重跑 submit, 或 git rebase --abort 回滚" >&2
-          exit 1
-        fi
+    # WP1 Wave B2: 禁止 rebase/merge/pull 吸收上游。base 前进时发出同一 typed 指令。
+    _emit_managed_successor_proposal() {
+      local _base_ref="${1:-}"
+      local _source _base _patch_digest _paths_digest
+      _source="$(git rev-parse HEAD)"
+      if [ -n "$_base_ref" ] && git rev-parse --verify --quiet "${_base_ref}^{commit}" >/dev/null 2>&1; then
+        _base="$(git rev-parse "${_base_ref}^{commit}")"
+      else
+        _base="$_source"
       fi
+      _patch_digest="$(git diff --binary "${_base}...HEAD" 2>/dev/null | shasum -a 256 | awk '{print $1}')"
+      _paths_digest="$(git diff --name-only "${_base}...HEAD" 2>/dev/null | sort | shasum -a 256 | awk '{print $1}')"
+      echo "MANAGED_SUCCESSOR_REQUIRED"
+      echo "source_commit=${_source}"
+      echo "base_commit=${_base}"
+      echo "patch_digest=${_patch_digest}"
+      echo "changed_path_digest=${_paths_digest}"
+      echo "instruction=replay proposal in a distinct managed full successor via clone-lifecycle integrate"
+      echo "❌ submit 为 proposal-only: 不 push / 不开 PR / 不调用 integrate (exit 2)" >&2
+      exit 2
+    }
+    _submit_base_ref=""
+    if git fetch origin main 2>/dev/null; then
+      if git rev-parse --verify --quiet "origin/main^{commit}" >/dev/null 2>&1; then
+        _submit_base_ref="origin/main"
+      fi
+      _ahead="$(git rev-list --count HEAD..origin/main 2>/dev/null || echo 0)"
+      if [ "${_ahead:-0}" -gt 0 ]; then
+        echo "⬆ origin/main 前进 $_ahead commits; 不 rebase，发出 MANAGED_SUCCESSOR_REQUIRED" >&2
+        _emit_managed_successor_proposal "$_submit_base_ref"
+      fi
+    elif git rev-parse --verify --quiet "origin/main^{commit}" >/dev/null 2>&1; then
+      _submit_base_ref="origin/main"
+    elif git rev-parse --verify --quiet "upstream/main^{commit}" >/dev/null 2>&1; then
+      _submit_base_ref="upstream/main"
     fi
-    # BET-Y2Q1-T10-03: 台账预检 — 裸冒号会让 YAML 解析炸 (三犯教训), 坏文件拦在 push 前
+    # BET-Y2Q1-T10-03: 台账预检 — 裸冒号会让 YAML 解析炸 (三犯教训), 坏文件拦在提案前
     if git diff origin/main...HEAD --name-only -- docs/plans/3y-bet-ledger.yaml 2>/dev/null | \
        grep -q .; then
       if ! python3 -c "import yaml,sys; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml')); print('[ledger-precheck] YAML OK')" 2>/dev/null; then
@@ -481,47 +505,18 @@ except Exception: print('')" 2>/dev/null || true)"
         exit 1
       fi
     fi
-    # 推送子模块 commit 到远程 (防 CI "not our ref" 错误)
-    echo "⚡ 检查子模块未推送的 commit..."
-    bash "$(dirname "$0")/../sync-submodules.sh" --dry-run 2>&1 | tail -5
-    bash "$(dirname "$0")/../sync-submodules.sh" 2>&1 | tail -5
-    # push 分支
-    ROOT_REMOTE=$(resolve_root_remote) || exit 1
-    echo "   remote: $ROOT_REMOTE ($(git remote get-url "$ROOT_REMOTE")); repo: $CANONICAL_ROOT_REPO"
-    bash "$(dirname "$0")/git-retry.sh" push -u "$ROOT_REMOTE" "$branch" 2>&1 | tail -3
-    # 开 PR
-    if command -v gh &>/dev/null; then
-      gh pr create --repo "$CANONICAL_ROOT_REPO" --base main --head "$branch" \
-        --title "[$session] worktree 提交" \
-        --body "GaC worktree per session (ADR-0106 P2). 自动生成 PR." 2>&1 | tail -2
-      # PR 文件清单校验 (P74: 防运行时文件混入 PR)
-      pr_num=$(gh pr list --repo "$CANONICAL_ROOT_REPO" --head "$branch" --base main --state open --json number 2>/dev/null \
-        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
-      if [ -n "$pr_num" ]; then
-        bad_files=$(gh pr view "$pr_num" --repo "$CANONICAL_ROOT_REPO" --json files 2>/dev/null \
-          | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    bad = [f['path'] for f in d.get('files',[])
-            if ('.jsonl' in f['path'] or '.lock' in f['path'] or f['path'].startswith('.omo/_knowledge/workflow-mesh/'))
-            and f.get('changeType') in ('ADDED', 'MODIFIED')]
-    print('\n'.join(bad))
-except Exception:
-    print('')
-" 2>/dev/null)
-        if [ -n "$bad_files" ]; then
-          echo "❌ PR #$pr_num 混入运行时文件, 请移除后重推:" >&2
-          echo "$bad_files" | sed 's/^/    /' >&2
-          echo "   git rm --cached <file> && git commit --amend && git push --force" >&2
-          exit 1
-        fi
-        echo "   ✅ PR #$pr_num 文件清单校验通过"
+    # WP1 Wave B2: detection-only 子模块检查 (不 push 子模块)
+    echo "⚡ 检查子模块未推送的 commit (detection-only)..."
+    bash "$(dirname "$0")/../sync-submodules.sh" --status 2>&1 | tail -5 || true
+    # proposal-only: 不 push / 不开 PR / 不调用 clone-lifecycle integrate
+    if [ -z "${_submit_base_ref:-}" ]; then
+      if git rev-parse --verify --quiet "origin/main^{commit}" >/dev/null 2>&1; then
+        _submit_base_ref="origin/main"
+      elif git rev-parse --verify --quiet "upstream/main^{commit}" >/dev/null 2>&1; then
+        _submit_base_ref="upstream/main"
       fi
-    else
-      echo "⚠️  gh 未装, 手动开 PR: base main <- $branch"
     fi
-    echo "✅ submit: push $branch + PR"
+    _emit_managed_successor_proposal "${_submit_base_ref:-}"
     ;;
 
   release)
@@ -1025,8 +1020,8 @@ PYEOF
     echo "用法: gac-worktree.sh {claim|submit [--strict]|merge|release|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
     echo ""
     echo "  claim <session>      创建 worktree + 分支 work/<session>"
-    echo "  submit [--strict] <session>  push 分支 + 开 PR (base main)"
-    echo "                       --strict: 子模块 pointer 不可达时阻止提交 (默认仅 warning)"
+    echo "  submit [--strict] <session>  proposal-only → MANAGED_SUCCESSOR_REQUIRED"
+    echo "                       --strict: 子模块 pointer 不可达时阻止提案 (默认仅 warning)"
     echo "  merge <session>      squash 合并 PR + release worktree + 删分支"
     echo "  release <session>    清理 worktree (手动, 合并后)"
     echo "  bump-fast <submodule-path> [--sha <sha>|--latest-main]  流程内快速更新单个子模块指针"

@@ -396,3 +396,53 @@ def test_skip_submodule_init_is_explicit_root_only_degraded_mode(
     assert not (wt / "modules" / "alpha" / ".git").exists()
     assert "root worktree only" in result.stdout.lower()
     assert "pasw isolation not established" in result.stdout.lower()
+
+
+def _run_submit(
+    parent: Path,
+    tmp_path: Path,
+    session: str,
+    *,
+    cwd: Path | None = None,
+) -> subprocess.CompletedProcess[str]:
+    wrapper_dir = _write_git_wrapper(tmp_path)
+    env = {
+        **os.environ,
+        "WS_ROOT": str(parent),
+        "WS_PARENT": str(tmp_path / "worktrees"),
+        "PATH": f"{wrapper_dir}{os.pathsep}{os.environ['PATH']}",
+        "GIT_ALLOW_PROTOCOL": "file",
+    }
+    wt = _worktree(tmp_path, session)
+    return subprocess.run(
+        ["bash", str(SCRIPT), "submit", session],
+        cwd=cwd or wt,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+    )
+
+
+def test_submit_emits_managed_successor_proposal_without_push(tmp_path: Path) -> None:
+    parent = _make_parent_with_two_submodules(tmp_path)
+    session = "submit-proposal"
+    claim = _run_claim(parent, tmp_path, session)
+    assert claim.returncode == 0, claim.stderr
+    wt = _worktree(tmp_path, session)
+    (wt / "tracked.txt").write_text("proposal-only change\n")
+
+    result = _run_submit(parent, tmp_path, session)
+    combined = result.stdout + "\n" + result.stderr
+
+    assert result.returncode == 2, combined
+    assert "MANAGED_SUCCESSOR_REQUIRED" in combined
+    assert "source_commit=" in combined
+    assert "base_commit=" in combined
+    assert "patch_digest=" in combined
+    assert "changed_path_digest=" in combined
+    assert "gh pr create" not in combined
+    source = SCRIPT.read_text()
+    assert "gh pr create" not in source
+    assert "git rebase origin/main" not in source
