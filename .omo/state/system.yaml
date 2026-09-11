@@ -4,10 +4,10 @@ health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-09-06T13:03:18.325526+00:00'
 completed_tasks: 293
-planned_tasks: 13
+planned_tasks: 14
 active_tasks: 1
 blocked_tasks: 1
-total_tasks: 308
+total_tasks: 309
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 next_planned_tasks:
