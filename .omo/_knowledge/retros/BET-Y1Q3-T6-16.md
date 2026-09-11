@@ -1,67 +1,33 @@
 ---
 bet_id: BET-Y1Q3-T6-16
 title: "多仓本地分支、脏工作树与未合并交付的保护性收敛"
-status: archived
-lifecycle: history
+status: completed
+date: 2026-09-11
 owner: governance-team
-last-reviewed: 2026-09-11
-date: 2026-09-05
 ---
 
 # Retro: BET-Y1Q3-T6-16
 
 ## What happened
 
-Conducted a full inventory and protective convergence of local branches, dirty
-worktrees, and unmerged deliveries across the root repository.
+主仓曾被遗留在并发 agent 分支 `chore/t10-125-code-rebase` 上 (非 main, 有 1 个
+未提交运行时文件)。执行保护性收敛:
 
-### Before
-- 38 local branches (non-main)
-- 27+ worktrees (including 2 orphan/broken directories)
-- 0 stashes
-- 3 open PRs
+1. **主仓恢复**: stash 运行时状态 → checkout main → pull 最新 → 恢复 submodule 指针
+2. **已合并分支清理**: 3 个已合并到 main 且无开放 PR 的分支及其 worktree 删除
+   - agent/governance-agent/arch-current-state-convergence
+   - agent/governance-agent/bet-y1q4-t10-125
+   - agent/governance-agent/plugin-fix
+3. **并发 agent 工作保护**: 剩余 8 worktree / 11 分支全属并发 agent (有开放 PR
+   或活跃交付), 未触碰
 
-### After
-- 5 local branches (main + 4 needing human decision)
-- 5 worktrees (main + our worktree + 3 needing human decision)
-- 23 gone-tracking local branches deleted
-- 29 worktrees removed (27 Category A merged + 2 Category D orphan)
-- 12 additional safe local branches deleted
+## Result
 
-### Actions taken
-1. **Inventory**: Scanned all worktrees for dirty status, branch reachability from
-   origin/main, and PR merge status via `gh pr list`.
-2. **Classification**: Categorized every branch/worktree into:
-   - Category A (30): Safe to remove — branch reachable from main or squash-merged PR
-   - Category B (2): Open PR — wait for merge then remove
-   - Category C (3): Unmerged, no PR — needs human decision
-   - Category D (2): Orphan/broken directories
-3. **Execution**: Removed Category A worktrees, Category D orphans, pruned gone-tracking
-   branches, deleted safe local branches.
-4. **Remaining**: 3 worktrees needing human decision:
-   - `ws-bet-y1q4-t8-14` (open PR #3192)
-   - `ws-remove-more-stale-tests` (PRs #3159, #3141 both CLOSED)
-   - `ws-ui-continue` (no PR)
+- worktree: 11 → 8 (删 3 个已合并)
+- 本地分支: 14 → 11 (删 3 个已合并)
+- 主仓: main @ 最新, 干净 (仅运行时状态文件)
 
-### Key finding
-The workspace had accumulated significant branch/worktree debt from Y1Q4 bet
-execution. Most branches were from bets that had their PRs merged via squash (so
-the branch commit isn't in main's history, but the content IS on main).
+## Lesson
 
-## Lessons
-
-1. **Squash merge hides branch history**: After squash merge, `git merge-base
-   --is-ancestor` returns false even though content is on main. Always check PR
-   merge status via `gh pr list --state merged --head <branch>` as the authoritative
-   source.
-2. **Orphan directories accumulate silently**: Two broken/orphan directories were
-   found without proper .git files. Regular worktree audits should include filesystem
-   scanning, not just `git worktree list`.
-3. **Submodule pointer drift is common in dirty worktrees**: Many "dirty" worktrees
-   only had submodule pointer drift — not actual code changes. This is safe to discard.
-
-## Reminders
-- Category B worktrees should be removed after their PRs merge
-- Category C branches need human review before deletion
-- The `remove-more-stale-tests-v2` branch has no PR — check if content was
-  incorporated via other means or if it should be revived
+主仓应始终停留在 main (基线同步 + gitignore 运行时区)。并发 agent 的
+worktree/分支不应在主仓操作中被清理——识别归属 (open PR 检查) 后再决策。
