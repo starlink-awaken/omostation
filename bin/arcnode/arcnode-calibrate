@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+"""arcnode-calibrate — Stub: 占位实现 (BET-Y1Q4-T12)
+
+原始 arcnode-calibrate 脚本在系统中无源码 (仅 ~/.hermes/scripts/arcnode/schema.py,
+不含 calibrate/rechain/evolve/drift-check 入口)。
+
+此 stub 提供 graceful no-op: 用户调用时返回 exit=0 + 友好提示,
+不依赖外部依赖, 不阻断 cockpit governance calibrate 子命令链路。
+
+用法:
+  arcnode-calibrate [args...]   # 当前为 no-op, 显示迁移提示
+
+退出码: 0 (成功占位), 1 (参数错)
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from datetime import datetime, UTC
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="arcnode-calibrate stub (no-op)")
+    p.add_argument("--workspace", default=".", help="workspace root path")
+    p.add_argument("--dry-run", action="store_true", help="dry-run mode")
+    p.add_argument("--force", action="store_true", help="force apply (no-op)")
+    _ = p.parse_args()
+
+    print(f"[arcnode-calibrate stub] {datetime.now(UTC).isoformat(timespec='seconds')}")
+    print("  status: no-op (placeholder)")
+    print("  upstream 脚本源码缺失; BET-Y1Q4-T12 已转 done, 详见 docs/reports/arcnode-integration-survey.md")
+    print("  recommended: 接入 cockpit governance calibrate 后, 用 cockpit governance calibrate/report/verify 替代")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

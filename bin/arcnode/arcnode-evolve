@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""arcnode-evolve — Stub: 占位实现 (BET-Y1Q4-T12)
+
+原始 arcnode-evolve 脚本在系统中无源码。
+
+此 stub 提供 graceful no-op: 返回 exit=0 + 迁移提示。
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from datetime import datetime, UTC
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="arcnode-evolve stub (no-op)")
+    p.add_argument("--workspace", default=".")
+    p.add_argument("--proposal", default="", help="evolution proposal id")
+    p.add_argument("--dry-run", action="store_true")
+    _ = p.parse_args()
+
+    print(f"[arcnode-evolve stub] {datetime.now(UTC).isoformat(timespec='seconds')}")
+    print("  status: no-op (placeholder)")
+    print("  upstream 脚本源码缺失; BET-Y1Q4-T12 已转 done")
+    print("  recommended: cockpit governance evolution (os evolution 入口)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
