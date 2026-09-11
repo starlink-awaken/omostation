@@ -27602,8 +27602,7 @@ bets:
     1) ops check-signals 常态 drift 检测 (cron/launchd/file anchor 存在性);
     2) gen-service-configs --validate 增加 cron 准入规则
     (拒绝占位 entrypoint, 批次 18 误判根因)。
-  depends_on:
-  - BET-Y1Q4-T14
+  depends_on: []
   non_goals:
   - 不重写 ops 工具其它子命令
   - 不做 268 条 manual 能力项迁出 (另立 BET)
@@ -27640,6 +27639,13 @@ bets:
       engineering:
         status: NOT_STARTED
         evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
