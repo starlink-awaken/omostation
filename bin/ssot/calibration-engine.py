@@ -47,6 +47,30 @@ def record_execution(scene_id, run_id, result) -> None:
          result.get("token_usage",0), result.get("tool_calls",0),
          1 if result.get("human_reviewed") else 0, 1 if result.get("human_agreed") else 0, datetime.now(UTC).isoformat()))
     conn.commit(); conn.close()
+    _write_llm_cost(scene_id, run_id, result)
+
+
+def _write_llm_cost(scene_id: str, run_id: str, result: dict) -> None:
+    """Bridge token_usage to llm_cost.jsonl (X3/K1 LLM cost tracking fix)."""
+    try:
+        import os
+        token_usage = int(result.get("token_usage") or 0)
+        if token_usage <= 0:
+            return
+        cost_file = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime"))) / "data" / "llm_cost.jsonl"
+        cost_file.parent.mkdir(parents=True, exist_ok=True)
+        record = {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "scene_id": scene_id,
+            "run_id": run_id,
+            "token_usage": token_usage,
+            "source": "scene-execution",
+            "estimated_cost_usd": round(token_usage * 0.000001, 6),
+        }
+        with open(cost_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception:
+        pass  # cost bridge is non-blocking
 
 def compute_calibration(scene_id, window_days=30) -> dict:
     conn = _get_db()
