@@ -128,15 +128,23 @@ jobs:
     sfop_slot: S
     reconciliation_note: 纯登记债务补齐，无冲突。
 
-  # l4-harness-6h (真实在跑: 0 */6 * * * bash projects/l4-kernel/scripts/harness-cron.sh)
-  # 2026-09-11 发现: 故意不在此登记。l4-kernel 是 dao_layer=dao 组件, 一旦登记进
-  # 这份 cron registry, bin/gac/check-sfop-slots.py 的 CR-DFSQ-01("dao 层组件
-  # 不得出现在 cron 执行账本")会硬性 FAIL——这条规则对任何 status 值都无条件检查,
-  # 不存在标 proposed 就能绕过的办法。这个 cron job 本身已经真实运行、违反
-  # CR-DFSQ-01 有一段时间了(不是本次改动引入的), 只是此前从未被任何声明源登记过,
-  # 所以一直没触发这条检查。是否该让 l4-kernel 的每日 harness 巡检继续走 cron、
-  # 还是改走别的机制(或重新评估 l4-kernel 的 dao_layer 归类), 是一个独立的架构决定,
-  # 不该在这次"调度声明收敛"里顺手拍板。见 open_decisions D7。
+  # l4-harness-6h — D7 已决议 (2026-09-11, 方案 A: dao_layer 重归类 dao→fa,
+  # ecos#74): 本体矛盾消除后正式登记, CR-DFSQ-01 不再触发 (fa 允许上 cron 账本)。
+  - name: l4-harness-6h
+    schedule: "0 */6 * * *"
+    command: >-
+      cd "$HOME/Workspace" && bash projects/l4-kernel/scripts/harness-cron.sh
+      >> runtime/cron/l4-harness-cron.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: K
+    reconciliation_note: >-
+      D7 决议: l4-kernel 的 dao_layer 由 dao 重归类为 fa (道=不可执行, 而
+      harness 巡检是可执行的门禁判定活动, 属法)。此前因 CR-DFSQ-01 无条件
+      硬 FAIL 而"故意不登记"形成隐形债务, 重归类后登记消除声明漂移。
+      脚本本体已入库 (l4-kernel#14)。
 
   # ── 面板刷新: 2026-09-11 退出 Codex LLM automation (token 耗尽即停摆),
   #    改用 launchd，零推理需求、零 token 依赖 ──
@@ -365,6 +373,13 @@ open_decisions:
       crontab? 这是新增自动化, 不是文档整理, 需要单独决定, 启用前需设置真实
       OMO_WORKSPACE_ROOT。
   - id: D7
+    status: resolved
+    resolved_at: '2026-09-11'
+    resolution: >-
+      方案 A (重归类): l4-kernel dao_layer dao→fa (ecos#74), l4-harness-6h
+      正式登记进本 registry。理由: 道=不可执行, harness 巡检是可执行门禁
+      判定活动属法; 全仓唯一 dao 归类系命名直觉。归类指引见
+      docs/architecture/dao-fa-shu-qi.md。
     question: >-
       真实在跑的 l4-harness-6h(每6小时跑一次 projects/l4-kernel 的 harness 巡检)
       违反 CR-DFSQ-01(dao 层组件不得出现在 cron 执行账本), 且已经违反了一段时间
