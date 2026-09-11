@@ -77,8 +77,46 @@ def record_outcome(
     _write_value_evidence(entry, review_seconds=review_seconds, saved_seconds=saved_seconds)
     entry["value_evidence"] = True
 
+    # North Star 信任链: adjudication → Outcome.Human.v1 → event-ledger.
+    # North Star meter 只信任 broker-verified human outcomes.
+    _write_event_ledger_outcome(entry, review_seconds=review_seconds, saved_seconds=saved_seconds)
+    entry["north_star_bridge"] = True
+
     entry["status"] = "recorded"
     return entry
+
+
+def _write_event_ledger_outcome(entry: dict[str, Any], *, review_seconds: int | None = None,
+                                saved_seconds: int | None = None) -> None:
+    """Bridge scene outcome to Outcome.Human.v1 in event-ledger (North Star source)."""
+    try:
+        import os as _os
+
+        omo_src = str(ROOT / "projects" / "omo" / "src")
+        if omo_src not in sys.path:
+            sys.path.insert(0, omo_src)
+        from omo.event_ledger.surface import EventLedgerSurface
+
+        surface = EventLedgerSurface()
+        verdict = VERDICT_MAP.get(entry.get("adjudication", ""), "reject")
+        surface.append(
+            event_type="Outcome.Human.v1",
+            producer="scene-outcome-recorder",
+            principal_id=_os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing"),
+            correlation_id=str(entry.get("run_id", "")),
+            idempotency_key=f"scene:{entry.get('scene_id')}:{entry.get('run_id')}",
+            payload={
+                "verdict": verdict,
+                "scene_id": entry.get("scene_id", ""),
+                "run_id": entry.get("run_id", ""),
+                "review_duration_seconds": review_seconds,
+                "estimated_time_saved_seconds": saved_seconds,
+                "source": "scene-outcome-bridge",
+            },
+        )
+        surface.close()
+    except Exception:
+        pass  # North Star bridge is non-blocking
 
 
 def _scene_run_duration_seconds(scene_id: str, run_id: str) -> int:
