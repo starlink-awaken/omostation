@@ -5,4 +5,10 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 # 子模块上下文守卫: 同 pre-commit, 主仓 hook-runner 在子模块不存在则跳过
 [ -f "$ROOT/bin/gac/hook-runner.sh" ] || exit 0
+# ── BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 ──────────────
+# advisory (恒不阻断 checkout); 覆盖 git worktree add 绕过 gac-worktree.sh
+# claim 的路径. GAC_SKIP_POST_CHEKOUT_GUARD=1 可跳过 (测试/特殊流程).
+if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/gac/gac-worktree.sh" ]; then
+  bash "$ROOT/bin/gac/gac-worktree.sh" guard-submodules --fix >/dev/null 2>&1 || true
+fi
 bash "$ROOT/bin/gac/hook-runner.sh" --hook post-checkout
