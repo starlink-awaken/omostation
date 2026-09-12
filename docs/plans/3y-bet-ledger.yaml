@@ -1419,7 +1419,7 @@ bets:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
           merged_reachable_commit:
-            ref: git://origin/main@PLACEHOLDER
+            ref: git://origin/main@ff504bed4ef519f6a19a346d96373c5fd5903405
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
           tests:
