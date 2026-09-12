@@ -6,8 +6,8 @@ description: 生成转发通知与数据收集表两份草稿, 供人工确认�
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: shadow
-activation: preview
+lifecycle: assisted
+activation: controlled
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -50,3 +50,5 @@ failure_cost: 草稿质量差增加人工修改成本 (不直接外发, 风险�
 data_classification: internal
 data_scope: draft-documents-only
 operator: admin-forward-dispatch-under-risk-engine
+notes:
+- Transitioned shadow→assisted at 2026-09-11T22:51:19.398321+00:00 by evolution-agent

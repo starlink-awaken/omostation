@@ -6,8 +6,8 @@ description: 汇总收集结果生成工作报告草稿
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: shadow
-activation: preview
+lifecycle: assisted
+activation: controlled
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -48,3 +48,5 @@ failure_cost: 汇总遗漏导致报告不完整 (人工审阅兜底)
 data_classification: internal
 data_scope: draft-documents-only
 operator: admin-compile-dispatch
+notes:
+- Transitioned shadow→assisted at 2026-09-11T22:51:19.341983+00:00 by evolution-agent

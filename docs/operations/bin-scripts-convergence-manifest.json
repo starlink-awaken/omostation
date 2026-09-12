@@ -127,18 +127,18 @@
     },
     {
       "name": "adv_fail_report",
-      "bin": "bin/collab/adv-fail-report.py",
-      "scripts": "scripts/bin/collab/adv-fail-report.py",
+      "bin": "bin/_archive/migrated_low_value/adv-fail-report.py",
+      "scripts": "scripts/bin/_archive/migrated_low_value/adv-fail-report.py",
       "status": "managed",
       "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/collab/adv-fail-report.py"
+          "bin/_archive/migrated_low_value/adv-fail-report.py"
         ],
         "retired_files": [
-          "scripts/bin/collab/adv-fail-report.py"
+          "scripts/bin/_archive/migrated_low_value/adv-fail-report.py"
         ],
         "risk_score": 15,
         "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"
@@ -3133,18 +3133,18 @@
     },
     {
       "name": "recommend_mode",
-      "bin": "bin/collab/recommend_mode.py",
-      "scripts": "scripts/bin/collab/recommend_mode.py",
+      "bin": "bin/_archive/migrated_low_value/recommend_mode.py",
+      "scripts": "scripts/bin/_archive/migrated_low_value/recommend_mode.py",
       "status": "managed",
       "action": "bin-master, scripts-retired",
       "owner": "governance",
       "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
       "evidence": {
         "active_files": [
-          "bin/collab/recommend_mode.py"
+          "bin/_archive/migrated_low_value/recommend_mode.py"
         ],
         "retired_files": [
-          "scripts/bin/collab/recommend_mode.py"
+          "scripts/bin/_archive/migrated_low_value/recommend_mode.py"
         ],
         "risk_score": 15,
         "execution_report": "docs/operations/bin-scripts-close-duplicate-exec.md"

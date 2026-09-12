@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/orca-r0-verify.py
+name: Orca R0 Admission Verify
+category: governance
+owner: governance-team
+description: Read-only Orca R0 admission verifier (3 transactions + settlement report). No writer dispatch.
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - BET-Y1Q4-T10-149
+maturity: active
+last_reviewed: "2026-09-11"
