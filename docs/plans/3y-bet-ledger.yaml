@@ -1568,10 +1568,12 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: 真实邮件/日历多通道 Ingress 自动感知与 LECP 实体分诊管道
   track: T2-PERCEPT
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run python -m spine.ingress.test_pipeline
     expect: exit 0
@@ -1584,6 +1586,35 @@ bets:
   - bin/daemon/mail_ingress.py
   - .omo/_knowledge/retros/BET-Y1Q4-T2-06.md
   - docs/superpowers/specs/2026-09-12-t2-06-mail-calendar-ingress-design.md
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+        status: VERIFIED
+      operational:
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-12-t2-06-mail-calendar-ingress-design.md
     spec_version: 1.0.0
