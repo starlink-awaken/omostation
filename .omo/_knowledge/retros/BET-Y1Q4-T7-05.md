@@ -1,8 +1,11 @@
 ---
-status: active
+status: completed
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-09-12
+completed_at: 2026-09-12
+run_id: 20260912T113503Z-bet-execution-e24144d8
+pr: "https://github.com/starlink-awaken/omostation/pull/3715"
 ---
 # Retro — BET-Y1Q4-T7-05 业务场景五档生命周期自动巡航与金牌样例自学习闭环
 
