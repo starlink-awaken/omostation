@@ -1,8 +1,8 @@
 ---
 schema: resident-retro-candidate/v1
 topic: convergence-pulse-weekly
-generated_at: 2026-09-11T07:47:01Z
-status: archived
+generated_at: 2026-09-12T12:41:59Z
+status: candidate
 counts:
   runs: 2
   failures: 0
@@ -14,7 +14,7 @@ failure_breakdown:
 ---
 # convergence-pulse-weekly 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-11T07:47:01Z
+- generated_at: 2026-09-12T12:41:59Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 2 成功运行 + 0 失败模式 = 2 草稿
 - 失败率: 0.00%

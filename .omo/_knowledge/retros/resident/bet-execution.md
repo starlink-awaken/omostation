@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-09-11T07:47:01Z
-status: archived
+generated_at: 2026-09-12T12:41:59Z
+status: candidate
 counts:
-  runs: 51
+  runs: 54
   failures: 0
-  total: 51
+  total: 54
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-11T07:47:01Z
+- generated_at: 2026-09-12T12:41:59Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 51 成功运行 + 0 失败模式 = 51 草稿
+- sediment 覆盖: 54 成功运行 + 0 失败模式 = 54 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -72,6 +72,9 @@ failure_breakdown:
 - 20260908T011338Z-bet-execution-6de0ad38.md
 - 20260908T031155Z-bet-execution-cf6bdf89.md
 - 20260909T022521Z-bet-execution-2e826e12.md
+- 20260911T135703Z-bet-execution-128bc281.md
+- 20260911T144427Z-bet-execution-89987060.md
+- 20260912T113503Z-bet-execution-e24144d8.md
 
 ## 失败模式 (failures/)
 
@@ -431,6 +434,25 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=1
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=4528.881
+- **20260911T135703Z-bet-execution-128bc281**
+  - 计划 (objective): [BET-Y1Q3-T6-16] 多仓本地分支、脏工作树与未合并交付的保护性收敛 (Appetite: 3 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=534.41
+- **20260911T144427Z-bet-execution-89987060**
+  - 计划 (objective): [BET-Y1Q4-T6-23] Resident Daemon 与 AGE-v2 CellPool 算力池合体调度 (Resident Daemon & Agent Cell Elastic Pool Integration) (Appetite: 3 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=29180.084
+- **20260912T113503Z-bet-execution-e24144d8**
+  - 计划 (objective): [BET-Y1Q4-T7-05] 业务场景五档生命周期自动巡航与金牌样例自学习闭环 (Autonomous Scene Lifecycle Cruiser & Golden Sample Loop) (Appetite: 2 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=3229.772
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
