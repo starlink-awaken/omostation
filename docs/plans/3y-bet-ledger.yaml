@@ -28347,6 +28347,47 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-157-aetherforge-responses-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-157.md
+- accepted_specifications:
+  - content_digest: sha256:40a2e9826a429b69fef213c9de67dc9a6a11467659c2689c1c2df696903f1f35
+    decision_ref: decision://accepted/BET-Y1Q4-T10-158
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t10-158-omlxc-probe-candidates-pointer-close.md
+    spec_version: 1.0.0
+  appetite: 0.25 day
+  circuit_breaker: 发现该 SHA 在 child origin/main 不可达，或有其他 agent 正在处理同一指针，立即停止。
+  done_when:
+  - root projects/omlxc gitlink 等于 e92317572eefbc539bb99c29029cf001c6261388
+  - '该 SHA 在 omostation-omlxc origin/main 可达 (已验证: PR #72 已合并)'
+  - governance-release-gate / gac-local-gate 在指针 bump PR 上通过
+  goal: 'omostation-omlxc PR #72 修复了 OmlxAppAdapter.discover() 固定单一 probe_model_id 导致的
+    available:false 假阳性(单模型槽位后端上, 除了被钉死的那一个模型外其它 chat 模型的探活几乎永远被跳过)。
+    根仓 projects/omlxc 指针仍停在合并前的 a438f9a，需要 bump 到 e9231757 使根仓反映已合并、已生效的状态。'
+  human_gate: true
+  id: BET-Y1Q4-T10-158
+  non_goals:
+  - 不修改 projects/omlxc 源码、分支历史或其他 gitlink
+  - 不修改本 BET 台账/spec/retro 之外的任何文件
+  pasw_required: false
+  priority: P2
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: projects/omlxc root gitlink pointer closeout (probe-candidate availability fix)
+  track: T10-MATURITY
+  underlying_workflow: submodule-pointer-close
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/gac/check-submodule-pointer-drift.py --json
+    expect: exit 0
+  - cmd: make governance-release-gate
+    expect: exit 0
+  window: Y1Q4
+  workflow: submodule-pointer-close
+  write_surfaces:
+  - projects/omlxc
+  - docs/superpowers/specs/2026-09-12-t10-158-omlxc-probe-candidates-pointer-close.md
+  - docs/superpowers/specs/2026-09-12-t10-157-aetherforge-responses-pointer-close.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-158.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
