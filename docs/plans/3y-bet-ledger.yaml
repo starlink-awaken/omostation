@@ -28115,7 +28115,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: in_progress
   title: Studio 机理工坊与知识记忆中枢深度交付 (升级
   track: T8-SURFACE
   underlying_workflow: project-code-change
