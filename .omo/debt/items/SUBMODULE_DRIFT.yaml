@@ -7,7 +7,7 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: low
-lifecycle_state: open
+lifecycle_state: resolved
 owner: governance-team
 affected_roots:
 - projects/agora
@@ -136,3 +136,7 @@ description: "Submodule gitlink drift detected: 21 issue(s).\n\n- projects/aethe
   \ checkout main && git pull && cd ../.. && git add .subtrees/cockpit\n- .subtrees/agora:\
   \ DIVERGED (gitlink=4c775439d897, origin=?)\n  Fix: cd .subtrees/agora && git checkout\
   \ main && git pull && cd ../.. && git add .subtrees/agora"
+
+closed_at: "2026-09-12T12:48:00Z"
+closed_by: governance-agent
+closed_evidence: "PR #3700 merged — all 4 stale submodules (agora/c383bbc, cockpit/a340610d, cockpit-ui/91dfa1b, omo/743da7b) synced to origin/main"

@@ -2,7 +2,7 @@
 type: retro
 domain: governance
 bet: BET-Y1Q4-T6-24
-status: final
+status: archived
 owner: governance-agent
 last-reviewed: 2026-09-11
 ---

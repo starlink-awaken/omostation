@@ -10,7 +10,7 @@ last-reviewed: 2026-09-09
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-共 **220** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **221** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
@@ -1801,6 +1801,7 @@ cockpit vault --help          # 完整参数面
 | `cockpit open` | 打开研究全文 |
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
 | `cockpit pending` | 查看未决待办快照预览 |
+| `cockpit persona-radar` | 个人文风一致性多维雷达评估 (T3-01) |
 | `cockpit pipeline` | pipeline 概览 |
 | `cockpit pptx` | 渲染为 16:9 高管技术汇报 PPTX |
 | `cockpit prebrief` | ICS 日历事件 → 会前速递简报 |
@@ -1877,13 +1878,13 @@ cockpit completion fish | source    # Fish
 
 | CLI 命令 | MCP 服务器 | 工具数 |
 |----------|-----------|--------|
-| `cockpit omo` | `omo` | 0 |
-| `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 0 |
+| `cockpit omo` | `omo` | 24 |
+| `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
-| `cockpit model-driven` | `model-driven` | 0 |
+| `cockpit model-driven` | `model-driven` | 28 |
 | `cockpit agora` | `agora` | 110 |
-| `cockpit family-hub` | `family-hub` | 0 |
-| `cockpit mesh` | `aetherforge` | 0 |
-| `cockpit compute` | `aetherforge` | 0 |
+| `cockpit family-hub` | `family-hub` | 6 |
+| `cockpit mesh` | `aetherforge` | 15 |
+| `cockpit compute` | `aetherforge` | 15 |
 
 *由 `bin/ssot/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成 (T8-16 全量模式)*

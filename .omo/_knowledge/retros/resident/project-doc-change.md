@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-09-12T00:01:36Z
+generated_at: 2026-09-12T12:41:59Z
 status: candidate
 counts:
-  runs: 29
+  runs: 30
   failures: 0
-  total: 29
+  total: 30
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-12T00:01:36Z
+- generated_at: 2026-09-12T12:41:59Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 29 成功运行 + 0 失败模式 = 29 草稿
+- sediment 覆盖: 30 成功运行 + 0 失败模式 = 30 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -50,6 +50,7 @@ failure_breakdown:
 - 20260905T040605Z-project-doc-change-c33324b2.md
 - 20260905T041743Z-project-doc-change-b9bcff45.md
 - 20260911T101129Z-project-doc-change-2831b0aa.md
+- 20260912T073417Z-project-doc-change-eb813d27.md
 
 ## 失败模式 (failures/)
 
@@ -254,6 +255,13 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=1
   - 指标: event_count=6, duration_s=9269.733
+- **20260912T073417Z-project-doc-change-eb813d27**
+  - 计划 (objective): Canonical claims authority for T10-157 exact accepted-spec successor recovery
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=7
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=8310.966
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

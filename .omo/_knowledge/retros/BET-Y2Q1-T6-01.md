@@ -1,6 +1,6 @@
 ---
 bet_id: BET-Y2Q1-T6-01
-status: completed
+status: archived
 completed_at: 2026-09-07
 run_id: 20260907T03-memory-decay-engine
 pr: "https://github.com/starlink-awaken/omostation/pull/3361"

@@ -1,6 +1,6 @@
 ---
 type: ephemeral
-status: completed
+status: archived
 ---
 
 # BET-Y1Q4-T5-03 复盘（batch 1：spec 绑定 + resident A2A 委托闭环）

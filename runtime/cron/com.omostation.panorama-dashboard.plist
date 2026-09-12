@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.panorama-dashboard.plist
+  织星全景驾驶舱：常驻静态服务 + 每 5min 采集刷新。
+
+  安装:
+    cp runtime/cron/com.omostation.panorama-dashboard.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
+  状态:
+    launchctl list | grep panorama-dashboard
+    curl -s http://127.0.0.1:43910/data.json | head -c 200
+  卸载:
+    launchctl unload ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.omostation.panorama-dashboard</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/opt/homebrew/bin/python3</string>
+      <string>-B</string>
+      <string>/Users/xiamingxing/Workspace/bin/panorama/panorama-serve.py</string>
+      <string>--port</string>
+      <string>43910</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PYTHONDONTWRITEBYTECODE</key>
+      <string>1</string>
+      <key>PANORAMA_PORT</key>
+      <string>43910</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace</string>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true</key>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/dashboard/launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/dashboard/launchd.log</string>
+  </dict>
+</plist>

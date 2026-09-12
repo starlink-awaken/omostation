@@ -327,3 +327,4 @@ bin/.omo/
 runtime/mos/
 .tokensave
 .claude-flow/
+runtime/dashboard/

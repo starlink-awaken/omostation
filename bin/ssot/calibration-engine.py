@@ -133,11 +133,53 @@ def main(argv=None) -> int:
     gp = sub.add_parser("check-gates"); gp.add_argument("--scene-id",required=True); gp.add_argument("--target-level",required=True)
     dp = sub.add_parser("check-demotion"); dp.add_argument("--scene-id",required=True)
     lp = sub.add_parser("list")
+    ap = sub.add_parser("daily", help="Run daily calibration cycle for all scenes")
     args = parser.parse_args(argv); cmd = args.command or "list"
     if cmd == "record": record_execution(args.scene_id,args.run_id,args.result); print(json.dumps({"status":"ok"})); return 0
     if cmd == "compute": print(json.dumps(compute_calibration(args.scene_id,args.window),ensure_ascii=False,indent=2)); return 0
     if cmd == "check-gates": r = check_promotion_gates(args.scene_id,args.target_level); print(json.dumps(r,ensure_ascii=False,indent=2)); return 0 if r["eligible"] else 1
     if cmd == "check-demotion": print(json.dumps(check_demotion_triggers(args.scene_id),ensure_ascii=False,indent=2)); return 0
+    if cmd == "daily":
+        conn = _get_db()
+        rows = conn.execute("SELECT DISTINCT scene_id FROM scene_execution").fetchall(); conn.close()
+        alerts = 0; promoted = 0; auto_applied = 0
+        lifecycle_path = _ROOT / ".omo" / "_truth" / "scenarios" / "v3"
+        for r in rows:
+            sid = r["scene_id"]
+            cal = compute_calibration(sid)
+            demo = check_demotion_triggers(sid)
+            if demo["demote"]:
+                print(f"[DEMOTION] {sid}: {demo['triggers']}"); alerts += 1
+                _auto_transition(sid, "shadow", "calibration-engine")
+            for level in ("assisted","supervised","routine"):
+                gates = check_promotion_gates(sid, level)
+                if gates["eligible"]:
+                    print(f"[PROMOTION] {sid} → {level} (score={cal['calibration_score']:.3f})"); promoted += 1
+                    # Auto-apply promotion for assisted (supervised/routine need human)
+                    if level == "assisted":
+                        card_path = lifecycle_path / f"{sid}.yaml"
+                        if card_path.is_file() and _auto_transition(sid, level, "calibration-engine"):
+                            auto_applied += 1
+                    break
+        print(f"Daily cycle: {len(rows)} scenes, {alerts} demotion alerts, {promoted} promotion candidates, {auto_applied} auto-applied")
+        return 0
+
+def _auto_transition(scene_id: str, target_level: str, actor: str) -> bool:
+    """Auto-apply lifecycle transition. Returns True on success."""
+    try:
+        import subprocess as _sp
+        lifecycle_script = _ROOT / "bin" / "ssot" / "scene-card-lifecycle.py"
+        card_path = _ROOT / ".omo" / "_truth" / "scenarios" / "v3" / f"{scene_id}.yaml"
+        if not card_path.is_file() or not lifecycle_script.is_file():
+            return False
+        result = _sp.run(
+            [sys.executable, str(lifecycle_script), "transition",
+             "--scene-card", str(card_path), "--tier", target_level, "--actor", actor],
+            capture_output=True, text=True, timeout=15, cwd=str(_ROOT),
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
     conn = _get_db(); rows = conn.execute("SELECT DISTINCT scene_id FROM scene_execution ORDER BY scene_id").fetchall(); conn.close()
     print(f"{'Scene ID':<40} {'Samples':>8} {'Score':>8} {'FP Rate':>8} {'Trend':>8}\n{'-'*76}")
     for r in rows:

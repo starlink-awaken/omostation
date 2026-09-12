@@ -1194,6 +1194,33 @@ surfaces:
   - pull_request
   status: active
   note: 文档索引生成 (并行新增补登, 2026-09-03)
+- id: bin-gac-check-diff-lifecycle-py
+  tool: bin/gac/check-diff-lifecycle.py
+  workflow: diff-governance.yml
+  gate: true
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: 孤立 diff 检测 (BET-Y1Q4-T10-154)
+- id: bin-gac-check-diff-debt-py
+  tool: bin/gac/check-diff-debt.py
+  workflow: diff-governance.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: 代码变更历史债务报告 (BET-Y1Q4-T10-155, 仅报告不阻断)
+- id: bin-gac-check-diff-growth-py
+  tool: bin/gac/check-diff-growth.py
+  workflow: diff-governance.yml
+  gate: true
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: 单 PR 代码膨胀阻断 (BET-Y1Q4-T10-156)
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
@@ -1215,6 +1242,16 @@ workflow_triggers:
   triggers:
   - per_pr
   path_filtered: false
+- workflow: architecture-check.yml
+  triggers:
+  - per_pr
+  path_filtered: true
+  paths:
+  - docs/scene-cards/**
+  - docs/journey-specs/**
+  - .omo/standards/**
+  - bin/mof/**
+  - bin/ssot/**
 - workflow: audit-rollout-monthly.yml
   triggers:
   - manual
@@ -1292,6 +1329,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/cockpit-ui-ci.yml
+  - projects/cockpit-ui
   - projects/cockpit-ui/**
 - workflow: config-check.yml
   triggers:
@@ -1315,6 +1353,26 @@ workflow_triggers:
   - push
   - scheduled
   path_filtered: false
+- workflow: diff-governance.yml
+  triggers:
+  - per_pr
+  - push
+  path_filtered: true
+  paths:
+  - .github/workflows/diff-governance.yml
+  - bin/gac/check-diff-lifecycle.py
+  - bin/gac/check-diff-debt.py
+  - bin/gac/check-diff-growth.py
+  - bin/ssot/semantic_diff.py
+- workflow: doc-gov-check.yml
+  triggers:
+  - per_pr
+  - push
+  path_filtered: true
+  paths:
+  - "**.md"
+  - bin/ssot/generate-docs-index.py
+  - docs/**
 - workflow: ecos-ci.yml
   triggers:
   - per_pr
@@ -1347,6 +1405,18 @@ workflow_triggers:
   triggers:
   - scheduled
   path_filtered: false
+- workflow: harness-ci.yml
+  triggers:
+  - per_pr
+  path_filtered: true
+  paths:
+  - .omo/_truth/registry/harness-policy.yaml
+  - bin/gac/harness*.py
+  - .githooks/pre-edit-architecture.sh
+  - bin/harness
+  - .omo/standards/**
+  - docs/scene-cards/**
+  - docs/journey-specs/**
 - workflow: governance-check.yml
   triggers:
   - per_pr
