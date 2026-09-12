@@ -28101,6 +28101,40 @@ bets:
   write_surfaces:
   - docs/reports/
   - .omo/_knowledge/retros/
+- accepted_specifications:
+  - content_digest: sha256:29f301de1c9fc93cd6609aaad88c0ae1024dc8bfd7fa9fe811fcb496fadc8c2c
+    decision_ref: decision://accepted/BET-Y1Q4-T8-25
+    spec_ref: repo://docs/superpowers/specs/2026-09-11-zhixing-dashboard-full-causal-mesh-spec.md
+    spec_version: 1.0.0
+  appetite: 2 days
+  circuit_breaker: 任何可视化或交互升级若导致既有自动化测试失败或产生外部逃逸网络请求，立即回滚。
+  done_when:
+  - 43191 观测站六大主权平面全面上线原生交互式可视化组件（门禁流水线、战役分布、算力星系拓扑、价值回路、场景卡漏斗、动态因果子图）
+  - 严格保持 100% 离线主权与 CSP 约束，零外部第三方依赖
+  - 248 项单元与端到端回归测试全量通过（158 pytest + 36 strategic check + 11 workbench check + 43 UI unit tests）
+  - 形成交付复盘文档并完成主仓 PR 闭环
+  goal: 为 43191 织星全要素控制面升级全维度可视化呈现，包含 A1-A9 门禁准入流、3Y-BET 台账与里程碑柱状图、主权算力协同拓扑、五阶段价值增强回路、业务场景卡五级漏斗及动态交互因果拓扑子图。
+  human_gate: false
+  id: BET-Y1Q4-T8-25
+  non_goals:
+  - 不引入外部 CDN 或重型三方 JS库
+  - 不破坏既有 DOM 节点与选择器兼容性
+  - 不修改冻结中的 projects/cockpit-ui
+  priority: P0
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: 43191 织星全要素控制面全维度交互式可视化落地与验证
+  track: T8-SURFACE
+  underlying_workflow: project-code-change
+  verify:
+  - cmd: node ~/.local/share/zhixing-dashboard/playwright-workbench-check.cjs && node ~/.local/share/zhixing-dashboard/playwright-strategic-check.cjs
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - docs/reports/
+  - .omo/_knowledge/retros/
 - appetite: 1 sprint
   created_at: '2026-09-11'
   discipline: T10-REPO-HYGIENE
@@ -28272,7 +28306,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 401
+  total_bets: 402
   windows:
   - Y1Q1
   - Y1Q2
