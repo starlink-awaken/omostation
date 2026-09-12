@@ -28712,6 +28712,47 @@ bets:
   - .githooks/post-checkout
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+- accepted_specifications:
+  - content_digest: sha256:7d33a97ac5242e5a22327bfaaf374f3a9f04046f1088b781ff423604a3687a16
+    decision_ref: decision://accepted/BET-Y1Q4-T10-162
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t10-162-omlxc-inventory-baseline-reset-pointer-close.md
+    spec_version: 1.0.0
+  appetite: 0.25 day
+  circuit_breaker: 发现该 SHA 在 child origin/main 不可达，或有其他 agent 正在处理同一指针，立即停止。
+  done_when:
+  - root projects/omlxc gitlink 等于 c030788e8792482845b66f1247bd937f077f2efd
+  - '该 SHA 在 omostation-omlxc origin/main 可达 (已验证: PR #73 已合并)'
+  - governance-release-gate / gac-local-gate 在指针 bump PR 上通过
+  goal: 'omostation-omlxc PR #73 新增了 omlxc nodes reset-inventory-baseline 命令，修复了三个长期存在的
+    inventory_drop 假警报(高水位线只能单向上升，没有接受"有意缩减"的机制)。根仓 projects/omlxc 指针仍停在合并前的
+    e9231757，需要 bump 到 c030788e 使根仓反映已合并、已生效的状态。'
+  human_gate: true
+  id: BET-Y1Q4-T10-162
+  non_goals:
+  - 不修改 projects/omlxc 源码、分支历史或其他 gitlink
+  - 不修改本 BET 台账/spec/retro 之外的任何文件
+  pasw_required: false
+  priority: P2
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: projects/omlxc root gitlink pointer closeout (inventory-baseline reset)
+  track: T10-MATURITY
+  underlying_workflow: submodule-pointer-close
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/gac/check-submodule-pointer-drift.py --json
+    expect: exit 0
+  - cmd: make governance-release-gate
+    expect: exit 0
+  window: Y1Q4
+  workflow: submodule-pointer-close
+  write_surfaces:
+  - projects/omlxc
+  - projects/agora
+  - docs/superpowers/specs/2026-09-12-t10-162-omlxc-inventory-baseline-reset-pointer-close.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-162.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
