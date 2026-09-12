@@ -28572,6 +28572,47 @@ bets:
         evidence: {}
     decision_ref: decision://accepted/BET-Y1Q4-T10-158
     overall_state: delivery_accepted
+- accepted_specifications:
+  - content_digest: sha256:abe0c11d09b2356619725ce9d015ca4e77a0ab65c2fb3640b6f5fcb4ef90d06c
+    decision_ref: decision://accepted/BET-Y1Q4-T10-159
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t10-159-aetherforge-anthropic-messages-pointer-close.md
+    spec_version: 1.0.0
+  appetite: 0.25 day
+  circuit_breaker: 发现该 SHA 在 child origin/main 不可达，或有其他 agent 正在处理同一指针，立即停止。
+  done_when:
+  - root projects/aetherforge gitlink 等于 79842ed097b792cd2a856d62f8d08d4bf6f1a3de
+  - '该 SHA 在 omostation-aetherforge origin/main 可达 (已验证: PR #72 已合并)'
+  - governance-release-gate / gac-local-gate 在指针 bump PR 上通过
+  goal: 'omostation-aetherforge PR #72 合并了 Anthropic Messages API 支持 (79842ed)，解除了 Claude
+    Code / Anthropic SDK 客户端对本地网关的阻断。根仓 projects/aetherforge 指针仍停在合并前的
+    452f0db，需要 bump 到 79842ed 使根仓反映已合并、已生效的状态。'
+  human_gate: true
+  id: BET-Y1Q4-T10-159
+  non_goals:
+  - 不修改 projects/aetherforge 源码、分支历史或其他 gitlink
+  - 不修改本 BET 台账/spec/retro 之外的任何文件
+  pasw_required: false
+  priority: P2
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: projects/aetherforge root gitlink pointer closeout (Anthropic Messages API)
+  track: T10-MATURITY
+  underlying_workflow: submodule-pointer-close
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/gac/check-submodule-pointer-drift.py --json
+    expect: exit 0
+  - cmd: make governance-release-gate
+    expect: exit 0
+  window: Y1Q4
+  workflow: submodule-pointer-close
+  write_surfaces:
+  - projects/aetherforge
+  - projects/omo
+  - docs/superpowers/specs/2026-09-12-t10-159-aetherforge-anthropic-messages-pointer-close.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-159.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
