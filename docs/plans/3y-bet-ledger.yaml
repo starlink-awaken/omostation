@@ -28987,7 +28987,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: A1–A9 执行环境恢复收口（digest-bound 证据 receipt + 采集对齐）
   track: T10-MATURITY
   underlying_workflow: governance-state-mutation
