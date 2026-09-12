@@ -179,7 +179,8 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 656
+    script_baseline: 657
+    # 2026-09-12: +1 bin/daemon/mail_ingress.py (T2-06 真实邮件/日历 Ingress + LECP 分诊管道)
     # 2026-09-11: +5 GAC repository-hygiene health checks (BET-Y1Q4-T10-145/146/147)
     # 2026-09-11: +48 T16 ops check-signals + gen-service-configs 语法修复 + cron 准入 (BET-Y1Q4-T16)
     # 2026-09-07: +1 resident-sandbox-timemachine (BET-Y1Q4-T10-133 沙箱基建)

@@ -18,8 +18,8 @@ layers:
 
   L2:
     name: "引擎层"
-    projects: ["omo", "metaos", "omo-debt", "family-hub", "knowledge", "domain-cartridges"]
-    description: "知识引擎、治理中枢、知识数据库、领域场景卡内容包等"
+    projects: ["omo", "metaos", "omo-debt", "family-hub", "knowledge", "domain-cartridges", "spine"]
+    description: "知识引擎、治理中枢、知识数据库、领域场景卡内容包、Spine LECP Ingress 管道等"
 
   L3:
     name: "入口层"
