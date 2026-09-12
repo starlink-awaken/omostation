@@ -28142,7 +28142,9 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
+
   title: Operations 业务协同与 Mission 战略交付工作台落地
   track: T8-SURFACE
   underlying_workflow: project-code-change
