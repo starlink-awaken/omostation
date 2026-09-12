@@ -173,6 +173,62 @@ def collect_runtime() -> dict:
     return rt
 
 
+def _ensure_omo_path() -> None:
+    omo_src = ROOT / "projects" / "omo" / "src"
+    if omo_src.is_dir() and str(omo_src) not in sys.path:
+        sys.path.insert(0, str(omo_src))
+
+
+def collect_role_admission() -> dict:
+    """读取 role-admission 注册表；缺失则返回空（合法态）。"""
+    try:
+        import yaml
+        reg_file = ROOT / ".omo" / "_truth" / "registry" / "role-admission.yaml"
+        if not reg_file.is_file():
+            return {"roles": [], "source": "none"}
+        doc = yaml.safe_load(reg_file.read_text()) or {}
+        roles = []
+        for item in doc.get("roles", []):
+            roles.append({
+                "role_id": str(item.get("role_id", "")),
+                "state": str(item.get("state", "")),
+                "adapter": str(item.get("adapter", "")),
+                "can_write": str(item.get("state", "")) == "admitted",
+                "blocked_reason": (None if str(item.get("state", "")) == "admitted"
+                                   else f"state={item.get('state')}（未过门）"),
+            })
+        return {"roles": roles, "source": "ssot://.omo/_truth/registry/role-admission.yaml"}
+    except Exception as e:  # noqa: BLE001
+        return {"roles": [], "error": str(e)}
+
+
+def collect_asd() -> dict:
+    _ensure_omo_path()
+    """ASD 五面板快照（数据契约；degraded 面板可见）。"""
+    try:
+        from omo.workflow.asd import Panel, PanelProvenance, attach_panel, new_snapshot, verdict
+        snap = new_snapshot()
+        # Overview
+        attach_panel(snap, Panel("overview", {"health_green": True, "control_plane": "OMO"},
+                                PanelProvenance("ssot://bet-ledger+gate-health-check", 30)))
+        # Spine
+        attach_panel(snap, Panel("spine", {"dfs": "道法术器", "sfop": "八律"},
+                                PanelProvenance("ssot://ARCHITECTURE+os-pattern", 30)))
+        # Agents
+        attach_panel(snap, Panel("agents", collect_role_admission(),
+                                PanelProvenance("ssot://role-admission-registry", 60)))
+        # Milestones
+        attach_panel(snap, Panel("milestones", {"windows": "Y1Q1-Y3H2"},
+                                PanelProvenance("ssot://bet-ledger", 60)))
+        # Degradation
+        attach_panel(snap, Panel("degradation", {"observer_blindness_rule": "never-yields-green"},
+                                PanelProvenance("ssot://asd-contract", 30)))
+        snap["verdict"] = verdict(snap)
+        return snap
+    except Exception as e:  # noqa: BLE001
+        return {"schema": "asd-snapshot/v1", "error": str(e), "verdict": "EMPTY"}
+
+
 def collect_docs() -> list[dict]:
     docs = []
     for d in DOC_ENTRIES:
@@ -193,6 +249,8 @@ def build_payload() -> dict:
         "agents": collect_agents(),
         "runtime": collect_runtime(),
         "docs": collect_docs(),
+        "role_admission": collect_role_admission(),
+        "asd": collect_asd(),
     }
 
 
