@@ -655,7 +655,127 @@ def _with_provenance(source: str, collected_at: str | None = None) -> dict:
     }
 
 
-def collect_with_provenance() -> dict:
+def collect_ci() -> dict:
+    """CI Pipeline 健康：每 workflow 最近 run 状态 + 失败率。"""
+    code, out = run(["gh", "run", "list", "--limit", "60", "--json",
+                     "workflowName,status,conclusion,event,createdAt,databaseId"])
+    if code != 0 or not out.startswith("["):
+        return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
+    import yaml
+    from collections import Counter
+    try:
+        data = json.loads(out)
+    except Exception:
+        return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
+    by_wf: dict[str, list[str]] = {}
+    for r in data:
+        w = r.get("workflowName", "?")
+        conc = r.get("conclusion", "")
+        status = "pass" if conc == "success" else ("fail" if conc in ("failure", "cancelled", "timed_out") else "other")
+        by_wf.setdefault(w, []).append(status)
+    summaries = []
+    for w, statuses in sorted(by_wf.items()):
+        c = Counter(statuses)
+        total = len(statuses)
+        fails = c.get("fail", 0)
+        summaries.append({"workflow": w, "total": total, "pass": c.get("pass", 0),
+                          "fail": fails, "failure_rate": round(fails / total, 2) if total else 0,
+                          "health": "red" if fails > 0 else "green"})
+    red = [s for s in summaries if s["health"] == "red"][:8]
+    return {"total_runs": len(data), "workflows": len(by_wf), "red_workflows": red, "all": summaries[:20]}
+    if code == 0 and out.startswith("{"):
+        try:
+            return json.loads(out[out.index("{"):])
+        except ValueError:
+            pass
+    return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
+
+
+def collect_cron() -> dict:
+    """Cron 调度台：job 的 schedule / 状态 / 一致性。"""
+    import yaml
+    from pathlib import Path
+    reg_file = Path(ROOT / ".omo/cron/registry.yaml")
+    if not reg_file.is_file():
+        return {"total": 0, "active": 0, "proposed": 0, "installed": 0, "crontab_lines": 0, "planes": {}, "jobs": []}
+    reg = yaml.safe_load(reg_file.read_text()) or {}
+    jobs = reg.get("jobs", [])
+    active_cr = [j for j in jobs if j.get("status") == "active"]
+    proposed = [j for j in jobs if j.get("status") == "proposed"]
+    installed_declared = [j for j in jobs if j.get("reality") == "installed"]
+    planes: dict[str, int] = {}
+    for j in jobs:
+        for pl in j.get("planes", []):
+            planes[pl] = planes.get(pl, 0) + 1
+    code, ct_out = run(["crontab", "-l"])
+    installed_lines = [l for l in ct_out.splitlines() if l.strip() and not l.strip().startswith("#")] if code == 0 else []
+    sample = [{"name": j.get("name", ""), "schedule": j.get("schedule", ""),
+               "status": j.get("status", ""), "reality": j.get("reality", "declared_only")} for j in jobs[:40]]
+    return {"total": len(jobs), "active": len(active_cr), "proposed": len(proposed),
+            "installed": len(installed_declared), "crontab_lines": len(installed_lines),
+            "planes": planes, "jobs": sample}
+
+
+def collect_submodules() -> dict:
+    """子模块指针矩阵：当前 SHA vs origin/main / worktree HEAD / 新鲜度。"""
+    subs = {}
+    for name in ("omo", "cockpit-ui", "cockpit", "agora", "ecos", "l4-kernel", "bus-foundation",
+                 "aetherforge", "model-driven", "knowledge", "family-hub"):
+        sp = ROOT / "projects" / name
+        if not sp.is_dir():
+            continue
+        cur = run(["git", "-C", str(sp), "rev-parse", "HEAD"])[1] if run(["git", "-C", str(sp), "rev-parse", "HEAD"])[0]==0 else None
+        origin_main = run(["git", "-C", str(sp), "rev-parse", "origin/main"])[1] if run(["git", "-C", str(sp), "rev-parse", "origin/main"])[0]==0 else None
+        behind_ahead = ""
+        if cur and origin_main:
+            beh = run(["git", "-C", str(sp), "rev-list", "--left-right", "--count", f"origin/main...{cur}"])[1] if run(["git", "-C", str(sp), "rev-list", "--left-right", "--count", f"origin/main...{cur}"])[0]==0 else ""
+        behind, ahead = 0, 0
+        if behind_ahead:
+            parts = behind_ahead.split()
+            if len(parts)==2:
+                behind, ahead = int(parts[0]), int(parts[1])
+        status = "diverged" if behind and ahead else ("behind" if behind else ("ahead" if ahead else "synced"))
+        subs[name] = {"current": (cur or "")[:12], "origin_main": (origin_main or "")[:12],
+                      "behind": behind, "ahead": ahead, "status": status}
+    synced = sum(1 for s in subs.values() if s["status"]=="synced")
+    return {"submodules": subs, "synced": synced, "total": len(subs)}
+
+
+def collect_debt() -> dict:
+    """债务与决策：24 debt 项 + 3 open decision + 待 closeout。"""
+    import yaml
+    from glob import glob
+    debts = []
+    for f in sorted(glob(str(ROOT / ".omo/debt/items/*.yaml"))):
+        try:
+            d = yaml.safe_load(Path(f).read_text()) or {}
+            debts.append({"id": d.get("id", Path(f).stem), "status": str(d.get("status","?")),
+                          "severity": d.get("severity",""), "title": str(d.get("title",""))[:60]})
+        except Exception:  # noqa: BLE001
+            pass
+    open_d = [d for d in debts if d["status"] in ("open", "proposed", "registered")]
+    closeout = []
+    for f in sorted(glob(str(ROOT / ".omo/_knowledge/retros/BET-*.md")))[-8:]:
+        closeout.append(Path(f).stem)
+    return {"total": len(debts), "open": len(open_d), "debts": debts[:15], "recent_retros": closeout}
+
+
+def collect_workflows() -> list[dict]:
+    """工作流活动：近 N 次 agent-workflow run 的成功/失败/时长/触发链。"""
+    from glob import glob
+    runs = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/runs/*.yaml")), reverse=True)[:15]
+    out = []
+    for f in runs:
+        try:
+            content = Path(f).read_text().split("---")[0]
+            import yaml
+            meta = yaml.safe_load(content) or {}
+            out.append({"run_id": meta.get("run_id",""), "workflow_id": str(meta.get("workflow_id",""))[:40],
+                        "status": meta.get("status",""), "created_at": str(meta.get("created_at",""))[:19],
+                        "file": Path(f).stem[:30]})
+        except Exception:  # noqa: BLE001
+            pass
+    return out
     """T10-166: build_payload + 给每个顶层面板加 provenance/freshness/degradation."""
     from datetime import UTC, datetime
     payload = build_payload()
@@ -686,6 +806,11 @@ def build_payload() -> dict:
         "agents": collect_agents(),
         "runtime": collect_runtime(),
         "docs": collect_docs(),
+        "ci": collect_ci(),
+        "cron": collect_cron(),
+        "submodules": collect_submodules(),
+        "debt": collect_debt(),
+        "workflows": collect_workflows(),
     }
 
 
@@ -698,7 +823,7 @@ def write_site(payload: dict) -> None:
 
 def check_side_effects() -> int:
     before = run(["git", "status", "--porcelain"])[1].splitlines()
-    payload = collect_with_provenance()
+    payload = build_payload()
     write_site(payload)
     after = run(["git", "status", "--porcelain"])[1].splitlines()
     new_repo_writes = [l for l in after if l not in before and not l.startswith("?? runtime/dashboard")]
@@ -721,7 +846,7 @@ def main() -> int:
     if args.check_side_effects:
         return check_side_effects()
 
-    payload = collect_with_provenance()
+    payload = build_payload()
     write_site(payload)
 
     if args.gates:
@@ -796,6 +921,11 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 <a href="#agents" data-s="agents">Agent 全景</a>
 <a href="#bets" data-s="bets">任务与里程碑</a>
 <a href="#runtime" data-s="runtime">运行态</a>
+<a href="#ci" data-s="ci">CI Pipeline</a>
+<a href="#cron" data-s="cron">Cron 调度</a>
+<a href="#submods" data-s="submods">子模块矩阵</a>
+<a href="#debt" data-s="debt">债务决策</a>
+<a href="#wfruns" data-s="wfruns">工作流活动</a>
 <a href="#docs" data-s="docs">知识入口</a>
 </nav>
 </aside>
@@ -834,6 +964,31 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
 <section class="sec" id="s-docs">
 <h2>知识入口</h2><p class="sub">白皮书 / 架构 / 流程 / 操作 —— 每卡直达源文档</p>
 <div class="grid g3" id="docgrid"></div>
+</section>
+<section class="sec" id="s-ci">
+<h2>CI Pipeline 健康</h2><p class="sub">每 workflow 最近 run 状态 · 失败率 · 红源定位</p>
+<div class="grid g3" id="cikpi"></div>
+<div class="card" style="margin-top:12px"><h3>红源 workflow</h3><table id="cired"><thead><tr><th>Workflow</th><th>总数</th><th>失败</th><th>失败率</th></tr></thead><tbody></tbody></table></div>
+</section>
+<section class="sec" id="s-cron">
+<h2>Cron 调度台</h2><p class="sub">注册表 job · 安装态一致性</p>
+<div class="grid g3" id="cronkpi"></div>
+<div class="card" style="margin-top:12px"><table id="crontbl"><thead><tr><th>名称</th><th>调度</th><th>状态</th><th>安装态</th></tr></thead><tbody></tbody></table></div>
+</section>
+<section class="sec" id="s-submods">
+<h2>子模块指针矩阵</h2><p class="sub">当前 SHA vs origin/main · behind/ahead</p>
+<div class="card"><table id="subtbl"><thead><tr><th>子模块</th><th>当前</th><th>origin/main</th><th>behind</th><th>ahead</th><th>状态</th></tr></thead><tbody></tbody></table></div>
+</section>
+<section class="sec" id="s-debt">
+<h2>债务与决策</h2><p class="sub">open debt · open decision · 待 closeout</p>
+<div class="grid g2">
+<div class="card"><h3>开放债务</h3><table id="debttbl"><thead><tr><th>ID</th><th>状态</th><th>严重</th><th>标题</th></tr></thead><tbody></tbody></table></div>
+<div class="card"><h3>最近 retro</h3><div id="recentretro" class="mono" style="font-size:12px;line-height:2"></div></div>
+</div>
+</section>
+<section class="sec" id="s-wfruns">
+<h2>工作流活动</h2><p class="sub">近次 agent-workflow run</p>
+<div class="card"><table id="wftbl"><thead><tr><th>Run ID</th><th>Workflow</th><th>状态</th><th>创建时间</th></tr></thead><tbody></tbody></table></div>
 </section>
 <div class="foot">只读 SSOT 聚合 · 零写入零派工 · 产物 runtime/dashboard/（gitignored）· 刷新: launchd 每 5min · 与 Serena 观测站(43191)互补</div>
 </main>
@@ -888,6 +1043,39 @@ const degClass =d=>['d0','d1','d2','d3'][Math.min(d,3)];
 $('degbar').innerHTML = Object.entries(D.panel_metadata||{}).map(([k,v])=>
   '<span class="deg '+degClass(v.degradation)+'"><b>'+k+'</b>: '+degLabels[v.degradation]+
   ' ('+v.freshness.age_seconds+'s)</span>').join(' ');
+
+// === CI Pipeline ===
+(function(){
+  const ci=D.ci||{};
+  $('cikpi').innerHTML=['总 runs',ci.total_runs||0,'workflows',ci.workflows||0,'红源',(ci.red_workflows||[]).length].map((x,i,a)=>i%2===0?'':'<div class="card kpi"><b>'+x+'</b><span>'+a[i-1]+'</span></div>').filter(Boolean).join('');
+  const red=ci.red_workflows||[];
+  $('cired').querySelector('tbody').innerHTML=red.length?red.map(w=>'<tr><td class="mono">'+w.workflow+'</td><td>'+w.total+'</td><td class="chip f">'+w.fail+'</td><td>'+Math.round(w.failure_rate*100)+'%</td></tr>').join(''):'<tr><td colspan=4 class="mono">无红源 ✅</td></tr>';
+})();
+
+// === Cron 调度台 ===
+(function(){
+  const cr=D.cron||{};
+  $('cronkpi').innerHTML=['总 job',cr.total||0,'active',cr.active||0,'proposed',cr.proposed||0,'已安装',cr.installed||0,'crontab行',cr.crontab_lines||0].map((x,i,a)=>i%2===0?'':'<div class="card kpi"><b>'+x+'</b><span>'+a[i-1]+'</span></div>').filter(Boolean).join('');
+  $('crontbl').querySelector('tbody').innerHTML=(cr.jobs||[]).slice(0,40).map(j=>'<tr><td class="mono">'+j.name+'</td><td class="mono">'+j.schedule+'</td><td><span class="chip '+(j.status==='active'?'p':'n')+'">'+j.status+'</span></td><td class="mono">'+(j.reality||'')+'</td></tr>').join('');
+})();
+
+// === 子模块指针矩阵 ===
+(function(){
+  const subs=D.submodules?.submodules||{};
+  $('subtbl').querySelector('tbody').innerHTML=Object.entries(subs).map(([n,s])=>'<tr><td class="mono">'+n+'</td><td class="mono">'+s.current+'</td><td class="mono">'+s.origin_main+'</td><td>'+s.behind+'</td><td>'+s.ahead+'</td><td><span class="chip '+(s.status==='synced'?'p':'f')+'">'+s.status+'</span></td></tr>').join('');
+})();
+
+// === 债务与决策 ===
+(function(){
+  const db=D.debt||{};
+  $('debttbl').querySelector('tbody').innerHTML=(db.debts||[]).map(d=>'<tr><td class="mono">'+d.id+'</td><td><span class="chip '+(d.status==='open'?'f':'n')+'">'+d.status+'</span></td><td>'+(d.severity||'')+'</td><td>'+d.title+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无开放债务 ✅</td></tr>';
+  $('recentretro').innerHTML=(db.recent_retros||[]).map(r=>'📋 '+r).join('<br>');
+})();
+
+// === 工作流活动 ===
+(function(){
+  $('wftbl').querySelector('tbody').innerHTML=(D.workflows||[]).map(w=>'<tr><td class="mono">'+w.run_id+'</td><td class="mono">'+(w.workflow_id||'').slice(0,30)+'</td><td><span class="chip '+(w.status==='completed'?'p':'f')+'">'+w.status+'</span></td><td class="mono">'+w.created_at+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">暂无运行</td></tr>';
+})();
 </script>
 </body></html>
 """
