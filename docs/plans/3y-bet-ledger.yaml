@@ -2917,7 +2917,8 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: 多 Agent 场景导航锚点与运行时防跑偏护栏机制 (Scene Navigation Anchor & Runtime Guardrail Framework)
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -2934,8 +2935,33 @@ bets:
   - projects/agora/src/agora/server/tools_scene.py
   - projects/omo/tests/unit/test_scene_guardrail_anchor.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+  - projects/agora/tests/test_tools_scene_anchor.py
+  - docs/plans/3y-bet-ledger.yaml
+
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md'}
+          merged_reachable_commit: {ref: git://origin/main@c94899c21ce7dcfffc9cd0197118095a23c841a2}
+          rollback: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md'}
+          tests: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md'}
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md'}
+          fresh_receipt: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md'}
+          replay: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md'}
+          cleanup: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md'}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    decision_ref: decision://accepted/BET-Y1Q4-T7-04
+    overall_state: delivery_accepted
   accepted_specifications:
-  - content_digest: sha256:17b5344764ef81ff7bc09532bd2685bdf66466019509769f471ea85899159139
+  - content_digest: sha256:b5f684aaa33281bb0c23b172bf01ccca4e3b846eff09d35bafed3bc3c1cf4a54
     decision_ref: decision://accepted/BET-Y1Q4-T7-04
     spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-04-scene-navigation-guardrails-design.md
     spec_version: 1.0.0
