@@ -29130,7 +29130,8 @@ bets:
   priority: P2
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: ASD 五核心面板数据契约与验收（驾驶舱呈现 + 降级规则）
   track: T9-OBSERV
   underlying_workflow: project-code-change
