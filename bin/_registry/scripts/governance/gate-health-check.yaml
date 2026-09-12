@@ -1,0 +1,25 @@
+schema: script-registry/v1
+id: bin/gac/gate-health-check.py
+name: Gate Health Check (门禁健康验证)
+category: governance
+owner: governance-team
+description: >-
+  Validates all governance gate underlying checks independently of the Serena
+  dashboard snapshot. Covers A1 (SFOP slots), A2 (daemon freshness),
+  A3 (governance Python), A4 (scheduler), A5 (reference/launchd),
+  and A1.3 (submodule remote integrity).
+inputs:
+  - name: --json
+    type: flag
+    required: false
+    description: Output results as JSON.
+outputs:
+  - type: exit_code
+    description: 0 if all gates pass, 1 if any gate fails.
+triggers:
+  - manual
+  - scheduled
+tags:
+  - gate
+  - health-check
+  - governance
