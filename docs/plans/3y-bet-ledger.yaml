@@ -27998,6 +27998,7 @@ bets:
   parent_bet_id: BET-Y1Q4-T8-24
   priority: P0
   retro: required
+  value_indicator_policy: false
   risk_level: L1
   status: done
   done_at: 2026-09-12
