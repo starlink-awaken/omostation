@@ -28116,7 +28116,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: in_progress
   title: Studio 机理工坊与知识记忆中枢深度交付 (升级
   track: T8-SURFACE
   underlying_workflow: project-code-change
@@ -28143,6 +28143,7 @@ bets:
   goal: 全面交付 Operations（整合 Work Cases 案件大厅、Scene v3 旅程状态机、SpineReviewModal 署名确认与 PersistentQueue
     监控）与 Mission（3Y-BET 全景矩阵、交互式甘特图、Golden Slice 真实价值公证）。
   human_gate: false
+  value_indicator_policy: false
   id: BET-Y1Q4-T8-24D
   non_goals:
   - 不修改现有 Work Cases 的底层存储协议，仅重构呈现与联动层
@@ -28164,6 +28165,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:3bcf727d21aa2d30c71d19b4e8b72793da70466a5ded72b083d0502b96684464
     decision_ref: decision://accepted/BET-Y1Q4-T8-24D
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-12-t8-24d-operations-mission-design.md
+            sha256: sha256:3bcf727d21aa2d30c71d19b4e8b72793da70466a5ded72b083d0502b96684464
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          merged_reachable_commit:
+            ref: git://origin/main@17e2069ae5e80c2b2cf7846de135338682cb0be4
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   write_surfaces:
   - projects/cockpit-ui/src/views/OperationsView.tsx
   - projects/cockpit-ui/src/views/MissionView.tsx
