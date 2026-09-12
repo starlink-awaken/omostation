@@ -28508,6 +28508,7 @@ bets:
   workflow: submodule-pointer-close
   write_surfaces:
   - projects/aetherforge
+  - projects/omo
   - docs/superpowers/specs/2026-09-12-t10-159-aetherforge-anthropic-messages-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-159.md
