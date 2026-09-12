@@ -210,6 +210,117 @@ jobs:
       memory-os-consolidate) 全 dormant。激活阻塞: brief-gen 写 tracked BRIEF.md
       违反主树只读 (ADR-4443 v8); 需先改输出落点。meta-doctor 2026-09-12 发现。
 
+  # ── 孤儿 crontab 补登 (2026-09-12): 实际运行但 registry 未登记 ──
+  - name: worktree-hygiene-daily
+    schedule: "0 4 * * *"
+    command: 'cd "$HOME/Workspace" && make worktree-hygiene >> runtime/cron/worktree-hygiene.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: worktree 卫生日检 (每日 04:00)，已在 crontab -l 运行，补齐登记。
+
+  - name: worktree-prune-daily
+    schedule: "30 4 * * *"
+    command: 'cd "$HOME/Workspace" && make worktree-prune >> runtime/cron/branch-prune.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: worktree 修剪 (每日 04:30)，已在 crontab -l 运行，补齐登记。
+
+  - name: hygiene-dir-daily
+    schedule: "0 5 * * *"
+    command: 'cd "$HOME/Workspace" && make hygiene-dir >> runtime/cron/hygiene-dir.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: 目录卫生日检 (每日 05:00)，已在 crontab -l 运行，补齐登记。
+
+  - name: hygiene-patrol-weekly
+    schedule: "0 7 * * 1"
+    command: 'cd "$HOME/Workspace" && make hygiene-patrol >> runtime/cron/weekly-hygiene.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: 周巡检 (每周一 07:00)，已在 crontab -l 运行，补齐登记。
+
+  - name: ssot-guardian-weekly
+    schedule: "0 6 * * 3"
+    command: 'cd "$HOME/Workspace" && make ssot-guardian >> runtime/cron/ssot-sync.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: SSOT 守护 (每周三 06:00)，已在 crontab -l 运行，补齐登记。
+
+  - name: capability-registry-sync-daily
+    schedule: "5 4 * * *"
+    command: 'cd "$HOME/Workspace" && git add docs/generated/capability-registry.yaml docs/INDEX-MCP.md docs/CLI-REFERENCE.md 2>/dev/null && git diff --cached --quiet || git commit -m "chore(auto): capability-registry daily sync [skip ci]" >> runtime/cron/capability-registry-sync.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: capability-registry 每日同步 (04:05)，已在 crontab -l 运行，补齐登记。
+
+  - name: kems-freshness-daily
+    schedule: "30 4 * * *"
+    command: 'cd /Users/xiamingxing/Workspace/projects/ecos && python3 src/ecos/ssot/tools/mof-kems-bridge.py --freshness >> /Users/xiamingxing/Workspace/runtime/cron/kems-freshness.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: KEMS 保鲜度日检 (04:30, ecos 子模块)，已在 crontab -l 运行，补齐登记。
+
+  - name: mof-sla-snapshot-daily
+    schedule: "35 4 * * *"
+    command: 'cd /Users/xiamingxing/Workspace/projects/ecos && python3 src/ecos/ssot/tools/mof-sla.py --snapshot-only >> /Users/xiamingxing/Workspace/runtime/cron/mof-sla-m0.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: MOF SLA M0 快照 (04:35, ecos 子模块)，已在 crontab -l 运行，补齐登记。
+
+  - name: l4-harness-6h-active
+    schedule: "0 */6 * * *"
+    command: 'cd /Users/xiamingxing/Workspace && bash projects/l4-kernel/scripts/harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: K
+    reconciliation_note: l4-kernel harness 巡检 (每 6h)，已在 crontab -l 运行。D7 决议后正式登记为 active (sfop_slot K, 法)。
+
+  - name: scene-calibration-weekly-active
+    schedule: "0 6 * * 1"
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: 场景校准引擎 (每周一 06:00)，已在 crontab -l 运行，补齐登记。
+
+  - name: scene-registry-sync-daily-active
+    schedule: "15 6 * * *"
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/scene-v3-registry.py generate >> runtime/cron/scene-registry.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: 场景注册同步 (每日 06:15)，已在 crontab -l 运行，补齐登记。
+
   # ── 从未真正安装, 只存在于声明文件里 (reality: declared_only) ──
   # 以下 10 条来自 operating-rhythm-crontab (ADR-0119/0121), 设计有 fail-closed
   # 防护 (OMO_WORKSPACE_ROOT 校验), 但从未真正 `crontab` 安装过。是否现在正式启用

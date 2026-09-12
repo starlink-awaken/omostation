@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-08T03:01:40.305434Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `64/100`
+> **Generated**: `2026-09-12T07:21:27.608414Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `72/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
@@ -15,7 +15,7 @@
 | 维度 | 度量指标 | 状态 | 物理数据源 |
 |------|----------|------|------------|
 | **创意创作** | 新增发布数: `676` | 正常 | `@创意创作/_outputs` |
-| **工作交付** | 未接入真实数据源 (BET-Y1Q1-T1-01 废除 mtime 伪指标) | 待接入 | — |
+| **工作交付** | 场景 episodes: 1 · accepted 1 (100%) | 正常 | `scene-outcomes.jsonl` (30d) |
 | **知识复用** | KOS 索引篇: `5193` | 正常 | `kos/` 篇目 |
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
@@ -41,9 +41,9 @@
 
 ## ⚙️ 治理健康分详情 (Health Detail)
 
-- **复合健康分**: `64/100` (警戒, 请看下方分项)
-- **GAC 异常扣分**: `46/100`
-- **常驻 daemon 在线率**: `50.00%`
+- **复合健康分**: `72/100` (警戒, 请看下方分项)
+- **GAC 异常扣分**: `0/100`
+- **常驻 daemon 在线率**: `100.00%`
 
 ## 🌐 L4 Domain Health (Harness)
 
