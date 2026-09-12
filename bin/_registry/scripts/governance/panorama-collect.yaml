@@ -1,11 +1,11 @@
 schema: script-registry/v1
 id: bin/panorama/panorama-collect.py
-name: Panorama panorama-collect (织星全景驾驶舱)
+name: Panorama panorama-collect (织星全景驾驶舱 v3)
 category: governance
-owner: governance-agent-steward
+owner: agent-experience-steward
 description: >-
-  织星全景驾驶舱 v2 组件。collect=只读 SSOT 聚合（门禁/CI/Cron/子模块/债务/BET/Agent/ASD）；
-  serve=静态服务 :43910。零写入零派工。
+  织星全景驾驶舱 v3 组件。collect=只读 SSOT 聚合（门禁/CI/Cron/子模块/债务/BET/Agent/ASD/
+  Probe/Resident/Scene/Journey/Workspace，共 14 面板）；serve=静态服务 :43910。
 inputs:
   - name: --json / --gates / --check-side-effects / --port
     type: flag
