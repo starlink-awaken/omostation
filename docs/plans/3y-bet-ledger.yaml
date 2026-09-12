@@ -2898,6 +2898,12 @@ bets:
   - projects/agora/src/agora/server/tools_scene.py
   - projects/omo/tests/unit/test_scene_guardrail_anchor.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+  accepted_specifications:
+  - content_digest: sha256:6a4c3abc7ad075ea427e077ff88407289511c216af48905b00f8f1d7859a812b
+    decision_ref: decision://accepted/BET-Y1Q4-T7-04
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-04-scene-navigation-guardrails-design.md
+    spec_version: 1.0.0
+  value_indicator_policy: false
 - appetite: 2 days
   circuit_breaker: 场景升级巡航器如遇校准度骤降（calibration < 0.5），必须自动回退至上一级受控状态并告警。
   depends_on:
