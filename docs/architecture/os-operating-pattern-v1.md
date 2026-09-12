@@ -4,7 +4,7 @@ status: active
 lifecycle: contract
 owner: 夏明星
 created: 2026-08-25
-last-reviewed: 2026-08-25
+last-reviewed: 2026-09-12
 type: architecture-pattern
 id: SFOP/v1
 does_not_supersede:
@@ -41,5 +41,7 @@ note: >
 ## 八律
 
 1. 单人类面。2. 单 dispatcher（Mesh）。3. 后端不拥有收件箱。4. 投影不派活。5. 仪表不生产。6. 记忆默认 MOS。7. 宪法不是价值。8. 填槽不新槽。
+
+**第3条 enforcement**：B 槽后端（如 AGE-v2 Cell）的 CLI 入口必须经 Mesh `dispatch_backend()` 分发，不得直连后端模块。Mesh 发射 `BackendDispatched` 事件作为观察收件箱。自动化检查：`check-sfop-slots.py` CR-SFOP-03。（2026-09-12 收口）
 
 新项目：声明 `sfop_slot` + `dao_layer`，不要发明新运行时。
