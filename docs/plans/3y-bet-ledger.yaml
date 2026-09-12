@@ -28159,11 +28159,18 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t8-24d-operations-mission-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3bcf727d21aa2d30c71d19b4e8b72793da70466a5ded72b083d0502b96684464
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24D
   write_surfaces:
   - projects/cockpit-ui/src/views/OperationsView.tsx
   - projects/cockpit-ui/src/views/MissionView.tsx
   - projects/cockpit-ui/src/components/operations/
   - projects/cockpit-ui/src/components/mission/
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/cockpit-ui/tests/
 - appetite: 2 days
   circuit_breaker: 对账若发现任何一个指标丢失，严禁关闭 43191 原服务。
   done_when:
