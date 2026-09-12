@@ -27550,7 +27550,8 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: AGE-v2 Cell 收口 — 修复 SFOP 八律第3条违规（后端不拥有收件箱）
   track: T10-MATURITY
   underlying_workflow: project-code-change
