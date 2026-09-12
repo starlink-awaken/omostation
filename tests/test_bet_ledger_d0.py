@@ -90,6 +90,25 @@ def test_verify_accepts_file_in_index_pinned_submodule_commit(
     assert _verify(root, "projects/omo/src/contract.py", monkeypatch) == 0
 
 
+def test_verify_accepts_directory_in_index_pinned_submodule_commit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root, _, _ = _workspace_with_gitlink(tmp_path)
+
+    assert _verify(root, "projects/omo/src/", monkeypatch) == 0
+    assert _verify(root, "projects/omo/src", monkeypatch) == 0
+
+
+def test_verify_rejects_absent_directory_in_pinned_submodule(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root, _, _ = _workspace_with_gitlink(tmp_path)
+
+    assert _verify(root, "projects/omo/tests/", monkeypatch) == 1
+
+
 def test_verify_rejects_uncommitted_child_file(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -787,7 +787,7 @@ def _d0_surface_tracked(surface: str, *, ws: Path | None = None) -> tuple[bool, 
     if not matches:
         return False, "not tracked"
     gitlink_path, oid = max(matches, key=lambda item: len(item[0]))
-    child_path = surface[len(gitlink_path) + 1 :]
+    child_path = surface[len(gitlink_path) + 1 :].rstrip("/")
     child_repo = root / gitlink_path
 
     commit = subprocess.run(
@@ -798,13 +798,14 @@ def _d0_surface_tracked(surface: str, *, ws: Path | None = None) -> tuple[bool, 
     if commit.returncode != 0:
         return False, f"gitlink object unavailable: {gitlink_path}@{oid[:12]}"
 
-    tree = subprocess.run(
+    # 目录条目在 `ls-tree -r` 输出中不出现（只列内部文件），先以非递归
+    # ls-tree 验证条目本体（文件/目录均适用），失败再回退递归内容匹配。
+    listing = subprocess.run(
         [
             "git",
             "-C",
             str(child_repo),
             "ls-tree",
-            "-r",
             "--name-only",
             oid,
             "--",
@@ -814,6 +815,25 @@ def _d0_surface_tracked(surface: str, *, ws: Path | None = None) -> tuple[bool, 
         text=True,
         check=False,
     )
+    if listing.returncode == 0 and child_path in listing.stdout.splitlines():
+        tree = listing
+    else:
+        tree = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(child_repo),
+                "ls-tree",
+                "-r",
+                "--name-only",
+                oid,
+                "--",
+                child_path,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
     if tree.returncode != 0 or child_path not in tree.stdout.splitlines():
         return False, f"absent from pinned gitlink: {gitlink_path}@{oid[:12]}"
 

@@ -27280,7 +27280,6 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
-  write_surfaces: []
 - accepted_specifications:
   - content_digest: sha256:7b183e23bed3c291555d93da3bd0fa24b04aaed928eb896ec7de10c41d503bfd
     decision_ref: decision://accepted/BET-Y1Q4-T10-144
@@ -28208,12 +28207,13 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: Operations 业务协同与 Mission 战略交付工作台落地
   track: T8-SURFACE
   underlying_workflow: project-code-change
   verify:
-  - cmd: cd projects/cockpit-ui && bun test src/views/OperationsView.test.tsx src/views/MissionView.test.tsx
+  - cmd: cd projects/cockpit-ui && npx vitest run src/views/OperationsView.test.tsx src/views/MissionView.test.tsx
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
