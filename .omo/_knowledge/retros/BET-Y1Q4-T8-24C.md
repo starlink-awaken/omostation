@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-12
+---
 # BET-Y1Q4-T8-24C Retro — Studio 机理工坊与知识记忆中枢深度交付
 
 > 日期: 2026-09-12 | 状态: engineering VERIFIED (operational 待前端消费后单独证明)

@@ -1,6 +1,6 @@
 ---
 schema: resident-retro-candidate/v1
-topic: handoff-resume
+topic: closeout-with-retro
 generated_at: 2026-09-12T12:41:59Z
 status: candidate
 counts:
@@ -12,7 +12,7 @@ failure_breakdown:
   by_event_type:
   trace_count: 0
 ---
-# handoff-resume 运行复盘聚合 (resident 事件驱动)
+# closeout-with-retro 运行复盘聚合 (resident 事件驱动)
 
 - generated_at: 2026-09-12T12:41:59Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
@@ -21,7 +21,7 @@ failure_breakdown:
 
 ## 成功运行 (runs/)
 
-- 20260823T085002Z-handoff-resume-5432aed0.md
+- 20260911T124059Z-closeout-with-retro-55344fb4.md
 
 ## 失败模式 (failures/)
 
@@ -33,13 +33,10 @@ failure_breakdown:
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
-- **20260823T085002Z-handoff-resume-5432aed0**
-  - 计划 (objective): Maturity audit handoff
-  - workflow: handoff-resume
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=1
-  - 失败根因: step=execute, error=workflow failed
-  - 指标: event_count=6, duration_s=171690.919
+- **20260911T124059Z-closeout-with-retro-55344fb4**
+  - 计划 (objective): [BET-Y1Q4-T16] ops 注册表防漂移双闸 — check-signals + cron 准入 (Appetite: 1 day)
+  - workflow: closeout-with-retro
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
