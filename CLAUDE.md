@@ -1,12 +1,12 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-03
+last_updated: 2026-09-12
 ---
 
 # CLAUDE.md — omostation AI Context Loader
 
-> 最后更新: 2026-09-03
+> 最后更新: 2026-09-12
 > Purpose: session startup protocol for AI agents.
 > Detailed engineering rules live in [`AGENTS.md`](AGENTS.md).
 > Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md).
@@ -203,6 +203,15 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 
 - **P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律** ([p73-truth-driven-engineering-pattern.md](.omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md))
   > | 陷阱 | 症状 | 本轮案例 | |------|------|---------| | **D1** 凭路径直觉判存在性 | 报"X 零实现/不存在/悬空" 其实文件已迁移或运行时写面未创建 | 连续 3 轮把 debt(空=运行时写面正常) / task(卡 ingress delivery) / GaC(3 drift 非 129) 判错 |
+
+## 🔥 近期经验教训（2026-09-12 实证，详见 AGENTS.md §7）
+
+- **frontmatter UTC 时区**：`last-reviewed` 必须用 UTC 当天或更早 → 否则 gac-gate FAIL（PITFALL-004）
+- **mergeStateStatus**：值是 `CLEAN`/`BLOCKED`/`DIRTY`（非 `MERGEABLE`）
+- **worktree 创建后立即** `git submodule update --init` → 防指针回退
+- **并发 agent 争用**：`git stash push -u` → `checkout main` → `pull --ff-only`
+- **Diff 工具 ref 解析**：CI 只有 `origin/main`，工具已加 `_resolve_ref` fallback
+- **不为并发 agent 的 BET 写 retro/closeout**
 
 ## 治理活性自检 (2026-08-22 自进化框架)
 

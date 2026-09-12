@@ -1,12 +1,12 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-03
+last_updated: 2026-09-12
 ---
 
 # ARCHITECTURE.md — eCOS v6 Architecture Contracts
 
-> 最后更新: 2026-09-03
+> 最后更新: 2026-09-12
 > This document owns stable architecture concepts: layers, dependency direction, routing contracts, and governance boundaries.
 > It does not own runtime facts, current phase, health score, test counts, tool counts, service counts, or ports.
 
@@ -182,7 +182,19 @@ external resource -> descriptor -> scene-bound admission -> capability route -> 
 
 ## 8. Recent Architecture Decisions
 
-See [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) for the full ADR index.
+> 2026-09-04 → 2026-09-12 新增。详见 [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) 完整 ADR 索引。
+
+| 决策 | 状态 | 详情 |
+|---|---|---|
+| **SFOP 八律第3条收口**（dispatch_backend） | ✅ 已落地 | Cell 经 Mesh dispatch_backend 分发，B 槽不再拥有收件箱。[omo#163](https://github.com/starlink-awaken/omostation-omo/pull/163) |
+| **D7 本体矛盾重归类**（dao→fa） | ✅ 已落地 | l4-kernel 从道归为法，消除 CR-DFSQ-01 违规。[ecos#74](https://github.com/starlink-awaken/omostation-ecos/pull/74) |
+| **CR-SFOP-03 自动化检查** | ✅ 已落地 | check-sfop-slots.py 新增第3条检测，防止回退。[#3620](https://github.com/starlink-awaken/omostation/pull/3620) |
+| **Diff 治理三件套 CI 化** | ✅ 已落地 | diff-governance.yml 工作流（lifecycle/debt/growth）。[#3642](https://github.com/starlink-awaken/omostation/pull/3642) |
+| **Cron registry 一致性** | ✅ 已落地 | 11 个孤儿 crontab 补登，drift=0, orphan=0。[#3658](https://github.com/starlink-awaken/omostation/pull/3658) |
+| **Mesh 事件类型扩展** | ✅ 已落地 | 新增 BackendDispatched 事件（B 槽后端分发观察） |
+| **T10-125 任务网关**（7 波次） | ✅ 已落地 | 优先级队列 + 退避 + 标签 + 搜索 + CLI |
+
+Slot grammar 与硬检查详见 [`docs/architecture/os-operating-pattern-v1.md`](docs/architecture/os-operating-pattern-v1.md)。
 
 ## 9. Related Documents
 
