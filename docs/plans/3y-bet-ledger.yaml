@@ -3041,6 +3041,11 @@ bets:
   - projects/cockpit/src/cockpit/handlers/scene_lifecycle.py
   - projects/omo/tests/unit/test_scene_lifecycle_cruiser.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-05.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-05-scene-lifecycle-cruiser-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6e1a851d2c5daa9e3c8ba657c7d941d93fa203e321456c59346d4fc874cb1196
+    decision_ref: decision://accepted/BET-Y1Q4-T7-05
 - appetite: 3 days
   circuit_breaker: 边缘节点离线或网络分区时自动进入离线数据缓冲模式，本地持久化至环形缓冲区，严禁阻塞或丢弃体征事件。
   depends_on:
