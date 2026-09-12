@@ -202,6 +202,8 @@ def main():
                         help=f"最大净增长行数 (默认: {DEFAULT_MAX_LINES})")
     parser.add_argument("--max-files", type=int, default=DEFAULT_MAX_FILES,
                         help=f"最大变更文件数 (默认: {DEFAULT_MAX_FILES})")
+    parser.add_argument("--fail-on-violation", action="store_true",
+                        help="存在膨胀违规时 exit(1)（CI 门禁）")
     args = parser.parse_args()
 
     workspace = Path(args.workspace) if args.workspace else get_workspace()
@@ -226,6 +228,9 @@ def main():
         print(json.dumps(results, indent=2, ensure_ascii=False))
     else:
         print_human_report(results)
+
+    if args.fail_on_violation and results["violations"]:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

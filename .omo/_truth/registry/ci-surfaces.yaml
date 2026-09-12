@@ -1194,6 +1194,33 @@ surfaces:
   - pull_request
   status: active
   note: 文档索引生成 (并行新增补登, 2026-09-03)
+- id: bin-gac-check-diff-lifecycle-py
+  tool: bin/gac/check-diff-lifecycle.py
+  workflow: diff-governance.yml
+  gate: true
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: 孤立 diff 检测 (BET-Y1Q4-T10-154)
+- id: bin-gac-check-diff-debt-py
+  tool: bin/gac/check-diff-debt.py
+  workflow: diff-governance.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: 代码变更历史债务报告 (BET-Y1Q4-T10-155, 仅报告不阻断)
+- id: bin-gac-check-diff-growth-py
+  tool: bin/gac/check-diff-growth.py
+  workflow: diff-governance.yml
+  gate: true
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: 单 PR 代码膨胀阻断 (BET-Y1Q4-T10-156)
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:
@@ -1326,6 +1353,17 @@ workflow_triggers:
   - push
   - scheduled
   path_filtered: false
+- workflow: diff-governance.yml
+  triggers:
+  - per_pr
+  - push
+  path_filtered: true
+  paths:
+  - .github/workflows/diff-governance.yml
+  - bin/gac/check-diff-lifecycle.py
+  - bin/gac/check-diff-debt.py
+  - bin/gac/check-diff-growth.py
+  - bin/ssot/semantic_diff.py
 - workflow: doc-gov-check.yml
   triggers:
   - per_pr
