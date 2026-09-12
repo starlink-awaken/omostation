@@ -12,9 +12,9 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 642
-  bos_services: 306
+  bos_services: 309
   bos_domains: 23
-  cli_commands: 217
+  cli_commands: 218
   skills: 40
   workflows: 25
 mcp_servers:
@@ -882,7 +882,7 @@ mcp_servers:
 bos_services:
   _domain_counts:
     agent-cell: 23
-    agora: 3
+    agora: 6
     analysis: 28
     bcos: 3
     capability: 44
@@ -1009,6 +1009,18 @@ bos_services:
       status: active
     - uri: bos://agora/status
       description: agora @mcp.resource — BOS 系统内省统一大盘 (router/middleware/调用量)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/list
+      description: 列出所有已注册连接器 (支持 status/type/package 过滤)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/sync
+      description: 触发指定连接器的增量同步 (支持 dry_run 与 watermark)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/manifest
+      description: 读取连接器注册表 manifest (只读)
       transport: inline
       status: active
     analysis:
@@ -2435,6 +2447,8 @@ cli_commands:
   description: 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)
 - name: pending
   description: 查看未决待办快照预览
+- name: persona-radar
+  description: 个人文风一致性多维雷达评估 (T3-01)
 - name: pipeline
   description: pipeline 概览
 - name: policy
