@@ -2548,7 +2548,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: Resident Daemon 与 AGE-v2 CellPool 算力池合体调度 (Resident Daemon & Agent Cell Elastic
     Pool Integration)
   track: T6-EVOLUTION
