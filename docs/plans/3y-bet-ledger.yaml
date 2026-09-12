@@ -2572,6 +2572,11 @@ bets:
   - projects/omo/src/omo/resident/decision.py
   - projects/cockpit/tests/test_resident_decision_triage.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t8-21-decision-proposals-closeout-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:9298186372b4e7103d33380c97b6bc15378b22616564609dc11a6da8f603b5b2
+    decision_ref: decision://accepted/BET-Y1Q4-T8-21
 - appetite: 3 days
   circuit_breaker: 单个 Cell 执行超时（默认 120s）强制终止并隔离状态；Cell 崩溃时自动故障转移，不影响守护进程主循环。
   depends_on:
