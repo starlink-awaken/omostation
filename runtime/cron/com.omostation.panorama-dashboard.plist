@@ -29,7 +29,9 @@
     <dict>
       <key>PYTHONDONTWRITEBYTECODE</key>
       <string>1</string>
-      <key>PANORAMA_PORT</key>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>PANORAMA_PORT</key>
       <string>43910</string>
     </dict>
     <key>WorkingDirectory</key>
