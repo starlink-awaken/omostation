@@ -28429,7 +28429,8 @@ bets:
   priority: P2
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: projects/omlxc root gitlink pointer closeout (probe-candidate availability fix)
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
@@ -28447,6 +28448,29 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-157-aetherforge-responses-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+          merged_reachable_commit: {ref: 'git://origin/main@1c128f55dea7677f7f23f5a917cc7d003c441180'}
+          rollback: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+          tests: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+          fresh_receipt: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+          replay: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+          cleanup: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    decision_ref: decision://accepted/BET-Y1Q4-T10-158
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
