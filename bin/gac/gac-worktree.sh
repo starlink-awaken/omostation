@@ -13,6 +13,7 @@
 #   gac-worktree.sh release <session>    # 清理 worktree (手动, 合并后)
 #   gac-worktree.sh bump-fast <submodule-path> [--sha <sha>|--latest-main]
 #                                         # 流程内快速更新单个子模块指针
+#   gac-worktree.sh guard-submodules [--fix]  # T10-161: gitlink 新鲜度 + remote 完整性守卫 (advisory)
 #   gac-worktree.sh list                 # 列所有 worktree
 #
 # session 命名: 只允许 [a-z0-9-] (防 git 分支非法字符), 如 "fix-route-bug".
@@ -201,7 +202,57 @@ remove_verified_pasw() {
   rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
 }
 
+# ── BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 ────────────────
+# advisory: 恒 exit 0; --fix 仅做本地无网络子模块对齐 (不改根指针/URL).
+# 事故实证: ① worktree 创建后未 init → 陈旧 gitlink 被提交 → 指针回退;
+# ② origin URL 被并发会话改写成子仓 URL → 一切 origin/main 验证静默失效.
+guard_submodules() {
+  local fix="${1:-}"
+  local root="$WS_ROOT"
+  [ -f "$root/.gitmodules" ] || return 0
+  local repaired="" failed="" p
+  while IFS= read -r p; do
+    [ -z "$p" ] && continue
+    if [ "$fix" = "--fix" ]; then
+      if git -C "$root" submodule update --init --no-fetch -- "$p" >/dev/null 2>&1; then
+        repaired="$repaired $p"
+      else
+        failed="$failed $p"
+      fi
+    else
+      failed="$failed $p"
+    fi
+  done < <(git -C "$root" submodule status 2>/dev/null | grep -E '^[+-U]' | awk '{print $2}')
+  if [ -n "$repaired" ]; then
+    echo "   🔧 T10-161 gitlink 已对齐 pin (本地无网络):$repaired"
+  fi
+  if [ -n "$failed" ]; then
+    echo "   ⚠️ T10-161 子模块与 pin 不一致 (本地缺对象, 需手动):$failed"
+    echo "      修复: cd $root && git submodule update --init <path>"
+  fi
+  # remote 完整性: 主仓 remote URL 落入 .gitmodules 子仓 URL 集合 → 污染 (只告警, 不改写)
+  local sub_urls rem_url entry url su
+  sub_urls=$(git -C "$root" config -f "$root/.gitmodules" --get-regexp '^submodule\..*\.url$' 2>/dev/null | awk '{print $2}' || true)
+  [ -z "$sub_urls" ] && return 0
+  while IFS= read -r entry; do
+    [ -z "$entry" ] && continue
+    url="${entry#* }"
+    while IFS= read -r su; do
+      [ -z "$su" ] && continue
+      if [ "$url" = "$su" ]; then
+        echo "   🚨 T10-161 remote 污染: 主仓 remote URL 指向子仓 ($url)"
+        echo "      修复: git -C $root remote set-url <remote> <主仓 URL> (协议见 AGENTS.md §6)"
+      fi
+    done <<< "$sub_urls"
+  done < <(git -C "$root" config --local --get-regexp '^remote\..*\.url$' 2>/dev/null | awk '{$1=""; sub(/^ /,""); print}')
+  return 0
+}
+
 case "$cmd" in
+  guard-submodules)
+    # BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 (advisory, 恒 exit 0)
+    guard_submodules "${session:-}"
+    ;;
   claim)
     [ -z "$session" ] && echo "用法: claim <session> [--actor-id <id>]" >&2 && exit 1
     validate_session "$session"
@@ -257,6 +308,8 @@ case "$cmd" in
     if [ "${SKIP_SUBMODULE_INIT:-}" = "1" ]; then
       echo "   ⚠️ SKIP_SUBMODULE_INIT=1 — root worktree only; PASW isolation not established."
       echo "   子模块未 init (按需: cd $wt && git submodule update --init <sub>)"
+      # T10-161: 快速路径补偿 — gitlink 新鲜度对齐 + remote 完整性检查
+      WS_ROOT="$wt" guard_submodules --fix
     else
       echo "   init 全部子模块 (完整环境, 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
       t0=$(date +%s)
