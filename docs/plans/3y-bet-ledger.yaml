@@ -28276,7 +28276,8 @@ bets:
   priority: P2
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: projects/aetherforge root gitlink pointer closeout (Responses API)
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
