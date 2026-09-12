@@ -1,8 +1,9 @@
 ---
 type: retro
 bet_id: BET-Y1Q4-T5-05
-status: in_progress
+status: completed
 created: 2026-09-13
+closed: 2026-09-13
 ---
 
 # BET-Y1Q4-T5-05 Retro — 常驻 Agent 2.0 决策因果图化
