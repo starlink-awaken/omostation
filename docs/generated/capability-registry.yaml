@@ -13,7 +13,7 @@ totals:
   mcp_servers: 27
   mcp_tools: 642
   bos_services: 309
-  bos_domains: 24
+  bos_domains: 23
   cli_commands: 218
   skills: 40
   workflows: 25
@@ -882,13 +882,12 @@ mcp_servers:
 bos_services:
   _domain_counts:
     agent-cell: 23
-    agora: 3
+    agora: 6
     analysis: 28
     bcos: 3
     capability: 44
     cockpit: 8
     compute: 17
-    connectors: 3
     documents: 3
     ecos: 10
     fabric: 1
@@ -1010,6 +1009,18 @@ bos_services:
       status: active
     - uri: bos://agora/status
       description: agora @mcp.resource — BOS 系统内省统一大盘 (router/middleware/调用量)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/list
+      description: 列出所有已注册连接器 (支持 status/type/package 过滤)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/sync
+      description: 触发指定连接器的增量同步 (支持 dry_run 与 watermark)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/manifest
+      description: 读取连接器注册表 manifest (只读)
       transport: inline
       status: active
     analysis:
@@ -1416,19 +1427,6 @@ bos_services:
     - uri: bos://compute/omlxc/lora
       description: omlxc 端侧在线 LoRA 持续微调与毫秒级热插拔服务 (ADR-0435)
       transport: stdio
-      status: active
-    connectors:
-    - uri: bos://connectors/list
-      description: 列出所有已注册连接器 (支持 status/type/package 过滤)
-      transport: inline
-      status: active
-    - uri: bos://connectors/sync
-      description: 触发指定连接器的增量同步 (支持 dry_run 与 watermark)
-      transport: inline
-      status: active
-    - uri: bos://connectors/manifest
-      description: 读取连接器注册表 manifest (只读)
-      transport: inline
       status: active
     documents:
     - uri: bos://documents/registry
