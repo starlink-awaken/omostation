@@ -2778,7 +2778,7 @@ bets:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
           merged_reachable_commit:
-            ref: git://origin/main@3ecc7a21ec733f75e079a813e78b91048f9867d3
+            ref: git://origin/main@cb1a73a850b8def0765cd383e4aa4e028d76c464
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
           tests:
@@ -2800,6 +2800,11 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+  accepted_specifications:
+  - content_digest: sha256:c2bb387f5a3643bca9b37bdea5fcc659728c6556f3437b0b6dba8ab5a484171d
+    decision_ref: decision://accepted/BET-Y1Q4-T5-04
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-04-sovereign-connector-fabric-design.md
+    spec_version: 1.0.0
 - appetite: 3 days
   circuit_breaker: 敏感健康与生理体征数据处理全程必须保留在本地，严禁通过未经脱敏的网络请求发送至云端 API。
   depends_on:
@@ -28738,7 +28743,8 @@ bets:
   priority: P2
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: projects/aetherforge root gitlink pointer closeout (Anthropic Messages API)
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
@@ -28756,6 +28762,29 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-159-aetherforge-anthropic-messages-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
+          merged_reachable_commit: {ref: 'git://origin/main@729f06a32d29bc3cb38a415bc58d6b2737b4fbd2'}
+          rollback: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
+          tests: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
+          fresh_receipt: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
+          replay: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
+          cleanup: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    decision_ref: decision://accepted/BET-Y1Q4-T10-159
+    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:c39981f3487dfc36f7029efc81e5ad803d69a356a5031fe333fa4e58a7585cce
     decision_ref: decision://accepted/BET-Y1Q4-T10-161
