@@ -64,7 +64,7 @@ def run(cmd: list[str], timeout: int = 120) -> tuple[int, str]:
 
 
 def collect_gates() -> list[dict]:
-    code, out = run(["python3", "bin/gac/gate-health-check.py", "--json"])
+    code, out = run([sys.executable, "bin/gac/gate-health-check.py", "--json"])
     live: dict[str, dict] = {}
     if code == 0:
         try:
