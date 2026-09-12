@@ -4,6 +4,12 @@
 聚合门禁/BET/Agent/运行态/里程碑/治理数据，产物只写 runtime/dashboard/（gitignored）。
 与 Serena 只读观测站互补：Serena=外部证据观测，驾驶舱=体系运行指挥台。
 
+T10-166 数据契约（per 面板）:
+  - provenance: 字段来源 (gate-health / meta-doctor / bet-ledger / git worktree)
+  - freshness:   采集时间窗 + staleness 阈值 (>5min 标 stale)
+  - degradation: 0=fresh, 1=partial, 2=stale-blink, 3=missing
+  - never-yields-green: 任何缺失/陈旧 → 不得报 PASS (PARTIAL ≠ PASS 铁律)
+
 用法：
     python3 bin/panorama/panorama-collect.py            # 采集 + 生成站点
     python3 bin/panorama/panorama-collect.py --json     # 只输出 data.json 摘要
@@ -184,6 +190,59 @@ def collect_docs() -> list[dict]:
     return docs
 
 
+
+
+def _with_provenance(source: str, collected_at: str | None = None) -> dict:
+    """T10-166: 给任意面板数据添加 provenance/freshness/degradation 元数据."""
+    from datetime import UTC, datetime
+    ts = collected_at or datetime.now(UTC).isoformat()
+    # staleness 阈值: 5 分钟 (与 panorama 刷新周期一致)
+    try:
+        collected_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        age_sec = (datetime.now(UTC) - collected_dt).total_seconds()
+    except (ValueError, TypeError):
+        age_sec = 0
+    if age_sec < 300:
+        degradation = 0  # fresh
+    elif age_sec < 1800:
+        degradation = 1  # partial
+    elif age_sec < 7200:
+        degradation = 2  # stale-blink
+    else:
+        degradation = 3  # missing
+    return {
+        "provenance": {"source": source, "collected_at": ts},
+        "freshness": {
+            "collected_at": ts,
+            "age_seconds": round(age_sec, 1),
+            "stale_threshold_seconds": 300,
+        },
+        "degradation": degradation,
+    }
+
+
+def collect_with_provenance() -> dict:
+    """T10-166: build_payload + 给每个顶层面板加 provenance/freshness/degradation."""
+    from datetime import UTC, datetime
+    payload = build_payload()
+    ts = datetime.now(UTC).isoformat()
+    payload["provenance_global"] = {
+        "schema": "panorama/v2",
+        "generated_at": ts,
+        "source_collector": "panorama-collect.py",
+        "owner": "governance-team",
+        "never_yields_green": True,
+    }
+    payload["panel_metadata"] = {
+        "gates":   _with_provenance("bin/gac/gate-health-check.py", ts),
+        "bets":    _with_provenance("docs/plans/3y-bet-ledger.yaml", ts),
+        "agents":  _with_provenance("git worktree list", ts),
+        "runtime": _with_provenance("bin/gac/meta-doctor.py + launchd", ts),
+        "docs":    _with_provenance("filesystem entries", ts),
+    }
+    return payload
+
+
 def build_payload() -> dict:
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -205,7 +264,7 @@ def write_site(payload: dict) -> None:
 
 def check_side_effects() -> int:
     before = run(["git", "status", "--porcelain"])[1].splitlines()
-    payload = build_payload()
+    payload = collect_with_provenance()
     write_site(payload)
     after = run(["git", "status", "--porcelain"])[1].splitlines()
     new_repo_writes = [l for l in after if l not in before and not l.startswith("?? runtime/dashboard")]
@@ -228,7 +287,7 @@ def main() -> int:
     if args.check_side_effects:
         return check_side_effects()
 
-    payload = build_payload()
+    payload = collect_with_provenance()
     write_site(payload)
 
     if args.gates:
@@ -239,6 +298,8 @@ def main() -> int:
                    "gates": {g["id"]: g["verdict"] for g in payload["gates"]},
                    "bets": payload["bets"]["counts"],
                    "agents": len(payload["agents"]),
+                   "panel_metadata": payload.get("panel_metadata", {}),
+                   "provenance_global": payload.get("provenance_global", {}),
                    "out": str(INDEX_HTML.relative_to(ROOT))}
         print(json.dumps(summary, ensure_ascii=False, indent=1))
         return 0
@@ -282,6 +343,13 @@ th{color:var(--muted);font-weight:500;font-size:11px}
 a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 .dead{color:var(--red)}.fresh{color:var(--teal)}
 .foot{margin-top:26px;color:var(--muted);font-size:11px;border-top:1px solid var(--line);padding-top:12px}
+.degbar{padding:8px 14px;background:#0a1424;border:1px solid var(--line);border-radius:8px;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;font-size:12px}
+.degbar .deg{padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:11px}
+.degbar .deg b{color:var(--ink);margin-right:4px}
+.degbar .d0{background:#0d2e1f;color:#3ecf9a}
+.degbar .d1{background:#3d2e10;color:#f0b453}
+.degbar .d2{background:#3d1f15;color:#f26d6d}
+.degbar .d3{background:#3d1010;color:#ff5050;text-decoration:line-through}
 @media(max-width:900px){aside{position:static;width:auto}main{margin:0}.g3,.g2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -298,6 +366,7 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 </nav>
 </aside>
 <main>
+<section id="degbar" class="degbar"></section>
 <section class="sec on" id="s-overview">
 <h2>体系总览</h2><p class="sub">OMO 单控制面 + 持久 Role/Queue/Receipt + 动态 Agent Cell · 5+4+1+1 · 道法术器嵌套 MOF</p>
 <div class="grid g3" id="kpi"></div>
@@ -378,6 +447,13 @@ $('rtgrid').innerHTML=[
 $('docgrid').innerHTML=D.docs.map(d=>'<div class="card"><h3>'+d.name+'</h3><span class="chip '+(d.exists?'p':'f')+'">'+(d.exists?Math.round(d.size/1024)+'KB':'缺失')+'</span>'+
 '<div class="mono" style="margin-top:8px;font-size:11px">'+d.path+'</div>'+
 (d.exists?'<div style="margin-top:8px"><a href="/../../'+d.path+'">打开 →</a></div>':'')+'</div>').join('');
+
+// T10-166: 每面板降级指示器 (PARTIAL ≠ PASS 铁律)
+const degLabels=['fresh','partial','stale-blink','missing'];
+const degClass =d=>['d0','d1','d2','d3'][Math.min(d,3)];
+$('degbar').innerHTML = Object.entries(D.panel_metadata||{}).map(([k,v])=>
+  '<span class="deg '+degClass(v.degradation)+'"><b>'+k+'</b>: '+degLabels[v.degradation]+
+  ' ('+v.freshness.age_seconds+'s)</span>').join(' ');
 </script>
 </body></html>
 """
