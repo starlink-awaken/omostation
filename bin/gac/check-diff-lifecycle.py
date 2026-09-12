@@ -214,19 +214,23 @@ def main():
     args = parser.parse_args()
 
     workspace = Path(args.workspace) if args.workspace else get_workspace()
-    base_ref = args.base_branch
-    head_ref = args.head_branch
 
-    # Resolve base ref
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", base_ref],
-            capture_output=True, text=True, check=True, cwd=workspace,
-        )
-        base_commit = result.stdout.strip()
-    except subprocess.CalledProcessError:
-        print(f"ERROR: 无法解析 base ref '{base_ref}'", file=sys.stderr)
+    def _resolve_ref(ref: str) -> str:
+        """解析 ref；失败时 fallback 到 origin/<ref>（CI PR checkout 场景）。"""
+        for candidate in (ref, f"origin/{ref}"):
+            try:
+                result = subprocess.run(
+                    ["git", "rev-parse", candidate],
+                    capture_output=True, text=True, check=True, cwd=workspace,
+                )
+                return result.stdout.strip()
+            except subprocess.CalledProcessError:
+                continue
+        print(f"ERROR: 无法解析 ref '{ref}' (及 origin/{ref})", file=sys.stderr)
         sys.exit(1)
+
+    base_commit = _resolve_ref(args.base_branch)
+    head_ref = args.head_branch
 
     results = run_checks(workspace, base_commit, head_ref)
 
