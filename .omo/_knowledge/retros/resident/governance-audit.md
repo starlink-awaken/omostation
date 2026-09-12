@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: governance-audit
 generated_at: 2026-09-11T07:47:01Z
-status: candidate
+status: archived
 counts:
   runs: 9
   failures: 0

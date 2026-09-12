@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: mini
 generated_at: 2026-09-11T07:47:01Z
-status: candidate
+status: archived
 counts:
   runs: 242
   failures: 0
