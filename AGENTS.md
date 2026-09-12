@@ -180,7 +180,18 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 
 ---
 
-## 7. Testing Guidance
+## 7. Common Pitfalls（2026-09-12 实证）
+
+- **frontmatter UTC 时区**：`last-reviewed` 必须用 UTC 当天或更早，否则 gac-gate FAIL（PITFALL-004）
+- **ci-surfaces 不加自引用路径**：严格匹配 workflow `on.paths`
+- **mergeStateStatus**：值是 CLEAN/BLOCKED/DIRTY（非 MERGEABLE）
+- **worktree 创建后立即** `git submodule update --init`：防指针回退
+- **并发 agent 争用**：stash+checkout main 恢复；不替并发 agent 写 retro
+- **Diff 工具 ref 解析**：已加 `_resolve_ref` fallback 到 origin/<ref>
+
+---
+
+## 8. Testing Guidance
 
 | Change Surface | Minimum Verification |
 |----------------|----------------------|
