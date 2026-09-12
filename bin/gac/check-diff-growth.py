@@ -202,22 +202,28 @@ def main():
                         help=f"最大净增长行数 (默认: {DEFAULT_MAX_LINES})")
     parser.add_argument("--max-files", type=int, default=DEFAULT_MAX_FILES,
                         help=f"最大变更文件数 (默认: {DEFAULT_MAX_FILES})")
+    parser.add_argument("--fail-on-violation", action="store_true",
+                        help="存在膨胀违规时 exit(1)（CI 门禁）")
     args = parser.parse_args()
 
     workspace = Path(args.workspace) if args.workspace else get_workspace()
-    base_ref = args.base_branch
-    head_ref = args.head_branch
 
-    # Resolve refs
-    for ref_name, ref in [("base", base_ref), ("head", head_ref)]:
-        try:
-            subprocess.run(
-                ["git", "rev-parse", ref],
-                capture_output=True, text=True, check=True, cwd=workspace,
-            )
-        except subprocess.CalledProcessError:
-            print(f"ERROR: 无法解析 {ref_name} ref '{ref}'", file=sys.stderr)
-            sys.exit(1)
+    def _resolve_ref(ref: str) -> str:
+        """解析 ref；失败时 fallback 到 origin/<ref>（CI PR checkout 场景）。"""
+        for candidate in (ref, f"origin/{ref}"):
+            try:
+                subprocess.run(
+                    ["git", "rev-parse", candidate],
+                    capture_output=True, text=True, check=True, cwd=workspace,
+                )
+                return candidate
+            except subprocess.CalledProcessError:
+                continue
+        print(f"ERROR: 无法解析 ref '{ref}' (及 origin/{ref})", file=sys.stderr)
+        sys.exit(1)
+
+    base_ref = _resolve_ref(args.base_branch)
+    head_ref = _resolve_ref(args.head_branch)
 
     results = run_checks(workspace, base_ref, head_ref,
                          args.max_lines, args.max_files)
@@ -226,6 +232,9 @@ def main():
         print(json.dumps(results, indent=2, ensure_ascii=False))
     else:
         print_human_report(results)
+
+    if args.fail_on_violation and results["violations"]:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
