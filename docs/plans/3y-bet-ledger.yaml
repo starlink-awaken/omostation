@@ -1395,10 +1395,12 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: 个人文风一致性多维雷达评估与语气自适应调节引擎
   track: T3-COGNI
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run python -m omlxc.dataplane.persona_radar_eval
     expect: exit 0
@@ -1410,6 +1412,35 @@ bets:
   - projects/omlxc/src/omlxc/dataplane/persona_radar.py
   - projects/cockpit/src/cockpit/commands/spine.py
   - .omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+          merged_reachable_commit:
+            ref: git://origin/main@PLACEHOLDER
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+        status: VERIFIED
+      operational:
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - accepted_specifications:
   - content_digest: sha256:b1fd2443fc798286642d8ff477a274ea0d947cb67fc177e0a42bfd0821d58596
     decision_ref: decision://accepted/BET-Y1Q4-T8-20
