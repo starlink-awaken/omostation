@@ -3793,7 +3793,6 @@ bets:
   - projects/omo/tests/test_contract_net.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-06.md
   - docs/plans/3y-bet-ledger.yaml
-
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -29105,6 +29104,11 @@ bets:
   - projects/omo/tests/
   - docs/architecture/os-operating-pattern-v1.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t10-165-omo-persistent-semantics-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:9dca6c1cc8874870fedb57303d3f2cf98fe235f4e38fc558eec09b4d588e42a6
+    decision_ref: decision://accepted/BET-Y1Q4-T10-165
 - appetite: 3 days
   done_when:
   - ASD 五核心面板（Overview/Spine/Agents/Milestones/Degradation）在驾驶舱可呈现、有 provenance
