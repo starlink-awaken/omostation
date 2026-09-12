@@ -27207,15 +27207,31 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   done_when:
   - WP1 shadow 连续至少 24 小时并覆盖三个 lifecycle 类、完整 RED matrix、零未解释差异和零 v2 false-allow
@@ -27241,11 +27257,16 @@ bets:
   priority: P0
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: OMO canonical claims-authority bridge R0
   track: T10-MATURITY
   underlying_workflow: project-code-change
   value_indicator_policy: false
+  write_surfaces:
+  - projects/omo
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-143.md
   verify:
   - cmd: cd projects/omo && PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
       /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider tests/test_workflow_claims_authority_bridge.py
@@ -27406,7 +27427,8 @@ bets:
   priority: P0
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: Claims Authority Bridge WP1 R0 Shadow
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -27426,6 +27448,37 @@ bets:
   workflow: submodule-pointer-transaction
   write_surfaces:
   - projects/omo
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+        status: VERIFIED
+      operational:
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - appetite: 40 days
   circuit_breaker: 任一子 BET 的 writer 操作触及未过门的 Orca/Multica、或与并发 agent 产生 write 冲突，立即停止并记录，不强行覆盖。
   done_when:
@@ -28124,6 +28177,19 @@ bets:
   write_surfaces:
   - projects/cockpit-ui/src/views/StudioView.tsx
   - projects/cockpit-ui/src/components/studio/
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: NOT_STARTED
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
 - appetite: 4 days
   circuit_breaker: 任何导致用户审批误点击或案件数据丢失的 UI 缺陷立即回滚。
   done_when:
