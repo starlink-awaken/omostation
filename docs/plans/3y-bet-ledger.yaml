@@ -28123,6 +28123,11 @@ bets:
   verify:
   - cmd: cd projects/cockpit-ui && bun test src/views/StudioView.test.tsx
     expect: exit 0
+  accepted_specifications:
+  - content_digest: sha256:db6305015956f82c7464d62ae2f720bbb5a5ad17080e52d3b0cee62c0c3fe8bb
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24C
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-studio-view-deep-delivery-spec.md
+    spec_version: 1.0.0
   window: Y1Q4
   workflow: bet-execution
   write_surfaces:
