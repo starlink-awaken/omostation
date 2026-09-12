@@ -2811,6 +2811,11 @@ bets:
     spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-04-sovereign-connector-fabric-design.md
     spec_version: 1.0.0
 - appetite: 3 days
+  accepted_specifications:
+  - content_digest: sha256:008de04ed2211b532ccbfe8d166b0eb6948a64d0cc2a9d5c35c8154819b1e622
+    decision_ref: decision://accepted/BET-Y1Q4-T6-25
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t6-25-openhuman-bridge-biometric-normalizer-design.md
+    spec_version: 1.0.0
   circuit_breaker: 敏感健康与生理体征数据处理全程必须保留在本地，严禁通过未经脱敏的网络请求发送至云端 API。
   depends_on:
   - BET-Y1Q4-T5-04

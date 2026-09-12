@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 642
-  bos_services: 309
+  bos_services: 310
   bos_domains: 23
   cli_commands: 218
   skills: 40
@@ -899,7 +899,7 @@ bos_services:
     meta: 1
     omo: 4
     perception: 2
-    persona: 10
+    persona: 11
     resident: 8
     runtime: 1
     swarm: 1
@@ -2050,6 +2050,10 @@ bos_services:
       status: active
     - uri: bos://persona/health-profile/update
       description: Health Profile 更新
+      transport: stdio
+      status: active
+    - uri: bos://persona/health-profile/ingest
+      description: Health Profile 批量导入 (T6-25 OpenHuman Bridge)
       transport: stdio
       status: active
     - uri: bos://persona/sot-bridge-persona/recall-entity
