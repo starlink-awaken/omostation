@@ -2008,6 +2008,11 @@ bets:
   - docs/scene-cards/family-asset-governance.yaml
   - projects/family-hub/
   - .omo/_knowledge/retros/BET-Y2Q3-T7-01.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-12-y2q3-t7-01-family-asset-governance-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:8935a2aaf7d9aee8517acf92a710941cf295fc1e1639b1304b5f083257f608e5
+    decision_ref: decision://accepted/BET-Y2Q3-T7-01
 - accepted_specifications:
   - content_digest: sha256:cf46209a6b20827414574bb5671708e23b117518c2930d1b2cc28c40b72f66ba
     decision_ref: decision://accepted/BET-Y2Q4-T7-01
@@ -27449,15 +27454,31 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   depends_on: []
   done_when:
@@ -27512,35 +27533,6 @@ bets:
   - projects/omo
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-  completion_evidence:
-    axes:
-      engineering:
-        evidence:
-          diff:
-            ref: receipt://docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md
-          merged_reachable_commit:
-            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-        status: VERIFIED
-      operational:
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-        status: PROVEN
-      value:
-        evidence: {}
-        status: NOT_PROVEN
-    overall_state: delivery_accepted
-    schema_version: completion-evidence-matrix/v1
 - appetite: 40 days
   circuit_breaker: 任一子 BET 的 writer 操作触及未过门的 Orca/Multica、或与并发 agent 产生 write 冲突，立即停止并记录，不强行覆盖。
   done_when:
@@ -28276,7 +28268,8 @@ bets:
   track: T8-SURFACE
   underlying_workflow: project-code-change
   verify:
-  - cmd: cd projects/cockpit-ui && npx vitest run src/views/OperationsView.test.tsx src/views/MissionView.test.tsx
+  - cmd: cd projects/cockpit-ui && npx vitest run src/views/OperationsView.test.tsx
+      src/views/MissionView.test.tsx
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
@@ -28581,9 +28574,9 @@ bets:
   - root projects/omlxc gitlink 等于 e92317572eefbc539bb99c29029cf001c6261388
   - '该 SHA 在 omostation-omlxc origin/main 可达 (已验证: PR #72 已合并)'
   - governance-release-gate / gac-local-gate 在指针 bump PR 上通过
-  goal: 'omostation-omlxc PR #72 修复了 OmlxAppAdapter.discover() 固定单一 probe_model_id 导致的
-    available:false 假阳性(单模型槽位后端上, 除了被钉死的那一个模型外其它 chat 模型的探活几乎永远被跳过)。
-    根仓 projects/omlxc 指针仍停在合并前的 a438f9a，需要 bump 到 e9231757 使根仓反映已合并、已生效的状态。'
+  goal: 'omostation-omlxc PR #72 修复了 OmlxAppAdapter.discover() 固定单一 probe_model_id
+    导致的 available:false 假阳性(单模型槽位后端上, 除了被钉死的那一个模型外其它 chat 模型的探活几乎永远被跳过)。 根仓 projects/omlxc
+    指针仍停在合并前的 a438f9a，需要 bump 到 e9231757 使根仓反映已合并、已生效的状态。'
   human_gate: true
   id: BET-Y1Q4-T10-158
   non_goals:
@@ -28595,7 +28588,8 @@ bets:
   risk_level: L1
   status: done
   done_at: 2026-09-12
-  title: projects/omlxc root gitlink pointer closeout (probe-candidate availability fix)
+  title: projects/omlxc root gitlink pointer closeout (probe-candidate availability
+    fix)
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
   value_indicator_policy: false
@@ -28612,24 +28606,31 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-157-aetherforge-responses-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
         status: VERIFIED
         evidence:
-          diff: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
-          merged_reachable_commit: {ref: 'git://origin/main@1c128f55dea7677f7f23f5a917cc7d003c441180'}
-          rollback: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
-          tests: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          merged_reachable_commit:
+            ref: git://origin/main@1c128f55dea7677f7f23f5a917cc7d003c441180
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
       operational:
         status: PROVEN
         evidence:
-          live_canary: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
-          fresh_receipt: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
-          replay: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
-          cleanup: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md'}
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
       value:
         status: NOT_PROVEN
         evidence: {}
