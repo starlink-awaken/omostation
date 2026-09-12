@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 642
-  bos_services: 310
+  bos_services: 320
   bos_domains: 23
   cli_commands: 218
   skills: 40
@@ -892,10 +892,10 @@ bos_services:
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 70
+    governance: 76
     harness: 9
     l4-kernel: 1
-    memory: 47
+    memory: 51
     meta: 1
     omo: 4
     perception: 2
@@ -1773,6 +1773,30 @@ bos_services:
       description: 探测器心跳矩阵
       transport: stdio
       status: active
+    - uri: bos://governance/decision/record
+      description: 记录决策到因果图
+      transport: stdio
+      status: active
+    - uri: bos://governance/decision/trace-causes
+      description: 追溯决策的因果祖先链
+      transport: stdio
+      status: active
+    - uri: bos://governance/decision/trace-effects
+      description: 追溯决策的下游影响面
+      transport: stdio
+      status: active
+    - uri: bos://governance/decision/record
+      description: 记录决策到因果图
+      transport: stdio
+      status: active
+    - uri: bos://governance/decision/trace-causes
+      description: 追溯决策的因果祖先链
+      transport: stdio
+      status: active
+    - uri: bos://governance/decision/trace-effects
+      description: 追溯决策的下游影响面
+      transport: stdio
+      status: active
     harness:
     - uri: bos://harness/compliance/check
       description: Harness 12 章节全生命周期合规检查 (Phase 8)
@@ -2003,6 +2027,22 @@ bos_services:
     - uri: bos://memory/kems/ocr-queue
       description: KEMS 多源知识抽提与 OCR 纠错审阅队列 (ADR-0300)
       transport: http
+      status: active
+    - uri: bos://memory/graph/query
+      description: SPARQL 查询嵌入式图引擎
+      transport: stdio
+      status: active
+    - uri: bos://memory/graph/reason
+      description: Datalog 确定性推理
+      transport: stdio
+      status: active
+    - uri: bos://memory/graph/query
+      description: SPARQL 查询嵌入式图引擎
+      transport: stdio
+      status: active
+    - uri: bos://memory/graph/reason
+      description: Datalog 确定性推理
+      transport: stdio
       status: active
     meta:
     - uri: bos://meta/discover

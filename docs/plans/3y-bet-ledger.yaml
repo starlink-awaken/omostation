@@ -2878,7 +2878,9 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: "2026-09-12"
+  value_indicator_policy: false
   title: Semantica 嵌入式图引擎内核集成与 BOS 决策网格 (Semantica Graph Kernel & BOS Decision Mesh)
   track: T6-EVOLUTION
   underlying_workflow: project-code-change
@@ -2896,6 +2898,47 @@ bets:
   - projects/agora/etc/bos-services.yaml
   - projects/knowledge/kairon/tests/test_semantica_kernel.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+  accepted_specifications:
+  - content_digest: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+    decision_ref: decision://accepted/BET-Y1Q4-T6-26
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+    spec_version: 1.0.0
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+          merged_reachable_commit:
+            ref: git://origin/main@2969d536d2222a190ae552c952496d193fc8d619
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - appetite: 2 days
   circuit_breaker: 先例仲裁必须设定置信度下限（confidence >= 0.85），低于阈值时自动升级至人类待办，严禁低置信度盲目合并。
   depends_on:
