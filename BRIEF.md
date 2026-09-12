@@ -1,7 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-12T12:15:46.225090Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `72/100`
-
+> **Generated**: `2026-09-12T13:18:23.550793Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `72/100`
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
 

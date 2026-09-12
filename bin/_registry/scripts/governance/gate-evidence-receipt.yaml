@@ -1,0 +1,25 @@
+schema: script-registry/v1
+id: bin/gac/gate-evidence-receipt.py
+name: Gate Evidence Receipt (门禁证据 receipt 生成器)
+category: governance
+owner: governance-team
+description: >-
+  BET-Y1Q4-T10-164。逐项对照 A1-A9/RF0 exit criteria，把 proven/missing 落
+  digest-bound receipt 到 .omo/_delivery/environment-evidence/。
+  只记录机械可复算证据，不杜撰；not_admitted 是合法态。
+inputs:
+  - name: --gate
+    type: str
+    required: false
+  - name: --check
+    type: flag
+    required: false
+outputs:
+  - type: yaml_receipt
+triggers:
+  - manual
+  - scheduled
+tags:
+  - gate
+  - evidence
+  - receipt

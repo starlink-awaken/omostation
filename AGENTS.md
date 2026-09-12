@@ -184,6 +184,11 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 - **remote 污染特征**：主仓 remote URL 落入 `.gitmodules` 子仓 URL 集合即为污染（实证：origin 被并发会话改写成 cockpit-ui 仓后，一切 origin/main 验证静默失效）。守卫只告警不改写；修复：`git remote set-url origin https://github.com/starlink-awaken/omostation.git`。
 - **手工核验**：`bash bin/gac/gac-worktree.sh guard-submodules [--fix]`；跳过守卫：`GAC_SKIP_POST_CHEKOUT_GUARD=1`。
 
+### ledger BET 条目安全插入（2026-09-12, 批次 31 复盘固化）
+
+- **禁止按行号盲插**：bets 序列被顶层键 (`campaigns/disciplines/gates/meta/milestones/objectives`) 切断，盲插会把条目塞进错误段落。用 `python3 bin/gac/ledger-safe-insert.py --file <entry.yaml>` 自动定位（yaml.compose 物理边界）+ schema/digest/id 校验 + 原子写入。
+- **dry-run 先行**：`--dry-run` 校验通过后再正式写入。
+
 ---
 
 ## 7. Common Pitfalls（2026-09-12 实证）

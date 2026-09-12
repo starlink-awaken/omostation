@@ -73,6 +73,8 @@ help:
 	@echo "  make omo-status             Multi-Agent Swarm 秒级全景 Rich Panel 快照"
 	@echo "  make omo-top                Multi-Agent Swarm 4 象限互动大盘"
 	@echo "  make swarm-activity         多 Agent 实时活动面板"
+	@echo "  make panorama-serve         织星全景驾驶舱 :43910 (前台)"
+	@echo "  make panorama-status        驾驶舱数据快照 (collect --json)"
 	@echo ""
 
 # ── 🌟 算力织网 (Compute Fabric / omlxc v3.4.0) ─────────────────────────────────
@@ -439,6 +441,12 @@ omo-top:  ## Multi-Agent Swarm 4 象限实时互动大盘 (Textual 1.x)
 
 swarm-activity:  ## 多 agent 实时活动面板
 	python3 bin/gac/swarm-activity-dashboard.py
+
+panorama-serve:  ## 织星全景驾驶舱 :43910 (前台, Ctrl-C 停)
+	python3 bin/panorama/panorama-serve.py
+
+panorama-status:  ## 驾驶舱数据快照
+	python3 bin/panorama/panorama-collect.py --json
 
 swarm-prune:  ## 清理僵尸 Agent 锁与临时状态
 	python3 bin/gac/swarm-prune-zombies.py --apply
