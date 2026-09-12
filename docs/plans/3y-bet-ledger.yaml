@@ -2603,6 +2603,11 @@ bets:
   - projects/omo/src/omo/resident/decision.py
   - projects/cockpit/tests/test_resident_decision_triage.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t8-21-decision-proposals-closeout-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:9298186372b4e7103d33380c97b6bc15378b22616564609dc11a6da8f603b5b2
+    decision_ref: decision://accepted/BET-Y1Q4-T8-21
 - appetite: 3 days
   circuit_breaker: 单个 Cell 执行超时（默认 120s）强制终止并隔离状态；Cell 崩溃时自动故障转移，不影响守护进程主循环。
   depends_on:
@@ -28263,17 +28268,29 @@ bets:
   - projects/cockpit-ui/src/views/StudioView.tsx
   - projects/cockpit-ui/src/components/studio/
   completion_evidence:
+    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md"
+            sha256: "sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd"
+          merged_reachable_commit:
+            ref: git://origin/main@91dfa1bfc
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md"
+            sha256: "sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd"
+          tests:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md"
+            sha256: "sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd"
       operational:
-        evidence: {}
         status: NOT_PROVEN
+        evidence: {}
       value:
-        evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+        evidence: {}
+    overall_state: blocked
     schema_version: completion-evidence-matrix/v1
 - appetite: 4 days
   circuit_breaker: 任何导致用户审批误点击或案件数据丢失的 UI 缺陷立即回滚。
@@ -28714,6 +28731,10 @@ bets:
     spec_ref: repo://docs/superpowers/specs/2026-09-12-t10-161-gitlink-freshness-remote-integrity-guard.md
     spec_version: 1.0.0
   # --- 门禁治理 BET (A1 Git 完整性, 本 session 2 次指针回退实证) ---
+  done_when:
+  - root projects/aetherforge gitlink 等于 79842ed097b792cd2a856d62f8d08d4bf6f1a3de
+  - '该 SHA 在 omostation-aetherforge origin/main 可达 (已验证: PR #72/#3664 已合并)'
+  - gitlink 新鲜度守卫 (guard-submodules) 与 remote 完整性检查落地并通过双事故场景验证
   appetite: 2 days
   circuit_breaker: 任何导致子模块指针回退或 remote 配置污染的改动立即停止。
   goal: '本 session 实证 2 次 cockpit-ui 子模块指针回退（均由 worktree 创建后未 submodule update --init
@@ -28730,9 +28751,10 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: Git 子模块稳定性与 remote 配置完整性防护
-  track: T10-REPO-HYGIENE
+  track: T10-MATURITY
   underlying_workflow: project-code-change
   value_indicator_policy: false
   verify:
@@ -28748,6 +28770,29 @@ bets:
   - .githooks/post-checkout
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md'}
+          merged_reachable_commit: {ref: 'git://origin/main@7c114434fad42e735369ace55352b0068511eefa'}
+          rollback: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md'}
+          tests: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md'}
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md'}
+          fresh_receipt: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md'}
+          replay: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md'}
+          cleanup: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md'}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    decision_ref: decision://accepted/BET-Y1Q4-T10-161
+    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:7d33a97ac5242e5a22327bfaaf374f3a9f04046f1088b781ff423604a3687a16
     decision_ref: decision://accepted/BET-Y1Q4-T10-162

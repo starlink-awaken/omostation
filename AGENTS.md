@@ -178,6 +178,12 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 - **manifest 引用路径全量扫描**：改 hook 脚本路径后必须扫描 manifest 全部 hook 段（pre-commit/pre-push/post-checkout/pre-rebase/pre-merge-commit/post-merge/commit-msg），别只修一段——#3282 只改 pre-commit 段、回退 pre-merge-commit 的 conflict-marker 路径致检查静默失效。
 - **同 BET 并行交付防回退**：改 canonical hooks 前先 `git fetch` 查 main 是否已含目标内容（PITFALL-GAT-006）；并行 agent 同名 BET 的 PR 可能基于旧 main、合并后回退正确值（#3282 回退 #3277 的 5 处修复实录）。
 
+### worktree 子模块与 remote 完整性（2026-09-12, BET-Y1Q4-T10-161）
+
+- **gitlink 新鲜度**：worktree claim 默认全量 init 子模块；`SKIP_SUBMODULE_INIT=1` 快速路径与 `git worktree add` 直创路径由 post-checkout 守卫兜底——对 pin 不一致的子模块做本地无网络 `submodule update --init --no-fetch` 对齐（只动子模块工作树，**不改根指针**）。本地缺 pin 对象时打印修复命令，不联网。
+- **remote 污染特征**：主仓 remote URL 落入 `.gitmodules` 子仓 URL 集合即为污染（实证：origin 被并发会话改写成 cockpit-ui 仓后，一切 origin/main 验证静默失效）。守卫只告警不改写；修复：`git remote set-url origin https://github.com/starlink-awaken/omostation.git`。
+- **手工核验**：`bash bin/gac/gac-worktree.sh guard-submodules [--fix]`；跳过守卫：`GAC_SKIP_POST_CHEKOUT_GUARD=1`。
+
 ---
 
 ## 7. Common Pitfalls（2026-09-12 实证）
