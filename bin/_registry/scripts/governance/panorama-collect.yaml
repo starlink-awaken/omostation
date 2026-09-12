@@ -1,0 +1,21 @@
+schema: script-registry/v1
+id: bin/panorama/panorama-collect.py
+name: Panorama panorama-collect (织星全景驾驶舱)
+category: governance
+owner: governance-team
+description: >-
+  BET-Y1Q4-T10-163 织星全景驾驶舱组件。collect=只读 SSOT 聚合生成 runtime/dashboard/;
+  serve=静态服务 :43910 + 5min 自动刷新。零写入零派工。
+inputs:
+  - name: --json / --once / --port
+    type: flag
+    required: false
+outputs:
+  - type: exit_code
+triggers:
+  - manual
+  - launchd
+tags:
+  - panorama
+  - dashboard
+  - observability
