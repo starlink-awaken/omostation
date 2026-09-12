@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 642
-  bos_services: 312
+  bos_services: 309
   bos_domains: 24
   cli_commands: 218
   skills: 40
@@ -888,7 +888,7 @@ bos_services:
     capability: 44
     cockpit: 8
     compute: 17
-    connectors: 6
+    connectors: 3
     documents: 3
     ecos: 10
     fabric: 1
@@ -1419,24 +1419,12 @@ bos_services:
       status: active
     connectors:
     - uri: bos://connectors/list
-      description: ''
-      transport: ''
-      status: active
-    - uri: bos://connectors/list
       description: 列出所有已注册连接器 (支持 status/type/package 过滤)
       transport: inline
       status: active
     - uri: bos://connectors/sync
-      description: ''
-      transport: ''
-      status: active
-    - uri: bos://connectors/sync
       description: 触发指定连接器的增量同步 (支持 dry_run 与 watermark)
       transport: inline
-      status: active
-    - uri: bos://connectors/manifest
-      description: 触发指定连接器的增量同步 (支持 dry_run 与 watermark)
-      transport: ''
       status: active
     - uri: bos://connectors/manifest
       description: 读取连接器注册表 manifest (只读)
