@@ -2899,7 +2899,7 @@ bets:
   - projects/omo/tests/unit/test_scene_guardrail_anchor.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-04.md
   accepted_specifications:
-  - content_digest: sha256:6a4c3abc7ad075ea427e077ff88407289511c216af48905b00f8f1d7859a812b
+  - content_digest: sha256:17b5344764ef81ff7bc09532bd2685bdf66466019509769f471ea85899159139
     decision_ref: decision://accepted/BET-Y1Q4-T7-04
     spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-04-scene-navigation-guardrails-design.md
     spec_version: 1.0.0

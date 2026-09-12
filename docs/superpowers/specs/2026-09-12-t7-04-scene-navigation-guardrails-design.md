@@ -6,6 +6,8 @@ version: 1.0.0
 value_indicator_policy: false
 created: 2026-09-12
 owner: governance-team
+lifecycle: spec
+last-reviewed: 2026-09-12
 ---
 
 # T7-04 — Scene Navigation Anchor & Runtime Guardrails 设计
