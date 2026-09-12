@@ -28171,6 +28171,7 @@ bets:
   - projects/cockpit-ui/src/components/mission/
   - docs/plans/3y-bet-ledger.yaml
   - projects/cockpit-ui/tests/
+  - .omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
 - appetite: 2 days
   circuit_breaker: 对账若发现任何一个指标丢失，严禁关闭 43191 原服务。
   done_when:
