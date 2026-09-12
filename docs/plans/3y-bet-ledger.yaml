@@ -28889,6 +28889,159 @@ bets:
         evidence: {}
     decision_ref: decision://accepted/BET-Y1Q4-T10-162
     overall_state: delivery_accepted
+- appetite: 5 days
+  circuit_breaker: 驾驶舱只读 SSOT 采集；任何写副作用、派工、或越过 OMO 工作流的入口立即下线。
+  done_when:
+  - 单页站点含 7 板块（体系总览/门禁 A1-A9/Agent 全景/任务里程碑/运行态/治理/知识入口），全部真实数据渲染
+  - 采集器零写副作用通过 direct-omo-io lint
+  - launchd 注册且每 5min 刷新，cron registry 登记 sfop_slot=S
+  - docs/generated/panorama-dashboard.md 入口文档落账
+  goal: '指令要求"对整个体系有直观理解"的可观测面板。仓内建设织星全景驾驶舱：与 Serena 只读观测站互补，
+    作为体系运行指挥台——架构/白皮书/流程入口，运行中事物状态与进度，未完成事物规划/任务/里程碑，
+    所有 agent 可见。数据全部来自 SSOT 只读聚合（bet-ledger/gate-health-check/meta-doctor/worktree/
+    cron registry/CI surfaces），产物落 runtime/（gitignored），站点 http://127.0.0.1:43910。'
+  human_gate: false
+  id: BET-Y1Q4-T10-163
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  non_goals:
+  - 不取代 Serena 仓外只读观测站（互补关系）
+  - 不做任务派工/审批/写入（AGENT-READING 边界纪律）
+  - 不硬编码 runtime 事实进文档（doc-ssot-contract）
+  objective_ref: OBJ-HOLDABILITY
+  pasw_required: false
+  priority: P0
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: 织星全景驾驶舱 v1（体系可观测站点 + Agent/里程碑/门禁全景）
+  track: T8-SURFACE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/cockpit/panorama-collect.py --json
+    expect: exit 0
+  - cmd: python3 bin/cockpit/panorama-collect.py --check-side-effects
+    expect: exit 0
+  - cmd: python3 bin/gac/check-sfop-slots.py --json
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - bin/cockpit/
+  - runtime/dashboard/
+  - docs/generated/panorama-dashboard.md
+  - .omo/cron/registry.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-163.md
+- appetite: 2 days
+  circuit_breaker: 任何 gate 从 PASS 回退立即停线排查；receipt 不允许人工杜撰证据项。
+  done_when:
+  - A1-A9+RF0 每 gate 一份 digest-bound receipt（proven/missing/exit_criteria/owner/refresh 时间）
+  - Serena current_as_of 验证刷新到最新采集
+  - A6/A7/A8/A9/RF0 的依赖边界书面化（not_admitted 合法态 + 解锁条件）
+  goal: '指令"先完成 A1–A9 执行环境恢复"。底层检查本 session 已全过（gate-health-check 7/7），
+    缺的是证据正式化：把每 gate 的 exit criteria 逐项对照、proven/missing 落 receipt、
+    与 Serena 采集对齐，让门禁从"快照陈旧"转为"receipt 可复算"。'
+  human_gate: false
+  id: BET-Y1Q4-T10-164
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  non_goals:
+  - 不修改 gate 判定逻辑本身（ Serena/观测站职责）
+  - 不为凑齐证据降低 exit criteria 标准
+  objective_ref: OBJ-HOLDABILITY
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: A1–A9 执行环境恢复收口（digest-bound 证据 receipt + 采集对齐）
+  track: T10-MATURITY
+  underlying_workflow: governance-state-mutation
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/cockpit/panorama-collect.py --gates
+    expect: exit 0
+  - cmd: python3 bin/gac/gate-health-check.py --json
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - .omo/_delivery/environment-evidence/
+  - docs/generated/panorama-dashboard.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-164.md
+- appetite: 8 days
+  circuit_breaker: 未过门 adapter（R0/AS0 之外）获得任何写入/自治/并发能力立即停止。
+  done_when:
+  - omo 持久 Role 注册表（role_id/capabilities/admission_state）+ 准入状态机
+  - Capsule（WorkPacket 规范 + receipt 绑定）+ Handoff 事件入 Mesh（复用 dispatch_backend 模式）
+  - Claim 接入 task_gateway（T10-143 claims_authority R0 绑定执行面）
+  - Verification 扩展到 Role 级（verifier 接口绑定）
+  - ASD 五核心面板数据契约（喂驾驶舱板块）
+  - 检查器固化铁律：未过门零写入/零自治/零扩并发
+  goal: '指令核心："OMO 单控制面 + 持久 Role/Queue/Receipt + 动态 Agent Cell"的语义层。
+    Queue/Receipt 基础（task_gateway 七波次 + claims_authority）已就绪，本 BET 补齐
+    Role/Capsule/Handoff/Verification/ASD 五件，使 Cell 动态编排具备持久身份与可审计交接。'
+  human_gate: false
+  id: BET-Y1Q4-T10-165
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  non_goals:
+  - 不发明第二 dispatcher / 平行 OS（SFOP 八律）
+  - 不让 AGE-v2/resident/BCOS 升级为控制面（投影不派活）
+  - 不改变既有 BET 的 completion/value evidence
+  objective_ref: OBJ-HOLDABILITY
+  parent_bet_id: BET-Y1Q4-T10-146
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L2
+  status: candidate
+  title: OMO 持久 Role/Capsule/Handoff/Claim/Verification/ASD 语义落地
+  track: T10-MATURITY
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: cd projects/omo && python3 -m pytest tests/test_workflow_claims_authority_bridge.py -q
+    expect: exit 0
+  - cmd: python3 bin/gac/check-sfop-slots.py --json
+    expect: exit 0
+  - cmd: python3 bin/cockpit/panorama-collect.py --json
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - projects/omo/src/omo/workflow/
+  - projects/omo/tests/
+  - docs/architecture/os-operating-pattern-v1.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+- appetite: 3 days
+  done_when:
+  - ASD 五核心面板（Overview/Spine/Agents/Milestones/Degradation）在驾驶舱可呈现、有 provenance
+  - 面板数据新鲜度与降级规则（observer-blindness-never-yields-green）落契约
+  goal: 'A9 门禁（ASD and Cockpit observability）的交付面：把 ASD 五面板作为驾驶舱的一级公民，
+    每面板带来源/新鲜度/降级标记，部分证据永远不等于 PASS。'
+  human_gate: false
+  id: BET-Y1Q4-T10-166
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  non_goals:
+  - 不用显示层数据反推 gate PASS（PARTIAL ≠ PASS 铁律）
+  objective_ref: OBJ-HOLDABILITY
+  parent_bet_id: BET-Y1Q4-T10-163
+  pasw_required: false
+  priority: P2
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: ASD 五核心面板数据契约与验收（驾驶舱呈现 + 降级规则）
+  track: T9-OBSERV
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/cockpit/panorama-collect.py --json
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - bin/cockpit/
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-166.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
