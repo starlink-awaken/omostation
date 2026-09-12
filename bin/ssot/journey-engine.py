@@ -235,7 +235,9 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
                 ctx.status = "escalated"
                 _emit_omo_event("scene.escalated", ctx.to_event())
                 _emit_scene_alert("scene.escalated", ctx.to_event(), severity="critical")
-                ctx.end_time = datetime.now(UTC); return ctx
+                ctx.end_time = datetime.now(UTC)
+                _auto_record_calibration(ctx)
+                return ctx
             nxt = _resolve_next_state(spec, current, result, ctx)
             if nxt is None: break
             current = nxt
@@ -247,7 +249,39 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
         if failed: ctx.output["compensation_failures"] = len(failed)
     ctx.end_time = datetime.now(UTC)
     _emit_omo_event(ctx.to_event()["event_type"], ctx.to_event())
+    _auto_record_calibration(ctx)
     return ctx
+
+def _auto_record_calibration(ctx) -> None:
+    """Auto-record execution result in calibration DB (closes the loop).
+
+    Without this, signal-triggered executions bypass calibration tracking.
+    """
+    try:
+        cal_path = _ROOT / "bin" / "ssot" / "calibration-engine.py"
+        if not cal_path.exists():
+            return
+        result = {
+            "status": ctx.status,
+            "confidence": ctx.confidence,
+            "duration_ms": ctx._duration_ms(),
+            "token_usage": sum(
+                step.get("result_summary", {}).get("token_usage", 0)
+                for step in ctx.trace
+            ),
+            "tool_calls": sum(
+                len(step.get("result_summary", {}).get("tool_calls", []))
+                for step in ctx.trace
+            ),
+        }
+        subprocess.run(
+            [sys.executable, str(cal_path), "record",
+             "--scene-id", ctx.scene_id, "--run-id", ctx.run_id,
+             "--result", json.dumps(result)],
+            capture_output=True, text=True, timeout=10, check=False, cwd=str(_ROOT),
+        )
+    except Exception:
+        pass  # calibration recording is best-effort
 
 def _execute_action(action, state_def, ctx) -> dict:
     """Execute a state action — supports both BOS capability_refs and named actions."""

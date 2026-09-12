@@ -142,20 +142,44 @@ def main(argv=None) -> int:
     if cmd == "daily":
         conn = _get_db()
         rows = conn.execute("SELECT DISTINCT scene_id FROM scene_execution").fetchall(); conn.close()
-        alerts = 0; promoted = 0
+        alerts = 0; promoted = 0; auto_applied = 0
+        lifecycle_path = _ROOT / ".omo" / "_truth" / "scenarios" / "v3"
         for r in rows:
             sid = r["scene_id"]
             cal = compute_calibration(sid)
             demo = check_demotion_triggers(sid)
             if demo["demote"]:
                 print(f"[DEMOTION] {sid}: {demo['triggers']}"); alerts += 1
+                _auto_transition(sid, "shadow", "calibration-engine")
             for level in ("assisted","supervised","routine"):
                 gates = check_promotion_gates(sid, level)
                 if gates["eligible"]:
                     print(f"[PROMOTION] {sid} → {level} (score={cal['calibration_score']:.3f})"); promoted += 1
+                    # Auto-apply promotion for assisted (supervised/routine need human)
+                    if level == "assisted":
+                        card_path = lifecycle_path / f"{sid}.yaml"
+                        if card_path.is_file() and _auto_transition(sid, level, "calibration-engine"):
+                            auto_applied += 1
                     break
-        print(f"Daily cycle: {len(rows)} scenes, {alerts} demotion alerts, {promoted} promotion candidates")
+        print(f"Daily cycle: {len(rows)} scenes, {alerts} demotion alerts, {promoted} promotion candidates, {auto_applied} auto-applied")
         return 0
+
+def _auto_transition(scene_id: str, target_level: str, actor: str) -> bool:
+    """Auto-apply lifecycle transition. Returns True on success."""
+    try:
+        import subprocess as _sp
+        lifecycle_script = _ROOT / "bin" / "ssot" / "scene-card-lifecycle.py"
+        card_path = _ROOT / ".omo" / "_truth" / "scenarios" / "v3" / f"{scene_id}.yaml"
+        if not card_path.is_file() or not lifecycle_script.is_file():
+            return False
+        result = _sp.run(
+            [sys.executable, str(lifecycle_script), "transition",
+             "--scene-card", str(card_path), "--tier", target_level, "--actor", actor],
+            capture_output=True, text=True, timeout=15, cwd=str(_ROOT),
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
     conn = _get_db(); rows = conn.execute("SELECT DISTINCT scene_id FROM scene_execution ORDER BY scene_id").fetchall(); conn.close()
     print(f"{'Scene ID':<40} {'Samples':>8} {'Score':>8} {'FP Rate':>8} {'Trend':>8}\n{'-'*76}")
     for r in rows:
