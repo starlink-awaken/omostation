@@ -2919,7 +2919,7 @@ bets:
   track: T5-ORCH
   underlying_workflow: project-code-change
   verify:
-  - cmd: uv run pytest projects/omo/tests/unit/test_resident_causal_decision.py -q
+  - cmd: cd projects/omo && uv run --with pytest pytest tests/unit/test_resident_causal_decision.py -q
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -2930,8 +2930,16 @@ bets:
   - projects/omo/src/omo/resident/arbitration.py
   - projects/cockpit/src/cockpit/handlers/decision_graph.py
   - projects/cockpit-ui/src/components/DecisionGraphViewer.tsx
+  - projects/cockpit-ui/src/components/DecisionGraphViewer.test.tsx
   - projects/omo/tests/unit/test_resident_causal_decision.py
   - .omo/_knowledge/retros/BET-Y1Q4-T5-05.md
+  - docs/plans/3y-bet-ledger.yaml
+  accepted_specifications:
+  - content_digest: sha256:93497203740b72d2afb6e3f9c752ae9134245c7d3c9932a9feadc4dc134c15b7
+    decision_ref: decision://accepted/BET-Y1Q4-T5-05
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-05-resident-causal-decision-design.md
+    spec_version: 1.0.0
+  value_indicator_policy: false
 - appetite: 2 days
   circuit_breaker: SHACL 验证器仅针对纳管的核心架构资产运行，非受管目录的草稿文件走 warn 模式不阻断。
   depends_on:
