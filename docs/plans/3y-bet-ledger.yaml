@@ -2548,7 +2548,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: Resident Daemon 与 AGE-v2 CellPool 算力池合体调度 (Resident Daemon & Agent Cell Elastic
     Pool Integration)
   track: T6-EVOLUTION
@@ -28122,6 +28123,11 @@ bets:
   verify:
   - cmd: cd projects/cockpit-ui && bun test src/views/StudioView.test.tsx
     expect: exit 0
+  accepted_specifications:
+  - content_digest: sha256:db6305015956f82c7464d62ae2f720bbb5a5ad17080e52d3b0cee62c0c3fe8bb
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24C
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-studio-view-deep-delivery-spec.md
+    spec_version: 1.0.0
   window: Y1Q4
   workflow: bet-execution
   write_surfaces:
@@ -28153,11 +28159,18 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t8-24d-operations-mission-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3bcf727d21aa2d30c71d19b4e8b72793da70466a5ded72b083d0502b96684464
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24D
   write_surfaces:
   - projects/cockpit-ui/src/views/OperationsView.tsx
   - projects/cockpit-ui/src/views/MissionView.tsx
   - projects/cockpit-ui/src/components/operations/
   - projects/cockpit-ui/src/components/mission/
+  - docs/plans/3y-bet-ledger.yaml
+  - projects/cockpit-ui/tests/
 - appetite: 2 days
   circuit_breaker: 对账若发现任何一个指标丢失，严禁关闭 43191 原服务。
   done_when:
@@ -28209,7 +28222,8 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: 43191 织星全要素控制面全维度交互式可视化落地与验证
   track: T8-SURFACE
   underlying_workflow: project-code-change

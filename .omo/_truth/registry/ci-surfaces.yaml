@@ -1215,6 +1215,16 @@ workflow_triggers:
   triggers:
   - per_pr
   path_filtered: false
+- workflow: architecture-check.yml
+  triggers:
+  - per_pr
+  path_filtered: true
+  paths:
+  - docs/scene-cards/**
+  - docs/journey-specs/**
+  - .omo/standards/**
+  - bin/mof/**
+  - bin/ssot/**
 - workflow: audit-rollout-monthly.yml
   triggers:
   - manual
@@ -1292,6 +1302,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/cockpit-ui-ci.yml
+  - projects/cockpit-ui
   - projects/cockpit-ui/**
 - workflow: config-check.yml
   triggers:
@@ -1315,6 +1326,15 @@ workflow_triggers:
   - push
   - scheduled
   path_filtered: false
+- workflow: doc-gov-check.yml
+  triggers:
+  - per_pr
+  - push
+  path_filtered: true
+  paths:
+  - "**.md"
+  - bin/ssot/generate-docs-index.py
+  - docs/**
 - workflow: ecos-ci.yml
   triggers:
   - per_pr
@@ -1347,6 +1367,18 @@ workflow_triggers:
   triggers:
   - scheduled
   path_filtered: false
+- workflow: harness-ci.yml
+  triggers:
+  - per_pr
+  path_filtered: true
+  paths:
+  - .omo/_truth/registry/harness-policy.yaml
+  - bin/gac/harness*.py
+  - .githooks/pre-edit-architecture.sh
+  - bin/harness
+  - .omo/standards/**
+  - docs/scene-cards/**
+  - docs/journey-specs/**
 - workflow: governance-check.yml
   triggers:
   - per_pr
