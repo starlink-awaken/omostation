@@ -20,12 +20,12 @@ the local compute gateway. The PR merged to `omostation-aetherforge` main
 as commit `452f0db047e09657d56fc0913b6b54c36e8532c0`, live-verified against
 the running gateway and against a real `codex exec` invocation.
 
-The root `omostation` repo's `projects/aetherforge` gitlink still pointed at
-the pre-merge commit `f3df9b4b259c93d737ec5acd0c312eeeb3d383fe`. This was a
+The root `omostation` repo's `projects/aetherforge` gitlink still points at
+the pre-merge commit `f3df9b4b259c93d737ec5acd0c312eeeb3d383fe`. This is a
 pure documentation/consistency gap: the live gateway process runs directly
 from the submodule's own source tree (not from a root-repo checkout), so
-the stale pointer had no effect on the already-working, already-merged
-fix. It did affect fresh recursive clones and any tooling that reads the
+the stale pointer has no effect on the already-working, already-merged
+fix. It does affect fresh recursive clones and any tooling that reads the
 root repo's gitlink as the source of truth for what `projects/aetherforge`
 contains.
 
