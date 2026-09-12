@@ -1583,6 +1583,12 @@ bets:
   - projects/spine/src/spine/ingress/
   - bin/daemon/mail_ingress.py
   - .omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+  - docs/superpowers/specs/2026-09-12-t2-06-mail-calendar-ingress-design.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t2-06-mail-calendar-ingress-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:6436241f2ec449a43aad473f2ce89aab0d2e10f75c1d0c1ebc4eac07ae284189
+    decision_ref: decision://accepted/BET-Y1Q4-T2-06
 - accepted_specifications:
   - content_digest: sha256:d13886145ff25981dda76e630c1f9b9f717c27ee30dce4410857c6beadb693de
     decision_ref: decision://accepted/BET-Y1Q4-T4-06
@@ -27260,27 +27266,50 @@ bets:
     spec_ref: repo://docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
     spec_version: 1.3.0
   appetite: 2 days
-  circuit_breaker: version 1.3.0 WorkPacket 必须只含 projects/omo；不得 union 1.2.0 源码面。 禁止改源码/host/completion/value；目标须为含
-    omo#162 的 authoritative child main；门禁失败立即停止。
+  circuit_breaker: version 1.3.0 WorkPacket 必须只含 projects/omo；不得 union 1.2.0 源码面。
+    禁止改源码/host/completion/value；目标须为含 omo#162 的 authoritative child main；门禁失败立即停止。
   completion_evidence:
+    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
+            sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          merged_reachable_commit:
+            ref: git://origin/main@629744da6e64459ac1664c52215c2b1f482c8152
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
+            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          replay:
+            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
+            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
       value:
-        evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
-    schema_version: completion-evidence-matrix/v1
+        evidence: {}
+    overall_state: delivery_accepted
   depends_on: []
   done_when:
   - 完整 resident status 路径对 recovery、checkpoint、holder、CPU、kill、sleep 和 write-capable
     SQLite 的调用均为零
-  - check_lock_state_only 对 missing、unlocked、locked、busy、I/O error 与 unknown 返回稳定 typed
-    read-only 结果
+  - check_lock_state_only 对 missing、unlocked、locked、busy、I/O error 与 unknown 返回稳定
+    typed read-only 结果
   - busy 路径只执行一次 lock observation 和一次 chain probe，零 retry/零 sleep，并诚实 degraded
   - 100 个并发完整 snapshot 在预算内终止、JSON 可序列化且零副作用，显式 recovery/daemon 回归保持
   - child PR 先合并并可达 authoritative child main；后续 root-only binding amendment 仅推进 projects/omo
@@ -27320,43 +27349,6 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: submodule-pointer-transaction
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
-            sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
-            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
-            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
-          merged_reachable_commit:
-            ref: git://origin/main@629744da6e64459ac1664c52215c2b1f482c8152
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
-            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
-            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
-          replay:
-            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
-            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
-            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-  value_indicator_policy: false
   write_surfaces:
   - projects/omo
   - docs/plans/3y-bet-ledger.yaml
@@ -27369,8 +27361,8 @@ bets:
     spec_version: 1.9.0
   appetite: 12 days
   circuit_breaker: 1.9.0 WorkPacket 必须只含 projects/omo 并保持 implementation_authorized=true；
-    任一源码改动、host 激活、24h 窗、done/done_at、scope union、旧 WorkPacket hash 复用或
-    默认门禁失败都立即停止。Task 16 只能在指针合入且锁归零后单独授权。
+    任一源码改动、host 激活、24h 窗、done/done_at、scope union、旧 WorkPacket hash 复用或 默认门禁失败都立即停止。Task
+    16 只能在指针合入且锁归零后单独授权。
   completion_evidence:
     axes:
       engineering:
@@ -27403,7 +27395,8 @@ bets:
   human_gate: true
   id: BET-Y1Q4-T10-145
   non_goals:
-  - 1.9.0 仅授权 root projects/omo gitlink 指针事务，不改 Wave E 源码、不写 host runtime、不启动 24h 窗、不写 done
+  - 1.9.0 仅授权 root projects/omo gitlink 指针事务，不改 Wave E 源码、不写 host runtime、不启动 24h
+    窗、不写 done
   - 不信任 arbitrary external 或 clone-local root，不追认历史 v1/A1/A3 receipt
   - 不实施 R1、host service、service account、UDS、Keychain、多租户 RBAC 或高可用
   - 不修改其他 BET、completion/value evidence、branch protection 或业务运行态
@@ -27588,7 +27581,7 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: "2026-09-12"
+  done_at: '2026-09-12'
   title: Orca R0 正式准入验证工具链
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -27622,7 +27615,7 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: "2026-09-12"
+  done_at: '2026-09-12'
   title: Multica AS0 正式准入验证工具链
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -27994,7 +27987,7 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T8-24A
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-  done_at: 2026-09-12
+  done_at: 2026-09-11
   done_when:
   - projects/cockpit/src/cockpit/observatory/ 建立并集成 42 技能、6 记忆、302 BOS 采集
   - FastAPI 统一挂载 /api/v1/observatory/ 路由，支持 generation 锁定
@@ -28011,7 +28004,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-11
   title: Observatory 统一数据面收敛与增量流式投影服务
   track: T8-SURFACE
   underlying_workflow: project-code-change
@@ -28066,39 +28058,38 @@ bets:
         status: VERIFIED
         evidence:
           diff:
-            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
-            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
           merged_reachable_commit:
             ref: git://origin/main@1be55e3ecb079f45266955dcdf598b0dacf02477
           rollback:
-            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
-            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
           tests:
-            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
-            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
       operational:
         status: PROVEN
         evidence:
           live_canary:
-            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
-            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
           fresh_receipt:
-            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
-            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
           replay:
-            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
-            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
           cleanup:
-            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
-            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
       value:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-    notes: done_when#1 六面 Store + 解耦断言 11 tests; done_when#2 ⌘K 内存索引实测;
-      done_when#3 Causal Inspector 抽屉 UI 属 24C/D (数据面已就绪)。
-      engineering VERIFIED; operational PROVEN (store 底座随 cockpit-ui 构建产物运行);
-      24C/D/E 交付后各自单独证明。
+    notes: done_when#1 六面 Store + 解耦断言 11 tests; done_when#2 ⌘K 内存索引实测; done_when#3
+      Causal Inspector 抽屉 UI 属 24C/D (数据面已就绪)。 engineering VERIFIED; operational PROVEN
+      (store 底座随 cockpit-ui 构建产物运行); 24C/D/E 交付后各自单独证明。
 - appetite: 4 days
   circuit_breaker: 拓扑图渲染节点数过大导致帧率低于 30fps 时启用虚拟化视口。
   done_when:
@@ -28248,7 +28239,8 @@ bets:
   done_when:
   - 43191 观测站六大主权平面全面上线原生交互式可视化组件（门禁流水线、战役分布、算力星系拓扑、价值回路、场景卡漏斗、动态因果子图）
   - 严格保持 100% 离线主权与 CSP 约束，零外部第三方依赖
-  - 248 项单元与端到端回归测试全量通过（158 pytest + 36 strategic check + 11 workbench check + 43 UI unit tests）
+  - 248 项单元与端到端回归测试全量通过（158 pytest + 36 strategic check + 11 workbench check + 43
+    UI unit tests）
   - 形成交付复盘文档并完成主仓 PR 闭环
   goal: 为 43191 织星全要素控制面升级全维度可视化呈现，包含 A1-A9 门禁准入流、3Y-BET 台账与里程碑柱状图、主权算力协同拓扑、五阶段价值增强回路、业务场景卡五级漏斗及动态交互因果拓扑子图。
   human_gate: false
@@ -28266,7 +28258,8 @@ bets:
   track: T8-SURFACE
   underlying_workflow: project-code-change
   verify:
-  - cmd: node ~/.local/share/zhixing-dashboard/playwright-workbench-check.cjs && node ~/.local/share/zhixing-dashboard/playwright-strategic-check.cjs
+  - cmd: node ~/.local/share/zhixing-dashboard/playwright-workbench-check.cjs && node
+      ~/.local/share/zhixing-dashboard/playwright-strategic-check.cjs
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
@@ -28317,9 +28310,9 @@ bets:
   - root projects/aetherforge gitlink 等于 452f0db047e09657d56fc0913b6b54c36e8532c0
   - '该 SHA 在 omostation-aetherforge origin/main 可达 (已验证: PR #71 已合并)'
   - governance-release-gate / gac-local-gate 在指针 bump PR 上通过
-  goal: 'omostation-aetherforge PR #71 合并了 OpenAI Responses API 支持 (452f0db)，解除了 Codex CLI
-    wire_api="responses" 对本地网关的阻断。根仓 projects/aetherforge 指针仍停在合并前的
-    f3df9b4，需要 bump 到 452f0db 使根仓反映已合并、已生效的状态。'
+  goal: 'omostation-aetherforge PR #71 合并了 OpenAI Responses API 支持 (452f0db)，解除了 Codex
+    CLI wire_api="responses" 对本地网关的阻断。根仓 projects/aetherforge 指针仍停在合并前的 f3df9b4，需要
+    bump 到 452f0db 使根仓反映已合并、已生效的状态。'
   human_gate: true
   id: BET-Y1Q4-T10-157
   non_goals:
