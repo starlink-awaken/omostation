@@ -28320,9 +28320,11 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: A9 全景观测终验对账、43191 进程平稳退役与 Closeout
   track: T8-SURFACE
+  value_indicator_policy: false
   underlying_workflow: project-code-change
   verify:
   - cmd: python3 bin/gac/ci-check-runner.py && make gac-local-gate
@@ -28332,6 +28334,35 @@ bets:
   write_surfaces:
   - docs/reports/
   - .omo/_knowledge/retros/
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+        status: VERIFIED
+      operational:
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - accepted_specifications:
   - content_digest: sha256:29f301de1c9fc93cd6609aaad88c0ae1024dc8bfd7fa9fe811fcb496fadc8c2c
     decision_ref: decision://accepted/BET-Y1Q4-T8-25
