@@ -3738,10 +3738,11 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: 合同网协议 (CNP) 任务自主竞标与临时突击队动态自组织编排 (Contract Net Protocol Autonomous Bidding
     & Dynamic Taskforce Swarm)
-  track: T7-COOPERATION
+  track: T7-SCENE
   underlying_workflow: project-code-change
   verify:
   - cmd: cd projects/omo && python3 -m pytest tests/test_contract_net.py -q
@@ -3755,6 +3756,30 @@ bets:
   - projects/omo/src/omo/resident/taskforce.py
   - projects/omo/tests/test_contract_net.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+  - docs/plans/3y-bet-ledger.yaml
+
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md'}
+          merged_reachable_commit: {ref: 'git://origin/main@825a16fd3358dbb8f6c12e07772b8e68e20a2db3'}
+          rollback: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md'}
+          tests: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md'}
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md'}
+          fresh_receipt: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md'}
+          replay: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md'}
+          cleanup: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md'}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    decision_ref: decision://accepted/BET-Y1Q4-T7-06
+    overall_state: delivery_accepted
   accepted_specifications:
   - content_digest: sha256:6d4f80bbd6983065a5b382e6bcec9c35a7900bae980ef13f2be76f13e5e3c417
     decision_ref: decision://accepted/BET-Y1Q4-T7-06
