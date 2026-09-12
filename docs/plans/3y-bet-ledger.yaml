@@ -952,7 +952,38 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
+  value_indicator_policy: false
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-118.md
+          merged_reachable_commit:
+            ref: git://origin/main@7e375d9faa47620dd83ed911f7a4b12ee3a3ea44
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-118.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-118.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-118.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-118.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-118.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q3-T10-118.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   title: 个人文风 Continuous LoRA 在线蒸馏与多业务领域适配器管理
   track: T10-MATURITY
   underlying_workflow: project-code-change
