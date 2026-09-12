@@ -28619,6 +28619,41 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-159-aetherforge-anthropic-messages-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+  # --- 门禁治理 BET (A1 Git 完整性, 本 session 2 次指针回退实证) ---
+  appetite: 2 days
+  circuit_breaker: 任何导致子模块指针回退或 remote 配置污染的改动立即停止。
+  goal: '本 session 实证 2 次 cockpit-ui 子模块指针回退（均由 worktree 创建后未 submodule update --init
+    导致）。建立防护机制：worktree 创建后自动同步子模块、remote digest 校验、指针前进约束。'
+  human_gate: false
+  id: BET-Y1Q4-T10-161
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  non_goals:
+  - 不修改子模块源码或分支历史
+  - 不改变现有 remote URL
+  - 不动其他 BET 的 completion/value evidence
+  objective_ref: OBJ-HOLDABILITY
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: Git 子模块稳定性与 remote 配置完整性防护
+  track: T10-REPO-HYGIENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/gac/check-submodule-pointer-drift.py --json
+    expect: exit 0
+  - cmd: bash bin/gac/check-sfop-slots.py --json
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - AGENTS.md
+  - bin/gac/gac-worktree.sh
+  - .githooks/post-checkout
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-161.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
