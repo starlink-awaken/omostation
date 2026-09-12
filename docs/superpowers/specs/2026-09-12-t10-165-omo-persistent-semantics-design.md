@@ -52,7 +52,23 @@ Queue/Receipt 基础（task_gateway 七波次 + claims_authority R0）已就绪�
   接口雏形，件四扩展）。
 - 零模型调用，纯确定性逻辑；零写副作用（落盘路径由调用方传入）。
 
-### 3.2 件二 · Capsule（WorkPacket 规范 + receipt 绑定）[后续 PR]
+### 3.2 件二 · Capsule（WorkPacket 规范 + receipt 绑定）[本 PR 已交付]
+
+`projects/omo/src/omo/workflow/capsule.py`（omo 分支
+`agent/bet-y1q4-t10-165-omo`，件一之后叠加）：
+
+- `CapsuleRecord`: 不可变 envelope —— `capsule_id / bet_id /
+  work_packet_hash / receipt_digest / producer_role / consumer_role /
+  payload_digest / created_at`；digest = sha256(规范 JSON)。
+- WorkPacket 只引用不重复编译：`work_packet_hash` 仅校验
+  `sha256:<64 hex>` 形状，真值校验仍归 workspace 契约
+  (`validate_work_packet_run`)。
+- 无 receipt 不交接：`receipt_digest` 必填且形状合法，否则
+  `missing-receipt` 拒绝。
+- 生产/消费方复用 sovereignty `role:` 前缀约束；准入态核验留给件四。
+- `CapsuleStore`: append-only JSONL；`verify_capsule` 拒收未知字段；
+  篡改行在加载时整体拒绝 (fail closed)。
+- 纯确定性逻辑；`omo-capsule/v1` envelope 供件三 Handoff 入 Mesh 消费。
 
 ### 3.3 件三 · Handoff 事件入 Mesh（复用 dispatch_backend 模式）[后续 PR]
 
@@ -67,7 +83,13 @@ Queue/Receipt 基础（task_gateway 七波次 + claims_authority R0）已就绪�
 非法跃迁（pending→revoked 直跳、revoked 后再变）拒绝、stale-version
 拒绝、digest 稳定性。
 
+`projects/omo/tests/test_capsule.py`（件二）覆盖：密封成功、坏 capsule
+前缀/空 bet_id/坏 packet hash 拒绝、无 receipt 不交接、生产/消费
+`role:` 前缀约束、digest 稳定性、篡改拒绝、未知字段拒绝、append-only
+存储（重复拒绝/JSONL round-trip/篡改行加载拒绝）。
+
 ## 4. 验收
 
 - `uv run pytest projects/omo/tests/test_role_registry.py -q` exit 0
+- `uv run pytest projects/omo/tests/test_capsule.py -q` exit 0（件二）
 - `make gac-local-gate` exit 0（根仓）
