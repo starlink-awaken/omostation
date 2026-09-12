@@ -16939,7 +16939,7 @@ bets:
   - bin/gac/orca-worker-start.py
   - bin/gac/orca-codex-supervisor.py
   - bin/capability-sync.py
-  - bin/cockpit/gen-capability-registry.py
+  - bin/panorama/gen-capability-registry.py
   - .omo/_knowledge/bos-registry.json
   - docs/generated/capability-registry.yaml
   - bin/bc-os/north_star_meter_v2.py
@@ -28895,7 +28895,7 @@ bets:
   - 单页站点含 7 板块（体系总览/门禁 A1-A9/Agent 全景/任务里程碑/运行态/治理/知识入口），全部真实数据渲染
   - 采集器零写副作用通过 direct-omo-io lint
   - launchd 注册且每 5min 刷新，cron registry 登记 sfop_slot=S
-  - docs/generated/panorama-dashboard.md 入口文档落账
+  - docs/PANORAMA-DASHBOARD.md 入口文档落账
   goal: '指令要求"对整个体系有直观理解"的可观测面板。仓内建设织星全景驾驶舱：与 Serena 只读观测站互补，
     作为体系运行指挥台——架构/白皮书/流程入口，运行中事物状态与进度，未完成事物规划/任务/里程碑，
     所有 agent 可见。数据全部来自 SSOT 只读聚合（bet-ledger/gate-health-check/meta-doctor/worktree/
@@ -28927,9 +28927,9 @@ bets:
   window: Y1Q4
   workflow: bet-execution
   write_surfaces:
-  - bin/cockpit/
+  - bin/panorama/
   - runtime/dashboard/
-  - docs/generated/panorama-dashboard.md
+  - docs/PANORAMA-DASHBOARD.md
   - .omo/cron/registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-163.md
 - appetite: 2 days
@@ -28966,7 +28966,7 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - .omo/_delivery/environment-evidence/
-  - docs/generated/panorama-dashboard.md
+  - docs/PANORAMA-DASHBOARD.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-164.md
 - appetite: 8 days
   circuit_breaker: 未过门 adapter（R0/AS0 之外）获得任何写入/自治/并发能力立即停止。
@@ -29040,7 +29040,7 @@ bets:
   window: Y1Q4
   workflow: bet-execution
   write_surfaces:
-  - bin/cockpit/
+  - bin/panorama/
   - .omo/_knowledge/retros/BET-Y1Q4-T10-166.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
