@@ -9,6 +9,7 @@ authors = [{ name = "omostation Contributors" }]
 dependencies = [
     "icalendar>=5.0",
     "structlog>=24.0",
+    "pytest>=8.0",
 ]
 
 [project.optional-dependencies]
