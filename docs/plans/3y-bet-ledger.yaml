@@ -28112,7 +28112,7 @@ bets:
   track: T8-SURFACE
   underlying_workflow: project-code-change
   verify:
-  - cmd: cd projects/cockpit-ui && bun test src/views/StudioView.test.tsx
+  - cmd: cd projects/cockpit-ui && npx vitest run src/views/StudioView.test.tsx
     expect: exit 0
   accepted_specifications:
   - content_digest: sha256:db6305015956f82c7464d62ae2f720bbb5a5ad17080e52d3b0cee62c0c3fe8bb
