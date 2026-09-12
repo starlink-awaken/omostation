@@ -321,6 +321,25 @@ jobs:
     sfop_slot: S
     reconciliation_note: 场景注册同步 (每日 06:15)，已在 crontab -l 运行，补齐登记。
 
+  # ── 面板刷新: 织星全景驾驶舱（BET-Y1Q4-T10-163, 2026-09-12 登记）──
+  # 常驻静态服务(KeepAlive) + 服务内 5min 自动刷新; 与 Serena 观测站(43191)互补。
+
+  - name: panorama-dashboard
+    schedule: "*/5 * * * *"
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
+      /Users/xiamingxing/Workspace/bin/panorama/panorama-serve.py --once
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: agent-experience-steward
+    sfop_slot: S
+    reconciliation_note: >
+      plist ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
+      (runtime/cron/ 同源)。常驻 serve(KeepAlive=true) + 服务内每 5min 采集刷新，
+      --once 供 launchd StartInterval 场景兜底。产物 runtime/dashboard/(gitignored)。
+      首次安装需手动: cp plist + launchctl load。
+
   # ── 从未真正安装, 只存在于声明文件里 (reality: declared_only) ──
   # 以下 10 条来自 operating-rhythm-crontab (ADR-0119/0121), 设计有 fail-closed
   # 防护 (OMO_WORKSPACE_ROOT 校验), 但从未真正 `crontab` 安装过。是否现在正式启用

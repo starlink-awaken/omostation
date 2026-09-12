@@ -10,7 +10,7 @@ last-reviewed: 2026-09-09
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-共 **220** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **221** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
@@ -1801,6 +1801,7 @@ cockpit vault --help          # 完整参数面
 | `cockpit open` | 打开研究全文 |
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
 | `cockpit pending` | 查看未决待办快照预览 |
+| `cockpit persona-radar` | 个人文风一致性多维雷达评估 (T3-01) |
 | `cockpit pipeline` | pipeline 概览 |
 | `cockpit pptx` | 渲染为 16:9 高管技术汇报 PPTX |
 | `cockpit prebrief` | ICS 日历事件 → 会前速递简报 |
