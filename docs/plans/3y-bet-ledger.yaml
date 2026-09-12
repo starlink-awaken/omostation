@@ -28210,7 +28210,8 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: 43191 织星全要素控制面全维度交互式可视化落地与验证
   track: T8-SURFACE
   underlying_workflow: project-code-change
