@@ -3744,7 +3744,7 @@ bets:
   track: T7-COOPERATION
   underlying_workflow: project-code-change
   verify:
-  - cmd: python3 -m pytest projects/omo/tests/test_contract_net.py
+  - cmd: cd projects/omo && python3 -m pytest tests/test_contract_net.py -q
     expect: exit 0
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: exit 0
@@ -3755,6 +3755,12 @@ bets:
   - projects/omo/src/omo/resident/taskforce.py
   - projects/omo/tests/test_contract_net.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+  accepted_specifications:
+  - content_digest: sha256:6d4f80bbd6983065a5b382e6bcec9c35a7900bae980ef13f2be76f13e5e3c417
+    decision_ref: decision://accepted/BET-Y1Q4-T7-06
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-06-contract-net-taskforce-design.md
+    spec_version: 1.0.0
+  value_indicator_policy: false
 - appetite: 3-4 days
   circuit_breaker: 连续 3 次心跳上报超时自动降级为只读观测模式，不执行任何写操作。
   depends_on:
