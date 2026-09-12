@@ -28039,8 +28039,10 @@ bets:
   parent_bet_id: BET-Y1Q4-T8-24
   priority: P0
   retro: required
+  value_indicator_policy: false
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: Cockpit-UI 六面正交 Store 底座与 ⌘K 全键盘命令中枢
   track: T8-SURFACE
   underlying_workflow: project-code-change
@@ -28053,6 +28055,46 @@ bets:
   - projects/cockpit-ui/src/stores/
   - projects/cockpit-ui/src/components/common/
   - projects/cockpit-ui/src/routes.tsx
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
+            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+          merged_reachable_commit:
+            ref: git://origin/main@1be55e3ecb079f45266955dcdf598b0dacf02477
+          rollback:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
+            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+          tests:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
+            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
+            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+          fresh_receipt:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
+            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+          replay:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
+            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+          cleanup:
+            ref: "receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md"
+            sha256: "sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5"
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    notes: done_when#1 六面 Store + 解耦断言 11 tests; done_when#2 ⌘K 内存索引实测;
+      done_when#3 Causal Inspector 抽屉 UI 属 24C/D (数据面已就绪)。
+      engineering VERIFIED; operational PROVEN (store 底座随 cockpit-ui 构建产物运行);
+      24C/D/E 交付后各自单独证明。
 - appetite: 4 days
   circuit_breaker: 拓扑图渲染节点数过大导致帧率低于 30fps 时启用虚拟化视口。
   done_when:
