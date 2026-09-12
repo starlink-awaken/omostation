@@ -2755,11 +2755,6 @@ bets:
   title: 主权连接器架构升级与 Kairon/Iris 外部数据源统一 BOS 网关化 (Sovereign Connector Fabric & Iris
     BOS Gateway)
   track: T5-ORCH
-  accepted_specifications:
-  - content_digest: sha256:c2bb387f5a3643bca9b37bdea5fcc6556f3437b0b6dba8ab5a484171d
-    decision_ref: decision://accepted/BET-Y1Q4-T5-04
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-04-sovereign-connector-fabric-design.md
-    spec_version: 1.0.0
   value_indicator_policy: false
   underlying_workflow: project-code-change
   verify:
@@ -2783,7 +2778,7 @@ bets:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
           merged_reachable_commit:
-            ref: git://origin/main@cb1a73a850b8def0765cd383e4aa4e028d76c464
+            ref: git://origin/main@3ecc7a21ec733f75e079a813e78b91048f9867d3
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
           tests:
