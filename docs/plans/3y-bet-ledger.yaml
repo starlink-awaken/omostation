@@ -2750,10 +2750,17 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
   title: 主权连接器架构升级与 Kairon/Iris 外部数据源统一 BOS 网关化 (Sovereign Connector Fabric & Iris
     BOS Gateway)
   track: T5-ORCH
+  accepted_specifications:
+  - content_digest: sha256:c2bb387f5a3643bca9b37bdea5fcc6556f3437b0b6dba8ab5a484171d
+    decision_ref: decision://accepted/BET-Y1Q4-T5-04
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-04-sovereign-connector-fabric-design.md
+    spec_version: 1.0.0
+  value_indicator_policy: false
   underlying_workflow: project-code-change
   verify:
   - cmd: uv run pytest projects/agora/tests/test_connectors_bos.py -q
@@ -2769,13 +2776,35 @@ bets:
   - projects/omo/src/omo/resident/connectors_poll.py
   - projects/agora/tests/test_connectors_bos.py
   - .omo/_knowledge/retros/BET-Y1Q4-T5-04.md
-  - projects/omo/tests/unit/test_connectors_poll.py
-  accepted_specifications:
-  - content_digest: sha256:c2bb387f5a3643bca9b37bdea5fcc659728c6556f3437b0b6dba8ab5a484171d
-    decision_ref: decision://accepted/BET-Y1Q4-T5-04
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-04-sovereign-connector-fabric-design.md
-    spec_version: 1.0.0
-  value_indicator_policy: false
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          merged_reachable_commit:
+            ref: git://origin/main@cb1a73a850b8def0765cd383e4aa4e028d76c464
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+        status: VERIFIED
+      operational:
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - appetite: 3 days
   circuit_breaker: 敏感健康与生理体征数据处理全程必须保留在本地，严禁通过未经脱敏的网络请求发送至云端 API。
   depends_on:
@@ -3048,11 +3077,6 @@ bets:
   - projects/cockpit/src/cockpit/handlers/scene_lifecycle.py
   - projects/omo/tests/unit/test_scene_lifecycle_cruiser.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-05.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-05-scene-lifecycle-cruiser-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:6e1a851d2c5daa9e3c8ba657c7d941d93fa203e321456c59346d4fc874cb1196
-    decision_ref: decision://accepted/BET-Y1Q4-T7-05
 - appetite: 3 days
   circuit_breaker: 边缘节点离线或网络分区时自动进入离线数据缓冲模式，本地持久化至环形缓冲区，严禁阻塞或丢弃体征事件。
   depends_on:
@@ -28719,8 +28743,7 @@ bets:
   priority: P2
   retro: required
   risk_level: L1
-  status: done
-  done_at: 2026-09-12
+  status: candidate
   title: projects/aetherforge root gitlink pointer closeout (Anthropic Messages API)
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
@@ -28738,29 +28761,6 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-159-aetherforge-anthropic-messages-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
-          merged_reachable_commit: {ref: 'git://origin/main@729f06a32d29bc3cb38a415bc58d6b2737b4fbd2'}
-          rollback: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
-          tests: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
-          fresh_receipt: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
-          replay: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
-          cleanup: {ref: 'receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md'}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    decision_ref: decision://accepted/BET-Y1Q4-T10-159
-    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:c39981f3487dfc36f7029efc81e5ad803d69a356a5031fe333fa4e58a7585cce
     decision_ref: decision://accepted/BET-Y1Q4-T10-161
