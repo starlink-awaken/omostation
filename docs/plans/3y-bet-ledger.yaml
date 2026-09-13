@@ -3833,6 +3833,7 @@ bets:
   retro: required
   risk_level: L1
   status: done
+  done_at: 2026-09-13
   title: 仿生清醒-睡眠双相记忆巩固与 Semantica 因果三元组夜间蒸馏系统 (Bionic Dual-Phase Memory Consolidation
     & Semantica Distillation)
   track: T6-EVOLUTION
