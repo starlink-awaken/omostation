@@ -11,9 +11,9 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 511
-  bos_services: 320
-  bos_domains: 23
+  mcp_tools: 642
+  bos_services: 318
+  bos_domains: 24
   cli_commands: 218
   skills: 40
   workflows: 25
@@ -23,9 +23,33 @@ mcp_servers:
   layer: L2
   file: projects/omo/src/omo/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - acquire_lock
+  - agent_host_tick
+  - cards_check
+  - cards_create
+  - cards_search
+  - cards_status
+  - cards_update
+  - check_gac_rule
+  - check_lock
+  - journey_run_dag
+  - list_locks
+  - omo_bridge
+  - omo_debt_list
+  - omo_debt_summary
+  - omo_gc
+  - omo_metacognition
+  - omo_worker_dispatch
+  - omo_worker_reclaim
+  - omo_yield_task
+  - release_lock
+  - scene_calibrate
+  - scene_card_status
+  - scene_execute
+  - validate_task
+  tool_count: 24
 - id: kos
   name: KOS Knowledge Retrieval
   layer: L2
@@ -398,9 +422,33 @@ mcp_servers:
   layer: L2
   file: projects/metaos/src/metaos/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - handle_day
+  - handle_device_orchestrator
+  - handle_evening
+  - handle_family_brief
+  - handle_gate
+  - handle_health
+  - handle_morning
+  - handle_request
+  - handle_review
+  - handle_ssot
+  - handle_status
+  - handle_trace
+  - metaos-engine
+  - metaos_day
+  - metaos_device_orchestrator
+  - metaos_evening
+  - metaos_family_brief
+  - metaos_gate
+  - metaos_health
+  - metaos_morning
+  - metaos_review
+  - metaos_ssot
+  - metaos_status
+  - metaos_trace
+  tool_count: 24
 - id: aetherforge
   name: AetherForge Compute
   layer: X
@@ -454,25 +502,58 @@ mcp_servers:
   layer: M0
   file: projects/model-driven/src/model_driven/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - adr-create
+  - adr-list
+  - audit-record
+  - collab-assign
+  - collab-create
+  - collab-status
+  - cross-stage-check
+  - debt-register
+  - lifecycle-advance
+  - lifecycle-blockers
+  - lifecycle-create
+  - lifecycle-dashboard
+  - lifecycle-status
+  - model-execute
+  - model-tools
+  - okr-create
+  - okr-progress
+  - spec-create
+  - spec-list
+  - ssot-drift-check
+  - task-create
+  - trigger-dashboard
+  - trigger-derive
+  - trigger-drift
+  - trigger-heal
+  - trigger-list
+  - trigger-status
+  - value-roi
+  tool_count: 28
 - id: model-driven-fastmcp
   name: Model-Driven FastMCP
   layer: M0
   file: projects/model-driven/src/model_driven/fastmcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - model_tool_execute
+  - model_tools_list
+  tool_count: 2
 - id: c2g
   name: C2G Strategy Compass
   layer: X
   file: projects/omo/src/omo/_vendored/c2g/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - c2g_bet
+  - c2g_gc
+  - c2g_radar
+  tool_count: 3
 - id: family-hub
   name: Family Hub
   layer: X
@@ -514,9 +595,59 @@ mcp_servers:
   layer: L1
   file: projects/runtime/src/runtime/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - handle_agent_chat
+  - handle_agent_execute
+  - handle_agent_list
+  - handle_agent_list_tools
+  - handle_agent_run_task
+  - handle_agent_status
+  - handle_agent_task_status
+  - handle_brief
+  - handle_cartridge_inspect
+  - handle_cartridge_list
+  - handle_documents_audit
+  - handle_documents_guardrails
+  - handle_domain_compliance_audit
+  - handle_governance_explain
+  - handle_governance_guardrails
+  - handle_governance_preflight
+  - handle_health
+  - handle_intent_compile
+  - handle_kv_get
+  - handle_matrix_list
+  - handle_ontology
+  - handle_pitfall_check
+  - handle_protocol_get
+  - handle_protocol_list
+  - handle_shadow_challenge
+  - runtime_agent_chat
+  - runtime_agent_execute
+  - runtime_agent_list
+  - runtime_agent_list_tools
+  - runtime_agent_run_task
+  - runtime_agent_status
+  - runtime_agent_task_status
+  - runtime_brief
+  - runtime_cartridge_inspect
+  - runtime_cartridge_list
+  - runtime_documents_audit
+  - runtime_documents_guardrails
+  - runtime_domain_compliance_audit
+  - runtime_governance_explain
+  - runtime_governance_guardrails
+  - runtime_governance_preflight
+  - runtime_health
+  - runtime_intent_compile
+  - runtime_kv_get
+  - runtime_matrix_list
+  - runtime_ontology_get
+  - runtime_pitfall_check
+  - runtime_protocol_get
+  - runtime_protocol_list
+  - runtime_shadow_challenge
+  tool_count: 50
 - id: iris
   name: Iris
   layer: L2
@@ -756,16 +887,17 @@ bos_services:
     bcos: 3
     capability: 44
     cockpit: 8
-    compute: 17
+    compute: 14
     documents: 3
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 76
+    governance: 73
     harness: 9
     l4-kernel: 1
-    memory: 51
+    memory: 49
     meta: 1
+    observatory: 6
     omo: 4
     perception: 2
     persona: 11
@@ -778,95 +910,95 @@ bos_services:
     - uri: bos://agent-cell/pool/status
       description: Cell Pool 状态 — 多 Cell 并行运行状态
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pool/submit
       description: Cell Pool 提交 — 提交 Episode 到 Cell Pool
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pool/scale
       description: Cell Pool 扩缩容 — 调整 Cell 数量
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pool/auto-scale
       description: Cell Pool 自动扩缩容 — 基于负载自动调整
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pool/metrics
       description: Cell Pool 指标 — 详细监控指标
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/dag/execute
       description: Cell DAG 执行 — 跨 Cell 编排
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/publish
       description: Memory Publish — 发布记忆到网络
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/search
       description: Memory Search — 跨 Cell 搜索
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/governance/audit
       description: Governance Audit — 配置合规审计
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/governance/report
       description: Governance Report — 治理报告
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/config/list
       description: Cell Config 列表 — 列出预设配置
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/config/create
       description: Cell Config 创建 — 从预设创建 Cell
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/plan
       description: Cell Plan — 意图解析 + 任务分解 + 风险评估
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/execute
       description: Cell Execute — 按计划执行 + 工具调用 + 产出收集
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/verify
       description: Cell Verify — 完整性 + 正确性 + 质量三维评分
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/govern
       description: Cell Govern — R0-R3 风险分级 + 审批决策
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pdp/evaluate
       description: PDP Evaluate — 策略决策点上下文感知评估
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pep/enforce
       description: PEP Enforce — 策略执行点强制执行 + 审计
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/process
       description: Memory Process — Episode → 记忆候选生成
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/consolidate
       description: Memory Consolidate — 记忆冲突检测 + 整合
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/run
       description: Replay — Episode 回放验证
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/shadow
       description: Shadow — 影子运行 (无副作用验证)
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/eval
       description: Eval — 批量 Episode 性能评估
       transport: stdio
-      status: active
+      status: unimplemented
     agora:
     - uri: bos://agora/metrics
       description: agora 内部指标源 self-identifier (metrics collector source_uri)
@@ -1257,18 +1389,6 @@ bos_services:
       description: omlxc 经验回放池状态、水塘抽样与防遗忘混合 batch 统计
       transport: stdio
       status: active
-    - uri: bos://compute/omlxc/cache
-      description: '[UNIMPLEMENTED] omlxc Radix 动态前缀树与三级分层缓存指标与压测（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
-    - uri: bos://compute/omlxc/dflash
-      description: '[UNIMPLEMENTED] omlxc DFlash 2 块扩散投机解码加速与集群分工（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
-    - uri: bos://compute/omlxc/cluster
-      description: '[UNIMPLEMENTED] omlxc 异构三节点智能调度、心跳与故障自愈拓扑（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
     - uri: bos://compute/omlxc/tree
       description: omlxc 自适应熵感知树状投机解码与多候选验证服务 (ADR-0434)
       transport: stdio
@@ -1644,27 +1764,15 @@ bos_services:
       status: active
     - uri: bos://governance/decision/record
       description: 记录决策到因果图
-      transport: stdio
+      transport: internal
       status: active
     - uri: bos://governance/decision/trace-causes
       description: 追溯决策的因果祖先链
-      transport: stdio
+      transport: internal
       status: active
     - uri: bos://governance/decision/trace-effects
       description: 追溯决策的下游影响面
-      transport: stdio
-      status: active
-    - uri: bos://governance/decision/record
-      description: 记录决策到因果图
-      transport: stdio
-      status: active
-    - uri: bos://governance/decision/trace-causes
-      description: 追溯决策的因果祖先链
-      transport: stdio
-      status: active
-    - uri: bos://governance/decision/trace-effects
-      description: 追溯决策的下游影响面
-      transport: stdio
+      transport: internal
       status: active
     harness:
     - uri: bos://harness/compliance/check
@@ -1899,23 +2007,40 @@ bos_services:
       status: active
     - uri: bos://memory/graph/query
       description: SPARQL 查询嵌入式图引擎
-      transport: stdio
+      transport: internal
       status: active
     - uri: bos://memory/graph/reason
       description: Datalog 确定性推理
-      transport: stdio
-      status: active
-    - uri: bos://memory/graph/query
-      description: SPARQL 查询嵌入式图引擎
-      transport: stdio
-      status: active
-    - uri: bos://memory/graph/reason
-      description: Datalog 确定性推理
-      transport: stdio
+      transport: internal
       status: active
     meta:
     - uri: bos://meta/discover
       description: 发现所有可用 BOS 资源和入口
+      transport: internal
+      status: active
+    observatory:
+    - uri: bos://observatory/mcp-server
+      description: 织星系统官方架构拓扑、并发冲突防撞与状态哨兵 FastMCP Server
+      transport: mcp_proxy
+      status: active
+    - uri: bos://observatory/project/perception
+      description: 获取单项目的超紧凑架构感知信息与并发写冲突状态 (<800 tokens)
+      transport: internal
+      status: active
+    - uri: bos://observatory/agents/collisions
+      description: 全局检查 42 个未合并工作树并发写争用风险与防撞守卫建议
+      transport: internal
+      status: active
+    - uri: bos://observatory/sentinel/status
+      description: 探测 16 个子模块 Gitlink 对齐状态与 7 大主权端口健康度
+      transport: internal
+      status: active
+    - uri: bos://observatory/callchains/get
+      description: 获取 4 大跨层调用链时序步骤与契约规约
+      transport: internal
+      status: active
+    - uri: bos://observatory/system/overview
+      description: 获取八层架构项目分布与接口大厅汇总统计
       transport: internal
       status: active
     omo:
