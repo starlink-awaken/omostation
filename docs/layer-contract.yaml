@@ -13,8 +13,8 @@ layers:
 
   L1:
     name: "运行时层"
-    projects: ["runtime", "omlxc"]
-    description: "Matrix/Scheduler/KEI 沙箱与本地算力运行时"
+    projects: ["runtime", "omlxc", "surface"]
+    description: "Matrix/Scheduler/KEI 沙箱与本地算力运行时 + TinyBOS 边缘具身协议 (P2P mesh + 传感器桥接)"
 
   L2:
     name: "引擎层"
