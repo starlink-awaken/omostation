@@ -295,6 +295,16 @@ projects:
     dist_env: "COCKPIT_UI_DIST"
     note: "独立 UI 仓库；由 COCKPIT_UI_ROOT 指向源码 worktree，COCKPIT_UI_DIST 指向构建产物后由 cockpit 托管"
 
+  surface:
+    layer: "L1"
+    stack: "Rust"
+    role: "TinyBOS 边缘具身协议 — P2P mesh 编解码 + 传感器桥接 + 场景触发 (BET-Y1Q4-T8-22)"
+    status: "active"
+    submodule: false
+    physical_location: "projects/surface/"
+    src_dir: "tinybos/src/"
+    notes: "非子模块目录; Rust 边缘守护进程 (daemon) + 二进制帧 wire protocol + HRV/加速度/气压传感器 + P2P peer 注册表/路由表"
+
   toolbox:
      layer: "L1-L3"
      layer_aligned_with: "ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-toolbox-tools.yaml"

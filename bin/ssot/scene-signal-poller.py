@@ -154,13 +154,10 @@ def poll(dry_run: bool = False, scene_filter: str | None = None,
                 sid = _signal_id(item)
                 if sid not in seen_ids:
                     new_items.append((sid, item))
+                    seen_ids.add(sid)  # dedup within the same poll batch
 
             for sid, item in new_items[:3]:  # cap per-poll dispatches
                 results["new_signals"] += 1
-                watermarks.setdefault(wm_key, {"seen_ids": []})["seen_ids"].append(sid)
-                # Keep watermark bounded
-                watermarks[wm_key]["seen_ids"] = watermarks[wm_key]["seen_ids"][-200:]
-                watermarks[wm_key]["last_poll"] = results["polled_at"]
 
                 use_dry_run = dry_run or lifecycle not in LIVE_LIFECYCLES
                 signal_payload = {
@@ -191,6 +188,13 @@ def poll(dry_run: bool = False, scene_filter: str | None = None,
                     except Exception as e:
                         detail["status"] = "error"
                         detail["error"] = str(e)
+                    # Watermark only on success: a failed dispatch must be
+                    # retried on the next poll, not lost forever.
+                    if detail["status"] not in ("error",):
+                        watermarks.setdefault(wm_key, {"seen_ids": []})["seen_ids"].append(sid)
+                        # Keep watermark bounded
+                        watermarks[wm_key]["seen_ids"] = watermarks[wm_key]["seen_ids"][-200:]
+                        watermarks[wm_key]["last_poll"] = results["polled_at"]
                 else:
                     detail["status"] = "dry_run_skipped"
                     results["dispatched"] += 1
@@ -220,6 +224,13 @@ def _resolve_connector(signal_name: str, trigger: dict[str, Any]) -> str | None:
         "email.received": "apple_mail",
         "email": "apple_mail",
         "mail": "apple_mail",
+        "note.created": "applenotes",
+        "note": "applenotes",
+        "knowledge.item": "applenotes",
+        "zhihu.item": "zhihu",
+        "github.event": "github",
+        "wechat.message": "wechat",
+        "file.changed": "local_files",
     }
     for key, conn in mapping.items():
         if key in signal_name.lower():

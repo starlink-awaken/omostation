@@ -5,6 +5,14 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 # 子模块上下文守卫: 同 pre-commit, 主仓 hook-runner 在子模块不存在则跳过
 [ -f "$ROOT/bin/gac/hook-runner.sh" ] || exit 0
+# ── remote-hygiene 自愈 (2026-09-13, 实证污染事故) ────────────────────
+# 放在最前: 快速幂等 (纯 config 检查), 无网络依赖. 并发会话可能改写共享
+# config 的 remote.origin.url (实证: 被改写成 omostation-runtime 后
+# fetch/gh pr/验证静默失效). checkout/worktree add 是观测到的污染窗口.
+# 失败/绕过由 pre-push blocking remote-hygiene 兜底拦截.
+if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/ssot/fix-remotes.py" ]; then
+  bash "$ROOT/bin/ssot/fix-remotes.py" >/dev/null 2>&1 || true
+fi
 # ── BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 ──────────────
 # advisory (恒不阻断 checkout); 覆盖 git worktree add 绕过 gac-worktree.sh
 # claim 的路径. GAC_SKIP_POST_CHEKOUT_GUARD=1 可跳过 (测试/特殊流程).

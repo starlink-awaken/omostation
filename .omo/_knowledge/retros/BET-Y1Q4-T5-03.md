@@ -71,3 +71,17 @@ batch 1 覆盖 ledger done_when 中的子集：
    candidate→done transition。
 4. run-id：20260911T071722Z-bet-execution-65455711；path claim 覆盖 4 个
    write_surfaces；receipt 在 `.omo/evidence/<run-id>/`（untracked，不入库）。
+
+## Batch 2 交付 (2026-09-13)
+
+### 新增功能
+1. **a2a_update_task** — 支持 task 状态推进（submitted → working → completed）
+2. **working 状态 progression** — resident 长时任务可被推进到 working 状态
+3. **result retrieval** — completed task 可通过 a2a_get_task 拉取 result
+4. **2 个新测试** — test_deferred_task_can_be_set_to_working, test_working_task_can_be_completed_with_result
+
+### 完成标准
+- verify: `uv run pytest projects/agora/tests/test_resident_a2a.py -q` ✅ (10/10 通过)
+- gac-local-gate: ✅ PASS
+- completion_evidence: VERIFIED/PROVEN
+- ledger status: done

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,10 @@ OUTCOME_LOG = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.j
 VALID_ADJUDICATIONS = {"accepted", "rejected", "revised"}
 VALUE_EVIDENCE_LOG = ROOT / ".omo" / "_delivery" / "ingress" / "value-evidence.jsonl"
 VERDICT_MAP = {"accepted": "accept", "revised": "edit", "rejected": "reject"}
+# W2-05 personal episode kernel scene (must match omo.personal_episode).
+PERSONAL_SIGNAL_SCENE_ID = "personal-followup-dogfood"
+# Episode revision receipt closed vocabulary (omo.personal_episode_helpers).
+EPISODE_CHANGED_FIELDS = ("title", "context", "deadline", "next_action")
 
 
 def _load_scene_card(path: Path) -> dict[str, Any]:
@@ -44,6 +49,7 @@ def record_outcome(
     revision_diff: str = "",
     review_seconds: int | None = None,
     saved_seconds: int | None = None,
+    episode_changed_fields: list[str] | None = None,
 ) -> dict[str, Any]:
     """Record one human adjudication outcome."""
     if adjudication not in VALID_ADJUDICATIONS:
@@ -82,6 +88,18 @@ def record_outcome(
     _write_event_ledger_outcome(entry, review_seconds=review_seconds, saved_seconds=saved_seconds)
     entry["north_star_bridge"] = True
 
+    # W2-05 集成: scene outcome → PersonalEpisodeService (readiness gate 反馈).
+    # personal-followup-dogfood 场景的裁决进入 episode 内核, 供授权机制消费.
+    episode_id = _write_personal_episode_outcome(
+        entry,
+        review_seconds=review_seconds,
+        saved_seconds=saved_seconds,
+        episode_changed_fields=episode_changed_fields,
+    )
+    if episode_id is not None:
+        entry["personal_episode_id"] = episode_id
+        entry["personal_episode_bridge"] = True
+
     entry["status"] = "recorded"
     return entry
 
@@ -117,6 +135,79 @@ def _write_event_ledger_outcome(entry: dict[str, Any], *, review_seconds: int | 
         surface.close()
     except Exception:
         pass  # North Star bridge is non-blocking
+
+
+def _write_personal_episode_outcome(entry: dict[str, Any], *, review_seconds: int | None = None,
+                                    saved_seconds: int | None = None,
+                                    episode_changed_fields: list[str] | None = None) -> str | None:
+    """Bridge scene outcome → PersonalEpisodeService (W2-05 readiness gate).
+
+    Only the personal-signal-driven scene participates.  The latest episode
+    (chronological) whose start payload carries the personal scene id and
+    which has a recorded never-send candidate (Evidence.LocalDraft.v1)
+    receives the mapped verdict; replay with the same feedback id is
+    idempotent inside the kernel.  ``episode_changed_fields`` carries the
+    kernel's closed-vocabulary receipt for edit verdicts.  Any failure is a
+    silent no-op so the trust loop never blocks outcome recording.
+    """
+    if entry.get("scene_id") != PERSONAL_SIGNAL_SCENE_ID:
+        return None
+    try:
+        import os as _os
+
+        omo_src = str(ROOT / "projects" / "omo" / "src")
+        if omo_src not in sys.path:
+            sys.path.insert(0, omo_src)
+        from omo.event_ledger.broker import LedgerBroker
+        from omo.event_ledger.surface import _resolve_db_path
+        from omo.personal_episode import (
+            EVT_EVIDENCE_LOCAL_DRAFT,
+            EVT_EPISODE_DECISION,
+            PersonalEpisodeService,
+        )
+
+        verdict = VERDICT_MAP.get(entry.get("adjudication", ""))
+        if verdict is None:
+            return None
+        fields = [f for f in (episode_changed_fields or []) if f in EPISODE_CHANGED_FIELDS]
+        if verdict == "edit" and (not entry.get("revision_diff") or not fields):
+            return None  # edit verdict requires a revision receipt the kernel accepts
+
+        principal_id = _os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        feedback_id = f"scene:{entry.get('scene_id')}:{entry.get('run_id')}"
+        broker = LedgerBroker.connect(str(_resolve_db_path()))
+        try:
+            starts = [
+                row
+                for row in broker.read(event_type=EVT_EPISODE_DECISION)
+                if json.loads(row.get("payload_json") or "{}").get("scene_id") == PERSONAL_SIGNAL_SCENE_ID
+                and row.get("principal_id") == principal_id
+            ]
+            episode_id = None
+            for row in reversed(starts):
+                candidate = str(row["episode_id"])
+                if broker.read(episode_id=candidate, event_type=EVT_EVIDENCE_LOCAL_DRAFT):
+                    episode_id = candidate
+                    break
+        finally:
+            broker.close()
+        if episode_id is None:
+            return None
+
+        service = PersonalEpisodeService.open(str(_resolve_db_path()))
+        context = service.reload_execution_context(episode_id, principal_id)
+        service.record_outcome(
+            context,
+            verdict,
+            feedback_id=feedback_id,
+            review_duration_seconds=float(review_seconds) if review_seconds else None,
+            estimated_time_saved_seconds=float(saved_seconds) if saved_seconds else None,
+            revision_digest=f"sha256:{hashlib.sha256(entry['revision_diff'].encode()).hexdigest()}" if verdict == "edit" else None,
+            changed_fields=fields if verdict == "edit" else None,
+        )
+        return episode_id
+    except Exception:
+        return None  # episode kernel not configured / episode not actionable — non-blocking
 
 
 def _scene_run_duration_seconds(scene_id: str, run_id: str) -> int:
@@ -236,6 +327,9 @@ def main(argv: list[str] | None = None) -> int:
                             help="human review duration (X3 evidence; default: DB duration or 0)")
     rec_parser.add_argument("--saved-seconds", type=int, default=None,
                             help="estimated time saved (X3 evidence; default: scene work duration)")
+    rec_parser.add_argument("--episode-fields", default="",
+                            help=f"comma-separated episode fields changed on revised "
+                                 f"(W2-05 receipt; one of {','.join(EPISODE_CHANGED_FIELDS)})")
 
     list_parser = sub.add_parser("list", help="list recent outcomes")
     list_parser.add_argument("--scene-id", default=None)
@@ -254,6 +348,7 @@ def main(argv: list[str] | None = None) -> int:
             revision_diff=args.revision_diff,
             review_seconds=args.review_seconds,
             saved_seconds=args.saved_seconds,
+            episode_changed_fields=[f.strip() for f in args.episode_fields.split(",") if f.strip()] or None,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0

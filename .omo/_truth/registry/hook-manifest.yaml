@@ -108,12 +108,12 @@ pre-push:
       script: "bin/gac/remote-hygiene-check.py"
       blocking: true
       timeout: 3
-      description: "origin 指向校验"
-      fix: "python3 bin/ssot/fix-remotes.sh 2>/dev/null || git submodule update --init <空目录子模块>; git config remote.origin.url https://github.com/starlink-awaken/omostation.git"
+      description: "origin fetch+push URL 指向校验 (2026-09-13 强化: push URL 单独校验)"
+      fix: "python3 bin/ssot/fix-remotes.py 2>/dev/null || git submodule update --init <空目录子模块>; git config remote.origin.url https://github.com/starlink-awaken/omostation.git"
 
 # ── post-checkout ───────────────────────────────────────────
 post-checkout:
-  description: "分支检出后命名合规"
+  description: "分支检出后命名合规 + remote 自愈"
   checks:
     - id: branch-naming
       script: "bin/gac/check-branch-naming.py --branch $BRANCH --policy .omo/_truth/registry/branch-prefix-policy.yaml"
@@ -121,6 +121,13 @@ post-checkout:
       timeout: 3
       description: "新分支命名合规 (已有分支 advisory)"
       fix: "git switch -c work/<合规名> (前缀规则见 branch-prefix-policy.yaml)"
+
+    - id: remote-hygiene-fix
+      script: "python3 bin/ssot/fix-remotes.py"
+      blocking: false
+      timeout: 10
+      description: "origin fetch+push URL 幂等自愈 (checkout/worktree add 是污染窗口, 2026-09-13 实证)"
+      fix: "python3 bin/ssot/fix-remotes.py; 若 pre-push 仍报错则人工排查并发会话改写来源"
 
 # ── pre-rebase ──────────────────────────────────────────────
 pre-rebase:
