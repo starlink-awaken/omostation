@@ -11,7 +11,7 @@
 | L3 | 入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3) | `cockpit`, `cockpit-ui` |
 | I0 | 织层 (agora) | `agora` |
 | L2 | 引擎面 (knowledge{gbrain,kairon} / omo / metaos) | `domain-cartridges`, `family-hub`, `knowledge`, `metaos`, `omo` |
-| L1 | 运行时 (runtime / omlxc) | `omlxc`, `runtime` |
+| L1 | 运行时 (runtime / omlxc) | `omlxc`, `runtime`, `surface` |
 | L0 | 协议层 (ecos) | `ecos`, `mesh-router` |
 | M0 | 横切框架 (model-driven) | `model-driven` |
 | X | 横切扩展 (bus-foundation / observability / family-hub; aetherforge/c2g/omo-debt 已内包 runtime+omo, ADR-0412+T6-01+Y1Q4-T6-01) | `aetherforge`, `bus-foundation`, `observability` |
