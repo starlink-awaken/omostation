@@ -1,0 +1,14 @@
+[package]
+name = "tinybos"
+version = "0.1.0"
+edition = "2021"
+description = "TinyBOS edge daemon — ultra-lightweight physical-world sensing guardian"
+
+[dependencies]
+sha2 = "0.10"
+thiserror = "1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
