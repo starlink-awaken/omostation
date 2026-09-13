@@ -758,6 +758,142 @@ def collect_doc_governance() -> dict:
             "surface_list": [s.get("id","") if isinstance(s,dict) else str(s)[:30] for s in surfaces[:10]]}
 
 
+def collect_knowledge_health() -> dict:
+    """知识健康度：新鲜度/覆盖率/孤儿率。"""
+    import yaml
+    from datetime import UTC, datetime
+    from pathlib import Path as _P
+    total = fresh = stale = orphaned = has_fm = 0
+    stale_docs = []
+    type_counts = {}
+    _kp = _P(ROOT / ".omo/_knowledge")
+    for f in _kp.rglob("*.md"):
+        # 只跳过知识目录内部的隐藏子目录（如 .git），不跳过 .omo 本身
+        inner = f.relative_to(_kp).parts
+        if any(p.startswith(".") for p in inner):
+            continue
+        total += 1
+        try:
+            src = f.read_text(errors="ignore")
+            fm_text = src.split("---")[1] if src.startswith("---") else ""
+            fm = yaml.safe_load(fm_text) if fm_text else {}
+            if isinstance(fm, dict):
+                has_fm += 1
+                tp = str(fm.get("type", "unknown"))
+                type_counts[tp] = type_counts.get(tp, 0) + 1
+                lr = fm.get("last-reviewed", "")
+                if lr:
+                    try:
+                        # YAML 可能解析为 date 或 str，统一处理
+                        if hasattr(lr, "year"):
+                            from datetime import date as _date
+                            lr_date = datetime(lr.year, lr.month, lr.day, tzinfo=UTC)
+                        else:
+                            lr_date = datetime.fromisoformat(str(lr).replace("Z", "+00:00"))
+                            if lr_date.tzinfo is None:
+                                lr_date = lr_date.replace(tzinfo=UTC)
+                        age_days = (datetime.now(UTC) - lr_date).days
+                        if age_days <= 90:
+                            fresh += 1
+                        else:
+                            stale += 1
+                            if len(stale_docs) < 8:
+                                stale_docs.append({"path": str(f.relative_to(ROOT)), "age_days": age_days})
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        if (datetime.now(UTC).timestamp() - f.stat().st_mtime) > 180 * 86400:
+            orphaned += 1
+    return {
+        "total": total, "fresh": fresh, "stale": stale, "orphaned": orphaned,
+        "has_frontmatter": has_fm,
+        "freshness_pct": round(100 * fresh / total, 1) if total else 0,
+        "coverage_pct": round(100 * has_fm / total, 1) if total else 0,
+        "orphan_pct": round(100 * orphaned / total, 1) if total else 0,
+        "type_counts": type_counts, "stale_docs": stale_docs,
+    }
+
+
+def collect_knowledge_growth() -> dict:
+    """近 30 天知识增长。"""
+    from datetime import UTC, datetime, timedelta
+    from pathlib import Path as _P
+    new_per_day = {}
+    for i in range(30):
+        day = (datetime.now(UTC) - timedelta(days=i)).strftime("%m-%d")
+        new_per_day[day] = 0
+    for f in _P(ROOT / ".omo/_knowledge").rglob("*.md"):
+        try:
+            mtime = datetime.fromtimestamp(f.stat().st_mtime, tz=UTC)
+            age = (datetime.now(UTC) - mtime).days
+            if age < 30:
+                key = mtime.strftime("%m-%d")
+                new_per_day[key] = new_per_day.get(key, 0) + 1
+        except Exception:
+            pass
+    series = [{"day": d, "n": new_per_day[d]} for d in sorted(new_per_day)]
+    return {"total_new": sum(v for d, v in new_per_day.items()), "series": series}
+
+
+def collect_memory_dual_track() -> dict:
+    """记忆双轨：Raw + Theta。"""
+    raw_events = []
+    try:
+        with open(ROOT / ".omo/_knowledge/governance-history.jsonl") as f:
+            raw_events = f.readlines()[-15:]
+    except Exception:
+        pass
+    theta_facts = 0
+    theta_file = ROOT / ".omo/state/mos/theta-facts.json"
+    if theta_file.is_file():
+        try:
+            import json
+            theta_facts = len(json.loads(theta_file.read_text()))
+        except Exception:
+            pass
+    return {"raw_count": len(raw_events), "theta_facts": theta_facts,
+            "recent_raw": [l.strip()[:80] for l in raw_events[-5:]]}
+
+
+def collect_experience_network() -> dict:
+    """经验网络。"""
+    import yaml
+    from glob import glob
+    from pathlib import Path as _P
+    nodes = []
+    for f in sorted(glob(str(ROOT / ".omo/_knowledge/pitfalls/PITFALL-*.yaml"))):
+        try:
+            d = yaml.safe_load(open(f).read().split("---")[1]) or {}
+            nodes.append({"id": f"PIT-{d.get('id','')}","type":"pitfall","name":d.get('title','')[:40]})
+        except Exception:
+            pass
+    for f in sorted(glob(str(ROOT / ".omo/_knowledge/decisions/0*.md")))[:8]:
+        nodes.append({"id": f"DEC-{_P(f).stem}","type":"decision","name":_P(f).stem[:40]})
+    for f in sorted(glob(str(ROOT / ".omo/_knowledge/retros/BET-*.md")))[:8]:
+        nodes.append({"id": f"RET-{_P(f).stem}","type":"retro","name":_P(f).stem[:40]})
+    for f in sorted(glob(str(ROOT / ".omo/_knowledge/patterns/*.md")))[:8]:
+        nodes.append({"id": f"PAT-{_P(f).stem}","type":"pattern","name":_P(f).stem[:40]})
+    return {"nodes": nodes[:35], "total": len(nodes)}
+
+
+def collect_knowledge_inbound() -> dict:
+    """知识入链。"""
+    from pathlib import Path as _P
+    from collections import Counter
+    import re
+    inbound = Counter()
+    for f in _P(ROOT / ".omo/_knowledge").rglob("*.md"):
+        try:
+            src = f.read_text(errors="ignore")
+            refs = re.findall(r'\.omo/_knowledge/(\S+\.md)', src)
+            for r in refs:
+                inbound[r.split("/")[-1]] += 1
+        except Exception:
+            pass
+    return [{"doc": k, "inbound": v} for k, v in inbound.most_common(12)]
+
+
 def build_payload() -> dict:
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -798,6 +934,11 @@ def build_payload() -> dict:
         "predictive": collect_predictive(),
         "anticorrosion": collect_anticorrosion(),
         "doc_governance": collect_doc_governance(),
+        "knowledge_health": collect_knowledge_health(),
+        "knowledge_growth": collect_knowledge_growth(),
+        "memory_dual_track": collect_memory_dual_track(),
+        "experience_network": collect_experience_network(),
+        "knowledge_inbound": collect_knowledge_inbound(),
     }
 
 
@@ -899,6 +1040,13 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 .drill h4{margin:0 0 12px;font-size:13px}
 .drill table{width:100%;border-collapse:collapse;font-size:11px}
 .drill td,.drill th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.knowledge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kgraph{display:flex;align-items:flex-end;gap:3px;height:60px;padding:10px 0}
+.kgraph .bar{width:100%;background:var(--blue);border-radius:3px 3px 0 0;min-height:2px;transition:height .3s}
+.kgraph .bar:hover{background:var(--teal)}
+.kv{font:18px var(--mono)}
+.ks{color:var(--muted);font-size:10px}
+.assoc-link{color:var(--blue);cursor:pointer;text-decoration:underline;font-size:11px}
 .foot{margin-top:26px;color:var(--muted);font-size:11px;border-top:1px solid var(--line);padding-top:12px}
 @media(max-width:900px){aside{position:static;width:auto}main{margin:0}.g3,.g2{grid-template-columns:1fr}}
 </style>
@@ -917,6 +1065,7 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 <a href="#scenes" data-s="scenes">Scene 卡</a>
 <a href="#journeys" data-s="journeys">Journey</a>
 <a href="#hygiene" data-s="hygiene">工作区卫生</a>
+<a href="#knowledge" data-s="knowledge">知识记忆</a>
 <a href="#docs" data-s="docs">知识入口</a>
 </nav>
 </aside>
@@ -948,6 +1097,20 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
 <section class="sec" id="s-runtime">
 <h2>运行态</h2><p class="sub">守护 / 调度 / 引用健康 · meta-doctor 摘要</p>
 <div class="grid g3" id="rtgrid"></div>
+</section>
+<section class="sec" id="s-knowledge">
+<h2>知识 · 记忆 · 经验</h2><p class="sub">知识健康度 / 记忆双轨 / 经验网络 / 增长曲线 — 结构化建模与可视化</p>
+<div class="grid g3" id="khkpi"></div>
+<div class="card" style="margin-top:12px"><h3>知识健康度雷达</h3>
+ <div class="grid g3"><div>新鲜度<span id="kh_fresh" class="assoc-link" onclick="drillKH('fresh')"></span></div>
+ <div>覆盖率<span id="kh_cov"></span></div><div>孤儿率<span id="kh_orphan"></span></div></div>
+ <div id="kh_stale_list" class="mono" style="font-size:11px;margin-top:10px"></div></div>
+<div class="grid g2" style="margin-top:12px">
+ <div class="card"><h3>记忆双轨</h3><div class="grid g3" id="mdtkpi"></div><div id="mdt_raw" class="mono" style="font-size:11px;line-height:2"></div></div>
+ <div class="card"><h3>经验网络</h3><div id="exp_net" class="mono" style="font-size:11px;line-height:2"></div></div>
+</div>
+<div class="card" style="margin-top:12px"><h3>近 30 天知识增长</h3><div id="kgrowth" class="kgraph"></div></div>
+<div class="card" style="margin-top:12px"><h3>知识入链 Top 15</h3><table id="kinbound"><thead><tr><th>文档</th><th>入链数</th></tr></thead><tbody></tbody></table></div>
 </section>
 <section class="sec" id="s-docs">
 <h2>知识入口</h2><p class="sub">白皮书 / 架构 / 流程 / 操作 —— 每卡直达源文档</p>
@@ -1077,18 +1240,31 @@ $('rtgrid').innerHTML=[
 $('docgrid').innerHTML=D.docs.map(d=>'<div class="card"><h3>'+d.name+'</h3><span class="chip '+(d.exists?'p':'f')+'">'+(d.exists?Math.round(d.size/1024)+'KB':'缺失')+'</span>'+
 '<div class="mono" style="margin-top:8px;font-size:11px">'+d.path+'</div>'+
 (d.exists?'<div style="margin-top:8px"><a href="/../../'+d.path+'">打开 →</a></div>':'')+'</div>').join('');
-||||||| aff197f5fd
-
-T10-166 数据契约（per 面板）:
-  - provenance: 字段来源 (gate-health / meta-doctor / bet-ledger / git worktree)
-  - freshness:   采集时间窗 + staleness 阈值 (>5min 标 stale)
-  - degradation: 0=fresh, 1=partial, 2=stale-blink, 3=missing
-  - never-yields-green: 任何缺失/陈旧 → 不得报 PASS (PARTIAL ≠ PASS 铁律)
-
-用法：
-    python3 bin/panorama/panorama-collect.py            # 采集 + 生成站点
-    python3 bin/panorama/panorama-collect.py --json     # 只输出 data.json 摘要
-    python3 bin/panorama/panorama-collect.py --gates    # 只刷新门禁 receipt 视图
-    python3 bin/panorama/panorama-collect.py --check-side-effects
-                                                        # 验证零仓库写副作用
+// === 知识记忆经验建模 ===
+(function(){
+  const kh=D.knowledge_health||{};
+  $('khkpi').innerHTML=['total','fresh','stale','freshness_pct'].map(k=>{
+    const labels={total:'总文档',fresh:'新鲜',stale:'陈旧',freshness_pct:'新鲜度%'};
+    const v=kh[k]; const isPct=k==='freshness_pct';
+    return '<div class="card kpi"><b class="'+(k==='stale'?(v>50?'dead':'fresh'):'fresh')+'">'+(isPct?v+'%':v)+'</b><span>'+(labels[k]||k)+'</span></div>';
+  }).join('');
+  const kg=D.knowledge_growth||{};
+  if(kg.series && kg.series.length){
+    const max=Math.max(...kg.series.map(s=>s.n),1);
+    $('kgrowth').innerHTML=kg.series.slice(-14).map(s=>'<div class="bar" title="'+s.day+': '+s.n+'" style="height:'+Math.round(s.n/max*55)+'px"></div>').join('');
+  }
+  const mt=D.memory_dual_track||{};
+  $('mdtkpi').innerHTML=['Raw 事件','theta 事实','近期'].map(k=>({k:k,v:k==='Raw 事件'?(mt.raw_count||0):k==='theta 事实'?(mt.theta_facts||0):(mt.recent_raw||[]).length})).map(x=>'<div class="card kpi"><b>'+x.v+'</b><span>'+x.k+'</span></div>').join('');
+  const rawHtml=(mt.recent_raw||[]).slice(0,10).map(e=>'<div style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="mono" style="color:var(--muted)">'+(mt.raw_count||0)+' 条</span> '+e+'</div>').join('');
+  $('mdt_raw').innerHTML=rawHtml||'<span class="mono" style="color:var(--muted)">无 Raw 事件</span>';
+  const en=D.experience_network||{};
+  const nodes=en.nodes||[];
+  const grouped={}; nodes.forEach(n=>{grouped[n.type]=(grouped[n.type]||[]).push(n);});
+  const labels={pitfall:'坑',decision:'决策',retro:'复盘',pattern:'模式'};
+  const expHtml=Object.entries(grouped).map(([k,items])=>'<div style="margin-bottom:8px"><span class="mono" style="color:var(--teal)">'+(labels[k]||k)+' ('+items.length+')</span><br>'+items.slice(0,5).map(i=>'<span class="assoc-link" style="margin-right:8px">'+(i.id||i.name||'')+'</span>').join('')+'</div>').join('');
+  $('exp_net').innerHTML=expHtml||'<span class="mono" style="color:var(--muted)">无经验节点</span>';
+  const ib=D.knowledge_inbound||[];
+  $('kinbound').querySelector('tbody').innerHTML=(Array.isArray(ib)?ib:[]).map(r=>'<tr><td class="mono">'+r.doc+'</td><td>'+r.inbound+'</td></tr>').join('')||'<tr><td colspan=2 class="mono">无入链数据</td></tr>';
+})();
+</script></body></html>
 """
