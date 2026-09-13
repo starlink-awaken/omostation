@@ -9,13 +9,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "CodeAnalyze 深度分析",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -28,13 +22,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] CodeAnalyze Lint (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -47,13 +35,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "CodeAnalyze 代码度量",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -66,13 +48,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] CodeAnalyze 分析报告 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -85,13 +61,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "CodeAnalyze AST 扫描入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -104,13 +74,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Eidos 数据模型校验",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -123,13 +87,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Iris 发现入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -142,13 +100,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Iris 召回入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -161,13 +113,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Iris 扫描入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -180,13 +126,7 @@
     "transport": "http",
     "status": "active",
     "description": "KEMS 知识推断与影子评估推演分析 (ADR-0300)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -199,13 +139,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Minerva 追问入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -218,13 +152,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Minerva 审计 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -237,13 +165,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Minerva 草稿生成 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -256,13 +178,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Minerva 深度研究入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -275,13 +191,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Minerva 摘要入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -294,13 +204,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 语义对齐",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -313,13 +217,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 审计入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -332,13 +230,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 本体推导入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -351,13 +243,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 推导解释",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -370,13 +256,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 事实核验入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -389,13 +269,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OntoDerive 推导验证",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -408,13 +282,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "BCOS 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -427,13 +295,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "BCOS 北极星价值度量 v2 (排除 self-data, W3)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -446,13 +308,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "BCOS 统一信号路由 (W1-D2, doc/meeting/research/code)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -465,13 +321,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "列出所有可用 Agent 实例",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -484,13 +334,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent 交互式对话接口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -503,13 +347,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent Runtime 执行入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -522,13 +360,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent Runtime 工具列表",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -541,13 +373,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent 任务执行接口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -560,13 +386,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent Runtime 状态",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -579,13 +399,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Agent 任务状态查询",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -598,13 +412,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "BOS Skill 管理 CLI/TUI — 搜索/暂存/promote/回退 skill 包",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -617,13 +425,7 @@
     "transport": "internal",
     "status": "active",
     "description": "Omni-Bus 控制面路由 (异步/定时任务)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -636,13 +438,7 @@
     "transport": "internal",
     "status": "active",
     "description": "Omni-Bus 数据面路由 (日志/遥测)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -655,13 +451,7 @@
     "transport": "internal",
     "status": "active",
     "description": "Omni-Bus 事件面路由 (Pub/Sub)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -674,13 +464,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "354 个 Claude Code Skill 最全库 — 593 CLI 脚本 + 711 模板",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -693,13 +477,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Cockpit MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -712,13 +490,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Token 优化型代码评审图工具 — PyPI 发布，MCP 兼容",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -731,13 +503,7 @@
     "transport": "internal",
     "status": "active",
     "description": "AetherForge 网关生成 — 经 SSOT registry 路由到 omlx/本地/云 (internal 直调)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -750,13 +516,7 @@
     "transport": "internal",
     "status": "active",
     "description": "AetherForge 算力网格节点健康/在线摘要 (internal 直调)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -769,13 +529,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "企业级 Data Agent 工作台 — 28 数据源 + 语义层 + 多步分析",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -788,13 +542,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "字节开源超 Agent 框架 v2.0 — 子 Agent/记忆/沙箱/技能",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -807,13 +555,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent 上下文压缩层 — 60-95% token 节省 + 模型压缩 + MCP 代理",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -826,13 +568,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Claude Cowork 11 个生产力插件 — Claude Code 兼容",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -845,13 +581,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "AI Agent 驱动的搜索/打分类信息流聚合 — GitHub Trending #1",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -864,13 +594,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "自媒体平台爬虫 — 抖音/小红书/快手/B站/微博等 12 平台，含反爬能力",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -883,13 +607,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "开源 Agentic 视频制作系统 — 从剧本到成品的全流程 Pipeline",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -902,13 +620,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Runtime MCP — 服务注册表/健康/协议/KEI",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -921,13 +633,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "微软 Fabric AI 技能集 — 作者/消费/运维三类 Skill",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -940,13 +646,7 @@
     "transport": "internal",
     "status": "active",
     "description": "AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -959,13 +659,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -978,13 +672,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -997,13 +685,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane 启动上下文",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1016,13 +698,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane 合规审计",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1035,13 +711,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane 内外部集成健康检查",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1054,13 +724,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane run/lock/ledger 观察",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1073,13 +737,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Agent Governance Control Plane diff-aware 验证规划",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1092,13 +750,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "提案池质量分层 (第0段清淤) — keep/archive/invalid 三层, --dry-run 预演",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1111,13 +763,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "L4 约束层规则生命周期 (ADR-0431 D2) — expired/due-soon/healthy 三层, 过期进减法候选",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1130,13 +776,7 @@
     "transport": "inline",
     "status": "active",
     "description": "B.D.S.K. Virtual Board consensus engine & Mode-A/B execution",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1149,13 +789,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "领域治理卡带列表 (ADR-0198)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1168,26 +802,7 @@
     "transport": "internal",
     "status": "active",
     "description": "记录决策到因果图",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-    "registered_by": "bin/ssot/sync-bos-registry.py"
-  },
-  {
-    "uri": "bos://governance/decision/record",
-    "domain": "governance",
-    "package": "kairon",
-    "action": "record",
-    "endpoint": "stdio",
-    "protocol": "stdio",
-    "transport": "stdio",
-    "status": "active",
-    "description": "记录决策到因果图",
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1200,26 +815,7 @@
     "transport": "internal",
     "status": "active",
     "description": "追溯决策的因果祖先链",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-    "registered_by": "bin/ssot/sync-bos-registry.py"
-  },
-  {
-    "uri": "bos://governance/decision/trace-causes",
-    "domain": "governance",
-    "package": "kairon",
-    "action": "trace-causes",
-    "endpoint": "stdio",
-    "protocol": "stdio",
-    "transport": "stdio",
-    "status": "active",
-    "description": "追溯决策的因果祖先链",
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1232,26 +828,7 @@
     "transport": "internal",
     "status": "active",
     "description": "追溯决策的下游影响面",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-    "registered_by": "bin/ssot/sync-bos-registry.py"
-  },
-  {
-    "uri": "bos://governance/decision/trace-effects",
-    "domain": "governance",
-    "package": "kairon",
-    "action": "trace-effects",
-    "endpoint": "stdio",
-    "protocol": "stdio",
-    "transport": "stdio",
-    "status": "active",
-    "description": "追溯决策的下游影响面",
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1264,13 +841,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Eidos Schema 约束校验",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1283,13 +854,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理 Golden Path 端到端流程视图",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1302,13 +867,7 @@
     "transport": "internal",
     "status": "active",
     "description": "OMO 自动进化循环监控",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1321,13 +880,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理演进发布包与工作树收口视图",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1340,13 +893,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理演进路线图状态入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1359,13 +906,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理能力到入口/SSOT/验证器的追踪视图",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1378,13 +919,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理演进路线图结构与追踪校验",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1397,13 +932,7 @@
     "transport": "inline",
     "status": "active",
     "description": "governance cockpit circuit_breaker 端点 (cockpit api_omos metrics source)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1416,13 +945,7 @@
     "transport": "inline",
     "status": "active",
     "description": "governance cockpit daily_budget 端点 (cockpit api_omos metrics source)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1435,13 +958,7 @@
     "transport": "inline",
     "status": "active",
     "description": "governance omo worker dispatch 端点 (omo bus_demo_omo_producer metrics source)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1454,13 +971,7 @@
     "transport": "inline",
     "status": "active",
     "description": "governance cockpit quests 端点 (cockpit api_omos metrics source)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1473,13 +984,7 @@
     "transport": "inline",
     "status": "active",
     "description": "gov tasks 端点 (cockpit dashboard helpers_compute 引用)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1492,13 +997,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "意图解构与工程规格编译器 (ADR-0195)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1511,13 +1010,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "L4 Domain Kernel MCP — 24域管理",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1530,13 +1023,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "治理自进化巡检 M1 心跳 SLA + M2 引用活性 + 调度漂移",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1549,13 +1036,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "MetaOS 决策门控",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1568,13 +1049,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "MetaOS 门控检查 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1587,13 +1062,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "MetaOS 免疫响应",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1606,13 +1075,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "MetaOS 包注册 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1625,13 +1088,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "MetaOS 路由决策",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1644,13 +1101,7 @@
     "transport": "internal",
     "status": "active",
     "description": "OMO 治理审计 (internal — 同进程 importlib)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1663,13 +1114,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "8 维全景元架构立体重构追溯",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1682,13 +1127,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OMO 债务查询",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1701,13 +1140,7 @@
     "transport": "internal",
     "status": "active",
     "description": "OMO 系统检查 (internal 同进程)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1720,13 +1153,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OMO 事件台账追加 (stdio one-shot)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1739,13 +1166,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OMO 事件台账读取 (stdio one-shot)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1758,13 +1179,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OMO 事件台账状态查询 (stdio one-shot)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1777,13 +1192,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OMO 事件台账完整性校验 (stdio one-shot)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1796,13 +1205,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "17 项目全景 4D 体检与诊断",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1815,13 +1218,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "OMO 状态查询",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1834,13 +1231,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "OMO 状态同步 (mcp_stdio transport 跨进程)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1853,13 +1244,7 @@
     "transport": "internal",
     "status": "active",
     "description": "记忆脊知识质量审计与评分",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1872,13 +1257,7 @@
     "transport": "inline",
     "status": "active",
     "description": "governance roles list 端点 (mcp_protocol registry 端点)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1891,13 +1270,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "调度编译器一致性校验 registry↔crontab 漂移检测 (ADR-A)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1910,13 +1283,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "会话交接协议 机器可读 handoff.json (需 --session/--agent/--summary)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1929,13 +1296,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "影子红蓝对抗审查与合规自动补丁 (ADR-0196)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1948,13 +1309,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness 架构感知预编辑检查 (场景卡/Journey/标准/Harness)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1967,13 +1322,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness 12 章节全生命周期合规检查 (Phase 8)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -1986,13 +1335,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "全量合规检查 (arch + compliance + mof + omo)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2005,13 +1348,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness 统一约束与驱动 (整合 4 引擎 CI 模式)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2024,13 +1361,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness MOF 约束联动检查 (8 条 Agent-MOF 规则)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2043,13 +1374,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Harness OMO 状态同步检查 (Harness/GaC/漂移/已知债)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2062,13 +1387,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "AetherForge MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2081,13 +1400,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "C2G MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2100,13 +1413,7 @@
     "transport": "inline",
     "status": "active",
     "description": "memory docs readme 端点 (mcp_protocol registry 端点)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2119,13 +1426,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "ECOS MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2138,13 +1439,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "Eidos MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2157,13 +1452,7 @@
     "transport": "inline",
     "status": "active",
     "description": "memory fast-track virtual-doc 端点 (omo bridge source_docs)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2176,13 +1465,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "Forge MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2195,13 +1478,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "gbrain 知识库结构化查询",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2214,13 +1491,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "gbrain 知识库全文搜索 (高性能 Postgres)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2233,13 +1504,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "gbrain 知识库增量同步",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2252,26 +1517,7 @@
     "transport": "internal",
     "status": "active",
     "description": "SPARQL 查询嵌入式图引擎",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-    "registered_by": "bin/ssot/sync-bos-registry.py"
-  },
-  {
-    "uri": "bos://memory/graph/query",
-    "domain": "memory",
-    "package": "kairon",
-    "action": "query",
-    "endpoint": "stdio",
-    "protocol": "stdio",
-    "transport": "stdio",
-    "status": "active",
-    "description": "SPARQL 查询嵌入式图引擎",
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2284,26 +1530,7 @@
     "transport": "internal",
     "status": "active",
     "description": "Datalog 确定性推理",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-    "registered_by": "bin/ssot/sync-bos-registry.py"
-  },
-  {
-    "uri": "bos://memory/graph/reason",
-    "domain": "memory",
-    "package": "kairon",
-    "action": "reason",
-    "endpoint": "stdio",
-    "protocol": "stdio",
-    "transport": "stdio",
-    "status": "active",
-    "description": "Datalog 确定性推理",
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2316,13 +1543,7 @@
     "transport": "internal",
     "status": "active",
     "description": "BOS Inbox 工单处理完结与冷归档闭环接口 (Lifecycle Archive)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2335,13 +1556,7 @@
     "transport": "internal",
     "status": "active",
     "description": "BOS Inbox 智能拟办意见与风险提示批复草拟引擎 (Draft Assistant)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2354,13 +1569,7 @@
     "transport": "internal",
     "status": "active",
     "description": "BOS Inbox 实时待办公文与未读事项读取",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2373,13 +1582,7 @@
     "transport": "internal",
     "status": "active",
     "description": "BOS Inbox 多源私有知识库全文与高维关键词检索",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2392,13 +1595,7 @@
     "transport": "internal",
     "status": "active",
     "description": "BOS Inbox 多源私有知识神经网运行状态统计",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2411,13 +1608,7 @@
     "transport": "internal",
     "status": "active",
     "description": "BOS Inbox 公文与待办事项智能分类分拣与紧急度测算引擎 (Triage Engine)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2430,13 +1621,7 @@
     "transport": "internal",
     "status": "active",
     "description": "BOS Inbox 实时事件驱动监控与紧急公文/工单待办通知 (Event-Driven Watcher)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2449,13 +1634,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "Iris MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2468,13 +1647,7 @@
     "transport": "http",
     "status": "active",
     "description": "KEMS 实体关系图谱查询与关系拓扑推导 (ADR-0300)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2487,13 +1660,7 @@
     "transport": "http",
     "status": "active",
     "description": "KEMS 多源知识抽提与 OCR 纠错审阅队列 (ADR-0300)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2506,13 +1673,7 @@
     "transport": "http",
     "status": "active",
     "description": "KEMS 知识管理引擎与图谱服务运行状态 (ADR-0300)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2525,13 +1686,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "KOS GraphRAG: 实体+BFS+证据+LLM",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py",
     "mcp_tool": "knowledge_ask"
   },
@@ -2545,13 +1700,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS 知识摄取入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2564,13 +1713,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "KOS MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2583,13 +1726,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "KOS MCP v2.0 (25 tools)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py",
     "tools": [
       "graph_search",
@@ -2610,13 +1747,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS 知识查询",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2629,13 +1760,7 @@
     "transport": "http",
     "status": "active",
     "description": "KOS REST API v1 (9 endpoints)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2648,13 +1773,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS Schema 查询",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2667,13 +1786,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "KOS 知识图谱检索入口 (P33-W1 战役 2 起步)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2686,13 +1799,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Kronos 知识摄取管线入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2705,13 +1812,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "Kronos MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2724,13 +1825,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] KRONOS 时间序列查询 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2743,13 +1838,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Kronos 扫描入口",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2762,13 +1851,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] KRONOS 调度任务 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2781,13 +1864,7 @@
     "transport": "internal",
     "status": "active",
     "description": "P2 多区聚合搜索 — cockpit local + KOS + vault",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2800,13 +1877,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "Minerva MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2819,13 +1890,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Memory OS sleep-time consolidate via gbrain dream orchestration — ADR-0372",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2838,13 +1903,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Memory OS forget propagation (raw+theta+mem0+neo4j invalidate) — ADR-0372",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2857,13 +1916,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Memory OS ADR-0315 knowledge citation metadata (no body) — ADR-0372",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2876,13 +1929,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Memory OS unified intent-aware recall (neo4j+kos+gbrain fan-out) — ADR-0372",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2895,13 +1942,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Memory OS control plane health and backlog — ADR-0372",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2914,13 +1955,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Memory OS unified write (dual-track raw+theta; Neo4j FACT when NEO4J_URI) — ADR-0372",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2933,13 +1968,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "OMO MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2952,13 +1981,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "Ontoderive MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2971,13 +1994,7 @@
     "transport": "mcp_proxy",
     "status": "active",
     "description": "Sophia MCP Server (HTTP proxy mode)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -2990,13 +2007,7 @@
     "transport": "internal",
     "status": "active",
     "description": "L4 Vault 知识库搜索",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3009,13 +2020,7 @@
     "transport": "internal",
     "status": "active",
     "description": "B.D.S.K. 虚拟董事会评审网关；唯一推理链为 bos://compute/aetherforge/infer，失败返回 not_proven，禁止自动 ADR",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3028,13 +2033,7 @@
     "transport": "inline",
     "status": "active",
     "description": "B.D.S.K. 4-Corner Persona Router (@Builder/@Devil/@Sage/@Keeper)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3047,13 +2046,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Core Models Schema 查询",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3066,13 +2059,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Core Models 校验",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3085,13 +2072,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "Family Hub local MCP Server",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3104,13 +2085,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Health-Profile 健康告警 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3123,13 +2098,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Health Profile 批量导入 (T6-25 OpenHuman Bridge)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3142,13 +2111,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Health Profile 查询",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3161,13 +2124,7 @@
     "transport": "mcp_stdio",
     "status": "active",
     "description": "[POC] Health-Profile 健康摘要 (POC stdio)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3180,13 +2137,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Health Profile 更新",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3199,13 +2150,7 @@
     "transport": "internal",
     "status": "active",
     "description": "SharedBrain Bridge 实体召回 (P36-W1 GAP 补全, canonical URI)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3218,13 +2163,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Resident 五类常驻角色配置 (M4.3)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3237,13 +2176,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Resident 常驻 Agent 体系运行状态快照 (WP-A~I / ADR-0396)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3256,13 +2189,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Resident daemon 单次 tick (M1 事件驱动)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3275,13 +2202,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "Resident 决策提案处理 (WP-F)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3294,13 +2215,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "触发决策提案异步处理 (T10-125 dual-write)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3313,13 +2228,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "触发知识 sediment 异步写入 (T10-125 dual-write)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3332,13 +2241,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "查询异步任务状态 (T10-125 task_gateway)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
@@ -3351,13 +2254,7 @@
     "transport": "stdio",
     "status": "active",
     "description": "提交异步任务到 Resident 就绪队列 (T10-125 task_gateway)",
-<<<<<<< HEAD
     "registered_at": "2026-09-13T09:19:25.629101+00:00",
-||||||| parent of f03a3cffa3 (chore: sync bos-registry mirror)
-    "registered_at": "2026-09-12T15:09:28.332453+00:00",
-=======
-    "registered_at": "2026-09-13T08:38:22.851164+00:00",
->>>>>>> f03a3cffa3 (chore: sync bos-registry mirror)
     "registered_by": "bin/ssot/sync-bos-registry.py"
   }
 ]
