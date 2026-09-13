@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-13
+---
 # Retro — BET-Y2Q2-T7-03 主动健康连续体征监测、异常预警与就诊咨询闭环
 
 - bet: BET-Y2Q2-T7-03

@@ -10,7 +10,7 @@ last-reviewed: 2026-09-09
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-共 **228** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **221** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
@@ -1739,7 +1739,6 @@ cockpit vault --help          # 完整参数面
 |------|------|
 | `cockpit ack` | 确认任务完成 |
 | `cockpit add` | 手动添加决策项 |
-| `cockpit agents` | 活体工作树空间作业热力与并发写锁冲突预警 |
 | `cockpit analyze` | 运行全部分析工具 |
 | `cockpit api` | 启动 API server |
 | `cockpit approve` | 批准决策 |
@@ -1751,7 +1750,6 @@ cockpit vault --help          # 完整参数面
 | `cockpit cache` | 检查三级分层缓存与 Radix 前缀树状态 (含基准压测) |
 | `cockpit calendar` | 多维日历感知与督办闭环 (T7-02) |
 | `cockpit calibrate` | [v2] 校准场景卡 |
-| `cockpit callchains` | 主权系统端到端跨层调用链路时序 |
 | `cockpit client` | 以 REPL 模式连接到 MCP server |
 | `cockpit cluster` | 异构三节点智能路由与拓扑诊断 |
 | `cockpit compact` | 上下文滑动蒸馏与双区自适应量化压缩模拟 |
@@ -1777,7 +1775,6 @@ cockpit vault --help          # 完整参数面
 | `cockpit gc` | 清理 data/tmp 过期文件 |
 | `cockpit get` | 查 1 个 card |
 | `cockpit graph` | 运行语义图谱分析 |
-| `cockpit guard` | 🛡️ 定向检测一组文件路径的并发争用与踩踏隐患 |
 | `cockpit heatmap` | 显示研究活跃度热力图 |
 | `cockpit history` | 查看对话历史 |
 | `cockpit hud` | 查看次世代主权算力织网全景 HUD 实时状态 |
@@ -1791,7 +1788,6 @@ cockpit vault --help          # 完整参数面
 | `cockpit knowledge-ref` | ADR-0315 引用元数据 (无正文) |
 | `cockpit lifecycle` | [v2] 场景卡生命周期管理 (list/status/promote/demote/validate) |
 | `cockpit list` | 查看研究历史 |
-| `cockpit listen` | 🎧 终端流式监听主权态势感知事件流 (实时捕获) |
 | `cockpit logs` | 查看日志 |
 | `cockpit lora` | 查看与测试端侧在线 LoRA 适配层热插拔 |
 | `cockpit mail-draft` | 邮箱 3 档拟复 (经 BOS inbox/mail/draft 服务) |
@@ -1803,7 +1799,6 @@ cockpit vault --help          # 完整参数面
 | `cockpit nodes` | 列出 KOS 中注册的算力节点 |
 | `cockpit onboarding` | 为 AI 构建项目全貌上下文 |
 | `cockpit open` | 打开研究全文 |
-| `cockpit overview` | 八层架构拓扑与项目资产总览 |
 | `cockpit pack` | 将代码库打包为 LLM 友好格式 |
 | `cockpit pending` | 查看未决待办快照预览 |
 | `cockpit persona-radar` | 个人文风一致性多维雷达评估 (T3-01) |
@@ -1829,7 +1824,6 @@ cockpit vault --help          # 完整参数面
 | `cockpit scene` | 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub) |
 | `cockpit score` | 评分债务项 |
 | `cockpit send` | 一键确认署名并经外发网关真实外发 |
-| `cockpit sentinel` | 16 个子模块 Gitlink 对齐与 7 大主权端口探针 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit sign` | 提交用户署名 Diff 并入队 Experience Replay |
 | `cockpit snapshot` | KV 缓存快照管理与预热 |
@@ -1844,7 +1838,6 @@ cockpit vault --help          # 完整参数面
 | `cockpit test_export_formats` | 离线自测: 三格式导出 + GB/T 参数断言 |
 | `cockpit timeline` | 查看研究的演化时间线 |
 | `cockpit topics` | 列出已注册 topic |
-| `cockpit topology` | 🗺️ 八层架构拓扑全景、多 Agent 空间作业与调用链穿透 |
 | `cockpit tree` | 自适应熵感知树状投机解码与多候选验证基准 |
 | `cockpit types` | 查看已注册的数据类型 |
 | `cockpit unarchive` | 恢复已归档研究记录 |
