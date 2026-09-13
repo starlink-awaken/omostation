@@ -1,7 +1,9 @@
 ---
 type: retro
 bet_id: BET-Y1Q4-T6-29
-status: completed
+status: archived
+lifecycle: history
+owner: governance-team
 created: 2026-09-13
 last_reviewed: 2026-09-13
 ---
