@@ -1807,7 +1807,12 @@ bets:
   write_surfaces:
   - projects/knowledge/
   - .omo/_knowledge/retros/BET-Y2Q1-T6-02.md
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:3ba7a11a67d0bc2bafaf16843633005b79955ca24724325b156278b69b3788ad
+    decision_ref: decision://accepted/BET-Y2Q1-T3-05
+    spec_ref: repo://docs/superpowers/specs/2026-09-14-t3-05-mindmodel-four-pieces-spec.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 心智模型解析异常时回退到默认静态规则配置。
   depends_on:
   - BET-Y1Q4-T2-06
@@ -1838,6 +1843,7 @@ bets:
   write_surfaces:
   - projects/spine/src/spine/cognitive/
   - .omo/_knowledge/retros/BET-Y2Q1-T3-05.md
+  - docs/superpowers/specs/2026-09-14-t3-05-mindmodel-four-pieces-spec.md
 - appetite: 3 days
   circuit_breaker: 文风严重失真时自动回退至基准中立模板。
   depends_on:
@@ -9724,14 +9730,8 @@ bets:
   - bin/gac/**
 - appetite: 2 days
   done_at: 2026-08-08
-  done_evidence: 'start_run accepts parent_run_id/parent_agent; run record + ledger
-    event include parent fields. spawn_run creates child runs auto-linked to parent
-    (auto-copies parent_agent). trace_attribution walks full parent chain (root→leaf),
-    handles missing runs gracefully. CLI: `start --parent-run`, `spawn <parent> <workflow>`,
-    `trace <run-id>` (--json supported). 9 tests pass: parent linkage, ledger events,
-    chain tracing (1/2/3 levels), missing run handling.
-
-    '
+  done_evidence: |
+    start_run accepts parent_run_id/parent_agent; run record + ledger event include parent fields. spawn_run creates child runs auto-linked to parent (auto-copies parent_agent). trace_attribution walks full parent chain (root→leaf), handles missing runs gracefully. CLI: `start --parent-run`, `spawn <parent> <workflow>`, `trace <run-id>` (--json supported). 9 tests pass: parent linkage, ledger events, chain tracing (1/2/3 levels), missing run handling.
   done_when:
   - start_run 接受 parent_run_id/parent_agent 参数，写入 run record + ledger 事件
   - spawn_run 创建子 run 时自动继承父 agent_profile
@@ -9779,14 +9779,8 @@ bets:
   - .subtrees/aetherforge/**
 - appetite: 1 week
   done_at: 2026-08-08
-  done_evidence: 'commit 185b443 in cockpit main: feat(T6-10): god-module SRP split
-    — cli.py 1540L→792L + api_system_map_catalog.py 1565L→59L. Verification: `omo
-    lint god-module` GATE PASS (0 files >1500L). Split strategy: cli/_subcommands.py
-    (863L, argparse registration), web/pages.py (757L), web/coverage_dims.py (107L),
-    web/playbooks.py (496L), web/roadmap.py (229L). Backward compat maintained via
-    re-export pattern in api_system_map_catalog.py shim.
-
-    '
+  done_evidence: |
+    commit 185b443 in cockpit main: feat(T6-10): god-module SRP split — cli.py 1540L→792L + api_system_map_catalog.py 1565L→59L. Verification: `omo lint god-module` GATE PASS (0 files >1500L). Split strategy: cli/_subcommands.py (863L, argparse registration), web/pages.py (757L), web/coverage_dims.py (107L), web/playbooks.py (496L), web/roadmap.py (229L). Backward compat maintained via re-export pattern in api_system_map_catalog.py shim.
   done_when:
   - 3 个 >1500L 文件拆分至全部 <=1500L, omo lint god-module GATE PASS (见 done_evidence)
   evidence:
@@ -9830,10 +9824,8 @@ bets:
 - appetite: 2 days
   depends_on: []
   done_at: 2026-08-07
-  done_evidence: 'git-shim fail-closed (T1-04) 拦截 agent 危险操作; 锁心跳+僵尸锁检测+prune-locks
-    (lifecycle.py); AGENTS.md 共享主树只读红线; 9 个新测试全通过
-
-    '
+  done_evidence: |
+    git-shim fail-closed (T1-04) 拦截 agent 危险操作; 锁心跳+僵尸锁检测+prune-locks (lifecycle.py); AGENTS.md 共享主树只读红线; 9 个新测试全通过
   done_when:
   - 所有 agent 必须在 gac-worktree claim 出的隔离树内工作, 共享 main 树只读
   - git clean / reset --hard / stash -u 在 hook 层要求 SWARM_ESCAPE_ID
@@ -9846,41 +9838,31 @@ bets:
   - 'D0 铁律升级: 交付物 commit 后须打 tag 或推独立分支, 仅 commit 不算持久化'
   evidence:
     E16_sandbox_can_create_but_not_delete:
-      判断: '工具自身的能力边界会伪装成环境问题。
-
+      判断: |
+        工具自身的能力边界会伪装成环境问题。
         agent 报告「环境有并发干扰」时, 先验证自己的工具链在该环境下的完整性,
-
         再归因外部。这是 D1(声明 vs 事实)在「自我能力」维度上的投影, 原 D1 未覆盖
-
-        '
-      实测: 'touch .git/_probe  → OK
-
+      实测: |
+        touch .git/_probe  → OK
         rm -f .git/_probe  → Operation not permitted
-
         git 的锁协议是「建 .lock → 干活 → unlink」, 第三步永远失败,
-
         一次 git status 在 17 个子模块留 17 个僵尸 index.lock,
-
         此后该仓库任何 git 写操作直接失败
-
-        '
       观察: agent sandbox 对 .git/ 有写权限但无删除权限, git 的锁协议因此必然残留
       规避: 只读操作加 GIT_OPTIONAL_LOCKS=0; 写操作一律交人类终端执行
       误判过程: 2026-08-06 全天把由此产生的异常判断为「并发 agent 在删我的文件」, 据此写了 E1 的部分结论并设计了 D0 三段式。D0
         本身仍成立(E6 独立支持), 但 E1 里「文件被清理 4 次」中至少 2 次实为本因, 归因错误
     E17_ci_inline_script_blind_spot:
-      判断: '语法检查验的是「能不能解析」, 不是「能不能跑」。
-
+      判断: |
+        语法检查验的是「能不能解析」, 不是「能不能跑」。
         同类还有 bash -n 查不出全角字符紧跟变量名(本轮实测命中 3 次)。
-
         凡「解析得过、执行才炸」的构造, 必须有一条真正执行它的验证路径
-
-        '
-      实测: ".github/workflows/agora-ci.yml 在 main 与 phase13 两侧都有 deploy-smoke job,\n\
-        唯一差异是 Smoke assertions 里的内联 Python 写法:\n  main(b02d67899 20:45 starlink-awaken)\
-        \  单行 python3 -c '...'      → 实测 PASS\n  phase13(47e48755d 20:57 xiamingxing)\
-        \   多行缩进 python3 -c \"...\"  → IndentationError\n两个版本都是合法 YAML, yamllint 全过;\
-        \ 只有真把那段 Python 喂给解释器才暴露\n"
+      实测: |
+        .github/workflows/agora-ci.yml 在 main 与 phase13 两侧都有 deploy-smoke job,
+        唯一差异是 Smoke assertions 里的内联 Python 写法:
+          main(b02d67899 20:45 starlink-awaken)  单行 python3 -c '...'      → 实测 PASS
+          phase13(47e48755d 20:57 xiamingxing)   多行缩进 python3 -c "..."  → IndentationError
+        两个版本都是合法 YAML, yamllint 全过; 只有真把那段 Python 喂给解释器才暴露
       影响面: 本仓 .github/workflows/ 下所有 run 块里的内联 python/node 都在此盲区内
       成因: phase13 在原版落地 12 分钟后做纯格式美化, 把可跑的改成跑不了的, 无人执行验证
       观察: CI 配置文件里的内联脚本, YAML 合法不代表脚本能跑, 常规校验查不出
@@ -11718,10 +11700,8 @@ bets:
   depends_on:
   - BET-Y1Q1-T4-01
   done_at: 2026-08-08
-  done_evidence: 'commit 4274d18fb merged to main: /inbox route + approve-with-edit
-    + ignore buttons + daily cap 5. All 4 done_when criteria covered by implementation.
-
-    '
+  done_evidence: |
+    commit 4274d18fb merged to main: /inbox route + approve-with-edit + ignore buttons + daily cap 5. All 4 done_when criteria covered by implementation.
   done_when:
   - /inbox 列出待裁决条目, 每条含来源/原文定位/问题清单
   - '三个按钮: 采纳 / 改后采纳 / 忽略'
@@ -15060,9 +15040,11 @@ bets:
       description: 'cockpit events-watch 无参运行报 AttributeError: ''Namespace'' object
         has no attribute ''url'''
       source: docs/cockpit-cmd-audit-comprehensive.md
-      stacktrace: "File \"src/cockpit/cli.py\", line 761, in (lambda)\n  \"events-watch\"\
-        : lambda a: _c_events(\nFile \"src/cockpit/cli.py\", line 170, in _c_events\n\
-        \  run_events_dashboard(a.url)\n"
+      stacktrace: |
+        File "src/cockpit/cli.py", line 761, in (lambda)
+          "events-watch": lambda a: _c_events(
+        File "src/cockpit/cli.py", line 170, in _c_events
+          run_events_dashboard(a.url)
     E2_audit_path_error:
       actual_path: bin/ssot/workspace-audit
       description: cockpit audit 无参运行报 [Error] 找不到 /Users/xiamingxing/Workspace/bin/workspace-audit
@@ -26168,15 +26150,11 @@ bets:
   - 至少 2 个新 PR 引用 runbook
   - 至少 5 个 L1/L2/L0 human_gate BET 的 retro 提到 HITL adoption (含 v1.0 时代已 done BET 的
     retroactive 追加)
-  goal: '把 HITL proposal system 真正铺到 L2/L0 风险 BET 中,而非停留在"工具就绪"阶段。
-
+  goal: |
+    把 HITL proposal system 真正铺到 L2/L0 风险 BET 中,而非停留在"工具就绪"阶段。
     - 量化指标:human_gate: true 的 L2/L0 BET 中,至少 30% 在 retro 中提到 HITL adoption
-
     - 质量指标:被启用的 BET 必须在 retro 中记录 E2E flow evidence
-
     - 流程指标:adoption runbook 至少被 2 个新 PR 引用
-
-    '
   human_gate: false
   id: BET-Y1Q4-T1-12
   non_goals:
@@ -29436,11 +29414,8 @@ concurrency:
 disciplines:
   D0_committed_or_undelivered:
     check: git ls-files --error-unmatch <每个 deliverable>
-    origin: '2026-08-06 实测两次事故 — journey-runner.py / scene-card v2 / v10 plans 从未
-      tracked, 工作树在 20 分钟内被并发 agent 清理两次 (847375f0 -> 7d7ffdaa -> 5dff6900), 无 blob
-      可恢复
-
-      '
+    origin: |
+      2026-08-06 实测两次事故 — journey-runner.py / scene-card v2 / v10 plans 从未 tracked, 工作树在 20 分钟内被并发 agent 清理两次 (847375f0 -> 7d7ffdaa -> 5dff6900), 无 blob 可恢复
     rule: 任何交付物在 git add 之前不算交付
     severity: red
   D1_no_proxy_metric:
@@ -29467,10 +29442,10 @@ disciplines:
   D6_metric_not_harmfully_optimizable:
     check: 设指标时人工反问; 已知有害路径写进 non_goals
     corollary: 每个数量目标都要配一个「保护量」, 例如 src 可减但 test 不得降
-    origin: "2026-08-06 复盘发现自设的三个减法指标全部可被有害优化 —— ① 「代码 ≤69万行」不分 src/test, 删测试(占33%)是最便宜路径;\
-      \ ② 表面积扫文件系统, 建/删 PASW worktree(占旧基线33%)就能大幅波动; ③ 「GaC ≤80 条」不分 advisory/required,\
-      \ 删最无害的 105 条 advisory 最容易,\n   而真正有成本的 26 条 required 反而留下。\n三者与本项目最初批评的 X3\
-      \ mtime 指标是同一个病 —— 用代理量冒充真实量。\n"
+    origin: |
+      2026-08-06 复盘发现自设的三个减法指标全部可被有害优化 —— ① 「代码 ≤69万行」不分 src/test, 删测试(占33%)是最便宜路径; ② 表面积扫文件系统, 建/删 PASW worktree(占旧基线33%)就能大幅波动; ③ 「GaC ≤80 条」不分 advisory/required, 删最无害的 105 条 advisory 最容易,
+         而真正有成本的 26 条 required 反而留下。
+      三者与本项目最初批评的 X3 mtime 指标是同一个病 —— 用代理量冒充真实量。
     rule: 任何指标在设立前必须回答「最便宜的达标路径是什么」, 若那条路径有害则指标不成立
     severity: red
 gates:
