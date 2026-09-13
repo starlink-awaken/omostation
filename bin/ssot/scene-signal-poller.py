@@ -220,6 +220,13 @@ def _resolve_connector(signal_name: str, trigger: dict[str, Any]) -> str | None:
         "email.received": "apple_mail",
         "email": "apple_mail",
         "mail": "apple_mail",
+        "note.created": "applenotes",
+        "note": "applenotes",
+        "knowledge.item": "applenotes",
+        "zhihu.item": "zhihu",
+        "github.event": "github",
+        "wechat.message": "wechat",
+        "file.changed": "local_files",
     }
     for key, conn in mapping.items():
         if key in signal_name.lower():
