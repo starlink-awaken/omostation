@@ -2509,7 +2509,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: in_progress
+  status: done
   title: Agora A2A 双向任务委派与 Resident Agent Card 协议接入 (A2A Task Delegation & Resident
     Agent Card)
   track: T5-ORCH
@@ -2526,6 +2526,35 @@ bets:
   - projects/agora/src/agora/server/tools_resident.py
   - projects/agora/tests/test_resident_a2a.py
   - .omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          merged_reachable_commit:
+            ref: git://origin/main@8da47b9be4
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:07edff7014a86df77a987aa86dba473ee8e17f8f550122ed59116a35a1abf7ce
     decision_ref: decision://accepted/BET-Y1Q4-T10-125
@@ -3981,7 +4010,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: in_progress
+  status: done
   title: 基于风险-置信度矩阵的自适应授权与 Cockpit Resident Flight Deck 四维透明指挥舱 (Risk-Confidence Adaptive
     Authorization & Cockpit Flight Deck)
   track: T8-EXECUTION
