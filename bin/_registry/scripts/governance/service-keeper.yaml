@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/service-keeper.py
+name: Scene Service Keeper
+category: governance
+owner: governance-team
+description: Keep Agora/Cockpit/KOS services running with launchd integration
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: active
+last_reviewed: "2026-09-12"

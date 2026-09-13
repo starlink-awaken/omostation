@@ -1,10 +1,11 @@
 version: 1.0
-description: X1-X4 治理检查器注册表
+description: "X1-X4 \u6CBB\u7406\u68C0\u67E5\u5668\u6CE8\u518C\u8868"
 checkers:
 - id: x1-audit-chain
   dimension: X1
-  name: 审计链检查器
-  description: 检查操作是否安全：债务审计 + 操作审计
+  name: "\u5BA1\u8BA1\u94FE\u68C0\u67E5\u5668"
+  description: "\u68C0\u67E5\u64CD\u4F5C\u662F\u5426\u5B89\u5168\uFF1A\u503A\u52A1\
+    \u5BA1\u8BA1 + \u64CD\u4F5C\u5BA1\u8BA1"
   module: ecos.l0.governance.checkers
   class: X1AuditChainChecker
   type: python
@@ -16,8 +17,9 @@ checkers:
   remediation: Investigate audit failure and apply targeted fix; re-run x1-audit-chain
 - id: x2-staleness
   dimension: X2
-  name: 抗熵检查器
-  description: 检查数据是否新鲜：债务新鲜度 + 健康度趋势
+  name: "\u6297\u71B5\u68C0\u67E5\u5668"
+  description: "\u68C0\u67E5\u6570\u636E\u662F\u5426\u65B0\u9C9C\uFF1A\u503A\u52A1\
+    \u65B0\u9C9C\u5EA6 + \u5065\u5EB7\u5EA6\u8D8B\u52BF"
   module: ecos.l0.governance.checkers
   class: X2StalenessChecker
   type: python
@@ -29,8 +31,9 @@ checkers:
   remediation: Refresh stale facts via state sync; verify against x2-freshness-rules
 - id: x3-value
   dimension: X3
-  name: 价值栈检查器
-  description: 检查投入是否合理：债务优先级 + SLA 达成
+  name: "\u4EF7\u503C\u6808\u68C0\u67E5\u5668"
+  description: "\u68C0\u67E5\u6295\u5165\u662F\u5426\u5408\u7406\uFF1A\u503A\u52A1\
+    \u4F18\u5148\u7EA7 + SLA \u8FBE\u6210"
   module: ecos.l0.governance.checkers
   class: X3ValueChecker
   type: python
@@ -42,8 +45,9 @@ checkers:
   remediation: Rebalance debt priorities against x3-value-stack; escalate SLA misses
 - id: x4-consistency
   dimension: X4
-  name: 一致性检查器
-  description: 检查规则是否被遵守：CI + pre-commit + 文档
+  name: "\u4E00\u81F4\u6027\u68C0\u67E5\u5668"
+  description: "\u68C0\u67E5\u89C4\u5219\u662F\u5426\u88AB\u9075\u5B88\uFF1ACI + pre-commit\
+    \ + \u6587\u6863"
   module: ecos.l0.governance.checkers
   class: X4ConsistencyChecker
   type: python
@@ -179,32 +183,14 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 660
-    # 2026-09-12: +1 bin/daemon/mail_ingress.py (T2-06 真实邮件/日历 Ingress + LECP 分诊管道)
-    # 2026-09-11: +5 GAC repository-hygiene health checks (BET-Y1Q4-T10-145/146/147)
-    # 2026-09-11: +48 T16 ops check-signals + gen-service-configs 语法修复 + cron 准入 (BET-Y1Q4-T16)
-    # 2026-09-07: +1 resident-sandbox-timemachine (BET-Y1Q4-T10-133 沙箱基建)
-    # 2026-09-07: +2 T10-129 check-submodule-consistency + generate-submodule-health-report (子模块生命周期管理)
-    # 2026-09-06: -2 删除 placeholder guard-chore-state.py + notify-submodule-change.py (canonical 内联已有真实实现, BET-Y1Q4-T6-24 净减)
-    # 2026-09-06: -1 删除 check-dangerous-rebase.py (canonical pre-rebase 内联已有实现+逃生口, 消除重复, BET-Y1Q4-T6-24)
-    # 2026-09-03: +1 perception-coverage
-    # 2026-09-03: +2 ops-cron-install + weekly-evolution-report
-    # 2026-09-04: +2 T10-105 work branch net bin diff baseline
-    # 2026-09-04: +2 ops stubs (lighthouse-stub.py + nfr-stub.py, #3044 欠账同步, BET-Y1Q4-T6-02)
-    # 2026-09-04: +1 portfolio_contract.py (BET-Y1Q4-T1-04 Wave A1 validator)
-    # 2026-09-04: +1 portfolio_graph.py (BET-Y1Q4-T1-05 coverage graph)
-    # 2026-09-04: +1 hitl-proposal.py (BET-Y1Q4-HITL-01 HITL proposal system)
-    # 2026-09-06: +12 mechanism 22c hook runner + guard scripts (BET-Y1Q4-T6-24)
-    # 2026-09-05: +1 notification.py (BET-Y1Q4-HITL-02 HITL v1.1 multi-channel)
-    # 2026-09-05: +2 cold-backup-drill.sh + restore-cold-snapshot.sh (BET-Y2Q1-T10-01)
-    # 2026-09-05: +1 check-mcp-bos-uri-completeness.py (BET-Y1Q4-T6-19)
-    # 2026-09-05: +2 arch-health-meter.py + architecture-health-weekly.sh (BET-Y1Q4-T6-18)
+    script_baseline: 661
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
     layer: L2
-    name: 健康分 SSOT
-    description: health_score 唯一源 system.yaml, 文档用指针不复制
+    name: "\u5065\u5EB7\u5206 SSOT"
+    description: "health_score \u552F\u4E00\u6E90 system.yaml, \u6587\u6863\u7528\u6307\
+      \u9488\u4E0D\u590D\u5236"
     check_type: ssot_pointer
     target: .omo/state/system.yaml::health_score
     forbid_copy_in:
@@ -228,14 +214,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-13'
-    justification: '[ADR-0431 D2] CR-X4-HEALTH-SSOT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-HEALTH-SSOT \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-M0-STAGE-GATE
     dimension: X4
     layer: M0
-    name: M0 7 阶段 Stage/Gate 派生一致
-    description: M1→M2→M3 派生必走 mof Stage/Gate (零风险派生)
+    name: "M0 7 \u9636\u6BB5 Stage/Gate \u6D3E\u751F\u4E00\u81F4"
+    description: "M1\u2192M2\u2192M3 \u6D3E\u751F\u5FC5\u8D70 mof Stage/Gate (\u96F6\
+      \u98CE\u9669\u6D3E\u751F)"
     check_type: mof_stage_gate
-    target: projects/model-driven (7 阶段引擎)
+    target: "projects/model-driven (7 \u9636\u6BB5\u5F15\u64CE)"
     executor:
     - mof_validate
     - mof_audit
@@ -252,14 +240,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=mof_stage_gate | 代码引用 427 处（如 lib/documents_signals_preflight.py,
-      .github/workflows/task-schema-enforce.yml）| history fire=0（drift/ssot 型检查，fire
-      非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=mof_stage_gate | \u4EE3\u7801\
+      \u5F15\u7528 427 \u5904\uFF08\u5982 lib/documents_signals_preflight.py, .github/workflows/task-schema-enforce.yml\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-L0-BOS-RESOLVE
     dimension: X1
     layer: L0
-    name: BOS 声明/执行一致
-    description: BOS URI 声明必须 resolve (evidence-smoke 防 alive 标志假阳)
+    name: "BOS \u58F0\u660E/\u6267\u884C\u4E00\u81F4"
+    description: "BOS URI \u58F0\u660E\u5FC5\u987B resolve (evidence-smoke \u9632\
+      \ alive \u6807\u5FD7\u5047\u9633)"
     check_type: bos_resolve
     target: projects/agora/etc/bos-services.yaml
     executor:
@@ -278,13 +269,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=bos_resolve | 代码引用 686 处（如 bin/plan/closeout-audit.py,
-      lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=bos_resolve | \u4EE3\u7801\u5F15\
+      \u7528 686 \u5904\uFF08\u5982 bin/plan/closeout-audit.py, lib/documents_signals_preflight.py\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-L2-TASK-DELIVERABLE
     dimension: X4
     layer: L2
-    name: 任务 deliverable 文件路径必填
-    description: OMO 任务必声明 deliverables (task-yaml-rules 规则 1)
+    name: "\u4EFB\u52A1 deliverable \u6587\u4EF6\u8DEF\u5F84\u5FC5\u586B"
+    description: "OMO \u4EFB\u52A1\u5FC5\u58F0\u660E deliverables (task-yaml-rules\
+      \ \u89C4\u5219 1)"
     check_type: task_field
     target: .omo/tasks/**/*.yaml::deliverables
     executor:
@@ -302,14 +297,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-28'
-    justification: '[ADR-0431 D2] CR-L2-TASK-DELIVERABLE — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-L2-TASK-DELIVERABLE \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X2-GAC-DRIFT
     dimension: X2
     layer: meta
-    name: GaC drift 自检 (注册表 vs 实际执行)
-    description: '防 GaC 自己走偏: 注册表规则 vs hook/mcp/gate 实际注册, drift 告警 + 自愈'
+    name: "GaC drift \u81EA\u68C0 (\u6CE8\u518C\u8868 vs \u5B9E\u9645\u6267\u884C)"
+    description: "\u9632 GaC \u81EA\u5DF1\u8D70\u504F: \u6CE8\u518C\u8868\u89C4\u5219\
+      \ vs hook/mcp/gate \u5B9E\u9645\u6CE8\u518C, drift \u544A\u8B66 + \u81EA\u6108"
     check_type: drift_audit
-    target: governance-checks.yaml::gac.rules vs executor 实际注册
+    target: "governance-checks.yaml::gac.rules vs executor \u5B9E\u9645\u6CE8\u518C"
     executor:
     - ci_gate
     - radar_cron
@@ -325,14 +322,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=drift_audit | 代码引用 198 处（如 lib/batch_bet_closeout.py,
-      lib/documents_zcode_state_relocation.py）| history fire=0（drift/ssot 型检查，fire
-      非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=drift_audit | \u4EE3\u7801\u5F15\
+      \u7528 198 \u5904\uFF08\u5982 lib/batch_bet_closeout.py, lib/documents_zcode_state_relocation.py\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-X1-AGENT-AUDIT
     dimension: X1
     layer: meta
-    name: agent 操作审计链
-    description: agent 编辑经 MCP/omo CLI, 自动记 AppendOnlyLog (可追溯)
+    name: "agent \u64CD\u4F5C\u5BA1\u8BA1\u94FE"
+    description: "agent \u7F16\u8F91\u7ECF MCP/omo CLI, \u81EA\u52A8\u8BB0 AppendOnlyLog\
+      \ (\u53EF\u8FFD\u6EAF)"
     check_type: audit_chain
     target: runtime/omo/_delivery/ingress/ingress-trail.jsonl
     executor:
@@ -352,13 +352,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=audit_chain | 代码引用 526 处（如 .githooks/pre-commit,
-      lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=audit_chain | \u4EE3\u7801\u5F15\
+      \u7528 526 \u5904\uFF08\u5982 .githooks/pre-commit, lib/documents_signals_preflight.py\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-X3-DEBT-TIER
     dimension: X3
     layer: L2
-    name: 债务 X3 tier 必声明
-    description: debt items 必声明 x3_tier (价值分级, 投入产出可量化)
+    name: "\u503A\u52A1 X3 tier \u5FC5\u58F0\u660E"
+    description: "debt items \u5FC5\u58F0\u660E x3_tier (\u4EF7\u503C\u5206\u7EA7\
+      , \u6295\u5165\u4EA7\u51FA\u53EF\u91CF\u5316)"
     check_type: value_roi
     target: .omo/debt/items/*.yaml::x3_tier
     executor:
@@ -376,14 +380,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-17'
-    justification: '[ADR-0431 D2] CR-X3-DEBT-TIER — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X3-DEBT-TIER \u2014 \u5F85\u8865\u5B58\u5728\u7406\
+      \u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-L1-RUNTIME-HEALTH
     dimension: X2
     layer: L1
-    name: 运行时健康监控新鲜
-    description: runtime 健康监控数据新鲜 (不超 24h, X2 抗熵)
+    name: "\u8FD0\u884C\u65F6\u5065\u5EB7\u76D1\u63A7\u65B0\u9C9C"
+    description: "runtime \u5065\u5EB7\u76D1\u63A7\u6570\u636E\u65B0\u9C9C (\u4E0D\
+      \u8D85 24h, X2 \u6297\u71B5)"
     check_type: freshness
-    target: projects/runtime (健康监控)
+    target: "projects/runtime (\u5065\u5EB7\u76D1\u63A7)"
     executor:
     - omo_audit
     - ci_gate
@@ -399,14 +405,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-20'
-    justification: '[ADR-0431 D2] CR-L1-RUNTIME-HEALTH — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-L1-RUNTIME-HEALTH \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-L3-COCKPIT-ENTRY
     dimension: X4
     layer: L3
-    name: cockpit 唯一人类 CLI 入口
-    description: cockpit 是唯一人类 CLI/Web 入口 (其他 CLI 程序接口, X4 一致)
+    name: "cockpit \u552F\u4E00\u4EBA\u7C7B CLI \u5165\u53E3"
+    description: "cockpit \u662F\u552F\u4E00\u4EBA\u7C7B CLI/Web \u5165\u53E3 (\u5176\
+      \u4ED6 CLI \u7A0B\u5E8F\u63A5\u53E3, X4 \u4E00\u81F4)"
     check_type: ssot_pointer
-    target: projects/cockpit (唯一入口)
+    target: "projects/cockpit (\u552F\u4E00\u5165\u53E3)"
     executor:
     - omo_audit
     - ci_gate
@@ -417,19 +425,23 @@ gac:
     enforcement: advisory
     source_ref: projects/cockpit/
     owner: cockpit-team
-    expected: projects/cockpit (唯一入口) is the unique source of truth; no markdown or
-      other file may duplicate this value
+    expected: "projects/cockpit (\u552F\u4E00\u5165\u53E3) is the unique source of\
+      \ truth; no markdown or other file may duplicate this value"
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 348 处（如 .githooks/pre-commit,
-      lib/documents_signals_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=ssot_pointer | \u4EE3\u7801\
+      \u5F15\u7528 348 \u5904\uFF08\u5982 .githooks/pre-commit, lib/documents_signals_preflight.py\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-L2-DIRECT-IO
     dimension: X1
     layer: L2
-    name: .omo 直写拦截 (走 omo ingress, 禁原生 write_text/mkdir)
-    description: 禁止绕过 omo ingress 直写 .omo (防状态竞态死锁, 报告债务① Critical)
+    name: ".omo \u76F4\u5199\u62E6\u622A (\u8D70 omo ingress, \u7981\u539F\u751F write_text/mkdir)"
+    description: "\u7981\u6B62\u7ED5\u8FC7 omo ingress \u76F4\u5199 .omo (\u9632\u72B6\
+      \u6001\u7ADE\u6001\u6B7B\u9501, \u62A5\u544A\u503A\u52A1\u2460 Critical)"
     check_type: direct_io_gate
     target: .omo/ (omo lint direct-omo-io gate)
     executor:
@@ -447,16 +459,22 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=direct_io_gate | 代码引用 549 处（如 lib/documents_signals_preflight.py,
-      lib/documents_predictor_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=direct_io_gate | \u4EE3\u7801\
+      \u5F15\u7528 549 \u5904\uFF08\u5982 lib/documents_signals_preflight.py, lib/documents_predictor_preflight.py\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-X4-DOC-SSOT
     dimension: X4
     layer: meta
-    name: 文档 SSOT (markdown 禁硬编码项目元数据, 引用 project-registry)
-    description: markdown 禁硬编码 (包数/版本/Phase/健康分), 引用 docs/project-registry.yaml (bin/ssot/doc-ssot-lint.py
-      扫描)
+    name: "\u6587\u6863 SSOT (markdown \u7981\u786C\u7F16\u7801\u9879\u76EE\u5143\u6570\
+      \u636E, \u5F15\u7528 project-registry)"
+    description: "markdown \u7981\u786C\u7F16\u7801 (\u5305\u6570/\u7248\u672C/Phase/\u5065\
+      \u5EB7\u5206), \u5F15\u7528 docs/project-registry.yaml (bin/ssot/doc-ssot-lint.py\
+      \ \u626B\u63CF)"
     check_type: ssot_pointer
-    target: docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围
+    target: "docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py \u626B\u63CF\u8303\
+      \u56F4"
     forbid_copy_in:
     - AGENTS.md
     - CLAUDE.md
@@ -471,20 +489,26 @@ gac:
     enforcement: advisory
     source_ref: .omo/standards/doc-ssot-contract.md
     owner: governance-team
-    expected: docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py 扫描范围 is the unique
-      source of truth; no markdown or other file may duplicate this value
+    expected: "docs/project-registry.yaml + bin/ssot/doc-ssot-lint.py \u626B\u63CF\
+      \u8303\u56F4 is the unique source of truth; no markdown or other file may duplicate\
+      \ this value"
     remediation: Remove duplicated value from markdown; reference the SSOT file instead
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 1283 处（如 .githooks/pre-commit,
-      bin/sync-submodules.sh）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=ssot_pointer | \u4EE3\u7801\
+      \u5F15\u7528 1283 \u5904\uFF08\u5982 .githooks/pre-commit, bin/sync-submodules.sh\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-L2-SURFACES-INTEGRITY
     dimension: X4
     layer: L2
-    name: governance surfaces 面定义完整 (state/kernel/ingress plane)
-    description: omo-governance-surfaces.yaml 面定义权威 (plane 资产归属), GaC 引用不复制; omo governance
-      surfaces 校验完整
+    name: "governance surfaces \u9762\u5B9A\u4E49\u5B8C\u6574 (state/kernel/ingress\
+      \ plane)"
+    description: "omo-governance-surfaces.yaml \u9762\u5B9A\u4E49\u6743\u5A01 (plane\
+      \ \u8D44\u4EA7\u5F52\u5C5E), GaC \u5F15\u7528\u4E0D\u590D\u5236; omo governance\
+      \ surfaces \u6821\u9A8C\u5B8C\u6574"
     check_type: ssot_pointer
     target: .omo/_truth/registry/omo-governance-surfaces.yaml::governance_stack
     executor:
@@ -504,13 +528,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-16'
-    justification: '[ADR-0431 D2] CR-L2-SURFACES-INTEGRITY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-L2-SURFACES-INTEGRITY \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-L0-PROTOCOLS-SSOT
     dimension: X4
     layer: L0
-    name: protocols 注册表 SSOT (端口/vault/x-axis 禁硬编码)
-    description: protocols/{port,vault-paths,x-axis}-registry.yaml 协议层 SSOT, markdown/代码禁硬编码端口号;
-      scripts/check-vault-paths.py CI 校验
+    name: "protocols \u6CE8\u518C\u8868 SSOT (\u7AEF\u53E3/vault/x-axis \u7981\u786C\
+      \u7F16\u7801)"
+    description: "protocols/{port,vault-paths,x-axis}-registry.yaml \u534F\u8BAE\u5C42\
+      \ SSOT, markdown/\u4EE3\u7801\u7981\u786C\u7F16\u7801\u7AEF\u53E3\u53F7; scripts/check-vault-paths.py\
+      \ CI \u6821\u9A8C"
     check_type: ssot_pointer
     target: protocols/port-registry.yaml + vault-paths.yaml + x-axis-registry.yaml
     forbid_copy_in:
@@ -533,16 +560,23 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=ssot_pointer | 代码引用 67 处（如 lib/documents_learning_control_plane.py,
-      .github/workflows/mof-update.yml）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=ssot_pointer | \u4EE3\u7801\
+      \u5F15\u7528 67 \u5904\uFF08\u5982 lib/documents_learning_control_plane.py,\
+      \ .github/workflows/mof-update.yml\uFF09| history fire=0\uFF08drift/ssot \u578B\
+      \u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\u6027\u6307\u6807\uFF09\u2014\u2014\
+      \u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\u89C4\u5219"
   - id: CR-X2-GAC-BOOTSTRAP
     dimension: X2
     layer: meta
-    name: GaC 自举递归 (工具活/indexed 完整/exec 有效/schema 自洽)
-    description: 'GaC 治一切, GaC 自己也要被治 (NORTH-STAR 元治理递归); bin/gac/gac-bootstrap.py
-      检测 4 层: 工具活/死 + indexed source_ref 完整 + executor 执行有效 + schema 自洽'
+    name: "GaC \u81EA\u4E3E\u9012\u5F52 (\u5DE5\u5177\u6D3B/indexed \u5B8C\u6574/exec\
+      \ \u6709\u6548/schema \u81EA\u6D3D)"
+    description: "GaC \u6CBB\u4E00\u5207, GaC \u81EA\u5DF1\u4E5F\u8981\u88AB\u6CBB\
+      \ (NORTH-STAR \u5143\u6CBB\u7406\u9012\u5F52); bin/gac/gac-bootstrap.py \u68C0\
+      \u6D4B 4 \u5C42: \u5DE5\u5177\u6D3B/\u6B7B + indexed source_ref \u5B8C\u6574\
+      \ + executor \u6267\u884C\u6709\u6548 + schema \u81EA\u6D3D"
     check_type: drift_audit
-    target: bin/gac/gac-bootstrap.py (GaC 自身完整性自检)
+    target: "bin/gac/gac-bootstrap.py (GaC \u81EA\u8EAB\u5B8C\u6574\u6027\u81EA\u68C0\
+      )"
     executor:
     - ci_gate
     - radar_cron
@@ -558,17 +592,24 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=drift_audit | 代码引用 1103 处（如 lib/documents_signals_preflight.py,
-      lib/monthly_healthcheck.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=drift_audit | \u4EE3\u7801\u5F15\
+      \u7528 1103 \u5904\uFF08\u5982 lib/documents_signals_preflight.py, lib/monthly_healthcheck.py\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-X2-GOVERNANCE-SEMANTIC-GATE
     dimension: X2
     layer: meta
-    name: 治理语义门禁统一契约
-    description: '防声明/执行语义错位: 本地 gate 不只看 exit code, 还消费 gac-bootstrap/gac-executor/gac-mof-validate/mof-schema/adr-coverage/AGCP/package
-      的 JSON ok 字段; release 模式硬挡 active runs 和 release package 未决. PR #17 落地工具 (bin/gac/governance-semantic-gate.py),
-      M1 实例同步派生, 但 registry SSOT 漏登记 — 本 commit 补.'
+    name: "\u6CBB\u7406\u8BED\u4E49\u95E8\u7981\u7EDF\u4E00\u5951\u7EA6"
+    description: "\u9632\u58F0\u660E/\u6267\u884C\u8BED\u4E49\u9519\u4F4D: \u672C\u5730\
+      \ gate \u4E0D\u53EA\u770B exit code, \u8FD8\u6D88\u8D39 gac-bootstrap/gac-executor/gac-mof-validate/mof-schema/adr-coverage/AGCP/package\
+      \ \u7684 JSON ok \u5B57\u6BB5; release \u6A21\u5F0F\u786C\u6321 active runs\
+      \ \u548C release package \u672A\u51B3. PR #17 \u843D\u5730\u5DE5\u5177 (bin/gac/governance-semantic-gate.py),\
+      \ M1 \u5B9E\u4F8B\u540C\u6B65\u6D3E\u751F, \u4F46 registry SSOT \u6F0F\u767B\
+      \u8BB0 \u2014 \u672C commit \u8865."
     check_type: schema_integrity
-    target: bin/gac/governance-semantic-gate.py (统一消费治理工具 JSON 语义)
+    target: "bin/gac/governance-semantic-gate.py (\u7EDF\u4E00\u6D88\u8D39\u6CBB\u7406\
+      \u5DE5\u5177 JSON \u8BED\u4E49)"
     executor:
     - ci_gate
     - gac_local_gate
@@ -584,18 +625,27 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-29'
-    justification: '[v10 评审 keep] check_type=schema_integrity | 代码引用 1148 处（如 lib/documents_signals_preflight.py,
-      lib/documents_kos_preflight.py）| history fire=0（drift/ssot 型检查，fire 非其活性指标）——活跃规则，非死规则'
+    justification: "[v10 \u8BC4\u5BA1 keep] check_type=schema_integrity | \u4EE3\u7801\
+      \u5F15\u7528 1148 \u5904\uFF08\u5982 lib/documents_signals_preflight.py, lib/documents_kos_preflight.py\uFF09\
+      | history fire=0\uFF08drift/ssot \u578B\u68C0\u67E5\uFF0Cfire \u975E\u5176\u6D3B\
+      \u6027\u6307\u6807\uFF09\u2014\u2014\u6D3B\u8DC3\u89C4\u5219\uFF0C\u975E\u6B7B\
+      \u89C4\u5219"
   - id: CR-X1-GOD-MODULE-LIMIT
     dimension: X1
     layer: L2
-    name: god-module 文件行数上限 (新代码 > 1500L 阻塞)
-    description: '防 god module 漂移: 当前已知 7 文件 > 1500L (gbrain 重灾区) + 51 文件 > 800L,
-      大多数是历史累积. 新代码不许引入 > 1500L 文件 (P0 audit 2026-07-02). 实现: bin/ssot/check-god-module.py
-      扩展 --strict 模式, 新加文件 > 1500L 返回 exit 1. 已有 god module 走 ADR-0115 渐进拆分 (单仓 /
-      跨仓分别由对应模块 owner 实施)'
+    name: "god-module \u6587\u4EF6\u884C\u6570\u4E0A\u9650 (\u65B0\u4EE3\u7801 > 1500L\
+      \ \u963B\u585E)"
+    description: "\u9632 god module \u6F02\u79FB: \u5F53\u524D\u5DF2\u77E5 7 \u6587\
+      \u4EF6 > 1500L (gbrain \u91CD\u707E\u533A) + 51 \u6587\u4EF6 > 800L, \u5927\u591A\
+      \u6570\u662F\u5386\u53F2\u7D2F\u79EF. \u65B0\u4EE3\u7801\u4E0D\u8BB8\u5F15\u5165\
+      \ > 1500L \u6587\u4EF6 (P0 audit 2026-07-02). \u5B9E\u73B0: bin/ssot/check-god-module.py\
+      \ \u6269\u5C55 --strict \u6A21\u5F0F, \u65B0\u52A0\u6587\u4EF6 > 1500L \u8FD4\
+      \u56DE exit 1. \u5DF2\u6709 god module \u8D70 ADR-0115 \u6E10\u8FDB\u62C6\u5206\
+      \ (\u5355\u4ED3 / \u8DE8\u4ED3\u5206\u522B\u7531\u5BF9\u5E94\u6A21\u5757 owner\
+      \ \u5B9E\u65BD)"
     check_type: god_module
-    target: bin/ssot/check-god-module.py --strict (新文件 > 1500L 阻塞, 已有文件仅 warn)
+    target: "bin/ssot/check-god-module.py --strict (\u65B0\u6587\u4EF6 > 1500L \u963B\
+      \u585E, \u5DF2\u6709\u6587\u4EF6\u4EC5 warn)"
     executor:
     - ci_gate
     - radar_cron
@@ -611,14 +661,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-27'
-    justification: '[ADR-0431 D2] CR-X1-GOD-MODULE-LIMIT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X1-GOD-MODULE-LIMIT \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-L0-MATRIX-PORT-CONSISTENCY
     dimension: X4
     layer: meta
-    name: matrix.yaml port 与 port-registry.yaml 一致性
-    description: '防 SSOT 漂移: matrix.yaml 中配了 port 的服务, port 必须在 port-registry.yaml
-      注册; stdio/scheduled 类型不应配 port (除非有 health_url). 实现: bin/ssot/matrix-consistency-lint.py
-      R2/R3'
+    name: "matrix.yaml port \u4E0E port-registry.yaml \u4E00\u81F4\u6027"
+    description: "\u9632 SSOT \u6F02\u79FB: matrix.yaml \u4E2D\u914D\u4E86 port \u7684\
+      \u670D\u52A1, port \u5FC5\u987B\u5728 port-registry.yaml \u6CE8\u518C; stdio/scheduled\
+      \ \u7C7B\u578B\u4E0D\u5E94\u914D port (\u9664\u975E\u6709 health_url). \u5B9E\
+      \u73B0: bin/ssot/matrix-consistency-lint.py R2/R3"
     check_type: ssot_lint
     target: ~/runtime/matrix.yaml + protocols/port-registry.yaml
     executor:
@@ -636,16 +688,19 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-17'
-    justification: '[ADR-0431 D2] CR-L0-MATRIX-PORT-CONSISTENCY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-L0-MATRIX-PORT-CONSISTENCY \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-L0-SSOT-PATH-NORM
     dimension: X4
     layer: meta
-    name: SSOT 路径与 broker 写入路径一致
-    description: '防 P71 Class A (路径错位): SSOT 声明路径必须与 broker 实际写入路径一致. 案例: dependency-baseline
-      从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 实现: bin/gac/governance-convergence-lint.py
-      --rule ssot-path-norm'
+    name: "SSOT \u8DEF\u5F84\u4E0E broker \u5199\u5165\u8DEF\u5F84\u4E00\u81F4"
+    description: "\u9632 P71 Class A (\u8DEF\u5F84\u9519\u4F4D): SSOT \u58F0\u660E\
+      \u8DEF\u5F84\u5FC5\u987B\u4E0E broker \u5B9E\u9645\u5199\u5165\u8DEF\u5F84\u4E00\
+      \u81F4. \u6848\u4F8B: dependency-baseline \u4ECE .omo/ \u8FC1\u5230 runtime/omo/\
+      \ (gitignored) \u5BFC\u81F4 CI \u62FF\u4E0D\u5230. \u5B9E\u73B0: bin/gac/governance-convergence-lint.py\
+      \ --rule ssot-path-norm"
     check_type: ssot_lint
-    target: .omo/_truth/ + broker 写入路径
+    target: ".omo/_truth/ + broker \u5199\u5165\u8DEF\u5F84"
     executor:
     - ci_gate
     - radar_cron
@@ -661,12 +716,14 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-29'
-    justification: '[ADR-0431 D2] CR-L0-SSOT-PATH-NORM — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-L0-SSOT-PATH-NORM \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-TEST-COVERAGE
     dimension: X3
     layer: L2
-    name: 测试覆盖检查
-    description: '每个非归档 kairon 包至少 1 个 test_*.py (omo_audit 检查 #2)'
+    name: "\u6D4B\u8BD5\u8986\u76D6\u68C0\u67E5"
+    description: "\u6BCF\u4E2A\u975E\u5F52\u6863 kairon \u5305\u81F3\u5C11 1 \u4E2A\
+      \ test_*.py (omo_audit \u68C0\u67E5 #2)"
     check_type: test_coverage
     target: projects/knowledge/kairon/packages/*/tests/
     executor:
@@ -684,12 +741,14 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-30'
-    justification: '[ADR-0431 D2] CR-X4-TEST-COVERAGE — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-TEST-COVERAGE \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-ADR-LINKS
     dimension: X3
     layer: L2
-    name: ADR 链接完整性
-    description: 'ADR INDEX.md 引用的所有 ADR 文件必须存在 (omo_audit 检查 #4)'
+    name: "ADR \u94FE\u63A5\u5B8C\u6574\u6027"
+    description: "ADR INDEX.md \u5F15\u7528\u7684\u6240\u6709 ADR \u6587\u4EF6\u5FC5\
+      \u987B\u5B58\u5728 (omo_audit \u68C0\u67E5 #4)"
     check_type: doc_lifecycle
     target: .omo/_knowledge/decisions/
     executor:
@@ -707,12 +766,15 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-25'
-    justification: '[ADR-0431 D2] CR-X4-ADR-LINKS — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-ADR-LINKS \u2014 \u5F85\u8865\u5B58\u5728\u7406\
+      \u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-L4-DOMAIN-REGISTRY-FRESHNESS
     dimension: X2
     layer: L4
-    name: L4 域注册表新鲜度
-    description: 'L4 DomainRegistry 新鲜度, 防 stale 域配置 (治审计 D5: L4 整层 0 GaC 规则盲区, 打破完全无约束)'
+    name: "L4 \u57DF\u6CE8\u518C\u8868\u65B0\u9C9C\u5EA6"
+    description: "L4 DomainRegistry \u65B0\u9C9C\u5EA6, \u9632 stale \u57DF\u914D\u7F6E\
+      \ (\u6CBB\u5BA1\u8BA1 D5: L4 \u6574\u5C42 0 GaC \u89C4\u5219\u76F2\u533A, \u6253\
+      \u7834\u5B8C\u5168\u65E0\u7EA6\u675F)"
     check_type: freshness
     target: projects/l4-kernel/src/l4_kernel/registry.py (DomainRegistry)
     executor:
@@ -730,7 +792,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-22'
-    justification: '[ADR-0431 D2] CR-L4-DOMAIN-REGISTRY-FRESHNESS — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-L4-DOMAIN-REGISTRY-FRESHNESS \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-MOF-CAPABILITIES-DRIFT
     relates_to:
     - CR-X4-METAOS-REGISTRY-DRIFT
@@ -758,7 +821,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-20'
-    justification: '[ADR-0431 D2] CR-X4-MOF-CAPABILITIES-DRIFT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-MOF-CAPABILITIES-DRIFT \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-DOC-CLAIMS
     relates_to:
     - CR-X4-MOF-CAPABILITIES-DRIFT
@@ -786,12 +850,14 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-04'
-    justification: '[ADR-0431 D2] CR-X4-DOC-CLAIMS — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-DOC-CLAIMS \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-M4-BOOTSTRAP-REFLEX
     dimension: X1
     layer: meta
-    name: M4 自反校验门禁 (5-check)
-    description: M4 5-check 自反校验:check_1(m3)/check_2(m2)/check_3(m2-m3锚)/check_4(m3-meta)/check_5(M2BaseSchema).覆盖schema:constraint_l0.yaml/m2_base_schema.yaml/m3-meta.yaml/mof_driven.py
+    name: "M4 \u81EA\u53CD\u6821\u9A8C\u95E8\u7981 (5-check)"
+    description: "M4 5-check \u81EA\u53CD\u6821\u9A8C:check_1(m3)/check_2(m2)/check_3(m2-m3\u951A\
+      )/check_4(m3-meta)/check_5(M2BaseSchema).\u8986\u76D6schema:constraint_l0.yaml/m2_base_schema.yaml/m3-meta.yaml/mof_driven.py"
     check_type: audit_chain
     target: projects/ecos/src/ecos/ssot/mof/
     source_ref: bin/mof/mof-bootstrap.py::all
@@ -810,12 +876,14 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-06'
-    justification: '[ADR-0431 D2] CR-M4-BOOTSTRAP-REFLEX — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-M4-BOOTSTRAP-REFLEX \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-M4-SUBMODULE-HYGIENE
     dimension: X1
     layer: meta
-    name: 子模块卫生守门
-    description: 检测3类:submodule-dirty/tracked-derived/pointer-stale.每周cron.
+    name: "\u5B50\u6A21\u5757\u536B\u751F\u5B88\u95E8"
+    description: "\u68C0\u6D4B3\u7C7B:submodule-dirty/tracked-derived/pointer-stale.\u6BCF\
+      \u5468cron."
     check_type: audit_chain
     target: .gitignore
     source_ref: bin/ssot/check-submodule-hygiene.py::strict
@@ -834,12 +902,14 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-24'
-    justification: '[ADR-0431 D2] CR-M4-SUBMODULE-HYGIENE — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-M4-SUBMODULE-HYGIENE \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-M4-MCPTOOL-INTEGRITY
     dimension: X4
     layer: L0
-    name: MCPTOOL 数据完整性守门
-    description: MCPTOOL单工具yaml校验tool_name+server非空.集合yaml跳过(ADR-0145).
+    name: "MCPTOOL \u6570\u636E\u5B8C\u6574\u6027\u5B88\u95E8"
+    description: "MCPTOOL\u5355\u5DE5\u5177yaml\u6821\u9A8Ctool_name+server\u975E\u7A7A\
+      .\u96C6\u5408yaml\u8DF3\u8FC7(ADR-0145)."
     check_type: consistency_drift
     target: projects/ecos/src/ecos/ssot/mof/m1/mcptool/
     source_ref: bin/gac/mcp-tool-data-complete.py
@@ -857,18 +927,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-21'
-    justification: '[ADR-0431 D2] CR-M4-MCPTOOL-INTEGRITY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-M4-MCPTOOL-INTEGRITY \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-FOUNDRY-MONITOR
     dimension: X2
     layer: meta
-    name: Knowledge Foundry cron 监控
-    description: 'Knowledge Foundry 9-cron deck 每 6h 跑一次, run ledger 持久化 (runtime/omo/_delivery/foundry/).
-
-      threshold: 9 deck 中 ≥ 7/9 (80%) ok. 跨 deck fail 必须写 FAIL-<run-id>.yaml.
-
-      实施: bin/gac/knowledge-foundry-cron.py
-
-      '
+    name: "Knowledge Foundry cron \u76D1\u63A7"
+    description: "Knowledge Foundry 9-cron deck \u6BCF 6h \u8DD1\u4E00\u6B21, run\
+      \ ledger \u6301\u4E45\u5316 (runtime/omo/_delivery/foundry/).\nthreshold: 9\
+      \ deck \u4E2D \u2265 7/9 (80%) ok. \u8DE8 deck fail \u5FC5\u987B\u5199 FAIL-<run-id>.yaml.\n\
+      \u5B9E\u65BD: bin/gac/knowledge-foundry-cron.py\n"
     check_type: drift_audit
     target: bin/gac/knowledge-foundry-cron.py
     source_ref: bin/gac/knowledge-foundry-cron.py::main
@@ -888,21 +956,18 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-15'
-    justification: '[ADR-0431 D2] CR-FOUNDRY-MONITOR — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-FOUNDRY-MONITOR \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-COMMIT-LLM-ASSIST
     dimension: X2
     layer: meta
-    name: LLM-assisted commit (advisory 硬门)
-    description: 'LLM 永远不能 auto-commit. 必须通过 bin/gac/commit-assist.py, 必须 write .commit-suggestion
-      (侧车)
-
-      然后用户显式 git commit -F .commit-suggestion 接受.
-
-      LLM 3-tier: aetherforge → ollama → heuristic (任一可用即可).
-
-      网关失败 fallback: --no-llm 硬门 (永不阻塞 PR).
-
-      '
+    name: "LLM-assisted commit (advisory \u786C\u95E8)"
+    description: "LLM \u6C38\u8FDC\u4E0D\u80FD auto-commit. \u5FC5\u987B\u901A\u8FC7\
+      \ bin/gac/commit-assist.py, \u5FC5\u987B write .commit-suggestion (\u4FA7\u8F66\
+      )\n\u7136\u540E\u7528\u6237\u663E\u5F0F git commit -F .commit-suggestion \u63A5\
+      \u53D7.\nLLM 3-tier: aetherforge \u2192 ollama \u2192 heuristic (\u4EFB\u4E00\
+      \u53EF\u7528\u5373\u53EF).\n\u7F51\u5173\u5931\u8D25 fallback: --no-llm \u786C\
+      \u95E8 (\u6C38\u4E0D\u963B\u585E PR).\n"
     check_type: drift_audit
     target: bin/gac/commit-assist.py
     source_ref: bin/gac/commit-assist.py::query_llm
@@ -921,21 +986,18 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-07'
-    justification: '[ADR-0431 D2] CR-COMMIT-LLM-ASSIST — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-COMMIT-LLM-ASSIST \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-CROSS-REPO-CONSISTENT
     dimension: X4
     layer: meta
-    name: 跨仓 BOS URI / port-registry 一致性 (hard, P77 Phase 3 治本后)
-    description: '对比 projects/agora/etc/bos-services.yaml (BOS URI SSOT) 与 projects/*/src/
-      中
-
-      bos:// 引用. unregistered (referenced but not in SSOT) 应 = 0 (Phase 3 治本, hard).
-
-      同步检查 ecos port-registry 与各仓 port 声明.
-
-      实施: bin/ssot/check-cross-repo-consistency.py
-
-      '
+    name: "\u8DE8\u4ED3 BOS URI / port-registry \u4E00\u81F4\u6027 (hard, P77 Phase\
+      \ 3 \u6CBB\u672C\u540E)"
+    description: "\u5BF9\u6BD4 projects/agora/etc/bos-services.yaml (BOS URI SSOT)\
+      \ \u4E0E projects/*/src/ \u4E2D\nbos:// \u5F15\u7528. unregistered (referenced\
+      \ but not in SSOT) \u5E94 = 0 (Phase 3 \u6CBB\u672C, hard).\n\u540C\u6B65\u68C0\
+      \u67E5 ecos port-registry \u4E0E\u5404\u4ED3 port \u58F0\u660E.\n\u5B9E\u65BD\
+      : bin/ssot/check-cross-repo-consistency.py\n"
     check_type: consistency_drift
     target: bin/ssot/check-cross-repo-consistency.py
     source_ref: bin/ssot/check-cross-repo-consistency.py::main
@@ -955,21 +1017,20 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-13'
-    justification: '[ADR-0431 D2] CR-CROSS-REPO-CONSISTENT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-CROSS-REPO-CONSISTENT \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-PRINCIPLE-FOLLOWED
     dimension: X1
     layer: meta
-    name: P76 沉淀原则 catalog 引用
-    description: '任意 phase 主交付的 ADR 必须含 § 2 沉淀原则段并引用 .omo/standards/p76-principles.md.
-
-      这是原则形式化硬门 — 防 ADR 缺失原则说明 (修真修真反模式).
-
-      实施: docs/SPEC # 6.
-
-      '
+    name: "P76 \u6C89\u6DC0\u539F\u5219 catalog \u5F15\u7528"
+    description: "\u4EFB\u610F phase \u4E3B\u4EA4\u4ED8\u7684 ADR \u5FC5\u987B\u542B\
+      \ \xA7 2 \u6C89\u6DC0\u539F\u5219\u6BB5\u5E76\u5F15\u7528 .omo/standards/p76-principles.md.\n\
+      \u8FD9\u662F\u539F\u5219\u5F62\u5F0F\u5316\u786C\u95E8 \u2014 \u9632 ADR \u7F3A\
+      \u5931\u539F\u5219\u8BF4\u660E (\u4FEE\u771F\u4FEE\u771F\u53CD\u6A21\u5F0F).\n\
+      \u5B9E\u65BD: docs/SPEC # 6.\n"
     check_type: ssot_pointer
     target: .omo/standards/p76-principles.md
-    source_ref: .omo/standards/p76-principles.md::§ 1-5
+    source_ref: ".omo/standards/p76-principles.md::\xA7 1-5"
     executor:
     - omo_audit
     - gac_local_gate
@@ -986,16 +1047,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-04'
-    justification: '[ADR-0431 D2] CR-PRINCIPLE-FOLLOWED — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-PRINCIPLE-FOLLOWED \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-EVIDENCE-DECLARED
     dimension: X2
     layer: meta
-    name: ADR closeout 引用 ≥1 evidence path
-    description: 'ADR closeout 必须有真 evidence path. 防 ophist 反模式 (修真修真原则 P76-7-4).
-
-      含 evidence_required 字段的 task close 必须引 evidence file path.
-
-      '
+    name: "ADR closeout \u5F15\u7528 \u22651 evidence path"
+    description: "ADR closeout \u5FC5\u987B\u6709\u771F evidence path. \u9632 ophist\
+      \ \u53CD\u6A21\u5F0F (\u4FEE\u771F\u4FEE\u771F\u539F\u5219 P76-7-4).\n\u542B\
+      \ evidence_required \u5B57\u6BB5\u7684 task close \u5FC5\u987B\u5F15 evidence\
+      \ file path.\n"
     check_type: drift_audit
     target: omo task done --evidence-path
     source_ref: .omo/standards/p76-principles.md::P76-7-4
@@ -1013,24 +1074,18 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-10'
-    justification: '[ADR-0431 D2] CR-EVIDENCE-DECLARED — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-EVIDENCE-DECLARED \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-COMMIT-ASSIST-E2E
     dimension: X4
     layer: meta
-    name: commit-assist E2E 测试 (19/19, P77-6-1 e2e-test-for-advisory-tool)
-    description: 'bin/commit-assist.py 的 19 E2E 测试必须全通过 (P77-6-1).
-
-      测试覆盖: heuristic_subject (8), clean_suggestion (3),
-
-      72-char truncation (2), tier fallback (2), integration (2),
-
-      CONVENTIONAL_TYPES (1), ctype format (1).
-
-      修真修真反模式: advisory tool 也必须测试, 防沉默失效.
-
-      实施: tests/test_commit_assist_e2e.py
-
-      '
+    name: "commit-assist E2E \u6D4B\u8BD5 (19/19, P77-6-1 e2e-test-for-advisory-tool)"
+    description: "bin/commit-assist.py \u7684 19 E2E \u6D4B\u8BD5\u5FC5\u987B\u5168\
+      \u901A\u8FC7 (P77-6-1).\n\u6D4B\u8BD5\u8986\u76D6: heuristic_subject (8), clean_suggestion\
+      \ (3),\n72-char truncation (2), tier fallback (2), integration (2),\nCONVENTIONAL_TYPES\
+      \ (1), ctype format (1).\n\u4FEE\u771F\u4FEE\u771F\u53CD\u6A21\u5F0F: advisory\
+      \ tool \u4E5F\u5FC5\u987B\u6D4B\u8BD5, \u9632\u6C89\u9ED8\u5931\u6548.\n\u5B9E\
+      \u65BD: tests/test_commit_assist_e2e.py\n"
     check_type: consistency_drift
     target: tests/test_commit_assist_e2e.py
     source_ref: tests/test_commit_assist_e2e.py::main
@@ -1048,14 +1103,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-08'
-    justification: '[ADR-0431 D2] CR-COMMIT-ASSIST-E2E — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-COMMIT-ASSIST-E2E \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-SEC-YAML-BYPASS
     dimension: X1
     layer: L2
-    name: yaml safe_load 强制 (禁止 yaml.load)
-    description: 禁止 yaml.load (不安全), 必 safe_load/safe_load_all. memory frontmatter-safe-load-all.
+    name: "yaml safe_load \u5F3A\u5236 (\u7981\u6B62 yaml.load)"
+    description: "\u7981\u6B62 yaml.load (\u4E0D\u5B89\u5168), \u5FC5 safe_load/safe_load_all.\
+      \ memory frontmatter-safe-load-all."
     check_type: yaml_bypass
-    target: Python yaml.load 调用 (声明面; 执行面 hook 内置 PR#190)
+    target: "Python yaml.load \u8C03\u7528 (\u58F0\u660E\u9762; \u6267\u884C\u9762\
+      \ hook \u5185\u7F6E PR#190)"
     executor:
     - hook_pre_edit
     - ci_gate
@@ -1072,14 +1130,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-22'
-    justification: '[ADR-0431 D2] CR-SEC-YAML-BYPASS — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-SEC-YAML-BYPASS \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-SEC-SENSITIVE-WRITE
     dimension: X1
     layer: L2
-    name: 敏感信息硬编码禁止
-    description: 禁止硬编码 password/token/secret/api_key (用 env var/vault).
+    name: "\u654F\u611F\u4FE1\u606F\u786C\u7F16\u7801\u7981\u6B62"
+    description: "\u7981\u6B62\u786C\u7F16\u7801 password/token/secret/api_key (\u7528\
+      \ env var/vault)."
     check_type: sensitive_write
-    target: Python 源码硬编码密钥 (声明面; 执行面 hook 内置 PR#190)
+    target: "Python \u6E90\u7801\u786C\u7F16\u7801\u5BC6\u94A5 (\u58F0\u660E\u9762\
+      ; \u6267\u884C\u9762 hook \u5185\u7F6E PR#190)"
     executor:
     - hook_pre_edit
     - ci_gate
@@ -1096,14 +1157,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-09'
-    justification: '[ADR-0431 D2] CR-SEC-SENSITIVE-WRITE — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-SEC-SENSITIVE-WRITE \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X2-GOD-MODULE-EDIT
     dimension: X1
     layer: L2
-    name: God Module 编辑门禁 (>800L)
-    description: 编辑 god module (文件超 800L) 时警告, 拆分. memory check-god-module-mechanism.
+    name: "God Module \u7F16\u8F91\u95E8\u7981 (>800L)"
+    description: "\u7F16\u8F91 god module (\u6587\u4EF6\u8D85 800L) \u65F6\u8B66\u544A\
+      , \u62C6\u5206. memory check-god-module-mechanism."
     check_type: god_module
-    target: Python 文件行数 (声明面; 执行面 hook 内置 PR#193)
+    target: "Python \u6587\u4EF6\u884C\u6570 (\u58F0\u660E\u9762; \u6267\u884C\u9762\
+      \ hook \u5185\u7F6E PR#193)"
     executor:
     - hook_pre_edit
     - ci_gate
@@ -1120,14 +1184,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-05'
-    justification: '[ADR-0431 D2] CR-X2-GOD-MODULE-EDIT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X2-GOD-MODULE-EDIT \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-SEC-EVAL-EXEC
     dimension: X1
     layer: L2
-    name: eval/exec 禁止 (用 ast.literal_eval)
-    description: 禁止 eval()/exec() (不安全). 用 ast.literal_eval 或专门解析.
+    name: "eval/exec \u7981\u6B62 (\u7528 ast.literal_eval)"
+    description: "\u7981\u6B62 eval()/exec() (\u4E0D\u5B89\u5168). \u7528 ast.literal_eval\
+      \ \u6216\u4E13\u95E8\u89E3\u6790."
     check_type: eval_exec
-    target: Python eval/exec 调用 (声明面; 执行面 hook 内置 PR#196)
+    target: "Python eval/exec \u8C03\u7528 (\u58F0\u660E\u9762; \u6267\u884C\u9762\
+      \ hook \u5185\u7F6E PR#196)"
     executor:
     - hook_pre_edit
     - ci_gate
@@ -1144,14 +1211,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-03'
-    justification: '[ADR-0431 D2] CR-SEC-EVAL-EXEC — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-SEC-EVAL-EXEC \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-PY-MUTABLE-DEFAULT
     dimension: X1
     layer: L2
-    name: 函数默认参数禁用 mutable
-    description: 禁止 def f(x=[])/dict()/set() 默认参数 (Python 高频坑). 用 None+内部创建.
+    name: "\u51FD\u6570\u9ED8\u8BA4\u53C2\u6570\u7981\u7528 mutable"
+    description: "\u7981\u6B62 def f(x=[])/dict()/set() \u9ED8\u8BA4\u53C2\u6570 (Python\
+      \ \u9AD8\u9891\u5751). \u7528 None+\u5185\u90E8\u521B\u5EFA."
     check_type: mutable_default
-    target: Python 函数默认参数 (声明面; 执行面 hook 内置 PR#196)
+    target: "Python \u51FD\u6570\u9ED8\u8BA4\u53C2\u6570 (\u58F0\u660E\u9762; \u6267\
+      \u884C\u9762 hook \u5185\u7F6E PR#196)"
     executor:
     - hook_pre_edit
     - ci_gate
@@ -1168,7 +1238,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-26'
-    justification: '[ADR-0431 D2] CR-PY-MUTABLE-DEFAULT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-PY-MUTABLE-DEFAULT \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-PRINCIPLE-ENFORCEMENT
     relates_to:
     - CR-PR-DESCRIPTION-NON-EMPTY
@@ -1179,9 +1250,10 @@ gac:
     - CR-X1-EXTERNAL-AGENT-AUDIT
     dimension: X1
     layer: meta
-    name: 原则执行化
-    description: 'governance audit 每月 dry-run, 验证工程原则是否被工具/流程执行. 实现: bin/gac/check-principle-enforcement.py
-      (gac-gate CI advisory)'
+    name: "\u539F\u5219\u6267\u884C\u5316"
+    description: "governance audit \u6BCF\u6708 dry-run, \u9A8C\u8BC1\u5DE5\u7A0B\u539F\
+      \u5219\u662F\u5426\u88AB\u5DE5\u5177/\u6D41\u7A0B\u6267\u884C. \u5B9E\u73B0\
+      : bin/gac/check-principle-enforcement.py (gac-gate CI advisory)"
     check_type: audit_chain
     executor:
     - omo_audit
@@ -1202,13 +1274,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-14'
-    justification: '[ADR-0431 D2] CR-PRINCIPLE-ENFORCEMENT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-PRINCIPLE-ENFORCEMENT \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-SUBMODULE-REWIND
     dimension: X1
     layer: meta
-    name: 子模块指针回退检测
-    description: '检测子模块指针是否被意外回退: 对比 index 当前指针与上一次 commit 的指针, 当前指针 NOT ancestor
-      of 上一次指针 → rewind. 防止 Phase 4 等变更被意外撤销. 实施: bin/gac/check-submodule-rewind.py'
+    name: "\u5B50\u6A21\u5757\u6307\u9488\u56DE\u9000\u68C0\u6D4B"
+    description: "\u68C0\u6D4B\u5B50\u6A21\u5757\u6307\u9488\u662F\u5426\u88AB\u610F\
+      \u5916\u56DE\u9000: \u5BF9\u6BD4 index \u5F53\u524D\u6307\u9488\u4E0E\u4E0A\u4E00\
+      \u6B21 commit \u7684\u6307\u9488, \u5F53\u524D\u6307\u9488 NOT ancestor of \u4E0A\
+      \u4E00\u6B21\u6307\u9488 \u2192 rewind. \u9632\u6B62 Phase 4 \u7B49\u53D8\u66F4\
+      \u88AB\u610F\u5916\u64A4\u9500. \u5B9E\u65BD: bin/gac/check-submodule-rewind.py"
     check_type: audit_chain
     target: projects/*/ (submodule gitlink pointer)
     source_ref: bin/gac/check-submodule-rewind.py::main
@@ -1226,19 +1302,22 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-24'
-    justification: '[ADR-0431 D2] CR-SUBMODULE-REWIND — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-SUBMODULE-REWIND \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-P76-6-5-LLM-DEFERRAL
     dimension: X1
     layer: meta
-    name: LLM commit 推迟
-    description: LLM-assisted commit 推到 Phase 7+. 对应 P76-6-5 (vit-via-LLM-deferral)
+    name: "LLM commit \u63A8\u8FDF"
+    description: "LLM-assisted commit \u63A8\u5230 Phase 7+. \u5BF9\u5E94 P76-6-5\
+      \ (vit-via-LLM-deferral)"
     check_type: hygiene_case
     executor:
     - omo_audit
     lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-P76-7-1-LLM-ADVISORY-ONLY,CR-P76-7-2-TIER-GRACEFUL-FALLBACK,CR-COMMIT-LLM-ASSIST
-    superseded_reason: 被 3 条 active LLM 护栏规则取代, LLM 辅助 commit 已落地
+    superseded_reason: "\u88AB 3 \u6761 active LLM \u62A4\u680F\u89C4\u5219\u53D6\u4EE3\
+      , LLM \u8F85\u52A9 commit \u5DF2\u843D\u5730"
     version: 0.1.0
     created_at: 2026-07-08
     adr: ADR-0158
@@ -1249,20 +1328,23 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-01'
-    justification: '[ADR-0431 D2] CR-P76-6-5-LLM-DEFERRAL — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-P76-6-5-LLM-DEFERRAL \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-P77-2-1-PRINCIPLE-FORMALIZATION
     dimension: X1
     layer: meta
-    name: 原则形式化
-    description: 原则形式化保留上下文, 不变成死的 checkbox. 对应 P77-2-1 (principle-formalization-with-context)
+    name: "\u539F\u5219\u5F62\u5F0F\u5316"
+    description: "\u539F\u5219\u5F62\u5F0F\u5316\u4FDD\u7559\u4E0A\u4E0B\u6587, \u4E0D\
+      \u53D8\u6210\u6B7B\u7684 checkbox. \u5BF9\u5E94 P77-2-1 (principle-formalization-with-context)"
     check_type: audit_chain
     executor:
     - omo_audit
     lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-PRINCIPLE-FOLLOWED,CR-PRINCIPLE-ENFORCEMENT
-    superseded_reason: 被 CR-PRINCIPLE-FOLLOWED 和 CR-PRINCIPLE-ENFORCEMENT (active)
-      取代, 原则形式化已通过 ADR §2 引用实现
+    superseded_reason: "\u88AB CR-PRINCIPLE-FOLLOWED \u548C CR-PRINCIPLE-ENFORCEMENT\
+      \ (active) \u53D6\u4EE3, \u539F\u5219\u5F62\u5F0F\u5316\u5DF2\u901A\u8FC7 ADR\
+      \ \xA72 \u5F15\u7528\u5B9E\u73B0"
     version: 0.1.0
     created_at: 2026-07-08
     adr: ADR-0165
@@ -1273,21 +1355,23 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-14'
-    justification: '[ADR-0431 D2] CR-P77-2-1-PRINCIPLE-FORMALIZATION — 待补存在理由 (90
-      天内补齐)'
+    justification: "[ADR-0431 D2] CR-P77-2-1-PRINCIPLE-FORMALIZATION \u2014 \u5F85\
+      \u8865\u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-P77-2-2-CATALOG-SSOT
     dimension: X1
     layer: meta
-    name: 原则 catalog SSOT
-    description: 原则 catalog 是 SSOT, ADR 是 mirror. 对应 P77-2-2 (catalog-SSOT)
+    name: "\u539F\u5219 catalog SSOT"
+    description: "\u539F\u5219 catalog \u662F SSOT, ADR \u662F mirror. \u5BF9\u5E94\
+      \ P77-2-2 (catalog-SSOT)"
     check_type: audit_chain
     executor:
     - omo_audit
     lifecycle: removed
     superseded_at: 2026-08-06
     superseded_by: CR-PRINCIPLE-FOLLOWED
-    superseded_reason: 被 CR-PRINCIPLE-FOLLOWED (active) 取代, 原则 catalog 已通过 .omo/standards/p76-principles.md
-      SSOT 实现
+    superseded_reason: "\u88AB CR-PRINCIPLE-FOLLOWED (active) \u53D6\u4EE3, \u539F\
+      \u5219 catalog \u5DF2\u901A\u8FC7 .omo/standards/p76-principles.md SSOT \u5B9E\
+      \u73B0"
     version: 0.1.0
     created_at: 2026-07-08
     adr: ADR-0165
@@ -1298,7 +1382,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-06'
-    justification: '[ADR-0431 D2] CR-P77-2-2-CATALOG-SSOT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-P77-2-2-CATALOG-SSOT \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-P77-3-2-PREFIX-PATTERN
     relates_to:
     - CR-X4-MOF-CAPABILITIES-DRIFT
@@ -1309,9 +1394,10 @@ gac:
     - CR-X4-MCPTOOL-IMPL-DRIFT
     dimension: X4
     layer: X
-    name: URI 前缀模式
-    description: 'URI 末尾 / 表 routing prefix, 不需具体服务注册. 对应 P77-3-2 (prefix-pattern-allowed).
-      实现: bin/gac/check-uri-prefix-pattern.py (gac-gate CI, advisory)'
+    name: "URI \u524D\u7F00\u6A21\u5F0F"
+    description: "URI \u672B\u5C3E / \u8868 routing prefix, \u4E0D\u9700\u5177\u4F53\
+      \u670D\u52A1\u6CE8\u518C. \u5BF9\u5E94 P77-3-2 (prefix-pattern-allowed). \u5B9E\
+      \u73B0: bin/gac/check-uri-prefix-pattern.py (gac-gate CI, advisory)"
     check_type: consistency_drift
     executor:
     - ci_gate
@@ -1331,16 +1417,18 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-09'
-    justification: '[ADR-0431 D2] CR-P77-3-2-PREFIX-PATTERN — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-P77-3-2-PREFIX-PATTERN \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-P77-6-2-TIER-FALLBACK-TEST
     relates_to:
     - CR-P77-6-3-GATEWAY-STATUS-DOC
     - CR-WORKORDER-SCHEMA
     dimension: X2
     layer: meta
-    name: 层级 fallback 测试
-    description: '每级 fallback 都必须有测试证明不崩溃. 对应 P77-6-2 (tier-test-for-fallback). 实现:
-      bin/gac/check-fallback-test-coverage.py (gac-gate CI, advisory)'
+    name: "\u5C42\u7EA7 fallback \u6D4B\u8BD5"
+    description: "\u6BCF\u7EA7 fallback \u90FD\u5FC5\u987B\u6709\u6D4B\u8BD5\u8BC1\
+      \u660E\u4E0D\u5D29\u6E83. \u5BF9\u5E94 P77-6-2 (tier-test-for-fallback). \u5B9E\
+      \u73B0: bin/gac/check-fallback-test-coverage.py (gac-gate CI, advisory)"
     check_type: schema_integrity
     executor:
     - ci_gate
@@ -1360,16 +1448,18 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-04'
-    justification: '[ADR-0431 D2] CR-P77-6-2-TIER-FALLBACK-TEST — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-P77-6-2-TIER-FALLBACK-TEST \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-P77-6-3-GATEWAY-STATUS-DOC
     relates_to:
     - CR-P77-6-2-TIER-FALLBACK-TEST
     - CR-WORKORDER-SCHEMA
     dimension: X2
     layer: meta
-    name: Gateway 状态文档化
-    description: '外部 LLM gateway 不可达时, 必须文档化不可达状态. 对应 P77-6-3 (gateway-status-documentation).
-      实现: bin/gac/check-gateway-status-doc.py (gac-local-gate)'
+    name: "Gateway \u72B6\u6001\u6587\u6863\u5316"
+    description: "\u5916\u90E8 LLM gateway \u4E0D\u53EF\u8FBE\u65F6, \u5FC5\u987B\u6587\
+      \u6863\u5316\u4E0D\u53EF\u8FBE\u72B6\u6001. \u5BF9\u5E94 P77-6-3 (gateway-status-documentation).\
+      \ \u5B9E\u73B0: bin/gac/check-gateway-status-doc.py (gac-local-gate)"
     check_type: schema_integrity
     executor:
     - omo_audit
@@ -1389,7 +1479,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-10'
-    justification: '[ADR-0431 D2] CR-P77-6-3-GATEWAY-STATUS-DOC — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-P77-6-3-GATEWAY-STATUS-DOC \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-P79-3-FOUNDRY-DECK
     relates_to:
     - CR-PR-DESCRIPTION-NON-EMPTY
@@ -1400,9 +1491,10 @@ gac:
     - CR-X1-EXTERNAL-AGENT-AUDIT
     dimension: X1
     layer: meta
-    name: 治理轴 Foundry Deck
-    description: '每治理轴对应一个 foundry deck. 对应 P79-3 (foundry-deck-per-governance-axis).
-      实现: bin/gac/check-foundry-deck-coverage.py (gac-local-gate)'
+    name: "\u6CBB\u7406\u8F74 Foundry Deck"
+    description: "\u6BCF\u6CBB\u7406\u8F74\u5BF9\u5E94\u4E00\u4E2A foundry deck. \u5BF9\
+      \u5E94 P79-3 (foundry-deck-per-governance-axis). \u5B9E\u73B0: bin/gac/check-foundry-deck-coverage.py\
+      \ (gac-local-gate)"
     check_type: audit_chain
     executor:
     - omo_audit
@@ -1423,7 +1515,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-13'
-    justification: '[ADR-0431 D2] CR-P79-3-FOUNDRY-DECK — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-P79-3-FOUNDRY-DECK \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-P79-4-CATALOG-HEALTH-METRIC
     relates_to:
     - CR-PR-DESCRIPTION-NON-EMPTY
@@ -1434,9 +1527,10 @@ gac:
     - CR-X1-EXTERNAL-AGENT-AUDIT
     dimension: X1
     layer: meta
-    name: Catalog 健康指标
-    description: '原则数和 GaC 规则数作为可观测指标写入 foundry. 对应 P79-4 (catalog-health-metric).
-      实现: bin/gac/check-catalog-health.py (gac-gate CI, advisory)'
+    name: "Catalog \u5065\u5EB7\u6307\u6807"
+    description: "\u539F\u5219\u6570\u548C GaC \u89C4\u5219\u6570\u4F5C\u4E3A\u53EF\
+      \u89C2\u6D4B\u6307\u6807\u5199\u5165 foundry. \u5BF9\u5E94 P79-4 (catalog-health-metric).\
+      \ \u5B9E\u73B0: bin/gac/check-catalog-health.py (gac-gate CI, advisory)"
     check_type: audit_chain
     executor:
     - ci_gate
@@ -1457,13 +1551,15 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-25'
-    justification: '[ADR-0431 D2] CR-P79-4-CATALOG-HEALTH-METRIC — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-P79-4-CATALOG-HEALTH-METRIC \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-RUFF-SCOPE-STABLE
     dimension: X4
     layer: X
-    name: Ruff Scope 稳定
-    description: '防止 X-Plane 项目改变 ruff scope 导致 lint 面漂移. 实现: bin/gac/check-ruff-scope-stable.py
-      (gac-gate CI)'
+    name: "Ruff Scope \u7A33\u5B9A"
+    description: "\u9632\u6B62 X-Plane \u9879\u76EE\u6539\u53D8 ruff scope \u5BFC\u81F4\
+      \ lint \u9762\u6F02\u79FB. \u5B9E\u73B0: bin/gac/check-ruff-scope-stable.py\
+      \ (gac-gate CI)"
     check_type: schema_integrity
     executor:
     - ci_gate
@@ -1482,7 +1578,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-13'
-    justification: '[ADR-0431 D2] CR-RUFF-SCOPE-STABLE — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-RUFF-SCOPE-STABLE \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-L0-CONSTRAINTS-SSOT
     relates_to:
     - CR-X4-CONSISTENCY-SSOT
@@ -1490,11 +1587,12 @@ gac:
     source_ref: projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
     dimension: X4
     layer: L0
-    name: L0 约束集 SSOT (GaC 索引)
-    description: 'L0-constraints.yaml 中所有约束的 GaC 索引. 源文件包含: constraint, protocol_registry,
-      trigger_constraints, opc_cadence_constraints, mof_schema_validate_constraints,
-      c2g_v3_constraints, c2g_v4_constraints, omni_bus_constraints, debt_constraints,
-      governance_closure_constraints 等集合.'
+    name: "L0 \u7EA6\u675F\u96C6 SSOT (GaC \u7D22\u5F15)"
+    description: "L0-constraints.yaml \u4E2D\u6240\u6709\u7EA6\u675F\u7684 GaC \u7D22\
+      \u5F15. \u6E90\u6587\u4EF6\u5305\u542B: constraint, protocol_registry, trigger_constraints,\
+      \ opc_cadence_constraints, mof_schema_validate_constraints, c2g_v3_constraints,\
+      \ c2g_v4_constraints, omni_bus_constraints, debt_constraints, governance_closure_constraints\
+      \ \u7B49\u96C6\u5408."
     check_type: legacy_index
     executor:
     - omo_audit
@@ -1512,7 +1610,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-07'
-    justification: '[ADR-0431 D2] CR-L0-CONSTRAINTS-SSOT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-L0-CONSTRAINTS-SSOT \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X1-POLICIES-SSOT
     relates_to:
     - CR-CI-SURFACE-SSOT
@@ -1520,10 +1619,11 @@ gac:
     source_ref: .omo/_truth/x1-governance-policies.yaml::policies
     dimension: X1
     layer: meta
-    name: X1 治理策略 SSOT (GaC 索引)
-    description: 'x1-governance-policies.yaml 中所有策略的 GaC 索引. 源文件包含: omni_bus_routing,
-      governance_surfaces, direct_mutation_gate, arch_merge_llmgateway, debt_evidence_closure,
-      cross_project_lint_enforce, aud_commit_loop 等策略.'
+    name: "X1 \u6CBB\u7406\u7B56\u7565 SSOT (GaC \u7D22\u5F15)"
+    description: "x1-governance-policies.yaml \u4E2D\u6240\u6709\u7B56\u7565\u7684\
+      \ GaC \u7D22\u5F15. \u6E90\u6587\u4EF6\u5305\u542B: omni_bus_routing, governance_surfaces,\
+      \ direct_mutation_gate, arch_merge_llmgateway, debt_evidence_closure, cross_project_lint_enforce,\
+      \ aud_commit_loop \u7B49\u7B56\u7565."
     check_type: legacy_index
     executor:
     - omo_audit
@@ -1540,17 +1640,19 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-11'
-    justification: '[ADR-0431 D2] CR-X1-POLICIES-SSOT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X1-POLICIES-SSOT \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X2-FRESHNESS-SSOT
     source_type: indexed
     source_ref: .omo/_truth/x2-freshness-rules.yaml::rules
     dimension: X2
     layer: meta
-    name: X2 新鲜度规则 SSOT (GaC 索引)
-    description: 'x2-freshness-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces,
-      evidence_alias, archived_llmgateway, merge_checklist, debt_evidence_integrity,
-      cross_project_lint, mof_version_bump, doc_lifecycle, commit_fatigue, omo_lint_size,
-      gov_dashboard, adr_drift 等规则.'
+    name: "X2 \u65B0\u9C9C\u5EA6\u89C4\u5219 SSOT (GaC \u7D22\u5F15)"
+    description: "x2-freshness-rules.yaml \u4E2D\u6240\u6709\u89C4\u5219\u7684 GaC\
+      \ \u7D22\u5F15. \u6E90\u6587\u4EF6\u5305\u542B: governance_surfaces, evidence_alias,\
+      \ archived_llmgateway, merge_checklist, debt_evidence_integrity, cross_project_lint,\
+      \ mof_version_bump, doc_lifecycle, commit_fatigue, omo_lint_size, gov_dashboard,\
+      \ adr_drift \u7B49\u89C4\u5219."
     check_type: legacy_index
     executor:
     - omo_audit
@@ -1567,7 +1669,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-30'
-    justification: '[ADR-0431 D2] CR-X2-FRESHNESS-SSOT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X2-FRESHNESS-SSOT \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-CONSISTENCY-SSOT
     relates_to:
     - CR-L0-CONSTRAINTS-SSOT
@@ -1575,10 +1678,11 @@ gac:
     source_ref: .omo/_truth/x4-consistency-rules.yaml::rules
     dimension: X4
     layer: meta
-    name: X4 一致性规则 SSOT (GaC 索引)
-    description: 'x4-consistency-rules.yaml 中所有规则的 GaC 索引. 源文件包含: governance_surfaces,
-      llmgateway_archived, p43_closed_loop_ssot, debt_gitignore_boundary, drift_vs_governance
-      等规则.'
+    name: "X4 \u4E00\u81F4\u6027\u89C4\u5219 SSOT (GaC \u7D22\u5F15)"
+    description: "x4-consistency-rules.yaml \u4E2D\u6240\u6709\u89C4\u5219\u7684 GaC\
+      \ \u7D22\u5F15. \u6E90\u6587\u4EF6\u5305\u542B: governance_surfaces, llmgateway_archived,\
+      \ p43_closed_loop_ssot, debt_gitignore_boundary, drift_vs_governance \u7B49\u89C4\
+      \u5219."
     check_type: legacy_index
     executor:
     - mof_validate
@@ -1596,7 +1700,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-15'
-    justification: '[ADR-0431 D2] CR-X4-CONSISTENCY-SSOT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-CONSISTENCY-SSOT \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-MCPTOOL-IMPL-DRIFT
     relates_to:
     - CR-X4-MOF-CAPABILITIES-DRIFT
@@ -1625,7 +1730,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-17'
-    justification: '[ADR-0431 D2] CR-X4-MCPTOOL-IMPL-DRIFT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-MCPTOOL-IMPL-DRIFT \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-SUBMODULE-POINTER-INTEGRITY
     relates_to:
     - CR-P76-7-1-LLM-ADVISORY-ONLY
@@ -1642,10 +1748,11 @@ gac:
     - CR-ADVERSARIAL-EFFECTIVENESS
     dimension: X4
     layer: meta
-    name: 子模块指针完整性
-    description: '子模块指针必须与远程同步: 禁止超前指针 (未推送的 submodule commit), 禁止指针漂移 (submodule
-      commit 被 rebase/drop). 实现: bin/gac/check-submodule-pointer-integrity.py (gac-gate
-      CI)'
+    name: "\u5B50\u6A21\u5757\u6307\u9488\u5B8C\u6574\u6027"
+    description: "\u5B50\u6A21\u5757\u6307\u9488\u5FC5\u987B\u4E0E\u8FDC\u7A0B\u540C\
+      \u6B65: \u7981\u6B62\u8D85\u524D\u6307\u9488 (\u672A\u63A8\u9001\u7684 submodule\
+      \ commit), \u7981\u6B62\u6307\u9488\u6F02\u79FB (submodule commit \u88AB rebase/drop).\
+      \ \u5B9E\u73B0: bin/gac/check-submodule-pointer-integrity.py (gac-gate CI)"
     check_type: hygiene_case
     executor:
     - ci_gate
@@ -1664,7 +1771,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-27'
-    justification: '[ADR-0431 D2] CR-X4-SUBMODULE-POINTER-INTEGRITY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-SUBMODULE-POINTER-INTEGRITY \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-MESH-EXECUTOR-RELIABILITY
     relates_to:
     - CR-P76-7-1-LLM-ADVISORY-ONLY
@@ -1681,10 +1789,12 @@ gac:
     - CR-ADVERSARIAL-EFFECTIVENESS
     dimension: X4
     layer: meta
-    name: Mesh executor 可靠性
-    description: 'mesh executor 脚本必须有: 超时控制 (timeout/retry), 错误处理 (try/except), 日志记录
-      (logging). 防止 iris→mesh 自动化管道无声失败. 实现: bin/gac/check-mesh-executor-reliability.py
-      (gac-gate CI, advisory)'
+    name: "Mesh executor \u53EF\u9760\u6027"
+    description: "mesh executor \u811A\u672C\u5FC5\u987B\u6709: \u8D85\u65F6\u63A7\
+      \u5236 (timeout/retry), \u9519\u8BEF\u5904\u7406 (try/except), \u65E5\u5FD7\u8BB0\
+      \u5F55 (logging). \u9632\u6B62 iris\u2192mesh \u81EA\u52A8\u5316\u7BA1\u9053\
+      \u65E0\u58F0\u5931\u8D25. \u5B9E\u73B0: bin/gac/check-mesh-executor-reliability.py\
+      \ (gac-gate CI, advisory)"
     check_type: hygiene_case
     executor:
     - ci_gate
@@ -1703,7 +1813,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-11'
-    justification: '[ADR-0431 D2] CR-X4-MESH-EXECUTOR-RELIABILITY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-MESH-EXECUTOR-RELIABILITY \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-MEMORY-OS-SURFACE-INTEGRITY
     relates_to:
     - CR-P76-7-1-LLM-ADVISORY-ONLY
@@ -1720,10 +1831,10 @@ gac:
     - CR-ADVERSARIAL-EFFECTIVENESS
     dimension: X4
     layer: meta
-    name: Memory-OS surface 一致性
-    description: 'Memory OS light gate: SSOT/ports/env.example/help catalog/smoke
-      surfaces 必须齐全. 实现: bin/gac/check-memory-os-surfaces.py (gac-gate CI blocking;
-      make memory-os-check)'
+    name: "Memory-OS surface \u4E00\u81F4\u6027"
+    description: "Memory OS light gate: SSOT/ports/env.example/help catalog/smoke\
+      \ surfaces \u5FC5\u987B\u9F50\u5168. \u5B9E\u73B0: bin/gac/check-memory-os-surfaces.py\
+      \ (gac-gate CI blocking; make memory-os-check)"
     check_type: hygiene_case
     executor:
     - ci_gate
@@ -1742,7 +1853,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-03'
-    justification: '[ADR-0431 D2] CR-X4-MEMORY-OS-SURFACE-INTEGRITY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-MEMORY-OS-SURFACE-INTEGRITY \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X1-EXTERNAL-AGENT-AUDIT
     relates_to:
     - CR-PR-DESCRIPTION-NON-EMPTY
@@ -1753,10 +1865,12 @@ gac:
     - CR-P76-7-5-RESOLVE-NOT-STUB
     dimension: X1
     layer: meta
-    name: 外部 agent 接入审计
-    description: '外部 agent 接入必须: 1) 注册 MCP 工具入口 2) 审计链记录操作 3) 不绕过 .omo ingress. 扩展
-      CR-X1-AGENT-AUDIT 覆盖外部 agent 场景. 实现: bin/gac/check-external-agent-audit.py (gac-gate
-      CI, advisory)'
+    name: "\u5916\u90E8 agent \u63A5\u5165\u5BA1\u8BA1"
+    description: "\u5916\u90E8 agent \u63A5\u5165\u5FC5\u987B: 1) \u6CE8\u518C MCP\
+      \ \u5DE5\u5177\u5165\u53E3 2) \u5BA1\u8BA1\u94FE\u8BB0\u5F55\u64CD\u4F5C 3)\
+      \ \u4E0D\u7ED5\u8FC7 .omo ingress. \u6269\u5C55 CR-X1-AGENT-AUDIT \u8986\u76D6\
+      \u5916\u90E8 agent \u573A\u666F. \u5B9E\u73B0: bin/gac/check-external-agent-audit.py\
+      \ (gac-gate CI, advisory)"
     check_type: audit_chain
     executor:
     - ci_gate
@@ -1776,7 +1890,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-16'
-    justification: '[ADR-0431 D2] CR-X1-EXTERNAL-AGENT-AUDIT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X1-EXTERNAL-AGENT-AUDIT \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-SWEEP-TOOL-INTEGRITY
     relates_to:
     - CR-P76-7-1-LLM-ADVISORY-ONLY
@@ -1793,9 +1908,10 @@ gac:
     - CR-ADVERSARIAL-EFFECTIVENESS
     dimension: X4
     layer: meta
-    name: Sweep 工具完整性
-    description: 'sweep 工具链 (bin/sweep/) 必须有测试覆盖和 CI 集成. 对应 ADR-0367. 实现: bin/gac/check-sweep-tool-integrity.py
-      (gac-gate CI, advisory)'
+    name: "Sweep \u5DE5\u5177\u5B8C\u6574\u6027"
+    description: "sweep \u5DE5\u5177\u94FE (bin/sweep/) \u5FC5\u987B\u6709\u6D4B\u8BD5\
+      \u8986\u76D6\u548C CI \u96C6\u6210. \u5BF9\u5E94 ADR-0367. \u5B9E\u73B0: bin/gac/check-sweep-tool-integrity.py\
+      \ (gac-gate CI, advisory)"
     check_type: hygiene_case
     executor:
     - ci_gate
@@ -1814,13 +1930,15 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-08'
-    justification: '[ADR-0431 D2] CR-X4-SWEEP-TOOL-INTEGRITY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-SWEEP-TOOL-INTEGRITY \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X4-MESH-ROUTING-CONSISTENCY
     dimension: X4
     layer: meta
-    name: Mesh 路由一致性
-    description: 'mesh 路由必须遵循 BOS URI 标准, 确保路由注册与声明一致. 实现: bin/gac/check-mesh-routing-consistency.py
-      (gac-gate CI, advisory)'
+    name: "Mesh \u8DEF\u7531\u4E00\u81F4\u6027"
+    description: "mesh \u8DEF\u7531\u5FC5\u987B\u9075\u5FAA BOS URI \u6807\u51C6,\
+      \ \u786E\u4FDD\u8DEF\u7531\u6CE8\u518C\u4E0E\u58F0\u660E\u4E00\u81F4. \u5B9E\
+      \u73B0: bin/gac/check-mesh-routing-consistency.py (gac-gate CI, advisory)"
     check_type: mesh_routing
     executor:
     - ci_gate
@@ -1839,7 +1957,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-15'
-    justification: '[ADR-0431 D2] CR-X4-MESH-ROUTING-CONSISTENCY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X4-MESH-ROUTING-CONSISTENCY \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X2-PROJECT-HEALTH-FRESHNESS
     relates_to:
     - CR-X2-DOC-FRESHNESS-GATE
@@ -1849,9 +1968,10 @@ gac:
     - CR-X2-GOVERNANCE-TREND
     dimension: X2
     layer: meta
-    name: 项目健康分新鲜度
-    description: '项目健康分 (system.yaml health_score) 必须定期更新, 不超过 48h. 实现: bin/gac/check-project-health-freshness.py
-      (gac-gate CI, advisory)'
+    name: "\u9879\u76EE\u5065\u5EB7\u5206\u65B0\u9C9C\u5EA6"
+    description: "\u9879\u76EE\u5065\u5EB7\u5206 (system.yaml health_score) \u5FC5\
+      \u987B\u5B9A\u671F\u66F4\u65B0, \u4E0D\u8D85\u8FC7 48h. \u5B9E\u73B0: bin/gac/check-project-health-freshness.py\
+      \ (gac-gate CI, advisory)"
     check_type: freshness
     executor:
     - ci_gate
@@ -1870,7 +1990,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-15'
-    justification: '[ADR-0431 D2] CR-X2-PROJECT-HEALTH-FRESHNESS — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X2-PROJECT-HEALTH-FRESHNESS \u2014 \u5F85\u8865\
+      \u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X3-DELIVERY-VALUE-GATE
     relates_to:
     - CR-X3-DELIVERY-CADENCE
@@ -1879,9 +2000,11 @@ gac:
     - CR-X3-M4-HEALTH-TREND
     dimension: X3
     layer: meta
-    name: 交付 X3 价值门禁
-    description: '交付文件必须有 X3 价值标注 (x3_tier/value/roi), 确保投入产出可量化. 平衡 X3 维度覆盖. 实现:
-      bin/gac/check-delivery-value-gate.py (gac-gate CI, advisory)'
+    name: "\u4EA4\u4ED8 X3 \u4EF7\u503C\u95E8\u7981"
+    description: "\u4EA4\u4ED8\u6587\u4EF6\u5FC5\u987B\u6709 X3 \u4EF7\u503C\u6807\
+      \u6CE8 (x3_tier/value/roi), \u786E\u4FDD\u6295\u5165\u4EA7\u51FA\u53EF\u91CF\
+      \u5316. \u5E73\u8861 X3 \u7EF4\u5EA6\u8986\u76D6. \u5B9E\u73B0: bin/gac/check-delivery-value-gate.py\
+      \ (gac-gate CI, advisory)"
     check_type: value_roi
     executor:
     - ci_gate
@@ -1900,18 +2023,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-23'
-    justification: '[ADR-0431 D2] CR-X3-DELIVERY-VALUE-GATE — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X3-DELIVERY-VALUE-GATE \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-SWEEP-INDEX-AUTO
     dimension: X4
     layer: meta
-    name: Sweep 历史索引自动维护 (C5, ADR-0373)
-    description: '检测 .omo/_knowledge/sweeps/INDEX.md 是否与同一目录下的 <date>.json 派生内容漂移.
-
-      bin/sweep/sweep_index.py --check 在 CI/closeout 同时被调用, drift → exit 1.
-
-      Excludes short-term local probes via AGENT_WORKFLOW_SWEEP_FAIL_HARD=0 (default).
-
-      '
+    name: "Sweep \u5386\u53F2\u7D22\u5F15\u81EA\u52A8\u7EF4\u62A4 (C5, ADR-0373)"
+    description: "\u68C0\u6D4B .omo/_knowledge/sweeps/INDEX.md \u662F\u5426\u4E0E\u540C\
+      \u4E00\u76EE\u5F55\u4E0B\u7684 <date>.json \u6D3E\u751F\u5185\u5BB9\u6F02\u79FB\
+      .\nbin/sweep/sweep_index.py --check \u5728 CI/closeout \u540C\u65F6\u88AB\u8C03\
+      \u7528, drift \u2192 exit 1.\nExcludes short-term local probes via AGENT_WORKFLOW_SWEEP_FAIL_HARD=0\
+      \ (default).\n"
     check_type: consistency_drift
     target: .omo/_knowledge/sweeps/**
     source_ref: bin/sweep/sweep_index.py::--check
@@ -1930,7 +2052,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-12'
-    justification: '[ADR-0431 D2] CR-SWEEP-INDEX-AUTO — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-SWEEP-INDEX-AUTO \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X2-DOC-FRESHNESS-GATE
     relates_to:
     - CR-X2-PROJECT-HEALTH-FRESHNESS
@@ -1940,9 +2063,10 @@ gac:
     - CR-X2-GOVERNANCE-TREND
     dimension: X2
     layer: meta
-    name: 文档新鲜度门禁
-    description: '检查 docs/ 下 md 文件是否在 90 天内更新过. 平衡 X2 维度覆盖. 实现: bin/gac/check-doc-freshness-gate.py
-      (gac-gate CI, advisory)'
+    name: "\u6587\u6863\u65B0\u9C9C\u5EA6\u95E8\u7981"
+    description: "\u68C0\u67E5 docs/ \u4E0B md \u6587\u4EF6\u662F\u5426\u5728 90 \u5929\
+      \u5185\u66F4\u65B0\u8FC7. \u5E73\u8861 X2 \u7EF4\u5EA6\u8986\u76D6. \u5B9E\u73B0\
+      : bin/gac/check-doc-freshness-gate.py (gac-gate CI, advisory)"
     check_type: freshness
     executor:
     - ci_gate
@@ -1961,7 +2085,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-11'
-    justification: '[ADR-0431 D2] CR-X2-DOC-FRESHNESS-GATE — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X2-DOC-FRESHNESS-GATE \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X2-METRIC-TREND
     relates_to:
     - CR-X2-PROJECT-HEALTH-FRESHNESS
@@ -1971,9 +2096,10 @@ gac:
     - CR-X2-GOVERNANCE-TREND
     dimension: X2
     layer: meta
-    name: 治理指标趋势
-    description: '检查 governance-evolution 指标趋势, 确认关键指标未恶化. 平衡 X2 维度覆盖. 实现: bin/gac/check-metric-trend.py
-      (gac-gate CI, advisory)'
+    name: "\u6CBB\u7406\u6307\u6807\u8D8B\u52BF"
+    description: "\u68C0\u67E5 governance-evolution \u6307\u6807\u8D8B\u52BF, \u786E\
+      \u8BA4\u5173\u952E\u6307\u6807\u672A\u6076\u5316. \u5E73\u8861 X2 \u7EF4\u5EA6\
+      \u8986\u76D6. \u5B9E\u73B0: bin/gac/check-metric-trend.py (gac-gate CI, advisory)"
     check_type: freshness
     executor:
     - ci_gate
@@ -1992,7 +2118,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-19'
-    justification: '[ADR-0431 D2] CR-X2-METRIC-TREND — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X2-METRIC-TREND \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-CI-SURFACE-SSOT
     relates_to:
     - CR-X1-POLICIES-SSOT
@@ -2000,10 +2127,12 @@ gac:
     source_ref: .omo/_truth/registry/ci-surfaces.yaml::surfaces
     dimension: X1
     layer: meta
-    name: CI 平面检查登记 SSOT (ADR-0379 E-1)
-    description: 'ci-surfaces.yaml 是 CI 平面检查接线登记 SSOT. 所有 workflow / sgf-policy 中执行的
-      check 类工具必须登记; bin/gac/check-ci-surfaces.py 检测 unregistered / gate-parity /
-      orphan / overlap / double-trigger (on: [push, pull_request] 双跑).'
+    name: "CI \u5E73\u9762\u68C0\u67E5\u767B\u8BB0 SSOT (ADR-0379 E-1)"
+    description: "ci-surfaces.yaml \u662F CI \u5E73\u9762\u68C0\u67E5\u63A5\u7EBF\u767B\
+      \u8BB0 SSOT. \u6240\u6709 workflow / sgf-policy \u4E2D\u6267\u884C\u7684 check\
+      \ \u7C7B\u5DE5\u5177\u5FC5\u987B\u767B\u8BB0; bin/gac/check-ci-surfaces.py \u68C0\
+      \u6D4B unregistered / gate-parity / orphan / overlap / double-trigger (on: [push,\
+      \ pull_request] \u53CC\u8DD1)."
     check_type: legacy_index
     executor:
     - ci_gate
@@ -2021,7 +2150,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-30'
-    justification: '[ADR-0431 D2] CR-CI-SURFACE-SSOT — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-CI-SURFACE-SSOT \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X2-EVIDENCE-FRESHNESS
     relates_to:
     - CR-X2-PROJECT-HEALTH-FRESHNESS
@@ -2031,9 +2161,10 @@ gac:
     - CR-X2-GOVERNANCE-TREND
     dimension: X2
     layer: meta
-    name: 证据新鲜度检查
-    description: 'evidence-smoke 报告必须 7 天内生成, 分数不低于 90. 实现: bin/gac/check-evidence-freshness.py
-      (gac-local-gate)'
+    name: "\u8BC1\u636E\u65B0\u9C9C\u5EA6\u68C0\u67E5"
+    description: "evidence-smoke \u62A5\u544A\u5FC5\u987B 7 \u5929\u5185\u751F\u6210\
+      , \u5206\u6570\u4E0D\u4F4E\u4E8E 90. \u5B9E\u73B0: bin/gac/check-evidence-freshness.py\
+      \ (gac-local-gate)"
     check_type: freshness
     executor:
     - gac_local_gate
@@ -2052,7 +2183,8 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-05'
-    justification: '[ADR-0431 D2] CR-X2-EVIDENCE-FRESHNESS — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X2-EVIDENCE-FRESHNESS \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-X2-GOVERNANCE-TREND
     relates_to:
     - CR-X2-PROJECT-HEALTH-FRESHNESS
@@ -2062,9 +2194,10 @@ gac:
     - CR-X2-EVIDENCE-FRESHNESS
     dimension: X2
     layer: meta
-    name: 治理指标趋势检查
-    description: '治理指标在合理范围内: 规则数 ≤ freeze, ADR 100%, 无过期 draft. 实现: bin/gac/check-governance-trend.py
-      (gac-local-gate)'
+    name: "\u6CBB\u7406\u6307\u6807\u8D8B\u52BF\u68C0\u67E5"
+    description: "\u6CBB\u7406\u6307\u6807\u5728\u5408\u7406\u8303\u56F4\u5185: \u89C4\
+      \u5219\u6570 \u2264 freeze, ADR 100%, \u65E0\u8FC7\u671F draft. \u5B9E\u73B0\
+      : bin/gac/check-governance-trend.py (gac-local-gate)"
     check_type: freshness
     executor:
     - gac_local_gate
@@ -2083,14 +2216,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-10'
-    justification: '[ADR-0431 D2] CR-X2-GOVERNANCE-TREND — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-X2-GOVERNANCE-TREND \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-LLM-GATEWAY-ONLY
     source_type: native
     dimension: X2
     layer: meta
-    name: LLM 推理统一接入层
-    description: '禁止业务代码直连 ollama (11434) / 裸 OpenAI 端点; 必须走 llm-router / AetherForge
-      网关. 静态源码扫描, --warn 迁移期仅告警. 实现: bin/gac/check-llm-gateway-only.py'
+    name: "LLM \u63A8\u7406\u7EDF\u4E00\u63A5\u5165\u5C42"
+    description: "\u7981\u6B62\u4E1A\u52A1\u4EE3\u7801\u76F4\u8FDE ollama (11434)\
+      \ / \u88F8 OpenAI \u7AEF\u70B9; \u5FC5\u987B\u8D70 llm-router / AetherForge\
+      \ \u7F51\u5173. \u9759\u6001\u6E90\u7801\u626B\u63CF, --warn \u8FC1\u79FB\u671F\
+      \u4EC5\u544A\u8B66. \u5B9E\u73B0: bin/gac/check-llm-gateway-only.py"
     check_type: drift_audit
     target: projects/**
     source_ref: bin/gac/check-llm-gateway-only.py::--warn
@@ -2108,12 +2244,15 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-09'
-    justification: '[ADR-0431 D2] CR-LLM-GATEWAY-ONLY — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-LLM-GATEWAY-ONLY \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-L4-DOCUMENTS-MIGRATION-COVERAGE
     dimension: X4
     layer: L4
-    name: Documents 内容面迁移覆盖
-    description: runtime/cache 候选必须恰好归属一个声明式迁移族，且目标 owner、replacement、回滚与确认门完整
+    name: "Documents \u5185\u5BB9\u9762\u8FC1\u79FB\u8986\u76D6"
+    description: "runtime/cache \u5019\u9009\u5FC5\u987B\u6070\u597D\u5F52\u5C5E\u4E00\
+      \u4E2A\u58F0\u660E\u5F0F\u8FC1\u79FB\u65CF\uFF0C\u4E14\u76EE\u6807 owner\u3001\
+      replacement\u3001\u56DE\u6EDA\u4E0E\u786E\u8BA4\u95E8\u5B8C\u6574"
     check_type: registry_integrity
     target: .omo/_truth/registry/documents-content-plane-migrations.yaml
     source_ref: bin/gac/documents-content-plane-migration-check.py
@@ -2131,14 +2270,17 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-12'
-    justification: '[ADR-0431 D2] CR-L4-DOCUMENTS-MIGRATION-COVERAGE — 待补存在理由 (90
-      天内补齐)'
+    justification: "[ADR-0431 D2] CR-L4-DOCUMENTS-MIGRATION-COVERAGE \u2014 \u5F85\
+      \u8865\u5B58\u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-RESIDENT-STATUS-01
     dimension: X2
     layer: meta
-    name: resident daemon 水位活性
-    description: resident 体系活性以 daemon 角色水位判断 (cron --once 下无常驻进程, 进程退出正常). 水位新鲜 ≤30min,
-      超阈值 → degraded. 排除订阅层 resident-sub.json 防误判. 对齐 L0 CR-RESIDENT-STATUS-01.
+    name: "resident daemon \u6C34\u4F4D\u6D3B\u6027"
+    description: "resident \u4F53\u7CFB\u6D3B\u6027\u4EE5 daemon \u89D2\u8272\u6C34\
+      \u4F4D\u5224\u65AD (cron --once \u4E0B\u65E0\u5E38\u9A7B\u8FDB\u7A0B, \u8FDB\
+      \u7A0B\u9000\u51FA\u6B63\u5E38). \u6C34\u4F4D\u65B0\u9C9C \u226430min, \u8D85\
+      \u9608\u503C \u2192 degraded. \u6392\u9664\u8BA2\u9605\u5C42 resident-sub.json\
+      \ \u9632\u8BEF\u5224. \u5BF9\u9F50 L0 CR-RESIDENT-STATUS-01."
     check_type: freshness
     target: .omo/_delivery/resident-orchestrator/watermarks/resident-*.json
     source_ref: bin/gac/check-resident-status.py
@@ -2157,13 +2299,15 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-30'
-    justification: '[ADR-0431 D2] CR-RESIDENT-STATUS-01 — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-RESIDENT-STATUS-01 \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-RESIDENT-MOF-SYNC-01
     dimension: X4
     layer: L0
-    name: resident 角色双份对齐
-    description: resident 五类角色 (sediment/decision/execute/monitor/heartbeat) 必须同时注册在
-      roles.py (SSOT) 与 MOF m1 DigitalAgent (AGENT-RESIDENT-*), 零漂移. 对齐 L0 CR-RESIDENT-MOF-SYNC-01.
+    name: "resident \u89D2\u8272\u53CC\u4EFD\u5BF9\u9F50"
+    description: "resident \u4E94\u7C7B\u89D2\u8272 (sediment/decision/execute/monitor/heartbeat)\
+      \ \u5FC5\u987B\u540C\u65F6\u6CE8\u518C\u5728 roles.py (SSOT) \u4E0E MOF m1 DigitalAgent\
+      \ (AGENT-RESIDENT-*), \u96F6\u6F02\u79FB. \u5BF9\u9F50 L0 CR-RESIDENT-MOF-SYNC-01."
     check_type: drift_audit
     target: projects/omo/src/omo/resident/roles.py vs projects/ecos/src/ecos/ssot/mof/m1/agent/AGENT-RESIDENT-ROLES.yaml
     source_ref: bin/gac/check-resident-mof-sync.py
@@ -2182,13 +2326,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-26'
-    justification: '[ADR-0431 D2] CR-RESIDENT-MOF-SYNC-01 — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-RESIDENT-MOF-SYNC-01 \u2014 \u5F85\u8865\u5B58\
+      \u5728\u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-RESIDENT-BOS-01
     dimension: X1
     layer: L2
-    name: resident 接口 BOS 路由
-    description: resident 接口 (status/roles/daemon/decision/execute) 必须经 bos://resident/*
-      暴露, 禁止绕过 BOS 直连 resident 内部数据面 (events.jsonl / sediment / ledger). 对齐 L0 CR-RESIDENT-BOS-01.
+    name: "resident \u63A5\u53E3 BOS \u8DEF\u7531"
+    description: "resident \u63A5\u53E3 (status/roles/daemon/decision/execute) \u5FC5\
+      \u987B\u7ECF bos://resident/* \u66B4\u9732, \u7981\u6B62\u7ED5\u8FC7 BOS \u76F4\
+      \u8FDE resident \u5185\u90E8\u6570\u636E\u9762 (events.jsonl / sediment / ledger).\
+      \ \u5BF9\u9F50 L0 CR-RESIDENT-BOS-01."
     check_type: bos_resolve
     target: projects/agora/etc/bos-services.yaml::bos://resident/*
     source_ref: bin/gac/check-resident-bos.py
@@ -2207,13 +2354,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-11-30'
-    justification: '[ADR-0431 D2] CR-RESIDENT-BOS-01 — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-RESIDENT-BOS-01 \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-AGE-BOS-01
     dimension: X1
     layer: L2
-    name: AGE-v2 Cell 核心链路 BOS 路由
-    description: AGE-v2 Cell 核心接口 (plan/execute/verify/govern) 必须经 bos://agent-cell/*
-      暴露, 禁止绕过 BOS 直连 Cell 内部数据面 (cell_states.json / handoff_log). 对齐 L0 CR-AGE-BOS-01.
+    name: "AGE-v2 Cell \u6838\u5FC3\u94FE\u8DEF BOS \u8DEF\u7531"
+    description: "AGE-v2 Cell \u6838\u5FC3\u63A5\u53E3 (plan/execute/verify/govern)\
+      \ \u5FC5\u987B\u7ECF bos://agent-cell/* \u66B4\u9732, \u7981\u6B62\u7ED5\u8FC7\
+      \ BOS \u76F4\u8FDE Cell \u5185\u90E8\u6570\u636E\u9762 (cell_states.json / handoff_log).\
+      \ \u5BF9\u9F50 L0 CR-AGE-BOS-01."
     check_type: bos_resolve
     target: projects/agora/etc/bos-services.yaml::bos://agent-cell/*
     source_ref: bin/gac/check-age-bos.py
@@ -2231,13 +2381,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-18'
-    justification: '[ADR-0431 D2] CR-AGE-BOS-01 — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-AGE-BOS-01 \u2014 \u5F85\u8865\u5B58\u5728\u7406\
+      \u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-AGE-POLICY-01
     dimension: X1
     layer: L2
-    name: AGE-v2 Cell PDP/PEP 策略执行
-    description: Cell 高风险动作 (R2/R3) 必须经 PDP 评估 + PEP 强制执行, 禁止绕过策略引擎直接执行. PDP 评估记录必须写入
-      Cell handoff_log 证据链. 对齐 L0 CR-AGE-POLICY-01.
+    name: "AGE-v2 Cell PDP/PEP \u7B56\u7565\u6267\u884C"
+    description: "Cell \u9AD8\u98CE\u9669\u52A8\u4F5C (R2/R3) \u5FC5\u987B\u7ECF PDP\
+      \ \u8BC4\u4F30 + PEP \u5F3A\u5236\u6267\u884C, \u7981\u6B62\u7ED5\u8FC7\u7B56\
+      \u7565\u5F15\u64CE\u76F4\u63A5\u6267\u884C. PDP \u8BC4\u4F30\u8BB0\u5F55\u5FC5\
+      \u987B\u5199\u5165 Cell handoff_log \u8BC1\u636E\u94FE. \u5BF9\u9F50 L0 CR-AGE-POLICY-01."
     check_type: ssot_lint
     target: projects/omo/src/omo/resident/pdp_pep.py
     source_ref: bin/gac/check-age-policy.py
@@ -2255,13 +2408,16 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-29'
-    justification: '[ADR-0431 D2] CR-AGE-POLICY-01 — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-AGE-POLICY-01 \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-AGE-MEMORY-01
     dimension: X2
     layer: L2
-    name: AGE-v2 Cell 记忆管道活性
-    description: Cell Memory Pipeline 必须维持 candidate → conflict → consolidate → forget
-      四阶段运转, 禁止跳过 conflict 检测直接写入记忆. 对齐 L0 CR-AGE-MEMORY-01.
+    name: "AGE-v2 Cell \u8BB0\u5FC6\u7BA1\u9053\u6D3B\u6027"
+    description: "Cell Memory Pipeline \u5FC5\u987B\u7EF4\u6301 candidate \u2192 conflict\
+      \ \u2192 consolidate \u2192 forget \u56DB\u9636\u6BB5\u8FD0\u8F6C, \u7981\u6B62\
+      \u8DF3\u8FC7 conflict \u68C0\u6D4B\u76F4\u63A5\u5199\u5165\u8BB0\u5FC6. \u5BF9\
+      \u9F50 L0 CR-AGE-MEMORY-01."
     check_type: file_exists
     target: projects/omo/src/omo/resident/memory_pipeline.py
     source_ref: bin/gac/check-age-memory.py
@@ -2279,13 +2435,15 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-22'
-    justification: '[ADR-0431 D2] CR-AGE-MEMORY-01 — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-AGE-MEMORY-01 \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-AGE-REPLAY-01
     dimension: X4
     layer: L2
-    name: AGE-v2 Cell 回放框架完整性
-    description: Cell Replay Framework 必须同时支持 replay / shadow / eval 三种模式, 禁止仅实现部分模式.
-      对齐 L0 CR-AGE-REPLAY-01.
+    name: "AGE-v2 Cell \u56DE\u653E\u6846\u67B6\u5B8C\u6574\u6027"
+    description: "Cell Replay Framework \u5FC5\u987B\u540C\u65F6\u652F\u6301 replay\
+      \ / shadow / eval \u4E09\u79CD\u6A21\u5F0F, \u7981\u6B62\u4EC5\u5B9E\u73B0\u90E8\
+      \u5206\u6A21\u5F0F. \u5BF9\u9F50 L0 CR-AGE-REPLAY-01."
     check_type: ssot_lint
     target: projects/omo/src/omo/resident/replay.py
     source_ref: bin/gac/check-age-replay.py
@@ -2303,13 +2461,15 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2027-01-10'
-    justification: '[ADR-0431 D2] CR-AGE-REPLAY-01 — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-AGE-REPLAY-01 \u2014 \u5F85\u8865\u5B58\u5728\
+      \u7406\u7531 (90 \u5929\u5185\u8865\u9F50)"
   - id: CR-AGE-EVENT-01
     dimension: X3
     layer: L2
-    name: AGE-v2 Cell 事件驱动路由
-    description: Cell Handler 必须订阅 WorkflowClosed / ExecutionRequested / WorkflowFailed
-      / StepTimeout 四类事件, 禁止选择性订阅. 对齐 L0 CR-AGE-EVENT-01.
+    name: "AGE-v2 Cell \u4E8B\u4EF6\u9A71\u52A8\u8DEF\u7531"
+    description: "Cell Handler \u5FC5\u987B\u8BA2\u9605 WorkflowClosed / ExecutionRequested\
+      \ / WorkflowFailed / StepTimeout \u56DB\u7C7B\u4E8B\u4EF6, \u7981\u6B62\u9009\
+      \u62E9\u6027\u8BA2\u9605. \u5BF9\u9F50 L0 CR-AGE-EVENT-01."
     check_type: ssot_lint
     target: projects/omo/src/omo/resident/cell_handler.py
     source_ref: bin/gac/check-age-event.py
@@ -2331,9 +2491,13 @@ gac:
     lifecycle: active
     dimension: X1
     layer: L1
-    name: 子模块指针 bump 必须锚定子仓 origin/main
-    description: 'bump gitlink 时 sha 唯一合法来源为子仓 fetch 后的 origin/main 头; 禁止分支头/PR head/手搓
-      sha。2026-08-29 双指针污染事故 (cockpit/agora) 根因即 bump 分支头。契约: .omo/standards/submodule-pointer-bump-contract.md'
+    name: "\u5B50\u6A21\u5757\u6307\u9488 bump \u5FC5\u987B\u951A\u5B9A\u5B50\u4ED3\
+      \ origin/main"
+    description: "bump gitlink \u65F6 sha \u552F\u4E00\u5408\u6CD5\u6765\u6E90\u4E3A\
+      \u5B50\u4ED3 fetch \u540E\u7684 origin/main \u5934; \u7981\u6B62\u5206\u652F\
+      \u5934/PR head/\u624B\u6413 sha\u30022026-08-29 \u53CC\u6307\u9488\u6C61\u67D3\
+      \u4E8B\u6545 (cockpit/agora) \u6839\u56E0\u5373 bump \u5206\u652F\u5934\u3002\
+      \u5951\u7EA6: .omo/standards/submodule-pointer-bump-contract.md"
     check_type: audit_chain
     target: projects/*
     source_ref: .omo/standards/submodule-pointer-bump-contract.md
@@ -2344,8 +2508,10 @@ gac:
     adr: ADR-0431
     added_at: '2026-08-30'
     review_before: '2027-01-24'
-    justification: 指针污染阻塞全仓 PR 半天×2; submodule-guard 只查 fast-forward 不查来源, 本规则补源头纪律
-      (人工+review 执行, 工具化后续 BET 跟进)。
+    justification: "\u6307\u9488\u6C61\u67D3\u963B\u585E\u5168\u4ED3 PR \u534A\u5929\
+      \xD72; submodule-guard \u53EA\u67E5 fast-forward \u4E0D\u67E5\u6765\u6E90, \u672C\
+      \u89C4\u5219\u8865\u6E90\u5934\u7EAA\u5F8B (\u4EBA\u5DE5+review \u6267\u884C\
+      , \u5DE5\u5177\u5316\u540E\u7EED BET \u8DDF\u8FDB)\u3002"
     expected: Check CR-GITLINK-BUMP-SQUASH-MAIN must pass without violations
     remediation: bump gitlink to origin/main SHA only; use gac-worktree.sh bump-fast
       for safe updates.
@@ -2356,9 +2522,12 @@ gac:
     lifecycle: active
     dimension: X1
     layer: L2
-    name: completion_evidence 锚新鲜度
-    description: 'evidence sha256 是写入时刻快照; 锚文件此后只增不改。complete 前重算全部 锚 sha; DIGEST_MISMATCH
-      先核实变更合法性再刷新, 禁止无脑重算。 契约: .omo/standards/evidence-anchor-freshness.md'
+    name: "completion_evidence \u951A\u65B0\u9C9C\u5EA6"
+    description: "evidence sha256 \u662F\u5199\u5165\u65F6\u523B\u5FEB\u7167; \u951A\
+      \u6587\u4EF6\u6B64\u540E\u53EA\u589E\u4E0D\u6539\u3002complete \u524D\u91CD\u7B97\
+      \u5168\u90E8 \u951A sha; DIGEST_MISMATCH \u5148\u6838\u5B9E\u53D8\u66F4\u5408\
+      \u6CD5\u6027\u518D\u5237\u65B0, \u7981\u6B62\u65E0\u8111\u91CD\u7B97\u3002 \u5951\
+      \u7EA6: .omo/standards/evidence-anchor-freshness.md"
     check_type: freshness
     target: docs/plans/3y-bet-ledger.yaml
     source_ref: .omo/standards/evidence-anchor-freshness.md
@@ -2369,7 +2538,9 @@ gac:
     adr: ADR-0431
     added_at: '2026-08-30'
     review_before: '2026-12-30'
-    justification: T4-07/T4-02 收口连环 DIGEST_MISMATCH; bet-ledger 已有运行时校验, 本规则固化人工流程纪律。
+    justification: "T4-07/T4-02 \u6536\u53E3\u8FDE\u73AF DIGEST_MISMATCH; bet-ledger\
+      \ \u5DF2\u6709\u8FD0\u884C\u65F6\u6821\u9A8C, \u672C\u89C4\u5219\u56FA\u5316\
+      \u4EBA\u5DE5\u6D41\u7A0B\u7EAA\u5F8B\u3002"
     expected: Check CR-EVIDENCE-SHA-FRESHNESS must pass without violations
     remediation: Recompute completion_evidence sha256 after any ledger or receipt
       edit.
@@ -2380,10 +2551,12 @@ gac:
     lifecycle: active
     dimension: X4
     layer: L2
-    name: bin 脚本退役六层登记面
-    description: 'bin/ 脚本退役必须同步六层登记面: 1) bin/_registry/scripts/ yaml 2) governance-checks
-      script_baseline 3) bin-scripts-convergence-manifest 4) ci-surfaces.yaml 5) INDEX-TOOLS(自动)
-      6) ecos sgf-policy gate 引用。 2026-08-29 bus-usage-report 退役逐层踩齐全部六层。'
+    name: "bin \u811A\u672C\u9000\u5F79\u516D\u5C42\u767B\u8BB0\u9762"
+    description: "bin/ \u811A\u672C\u9000\u5F79\u5FC5\u987B\u540C\u6B65\u516D\u5C42\
+      \u767B\u8BB0\u9762: 1) bin/_registry/scripts/ yaml 2) governance-checks script_baseline\
+      \ 3) bin-scripts-convergence-manifest 4) ci-surfaces.yaml 5) INDEX-TOOLS(\u81EA\
+      \u52A8) 6) ecos sgf-policy gate \u5F15\u7528\u3002 2026-08-29 bus-usage-report\
+      \ \u9000\u5F79\u9010\u5C42\u8E29\u9F50\u5168\u90E8\u516D\u5C42\u3002"
     check_type: registry_integrity
     target: bin/
     source_ref: .omo/standards/submodule-pointer-bump-contract.md
@@ -2394,24 +2567,29 @@ gac:
     adr: ADR-0431
     added_at: '2026-08-28'
     review_before: '2026-12-22'
-    justification: '[ADR-0431 D2] CR-AGE-EVENT-01 — 待补存在理由 (90 天内补齐)'
+    justification: "[ADR-0431 D2] CR-AGE-EVENT-01 \u2014 \u5F85\u8865\u5B58\u5728\u7406\
+      \u7531 (90 \u5929\u5185\u8865\u9F50)"
     expected: Check CR-BIN-RETIREMENT-CHECKLIST must pass without violations
     remediation: Investigate check failure and apply targeted fix
     related_runbooks: []
   - id: CR-GIT-STAGE-SUBMODULE-PIN
     dimension: X4
     layer: L2
-    name: 子模块指针暂存纪律
-    description: 主仓暂存禁用 git add -A / add .（带入子仓 gitlink 侧分支状态）；变更须 add 具体路径，涉子模块先核对
-      gitlink 指向 origin/main
+    name: "\u5B50\u6A21\u5757\u6307\u9488\u6682\u5B58\u7EAA\u5F8B"
+    description: "\u4E3B\u4ED3\u6682\u5B58\u7981\u7528 git add -A / add .\uFF08\u5E26\
+      \u5165\u5B50\u4ED3 gitlink \u4FA7\u5206\u652F\u72B6\u6001\uFF09\uFF1B\u53D8\u66F4\
+      \u987B add \u5177\u4F53\u8DEF\u5F84\uFF0C\u6D89\u5B50\u6A21\u5757\u5148\u6838\
+      \u5BF9 gitlink \u6307\u5411 origin/main"
     check_type: audit_chain
-    target: .githooks/pre-commit + git-discipline skill §1
+    target: ".githooks/pre-commit + git-discipline skill \xA71"
     executor:
     - gac_local_gate
     - hook_pre_edit
-    justification: 'pitfall PITFALL-COO-003 encountered 3 times (threshold 5): git
-      add -A 误 stage 子仓旧指针——同型三次（cockpit/omlxc/omo）均被 gate 拦截；事故→规则流水线首例人工入册（ADR-0443
-      v3）'
+    justification: "pitfall PITFALL-COO-003 encountered 3 times (threshold 5): git\
+      \ add -A \u8BEF stage \u5B50\u4ED3\u65E7\u6307\u9488\u2014\u2014\u540C\u578B\
+      \u4E09\u6B21\uFF08cockpit/omlxc/omo\uFF09\u5747\u88AB gate \u62E6\u622A\uFF1B\
+      \u4E8B\u6545\u2192\u89C4\u5219\u6D41\u6C34\u7EBF\u9996\u4F8B\u4EBA\u5DE5\u5165\
+      \u518C\uFF08ADR-0443 v3\uFF09"
     added_at: '2026-08-31'
     review_before: '2026-11-29'
     created_at: '2026-08-31'
@@ -2421,9 +2599,12 @@ gac:
   - id: CR-HARNESS-STRUCTURE
     dimension: X4
     layer: L2
-    name: Harness 结构完整性 (章节 + 维度 + 实现率)
-    description: harness-policy.yaml 必须包含 12 必现章节 + 12 维度全量挂载 + entry 指向脚本存在且调用 agent-workflow；合并自
-      CR-HARNESS-SECTION-COMPLETENESS + CR-HARNESS-DIMENSION-COVERAGE + CR-HARNESS-IMPL-RATE
+    name: "Harness \u7ED3\u6784\u5B8C\u6574\u6027 (\u7AE0\u8282 + \u7EF4\u5EA6 + \u5B9E\
+      \u73B0\u7387)"
+    description: "harness-policy.yaml \u5FC5\u987B\u5305\u542B 12 \u5FC5\u73B0\u7AE0\
+      \u8282 + 12 \u7EF4\u5EA6\u5168\u91CF\u6302\u8F7D + entry \u6307\u5411\u811A\u672C\
+      \u5B58\u5728\u4E14\u8C03\u7528 agent-workflow\uFF1B\u5408\u5E76\u81EA CR-HARNESS-SECTION-COMPLETENESS\
+      \ + CR-HARNESS-DIMENSION-COVERAGE + CR-HARNESS-IMPL-RATE"
     check_type: schema_integrity
     target: .omo/_truth/registry/harness-policy.yaml
     executor:
@@ -2433,7 +2614,8 @@ gac:
     - CR-HARNESS-SECTION-COMPLETENESS
     - CR-HARNESS-DIMENSION-COVERAGE
     - CR-HARNESS-IMPL-RATE
-    justification: Phase 8 合并 — 结构完整性统一检查 (章节 + 维度 + 实现率)
+    justification: "Phase 8 \u5408\u5E76 \u2014 \u7ED3\u6784\u5B8C\u6574\u6027\u7EDF\
+      \u4E00\u68C0\u67E5 (\u7AE0\u8282 + \u7EF4\u5EA6 + \u5B9E\u73B0\u7387)"
     added_at: '2026-09-01'
     review_before: '2026-12-01'
     created_at: '2026-09-01'
@@ -2443,9 +2625,11 @@ gac:
   - id: CR-HARNESS-MOF-INTEGRATION
     dimension: X4
     layer: L2
-    name: Harness MOF 集成 (S 槽位 + MOF 约束)
-    description: harness sfop_slot 必须为 S + controller 为 COMP-WS-omo；编辑 MOF 文件前必须影响分析
-      + 编辑后 schema 校验；合并自 CR-HARNESS-SFOP-SLOT + CR-HARNESS-MOF-CONSTRAINT
+    name: "Harness MOF \u96C6\u6210 (S \u69FD\u4F4D + MOF \u7EA6\u675F)"
+    description: "harness sfop_slot \u5FC5\u987B\u4E3A S + controller \u4E3A COMP-WS-omo\uFF1B\
+      \u7F16\u8F91 MOF \u6587\u4EF6\u524D\u5FC5\u987B\u5F71\u54CD\u5206\u6790 + \u7F16\
+      \u8F91\u540E schema \u6821\u9A8C\uFF1B\u5408\u5E76\u81EA CR-HARNESS-SFOP-SLOT\
+      \ + CR-HARNESS-MOF-CONSTRAINT"
     check_type: mof_stage_gate
     target: .omo/_truth/registry/harness-policy.yaml
     executor:
@@ -2455,7 +2639,8 @@ gac:
     relates_to:
     - CR-HARNESS-SFOP-SLOT
     - CR-HARNESS-MOF-CONSTRAINT
-    justification: Phase 8 合并 — MOF 集成统一检查 (S 槽位 + MOF 约束)
+    justification: "Phase 8 \u5408\u5E76 \u2014 MOF \u96C6\u6210\u7EDF\u4E00\u68C0\
+      \u67E5 (S \u69FD\u4F4D + MOF \u7EA6\u675F)"
     added_at: '2026-09-01'
     review_before: '2026-12-01'
     created_at: '2026-09-01'
@@ -2465,9 +2650,10 @@ gac:
   - id: CR-HARNESS-OPERATIONS
     dimension: X1
     layer: L2
-    name: Harness 运营 (Probe + 价值循环)
-    description: harness probes 必须声明 7 类 Event + 统一 bus；value_loop 必须声明 5 阶段 DAG +
-      bus + store；合并自 CR-HARNESS-PROBE-STANDARDIZATION + CR-HARNESS-VALUE-LOOP
+    name: "Harness \u8FD0\u8425 (Probe + \u4EF7\u503C\u5FAA\u73AF)"
+    description: "harness probes \u5FC5\u987B\u58F0\u660E 7 \u7C7B Event + \u7EDF\u4E00\
+      \ bus\uFF1Bvalue_loop \u5FC5\u987B\u58F0\u660E 5 \u9636\u6BB5 DAG + bus + store\uFF1B\
+      \u5408\u5E76\u81EA CR-HARNESS-PROBE-STANDARDIZATION + CR-HARNESS-VALUE-LOOP"
     check_type: audit_chain
     target: .omo/_truth/registry/harness-policy.yaml
     executor:
@@ -2476,7 +2662,8 @@ gac:
     relates_to:
     - CR-HARNESS-PROBE-STANDARDIZATION
     - CR-HARNESS-VALUE-LOOP
-    justification: Phase 8 合并 — 运营统一检查 (Probe + 价值循环)
+    justification: "Phase 8 \u5408\u5E76 \u2014 \u8FD0\u8425\u7EDF\u4E00\u68C0\u67E5\
+      \ (Probe + \u4EF7\u503C\u5FAA\u73AF)"
     added_at: '2026-09-01'
     review_before: '2026-12-01'
     created_at: '2026-09-01'
@@ -2486,10 +2673,12 @@ gac:
   - id: CR-HARNESS-GOVERNANCE
     dimension: X1
     layer: L2
-    name: Harness 治理 (已知债 + OMO 同步 + 防腐)
-    description: known_debt.growth_policy=shrink_only + escape 收口；Harness 状态同步 OMO
-      system.yaml；脚本配额遵守 anti-corrosion-budget；合并自 CR-HARNESS-KNOWN-DEBT + CR-HARNESS-OMO-SYNC
-      + CR-HARNESS-ANTI-CORROSION
+    name: "Harness \u6CBB\u7406 (\u5DF2\u77E5\u503A + OMO \u540C\u6B65 + \u9632\u8150\
+      )"
+    description: "known_debt.growth_policy=shrink_only + escape \u6536\u53E3\uFF1B\
+      Harness \u72B6\u6001\u540C\u6B65 OMO system.yaml\uFF1B\u811A\u672C\u914D\u989D\
+      \u9075\u5B88 anti-corrosion-budget\uFF1B\u5408\u5E76\u81EA CR-HARNESS-KNOWN-DEBT\
+      \ + CR-HARNESS-OMO-SYNC + CR-HARNESS-ANTI-CORROSION"
     check_type: audit_chain
     target: .omo/_truth/registry/harness-policy.yaml
     executor:
@@ -2499,7 +2688,8 @@ gac:
     - CR-HARNESS-KNOWN-DEBT
     - CR-HARNESS-OMO-SYNC
     - CR-HARNESS-ANTI-CORROSION
-    justification: Phase 8 合并 — 治理统一检查 (已知债 + OMO 同步 + 防腐)
+    justification: "Phase 8 \u5408\u5E76 \u2014 \u6CBB\u7406\u7EDF\u4E00\u68C0\u67E5\
+      \ (\u5DF2\u77E5\u503A + OMO \u540C\u6B65 + \u9632\u8150)"
     added_at: '2026-09-01'
     review_before: '2026-12-01'
     created_at: '2026-09-01'
@@ -2522,17 +2712,22 @@ gac:
       X2: 35
       X3: 38
       X4: 60
-      rationale: 各维度上限确保均衡覆盖, 防止单维度主导. X4 上限最高因其一致性检查需求最大 (含 Harness 合规).
+      rationale: "\u5404\u7EF4\u5EA6\u4E0A\u9650\u786E\u4FDD\u5747\u8861\u8986\u76D6\
+        , \u9632\u6B62\u5355\u7EF4\u5EA6\u4E3B\u5BFC. X4 \u4E0A\u9650\u6700\u9AD8\u56E0\
+        \u5176\u4E00\u81F4\u6027\u68C0\u67E5\u9700\u6C42\u6700\u5927 (\u542B Harness\
+        \ \u5408\u89C4)."
     slot_reservation:
       X4: 8
       X1: 5
       X3: 5
       X2: 4
-      rationale: 剩余 22 槽位按需分配, 优先 X4 一致性检查和新维度扩展.
+      rationale: "\u5269\u4F59 22 \u69FD\u4F4D\u6309\u9700\u5206\u914D, \u4F18\u5148\
+        \ X4 \u4E00\u81F4\u6027\u68C0\u67E5\u548C\u65B0\u7EF4\u5EA6\u6269\u5C55."
     exemption_process: ADR + governance-team approval
-    review_trigger: 剩余槽位 < 5 或每季度末
-    reason: Phase 8 合并完成 — 10 条 CR-HARNESS-* 合并为 4 条 (STRUCTURE/MOF-INTEGRATION/OPERATIONS/GOVERNANCE).
-      当前 85 active, 预算内.
+    review_trigger: "\u5269\u4F59\u69FD\u4F4D < 5 \u6216\u6BCF\u5B63\u5EA6\u672B"
+    reason: "Phase 8 \u5408\u5E76\u5B8C\u6210 \u2014 10 \u6761 CR-HARNESS-* \u5408\
+      \u5E76\u4E3A 4 \u6761 (STRUCTURE/MOF-INTEGRATION/OPERATIONS/GOVERNANCE). \u5F53\
+      \u524D 85 active, \u9884\u7B97\u5185."
   lifecycle:
     draft_to_active_days: 7
     deprecated_to_removed_days: 28
