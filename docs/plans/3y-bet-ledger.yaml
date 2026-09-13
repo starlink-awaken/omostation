@@ -3202,7 +3202,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游 (TinyBOS Embodied Protocol & Home LAN Roaming
     Mesh)
   track: T8-SURFACE
@@ -3220,6 +3220,43 @@ bets:
   - projects/agora/src/agora/transport/p2p_mesh.py
   - projects/agora/tests/test_tinybos_mesh.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+  done_at: '2026-09-13'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c582f07a7239d057db07a0345f0ac5e7c94a2d02
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 - appetite: 3 days
   circuit_breaker: 分级路由如遇 L0/L1 判定置信度低于阈值，必须平滑降级至上一层重型模型，严禁因追求低延迟而牺牲决策正确性。
   depends_on:
@@ -3942,7 +3979,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: in_progress
   title: 基于风险-置信度矩阵的自适应授权与 Cockpit Resident Flight Deck 四维透明指挥舱 (Risk-Confidence Adaptive
     Authorization & Cockpit Flight Deck)
   track: T8-EXECUTION
