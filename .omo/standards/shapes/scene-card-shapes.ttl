@@ -1,0 +1,175 @@
+# Scene Card SHACL Shapes
+# =======================
+# W3C SHACL validation shapes for scene card lifecycle governance.
+#
+# SSOT: .omo/standards/shapes/scene-card-shapes.ttl
+# Version: 1.0.0 | 2026-09-13
+# Reference: BET-Y1Q4-T6-27
+# Aligned with: .omo/standards/scene-card-lifecycle.yaml
+
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix scene: <https://omostation.starlink-awaken.com/ns/scene#> .
+@prefix lifecycle: <https://omostation.starlink-awaken.com/ns/lifecycle#> .
+
+# ── Scene Card Shape ──
+# Validates the structure and constraints of scene card definitions.
+
+scene:CardShape
+    a sh:NodeShape ;
+    sh:targetClass scene:Card ;
+    sh:closed false ;
+
+    # Required: unique identifier
+    sh:property [
+        sh:path scene:id ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:pattern "^[a-zA-Z][a-zA-Z0-9_-]{1,127}$" ;
+        sh:message "Scene card 'id' must be 2-128 chars, start with a letter" ;
+    ] ;
+
+    # Required: display title
+    sh:property [
+        sh:path scene:title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:minLength 1 ;
+        sh:message "Scene card must have a non-empty 'title'" ;
+    ] ;
+
+    # Required: lifecycle status
+    sh:property [
+        sh:path scene:status ;
+        sh:in ( "draft" "shadow" "assisted" "supervised" "routine" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Scene card 'status' must be one of: draft, shadow, assisted, supervised, routine" ;
+    ] ;
+
+    # Optional: sample count for lifecycle gating
+    sh:property [
+        sh:path scene:samples ;
+        sh:datatype xsd:integer ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+        sh:minInclusive 0 ;
+        sh:message "Scene card 'samples' must be a non-negative integer" ;
+    ] ;
+
+    # Optional: calibration score for assisted+ lifecycle
+    sh:property [
+        sh:path scene:calibration ;
+        sh:datatype xsd:decimal ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "Scene card 'calibration' must be between 0.0 and 1.0" ;
+    ] ;
+
+    # Conditional: assisted+ requires samples >= 30
+    sh:sparql [
+        sh:message "Scene cards with status 'assisted' or higher must have samples >= 30" ;
+        sh:select """
+            SELECT $this
+            WHERE {
+                $this scene:status ?status .
+                FILTER (?status IN ("assisted", "supervised", "routine"))
+                FILTER NOT EXISTS {
+                    $this scene:samples ?samples .
+                    FILTER (?samples >= 30)
+                }
+            }
+        """ ;
+    ] ;
+
+    # Conditional: routine requires calibration >= 0.6
+    sh:sparql [
+        sh:message "Scene cards with status 'routine' must have calibration >= 0.6" ;
+        sh:select """
+            SELECT $this
+            WHERE {
+                $this scene:status "routine" .
+                FILTER NOT EXISTS {
+                    $this scene:calibration ?cal .
+                    FILTER (?cal >= 0.6)
+                }
+            }
+        """ ;
+    ] ;
+
+    # Optional: activation mode
+    sh:property [
+        sh:path scene:activation ;
+        sh:in ( "preview" "controlled" "active" ) ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+        sh:message "Scene card 'activation' must be one of: preview, controlled, active" ;
+    ] .
+
+# ── Scene Domain Shape ──
+# Validates business domain classification.
+
+scene:DomainShape
+    a sh:NodeShape ;
+    sh:targetClass scene:Domain ;
+
+    sh:property [
+        sh:path scene:domainId ;
+        sh:in ( "work" "health" "research" "knowledge" "governance" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Scene domain must be one of: work, health, research, knowledge, governance" ;
+    ] .
+
+# ── Lifecycle Transition Shape ──
+# Validates that lifecycle transitions follow the correct order.
+
+lifecycle:TransitionShape
+    a sh:NodeShape ;
+    sh:targetClass lifecycle:Transition ;
+
+    sh:property [
+        sh:path lifecycle:fromStatus ;
+        sh:in ( "draft" "shadow" "assisted" "supervised" "routine" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Transition 'fromStatus' must be a valid lifecycle status" ;
+    ] ;
+
+    sh:property [
+        sh:path lifecycle:toStatus ;
+        sh:in ( "draft" "shadow" "assisted" "supervised" "routine" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Transition 'toStatus' must be a valid lifecycle status" ;
+    ] ;
+
+    # Constraint: transitions must be sequential (no skipping)
+    sh:sparql [
+        sh:message "Lifecycle transitions must be sequential (cannot skip levels)" ;
+        sh:select """
+            SELECT $this
+            WHERE {
+                $this lifecycle:fromStatus ?from ;
+                      lifecycle:toStatus ?to .
+                VALUES (?from ?to) {
+                    ("draft" "draft")
+                    ("draft" "shadow")
+                    ("shadow" "shadow")
+                    ("shadow" "assisted")
+                    ("assisted" "assisted")
+                    ("assisted" "supervised")
+                    ("supervised" "supervised")
+                    ("supervised" "routine")
+                    ("routine" "routine")
+                }
+                FILTER (?from != ?to)
+            }
+        """ ;
+    ] .
