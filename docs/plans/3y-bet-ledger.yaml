@@ -2854,7 +2854,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化 (OpenHuman Local Bridge & Biometric
     Normalizer)
   track: T6-EVOLUTION
@@ -2874,6 +2874,7 @@ bets:
   - projects/family-hub/src/family_hub/health_importer.py
   - projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+  done_at: '2026-09-13'
 - appetite: 2 days
   circuit_breaker: 图存储与推理全量在本地沙箱运行；若 Oxigraph 初始化或查询失败，自动降级为 SQLite 本地事务存储，严禁阻塞核心流程。
   depends_on:
@@ -29314,7 +29315,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: OMO 持久 Role/Capsule/Handoff/Claim/Verification/ASD 语义落地
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -29339,6 +29340,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:08cf945ec60df0d75268a05f09c4771d7c75cde1a94ba293798caf1886af7bd7
     decision_ref: decision://accepted/BET-Y1Q4-T10-165
+  done_at: '2026-09-13'
 - appetite: 3 days
   done_when:
   - ASD 五核心面板（Overview/Spine/Agents/Milestones/Degradation）在驾驶舱可呈现、有 provenance
