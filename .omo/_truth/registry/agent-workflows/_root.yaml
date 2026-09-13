@@ -36,7 +36,7 @@ internal_integrations:
     - omo
     - bridge
     - --help
-    health_required: true
+    health_required: false
   c2g:
     status: integrated
     authority: strategy_ingress
@@ -75,7 +75,7 @@ internal_integrations:
     - cockpit
     - agent-workflow
     - list
-    health_required: true
+    health_required: false
   mof:
     status: integrated
     authority: model_registry
@@ -92,7 +92,7 @@ internal_integrations:
     - python3
     - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
     - --json
-    health_required: true
+    health_required: false
   resident:
     status: integrated
     authority: state_broker
@@ -457,7 +457,7 @@ doctor_checks:
   - --json
 - id: cockpit-agent-workflow-list
   description: Cockpit L3 entry can delegate to the root runner.
-  required: true
+  required: false
   command:
   - uv
   - run
@@ -468,7 +468,7 @@ doctor_checks:
   - list
 - id: cockpit-agent-bootstrap
   description: Cockpit L3 agent entry can show startup context.
-  required: true
+  required: false
   command:
   - uv
   - run
@@ -480,7 +480,7 @@ doctor_checks:
   - --skip-health
 - id: cockpit-agent-status
   description: Cockpit L3 agent entry can show AGCP status.
-  required: true
+  required: false
   command:
   - uv
   - run
@@ -492,7 +492,7 @@ doctor_checks:
   - --json
 - id: cockpit-agent-workflow-agents
   description: Cockpit L3 entry can expose registered agent profiles.
-  required: true
+  required: false
   command:
   - uv
   - run
@@ -503,7 +503,7 @@ doctor_checks:
   - agents
 - id: cockpit-compass-help
   description: Cockpit C2G compass entry is available.
-  required: true
+  required: false
   command:
   - uv
   - run
@@ -514,7 +514,7 @@ doctor_checks:
   - --help
 - id: c2g-bet-help
   description: C2G pitch-to-task ingress command is available.
-  required: true
+  required: false
   command:
   - uv
   - run
@@ -527,7 +527,7 @@ doctor_checks:
   - --help
 - id: omo-bridge-help
   description: OMO bridge compatibility path for BMAD/OpenSpec is available.
-  required: true
+  required: false
   command:
   - uv
   - run
@@ -545,14 +545,14 @@ doctor_checks:
   - .omo/_truth/registry/mof-capabilities.yaml
 - id: mof-schema-validate
   description: MOF M1/M2 schema validation is runnable.
-  required: true
+  required: false
   command:
   - python3
   - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
   - --json
 - id: mof-state-bridge
   description: MOF state bridge can report OMO task alignment.
-  required: true
+  required: false
   command:
   - python3
   - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py

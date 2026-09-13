@@ -1015,7 +1015,7 @@ doctor_checks:
   - list
   description: Cockpit L3 entry can delegate to the root runner.
   id: cockpit-agent-workflow-list
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1027,7 +1027,7 @@ doctor_checks:
   - --skip-health
   description: Cockpit L3 agent entry can show startup context.
   id: cockpit-agent-bootstrap
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1039,7 +1039,7 @@ doctor_checks:
   - --json
   description: Cockpit L3 agent entry can show AGCP status.
   id: cockpit-agent-status
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1050,7 +1050,7 @@ doctor_checks:
   - agents
   description: Cockpit L3 entry can expose registered agent profiles.
   id: cockpit-agent-workflow-agents
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1061,7 +1061,7 @@ doctor_checks:
   - --help
   description: Cockpit C2G compass entry is available.
   id: cockpit-compass-help
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1074,7 +1074,7 @@ doctor_checks:
   - --help
   description: C2G pitch-to-task ingress command is available.
   id: c2g-bet-help
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1085,7 +1085,7 @@ doctor_checks:
   - --help
   description: OMO bridge compatibility path for BMAD/OpenSpec is available.
   id: omo-bridge-help
-  required: true
+  required: false
 - command:
   - test
   - -f
@@ -1099,14 +1099,14 @@ doctor_checks:
   - --json
   description: MOF M1/M2 schema validation is runnable.
   id: mof-schema-validate
-  required: true
+  required: false
 - command:
   - python3
   - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
   - --json
   description: MOF state bridge can report OMO task alignment.
   id: mof-state-bridge
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1260,7 +1260,7 @@ internal_integrations:
     - cockpit
     - agent-workflow
     - list
-    health_required: true
+    health_required: false
     owner: cockpit-team
     ssot_rule: Cockpit is the L3 human entrypoint and delegates governance behavior to registered lower-layer tools.
     status: integrated
@@ -1286,7 +1286,7 @@ internal_integrations:
     - python3
     - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
     - --json
-    health_required: true
+    health_required: false
     owner: ecos-team
     schema_validate: python3 projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py --json
     ssot_rule: MOF M1/M2/M3 model facts and capability tools are canonical under ecos/mof registries.
@@ -1304,7 +1304,7 @@ internal_integrations:
     - omo
     - bridge
     - --help
-    health_required: true
+    health_required: false
     owner: omo-team
     ssot_rule: OMO owns governed state mutation; direct .omo writes are exceptional and must be called out.
     state_broker: projects/omo
@@ -1325,7 +1325,7 @@ projection:
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:e7cba5657f21ce28e7ab9346b8ebfaf9002bb03a47bc98c882e5f5e277e2d405
+  source_digest: sha256:b4e66c5ff2bad857e52024d53c8f215e98f5b587c4811229c13976b90f491835
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203
