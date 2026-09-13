@@ -1286,7 +1286,7 @@ internal_integrations:
     - python3
     - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
     - --json
-    health_required: false
+    health_required: true
     owner: ecos-team
     schema_validate: python3 projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py --json
     ssot_rule: MOF M1/M2/M3 model facts and capability tools are canonical under ecos/mof registries.
@@ -1325,7 +1325,7 @@ projection:
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:b4e66c5ff2bad857e52024d53c8f215e98f5b587c4811229c13976b90f491835
+  source_digest: sha256:69b97a5f1d6bc26395a3a36c06ee23a51eda21c826c65264368c303d8834b52e
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203

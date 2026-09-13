@@ -92,7 +92,7 @@ internal_integrations:
     - python3
     - projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
     - --json
-    health_required: false
+    health_required: true
   resident:
     status: integrated
     authority: state_broker
