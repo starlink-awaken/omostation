@@ -182,7 +182,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
-      max_findings: 61 # 2026-09-06 56→57; 2026-09-11 57→58→59→60; 2026-09-13 60→61: BET-Y1Q4-T8-23 spec 新增知识文件推高计数
+      max_findings: 62 # 2026-09-06 56→57; 2026-09-11 57→58→59→60; 2026-09-13 60→61; 2026-09-14 61→62: BET-Y1Q4-T8-23 交付窗口并发新增知识文件推高计数
       expires: 2026-10-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
