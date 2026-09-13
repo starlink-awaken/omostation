@@ -3258,6 +3258,35 @@ bets:
   - projects/aetherforge/src/aetherforge/engine/speculative.py
   - projects/aetherforge/tests/test_cognitive_hierarchy.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+          merged_reachable_commit:
+            ref: git://origin/main@pending-merge-pr3749
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - appetite: 2-3 days
   circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
   done_at: '2026-09-06'
