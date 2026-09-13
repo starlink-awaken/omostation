@@ -10,8 +10,8 @@ ROOT="$(git rev-parse --show-toplevel)"
 # config 的 remote.origin.url (实证: 被改写成 omostation-runtime 后
 # fetch/gh pr/验证静默失效). checkout/worktree add 是观测到的污染窗口.
 # 失败/绕过由 pre-push blocking remote-hygiene 兜底拦截.
-if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/ssot/fix-remotes.sh" ]; then
-  bash "$ROOT/bin/ssot/fix-remotes.sh" >/dev/null 2>&1 || true
+if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/ssot/fix-remotes.py" ]; then
+  bash "$ROOT/bin/ssot/fix-remotes.py" >/dev/null 2>&1 || true
 fi
 # ── BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 ──────────────
 # advisory (恒不阻断 checkout); 覆盖 git worktree add 绕过 gac-worktree.sh
