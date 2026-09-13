@@ -262,3 +262,12 @@ entries:
   range: origin/main..3018d3897
   recorded_at: '2026-09-11T08:02:03.623579+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|19ac62aac9247304
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 19ac62aac9247304
+  kind: gitlink-regress
+  reason: submodule projects/knowledge/kairon pointer f616426e7771 unreachable (not in any remote ref); aligned to 38e3eb5593b9 on origin/main to fix gac-gate/governance-verify
+  range: origin/main..HEAD
+  recorded_at: '2026-09-13T05:02:16.272781+00:00'
+  active: true
