@@ -459,6 +459,61 @@ def collect_workflows() -> list[dict]:
             pass
     return out
 
+
+def collect_alerts() -> dict:
+    """告警聚合：CI 红源 + 开放债务 + 需关注探针。"""
+    import yaml
+    from glob import glob
+    alerts = []
+    try:
+        ci = json.loads(open(str(ROOT / "runtime/dashboard/data.json")).read()) if (ROOT / "runtime/dashboard/data.json").is_file() else {}
+        for w in (ci.get("ci", {}).get("red_workflows") or []):
+            alerts.append({"severity": "high", "source": "ci", "msg": f"workflow 红源: {w['workflow']} ({w['fail']}/{w['total']})"})
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        for f in glob(str(ROOT / ".omo/debt/items/*.yaml")):
+            d = yaml.safe_load(Path(f).read_text()) or {}
+            if d.get("status") in ("open", "registered"):
+                alerts.append({"severity": d.get("severity", "medium"), "source": "debt",
+                               "msg": f"开放债务: {d.get('title', d.get('id',''))[:50]}"})
+    except Exception:  # noqa: BLE001
+        pass
+    high = sum(1 for a in alerts if a["severity"] == "high")
+    return {"alerts": alerts[:30], "high": high, "total": len(alerts)}
+
+
+def collect_deployments() -> dict:
+    """部署活动：近 7 天 commit。"""
+    code, out = run(["git", "log", "--oneline", "--no-merges", "-n", "20",
+                     "--since", "7 days ago", "--format=%h|%s|%ad", "--date=short"])
+    commits = []
+    if code == 0:
+        for line in out.splitlines():
+            parts = line.split("|", 2)
+            if len(parts) == 3:
+                commits.append({"sha": parts[0], "subject": parts[1][:70], "date": parts[2]})
+    return {"commits": commits, "total": len(commits)}
+
+
+def collect_closeouts() -> dict:
+    """待 closeout：engineering done 但缺 retro/value 的 BET。"""
+    import yaml
+    from glob import glob
+    ready = []
+    for f in sorted(glob(str(ROOT / "docs/plans/3y-bet-ledger-archive.yaml"))):
+        try:
+            doc = yaml.safe_load(Path(f).read_text()) or {}
+            for b in (doc.get("bets") or []):
+                if not isinstance(b, dict):
+                    continue
+                eng = (b.get("completion_evidence") or {}).get("axes", {}).get("engineering", {})
+                if eng.get("status") == "VERIFIED":
+                    ready.append({"id": b.get("id", ""), "title": str(b.get("title", ""))[:50]})
+        except Exception:  # noqa: BLE001
+            pass
+    return {"closeouts": ready[:15], "total": len(ready)}
+
 def build_payload() -> dict:
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -480,6 +535,9 @@ def build_payload() -> dict:
         "submodules": collect_submodules(),
         "debt": collect_debt(),
         "workflows": collect_workflows(),
+        "alerts": collect_alerts(),
+        "deployments": collect_deployments(),
+        "closeouts": collect_closeouts(),
     }
 
 
