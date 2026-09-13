@@ -1993,7 +1993,9 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
+  value_indicator_policy: false
   title: 主动健康连续体征监测、异常预警与就诊咨询闭环场景包
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -2008,6 +2010,42 @@ bets:
   - docs/scene-cards/personal-health-monitor.yaml
   - projects/domain-cartridges/health/
   - .omo/_knowledge/retros/BET-Y2Q2-T7-03.md
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-12-y2q2-t7-03-health-monitor-design.md
+            sha256: sha256:c36b397da52890c0bf7e2ceb4207637dd15c08ce7df15380ce01a1e12ff81099
+          merged_reachable_commit:
+            ref: git://origin/main@b1e50ee89e0f0d4768c1d5b57a7804cec636ee15
+          tests:
+            ref: receipt://projects/domain-cartridges/health/domain/health/test_monitor_pipeline.py
+            sha256: sha256:PLACEHOLDER
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-03.md
+            sha256: sha256:PLACEHOLDER
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-03.md
+            sha256: sha256:PLACEHOLDER
+          fresh_receipt:
+            ref: receipt://docs/scene-cards/personal-health-monitor.yaml
+            sha256: sha256:PLACEHOLDER
+          live_canary:
+            ref: receipt://docs/scene-cards/personal-health-monitor.yaml
+            sha256: sha256:PLACEHOLDER
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-03.md
+            sha256: sha256:PLACEHOLDER
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-12-y2q2-t7-03-health-monitor-design.md
     spec_version: 1.0.0
@@ -2836,7 +2874,9 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-12'
+  value_indicator_policy: false
   title: OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化 (OpenHuman Local Bridge & Biometric
     Normalizer)
   track: T6-EVOLUTION
@@ -2856,6 +2896,42 @@ bets:
   - projects/family-hub/src/family_hub/health_importer.py
   - projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-12-t6-25-openhuman-bridge-biometric-normalizer-design.md
+            sha256: sha256:PLACEHOLDER
+          merged_reachable_commit:
+            ref: git://origin/main@e8cf3d22152dfa16467121f05ee12aac93b4a7d0
+          tests:
+            ref: receipt://projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
+            sha256: sha256:PLACEHOLDER
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - appetite: 2 days
   circuit_breaker: 图存储与推理全量在本地沙箱运行；若 Oxigraph 初始化或查询失败，自动降级为 SQLite 本地事务存储，严禁阻塞核心流程。
   depends_on:
