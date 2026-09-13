@@ -181,7 +181,8 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 ### worktree 子模块与 remote 完整性（2026-09-12, BET-Y1Q4-T10-161）
 
 - **gitlink 新鲜度**：worktree claim 默认全量 init 子模块；`SKIP_SUBMODULE_INIT=1` 快速路径与 `git worktree add` 直创路径由 post-checkout 守卫兜底——对 pin 不一致的子模块做本地无网络 `submodule update --init --no-fetch` 对齐（只动子模块工作树，**不改根指针**）。本地缺 pin 对象时打印修复命令，不联网。
-- **remote 污染特征**：主仓 remote URL 落入 `.gitmodules` 子仓 URL 集合即为污染（实证：origin 被并发会话改写成 cockpit-ui 仓后，一切 origin/main 验证静默失效）。守卫只告警不改写；修复：`git remote set-url origin https://github.com/starlink-awaken/omostation.git`。
+- **remote 污染特征**：主仓 remote URL 落入 `.gitmodules` 子仓 URL 集合即为污染（实证：origin 被并发会话改写成 cockpit-ui 仓后，一切 origin/main 验证静默失效）。**强制约束（2026-09-13 三层）**：① post-checkout hook `remote-hygiene-fix` 幂等自愈（checkout/worktree add 是污染窗口）② pre-push `remote-hygiene-check.py` 阻断（fetch+push URL 双校验）③ cron 每小时 `fix-remotes.py` 巡检自愈（`runtime/cron/remote-hygiene.log`）。push URL 可被单独改写，两层都要查。
+- **污染根因（2026-09-13 实证）**：旧 `fix-remotes.sh`（bash 版）本身就是污染源——① `[ -d .git ]` 在 worktree 中恒 false → 自愈静默失效；② 对未初始化子模块（目录存在无 `.git`）执行 `git -C <sub> remote set-url` 会向上解析写进主仓共享 config（串联覆盖，最后写的赢）→ root origin 被写成最后一个子模块 URL（omostation-runtime）。已 Python 重写（`fix-remotes.py`，sh 为 shim）：worktree 兼容 + 跳过未初始化子模块 + 幂等。检查端同理：未初始化子模块不读 remote（防误报）。
 - **手工核验**：`bash bin/gac/gac-worktree.sh guard-submodules [--fix]`；跳过守卫：`GAC_SKIP_POST_CHEKOUT_GUARD=1`。
 
 ### ledger BET 条目安全插入（2026-09-12, 批次 31 复盘固化）

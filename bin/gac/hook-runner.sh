@@ -220,6 +220,8 @@ run_hook_pre_push() {
 }
 
 # ── 解析 manifest 并执行 post-checkout 检查 ─────────────────
+# remote-hygiene 自愈 (remote-hygiene-fix) 由 .githooks/post-checkout 直调
+# fix-remotes.sh — 放最前 (快, 无网络), 不在此重复执行 (幂等但拖慢 checkout).
 run_hook_post_checkout() {
   local py="$ROOT/bin/gac/managed-python"
   run_check "branch-naming" "$py run --profile pyyaml -- bin/gac/check-branch-naming.py --branch $CURRENT_BRANCH --policy .omo/_truth/registry/branch-prefix-policy.yaml" true 3 || FAILED=1

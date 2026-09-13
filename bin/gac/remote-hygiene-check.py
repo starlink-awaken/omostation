@@ -92,21 +92,28 @@ def main():
 
     failed = 0
 
-    # Root check: origin must equal canonical
-    result = _git(["remote", "get-url", "origin"], root)
-    if result.returncode == 0:
-        actual = result.stdout.strip()
-        if not _matches(actual, canonical_root):
-            print(
-                f"❌ {root or 'root'} origin 指向异常: {actual}",
-                file=sys.stderr,
-            )
-            print(f"   应为: {canonical_root}", file=sys.stderr)
-            failed += 1
+    # Root check: origin fetch + push URL must both equal canonical.
+    # (2026-09-13 强化: 实证污染事故中 push URL 可被单独改写, 且污染窗口
+    # 不止 push — fetch/gh pr 解析同样受害. 两个 URL 都必须锁定.)
+    for url_args, label in (([], "fetch"), (["--push"], "push")):
+        result = _git(["remote", "get-url", *url_args, "origin"], root)
+        if result.returncode == 0:
+            actual = result.stdout.strip()
+            if not _matches(actual, canonical_root):
+                print(
+                    f"❌ {root or 'root'} origin {label} URL 指向异常: {actual}",
+                    file=sys.stderr,
+                )
+                print(f"   应为: {canonical_root}", file=sys.stderr)
+                failed += 1
 
     for sub_path, expected_url in sub_expected.items():
         repo_path = os.path.join(root, sub_path)
         if not os.path.isdir(repo_path):
+            continue
+        # 2026-09-13: 未初始化子模块 (目录存在但无 .git) 必须跳过 —
+        # git -C 会向上解析到主仓 config, 读到主仓 URL 造成误报.
+        if not os.path.exists(os.path.join(repo_path, ".git")):
             continue
         result = _git(["remote", "get-url", "origin"], repo_path)
         if result.returncode != 0:
