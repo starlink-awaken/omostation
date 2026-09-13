@@ -3287,6 +3287,11 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-13-t6-28-cognitive-hierarchy-radix-kv-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:5d1957b83a556c33e3a448047f326ce35aca710b0e83a5362a46fe2eab6f5c44
+    decision_ref: decision://accepted/BET-Y1Q4-T6-28
 - appetite: 2-3 days
   circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
   done_at: '2026-09-06'
