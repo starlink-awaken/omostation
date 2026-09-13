@@ -241,119 +241,6 @@ def collect_docs() -> list[dict]:
 
 
 
-
-def collect_ci() -> dict:
-    """CI Pipeline 健康：每 workflow 最近 run 状态 + 失败率。"""
-    from collections import Counter
-    code, out = run(["gh", "run", "list", "--limit", "60", "--json",
-                     "workflowName,status,conclusion,event,createdAt,databaseId"])
-    if code != 0 or not out.startswith("["):
-        return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
-    try:
-        data = json.loads(out)
-    except Exception:
-        return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
-    by_wf: dict[str, list[str]] = {}
-    for r in data:
-        w = r.get("workflowName", "?")
-        conc = r.get("conclusion", "")
-        status = "pass" if conc == "success" else ("fail" if conc in ("failure", "cancelled", "timed_out") else "other")
-        by_wf.setdefault(w, []).append(status)
-    summaries = []
-    for w, statuses in sorted(by_wf.items()):
-        cc = Counter(statuses)
-        total = len(statuses)
-        fails = cc.get("fail", 0)
-        summaries.append({"workflow": w, "total": total, "pass": cc.get("pass", 0),
-                          "fail": fails, "failure_rate": round(fails / total, 2) if total else 0,
-                          "health": "red" if fails > 0 else "green"})
-    red = [s for s in summaries if s["health"] == "red"][:8]
-    return {"total_runs": len(data), "workflows": len(by_wf), "red_workflows": red, "all": summaries[:20]}
-
-
-def collect_cron() -> dict:
-    """Cron 调度台：job 的 schedule / 状态 / 一致性。"""
-    import yaml
-    from pathlib import Path as _P
-    reg_file = ROOT / ".omo" / "cron" / "registry.yaml"
-    if not reg_file.is_file():
-        return {"total": 0, "active": 0, "proposed": 0, "installed": 0, "crontab_lines": 0, "planes": {}, "jobs": []}
-    reg = yaml.safe_load(reg_file.read_text()) or {}
-    jobs = reg.get("jobs", [])
-    active_cr = [j for j in jobs if j.get("status") == "active"]
-    proposed = [j for j in jobs if j.get("status") == "proposed"]
-    installed_declared = [j for j in jobs if j.get("reality") == "installed"]
-    planes: dict[str, int] = {}
-    for j in jobs:
-        for pl in j.get("planes", []):
-            planes[pl] = planes.get(pl, 0) + 1
-    code, ct_out = run(["crontab", "-l"])
-    installed_lines = [l for l in ct_out.splitlines() if l.strip() and not l.strip().startswith("#")] if code == 0 else []
-    sample = [{"name": j.get("name", ""), "schedule": j.get("schedule", ""),
-               "status": j.get("status", ""), "reality": j.get("reality", "declared_only")} for j in jobs[:40]]
-    return {"total": len(jobs), "active": len(active_cr), "proposed": len(proposed),
-            "installed": len(installed_declared), "crontab_lines": len(installed_lines),
-            "planes": planes, "jobs": sample}
-
-
-def collect_submodules() -> dict:
-    """子模块指针矩阵：当前 SHA vs origin/main。"""
-    subs: dict[str, dict] = {}
-    for name in ("omo", "cockpit-ui", "cockpit", "agora", "ecos", "l4-kernel",
-                 "bus-foundation", "aetherforge", "model-driven", "knowledge", "family-hub"):
-        sp = ROOT / "projects" / name
-        if not sp.is_dir():
-            continue
-        cur = run(["git", "-C", str(sp), "rev-parse", "HEAD"])[1] if run(["git", "-C", str(sp), "rev-parse", "HEAD"])[0] == 0 else None
-        origin_main = run(["git", "-C", str(sp), "rev-parse", "origin/main"])[1] if run(["git", "-C", str(sp), "rev-parse", "origin/main"])[0] == 0 else None
-        behind = ahead = 0
-        if cur and origin_main:
-            beh = run(["git", "-C", str(sp), "rev-list", "--left-right", "--count", f"origin/main...{cur}"])[1] if run(["git", "-C", str(sp), "rev-list", "--left-right", "--count", f"origin/main...{cur}"])[0] == 0 else ""
-            if beh:
-                parts = beh.strip().split()
-                if len(parts) == 2:
-                    behind, ahead = int(parts[0]), int(parts[1])
-        status = "diverged" if behind and ahead else ("behind" if behind else ("ahead" if ahead else "synced"))
-        subs[name] = {"current": (cur or "")[:12], "origin_main": (origin_main or "")[:12],
-                      "behind": behind, "ahead": ahead, "status": status}
-    synced = sum(1 for s in subs.values() if s["status"] == "synced")
-    return {"submodules": subs, "synced": synced, "total": len(subs)}
-
-
-def collect_debt() -> dict:
-    """债务与决策：debt 项 + open decision。"""
-    import yaml
-    from glob import glob
-    debts = []
-    for f in sorted(glob(str(ROOT / ".omo/debt/items/*.yaml"))):
-        try:
-            d = yaml.safe_load(Path(f).read_text()) or {}
-            debts.append({"id": d.get("id", Path(f).stem), "status": str(d.get("status", "?")),
-                          "severity": d.get("severity", ""), "title": str(d.get("title", ""))[:60]})
-        except Exception:  # noqa: BLE001
-            pass
-    open_d = [d for d in debts if d["status"] in ("open", "proposed", "registered")]
-    closeout = [Path(f).stem for f in sorted(glob(str(ROOT / ".omo/_knowledge/retros/BET-*.md")))[-8:]]
-    return {"total": len(debts), "open": len(open_d), "debts": debts[:15], "recent_retros": closeout}
-
-
-def collect_workflows() -> list[dict]:
-    """工作流活动：近次 agent-workflow run。"""
-    from glob import glob
-    import yaml
-    runs = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/runs/*.yaml")), reverse=True)[:15]
-    out = []
-    for f in runs:
-        try:
-            content = Path(f).read_text().split("---")[0]
-            meta = yaml.safe_load(content) or {}
-            out.append({"run_id": meta.get("run_id", ""), "workflow_id": str(meta.get("workflow_id", ""))[:40],
-                        "status": meta.get("status", ""), "created_at": str(meta.get("created_at", ""))[:19]})
-        except Exception:  # noqa: BLE001
-            pass
-    return out
-
-
 def collect_probes() -> dict:
     """Probe 心跳矩阵：守护/探针 SLA 健康（红/绿/陈旧）。"""
     import yaml
@@ -459,6 +346,118 @@ def collect_workspace_hygiene() -> dict:
     locks = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/locks/*.yaml")))
     return {"worktrees": stale_wt, "total_worktrees": len(stale_wt),
             "orphan_locks": locks[:10], "total_locks": len(locks)}
+
+
+def collect_ci() -> dict:
+    """CI Pipeline 健康。"""
+    from collections import Counter
+    code, out = run(["gh", "run", "list", "--limit", "60", "--json",
+                     "workflowName,status,conclusion,event,createdAt,databaseId"])
+    if code != 0 or not out.startswith("["):
+        return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
+    try:
+        data = json.loads(out)
+    except Exception:
+        return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
+    by_wf: dict[str, list[str]] = {}
+    for r in data:
+        w = r.get("workflowName", "?")
+        conc = r.get("conclusion", "")
+        status = "pass" if conc == "success" else ("fail" if conc in ("failure", "cancelled", "timed_out") else "other")
+        by_wf.setdefault(w, []).append(status)
+    summaries = []
+    for w, statuses in sorted(by_wf.items()):
+        cc = Counter(statuses)
+        total = len(statuses)
+        fails = cc.get("fail", 0)
+        summaries.append({"workflow": w, "total": total, "pass": cc.get("pass", 0),
+                          "fail": fails, "failure_rate": round(fails / total, 2) if total else 0,
+                          "health": "red" if fails > 0 else "green"})
+    red = [s for s in summaries if s["health"] == "red"][:8]
+    return {"total_runs": len(data), "workflows": len(by_wf), "red_workflows": red, "all": summaries[:20]}
+
+
+def collect_cron() -> dict:
+    """Cron 调度台。"""
+    import yaml
+    from pathlib import Path as _P
+    reg_file = ROOT / ".omo" / "cron" / "registry.yaml"
+    if not reg_file.is_file():
+        return {"total": 0, "active": 0, "proposed": 0, "installed": 0, "crontab_lines": 0, "planes": {}, "jobs": []}
+    reg = yaml.safe_load(reg_file.read_text()) or {}
+    jobs = reg.get("jobs", [])
+    active_cr = [j for j in jobs if j.get("status") == "active"]
+    proposed = [j for j in jobs if j.get("status") == "proposed"]
+    installed_declared = [j for j in jobs if j.get("reality") == "installed"]
+    planes: dict[str, int] = {}
+    for j in jobs:
+        for pl in j.get("planes", []):
+            planes[pl] = planes.get(pl, 0) + 1
+    code, ct_out = run(["crontab", "-l"])
+    installed_lines = [l for l in ct_out.splitlines() if l.strip() and not l.strip().startswith("#")] if code == 0 else []
+    sample = [{"name": j.get("name", ""), "schedule": j.get("schedule", ""),
+               "status": j.get("status", ""), "reality": j.get("reality", "declared_only")} for j in jobs[:40]]
+    return {"total": len(jobs), "active": len(active_cr), "proposed": len(proposed),
+            "installed": len(installed_declared), "crontab_lines": len(installed_lines),
+            "planes": planes, "jobs": sample}
+
+
+def collect_submodules() -> dict:
+    """子模块指针矩阵。"""
+    subs: dict[str, dict] = {}
+    for name in ("omo", "cockpit-ui", "cockpit", "agora", "ecos", "l4-kernel",
+                 "bus-foundation", "aetherforge", "model-driven", "knowledge", "family-hub"):
+        sp = ROOT / "projects" / name
+        if not sp.is_dir():
+            continue
+        cur = run(["git", "-C", str(sp), "rev-parse", "HEAD"])[1] if run(["git", "-C", str(sp), "rev-parse", "HEAD"])[0] == 0 else None
+        origin_main = run(["git", "-C", str(sp), "rev-parse", "origin/main"])[1] if run(["git", "-C", str(sp), "rev-parse", "origin/main"])[0] == 0 else None
+        behind = ahead = 0
+        if cur and origin_main:
+            beh = run(["git", "-C", str(sp), "rev-list", "--left-right", "--count", f"origin/main...{cur}"])[1] if run(["git", "-C", str(sp), "rev-list", "--left-right", "--count", f"origin/main...{cur}"])[0] == 0 else ""
+            if beh:
+                parts = beh.strip().split()
+                if len(parts) == 2:
+                    behind, ahead = int(parts[0]), int(parts[1])
+        status = "diverged" if behind and ahead else ("behind" if behind else ("ahead" if ahead else "synced"))
+        subs[name] = {"current": (cur or "")[:12], "origin_main": (origin_main or "")[:12],
+                      "behind": behind, "ahead": ahead, "status": status}
+    synced = sum(1 for s in subs.values() if s["status"] == "synced")
+    return {"submodules": subs, "synced": synced, "total": len(subs)}
+
+
+def collect_debt() -> dict:
+    """债务与决策。"""
+    import yaml
+    from glob import glob
+    debts = []
+    for f in sorted(glob(str(ROOT / ".omo/debt/items/*.yaml"))):
+        try:
+            d = yaml.safe_load(Path(f).read_text()) or {}
+            debts.append({"id": d.get("id", Path(f).stem), "status": str(d.get("status", "?")),
+                          "severity": d.get("severity", ""), "title": str(d.get("title", ""))[:60]})
+        except Exception:  # noqa: BLE001
+            pass
+    open_d = [d for d in debts if d["status"] in ("open", "proposed", "registered")]
+    closeout = [Path(f).stem for f in sorted(glob(str(ROOT / ".omo/_knowledge/retros/BET-*.md")))[-8:]]
+    return {"total": len(debts), "open": len(open_d), "debts": debts[:15], "recent_retros": closeout}
+
+
+def collect_workflows() -> list[dict]:
+    """工作流活动。"""
+    from glob import glob
+    import yaml
+    runs = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/runs/*.yaml")), reverse=True)[:15]
+    out = []
+    for f in runs:
+        try:
+            content = Path(f).read_text().split("---")[0]
+            meta = yaml.safe_load(content) or {}
+            out.append({"run_id": meta.get("run_id", ""), "workflow_id": str(meta.get("workflow_id", ""))[:40],
+                        "status": meta.get("status", ""), "created_at": str(meta.get("created_at", ""))[:19]})
+        except Exception:  # noqa: BLE001
+            pass
+    return out
 
 def build_payload() -> dict:
     return {
@@ -712,4 +711,3 @@ T10-166 数据契约（per 面板）:
     python3 bin/panorama/panorama-collect.py --check-side-effects
                                                         # 验证零仓库写副作用
 """
-
