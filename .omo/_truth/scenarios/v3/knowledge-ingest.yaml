@@ -18,6 +18,10 @@ triggers:
 - type: signal
   signal: scene.completed
   debounce: 120s
+- type: signal
+  signal: note.created
+  connector: applenotes
+  debounce: 300s
 - type: schedule
   cron: 0 2 * * *
 input:
