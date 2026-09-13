@@ -525,16 +525,13 @@ def collect_services() -> dict:
     services = []
     for d in docs:
         if isinstance(d, dict):
-            if "services" in d:
-                svcs = d["services"]
-                if isinstance(svcs, list):
-                    services.extend(svcs)
-                elif isinstance(svcs, dict):
-                    services.extend([{"name": k, **v} for k, v in svcs.items()])
+            svcs = d.get("services")
+            if isinstance(svcs, list):
+                services.extend(svcs)
+            elif isinstance(svcs, dict):
+                services.extend([{"name": k, **v} for k, v in svcs.items()])
             elif "name" in d:
                 services.append(d)
-            else:
-                services.extend([{"name": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()])
     active = [s for s in services if isinstance(s, dict) and s.get("status") == "active"]
     return {"total": len(services), "active": len(active),
             "sample": [{k: str(v)[:40] for k, v in s.items() if k in ("name","status","endpoint","owner")}
@@ -545,9 +542,9 @@ def collect_swarm() -> dict:
     """Swarm 协调。"""
     import yaml
     try:
-        reg = yaml.safe_load_all((ROOT / ".omo/_truth/registry/swarm-coordination.yaml").read_text())
+        docs = list(yaml.safe_load_all((ROOT / ".omo/_truth/registry/swarm-coordination.yaml").read_text()))
         items = []
-        for d in reg:
+        for d in docs:
             if isinstance(d, dict):
                 items.extend([{"name": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()])
     except Exception:
@@ -562,9 +559,9 @@ def collect_governance_alerts() -> dict:
     """治理告警通道。"""
     import yaml
     try:
-        reg = yaml.safe_load_all((ROOT / ".omo/_truth/registry/governance-alerts.yaml").read_text())
+        docs = list(yaml.safe_load_all((ROOT / ".omo/_truth/registry/governance-alerts.yaml").read_text()))
         channels = []
-        for d in reg:
+        for d in docs:
             if isinstance(d, dict):
                 channels.extend([{"name": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()])
     except Exception:
@@ -582,7 +579,8 @@ def collect_value_metrics() -> dict:
     for f in ("x3-value-stack.yaml", "x3-delivery-soft-gate.yaml"):
         try:
             docs = list(yaml.safe_load_all((ROOT / f".omo/_truth/{f}").read_text()))
-            metrics[f.replace(".yaml", "")] = f"{len(docs)} docs, {sum(len(d) if isinstance(d,dict) else 0 for d in docs)} entries"
+            total = sum(len(d) if isinstance(d, (dict, list)) else 0 for d in docs)
+            metrics[f.replace(".yaml", "")] = f"{len(docs)} docs, {total} entries"
         except Exception:
             metrics[f.replace(".yaml", "")] = "unavailable"
     return metrics
@@ -658,8 +656,7 @@ def collect_pipeline() -> dict:
     recent = []
     for l in lines[-10:]:
         try:
-            import json as _j
-            d = _j.loads(l)
+            d = json.loads(l)
             recent.append({k: str(v)[:40] for k, v in d.items() if k in ("event","status","pipeline_id")})
         except Exception:
             recent.append({"_raw": l[:80]})
@@ -728,7 +725,7 @@ def collect_predictive() -> dict:
         docs = []
     return {"available": bool(docs), "docs": len(docs),
             "metrics": [item for d in docs for item in (d.get("metrics",[]) if isinstance(d,dict) else [])],
-            "horizons": {k:str(v)[:30] for d in docs for k,v in (d.get("horizons",{}).items() if isinstance(d,dict) else {})}}
+            "horizons": {k: str(v)[:30] for d in docs for k,v in (d.get("horizons",{}).items() if isinstance(d,dict) else {})}}
 
 
 def collect_anticorrosion() -> dict:
