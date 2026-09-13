@@ -886,6 +886,19 @@ th{color:var(--muted);font-weight:500;font-size:11px}
 .bar.done i{background:var(--teal)}
 a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 .dead{color:var(--red)}.fresh{color:var(--teal)}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.kpi-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.kpi-card:hover{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+.kpi-card b{font:22px var(--mono);display:block;color:var(--ink)}
+.kpi-card span{color:var(--muted);font-size:10px}
+.kpi-card .trend{position:absolute;top:8px;right:10px;font:13px var(--mono)}
+.kpi-card .trend.up{color:var(--teal)}.kpi-card .trend.down{color:var(--red)}
+.drill{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;max-height:0;overflow:hidden;transition:max-height .3s}
+.drill.open{max-height:600px;overflow-y:auto}
+.drill-inner{padding:18px}
+.drill h4{margin:0 0 12px;font-size:13px}
+.drill table{width:100%;border-collapse:collapse;font-size:11px}
+.drill td,.drill th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
 .foot{margin-top:26px;color:var(--muted);font-size:11px;border-top:1px solid var(--line);padding-top:12px}
 @media(max-width:900px){aside{position:static;width:auto}main{margin:0}.g3,.g2{grid-template-columns:1fr}}
 </style>
@@ -909,15 +922,13 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 </aside>
 <main>
 <section class="sec on" id="s-overview">
-<h2>体系总览</h2><p class="sub">OMO 单控制面 + 持久 Role/Queue/Receipt + 动态 Agent Cell · 5+4+1+1 · 道法术器嵌套 MOF</p>
-<div class="grid g3" id="kpi"></div>
-<div class="grid g2" style="margin-top:14px">
-<div class="card"><h3>架构主轴</h3><div class="mono" style="font-size:12px;line-height:2">
+<h2>战略全景</h2><p class="sub">可下钻 · 可关联 · 可跨面板跳转 — 点击任意 KPI 或实体查看详情</p>
+<div class="kpi-grid" id="kpi"></div>
+<div class="drill" id="drill"></div>
+<div class="card" style="margin-top:14px"><h3>架构主轴</h3><div class="mono" style="font-size:12px;line-height:2">
 L0 协议(ecos) → L1 运行时(omo/Mesh) → L2 内核(l4-kernel) → L3 入口(cockpit) → L4 文档<br>
 S 槽唯一 dispatcher：COMP-WS-omo · 八律第3条已收口（dispatch_backend）<br>
 Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</div></div>
-<div class="card"><h3>本周动态</h3><div id="week" class="mono" style="font-size:12px;line-height:2"></div></div>
-</div>
 </section>
 <section class="sec" id="s-gates">
 <h2>门禁 A1–A9 / RF0</h2><p class="sub">底层实时验证 + 声明态边界 · PARTIAL ≠ PASS · 未过门零写入/零自治/零扩并发</p>
@@ -979,18 +990,70 @@ const chip=v=>v==='PASS'?'<span class="chip p">PASS</span>':(v==='FAIL'?'<span c
 document.querySelectorAll('#nav a').forEach(a=>a.onclick=e=>{e.preventDefault();
 document.querySelectorAll('#nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');
 document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));$('s-'+a.dataset.s).classList.add('on');});
-// overview
-const c=D.bets.counts;
-$('kpi').innerHTML=[
- ['总 BET',D.bets.total,'三年台账'],
- ['已完成',c.done||0,'done'],
- ['候选',c.candidate||0,'待认领'],
- ['进行中',c.in_progress||0,'in_progress'],
- ['阻塞',c.blocked||0,'blocked'],
- ['Agents',D.agents.length,'worktree 占用']
-].map(x=>'<div class="card kpi"><b>'+x[1]+'</b><span>'+x[0]+' · '+x[2]+'</span></div>').join('');
-const gmap={};D.gates.forEach(g=>gmap[g.id]=g.verdict);
-$('week').innerHTML='SFOP 八律第3条: '+gmap['A1']+'<br>调度一致性: '+gmap['A4']+'<br>引用完整性: '+gmap['A5']+'<br>Semantic gate: '+gmap['A3'];
+// === 战略全景（可下钻 + 可关联） ===
+(function(){
+  const c=D.bets.counts, gmap={};D.gates.forEach(g=>gmap[g.id]=g.verdict);
+  const trendUp='<span class="trend up">↗</span>';
+  const kpis=[
+    {k:'bets',l:'总 BET',v:D.bets.total},
+    {k:'done',l:'已完成',v:c.done||0},
+    {k:'inprogress',l:'进行中',v:c.in_progress||0},
+    {k:'candidate',l:'候选',v:c.candidate||0},
+    {k:'agents',l:'Agents',v:D.agents.length},
+    {k:'gates',l:'门禁 PASS',v:Object.values(gmap).filter(v=>v==='PASS').length+'/10'},
+    {k:'ci',l:'CI 红源',v:(D.ci.red_workflows||[]).length},
+    {k:'cron',l:'Cron',v:D.cron.total||0},
+    {k:'services',l:'BOS 服务',v:D.services.total||0},
+    {k:'debt',l:'债务',v:(D.debt_registry.open||D.debt.open||0)},
+    {k:'alerts',l:'告警',v:D.alerts.total||0}
+  ];
+  const kpi=$('kpi'); kpi.className='kpi-grid';
+  kpi.innerHTML=kpis.map(k=>'<div class="kpi-card" data-key="'+k.k+'" onclick="drill(\''+k.k+'\"><b>'+k.v+'</b>'+(k.v>0?trendUp:'')+'<span>'+k.l+'</span></div>').join('');
+
+  window.drill=function(key){
+    const d=$('drill');
+    if(d.classList.contains('open')&&d.dataset.key===key){d.classList.remove('open');return;}
+    d.dataset.key=key; d.classList.add('open');
+    let html='<div class="drill-inner">';
+    if(key==='bets'){
+      html+='<h4>BET 台账下钻</h4><div class="grid g3" style="margin-bottom:12px">';
+      for(const[w,wd]of Object.entries(D.bets.windows||{})){const p=Math.round(100*wd.done/wd.total);html+='<div><div style="display:flex;justify-content:space-between"><span class="mono">'+w+'</span><span>'+wd.done+'/'+wd.total+'</span></div><div class="bar"><i style="width:'+p+'%"></i></div></div>';}
+      html+='</div>';
+      if((D.bets.in_progress||[]).length){html+='<h4>进行中</h4><table><tr><th>ID</th><th>标题</th><th>级</th></tr>';for(const b of D.bets.in_progress)html+='<tr><td class="mono">'+b.id+'</td><td>'+b.title+'</td><td><span class="chip n">'+b.priority+'</span></td></tr>';html+='</table>';}
+    } else if(key==='gates'){
+      html+='<h4>门禁 A1–A9</h4><table><tr><th>ID</th><th>判定</th><th>证据</th><th>依赖</th></tr>';
+      for(const g of D.gates)html+='<tr><td class="mono">'+g.id+'</td><td><span class="chip '+(g.verdict==='PASS'?'p':'f')+'">'+g.verdict+'</span></td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">'+g.detail+'</td><td>'+(g.depends_on||[]).join(', ')+'</td></tr>';
+      html+='</table>';
+    } else if(key==='agents'){
+      html+='<h4>Agent 全景</h4><table><tr><th>worktree</th><th>分支</th><th>活动</th></tr>';
+      for(const a of D.agents.slice(0,25))html+='<tr><td class="mono">'+a.worktree+'</td><td class="mono">'+a.branch+'</td><td>'+(a.last_activity_hours==null?'n/a':a.last_activity_hours+'h')+'</td></tr>';
+      html+='</table>';
+    } else if(key==='ci'){
+      html+='<h4>CI 红源</h4><table><tr><th>Workflow</th><th>总数</th><th>失败</th><th>率</th></tr>';
+      for(const w of D.ci.all||[])html+='<tr><td class="mono">'+w.workflow+'</td><td>'+w.total+'</td><td class="chip f">'+w.fail+'</td><td>'+Math.round(w.failure_rate*100)+'%</td></tr>';
+      html+='</table>';
+    } else if(key==='cron'){
+      html+='<h4>Cron 调度台</h4><table><tr><th>名称</th><th>调度</th><th>状态</th><th>安装态</th></tr>';
+      for(const j of D.cron.jobs||[])html+='<tr><td class="mono">'+j.name+'</td><td class="mono">'+j.schedule+'</td><td><span class="chip '+(j.status==='active'?'p':'n')+'">'+j.status+'</span></td><td>'+(j.reality||'')+'</td></tr>';
+      html+='</table>';
+    } else if(key==='services'){
+      html+='<h4>BOS 服务</h4><table><tr><th>名称</th><th>状态</th><th>端点</th></tr>';
+      for(const s of D.services.sample||[])html+='<tr><td class="mono">'+s.name+'</td><td><span class="chip '+(s.status==='active'?'p':'n')+'">'+s.status+'</span></td><td class="mono">'+s.endpoint+'</td></tr>';
+      html+='</table>';
+    } else if(key==='debt'){
+      html+='<h4>债务全览</h4>';
+      if(D.debt_registry.by_status)html+='<div class="grid g3" style="margin-bottom:12px">'+Object.entries(D.debt_registry.by_status).map(([s,n])=>'<div class="card kpi"><b>'+n+'</b><span>'+s+'</span></div>').join('')+'</div>';
+      html+='<table><tr><th>ID</th><th>状态</th><th>标题</th></tr>';
+      for(const i of (D.debt_registry.items||[]).slice(0,15))html+='<tr><td class="mono">'+i.id+'</td><td><span class="chip f">'+i.status+'</span></td><td>'+i.title+'</td></tr>';
+      html+='</table>';
+    } else if(key==='alerts'){
+      html+='<h4>告警聚合</h4><table><tr><th>级</th><th>源</th><th>信息</th></tr>';
+      for(const a of D.alerts.alerts||[])html+='<tr><td><span class="chip '+(a.severity==='high'?'f':'w')+'">'+a.severity+'</span></td><td class="mono">'+a.source+'</td><td>'+a.msg+'</td></tr>';
+      html+='</table>';
+    }
+    html+='</div>'; d.innerHTML=html;
+  };
+})();
 // gates
 $('gategrid').innerHTML=D.gates.map(g=>'<div class="card"><h3>'+g.id+' · '+g.title+'</h3>'+chip(g.verdict)+
 '<div class="mono" style="margin-top:8px;color:var(--muted)">'+g.detail+'</div>'+
