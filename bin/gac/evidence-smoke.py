@@ -328,9 +328,17 @@ def _check_internal(module_path: str, func_name: str) -> tuple[bool, str]:
     # 老王务实: 找全 workspace 下匹配的 .py 文件或包含 .py 的包目录
     target_file = module_path.replace(".", "/") + ".py"
     target_pkg = module_path.replace(".", "/")
-    for proj in (WORKSPACE / "projects").iterdir():
+    # projects/* (直接项目) + projects/*/* (嵌套子模块, 如 projects/knowledge/kairon)
+    proj_roots: list[Path] = []
+    projects_dir = WORKSPACE / "projects"
+    for proj in projects_dir.iterdir():
         if not proj.is_dir():
             continue
+        proj_roots.append(proj)
+        for sub in proj.iterdir():
+            if sub.is_dir() and (sub / "src").is_dir() or (sub.is_dir() and (sub / "pyproject.toml").exists()):
+                proj_roots.append(sub)
+    for proj in proj_roots:
         for sub in ("src", ""):
             base = proj / sub if sub else proj
             file_candidate = base / target_file

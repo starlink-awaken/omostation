@@ -67,7 +67,17 @@ def check_internal(service: dict[str, Any]) -> dict[str, Any]:
         return {"status": "ok", "module": module_path, "func": func_name}
     except ImportError as e:
         pkg = module_path.split(".")[0]
-        if pkg in ("agora", "omo", "aetherforge", "bus_foundation", "family_hub"):
+        workspace_pkgs = ("agora", "omo", "aetherforge", "bus_foundation", "family_hub", "kairon")
+        if pkg in workspace_pkgs:
+            # Check if the package exists as a filesystem path (submodule not installed)
+            dir_base = service.get("_dir_base")
+            if dir_base:
+                pkg_path = Path(dir_base) / pkg
+                if not pkg_path.exists():
+                    pkg_path = Path(dir_base) / "src" / pkg
+                if pkg_path.exists():
+                    return {"status": "external", "module": module_path,
+                            "note": f"workspace package ({pkg}) on filesystem at {pkg_path}: {e}"}
             return {"status": "external", "module": module_path, "note": f"workspace package ({pkg}): {e}"}
         return {"status": "error", "reason": f"ImportError: {e}"}
 
@@ -91,11 +101,21 @@ def check_stdio(service: dict[str, Any]) -> dict[str, Any]:
         elif arg == "-m" and i + 1 < len(command):
             module = command[i + 1]
             parts = module.split(".")
-            for p in [
+            # Resolve relative to --directory base, not ROOT
+            # Try multiple layouts: flat, src/ layout
+            candidates = [
+                base / "/".join(parts[:-1]) / (parts[-1] + ".py"),
+                base / "src" / "/".join(parts[:-1]) / (parts[-1] + ".py"),
+                base / "/".join(parts) / "__main__.py",
+                base / "src" / "/".join(parts) / "__main__.py",
+                base / "/".join(parts[:-1]) / parts[-1] / "__init__.py",
+                base / "src" / "/".join(parts[:-1]) / parts[-1] / "__init__.py",
                 ROOT / "/".join(parts[:-1]) / (parts[-1] + ".py"),
+                ROOT / "src" / "/".join(parts[:-1]) / (parts[-1] + ".py"),
                 ROOT / "/".join(parts) / "__main__.py",
                 ROOT / "/".join(parts[:-1]) / parts[-1] / "__init__.py",
-            ]:
+            ]
+            for p in candidates:
                 if p.exists():
                     script_path = str(p)
                     break
@@ -158,7 +178,20 @@ def verify_all(verbose: bool = False) -> dict[str, Any]:
         results["by_transport"].setdefault(transport, {"total": 0, "ok": 0, "error": 0})
         results["by_transport"][transport]["total"] += 1
 
-        if transport in ("internal", "inline"):
+        # Extract --directory base for resolving subprocess paths
+        cmd = svc.get("command", [])
+        dir_base = None
+        for i, arg in enumerate(cmd):
+            if arg == "--directory" and i + 1 < len(cmd):
+                d = Path(cmd[i + 1])
+                dir_base = str(d if d.is_absolute() else ROOT / d)
+                break
+        svc["_dir_base"] = dir_base
+
+        # If service has module_path + func_name, treat as internal
+        # (regardless of transport label — some legacy entries say "stdio" but use module_path)
+        has_module = bool(svc.get("module_path") and svc.get("func_name"))
+        if transport in ("internal", "inline") or has_module:
             check = check_internal(svc)
         elif transport == "stdio":
             check = check_stdio(svc)
