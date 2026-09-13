@@ -52,10 +52,18 @@ SERVICES = {
 }
 
 
-def check_port(port: int) -> bool:
+def check_port(port: int, health_path: str | None = None) -> bool:
+    """探测端口存活.
+
+    2026-09-13 修复: agora 根路径是 SSE 长连接端点, urllib 打根路径会
+    挂起/异常 → 已运行的服务被误报为 ❌. 探测统一走 /health 类健康端点.
+    """
     import urllib.request
+
     try:
-        urllib.request.urlopen(f"http://127.0.0.1:{port}", timeout=2)
+        urllib.request.urlopen(
+            f"http://127.0.0.1:{port}{health_path or '/'}", timeout=2
+        )
         return True
     except Exception:
         return False
@@ -63,7 +71,7 @@ def check_port(port: int) -> bool:
 
 def check_service(name: str) -> dict:
     svc = SERVICES[name]
-    running = check_port(svc["port"])
+    running = check_port(svc["port"], svc.get("health"))
     return {
         "name": name,
         "port": svc["port"],
@@ -74,7 +82,7 @@ def check_service(name: str) -> dict:
 
 def start_service(name: str) -> bool:
     svc = SERVICES[name]
-    if check_port(svc["port"]):
+    if check_port(svc["port"], svc.get("health")):
         print(f"  {name} already running on port {svc['port']}")
         return True
 
@@ -95,7 +103,7 @@ def start_service(name: str) -> bool:
         # Wait for service to start
         for _ in range(30):
             time.sleep(0.5)
-            if check_port(svc["port"]):
+            if check_port(svc["port"], svc.get("health")):
                 print(f"  {name} started (PID {proc.pid})")
                 return True
         print(f"  {name} failed to start within 15s")
@@ -119,7 +127,7 @@ def stop_service(name: str) -> bool:
         subprocess.run(["lsof", "-ti", f":{svc['port']}"], capture_output=True, check=False)
     except Exception:
         pass
-    return not check_port(svc["port"])
+    return not check_port(svc["port"], svc.get("health"))
 
 
 def get_status() -> list[dict]:
