@@ -125,6 +125,7 @@ SHELL=/bin/bash
 0 6 * * * cd /Users/xiamingxing/ws-t1069 && python3 bin/gac/architecture-drift.py # omostation-ops
 # omostation-ops-end
 0 2 * * * cd /Users/xiamingxing/Workspace && python3 bin/gac/worktree-hygiene-audit.py --auto-clean --execute --stale-days 3 >> runtime/cron/worktree-hygiene.log 2>&1 # omostation-worktree-hygiene
+23 * * * * cd /Users/xiamingxing/Workspace && bash bin/ssot/fix-remotes.sh >> runtime/cron/remote-hygiene.log 2>&1 # omostation-remote-hygiene (origin 污染幂等自愈, 2026-09-13 实证事故)
 30 3 * * 1 cd /Users/xiamingxing/Workspace && bash bin/gac/gac-branch-prune.sh >> runtime/cron/branch-prune.log 2>&1 # omostation-branch-prune
 0 4 * * * cd /Users/xiamingxing/Workspace && make sync-capability-registry >> runtime/cron/capability-registry-sync.log 2>&1 # omostation-capability-registry-sync
 0 5 * * * cd /Users/xiamingxing/Workspace && make ssot-guardian >> runtime/cron/ssot-guardian.log 2>&1 # omostation-ssot-guardian
