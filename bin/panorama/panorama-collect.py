@@ -857,24 +857,72 @@ def collect_memory_dual_track() -> dict:
 
 
 def collect_experience_network() -> dict:
-    """经验网络。"""
+    """经验网络：节点 + 跨引用边 + 图谱遍历。"""
     import yaml
     from glob import glob
     from pathlib import Path as _P
+    import re
     nodes = []
+    edges = []
+    # Pitfalls → 解析关联 decision/pattern
     for f in sorted(glob(str(ROOT / ".omo/_knowledge/pitfalls/PITFALL-*.yaml"))):
         try:
-            d = yaml.safe_load(open(f).read().split("---")[1]) or {}
-            nodes.append({"id": f"PIT-{d.get('id','')}","type":"pitfall","name":d.get('title','')[:40]})
+            raw = open(f).read()
+            fm = raw.split("---")[1] if raw.startswith("---") else ""
+            d = yaml.safe_load(fm) or {}
+            nid = f"PIT-{d.get('id','')}"
+            nodes.append({"id": nid, "type": "pitfall", "name": d.get("title", "")[:50]})
+            # 跨引用：pitfall → decision
+            for ref in re.findall(r'(ADR-\d{4})', raw):
+                edges.append({"from": nid, "to": f"DEC-{ref}", "rel": "resolved_by"})
+            for ref in re.findall(r'(P\d{2})', raw):
+                edges.append({"from": nid, "to": f"PAT-{ref}", "rel": "pattern"})
         except Exception:
             pass
-    for f in sorted(glob(str(ROOT / ".omo/_knowledge/decisions/0*.md")))[:8]:
-        nodes.append({"id": f"DEC-{_P(f).stem}","type":"decision","name":_P(f).stem[:40]})
-    for f in sorted(glob(str(ROOT / ".omo/_knowledge/retros/BET-*.md")))[:8]:
-        nodes.append({"id": f"RET-{_P(f).stem}","type":"retro","name":_P(f).stem[:40]})
-    for f in sorted(glob(str(ROOT / ".omo/_knowledge/patterns/*.md")))[:8]:
-        nodes.append({"id": f"PAT-{_P(f).stem}","type":"pattern","name":_P(f).stem[:40]})
-    return {"nodes": nodes[:35], "total": len(nodes)}
+    # Decisions → 解析关联 ADR/pitfall
+    for f in sorted(glob(str(ROOT / ".omo/_knowledge/decisions/0*.md"))):
+        try:
+            raw = open(f).read()
+            stem = _P(f).stem
+            nid = f"DEC-{stem}"
+            nodes.append({"id": nid, "type": "decision", "name": stem[:50]})
+            for ref in re.findall(r'PITFALL-(\d+)', raw):
+                edges.append({"from": nid, "to": f"PIT-{ref}", "rel": "resolves"})
+        except Exception:
+            pass
+    # Retros → 解析关联 BET/pattern
+    for f in sorted(glob(str(ROOT / ".omo/_knowledge/retros/BET-*.md"))):
+        try:
+            raw = open(f).read()
+            stem = _P(f).stem
+            nid = f"RET-{stem}"
+            nodes.append({"id": nid, "type": "retro", "name": stem[:50]})
+            for ref in re.findall(r'(P\d{2})', raw):
+                edges.append({"from": nid, "to": f"PAT-{ref}", "rel": "identifies"})
+        except Exception:
+            pass
+    # Patterns
+    for f in sorted(glob(str(ROOT / ".omo/_knowledge/patterns/*.md"))):
+        try:
+            stem = _P(f).stem
+            nodes.append({"id": f"PAT-{stem}", "type": "pattern", "name": stem[:50]})
+        except Exception:
+            pass
+    # 去重节点
+    seen = set()
+    uniq = []
+    for n in nodes:
+        if n["id"] not in seen:
+            seen.add(n["id"])
+            uniq.append(n)
+    # 统计连接度
+    degree = {}
+    for e in edges:
+        degree[e["from"]] = degree.get(e["from"], 0) + 1
+        degree[e["to"]] = degree.get(e["to"], 0) + 1
+    top_connected = sorted(degree.items(), key=lambda x: -x[1])[:8]
+    return {"nodes": uniq[:50], "edges": edges[:80], "total": len(uniq),
+            "edge_count": len(edges), "top_connected": [{"id": k, "links": v} for k, v in top_connected]}
 
 
 def collect_knowledge_inbound() -> dict:
@@ -956,6 +1004,40 @@ def collect_theta_facts() -> dict:
     return {"total": len(facts), "by_type": by_type}
 
 
+def collect_experience_graph() -> dict:
+    """Phase C: 经验图谱遍历 — 跨类引用 + 热点分析。"""
+    from pathlib import Path as _P
+    from collections import Counter
+    import re
+    # 收集所有知识文件的交叉引用
+    refs = Counter()
+    nodes_by_type = {"pitfall": 0, "decision": 0, "retro": 0, "pattern": 0, "adr": 0}
+    for f in _P(ROOT / ".omo/_knowledge").rglob("*.md"):
+        try:
+            src = f.read_text(errors="ignore")
+            # 统计内部引用
+            if ".omo/_knowledge/" in src:
+                refs["internal"] += len(re.findall(r'\.omo/_knowledge/', src))
+            # 统计各类节点（通过文件名模式）
+            fp = str(f)
+            if "/pitfalls/" in fp:
+                nodes_by_type["pitfall"] += 1
+            elif "/decisions/" in fp:
+                nodes_by_type["decision"] += 1
+            elif "/retros/" in fp:
+                nodes_by_type["retro"] += 1
+            elif "/patterns/" in fp:
+                nodes_by_type["pattern"] += 1
+        except Exception:
+            pass
+    # 热点：引用最频繁的知识类型
+    hotspots = [{"type": k, "count": v} for k, v in sorted(nodes_by_type.items(), key=lambda x: -x[1])]
+    # 连通性评分
+    connectivity = min(100, refs["internal"] * 100 // max(sum(nodes_by_type.values()), 1))
+    return {"nodes_by_type": nodes_by_type, "internal_refs": refs["internal"],
+            "hotspots": hotspots, "connectivity_pct": connectivity}
+
+
 def build_payload() -> dict:
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -1004,6 +1086,8 @@ def build_payload() -> dict:
         # Phase B
         "skill_inventory": collect_skill_inventory(),
         "theta_facts": collect_theta_facts(),
+        # Phase C
+        "experience_graph": collect_experience_graph(),
     }
 
 
@@ -1177,6 +1261,13 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
 </div>
 <div class="card" style="margin-top:12px"><h3>近 30 天知识增长</h3><div id="kgrowth" class="kgraph"></div></div>
 <div class="card" style="margin-top:12px"><h3>知识入链 Top 15</h3><table id="kinbound"><thead><tr><th>文档</th><th>入链数</th></tr></thead><tbody></tbody></table></div>
+<div class="card" style="margin-top:12px"><h3>经验图谱</h3>
+  <div class="grid g2">
+    <div style="display:flex;align-items:center;gap:20px;justify-content:center"><div id="eg_connect" style="text-align:center"></div><div id="eg_refs" style="text-align:center"></div></div>
+    <div><span class="mono" style="color:var(--teal)">热点</span><div id="eg_hot" style="margin-top:6px"></div></div>
+  </div>
+  <div style="margin-top:10px"><span class="mono" style="color:var(--muted)">最高连接</span><div id="eg_top" style="margin-top:4px"></div></div>
+</div>
 </section>
 
 <section class="sec" id="s-skills">
@@ -1338,6 +1429,13 @@ $('docgrid').innerHTML=D.docs.map(d=>'<div class="card"><h3>'+d.name+'</h3><span
   $('exp_net').innerHTML=expHtml||'<span class="mono" style="color:var(--muted)">无经验节点</span>';
   const ib=D.knowledge_inbound||[];
   $('kinbound').querySelector('tbody').innerHTML=(Array.isArray(ib)?ib:[]).map(r=>'<tr><td class="mono">'+r.doc+'</td><td>'+r.inbound+'</td></tr>').join('')||'<tr><td colspan=2 class="mono">无入链数据</td></tr>';
+  // Phase C: 经验图谱
+  const eg=D.experience_graph||{};
+  const connPct=eg.connectivity_pct||0;
+  $('eg_connect').innerHTML='<span class="kv '+(connPct>=50?'fresh':'dead')+'">'+connPct+'%</span><span class="ks">连通性</span>';
+  $('eg_refs').innerHTML='<span class="kv">'+(eg.internal_refs||0)+'</span><span class="ks">内部引用</span>';
+  $('eg_top').innerHTML=(en.top_connected||[]).map(n=>'<span class="assoc-link" style="margin-right:10px">'+n.id+' <span style="color:var(--teal)">'+n.links+'</span></span>').join('')||'<span class="mono" style="color:var(--muted)">无连接</span>';
+  $('eg_hot').innerHTML=(eg.hotspots||[]).map(h=>'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span class="mono">'+h.type+'</span><span style="color:var(--teal)">'+h.count+'</span></div>').join('');
 })();
 </script></body></html>
 """
