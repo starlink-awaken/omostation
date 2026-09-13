@@ -2480,18 +2480,34 @@ bets:
   appetite: 2 days
   circuit_breaker: A2A 任务派发必须具备幂等 ID 与超时隔离；任务异常时 fail-closed，严禁挂起阻塞主进程。
   completion_evidence:
+    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        evidence: {}
-        status: IN_PROGRESS
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          merged_reachable_commit:
+            ref: git://origin/main@8da47b9be4e39394c52080bb2a21a80cddf300a2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
-    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
   depends_on:
   - BET-Y1Q4-T10-05
   done_when:
@@ -2526,35 +2542,7 @@ bets:
   - projects/agora/src/agora/server/tools_resident.py
   - projects/agora/tests/test_resident_a2a.py
   - .omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-          merged_reachable_commit:
-            ref: git://origin/main@8da47b9be4
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-        status: VERIFIED
-      operational:
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-        status: PROVEN
-      value:
-        evidence: {}
-        status: NOT_PROVEN
-    overall_state: delivery_accepted
+  value_indicator_policy: false
 - accepted_specifications:
   - content_digest: sha256:07edff7014a86df77a987aa86dba473ee8e17f8f550122ed59116a35a1abf7ce
     decision_ref: decision://accepted/BET-Y1Q4-T10-125
@@ -4034,18 +4022,35 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T8-23.md
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    value_indicator_policy: false
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@0b677512e8081ff53e93ae4338a88915423b85d4
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: '2026-09-13'
+  value_indicator_policy: false
 - appetite: 4-5 days
   circuit_breaker: 数据集包含敏感密钥或凭证时立即终止并清洗，拒绝脏数据进入训练集。
   depends_on:
@@ -29763,7 +29768,6 @@ tracks:
     - projects/cockpit/src/cockpit/web/**
     scope: /inbox /outcomes /signals /journeys 面板
     title: 人机界面
-
   T8-EXECUTION:
     agent_profile_hint: engineering-agent
     default_workflow: project-code-change
