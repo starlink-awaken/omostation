@@ -36,6 +36,9 @@ EXEMPT_ERRORS = {
     "projects/knowledge/gbrain/src/commands/doctor.ts",  # 4825L: runDoctor 单函数 2330L inline 重构, P4 极高
     "projects/knowledge/gbrain/src/core/postgres-engine.ts",  # 4514L: 双引擎 DRY 逐方法对比 SQL (unnest+JOIN), P4
     "projects/knowledge/gbrain/src/core/pglite-engine.ts",  # 4509L: 双引擎 DRY (同 postgres, 手动 $N), P4
+    "projects/omo/src/omo/workflow/claims_authority.py",  # 3456L: BET-Y1Q4-T8-23 暂豁 (高风险核心, 多会话推进)
+    "projects/omo/src/omo/workflow/lifecycle.py",  # 1820L: BET-Y1Q4-T8-23 暂豁 (高风险核心)
+    "projects/cockpit/src/cockpit/observatory/topology_engine.py",  # 1887L: BET-Y1Q4-T8-24 暂豁 (observatory 核心)
 }
 
 # 扫描范围 + 排除 (避免噪音: 生成代码/测试快照/旧码)
