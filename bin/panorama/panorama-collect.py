@@ -894,6 +894,68 @@ def collect_knowledge_inbound() -> dict:
     return [{"doc": k, "inbound": v} for k, v in inbound.most_common(12)]
 
 
+
+# ─── Phase B: 技能清单 + Theta 事实 ───
+
+def collect_skill_inventory() -> dict:
+    """技能清单：扫描全局/项目/用户 skills 目录。"""
+    from pathlib import Path as _P
+    import re
+    dirs = [
+        (_P.home() / ".agents/skills", "user-global"),
+        (_P(ROOT / ".agents/skills"), "project"),
+        (_P.home() / ".kimi-code/skills", "kimi-code"),
+    ]
+    skills = []
+    seen = set()
+    for d, scope in dirs:
+        if not d.is_dir():
+            continue
+        for skill_dir in sorted(d.iterdir()):
+            if not skill_dir.is_dir():
+                continue
+            name = skill_dir.name
+            if name in seen:
+                continue
+            seen.add(name)
+            md = skill_dir / "SKILL.md"
+            desc = ""
+            if md.is_file():
+                try:
+                    txt = md.read_text(errors="ignore")[:500]
+                    m = re.search(r"^#\s+(.+)$", txt, re.M)
+                    if m:
+                        desc = m.group(1).strip()[:80]
+                    else:
+                        desc = txt.split("\n")[0].strip()[:80]
+                except Exception:
+                    pass
+            skills.append({"name": name, "scope": scope, "desc": desc,
+                           "path": str(skill_dir)})
+    by_scope = {}
+    for s in skills:
+        by_scope.setdefault(s["scope"], []).append(s)
+    return {"total": len(skills), "by_scope": {k: len(v) for k, v in by_scope.items()},
+            "skills": skills}
+
+
+def collect_theta_facts() -> dict:
+    """Theta 事实：MOS 提取的结构化事实。"""
+    theta_file = ROOT / ".omo/state/mos/theta-facts.json"
+    facts = []
+    if theta_file.is_file():
+        try:
+            import json
+            facts = json.loads(theta_file.read_text())
+        except Exception:
+            pass
+    by_type = {}
+    for f in facts:
+        tp = f.get("type", "unknown") if isinstance(f, dict) else "unknown"
+        by_type[tp] = by_type.get(tp, 0) + 1
+    return {"total": len(facts), "by_type": by_type}
+
+
 def build_payload() -> dict:
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -939,6 +1001,9 @@ def build_payload() -> dict:
         "memory_dual_track": collect_memory_dual_track(),
         "experience_network": collect_experience_network(),
         "knowledge_inbound": collect_knowledge_inbound(),
+        # Phase B
+        "skill_inventory": collect_skill_inventory(),
+        "theta_facts": collect_theta_facts(),
     }
 
 
@@ -1067,6 +1132,7 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 <a href="#hygiene" data-s="hygiene">工作区卫生</a>
 <a href="#knowledge" data-s="knowledge">知识记忆</a>
 <a href="#docs" data-s="docs">知识入口</a>
+<a href="#skills" data-s="skills">技能清单</a>
 </nav>
 </aside>
 <main>
@@ -1111,6 +1177,13 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
 </div>
 <div class="card" style="margin-top:12px"><h3>近 30 天知识增长</h3><div id="kgrowth" class="kgraph"></div></div>
 <div class="card" style="margin-top:12px"><h3>知识入链 Top 15</h3><table id="kinbound"><thead><tr><th>文档</th><th>入链数</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section class="sec" id="s-skills">
+<h2>技能清单</h2><p class="sub">全局 / 项目 / Kimi Code —— 全部可用 skill 可见</p>
+<div class="grid g3" id="skillkpi"></div>
+<div class="card" style="margin-top:12px"><h3>Theta 事实</h3><div class="grid g3" id="thetakpi"></div></div>
+<div class="card" style="margin-top:12px"><h3>Skill 列表</h3><table id="skilltbl"><thead><tr><th>名称</th><th>域</th><th>描述</th></tr></thead><tbody></tbody></table></div>
 </section>
 <section class="sec" id="s-docs">
 <h2>知识入口</h2><p class="sub">白皮书 / 架构 / 流程 / 操作 —— 每卡直达源文档</p>
