@@ -1,0 +1,10 @@
+version: "1.0.0"
+tone: neutral
+verbosity: balanced
+expression_style:
+  - data-driven
+  - first-principles
+preferred_formats:
+  - bullet-list
+  - mermaid
+updated_at: "2026-09-14T00:00:00Z"
