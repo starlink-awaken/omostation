@@ -27199,7 +27199,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: Continual Harness 证据驱动自演化与沙箱回滚管道 (Evidence-Backed /refine Pipeline & Rollback)
   track: T7-COOPERATION
   underlying_workflow: project-code-change
@@ -27216,6 +27216,7 @@ bets:
   - projects/omo/src/omo/resident/refine_rollback.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T7-07.md
+  done_at: '2026-09-13'
 - appetite: 2-3 days
   circuit_breaker: 监测到未经授权的危险系统调用（如未经沙箱直接调起 shell rm）直接阻断并降级告警。
   completion_evidence:
