@@ -14,7 +14,7 @@ totals:
   mcp_tools: 642
   bos_services: 326
   bos_domains: 24
-  cli_commands: 225
+  cli_commands: 218
   skills: 40
   workflows: 25
 mcp_servers:
@@ -2247,8 +2247,6 @@ cli_commands:
   description: 🤖 Agent Runtime 任务执行 / HTTP server (替代独立 agent-runtime 命令)
 - name: agent-workflow
   description: 🤖 Agent 可执行治理流程 (委派 root bin/agent-workflow.py)
-- name: agents
-  description: 活体工作树空间作业热力与并发写锁冲突预警
 - name: agora
   description: Agora BOS 网关入口 (委派 agora CLI)
 - name: analyze
@@ -2297,8 +2295,6 @@ cli_commands:
   description: 多维日历感知与督办闭环 (T7-02)
 - name: calibrate
   description: '[v2] 校准场景卡'
-- name: callchains
-  description: 主权系统端到端跨层调用链路时序
 - name: capabilities
   description: 统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance)
 - name: capability
@@ -2423,8 +2419,6 @@ cli_commands:
   description: 架构治理 (委派 arcnode-*)
 - name: graph
   description: 运行语义图谱分析
-- name: guard
-  description: 🛡️ 定向检测一组文件路径的并发争用与踩踏隐患
 - name: health
   description: 查看研究健康报告（衰减状态/保鲜建议）
 - name: heatmap
@@ -2473,8 +2467,6 @@ cli_commands:
   description: '[v2] 场景卡生命周期管理 (list/status/promote/demote/validate)'
 - name: list
   description: 查看研究历史
-- name: listen
-  description: 🎧 终端流式监听主权态势感知事件流 (实时捕获)
 - name: logs
   description: 查看日志
 - name: lora
@@ -2519,8 +2511,6 @@ cli_commands:
   description: 打开研究全文
 - name: ops
   description: 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate)
-- name: overview
-  description: 八层架构拓扑与项目资产总览
 - name: pack
   description: 将代码库打包为 LLM 友好格式
 - name: panorama
@@ -2603,8 +2593,6 @@ cli_commands:
   description: 全文搜索
 - name: send
   description: 一键确认署名并经外发网关真实外发
-- name: sentinel
-  description: 16 个子模块 Gitlink 对齐与 7 大主权端口探针
 - name: serve
   description: stdio JSON-RPC serve mode
 - name: sign
@@ -2645,8 +2633,6 @@ cli_commands:
   description: 查看研究的演化时间线
 - name: topics
   description: 列出已注册 topic
-- name: topology
-  description: 🗺️ 八层架构拓扑全景、多 Agent 空间作业与调用链穿透
 - name: tree
   description: 自适应熵感知树状投机解码与多候选验证基准
 - name: triage
