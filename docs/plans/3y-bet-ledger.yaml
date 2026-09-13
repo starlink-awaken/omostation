@@ -2543,6 +2543,7 @@ bets:
   - projects/agora/tests/test_resident_a2a.py
   - .omo/_knowledge/retros/BET-Y1Q4-T5-03.md
   value_indicator_policy: false
+  done_at: '2026-09-13'
 - accepted_specifications:
   - content_digest: sha256:07edff7014a86df77a987aa86dba473ee8e17f8f550122ed59116a35a1abf7ce
     decision_ref: decision://accepted/BET-Y1Q4-T10-125
