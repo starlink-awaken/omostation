@@ -3127,7 +3127,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-12
   title: 业务场景五档生命周期自动巡航与金牌样例自学习闭环 (Autonomous Scene Lifecycle Cruiser & Golden Sample
     Loop)
   track: T7-SCENE
