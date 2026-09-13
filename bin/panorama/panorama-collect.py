@@ -349,7 +349,7 @@ def collect_workspace_hygiene() -> dict:
 
 
 def collect_ci() -> dict:
-    """CI Pipeline 健康：每 workflow 最近 run 状态 + 失败率。"""
+    """CI Pipeline 健康。"""
     from collections import Counter
     code, out = run(["gh", "run", "list", "--limit", "60", "--json",
                      "workflowName,status,conclusion,event,createdAt,databaseId"])
@@ -378,7 +378,7 @@ def collect_ci() -> dict:
 
 
 def collect_cron() -> dict:
-    """Cron 调度台：job 的 schedule / 状态 / 一致性。"""
+    """Cron 调度台。"""
     import yaml
     from pathlib import Path as _P
     reg_file = ROOT / ".omo" / "cron" / "registry.yaml"
@@ -403,7 +403,7 @@ def collect_cron() -> dict:
 
 
 def collect_submodules() -> dict:
-    """子模块指针矩阵：当前 SHA vs origin/main。"""
+    """子模块指针矩阵。"""
     subs: dict[str, dict] = {}
     for name in ("omo", "cockpit-ui", "cockpit", "agora", "ecos", "l4-kernel",
                  "bus-foundation", "aetherforge", "model-driven", "knowledge", "family-hub"):
@@ -427,7 +427,7 @@ def collect_submodules() -> dict:
 
 
 def collect_debt() -> dict:
-    """债务与决策：debt 项 + open decision。"""
+    """债务与决策。"""
     import yaml
     from glob import glob
     debts = []
@@ -444,7 +444,7 @@ def collect_debt() -> dict:
 
 
 def collect_workflows() -> list[dict]:
-    """工作流活动：近次 agent-workflow run。"""
+    """工作流活动。"""
     from glob import glob
     import yaml
     runs = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/runs/*.yaml")), reverse=True)[:15]
@@ -468,8 +468,7 @@ def collect_alerts() -> dict:
     try:
         ci = json.loads(open(str(ROOT / "runtime/dashboard/data.json")).read()) if (ROOT / "runtime/dashboard/data.json").is_file() else {}
         for w in (ci.get("ci", {}).get("red_workflows") or []):
-            alerts.append({"severity": "high", "source": "ci",
-                           "msg": f"workflow 红源: {w['workflow']} ({w['fail']}/{w['total']})"})
+            alerts.append({"severity": "high", "source": "ci", "msg": f"workflow 红源: {w['workflow']} ({w['fail']}/{w['total']})"})
     except Exception:  # noqa: BLE001
         pass
     try:
@@ -515,6 +514,253 @@ def collect_closeouts() -> dict:
             pass
     return {"closeouts": ready[:15], "total": len(ready)}
 
+def collect_services() -> dict:
+    """BOS 服务注册。"""
+    import yaml
+    try:
+        text = (ROOT / ".omo/_truth/registry/services.yaml").read_text()
+        docs = list(yaml.safe_load_all(text))
+    except Exception:
+        docs = []
+    services = []
+    for d in docs:
+        if isinstance(d, dict):
+            if "services" in d:
+                svcs = d["services"]
+                if isinstance(svcs, list):
+                    services.extend(svcs)
+                elif isinstance(svcs, dict):
+                    services.extend([{"name": k, **v} for k, v in svcs.items()])
+            elif "name" in d:
+                services.append(d)
+            else:
+                services.extend([{"name": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()])
+    active = [s for s in services if isinstance(s, dict) and s.get("status") == "active"]
+    return {"total": len(services), "active": len(active),
+            "sample": [{k: str(v)[:40] for k, v in s.items() if k in ("name","status","endpoint","owner")}
+                      for s in services[:25] if isinstance(s, dict)]}
+
+
+def collect_swarm() -> dict:
+    """Swarm 协调。"""
+    import yaml
+    try:
+        reg = yaml.safe_load_all((ROOT / ".omo/_truth/registry/swarm-coordination.yaml").read_text())
+        items = []
+        for d in reg:
+            if isinstance(d, dict):
+                items.extend([{"name": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()])
+    except Exception:
+        items = []
+    active = [i for i in items if isinstance(i, dict) and i.get("status") in ("active", "conditional_active")]
+    return {"total": len(items), "active": len(active),
+            "items": [{k: str(v)[:40] for k, v in i.items() if k in ("name","status","sfop_slot")}
+                     for i in items[:20] if isinstance(i, dict)]}
+
+
+def collect_governance_alerts() -> dict:
+    """治理告警通道。"""
+    import yaml
+    try:
+        reg = yaml.safe_load_all((ROOT / ".omo/_truth/registry/governance-alerts.yaml").read_text())
+        channels = []
+        for d in reg:
+            if isinstance(d, dict):
+                channels.extend([{"name": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()])
+    except Exception:
+        channels = []
+    healthy = [c for c in channels if isinstance(c, dict) and c.get("status") == "active"]
+    return {"total": len(channels), "healthy": len(healthy),
+            "channels": [{k: str(v)[:40] for k, v in c.items() if k in ("name","channel","status")}
+                        for c in channels[:15] if isinstance(c, dict)]}
+
+
+def collect_value_metrics() -> dict:
+    """北极星价值度量/交付软门禁。"""
+    import yaml
+    metrics = {}
+    for f in ("x3-value-stack.yaml", "x3-delivery-soft-gate.yaml"):
+        try:
+            docs = list(yaml.safe_load_all((ROOT / f".omo/_truth/{f}").read_text()))
+            metrics[f.replace(".yaml", "")] = f"{len(docs)} docs, {sum(len(d) if isinstance(d,dict) else 0 for d in docs)} entries"
+        except Exception:
+            metrics[f.replace(".yaml", "")] = "unavailable"
+    return metrics
+
+
+def collect_debt_registry() -> dict:
+    """债务全览。"""
+    import yaml
+    try:
+        docs = list(yaml.safe_load_all((ROOT / ".omo/_truth/registry/debt.yaml").read_text()))
+        items = []
+        for d in docs:
+            if isinstance(d, dict):
+                items.extend([{"id": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()])
+    except Exception:
+        items = []
+    by_status = {}
+    for i in items:
+        if isinstance(i, dict):
+            s = str(i.get("status", "unknown"))
+            by_status[s] = by_status.get(s, 0) + 1
+    return {"total": len(items), "by_status": by_status,
+            "items": [{k: str(v)[:40] for k, v in i.items() if k in ("id","status","severity","title")}
+                     for i in items[:15] if isinstance(i, dict)]}
+
+
+def collect_tasks() -> dict:
+    """任务注册。"""
+    import yaml
+    try:
+        reg = yaml.safe_load((ROOT / ".omo/state/task-registry.yaml").read_text()) or {}
+    except Exception:
+        reg = {}
+    tasks = reg.get("tasks") or reg.get("items") or []
+    if isinstance(tasks, dict):
+        tasks = [{"id": k, **(v if isinstance(v, dict) else {})} for k, v in tasks.items()]
+    by_status = {}
+    for t in tasks:
+        if isinstance(t, dict):
+            s = str(t.get("status", "unknown"))
+            by_status[s] = by_status.get(s, 0) + 1
+    return {"total": len(tasks), "by_status": by_status,
+            "recent": [{k: str(v)[:40] for k, v in t.items() if k in ("id","title","status","owner")}
+                      for t in tasks[:15] if isinstance(t, dict)]}
+
+
+def collect_agent_tick() -> dict:
+    """Agent Tick 心跳。"""
+    lines = []
+    try:
+        with open(ROOT / ".omo/state/agent-tick-daemon.jsonl") as f:
+            lines = f.readlines()[-20:]
+    except Exception:
+        pass
+    return {"recent_ticks": len(lines), "last_5": [l.strip()[:100] for l in lines[-5:]]}
+
+
+def collect_handoffs() -> dict:
+    """交接记录。"""
+    from glob import glob
+    files = sorted(glob(str(ROOT / ".omo/state/handoffs/*")), reverse=True)[:10]
+    return {"total": len(files), "recent": [Path(f).stem[:50] for f in files]}
+
+
+def collect_pipeline() -> dict:
+    """管线事件。"""
+    lines = []
+    try:
+        with open(ROOT / ".omo/state/pipeline-events.jsonl") as f:
+            lines = f.readlines()[-30:]
+    except Exception:
+        pass
+    recent = []
+    for l in lines[-10:]:
+        try:
+            import json as _j
+            d = _j.loads(l)
+            recent.append({k: str(v)[:40] for k, v in d.items() if k in ("event","status","pipeline_id")})
+        except Exception:
+            recent.append({"_raw": l[:80]})
+    return {"total_events": len(lines), "recent": recent}
+
+
+def collect_a2a() -> dict:
+    """A2A 消息。"""
+    lines = []
+    try:
+        with open(ROOT / ".omo/state/a2a-messages.jsonl") as f:
+            lines = f.readlines()[-30:]
+    except Exception:
+        pass
+    return {"total": len(lines), "recent": [l.strip()[:100] for l in lines[-5:]]}
+
+
+def collect_observability_events() -> dict:
+    """可观测事件。"""
+    import yaml
+    try:
+        docs = list(yaml.safe_load_all((ROOT / ".omo/_truth/registry/observability-events.yaml").read_text()))
+        events = []
+        for d in docs:
+            if isinstance(d, dict):
+                events.extend([{"name": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()])
+    except Exception:
+        events = []
+    return {"total": len(events),
+            "events": [{k: str(v)[:40] for k, v in e.items() if k in ("name","type","status")}
+                      for e in events[:20] if isinstance(e, dict)]}
+
+
+def collect_scene_v3() -> dict:
+    """场景卡 v3。"""
+    import yaml
+    from glob import glob
+    cards = []
+    for f in sorted(glob(str(ROOT / ".omo/_truth/scene-cards-v3.yaml"))):
+        try:
+            docs = list(yaml.safe_load_all(Path(f).read_text()))
+            for d in docs:
+                for cid, cfg in (d.get("scenes") or {}).items() if isinstance(d, dict) else []:
+                    if isinstance(cfg, dict):
+                        cards.append({"id": str(cid)[:40], "stage": cfg.get("stage",""),
+                                      "domain": cfg.get("domain",""), "title": str(cfg.get("title",cid))[:40]})
+        except Exception:
+            pass
+    return {"total": len(cards), "cards": cards[:30]}
+
+
+def collect_evolution() -> dict:
+    """进化提案。"""
+    from glob import glob
+    files = sorted(glob(str(ROOT / ".omo/state/evolution-proposals/*")))
+    proposals = [Path(f).stem[:50] for f in files[-15:]]
+    return {"total": len(files), "recent_proposals": proposals}
+
+
+def collect_predictive() -> dict:
+    """预测治理。"""
+    import yaml
+    try:
+        docs = list(yaml.safe_load_all((ROOT / ".omo/_truth/registry/predictive-governance.yaml").read_text()))
+    except Exception:
+        docs = []
+    return {"available": bool(docs), "docs": len(docs),
+            "metrics": [item for d in docs for item in (d.get("metrics",[]) if isinstance(d,dict) else [])],
+            "horizons": {k:str(v)[:30] for d in docs for k,v in (d.get("horizons",{}).items() if isinstance(d,dict) else {})}}
+
+
+def collect_anticorrosion() -> dict:
+    """防腐约束。"""
+    import yaml
+    surfaces = {}
+    for f in ("mutation-surfaces.yaml", "write-owners.yaml"):
+        try:
+            docs = list(yaml.safe_load_all((ROOT / f".omo/_truth/registry/{f}").read_text()))
+            surfaces[f.replace(".yaml","")] = sum(len(d) if isinstance(d,(dict,list)) else 0 for d in docs)
+        except Exception:
+            surfaces[f.replace(".yaml","")] = 0
+    return surfaces
+
+
+def collect_doc_governance() -> dict:
+    """文档治理。"""
+    import yaml
+    try:
+        docs = list(yaml.safe_load_all((ROOT / ".omo/_truth/registry/document-governance.yaml").read_text()))
+        surfaces = []
+        for d in docs:
+            if isinstance(d, dict):
+                surfaces.extend(d.get("surfaces") or [])
+                if "surfaces" not in d and d.get("id"):
+                    surfaces.append(d)
+    except Exception:
+        surfaces = []
+    return {"available": True, "surfaces": len(surfaces),
+            "surface_list": [s.get("id","") if isinstance(s,dict) else str(s)[:30] for s in surfaces[:10]]}
+
+
 def build_payload() -> dict:
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -539,6 +785,22 @@ def build_payload() -> dict:
         "alerts": collect_alerts(),
         "deployments": collect_deployments(),
         "closeouts": collect_closeouts(),
+        "services": collect_services(),
+        "swarm": collect_swarm(),
+        "governance_alerts": collect_governance_alerts(),
+        "value_metrics": collect_value_metrics(),
+        "debt_registry": collect_debt_registry(),
+        "tasks": collect_tasks(),
+        "agent_tick": collect_agent_tick(),
+        "handoffs": collect_handoffs(),
+        "pipeline": collect_pipeline(),
+        "a2a": collect_a2a(),
+        "observability_events": collect_observability_events(),
+        "scene_v3": collect_scene_v3(),
+        "evolution": collect_evolution(),
+        "predictive": collect_predictive(),
+        "anticorrosion": collect_anticorrosion(),
+        "doc_governance": collect_doc_governance(),
     }
 
 
@@ -770,4 +1032,3 @@ T10-166 数据契约（per 面板）:
     python3 bin/panorama/panorama-collect.py --check-side-effects
                                                         # 验证零仓库写副作用
 """
-
