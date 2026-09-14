@@ -2527,16 +2527,40 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: IN_PROGRESS
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@eed16ec0800f60a15273817f2fcb6b3e5977ed23
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+    notes: batch1 #3739 + batch2 agora@7a92d11（经 #3751 pin 入主链）；10/10 pytest 复测通过；operational 以测试级验证为据，无生产灰度；value 待业务指标单独证明
   depends_on:
   - BET-Y1Q4-T10-05
   done_when:
@@ -2554,11 +2578,13 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: in_progress
+  status: done
+  done_at: 2026-09-14
   title: Agora A2A 双向任务委派与 Resident Agent Card 协议接入 (A2A Task Delegation & Resident
     Agent Card)
   track: T5-ORCH
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/agora/tests/test_resident_a2a.py -q
     expect: exit 0
@@ -3316,7 +3342,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: 2026-09-14
   title: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游 (TinyBOS Embodied Protocol & Home LAN Roaming
     Mesh)
   track: T8-SURFACE
@@ -3334,6 +3361,50 @@ bets:
   - projects/agora/src/agora/transport/p2p_mesh.py
   - projects/agora/tests/test_tinybos_mesh.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-14-t8-22-tinybos-mesh-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:f4426dd472a97652297d24bb7390299878b3d90214816f8e56503378f85c8962
+    decision_ref: decision://accepted/BET-Y1Q4-T8-22
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c582f07a7239d057db07a0345f0ac5e7c94a2d02
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    notes: PR #3746 已合入 origin/main；30/30 pytest 通过；operational 以测试级验证为据（见 retro），业务价值待单独证明
+
 - appetite: 3 days
   circuit_breaker: 分级路由如遇 L0/L1 判定置信度低于阈值，必须平滑降级至上一层重型模型，严禁因追求低延迟而牺牲决策正确性。
   depends_on:
