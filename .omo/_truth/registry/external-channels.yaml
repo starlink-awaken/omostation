@@ -1,24 +1,24 @@
 # External Channels Inventory SSOT (ECCP P0)
 # 自动生成, 请勿手动编辑
 # 生成器: bin/ssot/gen-external-channels-inventory.py
-# 生成时间: 2026-09-04T00:03:57Z
+# 生成时间: 2026-09-09T01:27:10Z
 # 对标: Backstage software catalog (集中 inventory)
 
 version: '1.0'
-generated_at: '2026-09-04T00:03:57Z'
+generated_at: '2026-09-09T01:27:10Z'
 generator: bin/ssot/gen-external-channels-inventory.py
 policy_digest: external-connection-fabric/v1
 totals:
-  channels: 25
+  channels: 26
   exposed: 20
   orphan: 5
   proposal: 0
 health_summary:
-  available: 8
-  unavailable: 12
+  available: 9
+  unavailable: 11
   error: 0
-  pending: 5
-  available_rate: 32.0
+  pending: 6
+  available_rate: 34.6
 
 channels:
   - id: iris:apple_mail
