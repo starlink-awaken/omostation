@@ -29242,7 +29242,47 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          merged_reachable_commit:
+            ref: git://origin/main@5fe0f477efa71d734b765ea2c28e55d1b1cdaa84
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    notes: >-
+      Engineering and operational delivery are proven by child PR #170/#172,
+      required child CI, and post-merge focused replay. Human value remains
+      NOT_PROVEN.
   title: OMO 持久 Role/Capsule/Handoff/Claim/Verification/ASD 语义落地
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -29258,6 +29298,7 @@ bets:
   window: Y1Q4
   workflow: bet-execution
   write_surfaces:
+  - projects/omo
   - projects/omo/src/omo/workflow/
   - projects/omo/tests/
   - docs/architecture/os-operating-pattern-v1.md
@@ -29267,6 +29308,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:08cf945ec60df0d75268a05f09c4771d7c75cde1a94ba293798caf1886af7bd7
     decision_ref: decision://accepted/BET-Y1Q4-T10-165
+  done_at: '2026-09-13'
 - appetite: 3 days
   done_when:
   - ASD 五核心面板（Overview/Spine/Agents/Milestones/Degradation）在驾驶舱可呈现、有 provenance
