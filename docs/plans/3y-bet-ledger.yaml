@@ -2634,7 +2634,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: in_progress
+  done_note: 'CLI triage/approve/status 已接线 + 扫描器修复 (triage_status 优先) + 17 tests 全绿; 剩余: operator 执行 batch_archive_status("reviewed") 归档 133 份提案后升 done'
   title: 常驻决策提案 (Decision Proposals) 闭环消费与 Cockpit 审批自进化通道 (Decision Proposals Closeout
     & Cockpit Triage)
   track: T8-SURFACE
