@@ -7,6 +7,7 @@ description = "TinyBOS edge daemon — ultra-lightweight physical-world sensing 
 [dependencies]
 sha2 = "0.10"
 thiserror = "1"
+libc = "0.2"
 
 [profile.release]
 opt-level = "z"

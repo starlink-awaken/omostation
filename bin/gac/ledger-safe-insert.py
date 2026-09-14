@@ -11,6 +11,7 @@
   python3 bin/gac/ledger-safe-insert.py --file <entry.yaml> [--dry-run]
   python3 bin/gac/ledger-safe-insert.py --show-bounds
 """
+
 from __future__ import annotations
 
 import argparse
@@ -85,6 +86,37 @@ def validate_entry(entry: dict, root: Path, bet_id: str) -> list[str]:
     return errors
 
 
+def format_entry_as_list_item(entry: dict, *, indent_units: int = 0) -> str:
+    """Render a mapping-shaped entry as one item directly inside ``bets``.
+
+    The public input contract is a mapping, while the Ledger requires a list
+    item. Rendering through PyYAML avoids trusting the caller's indentation.
+    """
+    rendered = yaml.safe_dump(entry, sort_keys=False, allow_unicode=True).rstrip("\n")
+    lines = rendered.splitlines()
+    if not lines:
+        raise SystemExit("entry mapping is empty")
+    item_prefix = " " * indent_units
+    nested_prefix = " " * (indent_units + 2)
+    return (
+        "\n".join([f"{item_prefix}- {lines[0]}", *(f"{nested_prefix}{line}" if line else "" for line in lines[1:])])
+        + "\n"
+    )
+
+
+def bets_item_indent(ledger: Path) -> int:
+    node = yaml.compose(ledger.open(encoding="utf-8"))
+    for key_node, value_node in node.value:
+        if key_node.value == "bets":
+            if not isinstance(value_node, yaml.SequenceNode) or not value_node.value:
+                raise SystemExit("bets: is not a non-empty sequence")
+            column = value_node.value[0].start_mark.column
+            if column < 2:
+                raise SystemExit("bets: first item has invalid indentation")
+            return column - 2
+    raise SystemExit("no bets key found at top level")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--file", help="YAML file containing a single BET entry mapping")
@@ -116,9 +148,7 @@ def main() -> int:
     insert_at, current_total, _ = compose_bounds(ledger)
 
     errors = validate_entry(entry, root, bet_id)
-    dup = sum(
-        1 for line_item in lines if line_item.strip() == f"id: {bet_id}"
-    )
+    dup = sum(1 for line_item in lines if line_item.strip() == f"id: {bet_id}")
     if dup:
         errors.append(f"id conflict: {bet_id} already in ledger")
 
@@ -131,7 +161,10 @@ def main() -> int:
         print(f"DRY-RUN OK: {bet_id} would be inserted at line {insert_at + 1}")
         return 0
 
-    entry_lines = [l + "\n" for l in entry_text.rstrip("\n").split("\n")]
+    entry_lines = format_entry_as_list_item(
+        entry,
+        indent_units=bets_item_indent(ledger),
+    ).splitlines(keepends=True)
     lines[insert_at:insert_at] = entry_lines
     new_text = "".join(lines)
 
@@ -139,10 +172,17 @@ def main() -> int:
         stripped = cfg_line.strip()
         if stripped.startswith("total_bets:"):
             old_total = int(stripped.split(":")[1].strip())
-            new_text = new_text.replace(
-                f"  total_bets: {old_total}", f"  total_bets: {old_total + 1}", 1
-            )
+            new_text = new_text.replace(f"  total_bets: {old_total}", f"  total_bets: {old_total + 1}", 1)
             break
+
+    candidate = yaml.safe_load(new_text)
+    candidate_bets = candidate.get("bets") if isinstance(candidate, dict) else None
+    if (
+        not isinstance(candidate_bets, list)
+        or len(candidate_bets) != current_total + 1
+        or candidate_bets[-1].get("id") != bet_id
+    ):
+        raise SystemExit("semantic verification failed: inserted entry is not the last bets list item")
 
     fd, tmp = tempfile.mkstemp(suffix=".yaml", dir=str(ledger.parent))
     with os.fdopen(fd, "w", encoding="utf-8") as f:

@@ -2,16 +2,27 @@
 schema_version: retrospective/v1
 bet_id: BET-Y1Q4-T8-22
 status: archived
+||||||| 389282d132
+status: done
+done_at: 2026-09-13
+merged_reachable_commit: c582f07a7239d057db07a0345f0ac5e7c94a2d02
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-14
 ---
 
 # BET-Y1Q4-T8-22 复盘: TinyBOS Edge Guardian
+||||||| 389282d132
+# BET-Y1Q4-T8-22 Retro: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游
 
 ## 交付摘要
 
 **状态**: 代码交付完成 (4/4 done_when 已满足)
+||||||| 389282d132
+- PR #3746 已合入 main
+- TinyBOS Rust 边缘守护进程骨架 (projects/surface/tinybos/): codec/mesh/sensor 三模块
+- Agora P2P mesh Python 模块接入
+- 单元测试覆盖边缘报文编解码、P2P 网格连通与网络波动断线重连
 
 ### 已交付
 
@@ -20,11 +31,16 @@ last-reviewed: 2026-09-14
    - `sensor.rs`: 4 传感器类型, 3 阈值检测 (4 tests)
    - `mesh.rs`: MeshTable + prune_stale + touch_peer (7 tests)
    - `main.rs`: 传感器采样→编码→发送管道, 信号处理, test-pipeline CI 模式
+||||||| 389282d132
+- squash-merge 后原分支 sha 不在 origin/main 祖先链，需放宽 merge-base 校验
+- Rust 交叉编译到 ARM 家庭微型主机需单独 CI 矩阵（留待后续 bet 覆盖）
 
 2. **Python Agora Transport (`tinybos_bridge.py`)** — 传感器帧解码 + 场景触发映射
    - `decode_sensor_frame()`: 二进制帧解析
    - `map_to_trigger()`: HRV/加速度→场景触发映射
    - `TinyBOSBridge` 类: Unix socket 服务端, asyncio 连接管理
+||||||| 389282d132
+## 经验沉淀
 
 3. **单元测试** — Rust 15/15 + Python 45/45 全部通过
 
@@ -54,4 +70,7 @@ cargo build --release                              # 354KB binary
 
 # Python 测试
 cd projects/agora && uv run pytest tests/test_tinybos_mesh.py -v  # 45 passed
+||||||| 389282d132
+- 物感知边缘守护进程适合独立 Rust crate 起步，不混入 Python runtime
+- P2P mesh 节点发现优先用 mDNS + WireGuard，不依赖中心化信令服务器
 ```
