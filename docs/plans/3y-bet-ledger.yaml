@@ -4116,7 +4116,7 @@ bets:
   - BET-Y1Q4-T8-22
   done_when:
   - 交付 projects/cockpit/src/cockpit/resident_flight_deck.py 授权与遥测服务
-  - 交付 projects/cockpit-ui/src/pages/ResidentFlightDeck.vue 前端透明指挥舱页面
+  - 交付 projects/cockpit-ui/src/views/ResidentFlightDeck.tsx 前端透明指挥舱页面
   - 越权拦截率 100%，紧急人工熔断在 1 秒内生效
   goal: 建立 L1~L4 四阶梯自适应风险授权拦截网关；在 Cockpit 前端集成 Resident Flight Deck 四维透明指挥舱，实现心跳健康、任务
     DAG 流水、算力显存遥测与人工熔断介入全景可见。
@@ -4128,7 +4128,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: in_progress
   title: 基于风险-置信度矩阵的自适应授权与 Cockpit Resident Flight Deck 四维透明指挥舱 (Risk-Confidence Adaptive
     Authorization & Cockpit Flight Deck)
   track: T8-EXECUTION
@@ -4142,9 +4142,29 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - projects/cockpit/src/cockpit/resident_flight_deck.py
-  - projects/cockpit-ui/src/pages/ResidentFlightDeck.vue
+  - projects/cockpit/src/cockpit/web/api_flight_deck.py
+  - projects/cockpit-ui/src/views/ResidentFlightDeck.tsx
   - projects/cockpit/tests/test_resident_flight_deck.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:07420c743e90abd285259c9cfc16611e5a805608726065aa85b210851ca838d1
+    decision_ref: decision://accepted/BET-Y1Q4-T8-23
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 - appetite: 4-5 days
   circuit_breaker: 数据集包含敏感密钥或凭证时立即终止并清洗，拒绝脏数据进入训练集。
   depends_on:
@@ -29933,6 +29953,16 @@ tracks:
     - projects/cockpit/src/cockpit/web/**
     scope: /inbox /outcomes /signals /journeys 面板
     title: 人机界面
+  T8-EXECUTION:
+    agent_profile_hint: engineering-agent
+    default_workflow: project-code-change
+    pasw_required: true
+    primary_write_surfaces:
+    - projects/cockpit/src/cockpit/*.py
+    - projects/cockpit/tests/**
+    - projects/cockpit-ui/src/**
+    scope: 授权网关 / 风险-置信度矩阵 / 执行层遥测 / 人工熔断
+    title: 执行层授权与遥测
   T9-OBSERV:
     agent_profile_hint: governance-agent
     default_workflow: governance-state-mutation
