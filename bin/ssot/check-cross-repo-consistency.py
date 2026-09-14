@@ -98,20 +98,42 @@ def collect_referenced_uris() -> set[str]:
     return found
 
 
-def load_ecos_ports() -> dict[int, str]:
-    """ecos port-registry."""
+def load_ecos_ports() -> dict[int, object]:
+    """ecos port-registry.
+
+    Returns either a dict entry (structured) or a string (legacy flat format).
+    """
     f = WORKSPACE / "projects" / "ecos" / "port-registry.yaml"
     data = load_yaml(f) or {}
     ports = data.get("ports", {}) if isinstance(data, dict) else {}
-    return {int(k): _strip_yaml_comment(str(v)) for k, v in ports.items() if str(k).isdigit()}
+    out: dict[int, object] = {}
+    for k, v in ports.items():
+        if not str(k).isdigit():
+            continue
+        if isinstance(v, dict):
+            out[int(k)] = v
+        else:
+            out[int(k)] = _strip_yaml_comment(str(v))
+    return out
 
 
-def load_protocols_ports() -> dict[int, str]:
-    """protocols port-registry (SSOT 协议层)."""
+def load_protocols_ports() -> dict[int, object]:
+    """protocols port-registry (SSOT 协议层).
+
+    Returns either a dict entry (structured) or a string (legacy flat format).
+    """
     f = WORKSPACE / "protocols" / "port-registry.yaml"
     data = load_yaml(f) or {}
     ports = data.get("ports", {}) if isinstance(data, dict) else {}
-    return {int(k): _strip_yaml_comment(str(v)) for k, v in ports.items() if str(k).isdigit()}
+    out: dict[int, object] = {}
+    for k, v in ports.items():
+        if not str(k).isdigit():
+            continue
+        if isinstance(v, dict):
+            out[int(k)] = v
+        else:
+            out[int(k)] = _strip_yaml_comment(str(v))
+    return out
 
 
 def _strip_yaml_comment(value: str) -> str:

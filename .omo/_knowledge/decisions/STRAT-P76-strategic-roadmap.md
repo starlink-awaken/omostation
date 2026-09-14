@@ -11,6 +11,7 @@ related:
   - 0159-p76-phase5-foundry.md
   - ../../../.omo/_knowledge/audits/2026-07-02-system-comprehensive-audit.md
   - ../../../.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md
+type: ssot
 ---
 
 # STRATEGY-DECISION: P76 战略 5-phase 迭代路线图 — **已收口 (2026-07-07)**

@@ -1,0 +1,23 @@
+schema: agent-error/v1
+id: PITFALL-MEA-003
+category: measurement
+severity: high
+title: bet-ledger complete 静默跳过写盘 (block 边界 + 块级 status)
+symptom: cmd_complete 打印 ✅ → done 但台账 status 仍 candidate; complete 幂等显示已是 done 却没写盘
+root_cause: 'block_end 用 text.find(''\n- id:'') 定位下一个块, 但 152/160 bet 块以 ''- appetite:''
+  开头 → block 吞多块 → 误检别的 done bet 的 ''  status: done'' → 跳过写盘; 且 re.sub(count=1) 误改
+  completion_evidence 的 axis status'
+solution: 'id 行首锚定 ''\n  id: <bet_id>''; 块边界改下一个顶格 ''\n- ''; 只锚定 2 空格块级 status 行替换
+  + 插入 done_at; 新增回归测试'
+prevention: complete 写盘必须精确锚定块边界(顶格 '- ')与块级字段缩进(2 空格), 禁止朴素子串/re.sub count 匹配; 测试需覆盖多块+evidence
+  场景
+tags:
+- bet-ledger
+- complete
+- block-boundary
+- ledger
+discovered_by: governance-agent
+discovered_at: '2026-09-08'
+times_encountered: 1
+last_confirmed_at: '2026-09-08'
+status: active

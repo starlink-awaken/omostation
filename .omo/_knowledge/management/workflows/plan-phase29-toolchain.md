@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: plan-phase29-toolchain.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 29 — 工具体系韧性 (Toolchain Resilience)

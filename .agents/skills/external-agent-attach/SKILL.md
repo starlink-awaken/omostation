@@ -2,7 +2,10 @@
 name: external-agent-attach
 description: "Attach an external AI agent (Claude Code, Codex, Cursor, custom MCP host) to omostation via Agora MCP + BOS + agent-workflow. Use when onboarding a foreign agent, configuring MCP, or asking how to connect another agent to this workspace."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # External Agent Attach
 

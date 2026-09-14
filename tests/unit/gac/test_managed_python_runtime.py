@@ -157,33 +157,38 @@ def test_tracked_hooks_execute_python_calls_through_the_managed_runtime(tmp_path
         "#!/bin/sh\n"
         "printf '%s\\n' \"$*\" >> \"$MANAGED_PYTHON_LOG\"\n"
         "case \"$*\" in\n"
-        "  *check-submodule-pointer-drift.py*)\n"
-        "    [ \"${MANAGED_PYTHON_FAIL_DRIFT:-}\" = 1 ] && exit 7\n"
+        "  *check-submodule-rewind.py*)\n"
+        "    [ \"${MANAGED_PYTHON_FAIL_REWIND:-}\" = 1 ] && exit 7\n"
         "    ;;\n"
         "esac\n"
         "exit 0\n",
     )
+    shutil.copy2(ROOT / "bin" / "gac" / "hook-runner.sh", repo / "bin" / "gac" / "hook-runner.sh")
+    hook_manifest = repo / ".omo" / "_truth" / "registry" / "hook-manifest.yaml"
+    hook_manifest.parent.mkdir(parents=True)
+    shutil.copy2(ROOT / ".omo" / "_truth" / "registry" / "hook-manifest.yaml", hook_manifest)
 
     pre_commit_scripts = (
         "bin/gac/agent-clone.py",
-        "bin/gac-hygiene-check.py",
-        "bin/gac-local-gate.py",
-        "bin/ssot-guardian.py",
-        "bin/gac-audit-engine.py",
+        "bin/gac/check-branch-naming.py",
+        "bin/gac/check-conflict-markers.py",
         "bin/gac/mass-deletion-gate.py",
-        "bin/ssot/conflict-marker-check.py",
+        "bin/gac/check-runtime-artifacts.py",
+        "bin/gac/debt-directory-guard.py",
+        "bin/gac/submodule-guard.py",
+        "bin/gac/gac-hygiene-check.py",
     )
     for relative in pre_commit_scripts:
         path = repo / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
-    (repo / "bin/gac-hygiene-check.py").chmod(0o755)
+    (repo / "bin/gac/gac-hygiene-check.py").chmod(0o755)
 
     hook_tmp = tmp_path / "hook-tmp"
     hook_tmp.mkdir()
     env = _env(
         MANAGED_PYTHON_LOG=str(log),
-        MANAGED_PYTHON_FAIL_DRIFT="",
+        MANAGED_PYTHON_FAIL_REWIND="",
         AGENT_ID="managed-runtime-test",
         TMPDIR=str(hook_tmp),
     )
@@ -198,17 +203,17 @@ def test_tracked_hooks_execute_python_calls_through_the_managed_runtime(tmp_path
     assert pre_commit.returncode == 0, pre_commit.stderr
     calls = log.read_text(encoding="utf-8").splitlines()
     assert len(calls) == len(pre_commit_scripts)
-    assert sum("run --profile pyyaml --" in call for call in calls) == 2
-    assert sum("run --profile stdlib --" in call for call in calls) == 5
+    assert sum("run --profile pyyaml --" in call for call in calls) == 1
+    assert sum("run --profile stdlib --" in call for call in calls) == 7
 
     log.write_text("", encoding="utf-8")
+    _write_executable(repo / "bin/gac/pre-push-network-check.sh", "#!/bin/sh\nexit 0\n")
     _write_executable(repo / "bin/ssot/sync-submodules-push.sh", "#!/bin/sh\nexit 0\n")
     for relative in (
         "bin/ssot/submodule-reachability-gate.py",
-        "bin/gac/ci-local-fast.py",
-        "bin/gac/check-submodule-pointer-drift.py",
-        "bin/gac/swarm-discipline-cli.py",
-        "bin/gac/mass-deletion-gate.py",
+        "bin/gac/guard-direct-push-main.py",
+        "bin/gac/check-submodule-rewind.py",
+        "bin/gac/remote-hygiene-check.py",
     ):
         path = repo / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -225,34 +230,32 @@ def test_tracked_hooks_execute_python_calls_through_the_managed_runtime(tmp_path
     )
     assert pre_push.returncode == 0, pre_push.stderr
     calls = log.read_text(encoding="utf-8").splitlines()
-    assert len(calls) == 4
-    assert sum("run --profile pyyaml --" in call for call in calls) == 1
-    assert sum("run --profile stdlib --" in call for call in calls) == 3
-    assert any("run --profile pyyaml --" in call and "ci-local-fast.py" in call for call in calls)
+    assert len(calls) == 6
+    assert sum("run --profile pyyaml --" in call for call in calls) == 2
+    assert sum("run --profile stdlib --" in call for call in calls) == 4
+    assert any("run --profile pyyaml --" in call and "check-submodule-rewind.py" in call for call in calls)
 
     log.write_text("", encoding="utf-8")
-    skip_env = {
+    fail_env = {
         **env,
-        "CI_LOCAL_SKIP": "1",
-        "SWARM_ESCAPE_ID": "managed-runtime-test",
-        "MANAGED_PYTHON_FAIL_DRIFT": "1",
+        "MANAGED_PYTHON_FAIL_REWIND": "1",
     }
     pre_push = subprocess.run(
         ["bash", str(hooks / "pre-push")],
         cwd=repo,
-        env=skip_env,
+        env=fail_env,
         input=push_line,
         capture_output=True,
         text=True,
         check=False,
     )
-    assert pre_push.returncode == 0, pre_push.stderr
+    assert pre_push.returncode == 1
+    assert "[gitlink-ancestry] failed" in pre_push.stderr
     calls = log.read_text(encoding="utf-8").splitlines()
     assert len(calls) == 6
     assert sum("run --profile pyyaml --" in call for call in calls) == 2
     assert sum("run --profile stdlib --" in call for call in calls) == 4
-    assert any("run --profile stdlib -- - " in call for call in calls)
-    assert any("run --profile pyyaml --" in call and "swarm-discipline-cli.py" in call for call in calls)
+    assert any("run --profile pyyaml --" in call and "check-submodule-rewind.py" in call for call in calls)
 
 
 def test_clone_make_target_executes_the_managed_stdlib_profile(tmp_path: Path) -> None:
@@ -264,7 +267,12 @@ def test_clone_make_target_executes_the_managed_stdlib_profile(tmp_path: Path) -
     )
 
     proc = subprocess.run(
-        ["make", "clone-snapshot", "AGENT_ID=probe"],
+        [
+            "make",
+            "clone-snapshot",
+            "AGENT_ID=probe",
+            "DELIVERY_ATTEMPT_ID=managed-python-test-01",
+        ],
         cwd=tmp_path,
         env=_env(MANAGED_PYTHON_LOG=str(log), HOME=str(tmp_path / "home")),
         capture_output=True,

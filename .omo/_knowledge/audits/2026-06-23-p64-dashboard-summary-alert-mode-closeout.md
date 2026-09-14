@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ephemeral
+status: archived
 ---
 
 # P64 — dashboard 数据源 + 异常自动告警 收口

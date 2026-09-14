@@ -5,6 +5,8 @@ owner: laowang
 last-reviewed: 2026-06-28
 related-task: memu-engine-bpp
 completed: 2026-06-28
+type: ephemeral
+status: archived
 ---
 
 # memu-engine B++ 修复完成 ✅

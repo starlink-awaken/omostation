@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # MECH-03: 管线编排 Pipeline System
 
 > **来源**: `.omo/ARC-ONTOLOGY-TOOLKIT.md`

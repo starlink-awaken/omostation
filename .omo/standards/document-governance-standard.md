@@ -7,6 +7,7 @@ ssot: .omo/_truth/registry/document-governance.yaml
 verifier: bin/ssot/doc-governance-check.py
 review-state: content-reviewed
 content-reviewed-at: 2026-07-31
+type: ssot
 ---
 
 # Document Governance Standard

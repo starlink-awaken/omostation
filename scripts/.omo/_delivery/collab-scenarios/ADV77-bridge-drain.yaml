@@ -1,0 +1,31 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV77-bridge-drain
+category: B_failure_injection
+adversarial: true
+seed: 177
+description: >
+  [对抗·red-team wave13] 跨链桥抽干: 假证明解锁大额资产,
+  管线尚无 bridge_drain_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: bridge_vault, value: "100000", writers: [bridge]}
+  roles: [bridge, attacker]
+inject:
+  - {type: write_conflict, role: attacker, target: bridge_proof, value: "forged_proof"}
+  - {type: write_conflict, role: attacker, target: bridge_vault, value: "0"}
+  - {type: write_conflict, role: attacker, target: attacker_chain_b, value: "mint_100000"}
+expected:
+  behavior: bridge_drain_detected
+  silent_loss: 0
+verdict:
+  - criterion: bridge_drain_detected
+    check: events_contain
+    args: {kind: bridge_drain_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

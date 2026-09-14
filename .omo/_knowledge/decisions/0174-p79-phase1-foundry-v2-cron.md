@@ -11,6 +11,7 @@ related:
   - ../../../../../bin/_archive/2026-08-conv3/port-governance-deck.py
   - ../../../../../docs/operations/knowledge-foundry-monitor.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0174: P79 Phase 1 — Foundry v2 cron 集成 (10-deck)

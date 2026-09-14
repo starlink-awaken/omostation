@@ -13,6 +13,7 @@ related:
   - ../../../../../bin/start-gateway.sh
   - ../../../../../bin/gac-mesh-router.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0170: P77 Phase 7 — 端口硬编码 → Env Var 重构 (P77-5-3 治本)

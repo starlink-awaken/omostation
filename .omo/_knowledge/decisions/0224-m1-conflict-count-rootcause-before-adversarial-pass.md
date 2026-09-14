@@ -10,6 +10,7 @@ related:
   - 0210-three-year-strategy-execution-convergence.md
 supersedes: []
 amends: [0222]
+type: ssot
 ---
 
 # ADR-0224: 被动窗 conflict_count>0 时对抗路径不得单独判 M1 达标

@@ -1,0 +1,49 @@
+name: Diff Governance (lifecycle + debt + growth)
+
+# BET-Y1Q4-T10-154/155/156 — Diff 治理三件套接入 CI 门禁
+# - lifecycle: 孤立未应用 diff 阻断
+# - debt: 代码变更历史债务报告（可见但不阻断）
+# - growth: 单 PR 代码膨胀阻断（超阈值 fail）
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/diff-governance.yml"
+      - "bin/gac/check-diff-lifecycle.py"
+      - "bin/gac/check-diff-debt.py"
+      - "bin/gac/check-diff-growth.py"
+      - "bin/ssot/semantic_diff.py"
+  pull_request:
+    paths:
+      - ".github/workflows/diff-governance.yml"
+      - "bin/gac/check-diff-lifecycle.py"
+      - "bin/gac/check-diff-debt.py"
+      - "bin/gac/check-diff-growth.py"
+      - "bin/ssot/semantic_diff.py"
+
+jobs:
+  diff-governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "ci@omostation.local"
+          git config --global user.name "omostation-ci"
+
+      - name: Diff lifecycle (阻断孤立 diff)
+        run: python3 bin/gac/check-diff-lifecycle.py --fail-on-blocking
+
+      - name: Diff debt (报告)
+        run: python3 bin/gac/check-diff-debt.py --json
+
+      - name: Diff growth (阻断膨胀)
+        run: python3 bin/gac/check-diff-growth.py --max-lines 500 --max-files 30 --fail-on-violation

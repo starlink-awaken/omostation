@@ -3,21 +3,27 @@ id: PITFALL-COO-003
 category: coordination
 severity: high
 title: git add -A 误 stage 子仓旧指针（worktree 共享环境）
-symptom: add -A 后 commit 含 projects/<sub> gitlink 指向 side-branch/旧 checkout；被 submodule-guard/pointer-drift/gitlink-ancestry 任一 gate 以 "指针回退 NOT on origin/main" 拦截
-root_cause: worktree 内子仓常被切到 side-branch（prune/feat 等），git add -A 把该 gitlink 状态连同目标文件一并 stage
-solution: git restore --staged projects/<sub> && git -C projects/<sub> checkout origin/main 后重 commit；amend 需重新 add
+symptom: add -A 后 commit 含 projects/<sub> gitlink 指向 side-branch/旧 checkout；被 submodule-guard/pointer-drift/gitlink-ancestry
+  任一 gate 以 "指针回退 NOT on origin/main" 拦截
+root_cause: worktree 内子仓常被切到 side-branch（prune/feat 等），git add -A 把该 gitlink 状态连同目标文件一并
+  stage
+solution: git restore --staged projects/<sub> && git -C projects/<sub> checkout origin/main
+  后重 commit；amend 需重新 add
 prevention: 永远 git add <具体路径> 替代 -A；add 前自检 git diff --cached --submodule=short
 tags:
 - submodule
 - git-discipline
 - add-a
 - incident-to-rule
-discovered_by: laowang-443-v3 (manual entry — record CLI fuzzy 去重对此条假阳性误配 ENV-001，精确登记绕过；假阳性本身见 v3 复盘)
+discovered_by: laowang-443-v3 (manual entry — record CLI fuzzy 去重对此条假阳性误配 ENV-001，精确登记绕过；假阳性本身见
+  v3 复盘)
 discovered_at: '2026-08-31'
-times_encountered: 3
-last_confirmed_at: '2026-08-31'
+times_encountered: 5
+last_confirmed_at: '2026-09-05'
 status: active
 evidence:
 - 2026-08-30 projects/cockpit 误 stage（gate 拦截零污染）
 - 2026-08-30 projects/omlxc 误 stage（gate 拦截零污染）
 - 2026-08-31 projects/omo side-branch 指针（pointer-drift 拦截）
+_path: /Users/xiamingxing/ws-solidify-lessons/.omo/_knowledge/pitfalls/coordination/PITFALL-COO-003.yaml
+_file: PITFALL-COO-003.yaml

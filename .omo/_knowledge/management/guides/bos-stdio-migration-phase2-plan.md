@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+type: ssot
+owner: governance-team
 ---
 
 # BOS stdio 迁移 Phase 2 实施方案

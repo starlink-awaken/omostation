@@ -1,0 +1,34 @@
+---
+title: 家庭资产负债平水审计、大额支出预警与法务合同审查场景包
+status: assisted
+type: scene-card
+owner: governance-team
+last-reviewed: 2026-09-12
+related:
+  - ./admin-inbox.yaml
+  - ./document-review.yaml
+---
+schema: scene-card/v2
+bet: BET-Y2Q3-T7-01
+falsifier: "若 30 天内无任何家庭财务数据输入，则场景无实际价值"
+scene_id: family-asset-governance
+journey_id: family-financial-audit-workflow
+goal: 自动化解析家庭银行流水账单、固定资产维保与法务合同，生成月度净资产走势与现金流预测，提供大额异常支出与合同违约条款预警
+trigger: 月度定时触发或人工上传账单/合同文件
+input_contract: CSV/OFX/PDF 银行流水、固定资产维保记录、法务合同文本
+result_contract: 月度资产负债平水报表（净资产/现金流/负债比）+ 大额支出预警列表 + 合同风险摘要
+outcome_metric: asset_audit_accuracy, large_expense_detection_rate, contract_risk_precision
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 家庭财务风险漏判导致资产损失或合同陷阱
+data_classification: confidential
+data_scope: family-financial-records
+operator: family-asset-audit-under-human-review
+required_capabilities:
+  - llm:local-classify
+  - llm:local-extract
+notes:
+  - '实现: projects/family-hub/src/family_hub/runtime/asset_audit.py (核心审计引擎)'
+  - '2026-09-12: spec 绑定 + 场景卡初始化，进入 assisted 生命周期'
+  - '验证标准: 场景卡 30-sample + calibration >= 0.6'

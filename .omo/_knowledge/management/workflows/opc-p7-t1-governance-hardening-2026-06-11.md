@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: opc-p7-t1-governance-hardening-2026-06-11.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # OPC-P7 T1-T5 设计合集 + OPC 路线图收官报告

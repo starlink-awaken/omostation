@@ -1,0 +1,13 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "agora-bos-gateway",
+  "name": "Agora Bos Gateway",
+  "lifecycle": "routine",
+  "permissions": {
+    "fs_read": [],
+    "fs_write": [],
+    "network": [],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:34.872957+00:00"
+}

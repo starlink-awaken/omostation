@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ephemeral
+status: archived
 ---
 
 # P63 — readiness 历史快照 + trend 报告 + agent 增强 收口

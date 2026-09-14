@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/scene-journey-autogen.py
+name: Scene Journey Auto-Generator
+category: governance
+owner: governance-team
+description: Generate journey specs from scene cards
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: active
+last_reviewed: "2026-09-07"

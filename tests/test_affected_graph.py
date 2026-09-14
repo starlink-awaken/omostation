@@ -25,7 +25,14 @@ def test_cascading_workflow_preserves_project_argument_boundaries():
     workflow = CASCADE_WORKFLOW.read_text(encoding="utf-8")
 
     assert "tr -d '[:space:]'" not in workflow
-    assert "--changed-projects $PROJS --json" in workflow
+    # The workflow must invoke affected-graph.py with --changed-projects
+    # and --json. Allow either the legacy single-string form or the modern
+    # bash-array form (the array form is preferred to handle project names
+    # with whitespace safely).
+    assert (
+        "affected-graph.py --changed-projects" in workflow
+        and "--json" in workflow
+    ), "cascading-test.yml must invoke affected-graph.py with --changed-projects and --json"
 
 
 def _workspace(tmp_path: Path) -> Path:

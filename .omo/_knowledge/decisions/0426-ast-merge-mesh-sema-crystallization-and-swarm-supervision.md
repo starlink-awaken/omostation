@@ -4,6 +4,7 @@ status: archived
 lifecycle: spec
 owner: agora
 last-reviewed: '2026-08-25'
+type: ssot
 ---
 
 # ADR-0426: AST 语义级合流防腐、SEMA 自动结晶与蜂群常驻看护架构

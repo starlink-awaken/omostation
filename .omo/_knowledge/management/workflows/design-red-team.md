@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: design-red-team.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P2-RED_TEAM 红蓝对抗方案

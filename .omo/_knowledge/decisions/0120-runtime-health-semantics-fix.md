@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-02
+type: ssot
 ---
 
 # ADR-0120: Runtime 健康监控语义修正与 SSOT 一致性加固

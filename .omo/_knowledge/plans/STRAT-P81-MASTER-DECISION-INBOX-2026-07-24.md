@@ -15,6 +15,7 @@ warning: |
   Agent 不得在拍板前自宣进入兑现期。
 last-reviewed: 2026-08-25
 lifecycle: plan
+type: ssot
 ---
 
 > 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: SUPERSEDED-PARTIAL — 物理底座/多机已被 ADR-0414 覆盖, M1 提前已由 P80→0410 链覆盖, 其余卡过期

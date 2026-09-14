@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 # GaC 阶段 1 机制 3 设计 — hook + MCP + CI 多通道 (ADR-0106)
 

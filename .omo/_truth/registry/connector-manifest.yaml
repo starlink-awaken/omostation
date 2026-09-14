@@ -1,0 +1,208 @@
+schema_version: connector-manifest/v1
+created: '2026-09-12'
+last-reviewed: '2026-09-12'
+description: >
+  统一登记所有外部数据源连接器元数据。每个连接器定义其类型、
+  传输方式、认证方式、增量同步能力与 BOS 路由。
+
+connectors:
+  - id: kairon-semantic
+    name: Kairon Semantic Graph
+    type: knowledge-graph
+    transport: internal
+    uri: bos://memory/kos/search
+    status: active
+    incremental: false
+    auth: internal
+    description: Kairon 知识图谱语义检索连接器
+    package: kairon
+    tags: [memory, knowledge, graph]
+
+  - id: iris-calendar
+    name: Iris Calendar Sync
+    type: calendar
+    transport: stdio
+    uri: bos://connectors/iris-calendar/sync
+    status: active
+    incremental: true
+    watermark_field: last_event_id
+    auth: api_key
+    description: Iris 日历事件增量同步连接器
+    package: iris
+    tags: [calendar, events]
+
+  - id: iris-mail
+    name: Iris Mail Ingress
+    type: mail
+    transport: smtp
+    uri: bos://connectors/iris-mail/ingress
+    status: active
+    incremental: true
+    watermark_field: last_message_id
+    auth: smtp
+    description: Iris 邮件收件箱增量同步连接器
+    package: iris
+    tags: [mail, ingress]
+
+  - id: iris-contacts
+    name: Iris Contacts Sync
+    type: contacts
+    transport: stdio
+    uri: bos://connectors/iris-contacts/sync
+    status: active
+    incremental: true
+    watermark_field: last_contact_id
+    auth: api_key
+    description: Iris 通讯录增量同步连接器
+    package: iris
+    tags: [contacts, crm]
+
+  - id: agora-events
+    name: Agora Event Bus
+    type: event-bus
+    transport: internal
+    uri: bos://connectors/agora-events/publish
+    status: active
+    incremental: true
+    watermark_field: event_sequence
+    auth: internal
+    description: Agora 事件总线连接器
+    package: agora
+    tags: [events, realtime]
+
+  - id: cockpit-signature
+    name: Cockpit Signature Diff
+    type: signature-diff
+    transport: internal
+    uri: bos://connectors/cockpit-signature/diff
+    status: active
+    incremental: false
+    auth: internal
+    description: Cockpit 署名 Diff 连接器 (Spine pipeline)
+    package: cockpit
+    tags: [signature, spine]
+
+  - id: cockpit-lora
+    name: Cockpit LoRA Adapter
+    type: lora-adapter
+    transport: internal
+    uri: bos://connectors/cockpit-lora/registry
+    status: active
+    incremental: false
+    auth: internal
+    description: Cockpit 域 LoRA 适配层注册表连接器
+    package: cockpit
+    tags: [lora, adapter]
+
+  - id: omo-resident-heartbeat
+    name: OMO Resident Heartbeat
+    type: heartbeat
+    transport: internal
+    uri: bos://connectors/omo-heartbeat/report
+    status: active
+    incremental: true
+    watermark_field: last_heartbeat_ts
+    auth: internal
+    description: Resident Daemon 心跳上报连接器
+    package: omo
+    tags: [heartbeat, resident]
+
+  - id: omo-decision-log
+    name: OMO Decision Log
+    type: decision-log
+    transport: internal
+    uri: bos://connectors/omo-decision/query
+    status: active
+    incremental: true
+    watermark_field: last_decision_id
+    auth: internal
+    description: Resident 决策日志连接器
+    package: omo
+    tags: [decision, audit]
+
+  - id: gbrain-search
+    name: GBrain Semantic Search
+    type: semantic-search
+    transport: stdio
+    uri: bos://connectors/gbrain/search
+    status: active
+    incremental: false
+    auth: api_key
+    description: GBrain 语义搜索引擎连接器
+    package: gbrain
+    tags: [search, semantic]
+
+  - id: gbrain-vector
+    name: GBrain Vector Store
+    type: vector-store
+    transport: internal
+    uri: bos://connectors/gbrain-vector/query
+    status: active
+    incremental: false
+    auth: internal
+    description: GBrain 向量存储连接器
+    package: gbrain
+    tags: [vector, embedding]
+
+  - id: ecos-mof
+    name: ECOS MOF Protocol
+    type: protocol
+    transport: internal
+    uri: bos://connectors/ecos-mof/constraints
+    status: active
+    incremental: false
+    auth: internal
+    description: ECOS MOF 协议约束连接器
+    package: ecos
+    tags: [protocol, constraints]
+
+  - id: family-hub-documents
+    name: Family Hub Documents
+    type: document-store
+    transport: internal
+    uri: bos://connectors/family-docs/read
+    status: active
+    incremental: true
+    watermark_field: last_doc_id
+    auth: internal
+    description: Family Hub 文档存储连接器
+    package: family-hub
+    tags: [documents, cas]
+
+  - id: bcos-evolution
+    name: BCOS Evolution Engine
+    type: evolution-engine
+    transport: internal
+    uri: bos://connectors/bcos-evolution/tick
+    status: active
+    incremental: true
+    watermark_field: last_evolution_ts
+    auth: internal
+    description: BCOS 进化引擎连接器
+    package: omo
+    tags: [evolution, self-improve]
+
+  - id: runtime-telemetry
+    name: Runtime Telemetry
+    type: telemetry
+    transport: internal
+    uri: bos://connectors/runtime-telemetry/collect
+    status: active
+    incremental: true
+    watermark_field: last_metric_ts
+    auth: internal
+    description: Runtime 遥测数据连接器
+    package: runtime
+    tags: [telemetry, metrics]
+
+  - id: observability-a9
+    name: A9 Observatory
+    type: observability
+    transport: internal
+    uri: bos://connectors/a9-observatory/query
+    status: active
+    incremental: false
+    auth: internal
+    description: A9 全景观测连接器
+    package: cockpit
+    tags: [observability, monitoring]

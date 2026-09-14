@@ -2,7 +2,10 @@
 name: governance-phase-orchestrator
 description: "Use when the user requests a governance-related task, P-phase closure, doc-lifecycle audit, frontmatter remediation, drift cleanup, or any workspace-wide convergence work. Triggers on keywords: 治理, 收敛, P 阶段, governance cycle, phase closure, drift, frontmatter, commit closure, linter saturation, 4 类分类, doc-lifecycle, RISE 循环."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # governance-phase-orchestrator
 

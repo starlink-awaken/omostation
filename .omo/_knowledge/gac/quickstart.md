@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 # GaC Quickstart — 治理即代码使用指南
 

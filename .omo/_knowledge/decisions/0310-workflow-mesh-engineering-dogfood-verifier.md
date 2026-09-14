@@ -10,6 +10,7 @@ related:
   - docs/WORKFLOW-MESH-IMPLEMENTATION.md
   - docs/scene-cards/engineering-delivery-dogfood.yaml
   - .omo/_knowledge/decisions/0309-cockpit-home-operating-focus.md
+type: ssot
 ---
 
 # ADR-0310: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递

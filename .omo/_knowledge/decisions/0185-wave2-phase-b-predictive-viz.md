@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-15
+type: ssot
 ---
 
 # ADR-0185 — Wave 2 Phase B: 预测增强 + 可视化导出

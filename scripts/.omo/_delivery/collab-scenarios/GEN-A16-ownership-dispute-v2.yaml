@@ -1,0 +1,36 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: A16-ownership-dispute-v2
+category: A_conflict
+adversarial: false
+seed: 1161
+description: '[W2.1 批量] 所有权争议 (产物归属) (原型16 实例2)'
+setup:
+  blackboard:
+  - key: target_16
+    value: null
+  roles:
+  - role_a_1
+  - role_b_1
+inject:
+- type: write_conflict
+  role: role_a_1
+  target: target_16
+  value: val_a_1
+- type: write_conflict
+  role: role_b_1
+  target: target_16
+  value: val_b_1
+expected:
+  behavior: conflict_detected_and_resolved
+  max_resolution_rounds: 3
+  silent_loss: 0
+verdict:
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

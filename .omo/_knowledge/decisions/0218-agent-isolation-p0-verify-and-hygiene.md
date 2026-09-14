@@ -11,6 +11,7 @@ related:
   - ../../../docs/AGENT-ISOLATION-ROLLOUT.md
   - ../../../docs/ARCHITECTURE-ANALYSIS-2026-07-14.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0218: Agent Isolation P0 落地 — 核实生效态 + worktree 卫生固化

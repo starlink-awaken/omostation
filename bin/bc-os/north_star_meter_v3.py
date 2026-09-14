@@ -8,7 +8,12 @@
   D 知识消费深度 (advisory, 4-axis 0.20): EvidenceRecorded + WorkflowSucceeded
     拉平 compass_radar(55) ↔ bet_ledger(95) 的口径差距 — 两者都能讲同一个故事.
 
-输出: provable / partial / unprovable + 主 3 轴得分 + 4-axis advisory.
++ Journey Completion Rate (BET-Y1Q4-T4-02): 有效工作旅程完成率北极星基线
+  - 分母: 进入工作旅程的真实外部信号实例
+  - 分子: 到达人类裁决终态且非 discard-only 的旅程
+  - 缺数据时显式 unmeasured, 禁止填 0 伪装
+
+输出: provable / partial / unprovable + 主 3 轴得分 + 4-axis advisory + journey baseline.
 
 用法:
   python3 bin/bc-os/north_star_meter_v3.py --json
@@ -33,6 +38,301 @@ DECISIONS_LOG = WS_ROOT / ".omo" / "notepads" / "delegation-guardrails" / "decis
 AUDIT_TICK = WS_ROOT / ".omo" / "state" / "autoloop-trace.jsonl"
 DUCK_LOG = WS_ROOT / ".omo" / "state" / "agent-tick-daemon.jsonl"
 WORKFLOW_MESH_EVENTS = WS_ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
+
+# ---------------------------------------------------------------------------
+# Journey Completion Rate (BET-Y1Q4-T4-02)
+# ---------------------------------------------------------------------------
+
+JOURNEY_BASELINE_SCHEMA = "journey-baseline/v1"
+
+# Revision Rate Baseline (BET-Y1Q4-T4-04)
+REVISION_RATE_SCHEMA = "revision-rate-baseline/v1"
+MIN_REVISION_WINDOW_DAYS = 30
+
+
+def _query_revisions(
+    db_path: Path,
+    window_start: str,
+    window_end: str,
+) -> tuple[int, int, list[str]]:
+    """Query event ledger for revision rate data.
+
+    Returns (denominator, numerator, gap_inventory).
+
+    Denominator = suggestions exiting to principal adjudication
+                  (verdict in {accept, edit, reject}, binding=true)
+    Numerator = suggestions where verdict='edit' (signed off after modification)
+    """
+    gaps: list[str] = []
+    if not db_path.is_file():
+        gaps.append("event-ledger-missing")
+        return 0, 0, gaps
+
+    import sqlite3
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    except sqlite3.Error as exc:
+        gaps.append(f"ledger-open-failed:{exc}")
+        return 0, 0, gaps
+
+    denominator = 0
+    numerator = 0
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = {row[0] for row in cur.fetchall()}
+
+        if "outcome_event" in tables:
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM outcome_event
+                WHERE verdict IN ('accept', 'edit', 'reject')
+                  AND binding = 1
+                  AND timestamp >= ? AND timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            denominator = cur.fetchone()[0] or 0
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM outcome_event
+                WHERE verdict = 'edit' AND binding = 1
+                  AND timestamp >= ? AND timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            numerator = cur.fetchone()[0] or 0
+        elif "events" in tables:
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM events
+                WHERE type = 'outcome.resolved'
+                  AND verdict IN ('accept', 'edit', 'reject')
+                  AND binding = 1
+                  AND timestamp >= ? AND timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            denominator = cur.fetchone()[0] or 0
+            cur.execute(
+                """
+                SELECT COUNT(*) FROM events
+                WHERE type = 'outcome.resolved'
+                  AND verdict = 'edit' AND binding = 1
+                  AND timestamp >= ? AND timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            numerator = cur.fetchone()[0] or 0
+        else:
+            gaps.append("ledger-no-outcome-table")
+
+        conn.close()
+    except sqlite3.Error as exc:
+        gaps.append(f"ledger-query-failed:{exc}")
+        conn.close()
+        return 0, 0, gaps
+
+    return denominator, numerator, gaps
+
+
+def measure_revision_rate(
+    *,
+    db_path: Path | str = None,
+    window_days: int = MIN_REVISION_WINDOW_DAYS,
+) -> dict[str, Any]:
+    """Compute principal revision rate baseline. Projection only, never writes.
+
+    Metric: edit_verdicts / total_adjudicated_suggestions
+    Y2 target: -20% (target ≤ 0.2)
+    Circuit breaker: returns unmeasured + gap inventory when data insufficient.
+    """
+    if db_path is None:
+        db_path = DEFAULT_EVENT_LEDGER
+    path = Path(db_path)
+    end = dt.datetime.now(dt.UTC)
+    start = end - dt.timedelta(days=window_days)
+    start_str = start.isoformat().replace("+00:00", "Z")
+    end_str = end.isoformat().replace("+00:00", "Z")
+
+    denominator, numerator, gaps = _query_revisions(path, start_str, end_str)
+
+    result: dict[str, Any] = {
+        "schema_version": REVISION_RATE_SCHEMA,
+        "observed_at": _utc_now().isoformat().replace("+00:00", "Z"),
+        "window": {"start": start_str, "end": end_str, "days": window_days},
+        "metric": "principal_revision_rate",
+        "denominator": denominator,
+        "numerator": numerator,
+        "evidence_refs": [],
+        "gap_inventory": gaps,
+    }
+
+    if not path.is_file():
+        result["status"] = "unmeasured"
+        result["reason"] = "event-ledger-not-available"
+        return result
+
+    if denominator < 1:
+        result["status"] = "unmeasured"
+        result["reason"] = "insufficient-adjudication-data"
+        gaps.append("need-at-least-1-adjudicated-suggestion")
+        return result
+
+    rate = numerator / denominator if denominator > 0 else 0.0
+    result["status"] = "measured"
+    result["value"] = round(rate, 4)
+    result["evidence_refs"] = [f"repo://{path.relative_to(WS_ROOT).as_posix()}"]
+    return result
+DEFAULT_EVENT_LEDGER = WS_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
+MIN_JOURNEY_WINDOW_DAYS = 7
+
+
+def _query_journey_completion(
+    db_path: Path,
+    window_start: str,
+    window_end: str,
+) -> tuple[int, int, list[str]]:
+    """Query event ledger for journey completion data.
+
+    Returns (denominator, numerator, gap_inventory).
+
+    Denominator = work journeys triggered by real external signals.
+    Numerator = journeys reaching human-adjudication terminal state
+    (accepted/edited/rejected, not discard-only).
+    """
+    gaps: list[str] = []
+    if not db_path.is_file():
+        gaps.append("event-ledger-missing")
+        return 0, 0, gaps
+
+    import sqlite3
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    except sqlite3.Error as exc:
+        gaps.append(f"ledger-open-failed:{exc}")
+        return 0, 0, gaps
+
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = {row[0] for row in cur.fetchall()}
+
+        denominator = 0
+        if "signal_event" in tables and "journey_instance" in tables:
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT se.id)
+                FROM signal_event se
+                JOIN journey_instance ji ON ji.trigger_signal_id = se.id
+                WHERE se.domain = 'work'
+                  AND se.timestamp >= ? AND se.timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            denominator = cur.fetchone()[0] or 0
+        elif "events" in tables:
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT e.id) FROM events e
+                WHERE e.type = 'signal.ingested' AND e.domain = 'work'
+                  AND e.timestamp >= ? AND e.timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            denominator = cur.fetchone()[0] or 0
+        else:
+            gaps.append("ledger-no-signal-table")
+
+        numerator = 0
+        if "outcome_event" in tables and "journey_instance" in tables:
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT oe.journey_id)
+                FROM outcome_event oe
+                JOIN journey_instance ji ON ji.id = oe.journey_id
+                WHERE oe.verdict IN ('accepted', 'edited', 'rejected')
+                  AND (oe.review_type IS NULL OR oe.review_type != 'discard_only')
+                  AND oe.timestamp >= ? AND oe.timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            numerator = cur.fetchone()[0] or 0
+        elif "events" in tables:
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT e.journey_id) FROM events e
+                WHERE e.type = 'outcome.resolved'
+                  AND e.verdict IN ('accepted', 'edited', 'rejected')
+                  AND (e.review_type IS NULL OR e.review_type != 'discard_only')
+                  AND e.timestamp >= ? AND e.timestamp < ?
+                """,
+                (window_start, window_end),
+            )
+            numerator = cur.fetchone()[0] or 0
+        else:
+            gaps.append("ledger-no-outcome-table")
+
+        conn.close()
+    except sqlite3.Error as exc:
+        gaps.append(f"ledger-query-failed:{exc}")
+        conn.close()
+        return 0, 0, gaps
+
+    return denominator, numerator, gaps
+
+
+def measure_journey_completion(
+    *,
+    db_path: Path | str = DEFAULT_EVENT_LEDGER,
+    window_days: int = MIN_JOURNEY_WINDOW_DAYS,
+) -> dict[str, Any]:
+    """Compute journey completion baseline. Projection only, never writes.
+
+    Metric: completed_work_journeys / entered_work_journeys
+    Circuit breaker: returns unmeasured + gap inventory when data insufficient.
+    """
+    path = Path(db_path)
+    end = dt.datetime.now(dt.UTC)
+    start = end - dt.timedelta(days=window_days)
+    start_str = start.isoformat().replace("+00:00", "Z")
+    end_str = end.isoformat().replace("+00:00", "Z")
+
+    denominator, numerator, gaps = _query_journey_completion(path, start_str, end_str)
+
+    result: dict[str, Any] = {
+        "schema_version": JOURNEY_BASELINE_SCHEMA,
+        "observed_at": _utc_now().isoformat().replace("+00:00", "Z"),
+        "window": {"start": start_str, "end": end_str, "days": window_days},
+        "metric": "journey_completion_rate",
+        "denominator": denominator,
+        "numerator": numerator,
+        "evidence_refs": [],
+        "gap_inventory": gaps,
+    }
+
+    if not path.is_file():
+        result["status"] = "unmeasured"
+        result["reason"] = "event-ledger-not-available"
+        return result
+
+    if window_days < MIN_JOURNEY_WINDOW_DAYS:
+        result["status"] = "unmeasured"
+        result["reason"] = f"window-too-short (minimum {MIN_JOURNEY_WINDOW_DAYS}d)"
+        gaps.append(f"need-{MIN_JOURNEY_WINDOW_DAYS}d-window")
+        return result
+
+    if denominator < 1:
+        result["status"] = "unmeasured"
+        result["reason"] = "insufficient-journey-data"
+        gaps.append("need-at-least-1-work-journey")
+        return result
+
+    rate = numerator / denominator if denominator > 0 else 0.0
+    result["status"] = "measured"
+    result["value"] = round(rate, 4)
+    result["evidence_refs"] = [f"repo://{path.relative_to(WS_ROOT).as_posix()}"]
+    return result
 
 # A-axis: 系统自动化事件估时 (分钟/事件) — 这些值是经验估值, 后续可校准
 TIME_PER_EVENT_MIN = {
@@ -461,6 +761,20 @@ def render_text(d: dict[str, Any]) -> str:
     lines.append(f"  composite (3-axis, BC):    {d['composite']['score']}/100  weights={d['composite']['weights']}")
     lines.append(f"  composite (4-axis, advisory): {d['composite_4axis']['score']}/100  weights={d['composite_4axis']['weights']}")
     lines.append(f"  composite (5-axis, advisory): {d['composite_5axis']['score']}/100  weights={d['composite_5axis']['weights']}")
+
+    # Journey Completion Rate (BET-Y1Q4-T4-02)
+    journey = d.get("journey_completion")
+    if journey:
+        lines.append("")
+        lines.append(f"  journey_completion_rate: {journey.get('status', 'unknown')}")
+        if journey.get("status") == "measured":
+            lines.append(f"    value: {journey['value']:.2%} ({journey['numerator']}/{journey['denominator']})")
+            lines.append(f"    window: {journey['window']['days']}d ({journey['window']['start'][:10]} .. {journey['window']['end'][:10]})")
+        else:
+            lines.append(f"    reason: {journey.get('reason', 'unknown')}")
+            if journey.get("gap_inventory"):
+                lines.append(f"    gaps: {', '.join(journey['gap_inventory'])}")
+
     lines.append(f"  status: {d['status']}")
     return "\n".join(lines)
 
@@ -469,8 +783,43 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="north_star v3 复合制价值证明")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument("--window", type=int, default=30, help="统计窗口 (天)")
+    parser.add_argument("--journey", action="store_true", help="仅输出旅程完成率基线 (journey-baseline/v1)")
+    parser.add_argument("--journey-window", type=int, default=MIN_JOURNEY_WINDOW_DAYS, help=f"旅程基线窗口天数 (默认 {MIN_JOURNEY_WINDOW_DAYS})")
+    parser.add_argument("--revision-rate", action="store_true", help="仅输出修订率基线 (revision-rate-baseline/v1, BET-Y1Q4-T4-04)")
+    parser.add_argument("--revision-window", type=int, default=MIN_REVISION_WINDOW_DAYS, help=f"修订率窗口天数 (默认 {MIN_REVISION_WINDOW_DAYS})")
+    parser.add_argument("--db-path", type=str, default=str(DEFAULT_EVENT_LEDGER), help="事件台账 SQLite 路径")
     args = parser.parse_args()
+
+    if args.journey:
+        result = measure_journey_completion(db_path=args.db_path, window_days=args.journey_window)
+        if args.json:
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            status = result["status"]
+            if status == "measured":
+                print(f"journey_completion_rate: {result['value']:.2%} ({result['numerator']}/{result['denominator']})")
+            else:
+                print(f"journey_completion_rate: {status} ({result.get('reason', 'unknown')})")
+                if result.get("gap_inventory"):
+                    print(f"  gaps: {', '.join(result['gap_inventory'])}")
+        return 0
+
+    if args.revision_rate:
+        result = measure_revision_rate(db_path=args.db_path, window_days=args.revision_window)
+        if args.json:
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            status = result["status"]
+            if status == "measured":
+                print(f"principal_revision_rate: {result['value']:.2%} ({result['numerator']}/{result['denominator']})")
+            else:
+                print(f"principal_revision_rate: {status} ({result.get('reason', 'unknown')})")
+                if result.get("gap_inventory"):
+                    print(f"  gaps: {', '.join(result['gap_inventory'])}")
+        return 0
+
     d = compute_axes(args.window)
+    d["journey_completion"] = measure_journey_completion(db_path=args.db_path, window_days=args.journey_window)
     if args.json:
         print(json.dumps(d, ensure_ascii=False, indent=2))
     else:
@@ -480,6 +829,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-# ---------------------------------------------------------------------------
-# E-axis: Decision Quality
-# ---------------------------------------------------------------------------

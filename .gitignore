@@ -16,8 +16,12 @@
 .omo/_knowledge/workflow-mesh/
 # 通用锁文件 (git 不追踪 .lock)
 **/*.lock
+# 运行时 worktree 锁目录 (PASW/并发 agent 产物, 不入库)
+.omo/locks/
 .omo/_control/evolution/drift-history/*.json.lock
 .omo/capabilities/
+# runtime lock files (clone-guard checkout-log.tsv etc) — high churn, 由 hooks 自动重建
+.omo/locks/
 # debt/ 派生产物 (dashboard/dispatch/action-packet/review-queue/owner-routing/reviews/
 # campaign/reporting) 高 churn, write_dashboard 等从 items/ + metrics 派生, 生成器可重建.
 # items/ 例外: canonical SSOT (跟 .omo/tasks/ 同类 lifecycle 数据), 入仓 (修正 c82cbd23 误判).
@@ -61,7 +65,7 @@ runtime/concept-weave-preflight*.json
 runtime/consumer-audit-*.json
 runtime/control/evidence/documents-weijian-*/
 runtime/daily-health-preflight*.json
-runtime/heartbeats/weijian-*
+runtime/heartbeats/
 runtime/kos-preflight-*.json
 runtime/predictor-preflight*.json
 runtime/quarantine/documents-bos-neural-mesh-20260828/
@@ -72,6 +76,11 @@ runtime/task-inventory/snapshots/
 
 runtime/sandbox/decayed/
 runtime/sandbox/pitches/
+
+# T10-122: family-hub dashboard generated artifacts — runtime-only, not tracked
+runtime/family-hub/dashboard/generated/
+runtime/family-hub/dashboard/manifests/
+runtime/family-hub/dashboard/migration/
 runtime/omo/
 runtime/agent-sessions/
 
@@ -301,4 +310,21 @@ projects/omo-debt/
 .omo/state/attestations/
 .kb/
 .kb/
-projects/cockpit-ui
+
+# tool caches (root-governance allowed)
+.benchmarks/
+.deepeval/
+
+# 运行时 worktree 锁目录 (PASW/并发 agent 产物, 不入库)
+.omo/locks/
+
+# 运行时 decision-proposal 收件箱 (resident agent 产物, 不入库; 已跟踪历史文件例外保留)
+.omo/_knowledge/decision-proposals/
+
+# 运行时 bin/.omo 状态 (resident 运行时 _state, 不入库)
+bin/.omo/
+.commandcode/
+runtime/mos/
+.tokensave
+.claude-flow/
+runtime/dashboard/

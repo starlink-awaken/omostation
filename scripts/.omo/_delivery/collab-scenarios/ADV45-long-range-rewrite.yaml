@@ -1,0 +1,31 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV45-long-range-rewrite
+category: B_failure_injection
+adversarial: true
+seed: 145
+description: >
+  [对抗·red-team wave8] 长程重写: 历史 checkpoint 被整段替换,
+  管线尚无 long_range_rewrite_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: checkpoint, value: "cp_v5_sealed", writers: [archivist]}
+  roles: [archivist, rewriter]
+inject:
+  - {type: write_conflict, role: rewriter, target: checkpoint, value: "cp_v1_fork"}
+  - {type: write_conflict, role: rewriter, target: checkpoint, value: "cp_v0_genesis_fork"}
+  - {type: role_timeout, role: archivist}
+expected:
+  behavior: long_range_rewrite_detected
+  silent_loss: 0
+verdict:
+  - criterion: long_range_rewrite_detected
+    check: events_contain
+    args: {kind: long_range_rewrite_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

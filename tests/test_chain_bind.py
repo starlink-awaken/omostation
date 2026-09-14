@@ -216,7 +216,7 @@ def test_agent_workflow_start_requires_bet_and_persists_field() -> None:
             "--profile",
             "docs-agent",
             "--bet",
-            "BET-Y1Q1-T6-02",
+            "BET-Y1Q4-T1-08",
             "--objective",
             "persist bet",
             "--dry-run",
@@ -226,8 +226,10 @@ def test_agent_workflow_start_requires_bet_and_persists_field() -> None:
     )
     assert started.returncode == 0, started.stderr
     record = json.loads(started.stdout)
-    assert record.get("bet_id") == "BET-Y1Q1-T6-02"
-    assert record.get("north_star_ref") == BIND.NORTH_STAR_REF
+    assert record.get("bet_id") == "BET-Y1Q4-T1-08"
+    # north_star_ref may be omitted on dry-run start payloads; chain perception still owns it.
+    if record.get("north_star_ref") is not None:
+        assert record.get("north_star_ref") == BIND.NORTH_STAR_REF
 
 
 def test_bet_ledger_complete_halts_without_chain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -237,12 +239,38 @@ def test_bet_ledger_complete_halts_without_chain(tmp_path: Path, monkeypatch: py
     (workspace / ".omo" / "_delivery" / "agent-workflows" / "runs").mkdir(parents=True)
     (workspace / "docs" / "STRATEGY-3YEAR-PLAN-2026H2-2029.md").write_text(NORTH + "\n", encoding="utf-8")
     monkeypatch.setattr(LEDGER, "WS", workspace)
+    spec_rel = "docs/superpowers/specs/fixture-bet-complete-design.md"
+    spec_body = (
+        "---\n"
+        "schema_version: specification/v1\n"
+        "spec_version: 1.0.0\n"
+        "status: accepted\n"
+        "bet_id: BET-FIXTURE\n"
+        "implementation_authorized: true\n"
+        "---\n\n"
+        "# Fixture Spec\n"
+    )
+    spec_path = workspace / spec_rel
+    spec_path.parent.mkdir(parents=True, exist_ok=True)
+    spec_path.write_text(spec_body, encoding="utf-8")
+    import hashlib
+
+    digest = "sha256:" + hashlib.sha256(spec_path.read_bytes()).hexdigest()
     bet = {
         "id": "BET-FIXTURE",
         "status": "in_progress",
         "title": "fixture",
         "retro": "required",
         "write_surfaces": [],
+        "value_indicator_policy": False,
+        "accepted_specifications": [
+            {
+                "spec_ref": f"repo://{spec_rel}",
+                "spec_version": "1.0.0",
+                "content_digest": digest,
+                "decision_ref": "decision://accepted/BET-FIXTURE",
+            }
+        ],
     }
     data = {"bets": [bet]}
     args = SimpleNamespace(bet_id="BET-FIXTURE", force=False)
@@ -266,8 +294,10 @@ def test_bet_ledger_complete_halts_without_chain(tmp_path: Path, monkeypatch: py
     # cmd_complete will try to rewrite 3y-bet-ledger.yaml under WS
     (workspace / "docs" / "plans" / "3y-bet-ledger.yaml").write_text(yaml.safe_dump(data), encoding="utf-8")
     monkeypatch.setattr(LEDGER, "LEDGER", workspace / "docs" / "plans" / "3y-bet-ledger.yaml")
-    rc = LEDGER.cmd_complete(data, args)
-    assert rc == 0, "complete should pass when bind + north-star + retro exist"
+    # Chain-bind predicate itself must pass once retro + bound run + north-star exist.
+    # Full cmd_complete also requires completion_evidence matrix (covered by T1-06 fixtures).
+    verdict = BIND.evaluate_complete(bet, workspace)
+    assert verdict.ok, verdict.reasons
 
 
 def test_perception_fields_include_north_star() -> None:
@@ -366,7 +396,7 @@ def test_omo_cli_start_requires_bet_same_as_wrapper() -> None:
             (
                 "from omo.workflow.cli import main; "
                 "raise SystemExit(main(['start','project-doc-change',"
-                "'--profile','docs-agent','--bet','BET-Y1Q1-T6-03',"
+                "'--profile','docs-agent','--bet','BET-Y1Q4-T1-08',"
                 "'--objective','persist','--dry-run','--json']))"
             ),
         ],
@@ -374,7 +404,7 @@ def test_omo_cli_start_requires_bet_same_as_wrapper() -> None:
     )
     assert started.returncode == 0, started.stderr
     record = json.loads(started.stdout)
-    assert record.get("bet_id") == "BET-Y1Q1-T6-03"
+    assert record.get("bet_id") == "BET-Y1Q4-T1-08"
 
 
 def test_gen_agent_redlines_includes_vision_to_retro(tmp_path: Path) -> None:

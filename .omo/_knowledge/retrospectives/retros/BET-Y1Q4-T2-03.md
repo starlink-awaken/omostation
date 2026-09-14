@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T2-03
 title: 纸质公文扫描件 OCR 版面还原
 symptom: 无（按计划交付，无故障）
 solution: pyobjc CGImage 通道 + 印章词典双通道 + 几何版面引擎
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T2-03 复盘

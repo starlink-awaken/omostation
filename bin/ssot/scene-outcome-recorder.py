@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,12 @@ from _shared import ROOT, append_jsonl, load_yaml, read_jsonl, utc_now
 OUTCOME_SCHEMA = "scene-outcome/v1"
 OUTCOME_LOG = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.jsonl"
 VALID_ADJUDICATIONS = {"accepted", "rejected", "revised"}
+VALUE_EVIDENCE_LOG = ROOT / ".omo" / "_delivery" / "ingress" / "value-evidence.jsonl"
+VERDICT_MAP = {"accepted": "accept", "revised": "edit", "rejected": "reject"}
+# W2-05 personal episode kernel scene (must match omo.personal_episode).
+PERSONAL_SIGNAL_SCENE_ID = "personal-followup-dogfood"
+# Episode revision receipt closed vocabulary (omo.personal_episode_helpers).
+EPISODE_CHANGED_FIELDS = ("title", "context", "deadline", "next_action")
 
 
 def _load_scene_card(path: Path) -> dict[str, Any]:
@@ -40,6 +47,9 @@ def record_outcome(
     actor: str = "operator",
     notes: str = "",
     revision_diff: str = "",
+    review_seconds: int | None = None,
+    saved_seconds: int | None = None,
+    episode_changed_fields: list[str] | None = None,
 ) -> dict[str, Any]:
     """Record one human adjudication outcome."""
     if adjudication not in VALID_ADJUDICATIONS:
@@ -68,8 +78,195 @@ def record_outcome(
     mos_outcome_id = _write_mos_decision_outcome(entry)
     entry["mos_outcome_id"] = mos_outcome_id
 
+    # X3 价值证据桥: adjudication → value-evidence/v1 (裁决词汇 1:1 映射).
+    # estimated_time_saved 以场景自主执行时长为估计值 (真实工作时长, 非合成).
+    _write_value_evidence(entry, review_seconds=review_seconds, saved_seconds=saved_seconds)
+    entry["value_evidence"] = True
+
+    # North Star 信任链: adjudication → Outcome.Human.v1 → event-ledger.
+    # North Star meter 只信任 broker-verified human outcomes.
+    _write_event_ledger_outcome(entry, review_seconds=review_seconds, saved_seconds=saved_seconds)
+    entry["north_star_bridge"] = True
+
+    # W2-05 集成: scene outcome → PersonalEpisodeService (readiness gate 反馈).
+    # personal-followup-dogfood 场景的裁决进入 episode 内核, 供授权机制消费.
+    episode_id = _write_personal_episode_outcome(
+        entry,
+        review_seconds=review_seconds,
+        saved_seconds=saved_seconds,
+        episode_changed_fields=episode_changed_fields,
+    )
+    if episode_id is not None:
+        entry["personal_episode_id"] = episode_id
+        entry["personal_episode_bridge"] = True
+
     entry["status"] = "recorded"
     return entry
+
+
+def _write_event_ledger_outcome(entry: dict[str, Any], *, review_seconds: int | None = None,
+                                saved_seconds: int | None = None) -> None:
+    """Bridge scene outcome to Outcome.Human.v1 in event-ledger (North Star source)."""
+    try:
+        import os as _os
+
+        omo_src = str(ROOT / "projects" / "omo" / "src")
+        if omo_src not in sys.path:
+            sys.path.insert(0, omo_src)
+        from omo.event_ledger.surface import EventLedgerSurface
+
+        surface = EventLedgerSurface()
+        verdict = VERDICT_MAP.get(entry.get("adjudication", ""), "reject")
+        surface.append(
+            event_type="Outcome.Human.v1",
+            producer="scene-outcome-recorder",
+            principal_id=_os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing"),
+            correlation_id=str(entry.get("run_id", "")),
+            idempotency_key=f"scene:{entry.get('scene_id')}:{entry.get('run_id')}",
+            payload={
+                "verdict": verdict,
+                "scene_id": entry.get("scene_id", ""),
+                "run_id": entry.get("run_id", ""),
+                "review_duration_seconds": review_seconds,
+                "estimated_time_saved_seconds": saved_seconds,
+                "source": "scene-outcome-bridge",
+            },
+        )
+        surface.close()
+    except Exception:
+        pass  # North Star bridge is non-blocking
+
+
+def _write_personal_episode_outcome(entry: dict[str, Any], *, review_seconds: int | None = None,
+                                    saved_seconds: int | None = None,
+                                    episode_changed_fields: list[str] | None = None) -> str | None:
+    """Bridge scene outcome → PersonalEpisodeService (W2-05 readiness gate).
+
+    Only the personal-signal-driven scene participates.  The latest episode
+    (chronological) whose start payload carries the personal scene id and
+    which has a recorded never-send candidate (Evidence.LocalDraft.v1)
+    receives the mapped verdict; replay with the same feedback id is
+    idempotent inside the kernel.  ``episode_changed_fields`` carries the
+    kernel's closed-vocabulary receipt for edit verdicts.  Any failure is a
+    silent no-op so the trust loop never blocks outcome recording.
+    """
+    if entry.get("scene_id") != PERSONAL_SIGNAL_SCENE_ID:
+        return None
+    try:
+        import os as _os
+
+        omo_src = str(ROOT / "projects" / "omo" / "src")
+        if omo_src not in sys.path:
+            sys.path.insert(0, omo_src)
+        from omo.event_ledger.broker import LedgerBroker
+        from omo.event_ledger.surface import _resolve_db_path
+        from omo.personal_episode import (
+            EVT_EVIDENCE_LOCAL_DRAFT,
+            EVT_EPISODE_DECISION,
+            PersonalEpisodeService,
+        )
+
+        verdict = VERDICT_MAP.get(entry.get("adjudication", ""))
+        if verdict is None:
+            return None
+        fields = [f for f in (episode_changed_fields or []) if f in EPISODE_CHANGED_FIELDS]
+        if verdict == "edit" and (not entry.get("revision_diff") or not fields):
+            return None  # edit verdict requires a revision receipt the kernel accepts
+
+        principal_id = _os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        feedback_id = f"scene:{entry.get('scene_id')}:{entry.get('run_id')}"
+        broker = LedgerBroker.connect(str(_resolve_db_path()))
+        try:
+            starts = [
+                row
+                for row in broker.read(event_type=EVT_EPISODE_DECISION)
+                if json.loads(row.get("payload_json") or "{}").get("scene_id") == PERSONAL_SIGNAL_SCENE_ID
+                and row.get("principal_id") == principal_id
+            ]
+            episode_id = None
+            for row in reversed(starts):
+                candidate = str(row["episode_id"])
+                if broker.read(episode_id=candidate, event_type=EVT_EVIDENCE_LOCAL_DRAFT):
+                    episode_id = candidate
+                    break
+        finally:
+            broker.close()
+        if episode_id is None:
+            return None
+
+        service = PersonalEpisodeService.open(str(_resolve_db_path()))
+        context = service.reload_execution_context(episode_id, principal_id)
+        service.record_outcome(
+            context,
+            verdict,
+            feedback_id=feedback_id,
+            review_duration_seconds=float(review_seconds) if review_seconds else None,
+            estimated_time_saved_seconds=float(saved_seconds) if saved_seconds else None,
+            revision_digest=f"sha256:{hashlib.sha256(entry['revision_diff'].encode()).hexdigest()}" if verdict == "edit" else None,
+            changed_fields=fields if verdict == "edit" else None,
+        )
+        return episode_id
+    except Exception:
+        return None  # episode kernel not configured / episode not actionable — non-blocking
+
+
+def _scene_run_duration_seconds(scene_id: str, run_id: str) -> int:
+    """Read execution duration from calibration DB (real measured seconds)."""
+    try:
+        import sqlite3
+
+        db = ROOT / "data" / "scene-metrics.db"
+        if not db.exists():
+            return 0
+        conn = sqlite3.connect(str(db))
+        try:
+            row = conn.execute(
+                "SELECT duration_ms FROM scene_execution WHERE scene_id=? AND run_id=? ORDER BY created_at DESC LIMIT 1",
+                (scene_id, run_id),
+            ).fetchone()
+            return int(row[0] // 1000) if row and row[0] else 0
+        finally:
+            conn.close()
+    except Exception:
+        return 0
+
+
+def _write_value_evidence(entry: dict[str, Any], *, review_seconds: int | None = None,
+                          saved_seconds: int | None = None) -> None:
+    """Bridge scene outcome to value-evidence/v1 (X3 data source).
+
+    verdict: accepted→accept / revised→edit / rejected→reject (1:1).
+    estimated_time_saved_seconds = scene autonomous work duration (from
+    calibration DB) unless explicitly provided; review_duration_seconds
+    is human-provided (0 = unknown).
+    """
+    try:
+        import os
+
+        scene_id = str(entry.get("scene_id", "unknown"))
+        run_id = str(entry.get("run_id", ""))
+        duration_s = _scene_run_duration_seconds(scene_id, run_id)
+        review_s = int(review_seconds or 0)
+        saved_s = int(saved_seconds if saved_seconds is not None else duration_s)
+
+        evidence = {
+            "schema": "value-evidence/v1",
+            "timestamp": entry.get("ts", ""),
+            "principal_id": os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing"),
+            "scene_id": scene_id,
+            "run_id": run_id,
+            "review_duration_seconds": review_s,
+            "estimated_time_saved_seconds": saved_s,
+            "verdict": VERDICT_MAP.get(entry.get("adjudication", ""), "reject"),
+            "net_saved_seconds": max(0, saved_s - review_s),
+            "qualifying": saved_s > review_s
+            and entry.get("adjudication") in ("accepted", "revised"),
+            "source": "scene-outcome-bridge",
+        }
+        VALUE_EVIDENCE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        append_jsonl(VALUE_EVIDENCE_LOG, evidence)
+    except Exception:
+        pass  # value bridge is non-blocking (X3 wiring must not break trust loop)
 
 
 def _write_mos_decision_outcome(entry: dict[str, Any]) -> str | None:
@@ -126,6 +323,13 @@ def main(argv: list[str] | None = None) -> int:
     rec_parser.add_argument("--actor", default="operator")
     rec_parser.add_argument("--notes", default="")
     rec_parser.add_argument("--revision-diff", default="")
+    rec_parser.add_argument("--review-seconds", type=int, default=None,
+                            help="human review duration (X3 evidence; default: DB duration or 0)")
+    rec_parser.add_argument("--saved-seconds", type=int, default=None,
+                            help="estimated time saved (X3 evidence; default: scene work duration)")
+    rec_parser.add_argument("--episode-fields", default="",
+                            help=f"comma-separated episode fields changed on revised "
+                                 f"(W2-05 receipt; one of {','.join(EPISODE_CHANGED_FIELDS)})")
 
     list_parser = sub.add_parser("list", help="list recent outcomes")
     list_parser.add_argument("--scene-id", default=None)
@@ -142,6 +346,9 @@ def main(argv: list[str] | None = None) -> int:
             actor=args.actor,
             notes=args.notes,
             revision_diff=args.revision_diff,
+            review_seconds=args.review_seconds,
+            saved_seconds=args.saved_seconds,
+            episode_changed_fields=[f.strip() for f in args.episode_fields.split(",") if f.strip()] or None,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
         return 0

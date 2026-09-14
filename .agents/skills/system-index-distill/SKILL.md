@@ -2,7 +2,10 @@
 name: system-index-distill
 description: "Deep workspace analysis to find information silos and create unified navigation. Use when the workspace has many projects/SSOT sources and agents struggle to find things. Produces a SYSTEM-INDEX.md with pure pointers — no data duplication."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # System Index Distill — 信息孤岛分析与导航整合
 

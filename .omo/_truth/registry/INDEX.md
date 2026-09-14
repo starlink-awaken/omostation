@@ -3,6 +3,7 @@ status: active
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-28
+type: ssot
 ---
 
 # Capability registry

@@ -7,6 +7,7 @@ owner: architecture-governance
 last-reviewed: 2026-08-03
 lifecycle: spec
 scope: Workflow Mesh external connection fabric
+type: ssot
 ---
 
 # ADR-0345: External Capability Directory 只读能力地图

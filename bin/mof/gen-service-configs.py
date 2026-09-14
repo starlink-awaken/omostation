@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -70,8 +71,45 @@ def _stable_python3() -> str:
 INTERPRETERS = {"stable-python3": _stable_python3}
 
 
+def _cron_tokens(svc: dict) -> set[str]:
+    """Entry 的可匹配 token 集: id 尾段 (含连字符变体) + 显式 crontab_token。"""
+    service_id = str(svc.get("id") or "")
+    tail = service_id.rsplit(".", 1)[-1]
+    tokens = {tail, tail.replace("_", "-")}
+    token = svc.get("crontab_token")
+    if isinstance(token, str) and token.strip():
+        tokens.add(token.strip())
+    return {t for t in tokens if len(t) >= 4}
+
+
+def _cron_admission_violation(svc: dict) -> str | None:
+    """Cron 准入 (BET-Y1Q4-T16): enabled cron 条目必须携带至少一个能与 crontab
+    行匹配的 token — entrypoint basename 词边界命中 id 尾段, 或显式 crontab_token
+    (显式声明即放行, 现实性由 ops check-signals 对本机 crontab 核验)。
+    拒绝 `projects/omo` 类占位 entrypoint 无 token 混进注册表 (批次 18 误判根因)。
+    仅校验 enabled=true (存量 disabled 占位 grandfather)。"""
+    if not svc.get("enabled", True):
+        return None
+    service_id = str(svc.get("id") or "?")
+    program = svc.get("program") or {}
+    entrypoint = program.get("entrypoint") if isinstance(program, dict) else None
+    if not isinstance(entrypoint, str) or not entrypoint.strip():
+        return f"{service_id}: cron generator requires program.entrypoint"
+    declared = svc.get("crontab_token")
+    if isinstance(declared, str) and declared.strip():
+        return None
+    text = entrypoint.rsplit("/", 1)[-1]
+    for token in _cron_tokens(svc):
+        if re.search(rf"(?<![A-Za-z0-9_-]){re.escape(token)}(?![A-Za-z0-9_-])", text):
+            return None
+    return (
+        f"{service_id}: cron 准入失败 — entrypoint basename 与 id 尾段词边界不匹配且无 crontab_token"
+        f" (entrypoint={entrypoint!r})"
+    )
+
+
 def validate_service_declaration(svc: dict) -> list[str]:
-    """Validate fields required before a launchd plist can be generated."""
+    """Validate fields required before a launchd plist or crontab line can be generated."""
     service_id = str(svc.get("id") or "?")
     violations: list[str] = []
     if not svc.get("id"):
@@ -79,6 +117,11 @@ def validate_service_declaration(svc: dict) -> list[str]:
     scheduler = svc.get("scheduler")
     if not scheduler:
         violations.append("service 缺必填 scheduler")
+    if scheduler == "cron":
+        violation = _cron_admission_violation(svc)
+        if violation:
+            violations.append(violation)
+        return violations
     if scheduler != "launchd" or not svc.get("enabled", True) or not svc.get("generate", True):
         return violations
     if not isinstance(svc.get("label"), str) or not svc["label"].strip():
@@ -91,8 +134,9 @@ def validate_service_declaration(svc: dict) -> list[str]:
     return violations
 
 
-def load_services() -> list[dict]:
-    docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
+def load_services(path: Path | None = None) -> list[dict]:
+    reg = path or REGISTRY
+    docs = [d for d in yaml.safe_load_all(reg.read_text(encoding="utf-8")) if d]
     return (docs[-1] if docs else {}).get("services", []) or []
 
 
@@ -171,6 +215,14 @@ def gen_launchd_plist(svc: dict) -> str:
         )
     throttle = res.get("throttle_interval")
     throttle_xml = f"    <key>ThrottleInterval</key>\n    <integer>{throttle}</integer>\n" if throttle else ""
+    # trigger: interval → StartInterval (此前静默丢弃: interval 型服务退化成
+    # RunAtLoad 一次性, load 后永不再调度 —— 角色 jobs 40min 水位 stale 的根因)
+    trigger = svc.get("trigger", "")
+    interval_sec = svc.get("interval_sec")
+    start_interval_xml = (
+        f"    <key>StartInterval</key>\n    <integer>{int(interval_sec)}</integer>\n"
+        if trigger == "interval" and interval_sec else ""
+    )
     run_at_load_xml = "    <key>RunAtLoad</key>\n    <true/>\n" if svc.get("run_at_load") else ""
     out = svc.get("outputs", {})
     # 与 entrypoint 同样要过 _resolve_path —— 否则 "~/Library/Logs/x.log" 会被
@@ -198,6 +250,7 @@ def gen_launchd_plist(svc: dict) -> str:
         + keepalive_xml
         + throttle_xml
         + run_at_load_xml
+        + start_interval_xml
         + stdout_xml
         + stderr_xml
         + "</dict>\n</plist>\n"
@@ -211,10 +264,12 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="JSON 输出 (--check/--validate)")
     parser.add_argument("--validate", action="store_true", help="验注册自洽 (CI, 不依赖本机 plist)")
     args = parser.parse_args()
-    if not REGISTRY.exists():
-        print(f"❌ 注册不存在: {REGISTRY}", file=sys.stderr)
+    local_root = Path(__file__).resolve().parents[2]
+    registry_path = local_root / ".omo" / "_truth" / "registry" / "services.yaml" if args.validate else REGISTRY
+    if not registry_path.exists():
+        print(f"❌ 注册不存在: {registry_path}", file=sys.stderr)
         return 1
-    services = load_services()
+    services = load_services(registry_path)
     if args.validate:
         # 验注册自洽 (CI 可验, 不依赖本机 plist). 治 service-config-drift gate 在 CI 无本机 plist 的设计问题.
         violations: list[str] = []
@@ -233,7 +288,7 @@ def main() -> int:
                 sched_ref = svc.get("schedule_ref")
                 if not sched_ref:
                     violations.append(f"{svc.get('id', '?')}: gha 调度缺 schedule_ref")
-                elif not (WORKSPACE / sched_ref).is_file():
+                elif not (local_root / sched_ref).is_file():
                     violations.append(f"{svc.get('id', '?')}: schedule_ref 不存在 {sched_ref}")
         report = {
             "ok": not violations,

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # ⚠️ LEGACY — 健康监控看板 — 9维系统健康度
 
 > **历史健康看板快照；不再作为当前 health 权威源。**

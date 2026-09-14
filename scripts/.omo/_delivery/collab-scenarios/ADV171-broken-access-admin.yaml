@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV171-broken-access-admin
+category: B_failure_injection
+adversarial: true
+seed: 271
+description: >
+  [对抗·red-team wave30] 垂直越权: 普通用户直调 admin API 删除资源,
+  管线已有 broken_access_admin_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: user_role, value: "user", writers: [auth]}
+  roles: [attacker, api, auth]
+inject:
+  - {type: write_conflict, role: attacker, target: api_path, value: "/admin/users/delete"}
+  - {type: write_conflict, role: api, target: rbac, value: "no_role_gate"}
+  - {type: write_conflict, role: api, target: delete_result, value: "user_deleted"}
+  - {type: write_conflict, role: auth, target: audit, value: "unprivileged_admin_action"}
+expected:
+  behavior: broken_access_admin_detected
+  silent_loss: 0
+verdict:
+  - criterion: broken_access_admin_detected
+    check: events_contain
+    args: {kind: broken_access_admin_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

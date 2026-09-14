@@ -1,0 +1,31 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV29-supply-chain-tamper
+category: B_failure_injection
+adversarial: true
+seed: 129
+description: >
+  [对抗·red-team wave5] 供应链篡改: 链上依赖步骤被静默替换,
+  管线尚无 supply_chain_tamper_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: dep_base, value: "clean", writers: [builder]}
+  roles: [builder, packager]
+inject:
+  - {type: chain_step, step: build, depends_on: [dep_base]}
+  - {type: write_conflict, role: packager, target: dep_base, value: "tampered"}
+  - {type: chain_step, step: package, depends_on: [build, dep_base]}
+expected:
+  behavior: supply_chain_tamper_detected
+  silent_loss: 0
+verdict:
+  - criterion: supply_chain_tamper_detected
+    check: events_contain
+    args: {kind: supply_chain_tamper_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

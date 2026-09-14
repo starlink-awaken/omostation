@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: '@Builder'
 last-reviewed: '2026-08-09'
+type: ssot
 ---
 
 # ADR-0397: 运行时状态文件不进git

@@ -4,6 +4,7 @@ status: accepted
 lifecycle: spec
 owner: xiamingxing
 last-reviewed: 2026-09-01
+type: ssot
 ---
 
 # ADR-0447: cockpit 命令多维审查评分卡 SSOT (15 维)

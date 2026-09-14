@@ -1,0 +1,29 @@
+id: scene-execution
+run_frequency: on_demand
+title: Scene v3 execution via BOS/MCP capability refs
+purpose: >
+  执行场景卡 v3 — 通过 BOS URI 解析能力引用，在 KEI 沙箱中执行 journey 状态机。
+  信号触发 → scene-trigger → journey-engine → Agora BOS Router → MCP 工具 → 结果记录。
+agents:
+  roles: [governance-agent]
+observer_policy: required
+allowed_lanes: [config, governance_state]
+lock_scopes: ["scene:{scene_id}"]
+surfaces:
+  read:
+    - projects/agora/etc/bos-services.yaml
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+    - bin/ssot/journey-engine.py
+    - bin/ssot/calibration-engine.py
+  write:
+    - .omo/_knowledge/workflow-mesh/scene-outcomes.jsonl
+phases:
+  preflight:
+    - {id: validate_scene, mode: required, command: [python3, bin/ssot/scene-card-lifecycle.py, check, --scene-card, ".omo/_truth/scenarios/v3/{scene_id}.yaml"]}
+  execute:
+    - {id: run_journey, mode: required, command: [python3, bin/ssot/journey-engine.py, execute, "{scene_id}"]}
+  verification:
+    - {id: record_outcome, mode: required, command: [python3, bin/ssot/scene-outcome-recorder.py, record, --scene-id, "{scene_id}"]}
+  closeout:
+    - {id: reflection, mode: required, command: [python3, bin/ssot/scene-reflection.py, generate, --scene-id, "{scene_id}"]}
+evidence_required: [journey_run_ref, capability_outcome_refs, calibration_delta]

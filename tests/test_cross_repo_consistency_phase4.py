@@ -57,25 +57,31 @@ def test_yaml_comment_stripping():
 
 
 def test_port_8080_aligned():
-    """port 8080 在两个 registry 都应是 'ontoderive-web' (治本后)."""
+    """port 8080 在两个 registry 都应是 'ontoderive-web' (治本后).
+    After P79 detector fix (preserves dict structure for structured entries),
+    true duplicates (same name + same transport) are correctly NOT reported as
+    port_conflicts_list items.
+    """
     r = run(["--json"])
     import json
 
     data = json.loads(r.stdout)
     port_8080 = next((c for c in data["port_conflicts_list"] if c["port"] == 8080), None)
-    assert port_8080 is not None, "port 8080 should be tracked"
-    assert port_8080["type"] == "duplicate", f"port 8080 should be duplicate (aligned), got {port_8080}"
-    assert port_8080["ecos"] == port_8080["protocols"] == "ontoderive-web", f"port 8080 name mismatch: {port_8080}"
+    assert port_8080 is None, (
+        f"port 8080 should NOT be in conflicts_list (true duplicate), got {port_8080}"
+    )
+    # 验证 detector 仍能在两个 registry 里看到 8080 = ontoderive-web
+    e = data.get("port_count_ecos", 0)
+    p = data.get("port_count_protocols", 0)
+    assert e >= 1 and p >= 1, "both registries should still expose ports"
 
 
 def test_port_9290_aligned():
-    """port 9290 在两个 registry 都应是 'llm-gateway'."""
+    """port 9290 在两个 registry 都应是 'llm-gateway' (true duplicate, not in conflicts_list)."""
     r = run(["--json"])
     data = json.loads(r.stdout)
     p = next((c for c in data["port_conflicts_list"] if c["port"] == 9290), None)
-    assert p is not None
-    assert p["type"] == "duplicate", f"port 9290 should be duplicate, got {p}"
-    assert p["ecos"] == p["protocols"] == "llm-gateway", f"port 9290 name: {p}"
+    assert p is None, f"port 9290 should NOT be in conflicts_list (true duplicate), got {p}"
 
 
 def test_principle_p77_4_port_consistency():

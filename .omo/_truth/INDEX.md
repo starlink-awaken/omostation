@@ -3,6 +3,7 @@ status: active
 lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-06-22
+type: ssot
 ---
 
 # Truth Plane — 事实面

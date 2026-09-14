@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-16-p44-w6.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P44 W6 复盘: 修最后 1 债务 (DEBT-OPC-P4-BUDGET 闭环)

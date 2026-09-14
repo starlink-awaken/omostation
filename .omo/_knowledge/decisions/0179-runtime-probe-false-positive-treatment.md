@@ -11,6 +11,7 @@ related:
   - ../../projects/agora/src/agora/mcp_proxy/manager.py
   - ../../projects/agora/src/agora/core/service_base.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0179: runtime 探测假阳性根治本 (launcher-zombie + import 断裂 + self-heal 死循环)

@@ -1,0 +1,18 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "meeting-supervision",
+  "name": "Meeting Supervision",
+  "lifecycle": "supervised",
+  "permissions": {
+    "fs_read": [
+      ".omo/"
+    ],
+    "fs_write": [
+      ".omo/_delivery/",
+      ".omo/_knowledge/"
+    ],
+    "network": [],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:36.447441+00:00"
+}

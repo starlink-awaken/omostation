@@ -9,6 +9,7 @@ related:
   - 0226-g-del-1-blocked-until-four-hosts.md
   - STRAT-P80-strategic-roadmap.md
 supersedes: []
+type: ssot
 ---
 
 # STRAT-P81: 兑现期启动 — 蜂群从图纸到真机 (2026-08 ~ 2027-06)

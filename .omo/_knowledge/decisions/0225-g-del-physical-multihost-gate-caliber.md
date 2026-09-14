@@ -13,6 +13,7 @@ related:
 supersedes: []
 amends: [0210]
 amended_by: [0226]
+type: ssot
 ---
 
 # ADR-0225: G-DEL 兑现期门禁维持物理多机口径（方案 A）

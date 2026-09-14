@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: '@Builder'
 last-reviewed: '2026-08-09'
+type: ssot
 ---
 
 # ADR-0406: model-driven (M0) 维持子模块形态

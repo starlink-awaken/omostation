@@ -15,6 +15,7 @@ supersedes: []
 amends:
   - 0210-three-year-strategy-execution-convergence.md
   - 0228-physical-hosts-failclosed.md
+type: ssot
 ---
 
 # ADR-0247: 战略转向 — 多 agent 协作优先, 物理多机 DEFERRED (补立)

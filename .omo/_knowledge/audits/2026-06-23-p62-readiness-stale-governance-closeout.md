@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ephemeral
+status: archived
 ---
 
 # P62 — readiness 5 档优化 + mof-drift v7 + install 脚本 收口

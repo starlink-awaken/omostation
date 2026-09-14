@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — 2026-07-15 macOS host ACL apply
 
 ## Concurrent sessions (left alone)

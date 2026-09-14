@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: omo-extension-architecture-v1.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # OMO 体系扩展架构设计 (v1.0)

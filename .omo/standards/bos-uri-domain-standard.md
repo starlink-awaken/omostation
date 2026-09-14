@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-02
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 
 # BOS URI Domain Standard (5 域锁定 + 命名规范)

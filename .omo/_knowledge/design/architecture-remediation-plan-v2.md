@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-06-23
 archived-since: 2026-06-23
 note: "P53 R2: 历史整改 v2 修订版, 整改执行已通过 P44-P52 治理收敛完成 (governance 100 A+, 17 项目 lint 0, PLANNED/drafts 双清零)"
+type: ssot
 ---
 
 # omostation 架构审计整改方案 v2（修订版）

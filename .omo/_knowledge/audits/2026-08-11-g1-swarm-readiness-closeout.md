@@ -8,6 +8,8 @@ related:
   - ../decisions/0407-truthful-ci-local-fast.md
   - ../decisions/0371-pasw-submodule-isolation.md
   - ../decisions/0220-swarm-coordination-discipline-m1-gate.md
+type: ephemeral
+status: archived
 ---
 
 # G-1 Swarm Readiness Closeout Audit — 2026-08-11

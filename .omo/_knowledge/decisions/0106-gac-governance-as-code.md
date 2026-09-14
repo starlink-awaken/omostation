@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-26
+type: ssot
 ---
 
 # ADR-0106: GaC 治理即代码架构 (Governance-as-Code)

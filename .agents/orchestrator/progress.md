@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 ## Current Status
 Last visited: 2026-06-24T10:26:00+08:00
 - [x] 初始化 ORIGINAL_REQUEST.md 与 BRIEFING.md

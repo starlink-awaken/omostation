@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: dependency-audit-post-phase16.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 跨项目依赖与耦合审计报告 — Phase 16 后

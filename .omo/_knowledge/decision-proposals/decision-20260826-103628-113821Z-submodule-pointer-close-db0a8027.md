@@ -7,6 +7,8 @@ workflow_run_id: 20260825T113821Z-submodule-pointer-close-db0a8027
 event_id: 5c8a8aa054df44b58452c6c091bd64f5
 proposal_count: 0
 generated_at: 2026-08-26T10:36:28Z
+type: ephemeral
+status: archived
 ---
 
 # 决策提案收件箱 (T10-13)

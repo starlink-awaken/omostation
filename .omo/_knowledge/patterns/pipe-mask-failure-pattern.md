@@ -3,6 +3,7 @@ status: active
 lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-07-28
+type: ssot
 ---
 # Pattern: 管道/异常掩盖失败（与"为变绿改断言"同族）
 

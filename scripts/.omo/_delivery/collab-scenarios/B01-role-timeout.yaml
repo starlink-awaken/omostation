@@ -1,0 +1,26 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: B01-role-timeout
+category: B_failure_injection
+adversarial: false
+seed: 7
+description: 角色超时, 测协作机制检测与标记 (失败注入·角色超时)
+setup:
+  blackboard: []
+  roles: [research, delivery, audit]
+inject:
+  - {type: role_timeout, role: delivery}
+expected:
+  behavior: timeout_detected
+  silent_loss: 0
+verdict:
+  - criterion: timeout_detected
+    check: events_contain
+    args: {kind: role_timeout}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

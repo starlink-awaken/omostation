@@ -1,5 +1,5 @@
 ---
-status: done
+status: archived
 lifecycle: history
 owner: governance-agent
 last-reviewed: 2026-08-27

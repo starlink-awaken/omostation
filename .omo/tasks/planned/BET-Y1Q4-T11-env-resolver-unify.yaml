@@ -1,0 +1,53 @@
+id: BET-Y1Q4-T11
+track: T11-MODERNIZATION
+window: Y1Q4
+title: env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N] 硬编码
+priority: P1
+status: candidate
+goal: '5+ 个文件硬编码 parents[N] 计算 workspace 根, 在 worktree 下指向错。 全部统一替换为 env_resolver.get_workspace_root(),
+  跨 worktree/主仓/容器通用。
+
+  '
+non_goals:
+- 不修改 env_resolver 自身 (已稳定)
+- 不修复不属于本 BET 的同类 bug (DRY 原则: 见到就修)
+deliverables:
+- 全仓 grep parents[N] 列出所有硬编码点 (目标 ≤ 5)
+- 替换每个为 env_resolver 调用
+- 验证 跨 worktree + 主仓 + CI 三环境路径一致
+- 加回归 test 防止引入 parents[N] 硬编码
+acceptance:
+- 0 个新增 parents[N] 硬编码
+- 所有 worktree 内 cockpit 仓跨 worktree 启动路径测试通过
+- 重复 bug 类别 (parents[N] 算路径错) 在 main 上不复发
+appetite: 3 days
+depends_on: []
+risk:
+- 中. 跨仓 (cockpit/agora/omo/ecos) 都可能涉及, 需要主仓 + 4+ 子仓协调
+- env_resolver 接口变更风险 (已有 5+ 个文件在用)
+mitigation: 先 grep 列举 + 一次性 PR 链 (cockpit → 主仓 bump)
+task_type: bet
+owner: human
+source: manual
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- gate/standard
+source_docs:
+- src/cockpit/cli.py
+- src/cockpit/_subcommands.py
+- src/cockpit/commands/
+evidence_required:
+- T11-env-resolver-unify acceptance criteria met
+- 相关测试通过
+test_plan:
+- 1. 跑 BET-Y1Q4-T11-env-resolver-unify.yaml 范围内的命令/脚本
+- 2. 验证 acceptance 标准

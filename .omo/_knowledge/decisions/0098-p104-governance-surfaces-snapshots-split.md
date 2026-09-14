@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0098: P104 omo_governance_surfaces snapshots 子模块拆分 (1762→1244L, 13→12 god-module)

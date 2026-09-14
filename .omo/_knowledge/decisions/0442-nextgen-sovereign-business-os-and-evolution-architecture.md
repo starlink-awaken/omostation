@@ -4,6 +4,7 @@ status: accepted
 lifecycle: spec
 owner: xiamingxing
 last-reviewed: 2026-08-30
+type: ssot
 ---
 
 # ADR-0442: 次世代主权智能体全域常态化运营、业务真值流演进与全生命周期自进化治理架构

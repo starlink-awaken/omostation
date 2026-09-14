@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-29
+type: ssot
 ---
 
 # Agent Mutation Protocol — 自治代理写入协议

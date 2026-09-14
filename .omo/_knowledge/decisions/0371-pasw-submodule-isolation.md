@@ -10,6 +10,7 @@ related:
   - 0106-gac-governance-as-code.md
   - ../patterns/p74-workflow-solidification-pattern.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0371: PASW — Per-Agent Submodule Worktree 隔离

@@ -2,6 +2,8 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+type: ephemeral
+status: archived
 ---
 
 # Session 复盘 — 2026-07-29 ~ 2026-07-30

@@ -1,0 +1,23 @@
+schema: journey-spec/v3
+journey_id: journey-project-supervision
+name: 项目监督旅程
+description: 项目状态 → 风险评估 → 决策建议 → 干预
+
+initial_state: detected
+
+states:
+  - {name: detected, type: initial}
+  - {name: collect_status, type: task, action: collect_status, timeout: 30s}
+  - {name: risk_assessment, type: task, action: assess_risk, timeout: 30s}
+  - {name: decision_advice, type: task, action: generate_advice, timeout: 30s}
+  - {name: review_gate, type: human_gate, requires_human: true, approval_timeout: 86400s}
+  - {name: intervene, type: task, action: execute_intervention, timeout: 60s}
+  - {name: completed, type: final}
+
+transitions:
+  - {from: detected, to: collect_status}
+  - {from: collect_status, to: risk_assessment}
+  - {from: risk_assessment, to: decision_advice}
+  - {from: decision_advice, to: review_gate}
+  - {from: review_gate, to: intervene, condition: "confidence >= 0.7"}
+  - {from: intervene, to: completed}

@@ -12,6 +12,7 @@ related:
   - ../../../projects/ecos/src/ecos/ssot/mof/m2/constraint_l0.yaml
   - ../../../../bin/l0-constraints-migrate.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0133: L0-constraints v2 派生面 — 双轨切单轨

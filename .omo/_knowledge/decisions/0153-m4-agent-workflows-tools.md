@@ -13,6 +13,7 @@ related:
   - ../../../../bin/check-submodule-hygiene.py
   - ../../../../bin/mcp-tool-data-complete.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0153: M4 4 工具入 agent-workflows (Phase 2b)

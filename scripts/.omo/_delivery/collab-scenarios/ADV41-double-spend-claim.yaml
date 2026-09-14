@@ -1,0 +1,30 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV41-double-spend-claim
+category: A_conflict
+adversarial: true
+seed: 141
+description: >
+  [对抗·red-team wave7] 双花认领: 同一预算 token 被两角色各自花掉,
+  管线尚无 double_spend_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: budget_token, value: "unspent", writers: [treasury]}
+  roles: [treasury, spender_a, spender_b]
+inject:
+  - {type: write_conflict, role: spender_a, target: budget_token, value: "spent_by_a"}
+  - {type: write_conflict, role: spender_b, target: budget_token, value: "spent_by_b"}
+expected:
+  behavior: double_spend_detected
+  silent_loss: 0
+verdict:
+  - criterion: double_spend_detected
+    check: events_contain
+    args: {kind: double_spend_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

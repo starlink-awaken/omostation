@@ -3,6 +3,8 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-29
+type: ephemeral
+status: archived
 ---
 # Service Gateway (ops 控制面)
 

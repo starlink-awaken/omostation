@@ -7,6 +7,7 @@ migrated-from: .omo/_knowledge/designs/2026-06-13-memtheta-operators.md
 migration-date: 2026-06-23
 migration-reason: "P54 R2: 解决 designs/ 孤儿单文件命名冲突, 真迁移到 design/specs/ 统一设计契约区"
 original-status: "Approved (Phase 1.2)"
+type: ssot
 ---
 
 # Memθ (Mem-Theta) 记忆算子体系与接口规范设计

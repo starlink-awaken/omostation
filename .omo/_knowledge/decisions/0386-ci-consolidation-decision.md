@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-07
+type: ssot
 ---
 
 # ADR-0386 Decision: CI Check Consolidation (Architecture Analysis + Plan)

@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: cross-repo-probe-runtime-metaos-2026-06-10.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Cross-Repo Probe: runtime / metaos — 2026-06-10

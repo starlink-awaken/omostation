@@ -10,6 +10,7 @@ related:
   - docs/G-DEL-2a-role-framework-contract.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0229: Role framework — engineering / governance / audit first-ship

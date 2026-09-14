@@ -7,6 +7,8 @@ related:
   - ../patterns/delegation-infra-diagnosis-pattern.md
   - ../../plans/delegation-infra-reliability.md
   - ../../../docs/operations/delegation-infra-config.md
+type: ephemeral
+status: archived
 ---
 
 # delegation-infra-reliability 复盘 — 2026-08-07 子代理委托基础设施系统性故障（P4b 知识固化）

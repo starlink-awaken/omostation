@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/ssot/fix-remotes.py
+name: Fix Root and Submodule origin URLs
+category: governance
+owner: governance-team
+description: "自动修复 root + submodule 的 origin 指向 omostation canonical (fetch+push). 2026-09-13 Python 重写: worktree 兼容 + 跳过未初始化子模块 (防写穿污染) + 幂等."
+inputs:
+  - name: "无 (脚本读 .gitmodules 自动)"
+outputs:
+  - type: exit_code
+dependencies:
+  - bin/gac/remote-hygiene-check.py
+triggers:
+  - "manual: 当 remote-hygiene check fail 时复制 hint 命令执行"
+related: []
+maturity: draft
+last_reviewed: "2026-09-13"

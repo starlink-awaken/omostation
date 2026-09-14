@@ -10,6 +10,7 @@ related:
   - 0167-p77-phase4-port-registry-consistency.md
   - ../../../../../protocols/port-registry.yaml
 supersedes: []
+type: ssot
 ---
 
 # ADR-0172: P78 — 端口注册表收敛 (deprecated 清理 + transport 字段)

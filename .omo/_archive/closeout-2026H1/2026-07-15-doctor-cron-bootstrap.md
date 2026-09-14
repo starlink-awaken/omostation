@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — 2026-07-15 doctor cron + bootstrap
 
 - ADR-0200: omo-doctor-cron + operating-rhythm 09:20

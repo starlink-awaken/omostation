@@ -1,9 +1,3 @@
----
-type: ssot
-owner: governance-team
-last_updated: 2026-09-03
----
-
 # INDEX-PROJECTS.md — 项目索引
 
 > **维护规则**
@@ -13,7 +7,7 @@ last_updated: 2026-09-03
 > - validation: 与 project-registry.yaml 项目数一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-08-18T07:07:09.084624+00:00
+> - generated_at: 2026-09-11T13:25:31.102982+00:00
 
 ---
 
@@ -25,7 +19,7 @@ last_updated: 2026-09-03
 | L0 | ecos | Python (uv, pytest) | 各项目 `AGENTS.md` |
 | L1 | omlxc, runtime | Python (uv, pytest) + Python (uv, pytest, Textual) | 各项目 `AGENTS.md` |
 | L1-L3 | toolbox | Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline) | 各项目 `AGENTS.md` |
-| L2 | family-hub, knowledge, metaos, omo | ? + Python (FastMCP) + Python (uv, pytest) | 各项目 `AGENTS.md` |
+| L2 | domain-cartridges, family-hub, knowledge, metaos, omo | ? + Python (FastMCP) + Python (stdlib only) + Python (uv, pytest) | 各项目 `AGENTS.md` |
 | L3 | cockpit, cockpit-ui | Python (uv, pytest) + TypeScript (Vite, React) | 各项目 `AGENTS.md` |
 | L4 | l4-kernel | Python (uv, pytest) | 各项目 `AGENTS.md` |
 | M0 | model-driven | Python (uv, pytest) | 各项目 `AGENTS.md` |
@@ -41,6 +35,7 @@ last_updated: 2026-09-03
 | Docker | observability |
 | Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline) | toolbox |
 | Python (FastMCP) | family-hub |
+| Python (stdlib only) | domain-cartridges |
 | Python (uv, pytest) | aetherforge, agora, bus-foundation, cockpit, ecos, l4-kernel, metaos, model-driven, omo, runtime |
 | Python (uv, pytest, Textual) | omlxc |
 | TypeScript (Vite, React) | cockpit-ui |
@@ -53,10 +48,11 @@ last_updated: 2026-09-03
 
 | 项目 | 层 | 角色 | AGENTS.md |
 |------|----|------|-----------|
-| aetherforge | X | 能力与算力框架 (gateway/mesh/swarm) | ✅ |
+| aetherforge | X | LLM 推理网关 · AetherForge (本地/边缘 LLM 推理) | ✅ |
 | agora | I0 | MCP Hub · BOS URI 路由 | ✅ |
 | bus-foundation | X | Omni-Bus (Data/Event/Control) | ✅ |
 | cockpit | L3 | 统一入口 (CLI + MCP + Web) | ✅ |
+| domain-cartridges | L2 | 领域场景卡内容包 · research 精读 pipeline (sources/filter/synthesis/pipeline) (BET-Y2Q4-T7-01) | ✅ |
 | ecos | L0 | SSB 签名链 + MOF 元模型 + L0 约束 | ✅ |
 | family-hub | L2 | 家庭数字枢纽 | ✅ |
 | l4-kernel | L4 | 自我层管理面 · 域统一注册 · KEMS | ✅ |

@@ -13,6 +13,7 @@ related:
   - ../../../../../tests/test_commit_assist_e2e.py
   - ../../../../../.githooks/prepare-commit-msg-commit-assist
 supersedes: []
+type: ssot
 ---
 
 # ADR-0169: P77 Phase 6 — LLM-assisted commit 端到端验收 (19 测试 + heuristic bug 修)

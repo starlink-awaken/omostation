@@ -1,0 +1,87 @@
+[
+ {
+  "id": "A1",
+  "title": "Workflow 与 Git 执行完整性",
+  "verdict": "PASS",
+  "detail": "}",
+  "live": true
+ },
+ {
+  "id": "A2",
+  "title": "Resident 与宿主健康真值",
+  "verdict": "PASS",
+  "detail": "all technical checks pass",
+  "live": true
+ },
+ {
+  "id": "A3",
+  "title": "受管 Python 与语义门",
+  "verdict": "PASS",
+  "detail": "Governance semantic gate: PASS",
+  "live": true
+ },
+ {
+  "id": "A4",
+  "title": "调度声明与安装态一致",
+  "verdict": "PASS",
+  "detail": "{\"ok\": true, \"drift_count\": 0, \"orphan_count\": 0}",
+  "live": true
+ },
+ {
+  "id": "A5",
+  "title": "引用与 launchd 完整性",
+  "verdict": "PASS",
+  "detail": "all technical checks pass",
+  "live": true
+ },
+ {
+  "id": "A6",
+  "title": "Orca R0 准入",
+  "verdict": "NOT_ADMITTED",
+  "detail": "T10-149 只读验证工具链；未过门零写入",
+  "live": false,
+  "depends_on": [
+   "A8"
+  ]
+ },
+ {
+  "id": "A7",
+  "title": "Multica AS0 准入",
+  "verdict": "NOT_ADMITTED",
+  "detail": "T10-150 只读验证工具链；未过门零写入",
+  "live": false,
+  "depends_on": [
+   "A8"
+  ]
+ },
+ {
+  "id": "A8",
+  "title": "OMO 外部执行事务",
+  "verdict": "ABSENT",
+  "detail": "T10-165 语义落地后推进",
+  "live": false,
+  "depends_on": [
+   "G2",
+   "G3"
+  ]
+ },
+ {
+  "id": "A9",
+  "title": "ASD 与 Cockpit 可观测",
+  "verdict": "PARTIAL",
+  "detail": "T10-166 面板契约；PARTIAL≠PASS",
+  "live": false,
+  "depends_on": [
+   "G2",
+   "G3"
+  ]
+ },
+ {
+  "id": "RF0",
+  "title": "Ruflo 只读协作准入",
+  "verdict": "NOT_ADMITTED",
+  "detail": "side-effect-free 观察；独立驱动不建第二队列",
+  "live": false,
+  "depends_on": []
+ }
+]

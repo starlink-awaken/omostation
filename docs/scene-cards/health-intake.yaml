@@ -7,6 +7,8 @@ related:
 - ./unified-inbox.yaml
 ---
 schema: scene-card/v2
+bet: BET-Y1Q4-T8-04
+falsifier: "若 30 天内无 health 类任务触发，则场景无实际价值"
 scene_id: health-intake
 journey_id: health-medical-workflow
 goal: 将症状/体征指标/医嘱等健康信息结构化记录到本地健康台账, 并判定是否需要就诊

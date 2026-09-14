@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""arcnode-validate — Wrapper: 委托给主仓 bin/ssot/arcnode-validate
+
+保留原实现位置 (bin/ssot/), 这里做一个友好入口让 PATH / 主仓 bin/arcnode/ 自动发现。
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+def main() -> int:
+    # 主仓根 (相对于当前脚本): bin/arcnode/arcnode-validate -> bin/ssot/arcnode-validate
+    workspace_root = Path(__file__).resolve().parents[2]
+    target = workspace_root / "bin" / "ssot" / "arcnode-validate"
+    if not target.is_file():
+        print(f"ERROR: {target} 不存在", file=sys.stderr)
+        return 1
+    return subprocess.call([str(target), *sys.argv[1:]],
+                           env=os.environ.copy())
+
+
+if __name__ == "__main__":
+    sys.exit(main())

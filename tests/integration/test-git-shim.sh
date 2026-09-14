@@ -31,6 +31,7 @@ _setup() {
   cd "$test_root"
   git config user.email "test@test.com"
   git config user.name "Test"
+  git checkout -q -b agent/test-agent/attempt-1
   git commit --allow-empty -q -m "init"
 }
 
@@ -39,6 +40,23 @@ _assert_blocked() {
   shift
   if AGENT_ID="test-agent" bash "$SHIM" "$@" 2>/dev/null; then
     echo "FAIL: $desc (should have been blocked)"
+    FAIL=$((FAIL + 1))
+  else
+    echo "PASS: $desc"
+    PASS=$((PASS + 1))
+  fi
+}
+
+_assert_publication_blocked() {
+  local desc="$1"
+  shift
+  local stderr_file="$TMPDIR_SHIM/stderr"
+  if AGENT_ID="test-agent" bash "$SHIM" "$@" 2>"$stderr_file"; then
+    echo "FAIL: $desc (should have been blocked)"
+    FAIL=$((FAIL + 1))
+  elif ! grep -q "PUBLICATION_OWNER_REQUIRED" "$stderr_file"; then
+    echo "FAIL: $desc (missing PUBLICATION_OWNER_REQUIRED)"
+    cat "$stderr_file"
     FAIL=$((FAIL + 1))
   else
     echo "PASS: $desc"
@@ -77,7 +95,19 @@ _setup
 
 # 1. --no-verify blocked for agent
 _assert_blocked "agent --no-verify commit blocked" commit --no-verify -m "test"
-_assert_blocked "agent push --no-verify blocked" push --no-verify
+
+# Wave B3: every publication form is typed-rejected before real Git.
+_assert_publication_blocked "agent ordinary push blocked" push origin HEAD
+_assert_publication_blocked "agent force (-f) push blocked" push -f origin HEAD
+_assert_publication_blocked "agent force push blocked" push --force origin HEAD
+_assert_publication_blocked "agent force-with-lease push blocked" push --force-with-lease origin HEAD
+_assert_publication_blocked "agent atomic first-publication lease blocked" \
+  push --porcelain "--force-with-lease=refs/heads/agent/test-agent/attempt-1:" origin \
+  "$(git rev-parse HEAD):refs/heads/agent/test-agent/attempt-1"
+_assert_publication_blocked "agent push --no-verify blocked" push --no-verify origin HEAD
+_assert_publication_blocked "agent -C push blocked" -C . push origin HEAD
+_assert_publication_blocked "agent -c push blocked" -c push.default=current push origin HEAD
+_assert_publication_blocked "agent --git-dir push blocked" --git-dir=.git push origin HEAD
 
 # 2. clean -fd blocked for agent
 _assert_blocked "agent clean -fd blocked" clean -fd

@@ -1,0 +1,49 @@
+id: BET-Y1Q4-T13
+track: T13-OBSERVABILITY
+window: Y1Q4
+title: Cockpit CLI 106 命令 smoke test 接入 Harness — 每 6h 周期化监控
+priority: P2
+status: candidate
+goal: '把批次 7 写的 106 命令 smoke test 脚本接入 Harness cron (每 6h), 保证命令可用性 regression 立即被发现。
+
+  '
+non_goals:
+- 不重写 smoke test (批次 7 的 python 脚本已工作)
+- 不做 100% 自动化修复 (smoke fail 时告警人, 不自动修)
+deliverables:
+- 抽取 harness/cli-availability-probe.py (周期化 smoke test 脚本)
+- 注册到 Harness (cron: 每 6h 跑一次)
+- 失败时记录到 cockpit ops register (人 review)
+- 报告: docs/reports/cli-smoke-test-harness-rollout.md
+acceptance:
+- Harness cron 每 6h 跑一次 cli-availability-probe
+- 失败时 ops register 记录
+- 6h 内命令 regression 可发现
+appetite: 2 days
+depends_on: []
+risk:
+- 低. smoke test 脚本已存在, 接入 Harness 是配置工作
+task_type: bet
+owner: human
+source: manual
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- gate/standard
+source_docs:
+- docs/reports/cockpit-cli-command-availability-ledger.md
+- bin/harness/harness-cron.sh
+evidence_required:
+- T13-cli-smoke-test-harness acceptance criteria met
+- 相关测试通过
+test_plan:
+- 1. 跑 BET-Y1Q4-T13-cli-smoke-test-harness.yaml 范围内的命令/脚本
+- 2. 验证 acceptance 标准

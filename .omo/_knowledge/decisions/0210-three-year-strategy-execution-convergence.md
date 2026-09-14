@@ -19,6 +19,7 @@ amended_by: [0225]
 note: >
   ADR-0225 明确兑现期 G-DEL.1/3 门禁为物理多机口径；
   in-process 模拟仅可填 meets_sim_harness，不得宣称官方达标。
+type: ssot
 ---
 
 # ADR-0210: 三年综合战略方向 — 从"扩图纸"转向"收敛执行面"

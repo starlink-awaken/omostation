@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: "2026-07-28"
+type: ssot
 ---
 
 # GAC Check Performance Budget Standard

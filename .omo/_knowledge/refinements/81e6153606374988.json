@@ -1,0 +1,12 @@
+{
+  "refinement_id": "81e6153606374988",
+  "task_id": "test-123",
+  "skill_names": [
+    "skill.37eb1918.observe-pattern",
+    "skill.4eb9e498.recover-sequence",
+    "skill.3307ec14.conclude-checkpoint"
+  ],
+  "evidence_digest": "732bcbabb8a3d1b036b663968a0d6b7e76099397f1787bde8d6ddfd196b2aec8",
+  "created_at": "2026-09-13T23:16:08.950609+00:00",
+  "rollback_supported": true
+}

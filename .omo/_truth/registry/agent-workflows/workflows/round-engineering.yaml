@@ -1,0 +1,94 @@
+id: round-engineering
+run_frequency: on_demand
+title: Round engineering lifecycle
+purpose: >
+  M4 时代工程闭环 — commit → ADR → 测 → closeout。
+  每轮 (Round X) 严格按 7 步执行，回答 P72/P52/P74 三门槛。
+agents:
+  roles:
+  - engineering-agent
+  - governance-agent
+  observer_policy: use_for_high_blast_radius_or_unattended_runs
+allowed_lanes:
+- docs
+- code
+- governance_code
+- governance_state
+- config
+lock_scopes:
+- round:{round_id}
+- root-gate
+surfaces:
+  read:
+  - AGENTS.md
+  - .agents/skills/round-workflow/SKILL.md
+  - .agents/skills/round-gate-check/SKILL.md
+  - .agents/skills/closeout-retro/SKILL.md
+  - docs/architecture/
+  - bin/mof/mof-bootstrap.py
+  write:
+  - docs/M4-DECISIONS-INDEX.md
+  - .omo/_knowledge/retros/**
+phases:
+  preflight:
+  - id: baseline
+    mode: required
+    command:
+    - make
+    - m4-health
+  - id: worktree
+    mode: required
+    command:
+    - bash
+    - bin/gac/gac-worktree.sh
+    - claim
+    - round-{round_id}
+  - id: gate_check
+    mode: required
+    command:
+    - python3
+    - bin/gac/round-gate-check.py
+  execute:
+  - id: deliver
+    mode: manual
+    command:
+    - agent
+    - deliver
+  - id: tests
+    mode: manual
+    command:
+    - agent
+    - run-tests
+  verification:
+  - id: self_reflex
+    mode: required
+    command:
+    - python3
+    - bin/mof/mof-bootstrap.py
+    - all
+  - id: adr
+    mode: manual
+    command:
+    - agent
+    - write-adr
+  - id: health_compare
+    mode: required
+    command:
+    - make
+    - m4-health-compare
+  closeout:
+  - id: decisions_index
+    mode: required
+    command:
+    - agent
+    - write-docs
+    - docs/M4-DECISIONS-INDEX.md
+  - id: retro
+    mode: required
+    command:
+    - python3
+    - bin/gac/p78-diagnostic-prescan.py
+evidence_required:
+- adr_ref
+- health_delta
+- test_results

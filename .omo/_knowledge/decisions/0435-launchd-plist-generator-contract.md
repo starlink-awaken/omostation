@@ -4,6 +4,7 @@ status: accepted
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-30
+type: ssot
 ---
 
 # ADR-0435 — launchd plist 修复必须走生成器 + 注册表，不允许手改 plist

@@ -1,4 +1,5 @@
 ---
+type: ssot
 name: harness-compliance
 description: Harness 全生命周期合规检查 — 12 章节完整性 + MOF 约束联动 + OMO 状态同步
 triggers:
@@ -8,6 +9,8 @@ triggers:
   - 编辑 MOF 相关文件时
   - PR 提交前
   - CI 失败排查时
+owner: governance-team
+last-reviewed: 2026-09-04
 ---
 
 # Skill: harness-compliance

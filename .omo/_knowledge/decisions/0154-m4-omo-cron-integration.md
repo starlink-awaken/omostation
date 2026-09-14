@@ -14,6 +14,7 @@ related:
   - ../../../../bin/m4-health-score.py
   - ../../../../bin/check-submodule-hygiene.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0154: M4 OMO cron 集成 (Phase 4)

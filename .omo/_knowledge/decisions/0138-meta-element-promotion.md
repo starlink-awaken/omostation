@@ -11,6 +11,7 @@ related:
   - ../../../projects/ecos/src/ecos/ssot/mof/m3-meta.yaml
   - ../../../projects/ecos/src/ecos/l0/ssot/mof_bridge.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0138: 元元模型类目提升至 m3.yaml 主流 (Round 2b)

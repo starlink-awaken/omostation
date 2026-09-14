@@ -2,7 +2,10 @@
 name: ecos-test-cycle
 description: "Edit→test→commit cycle for the ecos project. Run full test suite after code changes, verify results, commit on pass, recover on failure. Use whenever modifying ecos source code."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # Ecos Test Cycle — Edit → Verify → Commit
 

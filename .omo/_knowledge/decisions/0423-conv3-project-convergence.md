@@ -13,6 +13,7 @@ related:
   - .omo/_truth/governance-evidence/waiver-2026-08-24-gap-governance.md (用户授权证据)
   - BET-Y1Q3-T1-06 (mesh-router 双 owner 收敛)
   - ADR-0162 (P76 Phase 7)
+type: ssot
 ---
 
 # CONV-3 项目收敛 — family-hub / metaos / mesh-router 三态定案

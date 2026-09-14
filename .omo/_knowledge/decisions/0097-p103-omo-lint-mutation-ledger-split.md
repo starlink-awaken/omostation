@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0097: P103 omo_lint mutation-ledger 子模块拆分 (594→544L, ADR-0093 4 步路径完整兑现)

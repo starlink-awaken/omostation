@@ -1,0 +1,51 @@
+schema: scene-card/v3
+scene_id: scene-health-archive
+version: 3.0.0
+name: Health Archive
+description: 归档就诊档案与体检报告, 提取复查/用药时间节点形成追踪清单 (journey 终态)
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: draft
+activation: preview
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: health-medical-workflow
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - storage:local-health-ledger
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 30 天内无 health 类任务触发，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: journey 前置状态 visited 的 records_received == true, 或 recorded 直接分叉进入
+input_contract: 就诊档案 + 报告文件 (本地路径)
+result_contract: 归档索引 (archived_at/category) + followup_checklist (复查日期/用药周期) + archive_completed
+  布尔判定
+outcome_metric: health_archive_retrievability
+consumer: xiamingxing
+failure_cost: 报告散落各处难检索, 复查时间遗忘
+data_classification: confidential
+data_scope: local-health-ledger-only
+operator: health-archive-dispatch-under-human-review

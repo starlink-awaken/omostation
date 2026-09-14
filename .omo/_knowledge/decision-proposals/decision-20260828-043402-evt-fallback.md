@@ -7,6 +7,8 @@ workflow_run_id:
 event_id: evt-fallback
 proposal_count: 1
 generated_at: 2026-08-28T04:34:02Z
+type: ephemeral
+status: archived
 ---
 
 # 决策提案收件箱 (T10-13)

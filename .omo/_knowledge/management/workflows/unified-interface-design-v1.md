@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: unified-interface-design-v1.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 5+3+1 统一接口层设计方案

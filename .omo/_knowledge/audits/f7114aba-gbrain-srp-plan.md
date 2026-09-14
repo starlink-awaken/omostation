@@ -4,6 +4,8 @@ lifecycle: history
 owner: laowang
 last-reviewed: 2026-06-28
 related-task: F7114ABA
+type: ephemeral
+status: archived
 ---
 
 # F7114ABA gbrain God Module SRP 拆分计划

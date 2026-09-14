@@ -13,6 +13,7 @@ related:
   - ADR-0419-business-workflow-implementation-plan.md
   - ADR-0421-bcos-2week-retro.md
   - bin/bc-os/evolution_engine.py
+type: ssot
 ---
 
 # ADR-0420: BCOS evolution engine 占位决策

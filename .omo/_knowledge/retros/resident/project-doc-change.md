@@ -1,24 +1,23 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-08-31T08:20:01Z
+generated_at: 2026-09-12T12:41:59Z
 status: candidate
 counts:
-  runs: 25
-  failures: 14
-  total: 39
-failure_rate: 0.359
+  runs: 30
+  failures: 0
+  total: 30
+failure_rate: 0.0
 failure_breakdown:
   by_event_type:
-    StepFailed: 14
-  trace_count: 14
+  trace_count: 0
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-08-31T08:20:01Z
+- generated_at: 2026-09-12T12:41:59Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 25 成功运行 + 14 失败模式 = 39 草稿
-- 失败率: 35.90%
+- sediment 覆盖: 30 成功运行 + 0 失败模式 = 30 草稿
+- 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
@@ -47,42 +46,19 @@ failure_breakdown:
 - 20260824T075257Z-project-doc-change-ee42e0c7.md
 - 20260825T132256Z-project-doc-change-e2914012.md
 - 20260828T115730Z-project-doc-change-08be17ff.md
+- 20260905T030841Z-project-doc-change-2dc3f5be.md
+- 20260905T040605Z-project-doc-change-c33324b2.md
+- 20260905T041743Z-project-doc-change-b9bcff45.md
+- 20260911T101129Z-project-doc-change-2831b0aa.md
+- 20260912T073417Z-project-doc-change-eb813d27.md
 
 ## 失败模式 (failures/)
 
-- 20260804T035034Z-project-doc-change-5f6ff67b-aa01698a.md
-- 20260806T043854Z-project-doc-change-d04c2601-e2872979.md
-- 20260806T044652Z-project-doc-change-cc6e9deb-47752729.md
-- 20260806T045515Z-project-doc-change-8102535f-875675b3.md
-- 20260806T121006Z-project-doc-change-7aae1292-19c772cd.md
-- 20260806T122816Z-project-doc-change-fe690043-1d5ff092.md
-- 20260806T125818Z-project-doc-change-1e386c0b-d0189ee6.md
-- 20260807T023335Z-project-doc-change-fe1ac78c-8e105a4d.md
-- 20260807T034407Z-project-doc-change-468f966b-d40e2022.md
-- 20260808T234306Z-project-doc-change-bc18e917-12eb00a0.md
-- 20260814T121446Z-project-doc-change-9cd9b9e1-df3f8217.md
-- 20260815T060912Z-project-doc-change-b775a96f-28846c46.md
-- 20260821T184348Z-project-doc-change-31c3f51b-eecbe42a.md
-- 20260822T032336Z-project-doc-change-8da4c56e-6c6968f3.md
+- (无)
 
 ## 失败根因画像 (确定性启发式)
 
-- StepFailed: 14 篇
-- 关联工作流溯源: 14 个 (trace_id 见下)
-  - `20260804T035034Z-project-doc-change-5f6ff67b`
-  - `20260806T043854Z-project-doc-change-d04c2601`
-  - `20260806T044652Z-project-doc-change-cc6e9deb`
-  - `20260806T045515Z-project-doc-change-8102535f`
-  - `20260806T121006Z-project-doc-change-7aae1292`
-  - `20260806T122816Z-project-doc-change-fe690043`
-  - `20260806T125818Z-project-doc-change-1e386c0b`
-  - `20260807T023335Z-project-doc-change-fe1ac78c`
-  - `20260807T034407Z-project-doc-change-468f966b`
-  - `20260808T234306Z-project-doc-change-bc18e917`
-  - `20260814T121446Z-project-doc-change-9cd9b9e1`
-  - `20260815T060912Z-project-doc-change-b775a96f`
-  - `20260821T184348Z-project-doc-change-31c3f51b`
-  - `20260822T032336Z-project-doc-change-8da4c56e`
+- (无失败模式沉淀)
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
@@ -252,6 +228,40 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=1
   - 失败根因: step=execute, error=workflow failed
   - 指标: event_count=6, duration_s=4483.473
+- **20260905T030841Z-project-doc-change-2dc3f5be**
+  - 计划 (objective): multica squad ops: Squad A dry-run 验证 + SOP 沉淀
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=435.566
+- **20260905T040605Z-project-doc-change-c33324b2**
+  - 计划 (objective): multica squad ops: Squad E 供应链多样性小队 + Tier 表扩容 + 新增4智能体 文档同步
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=171.388
+- **20260905T041743Z-project-doc-change-b9bcff45**
+  - 计划 (objective): multica squad ops: 13 agent system prompt + 7 squad 指引 + Squad F/G 新增
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=84.811
+- **20260911T101129Z-project-doc-change-2831b0aa**
+  - 计划 (objective): [BET-Y1Q4-T16] ops 注册表防漂移双闸 — check-signals + cron 准入 (Appetite: 1 day)
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=9269.733
+- **20260912T073417Z-project-doc-change-eb813d27**
+  - 计划 (objective): Canonical claims authority for T10-157 exact accepted-spec successor recovery
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=7
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=8310.966
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

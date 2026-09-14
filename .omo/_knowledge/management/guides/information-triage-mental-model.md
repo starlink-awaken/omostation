@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-25
+type: ssot
+owner: governance-team
 ---
 
 # 信息分诊心智模型 (Information Triage Mental Model)

@@ -9,6 +9,7 @@ last-reviewed: 2026-08-04
 related:
   - 0366-pyright-sweep-algorithm.md
   - 0367-sweep-tooling-scaling-roadmap.md
+type: ssot
 ---
 
 # ADR-0368: Runtime Registry 测试契约与 TaskFallback 响应对齐

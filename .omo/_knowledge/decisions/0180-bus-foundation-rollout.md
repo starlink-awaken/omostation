@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-13
+type: ssot
 ---
 
 # ADR-0180 — bus-foundation 全面落地 (P7x-bus-foundation-rollout)

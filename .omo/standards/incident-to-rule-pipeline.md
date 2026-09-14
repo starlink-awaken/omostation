@@ -5,6 +5,7 @@ created: 2026-08-30
 last-reviewed: 2026-08-30
 owner: governance-team
 adr: ADR-0443
+type: ssot
 ---
 
 # 事故→规则流水线（incident-to-rule pipeline）

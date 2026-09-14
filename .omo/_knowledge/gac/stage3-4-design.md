@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 # GaC 阶段 3/4 设计 — 元模型派生 + 治理仪表盘 (ADR-0106)
 

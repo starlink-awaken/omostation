@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: ARCH-REVIEW.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 知识架构综合分析与方案设计

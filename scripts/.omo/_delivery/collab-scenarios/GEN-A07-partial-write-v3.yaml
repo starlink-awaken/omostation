@@ -1,0 +1,36 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: A07-partial-write-v3
+category: A_conflict
+adversarial: false
+seed: 1072
+description: '[W2.1 批量] 部分写入 (产物不完整) (原型07 实例3)'
+setup:
+  blackboard:
+  - key: target_7
+    value: null
+  roles:
+  - role_a_2
+  - role_b_2
+inject:
+- type: write_conflict
+  role: role_a_2
+  target: target_7
+  value: val_a_2
+- type: write_conflict
+  role: role_b_2
+  target: target_7
+  value: val_b_2
+expected:
+  behavior: conflict_detected_and_resolved
+  max_resolution_rounds: 3
+  silent_loss: 0
+verdict:
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

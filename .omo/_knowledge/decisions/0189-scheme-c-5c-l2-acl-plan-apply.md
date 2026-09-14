@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-15
+type: ssot
 ---
 
 # ADR-0189 — Scheme C 5c L2: `omo acl plan|apply`（opt-in chmod）

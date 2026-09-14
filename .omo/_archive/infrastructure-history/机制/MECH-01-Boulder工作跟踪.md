@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # MECH-01: Boulder 工作跟踪系统
 
 > **来源**: `.omo/boulder.json`

@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: omo-cli-consolidation-opportunities-2026-06-09.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # omo-cli 固化机会扫描 — 2026-06-09

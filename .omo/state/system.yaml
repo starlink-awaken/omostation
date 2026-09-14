@@ -1,16 +1,27 @@
 current_phase: 29
 current_wave: W1
-health_score_evidence: 81.7
+health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-09-01T02:45:15.763308+00:00'
-completed_tasks: 290
-planned_tasks: 7
+health_score_evidence_generated_at: '2026-09-13T08:47:22.014553+00:00'
+completed_tasks: 293
+planned_tasks: 16
 active_tasks: 1
 blocked_tasks: 1
-total_tasks: 299
+total_tasks: 311
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 next_planned_tasks:
+- BET-Y1Q4-T10-141 (Cockpit CLI 命令可用性台账 — 106 命令逐批验证与修复)
+- BET-Y1Q4-T11-env-resolver-unify (env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N]
+  硬)
+- BET-Y1Q4-T12-arcnode-integration (arcnode-* 外部依赖纳入主仓 — 治理命令不再依赖 ~/.hermes)
+- BET-Y1Q4-T13-cli-smoke-test-harness (Cockpit CLI 106 命令 smoke test 接入 Harness —
+  每 6h )
+- BET-Y1Q4-T14-ops-services-cleanup (ops services 20 missing 清理 — 注册表与现实同步)
+- BET-Y1Q4-T15-import-perf-regression (cockpit import 性能回归 (164ms > 120ms 预算) 排查)
+- BET-Y1Q4-T16-ops-drift-guard (ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校)
+- 'TASK-117310A1 (AGE-v2 Agent Cell 违反 SFOP 八律第3条(后端不拥有收件箱): omo c)'
+- 'TASK-B3229A65 (A4 调度真相收敛: 统一三源声明 + 修复死引用 + 面板刷新退出 token 自动化)'
 - bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
 - cockpit-debt-debt-1 (治理技术债务：债务)
@@ -19,7 +30,7 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-08-30T03:30:23Z'
+updated_at: '2026-09-13T08:47:32Z'
 harness:
   last_run: null
   last_status: null
@@ -35,3 +46,23 @@ self_evolution:
   proposals_pending: 0
   proposals_approved: 0
   proposals_executed: 0
+health_score: 82
+governance_anomaly_score: 46
+service_online_ratio: 1.0
+health_score_source: compass_radar_composite_isc3
+health_score_generated_at: '2026-09-13T08:47:10Z'
+runtime_health_summary:
+  online_services: 1
+  total_services: 1
+  ratio: 1.0
+  health_score: 82
+  last_scan: '2026-09-13T08:47:10Z'
+  source: compass_radar_isc3_daemon_ratio
+  degraded: []
+governance_feedback_last_run: '2026-09-13T08:47:09Z'
+workflow_mesh_health:
+  status: degraded
+  event_count: 0
+  events_last_hour: 0
+  last_event_age_seconds: null
+  bridges_active: []

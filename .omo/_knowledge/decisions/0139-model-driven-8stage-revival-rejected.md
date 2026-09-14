@@ -13,6 +13,7 @@ related:
   - ../../../projects/model-driven/src/model_driven/mof/m3_extended.py
   - ../../../projects/ecos/src/ecos/ssot/mof/m3.yaml
 supersedes: []
+type: ssot
 ---
 
 # ADR-0139: model-driven 8 阶段复活评估 — 拒回 (Round 2c)

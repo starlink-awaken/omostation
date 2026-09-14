@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: omo-cicd-stack-2026-06-10.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # §14 omo 仓 CI/CD 全栈 — 集成 + 自动化 (Round 31 起步)

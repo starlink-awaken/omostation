@@ -10,6 +10,7 @@ related:
   - ADR-0210
   - ADR-0247
   - ADR-0365
+type: ssot
 ---
 
 # ADR-0410: 三年战略主线归属 — Plan supersede Panorama

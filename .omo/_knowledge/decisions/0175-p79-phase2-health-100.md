@@ -8,6 +8,7 @@ related:
   - STRAT-P79-strategic-roadmap.md
   - 0174-p79-phase1-foundry-v2-cron.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0175: P79 Phase 2 — Health 100 (bare ports 分类 + env var 迁移)

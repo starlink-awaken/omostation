@@ -1,0 +1,15 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "knowledge-curation",
+  "name": "Knowledge Curation",
+  "lifecycle": "supervised",
+  "permissions": {
+    "fs_read": [],
+    "fs_write": [],
+    "network": [
+      "iris-connector"
+    ],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:36.380718+00:00"
+}

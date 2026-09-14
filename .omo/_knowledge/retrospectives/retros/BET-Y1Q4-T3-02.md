@@ -9,6 +9,8 @@ bet: BET-Y1Q4-T3-02
 title: 本地 MPS 嵌入引擎
 symptom: 冷启动 757ms 惊乍；SOCKS 代理炸模型加载
 solution: median-of-N 稳态测量 + HF_HUB_OFFLINE 代码级红线
+type: ephemeral
+status: archived
 ---
 
 # BET-Y1Q4-T3-02 复盘

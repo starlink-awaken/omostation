@@ -3,6 +3,8 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-30
+type: ephemeral
+status: archived
 ---
 
 # P3 work 验证 — family-hub/cockpit/ecos 治本

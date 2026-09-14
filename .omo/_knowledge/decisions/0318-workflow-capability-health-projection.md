@@ -7,6 +7,7 @@ owner: architecture-governance
 scope: Workflow Mesh / Cockpit / Agora
 lifecycle: spec
 last-reviewed: 2026-08-03
+type: ssot
 ---
 
 # ADR-0318: Agora 能力健康作为 Cockpit 准入证据

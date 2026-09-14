@@ -16,6 +16,7 @@ related:
   - ../../../../.gitignore
 supersedes:
   - 0133 (partial: the v2 derived-path default)
+type: ssot
 ---
 
 # ADR-0137: 派生面落点纠偏 — 跟随 SSOT 源所在子模块

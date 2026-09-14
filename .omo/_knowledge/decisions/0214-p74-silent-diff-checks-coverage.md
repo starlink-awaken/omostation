@@ -11,6 +11,7 @@ related:
   - 0211-p74-run-frequency-field-and-excluded-workflows-removal.md
   - 0209-ledger-trim-and-adr-ssot-renumbering.md
   - 0130-p74-workflow-solidification.md
+type: ssot
 ---
 
 # ADR-0213 — P74 silent 治本 D6：diff_checks 覆盖 4 silent workflow

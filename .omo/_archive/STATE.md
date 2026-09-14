@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # ⚠️ LEGACY — 工作区架构历史
 
 > **历史快照，不再反映当前系统状态。**

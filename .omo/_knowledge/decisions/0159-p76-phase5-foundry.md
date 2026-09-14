@@ -13,6 +13,7 @@ related:
   - ../../../../../docs/SOP-GOD-MODULE-SPLIT.md
   - ../../../../../docs/architecture/knowledge-foundry-cron.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0159: P76 Phase 5 — 收敛面 + 演化平台 (12 周路线图收口)

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scene-card-v3",
+  "title": "Scene Card v3",
+  "description": "Scene card schema v3 — unified contract for business, governance, and infrastructure scenes",
+  "type": "object",
+  "required": ["schema", "scene_id", "name", "lifecycle", "activation", "owner"],
+  "properties": {
+    "schema": { "const": "scene-card/v3" },
+    "scene_id": { "type": "string", "pattern": "^scene-[a-z0-9-]+$" },
+    "version": { "type": "string", "default": "3.0.0" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "scene_class": { "type": "string", "enum": ["business", "governance", "infra"] },
+    "scene_type": { "type": "string", "enum": ["inbound", "outbound", "cycle"] },
+    "domain": { "type": "string", "enum": ["work", "health", "research", "knowledge", "governance"] },
+    "lifecycle": { "type": "string", "enum": ["draft", "shadow", "assisted", "supervised", "routine"] },
+    "activation": { "type": "string", "enum": ["preview", "controlled", "active", "allowed"] },
+    "owner": { "type": "string" },
+    "approver": { "type": "string" },
+    "approval_state": { "type": "string", "enum": ["pending_business_confirmation", "confirmed", "approved"] },
+    "bet": { "type": "string" },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": { "type": "string", "enum": ["signal", "schedule", "webhook", "manual", "condition"] },
+          "signal": { "type": "string" },
+          "filter": { "type": "string" },
+          "cron": { "type": "string" },
+          "expression": { "type": "string" }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "journey_ref": { "type": "string" },
+        "timeout": { "type": "string", "default": "3600s" },
+        "sandbox": {
+          "type": "object",
+          "properties": {
+            "level": { "type": "string", "enum": ["shared", "isolated", "privileged"] },
+            "capabilities": { "type": "array", "items": { "type": "string" } },
+            "permissions": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "calibration": {
+          "type": "object",
+          "properties": {
+            "min_samples": { "type": "integer", "default": 30 },
+            "min_calibration": { "type": "number", "default": 0.6 }
+          }
+        },
+        "falsifier": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "topology": {
+      "type": "object",
+      "properties": {
+        "upstream": { "type": "array", "items": { "type": "object" } },
+        "downstream": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "human_in_the_loop": { "type": "object" },
+    "observability": { "type": "object" },
+    "capability_refs": { "type": "array", "items": { "type": "string" } },
+    "permission_scope": { "type": "array", "items": { "type": "string" } },
+    "activation_blockers": { "type": "array", "items": { "type": "string" } },
+    "falsifier": { "type": "array", "items": { "type": "object" } }
+  }
+}

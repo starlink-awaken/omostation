@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: strategy-observability-v1.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # eCOS 全系统可观测性战略方案 (v1.0)

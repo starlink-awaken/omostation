@@ -10,6 +10,7 @@ related:
   - ../../docs/operations/memory-os-epic-retro.md
   - ../../docs/operations/memory-os-phase10-retro.md
   - ../../docs/architecture/memory-os.md
+type: ssot
 ---
 
 # Memory OS 运维契约（Phase 8–9）

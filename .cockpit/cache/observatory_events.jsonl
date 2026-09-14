@@ -1,0 +1,1 @@
+{"type": "WORKTREE_CLAIMED", "severity": "INFO", "title": "路径认领安全放行: ['projects/cockpit/src']", "source": "agent_workflow", "project_id": "cockpit", "advice": "可安全推进", "payload": {"paths": ["projects/cockpit/src"]}, "id": "evt_20260913_080422_2a8593", "timestamp": "2026-09-13T08:04:22Z"}

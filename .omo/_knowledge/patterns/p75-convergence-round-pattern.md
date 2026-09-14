@@ -6,6 +6,7 @@ created_at: '2026-08-05'
 lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ssot
 ---
 
 # P75 — Convergence Round Pattern (ADR-0373, 5 方向合一)

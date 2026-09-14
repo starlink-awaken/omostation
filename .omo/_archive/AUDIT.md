@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Workspace 综合审计报告
 
 > 审计日期: 2026-05-20 | 审计人: Sisyphus

@@ -100,7 +100,7 @@ def collect_maturity_scorecard(ws_root: Path) -> dict:
     out["available"] = True
     try:
         res = subprocess.run(
-            [sys.executable, str(script), "--json"],
+            [sys.executable, str(script), "--json", "--skip-observable"],
             cwd=ws_root,
             capture_output=True,
             text=True,

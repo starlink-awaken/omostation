@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0109: P110-B omo_governance_surfaces build_report 子模块化 (443→276L, <300L ideal)

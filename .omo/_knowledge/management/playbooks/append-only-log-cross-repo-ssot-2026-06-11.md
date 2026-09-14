@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: append-only-log-cross-repo-ssot-2026-06-11.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # §12 跨仓 SSOT — AppendOnlyLog 5 仓实施指南 (E4 P0 收口)

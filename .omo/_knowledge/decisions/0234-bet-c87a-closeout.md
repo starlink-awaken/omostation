@@ -15,6 +15,7 @@ related:
   - ADR-0228 m1-acceptance-physical-deferred-reorder
   - ADR-0232 g-del-2b-official-pass
   - STRAT-P81-strategic-roadmap.md
+type: ssot
 ---
 
 # 0234 - BET-c87a http-mcp-convergence 收尾

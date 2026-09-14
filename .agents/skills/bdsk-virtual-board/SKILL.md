@@ -2,7 +2,10 @@
 name: bdsk-virtual-board
 description: "B.D.S.K. 虚拟董事会 4 角架构审议与真实 BOS/AetherForge 本地算力接入。用于高风险架构、技术取舍、跨仓协作和合规决策。"
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # B.D.S.K. Virtual Board
 

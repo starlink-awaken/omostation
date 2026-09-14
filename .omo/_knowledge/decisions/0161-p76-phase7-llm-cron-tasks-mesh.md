@@ -14,6 +14,7 @@ related:
   - ../../../../../bin/commit-assist.py
 supersedes:
   - STRAT-P76 §6 (Phase 7+ entries formerly deferred)
+type: ssot
 ---
 
 # ADR-0161: P76 Phase 7 — LLM-assisted commit + foundry timer + 8 planned tasks + mesh-router 真正落地

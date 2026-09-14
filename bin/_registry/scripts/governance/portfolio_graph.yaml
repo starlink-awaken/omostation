@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/plan/portfolio_graph.py
+name: Portfolio Coverage Graph
+category: governance
+owner: governance-team
+description: Additive Portfolio v2 coverage graph and critical-path reporter (BET-Y1Q4-T1-05)
+inputs: []
+outputs:
+- type: exit_code
+- type: json
+dependencies: []
+triggers: []
+related:
+- bin/plan/bet-ledger.py
+- bin/plan/portfolio_contract.py
+maturity: alpha
+last_reviewed: '2026-09-04'

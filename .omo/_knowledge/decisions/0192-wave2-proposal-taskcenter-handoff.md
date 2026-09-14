@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-15
+type: ssot
 ---
 
 # ADR-0192 — Wave2 提案 → TaskCenter 闭环（dry-run plan）

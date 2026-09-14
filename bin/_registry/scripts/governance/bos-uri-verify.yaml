@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/bos-uri-verify.py
+name: BOS URI Verification
+category: governance
+owner: governance-team
+description: Verify all registered BOS URIs for reachability
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: active
+last_reviewed: "2026-09-10"

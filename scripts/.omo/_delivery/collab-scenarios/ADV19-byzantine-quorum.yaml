@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV19-byzantine-quorum
+category: A_conflict
+adversarial: true
+seed: 119
+description: >
+  [对抗·red-team] 多数角色串通投假票形成伪共识 (byzantine quorum),
+  W3 wave4 加硬 — 管线尚无 byzantine_quorum_detected → 预期 FAIL 暴露真缺口
+setup:
+  blackboard:
+    - {key: vote_tally, value: null}
+  roles: [r_a, r_b, r_c, r_honest]
+inject:
+  - {type: write_conflict, role: r_a, target: vote_tally, value: "fake_pass"}
+  - {type: write_conflict, role: r_b, target: vote_tally, value: "fake_pass"}
+  - {type: write_conflict, role: r_c, target: vote_tally, value: "fake_pass"}
+  - {type: write_conflict, role: r_honest, target: vote_tally, value: "reject"}
+expected:
+  behavior: byzantine_quorum_detected
+  silent_loss: 0
+verdict:
+  - criterion: byzantine_quorum_detected
+    check: events_contain
+    args: {kind: byzantine_quorum_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

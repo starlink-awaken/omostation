@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-30
+type: ssot
 ---
 
 # ADR-0116: Tier 1 渐进式修复 vs Tier 2 真治本 (Meta-Reflection)

@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: KOS_MIGRATION_IMPACT.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # KOS 迁移影响分析 & 全局 MCP 审计

@@ -15,6 +15,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-26
+type: ephemeral
+status: archived
 ---
 
 last-reviewed: 2026-08-26

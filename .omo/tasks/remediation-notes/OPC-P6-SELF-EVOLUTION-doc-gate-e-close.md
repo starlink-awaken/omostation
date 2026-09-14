@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # OPC-P6-SELF-EVOLUTION-doc-gate-e — 执行确认
 
 ## 状态: ✅ 已处理

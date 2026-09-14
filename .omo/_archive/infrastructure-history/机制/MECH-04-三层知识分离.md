@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # MECH-04: 三层知识分离架构
 
 > **来源**: `.omo/KNOWLEDGE_ARCH.md`

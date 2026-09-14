@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — 2026-07-15 Workflow 强制 + Learner patterns 入库
 
 ## Landed

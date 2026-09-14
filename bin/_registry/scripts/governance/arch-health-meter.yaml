@@ -1,0 +1,36 @@
+schema: script-registry/v1
+id: bin/arch-health-meter.py
+name: Architecture Health Meter (6-dim)
+category: observability
+owner: governance-team
+description: >-
+  采集架构健康度 6 维度量化指标 (场景/架构/进化/运维/防腐/感知),
+  输出 JSON 或 markdown 表格. 接入周报自动生成. See BET-Y1Q4-T6-18.
+inputs:
+  - name: --json
+    type: flag
+    required: false
+    description: JSON 输出
+  - name: --week
+    type: flag
+    required: false
+    description: 周报模式 (含趋势占位)
+  - name: --workspace
+    type: path
+    required: false
+    description: workspace root (默认自动检测)
+outputs:
+  - type: exit_code
+  - type: json_6dim
+  - type: markdown_table
+dependencies:
+  - python3
+  - PyYAML
+triggers:
+  - weekly
+  - on_demand
+related:
+  - bin/ops/architecture-health-weekly.sh
+  - .omo/standards/architecture-health-six-dim.md
+maturity: stable
+last_reviewed: "2026-09-05"

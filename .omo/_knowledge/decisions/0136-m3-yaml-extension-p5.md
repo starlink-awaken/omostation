@@ -14,6 +14,7 @@ related:
   - ../../../projects/ecos/src/ecos/ssot/mof/m2/concurrency_control.yaml
   - ../../../../bin/mof-bootstrap.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0136: P5 phase — m3.yaml 扩展 4 gap 治本

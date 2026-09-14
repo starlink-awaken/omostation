@@ -3,6 +3,7 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+type: ssot
 ---
 
 # P87: 系统性优化复盘

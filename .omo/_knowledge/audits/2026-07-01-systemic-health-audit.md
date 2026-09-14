@@ -5,6 +5,8 @@ owner: governance-team
 last-reviewed: 2026-07-01
 audit-date: 2026-07-01
 audit-scope: A-H (8 dimensions)
+type: ephemeral
+status: archived
 ---
 
 # Workspace 系统性健康审计 (2026-07-01)

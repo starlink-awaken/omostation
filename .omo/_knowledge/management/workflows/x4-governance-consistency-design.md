@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: x4-governance-consistency-design.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # X4: 治理一致性 (Governance Consistency) — 5+3+1 第四横切面设计

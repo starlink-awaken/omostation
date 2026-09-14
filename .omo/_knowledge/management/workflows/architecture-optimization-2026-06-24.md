@@ -7,6 +7,7 @@ last-reviewed: 2026-06-24
 migrated_to: architecture-optimization-2026-06-24.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # 整体架构优化建议 — 2026-06-24

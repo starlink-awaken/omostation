@@ -8,6 +8,8 @@ last-reviewed: '2026-08-25'
 scenario_id: SC-TF-SURGICAL-NAV-001
 domain: work-transfer
 verdict: APPROVED
+type: ephemeral
+status: archived
 ---
 
 # 决策提案: 医工交叉智能显微手术导航系统科技成果转化收益分配方案审核

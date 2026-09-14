@@ -73,6 +73,8 @@ help:
 	@echo "  make omo-status             Multi-Agent Swarm 秒级全景 Rich Panel 快照"
 	@echo "  make omo-top                Multi-Agent Swarm 4 象限互动大盘"
 	@echo "  make swarm-activity         多 Agent 实时活动面板"
+	@echo "  make panorama-serve         织星全景驾驶舱 :43910 (前台)"
+	@echo "  make panorama-status        驾驶舱数据快照 (collect --json)"
 	@echo ""
 
 # ── 🌟 算力织网 (Compute Fabric / omlxc v3.4.0) ─────────────────────────────────
@@ -339,7 +341,7 @@ worktree-guard:  ## 检查 worktree 数量上限
 	bash bin/gac/gac-worktree-guard.sh --check
 
 worktree-prune:  ## 清理已合并/冗余 worktree
-	bash bin/gac/gac-worktree-prune.sh --apply
+	bash bin/gac/gac-branch-prune.sh
 
 escape-digest:  ## D4 逃逸台账只读聚类 (不改白名单, ADR-0422)
 	python3 bin/gac/escape-digest.py --dry-run
@@ -439,6 +441,12 @@ omo-top:  ## Multi-Agent Swarm 4 象限实时互动大盘 (Textual 1.x)
 
 swarm-activity:  ## 多 agent 实时活动面板
 	python3 bin/gac/swarm-activity-dashboard.py
+
+panorama-serve:  ## 织星全景驾驶舱 :43910 (前台, Ctrl-C 停)
+	python3 bin/panorama/panorama-serve.py
+
+panorama-status:  ## 驾驶舱数据快照
+	python3 bin/panorama/panorama-collect.py --json
 
 swarm-prune:  ## 清理僵尸 Agent 锁与临时状态
 	python3 bin/gac/swarm-prune-zombies.py --apply
@@ -592,6 +600,16 @@ cockpit-dashboard-stop:  ## 停止后台 cockpit Web 控制台
 cockpit-dashboard-status:  ## 查看 cockpit Web 控制台状态 (running / not running)
 	bash bin/runtime/start-cockpit-dashboard.sh status
 
+cockpit-install:  ## 安装 cockpit 软链接至 ~/.local/bin/cockpit (全局免路径调用)
+	@mkdir -p $(HOME)/.local/bin
+	@ln -sf $(CURDIR)/bin/cockpit $(HOME)/.local/bin/cockpit
+	@echo "✅ 已成功安装 cockpit 至 $(HOME)/.local/bin/cockpit"
+	@echo "   请确保 $(HOME)/.local/bin 在 PATH 中即可在任意终端直接执行 cockpit"
+
+cockpit-completions-install:  ## 生成当前 Shell 补全脚本
+	@./bin/cockpit completion zsh > $(HOME)/.cockpit-completion.zsh 2>/dev/null && \
+		echo "✅ 已生成 Zsh 补全脚本: $(HOME)/.cockpit-completion.zsh (可在 ~/.zshrc 中添加: source ~/.cockpit-completion.zsh)" || true
+
 doc-ssot-lint:
 	$(PY) bin/ssot/doc-ssot-lint.py --json
 
@@ -633,8 +651,11 @@ canvas-serve:  ## 启动 Dual-Plane Truth Canvas Web 事实大盘 (ADR-0194)
 
 OMO_RESIDENT := uv run --directory projects/omo python -m omo.cli resident
 
-resident-status:  ## resident 运行状态快照 (daemon/events/sediment/alert/ledger)
+resident-status:  ## resident 运行状态快照 (daemon/events/sediment/alert/ledger) — read-only
 	$(OMO_RESIDENT) status
+
+resident-recover:  ## ⚠️  WRITES — 显式 ops-only 恢复 (status 不会自动调用); stale lock + WAL checkpoint
+	uv run --directory projects/omo python -c "from omo.resident.ledger_check import recover_ledger_with_wal_checkpoint as r; import sys; from pathlib import Path; r_ = r(Path('runtime/omo/event-ledger.sqlite3')); print(r_); sys.exit(0 if r_.get('ok', True) else 1)"
 
 resident-roles:  ## resident 五类角色配置 (sediment/decision/execute/monitor/heartbeat)
 	$(OMO_RESIDENT) roles
@@ -881,12 +902,5 @@ ops-template-apply:  ## 应用模板创建服务
 # ── Git Hooks 安装 ──────────────────────────────────────────────────────────────
 
 install-hooks:  ## 安装 Git hooks (.githooks/ → .git/hooks/)
-	@mkdir -p .git/hooks
-	cp .githooks/pre-commit .git/hooks/pre-commit
-	cp .githooks/pre-push .git/hooks/pre-push
-	cp .githooks/commit-msg .git/hooks/commit-msg
-	cp .githooks/post-commit .git/hooks/post-commit
-	cp .githooks/prepare-commit-msg-commit-assist .git/hooks/prepare-commit-msg
-	cp .githooks/pre-edit-architecture.sh .git/hooks/pre-edit-architecture
-	chmod +x .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg .git/hooks/post-commit .git/hooks/prepare-commit-msg .git/hooks/pre-edit-architecture
-	@echo "✅ Git hooks installed (including pre-edit-architecture)"
+	@bash bin/gac/hook-installer.sh
+	@echo "✅ Git hooks installed via hook-installer"

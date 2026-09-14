@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ssot
 ---
 
 # ADR-0075: P81 watchdog 集成 + dashboard UI + z-score 洞察 + 跨子目录引用检查

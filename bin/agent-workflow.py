@@ -3,6 +3,217 @@
 
 from __future__ import annotations
 
+_CLAIMS_AUTHORITY_ID = "omo-claims-authority-r0"
+_CLAIMS_AUTHORITY_RESPONSE_SCHEMA = "claims-authority-response/v2"
+_CLAIMS_AUTHORITY_STATUS_SCHEMA = "claims-authority-status/v2"
+_CLAIMS_AUTHORITY_BROKER_REL = "projects/omo/src/omo/workflow/claims_authority.py"
+_CLAIMS_AUTHORITY_FROZEN_VERBS = frozenset(
+    {
+        "observe-claim",
+        "begin-claim-mutation",
+        "settle-claim-mutation",
+        "mark-claim-mutation-operator-required",
+        "resolve-claim-mutation-unknown",
+        "activate-shadow",
+        "issue-legacy-fence",
+        "enter-legacy-publishing",
+        "settle-legacy-publication",
+        "mark-legacy-operator-required",
+        "resolve-legacy-unknown",
+        "evaluate-graduation",
+        "status",
+    }
+)
+
+
+def _claims_authority_canonical_json(value: object) -> str:
+    import json
+
+    return json.dumps(
+        value,
+        ensure_ascii=True,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _claims_authority_emit(response: dict) -> None:
+    import sys
+
+    sys.stdout.write(_claims_authority_canonical_json(response) + "\n")
+
+
+def _claims_authority_error(code: str, *, sequence: int = 0) -> dict:
+    return {
+        "ok": False,
+        "schema": _CLAIMS_AUTHORITY_RESPONSE_SCHEMA,
+        "authority_id": _CLAIMS_AUTHORITY_ID,
+        "sequence": sequence,
+        "result": None,
+        "error": {"code": code},
+    }
+
+
+def _claims_authority_ok(result: dict, *, sequence: int = 0) -> dict:
+    return {
+        "ok": True,
+        "schema": _CLAIMS_AUTHORITY_RESPONSE_SCHEMA,
+        "authority_id": _CLAIMS_AUTHORITY_ID,
+        "sequence": sequence,
+        "result": result,
+        "error": None,
+    }
+
+
+def _claims_authority_integration_root():
+    """Production integration root is passwd-derived Workspace only."""
+    import os
+    import pwd
+    from pathlib import Path
+
+    account_home = Path(pwd.getpwuid(os.getuid()).pw_dir)
+    return account_home / "Workspace"
+
+
+def _claims_authority_broker_path(integration_root=None):
+    from pathlib import Path
+
+    root = Path(integration_root) if integration_root is not None else _claims_authority_integration_root()
+    return (root / _CLAIMS_AUTHORITY_BROKER_REL).resolve()
+
+
+def _claims_authority_load_broker(broker_path):
+    import importlib.util
+    import sys
+    from pathlib import Path
+
+    path = Path(broker_path)
+    if not path.is_file():
+        raise FileNotFoundError(str(path))
+    # Load from exact committed path; never from caller-supplied sys.path entries.
+    module_name = "_omo_claims_authority_broker_stdio"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load claims authority broker from {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _claims_authority_unactivated_status() -> dict:
+    return {
+        "schema": _CLAIMS_AUTHORITY_STATUS_SCHEMA,
+        "authority_id": _CLAIMS_AUTHORITY_ID,
+        "security_level": "R0_COOPERATIVE",
+        "activation_state": "unactivated",
+        "authority_epoch": 0,
+        "descriptor_digest": None,
+        "sequence": 0,
+        "last_receipt_digest": None,
+        "observed_at": None,
+        "fresh": False,
+        "effective_claim_authority": "v1",
+        "instruction_capable": False,
+        "code": "not_activated",
+    }
+
+
+def _claims_authority_parse_argv(argv: list[str]) -> tuple[str, object | None]:
+    import json
+    import sys
+
+    if argv == ["status", "--json"]:
+        return "status", None
+    if len(argv) == 3 and argv[1:] == ["--request-json", "-"]:
+        verb = argv[0]
+        if verb not in _CLAIMS_AUTHORITY_FROZEN_VERBS or verb == "status":
+            raise ValueError("REQUEST_SCHEMA_INVALID")
+        raw = sys.stdin.read().strip()
+        try:
+            decoded = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError("REQUEST_SCHEMA_INVALID") from exc
+        if not isinstance(decoded, dict) or _claims_authority_canonical_json(decoded) != raw:
+            raise ValueError("REQUEST_SCHEMA_INVALID")
+        return verb, decoded
+    raise ValueError("REQUEST_SCHEMA_INVALID")
+
+
+def _claims_authority_verify_descriptor_closure(integration_root, broker_path) -> str | None:
+    """Best-effort closure check before broker dispatch. Returns error code or None."""
+    import os
+    from pathlib import Path
+
+    root = Path(integration_root)
+    broker = Path(broker_path)
+    # Two independent path resolutions must agree; env/cwd must not redirect.
+    first = (root / _CLAIMS_AUTHORITY_BROKER_REL).resolve()
+    second = Path(os.path.join(str(root), *_CLAIMS_AUTHORITY_BROKER_REL.split("/"))).resolve()
+    if first != second or first != broker.resolve():
+        return "AUTHORITY_DESCRIPTOR_MISMATCH"
+    # Caller environment overrides are ignored for path selection (never consulted).
+    return None
+
+
+def _claims_authority_early_main(argv: list[str] | None = None) -> int:
+    """Stdio claims-authority entry before any repository import."""
+    import sys
+
+    args = list(sys.argv[2:] if argv is None else argv)
+    try:
+        verb, request = _claims_authority_parse_argv(args)
+    except ValueError:
+        _claims_authority_emit(_claims_authority_error("REQUEST_SCHEMA_INVALID"))
+        return 2
+
+    integration_root = _claims_authority_integration_root()
+    broker_path = _claims_authority_broker_path(integration_root)
+    mismatch = _claims_authority_verify_descriptor_closure(integration_root, broker_path)
+    if mismatch is not None:
+        _claims_authority_emit(_claims_authority_error(mismatch))
+        return 2
+
+    try:
+        broker = _claims_authority_load_broker(broker_path)
+    except (FileNotFoundError, ImportError, OSError, SyntaxError, TypeError, AttributeError):
+        # Lazy: missing Wave A child code is typed and non-blocking before activation.
+        if verb == "status":
+            status = _claims_authority_unactivated_status()
+            _claims_authority_emit(_claims_authority_ok(status, sequence=0))
+            return 0
+        _claims_authority_emit(_claims_authority_error("AUTHORITY_UNAVAILABLE"))
+        return 2
+
+    dispatch = getattr(broker, "dispatch_request", None)
+    if not callable(dispatch):
+        _claims_authority_emit(_claims_authority_error("AUTHORITY_UNAVAILABLE"))
+        return 2
+
+    try:
+        response = dispatch(verb, request)
+    except Exception as exc:  # noqa: BLE001 - map broker typed errors to envelope
+        code = getattr(exc, "code", None)
+        if not isinstance(code, str) or not code:
+            code = "AUTHORITY_UNAVAILABLE"
+        _claims_authority_emit(_claims_authority_error(code))
+        return 2
+
+    if not isinstance(response, dict) or response.get("schema") != _CLAIMS_AUTHORITY_RESPONSE_SCHEMA:
+        _claims_authority_emit(_claims_authority_error("AUTHORITY_UNAVAILABLE"))
+        return 2
+    _claims_authority_emit(response)
+    return 0 if response.get("ok") is True else 2
+
+
+# Claims-authority must run before sys.path mutation or omo/ecos imports.
+if __name__ == "__main__":
+    import sys as _sys_for_claims_authority
+
+    if len(_sys_for_claims_authority.argv) > 1 and _sys_for_claims_authority.argv[1] == "claims-authority":
+        raise SystemExit(_claims_authority_early_main(_sys_for_claims_authority.argv[2:]))
+
 import importlib.util
 import json
 import os
@@ -132,6 +343,64 @@ def _validate_packet_run(
         )
     except ledger_contract.SpecBindingContractError as exc:
         raise WorkflowError(str(exc)) from exc
+
+
+def _delivery_claims_root() -> Path:
+    """T10-139: 共享认领根锚点 (与 bet-ledger.py 同源逻辑).
+
+    `.omo/` gitignored → worktree 本地互相不可见 → 广播必须落共享物理位置.
+    git-common-dir 恒指向主仓 .git; 其父目录即主 checkout. 任何一侧解析
+    失败时回退各自 WS (宽容, 不因防御层故障阻断主流程).
+    """
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--git-common-dir"],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        common = Path(out)
+        if not common.is_absolute():
+            common = WORKSPACE / common
+        root = common.resolve().parent
+        # 主 checkout 判定: 恒存在 .git 目录 (worktree 的 .git 是文件不是目录)
+        if (root / ".git").is_dir():
+            return root
+        return WORKSPACE
+    except (OSError, subprocess.CalledProcessError):
+        return WORKSPACE
+
+
+def _claim_interlock_guard(bet_id: str, argv: list[str]) -> str | None:
+    """T10-139: 双认领拦截 — 他人持有 claim 广播时 fail closed.
+
+    返回 None = 放行; str = 拒绝原因. actor 解析: --actor → $USER →
+    governance-agent. 无广播 = 放行 (不强制先 claim, 兼容存量);
+    持有者本人放行; 损坏文件宽容放行 (写入侧 fail closed, 读取侧宽容).
+    """
+    actor = _claim_interlock_actor(argv)
+    claim_path = (
+        _delivery_claims_root() / ".omo/_delivery/bet-claims" / f"{bet_id}.json"
+    )
+    if not claim_path.is_file():
+        return None
+    try:
+        claim = json.loads(claim_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    holder = claim.get("actor")
+    if not holder or holder == actor:
+        return None
+    return (
+        f"BET_CLAIM_HELD: {bet_id} 已被 {holder} 认领 "
+        f"(claimed_at {claim.get('claimed_at', '?')}) — 同号竞速防护 (T10-139)"
+    )
+
+
+def _claim_interlock_actor(argv: list[str]) -> str:
+    """T10-139: start 拦截用的 actor 解析 (--actor → $USER → governance-agent)."""
+    return _flag(argv, "--actor") or os.environ.get("USER") or "governance-agent"
 
 
 def _clone_identity_for_preflight(workspace: Path) -> dict[str, str]:
@@ -762,6 +1031,19 @@ def wrapped_main(argv: list[str] | None = None) -> int:
             )
             return 1
         if bet_id:
+            # T10-139 双认领拦截: 他人持有 claim 广播 → 拒绝 start (fail closed)
+            try:
+                _guard_msg = _claim_interlock_guard(bet_id, argv)
+                if _guard_msg is not None:
+                    print(f"agent-workflow: {_guard_msg}", file=sys.stderr)
+                    print(
+                        "  协调: bet-ledger.py claim-bet <BET-ID> --force (显式接管) "
+                        "或等 claim-gc TTL (7d) 过期",
+                        file=sys.stderr,
+                    )
+                    return 1
+            except Exception as _gexc:  # noqa: BLE001 — guard 故障不应阻断 start
+                print(f"agent-workflow: [claim-guard] 跳过 ({_gexc})", file=sys.stderr)
             try:
                 prepared = _prepare_bet_execution(bet_id)
                 if not parent_run_id and "capability_requirements_digest" in prepared:

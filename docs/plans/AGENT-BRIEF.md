@@ -164,10 +164,12 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run-id> \
 
 **⚠️ 三个失败模式（2026-08-24 T10 验收会话，golden-rules: BASE-TREE-SNAPSHOT / SCHEMA-VALIDATOR-FIRST / TIME-FIRST-TRIAGE）**：
 
-1. **API 推送必须用完整 base_tree**——GitHub Git Data API 的 tree 是**完整快照不是 patch**。
-   `base_tree=None` + 只列变更 blobs = `.github/workflows/` 整个被删 → CI 0 runs
-   （PR #2126 曾因此 debug 一整轮）。**用 `bin/gac/gh-api-push.sh` 一键推送**
-   （内置 base_tree=父完整树 + 推后验证 workflows 存在），别手搓 gh api。
+1. **远程 publication 只走 managed `clone-lifecycle integrate`**——`bin/gac/gh-api-push.sh`、
+   `git-shim` / `swarm-git` 的一切 push / Git Data API 写路径均 fail-closed，返回
+   `PUBLICATION_OWNER_REQUIRED`。历史教训仍有效：Git Data API 的 tree 是**完整快照不是
+   patch**（`base_tree=None` + 只列变更 blobs 会删掉 `.github/workflows/`，PR #2126），
+   但正确修复不是再调 helper 直推，而是走 canonical integrate。**提案创建 ≠ 发布**；
+   未知结果只允许 query-only 核对，禁止 wrapper / API 旁路补写 ref/PR。
 2. **填 schema 数据先读 validator**——`bet-ledger complete` 的 completion_evidence
    有三类必踩坑：diff 用 `receipt://`|`repo://`（不能用 `git://`）；merged_reachable_commit
    用 `git://origin/main@<40hex>` 且先 `git merge-base --is-ancestor` 验证可达；

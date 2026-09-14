@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: phase17-planning-gate-architecture-debt-report.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 17 Planning Gate — 架构分析与债务治理综合报告

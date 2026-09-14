@@ -17,6 +17,10 @@ import json
 import sys
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from omlxc.dataplane.failover import HeartbeatSnapshot
 
 import pytest
 
@@ -52,13 +56,13 @@ def fo():
         yield mod, ctrl
 
 
-def _snap(connected: bool, ts: dt.datetime | None = None) -> "HeartbeatSnapshot":
+def _snap(connected: bool, ts: dt.datetime | None = None) -> HeartbeatSnapshot:
     mod = _load_failover()
     return mod.HeartbeatSnapshot(
         is_connected=connected,
         link_speed_gbps=120.0 if connected else 0.0,
         avg_latency_ms=1.5 if connected else 999.0,
-        timestamp_utc=(ts or dt.datetime.now(dt.timezone.utc)).isoformat(),
+        timestamp_utc=(ts or dt.datetime.now(dt.UTC)).isoformat(),
     )
 
 
@@ -111,7 +115,7 @@ def test_takeover_winner_takes_all_with_lease(fo):
     assert ctrl.request_takeover("req-2", actor="node-B") is False
     # Wait lease expire, then takeover granted
     ctrl.lease_duration_s = 0  # immediate expiry
-    ctrl._lease = dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=1)
+    ctrl._lease = dt.datetime.now(dt.UTC) - dt.timedelta(seconds=1)
     assert ctrl.request_takeover("req-3", actor="node-B") is True
 
 
@@ -127,7 +131,7 @@ def test_audit_log_atomic_append_and_size_rotation(fo):
         f.write('{"x":"' + "A" * 1_200_000 + '"}\n')
     # trigger another append to invoke rotation
     ctrl._append_audit(mod.FailoverEvent(
-        timestamp_utc=dt.datetime.now(dt.timezone.utc).isoformat(),
+        timestamp_utc=dt.datetime.now(dt.UTC).isoformat(),
         event_type="rotated", from_state="x", to_state="y", actor="test",
     ))
     # Verify at least one rotation file exists

@@ -1,0 +1,29 @@
+schema: journey-spec/v3
+journey_id: journey-document-review
+name: 公文审查旅程
+description: 公文起草 → 格式检查 → 敏感项核查 → 依据验证
+
+initial_state: detected
+
+states:
+  - {name: detected, type: initial}
+  - {name: load_document, type: task, action: load_document}
+  - {name: format_check, type: task, action: check_format, timeout: 30s}
+  - {name: sensitivity_check, type: task, action: check_sensitivity, timeout: 30s}
+  - {name: basis_verification, type: task, action: verify_basis, timeout: 60s}
+  - {name: decision_generation, type: task, action: generate_decision, timeout: 30s}
+  - {name: review_gate, type: human_gate, requires_human: true, approval_timeout: 86400s}
+  - {name: recorded, type: task, action: record_decision}
+  - {name: completed, type: final}
+  - {name: escalated, type: final}
+
+transitions:
+  - {from: detected, to: load_document}
+  - {from: load_document, to: format_check}
+  - {from: format_check, to: sensitivity_check}
+  - {from: sensitivity_check, to: basis_verification}
+  - {from: basis_verification, to: decision_generation}
+  - {from: decision_generation, to: review_gate}
+  - {from: review_gate, to: recorded, condition: "confidence >= 0.7"}
+  - {from: review_gate, to: escalated, condition: "confidence < 0.5"}
+  - {from: recorded, to: completed}

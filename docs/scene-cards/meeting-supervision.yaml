@@ -1,5 +1,7 @@
 ---
 last-reviewed: 2026-08-26
+bet: BET-Y1Q4-T8-04
+falsifier: 若 30 天内无 meeting 类任务触发，则场景无实际价值
 ---
 
 schema: scene-card/v1

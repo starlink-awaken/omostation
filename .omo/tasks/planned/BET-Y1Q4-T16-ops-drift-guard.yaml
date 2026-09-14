@@ -1,0 +1,66 @@
+id: BET-Y1Q4-T16
+track: T16-DRIFT-GUARD
+window: Y1Q4
+title: ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校验
+priority: P2
+status: candidate
+goal: |
+  BET-Y1Q4-T14 (批次 18) 一次性清理了 303 missing, 但漂移机制仍在:
+  注册项与实际 anchor (crontab/plist/日志) 脱节没有任何常态检测,
+  必然再次积累。建双闸:
+
+  1. `ops check-signals` — 本地常态 drift 检测: enabled 条目的
+     cron->crontab / launchd->plist / file signal->路径 存在性逐一核验,
+     类 gen-service-configs --check 的失败模式 (PR#77/批次18 根因).
+  2. cron 准入校验 — gen-service-configs --validate (CI) 增加 cron 规则:
+     enabled cron 条目必须带可匹配 token (id 尾段出现于 entrypoint,
+     或显式 crontab_token 字段), 拒绝 `projects/omo` 类占位 entrypoint
+     再进注册表 (批次 18 抓到的 30 条误判根因).
+
+non_goals:
+- 不重写 ops 工具
+- 不做 268 条 manual 能力项迁出 (另立 BET, 需消费方调查)
+- 不阻断 CI 于本机状态 (准入校验只验注册自洽, 不验 crontab)
+deliverables:
+- bin/ops/cli.py 新增 check-signals 子命令 (人类可读 + --json, exit 0/1)
+- bin/mof/gen-service-configs.py validate_service_declaration 增加 cron 规则
+- 两个工具的测试 (含批次 18 误判回归用例：omo vs oostation 词边界,
+  占位 entrypoint 拒绝)
+- 每日 drift 巡检注册项 (registry entry + crontab 行, 批次 17 先例)
+acceptance: |
+  check-signals 对当前 main services.yaml (T14 清理后) 输出 0 drift;
+  --validate 对当前注册表 0 violations (存量条目 grandfather:
+  只拦新增/再激活, 已 disabled 占位条目不动);
+  测试覆盖两类批次 18 误判回归。
+appetite: 1 day
+depends_on: [BET-Y1Q4-T14]
+risk:
+- 低. 纯新增检测面, 不改调度行为
+- 每日巡检若误报会刷日志：接受 (exit 1 不告警, 只落报告)
+task_type: bet
+owner: human
+source: manual
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- .omo/_truth/registry/services.yaml
+- bin/ops/cli.py
+- bin/mof/gen-service-configs.py
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- gate/service-registry
+evidence_required:
+- check-signals drift=0 (cron/plist/file anchor 核验)
+- gen-service-configs --validate 新增 cron 准入 0 violations
+test_plan:
+- 1. 实现 check-signals 子命令
+- 2. 实现 validate_service_declaration cron 准入
+- 3. 验证当前 main 注册表 0 drift, 0 violations
+- 4. 回归测试: 批次 18 误判案例 (omo vs oostation 词边界, 占位 entrypoint)

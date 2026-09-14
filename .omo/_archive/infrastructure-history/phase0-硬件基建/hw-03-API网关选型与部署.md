@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 03 — API 网关选型与部署
 
 > 核心问题：用 One-API / LiteLLM / 9Router 还是别的？放哪台机器？

@@ -9,6 +9,7 @@ related:
   - 0218-agent-isolation-p0-verify-and-hygiene.md
   - ../patterns/p73-truth-driven-engineering-pattern.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0227: 治理架构理想态 — 4 原则 (分层/单源/自审/闭环)

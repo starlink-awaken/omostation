@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/ops/continual-harness-refine.py
+name: Continual Harness Refine
+category: ops
+owner: governance-team
+description: "T7-07 轨迹审阅与技能萃取管道. 零模型调用, 确定性逻辑 (sha256 + file IO)."
+inputs:
+  - name: "task_id / auto / rollback / dry_run"
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/_registry/scripts/governance/bionic_memory_consolidation.yaml
+triggers:
+  - "manual: 长程任务结案后"
+related: []
+maturity: draft
+last_reviewed: "2026-09-13"

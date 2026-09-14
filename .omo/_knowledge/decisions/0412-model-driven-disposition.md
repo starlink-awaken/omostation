@@ -9,6 +9,7 @@ last-reviewed: 2026-08-16
 related:
   - ./0399-blueprint-consolidation.md
   - ../../../docs/plans/3y-bet-ledger.yaml#BET-Y1Q2-T1-02
+type: ssot
 ---
 
 # ADR-0412: model-driven (M0) 定位判定 — 接入主链 (保留独立子仓)

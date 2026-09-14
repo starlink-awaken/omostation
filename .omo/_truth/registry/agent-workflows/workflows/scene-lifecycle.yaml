@@ -1,0 +1,31 @@
+id: scene-lifecycle
+run_frequency: on_demand
+title: Scene v3 lifecycle transition (promote/demote/calibrate)
+purpose: >
+  场景卡 v3 生命周期状态转换 — 复用 OMO 任务门禁 + Workflow Mesh。
+  支持 promote（升级）、demote（降级）、calibrate（校准）三种操作。
+agents:
+  roles: [governance-agent]
+  observer_policy: optional
+allowed_lanes: [governance_state, docs, config]
+lock_scopes: ["scene:{scene_id}"]
+surfaces:
+  read:
+    - .omo/standards/scene-card-lifecycle.yaml
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+    - bin/ssot/scene-card-lifecycle.py
+    - bin/ssot/journey-engine.py
+    - bin/ssot/calibration-engine.py
+  write:
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+phases:
+  preflight:
+    - {id: validate_schema, mode: required, command: [python3, bin/ssot/journey-engine.py, validate, "<journey_id>"]}
+    - {id: check_readiness, mode: required, command: [python3, bin/ssot/scene-card-lifecycle.py, check, --scene-card, ".omo/_truth/scenarios/v3/{scene_id}.yaml"]}
+  execute:
+    - {id: transition, mode: manual, command: [python3, bin/ssot/scene-card-lifecycle.py, transition, --scene-card, ".omo/_truth/scenarios/v3/{scene_id}.yaml", --tier, "<target_level>", --actor, "<actor>"]}
+  verification:
+    - {id: verify, mode: required, command: [python3, bin/ssot/scene-card-lifecycle.py, check, --scene-card, ".omo/_truth/scenarios/v3/{scene_id}.yaml"]}
+  closeout:
+    - {id: record, mode: required, command: [python3, bin/ssot/scene-outcome-recorder.py, record-lifecycle, --scene-id, "{scene_id}", --from, "<from_level>", --to, "<to_level>"]}
+evidence_required: [transition_evidence, sample_refs, calibration_score]

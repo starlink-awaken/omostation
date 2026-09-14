@@ -10,6 +10,7 @@ related:
   - 0228-m1-acceptance-physical-deferred-reorder.md
   - STRAT-P81-strategic-roadmap.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0232: G-DEL.2b 官方达标宣布（3 角色协作完成率 100%）+ Batch 2 批准

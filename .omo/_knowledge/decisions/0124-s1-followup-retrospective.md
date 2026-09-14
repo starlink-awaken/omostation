@@ -10,6 +10,7 @@ related:
   - ../patterns/p72-follow-up-completion-pattern.md
   - ../audits/2026-07-02-system-comprehensive-audit.md
   - 0121-governance-convergence-initiative.md
+type: ssot
 ---
 
 # ADR-0124: S1 阶段完结复盘 — 5 PR + 1 修 + 1 cleanup (6 commit, 1 工作日)

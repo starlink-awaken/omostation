@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import uuid
 from pathlib import Path
 from typing import Any
@@ -3163,3 +3164,139 @@ def test_compliance_auto_fix_orphan_lock() -> None:
     result = _run_root_workflow_strict("compliance")
     assert "orphan_lock" not in result.stdout
     assert "orphan_lock" not in result.stderr
+
+
+# ---------------------------------------------------------------------------
+# Claims Authority Bridge WP1 Wave B1 — root stdio adapter
+# ---------------------------------------------------------------------------
+
+
+def _b1_canonical(value: object) -> str:
+    return json.dumps(value, ensure_ascii=True, allow_nan=False, sort_keys=True, separators=(",", ":"))
+
+
+def _b1_run_claims_authority(args: list[str], *, input_text: str | None = None, env: dict[str, str] | None = None):
+    command = [sys.executable, str(WORKFLOW_MODULE_PATH), "claims-authority", *args]
+    return subprocess.run(
+        command,
+        input=input_text,
+        text=True,
+        capture_output=True,
+        check=False,
+        cwd=str(ROOT),
+        env=env,
+    )
+
+
+def test_b1_missing_broker_status_is_unactivated_shadow() -> None:
+    result = _b1_run_claims_authority(["status", "--json"])
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout.strip())
+    assert payload["ok"] is True
+    assert payload["schema"] == "claims-authority-response/v2"
+    assert payload["authority_id"] == "omo-claims-authority-r0"
+    assert payload["result"]["activation_state"] == "unactivated"
+    assert payload["result"]["code"] == "not_activated"
+    assert payload["result"]["instruction_capable"] is False
+    assert payload["result"]["effective_claim_authority"] == "v1"
+
+
+def test_b1_missing_broker_mutation_is_typed_unavailable() -> None:
+    body = {
+        "authority_id": "omo-claims-authority-r0",
+        "operation": "observe-claim",
+        "request_id": "00000000-0000-4000-8000-000000000099",
+        "schema": "claim-mutation-envelope/v2",
+    }
+    raw = _b1_canonical(body)
+    result = _b1_run_claims_authority(["observe-claim", "--request-json", "-"], input_text=raw)
+    assert result.returncode == 2
+    payload = json.loads(result.stdout.strip())
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "AUTHORITY_UNAVAILABLE"
+    assert payload["result"] is None
+
+
+def test_b1_noncanonical_request_json_is_rejected() -> None:
+    # schema before request_id is not canonical key order.
+    raw = '{"schema":"claim-mutation-envelope/v2","request_id":"00000000-0000-4000-8000-000000000001"}'
+    assert raw != _b1_canonical(json.loads(raw))
+    result = _b1_run_claims_authority(["observe-claim", "--request-json", "-"], input_text=raw)
+    assert result.returncode == 2
+    payload = json.loads(result.stdout.strip())
+    assert payload["error"]["code"] == "REQUEST_SCHEMA_INVALID"
+
+
+def test_b1_descriptor_bound_broker_dispatch(tmp_path: Path, monkeypatch) -> None:
+    home = tmp_path / "home"
+    workspace = home / "Workspace"
+    broker = workspace / "projects/omo/src/omo/workflow/claims_authority.py"
+    broker.parent.mkdir(parents=True)
+    broker.write_text(
+        "def dispatch_request(verb, request):\n"
+        "    assert verb == 'status'\n"
+        "    assert request is None\n"
+        "    return {\n"
+        "        'ok': True,\n"
+        "        'schema': 'claims-authority-response/v2',\n"
+        "        'authority_id': 'omo-claims-authority-r0',\n"
+        "        'sequence': 7,\n"
+        "        'result': {\n"
+        "            'schema': 'claims-authority-status/v2',\n"
+        "            'authority_id': 'omo-claims-authority-r0',\n"
+        "            'activation_state': 'shadow-active',\n"
+        "            'instruction_capable': False,\n"
+        "            'sequence': 7,\n"
+        "            'code': 'shadow_active',\n"
+        "        },\n"
+        "        'error': None,\n"
+        "    }\n",
+        encoding="utf-8",
+    )
+
+    class _Pw:
+        pw_dir = str(home)
+
+    import pwd
+
+    monkeypatch.setattr(pwd, "getpwuid", lambda _uid: _Pw())
+    # Import early-main from source without executing normal omo imports via __main__ gate.
+    module = _load_root_workflow_wrapper()
+    monkeypatch.setattr(module, "_claims_authority_integration_root", lambda: workspace)
+    rc = module._claims_authority_early_main(["status", "--json"])
+    assert rc == 0
+
+
+def test_b1_env_cannot_redirect_broker_to_attacker_store(tmp_path: Path, monkeypatch) -> None:
+    home = tmp_path / "home"
+    workspace = home / "Workspace"
+    workspace.mkdir(parents=True)
+    attacker = tmp_path / "attacker" / "store.sqlite3"
+    attacker.parent.mkdir(parents=True)
+    attacker.write_text("x", encoding="utf-8")
+    module = _load_root_workflow_wrapper()
+    monkeypatch.setattr(module, "_claims_authority_integration_root", lambda: workspace)
+    monkeypatch.setenv("OMO_CLAIMS_AUTHORITY_STORE", str(attacker))
+    # Broker missing => lazy status still ok; store override must not become authority path.
+    rc = module._claims_authority_early_main(["status", "--json"])
+    assert rc == 0
+
+
+def test_b1_frozen_verbs_are_recognized() -> None:
+    module = _load_root_workflow_wrapper()
+    expected = {
+        "observe-claim",
+        "begin-claim-mutation",
+        "settle-claim-mutation",
+        "mark-claim-mutation-operator-required",
+        "resolve-claim-mutation-unknown",
+        "activate-shadow",
+        "issue-legacy-fence",
+        "enter-legacy-publishing",
+        "settle-legacy-publication",
+        "mark-legacy-operator-required",
+        "resolve-legacy-unknown",
+        "evaluate-graduation",
+        "status",
+    }
+    assert module._CLAIMS_AUTHORITY_FROZEN_VERBS == expected

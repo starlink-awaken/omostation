@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # MECH-02: 治理计划系统
 
 > **来源**: `.omo/GOVERNANCE_PLAN.md`

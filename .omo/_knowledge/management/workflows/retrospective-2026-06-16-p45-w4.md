@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-16-p45-w4.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P45 W4 复盘: kairon 调试面板 (INTERFACE.yaml) + simplify 4 + cockpit 端点 P46 升级

@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # omo Submodule 拆分验证模板 (7-step Checklist)

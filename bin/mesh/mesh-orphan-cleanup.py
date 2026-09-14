@@ -11,8 +11,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
+
+TIMEOUT = 30  # seconds per subprocess call
+RETRY = 3    # max retries on transient failure
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "projects" / "omo" / "src"))

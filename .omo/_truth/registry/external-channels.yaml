@@ -1,24 +1,24 @@
 # External Channels Inventory SSOT (ECCP P0)
 # 自动生成, 请勿手动编辑
 # 生成器: bin/ssot/gen-external-channels-inventory.py
-# 生成时间: 2026-08-04T10:02:38Z
+# 生成时间: 2026-09-09T01:27:10Z
 # 对标: Backstage software catalog (集中 inventory)
 
 version: '1.0'
-generated_at: '2026-08-04T10:02:38Z'
+generated_at: '2026-09-09T01:27:10Z'
 generator: bin/ssot/gen-external-channels-inventory.py
 policy_digest: external-connection-fabric/v1
 totals:
-  channels: 27
-  exposed: 21
+  channels: 26
+  exposed: 20
   orphan: 5
   proposal: 1
 health_summary:
-  available: 10
+  available: 9
   unavailable: 11
   error: 0
   pending: 6
-  available_rate: 37.0
+  available_rate: 34.6
 
 channels:
   - id: iris:apple_mail
@@ -125,14 +125,6 @@ channels:
     health: unavailable
     status: exposed
 
-  - id: iris:rss
-    kind: knowledge_source
-    provider: kairon.iris
-    connector: iris.connectors.rss:RssConnector
-    entry_point: external.resources
-    health: unavailable
-    status: exposed
-
   - id: iris:seeyon_oa
     kind: knowledge_source
     provider: kairon.iris
@@ -170,7 +162,7 @@ channels:
     provider: kairon.iris
     connector: iris.connectors.wpsnote:WPSNoteConnector
     entry_point: external.resources
-    health: available
+    health: unavailable
     status: exposed
 
   - id: iris:wxread

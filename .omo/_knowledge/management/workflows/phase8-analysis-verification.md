@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: phase8-analysis-verification.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 8 分析与验证报告

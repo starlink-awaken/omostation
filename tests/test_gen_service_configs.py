@@ -120,3 +120,101 @@ def test_observer_unavailable_does_not_mask_malformed_declarations(
     assert report["ok"] is False
     assert report["reason"] == "launchd_observer_unavailable"
     assert any("requires label" in e for e in report["validation_errors"])
+
+
+# ── BET-Y1Q4-T16: cron 准入 ──
+
+
+def test_cron_enabled_placeholder_entrypoint_rejected() -> None:
+    """批次 18 回归: `projects/omo` 占位 entrypoint 且无 crontab_token 必须被拒。"""
+    module = _module()
+
+    violations = module.validate_service_declaration(
+        {
+            "id": "cron.new_thing",
+            "enabled": True,
+            "scheduler": "cron",
+            "program": {"interpreter": "uv", "entrypoint": "projects/omo"},
+        }
+    )
+
+    assert len(violations) == 1
+    assert "cron 准入失败" in violations[0]
+
+
+def test_cron_enabled_omostation_word_boundary_not_matched_by_omo() -> None:
+    """批次 18 回归: entrypoint basename `omostation-xxx` 不得被 id 尾段 `omo` 子串误命中。"""
+    module = _module()
+
+    violations = module.validate_service_declaration(
+        {
+            "id": "cron.omo",
+            "enabled": True,
+            "scheduler": "cron",
+            "program": {"interpreter": "bash", "entrypoint": "bin/omostation-helper.sh"},
+        }
+    )
+
+    assert len(violations) == 1
+    assert "cron 准入失败" in violations[0]
+
+
+def test_cron_enabled_explicit_crontab_token_passes() -> None:
+    """显式 crontab_token 即放行 (现实性由 ops check-signals 对本机 crontab 核验)。"""
+    module = _module()
+
+    violations = module.validate_service_declaration(
+        {
+            "id": "cron.ssot_guardian",
+            "enabled": True,
+            "scheduler": "cron",
+            "program": {"interpreter": "uv", "entrypoint": "projects/omo"},
+            "crontab_token": "ssot-guardian",
+        }
+    )
+
+    assert violations == []
+
+
+def test_cron_enabled_entrypoint_basename_tail_match_passes() -> None:
+    """entrypoint basename 词边界命中 id 尾段 (含下划线->连字符变体) 即放行。"""
+    module = _module()
+
+    assert (
+        module.validate_service_declaration(
+            {
+                "id": "cron.log_rotate",
+                "enabled": True,
+                "scheduler": "cron",
+                "program": {"interpreter": "python3", "entrypoint": "bin/ssot/log-rotate.py"},
+            }
+        )
+        == []
+    )
+
+
+def test_cron_disabled_placeholder_grandfathered() -> None:
+    """存量 disabled 占位条目不报错 (只拦新增/再激活)。"""
+    module = _module()
+
+    violations = module.validate_service_declaration(
+        {
+            "id": "cron.debt_refresh",
+            "enabled": False,
+            "scheduler": "cron",
+            "program": {"interpreter": "uv", "entrypoint": "projects/omo"},
+        }
+    )
+
+    assert violations == []
+
+
+def test_cron_enabled_missing_entrypoint_rejected() -> None:
+    module = _module()
+
+    violations = module.validate_service_declaration(
+        {"id": "cron.bare", "enabled": True, "scheduler": "cron"}
+    )
+
+    assert len(violations) == 1
+    assert "requires program.entrypoint" in violations[0]

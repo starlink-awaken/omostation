@@ -6,6 +6,7 @@ last-reviewed: 2026-06-23
 archived-since: 2026-06-23
 superseded-by: architecture-remediation-plan-v2.md
 note: "P53 R2: 历史整改 v1, 已被 v2 替代。当前架构健康/债务以 .omo/state/system.yaml + .omo/debt/ 为准"
+type: ssot
 ---
 
 # omostation 架构审计整改方案 v1

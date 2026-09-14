@@ -7,6 +7,7 @@ expires_at: 2026-09-03T07:34:24Z
 owner: human
 lifecycle: history
 last-reviewed: 2026-09-02
+type: ssot
 ---
 
 # Family dashboard Phase B Documents write canary approval

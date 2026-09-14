@@ -1,0 +1,21 @@
+schema: script-registry/v1
+id: bin/gac/check-branch-naming.py
+name: Check Branch Naming
+category: governance
+owner: governance-team
+description: "分支命名门禁 — 校验分支名符合 branch-prefix-policy.yaml naming SSOT (blocking hook-runner 检查)"
+inputs:
+  - --branch
+  - --policy
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - pre-commit
+  - pre-push
+  - pre-rebase
+related:
+  - .omo/_truth/registry/branch-prefix-policy.yaml
+maturity: draft
+last_reviewed: "2026-09-06"

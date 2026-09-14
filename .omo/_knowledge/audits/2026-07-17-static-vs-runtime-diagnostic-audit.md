@@ -2,6 +2,8 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+type: ephemeral
+status: archived
 ---
 
 # 2026-07-17 静态 vs 运行时方法论审计 — 9 轮诊断翻案链

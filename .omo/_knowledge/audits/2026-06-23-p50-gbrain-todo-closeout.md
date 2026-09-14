@@ -5,6 +5,8 @@ owner: governance-team
 last-reviewed: 2026-06-23
 archived-since: 2026-06-23
 note: "P56 R2: 历史审计快照批量归档, 当前 governance 100 A+ 持续"
+type: ephemeral
+status: archived
 ---
 # P50 收口报告 — gbrain 53 TODOs 4 类决策 + mof-drift v4 智能分类
 

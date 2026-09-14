@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0086: P92 ADR 趋势洞察 + install-dashboard-cron 推入 scripts/ 子模块

@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/scene-metasos-gate.py
+name: scene metasos gate
+category: governance
+owner: governance-team
+description: Scene system scene-metasos-gate
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: active
+last_reviewed: "2026-09-07"

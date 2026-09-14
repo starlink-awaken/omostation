@@ -1,0 +1,30 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV37-eclipse-clock-skew
+category: B_failure_injection
+adversarial: true
+seed: 137
+description: >
+  [对抗·red-team wave7] 时钟偏移日食: 节点用虚假更早时间戳宣称已提交,
+  管线尚无 clock_skew_eclipse_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: commit_log, value: "ts=1000", writers: [node_a]}
+  roles: [node_a, node_b]
+inject:
+  - {type: write_conflict, role: node_b, target: commit_log, value: "ts=1"}
+  - {type: role_timeout, role: node_a}
+expected:
+  behavior: clock_skew_eclipse_detected
+  silent_loss: 0
+verdict:
+  - criterion: clock_skew_eclipse_detected
+    check: events_contain
+    args: {kind: clock_skew_eclipse_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

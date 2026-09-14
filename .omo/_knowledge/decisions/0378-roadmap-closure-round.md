@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-05
+type: ssot
 ---
 
 # 0378 — Roadmap Closure Round (R-archive)

@@ -8,6 +8,7 @@ related:
   - 0247-strategic-pivot-collab-first-physical-deferred.md
   - 0291-p86-abcd-final-closeout.md
   - 0292-check-work-landed-sha-fix.md
+type: ssot
 ---
 
 # ADR-0293: Phase 45 — Governance Observability Layer

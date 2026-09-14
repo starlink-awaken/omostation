@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ssot
 ---
 
 # ADR-0051: gbrain TODOs v5 终极收敛 — unknown 19→0 (P52)

@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV157-open-redirect
+category: A_conflict
+adversarial: true
+seed: 257
+description: >
+  [对抗·red-team wave28] 开放重定向: next= 参数跳转钓鱼域窃取凭证,
+  管线已有 open_redirect_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: login_next, value: "/home", writers: [app]}
+  roles: [attacker, app, victim]
+inject:
+  - {type: write_conflict, role: attacker, target: login_next, value: "https://evil.phish/steal"}
+  - {type: write_conflict, role: app, target: redirect, value: "302_to_evil"}
+  - {type: write_conflict, role: victim, target: credentials, value: "posted_to_phish"}
+  - {type: write_conflict, role: attacker, target: loot, value: "creds_captured"}
+expected:
+  behavior: open_redirect_detected
+  silent_loss: 0
+verdict:
+  - criterion: open_redirect_detected
+    check: events_contain
+    args: {kind: open_redirect_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

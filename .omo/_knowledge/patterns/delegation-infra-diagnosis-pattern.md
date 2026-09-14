@@ -7,6 +7,7 @@ related:
   - ../../../docs/operations/delegation-infra-config.md
   - p71-baseline-recovery-pattern.md
   - p78-triple-axis-diagnostic-pattern.md
+type: ssot
 ---
 
 # Delegation Infra Diagnosis Pattern — 子代理委托基础设施四层故障诊断 Runbook

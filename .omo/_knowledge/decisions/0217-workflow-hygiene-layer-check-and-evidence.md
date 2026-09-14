@@ -8,6 +8,7 @@ related:
   - 0203-requirement-iteration-workflow-mandatory.md
   - 0216-compass-feedback-partial-smoke.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0217 — Workflow 卫生：layer-check 误报修复 + 契约对齐 + evidence 愈合

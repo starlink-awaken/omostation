@@ -2,7 +2,10 @@
 name: agent-onboarding
 description: "Onboard a new AI agent into the omostation workspace. Covers agent profile registration, MCP connection setup, BOS URI discovery, cockpit CLI orientation, and first workflow lifecycle run. Use when adding a new agent (Claude Code, Codex, Cursor, custom) or re-onboarding after a major architecture change."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # Agent Onboarding - New Agent Integration Workflow
 

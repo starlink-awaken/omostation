@@ -20,8 +20,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# bin/ 只含 .py/.sh 两种扩展名
-BIN_PATTERNS = ("bin/*.py", "bin/*.sh")
+# bin/ 只含 .py/.sh 两种扩展名.
+# "*": 顶层; "**": 子目录显式覆盖 — 不依赖 git pathspec wildmatch
+# 中 "*" 是否跨 "/" 的版本差异行为, 子目录覆盖写死在口径里.
+BIN_PATTERNS = ("bin/*.py", "bin/*.sh", "bin/**/*.py", "bin/**/*.sh")
 
 
 def _git_diff(base: str, diff_filter: str, repo_root: Path) -> list[str]:

@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-28
+type: ephemeral
+status: archived
 ---
 
 # Omostation 债务真实性审计报告

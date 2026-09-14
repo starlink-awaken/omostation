@@ -12,6 +12,7 @@ related:
   - ../../../../bin/mof-bootstrap.py
   - ../../../../bin/m4-health-score.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0141: M2BaseSchema 抽象基类 + check_5 (Round 3a)

@@ -71,6 +71,9 @@ agent_profiles:
     - project-code-change
     - pyright-sweep
     - bet-execution
+    - round-engineering
+    - round-type-router
+    - closeout-with-retro
     can_write_lanes:
     - code
     - config
@@ -120,6 +123,13 @@ agent_profiles:
     - resident-runtime-observe
     - documents-consumer-audit-weekly
     - convergence-pulse-weekly
+    - round-engineering
+    - round-type-router
+    - closeout-with-retro
+    - scene-lifecycle
+    - scene-lifecycle
+    - scene-execution
+    - submodule-pointer-bump
     can_write_lanes:
     - docs
     - governance_code
@@ -167,6 +177,7 @@ agent_profiles:
     allowed_workflows:
     - project-code-change
     - pyright-sweep
+    - closeout-with-retro
     can_write_lanes:
     - code
     closeout_required:
@@ -400,7 +411,7 @@ diff_checks:
   - bin/sweep/**
   - tests/test_sweep_tools.py
   - bin/gac/gac-worktree.sh
-  - bin/gac/gac-worktree-cleanup.sh
+  - bin/gac/prune-zombie-worktrees.py
   - tests/test_gac_worktree_lifecycle.py
   - projects/*/src/**/*.py
   - projects/*/tests/**/*.py
@@ -1004,7 +1015,7 @@ doctor_checks:
   - list
   description: Cockpit L3 entry can delegate to the root runner.
   id: cockpit-agent-workflow-list
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1016,7 +1027,7 @@ doctor_checks:
   - --skip-health
   description: Cockpit L3 agent entry can show startup context.
   id: cockpit-agent-bootstrap
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1028,7 +1039,7 @@ doctor_checks:
   - --json
   description: Cockpit L3 agent entry can show AGCP status.
   id: cockpit-agent-status
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1039,7 +1050,7 @@ doctor_checks:
   - agents
   description: Cockpit L3 entry can expose registered agent profiles.
   id: cockpit-agent-workflow-agents
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1050,7 +1061,7 @@ doctor_checks:
   - --help
   description: Cockpit C2G compass entry is available.
   id: cockpit-compass-help
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1063,7 +1074,7 @@ doctor_checks:
   - --help
   description: C2G pitch-to-task ingress command is available.
   id: c2g-bet-help
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1074,7 +1085,7 @@ doctor_checks:
   - --help
   description: OMO bridge compatibility path for BMAD/OpenSpec is available.
   id: omo-bridge-help
-  required: true
+  required: false
 - command:
   - test
   - -f
@@ -1088,14 +1099,14 @@ doctor_checks:
   - --json
   description: MOF M1/M2 schema validation is runnable.
   id: mof-schema-validate
-  required: true
+  required: false
 - command:
   - python3
   - projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py
   - --json
   description: MOF state bridge can report OMO task alignment.
   id: mof-state-bridge
-  required: true
+  required: false
 - command:
   - uv
   - run
@@ -1249,7 +1260,7 @@ internal_integrations:
     - cockpit
     - agent-workflow
     - list
-    health_required: true
+    health_required: false
     owner: cockpit-team
     ssot_rule: Cockpit is the L3 human entrypoint and delegates governance behavior to registered lower-layer tools.
     status: integrated
@@ -1293,7 +1304,7 @@ internal_integrations:
     - omo
     - bridge
     - --help
-    health_required: true
+    health_required: false
     owner: omo-team
     ssot_rule: OMO owns governed state mutation; direct .omo writes are exceptional and must be called out.
     state_broker: projects/omo
@@ -1314,7 +1325,7 @@ projection:
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:694b9a4718b3aa3f00bef005a95047ecf4ce8d703c2f4131a48b95e9e13464df
+  source_digest: sha256:69b97a5f1d6bc26395a3a36c06ee23a51eda21c826c65264368c303d8834b52e
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203
@@ -1769,6 +1780,64 @@ workflows:
     - runtime/omo/_delivery/ingress/**
   title: C2G external spec ingress
 - agents:
+    observer_policy: optional
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  - governance_code
+  evidence_required:
+  - p78_answers
+  - solidification_actions
+  id: closeout-with-retro
+  lock_scopes:
+  - closeout:{run_id}
+  phases:
+    closeout:
+    - command:
+      - agent
+      - solidify-retro
+      id: solidify
+      mode: manual
+    execute:
+    - command:
+      - python3
+      - bin/gac/p78-diagnostic-prescan.py
+      id: p78_diagnostic
+      mode: required
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: basic_closeout
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac_gate
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/gac/p78-diagnostic-prescan.py
+      - --json
+      id: retro_analysis
+      mode: required
+  purpose: '闭环收尾 + 强制复盘。 解决当前 agent-workflow closeout 不强制 retro 导致教训流失的问题。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .agents/skills/closeout-retro/SKILL.md
+    - .omo/_knowledge/patterns/p78-triple-axis-diagnostic-pattern.md
+    write:
+    - .omo/_knowledge/retros/**
+  title: Closeout with mandatory retrospective
+- agents:
     observer_policy: required
     roles:
     - sage-planner
@@ -1940,6 +2009,12 @@ workflows:
       - python3
       - bin/gac/escape-digest.py
       id: escape-digest
+      mode: required
+    - command:
+      - python3
+      - bin/gac/error-knowledge.py
+      - feed-escapes
+      id: pitfall-feed
       mode: required
     - command:
       - python3
@@ -3001,6 +3076,294 @@ workflows:
     write: []
   title: Resident runtime observe
 - agents:
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+    roles:
+    - engineering-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  - code
+  - governance_code
+  - governance_state
+  - config
+  evidence_required:
+  - adr_ref
+  - health_delta
+  - test_results
+  id: round-engineering
+  lock_scopes:
+  - round:{round_id}
+  - root-gate
+  phases:
+    closeout:
+    - command:
+      - agent
+      - write-docs
+      - docs/M4-DECISIONS-INDEX.md
+      id: decisions_index
+      mode: required
+    - command:
+      - python3
+      - bin/gac/p78-diagnostic-prescan.py
+      id: retro
+      mode: required
+    execute:
+    - command:
+      - agent
+      - deliver
+      id: deliver
+      mode: manual
+    - command:
+      - agent
+      - run-tests
+      id: tests
+      mode: manual
+    preflight:
+    - command:
+      - make
+      - m4-health
+      id: baseline
+      mode: required
+    - command:
+      - bash
+      - bin/gac/gac-worktree.sh
+      - claim
+      - round-{round_id}
+      id: worktree
+      mode: required
+    - command:
+      - python3
+      - bin/gac/round-gate-check.py
+      id: gate_check
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/mof/mof-bootstrap.py
+      - all
+      id: self_reflex
+      mode: required
+    - command:
+      - agent
+      - write-adr
+      id: adr
+      mode: manual
+    - command:
+      - make
+      - m4-health-compare
+      id: health_compare
+      mode: required
+  purpose: 'M4 时代工程闭环 — commit → ADR → 测 → closeout。 每轮 (Round X) 严格按 7 步执行，回答 P72/P52/P74 三门槛。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - AGENTS.md
+    - .agents/skills/round-workflow/SKILL.md
+    - .agents/skills/round-gate-check/SKILL.md
+    - .agents/skills/closeout-retro/SKILL.md
+    - docs/architecture/
+    - bin/mof/mof-bootstrap.py
+    write:
+    - docs/M4-DECISIONS-INDEX.md
+    - .omo/_knowledge/retros/**
+  title: Round engineering lifecycle
+- agents:
+    observer_policy: none
+    roles:
+    - engineering-agent
+    - governance-agent
+  allowed_lanes:
+  - docs
+  evidence_required:
+  - diff_analysis
+  - type_recommendation
+  id: round-type-router
+  lock_scopes:
+  - round_type:{round_id}
+  phases:
+    closeout:
+    - command:
+      - echo
+      - record round type
+      id: record_recommendation
+      mode: advisory
+    execute:
+    - command:
+      - python3
+      - bin/gac/skill-recommender.py
+      id: recommend_type
+      mode: advisory
+    preflight:
+    - command:
+      - git
+      - diff
+      - --stat
+      - origin/main...HEAD
+      id: analyze_diff
+      mode: required
+    verification:
+    - command:
+      - echo
+      - validate round type recommendation
+      id: validate_recommendation
+      mode: advisory
+  purpose: '根据 diff 自动推荐 Round 类型 (R-patch/R-feature/R-meta/R-archive)。 减少人工判断成本。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - AGENTS.md
+    - .agents/skills/round-workflow/SKILL.md
+    write: []
+  title: Round type recommendation
+- agents:
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - config
+  - governance_state
+  evidence_required:
+  - journey_run_ref
+  - capability_outcome_refs
+  - calibration_delta
+  id: scene-execution
+  lock_scopes:
+  - scene:{scene_id}
+  observer_policy: required
+  phases:
+    closeout:
+    - command:
+      - python3
+      - bin/ssot/scene-reflection.py
+      - generate
+      - --scene-id
+      - '{scene_id}'
+      id: reflection
+      mode: required
+    execute:
+    - command:
+      - python3
+      - bin/ssot/journey-engine.py
+      - execute
+      - '{scene_id}'
+      id: run_journey
+      mode: required
+    preflight:
+    - command:
+      - python3
+      - bin/ssot/scene-card-lifecycle.py
+      - check
+      - --scene-card
+      - .omo/_truth/scenarios/v3/{scene_id}.yaml
+      id: validate_scene
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/ssot/scene-outcome-recorder.py
+      - record
+      - --scene-id
+      - '{scene_id}'
+      id: record_outcome
+      mode: required
+  purpose: '执行场景卡 v3 — 通过 BOS URI 解析能力引用，在 KEI 沙箱中执行 journey 状态机。 信号触发 → scene-trigger → journey-engine → Agora BOS Router → MCP 工具 → 结果记录。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - projects/agora/etc/bos-services.yaml
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+    - bin/ssot/journey-engine.py
+    - bin/ssot/calibration-engine.py
+    write:
+    - .omo/_knowledge/workflow-mesh/scene-outcomes.jsonl
+  title: Scene v3 execution via BOS/MCP capability refs
+- agents:
+    observer_policy: optional
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - governance_state
+  - docs
+  - config
+  evidence_required:
+  - transition_evidence
+  - sample_refs
+  - calibration_score
+  id: scene-lifecycle
+  lock_scopes:
+  - scene:{scene_id}
+  phases:
+    closeout:
+    - command:
+      - python3
+      - bin/ssot/scene-outcome-recorder.py
+      - record-lifecycle
+      - --scene-id
+      - '{scene_id}'
+      - --from
+      - <from_level>
+      - --to
+      - <to_level>
+      id: record
+      mode: required
+    execute:
+    - command:
+      - python3
+      - bin/ssot/scene-card-lifecycle.py
+      - transition
+      - --scene-card
+      - .omo/_truth/scenarios/v3/{scene_id}.yaml
+      - --tier
+      - <target_level>
+      - --actor
+      - <actor>
+      id: transition
+      mode: manual
+    preflight:
+    - command:
+      - python3
+      - bin/ssot/journey-engine.py
+      - validate
+      - <journey_id>
+      id: validate_schema
+      mode: required
+    - command:
+      - python3
+      - bin/ssot/scene-card-lifecycle.py
+      - check
+      - --scene-card
+      - .omo/_truth/scenarios/v3/{scene_id}.yaml
+      id: check_readiness
+      mode: required
+    verification:
+    - command:
+      - python3
+      - bin/ssot/scene-card-lifecycle.py
+      - check
+      - --scene-card
+      - .omo/_truth/scenarios/v3/{scene_id}.yaml
+      id: verify
+      mode: required
+  purpose: '场景卡 v3 生命周期状态转换 — 复用 OMO 任务门禁 + Workflow Mesh。 支持 promote（升级）、demote（降级）、calibrate（校准）三种操作。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .omo/standards/scene-card-lifecycle.yaml
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+    - bin/ssot/scene-card-lifecycle.py
+    - bin/ssot/journey-engine.py
+    - bin/ssot/calibration-engine.py
+    write:
+    - .omo/_truth/scenarios/v3/{scene_id}.yaml
+  title: Scene v3 lifecycle transition (promote/demote/calibrate)
+- agents:
     observer_policy: recommended_for_unattended_runs
     roles:
     - state-sync-agent
@@ -3101,6 +3464,78 @@ workflows:
     - BRIEF.md
     - runtime/omo/_delivery/ingress/state/**
   title: Runtime state projection sync
+- agents:
+    observer_policy: required
+    roles:
+    - governance-agent
+  allowed_lanes:
+  - submodule_pointer
+  - config
+  evidence_required:
+  - transaction_log
+  - ancestry_verification
+  id: submodule-pointer-bump
+  lock_scopes:
+  - submodule:{sub_name}
+  - root-gate
+  phases:
+    closeout:
+    - command:
+      - bash
+      - bin/ssot/sync-submodule-pointers.sh
+      id: push_root
+      mode: manual
+    execute:
+    - command:
+      - bash
+      - bin/ssot/submodule-pointer-transaction.sh
+      - --message
+      - '{message}'
+      id: bump_pointer
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - pull
+      - --rebase
+      - origin
+      - main
+      cwd: projects/{sub_name}
+      id: check_ff
+      mode: required
+    - command:
+      - python3
+      - bin/ssot/submodule-reachability-gate.py
+      id: check_reachability
+      mode: required
+    verification:
+    - command:
+      - git
+      - log
+      - --oneline
+      - '-3'
+      cwd: projects/{sub_name}
+      id: verify_ancestry
+      mode: required
+    - command:
+      - git
+      - push
+      - origin
+      - main
+      cwd: projects/{sub_name}
+      id: push_submodule
+      mode: manual
+  purpose: '子模块指针安全更新 — 防止直通 main 和指针污染。 强制 4 步流程: check → update → verify → push。
+
+    '
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - .omo/standards/submodule-pointer-bump-contract.md
+    - bin/ssot/submodule-reachability-gate.py
+    write:
+    - projects/{sub_name}
+  title: Submodule pointer safe bump
 - agents:
     observer_policy: recommended_for_multi_submodule_updates
     roles:

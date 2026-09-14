@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-02
+type: ssot
 ---
 
 # ADR-0121: Governance Convergence Special Initiative (GCSI) — 治理收敛专项

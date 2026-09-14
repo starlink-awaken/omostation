@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # AI OS 用户旅程与场景全集
 
 > **系统状态**: Phase 1-13+ 全部完成, 251个Task, ~7,500LOC

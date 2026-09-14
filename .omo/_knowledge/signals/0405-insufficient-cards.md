@@ -4,6 +4,8 @@ status: active
 lifecycle: spec
 owner: '@Builder'
 last-reviewed: '2026-08-09'
+type: ephemeral
+status: archived
 ---
 
 # ADR-0405: Only 9 scene cards — consider adding more domain coverage

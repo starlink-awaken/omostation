@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: '@Builder'
 last-reviewed: '2026-08-09'
+type: ssot
 ---
 
 # ADR-0403: Agent本体与模型驱动约束架构

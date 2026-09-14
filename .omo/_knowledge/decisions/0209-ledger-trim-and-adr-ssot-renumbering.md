@@ -7,6 +7,7 @@ last-reviewed: 2026-07-15
 omo_task_ref: null
 agent_workflow_run: 20260715T074610Z-governance-audit-d0d7c3c6
 supersedes: []
+type: ssot
 ---
 
 > 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: SUPERSEDED — 元凶定位与重编号已由后续 T6 系列实践覆盖, 04xx 连续编号已成事实

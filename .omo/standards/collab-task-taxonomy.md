@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ssot
 ---
 
 # 协作任务类型分类学 (P86 A1)

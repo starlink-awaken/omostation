@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/ssot/doc-lifecycle.py
+name: Doc Lifecycle
+category: governance
+owner: governance-team
+description: "文档生命周期治理工具：audit/archive/lint 三模式"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/ssot/doc-ssot-lint.py
+  - bin/gac/check-doc-freshness-gate.py
+maturity: draft
+last_reviewed: "2026-09-06"

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # OpenSpec: Context URI SSOT Write-back
 
 ## 1. 概念与目标 (Why)

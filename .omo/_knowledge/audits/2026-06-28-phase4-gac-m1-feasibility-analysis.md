@@ -2,6 +2,8 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+type: ephemeral
+status: archived
 ---
 
 # Phase 4 GaC M1 化 — Feasibility Analysis

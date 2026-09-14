@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ephemeral
+status: archived
 ---
 
 # P60 — 治理方法论内化实施收口报告 (L/X/M/L4/cockpit/Skill 6 层落地)

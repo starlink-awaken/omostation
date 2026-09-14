@@ -247,6 +247,11 @@ DEFAULT_POLICY = {
             "command": ["bin/gac/check-work-landed.py"],
             "timeout": 45,
         },
+        # ADR-0424 配套: 校验错误知识库 (pitfalls yaml) 一致性 — 解析/必填字段/id 唯一
+        {
+            "id": "error-knowledge-check",
+            "command": ["bin/gac/error-knowledge.py", "check"],
+        },
         {
             "id": "check-governance-ratio",
             "command": ["bin/gac/check-governance-ratio.py"],
@@ -475,6 +480,18 @@ if not any(gate.get("id") == "bin-quota-diff" for gate in GATES_LIST):
         }
     )
 
+# Root-owned PITFALL-GAT-006 detector (2026-09-05): 检测当前分支是否在 main 已自愈后
+# 重复造轮子. 分支 diff 为空 + main 有近期 merge → WARNING (exit 0, 非阻断).
+# 防多 agent 并发下修复目标已被其他 PR 达成, 合并后回退 main 正确值.
+# 详见 .omo/_knowledge/pitfalls/gate/PITFALL-GAT-006.yaml
+if not any(gate.get("id") == "pitfall-gat006-check" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "pitfall-gat006-check",
+            "command": ["bin/gac/check-pitfall-gat006.py"],
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
@@ -503,13 +520,22 @@ BROKEN_CHECKS = {g["id"] for g in GATES_LIST if g.get("broken")}
 # Live sgf-policy.yaml often omits timeout; semantic-gate runs several
 # subprocesses and false-timeouts at the 15s default. Named defaults apply
 _DEFAULT_CHECK_TIMEOUTS = {
-    "agent-workflow-doctor": 45,
+    # The default doctor runs 23 registered checks plus its AGCP drift probe
+    # sequentially and exceeded 60s; use a finite 120s end-to-end boundary.
+    "agent-workflow-doctor": 120,
     "governance-semantic-gate": 60,
     "execution-chain": 45,
     "layer-call-direction-check": 45,
     "gac-drift": 45,
     "mof-schema-validate": 45,
     "sfop-slots": 45,
+    # bet-retro-due-check: CI 冷环境 import yaml + 读 378-bet ledger 需 7-8s,
+    # gate 内系统负载下超 15s 默认 → false TIMEOUT (2026-09-08 CI 实证, PR #3436)
+    "bet-retro-due-check": 60,
+    # pitfall-gat006-check: 内部 git fetch origin main 自身就有 ~10s 超时,
+    # 15s 外层默认给 fetch+log 的余量太薄, CI 负载下反复 false TIMEOUT
+    # (2026-09-11 CI 实证, PR #3518, 与 PR #3436 同一类问题同一个修法)
+    "pitfall-gat006-check": 30,
 }
 _CHECK_TIMEOUTS = {
     g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"], 15)) for g in GATES_LIST
@@ -522,6 +548,8 @@ SOFT_CHECKS = {
     "ci-surfaces-check",  # CI Surface 重叠软警告
     "derived-only-fast-track",  # GOV-REBAL (S5): 纯派生文档 fast-track 建议, 非阻断
     "command-discovery",  # UX-NOISE (S5): 命令密度/重复定位, 非阻断
+    "resident-bos-check",  # CR-RESIDENT-BOS-01: agora bos-services.yaml 缺 resident 域, 非阻断
+    "pitfall-gat006-check",  # PITFALL-GAT-006: 分支与 main 等价检测, 警告不阻断
 }
 
 
@@ -770,6 +798,10 @@ FINDING_TOPIC_CHECKS: dict[str, dict[str, str]] = {
     "bus-usage-report": {
         "topic": "bus-dormant-adapter",
         "label": "总线休眠适配器 (declaration without execution)",
+    },
+    "pitfall-gat006-check": {
+        "topic": "pitfall-gat006-redundant-branch",
+        "label": "分支等价检测 (main 已自愈 / 重复造轮子)",
     },
 }
 

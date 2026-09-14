@@ -4,6 +4,8 @@ lifecycle: history
 owner: governance-team
 last-reviewed: "2026-07-29"
 escalation_target: 人类决策者
+type: ephemeral
+status: archived
 ---
 
 > ⚠️ **A2 SSOT 已 supersede 本文件中任何「5.4x / 协作普遍正收益」定论句**。  

@@ -1,0 +1,47 @@
+{
+  "all_ok": true,
+  "gates": [
+    {
+      "gate": "A1 Workflow/Git",
+      "ok": true,
+      "exit_code": 0,
+      "output": "}"
+    },
+    {
+      "gate": "A2 Resident/Host",
+      "ok": true,
+      "exit_code": 0,
+      "output": "all technical checks pass"
+    },
+    {
+      "gate": "A3 Governance Python",
+      "ok": true,
+      "exit_code": 0,
+      "output": "Governance semantic gate: PASS"
+    },
+    {
+      "gate": "A4 Scheduler",
+      "ok": true,
+      "exit_code": 0,
+      "output": "{\"ok\": true, \"drift_count\": 0, \"orphan_count\": 0}"
+    },
+    {
+      "gate": "A5 Reference/Launchd",
+      "ok": true,
+      "exit_code": 0,
+      "output": "all technical checks pass"
+    },
+    {
+      "gate": "A1.3 Submodule Remote",
+      "ok": true,
+      "exit_code": 0,
+      "output": "origin\thttps://github.com/starlink-awaken/omostation-omo.git (push)"
+    },
+    {
+      "gate": "A1.3 Cockpit-UI Remote",
+      "ok": true,
+      "exit_code": 0,
+      "output": "origin\thttps://github.com/starlink-awaken/omostation-cockpit-ui.git (push)"
+    }
+  ]
+}

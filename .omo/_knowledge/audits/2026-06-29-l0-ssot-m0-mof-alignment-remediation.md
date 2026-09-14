@@ -6,6 +6,8 @@ last-reviewed: 2026-06-29
 related:
   - 2026-06-29-l0-ssot-m0-mof-alignment.md
   - ../standards/doc-ssot-contract.md
+type: ephemeral
+status: archived
 ---
 
 # L0/SSOT/M0/MOF 对齐 — 修复执行手册 (2026-06-29)

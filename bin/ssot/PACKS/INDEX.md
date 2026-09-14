@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # PACKS/INDEX.md — Skills System Catalog
 
 This directory contains standardized Packs — modular units of

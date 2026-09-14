@@ -1,0 +1,31 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV73-rug-pull
+category: A_conflict
+adversarial: true
+seed: 173
+description: >
+  [对抗·red-team wave13] 跑路: 流动性被创建者抽干,
+  管线尚无 rug_pull_detected → 预期 FAIL
+setup:
+  blackboard:
+    - {key: lp_pool, value: "liq_1000", writers: [creator]}
+  roles: [creator, victim]
+inject:
+  - {type: write_conflict, role: victim, target: lp_deposit, value: "deposit_500"}
+  - {type: write_conflict, role: creator, target: lp_pool, value: "liq_0"}
+  - {type: write_conflict, role: creator, target: creator_wallet, value: "drained_1500"}
+expected:
+  behavior: rug_pull_detected
+  silent_loss: 0
+verdict:
+  - criterion: rug_pull_detected
+    check: events_contain
+    args: {kind: rug_pull_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

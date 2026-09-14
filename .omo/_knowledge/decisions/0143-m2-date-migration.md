@@ -10,6 +10,7 @@ related:
   - ../../../../bin/m2-date-migrate.py
   - ../../../projects/ecos/src/ecos/ssot/mof/m2/
 supersedes: []
+type: ssot
 ---
 
 # ADR-0143: 45 m2 schema date → datetime 迁移 (Round 4c)

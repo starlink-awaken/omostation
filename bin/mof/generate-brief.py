@@ -212,6 +212,51 @@ def scan_active_pitfalls() -> dict:
     return result
 
 
+def _x3_work_delivery_row() -> str:
+    """X3 工作交付行 — 从场景裁决证据 (scene-outcomes.jsonl) 聚合真实数据.
+
+    30 天窗口: episodes / accepted / acceptance_rate. 数据源为人类裁决
+    记录 (scene-outcome/v1), 由 scene-outcome-recorder.py 写入.
+    """
+    import json as _json
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+
+    outcomes_path = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.jsonl"
+    if not outcomes_path.is_file():
+        return "| **工作交付** | 场景裁决证据尚未产生 (等待首批场景验收) | 待验收 | `scene-outcomes.jsonl` |"
+
+    cutoff = (_dt.now(_tz.utc) - _td(days=30)).isoformat()
+    total = accepted = 0
+    try:
+        with open(outcomes_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = _json.loads(line)
+                except _json.JSONDecodeError:
+                    continue
+                ts = str(rec.get("ts", ""))
+                if ts and ts < cutoff:
+                    continue
+                total += 1
+                if rec.get("adjudication") == "accepted":
+                    accepted += 1
+    except OSError:
+        return "| **工作交付** | 场景裁决证据读取失败 | 异常 | `scene-outcomes.jsonl` |"
+
+    if total == 0:
+        return "| **工作交付** | 30 天内无场景裁决记录 | 待验收 | `scene-outcomes.jsonl` |"
+
+    rate = accepted / total * 100
+    status = "正常" if rate >= 60 else "关注"
+    return (
+        f"| **工作交付** | 场景 episodes: {total} · accepted {accepted} ({rate:.0f}%) "
+        f"| {status} | `scene-outcomes.jsonl` (30d) |"
+    )
+
+
 def scan_x3_metrics() -> dict:
     """统计 X3 价值产出指标."""
     metrics = {
@@ -410,7 +455,7 @@ def generate_brief_content() -> str:
     lines.append("| 维度 | 度量指标 | 状态 | 物理数据源 |")
     lines.append("|------|----------|------|------------|")
     lines.append(f"| **创意创作** | 新增发布数: `{x3['creations']}` | 正常 | `@创意创作/_outputs` |")
-    lines.append("| **工作交付** | 未接入真实数据源 (BET-Y1Q1-T1-01 废除 mtime 伪指标) | 待接入 | — |")
+    lines.append(_x3_work_delivery_row())
     lines.append(f"| **知识复用** | KOS 索引篇: `{x3['knowledge_reuse']}` | 正常 | `kos/` 篇目 |")
     # B5: per-role completion/cost rows (pointerized X3)
     role_metrics_path = WORKSPACE / ".omo" / "_truth" / "registry" / "x3-role-metrics.yaml"
@@ -454,6 +499,28 @@ def generate_brief_content() -> str:
         lines.append(f"- **GAC 异常扣分**: `{gov_anomaly}/100`")
         lines.append(f"- **常驻 daemon 在线率**: `{online_ratio:.2%}`")
         lines.append("")
+
+    # 4. L4 Domain Health (12 域 Harness 结果, 从 M0 snapshot 读取)
+    m0_file = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
+    if m0_file.is_file():
+        try:
+            m0 = yaml.safe_load(m0_file.read_text(encoding="utf-8")) or {}
+            l4h = m0.get("l4_domain_health") or {}
+            if l4h:
+                ok_count = sum(1 for v in l4h.values() if v.get("ok"))
+                total = len(l4h)
+                lines.append("## 🌐 L4 Domain Health (Harness)")
+                lines.append("")
+                lines.append(f"| 域 | ok | issues |")
+                lines.append(f"|---|---|---|")
+                for dom_id, h in sorted(l4h.items()):
+                    mark = "✅" if h.get("ok") else "❌"
+                    lines.append(f"| {dom_id} | {mark} | {h.get('issue_count', 0)} |")
+                lines.append("")
+                lines.append(f"**{ok_count}/{total}** 域 Harness 通过")
+                lines.append("")
+        except Exception:
+            pass
 
     return "\n".join(lines)
 

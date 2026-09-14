@@ -12,6 +12,7 @@ related:
   - ADR-0220 (swarm coordination D4)
   - BET-Y1Q1-T1-07 (git-shim / swarm-git)
   - BET-Y1Q3-T1-09
+type: ssot
 ---
 
 # D4 逃生口固化 — 权限类 vs fingerprint 债

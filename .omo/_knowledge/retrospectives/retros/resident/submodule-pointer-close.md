@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 1
   trace_count: 1
+type: ephemeral
+status: archived
 ---
 # submodule-pointer-close 运行复盘聚合 (resident 事件驱动)
 

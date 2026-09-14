@@ -1,0 +1,13 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "documents-zcode-state",
+  "name": "Documents Zcode State",
+  "lifecycle": "supervised",
+  "permissions": {
+    "fs_read": [],
+    "fs_write": [],
+    "network": [],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:36.167565+00:00"
+}

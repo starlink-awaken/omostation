@@ -5,6 +5,8 @@ owner: governance-team
 last-reviewed: 2026-06-23
 phase: '52'
 task: P52-MDRIFT-CLOSURE
+type: ephemeral
+status: archived
 ---
 
 # P52 收口报告: mof-drift v5 终极 — gbrain unknown 19→0

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # .omo/tasks/ — 任务跟踪系统
 
 > 多 Agent 协同任务管理。每个任务一个 YAML 文件，是当前唯一任务 SSOT。

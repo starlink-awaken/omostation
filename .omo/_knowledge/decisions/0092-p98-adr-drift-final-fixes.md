@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0092: P98 ADR drift 实际修复 + regex bug 修 + P50+ 19→2 (-89%)

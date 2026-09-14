@@ -9,3 +9,4 @@ lifecycle_state: closed
 closed_at: '2026-08-08T13:12:15Z'
 closed_by: autoloop-controller
 close_reason: 'S1 auto-close: verification passed'
+resolution_evidence: "S1 auto-close: verification passed (autoloop-controller 2026-08-08); viol-test schema violation 由自动验证闭环关闭并验证通过"

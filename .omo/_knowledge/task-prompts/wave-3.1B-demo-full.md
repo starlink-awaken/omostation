@@ -5,6 +5,8 @@ owner: governance-team
 last-reviewed: 2026-06-23
 archived-since: 2026-06-23
 note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+type: ephemeral
+status: archived
 ---
 # Task Prompt: Wave 3.1.B — workspace demo 完整版
 

@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0094: P100 omo_lint schemas 子模块拆分 (1269→800L, 兑现 11 轮推迟)

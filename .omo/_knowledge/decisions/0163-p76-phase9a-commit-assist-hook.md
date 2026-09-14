@@ -10,6 +10,7 @@ related:
   - ../../../../../.githooks/prepare-commit-msg-commit-assist
   - ../../../../../bin/commit-assist.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0163: P76 Phase 9A — commit-assist pre-commit-msg 集成 (advisory 硬门)

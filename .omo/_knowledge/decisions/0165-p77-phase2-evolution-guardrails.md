@@ -10,6 +10,7 @@ related:
   - ../../../standards/p76-principles.md
   - ../../../../../tests/test_p76_principles.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0165: P77 Phase 2 — 演化护栏 catalog (15 原则形式化 + 5 新 GaC rules)

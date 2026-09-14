@@ -6,11 +6,14 @@
 #
 # 用法:
 #   gac-worktree.sh claim <session>      # 创建 worktree + 分支 work/<session>
-#   gac-worktree.sh submit <session>     # push 分支 + 开 PR (base main)
+#                                         # --actor-id <id> → agent/<id>/<session>
+#   gac-worktree.sh submit [--strict] <session>  # proposal-only → MANAGED_SUCCESSOR_REQUIRED
+#                                         # --strict: 子模块 pointer 不可达时阻止提案
 #   gac-worktree.sh merge <session>      # squash 合并 PR + release worktree + 删分支
 #   gac-worktree.sh release <session>    # 清理 worktree (手动, 合并后)
 #   gac-worktree.sh bump-fast <submodule-path> [--sha <sha>|--latest-main]
 #                                         # 流程内快速更新单个子模块指针
+#   gac-worktree.sh guard-submodules [--fix]  # T10-161: gitlink 新鲜度 + remote 完整性守卫 (advisory)
 #   gac-worktree.sh list                 # 列所有 worktree
 #
 # session 命名: 只允许 [a-z0-9-] (防 git 分支非法字符), 如 "fix-route-bug".
@@ -34,6 +37,31 @@ WS_PARENT="${WS_PARENT:-$(dirname "$WS_ROOT")}"
 
 cmd="${1:-list}"
 session="${2:-}"
+
+# BET-Y1Q4-T10-128: 从 claim JSON 读 branch (fallback work/<session> 向后兼容)
+resolve_branch_for() {
+  local session="$1"
+  local cj="$WS_ROOT/.omo/_delivery/branch-claims/${session}.json"
+  if [ -f "$cj" ] && command -v python3 >/dev/null 2>&1; then
+    local b
+    b="$(python3 -c "import json,sys; print(json.load(open('$cj')).get('branch',''))" 2>/dev/null || true)"
+    if [ -n "$b" ]; then
+      printf '%s' "$b"
+      return 0
+    fi
+  fi
+  printf 'work/%s' "$session"
+}
+
+# BET-Y1Q4-T10-128: actor 解析 (claim 第三参数 > OMO_ACTOR > 默认 governance-agent)
+resolve_actor() {
+  local a="${1:-${OMO_ACTOR:-governance-agent}}"
+  if ! printf '%s' "$a" | grep -qE '^[a-z][a-z0-9-]{1,30}$'; then
+    echo "❌ actor 非法: '$a' (规则 [a-z][a-z0-9-]{1,30})" >&2
+    exit 1
+  fi
+  printf '%s' "$a"
+}
 
 # session 名只允许小写字母/数字/连字符 (防 work/<session> 含 git 分支非法字符)
 validate_session() {
@@ -174,16 +202,76 @@ remove_verified_pasw() {
   rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
 }
 
+# ── BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 ────────────────
+# advisory: 恒 exit 0; --fix 仅做本地无网络子模块对齐 (不改根指针/URL).
+# 事故实证: ① worktree 创建后未 init → 陈旧 gitlink 被提交 → 指针回退;
+# ② origin URL 被并发会话改写成子仓 URL → 一切 origin/main 验证静默失效.
+guard_submodules() {
+  local fix="${1:-}"
+  local root="$WS_ROOT"
+  [ -f "$root/.gitmodules" ] || return 0
+  local repaired="" failed="" p
+  while IFS= read -r p; do
+    [ -z "$p" ] && continue
+    if [ "$fix" = "--fix" ]; then
+      if git -C "$root" submodule update --init --no-fetch -- "$p" >/dev/null 2>&1; then
+        repaired="$repaired $p"
+      else
+        failed="$failed $p"
+      fi
+    else
+      failed="$failed $p"
+    fi
+  done < <(git -C "$root" submodule status 2>/dev/null | grep -E '^[+-U]' | awk '{print $2}')
+  if [ -n "$repaired" ]; then
+    echo "   🔧 T10-161 gitlink 已对齐 pin (本地无网络):$repaired"
+  fi
+  if [ -n "$failed" ]; then
+    echo "   ⚠️ T10-161 子模块与 pin 不一致 (本地缺对象, 需手动):$failed"
+    echo "      修复: cd $root && git submodule update --init <path>"
+  fi
+  # remote 完整性: 主仓 remote URL 落入 .gitmodules 子仓 URL 集合 → 污染 (只告警, 不改写)
+  local sub_urls rem_url entry url su
+  sub_urls=$(git -C "$root" config -f "$root/.gitmodules" --get-regexp '^submodule\..*\.url$' 2>/dev/null | awk '{print $2}' || true)
+  [ -z "$sub_urls" ] && return 0
+  while IFS= read -r entry; do
+    [ -z "$entry" ] && continue
+    url="${entry#* }"
+    while IFS= read -r su; do
+      [ -z "$su" ] && continue
+      if [ "$url" = "$su" ]; then
+        echo "   🚨 T10-161 remote 污染: 主仓 remote URL 指向子仓 ($url)"
+        echo "      修复: git -C $root remote set-url <remote> <主仓 URL> (协议见 AGENTS.md §6)"
+      fi
+    done <<< "$sub_urls"
+  done < <(git -C "$root" config --local --get-regexp '^remote\..*\.url$' 2>/dev/null | awk '{$1=""; sub(/^ /,""); print}')
+  return 0
+}
+
 case "$cmd" in
+  guard-submodules)
+    # BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 (advisory, 恒 exit 0)
+    guard_submodules "${session:-}"
+    ;;
   claim)
-    [ -z "$session" ] && echo "用法: claim <session>" >&2 && exit 1
+    [ -z "$session" ] && echo "用法: claim <session> [--actor-id <id>]" >&2 && exit 1
     validate_session "$session"
     ROOT_REMOTE=$(cd "$WS_ROOT" && resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"
-    branch="work/$session"
+    # BET-Y1Q4-T10-128: 并发 agent 命名空间 — claim 强制 agent/{actor}/{session}
+    actor="$(resolve_actor "${3:-}")"
+    branch="agent/${actor}/${session}"
     claim_in_progress="$WS_PARENT/.ws-$session.claiming"
+    lifecycle_guard="$WS_PARENT/.ws-$session.lifecycle-lock"
+    if ! mkdir -m 700 "$lifecycle_guard" 2>/dev/null; then
+      echo "❌ lifecycle guard held: $lifecycle_guard" >&2
+      exit 1
+    fi
     cleanup_claim_marker() {
       rm -f "$claim_in_progress"
+      if ! rmdir "$lifecycle_guard" 2>/dev/null; then
+        echo "⚠️ lifecycle guard release failed: $lifecycle_guard" >&2
+      fi
     }
     trap cleanup_claim_marker EXIT INT TERM
     # ── G-CONV.7 / ADR-0220 D2: branch occupancy lock ─────────────────
@@ -199,9 +287,10 @@ case "$cmd" in
       rm -f /tmp/gconv7-branch-claim-$$.json /tmp/gconv7-branch-claim-$$.err
       echo "   🔒 D2 branch lock: $branch (session=$session)"
     fi
-    # 分支已存在但 worktree 缺失 → 残留/重名, 提示清理 (防 claim 撞残留分支)
+    # T10-128 circuit_breaker: agent/ 分支已存在且 worktree 缺失 → 阻断 (不自动覆盖)
     if git -C "$WS_ROOT" show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null && [ ! -d "$wt" ]; then
-      echo "⚠️  分支 $branch 已存在但 worktree 缺失 (残留? 清理: git branch -D $branch)" >&2
+      echo "❌ 分支 $branch 已存在但 worktree 缺失 (命名空间冲突)。请重命名 session 或清理: git branch -D $branch" >&2
+      exit 1
       exit 1
     fi
     if [ -d "$wt" ]; then
@@ -219,6 +308,8 @@ case "$cmd" in
     if [ "${SKIP_SUBMODULE_INIT:-}" = "1" ]; then
       echo "   ⚠️ SKIP_SUBMODULE_INIT=1 — root worktree only; PASW isolation not established."
       echo "   子模块未 init (按需: cd $wt && git submodule update --init <sub>)"
+      # T10-161: 快速路径补偿 — gitlink 新鲜度对齐 + remote 完整性检查
+      WS_ROOT="$wt" guard_submodules --fix
     else
       echo "   init 全部子模块 (完整环境, 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
       t0=$(date +%s)
@@ -263,10 +354,22 @@ case "$cmd" in
     ;;
 
   submit)
-    [ -z "$session" ] && echo "用法: submit <session>" >&2 && exit 1
+    # PR2: 支持 --strict 标志 (子模块 pointer 不可达时阻塞提交, 默认仅 warning)
+    SUBMOD_PREFLIGHT_STRICT=0
+    _args=()
+    for _a in "$@"; do
+      if [ "$_a" = "--strict" ]; then
+        SUBMOD_PREFLIGHT_STRICT=1
+      else
+        _args+=("$_a")
+      fi
+    done
+    set -- "${_args[@]}"
+    cmd="${1:-}" ; session="${2:-}"
+    [ -z "$session" ] && echo "用法: submit [--strict] <session>" >&2 && exit 1
     validate_session "$session"
     wt="$WS_PARENT/ws-$session"
-    branch="work/$session"
+    branch="$(resolve_branch_for "$session")"
     if [ ! -d "$wt" ]; then
       echo "❌ worktree 不存在: $wt (先 claim)" >&2
       exit 1
@@ -278,9 +381,65 @@ case "$cmd" in
       # .gitignore 含 .subtrees/ → git add 撞上被忽略路径会返回 1
       # (实测 ':!.subtrees' / ':!.subtrees/' / ':(exclude).subtrees/*' 都是 1),
       # 但非忽略文件其实已暂存成功。set -euo pipefail 下必须吞掉这个返回码,
-      # 否则 submit 在此静默中断 —— 后面的 push / 开 PR / CI 校验一个都不执行。
+      # 否则 submit 在此静默中断 —— 后面的提案准备一个都不执行。
       git add -- ':!.subtrees' . || true
       git commit -m "wip: $session worktree 提交" 2>&1 | tail -2
+    fi
+    # WP1 Wave B2: 禁止 rebase/merge/pull 吸收上游。base 前进时发出同一 typed 指令。
+    _emit_managed_successor_proposal() {
+      local _base_ref="${1:-}"
+      local _source _base _patch_digest _paths_digest
+      _source="$(git rev-parse HEAD)"
+      if [ -n "$_base_ref" ] && git rev-parse --verify --quiet "${_base_ref}^{commit}" >/dev/null 2>&1; then
+        _base="$(git rev-parse "${_base_ref}^{commit}")"
+      else
+        _base="$_source"
+      fi
+      _patch_digest="$(git diff --binary "${_base}...HEAD" 2>/dev/null | shasum -a 256 | awk '{print $1}')"
+      _paths_digest="$(git diff --name-only "${_base}...HEAD" 2>/dev/null | sort | shasum -a 256 | awk '{print $1}')"
+      echo "MANAGED_SUCCESSOR_REQUIRED"
+      echo "source_commit=${_source}"
+      echo "base_commit=${_base}"
+      echo "patch_digest=${_patch_digest}"
+      echo "changed_path_digest=${_paths_digest}"
+      echo "instruction=replay proposal in a distinct managed full successor via clone-lifecycle integrate"
+      echo "❌ submit 为 proposal-only: 不 push / 不开 PR / 不调用 integrate (exit 2)" >&2
+      exit 2
+    }
+    _submit_base_ref=""
+    if git fetch origin main 2>/dev/null; then
+      if git rev-parse --verify --quiet "origin/main^{commit}" >/dev/null 2>&1; then
+        _submit_base_ref="origin/main"
+      fi
+      _ahead="$(git rev-list --count HEAD..origin/main 2>/dev/null || echo 0)"
+      if [ "${_ahead:-0}" -gt 0 ]; then
+        echo "⬆ origin/main 前进 $_ahead commits; 不 rebase，发出 MANAGED_SUCCESSOR_REQUIRED" >&2
+        _emit_managed_successor_proposal "$_submit_base_ref"
+      fi
+    elif git rev-parse --verify --quiet "origin/main^{commit}" >/dev/null 2>&1; then
+      _submit_base_ref="origin/main"
+    elif git rev-parse --verify --quiet "upstream/main^{commit}" >/dev/null 2>&1; then
+      _submit_base_ref="upstream/main"
+    fi
+    # BET-Y2Q1-T10-03: 台账预检 — 裸冒号会让 YAML 解析炸 (三犯教训), 坏文件拦在提案前
+    if git diff origin/main...HEAD --name-only -- docs/plans/3y-bet-ledger.yaml 2>/dev/null | \
+       grep -q .; then
+      if ! python3 -c "import yaml,sys; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml')); print('[ledger-precheck] YAML OK')" 2>/dev/null; then
+        echo "❌ 台账 YAML 解析失败 (多半是值里的裸冒号, 冒号后加空格或引号包裹)" >&2
+        exit 1
+      fi
+    fi
+    # BET-Y2Q1-T10-03: 台账并发写警告 — 其他 worktree 有未提交台账变更时提示 (非阻塞)
+    if git diff origin/main...HEAD --name-only -- docs/plans/3y-bet-ledger.yaml 2>/dev/null | \
+       grep -q .; then
+      for _wt in "$WS_PARENT"/ws-*/docs/plans/3y-bet-ledger.yaml; do
+        _other="${_wt%/docs/plans/3y-bet-ledger.yaml}"
+        [ "$_other" = "$PWD" ] && continue
+        [ -f "$_wt" ] || continue
+        if ! git -C "$_other" diff --quiet -- docs/plans/3y-bet-ledger.yaml 2>/dev/null; then
+          echo "⚠️  台账并发写提醒: $_other 的主台账有未提交变更 — 建议协调合并 (非阻塞)" >&2
+        fi
+      done
     fi
     # BET-Y1Q1-T1-05A: fencing token 校验 (shadow 阶段只判定不阻断, exit 2 才停)
     # token 从 claim 文件读 (claim 时由镜像写入 coordination_token 字段);
@@ -327,47 +486,90 @@ except Exception: print('')" 2>/dev/null || true)"
         fi
       fi
     fi
-    # 推送子模块 commit 到远程 (防 CI "not our ref" 错误)
-    echo "⚡ 检查子模块未推送的 commit..."
-    bash "$(dirname "$0")/../sync-submodules.sh" --dry-run 2>&1 | tail -5
-    bash "$(dirname "$0")/../sync-submodules.sh" 2>&1 | tail -5
-    # push 分支
-    ROOT_REMOTE=$(resolve_root_remote) || exit 1
-    echo "   remote: $ROOT_REMOTE ($(git remote get-url "$ROOT_REMOTE")); repo: $CANONICAL_ROOT_REPO"
-    git push -u "$ROOT_REMOTE" "$branch" 2>&1 | tail -3
-    # 开 PR
-    if command -v gh &>/dev/null; then
-      gh pr create --repo "$CANONICAL_ROOT_REPO" --base main --head "$branch" \
-        --title "[$session] worktree 提交" \
-        --body "GaC worktree per session (ADR-0106 P2). 自动生成 PR." 2>&1 | tail -2
-      # PR 文件清单校验 (P74: 防运行时文件混入 PR)
-      pr_num=$(gh pr list --repo "$CANONICAL_ROOT_REPO" --head "$branch" --base main --state open --json number 2>/dev/null \
-        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
-      if [ -n "$pr_num" ]; then
-        bad_files=$(gh pr view "$pr_num" --repo "$CANONICAL_ROOT_REPO" --json files 2>/dev/null \
-          | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    bad = [f['path'] for f in d.get('files',[])
-            if ('.jsonl' in f['path'] or '.lock' in f['path'] or f['path'].startswith('.omo/_knowledge/workflow-mesh/'))
-            and f.get('changeType') in ('ADDED', 'MODIFIED')]
-    print('\n'.join(bad))
-except Exception:
-    print('')
-" 2>/dev/null)
-        if [ -n "$bad_files" ]; then
-          echo "❌ PR #$pr_num 混入运行时文件, 请移除后重推:" >&2
-          echo "$bad_files" | sed 's/^/    /' >&2
-          echo "   git rm --cached <file> && git commit --amend && git push --force" >&2
-          exit 1
-        fi
-        echo "   ✅ PR #$pr_num 文件清单校验通过"
-      fi
-    else
-      echo "⚠️  gh 未装, 手动开 PR: base main <- $branch"
+    # ── PR2: 子模块 pointer SHA 可达性前置检查 ─────────────────────────
+    # 扫描本分支相对于 base 的子模块指针变更 (projects/*), 对每个变更子模块:
+    #   1. 从 root index 获取 pointer SHA
+    #   2. 通过 git ls-remote 检查 SHA 是否在 child origin/main refs 中
+    # 默认: 不可达时 warning (不阻塞); --strict: 阻塞提交
+    _submod_check_base=""
+    if git rev-parse --verify --quiet "origin/main^{commit}" >/dev/null 2>&1; then
+      _submod_check_base="origin/main"
+    elif git rev-parse --verify --quiet "upstream/main^{commit}" >/dev/null 2>&1; then
+      _submod_check_base="upstream/main"
     fi
-    echo "✅ submit: push $branch + PR"
+    if [ -n "$_submod_check_base" ]; then
+      _submod_changed=$(git diff --name-only "$_submod_check_base"...HEAD -- 'projects/' 2>/dev/null \
+        | grep -E '^projects/[^/]+/?$' | sort -u || true)
+    else
+      _submod_changed=""
+    fi
+    if [ -z "$_submod_changed" ]; then
+      echo "   ℹ️  子模块指针无变更, 跳过可达性检查"
+    else
+      echo "⚡ PR2: 检查子模块 pointer SHA 可达性 (base=$_submod_check_base)..."
+      _submod_strict_fails=0
+      while IFS= read -r _sub_path; do
+        [ -z "$_sub_path" ] && continue
+        _sub_sha=$(git ls-files -s -- "$_sub_path" 2>/dev/null | awk '{print $2}')
+        if [ -z "$_sub_sha" ]; then
+          echo "   ⚠️  $_sub_path: 无法获取 pointer SHA" >&2
+          continue
+        fi
+        _sub_url=$(git config --file .gitmodules --get "submodule.$_sub_path.url" 2>/dev/null || true)
+        if [ -z "$_sub_url" ]; then
+          echo "   ⚠️  $_sub_path: 无法获取 submodule URL, 跳过检查" >&2
+          continue
+        fi
+        # 通过 ls-remote 获取 child origin/main refs, 检查 SHA 是否可达
+        _sub_main_refs=$(git ls-remote "$_sub_url" "refs/heads/main" 2>/dev/null || true)
+        _sub_main_tip=$(printf '%s\n' "$_sub_main_refs" | awk '$2 == "refs/heads/main" {print $1}')
+        if [ -z "$_sub_main_tip" ]; then
+          echo "   ⚠️  $_sub_path: 无法获取 origin/main tip (可能仓库不可达)" >&2
+          continue
+        fi
+        _reachable=0
+        # 精确匹配 main tip (最快路径, 无需 git clone)
+        if [ "$_sub_sha" = "$_sub_main_tip" ]; then
+          _reachable=1
+        else
+          # 通用检查: 需要子模块已 init 才能用 branch -r --contains
+          # 子模块未 init 时只能精确匹配, 无法验证间接可达性
+          if [ -d "$_sub_path/.git" ] || [ -f "$_sub_path/.git" ]; then
+            if ( cd "$_sub_path" 2>/dev/null && unset GIT_DIR GIT_WORK_TREE GIT_QUARANTINE_PATH 2>/dev/null; git branch -r --contains "$_sub_sha" 2>/dev/null | grep -q . ); then
+              _reachable=1
+            fi
+          fi
+        fi
+        if [ "$_reachable" -eq 0 ]; then
+          echo "   ⚠️  $_sub_path: SHA $_sub_sha 在 child origin/main 不可达 (main tip: ${_sub_main_tip:0:12})" >&2
+          if [ "$SUBMOD_PREFLIGHT_STRICT" -eq 1 ]; then
+            echo "   ❌ --strict: 子模块 $_sub_path 指针不可达, 阻止提交" >&2
+            _submod_strict_fails=$((_submod_strict_fails+1))
+          else
+            echo "   ℹ️  默认模式: 仅 warning, 继续提交 (加 --strict 可阻塞)" >&2
+          fi
+        else
+          echo "   ✅ $_sub_path: SHA ${_sub_sha:0:12} 在 child origin/main 可达"
+        fi
+      done <<< "$_submod_changed"
+      if [ "$_submod_strict_fails" -gt 0 ]; then
+        echo "❌ $_submod_strict_fails 个子模块指针在 origin/main 不可达, --strict 阻止提交" >&2
+        echo "   修复: 先推送子模块 commit 到 origin/main, 再重新提交" >&2
+        exit 1
+      fi
+    fi
+    # WP1 Wave B2: detection-only 子模块检查 (不 push 子模块)
+    echo "⚡ 检查子模块未推送的 commit (detection-only)..."
+    bash "$(dirname "$0")/../sync-submodules.sh" --status 2>&1 | tail -5 || true
+    # proposal-only: 不 push / 不开 PR / 不调用 clone-lifecycle integrate
+    if [ -z "${_submit_base_ref:-}" ]; then
+      if git rev-parse --verify --quiet "origin/main^{commit}" >/dev/null 2>&1; then
+        _submit_base_ref="origin/main"
+      elif git rev-parse --verify --quiet "upstream/main^{commit}" >/dev/null 2>&1; then
+        _submit_base_ref="upstream/main"
+      fi
+    fi
+    _emit_managed_successor_proposal "${_submit_base_ref:-}"
     ;;
 
   release)
@@ -400,7 +602,7 @@ except Exception:
     # PASW: 清理 claim 记录
     pasw_claim_clean "$session"
     # 分支清理: 已合并到 main → 删; 否则保留
-    branch="work/$session"
+    branch="$(resolve_branch_for "$session")"
     if git rev-parse --verify "$branch" >/dev/null 2>&1; then
       if git log --oneline --not "origin/main" "$branch" 2>/dev/null | head -1 | grep -q .; then
         echo "   分支 $branch 有 main 外 commit, 保留 (可手动 git branch -D)"
@@ -422,7 +624,7 @@ except Exception:
     [ -z "$session" ] && echo "用法: merge <session> [--auto]" >&2 && exit 1
     validate_session "$session"
     wt="$WS_PARENT/ws-$session"
-    branch="work/$session"
+    branch="$(resolve_branch_for "$session")"
     if [ ! -d "$wt" ]; then
       echo "❌ worktree 不存在: $wt (先 claim + submit)" >&2
       exit 1
@@ -820,7 +1022,7 @@ PYEOF
     ;;
 
   cleanup)
-    # TTL 过期 worktree 回收 (cron 调用入口; gac-worktree-cleanup.sh 委托本子命令)
+    # 旧手动 TTL 兼容入口；定时回收的 canonical successor 是 prune-zombie-worktrees.py。
     # 判定: mtime (非 atime — relatime 下 atime 不更新) 超 TTL 且无脏改动 → 删除
     TTL_HOURS="${PASW_TTL_HOURS:-24}"
     DRY=false
@@ -868,10 +1070,11 @@ PYEOF
   *)
     echo "GaC worktree per session (ADR-0106 P2)"
     echo ""
-    echo "用法: gac-worktree.sh {claim|submit|merge|release|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
+    echo "用法: gac-worktree.sh {claim|submit [--strict]|merge|release|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
     echo ""
     echo "  claim <session>      创建 worktree + 分支 work/<session>"
-    echo "  submit <session>     push 分支 + 开 PR (base main)"
+    echo "  submit [--strict] <session>  proposal-only → MANAGED_SUCCESSOR_REQUIRED"
+    echo "                       --strict: 子模块 pointer 不可达时阻止提案 (默认仅 warning)"
     echo "  merge <session>      squash 合并 PR + release worktree + 删分支"
     echo "  release <session>    清理 worktree (手动, 合并后)"
     echo "  bump-fast <submodule-path> [--sha <sha>|--latest-main]  流程内快速更新单个子模块指针"
@@ -881,7 +1084,7 @@ PYEOF
     echo "  onboard <session>    新 Agent 入职引导 (claim + 环境 + 引导)"
     echo "  cleanup              回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h)"
     echo ""
-    echo "PASW 隔离子模块: $ISOLATED_SUBS"
+    echo "PASW 隔离子模块: ${ISOLATED_SUBS:-}"
     echo "session 命名: 只允许 [a-z0-9-] (如 fix-route-bug)"
     exit 1
     ;;

@@ -14,6 +14,7 @@ warning: |
   Agent 不得在立项前自行修改 bos-services.yaml 的 transport 字段。
 last-reviewed: 2026-08-25
 lifecycle: plan
+type: ssot
 ---
 
 # BOS 迁移候选图谱 (P81 S0.4 evidence)

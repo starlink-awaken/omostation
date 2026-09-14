@@ -6,6 +6,7 @@ owner: governance
 last-reviewed: 2026-08-08
 surface: L3
 dimension: X1
+type: ssot
 ---
 
 # 文档 ↔ L0 ↔ MOF 映射治理方案

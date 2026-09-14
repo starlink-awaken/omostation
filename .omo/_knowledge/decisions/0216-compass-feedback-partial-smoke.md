@@ -9,6 +9,7 @@ related:
   - 0215-agora-gateway-false-green-pid-health-check.md
   - 0179-runtime-probe-false-positive-treatment.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0216 — compass 健康刷新：feedback partial smoke + c2g 降级

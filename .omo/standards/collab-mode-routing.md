@@ -5,6 +5,7 @@ owner: governance-team
 last-reviewed: 2026-07-28
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ssot
 ---
 
 # 协作模式路由标准（P84 · ADR-0253）

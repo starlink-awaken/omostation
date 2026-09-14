@@ -10,6 +10,7 @@ related:
   - 0240-mof-d1d4-decisions-aaaa-phase1.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0252: metaos Phase 1/2 前提 D1-D4 决策 (A/A/B/A)

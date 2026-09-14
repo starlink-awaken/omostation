@@ -3,6 +3,7 @@ status: active
 lifecycle: plan
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
+type: ssot
 ---
 
 # Phase 45 — 治理可观测性: 从"执行"到"自维护"

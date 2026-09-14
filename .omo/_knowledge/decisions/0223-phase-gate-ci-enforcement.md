@@ -10,6 +10,7 @@ related:
   - 0222-m1-conflict-zero-evidence-standard-adversarial.md
   - 0202-fake-green-prevention.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0223: 阶段门禁 CI 硬阻断 — phase gate 从 advisory 升为 enforcing

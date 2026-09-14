@@ -5,6 +5,8 @@ owner: governance-team
 last-reviewed: 2026-08-18
 archived-since: 2026-08-18
 note: "2026-08-18 文档与配置全面治理 closeout (RISE 循环)"
+type: ephemeral
+status: archived
 ---
 
 # 文档与配置全面治理 Closeout (2026-08-18)

@@ -2,7 +2,10 @@
 name: workflow-silence-detection
 description: "Use when governance audits report silent workflows, P74 or p74_solidification warnings, compliance drift, or when planning workflow consolidation in the canonical split registry."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # Workflow Silence Detection — P74 Solidification
 

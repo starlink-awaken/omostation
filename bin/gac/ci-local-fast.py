@@ -371,6 +371,84 @@ def run_ruff_debt_report(*, root: Path = WORKSPACE, output: TextIO = sys.stdout)
     return 1 if diagnostics else 0
 
 
+def run_runtime_artifact_gate(*, root: Path = WORKSPACE, output: TextIO = sys.stdout) -> int:
+    """Block runtime artifacts from entering git index."""
+    import subprocess as _sp
+
+    BLACKLIST_SUFFIXES = {
+        ".sqlite", ".sqlite3", ".db", ".pyc", ".pyo", ".class", ".o", ".so", ".dylib", ".dll", ".exe",
+    }
+    BLACKLIST_FILENAMES = {".DS_Store", "Thumbs.db", "desktop.ini"}
+    BLACKLIST_PREFIXES = [
+        ".omo/locks/", ".omo/_log/", ".omo/_delivery/", "__pycache__/", ".venv/",
+        "node_modules/", "dist/", "build/", "target/debug/", "target/release/",
+    ]
+
+    r = _sp.run(
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=A"],
+        cwd=root, capture_output=True, text=True, check=False,
+    )
+    if r.returncode != 0:
+        return 2
+
+    violations = []
+    for path in r.stdout.splitlines():
+        path = path.strip()
+        if not path:
+            continue
+        basename = os.path.basename(path)
+        if basename in BLACKLIST_FILENAMES:
+            violations.append(f"{path} (blacklisted filename)")
+            continue
+        if any(path.endswith(s) for s in BLACKLIST_SUFFIXES):
+            violations.append(f"{path} (blacklisted suffix)")
+            continue
+        if any(path.startswith(p) for p in BLACKLIST_PREFIXES):
+            violations.append(f"{path} (blacklisted prefix)")
+            continue
+
+    if violations:
+        output.write(f"❌ {len(violations)} runtime artifact(s) blocked from staging:\n")
+        for v in violations:
+            output.write(f"  - {v}\n")
+        output.write("\nFix: git rm --cached <file> + add to .gitignore\n")
+        return 1
+
+    output.write("✓ runtime artifact gate: clean\n")
+    return 0
+
+
+def run_gitignore_drift_check(*, root: Path = WORKSPACE, output: TextIO = sys.stdout) -> int:
+    """Detect tracked files that match gitignore rules."""
+    import subprocess as _sp
+
+    r = _sp.run(["git", "ls-files"], cwd=root, capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        return 2
+
+    tracked = [ln for ln in r.stdout.splitlines() if ln.strip()]
+    if not tracked:
+        output.write("✓ gitignore drift: clean\n")
+        return 0
+
+    proc = _sp.run(
+        ["git", "check-ignore", "--stdin"],
+        cwd=root, input="\n".join(tracked),
+        capture_output=True, text=True, check=False,
+    )
+    drift = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+
+    if drift:
+        output.write(f"⚠️ {len(drift)} tracked file(s) match .gitignore (drift):\n")
+        for f in drift[:20]:
+            output.write(f"  - {f}\n")
+        output.write("\nFix: git rm --cached <files>\n")
+        return 1
+
+    output.write("✓ gitignore drift: clean\n")
+    return 0
+
+
 def run_html_entity_check(*, root: Path = WORKSPACE, output: TextIO = sys.stdout) -> int:
     projects = root / "projects"
     if not projects.is_dir():
@@ -421,6 +499,17 @@ def build_checks(*, root: Path = WORKSPACE) -> tuple[Check, ...]:
         ),
         Check("html", "HTML entity encoding", (python, script, "--html-entities")),
         Check("yaml", "YAML syntax", (python, str(root / "bin/ssot/yaml-validate.py"))),
+        Check(
+            "runtime-artifacts",
+            "Runtime artifact gate",
+            (python, script, "--runtime-artifacts"),
+        ),
+        Check(
+            "gitignore-drift",
+            "Gitignore drift check",
+            (python, script, "--gitignore-drift"),
+            blocking=False,
+        ),
     )
 
 
@@ -467,6 +556,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ruff-gate", action="store_true")
     parser.add_argument("--ruff-debt", action="store_true")
     parser.add_argument("--html-entities", action="store_true")
+    parser.add_argument("--runtime-artifacts", action="store_true")
+    parser.add_argument("--gitignore-drift", action="store_true")
     parser.add_argument(
         "--failures-json",
         default="",
@@ -479,6 +570,10 @@ def main(argv: list[str] | None = None) -> int:
         return run_ruff_debt_report()
     if args.html_entities:
         return run_html_entity_check()
+    if args.runtime_artifacts:
+        return run_runtime_artifact_gate()
+    if args.gitignore_drift:
+        return run_gitignore_drift_check()
 
     print("════════════════════════════════════════════════════")
     print("  ci-local-fast — 本地 CI 预检（真实退出码）")

@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-22
+type: ssot
 ---
 
 # Agent Registry Heartbeat, Cache & Identity Gate — M2.2

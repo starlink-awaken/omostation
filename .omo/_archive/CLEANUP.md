@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # .omo/ Cleanup Policy
 > ⚠️ **LEGACY** — 历史参考文档，不再作为当前执行标准。清理策略请遵循 `.omo/state/system.yaml` 与 `state/` 目录下的实际状态。
 

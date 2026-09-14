@@ -1,0 +1,14 @@
+schema: script-registry/v1
+id: bin/panorama/panorama-collect.py
+name: Panorama panorama-collect (织星全景驾驶舱 v5, 36 采集器)
+category: governance
+owner: agent-experience-steward
+description: 织星全景驾驶舱 v5。collect=只读 SSOT 聚合（36 采集器/36 板块）。
+inputs:
+  - name: --json / --gates / --check-side-effects / --port
+    type: flag
+    required: false
+outputs:
+  - type: exit_code
+triggers: [manual, launchd]
+tags: [panorama, dashboard, observability]

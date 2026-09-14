@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV179-jwt-kid-injection
+category: B_failure_injection
+adversarial: true
+seed: 279
+description: >
+  [对抗·red-team wave31 闭环] JWT kid 注入: kid 路径穿越指向公钥空文件验签绕过,
+  检测器 jwt_kid_injection_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: jwt_verify, value: "kid_lookup", writers: [auth]}
+  roles: [attacker, auth, api]
+inject:
+  - {type: write_conflict, role: attacker, target: jwt_header, value: "kid=../../dev/null"}
+  - {type: write_conflict, role: auth, target: key_load, value: "empty_key_from_path"}
+  - {type: write_conflict, role: auth, target: verify, value: "accept_hmac_empty"}
+  - {type: write_conflict, role: attacker, target: session, value: "forged_admin_jwt"}
+expected:
+  behavior: jwt_kid_injection_detected
+  silent_loss: 0
+verdict:
+  - criterion: jwt_kid_injection_detected
+    check: events_contain
+    args: {kind: jwt_kid_injection_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

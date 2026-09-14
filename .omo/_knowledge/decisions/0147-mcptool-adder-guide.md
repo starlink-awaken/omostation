@@ -12,6 +12,7 @@ related:
   - ../../../../docs/MCPTOOL-ADDER-GUIDE.md
   - ../../../../bin/mcp-tool-data-complete.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0147: MCPTOOL M1 Adder Guide (Round 5b)

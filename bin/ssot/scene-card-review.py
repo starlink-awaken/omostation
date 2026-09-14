@@ -179,11 +179,10 @@ def _parse_time(ts: str) -> datetime | None:
 
 def validate_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
     """Validate a scene card's field completeness."""
-    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    scene_file = workspace_root / "docs" / "scene-cards" / f"{scene_id}.yaml"
     if not scene_file.exists():
         return {"valid": False, "error": f"Scene card not found: {scene_file}"}
 
-    import yaml
     data = yaml.safe_load(scene_file.read_text())
 
     required = [
@@ -213,11 +212,10 @@ def promote_scene_card(workspace_root: Path, scene_id: str, target_lifecycle: st
     if target_lifecycle not in valid_order:
         return {"success": False, "error": f"Invalid lifecycle: {target_lifecycle}"}
 
-    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    scene_file = workspace_root / "docs" / "scene-cards" / f"{scene_id}.yaml"
     if not scene_file.exists():
         return {"success": False, "error": f"Scene card not found: {scene_file}"}
 
-    import yaml
     data = yaml.safe_load(scene_file.read_text())
     current = data.get("lifecycle", "draft")
 
@@ -236,11 +234,10 @@ def promote_scene_card(workspace_root: Path, scene_id: str, target_lifecycle: st
 
 def status_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
     """Get scene card status."""
-    scene_file = workspace_root / ".omo" / "_truth" / "scenarios" / f"{scene_id}.yaml"
+    scene_file = workspace_root / "docs" / "scene-cards" / f"{scene_id}.yaml"
     if not scene_file.exists():
         return {"error": f"Scene card not found: {scene_file}"}
 
-    import yaml
     data = yaml.safe_load(scene_file.read_text())
     return {
         "scene_id": data.get("scene_id", scene_id),
@@ -312,7 +309,6 @@ def generate_pilot_report(workspace_root: Path) -> dict[str, Any]:
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main():
-    import argparse
     parser = argparse.ArgumentParser(description="Scene Card Review — 场景卡生命周期管理")
     sub = parser.add_subparsers(dest="command")
 

@@ -4,6 +4,7 @@ lifecycle: history
 owner: bootloader
 last-reviewed: 2026-08-25
 related: []
+type: ssot
 ---
 
 # DRAFT ADR (omostation-bootloader)

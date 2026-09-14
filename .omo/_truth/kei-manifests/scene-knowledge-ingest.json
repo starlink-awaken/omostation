@@ -1,0 +1,24 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "scene-knowledge-ingest",
+  "name": "知识沉淀与检索",
+  "lifecycle": "assisted",
+  "permissions": {
+    "fs_read": [
+      ".omo/"
+    ],
+    "fs_write": [
+      ".omo/_delivery/",
+      ".omo/_knowledge/",
+      "data/"
+    ],
+    "network": [
+      "localhost:4000",
+      "localhost:5432",
+      "localhost:8766",
+      "localhost:9290"
+    ],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:36.405333+00:00"
+}

@@ -4,11 +4,9 @@ status: pilot
 type: scene-card
 owner: product-architecture
 last-reviewed: 2026-08-22
-related:
-  - ../WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../SCENE-CARD-REVIEW-RUNBOOK.md
-  - ../reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json
-  - ../../.omo/standards/external-connection-fabric.md
+related: ['../WORKFLOW-MESH-IMPLEMENTATION.md', '../SCENE-CARD-REVIEW-RUNBOOK.md', '../reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json', '../../.omo/standards/external-connection-fabric.md']
+bet: BET-Y1Q4-T8-04
+falsifier: 若 30 天内无 engineering 类任务触发，则场景无实际价值
 ---
 schema: scene-card/v2
 scene_type: internal_pipeline

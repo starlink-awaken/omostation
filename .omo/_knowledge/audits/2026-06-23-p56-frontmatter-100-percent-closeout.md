@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # P56 — frontmatter 100% 全覆盖 + ADR-0052 收口报告
 
 **日期**：2026-06-23

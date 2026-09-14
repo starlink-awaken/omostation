@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ssot
 ---
 
 # ADR-0072: P78 跨子仓联动 + management INDEX + alert-history 自动洞察

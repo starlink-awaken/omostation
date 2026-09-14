@@ -1,0 +1,51 @@
+schema: scene-card/v3
+scene_id: scene-health-visit-prep
+version: 3.0.0
+name: Health Visit Prep
+description: 汇总症状时间线 + 历史健康摘要 + 就诊问题清单, 生成就诊准备包供人携带就诊
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: draft
+activation: preview
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: health-medical-workflow
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - llm:local-summarize
+    - storage:local-health-ledger
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 30 天内无 health 类任务触发，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: journey 前置状态 recorded 判定 needs_doctor_visit == true 后进入
+input_contract: 本地健康台账中的历史记录 + 当前症状时间线
+result_contract: 就诊准备包 (symptom_timeline/history_summary/question_list) 供人工使用
+outcome_metric: health_visit_prep_completeness
+consumer: xiamingxing
+failure_cost: 就诊时遗漏关键症状信息或想不起要问的问题
+data_classification: confidential
+data_scope: local-health-ledger-only
+operator: health-visit-prep-dispatch-under-human-review

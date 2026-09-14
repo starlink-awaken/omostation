@@ -5,6 +5,8 @@ owner: governance-team
 last-reviewed: 2026-06-22
 archived-since: 2026-06-22
 note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+type: ephemeral
+status: archived
 ---
 
 # mof-bridge-sync — M0/M1 双向追溯覆盖报告 (P44 R0)

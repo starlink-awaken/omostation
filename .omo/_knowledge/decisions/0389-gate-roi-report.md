@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-07
+type: ssot
 ---
 
 # ADR-0389 Decision: M5 gate ROI 治理价值报告

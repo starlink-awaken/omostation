@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-14
+type: ssot
 ---
 
 # ADR-0181: metaos × ecos 方案 C — 三平面契约化

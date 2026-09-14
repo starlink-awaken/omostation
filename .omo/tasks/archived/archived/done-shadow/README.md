@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 这些任务文件曾错误地落在 `.omo/tasks/done/`，但其 `status` 仍是 `pending/review`。
 
 处理原则：

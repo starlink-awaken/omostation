@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — 2026-07-15 hygiene follow-up
 
 ## Ops (local, not in git)

@@ -5,6 +5,7 @@ lifecycle: history
 owner: governance-team
 created: 2026-08-28
 last-reviewed: 2026-08-28
+type: ssot
 ---
 
 # T10-46 BET bootstrap waiver

@@ -1,0 +1,36 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-07-28
+---
+id: A12-dependency-cycle-v1
+category: A_conflict
+adversarial: false
+seed: 1120
+description: '[W2.1 批量] 依赖循环 (A→B→A) (原型12 实例1)'
+setup:
+  blackboard:
+  - key: target_12
+    value: null
+  roles:
+  - role_a_0
+  - role_b_0
+inject:
+- type: write_conflict
+  role: role_a_0
+  target: target_12
+  value: val_a_0
+- type: write_conflict
+  role: role_b_0
+  target: target_12
+  value: val_b_0
+expected:
+  behavior: conflict_detected_and_resolved
+  max_resolution_rounds: 3
+  silent_loss: 0
+verdict:
+- criterion: no_silent_loss
+  check: silent_loss_eq
+  args:
+    expected: 0

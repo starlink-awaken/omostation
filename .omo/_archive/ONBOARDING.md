@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Workspace Onboarding
 
 > 新人上手指南 — 5 分钟了解 omostation

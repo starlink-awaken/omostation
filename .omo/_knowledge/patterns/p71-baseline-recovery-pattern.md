@@ -8,6 +8,7 @@ related:
   - 0115-bin-governance-rationalize.md
   - 0120-runtime-health-semantics-fix.md
   - ../audits/2026-07-02-p0-baseline-recovery-closeout.md
+type: ssot
 ---
 
 # P71 Baseline Recovery Pattern — 5 阶段声明/执行鸿沟修复

@@ -9,6 +9,7 @@ related:
   - 0179-runtime-probe-false-positive-treatment.md
   - 0212-ledger-history-gap-not-physical-trim.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0215 — agora-gateway 假绿灯治本（PID 重置 + health_check 落盘）

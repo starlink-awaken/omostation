@@ -72,6 +72,23 @@ _SANYI_STATUS_SCHEMA = "runtime.documents-sanyi-status-consistency.evidence.v1"
 _SANYI_STATUS_EVIDENCE_PATH = (
     "control/evidence/documents-weijian-sanyi-status-audit/documents-weijian-sanyi-status-audit.json"
 )
+_RUNTIME_LEARNING_FIELDS = {
+    "id",
+    "domain_id",
+    "owner",
+    "action",
+    "schedule",
+    "timeout_seconds",
+    "reads",
+    "writes",
+    "evidence_relative_path",
+    "evidence_schema",
+    "fail_closed",
+}
+_RUNTIME_LEARNING_SCHEMAS = {
+    "audit_concept_decay": "runtime.documents-learning-decay.evidence.v1",
+    "list_orphan_concepts": "runtime.documents-learning-decay.evidence.v1",
+}
 
 
 def _safe_relative_path(value: object) -> bool:
@@ -247,6 +264,33 @@ def _validate_sanyi_status_job(value: dict[str, object], label: str) -> list[str
     return errors
 
 
+def _validate_runtime_learning_job(value: dict[str, object], label: str) -> list[str]:
+    """Validate a runtime-learning owner job (concept decay / orphan detection)."""
+
+    errors: list[str] = []
+    unknown_fields = sorted(set(value) - _RUNTIME_LEARNING_FIELDS)
+    missing_fields = sorted(_RUNTIME_LEARNING_FIELDS - set(value))
+    if unknown_fields:
+        errors.append(f"runtime learning job {label} has unknown fields: {', '.join(unknown_fields)}")
+    if missing_fields:
+        errors.append(f"runtime learning job {label} is missing fields: {', '.join(missing_fields)}")
+    if value.get("owner") != "runtime-learning":
+        errors.append(f"runtime learning job {label} owner must be runtime-learning")
+    action = value.get("action")
+    if action not in _RUNTIME_LEARNING_SCHEMAS:
+        errors.append(
+            f"runtime learning job {label} action must be one of {sorted(_RUNTIME_LEARNING_SCHEMAS)}"
+        )
+    if value.get("domain_id") != "vault":
+        errors.append(f"runtime learning job {label} domain_id must be vault")
+    if not _safe_relative_path(value.get("evidence_relative_path")):
+        errors.append(f"runtime learning job {label} evidence_relative_path must be relative and non-traversing")
+    expected_schema = _RUNTIME_LEARNING_SCHEMAS.get(action, "")
+    if expected_schema and value.get("evidence_schema") != expected_schema:
+        errors.append(f"runtime learning job {label} evidence_schema must be {expected_schema}")
+    return errors
+
+
 def validate_runtime_state(raw: object) -> list[str]:
     """Require the one Runtime state binding that Cockpit can resolve."""
 
@@ -288,6 +332,8 @@ def validate_runtime_jobs(raw: object, domain_ids: Sequence[str]) -> list[str]:
             errors.extend(_validate_facts_audit_job(value, label))
         elif value.get("owner") == "runtime-control" or value.get("action") == "shadow_legacy_controller":
             errors.extend(_validate_controller_shadow_job(value, label))
+        elif value.get("owner") == "runtime-learning" or value.get("action") in _RUNTIME_LEARNING_SCHEMAS:
+            errors.extend(_validate_runtime_learning_job(value, label))
         else:
             errors.extend(_validate_manifest_job(value, label))
     return errors

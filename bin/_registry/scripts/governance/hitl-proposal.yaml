@@ -1,0 +1,25 @@
+schema: script-registry/v1
+id: bin/hitl-proposal.py
+name: Hitl Proposal
+category: governance
+owner: governance-team
+description: "HITL Proposal Manager — file-based approval gate for human-in-the-loop BET execution. 8 subcommands: create, list, get, approve, reject, expire, check, wait. Atomic YAML writes, fcntl locking, 24h TTL. Integrated with bin/harness stage_execute and cockpit decide."
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/harness
+  - bin/cockpit
+triggers:
+  - hitl proposal
+  - approval gate
+  - human-in-the-loop
+  - human gate
+related:
+  - ADR-0460
+  - BET-Y1Q4-HITL-01
+  - docs/superpowers/specs/2026-09-04-hitl-proposal-system-design.md
+  - docs/superpowers/specs/2026-09-04-hitl-proposal-system-adoption-runbook.md
+maturity: active
+last_reviewed: "2026-09-04"

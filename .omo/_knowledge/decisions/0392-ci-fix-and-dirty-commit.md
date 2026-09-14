@@ -5,6 +5,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-08
+type: ssot
 ---
 
 # ADR-0392 Decision: CI 修复 + 主仓 dirty 提交

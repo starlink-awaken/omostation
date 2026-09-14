@@ -163,3 +163,120 @@ entries:
   range: origin/main..5a1b1ebddc0c
   recorded_at: '2026-09-03T08:43:07.538253+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|214c3294bad7e89f
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 214c3294bad7e89f
+  kind: gitlink-regress
+  reason: submodule projects/omlxc pointer 0f50b8bdcebb realigns after child origin/main
+    force-push dropped 695c9b5edd3b
+  range: origin/main..HEAD
+  recorded_at: '2026-09-04T12:16:06.155397+00:00'
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|e757f9545b8a8198
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: e757f9545b8a8198
+  kind: gitlink-regress
+  reason: submodule projects/cockpit pointer 3ade4ac68a19 rewinds b768037f5d95
+  range: origin/main..dd1d8c3ff9ff
+  recorded_at: '2026-09-04T10:41:10.331968+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|bd4a1bf3966438e1
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: bd4a1bf3966438e1
+  kind: gitlink-regress
+  reason: submodule projects/runtime pointer 9db8cda8c803 rewinds b7b8cb1a36c7
+  range: origin/main..dd1d8c3ff9ff
+  recorded_at: '2026-09-04T10:41:10.331968+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|ef73132fddb8bf49
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: ef73132fddb8bf49
+  kind: gitlink-regress
+  reason: submodule projects/aetherforge pointer 3175666274d0 rewinds 09e96346d59a
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|0742d6436b294381
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 0742d6436b294381
+  kind: gitlink-regress
+  reason: submodule projects/agora pointer 0d48285869e4 rewinds 8638c05fb5f5
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|98b339062db21987
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 98b339062db21987
+  kind: gitlink-regress
+  reason: submodule projects/family-hub pointer c17f54d562d8 rewinds 38982e393541
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|a56a52ff0ff1fcb8
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: a56a52ff0ff1fcb8
+  kind: gitlink-regress
+  reason: submodule projects/metaos pointer 257cd8874753 rewinds af7f76305e52
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|49dd44f170e301e1
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 49dd44f170e301e1
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer 75071607ebd0 rewinds e448efd3ffcc
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|b8af39363d70c8a3
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: b8af39363d70c8a3
+  kind: gitlink-regress
+  reason: submodule projects/runtime pointer b7b8cb1a36c7 rewinds ebf27ef3ab90
+  range: origin/main..f1c7d5d52664
+  recorded_at: '2026-09-04T14:10:13.079668+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|e6e5d21f488ad6f5
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: e6e5d21f488ad6f5
+  kind: gitlink-regress
+  reason: submodule projects/knowledge/kairon pointer e777becf1d8d rewinds 6dcd4c6e8ae6
+  range: origin/main..770c49726399
+  recorded_at: '2026-09-05T04:08:58.439073+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|16c09780d627aaa1
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 16c09780d627aaa1
+  kind: gitlink-regress
+  reason: submodule projects/agora pointer 9578d7b07e7f advances 24387abce0f8 via squash #76 (content-identical, non-FF by squash)
+  range: origin/main..3018d3897
+  recorded_at: '2026-09-11T08:02:03.623579+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|19ac62aac9247304
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 19ac62aac9247304
+  kind: gitlink-regress
+  reason: submodule projects/knowledge/kairon pointer f616426e7771 unreachable (not in any remote ref); aligned to 38e3eb5593b9 on origin/main to fix gac-gate/governance-verify
+  range: origin/main..HEAD
+  recorded_at: '2026-09-13T05:02:16.272781+00:00'
+  active: true
+- fingerprint: submodule-guard|projects/cockpit|489c94680c05efe4
+  surface: submodule-guard
+  check_id: submodule-guard
+  signature: 489c94680c05efe4
+  kind: gitlink-regress
+  reason: submodule projects/cockpit pointer c345004 squashed to 51c847b via PR #173 (content-identical, non-FF by squash-merge oid rewrite)
+  range: origin/main..HEAD
+  recorded_at: '2026-09-14T03:00:00+00:00'
+  active: true

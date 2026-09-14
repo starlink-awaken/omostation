@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 14
   trace_count: 14
+type: ephemeral
+status: archived
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 

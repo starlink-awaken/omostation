@@ -10,6 +10,7 @@ related:
   - ../../patterns/p71-baseline-recovery-pattern.md
   - ../../audits/2026-07-02-p0-baseline-recovery-closeout.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0149: P71 Baseline 防重做 (Round 5d)

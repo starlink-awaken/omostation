@@ -1,4 +1,6 @@
 ---
+type: derived
+source: bin/mof/gen-agent-redlines.py → .omo/_truth/registry/governance-checks.yaml::gac.rules
 last-reviewed: 2026-08-26
 ---
 

@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: retrospective-2026-06-16-p44-w4.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # P44 W4 复盘: 6 archive + 48 review + c2g eCOS 独立化

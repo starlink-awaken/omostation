@@ -1,7 +1,12 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # Knowledge Engineering Complex (知识工程复合体)
 
 > **Layer**: L2  
-> **Subprojects**: `gbrain` (PostgreSQL + pgvector + TypeScript) + `kairon` (16 packages monorepo)  
+> **Subprojects**: `gbrain` (PostgreSQL + pgvector + TypeScript) + `kairon` (packages monorepo)  
 > **ADR**: ADR-0294, ADR-0372  
 
 ## 架构职责

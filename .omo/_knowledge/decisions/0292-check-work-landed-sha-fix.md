@@ -6,6 +6,7 @@ owner: governance-agent
 last-reviewed: 2026-07-30
 related:
   - 0293-phase45-governance-observability.md
+type: ssot
 ---
 
 # ADR-0292: check-work-landed SHA Detection Fix + M3 Grace Baseline

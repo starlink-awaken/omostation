@@ -9,6 +9,7 @@ related:
   - .omo/plans/metaos-governance-batch-workorder.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0242: metaos registry drift 门扩展 (§J1, 承接 ADR-0238)

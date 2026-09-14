@@ -1,0 +1,7 @@
+# X4 Governance Axis Foundry Deck
+# 创建日期: 2026-09-08
+# 用途: 满足 CR-P79-3-FOUNDRY-DECK gac-gate 检查
+axis: X4
+name: "X4 Governance Deck"
+status: stub
+description: "Placeholder deck for X4 governance axis. Full content pending."

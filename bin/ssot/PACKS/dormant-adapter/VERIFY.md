@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 #!/usr/bin/env bash
 # VERIFY: Dormant Adapter Detector Pack
 #

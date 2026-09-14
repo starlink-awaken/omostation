@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: debt-lifecycle-case-studies-2026-06-10.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # §16 §15 流程实践案例集 — 债循环自然扩 (Round 36 起步)

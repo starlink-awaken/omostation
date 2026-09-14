@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # OpenSpec: Fast-Track Task Compaction
 
 ## 1. 概念与目标 (Why)

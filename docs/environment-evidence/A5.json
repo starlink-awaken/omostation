@@ -1,0 +1,17 @@
+{
+  "gate_id": "A5",
+  "status": "proven",
+  "verdict": "PASS",
+  "detail": "all technical checks pass",
+  "owner": "infra-team",
+  "exit_criteria": "submodule_fresh_within_7d;reference_alignment_pass;launchd_keepalive_active",
+  "refresh_time": "2026-09-12T12:47:16Z",
+  "sha256_digest": "sha256:0066c8af23c77962acb2f9b773660d149704e72c91427db1c8633789887ff2fd",
+  "source_receipt": "receipt:///Users/xiamingxing/ws-t10-164-evidence/.omo/_delivery/environment-evidence/_gate-health.json",
+  "not_admitted_legal_states": "NOT_ADMITTED 合法 (A6/A7/RF0 设计如此, 非缺陷)",
+  "unlock_conditions": {
+    "A6": "T10-149 完成 R0 验收测试 + signoff",
+    "A7": "T10-150 完成 AS0 验收测试 + signoff",
+    "RF0": "side-effect-free 观察保持, 不建第二队列"
+  }
+}

@@ -4,6 +4,7 @@ status: ACCEPTED
 lifecycle: spec
 owner: governance-agent
 last-reviewed: 2026-08-02
+type: ssot
 ---
 
 # ADR-0296: C2G Predictive Outcomes to Knowledge Graph Pipeline (Wave 2 Phase C)

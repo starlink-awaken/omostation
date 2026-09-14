@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-23
+type: ssot
 ---
 
 # ADR-0061: P67 告警阈值参数化 (P0/P1/P2/P3) + governance-agent 集成 alert-aggregator

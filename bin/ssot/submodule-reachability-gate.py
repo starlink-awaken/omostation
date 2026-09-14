@@ -135,6 +135,83 @@ def remote_contains(path: str, sha: str, *, fetch: bool, require_main: bool = Fa
     return False, "not contained in fetched origin branches"
 
 
+def detect_drift(path: str) -> dict[str, object] | None:
+    """Check if local working tree HEAD differs from the gitlink SHA (drift detection).
+
+    Returns a finding dict when drift is detected, None when consistent.
+    Drift means: the local checked-out commit does not match the gitlink
+    recorded in the superproject index/HEAD. This is the P97 squash-SHA
+    dangling pattern and the local-uncommitted-change pattern.
+    """
+    submodule_dir = WORKSPACE / path
+    if not submodule_dir.exists():
+        return None
+    if not (submodule_dir / ".git").exists():
+        return None
+    # Submodule must be initialized to read local HEAD
+    init_check = run(["git", "rev-parse", "--is-inside-work-tree"], cwd=submodule_dir)
+    if init_check.stdout.strip() != "true":
+        return None
+    local_result = run(["git", "-C", path, "rev-parse", "HEAD"])
+    if local_result.returncode != 0 or not local_result.stdout.strip():
+        return None
+    local_sha = local_result.stdout.strip()
+    # Read gitlink from the index (most authoritative for the superproject intent)
+    gitlink = gitlink_sha(path, "index")
+    if gitlink is None:
+        return None
+    if local_sha == gitlink:
+        return None
+    return {
+        "path": path,
+        "local_sha": local_sha,
+        "gitlink_sha": gitlink,
+        "ok": False,
+        "reason": f"gitlink drift: local HEAD ({local_sha[:12]}) != gitlink ({gitlink[:12]})",
+    }
+
+
+def auto_fast_forward(path: str, gitlink_sha: str) -> tuple[bool, str]:
+    """Try to fast-forward the submodule working tree to match the gitlink SHA.
+
+    Returns (success, message). Only performs fast-forward (non-destructive);
+    refuses if the target is not an ancestor of the local branch or if there
+    are uncommitted changes. This is the circuit_breaker: fast-forward failure
+    stops, never forces update.
+    """
+    submodule_dir = WORKSPACE / path
+    if not submodule_dir.exists():
+        return False, "submodule directory missing"
+    if not (submodule_dir / ".git").exists():
+        return False, "submodule not initialized"
+    init_check = run(["git", "rev-parse", "--is-inside-work-tree"], cwd=submodule_dir)
+    if init_check.stdout.strip() != "true":
+        return False, "submodule not initialized"
+    # Check for uncommitted changes — refuse to move HEAD if dirty
+    status = run(["git", "status", "--porcelain"], cwd=submodule_dir)
+    if status.stdout.strip():
+        return False, "submodule has uncommitted changes — refusing fast-forward"
+    # Verify target is reachable (fetch first if needed)
+    fetch_result = run(
+        ["git", "fetch", "--quiet", "origin", f"+refs/heads/*:refs/remotes/origin/*"],
+        cwd=submodule_dir,
+    )
+    if fetch_result.returncode != 0:
+        return False, f"fetch failed: {fetch_result.stderr.strip()}"
+    # Check if target is an ancestor of current HEAD (can only ff forward)
+    is_ancestor = run(
+        ["git", "merge-base", "--is-ancestor", "HEAD", gitlink_sha],
+        cwd=submodule_dir,
+    )
+    if is_ancestor.returncode != 0:
+        return False, f"gitlink SHA {gitlink_sha[:12]} is not a descendant of local HEAD — fast-forward impossible"
+    # Perform the fast-forward checkout
+    ff_result = run(["git", "checkout", "--quiet", gitlink_sha], cwd=submodule_dir)
+    if ff_result.returncode != 0:
+        return False, f"checkout failed: {ff_result.stderr.strip()}"
+    return True, f"fast-forwarded to {gitlink_sha[:12]}"
+
+
 def changed_submodules(base_ref: str, source: str) -> set[str] | None:
     """相对 base_ref 真正变了 gitlink 的子模块路径。
 
@@ -229,6 +306,16 @@ def main() -> int:
     )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     parser.add_argument(
+        "--drift-check",
+        action="store_true",
+        help="Detect gitlink drift: local HEAD vs gitlink SHA mismatch (P97 squash-SHA dangling pattern)",
+    )
+    parser.add_argument(
+        "--auto-fast-forward",
+        action="store_true",
+        help="When drift is detected, attempt fast-forward to the gitlink SHA (circuit_breaker: stops on failure)",
+    )
+    parser.add_argument(
         "--skip",
         nargs="*",
         default=[],
@@ -276,6 +363,26 @@ def main() -> int:
         else:
             mode = f"changed-from {args.changed_from}"
 
+    # --- Gitlink drift detection (BET-Y1Q4-T6-03) ---
+    drift_findings: list[dict[str, object]] = []
+    drift_ok = True
+    if args.drift_check:
+        paths = submodule_paths()
+        for path in paths:
+            finding = detect_drift(path)
+            if finding is not None:
+                drift_findings.append(finding)
+                drift_ok = False
+                # Auto fast-forward if requested (circuit_breaker: fails → stop, no force)
+                if args.auto_fast_forward and finding.get("gitlink_sha"):
+                    ff_ok, ff_msg = auto_fast_forward(path, finding["gitlink_sha"])
+                    finding["fast_forward"] = {"ok": ff_ok, "message": ff_msg}
+                    if ff_ok:
+                        # After successful ff, drift is resolved
+                        finding["ok"] = True
+                        finding["reason"] = f"drift resolved: {ff_msg}"
+                        drift_ok = True
+
     report = check(
         args.source,
         fetch=args.fetch,
@@ -284,17 +391,28 @@ def main() -> int:
         only_paths=only_paths,
     )
     report["mode"] = mode
+    if args.drift_check:
+        report["drift_findings"] = drift_findings
+        report["drift_ok"] = drift_ok
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
-    elif report["ok"]:
+    elif report["ok"] and (not args.drift_check or drift_ok):
         skip_msg = f", skipped={report['skipped']}" if report["skipped"] else ""
         mode_msg = f", mode={mode}" if mode != "full" else ""
-        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg}{mode_msg})")
-    else:
+        drift_msg = f", drift={len(drift_findings)}" if drift_findings else ""
+        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg}{mode_msg}{drift_msg})")
+    elif not report["ok"]:
         for item in report["failures"]:
             print(f"{item['path']}: {item['sha'] or '-'} unreachable: {item['reason']}")
         print(f"submodule-reachability: FAIL ({len(report['failures'])} failures)")
-    return 0 if report["ok"] else 1
+    else:
+        # drift failures only (reachability passed)
+        for item in drift_findings:
+            if not item.get("ok", True):
+                print(f"{item['path']}: {item['reason']}")
+        print(f"submodule-reachability: FAIL (drift: {len([f for f in drift_findings if not f.get('ok', True)])} submodules)")
+    overall_ok = report["ok"] and (not args.drift_check or drift_ok)
+    return 0 if overall_ok else 1
 
 
 if __name__ == "__main__":

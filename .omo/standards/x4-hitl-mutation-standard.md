@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-22
+type: ssot
 ---
 
 # X4 Standard: MutationProposal & HITL Lifecycle

@@ -7,6 +7,7 @@ last-reviewed: 2026-07-29
 related:
   - 0287-p86-abcd-wave-closeout.md
   - 0247-strategic-pivot-collab-first-physical-deferred.md
+type: ssot
 ---
 
 # ADR-0288: ABCD skeptic 补强 — 诚实 A2 墙钟 + 产能目标 15

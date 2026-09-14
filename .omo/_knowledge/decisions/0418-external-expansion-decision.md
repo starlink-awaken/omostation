@@ -12,6 +12,7 @@ deciders:
 related:
   - .omo/_knowledge/decisions/0415-reject-agt-integration-adopt-capability-parity.md
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md §2.1 边界
+type: ssot
 ---
 
 # ADR-0418: 对外扩展决策 — 默认不做

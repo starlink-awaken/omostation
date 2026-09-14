@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-22
+type: ssot
 ---
 
 # L0-L3 Operation Levels — Phase 2 Safe Mesh

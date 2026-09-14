@@ -1,0 +1,39 @@
+---
+title: Personal Health Monitor Scene Card (主动健康连续体征监测)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-09-12
+lifecycle: assisted
+related:
+- ./health-intake.yaml
+- ../journey-specs/health-medical-workflow.yaml
+---
+schema: scene-card/v2
+bet: BET-Y2Q2-T7-03
+falsifier: "若 30 天内连续体征台账无有效记录日 (<20 天)，则自动监测无数据基础"
+scene_id: personal-health-monitor
+journey_id: health-medical-workflow
+goal: 对本地连续体征台账做每日健康分汇总与基线对比，异常 5 分钟内生成干预场景卡（含就诊问答卡），形成监测→预警→就诊咨询闭环
+trigger: "每日定时 run_daily --daily（cron proposed health-daily-summary，待 owner 装机）或人工触发"
+input_contract: 本地 JSONL 体征台账 (date/metric/value/source) + Apple Health 手工导出 CSV（本地解析）
+result_contract: 每日健康分 (0-100, ok/partial/unmeasured) + 结构化发现列表 (metric/kind/days/peak_z) + 干预卡 (needs_doctor_visit/就诊问题清单/免责声明)
+outcome_metric: health_monitor_anomaly_f1
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 异常漏报导致就诊延误；误报导致不必要的焦虑与就诊（F1 校准门约束）
+data_classification: confidential
+data_scope: local-health-ledger-only
+operator: personal-health-monitor-dispatch-under-human-review
+required_capabilities:
+- storage:local-health-ledger
+- compute:local-deterministic-pipeline
+notes:
+- '实现: projects/domain-cartridges/health/domain/health/ (vitals/monitor_pipeline/apple_health_csv)，零模型调用，纯本地确定性计算'
+- 'assisted 校准证据 (2026-09-12, synthetic-seed): 30 天评估窗 + 12 天前置基线期，6 天注入异常全检出、0 误报，F1=1.000 ≥ 0.6 门；自测: cd projects/domain-cartridges/health && uv run python -m domain.health.test_monitor_pipeline'
+- 'P1 敏感域约束 (沿用 health-intake): 不接自动采集源（穿戴 API/体检系统），Apple Health 仅支持手工导出 CSV 本地解析；不外发任何未人审内容'
+- '风险边界: 管线只输出结构化发现与建议向医生提问的问题，不做诊断断言（免责声明随卡）；send_email:doctor 属 L2 强 HITL，本卡不碰'
+- '基线鲁棒性: 两遍检测 — 首遍标极值，次遍用剔除已标日期的基线重判（防极值污染均值/标准差）；spike 日计入 anomaly 连续段（防碎片化漏报）'
+- '缺失语义: 缺失日标 unmeasured，部分缺失标 partial 并按权重重归一，永不插值伪造'
+- '每日定时: run_daily --daily 已就绪；cron 装机为 owner 待办（.omo/cron/registry.yaml 未动，reality-tagged 注册表不由场景 bet 直写）'

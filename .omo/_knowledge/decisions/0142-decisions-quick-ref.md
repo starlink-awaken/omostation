@@ -17,6 +17,7 @@ related:
   - 0141-m2-base-schema.md
   - ../../../docs/M4-DECISIONS-INDEX.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0142: M4 决策速查表 (Round 4b)

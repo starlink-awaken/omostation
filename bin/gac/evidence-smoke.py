@@ -124,8 +124,18 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     #   治本: ToolBox maintainer 跑 build; 临时不计鸿沟, 30 天复查. 见 evidence-smoke #P0-④.)
     "bos://capability/wps-office-mcp/": "ToolBox wps-office-mcp dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
     "bos://capability/wps-skills/": "ToolBox wps-skills dist/index.js 未 build (external ~/ToolBox; re-audited 2026-07-14, extend to 2026-08-25)",
+    # kairon decision/graph internal 服务 (2026-09-13, agora 子模块 30ef965 将 5 个 stdio 转 internal;
+    #   module_path=kairon.decision.causal_tracer / kairon.graph.semantica_kernel 指向 kairon 包路径,
+    #   实际文件在 projects/knowledge/kairon/src/kairon/{decision,graph}/.py — _check_internal 一级 projects/*
+    #   扫描深度不足定位. 治本: evidence-smoke _check_internal 增加 knowledge/ 嵌套路径搜索)
+    "bos://governance/decision/": "kairon.decision.causal_tracer 路径搜索深度不足 (knowledge/kairon 嵌套; re-audit 2026-10-13)",
+    "bos://memory/graph/": "kairon.graph.semantica_kernel 路径搜索深度不足 (knowledge/kairon 嵌套; re-audit 2026-10-13)",
+    # observatory 服务 (2026-09-13, agora 30ef965 新增 5 个 internal 声明;
+    #   module_path=cockpit.observatory.topology_engine — 文件不存在, 待 cockpit 模块实现.
+    #   治本: cockpit.observatory.topology_engine.py 落地或移除声明)
+    "bos://observatory/": "cockpit.observatory.topology_engine 未实现 (re-audit 2026-10-13)",
 }
-KNOWN_GAP_EXPIRES = "2026-08-25"  # re-audit after ToolBox build (was 2026-07-25)
+KNOWN_GAP_EXPIRES = "2026-10-13"  # re-audit (was 2026-10-04; +30d for kairon/cockpit paths)
 
 
 def _is_known_gap(uri: str) -> tuple[bool, str]:
@@ -328,9 +338,17 @@ def _check_internal(module_path: str, func_name: str) -> tuple[bool, str]:
     # 老王务实: 找全 workspace 下匹配的 .py 文件或包含 .py 的包目录
     target_file = module_path.replace(".", "/") + ".py"
     target_pkg = module_path.replace(".", "/")
-    for proj in (WORKSPACE / "projects").iterdir():
+    # projects/* (直接项目) + projects/*/* (嵌套子模块, 如 projects/knowledge/kairon)
+    proj_roots: list[Path] = []
+    projects_dir = WORKSPACE / "projects"
+    for proj in projects_dir.iterdir():
         if not proj.is_dir():
             continue
+        proj_roots.append(proj)
+        for sub in proj.iterdir():
+            if sub.is_dir() and (sub / "src").is_dir() or (sub.is_dir() and (sub / "pyproject.toml").exists()):
+                proj_roots.append(sub)
+    for proj in proj_roots:
         for sub in ("src", ""):
             base = proj / sub if sub else proj
             file_candidate = base / target_file

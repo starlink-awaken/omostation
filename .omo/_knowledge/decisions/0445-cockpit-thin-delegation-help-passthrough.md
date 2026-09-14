@@ -4,6 +4,7 @@ status: accepted
 lifecycle: spec
 owner: xiamingxing
 last-reviewed: 2026-09-01
+type: ssot
 ---
 
 # ADR-0445: cockpit 薄委派命令体系与 --help 透传

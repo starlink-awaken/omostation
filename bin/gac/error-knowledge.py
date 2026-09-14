@@ -345,6 +345,66 @@ def cmd_stats(args):
     return 0
 
 
+def cmd_check(args):
+    """Gate: 校验 pitfalls 库一致性 (解析/必填字段/id 唯一/category 合法). exit 1 on problem."""
+    import yaml
+
+    problems: list[str] = []
+    entries: list[dict] = []
+    seen_ids: dict[str, str] = {}
+
+    if PITFALLS_DIR.is_dir():
+        for cat_dir in sorted(PITFALLS_DIR.iterdir()):
+            if not cat_dir.is_dir() or cat_dir.name.startswith("."):
+                continue
+            if cat_dir.name not in CATEGORIES and cat_dir.name != "submodule":
+                problems.append(f"unknown category dir: {cat_dir.name}")
+            for f in sorted(cat_dir.glob("*.yaml")):
+                try:
+                    d = yaml.safe_load(f.read_text())
+                except Exception as exc:  # noqa: BLE001
+                    problems.append(f"unparseable: {f} ({exc})")
+                    continue
+                if not isinstance(d, dict):
+                    problems.append(f"not a mapping: {f}")
+                    continue
+                eid = d.get("id")
+                if not eid:
+                    problems.append(f"missing id: {f}")
+                    continue
+                if eid in seen_ids:
+                    problems.append(f"duplicate id {eid}: {f} vs {seen_ids[eid]}")
+                seen_ids[eid] = f.name
+                # schema: agent-error/v1 条目严格校验必填字段; legacy 格式 (无 schema, 如 CRD-001) 只查可解析/id
+                # auto 喂食条目 (discovered_by 含 auto:) 的 solution/prevention 允许留空待人工复盘
+                if d.get("schema") == "agent-error/v1":
+                    is_auto = "auto:" in str(d.get("discovered_by", ""))
+                    for key in ("schema", "title", "symptom", "category", "status"):
+                        if not d.get(key):
+                            problems.append(f"{eid}: missing required field '{key}'")
+                    if not d.get("solution") and not is_auto:
+                        problems.append(f"{eid}: missing required field 'solution'")
+                    if d.get("category") and d["category"] not in CATEGORIES:
+                        problems.append(f"{eid}: invalid category '{d['category']}'")
+                    if d.get("id") and not d["id"].startswith("PITFALL-"):
+                        problems.append(f"{eid}: id must start with PITFALL-")
+                d["_path"] = str(f)
+                d["_file"] = f.name
+                entries.append(d)
+
+    # 强制至少 1 条记录 (空库视为体系未启用, 也报问题)
+    if not entries:
+        problems.append("pitfalls library is empty")
+
+    ok = not problems
+    result = {"ok": ok, "total": len(entries), "problems": problems}
+    if args.json or not ok:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(f"error-knowledge check: ok ({len(entries)} pitfalls)")
+    return 0 if ok else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd")
@@ -376,9 +436,11 @@ def main():
     fd = sub.add_parser("feed-escapes")
     st = sub.add_parser("stats")
     st.add_argument("--json", action="store_true")
+    ck = sub.add_parser("check")
+    ck.add_argument("--json", action="store_true")
 
     args = ap.parse_args()
-    handlers = {"lookup": cmd_lookup, "record": cmd_record, "stats": cmd_stats, "feed-escapes": cmd_feed_escapes}
+    handlers = {"lookup": cmd_lookup, "record": cmd_record, "stats": cmd_stats, "feed-escapes": cmd_feed_escapes, "check": cmd_check}
     fn = handlers.get(args.cmd)
     if fn:
         raise SystemExit(fn(args) or 0)

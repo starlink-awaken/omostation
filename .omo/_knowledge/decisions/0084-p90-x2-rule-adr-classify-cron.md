@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0084: P90 X2 rule 扩 (OMO-LINT-SIZE) + ADR drift 归类 + governance dashboard cron

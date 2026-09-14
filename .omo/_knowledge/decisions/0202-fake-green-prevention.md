@@ -9,6 +9,7 @@ related:
   - 0195-architecture-convergence-isc2.md
   - ../patterns/p73-truth-driven-engineering-pattern.md
 supersedes: []
+type: ssot
 ---
 
 # ADR-0202: 假绿灯防线三件套 — 非空守卫 / 迁移保内容 / 并发验证纪律

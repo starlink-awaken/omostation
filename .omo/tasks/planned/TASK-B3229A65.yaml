@@ -1,0 +1,54 @@
+id: TASK-B3229A65
+title: 'A4 调度真相收敛: 统一三源声明 + 修复死引用 + 面板刷新退出 token 自动化'
+description: '现状: .omo/cron/registry.yaml(10条,全部declared_only) / .omo/cron/operating-rhythm-crontab(14条,ADR-0119/0121,OMO_WORKSPACE_ROOT留空从未安装)
+  / 真实crontab -l(10条,唯一在跑但两个声明文件都不认识) 三源互相矛盾。另发现2个新死引用: crontab里 make worktree-prune
+  调用的 bin/gac/gac-worktree-prune.sh 不存在(应为 gac-branch-prune.sh); crontab里 bin/gac/log-rotate.sh
+  不存在(应为 bin/ssot/log-rotate.py)。面板刷新(zhixing-dashboard refresh.py)挂在 Codex LLM automation
+  上, token 耗尽即停摆, 应退出改用 launchd 或本地 omlxc 模型(如需 LLM)。草案见 /private/tmp/claude-501/-Users-xiamingxing-Workspace/1399c74e-27d5-45c2-bfa9-2659f2bfa6b2/scratchpad/registry-draft-A4-consolidation.yaml。用户已批准收敛方向
+  2026-09-11。'
+status: candidate
+task_type: governance-infra
+risk_level: L1
+depends_on: []
+source_docs:
+- .omo/cron/registry.yaml
+- .omo/cron/operating-rhythm-crontab
+- bin/scheduler-compile.py
+deliverables:
+- 统一后的 .omo/cron/registry.yaml v2
+- launchd plist for zhixing-dashboard refresh
+- 修复 log-rotate 与 worktree-prune 两处死引用
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/TASK-B3229A65
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- python3 bin/scheduler-compile.py --check 输出
+- crontab -l 修改前后 diff
+test_plan:
+- python3 bin/scheduler-compile.py --check 返回 ok=true drift_count=0 orphan_count=0
+- crontab -l 与 registry.yaml 生成结果逐行一致
+- launchctl list | grep zhixing-dashboard 显示已加载且非 token 依赖
+allowed_operation_level: L1
+human_approval_required: false
+metadata:
+  priority: P1
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-09-11T02:21:11Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: session-2026-09-11-a4-scheduler-truth

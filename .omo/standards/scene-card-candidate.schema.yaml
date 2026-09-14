@@ -49,7 +49,7 @@ required_fields_v2:
   - bet
   - falsifier
 input_sources:
-  - governed scenario contracts under .omo/_truth/scenarios
+  - governed scenario contracts under .omo/_truth/contracts
   - explicitly curated strategy seed catalog
 output:
   mode: candidate_only

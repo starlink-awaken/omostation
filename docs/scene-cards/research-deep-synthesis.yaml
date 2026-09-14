@@ -1,0 +1,37 @@
+---
+title: Research Deep-Synthesis Scene Card (前沿文献精读)
+status: draft
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-09-08
+related:
+- ./research-deep-synthesis.yaml
+---
+schema: scene-card/v2
+lifecycle: shadow
+bet: BET-Y2Q4-T7-01
+falsifier: 若 30 天内无前沿文献精读需求触发，则场景无实际价值
+scene_id: research-deep-synthesis
+journey_id: research-deep-synthesis-workflow
+goal: 自动化追踪 PubMed/BioRxiv/arXiv 前沿论文，生成三段式精读研判卡（摘要/方法/影响），提取创新点供知识图谱与系统技术选型参考
+trigger: research 主题订阅或技术选型需求到达
+input_contract: 主题关键词列表 (topics) + 抓取源配置
+result_contract: 每日 Top-3 精读卡 + 技术选型权衡矩阵
+outcome_metric: synthesis_card_accuracy
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 错过关键前沿文献导致技术选型偏差
+data_classification: internal
+data_scope: literature-metadata-only
+operator: research-deep-synthesis-dispatch
+required_capabilities:
+- llm:local-summarize
+- network:paper-fetch
+notes:
+- '实现: projects/domain-cartridges/research/domain/research/pipeline.py (ResearchPipeline, 网络异常安全跳过)'
+- 'verify: uv run python -m domain.research.test_synthesis_pipeline (自测 10 项)'
+- Transitioned draft→shadow at 2026-09-08T00:00:00+00:00 by xiamingxing
+activation: preview
+activation_blockers: []
+approval_state: confirmed

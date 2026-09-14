@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: "2026-07-29"
+type: ephemeral
+status: archived
 ---
 
 > 📌 **唯一协作收益定论 SSOT**（冷启动请只读本文件；旧 audit 中 5.4x 表已 supersede）。

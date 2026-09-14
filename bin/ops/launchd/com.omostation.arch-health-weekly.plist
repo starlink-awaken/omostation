@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.arch-health-weekly.plist — 示例 launchd snippet
+  用途: 每周一上午 9 点跑 arch-health-meter 写周报
+  安装 (人手动):
+    cp bin/ops/launchd/com.omostation.arch-health-weekly.plist \
+       ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.omostation.arch-health-weekly.plist
+  卸载:
+    launchctl unload ~/Library/LaunchAgents/com.omostation.arch-health-weekly.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.arch-health-weekly</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>cd /Users/xiamingxing/Workspace && bash bin/ops/architecture-health-weekly.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/tmp/omostation-arch-health-weekly.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/omostation-arch-health-weekly.err</string>
+</dict>
+</plist>

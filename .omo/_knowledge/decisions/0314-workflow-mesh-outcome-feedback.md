@@ -11,6 +11,7 @@ related:
   - ../../../docs/operations/workflow-mesh-operations.md
   - ../../../projects/omo/src/omo/outcome_feedback.py
   - ../../../projects/cockpit-ui/src/components/WorkflowMeshOperationsView.tsx
+type: ssot
 ---
 
 # ADR-0314: Workflow Mesh 显式结果消费反馈契约

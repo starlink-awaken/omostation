@@ -3,6 +3,7 @@ status: active
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-06-22
+type: ssot
 ---
 
 # 规划、蓝图、架构、里程碑、交付与测试迭代标准

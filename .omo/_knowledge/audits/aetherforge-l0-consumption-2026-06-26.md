@@ -2,6 +2,8 @@
 last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+type: ephemeral
+status: archived
 ---
 
 # AetherForge L0 M1 消费鸿沟审计 (TASK-13AD0B21)

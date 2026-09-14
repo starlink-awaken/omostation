@@ -1,0 +1,15 @@
+{
+  "schema": "kei-manifest/v1",
+  "scene_id": "admin-inbox",
+  "name": "Admin Inbox",
+  "lifecycle": "draft",
+  "permissions": {
+    "fs_read": [],
+    "fs_write": [],
+    "network": [
+      "localhost:9290"
+    ],
+    "shell_exec": false
+  },
+  "generated_at": "2026-09-08T02:37:34.790513+00:00"
+}

@@ -146,14 +146,22 @@ tools:
   mof-manage:
     path: bin/mof/mof-manage
     description: MOF 能力注册表管理 (查看/验证/更新 mof-capabilities.yaml)
-    commands: [status, validate, update]
+    commands: [status, tools, constraints, integrations]
     usage: "bin/mof/mof-manage status"
+    generatable: false
+    verifiable: true
+  ecos-ssot-tools:
+    path: projects/ecos/src/ecos/ssot/tools
+    description: MOF 实现层工具链 (44 个 Python 工具, bin/mof/* 入口包装的内部实现; 见该目录各脚本 docstring)
+    commands: [mof-validate, mof-schema-validate, mof-enforce, mof-audit, mof-bootstrap, mof-sla, mof-compile, mof-scan, mof-derive, mof-extract, mof-l4-bridge, mof-kems-bridge, "..."]
+    usage: "python3 projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py --staged --strict"
+    generatable: false
+    verifiable: true
+    note: 实现层家族注册 — 本表 tools.* 为 bin/mof 入口包装层; 两层关系 wrapper → src 实现, 计数以 `ls projects/ecos/src/ecos/ssot/tools/*.py | wc -l` 为准
 
 # ═══════════════════════════════════════════════════════════
 # 约束注册表
 # ═══════════════════════════════════════════════════════════
-    generatable: false
-    verifiable: true
 constraints:
 - id: AGENT-MOF-IMPACT-CHECK
   description: 修改前必须查询影响
@@ -263,10 +271,10 @@ autonomous_growth:
 model_stats:
   # 节点计数由 bin/mof/check-mof-capabilities-drift.py 守护 (ADR-0238, P0-2)
   # source: projects/ecos/src/ecos/ssot/mof/{m1,m2}/ — 以实际文件为准 (ecos CLAUDE.md)
-  m1_nodes: 1409
-  m2_schemas: 68
+  m1_nodes: 1487
+  m2_schemas: 71
   m3_elements: 8
-  stats_as_of: "2026-09-03"
+  stats_as_of: "2026-09-06"
   coverage:
     type_drift: 0
     required_missing: 0

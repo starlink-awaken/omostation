@@ -13,6 +13,7 @@ related:
   - ../../../../../protocols/port-registry.yaml
   - ../../../../../projects/agora/etc/bos-services.yaml
 supersedes: []
+type: ssot
 ---
 
 # ADR-0176: P79 Phase 3 — 跨仓零残留 (ecos 对齐 + 孤儿 URI 清理)

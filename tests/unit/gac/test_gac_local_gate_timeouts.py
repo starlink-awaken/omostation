@@ -31,8 +31,8 @@ def test_semantic_gate_timeout_is_at_least_60_seconds() -> None:
 
 
 def test_agent_workflow_doctor_has_explicit_full_integration_timeout() -> None:
-    """The full doctor probes multiple project integrations sequentially."""
+    """The aggregate doctor has an explicit end-to-end outer budget."""
     module = _load_module()
 
-    assert module._DEFAULT_CHECK_TIMEOUTS["agent-workflow-doctor"] == 45
-    assert module._CHECK_TIMEOUTS["agent-workflow-doctor"] >= 45
+    assert module._DEFAULT_CHECK_TIMEOUTS["agent-workflow-doctor"] == 120
+    assert module._CHECK_TIMEOUTS["agent-workflow-doctor"] >= 120

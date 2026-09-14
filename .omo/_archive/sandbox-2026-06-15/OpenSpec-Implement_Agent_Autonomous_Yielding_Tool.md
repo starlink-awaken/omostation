@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # OpenSpec: Agent Autonomous Yielding Tool
 
 ## 1. 概念与目标 (Why)

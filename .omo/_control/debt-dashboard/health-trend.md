@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-05
+---
+
 # 健康度趋势追踪
 #
 > 记录 debt_weight / debt_health 变化趋势，用于治理仪表板。

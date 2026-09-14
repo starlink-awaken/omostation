@@ -1,0 +1,25 @@
+# Local Secure Vault — 沙箱策略（BET-Y1Q4-T10-05，batch 1）
+schema_version: vault-policy/v1
+last_updated: 2026-09-11
+
+# 零明文存储：落盘 envelope 只含 salt/nonce/ciphertext/tag，不含任何明文凭据
+zero_plaintext_storage: true
+
+kdf:
+  algorithm: PBKDF2-HMAC-SHA256
+  iterations: 210000
+  salt_bytes: 16
+
+cipher:
+  construction: HMAC-SHA256-CTR + Encrypt-then-MAC
+  nonce_bytes: 16
+
+# 熔断：连续校验失败达阈值自动锁定，需显式 reset 解锁并审计
+circuit_breaker:
+  max_failed_unlocks: 5
+  on_lock: deny_all_reveals_until_explicit_reset
+
+# 离线：不访问网络；自测断言 vault 模块不引入 socket
+offline:
+  network_access: deny
+  selftest_asserts_no_socket_import: true

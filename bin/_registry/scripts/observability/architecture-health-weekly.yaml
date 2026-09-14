@@ -1,0 +1,31 @@
+schema: script-registry/v1
+id: bin/ops/architecture-health-weekly.sh
+name: Architecture Health Weekly Wrap
+category: observability
+owner: governance-team
+description: >-
+  跑 bin/arch-health-meter.py 采集 6 维度数据, 写
+  docs/reports/architecture-health-weekly.md + snapshot.
+  配合 bin/ops/launchd/com.omostation.arch-health-weekly.plist 实现周报.
+  See BET-Y1Q4-T6-18.
+inputs:
+  - name: --no-snapshot
+    type: flag
+    required: false
+    description: 跳过 snapshot 备份
+outputs:
+  - type: exit_code
+  - type: file_markdown
+dependencies:
+  - bash
+  - bin/arch-health-meter.py
+  - python3
+  - PyYAML
+triggers:
+  - weekly
+  - on_demand
+related:
+  - bin/arch-health-meter.py
+  - bin/ops/launchd/com.omostation.arch-health-weekly.plist
+maturity: stable
+last_reviewed: "2026-09-05"

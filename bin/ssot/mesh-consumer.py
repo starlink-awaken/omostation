@@ -18,8 +18,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import time
 from pathlib import Path
+
+TIMEOUT = 30  # seconds per subprocess call
+RETRY = 3    # max retries on transient failure
 from typing import Any
 
 from _shared import ROOT, append_jsonl, utc_now

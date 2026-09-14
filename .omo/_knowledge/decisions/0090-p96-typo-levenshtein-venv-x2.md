@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0090: P96 真 Levenshtein TYPO 修复 + venv 一致性 + X2-FRESH-ADR-DRIFT

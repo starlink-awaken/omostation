@@ -12,6 +12,7 @@ deciders:
 related:
   - docs/governance/agent-capability-gap-matrix.md
   - https://github.com/microsoft/agent-governance-toolkit
+type: ssot
 ---
 
 # ADR-0415: 拒绝 AGT 整体接入，确立能力对齐路线

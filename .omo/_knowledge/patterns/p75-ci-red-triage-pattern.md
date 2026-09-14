@@ -7,6 +7,7 @@ related:
   - p71-baseline-recovery-pattern.md
   - p73-truth-driven-engineering-pattern.md
   - p74-workflow-solidification-pattern.md
+type: ssot
 ---
 
 # P75 — CI Red Recursive Triage Pattern (CI 红递归分层诊断)

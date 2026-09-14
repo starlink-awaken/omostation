@@ -10,6 +10,7 @@ related:
   - docs/STRATEGY-INDEX.md
   - BET-8c7c
 supersedes: []
+type: ssot
 ---
 
 # ADR-0221: G-DEL.5a 涌现检测与集体决策 · L3 专项风险评审

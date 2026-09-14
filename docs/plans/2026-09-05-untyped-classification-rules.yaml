@@ -1,0 +1,41 @@
+# BET-Y1Q4-T10-04 执行规则 — 目录→type 批量分类
+# 用法: uv run --with pyyaml python3 bin/ssot/generate-docs-index.py --classify docs/plans/2026-09-05-untyped-classification-rules.yaml
+# 匹配: 目录前缀 (最长优先); 命中文件写入 type[/status], ssot 同时补 owner/last-reviewed
+# 原则: 长期知识→ssot; 时点产物→ephemeral+archived (避开 EXPIRED 硬阻塞)
+rules:
+  - {dir: ".omo/_knowledge/decisions", type: "ssot"}
+  - {dir: ".omo/_knowledge/design", type: "ssot"}
+  - {dir: ".omo/_knowledge/management", type: "ssot"}
+  - {dir: ".omo/_knowledge/superpowers", type: "ssot"}
+  - {dir: ".omo/_knowledge/patterns", type: "ssot"}
+  - {dir: ".omo/_knowledge/process", type: "ssot"}
+  - {dir: ".omo/_knowledge/reference", type: "ssot"}
+  - {dir: ".omo/standards", type: "ssot"}
+  - {dir: ".agents/skills", type: "ssot"}
+  - {dir: ".omo/_knowledge/audits", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_knowledge/decision-proposals", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_knowledge/sediment", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_knowledge/summaries", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_knowledge/retros", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_knowledge/retrospectives", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_knowledge/task-prompts", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_archive", type: "ephemeral", status: "archived"}
+  # 第二批: 漏网小目录 (首轮分类后残余 338 → 目标 <300)
+  - {dir: ".omo/_knowledge/plans-archive", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_knowledge/plans", type: "ssot"}
+  - {dir: ".omo/_knowledge/signals", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_knowledge/governance", type: "ssot"}
+  - {dir: ".omo/_knowledge/gac", type: "ssot"}
+  - {dir: ".omo/_knowledge/pitfalls", type: "ssot"}
+  - {dir: ".omo/_knowledge/designs", type: "ssot"}
+  - {dir: ".omo/_knowledge/usage", type: "ssot"}
+  - {dir: ".omo/_knowledge/vision-roadmap", type: "ssot"}
+  - {dir: ".omo/_knowledge/reviews", type: "ephemeral", status: "archived"}
+  - {dir: "docs/superpowers", type: "ssot"}
+  - {dir: ".omo/_truth", type: "ssot"}
+  - {dir: ".omo/tasks", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_delivery", type: "ephemeral", status: "archived"}
+  - {dir: "docs/reports", type: "ephemeral", status: "archived"}
+  - {dir: ".omo/_control", type: "ssot"}
+  - {dir: ".agents/orchestrator", type: "ssot"}
+  - {dir: "bin/ssot", type: "ssot"}

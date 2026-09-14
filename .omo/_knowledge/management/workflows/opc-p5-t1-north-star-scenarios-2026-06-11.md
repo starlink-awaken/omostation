@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: opc-p5-t1-north-star-scenarios-2026-06-11.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # OPC-P5 T1-T5 设计合集: North Star Scenarios

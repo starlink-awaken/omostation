@@ -1,0 +1,51 @@
+schema: scene-card/v3
+scene_id: scene-admin-submit
+version: 3.0.0
+name: Admin Submit
+description: 生成提交上级的邮件草稿并记录 trust outcome, 完成任务闭环
+scene_class: business
+scene_type: inbound
+domain: work
+lifecycle: draft
+activation: preview
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: admin-notification-workflow
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - risk_engine:submit-check
+    - mail:create-draft
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: journey reviewing→submitted 转移 (status == succeeded)
+input_contract: latest_subject
+result_contract: submission_draft 草稿路径 + task_completed 布尔
+outcome_metric: submit_draft_acceptance_rate
+consumer: xiamingxing
+failure_cost: 提交遗漏导致任务未闭环 (草稿模式, 发送由人确认)
+data_classification: internal
+data_scope: draft-email-only
+operator: admin-submit-dispatch-under-risk-engine

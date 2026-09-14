@@ -5,6 +5,7 @@ lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-07-08
 related: [ADR-0106, 宪法-Wave-1, PR-178]
+type: ssot
 ---
 
 # ADR-0171: 宪法 Wave 1 — 治理规则 severity 分层 (red/gray)

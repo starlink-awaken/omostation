@@ -1,0 +1,40 @@
+#!/bin/bash
+# post-merge — 合并后自动同步 (advisory only).
+#
+# 机制 22c (2026-09-05): 合并后自动同步 + 子模块变更通知.
+# 参数:
+#   $1 = squash (1=squash merge, 0=normal merge)
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo '')"
+if [ -z "$ROOT" ]; then
+  exit 0
+fi
+
+PY_RUNTIME="$ROOT/bin/gac/managed-python"
+run_py() { "$PY_RUNTIME" run --profile stdlib -- "$@"; }
+run_py_with_yaml() { "$PY_RUNTIME" run --profile pyyaml -- "$@"; }
+
+SQUASH="${1:-0}"
+
+# ── auto-sync-docs (advisory) ──────────────────────────────
+if [ -f "$ROOT/bin/ssot/post-commit-sync-check.py" ]; then
+  run_py_with_yaml "$ROOT/bin/ssot/post-commit-sync-check.py" 2>&1 || true
+fi
+
+# ── submodule-change-notify (advisory) ─────────────────────
+# 检查是否有子模块指针变更
+SUBMODULES_CHANGED=$(git diff --name-only HEAD@{1} HEAD -- 'projects/' 2>/dev/null | grep -E '^projects/[^/]+/?$' | sort -u || true)
+if [ -n "$SUBMODULES_CHANGED" ]; then
+  echo "[post-merge] ℹ️ 子模块指针变更:" >&2
+  echo "$SUBMODULES_CHANGED" | sed 's/^/   /' >&2
+  echo "   建议: 检查相关文档是否需要同步更新" >&2
+fi
+
+# ── state-stale-emit (advisory) ────────────────────────────
+if [ -f "$ROOT/bin/gac/state-stale-emit.py" ]; then
+  run_py "$ROOT/bin/gac/state-stale-emit.py" --source post-merge 2>&1 || true
+fi
+
+exit 0

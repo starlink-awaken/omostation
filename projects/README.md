@@ -1,3 +1,8 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-06
+---
 # projects — 项目容器与子仓库治理入口
 
 ## 定位

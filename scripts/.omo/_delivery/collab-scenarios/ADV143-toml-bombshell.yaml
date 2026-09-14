@@ -1,0 +1,32 @@
+---
+status: active
+lifecycle: ssot
+owner: red-team
+last-reviewed: 2026-07-29
+---
+id: ADV143-toml-bombshell
+category: B_failure_injection
+adversarial: true
+seed: 243
+description: >
+  [对抗·red-team wave25] 配置炸弹: 超深嵌套/巨量键拖垮解析器导致 DoS,
+  管线已有 config_bombshell_detected → 预期 PASS
+setup:
+  blackboard:
+    - {key: config_doc, value: "normal", writers: [loader]}
+  roles: [attacker, loader, service]
+inject:
+  - {type: write_conflict, role: attacker, target: config_doc, value: "nested_depth_10000"}
+  - {type: write_conflict, role: loader, target: parse_status, value: "oom_or_timeout"}
+  - {type: write_conflict, role: service, target: liveness, value: "down"}
+  - {type: write_conflict, role: attacker, target: attack_result, value: "dos_success"}
+expected:
+  behavior: config_bombshell_detected
+  silent_loss: 0
+verdict:
+  - criterion: config_bombshell_detected
+    check: events_contain
+    args: {kind: config_bombshell_detected}
+  - criterion: no_silent_loss
+    check: silent_loss_eq
+    args: {expected: 0}

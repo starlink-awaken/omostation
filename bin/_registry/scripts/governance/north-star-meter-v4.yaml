@@ -1,0 +1,34 @@
+schema: script-registry/v1
+id: bin/bc-os/north_star_meter_v4.py
+name: North Star Meter v4
+category: governance
+owner: governance-team
+description: "复合制价值证明 V4 — 在 v3 五轴 + KV cache 基础上新增 realtime 投影 + 认知杠杆率 (D2-axis) + monthly/quarterly 报告生成 (BET-Y1Q3-T10-121)"
+inputs:
+  - name: --window
+    type: int
+    description: 统计窗口 (天, 默认 30)
+  - name: --realtime
+    type: flag
+    description: 输出今日 0:00 至今的实时投影
+  - name: --report
+    type: enum
+    values: [monthly, quarterly]
+    description: 生成月度/季度 Markdown 报告
+  - name: --json
+    type: flag
+    description: JSON 输出
+outputs:
+  - type: json
+  - type: markdown
+dependencies:
+  - bin/bc-os/north_star_meter_v3.py
+triggers:
+  - weekly-review
+  - cockpit north-star
+related:
+  - bin/bc-os/north_star_meter_v3.py
+  - bin/bc-os/north_star_meter_v2.py
+  - docs/architecture/north-star-v3-design.md
+maturity: stable
+last_reviewed: "2026-09-03"

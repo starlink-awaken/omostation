@@ -9,6 +9,8 @@ related:
   - 0119-systemic-optimization-roadmap-2026h2.md
   - 0120-runtime-health-semantics-fix.md
   - ../../../.omo/_knowledge/decisions/0117-p52-undo-p60-stage-8.md
+type: ephemeral
+status: archived
 ---
 
 # P0 Baseline Recovery Closeout (2026-07-02)

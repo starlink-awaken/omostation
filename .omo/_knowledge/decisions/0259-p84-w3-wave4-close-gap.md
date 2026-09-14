@@ -8,6 +8,7 @@ related:
   - 0256-p84-w3-throughput-wave.md
   - 0258-p84-w3-wave3-tooling-hygiene.md
   - 0254-p84-w22-cclass-collab-detectors.md
+type: ssot
 ---
 
 # ADR-0259: W3 wave4 — ADV13/15/17 检测 + patterns 注册 + 产能 gap 收口

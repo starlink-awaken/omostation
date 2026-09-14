@@ -1,0 +1,50 @@
+id: BET-Y1Q4-T12
+track: T12-EXTENSION
+window: Y1Q4
+title: arcnode-* 外部依赖纳入主仓 — 治理命令不再依赖 ~/.hermes
+priority: P1
+status: candidate
+goal: '5 个 governance 子命令 (calibrate/rechain/evolve/drift-check/validate) 当前依赖 ~/.hermes/scripts/arcnode-*
+  外部脚本, 用户装上就报错。把 arcnode-* 6 个脚本移到 主仓 bin/arcnode/, cockpit governance 自动发现, 解决依赖缺失问题。
+
+  '
+non_goals:
+- 不重写 arcnode-* 内部逻辑 (只搬位置)
+- 不修改 governance 命令本身 (只改脚本发现路径)
+deliverables:
+- 6 个 arcnode-* 脚本从 ~/.hermes/scripts/ 复制到主仓 bin/arcnode/
+- cockpit governance 改为先查主仓 bin/arcnode/, 再查 ~/.hermes/scripts/ (向后兼容)
+- 测试: 6 个 governance 子命令全部 exit=0 (无 ~/.hermes 时)
+- 文档: docs/architecture/arcnode-integration.md
+acceptance:
+- 不依赖 ~/.hermes/scripts/ 即可跑 6 个 governance 子命令
+- worktree 环境下 cockpit governance 6 全部 exit=0
+appetite: 2 days
+depends_on: []
+risk:
+- 低. 脚本搬位置, 不改逻辑
+- 向后兼容: ~/.hermes/scripts/ 仍可用
+task_type: bet
+owner: human
+source: manual
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- gate/standard
+source_docs:
+- src/cockpit/commands/governance.py
+- bin/ops/cli.py
+evidence_required:
+- T12-arcnode-integration acceptance criteria met
+- 相关测试通过
+test_plan:
+- 1. 跑 BET-Y1Q4-T12-arcnode-integration.yaml 范围内的命令/脚本
+- 2. 验证 acceptance 标准

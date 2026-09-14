@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/scene-signal-poller.py
+name: Scene Signal Poller
+category: governance
+owner: governance-team
+description: Poll signal sources and dispatch scenes via journey-engine
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: active
+last_reviewed: "2026-09-11"

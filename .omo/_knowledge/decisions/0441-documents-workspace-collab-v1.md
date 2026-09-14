@@ -4,6 +4,7 @@ status: accepted
 lifecycle: spec
 owner: xiamingxing
 last-reviewed: 2026-08-30
+type: ssot
 ---
 
 # ADR-0441: Documents↔Workspace 协同机制 v1（DW 三原语）

@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # Closeout — staff group ACE (ADR-0208)
 
 ```bash

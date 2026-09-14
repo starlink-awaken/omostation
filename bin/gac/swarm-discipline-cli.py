@@ -64,6 +64,11 @@ def cmd_branch_claim(args: argparse.Namespace) -> int:
 
 def cmd_branch_check(args: argparse.Namespace) -> int:
     root = root_from_cwd()
+    # T10-128: D2 conditional active — 仅 agent/ 前缀启用 occupancy 检查,
+    # work/ 分支豁免 (2026-08-19 独立 clone 时代的存量兼容)
+    if not args.branch.startswith("agent/"):
+        print(json.dumps({"ok": True, "reason": "work-branch-out-of-scope", "branch": args.branch}, indent=2))
+        return 0
     ok, reason = sd.check_branch_available(root, args.branch, args.session)
     print(json.dumps({"ok": ok, "reason": reason, "branch": args.branch}, indent=2))
     return 0 if ok else 1
@@ -78,7 +83,7 @@ def cmd_branch_release(args: argparse.Namespace) -> int:
 
 def cmd_claim_gc(args: argparse.Namespace) -> int:
     root = root_from_cwd()
-    result = sd.claim_gc(root, ttl_hours=args.ttl_hours, dry_run=args.dry_run)
+    result = sd.claim_gc(root, ttl_hours=args.ttl_hours, dry_run=args.dry_run, namespace=args.namespace)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 
@@ -119,10 +124,10 @@ def cmd_claim_check(args: argparse.Namespace) -> int:
 def cmd_escape_digest(args: argparse.Namespace) -> int:
     root = root_from_cwd()
     if args.dir:
-        from pathlib import Path as _P
+        from pathlib import Path as path_cls
 
         records: list = []
-        d = _P(args.dir)
+        d = path_cls(args.dir)
         if d.is_dir():
             for path in sorted(d.glob("*.json")):
                 if path.parent.name == "tokens":
@@ -414,6 +419,12 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=168,
         help="TTL 小时 (默认 168=7天, claim 是长期占位)",
+    )
+    s.add_argument(
+        "--namespace",
+        choices=["work", "agent"],
+        default=None,
+        help="仅清理指定命名空间的 claim (work=work/*, agent=agent/*)",
     )
     s.add_argument("--dry-run", action="store_true")
     s.set_defaults(func=cmd_claim_gc)

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>跨设备分布式工作站 — 全量架构方案</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: #e2e8f0;
+    }
+    .container { max-width: 1300px; margin: 0 auto; }
+    .header { margin-bottom: 2.5rem; }
+    .header-row {
+      display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;
+    }
+    .pulse-dot {
+      width: 14px; height: 14px;
+      background: #22d3ee; border-radius: 50%;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 10px #22d3ee;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    h1 {
+      font-size: 1.8rem; font-weight: 700;
+      background: linear-gradient(135deg, #22d3ee, #34d399);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { color: #64748b; font-size: 0.85rem; margin-left: 2rem; }
+    .meta-bar {
+      display: flex; gap: 2rem; margin-top: 0.75rem; margin-left: 2rem;
+      color: #475569; font-size: 0.75rem;
+    }
+    .section-title {
+      font-size: 1rem; font-weight: 600; margin: 2rem 0 1rem 0;
+      padding-bottom: 0.5rem; border-bottom: 1px solid #1e293b;
+      color: #94a3b8; letter-spacing: 0.05em;
+    }
+    .section-title .accent { color: #22d3ee; }
+    .diagram-wrap {
+      background: rgba(15,23,42,0.5); border-radius: 1rem;
+      border: 1px solid #1e293b; padding: 1.5rem;
+      overflow-x: auto; margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 1050px; display: block; }
+
+    /* Decision Cards */
+    .decision-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 2rem;
+    }
+    .decision-card {
+      background: rgba(15,23,42,0.6); border-radius: 0.75rem;
+      border: 1px solid #1e293b; padding: 1.25rem; position: relative; overflow: hidden;
+    }
+    .decision-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .decision-card.cyan::before { background: linear-gradient(90deg, #22d3ee, #0891b2); }
+    .decision-card.emerald::before { background: linear-gradient(90deg, #34d399, #059669); }
+    .decision-card.amber::before { background: linear-gradient(90deg, #fbbf24, #d97706); }
+    .decision-card.violet::before { background: linear-gradient(90deg, #a78bfa, #7c3aed); }
+    .dc-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
+    .dc-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .dc-icon.cyan { background: rgba(8,51,68,0.6); color: #22d3ee; }
+    .dc-icon.emerald { background: rgba(6,78,59,0.6); color: #34d399; }
+    .dc-icon.amber { background: rgba(120,53,15,0.4); color: #fbbf24; }
+    .dc-icon.violet { background: rgba(76,29,149,0.4); color: #a78bfa; }
+    .dc-title { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; }
+    .dc-sub { color: #64748b; font-size: 0.7rem; margin-top: 0.15rem; }
+    .dc-body { color: #94a3b8; font-size: 0.78rem; line-height: 1.7; }
+    .dc-body strong { color: #e2e8f0; }
+    .tag {
+      display: inline-block; padding: 1px 6px; border-radius: 3px;
+      font-size: 0.65rem; font-weight: 600; margin-right: 2px;
+    }
+    .tag.green { background: rgba(52,211,153,0.15); color: #34d399; }
+    .tag.blue { background: rgba(34,211,238,0.15); color: #22d3ee; }
+    .tag.yellow { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .tag.purple { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .tag.red { background: rgba(251,113,133,0.15); color: #fb7185; }
+    .tag.pink { background: rgba(244,114,182,0.15); color: #f472b6; }
+
+    /* Device cards */
+    .device-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .device-card {
+      background: rgba(15,23,42,0.5); border-radius: 0.75rem;
+      border: 1px solid #1e293b; padding: 1rem;
+    }
+    .device-name { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .device-spec { color: #64748b; font-size: 0.65rem; margin-bottom: 0.5rem; }
+    .device-role { font-size: 0.72rem; color: #94a3b8; line-height: 1.6; }
+    .device-role li { list-style: none; padding-left: 12px; position: relative; }
+    .device-role li::before { content: '›'; position: absolute; left: 2px; color: #475569; }
+
+    /* Model table */
+    .model-table {
+      width: 100%; border-collapse: collapse; margin-bottom: 2rem;
+      font-size: 0.72rem;
+    }
+    .model-table th {
+      text-align: left; padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #1e293b; color: #64748b; font-weight: 500;
+    }
+    .model-table td {
+      padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(30,41,59,0.5);
+      color: #94a3b8;
+    }
+    .model-table td:first-child { color: #e2e8f0; font-weight: 600; }
+    .model-table tr:hover td { background: rgba(30,41,59,0.3); }
+
+    /* Router flow */
+    .router-flow {
+      background: rgba(15,23,42,0.4); border-radius: 0.75rem;
+      border: 1px solid #1e293b; padding: 1.25rem; margin-bottom: 2rem;
+    }
+    .router-row {
+      display: flex; align-items: center; padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(30,41,59,0.5); gap: 1rem;
+    }
+    .router-row:last-child { border-bottom: none; }
+    .router-scenario { width: 100px; flex-shrink: 0; font-size: 0.72rem; font-weight: 500; }
+    .router-chain { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .router-node { padding: 3px 10px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; }
+    .router-node.cloud { background: rgba(251,191,36,0.12); color: #fbbf24; }
+    .router-node.local { background: rgba(52,211,153,0.12); color: #34d399; }
+    .router-node.fallback { background: rgba(167,139,250,0.12); color: #a78bfa; }
+    .router-node.ocr { background: rgba(244,114,182,0.12); color: #f472b6; }
+    .router-arrow { color: #475569; font-size: 0.7rem; }
+
+    .footer { text-align: center; margin-top: 2rem; color: #334155; font-size: 0.7rem; }
+    @media (max-width: 768px) {
+      .decision-grid { grid-template-columns: 1fr; }
+      .device-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ═══ HEADER ═══ -->
+  <div class="header">
+    <div class="header-row">
+      <div class="pulse-dot"></div>
+      <h1>跨设备分布式工作站 · 全量架构</h1>
+    </div>
+    <p class="subtitle">Mac mini M4 服务器 · MBP M5 Max 主力开发 · Y7000P 游戏+备份 · Tailscale Mesh VPN</p>
+    <div class="meta-bar">
+      <span>📅 2026-05-20</span>
+      <span>🏠 家庭 + 🏢 单位</span>
+      <span>🔄 v2.1 (MoE + OCR)</span>
+    </div>
+  </div>
+
+  <!-- ═══ DEVICE ROLES ═══ -->
+  <div class="section-title">📦 <span class="accent">硬件资产</span></div>
+  <div class="device-grid">
+    <div class="device-card">
+      <div class="device-name" style="color:#34d399">Mac mini M4</div>
+      <div class="device-spec">24GB · /Volumes/Model + /Volumes/Work · 100.x.x.1</div>
+      <ul class="device-role">
+        <li>24h AI 服务器 · 代理常开</li>
+        <li>New API 网关 · Ollama · SearXNG</li>
+        <li>Qwen3.6-35B-A3B MoE (21GB)</li>
+        <li>bge-m3 嵌入 RAG · GLM-OCR</li>
+      </ul>
+    </div>
+    <div class="device-card">
+      <div class="device-name" style="color:#22d3ee">MBP M5 Max</div>
+      <div class="device-spec">128GB · 外接 SSD · 100.x.x.2</div>
+      <ul class="device-role">
+        <li>主力开发 · 三态切换</li>
+        <li>Hermes + IDE + Cline/Cursor</li>
+        <li>Qwen3-Coder-Next (38GB)</li>
+        <li>Chezmoi 源端 · PaddleOCR</li>
+      </ul>
+    </div>
+    <div class="device-card">
+      <div class="device-name" style="color:#fbbf24">Y7000P</div>
+      <div class="device-spec">48GB · 4TB NVMe · 100.x.x.3</div>
+      <ul class="device-role">
+        <li>游戏 + 备份底座</li>
+        <li>SMB 共享 WD_BLACK P10</li>
+        <li>养护模式 55-60%</li>
+        <li>不参与 AI 推理</li>
+      </ul>
+    </div>
+    <div class="device-card">
+      <div class="device-name" style="color:#fb7185">单位台式机</div>
+      <div class="device-spec">8GB · Tailscale · 100.x.x.4</div>
+      <ul class="device-role">
+        <li>Tailscale 子网路由</li>
+        <li>打通单位内网</li>
+        <li>纯网关 · 不装服务</li>
+        <li>已审批 ✅</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══ MODEL TABLE ═══ -->
+  <div class="section-title">🧠 <span class="accent">本地模型推荐（2026年5月最新）</span></div>
+  <table class="model-table">
+    <thead>
+      <tr><th>模型</th><th>架构</th><th>大小</th><th>部署位置</th><th>用途</th><th>推荐理由</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="color:#fbbf24">🥇 Qwen3.6-35B-A3B</td>
+        <td>MoE 35B/3B</td>
+        <td>~21GB Q4</td>
+        <td>Mac mini</td>
+        <td>通用 + 代码</td>
+        <td style="color:#34d399">🔥 Mac mini 24GB 首选！3B激活≈7B速度</td>
+      </tr>
+      <tr>
+        <td style="color:#fbbf24">🥇 Qwen3-Coder-Next</td>
+        <td>MoE 235B/22B</td>
+        <td>~38GB Q4</td>
+        <td>MBP 128GB</td>
+        <td>本地最强代码</td>
+        <td style="color:#34d399">🔥 Agentic Coding 之王</td>
+      </tr>
+      <tr>
+        <td style="color:#22d3ee">Qwen3.6-35B-A3B</td>
+        <td>MoE 35B/3B</td>
+        <td>~37GB Q8</td>
+        <td>MBP 高精度</td>
+        <td>高精度推理</td>
+        <td>128GB 跑Q8精度更优</td>
+      </tr>
+      <tr>
+        <td style="color:#a78bfa">bge-m3</td>
+        <td>Dense</td>
+        <td>~2GB</td>
+        <td>Mac mini</td>
+        <td>嵌入 / RAG</td>
+        <td>多语言标杆，100+语言</td>
+      </tr>
+      <tr>
+        <td style="color:#f472b6">GLM-OCR</td>
+        <td>VLM</td>
+        <td>~2.2GB</td>
+        <td>Mac mini / MBP</td>
+        <td>文档 OCR</td>
+        <td>OmniDocBench 94.62 第一</td>
+      </tr>
+      <tr>
+        <td style="color:#64748b">PaddleOCR</td>
+        <td>传统引擎</td>
+        <td>~1GB</td>
+        <td>Mac mini / MBP</td>
+        <td>中文 OCR</td>
+        <td>中文精度最高，pip安装</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═══ ARCHITECTURE DIAGRAM ═══ -->
+  <div class="section-title">🌐 <span class="accent">架构拓扑</span></div>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 1100 850">
+
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b" /></marker>
+        <marker id="arrow-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399" /></marker>
+        <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" /></marker>
+        <marker id="arrow-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" /></marker>
+        <marker id="arrow-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" /></marker>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+        </pattern>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="g-emerald" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="rgba(6,78,59,0.15)"/>
+          <stop offset="100%" stop-color="rgba(6,78,59,0.25)"/>
+        </linearGradient>
+      </defs>
+
+      <rect width="100%" height="100%" fill="url(#grid)" />
+
+      <!-- ROW 1: CLOUD -->
+      <rect x="30" y="30" width="1040" height="130" rx="12" fill="rgba(120,53,15,0.06)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
+      <text x="42" y="50" fill="#fbbf24" font-size="10" font-weight="600">☁️ 云服务 (代理出墙)</text>
+
+      <rect x="60" y="65" width="130" height="50" rx="6" fill="rgba(120,53,15,0.25)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="125" y="85" fill="white" font-size="11" font-weight="600" text-anchor="middle">DeepSeek</text>
+      <text x="125" y="101" fill="#fbbf24" font-size="7" text-anchor="middle">V4 Flash · V4 Pro</text>
+
+      <rect x="210" y="65" width="120" height="50" rx="6" fill="rgba(120,53,15,0.25)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="270" y="85" fill="white" font-size="11" font-weight="600" text-anchor="middle">GLM</text>
+      <text x="270" y="101" fill="#fbbf24" font-size="7" text-anchor="middle">GLM-4.7</text>
+
+      <rect x="350" y="65" width="120" height="50" rx="6" fill="rgba(120,53,15,0.25)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="410" y="85" fill="white" font-size="11" font-weight="600" text-anchor="middle">Kimi</text>
+      <text x="410" y="101" fill="#fbbf24" font-size="7" text-anchor="middle">K2 长上下文</text>
+
+      <rect x="490" y="65" width="120" height="50" rx="6" fill="rgba(120,53,15,0.25)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="550" y="85" fill="white" font-size="11" font-weight="600" text-anchor="middle">MiniMax</text>
+      <text x="550" y="101" fill="#fbbf24" font-size="7" text-anchor="middle">M2.5 高并发</text>
+
+      <rect x="710" y="65" width="120" height="50" rx="6" fill="rgba(120,53,15,0.25)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="770" y="85" fill="white" font-size="11" font-weight="600" text-anchor="middle">Google One</text>
+      <text x="770" y="101" fill="#fbbf24" font-size="7" text-anchor="middle">照片·知识库·配置</text>
+
+      <!-- TAILSCALE -->
+      <rect x="30" y="195" width="1040" height="44" rx="8" fill="rgba(30,41,59,0.6)" stroke="#64748b" stroke-width="1"/>
+      <text x="550" y="213" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle" filter="url(#glow)">Tailscale Mesh VPN — 100.x.x.x (P2P WireGuard)</text>
+      <text x="550" y="229" fill="#94a3b8" font-size="7" text-anchor="middle">Mac mini:100.x.x.1  ·  MBP:100.x.x.2  ·  Y7000P:100.x.x.3  ·  单位台式机:100.x.x.4</text>
+
+      <path d="M 125 115 L 125 170 Q 125 182 140 182 L 250 182 Q 260 182 260 193" fill="none" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+      <text x="165" y="165" fill="#fbbf24" font-size="7">出墙 · 走代理</text>
+
+      <!-- MAC MINI -->
+      <rect x="50" y="270" width="460" height="250" rx="10" fill="url(#g-emerald)" stroke="#34d399" stroke-width="1.5"/>
+      <rect x="50" y="270" width="460" height="28" rx="10" fill="rgba(6,78,59,0.3)"/>
+      <rect x="50" y="285" width="460" height="13" fill="rgba(6,78,59,0.3)"/>
+      <text x="280" y="289" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">🖥️ Mac mini M4 · 24h 服务器 · 24GB</text>
+
+      <!-- New API box -->
+      <rect x="70" y="310" width="180" height="195" rx="6" fill="rgba(6,78,59,0.12)" stroke="#34d399" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="160" y="325" fill="#34d399" font-size="8" font-weight="600" text-anchor="middle">AI API Gateway</text>
+      <rect x="80" y="335" width="160" height="35" rx="5" fill="rgba(6,78,59,0.35)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="160" y="350" fill="white" font-size="10" font-weight="600" text-anchor="middle">New API</text>
+      <text x="160" y="363" fill="#94a3b8" font-size="7" text-anchor="middle">AI API 网关 · :3000</text>
+      <text x="160" y="405" fill="#fbbf24" font-size="6" text-anchor="middle">→ Flash 日常 · Pro 推理</text>
+      <text x="160" y="416" fill="#fbbf24" font-size="6" text-anchor="middle">→ GLM 架构 · Kimi 长文</text>
+      <text x="160" y="427" fill="#fbbf24" font-size="6" text-anchor="middle">→ MiniMax 高并发 · Fallback</text>
+      <text x="160" y="445" fill="#94a3b8" font-size="6" text-anchor="middle">→ 全部走本机代理出墙</text>
+      <rect x="85" y="453" width="150" height="12" rx="3" fill="rgba(76,29,149,0.2)" stroke="#a78bfa" stroke-width="0.5"/>
+      <text x="160" y="462" fill="#a78bfa" font-size="6" text-anchor="middle">📦 /Volumes/Work (空) 挂 Docker</text>
+
+      <!-- Proxy -->
+      <rect x="270" y="310" width="85" height="30" rx="5" fill="rgba(136,19,55,0.3)" stroke="#fb7185" stroke-width="1"/>
+      <text x="312" y="328" fill="white" font-size="8" font-weight="600" text-anchor="middle">代理</text>
+      <text x="312" y="338" fill="#fb7185" font-size="6" text-anchor="middle">Clash/Surge</text>
+
+      <!-- Ollama box -->
+      <rect x="270" y="350" width="225" height="155" rx="6" fill="rgba(6,78,59,0.12)" stroke="#34d399" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="382" y="365" fill="#34d399" font-size="8" font-weight="600" text-anchor="middle">Ollama 本地推理</text>
+
+      <rect x="285" y="375" width="195" height="60" rx="5" fill="rgba(6,78,59,0.25)" stroke="#fbbf24" stroke-width="1.2"/>
+      <text x="382" y="392" fill="#fbbf24" font-size="9" font-weight="600" text-anchor="middle">🥇 Qwen3.6-35B-A3B</text>
+      <text x="382" y="407" fill="#94a3b8" font-size="7" text-anchor="middle">MoE · 35B总/3B激活 · ~21GB · Q4</text>
+      <text x="382" y="420" fill="#94a3b8" font-size="6" text-anchor="middle">🔥 24GB跑35B级别推理 · 3B激活≈7B速度</text>
+
+      <text x="382" y="450" fill="#94a3b8" font-size="6" text-anchor="middle">bge-m3 · GLM-OCR · :11434</text>
+      <text x="382" y="465" fill="#a78bfa" font-size="6" text-anchor="middle">📦 /Volumes/Model Docker+Ollama+LM</text>
+      <text x="382" y="478" fill="#94a3b8" font-size="6" text-anchor="middle">PaddleOCR (pip) · Apple Vision</text>
+
+      <!-- MBP -->
+      <rect x="580" y="270" width="490" height="250" rx="10" fill="rgba(8,51,68,0.15)" stroke="#22d3ee" stroke-width="1.5"/>
+      <rect x="580" y="270" width="490" height="28" rx="10" fill="rgba(8,51,68,0.3)"/>
+      <rect x="580" y="285" width="490" height="13" fill="rgba(8,51,68,0.3)"/>
+      <text x="825" y="289" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">💻 MBP M5 Max · 主力开发机 · 128GB</text>
+
+      <rect x="600" y="310" width="120" height="40" rx="5" fill="rgba(8,51,68,0.3)" stroke="#22d3ee" stroke-width="1.5"/>
+      <text x="660" y="327" fill="white" font-size="10" font-weight="600" text-anchor="middle">Hermes</text>
+      <text x="660" y="341" fill="#94a3b8" font-size="7" text-anchor="middle">AI 终端助手</text>
+
+      <rect x="740" y="310" width="120" height="40" rx="5" fill="rgba(8,51,68,0.3)" stroke="#22d3ee" stroke-width="1.5"/>
+      <text x="800" y="327" fill="white" font-size="10" font-weight="600" text-anchor="middle">IDE</text>
+      <text x="800" y="341" fill="#94a3b8" font-size="7" text-anchor="middle">Cline/Cursor</text>
+
+      <rect x="880" y="310" width="170" height="40" rx="5" fill="rgba(76,29,149,0.2)" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="965" y="327" fill="white" font-size="10" font-weight="600" text-anchor="middle">外接 SSD</text>
+      <text x="965" y="341" fill="#94a3b8" font-size="7" text-anchor="middle">/Volumes/Model · 模型+镜像</text>
+
+      <line x1="720" y1="330" x2="738" y2="330" stroke="#22d3ee" stroke-width="1" marker-end="url(#arrow-cyan)"/>
+      <line x1="860" y1="330" x2="878" y2="330" stroke="#a78bfa" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- MBP model box -->
+      <rect x="600" y="360" width="220" height="65" rx="5" fill="rgba(8,51,68,0.12)" stroke="none"/>
+      <text x="610" y="375" fill="#22d3ee" font-size="8">🦾 本地重型推理</text>
+      <text x="610" y="390" fill="#fbbf24" font-size="8" font-weight="600">🥇 Qwen3-Coder-Next</text>
+      <text x="610" y="405" fill="#94a3b8" font-size="7">MoE 235B/22B · ~38GB Q4</text>
+      <text x="610" y="418" fill="#94a3b8" font-size="6">🔥 Agentic Coding 最强开源</text>
+
+      <rect x="840" y="360" width="210" height="65" rx="5" fill="rgba(8,51,68,0.12)" stroke="none"/>
+      <text x="850" y="375" fill="#22d3ee" font-size="8">📋 配置同步 (Chezmoi)</text>
+      <text x="850" y="390" fill="#94a3b8" font-size="7">MBP = 源端 → git push</text>
+      <text x="850" y="405" fill="#94a3b8" font-size="7">Mac mini = 接收 → update</text>
+      <text x="850" y="418" fill="#f472b6" font-size="6">PaddleOCR · Apple Vision</text>
+
+      <!-- Routing summary -->
+      <rect x="600" y="435" width="450" height="70" rx="5" fill="rgba(8,51,68,0.12)" stroke="#1e293b" stroke-width="1"/>
+      <text x="610" y="450" fill="#22d3ee" font-size="8">🚀 推理链路</text>
+      <text x="610" y="465" fill="#fbbf24" font-size="7">云端 → Mac mini:3000 → New API → DeepSeek/GLM/Kimi/MiniMax</text>
+      <text x="610" y="480" fill="#34d399" font-size="7">本地 → Mac mini:11434 → Qwen3.6-35B-A3B (Mac mini) · Qwen3-Coder-Next (MBP)</text>
+      <text x="610" y="495" fill="#f472b6" font-size="7">OCR → PaddleOCR · GLM-OCR · Apple Vision (三端全支持)</text>
+
+      <!-- Arrows between Mac mini and MBP -->
+      <line x1="280" y1="239" x2="280" y2="268" stroke="#34d399" stroke-width="1.5"/>
+      <line x1="280" y1="239" x2="280" y2="225" stroke="#34d399" stroke-width="1.5"/>
+      <line x1="825" y1="239" x2="825" y2="268" stroke="#22d3ee" stroke-width="1.5"/>
+      <line x1="825" y1="239" x2="825" y2="225" stroke="#22d3ee" stroke-width="1.5"/>
+      <path d="M 510 310 L 578 310" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+      <path d="M 578 320 L 510 320" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+      <text x="544" y="306" fill="#94a3b8" font-size="6" text-anchor="middle">SSH · SMB</text>
+      <text x="544" y="333" fill="#94a3b8" font-size="6" text-anchor="middle">:3000 · :11434</text>
+
+      <!-- Y7000P -->
+      <rect x="50" y="560" width="460" height="120" rx="10" fill="rgba(120,53,15,0.08)" stroke="#fbbf24" stroke-width="1.5"/>
+      <rect x="50" y="560" width="460" height="26" rx="10" fill="rgba(120,53,15,0.15)"/>
+      <rect x="50" y="575" width="460" height="11" fill="rgba(120,53,15,0.15)"/>
+      <text x="280" y="578" fill="#fbbf24" font-size="10" font-weight="600" text-anchor="middle">🎮 Y7000P · 游戏 + 备份底座</text>
+
+      <rect x="70" y="593" width="110" height="72" rx="6" fill="rgba(120,53,15,0.15)" stroke="#fbbf24" stroke-width="1"/>
+      <text x="125" y="612" fill="white" font-size="9" font-weight="600" text-anchor="middle">🎮 游戏</text>
+      <text x="125" y="628" fill="#94a3b8" font-size="7" text-anchor="middle">野兽模式 · 蓝标安静</text>
+      <text x="125" y="642" fill="#fbbf24" font-size="6" text-anchor="middle">Tailscale 后台不关</text>
+
+      <rect x="200" y="593" width="120" height="72" rx="6" fill="rgba(120,53,15,0.15)" stroke="#fbbf24" stroke-width="1"/>
+      <text x="260" y="612" fill="white" font-size="9" font-weight="600" text-anchor="middle">SMB 共享</text>
+      <text x="260" y="628" fill="#94a3b8" font-size="7" text-anchor="middle">:445 Time Machine</text>
+      <text x="260" y="642" fill="#94a3b8" font-size="6" text-anchor="middle">Mac → P10 备份</text>
+
+      <rect x="340" y="593" width="150" height="72" rx="6" fill="rgba(76,29,149,0.15)" stroke="#a78bfa" stroke-width="1"/>
+      <text x="415" y="612" fill="white" font-size="9" font-weight="600" text-anchor="middle">WD_BLACK P10</text>
+      <text x="415" y="628" fill="#94a3b8" font-size="7" text-anchor="middle">2TB SMR HDD</text>
+      <text x="415" y="642" fill="#a78bfa" font-size="6" text-anchor="middle">T3 冷备份 · ~130MB/s</text>
+
+      <line x1="280" y1="239" x2="280" y2="558" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+      <path d="M 460 520 L 460 535 Q 460 545 415 545 L 260 545 Q 250 545 250 558" fill="none" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <text x="370" y="540" fill="#a78bfa" font-size="6" text-anchor="middle">Time Machine 备份</text>
+
+      <!-- 单位台式机 -->
+      <rect x="580" y="560" width="490" height="120" rx="10" fill="rgba(30,41,59,0.25)" stroke="#64748b" stroke-width="1.5"/>
+      <rect x="580" y="560" width="490" height="26" rx="10" fill="rgba(30,41,59,0.35)"/>
+      <rect x="580" y="575" width="490" height="11" fill="rgba(30,41,59,0.35)"/>
+      <text x="825" y="578" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle">🏢 单位台式机 · 内网穿透网关</text>
+
+      <rect x="600" y="595" width="150" height="70" rx="6" fill="rgba(136,19,55,0.12)" stroke="#fb7185" stroke-width="1.5"/>
+      <text x="675" y="615" fill="#fb7185" font-size="9" font-weight="600" text-anchor="middle">子网路由器</text>
+      <text x="675" y="632" fill="#94a3b8" font-size="7" text-anchor="middle">192.168.1.0/24</text>
+      <text x="675" y="648" fill="#94a3b8" font-size="6" text-anchor="middle">已审批 ✅</text>
+
+      <rect x="790" y="595" width="260" height="70" rx="6" fill="rgba(30,41,59,0.2)" stroke="#64748b" stroke-width="1" stroke-dasharray="6,3"/>
+      <text x="920" y="615" fill="white" font-size="9" font-weight="600" text-anchor="middle">单位内网</text>
+      <text x="920" y="632" fill="#94a3b8" font-size="7" text-anchor="middle">服务器 · 信创 UOS</text>
+      <text x="920" y="648" fill="#94a3b8" font-size="6" text-anchor="middle">家庭设备全可达</text>
+
+      <line x1="750" y1="630" x2="788" y2="630" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrow-rose)"/>
+      <line x1="825" y1="239" x2="825" y2="558" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- LEGEND -->
+      <rect x="860" y="740" width="210" height="90" rx="6" fill="rgba(15,23,42,0.85)" stroke="#1e293b" stroke-width="1"/>
+      <text x="870" y="755" fill="white" font-size="9" font-weight="600">图例</text>
+      <rect x="870" y="763" width="12" height="8" rx="2" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1"/><text x="888" y="770" fill="#94a3b8" font-size="6">开发机 (MBP)</text>
+      <rect x="870" y="776" width="12" height="8" rx="2" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1"/><text x="888" y="783" fill="#94a3b8" font-size="6">服务器 (Mac mini)</text>
+      <rect x="960" y="763" width="12" height="8" rx="2" fill="rgba(120,53,15,0.25)" stroke="#fbbf24" stroke-width="1"/><text x="978" y="770" fill="#94a3b8" font-size="6">云服务 / 游戏</text>
+      <rect x="960" y="776" width="12" height="8" rx="2" fill="rgba(76,29,149,0.3)" stroke="#a78bfa" stroke-width="1"/><text x="978" y="783" fill="#94a3b8" font-size="6">存储</text>
+      <rect x="870" y="789" width="12" height="8" rx="2" fill="rgba(136,19,55,0.3)" stroke="#fb7185" stroke-width="1"/><text x="888" y="796" fill="#94a3b8" font-size="6">网络/代理</text>
+      <rect x="960" y="789" width="12" height="8" rx="2" fill="rgba(244,114,182,0.3)" stroke="#f472b6" stroke-width="1"/><text x="978" y="796" fill="#94a3b8" font-size="6">OCR</text>
+      <rect x="870" y="802" width="12" height="8" rx="2" fill="rgba(30,41,59,0.4)" stroke="#64748b" stroke-width="1"/><text x="888" y="809" fill="#94a3b8" font-size="6">外部/其他</text>
+
+    </svg>
+  </div>
+
+  <!-- ═══ KEY DECISIONS ═══ -->
+  <div class="section-title">🔑 <span class="accent">关键决策</span></div>
+  <div class="decision-grid">
+
+    <div class="decision-card emerald">
+      <div class="dc-header">
+        <div class="dc-icon emerald">⚡</div>
+        <div>
+          <div class="dc-title">AI 算力：MoE 双层架构</div>
+          <div class="dc-sub">Qwen3.6-35B-A3B 让 24GB 也能跑 35B 级别</div>
+        </div>
+      </div>
+      <div class="dc-body">
+        <span class="tag green">Mac mini 24GB</span> → <strong>Qwen3.6-35B-A3B</strong> (MoE·21GB Q4)
+        每 token 只激活 3B 参数，推理速度≈7B 模型。<br>
+        <span class="tag blue">MBP 128GB</span> → <strong>Qwen3-Coder-Next</strong> (MoE·38GB Q4)
+        235B 总参/22B 激活，本地最强代码推理。<br>
+        <span class="tag yellow">Y7000P</span> → 不参与推理
+      </div>
+    </div>
+
+    <div class="decision-card cyan">
+      <div class="dc-header">
+        <div class="dc-icon cyan">🌐</div>
+        <div>
+          <div class="dc-title">API 网关：New API</div>
+          <div class="dc-sub">Go 单二进制 30MB · 代理分离</div>
+        </div>
+      </div>
+      <div class="dc-body">
+        <span class="tag green">✅</span> <strong>New API</strong> (One-API fork) on Mac mini :3000<br>
+        <span class="tag red">❌</span> LiteLLM 太重 (4-8GB)，文档无中文<br>
+        <span class="tag green">✅</span> RELAY_PROXY 仅海外走代理，国产直连
+      </div>
+    </div>
+
+    <div class="decision-card violet">
+      <div class="dc-header">
+        <div class="dc-icon violet">👁️</div>
+        <div>
+          <div class="dc-title">OCR 方案：三层架构</div>
+          <div class="dc-sub">中文 + 复杂文档 + 快速截图</div>
+        </div>
+      </div>
+      <div class="dc-body">
+        <span class="tag pink">PaddleOCR</span> → 中文文档/手写，<code>pip install</code><br>
+        <span class="tag pink">GLM-OCR</span> → 复杂文档/表格/印章，2.2GB Ollama<br>
+        <span class="tag pink">Apple Vision</span> → 零安装截图文字提取
+      </div>
+    </div>
+
+    <div class="decision-card amber">
+      <div class="dc-header">
+        <div class="dc-icon amber">📡</div>
+        <div>
+          <div class="dc-title">网络 + 配置</div>
+          <div class="dc-sub">Tailscale · Chezmoi · SMB</div>
+        </div>
+      </div>
+      <div class="dc-body">
+        <strong>Tailscale</strong> 4 台设备 P2P 互联<br>
+        <strong>子网路由</strong> 单位台式机 192.168.1.0/24<br>
+        <strong>Chezmoi</strong> MBP 源端 → Mac mini 接收<br>
+        <strong>SMB</strong> Y7000P → WD_BLACK Time Machine
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ MODEL ROUTING ═══ -->
+  <div class="section-title">🔄 <span class="accent">推理 + OCR 路由</span></div>
+  <div class="router-flow">
+    <div class="router-row">
+      <div class="router-scenario" style="color:#22d3ee">代码补全</div>
+      <div class="router-chain">
+        <span class="router-node cloud">DeepSeek V4 Flash</span>
+        <span class="router-arrow">→</span>
+        <span class="router-node fallback">GLM-4.7</span>
+        <span class="router-arrow">→</span>
+        <span class="router-node local">Mac mini Qwen3.6 (离线)</span>
+      </div>
+    </div>
+    <div class="router-row">
+      <div class="router-scenario" style="color:#fbbf24">复杂推理</div>
+      <div class="router-chain">
+        <span class="router-node cloud">DeepSeek V4 Pro</span>
+        <span class="router-arrow">→</span>
+        <span class="router-node fallback">GLM-4.7</span>
+        <span class="router-arrow">→</span>
+        <span class="router-node local">MBP Qwen3-Coder-Next (离线)</span>
+      </div>
+    </div>
+    <div class="router-row">
+      <div class="router-scenario" style="color:#a78bfa">架构设计</div>
+      <div class="router-chain">
+        <span class="router-node cloud">GLM-4.7</span>
+        <span class="router-arrow">→</span>
+        <span class="router-node fallback">DeepSeek V4 Pro</span>
+      </div>
+    </div>
+    <div class="router-row">
+      <div class="router-scenario" style="color:#fb7185">长上下文</div>
+      <div class="router-chain">
+        <span class="router-node cloud">Kimi K2</span>
+        <span class="router-arrow">→</span>
+        <span class="router-node fallback">DeepSeek V4 Flash</span>
+      </div>
+    </div>
+    <div class="router-row">
+      <div class="router-scenario" style="color:#34d399">高并发批量</div>
+      <div class="router-chain">
+        <span class="router-node cloud">MiniMax M2.5</span>
+        <span class="router-arrow">→</span>
+        <span class="router-node fallback">DeepSeek V4 Flash</span>
+      </div>
+    </div>
+    <div class="router-row">
+      <div class="router-scenario" style="color:#f472b6">中文文档 OCR</div>
+      <div class="router-chain">
+        <span class="router-node ocr">PaddleOCR</span>
+        <span class="router-arrow">→</span>
+        <span class="router-node ocr">GLM-OCR (复杂文档)</span>
+        <span style="color:#475569;font-size:0.65rem;margin-left:8px">Mac mini/MBP 均可</span>
+      </div>
+    </div>
+    <div class="router-row" style="border-bottom:none">
+      <div class="router-scenario" style="color:#34d399">嵌入 / RAG</div>
+      <div class="router-chain">
+        <span class="router-node local">bge-m3 (Mac mini)</span>
+        <span style="color:#475569;font-size:0.65rem;margin-left:8px">24h 在线 · 不走代理</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ FOOTER ═══ -->
+  <p class="footer">
+    跨设备分布式工作站 · 2026-05-20 · Tailscale · New API · Qwen3.6-35B-A3B · Qwen3-Coder-Next · GLM-OCR · PaddleOCR · v2.1
+  </p>
+
+</div>
+</body>
+</html>

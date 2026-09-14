@@ -7,6 +7,7 @@ related:
   - p73-truth-driven-engineering-pattern.md
   - p71-baseline-recovery-pattern.md
   - ../audits/2026-07-17-static-vs-runtime-diagnostic-audit.md
+type: ssot
 ---
 
 # P78 Triple-Axis Diagnostic Pattern — 声明/执行鸿沟系统的三维查证纪律

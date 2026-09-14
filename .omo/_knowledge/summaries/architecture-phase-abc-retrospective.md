@@ -6,6 +6,8 @@ last-reviewed: 2026-06-23
 archived-since: 2026-06-23
 related: process/retrospectives/
 note: "P53 R2 软收敛: retro/summary 命名文件交叉引用 process/retrospectives/, 沿用不动路径原则保留当前位置"
+type: ephemeral
+status: archived
 ---
 # Architecture Phase A/B/C 复盘总结
 

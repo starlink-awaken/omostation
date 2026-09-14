@@ -1,0 +1,144 @@
+# DFSQ (Dao-Fa-Shi-Qi) Architecture SHACL Shapes
+# ================================================
+# W3C SHACL validation shapes for eCOS governance architecture.
+#
+# SSOT: .omo/standards/shapes/dfsq-shapes.ttl
+# Version: 1.0.0 | 2026-09-13
+# Reference: BET-Y1Q4-T6-27
+
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dfsq: <https://omostation.starlink-awaken.com/ns/dfsq#> .
+@prefix ecos: <https://omostation.starlink-awaken.com/ns/ecos#> .
+
+# ── DFSQ Document Shape ──
+# Validates top-level structure of DFSQ governance documents.
+
+dfsq:DocumentShape
+    a sh:NodeShape ;
+    sh:targetClass dfsq:Document ;
+    sh:closed false ;
+
+    # Required: schema identifier
+    sh:property [
+        sh:path dfsq:schema ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "DFSQ document must have exactly one 'schema" ;
+    ] ;
+
+    # Required: version string
+    sh:property [
+        sh:path dfsq:version ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:pattern "^\\d+\\.\\d+\\.\\d+$" ;
+        sh:message "DFSQ document must have a valid semver 'version' (e.g., 1.0.0)" ;
+    ] ;
+
+    # Required: dimensions or slots
+    sh:property [
+        sh:path dfsq:dimensions ;
+        sh:datatype xsd:integer ;
+        sh:minCount 0 ;
+        sh:message "DFSQ 'dimensions' must be an integer" ;
+    ] ;
+
+    sh:property [
+        sh:path dfsq:slots ;
+        sh:datatype xsd:integer ;
+        sh:minCount 0 ;
+        sh:message "DFSQ 'slots' must be an integer" ;
+    ] ;
+
+    # Constraint: must have at least one of dimensions or slots
+    sh:sparql [
+        sh:message "DFSQ document must define at least one of: dimensions, slots" ;
+        sh:select """
+            SELECT $this
+            WHERE {
+                FILTER NOT EXISTS { $this dfsq:dimensions ?d }
+                FILTER NOT EXISTS { $this dfsq:slots ?s }
+            }
+        """ ;
+    ] .
+
+# ── DFSQ Dimension Shape ──
+# Validates individual dimension definitions.
+
+dfsq:DimensionShape
+    a sh:NodeShape ;
+    sh:targetClass dfsq:Dimension ;
+
+    sh:property [
+        sh:path dfsq:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:minLength 1 ;
+        sh:message "Dimension must have a non-empty 'name'" ;
+    ] ;
+
+    sh:property [
+        sh:path dfsq:description ;
+        sh:datatype xsd:string ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:path dfsq:metrics ;
+        sh:minCount 0 ;
+        sh:message "Dimension metrics must be well-formed" ;
+    ] .
+
+# ── DFSQ Slot Shape ──
+# Validates slot definitions (S-slot in SFOP).
+
+dfsq:SlotShape
+    a sh:NodeShape ;
+    sh:targetClass dfsq:Slot ;
+
+    sh:property [
+        sh:path dfsq:slotId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:pattern "^[A-Z][a-zA-Z0-9_-]{1,63}$" ;
+        sh:message "Slot ID must be 2-64 chars, start with uppercase letter" ;
+    ] ;
+
+    sh:property [
+        sh:path dfsq:active ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Slot must have an 'active' boolean flag" ;
+    ] .
+
+# ── Ecosystem Binding Shape ──
+# Validates ecosystem protocol bindings.
+
+ecos:BindingShape
+    a sh:NodeShape ;
+    sh:targetClass ecos:Binding ;
+
+    sh:property [
+        sh:path ecos:contractId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Binding must have a 'contractId'" ;
+    ] ;
+
+    sh:property [
+        sh:path ecos:transport ;
+        sh:in ( "http" "grpc" "thrift" "topic" "include" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Binding transport must be one of: http, grpc, thrift, topic, include" ;
+    ] .

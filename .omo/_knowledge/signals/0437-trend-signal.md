@@ -4,6 +4,8 @@ status: proposed
 lifecycle: spec
 owner: evolution-agent
 last-reviewed: 2026-08-29
+type: ephemeral
+status: archived
 ---
 
 # ADR-0437: [hacker_news] Indirect Calling of Nested Functions on GCC Without Executable Stack

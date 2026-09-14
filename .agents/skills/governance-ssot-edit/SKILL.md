@@ -2,7 +2,10 @@
 name: governance-ssot-edit
 description: "Edit governance SSOT (governance-checks.yaml / gac-*.py / write-owners / x*-rules / mutation-surfaces) safely in a concurrent multi-agent workspace. Aligns ALL source copies, commits via pathspec to avoid clobbering concurrent staged work, pushes immediately so concurrent PRs can't silently revert, and verifies the change survives. Use when changing GaC rules/executor enums, governance registries, or any multi-source governance field."
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # Governance SSOT Edit — Multi-Source Align + Concurrent-Safe Workflow
 

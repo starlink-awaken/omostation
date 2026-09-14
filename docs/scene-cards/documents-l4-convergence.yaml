@@ -1,6 +1,7 @@
 ---
 last-reviewed: 2026-08-30
----
+bet: BET-Y1Q4-T8-04
+falsifier: 若 shadow 期间无文档被处理，则场景无实际价值
 
 schema: scene-card/v2
 lifecycle: supervised
@@ -21,7 +22,6 @@ source_path: projects/l4-kernel + projects/agora/projects/l4-kernel
 target_path: canonical Workspace L4
 risk_level: L1
 files_count: 5 waves
-bet_id: BET-Y1Q3-T10-21
 category: convergence
 
 # Architecture Alignment (ADR-0387 dual-track admission)
@@ -34,4 +34,3 @@ architecture:
   dependency_direction: "entry -> routing mesh -> engines/runtime -> governed state"
   evidence_plane: ".omo/_delivery/"
 
----

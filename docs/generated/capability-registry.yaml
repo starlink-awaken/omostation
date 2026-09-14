@@ -11,12 +11,12 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 634
-  bos_services: 298
-  bos_domains: 22
-  cli_commands: 200
-  skills: 3
-  workflows: 19
+  mcp_tools: 642
+  bos_services: 318
+  bos_domains: 24
+  cli_commands: 218
+  skills: 40
+  workflows: 25
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -45,9 +45,11 @@ mcp_servers:
   - omo_worker_reclaim
   - omo_yield_task
   - release_lock
+  - scene_calibrate
   - scene_card_status
+  - scene_execute
   - validate_task
-  tool_count: 22
+  tool_count: 24
 - id: kos
   name: KOS Knowledge Retrieval
   layer: L2
@@ -229,6 +231,9 @@ mcp_servers:
   - bcos_evolve
   - bcos_north_star
   - bcos_signals
+  - bos_documents_jobs
+  - bos_documents_registry
+  - bos_documents_state
   - bos_health
   - bos_inbox_archive
   - bos_inbox_draft
@@ -236,6 +241,7 @@ mcp_servers:
   - bos_inbox_search
   - bos_inbox_triage
   - bos_inbox_watch
+  - bos_mail_draft
   - bos_mesh_dma_status
   - bos_metrics_status
   - bos_middleware_status
@@ -243,7 +249,9 @@ mcp_servers:
   - bos_reload_m1
   - bos_reload_routes
   - bos_spine_diff
+  - bos_spine_distill
   - bos_spine_draft
+  - bos_spine_replay
   - bos_spine_sign
   - bos_spine_status
   - cartridge_pack
@@ -321,7 +329,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 104
+  tool_count: 110
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -874,24 +882,26 @@ mcp_servers:
 bos_services:
   _domain_counts:
     agent-cell: 23
-    agora: 3
+    agora: 6
     analysis: 28
     bcos: 3
     capability: 44
-    cockpit: 7
-    compute: 17
+    cockpit: 8
+    compute: 14
+    documents: 3
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 70
+    governance: 73
     harness: 9
     l4-kernel: 1
-    memory: 47
+    memory: 49
     meta: 1
+    observatory: 6
     omo: 4
     perception: 2
-    persona: 10
-    resident: 4
+    persona: 11
+    resident: 8
     runtime: 1
     swarm: 1
     system: 11
@@ -900,95 +910,95 @@ bos_services:
     - uri: bos://agent-cell/pool/status
       description: Cell Pool 状态 — 多 Cell 并行运行状态
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pool/submit
       description: Cell Pool 提交 — 提交 Episode 到 Cell Pool
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pool/scale
       description: Cell Pool 扩缩容 — 调整 Cell 数量
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pool/auto-scale
       description: Cell Pool 自动扩缩容 — 基于负载自动调整
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pool/metrics
       description: Cell Pool 指标 — 详细监控指标
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/dag/execute
       description: Cell DAG 执行 — 跨 Cell 编排
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/publish
       description: Memory Publish — 发布记忆到网络
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/search
       description: Memory Search — 跨 Cell 搜索
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/governance/audit
       description: Governance Audit — 配置合规审计
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/governance/report
       description: Governance Report — 治理报告
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/config/list
       description: Cell Config 列表 — 列出预设配置
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/config/create
       description: Cell Config 创建 — 从预设创建 Cell
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/plan
       description: Cell Plan — 意图解析 + 任务分解 + 风险评估
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/execute
       description: Cell Execute — 按计划执行 + 工具调用 + 产出收集
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/verify
       description: Cell Verify — 完整性 + 正确性 + 质量三维评分
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/govern
       description: Cell Govern — R0-R3 风险分级 + 审批决策
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pdp/evaluate
       description: PDP Evaluate — 策略决策点上下文感知评估
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pep/enforce
       description: PEP Enforce — 策略执行点强制执行 + 审计
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/process
       description: Memory Process — Episode → 记忆候选生成
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/consolidate
       description: Memory Consolidate — 记忆冲突检测 + 整合
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/run
       description: Replay — Episode 回放验证
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/shadow
       description: Shadow — 影子运行 (无副作用验证)
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/eval
       description: Eval — 批量 Episode 性能评估
       transport: stdio
-      status: active
+      status: unimplemented
     agora:
     - uri: bos://agora/metrics
       description: agora 内部指标源 self-identifier (metrics collector source_uri)
@@ -1000,6 +1010,18 @@ bos_services:
       status: active
     - uri: bos://agora/status
       description: agora @mcp.resource — BOS 系统内省统一大盘 (router/middleware/调用量)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/list
+      description: 列出所有已注册连接器 (支持 status/type/package 过滤)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/sync
+      description: 触发指定连接器的增量同步 (支持 dry_run 与 watermark)
+      transport: inline
+      status: active
+    - uri: bos://agora/connectors/manifest
+      description: 读取连接器注册表 manifest (只读)
       transport: inline
       status: active
     analysis:
@@ -1334,6 +1356,10 @@ bos_services:
       description: Cockpit/Spine 触发 Mac mini M4 闲时在线 LoRA 蒸馏
       transport: stdio
       status: active
+    - uri: bos://cockpit/spine/replay
+      description: Cockpit/Spine 经验回放水塘状态、容量与样本域分布查看
+      transport: stdio
+      status: active
     compute:
     - uri: bos://compute/aetherforge/infer
       description: AetherForge 算力网关与 omlxc (Apple MLX/Local LLM) 本地量化模型通用推理调度端点
@@ -1363,18 +1389,6 @@ bos_services:
       description: omlxc 经验回放池状态、水塘抽样与防遗忘混合 batch 统计
       transport: stdio
       status: active
-    - uri: bos://compute/omlxc/cache
-      description: '[UNIMPLEMENTED] omlxc Radix 动态前缀树与三级分层缓存指标与压测（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
-    - uri: bos://compute/omlxc/dflash
-      description: '[UNIMPLEMENTED] omlxc DFlash 2 块扩散投机解码加速与集群分工（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
-    - uri: bos://compute/omlxc/cluster
-      description: '[UNIMPLEMENTED] omlxc 异构三节点智能调度、心跳与故障自愈拓扑（旧 demo 已不存在，待 canonical CLI parity）'
-      transport: stdio
-      status: unimplemented
     - uri: bos://compute/omlxc/tree
       description: omlxc 自适应熵感知树状投机解码与多候选验证服务 (ADR-0434)
       transport: stdio
@@ -1402,6 +1416,19 @@ bos_services:
     - uri: bos://compute/omlxc/lora
       description: omlxc 端侧在线 LoRA 持续微调与毫秒级热插拔服务 (ADR-0435)
       transport: stdio
+      status: active
+    documents:
+    - uri: bos://documents/registry
+      description: Documents L4 域注册表只读查询 (域元数据/客户端契约/能力路由)
+      transport: inline
+      status: active
+    - uri: bos://documents/jobs
+      description: Documents 运行时任务配置只读查询 (job 定义/调度/证据路径)
+      transport: inline
+      status: active
+    - uri: bos://documents/state
+      description: Documents 运行时状态只读查询
+      transport: inline
       status: active
     ecos:
     - uri: bos://ecos/workflow/list
@@ -1735,6 +1762,18 @@ bos_services:
       description: 探测器心跳矩阵
       transport: stdio
       status: active
+    - uri: bos://governance/decision/record
+      description: 记录决策到因果图
+      transport: internal
+      status: active
+    - uri: bos://governance/decision/trace-causes
+      description: 追溯决策的因果祖先链
+      transport: internal
+      status: active
+    - uri: bos://governance/decision/trace-effects
+      description: 追溯决策的下游影响面
+      transport: internal
+      status: active
     harness:
     - uri: bos://harness/compliance/check
       description: Harness 12 章节全生命周期合规检查 (Phase 8)
@@ -1966,11 +2005,44 @@ bos_services:
       description: KEMS 多源知识抽提与 OCR 纠错审阅队列 (ADR-0300)
       transport: http
       status: active
+    - uri: bos://memory/graph/query
+      description: SPARQL 查询嵌入式图引擎
+      transport: internal
+      status: active
+    - uri: bos://memory/graph/reason
+      description: Datalog 确定性推理
+      transport: internal
+      status: active
     meta:
     - uri: bos://meta/discover
       description: 发现所有可用 BOS 资源和入口
       transport: internal
       status: active
+    observatory:
+    - uri: bos://observatory/mcp-server
+      description: 织星系统官方架构拓扑、并发冲突防撞与状态哨兵 FastMCP Server
+      transport: mcp_proxy
+      status: active
+    - uri: bos://observatory/project/perception
+      description: 获取单项目的超紧凑架构感知信息与并发写冲突状态 (<800 tokens)
+      transport: internal
+      status: unimplemented
+    - uri: bos://observatory/agents/collisions
+      description: 全局检查 42 个未合并工作树并发写争用风险与防撞守卫建议
+      transport: internal
+      status: unimplemented
+    - uri: bos://observatory/sentinel/status
+      description: 探测 16 个子模块 Gitlink 对齐状态与 7 大主权端口健康度
+      transport: internal
+      status: unimplemented
+    - uri: bos://observatory/callchains/get
+      description: 获取 4 大跨层调用链时序步骤与契约规约
+      transport: internal
+      status: unimplemented
+    - uri: bos://observatory/system/overview
+      description: 获取八层架构项目分布与接口大厅汇总统计
+      transport: internal
+      status: unimplemented
     omo:
     - uri: bos://omo/eidos/pipeline
       description: Eidos 治理管线调度
@@ -2014,6 +2086,10 @@ bos_services:
       description: Health Profile 更新
       transport: stdio
       status: active
+    - uri: bos://persona/health-profile/ingest
+      description: Health Profile 批量导入 (T6-25 OpenHuman Bridge)
+      transport: stdio
+      status: active
     - uri: bos://persona/sot-bridge-persona/recall-entity
       description: SharedBrain Bridge 实体召回 (P36-W1 GAP 补全, canonical URI)
       transport: internal
@@ -2053,6 +2129,22 @@ bos_services:
       status: active
     - uri: bos://resident/decision/run
       description: Resident 决策提案处理 (WP-F)
+      transport: stdio
+      status: active
+    - uri: bos://resident/task/submit
+      description: 提交异步任务到 Resident 就绪队列 (T10-125 task_gateway)
+      transport: stdio
+      status: active
+    - uri: bos://resident/task/status
+      description: 查询异步任务状态 (T10-125 task_gateway)
+      transport: stdio
+      status: active
+    - uri: bos://resident/sediment/trigger
+      description: 触发知识 sediment 异步写入 (T10-125 dual-write)
+      transport: stdio
+      status: active
+    - uri: bos://resident/decision/trigger
+      description: 触发决策提案异步处理 (T10-125 dual-write)
       transport: stdio
       status: active
     runtime:
@@ -2167,6 +2259,10 @@ cli_commands:
   description: 🎯 C2G 战略罗盘 (status/pipeline)
 - name: cache
   description: 检查三级分层缓存与 Radix 前缀树状态 (含基准压测)
+- name: calendar
+  description: 多维日历感知与督办闭环 (T7-02)
+- name: calibrate
+  description: '[v2] 校准场景卡'
 - name: capabilities
   description: 统一能力发现入口 — 搜索/推荐/全量列出 (CLI+BOS+Scene+Journey+Governance)
 - name: capability
@@ -2193,6 +2289,8 @@ cli_commands:
   description: 对比多个研究结果
 - name: compass
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
+- name: completion
+  description: 生成 Shell 自动补全脚本
 - name: compute
   description: 算力与 LLM 网关操作 (委派 aetherforge)
 - name: consolidate
@@ -2210,7 +2308,7 @@ cli_commands:
 - name: daily
   description: 每日研究简报
 - name: dashboard
-  description: 打开 Web Dashboard
+  description: 打开 Web 运维与全景仪表盘 (Web Dashboard)
 - name: data
   description: 数据目录索引 / 类型注册 / TTL 清理
 - name: debt
@@ -2229,8 +2327,12 @@ cli_commands:
   description: 发现可用功能和资源
 - name: distill
   description: 在 Mac mini M4 触发闲时 LoRA 蒸馏
+- name: dlp-guard
+  description: 外发前防泄密扫描 (敏感识别+挂起+脱敏)
 - name: dma
   description: 测试雷雳 5 跨机零拷贝 DMA 通道与换页基准
+- name: docs
+  description: 📚 CLI 参考手册生成与导出
 - name: docx
   description: 渲染为 GB/T 9704-2012 红头公文 DOCX
 - name: domain-status
@@ -2249,6 +2351,8 @@ cli_commands:
   description: 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)
 - name: events-watch
   description: 实时监听 SSE 事件流简便入口
+- name: execute
+  description: '[v2] 执行场景卡 (BOS/MCP 驱动)'
 - name: export
   description: 导出研究 (markdown/text/json)
 - name: export-research
@@ -2318,7 +2422,7 @@ cli_commands:
 - name: iterate
   description: ♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)
 - name: journey
-  description: 🗺️ Journey State Graph 状态表达校验器
+  description: 🗺️ Journey State Graph 业务场景旅程与状态图校验器
 - name: kairon
   description: kairon 知识引擎 monorepo 聚合入口
 - name: kems
@@ -2327,12 +2431,16 @@ cli_commands:
   description: 📚 KOS 知识检索 (search/status/stats)
 - name: knowledge-ref
   description: ADR-0315 引用元数据 (无正文)
+- name: lifecycle
+  description: '[v2] 场景卡生命周期管理 (list/status/promote/demote/validate)'
 - name: list
   description: 查看研究历史
 - name: logs
   description: 查看日志
 - name: lora
   description: 查看与测试端侧在线 LoRA 适配层热插拔
+- name: mail-draft
+  description: 邮箱 3 档拟复 (经 BOS inbox/mail/draft 服务)
 - name: mcp
   description: 启动 MCP server 或列出工具
 - name: memory
@@ -2345,6 +2453,8 @@ cli_commands:
   description: omlx 算力网格路由入口
 - name: metrics
   description: 查看 bus metrics 快照
+- name: minutes
+  description: 会议转写文本 → 交办事项督办清单
 - name: model-driven
   description: ''
 - name: model-freshness
@@ -2352,7 +2462,7 @@ cli_commands:
 - name: mof
   description: MOF 元模型操作 (委派 mof CLI)
 - name: monitor
-  description: 📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)
+  description: 📊 实时终端大盘 (C2G Pipeline 监控仪, 默认实时; --status 一次性快照)
 - name: mutate
   description: 通过 agora 统一 BOS URI 写协议修改资源
 - name: nack
@@ -2375,18 +2485,22 @@ cli_commands:
   description: 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)
 - name: pending
   description: 查看未决待办快照预览
+- name: persona-radar
+  description: 个人文风一致性多维雷达评估 (T3-01)
 - name: pipeline
   description: pipeline 概览
 - name: policy
   description: ⚖️ 领域监管合规与 Policy-as-Code 红线审查 (E-POL-*)
 - name: pptx
   description: 渲染为 16:9 高管技术汇报 PPTX
+- name: prebrief
+  description: ICS 日历事件 → 会前速递简报
 - name: product-health
   description: 产品健康度检测
 - name: profile
   description: 查看/编辑身份档案 (L4 入口)
 - name: project
-  description: 🔍 17 项目全景 4D 体检与诊断
+  description: 'inspect|list (default: inspect)'
 - name: proxy-env
   description: 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)
 - name: publish
@@ -2425,6 +2539,8 @@ cli_commands:
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: restore
   description: 恢复已隔离研究记录
+- name: review
+  description: 左右分栏 Diff 审阅工作台 (初稿 vs 编辑态)
 - name: route
   description: 为模型选择最优节点
 - name: run
@@ -2437,10 +2553,14 @@ cli_commands:
   description: 平面扫描
 - name: scenario
   description: P5 统一 scenario 入口 (radar/assistant/health/inbox/intake/task/approval/connector/review)
+- name: scene
+  description: 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub)
 - name: score
   description: 评分债务项
 - name: search
   description: 全文搜索
+- name: send
+  description: 一键确认署名并经外发网关真实外发
 - name: serve
   description: stdio JSON-RPC serve mode
 - name: sign
@@ -2469,8 +2589,12 @@ cli_commands:
   description: 渲染 ```diagram 代码块为矢量架构图 SVG
 - name: swarm
   description: 分布式跨节点 KV 共享池与超长上下文置换基准
+- name: system
+  description: 🖥️ 系统与运维正交领域 (status/health/dashboard/readiness/runtime)
 - name: tag
   description: 为研究添加/覆盖标签
+- name: telemetry
+  description: 命令遥测与 Prometheus 指标导出
 - name: test_export_formats
   description: '离线自测: 三格式导出 + GB/T 参数断言'
 - name: timeline
@@ -2491,12 +2615,16 @@ cli_commands:
   description: 启动观测栈
 - name: url
   description: 打印 Langfuse Web URL
+- name: user
+  description: 👤 用户体验与向导正交领域 (quickstart/help/demo/init/profile/completion)
 - name: validate
   description: 验证 Workspace 契约
 - name: vault
   description: 搜索 L4 Vault 知识库
 - name: version
   description: 版本信息
+- name: voice-memo
+  description: 语音随想 → 转录润色分拣 → Spine 备选池 (T2-01)
 - name: vram
   description: 计算模型动态 KV Cache 显存预算
 - name: warm
@@ -2512,14 +2640,125 @@ cli_commands:
 - name: write
   description: 双轨写入 (+ Neo4j FACT 若配置)
 skills:
+- id: a2a-coordination
+  file: .agents/skills/a2a-coordination/SKILL.md
+  exists: true
+- id: agent-onboarding
+  file: .agents/skills/agent-onboarding/SKILL.md
+  exists: true
+- id: agent-quickstart
+  file: .agents/skills/agent-quickstart/SKILL.md
+  exists: true
 - id: architecture-perception
   file: .agents/skills/architecture-perception/SKILL.md
+  exists: true
+- id: bdsk-virtual-board
+  file: .agents/skills/bdsk-virtual-board/SKILL.md
+  exists: true
+- id: bet-closeout-chain
+  file: .agents/skills/bet-closeout-chain/SKILL.md
+  exists: true
+- id: bet-execution
+  file: .agents/skills/bet-execution/SKILL.md
+  exists: true
+- id: bos-service-discovery
+  file: .agents/skills/bos-service-discovery/SKILL.md
+  exists: true
+- id: ci-red-triage
+  file: .agents/skills/ci-red-triage/SKILL.md
+  exists: true
+- id: closeout-retro
+  file: .agents/skills/closeout-retro/SKILL.md
+  exists: true
+- id: cognitive-governance
+  file: .agents/skills/cognitive-governance/SKILL.md
+  exists: true
+- id: delegation-guardrails
+  file: .agents/skills/delegation-guardrails/SKILL.md
+  exists: true
+- id: domain-cartridge-governance
+  file: .agents/skills/domain-cartridge-governance/SKILL.md
+  exists: true
+- id: ecos-test-cycle
+  file: .agents/skills/ecos-test-cycle/SKILL.md
+  exists: true
+- id: external-agent-attach
+  file: .agents/skills/external-agent-attach/SKILL.md
   exists: true
 - id: git-discipline
   file: .agents/skills/git-discipline/SKILL.md
   exists: true
+- id: git-safety-check
+  file: .agents/skills/git-safety-check/SKILL.md
+  exists: true
+- id: governance-phase-orchestrator
+  file: .agents/skills/governance-phase-orchestrator/SKILL.md
+  exists: true
+- id: governance-ssot-edit
+  file: .agents/skills/governance-ssot-edit/SKILL.md
+  exists: true
+- id: harness-compliance
+  file: .agents/skills/harness-compliance/SKILL.md
+  exists: true
+- id: kos-cold-start
+  file: .agents/skills/kos-cold-start/SKILL.md
+  exists: true
+- id: memory-recall
+  file: .agents/skills/memory-recall/SKILL.md
+  exists: true
+- id: multica-squad-ops
+  file: .agents/skills/multica-squad-ops/SKILL.md
+  exists: true
+- id: nextgen-cognitive-mesh
+  file: .agents/skills/nextgen-cognitive-mesh/SKILL.md
+  exists: true
+- id: omlxc-compute-fabric
+  file: .agents/skills/omlxc-compute-fabric/SKILL.md
+  exists: true
+- id: omo-audit-baseline
+  file: .agents/skills/omo-audit-baseline/SKILL.md
+  exists: true
+- id: project-governance
+  file: .agents/skills/project-governance/SKILL.md
+  exists: true
+- id: round-gate-check
+  file: .agents/skills/round-gate-check/SKILL.md
+  exists: true
+- id: round-workflow
+  file: .agents/skills/round-workflow/SKILL.md
+  exists: true
+- id: scene-shadow-activate
+  file: .agents/skills/scene-shadow-activate/SKILL.md
+  exists: true
 - id: spine-value-pipeline
   file: .agents/skills/spine-value-pipeline/SKILL.md
+  exists: true
+- id: swarm-escape
+  file: .agents/skills/swarm-escape/SKILL.md
+  exists: true
+- id: system-index-distill
+  file: .agents/skills/system-index-distill/SKILL.md
+  exists: true
+- id: workflow-silence-detection
+  file: .agents/skills/workflow-silence-detection/SKILL.md
+  exists: true
+- id: workflow:bet-execution
+  file: .agents/skills/workflow:bet-execution/SKILL.md
+  exists: true
+- id: workflow:governance-state-mutation
+  file: .agents/skills/workflow:governance-state-mutation/SKILL.md
+  exists: true
+- id: workflow:mini
+  file: .agents/skills/workflow:mini/SKILL.md
+  exists: true
+- id: workflow:project-code-change
+  file: .agents/skills/workflow:project-code-change/SKILL.md
+  exists: true
+- id: workflow:project-doc-change
+  file: .agents/skills/workflow:project-doc-change/SKILL.md
+  exists: true
+- id: worktree-ci-isolate
+  file: .agents/skills/worktree-ci-isolate/SKILL.md
   exists: true
 workflows:
 - id: agent-onboarding
@@ -2530,6 +2769,9 @@ workflows:
   exists: true
 - id: c2g-spec-ingress
   file: .omo/_truth/registry/agent-workflows/workflows/c2g-spec-ingress.yaml
+  exists: true
+- id: closeout-with-retro
+  file: .omo/_truth/registry/agent-workflows/workflows/closeout-with-retro.yaml
   exists: true
 - id: cognitive-governance-delivery
   file: .omo/_truth/registry/agent-workflows/workflows/cognitive-governance-delivery.yaml
@@ -2573,8 +2815,23 @@ workflows:
 - id: resident-runtime-observe
   file: .omo/_truth/registry/agent-workflows/workflows/resident-runtime-observe.yaml
   exists: true
+- id: round-engineering
+  file: .omo/_truth/registry/agent-workflows/workflows/round-engineering.yaml
+  exists: true
+- id: round-type-router
+  file: .omo/_truth/registry/agent-workflows/workflows/round-type-router.yaml
+  exists: true
+- id: scene-execution
+  file: .omo/_truth/registry/agent-workflows/workflows/scene-execution.yaml
+  exists: true
+- id: scene-lifecycle
+  file: .omo/_truth/registry/agent-workflows/workflows/scene-lifecycle.yaml
+  exists: true
 - id: state-sync
   file: .omo/_truth/registry/agent-workflows/workflows/state-sync.yaml
+  exists: true
+- id: submodule-pointer-bump
+  file: .omo/_truth/registry/agent-workflows/workflows/submodule-pointer-bump.yaml
   exists: true
 - id: submodule-pointer-close
   file: .omo/_truth/registry/agent-workflows/workflows/submodule-pointer-close.yaml

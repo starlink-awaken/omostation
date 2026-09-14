@@ -13,6 +13,7 @@ related:
   - ../../../../../bin/check-hardcoded-ports.py
   - ../../../../../tests/test_hardcoded_ports.py
 supersedes: []
+type: ssot
 ---
 
 # ADR-0168: P77 Phase 5 — 跨仓端口硬编码扫描 (硬门 + 5 port 补登)

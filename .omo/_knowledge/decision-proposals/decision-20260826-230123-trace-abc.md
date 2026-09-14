@@ -7,6 +7,8 @@ workflow_run_id: run-1
 event_id: evt-1
 proposal_count: 1
 generated_at: 2026-08-26T23:01:23Z
+type: ephemeral
+status: archived
 ---
 
 # 决策提案收件箱 (T10-13)

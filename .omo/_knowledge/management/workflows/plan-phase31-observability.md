@@ -9,6 +9,7 @@ note: "P45 审计: 历史决策/phase closeout, 标记 archived"
 migrated_to: plan-phase31-observability.md
 deprecated-since: 2026-06-23
 
+type: ssot
 ---
 
 # Phase 31 — 可观测性与成本追踪 (Observability & Cost Tracking)

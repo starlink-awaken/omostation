@@ -12,6 +12,7 @@ related:
   - STRAT-P81-strategic-roadmap.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0228: M1 收敛期验收通过 + 物理底座挂起下的兑现期推进顺序

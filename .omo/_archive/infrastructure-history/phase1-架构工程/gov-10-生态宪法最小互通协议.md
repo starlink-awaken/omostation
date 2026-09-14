@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # 生态宪法 — 最小互通协议
 
 > 制定: 2026-05-25 | 版本: v1 | 状态: 草案

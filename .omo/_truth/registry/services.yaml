@@ -67,7 +67,7 @@ services:
   note: 合成 health_score (含 feedback 硬门槛 PR#81). gha daily. 引导扇区.
   depends_on: []
 - id: gen-service-configs
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on-registry-change
   program:
@@ -76,6 +76,7 @@ services:
   note: 从本注册生 launchd plist (scheduler=launchd 项). manual/on-registry-change. 引导扇区
     (生成本身, 不自生).
   depends_on: []
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: lmstudio.server
   enabled: true
   generate: false
@@ -131,7 +132,7 @@ services:
     max_stale_hours: 24
   depends_on: []
 - id: omlxc.dma_daemon
-  enabled: true
+  enabled: false
   generate: false
   config_source: projects/omlxc/packaging/launchd/com.omostation.omlxc-dma-daemon.plist
   scheduler: launchd
@@ -158,6 +159,7 @@ services:
     endpoint: .omo/state/mesh-telemetry.json
     max_stale_hours: 24
   depends_on: []
+  disabled_reason: "launchd 无 plist 且未加载: com.omostation.omlxc-dma-daemon"
 - id: omlx.gateway
   enabled: false
   lifecycle: retired
@@ -238,16 +240,14 @@ services:
 - id: agora.sse
   enabled: false
   generate: false
-  config_source: 手写 plist (~/Library/LaunchAgents/com.agora.sse.plist) — 已移除
+  config_source: services.yaml + wrapper (ADR-0435 判例第四例修复 2026-09-08)
   scheduler: launchd
   trigger: keepalive
   label: com.agora.sse
   program:
-    interpreter: uv
-    entrypoint: projects/agora
-    args:
-    - agora-mcp
-    - --sse
+    interpreter: /bin/bash
+    entrypoint: lib/agora-sse.sh
+    args: []
   resilience:
     keepalive: always
   run_at_load: true
@@ -296,7 +296,7 @@ services:
     max_stale_hours: 24
   depends_on: []
 - id: docker.observability-db
-  enabled: true
+  enabled: false
   generate: false
   config_source: docker compose (projects/observability)
   scheduler: docker
@@ -314,8 +314,9 @@ services:
     signal: docker
     max_stale_hours: 1
   depends_on: []
+  disabled_reason: "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
 - id: docker.searxng
-  enabled: true
+  enabled: false
   generate: false
   config_source: docker compose
   scheduler: docker
@@ -336,10 +337,11 @@ services:
     endpoint: http://localhost:8080/health
     max_stale_hours: 24
   depends_on: []
+  disabled_reason: "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
 - id: aetherforge.gateway
-  enabled: false
+  enabled: true
   generate: false
-  config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist — 已移除
+  config_source: ~/Library/LaunchAgents/com.aetherforge.gateway.plist
   scheduler: launchd
   trigger: keepalive
   label: com.aetherforge.gateway
@@ -359,7 +361,10 @@ services:
   notes: 'aetherforge OpenAI 兼容门面 — LiteLLM :4000 的继任者。 唯一公共推理 URI 是 bos://compute/aetherforge/infer；逻辑模型、认证与公共数据面
     归 AetherForge，本地物理 placement 与执行经 omlxc Unix Socket API。 硬约束: 启动路径不得有外部网络依赖(guard
     直接用项目 venv 解释器, 不走 uv run), 且显式隔离系统代理 —— LiteLLM 曾栽在这两条上。 绑到 loopback 之外(--bind
-    tailnet)必须配 AETHERFORGE_API_KEY, 否则拒绝启动 —— 绑定范围变大和鉴权消失不允许同时发生。'
+    tailnet)必须配 AETHERFORGE_API_KEY, 否则拒绝启动 —— 绑定范围变大和鉴权消失不允许同时发生。 2026-09-11:
+    发现 plist 在此前的工作区路径迁移中丢失，服务实际停跑多时(与同期 ws-t1069 死引用系列同根)，
+    但守护脚本/venv/Keychain 密钥均完好；重建 plist 并 launchctl load 后现场验证 health=200、
+    鉴权/v1/models 200、9 compute engines/20 aliases 正常发现，无需改动脚本或依赖代码。'
   liveness:
     signal: http
     endpoint: http://localhost:9290/health
@@ -370,6 +375,8 @@ services:
   trigger: interval
   interval_sec: 1800
   label: com.l4.omo.sync
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.l4.omo.sync.plist
   program:
     interpreter: uv
     entrypoint: projects/omo
@@ -430,12 +437,12 @@ services:
     stderr: runtime/logs/gac-watchdog-stderr.log
   notes: GaC 自治 Daemon 看门狗 — 监控 Agora Bus (:7432) + BOS 服务, 自动修复重启
   liveness:
-    signal: .omo/_delivery/gac-watchdog/
+    signal: runtime/logs/gac-watchdog-stdout.log
     max_stale_hours: 2
   depends_on:
   - omo.sync_daemon
 - id: cron.capability_ownership
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 30 8 * * *
@@ -447,8 +454,9 @@ services:
     max_stale_hours: 24
   notes: 每日能力所有权检查
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/gac/check-capability-ownership.py, token=capability-ownership)"
 - id: cron.agent_workflow_status
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 0 9 * * *
@@ -462,8 +470,9 @@ services:
     max_stale_hours: 24
   notes: 每日 agent workflow 状态检查
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/agent-workflow.py, token=agent-workflow-status)"
 - id: cron.governance_evolution
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 5 9 * * *
@@ -477,8 +486,9 @@ services:
     signal: .omo/_delivery/governance-evolution/
     max_stale_hours: 24
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/gac/governance-evolution.py, token=governance-evolution)"
 - id: cron.meta_doctor
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 25 9 * * *
@@ -494,8 +504,9 @@ services:
     signal: .omo/_delivery/meta-doctor/
     max_stale_hours: 24
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/gac/meta-doctor.py, token=meta-doctor)"
 - id: cron.debt_refresh
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 30 10 * * 1
@@ -510,8 +521,9 @@ services:
     signal: .omo/_delivery/debt-refresh/
     max_stale_hours: 168
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=debt-refresh)"
 - id: mcp.agora
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: sse
@@ -533,8 +545,9 @@ services:
   - 7433
   depends_on:
   - cockpit.dashboard
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.omo
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -551,8 +564,9 @@ services:
     endpoint: http://localhost:7463/health
     max_stale_hours: 24
   depends_on: []
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.cockpit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -565,8 +579,9 @@ services:
     signal: .omo/_delivery/cli.cockpit/
     max_stale_hours: 168
   depends_on: []
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.omo
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -578,6 +593,7 @@ services:
   liveness:
     signal: .omo/_delivery/cli.omo/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: resident.sediment
   enabled: true
   scheduler: launchd
@@ -585,12 +601,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.sediment
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - sediment
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -602,7 +616,7 @@ services:
     stderr: runtime/logs/resident-sediment-stderr.log
   notes: Resident 记忆沉淀 — 成功/关闭事件→知识草稿 (2min)
   liveness:
-    signal: .omo/_delivery/resident-sediment/
+    signal: runtime/logs/resident-sediment-stdout.log
     max_stale_hours: 2
 - id: resident.decision
   enabled: true
@@ -611,12 +625,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.decision
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - decision
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -625,7 +637,7 @@ services:
   - resident.orchestrator
   notes: Resident 大脑决策 — 失败事件→决策提案 (2min)
   liveness:
-    signal: .omo/_delivery/resident-decision/
+    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.decision.plist
     max_stale_hours: 2
 - id: resident.execute
   enabled: true
@@ -634,12 +646,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.execute
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - execute
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -648,7 +658,7 @@ services:
   - resident.orchestrator
   notes: Resident 手执行 — 执行请求→pi-worker (批准门) (2min)
   liveness:
-    signal: .omo/_delivery/resident-execute/
+    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.execute.plist
     max_stale_hours: 2
 - id: resident.monitor
   enabled: true
@@ -657,12 +667,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.monitor
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - monitor
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -671,7 +679,7 @@ services:
   - resident.orchestrator
   notes: Resident 眼睛监控 — 可观测/告警事件→告警通道 (2min)
   liveness:
-    signal: .omo/_delivery/resident-monitor/
+    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.monitor.plist
     max_stale_hours: 2
 - id: resident.heartbeat
   enabled: true
@@ -680,12 +688,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.heartbeat
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - heartbeat
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -694,7 +700,7 @@ services:
   - resident.orchestrator
   notes: Resident 心脏心跳 — 存活/心跳事件→活性台账 (2min)
   liveness:
-    signal: .omo/_delivery/resident-heartbeat/
+    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.heartbeat.plist
     max_stale_hours: 2
 - id: resident.event_ingest
   enabled: true
@@ -714,7 +720,7 @@ services:
   - omo.sync_daemon
   notes: Resident 事件摄入 — workflow-mesh→bus_foundation→event-ledger (5min)
   liveness:
-    signal: .omo/_delivery/resident-ingest/
+    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.event-ingest.plist
     max_stale_hours: 1
 - id: resident.signals
   enabled: true
@@ -723,19 +729,17 @@ services:
   interval_sec: 300
   label: com.l4.resident.signals
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - signals
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 300
   run_at_load: true
   notes: Resident 个人信号 — personal-signals 轮询→事件流 (5min)
   liveness:
-    signal: .omo/_delivery/resident-signals/
+    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.signals.plist
     max_stale_hours: 1
   depends_on: []
 - id: resident.inbox
@@ -745,19 +749,17 @@ services:
   interval_sec: 300
   label: com.l4.resident.inbox
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - inbox
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 300
   run_at_load: true
   notes: Resident 感知 inbox — 感知文件夹轮询→事件流 (5min)
   liveness:
-    signal: .omo/_delivery/resident-inbox/
+    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.inbox.plist
     max_stale_hours: 1
   depends_on: []
 - id: resident.promote
@@ -767,12 +769,10 @@ services:
   interval_sec: 600
   label: com.l4.resident.promote
   program:
-    interpreter: uv
-    entrypoint: projects/omo
+    interpreter: /bin/bash
+    entrypoint: lib/resident-role-tick.sh
     args:
-    - resident
     - promote
-    - --once
   resilience:
     keepalive: crashed
     throttle_interval: 600
@@ -781,10 +781,10 @@ services:
   - resident.sediment
   notes: Resident 知识晋升 — sediment 草稿→主题 retro 候选 (10min)
   liveness:
-    signal: .omo/_delivery/resident-promote/
+    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.promote.plist
     max_stale_hours: 2
 - id: cron.observability_events
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 30 8 * * *
@@ -799,6 +799,7 @@ services:
     max_stale_hours: 24
   notes: 每日可观测性事件采集
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/ssot/observability-events.py, token=observability-events)"
 - id: cron.log_rotate
   enabled: true
   scheduler: cron
@@ -809,11 +810,11 @@ services:
     entrypoint: bin/ssot/log-rotate.py
   notes: 每日日志轮转
   liveness:
-    signal: .omo/_delivery/log-rotate/
+    signal: runtime/cron/log-rotate.log
     max_stale_hours: 24
   depends_on: []
 - id: cron.anomaly_detector
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 45 8 * * *
@@ -826,8 +827,9 @@ services:
   liveness:
     signal: .omo/_delivery/anomaly-detector/
     max_stale_hours: 24
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/gac/anomaly-detector.py, token=anomaly-detector)"
 - id: cron.alert_router
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 45 8 * * *
@@ -840,8 +842,9 @@ services:
   liveness:
     signal: .omo/_delivery/alert-router/
     max_stale_hours: 24
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/gac/alert-router.py, token=alert-router)"
 - id: cron.m4_health
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 15 9 * * *
@@ -855,8 +858,9 @@ services:
     max_stale_hours: 24
   notes: 每日 M4 健康分计算
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/mof/m4-health-score.py, token=m4-health)"
 - id: cron.agent_workflow_doctor
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 20 9 * * *
@@ -871,8 +875,9 @@ services:
     max_stale_hours: 24
   depends_on:
   - cron.agent_workflow_status
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/agent-workflow.py, token=agent-workflow-doctor)"
 - id: cron.uhs_sync
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 30 9 * * *
@@ -886,8 +891,9 @@ services:
     signal: .omo/_delivery/uhs-sync/
     max_stale_hours: 24
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/gac/unified-health-score.py, token=uhs-sync)"
 - id: cron.drift_sweep
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 0 9 * * 3
@@ -900,8 +906,9 @@ services:
     max_stale_hours: 168
   depends_on:
   - cron.meta_doctor
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/gac/drift-sweep.py, token=drift-sweep)"
 - id: cron.mof_drift
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 5 10 * * 1
@@ -914,8 +921,9 @@ services:
     max_stale_hours: 168
   depends_on:
   - cron.meta_doctor
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/mof/mof-drift, token=mof-drift)"
 - id: cron.weekly_review
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 30 10 * * 1
@@ -930,8 +938,9 @@ services:
     max_stale_hours: 168
   depends_on:
   - cron.debt_refresh
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/ssot/weekly-review.py, token=weekly-review)"
 - id: cron.proposal_to_adr
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 0 1 * * *
@@ -948,8 +957,9 @@ services:
   liveness:
     signal: .omo/_delivery/proposal-to-adr/
     max_stale_hours: 24
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=proposal-to-adr)"
 - id: cron.system_health
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 10 2 * * *
@@ -964,8 +974,9 @@ services:
     max_stale_hours: 24
   depends_on:
   - cron.uhs_sync
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=bin/ssot/system-health-check.py, token=system-health)"
 - id: mcp.kos
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -983,8 +994,9 @@ services:
     signal: http
     endpoint: http://localhost:7434/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.minerva
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1002,8 +1014,9 @@ services:
     signal: http
     endpoint: http://localhost:7435/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.ontoderive
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1021,8 +1034,9 @@ services:
     signal: http
     endpoint: http://localhost:7436/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.kronos
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1040,8 +1054,9 @@ services:
     signal: http
     endpoint: http://localhost:7437/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.iris
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1059,8 +1074,9 @@ services:
     signal: http
     endpoint: http://localhost:7438/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.sophia
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1078,8 +1094,9 @@ services:
     signal: http
     endpoint: http://localhost:7439/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.forge
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1097,8 +1114,9 @@ services:
     signal: http
     endpoint: http://localhost:7440/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.eidos
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1116,8 +1134,9 @@ services:
     signal: http
     endpoint: http://localhost:7441/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.cockpit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1135,8 +1154,9 @@ services:
     signal: http
     endpoint: http://localhost:7442/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.agora
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -1148,8 +1168,9 @@ services:
   liveness:
     signal: .omo/_delivery/cli.agora/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.aetherforge
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -1160,8 +1181,9 @@ services:
     signal: .omo/_delivery/cli.aetherforge/
     max_stale_hours: 168
   depends_on: []
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.l4_kernel
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -1172,8 +1194,9 @@ services:
     signal: .omo/_delivery/cli.l4_kernel/
     max_stale_hours: 168
   depends_on: []
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.llm_gateway
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -1184,8 +1207,9 @@ services:
     signal: .omo/_delivery/cli.llm_gateway/
     max_stale_hours: 168
   depends_on: []
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: docker.ecos
-  enabled: true
+  enabled: false
   scheduler: docker
   trigger: compose
   label: docker:ecos
@@ -1201,8 +1225,9 @@ services:
     signal: docker
     max_stale_hours: 1
   depends_on: []
+  disabled_reason: "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
 - id: docker.aetherforge
-  enabled: true
+  enabled: false
   scheduler: docker
   trigger: compose
   label: docker:aetherforge
@@ -1218,8 +1243,9 @@ services:
     signal: docker
     max_stale_hours: 1
   depends_on: []
+  disabled_reason: "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
 - id: docker.kairon
-  enabled: true
+  enabled: false
   scheduler: docker
   trigger: compose
   label: docker:kairon
@@ -1235,8 +1261,9 @@ services:
     signal: docker
     max_stale_hours: 1
   depends_on: []
+  disabled_reason: "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
 - id: docker.minerva
-  enabled: true
+  enabled: false
   scheduler: docker
   trigger: compose
   label: docker:minerva
@@ -1252,8 +1279,9 @@ services:
     signal: docker
     max_stale_hours: 1
   depends_on: []
+  disabled_reason: "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
 - id: docker.eidos
-  enabled: true
+  enabled: false
   scheduler: docker
   trigger: compose
   label: docker:eidos
@@ -1269,6 +1297,7 @@ services:
     signal: docker
     max_stale_hours: 1
   depends_on: []
+  disabled_reason: "docker compose 栈未运行, 重启由 compose 管理 (BET-Y1Q4-T14)"
 - id: mail.daemon
   enabled: true
   scheduler: launchd
@@ -1287,7 +1316,7 @@ services:
     stderr: runtime/logs/mail-daemon-stderr.log
   notes: 邮件感知 daemon — 每 30min 读邮件→LLM 分类→任务提取
   liveness:
-    signal: .omo/_delivery/mail-daemon/
+    signal: runtime/logs/mail-daemon-stdout.log
     max_stale_hours: 2
   depends_on:
   - omo.sync_daemon
@@ -1312,7 +1341,7 @@ services:
     endpoint: http://localhost:7432/health
     max_stale_hours: 24
 - id: bos.kos.search
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1326,8 +1355,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kos.search/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.eidos.memory
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1341,8 +1371,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.eidos.memory/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.minerva.research
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1356,8 +1387,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.minerva.research/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ontoderive.derive
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1371,8 +1403,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ontoderive.derive/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cockpit.mcp
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1386,8 +1419,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cockpit.mcp/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.decide
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1401,8 +1435,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.decide/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.audit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -1416,8 +1451,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.audit/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.debt
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -1431,8 +1467,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.debt/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1446,8 +1483,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.resident.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1461,8 +1499,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.resident.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.compute.infer
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1476,8 +1515,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.compute.infer/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.bcos.evolve
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1491,8 +1531,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.bcos.evolve/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.io
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1506,8 +1547,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.io/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agora.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -1521,8 +1563,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agora.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.health
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -1536,8 +1579,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.health/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kos.mcp
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1551,8 +1595,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kos.mcp/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kos.graphrag
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1566,8 +1611,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kos.graphrag/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kos.ingest
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1581,8 +1627,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kos.ingest/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ontoderive.mcp
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1596,8 +1643,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ontoderive.mcp/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.minerva.mcp
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1611,8 +1659,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.minerva.mcp/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kronos.mcp
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1626,8 +1675,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kronos.mcp/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.iris.mcp
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1641,8 +1691,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.iris.mcp/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.sophia.mcp
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1656,8 +1707,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.sophia.mcp/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.forge.mcp
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -1671,8 +1723,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.forge.mcp/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.state
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1686,8 +1739,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.state/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.compass
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1701,8 +1755,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.compass/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.project
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1716,8 +1771,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.project/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.workflow.bootstrap
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1731,8 +1787,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.workflow.bootstrap/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.workflow.compliance
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1746,8 +1803,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.workflow.compliance/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.evolution.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1761,8 +1819,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.evolution.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.metaos.immune
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1776,8 +1835,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.metaos.immune/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.codeanalyze.scan
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1791,8 +1851,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.codeanalyze.scan/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.codeanalyze.report
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -1806,8 +1867,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.codeanalyze.report/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.iris.discover
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1821,8 +1883,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.iris.discover/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent-runtime.execute
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -1836,8 +1899,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent-runtime.execute/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent-runtime.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -1851,8 +1915,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent-runtime.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.runtime.health
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -1866,8 +1931,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.runtime.health/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.plan
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1881,8 +1947,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.plan/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.execute
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1896,8 +1963,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.execute/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.verify
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1911,8 +1979,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.verify/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.govern
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1926,8 +1995,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.govern/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.version
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1941,8 +2011,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.version/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.reason
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1956,8 +2027,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.reason/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.decide
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1971,8 +2043,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.decide/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.graph
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -1986,8 +2059,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.graph/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.routes
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -2001,8 +2075,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.routes/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.governance
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -2016,8 +2091,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.governance/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.schema
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2031,8 +2107,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.schema/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.health
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2046,8 +2123,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.health/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.kairon
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -2059,8 +2137,9 @@ services:
     max_stale_hours: 168
   depends_on:
   - mcp.kos
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.kos
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -2072,8 +2151,9 @@ services:
     max_stale_hours: 168
   depends_on:
   - mcp.kos
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.minerva
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -2085,8 +2165,9 @@ services:
     max_stale_hours: 168
   depends_on:
   - mcp.minerva
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.gbrain
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -2098,8 +2179,9 @@ services:
     max_stale_hours: 168
   depends_on:
   - mcp.gbrain
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.ecos
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -2111,8 +2193,9 @@ services:
     max_stale_hours: 168
   depends_on:
   - mcp.agora
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.gbrain
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2129,8 +2212,9 @@ services:
   - 7443
   depends_on:
   - mcp.agora
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.c2g
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2147,8 +2231,9 @@ services:
   - 7444
   depends_on:
   - mcp.agora
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.aetherforge
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2165,8 +2250,9 @@ services:
   - 7445
   depends_on:
   - mcp.agora
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kos.rest
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: http
@@ -2182,8 +2268,9 @@ services:
     signal: http
     endpoint: http://localhost:7450/health
     max_stale_hours: 24
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kos.mcp_v2
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -2196,8 +2283,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kos.mcp_v2/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kos.schema
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2210,8 +2298,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kos.schema/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kos.query
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2224,8 +2313,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kos.query/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kronos.ingest
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2238,8 +2328,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kronos.ingest/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kronos.query
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2252,8 +2343,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kronos.query/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.kronos.schedule
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2266,8 +2358,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.kronos.schedule/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.gbrain.search
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2280,8 +2373,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.gbrain.search/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.gbrain.query
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2294,8 +2388,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.gbrain.query/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mos.write
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2308,8 +2403,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mos.write/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mos.recall
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2322,8 +2418,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mos.recall/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mos.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2336,8 +2433,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mos.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mos.consolidate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2350,8 +2448,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mos.consolidate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.inspect
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -2364,8 +2463,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.inspect/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.sync
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2378,8 +2478,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.sync/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.ledger_append
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2392,8 +2493,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.ledger_append/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.ledger_read
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2406,8 +2508,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.ledger_read/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.ledger_verify
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2420,8 +2523,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.ledger_verify/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.workflow.observe
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2434,8 +2538,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.workflow.observe/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.workflow.doctor
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2448,8 +2553,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.workflow.doctor/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.evolution.validate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2462,8 +2568,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.evolution.validate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.evolution.traces
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2476,8 +2583,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.evolution.traces/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.evolution.packages
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2490,8 +2598,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.evolution.packages/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.metaos.route
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2504,8 +2613,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.metaos.route/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.metaos.gate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2518,8 +2628,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.metaos.gate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.metaos.register
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2532,8 +2643,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.metaos.register/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.minerva.ask
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2546,8 +2658,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.minerva.ask/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.minerva.summarize
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2560,8 +2673,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.minerva.summarize/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.minerva.draft
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2574,8 +2688,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.minerva.draft/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.minerva.audit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2588,8 +2703,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.minerva.audit/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ontoderive.validate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2602,8 +2718,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ontoderive.validate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ontoderive.explain
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2616,8 +2733,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ontoderive.explain/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ontoderive.audit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2630,8 +2748,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ontoderive.audit/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ontoderive.fact_check
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2644,8 +2763,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ontoderive.fact_check/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.codeanalyze.analyze
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2658,8 +2778,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.codeanalyze.analyze/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.codeanalyze.metrics
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2672,8 +2793,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.codeanalyze.metrics/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.codeanalyze.lint
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2686,8 +2808,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.codeanalyze.lint/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.iris.scan
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2700,8 +2823,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.iris.scan/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.iris.recall
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2714,8 +2838,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.iris.recall/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent-runtime.list-tools
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2728,8 +2853,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent-runtime.list-tools/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent-runtime.chat
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2742,8 +2868,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent-runtime.chat/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent-runtime.run-task
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2756,8 +2883,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent-runtime.run-task/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent-runtime.task-status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2770,8 +2898,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent-runtime.task-status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent-runtime.agent-list
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -2784,8 +2913,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent-runtime.agent-list/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.swarm.run
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -2798,8 +2928,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.swarm.run/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.compute.generate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -2812,8 +2943,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.compute.generate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.bus.data
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -2826,8 +2958,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.bus.data/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.bus.event
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -2840,8 +2973,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.bus.event/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.autonomous
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2854,8 +2988,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.autonomous/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.act
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2868,8 +3003,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.act/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.analyze
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2882,8 +3018,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.analyze/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.export
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2896,8 +3033,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.export/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.drift
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2910,8 +3048,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.drift/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.scan
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2924,8 +3063,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.scan/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.assign
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2938,8 +3078,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.assign/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.evolution
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2952,8 +3093,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.evolution/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.enforce
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2966,8 +3108,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.enforce/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.mof.manage
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -2980,8 +3123,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.mof.manage/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.backends.register
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -2994,8 +3138,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.backends.register/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.governance.heartbeat
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3008,8 +3153,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.governance.heartbeat/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.omo.debt
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3022,8 +3168,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.omo.debt/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.discovery.package
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -3036,8 +3183,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.discovery.package/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.memory.publish
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3050,8 +3198,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.memory.publish/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.memory.search
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3064,8 +3213,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.memory.search/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.governance.audit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3078,8 +3228,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.governance.audit/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.config.list
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3092,8 +3243,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.config.list/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cell.replay.run
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3106,8 +3258,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cell.replay.run/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agora.metrics
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -3120,8 +3273,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agora.metrics/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agora.registry
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -3134,8 +3288,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agora.registry/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cockpit.cards_status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -3148,8 +3303,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cockpit.cards_status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.cockpit.test
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -3162,8 +3318,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.cockpit.test/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.compute.mesh
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3176,8 +3333,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.compute.mesh/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.compute.swarm
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3190,8 +3348,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.compute.swarm/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.events
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3204,8 +3363,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.events/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3218,8 +3378,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.validate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3232,8 +3393,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.validate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.update
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3246,8 +3408,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.update/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.resident.roles
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3260,8 +3423,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.resident.roles/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.resident.daemon
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3274,8 +3438,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.resident.daemon/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.resident.decision
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3288,8 +3453,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.resident.decision/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.ecos.mcp_server
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -3302,8 +3468,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.ecos.mcp_server/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.omo.mcp_server
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -3316,8 +3483,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.omo.mcp_server/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.aetherforge.mcp_server
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -3330,8 +3498,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.aetherforge.mcp_server/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.c2g.mcp_server
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_proxy
@@ -3344,8 +3513,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.c2g.mcp_server/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.kronos.scan
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3358,8 +3528,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.kronos.scan/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.omo.debt
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3372,8 +3543,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.omo.debt/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.agent_workflow.verify_plan
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3386,8 +3558,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.agent_workflow.verify_plan/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.evolution.golden_paths
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3400,8 +3573,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.evolution.golden_paths/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.eidos.validate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3414,8 +3588,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.eidos.validate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.analysis.ontoderive.toolforge.match
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3428,8 +3603,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.analysis.ontoderive.toolforge.match/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.analysis.ontoderive.toolforge.select
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3442,8 +3618,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.analysis.ontoderive.toolforge.select/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.analysis.ontoderive.toolforge.guide
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3456,8 +3633,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.analysis.ontoderive.toolforge.guide/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.sot_bridge_persona.recall_entity
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3470,8 +3648,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.sot_bridge_persona.recall_entity/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.compute.mesh_status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3484,8 +3663,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.compute.mesh_status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.local.all_search
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3498,8 +3678,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.local.all_search/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.family_hub.health
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -3512,8 +3693,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.family_hub.health/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.omo.audit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3526,8 +3708,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.omo.audit/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.omo.ledger_status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3540,8 +3723,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.omo.ledger_status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.l4_kernel.domains
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -3554,8 +3738,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.l4_kernel.domains/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.l4_kernel.domains
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -3568,8 +3753,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.l4_kernel.domains/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.meta.discover
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3582,8 +3768,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.meta.discover/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.vault.search
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3596,8 +3783,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.vault.search/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.health_profile.summary
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -3610,8 +3798,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.health_profile.summary/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.health_profile.alert
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -3624,8 +3813,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.health_profile.alert/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.bus.control
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3638,8 +3828,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.bus.control/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.gbrain.sync
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: mcp_stdio
@@ -3652,8 +3843,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.gbrain.sync/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.mos.forget
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3666,8 +3858,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.mos.forget/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.mos.knowledge_ref
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3680,8 +3873,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.mos.knowledge_ref/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.swarm.orchestrator.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3694,8 +3888,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.swarm.orchestrator.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.evolution.loop
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3708,8 +3903,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.evolution.loop/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.quality.audit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3722,8 +3918,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.quality.audit/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.analysis.eidos.validate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3736,8 +3933,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.analysis.eidos.validate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.analysis.ontoderive.align
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3750,8 +3948,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.analysis.ontoderive.align/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.eidos.pipeline
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3764,8 +3963,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.eidos.pipeline/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow.list
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3778,8 +3978,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow.list/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow.describe
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3792,8 +3993,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow.describe/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow.run
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3806,8 +4008,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow.run/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow.logs
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3820,8 +4023,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow.logs/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow.cache_status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3834,8 +4038,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow.cache_status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow.cache_invalidate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3848,8 +4053,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow.cache_invalidate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow.cb_status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3862,8 +4068,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow.cb_status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.ecos.workflow.cb_reset
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3876,8 +4083,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.ecos.workflow.cb_reset/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.backends.list
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -3890,8 +4098,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.backends.list/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.wps_office_mcp.invoke
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3904,8 +4113,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.wps_office_mcp.invoke/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.wps_skills.load
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3918,8 +4128,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.wps_skills.load/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.bos_skill_cli.exec
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3932,8 +4143,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.bos_skill_cli.exec/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.headroom.compress
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3946,8 +4158,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.headroom.compress/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.code_review_graph.analyze
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3960,8 +4173,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.code_review_graph.analyze/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.claude_skills.load
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3974,8 +4188,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.claude_skills.load/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.last30days_skill.fetch
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -3988,8 +4203,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.last30days_skill.fetch/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.media_crawler.crawl
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4002,8 +4218,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.media_crawler.crawl/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.open_montage.render
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4016,8 +4233,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.open_montage.render/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.skills_for_fabric.load
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4030,8 +4248,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.skills_for_fabric.load/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.deer_flow.run
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4044,8 +4263,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.deer_flow.run/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.datafoundry.analyze
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4058,8 +4278,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.datafoundry.analyze/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.knowledge_work_plugins.load
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4072,8 +4293,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.knowledge_work_plugins.load/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.evaluator
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4086,8 +4308,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.capability.evaluator/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.discovery.package.action
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4100,8 +4323,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.discovery.package.action/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.runtime.workers.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4114,8 +4338,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.runtime.workers.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.forge.market.list
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4128,8 +4353,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.forge.market.list/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.roles.list
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4142,8 +4368,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.roles.list/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.analysis.minerva
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4156,8 +4383,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.analysis.minerva/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.docs.readme
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4170,8 +4398,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.docs.readme/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.system.vault.state
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4184,8 +4413,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.system.vault.state/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.governance.tasks
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4198,8 +4428,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.governance.tasks/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.governance.circuit_breaker
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4212,8 +4443,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.governance.circuit_breaker/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.governance.daily_budget
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4226,8 +4458,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.governance.daily_budget/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.governance.quests
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4240,8 +4473,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.governance.quests/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.governance.omo_worker_dispatch
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4254,8 +4488,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.governance.omo_worker_dispatch/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.fast_track.virtual_doc
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4268,8 +4503,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.fast_track.virtual_doc/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.omo.tasks.active
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4282,8 +4518,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.omo.tasks.active/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.board.execute
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4296,8 +4533,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.board.execute/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.board.route
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: inline
@@ -4310,8 +4548,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.board.route/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.inbox.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -4324,8 +4563,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.inbox.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.inbox.search
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -4338,8 +4578,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.inbox.search/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.inbox.pending
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -4352,8 +4593,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.inbox.pending/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.inbox.watch
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -4366,8 +4608,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.inbox.watch/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.inbox.archive
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -4380,8 +4623,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.inbox.archive/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.inbox.triage
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -4394,8 +4638,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.inbox.triage/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.inbox.draft
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -4408,8 +4653,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.inbox.draft/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.persona.bdsk.evaluate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: internal
@@ -4422,8 +4668,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.persona.bdsk.evaluate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.kems.status
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: http
@@ -4436,8 +4683,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.kems.status/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.kems.graph
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: http
@@ -4450,8 +4698,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.kems.graph/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.memory.kems.ocr_queue
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: http
@@ -4464,8 +4713,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.memory.kems.ocr_queue/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.analysis.kems.forecast
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: http
@@ -4478,8 +4728,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.analysis.kems.forecast/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.intent.compile
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4492,8 +4743,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.intent.compile/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.shadow.challenge
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4506,8 +4758,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.shadow.challenge/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.cartridge.list
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4520,8 +4773,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.cartridge.list/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.meta_doctor.check
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4534,8 +4788,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.meta_doctor.check/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.scheduler_compile.check
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4548,8 +4803,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.scheduler_compile.check/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.governance.session_handoff.emit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4562,8 +4818,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.governance.session_handoff.emit/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.fabric.snapshot.manage
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4576,8 +4833,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.fabric.snapshot.manage/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.pool.submit
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4590,8 +4848,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.pool.submit/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.pool.scale
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4604,8 +4863,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.pool.scale/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.pool.auto_scale
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4618,8 +4878,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.pool.auto_scale/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.pool.metrics
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4632,8 +4893,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.pool.metrics/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.dag.execute
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4646,8 +4908,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.dag.execute/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.governance.report
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4660,8 +4923,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.governance.report/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.config.create
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4674,8 +4938,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.config.create/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.pdp.evaluate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4688,8 +4953,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.pdp.evaluate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.pep.enforce
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4702,8 +4968,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.pep.enforce/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.memory.process
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4716,8 +4983,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.memory.process/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.memory.consolidate
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4730,8 +4998,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.memory.consolidate/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.replay.shadow
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4744,8 +5013,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.replay.shadow/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.replay.eval
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4758,8 +5028,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.agent_cell.replay.eval/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.bcos.signals.route
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4772,8 +5043,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.bcos.signals.route/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.bcos.north_star.measure
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -4786,8 +5058,9 @@ services:
   liveness:
     signal: .omo/_delivery/bos.bcos.north_star.measure/
     max_stale_hours: 168
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cron.gac_validate
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 30 9 * * *
@@ -4799,8 +5072,9 @@ services:
     max_stale_hours: 24
   notes: 每日 GaC 校验
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=gac-validate)"
 - id: cron.gac_drift
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 35 9 * * *
@@ -4812,8 +5086,9 @@ services:
     max_stale_hours: 24
   notes: 每日 GaC 漂移检测
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=gac-drift)"
 - id: cron.doc_ssot
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 40 9 * * *
@@ -4825,6 +5100,7 @@ services:
     max_stale_hours: 24
   notes: 每日文档 SSOT 检查
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=doc-ssot)"
 - id: cron.ssot_guardian
   enabled: true
   scheduler: cron
@@ -4834,10 +5110,11 @@ services:
     interpreter: uv
     entrypoint: projects/omo
   liveness:
-    signal: .omo/_delivery/cron.ssot_guardian/
+    signal: runtime/cron/ssot-sync.log
     max_stale_hours: 24
   notes: 每日 SSOT 守护
   depends_on: []
+  crontab_token: ssot-guardian
 - id: cron.ssot_sync
   enabled: true
   scheduler: cron
@@ -4847,12 +5124,13 @@ services:
     interpreter: uv
     entrypoint: projects/omo
   liveness:
-    signal: .omo/_delivery/cron.ssot_sync/
+    signal: runtime/cron/ssot-sync.log
     max_stale_hours: 24
   notes: 每日 SSOT 同步
   depends_on: []
+  crontab_token: ssot-guardian
 - id: cron.ssot_log
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 55 9 * * *
@@ -4864,8 +5142,9 @@ services:
     max_stale_hours: 24
   notes: 每日 SSOT 日志
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=ssot-log)"
 - id: cron.sync_submodules
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 0 10 * * *
@@ -4877,6 +5156,7 @@ services:
     max_stale_hours: 24
   notes: 每日子模块同步
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=sync-submodules)"
 - id: cron.worktree_prune
   enabled: true
   scheduler: cron
@@ -4886,12 +5166,13 @@ services:
     interpreter: uv
     entrypoint: projects/omo
   liveness:
-    signal: .omo/_delivery/cron.worktree_prune/
+    signal: runtime/cron/branch-prune.log
     max_stale_hours: 24
   notes: 每周 worktree 清理
   depends_on: []
+  crontab_token: worktree-prune
 - id: omo.governor
-  enabled: true
+  enabled: false
   scheduler: launchd
   generate: false
   trigger: on_demand
@@ -4903,8 +5184,9 @@ services:
     max_stale_hours: 24
   notes: OMO 治理门 PDP/PEP
   depends_on: []
+  disabled_reason: "on_demand 工具, 无常驻 plist/信号产物, 健康由调用方 (governance-orchestrator) 负责 (BET-Y1Q4-T14)"
 - id: omo.verifier
-  enabled: true
+  enabled: false
   scheduler: launchd
   generate: false
   trigger: on_demand
@@ -4916,8 +5198,9 @@ services:
     max_stale_hours: 24
   notes: OMO 验证器
   depends_on: []
+  disabled_reason: "on_demand 工具, 无常驻 plist/信号产物 (BET-Y1Q4-T14)"
 - id: omo.replay
-  enabled: true
+  enabled: false
   scheduler: launchd
   generate: false
   trigger: on_demand
@@ -4929,8 +5212,9 @@ services:
     max_stale_hours: 24
   notes: OMO 事件回放
   depends_on: []
+  disabled_reason: "on_demand 工具, 无常驻 plist/信号产物 (BET-Y1Q4-T14)"
 - id: omo.alert
-  enabled: true
+  enabled: false
   scheduler: launchd
   generate: false
   trigger: on_demand
@@ -4942,8 +5226,9 @@ services:
     max_stale_hours: 24
   notes: OMO 告警转发
   depends_on: []
+  disabled_reason: "on_demand 工具, 无常驻 plist/信号产物 (BET-Y1Q4-T14)"
 - id: omo.status
-  enabled: true
+  enabled: false
   scheduler: launchd
   generate: false
   trigger: on_demand
@@ -4955,8 +5240,9 @@ services:
     max_stale_hours: 24
   notes: OMO 状态快照
   depends_on: []
+  disabled_reason: "on_demand 工具, 无常驻 plist/信号产物 (BET-Y1Q4-T14)"
 - id: cron.bin_scripts
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: on_demand
   program:
@@ -4968,8 +5254,9 @@ services:
   notes: 每周 bin 脚本收敛
   schedule: 0 11 * * 1
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=bin-scripts)"
 - id: cron.evidence_smoke
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: on_demand
   program:
@@ -4981,8 +5268,9 @@ services:
   notes: 每日 evidence smoke
   schedule: 0 8 * * *
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=evidence-smoke)"
 - id: cron.config_check
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: on_demand
   program:
@@ -4994,8 +5282,9 @@ services:
   notes: 每日配置检查
   schedule: 0 12 * * *
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=config-check)"
 - id: cron.state_sync
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: on_demand
   program:
@@ -5007,8 +5296,9 @@ services:
   notes: 每日状态同步
   schedule: 0 13 * * *
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=state-sync)"
 - id: cron.install_hooks
-  enabled: true
+  enabled: false
   scheduler: cron
   trigger: schedule
   schedule: 0 14 * * 0
@@ -5020,8 +5310,9 @@ services:
     max_stale_hours: 168
   notes: 每周安装 hooks
   depends_on: []
+  disabled_reason: "cron 无对应 crontab 条目 (entrypoint=projects/omo, token=install-hooks)"
 - id: cli.sophia
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -5033,8 +5324,9 @@ services:
   notes: Sophia CLI — 知识编译
   depends_on:
   - mcp.sophia
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.iris
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -5046,8 +5338,9 @@ services:
   notes: Iris CLI — 信息检索
   depends_on:
   - mcp.iris
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.kronos
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -5059,8 +5352,9 @@ services:
   notes: Kronos CLI — 时间智能
   depends_on:
   - mcp.kronos
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: cli.ontoderive
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   program:
@@ -5072,8 +5366,9 @@ services:
   notes: OntoDerive CLI — 本体推导
   depends_on:
   - mcp.ontoderive
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.ecos
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -5090,8 +5385,9 @@ services:
   notes: ECOS MCP — 协议编织
   ports:
   - 7455
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: mcp.omo_web
-  enabled: true
+  enabled: false
   scheduler: manual
   trigger: on_demand
   transport: stdio
@@ -5108,3 +5404,52 @@ services:
   notes: OMO Web MCP
   ports:
   - 7456
+- label: com.l4.bet-claim-gc
+  description: BET 认领广播 TTL 自清理 (T10-139 claim-gc; 7d 过期视为放弃)
+  interval_sec: 86400
+  program:
+    interpreter: /bin/bash
+    entrypoint: lib/bet-claim-gc.sh
+    args: []
+  resilience:
+    keepalive: crashed
+    throttle_interval: 3600
+  run_at_load: false
+  notes: T10-139 四件套的调度补全 (T10-140 迭代); claim 过期清理只删广播文件不动 ledger status
+  scheduler: launchd
+  id: bet-claim-gc
+  trigger: interval
+  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
+- id: agora.daemon
+  label: com.agora.daemon
+  description: Agora 2.0 A2A 事件总线 daemon (:7432) — I0 服务网格枢纽
+  scheduler: launchd
+  trigger: keepalive
+  program:
+    interpreter: /bin/bash
+    entrypoint: lib/agora-daemon.sh
+    args: []
+  resilience:
+    keepalive: crashed
+  run_at_load: true
+  ports:
+  - 7432
+  outputs:
+    stdout: ~/.agora/logs/daemon-stdout.log
+    stderr: ~/.agora/logs/daemon-stderr.log
+  notes: '2026-09-10 修复 exit 78: 旧手写 plist WorkingDirectory 指向已清理的 T1-12 worktree
+    + 裸 python3 无依赖。ADR-0435 模式收编 (wrapper + 注册表 + 生成器)。'
+- id: cron.ops_signal_drift_check
+  enabled: true
+  scheduler: cron
+  trigger: schedule
+  schedule: 20 6 * * *
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/ops/cli.py
+  crontab_token: ops-signal-drift
+  liveness:
+    signal: runtime/cron/ops-signal-drift.log
+    max_stale_hours: 24
+  notes: 每日 ops check-signals 巡检 — enabled 条目 anchor 漂移检测 (BET-Y1Q4-T16)
+  depends_on: []

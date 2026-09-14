@@ -12,6 +12,7 @@ related:
   - 0220-gconv7-concurrency-discipline.md
   - ../decisions/0371-pasw-submodule-isolation.md
   - ../../standards/agent-workflow-contract.md
+type: ssot
 ---
 
 > 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: 保持 PROPOSED — 仍相关 (质量扫描规模化持续议题, 留待 Y1Q4/Q2 排期)

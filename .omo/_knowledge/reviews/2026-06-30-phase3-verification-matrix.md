@@ -5,6 +5,8 @@ owner: kems-team
 last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
+type: ephemeral
+status: archived
 ---
 # Phase 3 验证矩阵 — Tier 2 真治本后 17 项目 pytest 状态
 

@@ -10,6 +10,7 @@ related:
   - STRAT-P81-strategic-roadmap.md
 supersedes: []
 amends: []
+type: ssot
 ---
 
 # ADR-0236: C2 协作协议加深 — 多轮协商 + 冲突消解 + 任务分解

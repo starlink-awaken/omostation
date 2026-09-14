@@ -12,6 +12,8 @@ failure_breakdown:
   by_event_type:
     StepFailed: 13
   trace_count: 13
+type: ephemeral
+status: archived
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 

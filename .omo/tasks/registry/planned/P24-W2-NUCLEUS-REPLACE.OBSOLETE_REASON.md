@@ -1,3 +1,8 @@
+---
+type: ephemeral
+status: archived
+---
+
 # P24-W2-NUCLEUS-REPLACE — 已废弃
 
 **原因**: 占位符任务，内容损坏（phase: Phase, milestone: Mhase, 无实质内容）。

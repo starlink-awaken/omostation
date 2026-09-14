@@ -1,0 +1,30 @@
+schema: script-registry/v1
+id: bin/gac/check-documents-boundary.py
+name: Documents Boundary Gate
+category: governance
+owner: governance-team
+description: "E-DOC-001~005: Documents dual-plane boundary gate (ADR-0191)"
+inputs:
+  - name: documents-root
+    type: path
+    default: ~/Documents
+  - name: --json
+    type: flag
+  - name: --dry-run
+    type: flag
+  - name: --auto-fix
+    type: flag
+  - name: --rule
+    type: string
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers:
+  - gac_local_gate
+  - ci_gate
+related:
+  - ADR-0191
+  - governance-checks.yaml::CR-EDOC-001~005
+maturity: active
+last_reviewed: "2026-09-06"

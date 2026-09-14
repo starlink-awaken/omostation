@@ -1,0 +1,38 @@
+schema: script-registry/v1
+id: bin/gac/check-mcp-bos-uri-completeness.py
+name: MCP/BOS URI Completeness Check
+category: governance
+owner: governance-team
+description: >-
+  Audits MCPTOOL node metadata (tool_name/server/project/transport) and
+  bos:// URI domain registration against .omo/standards/bos-uri-domain-standard.md.
+  Flags missing fields, duplicates, and unregistered domains. See BET-Y1Q4-T6-19.
+inputs:
+  - name: --mcp-only
+    type: flag
+    required: false
+    description: Only check MCPTOOL nodes.
+  - name: --bos-only
+    type: flag
+    required: false
+    description: Only check bos:// URI domains.
+  - name: --warn
+    type: flag
+    required: false
+    description: Audit-only mode, exit 0 even when issues found.
+  - name: --json
+    type: flag
+    required: false
+    description: Machine-readable output.
+outputs:
+  - type: exit_code
+  - type: audit_report
+dependencies:
+  - python3
+  - PyYAML (optional, for richer parsing)
+triggers:
+  - weekly
+  - on_demand
+related: []
+maturity: stable
+last_reviewed: "2026-09-05"

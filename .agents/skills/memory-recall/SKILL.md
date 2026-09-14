@@ -6,7 +6,10 @@ description: >
   memory, forgetting facts, or deciding between kos / gbrain / cards / inbox.
   Prefer bos://memory/mos/* (phase1+ live; phase10 as_of + optional live backends).
 
-last-reviewed: 2026-08-26---
+last-reviewed: 2026-08-26
+type: ssot
+owner: governance-team
+---
 
 # Memory Recall — Agent 默认记忆入口
 

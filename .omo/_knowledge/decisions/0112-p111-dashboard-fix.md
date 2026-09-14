@@ -4,6 +4,7 @@ status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-06-25
+type: ssot
 ---
 
 # ADR-0112: P111 修复 dashboard 退化 (2 工具退出码语义 + ADR 0108 duplicate)

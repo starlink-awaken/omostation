@@ -28,7 +28,8 @@ UTC = UTC
 
 DEFAULT_REGISTRY = ".omo/_truth/registry/swarm-coordination.yaml"
 ADR_FILE_RE = re.compile(r"^\.omo/_knowledge/decisions/(\d{4})-.*\.md$")
-BRANCH_RE = re.compile(r"^work/[a-z0-9][a-z0-9-]*$")
+# T10-128: agent/{actor}/{session} 三段式 + work/ 存量兼容
+BRANCH_RE = re.compile(r"^(work/[a-z0-9][a-z0-9-]*|agent/[a-z][a-z0-9-]{1,30}/[a-z0-9][a-z0-9-]{1,60})$")
 
 
 def _utc_now() -> datetime:
@@ -457,7 +458,7 @@ def _branch_has_open_pr(root: Path, branch: str) -> bool:
         return False
 
 
-def claim_gc(root: Path, ttl_hours: int = 168, dry_run: bool = False) -> dict[str, Any]:
+def claim_gc(root: Path, ttl_hours: int = 168, dry_run: bool = False, namespace: str | None = None) -> dict[str, Any]:
     """GC 过期 claim 文件 (branch-claims + agent-claims + adr-claims).
 
     D1 (2026-08-04): claim 有 acquire/release 但无 auto-expire, 长期累积垃圾
@@ -468,6 +469,7 @@ def claim_gc(root: Path, ttl_hours: int = 168, dry_run: bool = False) -> dict[st
       3. 过期 + 无 PR → 清理
 
     ttl_hours 默认 168 (7 天): claim 是长期占位 (worktree 可能跨天), 短 TTL 误清风险高.
+    namespace: "work" 仅清理 work/* 分支; "agent" 仅清理 agent/* 分支; None 不过滤.
     返回 {reclaimed, skipped, errors}.
     """
     import time
@@ -518,6 +520,13 @@ def claim_gc(root: Path, ttl_hours: int = 168, dry_run: bool = False) -> dict[st
                             ts_field = stripped.split(":", 1)[1].strip()
                         elif stripped.startswith("branch:"):
                             branch = stripped.split(":", 1)[1].strip()
+
+                # Namespace filtering (BET-Y1Q4-T10-128): skip non-matching prefixes
+                if namespace and branch:
+                    if namespace == "agent" and not branch.startswith("agent/"):
+                        continue
+                    elif namespace == "work" and not branch.startswith("work/"):
+                        continue
 
                 if not ts_field:
                     result["skipped"].append(f"{label}: 无时间戳")

@@ -3,6 +3,8 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-08-18
+type: ephemeral
+status: archived
 ---
 # BOS Inbox 多源私有知识神经网：架构收敛与双端落地总结
 

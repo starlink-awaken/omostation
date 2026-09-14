@@ -8,6 +8,7 @@ related:
   - 0287-p86-abcd-wave-closeout.md
   - 0289-p86-a2-type1-demote-true-dispatch-shortfall.md
   - 0290-p86-review-followup-ssot-hygiene.md
+type: ssot
 ---
 
 # ADR-0291: P86 A/B/C/D 最终结案
