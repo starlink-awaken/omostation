@@ -1829,7 +1829,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 心智模型四件套首期落地与有状态 SceneWatcher
   track: T3-COGNI
   underlying_workflow: project-code-change
@@ -1844,6 +1844,7 @@ bets:
   - projects/spine/src/spine/cognitive/
   - .omo/_knowledge/retros/BET-Y2Q1-T3-05.md
   - docs/superpowers/specs/2026-09-14-t3-05-mindmodel-four-pieces-spec.md
+  done_at: '2026-09-13'
 - appetite: 3 days
   circuit_breaker: 文风严重失真时自动回退至基准中立模板。
   depends_on:
@@ -2641,19 +2642,29 @@ bets:
     axes:
       engineering:
         evidence:
-          diff: {ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md}
-          merged_reachable_commit: {ref: git://origin/main@3849f65fb2825bc33b5ca66c0b5c62704e372ffb}
-          tests: {ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md}
-          rollback: {ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md}
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          merged_reachable_commit:
+            ref: git://origin/main@3849f65fb2825bc33b5ca66c0b5c62704e372ffb
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
         status: VERIFIED
       operational:
         evidence:
-          cleanup: {ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md}
-          fresh_receipt: {ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md}
-          live_canary: {ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md}
-          replay: {ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md}
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
         status: PROVEN
-      value: {evidence: {}, status: NOT_PROVEN}
+      value:
+        evidence: {}
+        status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   title: 常驻决策提案 (Decision Proposals) 闭环消费与 Cockpit 审批自进化通道 (Decision Proposals Closeout
