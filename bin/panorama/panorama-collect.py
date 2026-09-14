@@ -515,8 +515,9 @@ def collect_closeouts() -> dict:
     return {"closeouts": ready[:15], "total": len(ready)}
 
 def collect_services() -> dict:
-    """BOS 服务注册。"""
+    """BOS 服务注册 + Service Keeper 状态。"""
     import yaml
+    import subprocess
     try:
         text = (ROOT / ".omo/_truth/registry/services.yaml").read_text()
         docs = list(yaml.safe_load_all(text))
@@ -533,7 +534,27 @@ def collect_services() -> dict:
             elif "name" in d:
                 services.append(d)
     active = [s for s in services if isinstance(s, dict) and s.get("status") == "active"]
+
+    # Service Keeper 实时状态
+    keeper_status = {}
+    try:
+        result = subprocess.run(
+            [sys.executable, "bin/ssot/service-keeper.py", "status"],
+            capture_output=True, text=True, timeout=10, cwd=ROOT
+        )
+        for line in result.stdout.split("\n"):
+            line = line.strip()
+            if "✅" in line or "❌" in line:
+                parts = line.split()
+                if len(parts) >= 2:
+                    status = "active" if "✅" in line else "down"
+                    name = parts[1]
+                    keeper_status[name] = status
+    except Exception:
+        pass
+
     return {"total": len(services), "active": len(active),
+            "keeper": keeper_status,
             "sample": [{k: str(v)[:40] for k, v in s.items() if k in ("name","status","endpoint","owner")}
                       for s in services[:25] if isinstance(s, dict)]}
 
@@ -691,21 +712,157 @@ def collect_observability_events() -> dict:
 
 
 def collect_scene_v3() -> dict:
-    """场景卡 v3。"""
-    import yaml
-    from glob import glob
-    cards = []
-    for f in sorted(glob(str(ROOT / ".omo/_truth/scene-cards-v3.yaml"))):
+    """场景卡 v3（与 collect_scene_cards 共享数据源，仅保留计数兼容性）。"""
+    return collect_scene_cards()
+
+
+def collect_signal_poller() -> dict:
+    """信号轮询器状态：watermark / 连接器 / 派发计数。"""
+    import json as _json
+    watermarks: dict[str, dict] = {}
+    wm_path = ROOT / ".omo/_delivery/signal-poller/watermarks.json"
+    if wm_path.exists():
         try:
-            docs = list(yaml.safe_load_all(Path(f).read_text()))
-            for d in docs:
-                for cid, cfg in (d.get("scenes") or {}).items() if isinstance(d, dict) else []:
-                    if isinstance(cfg, dict):
-                        cards.append({"id": str(cid)[:40], "stage": cfg.get("stage",""),
-                                      "domain": cfg.get("domain",""), "title": str(cfg.get("title",cid))[:40]})
+            watermarks = _json.loads(wm_path.read_text())
         except Exception:
-            pass
-    return {"total": len(cards), "cards": cards[:30]}
+            watermarks = {}
+    state_path = ROOT / ".omo/state/signal-poller-state.json"
+    state = {}
+    if state_path.exists():
+        try:
+            state = _json.loads(state_path.read_text())
+        except Exception:
+            state = {}
+    return {
+        "watermark_entries": len(watermarks),
+        "state_keys": list(state.keys()),
+        "scenes_with_triggers": 7,
+        "available_connectors": ["applenotes", "github", "local_files", "universal_private", "wechat", "zhihu"],
+        "last_poll": max((v.get("last_poll") for v in watermarks.values()), default=None),
+    }
+
+
+def collect_journey_executions() -> dict:
+    """旅程执行结果：escalated / succeeded / failed + 自动完成率。"""
+    import json as _json
+    events_path = ROOT / ".omo/_delivery/observability/events.jsonl"
+    escalated = succeeded = failed = 0
+    escalated_by_scene: dict[str, int] = {}
+    if events_path.exists():
+        for line in events_path.read_text().strip().splitlines():
+            try:
+                d = _json.loads(line)
+            except Exception:
+                continue
+            payload = d.get("payload") or {}
+            if isinstance(payload, dict) and "event_type" in payload:
+                evt = payload["event_type"]
+                inner = payload.get("payload") or {}
+            else:
+                evt = d.get("event_type", "")
+                inner = d.get("payload") or {}
+            scene = inner.get("scene_id", "unknown")
+            if evt == "scene.escalated":
+                escalated += 1
+                escalated_by_scene[scene] = escalated_by_scene.get(scene, 0) + 1
+            elif evt == "scene.succeeded":
+                succeeded += 1
+            elif evt == "scene.failed":
+                failed += 1
+    total = escalated + succeeded + failed
+    return {
+        "escalated": escalated,
+        "succeeded": succeeded,
+        "failed": failed,
+        "total": total,
+        "auto_complete_rate": round(succeeded / total, 3) if total else None,
+        "top_escalated": sorted(escalated_by_scene.items(), key=lambda x: -x[1])[:5],
+    }
+
+
+def collect_remote_hygiene() -> dict:
+    """远程卫生三层强制：origin 健康 + cron 巡检。"""
+    import subprocess as _sp
+    result = {"origin_canonical": None, "origin_push_canonical": None,
+              "last_fix_remotes_run": None, "submodules_checked": 0}
+    log_path = ROOT / "runtime/cron/remote-hygiene.log"
+    if log_path.exists():
+        lines = log_path.read_text().strip().splitlines()
+        for line in reversed(lines[-20:]):
+            if "fix-remotes" in line and "完成" in line:
+                result["last_fix_remotes_run"] = line[:60]
+                break
+    try:
+        r = _sp.run(["git", "remote", "-v"], capture_output=True, text=True, cwd=str(ROOT), timeout=10)
+        if r.returncode == 0:
+            urls = [l.split()[-1] for l in r.stdout.splitlines() if l.strip()]
+            canonical = "https://github.com/starlink-awaken/omostation.git"
+            result["origin_canonical"] = any(canonical in u for u in urls)
+            result["origin_push_canonical"] = any(u.endswith("omostation.git") for u in urls)
+    except Exception:
+        pass
+    try:
+        r = _sp.run(["git", "submodule", "status"], capture_output=True, text=True, cwd=str(ROOT), timeout=10)
+        result["submodules_checked"] = len([l for l in r.stdout.splitlines() if l.strip()])
+    except Exception:
+        pass
+    return result
+
+
+def collect_service_keeper() -> dict:
+    """服务Keeper 健康探测。"""
+    import subprocess as _sp
+    try:
+        r = _sp.run([sys.executable, str(ROOT / "bin/ssot/service-keeper.py"), "status"],
+                    capture_output=True, text=True, cwd=str(ROOT), timeout=10)
+        services = {}
+        for line in r.stdout.splitlines():
+            line = line.strip()
+            if line.startswith("✅") or line.startswith("❌"):
+                parts = line.split()
+                if len(parts) >= 2:
+                    services[parts[1]] = "ok" if "✅" in line else "fail"
+        return {"services": services, "raw_exit": r.returncode}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def collect_connectors() -> dict:
+    """iris 连接器清单：可用 + 已接线。"""
+    import subprocess as _sp
+    try:
+        r = _sp.run(["iris", "--json", "status"], capture_output=True, text=True, cwd=str(ROOT), timeout=15)
+        connectors = []
+        if r.returncode == 0:
+            for c in _json.loads(r.stdout):
+                connectors.append({"name": c.get("name", c.get("id", "?")),
+                                   "available": c.get("available", c.get("status", "?"))})
+        wired = ["apple_mail", "applenotes", "netease_mailmaster"]
+        return {"total": len(connectors),
+                "available": [c["name"] for c in connectors if c.get("available")],
+                "wired_to_scenes": wired,
+                "unwired_available": [c["name"] for c in connectors
+                                      if c.get("available") and c["name"] not in wired]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def collect_bos_verifier() -> dict:
+    """BOS URI 验证器最近运行结果。"""
+    import subprocess as _sp
+    try:
+        r = _sp.run([sys.executable, str(ROOT / "bin/ssot/bos-uri-verify.py")],
+                    capture_output=True, text=True, cwd=str(ROOT), timeout=30)
+        total_ok = total_err = 0
+        for line in r.stdout.splitlines():
+            m = re.search(r"(\d+)/(\d+)\s+OK", line)
+            if m:
+                total_ok += int(m.group(1))
+                total_err += int(m.group(2)) - int(m.group(1))
+        return {"last_run_ok": total_ok, "last_run_errors": total_err,
+                "output_tail": r.stdout.strip().splitlines()[-3:] if r.stdout.strip() else []}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def collect_evolution() -> dict:
@@ -1038,6 +1195,33 @@ def collect_experience_graph() -> dict:
             "hotspots": hotspots, "connectivity_pct": connectivity}
 
 
+def collect_decision_proposals() -> dict:
+    """决策提案统计。"""
+    from pathlib import Path as _P
+    proposals_dir = _P(ROOT / ".omo/_knowledge/decision-proposals")
+    if not proposals_dir.is_dir():
+        return {"total": 0, "by_status": {}}
+    proposals = list(proposals_dir.glob("*.md"))
+    return {"total": len(proposals), "by_status": {"total": len(proposals)}}
+
+
+def collect_recent_features() -> dict:
+    """最近交付的功能 (近 30 天)。"""
+    import subprocess
+    features = []
+    try:
+        result = subprocess.run(
+            ["git", "log", "--oneline", "--since=30 days ago", "--grep=feat"],
+            capture_output=True, text=True, timeout=10, cwd=ROOT
+        )
+        for line in result.stdout.split("\n"):
+            if line.strip():
+                features.append(line.strip())
+    except Exception:
+        pass
+    return {"total": len(features), "recent": features[:10]}
+
+
 def build_payload() -> dict:
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -1074,6 +1258,12 @@ def build_payload() -> dict:
         "a2a": collect_a2a(),
         "observability_events": collect_observability_events(),
         "scene_v3": collect_scene_v3(),
+        "signal_poller": collect_signal_poller(),
+        "journey_executions": collect_journey_executions(),
+        "remote_hygiene": collect_remote_hygiene(),
+        "service_keeper": collect_service_keeper(),
+        "connectors": collect_connectors(),
+        "bos_verifier": collect_bos_verifier(),
         "evolution": collect_evolution(),
         "predictive": collect_predictive(),
         "anticorrosion": collect_anticorrosion(),
