@@ -29523,6 +29523,64 @@ bets:
   write_surfaces:
   - bin/panorama/
   - .omo/_knowledge/retros/BET-Y1Q4-T10-166.md
+- accepted_specifications:
+  - content_digest: sha256:b1b437406488b45860905918b2b3526cc7ed7f0a84b4fb3e982649ed4252587d
+    decision_ref: decision://accepted/BET-Y1Q4-T16-02
+    spec_ref: repo://docs/superpowers/specs/2026-09-14-a4-remote-hygiene-cron-registry-parity-design.md
+    spec_version: 1.0.0
+  appetite: 0.5 days
+  circuit_breaker: 若登记需要改变已安装 cron 的 schedule、command 或执行语义，立即停止；本 BET 只做声明面 parity。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: IN_PROGRESS
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y1Q4-T16
+  done_when:
+  - remote-hygiene hourly job 在 .omo/cron/registry.yaml 中登记为 active installed，scheduler
+    check drift=0/orphan=0
+  - unbound bootstrap waiver 与 retro 记录真实授权、验证和回滚边界
+  goal: '修复 PR #3752/#3754 遗留的 A4 声明面缺口：已安装 remote-hygiene cron 未进入 scheduler registry，导致
+    orphan_count=1。'
+  human_gate: false
+  id: BET-Y1Q4-T16-02
+  non_goals:
+  - 不修改已安装 crontab、fix-remotes 实现、调度编译器或运行行为
+  - 不把 orphan 加入 known_orphans 白名单
+  - 不声明 A6/A7/A8/A9 准入或价值证明
+  parent_bet_id: BET-Y1Q4-T16
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: A4 remote-hygiene cron registry parity recovery
+  track: T16-DRIFT-GUARD
+  underlying_workflow: project-doc-change
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/scheduler-compile.py --check
+    expect: exit 0
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: python3 bin/gac/gate-health-check.py --json
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-14-a4-remote-hygiene-cron-registry-parity-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/cron/registry.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T16-02.md
+  - .omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -29661,7 +29719,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 403
+  total_bets: 404
   windows:
   - Y1Q1
   - Y1Q2
