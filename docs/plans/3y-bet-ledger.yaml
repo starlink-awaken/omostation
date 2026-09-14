@@ -28394,7 +28394,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: Cockpit-UI 全面重构与六面合流涅槃战役 (总揽)
   track: T8-SURFACE
   underlying_workflow: project-code-change
@@ -28412,6 +28412,7 @@ bets:
   - docs/superpowers/specs/
   - projects/cockpit/
   - projects/cockpit-ui/
+  done_at: '2026-09-14'
 - accepted_specifications:
   - content_digest: sha256:c4e872bb66b558c41328127900d1ffbd7a54fdd6ae2d0e983eb9599ab2629438
     decision_ref: decision://accepted/BET-Y1Q4-T8-24A
@@ -28576,7 +28577,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: in_progress
+  status: done
   title: Studio 机理工坊与知识记忆中枢深度交付 (升级
   track: T8-SURFACE
   underlying_workflow: project-code-change
@@ -28617,6 +28618,7 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: blocked
+  done_at: '2026-09-14'
 - appetite: 4 days
   circuit_breaker: 任何导致用户审批误点击或案件数据丢失的 UI 缺陷立即回滚。
   done_when:
