@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T1-06 Closeout Retro — Milestone/Vision derived gates
 bet_id: BET-Y1Q4-T1-06
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-04
 last-reviewed: 2026-09-04

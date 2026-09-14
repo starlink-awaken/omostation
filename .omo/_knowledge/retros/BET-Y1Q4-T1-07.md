@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T1-07 Closeout Retro — legacy BET classification manifest
 bet_id: BET-Y1Q4-T1-07
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-04
 last-reviewed: 2026-09-04

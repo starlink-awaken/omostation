@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T1-10 Closeout Retro — Portfolio v2 validator 全 §6 校验扩展
 bet_id: BET-Y1Q4-T1-10
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-04
 last-reviewed: 2026-09-05

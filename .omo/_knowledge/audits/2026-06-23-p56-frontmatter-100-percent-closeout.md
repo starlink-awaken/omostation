@@ -1,6 +1,8 @@
 ---
 type: ephemeral
 status: archived
+lifecycle: history
+owner: unassigned
 ---
 
 # P56 — frontmatter 100% 全覆盖 + ADR-0052 收口报告

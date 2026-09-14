@@ -2,7 +2,7 @@
 schema: resident-retro-candidate/v1
 topic: closeout-with-retro
 generated_at: 2026-09-12T12:41:59Z
-status: candidate
+status: planned
 counts:
   runs: 1
   failures: 0
@@ -11,6 +11,8 @@ failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
+lifecycle: history
+owner: unassigned
 ---
 # closeout-with-retro 运行复盘聚合 (resident 事件驱动)
 

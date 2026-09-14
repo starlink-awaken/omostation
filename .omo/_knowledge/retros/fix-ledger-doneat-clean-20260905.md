@@ -4,7 +4,7 @@ type: retro
 title: 台账 T8-14/T8-16 重复 done_at 清理
 bet_id: fix-ledger-doneat-clean
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

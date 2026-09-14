@@ -4,7 +4,7 @@ type: retro
 title: doc-index 硬阻塞修复 — t10-122 证据文件 SSOT owner/date
 bet_id: fix-doc-index-hardblock
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

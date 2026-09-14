@@ -4,7 +4,7 @@ type: retro
 title: 台账 lint 归零 — T8-04 spec_ref 修复 + T6-17/18/19 字段补全
 bet_id: fix-ledger-lint-debt
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

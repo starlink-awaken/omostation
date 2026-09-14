@@ -1,9 +1,10 @@
 ---
 type: ssot
+lifecycle: active
 version: "1.0"
 status: active
 owner: <team-or-role>
-last_updated: <YYYY-MM-DD>
+last-reviewed: 2026-09-14
 ---
 
 # <标题>

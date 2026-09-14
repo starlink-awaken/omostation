@@ -4,6 +4,8 @@ status: archived
 completed_at: 2026-09-06T01:50:00+00:00
 run_id: 20260906T013733Z-bet-execution-01a20e92
 pr: https://github.com/starlink-awaken/omostation/pull/3265
+lifecycle: history
+owner: unassigned
 ---
 
 # Retro: BET-Y1Q4-T6-20 — E-DOC 双平面边界门禁落地

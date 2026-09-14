@@ -1,9 +1,11 @@
 ---
 type: ephemeral
-status: active | completed | archived
+lifecycle: active
+status: draft
 created: <YYYY-MM-DD>
 expires: <YYYY-MM-DD | "completion">
-owner: <role>
+owner: governance-team
+last-reviewed: 2026-09-14
 ---
 
 # <标题>
