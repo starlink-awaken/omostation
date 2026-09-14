@@ -48,4 +48,4 @@ Because no human reply was available during the Wave 4 kickoff, the default exit
 2. runtime residue stays inside runtime-owned roots
 3. `python3 scripts/omo_worker.py worker rollout-eval .omo/workers/runs/phase9-wave4-rollout-ops-envelope.yaml` returns `decision=allow`
 4. `python3 scripts/omo_worker.py worker rollout-accept ...` writes an acceptance record and updates the envelope gate
-5. Phase 9 control docs point to `current_phase: 9`, `phase_status: completed`, `current_wave: 4`
+5. Phase 9 control docs point to `current_phase: 9`, `phase_status: archived`, `current_wave: 4`

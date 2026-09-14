@@ -605,7 +605,7 @@ def test_phase6_is_still_planning_gate_until_packet_closes():
     system_state = (OMO / "state" / "system.yaml").read_text(encoding="utf-8")
 
     assert "next_milestone: Phase 6 planning gate" in system_state
-    assert "phase_status: completed" in system_state
+    assert "phase_status: archived" in system_state
 ```
 
 - [ ] **Step 2: Run the targeted test to verify it fails**

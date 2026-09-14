@@ -22,7 +22,7 @@ type: ephemeral
   - `git log origin/main --since="2026-09-03" --until="2026-09-15" --oneline | wc -l`
 - 文档约定：相对链接，不硬编码健康分/测试数/端口等易变数值；PR 编号仅作可验证指针，
   详情以 `gh pr view <号>` 为准。
-- 归档位置约定：`type: ephemeral + status: completed` 的一次性文档归档到
+- 归档位置约定：`type: ephemeral + status: archived` 的一次性文档归档到
   `.omo/_knowledge/design/plans/archive/`，顶层不再留存。
 
 ## §1 目标 vs 实际
