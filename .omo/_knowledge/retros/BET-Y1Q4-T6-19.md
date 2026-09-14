@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T6-19 Closeout Retro — Agent 感知覆盖率提升
 bet_id: BET-Y1Q4-T6-19
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

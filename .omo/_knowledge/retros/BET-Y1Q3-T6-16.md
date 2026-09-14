@@ -4,6 +4,7 @@ title: "多仓本地分支、脏工作树与未合并交付的保护性收敛"
 status: archived
 date: 2026-09-11
 owner: governance-team
+lifecycle: history
 ---
 
 # Retro: BET-Y1Q3-T6-16

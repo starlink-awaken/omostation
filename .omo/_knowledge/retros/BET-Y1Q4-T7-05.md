@@ -1,6 +1,6 @@
 ---
-status: completed
-lifecycle: entry
+status: archived
+lifecycle: history
 owner: auto-fix-loop
 last-reviewed: 2026-09-12
 completed_at: 2026-09-12

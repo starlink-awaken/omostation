@@ -1,6 +1,8 @@
 ---
 type: ephemeral
 status: archived
+lifecycle: history
+owner: unassigned
 ---
 
 # BET-Y1Q4-T7-03 Retro — 政策雷达晨报

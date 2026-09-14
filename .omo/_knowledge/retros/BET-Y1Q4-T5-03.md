@@ -5,6 +5,8 @@ bet_id: BET-Y1Q4-T5-03
 done_at: 2026-09-14
 overall_state: delivery_accepted
 merged_root_commit: eed16ec0800f60a15273817f2fcb6b3e5977ed23
+lifecycle: history
+owner: unassigned
 ---
 
 # BET-Y1Q4-T5-03 复盘（batch 1：spec 绑定 + resident A2A 委托闭环）

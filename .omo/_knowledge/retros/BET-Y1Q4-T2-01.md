@@ -1,6 +1,8 @@
 ---
 type: ephemeral
 status: archived
+lifecycle: history
+owner: unassigned
 ---
 
 # BET-Y1Q4-T2-01 Retro — Event Stream Bus

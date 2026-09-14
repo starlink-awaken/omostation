@@ -1,6 +1,6 @@
 ---
 id: ADR-0431
-status: candidate
+status: planned
 lifecycle: spec
 owner: xiamingxing
 last-reviewed: 2026-08-28

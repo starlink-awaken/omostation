@@ -1,28 +1,31 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-14T07:15:38Z
-status: candidate
+generated_at: 2026-09-14T10:45:40Z
+status: planned
 counts:
-  runs: 2
+  runs: 3
   failures: 0
-  total: 2
+  total: 3
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
+lifecycle: history
+owner: unassigned
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-14T07:15:38Z
+- generated_at: 2026-09-14T10:45:40Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 2 成功运行 + 0 失败模式 = 2 草稿
+- sediment 覆盖: 3 成功运行 + 0 失败模式 = 3 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
 - 20260913T230353Z-project-code-change-10ba437f.md
 - 20260914T040913Z-project-code-change-a78b5042.md
+- 20260914T082253Z-project-code-change-a90b200b.md
 
 ## 失败模式 (failures/)
 
@@ -43,6 +46,10 @@ failure_breakdown:
   - 指标: event_count=6, duration_s=12433.308
 - **20260914T040913Z-project-code-change-a78b5042**
   - 计划 (objective): Unbound mechanism recovery: make ledger-safe-insert emit a semantic bets list item
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20260914T082253Z-project-code-change-a90b200b**
+  - 计划 (objective): Ledger-safe-insert semantic item repair fresh claims after stale-lock prune
   - workflow: project-code-change
   - 指标: event_count=1, duration_s=0.0
 

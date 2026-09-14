@@ -4,7 +4,7 @@ type: retro
 title: "PR3 Closeout Retro — retro 模板 + docs freshness SOP"
 bet_id: "BET-Y1Q4-T1-14"
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

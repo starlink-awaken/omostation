@@ -4,7 +4,7 @@ type: retro
 title: runtime 子模块 STRAT-P81 doc-index 硬阻塞修复 + gitlink bump
 bet_id: fix-runtime-docindex
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

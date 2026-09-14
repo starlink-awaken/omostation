@@ -1,8 +1,8 @@
 ---
 id: ADR-0452
 title: Scene System v3 Architecture
-status: accepted
-lifecycle: contract
+status: archived
+lifecycle: spec
 date: 2026-09-07
 owner: governance-team
 last-reviewed: 2026-09-07

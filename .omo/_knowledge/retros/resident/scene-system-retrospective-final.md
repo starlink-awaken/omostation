@@ -5,6 +5,7 @@ bet: BET-Y1Q4-T6-24
 status: archived
 owner: governance-agent
 last-reviewed: 2026-09-11
+lifecycle: history
 ---
 
 # Scene System v3 — 全面交付复盘（Final）

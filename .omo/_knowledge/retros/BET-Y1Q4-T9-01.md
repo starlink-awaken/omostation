@@ -1,6 +1,8 @@
 ---
 type: ephemeral
 status: archived
+lifecycle: history
+owner: unassigned
 ---
 
 # BET-Y1Q4-T9-01 复盘

@@ -4,7 +4,7 @@ type: retro
 title: 机制 22c Git Hook 调度引擎完整化 — runner/manifest 接线 + 缺失检查脚本补齐 + 净减配平
 bet_id: BET-Y1Q4-T6-24
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-06
 last-reviewed: 2026-09-06

@@ -4,6 +4,8 @@ bet_id: BET-Y2Q1-T7-04
 title: "场景卡归一遗留 — omo phase15/16 死链清理 + ecos 第四家存储收口"
 closed_at: "2026-09-05T22:30:00Z"
 verdict: success
+lifecycle: history
+owner: unassigned
 ---
 
 ## 回顾

@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T8-13 Closeout Retro — P0 core command dry-run/JSON contract
 bet_id: BET-Y1Q4-T8-13
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-team
 created: 2026-09-05
 last-reviewed: 2026-09-05

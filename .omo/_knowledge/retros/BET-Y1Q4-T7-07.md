@@ -1,9 +1,11 @@
 ---
 bet_id: BET-Y1Q4-T7-07
-status: completed
+status: archived
 completed_at: 2026-09-13
 run_id: 20260913T23-t7-07-refine-script
 pr: "https://github.com/starlink-awaken/omostation/pull/3755"
+lifecycle: history
+owner: unassigned
 ---
 
 # Retro: BET-Y1Q4-T7-07 — Continual Harness 证据驱动自演化与沙箱回滚管道
