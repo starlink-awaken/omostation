@@ -3377,33 +3377,33 @@ bets:
             ref: git://origin/main@c582f07a7239d057db07a0345f0ac5e7c94a2d02
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:e54d7c46be5f9e09885a3da1952d3e0ea43c2405f4d5c8e59bb1b54045e1bb8e
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
       value:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-    notes: PR #3746 已合入 origin/main；30/30 pytest 通过；operational 以测试级验证为据（见 retro），业务价值待单独证明
+    notes: Rust 15/15 + Python 45/45 测试通过；release 二进制 354KB；test-pipeline CI 验证通过；operational 以测试级验证为据（见 retro），业务价值待单独证明
 
 - appetite: 3 days
   circuit_breaker: 分级路由如遇 L0/L1 判定置信度低于阈值，必须平滑降级至上一层重型模型，严禁因追求低延迟而牺牲决策正确性。
