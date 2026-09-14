@@ -12,6 +12,13 @@ owner: governance-team
 approver: governance-agent
 approval_state: confirmed
 bet: BET-Y2Q1-T7-03
+triggers:
+- type: signal
+  signal: note.created
+  connector: applenotes
+  debounce: 600s
+- type: schedule
+  cron: 0 10 * * 1-5
 runtime:
   journey_ref: research-to-insight
   timeout: 3600s

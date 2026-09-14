@@ -228,10 +228,22 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
             action = state_def.get("action", "noop")
             result = {"status": "succeeded", "dry_run": True, "confidence": 0.85, "action": action} if dry_run else _execute_action(action, state_def, ctx)
             ctx.record_step(current, action, result)
+            # 2026-09-13: 携带置信度进入下一状态 — human_gate 的分支条件
+            # (confidence >= 0.7 → recorded / confidence < 0.5 → escalated)
+            # 依赖 ctx.confidence; 旧版只在循环末尾赋值, gate 永远走 escalate.
+            if result.get("confidence") is not None:
+                ctx.confidence = float(result["confidence"])
             comp = state_def.get("compensation")
             if comp:
                 ctx.compensation_log.push(CompensationAction(comp.get("type","emit_event"), comp.get({})))
             if state_def.get("type") == "human_gate" or state_def.get("requires_human"):
+                # 按旅程 spec 的 transition 条件自动裁决:
+                # confidence >= 阈值 → 继续后续状态 (自动完成);
+                # confidence < 阈值 / 无匹配 → escalate (兜底安全).
+                nxt = _resolve_next_state(spec, current, result, ctx)
+                if nxt and nxt != current and "escalate" not in nxt:
+                    current = nxt
+                    continue
                 ctx.status = "escalated"
                 _emit_omo_event("scene.escalated", ctx.to_event())
                 _emit_scene_alert("scene.escalated", ctx.to_event(), severity="critical")
@@ -241,7 +253,11 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
             nxt = _resolve_next_state(spec, current, result, ctx)
             if nxt is None: break
             current = nxt
-        ctx.status = "succeeded"; ctx.confidence = result.get("confidence", 0.8) if result else 0.0; ctx.output = result
+        ctx.status = "succeeded"; ctx.confidence = result.get("confidence", ctx.confidence) if result else ctx.confidence; ctx.output = result
+        # 2026-09-13: 自动完成 = 隐式 accepted → 写 scene-outcome 闭环价值管道.
+        # (escalated 路径由人审裁决记录; 此处仅处理自动完成.)
+        if ctx.status == "succeeded":
+            _record_auto_outcome(ctx)
     except Exception as exc:
         ctx.status = "failed"; ctx.output = {"error": str(exc), "error_type": type(exc).__name__}
         _emit_scene_alert("scene.failed", ctx.to_event(), severity="degraded")
@@ -251,6 +267,37 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
     _emit_omo_event(ctx.to_event()["event_type"], ctx.to_event())
     _auto_record_calibration(ctx)
     return ctx
+
+
+def _find_scene_card_path(scene_id: str) -> Path | None:
+    """按约定定位场景卡文件路径 (用于结果记录)."""
+    for d in [_ROOT / ".omo" / "_truth" / "scenarios" / "v3", _ROOT / "docs" / "scene-cards"]:
+        p = d / f"{scene_id}.yaml"
+        if p.is_file():
+            return p
+    return None
+
+
+def _record_auto_outcome(ctx: ExecutionContext) -> None:
+    """自动完成场景的结果记录 — accepted → scene-outcome → 价值证据闭环."""
+    try:
+        rec_path = _ROOT / "bin" / "ssot" / "scene-outcome-recorder.py"
+        if not rec_path.exists():
+            return
+        card_path = _find_scene_card_path(ctx.scene_id)
+        if card_path is None:
+            return
+        subprocess.run(
+            [sys.executable, str(rec_path), "record",
+             "--scene-card", str(card_path),
+             "--run-id", ctx.run_id,
+             "--adjudication", "accepted",
+             "--actor", "journey-auto-complete",
+             "--notes", f"human_gate 自动完成 (confidence={ctx.confidence:.2f} >= 旅程阈值)"],
+            capture_output=True, text=True, timeout=15, check=False, cwd=str(_ROOT),
+        )
+    except Exception:
+        pass  # outcome 记录为 best-effort
 
 def _auto_record_calibration(ctx) -> None:
     """Auto-record execution result in calibration DB (closes the loop).
