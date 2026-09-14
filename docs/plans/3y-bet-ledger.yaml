@@ -28594,30 +28594,6 @@ bets:
   write_surfaces:
   - projects/cockpit-ui/src/views/StudioView.tsx
   - projects/cockpit-ui/src/components/studio/
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md
-            sha256: sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd
-          merged_reachable_commit:
-            ref: git://origin/main@63133e7f8bd9772afd2a9cb513d0c0903c7fecce
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md
-            sha256: sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md
-            sha256: sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd
-      operational:
-        status: NOT_PROVEN
-        evidence: {}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: blocked
   done_at: '2026-09-14'
 - appetite: 4 days
   circuit_breaker: 任何导致用户审批误点击或案件数据丢失的 UI 缺陷立即回滚。
