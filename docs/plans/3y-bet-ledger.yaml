@@ -4128,7 +4128,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: in_progress
+  status: done
+  done_at: 2026-09-14
   title: 基于风险-置信度矩阵的自适应授权与 Cockpit Resident Flight Deck 四维透明指挥舱 (Risk-Confidence Adaptive
     Authorization & Cockpit Flight Deck)
   track: T8-EXECUTION
@@ -4153,17 +4154,41 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T8-23
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4b613556dac201fc969626150b3a88e396b95064
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
+    notes: 28 tests passed (test_resident_flight_deck.py); 真实心跳闭环 + 并发回退恢复; operational 以测试级验证为据（见 retro），业务价值待单独证明
   value_indicator_policy: false
 - appetite: 4-5 days
   circuit_breaker: 数据集包含敏感密钥或凭证时立即终止并清洗，拒绝脏数据进入训练集。
