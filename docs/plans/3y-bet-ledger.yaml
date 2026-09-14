@@ -2912,7 +2912,7 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@e8cf3d22152dfa16467121f05ee12aac93b4a7d0
           tests:
-            ref: receipt://projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
             sha256: sha256:PLACEHOLDER
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
@@ -28238,7 +28238,7 @@ bets:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
           merged_reachable_commit:
-            ref: git://origin/main@7b02a3d379
+            ref: git://origin/main@7b02a3d37984b8356c5af28e1a7930114fa73af4
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
           rollback:
@@ -28246,10 +28246,14 @@ bets:
         status: VERIFIED
       operational:
         evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
           live_canary:
-            ref: receipt://.omo/state/spine-outbox/msg-*/receipt.json
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
         status: PROVEN
       value:
         evidence: {}
