@@ -1,5 +1,9 @@
 ---
 type: derived
+status: draft
+lifecycle: active
+owner: governance-team
+last-reviewed: 2026-09-14
 source: <SSOT 路径>
 last_synced: <YYYY-MM-DD>
 ---

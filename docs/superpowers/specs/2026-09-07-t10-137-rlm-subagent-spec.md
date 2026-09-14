@@ -1,6 +1,6 @@
 ---
 status: accepted
-lifecycle: history
+lifecycle: spec
 owner: governance-team
 created: 2026-09-07
 last-reviewed: 2026-09-07
