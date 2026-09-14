@@ -1,36 +1,46 @@
-last_scan: 1789114876.376411
+last_scan: 1789358570.785873
 services:
   cron-service:
     health_check: healthy
     name: cron-service
     port_listening: true
     runtime:
-      freshness_seconds: 60
-      last_healthy_seconds: 0
-      pid: '8315'
+      freshness_seconds: 0
+      port: 7450
       status: running
-      uptime_seconds: 264279
+      timestamp: 1789358570.785873
     timestamp: 1789114876.376411
     type: daemon
   gbrain:
+    health_check: healthy
     name: gbrain
+    port_listening: false
     runtime:
-      last_healthy_seconds: 0
-      status: unmanaged
+      freshness_seconds: 0
+      port: null
+      status: running
+      timestamp: 1789358570.785873
     timestamp: 1789114876.376411
     type: cli
   gbrain-index:
     health_check: scheduled
     name: gbrain-index
     runtime:
-      status: scheduled
+      freshness_seconds: 0
+      port: null
+      status: configured
+      timestamp: 1789358570.785873
     timestamp: 1789114876.376411
     type: scheduled
   kos:
+    health_check: healthy
     name: kos
+    port_listening: false
     runtime:
-      last_healthy_seconds: 0
-      status: unmanaged
+      freshness_seconds: 0
+      port: null
+      status: active
+      timestamp: 1789358570.785873
     timestamp: 1789114876.376411
     type: integrated
   ollama:
@@ -38,14 +48,20 @@ services:
     name: ollama
     port_listening: true
     runtime:
-      last_healthy_seconds: 0
-      status: unmanaged
+      freshness_seconds: 0
+      port: 11434
+      status: idle
+      timestamp: 1789358570.785873
     timestamp: 1789114876.376411
     type: integrated
   runtime-mcp:
+    health_check: healthy
     name: runtime-mcp
+    port_listening: false
     runtime:
-      last_healthy_seconds: 0
-      status: unmanaged
+      freshness_seconds: 0
+      port: null
+      status: active
+      timestamp: 1789358570.785873
     timestamp: 1789114876.376411
     type: mcp

@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T6-18 Closeout Retro — 架构健康度 6 维度周报
 bet_id: BET-Y1Q4-T6-18
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

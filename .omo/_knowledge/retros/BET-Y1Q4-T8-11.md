@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T8-11 Closeout Retro — Orthogonal domains + dual-track router
 bet_id: BET-Y1Q4-T8-11
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-team
 created: 2026-09-04
 last-reviewed: 2026-09-05

@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T1-13 Closeout Retro — Portfolio-status broker ownership
 bet_id: BET-Y1Q4-T1-13
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

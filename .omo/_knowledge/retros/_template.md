@@ -4,7 +4,7 @@ type: retro
 title: "<BET-ID> Closeout Retro — <简短标题>"
 bet_id: "<BET-ID>"
 status: draft
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: "<YYYY-MM-DD>"
 last-reviewed: "<YYYY-MM-DD>"

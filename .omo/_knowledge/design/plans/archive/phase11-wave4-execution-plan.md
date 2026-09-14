@@ -67,7 +67,7 @@ Production readiness start (v0.2 roadmap), deep hardening (Hermes/Minerva/KOS), 
 - [ ] Phase 13 metacognition pre-planning boundary registered in `plans/phase13-metacognition-preplanning.md`
 - [ ] Wave 4 closeout recorded in `summaries/phase11-wave4-closeout.md`
 - [ ] Phase 11 retrospective recorded in `summaries/phase11-retrospective.md`
-- [ ] system.yaml updated: `current_phase: 11, phase_status: completed`
+- [ ] system.yaml updated: `current_phase: 11, phase_status: archived`
 
 ---
 

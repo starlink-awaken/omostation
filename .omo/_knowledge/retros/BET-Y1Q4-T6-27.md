@@ -2,9 +2,11 @@
 type: retro
 bet_id: BET-Y1Q4-T6-27
 title: "GraphRAG 实体感知切片与 SHACL 架构形状验证引擎"
-status: in_progress
+status: active
 created: 2026-09-13
 track: T6-EVOLUTION
+lifecycle: history
+owner: unassigned
 ---
 
 # BET-Y1Q4-T6-27 复盘记录

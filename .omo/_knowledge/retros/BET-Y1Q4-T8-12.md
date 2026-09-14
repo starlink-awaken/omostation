@@ -4,7 +4,7 @@ type: retro
 title: BET-Y1Q4-T8-12 Closeout Retro — ExitCode / ANSI purity / Trace-ID
 bet_id: BET-Y1Q4-T8-12
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-team
 created: 2026-09-05
 last-reviewed: 2026-09-05

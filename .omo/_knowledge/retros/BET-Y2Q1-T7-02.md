@@ -4,7 +4,7 @@ type: retro
 title: BET-Y2Q1-T7-02 Closeout Retro — shadow 试验记录机制
 bet_id: BET-Y2Q1-T7-02
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

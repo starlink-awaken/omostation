@@ -1,7 +1,7 @@
 ---
 id: ADR-0435
-status: accepted
-lifecycle: history
+status: archived
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-08-30
 type: ssot

@@ -1829,7 +1829,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 心智模型四件套首期落地与有状态 SceneWatcher
   track: T3-COGNI
   underlying_workflow: project-code-change
@@ -1844,6 +1844,7 @@ bets:
   - projects/spine/src/spine/cognitive/
   - .omo/_knowledge/retros/BET-Y2Q1-T3-05.md
   - docs/superpowers/specs/2026-09-14-t3-05-mindmodel-four-pieces-spec.md
+  done_at: '2026-09-13'
 - appetite: 3 days
   circuit_breaker: 文风严重失真时自动回退至基准中立模板。
   depends_on:
@@ -2526,16 +2527,40 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: IN_PROGRESS
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@eed16ec0800f60a15273817f2fcb6b3e5977ed23
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+    notes: batch1 #3739 + batch2 agora@7a92d11（经 #3751 pin 入主链）；10/10 pytest 复测通过；operational 以测试级验证为据，无生产灰度；value 待业务指标单独证明
   depends_on:
   - BET-Y1Q4-T10-05
   done_when:
@@ -2553,11 +2578,13 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: in_progress
+  status: done
+  done_at: 2026-09-14
   title: Agora A2A 双向任务委派与 Resident Agent Card 协议接入 (A2A Task Delegation & Resident
     Agent Card)
   track: T5-ORCH
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/agora/tests/test_resident_a2a.py -q
     expect: exit 0
@@ -2634,7 +2661,38 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  value_indicator_policy: false
+  status: done
+  done_at: 2026-09-14
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          merged_reachable_commit:
+            ref: git://origin/main@3849f65fb2825bc33b5ca66c0b5c62704e372ffb
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   title: 常驻决策提案 (Decision Proposals) 闭环消费与 Cockpit 审批自进化通道 (Decision Proposals Closeout
     & Cockpit Triage)
   track: T8-SURFACE
@@ -2912,7 +2970,7 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@e8cf3d22152dfa16467121f05ee12aac93b4a7d0
           tests:
-            ref: receipt://projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
             sha256: sha256:PLACEHOLDER
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
@@ -3284,7 +3342,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: 2026-09-14
   title: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游 (TinyBOS Embodied Protocol & Home LAN Roaming
     Mesh)
   track: T8-SURFACE
@@ -3308,6 +3367,7 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T8-22
     spec_ref: repo://docs/superpowers/specs/2026-09-14-t8-22-tinybos-design.md
     spec_version: 1.0.0
+||||||| b6539789e2
 - appetite: 3 days
   circuit_breaker: 分级路由如遇 L0/L1 判定置信度低于阈值，必须平滑降级至上一层重型模型，严禁因追求低延迟而牺牲决策正确性。
   depends_on:
@@ -3328,7 +3388,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: 四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎 (4-Tier Cognitive Hierarchy & Radix KV Cache
     Engine)
   track: T6-EVOLUTION
@@ -3346,6 +3406,7 @@ bets:
   - projects/aetherforge/src/aetherforge/engine/speculative.py
   - projects/aetherforge/tests/test_cognitive_hierarchy.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+  done_at: '2026-09-13'
 - appetite: 2-3 days
   circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
   done_at: '2026-09-06'
@@ -4018,7 +4079,7 @@ bets:
   - BET-Y1Q4-T8-22
   done_when:
   - 交付 projects/cockpit/src/cockpit/resident_flight_deck.py 授权与遥测服务
-  - 交付 projects/cockpit-ui/src/pages/ResidentFlightDeck.vue 前端透明指挥舱页面
+  - 交付 projects/cockpit-ui/src/views/ResidentFlightDeck.tsx 前端透明指挥舱页面
   - 越权拦截率 100%，紧急人工熔断在 1 秒内生效
   goal: 建立 L1~L4 四阶梯自适应风险授权拦截网关；在 Cockpit 前端集成 Resident Flight Deck 四维透明指挥舱，实现心跳健康、任务
     DAG 流水、算力显存遥测与人工熔断介入全景可见。
@@ -4030,7 +4091,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-14
   title: 基于风险-置信度矩阵的自适应授权与 Cockpit Resident Flight Deck 四维透明指挥舱 (Risk-Confidence Adaptive
     Authorization & Cockpit Flight Deck)
   track: T8-EXECUTION
@@ -4044,9 +4106,53 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - projects/cockpit/src/cockpit/resident_flight_deck.py
-  - projects/cockpit-ui/src/pages/ResidentFlightDeck.vue
+  - projects/cockpit/src/cockpit/web/api_flight_deck.py
+  - projects/cockpit-ui/src/views/ResidentFlightDeck.tsx
   - projects/cockpit/tests/test_resident_flight_deck.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:07420c743e90abd285259c9cfc16611e5a805608726065aa85b210851ca838d1
+    decision_ref: decision://accepted/BET-Y1Q4-T8-23
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4b613556dac201fc969626150b3a88e396b95064
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+    notes: 28 tests passed (test_resident_flight_deck.py); 真实心跳闭环 + 并发回退恢复; operational 以测试级验证为据（见 retro），业务价值待单独证明
+  value_indicator_policy: false
 - appetite: 4-5 days
   circuit_breaker: 数据集包含敏感密钥或凭证时立即终止并清洗，拒绝脏数据进入训练集。
   depends_on:
@@ -9684,8 +9790,14 @@ bets:
   - bin/gac/**
 - appetite: 2 days
   done_at: 2026-08-08
-  done_evidence: |
-    start_run accepts parent_run_id/parent_agent; run record + ledger event include parent fields. spawn_run creates child runs auto-linked to parent (auto-copies parent_agent). trace_attribution walks full parent chain (root→leaf), handles missing runs gracefully. CLI: `start --parent-run`, `spawn <parent> <workflow>`, `trace <run-id>` (--json supported). 9 tests pass: parent linkage, ledger events, chain tracing (1/2/3 levels), missing run handling.
+  done_evidence: 'start_run accepts parent_run_id/parent_agent; run record + ledger
+    event include parent fields. spawn_run creates child runs auto-linked to parent
+    (auto-copies parent_agent). trace_attribution walks full parent chain (root→leaf),
+    handles missing runs gracefully. CLI: `start --parent-run`, `spawn <parent> <workflow>`,
+    `trace <run-id>` (--json supported). 9 tests pass: parent linkage, ledger events,
+    chain tracing (1/2/3 levels), missing run handling.
+
+    '
   done_when:
   - start_run 接受 parent_run_id/parent_agent 参数，写入 run record + ledger 事件
   - spawn_run 创建子 run 时自动继承父 agent_profile
@@ -9733,8 +9845,14 @@ bets:
   - .subtrees/aetherforge/**
 - appetite: 1 week
   done_at: 2026-08-08
-  done_evidence: |
-    commit 185b443 in cockpit main: feat(T6-10): god-module SRP split — cli.py 1540L→792L + api_system_map_catalog.py 1565L→59L. Verification: `omo lint god-module` GATE PASS (0 files >1500L). Split strategy: cli/_subcommands.py (863L, argparse registration), web/pages.py (757L), web/coverage_dims.py (107L), web/playbooks.py (496L), web/roadmap.py (229L). Backward compat maintained via re-export pattern in api_system_map_catalog.py shim.
+  done_evidence: 'commit 185b443 in cockpit main: feat(T6-10): god-module SRP split
+    — cli.py 1540L→792L + api_system_map_catalog.py 1565L→59L. Verification: `omo
+    lint god-module` GATE PASS (0 files >1500L). Split strategy: cli/_subcommands.py
+    (863L, argparse registration), web/pages.py (757L), web/coverage_dims.py (107L),
+    web/playbooks.py (496L), web/roadmap.py (229L). Backward compat maintained via
+    re-export pattern in api_system_map_catalog.py shim.
+
+    '
   done_when:
   - 3 个 >1500L 文件拆分至全部 <=1500L, omo lint god-module GATE PASS (见 done_evidence)
   evidence:
@@ -9778,8 +9896,10 @@ bets:
 - appetite: 2 days
   depends_on: []
   done_at: 2026-08-07
-  done_evidence: |
-    git-shim fail-closed (T1-04) 拦截 agent 危险操作; 锁心跳+僵尸锁检测+prune-locks (lifecycle.py); AGENTS.md 共享主树只读红线; 9 个新测试全通过
+  done_evidence: 'git-shim fail-closed (T1-04) 拦截 agent 危险操作; 锁心跳+僵尸锁检测+prune-locks
+    (lifecycle.py); AGENTS.md 共享主树只读红线; 9 个新测试全通过
+
+    '
   done_when:
   - 所有 agent 必须在 gac-worktree claim 出的隔离树内工作, 共享 main 树只读
   - git clean / reset --hard / stash -u 在 hook 层要求 SWARM_ESCAPE_ID
@@ -9792,31 +9912,41 @@ bets:
   - 'D0 铁律升级: 交付物 commit 后须打 tag 或推独立分支, 仅 commit 不算持久化'
   evidence:
     E16_sandbox_can_create_but_not_delete:
-      判断: |
-        工具自身的能力边界会伪装成环境问题。
+      判断: '工具自身的能力边界会伪装成环境问题。
+
         agent 报告「环境有并发干扰」时, 先验证自己的工具链在该环境下的完整性,
+
         再归因外部。这是 D1(声明 vs 事实)在「自我能力」维度上的投影, 原 D1 未覆盖
-      实测: |
-        touch .git/_probe  → OK
+
+        '
+      实测: 'touch .git/_probe  → OK
+
         rm -f .git/_probe  → Operation not permitted
+
         git 的锁协议是「建 .lock → 干活 → unlink」, 第三步永远失败,
+
         一次 git status 在 17 个子模块留 17 个僵尸 index.lock,
+
         此后该仓库任何 git 写操作直接失败
+
+        '
       观察: agent sandbox 对 .git/ 有写权限但无删除权限, git 的锁协议因此必然残留
       规避: 只读操作加 GIT_OPTIONAL_LOCKS=0; 写操作一律交人类终端执行
       误判过程: 2026-08-06 全天把由此产生的异常判断为「并发 agent 在删我的文件」, 据此写了 E1 的部分结论并设计了 D0 三段式。D0
         本身仍成立(E6 独立支持), 但 E1 里「文件被清理 4 次」中至少 2 次实为本因, 归因错误
     E17_ci_inline_script_blind_spot:
-      判断: |
-        语法检查验的是「能不能解析」, 不是「能不能跑」。
+      判断: '语法检查验的是「能不能解析」, 不是「能不能跑」。
+
         同类还有 bash -n 查不出全角字符紧跟变量名(本轮实测命中 3 次)。
+
         凡「解析得过、执行才炸」的构造, 必须有一条真正执行它的验证路径
-      实测: |
-        .github/workflows/agora-ci.yml 在 main 与 phase13 两侧都有 deploy-smoke job,
-        唯一差异是 Smoke assertions 里的内联 Python 写法:
-          main(b02d67899 20:45 starlink-awaken)  单行 python3 -c '...'      → 实测 PASS
-          phase13(47e48755d 20:57 xiamingxing)   多行缩进 python3 -c "..."  → IndentationError
-        两个版本都是合法 YAML, yamllint 全过; 只有真把那段 Python 喂给解释器才暴露
+
+        '
+      实测: ".github/workflows/agora-ci.yml 在 main 与 phase13 两侧都有 deploy-smoke job,\n\
+        唯一差异是 Smoke assertions 里的内联 Python 写法:\n  main(b02d67899 20:45 starlink-awaken)\
+        \  单行 python3 -c '...'      → 实测 PASS\n  phase13(47e48755d 20:57 xiamingxing)\
+        \   多行缩进 python3 -c \"...\"  → IndentationError\n两个版本都是合法 YAML, yamllint 全过;\
+        \ 只有真把那段 Python 喂给解释器才暴露\n"
       影响面: 本仓 .github/workflows/ 下所有 run 块里的内联 python/node 都在此盲区内
       成因: phase13 在原版落地 12 分钟后做纯格式美化, 把可跑的改成跑不了的, 无人执行验证
       观察: CI 配置文件里的内联脚本, YAML 合法不代表脚本能跑, 常规校验查不出
@@ -11654,8 +11784,10 @@ bets:
   depends_on:
   - BET-Y1Q1-T4-01
   done_at: 2026-08-08
-  done_evidence: |
-    commit 4274d18fb merged to main: /inbox route + approve-with-edit + ignore buttons + daily cap 5. All 4 done_when criteria covered by implementation.
+  done_evidence: 'commit 4274d18fb merged to main: /inbox route + approve-with-edit
+    + ignore buttons + daily cap 5. All 4 done_when criteria covered by implementation.
+
+    '
   done_when:
   - /inbox 列出待裁决条目, 每条含来源/原文定位/问题清单
   - '三个按钮: 采纳 / 改后采纳 / 忽略'
@@ -14994,11 +15126,9 @@ bets:
       description: 'cockpit events-watch 无参运行报 AttributeError: ''Namespace'' object
         has no attribute ''url'''
       source: docs/cockpit-cmd-audit-comprehensive.md
-      stacktrace: |
-        File "src/cockpit/cli.py", line 761, in (lambda)
-          "events-watch": lambda a: _c_events(
-        File "src/cockpit/cli.py", line 170, in _c_events
-          run_events_dashboard(a.url)
+      stacktrace: "File \"src/cockpit/cli.py\", line 761, in (lambda)\n  \"events-watch\"\
+        : lambda a: _c_events(\nFile \"src/cockpit/cli.py\", line 170, in _c_events\n\
+        \  run_events_dashboard(a.url)\n"
     E2_audit_path_error:
       actual_path: bin/ssot/workspace-audit
       description: cockpit audit 无参运行报 [Error] 找不到 /Users/xiamingxing/Workspace/bin/workspace-audit
@@ -26104,11 +26234,15 @@ bets:
   - 至少 2 个新 PR 引用 runbook
   - 至少 5 个 L1/L2/L0 human_gate BET 的 retro 提到 HITL adoption (含 v1.0 时代已 done BET 的
     retroactive 追加)
-  goal: |
-    把 HITL proposal system 真正铺到 L2/L0 风险 BET 中,而非停留在"工具就绪"阶段。
+  goal: '把 HITL proposal system 真正铺到 L2/L0 风险 BET 中,而非停留在"工具就绪"阶段。
+
     - 量化指标:human_gate: true 的 L2/L0 BET 中,至少 30% 在 retro 中提到 HITL adoption
+
     - 质量指标:被启用的 BET 必须在 retro 中记录 E2E flow evidence
+
     - 流程指标:adoption runbook 至少被 2 个新 PR 引用
+
+    '
   human_gate: false
   id: BET-Y1Q4-T1-12
   non_goals:
@@ -27133,7 +27267,7 @@ bets:
   risk_level: L1
   status: done
   title: Continual Harness 证据驱动自演化与沙箱回滚管道 (Evidence-Backed /refine Pipeline & Rollback)
-  track: T7-COOPERATION
+  track: T7-SCENE
   underlying_workflow: project-code-change
   value_indicator_policy: false
   verify:
@@ -28193,7 +28327,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: T4-06 外发网关真实收件箱一键实测 (operator human moment 收尾件)
   track: T4-OUTCOME
   underlying_workflow: project-code-change
@@ -28208,6 +28342,36 @@ bets:
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+  done_at: '2026-09-14'
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          merged_reachable_commit:
+            ref: git://origin/main@7b02a3d37984b8356c5af28e1a7930114fa73af4
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - accepted_specifications:
   - content_digest: sha256:3237cf963d27baa31fb7e7ac887e16d917b88390f00920bf0f4a68d99c5fa892
     decision_ref: decision://accepted/BET-Y1Q4-T16
@@ -28309,7 +28473,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: Cockpit-UI 全面重构与六面合流涅槃战役 (总揽)
   track: T8-SURFACE
   underlying_workflow: project-code-change
@@ -28327,6 +28491,7 @@ bets:
   - docs/superpowers/specs/
   - projects/cockpit/
   - projects/cockpit-ui/
+  done_at: '2026-09-14'
 - accepted_specifications:
   - content_digest: sha256:c4e872bb66b558c41328127900d1ffbd7a54fdd6ae2d0e983eb9599ab2629438
     decision_ref: decision://accepted/BET-Y1Q4-T8-24A
@@ -28491,7 +28656,7 @@ bets:
   priority: P0
   retro: required
   risk_level: L1
-  status: in_progress
+  status: done
   title: Studio 机理工坊与知识记忆中枢深度交付 (升级
   track: T8-SURFACE
   underlying_workflow: project-code-change
@@ -28508,30 +28673,7 @@ bets:
   write_surfaces:
   - projects/cockpit-ui/src/views/StudioView.tsx
   - projects/cockpit-ui/src/components/studio/
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md
-            sha256: sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd
-          merged_reachable_commit:
-            ref: git://origin/main@63133e7f8bd9772afd2a9cb513d0c0903c7fecce
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md
-            sha256: sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24C.md
-            sha256: sha256:d645ba4c0f8a659833160c4c2235e810c58daf79006abbf60c389d247b1017bd
-      operational:
-        status: NOT_PROVEN
-        evidence: {}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: blocked
+  done_at: '2026-09-14'
 - appetite: 4 days
   circuit_breaker: 任何导致用户审批误点击或案件数据丢失的 UI 缺陷立即回滚。
   done_when:
@@ -29285,10 +29427,8 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-    notes: >-
-      Engineering and operational delivery are proven by child PR #170/#172,
-      required child CI, and post-merge focused replay. Human value remains
-      NOT_PROVEN.
+    notes: 'Engineering and operational delivery are proven by child PR #170/#172,
+      required child CI, and post-merge focused replay. Human value remains NOT_PROVEN.'
   title: OMO 持久 Role/Capsule/Handoff/Claim/Verification/ASD 语义落地
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -29410,8 +29550,11 @@ concurrency:
 disciplines:
   D0_committed_or_undelivered:
     check: git ls-files --error-unmatch <每个 deliverable>
-    origin: |
-      2026-08-06 实测两次事故 — journey-runner.py / scene-card v2 / v10 plans 从未 tracked, 工作树在 20 分钟内被并发 agent 清理两次 (847375f0 -> 7d7ffdaa -> 5dff6900), 无 blob 可恢复
+    origin: '2026-08-06 实测两次事故 — journey-runner.py / scene-card v2 / v10 plans 从未
+      tracked, 工作树在 20 分钟内被并发 agent 清理两次 (847375f0 -> 7d7ffdaa -> 5dff6900), 无 blob
+      可恢复
+
+      '
     rule: 任何交付物在 git add 之前不算交付
     severity: red
   D1_no_proxy_metric:
@@ -29438,10 +29581,10 @@ disciplines:
   D6_metric_not_harmfully_optimizable:
     check: 设指标时人工反问; 已知有害路径写进 non_goals
     corollary: 每个数量目标都要配一个「保护量」, 例如 src 可减但 test 不得降
-    origin: |
-      2026-08-06 复盘发现自设的三个减法指标全部可被有害优化 —— ① 「代码 ≤69万行」不分 src/test, 删测试(占33%)是最便宜路径; ② 表面积扫文件系统, 建/删 PASW worktree(占旧基线33%)就能大幅波动; ③ 「GaC ≤80 条」不分 advisory/required, 删最无害的 105 条 advisory 最容易,
-         而真正有成本的 26 条 required 反而留下。
-      三者与本项目最初批评的 X3 mtime 指标是同一个病 —— 用代理量冒充真实量。
+    origin: "2026-08-06 复盘发现自设的三个减法指标全部可被有害优化 —— ① 「代码 ≤69万行」不分 src/test, 删测试(占33%)是最便宜路径;\
+      \ ② 表面积扫文件系统, 建/删 PASW worktree(占旧基线33%)就能大幅波动; ③ 「GaC ≤80 条」不分 advisory/required,\
+      \ 删最无害的 105 条 advisory 最容易,\n   而真正有成本的 26 条 required 反而留下。\n三者与本项目最初批评的 X3\
+      \ mtime 指标是同一个病 —— 用代理量冒充真实量。\n"
     rule: 任何指标在设立前必须回答「最便宜的达标路径是什么」, 若那条路径有害则指标不成立
     severity: red
 gates:
@@ -29776,6 +29919,16 @@ tracks:
     - projects/cockpit/src/cockpit/web/**
     scope: /inbox /outcomes /signals /journeys 面板
     title: 人机界面
+  T8-EXECUTION:
+    agent_profile_hint: engineering-agent
+    default_workflow: project-code-change
+    pasw_required: true
+    primary_write_surfaces:
+    - projects/cockpit/src/cockpit/*.py
+    - projects/cockpit/tests/**
+    - projects/cockpit-ui/src/**
+    scope: 授权网关 / 风险-置信度矩阵 / 执行层遥测 / 人工熔断
+    title: 执行层授权与遥测
   T9-OBSERV:
     agent_profile_hint: governance-agent
     default_workflow: governance-state-mutation

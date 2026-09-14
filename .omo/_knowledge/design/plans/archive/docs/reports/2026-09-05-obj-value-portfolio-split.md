@@ -1,6 +1,9 @@
 ---
 type: ephemeral
-status: completed
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-14
 created: 2026-09-05
 ---
 # OBJ-VALUE portfolio split — landing receipt

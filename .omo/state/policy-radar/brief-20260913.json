@@ -1,0 +1,12 @@
+{
+ "schema": "bcos.policy-radar.v1",
+ "generated_at": "2026-09-13T23:30:05.643569+00:00",
+ "date": "2026-09-13",
+ "degraded_sources": [
+  "nhc",
+  "miit",
+  "arxiv-healph"
+ ],
+ "is_degraded": true,
+ "items": []
+}

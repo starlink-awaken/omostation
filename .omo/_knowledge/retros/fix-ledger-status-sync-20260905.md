@@ -4,7 +4,7 @@ type: retro
 title: 台账 status 收口 — 3 个已交付 bet candidate→done
 bet_id: fix-ledger-status-sync
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

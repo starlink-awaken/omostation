@@ -4,7 +4,7 @@ type: retro
 title: BET-Y2Q1-T7-05 Closeout Retro — calibration 与五档 tier 语义统一
 bet_id: BET-Y2Q1-T7-05
 status: archived
-lifecycle: contract
+lifecycle: history
 owner: governance-agent
 created: 2026-09-05
 last-reviewed: 2026-09-05

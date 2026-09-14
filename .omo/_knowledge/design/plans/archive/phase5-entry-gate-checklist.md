@@ -18,7 +18,7 @@ type: ssot
 - [x] Phase 4 Wave 1 complete
 - [x] Phase 4 Wave 2 complete
 - [x] Phase 4 closeout retrospective linked
-- [x] current state shows `phase_status: completed`
+- [x] current state shows `phase_status: archived`
 - [x] current state shows `next_milestone: Phase 5 entry gate`
 
 ## EG-2 Task Center landing model

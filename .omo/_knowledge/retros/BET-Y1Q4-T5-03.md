@@ -1,6 +1,12 @@
 ---
 type: ephemeral
 status: archived
+bet_id: BET-Y1Q4-T5-03
+done_at: 2026-09-14
+overall_state: delivery_accepted
+merged_root_commit: eed16ec0800f60a15273817f2fcb6b3e5977ed23
+lifecycle: history
+owner: unassigned
 ---
 
 # BET-Y1Q4-T5-03 复盘（batch 1：spec 绑定 + resident A2A 委托闭环）
@@ -85,3 +91,19 @@ batch 1 覆盖 ledger done_when 中的子集：
 - gac-local-gate: ✅ PASS
 - completion_evidence: VERIFIED/PROVEN
 - ledger status: done
+
+## Closeout 复核 (2026-09-14, run 20260914T041126Z-bet-execution-e3d35f30)
+
+- 台账在 origin/main 上实为 `in_progress` + `evaluating`（此前 batch 2 自述
+  done 未落盘），本次走 `bet-ledger.py complete` 正式 transition。
+- 代码落点（均已在 origin/main 祖先链）：
+  batch 1 `0d86b0346ef14a9885e7b38df6919a3c4f4f7af2`（PR #3739）；
+  batch 2 agora 子模块 `7a92d118d40a0226fa8378b33d1d412b0849e414`
+  （含 `a2a_update_task`），由根提交
+  `eed16ec0800f60a15273817f2fcb6b3e5977ed23`（PR #3751）pin 入主链，
+  且该 agora 修订位于 `origin/main` 祖先链（非悬空 feature 分支）。
+- 复测（隔离 worktree，worktree 自有 venv + `metaos` editable）：
+  `test_resident_a2a.py` 10/10 通过；
+  同环境 `test_tinybos_mesh.py` 30/30 通过（T8-22 证据，不计入本 bet）。
+- operational PROVEN 以测试级验证为据（见本文件 batch 1/2 记录）；
+  无生产灰度动作；value 保持 NOT_PROVEN，待业务指标单独证明。

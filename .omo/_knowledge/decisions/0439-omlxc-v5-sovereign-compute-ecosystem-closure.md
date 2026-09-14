@@ -1,6 +1,6 @@
 ---
 id: ADR-0439
-status: accepted
+status: archived
 lifecycle: spec
 owner: xiamingxing
 last-reviewed: 2026-08-30
