@@ -1,7 +1,7 @@
 ---
 title: omostation 2026-09-03 至 2026-09-14 治理交付轮深度复盘
-status: completed
-lifecycle: ephemeral
+status: archived
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-14
 type: ephemeral
