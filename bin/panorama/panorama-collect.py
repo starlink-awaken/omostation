@@ -15,7 +15,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -293,36 +295,51 @@ def collect_resident_agents() -> dict:
 
 
 def collect_scene_cards() -> dict:
-    """Scene Card 生命周期：阶段分布。"""
+    """场景卡 v3：按生命周期分布 + 触发器覆盖率。"""
     import yaml
     from glob import glob
-    stages: dict[str, int] = {}
-    cards = []
+    lifecycles: dict[str, int] = {}
+    with_trigger = 0
+    total = 0
     for f in sorted(glob(str(ROOT / ".omo/_truth/scenarios/v3/*.yaml"))):
         try:
-            doc = yaml.safe_load(Path(f).read_text()) or {}
-            for cid, cfg in (doc.get("scenes") or doc if isinstance(doc, dict) else {}).items():
-                if not isinstance(cfg, dict):
-                    continue
-                stage = str(cfg.get("stage", "unknown"))
-                stages[stage] = stages.get(stage, 0) + 1
-                cards.append({"id": str(cid)[:40], "stage": stage,
-                              "domain": cfg.get("domain", ""),
-                              "title": str(cfg.get("title", cid))[:40]})
+            doc = yaml.safe_load(Path(f).read_text())
+            if not isinstance(doc, dict):
+                continue
+            life = str(doc.get("lifecycle", "unknown"))
+            lifecycles[life] = lifecycles.get(life, 0) + 1
+            total += 1
+            if doc.get("triggers"):
+                with_trigger += 1
         except Exception:  # noqa: BLE001
             pass
-    return {"stages": stages, "cards": cards[:30], "total": sum(stages.values())}
+    return {"lifecycle": lifecycles, "with_trigger": with_trigger,
+            "total": total, "note": "v3 flat schema (scene_id at top level)"}
 
 
 def collect_journeys() -> dict:
-    """Journey 状态：完成度/阻塞点。"""
+    """旅程规范：路径 / human_gate 数量 / state 数。"""
     from glob import glob
     journeys = []
-    for f in sorted(glob(str(ROOT / "docs/journey-specs/*.yaml"))):
-        name = Path(f).stem
-        size = Path(f).stat().st_size if Path(f).is_file() else 0
-        journeys.append({"name": name, "size_kb": round(size/1024, 1), "file": f})
-    return {"journeys": journeys[:25], "total": len(journeys)}
+    for f in sorted(glob(str(ROOT / ".omo/_truth/journeys/v3/*.yaml"))):
+        try:
+            doc = yaml.safe_load(Path(f).read_text())
+            if not isinstance(doc, dict):
+                continue
+            states = doc.get("states") or []
+            human_gates = sum(
+                1 for s in states
+                if isinstance(s, dict) and (s.get("type") == "human_gate" or s.get("requires_human"))
+            )
+            journeys.append({
+                "name": Path(f).stem,
+                "states": len(states),
+                "human_gates": human_gates,
+                "size_kb": round(Path(f).stat().st_size / 1024, 1),
+            })
+        except Exception:  # noqa: BLE001
+            pass
+    return {"journeys": journeys, "total": len(journeys)}
 
 
 def collect_workspace_hygiene() -> dict:
@@ -834,7 +851,7 @@ def collect_connectors() -> dict:
         r = _sp.run(["iris", "--json", "status"], capture_output=True, text=True, cwd=str(ROOT), timeout=15)
         connectors = []
         if r.returncode == 0:
-            for c in _json.loads(r.stdout):
+            for c in json.loads(r.stdout):
                 connectors.append({"name": c.get("name", c.get("id", "?")),
                                    "available": c.get("available", c.get("status", "?"))})
         wired = ["apple_mail", "applenotes", "netease_mailmaster"]
@@ -862,7 +879,7 @@ def collect_bos_verifier() -> dict:
         return {"last_run_ok": total_ok, "last_run_errors": total_err,
                 "output_tail": r.stdout.strip().splitlines()[-3:] if r.stdout.strip() else []}
     except Exception as e:
-        return {"error": str(e)}
+         return {"error": str(e)}
 
 
 def collect_evolution() -> dict:
@@ -1278,6 +1295,8 @@ def build_payload() -> dict:
         "theta_facts": collect_theta_facts(),
         # Phase C
         "experience_graph": collect_experience_graph(),
+        "decision_proposals": collect_decision_proposals(),
+        "recent_features": collect_recent_features(),
     }
 
 
