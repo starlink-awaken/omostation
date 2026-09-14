@@ -1198,7 +1198,12 @@ bets:
   - projects/agora/tests/test_voice_tools.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-- appetite: 2 days
+- accepted_specifications:
+  - content_digest: sha256:9a3d4a479a0248ad32eaec7472857b78cf589b5ff07a9a31389c48429f228491
+    decision_ref: decision://accepted/BET-Y2Q1-T5-01
+    spec_ref: repo://docs/superpowers/specs/2026-09-14-t5-01-strategy-sandbox-design.md
+    spec_version: 1.0.0
+  appetite: 2 days
   circuit_breaker: 单次模拟耗时超过 60 秒时中断未完成分支并输出置信区间。
   depends_on:
   - BET-Y1Q4-T5-02
@@ -1228,7 +1233,13 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - projects/cockpit/src/cockpit/commands/strategy.py
+  - projects/cockpit/src/cockpit/_subcommands.py
+  - projects/cockpit/src/cockpit/cli.py
+  - projects/cockpit/tests/test_strategy.py
   - projects/agora/src/agora/orchestration/sandbox_sim.py
+  - projects/agora/tests/test_sandbox_sim.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-14-t5-01-strategy-sandbox-design.md
   - .omo/_knowledge/retros/BET-Y2Q1-T5-01.md
 - accepted_specifications:
   - content_digest: sha256:44411b6262b7191edf515faba6bba8f18f2c64c5731592b7d8541a517bd12931
