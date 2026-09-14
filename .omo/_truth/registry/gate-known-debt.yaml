@@ -271,3 +271,12 @@ entries:
   range: origin/main..HEAD
   recorded_at: '2026-09-13T05:02:16.272781+00:00'
   active: true
+- fingerprint: submodule-guard|projects/cockpit|489c94680c05efe4
+  surface: submodule-guard
+  check_id: submodule-guard
+  signature: 489c94680c05efe4
+  kind: gitlink-regress
+  reason: submodule projects/cockpit pointer c345004 squashed to 51c847b via PR #173 (content-identical, non-FF by squash-merge oid rewrite)
+  range: origin/main..HEAD
+  recorded_at: '2026-09-14T03:00:00+00:00'
+  active: true
