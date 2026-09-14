@@ -2634,6 +2634,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
+  value_indicator_policy: false
   status: done
   done_at: 2026-09-14
   completion_evidence:
