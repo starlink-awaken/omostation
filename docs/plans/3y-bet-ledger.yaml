@@ -3323,7 +3323,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: 四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎 (4-Tier Cognitive Hierarchy & Radix KV Cache
     Engine)
   track: T6-EVOLUTION
@@ -3341,6 +3341,7 @@ bets:
   - projects/aetherforge/src/aetherforge/engine/speculative.py
   - projects/aetherforge/tests/test_cognitive_hierarchy.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-28.md
+  done_at: '2026-09-13'
 - appetite: 2-3 days
   circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
   done_at: '2026-09-06'
@@ -27156,7 +27157,7 @@ bets:
   risk_level: L1
   status: done
   title: Continual Harness 证据驱动自演化与沙箱回滚管道 (Evidence-Backed /refine Pipeline & Rollback)
-  track: T7-COOPERATION
+  track: T7-SCENE
   underlying_workflow: project-code-change
   value_indicator_policy: false
   verify:
