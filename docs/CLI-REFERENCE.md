@@ -10,7 +10,7 @@ last-reviewed: 2026-09-09
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-共 **221** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **222** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
@@ -1829,6 +1829,7 @@ cockpit vault --help          # 完整参数面
 | `cockpit snapshot` | KV 缓存快照管理与预热 |
 | `cockpit speculative-eval` | 本地首选投机推演评估 |
 | `cockpit stats` | 索引统计 |
+| `cockpit strategy` | 🎲 战略决策沙盘 → 蒙特卡洛多智能体推演 (T5-01) |
 | `cockpit stream` | 跨节点 Chunk-level 流式协同流水线基准 |
 | `cockpit submit` | 提交控制任务 |
 | `cockpit summary` | 债务摘要 (委派 omo debt) |
@@ -1882,7 +1883,7 @@ cockpit completion fish | source    # Fish
 | `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
 | `cockpit model-driven` | `model-driven` | 28 |
-| `cockpit agora` | `agora` | 110 |
+| `cockpit agora` | `agora` | 111 |
 | `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 15 |
 | `cockpit compute` | `aetherforge` | 15 |

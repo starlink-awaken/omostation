@@ -11,10 +11,10 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 642
+  mcp_tools: 643
   bos_services: 318
   bos_domains: 24
-  cli_commands: 218
+  cli_commands: 219
   skills: 40
   workflows: 25
 mcp_servers:
@@ -223,6 +223,7 @@ mcp_servers:
   - a2a_get_task
   - a2a_list_tasks
   - a2a_send_task
+  - a2a_update_task
   - add_route
   - agora_capability_discover
   - agora_execute
@@ -329,7 +330,7 @@ mcp_servers:
   - workspace_audit_radar
   - workspace_audit_run
   - workspace_audit_ssot
-  tool_count: 110
+  tool_count: 111
 - id: ecos
   name: eCOS SSOT Kernel
   layer: L0
@@ -2025,15 +2026,15 @@ bos_services:
       status: active
     - uri: bos://observatory/project/perception
       description: 获取单项目的超紧凑架构感知信息与并发写冲突状态 (<800 tokens)
-      transport: internal
+      transport: mcp_proxy
       status: unimplemented
     - uri: bos://observatory/agents/collisions
       description: 全局检查 42 个未合并工作树并发写争用风险与防撞守卫建议
-      transport: internal
+      transport: mcp_proxy
       status: unimplemented
     - uri: bos://observatory/sentinel/status
       description: 探测 16 个子模块 Gitlink 对齐状态与 7 大主权端口健康度
-      transport: internal
+      transport: mcp_proxy
       status: unimplemented
     - uri: bos://observatory/callchains/get
       description: 获取 4 大跨层调用链时序步骤与契约规约
@@ -2534,7 +2535,7 @@ cli_commands:
 - name: research
   description: 深度研究 — 创建/查询/管理研究对象
 - name: resident
-  description: Resident 常驻 Agent 体系 (status/roles/daemon/decision/execute/...)
+  description: Resident 常驻 Agent (status/roles/daemon/decision triage/approve/status/execute/...)
 - name: resolve
   description: 统一 BOS URI 路由解析与目标元数据提取
 - name: restore
@@ -2579,6 +2580,8 @@ cli_commands:
   description: 索引统计
 - name: status
   description: 系统健康
+- name: strategy
+  description: 🎲 战略决策沙盘 → 蒙特卡洛多智能体推演 (T5-01)
 - name: stream
   description: 跨节点 Chunk-level 流式协同流水线基准
 - name: submit
