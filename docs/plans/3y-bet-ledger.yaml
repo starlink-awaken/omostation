@@ -29826,15 +29826,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@47f143e9b3ec91e2897fe2f2b517d87593a6d043
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
