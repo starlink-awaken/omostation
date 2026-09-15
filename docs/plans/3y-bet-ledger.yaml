@@ -1994,7 +1994,12 @@ bets:
   - bin/security/vault.py
   - .omo/_knowledge/retros/BET-Y1Q4-T10-05.md
   - docs/superpowers/specs/2026-09-11-t10-05-offline-sandbox-vault-spec.md
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:6c4fcfef3a3f1163dfec8aea6a27fe67ce834f2a0a4bf1a94c02b074f3459b5b
+    decision_ref: decision://accepted/BET-Y2Q1-T7-06
+    spec_ref: repo://docs/superpowers/specs/2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 公文格式校验不通过时阻止生成并高亮错误条款。
   depends_on:
   - BET-Y1Q4-T4-06
@@ -2016,7 +2021,7 @@ bets:
   track: T7-SCENE
   underlying_workflow: project-code-change
   verify:
-  - cmd: uv run python -m domain.health_gov.test_doc_pipeline
+  - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run python -m domain.health_gov.test_doc_pipeline
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
