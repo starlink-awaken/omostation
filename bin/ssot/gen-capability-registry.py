@@ -39,7 +39,7 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    print("DEBUG: ", "❌ 需要 pyyaml: uv run --with pyyaml python ...", file=sys.stderr)
+    print("❌ 需要 pyyaml: uv run --with pyyaml python ...", file=sys.stderr)
     sys.exit(2)
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -621,7 +621,22 @@ def check_yaml(registry: dict, output_path: Path = OUTPUT_YAML) -> bool:
     """Return whether the generated file matches without mutating it."""
     if not output_path.is_file():
         return False
-    return output_path.read_text(encoding="utf-8") == render_yaml(registry)
+    committed = output_path.read_text(encoding="utf-8")
+    generated = render_yaml(registry)
+    if committed != generated:
+        # Show diff for debugging
+        import difflib
+        diff = difflib.unified_diff(
+            committed.splitlines(keepends=True),
+            generated.splitlines(keepends=True),
+            fromfile="committed",
+            tofile="generated",
+            lineterm="",
+        )
+        sys.stderr.write("\n".join(diff))
+        sys.stderr.write("\n")
+        return False
+    return True
 
 
 def write_yaml(registry: dict, output_path: Path = OUTPUT_YAML) -> Path:
@@ -651,23 +666,23 @@ def verify_runtime(registry: dict) -> int:
     """
     runtime_checks: list[dict] = []
 
-    print("DEBUG: ", "🔍 运行时内省校验 (in-process MCP servers):")
-    print("DEBUG: ", "=" * 60)
+    print("🔍 运行时内省校验 (in-process MCP servers):")
+    print("=" * 60)
     all_match = True
     for chk in runtime_checks:
         if "error" in chk:
-            print("DEBUG: ", f"  ⚠️  {chk['server']}: 内省失败 ({chk['error']})")
+            print(f"  ⚠️  {chk['server']}: 内省失败 ({chk['error']})")
             continue
         flag = "✅" if chk["match"] else "⚠️ "
-        print("DEBUG: ", f"  {flag} {chk['server']}: 运行时={chk['runtime']} 静态={chk['static']}")
+        print(f"  {flag} {chk['server']}: 运行时={chk['runtime']} 静态={chk['static']}")
         if not chk["match"]:
             all_match = False
             if chk["missing"]:
-                print("DEBUG: ", f"     静态多 (运行时无): {chk['missing']}")
+                print(f"     静态多 (运行时无): {chk['missing']}")
             if chk["extra"]:
-                print("DEBUG: ", f"     运行时多 (静态漏): {chk['extra']}")
-    print("DEBUG: ", "=" * 60)
-    print("DEBUG: ", "✅ 全部匹配" if all_match else "⚠️  有偏差 — 见上方详情 (动态注册工具静态扫描会漏)")
+                print(f"     运行时多 (静态漏): {chk['extra']}")
+    print("=" * 60)
+    print("✅ 全部匹配" if all_match else "⚠️  有偏差 — 见上方详情 (动态注册工具静态扫描会漏)")
     return 0 if all_match else 1
 
 
@@ -697,9 +712,9 @@ def main() -> int:
     if args.check:
         if check_yaml(registry, args.output):
             if not args.quiet:
-                print("DEBUG: ", f"✅ 能力注册表无漂移: {args.output}")
+                print(f"✅ 能力注册表无漂移: {args.output}")
             return 0
-        print("DEBUG: ", 
+        print(
             "❌ 能力注册表漂移；运行 make sync-capability-registry 修复",
             file=sys.stderr,
         )
@@ -712,11 +727,11 @@ def main() -> int:
             display_path = out.relative_to(WORKSPACE)
         except ValueError:
             display_path = out
-        print("DEBUG: ", f"✅ 能力注册表已生成: {display_path}")
-        print("DEBUG: ", f"   MCP 服务器: {t['mcp_servers']}  |  MCP 工具: {t['mcp_tools']}")
-        print("DEBUG: ", f"   BOS 服务: {t['bos_services']}  |  BOS 域: {t['bos_domains']}")
-        print("DEBUG: ", f"   CLI 命令: {t['cli_commands']}")
-        print("DEBUG: ", f"   运行时校验: python {Path(__file__).name} --verify")
+        print(f"✅ 能力注册表已生成: {display_path}")
+        print(f"   MCP 服务器: {t['mcp_servers']}  |  MCP 工具: {t['mcp_tools']}")
+        print(f"   BOS 服务: {t['bos_services']}  |  BOS 域: {t['bos_domains']}")
+        print(f"   CLI 命令: {t['cli_commands']}")
+        print(f"   运行时校验: python {Path(__file__).name} --verify")
     return 0
 
 
