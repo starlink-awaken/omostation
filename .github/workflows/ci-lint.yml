@@ -254,3 +254,4 @@ jobs:
         run: pip install --quiet pyyaml
       - name: Check Agent Skills format and contracts
         run: python3 bin/ssot/check-agent-skills.py
+# trigger CI Lint Tue Sep 15 17:43:13 CST 2026
