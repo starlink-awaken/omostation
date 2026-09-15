@@ -29544,18 +29544,47 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: IN_PROGRESS
+        evidence:
+          accepted_binding:
+            ref: git://origin/main@600abfb33818dc0d45ba5c7d7e00223ce24f9bc4
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-14-a4-remote-hygiene-cron-registry-parity-design.md
+          merged_reachable_commit:
+            ref: git://origin/main@7508c84540742eaba5fd7d44d4d9b9611743e495
+          rollback:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16-02.md
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
+          fresh_receipt:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
+          governance_check:
+            ref: git://actions/runs/34868743118
+          live_canary:
+            ref: receipt://.omo/cron/registry.yaml
+          post_merge_gac:
+            ref: git://actions/runs/34868522673
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T16-02.md
+          runtime_unchanged:
+            ref: receipt://.omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
+          scheduler_parity:
+            ref: receipt://.omo/cron/registry.yaml
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    notes: Operational proof is limited to declaration-plane scheduler parity and unchanged
+      runtime behavior; business value remains NOT_PROVEN.
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T16
+  done_at: '2026-09-14'
   done_when:
   - remote-hygiene hourly job 在 .omo/cron/registry.yaml 中登记为 active installed，scheduler
     check drift=0/orphan=0
@@ -29572,7 +29601,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: A4 remote-hygiene cron registry parity recovery
   track: T16-DRIFT-GUARD
   underlying_workflow: project-doc-change
