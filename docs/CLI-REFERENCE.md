@@ -1880,9 +1880,9 @@ cockpit completion fish | source    # Fish
 | CLI 命令 | MCP 服务器 | 工具数 |
 |----------|-----------|--------|
 | `cockpit omo` | `omo` | 24 |
-| `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 0 |
+| `cockpit kairon` | `kos/iris/sophia/kronos/minerva/codeanalyze/forge/ontoderive` | 123 |
 | `cockpit gbrain` | `gbrain` | 75 |
-| `cockpit model-driven` | `model-driven` | 0 |
+| `cockpit model-driven` | `model-driven` | 28 |
 | `cockpit agora` | `agora` | 111 |
 | `cockpit family-hub` | `family-hub` | 6 |
 | `cockpit mesh` | `aetherforge` | 15 |
