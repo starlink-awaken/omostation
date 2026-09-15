@@ -29798,7 +29798,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-15
   title: 3Y BET ledger schema hardening — structural guards and actionable YAML diagnostics
   track: T10-MATURITY
   underlying_workflow: governance-state-mutation
