@@ -2001,9 +2001,39 @@ bets:
     spec_version: 1.0.0
   appetite: 3 days
   circuit_breaker: 公文格式校验不通过时阻止生成并高亮错误条款。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md
+          merged_reachable_commit:
+            ref: git://origin/main@ea33d5d779d39af53bc9f363e532f62fbfc110b7
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-06.md
+          tests:
+            ref: receipt://projects/domain-cartridges/health-gov/domain/health_gov/test_doc_pipeline.py
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-06.md
+          fresh_receipt:
+            ref: receipt://docs/scene-cards/health-gov-doc-cycle.yaml
+          live_canary:
+            ref: receipt://docs/scene-cards/health-gov-doc-cycle.yaml
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-06.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T4-06
   - BET-Y2Q1-T3-05
+  done_at: '2026-09-15'
   done_when:
   - docs/scene-cards/health-gov-doc-cycle.yaml 场景卡晋级 assisted
   - 端到端完成 3 例卫健公文拟办、署名与 PDF 导出全流程演练
@@ -2016,10 +2046,11 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 卫健公文全周期拟办、批阅与会议督办全闭环场景包
   track: T7-SCENE
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run python -m domain.health_gov.test_doc_pipeline
     expect: exit 0
