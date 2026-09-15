@@ -1,0 +1,46 @@
+# 结构性推理规则 (R15-R19) — YAML声明式
+
+- id: R15
+  name: temporal_sequence
+  type: temporal_sequence
+  category: induction
+  description: 时序推理 — 检测事实中的时间序列变化
+  premises: ["has_timestamps"]
+  conclusion_template: "{metric}从{old}变为{new}, 变化{change}%, 趋势{trend}"
+  confidence: 0.75
+
+- id: R16
+  name: consistency_warning
+  type: consistency_warning
+  category: induction
+  description: 置信度vs推导深度不一致检测
+  premises: ["high_confidence", "shallow_depth"]
+  conclusion_template: "所有{n}个推论置信度过高(均≥0.85)但推导链深度不足, 可能存在过度自信"
+  confidence: 0.70
+
+- id: R17
+  name: structural_hole
+  type: structural_hole
+  category: induction
+  description: 移除关键节点后网络断裂检测
+  premises: ["single_bottleneck_node"]
+  conclusion_template: "结构洞: 移除'{node}'后图断裂为{components}个连通分量"
+  confidence: 0.75
+
+- id: R18
+  name: constraint_propagation
+  type: constraint_propagation
+  category: deduction
+  description: 规约阈值触发→改善建议传播
+  premises: ["constraint_violated"]
+  conclusion_template: "约束违规: {rule}→{n}处违反, 建议{action}"
+  confidence: 0.70
+
+- id: R19
+  name: relation_reasoning
+  type: relation_transitive
+  category: deduction
+  description: 关系推理 — 传递性+逆关系+域约束
+  premises: ["has_relations"]
+  conclusion_template: "关系推理: {conclusion}"
+  confidence: 0.80
