@@ -108,6 +108,7 @@ last_updated: 2026-09-06
 → [BET-Y1Q2-T1-19 权威复盘](../.omo/_knowledge/retros/BET-Y1Q2-T1-19.md) — Codex ACP 切割的当前事实与未证边界
 
 → [CR08 卫健委三医态势安装态审计复盘](reports/2026-08-14-weijian-sanyi-status-audit-retrospective.md) — 临时隔离源码的只读审计边界与可复核证据
+→ [T10-151 A8 现状复核](a8-research/external-transaction-status.md) — 7 段状态机 (reserve/bind/readback/start/ACK/fence/release/retire) 路径搜索, phase1 结论: 未完整实现, 进入 phase2
 
 → [执行计划](plans/) — 三年规划执行台账与 agent 执行指令（详见 `docs/plans/`）
 
