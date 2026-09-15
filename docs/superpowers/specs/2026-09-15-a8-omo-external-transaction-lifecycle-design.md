@@ -1,63 +1,152 @@
 ---
-id: T10-151
-title: "A8 OMO 外部事务生命周期 — 7 阶段状态机"
+schema_version: specification/v1
+spec_version: 1.0.0
+title: A8 OMO external adapter transaction lifecycle
+bet_id: BET-Y1Q4-T10-151
 status: accepted
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-09-15
-date: "2026-09-15"
-author: governance-agent
-implementation_ref: "omostation-omo:agent/governance-agent/t10-151-a8-impl"
-implementation_commit: "79b6c43"
-parent_bet: T10-146
+created: '2026-09-15'
+last-reviewed: '2026-09-15'
+implementation_authorized: true
+value_indicator_policy: false
+risk_level: L2
+human_gate: true
+type: ssot
 ---
 
-# A8 OMO External Transaction Lifecycle Design
+# A8 OMO external adapter transaction lifecycle
 
-## Summary
+## Problem
 
-7-stage append-only event lifecycle for OMO external adapter transactions:
-reserve → bind → readback → start → observe (ACK/fence) → verify → release → retire.
+A8 currently records `absent`: OMO has transaction primitives but no unified
+generic lifecycle for an external adapter effect. Existing policy enforcement
+can start and settle a provider call, claims authority can fence Git
+publication, and queues/receipts are durable, but these systems do not jointly
+prove adapter identity binding, readback, dispatch, observation, verification,
+release, and retirement for one transaction.
 
-## Design
+The authoritative review is
+`docs/reports/2026-09-15-a8-external-transaction-authoritative-review.md`.
 
-### State Machine
+## Decision
 
+Add one OMO-owned `ExternalTransactionService` that composes existing
+primitives and owns the following append-only event lifecycle:
+
+1. **Reserve** — persist transaction ID, adapter ID, role ID, capability,
+   operation, request digest, principal identity, and lease deadline before
+   any external effect.
+2. **Bind** — bind the sealed Capsule/WorkPacket and verifier identity to the
+   reserved transaction.
+3. **Readback** — reload the reservation, role, capsule, and verifier records
+   by durable IDs and verify every digest before dispatch.
+4. **Start** — persist `Dispatch.Started`; only then hand a transport-only
+   request to the adapter.
+5. **Observe / ACK or fence** — consume a credential-free adapter receipt.
+   Identity mismatch, missing receipt, or unknown outcome transitions to
+   `fenced`; it never auto-retries.
+6. **Verify** — run the bound role verifier and validate the receipt's
+   operation, transaction ID, result digest, provenance, and policy digest.
+7. **Release / retire** — append release for the reservation and retire the
+   completed transaction; a fenced transaction remains queryable for operator
+   resolution and never re-enters automatic dispatch.
+
+The service uses the existing OMO event ledger for durability and idempotency.
+It delegates authorization and identity to `RoleRegistry`, packet integrity to
+Capsule, transport to the external adapter, and evidence projection to the
+existing external receipt broker. It does not create a second dispatcher,
+queue authority, or control plane.
+
+## State model
+
+```text
+reserved -> bound -> readback_verified -> started
+started -> observed -> verified -> released -> retired
+started -> fenced
+observed -> fenced
+verified -> fenced
+fenced -> operator_resolved
 ```
-reserved ──► bound ──► readback_verified ──► started
-    │                                      │
-    │                                      ├─► observed ──► verified ──► released ──► retired
-    │                                      │
-    │                                      └─► fenced ──► operator_resolved
-    └─► fenced ──► operator_resolved
-```
 
-### 7 Stages
+Legal terminal states are `retired` and `operator_resolved`. `fenced` is not
+terminal and grants no retry authority.
 
-1. **Reserve** — Register transaction intent with unique correlation key
-2. **Bind** — Bind transaction to adapter capsule and verifier role
-3. **Readback** — Verify capsule digest and role capabilities unchanged
-4. **Start** — Persist start event, prepare adapter invocation
-5. **Observe** — Consume adapter receipt; identity mismatch or unknown outcome → fence
-6. **Verify** — Validate receipt operation matches bound capability
-7. **Release/Retire** — Release resources, retire transaction (terminal)
+## Hard invariants
 
-### Fence-on-Unknown
+- OMO owns the transaction state machine; the adapter is transport only.
+- A role not admitted for the exact capability cannot advance beyond reserve.
+- Capsule digest, role ID, capability, operation, transaction ID, and request
+   digest must match on readback.
+- Start is appended before an external effect.
+- Unknown outcome always fences and requires an operator resolution.
+- Duplicate transaction ID plus identical request is idempotent and performs
+   no second provider effect.
+- Duplicate transaction ID with a different request digest is rejected.
+- Adapter payloads and receipts never contain credentials or raw private
+  content.
+- A8 admission does not grant A6 Orca, A7 Multica, Ruflo, or A9 Cockpit
+  admission.
 
-Any unhandled error state (`unknown`, `failed`, `error`) transitions to `fenced`.
-Fenced transactions require operator resolution — no auto-retry.
+## Minimal implementation scope
 
-### Ledger-Backed
+- Add `projects/omo/src/omo/workflow/external_transaction.py`.
+- Add focused tests in `projects/omo/tests/test_external_transaction.py`.
+- Reuse:
+  - `RoleRegistry` / role verifier binding;
+  - `seal_capsule` / `verify_capsule`;
+  - the event ledger's producer/idempotency semantics;
+  - `record_external_receipt` for evidence projection.
+- Keep transport adapters behind a narrow callable protocol for tests and
+  later A6/A7/Ruflo integration.
 
-All state transitions are appended to `LedgerBroker` as `ExternalTransaction.*` events.
-Idempotency keys prevent duplicate events.
+## RED matrix
 
-## Acceptance Criteria
+| Case | Expected |
+|---|---|
+| Reserve twice with same transaction/request | Same reservation; one event effect |
+| Same transaction ID, different request digest | Reject before bind |
+| Role not admitted for capability | Remain reserved; no bind |
+| Capsule digest changes before readback | Reject and fence |
+| Start ledger append fails | Zero adapter calls |
+| Adapter returns mismatched transaction/operation | Fence, no verify |
+| Adapter returns unknown/error | Fence, no auto retry |
+| Receipt verification fails | Fence and preserve started receipt |
+| Terminal receipt append fails | `receipt_unconfirmed`; transaction remains queryable |
+| Happy path | Exactly one provider call and terminal retired receipt |
+| Duplicate replay after retirement | No second provider call |
 
-- [x] 7-stage state machine implemented
-- [x] Fence-on-unknown for adapter errors
-- [x] Identity mismatch detection (transaction_id, operation)
-- [x] Digest readback verification
-- [x] Operator resolution for fenced transactions
-- [x] Full RED matrix test coverage (22 tests)
-- [x] 22/22 tests passing
+## Acceptance
+
+- Focused external transaction tests cover every RED row.
+- Existing role, capsule, claims authority, and external receipt tests remain
+  green.
+- `make gac-local-gate` passes.
+- The A8 evidence gate can move from declared `absent` to mechanically
+  evaluated only after all four exit criteria are implemented:
+  - seven-stage contract;
+  - identity mismatch never advances OMO;
+  - unknown outcome never auto-retries;
+  - duplicate effect is zero.
+
+## Rollout
+
+1. Merge this draft review/spec.
+2. Human review and acceptance.
+3. Implement the service and tests in one OMO child PR.
+4. Add a read-only fake adapter canary.
+5. Only after A8 passes, evaluate A6 Orca R0, A7 Multica AS0, and Ruflo R0
+   against the transaction API.
+
+## Rollback
+
+Revert the new service and tests. Existing policy enforcement, claims
+authority, queue, and external receipt behavior remain unchanged.
+
+## Non-goals
+
+- No second authoritative dispatcher or queue.
+- No credential or raw provider output storage.
+- No automatic retry after an unknown outcome.
+- No claim that business value is proven.
+- No external tool admission merely because the API exists.
