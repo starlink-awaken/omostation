@@ -2,6 +2,9 @@
 id: T10-151
 title: "A8 OMO 外部事务生命周期 — 7 阶段状态机"
 status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-15
 date: "2026-09-15"
 author: governance-agent
 implementation_ref: "omostation-omo:agent/governance-agent/t10-151-a8-impl"
