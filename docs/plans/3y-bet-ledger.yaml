@@ -28110,7 +28110,38 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: '2026-09-15'
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@12b01ad3c46f1ded03a5ea50dc5cfc661756de6f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   title: OMO Agent OS 成熟度差距收口 — Queue/AGE-v2/Orca R0/Multica AS0/A8 外部事务
   track: T10-MATURITY
   underlying_workflow: project-code-change
