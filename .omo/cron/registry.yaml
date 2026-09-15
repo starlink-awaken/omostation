@@ -543,6 +543,19 @@ jobs:
     sfop_slot: S
     note: "工作日 9-18 点每 15 分钟轮询邮件信号并触发场景 (assisted+ live, shadow dry-run)"
 
+  - name: remote-hygiene-hourly
+    schedule: "23 * * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/fix-remotes.py >> runtime/cron/remote-hygiene.log 2>&1 # omostation-remote-hygiene (origin 污染幂等自愈, 2026-09-13 实证事故)'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-14 补登 PR #3752/#3754 遗漏：该 hourly remote-hygiene job 已安装且
+      使用 fix-remotes.py，但未进入 scheduler registry，导致 A4 orphan=1。
+      本条只补声明面 parity，不改变已安装 schedule、command 或运行行为。
+
 # ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
 open_decisions:
   - id: D2

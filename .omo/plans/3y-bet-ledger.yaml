@@ -1,0 +1,62 @@
+# 3-Year BET Ledger — 3y-bet-ledger
+# Auto-generated for T10-146 maturity closeout
+
+bets:
+  - id: T10-151
+    title: "A8 OMO 外部事务生命周期 — 7 阶段状态机"
+    status: done
+    done_at: "2026-09-15"
+    priority: P1
+    domain: T10-maturity
+    spec_ref: "docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md"
+    implementation_ref: "omostation-omo:agent/governance-agent/t10-151-a8-impl"
+    implementation_commit: "79b6c43"
+    tests: "22/22 passing"
+    evidence:
+      - "external_transaction.py: 7-stage state machine"
+      - "test_external_transaction.py: 22 tests covering RED matrix"
+      - "reserve→bind→readback→start→observe→verify→release→retire"
+      - "fence-on-unknown: identity mismatch, adapter errors"
+      - "operator resolution for fenced transactions"
+    completion_evidence:
+      type: delivery_accepted
+      criteria:
+        - "7-stage state machine implemented and tested"
+        - "Fence-on-unknown behavior verified"
+        - "All 22 tests passing"
+        - "No auto-retry for unknown outcomes"
+    child_bets: []
+
+  - id: T10-146
+    title: "T10 成熟度收口 — 外部事务生命周期 + 剩余子BET"
+    status: done
+    done_at: "2026-09-15"
+    priority: P0
+    domain: T10-maturity
+    description: "Close out T10 maturity gap by implementing A8 external transaction lifecycle"
+    child_bets:
+      - id: T10-147
+        title: "T10-147 — maturity assessment baseline"
+        status: done
+      - id: T10-148
+        title: "T10-148 — observability gap analysis"
+        status: done
+      - id: T10-149
+        title: "T10-149 — governance convergence"
+        status: done
+      - id: T10-150
+        title: "T10-150 — documentation completeness"
+        status: done
+      - id: T10-151
+        title: "A8 OMO 外部事务生命周期 — 7 阶段状态机"
+        status: done
+    evidence:
+      - "All child BETs (T10-147 through T10-151) completed"
+      - "T10-151 implementation merged to omostation-omo"
+      - "Spec accepted and documented"
+    completion_evidence:
+      type: delivery_accepted
+      criteria:
+        - "All 5 child BETs done"
+        - "T10-151 code implementation pushed to omostation-omo"
+        - "T10-151 spec created and accepted"
