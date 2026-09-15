@@ -1,0 +1,38 @@
+---
+title: Health Gov Doc Cycle Scene Card (卫健公文全周期拟办批阅与会议督办)
+status: active
+type: scene-card
+owner: product-architecture
+last-reviewed: 2026-09-15
+lifecycle: assisted
+related:
+- ../superpowers/specs/2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md
+- ../journey-specs/health-gov-doc-cycle-workflow.yaml
+---
+schema: scene-card/v2
+bet: BET-Y2Q1-T7-06
+falsifier: "若合成校准复跑 F1 < 0.6，或任一 e2e 的 PDF 产物缺失/要素校验不通过，则 assisted 资格自动失效"
+scene_id: health-gov-doc-cycle
+journey_id: health-gov-doc-cycle
+goal: 对卫健政务三类文种（局发通知下行文/跨部门平行函/会议纪要督办件）跑通来文登记→拟办→批阅（署名）→红头导出（PDF）→督办归档全闭环，版式符合 GB/T 9704-2012 要素子集
+trigger: "人工触发：PYTHONPATH=projects/domain-cartridges/health-gov uv run python -m domain.health_gov.test_doc_pipeline（3 e2e + 36 例合成校准）"
+input_contract: 来文登记字段 (doc_id/title/文号/文种/缓急/密级/机关/主送/正文/版记) + 批阅三元组 (approver/decision/decided_at) + 会议纪要 (议题/参会/议定事项 owner+due)
+result_contract: 拟办单 (意见/分办去向/办结时限) + 批阅记录 (署名+意见+时间) + 红头二件套 (redhead.txt 版式文本 + redhead.pdf 真实 PDF) + 督办单 (done/open/overdue 计数，overdue 置顶)
+outcome_metric: health_gov_doc_calibration_f1
+consumer: xiamingxing
+approver: business-governance
+owner: xiamingxing
+failure_cost: 版式错误导致公文返工；督办漏报导致议定事项逾期无人跟进（F1 校准门约束）
+data_classification: internal
+data_scope: local-doc-ledger-only
+operator: health-gov-doc-cycle-dispatch-under-human-review
+required_capabilities:
+- storage:local-doc-ledger
+- compute:local-deterministic-pipeline
+notes:
+- '实现: projects/domain-cartridges/health-gov/domain/health_gov/ (doc_pipeline/test_doc_pipeline)，零模型调用，纯本地确定性计算；PDF 需 workspace .venv 内 reportlab（已装 5.0.1），缺失时显式抛错不伪造'
+- 'assisted 校准证据 (2026-09-15, synthetic-seed): 36 例合成（18 有效 + 18 缺陷覆盖 6 类熔断），有效全放行、缺陷全拦截，F1=1.000 ≥ 0.6 门；自测: PYTHONPATH=projects/domain-cartridges/health-gov uv run python -m domain.health_gov.test_doc_pipeline'
+- '3 例 e2e 演练: 局发通知（拟办贯彻落实/王局长同意署名/PDF 导出）+ 跨部门函（加急 3 天/研提回复意见/赵副局长批阅）+ 会议纪要（3 事项→1 办结署名→督办单 1 overdue 置顶）'
+- 'GB/T 9704-2012 要素子集: 发文机关标志/发文字号（机关代字〔YYYY〕N号）/标题/主送机关/正文/全字成文日期/印章占位/版记（印发机关+日期）；缺任一要素阻止导出并高亮条款'
+- '涉密硬约束 (non_goals): secret/topsecret 来文在登记环节直接拒绝，不进入任何后续环节；外发网关复用 BET-Y1Q4-T4-06，不在本包重建'
+- '样本性质声明: assisted 的 30-sample 门槛本版以 synthetic-seed 满足；真实场景 30-sample 待 follow-up bet 补齐后摘掉本标注'
