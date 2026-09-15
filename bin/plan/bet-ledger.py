@@ -51,6 +51,129 @@ RETRO_DIR = WS / ".omo" / "_knowledge" / "retros"
 _PORTFOLIO_VALIDATOR = None
 _PORTFOLIO_GRAPH = None
 
+LEDGER_ROOT_SECTION_TYPES = {
+    "bets": list,
+    "campaigns": list,
+    "concurrency": dict,
+    "disciplines": dict,
+    "gates": dict,
+    "meta": dict,
+    "milestones": list,
+    "objectives": list,
+    "retro": dict,
+    "tracks": dict,
+    "vision": dict,
+}
+
+
+class LedgerStructureError(ValueError):
+    """Raised when the BET ledger cannot be safely consumed."""
+
+    def __init__(self, diagnostics: list[str]) -> None:
+        self.diagnostics = tuple(diagnostics)
+        super().__init__("\n".join(diagnostics))
+
+
+def _yaml_parse_diagnostic(text: str, error: yaml.YAMLError, *, source: str) -> str:
+    mark = getattr(error, "problem_mark", None)
+    if mark is None:
+        return f"YAML_PARSE_ERROR {source}: {error}"
+    line = mark.line + 1
+    column = mark.column + 1
+    lines = text.splitlines()
+    start = max(0, mark.line - 1)
+    end = min(len(lines), mark.line + 2)
+    context = " | ".join(f"{index + 1}: {lines[index]}" for index in range(start, end))
+    problem = getattr(error, "problem", str(error))
+    return (
+        f"YAML_PARSE_ERROR {source}: line {line}, column {column}: {problem}; "
+        f"context: {context}"
+    )
+
+
+def _walk_yaml_mappings(value: Any, path: str) -> list[tuple[str, dict[str, Any]]]:
+    mappings: list[tuple[str, dict[str, Any]]] = []
+    seen: set[int] = set()
+
+    def visit(current: Any, current_path: str) -> None:
+        if isinstance(current, dict):
+            identity = id(current)
+            if identity in seen:
+                return
+            seen.add(identity)
+            mappings.append((current_path, current))
+            for key, child in current.items():
+                visit(child, f"{current_path}.{key}" if current_path else str(key))
+        elif isinstance(current, list):
+            identity = id(current)
+            if identity in seen:
+                return
+            seen.add(identity)
+            for index, child in enumerate(current):
+                visit(child, f"{current_path}[{index}]")
+
+    visit(value, path)
+    return mappings
+
+
+def validate_ledger_structure(data: Any) -> list[str]:
+    """Return fail-closed structural diagnostics for one parsed ledger."""
+    if not isinstance(data, dict):
+        return ["root: expected mapping"]
+
+    errors: list[str] = []
+    for section, expected_type in LEDGER_ROOT_SECTION_TYPES.items():
+        if section not in data:
+            errors.append(f"root missing required section: {section}")
+        elif not isinstance(data[section], expected_type):
+            expected_name = "mapping" if expected_type is dict else "list"
+            errors.append(f"{section}: expected {expected_name}")
+
+    bets = data.get("bets")
+    if isinstance(bets, list):
+        seen_ids: set[str] = set()
+        for index, bet in enumerate(bets):
+            path = f"bets[{index}]"
+            if not isinstance(bet, dict):
+                errors.append(f"{path}: expected mapping")
+                continue
+            bet_id = bet.get("id")
+            if not isinstance(bet_id, str) or not bet_id.startswith("BET-"):
+                errors.append(f"{path}.id: expected BET-* string")
+                continue
+            if bet_id in seen_ids:
+                errors.append(f"duplicate BET id: {bet_id}")
+            seen_ids.add(bet_id)
+
+    for section, value in data.items():
+        if section == "bets":
+            continue
+        for path, mapping in _walk_yaml_mappings(value, section):
+            bet_id = mapping.get("id")
+            if isinstance(bet_id, str) and bet_id.startswith("BET-"):
+                errors.append(f"{path} contains misplaced BET id: {bet_id}")
+            for key in mapping:
+                if isinstance(key, str) and key.startswith("BET-"):
+                    errors.append(f"{path} contains misplaced BET id: {key}")
+    return errors
+
+
+def parse_ledger_text(text: str, *, source: str = "<ledger>") -> dict[str, Any]:
+    """Parse and structurally validate exactly one BET ledger document."""
+    try:
+        documents = list(yaml.safe_load_all(text))
+    except yaml.YAMLError as error:
+        raise LedgerStructureError([_yaml_parse_diagnostic(text, error, source=source)]) from error
+    if len(documents) != 1:
+        raise LedgerStructureError(
+            [f"YAML_DOCUMENT_COUNT_ERROR {source}: expected exactly one document, found {len(documents)}"]
+        )
+    data = documents[0]
+    errors = validate_ledger_structure(data)
+    if errors:
+        raise LedgerStructureError(errors)
+    return data
+
 
 def _validate_portfolio(ledger: dict, *, strict: bool):
     """Load the sibling validator when this script is run or file-imported."""
@@ -697,22 +820,26 @@ def build_provider_attempt_receipt(
 def load() -> dict:
     if not LEDGER.exists():
         sys.exit(f"台账不存在: {LEDGER}")
-    data: dict = {}
-    for d in yaml.safe_load_all(LEDGER.read_text(encoding="utf-8")):
-        if isinstance(d, dict):
-            data.update(d)
-    if "bets" not in data:
-        sys.exit("台账缺少 bets 段")
+    try:
+        data = parse_ledger_text(
+            LEDGER.read_text(encoding="utf-8"),
+            source=str(LEDGER),
+        )
+    except LedgerStructureError as error:
+        sys.exit("\n".join(error.diagnostics))
     # BET-Y2Q1-T10-03: 归档合并读 — show/list/complete 等命令对历史 BET 不失明
     arch = Path("docs/plans/3y-bet-ledger-archive.yaml")
     if arch.exists():
         try:
-            adoc = yaml.safe_load(arch.read_text(encoding="utf-8"))
+            adoc = _yaml_mapping(
+                arch.read_text(encoding="utf-8"),
+                source=str(arch),
+            )
             if isinstance(adoc, dict) and isinstance(adoc.get("bets"), list):
                 seen = {b.get("id") for b in data["bets"]}
                 data["bets"].extend(b for b in adoc["bets"] if isinstance(b, dict) and b.get("id") not in seen)
-        except yaml.YAMLError:
-            pass  # archive 损坏不阻断主台账
+        except LedgerStructureError as error:
+            sys.exit("\n".join(error.diagnostics))
     return data
 
 
@@ -1299,11 +1426,18 @@ def cmd_gate(data: dict, args) -> int:
     return 0
 
 
-def _yaml_mapping(text: str) -> dict[str, Any]:
-    data: dict[str, Any] = {}
-    for document in yaml.safe_load_all(text):
-        if isinstance(document, dict):
-            data.update(document)
+def _yaml_mapping(text: str, *, source: str = "<yaml>") -> dict[str, Any]:
+    try:
+        documents = list(yaml.safe_load_all(text))
+    except yaml.YAMLError as error:
+        raise LedgerStructureError([_yaml_parse_diagnostic(text, error, source=source)]) from error
+    if len(documents) != 1:
+        raise LedgerStructureError(
+            [f"YAML_DOCUMENT_COUNT_ERROR {source}: expected exactly one document, found {len(documents)}"]
+        )
+    data = documents[0]
+    if not isinstance(data, dict):
+        raise LedgerStructureError([f"{source}: expected mapping"])
     return data
 
 
@@ -1942,9 +2076,13 @@ def _ledger_for_workspace(workspace: Path) -> dict[str, Any]:
     ledger = workspace / "docs/plans/3y-bet-ledger.yaml"
     if not ledger.is_file():
         raise SpecBindingContractError(f"BET_LEDGER_UNAVAILABLE: {ledger}")
-    data = _yaml_mapping(ledger.read_text(encoding="utf-8"))
-    if not isinstance(data.get("bets"), list):
-        raise SpecBindingContractError("BET_LEDGER_INVALID: bets must be a list")
+    try:
+        data = parse_ledger_text(
+            ledger.read_text(encoding="utf-8"),
+            source=str(ledger),
+        )
+    except LedgerStructureError as error:
+        raise SpecBindingContractError("\n".join(error.diagnostics)) from error
     return data
 
 

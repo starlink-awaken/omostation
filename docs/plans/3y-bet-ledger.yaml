@@ -29689,6 +29689,70 @@ bets:
   - .omo/cron/registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T16-02.md
   - .omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
+- appetite: 2 days
+  circuit_breaker: If schema validation changes break an existing ledger consumer, stop
+    the implementation, restore the last compatible validator behavior, and record the
+    failing consumer before retrying.
+  done_when:
+  - The ledger loader rejects malformed top-level shapes, misplaced BET-* entries, duplicate
+    BET IDs, and non-mapping BET entries with actionable diagnostics.
+  - YAML parse failures report line, column, and a bounded source context without silently
+    falling back.
+  - ledger-safe-insert.py and bet-ledger.py share one structural validation path, with
+    focused regression coverage for each failure class.
+  - A governed specification and retro document record the contract, migration boundary,
+    and verification evidence.
+  goal: Harden the 3Y BET ledger against structurally valid but semantically misplaced
+    YAML edits by enforcing root-section ownership, BET identity uniqueness, typed entries,
+    precise parse diagnostics, and one controlled mutation path.
+  human_gate: false
+  id: BET-Y1Q4-T10-167
+  non_goals:
+  - Do not rewrite existing BET content unrelated to structural validation.
+  - Do not change transition, completion-evidence, or dependency semantics except where
+    required to reject malformed structure.
+  - Do not add a second ledger mutation utility or a parallel ledger SSOT.
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: 3Y BET ledger schema hardening — structural guards and actionable YAML diagnostics
+  track: T10-MATURITY
+  underlying_workflow: governance-state-mutation
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: python3 -m pytest tests/unit/gac/test_ledger_safe_insert.py -q
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-15-t10-167-ledger-schema-hardening.md
+  - bin/plan/bet-ledger.py
+  - bin/gac/ledger-safe-insert.py
+  - tests/unit/gac/test_ledger_safe_insert.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-15-t10-167-ledger-schema-hardening.md
+    spec_version: 1.0.0
+    content_digest: sha256:9dceb31b7394147a4b5da49204391245d7d2401cc08fdbc0b545730155d3a85e
+    decision_ref: decision://accepted/BET-Y1Q4-T10-167
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -29827,7 +29891,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 404
+  total_bets: 405
   windows:
   - Y1Q1
   - Y1Q2
