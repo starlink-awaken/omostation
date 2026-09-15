@@ -1178,7 +1178,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 语音随想/口头指示多模态实时转录、结构化润色与待办入库
   track: T2-PERCEPT
   underlying_workflow: project-code-change
@@ -1198,6 +1198,15 @@ bets:
   - projects/agora/tests/test_voice_tools.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+  done_at: '2026-09-15'
+  completion_evidence:
+    type: delivery_accepted
+    criteria:
+    - voice.py 175行 — ASR引擎可插拔(whisper-cli/whisper-cpp/funasr)
+    - voice_memo.py 122行 — cockpit voice-memo 子命令
+    - test_voice_memo.py + test_voice_tools.py — 测试覆盖
+    - retro BET-Y2Q1-T2-01.md — 交付回顾
+    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:9a3d4a479a0248ad32eaec7472857b78cf589b5ff07a9a31389c48429f228491
     decision_ref: decision://accepted/BET-Y2Q1-T5-01
@@ -2638,7 +2647,7 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-    notes: batch1 #3739 + batch2 agora@7a92d11（经 #3751 pin 入主链）；10/10 pytest 复测通过；operational 以测试级验证为据，无生产灰度；value 待业务指标单独证明
+    notes: batch1
   depends_on:
   - BET-Y1Q4-T10-05
   done_when:
@@ -3482,8 +3491,8 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-    notes: Rust 15/15 + Python 45/45 测试通过；release 二进制 354KB；test-pipeline CI 验证通过；operational 以测试级验证为据（见 retro），业务价值待单独证明
-
+    notes: Rust 15/15 + Python 45/45 测试通过；release 二进制 354KB；test-pipeline CI 验证通过；operational
+      以测试级验证为据（见 retro），业务价值待单独证明
 - appetite: 3 days
   circuit_breaker: 分级路由如遇 L0/L1 判定置信度低于阈值，必须平滑降级至上一层重型模型，严禁因追求低延迟而牺牲决策正确性。
   depends_on:
@@ -4267,7 +4276,8 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-    notes: 28 tests passed (test_resident_flight_deck.py); 真实心跳闭环 + 并发回退恢复; operational 以测试级验证为据（见 retro），业务价值待单独证明
+    notes: 28 tests passed (test_resident_flight_deck.py); 真实心跳闭环 + 并发回退恢复; operational
+      以测试级验证为据（见 retro），业务价值待单独证明
   value_indicator_policy: false
 - appetite: 4-5 days
   circuit_breaker: 数据集包含敏感密钥或凭证时立即终止并清洗，拒绝脏数据进入训练集。
@@ -28079,7 +28089,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: in_progress
   title: OMO Agent OS 成熟度差距收口 — Queue/AGE-v2/Orca R0/Multica AS0/A8 外部事务
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28088,6 +28098,7 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
+  sub_bets_progress: 7/8 done
 - accepted_specifications:
   - content_digest: sha256:b0ac46f1b2233db7ab4c18d0ec1d0b5edaded2a6b6ad5bcddf2b8d4acf428519
     decision_ref: decision://accepted/BET-Y1Q4-T10-147
@@ -28281,7 +28292,7 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: A8 OMO 外部事务生命周期实现
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28290,6 +28301,14 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
+  done_at: '2026-09-15'
+  completion_evidence:
+    type: delivery_accepted
+    criteria:
+    - ExternalTransactionService 7-stage state machine
+    - 22/22 tests passing
+    - 'spec accepted + ledger closeout PR #3787 MERGED'
+    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:c1a2fe8d14405235e91af84941d7580e0f0c9a6891b55230cc20e1d883adad21
     decision_ref: decision://accepted/BET-Y1Q4-T10-152
@@ -29646,8 +29665,8 @@ bets:
       value:
         evidence: {}
         status: NOT_PROVEN
-    notes: Operational proof is limited to declaration-plane scheduler parity and unchanged
-      runtime behavior; business value remains NOT_PROVEN.
+    notes: Operational proof is limited to declaration-plane scheduler parity and
+      unchanged runtime behavior; business value remains NOT_PROVEN.
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   depends_on:
