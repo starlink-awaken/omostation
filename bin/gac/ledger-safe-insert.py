@@ -16,16 +16,33 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import os
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 LEDGER_REL = "docs/plans/3y-bet-ledger.yaml"
 SPEC_BINDING_KEYS = {"spec_ref", "spec_version", "content_digest", "decision_ref"}
 COMPLETION_AXES = ("engineering", "operational", "value")
+_LEDGER_CONTRACT = None
+
+
+def _ledger_contract() -> Any:
+    global _LEDGER_CONTRACT
+    if _LEDGER_CONTRACT is None:
+        module_path = Path(__file__).resolve().parents[1] / "plan" / "bet-ledger.py"
+        spec = importlib.util.spec_from_file_location("_ledger_structural_contract", module_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("LEDGER_STRUCTURAL_CONTRACT_UNAVAILABLE")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        _LEDGER_CONTRACT = module
+    return _LEDGER_CONTRACT
 
 
 def sha256_file(path: Path) -> str:
@@ -54,6 +71,8 @@ def compose_bounds(ledger: Path) -> tuple[int, int, str]:
 
 def validate_entry(entry: dict, root: Path, bet_id: str) -> list[str]:
     errors: list[str] = []
+    if not isinstance(bet_id, str) or not bet_id.startswith("BET-"):
+        errors.append("id must be a BET-* string")
     specs = entry.get("accepted_specifications")
     if not isinstance(specs, list) or len(specs) != 1:
         errors.append("accepted_specifications must contain exactly one binding")
@@ -130,6 +149,17 @@ def main() -> int:
     if not ledger.is_file():
         raise SystemExit(f"ledger not found: {ledger}")
 
+    contract = _ledger_contract()
+    try:
+        ledger_data = contract.parse_ledger_text(
+            ledger.read_text(encoding="utf-8"),
+            source=str(ledger),
+        )
+    except contract.LedgerStructureError as error:
+        for diagnostic in error.diagnostics:
+            print(f"ERROR {diagnostic}", file=sys.stderr)
+        return 1
+
     insert_at, total, last_id = compose_bounds(ledger)
     if args.show_bounds:
         print(f"bets: {total} | insert before 1-based line {insert_at + 1} | last: {last_id}")
@@ -148,9 +178,13 @@ def main() -> int:
     insert_at, current_total, _ = compose_bounds(ledger)
 
     errors = validate_entry(entry, root, bet_id)
-    dup = sum(1 for line_item in lines if line_item.strip() == f"id: {bet_id}")
-    if dup:
-        errors.append(f"id conflict: {bet_id} already in ledger")
+    existing_ids = {
+        item.get("id")
+        for item in ledger_data["bets"]
+        if isinstance(item, dict)
+    }
+    if bet_id in existing_ids:
+        errors.append(f"duplicate BET id: {bet_id}")
 
     if errors:
         for e in errors:
@@ -175,8 +209,13 @@ def main() -> int:
             new_text = new_text.replace(f"  total_bets: {old_total}", f"  total_bets: {old_total + 1}", 1)
             break
 
-    candidate = yaml.safe_load(new_text)
-    candidate_bets = candidate.get("bets") if isinstance(candidate, dict) else None
+    try:
+        candidate = contract.parse_ledger_text(new_text, source=str(ledger))
+    except contract.LedgerStructureError as error:
+        for diagnostic in error.diagnostics:
+            print(f"ERROR {diagnostic}", file=sys.stderr)
+        return 1
+    candidate_bets = candidate["bets"]
     if (
         not isinstance(candidate_bets, list)
         or len(candidate_bets) != current_total + 1
