@@ -3372,10 +3372,11 @@ bets:
   - projects/agora/src/agora/transport/p2p_mesh.py
   - projects/agora/tests/test_tinybos_mesh.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+  - docs/superpowers/specs/2026-09-14-t8-22-tinybos-mesh-spec.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-14-t8-22-tinybos-mesh-spec.md
     spec_version: 1.0.0
-    content_digest: sha256:f4426dd472a97652297d24bb7390299878b3d90214816f8e56503378f85c8962
+    content_digest: sha256:de0ca22764aa36667584481aeb40eb8681fd49d54ef4f9adf47486f282ebc397
     decision_ref: decision://accepted/BET-Y1Q4-T8-22
   value_indicator_policy: false
   completion_evidence:
