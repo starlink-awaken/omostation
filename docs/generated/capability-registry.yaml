@@ -11,7 +11,7 @@ generated_at: '1970-01-01T00:00:00Z'
 generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
-  mcp_tools: 391
+  mcp_tools: 563
   bos_services: 318
   bos_domains: 24
   cli_commands: 219
@@ -55,17 +55,105 @@ mcp_servers:
   layer: L2
   file: projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - build_context
+  - check_subscription
+  - collab.add_artifact
+  - collab.claim_subtask
+  - collab.create_task
+  - collab.get_task
+  - collab.list_tasks
+  - collab.update_task
+  - consensus.create
+  - consensus.get
+  - consensus.list_expired
+  - consensus.renew
+  - consensus.trace
+  - cross_domain_sync
+  - db_vacuum
+  - entity_explore
+  - fact_check
+  - full_sync
+  - get_entity
+  - get_entity_timeline
+  - get_knowledge
+  - get_stats
+  - get_system_status
+  - graph_search
+  - knowledge_ask
+  - list_domains
+  - mcp_market_discover
+  - memory_stats
+  - ontology_graph
+  - ontology_rebuild
+  - research_now
+  - research_pipeline
+  - run_indexer
+  - search_entity
+  - search_knowledge
+  - self.get_current_role
+  - self.get_profile
+  - self.get_vision_summary
+  - semantic_scholar
+  - semantic_search
+  - subscribe_topic
+  - sync_gbrain
+  - verify_claim
+  - viz_render
+  tool_count: 44
 - id: kos-stdio
   name: KOS (stdio JSON-RPC, legacy)
   layer: L2
   file: projects/knowledge/kairon/packages/kos/src/kos/mcp/fastmcp_app.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - build_context
+  - check_subscription
+  - collab.add_artifact
+  - collab.claim_subtask
+  - collab.create_task
+  - collab.get_task
+  - collab.list_tasks
+  - collab.update_task
+  - consensus.create
+  - consensus.get
+  - consensus.list_expired
+  - consensus.renew
+  - consensus.trace
+  - cross_domain_sync
+  - db_vacuum
+  - entity_explore
+  - fact_check
+  - full_sync
+  - get_entity
+  - get_entity_timeline
+  - get_knowledge
+  - get_stats
+  - get_system_status
+  - graph_search
+  - knowledge_ask
+  - list_domains
+  - mcp_market_discover
+  - memory_stats
+  - ontology_graph
+  - ontology_rebuild
+  - research_now
+  - research_pipeline
+  - run_indexer
+  - search_entity
+  - search_knowledge
+  - self.get_current_role
+  - self.get_profile
+  - self.get_vision_summary
+  - semantic_scholar
+  - semantic_search
+  - subscribe_topic
+  - sync_gbrain
+  - verify_claim
+  - viz_render
+  tool_count: 44
 - id: l4-kernel
   name: L4 Self-Layer Kernel
   layer: L4
@@ -486,65 +574,149 @@ mcp_servers:
   layer: L2
   file: projects/knowledge/kairon/packages/iris/src/iris/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - iris_connector_status
+  - iris_get_item
+  - iris_list_connectors
+  - iris_list_items
+  - iris_search
+  - iris_sync
+  - iris_sync_bidirectional
+  - iris_validate
+  tool_count: 8
 - id: sophia
   name: Sophia Research Paradigm
   layer: L2
   file: projects/knowledge/kairon/packages/sophia/src/sophia/server/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - compile_paradigm
+  - get_effective_ops
+  - get_transitions
+  - list_operations
+  - list_states
+  - record_trace
+  - suggest_ops
+  - suggest_paradigm
+  tool_count: 8
 - id: kronos
   name: Kronos
   layer: L2
   file: projects/knowledge/kairon/packages/kronos/src/kronos/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - cloakbrowser
+  - eidos
+  - kos
+  - kronos
+  - kronos_browser_fetch
+  - kronos_extract
+  - kronos_fetch
+  - kronos_insight
+  - kronos_pipelines
+  - kronos_plan
+  - kronos_route
+  - kronos_status
+  - kronos_tools
+  - ollama
+  - vault
+  - wps_note
+  tool_count: 16
 - id: minerva
   name: Minerva
   layer: L2
   file: projects/knowledge/kairon/packages/minerva/src/minerva/mcp_server/server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - cross_domain_research
+  - knowledge_closed_loop
+  - knowledge_ingest
+  - knowledge_search
+  - minerva_bfs_search
+  - research_now
+  - research_schedule
+  - research_watch
+  tool_count: 8
 - id: codeanalyze
   name: CodeAnalyze
   layer: L2
   file: projects/knowledge/kairon/packages/codeanalyze/src/codeanalyze/mcp.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - analyze_project
+  - architecture_generate_diagram
+  - architecture_get_code_metrics
+  - ast_search
+  - audit_project
+  - cgc_query
+  - codegraph_callees
+  - codegraph_callers
+  - codegraph_context
+  - codegraph_get_affected_tests
+  - codegraph_get_impact_radius
+  - codegraph_get_symbol_graph
+  - codegraph_init
+  - codegraph_search
+  - codegraph_sync
+  - crg_build
+  - crg_status
+  - export_graph
+  - extract_policy_docs
+  - pack_repo
+  - rg_search
+  - scan_directory
+  - status
+  - workflow_impact_analysis
+  - workflow_onboarding
+  tool_count: 25
 - id: forge
   name: Forge
   layer: L2
   file: projects/knowledge/kairon/packages/forge/src/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - get_project_status
+  - get_tool_info
+  - list_tools
+  - market_install
+  - market_list
+  - market_remove
+  - search_tools
+  tool_count: 7
 - id: ontoderive
   name: OntoDerive
   layer: L2
   file: projects/knowledge/kairon/packages/ontoderive/src/ontoderive/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - derive
+  - handle_mcp_request
+  - list_entities
+  - ontoderive
+  - pipeline_status
+  - trace
+  - validate
+  tool_count: 7
 - id: toolforge
   name: ToolForge
   layer: L2
   file: projects/knowledge/kairon/packages/ontoderive/src/ontoderive/toolforge/mcp_server.py
   transport: stdio
-  exists: false
-  tools: []
-  tool_count: 0
+  exists: true
+  tools:
+  - handle_request
+  - ontoderive-toolforge
+  - toolforge_guide
+  - toolforge_match
+  - toolforge_select
+  tool_count: 5
 - id: gbrain
   name: gbrain Knowledge DB
   layer: L2
