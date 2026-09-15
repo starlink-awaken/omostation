@@ -1208,11 +1208,11 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@108d70433909f093f5f629b0544fbfdddf099a01
           tests:
-            ref: .omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
           diff:
-            ref: .omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
           rollback:
-            ref: .omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
       operational:
         status: NOT_PROVEN
         evidence: {}
@@ -28323,11 +28323,11 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@108d70433909f093f5f629b0544fbfdddf099a01
           tests:
-            ref: .omo/plans/3y-bet-ledger.yaml
+            ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
           diff:
-            ref: .omo/plans/3y-bet-ledger.yaml
+            ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
           rollback:
-            ref: .omo/plans/3y-bet-ledger.yaml
+            ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
       operational:
         status: NOT_PROVEN
         evidence: {}
