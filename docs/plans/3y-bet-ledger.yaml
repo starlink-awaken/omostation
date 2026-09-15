@@ -1205,8 +1205,38 @@ bets:
     spec_version: 1.0.0
   appetite: 2 days
   circuit_breaker: 单次模拟耗时超过 60 秒时中断未完成分支并输出置信区间。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T5-01.md
+          merged_reachable_commit:
+            ref: git://origin/main@526fec9ff439a5cffa0bd54e220278cf23e8b31a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T5-01.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T5-01.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T5-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T5-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T5-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T5-01.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T5-02
+  done_at: 2026-09-15
   done_when:
   - 100 轮蒙特卡洛多 Agent 模拟推演在 30 秒内完成
   - 自动输出决策收益分布图、最坏情况止损线与敏感性因子分析报告
@@ -1220,10 +1250,11 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 个人战略决策沙盘（Strategy Sandbox）与多智能体蒙特卡洛方案推演
   track: T5-ORCH
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run python -m cockpit.cli strategy simulate --demo
     expect: exit 0
