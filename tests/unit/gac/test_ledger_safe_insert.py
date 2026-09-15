@@ -224,3 +224,16 @@ def test_loader_rejects_multiple_yaml_documents(tmp_path: Path, monkeypatch: pyt
 
     with pytest.raises(SystemExit, match="YAML_DOCUMENT_COUNT_ERROR"):
         module.load()
+
+
+def test_workflow_compatibility_mode_accepts_minimal_bet_fixture() -> None:
+    module = _load_ledger_cli()
+    minimal = "bets:\n- id: BET-MINIMAL\n  status: candidate\n"
+
+    parsed = module.parse_ledger_text(
+        minimal,
+        source="<fixture>",
+        require_complete_root=False,
+    )
+
+    assert parsed["bets"][0]["id"] == "BET-MINIMAL"

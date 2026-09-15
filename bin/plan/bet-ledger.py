@@ -116,15 +116,21 @@ def _walk_yaml_mappings(value: Any, path: str) -> list[tuple[str, dict[str, Any]
     return mappings
 
 
-def validate_ledger_structure(data: Any) -> list[str]:
-    """Return fail-closed structural diagnostics for one parsed ledger."""
+def validate_ledger_structure(data: Any, *, require_complete_root: bool = True) -> list[str]:
+    """Return fail-closed structural diagnostics for one parsed ledger.
+
+    Workflow contract fixtures may intentionally provide only ``bets``. They
+    still use this validator, but the CLI and mutation path keep the complete
+    production root contract enabled.
+    """
     if not isinstance(data, dict):
         return ["root: expected mapping"]
 
     errors: list[str] = []
     for section, expected_type in LEDGER_ROOT_SECTION_TYPES.items():
         if section not in data:
-            errors.append(f"root missing required section: {section}")
+            if require_complete_root or section == "bets":
+                errors.append(f"root missing required section: {section}")
         elif not isinstance(data[section], expected_type):
             expected_name = "mapping" if expected_type is dict else "list"
             errors.append(f"{section}: expected {expected_name}")
@@ -158,7 +164,12 @@ def validate_ledger_structure(data: Any) -> list[str]:
     return errors
 
 
-def parse_ledger_text(text: str, *, source: str = "<ledger>") -> dict[str, Any]:
+def parse_ledger_text(
+    text: str,
+    *,
+    source: str = "<ledger>",
+    require_complete_root: bool = True,
+) -> dict[str, Any]:
     """Parse and structurally validate exactly one BET ledger document."""
     try:
         documents = list(yaml.safe_load_all(text))
@@ -169,7 +180,7 @@ def parse_ledger_text(text: str, *, source: str = "<ledger>") -> dict[str, Any]:
             [f"YAML_DOCUMENT_COUNT_ERROR {source}: expected exactly one document, found {len(documents)}"]
         )
     data = documents[0]
-    errors = validate_ledger_structure(data)
+    errors = validate_ledger_structure(data, require_complete_root=require_complete_root)
     if errors:
         raise LedgerStructureError(errors)
     return data
@@ -2080,6 +2091,7 @@ def _ledger_for_workspace(workspace: Path) -> dict[str, Any]:
         data = parse_ledger_text(
             ledger.read_text(encoding="utf-8"),
             source=str(ledger),
+            require_complete_root=False,
         )
     except LedgerStructureError as error:
         raise SpecBindingContractError("\n".join(error.diagnostics)) from error
