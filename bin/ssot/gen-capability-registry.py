@@ -621,24 +621,7 @@ def check_yaml(registry: dict, output_path: Path = OUTPUT_YAML) -> bool:
     """Return whether the generated file matches without mutating it."""
     if not output_path.is_file():
         return False
-    committed = output_path.read_text(encoding="utf-8")
-    generated = render_yaml(registry)
-    if committed != generated:
-        # Show diff for debugging
-        import difflib
-        diff = difflib.unified_diff(
-            committed.splitlines(keepends=True),
-            generated.splitlines(keepends=True),
-            fromfile="committed",
-            tofile="generated",
-            lineterm="",
-        )
-        sys.stderr.write("
-".join(diff))
-        sys.stderr.write("
-")
-        return False
-    return True
+    return output_path.read_text(encoding="utf-8") == render_yaml(registry)
 
 
 def write_yaml(registry: dict, output_path: Path = OUTPUT_YAML) -> Path:
