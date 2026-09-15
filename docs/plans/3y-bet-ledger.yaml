@@ -1206,7 +1206,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@108d70433909f093f5f629b0544fbfdddf099a01
+            ref: git://origin/main@f75eeb00d8c07ca94a8abbc92350c190d333f0e8
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
           diff:
@@ -1214,8 +1214,16 @@ bets:
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -28321,16 +28329,24 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@108d70433909f093f5f629b0544fbfdddf099a01
+            ref: git://origin/main@f75eeb00d8c07ca94a8abbc92350c190d333f0e8
           tests:
-            ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
           diff:
-            ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
           rollback:
-            ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+          fresh_receipt:
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+          live_canary:
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+          replay:
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
       value:
         status: NOT_PROVEN
         evidence: {}
