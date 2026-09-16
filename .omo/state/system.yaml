@@ -3,8 +3,8 @@ current_wave: W1
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-09-14T10:25:35.150291+00:00'
-completed_tasks: 293
-planned_tasks: 16
+completed_tasks: 294
+planned_tasks: 15
 active_tasks: 1
 blocked_tasks: 1
 total_tasks: 311
@@ -21,7 +21,6 @@ next_planned_tasks:
 - BET-Y1Q4-T15-import-perf-regression (cockpit import 性能回归 (164ms > 120ms 预算) 排查)
 - BET-Y1Q4-T16-ops-drift-guard (ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校)
 - 'TASK-117310A1 (AGE-v2 Agent Cell 违反 SFOP 八律第3条(后端不拥有收件箱): omo c)'
-- 'TASK-B3229A65 (A4 调度真相收敛: 统一三源声明 + 修复死引用 + 面板刷新退出 token 自动化)'
 - bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
 - cockpit-debt-debt-1 (治理技术债务：债务)
@@ -30,7 +29,7 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-09-14T10:25:35Z'
+updated_at: '2026-09-16T08:03:30Z'
 harness:
   last_run: null
   last_status: null
