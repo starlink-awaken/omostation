@@ -4473,11 +4473,12 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: 夏明星数字化 Persona 心智镜像微调与主权分身共生体系 (Xia Mingxing Digital Persona Mirror Fine-tuning
     & Sovereign Symbiosis)
   track: T6-EVOLUTION
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: python3 bin/evolution/extract-persona-diffs.py --help
     expect: exit 0
@@ -4495,6 +4496,31 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T6-30
     spec_ref: repo://docs/superpowers/specs/2026-09-16-t6-30-persona-mirror-spec.md
     spec_version: 1.0.0
+  delivery_accepted:
+    engineering:
+      evidence:
+        diff_extractor:
+          ref: repo://bin/evolution/extract-persona-diffs.py
+          sha256: sha256:c22eaccb5970a0bc627173be4ce9bd4cbd1dfc87971c6f60c01224a42403d0bd
+        persona_trainer:
+          ref: repo://bin/evolution/persona_trainer.py
+          sha256: sha256:9a02c1580cda66e689bf954b9c592381a07d8f6c69004aab87bb17ee1a294db7
+        spec:
+          ref: repo://docs/superpowers/specs/2026-09-16-t6-30-persona-mirror-spec.md
+          sha256: sha256:b1280b120d84b43aaa715a340fe4f255e8e2f983a0449fb2c89615459c0fbcfc
+      status: VERIFIED
+    operational:
+      evidence:
+        governance_registry:
+          ref: repo://.omo/_truth/registry/governance-checks.yaml
+          sha256: sha256:064bbfe116c1c35f2a880ddea645fafdd21cb4f2d94efafe070a27aaf7aeb33c
+      status: PROVEN
+    value:
+      evidence: {}
+      status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-16
 - accepted_specifications:
   - content_digest: sha256:cd8573840afe4878120d7614a7ef1c38f295d57db50342b338f07b64cc178302
     decision_ref: decision://accepted/BET-Y1Q4-T9-03
