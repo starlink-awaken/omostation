@@ -1992,6 +1992,7 @@ bets:
   - projects/omlxc/src/omlxc/dataplane/lora/
   - projects/spine/src/spine/cognitive/
   - .omo/_knowledge/retros/BET-Y2Q2-T3-02.md
+  done_at: '2026-09-16'
 - accepted_specifications:
   - content_digest: sha256:ecbf01733a5b7be997cd2dd08ff86926bc2e0397335cfa4938cf5062435fac30
     decision_ref: decision://accepted/BET-Y1Q4-T10-05
@@ -29775,27 +29776,27 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T16-02.md
   - .omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
 - appetite: 2 days
-  circuit_breaker: If schema validation changes break an existing ledger consumer, stop
-    the implementation, restore the last compatible validator behavior, and record the
-    failing consumer before retrying.
+  circuit_breaker: If schema validation changes break an existing ledger consumer,
+    stop the implementation, restore the last compatible validator behavior, and record
+    the failing consumer before retrying.
   done_when:
-  - The ledger loader rejects malformed top-level shapes, misplaced BET-* entries, duplicate
-    BET IDs, and non-mapping BET entries with actionable diagnostics.
-  - YAML parse failures report line, column, and a bounded source context without silently
-    falling back.
-  - ledger-safe-insert.py and bet-ledger.py share one structural validation path, with
-    focused regression coverage for each failure class.
+  - The ledger loader rejects malformed top-level shapes, misplaced BET-* entries,
+    duplicate BET IDs, and non-mapping BET entries with actionable diagnostics.
+  - YAML parse failures report line, column, and a bounded source context without
+    silently falling back.
+  - ledger-safe-insert.py and bet-ledger.py share one structural validation path,
+    with focused regression coverage for each failure class.
   - A governed specification and retro document record the contract, migration boundary,
     and verification evidence.
   goal: Harden the 3Y BET ledger against structurally valid but semantically misplaced
-    YAML edits by enforcing root-section ownership, BET identity uniqueness, typed entries,
-    precise parse diagnostics, and one controlled mutation path.
+    YAML edits by enforcing root-section ownership, BET identity uniqueness, typed
+    entries, precise parse diagnostics, and one controlled mutation path.
   human_gate: false
   id: BET-Y1Q4-T10-167
   non_goals:
   - Do not rewrite existing BET content unrelated to structural validation.
-  - Do not change transition, completion-evidence, or dependency semantics except where
-    required to reject malformed structure.
+  - Do not change transition, completion-evidence, or dependency semantics except
+    where required to reject malformed structure.
   - Do not add a second ledger mutation utility or a parallel ledger SSOT.
   pasw_required: false
   priority: P1

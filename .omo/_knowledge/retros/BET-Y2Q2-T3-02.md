@@ -1,10 +1,13 @@
 ---
 schema: bet-retro/v1
 bet_id: BET-Y2Q2-T3-02
-status: active
+status: completed
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-15
+completed_at: 2026-09-16
+run_id: 20260916T02-t3-02-closeout
+pr: https://github.com/starlink-awaken/omostation/pull/3793
 type: ephemeral
 ---
 
