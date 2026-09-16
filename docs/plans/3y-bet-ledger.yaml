@@ -2263,7 +2263,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 家庭资产负债平水审计、大额支出预警与法务合同审查场景包
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -2283,6 +2283,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:8935a2aaf7d9aee8517acf92a710941cf295fc1e1639b1304b5f083257f608e5
     decision_ref: decision://accepted/BET-Y2Q3-T7-01
+  done_at: '2026-09-16'
 - accepted_specifications:
   - content_digest: sha256:cf46209a6b20827414574bb5671708e23b117518c2930d1b2cc28c40b72f66ba
     decision_ref: decision://accepted/BET-Y2Q4-T7-01
