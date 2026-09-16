@@ -1365,7 +1365,8 @@ bets:
   track: T7-SCENE
   underlying_workflow: project-code-change
   verify:
-  - cmd: PYTHONPATH=projects/knowledge/kairon/src:. uv run python -m kairon.cli org-graph --query 测试单位
+  - cmd: PYTHONPATH=projects/knowledge/kairon/src:. uv run python -m kairon.cli org-graph
+      --query 测试单位
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -1376,10 +1377,10 @@ bets:
   - projects/cockpit/src/cockpit/commands/org_relation.py
   - .omo/_knowledge/retros/BET-Y2Q1-T7-01.md
   accepted_specifications:
-    - content_digest: sha256:50afa758e7deb73eb5b51f686e190fae922312356144a80d20cd90357e8fe6c1
-      decision_ref: decision://accepted/BET-Y2Q1-T7-01
-      spec_ref: repo://docs/superpowers/specs/2026-09-16-t7-01-org-network-graph-spec.md
-      spec_version: 1.0.0
+  - content_digest: sha256:50afa758e7deb73eb5b51f686e190fae922312356144a80d20cd90357e8fe6c1
+    decision_ref: decision://accepted/BET-Y2Q1-T7-01
+    spec_ref: repo://docs/superpowers/specs/2026-09-16-t7-01-org-network-graph-spec.md
+    spec_version: 1.0.0
   completion_evidence:
     axes:
       engineering:
@@ -2366,9 +2367,9 @@ bets:
   - 产出至少一个不依赖国转中心借调的公文/决策收件箱候选业务驱动，附真实场景描述与预估请求量
   - 验证该候选驱动能否复用已建成的 document-review 能力（拟稿/审批/督办闭环），给出兼容度结论
   - 结论写入 docs/plans/，供后续 BET 认领决策参考
-  goal: 2026-08-19 国转中心借调冻结后，公文/决策收件箱场景（当前唯一"主战场"）业务驱动单点依赖的问题一直未解决（见 2026-08-19
-    多智能体深度复盘 retro 自陈"场景单点依赖：需决策场景转型 or 协议归档"）。本 BET 调研并提出至少一个不依赖国转借调的第二业务驱动，
-    验证其与已建成 document-review 能力的兼容性，为该场景找到脱离单点依赖的路径。
+  goal: 2026-08-19 国转中心借调冻结后，公文/决策收件箱场景（当前唯一"主战场"）业务驱动单点依赖的问题一直未解决（见 2026-08-19 多智能体深度复盘
+    retro 自陈"场景单点依赖：需决策场景转型 or 协议归档"）。本 BET 调研并提出至少一个不依赖国转借调的第二业务驱动， 验证其与已建成 document-review
+    能力的兼容性，为该场景找到脱离单点依赖的路径。
   human_gate: true
   id: BET-Y2Q4-T7-02
   non_goals:
@@ -15068,7 +15069,7 @@ bets:
   priority: P2
   retro: required
   risk_level: L0
-  status: candidate
+  status: done
   title: 战略主线宪章修订 — family 域正式纳编入三年计划
   track: T1-TRUTH
   underlying_workflow: project-doc-change
@@ -15079,14 +15080,45 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+  done_at: '2026-09-16'
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e86e3cda9fdee04285e66ef2edb1174c60fc1fa6
+          tests:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          diff:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          rollback:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          fresh_receipt:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          live_canary:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          replay:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - appetite: 2 days
   circuit_breaker: 修订内容与已交付代码事实核对不一致时，以代码为准重新核实后再落笔，不凭印象改文档。
   done_when:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md §6 应用形态章节去掉与已交付功能冲突的"不做移动 App/多窗格"表述
   - 改为如实描述当前形态（Mobile Cockpit、Sovereign TUI 2.0 多窗格）并说明其与"一个应用形态"原则的关系，给出明确结论（是否算同一形态的不同投影，或需要新增一条替代性自我约束）
   goal: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md §6 写明"三年只做一个 App 形态，不做移动 App、聊天机器人入口、Agent
-    编排画布、插件市场"，但 BET-Y1Q4-T8-02（Mobile Cockpit iOS/PWA）与 BET-Y1Q4-T8-18（Sovereign TUI 2.0
-    多窗格）均已交付。文档与执行现状矛盾，追认已交付形态，避免"文档说不做、代码已经做了"的持续性自相矛盾。
+    编排画布、插件市场"，但 BET-Y1Q4-T8-02（Mobile Cockpit iOS/PWA）与 BET-Y1Q4-T8-18（Sovereign
+    TUI 2.0 多窗格）均已交付。文档与执行现状矛盾，追认已交付形态，避免"文档说不做、代码已经做了"的持续性自相矛盾。
   human_gate: true
   id: BET-Y2Q4-T1-03
   non_goals:
@@ -15095,7 +15127,7 @@ bets:
   priority: P2
   retro: required
   risk_level: L0
-  status: candidate
+  status: done
   title: 战略主线宪章修订 — 追认移动 Cockpit / TUI 多窗格为既定应用形态
   track: T1-TRUTH
   underlying_workflow: project-doc-change
@@ -15106,6 +15138,37 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+  done_at: '2026-09-16'
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e86e3cda9fdee04285e66ef2edb1174c60fc1fa6
+          tests:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          diff:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          rollback:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          fresh_receipt:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          live_canary:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          replay:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - appetite: 3 weeks
   circuit_breaker: 模板抽象泄漏 → 退回每场景独立 DAG
   depends_on:
