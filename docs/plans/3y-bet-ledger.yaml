@@ -1917,7 +1917,12 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q1-T3-05.md
   - docs/superpowers/specs/2026-09-14-t3-05-mindmodel-four-pieces-spec.md
   done_at: '2026-09-13'
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:b6a2228f72b2caf8ae724a34e73e1732ee7a4d7697bd812b140cdf06abd48037
+    decision_ref: decision://accepted/BET-Y2Q2-T3-02
+    spec_ref: repo://docs/superpowers/specs/2026-09-15-t3-02-lora-matrix-spec.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 文风严重失真时自动回退至基准中立模板。
   depends_on:
   - BET-Y1Q3-T10-118
@@ -1934,10 +1939,48 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 个人文风多领域 LoRA 适配器矩阵与语气自适应调节
   track: T3-COGNI
   underlying_workflow: project-code-change
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-15-t3-02-lora-matrix-spec.md
+            sha256: sha256:b6a2228f72b2caf8ae724a34e73e1732ee7a4d7697bd812b140cdf06abd48037
+          merged_reachable_commit:
+            ref: git://origin/main@2615b3ab5fb1d8bb333010fd535870a0b5841fd1
+          tests:
+            ref: receipt://projects/spine/src/spine/cognitive/test_lora_tone.py
+            sha256: sha256:ccdfa898c3267d624f2887f7ba223886938dd460832cfaa3f4aded74012160f6
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-02.md
+            sha256: sha256:cf33d266c4b40f86bf51af966c12bcd16fc7ec9cccb65507106049c9cab0a37a
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-02.md
+            sha256: sha256:cf33d266c4b40f86bf51af966c12bcd16fc7ec9cccb65507106049c9cab0a37a
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-02.md
+            sha256: sha256:cf33d266c4b40f86bf51af966c12bcd16fc7ec9cccb65507106049c9cab0a37a
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-02.md
+            sha256: sha256:cf33d266c4b40f86bf51af966c12bcd16fc7ec9cccb65507106049c9cab0a37a
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-02.md
+            sha256: sha256:cf33d266c4b40f86bf51af966c12bcd16fc7ec9cccb65507106049c9cab0a37a
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: '2026-09-16'
+  value_indicator_policy: false
   verify:
   - cmd: uv run python -m omlxc.dataplane.lora.test_matrix
     expect: exit 0
@@ -1949,6 +1992,7 @@ bets:
   - projects/omlxc/src/omlxc/dataplane/lora/
   - projects/spine/src/spine/cognitive/
   - .omo/_knowledge/retros/BET-Y2Q2-T3-02.md
+  done_at: '2026-09-16'
 - accepted_specifications:
   - content_digest: sha256:ecbf01733a5b7be997cd2dd08ff86926bc2e0397335cfa4938cf5062435fac30
     decision_ref: decision://accepted/BET-Y1Q4-T10-05
@@ -2025,7 +2069,7 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T10-05.md
   - docs/superpowers/specs/2026-09-11-t10-05-offline-sandbox-vault-spec.md
 - accepted_specifications:
-  - content_digest: sha256:6c4fcfef3a3f1163dfec8aea6a27fe67ce834f2a0a4bf1a94c02b074f3459b5b
+  - content_digest: sha256:922137303e2628dbf44beaf329731a707605ee6a9c881fb09069139386660454
     decision_ref: decision://accepted/BET-Y2Q1-T7-06
     spec_ref: repo://docs/superpowers/specs/2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md
     spec_version: 1.0.0
@@ -2082,7 +2126,7 @@ bets:
   underlying_workflow: project-code-change
   value_indicator_policy: false
   verify:
-  - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run python -m domain.health_gov.test_doc_pipeline
+  - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run --with reportlab python -m domain.health_gov.test_doc_pipeline
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -28110,38 +28154,10 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: done
-  done_at: '2026-09-15'
+  status: candidate
+  reopen_at: '2026-09-15'
+  reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo pin; false done rolled back'
   value_indicator_policy: false
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@12b01ad3c46f1ded03a5ea50dc5cfc661756de6f
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
   title: OMO Agent OS 成熟度差距收口 — Queue/AGE-v2/Orca R0/Multica AS0/A8 外部事务
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28150,6 +28166,9 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-146.md
 - accepted_specifications:
   - content_digest: sha256:b0ac46f1b2233db7ab4c18d0ec1d0b5edaded2a6b6ad5bcddf2b8d4acf428519
     decision_ref: decision://accepted/BET-Y1Q4-T10-147
@@ -28328,7 +28347,25 @@ bets:
     spec_ref: repo://docs/superpowers/specs/2026-09-12-multica-as0-verify-design.md
     spec_version: 1.0.0
 - appetite: 15 days
+  accepted_specifications:
+  - content_digest: sha256:6e37fd46308404de2fe85d63d83cf87cb71cb841a8199022f41ac2363da94d18
+    decision_ref: decision://accepted/BET-Y1Q4-T10-151
+    spec_ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+    spec_version: 1.0.0
   circuit_breaker: 复核后发现该事务链已存在但未被发现时，立即停止重复实现，转为补充证据登记。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: IN_PROGRESS
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
   done_when:
   - 完成 ADR/archive/mutation-surfaces/ingress delivery 五处路径搜索，产出 权威现状报告（存在/不存在/部分存在，附证据）
   - 若确认缺失，产出 reserve→bind→readback→start→ACK/fence→release/retire 七段状态机的最小实现与测试
@@ -28343,7 +28380,9 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: done
+  status: candidate
+  reopen_at: '2026-09-15'
+  reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo pin; false done rolled back'
   title: A8 OMO 外部事务生命周期实现
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28352,26 +28391,11 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_delivery/external-transaction-status-2026-09-14.md
-            sha256: sha256:placeholder_phase1_report
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
-            sha256: sha256:placeholder_phase1_retro
-      operational:
-        status: NOT_PROVEN
-        evidence: {}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-    notes: 'phase1: 现状复核 (5 路径搜索), 结论: A8 未完整实现, 进入 phase2 (状态机实现)'
+  value_indicator_policy: false
+  write_surfaces:
+  - projects/omo/src/omo/workflow/external_transaction.py
+  - projects/omo/tests/test_external_transaction.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-151.md
 - accepted_specifications:
   - content_digest: sha256:c1a2fe8d14405235e91af84941d7580e0f0c9a6891b55230cc20e1d883adad21
     decision_ref: decision://accepted/BET-Y1Q4-T10-152
@@ -29772,27 +29796,27 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T16-02.md
   - .omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
 - appetite: 2 days
-  circuit_breaker: If schema validation changes break an existing ledger consumer, stop
-    the implementation, restore the last compatible validator behavior, and record the
-    failing consumer before retrying.
+  circuit_breaker: If schema validation changes break an existing ledger consumer,
+    stop the implementation, restore the last compatible validator behavior, and record
+    the failing consumer before retrying.
   done_when:
-  - The ledger loader rejects malformed top-level shapes, misplaced BET-* entries, duplicate
-    BET IDs, and non-mapping BET entries with actionable diagnostics.
-  - YAML parse failures report line, column, and a bounded source context without silently
-    falling back.
-  - ledger-safe-insert.py and bet-ledger.py share one structural validation path, with
-    focused regression coverage for each failure class.
+  - The ledger loader rejects malformed top-level shapes, misplaced BET-* entries,
+    duplicate BET IDs, and non-mapping BET entries with actionable diagnostics.
+  - YAML parse failures report line, column, and a bounded source context without
+    silently falling back.
+  - ledger-safe-insert.py and bet-ledger.py share one structural validation path,
+    with focused regression coverage for each failure class.
   - A governed specification and retro document record the contract, migration boundary,
     and verification evidence.
   goal: Harden the 3Y BET ledger against structurally valid but semantically misplaced
-    YAML edits by enforcing root-section ownership, BET identity uniqueness, typed entries,
-    precise parse diagnostics, and one controlled mutation path.
+    YAML edits by enforcing root-section ownership, BET identity uniqueness, typed
+    entries, precise parse diagnostics, and one controlled mutation path.
   human_gate: false
   id: BET-Y1Q4-T10-167
   non_goals:
   - Do not rewrite existing BET content unrelated to structural validation.
-  - Do not change transition, completion-evidence, or dependency semantics except where
-    required to reject malformed structure.
+  - Do not change transition, completion-evidence, or dependency semantics except
+    where required to reject malformed structure.
   - Do not add a second ledger mutation utility or a parallel ledger SSOT.
   pasw_required: false
   priority: P1
@@ -29859,6 +29883,87 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- accepted_specifications:
+  - content_digest: sha256:f6320b4f66cb47c9dba429ebc9f2be78e486be205da3e67e3d81c771265749a2
+    decision_ref: decision://accepted/BET-Y2Q1-T7-07
+    spec_ref: repo://docs/superpowers/specs/2026-09-15-t7-07-review-remediation-design.md
+    spec_version: 1.0.0
+  appetite: 0.5 day
+  circuit_breaker: 若发现 A8 实现已合入 omo pin，则停止回退 T10-151，改为只修 T7-06 状态机与 journey。
+  depends_on:
+  - BET-Y2Q1-T7-06
+  done_when:
+  - approve(退回) 后 dispatch 拒绝；同意路径仍可 dispatch
+  - docs/journey-specs/health-gov-doc-cycle-workflow.yaml 存在且 scene-card related 可解析
+  - BET-Y1Q4-T10-151 不再标 done（无虚假 VERIFIED 实现证据）
+  - 仓库不再跟踪 .omo/plans/3y-bet-ledger.yaml 影子台账
+  goal: 校正 T7-06/T10-151 合入后评审发现的状态机缺陷、虚假 done 收口、影子台账漂移与 journey 悬空。
+  id: BET-Y2Q1-T7-07
+  non_goals:
+  - 不在本 BET 合入 omo A8 外部事务实现代码
+  - 不 bump agora/cockpit/omo 子模块指针
+  - 不扩展公文管线到外部 OA/邮件网关
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: done
+  done_at: 2026-09-16
+  title: T7-06/T10-151 合入后评审缺陷校正（退回状态机 / journey / 虚假 done / 影子台账）
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run --with reportlab python
+      -m domain.health_gov.test_doc_pipeline
+    expect: exit 0
+  - cmd: test -f docs/journey-specs/health-gov-doc-cycle-workflow.yaml
+    expect: exit 0
+  window: Y2Q1
+  workflow: bet-execution
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f49c76eb70ef5d81837ad277d4c4aa5c6e022ebb
+          tests:
+            ref: receipt://projects/domain-cartridges/health-gov/domain/health_gov/test_doc_pipeline.py
+            sha256: sha256:b5452126eaf094c5280c68cc90dcb441911ae7dc0e853b86230bb5e7637a319d
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-15-t7-07-review-remediation-design.md
+            sha256: sha256:f6320b4f66cb47c9dba429ebc9f2be78e486be205da3e67e3d81c771265749a2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/journey-specs/health-gov-doc-cycle-workflow.yaml
+            sha256: sha256:8bd1450874dc8139917abeaced594176d3a26aa47331ba1c480265fc7e649efe
+          fresh_receipt:
+            ref: receipt://docs/scene-cards/health-gov-doc-cycle.yaml
+            sha256: sha256:d27a6ed5699b0039534e98826aea2e2889a1c1e6479dfa9c2d2a22bbc0e81b2e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  write_surfaces:
+  - projects/domain-cartridges/health-gov/
+  - docs/journey-specs/health-gov-doc-cycle-workflow.yaml
+  - docs/scene-cards/health-gov-doc-cycle.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-15-t7-07-review-remediation-design.md
+  - docs/superpowers/specs/2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md
+  - .omo/_knowledge/retros/BET-Y2Q1-T7-07.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2

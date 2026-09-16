@@ -1174,26 +1174,36 @@ def _collect_mesh_health(workspace_root: Path) -> dict[str, Any] | None:
         events = store.events()
         from datetime import UTC, datetime
 
+        def _parse_ts(value: str) -> datetime | None:
+            try:
+                return datetime.fromisoformat((value or "").replace("Z", "+00:00"))
+            except ValueError:
+                return None
+
         now = datetime.now(UTC)
         events_last_hour = sum(
             1
             for e in events
             if (
-                now - datetime.fromisoformat(e.get("occurred_at", "2000-01-01T00:00:00Z").replace("Z", "+00:00"))
-            ).total_seconds()
-            < 3600
+                (_ts := _parse_ts(e.get("occurred_at", ""))) is not None
+                and (now - _ts).total_seconds() < 3600
+            )
         )
         producers = {e.get("producer", "") for e in events}
         last_event_age = None
         if events:
-            last_ts = events[-1].get("occurred_at", "").replace("Z", "+00:00")
-            last_event_age = (now - datetime.fromisoformat(last_ts)).total_seconds()
+            last_ts = _parse_ts(events[-1].get("occurred_at", ""))
+            if last_ts is not None:
+                last_event_age = (now - last_ts).total_seconds()
+        # C3a: an idle input stream is normal (cf. system-health-check
+        # _check_events_active). Only a missing/unreadable log is degraded.
         return {
-            "status": "healthy" if events else "degraded",
+            "status": "healthy" if store.log_path.is_file() else "degraded",
             "event_count": len(events),
             "events_last_hour": events_last_hour,
             "last_event_age_seconds": round(last_event_age, 1) if last_event_age else None,
             "bridges_active": sorted(producers),
+            "idle": not events,
         }
     except Exception:
         return None
