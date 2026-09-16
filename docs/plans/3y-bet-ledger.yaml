@@ -1357,7 +1357,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 组织架构与政企人脉关系图谱（深度关联来件单位、历史沟通偏好与决策背景）
   track: T7-SCENE
   underlying_workflow: project-code-change
