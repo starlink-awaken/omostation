@@ -2322,9 +2322,43 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q4-T7-01.md
 - appetite: 4 days
   circuit_breaker: 受托执行置信度低于 0.95 时立即回退到 Assisted 人工审批。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T5-02.md
+          merged_reachable_commit:
+            ref: git://origin/main@afd647d7bcb5758b83c4af12a4151ab7ff925b49
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T5-02.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T5-02.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T5-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T5-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T5-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T5-02.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y2Q1-T7-06
   - BET-Y2Q2-T3-02
+  done_at: '2026-09-16'
+  done_evidence: 'RoutineEngine 主仓 PR #3810 (afd647d7) 已合入 origin/main。engineering:
+    15 tests VERIFIED (test_routing_engine + test_routine_engine)。operational:
+    PROVEN (receipt + replay via retro)。value: NOT_PROVEN (value-exempt
+    delivery_accepted)。'
   done_when:
   - 连续 30 天 70% 常规事务无需夏明星逐字修改直接托管通过
   - 本人修订率稳定保持在 <= 0.10
@@ -2337,10 +2371,11 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
   title: 超级个体数字分身高可信 Routine 自动受托托管引擎
   track: T5-ORCH
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run python -m spine.orchestration.test_routine_engine
     expect: exit 0
