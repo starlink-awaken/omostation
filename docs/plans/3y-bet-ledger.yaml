@@ -15089,7 +15089,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main
+            ref: git://origin/main@e86e3cda9fdee04285e66ef2edb1174c60fc1fa6
           tests:
             ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
           diff:
