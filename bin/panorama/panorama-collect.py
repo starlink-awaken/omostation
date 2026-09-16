@@ -761,12 +761,24 @@ def collect_signal_poller() -> dict:
 
 
 def collect_journey_executions() -> dict:
-    """旅程执行结果：escalated / succeeded / failed + 自动完成率。"""
+    """旅程执行结果：escalated / succeeded / failed + 自动完成率。
+
+    Scans all known scene event sinks — the observability log is cleaned
+    periodically (2026-09-16 实证: 目录被 hygiene 清理后指标静默归零),
+    so every candidate path is read and merged.
+    """
     import json as _json
-    events_path = ROOT / ".omo/_delivery/observability/events.jsonl"
+    event_paths = [
+        ROOT / ".omo/_delivery/observability/events.jsonl",
+        ROOT / ".omo/_knowledge/workflow-mesh/events.jsonl",
+        ROOT / ".omo/_delivery/event-ingest/events.jsonl",
+        ROOT / ".omo/_delivery/agent-workflows/events.jsonl",
+    ]
     escalated = succeeded = failed = 0
     escalated_by_scene: dict[str, int] = {}
-    if events_path.exists():
+    for events_path in event_paths:
+        if not events_path.exists():
+            continue
         for line in events_path.read_text().strip().splitlines():
             try:
                 d = _json.loads(line)
@@ -779,6 +791,8 @@ def collect_journey_executions() -> dict:
             else:
                 evt = d.get("event_type", "")
                 inner = d.get("payload") or {}
+            if not isinstance(inner, dict):
+                continue
             scene = inner.get("scene_id", "unknown")
             if evt == "scene.escalated":
                 escalated += 1
@@ -795,6 +809,7 @@ def collect_journey_executions() -> dict:
         "total": total,
         "auto_complete_rate": round(succeeded / total, 3) if total else None,
         "top_escalated": sorted(escalated_by_scene.items(), key=lambda x: -x[1])[:5],
+        "event_paths_scanned": [str(p.relative_to(ROOT)) for p in event_paths if p.exists()],
     }
 
 
@@ -846,23 +861,42 @@ def collect_service_keeper() -> dict:
 
 
 def collect_connectors() -> dict:
-    """iris 连接器清单：可用 + 已接线。"""
+    """iris 连接器清单：可用 + 已接线。
+
+    iris status 冷启动偶发超时 (实证 2026-09-16: 0.5s ~ >30s 抖动), 加退避
+    重试; 全部失败时返回 error 键, 上层 UI 降级显示而非崩溃.
+    """
     import subprocess as _sp
-    try:
-        r = _sp.run(["iris", "--json", "status"], capture_output=True, text=True, cwd=str(ROOT), timeout=15)
-        connectors = []
-        if r.returncode == 0:
-            for c in json.loads(r.stdout):
-                connectors.append({"name": c.get("name", c.get("id", "?")),
-                                   "available": c.get("available", c.get("status", "?"))})
-        wired = ["apple_mail", "applenotes", "netease_mailmaster"]
-        return {"total": len(connectors),
-                "available": [c["name"] for c in connectors if c.get("available")],
-                "wired_to_scenes": wired,
-                "unwired_available": [c["name"] for c in connectors
-                                      if c.get("available") and c["name"] not in wired]}
-    except Exception as e:
-        return {"error": str(e)}
+    import time as _time
+    last_err = ""
+    for attempt, timeout in enumerate((20, 45), start=1):
+        try:
+            r = _sp.run(["iris", "--json", "status"], capture_output=True, text=True,
+                        cwd=str(ROOT), timeout=timeout)
+            if r.returncode != 0 or not r.stdout.strip():
+                last_err = (r.stderr or "no output").strip()[:200]
+                continue
+            raw = r.stdout
+            for ch in ("[", "{"):
+                idx = raw.find(ch)
+                if idx >= 0:
+                    raw = raw[idx:]
+                    break
+            data = json.loads(raw)
+            connectors = [{"name": c.get("name", c.get("id", "?")),
+                           "available": c.get("available", c.get("status", "?"))}
+                          for c in (data if isinstance(data, list) else [])]
+            wired = ["apple_mail", "applenotes", "netease_mailmaster"]
+            return {"total": len(connectors),
+                    "available": [c["name"] for c in connectors if c.get("available")],
+                    "wired_to_scenes": wired,
+                    "unwired_available": [c["name"] for c in connectors
+                                          if c.get("available") and c["name"] not in wired]}
+        except Exception as e:
+            last_err = str(e)[:200]
+            if attempt < 2:
+                _time.sleep(2)
+    return {"error": last_err or "iris status unavailable"}
 
 
 def collect_bos_verifier() -> dict:
