@@ -18,7 +18,7 @@ decision: .omo/_knowledge/decisions/0410-strategy-mainline-plan-supersedes-panor
 note: >
   2026-08-15 ADR-0410 采纳为主线。体量数据仍以文中标注日期的实测为准，
   运行时规模读 .omo/state/system.yaml，不在本文追更数字。
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-16
 ---
 
 # 织星 / eCOS 三年全面规划（2026H2 – 2029）
@@ -217,9 +217,10 @@ Agent 以机器速度产出治理与文档资产
 | **knowledge** | **gbrain + kairon** | 最大归并，统一到 MOS |
 | **runtime** | runtime + aetherforge | 执行与算力调度合并 |
 | **cockpit** | cockpit + cockpit-ui | 人机入口本是一件事 |
+| **family-hub** | family-hub | 家庭资产审计 + 大额支出预警 + 法务合同审查场景包（Y2Q3-T7-01 已交付） |
 | **metaos** | metaos | Y1 证明主链必经位置，否则 Y2 并入 omo |
 | **l4-kernel** | l4-kernel | 保留 |
-| 退役 | family-hub、observability | 归档 |
+| 退役 | observability | 归档 |
 
 **归并不是搬文件，是删代码。**
 
@@ -328,6 +329,7 @@ draft → shadow → assisted → supervised → routine
 | **公文 / 决策收件箱** | **主战场** | shadow → assisted | supervised | routine（限格式类） |
 | **工程交付 dogfood** | **数据发生器**（不计价值指标） | shadow | assisted | assisted |
 | **知识入库与创作** | **存量变现** | shadow | assisted | supervised |
+| 家庭资产治理 | **家庭域纳编** | assisted（Y2Q3-T7-01 已交付） | supervised | routine（限审计类） |
 | 中试平台与政策申报 | 扩展 | 不启动 | draft → shadow | assisted |
 | 预测提醒（KEMS） | 扩展 | 不启动 | shadow only | shadow only |
 
@@ -372,7 +374,9 @@ falsifier: "连续 4 周, 若人类修改率 > 70% 或出现 1 次敏感项漏�
 
 **判定标准只有一条：`/inbox` 是否成为每日必开的界面。** 一年后仍不会每天打开，说明未产生足以改变习惯的价值，应关停而非继续加功能。
 
-**不做**：移动 App、聊天机器人式入口、Agent 编排可视化画布、插件市场。
+**追认既定形态**（2026-09-16 T1-03）：移动 Cockpit / TUI 多窗格为既定应用形态——cockpit-ui 已交付 Console 控制台（BOS REPL + MOF + Harness SSE），桌面 TUI 多窗格（cockpit --tui）为开发态主入口，两者与 Web 收件箱并存而非替代。
+
+**不做**：原生移动 App（iOS/Android 独立应用）、聊天机器人式入口、Agent 编排可视化画布、插件市场。
 
 ---
 
