@@ -39,9 +39,9 @@ def compile_crontab(jobs: list[dict]) -> list[str]:
     for j in jobs:
         sched = j.get("schedule", "")
         cmd = j.get("command", "")
-        name = j.get("name", "")
-        log = f"runtime/cron/{name}.log"
-        out.append(f"{sched} cd \"$HOME/Workspace\" && {cmd} >> {log} 2>&1")
+        # command 已含完整 cd 与日志重定向 (registry.yaml v2 范式),
+        # 编译器只加 schedule, 不再包 cd / log 避免嵌套。
+        out.append(f"{sched} {cmd}")
     return out
 
 
