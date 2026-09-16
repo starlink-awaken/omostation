@@ -1992,7 +1992,6 @@ bets:
   - projects/omlxc/src/omlxc/dataplane/lora/
   - projects/spine/src/spine/cognitive/
   - .omo/_knowledge/retros/BET-Y2Q2-T3-02.md
-  done_at: '2026-09-16'
 - accepted_specifications:
   - content_digest: sha256:ecbf01733a5b7be997cd2dd08ff86926bc2e0397335cfa4938cf5062435fac30
     decision_ref: decision://accepted/BET-Y1Q4-T10-05
@@ -2126,7 +2125,8 @@ bets:
   underlying_workflow: project-code-change
   value_indicator_policy: false
   verify:
-  - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run --with reportlab python -m domain.health_gov.test_doc_pipeline
+  - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run --with reportlab
+      python -m domain.health_gov.test_doc_pipeline
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -2351,6 +2351,11 @@ bets:
   write_surfaces:
   - projects/spine/src/spine/orchestration/
   - .omo/_knowledge/retros/BET-Y3H1-T5-02.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-16-y3h1-t5-02-routine-hosting-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:2f1363e0d1419c7fab5839bb696697a5101613597bedd5acfd3582bbed22273f
+    decision_ref: decision://accepted/BET-Y3H1-T5-02
 - accepted_specifications:
   - content_digest: sha256:b9bf6cccf6aa9e0e9dbf24b1066918dac722e3138c9cb3b2a3ab16bfc3feef6b
     decision_ref: decision://accepted/BET-Y1Q4-T6-20
@@ -28156,7 +28161,8 @@ bets:
   risk_level: L2
   status: candidate
   reopen_at: '2026-09-15'
-  reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo pin; false done rolled back'
+  reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo
+    pin; false done rolled back'
   value_indicator_policy: false
   title: OMO Agent OS 成熟度差距收口 — Queue/AGE-v2/Orca R0/Multica AS0/A8 外部事务
   track: T10-MATURITY
@@ -28391,6 +28397,7 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
+
   value_indicator_policy: false
   write_surfaces:
   - projects/omo/src/omo/workflow/external_transaction.py
@@ -29913,8 +29920,8 @@ bets:
   underlying_workflow: project-code-change
   value_indicator_policy: false
   verify:
-  - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run --with reportlab python
-      -m domain.health_gov.test_doc_pipeline
+  - cmd: PYTHONPATH=projects/domain-cartridges/health-gov uv run --with reportlab
+      python -m domain.health_gov.test_doc_pipeline
     expect: exit 0
   - cmd: test -f docs/journey-specs/health-gov-doc-cycle-workflow.yaml
     expect: exit 0
