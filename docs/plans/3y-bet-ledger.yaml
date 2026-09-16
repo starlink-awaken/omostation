@@ -1377,6 +1377,27 @@ bets:
       decision_ref: decision://accepted/BET-Y2Q1-T7-01
       spec_ref: repo://docs/superpowers/specs/2026-09-16-t7-01-org-network-graph-spec.md
       spec_version: 1.0.0
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
+          merged_reachable_commit:
+            ref: git://origin/main@PENDING_PR_MERGE
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
 - accepted_specifications:
   - content_digest: sha256:c48e1af6fa5de6a5506e834a966c4c0a1ed65516df50abc7b6721759afe869a7
     decision_ref: decision://accepted/BET-Y2Q1-T10-03
