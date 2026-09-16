@@ -13,10 +13,12 @@ from datetime import date, timedelta
 from pathlib import Path
 
 KINDS = ("notice", "letter", "minutes-task")
+# Spec alias: xh-letter → letter (T7-06 design used xh-letter; keep both).
+KIND_ALIASES = {"xh-letter": "letter"}
 URGENCIES = ("normal", "urgent", "immediate")
 CLASSIFICATIONS = ("public", "internal", "secret", "topsecret")
 DECISIONS = ("同意", "退回", "转办")
-STATUSES = ("registered", "drafted", "approved", "dispatched")
+STATUSES = ("registered", "drafted", "approved", "returned", "dispatched")
 
 SECRET_LEVELS = {"secret", "topsecret"}
 
@@ -62,6 +64,7 @@ class IncomingDoc:
     printed_date: str = ""  # 印发日期(版记)
     status: str = "registered"
     deadline: str = ""  # 拟办后填写 YYYY-MM-DD
+    last_decision: str = ""  # 最近一次批阅意见: 同意|退回|转办
 
 
 @dataclass
@@ -107,6 +110,7 @@ def register_incoming(**kwargs) -> IncomingDoc:
     doc = IncomingDoc(**kwargs)
     if doc.classification in SECRET_LEVELS:
         raise ValueError(f"涉密公文拒绝入库: classification={doc.classification}(涉密不上网)")
+    doc.kind = KIND_ALIASES.get(doc.kind, doc.kind)
     if doc.kind not in KINDS:
         raise ValueError(f"非法文种: {doc.kind}")
     if doc.urgency not in URGENCIES:
@@ -114,13 +118,14 @@ def register_incoming(**kwargs) -> IncomingDoc:
     if not DOC_NO_RE.match(doc.doc_no or ""):
         raise ValueError(f"发文字号格式不符(机关代字〔YYYY〕N号): {doc.doc_no!r}")
     doc.status = "registered"
+    doc.last_decision = ""
     return doc
 
 
 def draft_opinion(doc: IncomingDoc, drafter: str, route: str = "") -> DraftOpinion:
-    """拟办. 仅 registered 可拟办；返回拟办单并回填 doc.deadline."""
-    if doc.status != "registered":
-        raise ValueError(f"非法跃迁: {doc.status} → drafted(仅 registered 可拟办)")
+    """拟办. registered/returned 可拟办；返回拟办单并回填 doc.deadline."""
+    if doc.status not in ("registered", "returned"):
+        raise ValueError(f"非法跃迁: {doc.status} → drafted(仅 registered/returned 可拟办)")
     if not drafter:
         raise ValueError("拟办人不能为空")
     route = route or _KIND_ROUTE[doc.kind]
@@ -137,24 +142,36 @@ def draft_opinion(doc: IncomingDoc, drafter: str, route: str = "") -> DraftOpini
 
 def approve(doc: IncomingDoc, approver: str, decision: str,
             comment: str = "", decided_at: str = "") -> Approval:
-    """批阅. 仅 drafted 可批阅；无署名/非法decision/退回无意见 → 拒绝."""
+    """批阅. 仅 drafted 可批阅；无署名/非法decision/退回无意见 → 拒绝.
+
+    决策分流: 同意→approved；退回→returned；转办→registered（重新拟办）.
+    """
     if doc.status != "drafted":
-        raise ValueError(f"非法跃迁: {doc.status} → approved(仅 drafted 可批阅)")
+        raise ValueError(f"非法跃迁: {doc.status} → approve(仅 drafted 可批阅)")
     if not approver:
         raise ValueError("无署名批阅无效: approver 为空")
     if decision not in DECISIONS:
         raise ValueError(f"非法批阅意见: {decision}")
     if decision == "退回" and not comment:
         raise ValueError("退回必须附意见: comment 为空")
-    doc.status = "approved"
+    doc.last_decision = decision
+    if decision == "同意":
+        doc.status = "approved"
+    elif decision == "退回":
+        doc.status = "returned"
+    else:  # 转办
+        doc.status = "registered"
     return Approval(doc_id=doc.doc_id, approver=approver, decision=decision,
                     comment=comment, decided_at=decided_at or date.today().isoformat())
 
 
 def dispatch(doc: IncomingDoc) -> IncomingDoc:
-    """办结/发出. 仅 approved 可办结."""
-    if doc.status != "approved":
-        raise ValueError(f"非法跃迁: {doc.status} → dispatched(仅 approved 可办结)")
+    """办结/发出. 仅 approved 且 last_decision=同意 可办结."""
+    if doc.status != "approved" or doc.last_decision != "同意":
+        raise ValueError(
+            f"非法跃迁: status={doc.status} decision={doc.last_decision!r} "
+            "→ dispatched(仅 approved+同意 可办结)"
+        )
     doc.status = "dispatched"
     return doc
 
@@ -173,7 +190,7 @@ def validate_redhead(doc: IncomingDoc) -> list[str]:
     if not DOC_NO_RE.match(doc.doc_no or ""):
         errors.append(f"发文字号不合规: {doc.doc_no!r}")
     if not doc.title or len(doc.title) < 6:
-        errors.append("标题缺失或过短(须含发文机关/事由/文种三要素)")
+        errors.append("标题缺失或过短")
     if not doc.recipients:
         errors.append("缺主送机关")
     if not doc.text:
@@ -225,6 +242,8 @@ def export_package(doc: IncomingDoc, out_dir: str | Path,
     errors = validate_redhead(doc)
     if errors:
         raise ValueError("版式要素缺失，阻止导出: " + "；".join(errors))
+    if approval is not None and approval.decision != "同意":
+        raise ValueError(f"非同意批阅不可导出红头: decision={approval.decision!r}")
     try:
         from reportlab.lib.pagesizes import A4
         from reportlab.pdfbase import pdfmetrics

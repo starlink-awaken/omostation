@@ -1,0 +1,55 @@
+schema: journey-spec/v1
+journey_id: health-gov-doc-cycle
+title: 卫健公文全周期拟办批阅与会议督办 (5 状态闭环)
+status: active
+version: 1
+created: 2026-09-15
+owner: xiamingxing
+note: >
+  BET-Y2Q1-T7-06 交付场景契约；BET-Y2Q1-T7-07 补齐本 journey 文件以消解
+  scene-card related 悬空。状态机对齐 domain/health_gov/doc_pipeline.py：
+  registered → drafted → (approved|returned) → dispatched；returned 可回到 drafted。
+description: >
+  来文登记 → 拟办 → 批阅(同意/退回/转办) → 红头导出 → 办结发出；
+  会议纪要督办为并行支线（record_minutes → close_action → supervise）。
+
+trigger:
+  type: manual_journey_run
+  source: human
+
+states:
+  - name: registered
+    scene: health-gov-doc-cycle
+    next: [drafted]
+  - name: drafted
+    scene: health-gov-doc-cycle
+    next: [approved, returned, registered]
+  - name: approved
+    scene: health-gov-doc-cycle
+    next: [dispatched]
+  - name: returned
+    scene: health-gov-doc-cycle
+    next: [drafted]
+  - name: dispatched
+    scene: health-gov-doc-cycle
+    next: []
+
+transitions:
+  - from: registered
+    to: drafted
+    condition: "draft_opinion_ok == true"
+  - from: drafted
+    to: approved
+    condition: "decision == '同意'"
+  - from: drafted
+    to: returned
+    condition: "decision == '退回'"
+  - from: drafted
+    to: registered
+    condition: "decision == '转办'"
+  - from: returned
+    to: drafted
+    condition: "redraft_ok == true"
+  - from: approved
+    to: dispatched
+    condition: "dispatch_ok == true"

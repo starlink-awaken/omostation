@@ -33,21 +33,22 @@ last-reviewed: 2026-09-15
 
 ### 3.1 公文领域模型 (`domain/health_gov/doc_pipeline.py`)
 
-- `IncomingDoc`: `doc_id / title / doc_no(发文字号) / kind(notice|xh-letter|minutes-task) /
+- `IncomingDoc`: `doc_id / title / doc_no(发文字号) / kind(notice|letter|minutes-task) /
   urgency(normal|urgent|immediate) / classification(public|internal|secret|topsecret) /
-  source / received_date / status`。
+  source / received_date / status / last_decision`。`xh-letter` 作为 `letter` 别名接受。
 - `register_incoming(...)`: 登记并校验。涉密 → 拒绝；`doc_no` 必须匹配
   `机关代字〔YYYY〕N号`（如 `×卫发〔2026〕12号`），格式不符 → 拒绝
   （circuit breaker：格式校验不通过时阻止生成并高亮错误条款）。
 - `draft_opinion(doc)`: 规则拟办单 —— `drafter / opinion(拟办意见) /
   route(分办去向) / deadline_days`。模板按 `kind × urgency` 选择：
   下行通知 → 拟办“请××科室贯彻落实”，平行函 → 拟办“请××科室研提回复意见”，
-  督办件 → 拟办“请××科室按期办结并反馈”。
+  督办件 → 拟办“请××科室按期办结并反馈”。`registered`/`returned` 可拟办。
 - `approve(doc, approver, decision)`: 批阅。`decision ∈ {同意, 退回, 转办}`；
   未署名（`approver` 为空）→ 拒绝（无署名批阅无效）；`退回` 必须附 `comment`。
-- `dispatch(doc)`: 状态机 `registered → drafted → approved → dispatched`，
-  非法跃迁 → 拒绝。逾期（`today > deadline` 且未 dispatched）标 `overdue`。
-- 全流程纯 stdlib（`dataclass/datetime/re`），零模型调用。
+  分流：`同意→approved`；`退回→returned`；`转办→registered`。
+- `dispatch(doc)`: 仅 `approved` 且 `last_decision==同意` 可办结；退回公文不可发出。
+  逾期（`today > deadline` 且未 dispatched）标 `overdue`。
+- 全流程纯 stdlib（`dataclass/datetime/re`）+ 可选 reportlab PDF，零模型调用。
 
 ### 3.2 红头导出与 GB/T 9704-2012 要素校验
 
