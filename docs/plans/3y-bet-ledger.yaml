@@ -1917,7 +1917,12 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q1-T3-05.md
   - docs/superpowers/specs/2026-09-14-t3-05-mindmodel-four-pieces-spec.md
   done_at: '2026-09-13'
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:b6a2228f72b2caf8ae724a34e73e1732ee7a4d7697bd812b140cdf06abd48037
+    decision_ref: decision://accepted/BET-Y2Q2-T3-02
+    spec_ref: repo://docs/superpowers/specs/2026-09-15-t3-02-lora-matrix-spec.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 文风严重失真时自动回退至基准中立模板。
   depends_on:
   - BET-Y1Q3-T10-118
