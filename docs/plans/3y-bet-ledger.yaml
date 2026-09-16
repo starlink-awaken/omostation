@@ -1349,7 +1349,8 @@ bets:
   - 拟稿前秒级推荐：“该部门近期重点关注数据安全，建议补充合规保障章节”
   - 关联检索召回率 ≥95%
   goal: 在 KEMS-v2 中构建人脉与组织架构关系图谱，自动关联公文/邮件/会议来件涉及的部门、关键领导、行业专家、历史合作项目与对方关注点，拟稿时自动注入人际上下文与沟通偏好。
-  human_gate: false
+  human_gate: true
+  value_indicator_policy: false
   id: BET-Y2Q1-T7-01
   non_goals:
   - 不泄露未经公开的人际关系敏感背景
@@ -1358,6 +1359,8 @@ bets:
   retro: required
   risk_level: L1
   status: done
+  done_at: '2026-09-16'
+  outcome_status: accepted
   title: 组织架构与政企人脉关系图谱（深度关联来件单位、历史沟通偏好与决策背景）
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -1384,7 +1387,7 @@ bets:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
           merged_reachable_commit:
-            ref: git://origin/main@PENDING_PR_MERGE
+            ref: git://origin/main@dbf00f6fa51f1886ad1eaeecc8564c6ebd633b40
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
           tests:
@@ -1398,6 +1401,14 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
           live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-01.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - accepted_specifications:
   - content_digest: sha256:c48e1af6fa5de6a5506e834a966c4c0a1ed65516df50abc7b6721759afe869a7
     decision_ref: decision://accepted/BET-Y2Q1-T10-03
