@@ -2354,7 +2354,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-16-y3h1-t5-02-routine-hosting-spec.md
     spec_version: 1.0.0
-    content_digest: sha256:0e16d2a0e2bcf409f04ec9079233ac645da3500a68fdce4a62c5172498942d36
+    content_digest: sha256:2f1363e0d1419c7fab5839bb696697a5101613597bedd5acfd3582bbed22273f
     decision_ref: decision://accepted/BET-Y3H1-T5-02
 - accepted_specifications:
   - content_digest: sha256:b9bf6cccf6aa9e0e9dbf24b1066918dac722e3138c9cb3b2a3ab16bfc3feef6b

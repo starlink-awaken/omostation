@@ -5,7 +5,7 @@ title: BET-Y3H1-T5-02 specification
 bet_id: BET-Y3H1-T5-02
 status: accepted
 lifecycle: spec
-owner: @xiamingxing
+owner: "@xiamingxing"
 last-reviewed: 2026-09-16
 ---
 
