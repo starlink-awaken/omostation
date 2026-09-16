@@ -178,6 +178,24 @@ class TestGetCmd:
         assert Path(cmd[0]).name in {"python", "python3"}
         assert cmd[1] == "bin/test.py"
 
+    def test_stable_python3_uses_dedicated_function_not_sys_executable(self, monkeypatch):
+        """防回归: stable-python3 必须走 _stable_python3() (避免 sys.executable 拿到 uv 临时 venv 的 python3.14).
+
+        旧 bug (PR #3818 之前): bin/ops/cli.py._get_cmd 用 sys.executable,
+        在 uv run / venv 启动时拿到 python3.14 全路径, 与 gen-service-configs
+        的 _stable_python3 返 /opt/homebrew/bin/python3 不一致.
+        """
+        from bin.ops import cli as cli_module
+        # 让 _stable_python3 返固定字符串, 模拟稳定环境
+        monkeypatch.setattr(cli_module, "_stable_python3", lambda: "/opt/homebrew/bin/python3")
+        svc = {"program": {"interpreter": "stable-python3", "entrypoint": "bin/test.py", "args": []}}
+        cmd = _get_cmd(svc)
+        assert cmd[0] == "/opt/homebrew/bin/python3", (
+            f"stable-python3 应走 _stable_python3() 返固定路径, 实际: {cmd[0]}. "
+            f"若返 python3.14 全路径则 cli 与 gen-service-configs 不一致, "
+            f"pl生成 vs pl执行 会用两个不同 python 解释器, 引发 'stable' 语义失效."
+        )
+
     def test_absolute_interpreter(self):
         svc = {"program": {"interpreter": "/bin/bash", "entrypoint": "test.sh", "args": []}}
         cmd = _get_cmd(svc)

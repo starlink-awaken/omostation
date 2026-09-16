@@ -68,7 +68,7 @@ def test_check_skips_byte_comparison_when_host_observer_is_unavailable(
     monkeypatch.setattr(
         module,
         "load_services",
-        lambda: [
+        lambda path=None: [
             {
                 "id": "generated.valid",
                 "enabled": True,
@@ -104,7 +104,7 @@ def test_observer_unavailable_does_not_mask_malformed_declarations(
     monkeypatch.setattr(
         module,
         "load_services",
-        lambda: [
+        lambda path=None: [
             {
                 "id": "broken.missing_label",
                 "enabled": True,

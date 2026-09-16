@@ -28,6 +28,19 @@ except ImportError:
     print("ERROR: pyyaml required. Run: uv pip install pyyaml", file=sys.stderr)
     sys.exit(1)
 
+# 复用 gen-service-configs 的 _stable_python3 (避免 sys.executable 拿到 uv 临时 venv 的 python3.14)
+import importlib.util as _importlib_util
+_GSC_PATH = Path(__file__).resolve().parents[2] / "bin" / "mof" / "gen-service-configs.py"
+_gsc_spec = _importlib_util.spec_from_file_location("_gsc_stable_python3", _GSC_PATH)
+_gsc_mod = _importlib_util.module_from_spec(_gsc_spec) if _gsc_spec else None
+if _gsc_spec is not None and _gsc_spec.loader is not None:
+    _gsc_spec.loader.exec_module(_gsc_mod)
+    _stable_python3 = _gsc_mod._stable_python3  # type: ignore[attr-defined]
+else:
+    # 退化: 用 sys.executable (行为对 venv 启动的 CLI 仍合理, 不阻断启动)
+    def _stable_python3() -> str:  # type: ignore[no-redef]
+        return sys.executable
+
 WORKSPACE = Path(__file__).resolve().parents[2]
 SERVICES_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "services.yaml"
 PORT_REGISTRY = WORKSPACE / "protocols" / "port-registry.yaml"
@@ -476,7 +489,7 @@ def _get_cmd(svc: dict) -> list[str]:
             return ["uv", "run", "--directory", entry] + svc_args
         return ["uv", "run", entry] + svc_args
     elif interpreter == "stable-python3":
-        return [sys.executable, entry] + svc_args
+        return [_stable_python3(), entry] + svc_args
     elif interpreter.startswith("/"):
         return [interpreter, entry] + svc_args
     else:
