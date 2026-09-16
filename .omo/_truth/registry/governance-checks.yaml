@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 666 # 2026-09-16 664→666: T6-30 persona-mirror (extract-persona-diffs + persona_trainer)
+    script_baseline: 668 # 2026-09-16 666→668: T6-30 persona-mirror (registry: extract-persona-diffs + persona_trainer)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
