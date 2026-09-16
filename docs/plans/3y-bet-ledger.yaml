@@ -4457,6 +4457,11 @@ bets:
   - projects/aetherforge/src/persona_trainer.py
   - tests/integration/test-persona-mirror.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-30.md
+  accepted_specifications:
+  - content_digest: sha256:d7c0723ef0e2a8cb090b9b2d7a1445e5ae4fd62b4be21488468365f42c33c8b1
+    decision_ref: decision://accepted/BET-Y1Q4-T6-30
+    spec_ref: repo://docs/superpowers/specs/2026-09-16-t6-30-persona-mirror-spec.md
+    spec_version: 1.0.0
 - accepted_specifications:
   - content_digest: sha256:cd8573840afe4878120d7614a7ef1c38f295d57db50342b338f07b64cc178302
     decision_ref: decision://accepted/BET-Y1Q4-T9-03
