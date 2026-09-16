@@ -319,11 +319,12 @@ def collect_scene_cards() -> dict:
 
 def collect_journeys() -> dict:
     """旅程规范：路径 / human_gate 数量 / state 数。"""
+    import yaml as _yaml
     from glob import glob
     journeys = []
     for f in sorted(glob(str(ROOT / ".omo/_truth/journeys/v3/*.yaml"))):
         try:
-            doc = yaml.safe_load(Path(f).read_text())
+            doc = _yaml.safe_load(Path(f).read_text())
             if not isinstance(doc, dict):
                 continue
             states = doc.get("states") or []
@@ -1500,13 +1501,14 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
 <div class="card"><table id="restbl"><thead><tr><th>角色</th><th>项目</th><th>类型</th></tr></thead><tbody></tbody></table></div>
 </section>
 <section class="sec" id="s-scenes">
-<h2>Scene Card 生命周期</h2><p class="sub">阶段分布（draft→routine）</p>
+<h2>Scene System 运行态</h2><p class="sub">场景卡 / 信号轮询 / 旅程执行 / 连接器 / 远程卫生</p>
 <div class="grid g3" id="scenekpi"></div>
-<div class="card" style="margin-top:12px"><table id="scenetbl"><thead><tr><th>ID</th><th>阶段</th><th>域</th></tr></thead><tbody></tbody></table></div>
+<div class="grid g2" id="sceneextra"></div>
 </section>
 <section class="sec" id="s-journeys">
-<h2>Journey 状态</h2><p class="sub">旅程规格文件 · 完成度/阻塞</p>
-<div class="card"><table id="journeytbl"><thead><tr><th>名称</th><th>大小</th></tr></thead><tbody></tbody></table></div>
+<h2>Journey 引擎</h2><p class="sub">旅程规格文件 · human_gate 数量 · state 数</p>
+<div class="grid g3" id="journeykpi"></div>
+<div class="card" style="margin-top:12px"><table id="journeytbl"><thead><tr><th>名称</th><th>states</th><th>human_gates</th><th>size</th></tr></thead><tbody></tbody></table></div>
 </section>
 <section class="sec" id="s-hygiene">
 <h2>工作区卫生</h2><p class="sub">陈旧 worktree / 僵尸锁 / 遗留</p>
@@ -1613,6 +1615,34 @@ $('rtgrid').innerHTML=[
 $('docgrid').innerHTML=D.docs.map(d=>'<div class="card"><h3>'+d.name+'</h3><span class="chip '+(d.exists?'p':'f')+'">'+(d.exists?Math.round(d.size/1024)+'KB':'缺失')+'</span>'+
 '<div class="mono" style="margin-top:8px;font-size:11px">'+d.path+'</div>'+
 (d.exists?'<div style="margin-top:8px"><a href="/../../'+d.path+'">打开 →</a></div>':'')+'</div>').join('');
+// === Scene System 运行态 ===
+(function(){
+  const sc=D.scene_cards||{}, sp=D.signal_poller||{}, je=D.journey_executions||{};
+  const rh=D.remote_hygiene||{}, co=D.connectors||{}, bv=D.bos_verifier||{};
+  const lc=sc.lifecycle||{};
+  const lcHtml=Object.entries(lc).map(([s,n])=>'<div class="card kpi"><b>'+n+'</b><span>'+s+'</span></div>').join('');
+  $('scenekpi').innerHTML=[
+    {v:sc.total,l:'总场景卡'}, {v:sc.with_trigger,l:'有触发器'}, {v:Object.keys(lc).length,l:'阶段数'},
+    {v:je.total||0,l:'旅程执行'}, {v:je.escalated||0,l:'escalated'}, {v:(je.auto_complete_rate!=null?je.auto_complete_rate:'n/a'),l:'自动完成率'},
+    {v:sp.watermark_entries||0,l:'watermark'}, {v:sp.scenes_with_triggers||0,l:'场景有触发'}, {v:(co.total||0)+' / '+(co.available||[]).length,l:'连接器 总/可用'}
+  ].map(k=>'<div class="card kpi"><b>'+k.v+'</b><span>'+k.l+'</span></div>').join('')+lcHtml;
+  const extra=[];
+  if(co.wired_to_scenes) extra.push('<div class="card"><h3>已接线连接器</h3><div style="margin-top:8px">'+(co.wired_to_scenes||[]).map(c=>'<span class="chip p" style="margin:2px">'+c+'</span>').join(' ')+'</div></div>');
+  if(co.unwired_available) extra.push('<div class="card"><h3>可用未接线</h3><div style="margin-top:8px">'+(co.unwired_available||[]).map(c=>'<span class="chip n" style="margin:2px">'+c+'</span>').join(' ')+'</div></div>');
+  if(sp.last_poll) extra.push('<div class="card"><h3>最近轮询</h3><div class="mono" style="font-size:11px;margin-top:8px">'+sp.last_poll.slice(0,16).replace('T',' ')+'</div></div>');
+  if(rh.origin_canonical!=null) extra.push('<div class="card"><h3>远程卫生</h3><div style="margin-top:6px"><span class="chip '+(rh.origin_canonical?'p':'f')+'">origin '+(rh.origin_canonical?'✓':'✗')+'</span> <span class="chip '+(rh.origin_push_canonical?'p':'f')+'">push '+(rh.origin_push_canonical?'✓':'✗')+'</span><div class="mono" style="font-size:10px;margin-top:6px">submodules: '+(rh.submodules_checked||0)+'</div></div></div>');
+  if(bv.last_run_ok!=null) extra.push('<div class="card"><h3>BOS 验证</h3><div style="margin-top:6px"><span class="chip '+(bv.last_run_ok>=100?'p':'w')+'">OK '+bv.last_run_ok+'</span> <span class="chip '+(bv.last_run_errors>0?'f':'p')+'">errors '+bv.last_run_errors+'</span></div></div>');
+  $('sceneextra').innerHTML=extra.join('')||'';
+})();
+// === Journey 引擎 ===
+(function(){
+  const specs=(D.journeys&&D.journeys.journeys)||[];
+  const totalGates=specs.reduce((a,j)=>a+(j.human_gates||0),0);
+  $('journeykpi').innerHTML=[
+    {v:specs.length,l:'旅程规格'},{v:totalGates,l:'human_gate 总数'},{v:specs.filter(j=>j.human_gates>0).length,l:'含门控'}
+  ].map(k=>'<div class="card kpi"><b>'+k.v+'</b><span>'+k.l+'</span></div>').join('');
+  $('journeytbl').querySelector('tbody').innerHTML=specs.slice(0,15).map(j=>'<tr><td class="mono">'+j.name+'</td><td>'+j.states+'</td><td>'+j.human_gates+'</td><td>'+j.size_kb+'KB</td></tr>').join('')||'<tr><td colspan=4 class="mono">无旅程规格</td></tr>';
+})();
 // === 知识记忆经验建模 ===
 (function(){
   const kh=D.knowledge_health||{};
@@ -1648,3 +1678,6 @@ $('docgrid').innerHTML=D.docs.map(d=>'<div class="card"><h3>'+d.name+'</h3><span
 })();
 </script></body></html>
 """
+
+if __name__ == "__main__":
+    raise SystemExit(main())
