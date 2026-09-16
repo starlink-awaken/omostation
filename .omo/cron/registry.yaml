@@ -556,6 +556,22 @@ jobs:
       使用 fix-remotes.py，但未进入 scheduler registry，导致 A4 orphan=1。
       本条只补声明面 parity，不改变已安装 schedule、command 或运行行为。
 
+  - name: zhixing-dashboard-panorama-cache-5min
+    schedule: "*/5 * * * *"
+    command: 'cd /Users/xiamingxing/.local/share/zhixing-dashboard && python3 panorama_cache.py >> /tmp/panorama_cron.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-16 补登 (TASK-B3229A65 收尾)：scheduler-compile.py --check 报告的最后
+      1 个 orphan。与上面已登记的 zhixing-dashboard-refresh（同一面板、已于
+      2026-09-11 迁 launchd 脱离 Codex 依赖）是两条独立并存的任务，不是同一个
+      被替代掉的脚本——panorama_cache.py 走的是普通 crontab、纯本地缓存刷新，
+      本来就不含 LLM/Codex 调用，此前只是漏登记。本条只补声明面 parity，不改变
+      已安装 schedule、command 或运行行为。
+
 # ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
 open_decisions:
   - id: D2
