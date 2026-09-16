@@ -28280,7 +28280,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: in_progress
+  status: done
+  done_at: '2026-09-16'
   reopen_at: '2026-09-15'
   reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo
     pin; false done rolled back'
@@ -28303,15 +28304,31 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T10-146
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     decision_ref: decision://accepted/BET-Y1Q4-T10-146
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          merged_reachable_commit:
+            ref: git://origin/main@de5cafe0662e2eaac464be69f5850df1e5bafc42
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
       value:
         status: NOT_PROVEN
         evidence: {}
