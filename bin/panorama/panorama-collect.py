@@ -816,6 +816,13 @@ def collect_journey_executions() -> dict:
 def collect_remote_hygiene() -> dict:
     """远程卫生三层强制：origin 健康 + cron 巡检。"""
     import subprocess as _sp
+
+    def _normalize_git_url(url: str) -> str:
+        """SSH ↔ HTTPS 等价归一 (git@github.com:owner/repo.git → https://...)."""
+        if url.startswith("git@") and ":" in url:
+            host, path = url.split(":", 1)
+            return "https://" + host.split("@", 1)[1] + "/" + path
+        return url
     result = {"origin_canonical": None, "origin_push_canonical": None,
               "last_fix_remotes_run": None, "submodules_checked": 0}
     log_path = ROOT / "runtime/cron/remote-hygiene.log"
@@ -828,10 +835,23 @@ def collect_remote_hygiene() -> dict:
     try:
         r = _sp.run(["git", "remote", "-v"], capture_output=True, text=True, cwd=str(ROOT), timeout=10)
         if r.returncode == 0:
-            urls = [l.split()[-1] for l in r.stdout.splitlines() if l.strip()]
+            # `git remote -v` 行格式: <name>\t<url> (fetch|push) — URL 是第 2 列,
+            # 末列是 (fetch)/(push) 标记 (2026-09-16 修复: 旧版取 [-1] 恒不匹配 → 面板恒 ✗).
             canonical = "https://github.com/starlink-awaken/omostation.git"
-            result["origin_canonical"] = any(canonical in u for u in urls)
-            result["origin_push_canonical"] = any(u.endswith("omostation.git") for u in urls)
+            fetch_urls, push_urls = [], []
+            for line in r.stdout.splitlines():
+                parts = line.split()
+                if len(parts) < 2 or parts[0] != "origin":
+                    continue
+                url = parts[1]
+                if parts[-1] == "(fetch)":
+                    fetch_urls.append(url)
+                elif parts[-1] == "(push)":
+                    push_urls.append(url)
+            result["origin_canonical"] = any(canonical == u or canonical == _normalize_git_url(u)
+                                             for u in fetch_urls) if fetch_urls else False
+            result["origin_push_canonical"] = any(canonical == u or canonical == _normalize_git_url(u)
+                                                  for u in push_urls) if push_urls else False
     except Exception:
         pass
     try:
