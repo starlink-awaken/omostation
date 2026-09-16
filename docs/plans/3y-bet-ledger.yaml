@@ -28395,18 +28395,41 @@ bets:
     spec_version: 1.0.0
   circuit_breaker: 复核后发现该事务链已存在但未被发现时，立即停止重复实现，转为补充证据登记。
   completion_evidence:
+    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        evidence: {}
-        status: IN_PROGRESS
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1c4bdeacbd5bfd5a63136bb515fd9c3e6890ebe0
+          tests:
+            ref: receipt://projects/omo/tests/test_external_transaction.py
+            sha256: sha256:0091497cb2c6685ed22d7b230117b2c33e1c8ecdaf288b05fcec0ed5f72f3424
+          diff:
+            ref: receipt://projects/omo/src/omo/workflow/external_transaction.py
+            sha256: sha256:5e42d7572e009dfbf86472037ecb53fce123a761674326368cc73942f5568d0d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
+            sha256: sha256:5bcf76348b93fbb35b1958e6845520d588e2c31362108b769eed3d0db615aabd
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-15-a8-external-transaction-authoritative-review.md
+            sha256: sha256:19aa78f377c8cf1532d12ac9ff828ca382146dcd55f02228fa9430dcde117f2c
+          fresh_receipt:
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+            sha256: sha256:6e37fd46308404de2fe85d63d83cf87cb71cb841a8199022f41ac2363da94d18
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
+            sha256: sha256:5bcf76348b93fbb35b1958e6845520d588e2c31362108b769eed3d0db615aabd
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
+            sha256: sha256:5bcf76348b93fbb35b1958e6845520d588e2c31362108b769eed3d0db615aabd
       value:
-        evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
-    schema_version: completion-evidence-matrix/v1
+        evidence: {}
+    overall_state: delivery_accepted
   done_when:
   - 完成 ADR/archive/mutation-surfaces/ingress delivery 五处路径搜索，产出 权威现状报告（存在/不存在/部分存在，附证据）
   - 若确认缺失，产出 reserve→bind→readback→start→ACK/fence→release/retire 七段状态机的最小实现与测试
@@ -28435,8 +28458,10 @@ bets:
 
   value_indicator_policy: false
   write_surfaces:
+  - projects/omo
   - projects/omo/src/omo/workflow/external_transaction.py
   - projects/omo/tests/test_external_transaction.py
+  - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-151.md
 - accepted_specifications:
   - content_digest: sha256:c1a2fe8d14405235e91af84941d7580e0f0c9a6891b55230cc20e1d883adad21
