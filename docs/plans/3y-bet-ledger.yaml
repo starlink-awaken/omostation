@@ -28401,7 +28401,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@1c4bdeacbd5bfd5a63136bb515fd9c3e6890ebe0
+            ref: git://origin/main@de5cafe0662e2eaac464be69f5850df1e5bafc42
           tests:
             ref: receipt://projects/omo/tests/test_external_transaction.py
             sha256: sha256:0091497cb2c6685ed22d7b230117b2c33e1c8ecdaf288b05fcec0ed5f72f3424
@@ -28444,7 +28444,8 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: candidate
+  status: done
+  done_at: 2026-09-16
   reopen_at: '2026-09-15'
   reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo pin; false done rolled back'
   title: A8 OMO 外部事务生命周期实现
