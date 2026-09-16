@@ -15083,14 +15083,34 @@ bets:
   done_at: '2026-09-16'
   value_indicator_policy: false
   completion_evidence:
-    pr: starlink-awaken/omostation#3832
-    merge_commit: e86e3cda9f
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main
+          tests:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          diff:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          rollback:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          fresh_receipt:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          live_canary:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          replay:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
     overall_state: delivery_accepted
-    refs:
-    - pr
-    - merge_commit
-    - overall_state
-    - done_at
 - appetite: 2 days
   circuit_breaker: 修订内容与已交付代码事实核对不一致时，以代码为准重新核实后再落笔，不凭印象改文档。
   done_when:
@@ -15121,14 +15141,34 @@ bets:
   done_at: '2026-09-16'
   value_indicator_policy: false
   completion_evidence:
-    pr: starlink-awaken/omostation#3832
-    merge_commit: e86e3cda9f
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main
+          tests:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          diff:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          rollback:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          fresh_receipt:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          live_canary:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          replay:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
     overall_state: delivery_accepted
-    refs:
-    - pr
-    - merge_commit
-    - overall_state
-    - done_at
 - appetite: 3 weeks
   circuit_breaker: 模板抽象泄漏 → 退回每场景独立 DAG
   depends_on:
