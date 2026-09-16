@@ -2,6 +2,8 @@
 schema_version: specification/v1
 spec_version: 1.0.0
 status: accepted
+lifecycle: contract
+type: ssot
 bet_id: BET-Y1Q4-T6-30
 decision_ref: decision://accepted/BET-Y1Q4-T6-30
 track: T6-EVOLUTION
