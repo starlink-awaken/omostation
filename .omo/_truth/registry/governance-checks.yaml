@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 664 # 2026-09-13 663→664: T7-07 continual-harness-refine (skill extraction pipeline)
+    script_baseline: 668 # 2026-09-16 666→668: T6-30 persona-mirror (registry: extract-persona-diffs + persona_trainer)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
