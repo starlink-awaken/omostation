@@ -42,7 +42,19 @@ owner: engineering-agent
 - `network_view()` 的 BFS 遍历在大规模图谱（>10K 节点）时可能需要深度限制或索引优化。
 - Cockpit 命令目前使用 demo 数据，后续需接入实际数据加载路径。
 
+## D2 表面积记账
+
+```
+项目                 churn_add   churn_del          净值        重写噪音
+----------------------------------------------------------------
+cockpit               72,113      17,751     +54,362       4,912
+_root                 688,230     679,883      +8,347       2,324
+```
+
+主要增量集中在 cockpit（org_relation 命令 + subcommand/handler 注册）和 _root（spec + retro + ledger 绑定）。
+
 ## 教训
 
 - submodule 初始化需要 `--depth 1` 加速，部分 submodule（如 ecos）可能因网络超时需重试。
 - cockpit 的 `handlers` dict 使用 lambda + `__import__` 模式，新增命令时需遵循此模式避免静态导入导致的循环依赖。
+- submodule commit 三步走：① submodule 内 add+commit ② push submodule ③ 根仓 add submodule pointer + commit + push。
