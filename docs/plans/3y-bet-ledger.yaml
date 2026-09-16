@@ -29906,7 +29906,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
+  done_at: 2026-09-16
   title: T7-06/T10-151 合入后评审缺陷校正（退回状态机 / journey / 虚假 done / 影子台账）
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -29919,6 +29920,42 @@ bets:
     expect: exit 0
   window: Y2Q1
   workflow: bet-execution
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f49c76eb70ef5d81837ad277d4c4aa5c6e022ebb
+          tests:
+            ref: receipt://projects/domain-cartridges/health-gov/domain/health_gov/test_doc_pipeline.py
+            sha256: sha256:b5452126eaf094c5280c68cc90dcb441911ae7dc0e853b86230bb5e7637a319d
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-15-t7-07-review-remediation-design.md
+            sha256: sha256:f6320b4f66cb47c9dba429ebc9f2be78e486be205da3e67e3d81c771265749a2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/journey-specs/health-gov-doc-cycle-workflow.yaml
+            sha256: sha256:8bd1450874dc8139917abeaced594176d3a26aa47331ba1c480265fc7e649efe
+          fresh_receipt:
+            ref: receipt://docs/scene-cards/health-gov-doc-cycle.yaml
+            sha256: sha256:d27a6ed5699b0039534e98826aea2e2889a1c1e6479dfa9c2d2a22bbc0e81b2e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
   write_surfaces:
   - projects/domain-cartridges/health-gov/
   - docs/journey-specs/health-gov-doc-cycle-workflow.yaml
