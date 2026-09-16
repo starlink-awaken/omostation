@@ -2320,6 +2320,39 @@ bets:
   - docs/scene-cards/research-deep-synthesis.yaml
   - projects/domain-cartridges/research/
   - .omo/_knowledge/retros/BET-Y2Q4-T7-01.md
+- appetite: 5 days
+  circuit_breaker: 调研发现现有雇主内部审批流与 document-review 能力模型不兼容（如格式/密级/审批链路差异过大）时，如实记录不兼容原因，不强行削足适履。
+  depends_on:
+  - BET-Y2Q1-T7-07
+  done_when:
+  - 产出至少一个不依赖国转中心借调的公文/决策收件箱候选业务驱动，附真实场景描述与预估请求量
+  - 验证该候选驱动能否复用已建成的 document-review 能力（拟稿/审批/督办闭环），给出兼容度结论
+  - 结论写入 docs/plans/，供后续 BET 认领决策参考
+  goal: 2026-08-19 国转中心借调冻结后，公文/决策收件箱场景（当前唯一"主战场"）业务驱动单点依赖的问题一直未解决（见 2026-08-19
+    多智能体深度复盘 retro 自陈"场景单点依赖：需决策场景转型 or 协议归档"）。本 BET 调研并提出至少一个不依赖国转借调的第二业务驱动，
+    验证其与已建成 document-review 能力的兼容性，为该场景找到脱离单点依赖的路径。
+  human_gate: true
+  id: BET-Y2Q4-T7-02
+  non_goals:
+  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01（两条已冻结 BET 各自的 retro 都明确建议"若未来重新借调或出现新场景，应新建
+    bet 而非复活本条目"）
+  - 不在本 BET 内直接实现新驱动对应的代码，只做调研与可行性结论
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: candidate
+  title: 公文场景第二业务驱动探索 — 脱离国转中心借调依赖
+  track: T7-SCENE
+  underlying_workflow: project-doc-change
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  window: Y2Q4
+  workflow: bet-execution
+  write_surfaces:
+  - docs/plans/
+  - docs/scene-cards/
 - appetite: 4 days
   circuit_breaker: 受托执行置信度低于 0.95 时立即回退到 Assisted 人工审批。
   completion_evidence:
@@ -2356,9 +2389,8 @@ bets:
   - BET-Y2Q2-T3-02
   done_at: '2026-09-16'
   done_evidence: 'RoutineEngine 主仓 PR #3810 (afd647d7) 已合入 origin/main。engineering:
-    15 tests VERIFIED (test_routing_engine + test_routine_engine)。operational:
-    PROVEN (receipt + replay via retro)。value: NOT_PROVEN (value-exempt
-    delivery_accepted)。'
+    15 tests VERIFIED (test_routing_engine + test_routine_engine)。operational: PROVEN
+    (receipt + replay via retro)。value: NOT_PROVEN (value-exempt delivery_accepted)。'
   done_when:
   - 连续 30 天 70% 常规事务无需夏明星逐字修改直接托管通过
   - 本人修订率稳定保持在 <= 0.10
@@ -14951,6 +14983,60 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - .omo/_knowledge/retros/gates/**
+- appetite: 2 days
+  circuit_breaker: 修订内容与已交付代码事实核对不一致时，以代码为准重新核实后再落笔，不凭印象改文档。
+  done_when:
+  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md 明确把 family 域（含已 assisted 状态的资产审计场景）列入正式认领范围，说明理由
+  - 原"休眠/待退役"表述被替换或明确限定为"截至 <日期> 的历史判断，现状见本次修订"，不留自相矛盾的并存文本
+  goal: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md 把 family-hub 标记为"休眠/待退役"，但 family-asset-governance
+    场景卡已经是 assisted 状态且有真实代码交付（projects/family-hub/src/family_hub/runtime/asset_audit.py）。文档与执行现状矛盾，
+    追认既成事实，修订宪章正式纳编 family 域，而不是让矛盾继续挂着。
+  human_gate: true
+  id: BET-Y2Q4-T1-02
+  non_goals:
+  - 不代表要求继续扩大 family 域投入，仅追认已交付部分的定位
+  pasw_required: false
+  priority: P2
+  retro: required
+  risk_level: L0
+  status: candidate
+  title: 战略主线宪章修订 — family 域正式纳编入三年计划
+  track: T1-TRUTH
+  underlying_workflow: project-doc-change
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  window: Y2Q4
+  workflow: bet-execution
+  write_surfaces:
+  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+- appetite: 2 days
+  circuit_breaker: 修订内容与已交付代码事实核对不一致时，以代码为准重新核实后再落笔，不凭印象改文档。
+  done_when:
+  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md §6 应用形态章节去掉与已交付功能冲突的"不做移动 App/多窗格"表述
+  - 改为如实描述当前形态（Mobile Cockpit、Sovereign TUI 2.0 多窗格）并说明其与"一个应用形态"原则的关系，给出明确结论（是否算同一形态的不同投影，或需要新增一条替代性自我约束）
+  goal: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md §6 写明"三年只做一个 App 形态，不做移动 App、聊天机器人入口、Agent
+    编排画布、插件市场"，但 BET-Y1Q4-T8-02（Mobile Cockpit iOS/PWA）与 BET-Y1Q4-T8-18（Sovereign TUI 2.0
+    多窗格）均已交付。文档与执行现状矛盾，追认已交付形态，避免"文档说不做、代码已经做了"的持续性自相矛盾。
+  human_gate: true
+  id: BET-Y2Q4-T1-03
+  non_goals:
+  - 不代表批准继续新增更多应用形态（如插件市场），仅追认已交付的两项
+  pasw_required: false
+  priority: P2
+  retro: required
+  risk_level: L0
+  status: candidate
+  title: 战略主线宪章修订 — 追认移动 Cockpit / TUI 多窗格为既定应用形态
+  track: T1-TRUTH
+  underlying_workflow: project-doc-change
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  window: Y2Q4
+  workflow: bet-execution
+  write_surfaces:
+  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
 - appetite: 3 weeks
   circuit_breaker: 模板抽象泄漏 → 退回每场景独立 DAG
   depends_on:
@@ -28194,7 +28280,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: in_progress
   reopen_at: '2026-09-15'
   reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo
     pin; false done rolled back'
@@ -28210,6 +28296,25 @@ bets:
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-16-t10-146-maturity-rollup-tracking.md
+    spec_version: 1.0.0
+    content_digest: sha256:7dfe23e895be4c86bb8f0c8a978adeeab7985a627aba1e95b33b9b92234090c5
+    decision_ref: decision://accepted/BET-Y1Q4-T10-146
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    decision_ref: decision://accepted/BET-Y1Q4-T10-146
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 - accepted_specifications:
   - content_digest: sha256:b0ac46f1b2233db7ab4c18d0ec1d0b5edaded2a6b6ad5bcddf2b8d4acf428519
     decision_ref: decision://accepted/BET-Y1Q4-T10-147
@@ -28447,7 +28552,8 @@ bets:
   status: done
   done_at: 2026-09-16
   reopen_at: '2026-09-15'
-  reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo pin; false done rolled back'
+  reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo
+    pin; false done rolled back'
   title: A8 OMO 外部事务生命周期实现
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28456,7 +28562,6 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
-
   value_indicator_policy: false
   write_surfaces:
   - projects/omo
