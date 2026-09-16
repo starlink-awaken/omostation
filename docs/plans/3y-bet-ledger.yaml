@@ -28115,38 +28115,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: done
-  done_at: '2026-09-15'
+  status: candidate
   value_indicator_policy: false
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@12b01ad3c46f1ded03a5ea50dc5cfc661756de6f
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
   title: OMO Agent OS 成熟度差距收口 — Queue/AGE-v2/Orca R0/Multica AS0/A8 外部事务
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28333,7 +28303,25 @@ bets:
     spec_ref: repo://docs/superpowers/specs/2026-09-12-multica-as0-verify-design.md
     spec_version: 1.0.0
 - appetite: 15 days
+  accepted_specifications:
+  - content_digest: sha256:6e37fd46308404de2fe85d63d83cf87cb71cb841a8199022f41ac2363da94d18
+    decision_ref: decision://accepted/BET-Y1Q4-T10-151
+    spec_ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+    spec_version: 1.0.0
   circuit_breaker: 复核后发现该事务链已存在但未被发现时，立即停止重复实现，转为补充证据登记。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: IN_PROGRESS
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
   done_when:
   - 完成 ADR/archive/mutation-surfaces/ingress delivery 五处路径搜索，产出 权威现状报告（存在/不存在/部分存在，附证据）
   - 若确认缺失，产出 reserve→bind→readback→start→ACK/fence→release/retire 七段状态机的最小实现与测试
@@ -28348,7 +28336,7 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: done
+  status: candidate
   title: A8 OMO 外部事务生命周期实现
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28357,26 +28345,11 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_delivery/external-transaction-status-2026-09-14.md
-            sha256: sha256:placeholder_phase1_report
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
-            sha256: sha256:placeholder_phase1_retro
-      operational:
-        status: NOT_PROVEN
-        evidence: {}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-    notes: 'phase1: 现状复核 (5 路径搜索), 结论: A8 未完整实现, 进入 phase2 (状态机实现)'
+  value_indicator_policy: false
+  write_surfaces:
+  - projects/omo/src/omo/workflow/external_transaction.py
+  - projects/omo/tests/test_external_transaction.py
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-151.md
 - accepted_specifications:
   - content_digest: sha256:c1a2fe8d14405235e91af84941d7580e0f0c9a6891b55230cc20e1d883adad21
     decision_ref: decision://accepted/BET-Y1Q4-T10-152
