@@ -1,11 +1,11 @@
 """Self-test for the health-gov doc-cycle pipeline (verify entry).
 
-Run: `uv run python -m domain.health_gov.test_doc_pipeline` from repo root
-(exit 0 = pass; CWD-independent; requires reportlab in the workspace .venv).
+Run: `uv run --with reportlab python -m domain.health_gov.test_doc_pipeline`
+(exit 0 = pass; CWD-independent).
 
 Covers: 3 e2e (局发通知下行文 / 跨部门平行函 / 会议纪要督办，含署名与真实 PDF 导出),
-6 类负例熔断 (涉密拒收/文号格式错/无署名批阅/退回无意见/缺要素阻止导出/非法跃迁),
-36 例合成校准 (18 有效 + 18 缺陷, F1 >= 0.6 assisted 门).
+负例熔断 (涉密拒收/文号格式错/无署名批阅/退回无意见/退回后不可发出/缺要素阻止导出/非法跃迁),
+36 例合成校准 (18 有效 + 18 登记/版式缺陷, F1 >= 0.6 assisted 门).
 """
 
 from __future__ import annotations
@@ -127,6 +127,22 @@ def test_negatives() -> None:
     expect_reject("neg-return-nocomment", approve, d, "王局长", "退回")
     expect_reject("neg-bad-decision", approve, d, "王局长", "已阅")
     expect_reject("neg-double-draft", draft_opinion, d, "张主任")
+    # 退回后不可发出 / 不可导出红头
+    d_ret = register_incoming(**base_doc(doc_id="NEG-RET"))
+    draft_opinion(d_ret, drafter="张主任")
+    ap_ret = approve(d_ret, approver="王局长", decision="退回", comment="请补充依据")
+    check("neg-return-status", d_ret.status == "returned" and d_ret.last_decision == "退回")
+    expect_reject("neg-return-dispatch", dispatch, d_ret)
+    with tempfile.TemporaryDirectory() as td:
+        expect_reject("neg-return-export", export_package, d_ret, td, approval=ap_ret)
+    # 退回后可重新拟办
+    draft_opinion(d_ret, drafter="张主任")
+    check("neg-return-redraft", d_ret.status == "drafted")
+    # xh-letter alias
+    d_alias = register_incoming(**base_doc(doc_id="NEG-ALIAS", kind="xh-letter",
+                                           title="×市卫生健康委员会关于商请联合检查的函",
+                                           doc_no="×卫函〔2026〕9号"))
+    check("neg-xh-letter-alias", d_alias.kind == "letter")
     d2 = register_incoming(**base_doc(doc_id="NEG-2", recipients=""))
     draft_opinion(d2, drafter="张主任")
     approve(d2, approver="王局长", decision="同意")
@@ -153,6 +169,7 @@ def test_calibration(tmp: Path) -> None:
                 fn += 1
         except (ValueError, RuntimeError):
             fn += 1
+    # 登记/版式缺陷注入（6 类轮转）。熔断类（无署名/退回无意见/非法跃迁）在 test_negatives。
     defects = [
         dict(classification="secret"), dict(doc_no="坏文号"), dict(recipients=""),
         dict(printer=""), dict(title="短"), dict(text=""),
