@@ -30393,6 +30393,61 @@ bets:
         status: NOT_PROVEN
     overall_state: evaluating
     schema_version: completion-evidence-matrix/v1
+- appetite: 2 weeks
+  circuit_breaker: 连续 3 次 document-review 处理 admin-notification-workflow 产出时 校准得分低于
+    0.4 → 停止自动推进, 回退到 supervised 人工审批。
+  depends_on:
+  - BET-Y2Q4-T7-02
+  done_when:
+  - document-review 场景卡 lifecycle 从 supervised 升至 assisted
+  - calibration >= 0.6 且连续 30 次无 rejected
+  - 至少 3 份 admin-notification-workflow 产出的公文通过了 document-review 全链 (拟稿 → 格式检查 → 敏感项检查
+    → 依据核验 → 审批)
+  - 每份公文的 Workflow Mesh 证据链完整 (含 human_review checkpoint)
+  goal: 利用 admin-notification-workflow (BET-Y1Q4-T8-04, 6 场景 assisted/controlled) 作为第二业务驱动，将
+    document-review 场景从 supervised 推进到 assisted。 验证已建成的 document-review 能力 (拟稿/格式检查/敏感项检查/依据核验/审批/督办)
+    在脱离国转中心借调的情况下能否稳定运行。
+  human_gate: true
+  id: BET-Y3H1-T7-02
+  non_goals:
+  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01（retro 建议新建 BET）
+  - 不推进到 routine 级 (需先完成 assisted 阶段的稳定运行)
+  - 不实现新的 document-review 能力模块，只验证现有能力
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L2
+  status: candidate
+  title: 公文场景 assisted 升档 — 基于 admin-notification-workflow 驱动
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  window: Y3H1
+  workflow: bet-execution
+  write_surfaces:
+  - .omo/_truth/scenarios/v3/**
+  - .agents/skills/**
+  - docs/plans/
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-02-assisted-escalation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:8752077c3319fe4850ec3c9aed486bd42533bf3e9e462caa387909da03961612
+    decision_ref: decision://accepted/BET-Y3H1-T7-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30531,7 +30586,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 406
+  total_bets: 407
   windows:
   - Y1Q1
   - Y1Q2
