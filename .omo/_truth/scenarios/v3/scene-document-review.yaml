@@ -6,8 +6,8 @@ description: 将公文草稿生成、格式检查、敏感项检查和依据核�
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: assisted
-activation: controlled
+lifecycle: supervised
+activation: monitored
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -20,9 +20,6 @@ triggers:
 - type: schedule
   cron: 0 3 * * 1-5
 runtime:
-  # 2026-09-17: 原指向通用旅程 inbox-to-decision, 导致本卡声明的
-  # load_document/check_format/check_sensitivity/verify_basis 能力腿从未执行
-  # (声明与执行不一致). 改指匹配能力的 journey-document-review.
   journey_ref: journey-document-review
   timeout: 3600s
   sandbox:
@@ -66,3 +63,4 @@ sample_refs:
 - vault://redacted/document-review/sample-3
 notes:
 - Transitioned supervised→assisted at 2026-09-17T05:24:34.653024+00:00 by xiamingxing
+- Transitioned assisted→supervised at 2026-09-17T08:16:36.760926+00:00 by xiamingxing

@@ -201,7 +201,8 @@ bets:
 - appetite: 4 weeks
   blocked_at: '2026-08-20'
   blocked_reason: '永久关闭 (2026-09-17, wontfix): 用户决定不再解冻. 借调结束(2026-08-19)后政策申报业务前提消失且无恢复计划.
-    技术前置结论保留备查(depends_on Y2Q2-T7-02 + Y3H1-T3-01 全 done). 若未来重新借调或出现新场景应新建 BET, 不复活本 BET.'
+    技术前置结论保留备查(depends_on Y2Q2-T7-02 + Y3H1-T3-01 全 done). 若未来重新借调或出现新场景应新建 BET, 不复活本
+    BET.'
   blocked_reentry_policy: human_approval_required
   circuit_breaker: 未达标 → 保持 shadow
   depends_on:
@@ -216,7 +217,8 @@ bets:
   id: BET-Y3H1-T7-01
   non_goals:
   - 自动提交申报材料
-  note: 永久关闭(2026-09-17, wontfix)，用户决定不再解冻；中试/政策申报业务前提无恢复计划。技术前置结论保留备查；未来新场景应新建 BET，不复活本 BET
+  note: 永久关闭(2026-09-17, wontfix)，用户决定不再解冻；中试/政策申报业务前提无恢复计划。技术前置结论保留备查；未来新场景应新建 BET，不复活本
+    BET
   pasw_required: false
   priority: P1
   progress:
@@ -235,7 +237,8 @@ bets:
     commands:
     - python3 bin/plan/bet-ledger.py show BET-Y2Q2-T7-02 | grep status=done
     - python3 bin/plan/bet-ledger.py show BET-Y3H1-T3-01 | grep status=done
-    - grep -c lifecycle .omo/_truth/scenarios/v3/*zhongshi* 2>/dev/null || ls .omo/_truth/scenarios/v3/ | grep zhongshi
+    - grep -c lifecycle .omo/_truth/scenarios/v3/*zhongshi* 2>/dev/null || ls .omo/_truth/scenarios/v3/
+      | grep zhongshi
     - omo external-resources engineering-delivery-review-queue --json
     trigger: '任一: 用户明确发起解封评估; 重新参与中试/政策申报业务; 出现真实申报任务'
     verify: 运行 resume_acceptance 全部通过(依赖 done + 场景卡存在 + 管线可用 + done_when 起点不重置)
@@ -273,7 +276,8 @@ bets:
   - 内容生成自动化
   - 敏感判断自动化
   - 分发自动化
-  note: 永久关闭(2026-09-17, wontfix)，用户决定不再解冻；中试/公文场景业务前提无恢复计划。技术前置结论保留备查；未来新场景应新建 BET，不复活本 BET
+  note: 永久关闭(2026-09-17, wontfix)，用户决定不再解冻；中试/公文场景业务前提无恢复计划。技术前置结论保留备查；未来新场景应新建 BET，不复活本
+    BET
   pasw_required: false
   priority: P0
   progress:
@@ -291,8 +295,8 @@ bets:
     approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
     commands:
     - python3 bin/plan/bet-ledger.py show BET-Y3H1-T7-01 | grep status
-    - 'grep -c "lifecycle: routine" .omo/_truth/scenarios/v3/scene-document-review.yaml 2>/dev/null
-      || ls .omo/_truth/scenarios/v3/ | grep document-review'
+    - 'grep -c "lifecycle: routine" .omo/_truth/scenarios/v3/scene-document-review.yaml
+      2>/dev/null || ls .omo/_truth/scenarios/v3/ | grep document-review'
     - omo external-resources engineering-delivery-review-queue --json
     trigger: '任一: 用户明确发起解封评估; 重新参与公文业务; 出现真实公文任务'
     verify: 运行 resume_acceptance 全部通过(依赖状态 + 场景卡存在 + 管线可用 + done_when 起点不重置)
@@ -935,26 +939,6 @@ bets:
     spec_version: 1.0.0
   appetite: 2 days
   circuit_breaker: 出现文风失真或逻辑错乱时一键热拔出适配层回退到基座模型。
-  depends_on:
-  - BET-Y1Q3-T10-105
-  - BET-Y1Q3-T10-115
-  done_when:
-  - 生成 lora-gov-v1、lora-tech-v1、lora-email-v1 独立权重包
-  - Cockpit Spine draft 路由到对应业务领域时自动秒级挂载对应 LoRA
-  - 历史署名对齐度（BLEU/ROUGE）全面提升 ≥30%
-  goal: 基于 Mac mini M4 夜间闲时算力，按公文政务（Gov）、技术架构（Tech）、邮件简复（Email）三大垂直业务场景分别蒸馏专精 LoRA
-    适配层，实现动态热插拔。
-  human_gate: true
-  id: BET-Y1Q3-T10-118
-  non_goals:
-  - 不在夏明星工作互动高峰期占用 MBP 核心显存进行微调
-  pasw_required: false
-  priority: P0
-  retro: required
-  risk_level: L1
-  status: done
-  done_at: '2026-09-12'
-  value_indicator_policy: false
   completion_evidence:
     axes:
       engineering:
@@ -984,9 +968,29 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y1Q3-T10-105
+  - BET-Y1Q3-T10-115
+  done_at: '2026-09-12'
+  done_when:
+  - 生成 lora-gov-v1、lora-tech-v1、lora-email-v1 独立权重包
+  - Cockpit Spine draft 路由到对应业务领域时自动秒级挂载对应 LoRA
+  - 历史署名对齐度（BLEU/ROUGE）全面提升 ≥30%
+  goal: 基于 Mac mini M4 夜间闲时算力，按公文政务（Gov）、技术架构（Tech）、邮件简复（Email）三大垂直业务场景分别蒸馏专精 LoRA
+    适配层，实现动态热插拔。
+  human_gate: true
+  id: BET-Y1Q3-T10-118
+  non_goals:
+  - 不在夏明星工作互动高峰期占用 MBP 核心显存进行微调
+  pasw_required: false
+  priority: P0
+  retro: required
+  risk_level: L1
+  status: done
   title: 个人文风 Continuous LoRA 在线蒸馏与多业务领域适配器管理
   track: T10-MATURITY
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run python -m cockpit.cli spine lora --list-adapters --eval
     expect: exit 0
@@ -1163,8 +1167,38 @@ bets:
     spec_version: 1.0.0
   appetite: 2 days
   circuit_breaker: 音频输入噪音过大识别率低时自动提示人工重新录制。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+          merged_reachable_commit:
+            ref: git://origin/main@f75eeb00d8c07ca94a8abbc92350c190d333f0e8
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T2-01
+  done_at: '2026-09-15'
   done_when:
   - 1 分钟语音录音转录与语义提炼端到端耗时 ≤1.5 秒
   - 自动区分口头指示中的任务项、时间节点与相关责任人
@@ -1198,36 +1232,6 @@ bets:
   - projects/agora/tests/test_voice_tools.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-  done_at: '2026-09-15'
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@f75eeb00d8c07ca94a8abbc92350c190d333f0e8
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T2-01.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:9a3d4a479a0248ad32eaec7472857b78cf589b5ff07a9a31389c48429f228491
     decision_ref: decision://accepted/BET-Y2Q1-T5-01
@@ -1340,47 +1344,13 @@ bets:
   - bin/ssot/m0_feedback.py
   - projects/knowledge/kairon/src/kairon/graph/decay_manager.py
   - .omo/_knowledge/retros/BET-Y2Q1-T6-01.md
-- appetite: 2 days
-  circuit_breaker: 人际关系上下文置信度低时仅作为补充参考不强行修改行文。
-  depends_on:
-  - BET-Y1Q3-T10-117
-  done_when:
-  - 自动从未发公文、邮件往来中提取组织层级与人际关系链
-  - 拟稿前秒级推荐：“该部门近期重点关注数据安全，建议补充合规保障章节”
-  - 关联检索召回率 ≥95%
-  goal: 在 KEMS-v2 中构建人脉与组织架构关系图谱，自动关联公文/邮件/会议来件涉及的部门、关键领导、行业专家、历史合作项目与对方关注点，拟稿时自动注入人际上下文与沟通偏好。
-  human_gate: true
-  value_indicator_policy: false
-  id: BET-Y2Q1-T7-01
-  non_goals:
-  - 不泄露未经公开的人际关系敏感背景
-  pasw_required: false
-  priority: P1
-  retro: required
-  risk_level: L1
-  status: done
-  done_at: '2026-09-16'
-  outcome_status: accepted
-  title: 组织架构与政企人脉关系图谱（深度关联来件单位、历史沟通偏好与决策背景）
-  track: T7-SCENE
-  underlying_workflow: project-code-change
-  verify:
-  - cmd: PYTHONPATH=projects/knowledge/kairon/src:. uv run python -m kairon.cli org-graph
-      --query 测试单位
-    expect: exit 0
-  - cmd: make gac-local-gate
-    expect: exit 0
-  window: Y2Q1
-  workflow: bet-execution
-  write_surfaces:
-  - projects/knowledge/kairon/src/kairon/graph/org_graph.py
-  - projects/cockpit/src/cockpit/commands/org_relation.py
-  - .omo/_knowledge/retros/BET-Y2Q1-T7-01.md
-  accepted_specifications:
+- accepted_specifications:
   - content_digest: sha256:50afa758e7deb73eb5b51f686e190fae922312356144a80d20cd90357e8fe6c1
     decision_ref: decision://accepted/BET-Y2Q1-T7-01
     spec_ref: repo://docs/superpowers/specs/2026-09-16-t7-01-org-network-graph-spec.md
     spec_version: 1.0.0
+  appetite: 2 days
+  circuit_breaker: 人际关系上下文置信度低时仅作为补充参考不强行修改行文。
   completion_evidence:
     axes:
       engineering:
@@ -1410,6 +1380,40 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y1Q3-T10-117
+  done_at: '2026-09-16'
+  done_when:
+  - 自动从未发公文、邮件往来中提取组织层级与人际关系链
+  - 拟稿前秒级推荐：“该部门近期重点关注数据安全，建议补充合规保障章节”
+  - 关联检索召回率 ≥95%
+  goal: 在 KEMS-v2 中构建人脉与组织架构关系图谱，自动关联公文/邮件/会议来件涉及的部门、关键领导、行业专家、历史合作项目与对方关注点，拟稿时自动注入人际上下文与沟通偏好。
+  human_gate: true
+  id: BET-Y2Q1-T7-01
+  non_goals:
+  - 不泄露未经公开的人际关系敏感背景
+  outcome_status: accepted
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: done
+  title: 组织架构与政企人脉关系图谱（深度关联来件单位、历史沟通偏好与决策背景）
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: PYTHONPATH=projects/knowledge/kairon/src:. uv run python -m kairon.cli org-graph
+      --query 测试单位
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  window: Y2Q1
+  workflow: bet-execution
+  write_surfaces:
+  - projects/knowledge/kairon/src/kairon/graph/org_graph.py
+  - projects/cockpit/src/cockpit/commands/org_relation.py
+  - .omo/_knowledge/retros/BET-Y2Q1-T7-01.md
 - accepted_specifications:
   - content_digest: sha256:c48e1af6fa5de6a5506e834a966c4c0a1ed65516df50abc7b6721759afe869a7
     decision_ref: decision://accepted/BET-Y2Q1-T10-03
@@ -1490,38 +1494,6 @@ bets:
   - docs/superpowers/specs/2026-09-05-ledger-slimming-spec.md
 - appetite: 2 days
   circuit_breaker: 文风失真严重时自动回退到基准平实中立模板。
-  depends_on:
-  - BET-Y1Q3-T10-118
-  done_when:
-  - 自动输出文风雷达对齐得分（0-100 分），低于 85 分自动触发局部重写
-  - 提供语气滑块调节（“更庄严稳重”、“更犀利专业”、“更柔和温和”）
-  - 历史署名文风对齐度达 95% 以上
-  goal: 针对公文拟办、邮件简复、技术评审、公开演讲 4 类不同文体，建立夏明星个人文风特征雷达（用词严谨度、句式长短、情感倾向、肯定程度），生成初稿时动态调节温度与语气系数。
-  human_gate: true
-  id: BET-Y2Q2-T3-01
-  non_goals:
-  - 不在非必要场合强行套用呆板固定模板
-  pasw_required: false
-  priority: P0
-  retro: required
-  risk_level: L1
-  status: done
-  done_at: '2026-09-12'
-  title: 个人文风一致性多维雷达评估与语气自适应调节引擎
-  track: T3-COGNI
-  underlying_workflow: project-code-change
-  value_indicator_policy: false
-  verify:
-  - cmd: uv run python -m omlxc.dataplane.persona_radar_eval
-    expect: exit 0
-  - cmd: make gac-local-gate
-    expect: exit 0
-  window: Y2Q2
-  workflow: bet-execution
-  write_surfaces:
-  - projects/omlxc/src/omlxc/dataplane/persona_radar.py
-  - projects/cockpit/src/cockpit/commands/spine.py
-  - .omo/_knowledge/retros/BET-Y2Q2-T3-01.md
   completion_evidence:
     axes:
       engineering:
@@ -1537,13 +1509,13 @@ bets:
         status: VERIFIED
       operational:
         evidence:
-          live_canary:
+          cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
-          replay:
+          live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
-          cleanup:
+          replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-01.md
         status: PROVEN
       value:
@@ -1551,6 +1523,38 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y1Q3-T10-118
+  done_at: '2026-09-12'
+  done_when:
+  - 自动输出文风雷达对齐得分（0-100 分），低于 85 分自动触发局部重写
+  - 提供语气滑块调节（“更庄严稳重”、“更犀利专业”、“更柔和温和”）
+  - 历史署名文风对齐度达 95% 以上
+  goal: 针对公文拟办、邮件简复、技术评审、公开演讲 4 类不同文体，建立夏明星个人文风特征雷达（用词严谨度、句式长短、情感倾向、肯定程度），生成初稿时动态调节温度与语气系数。
+  human_gate: true
+  id: BET-Y2Q2-T3-01
+  non_goals:
+  - 不在非必要场合强行套用呆板固定模板
+  pasw_required: false
+  priority: P0
+  retro: required
+  risk_level: L1
+  status: done
+  title: 个人文风一致性多维雷达评估与语气自适应调节引擎
+  track: T3-COGNI
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: uv run python -m omlxc.dataplane.persona_radar_eval
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  window: Y2Q2
+  workflow: bet-execution
+  write_surfaces:
+  - projects/omlxc/src/omlxc/dataplane/persona_radar.py
+  - projects/cockpit/src/cockpit/commands/spine.py
+  - .omo/_knowledge/retros/BET-Y2Q2-T3-01.md
 - accepted_specifications:
   - content_digest: sha256:b1fd2443fc798286642d8ff477a274ea0d947cb67fc177e0a42bfd0821d58596
     decision_ref: decision://accepted/BET-Y1Q4-T8-20
@@ -1691,10 +1695,45 @@ bets:
   - .omo/standards/doc-ssot-contract.md
   - AGENTS.md
   - CLAUDE.md
-- appetite: 2 days
+- accepted_specifications:
+  - content_digest: sha256:6436241f2ec449a43aad473f2ce89aab0d2e10f75c1d0c1ebc4eac07ae284189
+    decision_ref: decision://accepted/BET-Y1Q4-T2-06
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t2-06-mail-calendar-ingress-design.md
+    spec_version: 1.0.0
+  appetite: 2 days
   circuit_breaker: 外部信号解析异常时记录告警日志并安全降级，不阻断主干运行。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q3-T10-113
+  done_at: '2026-09-12'
   done_when:
   - 部署本地 daemon 或 cron 定时探测邮件及日程更新
   - 收到新邮件 60s 内自动产出标准 Signal 事件并投递至 bos://spine/ingress
@@ -1710,7 +1749,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: '2026-09-12'
   title: 真实邮件/日历多通道 Ingress 自动感知与 LECP 实体分诊管道
   track: T2-PERCEPT
   underlying_workflow: project-code-change
@@ -1727,40 +1765,6 @@ bets:
   - bin/daemon/mail_ingress.py
   - .omo/_knowledge/retros/BET-Y1Q4-T2-06.md
   - docs/superpowers/specs/2026-09-12-t2-06-mail-calendar-ingress-design.md
-  completion_evidence:
-    axes:
-      engineering:
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
-          merged_reachable_commit:
-            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
-        status: VERIFIED
-      operational:
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T2-06.md
-        status: PROVEN
-      value:
-        evidence: {}
-        status: NOT_PROVEN
-    overall_state: delivery_accepted
-    schema_version: completion-evidence-matrix/v1
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t2-06-mail-calendar-ingress-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:6436241f2ec449a43aad473f2ce89aab0d2e10f75c1d0c1ebc4eac07ae284189
-    decision_ref: decision://accepted/BET-Y1Q4-T2-06
 - accepted_specifications:
   - content_digest: sha256:d13886145ff25981dda76e630c1f9b9f717c27ee30dce4410857c6beadb693de
     decision_ref: decision://accepted/BET-Y1Q4-T4-06
@@ -1926,6 +1930,7 @@ bets:
   circuit_breaker: 心智模型解析异常时回退到默认静态规则配置。
   depends_on:
   - BET-Y1Q4-T2-06
+  done_at: '2026-09-13'
   done_when:
   - 形成四件套 JSON Schema 与持久化/热更新机制
   - SceneWatcher 事件驱动延迟 <= 500ms
@@ -1954,7 +1959,6 @@ bets:
   - projects/spine/src/spine/cognitive/
   - .omo/_knowledge/retros/BET-Y2Q1-T3-05.md
   - docs/superpowers/specs/2026-09-14-t3-05-mindmodel-four-pieces-spec.md
-  done_at: '2026-09-13'
 - accepted_specifications:
   - content_digest: sha256:b6a2228f72b2caf8ae724a34e73e1732ee7a4d7697bd812b140cdf06abd48037
     decision_ref: decision://accepted/BET-Y2Q2-T3-02
@@ -1962,25 +1966,6 @@ bets:
     spec_version: 1.0.0
   appetite: 3 days
   circuit_breaker: 文风严重失真时自动回退至基准中立模板。
-  depends_on:
-  - BET-Y1Q3-T10-118
-  done_when:
-  - 训练并导出 3 个核心领域 LoRA 权重
-  - AetherForge 本地推理动态无缝热加载
-  - 评测基准下语气还原度 ROUGE-L >= 0.75，修订率降低至少 30%
-  goal: 从单一 LoRA 扩展为分领域（政务公文、技术架构、对外协作、随想随笔）适配器矩阵，推理时根据任务领域动态切换 LoRA 权重，结合 ROUGE-L
-    与双语正则防遗忘，全面降低本人修订率。
-  human_gate: true
-  id: BET-Y2Q2-T3-02
-  non_goals:
-  - 不在非必要场合强行套用模板
-  priority: P1
-  retro: required
-  risk_level: L1
-  status: done
-  title: 个人文风多领域 LoRA 适配器矩阵与语气自适应调节
-  track: T3-COGNI
-  underlying_workflow: project-code-change
   completion_evidence:
     axes:
       engineering:
@@ -1990,12 +1975,12 @@ bets:
             sha256: sha256:b6a2228f72b2caf8ae724a34e73e1732ee7a4d7697bd812b140cdf06abd48037
           merged_reachable_commit:
             ref: git://origin/main@2615b3ab5fb1d8bb333010fd535870a0b5841fd1
-          tests:
-            ref: receipt://projects/spine/src/spine/cognitive/test_lora_tone.py
-            sha256: sha256:ccdfa898c3267d624f2887f7ba223886938dd460832cfaa3f4aded74012160f6
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T3-02.md
             sha256: sha256:cf33d266c4b40f86bf51af966c12bcd16fc7ec9cccb65507106049c9cab0a37a
+          tests:
+            ref: receipt://projects/spine/src/spine/cognitive/test_lora_tone.py
+            sha256: sha256:ccdfa898c3267d624f2887f7ba223886938dd460832cfaa3f4aded74012160f6
         status: VERIFIED
       operational:
         evidence:
@@ -2017,7 +2002,26 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y1Q3-T10-118
   done_at: '2026-09-16'
+  done_when:
+  - 训练并导出 3 个核心领域 LoRA 权重
+  - AetherForge 本地推理动态无缝热加载
+  - 评测基准下语气还原度 ROUGE-L >= 0.75，修订率降低至少 30%
+  goal: 从单一 LoRA 扩展为分领域（政务公文、技术架构、对外协作、随想随笔）适配器矩阵，推理时根据任务领域动态切换 LoRA 权重，结合 ROUGE-L
+    与双语正则防遗忘，全面降低本人修订率。
+  human_gate: true
+  id: BET-Y2Q2-T3-02
+  non_goals:
+  - 不在非必要场合强行套用模板
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: done
+  title: 个人文风多领域 LoRA 适配器矩阵与语气自适应调节
+  track: T3-COGNI
+  underlying_workflow: project-code-change
   value_indicator_policy: false
   verify:
   - cmd: uv run python -m omlxc.dataplane.lora.test_matrix
@@ -2174,39 +2178,13 @@ bets:
   - docs/scene-cards/health-gov-doc-cycle.yaml
   - projects/domain-cartridges/health-gov/
   - .omo/_knowledge/retros/BET-Y2Q1-T7-06.md
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:c36b397da52890c0bf7e2ceb4207637dd15c08ce7df15380ce01a1e12ff81099
+    decision_ref: decision://accepted/BET-Y2Q2-T7-03
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-y2q2-t7-03-health-monitor-design.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 体征数据缺失或传感器断联时标为 unmeasured，不伪造数据。
-  depends_on:
-  - BET-Y1Q4-T2-06
-  done_when:
-  - docs/scene-cards/personal-health-monitor.yaml 场景卡晋级 assisted
-  - 每日定时自动汇总体征健康分并与基线对比
-  - 发现异常指标 5 分钟内生成干预场景卡
-  goal: 接入 Apple Health 与穿戴生理时序数据，结合临床指南与历史体检，自动识别心率/血糖/睡眠异常趋势，在 Cockpit 输出可执行干预建议与就诊问答卡。
-  human_gate: false
-  id: BET-Y2Q2-T7-03
-  non_goals:
-  - 不替代专业执业医师法律责任
-  priority: P1
-  retro: required
-  risk_level: L1
-  status: done
-  done_at: '2026-09-12'
-  value_indicator_policy: false
-  title: 主动健康连续体征监测、异常预警与就诊咨询闭环场景包
-  track: T7-SCENE
-  underlying_workflow: project-code-change
-  verify:
-  - cmd: cd projects/domain-cartridges/health && uv run python -m domain.health.test_monitor_pipeline
-    expect: exit 0
-  - cmd: make gac-local-gate
-    expect: exit 0
-  window: Y2Q2
-  workflow: bet-execution
-  write_surfaces:
-  - docs/scene-cards/personal-health-monitor.yaml
-  - projects/domain-cartridges/health/
-  - .omo/_knowledge/retros/BET-Y2Q2-T7-03.md
   completion_evidence:
     axes:
       engineering:
@@ -2216,11 +2194,11 @@ bets:
             sha256: sha256:c36b397da52890c0bf7e2ceb4207637dd15c08ce7df15380ce01a1e12ff81099
           merged_reachable_commit:
             ref: git://origin/main@b1e50ee89e0f0d4768c1d5b57a7804cec636ee15
-          tests:
-            ref: receipt://projects/domain-cartridges/health/domain/health/test_monitor_pipeline.py
-            sha256: sha256:PLACEHOLDER
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-03.md
+            sha256: sha256:PLACEHOLDER
+          tests:
+            ref: receipt://projects/domain-cartridges/health/domain/health/test_monitor_pipeline.py
             sha256: sha256:PLACEHOLDER
         status: VERIFIED
       operational:
@@ -2243,15 +2221,47 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-12-y2q2-t7-03-health-monitor-design.md
+  depends_on:
+  - BET-Y1Q4-T2-06
+  done_at: '2026-09-12'
+  done_when:
+  - docs/scene-cards/personal-health-monitor.yaml 场景卡晋级 assisted
+  - 每日定时自动汇总体征健康分并与基线对比
+  - 发现异常指标 5 分钟内生成干预场景卡
+  goal: 接入 Apple Health 与穿戴生理时序数据，结合临床指南与历史体检，自动识别心率/血糖/睡眠异常趋势，在 Cockpit 输出可执行干预建议与就诊问答卡。
+  human_gate: false
+  id: BET-Y2Q2-T7-03
+  non_goals:
+  - 不替代专业执业医师法律责任
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: done
+  title: 主动健康连续体征监测、异常预警与就诊咨询闭环场景包
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: cd projects/domain-cartridges/health && uv run python -m domain.health.test_monitor_pipeline
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  window: Y2Q2
+  workflow: bet-execution
+  write_surfaces:
+  - docs/scene-cards/personal-health-monitor.yaml
+  - projects/domain-cartridges/health/
+  - .omo/_knowledge/retros/BET-Y2Q2-T7-03.md
+- accepted_specifications:
+  - content_digest: sha256:8935a2aaf7d9aee8517acf92a710941cf295fc1e1639b1304b5f083257f608e5
+    decision_ref: decision://accepted/BET-Y2Q3-T7-01
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-y2q3-t7-01-family-asset-governance-spec.md
     spec_version: 1.0.0
-    content_digest: sha256:c36b397da52890c0bf7e2ceb4207637dd15c08ce7df15380ce01a1e12ff81099
-    decision_ref: decision://accepted/BET-Y2Q2-T7-03
-- appetite: 3 days
+  appetite: 3 days
   circuit_breaker: 账目不平或差异大于阈值时强制标黄告警。
   depends_on:
   - BET-Y1Q4-T4-06
+  done_at: '2026-09-16'
   done_when:
   - docs/scene-cards/family-asset-governance.yaml 场景卡晋级 assisted
   - 月度自动产出资产负债平水报表
@@ -2279,12 +2289,6 @@ bets:
   - docs/scene-cards/family-asset-governance.yaml
   - projects/family-hub/
   - .omo/_knowledge/retros/BET-Y2Q3-T7-01.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-12-y2q3-t7-01-family-asset-governance-spec.md
-    spec_version: 1.0.0
-    content_digest: sha256:8935a2aaf7d9aee8517acf92a710941cf295fc1e1639b1304b5f083257f608e5
-    decision_ref: decision://accepted/BET-Y2Q3-T7-01
-  done_at: '2026-09-16'
 - accepted_specifications:
   - content_digest: sha256:cf46209a6b20827414574bb5671708e23b117518c2930d1b2cc28c40b72f66ba
     decision_ref: decision://accepted/BET-Y2Q4-T7-01
@@ -2361,8 +2365,38 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q4-T7-01.md
 - appetite: 5 days
   circuit_breaker: 调研发现现有雇主内部审批流与 document-review 能力模型不兼容（如格式/密级/审批链路差异过大）时，如实记录不兼容原因，不强行削足适履。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          merged_reachable_commit:
+            ref: git://origin/main@cb3fd6e76907986a5f277a7d7b1756c676e49b47
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y2Q1-T7-07
+  done_at: '2026-09-17'
   done_when:
   - 产出至少一个不依赖国转中心借调的公文/决策收件箱候选业务驱动，附真实场景描述与预估请求量
   - 验证该候选驱动能否复用已建成的 document-review 能力（拟稿/审批/督办闭环），给出兼容度结论
@@ -2380,7 +2414,8 @@ bets:
   priority: P1
   progress:
     done_when_met:
-    - 产出至少一个不依赖国转中心借调的公文/决策收件箱候选业务驱动: admin-notification-workflow (BET-Y1Q4-T8-04), 5-20 件/天
+    - 产出至少一个不依赖国转中心借调的公文/决策收件箱候选业务驱动: admin-notification-workflow (BET-Y1Q4-T8-04),
+        5-20 件/天
     - 验证该候选驱动能否复用已建成的 document-review 能力: 100% 兼容 (拟稿/格式检查/敏感项检查/依据核验/审批/督办全链)
     - 结论写入 docs/plans/: 2026-09-17-t7-02-second-business-driver-research.md
   retro: required
@@ -2389,6 +2424,7 @@ bets:
   title: 公文场景第二业务驱动探索 — 脱离国转中心借调依赖
   track: T7-SCENE
   underlying_workflow: project-doc-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
@@ -2397,38 +2433,12 @@ bets:
   write_surfaces:
   - docs/plans/
   - .omo/_truth/scenarios/v3/**
-  done_at: '2026-09-17'
-  value_indicator_policy: false
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@cb3fd6e76907986a5f277a7d7b1756c676e49b47
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-- appetite: 4 days
+- accepted_specifications:
+  - content_digest: sha256:2f1363e0d1419c7fab5839bb696697a5101613597bedd5acfd3582bbed22273f
+    decision_ref: decision://accepted/BET-Y3H1-T5-02
+    spec_ref: repo://docs/superpowers/specs/2026-09-16-y3h1-t5-02-routine-hosting-spec.md
+    spec_version: 1.0.0
+  appetite: 4 days
   circuit_breaker: 受托执行置信度低于 0.95 时立即回退到 Assisted 人工审批。
   completion_evidence:
     axes:
@@ -2493,11 +2503,6 @@ bets:
   write_surfaces:
   - projects/spine/src/spine/orchestration/
   - .omo/_knowledge/retros/BET-Y3H1-T5-02.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-16-y3h1-t5-02-routine-hosting-spec.md
-    spec_version: 1.0.0
-    content_digest: sha256:2f1363e0d1419c7fab5839bb696697a5101613597bedd5acfd3582bbed22273f
-    decision_ref: decision://accepted/BET-Y3H1-T5-02
 - accepted_specifications:
   - content_digest: sha256:b9bf6cccf6aa9e0e9dbf24b1066918dac722e3138c9cb3b2a3ab16bfc3feef6b
     decision_ref: decision://accepted/BET-Y1Q4-T6-20
@@ -2827,41 +2832,42 @@ bets:
     axes:
       engineering:
         evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@eed16ec0800f60a15273817f2fcb6b3e5977ed23
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
-            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
             sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          merged_reachable_commit:
+            ref: git://origin/main@eed16ec0800f60a15273817f2fcb6b3e5977ed23
           rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
+            sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
+          tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
             sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
         status: VERIFIED
       operational:
         evidence:
-          live_canary:
+          cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
             sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
             sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
-          replay:
+          live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
             sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
-          cleanup:
+          replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-03.md
             sha256: sha256:1606ae06583489421c18a5cfde4e8e6523a44f147af7a916dc2378219e70a873
         status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
+    notes: batch1
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-    notes: batch1
   depends_on:
   - BET-Y1Q4-T10-05
+  done_at: 2026-09-14
   done_when:
   - list_agent_cards 工具输出包含完整的 resident-orchestrator 卡片元数据及 Capabilities
   - 支持通过 a2a_send_task 提交 resident 任务并返回有效 task_id 与状态跟踪
@@ -2878,7 +2884,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-14
   title: Agora A2A 双向任务委派与 Resident Agent Card 协议接入 (A2A Task Delegation & Resident
     Agent Card)
   track: T5-ORCH
@@ -2941,28 +2946,13 @@ bets:
   - projects/omo/tests/unit/test_task_queue.py
   - docs/superpowers/specs/2026-09-11-t10-125-bos-gateway-spec.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-125.md
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:9298186372b4e7103d33380c97b6bc15378b22616564609dc11a6da8f603b5b2
+    decision_ref: decision://accepted/BET-Y1Q4-T8-21
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t8-21-decision-proposals-closeout-spec.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 自动结晶为 Bet 时必须经严格 Schema 校验与人类最终确认，禁止向主台账写入未审核草稿。
-  depends_on:
-  - BET-Y1Q4-T10-125
-  done_when:
-  - Cockpit Web 与 CLI 提供决策提案审查入口，支持按 S2/L3 与事件类型聚合过滤
-  - 提供 cockpit resident decision approve 自动化转换工具，一键生成标准 Bet YAML 模板
-  - 存量 80 份提案完成状态标记归档（reviewed / promoted / dismissed）
-  goal: 打通 .omo/_knowledge/decision-proposals/ 积累的 80+ 份提案与 138 条建议至 Cockpit 呈递面；提供
-    cockpit resident decision triage CLI 与 Web 仪表盘待办卡片；支持人类一键批准将高价值建议结晶为 3Y-BET-LEDGER
-    新 Bet 或架构 ADR，消除资产积压。
-  human_gate: true
-  id: BET-Y1Q4-T8-21
-  non_goals:
-  - 不做未经人类确认的全自动生产代码合入
-  - 不删除历史提案原始内容（保持不可篡改追溯）
-  priority: P1
-  retro: required
-  risk_level: L1
-  value_indicator_policy: false
-  status: done
-  done_at: 2026-09-14
   completion_evidence:
     axes:
       engineering:
@@ -2971,9 +2961,9 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
           merged_reachable_commit:
             ref: git://origin/main@3849f65fb2825bc33b5ca66c0b5c62704e372ffb
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
           rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
+          tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-21.md
         status: VERIFIED
       operational:
@@ -2992,10 +2982,30 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y1Q4-T10-125
+  done_at: 2026-09-14
+  done_when:
+  - Cockpit Web 与 CLI 提供决策提案审查入口，支持按 S2/L3 与事件类型聚合过滤
+  - 提供 cockpit resident decision approve 自动化转换工具，一键生成标准 Bet YAML 模板
+  - 存量 80 份提案完成状态标记归档（reviewed / promoted / dismissed）
+  goal: 打通 .omo/_knowledge/decision-proposals/ 积累的 80+ 份提案与 138 条建议至 Cockpit 呈递面；提供
+    cockpit resident decision triage CLI 与 Web 仪表盘待办卡片；支持人类一键批准将高价值建议结晶为 3Y-BET-LEDGER
+    新 Bet 或架构 ADR，消除资产积压。
+  human_gate: true
+  id: BET-Y1Q4-T8-21
+  non_goals:
+  - 不做未经人类确认的全自动生产代码合入
+  - 不删除历史提案原始内容（保持不可篡改追溯）
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: done
   title: 常驻决策提案 (Decision Proposals) 闭环消费与 Cockpit 审批自进化通道 (Decision Proposals Closeout
     & Cockpit Triage)
   track: T8-SURFACE
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/cockpit/tests/test_resident_decision_triage.py -q
     expect: exit 0
@@ -3009,15 +3019,11 @@ bets:
   - projects/omo/src/omo/resident/decision.py
   - projects/cockpit/tests/test_resident_decision_triage.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-21.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t8-21-decision-proposals-closeout-spec.md
-    spec_version: 1.0.0
-    content_digest: sha256:9298186372b4e7103d33380c97b6bc15378b22616564609dc11a6da8f603b5b2
-    decision_ref: decision://accepted/BET-Y1Q4-T8-21
 - appetite: 3 days
   circuit_breaker: 单个 Cell 执行超时（默认 120s）强制终止并隔离状态；Cell 崩溃时自动故障转移，不影响守护进程主循环。
   depends_on:
   - BET-Y1Q4-T10-125
+  done_at: '2026-09-12'
   done_when:
   - projects/omo/src/omo/resident/execute.py 原生挂载 CellPool 弹性调度路由
   - 支持在单机多进程/协程模式下隔离运行 Cell，具备显存与超时超限熔断保护
@@ -3033,7 +3039,6 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: '2026-09-12'
   title: Resident Daemon 与 AGE-v2 CellPool 算力池合体调度 (Resident Daemon & Agent Cell Elastic
     Pool Integration)
   track: T6-EVOLUTION
@@ -3135,10 +3140,45 @@ bets:
   - docs/superpowers/specs/2026-09-06-resident-readonly-zero-lock-wal-robustness.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-126.md
   - docs/plans/3y-bet-ledger.yaml
-- appetite: 2 days
+- accepted_specifications:
+  - content_digest: sha256:c2bb387f5a3643bca9b37bdea5fcc659728c6556f3437b0b6dba8ab5a484171d
+    decision_ref: decision://accepted/BET-Y1Q4-T5-04
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-04-sovereign-connector-fabric-design.md
+    spec_version: 1.0.0
+  appetite: 2 days
   circuit_breaker: 连接器拉取失败时自动降级跳过；严禁单个连接器超时或鉴权失败阻断其他连接器调度。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          merged_reachable_commit:
+            ref: git://origin/main@cb1a73a850b8def0765cd383e4aa4e028d76c464
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T5-03
+  done_at: '2026-09-12'
   done_when:
   - 交付 .omo/_truth/registry/connector-manifest.yaml 统一登记所有 15+ 种连接器元数据
   - 在 Agora 中注册 bos://connectors/* 路由并暴露 MCP 工具 connector_list / connector_sync
@@ -3157,12 +3197,11 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: '2026-09-12'
   title: 主权连接器架构升级与 Kairon/Iris 外部数据源统一 BOS 网关化 (Sovereign Connector Fabric & Iris
     BOS Gateway)
   track: T5-ORCH
-  value_indicator_policy: false
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/agora/tests/test_connectors_bos.py -q
     expect: exit 0
@@ -3177,49 +3216,52 @@ bets:
   - projects/omo/src/omo/resident/connectors_poll.py
   - projects/agora/tests/test_connectors_bos.py
   - .omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+- accepted_specifications:
+  - content_digest: sha256:008de04ed2211b532ccbfe8d166b0eb6948a64d0cc2a9d5c35c8154819b1e622
+    decision_ref: decision://accepted/BET-Y1Q4-T6-25
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t6-25-openhuman-bridge-biometric-normalizer-design.md
+    spec_version: 1.0.0
+  appetite: 3 days
+  circuit_breaker: 敏感健康与生理体征数据处理全程必须保留在本地，严禁通过未经脱敏的网络请求发送至云端 API。
   completion_evidence:
     axes:
       engineering:
         evidence:
           diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+            ref: receipt://docs/superpowers/specs/2026-09-12-t6-25-openhuman-bridge-biometric-normalizer-design.md
+            sha256: sha256:PLACEHOLDER
           merged_reachable_commit:
-            ref: git://origin/main@cb1a73a850b8def0765cd383e4aa4e028d76c464
+            ref: git://origin/main@e8cf3d22152dfa16467121f05ee12aac93b4a7d0
           rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
           tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
         status: VERIFIED
       operational:
         evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
           cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-04.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+            sha256: sha256:PLACEHOLDER
         status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-  accepted_specifications:
-  - content_digest: sha256:c2bb387f5a3643bca9b37bdea5fcc659728c6556f3437b0b6dba8ab5a484171d
-    decision_ref: decision://accepted/BET-Y1Q4-T5-04
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-04-sovereign-connector-fabric-design.md
-    spec_version: 1.0.0
-- appetite: 3 days
-  accepted_specifications:
-  - content_digest: sha256:008de04ed2211b532ccbfe8d166b0eb6948a64d0cc2a9d5c35c8154819b1e622
-    decision_ref: decision://accepted/BET-Y1Q4-T6-25
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-t6-25-openhuman-bridge-biometric-normalizer-design.md
-    spec_version: 1.0.0
-  circuit_breaker: 敏感健康与生理体征数据处理全程必须保留在本地，严禁通过未经脱敏的网络请求发送至云端 API。
   depends_on:
   - BET-Y1Q4-T5-04
+  done_at: '2026-09-12'
   done_when:
   - OpenHumanConnector 支持本地进程可用性探测、自愈心跳与安全 fallback
   - 交付 TokenJuice 轻量数据压缩器模块，并通过长文本/HTML 压缩率测试（≥60% 冗余剔除）
@@ -3238,12 +3280,11 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: '2026-09-12'
-  value_indicator_policy: false
   title: OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化 (OpenHuman Local Bridge & Biometric
     Normalizer)
   track: T6-EVOLUTION
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
       -q
@@ -3259,46 +3300,52 @@ bets:
   - projects/family-hub/src/family_hub/health_importer.py
   - projects/knowledge/kairon/packages/iris/tests/test_openhuman_bridge.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-25.md
+- accepted_specifications:
+  - content_digest: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+    decision_ref: decision://accepted/BET-Y1Q4-T6-26
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+    spec_version: 1.0.0
+  appetite: 2 days
+  circuit_breaker: 图存储与推理全量在本地沙箱运行；若 Oxigraph 初始化或查询失败，自动降级为 SQLite 本地事务存储，严禁阻塞核心流程。
   completion_evidence:
     axes:
       engineering:
         evidence:
           diff:
-            ref: receipt://docs/superpowers/specs/2026-09-12-t6-25-openhuman-bridge-biometric-normalizer-design.md
-            sha256: sha256:PLACEHOLDER
+            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
           merged_reachable_commit:
-            ref: git://origin/main@e8cf3d22152dfa16467121f05ee12aac93b4a7d0
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
-            sha256: sha256:PLACEHOLDER
+            ref: git://origin/main@2969d536d2222a190ae552c952496d193fc8d619
           rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
-            sha256: sha256:PLACEHOLDER
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
+          tests:
+            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
         status: VERIFIED
       operational:
         evidence:
           cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
-            sha256: sha256:PLACEHOLDER
+            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
           fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
-            sha256: sha256:PLACEHOLDER
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
           live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
-            sha256: sha256:PLACEHOLDER
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
           replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-25.md
-            sha256: sha256:PLACEHOLDER
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
+            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
         status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-- appetite: 2 days
-  circuit_breaker: 图存储与推理全量在本地沙箱运行；若 Oxigraph 初始化或查询失败，自动降级为 SQLite 本地事务存储，严禁阻塞核心流程。
   depends_on:
   - BET-Y1Q4-T6-25
+  done_at: '2026-09-12'
   done_when:
   - 在 kairon 中集成嵌入式 Oxigraph 并完成单元测试覆盖
   - 在 bos-services.yaml 中注册 bos://decision/* 与 bos://graph/* 路由端点
@@ -3318,11 +3365,10 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: '2026-09-12'
-  value_indicator_policy: false
   title: Semantica 嵌入式图引擎内核集成与 BOS 决策网格 (Semantica Graph Kernel & BOS Decision Mesh)
   track: T6-EVOLUTION
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/knowledge/kairon/tests/test_semantica_kernel.py -q
     expect: exit 0
@@ -3337,52 +3383,50 @@ bets:
   - projects/agora/etc/bos-services.yaml
   - projects/knowledge/kairon/tests/test_semantica_kernel.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-26.md
-  accepted_specifications:
-  - content_digest: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
-    decision_ref: decision://accepted/BET-Y1Q4-T6-26
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
+- accepted_specifications:
+  - content_digest: sha256:93497203740b72d2afb6e3f9c752ae9134245c7d3c9932a9feadc4dc134c15b7
+    decision_ref: decision://accepted/BET-Y1Q4-T5-05
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-05-resident-causal-decision-design.md
     spec_version: 1.0.0
+  appetite: 2 days
+  circuit_breaker: 先例仲裁必须设定置信度下限（confidence >= 0.85），低于阈值时自动升级至人类待办，严禁低置信度盲目合并。
   completion_evidence:
     axes:
       engineering:
         evidence:
           diff:
-            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
-            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
           merged_reachable_commit:
-            ref: git://origin/main@2969d536d2222a190ae552c952496d193fc8d619
-          tests:
-            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
-            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+            ref: git://origin/main@0b00a8c4629a4019e107a4a3eeb70c173c2b34eb
           rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
-            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
         status: VERIFIED
       operational:
         evidence:
           cleanup:
-            ref: receipt://docs/superpowers/specs/2026-09-12-t6-26-semantica-graph-kernel-design.md
-            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
           fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
-            sha256: sha256:9e324f4b70ef44a11d8a0e81f50752a2eef6bc9cf5d25e043ddb9a13cc37d7e4
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
           live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
-            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
           replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T6-26.md
-            sha256: sha256:aec0bb25054a4f7c9596f3daa42db6768a6f353ab8b7f4c7c013fc40dac8dd3c
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
         status: PROVEN
       value:
-        evidence: {}
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
         status: NOT_PROVEN
+    merged_reachable_commit:
+      ref: git://origin/main@0b00a8c4629a4019e107a4a3eeb70c173c2b34eb
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-- appetite: 2 days
-  circuit_breaker: 先例仲裁必须设定置信度下限（confidence >= 0.85），低于阈值时自动升级至人类待办，严禁低置信度盲目合并。
   depends_on:
   - BET-Y1Q4-T6-26
   - BET-Y1Q4-T5-04
+  done_at: '2026-09-13'
   done_when:
   - Resident Daemon 每次巡检与自愈动作均生成图原生决策节点与因果连线
   - 实现多 Agent 先例仲裁算法并在仿真冲突场景通过评测
@@ -3405,6 +3449,7 @@ bets:
     Arbitration)
   track: T5-ORCH
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: cd projects/omo && uv run --with pytest pytest tests/unit/test_resident_causal_decision.py
       -q
@@ -3422,50 +3467,11 @@ bets:
   - projects/omo/tests/unit/test_resident_causal_decision.py
   - .omo/_knowledge/retros/BET-Y1Q4-T5-05.md
   - docs/plans/3y-bet-ledger.yaml
-  accepted_specifications:
-  - content_digest: sha256:93497203740b72d2afb6e3f9c752ae9134245c7d3c9932a9feadc4dc134c15b7
-    decision_ref: decision://accepted/BET-Y1Q4-T5-05
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-t5-05-resident-causal-decision-design.md
-    spec_version: 1.0.0
-  value_indicator_policy: false
-  done_at: '2026-09-13'
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    overall_state: delivery_accepted
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
-          merged_reachable_commit:
-            ref: git://origin/main@0b00a8c4629a4019e107a4a3eeb70c173c2b34eb
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
-      value:
-        status: NOT_PROVEN
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T5-05.md
-    merged_reachable_commit:
-      ref: git://origin/main@0b00a8c4629a4019e107a4a3eeb70c173c2b34eb
 - appetite: 2 days
   circuit_breaker: SHACL 验证器仅针对纳管的核心架构资产运行，非受管目录的草稿文件走 warn 模式不阻断。
   depends_on:
   - BET-Y1Q4-T6-26
+  done_at: '2026-09-13'
   done_when:
   - Iris 连接器和 Minerva 分块管线接入 EntityAwareChunker，实体割裂率降为 0
   - 编制 dfsq-shapes.ttl 与 scene-card-shapes.ttl 架构验证规范
@@ -3502,12 +3508,47 @@ bets:
   - .omo/standards/shapes/scene-card-shapes.ttl
   - projects/knowledge/kairon/tests/test_entity_chunking_shacl.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-27.md
-  done_at: '2026-09-13'
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:b5f684aaa33281bb0c23b172bf01ccca4e3b846eff09d35bafed3bc3c1cf4a54
+    decision_ref: decision://accepted/BET-Y1Q4-T7-04
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-04-scene-navigation-guardrails-design.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 护栏拦截仅针对执行写操作与工具调用的 Agent 行为；探活类操作走 warn 模式，严禁误报阻断系统基础健康感知。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+          merged_reachable_commit:
+            ref: git://origin/main@c94899c21ce7dcfffc9cd0197118095a23c841a2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T7-04
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T5-05
   - BET-Y1Q4-T7-01
+  done_at: 2026-09-12
   done_when:
   - 交付 bos://scene/anchor 握手网关并支持场景意图自动推荐与解析
   - 实现 CapabilityJail 工具越界拦截与 DataScopeGuard 目录沙盒围栏
@@ -3526,10 +3567,10 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: 多 Agent 场景导航锚点与运行时防跑偏护栏机制 (Scene Navigation Anchor & Runtime Guardrail Framework)
   track: T7-SCENE
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/omo/tests/unit/test_scene_guardrail_anchor.py -q
     expect: exit 0
@@ -3545,46 +3586,11 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T7-04.md
   - projects/agora/tests/test_tools_scene_anchor.py
   - docs/plans/3y-bet-ledger.yaml
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
-          merged_reachable_commit:
-            ref: git://origin/main@c94899c21ce7dcfffc9cd0197118095a23c841a2
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-04.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    decision_ref: decision://accepted/BET-Y1Q4-T7-04
-    overall_state: delivery_accepted
-  accepted_specifications:
-  - content_digest: sha256:b5f684aaa33281bb0c23b172bf01ccca4e3b846eff09d35bafed3bc3c1cf4a54
-    decision_ref: decision://accepted/BET-Y1Q4-T7-04
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-04-scene-navigation-guardrails-design.md
-    spec_version: 1.0.0
-  value_indicator_policy: false
 - appetite: 2 days
   circuit_breaker: 场景升级巡航器如遇校准度骤降（calibration < 0.5），必须自动回退至上一级受控状态并告警。
   depends_on:
   - BET-Y1Q4-T7-04
+  done_at: 2026-09-12
   done_when:
   - 每次场景成功执行自动记录 Value Record 并注入 Semantica 先例库
   - 实现 SceneLifecycleCruiser，支持按 3-sample (shadow门) 与 30-sample+0.6 calib (assisted门)
@@ -3603,7 +3609,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: 业务场景五档生命周期自动巡航与金牌样例自学习闭环 (Autonomous Scene Lifecycle Cruiser & Golden Sample
     Loop)
   track: T7-SCENE
@@ -3621,11 +3626,55 @@ bets:
   - projects/cockpit/src/cockpit/handlers/scene_lifecycle.py
   - projects/omo/tests/unit/test_scene_lifecycle_cruiser.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-05.md
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:de0ca22764aa36667584481aeb40eb8681fd49d54ef4f9adf47486f282ebc397
+    decision_ref: decision://accepted/BET-Y1Q4-T8-22
+    spec_ref: repo://docs/superpowers/specs/2026-09-14-t8-22-tinybos-mesh-spec.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 边缘节点离线或网络分区时自动进入离线数据缓冲模式，本地持久化至环形缓冲区，严禁阻塞或丢弃体征事件。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
+          merged_reachable_commit:
+            ref: git://origin/main@c582f07a7239d057db07a0345f0ac5e7c94a2d02
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
+            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    notes: Rust 15/15 + Python 45/45 测试通过；release 二进制 354KB；test-pipeline CI 验证通过；operational
+      以测试级验证为据（见 retro），业务价值待单独证明
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T8-20
   - BET-Y1Q4-T6-25
+  done_at: 2026-09-14
   done_when:
   - 编译产出轻量 TinyBOS 边缘守护二进制并完成近场设备探活测试
   - 实现心率突变与跌倒加速度物理信号向 health-visit 场景卡的自动映射触发
@@ -3642,11 +3691,11 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: 2026-09-14
   title: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游 (TinyBOS Embodied Protocol & Home LAN Roaming
     Mesh)
   track: T8-SURFACE
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest projects/agora/tests/test_tinybos_mesh.py -q
     expect: exit 0
@@ -3661,54 +3710,11 @@ bets:
   - projects/agora/tests/test_tinybos_mesh.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-22.md
   - docs/superpowers/specs/2026-09-14-t8-22-tinybos-mesh-spec.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-14-t8-22-tinybos-mesh-spec.md
-    spec_version: 1.0.0
-    content_digest: sha256:de0ca22764aa36667584481aeb40eb8681fd49d54ef4f9adf47486f282ebc397
-    decision_ref: decision://accepted/BET-Y1Q4-T8-22
-  value_indicator_policy: false
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@c582f07a7239d057db07a0345f0ac5e7c94a2d02
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-22.md
-            sha256: sha256:7e109240521a4b495785cc2c80b84f8d8d008c9e66880bdaaf32468f25992061
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-    notes: Rust 15/15 + Python 45/45 测试通过；release 二进制 354KB；test-pipeline CI 验证通过；operational
-      以测试级验证为据（见 retro），业务价值待单独证明
 - appetite: 3 days
   circuit_breaker: 分级路由如遇 L0/L1 判定置信度低于阈值，必须平滑降级至上一层重型模型，严禁因追求低延迟而牺牲决策正确性。
   depends_on:
   - BET-Y1Q4-T6-26
+  done_at: '2026-09-13'
   done_when:
   - 实现 4-Tier 认知分级调度器并支持首字延迟 < 5ms 的 L0 快速拦截
   - 交付 Radix 前缀树 Paged KV Cache 预编译管线并在系统启动时热加载
@@ -3743,7 +3749,6 @@ bets:
   - projects/aetherforge/src/aetherforge/engine/speculative.py
   - projects/aetherforge/tests/test_cognitive_hierarchy.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-28.md
-  done_at: '2026-09-13'
 - appetite: 2-3 days
   circuit_breaker: cron 任务失败时记录日志并发送通知，不自动重试，防止误删活跃分支。
   done_at: '2026-09-06'
@@ -4304,6 +4309,7 @@ bets:
   depends_on:
   - BET-Y1Q4-T6-26
   - BET-Y1Q4-T10-132
+  done_at: 2026-09-13
   done_when:
   - 交付 bin/ops/bionic-memory-consolidation.py 夜间记忆巩固后台作业
   - 交付 projects/knowledge/gbrain/src/causal_distillation.py 因果提炼模块
@@ -4319,7 +4325,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-13
   title: 仿生清醒-睡眠双相记忆巩固与 Semantica 因果三元组夜间蒸馏系统 (Bionic Dual-Phase Memory Consolidation
     & Semantica Distillation)
   track: T6-EVOLUTION
@@ -4336,11 +4341,47 @@ bets:
   - projects/knowledge/gbrain/src/causal_distillation.py
   - tests/integration/test-bionic-memory.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-29.md
-- appetite: 3 days
+- accepted_specifications:
+  - content_digest: sha256:6d4f80bbd6983065a5b382e6bcec9c35a7900bae980ef13f2be76f13e5e3c417
+    decision_ref: decision://accepted/BET-Y1Q4-T7-06
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-06-contract-net-taskforce-design.md
+    spec_version: 1.0.0
+  appetite: 3 days
   circuit_breaker: 投标消耗超过 500 Token 时强行截断，自动转为默认 Archetype 兜底指派。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+          merged_reachable_commit:
+            ref: git://origin/main@825a16fd3358dbb8f6c12e07772b8e68e20a2db3
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T7-06
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T7-04
   - BET-Y1Q4-T10-132
+  done_at: 2026-09-12
   done_when:
   - 交付 projects/omo/src/omo/resident/contract_net.py 竞标状态机与评分算法
   - 交付 projects/omo/src/omo/resident/taskforce.py 临时突击队编排管理
@@ -4355,11 +4396,11 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: 合同网协议 (CNP) 任务自主竞标与临时突击队动态自组织编排 (Contract Net Protocol Autonomous Bidding
     & Dynamic Taskforce Swarm)
   track: T7-SCENE
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: cd projects/omo && python3 -m pytest tests/test_contract_net.py -q
     expect: exit 0
@@ -4373,47 +4414,55 @@ bets:
   - projects/omo/tests/test_contract_net.py
   - .omo/_knowledge/retros/BET-Y1Q4-T7-06.md
   - docs/plans/3y-bet-ledger.yaml
+- accepted_specifications:
+  - content_digest: sha256:07420c743e90abd285259c9cfc16611e5a805608726065aa85b210851ca838d1
+    decision_ref: decision://accepted/BET-Y1Q4-T8-23
+    spec_ref: repo://docs/superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md
+    spec_version: 1.0.0
+  appetite: 3-4 days
+  circuit_breaker: 连续 3 次心跳上报超时自动降级为只读观测模式，不执行任何写操作。
   completion_evidence:
-    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
         evidence:
           diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
           merged_reachable_commit:
-            ref: git://origin/main@825a16fd3358dbb8f6c12e07772b8e68e20a2db3
+            ref: git://origin/main@4b613556dac201fc969626150b3a88e396b95064
           rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
           tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+        status: VERIFIED
       operational:
-        status: PROVEN
         evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
           cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-06.md
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
+            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
+        status: PROVEN
       value:
-        status: NOT_PROVEN
         evidence: {}
-    decision_ref: decision://accepted/BET-Y1Q4-T7-06
+        status: NOT_PROVEN
+    notes: 28 tests passed (test_resident_flight_deck.py); 真实心跳闭环 + 并发回退恢复; operational
+      以测试级验证为据（见 retro），业务价值待单独证明
     overall_state: delivery_accepted
-  accepted_specifications:
-  - content_digest: sha256:6d4f80bbd6983065a5b382e6bcec9c35a7900bae980ef13f2be76f13e5e3c417
-    decision_ref: decision://accepted/BET-Y1Q4-T7-06
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-t7-06-contract-net-taskforce-design.md
-    spec_version: 1.0.0
-  value_indicator_policy: false
-- appetite: 3-4 days
-  circuit_breaker: 连续 3 次心跳上报超时自动降级为只读观测模式，不执行任何写操作。
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T7-04
   - BET-Y1Q4-T8-22
+  done_at: 2026-09-14
   done_when:
   - 交付 projects/cockpit/src/cockpit/resident_flight_deck.py 授权与遥测服务
   - 交付 projects/cockpit-ui/src/views/ResidentFlightDeck.tsx 前端透明指挥舱页面
@@ -4429,11 +4478,11 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-14
   title: 基于风险-置信度矩阵的自适应授权与 Cockpit Resident Flight Deck 四维透明指挥舱 (Risk-Confidence Adaptive
     Authorization & Cockpit Flight Deck)
   track: T8-EXECUTION
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: python3 -m pytest projects/cockpit/tests/test_resident_flight_deck.py
     expect: exit 0
@@ -4447,55 +4496,41 @@ bets:
   - projects/cockpit-ui/src/views/ResidentFlightDeck.tsx
   - projects/cockpit/tests/test_resident_flight_deck.py
   - .omo/_knowledge/retros/BET-Y1Q4-T8-23.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md
+- accepted_specifications:
+  - content_digest: sha256:d7c0723ef0e2a8cb090b9b2d7a1445e5ae4fd62b4be21488468365f42c33c8b1
+    decision_ref: decision://accepted/BET-Y1Q4-T6-30
+    spec_ref: repo://docs/superpowers/specs/2026-09-16-t6-30-persona-mirror-spec.md
     spec_version: 1.0.0
-    content_digest: sha256:07420c743e90abd285259c9cfc16611e5a805608726065aa85b210851ca838d1
-    decision_ref: decision://accepted/BET-Y1Q4-T8-23
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@4b613556dac201fc969626150b3a88e396b95064
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
-            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
-            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
-            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
-            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
-            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
-            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-23.md
-            sha256: sha256:a0c5e1c489656c0a1739f5fb1c296b42f269106cc907f7499fc62d98d1e23116
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-    notes: 28 tests passed (test_resident_flight_deck.py); 真实心跳闭环 + 并发回退恢复; operational
-      以测试级验证为据（见 retro），业务价值待单独证明
-  value_indicator_policy: false
-- appetite: 4-5 days
+  appetite: 4-5 days
   circuit_breaker: 数据集包含敏感密钥或凭证时立即终止并清洗，拒绝脏数据进入训练集。
+  delivery_accepted:
+    engineering:
+      evidence:
+        diff_extractor:
+          ref: repo://bin/evolution/extract-persona-diffs.py
+          sha256: sha256:c22eaccb5970a0bc627173be4ce9bd4cbd1dfc87971c6f60c01224a42403d0bd
+        persona_trainer:
+          ref: repo://bin/evolution/persona_trainer.py
+          sha256: sha256:9a02c1580cda66e689bf954b9c592381a07d8f6c69004aab87bb17ee1a294db7
+        spec:
+          ref: repo://docs/superpowers/specs/2026-09-16-t6-30-persona-mirror-spec.md
+          sha256: sha256:b1280b120d84b43aaa715a340fe4f255e8e2f983a0449fb2c89615459c0fbcfc
+      status: VERIFIED
+    operational:
+      evidence:
+        governance_registry:
+          ref: repo://.omo/_truth/registry/governance-checks.yaml
+          sha256: sha256:064bbfe116c1c35f2a880ddea645fafdd21cb4f2d94efafe070a27aaf7aeb33c
+      status: PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+    value:
+      evidence: {}
+      status: NOT_PROVEN
   depends_on:
   - BET-Y1Q4-T6-29
   - BET-Y1Q4-T8-23
+  done_at: 2026-09-16
   done_when:
   - 交付 bin/evolution/extract-persona-diffs.py 偏好提取与配对工具
   - 交付 projects/aetherforge/src/persona_trainer.py 本地 LoRA 微调流水线
@@ -4528,36 +4563,6 @@ bets:
   - projects/aetherforge/src/persona_trainer.py
   - tests/integration/test-persona-mirror.py
   - .omo/_knowledge/retros/BET-Y1Q4-T6-30.md
-  accepted_specifications:
-  - content_digest: sha256:d7c0723ef0e2a8cb090b9b2d7a1445e5ae4fd62b4be21488468365f42c33c8b1
-    decision_ref: decision://accepted/BET-Y1Q4-T6-30
-    spec_ref: repo://docs/superpowers/specs/2026-09-16-t6-30-persona-mirror-spec.md
-    spec_version: 1.0.0
-  delivery_accepted:
-    engineering:
-      evidence:
-        diff_extractor:
-          ref: repo://bin/evolution/extract-persona-diffs.py
-          sha256: sha256:c22eaccb5970a0bc627173be4ce9bd4cbd1dfc87971c6f60c01224a42403d0bd
-        persona_trainer:
-          ref: repo://bin/evolution/persona_trainer.py
-          sha256: sha256:9a02c1580cda66e689bf954b9c592381a07d8f6c69004aab87bb17ee1a294db7
-        spec:
-          ref: repo://docs/superpowers/specs/2026-09-16-t6-30-persona-mirror-spec.md
-          sha256: sha256:b1280b120d84b43aaa715a340fe4f255e8e2f983a0449fb2c89615459c0fbcfc
-      status: VERIFIED
-    operational:
-      evidence:
-        governance_registry:
-          ref: repo://.omo/_truth/registry/governance-checks.yaml
-          sha256: sha256:064bbfe116c1c35f2a880ddea645fafdd21cb4f2d94efafe070a27aaf7aeb33c
-      status: PROVEN
-    value:
-      evidence: {}
-      status: NOT_PROVEN
-    overall_state: delivery_accepted
-    schema_version: completion-evidence-matrix/v1
-  done_at: 2026-09-16
 - accepted_specifications:
   - content_digest: sha256:cd8573840afe4878120d7614a7ef1c38f295d57db50342b338f07b64cc178302
     decision_ref: decision://accepted/BET-Y1Q4-T9-03
@@ -15091,6 +15096,36 @@ bets:
   - .omo/_knowledge/retros/gates/**
 - appetite: 2 days
   circuit_breaker: 修订内容与已交付代码事实核对不一致时，以代码为准重新核实后再落笔，不凭印象改文档。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          merged_reachable_commit:
+            ref: git://origin/main@e86e3cda9fdee04285e66ef2edb1174c60fc1fa6
+          rollback:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          tests:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          fresh_receipt:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          live_canary:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          replay:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: '2026-09-16'
   done_when:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md 明确把 family 域（含已 assisted 状态的资产审计场景）列入正式认领范围，说明理由
   - 原"休眠/待退役"表述被替换或明确限定为"截至 <日期> 的历史判断，现状见本次修订"，不留自相矛盾的并存文本
@@ -15109,6 +15144,7 @@ bets:
   title: 战略主线宪章修订 — family 域正式纳编入三年计划
   track: T1-TRUTH
   underlying_workflow: project-doc-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
@@ -15116,24 +15152,22 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  done_at: '2026-09-16'
-  value_indicator_policy: false
+- appetite: 2 days
+  circuit_breaker: 修订内容与已交付代码事实核对不一致时，以代码为准重新核实后再落笔，不凭印象改文档。
   completion_evidence:
-    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
         evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@e86e3cda9fdee04285e66ef2edb1174c60fc1fa6
-          tests:
-            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
           diff:
             ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          merged_reachable_commit:
+            ref: git://origin/main@e86e3cda9fdee04285e66ef2edb1174c60fc1fa6
           rollback:
             ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+          tests:
+            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+        status: VERIFIED
       operational:
-        status: PROVEN
         evidence:
           cleanup:
             ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
@@ -15143,12 +15177,13 @@ bets:
             ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
           replay:
             ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
+        status: PROVEN
       value:
-        status: NOT_PROVEN
         evidence: {}
+        status: NOT_PROVEN
     overall_state: delivery_accepted
-- appetite: 2 days
-  circuit_breaker: 修订内容与已交付代码事实核对不一致时，以代码为准重新核实后再落笔，不凭印象改文档。
+    schema_version: completion-evidence-matrix/v1
+  done_at: '2026-09-16'
   done_when:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md §6 应用形态章节去掉与已交付功能冲突的"不做移动 App/多窗格"表述
   - 改为如实描述当前形态（Mobile Cockpit、Sovereign TUI 2.0 多窗格）并说明其与"一个应用形态"原则的关系，给出明确结论（是否算同一形态的不同投影，或需要新增一条替代性自我约束）
@@ -15167,6 +15202,7 @@ bets:
   title: 战略主线宪章修订 — 追认移动 Cockpit / TUI 多窗格为既定应用形态
   track: T1-TRUTH
   underlying_workflow: project-doc-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
@@ -15174,37 +15210,6 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  done_at: '2026-09-16'
-  value_indicator_policy: false
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@e86e3cda9fdee04285e66ef2edb1174c60fc1fa6
-          tests:
-            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-          diff:
-            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-          rollback:
-            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-          fresh_receipt:
-            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-          live_canary:
-            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-          replay:
-            ref: receipt://docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
 - appetite: 3 weeks
   circuit_breaker: 模板抽象泄漏 → 退回每场景独立 DAG
   depends_on:
@@ -27734,6 +27739,7 @@ bets:
   circuit_breaker: 若 refine 生成的技能导致回归报错，5 秒内自动回滚至上一个稳定 refinement_id。
   depends_on:
   - BET-Y1Q4-T7-06
+  done_at: '2026-09-13'
   done_when:
   - 交付 bin/ops/continual-harness-refine.py 轨迹审阅与技能萃取脚本
   - 交付 projects/omo/src/omo/resident/refine_rollback.py 回滚驱动器
@@ -27767,7 +27773,6 @@ bets:
   - projects/omo/src/omo/resident/refine_rollback.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T7-07.md
-  done_at: '2026-09-13'
 - appetite: 2-3 days
   circuit_breaker: 监测到未经授权的危险系统调用（如未经沙箱直接调起 shell rm）直接阻断并降级告警。
   completion_evidence:
@@ -28183,13 +28188,13 @@ bets:
         status: VERIFIED
       operational:
         evidence:
-          live_canary:
+          cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
-          replay:
+          live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
-          cleanup:
+          replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-143.md
         status: PROVEN
       value:
@@ -28197,6 +28202,7 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+  done_at: '2026-09-12'
   done_when:
   - WP1 shadow 连续至少 24 小时并覆盖三个 lifecycle 类、完整 RED matrix、零未解释差异和零 v2 false-allow
   - legacy v1 publication 全部经过 drainable fence，managed clone 在 shadow 期间仍不得由 v1 或
@@ -28222,15 +28228,10 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: '2026-09-12'
   title: OMO canonical claims-authority bridge R0
   track: T10-MATURITY
   underlying_workflow: project-code-change
   value_indicator_policy: false
-  write_surfaces:
-  - projects/omo
-  - docs/plans/3y-bet-ledger.yaml
-  - .omo/_knowledge/retros/BET-Y1Q4-T10-143.md
   verify:
   - cmd: cd projects/omo && PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
       /opt/homebrew/bin/python3 -B -m pytest -q -p no:cacheprovider tests/test_workflow_claims_authority_bridge.py
@@ -28244,6 +28245,10 @@ bets:
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
+  write_surfaces:
+  - projects/omo
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-143.md
 - accepted_specifications:
   - content_digest: sha256:7b183e23bed3c291555d93da3bd0fa24b04aaed928eb896ec7de10c41d503bfd
     decision_ref: decision://accepted/BET-Y1Q4-T10-144
@@ -28253,42 +28258,43 @@ bets:
   circuit_breaker: version 1.3.0 WorkPacket 必须只含 projects/omo；不得 union 1.2.0 源码面。
     禁止改源码/host/completion/value；目标须为含 omo#162 的 authoritative child main；门禁失败立即停止。
   completion_evidence:
-    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
         evidence:
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-09-a2-resident-status-purity-truth-recovery-design.md
             sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
-            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          merged_reachable_commit:
+            ref: git://origin/main@629744da6e64459ac1664c52215c2b1f482c8152
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
             sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
-          merged_reachable_commit:
-            ref: git://origin/main@629744da6e64459ac1664c52215c2b1f482c8152
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
-            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
-          fresh_receipt:
+          tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
             sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
-          replay:
-            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
-            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
+        status: VERIFIED
+      operational:
+        evidence:
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
             sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-144.md
+            sha256: sha256:b9792d74921dca422541c7eae3552f0aa49516bd1589c3c8e06272760d24bcb8
+          live_canary:
+            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
+            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
+          replay:
+            ref: receipt://docs/reports/2026-09-11-a2-root-canary-evidence.md
+            sha256: sha256:414d48c2a81e3e05aa0c6e31cd47587ee04581c5a1afbec7efd8bd42a9388a6e
+        status: PROVEN
       value:
-        status: NOT_PROVEN
         evidence: {}
+        status: NOT_PROVEN
     overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on: []
+  done_at: 2026-09-11
   done_when:
   - 完整 resident status 路径对 recovery、checkpoint、holder、CPU、kill、sleep 和 write-capable
     SQLite 的调用均为零
@@ -28316,7 +28322,6 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: 2026-09-11
   title: A2 Resident Status Purity Truth Recovery
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
@@ -28362,13 +28367,13 @@ bets:
         status: VERIFIED
       operational:
         evidence:
-          live_canary:
+          cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
           fresh_receipt:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-          replay:
+          live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-          cleanup:
+          replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-145.md
         status: PROVEN
       value:
@@ -28377,6 +28382,7 @@ bets:
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   depends_on: []
+  done_at: '2026-09-12'
   done_when:
   - 每个 1.0.0 至 1.9.0 accepted binding 均为完整非 union 替换，旧 run 已关闭且锁归零
   - canonical store、receipt chain、幂等、CAS、high-water、crash-tail、备份轮转与完整 RED matrix
@@ -28407,7 +28413,6 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: '2026-09-12'
   title: Claims Authority Bridge WP1 R0 Shadow
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28429,8 +28434,44 @@ bets:
   - projects/omo
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-145.md
-- appetite: 40 days
+- accepted_specifications:
+  - content_digest: sha256:7dfe23e895be4c86bb8f0c8a978adeeab7985a627aba1e95b33b9b92234090c5
+    decision_ref: decision://accepted/BET-Y1Q4-T10-146
+    spec_ref: repo://docs/superpowers/specs/2026-09-16-t10-146-maturity-rollup-tracking.md
+    spec_version: 1.0.0
+  appetite: 40 days
   circuit_breaker: 任一子 BET 的 writer 操作触及未过门的 Orca/Multica、或与并发 agent 产生 write 冲突，立即停止并记录，不强行覆盖。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          merged_reachable_commit:
+            ref: git://origin/main@de5cafe0662e2eaac464be69f5850df1e5bafc42
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T10-146
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: '2026-09-16'
   done_when:
   - 6 个子 BET（T10-147 至 T10-152）状态不再是 candidate（done 或有明确 blocked 原因并记录）
   - 本 BET 自身状态随子 BET 完成情况推进，不允许单独标 done 而子 BET 未完成
@@ -28446,17 +28487,16 @@ bets:
     确认可用，撞车立即退让
   - 不在子 BET 未过门前对 Orca/Multica 执行任何 writer 操作
   priority: P1
-  retro: required
-  risk_level: L2
-  status: done
-  done_at: '2026-09-16'
   reopen_at: '2026-09-15'
   reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo
     pin; false done rolled back'
-  value_indicator_policy: false
+  retro: required
+  risk_level: L2
+  status: done
   title: OMO Agent OS 成熟度差距收口 — Queue/AGE-v2/Orca R0/Multica AS0/A8 外部事务
   track: T10-MATURITY
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
@@ -28465,41 +28505,6 @@ bets:
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-16-t10-146-maturity-rollup-tracking.md
-    spec_version: 1.0.0
-    content_digest: sha256:7dfe23e895be4c86bb8f0c8a978adeeab7985a627aba1e95b33b9b92234090c5
-    decision_ref: decision://accepted/BET-Y1Q4-T10-146
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    overall_state: delivery_accepted
-    decision_ref: decision://accepted/BET-Y1Q4-T10-146
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          merged_reachable_commit:
-            ref: git://origin/main@de5cafe0662e2eaac464be69f5850df1e5bafc42
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
 - accepted_specifications:
   - content_digest: sha256:b0ac46f1b2233db7ab4c18d0ec1d0b5edaded2a6b6ad5bcddf2b8d4acf428519
     decision_ref: decision://accepted/BET-Y1Q4-T10-147
@@ -28572,6 +28577,7 @@ bets:
   - projects/omo/tests/test_sovereignty_persistent_queue.py
 - appetite: 8 days
   circuit_breaker: 任何改动导致既有 test_age_v2_*.py 生产测试回归立即停止。
+  done_at: '2026-09-12'
   done_when:
   - workflow_mesh.py 或等价机制具备 B 槽后端分发路径
   - omo cell 子命令改经 Mesh 分发，行为对最终用户 byte-for-byte 等价
@@ -28591,7 +28597,6 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: '2026-09-12'
   title: AGE-v2 Cell 收口 — 修复 SFOP 八律第3条违规（后端不拥有收件箱）
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28606,9 +28611,15 @@ bets:
   - projects/omo/src/omo/cli.py
   - projects/omo/src/omo/workflow_mesh.py
   - bin/gac/check-sfop-slots.py
-- appetite: 10 days
+- accepted_specifications:
+  - content_digest: sha256:a0d4320ffcb9f2025eb917f764ff1059ccf70e9d6e1533a87291894f174c0d3c
+    decision_ref: decision://accepted/BET-Y1Q4-T10-149
+    spec_ref: repo://docs/superpowers/specs/2026-09-11-orca-r0-verify-design.md
+    spec_version: 1.0.0
+  appetite: 10 days
   circuit_breaker: 1.0.0 WorkPacket 必须只含 bin/gac/orca-r0-verify.py；禁止 union；禁止任何 Orca
     writer（run-create/worker-start/stop/dispatch/gate-resolve 等）；门禁失败立即停止。
+  done_at: '2026-09-12'
   done_when:
   - 明确定义 R0 三笔事务的可复算验证命令与预期输出
   - 历史结算对账脚本产出可复核报告（reconciled/mismatch 计数）
@@ -28627,7 +28638,6 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: '2026-09-12'
   title: Orca R0 正式准入验证工具链
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28638,14 +28648,15 @@ bets:
   workflow: project-code-change
   write_surfaces:
   - bin/gac/orca-r0-verify.py
-  accepted_specifications:
-  - content_digest: sha256:a0d4320ffcb9f2025eb917f764ff1059ccf70e9d6e1533a87291894f174c0d3c
-    decision_ref: decision://accepted/BET-Y1Q4-T10-149
-    spec_ref: repo://docs/superpowers/specs/2026-09-11-orca-r0-verify-design.md
+- accepted_specifications:
+  - content_digest: sha256:dc3c558dfb2656e91de6672283a4113fd09b61038e96cf27d1ee74df716cae6f
+    decision_ref: decision://accepted/BET-Y1Q4-T10-150
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-multica-as0-verify-design.md
     spec_version: 1.0.0
-- appetite: 10 days
+  appetite: 10 days
   circuit_breaker: 1.0.0 WorkPacket 必须只含 bin/gac/multica-as0-verify.py；禁止 union；禁止任何
     Multica writer 派工/create/update/delete/trigger/daemon start|stop|restart；门禁失败立即停止。
+  done_at: '2026-09-12'
   done_when:
   - 30 个 API 端点逐一有可复算的只读探测命令与预期结果
   - 7 个 topology 关系逐一有可复算的只读验证
@@ -28661,7 +28672,6 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  done_at: '2026-09-12'
   title: Multica AS0 正式准入验证工具链
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -28672,54 +28682,50 @@ bets:
   workflow: project-code-change
   write_surfaces:
   - bin/gac/multica-as0-verify.py
-  accepted_specifications:
-  - content_digest: sha256:dc3c558dfb2656e91de6672283a4113fd09b61038e96cf27d1ee74df716cae6f
-    decision_ref: decision://accepted/BET-Y1Q4-T10-150
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-multica-as0-verify-design.md
-    spec_version: 1.0.0
-- appetite: 15 days
-  accepted_specifications:
+- accepted_specifications:
   - content_digest: sha256:6e37fd46308404de2fe85d63d83cf87cb71cb841a8199022f41ac2363da94d18
     decision_ref: decision://accepted/BET-Y1Q4-T10-151
     spec_ref: repo://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
     spec_version: 1.0.0
+  appetite: 15 days
   circuit_breaker: 复核后发现该事务链已存在但未被发现时，立即停止重复实现，转为补充证据登记。
   completion_evidence:
-    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
         evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@de5cafe0662e2eaac464be69f5850df1e5bafc42
-          tests:
-            ref: receipt://docs/reports/2026-09-15-a8-external-transaction-authoritative-review.md
-            sha256: sha256:19aa78f377c8cf1532d12ac9ff828ca382146dcd55f02228fa9430dcde117f2c
           diff:
             ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
             sha256: sha256:6e37fd46308404de2fe85d63d83cf87cb71cb841a8199022f41ac2363da94d18
+          merged_reachable_commit:
+            ref: git://origin/main@de5cafe0662e2eaac464be69f5850df1e5bafc42
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
             sha256: sha256:5bcf76348b93fbb35b1958e6845520d588e2c31362108b769eed3d0db615aabd
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
+          tests:
             ref: receipt://docs/reports/2026-09-15-a8-external-transaction-authoritative-review.md
             sha256: sha256:19aa78f377c8cf1532d12ac9ff828ca382146dcd55f02228fa9430dcde117f2c
-          fresh_receipt:
-            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
-            sha256: sha256:6e37fd46308404de2fe85d63d83cf87cb71cb841a8199022f41ac2363da94d18
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
-            sha256: sha256:5bcf76348b93fbb35b1958e6845520d588e2c31362108b769eed3d0db615aabd
+        status: VERIFIED
+      operational:
+        evidence:
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
             sha256: sha256:5bcf76348b93fbb35b1958e6845520d588e2c31362108b769eed3d0db615aabd
+          fresh_receipt:
+            ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
+            sha256: sha256:6e37fd46308404de2fe85d63d83cf87cb71cb841a8199022f41ac2363da94d18
+          live_canary:
+            ref: receipt://docs/reports/2026-09-15-a8-external-transaction-authoritative-review.md
+            sha256: sha256:19aa78f377c8cf1532d12ac9ff828ca382146dcd55f02228fa9430dcde117f2c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
+            sha256: sha256:5bcf76348b93fbb35b1958e6845520d588e2c31362108b769eed3d0db615aabd
+        status: PROVEN
       value:
-        status: NOT_PROVEN
         evidence: {}
+        status: NOT_PROVEN
     overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-16
   done_when:
   - 完成 ADR/archive/mutation-surfaces/ingress delivery 五处路径搜索，产出 权威现状报告（存在/不存在/部分存在，附证据）
   - 若确认缺失，产出 reserve→bind→readback→start→ACK/fence→release/retire 七段状态机的最小实现与测试
@@ -28732,22 +28738,21 @@ bets:
   - 不预判具体技术方案，先做存在性复核再设计
   parent_bet_id: BET-Y1Q4-T10-146
   priority: P2
-  retro: required
-  risk_level: L2
-  status: done
-  done_at: 2026-09-16
   reopen_at: '2026-09-15'
   reopen_reason: 'T7-07 review: A8 implementation not reachable in current projects/omo
     pin; false done rolled back'
+  retro: required
+  risk_level: L2
+  status: done
   title: A8 OMO 外部事务生命周期实现
   track: T10-MATURITY
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: make gac-local-gate
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
-  value_indicator_policy: false
   write_surfaces:
   - projects/omo
   - projects/omo/src/omo/workflow/external_transaction.py
@@ -28888,8 +28893,38 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T10-153.md
 - appetite: 0.5 days
   circuit_breaker: 外发内容固定为测试邮件; 频次受 T4-06 网关 daily_send_cap 熔断保护
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          merged_reachable_commit:
+            ref: git://origin/main@7b02a3d37984b8356c5af28e1a7930114fa73af4
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y1Q4-T4-06
+  done_at: '2026-09-14'
   done_when:
   - SMTP 凭据部署且 spine send 真实外发成功 (目标收件箱收到测试邮件)
   - receipt.json status=sent + 价值台账 entry 落盘核对
@@ -28922,36 +28957,6 @@ bets:
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T4-07.md
-  done_at: '2026-09-14'
-  completion_evidence:
-    axes:
-      engineering:
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
-          merged_reachable_commit:
-            ref: git://origin/main@7b02a3d37984b8356c5af28e1a7930114fa73af4
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
-        status: VERIFIED
-      operational:
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T4-07.md
-        status: PROVEN
-      value:
-        evidence: {}
-        status: NOT_PROVEN
-    overall_state: delivery_accepted
-    schema_version: completion-evidence-matrix/v1
 - accepted_specifications:
   - content_digest: sha256:3237cf963d27baa31fb7e7ac887e16d917b88390f00920bf0f4a68d99c5fa892
     decision_ref: decision://accepted/BET-Y1Q4-T16
@@ -29037,6 +29042,7 @@ bets:
     spec_version: 1.0.0
   appetite: 16 days
   circuit_breaker: 任何改动若破坏现有 Work Cases 案件数据持久性或导致 A9 门禁数据漂移，立即暂停并回滚。
+  done_at: '2026-09-14'
   done_when:
   - Observatory 统一数据面收敛至 projects/cockpit，废除 50+ 散乱旧 API
   - 前端 6 大正交 Store 建立，状态严格解耦互不污染
@@ -29071,7 +29077,6 @@ bets:
   - docs/superpowers/specs/
   - projects/cockpit/
   - projects/cockpit-ui/
-  done_at: '2026-09-14'
 - accepted_specifications:
   - content_digest: sha256:c4e872bb66b558c41328127900d1ffbd7a54fdd6ae2d0e983eb9599ab2629438
     decision_ref: decision://accepted/BET-Y1Q4-T8-24A
@@ -29151,6 +29156,46 @@ bets:
   - .omo/_truth/registry/services.yaml
 - appetite: 3 days
   circuit_breaker: 路由重构若导致旧有深度链接无法访问，立即恢复重定向表。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
+          merged_reachable_commit:
+            ref: git://origin/main@1be55e3ecb079f45266955dcdf598b0dacf02477
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
+            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    notes: done_when#1 六面 Store + 解耦断言 11 tests; done_when#2 ⌘K 内存索引实测; done_when#3
+      Causal Inspector 抽屉 UI 属 24C/D (数据面已就绪)。 engineering VERIFIED; operational PROVEN
+      (store 底座随 cockpit-ui 构建产物运行); 24C/D/E 交付后各自单独证明。
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-12
   done_when:
   - 6 大 Zustand Store 建立，状态解耦互不污染
   - ⌘K 命令面板在 50ms 内模糊检索 1248 能力与 302 服务
@@ -29164,13 +29209,12 @@ bets:
   parent_bet_id: BET-Y1Q4-T8-24
   priority: P0
   retro: required
-  value_indicator_policy: false
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: Cockpit-UI 六面正交 Store 底座与 ⌘K 全键盘命令中枢
   track: T8-SURFACE
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: cd projects/cockpit-ui && bun test src/stores/
     expect: exit 0
@@ -29180,47 +29224,14 @@ bets:
   - projects/cockpit-ui/src/stores/
   - projects/cockpit-ui/src/components/common/
   - projects/cockpit-ui/src/routes.tsx
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
-            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
-          merged_reachable_commit:
-            ref: git://origin/main@1be55e3ecb079f45266955dcdf598b0dacf02477
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
-            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
-            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
-            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
-            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
-            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24B.md
-            sha256: sha256:5139ee9bb0896b07ae293cb0feeb27baf13d1d75cc39fe7a510be14dc25fa1b5
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-    notes: done_when#1 六面 Store + 解耦断言 11 tests; done_when#2 ⌘K 内存索引实测; done_when#3
-      Causal Inspector 抽屉 UI 属 24C/D (数据面已就绪)。 engineering VERIFIED; operational PROVEN
-      (store 底座随 cockpit-ui 构建产物运行); 24C/D/E 交付后各自单独证明。
-- appetite: 4 days
+- accepted_specifications:
+  - content_digest: sha256:db6305015956f82c7464d62ae2f720bbb5a5ad17080e52d3b0cee62c0c3fe8bb
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24C
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-studio-view-deep-delivery-spec.md
+    spec_version: 1.0.0
+  appetite: 4 days
   circuit_breaker: 拓扑图渲染节点数过大导致帧率低于 30fps 时启用虚拟化视口。
+  done_at: '2026-09-14'
   done_when:
   - 六大记忆通道状态墙与意图路由仿真器流畅运行
   - ReactFlow 渲染 42 技能与 25 工作流拓扑网，点击下钻代码与证据
@@ -29243,19 +29254,55 @@ bets:
   verify:
   - cmd: cd projects/cockpit-ui && npx vitest run src/views/StudioView.test.tsx
     expect: exit 0
-  accepted_specifications:
-  - content_digest: sha256:db6305015956f82c7464d62ae2f720bbb5a5ad17080e52d3b0cee62c0c3fe8bb
-    decision_ref: decision://accepted/BET-Y1Q4-T8-24C
-    spec_ref: repo://docs/superpowers/specs/2026-09-12-studio-view-deep-delivery-spec.md
-    spec_version: 1.0.0
   window: Y1Q4
   workflow: bet-execution
   write_surfaces:
   - projects/cockpit-ui/src/views/StudioView.tsx
   - projects/cockpit-ui/src/components/studio/
-  done_at: '2026-09-14'
-- appetite: 4 days
+- accepted_specifications:
+  - content_digest: sha256:3bcf727d21aa2d30c71d19b4e8b72793da70466a5ded72b083d0502b96684464
+    decision_ref: decision://accepted/BET-Y1Q4-T8-24D
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t8-24d-operations-mission-design.md
+    spec_version: 1.0.0
+  appetite: 4 days
   circuit_breaker: 任何导致用户审批误点击或案件数据丢失的 UI 缺陷立即回滚。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-12-t8-24d-operations-mission-design.md
+            sha256: sha256:3bcf727d21aa2d30c71d19b4e8b72793da70466a5ded72b083d0502b96684464
+          merged_reachable_commit:
+            ref: git://origin/main@17e2069ae5e80c2b2cf7846de135338682cb0be4
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
+            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-12
   done_when:
   - Work Cases 案件流转、材料提交与回执归档流畅运行
   - Scene v3 旅程状态机与校准曲线无缝接入
@@ -29264,7 +29311,6 @@ bets:
   goal: 全面交付 Operations（整合 Work Cases 案件大厅、Scene v3 旅程状态机、SpineReviewModal 署名确认与 PersistentQueue
     监控）与 Mission（3Y-BET 全景矩阵、交互式甘特图、Golden Slice 真实价值公证）。
   human_gate: false
-  value_indicator_policy: false
   id: BET-Y1Q4-T8-24D
   non_goals:
   - 不修改现有 Work Cases 的底层存储协议，仅重构呈现与联动层
@@ -29273,57 +29319,16 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: Operations 业务协同与 Mission 战略交付工作台落地
   track: T8-SURFACE
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: cd projects/cockpit-ui && npx vitest run src/views/OperationsView.test.tsx
       src/views/MissionView.test.tsx
     expect: exit 0
   window: Y1Q4
   workflow: bet-execution
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t8-24d-operations-mission-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:3bcf727d21aa2d30c71d19b4e8b72793da70466a5ded72b083d0502b96684464
-    decision_ref: decision://accepted/BET-Y1Q4-T8-24D
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://docs/superpowers/specs/2026-09-12-t8-24d-operations-mission-design.md
-            sha256: sha256:3bcf727d21aa2d30c71d19b4e8b72793da70466a5ded72b083d0502b96684464
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
-            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
-            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
-          merged_reachable_commit:
-            ref: git://origin/main@17e2069ae5e80c2b2cf7846de135338682cb0be4
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
-            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
-            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
-            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
-            sha256: sha256:e34c9368a2869872a4342c8b59f218630bb72873ebcab166e2b89abaae7401aa
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
   write_surfaces:
   - projects/cockpit-ui/src/views/OperationsView.tsx
   - projects/cockpit-ui/src/views/MissionView.tsx
@@ -29334,6 +29339,36 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T8-24D.md
 - appetite: 2 days
   circuit_breaker: 对账若发现任何一个指标丢失，严禁关闭 43191 原服务。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          merged_reachable_commit:
+            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: '2026-09-12'
   done_when:
   - Cockpit 数据点与原 43191 达到 100% 一致性与 SHA-256 对齐
   - A9 全景观测准入门禁证据链完成签署
@@ -29350,11 +29385,10 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: '2026-09-12'
   title: A9 全景观测终验对账、43191 进程平稳退役与 Closeout
   track: T8-SURFACE
-  value_indicator_policy: false
   underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: python3 bin/gac/ci-check-runner.py && make gac-local-gate
     expect: exit 0
@@ -29363,35 +29397,6 @@ bets:
   write_surfaces:
   - docs/reports/
   - .omo/_knowledge/retros/
-  completion_evidence:
-    axes:
-      engineering:
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
-          merged_reachable_commit:
-            ref: git://origin/main@b068e61c198c2f7cf85fbc0f535fd92544688651
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
-        status: VERIFIED
-      operational:
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T8-24E.md
-        status: PROVEN
-      value:
-        evidence: {}
-        status: NOT_PROVEN
-    overall_state: delivery_accepted
-    schema_version: completion-evidence-matrix/v1
 - accepted_specifications:
   - content_digest: sha256:29f301de1c9fc93cd6609aaad88c0ae1024dc8bfd7fa9fe811fcb496fadc8c2c
     decision_ref: decision://accepted/BET-Y1Q4-T8-25
@@ -29399,6 +29404,7 @@ bets:
     spec_version: 1.0.0
   appetite: 2 days
   circuit_breaker: 任何可视化或交互升级若导致既有自动化测试失败或产生外部逃逸网络请求，立即回滚。
+  done_at: '2026-09-12'
   done_when:
   - 43191 观测站六大主权平面全面上线原生交互式可视化组件（门禁流水线、战役分布、算力星系拓扑、价值回路、场景卡漏斗、动态因果子图）
   - 严格保持 100% 离线主权与 CSP 约束，零外部第三方依赖
@@ -29416,7 +29422,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: '2026-09-12'
   title: 43191 织星全要素控制面全维度交互式可视化落地与验证
   track: T8-SURFACE
   underlying_workflow: project-code-change
@@ -29430,20 +29435,28 @@ bets:
   - docs/reports/
   - .omo/_knowledge/retros/
 - appetite: 1 sprint
+  circuit_breaker: 任何导致 gac-local-gate fail 的回归立即停止.
   created_at: '2026-09-11'
+  depends_on: []
   discipline: T10-REPO-HYGIENE
-  id: BET-Y1Q4-T10-154
-  kr_link: KR-HOLDABILITY-ORPHAN-BETS
-  objective_ref: OBJ-HOLDABILITY
-  priority: P1
-  status: done
-  title: 'Diff Lifecycle Closure: 检测孤立未应用代码 diff'
-  track: T10-MATURITY
-  window: Y1Q4
+  done_at: '2026-09-12'
   done_when:
   - check-diff-lifecycle.py 在 CI 阻断孤立未应用代码 diff (合并 commit 但未被吸收的 patch)
   - tests/unit/test_diff_lifecycle.py 覆盖 4 种孤儿 diff 场景
   - pre-commit hook 集成 (gac-local-gate 串入)
+  goal: 扫描 workspace 中的 .patch/.diff 文件, 检测其中包含的 commit 是否已被后续 merge 覆盖, 防止孤儿 diff
+    长期占用仓库空间.
+  human_gate: false
+  id: BET-Y1Q4-T10-154
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P1
+  retro: required
+  risk_level: L2
+  status: done
+  title: 'Diff Lifecycle Closure: 检测孤立未应用代码 diff'
+  track: T10-MATURITY
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest tests/unit/test_diff_lifecycle.py -q
     expect: exit 0
@@ -29451,34 +29464,33 @@ bets:
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
   write_surfaces:
   - bin/gac/check-diff-lifecycle.py
   - tests/unit/test_diff_lifecycle.py
-  circuit_breaker: 任何导致 gac-local-gate fail 的回归立即停止.
-  goal: 扫描 workspace 中的 .patch/.diff 文件, 检测其中包含的 commit 是否已被后续 merge 覆盖, 防止孤儿 diff
-    长期占用仓库空间.
-  workflow: bet-execution
-  human_gate: false
-  risk_level: L2
-  retro: required
-  value_indicator_policy: false
-  depends_on: []
-  done_at: '2026-09-12'
 - appetite: 1 sprint
+  circuit_breaker: 任何导致 gac-local-gate fail 的回归立即停止.
   created_at: '2026-09-11'
+  depends_on: []
   discipline: T10-REPO-HYGIENE
-  id: BET-Y1Q4-T10-155
-  kr_link: KR-HOLDABILITY-ORPHAN-BETS
-  objective_ref: OBJ-HOLDABILITY
-  priority: P2
-  status: done
-  title: 'Diff Debt Tracking: 跟踪代码变更中的历史债务'
-  track: T10-MATURITY
-  window: Y1Q4
+  done_at: '2026-09-12'
   done_when:
   - check-diff-debt.py 在 PR diff 中检测新增 FIXME/HACK/TODO 并与 base 对比
   - tests/unit/test_diff_debt.py 覆盖 5 种债务继承场景
   - warning budget 5 个 / PR, 超过阻断合并
+  goal: 扫描当前分支 diff 中新增的 FIXME/HACK/TODO 标记, 检查对应代码在 base 中是否已存在未解决的债务, 防止新增技术债.
+  human_gate: false
+  id: BET-Y1Q4-T10-155
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P2
+  retro: required
+  risk_level: L2
+  status: done
+  title: 'Diff Debt Tracking: 跟踪代码变更中的历史债务'
+  track: T10-MATURITY
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest tests/unit/test_diff_debt.py -q
     expect: exit 0
@@ -29486,33 +29498,33 @@ bets:
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
   write_surfaces:
   - bin/gac/check-diff-debt.py
   - tests/unit/test_diff_debt.py
-  circuit_breaker: 任何导致 gac-local-gate fail 的回归立即停止.
-  goal: 扫描当前分支 diff 中新增的 FIXME/HACK/TODO 标记, 检查对应代码在 base 中是否已存在未解决的债务, 防止新增技术债.
-  workflow: bet-execution
-  human_gate: false
-  risk_level: L2
-  retro: required
-  value_indicator_policy: false
-  depends_on: []
-  done_at: '2026-09-12'
 - appetite: 1 sprint
+  circuit_breaker: 任何导致 gac-local-gate fail 的回归立即停止.
   created_at: '2026-09-11'
+  depends_on: []
   discipline: T10-REPO-HYGIENE
-  id: BET-Y1Q4-T10-156
-  kr_link: KR-HOLDABILITY-ORPHAN-BETS
-  objective_ref: OBJ-HOLDABILITY
-  priority: P2
-  status: done
-  title: 'Diff Growth Detection: 检测单 PR 的代码膨胀'
-  track: T10-MATURITY
-  window: Y1Q4
+  done_at: '2026-09-12'
   done_when:
   - check-diff-growth.py 计算 PR diff LOC 增量, 超过阈值标记 warning
   - tests/unit/test_diff_growth.py 覆盖 +/- 阈值边界
   - '与 check-bin-quota-diff 互补: 后者按脚本计数, 前者按代码行数'
+  goal: 计算当前分支相对 base 分支的代码增长量, 超过阈值时标记 warning, 防止单 PR 代码膨胀.
+  human_gate: false
+  id: BET-Y1Q4-T10-156
+  kr_link: KR-HOLDABILITY-ORPHAN-BETS
+  objective_ref: OBJ-HOLDABILITY
+  priority: P2
+  retro: required
+  risk_level: L2
+  status: done
+  title: 'Diff Growth Detection: 检测单 PR 的代码膨胀'
+  track: T10-MATURITY
+  value_indicator_policy: false
   verify:
   - cmd: uv run pytest tests/unit/test_diff_growth.py -q
     expect: exit 0
@@ -29520,18 +29532,11 @@ bets:
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
   write_surfaces:
   - bin/gac/check-diff-growth.py
   - tests/unit/test_diff_growth.py
-  circuit_breaker: 任何导致 gac-local-gate fail 的回归立即停止.
-  goal: 计算当前分支相对 base 分支的代码增长量, 超过阈值时标记 warning, 防止单 PR 代码膨胀.
-  workflow: bet-execution
-  human_gate: false
-  risk_level: L2
-  retro: required
-  value_indicator_policy: false
-  depends_on: []
-  done_at: '2026-09-12'
 - accepted_specifications:
   - content_digest: sha256:c3216a927df7db567d0f6b1be4de3c5809ba3f4b8cf14cdf2bd815d34538577e
     decision_ref: decision://accepted/BET-Y1Q4-T10-157
@@ -29539,6 +29544,7 @@ bets:
     spec_version: 1.0.0
   appetite: 0.25 day
   circuit_breaker: 发现该 SHA 在 child origin/main 不可达，或有其他 agent 正在处理同一指针，立即停止。
+  done_at: '2026-09-12'
   done_when:
   - root projects/aetherforge gitlink 等于 452f0db047e09657d56fc0913b6b54c36e8532c0
   - '该 SHA 在 omostation-aetherforge origin/main 可达 (已验证: PR #71 已合并)'
@@ -29556,7 +29562,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: '2026-09-12'
   title: projects/aetherforge root gitlink pointer closeout (Responses API)
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
@@ -29580,6 +29585,37 @@ bets:
     spec_version: 1.0.0
   appetite: 0.25 day
   circuit_breaker: 发现该 SHA 在 child origin/main 不可达，或有其他 agent 正在处理同一指针，立即停止。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          merged_reachable_commit:
+            ref: git://origin/main@1c128f55dea7677f7f23f5a917cc7d003c441180
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T10-158
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-12
   done_when:
   - root projects/omlxc gitlink 等于 e92317572eefbc539bb99c29029cf001c6261388
   - '该 SHA 在 omostation-omlxc origin/main 可达 (已验证: PR #72 已合并)'
@@ -29597,7 +29633,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: projects/omlxc root gitlink pointer closeout (probe-candidate availability
     fix)
   track: T10-MATURITY
@@ -29616,36 +29651,6 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-157-aetherforge-responses-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-          merged_reachable_commit:
-            ref: git://origin/main@1c128f55dea7677f7f23f5a917cc7d003c441180
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-158.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    decision_ref: decision://accepted/BET-Y1Q4-T10-158
-    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:abe0c11d09b2356619725ce9d015ca4e77a0ab65c2fb3640b6f5fcb4ef90d06c
     decision_ref: decision://accepted/BET-Y1Q4-T10-159
@@ -29653,6 +29658,37 @@ bets:
     spec_version: 1.0.0
   appetite: 0.25 day
   circuit_breaker: 发现该 SHA 在 child origin/main 不可达，或有其他 agent 正在处理同一指针，立即停止。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+          merged_reachable_commit:
+            ref: git://origin/main@729f06a32d29bc3cb38a415bc58d6b2737b4fbd2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T10-159
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-12
   done_when:
   - root projects/aetherforge gitlink 等于 79842ed097b792cd2a856d62f8d08d4bf6f1a3de
   - '该 SHA 在 omostation-aetherforge origin/main 可达 (已验证: PR #72 已合并)'
@@ -29670,7 +29706,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: projects/aetherforge root gitlink pointer closeout (Anthropic Messages API)
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
@@ -29688,47 +29723,48 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-159-aetherforge-anthropic-messages-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-          merged_reachable_commit:
-            ref: git://origin/main@729f06a32d29bc3cb38a415bc58d6b2737b4fbd2
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-159.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    decision_ref: decision://accepted/BET-Y1Q4-T10-159
-    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:c39981f3487dfc36f7029efc81e5ad803d69a356a5031fe333fa4e58a7585cce
     decision_ref: decision://accepted/BET-Y1Q4-T10-161
     spec_ref: repo://docs/superpowers/specs/2026-09-12-t10-161-gitlink-freshness-remote-integrity-guard.md
     spec_version: 1.0.0
+  appetite: 2 days
+  circuit_breaker: 任何导致子模块指针回退或 remote 配置污染的改动立即停止。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+          merged_reachable_commit:
+            ref: git://origin/main@7c114434fad42e735369ace55352b0068511eefa
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T10-161
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-12
   done_when:
   - root projects/aetherforge gitlink 等于 79842ed097b792cd2a856d62f8d08d4bf6f1a3de
   - '该 SHA 在 omostation-aetherforge origin/main 可达 (已验证: PR #72/#3664 已合并)'
   - gitlink 新鲜度守卫 (guard-submodules) 与 remote 完整性检查落地并通过双事故场景验证
-  appetite: 2 days
-  circuit_breaker: 任何导致子模块指针回退或 remote 配置污染的改动立即停止。
   goal: 本 session 实证 2 次 cockpit-ui 子模块指针回退（均由 worktree 创建后未 submodule update --init
     导致）。建立防护机制：worktree 创建后自动同步子模块、remote digest 校验、指针前进约束。
   human_gate: false
@@ -29744,7 +29780,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: Git 子模块稳定性与 remote 配置完整性防护
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -29762,36 +29797,6 @@ bets:
   - .githooks/post-checkout
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-161.md
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
-          merged_reachable_commit:
-            ref: git://origin/main@7c114434fad42e735369ace55352b0068511eefa
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-161.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    decision_ref: decision://accepted/BET-Y1Q4-T10-161
-    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:7d33a97ac5242e5a22327bfaaf374f3a9f04046f1088b781ff423604a3687a16
     decision_ref: decision://accepted/BET-Y1Q4-T10-162
@@ -29799,6 +29804,37 @@ bets:
     spec_version: 1.0.0
   appetite: 0.25 day
   circuit_breaker: 发现该 SHA 在 child origin/main 不可达，或有其他 agent 正在处理同一指针，立即停止。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
+          merged_reachable_commit:
+            ref: git://origin/main@7a831efaf29ff97291ff6e59506cbc4eb35e21db
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T10-162
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-12
   done_when:
   - root projects/omlxc gitlink 等于 c030788e8792482845b66f1247bd937f077f2efd
   - '该 SHA 在 omostation-omlxc origin/main 可达 (已验证: PR #73 已合并)'
@@ -29816,7 +29852,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: projects/omlxc root gitlink pointer closeout (inventory-baseline reset)
   track: T10-MATURITY
   underlying_workflow: submodule-pointer-close
@@ -29834,38 +29869,9 @@ bets:
   - docs/superpowers/specs/2026-09-12-t10-162-omlxc-inventory-baseline-reset-pointer-close.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-162.md
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
-          merged_reachable_commit:
-            ref: git://origin/main@7a831efaf29ff97291ff6e59506cbc4eb35e21db
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-162.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    decision_ref: decision://accepted/BET-Y1Q4-T10-162
-    overall_state: delivery_accepted
 - appetite: 5 days
   circuit_breaker: 驾驶舱只读 SSOT 采集；任何写副作用、派工、或越过 OMO 工作流的入口立即下线。
+  done_at: '2026-09-13'
   done_when:
   - 单页站点含 7 板块（体系总览/门禁 A1-A9/Agent 全景/任务里程碑/运行态/治理/知识入口），全部真实数据渲染
   - 采集器零写副作用通过 direct-omo-io lint
@@ -29906,9 +29912,9 @@ bets:
   - docs/PANORAMA-DASHBOARD.md
   - .omo/cron/registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-163.md
-  done_at: '2026-09-13'
 - appetite: 2 days
   circuit_breaker: 任何 gate 从 PASS 回退立即停线排查；receipt 不允许人工杜撰证据项。
+  done_at: 2026-09-12
   done_when:
   - A1-A9+RF0 每 gate 一份 digest-bound receipt（proven/missing/exit_criteria/owner/refresh
     时间）
@@ -29929,7 +29935,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: A1–A9 执行环境恢复收口（digest-bound 证据 receipt + 采集对齐）
   track: T10-MATURITY
   underlying_workflow: governance-state-mutation
@@ -29945,8 +29950,52 @@ bets:
   - .omo/_delivery/environment-evidence/
   - docs/PANORAMA-DASHBOARD.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-164.md
-- appetite: 8 days
+- accepted_specifications:
+  - content_digest: sha256:08cf945ec60df0d75268a05f09c4771d7c75cde1a94ba293798caf1886af7bd7
+    decision_ref: decision://accepted/BET-Y1Q4-T10-165
+    spec_ref: repo://docs/superpowers/specs/2026-09-12-t10-165-omo-persistent-semantics-design.md
+    spec_version: 1.0.0
+  appetite: 8 days
   circuit_breaker: 未过门 adapter（R0/AS0 之外）获得任何写入/自治/并发能力立即停止。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          merged_reachable_commit:
+            ref: git://origin/main@5fe0f477efa71d734b765ea2c28e55d1b1cdaa84
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
+            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    notes: 'Engineering and operational delivery are proven by child PR #170/#172,
+      required child CI, and post-merge focused replay. Human value remains NOT_PROVEN.'
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: '2026-09-13'
   done_when:
   - omo 持久 Role 注册表（role_id/capabilities/admission_state）+ 准入状态机
   - Capsule（WorkPacket 规范 + receipt 绑定）+ Handoff 事件入 Mesh（复用 dispatch_backend 模式）
@@ -29971,44 +30020,6 @@ bets:
   retro: required
   risk_level: L2
   status: done
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
-            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
-          merged_reachable_commit:
-            ref: git://origin/main@5fe0f477efa71d734b765ea2c28e55d1b1cdaa84
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
-            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
-            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
-            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
-            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
-            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-165.md
-            sha256: sha256:4f2089d3c40bbfb72d118582eafb1c2ce49792a67e69ce4e2cf6be70844742e1
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
-    notes: 'Engineering and operational delivery are proven by child PR #170/#172,
-      required child CI, and post-merge focused replay. Human value remains NOT_PROVEN.'
   title: OMO 持久 Role/Capsule/Handoff/Claim/Verification/ASD 语义落地
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -30029,13 +30040,8 @@ bets:
   - projects/omo/tests/
   - docs/architecture/os-operating-pattern-v1.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-165.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-12-t10-165-omo-persistent-semantics-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:08cf945ec60df0d75268a05f09c4771d7c75cde1a94ba293798caf1886af7bd7
-    decision_ref: decision://accepted/BET-Y1Q4-T10-165
-  done_at: '2026-09-13'
 - appetite: 3 days
+  done_at: 2026-09-12
   done_when:
   - ASD 五核心面板（Overview/Spine/Agents/Milestones/Degradation）在驾驶舱可呈现、有 provenance
   - 面板数据新鲜度与降级规则（observer-blindness-never-yields-green）落契约
@@ -30053,7 +30059,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-12
   title: ASD 五核心面板数据契约与验收（驾驶舱呈现 + 降级规则）
   track: T9-OBSERV
   underlying_workflow: project-code-change
@@ -30153,10 +30158,52 @@ bets:
   - .omo/cron/registry.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T16-02.md
   - .omo/_truth/governance-evidence/waiver-2026-09-14-t16-02-a4-cron-registry-parity-bootstrap.md
-- appetite: 2 days
+- accepted_specifications:
+  - content_digest: sha256:9dceb31b7394147a4b5da49204391245d7d2401cc08fdbc0b545730155d3a85e
+    decision_ref: decision://accepted/BET-Y1Q4-T10-167
+    spec_ref: repo://docs/superpowers/specs/2026-09-15-t10-167-ledger-schema-hardening.md
+    spec_version: 1.0.0
+  appetite: 2 days
   circuit_breaker: If schema validation changes break an existing ledger consumer,
     stop the implementation, restore the last compatible validator behavior, and record
     the failing consumer before retrying.
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          merged_reachable_commit:
+            ref: git://origin/main@47f143e9b3ec91e2897fe2f2b517d87593a6d043
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
+            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-15
   done_when:
   - The ledger loader rejects malformed top-level shapes, misplaced BET-* entries,
     duplicate BET IDs, and non-mapping BET entries with actionable diagnostics.
@@ -30181,7 +30228,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-15
   title: 3Y BET ledger schema hardening — structural guards and actionable YAML diagnostics
   track: T10-MATURITY
   underlying_workflow: governance-state-mutation
@@ -30200,47 +30246,6 @@ bets:
   - bin/gac/ledger-safe-insert.py
   - tests/unit/gac/test_ledger_safe_insert.py
   - .omo/_knowledge/retros/BET-Y1Q4-T10-167.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-15-t10-167-ledger-schema-hardening.md
-    spec_version: 1.0.0
-    content_digest: sha256:9dceb31b7394147a4b5da49204391245d7d2401cc08fdbc0b545730155d3a85e
-    decision_ref: decision://accepted/BET-Y1Q4-T10-167
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@47f143e9b3ec91e2897fe2f2b517d87593a6d043
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
-            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
-            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
-            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
-            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
-            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
-            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-167.md
-            sha256: sha256:fa34aab98dfffd378fb20cef2ef9f2ef9e2828d081437db02594ea495dd6b8f9
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:f6320b4f66cb47c9dba429ebc9f2be78e486be205da3e67e3d81c771265749a2
     decision_ref: decision://accepted/BET-Y2Q1-T7-07
@@ -30248,8 +30253,45 @@ bets:
     spec_version: 1.0.0
   appetite: 0.5 day
   circuit_breaker: 若发现 A8 实现已合入 omo pin，则停止回退 T10-151，改为只修 T7-06 状态机与 journey。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/superpowers/specs/2026-09-15-t7-07-review-remediation-design.md
+            sha256: sha256:f6320b4f66cb47c9dba429ebc9f2be78e486be205da3e67e3d81c771265749a2
+          merged_reachable_commit:
+            ref: git://origin/main@f49c76eb70ef5d81837ad277d4c4aa5c6e022ebb
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+          tests:
+            ref: receipt://projects/domain-cartridges/health-gov/domain/health_gov/test_doc_pipeline.py
+            sha256: sha256:b5452126eaf094c5280c68cc90dcb441911ae7dc0e853b86230bb5e7637a319d
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+          fresh_receipt:
+            ref: receipt://docs/scene-cards/health-gov-doc-cycle.yaml
+            sha256: sha256:d27a6ed5699b0039534e98826aea2e2889a1c1e6479dfa9c2d2a22bbc0e81b2e
+          live_canary:
+            ref: receipt://docs/journey-specs/health-gov-doc-cycle-workflow.yaml
+            sha256: sha256:8bd1450874dc8139917abeaced594176d3a26aa47331ba1c480265fc7e649efe
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y2Q1-T7-06
+  done_at: 2026-09-16
   done_when:
   - approve(退回) 后 dispatch 拒绝；同意路径仍可 dispatch
   - docs/journey-specs/health-gov-doc-cycle-workflow.yaml 存在且 scene-card related 可解析
@@ -30265,7 +30307,6 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-16
   title: T7-06/T10-151 合入后评审缺陷校正（退回状态机 / journey / 虚假 done / 影子台账）
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -30278,42 +30319,6 @@ bets:
     expect: exit 0
   window: Y2Q1
   workflow: bet-execution
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@f49c76eb70ef5d81837ad277d4c4aa5c6e022ebb
-          tests:
-            ref: receipt://projects/domain-cartridges/health-gov/domain/health_gov/test_doc_pipeline.py
-            sha256: sha256:b5452126eaf094c5280c68cc90dcb441911ae7dc0e853b86230bb5e7637a319d
-          diff:
-            ref: receipt://docs/superpowers/specs/2026-09-15-t7-07-review-remediation-design.md
-            sha256: sha256:f6320b4f66cb47c9dba429ebc9f2be78e486be205da3e67e3d81c771265749a2
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
-            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://docs/journey-specs/health-gov-doc-cycle-workflow.yaml
-            sha256: sha256:8bd1450874dc8139917abeaced594176d3a26aa47331ba1c480265fc7e649efe
-          fresh_receipt:
-            ref: receipt://docs/scene-cards/health-gov-doc-cycle.yaml
-            sha256: sha256:d27a6ed5699b0039534e98826aea2e2889a1c1e6479dfa9c2d2a22bbc0e81b2e
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
-            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T7-07.md
-            sha256: sha256:5f8f97cc9a6787d0ebd65ae1984c664d1a37ceb380db6f5a3112caf54dff085b
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: delivery_accepted
   write_surfaces:
   - projects/domain-cartridges/health-gov/
   - docs/journey-specs/health-gov-doc-cycle-workflow.yaml
@@ -30322,25 +30327,47 @@ bets:
   - docs/superpowers/specs/2026-09-15-t7-07-review-remediation-design.md
   - docs/superpowers/specs/2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md
   - .omo/_knowledge/retros/BET-Y2Q1-T7-07.md
-- id: BET-Y1Q4-T10-168
-  title: Recent workspace documentation convergence
-  track: T10-DOCS
+- accepted_specifications:
+  - content_digest: sha256:b6338e4318bff847409e2f0cbebf229f2ad59c7cd89975e28401f27bc34280e9
+    decision_ref: decision://accepted/BET-Y1Q4-T10-168
+    spec_ref: repo://docs/superpowers/specs/2026-09-17-siri-40-documentation-convergence-design.md
+    spec_version: 1.0.0
   appetite: 1 day
-  window: Y1Q4
-  status: done
-  done_at: '2026-09-17'
+  circuit_breaker: If a generated index produces unrelated churn or a referenced fact
+    cannot be proven from current SSOT, keep the surgical documentation changes only
+    and record the unresolved item in the retrospective.
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          merged_reachable_commit:
+            ref: git://origin/main@0a9bf67cd3ac9a0091b9547261c4ebe8e6cc8713
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    decision_ref: decision://accepted/BET-Y1Q4-T10-168
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   delivery_accepted: true
-  priority: P2
-  risk_level: L1
-  human_gate: false
-  retro: required
-  goal: Restore discoverability and truthfulness for the workspace documentation surfaces
-    affected by the 2026-09-02 through 2026-09-16 delivery wave.
-  non_goals:
-  - Do not edit runtime projections, BRIEF.md, or concurrent agent artifacts.
-  - Do not modify submodule contents or pointers.
-  - Do not redesign accepted implementation specifications.
-  - Do not convert the specification registry to a generated index in this BET.
+  done_at: '2026-09-17'
   done_when:
   - All in-scope navigation pointers resolve to existing authoritative files.
   - SYSTEM-INDEX no longer hard-codes stale scene or Journey counts.
@@ -30348,6 +30375,24 @@ bets:
   - Resident architecture documents the delivered Flight Deck surface without claiming
     unimplemented BOS or CLI integration.
   - Documentation lint, cross-reference checks, and the local governance gate pass.
+  goal: Restore discoverability and truthfulness for the workspace documentation surfaces
+    affected by the 2026-09-02 through 2026-09-16 delivery wave.
+  human_gate: false
+  id: BET-Y1Q4-T10-168
+  non_goals:
+  - Do not edit runtime projections, BRIEF.md, or concurrent agent artifacts.
+  - Do not modify submodule contents or pointers.
+  - Do not redesign accepted implementation specifications.
+  - Do not convert the specification registry to a generated index in this BET.
+  priority: P2
+  retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+  risk_level: L1
+  status: done
+  title: Recent workspace documentation convergence
+  track: T10-DOCS
+  underlying_workflow: project-doc-change
+  value_indicator_policy: false
   verify:
   - cmd: python3 bin/ssot/doc-ssot-lint.py --json
     expect: exit 0
@@ -30361,6 +30406,8 @@ bets:
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
   write_surfaces:
   - docs/superpowers/specs/2026-09-17-siri-40-documentation-convergence-design.md
   - docs/plans/3y-bet-ledger.yaml
@@ -30372,62 +30419,55 @@ bets:
   - docs/INDEX-AGENTS.md
   - docs/INDEX-PROJECTS.md
   - .omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-  accepted_specifications:
-  - content_digest: sha256:b6338e4318bff847409e2f0cbebf229f2ad59c7cd89975e28401f27bc34280e9
-    decision_ref: decision://accepted/BET-Y1Q4-T10-168
-    spec_ref: repo://docs/superpowers/specs/2026-09-17-siri-40-documentation-convergence-design.md
+- accepted_specifications:
+  - content_digest: sha256:8752077c3319fe4850ec3c9aed486bd42533bf3e9e462caa387909da03961612
+    decision_ref: decision://accepted/BET-Y3H1-T7-02
+    spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-02-assisted-escalation-design.md
     spec_version: 1.0.0
-  circuit_breaker: If a generated index produces unrelated churn or a referenced fact
-    cannot be proven from current SSOT, keep the surgical documentation changes only
-    and record the unresolved item in the retrospective.
-  underlying_workflow: project-doc-change
-  workflow: bet-execution
-  value_indicator_policy: false
-  retro_path: .omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    overall_state: delivery_accepted
-    decision_ref: decision://accepted/BET-Y1Q4-T10-168
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-          merged_reachable_commit:
-            ref: git://origin/main@0a9bf67cd3ac9a0091b9547261c4ebe8e6cc8713
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-- appetite: 2 weeks
+  appetite: 2 weeks
   circuit_breaker: 连续 3 次 document-review 处理 admin-notification-workflow 产出时 校准得分低于
     0.4 → 停止自动推进, 回退到 supervised 人工审批。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          merged_reachable_commit:
+            ref: git://origin/main@539a8ed909e44c28eb2df9d6f71dd3b4123e6c09
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y2Q4-T7-02
+  done_at: '2026-09-17'
   done_when:
   - document-review 场景卡 lifecycle 从 supervised 升至 assisted
   - calibration >= 0.6 且连续 30 次无 rejected
   - 至少 3 份 admin-notification-workflow 产出的公文通过了 document-review 全链 (拟稿 → 格式检查 → 敏感项检查
     → 依据核验 → 审批)
   - 每份公文的 Workflow Mesh 证据链完整 (含 human_review checkpoint)
-  goal: 利用 admin-notification-workflow (BET-Y1Q4-T8-04, 6 场景 assisted/controlled) 作为第二业务驱动，将
-    document-review 场景从 supervised 推进到 assisted。 验证已建成的 document-review 能力 (拟稿/格式检查/敏感项检查/依据核验/审批/督办)
-    在脱离国转中心借调的情况下能否稳定运行。
+  goal: 利用 admin-notification-workflow (BET-Y1Q4-T8-04, 6 场景 assisted/controlled)
+    作为第二业务驱动，将 document-review 场景从 supervised 推进到 assisted。 验证已建成的 document-review
+    能力 (拟稿/格式检查/敏感项检查/依据核验/审批/督办) 在脱离国转中心借调的情况下能否稳定运行。
   human_gate: true
   id: BET-Y3H1-T7-02
   non_goals:
@@ -30436,128 +30476,96 @@ bets:
   - 不实现新的 document-review 能力模块，只验证现有能力
   pasw_required: false
   priority: P1
-  retro: required
-  risk_level: L2
-  status: done
-  done_at: '2026-09-17'
-  value_indicator_policy: false
-  retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-02.md
-  title: 公文场景 assisted 升档 — 基于 admin-notification-workflow 驱动
-  track: T7-SCENE
-  underlying_workflow: project-code-change
-  verify:
-  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
-    expect: exit 0
-  window: Y3H1
-  workflow: bet-execution
   progress:
-    phase: 3
-    phase_name: Lifecycle 推进
-    phase_goal: 场景卡 lifecycle supervised → assisted
-    started_at: '2026-09-17'
     current_step: Phase 3 执行 — lifecycle transition supervised→assisted
     done_when_met:
     - Phase 1: calibration=0.9>=0.6, 30/30 completed
     - Phase 2: E2E 3/3 公文全链通过, 15/15 检查项
     - Phase 3: lifecycle supervised→assisted, activation controlled
+    phase: 3
+    phase_goal: 场景卡 lifecycle supervised → assisted
+    phase_name: Lifecycle 推进
+    started_at: '2026-09-17'
+  retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-02.md
+  risk_level: L2
+  status: done
+  title: 公文场景 assisted 升档 — 基于 admin-notification-workflow 驱动
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  window: Y3H1
+  workflow: bet-execution
   write_surfaces:
   - .omo/_truth/scenarios/v3/**
   - .agents/skills/**
   - docs/plans/
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-02-assisted-escalation-design.md
+- accepted_specifications:
+  - content_digest: sha256:361a8e02fb2a4505402ebb70b005f3bdee61eb40c6a8657db3adc4e924938ad1
+    decision_ref: decision://accepted/BET-Y3H1-T7-03
+    spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-03-routine-promotion-design.md
     spec_version: 1.0.0
-    content_digest: sha256:8752077c3319fe4850ec3c9aed486bd42533bf3e9e462caa387909da03961612
-    decision_ref: decision://accepted/BET-Y3H1-T7-02
+  appetite: 1 week
+  circuit_breaker: 连续 3 次 document-review 处理产出时校准得分低于 0.4 → 停止自动推进，回退到 supervised
+    人工审批。
   completion_evidence:
-    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@539a8ed909e44c28eb2df9d6f71dd3b4123e6c09
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
-      value:
-        status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
-- id: BET-Y3H1-T7-03
-  status: candidate
-  appetite: 1 week
-  priority: P1
-  risk_level: L2
-  window: Y3H1
-  track: T7-SCENE
-  title: document-review routine 推进 — assisted→supervised→routine
-  workflow: bet-execution
-  underlying_workflow: project-code-change
-  human_gate: true
-  pasw_required: false
-  value_indicator_policy: false
-  retro: required
+        status: NOT_STARTED
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y3H1-T7-02
-  goal: 将 document-review 场景从 assisted 推进到 routine（经 supervised 中间态），限定格式类公文场景。验证 assisted
-    阶段已验证的能力在自动激活条件下能否稳定运行。
-  non_goals:
-  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01
-  - 不扩展到非格式类公文（人事/合同/财务）
-  - 不实现新的 document-review 能力模块
-  - 不修改 admin-notification-workflow 场景卡
-  circuit_breaker: 连续 3 次 document-review 处理产出时校准得分低于 0.4 → 停止自动推进，回退到 supervised 人工审批。
   done_when:
   - document-review 场景卡 lifecycle 从 assisted 升至 routine
   - activation 从 controlled 升至 allowed
   - ≥ 6 条 trial records（3 assisted + 3 supervised）
   - readiness 4 前置条件全绿
+  goal: 将 document-review 场景从 assisted 推进到 routine（经 supervised 中间态），限定格式类公文场景。验证
+    assisted 阶段已验证的能力在自动激活条件下能否稳定运行。
+  human_gate: true
+  id: BET-Y3H1-T7-03
+  non_goals:
+  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01
+  - 不扩展到非格式类公文（人事/合同/财务）
+  - 不实现新的 document-review 能力模块
+  - 不修改 admin-notification-workflow 场景卡
+  pasw_required: false
+  priority: P1
+  progress:
+    current_step: Step 1 完成 — lifecycle supervised, activation monitored
+    done_when_met:
+    - 'Step 1: lifecycle assisted→supervised, activation controlled→monitored'
+    phase: 1
+    phase_goal: lifecycle assisted→supervised, activation controlled→monitored
+    phase_name: assisted→supervised
+    started_at: '2026-09-17'
+  retro: required
+  risk_level: L2
+  status: in_progress
+  title: document-review routine 推进 — assisted→supervised→routine
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  window: Y3H1
+  workflow: bet-execution
   write_surfaces:
   - .omo/_truth/scenarios/v3/**
   - docs/plans/
   - .omo/_knowledge/retros/
-  verify:
-  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
-    expect: exit 0
-  progress:
-    phase: 0
-    phase_name: 准备
-    phase_goal: BET 立项 + spec 设计
-    started_at: '2026-09-17'
-    current_step: candidate — 待 operator 确认
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-03-routine-promotion-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:361a8e02fb2a4505402ebb70b005f3bdee61eb40c6a8657db3adc4e924938ad1
-    decision_ref: decision://accepted/BET-Y3H1-T7-03
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: NOT_STARTED
-        evidence: {}
-      operational:
-        status: NOT_PROVEN
-        evidence: {}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30889,6 +30897,16 @@ tracks:
     - docs/**
     scope: 指标口径 / 子模块指针 / 目标 SSOT / 项目归并判定 / 年度门
     title: 真相与止血
+  T10-DOCS:
+    agent_profile_hint: docs-agent
+    default_workflow: project-doc-change
+    pasw_required: false
+    primary_write_surfaces:
+    - docs/**
+    - docs/plans/3y-bet-ledger.yaml
+    - .omo/_knowledge/retros/**
+    scope: 工作区文档收敛 / 导航指针修复 / spec 注册表可发现性
+    title: 文档收敛
   T10-MATURITY:
     agent_profile_hint: governance-agent
     default_workflow: governance-audit
@@ -30904,16 +30922,6 @@ tracks:
     scope: 'maturity-scorecard 口径对齐 / 治理 bet 绑定 / resident promote + 事件源管线 / gaC 机制自进化
       (G10 三方口径: scorecard/health/台账)'
     title: 成熟度收官 (scorecard 0-10, target 9.0)
-  T10-DOCS:
-    agent_profile_hint: docs-agent
-    default_workflow: project-doc-change
-    pasw_required: false
-    primary_write_surfaces:
-    - docs/**
-    - docs/plans/3y-bet-ledger.yaml
-    - .omo/_knowledge/retros/**
-    scope: 工作区文档收敛 / 导航指针修复 / spec 注册表可发现性
-    title: 文档收敛
   T16-DRIFT-GUARD:
     agent_profile_hint: governance-agent
     default_workflow: project-doc-change
@@ -30992,15 +31000,6 @@ tracks:
     - bin/ssot/scene-card-*.py
     scope: scene-card schema / 五档生命周期 / 三锚点场景迭代
     title: 场景
-  T8-SURFACE:
-    agent_profile_hint: engineering-agent
-    default_workflow: project-code-change
-    pasw_required: true
-    primary_write_surfaces:
-    - projects/cockpit-ui/**
-    - projects/cockpit/src/cockpit/web/**
-    scope: /inbox /outcomes /signals /journeys 面板
-    title: 人机界面
   T8-EXECUTION:
     agent_profile_hint: engineering-agent
     default_workflow: project-code-change
@@ -31011,6 +31010,15 @@ tracks:
     - projects/cockpit-ui/src/**
     scope: 授权网关 / 风险-置信度矩阵 / 执行层遥测 / 人工熔断
     title: 执行层授权与遥测
+  T8-SURFACE:
+    agent_profile_hint: engineering-agent
+    default_workflow: project-code-change
+    pasw_required: true
+    primary_write_surfaces:
+    - projects/cockpit-ui/**
+    - projects/cockpit/src/cockpit/web/**
+    scope: /inbox /outcomes /signals /journeys 面板
+    title: 人机界面
   T9-OBSERV:
     agent_profile_hint: governance-agent
     default_workflow: governance-state-mutation
