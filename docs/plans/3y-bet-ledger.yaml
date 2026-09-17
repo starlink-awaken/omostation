@@ -30438,7 +30438,10 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: in_progress
+  status: done
+  done_at: '2026-09-17'
+  value_indicator_policy: false
+  retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-02.md
   title: 公文场景 assisted 升档 — 基于 admin-notification-workflow 驱动
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -30470,15 +30473,31 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@539a8ed909e44c28eb2df9d6f71dd3b4123e6c09
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
