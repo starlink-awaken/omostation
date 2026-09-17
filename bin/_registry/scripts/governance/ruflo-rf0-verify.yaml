@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/ruflo-rf0-verify.py
+name: Ruflo RF0 Admission Verify
+category: governance
+owner: governance-team
+description: Isolated read-only Ruflo RF0 admission verifier. Daemon must remain stopped and workers off; no second authoritative queue.
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - RF0
+maturity: active
+last_reviewed: "2026-09-17"
