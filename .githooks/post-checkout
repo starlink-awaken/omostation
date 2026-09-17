@@ -19,4 +19,11 @@ fi
 if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/gac/gac-worktree.sh" ]; then
   bash "$ROOT/bin/gac/gac-worktree.sh" guard-submodules --fix >/dev/null 2>&1 || true
 fi
+# ── WIP 快照兜底 (2026-09-17, 共享工作区改动丢失事故) ────────────────
+# 主工作区被多 agent 共享, checkout 可能刚覆盖掉他人的未提交改动.
+# 此处在 checkout 后立即快照当前脏态 (仅在主工作区生效; worktree 跳过).
+# 纯本地复制, 恒不阻断; 额外快照由 cron 每小时执行.
+if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/gac/workspace-wip-guard.py" ]; then
+  python3 "$ROOT/bin/gac/workspace-wip-guard.py" snapshot --reason post-checkout --quiet >/dev/null 2>&1 || true
+fi
 bash "$ROOT/bin/gac/hook-runner.sh" --hook post-checkout

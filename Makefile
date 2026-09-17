@@ -485,6 +485,12 @@ scene-history:  ## 场景历史耐久性: 导出 + 快照 + 暴跌检测 (失败
 scene-history-status:  ## 场景历史状态摘要 (行数/导出/快照/基线)
 	@python3 bin/ssot/scene-history.py status
 
+wip-snapshot:  ## 主工作区脏态快照 (共享工作区改动兜底)
+	@python3 bin/gac/workspace-wip-guard.py snapshot --reason manual
+
+wip-status:  ## 主工作区脏态摘要 + 最近快照
+	@python3 bin/gac/workspace-wip-guard.py status
+
 journey-validate:  ## 校验全部旅程 spec (states/transitions/deadlocks) — AGENTS.md §1.8
 	@python3 bin/ssot/journey-validator.py
 

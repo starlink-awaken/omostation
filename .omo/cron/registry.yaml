@@ -272,6 +272,16 @@ jobs:
     sfop_slot: S
     reconciliation_note: 场景注册同步 (每日 06:15)，已在 crontab -l 运行，补齐登记。
 
+  - name: wip-guard-hourly-active
+    schedule: "17 * * * *"
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py snapshot --reason cron-hourly --quiet >> runtime/cron/wip-snapshot.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: "主工作区 WIP 快照 (每小时第 17 分) — 共享工作区被并发会话切换/覆盖时兜底; 2026-09-17 实证改动丢失事故。"
+
   - name: scene-history-daily-active
     schedule: "20 3 * * *"
     command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/scene-history.py export && python3 bin/ssot/scene-history.py backup && python3 bin/ssot/scene-history.py verify >> runtime/cron/scene-history.log 2>&1'
