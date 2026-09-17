@@ -1,11 +1,13 @@
 import importlib.util
 import json
+import shutil
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "bin/panorama/panorama-collect.py"
+SMOKE_SCRIPT = ROOT / "bin/ssot/agent-cell-pool-live-smoke.py"
 
 
 def _module():
@@ -24,10 +26,26 @@ def _write_states(module, states: object) -> Path:
     return path
 
 
+def _smoke_module():
+    spec = importlib.util.spec_from_file_location("panorama_test_live_smoke", SMOKE_SCRIPT)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _install_verifier(root: Path) -> None:
+    target = root / "bin/ssot"
+    target.mkdir(parents=True, exist_ok=True)
+    shutil.copy(SMOKE_SCRIPT, target / SMOKE_SCRIPT.name)
+
+
 def test_missing_cell_state_is_a_legal_empty_projection(tmp_path, monkeypatch) -> None:
     module = _module()
     monkeypatch.setattr(module, "ROOT", tmp_path)
+    _install_verifier(tmp_path)
     result = module.collect_agent_cell_pool()
+    receipts = result.pop("receipt_verification")
     assert result["schema"] == "agent-cell-pool-projection/v1"
     assert result["available"] is False
     assert result["live"] is False
@@ -46,6 +64,9 @@ def test_missing_cell_state_is_a_legal_empty_projection(tmp_path, monkeypatch) -
         "age_seconds": None,
         "cells": [],
     }
+    assert receipts["verdict"] == "EMPTY"
+    assert receipts["receipt_count"] == 0
+    assert receipts["ok"] is True
 
 
 def test_fresh_active_state_is_summarized_without_context_leak(tmp_path, monkeypatch) -> None:
@@ -67,6 +88,7 @@ def test_fresh_active_state_is_summarized_without_context_leak(tmp_path, monkeyp
         },
     )
     result = module.collect_agent_cell_pool()
+    result.pop("receipt_verification")
     assert result["available"] is True
     assert result["live"] is True
     assert result["verdict"] == "PASS"
@@ -122,3 +144,41 @@ def test_malformed_state_is_visible_and_fail_closed(tmp_path, monkeypatch) -> No
     assert result["available"] is False
     assert result["verdict"] == "UNPARSEABLE"
     assert result["error"] == "ValueError"
+
+
+def test_collector_projects_valid_receipt_chain(tmp_path, monkeypatch) -> None:
+    panorama = _module()
+    smoke = _smoke_module()
+    monkeypatch.setattr(panorama, "ROOT", tmp_path)
+    _install_verifier(tmp_path)
+    state_file = tmp_path / ".omo/state/agent-cell/cell_states.json"
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    smoke.run_smoke(state_file)
+    result = panorama.collect_agent_cell_pool()
+    receipts = result["receipt_verification"]
+    assert result["verdict"] == "PASS"
+    assert result["live"] is True
+    assert receipts["ok"] is True
+    assert receipts["verdict"] == "PASS"
+    assert receipts["receipt_count"] == 1
+    assert receipts["state_bindings_ok"] is True
+    assert receipts["latest_receipt_digest"]
+
+
+def test_collector_fails_closed_on_broken_receipt_chain(tmp_path, monkeypatch) -> None:
+    panorama = _module()
+    smoke = _smoke_module()
+    monkeypatch.setattr(panorama, "ROOT", tmp_path)
+    _install_verifier(tmp_path)
+    state_file = tmp_path / ".omo/state/agent-cell/cell_states.json"
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    smoke.run_smoke(state_file)
+    receipt_file = state_file.parent / "live-smoke-receipts.jsonl"
+    rows = [json.loads(line) for line in receipt_file.read_text(encoding="utf-8").splitlines()]
+    rows[0]["receipt_digest"] = "0" * 64
+    receipt_file.write_text("".join(json.dumps(row, sort_keys=True) + "\n" for row in rows), encoding="utf-8")
+    result = panorama.collect_agent_cell_pool()
+    assert result["verdict"] == "FAILED"
+    assert result["receipt_verification"]["ok"] is False
+    assert result["receipt_verification"]["verdict"] == "FAILED"
+    assert result["receipt_verification"]["digests_ok"] is False
