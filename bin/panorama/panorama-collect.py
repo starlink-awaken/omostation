@@ -1516,7 +1516,11 @@ def collect_value_metrics() -> dict:
                     "superseded_by": front_matter.get("superseded_by"),
                 })
             else:
-                domains = docs[0].get("domains") if docs and isinstance(docs[0].get("domains"), dict) else {}
+                value_doc = next(
+                    (doc for doc in docs if isinstance(doc, dict) and isinstance(doc.get("domains"), dict)),
+                    {},
+                )
+                domains = value_doc.get("domains", {})
                 details.update({"domain_count": len(domains), "entries": len(domains)})
             metrics[key] = details
         except Exception:

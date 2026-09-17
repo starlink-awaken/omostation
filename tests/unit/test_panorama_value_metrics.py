@@ -40,6 +40,42 @@ def test_value_metrics_reads_registry_backed_delivery_soft_gate(tmp_path, monkey
     assert report["x3-delivery-soft-gate"]["superseded_by"] == "BET-Y1Q1-T1-01"
 
 
+def test_value_metrics_reads_domains_after_frontmatter(tmp_path, monkeypatch) -> None:
+    module = _module()
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    value_dir = tmp_path / ".omo/_truth"
+    value_dir.mkdir(parents=True)
+    (value_dir / "x3-value-stack.yaml").write_text(
+        """---
+status: active
+---
+
+documentation_contract:
+  ssot_role: authoritative_value_source
+
+domains:
+  CARDS:
+    x1_audit:
+      implemented: true
+  OMO:
+    x1_audit:
+      implemented: true
+""",
+        encoding="utf-8",
+    )
+    (value_dir / "registry").mkdir()
+    (value_dir / "registry/x3-delivery-soft-gate.yaml").write_text(
+        "status: deprecated\nx3_delivery_soft_gate:\n  enabled: false\n",
+        encoding="utf-8",
+    )
+
+    report = module.collect_value_metrics()
+
+    assert report["x3-value-stack"]["available"] is True
+    assert report["x3-value-stack"]["domain_count"] == 2
+    assert report["x3-value-stack"]["entries"] == 2
+
+
 def test_value_metrics_fail_closed_when_source_missing(tmp_path, monkeypatch) -> None:
     module = _module()
     monkeypatch.setattr(module, "ROOT", tmp_path)
