@@ -1557,7 +1557,7 @@ def collect_tasks() -> dict:
     buckets = ("active", "planned", "blocked", "done")
     tasks = []
     for bucket in buckets:
-        task_dir = ROOT / ".omo" / "tasks" / bucket
+        task_dir = CODE_ROOT / ".omo" / "tasks" / bucket
         if not task_dir.is_dir():
             continue
         for path in sorted(task_dir.glob("*.yaml")):
@@ -1576,7 +1576,7 @@ def collect_tasks() -> dict:
                 "bucket": bucket,
                 "owner": str(data.get("owner") or data.get("assigned_to") or "unassigned")[:60],
                 "priority": str(data.get("priority") or "unspecified")[:20],
-                "path": str(path.relative_to(ROOT))[:200],
+                "path": str(path.relative_to(CODE_ROOT))[:200],
             })
 
     by_status = {}
@@ -1620,7 +1620,7 @@ def collect_service_lifecycle() -> dict:
     """Project the separate service/task-lifecycle registry."""
     import yaml
     try:
-        reg = yaml.safe_load((ROOT / ".omo/state/task-registry.yaml").read_text()) or {}
+        reg = yaml.safe_load((CODE_ROOT / ".omo/state/task-registry.yaml").read_text()) or {}
     except Exception:
         reg = {}
     rows = reg.get("tasks") or reg.get("items") or []

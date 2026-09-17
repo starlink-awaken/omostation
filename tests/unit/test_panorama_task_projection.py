@@ -21,12 +21,13 @@ def _write(path: Path, text: str) -> None:
 
 def test_collect_tasks_reads_canonical_per_file_queue(tmp_path, monkeypatch) -> None:
     module = _module()
-    monkeypatch.setattr(module, "ROOT", tmp_path)
-    _write(tmp_path / ".omo/tasks/active/active-task.yaml", "id: TASK-A\ntitle: Active\nstatus: pending\npriority: P0\nowner: agent\n")
-    _write(tmp_path / ".omo/tasks/planned/planned-task.yaml", "id: TASK-B\ntitle: Planned\nstatus: candidate\npriority: P1\nowner: human\n")
-    _write(tmp_path / ".omo/tasks/blocked/blocked-task.yaml", "id: TASK-C\ntitle: Blocked\nstatus: blocked\npriority: P1\nowner: human\n")
-    _write(tmp_path / ".omo/tasks/done/done-task.yaml", "id: TASK-D\ntitle: Done\nstatus: done\n")
-    _write(tmp_path / ".omo/tasks/planned/duplicate-task.yaml", "id: TASK-A\ntitle: Duplicate\nstatus: candidate\n")
+    monkeypatch.setattr(module, "ROOT", tmp_path / "runtime")
+    monkeypatch.setattr(module, "CODE_ROOT", tmp_path / "code")
+    _write(tmp_path / "code/.omo/tasks/active/active-task.yaml", "id: TASK-A\ntitle: Active\nstatus: pending\npriority: P0\nowner: agent\n")
+    _write(tmp_path / "code/.omo/tasks/planned/planned-task.yaml", "id: TASK-B\ntitle: Planned\nstatus: candidate\npriority: P1\nowner: human\n")
+    _write(tmp_path / "code/.omo/tasks/blocked/blocked-task.yaml", "id: TASK-C\ntitle: Blocked\nstatus: blocked\npriority: P1\nowner: human\n")
+    _write(tmp_path / "code/.omo/tasks/done/done-task.yaml", "id: TASK-D\ntitle: Done\nstatus: done\n")
+    _write(tmp_path / "code/.omo/tasks/planned/duplicate-task.yaml", "id: TASK-A\ntitle: Duplicate\nstatus: candidate\n")
 
     report = module.collect_tasks()
 
@@ -42,8 +43,9 @@ def test_collect_tasks_reads_canonical_per_file_queue(tmp_path, monkeypatch) -> 
 
 def test_collect_service_lifecycle_separates_service_registry(tmp_path, monkeypatch) -> None:
     module = _module()
-    monkeypatch.setattr(module, "ROOT", tmp_path)
-    registry = tmp_path / ".omo/state/task-registry.yaml"
+    monkeypatch.setattr(module, "ROOT", tmp_path / "runtime")
+    monkeypatch.setattr(module, "CODE_ROOT", tmp_path / "code")
+    registry = tmp_path / "code/.omo/state/task-registry.yaml"
     _write(registry, "tasks:\n  daemon-a:\n    system: compute\n    carrier: launchd\n    lifecycle: active\n    purpose: daemon\n  daemon-b:\n    system: compute\n    carrier: cron\n    lifecycle: proposed\n    purpose: pending\n")
 
     report = module.collect_service_lifecycle()
@@ -52,3 +54,16 @@ def test_collect_service_lifecycle_separates_service_registry(tmp_path, monkeypa
     assert report["total"] == 2
     assert report["by_lifecycle"] == {"active": 1, "proposed": 1}
     assert {row["id"] for row in report["recent"]} == {"daemon-a", "daemon-b"}
+
+
+def test_task_projection_does_not_read_stale_runtime_root(tmp_path, monkeypatch) -> None:
+    module = _module()
+    monkeypatch.setattr(module, "ROOT", tmp_path / "runtime")
+    monkeypatch.setattr(module, "CODE_ROOT", tmp_path / "code")
+    _write(tmp_path / "runtime/.omo/tasks/planned/stale.yaml", "id: STALE\ntitle: Must not read\n")
+    _write(tmp_path / "code/.omo/tasks/active/fresh.yaml", "id: FRESH\ntitle: Must read\nstatus: pending\n")
+
+    report = module.collect_tasks()
+
+    assert report["total"] == 1
+    assert report["open_recent"][0]["id"] == "FRESH"
