@@ -295,12 +295,16 @@ def collect_resident_agents() -> dict:
 
 
 def collect_scene_cards() -> dict:
-    """场景卡 v3：按生命周期分布 + 触发器覆盖率。"""
+    """场景卡 v3：按生命周期分布 + 触发器覆盖率 + 在役/已完成区分.
+
+    2026-09-17: 43 个 scene-documents-* 是一次性历史任务 (引用 BET 已 done),
+    标记 status: completed. 若只报 total, 会把"已完成"误读为"闲置产能".
+    """
     import yaml
     from glob import glob
     lifecycles: dict[str, int] = {}
     with_trigger = 0
-    total = 0
+    active = completed = 0
     for f in sorted(glob(str(ROOT / ".omo/_truth/scenarios/v3/*.yaml"))):
         try:
             doc = yaml.safe_load(Path(f).read_text())
@@ -308,13 +312,18 @@ def collect_scene_cards() -> dict:
                 continue
             life = str(doc.get("lifecycle", "unknown"))
             lifecycles[life] = lifecycles.get(life, 0) + 1
-            total += 1
+            if str(doc.get("status", "active")) == "completed":
+                completed += 1
+            else:
+                active += 1
             if doc.get("triggers"):
                 with_trigger += 1
         except Exception:  # noqa: BLE001
             pass
     return {"lifecycle": lifecycles, "with_trigger": with_trigger,
-            "total": total, "note": "v3 flat schema (scene_id at top level)"}
+            "active": active, "completed": completed,
+            "total": active + completed,
+            "note": "v3 flat schema; status:completed = 一次性任务已完成(非闲置)"}
 
 
 def collect_journeys() -> dict:

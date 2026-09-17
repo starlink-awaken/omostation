@@ -32,10 +32,25 @@ last-reviewed: 2026-09-11
 - `schema: scene-card/v3` — 版本标识
 - `scene_id` — 必须匹配 `^scene-[a-z0-9-]+$`
 - `lifecycle` — draft → shadow → assisted → supervised → routine
+- `status` — `active`（默认，在役）/ `completed`（一次性任务已完成）/ `archived`
 - `triggers` — 信号/定时/webhook/条件/手动 5 种
 - `runtime.sandbox.capabilities` — BOS URI 能力引用
 - `topology.upstream/downstream` — 场景间拓扑关系
 - `quality.falsifier` — 降级规则
+
+#### 1.1.1 `status: completed` — 历史一次性任务（2026-09-17 澄清）
+
+43 个 `scene-documents-*` 是一次性迁移任务（引用 BET 全部 `done`：41×`BET-Y1Q4-T8-04`
++ `T10-27` + `T10-31`），其旅程为自动生成的空壳（无真实 action）。
+
+**它们无触发器是预期行为** —— 接周期触发器会让已完成的迁移任务永久空转，并产生
+无实际工作的校准样本。正确的持续治理应新建场景，而非复用这些卡。
+
+因此采集器报 `active` / `completed` 两个计数，避免把"已完成"误读为"闲置产能"：
+
+```bash
+python3 bin/panorama/panorama-collect.py --json   # scene_cards.active / .completed
+```
 
 ### 1.2 旅程引擎 (Journey Engine)
 
