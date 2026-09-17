@@ -1,0 +1,140 @@
+{
+  "phase": "Phase 2 — E2E 全链验证",
+  "bet_id": "BET-Y3H1-T7-02",
+  "samples_tested": 3,
+  "all_passed": true,
+  "passed_count": 3,
+  "total_checks": 15,
+  "total_possible_checks": 15,
+  "results": [
+    {
+      "sample_index": 1,
+      "subject": "关于2026年下半年绩效考核的通知",
+      "document_ref": "vault://redacted/document-review/sample-1",
+      "completed": true,
+      "checks": {
+        "full_chain_completed": true,
+        "human_review_checkpoint": true,
+        "steps_ge_5": true,
+        "reflection_generated": true,
+        "final_context_complete": true
+      },
+      "passed": true,
+      "elapsed": 0.6015491485595703,
+      "steps_count": 5,
+      "evidence_chain": {
+        "run_id": "20260917032717-cea422a0",
+        "checkpoint": true,
+        "steps_count": 5,
+        "terminal_reached": true,
+        "reflection_generated": true,
+        "final_context": {
+          "classification": "document",
+          "confidence": 0.85,
+          "content": "请各单位于10月底前完成绩效考核表填报，确保数据真实准确",
+          "document_ref": "vault://redacted/document-review/sample-1",
+          "indexed": true,
+          "sender": "上级部门",
+          "status": "succeeded",
+          "subject": "关于2026年下半年绩效考核的通知"
+        }
+      },
+      "final_context": {
+        "classification": "document",
+        "confidence": 0.85,
+        "content": "请各单位于10月底前完成绩效考核表填报，确保数据真实准确",
+        "document_ref": "vault://redacted/document-review/sample-1",
+        "indexed": true,
+        "sender": "上级部门",
+        "status": "succeeded",
+        "subject": "关于2026年下半年绩效考核的通知"
+      }
+    },
+    {
+      "sample_index": 2,
+      "subject": "关于开展安全生产专项检查的通知",
+      "document_ref": "vault://redacted/document-review/sample-2",
+      "completed": true,
+      "checks": {
+        "full_chain_completed": true,
+        "human_review_checkpoint": true,
+        "steps_ge_5": true,
+        "reflection_generated": true,
+        "final_context_complete": true
+      },
+      "passed": true,
+      "elapsed": 0.5859298706054688,
+      "steps_count": 5,
+      "evidence_chain": {
+        "run_id": "20260917032718-710e2dc5",
+        "checkpoint": true,
+        "steps_count": 5,
+        "terminal_reached": true,
+        "reflection_generated": true,
+        "final_context": {
+          "classification": "document",
+          "confidence": 0.9,
+          "content": "请各单位立即开展安全生产专项检查，11月15日前报送检查报告",
+          "document_ref": "vault://redacted/document-review/sample-2",
+          "indexed": true,
+          "sender": "安全生产委员会",
+          "status": "succeeded",
+          "subject": "关于开展安全生产专项检查的通知"
+        }
+      },
+      "final_context": {
+        "classification": "document",
+        "confidence": 0.9,
+        "content": "请各单位立即开展安全生产专项检查，11月15日前报送检查报告",
+        "document_ref": "vault://redacted/document-review/sample-2",
+        "indexed": true,
+        "sender": "安全生产委员会",
+        "status": "succeeded",
+        "subject": "关于开展安全生产专项检查的通知"
+      }
+    },
+    {
+      "sample_index": 3,
+      "subject": "关于调整2026年预算指标的通知",
+      "document_ref": "vault://redacted/document-review/sample-3",
+      "completed": true,
+      "checks": {
+        "full_chain_completed": true,
+        "human_review_checkpoint": true,
+        "steps_ge_5": true,
+        "reflection_generated": true,
+        "final_context_complete": true
+      },
+      "passed": true,
+      "elapsed": 0.5769059658050537,
+      "steps_count": 5,
+      "evidence_chain": {
+        "run_id": "20260917032718-710e2dc5",
+        "checkpoint": true,
+        "steps_count": 5,
+        "terminal_reached": true,
+        "reflection_generated": true,
+        "final_context": {
+          "classification": "document",
+          "confidence": 0.8,
+          "content": "经研究决定，调整部分部门2026年度预算指标，详见附件",
+          "document_ref": "vault://redacted/document-review/sample-3",
+          "indexed": true,
+          "sender": "财务处",
+          "status": "succeeded",
+          "subject": "关于调整2026年预算指标的通知"
+        }
+      },
+      "final_context": {
+        "classification": "document",
+        "confidence": 0.8,
+        "content": "经研究决定，调整部分部门2026年度预算指标，详见附件",
+        "document_ref": "vault://redacted/document-review/sample-3",
+        "indexed": true,
+        "sender": "财务处",
+        "status": "succeeded",
+        "subject": "关于调整2026年预算指标的通知"
+      }
+    }
+  ]
+}
