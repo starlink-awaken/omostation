@@ -30794,6 +30794,16 @@ tracks:
     scope: 'maturity-scorecard 口径对齐 / 治理 bet 绑定 / resident promote + 事件源管线 / gaC 机制自进化
       (G10 三方口径: scorecard/health/台账)'
     title: 成熟度收官 (scorecard 0-10, target 9.0)
+  T10-DOCS:
+    agent_profile_hint: docs-agent
+    default_workflow: project-doc-change
+    pasw_required: false
+    primary_write_surfaces:
+    - docs/**
+    - docs/plans/3y-bet-ledger.yaml
+    - .omo/_knowledge/retros/**
+    scope: 工作区文档收敛 / 导航指针修复 / spec 注册表可发现性
+    title: 文档收敛
   T16-DRIFT-GUARD:
     agent_profile_hint: governance-agent
     default_workflow: project-doc-change
