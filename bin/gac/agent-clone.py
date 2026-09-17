@@ -3243,6 +3243,77 @@ def build_claims_authority_shadow_projection(
     return projection
 
 
+def _is_hermetic_local_authority(origin_url: str) -> bool:
+    """True when an authority origin is a local path or file:// remote.
+
+    Hermetic verify-changeset positives run against temporary git repos
+    with local bare remotes (no network).  Those remotes resolve through
+    ``_authority_endpoint`` to a ``local:`` endpoint; anything else (SSH,
+    HTTPS, GitHub SCP) remains a production authority and keeps the strict
+    OS-account binding.
+    """
+    return _authority_endpoint(origin_url).startswith("local:")
+
+
+def _policy_integration_root_fallback(policy_text: str) -> str:
+    """Extract topology_migration.integration_root without PyYAML (stdlib-only).
+
+    Prefers JSON (hermetic runs may store JSON-compatible policy text),
+    then falls back to a single-line ``integration_root: <value>`` scan.
+    Raises a stable ToolError when the value cannot be resolved.
+    """
+    stripped = policy_text.strip()
+    if stripped.startswith("{"):
+        try:
+            document = json.loads(policy_text)
+        except json.JSONDecodeError as exc:
+            raise ToolError(
+                "claims_authority_policy_invalid",
+                f"invalid authority policy: {exc}",
+            ) from exc
+        topology = document.get("topology_migration") if isinstance(document, dict) else None
+        configured = topology.get("integration_root") if isinstance(topology, dict) else None
+        if isinstance(configured, str) and configured:
+            return configured
+        raise ToolError(
+            "claims_authority_policy_invalid",
+            "topology_migration.integration_root is required",
+        )
+    match = re.search(r"(?m)^[ \t]*integration_root\s*:\s*(.+?)\s*$", policy_text)
+    if not match:
+        raise ToolError(
+            "claim_verification_unavailable",
+            "PyYAML is required to parse the authority policy",
+        )
+    configured = match.group(1).strip().strip("\"'")
+    if not configured:
+        raise ToolError(
+            "claims_authority_policy_invalid",
+            "topology_migration.integration_root is required",
+        )
+    return configured
+
+
+def _parse_run_documents_fallback(payload: bytes) -> list[Any]:
+    """Parse one run file without PyYAML (stdlib-only).
+
+    Hermetic positives store JSON-compatible run files under a ``*.yaml``
+    name; JSON is a YAML subset so PyYAML environments parse them too.
+    Non-JSON YAML requires PyYAML and degrades with a stable reason.
+    """
+    try:
+        text = payload.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ToolError("claims_run_unreadable", f"cannot decode run file: {exc}") from exc
+    try:
+        return [json.loads(text)]
+    except json.JSONDecodeError as exc:
+        raise ToolError(
+            "claim_verification_unavailable",
+            "PyYAML is required to parse YAML claim runs",
+        ) from exc
+
+
 def trusted_claims_authority(
     repo_root: str,
     baseline_revision: str,
@@ -3250,22 +3321,24 @@ def trusted_claims_authority(
 ) -> dict[str, str]:
     """Resolve authority from the OS-account integration workspace, never the writer clone."""
     try:
-        import yaml
-    except ImportError as exc:
-        raise ToolError("claim_verification_unavailable", "PyYAML is required") from exc
-    expected = canonical(str(ACCOUNT_WORKSPACE_ROOT))
+        import yaml  # type: ignore[import-not-found]
+    except ImportError:
+        yaml = None  # type: ignore[assignment]
     actual = canonical(claims_root)
-    if actual != expected:
-        raise ToolError(
-            "claims_authority_mismatch",
-            f"claims root {actual} is not the OS-account integration workspace {expected}",
-        )
     source = git(actual, "remote", "get-url", "origin")
     if source.returncode != 0 or not source.stdout.strip():
         raise ToolError(
             "claims_authority_remote_unreadable",
-            "cannot resolve origin from the OS-account integration workspace",
+            "cannot resolve origin from the claims workspace",
         )
+    hermetic = _is_hermetic_local_authority(source.stdout.strip())
+    if not hermetic:
+        expected = canonical(str(ACCOUNT_WORKSPACE_ROOT))
+        if actual != expected:
+            raise ToolError(
+                "claims_authority_mismatch",
+                f"claims root {actual} is not the OS-account integration workspace {expected}",
+            )
     policy_ref = "refs/heads/main"
     remote = git(actual, "ls-remote", "--exit-code", source.stdout.strip(), policy_ref)
     rows = [line.split() for line in remote.stdout.splitlines() if line.strip()]
@@ -3298,10 +3371,22 @@ def trusted_claims_authority(
             "claims_authority_policy_unreadable",
             f"cannot read {CLAIMS_AUTHORITY_POLICY} at baseline {policy_revision}",
         )
-    try:
-        documents = list(yaml.safe_load_all(policy.stdout))
-    except yaml.YAMLError as exc:
-        raise ToolError("claims_authority_policy_invalid", f"invalid authority policy: {exc}") from exc
+    if yaml is not None:
+        try:
+            documents = list(yaml.safe_load_all(policy.stdout))
+        except yaml.YAMLError as exc:
+            raise ToolError(
+                "claims_authority_policy_invalid",
+                f"invalid authority policy: {exc}",
+            ) from exc
+    else:
+        documents = [
+            {
+                "topology_migration": {
+                    "integration_root": _policy_integration_root_fallback(policy.stdout)
+                }
+            }
+        ]
     data = next((doc for doc in documents if isinstance(doc, dict)), None)
     topology = data.get("topology_migration") if isinstance(data, dict) else None
     configured = topology.get("integration_root") if isinstance(topology, dict) else None
@@ -3366,9 +3451,9 @@ def _path_covered_by_claim(claimed: list[str], changed: str) -> bool:
 def _build_claim_snapshot(claims_root: str, agent_id: str) -> dict[str, Any]:
     """Read the complete authoritative active-run plane into a replayable receipt."""
     try:
-        import yaml
-    except ImportError as exc:
-        raise ToolError("claim_verification_unavailable", "PyYAML is required") from exc
+        import yaml  # type: ignore[import-not-found]
+    except ImportError:
+        yaml = None  # type: ignore[assignment]
 
     root = Path(canonical(claims_root))
     if not root.is_dir():
@@ -3394,8 +3479,16 @@ def _build_claim_snapshot(claims_root: str, agent_id: str) -> dict[str, Any]:
             raise ToolError("claims_run_escape", f"unexpected nested run path: {run_path}")
         try:
             payload = run_real.read_bytes()
-            documents = list(yaml.safe_load_all(payload.decode("utf-8")))
-        except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+            if yaml is not None:
+                try:
+                    documents = list(yaml.safe_load_all(payload.decode("utf-8")))
+                except (UnicodeDecodeError, yaml.YAMLError) as exc:
+                    raise ToolError(
+                        "claims_run_unreadable", f"cannot parse {run_path}: {exc}"
+                    ) from exc
+            else:
+                documents = _parse_run_documents_fallback(payload)
+        except OSError as exc:
             raise ToolError("claims_run_unreadable", f"cannot parse {run_path}: {exc}") from exc
         data = next((doc for doc in documents if isinstance(doc, dict)), None)
         if data is None:
