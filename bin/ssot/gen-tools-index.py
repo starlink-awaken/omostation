@@ -76,21 +76,34 @@ def scan_bin_directory():
 
 
 def scan_cockpit_commands():
-    """Parse cockpit top-level command names from cli.py add_parser calls."""
-    cli = WORKSPACE_ROOT / "projects" / "cockpit" / "src" / "cockpit" / "cli.py"
-    if not cli.is_file():
-        return []
+    """Parse cockpit top-level command names from add_parser calls.
+
+    T6-10 god-module split 后顶层注册位于 _subcommands.py (cli.py 只保留
+    add_subparsers + register_subcommands 调用), 故优先扫描 _subcommands.py,
+    cli.py 仅作回退. (?<!\\w) 排除 research create 类二级 r_sub 注册;
+    支持单/双引号与多行写法 (r = sub.add_parser(\\n "research", ...).
+    """
+    candidates = [
+        WORKSPACE_ROOT / "projects" / "cockpit" / "src" / "cockpit" / "_subcommands.py",
+        WORKSPACE_ROOT / "projects" / "cockpit" / "src" / "cockpit" / "cli.py",
+    ]
     import re
 
-    text = cli.read_text(encoding="utf-8", errors="ignore")
-    names = re.findall(r'sub\.add_parser\(\s*"([a-z0-9\-]+)"', text)
-    seen = set()
-    out = []
-    for n in names:
-        if n not in seen:
-            seen.add(n)
-            out.append(n)
-    return out
+    pattern = re.compile(r"(?<!\w)sub\.add_parser\(\s*[\"']([a-z0-9\-]+)[\"']")
+    for cli in candidates:
+        if not cli.is_file():
+            continue
+        text = cli.read_text(encoding="utf-8", errors="ignore")
+        names = pattern.findall(text)
+        seen = set()
+        out = []
+        for n in names:
+            if n not in seen:
+                seen.add(n)
+                out.append(n)
+        if out:
+            return out
+    return []
 
 
 def scan_skills():
@@ -239,7 +252,7 @@ def generate_cockpit_section(commands: list) -> str:
 
 ## 0. Cockpit CLI 顶层命令 (L3 入口)
 
-> 从 `projects/cockpit/src/cockpit/cli.py` 解析。人类/Agent 统一入口。
+> 从 `projects/cockpit/src/cockpit/_subcommands.py` 解析 (T6-10 起注册由 cli.py 拆出; cli.py 仅回退)。人类/Agent 统一入口。
 > 接入说明：`docs/operations/external-agent-attach-card.md`
 
 | 命令 | 调用 |

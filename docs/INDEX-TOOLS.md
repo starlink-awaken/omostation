@@ -1,9 +1,3 @@
----
-type: ssot
-owner: governance-team
-last_updated: 2026-09-03
----
-
 # INDEX-TOOLS.md — 治理工具统一目录
 
 > **维护规则**
@@ -13,7 +7,7 @@ last_updated: 2026-09-03
 > - validation: 工具数与实际扫描结果一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-08-04T11:15:12.901494+00:00
+> - generated_at: 2026-09-17T07:37:28.833749+00:00
 
 ---
 
@@ -22,7 +16,7 @@ last_updated: 2026-09-03
 
 ## 0. Cockpit CLI 顶层命令 (L3 入口)
 
-> 从 `projects/cockpit/src/cockpit/cli.py` 解析。人类/Agent 统一入口。
+> 从 `projects/cockpit/src/cockpit/_subcommands.py` 解析 (T6-10 起注册由 cli.py 拆出; cli.py 仅回退)。人类/Agent 统一入口。
 > 接入说明：`docs/operations/external-agent-attach-card.md`
 
 | 命令 | 调用 |
@@ -30,26 +24,21 @@ last_updated: 2026-09-03
 | `research` | `uv run --project projects/cockpit cockpit research --help` |
 | `import` | `uv run --project projects/cockpit cockpit import --help` |
 | `status` | `uv run --project projects/cockpit cockpit status --help` |
+| `org-relation` | `uv run --project projects/cockpit cockpit org-relation --help` |
 | `readiness` | `uv run --project projects/cockpit cockpit readiness --help` |
 | `omo` | `uv run --project projects/cockpit cockpit omo --help` |
+| `resident` | `uv run --project projects/cockpit cockpit resident --help` |
+| `bcos` | `uv run --project projects/cockpit cockpit bcos --help` |
 | `debt` | `uv run --project projects/cockpit cockpit debt --help` |
-| `score` | `uv run --project projects/cockpit cockpit score --help` |
-| `list` | `uv run --project projects/cockpit cockpit list --help` |
-| `summary` | `uv run --project projects/cockpit cockpit summary --help` |
 | `runtime` | `uv run --project projects/cockpit cockpit runtime --help` |
 | `demo` | `uv run --project projects/cockpit cockpit demo --help` |
 | `gac` | `uv run --project projects/cockpit cockpit gac --help` |
 | `daily` | `uv run --project projects/cockpit cockpit daily --help` |
 | `data` | `uv run --project projects/cockpit cockpit data --help` |
-| `index` | `uv run --project projects/cockpit cockpit index --help` |
-| `types` | `uv run --project projects/cockpit cockpit types --help` |
-| `gc` | `uv run --project projects/cockpit cockpit gc --help` |
+| `memory-distill` | `uv run --project projects/cockpit cockpit memory-distill --help` |
+| `audit-ledger` | `uv run --project projects/cockpit cockpit audit-ledger --help` |
+| `fabric-mesh` | `uv run --project projects/cockpit cockpit fabric-mesh --help` |
 | `contracts` | `uv run --project projects/cockpit cockpit contracts --help` |
-| `validate` | `uv run --project projects/cockpit cockpit validate --help` |
-| `export-research` | `uv run --project projects/cockpit cockpit export-research --help` |
-| `export` | `uv run --project projects/cockpit cockpit export --help` |
-| `identity` | `uv run --project projects/cockpit cockpit identity --help` |
-| `event` | `uv run --project projects/cockpit cockpit event --help` |
 | `dashboard` | `uv run --project projects/cockpit cockpit dashboard --help` |
 | `help` | `uv run --project projects/cockpit cockpit help --help` |
 | `quickstart` | `uv run --project projects/cockpit cockpit quickstart --help` |
@@ -63,15 +52,20 @@ last_updated: 2026-09-03
 | `governance` | `uv run --project projects/cockpit cockpit governance --help` |
 | `context` | `uv run --project projects/cockpit cockpit context --help` |
 | `cards` | `uv run --project projects/cockpit cockpit cards --help` |
-| `get` | `uv run --project projects/cockpit cockpit get --help` |
-| `search` | `uv run --project projects/cockpit cockpit search --help` |
-| `serve` | `uv run --project projects/cockpit cockpit serve --help` |
 | `vault` | `uv run --project projects/cockpit cockpit vault --help` |
 | `domains` | `uv run --project projects/cockpit cockpit domains --help` |
+| `domain-status` | `uv run --project projects/cockpit cockpit domain-status --help` |
+| `facts-audit` | `uv run --project projects/cockpit cockpit facts-audit --help` |
+| `facts-validation` | `uv run --project projects/cockpit cockpit facts-validation --help` |
+| `model-freshness` | `uv run --project projects/cockpit cockpit model-freshness --help` |
+| `sanyi-status` | `uv run --project projects/cockpit cockpit sanyi-status --help` |
+| `controller-shadow` | `uv run --project projects/cockpit cockpit controller-shadow --help` |
 | `skill` | `uv run --project projects/cockpit cockpit skill --help` |
 | `health` | `uv run --project projects/cockpit cockpit health --help` |
 | `brief` | `uv run --project projects/cockpit cockpit brief --help` |
+| `search` | `uv run --project projects/cockpit cockpit search --help` |
 | `discover` | `uv run --project projects/cockpit cockpit discover --help` |
+| `capabilities` | `uv run --project projects/cockpit cockpit capabilities --help` |
 | `events` | `uv run --project projects/cockpit cockpit events --help` |
 | `version` | `uv run --project projects/cockpit cockpit version --help` |
 | `tui` | `uv run --project projects/cockpit cockpit tui --help` |
@@ -84,38 +78,20 @@ last_updated: 2026-09-03
 | `agora` | `uv run --project projects/cockpit cockpit agora --help` |
 | `model-driven` | `uv run --project projects/cockpit cockpit model-driven --help` |
 | `brain` | `uv run --project projects/cockpit cockpit brain --help` |
-| `ask` | `uv run --project projects/cockpit cockpit ask --help` |
-| `remember` | `uv run --project projects/cockpit cockpit remember --help` |
-| `history` | `uv run --project projects/cockpit cockpit history --help` |
 | `gbrain` | `uv run --project projects/cockpit cockpit gbrain --help` |
 | `kairon` | `uv run --project projects/cockpit cockpit kairon --help` |
 | `bus` | `uv run --project projects/cockpit cockpit bus --help` |
-| `topics` | `uv run --project projects/cockpit cockpit topics --help` |
-| `metrics` | `uv run --project projects/cockpit cockpit metrics --help` |
-| `publish` | `uv run --project projects/cockpit cockpit publish --help` |
 | `observe` | `uv run --project projects/cockpit cockpit observe --help` |
-| `up` | `uv run --project projects/cockpit cockpit up --help` |
-| `down` | `uv run --project projects/cockpit cockpit down --help` |
-| `logs` | `uv run --project projects/cockpit cockpit logs --help` |
-| `url` | `uv run --project projects/cockpit cockpit url --help` |
 | `family-hub` | `uv run --project projects/cockpit cockpit family-hub --help` |
-| `api` | `uv run --project projects/cockpit cockpit api --help` |
 | `mesh` | `uv run --project projects/cockpit cockpit mesh --help` |
-| `nodes` | `uv run --project projects/cockpit cockpit nodes --help` |
-| `route` | `uv run --project projects/cockpit cockpit route --help` |
+| `spine` | `uv run --project projects/cockpit cockpit spine --help` |
+| `dlp-guard` | `uv run --project projects/cockpit cockpit dlp-guard --help` |
+| `render` | `uv run --project projects/cockpit cockpit render --help` |
+| `im-triage` | `uv run --project projects/cockpit cockpit im-triage --help` |
 | `bos` | `uv run --project projects/cockpit cockpit bos --help` |
-| `resolve` | `uv run --project projects/cockpit cockpit resolve --help` |
-| `read` | `uv run --project projects/cockpit cockpit read --help` |
 | `channels` | `uv run --project projects/cockpit cockpit channels --help` |
-| `inbox` | `uv run --project projects/cockpit cockpit inbox --help` |
-| `pending` | `uv run --project projects/cockpit cockpit pending --help` |
-| `watch` | `uv run --project projects/cockpit cockpit watch --help` |
-| `archive` | `uv run --project projects/cockpit cockpit archive --help` |
-| `capability` | `uv run --project projects/cockpit cockpit capability --help` |
-| `invoke` | `uv run --project projects/cockpit cockpit invoke --help` |
+| `swarm` | `uv run --project projects/cockpit cockpit swarm --help` |
 | `scenario` | `uv run --project projects/cockpit cockpit scenario --help` |
-| `radar` | `uv run --project projects/cockpit cockpit radar --help` |
-| `assistant` | `uv run --project projects/cockpit cockpit assistant --help` |
 | `workflow` | `uv run --project projects/cockpit cockpit workflow --help` |
 | `agent-workflow` | `uv run --project projects/cockpit cockpit agent-workflow --help` |
 | `agent` | `uv run --project projects/cockpit cockpit agent --help` |
@@ -124,22 +100,39 @@ last_updated: 2026-09-03
 | `iterate` | `uv run --project projects/cockpit cockpit iterate --help` |
 | `compass` | `uv run --project projects/cockpit cockpit compass --help` |
 | `wave2` | `uv run --project projects/cockpit cockpit wave2 --help` |
+| `bdsk` | `uv run --project projects/cockpit cockpit bdsk --help` |
+| `calendar` | `uv run --project projects/cockpit cockpit calendar --help` |
+| `voice-memo` | `uv run --project projects/cockpit cockpit voice-memo --help` |
+| `strategy` | `uv run --project projects/cockpit cockpit strategy --help` |
+| `journey` | `uv run --project projects/cockpit cockpit journey --help` |
+| `panorama` | `uv run --project projects/cockpit cockpit panorama --help` |
+| `project` | `uv run --project projects/cockpit cockpit project --help` |
 | `monitor` | `uv run --project projects/cockpit cockpit monitor --help` |
 | `code` | `uv run --project projects/cockpit cockpit code --help` |
-| `analyze` | `uv run --project projects/cockpit cockpit analyze --help` |
-| `graph` | `uv run --project projects/cockpit cockpit graph --help` |
-| `pack` | `uv run --project projects/cockpit cockpit pack --help` |
-| `impact` | `uv run --project projects/cockpit cockpit impact --help` |
-| `onboarding` | `uv run --project projects/cockpit cockpit onboarding --help` |
 | `compute` | `uv run --project projects/cockpit cockpit compute --help` |
+| `ask` | `uv run --project projects/cockpit cockpit ask --help` |
+| `proxy-env` | `uv run --project projects/cockpit cockpit proxy-env --help` |
 | `knowledge` | `uv run --project projects/cockpit cockpit knowledge --help` |
-| `stats` | `uv run --project projects/cockpit cockpit stats --help` |
+| `memory` | `uv run --project projects/cockpit cockpit memory --help` |
 | `kems` | `uv run --project projects/cockpit cockpit kems --help` |
-| `scan` | `uv run --project projects/cockpit cockpit scan --help` |
 | `c2g` | `uv run --project projects/cockpit cockpit c2g --help` |
-| `pipeline` | `uv run --project projects/cockpit cockpit pipeline --help` |
+| `intent` | `uv run --project projects/cockpit cockpit intent --help` |
+| `decide` | `uv run --project projects/cockpit cockpit decide --help` |
+| `challenge` | `uv run --project projects/cockpit cockpit challenge --help` |
+| `cartridge` | `uv run --project projects/cockpit cockpit cartridge --help` |
+| `cell` | `uv run --project projects/cockpit cockpit cell --help` |
+| `fabric` | `uv run --project projects/cockpit cockpit fabric --help` |
+| `watchdog` | `uv run --project projects/cockpit cockpit watchdog --help` |
+| `policy` | `uv run --project projects/cockpit cockpit policy --help` |
+| `ops` | `uv run --project projects/cockpit cockpit ops --help` |
+| `system` | `uv run --project projects/cockpit cockpit system --help` |
+| `scene` | `uv run --project projects/cockpit cockpit scene --help` |
+| `user` | `uv run --project projects/cockpit cockpit user --help` |
+| `telemetry` | `uv run --project projects/cockpit cockpit telemetry --help` |
+| `completion` | `uv run --project projects/cockpit cockpit completion --help` |
+| `docs` | `uv run --project projects/cockpit cockpit docs --help` |
 
-**合计**: 111 个顶层命令
+**合计**: 110 个顶层命令
 
 关键通道：`bos` · `bos list --all` · `channels` · `kems` · `agent-onboard` · `mcp` · `agent-workflow`
 ## 工具分类目录
@@ -162,7 +155,7 @@ last_updated: 2026-09-03
 | gac-daemon.py | 后台 drift 监控 | `python3 bin/gac/gac-daemon.py` |
 | gac-dashboard.py | GaC 仪表盘数据 | `python3 bin/gac/gac-dashboard.py` |
 | gac-hook-pre-edit.py | 编辑前 hook | `python3 bin/gac/gac-hook-pre-edit.py` |
-| gac-ingest-legacy.py | legacy 规则摄入 | `python3 bin/_archive/2026-08-gap-governance-s5/gac-ingest-legacy.py` |
+| gac-ingest-legacy.py | legacy 规则摄入 | `python3 bin/gac/gac-ingest-legacy.py` |
 
 ### 2. ADR 治理 (bin/adr/)
 
@@ -185,7 +178,7 @@ last_updated: 2026-09-03
 | check-boundary.py | 项目边界校验 | `python3 bin/ssot/check-boundary.py` |
 | check-cross-refs.py | 交叉引用一致性 | `python3 bin/ssot/check-cross-refs.py` (tracked; `--scope workspace` 做全量审计) |
 | doc-governance-check.py | 文档治理检查（ownership/lifecycle/freshness/discoverability；支持 warning signature baseline） | `python3 bin/ssot/doc-governance-check.py --no-new-warnings` |
-| doc-governance-migrate.py | 文档元数据迁移与 review-state 批次升级 | `python3 bin/_archive/2026-08-conv3/doc-governance-migrate.py --scope tracked` |
+| doc-governance-migrate.py | 文档元数据迁移与 review-state 批次升级 | `python3 bin/ssot/doc-governance-migrate.py --scope tracked` |
 | check_health_ssot.py | health SSOT 一致 | `python3 bin/ssot/check_health_ssot.py` |
 | doc-ssot-lint.py | 文档 SSOT 门禁 (CI) | `python3 bin/ssot/doc-ssot-lint.py` |
 | gen-project-registry.py | registry 派生 | `python3 bin/ssot/gen-project-registry.py` |
@@ -198,21 +191,11 @@ last_updated: 2026-09-03
 | mcp-attach-smoke.py | 外部 agent 接入烟测 | `python3 bin/ssot/mcp-attach-smoke.py` |
 | gen-external-channels-inventory.py | ECCP 外通道 inventory | `python3 bin/ssot/gen-external-channels-inventory.py` |
 | check-index-drift.py | 索引漂移检测 | `python3 bin/ssot/check-index-drift.py` |
-| resident-orchestrator-daemon.py | resident 订阅→执行桥 (M1) | `python3 bin/ssot/resident-orchestrator-daemon.py` |
-| decision-agent.py | resident 决策提案 (WP-F) | `python3 bin/ssot/decision-agent.py` |
-| event-ingest-adapter.py | resident 事件摄入 (WP-A) | `python3 bin/ssot/event-ingest-adapter.py` |
-| personal-signals-adapter.py | resident 个人信号输入 (WP-D) | `python3 bin/ssot/personal-signals-adapter.py` |
-| alert-forwarder.py | resident 告警转发 (WP-E) | `python3 bin/ssot/alert-forwarder.py` |
-| system-health-check.py | resident 系统健康检查 | `python3 bin/ssot/system-health-check.py` |
-| install-resident-cron.sh | resident cron 安装 (M3.1/M4.3) | `bash bin/ssot/install-resident-cron.sh` |
-| evolution_engine.py | BCOS 进化引擎四阶段 | `python3 bin/bc-os/evolution_engine.py [--apply] [--json]` |
-| signal_router.py | BCOS 统一信号路由 (W1-D2) | `python3 bin/bc-os/signal_router.py --inbox <dir> [--json]` |
-| north_star_meter_v2.py | BCOS 北极星价值度量 v2 | `python3 bin/bc-os/north_star_meter_v2.py --json` |
 
 ### 3.1 场景卡工具族 (bin/ssot/scene-*)
 
 > 场景卡 (Scene Card) 全生命周期工具。卡片定义 SSOT: `docs/scene-cards/*.yaml`。
-> 分工: 卡片定义/候选/生命周期 (只读无副作用) vs 决策收件箱/审批/连接/复盘 (写 `.omo`)。
+> 分工: 家族 A (卡片定义/候选/生命周期) 只读无副作用; 家族 B (决策收件箱/审批/连接/复盘) 写 `.omo`。
 
 | 工具 | 功能 | 调用方式 |
 |:-----|:-----|:---------|
@@ -267,18 +250,44 @@ last_updated: 2026-09-03
 |-------|------|
 | a2a-coordination | a2a coordination |
 | agent-onboarding | agent onboarding |
+| agent-quickstart | agent quickstart |
+| architecture-perception | architecture perception |
 | bdsk-virtual-board | bdsk virtual board |
+| bet-closeout-chain | bet closeout chain |
+| bet-execution | bet execution |
 | bos-contract-fix | bos contract fix |
 | bos-service-discovery | bos service discovery |
 | ci-red-triage | ci red triage |
+| closeout-retro | closeout retro |
+| cognitive-governance | cognitive governance |
+| delegation-guardrails | delegation guardrails |
+| domain-cartridge-governance | domain cartridge governance |
 | ecos-test-cycle | ecos test cycle |
 | external-agent-attach | external agent attach |
+| git-discipline | git discipline |
+| git-safety-check | git safety check |
 | governance-phase-orchestrator | governance phase orchestrator |
 | governance-ssot-edit | governance ssot edit |
+| harness-compliance | harness compliance |
+| kos-cold-start | kos cold start |
+| memory-recall | memory recall |
+| multica-squad-ops | multica squad ops |
+| nextgen-cognitive-mesh | nextgen cognitive mesh |
+| omlxc-compute-fabric | omlxc compute fabric |
 | omo-audit-baseline | omo audit baseline |
 | project-governance | project governance |
+| round-gate-check | round gate check |
+| round-workflow | round workflow |
+| scene-shadow-activate | scene shadow activate |
+| spine-value-pipeline | spine value pipeline |
+| swarm-escape | swarm escape |
 | system-index-distill | system index distill |
 | workflow-silence-detection | workflow silence detection |
+| workflow:bet-execution | workflow:bet execution |
+| workflow:governance-state-mutation | workflow:governance state mutation |
+| workflow:mini | workflow:mini |
+| workflow:project-code-change | workflow:project code change |
+| workflow:project-doc-change | workflow:project doc change |
 | worktree-ci-isolate | worktree ci isolate |
 
 ---
