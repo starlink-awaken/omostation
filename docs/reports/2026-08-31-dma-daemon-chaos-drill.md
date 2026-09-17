@@ -12,7 +12,7 @@ created: 2026-09-03
 
 ## Summary
 
-The omlxc V5.0 Sovereign Mesh DMA Daemon (`omlxc.daemon.dma_daemon`, ADR-0437) successfully
+The omlxc V5.0 Sovereign Mesh DMA Daemon (`omlxc.daemon.dma_daemon`, ADR-0439) successfully
 passed 4 chaos drills covering launchd persistence, probe cycle telemetry, VRAM Paged KV spillover,
 and disconnect/reconnect recovery. All drills run via the canonical `chaos_drill.py` harness
 without requiring physical Thunderbolt 5 hardware (the daemon's state machine is exercised

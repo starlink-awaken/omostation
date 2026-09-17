@@ -12,7 +12,7 @@ type: ssot
 - **状态**: ACCEPTED
 - **日期**: 2026-08-30
 - **作者**: starlink-awaken / xiamingxing
-- **关联**: ADR-0439, ADR-0437, ADR-0436, ADR-0203, ADR-0199
+- **关联**: ADR-0439, ADR-0436, ADR-0203, ADR-0199
 
 ---
 

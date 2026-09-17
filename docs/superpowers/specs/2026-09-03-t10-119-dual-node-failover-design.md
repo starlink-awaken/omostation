@@ -15,7 +15,7 @@ type: ssot
 
 ## Intent
 
-在 `omlxc.daemon.dma_daemon.DMADaemonController` (ADR-0437) 物理层基础上, 新增
+在 `omlxc.daemon.dma_daemon.DMADaemonController` (ADR-0439) 物理层基础上, 新增
 `projects/omlxc/src/omlxc/dataplane/failover.py` 高层故障转移控制器:
 1. **心跳状态机**: 监听 `MeshTelemetrySnapshot.is_connected`, 触发 P0/P1 故障转移
 2. **请求接管**: 双机争夺 inference job 时, winner-takes-all (避免脑裂), 记录 audit
