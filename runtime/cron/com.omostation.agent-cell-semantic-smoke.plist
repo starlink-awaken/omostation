@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.agent-cell-semantic-smoke.plist
+  Controlled Role/Capsule/Mesh/Queue semantic lifecycle canary.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.omostation.agent-cell-semantic-smoke</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/opt/homebrew/bin/python3</string>
+      <string>-B</string>
+      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/agent-cell-semantic-smoke.py</string>
+      <string>--state-dir</string>
+      <string>/Users/xiamingxing/Workspace/.omo/state/agent-cell/semantic</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PYTHONDONTWRITEBYTECODE</key>
+      <string>1</string>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+      <key>PYTHONPATH</key>
+      <string>/Users/xiamingxing/Workspace/projects/omo/src</string>
+      <key>AGENT_CELL_ROOT</key>
+      <string>/Users/xiamingxing/Workspace</string>
+      <key>AGENT_CELL_STATE_DIR</key>
+      <string>/Users/xiamingxing/Workspace/.omo/state/agent-cell/semantic</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace</string>
+    <key>StartInterval</key>
+    <integer>21600</integer>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/agent-cell-semantic-smoke.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/agent-cell-semantic-smoke.log</string>
+  </dict>
+</plist>
