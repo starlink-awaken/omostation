@@ -30587,6 +30587,80 @@ bets:
   - .omo/_truth/scenarios/v3/**
   - docs/plans/
   - .omo/_knowledge/retros/
+- id: BET-Y1Q4-T7-08
+  title: Scene and Journey admission validator convergence
+  goal: Reconcile scene-card admission validation with the canonical v2 lifecycle contract
+    and make Scene to Journey connector operations work from any isolated repository
+    root.
+  track: T7-SCENE
+  window: Y1Q4
+  appetite: 1 day
+  priority: P1
+  risk_level: L1
+  human_gate: false
+  status: candidate
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  circuit_breaker: If validator parity cannot be established without rewriting scene-card
+    data, stop at the validator and connector boundary and record the migration as a
+    follow-up.
+  done_when:
+  - scene-card-registry.py and scene-card-lifecycle.py agree on the canonical v2 required
+    fields and lifecycle tiers
+  - registry validation no longer reports current v2 cards invalid because domain or
+    promotion_evidence is absent
+  - scene-journey-connector.py resolves all scene, Journey, and state paths below an
+    explicit or script-derived repository root
+  - focused regression tests prove read-only listing and explicit state mutation behavior
+  - accepted spec, workflow evidence, retro, and verification commands are complete
+  non_goals:
+  - Do not migrate or rewrite existing scene-card YAML files
+  - Do not change Journey state-machine semantics or runtime projections
+  - Do not fix unrelated Journey warnings in this packet
+  depends_on:
+  - BET-Y1Q4-T7-04
+  - BET-Y1Q4-T7-05
+  verify:
+  - cmd: python3 -m pytest tests/scene_v2/test_scene_card_registry_connector.py -q
+    expect: exit 0
+  - cmd: python3 bin/ssot/scene-card-lifecycle.py --root . validate --all
+    expect: exit 0
+  - cmd: python3 bin/ssot/scene-card-registry.py --root . --validate --all
+    expect: exit 0
+  - cmd: python3 bin/gac/scene-journey-connector.py --root . --list
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/scene-card-lifecycle.py
+  - bin/ssot/scene-card-registry.py
+  - bin/gac/scene-journey-connector.py
+  - bin/_registry/scripts/governance/scene-card-registry.yaml
+  - bin/_registry/scripts/governance/scene-journey-connector.yaml
+  - tests/scene_v2/test_scene_card_registry_connector.py
+  - docs/superpowers/specs/2026-09-17-t7-08-scene-journey-admission-convergence-design.md
+  - docs/superpowers/specs/README.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-08-scene-journey-admission-convergence-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:398471b252419a32e03181a10dc2702c6104fd1c393a3e428154740a06045a32
+    decision_ref: decision://accepted/BET-Y1Q4-T7-08
+  completion_evidence:
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30725,7 +30799,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 408
+  total_bets: 409
   windows:
   - Y1Q1
   - Y1Q2

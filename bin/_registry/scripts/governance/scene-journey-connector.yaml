@@ -3,7 +3,7 @@ id: bin/gac/scene-journey-connector.py
 name: Scene Journey Connector
 category: governance
 owner: governance-team
-description: ""
+description: "Scene to Journey connector with explicit repository-root isolation"
 inputs: []
 outputs:
   - type: exit_code
@@ -11,5 +11,5 @@ outputs:
 dependencies: []
 triggers: []
 related: []
-maturity: draft
-last_reviewed: "2026-08-24"
+maturity: active
+last_reviewed: "2026-09-17"
