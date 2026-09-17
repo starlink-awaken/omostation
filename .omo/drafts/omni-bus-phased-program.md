@@ -32,7 +32,7 @@ approach: phased-program
 - F2. `projects/c2g/tests/test_knowledge_publisher.py:74` 断言 legacy `event_type` —— P1 必须同步更新该断言。
 - F3. `projects/cockpit/src/cockpit/web/knowledge_indexer.py`: callback 双通道接受 `{bos://memory/events/card_updated, bos://brain/events/card_updated}`（L71-74）；订阅双 pattern 含 legacy（L138-141）；非阻塞启动 + 5min keepalive + 5×指数退避重试；KOS HTTP PUT 优先、LanceDB 进程内降级；Agora 不可用不丢卡（文件已持久化）→ **P1 迁移安全网已确认：consumer 双接受，翻转 producer 不丢事件**。
 - F4. `.omo/_knowledge/decisions/0372-memory-os-control-plane.md` §D: legacy→canonical 迁移规则 = 生产发新 URI + consumer 双接受 → 再删旧；release 须双 pattern 兼容。
-- F5. `.omo/_knowledge/decisions/0296-c2g-predictive-outcomes-to-knowledge-graph.md`（Phase C 发布器来源）；`0294-knowledge-gateway-decoupling-and-event-pipeline.md`。
+- F5. `.omo/_knowledge/decisions/0449-c2g-predictive-outcomes-to-knowledge-graph.md`（Phase C 发布器来源，ADR-0296 正文）；`0294-knowledge-gateway-decoupling-and-event-pipeline.md`。
 - F6. `projects/kairon/packages/kairon-pipeline/src/kairon_pipeline/bus_adapter.py` (~100L): D-Harvest 事件桥接；lazy import `bus_foundation.facade.event`；`emit_event` → `bus_event.publish(topic, payload, source_uri=bos://capability/pipeline/{source}, trace_id)`；publish 失败仅 log warning + return None（失败被吞）；事件类型: `kairon:source:ingested` / `kairon:extraction:completed` / `kairon:quality_gate:result` / `kairon:downstream:dispatched`；pipeline 零运行时依赖。
 - F7. `projects/kairon/packages/kairon-pipeline/pyproject.toml`: `dependencies=[]`；bus-foundation 仅在 `[dependency-groups].dev`（path `../../../bus-foundation`）；`requires-python>=3.10`；version 0.4.0 → **P2 必须保留零运行时依赖设计**。
 - F8. `projects/kairon/packages/kairon-pipeline/tests/test_bus_adapter.py`: `test_emit_source_ingested_dispatches_envelope`(:23-38)、`test_publish_failure_does_not_propagate`(:87-99)。
@@ -73,5 +73,5 @@ approach: phased-program
 ## Approval gate
 
 - 状态: `drafting` → **`awaiting-approval`**
-- 等待用户显式 okay 后，将产出 `.omo/plans/omni-bus-phased-program.md` 完整计划（TL;DR / Scope / Verification strategy / Execution strategy / Todos 5-8 条 / Final verification wave F1-F4 / Commit strategy / Success criteria）。
+- 等待用户显式 okay 后，将产出 .omo/plans/omni-bus-phased-program.md 完整计划（批准后新建，不是对现有文件链接）（TL;DR / Scope / Verification strategy / Execution strategy / Todos 5-8 条 / Final verification wave F1-F4 / Commit strategy / Success criteria）。
 - 批准只授权写计划，不授权实现。

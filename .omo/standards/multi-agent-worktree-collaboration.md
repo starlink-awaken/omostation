@@ -10,7 +10,7 @@ type: ssot
 
 > 源自 omlxc 运维提案 v0.1 (2026-08-25/26 四起互踩事故实证) 收编,
 > 经 PR #2208-#2253 系列实战验证后升格为正式标准。事故数据与
-> 完整验尸见 omlxc `docs/operations/2026-08-26-multi-agent-collaboration-protocol-proposal.md`。
+> 完整验尸见 omlxc 仓 2026-08-26 multi-agent collaboration protocol proposal (外部仓, 不在根仓跟踪)。
 
 ## 问题
 

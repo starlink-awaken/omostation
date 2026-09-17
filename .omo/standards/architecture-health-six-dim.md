@@ -19,7 +19,7 @@ bet_id: BET-Y1Q4-T6-18
 | **场景** (Scene) | scene_card 总数 + lifecycle 分布 | count | `docs/scene-cards/*.yaml` frontmatter | `rg -c '^---$' docs/scene-cards/ \| head -1` + 解析 lifecycle 字段 |
 | **架构** (Architecture) | SFOP 槽位一致性 (5+4+1+1 唯一性) + DFSQ 层数 | bool/count | `bin/gac/check-sfop-slots.py --json` + `check-execution-chain.py` | 同左 |
 | **进化** (Evolution) | 3Y bet done 比例 (含 done_at 在最近 30d) | ratio | `docs/plans/3y-bet-ledger.yaml` 解析 status | `bin/arch-health-meter.py` 内联 |
-| **运维** (Operations) | runtime 在线率 (daemon + 5 服务) | ratio | `.omo/state/runtime.json` + `bin/observability/check-runtime.sh` | 简化为 `cockpit status --json` |
+| **运维** (Operations) | runtime 在线率 (daemon + 5 服务) | ratio | `cockpit status --json` (旧采集源已退役) | 同左 |
 | **防腐** (Anti-Corrosion) | GaC drift 项数 + 治理 SSOT 漂移告警 | count | `bin/gac/meta-doctor.py --json` + `bin/ssot/ssot-guardian.py` | 同左 |
 | **感知** (Perception) | skill INDEX 注册数 + workflow 沉默数 | count | `.agents/skills/INDEX.md` + `.omo/_truth/registry/agent-workflows/INDEX.md` | 静态解析 |
 
@@ -35,7 +35,7 @@ bet_id: BET-Y1Q4-T6-18
 
 合并为 1 个分 (如 weighted_score) 是反模式 — 维度是诊断, 不是 KPI.
 
-## 周报节选 (`.docs/reports/architecture-health-weekly.md`)
+## 周报节选 (`docs/reports/architecture-health-weekly.md`)
 
 | 维度 | 当前 | 上周 | 趋势 | 备注 |
 |------|------|------|------|------|
