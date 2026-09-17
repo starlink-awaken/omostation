@@ -2,7 +2,7 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-17
 title: Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)
 type: doc
 ---
@@ -103,6 +103,19 @@ uv run --directory projects/omo python -m omo.cli resident ingest      # 事件�
 > **BET-Y1Q3-T1-12（Exact Capability Binding）** 并发推进消费接线（omo gitlink AGE-v2 主线 320d4dca）。
 > 决策（2026-08-26 方向 C）：**不归档**（避免破坏并发工作）、**不提前接线**（与 T1-12 重叠），
 > 待 T1-12 合流后统一评估。executor.py 的 pi-worker 后端有完整实现（非死引用）。
+
+## 3.2 Resident Flight Deck（BET-Y1Q4-T8-23）
+
+Resident Flight Deck is the delivered Cockpit control surface for resident
+heartbeat visibility and authorization-boundary monitoring. Its current
+root-repository contract is defined by
+[`docs/superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md`](../superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md).
+
+The delivered surface is an HTTP endpoint in Cockpit:
+`POST /api/flight-deck/heartbeat`, with the corresponding Cockpit UI view
+`ResidentFlightDeck.tsx`. This document does **not** claim that Flight Deck is
+already exposed through `bos://resident/*` or an `omo resident` CLI
+subcommand; those remain separate follow-up integration work.
 
 ## 4. 运维与监控
 

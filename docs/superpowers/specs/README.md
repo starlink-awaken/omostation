@@ -2,9 +2,9 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-17
 type: ssot
-last_updated: 2026-09-03
+last_updated: 2026-09-17
 ---
 # Superpowers Spec Registry
 
@@ -63,3 +63,48 @@ L2/L3 bet 必须绑定 accepted spec：
 | `2026-08-14-codex-acp-stdio-cutover-design.md` | active | — | 2026-08-14 |
 | `2026-08-14-supervised-blueprint-control-loop-design.md` | active | BET-Y1Q2-T1-18 | 2026-08-14 |
 | `2026-08-14-weijian-sanyi-status-consistency-design.md` | active | — | 2026-08-14 |
+
+### 2026-09-12—09-17 delivery wave
+
+| 文件 | 状态 | BET | 最后审查 |
+|------|------|-----|----------|
+| `2026-09-12-multica-as0-verify-design.md` | accepted | BET-Y1Q4-T10-150 | 2026-09-11 |
+| `2026-09-12-studio-view-deep-delivery-spec.md` | accepted | BET-Y1Q4-T8-24C | 2026-09-12 |
+| `2026-09-12-t10-157-aetherforge-responses-pointer-close.md` | accepted | BET-Y1Q4-T10-157 | 2026-09-12 |
+| `2026-09-12-t10-158-omlxc-probe-candidates-pointer-close.md` | accepted | BET-Y1Q4-T10-158 | 2026-09-12 |
+| `2026-09-12-t10-159-aetherforge-anthropic-messages-pointer-close.md` | accepted | BET-Y1Q4-T10-159 | 2026-09-12 |
+| `2026-09-12-t10-161-gitlink-freshness-remote-integrity-guard.md` | accepted | BET-Y1Q4-T10-161 | 2026-09-12 |
+| `2026-09-12-t10-162-omlxc-inventory-baseline-reset-pointer-close.md` | accepted | BET-Y1Q4-T10-162 | 2026-09-12 |
+| `2026-09-12-t10-165-omo-persistent-semantics-design.md` | accepted | BET-Y1Q4-T10-165 | 2026-09-12 |
+| `2026-09-12-t2-06-mail-calendar-ingress-design.md` | accepted | BET-Y1Q4-T2-06 | 2026-09-12 |
+| `2026-09-12-t3-01-persona-radar-engine-design.md` | accepted | BET-Y2Q2-T3-01 | 2026-09-12 |
+| `2026-09-12-t5-04-sovereign-connector-fabric-design.md` | accepted | BET-Y1Q4-T5-04 | 2026-09-12 |
+| `2026-09-12-t5-05-resident-causal-decision-design.md` | accepted | BET-Y1Q4-T5-05 | 2026-09-12 |
+| `2026-09-12-t6-25-openhuman-bridge-biometric-normalizer-design.md` | accepted | BET-Y1Q4-T6-25 | 2026-09-12 |
+| `2026-09-12-t6-26-semantica-graph-kernel-design.md` | accepted | BET-Y1Q4-T6-26 | 2026-09-12 |
+| `2026-09-12-t7-04-scene-navigation-guardrails-design.md` | accepted | BET-Y1Q4-T7-04 | 2026-09-12 |
+| `2026-09-12-t7-05-scene-lifecycle-cruiser-design.md` | accepted | BET-Y1Q4-T7-05 | 2026-09-12 |
+| `2026-09-12-t7-06-contract-net-taskforce-design.md` | accepted | BET-Y1Q4-T7-06 | 2026-09-12 |
+| `2026-09-12-t8-21-decision-proposals-closeout-spec.md` | accepted | BET-Y1Q4-T8-21 | 2026-09-12 |
+| `2026-09-12-t8-24d-operations-mission-design.md` | accepted | BET-Y1Q4-T8-24D | 2026-09-12 |
+| `2026-09-12-t8-24e-a9-observatory-closeout-design.md` | accepted | BET-Y1Q4-T8-24E | 2026-09-12 |
+| `2026-09-12-y2q2-t7-03-health-monitor-design.md` | accepted | BET-Y2Q2-T7-03 | 2026-09-12 |
+| `2026-09-12-y2q3-t7-01-family-asset-governance-spec.md` | accepted | BET-Y2Q3-T7-01 | 2026-09-12 |
+| `2026-09-13-t6-28-cognitive-hierarchy-radix-kv-design.md` | accepted | BET-Y1Q4-T6-28 | 2026-09-13 |
+| `2026-09-13-t8-23-resident-flight-deck-design.md` | accepted | BET-Y1Q4-T8-23 | 2026-09-13 |
+| `2026-09-14-a4-remote-hygiene-cron-registry-parity-design.md` | accepted | BET-Y1Q4-T16-02 | 2026-09-14 |
+| `2026-09-14-t3-05-mindmodel-four-pieces-spec.md` | accepted | BET-Y2Q1-T3-05 | 2026-09-14 |
+| `2026-09-14-t5-01-strategy-sandbox-design.md` | accepted | BET-Y2Q1-T5-01 | 2026-09-14 |
+| `2026-09-14-t8-22-tinybos-mesh-spec.md` | accepted | BET-Y1Q4-T8-22 | 2026-09-15 |
+| `2026-09-15-a8-omo-external-transaction-lifecycle-design.md` | accepted | BET-Y1Q4-T10-151 | 2026-09-15 |
+| `2026-09-15-t10-167-ledger-schema-hardening.md` | accepted | BET-Y1Q4-T10-167 | 2026-09-15 |
+| `2026-09-15-t3-02-lora-matrix-spec.md` | accepted | BET-Y2Q2-T3-02 | 2026-09-15 |
+| `2026-09-15-t7-07-review-remediation-design.md` | accepted | BET-Y2Q1-T7-07 | 2026-09-15 |
+| `2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md` | accepted | BET-Y2Q1-T7-06 | 2026-09-15 |
+| `2026-09-16-t10-146-maturity-rollup-tracking.md` | accepted | BET-Y1Q4-T10-146 | 2026-09-16 |
+| `2026-09-16-t6-30-persona-mirror-spec.md` | accepted | BET-Y1Q4-T6-30 | 2026-09-16 |
+| `2026-09-16-t7-01-org-network-graph-spec.md` | accepted | BET-Y2Q1-T7-01 | 2026-09-16 |
+| `2026-09-16-y3h1-t5-02-routine-hosting-spec.md` | accepted | BET-Y3H1-T5-02 | 2026-09-16 |
+| `2026-09-17-siri-40-documentation-convergence-design.md` | accepted | BET-Y1Q4-T10-168 | 2026-09-17 |
+
+> 旧版条目保留为历史手工登记；后续应将本表迁移为生成型索引，避免新的 accepted spec 再次脱离导航。
