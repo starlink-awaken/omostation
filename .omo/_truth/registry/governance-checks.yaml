@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 668 # 2026-09-16 666→668: T6-30 persona-mirror (registry: extract-persona-diffs + persona_trainer)
+    script_baseline: 669 # 2026-09-17 668→669: 公文审查能力腿 doc-review-checks.py (journey-document-review 的 5 个 action 实现, 与引擎解耦)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
