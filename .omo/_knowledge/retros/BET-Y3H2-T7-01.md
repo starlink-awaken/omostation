@@ -2,7 +2,7 @@
 bet_id: BET-Y3H2-T7-01
 date: 2026-08-20
 lifecycle: history
-last-reviewed: 2026-08-20
+last-reviewed: 2026-09-16
 status: archived
 owner: governance-team
 title: BET-Y3H2-T7-01 Retro — 公文场景 routine (限格式类)
@@ -46,4 +46,6 @@ type: retro
 
 - 公文场景 routine 化已随国转中心协作窗口关闭而冻结，**当前不应投入任何自动化实现**。
 - 若未来重启，必须先重新评估 `BET-Y3H1-T7-01` 或新建前置 assisted bet，积累至少 100 次真实人机协作记录后再考虑 routine。
-- 本 retro 与 `BET-Y3H1-T7-01` 共同构成“外部协作窗口关闭”案例对，建议写入场景 bet 风险评估模板。
+- 本 retro 与 `BET-Y3H1-T7-01` 共同构成"外部协作窗口关闭"案例对，建议写入场景 bet 风险评估模板。
+- **2026-09-16 解冻评估结论: 不应解冻**。依赖 Y3H1-T7-01 仍 blocked, document-review 场景卡在 supervised (距 routine 差两档), 无 calibration 数据。
+- **路径修复 (2026-09-16)**: resume_condition 和 verify 已从 `docs/scene-cards/v2/document-review.yaml` 更新为 `.omo/_truth/scenarios/v3/scene-document-review.yaml`。
