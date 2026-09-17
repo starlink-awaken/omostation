@@ -30685,6 +30685,65 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+- id: BET-Y3H1-T7-04
+  status: candidate
+  appetite: 1 week
+  priority: P1
+  risk_level: L2
+  window: Y3H1
+  track: T7-SCENE
+  title: admin-notification-workflow 场景批量 routine 推进
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  human_gate: true
+  pasw_required: false
+  value_indicator_policy: false
+  retro: required
+  depends_on:
+  - BET-Y3H1-T7-03
+  goal: 将 admin-notification-workflow 驱动的 5 个 assisted 场景 (classify/collect/compile/forward/review)
+    批量推进到 routine。复用 T7-02/T7-03 已验证的推进模式。
+  non_goals:
+  - 不推进 scene-admin-inbox / scene-admin-submit（draft 级）
+  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01
+  - 不修改 admin-notification-workflow journey 定义
+  circuit_breaker: 任一场景连续 3 次校准 < 0.4 → 该场景回退 supervised，其他继续。
+  done_when:
+  - 5 场景卡 lifecycle 从 assisted 升至 routine
+  - activation 从 controlled 升至 allowed
+  - ≥ 30 条 trial records (5 场景 × 6 条)
+  - bet-ledger lint exit 0
+  write_surfaces:
+  - .omo/_truth/scenarios/v3/**
+  - docs/plans/
+  - .omo/_knowledge/retros/
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  progress:
+    phase: 0
+    phase_name: 准备
+    phase_goal: BET 立项 + spec 设计
+    started_at: '2026-09-17'
+    current_step: candidate — 待 operator 确认
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-04-admin-batch-promotion-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:a629fe95322cbf7ddb09585dfe7b0a7810006efee7a3948b43b5228cc9cb7c03
+    decision_ref: decision://accepted/BET-Y3H1-T7-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30823,7 +30882,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 409
+  total_bets: 410
   windows:
   - Y1Q1
   - Y1Q2
