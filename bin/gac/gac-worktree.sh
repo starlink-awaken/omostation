@@ -5,8 +5,10 @@
 # 治本 concurrent-agent-contention (共享工作树撞车 → worktree 隔离).
 #
 # 用法:
-#   gac-worktree.sh claim <session>      # 创建 worktree + 分支 work/<session>
+#   gac-worktree.sh claim [--full] <session>  # 创建 worktree + 分支 work/<session>
 #                                         # --actor-id <id> → agent/<id>/<session>
+#                                         # 默认浅 init 子模块 (--depth 1, 快);
+#                                         # --full 或 GAC_FULL_SUBMODULE_INIT=1 恢复完整 init
 #   gac-worktree.sh submit [--strict] <session>  # proposal-only → MANAGED_SUCCESSOR_REQUIRED
 #                                         # --strict: 子模块 pointer 不可达时阻止提案
 #   gac-worktree.sh merge <session>      # squash 合并 PR + release worktree + 删分支
@@ -254,7 +256,20 @@ case "$cmd" in
     guard_submodules "${session:-}"
     ;;
   claim)
-    [ -z "$session" ] && echo "用法: claim <session> [--actor-id <id>]" >&2 && exit 1
+    # 子模块 init 默认为浅 (--depth 1, 快); --full 或 GAC_FULL_SUBMODULE_INIT=1
+    # 恢复完整 init (兼容依赖完整历史/离线全量的调用方). 同 submit --strict 模式过滤.
+    CLAIM_FULL_INIT="${GAC_FULL_SUBMODULE_INIT:-0}"
+    _cargs=()
+    for _a in "$@"; do
+      if [ "$_a" = "--full" ]; then
+        CLAIM_FULL_INIT=1
+      else
+        _cargs+=("$_a")
+      fi
+    done
+    set -- "${_cargs[@]}"
+    cmd="${1:-}" ; session="${2:-}"
+    [ -z "$session" ] && echo "用法: claim [--full] <session> [--actor-id <id>]" >&2 && exit 1
     validate_session "$session"
     ROOT_REMOTE=$(cd "$WS_ROOT" && resolve_root_remote) || exit 1
     wt="$WS_PARENT/ws-$session"
@@ -311,11 +326,28 @@ case "$cmd" in
       # T10-161: 快速路径补偿 — gitlink 新鲜度对齐 + remote 完整性检查
       WS_ROOT="$wt" guard_submodules --fix
     else
-      echo "   init 全部子模块 (完整环境, 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
+      # 默认浅 init (--depth 1): 完整 checkout 但历史截断, claim 不再卡 120s 超时.
+      # 浅 init 失败 (pin 不在浅历史) 自动回退完整 init; --full 跳过浅尝试.
+      if [ "$CLAIM_FULL_INIT" = "1" ]; then
+        echo "   init 全部子模块 (完整环境, --full 显式指定; 慢 ~60s; SKIP_SUBMODULE_INIT=1 跳过)..."
+      else
+        echo "   浅 init 子模块 (--depth 1, 快; 需完整历史: claim --full 或 GAC_FULL_SUBMODULE_INIT=1)..."
+      fi
       t0=$(date +%s)
       init_rc=0
-      init_out=$(cd "$wt" && git submodule update --init 2>&1) || init_rc=$?
+      if [ "$CLAIM_FULL_INIT" = "1" ]; then
+        init_out=$(cd "$wt" && git submodule update --init 2>&1) || init_rc=$?
+      else
+        init_out=$(cd "$wt" && git submodule update --init --depth 1 2>&1) || init_rc=$?
+      fi
       t1=$(date +%s)
+      if [ "$init_rc" -ne 0 ] && [ "$CLAIM_FULL_INIT" != "1" ]; then
+        echo "   ⚠️ 浅 init 失败 (rc=$init_rc, $((t1-t0))s), 回退完整 init..."
+        t0=$(date +%s)
+        init_rc=0
+        init_out=$(cd "$wt" && git submodule update --init 2>&1) || init_rc=$?
+        t1=$(date +%s)
+      fi
       init_cnt=$(echo "$init_out" | grep -cE "checked out|initialized" || echo 0)
       if [ "$init_rc" -ne 0 ]; then
         echo "❌ 全部子模块 init 失败 (rc=$init_rc, $((t1-t0))s); 拒绝 PASW claim" >&2
