@@ -676,7 +676,18 @@ except Exception: print('')" 2>/dev/null || true)"
     fi
     ROOT_REMOTE=$(resolve_root_remote) || exit 1
     echo "   remote: $ROOT_REMOTE ($(git remote get-url "$ROOT_REMOTE")); repo: $CANONICAL_ROOT_REPO"
-    # 查 PR (head work/<session>, base main, open)
+    # 查 PR (head $branch, base main, open; T10-128: $branch 可能经命名空间发现, 见下)
+    # T10-128 namespace fallback: 无 claim 记录时 resolve_branch_for 回退 work/<session>,
+    # 但 claim 实际建的是 agent/<actor>/<session>. legacy work/<session> 优先 (向后兼容);
+    # 仅当回退分支本地不存在时, 按 agent/*/<session> 发现唯一匹配.
+    if ! git show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null; then
+      _ns_matches=$(git branch --list "agent/*/${session}" 2>/dev/null | sed 's/^[* ]*//' | awk 'NF')
+      _ns_count=$(printf '%s\n' "$_ns_matches" | grep -c . || true)
+      if [ "$_ns_count" = "1" ]; then
+        echo "   ℹ️ claim 记录缺失, 按命名空间发现分支: $_ns_matches (legacy work/<session> 不存在)"
+        branch="$_ns_matches"
+      fi
+    fi
     pr_number=$(gh pr list --repo "starlink-awaken/omostation" --head "$branch" --base main --state open --json number 2>/dev/null \
       | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['number'] if d else '')" 2>/dev/null)
     if [ -z "$pr_number" ]; then

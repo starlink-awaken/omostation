@@ -393,7 +393,8 @@ def test_skip_submodule_init_is_explicit_root_only_degraded_mode(
 
     assert result.returncode == 0, result.stderr
     assert not (wt / ".subtrees").exists()
-    assert not (wt / "modules" / "alpha" / ".git").exists()
+    # T10-161: SKIP 路径仍跑 guard_submodules --fix 做本地 gitlink 对齐,
+    # 子模块 .git 可能因此存在 — 不再断言其缺席. 降级本质 = 无 PASW + 明确提示.
     assert "root worktree only" in result.stdout.lower()
     assert "pasw isolation not established" in result.stdout.lower()
 
