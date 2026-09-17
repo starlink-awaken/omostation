@@ -60,13 +60,14 @@ def run(cmd: list[str], timeout: int = 120) -> tuple[int, str]:
 def collect_gates() -> list[dict]:
     code, out = run([sys.executable, "bin/gac/gate-health-check.py", "--json"])
     live: dict[str, dict] = {}
-    if code == 0:
-        try:
-            for g in json.loads(out).get("gates", []):
-                gid = str(g.get("gate", "")).split()[0]  # "A1 Workflow/Git" -> "A1"
-                live[gid] = g
-        except Exception:  # noqa: BLE001
-            pass
+    # A non-zero wrapper exit means at least one gate failed; the JSON payload
+    # still contains authoritative per-gate results and must not be discarded.
+    try:
+        for g in json.loads(out).get("gates", []):
+            gid = str(g.get("gate", "")).split()[0]  # "A1 Workflow/Git" -> "A1"
+            live[gid] = g
+    except Exception:  # noqa: BLE001
+        pass
     gates = []
     for gid in ("A1", "A2", "A3", "A4", "A5"):
         g = live.get(gid, {})
