@@ -64,6 +64,23 @@ L2/L3 bet 必须绑定 accepted spec：
 | `2026-08-14-supervised-blueprint-control-loop-design.md` | active | BET-Y1Q2-T1-18 | 2026-08-14 |
 | `2026-08-14-weijian-sanyi-status-consistency-design.md` | active | — | 2026-08-14 |
 
+### 2026-09-10—09-11 opening wave (T10-145 ~ T10-153, T16, T5-03 等)
+
+| 文件 | 状态 | BET | 最后审查 |
+|------|------|-----|----------|
+| `2026-09-10-claims-authority-bridge-wp1-shadow-design.md` | accepted | BET-Y1Q4-T10-145 | 2026-09-11 |
+| `2026-09-11-a5-aetherforge-gateway-restore-fix.md` | accepted | BET-Y1Q4-T10-153 | 2026-09-11 |
+| `2026-09-11-a5-launchd-ws-t1069-fix.md` | accepted | BET-Y1Q4-T10-152 | 2026-09-11 |
+| `2026-09-11-cockpit-nextgen-architecture-and-six-planes-spec.md` | accepted | BET-Y1Q4-T8-24 | 2026-09-11 |
+| `2026-09-11-ops-drift-guard-design.md` | accepted | BET-Y1Q4-T16 | 2026-09-11 |
+| `2026-09-11-orca-r0-verify-design.md` | accepted | BET-Y1Q4-T10-149 | 2026-09-11 |
+| `2026-09-11-persistent-queue-design.md` | accepted | BET-Y1Q4-T10-147 | 2026-09-11 |
+| `2026-09-11-t10-05-offline-sandbox-vault-spec.md` | accepted | BET-Y1Q4-T10-05 | 2026-09-11 |
+| `2026-09-11-t10-125-bos-gateway-spec.md` | accepted | BET-Y1Q4-T10-125 | 2026-09-11 |
+| `2026-09-11-t5-03-resident-a2a-delegation-spec.md` | accepted | BET-Y1Q4-T5-03 | 2026-09-11 |
+| `2026-09-11-t8-24a-observatory-convergence-spec.md` | accepted | BET-Y1Q4-T8-24A | 2026-09-11 |
+| `2026-09-11-zhixing-dashboard-full-causal-mesh-spec.md` | accepted | BET-Y1Q4-T8-25 | 2026-09-11 |
+
 ### 2026-09-12—09-17 delivery wave
 
 | 文件 | 状态 | BET | 最后审查 |
