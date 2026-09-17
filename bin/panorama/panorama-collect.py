@@ -700,6 +700,50 @@ def collect_code_root_health() -> dict:
     }
 
 
+def collect_claims_task16_preflight() -> dict:
+    """Run the read-only Claims Task16 preflight for agent-visible blockers."""
+    preflight_script = CODE_ROOT / "bin/gac/claims-shadow-preflight.py"
+    if not preflight_script.is_file():
+        return {
+            "schema": "panorama-claims-task16-projection/v1",
+            "available": False,
+            "verdict": "UNAVAILABLE",
+            "error": "preflight_script_missing",
+        }
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(preflight_script), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        report = json.loads(completed.stdout)
+    except Exception as exc:  # noqa: BLE001 - visibility must fail closed
+        return {
+            "schema": "panorama-claims-task16-projection/v1",
+            "available": False,
+            "verdict": "UNAVAILABLE",
+            "error": type(exc).__name__,
+        }
+    if not isinstance(report, dict) or report.get("schema") != "claims-shadow-preflight/v1":
+        return {
+            "schema": "panorama-claims-task16-projection/v1",
+            "available": False,
+            "verdict": "UNAVAILABLE",
+            "error": "invalid_preflight_payload",
+        }
+    return {
+        "schema": "panorama-claims-task16-projection/v1",
+        "available": True,
+        "verdict": report.get("readiness", "UNKNOWN"),
+        "activation_allowed": report.get("activation_allowed") is True,
+        "blocker_count": len(report.get("blockers") or []),
+        "preflight": report,
+    }
+
+
 def _ensure_omo_path() -> None:
     omo_src = ROOT / "projects" / "omo" / "src"
     if omo_src.is_dir() and str(omo_src) not in sys.path:
@@ -2276,6 +2320,7 @@ def build_payload() -> dict:
         "agent_cell_pool": collect_agent_cell_pool(),
         "agent_cell_semantic": collect_agent_cell_semantic(),
         "claims_authority": collect_claims_authority(),
+        "claims_task16": collect_claims_task16_preflight(),
         "asd": collect_asd(),
         "probes": collect_probes(),
         "resident_agents": collect_resident_agents(),
@@ -2686,12 +2731,16 @@ $('agenttable').querySelector('tbody').innerHTML=D.agents.map(a=>'<tr><td class=
   const cls=ca.available?(state==='active'?'p':'n'):'f';
   const cr=D.code_root_health||{};
   const crClass=cr.verdict==='PASS'?'p':((cr.verdict==='STALE'||cr.verdict==='DIRTY')?'f':'n');
+  const pt=D.claims_task16||{};
+  const ptClass=pt.verdict==='READY'?'p':(pt.available?'w':'f');
   $('claimkpi').innerHTML=[
     {v:state,l:'activation',c:cls},
     {v:ca.effective_claim_authority||'UNKNOWN',l:'effective'},
     {v:ca.security_level||'UNKNOWN',l:'security'},
     {v:ca.sequence==null?'n/a':ca.sequence,l:'sequence'},
-    {v:cr.verdict||'UNAVAILABLE',l:'code root',c:crClass}
+    {v:cr.verdict||'UNAVAILABLE',l:'code root',c:crClass},
+    {v:pt.blocker_count==null?'n/a':pt.blocker_count,l:'Task16 blockers',c:ptClass},
+    {v:pt.verdict||'UNAVAILABLE',l:'Task16 readiness',c:ptClass}
   ].map(k=>'<div class="card kpi"><b class="'+(k.c||'')+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
   const rows=[
     ['read-only observation',ca.available],
@@ -2699,7 +2748,9 @@ $('agenttable').querySelector('tbody').innerHTML=D.agents.map(a=>'<tr><td class=
     ['mutation performed',ca.mutation_performed],
     ['authorization granted',ca.authorization_granted],
     ['code root synced',cr.verdict==='PASS'],
-    ['code root clean',cr.dirty===false]
+    ['code root clean',cr.dirty===false],
+    ['Task16 preflight',pt.available],
+    ['Task16 activation allowed',pt.activation_allowed===true]
   ];
   $('claimtable').querySelector('tbody').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td><span class="chip '+(!r[1]||r[0]==='read-only observation'&&r[1]?'p':'f')+'">'+(r[1]?'true':'false')+'</span></td></tr>').join('');
 })();
