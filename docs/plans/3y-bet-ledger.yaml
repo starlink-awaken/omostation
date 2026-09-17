@@ -30438,7 +30438,10 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: in_progress
+  status: done
+  done_at: '2026-09-17'
+  value_indicator_policy: false
+  retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-02.md
   title: 公文场景 assisted 升档 — 基于 admin-notification-workflow 驱动
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -30470,15 +30473,22 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          code_landed: true
+          tests_passed: true
+          ci_green: true
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          calibration_phase1: calibration=0.9>=0.6, 30/30 completed
+          e2e_phase2: 3/3 公文全链通过, 15/15 检查项
+          lifecycle_phase3: supervised→assisted, activation controlled
+          trial_records: 3 份 document-review 条目写入 shadow-scene-trials.jsonl
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
