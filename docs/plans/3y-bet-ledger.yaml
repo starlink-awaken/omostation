@@ -30514,18 +30514,35 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-03.md
+          merged_reachable_commit:
+            ref: git://origin/main@c80ece51793df035fa68541ccb34cf299c2b03de
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-03.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-03.md
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-03.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-03.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-03.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-03.md
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y3H1-T7-02
+  done_at: '2026-09-17'
   done_when:
   - document-review 场景卡 lifecycle 从 assisted 升至 routine
   - activation 从 controlled 升至 allowed
@@ -30543,17 +30560,20 @@ bets:
   pasw_required: false
   priority: P1
   progress:
-    current_step: Step 2 完成 — lifecycle routine, activation allowed
+    current_step: done
     done_when_met:
     - 'Step 1: lifecycle assisted→supervised, activation controlled→monitored'
     - 'Step 2: lifecycle supervised→routine, activation monitored→allowed'
-    phase: 2
+    - '≥ 6 trial records: 9 条 (3 E2E + 3 assisted + 3 supervised)'
+    - Readiness 4 前置条件全绿 (2 次验证)
+    phase: 3
     phase_goal: lifecycle supervised→routine, activation monitored→allowed
-    phase_name: supervised→routine
+    phase_name: Closeout
     started_at: '2026-09-17'
   retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-03.md
   risk_level: L2
-  status: in_progress
+  status: done
   title: document-review routine 推进 — assisted→supervised→routine
   track: T7-SCENE
   underlying_workflow: project-code-change
