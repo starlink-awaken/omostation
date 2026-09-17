@@ -345,7 +345,7 @@ def check_l0_mapping() -> list[tuple[Path, int, str, str]]:
     if not mapper.exists():
         return [
             (
-                Path("<l0-mapping>"),
+                "<l0-mapping>",
                 1,
                 "missing tool",
                 "check-doc-l0-mapping.py 不存在, 无法验证 L0/MOF 映射",
@@ -359,7 +359,7 @@ def check_l0_mapping() -> list[tuple[Path, int, str, str]]:
             timeout=60,
         )
     except subprocess.TimeoutExpired:
-        return [(Path("<l0-mapping>"), 1, "timeout", "check-doc-l0-mapping.py 超时 (60s)")]
+        return [("<l0-mapping>", 1, "timeout", "check-doc-l0-mapping.py 超时 (60s)")]
     if proc.returncode == 0:
         return []
     try:
@@ -367,7 +367,7 @@ def check_l0_mapping() -> list[tuple[Path, int, str, str]]:
     except json.JSONDecodeError:
         return [
             (
-                Path("<l0-mapping>"),
+                "<l0-mapping>",
                 1,
                 "parse error",
                 proc.stderr[-200:] or "无法解析 check-doc-l0-mapping JSON 输出",
@@ -375,7 +375,7 @@ def check_l0_mapping() -> list[tuple[Path, int, str, str]]:
         ]
     findings = []
     for err in payload.get("errors", []):
-        findings.append((Path("<l0-mapping>"), 1, "L0/MOF 映射", err))
+        findings.append(("<l0-mapping>", 1, "L0/MOF 映射", err))
     return findings
 
 
@@ -465,7 +465,16 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
     if all_findings:
         print(f"❌ 检测到 {len(all_findings)} 项文档 SSOT 冲突:\n")
         for filepath, line_num, label, reason in all_findings:
-            rel_path = filepath.relative_to(WORKSPACE_ROOT)
+            # filepath may be Path (real .md) or sentinel string
+            # (e.g. check_l0_mapping's "<l0-mapping>" used when the L0 mapping
+            # tool itself is missing or errored). Guard both cases.
+            if isinstance(filepath, str):
+                rel_path = filepath
+            else:
+                try:
+                    rel_path = filepath.relative_to(WORKSPACE_ROOT)
+                except ValueError:
+                    rel_path = Path(str(filepath))
             print(f"  {rel_path}:{line_num}")
             print(f"    发现: {label}")
             print(f"    原因: {reason}")
