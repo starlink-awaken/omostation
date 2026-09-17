@@ -30587,43 +30587,82 @@ bets:
   - .omo/_truth/scenarios/v3/**
   - docs/plans/
   - .omo/_knowledge/retros/
-- id: BET-Y1Q4-T7-08
-  title: Scene and Journey admission validator convergence
-  goal: Reconcile scene-card admission validation with the canonical v2 lifecycle contract
-    and make Scene to Journey connector operations work from any isolated repository
-    root.
-  track: T7-SCENE
-  window: Y1Q4
+- accepted_specifications:
+  - content_digest: sha256:398471b252419a32e03181a10dc2702c6104fd1c393a3e428154740a06045a32
+    decision_ref: decision://accepted/BET-Y1Q4-T7-08
+    spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-08-scene-journey-admission-convergence-design.md
+    spec_version: 1.0.0
   appetite: 1 day
-  priority: P1
-  risk_level: L1
-  human_gate: false
-  status: done
-  done_at: 2026-09-17
-  workflow: bet-execution
-  underlying_workflow: project-code-change
-  retro: required
-  value_indicator_policy: false
-  pasw_required: false
   circuit_breaker: If validator parity cannot be established without rewriting scene-card
-    data, stop at the validator and connector boundary and record the migration as a
-    follow-up.
+    data, stop at the validator and connector boundary and record the migration as
+    a follow-up.
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          merged_reachable_commit:
+            ref: git://origin/main@aa6d6c0b96da7baf19a88cfe1535b501470f7e6f
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          tests:
+            ref: receipt://tests/scene_v2/test_scene_card_registry_connector.py
+            sha256: sha256:559de311709d66dcd2b5b2d5b312bbaaa79dcb9a090b58c7242e77dae0c70566
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y1Q4-T7-04
+  - BET-Y1Q4-T7-05
+  done_at: 2026-09-17
   done_when:
   - scene-card-registry.py and scene-card-lifecycle.py agree on the canonical v2 required
     fields and lifecycle tiers
-  - registry validation no longer reports current v2 cards invalid because domain or
-    promotion_evidence is absent
-  - scene-journey-connector.py resolves all scene, Journey, and state paths below an
-    explicit or script-derived repository root
+  - registry validation no longer reports current v2 cards invalid because domain
+    or promotion_evidence is absent
+  - scene-journey-connector.py resolves all scene, Journey, and state paths below
+    an explicit or script-derived repository root
   - focused regression tests prove read-only listing and explicit state mutation behavior
   - accepted spec, workflow evidence, retro, and verification commands are complete
+  goal: Reconcile scene-card admission validation with the canonical v2 lifecycle
+    contract and make Scene to Journey connector operations work from any isolated
+    repository root.
+  human_gate: false
+  id: BET-Y1Q4-T7-08
   non_goals:
   - Do not migrate or rewrite existing scene-card YAML files
   - Do not change Journey state-machine semantics or runtime projections
   - Do not fix unrelated Journey warnings in this packet
-  depends_on:
-  - BET-Y1Q4-T7-04
-  - BET-Y1Q4-T7-05
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: done
+  title: Scene and Journey admission validator convergence
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
   verify:
   - cmd: python3 -m pytest tests/scene_v2/test_scene_card_registry_connector.py -q
     expect: exit 0
@@ -30633,6 +30672,8 @@ bets:
     expect: exit 0
   - cmd: python3 bin/gac/scene-journey-connector.py --root . --list
     expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
   write_surfaces:
   - bin/ssot/scene-card-lifecycle.py
   - bin/ssot/scene-card-registry.py
@@ -30644,106 +30685,70 @@ bets:
   - docs/superpowers/specs/README.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T7-08.md
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-08-scene-journey-admission-convergence-design.md
+- accepted_specifications:
+  - content_digest: sha256:a629fe95322cbf7ddb09585dfe7b0a7810006efee7a3948b43b5228cc9cb7c03
+    decision_ref: decision://accepted/BET-Y3H1-T7-04
+    spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-04-admin-batch-promotion-design.md
     spec_version: 1.0.0
-    content_digest: sha256:398471b252419a32e03181a10dc2702c6104fd1c393a3e428154740a06045a32
-    decision_ref: decision://accepted/BET-Y1Q4-T7-08
+  appetite: 1 week
+  circuit_breaker: 任一场景连续 3 次校准 < 0.4 → 该场景回退 supervised，其他继续。
   completion_evidence:
     axes:
       engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@aa6d6c0b96da7baf19a88cfe1535b501470f7e6f
-          tests:
-            ref: receipt://tests/scene_v2/test_scene_card_registry_connector.py
-            sha256: sha256:559de311709d66dcd2b5b2d5b312bbaaa79dcb9a090b58c7242e77dae0c70566
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
-            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
-            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
-      operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
-            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
-            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
-            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
-            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
-      value:
-        status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
+        status: NOT_STARTED
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
     schema_version: completion-evidence-matrix/v1
-- id: BET-Y3H1-T7-04
-  status: candidate
-  appetite: 1 week
-  priority: P1
-  risk_level: L2
-  window: Y3H1
-  track: T7-SCENE
-  title: admin-notification-workflow 场景批量 routine 推进
-  workflow: bet-execution
-  underlying_workflow: project-code-change
-  human_gate: true
-  pasw_required: false
-  value_indicator_policy: false
-  retro: required
   depends_on:
   - BET-Y3H1-T7-03
-  goal: 将 admin-notification-workflow 驱动的 5 个 assisted 场景 (classify/collect/compile/forward/review)
-    批量推进到 routine。复用 T7-02/T7-03 已验证的推进模式。
-  non_goals:
-  - 不推进 scene-admin-inbox / scene-admin-submit（draft 级）
-  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01
-  - 不修改 admin-notification-workflow journey 定义
-  circuit_breaker: 任一场景连续 3 次校准 < 0.4 → 该场景回退 supervised，其他继续。
   done_when:
   - 5 场景卡 lifecycle 从 assisted 升至 routine
   - activation 从 controlled 升至 allowed
   - ≥ 30 条 trial records (5 场景 × 6 条)
   - bet-ledger lint exit 0
+  goal: 将 admin-notification-workflow 驱动的 5 个 assisted 场景 (classify/collect/compile/forward/review)
+    批量推进到 routine。复用 T7-02/T7-03 已验证的推进模式。
+  human_gate: true
+  id: BET-Y3H1-T7-04
+  non_goals:
+  - 不推进 scene-admin-inbox / scene-admin-submit（draft 级）
+  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01
+  - 不修改 admin-notification-workflow journey 定义
+  pasw_required: false
+  priority: P1
+  progress:
+    current_step: Step 1+2 完成 — 5 场景全部 routine/allowed
+    done_when_met:
+    - 5 场景 lifecycle assisted→routine (classify/collect/compile/forward/review)
+    - 5 场景 activation controlled→allowed
+    - '30 trial records (5场景 × 6条: 3 assisted + 3 supervised)'
+    - bet-ledger lint exit 0
+    phase: 2
+    phase_goal: 5 场景批量 lifecycle routine
+    phase_name: 'Step 1+2: assisted→supervised→routine'
+    started_at: '2026-09-17'
+  retro: required
+  risk_level: L2
+  status: in_progress
+  title: admin-notification-workflow 场景批量 routine 推进
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  window: Y3H1
+  workflow: bet-execution
   write_surfaces:
   - .omo/_truth/scenarios/v3/**
   - docs/plans/
   - .omo/_knowledge/retros/
-  verify:
-  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
-    expect: exit 0
-  progress:
-    phase: 0
-    phase_name: 准备
-    phase_goal: BET 立项 + spec 设计
-    started_at: '2026-09-17'
-    current_step: candidate — 待 operator 确认
-  accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-04-admin-batch-promotion-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:a629fe95322cbf7ddb09585dfe7b0a7810006efee7a3948b43b5228cc9cb7c03
-    decision_ref: decision://accepted/BET-Y3H1-T7-04
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    axes:
-      engineering:
-        status: NOT_STARTED
-        evidence: {}
-      operational:
-        status: NOT_PROVEN
-        evidence: {}
-      value:
-        status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2

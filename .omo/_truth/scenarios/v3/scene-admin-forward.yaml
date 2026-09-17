@@ -6,8 +6,8 @@ description: 生成转发通知与数据收集表两份草稿, 供人工确认�
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: assisted
-activation: controlled
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -52,3 +52,5 @@ data_scope: draft-documents-only
 operator: admin-forward-dispatch-under-risk-engine
 notes:
 - Transitioned shadow→assisted at 2026-09-11T22:51:19.398321+00:00 by evolution-agent
+- Transitioned assisted→supervised at 2026-09-17T12:07:21.110722+00:00 by xiamingxing
+- Transitioned supervised→routine at 2026-09-17T12:08:08.240976+00:00 by xiamingxing
