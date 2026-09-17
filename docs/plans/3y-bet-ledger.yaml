@@ -30598,7 +30598,8 @@ bets:
   priority: P1
   risk_level: L1
   human_gate: false
-  status: candidate
+  status: done
+  done_at: 2026-09-17
   workflow: bet-execution
   underlying_workflow: project-code-change
   retro: required
@@ -30651,15 +30652,38 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@aa6d6c0b96da7baf19a88cfe1535b501470f7e6f
+          tests:
+            ref: receipt://tests/scene_v2/test_scene_card_registry_connector.py
+            sha256: sha256:559de311709d66dcd2b5b2d5b312bbaaa79dcb9a090b58c7242e77dae0c70566
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T7-08.md
+            sha256: sha256:3efdbceffb9df9ad73281ce9a01c213c02d69ed64333ff71ffc4a7d258a6d906
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH

@@ -3,6 +3,7 @@ status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-17
+bet_id: BET-Y1Q4-T7-08
 title: BET-Y1Q4-T7-08 复盘
 type: retro
 ---
@@ -19,9 +20,9 @@ type: retro
 
 实现层 done_when 已在 worktree 中满足：70 张场景卡通过生命周期验证与新的
 registry 验证，唯一 v1 卡只产生显式 legacy warning；connector 的 list/create
-测试证明 root 隔离和显式 state mutation。PR 合并后的 reachable commit 和
-workflow closeout 证据仍待交付，因此 BET 在 ledger 中保持 evaluating，不提前
-标记 done。
+测试证明 root 隔离和显式 state mutation。PR #3882 已于 2026-09-17
+squash merge，合并提交为 `aa6d6c0b96da7baf19a88cfe1535b501470f7e6f`；
+合并后的主线复测和 closeout evidence 已完成。
 
 GaC local gate 唯一失败项是既有的 `check-cockpit-ui-dist`：当前隔离树的
 `projects/cockpit-ui` 没有 dist/index.html，且子项目没有 package.json，无法
@@ -48,3 +49,14 @@ GaC 规则、ADR、顶层入口或 scene-card 数据迁移。
 任何 connector 验证都应传入隔离 root，不能依赖用户本机绝对路径。若 gate 仍被
 cockpit-ui dist 缺失阻断，应先按独立子模块任务恢复其构建输入，不要把该问题
 混入 Scene/Journey 收敛。
+
+## 合并后收尾
+
+- PR #3882: `aa6d6c0b96da7baf19a88cfe1535b501470f7e6f`
+- focused regression: `3 passed`
+- lifecycle validation: `70 valid, 0 invalid`
+- registry validation: `70 valid, 0 invalid`; only `meeting-supervision`
+  emits the intentional `scene-card/v1` legacy warning
+- connector probe from the isolated repository root: 3 eligible Journey cards
+- value axis remains `NOT_PROVEN`; this governance BET has
+  `value_indicator_policy: false`
