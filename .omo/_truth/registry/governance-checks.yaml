@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 669 # 2026-09-17 668→669: 公文审查能力腿 doc-review-checks.py (journey-document-review 的 5 个 action 实现, 与引擎解耦)
+    script_baseline: 670 # 2026-09-17 669→670: 驾驶舱面板漂移自愈 zhixing-panel-sync.py (部署目录不受版本控制, 面板被覆盖 2 次)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

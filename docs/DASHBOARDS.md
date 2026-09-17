@@ -1,0 +1,65 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-17
+---
+
+# 驾驶舱面（Dashboards）职责边界
+
+> 本文件是「哪个驾驶舱负责什么」的 SSOT。改动职责边界时同步更新本文件与各自页脚。
+
+## 1. 三套入口
+
+| 入口 | 名称 | 代码位置 | 版本控制 | 定位 |
+|---|---|---|---|---|
+| `:43191` | **织星主权控制面**（Zhixing Dashboard） | `~/.local/share/zhixing-dashboard/`（**部署目录**） | ❌ **不在仓库** | **主入口**：战略/治理/知识/场景运行态 |
+| `:43910` | Panorama 全景驾驶舱 | `bin/panorama/panorama-collect.py`（生成 `runtime/dashboard/`，gitignored） | ✅ 采集器在仓库 | 运行指挥台：门禁/BET/Agent/运行态聚合 |
+| `:8090` | Cockpit Dashboard | `projects/cockpit/`（子模块） | ✅ | 工程面：observatory API + 工作台 |
+
+## 2. 职责划分（收敛后）
+
+- **`:43191` = 主权视窗（唯一人类主入口）**
+  - 数据源：`refresh.py` 每 5 分钟采集 + **复用 panorama `build_payload()`**
+  - 承载：核心决策 / 门禁 / BET / 运行态 / 知识记忆 / 技能清单 / **场景系统运行态**
+  - 边界：只读视窗；不做执行、不派工
+
+- **`:43910` = 运行指挥台（Panorama）**
+  - 数据源：`panorama-collect.py`（约 20+ 采集器）→ `runtime/dashboard/data.json`
+  - 承载：体系运行聚合 + 面板（与 `:43191` 数据同源，展示面更工程化）
+
+- **`:8090` = 工程工作台（Cockpit）**
+  - 数据源：`projects/cockpit` observatory（只读投影）+ 工作台 API
+  - 承载：Agent 用的结构化查询面（`scene_status` / `scene_graph` 等）
+
+**关系**：`panorama-collect.py` 是 `:43191` 与 `:43910` 的**共同数据源**；`:43191` 是给人看的主入口，`:8090` 是给 agent 查的工程面。
+
+## 3. 已知问题与缓解
+
+### 3.1 `:43191` 部署目录不受版本控制（**高风险**）
+
+`~/.local/share/zhixing-dashboard/` 不在任何 git 仓库中，多 agent 并发编辑同一
+`template.html` 会**互相覆盖**。
+
+**实证（2026-09-17）**：
+- 场景系统面板被另一 agent 的「metrics redesign」覆盖丢失（且所有备份均无该代码）
+- 该次覆盖同时回退了已修好的 `ens[n.type]` bug
+- 另发现一处语法错误（`` `...'—'%}` ``）直接使整个第二脚本失效 → `D is not defined` → 页面主功能损坏
+
+**缓解措施**：
+1. 面板代码**版本化为仓库资产** `bin/panorama/assets/scene-panel.html`
+2. `bin/gac/zhixing-panel-sync.py ensure` **幂等自愈注入**（cron 每小时巡检，`omostation-zhixing-panel`）
+3. `make zhixing-panel-check` 漂移检测（缺失退出非零）
+
+**根本解法（未做）**：把驾驶舱源码迁入子仓库（根仓只追踪元配置/基础设施/文档，
+不承载项目代码），以 PR 流程替代直改部署目录。建议单列 BET。
+
+### 3.2 面板/入口重叠
+
+`:43191` 与 `:43910` 数据同源、展示重叠。**收敛方向**：保留 `:43191` 为主入口，
+`:43910` 作为其工程化补充视图（或后续并入），避免第三份维护成本。
+
+## 4. 关联
+
+- 场景系统：`docs/scene-system-v3.md`
+- Panorama 入口：`docs/PANORAMA-DASHBOARD.md`
+- 面板自愈工具：`bin/gac/zhixing-panel-sync.py`
