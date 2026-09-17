@@ -1,9 +1,9 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-14T03:53:26.703984Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `71/100`
+> **Generated**: `2026-09-17T01:12:11.074117Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `71/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
-> ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 一页勾选清单见 `.omo/tasks/closed/decision-checklist-13-items.md`.
+> ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 各卡片的直接链接见下方清单。
 
 ### ⏳ 待处理卡片与债务 (Needs Human Decisions)
 - **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
@@ -15,7 +15,7 @@
 | 维度 | 度量指标 | 状态 | 物理数据源 |
 |------|----------|------|------------|
 | **创意创作** | 新增发布数: `676` | 正常 | `@创意创作/_outputs` |
-| **工作交付** | 场景 episodes: 24 · accepted 24 (100%) | 正常 | `scene-outcomes.jsonl` (30d) |
+| **工作交付** | 场景 episodes: 1 · accepted 1 (100%) | 正常 | `scene-outcomes.jsonl` (30d) |
 | **知识复用** | KOS 索引篇: `0` | 正常 | `kos/` 篇目 |
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |

@@ -10,12 +10,6 @@ from pathlib import Path
 WORKSPACE = Path(os.environ.get("OMOSTATION_WORKSPACE_ROOT", Path(__file__).resolve().parents[2])).expanduser().resolve()
 SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
 BRIEF_MD = Path(os.environ.get("OMOSTATION_BRIEF_OUTPUT", WORKSPACE / "BRIEF.md")).expanduser().resolve()
-DECISION_CHECKLIST_PATH = ".omo/tasks/closed/decision-checklist-13-items.md"
-
-
-def decision_checklist_reference() -> str:
-    """Render the canonical decision checklist pointer for the inbox summary."""
-    return f"一页勾选清单见 `{DECISION_CHECKLIST_PATH}`."
 
 
 def get_now_str() -> str:
@@ -424,7 +418,7 @@ def generate_brief_content() -> str:
         lines.append(
             f"> ⏳ **决策积压**: {len(decisions)} 张待人类拍板 — "
             "人类决策是当前系统瓶颈 (非技术问题). "
-            f"{decision_checklist_reference()}"
+            "各卡片的直接链接见下方清单。"
         )
     lines.append("")
     if not decisions and not violations:

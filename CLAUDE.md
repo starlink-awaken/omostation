@@ -216,7 +216,7 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 ## 治理活性自检 (2026-08-22 自进化框架)
 
 ```bash
-python3 bin/gac/meta-doctor.py --workspace . --json   # 治理活性巡检
+python3 bin/gac/meta-doctor.py --workspace .   # 治理活性巡检 (脚本恒定输出 JSON, 无 --json 参数)
 python3 bin/scheduler-compile.py --check               # 调度一致性
 ```
 
