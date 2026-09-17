@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/agent-cell-pool-live-smoke.py
+name: Agent Cell Pool Live Smoke
+category: governance
+owner: governance-team
+description: Controlled OMO CellPool lifecycle smoke with durable state and hash-chained runtime receipt; no external side effects.
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/ssot/agent-cell-effect-receipt-canary.py
+maturity: active
+last_reviewed: "2026-09-17"
