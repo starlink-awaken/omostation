@@ -31,8 +31,6 @@ INDEX_HTML = OUT_DIR / "index.html"
 GATE_DECLARED = {
     "A6": {"title": "Orca R0 准入", "state": "not_admitted", "depends_on": ["A8"],
            "note": "T10-149 只读验证工具链；未过门零写入"},
-    "A7": {"title": "Multica AS0 准入", "state": "not_admitted", "depends_on": ["A8"],
-           "note": "T10-150 只读验证工具链；未过门零写入"},
     "RF0": {"title": "Ruflo 只读协作准入", "state": "not_admitted", "depends_on": [],
             "note": "side-effect-free 观察；独立驱动不建第二队列"},
 }
@@ -86,11 +84,70 @@ def collect_gates() -> list[dict]:
     for gid, d in GATE_DECLARED.items():
         gates.append({"id": gid, "title": d["title"], "verdict": d["state"].upper(),
                       "detail": d["note"], "live": False, "depends_on": d["depends_on"]})
+    a7_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A6") + 1
+    gates.insert(a7_index, collect_a7_gate())
     a8_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A7") + 1
     gates.insert(a8_index, collect_a8_gate())
     a9_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A8") + 1
     gates.insert(a9_index, collect_a9_gate(payload=None))
     return gates
+
+
+def collect_a7_gate() -> dict:
+    """Project A7 from the read-only Multica AS0 verification matrix.
+
+    The verifier only reads Multica APIs and never invokes writers.  Raw API
+    results are intentionally discarded here so dashboard projection cannot
+    leak tokens, emails, agent names, or squad payloads.
+    """
+    verifier = ROOT / "bin/gac/multica-as0-verify.py"
+    if not verifier.is_file():
+        return {
+            "id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED",
+            "detail": "Multica AS0 verifier missing", "live": False,
+            "depends_on": ["A8"],
+        }
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(verifier), "--json"],
+            cwd=ROOT, capture_output=True, text=True, timeout=90, check=False,
+        )
+        report = json.loads(completed.stdout)
+    except Exception:  # noqa: BLE001 - missing/unreachable adapter stays not admitted
+        return {
+            "id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED",
+            "detail": "Multica AS0 verifier unavailable", "live": False,
+            "depends_on": ["A8"],
+        }
+
+    api = report.get("api") if isinstance(report.get("api"), dict) else {}
+    topology = report.get("topology") if isinstance(report.get("topology"), dict) else {}
+    trust = report.get("trust") if isinstance(report.get("trust"), dict) else {}
+    api_pass, api_total = int(api.get("passed", 0)), int(api.get("total", 0))
+    topology_pass, topology_total = int(topology.get("passed", 0)), int(topology.get("total", 0))
+    trust_pass, trust_total = int(trust.get("passed", 0)), int(trust.get("total", 0))
+    passed = bool(report.get("ok")) and (api_pass, topology_pass, trust_pass) == (
+        api_total, topology_total, trust_total,
+    ) and api_total > 0 and topology_total > 0 and trust_total > 0
+
+    if not passed:
+        return {
+            "id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED",
+            "detail": (
+                f"Multica AS0 verifier not complete: api {api_pass}/{api_total}, "
+                f"topology {topology_pass}/{topology_total}, trust {trust_pass}/{trust_total}"
+            ),
+            "live": False, "depends_on": ["A8"],
+        }
+
+    return {
+        "id": "A7", "title": "Multica AS0 准入", "verdict": "PASS",
+        "detail": (
+            f"read-only verifier complete: api {api_pass}/{api_total}, "
+            f"topology {topology_pass}/{topology_total}, trust {trust_pass}/{trust_total}"
+        ),
+        "live": True, "depends_on": ["A8"],
+    }
 
 
 def collect_a8_gate() -> dict:
