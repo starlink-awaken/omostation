@@ -19,7 +19,7 @@
       <key>PYTHONDONTWRITEBYTECODE</key>
       <string>1</string>
       <key>PATH</key>
-      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+      <string>/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
       <key>PYTHONPATH</key>
       <string>/Users/xiamingxing/Workspace/projects/omo/src</string>
       <key>PANORAMA_ROOT</key>
