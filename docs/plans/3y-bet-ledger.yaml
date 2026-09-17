@@ -227,7 +227,7 @@ bets:
     - 真实申报使用系统产出未发生
   resume_acceptance:
   - '依赖仍 done: Y2Q2-T7-02 + Y3H1-T3-01 status=done'
-  - '场景卡 lifecycle 未回退: docs/scene-cards/v2/ 中试场景存在'
+  - '场景卡 lifecycle 未回退: .omo/_truth/scenarios/v3/ 中试场景存在'
   - '申报管线可用: 相关 skill/观测命令可运行'
   - 'done_when 从冻结点继续: calibration 采样起点不重置'
   resume_condition:
@@ -235,7 +235,7 @@ bets:
     commands:
     - python3 bin/plan/bet-ledger.py show BET-Y2Q2-T7-02 | grep status=done
     - python3 bin/plan/bet-ledger.py show BET-Y3H1-T3-01 | grep status=done
-    - grep -c lifecycle docs/scene-cards/v2/*zhongshi* 2>/dev/null || ls docs/scene-cards/v2/
+    - grep -c lifecycle .omo/_truth/scenarios/v3/*zhongshi* 2>/dev/null || ls .omo/_truth/scenarios/v3/ | grep zhongshi
     - omo external-resources engineering-delivery-review-queue --json
     trigger: '任一: 用户明确发起解封评估; 重新参与中试/政策申报业务; 出现真实申报任务'
     verify: 运行 resume_acceptance 全部通过(依赖 done + 场景卡存在 + 管线可用 + done_when 起点不重置)
@@ -246,12 +246,12 @@ bets:
   track: T7-SCENE
   underlying_workflow: project-doc-change
   verify:
-  - cmd: ls docs/scene-cards/v2/ | wc -l
+  - cmd: ls .omo/_truth/scenarios/v3/ | wc -l
     expect: '>= 5'
   window: Y3H1
   workflow: bet-execution
   write_surfaces:
-  - docs/scene-cards/**
+  - .omo/_truth/scenarios/v3/**
   - .agents/skills/**
 - appetite: 3 weeks
   blocked_at: '2026-08-20'
@@ -284,15 +284,15 @@ bets:
     - 预算与白名单动作未形成真实运行证据
   resume_acceptance:
   - '依赖仍 done: Y3H1-T7-01 解封或维持 blocked(不影响公文独立恢复)'
-  - '场景卡 lifecycle 未回退: document-review.yaml 存在且可评估'
+  - '场景卡 lifecycle 未回退: scene-document-review.yaml 存在且可评估'
   - '公文管线可用: 相关 skill/观测命令可运行'
   - 'done_when 从冻结点继续: calibration 连续计数起点不重置'
   resume_condition:
     approval: '人工批准解封(blocked_reentry_policy: human_approval_required)'
     commands:
     - python3 bin/plan/bet-ledger.py show BET-Y3H1-T7-01 | grep status
-    - 'grep -c "lifecycle: routine" docs/scene-cards/v2/document-review.yaml 2>/dev/null
-      || ls docs/scene-cards/v2/'
+    - 'grep -c "lifecycle: routine" .omo/_truth/scenarios/v3/scene-document-review.yaml 2>/dev/null
+      || ls .omo/_truth/scenarios/v3/ | grep document-review'
     - omo external-resources engineering-delivery-review-queue --json
     trigger: '任一: 用户明确发起解封评估; 重新参与公文业务; 出现真实公文任务'
     verify: 运行 resume_acceptance 全部通过(依赖状态 + 场景卡存在 + 管线可用 + done_when 起点不重置)
@@ -303,12 +303,12 @@ bets:
   track: T7-SCENE
   underlying_workflow: project-doc-change
   verify:
-  - cmd: 'grep -c ''lifecycle: routine'' docs/scene-cards/v2/document-review.yaml'
+  - cmd: 'grep -c ''lifecycle: routine'' .omo/_truth/scenarios/v3/scene-document-review.yaml'
     expect: '>= 1'
   window: Y3H2
   workflow: bet-execution
   write_surfaces:
-  - docs/scene-cards/**
+  - .omo/_truth/scenarios/v3/**
 - accepted_specifications:
   - content_digest: sha256:e78cb0703cb2ba6bae2d00788d38af4e5d07f820a207fd383c8cf66c43566d00
     decision_ref: decision://accepted/BET-Y1Q3-T6-15

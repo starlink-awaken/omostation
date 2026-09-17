@@ -2,7 +2,7 @@
 bet_id: BET-Y3H1-T7-01
 date: 2026-08-20
 lifecycle: history
-last-reviewed: 2026-08-20
+last-reviewed: 2026-09-16
 status: archived
 owner: governance-team
 title: BET-Y3H1-T7-01 Retro — 中试 / 政策申报升 assisted
@@ -31,7 +31,7 @@ type: retro
 
 - 该 bet 建立在“用户持续借调国转中心”这一隐性假设上，但未在 depends_on 或 risk 中显式绑定外部人事条件。
 - 当外部条件变化时，不存在 graceful 降级路径：既不能推进到 assisted，也无法转为 routine，只能冻结。
-- 场景卡片 `docs/scene-cards/v2/` 中尚未产生与本 bet 直接相关的持久资产，因此无代码/文档需要迁移。
+- 场景卡片 `.omo/_truth/scenarios/v3/` 中尚未产生与本 bet 直接相关的持久资产（中试/政策申报场景卡不存在），因此无代码/文档需要迁移。
 
 ## Q4 净增减
 
@@ -45,4 +45,6 @@ type: retro
 
 - 国转中心政策申报场景已正式冻结，**勿在未经用户确认的情况下重启**。
 - 若未来用户重新借调或出现新的政策申报场景，应新建 bet 而非复活本条目。
-- 本 retro 与 `BET-Y3H2-T7-01` 公文场景共同构成“外部协作窗口关闭”案例对，可用于后续场景 bet 的风险评估模板。
+- 本 retro 与 `BET-Y3H2-T7-01` 公文场景共同构成"外部协作窗口关闭"案例对，可用于后续场景 bet 的风险评估模板。
+- **2026-09-16 解冻评估结论: 不应解冻**。业务前提未恢复 (国转中心借调仍冻结), T7-02 (替代驱动调研) 仍 candidate, v3 中无中试/政策申报场景卡。解冻顺序: T7-02 → Y3H1-T7-01 → Y3H2-T7-01。
+- **路径修复 (2026-09-16)**: resume_condition 和 verify 已从 `docs/scene-cards/v2/` 更新为 `.omo/_truth/scenarios/v3/`。
