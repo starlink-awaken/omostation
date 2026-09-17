@@ -1,0 +1,46 @@
+id: DEBT-20260917021531-GAP-SEED-DISPATCH
+title: debt.yaml 声明/执行鸿沟 — gap_seed_items(27项)/gap_registry/dispatch_ref/campaign_ref/reporting_ref
+  路径全部物理不存在但被 omo_debt_registry.py 当必填读取
+dimension: architecture
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- .omo/_truth/registry/debt.yaml
+- projects/omo/src/omo/omo_debt_registry.py
+- .omo/debt/gap-items/
+- .omo/debt/gap-registry.yaml
+- .omo/debt/dispatch/
+- .omo/debt/campaign/
+- .omo/debt/reporting/
+evidence_refs:
+- "27 个 gap_seed_items 引用路径 + gap_registry/dispatch_ref/campaign_ref/reporting_ref
+  共 4 个字段值经 python3 -c 逐一 os.path.exists 核实全部返回 False (2026-09-16 现场核实)"
+- "projects/omo/src/omo/omo_debt_registry.py:43-45,86-88 将 dispatch_ref/campaign_ref/
+  reporting_ref 声明为 dataclass 必填 str 字段, 直接 registry['dispatch_ref'] 取值,
+  缺失时会在真实调用路径上 KeyError"
+- "对照发现: projects/omo/.omo/(omo 包自身 dogfood 沙盒, 与本条根仓库 debt.yaml
+  完全独立无关) 恰好有一套自己的 dispatch/campaign/reporting 真实数据, 但那是
+  omo 包自测夹具, 不是本条声明缺失路径的隐藏来源"
+mitigation_refs: []
+decision_needed: >
+  需要产品/架构决策: (a) 补建 gap-items/dispatch/campaign/reporting 四个子系统的
+  真实实现, 使声明与代码一致; 还是 (b) 从 debt.yaml 与 omo_debt_registry.py 中
+  正式摘除这几个从未落地的字段/概念。本条 debt item 只做诚实登记, 不擅自选择方向。
+opened_at: '2026-09-17T02:13:37.093499+00:00'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+history:
+- at: '2026-09-17T02:13:37.093499+00:00'
+  action: register
+  note: Registered debt item DEBT-20260917021531-GAP-SEED-DISPATCH.
+  actor: governance-agent
+x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
+x2_freshness: ''
+x3_tier: ''
