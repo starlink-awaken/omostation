@@ -266,6 +266,9 @@ cockpit harness compliance|full|status
 - **Historical patterns**: `.omo/_knowledge/patterns/` (P75, P91, P43, P71, P72, P78, etc.)
 - **分支等价性判据**: 只用 **内容 diff** (`git diff origin/main...<branch>`)
 - **动手前先查 main 是否已自愈 (PITFALL-GAT-006)**: claim/start 前先 `git fetch origin main` 并做内容等价检查 — 被改文件在最新 main 是否已含目标内容 (`git diff origin/main...<branch>` 是否为空/仅剩预期增量), `git log --oneline origin/main -N` 是否已有同类 PR. 多 agent 并发下修复目标可能已被其他 PR 达成 (total_bets #3099 / scene-cards #3097 两次复发); 已合入则放弃分支, 勿开 PR — 否则 PR 合并会回退 main 正确值.
+- **PR CI lint fail 不一定是本 PR 引入 (PITFALL-COO-004)**: 子模块 pre-existing violation 同样会让主仓 PR fail. 验证: 1) PR diff 文件清单排除 gitlink 后是否触发 lint; 2) 近 5-10 个 PR 同 lint 都 fail = pre-existing; 3) rebase 到含子模块 bump 的 main.
+- **cherry-pick 跨 base 重放带 parent reverse (PITFALL-COO-005)**: cherry-pick commit 到新 base 会反向删除 main 已合入内容. 跨 base 重放: `git show <old>:<path>` 拿文件 + 在新 base 重做, 不用 cherry-pick 当 commit. 跑后立即 `git diff origin/<base>..HEAD --name-status`, 出现 "D" 行立即 abort.
+- **本地工作树 ≠ origin/main 状态 (PITFALL-COO-006)**: fetch 后没 reset, 工作树停留 fetch 前快照. "main 是不是这样" 判断, 先 `git fetch origin main && git reset --hard origin/main`; 或 `git show origin/main:<path>` / curl raw github, 不信本地工作树.
 - **Resident Agent**: `make resident-status` | BOS: `bos://resident/*`
 - **BCOS**: `make bcos-evolve` | `python3 bin/bc-os/evolution_engine.py --json`
 - **ADR index**: `.omo/_knowledge/decisions/`

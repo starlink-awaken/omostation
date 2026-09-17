@@ -1,0 +1,48 @@
+schema: agent-error/v1
+id: PITFALL-COO-006
+category: coordination
+severity: medium
+title: 本地工作树 ≠ origin/main 状态 — 看 main 必须 fetch + reset
+symptom: |
+  PR #3827 merge 后, 本地看到 .omo/cron/registry.yaml 仍是 47 jobs + 4 dups,
+  bin/scheduler-compile.py 仍是旧版本 (含嵌套 cd bug), tests/test_scheduler_compile.py
+  不存在。本地以为 PR 没合, 实际上 main 已经是 43 jobs + 0 dups + bug 修过
+  + 测试加好。是 fetch 没跑, 工作树停留在 fetch 前的快照。
+  本任务中差点据此在 #3827 之上又开 #3829 做重复改动。
+root_cause: |
+  `git fetch origin main` 不会自动 reset 工作树。fetch 只更新
+  origin/main 引用 (refs/remotes/origin/main), 工作树还保留上次 commit
+  / checkout 时的快照。如果想用 origin/main 的当前状态覆盖工作树,
+  必须 `git reset --hard origin/main` (或 `git checkout origin/main -- <path>`
+  逐文件同步)。
+solution: |
+  任何"main 是不是这样"的判断, 必须先:
+  1. `git fetch origin main` (或全 `git fetch origin`)
+  2. 立即 `git reset --hard origin/main` (如果想完全同步)
+  或:
+  1. 不动工作树
+  2. 看 main: `git show origin/main:<path>` 或 `curl https://raw.githubusercontent.com/<owner>/<repo>/main/<path>`
+  本任务中最终是 `git fetch` 后 `git reset --hard origin/main` 才看到 main
+  真实状态: 43 jobs + 0 dups + 修复 + 测试齐全, PR #3827 merge commit 21dc2ad10a
+  完整覆盖。
+prevention: |
+  1. 任何 "main 当前状态" 判断, 先 fetch + reset, 不要信本地工作树。
+  2. 调试 "PR 是不是合了" 时, 用 `git log --oneline origin/main -5` + `gh pr view --json state,mergedAt`,
+     不用本地文件内容判断。
+  3. 跨 session / 跨 PR 启动前, 工作流第一步:
+     `cd /Users/xiamingxing/Workspace && git fetch origin && git reset --hard origin/main`
+     (本仓 "主仓为真相源" 模式, worktree 改完 push + PR, 任何本地修改都应
+     在新 worktree 里, 主仓 worktree 只读)。
+  4. 长期方案: 写一个 `bin/gac/sync-main.sh` 把 fetch + reset + status 报告
+     一起做, 每次开工前跑一次 (本任务观察到的 4019 候选改进项)。
+tags:
+- coordination
+- git-discipline
+- main-truth-source
+- incident-to-rule
+discovered_by: xiamingxing-4018
+discovered_at: '2026-09-16'
+times_encountered: 1
+last_confirmed_at: '2026-09-16'
+status: active
+related_rules: []

@@ -1,0 +1,45 @@
+schema: agent-error/v1
+id: PITFALL-COO-004
+category: coordination
+severity: medium
+title: PR CI fail 不一定是自己引入的 — 子模块 pre-existing 也会被触发
+symptom: |
+  PR 上 interface-check / mutation-surfaces / doc-index 等 lint fail,
+  fail 行指向 files 都在 gitlink 子模块里 (projects/cockpit / projects/omlxc 等),
+  本 PR 改动只涉及主仓 .omo/cron/registry.yaml + bin/scheduler-compile.py
+  + tests/ + retro, 跟子模块文件无任何交集。
+  gh pr checks 报 fail 让人误以为本 PR 引入。
+root_cause: |
+  1. 主仓 CI workflow (governance-check.yml) 跑全仓 mutation-surfaces / doc-index,
+     任何 gitlink 子模块的 violation 都会让主仓 PR 失败。
+  2. 子模块 pre-existing violation (cockpit/console/*.py 用了 .mkdir() / .write_text()
+     而非经 omo core 走 mutation ingress) 长期积累, 没人修。
+  3. 多 agent 并行期间 (本任务前后) 多个 PR (例如 #3815 / #3817 / #3811) 同时
+     跑同一 lint, 都 fail 同一项, 形成 "假阳常态"。
+solution: |
+  1. 看 PR diff 文件清单, 排除 gitlink 子模块后, 自己的改动是否触发了 lint?
+  2. 查 `gh pr checks <PR>` 找到 fail 步骤, 抓 log (gh api .../actions/jobs/<id>/logs)
+     找具体 violation 路径, 跟本 PR 改动文件清单做差集。
+  3. 查近 5-10 个 PR 的同 lint 状态: `for pr in <近 N 个>; do gh pr checks $pr | grep <lint>; done`
+     — 如果都 fail, 100% 是 pre-existing, 不是本 PR 引入。
+  4. 区分两类: 自己引入的 → 修代码; pre-existing 子模块的 → rebase 到含子模块 bump
+     的 main, 让 bump PR 的修复覆盖 (本任务中 PR #3817 修了 cockpit 违规,
+     PR #3827 rebase 后 pass)。
+prevention: |
+  1. PR body 模板加 "Known pre-existing failures (unrelated)" 章节, 列出哪些 lint
+     fail 是 main 上积累的子模块问题, 跟本 PR 无关 — 让人审时一眼看到。
+  2. claim/start worktree 前先查 main: `git fetch origin main && git log --oneline origin/main -20`
+     找最近有否 "fix(<submodule>)" 类的 commit 在修 lint violation, 优先 rebase 到那之后。
+  3. 长期方案 (待 4019+ 修): 治理 check 应允许指定 "ignore_gitlink: true", 让主仓
+     PR 不被子模块 pre-existing violation 阻塞, 改由子模块各自 PR 修。
+tags:
+- coordination
+- pr-ci
+- submodule-violation
+- incident-to-rule
+discovered_by: xiamingxing-4014-4018
+discovered_at: '2026-09-16'
+times_encountered: 1
+last_confirmed_at: '2026-09-16'
+status: active
+related_rules: []

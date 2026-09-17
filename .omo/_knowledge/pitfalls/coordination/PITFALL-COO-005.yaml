@@ -1,0 +1,50 @@
+schema: agent-error/v1
+id: PITFALL-COO-005
+category: coordination
+severity: high
+title: cherry-pick commit 跨 base 重放会带 parent 的 reverse 到 target
+symptom: |
+  cherry-pick 一个 commit (例如 ad7c7af5a7) 到新 base (例如 main 最新),
+  PR diff 包含一堆不该删的文件删除 (例如 .omo/_knowledge/retros/BET-Y1Q4-T10-151.md
+  / docs/superpowers/specs/2026-09-16-t7-01-org-network-graph-spec.md / docs/plans/3y-bet-ledger.yaml
+  共 200+ 行反向删除)。这些文件在 main 上已存在, 是被 cherry-pick 的 commit 的 parent
+  (不在 cherry-pick 范围) 引入的, 但 cherry-pick 机制会 replay 整个 diff 树。
+  本任务中 PR #3827 第一次提就是这样, doc-index 抓 main 上 T10-151 / T7-01 retro
+  "突然消失" 报 261 个 untyped 文档 fail。
+root_cause: |
+  cherry-pick 是 "重放 commit 的 diff", 不考虑 target base 跟 commit parent 之间
+  的关系。Commit 的 parent 包含的内容, 如果 target base 也已包含 (被并行 PR 合入),
+  cherry-pick 就会以 "delete from parent, then add the same" 的方式反向删除。
+  这是 git cherry-pick 的根本行为, 没有 --no-revert 之类的开关能关。
+solution: |
+  跨 base 重放改动时, 不用 cherry-pick 当 commit, 而是:
+  1. 在新 base 上 claim worktree (不是基于旧 base 的 branch)
+  2. `git show <old_commit_sha>:<file_path>` 拿文件内容, `cp` 到 worktree
+  3. 在新 base 上重做改动 (registry dedup, compile_crontab 修复等) 重新 commit
+  4. 验证: `git diff origin/main...<new_branch> --name-status` 确认 diff
+     跟原 PR 一致 (新增 4 文件, 不含任何 reverse delete)
+  5. push + 开新 PR
+  本任务中 PR #3829 (用 cherry-pick ad7c7af5a7 到 main 最新) 在 doc-index
+  失败后, 改用 "重做 4 文件" 策略 (PR #3829 → 改名为 4018-pr-ci-lessons
+  branch 上重做), 验证 diff 干净。
+prevention: |
+  1. 跨 base 重放改动前, 必跑:
+     `git log --oneline <old_commit_sha>^..<target_base_sha> | head -20`
+     看 base 之间发生了什么, 评估 parent 内容是否被合入。
+  2. 跑 cherry-pick 后立即看 diff:
+     `git diff origin/<target_base>..HEAD --name-status`
+     如果出现 "D" (delete) 行, 立即 abort (git cherry-pick --abort) + 改用
+     "cp 文件 + 重做" 策略。
+  3. PR body 标注 "Supersede" 旧 PR, 写明 "本 PR 是 X 的重做, 不是 cherry-pick
+     重放, 因为 main 已前进 N commits, parent 内容差异大"。
+tags:
+- coordination
+- cherry-pick
+- git-discipline
+- incident-to-rule
+discovered_by: xiamingxing-4018
+discovered_at: '2026-09-16'
+times_encountered: 1
+last_confirmed_at: '2026-09-16'
+status: active
+related_rules: []
