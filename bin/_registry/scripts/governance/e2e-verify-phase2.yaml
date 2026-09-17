@@ -1,0 +1,19 @@
+schema: script-registry/v1
+id: bin/e2e-verify-phase2.py
+name: E2E Verify Phase2
+category: governance
+owner: governance-team
+description: "Phase 2 E2E full-chain verification — runs 3 documents through inbox-to-decision journey with document-review pipeline and validates Workflow Mesh evidence chain"
+inputs:
+  - name: output
+    type: string
+outputs:
+  - type: json
+  - type: exit_code
+dependencies:
+  - runtime/ssot-stable/journey-runner.py
+triggers: []
+related:
+  - BET-Y3H1-T7-02
+maturity: draft
+last_reviewed: "2026-09-17"
