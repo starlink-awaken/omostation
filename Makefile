@@ -491,6 +491,12 @@ wip-snapshot:  ## 主工作区脏态快照 (共享工作区改动兜底)
 wip-status:  ## 主工作区脏态摘要 + 最近快照
 	@python3 bin/gac/workspace-wip-guard.py status
 
+zhixing-panel:  ## 织星驾驶舱场景面板: 幂等注入/漂移自愈
+	@python3 bin/gac/zhixing-panel-sync.py ensure
+
+zhixing-panel-check:  ## 织星驾驶舱场景面板: 漂移检测 (缺失退出非零)
+	@python3 bin/gac/zhixing-panel-sync.py check
+
 journey-validate:  ## 校验全部旅程 spec (states/transitions/deadlocks) — AGENTS.md §1.8
 	@python3 bin/ssot/journey-validator.py
 

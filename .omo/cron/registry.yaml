@@ -272,6 +272,16 @@ jobs:
     sfop_slot: S
     reconciliation_note: 场景注册同步 (每日 06:15)，已在 crontab -l 运行，补齐登记。
 
+  - name: zhixing-panel-sync-hourly-active
+    schedule: "23 * * * *"
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/zhixing-panel-sync.py ensure --quiet >> runtime/cron/zhixing-panel-sync.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: "织星驾驶舱场景面板幂等自愈 (每小时第 23 分) — 部署目录不受版本控制, 面板曾被他 agent 覆盖 2 次; 资产版本化于 bin/panorama/assets/scene-panel.html。"
+
   - name: wip-guard-hourly-active
     schedule: "17 * * * *"
     command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py snapshot --reason cron-hourly --quiet >> runtime/cron/wip-snapshot.log 2>&1'
