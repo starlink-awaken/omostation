@@ -106,5 +106,6 @@ L2/L3 bet 必须绑定 accepted spec：
 | `2026-09-16-t7-01-org-network-graph-spec.md` | accepted | BET-Y2Q1-T7-01 | 2026-09-16 |
 | `2026-09-16-y3h1-t5-02-routine-hosting-spec.md` | accepted | BET-Y3H1-T5-02 | 2026-09-16 |
 | `2026-09-17-siri-40-documentation-convergence-design.md` | accepted | BET-Y1Q4-T10-168 | 2026-09-17 |
+| `2026-09-17-t7-02-assisted-escalation-design.md` | accepted | BET-Y3H1-T7-02 | 2026-09-17 |
 
 > 旧版条目保留为历史手工登记；后续应将本表迁移为生成型索引，避免新的 accepted spec 再次脱离导航。
