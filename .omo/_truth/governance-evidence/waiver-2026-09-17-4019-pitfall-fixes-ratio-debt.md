@@ -9,7 +9,9 @@ last-reviewed: 2026-09-17
 bet_id: null
 pr_numbers:
   - 3870  # 4019+ pitfall-fixes (PITFALL-COO-004/005/006 tool fixes) - retry of #3869
-waiver_scope: PR #3870 single merge (tool fixes)
+  - 3880  # 4019+ tool fixes retry with waiver env (PITFALL-COO-006 + pr-retry-sop applied)
+  - 3877  # 4019 ratio forward-fix (GOVERNANCE_PATHS split, bin/gac/ bin/ssot/ → flex)
+waiver_scope: PRs #3870, #3880, #3877 single merge (tool fixes + ratio forward-fix)
 ---
 
 # Waiver — PR #3870 governance-ratio single-merge bypass
