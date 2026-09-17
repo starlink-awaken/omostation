@@ -31,6 +31,8 @@ Panorama 同时提供人类站点与机器可读投影。Agent 应优先读取 `
 `bin/panorama/panorama-collect.py` 只读聚合生成，不引入第二个控制面或写入队列。
 任务投影只读取 managed code root 下的 `.omo/tasks/{active,planned,blocked,done}/*.yaml`；
 `.omo/state/task-registry.yaml` 单独投影为服务生命周期台账，不与执行任务混淆。
+债务与告警投影同样读取 managed code root，并以 `lifecycle_state` 为闭合真值，
+不再把 `status=registered` 的已关闭兼容记录误报为开放告警。
 
 ## 全景 SSOT
 

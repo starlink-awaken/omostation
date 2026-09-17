@@ -1328,20 +1328,39 @@ def collect_submodules() -> dict:
     return {"submodules": subs, "synced": synced, "total": len(subs)}
 
 
+def _debt_state(data: dict) -> str:
+    """Resolve debt state with lifecycle_state taking precedence over legacy status."""
+    lifecycle = str(data.get("lifecycle_state") or "").strip()
+    if lifecycle:
+        return lifecycle.lower()
+    return str(data.get("status") or "unknown").strip().lower()
+
+
 def collect_debt() -> dict:
     """债务与决策。"""
     import yaml
-    from glob import glob
     debts = []
-    for f in sorted(glob(str(ROOT / ".omo/debt/items/*.yaml"))):
+    debt_dir = CODE_ROOT / ".omo" / "debt" / "items"
+    for f in sorted(debt_dir.glob("*.yaml")) if debt_dir.is_dir() else []:
         try:
             d = yaml.safe_load(Path(f).read_text()) or {}
-            debts.append({"id": d.get("id", Path(f).stem), "status": str(d.get("status", "?")),
-                          "severity": d.get("severity", ""), "title": str(d.get("title", ""))[:60]})
+            if isinstance(d, dict):
+                debts.append({
+                    "id": str(d.get("id") or Path(f).stem)[:80],
+                    "status": _debt_state(d),
+                    "severity": str(d.get("severity") or "medium"),
+                    "title": str(d.get("title") or d.get("id") or Path(f).stem)[:60],
+                    "path": str(f.relative_to(CODE_ROOT))[:200],
+                })
         except Exception:  # noqa: BLE001
             pass
-    open_d = [d for d in debts if d["status"] in ("open", "proposed", "registered")]
-    closeout = [Path(f).stem for f in sorted(glob(str(ROOT / ".omo/_knowledge/retros/BET-*.md")))[-8:]]
+    open_states = {"open", "proposed", "registered"}
+    open_d = [d for d in debts if d["status"] in open_states]
+    retro_dir = ROOT / ".omo" / "_knowledge" / "retros"
+    closeout = [
+        path.stem
+        for path in (sorted(retro_dir.glob("BET-*.md"))[-8:] if retro_dir.is_dir() else [])
+    ]
     return {"total": len(debts), "open": len(open_d), "debts": debts[:15], "recent_retros": closeout}
 
 
@@ -1374,9 +1393,10 @@ def collect_alerts() -> dict:
     except Exception:  # noqa: BLE001
         pass
     try:
-        for f in glob(str(ROOT / ".omo/debt/items/*.yaml")):
+        debt_dir = CODE_ROOT / ".omo" / "debt" / "items"
+        for f in sorted(debt_dir.glob("*.yaml")) if debt_dir.is_dir() else []:
             d = yaml.safe_load(Path(f).read_text()) or {}
-            if d.get("status") in ("open", "registered"):
+            if isinstance(d, dict) and _debt_state(d) in {"open", "registered"}:
                 alerts.append({"severity": d.get("severity", "medium"), "source": "debt",
                                "msg": f"开放债务: {d.get('title', d.get('id',''))[:50]}"})
     except Exception:  # noqa: BLE001
