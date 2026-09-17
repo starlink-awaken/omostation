@@ -523,6 +523,91 @@ def collect_runtime() -> dict:
     return rt
 
 
+def _parse_launchctl_print(output: str) -> dict:
+    """Parse only the bounded launchd facts needed for runtime health."""
+    def first(pattern: str) -> str | None:
+        # launchctl prefixes facts with a tab; do not let line-start matching
+        # silently miss otherwise healthy runtime facts.
+        match = re.search(r"[ \t]*" + pattern, output, re.MULTILINE)
+        return match.group(1).strip() if match else None
+
+    return {
+        "loaded": bool(output.strip()),
+        "state": first(r"state = (.+)$"),
+        "pid": first(r"pid = (.+)$"),
+        "last_exit_code": first(r"last exit code = (.+)$"),
+        "runs": first(r"runs = (.+)$"),
+        "run_interval": first(r"run interval = (.+)$"),
+        "program": first(r"program = (.+)$"),
+        "plist_path": first(r"path = (.+)$"),
+    }
+
+
+def collect_launchd_health() -> dict:
+    """Project live launchd state for active registry-owned scheduled jobs.
+
+    This is observation only: Panorama never bootstraps, kicks, stops, or
+    reloads launchd jobs.  A periodic job being idle is healthy; a non-zero
+    last exit or unloaded job is a visible failure.
+    """
+    try:
+        import yaml
+        registry = yaml.safe_load(
+            (ROOT / ".omo/cron/registry.yaml").read_text(encoding="utf-8")
+        ) or {}
+        jobs = registry.get("jobs") or []
+    except Exception as exc:  # noqa: BLE001 - scheduler projection must degrade visibly
+        return {
+            "schema": "launchd-health-projection/v1",
+            "available": False,
+            "verdict": "UNAVAILABLE",
+            "jobs": [],
+            "error": type(exc).__name__,
+        }
+
+    selected = [
+        job for job in jobs
+        if job.get("status") == "active"
+        and job.get("reality") == "installed"
+        and "launchd" in (job.get("planes") or [])
+    ]
+    uid = os.getuid()
+    projections: list[dict] = []
+    for job in selected:
+        name = str(job.get("name") or "")
+        label = f"com.omostation.{name}"
+        code, output = run(["/bin/launchctl", "print", f"gui/{uid}/{label}"])
+        parsed = _parse_launchctl_print(output if code == 0 else "")
+        loaded = code == 0 and parsed.get("loaded") is True
+        last_exit = parsed.get("last_exit_code")
+        last_exit_ok = loaded and last_exit in {"0", "(never exited)"}
+        state = parsed.get("state") or ("unloaded" if not loaded else "unknown")
+        projections.append({
+            "name": name,
+            "label": label,
+            "schedule": job.get("schedule", ""),
+            "loaded": loaded,
+            "state": state,
+            "pid": parsed.get("pid"),
+            "last_exit_code": last_exit,
+            "last_exit_ok": last_exit_ok,
+            "runs": parsed.get("runs"),
+            "run_interval": parsed.get("run_interval"),
+            "program": parsed.get("program"),
+            "verdict": "PASS" if loaded and last_exit_ok else "FAILED",
+        })
+
+    failed = [job for job in projections if job["verdict"] != "PASS"]
+    return {
+        "schema": "launchd-health-projection/v1",
+        "available": True,
+        "verdict": "PASS" if projections and not failed else ("FAILED" if failed else "EMPTY"),
+        "loaded": sum(1 for job in projections if job["loaded"]),
+        "failed": len(failed),
+        "jobs": projections,
+    }
+
+
 def _ensure_omo_path() -> None:
     omo_src = ROOT / "projects" / "omo" / "src"
     if omo_src.is_dir() and str(omo_src) not in sys.path:
@@ -2092,6 +2177,7 @@ def build_payload() -> dict:
         "bets": collect_bets(),
         "agents": collect_agents(),
         "runtime": collect_runtime(),
+        "launchd_health": collect_launchd_health(),
         "docs": collect_docs(),
         "role_admission": collect_role_admission(),
         "agent_cell_pool": collect_agent_cell_pool(),
@@ -2318,6 +2404,10 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
 <section class="sec" id="s-runtime">
 <h2>运行态</h2><p class="sub">守护 / 调度 / 引用健康 · meta-doctor 摘要</p>
 <div class="grid g3" id="rtgrid"></div>
+<div class="card" style="margin-top:14px"><h3>Launchd Runtime Jobs</h3>
+ <div class="kpi-grid" id="launchdkpi"></div>
+ <table id="launchdtable" style="margin-top:12px"><thead><tr><th>job</th><th>state</th><th>last exit</th><th>interval</th><th>runs</th><th>verdict</th></tr></thead><tbody></tbody></table>
+</div>
 </section>
 <section class="sec" id="s-knowledge">
 <h2>知识 · 记忆 · 经验</h2><p class="sub">知识健康度 / 记忆双轨 / 经验网络 / 增长曲线 — 结构化建模与可视化</p>
@@ -2527,6 +2617,23 @@ $('rtgrid').innerHTML=[
  ['stale_beats',md.stale_beats],['dead_refs',md.dead_refs],['ritual_lapsed',md.ritual_lapsed],
  ['untracked_refs',md.untracked_refs],['launchd 任务',D.runtime.launchd_omostation_jobs],['crontab 行',D.runtime.crontab_lines]
 ].map(x=>'<div class="card kpi"><b class="'+(x[1]===0?'fresh':(x[1]>0&&x[0]!=='launchd 任务'&&x[0]!=='crontab 行'?'dead':'fresh'))+'">'+x[1]+'</b><span>'+x[0]+'</span></div>').join('');
+// launchd runtime jobs
+(function(){
+  const lh=D.launchd_health||{};
+  const cls=lh.verdict==='PASS'?'p':(lh.verdict==='EMPTY'?'n':'f');
+  $('launchdkpi').innerHTML=[
+    {v:lh.loaded||0,l:'loaded'},{v:lh.failed||0,l:'failed',c:lh.failed?'f':''},
+    {v:lh.verdict||'UNAVAILABLE',l:'verdict',c:cls}
+  ].map(k=>'<div class="card kpi"><b class="'+(k.c||'')+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
+  $('launchdtable').querySelector('tbody').innerHTML=(lh.jobs||[]).map(j=>{
+    const exitClass=j.last_exit_ok?'p':'f';
+    const jobClass=j.verdict==='PASS'?'p':'f';
+    return '<tr><td class="mono">'+j.name+'</td><td>'+(j.state||'unknown')+'</td>'+
+      '<td><span class="chip '+exitClass+'">'+(j.last_exit_code||'unknown')+'</span></td>'+
+      '<td class="mono">'+(j.run_interval||'—')+'</td><td>'+(j.runs||0)+'</td>'+
+      '<td><span class="chip '+jobClass+'">'+j.verdict+'</span></td></tr>';
+  }).join('')||'<tr><td colspan=6 class="mono">无 active launchd job</td></tr>';
+})();
 // docs
 $('docgrid').innerHTML=D.docs.map(d=>'<div class="card"><h3>'+d.name+'</h3><span class="chip '+(d.exists?'p':'f')+'">'+(d.exists?Math.round(d.size/1024)+'KB':'缺失')+'</span>'+
 '<div class="mono" style="margin-top:8px;font-size:11px">'+d.path+'</div>'+
