@@ -30475,16 +30475,25 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          code_landed: true
-          tests_passed: true
-          ci_green: true
+          merged_reachable_commit:
+            ref: git://origin/main@539a8ed909e44c28eb2df9d6f71dd3b4123e6c09
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
       operational:
         status: PROVEN
         evidence:
-          calibration_phase1: calibration=0.9>=0.6, 30/30 completed
-          e2e_phase2: 3/3 公文全链通过, 15/15 检查项
-          lifecycle_phase3: supervised→assisted, activation controlled
-          trial_records: 3 份 document-review 条目写入 shadow-scene-trials.jsonl
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-02.md
       value:
         status: NOT_PROVEN
         evidence: {}
