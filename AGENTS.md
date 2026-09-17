@@ -199,6 +199,7 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 - **mergeStateStatus**：值是 CLEAN/BLOCKED/DIRTY（非 MERGEABLE）
 - **worktree 创建后立即** `git submodule update --init`：防指针回退
 - **并发 agent 争用**：stash+checkout main 恢复；不替并发 agent 写 retro
+- **主工作区共享改动丢失（2026-09-17 实证）**：`/Users/xiamingxing/Workspace` 被多 agent 共享——他人分支切换/`reset --hard` 会静默丢掉你未提交的改动，反之你提交时也会裹入他人暂存内容（本人两件都经历过）。git 无 pre-checkout/pre-reset 钩子，无法在破坏性操作前拦截，故采用**快照兜底 + 脏态告警**：① post-checkout 钩子自动快照（仅主工作区）② cron 每小时快照（`omostation-wip-guard`）③ `python3 bin/gac/workspace-wip-guard.py status|check`。**纪律：主工作区只读，凡改动必 worktree**；若不得不在主工作区留改动，先 `make wip-snapshot`。恢复：`python3 bin/gac/workspace-wip-guard.py restore <snapshot> --force`（默认 dry-run）。
 - **Diff 工具 ref 解析**：已加 `_resolve_ref` fallback 到 origin/<ref>
 
 ---

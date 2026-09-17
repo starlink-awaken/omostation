@@ -129,6 +129,13 @@ post-checkout:
       description: "origin fetch+push URL 幂等自愈 (checkout/worktree add 是污染窗口, 2026-09-13 实证)"
       fix: "python3 bin/ssot/fix-remotes.py; 若 pre-push 仍报错则人工排查并发会话改写来源"
 
+    - id: wip-snapshot
+      script: "python3 bin/gac/workspace-wip-guard.py snapshot --reason post-checkout --quiet"
+      blocking: false
+      timeout: 15
+      description: "主工作区脏态快照兜底 (共享工作区改动丢失事故 2026-09-17; 仅主工作区生效)"
+      fix: "python3 bin/gac/workspace-wip-guard.py status; restore <snapshot> --force"
+
 # ── pre-rebase ──────────────────────────────────────────────
 pre-rebase:
   description: "rebase 前危险检测"
