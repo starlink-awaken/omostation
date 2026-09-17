@@ -55,6 +55,15 @@ def test_panorama_refresh_uses_deployed_collector_bound_to_canonical_root() -> N
     assert payload["ProgramArguments"][-1] == "/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py"
 
 
+def test_panorama_refresh_launchd_path_includes_multica_user_local_bin() -> None:
+    payload = plistlib.loads(
+        (ROOT / "runtime/cron/com.omostation.panorama-dashboard-refresh.plist").read_bytes()
+    )
+    path = payload["EnvironmentVariables"]["PATH"].split(":")
+    assert "/Users/xiamingxing/.local/bin" in path
+    assert "/opt/homebrew/bin" in path
+
+
 def test_collector_honors_panorama_root_override(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PANORAMA_ROOT", str(tmp_path))
     spec = importlib.util.spec_from_file_location(
