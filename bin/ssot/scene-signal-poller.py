@@ -35,6 +35,10 @@ POLL_LOG = _ROOT / ".omo" / "_delivery" / "signal-poller" / "poll-log.jsonl"
 # Live execution allowed only at these lifecycle levels
 LIVE_LIFECYCLES = {"assisted", "supervised", "routine"}
 
+# 本地工作区文档信号源 (BET-Y2Q4-T7-02 落地): 治理文档变更 → 场景审查.
+# 与 iris 连接器不同, 该源直接扫描工作区 mdfile 的 mtime, 无需外部平台.
+WORKSPACE_DOC_ROOTS = ("docs", ".omo/_knowledge/retros", ".omo/_truth/scenarios/v3")
+
 
 def _load_scene_cards() -> list[dict[str, Any]]:
     import yaml
@@ -65,8 +69,39 @@ def _save_watermarks(wm: dict[str, Any]) -> None:
     WATERMARK_PATH.write_text(json.dumps(wm, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _workspace_docs_list(limit: int = 10) -> list[dict[str, Any]]:
+    """本地工作区文档信号源: 按 mtime 降序返回最近变更的 .md.
+
+    signal id 形如 '<rel_path>@<mtime_epoch>' — 同一文件再次变更会产生新 id,
+    因此 watermark 去重天然实现"变更检测"而非"存在检测".
+    """
+    items: list[dict[str, Any]] = []
+    for rel in WORKSPACE_DOC_ROOTS:
+        root = _ROOT / rel
+        if not root.is_dir():
+            continue
+        for p in root.rglob("*.md"):
+            try:
+                st = p.stat()
+            except OSError:
+                continue
+            rel_path = str(p.relative_to(_ROOT))
+            items.append({
+                "id": f"{rel_path}@{int(st.st_mtime)}",
+                "title": p.stem,
+                "path": rel_path,
+                "platform": "workspace_docs",
+                "modified_at": datetime.fromtimestamp(st.st_mtime, UTC).isoformat(),
+                "_mtime": st.st_mtime,
+            })
+    items.sort(key=lambda x: x["_mtime"], reverse=True)
+    return items[:limit]
+
+
 def _iris_list(connector: str, limit: int = 10) -> list[dict[str, Any]]:
-    """Call iris --json list <connector>."""
+    """Call iris --json list <connector>; 本地源 workspace_docs 直读工作区."""
+    if connector == "workspace_docs":
+        return _workspace_docs_list(limit)
     try:
         result = subprocess.run(
             ["iris", "--json", "list", connector, "--limit", str(limit)],
@@ -227,6 +262,9 @@ def _resolve_connector(signal_name: str, trigger: dict[str, Any]) -> str | None:
         "note.created": "applenotes",
         "note": "applenotes",
         "knowledge.item": "applenotes",
+        "doc.changed": "workspace_docs",
+        "doc.updated": "workspace_docs",
+        "document.changed": "workspace_docs",
         "zhihu.item": "zhihu",
         "github.event": "github",
         "wechat.message": "wechat",

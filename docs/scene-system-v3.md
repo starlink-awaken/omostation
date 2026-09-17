@@ -78,8 +78,12 @@ last-reviewed: 2026-09-11
 
 `bin/ssot/scene-signal-poller.py`
 
-- 轮询 iris 连接器（netease_mailmaster + apple_mail）
-- 水印去重（per scene+connector）
+- 信号源两类：
+  - **iris 连接器**：`apple_mail` / `netease_mailmaster`（邮件）、`applenotes`（笔记）、`zhihu`/`github`/`wechat`/`local_files`
+  - **本地工作区源 `workspace_docs`**：扫描 `docs/**`、`.omo/_knowledge/retros`、`.omo/_truth/scenarios/v3` 的 md 文件 mtime（BET-Y2Q4-T7-02 第二业务驱动，不依赖外部借调）
+- 信号 id 形如 `<rel_path>@<mtime>` — 同一文件再次变更产生新 id，实现**变更检测**语义
+- 水印去重（per scene+connector）；仅在派发成功时写水印（失败下次重试）
+- 批内 sid 去重（防 iris 重复项重复派发）
 - 按 lifecycle 分级调度（assisted+ live, shadow dry-run）
 - cron `scene-signal-poll` (工作日 9-18 点每 15 分钟)
 
