@@ -30695,18 +30695,35 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-04.md
+          merged_reachable_commit:
+            ref: git://origin/main@5f425a426260b124d162c564b15eed904175beac
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-04.md
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-04.md
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y3H1-T7-03
+  done_at: '2026-09-17'
   done_when:
   - 5 场景卡 lifecycle 从 assisted 升至 routine
   - activation 从 controlled 升至 allowed
@@ -30723,19 +30740,20 @@ bets:
   pasw_required: false
   priority: P1
   progress:
-    current_step: Step 1+2 完成 — 5 场景全部 routine/allowed
+    current_step: done
     done_when_met:
     - 5 场景 lifecycle assisted→routine (classify/collect/compile/forward/review)
     - 5 场景 activation controlled→allowed
     - '30 trial records (5场景 × 6条: 3 assisted + 3 supervised)'
     - bet-ledger lint exit 0
-    phase: 2
+    phase: 3
     phase_goal: 5 场景批量 lifecycle routine
     phase_name: 'Step 1+2: assisted→supervised→routine'
     started_at: '2026-09-17'
   retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-04.md
   risk_level: L2
-  status: in_progress
+  status: done
   title: admin-notification-workflow 场景批量 routine 推进
   track: T7-SCENE
   underlying_workflow: project-code-change
