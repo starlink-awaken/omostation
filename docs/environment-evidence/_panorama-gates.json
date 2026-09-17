@@ -57,9 +57,9 @@
   {
     "id": "A8",
     "title": "OMO 外部执行事务",
-    "verdict": "ABSENT",
-    "detail": "T10-165 语义落地后推进",
-    "live": false,
+    "verdict": "PASS",
+    "detail": "T10-151 delivery accepted; omo PR #173 merge reachable in current pin; implementation and focused test contract present",
+    "live": true,
     "depends_on": [
       "G2",
       "G3"
