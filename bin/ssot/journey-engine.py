@@ -348,7 +348,15 @@ def _execute_action(action, state_def, ctx) -> dict:
     # 2. Named actions
     if action == "noop":
         return {"status": "succeeded"}
-    if action in ("llm_classify", "generate_decision"):
+    if action in ("llm_classify",):
+        return {"status": "succeeded", "confidence": 0.85, "action": action}
+    if action == "generate_decision":
+        # 有真实能力腿结果时, 置信度由检查结果聚合 (不再恒为 0.85 的 stub);
+        # 无检查结果的场景保持既有行为 (不影响其它场景).
+        checks = ctx.variables.get("doc_review_checks") or []
+        if checks:
+            return {"status": "succeeded", "action": action,
+                    "confidence": _doc_review_checks_module().confidence_of(*checks)}
         return {"status": "succeeded", "confidence": 0.85, "action": action}
     if action == "emit_event":
         _emit_omo_event(
@@ -357,12 +365,85 @@ def _execute_action(action, state_def, ctx) -> dict:
         )
         return {"status": "succeeded", "event": state_def.get("event")}
 
+    # 2b. 公文审查能力腿 (journey-document-review) — 2026-09-17 实现:
+    # 此前这些 action 落到默认分支, 声明存在但执行是空壳.
+    if action in ("load_document", "check_format", "check_sensitivity",
+                  "verify_basis", "record_decision"):
+        return _execute_doc_review_action(action, ctx)
+
     # 3. iris connector actions (e.g., action: "iris_list_apple_mail")
     if action.startswith("iris_list_"):
         connector = action.replace("iris_list_", "")
         return _call_iris_list(connector)
 
     return {"status": "succeeded", "action": action}
+
+
+def _doc_review_checks_module():
+    """惰性加载能力腿模块 (与 journey-engine 同目录)."""
+    import importlib.util
+    path = Path(__file__).with_name("doc-review-checks.py")
+    spec = importlib.util.spec_from_file_location("doc_review_checks", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["doc_review_checks"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _signal_doc_path(ctx) -> str:
+    """从信号载荷取出待审文档路径 (workspace_docs 源; 兼容 file 类信号)."""
+    signal = ctx.signal if isinstance(ctx.signal, dict) else {}
+    raw = signal.get("raw_item") if isinstance(signal.get("raw_item"), dict) else {}
+    for value in (raw.get("path"), signal.get("path"), signal.get("content")):
+        if isinstance(value, str) and value.endswith(".md"):
+            return value
+    return ""
+
+
+def _execute_doc_review_action(action: str, ctx) -> dict:
+    """公文审查能力腿执行: 真实跑格式/敏感/依据检查, 结果累积供置信度聚合."""
+    try:
+        drc = _doc_review_checks_module()
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "partial", "action": action, "error": str(exc)[:200]}
+
+    if action == "load_document":
+        path = _signal_doc_path(ctx)
+        if not path:
+            return {"status": "partial", "action": action, "error": "no_document_path_in_signal"}
+        doc = drc.load_document(path, _ROOT)
+        if doc.get("ok"):
+            ctx.variables["doc"] = doc
+        return {"status": "succeeded" if doc.get("ok") else "partial",
+                "action": action, "path": doc.get("path"), "reason": doc.get("reason")}
+
+    doc = ctx.variables.get("doc")
+    if not isinstance(doc, dict):
+        return {"status": "partial", "action": action, "error": "document_not_loaded"}
+
+    if action == "check_format":
+        result = drc.check_format(doc)
+    elif action == "check_sensitivity":
+        result = drc.check_sensitivity(doc)
+    elif action == "verify_basis":
+        result = drc.verify_basis(doc, _ROOT)
+    else:  # record_decision
+        results = ctx.variables.get("doc_review_checks") or []
+        ctx.variables["doc_review_decision"] = {
+            "doc": doc.get("path"),
+            "confidence": drc.confidence_of(*results),
+            "issues": [i for r in results for i in r.get("issues", [])],
+        }
+        return {"status": "succeeded", "action": action,
+                "issues": len(ctx.variables["doc_review_decision"]["issues"])}
+
+    ctx.variables.setdefault("doc_review_checks", []).append(result)
+    return {"status": "succeeded" if result.get("ok") else "partial",
+            "action": action, "checks": result.get("checks"),
+            "passed": result.get("passed"),
+            "issues": [i.get("kind") for i in result.get("issues", [])]}
 
 
 def _dispatch_bos_uri(uri: str, ctx) -> dict:
