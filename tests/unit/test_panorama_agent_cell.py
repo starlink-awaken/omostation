@@ -182,3 +182,33 @@ def test_collector_fails_closed_on_broken_receipt_chain(tmp_path, monkeypatch) -
     assert result["receipt_verification"]["ok"] is False
     assert result["receipt_verification"]["verdict"] == "FAILED"
     assert result["receipt_verification"]["digests_ok"] is False
+
+
+def test_collector_projects_semantic_verifier_fail_closed(tmp_path, monkeypatch) -> None:
+    module = _module()
+    monkeypatch.setattr(
+        module,
+        "_verify_agent_cell_semantic",
+        lambda: {
+            "schema": "agent-cell-semantic-smoke/v1",
+            "ok": True,
+            "verdict": "PASS",
+            "receipt_count": 2,
+            "chain_ok": True,
+            "digests_ok": True,
+            "bindings_ok": True,
+            "lifecycle_ok": True,
+            "latest_run_id": "semantic-smoke-test",
+            "latest_receipt_digest": "sha256:" + "0" * 64,
+        },
+    )
+    result = module.collect_agent_cell_semantic()
+    assert result["schema"] == "agent-cell-semantic-projection/v1"
+    assert result["available"] is True
+    assert result["verdict"] == "PASS"
+    assert result["receipt_count"] == 2
+    assert result["receipt_chain_ok"] is True
+    assert result["role_bindings_ok"] is True
+    assert result["mesh_bindings_ok"] is True
+    assert result["queue_bindings_ok"] is True
+    assert result["claims_authority_invoked"] is False

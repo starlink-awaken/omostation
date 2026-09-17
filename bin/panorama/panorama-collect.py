@@ -692,6 +692,69 @@ def collect_agent_cell_pool() -> dict:
     }
 
 
+def _verify_agent_cell_semantic() -> dict:
+    """Invoke the semantic no-mutation verifier and fail closed."""
+    candidates = [
+        ROOT / "bin/ssot/agent-cell-semantic-smoke.py",
+        Path(__file__).with_name("agent-cell-semantic-smoke.py"),
+    ]
+    verifier = next((candidate for candidate in candidates if candidate.is_file()), None)
+    empty = {
+        "schema": "agent-cell-semantic-smoke/v1",
+        "ok": False,
+        "verdict": "UNAVAILABLE",
+        "available": False,
+        "receipt_count": 0,
+        "digests_ok": False,
+        "chain_ok": False,
+        "bindings_ok": False,
+        "lifecycle_ok": False,
+    }
+    if verifier is None:
+        return empty
+    environment = os.environ.copy()
+    omo_src = str(ROOT / "projects/omo/src")
+    environment["PYTHONPATH"] = omo_src + (os.pathsep + environment["PYTHONPATH"] if environment.get("PYTHONPATH") else "")
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(verifier), "--verify", "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+            env=environment,
+        )
+        report = json.loads(completed.stdout)
+        if not isinstance(report, dict):
+            raise ValueError("verifier root is not an object")
+        return report
+    except Exception:  # noqa: BLE001 - degraded observability is never green
+        return empty
+
+
+def collect_agent_cell_semantic() -> dict:
+    """Project the durable semantic Role/Capsule/Mesh/Queue canary."""
+    report = _verify_agent_cell_semantic()
+    return {
+        "schema": "agent-cell-semantic-projection/v1",
+        "source": "runtime://.omo/state/agent-cell/semantic/semantic-smoke-receipts.jsonl",
+        "available": report.get("verdict") not in {"UNAVAILABLE"},
+        "verdict": report.get("verdict", "UNAVAILABLE"),
+        "receipt_count": int(report.get("receipt_count") or 0),
+        "receipt_chain_ok": report.get("chain_ok") is True,
+        "receipt_digests_ok": report.get("digests_ok") is True,
+        "role_bindings_ok": report.get("bindings_ok") is True,
+        "capsule_bindings_ok": report.get("bindings_ok") is True,
+        "mesh_bindings_ok": report.get("bindings_ok") is True,
+        "queue_bindings_ok": report.get("bindings_ok") is True,
+        "claims_authority_invoked": False,
+        "latest_run_id": report.get("latest_run_id"),
+        "latest_receipt_digest": report.get("latest_receipt_digest"),
+        "verification": report,
+    }
+
+
 def collect_asd() -> dict:
     _ensure_omo_path()
     """ASD 五面板快照（数据契约；degraded 面板可见）。"""
@@ -708,6 +771,7 @@ def collect_asd() -> dict:
         attach_panel(snap, Panel("agents", {
             "role_admission": collect_role_admission(),
             "agent_cell_pool": collect_agent_cell_pool(),
+            "agent_cell_semantic": collect_agent_cell_semantic(),
         },
                                 PanelProvenance("ssot://role-admission-registry", 60)))
         # Milestones
@@ -1972,6 +2036,7 @@ def build_payload() -> dict:
         "docs": collect_docs(),
         "role_admission": collect_role_admission(),
         "agent_cell_pool": collect_agent_cell_pool(),
+        "agent_cell_semantic": collect_agent_cell_semantic(),
         "asd": collect_asd(),
         "probes": collect_probes(),
         "resident_agents": collect_resident_agents(),
@@ -2174,6 +2239,10 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
  <div class="kpi-grid" id="cellkpi"></div>
  <table id="celltable" style="margin-top:12px"><thead><tr><th>cell</th><th>episode</th><th>state</th><th>role</th><th>handoffs</th><th>saved</th></tr></thead><tbody></tbody></table>
 </div>
+<div class="card" style="margin-top:14px"><h3>Semantic Lifecycle</h3>
+ <div class="kpi-grid" id="semantickpi"></div>
+ <table id="semantictable" style="margin-top:12px"><thead><tr><th>binding</th><th>verdict</th><th>value</th></tr></thead><tbody></tbody></table>
+</div>
 </section>
 <section class="sec" id="s-bets">
 <h2>任务与里程碑</h2><p class="sub">三年台账窗口进度 · in_progress / blocked 聚焦</p>
@@ -2347,6 +2416,21 @@ $('agenttable').querySelector('tbody').innerHTML=D.agents.map(a=>'<tr><td class=
       '<td><span class="chip '+stateClass+'">'+c.state+'</span></td><td>'+(c.current_role||'—')+'</td>'+
       '<td>'+(c.handoff_count||0)+'</td><td class="mono">'+(c.saved_at||'—').slice(0,19).replace('T',' ')+'</td></tr>';
   }).join('')||'<tr><td colspan=6 class="mono">无持久化 Cell 状态（合法空态）</td></tr>';
+})();
+// agent cell semantic lifecycle
+(function(){
+  const sm=D.agent_cell_semantic||{};
+  const cls=sm.verdict==='PASS'?'p':(sm.verdict==='EMPTY'?'n':'f');
+  $('semantickpi').innerHTML=[
+    {v:sm.receipt_count||0,l:'receipts',c:sm.receipt_count?'':'n'},
+    {v:sm.verdict||'UNAVAILABLE',l:'verdict',c:cls}
+  ].map(k=>'<div class="card kpi"><b class="'+k.c+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
+  const rows=[
+    ['receipt chain',sm.receipt_chain_ok],['receipt digests',sm.receipt_digests_ok],
+    ['role binding',sm.role_bindings_ok],['capsule binding',sm.capsule_bindings_ok],
+    ['mesh handoff',sm.mesh_bindings_ok],['queue completion',sm.queue_bindings_ok]
+  ];
+  $('semantictable').querySelector('tbody').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td><span class="chip '+(r[1]?'p':'n')+'">'+(r[1]?'PASS':'EMPTY')+'</span></td><td class="mono">'+(r[1]?'verified':'not available')+'</td></tr>').join('');
 })();
 // bets
 $('windows').innerHTML=Object.entries(D.bets.windows).map(([w,d])=>{

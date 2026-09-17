@@ -46,6 +46,13 @@ def _load_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def _read_json_object(path: Path) -> dict[str, Any]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"{path.name} root is not an object")
+    return value
+
+
 def _receipt_digest(receipt: dict[str, Any]) -> str:
     payload = {key: value for key, value in receipt.items() if key != "receipt_digest"}
     return _digest(payload)
@@ -227,29 +234,120 @@ def run_smoke() -> dict[str, Any]:
 
 
 def verify_latest() -> dict[str, Any]:
-    """Verify the durable latest receipt and cross-store bindings."""
+    """Verify the durable receipt chain and latest cross-store bindings."""
     receipts = _load_jsonl(STATE_DIR / "semantic-smoke-receipts.jsonl")
     if not receipts:
         return {"schema": SCHEMA, "ok": True, "verdict": "EMPTY", "receipt_count": 0}
+    try:
+        from omo.resident.task_queue import TaskQueue
+        from omo.workflow.capsule import CapsuleStore
+        from omo.workflow.role_registry import RoleRegistry
+        from omo.workflow_mesh import WorkflowMeshStore
+    except ImportError as exc:
+        return {
+            "schema": SCHEMA,
+            "ok": False,
+            "verdict": "UNAVAILABLE",
+            "receipt_count": len(receipts),
+            "error": f"OMO source unavailable: {type(exc).__name__}",
+        }
+    roles_path = STATE_DIR / "roles.jsonl"
+    capsules_path = STATE_DIR / "capsules.jsonl"
+    queue_path = STATE_DIR / "task-queue.sqlite3"
+    roles = RoleRegistry(roles_path)
+    capsules = CapsuleStore(capsules_path)
+    queue = TaskQueue(queue_path)
+    mesh = WorkflowMeshStore(STATE_DIR / ".omo")
+    mesh_events = mesh.events()
+    capsules_by_id = {record.capsule_id: record for record in capsules.list()}
     previous = None
     chain_ok = True
     digests_ok = True
+    bindings_ok = True
+    lifecycle_ok = True
     for receipt in receipts:
         if _receipt_digest(receipt) != receipt.get("receipt_digest"):
             digests_ok = False
         if receipt.get("previous_receipt_digest") != previous:
             chain_ok = False
         previous = receipt.get("receipt_digest")
+        if receipt.get("schema") != SCHEMA:
+            lifecycle_ok = False
+        role_report = receipt.get("roles") if isinstance(receipt.get("roles"), dict) else {}
+        for role_id, capability, key in (
+            (PLANNER, "semantic.plan", "planner"),
+            (EXECUTOR, "semantic.execute", "executor"),
+        ):
+            expected = role_report.get(key) if isinstance(role_report.get(key), dict) else {}
+            record = roles.get(role_id)
+            verification = roles.verify_role(role_id, capability)
+            if not (
+                record is not None
+                and verification.allowed
+                and expected.get("version") == record.version
+                and expected.get("digest") == record.digest
+            ):
+                bindings_ok = False
+
+        capsule_id = receipt.get("capsule", {}).get("capsule_id") if isinstance(receipt.get("capsule"), dict) else None
+        expected_capsule = capsules_by_id.get(capsule_id)
+        receipt_capsule = receipt.get("capsule") if isinstance(receipt.get("capsule"), dict) else {}
+        if not (
+            expected_capsule is not None
+            and receipt_capsule.get("digest") == expected_capsule.digest
+            and receipt_capsule.get("payload_digest") == expected_capsule.payload_digest
+            and receipt_capsule.get("receipt_digest") == expected_capsule.receipt_digest
+        ):
+            bindings_ok = False
+        matching_events = [
+            event
+            for event in mesh_events
+            if event.get("payload", {}).get("handoff", {}).get("capsule", {}).get("capsule_id")
+            == capsule_id
+        ]
+        mesh_report = receipt.get("mesh") if isinstance(receipt.get("mesh"), dict) else {}
+        if not (
+            len(matching_events) == 1
+            and mesh_report.get("event_count") == 1
+            and mesh_report.get("event_digest") == _digest(matching_events[0])
+            and mesh_report.get("handoff_id")
+        ):
+            bindings_ok = False
+        queue_report = receipt.get("queue") if isinstance(receipt.get("queue"), dict) else {}
+        task = queue.get(queue_report.get("task_id"))
+        if not (
+            task is not None
+            and task.status.value == "completed"
+            and task.result == {"status": "ok"}
+            and queue_report.get("status") == "completed"
+            and queue_report.get("result") == {"status": "ok"}
+        ):
+            bindings_ok = False
+        if not (
+            receipt.get("claims_authority_invoked") is False
+            and receipt.get("claim_authority_receipt") == "NOT_USED"
+            and receipt.get("external_side_effects") == "none"
+            and receipt.get("value_claim") == "NOT_PROVEN"
+        ):
+            lifecycle_ok = False
     latest = receipts[-1]
+    ok = digests_ok and chain_ok and bindings_ok and lifecycle_ok
     return {
         "schema": SCHEMA,
-        "ok": digests_ok and chain_ok,
-        "verdict": "PASS" if digests_ok and chain_ok else "FAILED",
         "receipt_count": len(receipts),
-        "latest_run_id": latest.get("run_id"),
-        "latest_receipt_digest": latest.get("receipt_digest"),
+        "state_count": len(roles.list()) + len(capsules.list()),
+        "role_bindings_ok": bindings_ok,
+        "capsule_bindings_ok": bindings_ok,
+        "mesh_bindings_ok": bindings_ok,
+        "queue_bindings_ok": bindings_ok,
         "digests_ok": digests_ok,
         "chain_ok": chain_ok,
+        "bindings_ok": bindings_ok,
+        "lifecycle_ok": lifecycle_ok,
+        "ok": ok,
+        "verdict": "PASS" if ok else "FAILED",
+        "latest_run_id": latest.get("run_id"),
+        "latest_receipt_digest": latest.get("receipt_digest"),
     }
 
 

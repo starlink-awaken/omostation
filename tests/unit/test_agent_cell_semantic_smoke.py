@@ -43,6 +43,8 @@ def test_second_semantic_smoke_reuses_roles_and_chains_receipts(tmp_path, monkey
     assert verification["receipt_count"] == 2
     assert verification["chain_ok"] is True
     assert verification["digests_ok"] is True
+    assert verification["bindings_ok"] is True
+    assert verification["lifecycle_ok"] is True
 
 
 def test_verify_latest_is_empty_before_first_run(tmp_path, monkeypatch) -> None:
