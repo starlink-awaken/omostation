@@ -140,6 +140,12 @@ def check_file(file: Path, root: Path) -> list[tuple[str, str]]:
     if "/task-prompts/" in str(file):
         return []
 
+    # 跳过 waiver 历史 (.omo/_truth/governance-evidence/waiver-*.md, #3851):
+    # waiver 是不可变治理历史, 其中的路径引用记录的是当时真实状态
+    # (已退役脚本/外部隔离路径/子仓相对路径/未落盘 evidence), 不随重构更新.
+    if "/governance-evidence/waiver-" in str(file):
+        return []
+
     # 跳过 .omo/INDEX.md / DOC-LIFECYCLE.md 等旧顶层索引文件 (引用已迁移或本身是设计文档)
     rel = file.relative_to(root) if file.is_relative_to(root) else file
     if rel.parent == Path(".omo") and rel.name in ("INDEX.md", "DOC-LIFECYCLE.md"):

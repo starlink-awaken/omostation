@@ -62,7 +62,7 @@ bootstrap → status → start → claim → edit/test → verify → closeout
 | `observer-audit` (read-only) | "I'll just open a PR then start workflow later" |
 | Explicit user waiver (record in closeout) | Completing work with no `run-id` / no ledger events |
 
-**Waiver evidence template**: [`docs/operations/workflow-waiver-template.md`](../../docs/operations/workflow-waiver-template.md).  
+**Waiver evidence template**: [`.omo/_archive/operations-2026H1/workflow-waiver-template.md`](.omo/_archive/operations-2026H1/workflow-waiver-template.md) (已归档).  
 Agents must not invent waivers. Gate bypass (`AGCP_REQUIREMENT_ITERATION_GATE=0`) requires the same evidence block.
 
 **Workflow selection**: before `start`, prefer  

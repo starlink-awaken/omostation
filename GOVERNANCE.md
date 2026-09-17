@@ -75,6 +75,14 @@ bash bin/gac/gac-worktree.sh retire <session-name>
 | CI | `gitlink-ancestry` + `pointer-drift` detect main divergence |
 | Audit | Periodic review of `git worktree list` vs PR activity |
 
+### Stale worktree retirement (N = 14 days idle)
+
+Worktrees idle for more than 14 days (no commits and no linked open-PR
+activity) are considered stale. The owner archives the remaining diff to a
+durable path (e.g. a patch file kept with the session notes) and then removes
+the worktree via the standard release flow. This is a docs convention only —
+no new automation or daemons.
+
 ### Exceptions
 
 | Exception | Condition |

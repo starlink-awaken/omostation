@@ -116,7 +116,7 @@ type: ssot
 
 ### P76-6-4: observability-first
 **含义**: cockpit 面板 = 出口守门 = 用户感知
-**实施**: `docs/operations/knowledge-foundry-monitor.md`, 不是每用户独立查 9 个 stdout
+**实施**: [`.omo/_archive/operations-2026H1/knowledge-foundry-monitor.md`](.omo/_archive/operations-2026H1/knowledge-foundry-monitor.md) (已归档), 不是每用户独立查 9 个 stdout
 
 ### P76-6-5: vit-via-LLM-deferral
 **含义**: LLM-assisted commit 推到 Phase 7+, 不在本期 (避免 LLM 调度状态机)
