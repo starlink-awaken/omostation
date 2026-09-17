@@ -30325,8 +30325,11 @@ bets:
 - id: BET-Y1Q4-T10-168
   title: Recent workspace documentation convergence
   track: T10-DOCS
+  appetite: 1 day
   window: Y1Q4
-  status: candidate
+  status: done
+  done_at: '2026-09-17'
+  delivery_accepted: true
   priority: P2
   risk_level: L1
   human_gate: false
@@ -30380,19 +30383,37 @@ bets:
   underlying_workflow: project-doc-change
   workflow: bet-execution
   value_indicator_policy: false
+  retro_path: .omo/_knowledge/retros/BET-Y1Q4-T10-168.md
   completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    decision_ref: decision://accepted/BET-Y1Q4-T10-168
     axes:
       engineering:
-        evidence: {}
-        status: IN_PROGRESS
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          merged_reachable_commit:
+            ref: git://origin/main@0a9bf67cd3ac9a0091b9547261c4ebe8e6cc8713
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-168.md
       value:
-        evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
-    schema_version: completion-evidence-matrix/v1
+        evidence: {}
 - appetite: 2 weeks
   circuit_breaker: 连续 3 次 document-review 处理 admin-notification-workflow 产出时 校准得分低于
     0.4 → 停止自动推进, 回退到 supervised 人工审批。
@@ -30454,7 +30475,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
