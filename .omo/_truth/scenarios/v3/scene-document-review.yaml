@@ -12,6 +12,15 @@ owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
 bet: BET-Y1Q1-T7-01
+# 第二业务驱动 (BET-Y2Q4-T7-02): 本体系治理文档生产流 — 不依赖国转中心借调.
+# 信号源 workspace_docs 扫描 docs/** 与 retros 的 mtime 变更 (≈18 篇/天).
+triggers:
+- type: signal
+  signal: doc.changed
+  connector: workspace_docs
+  debounce: 600s
+- type: schedule
+  cron: 0 3 * * 1-5
 runtime:
   journey_ref: inbox-to-decision
   timeout: 3600s
