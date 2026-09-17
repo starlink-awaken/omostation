@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 670 # 2026-09-17 669→670: 驾驶舱面板漂移自愈 zhixing-panel-sync.py (部署目录不受版本控制, 面板被覆盖 2 次)
+    script_baseline: 671 # 2026-09-17 670→671: Ruflo RF0 isolated read-only admission verifier (upstream panel-sync 670 merged)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

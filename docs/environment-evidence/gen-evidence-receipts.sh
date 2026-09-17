@@ -88,11 +88,10 @@ owners = {
     "A9": "observability-team",
     "RF0": "ruflo-team",
 }
-not_admitted_legal_states = "NOT_ADMITTED 合法 (A6/A7/RF0 设计如此, 非缺陷)"
+not_admitted_legal_states = "NOT_ADMITTED 合法 (未过门设计如此, 非缺陷)"
 unlock_conditions = {
     "A6": "T10-149 完成 R0 验收测试 + signoff",
     "A7": "T10-150 完成 AS0 验收测试 + signoff",
-    "RF0": "side-effect-free 观察保持, 不建第二队列",
 }
 
 receipts_path = output_dir / "receipts.jsonl"

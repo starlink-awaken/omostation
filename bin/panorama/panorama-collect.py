@@ -29,8 +29,6 @@ DATA_JSON = OUT_DIR / "data.json"
 INDEX_HTML = OUT_DIR / "index.html"
 
 GATE_DECLARED = {
-    "RF0": {"title": "Ruflo 只读协作准入", "state": "not_admitted", "depends_on": [],
-            "note": "side-effect-free 观察；独立驱动不建第二队列"},
 }
 
 DOC_ENTRIES = [
@@ -90,7 +88,68 @@ def collect_gates() -> list[dict]:
     gates.insert(a8_index, collect_a8_gate())
     a9_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A8") + 1
     gates.insert(a9_index, collect_a9_gate(payload=None))
+    rf0_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A9") + 1
+    gates.insert(rf0_index, collect_rf0_gate())
     return gates
+
+
+def collect_rf0_gate() -> dict:
+    """Project RF0 from the isolated, read-only Ruflo verification matrix.
+
+    The verifier supplies its own temporary cwd, so the projection remains
+    side-effect-free and never turns a missing or failing Ruflo runtime into a
+    green admission state.
+    """
+    verifier = ROOT / "bin/gac/ruflo-rf0-verify.py"
+    if not verifier.is_file():
+        return {
+            "id": "RF0", "title": "Ruflo 只读协作准入", "verdict": "NOT_ADMITTED",
+            "detail": "Ruflo RF0 verifier missing", "live": False,
+            "depends_on": [],
+        }
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(verifier), "--json"],
+            cwd=ROOT, capture_output=True, text=True, timeout=90, check=False,
+        )
+        report = json.loads(completed.stdout)
+    except Exception:  # noqa: BLE001 - unavailable adapter stays not admitted
+        return {
+            "id": "RF0", "title": "Ruflo 只读协作准入", "verdict": "NOT_ADMITTED",
+            "detail": "Ruflo RF0 verifier unavailable", "live": False,
+            "depends_on": [],
+        }
+
+    checks = report.get("checks") if isinstance(report.get("checks"), dict) else {}
+    required = {
+        "binary", "doctor", "daemon_stopped", "workers_off",
+        "no_second_queue", "cross_agent_dependency_zero",
+    }
+    passed = report.get("ok") is True and required.issubset(checks) and all(
+        checks[name] is True for name in required
+    )
+    if not passed:
+        failed = sorted(name for name in required if checks.get(name) is not True)
+        return {
+            "id": "RF0", "title": "Ruflo 只读协作准入", "verdict": "NOT_ADMITTED",
+            "detail": f"Ruflo RF0 verifier not complete: failed={','.join(failed) or 'unknown'}",
+            "live": False,
+            "depends_on": [],
+        }
+
+    version = report.get("version") if isinstance(report.get("version"), str) else "unknown"
+    doctor = report.get("doctor_summary") if isinstance(report.get("doctor_summary"), dict) else {}
+    doctor_passed = doctor.get("passed")
+    doctor_warnings = doctor.get("warnings")
+    return {
+        "id": "RF0", "title": "Ruflo 只读协作准入", "verdict": "PASS",
+        "detail": (
+            f"isolated read-only verifier complete: daemon stopped, workers off, "
+            f"version {version}, doctor {doctor_passed} passed/{doctor_warnings} warnings"
+        ),
+        "live": True,
+        "depends_on": [],
+    }
 
 
 def collect_a6_gate() -> dict:
