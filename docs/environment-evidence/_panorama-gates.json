@@ -68,9 +68,9 @@
   {
     "id": "A9",
     "title": "ASD 与 Cockpit 可观测",
-    "verdict": "PARTIAL",
-    "detail": "T10-166 面板契约；PARTIAL≠PASS",
-    "live": false,
+    "verdict": "PASS",
+    "detail": "dashboard/asd age 27s; cockpit projection age 476s; ASD COMPLETE; cockpit source states OK",
+    "live": true,
     "depends_on": [
       "G2",
       "G3"
