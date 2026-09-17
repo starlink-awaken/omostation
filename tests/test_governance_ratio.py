@@ -134,12 +134,19 @@ class TestWorkflowLockPrefixExclusion:
         assert mod._classify(evt) == "governance"
 
     def test_mixed_locks_workflow_and_non_workflow(self, mod):
+        """governance=true when lock path matches GOVERNANCE_PATHS (e.g. .omo/_truth/).
+
+        As of 2026-09-17 PITFALL-COO-006 fix: bin/gac/ bin/ssot/ removed from
+        GOVERNANCE_PATHS (tool-fix land, not governance-rule rewrite), so
+        the test uses .omo/_truth/governance/ which is the canonical governance
+        write surface.
+        """
         evt = {
             "agent_profile": "engineering-agent",
             "workflow_id": "handoff-resume",
             "locks": [
                 ".omo/_delivery/agent-workflows/locks/project.lock.yaml",
-                "bin/gac/gac-local-gate.py",
+                ".omo/_truth/governance/governance-state.yaml",
             ],
         }
         assert mod._classify(evt) == "governance"
