@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.agent-cell-pool-live-smoke.plist
+  Controlled AGE-v2 CellPool lifecycle smoke; no external side effects.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.omostation.agent-cell-pool-live-smoke</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/opt/homebrew/bin/python3</string>
+      <string>-B</string>
+      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/agent-cell-pool-live-smoke.py</string>
+      <string>--state-file</string>
+      <string>/Users/xiamingxing/Workspace/.omo/state/agent-cell/cell_states.json</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PYTHONDONTWRITEBYTECODE</key>
+      <string>1</string>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+      <key>PYTHONPATH</key>
+      <string>/Users/xiamingxing/Workspace/projects/omo/src</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace</string>
+    <key>StartInterval</key>
+    <integer>240</integer>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/agent-cell-pool-live-smoke.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/agent-cell-pool-live-smoke.log</string>
+  </dict>
+</plist>
