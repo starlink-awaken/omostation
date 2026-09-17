@@ -28,6 +28,7 @@ seed_items:
 - .omo/debt/items/D-5.yaml
 - .omo/debt/items/D-6.yaml
 - .omo/debt/items/D-7.yaml
+- .omo/debt/items/DEBT-20260917021531-GAP-SEED-DISPATCH.yaml
 gap_items_dir: .omo/debt/gap-items
 gap_registry: .omo/debt/gap-registry.yaml
 gap_seed_items:
