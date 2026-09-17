@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/gac/claims-shadow-preflight.py
+name: Claims Shadow Preflight
+category: governance
+owner: governance-team
+description: >-
+  Read-only Task 16 readiness observation for Claims Authority WP1 shadow
+  activation. Checks canonical root coherence, accepted Spec digest, closure
+  verifiers, and symmetric runtime state; never activates or repairs.
+inputs:
+  - name: --json
+    type: flag
+    required: false
+outputs:
+  - type: stdout
+    description: JSON readiness report.
+triggers: [manual]
+tags: [claims-authority, shadow, preflight, governance]
