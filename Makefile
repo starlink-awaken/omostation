@@ -477,6 +477,14 @@ scene-feedback:  ## 列出最近的 scene feedback
 scene-outcome:  ## 列出最近的 scene outcome
 	@python3 bin/ssot/scene-outcome-recorder.py list --limit 10
 
+scene-history:  ## 场景历史耐久性: 导出 + 快照 + 暴跌检测 (失败退出非零)
+	@python3 bin/ssot/scene-history.py export
+	@python3 bin/ssot/scene-history.py backup
+	@python3 bin/ssot/scene-history.py verify
+
+scene-history-status:  ## 场景历史状态摘要 (行数/导出/快照/基线)
+	@python3 bin/ssot/scene-history.py status
+
 journey-validate:  ## 校验全部旅程 spec (states/transitions/deadlocks) — AGENTS.md §1.8
 	@python3 bin/ssot/journey-validator.py
 

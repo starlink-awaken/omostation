@@ -1,0 +1,14 @@
+{
+ "note": "derived from data/scene-metrics.db — DB 是唯一写入口, 勿手编",
+ "rows": [
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-17",
+   "runs": 1,
+   "scene_id": "scene-agora-bos-gateway",
+   "successes": 1,
+   "total_duration_ms": 4086
+  }
+ ],
+ "schema": "scene-history-export/v1"
+}
