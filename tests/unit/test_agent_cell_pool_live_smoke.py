@@ -1,6 +1,7 @@
 import hashlib
 import importlib.util
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
@@ -107,3 +108,49 @@ def test_verify_mode_fails_closed_on_tampered_state_binding(tmp_path) -> None:
     assert report["verdict"] == "FAILED"
     assert report["state_bindings_ok"] is False
     assert report["digests_ok"] is True
+
+
+def test_cleanup_expired_states_removes_only_expired_smoke_states(tmp_path) -> None:
+    module = _module()
+    path = tmp_path / "cell_states.json"
+    now = datetime.now(UTC)
+    states = {
+        "cell-old": {"cell_id": "cell-old", "saved_at": (now - timedelta(hours=25)).isoformat()},
+        "cell-new": {"cell_id": "cell-new", "saved_at": now.isoformat()},
+        "cell-invalid": {"cell_id": "cell-invalid", "saved_at": "not-a-time"},
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(states), encoding="utf-8")
+
+    report = module._cleanup_expired_states(path, now=now)
+
+    retained = json.loads(path.read_text(encoding="utf-8"))
+    assert report["removed_count"] == 1
+    assert report["removed_cell_ids"] == ["cell-old"]
+    assert report["retained_count"] == 2
+    assert set(retained) == {"cell-new", "cell-invalid"}
+
+
+def test_verify_skips_expired_state_binding_but_keeps_full_receipt_chain(tmp_path) -> None:
+    module = _module()
+    state_file = tmp_path / "cell_states.json"
+    module.run_smoke(state_file)
+    receipt_file = tmp_path / "live-smoke-receipts.jsonl"
+    rows = [json.loads(line) for line in receipt_file.read_text(encoding="utf-8").splitlines()]
+    rows[0]["finished_at"] = (datetime.now(UTC) - timedelta(hours=25)).isoformat()
+    rows[0]["receipt_digest"] = module._receipt_digest(rows[0])
+    receipt_file.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    state_file.unlink()
+
+    report = module.verify_smoke(state_file)
+
+    assert report["ok"] is True
+    assert report["verdict"] == "PASS"
+    assert report["state_count"] == 0
+    assert report["receipt_count"] == 1
+    assert report["state_bindings_checked"] == 0
+    assert report["state_bindings_skipped_expired"] == 1
+    assert report["chain_ok"] is True

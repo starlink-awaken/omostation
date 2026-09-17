@@ -14,7 +14,7 @@ import hashlib
 import json
 import sys
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_STATE_FILE = ROOT / ".omo/state/agent-cell/cell_states.json"
 SCHEMA = "agent-cell-pool-live-smoke/v1"
 VERIFICATION_SCHEMA = "agent-cell-pool-live-smoke-verification/v1"
+STATE_RETENTION_HOURS = 24
 
 
 def _canonical(value: Any) -> bytes:
@@ -71,6 +72,53 @@ def _read_json_object(path: Path) -> dict[str, Any]:
     return value
 
 
+def _parse_timestamp(value: Any) -> datetime:
+    if not isinstance(value, str):
+        raise ValueError("timestamp is not a string")
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        raise ValueError("timestamp has no timezone")
+    return parsed.astimezone(UTC)
+
+
+def _cleanup_expired_states(
+    state_file: Path,
+    *,
+    retention_hours: int = STATE_RETENTION_HOURS,
+    now: datetime,
+) -> dict[str, Any]:
+    """Remove only already-expired smoke states; receipts stay hash-chained."""
+    states = _read_json_object(state_file) if state_file.is_file() else {}
+    cutoff = (now - timedelta(hours=retention_hours)).isoformat()
+    cutoff_at = _parse_timestamp(cutoff)
+    retained: dict[str, dict[str, Any]] = {}
+    removed_ids: list[str] = []
+    for cell_id, state in states.items():
+        try:
+            saved_at = _parse_timestamp(state.get("saved_at"))
+        except (ValueError, TypeError):
+            retained[cell_id] = state
+            continue
+        if saved_at < cutoff_at:
+            removed_ids.append(cell_id)
+        else:
+            retained[cell_id] = state
+    if removed_ids:
+        temporary = state_file.with_suffix(state_file.suffix + ".tmp")
+        temporary.write_text(
+            json.dumps(retained, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        temporary.replace(state_file)
+    return {
+        "schema": "agent-cell-state-retention/v1",
+        "retention_hours": retention_hours,
+        "cutoff": cutoff,
+        "removed_count": len(removed_ids),
+        "retained_count": len(retained),
+        "removed_cell_ids": removed_ids,
+    }
+
+
 def run_smoke(state_file: Path) -> dict[str, Any]:
     """Drive one real, bounded CellPool lifecycle against ``state_file``."""
     if str(ROOT) not in sys.path:
@@ -105,6 +153,8 @@ def run_smoke(state_file: Path) -> dict[str, Any]:
     }
     plan = {"schema": "agent-cell-smoke-plan/v1", "steps": ["verify_scheduler"]}
     result = {"schema": "agent-cell-smoke-result/v1", "status": "ok"}
+
+    retention = _cleanup_expired_states(state_file, now=now)
 
     pool = CellPool(max_cells=2, min_cells=1, auto_scale=False, enable_persistence=True)
     dispatch = pool.dispatch_episode(episode_id, intent)
@@ -167,6 +217,7 @@ def run_smoke(state_file: Path) -> dict[str, Any]:
         "receipt_file": str(state_file.parent / "live-smoke-receipts.jsonl"),
         "receipt_digest": stored_receipt["receipt_digest"],
         "pool_status": pool.get_pool_status(),
+        "retention": retention,
         "external_side_effects": "none",
         "value_claim": "NOT_PROVEN",
     }
@@ -184,6 +235,9 @@ def verify_smoke(state_file: Path) -> dict[str, Any]:
         "receipt_available": receipt_file.is_file(),
         "state_count": 0,
         "receipt_count": 0,
+        "state_retention_hours": STATE_RETENTION_HOURS,
+        "state_bindings_checked": 0,
+        "state_bindings_skipped_expired": 0,
         "digests_ok": True,
         "chain_ok": True,
         "state_bindings_ok": True,
@@ -211,6 +265,8 @@ def verify_smoke(state_file: Path) -> dict[str, Any]:
     chain_ok = True
     state_bindings_ok = True
     lifecycle_ok = True
+    observed_at = datetime.now(UTC)
+    retention_cutoff = observed_at - timedelta(hours=STATE_RETENTION_HOURS)
     for receipt in receipts:
         if _receipt_digest(receipt) != receipt.get("receipt_digest"):
             digests_ok = False
@@ -218,6 +274,15 @@ def verify_smoke(state_file: Path) -> dict[str, Any]:
             chain_ok = False
         if receipt.get("schema") != SCHEMA:
             lifecycle_ok = False
+        try:
+            finished_at = _parse_timestamp(receipt.get("finished_at"))
+        except (ValueError, TypeError):
+            state_bindings_ok = False
+            continue
+        if finished_at < retention_cutoff:
+            report["state_bindings_skipped_expired"] += 1
+            previous_digest = receipt.get("receipt_digest")
+            continue
         cell_id = receipt.get("cell_id")
         state = states.get(cell_id) if isinstance(cell_id, str) else None
         if not isinstance(state, dict) or _sha256(state) != receipt.get("persisted_state_sha256"):
@@ -244,6 +309,9 @@ def verify_smoke(state_file: Path) -> dict[str, Any]:
         "latest_finished_at": latest.get("finished_at"),
     })
     ok = digests_ok and chain_ok and state_bindings_ok and lifecycle_ok
+    report["state_bindings_checked"] = max(
+        0, len(receipts) - report["state_bindings_skipped_expired"]
+    )
     report["ok"] = ok
     report["verdict"] = "PASS" if ok else "FAILED"
     return report
