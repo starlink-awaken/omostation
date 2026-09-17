@@ -112,7 +112,15 @@ def main() -> int:
     rules = load_rules()
 
     if not m2_fields:
-        msg = "GacRule M2 fields 加载失败 (m2/gac_rule.yaml)"
+        if not M2.exists() and not (WORKSPACE / "projects" / "ecos" / ".git").exists():
+            # G9 环境感知: ecos 子模块未 checkout 时文件缺失是环境问题, 不是 M2 drift.
+            # fail-closed (仍 exit 1), 但指明修复动作而非报含混的加载失败.
+            msg = (
+                "m2/gac_rule.yaml 缺失: projects/ecos 子模块未 checkout (环境问题, 非 drift)."
+                " 修复: git submodule update --init projects/ecos 后重跑"
+            )
+        else:
+            msg = "GacRule M2 fields 加载失败 (m2/gac_rule.yaml)"
         if json_mode:
             print(json.dumps({"ok": False, "error": msg}))
         else:
