@@ -1551,23 +1551,101 @@ def collect_debt_registry() -> dict:
 
 
 def collect_tasks() -> dict:
-    """任务注册。"""
+    """Project the canonical per-file task queue under ``.omo/tasks``."""
+    import yaml
+
+    buckets = ("active", "planned", "blocked", "done")
+    tasks = []
+    for bucket in buckets:
+        task_dir = ROOT / ".omo" / "tasks" / bucket
+        if not task_dir.is_dir():
+            continue
+        for path in sorted(task_dir.glob("*.yaml")):
+            try:
+                data = yaml.safe_load(path.read_text())
+            except Exception:
+                data = None
+            if not isinstance(data, dict):
+                data = {}
+            task_id = str(data.get("id") or path.stem)
+            status = str(data.get("status") or bucket)
+            tasks.append({
+                "id": task_id[:120],
+                "title": str(data.get("title") or task_id)[:120],
+                "status": status[:40],
+                "bucket": bucket,
+                "owner": str(data.get("owner") or data.get("assigned_to") or "unassigned")[:60],
+                "priority": str(data.get("priority") or "unspecified")[:20],
+                "path": str(path.relative_to(ROOT))[:200],
+            })
+
+    by_status = {}
+    by_bucket = {}
+    id_buckets = {}
+    for t in tasks:
+        by_status[t["status"]] = by_status.get(t["status"], 0) + 1
+        by_bucket[t["bucket"]] = by_bucket.get(t["bucket"], 0) + 1
+        id_buckets.setdefault(t["id"], []).append(t["bucket"])
+    duplicates = [
+        {"id": task_id, "buckets": buckets}
+        for task_id, buckets in sorted(id_buckets.items())
+        if len(buckets) > 1
+    ]
+
+    closed_statuses = {"done", "completed", "closed", "archived"}
+    priority_order = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
+    bucket_order = {name: index for index, name in enumerate(buckets)}
+    open_tasks = [
+        task for task in tasks
+        if task["status"].lower() not in closed_statuses
+    ]
+    open_tasks.sort(key=lambda task: (
+        priority_order.get(task["priority"], 90),
+        bucket_order.get(task["bucket"], 90),
+        task["id"],
+    ))
+    return {
+        "source": ".omo/tasks/{active,planned,blocked,done}/*.yaml",
+        "total": len(tasks),
+        "open_count": len(open_tasks),
+        "by_status": by_status,
+        "by_bucket": by_bucket,
+        "duplicates": duplicates,
+        "open_recent": open_tasks[:20],
+        "recent": tasks[-20:],
+    }
+
+
+def collect_service_lifecycle() -> dict:
+    """Project the separate service/task-lifecycle registry."""
     import yaml
     try:
         reg = yaml.safe_load((ROOT / ".omo/state/task-registry.yaml").read_text()) or {}
     except Exception:
         reg = {}
-    tasks = reg.get("tasks") or reg.get("items") or []
-    if isinstance(tasks, dict):
-        tasks = [{"id": k, **(v if isinstance(v, dict) else {})} for k, v in tasks.items()]
-    by_status = {}
-    for t in tasks:
-        if isinstance(t, dict):
-            s = str(t.get("status", "unknown"))
-            by_status[s] = by_status.get(s, 0) + 1
-    return {"total": len(tasks), "by_status": by_status,
-            "recent": [{k: str(v)[:40] for k, v in t.items() if k in ("id","title","status","owner")}
-                      for t in tasks[:15] if isinstance(t, dict)]}
+    rows = reg.get("tasks") or reg.get("items") or []
+    if isinstance(rows, dict):
+        rows = [{"id": key, **(value if isinstance(value, dict) else {})} for key, value in rows.items()]
+    normalized = []
+    by_lifecycle = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        lifecycle = str(row.get("lifecycle") or "unknown")
+        normalized.append({
+            "id": str(row.get("id") or "unknown")[:120],
+            "system": str(row.get("system") or "unknown")[:60],
+            "carrier": str(row.get("carrier") or "unknown")[:40],
+            "lifecycle": lifecycle[:40],
+            "purpose": str(row.get("purpose") or "")[:120],
+        })
+        by_lifecycle[lifecycle] = by_lifecycle.get(lifecycle, 0) + 1
+    return {
+        "source": ".omo/state/task-registry.yaml",
+        "total": len(normalized),
+        "by_lifecycle": by_lifecycle,
+        "recent": normalized[:20],
+    }
 
 
 def collect_agent_tick() -> dict:
@@ -2426,6 +2504,7 @@ def collect_agent_visibility(payload: dict) -> dict:
         if isinstance(workflow, dict) and str(workflow.get("status", "")).lower() == "blocked"
     ]
     tasks = payload.get("tasks") if isinstance(payload.get("tasks"), dict) else {}
+    services = payload.get("service_lifecycle") if isinstance(payload.get("service_lifecycle"), dict) else {}
     alerts = payload.get("alerts") if isinstance(payload.get("alerts"), dict) else {}
     recent_alerts = [item for item in alerts.get("alerts", []) if isinstance(item, dict)][:10]
 
@@ -2495,8 +2574,18 @@ def collect_agent_visibility(payload: dict) -> dict:
             "tasks": {
                 "available": bool(tasks),
                 "total": tasks.get("total", 0),
+                "open_count": tasks.get("open_count", 0),
                 "by_status": tasks.get("by_status", {}),
+                "by_bucket": tasks.get("by_bucket", {}),
+                "duplicates": tasks.get("duplicates", []),
+                "open_recent": tasks.get("open_recent", []),
                 "recent": tasks.get("recent", []),
+            },
+            "services": {
+                "available": bool(services),
+                "total": services.get("total", 0),
+                "by_lifecycle": services.get("by_lifecycle", {}),
+                "recent": services.get("recent", []),
             },
             "alerts": {
                 "total": alerts.get("total", 0),
@@ -2597,6 +2686,7 @@ def build_payload() -> dict:
         "value_metrics": collect_value_metrics(),
         "debt_registry": collect_debt_registry(),
         "tasks": collect_tasks(),
+        "service_lifecycle": collect_service_lifecycle(),
         "agent_tick": collect_agent_tick(),
         "handoffs": collect_handoffs(),
         "pipeline": collect_pipeline(),

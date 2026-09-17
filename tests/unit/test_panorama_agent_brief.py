@@ -45,7 +45,20 @@ def _payload():
             {"run_id": "run-active", "workflow_id": "project-code-change", "status": "active"},
             {"run_id": "run-blocked", "workflow_id": "project-code-change", "status": "blocked"},
         ],
-        "tasks": {"total": 2, "by_status": {"unknown": 2}, "recent": [{"id": "task-a"}]},
+        "tasks": {
+            "total": 2,
+            "open_count": 2,
+            "by_status": {"pending": 1, "candidate": 1},
+            "by_bucket": {"active": 1, "planned": 1},
+            "duplicates": [{"id": "TASK-A", "buckets": ["active", "planned"]}],
+            "open_recent": [{"id": "TASK-A", "status": "pending", "bucket": "active"}],
+            "recent": [{"id": "task-a"}],
+        },
+        "service_lifecycle": {
+            "total": 2,
+            "by_lifecycle": {"active": 1, "proposed": 1},
+            "recent": [],
+        },
         "alerts": {
             "total": 1,
             "high": 1,
@@ -80,7 +93,12 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
     ]
     assert brief["work_state"]["workflows"]["active_count"] == 1
     assert brief["work_state"]["workflows"]["blocked_recent_count"] == 1
-    assert brief["work_state"]["tasks"]["by_status"] == {"unknown": 2}
+    assert brief["work_state"]["tasks"]["by_status"] == {"pending": 1, "candidate": 1}
+    assert brief["work_state"]["tasks"]["open_count"] == 2
+    assert brief["work_state"]["tasks"]["duplicates"] == [
+        {"id": "TASK-A", "buckets": ["active", "planned"]}
+    ]
+    assert brief["work_state"]["services"]["by_lifecycle"] == {"active": 1, "proposed": 1}
     assert brief["work_state"]["alerts"]["high"] == 1
     action_ids = {action["id"] for action in brief["next_actions"]}
     assert {"claims-authority-wait", "plan-candidate-bets", "triage-high-alerts"} <= action_ids

@@ -29,6 +29,8 @@ Panorama 同时提供人类站点与机器可读投影。Agent 应优先读取 `
 活动/阻塞工作流、任务、告警、下一步事务、读取接口和安全约束；
 完整字段使用 `runtime/dashboard/data.json`（HTTP: `/data.json`）。两者均由
 `bin/panorama/panorama-collect.py` 只读聚合生成，不引入第二个控制面或写入队列。
+任务投影只读取 `.omo/tasks/{active,planned,blocked,done}/*.yaml`；
+`.omo/state/task-registry.yaml` 单独投影为服务生命周期台账，不与执行任务混淆。
 
 ## 全景 SSOT
 
