@@ -34,6 +34,23 @@ def _payload():
         "agent_cell_pool": {"available": True, "total": 2, "active": 1, "failed": 0},
         "reference_cell": {"id": "RC-DL", "verdict": "PASS"},
         "value_metrics": {"x3-value-stack": {"available": True}},
+        "bets": {
+            "total": 3,
+            "counts": {"done": 2, "candidate": 1},
+            "in_progress": [],
+            "blocked": [{"id": "BET-X", "title": "Keep blocked"}],
+            "windows": {"Y1Q1": {"total": 2, "done": 2}, "Y1Q2": {"total": 1, "done": 0}},
+        },
+        "workflows": [
+            {"run_id": "run-active", "workflow_id": "project-code-change", "status": "active"},
+            {"run_id": "run-blocked", "workflow_id": "project-code-change", "status": "blocked"},
+        ],
+        "tasks": {"total": 2, "by_status": {"unknown": 2}, "recent": [{"id": "task-a"}]},
+        "alerts": {
+            "total": 1,
+            "high": 1,
+            "alerts": [{"severity": "high", "source": "debt", "msg": "example"}],
+        },
     }
 
 
@@ -55,6 +72,18 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
     assert brief["health"]["gates_failing"] == ["A2"]
     assert brief["read_interfaces"]["agent_brief_json"] == "/agent-brief.json"
     assert brief["read_interfaces"]["filesystem"]["brief"] == "runtime/dashboard/agent-brief.json"
+    assert brief["work_state"]["bets"]["milestones"] == [
+        {"id": "ledger-window:Y1Q1", "title": "Y1Q1", "total": 2, "done": 2,
+         "remaining": 0, "completion_pct": 100.0},
+        {"id": "ledger-window:Y1Q2", "title": "Y1Q2", "total": 1, "done": 0,
+         "remaining": 1, "completion_pct": 0.0},
+    ]
+    assert brief["work_state"]["workflows"]["active_count"] == 1
+    assert brief["work_state"]["workflows"]["blocked_recent_count"] == 1
+    assert brief["work_state"]["tasks"]["by_status"] == {"unknown": 2}
+    assert brief["work_state"]["alerts"]["high"] == 1
+    action_ids = {action["id"] for action in brief["next_actions"]}
+    assert {"claims-authority-wait", "plan-candidate-bets", "triage-high-alerts"} <= action_ids
 
 
 def test_write_site_emits_data_and_agent_brief(tmp_path, monkeypatch) -> None:
