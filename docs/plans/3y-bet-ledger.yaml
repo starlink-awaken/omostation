@@ -30448,12 +30448,15 @@ bets:
   window: Y3H1
   workflow: bet-execution
   progress:
-    phase: 1
-    phase_name: Calibration 采样
-    phase_goal: 运行 30 次 document-review 处理, 采集 calibration score >= 0.6
+    phase: 3
+    phase_name: Lifecycle 推进
+    phase_goal: 场景卡 lifecycle supervised → assisted
     started_at: '2026-09-17'
-    current_step: Phase 1 启动 — 等待采样数据
-    done_when_met: []
+    current_step: Phase 3 执行 — lifecycle transition supervised→assisted
+    done_when_met:
+    - Phase 1: calibration=0.9>=0.6, 30/30 completed
+    - Phase 2: E2E 3/3 公文全链通过, 15/15 检查项
+    - Phase 3: lifecycle supervised→assisted, activation controlled
   write_surfaces:
   - .omo/_truth/scenarios/v3/**
   - .agents/skills/**

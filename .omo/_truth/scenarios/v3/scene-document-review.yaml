@@ -6,14 +6,12 @@ description: 将公文草稿生成、格式检查、敏感项检查和依据核�
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: supervised
-activation: active
+lifecycle: assisted
+activation: controlled
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
 bet: BET-Y1Q1-T7-01
-# 第二业务驱动 (BET-Y2Q4-T7-02): 本体系治理文档生产流 — 不依赖国转中心借调.
-# 信号源 workspace_docs 扫描 docs/** 与 retros 的 mtime 变更 (≈18 篇/天).
 triggers:
 - type: signal
   signal: doc.changed
@@ -63,3 +61,5 @@ sample_refs:
 - vault://redacted/document-review/sample-1
 - vault://redacted/document-review/sample-2
 - vault://redacted/document-review/sample-3
+notes:
+- Transitioned supervised→assisted at 2026-09-17T05:24:34.653024+00:00 by xiamingxing
