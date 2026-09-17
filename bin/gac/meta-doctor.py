@@ -483,18 +483,21 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--workspace", type=Path, default=WORKSPACE,
                     help="工作区根目录 (默认取脚本位置推导)")
+    ap.add_argument("--reference-root", type=Path, default=None,
+                    help="代码/注册表引用根；默认跟随 --workspace")
     ap.add_argument("--refs-only", action="store_true",
                     help="仅跑 M2 引用活性 (CI/无本地心跳语境: 投影 SLA 不适用)")
     args = ap.parse_args(argv)
     ws_root = args.workspace.resolve()
+    reference_root = args.reference_root.resolve() if args.reference_root else ws_root
 
     beats = [] if args.refs_only else check_heartbeats(ws_root)
-    refs = collect_references(ws_root)
-    untracked_refs = annotate_tracking(refs, ws_root)
+    refs = collect_references(reference_root)
+    untracked_refs = annotate_tracking(refs, reference_root)
     unregistered_scripts = ([] if args.refs_only
-                           else _script_registry_coverage(refs, ws_root))
+                           else _script_registry_coverage(refs, reference_root))
     submodule_regressions = ([] if args.refs_only
-                             else _submodule_ff_check(ws_root))
+                             else _submodule_ff_check(reference_root))
 
     stale_beats = [b for b in beats if not b["ok"]]
     dead_refs = [r for r in refs if r.get("status") == "dead"]
@@ -503,6 +506,7 @@ def main(argv: list[str] | None = None) -> int:
     report = {
         "generated_at": _now().isoformat(timespec="seconds"),
         "workspace": str(ws_root),
+        "reference_root": str(reference_root),
         "ok": (not stale_beats and not dead_refs and not ritual_proposals
                 and not submodule_regressions),
         "heartbeat": beats,

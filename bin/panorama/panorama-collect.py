@@ -26,6 +26,11 @@ from pathlib import Path
 
 _CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
 ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
+_CONFIGURED_CODE_ROOT = os.environ.get("PANORAMA_CODE_ROOT")
+CODE_ROOT = (
+    Path(_CONFIGURED_CODE_ROOT).resolve()
+    if _CONFIGURED_CODE_ROOT else ROOT
+)
 OUT_DIR = ROOT / "runtime" / "dashboard"
 DATA_JSON = OUT_DIR / "data.json"
 INDEX_HTML = OUT_DIR / "index.html"
@@ -58,7 +63,10 @@ def run(cmd: list[str], timeout: int = 120) -> tuple[int, str]:
 
 
 def collect_gates() -> list[dict]:
-    code, out = run([sys.executable, "bin/gac/gate-health-check.py", "--json"])
+    code, out = run([
+        sys.executable, str(CODE_ROOT / "bin/gac/gate-health-check.py"),
+        "--workspace", str(ROOT), "--code-root", str(CODE_ROOT), "--json",
+    ])
     live: dict[str, dict] = {}
     # A non-zero wrapper exit means at least one gate failed; the JSON payload
     # still contains authoritative per-gate results and must not be discarded.

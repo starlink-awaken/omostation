@@ -24,6 +24,8 @@
       <string>/Users/xiamingxing/Workspace/projects/omo/src</string>
       <key>PANORAMA_ROOT</key>
       <string>/Users/xiamingxing/Workspace</string>
+      <key>PANORAMA_CODE_ROOT</key>
+      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/code-main</string>
     </dict>
     <key>WorkingDirectory</key>
     <string>/Users/xiamingxing/Workspace</string>

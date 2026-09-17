@@ -324,6 +324,7 @@ jobs:
   - name: panorama-dashboard-refresh
     schedule: "*/4 * * * *"
     command: >-
+      PANORAMA_CODE_ROOT=/Users/xiamingxing/.local/share/zhixing-dashboard/code-main
       PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
       /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py
     planes: [launchd]
@@ -334,6 +335,8 @@ jobs:
     reconciliation_note: >-
       部署版 collector 显式通过 PANORAMA_ROOT 指向 canonical Workspace，
       避免共享主仓本地 checkout 落后时覆盖 Agent Cell 等 origin/main 投影。
+      PANORAMA_CODE_ROOT 指向受管 fresh-main 引用根，分离运行态真值与
+      gate 引用/registry 代码真值，避免旧 checkout 把 A2/A4/A5 投影为假失败。
       4分钟频率与 Agent Cell smoke 闭环。plist 同源:
       runtime/cron/com.omostation.panorama-dashboard-refresh.plist。
 

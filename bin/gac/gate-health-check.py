@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 import subprocess
 import sys
 from pathlib import Path
@@ -50,7 +51,16 @@ def check_json_subchecks(name: str, cmd: list[str], zero_keys: list[str], cwd: P
         return {"gate": name, "ok": False, "exit_code": 1, "output": str(e)}
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--workspace", type=Path, default=ROOT,
+                        help="runtime state root (heartbeats and local checkout facts)")
+    parser.add_argument("--code-root", type=Path, default=ROOT,
+                        help="code and registry root used by reference/scheduler checks")
+    args = parser.parse_args(argv)
+    workspace = args.workspace.resolve()
+    code_root = args.code_root.resolve()
     results = []
 
     # A1: SFOP slots
@@ -58,18 +68,21 @@ def main() -> int:
 
     # A2: Resident/host health (daemon freshness - technical sub-checks only)
     results.append(check_json_subchecks("A2 Resident/Host",
-        ["python3", "bin/gac/meta-doctor.py", "--workspace", "."],
+        ["python3", str(code_root / "bin/gac/meta-doctor.py"),
+         "--workspace", str(workspace), "--reference-root", str(code_root)],
         ["stale_beats", "dead_refs", "submodule_regressions"]))
 
     # A3: Governance semantic gate
-    results.append(check("A3 Governance Python", ["python3", "bin/gac/governance-semantic-gate.py"]))
+    results.append(check("A3 Governance Python", ["python3", "bin/gac/governance-semantic-gate.py"], cwd=workspace))
 
     # A4: Scheduler
-    results.append(check("A4 Scheduler", ["python3", "bin/scheduler-compile.py", "--check"]))
+    results.append(check("A4 Scheduler",
+        ["python3", str(code_root / "bin/scheduler-compile.py"), "--check"], cwd=workspace))
 
     # A5: Reference/launchd (technical sub-checks only)
     results.append(check_json_subchecks("A5 Reference/Launchd",
-        ["python3", "bin/gac/meta-doctor.py", "--workspace", "."],
+        ["python3", str(code_root / "bin/gac/meta-doctor.py"),
+         "--workspace", str(workspace), "--reference-root", str(code_root)],
         ["stale_beats", "dead_refs", "submodule_regressions"]))
 
     # A1.3: Submodule remote integrity
@@ -82,8 +95,13 @@ def main() -> int:
 
     all_ok = all(r["ok"] for r in results)
 
-    if "--json" in sys.argv:
-        print(json.dumps({"all_ok": all_ok, "gates": results}, ensure_ascii=False, indent=2))
+    if args.json:
+        print(json.dumps({
+            "all_ok": all_ok,
+            "workspace": str(workspace),
+            "code_root": str(code_root),
+            "gates": results,
+        }, ensure_ascii=False, indent=2))
     else:
         print("=" * 50)
         print("门禁健康检查 (底层验证)")
