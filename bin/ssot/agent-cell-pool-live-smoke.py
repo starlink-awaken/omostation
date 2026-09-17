@@ -21,6 +21,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_STATE_FILE = ROOT / ".omo/state/agent-cell/cell_states.json"
 SCHEMA = "agent-cell-pool-live-smoke/v1"
+VERIFICATION_SCHEMA = "agent-cell-pool-live-smoke-verification/v1"
 
 
 def _canonical(value: Any) -> bytes:
@@ -61,6 +62,13 @@ def _append_receipt(path: Path, receipt: dict[str, Any]) -> dict[str, Any]:
     if _receipt_digest(stored) != stored["receipt_digest"]:
         raise RuntimeError("durable smoke receipt digest verification failed")
     return stored
+
+
+def _read_json_object(path: Path) -> dict[str, Any]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"{path.name} root is not an object")
+    return value
 
 
 def run_smoke(state_file: Path) -> dict[str, Any]:
@@ -164,6 +172,83 @@ def run_smoke(state_file: Path) -> dict[str, Any]:
     }
 
 
+def verify_smoke(state_file: Path) -> dict[str, Any]:
+    """Recompute the durable smoke state and receipt chain without writing."""
+    state_file = state_file.resolve()
+    receipt_file = state_file.parent / "live-smoke-receipts.jsonl"
+    report = {
+        "schema": VERIFICATION_SCHEMA,
+        "ok": True,
+        "verdict": "EMPTY",
+        "state_available": state_file.is_file(),
+        "receipt_available": receipt_file.is_file(),
+        "state_count": 0,
+        "receipt_count": 0,
+        "digests_ok": True,
+        "chain_ok": True,
+        "state_bindings_ok": True,
+        "lifecycle_ok": True,
+        "latest_receipt_digest": None,
+        "latest_finished_at": None,
+        "state_file": str(state_file),
+        "receipt_file": str(receipt_file),
+    }
+    try:
+        states = _read_json_object(state_file) if state_file.is_file() else {}
+        receipts = _load_receipts(receipt_file)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        return {**report, "ok": False, "verdict": "INVALID", "error": str(exc)}
+
+    report["state_count"] = len(states)
+    report["receipt_count"] = len(receipts)
+    if not receipts and not states:
+        return report
+    if not receipts:
+        return {**report, "ok": False, "verdict": "UNVERIFIED", "error": "cell state has no durable receipt"}
+
+    previous_digest = None
+    digests_ok = True
+    chain_ok = True
+    state_bindings_ok = True
+    lifecycle_ok = True
+    for receipt in receipts:
+        if _receipt_digest(receipt) != receipt.get("receipt_digest"):
+            digests_ok = False
+        if receipt.get("previous_receipt_digest") != previous_digest:
+            chain_ok = False
+        if receipt.get("schema") != SCHEMA:
+            lifecycle_ok = False
+        cell_id = receipt.get("cell_id")
+        state = states.get(cell_id) if isinstance(cell_id, str) else None
+        if not isinstance(state, dict) or _sha256(state) != receipt.get("persisted_state_sha256"):
+            state_bindings_ok = False
+        lifecycle = receipt.get("lifecycle") if isinstance(receipt.get("lifecycle"), dict) else {}
+        if not (
+            receipt.get("control_plane") == "OMO"
+            and receipt.get("external_side_effects") == "none"
+            and receipt.get("value_claim") == "NOT_PROVEN"
+            and lifecycle.get("final_state") == "idle"
+            and lifecycle.get("verdict") == "accept"
+            and lifecycle.get("handoff_count") == 2
+        ):
+            lifecycle_ok = False
+        previous_digest = receipt.get("receipt_digest")
+
+    latest = receipts[-1]
+    report.update({
+        "digests_ok": digests_ok,
+        "chain_ok": chain_ok,
+        "state_bindings_ok": state_bindings_ok,
+        "lifecycle_ok": lifecycle_ok,
+        "latest_receipt_digest": latest.get("receipt_digest"),
+        "latest_finished_at": latest.get("finished_at"),
+    })
+    ok = digests_ok and chain_ok and state_bindings_ok and lifecycle_ok
+    report["ok"] = ok
+    report["verdict"] = "PASS" if ok else "FAILED"
+    return report
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -173,19 +258,26 @@ def main(argv: list[str] | None = None) -> int:
         help="Cell state JSON path (default: canonical OMO runtime state)",
     )
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--verify", action="store_true", help="Verify durable state and receipt chain without mutation")
     args = parser.parse_args(argv)
     try:
-        report = run_smoke(args.state_file)
+        report = verify_smoke(args.state_file) if args.verify else run_smoke(args.state_file)
     except Exception as exc:
         print(json.dumps({"schema": SCHEMA, "ok": False, "error": str(exc)}, ensure_ascii=False))
         return 1
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(
-            f"agent-cell-pool-live-smoke: ok={report['ok']} cell={report['cell_id']} "
-            f"receipt={report['receipt_digest']}"
-        )
+        if args.verify:
+            print(
+                f"agent-cell-pool-live-smoke: verify ok={report['ok']} "
+                f"verdict={report['verdict']} receipts={report['receipt_count']}"
+            )
+        else:
+            print(
+                f"agent-cell-pool-live-smoke: ok={report['ok']} cell={report['cell_id']} "
+                f"receipt={report['receipt_digest']}"
+            )
     return 0 if report["ok"] else 1
 
 

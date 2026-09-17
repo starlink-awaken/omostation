@@ -77,3 +77,33 @@ def test_receipt_loader_rejects_non_object_lines(tmp_path) -> None:
         assert str(exc) == "receipt line is not an object"
     else:
         raise AssertionError("expected malformed receipt line to fail closed")
+
+
+def test_verify_mode_recomputes_durable_receipt_and_state_binding(tmp_path) -> None:
+    module = _module()
+    state_file = tmp_path / "cell_states.json"
+    module.run_smoke(state_file)
+    report = module.verify_smoke(state_file)
+    assert report["schema"] == "agent-cell-pool-live-smoke-verification/v1"
+    assert report["ok"] is True
+    assert report["verdict"] == "PASS"
+    assert report["state_count"] == 1
+    assert report["receipt_count"] == 1
+    assert report["digests_ok"] is True
+    assert report["chain_ok"] is True
+    assert report["state_bindings_ok"] is True
+    assert report["lifecycle_ok"] is True
+
+
+def test_verify_mode_fails_closed_on_tampered_state_binding(tmp_path) -> None:
+    module = _module()
+    state_file = tmp_path / "cell_states.json"
+    module.run_smoke(state_file)
+    states = json.loads(state_file.read_text(encoding="utf-8"))
+    next(iter(states.values()))["context"]["verdict"] = "reject"
+    state_file.write_text(json.dumps(states), encoding="utf-8")
+    report = module.verify_smoke(state_file)
+    assert report["ok"] is False
+    assert report["verdict"] == "FAILED"
+    assert report["state_bindings_ok"] is False
+    assert report["digests_ok"] is True

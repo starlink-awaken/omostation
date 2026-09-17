@@ -550,6 +550,43 @@ def collect_role_admission() -> dict:
         return {"roles": [], "error": str(e)}
 
 
+def _verify_agent_cell_receipts(state_file: Path) -> dict:
+    """Invoke the no-mutation runtime verifier and degrade fail-closed."""
+    verifier = ROOT / "bin/ssot/agent-cell-pool-live-smoke.py"
+    empty = {
+        "schema": "agent-cell-pool-live-smoke-verification/v1",
+        "ok": False,
+        "verdict": "UNAVAILABLE",
+        "state_available": state_file.is_file(),
+        "receipt_available": False,
+        "state_count": 0,
+        "receipt_count": 0,
+        "digests_ok": False,
+        "chain_ok": False,
+        "state_bindings_ok": False,
+        "lifecycle_ok": False,
+        "latest_receipt_digest": None,
+        "latest_finished_at": None,
+    }
+    if not verifier.is_file():
+        return empty
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(verifier), "--verify", "--state-file", str(state_file), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+        report = json.loads(completed.stdout)
+        if not isinstance(report, dict):
+            raise ValueError("verifier root is not an object")
+        return report
+    except Exception:  # noqa: BLE001 - observability must fail closed, never fake green
+        return empty
+
+
 def collect_agent_cell_pool() -> dict:
     """Project persisted AGE-v2 Agent Cell state without importing a writer.
 
@@ -571,15 +608,21 @@ def collect_agent_cell_pool() -> dict:
         "latest_saved_at": None,
         "age_seconds": None,
         "cells": [],
+        "receipt_verification": _verify_agent_cell_receipts(state_file),
     }
     if not state_file.is_file():
+        report = projection["receipt_verification"]
+        if report.get("verdict") == "FAILED":
+            projection["verdict"] = "FAILED"
         return projection
     try:
         states = json.loads(state_file.read_text(encoding="utf-8"))
         if not isinstance(states, dict):
             raise ValueError("state root is not an object")
     except Exception as e:  # noqa: BLE001 - malformed runtime state stays visible
-        return {**projection, "verdict": "UNPARSEABLE", "error": type(e).__name__}
+        report = projection["receipt_verification"]
+        verdict = "FAILED" if report.get("verdict") == "FAILED" else "UNPARSEABLE"
+        return {**projection, "verdict": verdict, "error": type(e).__name__}
 
     rows = [row for row in states.values() if isinstance(row, dict)]
     cells = [
@@ -622,11 +665,16 @@ def collect_agent_cell_pool() -> dict:
     else:
         verdict = "PASS"
 
+    receipt_verification = projection["receipt_verification"]
+    receipt_failure = bool(receipt_verification.get("receipt_count")) and receipt_verification.get("ok") is not True
     return {
         **projection,
         "available": True,
         "live": live,
-        "verdict": verdict,
+        "verdict": (
+            "FAILED" if receipt_failure
+            else ("PASS" if verdict == "PASS" else verdict)
+        ),
         "total": len(cells),
         "active": active,
         "failed": failed,
@@ -634,6 +682,7 @@ def collect_agent_cell_pool() -> dict:
         "latest_saved_at": latest or None,
         "age_seconds": age_seconds,
         "cells": cells[:20],
+        "receipt_verification": receipt_verification,
     }
 
 
@@ -2276,12 +2325,16 @@ $('agenttable').querySelector('tbody').innerHTML=D.agents.map(a=>'<tr><td class=
 (function(){
   const cp=D.agent_cell_pool||{};
   const cls=cp.verdict==='PASS'?'p':(cp.verdict==='FAILED'||cp.verdict==='UNPARSEABLE'?'f':'n');
+  const rv=cp.receipt_verification||{};
+  const rvClass=rv.verdict==='PASS'?'p':(rv.verdict==='EMPTY'?'n':'f');
   $('cellkpi').innerHTML=[
     {v:cp.total||0,l:'total',c:cp.available?'':'n'},{v:cp.active||0,l:'active'},
     {v:cp.failed||0,l:'failed',c:cp.failed?'f':''},
     {v:(cp.age_seconds==null?'n/a':cp.age_seconds+'s'),l:'age',c:cp.live?'':'w'},
     {v:cp.verdict||'EMPTY',l:'projection',c:cls}
   ].map(k=>'<div class="card kpi"><b class="'+(k.c||'')+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
+  $('cellkpi').insertAdjacentHTML('beforeend','<div class="card kpi"><b class="'+rvClass+'">'+(rv.receipt_count||0)+'</b><span>receipts</span></div>'+
+    '<div class="card kpi"><b class="'+rvClass+'">'+(rv.verdict||'UNAVAILABLE')+'</b><span>receipt chain</span></div>');
   $('celltable').querySelector('tbody').innerHTML=(cp.cells||[]).map(c=>{
     const stateClass=c.state==='failed'?'f':(['planning','executing','verifying'].includes(c.state)?'p':'n');
     return '<tr><td class="mono">'+c.cell_id+'</td><td class="mono">'+(c.episode_id||'—')+'</td>'+
