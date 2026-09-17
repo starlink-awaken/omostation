@@ -111,7 +111,9 @@ def collect_rf0_gate() -> dict:
     side-effect-free and never turns a missing or failing Ruflo runtime into a
     green admission state.
     """
-    verifier = ROOT / "bin/gac/ruflo-rf0-verify.py"
+    # Admission verifier code belongs to the managed fresh-main root; runtime
+    # facts stay under ROOT. This avoids a stale checkout hiding a verifier.
+    verifier = CODE_ROOT / "bin/gac/ruflo-rf0-verify.py"
     if not verifier.is_file():
         return {
             "id": "RF0", "title": "Ruflo 只读协作准入", "verdict": "NOT_ADMITTED",
@@ -171,7 +173,7 @@ def collect_a6_gate() -> dict:
     aggregate proof so tokens, workspace paths, and task identifiers do not
     enter the dashboard.
     """
-    verifier = ROOT / "bin/gac/orca-r0-verify.py"
+    verifier = CODE_ROOT / "bin/gac/orca-r0-verify.py"
     if not verifier.is_file():
         return {
             "id": "A6", "title": "Orca R0 准入", "verdict": "NOT_ADMITTED",
@@ -241,7 +243,7 @@ def collect_a7_gate() -> dict:
     results are intentionally discarded here so dashboard projection cannot
     leak tokens, emails, agent names, or squad payloads.
     """
-    verifier = ROOT / "bin/gac/multica-as0-verify.py"
+    verifier = CODE_ROOT / "bin/gac/multica-as0-verify.py"
     if not verifier.is_file():
         return {
             "id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED",
