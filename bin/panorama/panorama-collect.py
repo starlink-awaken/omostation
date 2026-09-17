@@ -2390,6 +2390,44 @@ def collect_agent_visibility(payload: dict) -> dict:
     agent_pool = payload.get("agent_cell_pool") if isinstance(payload.get("agent_cell_pool"), dict) else {}
     reference_cell = payload.get("reference_cell") if isinstance(payload.get("reference_cell"), dict) else {}
     value_metrics = payload.get("value_metrics") if isinstance(payload.get("value_metrics"), dict) else {}
+    bets = payload.get("bets") if isinstance(payload.get("bets"), dict) else {}
+    raw_windows = bets.get("windows") if isinstance(bets.get("windows"), dict) else {}
+    window_rows = []
+    for window_id in sorted(raw_windows):
+        window = raw_windows.get(window_id) if isinstance(raw_windows.get(window_id), dict) else {}
+        total = int(window.get("total") or 0)
+        done = int(window.get("done") or 0)
+        remaining = max(0, total - done)
+        window_rows.append({
+            "id": str(window_id),
+            "total": total,
+            "done": done,
+            "remaining": remaining,
+            "completion_pct": round(done * 100 / total, 1) if total else 0.0,
+        })
+    raw_workflows = payload.get("workflows") if isinstance(payload.get("workflows"), list) else []
+    active_workflow_states = {"active", "queued", "in_progress", "waiting"}
+    active_workflows = [
+        {
+            "id": str(workflow.get("run_id", "")),
+            "workflow": str(workflow.get("workflow_id", "")),
+            "status": str(workflow.get("status", "unknown")),
+        }
+        for workflow in raw_workflows
+        if isinstance(workflow, dict) and str(workflow.get("status", "")).lower() in active_workflow_states
+    ]
+    blocked_workflows = [
+        {
+            "id": str(workflow.get("run_id", "")),
+            "workflow": str(workflow.get("workflow_id", "")),
+            "status": str(workflow.get("status", "unknown")),
+        }
+        for workflow in raw_workflows
+        if isinstance(workflow, dict) and str(workflow.get("status", "")).lower() == "blocked"
+    ]
+    tasks = payload.get("tasks") if isinstance(payload.get("tasks"), dict) else {}
+    alerts = payload.get("alerts") if isinstance(payload.get("alerts"), dict) else {}
+    recent_alerts = [item for item in alerts.get("alerts", []) if isinstance(item, dict)][:10]
 
     activation_allowed = claims_task16.get("activation_allowed") is True
     blockers = []
@@ -2429,6 +2467,74 @@ def collect_agent_visibility(payload: dict) -> dict:
             },
             "value_metrics": value_metrics,
         },
+        "work_state": {
+            "bets": {
+                "available": bool(bets),
+                "total": bets.get("total", 0),
+                "counts": bets.get("counts", {}),
+                "in_progress": bets.get("in_progress", []),
+                "blocked": bets.get("blocked", []),
+                "milestones": [
+                    {
+                        "id": f"ledger-window:{row['id']}",
+                        "title": row["id"],
+                        "total": row["total"],
+                        "done": row["done"],
+                        "remaining": row["remaining"],
+                        "completion_pct": row["completion_pct"],
+                    }
+                    for row in window_rows
+                ],
+            },
+            "workflows": {
+                "active": active_workflows,
+                "active_count": len(active_workflows),
+                "blocked_recent": blocked_workflows[:10],
+                "blocked_recent_count": len(blocked_workflows),
+            },
+            "tasks": {
+                "available": bool(tasks),
+                "total": tasks.get("total", 0),
+                "by_status": tasks.get("by_status", {}),
+                "recent": tasks.get("recent", []),
+            },
+            "alerts": {
+                "total": alerts.get("total", 0),
+                "high": alerts.get("high", 0),
+                "recent": recent_alerts,
+            },
+        },
+        "next_actions": [
+            *([
+                {"id": "resolve-failing-gates", "state": "required",
+                 "detail": f"Resolve failing gates: {', '.join(g['id'] for g in failing)}",
+                 "source": "panorama.gates"}
+            ] if failing else []),
+            {
+                "id": "claims-authority-wait", "state": "authorization_required",
+                "detail": "Keep Claims Authority read-only until a fresh operation-specific authorization and its 24-hour observation gate pass.",
+                "source": "panorama.claims_authority",
+            } if not activation_allowed else {
+                "id": "claims-authority-observation", "state": "required",
+                "detail": "Run the accepted Claims Authority observation protocol under OMO.",
+                "source": "panorama.claims_authority",
+            },
+            *([
+                {"id": "continue-active-bets", "state": "ready",
+                 "detail": f"Continue active BETs: {len(bets.get('in_progress', []))}",
+                 "source": "panorama.bets"}
+            ] if bets.get("in_progress") else []),
+            *([
+                {"id": "plan-candidate-bets", "state": "ready",
+                 "detail": f"Advance {bets.get('counts', {}).get('candidate', 0)} candidate BET(s) through accepted Spec, plan, and verification gates.",
+                 "source": "panorama.bets"}
+            ] if bets.get("counts", {}).get("candidate", 0) else []),
+            *([
+                {"id": "triage-high-alerts", "state": "required",
+                 "detail": f"Triage {alerts.get('high', 0)} high-severity alert(s); classify real debt separately from stale fixtures.",
+                 "source": "panorama.alerts"}
+            ] if alerts.get("high", 0) else []),
+        ],
         "read_interfaces": {
             "human_html": "/",
             "data_json": "/data.json",
