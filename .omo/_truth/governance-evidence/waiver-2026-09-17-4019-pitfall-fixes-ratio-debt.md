@@ -7,6 +7,9 @@ owner: governance-team
 created: 2026-09-17
 last-reviewed: 2026-09-17
 bet_id: null
+pr_numbers:
+  - 3870  # 4019+ pitfall-fixes (retry of #3869)
+  - 3877  # 4019 ratio fix (forward-only, 改 GOVERNANCE_PATHS)
 related_prs:
   - 3870  # 4019+ pitfall-fixes (retry of #3869)
 waiver_scope: PR #3870 (PITFALL-COO-004/005/006 tool fixes) single merge
