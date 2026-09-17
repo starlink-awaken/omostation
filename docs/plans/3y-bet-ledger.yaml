@@ -200,8 +200,8 @@ bets:
   - docs/scene-cards/**
 - appetite: 4 weeks
   blocked_at: '2026-08-20'
-  blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 政策申报相关工作冻结. 技术前置已就绪(depends_on Y2Q2-T7-02
-    + Y3H1-T3-01 全 done), 仅业务前提冻结.'
+  blocked_reason: '永久关闭 (2026-09-17, wontfix): 用户决定不再解冻. 借调结束(2026-08-19)后政策申报业务前提消失且无恢复计划.
+    技术前置结论保留备查(depends_on Y2Q2-T7-02 + Y3H1-T3-01 全 done). 若未来重新借调或出现新场景应新建 BET, 不复活本 BET.'
   blocked_reentry_policy: human_approval_required
   circuit_breaker: 未达标 → 保持 shadow
   depends_on:
@@ -216,7 +216,7 @@ bets:
   id: BET-Y3H1-T7-01
   non_goals:
   - 自动提交申报材料
-  note: 借调结束(2026-08-19)，中试/公文场景业务前提冻结；技术前置已就绪，状态 blocked 待业务恢复后人工批准解封
+  note: 永久关闭(2026-09-17, wontfix)，用户决定不再解冻；中试/政策申报业务前提无恢复计划。技术前置结论保留备查；未来新场景应新建 BET，不复活本 BET
   pasw_required: false
   priority: P1
   progress:
@@ -255,8 +255,8 @@ bets:
   - .agents/skills/**
 - appetite: 3 weeks
   blocked_at: '2026-08-20'
-  blocked_reason: '冻结 (2026-08-19): 用户不再借调国转中心, 公文场景相关工作冻结. 技术前置已就绪(依赖 Y3H1-T7-01
-    且其依赖全 done), 仅业务前提冻结.'
+  blocked_reason: '永久关闭 (2026-09-17, wontfix): 用户决定不再解冻. 借调结束(2026-08-19)后公文场景业务前提消失且无恢复计划.
+    技术前置结论保留备查(依赖 Y3H1-T7-01 永久关闭, 其依赖全 done). 若未来重新参与公文业务或出现新场景应新建 BET, 不复活本 BET.'
   blocked_reentry_policy: human_approval_required
   circuit_breaker: 任一 override → 立即回 L2
   depends_on:
@@ -273,7 +273,7 @@ bets:
   - 内容生成自动化
   - 敏感判断自动化
   - 分发自动化
-  note: 借调结束(2026-08-19)，中试/公文场景业务前提冻结；技术前置已就绪，状态 blocked 待业务恢复后人工批准解封
+  note: 永久关闭(2026-09-17, wontfix)，用户决定不再解冻；中试/公文场景业务前提无恢复计划。技术前置结论保留备查；未来新场景应新建 BET，不复活本 BET
   pasw_required: false
   priority: P0
   progress:
