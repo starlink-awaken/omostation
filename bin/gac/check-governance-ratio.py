@@ -53,10 +53,11 @@ GOVERNANCE_PROFILES = {
     "release-agent",
     "obs-agent",
 }
+# 治理本体 (真正写规则/SSOT): 全部 .omo/ 仍算 governance (policy 写面)
+# 治理工具实现: bin/gac/ bin/ssot/ 是 tool-fix PR 落点, 不算 governance (跟 PITFALL-COO-006 同步)
+# 治理由 owner (governance-agent) 跑 bet-execution workflow 标记, 由 FLEX_OVERRIDE_WORKFLOWS 兜底
 GOVERNANCE_PATHS = (
     ".omo/",
-    "bin/gac/",
-    "bin/ssot/",
     "projects/ecos/",
     "projects/omo/",
     "projects/metaos/",
