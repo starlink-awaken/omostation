@@ -1498,13 +1498,29 @@ def collect_value_metrics() -> dict:
     """北极星价值度量/交付软门禁。"""
     import yaml
     metrics = {}
-    for f in ("x3-value-stack.yaml", "x3-delivery-soft-gate.yaml"):
+    sources = {
+        "x3-value-stack": ".omo/_truth/x3-value-stack.yaml",
+        "x3-delivery-soft-gate": ".omo/_truth/registry/x3-delivery-soft-gate.yaml",
+    }
+    for key, relative in sources.items():
         try:
-            docs = list(yaml.safe_load_all((ROOT / f".omo/_truth/{f}").read_text()))
-            total = sum(len(d) if isinstance(d, (dict, list)) else 0 for d in docs)
-            metrics[f.replace(".yaml", "")] = f"{len(docs)} docs, {total} entries"
+            docs = [doc for doc in yaml.safe_load_all((ROOT / relative).read_text()) if isinstance(doc, dict)]
+            details: dict[str, Any] = {"available": True}
+            if key == "x3-delivery-soft-gate":
+                front_matter = docs[0] if docs else {}
+                soft_gate = front_matter.get("x3_delivery_soft_gate") if isinstance(front_matter.get("x3_delivery_soft_gate"), dict) else {}
+                details.update({
+                    "status": str(front_matter.get("status") or "unknown"),
+                    "deprecated": front_matter.get("deprecated") is True,
+                    "enabled": soft_gate.get("enabled") is True,
+                    "superseded_by": front_matter.get("superseded_by"),
+                })
+            else:
+                domains = docs[0].get("domains") if docs and isinstance(docs[0].get("domains"), dict) else {}
+                details.update({"domain_count": len(domains), "entries": len(domains)})
+            metrics[key] = details
         except Exception:
-            metrics[f.replace(".yaml", "")] = "unavailable"
+            metrics[key] = {"available": False}
     return metrics
 
 
