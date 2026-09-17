@@ -17,8 +17,8 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
 from typing import Any
+from typing import Optional
 
 SCHEMA = "claims-shadow-preflight/v1"
 AUTHORITY_ID = "omo-claims-authority-r0"
@@ -76,8 +76,20 @@ def collect_preflight(
     gitlink_rc, root_gitlink = _git(root, "rev-parse", "HEAD:projects/omo")
     child_rc, child_head = _git(child, "rev-parse", "HEAD")
     status_rc, status = _git(root, "status", "--porcelain", "--untracked-files=no")
-    reads_ok = not any((first_rc, second_rc, origin_rc, gitlink_rc, child_rc, status_rc))
-    dirty_count = sum(1 for line in status.splitlines() if line.strip()) if status else 0
+    child_status_rc, child_status = _git(child, "status", "--porcelain", "--untracked-files=no")
+    reads_ok = not any((
+        first_rc, second_rc, origin_rc, gitlink_rc, child_rc,
+        status_rc, child_status_rc,
+    ))
+    dirty_paths = [
+        line[3:].strip() for line in (status.splitlines() if status else [])
+        if line.strip()
+    ]
+    dirty_count = len(dirty_paths)
+    closure_path_values = set(CLOSURE_PATHS.values())
+    dirty_closure_paths = sorted(path for path in dirty_paths if path in closure_path_values)
+    dirty_nonclosure_count = dirty_count - len(dirty_closure_paths)
+    child_dirty_count = sum(1 for line in child_status.splitlines() if line.strip())
 
     closure: dict[str, str | None] = {
         label: _sha256(root / relative) for label, relative in CLOSURE_PATHS.items()
@@ -103,30 +115,40 @@ def collect_preflight(
     high_water = authority_dir / "highwater.json"
     witness = authority_dir / "activation-witness.json"
 
-    blockers: list[str] = []
+    hard_blockers: list[str] = []
+    advisories: list[str] = []
     if not reads_ok:
-        blockers.append("git_read_failed")
+        hard_blockers.append("git_read_failed")
     else:
         if head_first != head_second:
-            blockers.append("root_head_double_read_mismatch")
+            hard_blockers.append("root_head_double_read_mismatch")
         if head_first != origin_main:
-            blockers.append("root_head_not_equal_origin_main")
+            advisories.append("root_head_not_equal_origin_main")
         if dirty_count:
-            blockers.append("dirty_tracked_integration_root")
+            if dirty_closure_paths:
+                hard_blockers.append("dirty_tracked_closure_path")
+            if dirty_nonclosure_count:
+                advisories.append("nonclosure_dirty_tracked_integration_root")
+        if child_dirty_count:
+            hard_blockers.append("child_source_dirty")
         if child_head != root_gitlink:
-            blockers.append("child_head_gitlink_mismatch")
+            hard_blockers.append("child_head_gitlink_mismatch")
     if any(value is None for value in closure.values()):
-        blockers.append("closure_unreadable")
+        hard_blockers.append("closure_unreadable")
     elif closure.get("spec") != ACCEPTED_SPEC_SHA256:
-        blockers.append("accepted_spec_digest_mismatch")
+        hard_blockers.append("accepted_spec_digest_mismatch")
     if verifier_error:
-        blockers.append("production_verifier_interface_unavailable")
+        hard_blockers.append("production_verifier_interface_unavailable")
     if store.exists() != high_water.exists():
-        blockers.append("authority_store_asymmetric_presence")
+        hard_blockers.append("authority_store_asymmetric_presence")
 
     # No script can prove an external Human decision. Activation callers must
     # separately record and independently verify that decision outside Git.
-    blockers.append("operation_specific_host_authorization_unproven")
+    authorization_status = "UNPROVEN"
+    blockers = [*hard_blockers, "operation_specific_host_authorization_unproven"]
+    readiness = "BLOCKED" if hard_blockers else "AWAITING_AUTHORIZATION"
+    if not hard_blockers and not reads_ok:
+        readiness = "BLOCKED"
     return {
         "schema": SCHEMA,
         "authority_id": AUTHORITY_ID,
@@ -137,6 +159,9 @@ def collect_preflight(
         "child_head_oid": child_head if child_rc == 0 else None,
         "root_child_gitlink_oid": root_gitlink if gitlink_rc == 0 else None,
         "dirty_tracked_count": dirty_count,
+        "dirty_closure_paths": dirty_closure_paths,
+        "dirty_nonclosure_count": dirty_nonclosure_count,
+        "child_dirty_count": child_dirty_count,
         "closure": closure,
         "runtime_state": {
             "store_exists": store.exists(),
@@ -145,8 +170,10 @@ def collect_preflight(
         },
         "operation_specific_authorization": "UNPROVEN",
         "activation_allowed": False,
+        "hard_blockers": hard_blockers,
+        "advisories": advisories,
         "blockers": blockers,
-        "readiness": "BLOCKED",
+        "readiness": readiness,
     }
 
 
