@@ -19,24 +19,30 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path("/Users/xiamingxing/Workspace")
+REPO = Path(__file__).resolve().parents[2]
 SCENES_DIR = REPO / "docs" / "scene-cards"
 JOURNEY_RUNNER = REPO / "bin" / "ssot" / "journey-runner.py"
 STATE_FILE = REPO / ".omo" / "state" / "scene-journey-map.json"
 
 
-def _load_state() -> dict:
-    if STATE_FILE.exists():
+def _state_file(root: Path) -> Path:
+    return root / ".omo" / "state" / "scene-journey-map.json"
+
+
+def _load_state(root: Path) -> dict:
+    state_file = _state_file(root)
+    if state_file.exists():
         try:
-            return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            return json.loads(state_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            pass
+            return {"mappings": [], "version": "1.0"}
     return {"mappings": [], "version": "1.0"}
 
 
-def _save_state(data: dict) -> None:
-    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+def _save_state(root: Path, data: dict) -> None:
+    state_file = _state_file(root)
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    state_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def _load_yaml_simple(path: Path) -> dict:
@@ -51,10 +57,12 @@ def _load_yaml_simple(path: Path) -> dict:
         return {}
 
 
-def list_eligible_cards() -> list[dict]:
+def list_eligible_cards(root: Path = REPO) -> list[dict]:
     """List scene cards eligible for journey creation."""
+    scenes_dir = root / "docs" / "scene-cards"
+    state = _load_state(root)
     eligible = []
-    for p in sorted(SCENES_DIR.glob("*.yaml")):
+    for p in sorted(scenes_dir.glob("*.yaml")):
         body = _load_yaml_simple(p)
         lifecycle = body.get("lifecycle", "")
         scene_id = body.get("scene_id", p.stem)
@@ -62,7 +70,6 @@ def list_eligible_cards() -> list[dict]:
 
         if lifecycle == "assisted" and journey_id:
             # Check if journey already created
-            state = _load_state()
             existing = [m for m in state.get("mappings", []) if m.get("scene_id") == scene_id]
             if not existing:
                 eligible.append({
@@ -73,10 +80,10 @@ def list_eligible_cards() -> list[dict]:
     return eligible
 
 
-def create_journey(scene_id: str) -> dict:
+def create_journey(scene_id: str, root: Path = REPO) -> dict:
     """Create a journey for an assisted scene card."""
     # Find the scene card
-    card_path = SCENES_DIR / f"{scene_id}.yaml"
+    card_path = root / "docs" / "scene-cards" / f"{scene_id}.yaml"
     if not card_path.exists():
         return {"ok": False, "error": f"scene card not found: {scene_id}"}
 
@@ -86,12 +93,12 @@ def create_journey(scene_id: str) -> dict:
         return {"ok": False, "error": f"no journey_id in scene card: {scene_id}"}
 
     # Check if journey spec exists
-    journey_spec = REPO / "docs" / "journey-specs" / f"{journey_id}.yaml"
+    journey_spec = root / "docs" / "journey-specs" / f"{journey_id}.yaml"
     if not journey_spec.exists():
         return {"ok": False, "error": f"journey spec not found: {journey_id}"}
 
     # Record the mapping
-    state = _load_state()
+    state = _load_state(root)
     mapping = {
         "scene_id": scene_id,
         "journey_id": journey_id,
@@ -99,7 +106,7 @@ def create_journey(scene_id: str) -> dict:
         "status": "created",
     }
     state.setdefault("mappings", []).append(mapping)
-    _save_state(state)
+    _save_state(root, state)
 
     return {
         "ok": True,
@@ -109,25 +116,26 @@ def create_journey(scene_id: str) -> dict:
     }
 
 
-def auto_create() -> list[dict]:
+def auto_create(root: Path = REPO) -> list[dict]:
     """Auto-create journeys for all eligible scene cards."""
-    eligible = list_eligible_cards()
+    eligible = list_eligible_cards(root)
     results = []
     for card in eligible:
-        result = create_journey(card["scene_id"])
+        result = create_journey(card["scene_id"], root)
         results.append(result)
     return results
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Scene Card → Journey 接线器")
+    parser.add_argument("--root", type=Path, default=REPO, help="repository root")
     parser.add_argument("--list", action="store_true", help="List eligible scene cards")
     parser.add_argument("--create", help="Create journey for specific scene_id")
     parser.add_argument("--auto-create", action="store_true", help="Auto-create all eligible journeys")
     args = parser.parse_args()
 
     if args.list:
-        eligible = list_eligible_cards()
+        eligible = list_eligible_cards(args.root)
         if not eligible:
             print("没有可创建 Journey 的场景卡")
             return 0
@@ -137,7 +145,7 @@ def main() -> int:
         return 0
 
     if args.create:
-        result = create_journey(args.create)
+        result = create_journey(args.create, args.root)
         if result.get("ok"):
             print(f"✓ {result['message']}")
             return 0
@@ -146,7 +154,7 @@ def main() -> int:
             return 1
 
     if args.auto_create:
-        results = auto_create()
+        results = auto_create(args.root)
         if not results:
             print("没有可创建 Journey 的场景卡")
             return 0

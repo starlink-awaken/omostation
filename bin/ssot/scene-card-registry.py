@@ -14,14 +14,28 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import sys
 from pathlib import Path
+from types import ModuleType
 
 REPO = Path(__file__).resolve().parents[2]
 SCENES_DIR = REPO / "docs" / "scene-cards"
 
-VALID_LIFECYCLES = ["draft", "shadow", "assisted", "supervised", "routine"]
-VALID_DOMAINS = ["work", "health", "research", "knowledge", "governance"]
+_LIFECYCLE_MODULE: ModuleType | None = None
+
+
+def _lifecycle_module() -> ModuleType:
+    global _LIFECYCLE_MODULE
+    if _LIFECYCLE_MODULE is None:
+        path = Path(__file__).with_name("scene-card-lifecycle.py")
+        spec = importlib.util.spec_from_file_location("scene_card_lifecycle_contract", path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"cannot load lifecycle validator: {path}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _LIFECYCLE_MODULE = module
+    return _LIFECYCLE_MODULE
 
 
 def _yaml_load(path: Path) -> dict:
@@ -38,56 +52,64 @@ def _yaml_load(path: Path) -> dict:
         return {}
 
 
-def validate_scene(scene_path: Path) -> list[str]:
-    """Validate a scene card."""
-    errors = []
+def _validate_scene(scene_path: Path) -> tuple[list[str], list[str]]:
     data = _yaml_load(scene_path)
     if not data:
-        return [f"{scene_path.name}: 无法解析 YAML"]
+        return [f"{scene_path.name}: 无法解析 YAML"], []
 
     scene_id = data.get("scene_id", scene_path.stem)
+    result = _lifecycle_module().validate_scene_card_v2(data)
+    errors = [f"{scene_id}: {error}" for error in result["errors"]]
+    warnings = [f"{scene_id}: {warning}" for warning in result["warnings"]]
+    schema = data.get("schema")
+    if schema == "scene-card/v1":
+        warnings.append(f"{scene_id}: schema '{schema}' is legacy; migrate to 'scene-card/v2'")
+    elif schema not in {"scene-card/v1", "scene-card/v2"}:
+        errors.append(f"{scene_id}: schema must be 'scene-card/v2' (got {schema!r})")
+    return errors, warnings
 
-    # 1. lifecycle
-    lifecycle = data.get("lifecycle", "")
-    if lifecycle and lifecycle not in VALID_LIFECYCLES:
-        errors.append(f"{scene_id}: lifecycle '{lifecycle}' 无效 {VALID_LIFECYCLES}")
 
-    # 2. domain
-    domain = data.get("domain", "")
-    if not domain:
-        errors.append(f"{scene_id}: 缺少 domain 字段")
-    elif domain not in VALID_DOMAINS:
-        errors.append(f"{scene_id}: domain '{domain}' 无效 {VALID_DOMAINS}")
-
-    # 3. promotion evidence
-    if lifecycle in ["assisted", "supervised", "routine"]:
-        if not data.get("promotion_evidence"):
-            errors.append(f"{scene_id}: 升级到 {lifecycle} 需要 promotion_evidence")
-
+def validate_scene(scene_path: Path) -> list[str]:
+    """Validate a scene card against the canonical lifecycle contract."""
+    errors, _ = _validate_scene(scene_path)
     return errors
 
 
-def validate_all() -> tuple[int, int, dict]:
+def scene_warnings(scene_path: Path) -> list[str]:
+    """Return non-blocking compatibility warnings for a scene card."""
+    _, warnings = _validate_scene(scene_path)
+    return warnings
+
+
+def validate_all(scenes_dir: Path = SCENES_DIR) -> tuple[int, int, dict, dict]:
     """Validate all scene cards."""
     all_errors = {}
+    all_warnings = {}
     total = 0
-    for scene_file in sorted(SCENES_DIR.glob("*.yaml")):
+    for scene_file in sorted(scenes_dir.glob("*.yaml")):
         total += 1
-        errors = validate_scene(scene_file)
+        errors, warnings = _validate_scene(scene_file)
         if errors:
             all_errors[scene_file.name] = errors
-    return total, total - len(all_errors), all_errors
+        if warnings:
+            all_warnings[scene_file.name] = warnings
+    return total, total - len(all_errors), all_errors, all_warnings
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="场景卡注册校验")
+    parser.add_argument("--root", type=Path, default=REPO)
     parser.add_argument("--validate", action="store_true")
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--scene", help="指定场景卡 ID")
     args = parser.parse_args()
+    scenes_dir = args.root / "docs" / "scene-cards"
 
     if args.scene:
-        errors = validate_scene(SCENES_DIR / f"{args.scene}.yaml")
+        scene_path = scenes_dir / f"{args.scene}.yaml"
+        errors = validate_scene(scene_path)
+        for warning in scene_warnings(scene_path):
+            print(f"[WARN] {warning}")
         if errors:
             for e in errors:
                 print(f"[FAIL] {e}")
@@ -95,8 +117,14 @@ def main() -> int:
         print(f"[PASS] {args.scene}")
         return 0
 
-    total, valid, errors = validate_all()
+    total, valid, errors, warnings = validate_all(scenes_dir)
     print(f"验证 {total} 个场景卡: {valid} 有效, {total - valid} 无效")
+    for warning_group in warnings.values():
+        for warning in warning_group:
+            print(f"[WARN] {warning}")
+    for error_group in errors.values():
+        for error in error_group:
+            print(f"[FAIL] {error}")
     return 0 if not errors else 1
 
 

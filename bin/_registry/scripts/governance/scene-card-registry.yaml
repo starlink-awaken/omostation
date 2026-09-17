@@ -2,7 +2,7 @@ id: bin/ssot/scene-card-registry.py
 name: scene-card-registry
 category: governance
 owner: governance-team
-description: "场景卡注册校验 (生命周期/业务域/升级证据)"
+description: "Canonical scene-card/v2 admission validation delegated to the lifecycle contract"
 inputs: []
 outputs:
   - type: exit_code
@@ -10,4 +10,4 @@ outputs:
 dependencies: []
 triggers: []
 maturity: active
-last_reviewed: "2026-08-31"
+last_reviewed: "2026-09-17"
