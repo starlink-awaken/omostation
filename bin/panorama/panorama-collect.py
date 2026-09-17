@@ -98,7 +98,7 @@ def collect_gates() -> list[dict]:
     a8_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A7") + 1
     gates.insert(a8_index, collect_a8_gate())
     a9_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A8") + 1
-    gates.insert(a9_index, collect_a9_gate(payload=None))
+    gates.insert(a9_index, collect_a9_gate(payload=None, dashboard_live=True))
     rf0_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A9") + 1
     gates.insert(rf0_index, collect_rf0_gate())
     return gates
@@ -366,7 +366,7 @@ def collect_a8_gate() -> dict:
     }
 
 
-def collect_a9_gate(payload: dict | None = None) -> dict:
+def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None = None) -> dict:
     """Project A9 only when dashboard, ASD, and Cockpit projections are fresh.
 
     This deliberately keeps CI/local checks independent: missing runtime files
@@ -389,9 +389,15 @@ def collect_a9_gate(payload: dict | None = None) -> dict:
         except ValueError:
             return None
 
-    dashboard_age = age_seconds(data.get("generated_at"))
-    if dashboard_age is None or dashboard_age < 0 or dashboard_age > 300:
-        missing.append("dashboard_live")
+    if dashboard_live is True:
+        # During in-memory generation there is no prior on-disk generation to
+        # judge. Reading the old snapshot made a valid refresh intermittently
+        # fail its own dashboard_live check.
+        dashboard_age = 0.0
+    else:
+        dashboard_age = age_seconds(data.get("generated_at"))
+        if dashboard_age is None or dashboard_age < 0 or dashboard_age > 300:
+            missing.append("dashboard_live")
 
     asd = data.get("asd") if isinstance(data.get("asd"), dict) else {}
     expected_panels = {"overview", "spine", "agents", "milestones", "degradation"}

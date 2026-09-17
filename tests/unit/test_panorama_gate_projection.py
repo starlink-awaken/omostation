@@ -31,7 +31,7 @@ def test_collect_gates_preserves_partial_results_when_wrapper_exits_nonzero(
     monkeypatch.setattr(module, "collect_a6_gate", lambda: {"id": "A6", "verdict": "PASS"})
     monkeypatch.setattr(module, "collect_a7_gate", lambda: {"id": "A7", "verdict": "NOT_ADMITTED"})
     monkeypatch.setattr(module, "collect_a8_gate", lambda: {"id": "A8", "verdict": "PASS"})
-    monkeypatch.setattr(module, "collect_a9_gate", lambda payload=None: {"id": "A9", "verdict": "PASS"})
+    monkeypatch.setattr(module, "collect_a9_gate", lambda payload=None, **kwargs: {"id": "A9", "verdict": "PASS"})
     monkeypatch.setattr(module, "collect_rf0_gate", lambda: {"id": "RF0", "verdict": "NOT_ADMITTED"})
 
     gates = {gate["id"]: gate for gate in module.collect_gates()}
@@ -50,7 +50,7 @@ def test_collect_gates_fails_closed_on_invalid_health_payload(tmp_path, monkeypa
     monkeypatch.setattr(module, "collect_a6_gate", lambda: {"id": "A6", "verdict": "PASS"})
     monkeypatch.setattr(module, "collect_a7_gate", lambda: {"id": "A7", "verdict": "NOT_ADMITTED"})
     monkeypatch.setattr(module, "collect_a8_gate", lambda: {"id": "A8", "verdict": "PASS"})
-    monkeypatch.setattr(module, "collect_a9_gate", lambda payload=None: {"id": "A9", "verdict": "PASS"})
+    monkeypatch.setattr(module, "collect_a9_gate", lambda payload=None, **kwargs: {"id": "A9", "verdict": "PASS"})
     monkeypatch.setattr(module, "collect_rf0_gate", lambda: {"id": "RF0", "verdict": "NOT_ADMITTED"})
 
     gates = {gate["id"]: gate for gate in module.collect_gates()}
@@ -87,7 +87,7 @@ def test_collect_gates_passes_runtime_and_code_roots(tmp_path, monkeypatch) -> N
     monkeypatch.setattr(module, "collect_a6_gate", lambda: {"id": "A6", "verdict": "PASS"})
     monkeypatch.setattr(module, "collect_a7_gate", lambda: {"id": "A7", "verdict": "NOT_ADMITTED"})
     monkeypatch.setattr(module, "collect_a8_gate", lambda: {"id": "A8", "verdict": "PASS"})
-    monkeypatch.setattr(module, "collect_a9_gate", lambda payload=None: {"id": "A9", "verdict": "PASS"})
+    monkeypatch.setattr(module, "collect_a9_gate", lambda payload=None, **kwargs: {"id": "A9", "verdict": "PASS"})
     monkeypatch.setattr(module, "collect_rf0_gate", lambda: {"id": "RF0", "verdict": "NOT_ADMITTED"})
 
     gates = module.collect_gates()
