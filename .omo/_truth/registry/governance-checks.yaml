@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 671 # 2026-09-17 670→671: Ruflo RF0 isolated read-only admission verifier (upstream panel-sync 670 merged)
+    script_baseline: 672 # 2026-09-17 671→672: controlled Agent Cell Pool live smoke with durable runtime receipt
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
