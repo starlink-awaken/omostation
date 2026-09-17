@@ -33,8 +33,6 @@ GATE_DECLARED = {
            "note": "T10-149 只读验证工具链；未过门零写入"},
     "A7": {"title": "Multica AS0 准入", "state": "not_admitted", "depends_on": ["A8"],
            "note": "T10-150 只读验证工具链；未过门零写入"},
-    "A9": {"title": "ASD 与 Cockpit 可观测", "state": "partial", "depends_on": ["G2", "G3"],
-           "note": "T10-166 面板契约；PARTIAL≠PASS"},
     "RF0": {"title": "Ruflo 只读协作准入", "state": "not_admitted", "depends_on": [],
             "note": "side-effect-free 观察；独立驱动不建第二队列"},
 }
@@ -90,6 +88,8 @@ def collect_gates() -> list[dict]:
                       "detail": d["note"], "live": False, "depends_on": d["depends_on"]})
     a8_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A7") + 1
     gates.insert(a8_index, collect_a8_gate())
+    a9_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A8") + 1
+    gates.insert(a9_index, collect_a9_gate(payload=None))
     return gates
 
 
@@ -160,6 +160,92 @@ def collect_a8_gate() -> dict:
         "detail": (
             "T10-151 delivery accepted; omo PR #173 merge reachable in current pin; "
             "implementation and focused test contract present"
+        ),
+        "live": True,
+        "depends_on": ["G2", "G3"],
+    }
+
+
+def collect_a9_gate(payload: dict | None = None) -> dict:
+    """Project A9 only when dashboard, ASD, and Cockpit projections are fresh.
+
+    This deliberately keeps CI/local checks independent: missing runtime files
+    in a clean checkout remain PARTIAL instead of pretending to be green.
+    """
+    now = datetime.now(UTC)
+    missing: list[str] = []
+
+    try:
+        data = payload or json.loads(DATA_JSON.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        data = {}
+
+    def age_seconds(value: object) -> float | None:
+        if not isinstance(value, str):
+            return None
+        try:
+            observed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return (now - observed).total_seconds()
+        except ValueError:
+            return None
+
+    dashboard_age = age_seconds(data.get("generated_at"))
+    if dashboard_age is None or dashboard_age < 0 or dashboard_age > 300:
+        missing.append("dashboard_live")
+
+    asd = data.get("asd") if isinstance(data.get("asd"), dict) else {}
+    expected_panels = {"overview", "spine", "agents", "milestones", "degradation"}
+    panels = asd.get("panels") if isinstance(asd.get("panels"), dict) else {}
+    if asd.get("schema") != "asd-snapshot/v1":
+        missing.append("asd_schema")
+    if asd.get("verdict") != "COMPLETE":
+        missing.append("asd_complete")
+    if set(panels) != expected_panels:
+        missing.append("asd_panels")
+    degraded = asd.get("degraded_panels")
+    if degraded != []:
+        missing.append("asd_degraded")
+
+    cockpit_path = Path.home() / ".local/share/zhixing-dashboard/current.json"
+    try:
+        cockpit = json.loads(cockpit_path.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        cockpit = {}
+        missing.append("cockpit_projection")
+    cockpit_age = age_seconds(cockpit.get("generated_at"))
+    if cockpit_age is None or cockpit_age < 0 or cockpit_age > 600:
+        missing.append("cockpit_freshness")
+    source_states = cockpit.get("source_states") if isinstance(cockpit.get("source_states"), dict) else {}
+    required_sources = {
+        "catalog", "strategy", "strategy-projection", "environment_evidence",
+        "portfolio", "workflow", "resident", "scheduler", "references",
+        "orca", "multica", "ruflo", "documents", "compute",
+    }
+    bad_sources = sorted(
+        name for name in required_sources
+        if not isinstance(source_states.get(name), dict)
+        or source_states[name].get("status") != "OK"
+    )
+    if bad_sources:
+        missing.append("cockpit_sources")
+
+    if missing:
+        return {
+            "id": "A9",
+            "title": "ASD 与 Cockpit 可观测",
+            "verdict": "PARTIAL",
+            "detail": "A9 evidence incomplete: " + ", ".join(missing),
+            "live": False,
+            "depends_on": ["G2", "G3"],
+        }
+
+    return {
+        "id": "A9",
+        "title": "ASD 与 Cockpit 可观测",
+        "verdict": "PASS",
+        "detail": (
+            f"dashboard/asd age {dashboard_age:.0f}s; cockpit projection age "
+            f"{cockpit_age:.0f}s; ASD COMPLETE; cockpit source states OK"
         ),
         "live": True,
         "depends_on": ["G2", "G3"],
