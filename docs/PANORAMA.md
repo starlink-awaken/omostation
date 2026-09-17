@@ -2,8 +2,8 @@
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-17
-review-state: content-reviewed-20260817
+last-reviewed: 2026-09-17
+review-state: content-reviewed-20260917
 review-note: >
   2026-08-17 内容级重读 (T6-07 r3): 全文 341 行通读。分层表/项目链接已随 T6-01
   knowledge 归并更新 (kairon/gbrain 指向 projects/knowledge/*, 链接实测有效)。
@@ -13,7 +13,7 @@ review-note: >
 metadata-migrated-at: 2026-07-31
 stale-reason: body frozen 2026-06-30; metadata-only review 2026-07-31; not a strategy mainline
 type: ssot
-last_updated: 2026-09-03
+last_updated: 2026-09-18
 ---
 # PANORAMA.md — eCOS 系统全景架构
 
@@ -21,6 +21,13 @@ last_updated: 2026-09-03
 > 任何会漂移的测试数、路由数、健康分、Phase、端口状态，以各自 SSOT 与运行时探针为准。
 > 配套: [I0-AGORA-CALLCHAIN.md](./I0-AGORA-CALLCHAIN.md)
 > 项目级 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` 也只保留骨架与指针，不承担运行时快照职责。
+
+## Agent 可读入口
+
+Panorama 同时提供人类站点与机器可读投影。Agent 应优先读取 `runtime/dashboard/agent-brief.json`
+（HTTP: `/agent-brief.json`）获取权威控制面、门禁摘要、Claims 边界、读取接口和安全约束；
+完整字段使用 `runtime/dashboard/data.json`（HTTP: `/data.json`）。两者均由
+`bin/panorama/panorama-collect.py` 只读聚合生成，不引入第二个控制面或写入队列。
 
 ## 全景 SSOT
 

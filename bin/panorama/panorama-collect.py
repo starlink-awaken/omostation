@@ -33,6 +33,7 @@ CODE_ROOT = (
 )
 OUT_DIR = ROOT / "runtime" / "dashboard"
 DATA_JSON = OUT_DIR / "data.json"
+AGENT_BRIEF_JSON = OUT_DIR / "agent-brief.json"
 INDEX_HTML = OUT_DIR / "index.html"
 
 GATE_DECLARED = {
@@ -2364,8 +2365,97 @@ def collect_recent_features() -> dict:
     return {"total": len(features), "recent": features[:10]}
 
 
-def build_payload() -> dict:
+def collect_agent_visibility(payload: dict) -> dict:
+    """Project a bounded, machine-readable overview for every agent.
+
+    The human HTML remains the panoramic view.  This projection is deliberately
+    small and stable so an agent can discover authority, execution state, read
+    paths, and safety boundaries without parsing the full dashboard payload.
+    """
+    gates = payload.get("gates") if isinstance(payload.get("gates"), list) else []
+    gate_rows = [
+        {
+            "id": str(g.get("id", "")),
+            "title": str(g.get("title", "")),
+            "verdict": str(g.get("verdict", "UNKNOWN")).upper(),
+            "live": g.get("live") is True,
+        }
+        for g in gates
+        if isinstance(g, dict)
+    ]
+    failing = [g for g in gate_rows if g["verdict"] not in {"PASS", "SKIPPED"}]
+
+    claims_authority = payload.get("claims_authority") if isinstance(payload.get("claims_authority"), dict) else {}
+    claims_task16 = payload.get("claims_task16") if isinstance(payload.get("claims_task16"), dict) else {}
+    agent_pool = payload.get("agent_cell_pool") if isinstance(payload.get("agent_cell_pool"), dict) else {}
+    reference_cell = payload.get("reference_cell") if isinstance(payload.get("reference_cell"), dict) else {}
+    value_metrics = payload.get("value_metrics") if isinstance(payload.get("value_metrics"), dict) else {}
+
+    activation_allowed = claims_task16.get("activation_allowed") is True
+    blockers = []
+    preflight = claims_task16.get("preflight") if isinstance(claims_task16.get("preflight"), dict) else {}
+    for source in (claims_task16.get("hard_blockers"), preflight.get("hard_blockers"), preflight.get("blockers")):
+        if isinstance(source, list):
+            blockers.extend(str(item) for item in source if item)
+    blockers = sorted(set(blockers))
+
     return {
+        "schema": "panorama-agent-brief/v1",
+        "available": True,
+        "generated_at": payload.get("generated_at", ""),
+        "authority": {
+            "control_plane": "OMO",
+            "single_dispatcher": True,
+            "effective_claim_authority": claims_authority.get("effective_claim_authority", "unknown"),
+            "claims_activation_state": claims_authority.get("activation_state", "unknown"),
+            "claims_instruction_capable": claims_authority.get("instruction_capable") is True,
+            "claims_activation_allowed": activation_allowed,
+            "claims_activation_blockers": blockers,
+            "value_proof": "NOT_PROVEN",
+        },
+        "health": {
+            "gates_total": len(gate_rows),
+            "gates_pass": sum(g["verdict"] == "PASS" for g in gate_rows),
+            "gates_failing": [g["id"] for g in failing],
+            "reference_cell": {
+                "id": reference_cell.get("id", "UNKNOWN"),
+                "verdict": str(reference_cell.get("verdict", "UNKNOWN")).upper(),
+            },
+            "agent_cells": {
+                "available": agent_pool.get("available") is True,
+                "total": agent_pool.get("total", 0),
+                "active": agent_pool.get("active", 0),
+                "failed": agent_pool.get("failed", 0),
+            },
+            "value_metrics": value_metrics,
+        },
+        "read_interfaces": {
+            "human_html": "/",
+            "data_json": "/data.json",
+            "agent_brief_json": "/agent-brief.json",
+            "filesystem": {
+                "data": "runtime/dashboard/data.json",
+                "brief": "runtime/dashboard/agent-brief.json",
+            },
+            "refresh": "python3 bin/panorama/panorama-collect.py",
+        },
+        "required_context": [
+            {"name": "Workspace operating rules", "path": "AGENTS.md"},
+            {"name": "Panorama agent interface", "path": "docs/PANORAMA.md"},
+            {"name": "Architecture contracts", "path": "ARCHITECTURE.md"},
+            {"name": "Strategy and roadmap", "path": "docs/VISION-ROADMAP.md"},
+        ],
+        "safety_boundaries": [
+            "Do not activate Claims Authority without a fresh operation-specific authorization.",
+            "Do not write the canonical Workspace directly; use a managed worktree and PR.",
+            "Do not add a second dispatcher or authority queue.",
+            "Do not claim completion or proven value without authoritative evidence.",
+        ],
+    }
+
+
+def build_payload() -> dict:
+    payload = {
         "generated_at": datetime.now(UTC).isoformat(),
         "mode": "read-only-ssot-aggregation",
         "gates": collect_gates(),
@@ -2432,11 +2522,20 @@ def build_payload() -> dict:
         "decision_proposals": collect_decision_proposals(),
         "recent_features": collect_recent_features(),
     }
+    payload["agent_visibility"] = collect_agent_visibility(payload)
+    return payload
 
 
 def write_site(payload: dict) -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     DATA_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=1))
+    AGENT_BRIEF_JSON.write_text(
+        json.dumps(
+            payload.get("agent_visibility", {"schema": "panorama-agent-brief/v1", "available": False}),
+            ensure_ascii=False,
+            indent=1,
+        )
+    )
     html = TEMPLATE.replace("__DATA__", json.dumps(payload, ensure_ascii=False))
     INDEX_HTML.write_text(html)
 
