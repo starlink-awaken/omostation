@@ -20,7 +20,10 @@ triggers:
 - type: schedule
   cron: 0 3 * * 1-5
 runtime:
-  journey_ref: inbox-to-decision
+  # 2026-09-17: 原指向通用旅程 inbox-to-decision, 导致本卡声明的
+  # load_document/check_format/check_sensitivity/verify_basis 能力腿从未执行
+  # (声明与执行不一致). 改指匹配能力的 journey-document-review.
+  journey_ref: journey-document-review
   timeout: 3600s
   sandbox:
     level: isolated
