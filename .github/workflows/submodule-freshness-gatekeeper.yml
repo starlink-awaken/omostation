@@ -38,13 +38,18 @@ jobs:
         id: drift
         run: |
           set -euo pipefail
-          git submodule update --remote --recursive
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "No submodules need updating."
+          # Root freshness compares root gitlinks only. Nested gitlink drift is
+          # owned by the child repository and must not make this root gate
+          # fail with an unpublishable, empty root proposal.
+          git submodule update --remote
+          root_gitlink_drift="$(git submodule status | grep -E '^[+U]' || true)"
+          if [ -z "$root_gitlink_drift" ]; then
+            echo "No root gitlinks need updating."
             echo "CHANGED=false" >> "$GITHUB_ENV"
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Submodules drifted! Emitting proposal only (no self-heal)."
+            echo "Root gitlinks drifted! Emitting proposal only (no self-heal)."
+            printf '%s\n' "$root_gitlink_drift"
             echo "CHANGED=true" >> "$GITHUB_ENV"
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
@@ -83,6 +88,9 @@ jobs:
               ["git", "submodule", "status"], text=True
           ).splitlines()
           for line in status_lines:
+              # Keep the artifact aligned with the root-only drift detector.
+              if not line or line[0] not in {"+", "U"}:
+                  continue
               parts = line.split()
               if len(parts) < 2:
                   continue
@@ -106,6 +114,7 @@ jobs:
                           "path": sm,
                           "base_sha": head_sha,
                           "head_sha": wt_sha,
+                          "scope": "root_gitlink",
                       }
                   )
 
