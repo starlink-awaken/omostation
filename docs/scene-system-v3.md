@@ -57,6 +57,31 @@ last-reviewed: 2026-09-11
 - 升级/降级门控自动检查
 - LLM 成本追踪（token_usage → llm_cost.jsonl，X3/K1）
 
+#### 1.3.1 历史耐久性（2026-09-17 事故后加固）
+
+`bin/ssot/scene-history.py` — 校准数据是信任回路的命脉，`data/scene-metrics.db`
+被 `data/.gitignore` 忽略（`*.db`），一旦本地丢失即永久丢失。2026-09-17 实证：
+三张表在无人察觉时被清空（09-13 尚有 4 条 → 09-17 全 0），无备份、无告警。
+
+三层防护：
+
+| 层 | 路径 | 入仓 | 作用 |
+|---|---|---|---|
+| L1 持久导出 | `.omo/_knowledge/scene-history/{calibration,lifecycle,execution-daily}.json` | ✅ git 跟踪 | 跨机器/跨分支/误删存活 |
+| L2 本地快照 | `runtime/backups/scene-metrics-<YYYYMMDD>.db`（保留 14 份） | ❌ 二进制 | 快速回滚 |
+| L3 基线 | `.omo/_knowledge/scene-history/baseline.json` | ✅ | 暴跌检测对照 |
+
+```bash
+make scene-history          # export + backup + verify（verify 失败退出非零）
+make scene-history-status   # 人读摘要
+python3 bin/ssot/scene-history.py restore   # 从 L1 自愈（部分丢失亦可补齐）
+```
+
+- 导出**确定性**（无时间戳，内容不变则字节不变）→ 不产生 git churn
+- `execution` 按日聚合（防膨胀）；`calibration`/`lifecycle` 全量
+- `verify` 仅在**未检测到下跌**时刷新基线（下跌时保留旧基线，避免污染判定）
+- cron `scene-history-daily-active`（每日 03:20）
+
 ### 1.4 场景图 (Scene Graph)
 
 `bin/ssot/scene-graph.py`

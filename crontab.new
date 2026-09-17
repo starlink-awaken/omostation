@@ -126,6 +126,7 @@ SHELL=/bin/bash
 # omostation-ops-end
 0 2 * * * cd /Users/xiamingxing/Workspace && python3 bin/gac/worktree-hygiene-audit.py --auto-clean --execute --stale-days 3 >> runtime/cron/worktree-hygiene.log 2>&1 # omostation-worktree-hygiene
 23 * * * * cd /Users/xiamingxing/Workspace && python3 bin/ssot/fix-remotes.py >> runtime/cron/remote-hygiene.log 2>&1 # omostation-remote-hygiene (origin 污染幂等自愈, 2026-09-13 实证事故)
+20 3 * * * cd /Users/xiamingxing/Workspace && python3 bin/ssot/scene-history.py export && python3 bin/ssot/scene-history.py backup && python3 bin/ssot/scene-history.py verify >> runtime/cron/scene-history.log 2>&1 # omostation-scene-history (校准数据耐久性: 导出+快照+暴跌检测, 2026-09-17 实证事故)
 30 3 * * 1 cd /Users/xiamingxing/Workspace && bash bin/gac/gac-branch-prune.sh >> runtime/cron/branch-prune.log 2>&1 # omostation-branch-prune
 0 4 * * * cd /Users/xiamingxing/Workspace && make sync-capability-registry >> runtime/cron/capability-registry-sync.log 2>&1 # omostation-capability-registry-sync
 0 5 * * * cd /Users/xiamingxing/Workspace && make ssot-guardian >> runtime/cron/ssot-guardian.log 2>&1 # omostation-ssot-guardian

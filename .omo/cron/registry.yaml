@@ -272,6 +272,16 @@ jobs:
     sfop_slot: S
     reconciliation_note: 场景注册同步 (每日 06:15)，已在 crontab -l 运行，补齐登记。
 
+  - name: scene-history-daily-active
+    schedule: "20 3 * * *"
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/scene-history.py export && python3 bin/ssot/scene-history.py backup && python3 bin/ssot/scene-history.py verify >> runtime/cron/scene-history.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: "场景历史耐久性 (每日 03:20) — 持久导出 + 本地快照(保留14) + 行数暴跌检测; verify 失败退出非零, 防 2026-09-17 校准数据静默清空复发。"
+
   # ── 面板刷新: 织星全景驾驶舱（BET-Y1Q4-T10-163, 2026-09-12 登记）──
   # 常驻静态服务(KeepAlive) + 服务内 5min 自动刷新; 与 Serena 观测站(43191)互补。
 

@@ -1,0 +1,5 @@
+{
+ "note": "derived from data/scene-metrics.db — DB 是唯一写入口, 勿手编",
+ "rows": [],
+ "schema": "scene-history-export/v1"
+}
