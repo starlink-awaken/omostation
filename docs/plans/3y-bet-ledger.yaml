@@ -30417,7 +30417,7 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: candidate
+  status: in_progress
   title: 公文场景 assisted 升档 — 基于 admin-notification-workflow 驱动
   track: T7-SCENE
   underlying_workflow: project-code-change
@@ -30426,6 +30426,13 @@ bets:
     expect: exit 0
   window: Y3H1
   workflow: bet-execution
+  progress:
+    phase: 1
+    phase_name: Calibration 采样
+    phase_goal: 运行 30 次 document-review 处理, 采集 calibration score >= 0.6
+    started_at: '2026-09-17'
+    current_step: Phase 1 启动 — 等待采样数据
+    done_when_met: []
   write_surfaces:
   - .omo/_truth/scenarios/v3/**
   - .agents/skills/**

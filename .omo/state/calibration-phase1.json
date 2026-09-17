@@ -1,0 +1,436 @@
+{
+  "phase": "Phase 1 — Calibration 采样",
+  "bet_id": "BET-Y3H1-T7-02",
+  "samples_run": 30,
+  "calibration": {
+    "calibration": 0.9,
+    "success_rate": 1.0,
+    "time_saved_ratio": 0.7,
+    "false_positive_rate": 0.05,
+    "completed": 30,
+    "total": 30,
+    "meets_threshold": true
+  },
+  "results": [
+    {
+      "run_id": "20260917025414-175b38be",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025415-2b773ca3",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025415-2b773ca3",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025416-c54c3aac",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025416-c54c3aac",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025417-3eca202d",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025417-3eca202d",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025418-c58b85cb",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025418-c58b85cb",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025419-4e0f754d",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025419-4e0f754d",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025420-38322af2",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025420-38322af2",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025421-7f5b6e50",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025421-7f5b6e50",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025422-5be33517",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025422-5be33517",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025423-bd84a659",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025423-bd84a659",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025424-8553ca22",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025424-8553ca22",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025425-9097dbbf",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025425-9097dbbf",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025426-3ec9b767",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025426-3ec9b767",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025427-342faf67",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025427-342faf67",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025428-8c6b749a",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025428-8c6b749a",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    },
+    {
+      "run_id": "20260917025429-9daf682f",
+      "completed": true,
+      "steps": [
+        {
+          "state": "under_review",
+          "checkpoint": true
+        },
+        {
+          "state": "knowledge_captured",
+          "checkpoint": false
+        }
+      ]
+    }
+  ]
+}
