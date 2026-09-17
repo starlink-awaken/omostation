@@ -155,3 +155,32 @@ def test_admission_verifiers_use_code_root_but_runtime_root_cwd(
     for command, cwd in calls:
         assert command[1].startswith(str(code_root / "bin/gac/"))
         assert cwd == runtime_root
+
+
+def test_code_root_health_reports_synced_and_stale(tmp_path, monkeypatch) -> None:
+    module = _module()
+    runtime_root = tmp_path / "runtime"
+    code_root = tmp_path / "code"
+    monkeypatch.setattr(module, "ROOT", runtime_root)
+    monkeypatch.setattr(module, "CODE_ROOT", code_root)
+
+    def fake_run(command, timeout=120):
+        assert command[:3] == ["git", "-C", str(code_root)]
+        args = command[3:]
+        if args == ["rev-parse", "HEAD"]:
+            return 0, "head-oid"
+        if args == ["rev-parse", "refs/remotes/origin/main"]:
+            return 0, "origin-oid"
+        if args == ["status", "--porcelain", "--untracked-files=no"]:
+            return 0, ""
+        if args == ["rev-list", "--left-right", "--count", "origin/main...HEAD"]:
+            return 0, "1\t0"
+        raise AssertionError(command)
+
+    monkeypatch.setattr(module, "run", fake_run)
+    report = module.collect_code_root_health()
+    assert report["verdict"] == "STALE"
+    assert report["behind_origin_main"] == 1
+    assert report["ahead_origin_main"] == 0
+    assert report["dirty_count"] == 0
+    assert report["auto_update_performed"] is False
