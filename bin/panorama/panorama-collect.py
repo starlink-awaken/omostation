@@ -755,6 +755,64 @@ def collect_agent_cell_semantic() -> dict:
     }
 
 
+def _verify_claims_authority() -> dict:
+    """Invoke the read-only Claims Authority observer and fail closed."""
+    candidates = [
+        ROOT / "bin/gac/claims-authority-status.py",
+        Path(__file__).with_name("claims-authority-status.py"),
+    ]
+    verifier = next((candidate for candidate in candidates if candidate.is_file()), None)
+    empty = {
+        "schema": "claims-authority-observation/v1",
+        "ok": False,
+        "verdict": "UNAVAILABLE",
+        "available": False,
+        "mutation_performed": False,
+        "authorization_granted": False,
+    }
+    if verifier is None:
+        return empty
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(verifier), "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+        report = json.loads(completed.stdout)
+        if not isinstance(report, dict):
+            raise ValueError("verifier root is not an object")
+        return report
+    except Exception:  # noqa: BLE001 - missing authority remains visibly unadmitted
+        return empty
+
+
+def collect_claims_authority() -> dict:
+    """Project Claims Authority status without granting or implying admission."""
+    observation = _verify_claims_authority()
+    status = observation.get("status") if isinstance(observation.get("status"), dict) else {}
+    return {
+        "schema": "claims-authority-projection/v1",
+        "source": "omo://workflow/claims-authority/authority-status",
+        "available": observation.get("ok") is True,
+        "verdict": observation.get("verdict", "UNAVAILABLE"),
+        "activation_state": status.get("activation_state", "unknown"),
+        "authority_id": status.get("authority_id"),
+        "authority_epoch": status.get("authority_epoch"),
+        "security_level": status.get("security_level", "UNKNOWN"),
+        "effective_claim_authority": status.get("effective_claim_authority", "UNKNOWN"),
+        "instruction_capable": status.get("instruction_capable") is True,
+        "fresh": status.get("fresh") is True,
+        "sequence": status.get("sequence", 0),
+        "mutation_performed": observation.get("mutation_performed") is True,
+        "authorization_granted": observation.get("authorization_granted") is True,
+        "status": status,
+        "verification": observation,
+    }
+
+
 def collect_asd() -> dict:
     _ensure_omo_path()
     """ASD 五面板快照（数据契约；degraded 面板可见）。"""
@@ -772,6 +830,7 @@ def collect_asd() -> dict:
             "role_admission": collect_role_admission(),
             "agent_cell_pool": collect_agent_cell_pool(),
             "agent_cell_semantic": collect_agent_cell_semantic(),
+            "claims_authority": collect_claims_authority(),
         },
                                 PanelProvenance("ssot://role-admission-registry", 60)))
         # Milestones
@@ -2037,6 +2096,7 @@ def build_payload() -> dict:
         "role_admission": collect_role_admission(),
         "agent_cell_pool": collect_agent_cell_pool(),
         "agent_cell_semantic": collect_agent_cell_semantic(),
+        "claims_authority": collect_claims_authority(),
         "asd": collect_asd(),
         "probes": collect_probes(),
         "resident_agents": collect_resident_agents(),
@@ -2243,6 +2303,10 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
  <div class="kpi-grid" id="semantickpi"></div>
  <table id="semantictable" style="margin-top:12px"><thead><tr><th>binding</th><th>verdict</th><th>value</th></tr></thead><tbody></tbody></table>
 </div>
+<div class="card" style="margin-top:14px"><h3>Claims Authority</h3>
+ <div class="kpi-grid" id="claimkpi"></div>
+ <table id="claimtable" style="margin-top:12px"><thead><tr><th>contract</th><th>value</th></tr></thead><tbody></tbody></table>
+</div>
 </section>
 <section class="sec" id="s-bets">
 <h2>任务与里程碑</h2><p class="sub">三年台账窗口进度 · in_progress / blocked 聚焦</p>
@@ -2431,6 +2495,25 @@ $('agenttable').querySelector('tbody').innerHTML=D.agents.map(a=>'<tr><td class=
     ['mesh handoff',sm.mesh_bindings_ok],['queue completion',sm.queue_bindings_ok]
   ];
   $('semantictable').querySelector('tbody').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td><span class="chip '+(r[1]?'p':'n')+'">'+(r[1]?'PASS':'EMPTY')+'</span></td><td class="mono">'+(r[1]?'verified':'not available')+'</td></tr>').join('');
+})();
+// claims authority
+(function(){
+  const ca=D.claims_authority||{};
+  const state=ca.activation_state||'unknown';
+  const cls=ca.available?(state==='active'?'p':'n'):'f';
+  $('claimkpi').innerHTML=[
+    {v:state,l:'activation',c:cls},
+    {v:ca.effective_claim_authority||'UNKNOWN',l:'effective'},
+    {v:ca.security_level||'UNKNOWN',l:'security'},
+    {v:ca.sequence==null?'n/a':ca.sequence,l:'sequence'}
+  ].map(k=>'<div class="card kpi"><b class="'+k.c+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
+  const rows=[
+    ['read-only observation',ca.available],
+    ['instruction capable',ca.instruction_capable],
+    ['mutation performed',ca.mutation_performed],
+    ['authorization granted',ca.authorization_granted]
+  ];
+  $('claimtable').querySelector('tbody').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td><span class="chip '+(!r[1]||r[0]==='read-only observation'&&r[1]?'p':'f')+'">'+(r[1]?'true':'false')+'</span></td></tr>').join('');
 })();
 // bets
 $('windows').innerHTML=Object.entries(D.bets.windows).map(([w,d])=>{
