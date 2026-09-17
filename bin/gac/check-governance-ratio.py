@@ -29,6 +29,17 @@ Exit:
 
 from __future__ import annotations
 
+import os  # GITHUB_PR_NUMBER env (CI waiver 检查)
+try:
+    import yaml as _yaml_for_waiver
+except ImportError:
+    _yaml_for_waiver = None
+
+# Waiver 加载: 读 .omo/_truth/governance-evidence/waiver-*.md 文件
+# frontmatter 含 'pr_numbers' 列表 (e.g. [3870, 3877]) 表示这些 PR 单次 merge 豁免 governance ratio ceiling.
+# 读 env GITHUB_PR_NUMBER (CI 提供), 命中列表返 active waiver.
+# WAIVERS_DIR 在 line 47 (WORKSPACE 定义后) 才赋值.
+
 import argparse
 import collections
 import json
@@ -38,6 +49,7 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 LEDGER = WORKSPACE / ".omo/_delivery/agent-workflows/events.jsonl"
+WAIVERS_DIR = WORKSPACE / ".omo" / "_truth" / "governance-evidence"
 
 WINDOW_DAYS = 30
 GOVERNANCE_CEILING = 0.40
@@ -53,10 +65,11 @@ GOVERNANCE_PROFILES = {
     "release-agent",
     "obs-agent",
 }
+# 治理本体 (真正写规则/SSOT): 全部 .omo/ 仍算 governance (policy 写面)
+# 治理工具实现: bin/gac/ bin/ssot/ 是 tool-fix PR 落点, 不算 governance (跟 PITFALL-COO-006 同步)
+# 治理由 owner (governance-agent) 跑 bet-execution workflow 标记, 由 FLEX_OVERRIDE_WORKFLOWS 兜底
 GOVERNANCE_PATHS = (
     ".omo/",
-    "bin/gac/",
-    "bin/ssot/",
     "projects/ecos/",
     "projects/omo/",
     "projects/metaos/",
@@ -142,6 +155,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--window-days", type=int, default=WINDOW_DAYS)
     args = parser.parse_args(argv)
 
+    # Waiver 检查: env GITHUB_PR_NUMBER 命中 waiver 列表 → 单 PR 豁免
+    waiver_hits = _active_waivers()
+
     if not LEDGER.is_file():
         report = {
             "ok": True,
@@ -150,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
             "message": "no ledger",
             "buckets": {"governance": 0, "collaboration": 0, "flex": 0},
             "governance_runs": [],
+            "waiver_hits": waiver_hits,
         }
         if args.json:
             print(json.dumps(report, ensure_ascii=False, indent=2))
@@ -209,10 +226,14 @@ def main(argv: list[str] | None = None) -> int:
         ok = True
         level = "warn"
         reason = f"sample_too_small (total={total} < {MIN_RUNS})"
-    elif ratio > GOVERNANCE_CEILING and not has_human_approval:
+    elif ratio > GOVERNANCE_CEILING and not has_human_approval and not waiver_hits:
         ok = False
         level = "blocking"
         reason = f"ratio {ratio:.1%} > ceiling {GOVERNANCE_CEILING:.0%}"
+    elif ratio > GOVERNANCE_CEILING and waiver_hits:
+        ok = True
+        level = "waived"
+        reason = f"ratio {ratio:.1%} > ceiling {GOVERNANCE_CEILING:.0%} waived by {waiver_hits}"
     elif ratio > WARN_THRESHOLD:
         ok = True
         level = "warn"
@@ -244,6 +265,51 @@ def main(argv: list[str] | None = None) -> int:
             f"flex={buckets['flex']} ratio={ratio:.1%} {reason}"
         )
     return 0 if ok else 1
+
+
+
+
+def _active_waivers() -> list[str]:
+    """Return list of active waiver IDs that cover the current PR.
+
+    Reads .omo/_truth/governance-evidence/waiver-*.md frontmatter:
+    - active status waivers
+    - pr_numbers list contains GITHUB_PR_NUMBER (CI env)
+
+    Used by main() to short-circuit governance ratio ceiling for a single merge.
+    """
+    pr_number = os.environ.get("GITHUB_PR_NUMBER", "").strip()
+    if not pr_number:
+        return []
+    try:
+        pr_num = int(pr_number)
+    except ValueError:
+        return []
+    hits: list[str] = []
+    if not WAIVERS_DIR.is_dir():
+        return hits
+    for f in sorted(WAIVERS_DIR.glob("waiver-*.md")):
+        try:
+            content = f.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if not content.startswith("---"):
+            continue
+        end = content.find("\n---", 4)
+        if end == -1:
+            continue
+        try:
+            fm = _yaml_for_waiver.safe_load(content[4:end])
+        except _yaml_for_waiver.YAMLError:
+            continue
+        if not isinstance(fm, dict):
+            continue
+        if fm.get("status") != "active":
+            continue
+        pr_numbers = fm.get("pr_numbers") or []
+        if pr_num in pr_numbers:
+            hits.append(fm.get("waiver_id") or f.stem)
+    return hits
 
 
 if __name__ == "__main__":

@@ -134,12 +134,19 @@ class TestWorkflowLockPrefixExclusion:
         assert mod._classify(evt) == "governance"
 
     def test_mixed_locks_workflow_and_non_workflow(self, mod):
+        """governance=true when lock path matches GOVERNANCE_PATHS (e.g. .omo/_truth/).
+
+        As of 2026-09-17 PITFALL-COO-006 fix: bin/gac/ bin/ssot/ removed from
+        GOVERNANCE_PATHS (tool-fix land, not governance-rule rewrite), so
+        the test uses .omo/_truth/governance/ which is the canonical governance
+        write surface.
+        """
         evt = {
             "agent_profile": "engineering-agent",
             "workflow_id": "handoff-resume",
             "locks": [
                 ".omo/_delivery/agent-workflows/locks/project.lock.yaml",
-                "bin/gac/gac-local-gate.py",
+                ".omo/_truth/governance/governance-state.yaml",
             ],
         }
         assert mod._classify(evt) == "governance"
@@ -150,6 +157,62 @@ class TestWorkflowLockPrefixExclusion:
             "workflow_id": "project-code-change",
         }
         assert mod._classify(evt) == "flex"
+
+
+class TestWaiverActive:
+    """Waiver 机制: env GITHUB_PR_NUMBER 命中 waiver 列表 → 返 active waiver.
+
+    4019+ fix: PITFALL-COO-006 加固. waiver 文件 .omo/_truth/governance-evidence/waiver-*.md
+    frontmatter 含 pr_numbers 列表.
+    """
+
+    def test_waiver_load_no_env(self, mod, monkeypatch):
+        monkeypatch.delenv("GITHUB_PR_NUMBER", raising=False)
+        assert mod._active_waivers() == []
+
+    def test_waiver_load_invalid_env(self, mod, monkeypatch):
+        monkeypatch.setenv("GITHUB_PR_NUMBER", "not-a-number")
+        assert mod._active_waivers() == []
+
+    def test_waiver_load_match(self, mod, monkeypatch, tmp_path):
+        """Setup: 写一个 waiver 含 pr_numbers=[1234], 跑 _active_waivers with PR=1234 → 命中."""
+        # 改 WAIVERS_DIR 临时指向 tmp
+        import os
+        import yaml
+        # WAIVERS_DIR 实际是 WORKSPACE/.omo/_truth/governance-evidence. 改不了 (模块级常量).
+        # 改用 monkey-patch 模块属性
+        waivers_subdir = tmp_path / "waivers_test"
+        waivers_subdir.mkdir()
+        w = waivers_subdir / "waiver-test-001.md"
+        w.write_text(
+            "---\n"
+            "schema_version: governance-waiver/v1\n"
+            "status: active\n"
+            "lifecycle: history\n"
+            "type: governance-ratio-waiver\n"
+            "owner: governance-team\n"
+            "created: 2026-09-17\n"
+            "last-reviewed: 2026-09-17\n"
+            "pr_numbers:\n"
+            "  - 1234\n"
+            "  - 5678\n"
+            "---\n"
+            "\n# test waiver\n"
+        )
+        # 用 monkey-patch WAIVERS_DIR 临时指向 tmp/waivers_test
+        # 但要确保其他 .md 不被 scan
+        # 简单方案: copy 现有 waivers 旁路 (不扫原 dir)
+        monkeypatch.setattr(mod, "WAIVERS_DIR", waivers_subdir)
+        monkeypatch.setenv("GITHUB_PR_NUMBER", "1234")
+        hits = mod._active_waivers()
+        assert "waiver-test-001" in hits
+        # 5678 单独跑
+        monkeypatch.setenv("GITHUB_PR_NUMBER", "5678")
+        hits = mod._active_waivers()
+        assert "waiver-test-001" in hits
+        # 9999 不命中
+        monkeypatch.setenv("GITHUB_PR_NUMBER", "9999")
+        assert mod._active_waivers() == []
 
 
 class TestCollaborationObjective:
