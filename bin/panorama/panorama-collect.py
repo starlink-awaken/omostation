@@ -101,7 +101,46 @@ def collect_gates() -> list[dict]:
     gates.insert(a9_index, collect_a9_gate(payload=None, dashboard_live=True))
     rf0_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A9") + 1
     gates.insert(rf0_index, collect_rf0_gate())
+    rc_index = next(i for i, gate in enumerate(gates) if gate["id"] == "RF0") + 1
+    gates.insert(rc_index, collect_reference_cell_gate())
     return gates
+
+
+def collect_reference_cell_gate() -> dict:
+    """Project attempt-local Direct Local Reference Cell evidence read-only."""
+    verifier = CODE_ROOT / "bin/gac/reference-cell-dl-verify.py"
+    if not verifier.is_file():
+        return {
+            "id": "RC-DL", "title": "Reference Cell Direct Local",
+            "verdict": "UNAVAILABLE", "detail": "verifier missing",
+            "live": False, "depends_on": [],
+        }
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(verifier), "--json"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        report = json.loads(completed.stdout)
+        if not isinstance(report, dict) or report.get("schema") != "reference-cell-direct-local-r0-verification/v1":
+            raise ValueError("invalid verifier payload")
+    except Exception as exc:  # noqa: BLE001 - fail closed, never fake admission
+        return {
+            "id": "RC-DL", "title": "Reference Cell Direct Local",
+            "verdict": "UNAVAILABLE", "detail": f"verifier unavailable: {type(exc).__name__}",
+            "live": False, "depends_on": [],
+        }
+    verdict = report.get("verdict")
+    return {
+        "id": "RC-DL", "title": "Reference Cell Direct Local",
+        "verdict": verdict,
+        "detail": (
+            f"latest evidence {report.get('latest_observed_at')}; "
+            f"result={report.get('result')}; backend={report.get('execution_backend')}; "
+            f"workspace_writes={report.get('workspace_writes')}"
+        ),
+        "live": verdict == "PASS",
+        "depends_on": [],
+    }
 
 
 def collect_rf0_gate() -> dict:
@@ -2321,6 +2360,7 @@ def build_payload() -> dict:
         "agent_cell_semantic": collect_agent_cell_semantic(),
         "claims_authority": collect_claims_authority(),
         "claims_task16": collect_claims_task16_preflight(),
+        "reference_cell": collect_reference_cell_gate(),
         "asd": collect_asd(),
         "probes": collect_probes(),
         "resident_agents": collect_resident_agents(),

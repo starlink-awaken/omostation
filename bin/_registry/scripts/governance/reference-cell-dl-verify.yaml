@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/gac/reference-cell-dl-verify.py
+name: Reference Cell Direct Local Verifier
+category: governance
+owner: governance-team
+description: Read-only verifier for attempt-local Direct Local Reference Cell R0 evidence.
+inputs:
+  - name: --json
+    type: flag
+    required: false
+outputs:
+  - type: stdout
+  - type: exit_code
+triggers: [manual, scheduled]
+tags: [reference-cell, direct-local, r0, governance]
