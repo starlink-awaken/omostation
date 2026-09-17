@@ -48,6 +48,9 @@ def test_panorama_refresh_uses_deployed_collector_bound_to_canonical_root() -> N
     assert payload["StartInterval"] == 240
     assert payload["RunAtLoad"] is False
     assert payload["EnvironmentVariables"]["PANORAMA_ROOT"] == "/Users/xiamingxing/Workspace"
+    assert payload["EnvironmentVariables"]["PANORAMA_CODE_ROOT"] == (
+        "/Users/xiamingxing/.local/share/zhixing-dashboard/code-main"
+    )
     assert payload["EnvironmentVariables"]["PYTHONPATH"] == "/Users/xiamingxing/Workspace/projects/omo/src"
     assert payload["ProgramArguments"][-1] == "/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py"
 
