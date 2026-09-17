@@ -729,6 +729,173 @@ def collect_observability_events() -> dict:
                       for e in events[:20] if isinstance(e, dict)]}
 
 
+def _to_iso(ts) -> str:
+    """Normalize timestamp to ISO 8601 string."""
+    if ts is None:
+        return ""
+    if isinstance(ts, (int, float)):
+        try:
+            return datetime.fromtimestamp(ts, tz=UTC).isoformat().replace("+00:00", "Z")
+        except (OSError, OverflowError, ValueError):
+            return str(ts)
+    s = str(ts).strip()
+    if s.endswith("Z"):
+        s = s[:-1]
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        return dt.isoformat().replace("+00:00", "Z")
+    except Exception:
+        return s
+
+
+def _ts_sort_key(ts) -> float:
+    """Convert any timestamp to numeric sort key."""
+    if ts is None:
+        return 0.0
+    if isinstance(ts, (int, float)):
+        return float(ts)
+    s = str(ts).strip()
+    if s.endswith("Z"):
+        s = s[:-1]
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        return dt.timestamp()
+    except Exception:
+        return 0.0
+
+
+def _make_summary(evt: dict, max_len: int = 80) -> str:
+    """Build a short summary string from an event dict."""
+    for key in ("summary", "message", "detail", "objective", "description", "error", "result"):
+        v = evt.get(key)
+        if v and isinstance(v, str):
+            return v[:max_len]
+    parts = []
+    for k in ("event", "event_type", "type", "status", "state", "action"):
+        v = evt.get(k)
+        if v and isinstance(v, str):
+            parts.append(v)
+    if parts:
+        return ": ".join(parts)[:max_len]
+    return ""
+
+
+def collect_recent_events() -> dict:
+    """最近事件聚合（跨 JSONL 源）。"""
+    sources = {
+        "agent-tick-daemon": ROOT / ".omo/state/agent-tick-daemon.jsonl",
+        "agent-workflows": ROOT / ".omo/_delivery/agent-workflows/events.jsonl",
+        "workflow-mesh": ROOT / ".omo/_knowledge/workflow-mesh/events.jsonl",
+        "swarm-conflicts": ROOT / ".omo/_delivery/swarm-conflicts/events.jsonl",
+        "signal-poller": ROOT / ".omo/_delivery/signal-poller/poll-log.jsonl",
+    }
+    all_events = []
+    per_source_counts = {}
+    cutoff_ts = datetime.now(tz=UTC).timestamp() - 86400
+
+    for src_name, path in sources.items():
+        count = 0
+        try:
+            if not path.exists():
+                per_source_counts[src_name] = 0
+                continue
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        evt = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    count += 1
+                    ts_raw = evt.get("ts") or evt.get("occurred_at") or evt.get("created_at") or evt.get("timestamp")
+                    if _ts_sort_key(ts_raw) < cutoff_ts:
+                        continue
+                    evt_type = evt.get("event") or evt.get("event_type") or evt.get("type") or "unknown"
+                    agent = evt.get("actor") or evt.get("agent_profile") or evt.get("agent") or ""
+                    all_events.append({
+                        "ts": _to_iso(ts_raw),
+                        "type": str(evt_type)[:30],
+                        "agent": str(agent)[:30],
+                        "source": src_name,
+                        "summary": _make_summary(evt),
+                    })
+        except Exception:
+            pass
+        per_source_counts[src_name] = count
+
+    all_events.sort(key=lambda e: _ts_sort_key(e.get("ts", "")), reverse=True)
+    return {"events": all_events[:50], "per_source_counts": per_source_counts, "total_available": sum(per_source_counts.values())}
+
+
+def collect_metrics_kpi() -> dict:
+    """关键 KPI 聚合。"""
+    kpi = {}
+    sources = {
+        "agent-tick-daemon": ROOT / ".omo/state/agent-tick-daemon.jsonl",
+        "agent-workflows": ROOT / ".omo/_delivery/agent-workflows/events.jsonl",
+        "workflow-mesh": ROOT / ".omo/_knowledge/workflow-mesh/events.jsonl",
+    }
+    events_per_source = {}
+    total_events_24h = 0
+    cutoff_ts = datetime.now(tz=UTC).timestamp() - 86400
+    for src_name, path in sources.items():
+        cnt = recent = 0
+        try:
+            if not path.exists():
+                continue
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    cnt += 1
+                    try:
+                        evt = json.loads(line)
+                        if _ts_sort_key(evt.get("ts") or evt.get("occurred_at")) >= cutoff_ts:
+                            recent += 1
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        events_per_source[src_name] = cnt
+        total_events_24h += recent
+    kpi["events_per_source"] = events_per_source
+    kpi["total_events_24h"] = total_events_24h
+    kpi["events_per_hour_24h"] = round(total_events_24h / 24, 1)
+
+    # Health scores
+    try:
+        import yaml
+        health_path = ROOT / ".omo/state/health.yaml"
+        if health_path.exists():
+            health = yaml.safe_load(health_path.read_text())
+            if isinstance(health, dict):
+                kpi["health_score"] = health.get("health_score")
+                kpi["freshness_score"] = health.get("freshness_score")
+                kpi["drift_score"] = health.get("drift_score")
+                kpi["alignment_score"] = health.get("alignment_score")
+                kpi["staleness_score"] = health.get("staleness_score")
+    except Exception:
+        pass
+
+    # Agent tick success
+    try:
+        tick_path = ROOT / ".omo/state/agent-tick-daemon.jsonl"
+        if tick_path.exists():
+            with open(tick_path, "r") as f:
+                lines = f.readlines()
+            if lines:
+                last = json.loads(lines[-1].strip())
+                kpi["agent_tick_success_rate"] = round(last.get("ok_count", 0) / max(last.get("agent_count", 1), 1), 3)
+    except Exception:
+        pass
+
+    return kpi
+
+
+
 def collect_scene_v3() -> dict:
     """场景卡 v3（与 collect_scene_cards 共享数据源，仅保留计数兼容性）。"""
     return collect_scene_cards()
@@ -1329,6 +1496,8 @@ def build_payload() -> dict:
         "pipeline": collect_pipeline(),
         "a2a": collect_a2a(),
         "observability_events": collect_observability_events(),
+        "recent_events": collect_recent_events(),
+        "metrics_kpi": collect_metrics_kpi(),
         "scene_v3": collect_scene_v3(),
         "signal_poller": collect_signal_poller(),
         "journey_executions": collect_journey_executions(),
