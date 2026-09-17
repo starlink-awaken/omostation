@@ -306,10 +306,10 @@ jobs:
   # 常驻静态服务(KeepAlive) + 服务内 5min 自动刷新; 与 Serena 观测站(43191)互补。
 
   - name: panorama-dashboard
-    schedule: "*/5 * * * *"
+    schedule: "always"
     command: >-
       PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
-      /Users/xiamingxing/Workspace/bin/panorama/panorama-serve.py --once
+      /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-serve.py --port 43910 --no-refresh
     planes: [launchd]
     reality: installed
     status: active
@@ -317,9 +317,25 @@ jobs:
     sfop_slot: S
     reconciliation_note: >
       plist ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
-      (runtime/cron/ 同源)。常驻 serve(KeepAlive=true) + 服务内每 5min 采集刷新，
-      --once 供 launchd StartInterval 场景兜底。产物 runtime/dashboard/(gitignored)。
-      首次安装需手动: cp plist + launchctl load。
+      (runtime/cron/ 同源)。常驻 serve(KeepAlive=true) 只负责静态站点；
+      刷新由 panorama-dashboard-refresh 独立执行，避免共享主仓旧 collector
+      覆盖最新运行态投影。产物 runtime/dashboard/(gitignored)。
+
+  - name: panorama-dashboard-refresh
+    schedule: "*/4 * * * *"
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
+      /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: agent-experience-steward
+    sfop_slot: S
+    reconciliation_note: >-
+      部署版 collector 显式通过 PANORAMA_ROOT 指向 canonical Workspace，
+      避免共享主仓本地 checkout 落后时覆盖 Agent Cell 等 origin/main 投影。
+      4分钟频率与 Agent Cell smoke 闭环。plist 同源:
+      runtime/cron/com.omostation.panorama-dashboard-refresh.plist。
 
   - name: agent-cell-pool-live-smoke
     schedule: "*/4 * * * *"

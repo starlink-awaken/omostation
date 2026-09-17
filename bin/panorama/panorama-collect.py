@@ -17,13 +17,15 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+_CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
+ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "runtime" / "dashboard"
 DATA_JSON = OUT_DIR / "data.json"
 INDEX_HTML = OUT_DIR / "index.html"
@@ -552,7 +554,11 @@ def collect_role_admission() -> dict:
 
 def _verify_agent_cell_receipts(state_file: Path) -> dict:
     """Invoke the no-mutation runtime verifier and degrade fail-closed."""
-    verifier = ROOT / "bin/ssot/agent-cell-pool-live-smoke.py"
+    candidates = [
+        ROOT / "bin/ssot/agent-cell-pool-live-smoke.py",
+        Path(__file__).with_name("agent-cell-pool-live-smoke.py"),
+    ]
+    verifier = next((candidate for candidate in candidates if candidate.is_file()), None)
     empty = {
         "schema": "agent-cell-pool-live-smoke-verification/v1",
         "ok": False,
@@ -568,12 +574,12 @@ def _verify_agent_cell_receipts(state_file: Path) -> dict:
         "latest_receipt_digest": None,
         "latest_finished_at": None,
     }
-    if not verifier.is_file():
+    if verifier is None:
         return empty
     try:
         completed = subprocess.run(
             [sys.executable, str(verifier), "--verify", "--state-file", str(state_file), "--json"],
-            cwd=ROOT,
+            cwd=ROOT if ROOT.exists() else None,
             capture_output=True,
             text=True,
             timeout=20,

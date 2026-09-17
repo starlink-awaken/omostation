@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  com.omostation.panorama-dashboard.plist
-  Static Panorama server only; refresh is owned by panorama-dashboard-refresh.
+  com.omostation.panorama-dashboard-refresh.plist
+  Deployed Panorama collector bound to the canonical Workspace root.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>com.omostation.panorama-dashboard</string>
+    <string>com.omostation.panorama-dashboard-refresh</string>
     <key>ProgramArguments</key>
     <array>
       <string>/opt/homebrew/bin/python3</string>
       <string>-B</string>
-      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-serve.py</string>
-      <string>--port</string>
-      <string>43910</string>
-      <string>--no-refresh</string>
+      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>
@@ -23,20 +20,20 @@
       <string>1</string>
       <key>PATH</key>
       <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
-      <key>PANORAMA_PORT</key>
-      <string>43910</string>
+      <key>PYTHONPATH</key>
+      <string>/Users/xiamingxing/Workspace/projects/omo/src</string>
       <key>PANORAMA_ROOT</key>
       <string>/Users/xiamingxing/Workspace</string>
     </dict>
     <key>WorkingDirectory</key>
     <string>/Users/xiamingxing/Workspace</string>
-    <key>KeepAlive</key>
-    <true/>
+    <key>StartInterval</key>
+    <integer>240</integer>
     <key>RunAtLoad</key>
-    <true/>
+    <false/>
     <key>StandardOutPath</key>
-    <string>/Users/xiamingxing/Workspace/runtime/dashboard/launchd.log</string>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/panorama-dashboard-refresh.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/xiamingxing/Workspace/runtime/dashboard/launchd.log</string>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/panorama-dashboard-refresh.log</string>
   </dict>
 </plist>

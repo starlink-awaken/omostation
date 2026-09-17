@@ -19,7 +19,8 @@ import sys
 from functools import partial
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+_CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
+ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "runtime" / "dashboard"
 COLLECT = ROOT / "bin" / "panorama" / "panorama-collect.py"
 PORT = int(os.environ.get("PANORAMA_PORT", "43910"))
@@ -57,9 +58,12 @@ def main() -> int:
     ap.add_argument("--no-refresh", action="store_true", help="服务内不启用 5min 自动刷新")
     args = ap.parse_args()
 
-    code = ensure_fresh()
-    if code != 0:
-        return code
+    if args.no_refresh:
+        code = 0
+    else:
+        code = ensure_fresh()
+        if code != 0:
+            return code
     if args.once:
         return 0
 
