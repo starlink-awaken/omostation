@@ -15,6 +15,7 @@
     "scene_type": { "type": "string", "enum": ["inbound", "outbound", "cycle"] },
     "domain": { "type": "string", "enum": ["work", "health", "research", "knowledge", "governance"] },
     "lifecycle": { "type": "string", "enum": ["draft", "shadow", "assisted", "supervised", "routine"] },
+    "status": { "type": "string", "enum": ["active", "completed", "archived"], "description": "active=在役(默认); completed=一次性任务已完成(BET done); archived=归档" },
     "activation": { "type": "string", "enum": ["preview", "controlled", "active", "allowed"] },
     "owner": { "type": "string" },
     "approver": { "type": "string" },
