@@ -550,6 +550,93 @@ def collect_role_admission() -> dict:
         return {"roles": [], "error": str(e)}
 
 
+def collect_agent_cell_pool() -> dict:
+    """Project persisted AGE-v2 Agent Cell state without importing a writer.
+
+    CellStateManager creates directories as a constructor side effect, so this
+    projection reads the canonical JSON file directly.  Only bounded summaries
+    are exposed; prompts, plans, results, and other context never enter the UI.
+    """
+    state_file = ROOT / ".omo/state/agent-cell/cell_states.json"
+    projection = {
+        "schema": "agent-cell-pool-projection/v1",
+        "source": "runtime://.omo/state/agent-cell/cell_states.json",
+        "available": False,
+        "live": False,
+        "verdict": "EMPTY",
+        "total": 0,
+        "active": 0,
+        "failed": 0,
+        "state_distribution": {},
+        "latest_saved_at": None,
+        "age_seconds": None,
+        "cells": [],
+    }
+    if not state_file.is_file():
+        return projection
+    try:
+        states = json.loads(state_file.read_text(encoding="utf-8"))
+        if not isinstance(states, dict):
+            raise ValueError("state root is not an object")
+    except Exception as e:  # noqa: BLE001 - malformed runtime state stays visible
+        return {**projection, "verdict": "UNPARSEABLE", "error": type(e).__name__}
+
+    rows = [row for row in states.values() if isinstance(row, dict)]
+    cells = [
+        {
+            "cell_id": str(row.get("cell_id", "")),
+            "state": str(row.get("state", "unknown")),
+            "episode_id": row.get("episode_id"),
+            "current_role": row.get("current_role"),
+            "handoff_count": len(row.get("handoff_log") or []),
+            "saved_at": row.get("saved_at"),
+        }
+        for row in rows
+    ]
+    cells.sort(key=lambda row: (str(row.get("saved_at") or ""), str(row.get("cell_id"))), reverse=True)
+    distribution: dict[str, int] = {}
+    for row in cells:
+        state = str(row["state"])
+        distribution[state] = distribution.get(state, 0) + 1
+
+    latest = max((str(row.get("saved_at") or "") for row in cells), default="")
+    age_seconds = None
+    if latest:
+        try:
+            observed = datetime.fromisoformat(latest.replace("Z", "+00:00"))
+            delta = (datetime.now(UTC) - observed).total_seconds()
+            if delta >= 0:
+                age_seconds = int(delta)
+        except ValueError:
+            pass
+
+    active = sum(distribution.get(state, 0) for state in ("planning", "executing", "verifying"))
+    failed = distribution.get("failed", 0)
+    live = age_seconds is not None and age_seconds <= 300
+    if not rows:
+        verdict = "EMPTY"
+    elif failed:
+        verdict = "FAILED"
+    elif not live:
+        verdict = "STALE"
+    else:
+        verdict = "PASS"
+
+    return {
+        **projection,
+        "available": True,
+        "live": live,
+        "verdict": verdict,
+        "total": len(cells),
+        "active": active,
+        "failed": failed,
+        "state_distribution": dict(sorted(distribution.items())),
+        "latest_saved_at": latest or None,
+        "age_seconds": age_seconds,
+        "cells": cells[:20],
+    }
+
+
 def collect_asd() -> dict:
     _ensure_omo_path()
     """ASD 五面板快照（数据契约；degraded 面板可见）。"""
@@ -563,7 +650,10 @@ def collect_asd() -> dict:
         attach_panel(snap, Panel("spine", {"dfs": "道法术器", "sfop": "八律"},
                                 PanelProvenance("ssot://ARCHITECTURE+os-pattern", 30)))
         # Agents
-        attach_panel(snap, Panel("agents", collect_role_admission(),
+        attach_panel(snap, Panel("agents", {
+            "role_admission": collect_role_admission(),
+            "agent_cell_pool": collect_agent_cell_pool(),
+        },
                                 PanelProvenance("ssot://role-admission-registry", 60)))
         # Milestones
         attach_panel(snap, Panel("milestones", {"windows": "Y1Q1-Y3H2"},
@@ -1826,6 +1916,7 @@ def build_payload() -> dict:
         "runtime": collect_runtime(),
         "docs": collect_docs(),
         "role_admission": collect_role_admission(),
+        "agent_cell_pool": collect_agent_cell_pool(),
         "asd": collect_asd(),
         "probes": collect_probes(),
         "resident_agents": collect_resident_agents(),
@@ -2024,6 +2115,10 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
 <section class="sec" id="s-agents">
 <h2>Agent 全景</h2><p class="sub">worktree / 分支 / 最近活动 · 所有 agent 可见</p>
 <div class="card"><table id="agenttable"><thead><tr><th>worktree</th><th>分支</th><th>最近活动</th></tr></thead><tbody></tbody></table></div>
+<div class="card" style="margin-top:14px"><h3>Agent Cell Pool</h3>
+ <div class="kpi-grid" id="cellkpi"></div>
+ <table id="celltable" style="margin-top:12px"><thead><tr><th>cell</th><th>episode</th><th>state</th><th>role</th><th>handoffs</th><th>saved</th></tr></thead><tbody></tbody></table>
+</div>
 </section>
 <section class="sec" id="s-bets">
 <h2>任务与里程碑</h2><p class="sub">三年台账窗口进度 · in_progress / blocked 聚焦</p>
@@ -2177,6 +2272,23 @@ $('gategrid').innerHTML=D.gates.map(g=>'<div class="card"><h3>'+g.id+' · '+g.ti
 // agents
 $('agenttable').querySelector('tbody').innerHTML=D.agents.map(a=>'<tr><td class="mono">'+a.worktree+'</td><td class="mono">'+(a.branch||'')+'</td><td>'+
 (a.last_activity_hours==null?'<span class="chip n">n/a</span>':a.last_activity_hours<2?'<span class="chip p">'+a.last_activity_hours+'h</span>':a.last_activity_hours<24?'<span class="chip w">'+a.last_activity_hours+'h</span>':'<span class="chip f">'+a.last_activity_hours+'h</span>')+'</td></tr>').join('');
+// agent cells
+(function(){
+  const cp=D.agent_cell_pool||{};
+  const cls=cp.verdict==='PASS'?'p':(cp.verdict==='FAILED'||cp.verdict==='UNPARSEABLE'?'f':'n');
+  $('cellkpi').innerHTML=[
+    {v:cp.total||0,l:'total',c:cp.available?'':'n'},{v:cp.active||0,l:'active'},
+    {v:cp.failed||0,l:'failed',c:cp.failed?'f':''},
+    {v:(cp.age_seconds==null?'n/a':cp.age_seconds+'s'),l:'age',c:cp.live?'':'w'},
+    {v:cp.verdict||'EMPTY',l:'projection',c:cls}
+  ].map(k=>'<div class="card kpi"><b class="'+(k.c||'')+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
+  $('celltable').querySelector('tbody').innerHTML=(cp.cells||[]).map(c=>{
+    const stateClass=c.state==='failed'?'f':(['planning','executing','verifying'].includes(c.state)?'p':'n');
+    return '<tr><td class="mono">'+c.cell_id+'</td><td class="mono">'+(c.episode_id||'—')+'</td>'+
+      '<td><span class="chip '+stateClass+'">'+c.state+'</span></td><td>'+(c.current_role||'—')+'</td>'+
+      '<td>'+(c.handoff_count||0)+'</td><td class="mono">'+(c.saved_at||'—').slice(0,19).replace('T',' ')+'</td></tr>';
+  }).join('')||'<tr><td colspan=6 class="mono">无持久化 Cell 状态（合法空态）</td></tr>';
+})();
 // bets
 $('windows').innerHTML=Object.entries(D.bets.windows).map(([w,d])=>{
 const pct=Math.round(100*d.done/d.total);
