@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/claims-authority-status.py
+name: Claims Authority Status Observer
+category: governance
+owner: governance-team
+description: Read-only Claims Authority status observer for Panorama; performs no mutation and grants no authority.
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - projects/omo/src/omo/workflow/claims_authority.py
+maturity: active
+last_reviewed: "2026-09-17"

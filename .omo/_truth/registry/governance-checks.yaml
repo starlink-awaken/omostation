@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 673 # 2026-09-17 672→673: Agent Cell Role/Capsule/Mesh/Queue semantic live canary
+    script_baseline: 674 # 2026-09-17 673→674: read-only Claims Authority status observer for Panorama
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
