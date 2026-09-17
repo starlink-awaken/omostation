@@ -182,7 +182,7 @@ warning_exceptions:
     - id: legacy-omo-knowledge-enums
       rule: invalid_metadata
       surface: omo-knowledge
-      max_findings: 80 # 2026-09-15 70→80: T10-151 closeout spec + ledger 新增推高计数; 2026-09-13 66→67→70: T3-05 mind model + T7-07 refine + 持续 retro 推高计数
+      max_findings: 70 # 2026-09-16 80→70: restore baseline after A8 implementation and broker recovery; 2026-09-13 66→67→70: T3-05 mind model + T7-07 refine + 持续 retro 推高计数
       expires: 2026-10-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
