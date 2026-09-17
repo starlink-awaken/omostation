@@ -29,8 +29,6 @@ DATA_JSON = OUT_DIR / "data.json"
 INDEX_HTML = OUT_DIR / "index.html"
 
 GATE_DECLARED = {
-    "A6": {"title": "Orca R0 准入", "state": "not_admitted", "depends_on": ["A8"],
-           "note": "T10-149 只读验证工具链；未过门零写入"},
     "RF0": {"title": "Ruflo 只读协作准入", "state": "not_admitted", "depends_on": [],
             "note": "side-effect-free 观察；独立驱动不建第二队列"},
 }
@@ -84,6 +82,8 @@ def collect_gates() -> list[dict]:
     for gid, d in GATE_DECLARED.items():
         gates.append({"id": gid, "title": d["title"], "verdict": d["state"].upper(),
                       "detail": d["note"], "live": False, "depends_on": d["depends_on"]})
+    a6_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A5") + 1
+    gates.insert(a6_index, collect_a6_gate())
     a7_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A6") + 1
     gates.insert(a7_index, collect_a7_gate())
     a8_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A7") + 1
@@ -91,6 +91,77 @@ def collect_gates() -> list[dict]:
     a9_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A8") + 1
     gates.insert(a9_index, collect_a9_gate(payload=None))
     return gates
+
+
+def collect_a6_gate() -> dict:
+    """Project A6 from the read-only Orca R0 verification matrix.
+
+    The verifier may launch no orchestration work; it queries runtime state and
+    historical worker settlement.  Raw payloads are discarded after deriving
+    aggregate proof so tokens, workspace paths, and task identifiers do not
+    enter the dashboard.
+    """
+    verifier = ROOT / "bin/gac/orca-r0-verify.py"
+    if not verifier.is_file():
+        return {
+            "id": "A6", "title": "Orca R0 准入", "verdict": "NOT_ADMITTED",
+            "detail": "Orca R0 verifier missing", "live": False,
+            "depends_on": ["A8"],
+        }
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(verifier), "--json"],
+            cwd=ROOT, capture_output=True, text=True, timeout=90, check=False,
+        )
+        report = json.loads(completed.stdout)
+    except Exception:  # noqa: BLE001 - unavailable runtime remains not admitted
+        return {
+            "id": "A6", "title": "Orca R0 准入", "verdict": "NOT_ADMITTED",
+            "detail": "Orca R0 verifier unavailable", "live": False,
+            "depends_on": ["A8"],
+        }
+
+    probes = report.get("probes") if isinstance(report.get("probes"), dict) else {}
+    r0 = report.get("r0_transactions") if isinstance(report.get("r0_transactions"), dict) else {}
+    trust = report.get("trust") if isinstance(report.get("trust"), dict) else {}
+    write_guard = trust.get("write_argv_guard") if isinstance(trust.get("write_argv_guard"), dict) else {}
+    probe_pass, probe_total = int(probes.get("passed", 0)), int(probes.get("total", 0))
+    accepted = int(r0.get("accepted", 0))
+    transactions = r0.get("transactions") if isinstance(r0.get("transactions"), list) else []
+    transactions_pass = bool(transactions) and all(
+        isinstance(item, dict) and item.get("ok") is True for item in transactions
+    )
+    runtime_ready = report.get("runtime_ready") is True
+    trust_ok = write_guard.get("ok") is True
+    passed = (
+        report.get("ok") is True
+        and runtime_ready
+        and probe_total > 0
+        and probe_pass == probe_total
+        and accepted >= 1
+        and transactions_pass
+        and trust_ok
+    )
+
+    if not passed:
+        return {
+            "id": "A6", "title": "Orca R0 准入", "verdict": "NOT_ADMITTED",
+            "detail": (
+                f"Orca R0 verifier not complete: runtime_ready={runtime_ready}, "
+                f"probes {probe_pass}/{probe_total}, R0 evidence {accepted}/1, "
+                f"write_guard_ok={trust_ok}"
+            ),
+            "live": False, "depends_on": ["A8"],
+        }
+
+    return {
+        "id": "A6", "title": "Orca R0 准入", "verdict": "PASS",
+        "detail": (
+            f"read-only verifier complete: runtime ready, probes {probe_pass}/{probe_total}, "
+            "R0 dispatch/worker/reclaim evidence accepted, write guard OK"
+        ),
+        "live": True, "depends_on": ["A8"],
+    }
 
 
 def collect_a7_gate() -> dict:

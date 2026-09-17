@@ -5,7 +5,7 @@
   "detail": "all technical checks pass",
   "owner": "infra-team",
   "exit_criteria": "submodule_fresh_within_7d;reference_alignment_pass;launchd_keepalive_active",
-  "refresh_time": "2026-09-17T12:24:53Z",
+  "refresh_time": "2026-09-17T12:51:43Z",
   "sha256_digest": "sha256:0066c8af23c77962acb2f9b773660d149704e72c91427db1c8633789887ff2fd",
   "source_receipt": "receipt://.omo/_delivery/environment-evidence/_gate-health.json",
   "not_admitted_legal_states": "NOT_ADMITTED 合法 (A6/A7/RF0 设计如此, 非缺陷)",
