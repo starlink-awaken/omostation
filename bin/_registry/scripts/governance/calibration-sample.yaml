@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/calibration-sample.py
+name: Calibration Sample
+category: governance
+owner: governance-team
+description: "Phase 1 Calibration sampler — runs 30 document-review samples via inbox-to-decision journey and computes weighted calibration score"
+inputs:
+  - name: samples
+    type: integer
+    default: 30
+  - name: output
+    type: string
+outputs:
+  - type: json
+  - type: exit_code
+dependencies:
+  - runtime/ssot-stable/journey-runner.py
+triggers: []
+related:
+  - BET-Y3H1-T7-02
+maturity: draft
+last_reviewed: "2026-09-17"
