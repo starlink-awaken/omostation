@@ -1,0 +1,96 @@
+<!-- zhixing-scene-panel v1 — 版本化资产, 由 bin/gac/zhixing-panel-sync.py 幂等注入 -->
+<!-- NAV -->
+<a href="#scene-system" class="nav-item-engineering"><span class="nav-symbol">🃏</span>场景系统</a>
+<!-- SECTION -->
+<section id="scene-system" class="section" aria-labelledby="title-ss">
+<div class="section-breadcrumb"><span>📍 场景系统</span><span class="sep">|</span><span>关联：</span><a href="#knowledge-memory">知识记忆</a><a href="#swarm">Agent 与协同</a><a href="#gov">恢复与准入</a></div>
+<div class="section-head"><div class="eyebrow">P-SCENE / SCENE SYSTEM RUNTIME</div><h1 id="title-ss">场景系统运行态</h1><button onclick="refreshPanorama()" style="float:right;padding:6px 14px;background:#5b9dff;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">⟳ 刷新</button><div style="clear:both"></div><p class="lead">场景卡生命周期（在役/已完成）、信号轮询、旅程执行、连接器清单、远程卫生。</p></div>
+<div class="grid three gap" id="ss-kpi"><div class="loading-center" style="padding:16px;grid-column:1/-1"><span class="loading-spinner"></span><span class="loading-text">加载场景系统 KPI...</span></div></div>
+<div class="grid two gap" style="margin-top:14px">
+  <div class="card"><h3>场景卡生命周期分布</h3><div id="ss-lifecycle"></div></div>
+  <div class="card"><h3>旅程执行（escalated / succeeded）</h3><div id="ss-executions"></div></div>
+</div>
+<div class="grid two gap" style="margin-top:14px">
+  <div class="card"><h3>连接器清单</h3><div id="ss-connectors"></div></div>
+  <div class="card"><h3>远程卫生 / BOS 验证</h3><div id="ss-hygiene"></div></div>
+</div>
+<div class="card" style="margin-top:14px"><h3>旅程规格（human_gate 门控）<span class="chip neutral" id="ss-journey-count">0</span></h3><div id="ss-journeys" style="max-height:260px;overflow-y:auto"></div></div>
+</section>
+<!-- SCRIPT -->
+<script>
+function renderSceneSystem(D){
+  if(!D)return;
+  var sc=D.scene_cards||{},sp=D.signal_poller||{},je=D.journey_executions||{};
+  var co=D.connectors||{},rh=D.remote_hygiene||{},bv=D.bos_verifier||{},js=D.journeys||{};
+  var n=function(v){return v==null?'--':v};
+  var kpi=document.getElementById('ss-kpi');
+  if(kpi){
+    var hasSplit=(sc.active!=null);
+    var items=[
+      [hasSplit?'在役场景卡':'总场景卡',n(hasSplit?sc.active:sc.total),'#5b9dff'],
+      ['已完成(历史)',n(sc.completed||0),'#7d93b0'],
+      ['有触发器',n(sc.with_trigger),'#3ecf9a'],
+      ['旅程规格',n(js.total),'#5b9dff'],
+      ['已执行',n(je.total),'#5b9dff'],
+      ['escalated',n(je.escalated),(je.escalated>0?'#f0b453':'#3ecf9a')],
+      ['自动完成率',(je.auto_complete_rate==null?'--':je.auto_complete_rate),'#3ecf9a'],
+      ['watermark',n(sp.watermark_entries),'#5b9dff'],
+      ['连接器 可用/总',(co.available||[]).length+'/'+n(co.total),'#5b9dff']
+    ];
+    kpi.innerHTML=items.map(function(x){return '<div class="card" style="text-align:center"><b style="font-size:22px;color:'+x[2]+'">'+x[1]+'</b><br><span style="font-size:11px;color:var(--muted)">'+x[0]+'</span></div>'}).join('');
+  }
+  var lc=document.getElementById('ss-lifecycle');
+  if(lc){
+    var lifecycle=sc.lifecycle||{};
+    var total=sc.total||1;
+    var order=['draft','shadow','assisted','supervised','routine'];
+    var colors={draft:'#7d93b0',shadow:'#f0b453',assisted:'#5b9dff',supervised:'#3ecf9a',routine:'#a78bfa'};
+    var keys=order.filter(function(k){return lifecycle[k]!=null}).concat(Object.keys(lifecycle).filter(function(k){return order.indexOf(k)<0}));
+    lc.innerHTML=keys.map(function(k){
+      var v=lifecycle[k]||0;var pct=Math.round(v/total*100);
+      return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px"><span>'+k+'</span><b>'+v+' ('+pct+'%)</b></div>'+
+        '<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:4px"><div style="height:100%;width:'+pct+'%;background:'+(colors[k]||'#5b9dff')+';border-radius:4px"></div></div></div>';
+    }).join('')||emptyState('🃏','暂无场景卡数据','场景卡生命周期分布将在此处显示');
+    if(sc.completed)lc.innerHTML+='<div style="margin-top:10px;font-size:11px;color:var(--muted)">'+sc.completed+' 个为一次性历史任务（status: completed，无触发器属预期）</div>';
+  }
+  var ex=document.getElementById('ss-executions');
+  if(ex){
+    ex.innerHTML='<div style="display:flex;gap:10px;text-align:center">'+
+      '<div style="flex:1"><b style="font-size:24px;color:#3ecf9a">'+(je.succeeded||0)+'</b><br><span class="small muted">succeeded</span></div>'+
+      '<div style="flex:1"><b style="font-size:24px;color:#f0b453">'+(je.escalated||0)+'</b><br><span class="small muted">escalated</span></div>'+
+      '<div style="flex:1"><b style="font-size:24px;color:#f26d6d">'+(je.failed||0)+'</b><br><span class="small muted">failed</span></div>'+
+      '<div style="flex:1"><b style="font-size:24px;color:#5b9dff">'+(je.auto_complete_rate==null?'--':je.auto_complete_rate)+'</b><br><span class="small muted">自动完成率</span></div>'+
+      '</div>';
+  }
+  var cn=document.getElementById('ss-connectors');
+  if(cn){
+    var wired=co.wired_to_scenes||[],unwired=co.unwired_available||[];
+    cn.innerHTML='<div style="margin-bottom:10px"><b style="font-size:12px;color:#3ecf9a">已接线 ('+wired.length+')</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+
+      (wired.map(function(c){return '<span class="chip" style="background:#3ecf9a20;color:#3ecf9a">'+c+'</span>'}).join('')||'<span class="muted">无</span>')+'</div></div>'+
+      '<div><b style="font-size:12px;color:var(--muted)">可用未接线 ('+unwired.length+')</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+
+      (unwired.map(function(c){return '<span class="chip neutral">'+c+'</span>'}).join('')||'<span class="muted">无</span>')+'</div></div>';
+  }
+  var hy=document.getElementById('ss-hygiene');
+  if(hy){
+    var ok=function(v){return v?'#3ecf9a':'#f26d6d'};
+    hy.innerHTML='<div style="font-size:12px">'+
+      '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span>origin 规范</span><b style="color:'+ok(rh.origin_canonical)+'">'+(rh.origin_canonical?'✓':'✗')+'</b></div>'+
+      '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span>origin push 规范</span><b style="color:'+ok(rh.origin_push_canonical)+'">'+(rh.origin_push_canonical?'✓':'✗')+'</b></div>'+
+      '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span>子模块检查</span><b>'+(rh.submodules_checked||0)+'</b></div>'+
+      '<div style="display:flex;justify-content:space-between;padding:5px 0"><span>BOS URI OK / errors</span><b><span style="color:#3ecf9a">'+(bv.last_run_ok||0)+'</span> / <span style="color:'+((bv.last_run_errors||0)>0?'#f26d6d':'#3ecf9a')+'">'+(bv.last_run_errors||0)+'</span></b></div>'+
+      '</div>';
+  }
+  var jw=document.getElementById('ss-journeys'),jc=document.getElementById('ss-journey-count');
+  var specs=js.journeys||[];
+  if(jc)jc.textContent=specs.length;
+  if(jw){
+    jw.innerHTML=specs.slice(0,30).map(function(j){
+      var g=(j.human_gates||0);
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px">'+
+        '<span class="mono" style="font-size:11px">'+j.name+'</span>'+
+        '<span><span class="chip neutral" style="font-size:10px">'+j.states+' states</span> '+
+        (g>0?'<span class="chip warn" style="font-size:10px">'+g+' 门控</span>':'<span class="chip good" style="font-size:10px">无门控</span>')+'</span></div>';
+    }).join('')||'<span class="muted">无旅程规格数据</span>';
+  }
+}
+</script>
