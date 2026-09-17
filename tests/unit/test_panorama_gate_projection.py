@@ -96,3 +96,62 @@ def test_collect_gates_passes_runtime_and_code_roots(tmp_path, monkeypatch) -> N
     assert command[command.index("--workspace") + 1] == str(runtime_root)
     assert command[command.index("--code-root") + 1] == str(code_root)
     assert [gate["verdict"] for gate in gates[:5]] == ["PASS"] * 5
+
+
+def test_admission_verifiers_use_code_root_but_runtime_root_cwd(
+    tmp_path, monkeypatch
+) -> None:
+    module = _module()
+    runtime_root = tmp_path / "runtime"
+    code_root = tmp_path / "code"
+    verifier_dir = code_root / "bin/gac"
+    verifier_dir.mkdir(parents=True)
+    for name in (
+        "ruflo-rf0-verify.py", "orca-r0-verify.py", "multica-as0-verify.py",
+    ):
+        (verifier_dir / name).touch()
+    monkeypatch.setattr(module, "ROOT", runtime_root)
+    monkeypatch.setattr(module, "CODE_ROOT", code_root)
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append((command, kwargs.get("cwd")))
+        report = {
+            "ruflo-rf0-verify.py": {
+                "ok": True,
+                "checks": {
+                    "binary": True, "doctor": True, "daemon_stopped": True,
+                    "workers_off": True, "no_second_queue": True,
+                    "cross_agent_dependency_zero": True,
+                },
+                "version": "3.42.2",
+                "doctor_summary": {"passed": 13, "warnings": 0},
+            },
+            "orca-r0-verify.py": {
+                "ok": True, "runtime_ready": True,
+                "probes": {"passed": 6, "total": 6},
+                "r0_transactions": {"accepted": 1, "transactions": [{"ok": True}]},
+                "trust": {"write_argv_guard": {"ok": True}},
+            },
+            "multica-as0-verify.py": {
+                "ok": True,
+                "api": {"passed": 30, "total": 30},
+                "topology": {"passed": 7, "total": 7},
+                "trust": {"passed": 3, "total": 3},
+            },
+        }[Path(command[1]).name]
+        return type("Completed", (), {"stdout": json.dumps(report)})()
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    reports = [
+        module.collect_rf0_gate(),
+        module.collect_a6_gate(),
+        module.collect_a7_gate(),
+    ]
+
+    assert all(report["verdict"] == "PASS" for report in reports)
+    assert len(calls) == 3
+    for command, cwd in calls:
+        assert command[1].startswith(str(code_root / "bin/gac/"))
+        assert cwd == runtime_root
