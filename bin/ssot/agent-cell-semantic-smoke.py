@@ -12,14 +12,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
-STATE_DIR = ROOT / ".omo/state/agent-cell/semantic"
+_CONFIGURED_ROOT = os.environ.get("AGENT_CELL_ROOT") or os.environ.get("PANORAMA_ROOT")
+ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
+_CONFIGURED_STATE_DIR = os.environ.get("AGENT_CELL_STATE_DIR")
+STATE_DIR = Path(_CONFIGURED_STATE_DIR).resolve() if _CONFIGURED_STATE_DIR else ROOT / ".omo/state/agent-cell/semantic"
 SCHEMA = "agent-cell-semantic-smoke/v1"
 PLANNER = "role:agent-cell-semantic-planner"
 EXECUTOR = "role:agent-cell-semantic-executor"
@@ -354,8 +357,16 @@ def verify_latest() -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify", action="store_true", help="Verify durable receipt chain only")
+    parser.add_argument(
+        "--state-dir",
+        type=Path,
+        help="Override the durable semantic state directory (otherwise AGENT_CELL_STATE_DIR or canonical root)",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    global STATE_DIR
+    if args.state_dir is not None:
+        STATE_DIR = args.state_dir.resolve()
     try:
         report = verify_latest() if args.verify else run_smoke()
     except Exception as exc:

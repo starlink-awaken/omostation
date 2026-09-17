@@ -57,3 +57,19 @@ def test_verify_latest_is_empty_before_first_run(tmp_path, monkeypatch) -> None:
         "verdict": "EMPTY",
         "receipt_count": 0,
     }
+
+
+def test_runtime_supports_deployed_root_and_state_overrides(tmp_path, monkeypatch) -> None:
+    repo_root = tmp_path / "workspace"
+    state_dir = tmp_path / "state"
+    monkeypatch.setenv("AGENT_CELL_ROOT", str(repo_root))
+    monkeypatch.setenv("AGENT_CELL_STATE_DIR", str(state_dir))
+    spec = importlib.util.spec_from_file_location(
+        "agent_cell_semantic_runtime_test",
+        ROOT / "bin/ssot/agent-cell-semantic-smoke.py",
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.ROOT == repo_root.resolve()
+    assert module.STATE_DIR == state_dir.resolve()
