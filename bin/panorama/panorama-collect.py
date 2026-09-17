@@ -33,8 +33,6 @@ GATE_DECLARED = {
            "note": "T10-149 只读验证工具链；未过门零写入"},
     "A7": {"title": "Multica AS0 准入", "state": "not_admitted", "depends_on": ["A8"],
            "note": "T10-150 只读验证工具链；未过门零写入"},
-    "A8": {"title": "OMO 外部执行事务", "state": "absent", "depends_on": ["G2", "G3"],
-           "note": "T10-165 语义落地后推进"},
     "A9": {"title": "ASD 与 Cockpit 可观测", "state": "partial", "depends_on": ["G2", "G3"],
            "note": "T10-166 面板契约；PARTIAL≠PASS"},
     "RF0": {"title": "Ruflo 只读协作准入", "state": "not_admitted", "depends_on": [],
@@ -90,7 +88,82 @@ def collect_gates() -> list[dict]:
     for gid, d in GATE_DECLARED.items():
         gates.append({"id": gid, "title": d["title"], "verdict": d["state"].upper(),
                       "detail": d["note"], "live": False, "depends_on": d["depends_on"]})
+    a8_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A7") + 1
+    gates.insert(a8_index, collect_a8_gate())
     return gates
+
+
+def collect_a8_gate() -> dict:
+    """Project A8 from accepted delivery evidence instead of a static absence.
+
+    A8 was originally ABSENT.  BET-Y1Q4-T10-151 later delivered the generic
+    external transaction lifecycle.  Keep the projection fail-closed: every
+    evidence condition must hold in the current OMO pin before showing PASS.
+    """
+    bet_id = "BET-Y1Q4-T10-151"
+    merge_commit = "5e1f7eae9b024dccc7a5977139e2de906c25b76c"
+    impl_rel = "projects/omo/src/omo/workflow/external_transaction.py"
+    test_rel = "projects/omo/tests/test_external_transaction.py"
+    missing: list[str] = []
+
+    try:
+        import yaml
+
+        ledger = yaml.safe_load(
+            (ROOT / "docs/plans/3y-bet-ledger.yaml").read_text(encoding="utf-8")
+        )
+        bet = next(
+            (bet for bet in ledger.get("bets", []) if bet.get("id") == bet_id),
+            {},
+        )
+        evidence = bet.get("completion_evidence") or {}
+        axes = evidence.get("axes") or {}
+        if bet.get("status") != "done":
+            missing.append("ledger_status")
+        if evidence.get("overall_state") != "delivery_accepted":
+            missing.append("delivery_accepted")
+        if axes.get("engineering", {}).get("status") != "VERIFIED":
+            missing.append("engineering_verified")
+        if axes.get("operational", {}).get("status") != "PROVEN":
+            missing.append("operational_proven")
+    except Exception:  # noqa: BLE001 - projection must degrade to ABSENT
+        missing.append("ledger_unreadable")
+
+    if not (ROOT / impl_rel).is_file():
+        missing.append("implementation")
+    if not (ROOT / test_rel).is_file():
+        missing.append("tests")
+
+    omo_dir = ROOT / "projects/omo"
+    reachable = subprocess.run(
+        ["git", "-C", str(omo_dir), "merge-base", "--is-ancestor", merge_commit, "HEAD"],
+        capture_output=True,
+        text=True,
+    )
+    if reachable.returncode != 0:
+        missing.append("omo_merge_commit")
+
+    if missing:
+        return {
+            "id": "A8",
+            "title": "OMO 外部执行事务",
+            "verdict": "ABSENT",
+            "detail": "A8 evidence incomplete: " + ", ".join(missing),
+            "live": False,
+            "depends_on": ["G2", "G3"],
+        }
+
+    return {
+        "id": "A8",
+        "title": "OMO 外部执行事务",
+        "verdict": "PASS",
+        "detail": (
+            "T10-151 delivery accepted; omo PR #173 merge reachable in current pin; "
+            "implementation and focused test contract present"
+        ),
+        "live": True,
+        "depends_on": ["G2", "G3"],
+    }
 
 
 def collect_bets() -> dict:
