@@ -184,6 +184,9 @@ jobs:
       - name: Run full governance verification
         run: make governance-verify
       - name: GaC local gate
+        env:
+          # 2019+ waiver 机制 (跟 gac-gate.yml 一致): 单次 merge bypass
+          GITHUB_PR_NUMBER: \${{ github.event.pull_request.number }}
         run: python3 bin/gac/gac-local-gate.py --strict
       - name: Submodule pointer drift check
         run: |
