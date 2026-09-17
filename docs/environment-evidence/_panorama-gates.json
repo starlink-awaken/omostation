@@ -37,9 +37,9 @@
   {
     "id": "A6",
     "title": "Orca R0 准入",
-    "verdict": "NOT_ADMITTED",
-    "detail": "T10-149 只读验证工具链；未过门零写入",
-    "live": false,
+    "verdict": "PASS",
+    "detail": "read-only verifier complete: runtime ready, probes 6/6, R0 dispatch/worker/reclaim evidence accepted, write guard OK",
+    "live": true,
     "depends_on": [
       "A8"
     ]
@@ -69,7 +69,7 @@
     "id": "A9",
     "title": "ASD 与 Cockpit 可观测",
     "verdict": "PASS",
-    "detail": "dashboard/asd age 123s; cockpit projection age 225s; ASD COMPLETE; cockpit source states OK",
+    "detail": "dashboard/asd age 180s; cockpit projection age 132s; ASD COMPLETE; cockpit source states OK",
     "live": true,
     "depends_on": [
       "G2",
