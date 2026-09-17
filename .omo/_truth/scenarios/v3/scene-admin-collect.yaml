@@ -6,8 +6,8 @@ description: 向 deadline_tracker 注册任务截止追踪, 进入等待回复�
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: assisted
-activation: controlled
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -60,3 +60,5 @@ triggers:
   debounce: 300s
 notes:
 - Transitioned shadow→assisted at 2026-09-11T22:51:19.287758+00:00 by evolution-agent
+- Transitioned assisted→supervised at 2026-09-17T12:07:21.011481+00:00 by xiamingxing
+- Transitioned supervised→routine at 2026-09-17T12:08:08.116436+00:00 by xiamingxing
