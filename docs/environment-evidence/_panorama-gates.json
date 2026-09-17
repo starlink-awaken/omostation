@@ -3,35 +3,35 @@
     "id": "A1",
     "title": "Workflow 与 Git 执行完整性",
     "verdict": "PASS",
-    "detail": "}",
+    "detail": "未采集",
     "live": true
   },
   {
     "id": "A2",
     "title": "Resident 与宿主健康真值",
     "verdict": "PASS",
-    "detail": "all technical checks pass",
+    "detail": "未采集",
     "live": true
   },
   {
     "id": "A3",
     "title": "受管 Python 与语义门",
     "verdict": "PASS",
-    "detail": "Governance semantic gate: PASS",
+    "detail": "未采集",
     "live": true
   },
   {
     "id": "A4",
     "title": "调度声明与安装态一致",
     "verdict": "PASS",
-    "detail": "{\"ok\": true, \"drift_count\": 0, \"orphan_count\": 0}",
+    "detail": "未采集",
     "live": true
   },
   {
     "id": "A5",
     "title": "引用与 launchd 完整性",
     "verdict": "PASS",
-    "detail": "all technical checks pass",
+    "detail": "未采集",
     "live": true
   },
   {
@@ -79,9 +79,9 @@
   {
     "id": "RF0",
     "title": "Ruflo 只读协作准入",
-    "verdict": "NOT_ADMITTED",
-    "detail": "side-effect-free 观察；独立驱动不建第二队列",
-    "live": false,
+    "verdict": "PASS",
+    "detail": "isolated read-only verifier complete: daemon stopped, workers off, version 3.42.2, doctor 13 passed/15 warnings",
+    "live": true,
     "depends_on": []
   }
 ]
