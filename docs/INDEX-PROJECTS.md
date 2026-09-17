@@ -7,7 +7,7 @@
 > - validation: 与 project-registry.yaml 项目数一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-09-11T13:25:31.102982+00:00
+> - generated_at: 2026-09-17T01:02:46.420133+00:00
 
 ---
 
@@ -17,7 +17,7 @@
 |----|------|-----|---------|
 | I0 | agora | Python (uv, pytest) | 各项目 `AGENTS.md` |
 | L0 | ecos | Python (uv, pytest) | 各项目 `AGENTS.md` |
-| L1 | omlxc, runtime | Python (uv, pytest) + Python (uv, pytest, Textual) | 各项目 `AGENTS.md` |
+| L1 | omlxc, runtime, surface | Python (uv, pytest) + Python (uv, pytest, Textual) + Rust | 各项目 `AGENTS.md` |
 | L1-L3 | toolbox | Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline) | 各项目 `AGENTS.md` |
 | L2 | domain-cartridges, family-hub, knowledge, metaos, omo | ? + Python (FastMCP) + Python (stdlib only) + Python (uv, pytest) | 各项目 `AGENTS.md` |
 | L3 | cockpit, cockpit-ui | Python (uv, pytest) + TypeScript (Vite, React) | 各项目 `AGENTS.md` |
@@ -38,6 +38,7 @@
 | Python (stdlib only) | domain-cartridges |
 | Python (uv, pytest) | aetherforge, agora, bus-foundation, cockpit, ecos, l4-kernel, metaos, model-driven, omo, runtime |
 | Python (uv, pytest, Textual) | omlxc |
+| Rust | surface |
 | TypeScript (Vite, React) | cockpit-ui |
 
 ---

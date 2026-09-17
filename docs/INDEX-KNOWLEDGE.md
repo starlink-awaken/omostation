@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-03
+last_updated: 2026-09-17
 ---
 
 # INDEX-KNOWLEDGE.md — 知识资产统一索引
@@ -13,7 +13,7 @@ last_updated: 2026-09-03
 > - validation: ADR 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-07-31T08:11:19.492413+00:00
+> - generated_at: 2026-09-17T01:02:46.337288+00:00
 
 ---
 
@@ -45,6 +45,9 @@ last_updated: 2026-09-03
 | ADR | 0238-mof-m4-phase0-registry-self-governance.md | 0238-mof-m4-phase0-registry-self-governance |
 | ADR | 0240-mof-d1d4-decisions-aaaa-phase1.md | 0240-mof-d1d4-decisions-aaaa-phase1 |
 | ADR | 0257-p84-w3-wave2-mof-d4-l0-debt.md | 0257-p84-w3-wave2-mof-d4-l0-debt |
+| ADR | 0370-agt-ecos-integration.md | 0370-agt-ecos-integration |
+| ADR | 0404-phase3-ecos-submodule-governance.md | 0404-phase3-ecos-submodule-governance |
+| ADR | 0439-omlxc-v5-sovereign-compute-ecosystem-closure.md | 0439-omlxc-v5-sovereign-compute-ecosystem-closure |
 
 ### GaC 治理相关
 
@@ -74,7 +77,7 @@ last_updated: 2026-09-03
 | ADR | 0219-bos-evidence-smoke-full-path.md | 0219-bos-evidence-smoke-full-path |
 | ADR | 0235-role-catalog-c1-research-delivery.md | 0235-role-catalog-c1-research-delivery |
 | ADR | 0260-p84-wave5-adv-bos-m2.md | 0260-p84-wave5-adv-bos-m2 |
-| ADR | phase0-bos-contract-linter-pre-analysis.md | phase0-bos-contract-linter-pre-analysis |
+| ADR | 0365-architecture-strategy-closeout.md | 0365-architecture-strategy-closeout |
 
 ### P7x 系列（声明/执行鸿沟）
 
@@ -147,7 +150,7 @@ last_updated: 2026-09-03
 | workflow-solidification-closeout | 2026-07-03-p74-workflow-solidification-closeout.md |
 | comprehensive-audit | 2026-07-02-system-comprehensive-audit.md |
 
-> 共 202 份审计报告，完整清单见 `.omo/_knowledge/audits/`
+> 共 215 份审计报告，完整清单见 `.omo/_knowledge/audits/`
 
 ---
 
@@ -158,7 +161,13 @@ last_updated: 2026-09-03
 | adr-concurrent-number-collision | adr-concurrent-number-collision.md | adr-concurrent-number-collision |
 | as-of-baseline-anti-drift-pattern | as-of-baseline-anti-drift-pattern.md | as-of-baseline-anti-drift-pattern |
 | ci-silent-fail-debug-chain | ci-silent-fail-debug-chain.md | ci-silent-fail-debug-chain |
+| delegation-infra-diagnosis-pattern | delegation-infra-diagnosis-pattern.md | delegation-infra-diagnosis-pattern |
+| doc-l0-mof-mapping-governance | doc-l0-mof-mapping-governance.md | doc-l0-mof-mapping-governance |
 | host-mutation-dual-gate | host-mutation-dual-gate.md | host-mutation-dual-gate |
+| p100-unified-memory-wired-ceiling | p100-unified-memory-wired-ceiling.md | p100-unified-memory-wired-ceiling |
+| p101-sentinel-value-masquerading-as-progress | p101-sentinel-value-masquerading-as-progress.md | p101-sentinel-value-masquerading-as-progress |
+| p102-backend-model-id-drift | p102-backend-model-id-drift.md | p102-backend-model-id-drift |
+| p103-volatile-dir-symlink-signals-missing-config | p103-volatile-dir-symlink-signals-missing-config.md | p103-volatile-dir-symlink-signals-missing-config |
 | p43-closed-loop-pattern | p43-closed-loop-pattern.md | p43-closed-loop-pattern |
 | p44-closed-loop-pattern | p44-closed-loop-pattern.md | p44-closed-loop-pattern |
 | p71-baseline-recovery-pattern | p71-baseline-recovery-pattern.md | p71-baseline-recovery-pattern |
@@ -166,9 +175,18 @@ last_updated: 2026-09-03
 | p73-truth-driven-engineering-pattern | p73-truth-driven-engineering-pattern.md | p73-truth-driven-engineering-pattern |
 | p74-workflow-solidification-pattern | p74-workflow-solidification-pattern.md | p74-workflow-solidification-pattern |
 | p75-ci-red-triage-pattern | p75-ci-red-triage-pattern.md | p75-ci-red-triage-pattern |
+| p75-convergence-round-pattern | p75-convergence-round-pattern.md | p75-convergence-round-pattern |
 | p76-launcher-zombie-false-positive | p76-launcher-zombie-false-positive.md | p76-launcher-zombie-false-positive |
 | p77-agora-heartbeat-transport-mismatch | p77-agora-heartbeat-transport-mismatch.md | p77-agora-heartbeat-transport-mismatch |
 | p78-triple-axis-diagnostic-pattern | p78-triple-axis-diagnostic-pattern.md | p78-triple-axis-diagnostic-pattern |
+| p79-partial-worktree-reachability-false-positive | p79-partial-worktree-reachability-false-positive.md | p79-partial-worktree-reachability-false-positive |
+| p87-systemic-optimization-retro | p87-systemic-optimization-retro.md | p87-systemic-optimization-retro |
+| p91-pyright-sweep-pattern | p91-pyright-sweep-pattern.md | p91-pyright-sweep-pattern |
+| p95-convergence-balance-iteration-rhythm | p95-convergence-balance-iteration-rhythm.md | p95-convergence-balance-iteration-rhythm |
+| p96-swarm-shared-state-hygiene | p96-swarm-shared-state-hygiene.md | p96-swarm-shared-state-hygiene |
+| p97-cross-repo-submodule-pr-capability-drift | p97-cross-repo-submodule-pr-capability-drift.md | p97-cross-repo-submodule-pr-capability-drift |
+| p98-governance-surfaces-completeness | p98-governance-surfaces-completeness.md | p98-governance-surfaces-completeness |
+| p99-hook-install-hygiene | p99-hook-install-hygiene.md | p99-hook-install-hygiene |
 | pipe-mask-failure-pattern | pipe-mask-failure-pattern.md | pipe-mask-failure-pattern |
 | pre-push-ssot-path-drift | pre-push-ssot-path-drift.md | pre-push-ssot-path-drift |
 

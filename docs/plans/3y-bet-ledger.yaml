@@ -30286,6 +30286,77 @@ bets:
   - docs/superpowers/specs/2026-09-15-t7-07-review-remediation-design.md
   - docs/superpowers/specs/2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md
   - .omo/_knowledge/retros/BET-Y2Q1-T7-07.md
+- id: BET-Y1Q4-T10-168
+  title: Recent workspace documentation convergence
+  track: T10-DOCS
+  window: Y1Q4
+  status: candidate
+  priority: P2
+  risk_level: L1
+  human_gate: false
+  retro: required
+  goal: Restore discoverability and truthfulness for the workspace documentation surfaces
+    affected by the 2026-09-02 through 2026-09-16 delivery wave.
+  non_goals:
+  - Do not edit runtime projections, BRIEF.md, or concurrent agent artifacts.
+  - Do not modify submodule contents or pointers.
+  - Do not redesign accepted implementation specifications.
+  - Do not convert the specification registry to a generated index in this BET.
+  done_when:
+  - All in-scope navigation pointers resolve to existing authoritative files.
+  - SYSTEM-INDEX no longer hard-codes stale scene or Journey counts.
+  - Recent accepted specifications are discoverable from the spec registry.
+  - Resident architecture documents the delivered Flight Deck surface without claiming
+    unimplemented BOS or CLI integration.
+  - Documentation lint, cross-reference checks, and the local governance gate pass.
+  verify:
+  - cmd: python3 bin/ssot/doc-ssot-lint.py --json
+    expect: exit 0
+  - cmd: python3 bin/ssot/doc-governance-check.py --json
+    expect: exit 0
+  - cmd: python3 bin/ssot/check-index-drift.py
+    expect: exit 0
+  - cmd: python3 bin/ssot/check-cross-refs.py
+    expect: exit 0
+  - cmd: python3 bin/ssot/dir-hygiene-check.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-17-siri-40-documentation-convergence-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/SYSTEM-INDEX.md
+  - docs/superpowers/specs/README.md
+  - docs/architecture/resident-agent-system-v1.md
+  - docs/INDEX-KNOWLEDGE.md
+  - docs/INDEX-TOOLS.md
+  - docs/INDEX-AGENTS.md
+  - docs/INDEX-PROJECTS.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+  accepted_specifications:
+  - content_digest: sha256:b6338e4318bff847409e2f0cbebf229f2ad59c7cd89975e28401f27bc34280e9
+    decision_ref: decision://accepted/BET-Y1Q4-T10-168
+    spec_ref: repo://docs/superpowers/specs/2026-09-17-siri-40-documentation-convergence-design.md
+    spec_version: 1.0.0
+  circuit_breaker: If a generated index produces unrelated churn or a referenced fact
+    cannot be proven from current SSOT, keep the surgical documentation changes only
+    and record the unresolved item in the retrospective.
+  underlying_workflow: project-doc-change
+  workflow: bet-execution
+  value_indicator_policy: false
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: IN_PROGRESS
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30424,7 +30495,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 405
+  total_bets: 406
   windows:
   - Y1Q1
   - Y1Q2

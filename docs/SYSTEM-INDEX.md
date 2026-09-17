@@ -1,7 +1,7 @@
 ---
 type: documentation
 owner: governance-team
-last_updated: 2026-09-06
+last_updated: 2026-09-17
 ---
 # SYSTEM-INDEX.md — Workspace 全景导航
 
@@ -77,8 +77,8 @@ last_updated: 2026-09-06
 
 → [脊面运行模式 SFOP/v1](architecture/os-operating-pattern-v1.md) — 把分层 / 四面 / 8D / AGE-v2 / resident / BCOS 收成一套槽位语法
 → [道法术器 DFSQ/v1](architecture/dao-fa-shu-qi.md) — MOF 嵌套的理论体系；器自报槽位；dispatcher 唯一性硬检查 (`sfop-slots`)
-→ [Scene Cards](scene-cards/) — 9 个场景卡 (external + internal_pipeline, 双轨准入)
-→ [Journey Specs](journey-specs/) — 3 个 journey 状态机 (inbox-to-decision, meeting-to-delivery, research-to-insight)
+→ [Scene Cards](scene-cards/) — 当前数量以 `find docs/scene-cards -maxdepth 1 -name '*.yaml' | wc -l` 实时统计
+→ [Journey Specs](journey-specs/) — 当前数量以 `find docs/journey-specs -maxdepth 1 -name '*.yaml' | wc -l` 实时统计
 → [External Connection Fabric](../.omo/standards/external-connection-fabric.md) — §7: dual-track admission standard
 → [Permission Scope Vocabulary](../.omo/standards/permission-scope-vocabulary.yaml) — RBAC scope 受控词表
 → [Signal Sources](../.omo/_truth/registry/signal-sources.yaml) — 感知面信号源注册表
@@ -108,7 +108,9 @@ last_updated: 2026-09-06
 → [BET-Y1Q2-T1-19 权威复盘](../.omo/_knowledge/retros/BET-Y1Q2-T1-19.md) — Codex ACP 切割的当前事实与未证边界
 
 → [CR08 卫健委三医态势安装态审计复盘](reports/2026-08-14-weijian-sanyi-status-audit-retrospective.md) — 临时隔离源码的只读审计边界与可复核证据
-→ [T10-151 A8 现状复核](a8-research/external-transaction-status.md) — 7 段状态机 (reserve/bind/readback/start/ACK/fence/release/retire) 路径搜索, phase1 结论: 未完整实现, 进入 phase2
+→ [T10-151 A8 权威复核](reports/2026-09-15-a8-external-transaction-authoritative-review.md) — 当前事实来源；实现仍保持 candidate/evaluating
+→ [T10-151 A8 生命周期规格](superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md) — accepted spec；实现范围与七阶段事务模型
+→ [T10-151 A8 历史路径搜索](a8-research/external-transaction-status.md) — 历史研究记录；不替代当前权威复核
 
 → [执行计划](plans/) — 三年规划执行台账与 agent 执行指令（详见 `docs/plans/`）
 
@@ -127,6 +129,13 @@ last_updated: 2026-09-06
 - [`superpowers/specs/2026-08-14-weijian-sanyi-status-consistency-design.md`](superpowers/specs/2026-08-14-weijian-sanyi-status-consistency-design.md) — 卫健委 CR08 三医态势只读一致性审计合同
 - [`superpowers/plans/2026-08-14-weijian-sanyi-status-consistency.md`](superpowers/plans/2026-08-14-weijian-sanyi-status-consistency.md) — 卫健委 CR08 三医态势一致性审计实施与安装态验收计划
 - [`superpowers/plans/2026-08-14-supervised-blueprint-control-loop.md`](superpowers/plans/2026-08-14-supervised-blueprint-control-loop.md) — 受监督 Blueprint 控制闭环实施与真实 dogfood 计划
+- [`superpowers/specs/2026-09-15-t10-167-ledger-schema-hardening.md`](superpowers/specs/2026-09-15-t10-167-ledger-schema-hardening.md) — BET Ledger 结构 fail-closed 校验与安全插入约束
+- [`superpowers/specs/2026-09-15-t3-02-lora-matrix-spec.md`](superpowers/specs/2026-09-15-t3-02-lora-matrix-spec.md) — LoRA 矩阵交付规格
+- [`superpowers/specs/2026-09-15-t7-07-review-remediation-design.md`](superpowers/specs/2026-09-15-t7-07-review-remediation-design.md) — review remediation 收口规格
+- [`superpowers/specs/2026-09-14-t8-22-tinybos-mesh-spec.md`](superpowers/specs/2026-09-14-t8-22-tinybos-mesh-spec.md) — TinyBOS mesh 规格
+- [`superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md`](superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md) — Resident Flight Deck 交付规格
+- [`superpowers/specs/2026-09-13-t6-28-cognitive-hierarchy-radix-kv-design.md`](superpowers/specs/2026-09-13-t6-28-cognitive-hierarchy-radix-kv-design.md) — cognitive hierarchy / Radix-KV 规格
+- [`superpowers/specs/2026-09-16-y3h1-t5-02-routine-hosting-spec.md`](superpowers/specs/2026-09-16-y3h1-t5-02-routine-hosting-spec.md) — Routine hosting 规格
 
 ---
 
@@ -272,6 +281,7 @@ KOS-*.md, SOP-*.md, VISION-ROADMAP.md 等。
 | 面 | 入口 |
 |----|------|
 | 功能规格 | [`docs/architecture/resident-agent-system-v1.md`](architecture/resident-agent-system-v1.md) |
+| Resident Flight Deck | [`docs/superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md`](superpowers/specs/2026-09-13-t8-23-resident-flight-deck-design.md) · Cockpit HTTP `/api/flight-deck/heartbeat` |
 | 状态/角色 | `make resident-status` / `make resident-roles`（`omo resident status/roles`） |
 | 路由表 SSOT | `projects/omo/src/omo/resident/resident-routes.yaml`（schema `resident-routes/v1`） |
 | MOF 元模型 | `projects/ecos/src/ecos/ssot/mof/m2/digital_agent.yaml`（DigitalAgent, tier=resident） |
