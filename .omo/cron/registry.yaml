@@ -376,6 +376,26 @@ jobs:
       不调用 Claims Authority、不产生外部副作用、不作价值证明。
       plist 同源: runtime/cron/com.omostation.agent-cell-semantic-smoke.plist。
 
+  - name: reference-cell-direct-local-smoke
+    schedule: "0 */12 * * *"
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
+      /Users/xiamingxing/.local/share/zhixing-dashboard/reference-cell-direct-local-smoke.py
+      --code-root /Users/xiamingxing/.local/share/zhixing-dashboard/code-main
+      --attempts-root /Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts
+      --omo-src /Users/xiamingxing/Workspace/projects/omo/src --json
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: agent-experience-steward
+    sfop_slot: S
+    reconciliation_note: >-
+      attempt-local Direct Local Reference Cell R0 canary；只读读取
+      ARCHITECTURE.md，只写 attempt 外部证据目录，不写 Workspace、不调用
+      Claims Authority、不作价值证明。12小时频率保持 RC-DL 在 168小时
+      新鲜窗口内。plist 同源:
+      runtime/cron/com.omostation.reference-cell-direct-local-smoke.plist。
+
   # ── 从未真正安装, 只存在于声明文件里 (reality: declared_only) ──
   # 以下 10 条来自 operating-rhythm-crontab (ADR-0119/0121), 设计有 fail-closed
   # 防护 (OMO_WORKSPACE_ROOT 校验), 但从未真正 `crontab` 安装过。是否现在正式启用

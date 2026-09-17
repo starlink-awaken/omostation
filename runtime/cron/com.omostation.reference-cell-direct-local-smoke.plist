@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.omostation.reference-cell-direct-local-smoke</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/opt/homebrew/bin/python3</string>
+      <string>-B</string>
+      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/reference-cell-direct-local-smoke.py</string>
+      <string>--code-root</string>
+      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/code-main</string>
+      <string>--attempts-root</string>
+      <string>/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts</string>
+      <string>--omo-src</string>
+      <string>/Users/xiamingxing/Workspace/projects/omo/src</string>
+      <string>--json</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PYTHONDONTWRITEBYTECODE</key>
+      <string>1</string>
+      <key>PATH</key>
+      <string>/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/.local/share/zhixing-dashboard/code-main</string>
+    <key>StartInterval</key>
+    <integer>43200</integer>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/reference-cell-direct-local-smoke.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/reference-cell-direct-local-smoke.log</string>
+  </dict>
+</plist>

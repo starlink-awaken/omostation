@@ -1,0 +1,21 @@
+schema: script-registry/v1
+id: bin/ssot/reference-cell-direct-local-smoke.py
+name: Reference Cell Direct Local Smoke
+category: governance
+owner: agent-experience-steward
+description: Attempt-local read-only Direct Local Reference Cell R0 lifecycle canary.
+inputs:
+  - name: --code-root
+    type: path
+    required: true
+  - name: --attempts-root
+    type: path
+    required: true
+  - name: --omo-src
+    type: path
+    required: true
+outputs:
+  - type: stdout
+  - type: exit_code
+triggers: [manual, launchd]
+tags: [reference-cell, direct-local, r0, canary]
