@@ -1,98 +1,127 @@
 #!/usr/bin/env bash
-# gen-evidence-receipts.sh — 为 A1-A9 + RF0 9 个 gate 生成 digest-bound receipt
+# gen-evidence-receipts.sh — generate digest-bound receipts for A1-A9 + RF0.
 #
-# 原则: 每 gate 一份 receipt, 包含 proven/missing/exit_criteria/owner/refresh 时间.
-# 格式: <gate-id>.json 包含 status, exit_criteria, evidence_collected, missing, sha256_digest
-# 输出: .omo/_delivery/environment-evidence/<gate-id>.json + receipts.jsonl
+# All JSON is emitted by Python's json serializer so gate output containing
+# quotes or braces cannot create malformed receipts (the A4 regression).
+# Default output remains the governance evidence plane; set
+# EVIDENCE_OUTPUT_DIR to refresh the tracked documentation snapshot in a
+# managed worktree.
 
 set -euo pipefail
+
 WS_ROOT="$(git rev-parse --show-toplevel)"
-EVIDENCE_DIR="$WS_ROOT/.omo/_delivery/environment-evidence"
-mkdir -p "$EVIDENCE_DIR"
-RECEIPTS_JSONL="$EVIDENCE_DIR/receipts.jsonl"
-> "$RECEIPTS_JSONL"
+OUTPUT_DIR="${EVIDENCE_OUTPUT_DIR:-$WS_ROOT/.omo/_delivery/environment-evidence}"
+mkdir -p "$OUTPUT_DIR"
 
-# 收集本次采集的输出
-NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-GATE_HEALTH_JSON="$EVIDENCE_DIR/_gate-health.json"
-PANORAMA_JSON="$EVIDENCE_DIR/_panorama-gates.json"
-python3 bin/gac/gate-health-check.py --json > "$GATE_HEALTH_JSON" 2>/dev/null || echo '{"error": "gate-health-check failed"}' > "$GATE_HEALTH_JSON"
-python3 bin/panorama/panorama-collect.py --gates > "$PANORAMA_JSON" 2>/dev/null || echo '[]' > "$PANORAMA_JSON"
+python3 - "$WS_ROOT" "$OUTPUT_DIR" <<'PY'
+import hashlib
+import json
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
-# A1-A9 + RF0 的 exit_criteria 定义 (与 PR #3696 织星驾驶舱对齐)
-declare -A EXIT_CRITERIA=(
-  [A1]="workflow_admission_satisfied;pasw_branch_compliance;git_push_drift_zero"
-  [A2]="resident_cell_pool_alive;host_memory_pressure_normal;workspace_lock_clean"
-  [A3]="governance_python_managed;harness_section_compliance;mo_consistency_pass"
-  [A4]="scheduler_drift_zero;launchd_loaded_count_consistent;cron_orphans_zero"
-  [A5]="submodule_fresh_within_7d;reference_alignment_pass;launchd_keepalive_active"
-  [A6]="orca_r0_live_no_state_drift;r0_evidence_digest_signed;readonly_admission_test_pass"
-  [A7]="multica_as0_alive_no_drift;digest_chain_consistent;readonly_admission_test_pass"
-  [A8]="oma_external_transaction_schema_signed;durable_queue_persistence_verified;as0_to_a8_replay_match"
-  [A9]="asd_dashboard_live;cockpit_observatory_aligned;live_evidence_refresh_within_5min"
-  [RF0]="ruflo_readonly_collaboration_live;no_second_queue_created;cross_agent_dependency_zero"
+ws_root = Path(sys.argv[1]).resolve()
+output_dir = Path(sys.argv[2]).resolve()
+now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+gate_health_path = output_dir / "_gate-health.json"
+panorama_path = output_dir / "_panorama-gates.json"
+gate_health_source = os.environ.get("GATE_HEALTH_INPUT")
+panorama_source = os.environ.get("PANORAMA_GATES_INPUT")
+
+
+def run_json(command: list[str], fallback) -> object:
+    result = subprocess.run(command, cwd=ws_root, capture_output=True, text=True)
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return fallback
+
+
+if gate_health_source:
+    gate_health = json.loads(Path(gate_health_source).read_text(encoding="utf-8"))
+else:
+    gate_health = run_json(
+        [sys.executable, "bin/gac/gate-health-check.py", "--json"],
+        {"all_ok": False, "error": "gate-health-check failed"},
+    )
+if panorama_source:
+    panorama_gates = json.loads(Path(panorama_source).read_text(encoding="utf-8"))
+else:
+    panorama_gates = run_json(
+        [sys.executable, "bin/panorama/panorama-collect.py", "--gates"],
+        [],
+    )
+
+gate_health_path.write_text(
+    json.dumps(gate_health, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+)
+panorama_path.write_text(
+    json.dumps(panorama_gates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
 )
 
-# Owner (from governance-checks.yaml / bet-ledger conventions)
-declare -A OWNER=(
-  [A1]="governance-agent"
-  [A2]="omo-runtime-team"
-  [A3]="governance-team"
-  [A4]="scheduler-agent"
-  [A5]="infra-team"
-  [A6]="orca-team"
-  [A7]="multica-team"
-  [A8]="omo-runtime-team"
-  [A9]="observability-team"
-  [RF0]="ruflo-team"
-)
+gate_digest = "sha256:" + hashlib.sha256(gate_health_path.read_bytes()).hexdigest()
+panorama_by_id = {gate.get("id"): gate for gate in panorama_gates if gate.get("id")}
 
-# Gate 状态 (从 panorama output 解析)
-for gate_id in A1 A2 A3 A4 A5 A6 A7 A8 A9 RF0; do
-  # 用 jq 或 grep 提取 verdict (无 jq 时用 grep)
-  if command -v jq >/dev/null 2>&1; then
-    VERDICT=$(jq -r ".[] | select(.id==\"$gate_id\") | .verdict" "$PANORAMA_JSON" 2>/dev/null || echo "UNKNOWN")
-    DETAIL=$(jq -r ".[] | select(.id==\"$gate_id\") | .detail" "$PANORAMA_JSON" 2>/dev/null || echo "")
-  else
-    VERDICT=$(grep -A 30 "\"id\": \"$gate_id\"" "$PANORAMA_JSON" | grep -m1 "verdict" | sed 's/.*: "\(.*\)",/\1/' || echo "UNKNOWN")
-    DETAIL=$(grep -A 30 "\"id\": \"$gate_id\"" "$PANORAMA_JSON" | grep -m1 "detail" | sed 's/.*: "\(.*\)",/\1/' || echo "")
-  fi
-  
-  CRITERIA="${EXIT_CRITERIA[$gate_id]}"
-  OWNER_NAME="${OWNER[$gate_id]}"
-  STATUS_FIELD="proven"
-  if [ "$VERDICT" = "PARTIAL" ] || [ "$VERDICT" = "ABSENT" ] || [ "$VERDICT" = "NOT_ADMITTED" ]; then
-    STATUS_FIELD="missing"
-  fi
-  
-  RECEIPT_FILE="$EVIDENCE_DIR/${gate_id}.json"
-  # 计算 SHA-256 of gate-health-check.json (用作 receipt digest)
-  GATE_DIGEST=$(shasum -a 256 "$GATE_HEALTH_JSON" | awk '{print $1}')
-  
-  cat > "$RECEIPT_FILE" <<EOF
-{
-  "gate_id": "$gate_id",
-  "status": "$STATUS_FIELD",
-  "verdict": "$VERDICT",
-  "detail": "$DETAIL",
-  "owner": "$OWNER_NAME",
-  "exit_criteria": "$CRITERIA",
-  "refresh_time": "$NOW",
-  "sha256_digest": "sha256:$GATE_DIGEST",
-  "source_receipt": "receipt://$GATE_HEALTH_JSON",
-  "not_admitted_legal_states": "NOT_ADMITTED 合法 (A6/A7/RF0 设计如此, 非缺陷)",
-  "unlock_conditions": {
+exit_criteria = {
+    "A1": "workflow_admission_satisfied;pasw_branch_compliance;git_push_drift_zero",
+    "A2": "resident_cell_pool_alive;host_memory_pressure_normal;workspace_lock_clean",
+    "A3": "governance_python_managed;harness_section_compliance;mo_consistency_pass",
+    "A4": "scheduler_drift_zero;launchd_loaded_count_consistent;cron_orphans_zero",
+    "A5": "submodule_fresh_within_7d;reference_alignment_pass;launchd_keepalive_active",
+    "A6": "orca_r0_live_no_state_drift;r0_evidence_digest_signed;readonly_admission_test_pass",
+    "A7": "multica_as0_alive_no_drift;digest_chain_consistent;readonly_admission_test_pass",
+    "A8": "oma_external_transaction_schema_signed;durable_queue_persistence_verified;as0_to_a8_replay_match",
+    "A9": "asd_dashboard_live;cockpit_observatory_aligned;live_evidence_refresh_within_5min",
+    "RF0": "ruflo_readonly_collaboration_live;no_second_queue_created;cross_agent_dependency_zero",
+}
+owners = {
+    "A1": "governance-agent",
+    "A2": "omo-runtime-team",
+    "A3": "governance-team",
+    "A4": "scheduler-agent",
+    "A5": "infra-team",
+    "A6": "orca-team",
+    "A7": "multica-team",
+    "A8": "omo-runtime-team",
+    "A9": "observability-team",
+    "RF0": "ruflo-team",
+}
+not_admitted_legal_states = "NOT_ADMITTED 合法 (A6/A7/RF0 设计如此, 非缺陷)"
+unlock_conditions = {
     "A6": "T10-149 完成 R0 验收测试 + signoff",
     "A7": "T10-150 完成 AS0 验收测试 + signoff",
-    "RF0": "side-effect-free 观察保持, 不建第二队列"
-  }
+    "RF0": "side-effect-free 观察保持, 不建第二队列",
 }
-EOF
-  
-  # 追加到 receipts.jsonl
-  cat "$RECEIPT_FILE" >> "$RECEIPTS_JSONL"
-  echo "✓ $gate_id receipt: $STATUS_FIELD ($VERDICT) → $(basename $RECEIPT_FILE)"
-done
 
-echo ""
-echo "Receipts 总览: $EVIDENCE_DIR/receipts.jsonl ($(wc -l < $RECEIPTS_JSONL) gates)"
+receipts_path = output_dir / "receipts.jsonl"
+with receipts_path.open("w", encoding="utf-8") as receipts:
+    for gate_id in ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "RF0"):
+        projection = panorama_by_id.get(gate_id, {})
+        verdict = projection.get("verdict", "UNKNOWN")
+        status = "proven" if verdict == "PASS" else "missing"
+        receipt = {
+            "gate_id": gate_id,
+            "status": status,
+            "verdict": verdict,
+            "detail": projection.get("detail", ""),
+            "owner": owners[gate_id],
+            "exit_criteria": exit_criteria[gate_id],
+            "refresh_time": now,
+            "sha256_digest": gate_digest,
+            "source_receipt": "receipt://.omo/_delivery/environment-evidence/_gate-health.json",
+            "not_admitted_legal_states": not_admitted_legal_states,
+            "unlock_conditions": unlock_conditions,
+            "live": projection.get("live", False),
+            "depends_on": projection.get("depends_on", []),
+        }
+        receipt_path = output_dir / f"{gate_id}.json"
+        receipt_path.write_text(
+            json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        receipts.write(json.dumps(receipt, ensure_ascii=False, sort_keys=True) + "\n")
+        print(f"OK {gate_id}: {status} ({verdict})")
+
+print(f"Receipts: {receipts_path}")
+PY
