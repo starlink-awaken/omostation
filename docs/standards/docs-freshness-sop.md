@@ -86,7 +86,7 @@ python3 bin/gac/x2-freshness-check.py --days 14
 ### 2.3 `meta-doctor.py` — 治理机制活性巡检
 
 ```bash
-python3 bin/gac/meta-doctor.py --workspace . --json
+python3 bin/gac/meta-doctor.py --workspace .
 ```
 
 - **M1 心跳**: 检查关键状态投影文件的 `generated_at`/`last_scan` 是否超 SLA
@@ -197,7 +197,7 @@ python3 bin/adr/adr-coverage.py
 
 ```bash
 # 检查治理机制活性（M1 心跳 + M2 引用）
-python3 bin/gac/meta-doctor.py --workspace . --json
+python3 bin/gac/meta-doctor.py --workspace .
 
 # X2 细粒度保鲜
 python3 bin/gac/x2-freshness-check.py --json

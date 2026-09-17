@@ -772,16 +772,16 @@ ops-recover:  ## 自动恢复失败服务
 ops-health-cron:  ## 健康检查定时任务 (每 5 分钟)
 	python3 bin/ops/health-check-cron.py
 
-ops-dashboard:  ## Web 仪表盘
+ops-dashboard-serve:  ## Web 仪表盘 (本地 Python 服务, 8091)
 	python3 bin/ops/dashboard.py --port 8091
 
 ops-metrics:  ## Prometheus 指标导出
 	python3 bin/ops/cli.py metrics --text
 
-ops-metrics-server:  ## Prometheus 指标服务器
+ops-metrics-server-cli:  ## Prometheus 指标服务器 (cli.py, 9090)
 	python3 bin/ops/cli.py metrics --port 9090
 
-ops-alert:  ## 告警检查
+ops-alert-basic:  ## 告警检查 (基础版)
 	python3 bin/ops/alert.py --check
 
 ops-template:  ## 服务模板列表

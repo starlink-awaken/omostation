@@ -143,7 +143,7 @@ cd "projects/knowledge/gbrain" && bun test
 
 ```bash
 make ssot-guardian && make ssot-sync
-python3 bin/gac/meta-doctor.py --workspace . --json
+python3 bin/gac/meta-doctor.py --workspace .
 ```
 
 **Full catalog**: [`bin/README.md`](bin/README.md) | **CLI reference**: [`docs/CLI-REFERENCE.md`](docs/CLI-REFERENCE.md)
