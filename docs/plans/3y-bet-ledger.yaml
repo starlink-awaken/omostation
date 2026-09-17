@@ -2378,9 +2378,14 @@ bets:
   - 不在本 BET 内直接实现新驱动对应的代码，只做调研与可行性结论
   pasw_required: false
   priority: P1
+  progress:
+    done_when_met:
+    - 产出至少一个不依赖国转中心借调的公文/决策收件箱候选业务驱动: admin-notification-workflow (BET-Y1Q4-T8-04), 5-20 件/天
+    - 验证该候选驱动能否复用已建成的 document-review 能力: 100% 兼容 (拟稿/格式检查/敏感项检查/依据核验/审批/督办全链)
+    - 结论写入 docs/plans/: 2026-09-17-t7-02-second-business-driver-research.md
   retro: required
   risk_level: L1
-  status: candidate
+  status: done
   title: 公文场景第二业务驱动探索 — 脱离国转中心借调依赖
   track: T7-SCENE
   underlying_workflow: project-doc-change
@@ -2391,7 +2396,38 @@ bets:
   workflow: bet-execution
   write_surfaces:
   - docs/plans/
-  - docs/scene-cards/
+  - .omo/_truth/scenarios/v3/**
+  done_at: '2026-09-17'
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@cb3fd6e76907986a5f277a7d7b1756c676e49b47
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T7-02.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 - appetite: 4 days
   circuit_breaker: 受托执行置信度低于 0.95 时立即回退到 Assisted 人工审批。
   completion_evidence:
