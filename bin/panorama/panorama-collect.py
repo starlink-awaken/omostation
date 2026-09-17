@@ -619,6 +619,81 @@ def collect_launchd_health() -> dict:
     }
 
 
+def collect_code_root_health() -> dict:
+    """Report whether the managed code root is clean and equal to origin/main.
+
+    This is intentionally read-only: Panorama never fetches, rebases, merges or
+    otherwise updates the managed clone. A stale root is visible rather than
+    silently used by admission verifiers.
+    """
+    checked_at = datetime.now(UTC).isoformat()
+    if CODE_ROOT == ROOT:
+        return {
+            "schema": "panorama-code-root-health/v1",
+            "available": False,
+            "managed": False,
+            "verdict": "UNMANAGED",
+            "checked_at": checked_at,
+            "error": "code_root_matches_runtime_root",
+        }
+
+    def git(args: list[str]) -> tuple[int, str]:
+        return run(["git", "-C", str(CODE_ROOT), *args], timeout=10)
+
+    head_code, head = git(["rev-parse", "HEAD"])
+    origin_code, origin_main = git(["rev-parse", "refs/remotes/origin/main"])
+    status_code, status = git(["status", "--porcelain", "--untracked-files=no"])
+    count_code, counts = git(["rev-list", "--left-right", "--count", "origin/main...HEAD"])
+    if head_code or origin_code or status_code or count_code:
+        return {
+            "schema": "panorama-code-root-health/v1",
+            "available": False,
+            "managed": True,
+            "verdict": "UNAVAILABLE",
+            "checked_at": checked_at,
+            "head_oid": head if head_code == 0 else None,
+            "origin_main_oid": origin_main if origin_code == 0 else None,
+            "error": "git_read_failed",
+        }
+
+    left, _, right = counts.partition("\t")
+    try:
+        behind, ahead = int(left.strip()), int(right.strip())
+    except ValueError:
+        return {
+            "schema": "panorama-code-root-health/v1",
+            "available": False,
+            "managed": True,
+            "verdict": "UNAVAILABLE",
+            "checked_at": checked_at,
+            "head_oid": head,
+            "origin_main_oid": origin_main,
+            "error": "count_parse_failed",
+        }
+
+    dirty_count = sum(1 for line in status.splitlines() if line.strip())
+    synced = head == origin_main and behind == 0 and ahead == 0
+    if dirty_count:
+        verdict = "DIRTY"
+    elif not synced:
+        verdict = "STALE"
+    else:
+        verdict = "PASS"
+    return {
+        "schema": "panorama-code-root-health/v1",
+        "available": True,
+        "managed": True,
+        "verdict": verdict,
+        "checked_at": checked_at,
+        "head_oid": head,
+        "origin_main_oid": origin_main,
+        "behind_origin_main": behind,
+        "ahead_origin_main": ahead,
+        "dirty_count": dirty_count,
+        "auto_update_performed": False,
+    }
+
+
 def _ensure_omo_path() -> None:
     omo_src = ROOT / "projects" / "omo" / "src"
     if omo_src.is_dir() and str(omo_src) not in sys.path:
@@ -2189,6 +2264,7 @@ def build_payload() -> dict:
         "agents": collect_agents(),
         "runtime": collect_runtime(),
         "launchd_health": collect_launchd_health(),
+        "code_root_health": collect_code_root_health(),
         "docs": collect_docs(),
         "role_admission": collect_role_admission(),
         "agent_cell_pool": collect_agent_cell_pool(),
@@ -2602,17 +2678,22 @@ $('agenttable').querySelector('tbody').innerHTML=D.agents.map(a=>'<tr><td class=
   const ca=D.claims_authority||{};
   const state=ca.activation_state||'unknown';
   const cls=ca.available?(state==='active'?'p':'n'):'f';
+  const cr=D.code_root_health||{};
+  const crClass=cr.verdict==='PASS'?'p':((cr.verdict==='STALE'||cr.verdict==='DIRTY')?'f':'n');
   $('claimkpi').innerHTML=[
     {v:state,l:'activation',c:cls},
     {v:ca.effective_claim_authority||'UNKNOWN',l:'effective'},
     {v:ca.security_level||'UNKNOWN',l:'security'},
-    {v:ca.sequence==null?'n/a':ca.sequence,l:'sequence'}
-  ].map(k=>'<div class="card kpi"><b class="'+k.c+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
+    {v:ca.sequence==null?'n/a':ca.sequence,l:'sequence'},
+    {v:cr.verdict||'UNAVAILABLE',l:'code root',c:crClass}
+  ].map(k=>'<div class="card kpi"><b class="'+(k.c||'')+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
   const rows=[
     ['read-only observation',ca.available],
     ['instruction capable',ca.instruction_capable],
     ['mutation performed',ca.mutation_performed],
-    ['authorization granted',ca.authorization_granted]
+    ['authorization granted',ca.authorization_granted],
+    ['code root synced',cr.verdict==='PASS'],
+    ['code root clean',cr.dirty===false]
   ];
   $('claimtable').querySelector('tbody').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td><span class="chip '+(!r[1]||r[0]==='read-only observation'&&r[1]?'p':'f')+'">'+(r[1]?'true':'false')+'</span></td></tr>').join('');
 })();
