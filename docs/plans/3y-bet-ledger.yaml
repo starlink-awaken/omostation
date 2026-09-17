@@ -30543,12 +30543,13 @@ bets:
   pasw_required: false
   priority: P1
   progress:
-    current_step: Step 1 完成 — lifecycle supervised, activation monitored
+    current_step: Step 2 完成 — lifecycle routine, activation allowed
     done_when_met:
     - 'Step 1: lifecycle assisted→supervised, activation controlled→monitored'
-    phase: 1
-    phase_goal: lifecycle assisted→supervised, activation controlled→monitored
-    phase_name: assisted→supervised
+    - 'Step 2: lifecycle supervised→routine, activation monitored→allowed'
+    phase: 2
+    phase_goal: lifecycle supervised→routine, activation monitored→allowed
+    phase_name: supervised→routine
     started_at: '2026-09-17'
   retro: required
   risk_level: L2
