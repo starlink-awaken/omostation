@@ -186,7 +186,7 @@ def cmd_lookup(args):
         if e.get("status") == "obsolete":
             continue
         score = 0
-        e_tags = set(t.lower() for t in e.get("tags", []))
+        e_tags = set(str(t).lower() for t in (e.get("tags") or []))
         score += len(tags & e_tags) * 10
         text = f"{e.get('symptom', '')} {e.get('title', '')} {e.get('root_cause', '')}".lower()
         score += sum(1 for w in symptom_words if w in text) * 5
