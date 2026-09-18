@@ -7,7 +7,7 @@ scope: workspace
 severity: high
 weight: 0.3
 entropy_class: low
-lifecycle_state: open
+lifecycle_state: closed
 owner: governance-team
 affected_roots:
 - .omo/_attic/family-hub-archive
@@ -29,7 +29,10 @@ description: |-
   (f456ce9 已修) 亦曾致 gac-gate 红，同轮确认已闭环。
 created: 2026-08-19
 status: closed
-closed_evidence: "commit <pending> — attic 孤儿 gitlink 移除, gac-gate submodule init 不再崩溃"
+closed_at: '2026-09-18T07:52:11+08:00'
+closed_by: governance-team
+close_reason: 'Verified already repaired on current main; reconciled stale contradictory lifecycle metadata.'
+closed_evidence: "Verified at main 8337ee9f1f8cbbe8bd7043f531ed057c186d3be5: `git ls-tree -r HEAD .omo/_attic` returns no entries and no mode-160000 attic gitlink; gac-gate run 35288268458 succeeded on the same main SHA."
 related:
 - BET-Y1Q3-T6-05
 - run: 20260819T013210Z-governance-audit-5c3da652
