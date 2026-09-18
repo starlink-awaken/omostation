@@ -3,7 +3,12 @@
 # 5-level lifecycle for all scene cards, aligned with project-strategy-v1.
 #
 # SSOT: .omo/standards/scene-card-lifecycle.yaml
-# Version: 1.0.0 | 2026-08-31
+# Version: 1.1.0 | 2026-09-18
+# v1.1.0: add demotion + human_gate (T7 calibration fallback reconciliation).
+#   ONE demote rule: calibration < 0.5 with sample_count >= 10 → propose
+#   demote ONE level via human gate. Rejects retro Q5 "3×<0.4" (no
+#   consecutive-history store exists) and engine "straight to shadow"
+#   (skips VALID_TRANSITIONS step-down pairs). See demotion.rationale.
 
 schema: scene-card-lifecycle/v1
 
@@ -36,3 +41,17 @@ activation:
   preview: "仅预览，不触发"
   controlled: "受控触发，需主人确认"
   active: "自动触发"
+
+demotion:
+  rule: "calibration < 0.5 且 sample_count >= 10 → 提议降一级 (propose only, 人工执行)"
+  calibration_floor: 0.5
+  min_samples: 10
+  step: "每次只降一级: assisted→shadow, supervised→assisted, routine→supervised"
+  shadow_floor: "shadow/draft 永不降级 (hold) — assisted 以下无执行风险"
+  rationale: "单次 <0.5 被选为唯一规则, 而非 retro Q5 的 '连续 3 次 <0.4': (1) 连续计数存储不存在 (scene_calibration/scene_lifecycle_log 表为空、无生产调用方, cron 从未运行); (2) <0.5 是 cruiser 熔断与 calibration-engine 高严重触发器唯一共享的下限; (3) 一级一级降与 transition 允许的 step-down 对齐, engine 原 '直降 shadow' 会跳级 (routine→shadow 非法)。engine 保留的 <0.6(n≥30)/fp>0.2/trend<-0.15 仅为检测信号, 触发后同样只走本规则的一级提议 (不直降、不自动执行)。"
+  future_option: "连续 3 次评估 < 0.4 → 降级 (需 consecutive-history 存储, 未实现)"
+
+human_gate:
+  principle: "永不自动激活 — 晋级与降级的所有 lifecycle 变更都必须由人类操作命令执行"
+  demote_path: "calibration-engine daily 只写提议 (scene_lifecycle_log 行 + needs_human 输出), 操作员经 `omo scene demote <scene_id> --to <level> --reason <text>` 执行 (底层走 scene-card-lifecycle.py transition)"
+  promote_path: "cruiser needs_human/routine-gate 与 engine 晋级提议同样需操作员手动执行"

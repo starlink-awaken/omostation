@@ -48,6 +48,10 @@ def record_execution(scene_id, run_id, result) -> None:
          1 if result.get("human_reviewed") else 0, 1 if result.get("human_agreed") else 0, datetime.now(UTC).isoformat()))
     conn.commit(); conn.close()
     _write_llm_cost(scene_id, run_id, result)
+    # T7 fallback chain: every recorded execution immediately recomputes
+    # calibration from REAL rows so scene_calibration is populated by the
+    # record path itself (no fake data, no dependency on cron having run).
+    compute_calibration(scene_id)
 
 
 def _write_llm_cost(scene_id: str, run_id: str, result: dict) -> None:
@@ -142,44 +146,96 @@ def main(argv=None) -> int:
     if cmd == "daily":
         conn = _get_db()
         rows = conn.execute("SELECT DISTINCT scene_id FROM scene_execution").fetchall(); conn.close()
-        alerts = 0; promoted = 0; auto_applied = 0
-        lifecycle_path = _ROOT / ".omo" / "_truth" / "scenarios" / "v3"
+        alerts = 0; promoted = 0; proposed = 0
         for r in rows:
             sid = r["scene_id"]
             cal = compute_calibration(sid)
             demo = check_demotion_triggers(sid)
             if demo["demote"]:
-                print(f"[DEMOTION] {sid}: {demo['triggers']}"); alerts += 1
-                _auto_transition(sid, "shadow", "calibration-engine")
+                # Human gate (SSOT scene-card-lifecycle.yaml): proposal only,
+                # NEVER auto-applied. Operator executes via:
+                #   omo scene demote <scene_id> --to <level> --reason <text>
+                target = _propose_demotion(sid, demo["triggers"], cal)
+                alerts += 1
+                if target:
+                    proposed += 1
+                    print(f"[DEMOTION-PROPOSED] {sid} → {target}: {demo['triggers']} "
+                          f"(needs_human; apply via: omo scene demote {sid} --to {target} "
+                          f"--reason 'calibration {cal['calibration_score']:.3f} < 0.5')")
+                else:
+                    print(f"[DEMOTION-HOLD] {sid}: {demo['triggers']} (below assisted or card missing target — no proposal logged)")
             for level in ("assisted","supervised","routine"):
                 gates = check_promotion_gates(sid, level)
                 if gates["eligible"]:
-                    print(f"[PROMOTION] {sid} → {level} (score={cal['calibration_score']:.3f})"); promoted += 1
-                    # Auto-apply promotion for assisted (supervised/routine need human)
-                    if level == "assisted":
-                        card_path = lifecycle_path / f"{sid}.yaml"
-                        if card_path.is_file() and _auto_transition(sid, level, "calibration-engine"):
-                            auto_applied += 1
+                    # Human gate: proposal only, never auto-applied.
+                    _log_lifecycle_proposal(sid, None, level,
+                        f"promotion proposed (score={cal['calibration_score']:.3f}); needs_human — "
+                        f"apply via: omo scene promote {sid} --to {level}", cal["calibration_score"])
+                    print(f"[PROMOTION-PROPOSED] {sid} → {level} (score={cal['calibration_score']:.3f}) "
+                          f"(needs_human; apply via: omo scene promote {sid} --to {level})")
+                    promoted += 1
+                    proposed += 1
                     break
-        print(f"Daily cycle: {len(rows)} scenes, {alerts} demotion alerts, {promoted} promotion candidates, {auto_applied} auto-applied")
+        print(f"Daily cycle: {len(rows)} scenes, {alerts} demotion alerts, {promoted} promotion candidates, {proposed} proposals logged (0 auto-applied — human gate)")
         return 0
 
-def _auto_transition(scene_id: str, target_level: str, actor: str) -> bool:
-    """Auto-apply lifecycle transition. Returns True on success."""
+def _card_lifecycle(scene_id: str) -> str | None:
+    """Read current lifecycle tier from the scene card (best-effort, no yaml dep)."""
+    import re
+    card_path = _ROOT / ".omo" / "_truth" / "scenarios" / "v3" / f"{scene_id}.yaml"
+    if not card_path.is_file():
+        return None
     try:
-        import subprocess as _sp
-        lifecycle_script = _ROOT / "bin" / "ssot" / "scene-card-lifecycle.py"
-        card_path = _ROOT / ".omo" / "_truth" / "scenarios" / "v3" / f"{scene_id}.yaml"
-        if not card_path.is_file() or not lifecycle_script.is_file():
-            return False
-        result = _sp.run(
-            [sys.executable, str(lifecycle_script), "transition",
-             "--scene-card", str(card_path), "--tier", target_level, "--actor", actor],
-            capture_output=True, text=True, timeout=15, cwd=str(_ROOT),
-        )
-        return result.returncode == 0
+        text = card_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    try:
+        import yaml  # type: ignore
+        docs = list(yaml.safe_load_all(text))
+        body = docs[-1] if len(docs) > 1 else docs[0]
+        if isinstance(body, dict) and isinstance(body.get("lifecycle"), str):
+            return body["lifecycle"]
     except Exception:
-        return False
+        pass
+    matches = re.findall(r"^\s*lifecycle\s*:\s*([A-Za-z_]+)", text, re.MULTILINE)
+    return matches[-1] if matches else None
+
+
+_ORDER_DOWN = {"routine": "supervised", "supervised": "assisted", "assisted": "shadow"}
+
+def _log_lifecycle_proposal(scene_id: str, from_level: str | None, to_level: str,
+                            reason: str, calibration_score: float) -> None:
+    """Persist a human-gate proposal as a scene_lifecycle_log row (consumption proof)."""
+    conn = _get_db()
+    conn.execute("""INSERT INTO scene_lifecycle_log (scene_id,from_level,to_level,reason,
+        calibration_score,actor,created_at) VALUES (?,?,?,?,?,?,?)""",
+        (scene_id, from_level, to_level, reason, calibration_score,
+         "calibration-engine", datetime.now(UTC).isoformat()))
+    conn.commit(); conn.close()
+
+def _propose_demotion(scene_id: str, triggers: list, cal: dict) -> str | None:
+    """SSOT one-level demote proposal. Returns target tier, or None when no proposal.
+
+    Never touches scene cards — only appends a scene_lifecycle_log row for the
+    human operator to consume. Below assisted there is no execution risk, so no
+    proposal is logged (hold).
+    """
+    current = _card_lifecycle(scene_id)
+    if current is None:
+        # Card not found: preserve legacy target so the proposal is still
+        # actionable, and say so in the reason.
+        _log_lifecycle_proposal(scene_id, None, "shadow",
+            f"demote proposed {triggers} (current tier unknown — card not found); needs_human",
+            cal["calibration_score"])
+        return "shadow"
+    target = _ORDER_DOWN.get(current)
+    if target is None:
+        return None
+    _log_lifecycle_proposal(scene_id, current, target,
+        f"demote proposed {triggers}; needs_human — "
+        f"apply via: omo scene demote {scene_id} --to {target}",
+        cal["calibration_score"])
+    return target
     conn = _get_db(); rows = conn.execute("SELECT DISTINCT scene_id FROM scene_execution ORDER BY scene_id").fetchall(); conn.close()
     print(f"{'Scene ID':<40} {'Samples':>8} {'Score':>8} {'FP Rate':>8} {'Trend':>8}\n{'-'*76}")
     for r in rows:
