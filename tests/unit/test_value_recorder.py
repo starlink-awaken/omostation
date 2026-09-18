@@ -119,3 +119,35 @@ def test_validate_evidence_reports_missing_baseline_binding(tmp_path) -> None:
 
     assert report["ok"] is False
     assert report["issues"] == [{"line": "1", "reason": "baseline digest binding mismatch"}]
+
+
+def test_validate_cli_accepts_explicit_runtime_paths(tmp_path, monkeypatch) -> None:
+    module = _module()
+    evidence = tmp_path / "value-evidence.jsonl"
+    baseline_dir = tmp_path / "baselines"
+    seen = {}
+
+    def fake_validate(path, directory):
+        seen["evidence"] = path
+        seen["baseline_dir"] = directory
+        return {
+            "schema": "value-evidence-validation/v2",
+            "ok": True,
+            "records": 0,
+            "v2_records": 0,
+            "qualifying": 0,
+            "target": 30,
+            "remaining_to_target": 30,
+            "issues": [],
+        }
+
+    monkeypatch.setattr(module, "validate_evidence", fake_validate)
+    monkeypatch.setattr(module.sys, "argv", [
+        "value-recorder.py", "validate",
+        "--evidence", str(evidence),
+        "--baseline-dir", str(baseline_dir),
+    ])
+
+    assert module.main() == 0
+    assert seen["evidence"] == evidence
+    assert seen["baseline_dir"] == baseline_dir

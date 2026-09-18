@@ -259,7 +259,9 @@ def main() -> int:
     record.add_argument("--principal-id", default="principal:xiamingxing")
     record.add_argument("--authority-receipt-digest", required=True)
     record.add_argument("--baseline-id", required=True)
-    commands.add_parser("validate")
+    validate = commands.add_parser("validate")
+    validate.add_argument("--evidence", type=Path, default=EVIDENCE_FILE)
+    validate.add_argument("--baseline-dir", type=Path, default=BASELINE_DIR)
     args = parser.parse_args()
 
     try:
@@ -290,7 +292,7 @@ def main() -> int:
             append_episode(episode)
             print(json.dumps(episode, ensure_ascii=False, indent=2))
             return 0
-        report = validate_evidence()
+        report = validate_evidence(args.evidence, args.baseline_dir)
         _print_validation(report)
         return 0 if report["ok"] else 1
     except (OSError, ValueError) as exc:
