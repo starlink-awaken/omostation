@@ -55,6 +55,5 @@ retro_required: true
 retro_path: .omo/_knowledge/retros/BET-Y3H2-T7-01.md
 agent_profile_hint: docs-agent
 started_at: null
-completed_at: null
 blocked_by: null
 retry_count: 0
