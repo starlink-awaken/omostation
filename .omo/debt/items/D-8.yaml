@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "medium"
 weight: 0.06
 entropy_class: "medium"
-lifecycle_state: "open"
+lifecycle_state: "resolved"
 owner: "runtime"
 affected_roots:
   - "projects/runtime/scripts"
@@ -16,9 +16,11 @@ evidence_refs:
   - "docs/reports/2026-08-30-documents-control-plane-sink-report.md"
   - ".omo/_truth/registry/documents-content-plane-migrations.yaml#public-runtime"
 mitigation_refs:
+  - "omostation-runtime#79 scripts/kems-v2 v2.2.0（12 工具 + 四域集成测试）"
+  - "omostation#3951 projects/runtime gitlink bump"
   - "omostation-runtime#70 scripts/kems-toolkit（6 月部署版工具集，已 git 托管）"
 opened_at: "2026-08-30"
-last_reviewed_at: "2026-08-30"
+last_reviewed_at: "2026-09-18"
 gate_level: "P2"
 x3_tier: "Capability"
 description: |
@@ -37,3 +39,7 @@ rebuild_plan: |
   4. 四域不再用 symlink 指向 Documents——消费者直接走 Workspace owner 命令
   5. 验收：kems-cross-check 跨域巡检语义在 Workspace 侧重建并测试
 acceptance_criteria: "scripts/kems-v2/ 入库 + 12 脚本功能对齐 CHANGELOG v2.1.1 + 四域语义测试绿 + 无 Documents 路径依赖"
+resolution_evidence: "docs/reports/2026-09-18-kems-v2-d8-rebuild-closeout.md — 12/12 tools landed via runtime#79; root gitlink landed via #3951; four-domain semantic tests green"
+closed_at: "2026-09-18T05:55:35Z"
+closed_by: "xiamingxing"
+note: "v2.2.0 语义重建完成；无 Documents 默认路径或 symlink 依赖。该结论是工程交付，不构成业务价值证明。"
