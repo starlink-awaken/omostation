@@ -30852,6 +30852,71 @@ bets:
   - docs/plans/
   - docs/superpowers/specs/
   - .omo/_knowledge/retros/
+- accepted_specifications:
+  - content_digest: sha256:29dbd1ef5a2d8e34694ec13cfd09b600cbff0e62c2c6e5f2d8d1c32c2c57007d
+    decision_ref: decision://accepted/BET-Y3H1-T7-06
+    spec_ref: repo://docs/superpowers/specs/2026-09-17-t7-06-health-cold-start-design.md
+    spec_version: 1.0.0
+  appetite: 1 day
+  circuit_breaker: 任一场景连续 3 次校准 < 0.4 → 该场景回退 supervised，其他继续。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: NOT_STARTED
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y3H1-T7-04
+  - BET-Y3H1-T7-05
+  done_at: ''
+  done_when:
+  - 4 场景卡 lifecycle 从 draft 升至 routine
+  - activation 从 preview 升至 allowed
+  - ≥ 36 条 trial records (4 场景 × 9 条 — 3 dry_run + 3 assisted + 3 supervised)
+  - bet-ledger lint exit 0
+  goal: 将 health-medical-workflow 驱动的 4 个 draft 场景 (archive/intake/visit-prep/visit)
+    冷启动推进到 routine。复用 T7-02/T7-03/T7-04/T7-05 已验证的推进模式。
+  human_gate: true
+  id: BET-Y3H1-T7-06
+  non_goals:
+  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01
+  - 不修改 health-medical-workflow journey 定义
+  - 不修复 domain 字段 (work → health 不在本 BET 范围)
+  pasw_required: false
+  priority: P1
+  progress:
+    current_step: Phase 0 - 立项
+    done_when_met: []
+    phase: 0
+    phase_goal: 创建 BET 条目 (candidate) + spec + retro
+    phase_name: 立项
+    started_at: '2026-09-18'
+  retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-06.md
+  risk_level: L2
+  status: candidate
+  title: health-medical-workflow 场景冷启动 — draft→routine
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  window: Y3H1
+  workflow: bet-execution
+  write_surfaces:
+  - .omo/_truth/scenarios/v3/**
+  - .omo/_knowledge/workflow-mesh/shadow-scene-trials.jsonl
+  - docs/plans/
+  - docs/superpowers/specs/
+  - .omo/_knowledge/retros/
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30990,7 +31055,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 411
+  total_bets: 412
   windows:
   - Y1Q1
   - Y1Q2
