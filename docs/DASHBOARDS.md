@@ -49,9 +49,28 @@ last-reviewed: 2026-09-17
 1. 面板代码**版本化为仓库资产** `bin/panorama/assets/scene-panel.html`
 2. `bin/gac/zhixing-panel-sync.py ensure` **幂等自愈注入**（cron 每小时巡检，`omostation-zhixing-panel`）
 3. `make zhixing-panel-check` 漂移检测（缺失退出非零）
+4. **宿主文件纳管**（2026-09-18 补）—— 上面 1~3 只覆盖 **panels**，而实测被覆盖的
+   是**宿主文件本身**（`template.html` 324KB / `refresh.py` 97KB，原先完全未纳管）。
+   现版本化为 `bin/panorama/assets/host/`，由 `bin/gac/zhixing-host-sync.py` 管理：
 
-**根本解法（未做）**：把驾驶舱源码迁入子仓库（根仓只追踪元配置/基础设施/文档，
-不承载项目代码），以 PR 流程替代直改部署目录。建议单列 BET。
+   | 命令 | 作用 |
+   |---|---|
+   | `make zhixing-host` | 漂移检测（部署被直接编辑 → exit 1） |
+   | `make zhixing-host-status` | 仓库 vs 部署 逐文件 sha 摘要 |
+   | `make zhixing-host-capture` | 部署 → 仓库（有意变更后版本化） |
+   | `python3 bin/gac/zhixing-host-sync.py restore --force` | 意外覆盖 → 从仓库回滚（留 `.before-restore`） |
+
+   捕获的是**注入后稳定态**（panels/补丁幂等，故不产生伪漂移）。cron 每小时
+   随 `omostation-zhixing-panel` 一并巡检。
+
+   > `refresh.py` 在仓库中存为 **`refresh.py.asset`**：`script-registry` 与
+   > `bin-quota` 两个门禁把 `bin/**/*.py` 一律当作**脚本**（排除规则只认
+   > `bin/_*` 目录），而这是部署文件的版本化副本 —— 是资产不是脚本。用 `.asset`
+   > 后缀既保持与同行 panels 资产相邻，又不误纳入脚本治理面。
+
+**残余风险**：纳管的是"快照 + 漂移检测"，不是"禁止直改"—— 部署目录仍可被写，
+但现在**覆盖会被检出**（原先静默丢失）。根本解法（迁入子仓库、以 PR 流程替代
+直改部署目录）仍未做，建议单列 BET。
 
 ### 3.2 面板/入口重叠
 
