@@ -123,6 +123,47 @@ def test_validate_evidence_reports_missing_baseline_binding(tmp_path) -> None:
     assert report["issues"] == [{"line": "1", "reason": "baseline digest binding mismatch"}]
 
 
+def test_validate_evidence_rejects_record_before_baseline_freeze(tmp_path) -> None:
+    module = _module()
+    baseline = _baseline(module, tmp_path)
+    episode = _record(module, baseline)
+    episode["timestamp"] = "2026-09-18T00:00:00+00:00"
+    evidence = tmp_path / "value-evidence.jsonl"
+    evidence.write_text(json.dumps(episode) + "\n", encoding="utf-8")
+
+    report = module.validate_evidence(evidence, tmp_path / "baselines")
+
+    assert report["ok"] is False
+    assert report["issues"] == [{
+        "line": "1",
+        "reason": "record timestamp must be after baseline frozen_at",
+    }]
+
+
+def test_record_episode_rejects_record_at_baseline_freeze(tmp_path) -> None:
+    module = _module()
+    baseline = _baseline(module, tmp_path)
+
+    try:
+        module.record_episode(
+            review_seconds=30,
+            saved_seconds=120,
+            verdict="accepted",
+            run_id="run-value-001",
+            scene_id="scene-value-001",
+            decision_id="decision-value-001",
+            principal_id="principal:xiamingxing",
+            authority_receipt_digest=_authority(),
+            baseline_id=baseline["baseline_id"],
+            baseline=baseline,
+            recorded_at="2026-09-18T00:00:00+00:00",
+        )
+    except ValueError as exc:
+        assert str(exc) == "record timestamp must be after baseline frozen_at"
+    else:
+        raise AssertionError("pre-window record was accepted")
+
+
 def test_validate_cli_accepts_explicit_runtime_paths(tmp_path, monkeypatch) -> None:
     module = _module()
     evidence = tmp_path / "value-evidence.jsonl"

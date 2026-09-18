@@ -30,6 +30,7 @@ QUALIFYING_SAMPLE_TARGET = 30
 QUALIFYING_VERDICTS = frozenset({"accepted", "modified"})
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$")
+_PREWINDOW_ERROR = "record timestamp must be after baseline frozen_at"
 
 
 def _utc_now() -> str:
@@ -44,6 +45,15 @@ def _canonical_bytes(value: Mapping[str, Any]) -> bytes:
 
 def _digest(value: Mapping[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(_canonical_bytes(value)).hexdigest()
+
+
+def _parse_timestamp(value: Any) -> float | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
 
 
 def _require_id(value: str, field: str) -> str:
@@ -153,6 +163,10 @@ def record_episode(
         raise ValueError("authority_receipt_digest must be sha256:<64 hex>")
     if not isinstance(baseline, dict) or baseline.get("baseline_id") != baseline_id:
         raise ValueError("record must bind the loaded pre-window baseline")
+    recorded_epoch = _parse_timestamp(recorded_at or _utc_now())
+    frozen_epoch = _parse_timestamp(baseline.get("frozen_at"))
+    if recorded_epoch is None or frozen_epoch is None or recorded_epoch <= frozen_epoch:
+        raise ValueError(_PREWINDOW_ERROR)
 
     net_saved_seconds = saved_seconds - review_seconds
     qualifying = (
@@ -216,8 +230,14 @@ def validate_evidence(
             baseline, error = load_baseline(str(record["baseline_id"]), baseline_dir)
             if baseline is None:
                 issues.append({"line": str(line_number), "reason": error or "baseline unavailable"})
+                continue
             elif baseline.get("digest") != record.get("baseline_digest"):
                 issues.append({"line": str(line_number), "reason": "baseline digest binding mismatch"})
+                continue
+            recorded_epoch = _parse_timestamp(record.get("timestamp"))
+            frozen_epoch = _parse_timestamp(baseline.get("frozen_at"))
+            if recorded_epoch is None or frozen_epoch is None or recorded_epoch <= frozen_epoch:
+                issues.append({"line": str(line_number), "reason": _PREWINDOW_ERROR})
     qualifying = sum(1 for item in records if item.get("qualifying") is True)
     return {
         "schema": "value-evidence-validation/v2",
