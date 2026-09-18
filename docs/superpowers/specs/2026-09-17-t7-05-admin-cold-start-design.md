@@ -1,4 +1,5 @@
 ---
+schema_version: specification/v1
 spec_version: 1.0.0
 status: accepted
 lifecycle: contract
