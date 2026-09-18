@@ -67,4 +67,12 @@ fi
 if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/gac/workspace-wip-guard.py" ]; then
   pc_run_stage wip-snapshot "$_STAGE_TIMEOUT" python3 "$ROOT/bin/gac/workspace-wip-guard.py" snapshot --reason post-checkout --quiet >/dev/null 2>&1 || true
 fi
+# ── 未推送提交钉扎 (2026-09-18, 提交被分支切换孤立事故) ──────────────
+# 模式 B: 提交已完成 (工作树干净) 但未推送 → 并发会话 switch 走该分支后提交
+# 不再可达 (实证 e4787d290; #3976 "dropped from #3969" 为同一事故).
+# 快照抓不到这种丢失 (无脏文件), 故额外把未合入 origin/main 的提交钉到
+# refs/wip/ —— 成为可达对象, 分支删除 / gc 都不影响恢复.
+if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/gac/workspace-wip-guard.py" ]; then
+  pc_run_stage wip-protect "$_STAGE_TIMEOUT" python3 "$ROOT/bin/gac/workspace-wip-guard.py" protect >/dev/null 2>&1 || true
+fi
 bash "$ROOT/bin/gac/hook-runner.sh" --hook post-checkout
