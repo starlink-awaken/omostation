@@ -26,7 +26,8 @@ last_updated: 2026-09-18
 
 Panorama 同时提供人类站点与机器可读投影。Agent 应优先读取 `runtime/dashboard/agent-brief.json`
 （HTTP: `/agent-brief.json`）获取权威控制面、门禁摘要、Claims 边界、未完成 BET、里程碑窗口、
-活动/阻塞工作流、任务、告警、下一步事务、读取接口和安全约束；
+活动/阻塞工作流、任务、告警、下一步事务、读取接口和安全约束；人类站点的 **Agent Brief**
+页签以同一份投影展示这些要点；
 完整字段使用 `runtime/dashboard/data.json`（HTTP: `/data.json`）。两者均由
 `bin/panorama/panorama-collect.py` 只读聚合生成，不引入第二个控制面或写入队列。
 任务投影只读取 managed code root 下的 `.omo/tasks/{active,planned,blocked,done}/*.yaml`；

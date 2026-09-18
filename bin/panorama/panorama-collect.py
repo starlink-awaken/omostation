@@ -2863,6 +2863,7 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 <h1>织星驾驶舱</h1><small>OMO PANORAMA · <span id="ts"></span></small>
 <nav id="nav">
 <a href="#overview" data-s="overview">体系总览</a>
+<a href="#agentbrief" data-s="agentbrief">Agent Brief</a>
 <a href="#gates" data-s="gates">门禁 A1–A9</a>
 <a href="#agents" data-s="agents">Agent 全景</a>
 <a href="#bets" data-s="bets">任务与里程碑</a>
@@ -2886,6 +2887,18 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 L0 协议(ecos) → L1 运行时(omo/Mesh) → L2 内核(l4-kernel) → L3 入口(cockpit) → L4 文档<br>
 S 槽唯一 dispatcher：COMP-WS-omo · 八律第3条已收口（dispatch_backend）<br>
 Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</div></div>
+</section>
+<section class="sec" id="s-agentbrief">
+<h2>Agent Brief</h2><p class="sub">权限 · 健康 · 未完成工作 · 下一步 · 安全边界 · 人类与 Agent 共用同一真相</p>
+<div class="kpi-grid" id="ab-kpi"></div>
+<div class="grid g2" style="margin-top:14px">
+ <div class="card"><h3>Authority & Safety</h3><table id="ab-authority"><thead><tr><th>contract</th><th>value</th></tr></thead><tbody></tbody></table></div>
+ <div class="card"><h3>Read Interfaces</h3><table id="ab-interfaces"><thead><tr><th>surface</th><th>path</th></tr></thead><tbody></tbody></table></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+ <div class="card"><h3>Next Actions</h3><table id="ab-actions"><thead><tr><th>state</th><th>action</th><th>detail</th><th>source</th></tr></thead><tbody></tbody></table></div>
+ <div class="card"><h3>Open Work & Alerts</h3><table id="ab-work"><thead><tr><th>type</th><th>name</th><th>state</th><th>detail</th></tr></thead><tbody></tbody></table></div>
+</div>
 </section>
 <section class="sec" id="s-gates">
 <h2>门禁 A1–A9 / RF0</h2><p class="sub">底层实时验证 + 声明态边界 · PARTIAL ≠ PASS · 未过门零写入/零自治/零扩并发</p>
@@ -2988,6 +3001,41 @@ const D=__DATA__;
 document.getElementById('ts').textContent=D.generated_at.slice(0,16).replace('T',' ');
 const $=id=>document.getElementById(id);
 const chip=v=>v==='PASS'?'<span class="chip p">PASS</span>':(v==='FAIL'?'<span class="chip f">FAIL</span>':'<span class="chip n">'+v+'</span>');
+// === Agent Brief ===
+(function(){
+  const av=D.agent_visibility||{available:false};
+  const a=av.authority||{}, h=av.health||{}, w=av.work_state||{};
+  const gates=h.gates_pass||0, gatesTotal=h.gates_total||0;
+  const items=[
+    {l:'Gate PASS',v:gates+'/'+gatesTotal},
+    {l:'Open Tasks',v:(w.tasks||{}).open_count||0},
+    {l:'Active Workflows',v:(w.workflows||{}).active_count||0},
+    {l:'Task Duplicates',v:((w.tasks||{}).duplicates||[]).length},
+    {l:'High Alerts',v:(w.alerts||{}).high||0},
+    {l:'Value Proof',v:a.value_proof||'UNKNOWN'}
+  ];
+  $('ab-kpi').innerHTML=items.map(x=>'<div class="kpi-card"><b class="'+(x.l==='High Alerts'&&x.v>0?'dead':(x.l==='Value Proof'&&x.v==='NOT_PROVEN'?'dead':'fresh'))+'">'+x.v+'</b><span>'+x.l+'</span></div>').join('');
+  const auth=[
+    ['Control Plane',a.control_plane||'unknown'],
+    ['Single Dispatcher',a.single_dispatcher===true?'true':'false'],
+    ['Effective Claim Authority',a.effective_claim_authority||'unknown'],
+    ['Claims Activation',a.claims_activation_state||'unknown'],
+    ['Instruction Capable',a.claims_instruction_capable===true?'true':'false'],
+    ['Activation Allowed',a.claims_activation_allowed===true?'true':'false'],
+    ['Value Proof',a.value_proof||'unknown']
+  ];
+  $('ab-authority').querySelector('tbody').innerHTML=auth.map(x=>'<tr><td>'+x[0]+'</td><td class="mono">'+x[1]+'</td></tr>').join('');
+  const ri=(av.read_interfaces||{});
+  const interfaces=[['human_html',ri.human_html||'/'],['data_json',ri.data_json||'/data.json'],['agent_brief_json',ri.agent_brief_json||'/agent-brief.json'],['filesystem brief',(ri.filesystem||{}).brief||'runtime/dashboard/agent-brief.json']];
+  $('ab-interfaces').querySelector('tbody').innerHTML=interfaces.map(x=>'<tr><td>'+x[0]+'</td><td class="mono">'+x[1]+'</td></tr>').join('');
+  $('ab-actions').querySelector('tbody').innerHTML=(av.next_actions||[]).map(x=>'<tr><td><span class="chip '+(x.state==='required'?'w':(x.state==='ready'?'p':'n'))+'">'+x.state+'</span></td><td class="mono">'+x.id+'</td><td>'+x.detail+'</td><td class="mono">'+x.source+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无投影</td></tr>';
+  const rows=[];
+  for(const t of ((w.tasks||{}).open_recent||[]).slice(0,8))rows.push({type:'task',name:t.id,state:t.bucket+'/'+t.status,detail:(t.priority||'')+' · '+(t.owner||'')});
+  for(const b of ((w.bets||{}).in_progress||[]))rows.push({type:'bet',name:b.id,state:'in_progress',detail:b.title||''});
+  for(const b of ((w.bets||{}).blocked||[]))rows.push({type:'bet',name:b.id,state:'blocked',detail:b.title||''});
+  for(const x of ((w.alerts||{}).recent||[]))rows.push({type:'alert',name:x.source,state:x.severity,detail:x.msg||''});
+  $('ab-work').querySelector('tbody').innerHTML=rows.map(x=>'<tr><td class="mono">'+x.type+'</td><td class="mono">'+x.name+'</td><td><span class="chip '+(x.state==='high'||x.state==='blocked'?'f':(x.state==='in_progress'?'p':'n'))+'">'+x.state+'</span></td><td>'+x.detail+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无开放工作</td></tr>';
+})();
 // nav
 document.querySelectorAll('#nav a').forEach(a=>a.onclick=e=>{e.preventDefault();
 document.querySelectorAll('#nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');
