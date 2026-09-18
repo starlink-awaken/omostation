@@ -30777,19 +30777,35 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c373df476f09ad999848aa9ca562d345fc2cf461
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-05.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-05.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-05.md
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-05.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-05.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-05.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-05.md
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   depends_on:
   - BET-Y3H1-T7-04
-  done_at: ''
+  done_at: '2026-09-18'
   done_when:
   - 2 场景卡 lifecycle 从 draft 升至 routine
   - activation 从 preview 升至 allowed
@@ -30807,19 +30823,20 @@ bets:
   pasw_required: false
   priority: P1
   progress:
-    current_step: Phase 1 - Transitions + Trials
+    current_step: Done
     done_when_met:
     - 2 场景卡 lifecycle 从 draft 升至 routine
     - activation 从 preview 升至 allowed
     - 18 条 trial records 已写入 (2 场景 × 9 条)
-    phase: 1
-    phase_goal: 8 transitions + 18 trial records 完成
-    phase_name: Transitions + Trials
+    - bet-ledger lint exit 0
+    phase: 3
+    phase_goal: Closeout — ledger done + completion_evidence + retro archived
+    phase_name: Closeout
     started_at: '2026-09-18'
   retro: required
   retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-05.md
   risk_level: L2
-  status: in_progress
+  status: done
   title: admin-notification-workflow 场景冷启动 — draft→routine
   track: T7-SCENE
   underlying_workflow: project-code-change
