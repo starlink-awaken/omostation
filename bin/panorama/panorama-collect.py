@@ -936,6 +936,88 @@ def collect_role_admission() -> dict:
         return {"roles": [], "error": str(e)}
 
 
+def _role_registry_digest(data: dict) -> str:
+    body = {
+        "schema": data["schema"],
+        "role_id": data["role_id"],
+        "capabilities": sorted(data.get("capabilities", [])),
+        "admission_state": data.get("admission_state", "pending"),
+        "version": int(data.get("version", 1)),
+        "updated_at": data.get("updated_at", ""),
+    }
+    canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def collect_role_registry() -> dict:
+    """Project the persistent RoleRegistry JSONL without mutating it.
+
+    The runtime JSONL is owned by OMO's single writer path.  Panorama only
+    verifies schema and digest integrity here so agents can distinguish a
+    valid empty registry from an unavailable or tampered one.
+    """
+    store = ROOT / ".omo" / "state" / "agent-cell" / "semantic" / "roles.jsonl"
+    report = {
+        "schema": "panorama-role-registry/v1",
+        "source": "runtime://.omo/state/agent-cell/semantic/roles.jsonl",
+        "available": store.is_file(),
+        "verdict": "UNAVAILABLE",
+        "total": 0,
+        "by_state": {},
+        "records": [],
+        "integrity_ok": False,
+        "errors": [],
+    }
+    if not store.is_file():
+        report["errors"].append("registry_file_missing")
+        return report
+
+    records: list[dict] = []
+    errors: list[str] = []
+    with store.open(encoding="utf-8") as fh:
+        for line_number, line in enumerate(fh, 1):
+            if not line.strip():
+                continue
+            try:
+                data = json.loads(line)
+            except Exception as exc:  # noqa: BLE001 - fail closed, never green-wash
+                errors.append(f"line:{line_number}:invalid-json:{type(exc).__name__}")
+                continue
+            required = {"schema", "role_id", "capabilities", "admission_state", "version", "updated_at", "digest"}
+            if not isinstance(data, dict) or not required.issubset(data) or data.get("schema") != "omo-role-registry/v1":
+                errors.append(f"line:{line_number}:schema-mismatch")
+                continue
+            digest = _role_registry_digest(data)
+            intact = digest == data.get("digest")
+            if not intact:
+                errors.append(f"line:{line_number}:digest-mismatch:{data.get('role_id', 'unknown')}")
+                continue
+            records.append({
+                "role_id": str(data["role_id"])[:160],
+                "capabilities": sorted(str(item) for item in data.get("capabilities", [])),
+                "admission_state": str(data.get("admission_state", "unknown"))[:40],
+                "version": int(data.get("version", 0)),
+                "updated_at": str(data.get("updated_at", ""))[:40],
+                "digest": str(data.get("digest", ""))[:80],
+                "intact": True,
+            })
+
+    by_state: dict[str, int] = {}
+    for record in records:
+        state = record["admission_state"]
+        by_state[state] = by_state.get(state, 0) + 1
+    records.sort(key=lambda item: item["role_id"])
+    report.update({
+        "total": len(records),
+        "by_state": by_state,
+        "records": records,
+        "integrity_ok": not errors,
+        "errors": errors,
+        "verdict": "PASS" if not errors else "DEGRADED",
+    })
+    return report
+
+
 def _verify_agent_cell_receipts(state_file: Path) -> dict:
     """Invoke the no-mutation runtime verifier and degrade fail-closed."""
     candidates = [
@@ -2664,6 +2746,7 @@ def collect_agent_visibility(payload: dict) -> dict:
         "available": True,
         "generated_at": payload.get("generated_at", ""),
         "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},
+        "role_registry": payload.get("role_registry") if isinstance(payload.get("role_registry"), dict) else {"schema": "panorama-role-registry/v1", "available": False, "verdict": "UNAVAILABLE"},
         "authority": {
             "control_plane": "OMO",
             "single_dispatcher": True,
@@ -2688,6 +2771,13 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "total": agent_pool.get("total", 0),
                 "active": agent_pool.get("active", 0),
                 "failed": agent_pool.get("failed", 0),
+            },
+            "persistent_roles": {
+                "available": (payload.get("role_registry") or {}).get("available") is True,
+                "total": (payload.get("role_registry") or {}).get("total", 0),
+                "admitted": (payload.get("role_registry") or {}).get("by_state", {}).get("admitted", 0),
+                "integrity_ok": (payload.get("role_registry") or {}).get("integrity_ok") is True,
+                "verdict": (payload.get("role_registry") or {}).get("verdict", "UNAVAILABLE"),
             },
             "value_metrics": value_metrics,
         },
@@ -2812,6 +2902,7 @@ def build_payload() -> dict:
         "claims_task16": collect_claims_task16_preflight(),
         "reference_cell": collect_reference_cell_gate(),
         "asd": collect_asd(),
+        "role_registry": collect_role_registry(),
         "probes": collect_probes(),
         "resident_agents": collect_resident_agents(),
         "scene_cards": collect_scene_cards(),
@@ -3026,6 +3117,7 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
  <div class="card"><h3>Open Work & Alerts</h3><table id="ab-work"><thead><tr><th>type</th><th>name</th><th>state</th><th>detail</th></tr></thead><tbody></tbody></table></div>
 </div>
 <div class="card" style="margin-top:14px"><h3>Objective Coverage</h3><table id="ab-objectives"><thead><tr><th>status</th><th>objective</th><th>value</th><th>requirement</th></tr></thead><tbody></tbody></table></div>
+<div class="card" style="margin-top:14px"><h3>Persistent Role Registry</h3><table id="ab-roles"><thead><tr><th>role</th><th>state</th><th>version</th><th>capabilities</th></tr></thead><tbody></tbody></table></div>
 </section>
 <section class="sec" id="s-gates">
 <h2>门禁 A1–A9 / RF0</h2><p class="sub">底层实时验证 + 声明态边界 · PARTIAL ≠ PASS · 未过门零写入/零自治/零扩并发</p>
@@ -3163,6 +3255,7 @@ const chip=v=>v==='PASS'?'<span class="chip p">PASS</span>':(v==='FAIL'?'<span c
   for(const x of ((w.alerts||{}).recent||[]))rows.push({type:'alert',name:x.source,state:x.severity,detail:x.msg||''});
   $('ab-work').querySelector('tbody').innerHTML=rows.map(x=>'<tr><td class="mono">'+x.type+'</td><td class="mono">'+x.name+'</td><td><span class="chip '+(x.state==='high'||x.state==='blocked'?'f':(x.state==='in_progress'?'p':'n'))+'">'+x.state+'</span></td><td>'+x.detail+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无开放工作</td></tr>';
   $('ab-objectives').querySelector('tbody').innerHTML=((av.objective_coverage||{}).items||[]).map(x=>'<tr><td><span class="chip '+(['PASS','DELIVERY_ACCEPTED'].includes(x.status)?'p':(x.status==='NOT_PROVEN'||x.status==='PARTIAL'?'f':'w'))+'">'+x.status+'</span></td><td class="mono">'+x.id+'</td><td class="mono">'+(x.value_status||'—')+'</td><td>'+x.requirement+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无投影</td></tr>';
+  $('ab-roles').querySelector('tbody').innerHTML=(((av.role_registry||{}).records)||[]).map(x=>'<tr><td class="mono">'+x.role_id+'</td><td><span class="chip '+(x.admission_state==='admitted'?'p':'n')+'">'+x.admission_state+'</span></td><td class="mono">'+x.version+'</td><td class="mono">'+x.capabilities.join(', ')+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无持久 Role 记录</td></tr>';
 })();
 // nav
 document.querySelectorAll('#nav a').forEach(a=>a.onclick=e=>{e.preventDefault();

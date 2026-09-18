@@ -36,6 +36,8 @@ Panorama 同时提供人类站点与机器可读投影。Agent 应优先读取 `
 不再把 `status=registered` 的已关闭兼容记录误报为开放告警。
 Agent Brief 的 Objective Coverage 把 A1–A9、持久语义、Reference Cell、R0/AS0/RF0
 外部边界映射到 Ledger 和 live gate 证据；Claims 激活与业务价值始终单独显示，不得混入交付完成。
+持久 Role Registry 的运行态 JSONL 由 Panorama 只读采集并校验 schema/digest；
+Dashboard 只展示投影，不写 Role 状态，也不把 external admission registry 与持久 Role 混淆。
 
 ## 全景 SSOT
 
