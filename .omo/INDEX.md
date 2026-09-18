@@ -63,7 +63,7 @@
 | **控制面** | [_control/INDEX.md](_control/INDEX.md) | 我现在在哪？下一步做什么？ |
 | **事实面** | [_truth/INDEX.md](_truth/INDEX.md) | 什么是真的？权威信息在哪？ |
 | **知识面** | [_knowledge/INDEX.md](_knowledge/INDEX.md) | 我们知道了什么？ |
-| **交付面** | [_delivery/INDEX.md](_delivery/INDEX.md) | 我们交付了什么？ |
+| **交付面** | `_delivery/` | 我们交付了什么？ |
 
 ---
 
@@ -81,7 +81,7 @@
 | 历史任务 | [tasks/done/](tasks/done/) |
 | 架构基线 | [_knowledge/design/system-design-baseline.md](_knowledge/design/system-design-baseline.md) |
 | 治理历史 (JSONL) | [_knowledge/governance-history.jsonl](_knowledge/governance-history.jsonl) |
-| AppendOnlyLog 模式 | [_knowledge/management/append-only-log-pattern-2026-06-09.md](_knowledge/management/append-only-log-pattern-2026-06-09.md) |
+| AppendOnlyLog 模式 | [_knowledge/management/playbooks/append-only-log-pattern-2026-06-09.md](_knowledge/management/playbooks/append-only-log-pattern-2026-06-09.md) |
 
 ---
 
@@ -94,7 +94,7 @@
 - [_truth/x3-value-stack.yaml](_truth/x3-value-stack.yaml) — X3 价值与成本归因
 - [_truth/x4-consistency-rules.yaml](_truth/x4-consistency-rules.yaml) — X4 一致性规则
 
-- [_archive/legacy-root-docs/DOC-ARCH.md](_archive/legacy-root-docs/DOC-ARCH.md) — 四平面文档架构定义
+- `_archive/legacy-root-docs/DOC-ARCH.md` — 四平面文档架构定义
 - [AGENT.md](_knowledge/usage/AGENT.md) — Agent 行为规范
 - [DOC-LIFECYCLE.md](DOC-LIFECYCLE.md) — `.omo/` 文档 4 类分类 + frontmatter schema + 引用规则 (P45)
 
