@@ -2742,6 +2742,33 @@ def collect_agent_visibility(payload: dict) -> dict:
     services = payload.get("service_lifecycle") if isinstance(payload.get("service_lifecycle"), dict) else {}
     alerts = payload.get("alerts") if isinstance(payload.get("alerts"), dict) else {}
     recent_alerts = [item for item in alerts.get("alerts", []) if isinstance(item, dict)][:10]
+    panel_value = payload.get("panel_value") if isinstance(payload.get("panel_value"), dict) else {}
+    value_samples = panel_value.get("samples") if isinstance(panel_value.get("samples"), dict) else {}
+    value_thresholds = [
+        item for item in (panel_value.get("thresholds") or [])
+        if isinstance(item, dict)
+    ]
+    value_blockers = [str(item) for item in (panel_value.get("state_reason") or []) if item]
+    qualifying = int(value_samples.get("qualifying") or 0)
+    value_readiness = {
+        "schema": "panorama-value-proof-readiness/v1",
+        "status": "NOT_PROVEN",
+        "available": bool(panel_value),
+        "source": panel_value.get("schema", "unavailable"),
+        "samples_total": int(value_samples.get("records") or 0),
+        "qualifying_samples": qualifying,
+        "accepted_samples": int(value_samples.get("accepted") or 0),
+        "adjudicated_samples": int(value_samples.get("adjudicated") or 0),
+        "net_saved_seconds": int(value_samples.get("net_saved_seconds") or 0),
+        "thresholds": value_thresholds,
+        "blockers": value_blockers,
+        "evidence_rule": "Only qualifying real-use records count; synthetic runs and unqualified accepted records never prove value.",
+        "next_action": (
+            f"Collect {max(0, 30 - qualifying)} more qualifying real-use records with a frozen baseline; do not backfill."
+            if qualifying < 30 else
+            "Review all threshold gates and independently adjudicate the full value window."
+        ),
+    }
 
     activation_allowed = claims_task16.get("activation_allowed") is True
     blockers = []
@@ -2817,6 +2844,7 @@ def collect_agent_visibility(payload: dict) -> dict:
             "claims_activation_blockers": blockers,
             "claims_activation_readiness": claims_activation_readiness,
             "value_proof": "NOT_PROVEN",
+            "value_proof_readiness": value_readiness,
         },
         "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},
         "health": {
@@ -2931,6 +2959,13 @@ def collect_agent_visibility(payload: dict) -> dict:
                  "detail": f"Triage {alerts.get('high', 0)} high-severity alert(s); classify real debt separately from stale fixtures.",
                  "source": "panorama.alerts"}
             ] if alerts.get("high", 0) else []),
+            *([
+                {
+                    "id": "collect-qualifying-value-evidence", "state": "required",
+                    "detail": value_readiness["next_action"],
+                    "source": "panorama.value_proof_readiness",
+                }
+            ] if not activation_allowed or qualifying < 30 else []),
         ],
         "read_interfaces": {
             "human_html": "/",
