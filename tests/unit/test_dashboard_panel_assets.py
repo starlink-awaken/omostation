@@ -93,6 +93,11 @@ def test_each_panel_asset_has_single_section_block():
 def test_sync_registry_covers_all_three_panels():
     mod = _load_sync()
     assert set(mod.MARKER_PANELS) == {"logs", "metrics", "value"}
+    # 注入顺序须保证锚点自洽: metrics 用非面板的 #health, logs 用 #metrics, value 用 #logs
+    assert list(mod.MARKER_PANELS) == ["metrics", "logs", "value"]
+    assert mod.SECTION_FALLBACK_ANCHOR["metrics"] == '<section id="health"'
+    assert mod.SECTION_FALLBACK_ANCHOR["logs"] == '<section id="metrics"'
+    assert mod.SECTION_FALLBACK_ANCHOR["value"] == '<section id="logs"' 
     for name in mod.MARKER_PANELS:
         assert (PANEL_DIR / f"{name}.html").is_file()
         assert (PANEL_DIR / f"{name}.js").is_file()
@@ -110,11 +115,12 @@ def test_migrate_section_replaces_block_with_markers():
     assert "NEW" in out
 
 
-def test_migrate_section_reports_missing_anchor():
+def test_migrate_section_reports_missing_anchor_only_without_any_tail():
+    """连 </body> 都没有时才判 section_missing; 否则回退追加（见自愈测试）。"""
     mod = _load_sync()
-    out, action = mod._migrate_section("<html><body>no section</body></html>",
+    out, action = mod._migrate_section("<html><body>no section",
                                        "logs", "<section>x</section>", "logs")
-    assert action == "section_missing" and out == "<html><body>no section</body></html>"
+    assert action == "section_missing" and out == "<html><body>no section"
 
 
 def test_replace_region_is_idempotent_on_size():
@@ -171,3 +177,31 @@ def test_panel_payload_keys_match_view_contract(tmp_path):
         value = mod.collect_value_evidence(root=tmp)
         assert {"state", "state_reason", "samples", "stages", "thresholds",
                 "vision_thresholds", "evidence"} <= set(value)
+
+
+def test_restores_section_after_whole_block_deletion():
+    """历史真实故障: 面板被并发覆盖整体删除, 自愈必须能重建而非只报缺失。"""
+    mod = _load_sync()
+    # metrics 的 section 被**整体删除**（只剩 anchor 目标 #health）
+    html = '<body><section id="health">H</section></body>'
+    out, action = mod._migrate_section(html, "metrics", "<section id=\"metrics\">NEW</section>", "metrics")
+    assert action == "restored", action
+    assert mod.HTML_ANCHOR.format(name="metrics") in out
+    assert out.index(mod.HTML_ANCHOR.format(name="metrics")) < out.index('<section id="health"')
+
+    # 三块全丢时, 按 metrics→logs→value 顺序可依次重建（锚点自洽）
+    bare = '<body><section id="health">H</section></body>'
+    for name in mod.MARKER_PANELS:
+        bare, act = mod._migrate_section(
+            bare, name, f'<section id="{name}">X</section>', name)
+        assert act in ("restored", "restored_append", "migrated"), (name, act)
+    order = [bare.index(f'<section id="{n}"') for n in ("value", "logs", "metrics", "health")]
+    assert order == sorted(order), f"面板顺序错乱: {order}"
+
+
+def test_falls_back_to_body_when_no_anchor_present():
+    mod = _load_sync()
+    html = '<body><div>no sections here</div></body>'
+    out, action = mod._migrate_section(html, "logs", "<section id=\"logs\">X</section>", "logs")
+    assert action == "restored_append"
+    assert mod.HTML_ANCHOR.format(name="logs") in out
