@@ -1516,7 +1516,7 @@ def collect_ci() -> dict:
         data = json.loads(out)
     except Exception:
         return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
-    by_wf: dict[str, list[str]] = {}
+    by_wf: dict[str, list[dict]] = {}
     for r in data:
         w = r.get("workflowName", "?")
         conc = r.get("conclusion", "")
@@ -1527,15 +1527,32 @@ def collect_ci() -> dict:
             else "fail" if conc in ("failure", "startup_failure", "timed_out")
             else "other"
         )
-        by_wf.setdefault(w, []).append(status)
+        by_wf.setdefault(w, []).append({
+            "status": status,
+            "conclusion": conc,
+            "created_at": str(r.get("createdAt") or ""),
+        })
     summaries = []
-    for w, statuses in sorted(by_wf.items()):
+    for w, runs_for_workflow in sorted(by_wf.items()):
+        statuses = [item["status"] for item in runs_for_workflow]
         cc = Counter(statuses)
         total = len(statuses)
         fails = cc.get("fail", 0)
+        # A workflow is red only when its latest terminal outcome failed.
+        # Historical failures remain visible in counters, but must not keep a
+        # recovered workflow red. Cancelled runs are superseded and skipped so
+        # the prior terminal outcome decides.
+        latest_terminal = next((
+            item for item in sorted(
+                runs_for_workflow, key=lambda item: item["created_at"], reverse=True
+            )
+            if item["conclusion"] in ("success", "failure", "startup_failure", "timed_out")
+        ), None)
+        latest_status = latest_terminal["status"] if latest_terminal else "other"
         summaries.append({"workflow": w, "total": total, "pass": cc.get("pass", 0),
                           "fail": fails, "failure_rate": round(fails / total, 2) if total else 0,
-                          "health": "red" if fails > 0 else "green"})
+                          "latest": latest_status,
+                          "health": "red" if latest_status == "fail" else "green"})
     red = [s for s in summaries if s["health"] == "red"][:8]
     return {"total_runs": len(data), "workflows": len(by_wf), "red_workflows": red, "all": summaries[:20]}
 
