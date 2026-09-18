@@ -76,6 +76,25 @@ def test_preflight_reports_blocked_but_read_only_root(tmp_path) -> None:
         "highwater_exists": False,
         "activation_witness_exists": False,
     }
+    recovery = report["recovery"]
+    assert recovery["schema"] == "claims-preflight-recovery/v1"
+    assert recovery["activation_authorized"] is False
+    assert recovery["canonical_workspace_mutation_recommended"] is True
+    assert recovery["isolated_workspace_recovery"] == [
+    ]
+    assert recovery["human_authorization_required"] == [
+        "operation_specific_host_authorization_unproven"
+    ]
+    assert recovery["remaining_after_isolated_recovery"] == [
+        "accepted_spec_digest_mismatch",
+        "operation_specific_host_authorization_unproven"
+    ]
+    assert recovery["items"]["accepted_spec_digest_mismatch"][
+        "canonical_mutation_required"
+    ] is True
+    assert recovery["items"][
+        "operation_specific_host_authorization_unproven"
+    ]["classification"] == "human_authorization_required"
 
 
 def test_preflight_awaits_authorization_for_stale_nonclosure_dirty_root(tmp_path) -> None:
@@ -140,3 +159,14 @@ def test_preflight_awaits_authorization_for_stale_nonclosure_dirty_root(tmp_path
     assert report["dirty_closure_paths"] == []
     assert "operation_specific_host_authorization_unproven" in report["blockers"]
     assert report["activation_allowed"] is False
+    recovery = report["recovery"]
+    assert recovery["canonical_workspace_mutation_recommended"] is False
+    assert recovery["isolated_workspace_recovery"] == []
+    assert recovery["human_authorization_required"] == [
+        "operation_specific_host_authorization_unproven"
+    ]
+    assert recovery["remaining_after_isolated_recovery"] == [
+        "operation_specific_host_authorization_unproven"
+    ]
+    assert "fresh managed exact-main clone" not in recovery["next_safe_action"]
+    assert "inactive" in recovery["next_safe_action"]

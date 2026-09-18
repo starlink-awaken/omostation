@@ -30,6 +30,74 @@ CLOSURE_PATHS = {
     "helper": "bin/plan/bet-ledger.py",
 }
 
+RECOVERY_SCHEMA = "claims-preflight-recovery/v1"
+RECOVERY_RULES = {
+    "dirty_tracked_closure_path": {
+        "classification": "isolated_workspace_recovery",
+        "canonical_mutation_required": False,
+        "action": (
+            "Create a fresh managed clone from the exact origin/main SHA, recursively check out the pinned "
+            "child, verify closure objects by digest, and rerun read-only preflight against that clone."
+        ),
+    },
+    "child_source_dirty": {
+        "classification": "isolated_workspace_recovery",
+        "canonical_mutation_required": False,
+        "action": (
+            "Use a fresh managed clone and recursively check out pinned child commits; never clean or overwrite "
+            "concurrent work in the canonical integration root."
+        ),
+    },
+    "child_head_gitlink_mismatch": {
+        "classification": "isolated_workspace_recovery",
+        "canonical_mutation_required": False,
+        "action": (
+            "Verify the child origin/main successor in a fresh clone and require child HEAD to equal the root "
+            "gitlink before rerunning preflight."
+        ),
+    },
+    "closure_unreadable": {
+        "classification": "isolated_workspace_recovery",
+        "canonical_mutation_required": False,
+        "action": (
+            "Re-read the required closure objects from a fresh exact-main clone and independently compare their "
+            "SHA-256 digests; do not synthesize missing files."
+        ),
+    },
+    "accepted_spec_digest_mismatch": {
+        "classification": "source_review_required",
+        "canonical_mutation_required": True,
+        "action": (
+            "Stop and compare the accepted Spec digest with the current source through a governed review PR; "
+            "never rewrite a historical receipt."
+        ),
+    },
+    "production_verifier_interface_unavailable": {
+        "classification": "isolated_workspace_recovery",
+        "canonical_mutation_required": False,
+        "action": (
+            "Import the production verifier closure from a recursively checked-out managed clone and rerun the "
+            "read-only preflight."
+        ),
+    },
+    "authority_store_asymmetric_presence": {
+        "classification": "operations_triage_required",
+        "canonical_mutation_required": False,
+        "action": (
+            "Quarantine the partial authority directory and require an operator-reviewed recovery transaction; "
+            "do not initialize or repair the store automatically."
+        ),
+    },
+    "operation_specific_host_authorization_unproven": {
+        "classification": "human_authorization_required",
+        "canonical_mutation_required": False,
+        "action": (
+            "Require a fresh principal authorization packet bound to the exact R0 descriptor before activation; "
+            "general approval is not sufficient."
+        ),
+    },
+}
+
 
 def _git(root: Path, *args: str) -> tuple[int, str]:
     result = subprocess.run(
@@ -149,6 +217,43 @@ def collect_preflight(
     readiness = "BLOCKED" if hard_blockers else "AWAITING_AUTHORIZATION"
     if not hard_blockers and not reads_ok:
         readiness = "BLOCKED"
+    blockers = [*hard_blockers, "operation_specific_host_authorization_unproven"]
+    recovery_items: dict[str, dict[str, Any]] = {}
+    for blocker in blockers:
+        rule = RECOVERY_RULES.get(blocker)
+        recovery_items[blocker] = {
+            "classification": rule["classification"] if rule else "manual_triage_required",
+            "canonical_mutation_required": bool(rule and rule["canonical_mutation_required"]),
+            "action": rule["action"] if rule else "Triage with the governance owner before any mutation.",
+        }
+
+    recovery = {
+        "schema": RECOVERY_SCHEMA,
+        "available": True,
+        "activation_authorized": False,
+        "canonical_workspace_mutation_recommended": any(
+            item["canonical_mutation_required"] for item in recovery_items.values()
+        ),
+        "human_authorization_required": [
+            blocker for blocker, item in recovery_items.items()
+            if item["classification"] == "human_authorization_required"
+        ],
+        "isolated_workspace_recovery": [
+            blocker for blocker, item in recovery_items.items()
+            if item["classification"] == "isolated_workspace_recovery"
+        ],
+        "remaining_after_isolated_recovery": [
+            blocker for blocker, item in recovery_items.items()
+            if item["classification"] != "isolated_workspace_recovery"
+        ],
+        "items": recovery_items,
+        "next_safe_action": (
+            "Run read-only preflight in a fresh managed exact-main clone; Claims Authority remains inactive."
+            if hard_blockers else
+            "Keep Claims Authority inactive until a fresh operation-specific principal authorization is verified."
+        ),
+    }
+
     return {
         "schema": SCHEMA,
         "authority_id": AUTHORITY_ID,
@@ -170,6 +275,7 @@ def collect_preflight(
         },
         "operation_specific_authorization": "UNPROVEN",
         "activation_allowed": False,
+        "recovery": recovery,
         "hard_blockers": hard_blockers,
         "advisories": advisories,
         "blockers": blockers,
