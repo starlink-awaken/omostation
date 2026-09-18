@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from collections import Counter, defaultdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -438,6 +439,49 @@ FINAL_VISION = (
     {"key": "revision_burden", "label": "修订负担下降", "target": 40, "unit": "%", "comparator": "gte"},
 )
 
+REVISION_BASELINE_PATH = ".omo/_delivery/value/revision-baseline.json"
+
+
+def _load_revision_baseline(root: Path) -> tuple[dict | None, str | None]:
+    """Load a digest-bound pre-window baseline; invalid data is never used."""
+    path = root / REVISION_BASELINE_PATH
+    if not path.is_file():
+        return None, None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return None, f"revision baseline unreadable: {type(exc).__name__}"
+    if not isinstance(value, dict):
+        return None, "revision baseline root is not an object"
+
+    supplied_digest = value.get("digest")
+    digest_body = {key: item for key, item in value.items() if key != "digest"}
+    digest = "sha256:" + hashlib.sha256(
+        json.dumps(digest_body, ensure_ascii=False, sort_keys=True,
+                   separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    if supplied_digest != digest:
+        return None, "revision baseline digest mismatch"
+    if value.get("schema") != "value-revision-baseline/v1":
+        return None, "revision baseline schema mismatch"
+
+    frozen_epoch = _parse_ts(value.get("frozen_at"))
+    adjudicated, revised = value.get("adjudicated"), value.get("revised")
+    rate = value.get("revision_burden_percent")
+    if frozen_epoch is None or type(adjudicated) is not int or adjudicated <= 0 \
+            or type(revised) is not int or revised < 0 or revised > adjudicated \
+            or type(rate) is not float or rate != round(revised / adjudicated * 100, 1):
+        return None, "revision baseline metrics invalid"
+    return {
+        "baseline_id": str(value.get("baseline_id") or "")[:128],
+        "frozen_at": value.get("frozen_at"),
+        "frozen_epoch": frozen_epoch,
+        "adjudicated": adjudicated,
+        "revised": revised,
+        "revision_burden_percent": rate,
+        "digest": digest,
+    }, None
+
 
 def _judge(current: float | None, spec: dict) -> bool | None:
     if current is None:
@@ -462,6 +506,7 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
             epoch = _parse_ts(rec.get("timestamp") or rec.get("ts") or rec.get("recorded_at"))
             evidence.append({
                 "ts": _iso(epoch) if epoch else None,
+                "_epoch": epoch,
                 "scene_id": rec.get("scene_id") or rec.get("id"),
                 "verdict": rec.get("verdict") or rec.get("adjudication"),
                 "qualifying": bool(rec.get("qualifying")),
@@ -472,6 +517,24 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
     evidence.sort(key=lambda e: (e["ts"] or "", e["scene_id"] or ""), reverse=True)
 
     verdicts = Counter((e["verdict"] or "unknown") for e in evidence)
+    baseline, baseline_error = _load_revision_baseline(root)
+    post_adjudicated = post_revised = 0
+    if baseline is not None:
+        for item in evidence:
+            if item["_epoch"] is not None and item["_epoch"] >= baseline["frozen_epoch"]:
+                verdict = (item["verdict"] or "").lower()
+                if verdict in {"accept", "edit", "reject", "accepted", "revised", "rejected"}:
+                    post_adjudicated += 1
+                    post_revised += verdict in {"edit", "revised"}
+        post_rate = round(post_revised / post_adjudicated * 100, 1) if post_adjudicated else None
+        baseline_revision_burden = (
+            round((baseline["revision_burden_percent"] - post_rate)
+                  / baseline["revision_burden_percent"] * 100, 1)
+            if post_rate is not None else None
+        )
+    else:
+        post_rate = baseline_revision_burden = None
+
     adjudicated = sum(verdicts[k] for k in ("accept", "edit", "reject", "accepted", "revised", "rejected"))
     accepted = verdicts["accept"] + verdicts["accepted"]
     samples_total = len(evidence)
@@ -522,7 +585,7 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
     metrics = {
         "samples": qualifying,
         "acceptance": acceptance,
-        "revision_burden": None,          # 无真实基线前不得编造
+        "revision_burden": baseline_revision_burden,
         "weeks": None,
         "weekly_accepted": None,
         "weekly_adjudications": None,
@@ -533,10 +596,20 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
         current = metrics.get(spec["key"])
         met = _judge(current, spec)
         gated = spec["key"] in rate_keys and not sample_basis_ok
+        gate = None
+        if spec["key"] == "revision_burden" and baseline is None:
+            gate = "revision baseline unavailable" + (f": {baseline_error}" if baseline_error else "")
+        elif spec["key"] == "revision_burden" and post_adjudicated == 0:
+            gate = "revision baseline frozen; waiting for post-baseline adjudications"
+        elif spec["key"] in rate_keys and not sample_basis_ok:
+            gate = "样本 %d/%d 不足, 比率不可判定" % (qualifying, GOLDEN_SLICE[0]["target"])
+        elif spec["key"] == "revision_burden" and baseline is None:
+            gate = "revision baseline unavailable" + (f": {baseline_error}" if baseline_error else "")
+        elif spec["key"] == "revision_burden" and post_adjudicated == 0:
+            gate = "revision baseline frozen; waiting for post-baseline adjudications"
         return {**spec, "current": current,
                 "met": None if gated else met,
-                "gate": ("样本 %d/%d 不足, 比率不可判定" % (qualifying, GOLDEN_SLICE[0]["target"]))
-                        if gated else None}
+                "gate": gate}
 
     thresholds = [_entry(spec) for spec in GOLDEN_SLICE]
     vision = [_entry(spec) for spec in FINAL_VISION]
@@ -551,7 +624,10 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
             reasons.append(f"样本 {samples_total}/{GOLDEN_SLICE[0]['target']} 不足")
         if acceptance is None:
             reasons.append("无 effective adjudication，采纳率不可计算")
-        reasons.append("修订负担降低缺真实基线（未在窗口开始前冻结，不可回填）")
+        if baseline is None:
+            reasons.append("修订负担降低缺真实基线（未在窗口开始前冻结，不可回填）")
+        elif post_adjudicated == 0:
+            reasons.append("修订基线已冻结；等待基线后的真实记录")
 
     return {
         "schema": "panel-value/v1",
@@ -561,6 +637,19 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
         # 页面退化成 UNKNOWN。小写可安全穿过该规则, 由视图层负责大写展示。
         "state": "not_proven",
         "state_reason": reasons,
+        "revision_baseline": None if baseline is None else {
+            "schema": "value-revision-baseline-projection/v1",
+            "baseline_id": baseline["baseline_id"],
+            "frozen_at": baseline["frozen_at"],
+            "digest": baseline["digest"],
+            "baseline_revision_burden_percent": baseline["revision_burden_percent"],
+            "post_window": {
+                "adjudicated": post_adjudicated,
+                "revised": post_revised,
+                "revision_burden_percent": post_rate,
+                "burden_reduction_percent": baseline_revision_burden,
+            },
+        },
         "samples": {
             "records": samples_total,
             "qualifying": qualifying,
@@ -572,7 +661,8 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
         "stages": stages,
         "thresholds": thresholds,
         "vision_thresholds": vision,
-        "evidence": evidence[:50],
+        "evidence": [{key: value for key, value in item.items() if not key.startswith("_")}
+                     for item in evidence[:50]],
     }
 
 

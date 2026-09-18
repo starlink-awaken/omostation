@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import sys
 from datetime import UTC, datetime, timedelta
@@ -302,3 +303,65 @@ def test_value_state_survives_deployment_not_proven_filter(tmp_path):
             assert not (isinstance(obj, str) and obj == "NOT_PROVEN"), f"{path} 会被删除"
 
     walk(result)
+
+
+def _write_revision_baseline(root: Path, *, revised: int, adjudicated: int,
+                             digest: str | None = "valid") -> dict:
+    value = {
+        "schema": "value-revision-baseline/v1",
+        "baseline_id": "pre-window-2026q4",
+        "frozen_at": _iso_hours_ago(2),
+        "adjudicated": adjudicated,
+        "revised": revised,
+        "revision_burden_percent": round(revised / adjudicated * 100, 1),
+    }
+    body = {key: item for key, item in value.items() if key != "digest"}
+    value["digest"] = digest
+    if digest == "valid":
+        value["digest"] = "sha256:" + hashlib.sha256(
+            json.dumps(body, ensure_ascii=False, sort_keys=True,
+                       separators=(",", ":")).encode("utf-8")).hexdigest()
+    path = root / ".omo/_delivery/value/revision-baseline.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, ensure_ascii=False), encoding="utf-8")
+    return value
+
+
+def test_revision_burden_uses_post_baseline_window(tmp_path):
+    mod = _load()
+    _write_revision_baseline(tmp_path, revised=10, adjudicated=20)
+    _seed_value(tmp_path, [
+        {"timestamp": _iso_hours_ago(1), "scene_id": f"s{i}", "verdict": "accept",
+         "qualifying": True, "net_saved_seconds": 60, "run_id": f"r{i}"}
+        for i in range(1, 28)
+    ] + [
+        {"timestamp": _iso_hours_ago(1), "scene_id": "revised-a", "verdict": "accept",
+         "qualifying": True, "net_saved_seconds": 60, "run_id": "ra"},
+        {"timestamp": _iso_hours_ago(1), "scene_id": "revised-b", "verdict": "accept",
+         "qualifying": True, "net_saved_seconds": 60, "run_id": "rb"},
+        {"timestamp": _iso_hours_ago(1), "scene_id": "revised-c", "verdict": "revised",
+         "qualifying": True, "net_saved_seconds": 60, "run_id": "rc"},
+    ])
+
+    result = mod.collect_value_evidence(root=tmp_path, now=NOW)
+    burden = next(t for t in result["thresholds"] if t["key"] == "revision_burden")
+    projection = result["revision_baseline"]
+
+    assert burden["current"] == 93.4
+    assert burden["met"] is True
+    assert projection["baseline_revision_burden_percent"] == 50.0
+    assert projection["post_window"]["adjudicated"] == 30
+    assert projection["post_window"]["revised"] == 1
+    assert projection["post_window"]["revision_burden_percent"] == 3.3
+    assert projection["post_window"]["burden_reduction_percent"] == 93.4
+
+
+def test_invalid_revision_baseline_is_not_used(tmp_path):
+    mod = _load()
+    _write_revision_baseline(tmp_path, revised=1, adjudicated=1, digest="sha256:" + "0" * 64)
+    result = mod.collect_value_evidence(root=tmp_path, now=NOW)
+
+    assert result["revision_baseline"] is None
+    burden = next(t for t in result["thresholds"] if t["key"] == "revision_burden")
+    assert burden["current"] is None
+    assert "unavailable" in burden["gate"]
