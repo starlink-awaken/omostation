@@ -26,6 +26,21 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+
+# Documents 任务类分组调度 (2026-09-17): 避免 43 个场景同时刷屏.
+_DOCUMENTS_TASK_CLASS = None
+
+def _set_documents_task_class(cls):
+    global _DOCUMENTS_TASK_CLASS
+    _DOCUMENTS_TASK_CLASS = cls
+
+def _documents_task_class_filter(scene_id):
+    if _DOCUMENTS_TASK_CLASS is None:
+        return True
+    base = scene_id.replace("scene-documents-", "")
+    from doc_legs import get_task_class
+    return get_task_class(base + "-journey") == _DOCUMENTS_TASK_CLASS
+
 _ROOT = Path(__file__).resolve().parents[2]
 SCENES_DIR = _ROOT / ".omo" / "_truth" / "scenarios" / "v3"
 JOURNEY_ENGINE = _ROOT / "bin" / "ssot" / "journey-engine.py"
@@ -130,8 +145,10 @@ def _signal_id(item: dict[str, Any]) -> str:
 
 
 def poll(dry_run: bool = False, scene_filter: str | None = None,
-         limit_per_connector: int = 10) -> dict[str, Any]:
+         limit_per_connector: int = 10,
+         task_class: str | None = None) -> dict[str, Any]:
     """Poll all signal-type triggers from v3 scene cards."""
+    _set_documents_task_class(task_class)
     cards = _load_scene_cards()
     watermarks = _load_watermarks()
     results = {
@@ -153,6 +170,8 @@ def poll(dry_run: bool = False, scene_filter: str | None = None,
         activation = card.get("activation", "preview")
 
         if not scene_id:
+            continue
+        if not _documents_task_class_filter(scene_id):
             continue
         if scene_filter and scene_id != scene_filter:
             continue
