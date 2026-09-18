@@ -17,12 +17,22 @@ def _module():
 
 def _run_ci(monkeypatch, runs):
     module = _module()
+    seen = {}
+
+    def fake_run(command, timeout=120):
+        seen["command"] = command
+        return 0, json.dumps(runs)
+
     monkeypatch.setattr(
         module,
         "run",
-        lambda command, timeout=120: (0, json.dumps(runs)),
+        fake_run,
     )
-    return module.collect_ci()
+    payload = module.collect_ci()
+    assert "gh" in seen["command"]
+    assert "--branch" in seen["command"]
+    assert seen["command"][seen["command"].index("--branch") + 1] == "main"
+    return payload
 
 
 def test_ci_health_separates_concurrency_cancel_from_failure(monkeypatch) -> None:
