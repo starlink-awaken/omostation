@@ -43,7 +43,15 @@ TEMPLATE = DASHBOARD_DIR / "template.html"
 REFRESH_PY = DASHBOARD_DIR / "refresh.py"
 
 # ── 标记式面板（section + 脚本块）───────────────────────────────────────
-MARKER_PANELS = {"logs": "logs", "metrics": "metrics", "value": "value"}
+# 注入顺序: 先 metrics（锚点用非面板的 #health）→ logs → value。
+# 这样即使三块被整体覆盖删除（历史真实故障: 面板被覆盖丢 2 次），
+# 也能按「插入到下一块之前」重建, 而不是只能靠已存在的 <section> 定位。
+MARKER_PANELS = {"metrics": "metrics", "logs": "logs", "value": "value"}
+SECTION_FALLBACK_ANCHOR = {
+    "metrics": '<section id="health"',
+    "logs": '<section id="metrics"',
+    "value": '<section id="logs"',
+}
 HTML_ANCHOR = "<!-- ZHIXING-PANEL:{name}:BEGIN -->"
 HTML_END = "<!-- ZHIXING-PANEL:{name}:END -->"
 JS_ANCHOR = "/* ZHIXING-PANEL-JS:{name}:BEGIN */"
@@ -114,14 +122,33 @@ def _panel_assets(name: str) -> tuple[str, str]:
     return _read(html_path), _read(js_path)
 
 
+def _panel_block(name: str, body: str) -> str:
+    return "\n".join([HTML_ANCHOR.format(name=name), body.strip(), HTML_END.format(name=name)])
+
+
 def _migrate_section(html: str, name: str, body: str, section_id: str) -> tuple[str, str]:
-    """未迁移: 把整个 <section id="...">…</section> 换成带标记的资产内容。"""
+    """未迁移: 把整个 <section id="...">…</section> 换成带标记的资产内容。
+
+    若该 section 已**整体消失**（被并发覆盖删除），退化为按下一块的位置重建 ——
+    这是历史真实故障模式, 必须能自愈而不能只报 section_missing。
+    """
+    block = _panel_block(name, body)
     pattern = re.compile(r'<section id="' + re.escape(section_id) + r'"[^>]*>.*?</section>', re.S)
     match = pattern.search(html)
-    if not match:
-        return html, "section_missing"
-    block = "\n".join([HTML_ANCHOR.format(name=name), body.strip(), HTML_END.format(name=name)])
-    return html[:match.start()] + block + html[match.end():], "migrated"
+    if match:
+        return html[:match.start()] + block + html[match.end():], "migrated"
+
+    anchor = SECTION_FALLBACK_ANCHOR.get(name)
+    if anchor:
+        restored, ok = _insert_before(html, anchor, block + "\n")
+        if ok:
+            return restored, "restored"
+    # 最后兜底: 追加到主内容区末尾
+    for tail in ("</main>", "</body>"):
+        restored, ok = _insert_before(html, tail, block + "\n")
+        if ok:
+            return restored, "restored_append"
+    return html, "section_missing"
 
 
 def apply_marker_panel(html: str, name: str, section_id: str) -> tuple[str, dict]:
@@ -246,7 +273,7 @@ def ensure(dry_run: bool = False) -> dict:
     if "anchor_missing" in scene_actions.values():
         ok = False
 
-    changed = any(v in ("inserted", "replaced", "migrated")
+    changed = any(v in ("inserted", "replaced", "migrated", "restored", "restored_append")
                   for panel in actions.values() for v in panel.values())
     if changed and not dry_run:
         shutil.copy2(TEMPLATE, DASHBOARD_DIR / (TEMPLATE.name + ".before-panel-sync"))
