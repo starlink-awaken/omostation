@@ -268,6 +268,7 @@ def test_value_evidence_validation_uses_runtime_paths_and_fail_closed(tmp_path, 
     def fake_run(command, **kwargs):
         assert command[1] == str(verifier)
         assert command[2] == "validate"
+        assert command[3] == "--json"
         assert command[command.index("--evidence") + 1] == str(
             runtime_root / ".omo/_delivery/ingress/value-evidence.jsonl"
         )

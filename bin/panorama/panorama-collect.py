@@ -1730,6 +1730,7 @@ def collect_value_evidence_validation() -> dict:
         completed = subprocess.run(
             [
                 sys.executable, str(verifier), "validate",
+                "--json",
                 "--evidence", str(ROOT / ".omo/_delivery/ingress/value-evidence.jsonl"),
                 "--baseline-dir", str(ROOT / ".omo/state/value-baselines"),
             ],
