@@ -6,8 +6,8 @@ description: 读取工作邮箱未读邮件并 LLM 分类, 判定是否存在需
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: draft
-activation: preview
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -60,3 +60,8 @@ triggers:
   signal: email.received
   connector: apple_mail
   debounce: 300s
+notes:
+- Transitioned draft→shadow at 2026-09-18T02:58:27.835646+00:00 by xiamingxing
+- Transitioned shadow→assisted at 2026-09-18T02:59:42.549494+00:00 by xiamingxing
+- Transitioned assisted→supervised at 2026-09-18T03:01:19.916996+00:00 by xiamingxing
+- Transitioned supervised→routine at 2026-09-18T03:03:12.615029+00:00 by xiamingxing
