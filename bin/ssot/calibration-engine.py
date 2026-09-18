@@ -12,13 +12,29 @@ Fallback-chain contract (SSOT: ``.omo/standards/scene-card-lifecycle.yaml``):
 """
 
 from __future__ import annotations
-import argparse, json, sqlite3
+import argparse, json, os, sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 _ROOT = Path(__file__).resolve().parents[2]
-_DB_PATH = _ROOT / "data" / "scene-metrics.db"
+
+
+def _default_db_path(root: Path | None = None) -> Path:
+    """校准库路径：默认 data/scene-metrics.db，可用 SCENE_METRICS_DB 覆盖.
+
+    为什么需要覆盖：测试若直接跑生产库, 会把夹具 scene_id (test-scene /
+    gate-test-scene / ...) 写进生产校准表, 而夹具样本数足以通过晋升门禁
+    (gate-test-scene 35 samples → eligible:true)。校准库是信任平面的证据源,
+    被夹具污染即违反"真实数据"约束。
+    """
+    override = os.environ.get("SCENE_METRICS_DB")
+    if override:
+        return Path(override).expanduser().resolve()
+    return (root or _ROOT) / "data" / "scene-metrics.db"
+
+
+_DB_PATH = _default_db_path()
 
 def _get_db() -> sqlite3.Connection:
     _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -291,7 +307,7 @@ def main(argv=None) -> int:
 
 def _cmd_list() -> int:
     """Read-only latest-calibration listing (writes no evidence rows)."""
-    db_path = _ROOT / "data" / "scene-metrics.db"
+    db_path = _default_db_path()
     if not db_path.is_file():
         print("No calibration store yet (data/scene-metrics.db missing).")
         return 0
@@ -400,7 +416,7 @@ def verify_chain(root: Path) -> dict:
                           "engine_no_subprocess": no_sub,
                           "ssot_never_auto_activate": has_gate}}
     # --- C (informational only) ---
-    db_path = root / "data" / "scene-metrics.db"
+    db_path = _default_db_path(root)
     if not db_path.is_file():
         check_c = {"name": "consumption-proof", "status": "EMPTY",
                    "detail": {"note": "no executions recorded yet — chain wired, awaiting data"}}

@@ -54,6 +54,9 @@ runtime/**/*.log
 runtime/**/*.jsonl
 runtime/**/*.pid
 runtime/data/
+# 场景/校准库的本地快照 (二进制, 由 scene-history.py backup 生成; 持久记录走
+# .omo/_knowledge/scene-history/*.json 的 git 跟踪导出)
+runtime/backups/
 runtime/run-continuation/*.json
 runtime/server.log
 runtime/wechat-main.png
