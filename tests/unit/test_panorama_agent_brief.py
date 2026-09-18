@@ -257,3 +257,13 @@ def test_template_has_agent_brief_human_surface() -> None:
     assert 'id="ab-objectives"' in module.TEMPLATE
     assert "D.agent_visibility" in module.TEMPLATE
     assert "/agent-brief.json" in module.TEMPLATE
+
+
+def test_panel_value_is_materialized_before_agent_visibility() -> None:
+    source = SCRIPT.read_text(encoding="utf-8")
+    panel_call = source.index("payload.update(_collect_panels(payload))")
+    brief_call = source.index(
+        'payload["agent_visibility"] = collect_agent_visibility(payload)'
+    )
+
+    assert panel_call < brief_call
