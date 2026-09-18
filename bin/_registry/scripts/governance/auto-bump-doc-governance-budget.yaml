@@ -1,0 +1,20 @@
+schema: script-registry/v1
+id: bin/ssot/auto-bump-doc-governance-budget.py
+name: Auto-Bump Doc-Governance Budget
+category: governance
+owner: governance-team
+description: "T10-125 (本会话沉淀) — 当 doc-governance-check FAIL with warning_budget_exceeded 时, 自动定位对应 surface 的 budget exception, bump max_findings (+20), 更新 reason 注释 + UTC 日期标记. circuit_breaker: 单 PR ≤ 20, 超额必人工审批."
+inputs:
+  - name: "无 (脚本读 .omo/_truth/registry/document-governance.yaml 自动定位)"
+outputs:
+  - type: exit_code
+  - type: yaml_modify
+dependencies:
+  - bin/ssot/doc-governance-check.py
+triggers:
+  - "manual: 每次 retro closeout 前, 或 doc-governance CI 失败时"
+related:
+  - .omo/_knowledge/retros/LESSONS-LEARNED-2026-09-16.md
+  - .omo/_knowledge/patterns/p105-doc-governance-auto-bump.md
+maturity: draft
+last_reviewed: "2026-09-18"
