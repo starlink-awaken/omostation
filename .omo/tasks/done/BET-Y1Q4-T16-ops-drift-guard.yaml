@@ -3,7 +3,7 @@ track: T16-DRIFT-GUARD
 window: Y1Q4
 title: ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校验
 priority: P2
-status: candidate
+status: done
 goal: |
   BET-Y1Q4-T14 (批次 18) 一次性清理了 303 missing, 但漂移机制仍在:
   注册项与实际 anchor (crontab/plist/日志) 脱节没有任何常态检测,
@@ -40,6 +40,10 @@ risk:
 task_type: bet
 owner: human
 source: manual
+completed_at: '2026-09-11'
+evidence:
+- .omo/_knowledge/retros/BET-Y1Q4-T16.md
+- docs/superpowers/specs/2026-09-11-ops-drift-guard-design.md
 assigned_to: null
 dispatch_id: null
 run_ref: null

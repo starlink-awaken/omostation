@@ -3,8 +3,8 @@ current_wave: W1
 health_score_evidence: 66.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-09-18T01:03:19.670303+00:00'
-completed_tasks: 296
-planned_tasks: 12
+completed_tasks: 298
+planned_tasks: 10
 active_tasks: 1
 blocked_tasks: 1
 total_tasks: 310
@@ -15,9 +15,7 @@ next_planned_tasks:
 - BET-Y1Q4-T11-env-resolver-unify (env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N]
   硬)
 - BET-Y1Q4-T12-arcnode-integration (arcnode-* 外部依赖纳入主仓 — 治理命令不再依赖 ~/.hermes)
-- BET-Y1Q4-T14-ops-services-cleanup (ops services 20 missing 清理 — 注册表与现实同步)
 - BET-Y1Q4-T15-import-perf-regression (cockpit import 性能回归 (164ms > 120ms 预算) 排查)
-- BET-Y1Q4-T16-ops-drift-guard (ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校)
 - bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
 - cockpit-debt-debt-1 (治理技术债务：债务)
@@ -25,7 +23,7 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-09-18T13:02:41Z'
+updated_at: '2026-09-18T13:20:48Z'
 harness:
   last_run: null
   last_status: null
