@@ -3063,9 +3063,9 @@ def build_payload() -> dict:
         "recent_features": collect_recent_features(),
     }
     payload["objective_coverage"] = collect_objective_coverage(payload)
-    payload["agent_visibility"] = collect_agent_visibility(payload)
     # logs / metrics / value 三板块真实数据（同时统合事件指标口径）
     payload.update(_collect_panels(payload))
+    payload["agent_visibility"] = collect_agent_visibility(payload)
     return payload
 
 
