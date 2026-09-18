@@ -1714,6 +1714,41 @@ def collect_closeouts() -> dict:
             pass
     return {"closeouts": ready[:15], "total": len(ready)}
 
+
+def collect_value_evidence_validation() -> dict:
+    """Validate authority-bound value evidence without mutating the log."""
+    verifier = CODE_ROOT / "bin/ssot/value-recorder.py"
+    unavailable = {
+        "schema": "value-evidence-validation/v2",
+        "available": False,
+        "ok": False,
+        "source": str(verifier),
+    }
+    if not verifier.is_file():
+        return unavailable
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable, str(verifier), "validate",
+                "--evidence", str(ROOT / ".omo/_delivery/ingress/value-evidence.jsonl"),
+                "--baseline-dir", str(ROOT / ".omo/state/value-baselines"),
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        report = json.loads(completed.stdout)
+        if not isinstance(report, dict):
+            raise ValueError("validator root is not an object")
+        report["available"] = True
+        report["source"] = str(verifier)
+        return report
+    except Exception:  # noqa: BLE001 - observability must fail closed
+        return unavailable
+
+
 def collect_services() -> dict:
     """BOS 服务注册 + Service Keeper 状态。"""
     import yaml
@@ -2799,6 +2834,13 @@ def collect_agent_visibility(payload: dict) -> dict:
     ]
     value_blockers = [str(item) for item in (panel_value.get("state_reason") or []) if item]
     qualifying = int(value_samples.get("qualifying") or 0)
+    value_validation = (
+        payload.get("value_evidence_validation")
+        if isinstance(payload.get("value_evidence_validation"), dict)
+        else {"schema": "value-evidence-validation/v2", "ok": False, "available": False}
+    )
+    if value_validation.get("ok") is not True:
+        value_blockers.append("value-evidence validation unavailable or failed")
     value_readiness = {
         "schema": "panorama-value-proof-readiness/v1",
         "status": "NOT_PROVEN",
@@ -2811,6 +2853,7 @@ def collect_agent_visibility(payload: dict) -> dict:
         "net_saved_seconds": int(value_samples.get("net_saved_seconds") or 0),
         "thresholds": value_thresholds,
         "blockers": value_blockers,
+        "validation": value_validation,
         "evidence_rule": "Only qualifying real-use records count; synthetic runs and unqualified accepted records never prove value.",
         "next_action": (
             f"Collect {max(0, 30 - qualifying)} more qualifying real-use records with a frozen baseline; do not backfill."
@@ -3071,6 +3114,7 @@ def build_payload() -> dict:
         "debt": collect_debt(),
         "workflows": collect_workflows(),
         "alerts": collect_alerts(),
+        "value_evidence_validation": collect_value_evidence_validation(),
         "deployments": collect_deployments(),
         "closeouts": collect_closeouts(),
         "services": collect_services(),
