@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-18
+---
+
 # spaces — System Boundary
 
 > 本文档描述 spaces 与 eCOS 系统其他部分的边界：暴露的接口、依赖的上游、影响的下游。
@@ -27,6 +33,6 @@
 
 ## 4. 配置 / SSOT
 
-- 项目源码：`projects/spaces/`
-- 入口定义：`projects/spaces/pyproject.toml` 或 `package.json`
+- 配置清单：顶层 `spaces/`（`registry.yaml` / `system-space*.yaml` / `runtime-space*.yaml` / `personal-space*.yaml`，schema 见 `spaces/_schema/`）
+- 入口定义：各空间 `*-space.yaml` manifest + `_schema/space-manifest.schema.yaml`
 - 测试：`bash tests/integration/run-all.sh`

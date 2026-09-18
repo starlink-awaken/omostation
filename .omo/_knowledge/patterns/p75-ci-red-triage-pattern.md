@@ -2,7 +2,7 @@
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-04
+last-reviewed: 2026-09-18
 related:
   - p71-baseline-recovery-pattern.md
   - p73-truth-driven-engineering-pattern.md

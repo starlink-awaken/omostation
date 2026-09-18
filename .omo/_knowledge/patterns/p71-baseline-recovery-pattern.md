@@ -2,7 +2,7 @@
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-09-18
 related:
   - 0114-l4-gac-exemption.md
   - 0115-bin-governance-rationalize.md
@@ -119,7 +119,7 @@ uv run --with "pyyaml" python bin/gac/gac-drift.py
 
 - **P43 Closed-Loop Pattern** — 7 阶段模型, P71 嵌入 Phase 4 (DEPLOYMENT) → 5 阶段 recovery
 - **P44 Closed-Loop Pattern** — 审计循环, P71 Phase 1 + Phase 5 对应"症状发现"和"自愈"
-- **GaC 7 机制** (NORTH-STAR.md) — P71 是机制 4 (drift + 自愈) 的实例化
+- **GaC 7 机制** ([0106-gac-governance-as-code](../decisions/0106-gac-governance-as-code.md) 决策 3, 动态一致性 7 机制) — P71 是机制 4 (drift + 自愈) 的实例化
 - **CR-X4 一致性集中度** (X4 占 60/139 规则) — P71 加的新规则是 X4/X1(meta 层), 治本必须加重 X4
 
 ## 4. 复用清单 (Recovery 时 Checklist)
