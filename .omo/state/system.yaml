@@ -3,8 +3,8 @@ current_wave: W1
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-09-18T15:08:10.522718+00:00'
-completed_tasks: 300
-planned_tasks: 8
+completed_tasks: 301
+planned_tasks: 7
 active_tasks: 1
 blocked_tasks: 1
 total_tasks: 310
@@ -15,13 +15,12 @@ next_planned_tasks:
 - BET-Y1Q4-T11-env-resolver-unify (env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N]
   硬)
 - BET-Y1Q4-T12-arcnode-integration (arcnode-* 外部依赖纳入主仓 — 治理命令不再依赖 ~/.hermes)
-- BET-Y1Q4-T15-import-perf-regression (cockpit import 性能回归 (164ms > 120ms 预算) 排查)
 - cockpit-debt-debt-1 (治理技术债务：债务)
 - 'event-loop-dead-loop (闭环回路死回路: 2 个 emit 零消费者)'
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-09-18T15:08:10Z'
+updated_at: '2026-09-18T15:27:06Z'
 harness:
   last_run: null
   last_status: null
