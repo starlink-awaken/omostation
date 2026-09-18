@@ -1,8 +1,8 @@
 # Skills Index
 
-> 自动生成，共 40 个 skills
+> 自动生成，共 42 个 skills
 
-最后更新: 2026-09-05
+最后更新: 2026-09-18
 
 使用 `agent-workflow.py suggest` 或 `grill-me` 技能进行智能推荐
 
@@ -12,6 +12,7 @@
 | 名称 | 标题 | 触发条件 | 路径 |
 |------|------|----------|------|
 | bdsk-virtual-board | Bdsk Virtual Board | general | .agents/skills/bdsk-virtual-board/SKILL.md |
+| bet-closeout-chain | BET Closeout Chain | BET 交付 PR 已合并, bet-ledger complete 需要闭环 | .agents/skills/bet-closeout-chain/SKILL.md |
 | bet-execution | Bet Execution | general | .agents/skills/bet-execution/SKILL.md |
 | cognitive-governance | Cognitive Governance | general | .agents/skills/cognitive-governance/SKILL.md |
 | domain-cartridge-governance | Domain Cartridge Governance | general | .agents/skills/domain-cartridge-governance/SKILL.md |

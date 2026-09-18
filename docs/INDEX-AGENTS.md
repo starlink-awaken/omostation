@@ -86,7 +86,7 @@ last_updated: 2026-09-17
 
 ### 外部 Agent 推荐包
 
-见 [`docs/operations/external-agent-attach-card.md`](operations/external-agent-attach-card.md)：
+见 [`external-agent-attach` skill](../.agents/skills/external-agent-attach/SKILL.md)：
 `external-agent-attach` · `agent-onboarding` · `bos-service-discovery` · `project-governance` · `a2a-coordination`。
 
 
