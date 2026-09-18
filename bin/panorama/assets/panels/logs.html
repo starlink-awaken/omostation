@@ -1,0 +1,102 @@
+<style>
+.zx-panel{--zx-ok:#10b981;--zx-warn:#f59e0b;--zx-red:#ef4444;--zx-dim:#94a3b8;--zx-blue:#3a64b3;--zx-teal:#2e7e79;--zx-violet:#8b5cf6}
+.zx-row{display:grid;gap:12px}
+.zx-kpis{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
+.zx-kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
+.zx-kpi .zx-kv{font:600 22px/1.15 var(--mono);letter-spacing:-.5px}
+.zx-kpi .zx-kl{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.4px}
+.zx-kpi .zx-ks{position:absolute;top:10px;right:12px;font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px}
+.zx-kpi .zx-ks.up{color:var(--zx-ok);background:rgba(16,185,129,.1)}
+.zx-kpi .zx-ks.down{color:var(--zx-red);background:rgba(239,68,68,.1)}
+.zx-kpi .zx-ks.flat{color:var(--zx-dim);background:#f1f5f9}
+.zx-kpi .zx-kbar{height:3px;background:#edf2f7;border-radius:2px;margin-top:8px;overflow:hidden}
+.zx-kpi .zx-kbar>i{display:block;height:100%;border-radius:2px}
+.zx-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.zx-card>h3{margin:0 0 10px;font-size:13px;display:flex;align-items:center;gap:8px}
+.zx-cols2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+@media(max-width:900px){.zx-cols2{grid-template-columns:1fr}}
+.zx-chip{font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:var(--muted);font-weight:600}
+.zx-chip.ok{background:rgba(16,185,129,.12);color:#0b8a63}
+.zx-chip.warn{background:rgba(245,158,11,.14);color:#a26a05}
+.zx-chip.err{background:rgba(239,68,68,.12);color:#c33}
+.zx-chip.dim{background:#f1f5f9;color:#8296a8}
+.zx-filters{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)}
+.zx-filters select,.zx-filters input{border:1px solid var(--line);border-radius:6px;padding:4px 7px;font-size:11px;background:#fff;color:inherit;max-width:190px}
+.zx-filters input{flex:1;min-width:110px}
+.zx-stream{max-height:430px;overflow-y:auto;margin:0 -4px}
+.zx-ev{display:flex;gap:9px;padding:7px 6px;border-bottom:1px solid #f4f7fb;font-size:11px;align-items:flex-start;border-radius:6px}
+.zx-ev:hover{background:#fafcff}
+.zx-ev .zx-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:0 0 auto;background:var(--zx-blue)}
+.zx-ev .zx-body{flex:1;min-width:0}
+.zx-ev .zx-sum{color:#233;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zx-ev .zx-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px;font-size:10px;color:var(--muted);align-items:center}
+.zx-ev .zx-t{color:#8fa3b5;font:10px var(--mono);flex:0 0 auto}
+.zx-tag{font-size:9px;padding:1px 5px;border-radius:4px;background:#eef3f9;color:#5b7690}
+.zx-bars{display:flex;flex-direction:column;gap:6px}
+.zx-bar-row{font-size:10.5px}
+.zx-bar-head{display:flex;justify-content:space-between;margin-bottom:2px;gap:8px}
+.zx-bar-head span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zx-bar-track{height:5px;background:#edf2f7;border-radius:3px;overflow:hidden}
+.zx-bar-track>i{display:block;height:100%;border-radius:3px;background:var(--zx-blue)}
+.zx-table{width:100%;border-collapse:collapse;font-size:11px}
+.zx-table th{text-align:left;font-weight:600;color:var(--muted);font-size:10px;padding:5px 6px;border-bottom:1px solid var(--line)}
+.zx-table td{padding:6px;border-bottom:1px solid #f4f7fb;vertical-align:middle}
+.zx-table tr:last-child td{border-bottom:0}
+.zx-table code{font:10px var(--mono);color:#7a8fa3}
+.zx-empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:11.5px}
+.zx-empty .zx-state{display:inline-block;margin-bottom:6px;font-size:10px;font-weight:700;letter-spacing:.6px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#8296a8}
+.zx-spark{display:block;width:100%;height:74px}
+.zx-more{text-align:center;padding:8px 0}
+.zx-more button{font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--zx-blue)}
+</style>
+<section id="logs" class="section zx-panel" aria-labelledby="title-logs">
+<div class="section-breadcrumb">
+  <span>📍 事件与运行态</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#value">价值中枢</a>
+  <a href="#swarm">Agent 协同</a>
+  <a href="#gov">门禁状态</a>
+</div>
+<div class="section-head">
+  <div class="eyebrow"><span class="eyebrow-text">事件流 · 运行态</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Event Stream</span></div>
+  <h1 id="title-logs">事件与运行态</h1>
+  <p class="lead">结构化的真实事件流 · 来源健康 · 24h 速率分布；全部数据可回溯到具体日志文件。</p>
+</div>
+<div id="zx-logs-kpis" class="zx-row zx-kpis" style="margin-top:14px"></div>
+
+<div class="zx-cols2" style="margin-top:14px">
+  <div class="zx-card">
+    <h3>📋 事件流 <span id="zx-logs-count" class="zx-chip dim">—</span></h3>
+    <div class="zx-filters">
+      <select id="zx-f-type" aria-label="按类型筛选"></select>
+      <select id="zx-f-source" aria-label="按来源筛选"></select>
+      <select id="zx-f-status" aria-label="按状态筛选"></select>
+      <input id="zx-f-q" type="search" placeholder="搜索摘要 / Agent / run_id" aria-label="搜索事件">
+    </div>
+    <div id="zx-logs-stream" class="zx-stream"><div class="zx-empty">加载中…</div></div>
+    <div id="zx-logs-more" class="zx-more"></div>
+  </div>
+  <div class="zx-row" style="align-content:start">
+    <div class="zx-card">
+      <h3>📈 24h 事件速率</h3>
+      <div id="zx-logs-spark"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px" id="zx-spark-note"></div>
+    </div>
+    <div class="zx-card">
+      <h3>🟢 运行态概览</h3>
+      <div id="zx-logs-agents" style="font-size:11px"></div>
+    </div>
+    <div class="zx-card">
+      <h3>🧩 分面分布</h3>
+      <div id="zx-logs-facets"></div>
+    </div>
+  </div>
+</div>
+
+<div class="zx-card" style="margin-top:14px">
+  <h3>🔌 事件源健康 <span id="zx-logs-src-count" class="zx-chip dim">—</span></h3>
+  <div style="overflow-x:auto"><table class="zx-table" id="zx-logs-sources"></table></div>
+</div>
+</section>

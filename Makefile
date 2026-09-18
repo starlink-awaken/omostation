@@ -497,6 +497,15 @@ zhixing-panel:  ## 织星驾驶舱场景面板: 幂等注入/漂移自愈
 zhixing-panel-check:  ## 织星驾驶舱场景面板: 漂移检测 (缺失退出非零)
 	@python3 bin/gac/zhixing-panel-sync.py check
 
+panels-sync:  ## 驾驶舱三板块: 幂等注入/自愈 (logs/metrics/value + 场景面板)
+	@python3 bin/gac/zhixing-panel-sync.py ensure
+
+panels-check:  ## 驾驶舱面板漂移检测 (任一缺失退出非零)
+	@python3 bin/gac/zhixing-panel-sync.py check
+
+panels-data:  ## 三板块真实数据采集预览 (events/history/value)
+	@python3 bin/panorama/panel-collect.py --key all | head -60
+
 journey-validate:  ## 校验全部旅程 spec (states/transitions/deadlocks) — AGENTS.md §1.8
 	@python3 bin/ssot/journey-validator.py
 

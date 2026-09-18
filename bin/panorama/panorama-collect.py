@@ -2005,122 +2005,75 @@ def _to_iso(ts) -> str:
         return s
 
 
-def _ts_sort_key(ts) -> float:
-    """Convert any timestamp to numeric sort key."""
-    if ts is None:
-        return 0.0
-    if isinstance(ts, (int, float)):
-        return float(ts)
-    s = str(ts).strip()
-    if s.endswith("Z"):
-        s = s[:-1]
+def _load_panel_collect():
+    """加载同目录的 panel-collect.py（文件名含连字符，须走 importlib）。"""
+    import importlib.util
+
+    path = Path(__file__).with_name("panel-collect.py")
+    spec = importlib.util.spec_from_file_location("panel_collect", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _collect_panels(payload: dict) -> dict:
+    """采集 logs / metrics / value 三板块的真实数据，并统一事件指标口径。
+
+    事件类指标的唯一来源是 ``panel_events``; 这里把它合并回 ``recent_events``
+    与 ``metrics_kpi``，使两个板块显示的 24h 事件数/速率完全一致。
+    """
     try:
-        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
-        return dt.timestamp()
-    except Exception:
-        return 0.0
+        panels = _load_panel_collect().collect_all(
+            root=ROOT,   # 显式传根: 两模块必须指向同一工作区, 不依赖各自 __file__
+            context={
+                "scene_cards": payload.get("scene_cards") or {},
+                "signal_poller": payload.get("signal_poller") or {},
+                "journey_executions": payload.get("journey_executions") or {},
+            })
+    except Exception as exc:  # 采集失败不得让整个 payload 崩掉
+        import logging
+        logging.warning("panel collection failed: %s", exc)
+        return {}
 
+    events = panels.get("panel_events") or {}
+    if events:
+        summary = events.get("summary") or {}
+        # 向后兼容旧键，同时暴露结构化新键
+        payload["recent_events"] = {
+            "events": events.get("events", [])[:50],
+            "events_all": events.get("events", []),
+            "per_source_counts": events.get("facets", {}).get("by_source", {}),
+            "per_source_window_counts": {s["name"]: s["window_count"] for s in events.get("sources", [])},
+            "per_source_total": {s["name"]: s["total_count"] for s in events.get("sources", [])},
+            "sources": events.get("sources", []),
+            "facets": events.get("facets", {}),
+            "series": events.get("series", {}),
+            "summary": summary,
+            "total_available": summary.get("events_24h", 0),
+        }
+        kpi = payload.setdefault("metrics_kpi", {})
+        kpi["total_events_24h"] = summary.get("events_24h", 0)
+        kpi["events_per_hour_24h"] = summary.get("events_per_hour", 0)
+        kpi["events_per_source"] = {s["name"]: (s["window_count"] or 0)
+                                    for s in events.get("sources", [])}
+        kpi["failed_events_24h"] = summary.get("failed_24h", 0)
+        kpi["failure_rate_24h"] = summary.get("failure_rate")
+        kpi["sources_live"] = summary.get("sources_live", 0)
+        kpi["sources_missing"] = summary.get("sources_missing", 0)
 
-def _make_summary(evt: dict, max_len: int = 80) -> str:
-    """Build a short summary string from an event dict."""
-    for key in ("summary", "message", "detail", "objective", "description", "error", "result"):
-        v = evt.get(key)
-        if v and isinstance(v, str):
-            return v[:max_len]
-    parts = []
-    for k in ("event", "event_type", "type", "status", "state", "action"):
-        v = evt.get(k)
-        if v and isinstance(v, str):
-            parts.append(v)
-    if parts:
-        return ": ".join(parts)[:max_len]
-    return ""
-
-
-def collect_recent_events() -> dict:
-    """最近事件聚合（跨 JSONL 源）。"""
-    sources = {
-        "agent-tick-daemon": ROOT / ".omo/state/agent-tick-daemon.jsonl",
-        "agent-workflows": ROOT / ".omo/_delivery/agent-workflows/events.jsonl",
-        "workflow-mesh": ROOT / ".omo/_knowledge/workflow-mesh/events.jsonl",
-        "swarm-conflicts": ROOT / ".omo/_delivery/swarm-conflicts/events.jsonl",
-        "signal-poller": ROOT / ".omo/_delivery/signal-poller/poll-log.jsonl",
-    }
-    all_events = []
-    per_source_counts = {}
-    cutoff_ts = datetime.now(tz=UTC).timestamp() - 86400
-
-    for src_name, path in sources.items():
-        count = 0
-        try:
-            if not path.exists():
-                per_source_counts[src_name] = 0
-                continue
-            with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        evt = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
-                    count += 1
-                    ts_raw = evt.get("ts") or evt.get("occurred_at") or evt.get("created_at") or evt.get("timestamp")
-                    if _ts_sort_key(ts_raw) < cutoff_ts:
-                        continue
-                    evt_type = evt.get("event") or evt.get("event_type") or evt.get("type") or "unknown"
-                    agent = evt.get("actor") or evt.get("agent_profile") or evt.get("agent") or ""
-                    all_events.append({
-                        "ts": _to_iso(ts_raw),
-                        "type": str(evt_type)[:30],
-                        "agent": str(agent)[:30],
-                        "source": src_name,
-                        "summary": _make_summary(evt),
-                    })
-        except Exception:
-            pass
-        per_source_counts[src_name] = count
-
-    all_events.sort(key=lambda e: _ts_sort_key(e.get("ts", "")), reverse=True)
-    return {"events": all_events[:50], "per_source_counts": per_source_counts, "total_available": sum(per_source_counts.values())}
+    return panels
 
 
 def collect_metrics_kpi() -> dict:
-    """关键 KPI 聚合。"""
+    """健康 KPI 聚合。
+
+    事件类指标（总数/速率/来源分布）**不再在此重复统计** —— 由
+    ``panel-collect.collect_event_stream()`` 作为单一数据源产出，再经
+    ``_collect_panels()`` 合并，避免两处源表不一致导致 logs 与 metrics 数字对不上。
+    """
     kpi = {}
-    sources = {
-        "agent-tick-daemon": ROOT / ".omo/state/agent-tick-daemon.jsonl",
-        "agent-workflows": ROOT / ".omo/_delivery/agent-workflows/events.jsonl",
-        "workflow-mesh": ROOT / ".omo/_knowledge/workflow-mesh/events.jsonl",
-    }
-    events_per_source = {}
-    total_events_24h = 0
-    cutoff_ts = datetime.now(tz=UTC).timestamp() - 86400
-    for src_name, path in sources.items():
-        cnt = recent = 0
-        try:
-            if not path.exists():
-                continue
-            with open(path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    cnt += 1
-                    try:
-                        evt = json.loads(line)
-                        if _ts_sort_key(evt.get("ts") or evt.get("occurred_at")) >= cutoff_ts:
-                            recent += 1
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-        events_per_source[src_name] = cnt
-        total_events_24h += recent
-    kpi["events_per_source"] = events_per_source
-    kpi["total_events_24h"] = total_events_24h
-    kpi["events_per_hour_24h"] = round(total_events_24h / 24, 1)
 
     # Health scores
     try:
@@ -2991,7 +2944,7 @@ def build_payload() -> dict:
         "pipeline": collect_pipeline(),
         "a2a": collect_a2a(),
         "observability_events": collect_observability_events(),
-        "recent_events": collect_recent_events(),
+        "recent_events": {},   # 由 _collect_panels() 从 panel_events 单一数据源填充
         "metrics_kpi": collect_metrics_kpi(),
         "scene_v3": collect_scene_v3(),
         "signal_poller": collect_signal_poller(),
@@ -3019,6 +2972,8 @@ def build_payload() -> dict:
     }
     payload["objective_coverage"] = collect_objective_coverage(payload)
     payload["agent_visibility"] = collect_agent_visibility(payload)
+    # logs / metrics / value 三板块真实数据（同时统合事件指标口径）
+    payload.update(_collect_panels(payload))
     return payload
 
 
