@@ -108,7 +108,7 @@ type: ephemeral
 ## 关联
 
 - [BET-Y1Q1-T1-05A 口](../reports/2026-08-14-shared-runtime-coordination-gap.md)
-- [ADR-0415 能力对齐](../decisions/0415-reject-agt-integration-adopt-capability-parity.md)
-- [ADR-0419 业务落地计划](../decisions/0419-business-workflow-implementation-plan.md)
-- [ADR-0421 2 周复盘](../decisions/0421-bcos-2week-retro.md)
-- [BCOS 完整方案](../../../projects/agora/Plans/cryptic-baking-newell.md)
+- [ADR-0415 能力对齐](../../.omo/_knowledge/decisions/0415-reject-agt-integration-adopt-capability-parity.md)
+- [ADR-0419 业务落地计划](../../.omo/_knowledge/decisions/0419-business-workflow-implementation-plan.md)
+- [ADR-0421 2 周复盘](../../.omo/_knowledge/decisions/0421-bcos-2week-retro.md)
+- BCOS 完整方案（`projects/agora/Plans/cryptic-baking-newell.md` 已移除）

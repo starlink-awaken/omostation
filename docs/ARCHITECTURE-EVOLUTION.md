@@ -50,12 +50,12 @@ eCOS 架构沿以下稳定向量演进（方向由 [`ARCHITECTURE.md`](../ARCHIT
 | [`ecos`](../projects/ecos/BOUNDARY.md) | L0 | BOUNDARY | MOF / L0 约束 / SSOT 注册表 | — | 全栈（协议根） |
 | [`aetherforge`](../projects/aetherforge/BOUNDARY.md) | X | BOUNDARY | 网关 / 调度 / 锻造 | runtime, ecos | runtime |
 | [`bus-foundation`](../projects/bus-foundation/BOUNDARY.md) | X | BOUNDARY | 总线 / 基础设施 | runtime, ecos | runtime |
-| [`c2g`](../projects/c2g/BOUNDARY.md) | X | BOUNDARY | 入场面（策略→任务） | omo, ecos | omo |
+| `c2g` | X | BOUNDARY | 入场面（策略→任务） | omo, ecos | omo |
 | [`family-hub`](../projects/family-hub/BOUNDARY.md) | X | BOUNDARY | 家庭管理 / 生活记录 | cockpit, agora | — |
 | [`l4-kernel`](../projects/l4-kernel/BOUNDARY.md) | L4 | BOUNDARY | 自我层 / 纯文档上下文 | — | cockpit（上下文） |
 | [`model-driven`](../projects/model-driven/BOUNDARY.md) | M0 | BOUNDARY | 模型驱动生成 | ecos | ecos |
 | [`observability`](../projects/observability/BOUNDARY.md) | X | BOUNDARY | 观测 / 指标 / 日志 | runtime | — |
-| [`omo-debt`](../projects/omo-debt/BOUNDARY.md) | X | BOUNDARY | 债务追踪 | omo | omo |
+| `omo-debt` | X | BOUNDARY | 债务追踪 | omo | omo |
 
 ## Archived Projects
 
