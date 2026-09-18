@@ -306,7 +306,7 @@ class TestAccountHome:
 class TestExtractUvPathDependencies:
     def test_tomllib_handles_compact_quoted_and_non_path_entries(self, tmp_path):
         (tmp_path / "pyproject.toml").write_text(
-            "[project]\nname = \"demo\"\nversion = \"0.1.0\"\n\n"
+            '[project]\nname = "demo"\nversion = "0.1.0"\n\n'
             "[tool.uv.sources]\n"
             'ecos={path="../ecos"}\n'
             '"my-pkg" = { path = "../my-pkg", editable = true }\n'
@@ -318,18 +318,14 @@ class TestExtractUvPathDependencies:
 
     def test_invalid_toml_falls_back_to_text_scan(self, tmp_path):
         (tmp_path / "pyproject.toml").write_text(
-            "[tool.uv.sources]\n"
-            "ecos = { path = \"../ecos\" }\n"
-            "BROKEN [[[ \n"
-            "\n[tool.ruff]\nline-length = 100\n",
+            '[tool.uv.sources]\necos = { path = "../ecos" }\nBROKEN [[[ \n\n[tool.ruff]\nline-length = 100\n',
             encoding="utf-8",
         )
         assert agent_clone.extract_uv_path_dependencies(str(tmp_path)) == ["ecos"]
 
     def test_missing_tomllib_falls_back_to_text_scan(self, tmp_path, monkeypatch):
         (tmp_path / "pyproject.toml").write_text(
-            "[tool.uv.sources]\n"
-            'agora = { path = "../agora", editable = true }\n',
+            '[tool.uv.sources]\nagora = { path = "../agora", editable = true }\n',
             encoding="utf-8",
         )
         monkeypatch.setattr(agent_clone, "tomllib", None)
@@ -337,7 +333,7 @@ class TestExtractUvPathDependencies:
 
     def test_path_only_filter_excludes_git_specs(self, tmp_path):
         (tmp_path / "pyproject.toml").write_text(
-            "[project]\nname = \"demo\"\nversion = \"0.1.0\"\n\n"
+            '[project]\nname = "demo"\nversion = "0.1.0"\n\n'
             "[tool.uv.sources]\n"
             'gitdep = { git = "https://example.com/x.git" }\n',
             encoding="utf-8",
@@ -355,7 +351,7 @@ class TestExtractUvPathDependencies:
 class TestReinstallTimeouts:
     @staticmethod
     def _pyproject(tmp_path, names=("ecos", "agora")):
-        body = "[project]\nname = \"demo\"\nversion = \"0.1.0\"\n\n[tool.uv.sources]\n"
+        body = '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\n'
         for name in names:
             body += f'{name} = {{ path = "../{name}" }}\n'
         (tmp_path / "pyproject.toml").write_text(body, encoding="utf-8")
@@ -410,9 +406,7 @@ class TestReinstallTimeouts:
 
 
 def _git(*args, cwd):
-    proc = subprocess.run(
-        ["git", *args], cwd=str(cwd), capture_output=True, text=True, check=False
-    )
+    proc = subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True, check=False)
     assert proc.returncode == 0, proc.stderr
     return proc
 
@@ -424,14 +418,12 @@ class TestDegradedReinstallDecision:
         and the published identity keeps ready:True with degraded status."""
         source = tmp_path / "source"
         source.mkdir()
-        assert subprocess.run(
-            ["git", "init", "-b", "main"], cwd=str(source), capture_output=True
-        ).returncode == 0
+        assert subprocess.run(["git", "init", "-b", "main"], cwd=str(source), capture_output=True).returncode == 0
         _git("config", "user.name", "D1 Tester", cwd=source)
         _git("config", "user.email", "d1@example.com", cwd=source)
         _git("config", "commit.gpgsign", "false", cwd=source)
         (source / "pyproject.toml").write_text(
-            "[project]\nname = \"decision-src\"\nversion = \"0.1.0\"\n"
+            '[project]\nname = "decision-src"\nversion = "0.1.0"\n'
             'dependencies = ["ecos"]\n\n'
             "[tool.uv.sources]\n"
             'ecos = { path = "../does-not-exist-ecos" }\n',
