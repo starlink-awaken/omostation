@@ -16,13 +16,12 @@ status: archived
 |----|-------|--------|
 | kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-## Planned Tasks (13 个)
+## Planned Tasks (12 个)
 | ID | Title | Status |
 |----|-------|--------|
 | BET-Y1Q4-T10-141 | Cockpit CLI 命令可用性台账 — 106 命令逐批验证与修复 | candidate |
 | BET-Y1Q4-T11-env-resolver-unify | env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N] 硬 | candidate |
 | BET-Y1Q4-T12-arcnode-integration | arcnode-* 外部依赖纳入主仓 — 治理命令不再依赖 ~/.hermes | candidate |
-| BET-Y1Q4-T13-cli-smoke-test-harness | Cockpit CLI 106 命令 smoke test 接入 Harness — 每 6h | candidate |
 | BET-Y1Q4-T14-ops-services-cleanup | ops services 20 missing 清理 — 注册表与现实同步 | candidate |
 | BET-Y1Q4-T15-import-perf-regression | cockpit import 性能回归 (164ms > 120ms 预算) 排查 | candidate |
 | BET-Y1Q4-T16-ops-drift-guard | ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校 | candidate |
@@ -35,9 +34,9 @@ status: archived
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
-## Completed Tasks (295 个)
+## Completed Tasks (296 个)
 
-> `tasks/done/` — 295 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
+> `tasks/done/` — 296 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
 
 近期关键完成里程碑（done/ 顶层）:
 - P42-W0-W1-COMBO / P42-W2-COMBO — P42 治理面 SSOT 同步
@@ -75,5 +74,5 @@ status: archived
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-09-18 (依据 `omo state sync-tasks` 与真实目录重算: done=295, planned=13, active=1, blocked=1, archived=6 顶层)*
+*Updated: 2026-09-18 (依据 `omo state sync-tasks` 与真实目录重算: done=296, planned=12, active=1, blocked=1, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*

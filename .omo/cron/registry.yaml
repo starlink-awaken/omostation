@@ -77,15 +77,15 @@ jobs:
     status: active
     owner: governance-team
     sfop_slot: S
-  - name: cli-availability-probe-daily
-    schedule: "15 6 * * *"
+  - name: cli-availability-probe-6h
+    schedule: "15 */6 * * *"
     command: 'cd "$HOME/Workspace" && bash bin/cli-availability-probe.sh >> runtime/cron/cli-availability-probe.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
     owner: governance-team
     sfop_slot: S
-    reconciliation_note: CLI 可用性探针 (每日 06:15, BET-Y1Q4-T13)，已在 crontab -l 运行，补齐登记。
+    reconciliation_note: CLI 可用性探针 (每 6 小时 00/06/12/18:15, BET-Y1Q4-T13)；满足 T13 的 6h 回归发现窗口。
 
   - name: ops-signal-drift-daily
     schedule: "20 6 * * *"
