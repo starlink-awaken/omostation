@@ -7,7 +7,7 @@ description: '现状: ADR-0401(2026-08-24 accepted)采用 AGE-v2 五角色架构
   bin/gac/check-sfop-slots.py 自动化检查(不是被重命名成 CR-X3-NS-001, 那是另一条不相关规则——北极星分子污染检测)。任务:
   1) 设计 Mesh 如何分发到 B 槽后端(现状待查, workflow_mesh.py 是否已有通用后端分发机制); 2) 把 omo cell 入口改经
   Mesh 分发; 3) 给八律第3条补一条 CR-SFOP-0X 自动化检查。2026-09-11 用户已批准方向。'
-status: candidate
+status: done
 task_type: architecture-consolidation
 risk_level: L2
 depends_on: []
@@ -27,6 +27,14 @@ dispatch_id: null
 run_ref: null
 approval_ref: null
 review_ref: null
+completion_evidence: |
+  Closed as delivered by BET-Y1Q4-T10-148.
+  - projects/omo/src/omo/cli.py routes the cell branch through
+    omo.workflow_mesh.dispatch_backend.
+  - projects/omo/src/omo/workflow_mesh.py provides the B-slot backend dispatch path.
+  - bin/gac/check-sfop-slots.py enforces CR-SFOP-03 for direct cell_cli routing.
+  - projects/omo/tests/test_mesh_backend_dispatch.py covers Mesh dispatch and CLI routing.
+completed_at: '2026-09-12'
 knowledge_refs: []
 handoff_refs: []
 governance_refs:

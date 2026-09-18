@@ -1,10 +1,10 @@
 current_phase: 29
 current_wave: W1
-health_score_evidence: 100.0
+health_score_evidence: 66.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-09-17T23:05:14.924019+00:00'
-completed_tasks: 294
-planned_tasks: 14
+health_score_evidence_generated_at: '2026-09-18T01:03:19.670303+00:00'
+completed_tasks: 295
+planned_tasks: 13
 active_tasks: 1
 blocked_tasks: 1
 total_tasks: 310
@@ -20,7 +20,6 @@ next_planned_tasks:
 - BET-Y1Q4-T14-ops-services-cleanup (ops services 20 missing 清理 — 注册表与现实同步)
 - BET-Y1Q4-T15-import-perf-regression (cockpit import 性能回归 (164ms > 120ms 预算) 排查)
 - BET-Y1Q4-T16-ops-drift-guard (ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校)
-- 'TASK-117310A1 (AGE-v2 Agent Cell 违反 SFOP 八律第3条(后端不拥有收件箱): omo c)'
 - bet-y3h1-t7-01 (中试 / 政策申报升 assisted)
 - bet-y3h2-t7-01 (公文场景 routine (限格式类))
 - cockpit-debt-debt-1 (治理技术债务：债务)
@@ -28,7 +27,7 @@ next_planned_tasks:
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
-updated_at: '2026-09-17T23:05:15Z'
+updated_at: '2026-09-18T01:03:19Z'
 harness:
   last_run: null
   last_status: null
@@ -44,25 +43,25 @@ self_evolution:
   proposals_pending: 0
   proposals_approved: 0
   proposals_executed: 0
-health_score: 73
-governance_anomaly_score: 0
+health_score: 50
+governance_anomaly_score: 70
 service_online_ratio: 1.0
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-09-17T23:04:58Z'
+health_score_generated_at: '2026-09-18T01:03:14Z'
 runtime_health_summary:
   online_services: 1
   total_services: 1
   ratio: 1.0
-  health_score: 73
-  last_scan: '2026-09-17T23:04:58Z'
+  health_score: 50
+  last_scan: '2026-09-18T01:03:14Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
-governance_feedback_last_run: '2026-09-17T23:04:58Z'
+governance_feedback_last_run: '2026-09-18T01:03:14Z'
 workflow_mesh_health:
   status: healthy
   event_count: 1
   events_last_hour: 1
-  last_event_age_seconds: 170.4
+  last_event_age_seconds: 123.6
   bridges_active:
   - agent-workflow
   idle: false
