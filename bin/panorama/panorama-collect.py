@@ -1659,14 +1659,18 @@ def collect_workflows() -> list[dict]:
     return out
 
 
-def collect_alerts() -> dict:
+def collect_alerts(ci: dict | None = None) -> dict:
     """告警聚合：CI 红源 + 开放债务 + 需关注探针。"""
     import yaml
     from glob import glob
     alerts = []
     try:
-        ci = json.loads(open(str(ROOT / "runtime/dashboard/data.json")).read()) if (ROOT / "runtime/dashboard/data.json").is_file() else {}
-        for w in (ci.get("ci", {}).get("red_workflows") or []):
+        if ci is None:
+            ci = json.loads(
+                open(str(ROOT / "runtime/dashboard/data.json")).read()
+            ) if (ROOT / "runtime/dashboard/data.json").is_file() else {}
+            ci = ci.get("ci", {})
+        for w in (ci.get("red_workflows") or []):
             alerts.append({"severity": "high", "source": "ci", "msg": f"workflow 红源: {w['workflow']} ({w['fail']}/{w['total']})"})
     except Exception:  # noqa: BLE001
         pass
@@ -2646,6 +2650,7 @@ def collect_skill_inventory() -> dict:
     """技能清单：扫描全局/项目/用户 skills 目录。"""
     from pathlib import Path as _P
     import re
+    import time
     dirs = [
         (_P.home() / ".agents/skills", "user-global"),
         (_P(ROOT / ".agents/skills"), "project"),
@@ -2656,7 +2661,18 @@ def collect_skill_inventory() -> dict:
     for d, scope in dirs:
         if not d.is_dir():
             continue
-        for skill_dir in sorted(d.iterdir()):
+        # Launchd can deliver a signal while scandir is blocked on a busy
+        # skills directory. Retry briefly instead of discarding a full payload.
+        entries = None
+        for _ in range(5):
+            try:
+                entries = sorted(d.iterdir())
+                break
+            except InterruptedError:
+                time.sleep(0.05)
+        if entries is None:
+            continue
+        for skill_dir in entries:
             if not skill_dir.is_dir():
                 continue
             name = skill_dir.name
@@ -3086,6 +3102,7 @@ def collect_agent_visibility(payload: dict) -> dict:
 
 
 def build_payload() -> dict:
+    ci_data = collect_ci()
     payload = {
         "generated_at": datetime.now(UTC).isoformat(),
         "mode": "read-only-ssot-aggregation",
@@ -3109,12 +3126,12 @@ def build_payload() -> dict:
         "scene_cards": collect_scene_cards(),
         "journeys": collect_journeys(),
         "workspace": collect_workspace_hygiene(),
-        "ci": collect_ci(),
+        "ci": ci_data,
         "cron": collect_cron(),
         "submodules": collect_submodules(),
         "debt": collect_debt(),
         "workflows": collect_workflows(),
-        "alerts": collect_alerts(),
+        "alerts": collect_alerts(ci_data),
         "value_evidence_validation": collect_value_evidence_validation(),
         "deployments": collect_deployments(),
         "closeouts": collect_closeouts(),
