@@ -536,6 +536,8 @@ def collect_objective_coverage(payload: dict) -> dict:
     gates = {g.get("id"): g for g in payload.get("gates", []) if isinstance(g, dict)}
     code_health = payload.get("code_root_health") if isinstance(payload.get("code_root_health"), dict) else {}
     claims_task16 = payload.get("claims_task16") if isinstance(payload.get("claims_task16"), dict) else {}
+    agent_cell_semantic = payload.get("agent_cell_semantic") if isinstance(payload.get("agent_cell_semantic"), dict) else {}
+    role_registry = payload.get("role_registry") if isinstance(payload.get("role_registry"), dict) else {}
     activation_allowed = claims_task16.get("activation_allowed") is True
 
     try:
@@ -565,6 +567,28 @@ def collect_objective_coverage(payload: dict) -> dict:
     a1_a9 = [gate(f"A{i}")[0] for i in range(1, 10)]
     a1_a9_pass = all(state == "PASS" for state in a1_a9)
     semantic_status, semantic_value = ledger_semantics("BET-Y1Q4-T10-165")
+    semantic_runtime_ok = (
+        agent_cell_semantic.get("available") is True
+        and agent_cell_semantic.get("verdict") == "PASS"
+        and agent_cell_semantic.get("receipt_chain_ok") is True
+        and agent_cell_semantic.get("receipt_digests_ok") is True
+        and agent_cell_semantic.get("role_bindings_ok") is True
+        and agent_cell_semantic.get("capsule_bindings_ok") is True
+        and agent_cell_semantic.get("mesh_bindings_ok") is True
+        and agent_cell_semantic.get("queue_bindings_ok") is True
+    )
+    role_registry_ok = (
+        role_registry.get("available") is True
+        and role_registry.get("verdict") == "PASS"
+        and role_registry.get("integrity_ok") is True
+    )
+    persistent_runtime_status = "VERIFIED" if semantic_runtime_ok and role_registry_ok else "UNVERIFIED"
+    if semantic_status == "DELIVERY_ACCEPTED":
+        semantic_status = (
+            "DELIVERY_ACCEPTED_RUNTIME_VERIFIED"
+            if persistent_runtime_status == "VERIFIED"
+            else "DELIVERY_ACCEPTED_RUNTIME_UNVERIFIED"
+        )
     external_status, external_value = ledger_semantics("BET-Y1Q4-T10-151")
     rc_state, _ = gate("RC-DL")
     orca_state, _ = gate("A6")
@@ -592,7 +616,15 @@ def collect_objective_coverage(payload: dict) -> dict:
             "requirement": "Persistent Role, Capsule, Handoff, Claim, Verification, and ASD semantics",
             "status": semantic_status,
             "value_status": semantic_value,
-            "evidence": evidence("ledger://BET-Y1Q4-T10-165", "repo://projects/omo/src/omo/workflow/role_registry.py", "repo://projects/omo/src/omo/workflow/capsule.py", "repo://projects/omo/src/omo/workflow/asd.py"),
+            "runtime_status": persistent_runtime_status,
+            "evidence": evidence(
+                "ledger://BET-Y1Q4-T10-165",
+                "projection://role_registry",
+                "projection://agent_cell_semantic",
+                "repo://projects/omo/src/omo/workflow/role_registry.py",
+                "repo://projects/omo/src/omo/workflow/capsule.py",
+                "repo://projects/omo/src/omo/workflow/asd.py",
+            ),
         },
         {
             "id": "REFERENCE_CELL_DIRECT_LOCAL",
@@ -2692,6 +2724,7 @@ def collect_agent_visibility(payload: dict) -> dict:
     claims_task16 = payload.get("claims_task16") if isinstance(payload.get("claims_task16"), dict) else {}
     agent_pool = payload.get("agent_cell_pool") if isinstance(payload.get("agent_cell_pool"), dict) else {}
     reference_cell = payload.get("reference_cell") if isinstance(payload.get("reference_cell"), dict) else {}
+    agent_cell_semantic = payload.get("agent_cell_semantic") if isinstance(payload.get("agent_cell_semantic"), dict) else {}
     value_metrics = payload.get("value_metrics") if isinstance(payload.get("value_metrics"), dict) else {}
     bets = payload.get("bets") if isinstance(payload.get("bets"), dict) else {}
     raw_windows = bets.get("windows") if isinstance(bets.get("windows"), dict) else {}
@@ -2778,6 +2811,18 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "admitted": (payload.get("role_registry") or {}).get("by_state", {}).get("admitted", 0),
                 "integrity_ok": (payload.get("role_registry") or {}).get("integrity_ok") is True,
                 "verdict": (payload.get("role_registry") or {}).get("verdict", "UNAVAILABLE"),
+            },
+            "semantic_lifecycle": {
+                "available": agent_cell_semantic.get("available") is True,
+                "verdict": agent_cell_semantic.get("verdict", "UNAVAILABLE"),
+                "receipt_chain_ok": agent_cell_semantic.get("receipt_chain_ok") is True,
+                "receipt_digests_ok": agent_cell_semantic.get("receipt_digests_ok") is True,
+                "role_bindings_ok": agent_cell_semantic.get("role_bindings_ok") is True,
+                "capsule_bindings_ok": agent_cell_semantic.get("capsule_bindings_ok") is True,
+                "mesh_bindings_ok": agent_cell_semantic.get("mesh_bindings_ok") is True,
+                "queue_bindings_ok": agent_cell_semantic.get("queue_bindings_ok") is True,
+                "latest_run_id": agent_cell_semantic.get("latest_run_id"),
+                "latest_receipt_digest": agent_cell_semantic.get("latest_receipt_digest"),
             },
             "value_metrics": value_metrics,
         },
@@ -3118,6 +3163,7 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
 </div>
 <div class="card" style="margin-top:14px"><h3>Objective Coverage</h3><table id="ab-objectives"><thead><tr><th>status</th><th>objective</th><th>value</th><th>requirement</th></tr></thead><tbody></tbody></table></div>
 <div class="card" style="margin-top:14px"><h3>Persistent Role Registry</h3><table id="ab-roles"><thead><tr><th>role</th><th>state</th><th>version</th><th>capabilities</th></tr></thead><tbody></tbody></table></div>
+<div class="card" style="margin-top:14px"><h3>Semantic Lifecycle</h3><table id="ab-semantic"><thead><tr><th>binding</th><th>value</th></tr></thead><tbody></tbody></table></div>
 </section>
 <section class="sec" id="s-gates">
 <h2>门禁 A1–A9 / RF0</h2><p class="sub">底层实时验证 + 声明态边界 · PARTIAL ≠ PASS · 未过门零写入/零自治/零扩并发</p>
@@ -3231,6 +3277,7 @@ const chip=v=>v==='PASS'?'<span class="chip p">PASS</span>':(v==='FAIL'?'<span c
     {l:'Active Workflows',v:(w.workflows||{}).active_count||0},
     {l:'Task Duplicates',v:((w.tasks||{}).duplicates||[]).length},
     {l:'High Alerts',v:(w.alerts||{}).high||0},
+    {l:'Semantic',v:(h.semantic_lifecycle||{}).verdict||'UNKNOWN'},
     {l:'Value Proof',v:a.value_proof||'UNKNOWN'}
   ];
   $('ab-kpi').innerHTML=items.map(x=>'<div class="kpi-card"><b class="'+(x.l==='High Alerts'&&x.v>0?'dead':(x.l==='Value Proof'&&x.v==='NOT_PROVEN'?'dead':'fresh'))+'">'+x.v+'</b><span>'+x.l+'</span></div>').join('');
@@ -3256,6 +3303,19 @@ const chip=v=>v==='PASS'?'<span class="chip p">PASS</span>':(v==='FAIL'?'<span c
   $('ab-work').querySelector('tbody').innerHTML=rows.map(x=>'<tr><td class="mono">'+x.type+'</td><td class="mono">'+x.name+'</td><td><span class="chip '+(x.state==='high'||x.state==='blocked'?'f':(x.state==='in_progress'?'p':'n'))+'">'+x.state+'</span></td><td>'+x.detail+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无开放工作</td></tr>';
   $('ab-objectives').querySelector('tbody').innerHTML=((av.objective_coverage||{}).items||[]).map(x=>'<tr><td><span class="chip '+(['PASS','DELIVERY_ACCEPTED'].includes(x.status)?'p':(x.status==='NOT_PROVEN'||x.status==='PARTIAL'?'f':'w'))+'">'+x.status+'</span></td><td class="mono">'+x.id+'</td><td class="mono">'+(x.value_status||'—')+'</td><td>'+x.requirement+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无投影</td></tr>';
   $('ab-roles').querySelector('tbody').innerHTML=(((av.role_registry||{}).records)||[]).map(x=>'<tr><td class="mono">'+x.role_id+'</td><td><span class="chip '+(x.admission_state==='admitted'?'p':'n')+'">'+x.admission_state+'</span></td><td class="mono">'+x.version+'</td><td class="mono">'+x.capabilities.join(', ')+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无持久 Role 记录</td></tr>';
+  const sm=(h.semantic_lifecycle||{});
+  $('ab-semantic').querySelector('tbody').innerHTML=[
+    ['available',sm.available===true?'true':'false'],
+    ['verdict',sm.verdict||'UNAVAILABLE'],
+    ['receipt_chain',sm.receipt_chain_ok===true?'PASS':'FAIL'],
+    ['receipt_digests',sm.receipt_digests_ok===true?'PASS':'FAIL'],
+    ['role_bindings',sm.role_bindings_ok===true?'PASS':'FAIL'],
+    ['capsule_bindings',sm.capsule_bindings_ok===true?'PASS':'FAIL'],
+    ['mesh_bindings',sm.mesh_bindings_ok===true?'PASS':'FAIL'],
+    ['queue_bindings',sm.queue_bindings_ok===true?'PASS':'FAIL'],
+    ['latest_run_id',sm.latest_run_id||'—'],
+    ['latest_receipt_digest',sm.latest_receipt_digest||'—']
+  ].map(x=>'<tr><td>'+x[0]+'</td><td class="mono">'+x[1]+'</td></tr>').join('');
 })();
 // nav
 document.querySelectorAll('#nav a').forEach(a=>a.onclick=e=>{e.preventDefault();

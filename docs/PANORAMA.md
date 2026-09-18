@@ -38,6 +38,9 @@ Agent Brief 的 Objective Coverage 把 A1–A9、持久语义、Reference Cell�
 外部边界映射到 Ledger 和 live gate 证据；Claims 激活与业务价值始终单独显示，不得混入交付完成。
 持久 Role Registry 的运行态 JSONL 由 Panorama 只读采集并校验 schema/digest；
 Dashboard 只展示投影，不写 Role 状态，也不把 external admission registry 与持久 Role 混淆。
+Objective Coverage 中的持久语义状态必须同时绑定 Ledger 交付证据与当前
+Role Registry / semantic lifecycle 运行态；历史交付在运行态未验证时显示为
+`DELIVERY_ACCEPTED_RUNTIME_UNVERIFIED`，不会冒充当前 PASS。
 
 ## 全景 SSOT
 
