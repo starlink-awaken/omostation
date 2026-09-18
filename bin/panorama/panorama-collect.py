@@ -2112,6 +2112,38 @@ def collect_metrics_kpi() -> dict:
 
 
 
+def collect_scene_calibration_fallback() -> dict:
+    """T7 校准熔断链：阈值一致性 + 人工门完整性 + 消费证据（只读）。
+
+    委托 calibration-engine.py verify（唯一真相源）；失败/缺失一律
+    fail-closed 为 UNAVAILABLE，绝不伪造 green。EMPTY（零行）是合法态。
+    """
+    import subprocess as _sp
+    verifier = CODE_ROOT / "bin" / "ssot" / "calibration-engine.py"
+    if not verifier.is_file():
+        return {"schema": "scene-calibration-fallback/v1", "available": False,
+                "verdict": "UNAVAILABLE", "error": "verifier_missing"}
+    try:
+        r = _sp.run([sys.executable, str(verifier), "verify", "--root", str(ROOT), "--json"],
+                    capture_output=True, text=True, cwd=str(ROOT), timeout=30)
+        report = json.loads(r.stdout)
+    except Exception as exc:
+        return {"schema": "scene-calibration-fallback/v1", "available": False,
+                "verdict": "UNAVAILABLE", "error": type(exc).__name__}
+    if not isinstance(report, dict) or "overall" not in report:
+        return {"schema": "scene-calibration-fallback/v1", "available": False,
+                "verdict": "UNAVAILABLE", "error": "invalid_verifier_payload"}
+    checks = report.get("checks") if isinstance(report.get("checks"), list) else []
+    proof = next((c for c in checks if isinstance(c, dict) and c.get("name") == "consumption-proof"), {})
+    return {"schema": "scene-calibration-fallback/v1", "available": True,
+            "verdict": report.get("overall", "FAIL"),
+            "threshold_agreement": next((c.get("status") for c in checks if isinstance(c, dict) and c.get("name") == "threshold-agreement"), "UNKNOWN"),
+            "human_gate": next((c.get("status") for c in checks if isinstance(c, dict) and c.get("name") == "human-gate"), "UNKNOWN"),
+            "consumption": proof.get("status", "UNKNOWN"),
+            "consumption_detail": proof.get("detail", {}),
+            "live": report.get("overall") == "PASS"}
+
+
 def collect_scene_v3() -> dict:
     """场景卡 v3（与 collect_scene_cards 共享数据源，仅保留计数兼容性）。"""
     return collect_scene_cards()
@@ -3039,6 +3071,7 @@ def build_payload() -> dict:
         "recent_events": {},   # 由 _collect_panels() 从 panel_events 单一数据源填充
         "metrics_kpi": collect_metrics_kpi(),
         "scene_v3": collect_scene_v3(),
+        "scene_calibration_fallback": collect_scene_calibration_fallback(),
         "signal_poller": collect_signal_poller(),
         "journey_executions": collect_journey_executions(),
         "remote_hygiene": collect_remote_hygiene(),
