@@ -1,22 +1,23 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
 # 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
 # generated_at: 2026-08-06T12:28:20+00:00
-id: BET-Y3H2-T7-01
-title: 公文场景 routine (限格式类)
-status: candidate
+id: BET-Y3H1-T7-01
+title: 中试 / 政策申报升 assisted
+status: done
 task_type: bet
-priority: P0
+priority: P1
 owner: human
 source: 3y-bet-ledger
-source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y3H2-T7-01
-window: Y3H2
+completed_at: '2026-09-18'
+evidence:
+- .omo/_knowledge/retros/BET-Y3H1-T7-01.md
+source_ref: docs/plans/3y-bet-ledger.yaml::BET-Y3H1-T7-01
+window: Y3H1
 track: T7-SCENE
-appetite: 3 weeks
-desc: 三年内第一个进入全自动的动作类型 — 且只限格式类
+appetite: 4 weeks
+desc: 把最有业务价值但流程最长的场景推进到受审执行
 non_goals:
-- 内容生成自动化
-- 敏感判断自动化
-- 分发自动化
+- 自动提交申报材料
 assigned_to: null
 dispatch_id: null
 run_ref: null
@@ -29,26 +30,28 @@ source_docs:
 - docs/plans/AGENT-BRIEF.md
 - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
 depends_on:
-- BET-Y3H1-T7-01
+- BET-Y2Q2-T7-02
+- BET-Y3H1-T3-01
 risk_level: L3
 allowed_operation_level: L3
 human_approval_required: true
 entry_gate:
-- '依赖已 done: BET-Y3H1-T7-01'
+- '依赖已 done: BET-Y2Q2-T7-02'
+- '依赖已 done: BET-Y3H1-T3-01'
 evidence_required:
-- calibration >= 0.85 且连续 100 次
-- 预算上限明确
-- 单次影响可逆
-- 白名单动作明确列举
+- calibration >= 0.6
+- lifecycle=assisted
+- 至少一次真实申报使用了系统产出
 test_plan:
-- 'grep -c ''lifecycle: routine'' docs/scene-cards/v2/document-review.yaml'
+- ls docs/scene-cards/v2/ | wc -l
 workflow: bet-execution
 write_surfaces:
 - docs/scene-cards/**
+- .agents/skills/**
 pasw_required: false
-circuit_breaker: 任一 override → 立即回 L2
+circuit_breaker: 未达标 → 保持 shadow
 retro_required: true
-retro_path: .omo/_knowledge/retros/BET-Y3H2-T7-01.md
+retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-01.md
 agent_profile_hint: docs-agent
 started_at: null
 completed_at: null
