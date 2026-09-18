@@ -45,7 +45,7 @@ entry surfaces -> routing mesh -> engines/runtime/protocol -> governed state and
 | L0 | 协议（MOF / M1 节点 / M2 类型 / 工具链） | [`ecos`](../projects/ecos/ARCHITECTURE.md) |
 | I0 | 织层（MCP Hub / BOS 路由） | [`agora`](../projects/agora/ARCHITECTURE.md) |
 | M0 | 制造面（模型驱动生成） | [`model-driven`](../projects/model-driven/ARCHITECTURE.md) |
-| X  | 横切（网关 / 总线 / 观测 / 债务 / 家庭） | [`aetherforge`](../projects/aetherforge/ARCHITECTURE.md) · [`bus-foundation`](../projects/bus-foundation/ARCHITECTURE.md) · [`c2g`](../projects/c2g/ARCHITECTURE.md) · [`observability`](../projects/observability/ARCHITECTURE.md) · [`omo-debt`](../projects/omo-debt/ARCHITECTURE.md) · [`family-hub`](../projects/family-hub/ARCHITECTURE.md) |
+| X  | 横切（网关 / 总线 / 观测 / 债务 / 家庭） | [`aetherforge`](../projects/aetherforge/ARCHITECTURE.md) · [`bus-foundation`](../projects/bus-foundation/ARCHITECTURE.md) · `c2g` · [`observability`](../projects/observability/ARCHITECTURE.md) · `omo-debt` · [`family-hub`](../projects/family-hub/ARCHITECTURE.md) |
 
 ## Workspace Diagram
 

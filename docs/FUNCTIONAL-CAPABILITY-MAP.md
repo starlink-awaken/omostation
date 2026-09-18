@@ -65,7 +65,7 @@ URL/文件 → kronos fetch (5层路由) → kronos extract → gbrain import (�
                                           iris sync (外部平台同步)
 ```
 
-> **运维白盒 + smoke（2026-07-23）**: [`docs/operations/external-ingest-callchain.md`](operations/external-ingest-callchain.md)  
+> **运维白盒 + smoke（2026-07-23）**: [`docs/operations/external-ingest-callchain.md`](../.omo/_archive/operations-2026H1/external-ingest-callchain.md)  
 > 产品入口: `cockpit import <url>`（优先 kronos）· `cockpit kairon kronos fetch` · `cockpit kairon minerva|iris …`
 
 ---

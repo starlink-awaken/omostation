@@ -9,7 +9,7 @@ last-reviewed: 2026-09-06
 > **归属工程**：omostation / eCOS v6 主干治理  
 > **审计日期**：2026-09-06  
 > **责任组织**：Chief Architect & Governance Team  
-> **关联依据**：[ADR-0191](file:///Users/xiamingxing/Workspace/docs/adr/ADR-0191-workspace-documents-dual-plane-architecture.md) (双平面架构) · [T6-17 文档盘点报告](file:///Users/xiamingxing/Workspace/docs/reports/doc-ssot-inventory-2026-09-05.md) · [3Y-BET-LEDGER](file:///Users/xiamingxing/Workspace/docs/plans/3y-bet-ledger.yaml)
+> **关联依据**：[ADR-0191](../adr/ADR-0191-workspace-documents-dual-plane-architecture.md) (双平面架构) · [T6-17 文档盘点报告](../reports/doc-ssot-inventory-2026-09-05.md) · [3Y-BET-LEDGER](3y-bet-ledger.yaml)
 
 ---
 

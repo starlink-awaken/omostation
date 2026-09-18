@@ -151,5 +151,5 @@ git merge <gitlink-sha>  # Or cherry-pick specific commits
 ## References
 
 - [Submodule Gitlink Drift Guard Spec](../superpowers/specs/2026-09-04-submodule-gitlink-drift-guard-spec.md)
-- [Submodule PR Strategy](./SUBMODULE-PR-STRATEGY.md)
+- [Submodule PR Strategy](../SUBMODULE-PR-STRATEGY.md)
 - [Git Worktree Policy](../../AGENTS.md#0-worktree-policy-mandatory)

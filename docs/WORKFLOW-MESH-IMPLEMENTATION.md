@@ -406,7 +406,7 @@ broker 只接受 `succeeded/degraded` receipt 作为 `EvidenceRecorded`，以
 Phase 20 已将上述观察收敛为 OMO 的 `workflow-mesh-operations/v1` 事件派生快照，并由
 Cockpit `GET /api/workflow-mesh/operations` 只读展示。快照提供状态、验证、证据、恢复、
 交付收口、场景归因和确定性复盘队列；它不写入运行态，也不创建第二套指标数据库。详细字段和
-验证命令见 [`docs/operations/workflow-mesh-operations.md`](./operations/workflow-mesh-operations.md)。
+验证命令见 [`docs/operations/workflow-mesh-operations.md`](../.omo/_archive/operations-2026H1/workflow-mesh-operations.md)。
 
 当前最重要的诚实边界是 `consumption.status=not_observed`：`WorkflowClosed`、
 `WorkflowVerified`、`PRMerged` 或 `EvidenceRecorded` 都不能推断业务用户已消费、采用或完成
@@ -417,7 +417,7 @@ Phase 21 已补齐独立的 `outcome-feedback/v1` 反馈契约：OMO 将最小�
 `rejected` 或 `not_observed`，Cockpit 提供只记录回执的人工表单。反馈要求 WorkflowRun 已进入
 可反馈状态并且 `scene_binding` 完全一致，备注只保留 `sha256:` 摘要；它不改变 WorkflowRun
 状态，不新增第二套状态机，也不触发外部资源或业务系统。契约细节见
-[`docs/operations/outcome-feedback.md`](./operations/outcome-feedback.md) 和 ADR-0314。
+[`docs/operations/outcome-feedback.md`](../.omo/_archive/operations-2026H1/outcome-feedback.md) 和 ADR-0314。
 
 ### 7.2 J2 知识到行动垂直切片
 
@@ -433,7 +433,7 @@ Phase 22 将 `知识检索 -> 引用 -> 受治理任务 -> 行动回执` 接入�
 工作流请求和结果回执漏斗；它不创建第二个工作流引擎、不替代任务状态机，也不自动调用外部系统。
 当真实业务场景和外部连接准入条件成熟后，才允许从 `task_created` 进入 `workflow_requested`，
 并沿用既有审批、证据和外部 receipt 契约。字段、验证命令和恢复语义见
-[`docs/operations/knowledge-to-action.md`](./operations/knowledge-to-action.md) 和 ADR-0315。
+[`docs/operations/knowledge-to-action.md`](../.omo/_archive/operations-2026H1/knowledge-to-action.md) 和 ADR-0315。
 
 ### 7.3 Phase 24 请求到准入的受治理漏斗
 
