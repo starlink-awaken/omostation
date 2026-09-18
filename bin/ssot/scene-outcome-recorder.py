@@ -215,7 +215,11 @@ def _scene_run_duration_seconds(scene_id: str, run_id: str) -> int:
     try:
         import sqlite3
 
-        db = ROOT / "data" / "scene-metrics.db"
+        _here = str(Path(__file__).resolve().parent)
+        if _here not in sys.path:
+            sys.path.insert(0, _here)
+        from _shared import scene_metrics_db_path
+        db = scene_metrics_db_path(ROOT)
         if not db.exists():
             return 0
         conn = sqlite3.connect(str(db))

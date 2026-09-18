@@ -12,7 +12,7 @@ Fallback-chain contract (SSOT: ``.omo/standards/scene-card-lifecycle.yaml``):
 """
 
 from __future__ import annotations
-import argparse, json, os, sqlite3
+import argparse, json, os, sqlite3, sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -21,17 +21,17 @@ _ROOT = Path(__file__).resolve().parents[2]
 
 
 def _default_db_path(root: Path | None = None) -> Path:
-    """校准库路径：默认 data/scene-metrics.db，可用 SCENE_METRICS_DB 覆盖.
+    """校准库路径 ── 委托 `_shared.scene_metrics_db_path`（唯一解析入口）.
 
-    为什么需要覆盖：测试若直接跑生产库, 会把夹具 scene_id (test-scene /
-    gate-test-scene / ...) 写进生产校准表, 而夹具样本数足以通过晋升门禁
-    (gate-test-scene 35 samples → eligible:true)。校准库是信任平面的证据源,
-    被夹具污染即违反"真实数据"约束。
+    支持 SCENE_METRICS_DB 覆盖 + pytest 上下文兜底; 详见该函数 docstring。
+    先补 sys.path 再导入 —— 不能靠调用方 import 方式碰运气, 否则兜底会静默
+    降级 (2026-09-18 实证: 非常规导入下 ImportError → 退回硬编码路径 → 保护失效)。
     """
-    override = os.environ.get("SCENE_METRICS_DB")
-    if override:
-        return Path(override).expanduser().resolve()
-    return (root or _ROOT) / "data" / "scene-metrics.db"
+    _here = str(Path(__file__).resolve().parent)
+    if _here not in sys.path:
+        sys.path.insert(0, _here)
+    from _shared import scene_metrics_db_path
+    return scene_metrics_db_path(root or _ROOT)
 
 
 _DB_PATH = _default_db_path()
