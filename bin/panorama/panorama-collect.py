@@ -501,7 +501,7 @@ def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None 
 def collect_bets() -> dict:
     import yaml
 
-    ledger = yaml.safe_load((ROOT / "docs/plans/3y-bet-ledger.yaml").read_text())
+    ledger = yaml.safe_load((CODE_ROOT / "docs/plans/3y-bet-ledger.yaml").read_text())
     bets = [b for b in ledger.get("bets", []) if isinstance(b, dict) and b.get("id")]
     by_status: dict[str, list[dict]] = {}
     for b in bets:
@@ -520,11 +520,134 @@ def collect_bets() -> dict:
                 "risk": b.get("risk_level", "")}
 
     return {
+        "source": "repo://docs/plans/3y-bet-ledger.yaml",
         "total": len(bets),
         "counts": {k: len(v) for k, v in sorted(by_status.items())},
         "in_progress": [brief(b) for b in by_status.get("in_progress", [])][:10],
         "blocked": [brief(b) for b in by_status.get("blocked", [])][:10],
         "windows": dict(sorted(windows.items())),
+    }
+
+
+def collect_objective_coverage(payload: dict) -> dict:
+    """Project the explicit objective-to-evidence boundary for Agent OS."""
+    import yaml
+
+    gates = {g.get("id"): g for g in payload.get("gates", []) if isinstance(g, dict)}
+    code_health = payload.get("code_root_health") if isinstance(payload.get("code_root_health"), dict) else {}
+    claims_task16 = payload.get("claims_task16") if isinstance(payload.get("claims_task16"), dict) else {}
+    activation_allowed = claims_task16.get("activation_allowed") is True
+
+    try:
+        ledger = yaml.safe_load((CODE_ROOT / "docs/plans/3y-bet-ledger.yaml").read_text()) or {}
+        ledger_bets = {b.get("id"): b for b in ledger.get("bets", []) if isinstance(b, dict) and b.get("id")}
+    except Exception:
+        ledger_bets = {}
+
+    def gate(gate_id: str) -> tuple[str, bool]:
+        verdict = str((gates.get(gate_id) or {}).get("verdict", "UNKNOWN")).upper()
+        return verdict, verdict == "PASS" and (gates.get(gate_id) or {}).get("live") is True
+
+    def ledger_semantics(bet_id: str) -> tuple[str, str]:
+        bet = ledger_bets.get(bet_id)
+        if not isinstance(bet, dict):
+            return "EVIDENCE_INCOMPLETE", "NOT_PROVEN"
+        evidence = bet.get("completion_evidence") if isinstance(bet.get("completion_evidence"), dict) else {}
+        axes = evidence.get("axes") if isinstance(evidence.get("axes"), dict) else {}
+        engineering = str((axes.get("engineering") or {}).get("status", "UNKNOWN")).upper()
+        operational = str((axes.get("operational") or {}).get("status", "UNKNOWN")).upper()
+        value = str((axes.get("value") or {}).get("status", "NOT_PROVEN")).upper()
+        overall = str(evidence.get("overall_state", "UNKNOWN")).upper()
+        if bet.get("status") == "done" and overall == "DELIVERY_ACCEPTED" and engineering == "VERIFIED" and operational == "PROVEN":
+            return "DELIVERY_ACCEPTED", value or "NOT_PROVEN"
+        return overall, value or "NOT_PROVEN"
+
+    a1_a9 = [gate(f"A{i}")[0] for i in range(1, 10)]
+    a1_a9_pass = all(state == "PASS" for state in a1_a9)
+    semantic_status, semantic_value = ledger_semantics("BET-Y1Q4-T10-165")
+    external_status, external_value = ledger_semantics("BET-Y1Q4-T10-151")
+    rc_state, _ = gate("RC-DL")
+    orca_state, _ = gate("A6")
+    multica_state, _ = gate("A7")
+    ruflo_state, _ = gate("RF0")
+
+    def evidence(*refs: str) -> list[dict[str, str]]:
+        return [{"kind": "authority_or_test", "ref": ref} for ref in refs]
+
+    items = [
+        {
+            "id": "EXECUTION_ENVIRONMENT_A1_A9",
+            "requirement": "A1–A9 execution environment recovery",
+            "status": "PASS" if a1_a9_pass else "PARTIAL",
+            "evidence": evidence("gate://A1", "gate://A2", "gate://A3", "gate://A4", "gate://A5", "gate://A6", "gate://A7", "gate://A8", "gate://A9", "ledger://BET-Y1Q4-T10-164"),
+        },
+        {
+            "id": "OMO_SINGLE_CONTROL_PLANE",
+            "requirement": "OMO is the single control plane and dispatcher",
+            "status": "PASS" if a1_a9_pass and code_health.get("verdict") == "PASS" else "PARTIAL",
+            "evidence": evidence("gate://A8", "repo://bin/gac/check-sfop-slots.py", "repo://docs/plans/3y-bet-ledger.yaml"),
+        },
+        {
+            "id": "PERSISTENT_ROLE_CAPSULE_HANDOFF_CLAIM_VERIFICATION_ASD",
+            "requirement": "Persistent Role, Capsule, Handoff, Claim, Verification, and ASD semantics",
+            "status": semantic_status,
+            "value_status": semantic_value,
+            "evidence": evidence("ledger://BET-Y1Q4-T10-165", "repo://projects/omo/src/omo/workflow/role_registry.py", "repo://projects/omo/src/omo/workflow/capsule.py", "repo://projects/omo/src/omo/workflow/asd.py"),
+        },
+        {
+            "id": "REFERENCE_CELL_DIRECT_LOCAL",
+            "requirement": "Reference Cell prefers Direct Local and remains evidenced",
+            "status": rc_state,
+            "evidence": evidence("gate://RC-DL"),
+        },
+        {
+            "id": "ORCA_R0",
+            "requirement": "Orca remains admitted only at R0",
+            "status": orca_state,
+            "evidence": evidence("gate://A6", "ledger://BET-Y1Q4-T10-149"),
+        },
+        {
+            "id": "MULTICA_AS0",
+            "requirement": "Multica remains admitted only at AS0",
+            "status": multica_state,
+            "evidence": evidence("gate://A7", "ledger://BET-Y1Q4-T10-150"),
+        },
+        {
+            "id": "RUFLO_RF0",
+            "requirement": "Ruflo remains read-only at RF0",
+            "status": ruflo_state,
+            "evidence": evidence("gate://RF0"),
+        },
+        {
+            "id": "EXTERNAL_TRANSACTION_LIFECYCLE",
+            "requirement": "External execution uses the OMO transaction lifecycle",
+            "status": "PASS" if gate("A8")[0] == "PASS" and external_status == "DELIVERY_ACCEPTED" else "PARTIAL",
+            "value_status": external_value,
+            "evidence": evidence("gate://A8", "ledger://BET-Y1Q4-T10-151"),
+        },
+        {
+            "id": "CLAIMS_AUTHORITY_ACTIVATION",
+            "requirement": "Claims Authority instruction capability requires separate authorization and observation",
+            "status": "ACTIVATION_ALLOWED" if activation_allowed else "AWAITING_AUTHORIZATION",
+            "value_status": "NOT_PROVEN",
+            "evidence": evidence("projection://claims_authority", "projection://claims_task16"),
+        },
+        {
+            "id": "BUSINESS_VALUE",
+            "requirement": "Human/business value proof",
+            "status": "NOT_PROVEN",
+            "value_status": "NOT_PROVEN",
+            "evidence": evidence("ledger://BET-Y1Q4-T10-165", "projection://value_metrics"),
+        },
+    ]
+    return {
+        "schema": "panorama-objective-coverage/v1",
+        "source": "repo://docs/plans/3y-bet-ledger.yaml + panorama gates",
+        "items": items,
+        "delivery_complete": all(item["status"] in {"PASS", "DELIVERY_ACCEPTED"} for item in items),
+        "activation_status": "ACTIVATION_ALLOWED" if activation_allowed else "AWAITING_AUTHORIZATION",
+        "value_proof": "NOT_PROVEN",
+        "note": "Delivery coverage never proves business value; Claims Authority activation remains separately authorized.",
     }
 
 
@@ -2540,6 +2663,7 @@ def collect_agent_visibility(payload: dict) -> dict:
         "schema": "panorama-agent-brief/v1",
         "available": True,
         "generated_at": payload.get("generated_at", ""),
+        "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},
         "authority": {
             "control_plane": "OMO",
             "single_dispatcher": True,
@@ -2550,6 +2674,7 @@ def collect_agent_visibility(payload: dict) -> dict:
             "claims_activation_blockers": blockers,
             "value_proof": "NOT_PROVEN",
         },
+        "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},
         "health": {
             "gates_total": len(gate_rows),
             "gates_pass": sum(g["verdict"] == "PASS" for g in gate_rows),
@@ -2738,6 +2863,7 @@ def build_payload() -> dict:
         "decision_proposals": collect_decision_proposals(),
         "recent_features": collect_recent_features(),
     }
+    payload["objective_coverage"] = collect_objective_coverage(payload)
     payload["agent_visibility"] = collect_agent_visibility(payload)
     return payload
 
@@ -2899,6 +3025,7 @@ Cell=动态算力（B 槽）；Resident=投影不派活；MOS=记忆控制面</d
  <div class="card"><h3>Next Actions</h3><table id="ab-actions"><thead><tr><th>state</th><th>action</th><th>detail</th><th>source</th></tr></thead><tbody></tbody></table></div>
  <div class="card"><h3>Open Work & Alerts</h3><table id="ab-work"><thead><tr><th>type</th><th>name</th><th>state</th><th>detail</th></tr></thead><tbody></tbody></table></div>
 </div>
+<div class="card" style="margin-top:14px"><h3>Objective Coverage</h3><table id="ab-objectives"><thead><tr><th>status</th><th>objective</th><th>value</th><th>requirement</th></tr></thead><tbody></tbody></table></div>
 </section>
 <section class="sec" id="s-gates">
 <h2>门禁 A1–A9 / RF0</h2><p class="sub">底层实时验证 + 声明态边界 · PARTIAL ≠ PASS · 未过门零写入/零自治/零扩并发</p>
@@ -3035,6 +3162,7 @@ const chip=v=>v==='PASS'?'<span class="chip p">PASS</span>':(v==='FAIL'?'<span c
   for(const b of ((w.bets||{}).blocked||[]))rows.push({type:'bet',name:b.id,state:'blocked',detail:b.title||''});
   for(const x of ((w.alerts||{}).recent||[]))rows.push({type:'alert',name:x.source,state:x.severity,detail:x.msg||''});
   $('ab-work').querySelector('tbody').innerHTML=rows.map(x=>'<tr><td class="mono">'+x.type+'</td><td class="mono">'+x.name+'</td><td><span class="chip '+(x.state==='high'||x.state==='blocked'?'f':(x.state==='in_progress'?'p':'n'))+'">'+x.state+'</span></td><td>'+x.detail+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无开放工作</td></tr>';
+  $('ab-objectives').querySelector('tbody').innerHTML=((av.objective_coverage||{}).items||[]).map(x=>'<tr><td><span class="chip '+(['PASS','DELIVERY_ACCEPTED'].includes(x.status)?'p':(x.status==='NOT_PROVEN'||x.status==='PARTIAL'?'f':'w'))+'">'+x.status+'</span></td><td class="mono">'+x.id+'</td><td class="mono">'+(x.value_status||'—')+'</td><td>'+x.requirement+'</td></tr>').join('')||'<tr><td colspan=4 class="mono">无投影</td></tr>';
 })();
 // nav
 document.querySelectorAll('#nav a').forEach(a=>a.onclick=e=>{e.preventDefault();
