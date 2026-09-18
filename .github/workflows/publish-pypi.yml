@@ -20,6 +20,7 @@ jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         package:
           - core-models
@@ -32,17 +33,12 @@ jobs:
           - iris
           - codeanalyze
           - forge
-          - symphony-protocol
-          - shared-lib
-          - sshard-brain-bridge
-          - engine-core
-          - cron-service
-          - agent-runtime
-          - kairon-governance
-          - pontus
-          - ecos
-          - metaos
           - health-profile
+          - kairon-observability
+          - kairon-pipeline
+          - kairon-plugin-sdk
+          - kairon-utils
+          - mos
     steps:
       - uses: actions/checkout@v4
         with:
