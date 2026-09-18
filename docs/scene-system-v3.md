@@ -105,13 +105,21 @@ python3 bin/ssot/scene-history.py restore   # 从 L1 自愈（部分丢失亦可
 累积 35 条样本，`check-gates --target-level supervised` 返回 **`eligible: true`**
 ——**测试夹具伪装成晋升证据**，违反"真实数据"约束。
 
-两条防线：
+三层防线：
 
 1. **DB 路径可注入** — `calibration-engine.py` 读 `SCENE_METRICS_DB` 环境变量
    （`_default_db_path()` 单点解析，收敛原 3 处硬编码）；未设时默认仍是
    `data/scene-metrics.db`。所有 `tests/scene_v2/*` 用 autouse fixture 指向临时库，
    并断言生产库 mtime 不变（防回退）。
-2. **纯度守卫** — `bin/gac/check-scene-metrics-purity.py`
+2. **pytest 运行时兜底** — 解析入口统一为 `_shared.scene_metrics_db_path()`，
+   被 `calibration-engine.py` / `scene-outcome-recorder.py` /
+   `scene-evolution-loop.py` 共用。**只要检测到 pytest 上下文且未显式指定
+   `SCENE_METRICS_DB`，一律改写为进程级临时库** —— 生产库永不被测试写，
+   无论调用方是否记得隔离。
+   > 为什么需要这层（2026-09-18 二次实证）：首次修复只给 `tests/scene_v2/*`
+   > 加了隔离，但基于旧提交的 worktree / 未更新的调用方仍在清理后当天又写入
+   > 夹具行。修复只对"跑了修复代码的测试"生效 —— 故兜底必须下沉到解析层。
+3. **纯度守卫** — `bin/gac/check-scene-metrics-purity.py`
 
 ```bash
 python3 bin/gac/check-scene-metrics-purity.py           # 报告 (夹具 → exit 1)

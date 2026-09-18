@@ -156,11 +156,16 @@ def test_engine_honors_env_db(tmp_path):
 
 
 def test_engine_default_path_unchanged(tmp_path, monkeypatch):
-    """未设 env 时默认仍是 data/scene-metrics.db."""
+    """非 pytest 上下文 + 未设 env 时, 默认仍是 <root>/data/scene-metrics.db.
+
+    (pytest 上下文下的行为已被 tests/test_scene_metrics_pytest_fallback.py 覆盖:
+     自动改写为临时库以保护生产库。)
+    """
     mod = _load("cal_engine", "bin/ssot/calibration-engine.py")
     monkeypatch.delenv("SCENE_METRICS_DB", raising=False)
-    import os
-    assert os.environ.get("SCENE_METRICS_DB") is None
+    # 模拟非 pytest 的生产调用环境
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    monkeypatch.delenv("PYTEST_VERSION", raising=False)
     assert mod._default_db_path().as_posix().endswith("data/scene-metrics.db")
 
 

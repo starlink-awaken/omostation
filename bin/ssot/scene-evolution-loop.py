@@ -25,7 +25,16 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 SCENES_DIR = ROOT / ".omo" / "_truth" / "scenarios" / "v3"
 PROPOSALS_DIR = ROOT / ".omo" / "_knowledge" / "evolution-proposals"
-CALIBRATION_DB = ROOT / "data" / "scene-metrics.db"
+def _calibration_db() -> Path:
+    """校准库路径 ── 统一走 _shared（含 SCENE_METRICS_DB 覆盖 + pytest 兜底）."""
+    _here = str(Path(__file__).resolve().parent)
+    if _here not in sys.path:
+        sys.path.insert(0, _here)
+    from _shared import scene_metrics_db_path
+    return scene_metrics_db_path(ROOT)
+
+
+CALIBRATION_DB = _calibration_db()
 
 
 def _load_scene(scene_id: str) -> dict[str, Any] | None:

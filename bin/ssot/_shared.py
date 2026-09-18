@@ -28,6 +28,40 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 
 
+# ── 校准库路径 ───────────────────────────────────────────────────────
+
+
+def scene_metrics_db_path(root: Path | None = None) -> Path:
+    """校准库路径 — 生产库的**唯一合法解析入口**.
+
+    优先级:
+      1. 环境变量 ``SCENE_METRICS_DB``（测试隔离 / ops 迁移）
+      2. pytest 上下文 → 进程级临时库（**兜底**, 见下）
+      3. 默认 ``<root>/data/scene-metrics.db``
+
+    为什么第 2 条存在（2026-09-18 二次实证）: 第一次修复只给
+    ``tests/scene_v2/*`` 加了 SCENE_METRICS_DB 隔离, 但基于旧提交的 worktree
+    或未更新的调用方仍会污染生产校准表 —— 清理后当天又出现夹具行
+    (gate-test-scene), 而夹具样本数足以通过 "30 samples" 晋升门禁 → 伪造
+    晋升证据。故在解析层兜底: **只要在 pytest 下且未显式指定, 一律改写为
+    临时库**, 生产库永不被测试写, 无论调用方是否记得隔离。
+    """
+    import os
+    import sys
+    import tempfile
+
+    override = os.environ.get("SCENE_METRICS_DB")
+    if override:
+        return Path(override).expanduser().resolve()
+    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("PYTEST_VERSION"):
+        fallback = (Path(tempfile.gettempdir()) / "scene-metrics-pytest"
+                    / f"pid{os.getpid()}.db")
+        print(f"[scene-metrics] pytest 上下文: 校准库改写为 {fallback} "
+              f"(保护生产库; 如需指定请设 SCENE_METRICS_DB)", file=sys.stderr)
+        return fallback
+    return (root or ROOT) / "data" / "scene-metrics.db"
+
+
 # ── YAML ─────────────────────────────────────────────────────────────
 
 
