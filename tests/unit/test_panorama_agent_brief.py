@@ -95,6 +95,33 @@ def _payload():
             "high": 1,
             "alerts": [{"severity": "high", "source": "debt", "msg": "example"}],
         },
+        "panel_value": {
+            "schema": "panel-value/v1",
+            "state": "not_proven",
+            "state_reason": [
+                "已有 2 条记录，但 qualifying=false（未产生净节省，不计入价值门）",
+                "样本 2/30 不足",
+            ],
+            "samples": {
+                "records": 2,
+                "qualifying": 0,
+                "accepted": 2,
+                "adjudicated": 2,
+                "net_saved_seconds": 0,
+            },
+            "thresholds": [
+                {
+                    "key": "samples",
+                    "label": "真实样本",
+                    "target": 30,
+                    "unit": "个",
+                    "comparator": "gte",
+                    "current": 0,
+                    "met": False,
+                    "gate": None,
+                }
+            ],
+        },
     }
 
 
@@ -132,6 +159,16 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
     ]
     assert readiness["observation_gate"]["minimum_samples"] == 1440
     assert readiness["observation_gate"]["first_three_are_diagnostic_only"] is True
+    value = brief["authority"]["value_proof_readiness"]
+    assert value["status"] == "NOT_PROVEN"
+    assert value["available"] is True
+    assert value["samples_total"] == 2
+    assert value["qualifying_samples"] == 0
+    assert value["net_saved_seconds"] == 0
+    assert value["thresholds"][0]["target"] == 30
+    assert value["next_action"] == (
+        "Collect 30 more qualifying real-use records with a frozen baseline; do not backfill."
+    )
     assert brief["authority"]["value_proof"] == "NOT_PROVEN"
     assert brief["health"]["gates_total"] == 2
     assert brief["health"]["gates_pass"] == 1
@@ -158,7 +195,12 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
     assert brief["role_registry"]["schema"] == "panorama-role-registry/v1"
     assert brief["work_state"]["alerts"]["high"] == 1
     action_ids = {action["id"] for action in brief["next_actions"]}
-    assert {"claims-authority-wait", "plan-candidate-bets", "triage-high-alerts"} <= action_ids
+    assert {
+        "claims-authority-wait",
+        "collect-qualifying-value-evidence",
+        "plan-candidate-bets",
+        "triage-high-alerts",
+    } <= action_ids
 
 
 def test_agent_visibility_claims_readiness_fails_closed_without_preflight() -> None:
@@ -173,6 +215,20 @@ def test_agent_visibility_claims_readiness_fails_closed_without_preflight() -> N
     assert readiness["readiness"] == "UNKNOWN"
     assert readiness["operation_specific_authorization"] == "UNPROVEN"
     assert readiness["activation_allowed"] is False
+
+
+def test_agent_visibility_value_readiness_fails_closed_without_panel() -> None:
+    module = _module()
+    payload = _payload()
+    del payload["panel_value"]
+
+    value = module.collect_agent_visibility(payload)["authority"]["value_proof_readiness"]
+
+    assert value["status"] == "NOT_PROVEN"
+    assert value["available"] is False
+    assert value["source"] == "unavailable"
+    assert value["qualifying_samples"] == 0
+    assert value["next_action"].startswith("Collect 30 more qualifying real-use records")
 
 
 def test_write_site_emits_data_and_agent_brief(tmp_path, monkeypatch) -> None:
