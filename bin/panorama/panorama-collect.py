@@ -1520,7 +1520,13 @@ def collect_ci() -> dict:
     for r in data:
         w = r.get("workflowName", "?")
         conc = r.get("conclusion", "")
-        status = "pass" if conc == "success" else ("fail" if conc in ("failure", "cancelled", "timed_out") else "other")
+        # Concurrency winners are cancelled by the system, not failed.  Keep
+        # them visible as "other" so rolling health reflects real defects.
+        status = (
+            "pass" if conc == "success"
+            else "fail" if conc in ("failure", "startup_failure", "timed_out")
+            else "other"
+        )
         by_wf.setdefault(w, []).append(status)
     summaries = []
     for w, statuses in sorted(by_wf.items()):
