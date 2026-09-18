@@ -3278,6 +3278,20 @@ def build_payload() -> dict:
     # logs / metrics / value 三板块真实数据（同时统合事件指标口径）
     payload.update(_collect_panels(payload))
     payload["agent_visibility"] = collect_agent_visibility(payload)
+    # Agent Brief owns action derivation; mirror it to the top level so all
+    # agents and the Next panel can consume one stable contract without
+    # discovering the nested envelope.
+    visibility = payload.get("agent_visibility")
+    if isinstance(visibility, dict):
+        authority = visibility.get("authority") if isinstance(visibility.get("authority"), dict) else {}
+        payload["next_actions"] = visibility.get("next_actions") or []
+        payload["unfinished_objectives"] = [
+            item
+            for item in (visibility.get("objective_coverage") or {}).get("items", [])
+            if isinstance(item, dict) and item.get("status") not in {"PASS", "DELIVERY_ACCEPTED_RUNTIME_VERIFIED"}
+        ]
+        payload["value_proof_readiness"] = authority.get("value_proof_readiness") or {"schema": "panorama-value-proof-readiness/v1", "available": False, "status": "UNKNOWN"}
+        payload["claims_activation_readiness"] = authority.get("claims_activation_readiness") or {"schema": "claims-activation-readiness/v1", "available": False, "readiness": "UNKNOWN"}
     return payload
 
 
