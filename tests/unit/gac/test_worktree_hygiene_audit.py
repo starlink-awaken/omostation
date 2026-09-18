@@ -91,3 +91,65 @@ class TestSummaryCounts:
         assert counts["total_unregistered_dirs"] == 2
         assert counts["unregistered_dirs"]["empty_abandoned"] == 1
         assert counts["unregistered_dirs"]["needs_review"] == 1
+
+
+class TestCronParity:
+    """A4 registry pattern 静态 parity：registry ↔ Makefile ↔ script 不可漂移。
+
+    不碰 live crontab（CI runner 上 crontab 为空），只校验声明面一致性：
+    退役链路必须 dry-run-first（无 --execute），N=14 天阈值必须显式声明，
+    registry 新增条目在安装前必须保持 proposed/declared_only（否则
+    scheduler-compile --check 会报 drift）。
+    """
+
+    REPO_ROOT = Path(__file__).resolve().parents[3]
+
+    def _recipe_lines(self, target: str) -> list[str]:
+        lines = (self.REPO_ROOT / "Makefile").read_text(encoding="utf-8").splitlines()
+        recipe: list[str] = []
+        in_target = False
+        for ln in lines:
+            if in_target:
+                if ln.startswith("\t"):
+                    recipe.append(ln)
+                else:
+                    break
+            elif ln.startswith(target + ":"):
+                in_target = True
+        return recipe
+
+    def _registry_block(self, job_name: str) -> str:
+        text = (self.REPO_ROOT / ".omo" / "cron" / "registry.yaml").read_text(encoding="utf-8")
+        start = text.find(f"- name: {job_name}")
+        assert start != -1, f"registry 缺少条目 {job_name}"
+        nxt = text.find("\n  - name: ", start)
+        return text[start:nxt if nxt != -1 else len(text)]
+
+    def test_retire_target_is_dry_run_first(self):
+        recipe = self._recipe_lines("worktree-hygiene-retire")
+        assert recipe, "Makefile 缺少 worktree-hygiene-retire 目标"
+        body = "\n".join(recipe)
+        assert "worktree-hygiene-audit.py" in body
+        assert "--stale-days 14" in body, "退役阈值必须显式声明 N=14"
+        assert "--execute" not in body, "退役步骤必须 dry-run-first，禁止 --execute"
+
+    def test_daily_target_is_dry_run_first(self):
+        recipe = self._recipe_lines("worktree-hygiene")
+        assert recipe, "Makefile 缺少 worktree-hygiene 目标"
+        body = "\n".join(recipe)
+        assert "worktree-hygiene-audit.py" in body
+        assert "--execute" not in body, "日检必须 dry-run-first，禁止 --execute"
+
+    def test_registry_retire_entry_is_proposed(self):
+        block = self._registry_block("worktree-retire-14d-weekly")
+        assert "make worktree-hygiene-retire" in block
+        assert "status: proposed" in block
+        assert "reality: declared_only" in block
+
+    def test_registry_daily_entry_links_makefile_target(self):
+        block = self._registry_block("worktree-hygiene-daily")
+        assert "make worktree-hygiene" in block
+        assert self._recipe_lines("worktree-hygiene"), "registry 引用的 make 目标不存在"
+
+    def test_script_default_threshold_untouched(self):
+        assert wha.STALE_DAYS == 2, "脚本默认阈值被改动会静默改变日检行为，须显式评审"
