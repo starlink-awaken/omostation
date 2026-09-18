@@ -10,14 +10,28 @@ Covered:
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENE_GRAPH = ROOT / "bin" / "ssot" / "scene-graph.py"
 JOURNEY_ENGINE = ROOT / "bin" / "ssot" / "journey-engine.py"
 CALIBRATION_ENGINE = ROOT / "bin" / "ssot" / "calibration-engine.py"
+
+
+@pytest.fixture(autouse=True)
+def isolated_db(tmp_path, monkeypatch):
+    """校准/场景状态写临时库, 绝不触碰生产 data/scene-metrics.db."""
+    prod = ROOT / "data" / "scene-metrics.db"
+    before = prod.stat().st_mtime_ns if prod.is_file() else None
+    monkeypatch.setenv("SCENE_METRICS_DB", str(tmp_path / "scene-metrics.db"))
+    yield
+    after = prod.stat().st_mtime_ns if prod.is_file() else None
+    assert before == after, "测试修改了生产校准库 data/scene-metrics.db"
 
 
 def run(*args):

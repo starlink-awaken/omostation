@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 678 # 2026-09-18 677→678: Documents 场景能力腿 doc_legs.py (#3969)
+    script_baseline: 679 # 2026-09-18 678→679: 校准库纯度守卫 check-scene-metrics-purity.py
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

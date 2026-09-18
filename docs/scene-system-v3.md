@@ -97,6 +97,36 @@ python3 bin/ssot/scene-history.py restore   # 从 L1 自愈（部分丢失亦可
 - `verify` 仅在**未检测到下跌**时刷新基线（下跌时保留旧基线，避免污染判定）
 - cron `scene-history-daily-active`（每日 03:20）
 
+#### 1.3.2 校准库纯度（2026-09-18 事故后加固）
+
+**事故**：`tests/scene_v2/test_calibration_engine.py` 用 `subprocess` 跑**生产**
+`calibration-engine.py`，`cwd=ROOT`、零隔离 → 夹具 `scene_id` 直接写进生产校准库。
+实测 `data/scene-metrics.db`：48 条 execution 有 37 条是夹具，其中 `gate-test-scene`
+累积 35 条样本，`check-gates --target-level supervised` 返回 **`eligible: true`**
+——**测试夹具伪装成晋升证据**，违反"真实数据"约束。
+
+两条防线：
+
+1. **DB 路径可注入** — `calibration-engine.py` 读 `SCENE_METRICS_DB` 环境变量
+   （`_default_db_path()` 单点解析，收敛原 3 处硬编码）；未设时默认仍是
+   `data/scene-metrics.db`。所有 `tests/scene_v2/*` 用 autouse fixture 指向临时库，
+   并断言生产库 mtime 不变（防回退）。
+2. **纯度守卫** — `bin/gac/check-scene-metrics-purity.py`
+
+```bash
+python3 bin/gac/check-scene-metrics-purity.py           # 报告 (夹具 → exit 1)
+python3 bin/gac/check-scene-metrics-purity.py --purge --yes   # 清理 (先自动备份)
+```
+
+两个信号（复用既有真值源，不另立规则集）：
+
+| 信号 | 判据 | 处理 |
+|---|---|---|
+| 夹具 ID | 显式 denylist（实证来源）+ 通用夹具模式 | **exit 1**（硬失败） |
+| 未注册 ID | 不在 `.omo/_truth/scenarios/v3/` 的 `scene_id` 集合内 | 报告（夹具？改名遗留？） |
+
+CI 无 `data/`（gitignored）→ 本检查天然跳过，面向本地/ops。
+
 ### 1.4 场景图 (Scene Graph)
 
 `bin/ssot/scene-graph.py`

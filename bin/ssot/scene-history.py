@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sqlite3
 import sys
@@ -34,9 +35,18 @@ from pathlib import Path
 from typing import Any
 
 _ROOT = Path(__file__).resolve().parents[2]
-DB_PATH = _ROOT / "data" / "scene-metrics.db"
-EXPORT_DIR = _ROOT / ".omo" / "_knowledge" / "scene-history"
-BACKUP_DIR = _ROOT / "runtime" / "backups"
+
+
+def _env_path(name: str, default: Path) -> Path:
+    """环境变量覆盖路径（测试隔离 / ops 迁移用）."""
+    value = os.environ.get(name)
+    return Path(value).expanduser().resolve() if value else default
+
+
+DB_PATH = _env_path("SCENE_METRICS_DB", _ROOT / "data" / "scene-metrics.db")
+EXPORT_DIR = _env_path("SCENE_HISTORY_EXPORT_DIR",
+                       _ROOT / ".omo" / "_knowledge" / "scene-history")
+BACKUP_DIR = _env_path("SCENE_HISTORY_BACKUP_DIR", _ROOT / "runtime" / "backups")
 BASELINE_PATH = EXPORT_DIR / "baseline.json"
 BACKUP_KEEP = 14
 # 下跌告警阈值: 行数低于基线的该比例即视为异常
