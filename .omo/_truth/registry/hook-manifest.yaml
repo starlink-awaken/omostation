@@ -10,6 +10,13 @@ description: "Hook 检查清单 — 声明式注册表"
 pre-commit:
   description: "提交前快速检查 (<5s)"
   checks:
+    - id: main-workspace-commit
+      script: "bin/gac/check-main-workspace-commit.py"
+      blocking: true
+      timeout: 3
+      description: "主工作区只读: 非 main 分支上提交即拦截 (隔离用 worktree)"
+      fix: "bash bin/gac/gac-worktree.sh claim <session> 然后在该 worktree 提交; 确需绕过: GAC_ALLOW_MAIN_WORKSPACE_COMMIT=1 git commit"
+
     - id: clone-guard
       script: "bin/gac/agent-clone.py guard --workspace $ROOT --json"
       blocking: true
