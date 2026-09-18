@@ -1,3 +1,4 @@
+schema_version: scene-card/v1
 schema: scene-card/v3
 scene_id: scene-knowledge-curation
 version: 3.0.0
@@ -6,11 +7,11 @@ description: 将工作中产生的知识 (公文经验/工程实践/会议洞察
 scene_class: business
 scene_type: external_resource
 domain: work
-lifecycle: supervised
-activation: active
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: business-governance
-approval_state: pending_business_confirmation
+approval_state: confirmed
 bet: BET-Y1Q1-T3-01
 runtime:
   journey_ref: capture-to-retrieval
@@ -61,3 +62,5 @@ sample_refs:
 - vault://redacted/knowledge-curation/sample-1
 - vault://redacted/knowledge-curation/sample-2
 - vault://redacted/knowledge-curation/sample-3
+notes:
+- Transitioned supervised→routine at 2026-09-18T08:13:52.223258+00:00 by governance-agent

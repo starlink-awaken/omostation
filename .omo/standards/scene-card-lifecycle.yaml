@@ -3,7 +3,24 @@
 # 5-level lifecycle for all scene cards, aligned with project-strategy-v1.
 #
 # SSOT: .omo/standards/scene-card-lifecycle.yaml
-# Version: 1.0.0 | 2026-08-31
+# Version: 1.1.0 | 2026-09-18
+# Change (T7 calibration fallback, BET-Y1Q4-T7): reconcile the three
+# competing demotion rules into ONE canonical rule below (see `demotion:`).
+# - cruiser.py: single-shot calibration < 0.5 → demote one level ✅ ADOPTED
+# - calibration-engine.py: < 0.5 (n ≥ 10) → demote_to_shadow plus
+#   < 0.6 (n ≥ 30) → demote_to_shadow ❌ REJECTED (medium trigger sits
+#   exactly on the 0.6 promotion gate → promote/demote oscillation;
+#   hardcoded demote_to_shadow skips levels, e.g. supervised should fall
+#   back to assisted, not shadow)
+# - retro BET-Y3H1-T7-03 Q5: 3 consecutive calibrations < 0.4 → back to
+#   supervised ❌ REJECTED as canonical rule (document-review-specific;
+#   needs consecutive-run history the engine does not track; 0.4 floor
+#   detects decay later than 0.5). Kept as a scene-local note only.
+# Human-command gate (`human_gate:`) is load-bearing: no engine or cruiser
+# path may auto-apply a transition — every demote/promote is a proposal
+# executed only by an explicit human command
+# (scene-card-lifecycle.py transition --actor, `omo scene demote`,
+# cockpit demote). Never auto-activate.
 
 schema: scene-card-lifecycle/v1
 
@@ -27,10 +44,43 @@ lifecycle:
     description: "受信运行：主人可观察、可干预"
     order: 3
     can_execute: true
+    min_samples: 30
+    min_calibration: 0.6
   routine:
     description: "无人值守常态化运行"
     order: 4
     can_execute: true
+    min_samples: 100
+    min_calibration: 0.8
+
+# Canonical promotion gates (target level → entry bar). Engine
+# target names (assisted/supervised/routine) map here as: assisted = first
+# executable tier (shadow 3-sample in cruiser terms), supervised = 30+0.6,
+# routine = 100+0.8. supervised→routine additionally requires an explicit
+# human confirmation (needs_human), never auto-promotion.
+promotion:
+  shadow: {min_samples: 3, min_calibration: 0.0}
+  assisted: {min_samples: 30, min_calibration: 0.6}
+  supervised: {min_samples: 30, min_calibration: 0.6}
+  routine: {min_samples: 100, min_calibration: 0.8, needs_human: true}
+
+# Canonical demotion rule (ONE rule): executed tiers (assisted and above)
+# with ≥ 10 samples and a single calibration reading < 0.5 demote exactly
+# one level, as a needs_human proposal — never a silent auto-transition.
+demotion:
+  calibration_floor: 0.5
+  min_samples: 10
+  scope: ["assisted", "supervised", "routine"]
+  action: demote_one_level
+  via: needs_human
+
+# Human-command gate: every lifecycle transition requires an explicit
+# human operator command. Engines and cruisers are proposal-only.
+human_gate:
+  never_auto_activate: true
+  proposal_codes: ["demote/calibration-drop", "needs_human/routine-gate"]
+  execution_surfaces: ["scene-card-lifecycle.py transition --actor", "omo scene demote", "cockpit demote"]
+  proposal_sink: "data/scene-metrics.db scene_lifecycle_log (reason LIKE 'needs_human/%')"
 
 activation:
   preview: "仅预览，不触发"

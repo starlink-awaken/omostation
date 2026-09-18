@@ -1506,9 +1506,9 @@ def collect_workspace_hygiene() -> dict:
 
 
 def collect_ci() -> dict:
-    """CI Pipeline 健康。"""
+    """Main-branch CI pipeline health."""
     from collections import Counter
-    code, out = run(["gh", "run", "list", "--limit", "60", "--json",
+    code, out = run(["gh", "run", "list", "--branch", "main", "--limit", "60", "--json",
                      "workflowName,status,conclusion,event,createdAt,databaseId"])
     if code != 0 or not out.startswith("["):
         return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
@@ -1516,7 +1516,7 @@ def collect_ci() -> dict:
         data = json.loads(out)
     except Exception:
         return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
-    by_wf: dict[str, list[str]] = {}
+    by_wf: dict[str, list[dict]] = {}
     for r in data:
         w = r.get("workflowName", "?")
         conc = r.get("conclusion", "")
@@ -1527,15 +1527,32 @@ def collect_ci() -> dict:
             else "fail" if conc in ("failure", "startup_failure", "timed_out")
             else "other"
         )
-        by_wf.setdefault(w, []).append(status)
+        by_wf.setdefault(w, []).append({
+            "status": status,
+            "conclusion": conc,
+            "created_at": str(r.get("createdAt") or ""),
+        })
     summaries = []
-    for w, statuses in sorted(by_wf.items()):
+    for w, runs_for_workflow in sorted(by_wf.items()):
+        statuses = [item["status"] for item in runs_for_workflow]
         cc = Counter(statuses)
         total = len(statuses)
         fails = cc.get("fail", 0)
+        # A workflow is red only when its latest terminal outcome failed.
+        # Historical failures remain visible in counters, but must not keep a
+        # recovered workflow red. Cancelled runs are superseded and skipped so
+        # the prior terminal outcome decides.
+        latest_terminal = next((
+            item for item in sorted(
+                runs_for_workflow, key=lambda item: item["created_at"], reverse=True
+            )
+            if item["conclusion"] in ("success", "failure", "startup_failure", "timed_out")
+        ), None)
+        latest_status = latest_terminal["status"] if latest_terminal else "other"
         summaries.append({"workflow": w, "total": total, "pass": cc.get("pass", 0),
                           "fail": fails, "failure_rate": round(fails / total, 2) if total else 0,
-                          "health": "red" if fails > 0 else "green"})
+                          "latest": latest_status,
+                          "health": "red" if latest_status == "fail" else "green"})
     red = [s for s in summaries if s["health"] == "red"][:8]
     return {"total_runs": len(data), "workflows": len(by_wf), "red_workflows": red, "all": summaries[:20]}
 
@@ -1696,6 +1713,41 @@ def collect_closeouts() -> dict:
         except Exception:  # noqa: BLE001
             pass
     return {"closeouts": ready[:15], "total": len(ready)}
+
+
+def collect_value_evidence_validation() -> dict:
+    """Validate authority-bound value evidence without mutating the log."""
+    verifier = CODE_ROOT / "bin/ssot/value-recorder.py"
+    unavailable = {
+        "schema": "value-evidence-validation/v2",
+        "available": False,
+        "ok": False,
+        "source": str(verifier),
+    }
+    if not verifier.is_file():
+        return unavailable
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable, str(verifier), "validate",
+                "--evidence", str(ROOT / ".omo/_delivery/ingress/value-evidence.jsonl"),
+                "--baseline-dir", str(ROOT / ".omo/state/value-baselines"),
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        report = json.loads(completed.stdout)
+        if not isinstance(report, dict):
+            raise ValueError("validator root is not an object")
+        report["available"] = True
+        report["source"] = str(verifier)
+        return report
+    except Exception:  # noqa: BLE001 - observability must fail closed
+        return unavailable
+
 
 def collect_services() -> dict:
     """BOS 服务注册 + Service Keeper 状态。"""
@@ -2110,6 +2162,38 @@ def collect_metrics_kpi() -> dict:
 
     return kpi
 
+
+
+def collect_scene_calibration_fallback() -> dict:
+    """T7 校准熔断链：阈值一致性 + 人工门完整性 + 消费证据（只读）。
+
+    委托 calibration-engine.py verify（唯一真相源）；失败/缺失一律
+    fail-closed 为 UNAVAILABLE，绝不伪造 green。EMPTY（零行）是合法态。
+    """
+    import subprocess as _sp
+    verifier = CODE_ROOT / "bin" / "ssot" / "calibration-engine.py"
+    if not verifier.is_file():
+        return {"schema": "scene-calibration-fallback/v1", "available": False,
+                "verdict": "UNAVAILABLE", "error": "verifier_missing"}
+    try:
+        r = _sp.run([sys.executable, str(verifier), "verify", "--root", str(ROOT), "--json"],
+                    capture_output=True, text=True, cwd=str(ROOT), timeout=30)
+        report = json.loads(r.stdout)
+    except Exception as exc:
+        return {"schema": "scene-calibration-fallback/v1", "available": False,
+                "verdict": "UNAVAILABLE", "error": type(exc).__name__}
+    if not isinstance(report, dict) or "overall" not in report:
+        return {"schema": "scene-calibration-fallback/v1", "available": False,
+                "verdict": "UNAVAILABLE", "error": "invalid_verifier_payload"}
+    checks = report.get("checks") if isinstance(report.get("checks"), list) else []
+    proof = next((c for c in checks if isinstance(c, dict) and c.get("name") == "consumption-proof"), {})
+    return {"schema": "scene-calibration-fallback/v1", "available": True,
+            "verdict": report.get("overall", "FAIL"),
+            "threshold_agreement": next((c.get("status") for c in checks if isinstance(c, dict) and c.get("name") == "threshold-agreement"), "UNKNOWN"),
+            "human_gate": next((c.get("status") for c in checks if isinstance(c, dict) and c.get("name") == "human-gate"), "UNKNOWN"),
+            "consumption": proof.get("status", "UNKNOWN"),
+            "consumption_detail": proof.get("detail", {}),
+            "live": report.get("overall") == "PASS"}
 
 
 def collect_scene_v3() -> dict:
@@ -2750,6 +2834,13 @@ def collect_agent_visibility(payload: dict) -> dict:
     ]
     value_blockers = [str(item) for item in (panel_value.get("state_reason") or []) if item]
     qualifying = int(value_samples.get("qualifying") or 0)
+    value_validation = (
+        payload.get("value_evidence_validation")
+        if isinstance(payload.get("value_evidence_validation"), dict)
+        else {"schema": "value-evidence-validation/v2", "ok": False, "available": False}
+    )
+    if value_validation.get("ok") is not True:
+        value_blockers.append("value-evidence validation unavailable or failed")
     value_readiness = {
         "schema": "panorama-value-proof-readiness/v1",
         "status": "NOT_PROVEN",
@@ -2762,6 +2853,7 @@ def collect_agent_visibility(payload: dict) -> dict:
         "net_saved_seconds": int(value_samples.get("net_saved_seconds") or 0),
         "thresholds": value_thresholds,
         "blockers": value_blockers,
+        "validation": value_validation,
         "evidence_rule": "Only qualifying real-use records count; synthetic runs and unqualified accepted records never prove value.",
         "next_action": (
             f"Collect {max(0, 30 - qualifying)} more qualifying real-use records with a frozen baseline; do not backfill."
@@ -3022,6 +3114,7 @@ def build_payload() -> dict:
         "debt": collect_debt(),
         "workflows": collect_workflows(),
         "alerts": collect_alerts(),
+        "value_evidence_validation": collect_value_evidence_validation(),
         "deployments": collect_deployments(),
         "closeouts": collect_closeouts(),
         "services": collect_services(),
@@ -3039,6 +3132,7 @@ def build_payload() -> dict:
         "recent_events": {},   # 由 _collect_panels() 从 panel_events 单一数据源填充
         "metrics_kpi": collect_metrics_kpi(),
         "scene_v3": collect_scene_v3(),
+        "scene_calibration_fallback": collect_scene_calibration_fallback(),
         "signal_poller": collect_signal_poller(),
         "journey_executions": collect_journey_executions(),
         "remote_hygiene": collect_remote_hygiene(),
@@ -3063,9 +3157,9 @@ def build_payload() -> dict:
         "recent_features": collect_recent_features(),
     }
     payload["objective_coverage"] = collect_objective_coverage(payload)
-    payload["agent_visibility"] = collect_agent_visibility(payload)
     # logs / metrics / value 三板块真实数据（同时统合事件指标口径）
     payload.update(_collect_panels(payload))
+    payload["agent_visibility"] = collect_agent_visibility(payload)
     return payload
 
 

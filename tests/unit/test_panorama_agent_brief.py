@@ -122,6 +122,16 @@ def _payload():
                 }
             ],
         },
+        "value_evidence_validation": {
+            "schema": "value-evidence-validation/v2",
+            "available": True,
+            "ok": True,
+            "records": 2,
+            "v2_records": 0,
+            "qualifying": 0,
+            "target": 30,
+            "issues": [],
+        },
     }
 
 
@@ -160,6 +170,8 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
     assert readiness["observation_gate"]["minimum_samples"] == 1440
     assert readiness["observation_gate"]["first_three_are_diagnostic_only"] is True
     value = brief["authority"]["value_proof_readiness"]
+    assert value["validation"]["ok"] is True
+    assert value["validation"]["target"] == 30
     assert value["status"] == "NOT_PROVEN"
     assert value["available"] is True
     assert value["samples_total"] == 2
@@ -231,6 +243,50 @@ def test_agent_visibility_value_readiness_fails_closed_without_panel() -> None:
     assert value["next_action"].startswith("Collect 30 more qualifying real-use records")
 
 
+def test_agent_visibility_value_readiness_fails_closed_without_validation() -> None:
+    module = _module()
+    payload = _payload()
+    del payload["value_evidence_validation"]
+
+    readiness = module.collect_agent_visibility(payload)["authority"]["value_proof_readiness"]
+
+    assert readiness["validation"]["ok"] is False
+    assert readiness["validation"]["available"] is False
+    assert "value-evidence validation unavailable or failed" in readiness["blockers"]
+
+
+def test_value_evidence_validation_uses_runtime_paths_and_fail_closed(tmp_path, monkeypatch) -> None:
+    module = _module()
+    runtime_root = tmp_path / "workspace"
+    code_root = tmp_path / "code"
+    verifier = code_root / "bin/ssot/value-recorder.py"
+    verifier.parent.mkdir(parents=True)
+    verifier.write_text("", encoding="utf-8")
+    monkeypatch.setattr(module, "ROOT", runtime_root)
+    monkeypatch.setattr(module, "CODE_ROOT", code_root)
+
+    def fake_run(command, **kwargs):
+        assert command[1] == str(verifier)
+        assert command[2] == "validate"
+        assert command[command.index("--evidence") + 1] == str(
+            runtime_root / ".omo/_delivery/ingress/value-evidence.jsonl"
+        )
+        assert command[command.index("--baseline-dir") + 1] == str(
+            runtime_root / ".omo/state/value-baselines"
+        )
+        assert kwargs["cwd"] == runtime_root
+        assert kwargs["timeout"] == 10
+        return type("Completed", (), {"stdout": json.dumps({
+            "schema": "value-evidence-validation/v2", "ok": True
+        })})()
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    report = module.collect_value_evidence_validation()
+
+    assert report["available"] is True
+    assert report["ok"] is True
+
+
 def test_write_site_emits_data_and_agent_brief(tmp_path, monkeypatch) -> None:
     module = _module()
     out_dir = tmp_path / "dashboard"
@@ -257,3 +313,13 @@ def test_template_has_agent_brief_human_surface() -> None:
     assert 'id="ab-objectives"' in module.TEMPLATE
     assert "D.agent_visibility" in module.TEMPLATE
     assert "/agent-brief.json" in module.TEMPLATE
+
+
+def test_panel_value_is_materialized_before_agent_visibility() -> None:
+    source = SCRIPT.read_text(encoding="utf-8")
+    panel_call = source.index("payload.update(_collect_panels(payload))")
+    brief_call = source.index(
+        'payload["agent_visibility"] = collect_agent_visibility(payload)'
+    )
+
+    assert panel_call < brief_call
