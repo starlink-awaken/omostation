@@ -4,12 +4,14 @@
 1. record 路径落盘即填充 scene_calibration (真实行, 无伪造, 不依赖 cron).
 2. demote 只走人类门: _propose_demotion 写 scene_lifecycle_log 提议行,
    一级一级降, 且永不触碰场景卡文件.
-3. panorama verifier: 阈值对账 + 人类门完整性 PASS.
+3. verifier (calibration-engine verify): 阈值对账 + 人类门完整性 PASS,
+   store 行数作为消费证据.
 """
 
 from __future__ import annotations
 
 import importlib.util
+import shutil
 import sqlite3
 import sys
 from pathlib import Path
@@ -37,7 +39,7 @@ def engine(tmp_path, monkeypatch):
     return mod
 
 
-def _counts(engine, db: Path) -> tuple[int, int]:
+def _counts(db: Path) -> tuple[int, int]:
     conn = sqlite3.connect(str(db))
     cal = conn.execute("SELECT COUNT(*) FROM scene_calibration").fetchone()[0]
     log = conn.execute("SELECT COUNT(*) FROM scene_lifecycle_log").fetchone()[0]
@@ -54,7 +56,7 @@ def test_record_populates_calibration_store(engine, tmp_path) -> None:
          "token_usage": 0, "tool_calls": 1},
     )
     db = tmp_path / "data" / "scene-metrics.db"
-    cal_n, _ = _counts(engine, db)
+    cal_n, _ = _counts(db)
     assert cal_n == 1
     conn = sqlite3.connect(str(db))
     row = conn.execute(
@@ -111,14 +113,59 @@ def test_propose_demotion_hold_below_assisted(engine, tmp_path) -> None:
     )
     assert target is None
     engine._get_db().close()  # 建表以便断言 log 为空
-    _, log_n = _counts(engine, tmp_path / "data" / "scene-metrics.db")
+    _, log_n = _counts(tmp_path / "data" / "scene-metrics.db")
     assert log_n == 0
 
 
-def test_panorama_passes_on_worktree() -> None:
+def _hermetic_root(engine, tmp_path: Path) -> Path:
+    """搭一个最小可用 root: 真实 SSOT/engine + stub cruiser, 供 verify 全绿."""
+    fake = tmp_path / "fakeroot"
+    (fake / ".omo" / "standards").mkdir(parents=True)
+    shutil.copy(ROOT / ".omo" / "standards" / "scene-card-lifecycle.yaml",
+                fake / ".omo" / "standards" / "scene-card-lifecycle.yaml")
+    cruiser = fake / "projects" / "omo" / "src" / "omo" / "scene"
+    cruiser.mkdir(parents=True)
+    cruiser.joinpath("cruiser.py").write_text("_DEMOTE_CALIBRATION = 0.5\n", encoding="utf-8")
+    eng_dir = fake / "bin" / "ssot"
+    eng_dir.mkdir(parents=True)
+    shutil.copy(ROOT / "bin" / "ssot" / "calibration-engine.py",
+                eng_dir / "calibration-engine.py")
+    return fake
+
+
+def test_verify_chain_hermetic_present(engine, tmp_path, monkeypatch) -> None:
+    """verify 在隔离 root 全 PASS, 且上报 store 行数为消费证据."""
+    fake = _hermetic_root(engine, tmp_path)
+    card_dir = tmp_path / ".omo" / "_truth" / "scenarios" / "v3"
+    card_dir.mkdir(parents=True)
+    (card_dir / "s-fallback-4.yaml").write_text(
+        "scene_id: s-fallback-4\nlifecycle: supervised\n", encoding="utf-8"
+    )
+    # 用隔离 DB 喂 10 条失败执行 → 触发提议 → log 行落盘
+    monkeypatch.setattr(engine, "_DB_PATH", fake / "data" / "scene-metrics.db")
+    monkeypatch.setattr(engine, "_ROOT", tmp_path)
+    for i in range(10):
+        engine.record_execution(
+            "s-fallback-4", f"run-{i}",
+            {"status": "failed", "confidence": 0.1, "duration_ms": 5,
+             "token_usage": 0, "tool_calls": 0},
+        )
+    demo = engine.check_demotion_triggers("s-fallback-4")
+    assert demo["demote"]
+    assert engine._propose_demotion("s-fallback-4", demo["triggers"], demo["calibration"]) == "assisted"
+    result = engine.verify_chain(fake)
+    by_name = {c["name"]: c for c in result["checks"]}
+    assert by_name["threshold-agreement"]["status"] == "PASS"
+    assert by_name["human-gate"]["status"] == "PASS"
+    assert by_name["consumption-proof"]["status"] == "PRESENT"
+    assert by_name["consumption-proof"]["detail"]["human_gate_proposal_rows"] == 1
+    assert result["overall"] == "PASS"
+
+
+def test_verify_chain_on_worktree() -> None:
     """verifier 在本仓 PASS (阈值对账 + 人类门); 数据项仅作信息上报."""
-    pano = _load("scene_calibration_panorama_ut", "bin/ssot/scene-calibration-panorama.py")
-    result = pano.run_all(ROOT)
+    eng = _load("calibration_engine_repo", "bin/ssot/calibration-engine.py")
+    result = eng.verify_chain(ROOT)
     by_name = {c["name"]: c for c in result["checks"]}
     assert by_name["threshold-agreement"]["status"] == "PASS"
     assert by_name["human-gate"]["status"] == "PASS"
