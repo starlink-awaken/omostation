@@ -157,6 +157,52 @@ def test_admission_verifiers_use_code_root_but_runtime_root_cwd(
         assert cwd == runtime_root
 
 
+def test_multica_gate_budgets_full_readonly_matrix_and_bypasses_hosts(
+    tmp_path, monkeypatch
+) -> None:
+    module = _module()
+    runtime_root = tmp_path / "runtime"
+    code_root = tmp_path / "code"
+    verifier = code_root / "bin/gac/multica-as0-verify.py"
+    verifier.parent.mkdir(parents=True)
+    verifier.touch()
+    monkeypatch.setattr(module, "ROOT", runtime_root)
+    monkeypatch.setattr(module, "CODE_ROOT", code_root)
+    monkeypatch.setenv("NO_PROXY", "internal.example")
+    monkeypatch.setenv("no_proxy", "internal.example")
+    seen = {}
+
+    def fake_run(command, **kwargs):
+        seen["command"] = command
+        seen.update(kwargs)
+        return type(
+            "Completed",
+            (),
+            {
+                "stdout": json.dumps({
+                    "ok": True,
+                    "api": {"passed": 30, "total": 30},
+                    "topology": {"passed": 7, "total": 7},
+                    "trust": {"passed": 3, "total": 3},
+                })
+            },
+        )()
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    report = module.collect_a7_gate()
+
+    assert report["verdict"] == "PASS"
+    assert module.MULTICA_AS0_TIMEOUT_S >= 240
+    assert seen["timeout"] == module.MULTICA_AS0_TIMEOUT_S
+    assert seen["cwd"] == runtime_root
+    for key in ("NO_PROXY", "no_proxy"):
+        hosts = seen["env"][key].split(",")
+        assert "internal.example" in hosts
+        assert "multica.ai" in hosts
+        assert ".multica.ai" in hosts
+
+
 def test_code_root_health_reports_synced_and_stale(tmp_path, monkeypatch) -> None:
     module = _module()
     runtime_root = tmp_path / "runtime"

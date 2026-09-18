@@ -33,6 +33,8 @@ CODE_ROOT = (
 )
 OUT_DIR = ROOT / "runtime" / "dashboard"
 DATA_JSON = OUT_DIR / "data.json"
+MULTICA_AS0_TIMEOUT_S = 300
+MULTICA_AS0_DIRECT_HOSTS = ("multica.ai", ".multica.ai", "127.0.0.1", "localhost")
 AGENT_BRIEF_JSON = OUT_DIR / "agent-brief.json"
 INDEX_HTML = OUT_DIR / "index.html"
 
@@ -290,12 +292,28 @@ def collect_a7_gate() -> dict:
             "detail": "Multica AS0 verifier missing", "live": False,
             "depends_on": ["A8"],
         }
+
+    # Multica reads up to 40 sequential APIs.  Host bypass is injected without
+    # changing other proxy settings so local policy stays explicit and the full
+    # read-only matrix stays under one collector budget.
+    verifier_env = os.environ.copy()
+    for key in ("NO_PROXY", "no_proxy"):
+        hosts = [item.strip() for item in verifier_env.get(key, "").split(",") if item.strip()]
+        hosts.extend(MULTICA_AS0_DIRECT_HOSTS)
+        verifier_env[key] = ",".join(dict.fromkeys(hosts))
     try:
         completed = subprocess.run(
             [sys.executable, str(verifier), "--json"],
-            cwd=ROOT, capture_output=True, text=True, timeout=90, check=False,
+            cwd=ROOT, capture_output=True, text=True,
+            env=verifier_env, timeout=MULTICA_AS0_TIMEOUT_S, check=False,
         )
         report = json.loads(completed.stdout)
+    except subprocess.TimeoutExpired:
+        return {
+            "id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED",
+            "detail": f"Multica AS0 verifier timeout after {MULTICA_AS0_TIMEOUT_S}s",
+            "live": False, "depends_on": ["A8"],
+        }
     except Exception:  # noqa: BLE001 - missing/unreachable adapter stays not admitted
         return {
             "id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED",
