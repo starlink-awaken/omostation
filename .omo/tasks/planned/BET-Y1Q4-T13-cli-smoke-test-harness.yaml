@@ -3,7 +3,7 @@ track: T13-OBSERVABILITY
 window: Y1Q4
 title: Cockpit CLI 106 命令 smoke test 接入 Harness — 每 6h 周期化监控
 priority: P2
-status: candidate
+status: done
 goal: '把批次 7 写的 106 命令 smoke test 脚本接入 Harness cron (每 6h), 保证命令可用性 regression 立即被发现。
 
   '
@@ -26,6 +26,11 @@ risk:
 task_type: bet
 owner: human
 source: manual
+completed_at: '2026-09-18'
+evidence:
+- .omo/cron/registry.yaml
+- bin/_registry/scripts/governance/cli-availability-probe.yaml
+- docs/reports/cli-smoke-test-harness-rollout.md
 assigned_to: null
 dispatch_id: null
 run_ref: null
