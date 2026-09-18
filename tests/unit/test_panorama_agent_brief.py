@@ -59,6 +59,17 @@ def _payload():
             "by_lifecycle": {"active": 1, "proposed": 1},
             "recent": [],
         },
+        "role_registry": {
+            "schema": "panorama-role-registry/v1",
+            "available": True,
+            "verdict": "PASS",
+            "total": 2,
+            "by_state": {"admitted": 2},
+            "integrity_ok": True,
+            "records": [
+                {"role_id": "role:alpha", "admission_state": "admitted", "version": 2, "capabilities": ["semantic.plan"]}
+            ],
+        },
         "alerts": {
             "total": 1,
             "high": 1,
@@ -99,6 +110,10 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
         {"id": "TASK-A", "buckets": ["active", "planned"]}
     ]
     assert brief["work_state"]["services"]["by_lifecycle"] == {"active": 1, "proposed": 1}
+    assert brief["health"]["persistent_roles"]["total"] == 2
+    assert brief["health"]["persistent_roles"]["admitted"] == 2
+    assert brief["health"]["persistent_roles"]["integrity_ok"] is True
+    assert brief["role_registry"]["schema"] == "panorama-role-registry/v1"
     assert brief["work_state"]["alerts"]["high"] == 1
     action_ids = {action["id"] for action in brief["next_actions"]}
     assert {"claims-authority-wait", "plan-candidate-bets", "triage-high-alerts"} <= action_ids
