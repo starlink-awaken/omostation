@@ -1,7 +1,6 @@
 import importlib.util
 import json
 from pathlib import Path
-
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "bin/ssot/value-recorder.py"
 
@@ -120,4 +119,3 @@ def test_validate_evidence_reports_missing_baseline_binding(tmp_path) -> None:
 
     assert report["ok"] is False
     assert report["issues"] == [{"line": "1", "reason": "baseline digest binding mismatch"}]
-
