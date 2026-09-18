@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 677 # 2026-09-18 676→677: 全仓无界网络调用审计 timeout-audit.py (#3934/#3937 收口, advisory)
+    script_baseline: 678 # 2026-09-18 677→678: Documents 场景能力腿 doc_legs.py (#3969)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
