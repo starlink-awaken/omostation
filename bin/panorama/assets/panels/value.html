@@ -1,0 +1,94 @@
+<style>
+.zx-v-banner{display:flex;gap:14px;align-items:flex-start;padding:15px 18px;border-radius:11px;border:1px solid #f3d6a0;background:linear-gradient(180deg,#fffaf0,#fff);margin-top:14px}
+.zx-v-banner .zx-v-badge{font:700 11px/1 var(--mono);letter-spacing:1px;padding:6px 11px;border-radius:7px;background:#f59e0b;color:#fff;white-space:nowrap}
+.zx-v-banner h3{margin:0 0 5px;font-size:14px}
+.zx-v-banner ul{margin:0;padding-left:17px;font-size:11.5px;color:#5b7690;line-height:1.75}
+.zx-v-loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(166px,1fr));gap:11px;margin-top:12px}
+.zx-v-stage{border:1px solid var(--line);border-radius:10px;padding:12px 13px;background:#fff;position:relative;overflow:hidden}
+.zx-v-stage.nodata{border-style:dashed;background:#fcfdfe}
+.zx-v-stage .zx-v-n{font:600 10px var(--mono);color:#9aabbd;letter-spacing:.6px}
+.zx-v-stage .zx-v-name{font-size:12.5px;font-weight:600;margin:2px 0 7px}
+.zx-v-stage .zx-v-count{font:600 23px/1.1 var(--mono)}
+.zx-v-stage .zx-v-src{font-size:9.5px;color:var(--muted);margin-top:6px;word-break:break-all;line-height:1.5}
+.zx-v-stage .zx-v-edge{position:absolute;left:0;top:0;bottom:0;width:3px}
+.zx-v-thr{display:flex;flex-direction:column;gap:11px}
+.zx-v-thr-row{font-size:11.5px}
+.zx-v-thr-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:4px;align-items:baseline}
+.zx-v-thr-track{height:7px;border-radius:4px;background:#eef2f7;overflow:hidden;position:relative}
+.zx-v-thr-track>i{display:block;height:100%;border-radius:4px;transition:width .3s}
+.zx-v-thr-note{font-size:9.5px;color:#a26a05;margin-top:3px}
+.zx-v-grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media(max-width:900px){.zx-v-grid2{grid-template-columns:1fr}}
+.zx-v-ev{padding:8px 0;border-bottom:1px solid #f4f7fb;font-size:11.5px}
+.zx-v-ev:last-child{border-bottom:0}
+.zx-v-ev .zx-v-evtop{display:flex;justify-content:space-between;gap:8px}
+.zx-v-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.zx-v-card>h3{margin:0 0 10px;font-size:13px}
+.zx-chip{font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:var(--muted);font-weight:600}
+.zx-chip.ok{background:rgba(16,185,129,.12);color:#0b8a63}
+.zx-chip.warn{background:rgba(245,158,11,.14);color:#a26a05}
+.zx-chip.err{background:rgba(239,68,68,.12);color:#c33}
+.zx-chip.dim{background:#f1f5f9;color:#8296a8}
+.zx-v-guard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.zx-v-guard>div{border-left:2px solid var(--line);padding-left:11px}
+.zx-v-guard h3{margin:0 0 5px;font-size:12px}
+.zx-v-guard p{margin:0;font-size:11px;color:#5b7690;line-height:1.65}
+.zx-nodata{padding:20px 10px;text-align:center;color:var(--muted);font-size:11.5px}
+.zx-nodata .zx-state{display:inline-block;margin-bottom:5px;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#8296a8}
+</style>
+<section id="value" class="section zx-panel" aria-labelledby="title-value">
+<div class="section-breadcrumb">
+  <span>📍 价值中枢</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#metrics">指标度量</a>
+  <a href="#logs">事件流</a>
+  <a href="#health">健康诊断</a>
+</div>
+<div class="section-head">
+  <div class="eyebrow"><span class="eyebrow-text">P-VALUE · 价值中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Outcomes &amp; Acceptance</span></div>
+  <h1 id="title-value">成果被采用，才开始证明价值</h1>
+  <p class="lead">交付、稳定运行与个人价值分别验收。所有计数均来自真实证据文件；样本不足时保持 NOT_PROVEN。</p>
+</div>
+
+<div class="zx-v-banner">
+  <span class="zx-v-badge" id="zx-v-badge">NOT_PROVEN</span>
+  <div style="flex:1">
+    <h3 id="zx-v-state-title">价值尚未证明</h3>
+    <ul id="zx-v-reasons"><li>加载中…</li></ul>
+  </div>
+</div>
+
+<div class="zx-v-grid2" style="margin-top:14px">
+  <div class="zx-v-card">
+    <h3>💎 五阶段价值回路 <span class="zx-chip dim" id="zx-v-loop-chip">—</span></h3>
+    <div class="zx-v-loop" id="zx-v-stages"></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:10px">实线=有真实计数；虚线=该阶段暂无数据（NO_DATA），非 0 伪装。</div>
+  </div>
+  <div class="zx-v-card">
+    <h3>🎯 验收门槛进度（Golden Slice）</h3>
+    <div class="zx-v-thr" id="zx-v-thr"></div>
+  </div>
+</div>
+
+<div class="zx-v-grid2" style="margin-top:14px">
+  <div class="zx-v-card">
+    <h3>🧾 价值证据时间线 <span class="zx-chip dim" id="zx-v-ev-chip">—</span></h3>
+    <div id="zx-v-evidence"></div>
+  </div>
+  <div class="zx-v-card">
+    <h3>🏁 最终愿景门槛</h3>
+    <div class="zx-v-thr" id="zx-v-vision"></div>
+  </div>
+</div>
+
+<div class="zx-v-card" style="margin-top:14px">
+  <h3>🛡️ 证据怎么防止被美化</h3>
+  <div class="zx-v-guard">
+    <div><h3>冻结口径</h3><p>分母、样本分区、baseline、metric version 和场景范围在窗口开始前冻结；未冻结的项（如修订负担基线）一律显示 UNKNOWN，不允许事后回填。</p></div>
+    <div><h3>排除无效样本</h3><p>测试、合成、无 HumanVerdict 绑定或重复样本独立分区。<code>qualifying=false</code> 的记录计入总量但不进入价值门。</p></div>
+    <div><h3>失败保持可见</h3><p>缺失与过期标记为未知；替代必须证明覆盖等价，保留原失败历史。比率型指标在样本不足时判为不可判定，不显示达标。</p></div>
+  </div>
+</div>
+</section>

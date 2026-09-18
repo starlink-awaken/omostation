@@ -1,0 +1,95 @@
+<style>
+.zx-m-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.zx-m-kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative}
+.zx-m-kpi .zx-m-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.zx-m-kpi .zx-m-v{font:600 21px/1.15 var(--mono);letter-spacing:-.5px}
+.zx-m-kpi .zx-m-u{font-size:10px;color:var(--muted);margin-left:3px;font-family:var(--mono)}
+.zx-m-kpi .zx-m-l{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.3px}
+.zx-m-kpi .zx-m-d{font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px;white-space:nowrap}
+.zx-m-kpi .zx-m-d.up{color:#0b8a63;background:rgba(16,185,129,.12)}
+.zx-m-kpi .zx-m-d.down{color:#c33;background:rgba(239,68,68,.12)}
+.zx-m-kpi .zx-m-d.flat{color:#8296a8;background:#f1f5f9}
+.zx-m-kpi .zx-m-spark{margin-top:8px}
+.zx-m-kpi svg{display:block;width:100%;height:26px}
+.zx-m-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.zx-m-card>h3{margin:0 0 10px;font-size:13px;display:flex;align-items:center;gap:8px}
+.zx-m-2col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media(max-width:900px){.zx-m-2col{grid-template-columns:1fr}}
+.zx-trend-wrap{position:relative}
+.zx-trend-ctl{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.zx-trend-ctl button{font-size:11px;padding:3px 10px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;color:#5b7690}
+.zx-trend-ctl button.active{background:var(--zx-blue,#3a64b3);border-color:var(--zx-blue,#3a64b3);color:#fff}
+.zx-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:10.5px;color:var(--muted)}
+.zx-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.zx-legend label{display:inline-flex;align-items:center;cursor:pointer;user-select:none}
+.zx-legend input{margin-right:3px}
+.zx-nodata{padding:22px 10px;text-align:center;color:var(--muted);font-size:11.5px}
+.zx-nodata .zx-state{display:inline-block;margin-bottom:5px;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#8296a8}
+.zx-cov{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6}
+.zx-cov code{font:9.5px var(--mono);color:#7a8fa3}
+</style>
+<section id="metrics" class="section zx-panel" aria-labelledby="title-metrics">
+<div class="section-breadcrumb">
+  <span>📍 指标度量</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#value">价值中枢</a>
+  <a href="#gov">门禁状态</a>
+  <a href="#logs">事件流</a>
+  <a href="#swarm">Agent 协同</a>
+</div>
+<div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
+  <div>
+    <div class="eyebrow"><span class="eyebrow-text">KPI · 度量看板</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Metrics Dashboard</span></div>
+    <h1 id="title-metrics">指标度量</h1>
+    <p class="lead" style="margin-bottom:0">全部序列由真实日志现场聚合（refresh.jsonl · 常驻心跳 · Agent 心跳 · 事件源），无合成波形。</p>
+  </div>
+  <div id="zx-m-fresh" style="font-size:11px;color:var(--muted)"></div>
+</div>
+
+<div id="zx-m-kpis" class="zx-m-kpis" style="margin-top:14px"></div>
+
+<div class="zx-m-2col" style="margin-top:14px">
+  <div class="zx-m-card">
+    <h3>🧭 五维健康度雷达</h3>
+    <div style="display:flex;justify-content:center"><div id="zx-m-radar"></div></div>
+    <div id="zx-m-radar-legend" style="margin-top:10px"></div>
+  </div>
+  <div class="zx-m-card">
+    <h3>📊 事件来源分布（24h 窗口）</h3>
+    <div id="zx-m-sources"></div>
+    <div id="zx-m-src-note" class="zx-cov"></div>
+  </div>
+</div>
+
+<div class="zx-m-card" style="margin-top:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+    <h3 style="margin:0">📈 趋势分析 <span class="zx-chip dim" id="zx-m-range-chip">—</span></h3>
+    <div class="zx-trend-ctl" id="zx-m-ranges"></div>
+  </div>
+  <div class="zx-trend-wrap" id="zx-m-trend"></div>
+  <div class="zx-legend" id="zx-m-legend"></div>
+  <div class="zx-cov" id="zx-m-coverage"></div>
+</div>
+
+<div class="zx-m-card" style="margin-top:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <h3 style="margin:0">⚡ Agent 效率矩阵</h3>
+    <select id="zx-m-sort" style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:11px">
+      <option value="activity">按活跃度</option>
+      <option value="events">按事件数</option>
+      <option value="name">按名称</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto"><table class="zx-table" id="zx-m-matrix"></table></div>
+</div>
+
+<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+  <a href="#logs" class="related-link">📋 查看详细事件流</a>
+  <a href="#gov" class="related-link">🛡️ 查看门禁状态</a>
+  <a href="#swarm" class="related-link">🤖 查看 Agent 协同</a>
+  <a href="#value" class="related-link">💎 查看价值证明</a>
+  <a href="#health" class="related-link">🏥 查看健康诊断</a>
+</div>
+</section>
