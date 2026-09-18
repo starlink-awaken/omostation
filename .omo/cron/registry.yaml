@@ -172,6 +172,23 @@ jobs:
     sfop_slot: S
     reconciliation_note: worktree 卫生日检 (每日 04:00)，已在 crontab -l 运行，补齐登记。
 
+  - name: worktree-retire-14d-weekly
+    schedule: "30 7 * * 1"
+    command: 'cd "$HOME/Workspace" && make worktree-hygiene-retire >> runtime/cron/worktree-hygiene.log 2>&1'
+    planes: [crontab]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      GOVERNANCE.md stale worktree retirement (N=14 天闲置, #3864 docs-only)
+      的自动化落点：--stale-days 14 + dry-run 只报告不删除（无 --execute，
+      归档 diff 后再删仍走人工标准释放流程），语义与 worktree-hygiene-daily
+      一致。declared_only + proposed，按 D4 惯例不进 scheduler-compile
+      drift 校验；正式启用（安装 crontab）需单独决定，启用时把本条翻为
+      installed/active 并同步安装，登记与安装同改以杜绝 TASK-B3229A65
+      式 double-write 漂移。
+
   - name: worktree-prune-daily
     schedule: "30 4 * * *"
     command: 'cd "$HOME/Workspace" && make worktree-prune >> runtime/cron/branch-prune.log 2>&1'

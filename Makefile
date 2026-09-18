@@ -318,6 +318,8 @@ submodule-pointer-transaction:
 hygiene-worktree: worktree-hygiene
 worktree-hygiene:  ## worktree 卫生审计与自动清理
 	python3 bin/gac/worktree-hygiene-audit.py --auto-clean --fail-on-unsafe
+worktree-hygiene-retire:  ## N=14 天闲置 worktree 退役候选报告 (GOVERNANCE.md, dry-run 只报告不删除)
+	python3 bin/gac/worktree-hygiene-audit.py --auto-clean --fail-on-unsafe --stale-days 14
 
 hygiene-audit: worktree-audit
 worktree-audit:  ## 列出可清理的冗余分支
