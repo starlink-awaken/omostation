@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-04
+last_updated: 2026-09-17
 ---
 
 # AGENTS.md — Workspace Development Guide
@@ -30,6 +30,9 @@ last_updated: 2026-09-04
 5. For governed state, use OMO/C2G brokers instead of direct `.omo` writes.
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
 7. All local/edge LLM inference MUST route through **AetherForge (`bos://compute/aetherforge/infer`)**.
+8. Check the Panorama Agent Brief before choosing work: `runtime/dashboard/agent-brief.json`
+   (human page: Panorama → Agent Brief). It is a read-only aggregation of authority, gates,
+   unfinished work, alerts, next actions, read interfaces, and safety boundaries.
 
 ### Key SSOT Registries
 
