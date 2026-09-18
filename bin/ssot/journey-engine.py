@@ -371,6 +371,11 @@ def _execute_action(action, state_def, ctx) -> dict:
                   "verify_basis", "record_decision"):
         return _execute_doc_review_action(action, ctx)
 
+    # 2c. Documents 场景能力腿 (43 个 scene-documents-*):
+    # process / record_result 此前落到默认分支, 静默成功但不产出值.
+    if action in ("process", "record_result"):
+        return _execute_doc_legs_action(action, ctx)
+
     # 3. iris connector actions (e.g., action: "iris_list_apple_mail")
     if action.startswith("iris_list_"):
         connector = action.replace("iris_list_", "")
@@ -708,3 +713,39 @@ def _migrate_cards(args) -> int:
     print(f"Total migrated: {migrated}"); return 0
 
 if __name__ == "__main__": raise SystemExit(main())
+
+
+def _doc_legs_module():
+    """惰性加载能力腿模块 (与 journey-engine 同目录)."""
+    import importlib.util
+    path = Path(__file__).with_name("doc_legs.py")
+    spec = importlib.util.spec_from_file_location("doc_legs", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["doc_legs"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _execute_doc_legs_action(action: str, ctx) -> dict:
+    """Documents 场景能力腿执行."""
+    try:
+        dl = _doc_legs_module()
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "partial", "action": action, "error": str(exc)[:200]}
+
+    if action == "process":
+        result = dl.process_document(ctx.signal or {}, dry_run=ctx.dry_run)
+        ctx.variables["doc_process_result"] = result
+        return {"status": result.get("status", "partial"), "action": action,
+                "checks": result.get("checks"), "passed": result.get("passed"),
+                "issues": [i.get("kind") for i in result.get("issues", [])]}
+
+    # record_result
+    ctx.variables.setdefault("scene_id", ctx.scene_id)
+    ctx.variables.setdefault("run_id", ctx.run_id)
+    result = dl.record_result(ctx.variables, dry_run=ctx.dry_run)
+    return {"status": result.get("status", "partial"), "action": action,
+            "record": result.get("record")}
+
