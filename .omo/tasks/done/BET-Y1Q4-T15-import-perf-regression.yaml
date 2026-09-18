@@ -3,7 +3,7 @@ track: T15-PERFORMANCE
 window: Y1Q4
 title: cockpit import 性能回归 (164ms > 120ms 预算) 排查
 priority: P2
-status: candidate
+status: done
 goal: '批次 12 全量测试发现 test_import_time_budget 失败: import cockpit.cli 实际 164ms, 预算 120ms。
   历史基线 60ms (PR 061b683 feat(cli): cold-start fast-path)。 退化 104ms, 需要找根因 (新增 import?
   同步代码路径? 慢 lookup?)
@@ -25,6 +25,9 @@ appetite: 1 day
 task_type: bet
 owner: human
 source: manual
+completed_at: '2026-09-18'
+evidence:
+- docs/reports/2026-09-18-cockpit-import-performance-recheck.md
 assigned_to: null
 dispatch_id: null
 run_ref: null
