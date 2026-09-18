@@ -28,7 +28,6 @@ import errno
 import hashlib
 import json
 import os
-import pwd
 import re
 import shutil
 import subprocess
@@ -39,6 +38,16 @@ import warnings
 from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
+
+try:  # MEDIUM: pwd is POSIX-only; Windows/embedded runtimes lack it.
+    import pwd
+except ImportError:  # pragma: no cover - platform boundary
+    pwd = None  # type: ignore[assignment]
+
+try:  # MEDIUM: tomllib is 3.11+; older runtimes use the text-scan fallback.
+    import tomllib
+except ImportError:  # pragma: no cover - interpreter boundary
+    tomllib = None  # type: ignore[assignment]
 
 SCHEMA_MANIFEST = "agent-clone-manifest/v1"
 SCHEMA_MANIFEST_ATTEMPT = "agent-clone-manifest/v2"
@@ -60,7 +69,68 @@ IDENTITY_FILENAME = "agent-clone-identity.json"
 READINESS_FILENAME = "agent-clone-readiness.json"
 PROVENANCE_FILENAME = "agent-clone-provenance.json"
 CLAIMS_AUTHORITY_POLICY = ".omo/_truth/registry/swarm-coordination.yaml"
-ACCOUNT_WORKSPACE_ROOT = Path(pwd.getpwuid(os.getuid()).pw_dir) / "Workspace"
+
+
+def _env_timeout_seconds(name: str, default: float) -> float:
+    """Read a timeout override from the environment without ever raising."""
+    try:
+        value = float(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+    return value if value > 0 else default
+
+
+# HIGH-1: every subprocess git invocation carries an explicit timeout so a
+# hung network endpoint (ls-remote/clone/fetch) or a wedged local git cannot
+# block an agent worker forever.  Both budgets are parameterizable via env
+# without changing call sites.
+GIT_TIMEOUT_LOCAL_SECONDS = _env_timeout_seconds("AGENT_CLONE_GIT_LOCAL_TIMEOUT", 30.0)
+GIT_TIMEOUT_NETWORK_SECONDS = _env_timeout_seconds("AGENT_CLONE_GIT_NETWORK_TIMEOUT", 60.0)
+# MEDIUM: best-effort uv reinstall per package; a stale local path wheel must
+# not stall clone publication longer than this per package.
+UV_REINSTALL_TIMEOUT_SECONDS = _env_timeout_seconds("AGENT_CLONE_UV_TIMEOUT", 120.0)
+
+
+_account_home_cache: str | None = None
+
+
+def account_home() -> str:
+    """OS-account home directory, resolved once and cached.
+
+    MEDIUM: pwd.getpwuid runs only on first use (never at import), and any
+    POSIX lookup failure (KeyError/OSError) or missing pwd module falls back
+    to Path.home() so Windows/container runtimes keep working.
+    """
+    global _account_home_cache
+    if _account_home_cache is not None:
+        return _account_home_cache
+    try:
+        if pwd is not None:
+            _account_home_cache = pwd.getpwuid(os.getuid()).pw_dir
+            return _account_home_cache
+    except (KeyError, OSError):
+        pass
+    _account_home_cache = str(Path.home())
+    return _account_home_cache
+
+
+_account_workspace_root_cache: Path | None = None
+
+
+def account_workspace_root() -> Path:
+    """OS-account integration workspace root (~/Workspace), resolved lazily."""
+    global _account_workspace_root_cache
+    if _account_workspace_root_cache is None:
+        _account_workspace_root_cache = Path(account_home()) / "Workspace"
+    return _account_workspace_root_cache
+
+
+# Backwards-compatible eager constant: guarded so import never raises when
+# the passwd entry is missing; prefer account_workspace_root() at runtime.
+try:
+    ACCOUNT_WORKSPACE_ROOT = account_workspace_root()
+except OSError:
+    ACCOUNT_WORKSPACE_ROOT = Path.home() / "Workspace"
 AGENT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 GOVERNANCE_SUBMODULES = (
     "projects/agora",
@@ -122,19 +192,46 @@ class ToolError(Exception):
 # ---------------------------------------------------------------------------
 
 
-def git(cwd: str | None, *args: str) -> subprocess.CompletedProcess:
-    """Run git with an argv list (never a shell string)."""
+def _git_timeout_error(cmd: list[str], timeout: float) -> ToolError:
+    """Map a hung git invocation to a stable, non-retry-masked failure."""
+    return ToolError(
+        "git_timeout",
+        f"git invocation timed out after {timeout:g}s: {' '.join(cmd)}",
+        EXIT_USAGE,
+        {"argv": cmd, "timeout_seconds": timeout},
+    )
+
+
+def git(
+    cwd: str | None,
+    *args: str,
+    timeout: float | None = None,
+) -> subprocess.CompletedProcess:
+    """Run git with an argv list (never a shell string).
+
+    HIGH-1: always bounded by timeout= (default: local budget).  Pass
+    GIT_TIMEOUT_NETWORK_SECONDS explicitly for network-touching invocations
+    (ls-remote/clone/fetch/submodule-update).  A timeout surfaces as
+    ToolError("git_timeout"), never an uncaught TimeoutExpired.
+    """
     cmd = ["git"]
     if cwd is not None:
         cmd += ["-C", cwd]
     cmd += list(args)
+    budget = GIT_TIMEOUT_LOCAL_SECONDS if timeout is None else timeout
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, check=False)
+        return subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=budget)
+    except subprocess.TimeoutExpired as exc:
+        raise _git_timeout_error(cmd, budget) from exc
     except OSError as exc:
         raise ToolError("git_unavailable", f"cannot execute git: {exc}", EXIT_USAGE) from exc
 
 
-def git_isolated(cwd: str, *args: str) -> subprocess.CompletedProcess:
+def git_isolated(
+    cwd: str,
+    *args: str,
+    timeout: float | None = None,
+) -> subprocess.CompletedProcess:
     """Run an on-disk repository probe without caller repository scope.
 
     Git hooks export values such as a relative ``GIT_INDEX_FILE`` for the
@@ -143,6 +240,8 @@ def git_isolated(cwd: str, *args: str) -> subprocess.CompletedProcess:
     and index command-line overrides can similarly spoof provenance probes.
     Preserve ordinary process policy (for example global/system config
     selection and author variables), but remove only repository-scoped state.
+
+    HIGH-1: bounded by timeout= exactly like git().
     """
     env = os.environ.copy()
     for key in GIT_REPOSITORY_SCOPE_ENV:
@@ -150,14 +249,19 @@ def git_isolated(cwd: str, *args: str) -> subprocess.CompletedProcess:
     for key in list(env):
         if re.fullmatch(r"GIT_CONFIG_(?:KEY|VALUE)_\d+", key):
             env.pop(key, None)
+    cmd = ["git", "-C", cwd, *args]
+    budget = GIT_TIMEOUT_LOCAL_SECONDS if timeout is None else timeout
     try:
         return subprocess.run(
-            ["git", "-C", cwd, *args],
+            cmd,
             capture_output=True,
             text=True,
             check=False,
             env=env,
+            timeout=budget,
         )
+    except subprocess.TimeoutExpired as exc:
+        raise _git_timeout_error(cmd, budget) from exc
     except OSError as exc:
         raise ToolError("git_unavailable", f"cannot execute git: {exc}", EXIT_USAGE) from exc
 
@@ -528,22 +632,8 @@ def live_author_identity(repo_root: str) -> dict[str, str | bool]:
     }
 
 
-def extract_uv_path_dependencies(repo_root: str) -> list[str]:
-    """Extract local path dependencies from [tool.uv.sources].
-
-    Returns a list of package names that have path dependencies (e.g., ['ecos', 'agora']).
-    Returns empty list if pyproject.toml doesn't exist or has no [tool.uv.sources].
-    """
-    pyproject = os.path.join(repo_root, "pyproject.toml")
-    if not os.path.isfile(pyproject):
-        return []
-
-    try:
-        with open(pyproject, encoding="utf-8") as fh:
-            content = fh.read()
-    except OSError:
-        return []
-
+def _scan_uv_path_dependencies_fallback(content: str) -> list[str]:
+    """Legacy text scan for [tool.uv.sources]; used when tomllib is missing/invalid."""
     # Simple text parsing: find [tool.uv.sources] section and extract package names
     # Format: package_name = { path = "../xxx", editable = true }
     in_uv_section = False
@@ -566,17 +656,71 @@ def extract_uv_path_dependencies(repo_root: str) -> list[str]:
     return packages
 
 
-def reinstall_path_dependencies(clone_root: str) -> tuple[bool, str]:
+def extract_uv_path_dependencies(repo_root: str) -> list[str]:
+    """Extract local path dependencies from [tool.uv.sources].
+
+    Returns a list of package names that have path dependencies (e.g., ['ecos', 'agora']).
+    Returns empty list if pyproject.toml doesn't exist or has no [tool.uv.sources].
+
+    MEDIUM: parsed with stdlib tomllib so quoted names, compact inline
+    tables, and trailing sections are handled exactly; only entries whose
+    value is a table containing a ``path`` key are returned.  Unparseable
+    TOML (or a pre-3.11 runtime without tomllib) falls back to the legacy
+    text scan, which keeps the previous over-approximate behaviour.
+    """
+    pyproject = os.path.join(repo_root, "pyproject.toml")
+    if not os.path.isfile(pyproject):
+        return []
+
+    try:
+        with open(pyproject, "rb") as fh:
+            raw = fh.read()
+    except OSError:
+        return []
+
+    if tomllib is not None:
+        try:
+            document = tomllib.loads(raw.decode("utf-8"))
+        except (tomllib.TOMLDecodeError, ValueError, UnicodeDecodeError):
+            document = None
+        if isinstance(document, dict):
+            try:
+                sources = document["tool"]["uv"]["sources"]
+            except (KeyError, TypeError):
+                return []
+            if isinstance(sources, dict):
+                return [
+                    name
+                    for name, spec in sources.items()
+                    if isinstance(spec, dict) and "path" in spec
+                ]
+            return []
+    try:
+        content = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return []
+    return _scan_uv_path_dependencies_fallback(content)
+
+
+def reinstall_path_dependencies(
+    clone_root: str,
+    timeout: float | None = None,
+) -> tuple[bool, str]:
     """Reinstall all uv path dependencies to avoid cache staleness (E8 fix).
 
     E8: 子仓版本号未动但文件变了时 uv 不重装 (2026-08-15 实证),
     clone 后强制 reinstall 每个 path 依赖.
 
     Returns (success, message). Never raises -- this is best-effort.
+    MEDIUM: each package reinstall is bounded by timeout=
+    (default UV_REINSTALL_TIMEOUT_SECONDS); a hung or failed package is
+    recorded and the loop continues with the remaining packages, so one bad
+    path dependency cannot wedge clone creation.
     """
     packages = extract_uv_path_dependencies(clone_root)
     if not packages:
         return True, "no uv path dependencies found"
+    budget = UV_REINSTALL_TIMEOUT_SECONDS if timeout is None else timeout
 
     # 检查 uv 是否可用
     try:
@@ -586,22 +730,33 @@ def reinstall_path_dependencies(clone_root: str) -> tuple[bool, str]:
             text=True,
             check=False,
             cwd=clone_root,
+            timeout=budget,
         )
         if proc.returncode != 0:
             return False, f"uv not available (exit {proc.returncode})"
     except FileNotFoundError:
         return False, "uv command not found"
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, f"uv probe failed: {exc}"
 
     # 逐个 reinstall
     failed = []
     for pkg in packages:
-        proc = subprocess.run(
-            ["uv", "sync", "--reinstall-package", pkg],
-            capture_output=True,
-            text=True,
-            check=False,
-            cwd=clone_root,
-        )
+        try:
+            proc = subprocess.run(
+                ["uv", "sync", "--reinstall-package", pkg],
+                capture_output=True,
+                text=True,
+                check=False,
+                cwd=clone_root,
+                timeout=budget,
+            )
+        except subprocess.TimeoutExpired:
+            failed.append((pkg, f"timed out after {budget:g}s"))
+            continue
+        except OSError as exc:
+            failed.append((pkg, str(exc)[:100]))
+            continue
         if proc.returncode != 0:
             failed.append((pkg, proc.stderr.strip() or proc.stdout.strip()))
 
@@ -804,7 +959,7 @@ def origin_branch_name(revision: str) -> str | None:
 def resolve_upstream_branch(source_url: str, branch: str) -> tuple[str, str]:
     """Resolve one canonical upstream branch without mutating the source clone."""
     ref = f"refs/heads/{branch}"
-    resolved = git(None, "ls-remote", "--exit-code", source_url, ref)
+    resolved = git(None, "ls-remote", "--exit-code", source_url, ref, timeout=GIT_TIMEOUT_NETWORK_SECONDS)
     if resolved.returncode != 0:
         raise ToolError(
             "revision_checkout_failed",
@@ -825,18 +980,28 @@ def resolve_upstream_branch(source_url: str, branch: str) -> tuple[str, str]:
     return matches[0], ref
 
 
-def git_authority(*args: str) -> subprocess.CompletedProcess:
-    """Probe an authority endpoint outside any repository while retaining credentials."""
+def git_authority(*args: str, timeout: float | None = None) -> subprocess.CompletedProcess:
+    """Probe an authority endpoint outside any repository while retaining credentials.
+
+    HIGH-1: defaults to the network budget because most authority probes are
+    ls-remote; pass GIT_TIMEOUT_LOCAL_SECONDS explicitly for local-only
+    probes such as ``ls-remote --get-url`` (no network I/O).
+    """
     env = os.environ.copy()
     for key in GIT_REPOSITORY_SCOPE_ENV:
         env.pop(key, None)
     for key in list(env):
         if re.fullmatch(r"GIT_CONFIG_(?:KEY|VALUE)_\d+", key):
             env.pop(key, None)
+    cmd = ["git", *args]
+    budget = GIT_TIMEOUT_NETWORK_SECONDS if timeout is None else timeout
     try:
         return subprocess.run(
-            ["git", *args], capture_output=True, text=True, check=False, env=env, cwd=os.path.sep
+            cmd, capture_output=True, text=True, check=False, env=env, cwd=os.path.sep,
+            timeout=budget,
         )
+    except subprocess.TimeoutExpired as exc:
+        raise _git_timeout_error(cmd, budget) from exc
     except OSError as exc:
         raise ToolError("git_unavailable", f"cannot execute git: {exc}", EXIT_USAGE) from exc
 
@@ -873,7 +1038,7 @@ def reject_authority_rewrite(authority: str) -> None:
     # Git's own ``ls-remote --get-url`` is the authority for URL rewrite
     # semantics.  It exercises global policy/credential configuration but
     # performs no network operation; any changed endpoint is rejected.
-    proc = git_authority("ls-remote", "--get-url", authority)
+    proc = git_authority("ls-remote", "--get-url", authority, timeout=GIT_TIMEOUT_LOCAL_SECONDS)
     if proc.returncode != 0:
         raise ToolError("authority_rewrite_lookup_failed", proc.stderr.strip(), EXIT_POLICY)
     effective = proc.stdout.strip()
@@ -1071,7 +1236,18 @@ def verify_accelerated_clone(
 
 
 def atomic_publish_no_replace(source: str, destination: str) -> None:
-    """Atomically publish a directory without replacing a concurrent path."""
+    """Atomically publish a directory without replacing a concurrent path.
+
+    Uses renamex_np(RENAME_EXCL) on macOS and renameat2(RENAME_NOREPLACE) on
+    Linux, so a concurrent publisher racing to the same destination loses
+    with destination_collision instead of silently replacing it.
+
+    HIGH-2 platform boundary: Windows is explicitly unsupported -- Win32
+    exposes no atomic no-replace directory rename through this ctypes path,
+    so win32 (and any POSIX without renamex_np/renameat2 symbols) raises
+    ToolError("atomic_publish_unsupported").  Windows clones must use a
+    different publication strategy; do not emulate with check-then-rename.
+    """
     libc = ctypes.CDLL(None, use_errno=True)
     source_bytes = os.fsencode(source)
     destination_bytes = os.fsencode(destination)
@@ -1561,6 +1737,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
             "--heads",
             source_url,
             remote_ref,
+            timeout=GIT_TIMEOUT_NETWORK_SECONDS,
         )
     if attempt_probe.returncode == 0:
         raise ToolError(
@@ -1596,7 +1773,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
     failure = None
     cleanup_failure = None
     try:
-        proc = git(None, *clone_args)
+        proc = git(None, *clone_args, timeout=GIT_TIMEOUT_NETWORK_SECONDS)
         if proc.returncode != 0:
             raise ToolError(
                 "clone_failed",
@@ -1622,6 +1799,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                     "--no-tags",
                     revision_fetch_url,
                     source_revision_ref,
+                    timeout=GIT_TIMEOUT_NETWORK_SECONDS,
                 )
                 if fetch.returncode != 0:
                     raise ToolError(
@@ -1742,6 +1920,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                         "--init",
                         "--",
                         path,
+                        timeout=GIT_TIMEOUT_NETWORK_SECONDS,
                     )
                     if proc.returncode != 0:
                         raise ToolError(
@@ -1759,6 +1938,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                     "--init",
                     "--",
                     *initialize_paths,
+                    timeout=GIT_TIMEOUT_NETWORK_SECONDS,
                 )
                 if proc.returncode != 0:
                     raise ToolError(
@@ -1819,6 +1999,14 @@ def cmd_create(args: argparse.Namespace) -> dict:
             )
         reinstall_ok, reinstall_msg = reinstall_path_dependencies(staging_clone)
         if not reinstall_ok:
+            # MEDIUM decision (recorded, tested in
+            # tests/test_agent_clone_hardening.py::TestDegradedReinstallDecision):
+            # a degraded uv path-dependency reinstall is best-effort and does
+            # NOT block ready:True.  Rationale: the clone's git bindings (pins,
+            # origins, cleanliness) are already verified above; a stale local
+            # wheel affects only the runtime venv, which the worker can repair
+            # with an explicit uv sync.  Failing closed here would turn every
+            # transient uv/network hiccup into a lost delivery attempt.
             warnings.warn(f"uv sync --reinstall-package warning: {reinstall_msg}")
         identity = {
             "schema": SCHEMA_IDENTITY_ATTEMPT if delivery_attempt_id else SCHEMA_IDENTITY,
@@ -3182,7 +3370,7 @@ def build_claims_authority_shadow_projection(
         "fresh": False,
     }
     # Lazy stdio status against passwd-derived Workspace broker entry.
-    runner = ACCOUNT_WORKSPACE_ROOT / "bin" / "agent-workflow.py"
+    runner = account_workspace_root() / "bin" / "agent-workflow.py"
     if not runner.is_file():
         # Root checkout without activated child broker remains bootstrap-safe.
         if claim_verification is not None:
@@ -3194,7 +3382,7 @@ def build_claims_authority_shadow_projection(
     try:
         completed = subprocess.run(
             [sys.executable, str(runner), "claims-authority", "status", "--json"],
-            cwd=str(ACCOUNT_WORKSPACE_ROOT),
+            cwd=str(account_workspace_root()),
             capture_output=True,
             text=True,
             check=False,
@@ -3333,14 +3521,14 @@ def trusted_claims_authority(
         )
     hermetic = _is_hermetic_local_authority(source.stdout.strip())
     if not hermetic:
-        expected = canonical(str(ACCOUNT_WORKSPACE_ROOT))
+        expected = canonical(str(account_workspace_root()))
         if actual != expected:
             raise ToolError(
                 "claims_authority_mismatch",
                 f"claims root {actual} is not the OS-account integration workspace {expected}",
             )
     policy_ref = "refs/heads/main"
-    remote = git(actual, "ls-remote", "--exit-code", source.stdout.strip(), policy_ref)
+    remote = git(actual, "ls-remote", "--exit-code", source.stdout.strip(), policy_ref, timeout=GIT_TIMEOUT_NETWORK_SECONDS)
     rows = [line.split() for line in remote.stdout.splitlines() if line.strip()]
     if (
         remote.returncode != 0
@@ -3395,11 +3583,11 @@ def trusted_claims_authority(
             "claims_authority_policy_invalid",
             "topology_migration.integration_root is required",
         )
-    account_home = pwd.getpwuid(os.getuid()).pw_dir
+    account_home_dir = account_home()
     if configured == "~":
-        configured_path = account_home
+        configured_path = account_home_dir
     elif configured.startswith("~/"):
-        configured_path = os.path.join(account_home, configured[2:])
+        configured_path = os.path.join(account_home_dir, configured[2:])
     elif os.path.isabs(configured):
         configured_path = configured
     else:
