@@ -186,7 +186,7 @@ def _seed_value(root: Path, records: list[dict]) -> None:
 def test_value_is_not_proven_with_no_evidence(tmp_path):
     mod = _load()
     result = mod.collect_value_evidence(root=tmp_path, now=NOW)
-    assert result["state"] == "NOT_PROVEN"
+    assert result["state"] == "not_proven"
     assert result["samples"]["records"] == 0
     assert any("尚无任何价值证据" in r for r in result["state_reason"])
 
@@ -221,7 +221,7 @@ def test_ratio_threshold_judged_once_sample_basis_sufficient(tmp_path):
     assert acceptance["met"] is True
     samples = next(t for t in result["thresholds"] if t["key"] == "samples")
     assert samples["current"] == 30 and samples["met"] is True
-    assert result["state"] == "NOT_PROVEN"               # 单条门槛达标 ≠ 整体已证明
+    assert result["state"] == "not_proven"               # 单条门槛达标 ≠ 整体已证明
 
 
 def test_non_qualifying_samples_excluded_from_value_gate(tmp_path):
@@ -266,3 +266,39 @@ def test_value_schema_and_stage_shape(tmp_path):
     assert result["schema"] == "panel-value/v1"
     assert [s["key"] for s in result["stages"]] == ["signal", "intent", "journey", "record", "feedback"]
     assert len(result["vision_thresholds"]) == 5
+
+
+def test_value_state_survives_deployment_not_proven_filter(tmp_path):
+    """部署侧 refresh.render() 的 clean_not_proven() 会删除**值恰为 'NOT_PROVEN' 的键**。
+
+    该规则本意是清理历史占位文本, 却会把合法的价值状态整键删掉, 使页面退化为
+    UNKNOWN。因此采集器必须输出能穿过该规则的值（小写）, 视图层负责大写展示。
+    """
+
+    def clean_not_proven(obj):
+        if isinstance(obj, dict):
+            return {k: clean_not_proven(v) for k, v in obj.items() if v != "NOT_PROVEN"}
+        if isinstance(obj, list):
+            return [clean_not_proven(i) for i in obj if i != "NOT_PROVEN"]
+        if isinstance(obj, str) and obj == "NOT_PROVEN":
+            return "—"
+        return obj
+
+    mod = _load()
+    result = mod.collect_value_evidence(root=tmp_path, now=NOW)
+    assert result["state"] != "NOT_PROVEN", "状态值会被部署侧规则整键删除"
+    survived = clean_not_proven(result)
+    assert "state" in survived, "state 键未能穿过 clean_not_proven()"
+    assert survived["state"] == "not_proven"
+    # 且不得存在任何会被该规则吞掉的字符串值
+    def walk(obj, path=""):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                walk(v, f"{path}.{k}")
+        elif isinstance(obj, list):
+            for i, v in enumerate(obj):
+                walk(v, f"{path}[{i}]")
+        else:
+            assert not (isinstance(obj, str) and obj == "NOT_PROVEN"), f"{path} 会被删除"
+
+    walk(result)

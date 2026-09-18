@@ -26,12 +26,13 @@ function zxRenderValue(){
     var badge=document.getElementById('zx-v-badge');
     var title=document.getElementById('zx-v-state-title');
     var reasons=document.getElementById('zx-v-reasons');
+    var rawState=String(v.state||'UNKNOWN');   /* 小写穿越部署侧 clean_not_proven(), 此处大写展示 */
+    var proven=rawState.toUpperCase()==='PROVEN';
     if(badge){
-      badge.textContent=v.state||'UNKNOWN';
-      var notProven=(v.state||'')!=='PROVEN';
-      badge.style.background=notProven?'#f59e0b':'#10b981';
+      badge.textContent=rawState.toUpperCase();
+      badge.style.background=proven?'#10b981':'#f59e0b';
     }
-    if(title) title.textContent=(v.state==='PROVEN')?'价值已证明':'价值尚未证明';
+    if(title) title.textContent=proven?'价值已证明':'价值尚未证明';
     if(reasons){
       var rs=(v.state_reason||[]);
       reasons.innerHTML=rs.length?rs.map(function(r){return '<li>'+zxVEsc(r)+'</li>';}).join('')

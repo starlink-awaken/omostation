@@ -555,7 +555,11 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
 
     return {
         "schema": "panel-value/v1",
-        "state": "NOT_PROVEN",
+        # 注意: 必须用小写。部署侧 refresh.py 的 render() 里有个遗留的
+        # clean_not_proven(), 它会 **删除任何值恰好等于字符串 'NOT_PROVEN' 的键**
+        # （本意是清掉历史占位文本），导致大写状态在嵌入快照时整键消失、
+        # 页面退化成 UNKNOWN。小写可安全穿过该规则, 由视图层负责大写展示。
+        "state": "not_proven",
         "state_reason": reasons,
         "samples": {
             "records": samples_total,
