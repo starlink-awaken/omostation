@@ -2750,6 +2750,56 @@ def collect_agent_visibility(payload: dict) -> dict:
         if isinstance(source, list):
             blockers.extend(str(item) for item in source if item)
     blockers = sorted(set(blockers))
+    advisories = sorted({
+        str(item)
+        for item in (preflight.get("advisories") or [])
+        if item
+    })
+    claims_activation_readiness = {
+        "schema": "claims-activation-readiness/v1",
+        "available": claims_task16.get("available") is True,
+        "verdict": str(claims_task16.get("verdict", "UNAVAILABLE")).upper(),
+        "readiness": str(preflight.get("readiness") or claims_task16.get("verdict") or "UNKNOWN").upper(),
+        "operation_specific_authorization": str(
+            preflight.get("operation_specific_authorization") or "UNPROVEN"
+        ).upper(),
+        "activation_allowed": activation_allowed,
+        "blockers": blockers,
+        "advisories": advisories,
+        "preflight_checked_at": preflight.get("checked_at"),
+        "authority_id": preflight.get("authority_id") or "omo-claims-authority-r0",
+        "effective_claim_authority": claims_authority.get(
+            "effective_claim_authority", "v1"
+        ),
+        "authorization_packet": {
+            "scope": "claims-authority activate-shadow, exact R0 descriptor only",
+            "required_fields": [
+                "principal_decision_id",
+                "decision_timestamp",
+                "authorized_surface=agents/_shared/runtime/omo-claims-authority-r0",
+                "rollback_surface=agents/_shared/backups/omo-claims-authority-r0",
+                "expiry_or_no_expiry",
+                "observation_requirement=24h foreground/1440 samples",
+            ],
+            "not_sufficient": [
+                "general_agent_authorization",
+                "accepted_spec_binding_alone",
+                "dashboard_status_or_ai_statement",
+            ],
+        },
+        "observation_gate": {
+            "duration_seconds": 86400,
+            "minimum_samples": 1440,
+            "maximum_gap_seconds": 120,
+            "checkpoints": {
+                "smoke": {"seconds": 1800, "samples": 30},
+                "provisional": {"seconds": 7200, "samples": 120},
+                "sustained": {"seconds": 21600, "samples": 360},
+                "graduation": {"seconds": 86400, "samples": 1440},
+            },
+            "first_three_are_diagnostic_only": True,
+        },
+    }
 
     return {
         "schema": "panorama-agent-brief/v1",
@@ -2765,6 +2815,7 @@ def collect_agent_visibility(payload: dict) -> dict:
             "claims_instruction_capable": claims_authority.get("instruction_capable") is True,
             "claims_activation_allowed": activation_allowed,
             "claims_activation_blockers": blockers,
+            "claims_activation_readiness": claims_activation_readiness,
             "value_proof": "NOT_PROVEN",
         },
         "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},
@@ -3425,11 +3476,12 @@ $('agenttable').querySelector('tbody').innerHTML=D.agents.map(a=>'<tr><td class=
     {v:pt.blocker_count==null?'n/a':pt.blocker_count,l:'Task16 blockers',c:ptClass},
     {v:pt.verdict||'UNAVAILABLE',l:'Task16 readiness',c:ptClass}
   ].map(k=>'<div class="card kpi"><b class="'+(k.c||'')+'">'+k.v+'</b><span>'+k.l+'</span></div>').join('');
-  const rows=[
+    const rows=[
     ['read-only observation',ca.available],
     ['instruction capable',ca.instruction_capable],
     ['mutation performed',ca.mutation_performed],
     ['authorization granted',ca.authorization_granted],
+    ['operation authorization',(D.authority.claims_activation_readiness||{}).operation_specific_authorization==='PROVEN'],
     ['code root synced',cr.verdict==='PASS'],
     ['code root clean',cr.dirty===false],
     ['Task16 preflight',pt.available],

@@ -28,8 +28,16 @@ def _payload():
             "instruction_capable": False,
         },
         "claims_task16": {
+            "available": True,
+            "verdict": "AWAITING_AUTHORIZATION",
             "activation_allowed": False,
             "hard_blockers": ["operation_specific_host_authorization_unproven"],
+            "preflight": {
+                "readiness": "AWAITING_AUTHORIZATION",
+                "operation_specific_authorization": "UNPROVEN",
+                "advisories": ["root_head_not_equal_origin_main"],
+                "checked_at": "2026-09-18T00:00:00+00:00",
+            },
         },
         "agent_cell_pool": {"available": True, "total": 2, "active": 1, "failed": 0},
         "reference_cell": {"id": "RC-DL", "verdict": "PASS"},
@@ -102,6 +110,28 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
     assert brief["authority"]["claims_activation_blockers"] == [
         "operation_specific_host_authorization_unproven"
     ]
+    readiness = brief["authority"]["claims_activation_readiness"]
+    assert readiness["schema"] == "claims-activation-readiness/v1"
+    assert readiness["verdict"] == "AWAITING_AUTHORIZATION"
+    assert readiness["readiness"] == "AWAITING_AUTHORIZATION"
+    assert readiness["operation_specific_authorization"] == "UNPROVEN"
+    assert readiness["activation_allowed"] is False
+    assert readiness["advisories"] == ["root_head_not_equal_origin_main"]
+    assert readiness["authorization_packet"]["required_fields"] == [
+        "principal_decision_id",
+        "decision_timestamp",
+        "authorized_surface=agents/_shared/runtime/omo-claims-authority-r0",
+        "rollback_surface=agents/_shared/backups/omo-claims-authority-r0",
+        "expiry_or_no_expiry",
+        "observation_requirement=24h foreground/1440 samples",
+    ]
+    assert readiness["authorization_packet"]["not_sufficient"] == [
+        "general_agent_authorization",
+        "accepted_spec_binding_alone",
+        "dashboard_status_or_ai_statement",
+    ]
+    assert readiness["observation_gate"]["minimum_samples"] == 1440
+    assert readiness["observation_gate"]["first_three_are_diagnostic_only"] is True
     assert brief["authority"]["value_proof"] == "NOT_PROVEN"
     assert brief["health"]["gates_total"] == 2
     assert brief["health"]["gates_pass"] == 1
@@ -129,6 +159,20 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
     assert brief["work_state"]["alerts"]["high"] == 1
     action_ids = {action["id"] for action in brief["next_actions"]}
     assert {"claims-authority-wait", "plan-candidate-bets", "triage-high-alerts"} <= action_ids
+
+
+def test_agent_visibility_claims_readiness_fails_closed_without_preflight() -> None:
+    module = _module()
+    payload = _payload()
+    payload["claims_task16"] = {"activation_allowed": False}
+
+    readiness = module.collect_agent_visibility(payload)["authority"]["claims_activation_readiness"]
+
+    assert readiness["available"] is False
+    assert readiness["verdict"] == "UNAVAILABLE"
+    assert readiness["readiness"] == "UNKNOWN"
+    assert readiness["operation_specific_authorization"] == "UNPROVEN"
+    assert readiness["activation_allowed"] is False
 
 
 def test_write_site_emits_data_and_agent_brief(tmp_path, monkeypatch) -> None:
