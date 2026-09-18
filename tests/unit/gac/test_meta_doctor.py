@@ -59,6 +59,35 @@ def test_heartbeat_fresh_vs_stale(tmp_path):
     assert dash_e["ok"] is False and dash_e["age_hours"] > 24 * 14
 
 
+def test_heartbeat_prefers_canonical_projection_with_legacy_fallback(tmp_path):
+    mod = _load()
+    now = datetime.now(timezone.utc)  # noqa: UP017 - match macOS Python 3.9 runtime
+    legacy = tmp_path / ".omo/state/system_health.yaml"
+    canonical = tmp_path / ".omo/state/runtime/system_health.yaml"
+    legacy.parent.mkdir(parents=True)
+    canonical.parent.mkdir(parents=True)
+    legacy.write_text(f"last_scan: {(now - timedelta(hours=100)).timestamp()}\n")
+    canonical.write_text(f"last_scan: {(now - timedelta(hours=1)).timestamp()}\n")
+
+    result = next(
+        row for row in mod.check_heartbeats(tmp_path, now=now)
+        if row["file"].endswith("system_health.yaml")
+    )
+    assert result["checked_file"] == ".omo/state/runtime/system_health.yaml"
+    assert result["source"] == "canonical"
+    assert result["ok"] is True
+
+    canonical.unlink()
+    legacy.write_text(f"last_scan: {(now - timedelta(hours=1)).timestamp()}\n")
+    result = next(
+        row for row in mod.check_heartbeats(tmp_path, now=now)
+        if row["file"].endswith("system_health.yaml")
+    )
+    assert result["checked_file"] == ".omo/state/system_health.yaml"
+    assert result["source"] == "legacy"
+    assert result["ok"] is True
+
+
 def test_scan_status_classification(tmp_path):
     mod = _load()
     live_target = REAL_WS / "scenarios/Y1Q4-B1/test_e2e.py"

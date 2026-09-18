@@ -36,6 +36,13 @@ HEARTBEATS: dict[str, tuple[str, int]] = {
     ".omo/_control/debt-dashboard/current.yaml": ("generated_at", 24 * 14),
 }
 
+# runtime-projections.yaml moves these derived snapshots under state/runtime/.
+# Keep the legacy key for report compatibility, but prefer canonical evidence.
+CANONICAL_HEARTBEATS: dict[str, str] = {
+    ".omo/state/system_health.yaml": ".omo/state/runtime/system_health.yaml",
+    ".omo/state/health.yaml": ".omo/state/runtime/health.yaml",
+}
+
 LAUNCHD_PREFIXES = ("com.omostation.", "com.opencode.", "com.l4.", "com.aetherforge.", "com.omlxc.")
 _LA = Path.home() / "Library" / "LaunchAgents"
 
@@ -100,9 +107,16 @@ def check_heartbeats(ws_root: Path, now: datetime | None = None) -> list[dict]:
     now = now or _now()
     out = []
     for rel, (field, sla_h) in HEARTBEATS.items():
-        f = ws_root / rel
+        canonical_rel = CANONICAL_HEARTBEATS.get(rel)
+        canonical_f = ws_root / canonical_rel if canonical_rel else None
+        f = canonical_f if canonical_f and canonical_f.is_file() else ws_root / rel
+        checked_rel = (
+            canonical_rel if canonical_f and canonical_f.is_file() else rel
+        )
         entry = {
             "file": rel, "field": field, "sla_hours": sla_h,
+            "checked_file": checked_rel,
+            "source": "canonical" if checked_rel != rel else "legacy",
             "exists": f.exists(), "age_hours": None, "ok": False,
         }
         if f.exists():

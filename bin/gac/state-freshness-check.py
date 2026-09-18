@@ -58,6 +58,14 @@ STATE_FILES = [
     (".omo/_control/governance-data.json", ("generated_at",)),
 ]
 
+# Derived projections moved to state/runtime (runtime-projections.yaml).  The
+# legacy paths remain the report keys and a compatibility fallback, but fresh
+# canonical evidence wins when both exist.
+CANONICAL_STATE_FILES = {
+    ".omo/state/system_health.yaml": ".omo/state/runtime/system_health.yaml",
+    ".omo/state/health.yaml": ".omo/state/runtime/health.yaml",
+}
+
 # 各文件类型用哪个字段作为 generated_at (JSONL 用首行, YAML 用顶层 key)
 GENERATED_AT_KEYS = (
     "generated_at",
@@ -164,10 +172,21 @@ def check_file(
 ) -> dict:
     """检查单个状态文件的 freshness."""
     now = now or datetime.now(UTC)
-    path = WORKSPACE / path_str
+    canonical_str = CANONICAL_STATE_FILES.get(path_str)
+    canonical_path = WORKSPACE / canonical_str if canonical_str else None
+    if canonical_path and canonical_path.is_file():
+        checked_str = canonical_str
+        source = "canonical"
+        path = canonical_path
+    else:
+        checked_str = path_str
+        source = "legacy"
+        path = WORKSPACE / path_str
     if not path.is_file():
         return {
             "path": path_str,
+            "checked_path": checked_str,
+            "source": source,
             "exists": False,
             "ok": False,
             "reason": "file_missing",
@@ -177,6 +196,8 @@ def check_file(
     if not ts:
         return {
             "path": path_str,
+            "checked_path": checked_str,
+            "source": source,
             "exists": True,
             "ok": False,
             "reason": "no_generated_at",
@@ -186,6 +207,8 @@ def check_file(
     if dt is None:
         return {
             "path": path_str,
+            "checked_path": checked_str,
+            "source": source,
             "exists": True,
             "ok": False,
             "reason": f"unparseable_timestamp:{ts}",
@@ -195,6 +218,8 @@ def check_file(
     score = _score_freshness(age_hours)
     return {
         "path": path_str,
+        "checked_path": checked_str,
+        "source": source,
         "exists": True,
         "ok": score >= 80,
         "generated_at": ts,
