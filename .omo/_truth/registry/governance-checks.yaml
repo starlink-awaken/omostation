@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 675 # 2026-09-17 674→675: attempt-local Direct Local Reference Cell canary
+    script_baseline: 676 # 2026-09-18 675→676: PR #3930 auto-bump-doc-governance-budget 新增 (+1)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
