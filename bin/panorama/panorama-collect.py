@@ -1506,9 +1506,9 @@ def collect_workspace_hygiene() -> dict:
 
 
 def collect_ci() -> dict:
-    """CI Pipeline 健康。"""
+    """Main-branch CI pipeline health."""
     from collections import Counter
-    code, out = run(["gh", "run", "list", "--limit", "60", "--json",
+    code, out = run(["gh", "run", "list", "--branch", "main", "--limit", "60", "--json",
                      "workflowName,status,conclusion,event,createdAt,databaseId"])
     if code != 0 or not out.startswith("["):
         return {"total_runs": 0, "workflows": 0, "red_workflows": [], "all": []}
