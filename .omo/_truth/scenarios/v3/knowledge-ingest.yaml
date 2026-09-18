@@ -8,8 +8,8 @@ description: '知识中枢——接收所有场景输出，自动结构化知识
 scene_class: business
 scene_type: inbound
 domain: knowledge
-lifecycle: assisted
-activation: controlled
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: governance-agent
 approval_state: confirmed
@@ -100,3 +100,6 @@ human_in_the_loop:
 observability:
   tracing: true
   evidence_capture: full
+notes:
+- Transitioned assisted→supervised at 2026-09-18T10:39:35.715558+00:00 by governance-agent
+- Transitioned supervised→routine at 2026-09-18T10:39:35.946722+00:00 by governance-agent
