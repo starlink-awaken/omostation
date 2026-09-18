@@ -30892,16 +30892,19 @@ bets:
   pasw_required: false
   priority: P1
   progress:
-    current_step: Phase 0 - 立项
-    done_when_met: []
-    phase: 0
-    phase_goal: 创建 BET 条目 (candidate) + spec + retro
-    phase_name: 立项
+    current_step: Phase 1 - Transitions + Trials
+    done_when_met:
+    - 4 场景卡 lifecycle 从 draft 升至 routine
+    - activation 从 preview 升至 allowed
+    - 36 条 trial records 已写入 (4 场景 × 9 条)
+    phase: 1
+    phase_goal: 16 transitions + 36 trial records 完成
+    phase_name: Transitions + Trials
     started_at: '2026-09-18'
   retro: required
   retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-06.md
   risk_level: L2
-  status: candidate
+  status: in_progress
   title: health-medical-workflow 场景冷启动 — draft→routine
   track: T7-SCENE
   underlying_workflow: project-code-change

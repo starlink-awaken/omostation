@@ -6,8 +6,8 @@ description: 就诊结束后记录诊断/处方/医嘱, 形成就诊结构化档
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: draft
-activation: preview
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -50,3 +50,8 @@ failure_cost: 处方/复查要求遗失导致用药或复诊中断
 data_classification: confidential
 data_scope: local-health-ledger-only
 operator: health-visit-dispatch-under-human-review
+notes:
+- Transitioned draft→shadow at 2026-09-18T03:59:27.613666+00:00 by xiamingxing
+- Transitioned shadow→assisted at 2026-09-18T04:00:06.012268+00:00 by xiamingxing
+- Transitioned assisted→supervised at 2026-09-18T04:00:50.631077+00:00 by xiamingxing
+- Transitioned supervised→routine at 2026-09-18T04:01:17.883715+00:00 by xiamingxing

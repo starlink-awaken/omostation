@@ -6,8 +6,8 @@ description: 汇总症状时间线 + 历史健康摘要 + 就诊问题清单, �
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: draft
-activation: preview
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -49,3 +49,8 @@ failure_cost: 就诊时遗漏关键症状信息或想不起要问的问题
 data_classification: confidential
 data_scope: local-health-ledger-only
 operator: health-visit-prep-dispatch-under-human-review
+notes:
+- Transitioned draft→shadow at 2026-09-18T03:59:27.570036+00:00 by xiamingxing
+- Transitioned shadow→assisted at 2026-09-18T04:00:05.965513+00:00 by xiamingxing
+- Transitioned assisted→supervised at 2026-09-18T04:00:50.584811+00:00 by xiamingxing
+- Transitioned supervised→routine at 2026-09-18T04:01:17.832187+00:00 by xiamingxing
