@@ -70,10 +70,24 @@ bash bin/gac/gac-worktree.sh retire <session-name>
 
 | Check | Mechanism |
 |-------|-----------|
+| Pre-commit | `bin/gac/check-main-workspace-commit.py`（hook-manifest `main-workspace-commit`）**blocking**: 主工作区停在非 `main` 分支时提交即拦截 |
 | Pre-push | `gac-worktree-guard.sh --check` blocks pushes from main with uncommitted changes |
-| Pre-commit | `pre-commit hook` warns if committing to main |
 | CI | `gitlink-ancestry` + `pointer-drift` detect main divergence |
 | Audit | Periodic review of `git worktree list` vs PR activity |
+
+**为什么拦"非 main 分支"而不是"提交到 main"**（2026-09-18 修正）：主工作区被多
+agent 共享，HEAD 停在非 `main` 分支意味着**该分支随时可能被并发会话切走**，
+其上的提交会因此不可达 —— 实证 `e4787d290`（同日 #3976 "dropped from #3969"
+是同一事故的另一次发生，导致重复劳动）。停在 `main` 上提交不产生该模式。
+
+逃生舱（会记入 `runtime/logs/main-workspace-commit-overrides.jsonl`）：
+
+```bash
+GAC_ALLOW_MAIN_WORKSPACE_COMMIT=1 git commit -m "..."
+```
+
+已孤立提交的恢复入口：`python3 bin/gac/workspace-wip-guard.py list-protected`
+（提交钉扎见 `refs/wip/`）。
 
 ### Stale worktree retirement (N = 14 days idle)
 
