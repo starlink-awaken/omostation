@@ -2,7 +2,7 @@
 name: agent-quickstart
 description: "Minimal 5-minute quickstart for AI agents working in the omostation workspace. Covers: run a gate, claim a path, edit + test, submit a PR, and where to find docs. Use when you're a new agent session and need to know 'what do I actually do'. NOT for full onboarding (use agent-onboarding skill instead)."
 
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-17
 type: ssot
 owner: governance-team
 ---
@@ -26,6 +26,10 @@ bash bin/gac/gac-worktree.sh claim <your-session-name>
 # ... edit files ...
 bash bin/gac/gac-worktree.sh submit <your-session-name>
 ```
+
+Before choosing work, check the runtime Agent Brief at `runtime/dashboard/agent-brief.json`
+(human page: Panorama → Agent Brief). It summarizes authority, gates, unfinished work,
+alerts, next actions, read interfaces, and safety boundaries.
 
 ## Workflow: Edit → Test → Submit
 
@@ -109,6 +113,7 @@ bash bin/gac/gac-worktree.sh release my-session-HHMM
 | Architecture review | `docs/operations/ARCHITECTURAL-REVIEW-2026-08-24.md` |
 | Operating rules | `AGENTS.md` (root), `<project>/AGENTS.md` (per-project) |
 | Session startup protocol | `CLAUDE.md` |
+| Runtime authority / work state | `runtime/dashboard/agent-brief.json` (Panorama → Agent Brief) |
 
 ## Common Gotchas
 

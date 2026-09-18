@@ -1,12 +1,12 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-12
+last_updated: 2026-09-17
 ---
 
 # CLAUDE.md — omostation AI Context Loader
 
-> 最后更新: 2026-09-12
+> 最后更新: 2026-09-17
 > Purpose: session startup protocol for AI agents.
 > Detailed engineering rules live in [`AGENTS.md`](AGENTS.md).
 > Stable architecture contracts live in [`ARCHITECTURE.md`](ARCHITECTURE.md).
@@ -33,6 +33,7 @@ last_updated: 2026-09-12
 > - [`docs/INDEX-TOOLS.md`](docs/INDEX-TOOLS.md) — find tools and scripts
 > - [`docs/INDEX-KNOWLEDGE.md`](docs/INDEX-KNOWLEDGE.md) — find ADRs, audits, patterns
 > - [`docs/INDEX-AGENTS.md`](docs/INDEX-AGENTS.md) — find skills and agent setup
+> - Runtime Agent Brief → `runtime/dashboard/agent-brief.json` (authority, gates, unfinished work, alerts, next actions, safety)
 >
 > **This file is a navigation layer only.** It does not duplicate project counts, ports, service inventories, test counts, phase, health scores, layer tables, or rule registries. Hard-coding those violates `doc-ssot-contract` and fails `bin/ssot/doc-ssot-lint.py`.
 
