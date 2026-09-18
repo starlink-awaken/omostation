@@ -1,3 +1,9 @@
+---
+type: ssot
+owner: governance-team
+last-reviewed: 2026-09-18
+---
+
 # .omo/state/ — Agent 共享状态
 
 > 所有 Agent 共享的运行时状态。每个 Agent 维护自己的状态文件，`system.yaml`
@@ -10,10 +16,11 @@
 ```
 state/
 ├── README.md            ← 本文件
-├── agents/              ← 每个 Agent 一个 YAML（Agent 自己维护）
-│   └── {agent-name}.yaml
 ├── system.yaml          ← 系统全局状态（聚合快照）
-└── locks/               ← 分布式锁（Agent 互斥操作时使用）
+├── health.yaml          ← 治理健康分（c2g.strategy 合成）
+├── system_health.yaml   ← 运行态快照
+├── runtime/             ← 运行时投影面（ADR-0129，gitignored，需投影生成）
+└── <domain>/            ← 各域状态目录（scene-cards/、handoffs/、proposals/ …）
 ```
 
 ## Agent 状态格式
@@ -41,7 +48,7 @@ errors:
 ## 系统状态格式
 
 ```yaml
-# system.yaml (通过 sync-omo-state 自动刷新)
+# system.yaml (经 `make ssot-sync` → `bin/ssot-watcher.py sync` 追踪变更)
 current_phase: 2
 current_sprint: 2
 health_score: 75.0  # 示例值, 实际见 .omo/state/system.yaml (SSOT, 勿在文档硬编码)
@@ -64,14 +71,8 @@ last_go_nogo: "PASS (2026-05-29T10:00Z)"
 
 ## 当前推荐同步方式
 
-Use the automation script instead of manual count edits:
+Use the automation instead of manual count edits:
 
 ```bash
-scripts/sync-omo-state.sh
-```
-
-Optional health-score input:
-
-```bash
-python3 scripts/sync_omo_state.py --test-output-file /path/to/pytest-output.txt
+make ssot-sync   # → bin/ssot-watcher.py sync（交互输入 author/reason，变更记入审计日志）
 ```
