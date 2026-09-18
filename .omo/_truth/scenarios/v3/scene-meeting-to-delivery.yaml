@@ -6,8 +6,8 @@ description: 会议结束后的行动项提取与任务自动创建
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: assisted
-activation: controlled
+lifecycle: routine
+activation: allowed
 owner: governance-team
 approver: governance-agent
 approval_state: confirmed
@@ -51,3 +51,6 @@ sample_refs:
 - .omo/state/scene-cards/meeting-to-delivery/samples/sample-1.json
 - .omo/state/scene-cards/meeting-to-delivery/samples/sample-2.json
 - .omo/state/scene-cards/meeting-to-delivery/samples/sample-3.json
+notes:
+- Transitioned assisted→supervised at 2026-09-18T10:39:35.834580+00:00 by governance-agent
+- Transitioned supervised→routine at 2026-09-18T10:39:36.072007+00:00 by governance-agent
