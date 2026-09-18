@@ -262,6 +262,7 @@ def main() -> int:
     validate = commands.add_parser("validate")
     validate.add_argument("--evidence", type=Path, default=EVIDENCE_FILE)
     validate.add_argument("--baseline-dir", type=Path, default=BASELINE_DIR)
+    validate.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
     try:
@@ -293,7 +294,10 @@ def main() -> int:
             print(json.dumps(episode, ensure_ascii=False, indent=2))
             return 0
         report = validate_evidence(args.evidence, args.baseline_dir)
-        _print_validation(report)
+        if args.json:
+            print(json.dumps(report, ensure_ascii=False))
+        else:
+            _print_validation(report)
         return 0 if report["ok"] else 1
     except (OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)

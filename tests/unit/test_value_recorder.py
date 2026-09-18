@@ -1,5 +1,7 @@
 import importlib.util
+import contextlib
 import json
+import io
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "bin/ssot/value-recorder.py"
@@ -151,3 +153,30 @@ def test_validate_cli_accepts_explicit_runtime_paths(tmp_path, monkeypatch) -> N
     assert module.main() == 0
     assert seen["evidence"] == evidence
     assert seen["baseline_dir"] == baseline_dir
+
+
+def test_validate_cli_can_emit_machine_readable_json(tmp_path, monkeypatch) -> None:
+    module = _module()
+    report = {
+        "schema": "value-evidence-validation/v2",
+        "ok": True,
+        "records": 0,
+        "v2_records": 0,
+        "qualifying": 0,
+        "target": 30,
+        "remaining_to_target": 30,
+        "issues": [],
+    }
+    monkeypatch.setattr(module, "validate_evidence", lambda *_: report)
+    monkeypatch.setattr(module.sys, "argv", [
+        "value-recorder.py", "validate",
+        "--evidence", str(tmp_path / "value-evidence.jsonl"),
+        "--baseline-dir", str(tmp_path / "baselines"),
+        "--json",
+    ])
+    output = io.StringIO()
+
+    with contextlib.redirect_stdout(output):
+        assert module.main() == 0
+
+    assert json.loads(output.getvalue()) == report
