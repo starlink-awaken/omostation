@@ -204,6 +204,32 @@ remove_verified_pasw() {
   rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
 }
 
+# ── 网络挂起防护 (2026-09-18, TLS 握手间歇性超时实证 x2) ──────────────
+# macOS 无 GNU timeout: 此处用纯 bash 后台进程 + 轮询实现可移植超时.
+# bash 3.2 兼容 (无关联数组/新式扩展). 用法:
+#   gac_run_with_timeout <secs> <cmd...>; 超时返回 124, 否则透传子进程退出码.
+gac_run_with_timeout() {
+  local secs="$1"; shift
+  "$@" &
+  local _tpid=$!
+  local _elapsed=0
+  while kill -0 "$_tpid" 2>/dev/null; do
+    if [ "$_elapsed" -ge "$secs" ]; then
+      kill -TERM "$_tpid" 2>/dev/null || true
+      sleep 2
+      if kill -0 "$_tpid" 2>/dev/null; then
+        kill -KILL "$_tpid" 2>/dev/null || true
+      fi
+      wait "$_tpid" 2>/dev/null || true
+      return 124
+    fi
+    sleep 1
+    _elapsed=$((_elapsed+1))
+  done
+  wait "$_tpid"
+  return $?
+}
+
 # ── BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 ────────────────
 # advisory: 恒 exit 0; --fix 仅做本地无网络子模块对齐 (不改根指针/URL).
 # 事故实证: ① worktree 创建后未 init → 陈旧 gitlink 被提交 → 指针回退;
@@ -312,7 +338,43 @@ case "$cmd" in
       echo "⚠️  worktree 已存在: $wt (cd 过去继续工作)"
     else
       : > "$claim_in_progress"
-      git -C "$WS_ROOT" fetch "$ROOT_REMOTE" main 2>&1 | sed '/FETCH_HEAD/d' >&2
+      # 网络挂起防护 (2026-09-18): fetch 加 60s 超时 + 2 次重试, 耗尽后 fail-closed.
+      # 可调: GAC_FETCH_TIMEOUT (默认 60), GAC_FETCH_RETRIES (默认 2).
+      _fetch_timeout="${GAC_FETCH_TIMEOUT:-60}"
+      _fetch_retries="${GAC_FETCH_RETRIES:-2}"
+      _fetch_attempt=0
+      _fetch_rc=0
+      _fetch_log="$(mktemp /tmp/gac-fetch-$$.XXXXXX 2>/dev/null)" || _fetch_log="/tmp/gac-fetch-$$.log"
+      : > "$_fetch_log" 2>/dev/null || true
+      while :; do
+        _fetch_attempt=$((_fetch_attempt+1))
+        _f0=$(date +%s)
+        if gac_run_with_timeout "$_fetch_timeout" git -C "$WS_ROOT" fetch "$ROOT_REMOTE" main >"$_fetch_log" 2>&1; then
+          _fetch_rc=0
+        else
+          _fetch_rc=$?
+        fi
+        _f1=$(date +%s)
+        sed '/FETCH_HEAD/d' "$_fetch_log" >&2 || true
+        if [ "$_fetch_rc" -eq 0 ]; then
+          if [ "$_fetch_attempt" -gt 1 ]; then
+            echo "   ✅ fetch 成功 (第 $_fetch_attempt 次尝试, $((_f1-_f0))s)" >&2
+          fi
+          break
+        fi
+        if [ "$_fetch_rc" -eq 124 ]; then
+          echo "   ⚠️ fetch 超时 (${_fetch_timeout}s, 第 $_fetch_attempt 次尝试, $((_f1-_f0))s)" >&2
+        else
+          echo "   ⚠️ fetch 失败 (rc=$_fetch_rc, 第 $_fetch_attempt 次尝试, $((_f1-_f0))s)" >&2
+        fi
+        if [ "$_fetch_attempt" -gt "$_fetch_retries" ]; then
+          echo "❌ fetch 失败: $((_fetch_retries+1)) 次尝试均失败 (末次 rc=$_fetch_rc); 拒绝 claim (fail-closed)" >&2
+          rm -f "$_fetch_log"
+          exit 1
+        fi
+        sleep 2
+      done
+      rm -f "$_fetch_log"
       git -C "$WS_ROOT" worktree add "$wt" -b "$branch" "$ROOT_REMOTE/main" 2>&1
       echo "✅ worktree 创建: $wt"
       echo "   分支: $branch (base: $ROOT_REMOTE/main, repo: $CANONICAL_ROOT_REPO)"
@@ -335,22 +397,41 @@ case "$cmd" in
       fi
       t0=$(date +%s)
       init_rc=0
+      # 网络挂起防护 (2026-09-18): bulk init 加整体超时 (默认 300s,
+      # GAC_SUBMODULE_INIT_TIMEOUT 可调). 浅/完整语义不变 (#3868),
+      # 仅加时间上界; 超时 (rc=124) 走既有失败/回退路径.
+      _submod_timeout="${GAC_SUBMODULE_INIT_TIMEOUT:-300}"
+      _init_log="$(mktemp /tmp/gac-submod-init-$$.XXXXXX 2>/dev/null)" || _init_log="/tmp/gac-submod-init-$$.log"
+      : > "$_init_log" 2>/dev/null || true
       if [ "$CLAIM_FULL_INIT" = "1" ]; then
-        init_out=$(cd "$wt" && git submodule update --init 2>&1) || init_rc=$?
+        ( cd "$wt" && gac_run_with_timeout "$_submod_timeout" git submodule update --init >"$_init_log" 2>&1 ) || init_rc=$?
+        init_out="$(cat "$_init_log")"
       else
-        init_out=$(cd "$wt" && git submodule update --init --depth 1 2>&1) || init_rc=$?
+        ( cd "$wt" && gac_run_with_timeout "$_submod_timeout" git submodule update --init --depth 1 >"$_init_log" 2>&1 ) || init_rc=$?
+        init_out="$(cat "$_init_log")"
       fi
       t1=$(date +%s)
       if [ "$init_rc" -ne 0 ] && [ "$CLAIM_FULL_INIT" != "1" ]; then
-        echo "   ⚠️ 浅 init 失败 (rc=$init_rc, $((t1-t0))s), 回退完整 init..."
+        if [ "$init_rc" -eq 124 ]; then
+          echo "   ⚠️ 浅 init 超时 (${_submod_timeout}s, $((t1-t0))s), 回退完整 init..."
+        else
+          echo "   ⚠️ 浅 init 失败 (rc=$init_rc, $((t1-t0))s), 回退完整 init..."
+        fi
         t0=$(date +%s)
         init_rc=0
-        init_out=$(cd "$wt" && git submodule update --init 2>&1) || init_rc=$?
+        : > "$_init_log" 2>/dev/null || true
+        ( cd "$wt" && gac_run_with_timeout "$_submod_timeout" git submodule update --init >"$_init_log" 2>&1 ) || init_rc=$?
+        init_out="$(cat "$_init_log")"
         t1=$(date +%s)
       fi
+      rm -f "$_init_log"
       init_cnt=$(echo "$init_out" | grep -cE "checked out|initialized" || echo 0)
       if [ "$init_rc" -ne 0 ]; then
-        echo "❌ 全部子模块 init 失败 (rc=$init_rc, $((t1-t0))s); 拒绝 PASW claim" >&2
+        if [ "$init_rc" -eq 124 ]; then
+          echo "❌ 全部子模块 init 超时 (${_submod_timeout}s/次, $((t1-t0))s); 拒绝 PASW claim" >&2
+        else
+          echo "❌ 全部子模块 init 失败 (rc=$init_rc, $((t1-t0))s); 拒绝 PASW claim" >&2
+        fi
         echo "$init_out" | tail -3 >&2
         # G9 (T10-09): 环境感知 — 未 checkout 的子模块会导致本地 gate 环境性失败
         # (CR-RESIDENT-BOS-01 缺 bos-services.yaml / omo-state-projection-guard 缺投影),

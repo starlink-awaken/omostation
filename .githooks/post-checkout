@@ -5,25 +5,66 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 # 子模块上下文守卫: 同 pre-commit, 主仓 hook-runner 在子模块不存在则跳过
 [ -f "$ROOT/bin/gac/hook-runner.sh" ] || exit 0
+# ── 网络/挂起防护 (2026-09-18, TLS 握手间歇性超时实证 x2) ─────────────
+# macOS 无 GNU timeout: 纯 bash 后台进程 + 轮询实现可移植超时 (bash 3.2 兼容).
+# 每阶段 GAC_HOOK_STAGE_TIMEOUT 秒 (默认 10) 上界, 超时/失败恒不阻断 checkout.
+# 每阶段计时追加到 runtime/logs/post-checkout-timing.log (date +%s 模式).
+TIMING_LOG="$ROOT/runtime/logs/post-checkout-timing.log"
+pc_log_stage() {
+  # $1=stage $2=start_epoch $3=end_epoch $4=rc
+  mkdir -p "$ROOT/runtime/logs" 2>/dev/null || true
+  printf '%s %s stage=%s dur=%ss rc=%s\n' "$2" "$3" "$1" "$(($3-$2))" "$4" >>"$TIMING_LOG" 2>/dev/null || true
+}
+pc_run_stage() {
+  # $1=stage $2=timeout_secs $3...=cmd — 恒返回 0 (advisory), 超时返回码记 124
+  local _stage="$1" _secs="$2"; shift 2
+  local _s _e _rc
+  _s=$(date +%s)
+  "$@" &
+  local _pid=$!
+  local _elapsed=0
+  _rc=0
+  while kill -0 "$_pid" 2>/dev/null; do
+    if [ "$_elapsed" -ge "$_secs" ]; then
+      kill -TERM "$_pid" 2>/dev/null || true
+      sleep 2
+      if kill -0 "$_pid" 2>/dev/null; then
+        kill -KILL "$_pid" 2>/dev/null || true
+      fi
+      wait "$_pid" 2>/dev/null || true
+      _rc=124
+      break
+    fi
+    sleep 1
+    _elapsed=$((_elapsed+1))
+  done
+  if [ "$_rc" -ne 124 ]; then
+    wait "$_pid" 2>/dev/null && _rc=0 || _rc=$?
+  fi
+  _e=$(date +%s)
+  pc_log_stage "$_stage" "$_s" "$_e" "$_rc"
+  return 0
+}
+_STAGE_TIMEOUT="${GAC_HOOK_STAGE_TIMEOUT:-10}"
 # ── remote-hygiene 自愈 (2026-09-13, 实证污染事故) ────────────────────
 # 放在最前: 快速幂等 (纯 config 检查), 无网络依赖. 并发会话可能改写共享
 # config 的 remote.origin.url (实证: 被改写成 omostation-runtime 后
 # fetch/gh pr/验证静默失效). checkout/worktree add 是观测到的污染窗口.
 # 失败/绕过由 pre-push blocking remote-hygiene 兜底拦截.
 if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/ssot/fix-remotes.py" ]; then
-  bash "$ROOT/bin/ssot/fix-remotes.py" >/dev/null 2>&1 || true
+  pc_run_stage fix-remotes "$_STAGE_TIMEOUT" bash "$ROOT/bin/ssot/fix-remotes.py" >/dev/null 2>&1 || true
 fi
 # ── BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 ──────────────
 # advisory (恒不阻断 checkout); 覆盖 git worktree add 绕过 gac-worktree.sh
 # claim 的路径. GAC_SKIP_POST_CHEKOUT_GUARD=1 可跳过 (测试/特殊流程).
 if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/gac/gac-worktree.sh" ]; then
-  bash "$ROOT/bin/gac/gac-worktree.sh" guard-submodules --fix >/dev/null 2>&1 || true
+  pc_run_stage guard-submodules "$_STAGE_TIMEOUT" bash "$ROOT/bin/gac/gac-worktree.sh" guard-submodules --fix >/dev/null 2>&1 || true
 fi
 # ── WIP 快照兜底 (2026-09-17, 共享工作区改动丢失事故) ────────────────
 # 主工作区被多 agent 共享, checkout 可能刚覆盖掉他人的未提交改动.
 # 此处在 checkout 后立即快照当前脏态 (仅在主工作区生效; worktree 跳过).
 # 纯本地复制, 恒不阻断; 额外快照由 cron 每小时执行.
 if [ "${GAC_SKIP_POST_CHEKOUT_GUARD:-}" != "1" ] && [ -f "$ROOT/bin/gac/workspace-wip-guard.py" ]; then
-  python3 "$ROOT/bin/gac/workspace-wip-guard.py" snapshot --reason post-checkout --quiet >/dev/null 2>&1 || true
+  pc_run_stage wip-snapshot "$_STAGE_TIMEOUT" python3 "$ROOT/bin/gac/workspace-wip-guard.py" snapshot --reason post-checkout --quiet >/dev/null 2>&1 || true
 fi
 bash "$ROOT/bin/gac/hook-runner.sh" --hook post-checkout
