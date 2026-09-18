@@ -1,4 +1,4 @@
-schema: scene-card/v3
+schema: scene-card/v1
 scene_id: scene-meeting-supervision
 version: 3.0.0
 name: Meeting Supervision

@@ -6,8 +6,8 @@ description: 将调研问题转化为结构化的收集、推导、检索和记�
 scene_class: business
 scene_type: external_resource
 domain: work
-lifecycle: supervised
-activation: active
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -62,3 +62,5 @@ sample_refs:
 - vault://redacted/research-pipeline/sample-1
 - vault://redacted/research-pipeline/sample-2
 - vault://redacted/research-pipeline/sample-3
+notes:
+- Transitioned supervised→routine at 2026-09-18T08:07:19.170846+00:00 by governance-agent
