@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 676 # 2026-09-18 675→676: 三板块真实数据采集 panel-collect.py (logs/metrics/value 真实性红线)
+    script_baseline: 677 # 2026-09-18 676→677: 全仓无界网络调用审计 timeout-audit.py (#3934/#3937 收口, advisory)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
@@ -2696,6 +2696,33 @@ gac:
     version: 2
     lifecycle: active
     adr: ADR-0205
+  - id: CR-GAC-TIMEOUT-AUDIT
+    created_at: '2026-09-18'
+    version: 1.0.0
+    lifecycle: active
+    dimension: X4
+    layer: meta
+    name: "治理脚本无界网络调用审计"
+    description: "bin/gac + bin/ssot + .githooks 中 git fetch/ls-remote/clone/submodule-update\
+      \ 与 curl/wget 必须有界 (gac_run_with_timeout/GAC_*_TIMEOUT/AGENT_CLONE_*_TIMEOUT/subprocess\
+      \ timeout=). #3934/#3937 只修了 claim/agent-clone 两处, 本规则做全仓审计.\
+      \ 首 landing advisory (warn-only, 详见 bin/gac/timeout-audit.py)"
+    check_type: consistency_drift
+    target: bin/gac/ + bin/ssot/ + .githooks/
+    source_ref: bin/gac/timeout-audit.py
+    executor:
+    - ci_gate
+    enforcement: advisory
+    owner: governance-team
+    added_at: '2026-09-18'
+    review_before: '2026-12-17'
+    justification: "#3934/#3937 有界超时修复的全仓审计收口 — 首 landing advisory\
+      \ (warn-only), 现有 17 处无界调用先 warn 不阻断, 90 天内收敛后评估升级"
+    expected: Check CR-GAC-TIMEOUT-AUDIT must pass without violations
+    remediation: Wrap shell network calls with gac_run_with_timeout/GAC_*_TIMEOUT;
+      pass timeout= in python subprocess (or route via bounded helper);
+      add --max-time/--timeout to curl/wget
+    related_runbooks: []
   drift:
     schedule: daily
     auto_heal: false
