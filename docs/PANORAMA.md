@@ -34,6 +34,8 @@ Panorama 同时提供人类站点与机器可读投影。Agent 应优先读取 `
 `.omo/state/task-registry.yaml` 单独投影为服务生命周期台账，不与执行任务混淆。
 债务与告警投影同样读取 managed code root，并以 `lifecycle_state` 为闭合真值，
 不再把 `status=registered` 的已关闭兼容记录误报为开放告警。
+Agent Brief 的 Objective Coverage 把 A1–A9、持久语义、Reference Cell、R0/AS0/RF0
+外部边界映射到 Ledger 和 live gate 证据；Claims 激活与业务价值始终单独显示，不得混入交付完成。
 
 ## 全景 SSOT
 

@@ -127,5 +127,6 @@ def test_template_has_agent_brief_human_surface() -> None:
     module = _module()
     assert 'id="s-agentbrief"' in module.TEMPLATE
     assert 'id="ab-kpi"' in module.TEMPLATE
+    assert 'id="ab-objectives"' in module.TEMPLATE
     assert "D.agent_visibility" in module.TEMPLATE
     assert "/agent-brief.json" in module.TEMPLATE
