@@ -24,6 +24,25 @@ def _payload():
         "gates": gates,
         "code_root_health": {"verdict": "PASS"},
         "claims_task16": {"activation_allowed": False},
+        "role_registry": {
+            "available": True,
+            "verdict": "PASS",
+            "integrity_ok": True,
+            "total": 2,
+            "by_state": {"admitted": 2},
+        },
+        "agent_cell_semantic": {
+            "available": True,
+            "verdict": "PASS",
+            "receipt_chain_ok": True,
+            "receipt_digests_ok": True,
+            "role_bindings_ok": True,
+            "capsule_bindings_ok": True,
+            "mesh_bindings_ok": True,
+            "queue_bindings_ok": True,
+            "latest_run_id": "semantic-smoke-test",
+            "latest_receipt_digest": "sha256:test",
+        },
     }
 
 
@@ -66,7 +85,8 @@ def test_objective_coverage_maps_delivery_without_value_or_activation(tmp_path, 
     assert report["delivery_complete"] is False
     by_id = {item["id"]: item for item in report["items"]}
     assert by_id["EXECUTION_ENVIRONMENT_A1_A9"]["status"] == "PASS"
-    assert by_id["PERSISTENT_ROLE_CAPSULE_HANDOFF_CLAIM_VERIFICATION_ASD"]["status"] == "DELIVERY_ACCEPTED"
+    assert by_id["PERSISTENT_ROLE_CAPSULE_HANDOFF_CLAIM_VERIFICATION_ASD"]["status"] == "DELIVERY_ACCEPTED_RUNTIME_VERIFIED"
+    assert by_id["PERSISTENT_ROLE_CAPSULE_HANDOFF_CLAIM_VERIFICATION_ASD"]["runtime_status"] == "VERIFIED"
     assert by_id["PERSISTENT_ROLE_CAPSULE_HANDOFF_CLAIM_VERIFICATION_ASD"]["value_status"] == "NOT_PROVEN"
     assert by_id["REFERENCE_CELL_DIRECT_LOCAL"]["status"] == "PASS"
     assert by_id["ORCA_R0"]["status"] == "PASS"
@@ -88,3 +108,22 @@ def test_objective_coverage_fails_partial_on_missing_ledger_or_gate(tmp_path, mo
     assert by_id["EXECUTION_ENVIRONMENT_A1_A9"]["status"] == "PARTIAL"
     assert by_id["PERSISTENT_ROLE_CAPSULE_HANDOFF_CLAIM_VERIFICATION_ASD"]["status"] == "EVIDENCE_INCOMPLETE"
     assert report["delivery_complete"] is False
+
+
+def test_objective_coverage_marks_runtime_unverified_without_live_semantics(tmp_path, monkeypatch) -> None:
+    module = _module()
+    monkeypatch.setattr(module, "CODE_ROOT", tmp_path / "code")
+    _write_ledger(tmp_path / "code/docs/plans/3y-bet-ledger.yaml")
+    payload = _payload()
+    payload["agent_cell_semantic"] = {"available": True, "verdict": "DEGRADED"}
+    payload["role_registry"] = {"available": True, "verdict": "DEGRADED", "integrity_ok": False}
+
+    report = module.collect_objective_coverage(payload)
+
+    item = next(
+        item for item in report["items"]
+        if item["id"] == "PERSISTENT_ROLE_CAPSULE_HANDOFF_CLAIM_VERIFICATION_ASD"
+    )
+    assert item["status"] == "DELIVERY_ACCEPTED_RUNTIME_UNVERIFIED"
+    assert item["runtime_status"] == "UNVERIFIED"
+    assert item["value_status"] == "NOT_PROVEN"

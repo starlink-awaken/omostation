@@ -33,6 +33,18 @@ def _payload():
         },
         "agent_cell_pool": {"available": True, "total": 2, "active": 1, "failed": 0},
         "reference_cell": {"id": "RC-DL", "verdict": "PASS"},
+        "agent_cell_semantic": {
+            "available": True,
+            "verdict": "PASS",
+            "receipt_chain_ok": True,
+            "receipt_digests_ok": True,
+            "role_bindings_ok": True,
+            "capsule_bindings_ok": True,
+            "mesh_bindings_ok": True,
+            "queue_bindings_ok": True,
+            "latest_run_id": "semantic-smoke-test",
+            "latest_receipt_digest": "sha256:test",
+        },
         "value_metrics": {"x3-value-stack": {"available": True}},
         "bets": {
             "total": 3,
