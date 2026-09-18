@@ -30941,6 +30941,91 @@ bets:
   - docs/plans/
   - docs/superpowers/specs/
   - .omo/_knowledge/retros/
+- id: BET-Y3H1-T7-07
+  title: documents-domain 场景卡批量 supervised→routine
+  track: T7-SCENE
+  window: Y3H1
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  value_indicator_policy: false
+  status: done
+  done_at: '2026-09-18'
+  accepted_specifications:
+  - content_digest: sha256:68f98298752ff932117bc81f28236b656d500339dc2ea462f76940c8d8d8752b
+    decision_ref: decision://accepted/BET-Y3H1-T7-07
+    spec_ref: repo://docs/superpowers/specs/2026-09-18-t7-07-documents-routine-design.md
+    spec_version: 1.0.0
+  goal: 将 documents-domain 50 张 supervised 场景卡批量升档到 routine。复用 T7-02/T7-03/T7-04/T7-05/T7-06
+    已验证的推进模式。
+  depends_on:
+  - BET-Y3H1-T7-04
+  - BET-Y3H1-T7-05
+  - BET-Y3H1-T7-06
+  done_when:
+  - 46 场景卡 lifecycle 从 supervised 升至 routine
+  - activation 从 monitored 升至 allowed
+  - ≥ 50 条 trial records 已写入
+  - bet-ledger lint exit 0
+  non_goals:
+  - 不复活 BET-Y3H1-T7-01 / BET-Y3H2-T7-01
+  - 不修复 4 张 internal_pipeline 场景卡的结构缺陷 (engineering-delivery/meeting-supervision/periodic-reporting/project-supervision)
+  - 不修改 journey 定义
+  circuit_breaker: 任一场景连续 3 次校准 < 0.4 → 该场景回退 supervised，其他继续。
+  retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y3H1-T7-07.md
+  progress:
+    phase: 3
+    phase_name: Closeout
+    phase_goal: Closeout — ledger done + completion_evidence + retro archived
+    current_step: Done
+    started_at: '2026-09-18'
+    done_when_met:
+    - 46 场景卡 lifecycle 从 supervised 升至 routine
+    - activation 从 monitored 升至 allowed
+    - 50 条 trial records 已写入 (50 场景 × 1 条 supervised)
+    - bet-ledger lint exit 0
+  underlying_workflow: project-code-change
+  workflow: bet-execution
+  write_surfaces:
+  - .omo/_truth/scenarios/v3/**
+  - .omo/_knowledge/workflow-mesh/shadow-scene-trials.jsonl
+  - docs/plans/
+  - .omo/_knowledge/retros/
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@8712c750ee760382dec41451db77a7f66ac9f68b
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-07.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-07.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-07.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-07.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-07.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-07.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y3H1-T7-07.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -31079,7 +31164,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 412
+  total_bets: 413
   windows:
   - Y1Q1
   - Y1Q2

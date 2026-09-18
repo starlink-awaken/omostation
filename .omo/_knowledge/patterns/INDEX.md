@@ -2,7 +2,7 @@
 status: active
 lifecycle: index
 owner: governance-team
-last-reviewed: 2026-09-17
+last-reviewed: 2026-09-16
 type: ssot
 ---
 
@@ -21,7 +21,7 @@ type: ssot
 | P99 | ADR-0092 self-ref 清 + omo_lint 兑现路径 | #0093 |
 | P100 | omo_lint schemas 子模块拆分 (1269→800L) | #0094 |
 | P101 | omo_lint yaml-bypass 子模块拆分 (800→731L) | #0095 |
-| P102 | omo_lint surfaces 子模块拆分 (731→694L, <600L ideal) | #0096 |
+| P102 | omo_lint surfaces 子模块拆分 (731→594L, <600L ideal) | #0096 |
 | P103 | omo_lint mutation-ledger 子模块拆分 (594→544L) | #0097 |
 
 ### 网关 / 安全 (P79)
@@ -30,24 +30,17 @@ type: ssot
 |-----|------|
 | P79 | Partial Worktree Reachability False-Positive |
 
-### 工作流 / 协作 (P104, P106)
+### 工作流 / 协作 (P104)
 
-| ID | 标题 | 教训 |
-|-----|------|------|
-| P104 | Ledger Closeout Reuse-Existing-Work Pattern | 复用已合入实现, 不重复造轮子 |
-| P106 | Main-Branch Edit Clobbering by Concurrent Agents | 裸 main 编辑被并发 agent 覆盖, 先切分支 |
+| ID | 标题 |
+|-----|------|
+| P104 | Ledger Closeout Reuse-Existing-Work Pattern (本会话沉淀) |
 
 ### 治理 / 检查 (P105)
 
 | ID | 标题 |
 |-----|------|
-| P105 | Doc-Governance Auto-Bump Pattern |
-
-### 测试 / 前端 (P107)
-
-| ID | 标题 | 教训 |
-|-----|------|------|
-| P107 | SPA Catch-All Route vs Test Expectation xfail Pattern | 设计冲突用 narrow exception + xfail, 不强行改产品代码 |
+| P105 | Doc-Governance Auto-Bump Pattern (本会话沉淀) |
 
 ## 引用规则
 
@@ -60,5 +53,5 @@ type: ssot
 ## 关联
 
 - `bin/ssot/auto-bump-doc-governance-budget.py` (P105 实现)
-- `.omo/_knowledge/retros/LESSONS-LEARNED-2026-09-16.md`
+- `.omo/_knowledge/retros/LESSONS-LEARNED-2026-09-16.md` (本会话沉淀)
 EOF

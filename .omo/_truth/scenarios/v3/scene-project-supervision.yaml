@@ -1,4 +1,4 @@
-schema: scene-card/v3
+schema: scene-card/v1
 scene_id: scene-project-supervision
 version: 3.0.0
 name: Project Supervision

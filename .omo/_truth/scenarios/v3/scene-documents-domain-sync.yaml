@@ -6,10 +6,10 @@ description: 域同步切换
 scene_class: business
 scene_type: inbound
 domain: work
-lifecycle: supervised
+lifecycle: routine
 status: completed
-status_note: "一次性历史任务已完成 (引用 BET 已 done) — 无触发器属预期; 接周期触发器会永久空转. 如未来需要同类持续治理, 应新建场景而非复用本卡。"
-activation: active
+status_note: 一次性历史任务已完成 (引用 BET 已 done) — 无触发器属预期; 接周期触发器会永久空转. 如未来需要同类持续治理, 应新建场景而非复用本卡。
+activation: allowed
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -45,3 +45,5 @@ input_contract: 源文件路径/范围
 result_contract: 完成确认 + 证据记录
 outcome_metric: documents_cutover_success_rate
 consumer: xiamingxing
+notes:
+- Transitioned supervised→routine at 2026-09-18T08:07:17.044752+00:00 by governance-agent

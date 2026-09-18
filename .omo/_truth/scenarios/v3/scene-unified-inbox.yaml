@@ -6,8 +6,8 @@ description: 将多渠道 (邮件/IM/OA) 的工作信息汇聚为统一、可分
 scene_class: business
 scene_type: external_resource
 domain: work
-lifecycle: supervised
-activation: active
+lifecycle: routine
+activation: allowed
 owner: xiamingxing
 approver: business-governance
 approval_state: confirmed
@@ -72,3 +72,5 @@ triggers:
   signal: email.received
   connector: apple_mail
   debounce: 300s
+notes:
+- Transitioned supervised→routine at 2026-09-18T08:07:19.227248+00:00 by governance-agent
