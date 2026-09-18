@@ -301,7 +301,7 @@ jobs:
 
   - name: wip-guard-hourly-active
     schedule: "17 * * * *"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py snapshot --reason cron-hourly --quiet >> runtime/cron/wip-snapshot.log 2>&1'
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py snapshot --reason cron-hourly --quiet && python3 bin/gac/workspace-wip-guard.py protect >> runtime/cron/wip-snapshot.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
