@@ -3,7 +3,7 @@ track: T14-CLEANUP
 window: Y1Q4
 title: ops services 20 missing 清理 — 注册表与现实同步
 priority: P2
-status: candidate
+status: done
 goal: 'ops status 显示 20 missing services, 这些是历史遗留 (analyzer/chat-history/
 
   cli.*/diary-synthesizer 等), 已不在 codebase 但仍在 bos-services.yaml 注册。
@@ -32,6 +32,10 @@ risk:
 task_type: bet
 owner: human
 source: manual
+completed_at: '2026-09-11'
+evidence:
+- docs/reports/ops-services-cleanup.md
+- docs/reports/ops-disposition-audit.json
 assigned_to: null
 dispatch_id: null
 run_ref: null
