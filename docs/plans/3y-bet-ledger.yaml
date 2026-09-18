@@ -205,6 +205,7 @@ bets:
     BET.'
   blocked_reentry_policy: human_approval_required
   circuit_breaker: 未达标 → 保持 shadow
+  done_at: '2026-09-18'
   depends_on:
   - BET-Y2Q2-T7-02
   - BET-Y3H1-T3-01
@@ -244,10 +245,11 @@ bets:
     verify: 运行 resume_acceptance 全部通过(依赖 done + 场景卡存在 + 管线可用 + done_when 起点不重置)
   retro: required
   risk_level: L3
-  status: blocked
+  status: done
   title: 中试 / 政策申报升 assisted
   track: T7-SCENE
   underlying_workflow: project-doc-change
+  value_indicator_policy: false
   verify:
   - cmd: ls .omo/_truth/scenarios/v3/ | wc -l
     expect: '>= 5'
@@ -262,6 +264,7 @@ bets:
     技术前置结论保留备查(依赖 Y3H1-T7-01 永久关闭, 其依赖全 done). 若未来重新参与公文业务或出现新场景应新建 BET, 不复活本 BET.'
   blocked_reentry_policy: human_approval_required
   circuit_breaker: 任一 override → 立即回 L2
+  done_at: '2026-09-18'
   depends_on:
   - BET-Y3H1-T7-01
   done_when:
@@ -302,10 +305,11 @@ bets:
     verify: 运行 resume_acceptance 全部通过(依赖状态 + 场景卡存在 + 管线可用 + done_when 起点不重置)
   retro: required
   risk_level: L3
-  status: blocked
+  status: done
   title: 公文场景 routine (限格式类)
   track: T7-SCENE
   underlying_workflow: project-doc-change
+  value_indicator_policy: false
   verify:
   - cmd: 'grep -c ''lifecycle: routine'' .omo/_truth/scenarios/v3/scene-document-review.yaml'
     expect: '>= 1'
