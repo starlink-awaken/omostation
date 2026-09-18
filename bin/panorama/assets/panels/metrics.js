@@ -237,8 +237,21 @@ function zxMToggleSeries(k){ var st=zxMState(); st.hidden[k]=!st.hidden[k]; zxRe
 
 /* 真实重渲染钩子：供 refreshPanorama 调用（保持面板动态） */
 function zxRenderPanels(live){
-  /* 实时刷新入口: 先换入新快照, 再重渲三板块（真正动态, 不再读死常量） */
-  if(live && typeof live==='object' && Object.keys(live).length) window.__zxLiveData=live;
+  /* 实时刷新入口: 换入新快照后重渲三板块（真正动态, 不再读死常量）。
+
+     注意: /__panorama_data__ 返回的是**精简 payload**（仅 panorama 自己的 ~18 个键），
+     不含 panel_events/history/value。若无条件整包替换, 面板会因取不到数据而退化成
+     NO DATA —— 所以这里做保护性合并: 新数据缺的 panel_* 键沿用上一份, 不丢失。 */
+  if(live && typeof live==='object' && Object.keys(live).length){
+    var base = window.__zxLiveData || (typeof D!=='undefined' && D) || {};
+    var merged = {};
+    Object.keys(base).forEach(function(k){ merged[k]=base[k]; });
+    Object.keys(live).forEach(function(k){ merged[k]=live[k]; });
+    ['panel_events','panel_history','panel_value'].forEach(function(k){
+      if(!live[k] && base[k]) merged[k]=base[k];
+    });
+    window.__zxLiveData = merged;
+  }
   zxRenderLogs(); zxRenderMetrics(); zxRenderValue();
 }
 (function zxMetricsBoot(){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',zxRenderMetrics); else zxRenderMetrics(); })();
