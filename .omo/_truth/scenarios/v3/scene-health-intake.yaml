@@ -5,7 +5,7 @@ name: Health Intake
 description: 将症状/体征指标/医嘱等健康信息结构化记录到本地健康台账, 并判定是否需要就诊
 scene_class: business
 scene_type: inbound
-domain: work
+domain: health
 lifecycle: routine
 activation: allowed
 owner: xiamingxing

@@ -5,7 +5,7 @@ name: Health Archive
 description: 归档就诊档案与体检报告, 提取复查/用药时间节点形成追踪清单 (journey 终态)
 scene_class: business
 scene_type: inbound
-domain: work
+domain: health
 lifecycle: routine
 activation: allowed
 owner: xiamingxing

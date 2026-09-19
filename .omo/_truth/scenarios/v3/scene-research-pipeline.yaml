@@ -5,7 +5,7 @@ name: Research Pipeline
 description: 将调研问题转化为结构化的收集、推导、检索和记忆流程，产出可引用的洞察报告
 scene_class: business
 scene_type: external_resource
-domain: work
+domain: research
 lifecycle: routine
 activation: allowed
 owner: xiamingxing
