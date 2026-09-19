@@ -41,7 +41,8 @@ class TaskCheck:
 
     @property
     def is_completed(self) -> bool:
-        return self.state in ("resolved", "completed")
+        # 债务注册表用 resolved/closed; gap-item 用 resolved/completed —— 两者都算完成
+        return self.state in ("resolved", "completed", "closed")
 
     @property
     def is_verified(self) -> bool:
@@ -49,10 +50,19 @@ class TaskCheck:
         return self.is_completed and self.evidence_ok
 
 
-# 校验源 —— `.omo/debt/gap-items/`. 2026-09-19 实证: 该目录缺失时 scan() 静默
-# 返回空, 下游据 0/0 报 "✅ 门禁通过" —— **真空合格** (声称能检测
-# "resolved but no evidence" 却什么都没扫)。故显式暴露源状态, 缺失即失败。
-GAP_ITEMS_REL = Path(".omo") / "debt" / "gap-items"
+# 校验源 —— **真实债务注册表** `.omo/debt/items/`.
+#
+# 2026-09-19 收敛 (本项原扫 `.omo/debt/gap-items/`): 该目录**从未入过 git**
+# (`git log --all --diff-filter=A -- .omo/debt/gap-items/*` 无结果) —— 不是丢失,
+# 而是从未创建。3 个脚本却引用它 (verify.py / autoloop-controller.py /
+# governance-scanner.py), 且 verify.py 扫得 0 对象后仍报
+# "✅ 门禁通过: 所有 completed 任务都有 evidence." —— **真空合格**:
+# docstring 声称检测 "resolved but no evidence fraud", 实际什么都没扫。
+#
+# 收敛前先量化了影响面: 仅认路径型 evidence_refs 时, 指向 items/ 会对 19 个
+# 终态项**全量误报** (债务 schema 以文本型 resolution_evidence 为主)。故同步
+# 扩展了 _shared.check_evidence 接受文本型证据; 扩展后误报 0。
+GAP_ITEMS_REL = Path(".omo") / "debt" / "items"
 
 
 def scan_source(root: Path | None = None) -> tuple[Path, int]:
