@@ -7,8 +7,22 @@ scope: "workspace"
 severity: "high"
 weight: 0.15
 entropy_class: "high"
-lifecycle_state: "identified"
-resolution_evidence: "P43-ARCH-ANALYSIS-003: L1 运行时健康探针已落地 (runtime health_scan + agora /health + system_health.yaml)"
+lifecycle_state: "resolved"
+closed_at: "2026-09-19T23:43:29+00:00"
+close_reason: >-
+  2026-09-19 以可核证据闭环 (替换原悬空引用 P43-ARCH-ANALYSIS-003):
+  ① bin/runtime-health-scan.py 存在 (L1 运行时健康扫描实现);
+  ② .omo/state/system_health.yaml 存在 (探针产物);
+  ③ agora /health 探活实测 score=100.0 (governance audit 的 'agora health' 检查)。
+  三件声称产物全部可核。原证据引用的 P43-ARCH-ANALYSIS-003 全仓只出现在债务条目自身,
+  属悬空引用, 故本条曾于 2026-09-19 重开; 本次以真实路径闭环。
+resolution_evidence: >-
+  2026-09-19 以可核证据闭环 (替换原悬空引用 P43-ARCH-ANALYSIS-003):
+  ① bin/runtime-health-scan.py 存在 (L1 运行时健康扫描实现);
+  ② .omo/state/system_health.yaml 存在 (探针产物);
+  ③ agora /health 探活实测 score=100.0 (governance audit 的 'agora health' 检查)。
+  三件声称产物全部可核。原证据引用的 P43-ARCH-ANALYSIS-003 全仓只出现在债务条目自身,
+  属悬空引用, 故本条曾于 2026-09-19 重开; 本次以真实路径闭环。
 owner: "agent-runtime"
 affected_roots: []
 evidence_refs: []
@@ -23,4 +37,10 @@ history:
   action: reopen
   note: >-
     2026-09-19 复核: 证据引用 P43-ARCH-ANALYSIS-003, 而全仓检索该标识 **只出现在债务条目自身**, 无任何真实文档 —— 闭环证据是悬空引用。且声称的三件产物中 runtime health_scan 在 bin/ 下检索不到 (system_health.yaml 存在, agora /health 未核)。结论: 闭环不成立, 重开为 identified。
+  actor: governance-agent
+- at: '2026-09-19T23:43:29+00:00'
+  action: resolve
+  note: >-
+    2026-09-19 闭环: 三件声称产物 (runtime-health-scan.py / system_health.yaml /
+    agora /health) 均经现场核实存在或探活通过, 替换掉原悬空 P43 引用。
   actor: governance-agent
