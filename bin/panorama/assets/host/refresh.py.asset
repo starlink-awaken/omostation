@@ -1242,6 +1242,49 @@ def apply_results(previous, results, attempted_at):
                                       gate=f"采样时 active workflow={active_count}。实施前重读当前 claim 与 root-gate，不据历史 BET 名称推断占用。")
     return data
 
+def _triage_strategic_gap(gap):
+    kind = str(gap.get("kind") or "unknown")
+    entity = str(gap.get("entity_id") or "")
+    source_path = str((gap.get("source") or {}).get("path") or "")
+    if kind in {"issue_status_conflict", "duplicate_id"}:
+        return "covered_by_prepared_reconciliation", {
+            "action": "review the prepared reconciliation diff, then run governed commit/PR gates",
+            "canonical_direct_write": False,
+        }
+    if kind == "missing_reference" and entity.startswith("BET-"):
+        return "bounded_projection_absence", {
+            "action": "retain the retro but mark the referenced BET absent from the bounded portfolio projection",
+            "canonical_direct_write": False,
+        }
+    if kind == "missing_reference" and (
+        "历史文档治理索引" in source_path or "Agent体系全景静态归档" in source_path
+    ):
+        return "historical_archive_reference", {
+            "action": "retain the historical archive reference as advisory; do not resurrect stale history",
+            "canonical_direct_write": False,
+        }
+    if kind == "source_observation_error" and "journey-completion-baseline" in entity:
+        return "canonical_workspace_drift", {
+            "action": "reconcile the dirty canonical Workspace through a managed recovery workflow",
+            "canonical_direct_write": False,
+        }
+    if kind == "source_observation_error" and entity.endswith(".omo/debt/gap-items"):
+        return "obsolete_optional_path", {
+            "action": "remove or explicitly deprecate the obsolete bounded source path in a governed PR",
+            "canonical_direct_write": False,
+        }
+    return "requires_owner_review", {
+        "action": "identify the source owner before changing any referenced artifact",
+        "canonical_direct_write": False,
+    }
+
+
+def _annotate_strategic_gaps(strategy):
+    for gap in ((strategy.get("trace") or {}).get("gaps") or []):
+        if isinstance(gap, dict):
+            gap["triage"], gap["remediation"] = _triage_strategic_gap(gap)
+
+
 def integrate_strategy(data, previous):
     """Derive strategic views without turning old successful reads into new truth."""
     status = data.get("source_states", {}).get("strategy", {})
@@ -1256,6 +1299,7 @@ def integrate_strategy(data, previous):
             value["phase_plans"] = copy.deepcopy(data.get("roadmap", {}).get("milestones", []))
             value["generation_id"] = data.get("generation_id")
             data["strategic"] = value
+            _annotate_strategic_gaps(value)
             data.setdefault("source_states", {})["strategy-projection"] = {"status": "OK", "last_success_at": value.get("observed_at"),
                 "last_attempt_at": status.get("last_attempt_at"), "proof_scope": "projection-computation-only"}
             return
@@ -1288,6 +1332,7 @@ def integrate_strategy(data, previous):
           "reason": failure or status.get("error_class") or "source_not_observed"})
     value["projection_error"] = failure
     data["strategic"] = value
+    _annotate_strategic_gaps(value)
     data.setdefault("source_states", {})["strategy-projection"] = {"status": value["state"], "last_attempt_at": status.get("last_attempt_at"),
         "last_success_at": old.get("observed_at") if isinstance(old, dict) else None, "error_class": failure or "source_unavailable"}
 
@@ -1459,18 +1504,6 @@ def render(data, template):
     # Mutate `data` in place so publish_generation writes the same object embedded in HTML.
 
     def clean_not_proven(obj):
-        if isinstance(obj, dict):
-            for key in list(obj.keys()):
-                if obj[key] == 'NOT_PROVEN':
-                    del obj[key]
-                else:
-                    clean_not_proven(obj[key])
-        elif isinstance(obj, list):
-            for idx, item in enumerate(list(obj)):
-                if item == 'NOT_PROVEN':
-                    obj[idx] = '—'
-                else:
-                    clean_not_proven(item)
         return obj
 
     clean_not_proven(data)
@@ -1575,6 +1608,80 @@ def refresh():
             data["panel_events"] = _p.get("panel_events", {})
             data["panel_history"] = _p.get("panel_history", {})
             data["panel_value"] = _p.get("panel_value", {})
+            # Pending exact-commit publications are verified in the dashboard runtime
+            # and projected read-only so the human UI and Agent Brief share one state.
+            _local_panorama_spec = _ilu.spec_from_file_location(
+                "local_panorama_collect",
+                "/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py",
+            )
+            _local_panorama = _ilu.module_from_spec(_local_panorama_spec)
+            _local_panorama_spec.loader.exec_module(_local_panorama)
+            data["pending_publications"] = _local_panorama.collect_pending_publications()
+            _reconciliation_manifest = APP / "reconciliation-candidates.json"
+            try:
+                data["reconciliation_candidates"] = {
+                    "schema": "reconciliation-candidate-projection/v1",
+                    "available": True,
+                    "manifest_path": str(_reconciliation_manifest),
+                    "items": json.loads(_reconciliation_manifest.read_text(encoding="utf-8")).get("items", []),
+                }
+            except Exception:
+                data["reconciliation_candidates"] = {
+                    "schema": "reconciliation-candidate-projection/v1",
+                    "available": False,
+                    "items": [],
+                }
+            # Use the dashboard-local deduping value projection. The canonical
+            # collector above remains compatible, but its two source feeds can
+            # contain mirrored adjudications and must not be double-counted.
+            _local_panel_spec = _ilu.spec_from_file_location(
+                "local_panel_collect",
+                str(APP / "panel-collect.py"),
+            )
+            _local_panel = _ilu.module_from_spec(_local_panel_spec)
+            _local_panel_spec.loader.exec_module(_local_panel)
+            data["panel_value"] = _local_panel.collect_value_evidence(root=WORKSPACE, context=data)
+            data["value_evidence_validation"] = _p.get("value_evidence_validation", {})
+            data["objective_coverage"] = _p.get("objective_coverage", {})
+            data["unfinished_objectives"] = _p.get("unfinished_objectives", [])
+            data["claims_activation_readiness"] = _p.get("claims_activation_readiness", {})
+            data["claims_activation_request"] = _p.get("claims_activation_request", {})
+            _runtime_dashboard_path = Path("/Users/xiamingxing/Workspace/runtime/dashboard/data.json")
+            if _runtime_dashboard_path.is_file():
+                _runtime_dashboard = json.loads(_runtime_dashboard_path.read_text(encoding="utf-8"))
+                if isinstance(_runtime_dashboard.get("objective_coverage"), dict):
+                    data["objective_coverage"] = _runtime_dashboard["objective_coverage"]
+                if isinstance(_runtime_dashboard.get("unfinished_objectives"), list):
+                    data["unfinished_objectives"] = _runtime_dashboard["unfinished_objectives"]
+                _runtime_visibility = _runtime_dashboard.get("agent_visibility")
+                if isinstance(_runtime_visibility, dict):
+                    _runtime_authority = _runtime_visibility.get("authority")
+                    if isinstance(_runtime_authority, dict):
+                        if isinstance(_runtime_authority.get("claims_activation_request"), dict):
+                            data["claims_activation_request"] = _runtime_authority["claims_activation_request"]
+                        if isinstance(_runtime_authority.get("claims_activation_readiness"), dict):
+                            data["claims_activation_readiness"] = _runtime_authority["claims_activation_readiness"]
+            data["agent_read_interfaces"] = {
+                "schema": "agent-read-interfaces/v1",
+                "agent_brief": "/agent-brief.json",
+                "agent_brief_api": "/api/v1/agent/brief",
+                "authorization_desk": "/api/v1/agent/authorization-desk",
+                "pending_authorizations": "/api/v1/agent/pending-authorizations",
+                "value_proof_readiness": "/api/v1/agent/value-proof-readiness",
+                "objective_coverage": "/api/v1/agent/objective-coverage",
+                "strategic_gaps": "/api/v1/agent/strategic-gaps",
+                "reconciliation_candidates": "/api/v1/agent/reconciliation-candidates",
+                "snapshot": "/api/snapshot",
+                "observatory": "/api/v1/agent/panorama",
+            }
+            data["operator_tools"] = {
+                "schema": "agent-operator-tools/v1",
+                "value_operator_helper": "/Users/xiamingxing/.local/share/zhixing-dashboard/bin/value-operator.py",
+            }
+            # Cache-backed admission evidence remains PASS, but is not a live probe.
+            for _gate in (data.get("gates") or []):
+                if isinstance(_gate, dict) and _gate.get("id") in {"A6", "A7"} and "cache PASS" in str(_gate.get("detail", "")):
+                    _gate["live"] = False
             # Agents and Gates (for Logs/Metrics sections)
             if _p.get("agents"):
                 data["agents"] = _p.get("agents")

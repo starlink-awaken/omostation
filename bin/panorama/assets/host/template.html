@@ -523,7 +523,10 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <span class="nav-group-toggle">▼</span>
   </div>
   <div class="nav-group-items">
+    <a href="#personal" class="nav-item-core"><span class="nav-symbol">👑</span>主权中心</a>
+    <a href="#workbench" class="nav-item-core"><span class="nav-symbol">🖥️</span>中枢工作台</a>
     <a href="#orient" aria-current="page" class="nav-item-core"><span class="nav-symbol">◎</span>全景总览</a>
+    <a href="#panorama" class="nav-item-core"><span class="nav-symbol">📐</span>白皮书指导</a>
     <a href="#mof-grid" class="nav-item-core"><span class="nav-symbol">🛡️</span>MOF 元模型与约束</a>
     <a href="#ledger" class="nav-item-core"><span class="nav-symbol">▤</span>路线与 BET</a>
     <a href="#next" class="nav-item-core"><span class="nav-symbol">→</span>接下来做什么</a>
@@ -538,12 +541,15 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   <div class="nav-group-items">
     <a href="#topology" class="nav-item-engineering"><span class="nav-symbol">☵</span>架构拓扑</a>
     <a href="#arch" class="nav-item-engineering"><span class="nav-symbol">↕</span>体系流程</a>
+    <a href="#atlas" class="nav-item-engineering"><span class="nav-symbol">◇</span>架构与模型</a>
+    <a href="#capabilities" class="nav-item-engineering"><span class="nav-symbol">▦</span>能力与 BOS</a>
     <a href="#gov" class="nav-item-engineering"><span class="nav-symbol">◇</span>恢复准入</a>
     <a href="#swarm" class="nav-item-engineering"><span class="nav-symbol">↔</span>Agent 协同</a>
     <a href="#value" class="nav-item-engineering"><span class="nav-symbol">↗</span>价值验收</a>
     <a href="#metrics" class="nav-item-engineering"><span class="nav-symbol">📊</span>指标度量</a>
     <a href="#health" class="nav-item-engineering"><span class="nav-symbol">🏥</span>健康诊断</a>
     <a href="#loops" class="nav-item-engineering"><span class="nav-symbol">⟳</span>回路观测</a>
+    <a href="#trace" class="nav-item-engineering"><span class="nav-symbol">🔗</span>因果拓扑图谱</a>
   </div>
 </div>
 <!-- Engineering Mode: Knowledge & Ops -->
@@ -556,6 +562,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <a href="#logs" class="nav-item-engineering"><span class="nav-symbol">📋</span>事件日志</a>
     <a href="#know" class="nav-item-engineering"><span class="nav-symbol">▧</span>文档知识</a>
     <a href="#knowledge-memory" class="nav-item-engineering"><span class="nav-symbol">◈</span>知识记忆</a>
+    <a href="#learning" class="nav-item-engineering"><span class="nav-symbol">🧬</span>经验与结晶</a>
     <a href="#scene-system" class="nav-item-engineering"><span class="nav-symbol">🃏</span>场景系统</a>
     <a href="#skills-inventory" class="nav-item-engineering"><span class="nav-symbol">⚙</span>技能清单</a>
   </div>
@@ -680,8 +687,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <!-- ZHIXING-PANEL:metrics:BEGIN -->
 <style>
 .zx-m-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.zx-m-kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative;transition:all .15s}
-.zx-m-kpi:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(58,100,179,.1)}
+.zx-m-kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative}
 .zx-m-kpi .zx-m-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
 .zx-m-kpi .zx-m-v{font:600 21px/1.15 var(--mono);letter-spacing:-.5px}
 .zx-m-kpi .zx-m-u{font-size:10px;color:var(--muted);margin-left:3px;font-family:var(--mono)}
@@ -692,14 +698,6 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 .zx-m-kpi .zx-m-d.flat{color:#8296a8;background:#f1f5f9}
 .zx-m-kpi .zx-m-spark{margin-top:8px}
 .zx-m-kpi svg{display:block;width:100%;height:26px}
-.zx-m-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
-.zx-m-sum-card{background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px}
-.zx-m-sum-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.zx-m-sum-body{flex:1;min-width:0}
-.zx-m-sum-body .zx-m-sum-v{font:600 18px/1.2 var(--mono)}
-.zx-m-sum-body .zx-m-sum-l{font-size:10px;color:var(--muted);margin-top:2px}
-.zx-m-group-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;padding-left:2px}
-.zx-m-group-title:first-child{margin-top:0}
 .zx-m-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .zx-m-card>h3{margin:0 0 10px;font-size:13px;display:flex;align-items:center;gap:8px}
 .zx-m-2col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
@@ -716,21 +714,13 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 .zx-nodata .zx-state{display:inline-block;margin-bottom:5px;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#8296a8}
 .zx-cov{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6}
 .zx-cov code{font:9.5px var(--mono);color:#7a8fa3}
-.zx-m-radar-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.zx-m-src-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
-.zx-m-src-item{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:10.5px}
-.zx-m-src-item .zx-m-src-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.zx-m-src-item .zx-m-src-name{font-weight:600;color:var(--ink)}
-.zx-m-src-item .zx-m-src-bar{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin-top:4px}
-.zx-m-src-item .zx-m-src-bar>i{display:block;height:100%;border-radius:2px}
 </style>
 <!-- ZHIXING-PANEL:logs:BEGIN -->
 <style>
 .zx-panel{--zx-ok:#10b981;--zx-warn:#f59e0b;--zx-red:#ef4444;--zx-dim:#94a3b8;--zx-blue:#3a64b3;--zx-teal:#2e7e79;--zx-violet:#8b5cf6}
 .zx-row{display:grid;gap:12px}
 .zx-kpis{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
-.zx-kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden;transition:all .15s}
-.zx-kpi:hover{border-color:var(--zx-blue);box-shadow:0 2px 8px rgba(58,100,179,.1)}
+.zx-kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
 .zx-kpi .zx-kv{font:600 22px/1.15 var(--mono);letter-spacing:-.5px}
 .zx-kpi .zx-kl{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.4px}
 .zx-kpi .zx-ks{position:absolute;top:10px;right:12px;font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px}
@@ -752,20 +742,13 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 .zx-filters select,.zx-filters input{border:1px solid var(--line);border-radius:6px;padding:4px 7px;font-size:11px;background:#fff;color:inherit;max-width:190px}
 .zx-filters input{flex:1;min-width:110px}
 .zx-stream{max-height:430px;overflow-y:auto;margin:0 -4px}
-.zx-ev{display:flex;gap:9px;padding:8px 6px;border-bottom:1px solid #f4f7fb;font-size:11px;align-items:flex-start;border-radius:6px;transition:background .12s}
+.zx-ev{display:flex;gap:9px;padding:7px 6px;border-bottom:1px solid #f4f7fb;font-size:11px;align-items:flex-start;border-radius:6px}
 .zx-ev:hover{background:#fafcff}
 .zx-ev .zx-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:0 0 auto;background:var(--zx-blue)}
-.zx-ev .zx-dot.ok{background:var(--zx-ok);box-shadow:0 0 0 2px rgba(16,185,129,.15)}
-.zx-ev .zx-dot.warn{background:var(--zx-warn);box-shadow:0 0 0 2px rgba(245,158,11,.15)}
-.zx-ev .zx-dot.err{background:var(--zx-red);box-shadow:0 0 0 2px rgba(239,68,68,.15)}
 .zx-ev .zx-body{flex:1;min-width:0}
-.zx-ev .zx-sum{color:#233;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.zx-ev .zx-sum{color:#233;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .zx-ev .zx-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px;font-size:10px;color:var(--muted);align-items:center}
 .zx-ev .zx-t{color:#8fa3b5;font:10px var(--mono);flex:0 0 auto}
-.zx-ev.zx-ev-fail{border-left:2px solid var(--zx-red);background:#fef2f2}
-.zx-ev.zx-ev-fail:hover{background:#fee2e2}
-.zx-ev.zx-ev-success{border-left:2px solid var(--zx-ok)}
-.zx-ev.zx-ev-warn{border-left:2px solid var(--zx-warn)}
 .zx-tag{font-size:9px;padding:1px 5px;border-radius:4px;background:#eef3f9;color:#5b7690}
 .zx-bars{display:flex;flex-direction:column;gap:6px}
 .zx-bar-row{font-size:10.5px}
@@ -791,19 +774,13 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 .zx-v-banner h3{margin:0 0 5px;font-size:14px}
 .zx-v-banner ul{margin:0;padding-left:17px;font-size:11.5px;color:#5b7690;line-height:1.75}
 .zx-v-loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(166px,1fr));gap:11px;margin-top:12px}
-.zx-v-stage{border:1px solid var(--line);border-radius:10px;padding:12px 13px;background:#fff;position:relative;overflow:hidden;transition:all .15s}
-.zx-v-stage:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(58,100,179,.1)}
+.zx-v-stage{border:1px solid var(--line);border-radius:10px;padding:12px 13px;background:#fff;position:relative;overflow:hidden}
 .zx-v-stage.nodata{border-style:dashed;background:#fcfdfe}
 .zx-v-stage .zx-v-n{font:600 10px var(--mono);color:#9aabbd;letter-spacing:.6px}
 .zx-v-stage .zx-v-name{font-size:12.5px;font-weight:600;margin:2px 0 7px}
 .zx-v-stage .zx-v-count{font:600 23px/1.1 var(--mono)}
 .zx-v-stage .zx-v-src{font-size:9.5px;color:var(--muted);margin-top:6px;word-break:break-all;line-height:1.5}
 .zx-v-stage .zx-v-edge{position:absolute;left:0;top:0;bottom:0;width:3px}
-.zx-v-proof{display:flex;align-items:center;gap:8px;padding:10px 0;flex-wrap:wrap}
-.zx-v-proof-step{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted)}
-.zx-v-proof-step .zx-v-ps-dot{width:8px;height:8px;border-radius:50%;background:var(--line)}
-.zx-v-proof-step.active .zx-v-ps-dot{background:var(--zx-ok)}
-.zx-v-proof-arrow{color:var(--muted);font-size:11px}
 .zx-v-thr{display:flex;flex-direction:column;gap:11px}
 .zx-v-thr-row{font-size:11.5px}
 .zx-v-thr-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:4px;align-items:baseline}
@@ -855,6 +832,10 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 
 <div class="zx-v-grid2" style="margin-top:14px">
   <div class="zx-v-card">
+    <h3>📌 冻结修订基线</h3>
+    <div id="zx-v-baseline" class="small">加载中…</div>
+  </div>
+  <div class="zx-v-card">
     <h3>💎 五阶段价值回路 <span class="zx-chip dim" id="zx-v-loop-chip">—</span></h3>
     <div class="zx-v-loop" id="zx-v-stages"></div>
     <div style="font-size:10px;color:var(--muted);margin-top:10px">实线=有真实计数；虚线=该阶段暂无数据（NO_DATA），非 0 伪装。</div>
@@ -883,6 +864,27 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <div><h3>排除无效样本</h3><p>测试、合成、无 HumanVerdict 绑定或重复样本独立分区。<code>qualifying=false</code> 的记录计入总量但不进入价值门。</p></div>
     <div><h3>失败保持可见</h3><p>缺失与过期标记为未知；替代必须证明覆盖等价，保留原失败历史。比率型指标在样本不足时判为不可判定，不显示达标。</p></div>
   </div>
+</div>
+
+<div class="zx-v-card" style="margin-top:14px">
+  <h3>🧪 真实使用样本记录协议</h3>
+  <p class="small">只有<strong>真实使用后由 principal 裁决</strong>的记录才能计入 30 个样本目标。Agent 不得代填、合成、批量生成或回填。</p>
+  <div class="zx-v-guard">
+    <div>
+      <h3>必须绑定</h3>
+      <p>真实 run_id、scene_id、decision_id、principal_id、fresh authority receipt digest，以及当前冻结 baseline。</p>
+    </div>
+    <div>
+      <h3>当前冻结 baseline</h3>
+      <p class="mono" style="word-break:break-all">value-recorder-baseline-20260919-unique-exec</p>
+      <p style="font-size:10.5px;color:var(--muted)">sha256:845fe0492c4b491559eccaa117ee1ad8cc93f2e6a7db181a39ef1ebf07ba644e</p>
+    </div>
+    <div>
+      <h3> Qualifying 条件</h3>
+      <p>post-baseline、real_human、HumanVerdict 有效，且净节省时间不少于 60 秒。</p>
+    </div>
+  </div>
+  <p class="small muted gap">记录入口使用 canonical recorder 的本地 CLI；HTTP 面板不提供写入接口，防止面板伪造价值证据。</p>
 </div>
 </section>
 <!-- ZHIXING-PANEL:value:END -->
@@ -960,12 +962,11 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   <div id="zx-m-fresh" style="font-size:11px;color:var(--muted)"></div>
 </div>
 
-<div id="zx-m-summary" class="zx-m-summary"></div>
 <div id="zx-m-kpis" class="zx-m-kpis" style="margin-top:14px"></div>
 
 <div class="zx-m-2col" style="margin-top:14px">
   <div class="zx-m-card">
-    <h3>🧭 五维健康度雷达 <span style="font-size:10px;color:var(--muted);font-weight:400">保鲜 · 时效 · 漂移 · 对齐 · 治理</span></h3>
+    <h3>🧭 五维健康度雷达</h3>
     <div style="display:flex;justify-content:center"><div id="zx-m-radar"></div></div>
     <div id="zx-m-radar-legend" style="margin-top:10px"></div>
   </div>
@@ -1085,8 +1086,52 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   </div>
   <div id="loops-freshness" style="font-size:11px;color:var(--muted)"></div>
 </div>
+
+<details class="card gap">
+  <summary style="cursor:pointer;font-weight:600">📐 回路体系纲领（来自白皮书第14章，静态参考，展开查看）</summary>
+  <div class="gap">
+    <h3 style="margin:0 0 10px">六类规范回路</h3>
+    <table class="ext-compact-table" style="width:100%;margin-bottom:16px">
+      <thead><tr><th>回路</th><th>类型</th><th>目的</th><th>主要周期</th></tr></thead>
+      <tbody>
+        <tr><td><b>L1</b> 主价值回路</td><td class="small">端到端闭环</td><td class="small">将真实信号变成人类认可结果</td><td class="small mono">分钟–周</td></tr>
+        <tr><td><b>L2</b> 认知增强回路</td><td class="small">Reinforcing</td><td class="small">让系统越来越理解主人和情境</td><td class="small mono">Episode–月</td></tr>
+        <tr><td><b>L3</b> 执行控制回路</td><td class="small">Balancing</td><td class="small">使实际执行回归授权目标</td><td class="small mono">秒–小时</td></tr>
+        <tr><td><b>L4</b> 信任—自治回路</td><td class="small">R+B 配对</td><td class="small">在可靠证据基础上扩大安全委托</td><td class="small mono">周–季度</td></tr>
+        <tr><td><b>L5</b> 进化回路</td><td class="small">R+B 配对</td><td class="small">改善系统而不扩大失控复杂度</td><td class="small mono">周–月</td></tr>
+        <tr><td><b>L6</b> 元体系抗熵回路</td><td class="small">Balancing</td><td class="small">维持对象、关系、权威和实现一致</td><td class="small mono">日–季度</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">安全、可靠性和资源平面各自提供局部平衡回路，但它们只能约束上述主回路，不能另建业务目标。</p>
+
+    <div class="grid two gap" style="margin-top:14px">
+      <div class="card" style="background:var(--paper)">
+        <h4 style="margin:0 0 8px">三个增强回路</h4>
+        <div class="small" style="line-height:1.8">
+          <b>R-G1 人机认知增强</b>：真实裁决 → 情境理解提高 → 修订负担下降 → 委托增加<br>
+          <b>R-G2 信任与委托增强</b>：可验证成功证据 → 信任提高 → 可授权范围增加<br>
+          <b>R-G3 能力复用增强</b>：通用契约增加 → 接入成本下降 → 契约成熟度提高
+        </div>
+      </div>
+      <div class="card" style="background:var(--paper)">
+        <h4 style="margin:0 0 8px">五个控制回路</h4>
+        <div class="small" style="line-height:1.8">
+          <b>B-C1</b> 目标—结果误差控制（KR vs Outcome）<br>
+          <b>B-C2</b> 执行偏差控制（期望 vs 实际 Run）<br>
+          <b>B-C3</b> 风险—自治控制（override → 降级 tier）<br>
+          <b>B-C4</b> 资源与注意力控制（WIP/成本/打扰）<br>
+          <b>B-C5</b> 元体系抗熵控制（orphan/drift → repair/retire）
+        </div>
+      </div>
+    </div>
+    <p class="small muted gap">完整定义见 <a href="#panorama">白皮书指导</a> 与 <code>白皮书 §14</code>。增强回路必须绑定控制回路，反方向晋升必须慢于降级。</p>
+  </div>
+</details>
+
 <!-- Status Bar -->
 <div id="loops-status-bar" class="metrics-status-bar"></div>
+<!-- Live control-loop dashboard (mesh.live_loops) -->
+<div id="loops-dashboard-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载四大控制回路...</span></div></div>
 <!-- Value Loop + Vitality -->
 <div class="grid two gap" style="margin-top:16px">
   <div class="card" style="padding:16px 20px">
@@ -1139,11 +1184,41 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <!-- 子系统 4: 演进路线时序甘特与阶段里程碑 -->
 <div id="next-roadmap-timeline" class="next-module-card"></div>
 
+<div class="card gap">
+  <h2>目标覆盖与未完成目标</h2>
+  <div id="objective-coverage-summary" class="small muted gap"></div>
+  <div style="overflow-x:auto"><table class="table"><thead><tr><th>状态</th><th>目标</th><th>价值</th><th>运行</th><th>要求</th></tr></thead><tbody id="objective-coverage-rows"></tbody></table></div>
+  <h3 class="gap">未完成目标</h3>
+  <div id="unfinished-objectives" class="list"></div>
+</div>
+
+<div class="card gap">
+  <h2>战略图谱已知缺口</h2>
+  <div id="strategic-gaps-summary" class="small muted gap"></div>
+  <div style="overflow-x:auto"><table class="table"><thead><tr><th>级别</th><th>类型</th><th>triage</th><th>实体</th><th>问题</th><th>下一步</th></tr></thead><tbody id="strategic-gaps-rows"></tbody></table></div>
+</div>
+
+<div class="card gap">
+  <h2>Reconciliation 候选包</h2>
+  <div id="reconciliation-candidates" class="list"></div>
+  <p class="small muted gap">这里只展示已准备但尚未提交的治理修复候选。提交、push、PR 和合并仍需按对应授权门执行。</p>
+</div>
+
 <!-- 子系统 5: 可审查的实施准备与法定信封 (原生兼容节点保留) -->
 <div class="grid two gap">
+  <article class="card" style="border-color:#f59e0b">
+    <h2>等待精确人工授权</h2>
+    <div id="pending-authorizations" class="list"></div>
+    <p class="small muted gap">这里只展示已通过技术验证、但尚未获得 operation-specific Human authorization 的发布候选。未授权前不得 tag、push、开 PR 或合并。</p>
+  </article>
   <article class="card">
     <h2>近期执行顺序 (Canonical Steps)</h2>
     <ol id="actions" class="steps"></ol>
+  </article>
+  <article class="card" style="border-color:#f59e0b">
+    <h2>Claims Authority 激活门</h2>
+    <div id="claims-authorization" class="list"></div>
+    <p class="small muted gap">激活后仍需完成 24 小时 / 1440 样本观察；这里只显示等待精确授权的请求，不提供写入接口。</p>
   </article>
   <article class="card">
     <h2>可审查的实施准备与法定凭据</h2>
@@ -1205,6 +1280,170 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <div class="grid three gap" id="si-kpi"></div>
 <div class="card gap"><h3>Skill 列表</h3><div id="si-filters" style="margin-bottom:10px"></div><table id="si-tbl"><thead><tr><th>名称</th><th>域</th><th>描述</th></tr></thead><tbody></tbody></table></div>
 </section>
+<section id="panorama" class="section" aria-labelledby="title-panorama">
+<div class="section-breadcrumb">
+  <span>📍 战略架构纲领</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#arch">体系流程</a>
+  <a href="#loops">回路观测</a>
+</div>
+<div class="section-head">
+  <div class="eyebrow"><span class="eyebrow-text">📐 战略架构纲领</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Whitepaper Reference Architecture</span></div>
+  <h1 id="title-panorama">1—2—8—5—1 总体架构与八大核心体系</h1>
+  <p class="lead">来自织星主权智能操作系统白皮书 v2 的纲领性内容：一个人类主权、两个主闭环、八个核心体系、五个横切平面、一套元体系约束。此板块内容源自静态文档，不随运行时数据刷新变化。</p>
+</div>
+<div class="note" style="margin-bottom:16px">📖 来源：<code>2026-09-07-织星主权智能操作系统白皮书-v2.md</code> 第7-9章。此为纲领摘要，完整原文见文档知识板块。</div>
+
+<div class="card gap">
+  <h3 style="margin:0 0 12px">🏛️ 总图：从人类主权到价值反馈</h3>
+  <div style="background:var(--paper);border-radius:10px;padding:18px;font-family:var(--mono);font-size:12px;line-height:1.9;overflow-x:auto;white-space:pre">
+<span style="color:var(--blue);font-weight:600">人类 Principal：最终主权与价值裁决</span>
+Constitution / Vision / Values / Risk / Revocation
+  │ 定义目的、边界与授权
+  ▼
+真实世界 → 感知情境 → 知识与记忆 → <span style="color:var(--teal)">决策体系</span>
+                                    │ 形成承诺
+                                    ▼
+        战略目标组合 → 治理与信任 → <span style="color:var(--teal)">运行与执行</span>
+                                    │ Deliverable/Receipt
+                                    ▼
+<span style="color:var(--amber);font-weight:600">价值与进化：Outcome → Verdict → Learning → Proposal</span>
+        └──────────── 反馈到知识、决策与目标 ────────────┘
+
+横切：安全隐私｜可靠恢复｜资源经济｜时间来源｜人机体验
+元体系：本体｜边界｜权威｜关系｜契约｜生命周期｜版本｜一致性｜演进</div>
+</div>
+
+<div class="grid two gap">
+  <div class="card">
+    <h3 style="margin:0 0 8px">🔁 闭环 A：价值闭环</h3>
+    <p class="small muted" style="margin:0 0 10px">回答：这次行动是否真正改善了主人的结果？</p>
+    <div class="mono small" style="line-height:2">Signal → Context → Decision → Goal/BET → Mandate/Policy → WorkflowRun → Deliverable/Receipt → HumanVerdict → Outcome → ValueRecord</div>
+  </div>
+  <div class="card">
+    <h3 style="margin:0 0 8px">🧬 闭环 B：进化闭环</h3>
+    <p class="small muted" style="margin:0 0 10px">回答：系统是否从真实结果中变得更好，而不是只变得更复杂？</p>
+    <div class="mono small" style="line-height:2">Outcome/Failure → Memory Update → Improvement Hypothesis → Replay → Sandbox → Shadow → Canary → Human/Policy Decision → Promote/Reject/Rollback/Retire</div>
+  </div>
+</div>
+<p class="small muted gap">两个主闭环描述系统的端到端目的；增强回路、控制回路、恢复回路和抗熵回路是嵌套在主闭环中的动力结构，详见 <a href="#loops">回路观测</a>。</p>
+
+<div class="card gap">
+  <h3 style="margin:0 0 14px">🎯 八个核心体系 (S1–S8)</h3>
+  <div class="grid two gap" id="panorama-s-systems">
+    <div class="card" style="background:var(--paper)"><b>S1 人类主权与宪法体系</b><div class="small muted gap">为谁服务、为什么存在、什么永远不能自动决定？</div><div class="small gap"><b>拥有：</b>Principal identity、Constitution、Values、Risk appetite、Revocation</div><div class="small"><b>不拥有：</b>日常调度、任务执行、价值数据加工</div><span class="chip warn gap">EXTEND</span></div>
+    <div class="card" style="background:var(--paper)"><b>S2 感知与情境体系</b><div class="small muted gap">真实世界发生了什么，哪些变化值得进入系统？</div><div class="small gap"><b>拥有：</b>Signal、Source、ContextSnapshot、Freshness、Classification</div><div class="small"><b>不拥有：</b>目标决定、价值裁决、自动进化</div><span class="chip warn gap">EXTEND</span></div>
+    <div class="card" style="background:var(--paper)"><b>S3 知识与记忆体系</b><div class="small muted gap">什么被认为是真的，为什么相信，何时失效？</div><div class="small gap"><b>拥有：</b>KnowledgeClaim、Belief、Memory、Provenance、Conflict、Decay</div><div class="small"><b>不拥有：</b>把推断自动升级为事实、替 Principal 定义价值</div><span class="chip warn gap">EXTEND</span></div>
+    <div class="card" style="background:var(--paper)"><b>S4 战略、目标与组合体系</b><div class="small muted gap">长期要赢什么，现在承诺什么，不做什么？</div><div class="small gap"><b>拥有：</b>Vision、Objective、KR、Campaign、BET、Kill criteria</div><div class="small"><b>不拥有：</b>直接执行任务、把 BET done 自动解释为 KR proven</div><span class="chip warn gap">EXTEND（先修复权威和覆盖）</span></div>
+    <div class="card" style="background:var(--paper)"><b>S5 决策体系</b><div class="small muted gap">面对多个选项，为什么选择此行动？</div><div class="small gap"><b>拥有：</b>DecisionRecord、Options、Trade-offs、Confidence、Supersession</div><div class="small"><b>不拥有：</b>执行、审批高风险动作、宣告价值</div><span class="chip warn gap">EXTEND</span></div>
+    <div class="card" style="background:var(--paper)"><b>S6 治理与信任体系</b><div class="small muted gap">什么行动可以发生，需要什么证据和职责分离？</div><div class="small gap"><b>拥有：</b>Policy、Admission、Permission、Audit、Gate、Waiver</div><div class="small"><b>不拥有：</b>业务价值裁决、普通任务生产、第二套执行状态</div><span class="chip good gap">EXISTS（进入 subtraction）</span></div>
+    <div class="card" style="background:var(--paper)"><b>S7 运行与执行体系</b><div class="small muted gap">如何把已授权承诺稳定变成可验证行动？</div><div class="small gap"><b>拥有：</b>WorkPacket、WorkflowRun、Dispatch、ActionReceipt、Recovery</div><div class="small"><b>不拥有：</b>目标、价值、历史事实重写和自我授权</div><span class="chip warn gap">EXTEND</span></div>
+    <div class="card" style="background:var(--paper)"><b>S8 价值验证与进化体系</b><div class="small muted gap">行动是否有意义，系统应如何改变？</div><div class="small gap"><b>拥有：</b>Outcome、HumanVerdict、EvolutionProposal、Experiment、PromotionDecision</div><div class="small"><b>不拥有：</b>自我批准宪法、权限、价值标准和高风险能力</div><span class="chip warn gap">BUILD-IN-PLACE（下一阶段最重要补强点）</span></div>
+  </div>
+</div>
+
+<div class="card gap">
+  <h3 style="margin:0 0 12px">⚏ 五个横切平面 (CP-*)</h3>
+  <table class="ext-compact-table" style="width:100%">
+    <thead><tr><th>平面</th><th>必须覆盖</th><th>当前判断</th><th>关键补强</th></tr></thead>
+    <tbody>
+      <tr><td><b>CP-SEC</b> 安全、隐私与信任</td><td class="small">身份、数据分级、最小权限、供应链、外发</td><td><span class="chip warn">EXTEND</span></td><td class="small">从工程权限延伸到业务数据和人类授权</td></tr>
+      <tr><td><b>CP-REL</b> 可靠性与恢复</td><td class="small">健康、备份、降级、RTO/RPO、故障演练</td><td><span class="chip warn">EXTEND</span></td><td class="small">统一关键旅程 SLO，未知不报绿</td></tr>
+      <tr><td><b>CP-ECON</b> 资源与经济性</td><td class="small">时间、注意力、Token、算力、并发、维护成本</td><td><span class="chip good">BUILD-IN-PLACE</span></td><td class="small">资源预算进入每个 Decision/BET/Run</td></tr>
+      <tr><td><b>CP-TEMP</b> 时间、版本与来源</td><td class="small">observed_at、validity、schema、causation、migration</td><td><span class="chip warn">EXTEND</span></td><td class="small">统一跨体系的 temporal/provenance contract</td></tr>
+      <tr><td><b>CP-UX</b> 人机体验</td><td class="small">收件箱、解释、审批、通知、纠错、无障碍</td><td><span class="chip warn">EXTEND</span></td><td class="small">Cockpit 从"系统控制台"收敛为"注意力与结果界面"</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted gap">横切平面不得各自再造一套业务状态机，通过公共字段、Policy、PEP、Metric 和 View 作用于八个核心体系。<code>CP-*</code> 不覆盖 Workspace 已有 <code>X1=审计、X2=保鲜、X3=价值、X4=一致性</code> 治理轴——二者是多对多实现映射，不得把同名编号原地改义。</p>
+</div>
+
+<div class="callout gap" style="border-left:4px solid var(--blue)">
+  <b>指导可视化区</b>：以下图来自白皮书/总设计的指导模型，用于理解体系；下方运行时板块继续展示真实观测数据。两者并存，互不替代。
+</div>
+
+<div class="card gap">
+  <div class="viz-head" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <div>
+      <h3 style="margin:0 0 4px">🌐 九面共生因果星环（指导模型）</h3>
+      <span class="small muted">与 <a href="#arch">体系流程</a> 同源渲染；此处固定保留为指导入口</span>
+    </div>
+    <a class="btn small" href="#arch">打开体系流程 ➔</a>
+  </div>
+  <div id="panorama-hex-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载九面星环指导图...</span></div></div>
+</div>
+
+<div class="card gap">
+  <div class="viz-head" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <div>
+      <h3 style="margin:0 0 4px">⛯ 系统全景架构大图（指导模型）</h3>
+      <span class="small muted">白皮书执行脊柱 / 跨面因果网络；支持经典·蓝图·信号流预设</span>
+    </div>
+    <a class="btn small" href="#arch">打开体系流程 ➔</a>
+  </div>
+  <div id="panorama-arch-viz" class="panoramic-container"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载全景架构指导图...</span></div></div>
+</div>
+
+<div class="card gap">
+  <div class="viz-head" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <div>
+      <h3 style="margin:0 0 4px">🔄 四大控制回路全景（指导 + 实况）</h3>
+      <span class="small muted">与 <a href="#loops">回路观测</a> 同源；无实况时仍保留回路语义骨架</span>
+    </div>
+    <a class="btn small" href="#loops">打开回路观测 ➔</a>
+  </div>
+  <div id="panorama-loops-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载控制回路指导图...</span></div></div>
+</div>
+
+<div class="grid two gap">
+  <article class="card">
+    <h3>物理分层与唯一执行脊柱（指导）</h3>
+    <div class="layer"><div class="layer-code">P-L4</div><div><strong>目的与主权</strong>白皮书、愿景、原则、目标、accepted Spec。</div></div>
+    <div class="layer"><div class="layer-code">P-L3</div><div><strong>组合与协作</strong>Portfolio / BET / Role / Queue / Capsule。</div></div>
+    <div class="layer"><div class="layer-code">P-L2</div><div><strong>OMO 控制内核</strong>Admission、claim、lease、attempt、fence、receipt。</div></div>
+    <div class="layer"><div class="layer-code">P-L1</div><div><strong>执行与恢复</strong>动态 Cell、隔离 clone、Direct Local。</div></div>
+    <div class="layer"><div class="layer-code">P-L0</div><div><strong>模型与协议</strong>MOF、BOS、MCP、A2A、WorkPacket。</div></div>
+    <div class="source">来源：Agent OS 总设计 / 白皮书分层摘要</div>
+  </article>
+  <article class="card">
+    <h3>一次交付的完整路径（指导）</h3>
+    <div class="flow"><span>意图 / 信号</span><i>→</i><span>BET + Spec</span><i>→</i><span>Capsule + Admission</span><i>→</i><span>claim</span><i>→</i><span>执行</span><i>→</i><span>独立验证</span><i>→</i><span>合并</span><i>→</i><span>价值验收</span><i>→</i><span>复盘</span></div>
+    <p class="small muted gap">Context Pack：C0 宪法指针＋C1 角色＋C2 当前任务＋C3 按需知识。</p>
+    <h3 class="gap">制度连续性</h3>
+    <div class="flow"><span>定义</span><i>→</i><span>编译</span><i>→</i><span>强制</span><i>→</i><span>观测</span><i>→</i><span>调和</span><i>→</i><span>学习</span><i>→</i><span>退役</span></div>
+    <div class="note">定义和真实副作用之间，通过 Capsule、摘要、ACK 与确定性门连接。</div>
+  </article>
+</div>
+
+<div class="grid three gap">
+  <article class="loop"><h3>价值增强回路</h3><p class="small">真实信号 → 交付 → 人类修订/采纳 → 有来源学习 → 更可靠的下一次交付。</p></article>
+  <article class="loop"><h3>执行控制回路</h3><p class="small">期望合同 → 实际运行 → 偏差观测 → fence/调和/回滚 → 再验证。</p></article>
+  <article class="loop"><h3>元治理慢回路</h3><p class="small">制度使用与失效证据 → 提案 → 独立审议 → 修订或减法 → 冷启动复验。</p></article>
+</div>
+
+<div class="card gap">
+  <h3>道法术器 / SFOP（指导指针）</h3>
+  <p class="small">绑定运行语法：<b>道法术器 (DFSQ)</b> 嵌套在 MOF 上；脊面运行模式 <b>SFOP</b> 要求唯一 Mesh 调度器，不并行第二套 OS。</p>
+  <div class="flow"><span>道 · 本体/原则</span><i>→</i><span>法 · 约束/门禁</span><i>→</i><span>术 · 编排/旅程</span><i>→</i><span>器 · 工具/算力</span></div>
+  <p class="small muted gap">详见 <code>docs/architecture/dao-fa-shu-qi.md</code> 与 <code>docs/architecture/os-operating-pattern-v1.md</code>。</p>
+</div>
+
+</section>
+<!-- Placeholder anchors for dynamically-mounted sections (created at runtime by
+     workbench_ui.js / strategy_ui.js / ui_extensions.js via document.createElement).
+     These placeholders exist so the sections are reachable even before/if the
+     runtime mount script for some reason doesn't run; the mount scripts fully
+     own and overwrite their innerHTML on load. Recovery note: these 6 sections
+     (plus panorama, fixed separately above) went missing from the served output
+     around 2026-09-18; the mount code itself was never touched. See git log
+     in this directory for the recovery commit. -->
+<section id="personal" class="section" aria-labelledby="title-personal"></section>
+<section id="workbench" class="section" aria-labelledby="title-workbench"></section>
+<section id="trace" class="section" aria-labelledby="title-trace"></section>
+<section id="learning" class="section" aria-labelledby="title-learning"></section>
+<section id="atlas" class="section" aria-labelledby="title-atlas"></section>
+<section id="capabilities" class="section" aria-labelledby="title-capabilities"></section>
 <section id="mof-grid" class="section" aria-labelledby="title-mof">
 <div class="section-breadcrumb">
   <span>📍 MOF 元模型与门禁</span>
@@ -1563,6 +1802,12 @@ function emptyState(icon, title, desc, action) {
 function errorState(msg) {
   return '<div class="error-state">\u26A0\uFE0F ' + (msg || '\u6570\u636E\u52A0\u8F7D\u5931\u8D25\uFF0C\u8BF7\u5237\u65B0\u9875\u9762') + '</div>';
 }
+// Hoisted above go()'s immediate self-invocation below (was declared at its
+// original call site further down the file, causing a TDZ ReferenceError:
+// "Cannot access 'currentNavMode' before initialization" on first paint,
+// since go() -> ensureNavVisibleForSection() reads it before that later
+// `let` statement had run). Single source of truth stays here now.
+let currentNavMode = 'engineering';
 
 function safeRender(fn, errorMsg) {
   try { fn(); } catch(e) { console.error(errorMsg || 'Render error:', e); }
@@ -1573,6 +1818,29 @@ function go(name){
  document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===name));
  document.querySelectorAll('nav a').forEach(x=>{if(x.hash==='#'+name)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});
  window.scrollTo(0,0);
+ if(typeof ensureNavVisibleForSection==='function') ensureNavVisibleForSection(name);
+ // Re-render section-owned dynamic surfaces when entering the panel
+ try {
+   if(name==='loops'){
+     if(typeof renderDynamicLoopsDashboard==='function') renderDynamicLoopsDashboard();
+     if(typeof populateLoops==='function') populateLoops();
+   } else if(name==='arch'){
+     if(typeof renderSovereignHexMesh==='function') renderSovereignHexMesh();
+     if(typeof window.renderPanoramicArchitecture==='function') window.renderPanoramicArchitecture();
+   } else if(name==='mof-grid'){
+     if(typeof window.renderMofGrid==='function') window.renderMofGrid();
+     if(typeof populateMof==='function') populateMof();
+   } else if(name==='topology'){
+     if(typeof window.initTopologyModule==='function') window.initTopologyModule();
+   } else if(name==='next'){
+     if(typeof window.renderNextHub==='function') window.renderNextHub();
+   } else if(name==='panorama'){
+     if(typeof renderGuidanceHub==='function') renderGuidanceHub();
+   } else if(name==='orient'){
+     if(typeof renderOrientLoopsPulse==='function') renderOrientLoopsPulse();
+     if(typeof renderSovereignPostureBar==='function') renderSovereignPostureBar();
+   }
+ } catch(e){ console.warn('section activate render failed', name, e); }
 }
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)));go(location.hash.slice(1));
 renderSceneSystem(D);
@@ -1701,7 +1969,24 @@ $('roles').innerHTML=D.role_design.map(x=>'<article class="role"><h3>'+esc(x[0])
 function documents(){const q=$('doc-search').value.trim().toLowerCase(),status=$('doc-status').value;const ds=D.documents.filter(d=>(!status||d.approval_state===status)&&(d.title+' '+d.document_id+' '+d.authority_scope).toLowerCase().includes(q));$('doc-count').textContent=ds.length+' / '+D.documents.length+' 份已登记文档；审阅状态来自 Documents registry';$('documents').innerHTML=ds.length?ds.map(d=>'<article class="doc"><a href="'+esc(fileLink(d.path))+'">'+esc(d.title)+'</a><div class="doc-id">'+esc(d.document_id)+'</div><div class="small muted">'+esc(d.owner)+'</div><div class="doc-tags">'+chip(d.approval_state,d.approval_state==='accepted'?'good':'neutral')+chip(d.exists?'本地文件存在':'路径缺失',d.exists?'neutral':'bad')+'</div><details><summary>来源与摘要</summary><div class="source">'+esc(d.path)+'<br><span class="mono">'+esc(d.sha256)+'</span></div></details></article>').join(''):'<div class="empty">没有匹配文档。试试“白皮书”“Agent”或“验收”。</div>'}
 $('doc-status').querySelector('option[value="accepted"]').textContent='已接受（'+D.documents.filter(d=>d.approval_state==='accepted').length+'）';
 $('doc-search').oninput=documents;$('doc-status').onchange=documents;documents();
-$('actions').innerHTML=D.next_actions.map((x,i)=>'<li><span class="step-count">'+(i+1)+'</span><div><h3>'+esc(x.title)+'</h3><p class="small">'+esc(x.gate)+'</p><span class="small muted">'+esc(x.owner)+' · '+esc(x.state)+'</span></div></li>').join('');
+$('actions').innerHTML=(D.next_actions||[]).map((x,i)=>'<li><span class="step-count">'+(i+1)+'</span><div><h3>'+esc(x.title||x.id||'法定行动')+'</h3><p class="small">'+esc(x.detail||x.gate||x.description||'')+'</p><span class="small muted">'+esc(x.owner||x.source||'OMO')+' · '+esc(x.state||'REQUIRED')+'</span></div></li>').join('');
+var pendingPubs=((D.pending_publications||{}).items||[]).filter(function(p){return p.verification==='READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION';});
+$('pending-authorizations').innerHTML=pendingPubs.map(function(p){return '<article class="loop"><h3>'+esc(p.id)+'</h3><p class="small mono">commit '+esc(p.commit)+'</p><p class="small mono">patch '+esc(p.patch_digest)+'</p><p class="small">dirty='+esc(p.dirty_count)+' · '+esc(p.authorization_scope||'exact-commit authorization required')+'</p></article>';}).join('')||'<p class="small muted">当前没有等待精确授权的发布候选。</p>';
+var objectiveCoverage=D.objective_coverage||{};
+var coverageItems=objectiveCoverage.items||[];
+function objectiveChip(state){var s=String(state||'UNKNOWN');var cls=s==='PASS'||s==='DELIVERY_ACCEPTED_RUNTIME_VERIFIED'?'good':(s==='NOT_PROVEN'||s==='AWAITING_AUTHORIZATION'||s==='PARTIAL'?'warn':'neutral');return chip(s,cls);}
+$('objective-coverage-summary').innerHTML='delivery='+esc(objectiveCoverage.delivery_complete===false?'false':String(objectiveCoverage.delivery_complete||'UNKNOWN'))+' · activation='+esc(objectiveCoverage.activation_status||'UNKNOWN')+' · value='+esc(objectiveCoverage.value_proof||'UNKNOWN');
+$('objective-coverage-rows').innerHTML=coverageItems.map(function(x){return '<tr><td>'+objectiveChip(x.status)+'</td><td class="mono">'+esc(x.id)+'</td><td>'+objectiveChip(x.value_status)+'</td><td>'+esc(x.runtime_status||'—')+'</td><td>'+esc(x.requirement||'')+'</td></tr>';}).join('')||'<tr><td colspan="5" class="empty">目标覆盖 NO_DATA</td></tr>';
+$('unfinished-objectives').innerHTML=(D.unfinished_objectives||[]).map(function(x){return '<article class="loop"><h3>'+esc(x.requirement||x.id)+'</h3><p class="small">'+esc(x.status||'UNKNOWN')+' · '+esc(x.id)+'</p></article>';}).join('')||'<p class="small muted">当前没有登记的未完成目标。</p>';
+var strategicGaps=(((D.strategic||{}).trace||{}).gaps)||[];
+var gapKinds={};strategicGaps.forEach(function(x){var k=x.kind||'unknown';gapKinds[k]=(gapKinds[k]||0)+1;});
+$('strategic-gaps-summary').innerHTML='state='+esc((D.strategic||{}).state||'UNKNOWN')+' · total='+strategicGaps.length+' · '+Object.keys(gapKinds).map(function(k){return esc(k)+' '+gapKinds[k];}).join(' · ');
+$('strategic-gaps-rows').innerHTML=strategicGaps.map(function(x){var cls=x.severity==='high'?'f':(x.severity==='medium'?'w':'neutral');return '<tr><td>'+chip(x.severity||'unknown',cls)+'</td><td class="mono">'+esc(x.kind||'unknown')+'</td><td class="mono">'+esc(x.triage||'—')+'</td><td class="mono">'+esc(x.entity_id||'—')+'</td><td>'+esc(x.title||'')+'</td><td>'+esc(x.next_action||'')+'</td></tr>';}).join('')||'<tr><td colspan="6" class="empty">战略图谱当前无登记缺口</td></tr>';
+var reconciliationCandidates=((D.reconciliation_candidates||{}).items||[]);
+$('reconciliation-candidates').innerHTML=reconciliationCandidates.map(function(x){return '<article class="loop"><h3>'+esc(x.id)+' · '+esc(x.state)+'</h3><p class="small mono">base '+esc(x.base_commit)+'</p><p class="small mono">patch '+esc(x.patch_sha256)+'</p><p class="small">'+esc(x.objective||'')+'</p></article>';}).join('')||'<p class="small muted">当前没有已准备的 reconciliation 候选包。</p>';
+var claimsActivationRequest=D.claims_activation_request||{};
+var claimsActivationReadiness=D.claims_activation_readiness||{};
+$('claims-authorization').innerHTML='<article class="loop"><h3>'+esc(claimsActivationRequest.authority_id||'omo-claims-authority-r0')+' · '+esc(claimsActivationRequest.operation||'activate-shadow')+'</h3><p class="small mono">request '+esc(claimsActivationRequest.request_id||'—')+'</p><p class="small mono">request digest '+esc(claimsActivationRequest.request_digest||'—')+'</p><p class="small mono">descriptor '+esc(claimsActivationRequest.descriptor_digest||'—')+'</p><p class="small">state '+esc(claimsActivationRequest.status||'—')+' · authorization '+esc(claimsActivationRequest.human_authorization_status||'UNPROVEN')+' · activation '+esc(claimsActivationRequest.activation||'NOT_AUTHORIZED')+'</p></article>';
 $('proposal-link').href=fileLink(D.library+'/30-实施与协同/Workspace组合闭环绑定实施准备-v1.md');
 $('envelope-link').href=fileLink(D.envelope.path);$('envelope-hash').textContent='SHA-256 '+D.envelope.sha256;
 
@@ -1938,8 +2223,8 @@ function renderSovereignPostureBar(){
   `;
 }
 
-function renderSovereignHexMesh(){
-  const el = $('sovereign-hex-mesh-viz');
+function renderSovereignHexMesh(targetId){
+  const el = $(targetId || 'sovereign-hex-mesh-viz');
   if(!el) return;
   const S = D.strategic || {};
   const mesh = S.cross_plane_mesh || {};
@@ -2431,6 +2716,13 @@ function renderAgentCapabilityMesh(){
         </div>
         <div style="background:white;border:1px solid var(--line);border-radius:8px;padding:10px 12px">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <strong style="font-size:12px;color:var(--blue)">/api/v1/agent/pending-authorizations</strong>
+            <a class="small" href="/api/v1/agent/pending-authorizations" target="_blank">调用 ↗</a>
+          </div>
+          <p class="small muted" style="margin:0">exact-commit 发布授权门：commit/base/patch digest、dirty 状态与禁止项</p>
+        </div>
+        <div style="background:white;border:1px solid var(--line);border-radius:8px;padding:10px 12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
             <strong style="font-size:12px;color:var(--blue)">/api/v1/agent/entity?id={id}</strong>
             <a class="small" href="/api/v1/agent/entity?id=vision:VISION-2029" target="_blank">示例 ↗</a>
           </div>
@@ -2844,8 +3136,8 @@ function renderOrientValuePipeline() {
 }
 
 
-window.renderDynamicLoopsDashboard = function renderDynamicLoopsDashboard(){
-  const el = $('loops-dashboard-viz'); if(!el) return;
+window.renderDynamicLoopsDashboard = function renderDynamicLoopsDashboard(targetId){
+  const el = $(targetId || 'loops-dashboard-viz'); if(!el) return;
   const cardsEl = $('loops-detail-cards');
   const safe = typeof esc === 'function' ? esc : x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -2880,11 +3172,13 @@ window.renderDynamicLoopsDashboard = function renderDynamicLoopsDashboard(){
       `状态: PASW ${breaker.sensor.raw.isolation_rate != null ? breaker.sensor.raw.isolation_rate : '—'}% · worktrees ${breaker.sensor.raw.worktrees_count != null ? breaker.sensor.raw.worktrees_count : '—'}` :
       (meshLoops.loop_breaker?.status || (gateTotal ? (`gates PASS ${gatePass}/${gateTotal}`) : 'gates NO_DATA'));
 
-    const stratTextEl = $('svg-loop-strat-text');
-    const oodaTextEl = $('svg-loop-ooda-text');
-    const knowTextEl = $('svg-loop-know-text');
-    const breakerTextEl = $('svg-loop-breaker-text');
-    const healthValEl = $('loop-global-health-val');
+    // Scope to current target container — global getElementById would hijack the first mount
+    // and leave secondary hosts (e.g. #panorama-loops-viz) stuck on loading.
+    const stratTextEl = el.querySelector('#svg-loop-strat-text');
+    const oodaTextEl = el.querySelector('#svg-loop-ooda-text');
+    const knowTextEl = el.querySelector('#svg-loop-know-text');
+    const breakerTextEl = el.querySelector('#svg-loop-breaker-text');
+    const healthValEl = el.querySelector('#loop-global-health-val');
 
     if (stratTextEl && oodaTextEl && knowTextEl && breakerTextEl) {
       stratTextEl.textContent = stratText;
@@ -3171,6 +3465,29 @@ window.renderDynamicLoopsDashboard = function renderDynamicLoopsDashboard(){
   window.refreshLoopsTelemetry();
 }
 
+
+function renderGuidanceHub(){
+  try{
+    if(typeof renderSovereignHexMesh==='function') renderSovereignHexMesh('panorama-hex-viz');
+  }catch(e){ console.warn('guidance hex', e); }
+  try{
+    if(typeof renderDynamicLoopsDashboard==='function') renderDynamicLoopsDashboard('panorama-loops-viz');
+  }catch(e){ console.warn('guidance loops', e); }
+  try{
+    // Prefer dedicated panoramic re-render into guidance host by cloning live arch container when available
+    const src=document.getElementById('panoramic-architecture-container');
+    const dst=document.getElementById('panorama-arch-viz');
+    if(typeof window.renderPanoramicArchitecture==='function'){
+      window.renderPanoramicArchitecture();
+    }
+    if(src && dst && src.innerHTML && src.innerHTML.length>80){
+      dst.innerHTML=src.innerHTML;
+    } else if(dst && (!dst.innerHTML || dst.innerText.includes('加载'))){
+      dst.innerHTML='<div class="empty">全景架构指导图待渲染。请先打开 <a href="#arch">体系流程</a> 后再回到本页，或点击下方重试。</div><button class="btn" type="button" onclick="renderGuidanceHub()">⟳ 重试指导图</button>';
+    }
+  }catch(e){ console.warn('guidance arch', e); }
+}
+
 safeRender(renderSovereignPostureBar, 'renderSovereignPostureBar failed');
 safeRender(renderSovereignHexMesh, 'renderSovereignHexMesh failed');
 safeRender(renderOrientLoopsPulse, 'renderOrientLoopsPulse failed');
@@ -3184,6 +3501,7 @@ safeRender(renderLedgerVisuals, 'renderLedgerVisuals failed');
 safeRender(renderSwarmGalaxy, 'renderSwarmGalaxy failed');
 safeRender(renderAgentCapabilityMesh, 'renderAgentCapabilityMesh failed');
 safeRender(renderKnowledgeStats, 'renderKnowledgeStats failed');
+safeRender(renderGuidanceHub, 'renderGuidanceHub failed');
 
 if(typeof initPersonaSystem === 'function') initPersonaSystem();
 if(typeof renderMofGrid === 'function') renderMofGrid();
@@ -3199,6 +3517,53 @@ function populateLoops(){
     var lv=D.loop_vitality||{};
     var al=D.autoloop_traces||{};
     var an=D.anomaly_events||{};
+    // Fallback: derive visible loop cards from strategic.cross_plane_mesh.live_loops when dedicated fields are empty
+    var meshLoops=((((D.strategic||{}).cross_plane_mesh)||{}).live_loops)||{};
+    if(!(vl.stages&&vl.stages.length) && meshLoops && Object.keys(meshLoops).length){
+      vl={
+        stages: Object.keys(meshLoops).map(function(k){
+          var loop=meshLoops[k]||{};
+          return {
+            id:k,
+            name:loop.name||loop.alias||k,
+            status:loop.health_level||loop.status||'unknown',
+            broken: String(loop.health_level||'').toLowerCase()==='warn' || /NO_DATA|FAIL|blocked/i.test(String(loop.status||''))
+          };
+        }),
+        broken_chains: Object.keys(meshLoops).filter(function(k){
+          var loop=meshLoops[k]||{};
+          return String(loop.health_level||'').toLowerCase()==='warn' || /NO_DATA|FAIL|blocked/i.test(String(loop.status||''));
+        }).map(function(k){return {id:k, reason:(meshLoops[k]||{}).diagnostics||(meshLoops[k]||{}).status};}),
+        source:'strategic.cross_plane_mesh.live_loops'
+      };
+    }
+    if(!(lv.rules&&lv.rules.length) && meshLoops && Object.keys(meshLoops).length){
+      lv={
+        rules: Object.keys(meshLoops).map(function(k){
+          var loop=meshLoops[k]||{};
+          var metrics=loop.metrics||{};
+          var count=0;
+          Object.keys(metrics).forEach(function(mk){ var n=Number(metrics[mk]); if(!isNaN(n)) count+=Math.abs(n); });
+          return {id:k, name:loop.name||k, count:count||1, detail:loop.status||''};
+        }),
+        source:'strategic.cross_plane_mesh.live_loops'
+      };
+    }
+    if(!(al.traces&&al.traces.length) && meshLoops && Object.keys(meshLoops).length){
+      al={
+        traces: Object.keys(meshLoops).map(function(k){
+          var loop=meshLoops[k]||{};
+          var ok=!/warn|NO_DATA|FAIL|blocked/i.test(String(loop.health_level||loop.status||''));
+          return {id:k, action:loop.recommended_action||loop.name||k, status: ok?'ok':'warn', duration: loop.cadence||''};
+        }),
+        total: Object.keys(meshLoops).length,
+        success_rate: Math.round(Object.keys(meshLoops).filter(function(k){
+          var loop=meshLoops[k]||{};
+          return !/warn|NO_DATA|FAIL|blocked/i.test(String(loop.health_level||loop.status||''));
+        }).length / Math.max(1,Object.keys(meshLoops).length) * 100),
+        source:'strategic.cross_plane_mesh.live_loops'
+      };
+    }
 
     /* Freshness */
     var fr=document.getElementById('loops-freshness');
@@ -3749,26 +4114,6 @@ function zxRenderMetrics(){
     var hs=hist.series||{}, es=ev.series||{};
     var cov=hist.coverage||{};
 
-    /* ── 顶部概览卡：核心数字一屏可见 ── */
-    var totalEvt=kpi.total_events_24h||0, successRate=kpi.failure_rate_24h!=null?Math.max(0,100-kpi.failure_rate_24h):null;
-    var summaryCards=[
-      {icon:'📊',v:totalEvt,l:'24h 事件总量',bg:'#e0f2fe',cl:'#0369a1'},
-      {icon:'⚡',v:(kpi.events_per_hour_24h||0)+'/h',l:'实时事件速率',bg:'#dcfce7',cl:'#15803d'},
-      {icon:'🎯',v:(kpi.health_score==null?'—':kpi.health_score),l:'综合健康分',bg:'#fef3c7',cl:'#b45309'},
-      {icon:'✅',v:(successRate==null?'—':successRate.toFixed(1)+'%'),l:'成功率',bg:'#d1fae5',cl:'#047857'}
-    ];
-    var sumHost=document.getElementById('zx-m-summary');
-    if(!sumHost){
-      sumHost=document.createElement('div');
-      sumHost.id='zx-m-summary';
-      sumHost.className='zx-m-summary';
-      host.parentNode.insertBefore(sumHost,host);
-    }
-    sumHost.innerHTML=summaryCards.map(function(s){
-      return '<div class="zx-m-sum-card"><div class="zx-m-sum-icon" style="background:'+s.bg+';color:'+s.cl+'">'+s.icon+'</div>'+
-        '<div class="zx-m-sum-body"><div class="zx-m-sum-v" style="color:'+s.cl+'">'+s.v+'</div><div class="zx-m-sum-l">'+s.l+'</div></div></div>';
-    }).join('');
-
     /* ── KPI: 数值 + 单位 + 真实 sparkline + 真实环比 ── */
     var cards=[
       {v:kpi.total_events_24h||0,u:'',l:'24h 事件',pts:es.hourly_24h,c:'#3a64b3'},
@@ -3789,73 +4134,49 @@ function zxRenderMetrics(){
         '<div class="zx-m-spark">'+zxMSpark(c.pts,c.c)+'</div></div>';
     }).join('');
 
-    /* ── 五维雷达（health.yaml 真实分） — 更大更清晰 ── */
+    /* ── 五维雷达（health.yaml 真实分） ── */
     var radar=document.getElementById('zx-m-radar');
     if(radar){
-      var dims=[
-        {n:'保鲜',v:kpi.freshness_score,c:'#10b981',tip:'数据源时效性 · freshness'},
-        {n:'时效',v:kpi.staleness_score,c:'#8b5cf6',tip:'数据新鲜度 · staleness'},
-        {n:'漂移',v:kpi.drift_score,c:'#f59e0b',tip:'基线漂移检测 · drift'},
-        {n:'对齐',v:kpi.alignment_score,c:'#3a64b3',tip:'多源对齐度 · alignment'},
-        {n:'治理',v:kpi.health_score,c:'#ef4444',tip:'综合健康治理分'}
-      ];
-      var known=dims.filter(function(x){return x.v!=null});
+      var dims=[['保鲜',kpi.freshness_score,'#10b981'],['时效',kpi.staleness_score,'#8b5cf6'],
+                ['漂移',kpi.drift_score,'#f59e0b'],['对齐',kpi.alignment_score,'#3a64b3'],['治理',kpi.health_score,'#ef4444']];
+      var known=dims.filter(function(x){return x[1]!=null});
       if(!known.length){
         radar.innerHTML='<div class="zx-nodata"><span class="zx-state">NO DATA</span><br>health.yaml 未提供五维分值</div>';
       } else {
-        var cx=140,cy=140,r=105,W=280,H=280;
-        var angles=dims.map(function(_,i){return (i*72-90)*Math.PI/180});
+        var cx=120,cy=118,r=88,angles=dims.map(function(_,i){return (i*72-90)*Math.PI/180});
         var rings='';
         for(var lv=1;lv<=5;lv++){
           var rr=r*lv/5;
-          rings+='<polygon points="'+angles.map(function(a){return (cx+Math.cos(a)*rr).toFixed(1)+','+(cy+Math.sin(a)*rr).toFixed(1)}).join(' ')+'" fill="none" stroke="#eef2f7" stroke-width="0.8"/>';
+          rings+='<polygon points="'+angles.map(function(a){return (cx+Math.cos(a)*rr).toFixed(1)+','+(cy+Math.sin(a)*rr).toFixed(1)}).join(' ')+'" fill="none" stroke="#eef2f7"/>';
         }
-        // Axis lines from center to each vertex
-        var axes='';
-        angles.forEach(function(a){
-          axes+='<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+Math.cos(a)*r).toFixed(1)+'" y2="'+(cy+Math.sin(a)*r).toFixed(1)+'" stroke="#e2e8f0" stroke-width="0.5"/>';
-        });
-        var pts=dims.map(function(d,i){ var v=(d.v!=null?d.v:0)/100*r; return (cx+Math.cos(angles[i])*v).toFixed(1)+','+(cy+Math.sin(angles[i])*v).toFixed(1); }).join(' ');
+        var pts=dims.map(function(d,i){ var v=(d[1]||0)/100*r; return (cx+Math.cos(angles[i])*v).toFixed(1)+','+(cy+Math.sin(angles[i])*v).toFixed(1); }).join(' ');
         var labels=dims.map(function(d,i){
-          var x=cx+Math.cos(angles[i])*(r+22), y=cy+Math.sin(angles[i])*(r+22);
-          var v=d.v!=null?d.v:'—';
-          return '<text x="'+x.toFixed(1)+'" y="'+(y-4).toFixed(1)+'" font-size="11" font-weight="600" fill="'+d.c+'" text-anchor="middle" title="'+d.tip+'">'+d.n+'</text>'+
-                 '<text x="'+x.toFixed(1)+'" y="'+(y+9).toFixed(1)+'" font-size="10" font-family="var(--mono)" fill="#7a8fa3" text-anchor="middle">'+v+'</text>';
+          var x=cx+Math.cos(angles[i])*(r+16), y=cy+Math.sin(angles[i])*(r+16);
+          return '<text x="'+x.toFixed(1)+'" y="'+(y+3).toFixed(1)+'" font-size="10" fill="#7a8fa3" text-anchor="middle">'+d[0]+'</text>';
         }).join('');
-        // Data points with color
-        var dots=dims.map(function(d,i){
-          var v=(d.v!=null?d.v:0)/100*r;
-          var px=cx+Math.cos(angles[i])*v, py=cy+Math.sin(angles[i])*v;
-          return '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4" fill="'+d.c+'" stroke="white" stroke-width="2" title="'+d.tip+': '+(d.v!=null?d.v:'—')+'"/>';
-        }).join('');
-        radar.innerHTML='<div class="zx-m-radar-wrap">'+
-          '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'+
-          rings+axes+labels+'<polygon points="'+pts+'" fill="rgba(58,100,179,.12)" stroke="#3a64b3" stroke-width="2"/>'+dots+'</svg></div>';
+        radar.innerHTML='<svg width="240" height="240" viewBox="0 0 240 240">'+rings+labels+
+          '<polygon points="'+pts+'" fill="rgba(58,100,179,.18)" stroke="#3a64b3" stroke-width="1.8"/></svg>';
         var lg=document.getElementById('zx-m-radar-legend');
         if(lg) lg.innerHTML='<div class="zx-legend">'+dims.map(function(d){
-          var known=d.v!=null;
-          return '<span title="'+d.tip+'"><i style="background:'+d.c+'"></i>'+d.n+' '+
-            (known?'<b style="color:'+d.c+'">'+d.v+'</b>':'<b style="color:#c33">UNKNOWN</b>')+'</span>';
+          return '<span><i style="background:'+d[2]+'"></i>'+d[0]+' '+
+            (d[1]==null?'<b style="color:#c33">UNKNOWN</b>':d[1])+'</span>';
         }).join('')+'</div>';
       }
     }
 
-    /* ── 来源分布（真实 24h 窗口 + 缺失源显式标注） — 卡片网格 ── */
+    /* ── 来源分布（真实 24h 窗口 + 缺失源显式标注） ── */
     var srcs=(ev.sources||[]), sd=document.getElementById('zx-m-sources');
     if(sd){
       var live=srcs.filter(function(s){return s.state!=='MISSING'});
       var mx=Math.max.apply(null,live.map(function(s){return s.window_count||0}).concat([1]));
-      sd.innerHTML=live.length?'<div class="zx-m-src-grid">'+live.map(function(s){
+      sd.innerHTML=live.length?live.map(function(s){
         var v=s.window_count||0, pct=Math.round(v/mx*100);
         var col=s.state==='OK'?'#3a64b3':(s.state==='STALE'?'#f59e0b':'#94a3b8');
-        var bgCol=s.state==='OK'?'#eff6ff':(s.state==='STALE'?'#fffbeb':'#f8fafc');
-        return '<div class="zx-m-src-item" style="background:'+bgCol+'">'+
-          '<div class="zx-m-src-top"><span class="zx-m-src-name" title="'+zxMEsc(s.name)+'">'+zxMEsc(s.label)+'</span>'+
-          '<span class="zx-chip '+(s.state==='OK'?'ok':s.state==='STALE'?'warn':'dim')+'" style="font-size:9px">'+s.state+'</span></div>'+
-          '<div style="font:600 16px/1.2 var(--mono);color:'+col+'">'+v+'</div>'+
-          '<div style="font-size:9px;color:var(--muted)">累计 '+(s.total_count==null?'—':s.total_count)+' · 24h</div>'+
-          '<div class="zx-m-src-bar"><i style="width:'+pct+'%;background:'+col+'"></i></div></div>';
-      }).join('')+'</div>':'<div class="zx-nodata">无事件源</div>';
+        return '<div class="zx-bar-row" style="margin-bottom:7px"><div class="zx-bar-head"><span>'+zxMEsc(s.label)+
+          ' <span class="zx-chip '+(s.state==='OK'?'ok':s.state==='STALE'?'warn':'dim')+'">'+s.state+'</span></span>'+
+          '<span>'+v+' / 累计 '+(s.total_count==null?'—':s.total_count)+'</span></div>'+
+          '<div class="zx-bar-track"><i style="width:'+pct+'%;background:'+col+'"></i></div></div>';
+      }).join(''):'<div class="zx-nodata">无事件源</div>';
       var note=document.getElementById('zx-m-src-note');
       var missing=srcs.filter(function(s){return s.state==='MISSING'});
       if(note) note.innerHTML=missing.length
@@ -4074,7 +4395,7 @@ function zxRenderLogs(){
     fill('zx-f-source',facets.by_source,'来源');
     fill('zx-f-status',facets.by_status,'状态');
 
-    /* ── 事件流（真实筛选 + 分页）— 增强视觉层级 ── */
+    /* ── 事件流（真实筛选 + 分页）── */
     var rows=zxLogsFiltered(), total=(ev.events_all||[]).length;
     var countEl=document.getElementById('zx-logs-count');
     if(countEl) countEl.textContent='显示 '+Math.min(st.limit,rows.length)+' / '+rows.length+(rows.length!==total?'（已筛选，共 '+total+'）':'');
@@ -4083,24 +4404,20 @@ function zxRenderLogs(){
       if(!rows.length){ stream.innerHTML='<div class="zx-empty"><span class="zx-state">NO MATCH</span><br>当前筛选条件下没有事件</div>'; }
       else {
         stream.innerHTML=rows.slice(0,st.limit).map(function(e){
-          var isFail=e.status&&/fail|error|blocked|degraded/i.test(e.status);
-          var isOk=/ok|healthy|pass/i.test(e.status||'');
-          var dotCls=isFail?'err':(isOk?'ok':'');
-          var rowCls=isFail?'zx-ev-fail':(isOk?'zx-ev-success':'');
-          var sevIcon=isFail?'🔴':(isOk?'🟢':'🔵');
+          var dot=e.status&&/fail|error|blocked|degraded/i.test(e.status)?'var(--zx-red)'
+                 :(/ok|healthy|pass/i.test(e.status||'')?'var(--zx-ok)':'var(--zx-blue)');
           var extra=[];
           if(e.duration_s!=null) extra.push('<span class="zx-tag">⏱ '+e.duration_s+'s</span>');
           if(e.check_count) extra.push('<span class="zx-tag">✓ '+e.check_count+' checks'+(e.failed_check_count?'（'+e.failed_check_count+' 失败）':'')+'</span>');
           if(e.changed_file_count) extra.push('<span class="zx-tag">📄 '+e.changed_file_count+' 文件</span>');
-          var tsDisplay=e.ts?new Date(e.ts).toLocaleString('zh-CN',{hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-          return '<div class="zx-ev '+rowCls+'"><span class="zx-dot '+dotCls+'"></span><div class="zx-body">'+
-            '<div class="zx-sum" title="'+zxLogsEsc(e.summary)+'">'+sevIcon+' '+zxLogsEsc(e.summary||e.type)+'</div>'+
+          return '<div class="zx-ev"><span class="zx-dot" style="background:'+dot+'"></span><div class="zx-body">'+
+            '<div class="zx-sum" title="'+zxLogsEsc(e.summary)+'">'+zxLogsEsc(e.summary||e.type)+'</div>'+
             '<div class="zx-meta"><span class="zx-tag">'+zxLogsEsc(e.type)+'</span>'+
               '<span>'+zxLogsEsc(e.source)+'</span>'+
               (e.agent?'<span>· '+zxLogsEsc(e.agent)+'</span>':'')+
               (e.workflow_id?'<span>· '+zxLogsEsc(e.workflow_id)+'</span>':'')+
               zxLogsStatusChip(e.status)+extra.join('')+'</div></div>'+
-            '<span class="zx-t" title="'+zxLogsEsc(e.ts)+'">'+tsDisplay+'</span></div>';
+            '<span class="zx-t" title="'+zxLogsEsc(e.ts)+'">'+zxLogsFmtRelative(e.ts)+'</span></div>';
         }).join('');
       }
     }
@@ -4226,47 +4543,22 @@ function zxRenderValue(){
         :'<li>无可展示的原因（payload 未提供 state_reason）</li>';
     }
 
-    /* ── 五阶段回路：真实计数, 无数据用 NO_DATA — 增强视觉 ── */
+    /* ── 五阶段回路：真实计数, 无数据用 NO_DATA ── */
     var stages=v.stages||[];
     var chip=document.getElementById('zx-v-loop-chip');
     var okN=stages.filter(function(x){return x.count>0}).length;
     if(chip) chip.textContent=okN+' / '+stages.length+' 阶段有数据';
     var numerals=['①','②','③','④','⑤'];
-    var palette=['#3a64b3','#2e7e79','#ac721a','#8b5cf6','#ef4444'];
-    var stageNames=['信号感知','信号分类','旅程执行','价值记录','进化反馈'];
+    var palette=['#3a64b3','#2e7e79','#ac721a','#2e7e79','#8b5cf6'];
     host.innerHTML=stages.length?stages.map(function(stg,i){
       var has=stg.count>0;
       return '<div class="zx-v-stage'+(has?'':' nodata')+'">'+
         '<span class="zx-v-edge" style="background:'+(has?palette[i%5]:'#dde5ee')+'"></span>'+
-        '<div class="zx-v-n">'+(numerals[i]||'')+' '+(stageNames[i]||'')+'</div>'+
+        '<div class="zx-v-n">'+(numerals[i]||'')+'</div>'+
         '<div class="zx-v-name">'+zxVEsc(stg.name)+'</div>'+
-        '<div class="zx-v-count" style="color:'+(has?palette[i%5]:'#a8b8c8')+'">'+(has?stg.count:'—')+'</div>'+
+        '<div class="zx-v-count" style="color:'+(has?'inherit':'#a8b8c8')+'">'+(has?stg.count:'—')+'</div>'+
         '<div class="zx-v-src">'+(has?'':'NO_DATA · ')+zxVEsc(stg.source)+'</div></div>';
     }).join(''):'<div class="zx-nodata">无阶段数据</div>';
-
-    /* ── 价值证明链（可视化） ── */
-    var proofHost=document.getElementById('zx-v-proof-chain');
-    if(!proofHost && stages.length){
-      proofHost=document.createElement('div');
-      proofHost.id='zx-v-proof-chain';
-      proofHost.className='zx-v-proof';
-      var stagesEl=document.getElementById('zx-v-stages');
-      if(stagesEl && stagesEl.parentNode){
-        var wrapper=document.createElement('div');
-        wrapper.style.cssText='margin-top:12px;padding-top:10px;border-top:1px solid var(--line)';
-        wrapper.innerHTML='<div style="font-size:10px;color:var(--muted);margin-bottom:6px">价值流转向导</div>';
-        wrapper.appendChild(proofHost);
-        stagesEl.parentNode.appendChild(wrapper);
-      }
-    }
-    if(proofHost && stages.length){
-      proofHost.innerHTML=stages.map(function(stg,i){
-        var active=stg.count>0;
-        return '<span class="zx-v-proof-step '+(active?'active':'')+'">'+
-          '<span class="zx-v-ps-dot"></span>'+(stageNames[i]||stg.name)+'</span>'+
-          (i<stages.length-1?'<span class="zx-v-proof-arrow">→</span>':'');
-      }).join('');
-    }
 
     /* ── 门槛进度：真实 current / target, 不可判定显示 UNKNOWN ── */
     function renderThr(list,elId){
@@ -4291,6 +4583,17 @@ function zxRenderValue(){
     }
     renderThr(v.thresholds,'zx-v-thr');
     renderThr(v.vision_thresholds,'zx-v-vision');
+    var baselineHost=document.getElementById('zx-v-baseline');
+    if(baselineHost){
+      var b=v.revision_baseline;
+      baselineHost.innerHTML=b ? [
+        '<div><b>'+zxVEsc(b.baseline_id||'—')+'</b></div>',
+        '<div style="color:#7a8fa3;font-size:10.5px;margin:4px 0">frozen '+zxVEsc(b.frozen_at||'—')+'</div>',
+        '<div class="mono" style="font-size:10.5px;word-break:break-all">'+zxVEsc(b.digest||'—')+'</div>',
+        '<div style="margin-top:6px">基线修订负担: <b>'+zxVEsc(b.baseline_revision_burden_percent!=null ? b.baseline_revision_burden_percent+'%' : 'UNKNOWN')+'</b></div>',
+        '<div style="color:#7a8fa3;font-size:10.5px;margin-top:4px">基线后裁决 '+zxVEsc((b.post_window||{}).adjudicated||0)+' 条；修订 '+zxVEsc((b.post_window||{}).revised||0)+' 条</div>'
+      ].join('') : '<p class="small muted">修订负担基线尚未冻结。</p>';
+    }
 
     /* ── 价值证据时间线（真实记录） ── */
     var evc=document.getElementById('zx-v-ev-chip');
