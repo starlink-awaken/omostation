@@ -97,6 +97,11 @@ def scan_debt() -> dict[str, Any]:
     _emit_metric("debt.total_count", total)
     _emit_metric("debt.items_count", len(debt_files))
     _emit_metric("debt.gap_count", len(gap_files))
+    # 2026-09-19: GAP_DIR (`.omo/debt/gap-items`) 从未入过 git —— 该子系统从未
+    # 创建 (见 debt item DEBT-20260917021531-GAP-SEED-DISPATCH)。此前 gap_count
+    # 恒为 0 但**原因不可见** (是"没有 gap"还是"没有这个目录"?)。加一个显式状态
+    # 指标 (附加, 不改既有指标语义), 使归零原因可查。
+    _emit_metric("debt.gap_source_present", 1 if GAP_DIR.is_dir() else 0)
 
     if total > 50:
         _emit_alert(

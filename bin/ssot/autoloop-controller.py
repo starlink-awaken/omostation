@@ -53,9 +53,18 @@ def _load_debt_items() -> list[dict]:
 
 
 def _load_gap_items() -> list[dict]:
-    """Load open gap items (all are open until closed)."""
+    """Load open gap items (all are open until closed).
+
+    2026-09-19: GAP_DIR (`.omo/debt/gap-items`) **从未入过 git** —— 该子系统
+    从未被创建 (见 debt item DEBT-20260917021531-GAP-SEED-DISPATCH)。此前这里
+    静默返回 [] 使「gap 链路不存在」这一事实不可见。现显式告警一次, 归零原因
+    可见 (行为不变: 仍返回 [])。
+    """
     items: list[dict] = []
     if not GAP_DIR.is_dir():
+        import sys as _sys
+        print(f"[autoloop-controller] ⚠️ gap 源不存在: {GAP_DIR} —— "
+              f"该子系统从未创建 (gap 链路为空, 非静默失败)", file=_sys.stderr)
         return items
     for path in sorted(GAP_DIR.glob("*.yaml")):
         if path.name == "TEMPLATE.yaml":
