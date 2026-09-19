@@ -7,14 +7,20 @@ scope: "workspace"
 severity: "medium"
 weight: 0.10
 entropy_class: "high"
-lifecycle_state: "resolved"
+lifecycle_state: "identified"
 resolution_evidence: "P43-ARCH-ANALYSIS-005: 测试覆盖已由 gac-local-gate + pytest 门禁守护 (44 checks ALL GREEN)"
 owner: "omo-team"
 affected_roots: []
 evidence_refs: []
 mitigation_refs: []
 opened_at: "2026-07-14"
-last_reviewed_at: "2026-07-14"
+last_reviewed_at: '2026-09-19'
 gate_level: "P2"
 x1_policy_ref: "P43-ARCH-ANALYSIS-005"
 x3_tier: "Framework"
+history:
+- at: '2026-09-19T10:28:48+00:00'
+  action: reopen
+  note: >-
+    2026-09-19 复核: 证据引用 P43-ARCH-ANALYSIS-005, 同为悬空引用 (全仓无此文档)。且声称的 '44 checks' 与实际不符 —— gac-local-gate 当前实跑 58 项检查。守护机制本身确实存在, 但闭环证据链条不成立。结论: 重开为 identified, 待 owner 以真实证据重新闭环。
+  actor: governance-agent

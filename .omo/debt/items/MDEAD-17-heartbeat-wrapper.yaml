@@ -4,6 +4,9 @@ dimension: governance
 subdimension: reference
 severity: medium
 lifecycle_state: resolved
+closed_at: '2026-09-18'
+close_reason: >-
+  引用断链已消除: 2026-09-19 核实 bin/_archive/2026-08-governance-self-evolution-unwired/heartbeat-wrapper.sh 确实存在 (该归档于 2026-09-18 入仓)。
 resolution_evidence: "文件已归档至 bin/_archive/2026-08-governance-self-evolution-unwired/heartbeat-wrapper.sh，引用断链消除。"
 owner: governance-team
 source_ref: ".omo/cron/operating-rhythm-crontab:17"

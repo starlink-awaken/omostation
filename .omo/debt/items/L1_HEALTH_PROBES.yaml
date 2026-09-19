@@ -7,14 +7,20 @@ scope: "workspace"
 severity: "high"
 weight: 0.15
 entropy_class: "high"
-lifecycle_state: "resolved"
+lifecycle_state: "identified"
 resolution_evidence: "P43-ARCH-ANALYSIS-003: L1 运行时健康探针已落地 (runtime health_scan + agora /health + system_health.yaml)"
 owner: "agent-runtime"
 affected_roots: []
 evidence_refs: []
 mitigation_refs: []
 opened_at: "2026-07-14"
-last_reviewed_at: "2026-07-14"
+last_reviewed_at: '2026-09-19'
 gate_level: "P1"
 x1_policy_ref: "P43-ARCH-ANALYSIS-003"
 x3_tier: "Framework"
+history:
+- at: '2026-09-19T10:28:48+00:00'
+  action: reopen
+  note: >-
+    2026-09-19 复核: 证据引用 P43-ARCH-ANALYSIS-003, 而全仓检索该标识 **只出现在债务条目自身**, 无任何真实文档 —— 闭环证据是悬空引用。且声称的三件产物中 runtime health_scan 在 bin/ 下检索不到 (system_health.yaml 存在, agora /health 未核)。结论: 闭环不成立, 重开为 identified。
+  actor: governance-agent
