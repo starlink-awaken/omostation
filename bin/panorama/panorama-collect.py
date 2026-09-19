@@ -660,6 +660,17 @@ def collect_objective_coverage(payload: dict) -> dict:
     agent_cell_semantic = payload.get("agent_cell_semantic") if isinstance(payload.get("agent_cell_semantic"), dict) else {}
     role_registry = payload.get("role_registry") if isinstance(payload.get("role_registry"), dict) else {}
     activation_allowed = claims_task16.get("activation_allowed") is True
+    claims_authority = payload.get("claims_authority") if isinstance(payload.get("claims_authority"), dict) else {}
+    claims_observation = (
+        payload.get("claims_observation_progress")
+        if isinstance(payload.get("claims_observation_progress"), dict) else {}
+    )
+    if activation_allowed:
+        claims_activation_status = "ACTIVATION_ALLOWED"
+    elif claims_observation.get("state") == "IN_PROGRESS" and claims_authority.get("activation_state") == "shadow-active":
+        claims_activation_status = "SHADOW_OBSERVING"
+    else:
+        claims_activation_status = "AWAITING_AUTHORIZATION"
 
     try:
         ledger = yaml.safe_load((CODE_ROOT / "docs/plans/3y-bet-ledger.yaml").read_text()) or {}
@@ -781,8 +792,11 @@ def collect_objective_coverage(payload: dict) -> dict:
         {
             "id": "CLAIMS_AUTHORITY_ACTIVATION",
             "requirement": "Claims Authority instruction capability requires separate authorization and observation",
-            "status": "ACTIVATION_ALLOWED" if activation_allowed else "AWAITING_AUTHORIZATION",
+            "status": claims_activation_status,
             "value_status": "NOT_PROVEN",
+            "runtime_state": claims_authority.get("activation_state", "unknown"),
+            "observation_state": claims_observation.get("state", "UNAVAILABLE"),
+            "observation_progress": claims_observation,
             "evidence": evidence("projection://claims_authority", "projection://claims_task16"),
         },
         {
@@ -798,7 +812,7 @@ def collect_objective_coverage(payload: dict) -> dict:
         "source": "repo://docs/plans/3y-bet-ledger.yaml + panorama gates",
         "items": items,
         "delivery_complete": all(item["status"] in {"PASS", "DELIVERY_ACCEPTED"} for item in items),
-        "activation_status": "ACTIVATION_ALLOWED" if activation_allowed else "AWAITING_AUTHORIZATION",
+        "activation_status": claims_activation_status,
         "value_proof": "NOT_PROVEN",
         "note": "Delivery coverage never proves business value; Claims Authority activation remains separately authorized.",
     }
@@ -1149,12 +1163,108 @@ def collect_claims_activation_request() -> dict:
         "expected_authority_epoch": request.get("expected_authority_epoch"),
         "expected_state": request.get("expected_state"),
         "human_authorization_status": str(human.get("status") or "UNKNOWN").upper(),
+        "execution_receipt": (
+            package.get("execution_receipt")
+            if isinstance(package.get("execution_receipt"), dict) else {}
+        ),
         "human_authorization_required": human.get("required") is True,
         "human_authorization_not_sufficient": human.get("not_sufficient") or [],
         "required_binding": human.get("required_binding") or [],
         "observation_after_activation": human.get("observation_after_activation") or {},
         "rollback_automatic_execution": rollback.get("automatic_execution") is True,
     }
+
+
+def collect_claims_observation_progress() -> dict:
+    """Project the read-only Claims shadow observation window without mutating it."""
+    request = collect_claims_activation_request()
+    observation = (
+        request.get("observation_after_activation")
+        if isinstance(request.get("observation_after_activation"), dict) else {}
+    )
+    evidence_dir = Path(str(observation.get("evidence_dir") or "")).expanduser()
+    summary_path = evidence_dir / "summary.json"
+    empty = {
+        "schema": "claims-observation-progress/v1",
+        "available": False,
+        "state": "UNAVAILABLE",
+        "activation_state": "unknown",
+        "sample_count": 0,
+        "minimum_samples": int(observation.get("minimum_samples") or 1440),
+        "duration_seconds": int(observation.get("duration_seconds") or 86400),
+        "maximum_gap_seconds": int(observation.get("maximum_gap_seconds") or 120),
+        "checkpoints": [],
+    }
+    if not request.get("available") or not summary_path.is_file():
+        return empty
+    try:
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        if not isinstance(summary, dict):
+            raise ValueError("summary root is not an object")
+        started_at = datetime.fromisoformat(str(summary.get("started_at_utc")).replace("Z", "+00:00"))
+        duration_seconds = int(observation.get("duration_seconds") or 86400)
+        minimum_samples = int(observation.get("minimum_samples") or 1440)
+        maximum_gap_seconds = float(observation.get("maximum_gap_seconds") or 120)
+        sample_count = int(summary.get("samples") or 0)
+        errors = int(summary.get("errors") or 0)
+        max_gap = float(summary.get("max_gap_seconds") or 0)
+        activation_state = str(summary.get("activation_state") or "unknown")
+        elapsed_seconds = max(0.0, (datetime.now(UTC) - started_at).total_seconds())
+        protocol_healthy = (
+            summary.get("invalid") is False
+            and errors == 0
+            and max_gap <= maximum_gap_seconds
+            and activation_state == "shadow-active"
+        )
+        request_receipt = (
+            request.get("execution_receipt") if isinstance(request.get("execution_receipt"), dict) else {}
+        ).get("receipt_digest")
+        sampled_receipt = summary.get("expected_last_receipt")
+        receipts_match = bool(request_receipt and sampled_receipt and request_receipt == sampled_receipt)
+        if not protocol_healthy or not receipts_match:
+            state = "INVALID"
+        elif elapsed_seconds >= duration_seconds and sample_count >= minimum_samples:
+            state = "GRADUATION_REACHED"
+        else:
+            state = "IN_PROGRESS"
+        checkpoints = []
+        for name, seconds, samples in (
+            ("smoke", 1800, 30),
+            ("provisional", 7200, 120),
+            ("sustained", 21600, 360),
+            ("graduation", 86400, 1440),
+        ):
+            checkpoints.append({
+                "id": name,
+                "duration_seconds": seconds,
+                "minimum_samples": samples,
+                "reached": elapsed_seconds >= seconds and sample_count >= samples,
+                "diagnostic_only": name != "graduation",
+            })
+        return {
+            "schema": "claims-observation-progress/v1",
+            "available": True,
+            "state": state,
+            "activation_state": activation_state,
+            "started_at_utc": started_at.isoformat(),
+            "elapsed_seconds": round(elapsed_seconds, 3),
+            "duration_seconds": duration_seconds,
+            "sample_count": sample_count,
+            "minimum_samples": minimum_samples,
+            "maximum_gap_seconds": maximum_gap_seconds,
+            "observed_max_gap_seconds": max_gap,
+            "errors": errors,
+            "receipts_match": receipts_match,
+            "descriptor_digest": summary.get("descriptor_digest"),
+            "evidence_dir": str(evidence_dir),
+            "checkpoints": checkpoints,
+        }
+    except Exception as exc:  # noqa: BLE001 - observation failure must stay visible
+        return {
+            **empty,
+            "state": "INVALID",
+            "error": type(exc).__name__,
+        }
 
 
 def _ensure_omo_path() -> None:
@@ -3018,6 +3128,10 @@ def collect_agent_visibility(payload: dict) -> dict:
         payload.get("claims_activation_request")
         if isinstance(payload.get("claims_activation_request"), dict) else {}
     )
+    claims_observation = (
+        payload.get("claims_observation_progress")
+        if isinstance(payload.get("claims_observation_progress"), dict) else {}
+    )
     agent_pool = payload.get("agent_cell_pool") if isinstance(payload.get("agent_cell_pool"), dict) else {}
     reference_cell = payload.get("reference_cell") if isinstance(payload.get("reference_cell"), dict) else {}
     agent_cell_semantic = payload.get("agent_cell_semantic") if isinstance(payload.get("agent_cell_semantic"), dict) else {}
@@ -3212,6 +3326,11 @@ def collect_agent_visibility(payload: dict) -> dict:
             "claims_activation_blockers": blockers,
             "claims_activation_readiness": claims_activation_readiness,
             "claims_activation_request": claims_activation_request,
+            "claims_observation_progress": (
+                payload.get("claims_observation_progress")
+                if isinstance(payload.get("claims_observation_progress"), dict)
+                else {"schema": "claims-observation-progress/v1", "available": False}
+            ),
             "value_proof": "NOT_PROVEN",
             "value_proof_readiness": value_readiness,
         },
@@ -3308,9 +3427,21 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "id": "claims-authority-wait", "state": "authorization_required",
                 "detail": "Keep Claims Authority read-only until a fresh operation-specific authorization and its 24-hour observation gate pass.",
                 "source": "panorama.claims_authority",
-            } if not activation_allowed else {
+            } if (
+                not activation_allowed
+                and not (
+                    claims_observation.get("state") == "IN_PROGRESS"
+                    and claims_authority.get("activation_state") == "shadow-active"
+                )
+            ) else {
                 "id": "claims-authority-observation", "state": "required",
-                "detail": "Run the accepted Claims Authority observation protocol under OMO.",
+                "detail": (
+                    "Preserve Claims Authority shadow observation under OMO: "
+                    f"{claims_observation.get('sample_count', 0)}/"
+                    f"{claims_observation.get('minimum_samples', 1440)} samples; "
+                    "instruction capability remains disabled until graduation."
+                ) if claims_observation.get("state") == "IN_PROGRESS" else
+                "Run the accepted Claims Authority observation protocol under OMO.",
                 "source": "panorama.claims_authority",
             },
             *([
@@ -3379,6 +3510,7 @@ def build_payload() -> dict:
         "claims_authority": collect_claims_authority(),
         "claims_task16": collect_claims_task16_preflight(),
         "claims_activation_request": collect_claims_activation_request(),
+        "claims_observation_progress": collect_claims_observation_progress(),
         "reference_cell": collect_reference_cell_gate(),
         "asd": collect_asd(),
         "role_registry": collect_role_registry(),
