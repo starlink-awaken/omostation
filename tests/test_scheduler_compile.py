@@ -165,3 +165,32 @@ def test_scheduler_check_no_drift_after_dedup() -> None:
     assert data.get("drift_count", -1) == 0, (
         f"dedup 引入 drift: {data}"
     )
+
+
+def test_compile_crontab_excludes_non_crontab_plane_jobs() -> None:
+    """平面过滤契约: compile_crontab 只输出 active + crontab 平面条目.
+
+    历史 bug (2026-09-19): 未过滤 planes 时, launchd-only 的
+    schedule=always 条目 (如 panorama-serve) 会混进 crontab 产物,
+    cron 因非法 schedule 拒绝整文件安装.
+    """
+    module = _load_compile_module()
+    jobs = _load_registry_jobs()
+    out = module.compile_crontab(jobs)
+    for j in jobs:
+        if j.get("status", "active") != "active":
+            continue
+        if "crontab" in j.get("planes", []):
+            continue
+        expected = f'{j.get("schedule", "")} {j.get("command", "")}'
+        assert expected not in out, (
+            f"非 crontab 平面条目泄漏进产物: job={j.get('name')}\n  {expected}"
+        )
+    # 产物中不允许出现非 5 字段 cron 表达式 (always/@ 系除外)
+    for line in out:
+        if not line.strip() or line.startswith("#"):
+            continue
+        schedule = line.split(maxsplit=5)[:5]
+        if schedule and schedule[0].startswith("@"):
+            continue
+        assert len(schedule) == 5, f"非法 schedule 字段数: {line}"
