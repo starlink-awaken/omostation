@@ -331,3 +331,4 @@ runtime/mos/
 .tokensave
 .claude-flow/
 runtime/dashboard/
+.omo/state/agent-cell/semantic/*.sqlite3
