@@ -70,15 +70,19 @@ bash bin/gac/gac-worktree.sh retire <session-name>
 
 | Check | Mechanism |
 |-------|-----------|
-| Pre-commit | `bin/gac/check-main-workspace-commit.py`（hook-manifest `main-workspace-commit`）**blocking**: 主工作区停在非 `main` 分支时提交即拦截 |
+| Pre-commit | `bin/gac/check-main-workspace-commit.py`（hook-manifest `main-workspace-commit`）**blocking**: 主工作区**任意分支**上提交即拦截 |
 | Pre-push | `gac-worktree-guard.sh --check` blocks pushes from main with uncommitted changes |
 | CI | `gitlink-ancestry` + `pointer-drift` detect main divergence |
 | Audit | Periodic review of `git worktree list` vs PR activity |
 
-**为什么拦"非 main 分支"而不是"提交到 main"**（2026-09-18 修正）：主工作区被多
-agent 共享，HEAD 停在非 `main` 分支意味着**该分支随时可能被并发会话切走**，
-其上的提交会因此不可达 —— 实证 `e4787d290`（同日 #3976 "dropped from #3969"
-是同一事故的另一次发生，导致重复劳动）。停在 `main` 上提交不产生该模式。
+**判据为何按"位置"而非"分支"**（2026-09-19 修正，含两次实证）：
+
+| 位置 | 故障模式 | 实证 |
+|---|---|---|
+| 主工作区 + **非 main** 分支 | HEAD 停在该分支 → 随时被并发会话切走 → 提交孤立 | 2026-09-18 `e4787d290`（同日 #3976 "dropped from #3969" 是同一事故） |
+| 主工作区 + **main** 分支 | 本地 main 领先 origin/main → 一旦 origin 前进即成**双向分叉** → 所有人的 `merge --ff-only origin/main` **只打印 hint、不报错** → 并发会话都以为同步了，实际停在旧提交上 | 2026-09-19，该状态持续近 1 小时无人察觉 |
+
+初版只拦非 main 分支（误判"main 上提交无孤立风险"）—— 第二次实证证明**两种模式都是"在共享工作区提交"的直接后果**，故判据收敛为按位置。
 
 逃生舱（会记入 `runtime/logs/main-workspace-commit-overrides.jsonl`）：
 
@@ -86,8 +90,12 @@ agent 共享，HEAD 停在非 `main` 分支意味着**该分支随时可能被�
 GAC_ALLOW_MAIN_WORKSPACE_COMMIT=1 git commit -m "..."
 ```
 
-已孤立提交的恢复入口：`python3 bin/gac/workspace-wip-guard.py list-protected`
-（提交钉扎见 `refs/wip/`）。
+已孤立/分叉提交的处置：
+
+```bash
+python3 bin/gac/workspace-wip-guard.py list-protected   # 查看钉扎
+git log --oneline origin/main..main                     # 查分叉
+```
 
 ### Stale worktree retirement (N = 14 days idle)
 
