@@ -523,13 +523,14 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <span class="nav-group-toggle">▼</span>
   </div>
   <div class="nav-group-items">
-    <a href="#personal" class="nav-item-core"><span class="nav-symbol">👑</span>主权中心</a>
-    <a href="#workbench" class="nav-item-core"><span class="nav-symbol">🖥️</span>中枢工作台</a>
-    <a href="#orient" aria-current="page" class="nav-item-core"><span class="nav-symbol">◎</span>全景总览</a>
-    <a href="#panorama" class="nav-item-core"><span class="nav-symbol">📐</span>白皮书指导</a>
-    <a href="#mof-grid" class="nav-item-core"><span class="nav-symbol">🛡️</span>MOF 元模型与约束</a>
-    <a href="#ledger" class="nav-item-core"><span class="nav-symbol">▤</span>路线与 BET</a>
-    <a href="#next" class="nav-item-core"><span class="nav-symbol">→</span>接下来做什么</a>
+    <a href="#ecosystem-map" data-system="META" class="nav-item-core"><span class="nav-symbol">🗺️</span>全域能力地图</a>
+    <a href="#personal" data-system="S1" class="nav-item-core"><span class="nav-symbol">👑</span>主权中心</a>
+    <a href="#workbench" data-system="S1,S5" class="nav-item-core"><span class="nav-symbol">🖥️</span>中枢工作台</a>
+    <a href="#orient" data-system="S1" aria-current="page" class="nav-item-core"><span class="nav-symbol">◎</span>全景总览</a>
+    <a href="#panorama" data-system="S1,S2,S3,S4,S5,S6,S7,S8" class="nav-item-core"><span class="nav-symbol">📐</span>白皮书指导</a>
+    <a href="#mof-grid" data-system="META" class="nav-item-core"><span class="nav-symbol">🛡️</span>MOF 元模型与约束</a>
+    <a href="#ledger" data-system="S4" class="nav-item-core"><span class="nav-symbol">▤</span>路线与 BET</a>
+    <a href="#next" data-system="S4,S5" class="nav-item-core"><span class="nav-symbol">→</span>接下来做什么</a>
   </div>
 </div>
 <!-- Engineering Mode: Deep Audit -->
@@ -539,17 +540,17 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <span class="nav-group-toggle">▼</span>
   </div>
   <div class="nav-group-items">
-    <a href="#topology" class="nav-item-engineering"><span class="nav-symbol">☵</span>架构拓扑</a>
-    <a href="#arch" class="nav-item-engineering"><span class="nav-symbol">↕</span>体系流程</a>
-    <a href="#atlas" class="nav-item-engineering"><span class="nav-symbol">◇</span>架构与模型</a>
-    <a href="#capabilities" class="nav-item-engineering"><span class="nav-symbol">▦</span>能力与 BOS</a>
-    <a href="#gov" class="nav-item-engineering"><span class="nav-symbol">◇</span>恢复准入</a>
-    <a href="#swarm" class="nav-item-engineering"><span class="nav-symbol">↔</span>Agent 协同</a>
-    <a href="#value" class="nav-item-engineering"><span class="nav-symbol">↗</span>价值验收</a>
-    <a href="#metrics" class="nav-item-engineering"><span class="nav-symbol">📊</span>指标度量</a>
-    <a href="#health" class="nav-item-engineering"><span class="nav-symbol">🏥</span>健康诊断</a>
-    <a href="#loops" class="nav-item-engineering"><span class="nav-symbol">⟳</span>回路观测</a>
-    <a href="#trace" class="nav-item-engineering"><span class="nav-symbol">🔗</span>因果拓扑图谱</a>
+    <a href="#topology" data-system="META" class="nav-item-engineering"><span class="nav-symbol">☵</span>架构拓扑</a>
+    <a href="#arch" data-system="META" class="nav-item-engineering"><span class="nav-symbol">↕</span>体系流程</a>
+    <a href="#atlas" data-system="S3" class="nav-item-engineering"><span class="nav-symbol">◇</span>架构与模型</a>
+    <a href="#capabilities" data-system="S7" class="nav-item-engineering"><span class="nav-symbol">▦</span>能力与 BOS</a>
+    <a href="#gov" data-system="S6" data-plane="CP-SEC" class="nav-item-engineering"><span class="nav-symbol">◇</span>恢复准入</a>
+    <a href="#swarm" data-system="S7" class="nav-item-engineering"><span class="nav-symbol">↔</span>Agent 协同</a>
+    <a href="#value" data-system="S8" class="nav-item-engineering"><span class="nav-symbol">↗</span>价值验收</a>
+    <a href="#metrics" data-system="S8" data-plane="CP-ECON" class="nav-item-engineering"><span class="nav-symbol">📊</span>指标度量</a>
+    <a href="#health" data-system="S7" data-plane="CP-REL" class="nav-item-engineering"><span class="nav-symbol">🏥</span>健康诊断</a>
+    <a href="#loops" data-system="S8" class="nav-item-engineering"><span class="nav-symbol">⟳</span>回路观测</a>
+    <a href="#trace" data-system="S8" data-plane="CP-TEMP" class="nav-item-engineering"><span class="nav-symbol">🔗</span>因果拓扑图谱</a>
   </div>
 </div>
 <!-- Engineering Mode: Knowledge & Ops -->
@@ -559,12 +560,12 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <span class="nav-group-toggle">▼</span>
   </div>
   <div class="nav-group-items">
-    <a href="#logs" class="nav-item-engineering"><span class="nav-symbol">📋</span>事件日志</a>
-    <a href="#know" class="nav-item-engineering"><span class="nav-symbol">▧</span>文档知识</a>
-    <a href="#knowledge-memory" class="nav-item-engineering"><span class="nav-symbol">◈</span>知识记忆</a>
-    <a href="#learning" class="nav-item-engineering"><span class="nav-symbol">🧬</span>经验与结晶</a>
-    <a href="#scene-system" class="nav-item-engineering"><span class="nav-symbol">🃏</span>场景系统</a>
-    <a href="#skills-inventory" class="nav-item-engineering"><span class="nav-symbol">⚙</span>技能清单</a>
+    <a href="#logs" data-system="S7" data-plane="CP-REL" class="nav-item-engineering"><span class="nav-symbol">📋</span>事件日志</a>
+    <a href="#know" data-system="S3" class="nav-item-engineering"><span class="nav-symbol">▧</span>文档知识</a>
+    <a href="#knowledge-memory" data-system="S3" class="nav-item-engineering"><span class="nav-symbol">◈</span>知识记忆</a>
+    <a href="#learning" data-system="S8" class="nav-item-engineering"><span class="nav-symbol">🧬</span>经验与结晶</a>
+    <a href="#scene-system" data-system="S2" class="nav-item-engineering"><span class="nav-symbol">🃏</span>场景系统</a>
+    <a href="#skills-inventory" data-system="S7" class="nav-item-engineering"><span class="nav-symbol">⚙</span>技能清单</a>
   </div>
 </div>
 </nav>
@@ -618,7 +619,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <div id="health-diagnostic-content"></div>
   </div>
 </div>
-<section id="orient" class="section active" aria-labelledby="title-orient">
+<section id="orient" data-system="S1" class="section active" aria-labelledby="title-orient">
 <div class="hero">
 <div class="hero-copy"><div class="eyebrow">VISION → EXECUTION → EVIDENCE</div><h1 id="title-orient">让 Agent 可以更替，<br>让目标与责任持续。</h1><p class="lead">把外部信号变成你愿意署名的成果，并记住每次修改。以 OMO 承接权威、任务和证据，用可替换的 Agent 完成有边界的交付。</p><span class="chip warn">总体：尚未具备完整运行与价值证据</span></div>
 <div class="card"><div class="spine">
@@ -645,7 +646,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <div class="grid two"><article class="card"><h2>当前阻塞与进展</h2><ul id="current-findings" class="list"></ul><div id="summary-source" class="source"></div></article><article class="card"><h2>从文档走向执行</h2><div class="tree">Vision <small>最终结果</small><div class="branch">Objective → Required KR<div class="branch">Campaign → Milestone<div class="branch">Parent BET <small>可选</small><div class="branch"><span class="selected">Leaf BET · 0.5–5 天</span><div class="branch">WorkPacket → Run → Evidence</div></div></div></div></div></div><p class="small muted gap">当前和下一里程碑逐批细化。mandatory BET 交付还要与 KR、持续价值、P0 和人工验收一起判断。</p><a class="btn" href="#ledger">查看里程碑与依赖 →</a></article></div>
 <div class="callout gap">采集计划每 5 分钟运行，页面每 60 秒检查新版本，深度阅读或固定阅读时保留现场；休眠、离线或调度延迟会使结果过期。每源独立保留成功时间，失败时显示降级。正式 ASD / Cockpit 与统一 Agent 身份关联继续按路线交付。</div>
 </section>
-<section id="arch" class="section" aria-labelledby="title-arch">
+<section id="arch" data-system="META" class="section" aria-labelledby="title-arch">
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-ARCH · 物理架构</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Target Architecture</span></div><h1 id="title-arch">体系如何连成一体</h1><p class="lead">持久的是职责、合同、队列和证据；Agent 只在一次 assignment 中承担角色。</p></div>
 <div id="sovereign-hex-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载九面星环...</span></div></div>
 <div id="panoramic-architecture-container" class="panoramic-container"></div>
@@ -663,18 +664,18 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <article class="loop"><h3>元治理慢回路</h3><p class="small">制度使用与失效证据 → 提案 → 独立审议 → 修订或减法 → 冷启动复验。</p></article></div>
 <div class="card gap"><h2>一次交付的完整路径</h2><div class="flow"><span>意图 / 信号</span><i>→</i><span>BET + Spec</span><i>→</i><span>Capsule + Admission</span><i>→</i><span>claim / assignment</span><i>→</i><span>执行</span><i>→</i><span>独立验证</span><i>→</i><span>child-first 合并</span><i>→</i><span>运行与价值验收</span><i>→</i><span>复盘 / 退役</span></div><p class="small muted">Context Pack：C0 宪法指针＋C1 角色＋C2 当前任务＋C3 按需知识。claim、首次写入、首次副作用、closeout 时重新校验。</p></div>
 </section>
-<section id="gov" class="section" aria-labelledby="title-gov">
+<section id="gov" data-system="S6" data-plane="CP-SEC" class="section" aria-labelledby="title-gov">
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-GOV · 治理平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Recovery & Admission</span></div><h1 id="title-gov">先让每个门可证明</h1><p class="lead">A1–A5 恢复基础环境；Core 与 Direct Local 建立后，继续 A8、A6/A7 和 A9。每项分别显示既有设计基线与最新观测。</p></div>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div class="note" id="freshness" style="margin:0;flex:1"></div><div id="gov-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="gate-pipeline-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载门禁流水线...</span></div></div><div id="gate-list" class="gates gap"></div>
 </section>
-<section id="ledger" class="section" aria-labelledby="title-ledger">
+<section id="ledger" data-system="S4" class="section" aria-labelledby="title-ledger">
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-LEDGER · 账本平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Portfolio & Roadmap</span></div><h1 id="title-ledger">结果、阶段与最小交付</h1><p class="lead">全周期覆盖到 Milestone，近端滚动细化到 leaf BET。下面同时保留当前 Ledger 与待落盘路线的边界。</p></div>
 <div class="card"><div class="row"><h2>当前主线 Ledger</h2><span class="chip">固定提交读取</span></div><div class="row" style="margin-bottom:12px"><span></span><div id="ledger-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="ledger-stats" class="statline"></div><div id="ledger-visuals"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载台账分布...</span></div></div><div id="ledger-source" class="source"></div></div>
 <div class="grid two gap"><article class="card"><h2>阶段依赖</h2><div id="stages"></div></article><article class="card"><h2>目标与 Campaign</h2><div id="objectives"></div><h3 class="gap">下一批候选</h3><div id="candidates"></div><div class="note gap">候选键尚未分配新 BET ID。写面、依赖、Spec、baseline、kill criteria 与 verifier 齐备后，再进入受管执行。</div></article></div>
 <div class="card gap"><h2>容量计划 · 滚动排期</h2><p class="small muted">来自 3Y-BET-LEDGER 动态台账排期，时间范围随台账实时滚动。前置门未通过时顺延，执行完成率以最新依赖为准。</p><div class="timeline"><div id="gantt" class="gantt"></div></div></div>
 <div class="card gap"><h2>当前非终态 BET</h2><div class="toolbar"><label class="sr-only" for="bet-search">搜索 BET</label><input id="bet-search" type="search" placeholder="搜索 BET、标题或依赖"><label class="sr-only" for="bet-status">按状态筛选</label><select id="bet-status"><option value="">全部非终态</option><option value="in_progress">in_progress</option><option value="candidate">candidate</option><option value="blocked">blocked</option></select></div><p id="bet-count" class="small muted" aria-live="polite"></p><div class="table-wrap"><table><thead><tr><th>BET / 目标</th><th>状态</th><th>依赖</th></tr></thead><tbody id="bet-rows"></tbody></table></div><div class="source">这里只展示 Ledger 已记录的状态。可执行性仍需 fresh WorkPacket、capability、claim 和运行证据。</div></div>
 </section>
-<section id="swarm" class="section" aria-labelledby="title-swarm">
+<section id="swarm" data-system="S7" class="section" aria-labelledby="title-swarm">
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Roles & Agents</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
 <div class="note" id="agent-coverage"></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
 <div class="card gap"><h2>当前核心协作实体与运行角色</h2><p class="small muted">包含人类主权决策者、常驻自治守护者、AetherForge 本地算力网关与受管工程智能体，数据实时保持最新。</p><div class="table-wrap"><table><thead><tr><th>协作实体 / Agent</th><th>当前职责</th><th>运行状态 / 算力与范围</th></tr></thead><tbody id="team-rows"></tbody></table></div></div>
@@ -806,7 +807,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 .zx-nodata{padding:20px 10px;text-align:center;color:var(--muted);font-size:11.5px}
 .zx-nodata .zx-state{display:inline-block;margin-bottom:5px;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#8296a8}
 </style>
-<section id="value" class="section zx-panel" aria-labelledby="title-value">
+<section id="value" data-system="S8" class="section zx-panel" aria-labelledby="title-value">
 <div class="section-breadcrumb">
   <span>📍 价值中枢</span>
   <span class="sep">|</span>
@@ -889,7 +890,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 </section>
 <!-- ZHIXING-PANEL:value:END -->
 
-<section id="logs" class="section zx-panel" aria-labelledby="title-logs">
+<section id="logs" data-system="S7" data-plane="CP-REL" class="section zx-panel" aria-labelledby="title-logs">
 <div class="section-breadcrumb">
   <span>📍 事件与运行态</span>
   <span class="sep">|</span>
@@ -942,7 +943,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 </section>
 <!-- ZHIXING-PANEL:logs:END -->
 
-<section id="metrics" class="section zx-panel" aria-labelledby="title-metrics">
+<section id="metrics" data-system="S8" data-plane="CP-ECON" class="section zx-panel" aria-labelledby="title-metrics">
 <div class="section-breadcrumb">
   <span>📍 指标度量</span>
   <span class="sep">|</span>
@@ -1009,7 +1010,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 </section>
 <!-- ZHIXING-PANEL:metrics:END -->
 
-<section id="health" class="section" aria-labelledby="title-health">
+<section id="health" data-system="S7" data-plane="CP-REL" class="section" aria-labelledby="title-health">
 <div class="section-breadcrumb">
   <span>📍 健康诊断</span>
   <span class="sep">|</span>
@@ -1069,7 +1070,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   <a href="#loops" class="related-link">⟳ 查看回路观测</a>
 </div>
 </section>
-<section id="loops" class="section" aria-labelledby="title-loops">
+<section id="loops" data-system="S8" class="section" aria-labelledby="title-loops">
 <div class="section-breadcrumb">
   <span>📍 回路观测</span>
   <span class="sep">|</span>
@@ -1161,12 +1162,12 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   <a href="#logs" class="related-link">📋 查看事件流</a>
 </div>
 </section>
-<section id="know" class="section" aria-labelledby="title-know">
+<section id="know" data-system="S3" class="section" aria-labelledby="title-know">
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-KNOW · 知识平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Shared Context</span></div><h1 id="title-know">共享知识有入口，也有边界</h1><p class="lead">从纲领、架构到实施、验收、运营和复盘，每个文档保留身份、owner 与审阅状态。新 Agent 按任务加载必要部分。</p></div>
 <div id="knowledge-stats-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载知识库统计...</span></div></div>
 <div class="toolbar"><label class="sr-only" for="doc-search">搜索文档</label><input id="doc-search" type="search" placeholder="搜索白皮书、架构、共享知识、验收…"><label class="sr-only" for="doc-status">筛选审阅状态</label><select id="doc-status"><option value="">全部文档</option><option value="in-review">审阅中</option><option value="not-requested">导航 / 观察</option><option value="accepted">已接受</option></select></div><p id="doc-count" class="small muted" aria-live="polite"></p><div id="documents" class="docgrid"></div>
 </section>
-<section id="next" class="section" aria-labelledby="title-next">
+<section id="next" data-system="S4,S5" class="section" aria-labelledby="title-next">
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-NEXT · 行动中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Next Legal Action</span></div><h1 id="title-next">战役演进雷达与下一步法定行动中枢</h1><p class="lead">先处理证据和写面，再逐步建设控制合同。每一步都有责任人、进入条件、验收和停止条件。</p></div>
 
 <!-- 快速穿透协同中枢 -->
@@ -1219,7 +1220,6 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <h2>Claims Authority 激活门</h2>
     <div id="claims-authorization" class="list"></div>
     <div id="claims-observation-progress" class="list gap"></div>
-    <div id="claims-lifecycle-authorization" class="list gap"></div>
     <p class="small muted gap">激活后仍需完成 24 小时 / 1440 样本观察；这里只显示等待精确授权的请求，不提供写入接口。</p>
   </article>
   <article class="card">
@@ -1244,14 +1244,14 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   </ul>
 </div>
 </section>
-<section id="topology" class="section" aria-labelledby="title-topology">
+<section id="topology" data-system="META" class="section" aria-labelledby="title-topology">
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-TOPOLOGY · 拓扑平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Architecture & Interfaces</span></div><h1 id="title-topology">全项目架构拓扑与接口全景</h1><p class="lead">全景透视 16 个核心子模块仓库、八层架构流动分工、项目级上下游调用链与跨域接口契约 (CLI / MCP / HTTP / BOS)。</p></div>
 <div id="topology-content-root"></div>
 </section>
 <footer class="foot">织星 · 人类可持有的个人智能操作系统。此视图无派工、审批、写回、自动重试或外部网络请求能力。<span id="foot-source"></span></footer>
 <noscript>本地交互需要 JavaScript。请打开同目录说明文档或下载 JSON 查看原始快照。</noscript>
 
-<section id="knowledge-memory" class="section" aria-labelledby="title-km">
+<section id="knowledge-memory" data-system="S3" class="section" aria-labelledby="title-km">
 <div class="section-head"><div class="eyebrow">P-KM / KNOWLEDGE & MEMORY</div><h1 id="title-km">知识记忆经验建模</h1><button onclick="refreshPanorama()" style="float:right;padding:6px 14px;background:#5b9dff;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">⟳ 刷新</button><span id="panorama-refresh-status" style="float:right;margin-right:10px;font-size:11px;color:var(--muted)"></span><div style="clear:both"></div><p class="lead">知识健康度、增长曲线、记忆双轨、经验网络、经验图谱。</p><div id="km-freshness" style="margin-top:8px;font-size:11px;color:var(--muted)"></div></div>
 <div class="grid three gap" id="km-kpi"><div class="loading-center" style="padding:16px;grid-column:1/-1"><span class="loading-spinner"></span><span class="loading-text">加载知识记忆 KPI...</span></div></div>
 <div class="grid two gap" style="margin-top:14px">
@@ -1263,7 +1263,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   <div class="card"><h3>知识入链 Top 10 <a href="#know" style="float:right;font-size:11px;font-weight:normal">→ 查看全部</a><div style="clear:both"></div></h3><table id="km-inbound"><thead><tr><th>文档</th><th>入链数</th></tr></thead><tbody></tbody></table></div>
 </div>
 </section>
-<section id="scene-system" class="section" aria-labelledby="title-ss">
+<section id="scene-system" data-system="S2" class="section" aria-labelledby="title-ss">
 <div class="section-breadcrumb"><span>📍 场景系统</span><span class="sep">|</span><span>关联：</span><a href="#knowledge-memory">知识记忆</a><a href="#swarm">Agent 与协同</a><a href="#gov">恢复与准入</a></div>
 <div class="section-head"><div class="eyebrow">P-SCENE / SCENE SYSTEM RUNTIME</div><h1 id="title-ss">场景系统运行态</h1><button onclick="refreshPanorama()" style="float:right;padding:6px 14px;background:#5b9dff;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">⟳ 刷新</button><div style="clear:both"></div><p class="lead">场景卡生命周期（在役/已完成）、信号轮询、旅程执行、连接器清单、远程卫生。</p></div>
 <div class="grid three gap" id="ss-kpi"><div class="loading-center" style="padding:16px;grid-column:1/-1"><span class="loading-spinner"></span><span class="loading-text">加载场景系统 KPI...</span></div></div>
@@ -1277,12 +1277,12 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 </div>
 <div class="card" style="margin-top:14px"><h3>旅程规格（human_gate 门控）<span class="chip neutral" id="ss-journey-count">0</span></h3><div id="ss-journeys" style="max-height:260px;overflow-y:auto"></div></div>
 </section>
-<section id="skills-inventory" class="section" aria-labelledby="title-si">
+<section id="skills-inventory" data-system="S7" class="section" aria-labelledby="title-si">
 <div class="section-head"><div class="eyebrow">P-SKILLS / CAPABILITY CATALOG</div><h1 id="title-si">技能清单</h1><p class="lead">全局 / 项目 / Kimi Code 全量 skill 注册。</p></div>
 <div class="grid three gap" id="si-kpi"></div>
 <div class="card gap"><h3>Skill 列表</h3><div id="si-filters" style="margin-bottom:10px"></div><table id="si-tbl"><thead><tr><th>名称</th><th>域</th><th>描述</th></tr></thead><tbody></tbody></table></div>
 </section>
-<section id="panorama" class="section" aria-labelledby="title-panorama">
+<section id="panorama" data-system="S1,S2,S3,S4,S5,S6,S7,S8" class="section" aria-labelledby="title-panorama">
 <div class="section-breadcrumb">
   <span>📍 战略架构纲领</span>
   <span class="sep">|</span>
@@ -1301,17 +1301,17 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <div class="card gap">
   <h3 style="margin:0 0 12px">🏛️ 总图：从人类主权到价值反馈</h3>
   <div style="background:var(--paper);border-radius:10px;padding:18px;font-family:var(--mono);font-size:12px;line-height:1.9;overflow-x:auto;white-space:pre">
-<span style="color:var(--blue);font-weight:600">人类 Principal：最终主权与价值裁决</span>
+<span style="color:var(--blue);font-weight:600">人类 <a href="#personal" style="color:inherit">Principal：最终主权与价值裁决</a></span>
 Constitution / Vision / Values / Risk / Revocation
   │ 定义目的、边界与授权
   ▼
-真实世界 → 感知情境 → 知识与记忆 → <span style="color:var(--teal)">决策体系</span>
+真实世界 → <a href="#scene-system">感知情境</a> → <a href="#know">知识与记忆</a> → <span style="color:var(--teal)"><a href="#next" style="color:inherit">决策体系</a></span>
                                     │ 形成承诺
                                     ▼
-        战略目标组合 → 治理与信任 → <span style="color:var(--teal)">运行与执行</span>
+        <a href="#ledger">战略目标组合</a> → <a href="#gov">治理与信任</a> → <span style="color:var(--teal)"><a href="#swarm" style="color:inherit">运行与执行</a></span>
                                     │ Deliverable/Receipt
                                     ▼
-<span style="color:var(--amber);font-weight:600">价值与进化：Outcome → Verdict → Learning → Proposal</span>
+<span style="color:var(--amber);font-weight:600">价值与进化：<a href="#value" style="color:inherit">Outcome</a> → <a href="#value" style="color:inherit">Verdict</a> → <a href="#learning" style="color:inherit">Learning</a> → <a href="#next" style="color:inherit">Proposal</a></span>
         └──────────── 反馈到知识、决策与目标 ────────────┘
 
 横切：安全隐私｜可靠恢复｜资源经济｜时间来源｜人机体验
@@ -1322,12 +1322,12 @@ Constitution / Vision / Values / Risk / Revocation
   <div class="card">
     <h3 style="margin:0 0 8px">🔁 闭环 A：价值闭环</h3>
     <p class="small muted" style="margin:0 0 10px">回答：这次行动是否真正改善了主人的结果？</p>
-    <div class="mono small" style="line-height:2">Signal → Context → Decision → Goal/BET → Mandate/Policy → WorkflowRun → Deliverable/Receipt → HumanVerdict → Outcome → ValueRecord</div>
+    <div class="mono small" style="line-height:2"><a href="#scene-system">Signal</a> → <a href="#know">Context</a> → <a href="#next">Decision</a> → <a href="#ledger">Goal/BET</a> → <a href="#gov">Mandate/Policy</a> → <a href="#swarm">WorkflowRun</a> → <a href="#logs">Deliverable/Receipt</a> → <a href="#personal">HumanVerdict</a> → <a href="#value">Outcome</a> → <a href="#value">ValueRecord</a></div>
   </div>
   <div class="card">
     <h3 style="margin:0 0 8px">🧬 闭环 B：进化闭环</h3>
     <p class="small muted" style="margin:0 0 10px">回答：系统是否从真实结果中变得更好，而不是只变得更复杂？</p>
-    <div class="mono small" style="line-height:2">Outcome/Failure → Memory Update → Improvement Hypothesis → Replay → Sandbox → Shadow → Canary → Human/Policy Decision → Promote/Reject/Rollback/Retire</div>
+    <div class="mono small" style="line-height:2"><a href="#value">Outcome/Failure</a> → <a href="#knowledge-memory">Memory Update</a> → <a href="#learning">Improvement Hypothesis</a> → <a href="#loops">Replay</a> → <a href="#loops">Sandbox</a> → <a href="#loops">Shadow</a> → <a href="#loops">Canary</a> → <a href="#gov">Human/Policy Decision</a> → <a href="#next">Promote/Reject/Rollback/Retire</a></div>
   </div>
 </div>
 <p class="small muted gap">两个主闭环描述系统的端到端目的；增强回路、控制回路、恢复回路和抗熵回路是嵌套在主闭环中的动力结构，详见 <a href="#loops">回路观测</a>。</p>
@@ -1335,14 +1335,14 @@ Constitution / Vision / Values / Risk / Revocation
 <div class="card gap">
   <h3 style="margin:0 0 14px">🎯 八个核心体系 (S1–S8)</h3>
   <div class="grid two gap" id="panorama-s-systems">
-    <div class="card" style="background:var(--paper)"><b>S1 人类主权与宪法体系</b><div class="small muted gap">为谁服务、为什么存在、什么永远不能自动决定？</div><div class="small gap"><b>拥有：</b>Principal identity、Constitution、Values、Risk appetite、Revocation</div><div class="small"><b>不拥有：</b>日常调度、任务执行、价值数据加工</div><span class="chip warn gap">EXTEND</span></div>
-    <div class="card" style="background:var(--paper)"><b>S2 感知与情境体系</b><div class="small muted gap">真实世界发生了什么，哪些变化值得进入系统？</div><div class="small gap"><b>拥有：</b>Signal、Source、ContextSnapshot、Freshness、Classification</div><div class="small"><b>不拥有：</b>目标决定、价值裁决、自动进化</div><span class="chip warn gap">EXTEND</span></div>
-    <div class="card" style="background:var(--paper)"><b>S3 知识与记忆体系</b><div class="small muted gap">什么被认为是真的，为什么相信，何时失效？</div><div class="small gap"><b>拥有：</b>KnowledgeClaim、Belief、Memory、Provenance、Conflict、Decay</div><div class="small"><b>不拥有：</b>把推断自动升级为事实、替 Principal 定义价值</div><span class="chip warn gap">EXTEND</span></div>
-    <div class="card" style="background:var(--paper)"><b>S4 战略、目标与组合体系</b><div class="small muted gap">长期要赢什么，现在承诺什么，不做什么？</div><div class="small gap"><b>拥有：</b>Vision、Objective、KR、Campaign、BET、Kill criteria</div><div class="small"><b>不拥有：</b>直接执行任务、把 BET done 自动解释为 KR proven</div><span class="chip warn gap">EXTEND（先修复权威和覆盖）</span></div>
-    <div class="card" style="background:var(--paper)"><b>S5 决策体系</b><div class="small muted gap">面对多个选项，为什么选择此行动？</div><div class="small gap"><b>拥有：</b>DecisionRecord、Options、Trade-offs、Confidence、Supersession</div><div class="small"><b>不拥有：</b>执行、审批高风险动作、宣告价值</div><span class="chip warn gap">EXTEND</span></div>
-    <div class="card" style="background:var(--paper)"><b>S6 治理与信任体系</b><div class="small muted gap">什么行动可以发生，需要什么证据和职责分离？</div><div class="small gap"><b>拥有：</b>Policy、Admission、Permission、Audit、Gate、Waiver</div><div class="small"><b>不拥有：</b>业务价值裁决、普通任务生产、第二套执行状态</div><span class="chip good gap">EXISTS（进入 subtraction）</span></div>
-    <div class="card" style="background:var(--paper)"><b>S7 运行与执行体系</b><div class="small muted gap">如何把已授权承诺稳定变成可验证行动？</div><div class="small gap"><b>拥有：</b>WorkPacket、WorkflowRun、Dispatch、ActionReceipt、Recovery</div><div class="small"><b>不拥有：</b>目标、价值、历史事实重写和自我授权</div><span class="chip warn gap">EXTEND</span></div>
-    <div class="card" style="background:var(--paper)"><b>S8 价值验证与进化体系</b><div class="small muted gap">行动是否有意义，系统应如何改变？</div><div class="small gap"><b>拥有：</b>Outcome、HumanVerdict、EvolutionProposal、Experiment、PromotionDecision</div><div class="small"><b>不拥有：</b>自我批准宪法、权限、价值标准和高风险能力</div><span class="chip warn gap">BUILD-IN-PLACE（下一阶段最重要补强点）</span></div>
+    <div class="card" style="background:var(--paper)"><b>S1 人类主权与宪法体系</b><div class="small muted gap">为谁服务、为什么存在、什么永远不能自动决定？</div><div class="small gap"><b>拥有：</b>Principal identity、Constitution、Values、Risk appetite、Revocation</div><div class="small"><b>不拥有：</b>日常调度、任务执行、价值数据加工</div><span class="chip warn gap">EXTEND</span><div class="small gap">落地板块：<a href="#personal">主权中心</a> · <a href="#orient">全景总览</a></div></div>
+    <div class="card" style="background:var(--paper)"><b>S2 感知与情境体系</b><div class="small muted gap">真实世界发生了什么，哪些变化值得进入系统？</div><div class="small gap"><b>拥有：</b>Signal、Source、ContextSnapshot、Freshness、Classification</div><div class="small"><b>不拥有：</b>目标决定、价值裁决、自动进化</div><span class="chip warn gap">EXTEND</span><div class="small gap">落地板块：<a href="#scene-system">场景系统</a></div></div>
+    <div class="card" style="background:var(--paper)"><b>S3 知识与记忆体系</b><div class="small muted gap">什么被认为是真的，为什么相信，何时失效？</div><div class="small gap"><b>拥有：</b>KnowledgeClaim、Belief、Memory、Provenance、Conflict、Decay</div><div class="small"><b>不拥有：</b>把推断自动升级为事实、替 Principal 定义价值</div><span class="chip warn gap">EXTEND</span><div class="small gap">落地板块：<a href="#know">文档知识</a> · <a href="#knowledge-memory">知识记忆</a> · <a href="#atlas">架构与模型</a></div></div>
+    <div class="card" style="background:var(--paper)"><b>S4 战略、目标与组合体系</b><div class="small muted gap">长期要赢什么，现在承诺什么，不做什么？</div><div class="small gap"><b>拥有：</b>Vision、Objective、KR、Campaign、BET、Kill criteria</div><div class="small"><b>不拥有：</b>直接执行任务、把 BET done 自动解释为 KR proven</div><span class="chip warn gap">EXTEND（先修复权威和覆盖）</span><div class="small gap">落地板块：<a href="#ledger">3Y台账与甘特</a> · <a href="#next">接下来做什么</a></div></div>
+    <div class="card" style="background:var(--paper)"><b>S5 决策体系</b><div class="small muted gap">面对多个选项，为什么选择此行动？</div><div class="small gap"><b>拥有：</b>DecisionRecord、Options、Trade-offs、Confidence、Supersession</div><div class="small"><b>不拥有：</b>执行、审批高风险动作、宣告价值</div><span class="chip warn gap">EXTEND</span><div class="small gap">落地板块：<a href="#next">接下来做什么</a> · <a href="#workbench">中枢工作台</a></div></div>
+    <div class="card" style="background:var(--paper)"><b>S6 治理与信任体系</b><div class="small muted gap">什么行动可以发生，需要什么证据和职责分离？</div><div class="small gap"><b>拥有：</b>Policy、Admission、Permission、Audit、Gate、Waiver</div><div class="small"><b>不拥有：</b>业务价值裁决、普通任务生产、第二套执行状态</div><span class="chip good gap">EXISTS（进入 subtraction）</span><div class="small gap">落地板块：<a href="#gov">恢复准入</a></div></div>
+    <div class="card" style="background:var(--paper)"><b>S7 运行与执行体系</b><div class="small muted gap">如何把已授权承诺稳定变成可验证行动？</div><div class="small gap"><b>拥有：</b>WorkPacket、WorkflowRun、Dispatch、ActionReceipt、Recovery</div><div class="small"><b>不拥有：</b>目标、价值、历史事实重写和自我授权</div><span class="chip warn gap">EXTEND</span><div class="small gap">落地板块：<a href="#swarm">Agent 协同</a> · <a href="#capabilities">能力与 BOS</a> · <a href="#logs">事件日志</a> · <a href="#skills-inventory">技能清单</a></div></div>
+    <div class="card" style="background:var(--paper)"><b>S8 价值验证与进化体系</b><div class="small muted gap">行动是否有意义，系统应如何改变？</div><div class="small gap"><b>拥有：</b>Outcome、HumanVerdict、EvolutionProposal、Experiment、PromotionDecision</div><div class="small"><b>不拥有：</b>自我批准宪法、权限、价值标准和高风险能力</div><span class="chip warn gap">BUILD-IN-PLACE（下一阶段最重要补强点）</span><div class="small gap">落地板块：<a href="#value">价值验收</a> · <a href="#learning">经验与结晶</a> · <a href="#metrics">指标度量</a></div></div>
   </div>
 </div>
 
@@ -1351,11 +1351,11 @@ Constitution / Vision / Values / Risk / Revocation
   <table class="ext-compact-table" style="width:100%">
     <thead><tr><th>平面</th><th>必须覆盖</th><th>当前判断</th><th>关键补强</th></tr></thead>
     <tbody>
-      <tr><td><b>CP-SEC</b> 安全、隐私与信任</td><td class="small">身份、数据分级、最小权限、供应链、外发</td><td><span class="chip warn">EXTEND</span></td><td class="small">从工程权限延伸到业务数据和人类授权</td></tr>
-      <tr><td><b>CP-REL</b> 可靠性与恢复</td><td class="small">健康、备份、降级、RTO/RPO、故障演练</td><td><span class="chip warn">EXTEND</span></td><td class="small">统一关键旅程 SLO，未知不报绿</td></tr>
-      <tr><td><b>CP-ECON</b> 资源与经济性</td><td class="small">时间、注意力、Token、算力、并发、维护成本</td><td><span class="chip good">BUILD-IN-PLACE</span></td><td class="small">资源预算进入每个 Decision/BET/Run</td></tr>
-      <tr><td><b>CP-TEMP</b> 时间、版本与来源</td><td class="small">observed_at、validity、schema、causation、migration</td><td><span class="chip warn">EXTEND</span></td><td class="small">统一跨体系的 temporal/provenance contract</td></tr>
-      <tr><td><b>CP-UX</b> 人机体验</td><td class="small">收件箱、解释、审批、通知、纠错、无障碍</td><td><span class="chip warn">EXTEND</span></td><td class="small">Cockpit 从"系统控制台"收敛为"注意力与结果界面"</td></tr>
+      <tr><td><b>CP-SEC</b> 安全、隐私与信任</td><td class="small">身份、数据分级、最小权限、供应链、外发</td><td><span class="chip warn">EXTEND</span></td><td class="small">从工程权限延伸到业务数据和人类授权 · 落地板块：<a href="#gov">恢复准入</a></td></tr>
+      <tr><td><b>CP-REL</b> 可靠性与恢复</td><td class="small">健康、备份、降级、RTO/RPO、故障演练</td><td><span class="chip warn">EXTEND</span></td><td class="small">统一关键旅程 SLO，未知不报绿 · 落地板块：<a href="#health">健康诊断</a> · <a href="#logs">事件日志</a></td></tr>
+      <tr><td><b>CP-ECON</b> 资源与经济性</td><td class="small">时间、注意力、Token、算力、并发、维护成本</td><td><span class="chip good">BUILD-IN-PLACE</span></td><td class="small">资源预算进入每个 Decision/BET/Run · 落地板块：<a href="#metrics">指标度量</a></td></tr>
+      <tr><td><b>CP-TEMP</b> 时间、版本与来源</td><td class="small">observed_at、validity、schema、causation、migration</td><td><span class="chip warn">EXTEND</span></td><td class="small">统一跨体系的 temporal/provenance contract · 落地板块：<a href="#trace">因果拓扑图谱</a></td></tr>
+      <tr><td><b>CP-UX</b> 人机体验</td><td class="small">收件箱、解释、审批、通知、纠错、无障碍</td><td><span class="chip warn">EXTEND</span></td><td class="small">Cockpit 从"系统控制台"收敛为"注意力与结果界面" · 落地板块：<a href="#personal">主权中心</a></td></tr>
     </tbody>
   </table>
   <p class="small muted gap">横切平面不得各自再造一套业务状态机，通过公共字段、Policy、PEP、Metric 和 View 作用于八个核心体系。<code>CP-*</code> 不覆盖 Workspace 已有 <code>X1=审计、X2=保鲜、X3=价值、X4=一致性</code> 治理轴——二者是多对多实现映射，不得把同名编号原地改义。</p>
@@ -1440,13 +1440,14 @@ Constitution / Vision / Values / Risk / Revocation
      (plus panorama, fixed separately above) went missing from the served output
      around 2026-09-18; the mount code itself was never touched. See git log
      in this directory for the recovery commit. -->
-<section id="personal" class="section" aria-labelledby="title-personal"></section>
-<section id="workbench" class="section" aria-labelledby="title-workbench"></section>
-<section id="trace" class="section" aria-labelledby="title-trace"></section>
-<section id="learning" class="section" aria-labelledby="title-learning"></section>
-<section id="atlas" class="section" aria-labelledby="title-atlas"></section>
-<section id="capabilities" class="section" aria-labelledby="title-capabilities"></section>
-<section id="mof-grid" class="section" aria-labelledby="title-mof">
+<section id="ecosystem-map" data-system="META" class="section" aria-labelledby="title-ecosystem-map"></section>
+<section id="personal" data-system="S1" class="section" aria-labelledby="title-personal"></section>
+<section id="workbench" data-system="S1,S5" class="section" aria-labelledby="title-workbench"></section>
+<section id="trace" data-system="S8" data-plane="CP-TEMP" class="section" aria-labelledby="title-trace"></section>
+<section id="learning" data-system="S8" class="section" aria-labelledby="title-learning"></section>
+<section id="atlas" data-system="S3" class="section" aria-labelledby="title-atlas"></section>
+<section id="capabilities" data-system="S7" class="section" aria-labelledby="title-capabilities"></section>
+<section id="mof-grid" data-system="META" class="section" aria-labelledby="title-mof">
 <div class="section-breadcrumb">
   <span>📍 MOF 元模型与门禁</span>
   <span class="sep">|</span>
@@ -1814,10 +1815,18 @@ let currentNavMode = 'engineering';
 function safeRender(fn, errorMsg) {
   try { fn(); } catch(e) { console.error(errorMsg || 'Render error:', e); }
 }
+// panorama/metrics/loops/logs each have a second, independently-created
+// section (their JS-rendered narrative counterpart) that used to share the
+// SAME id as the primary static one -- invalid HTML, and it silently broke
+// any future getElementById() lookup (only the first DOM match is ever
+// returned). Each was given its own id instead; this table keeps them
+// toggling together with their primary route so nothing that used to be
+// visible together stops being visible together.
+const RELATED_SECTIONS = {panorama: ['panorama-atlas'], metrics: ['metrics-evidence'], loops: ['loops-feedback'], logs: ['logs-tail']};
 function go(name){
  name=(name||'').split('?')[0];
  if(!name || !document.getElementById(name)?.classList.contains('section'))name='orient';
- document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===name));
+ document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===name || (RELATED_SECTIONS[name]||[]).includes(x.id)));
  document.querySelectorAll('nav a').forEach(x=>{if(x.hash==='#'+name)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});
  window.scrollTo(0,0);
  if(typeof ensureNavVisibleForSection==='function') ensureNavVisibleForSection(name);
@@ -1997,13 +2006,6 @@ var observationCheckpoints=(claimsObservation.checkpoints||[]).map(function(c){
   return '<tr><td class="mono">'+label+'</td><td>'+chip(reached?'REACHED':'WAITING',reached?'good':'neutral')+'</td><td class="mono">'+esc(c.duration_seconds+'s')+'</td><td>'+(c.diagnostic_only?'diagnostic':'graduation')+'</td></tr>';
 }).join('')||'<tr><td colspan="4" class="empty">NO_CHECKPOINTS</td></tr>';
 $('claims-observation-progress').innerHTML='<article class="loop"><h3>观察窗进度 · '+esc(claimsObservation.state||'UNAVAILABLE')+'</h3><div class="small mono">samples '+esc(claimsObservation.sample_count||0)+' / '+esc(claimsObservation.minimum_samples||1440)+' · elapsed '+esc(observationDuration(claimsObservation.elapsed_seconds))+' / '+esc(observationDuration(claimsObservation.duration_seconds||86400))+'</div><div class="small mono">max gap '+esc(claimsObservation.observed_max_gap_seconds??'—')+'s / '+esc(claimsObservation.maximum_gap_seconds||120)+'s · errors '+esc(claimsObservation.errors??'—')+' · receipts '+esc(claimsObservation.receipts_match===true?'MATCH':'UNVERIFIED')+'</div><div style="overflow-x:auto;margin-top:10px"><table class="table"><thead><tr><th>checkpoint</th><th>state</th><th>duration</th><th>scope</th></tr></thead><tbody>'+observationCheckpoints+'</tbody></table></div><p class="small muted">前三个 checkpoint 只用于提前发现问题；毕业必须连续满足 24h / 1440 samples，不可补样或拼接窗口。</p></article>';
-var lifecycleAuthorization=D.claims_lifecycle_authorization||{};
-var lifecycleArtifacts=lifecycleAuthorization.artifacts||{};
-var lifecycleArtifactRows=Object.entries(lifecycleArtifacts).map(function(entry){
-  var name=entry[0], artifact=entry[1]||{};
-  return '<tr><td class="mono">'+esc(name)+'</td><td>'+(artifact.available?'AVAILABLE':'MISSING')+'</td><td class="mono">'+esc(artifact.sha256||'—')+'</td></tr>';
-}).join('')||'<tr><td colspan="3" class="empty">NO_ARTIFACTS</td></tr>';
-$('claims-lifecycle-authorization').innerHTML='<article class="loop"><h3>WP1 Lifecycle Evidence · '+esc(lifecycleAuthorization.status||'UNAVAILABLE')+'</h3><p class="small mono">'+esc(lifecycleAuthorization.authority_id||'omo-claims-authority-r0')+' · execution '+esc(lifecycleAuthorization.execution||'NOT_EXECUTED')+' · activation '+esc(lifecycleAuthorization.activation||'SHADOW_ACTIVE')+'</p><div style="overflow-x:auto"><table class="table"><thead><tr><th>artifact</th><th>state</th><th>SHA-256</th></tr></thead><tbody>'+lifecycleArtifactRows+'</tbody></table></div><p class="small muted">此事务需要 operation-specific human approval；没有批准前不得写入 authority receipt 或触发 Git publication。</p></article>';
 $('claims-authorization').innerHTML='<article class="loop"><h3>'+esc(claimsActivationRequest.authority_id||'omo-claims-authority-r0')+' · '+esc(claimsActivationRequest.operation||'activate-shadow')+'</h3><p class="small mono">request '+esc(claimsActivationRequest.request_id||'—')+'</p><p class="small mono">request digest '+esc(claimsActivationRequest.request_digest||'—')+'</p><p class="small mono">descriptor '+esc(claimsActivationRequest.descriptor_digest||'—')+'</p><p class="small">state '+esc(claimsActivationRequest.status||'—')+' · authorization '+esc(claimsActivationRequest.human_authorization_status||'UNPROVEN')+' · activation '+esc(claimsActivationRequest.activation||'NOT_AUTHORIZED')+'</p></article>';
 $('proposal-link').href=fileLink(D.library+'/30-实施与协同/Workspace组合闭环绑定实施准备-v1.md');
 $('envelope-link').href=fileLink(D.envelope.path);$('envelope-hash').textContent='SHA-256 '+D.envelope.sha256;
@@ -2023,7 +2025,6 @@ function toggleHealthDiagnosticDrawer(){
   if(txt) txt.textContent = isHealthDrawerOpen ? '收起诊断' : '🔍 展开采集诊断';
 }
 
-let currentNavMode = 'engineering';
 function setNavMode(mode, opts){
   opts = opts || {};
   if(mode !== 'executive' && mode !== 'engineering') mode = 'engineering';

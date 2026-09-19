@@ -12,6 +12,8 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
+import probe_utils
+
 WORKSPACE = Path("/Users/xiamingxing/Workspace")
 LIBRARY = Path("/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库")
 APP = Path("/Users/xiamingxing/.local/share/zhixing-dashboard")
@@ -199,9 +201,11 @@ def project_bet(bet):
     def ref(value):
         if not isinstance(value, str):
             return None
-        if re.search(r"(?i)(sk-[a-z0-9]{8}|gh[pousr]_|bearer\s|[?&](token|key|secret|password)=)", value):
-            return "[REDACTED]"
-        return value[:2048]
+        # Shared with strategy_sources.py/catalog_sources.py (probe_utils.py) --
+        # substitutes just the matched span, preserving surrounding context,
+        # instead of this function's old behavior of nuking the whole field
+        # on any match.
+        return probe_utils.redact_secrets(value[:2048])
 
     def refs(value, limit=100):
         if not isinstance(value, list):
@@ -280,9 +284,8 @@ def probe_portfolio():
     def text(value):
         if not isinstance(value, str):
             return None
-        if re.search(r"(?i)(sk-[a-z0-9]{8}|gh[pousr]_|bearer\s|[?&](token|key|secret|password)=)", value):
-            return "[REDACTED]"
-        return value[:2048]
+        # See project_bet.ref()'s comment: shared via probe_utils.py.
+        return probe_utils.redact_secrets(value[:2048])
     def refs(value, limit=100):
         if not isinstance(value, list):
             return []
@@ -543,7 +546,7 @@ def probe_orca():
         try:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
-            last_error = TimeoutExpired("orca-probe-lock", 0)
+            last_error = subprocess.TimeoutExpired("orca-probe-lock", 0)
         else:
             for _ in range(3):
                 try:
@@ -1412,6 +1415,45 @@ def retain_previous_snapshot(previous):
     atomic_write(APP / "previous-snapshot.json", raw)
 
 
+def assert_ui_syntax(ui_js: str):
+    """Syntax-validate the combined *_ui.js payload before it is embedded.
+
+    Real incident (2026-09-19): a JS comment inside ecosystem_ui.js
+    literally contained the substring "</body>", which collided with an
+    unrelated live_server.py serve-time injection that blindly replaces
+    the first "</body>" match in the page -- corrupting the inline
+    <script> tag with no exception raised anywhere. assert_ui_integrity's
+    fixed-token check didn't catch it (a broken script can still contain
+    every required literal token). This uses `node --check` -- a real JS
+    parse, not a string/token heuristic -- to catch that whole class of
+    breakage before publish. If node isn't available in this environment,
+    skip rather than fail the refresh (this is a safety net, not a hard
+    dependency of the pipeline).
+    """
+    try:
+        node = subprocess.run(["node", "--version"], capture_output=True, timeout=5)
+        if node.returncode != 0:
+            return
+    except (OSError, subprocess.TimeoutExpired):
+        return
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".js", delete=False, encoding="utf-8") as fh:
+        fh.write(ui_js)
+        tmp_path = fh.name
+    try:
+        result = subprocess.run(["node", "--check", tmp_path], capture_output=True, timeout=30, text=True)
+        if result.returncode != 0:
+            raise ValueError(
+                "UI syntax check failed (node --check on combined *_ui.js payload): "
+                + (result.stderr or result.stdout or "unknown node --check failure").strip()[:2000]
+                + ". Aborting destructive overwrite."
+            )
+    finally:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+
+
 def assert_ui_integrity(html_str: str):
     required_tokens = [
         'id="topology"',
@@ -1516,6 +1558,8 @@ def render(data, template):
         raise ValueError("template data slot is not unique")
     ui = "\n".join(path.read_text().replace("</script", "<\\/script") for path in
                     (APP / "ui_extensions.js", APP / "strategy_ui.js", APP / "workbench_ui.js", APP / "panoramic_ui.js", APP / "next_ui.js", APP / "topology_ui.js", APP / "mof_ui.js", APP / "ecosystem_ui.js") if path.is_file())
+    if ui:
+        assert_ui_syntax(ui)
     result = (
         template
         .replace("__SNAPSHOT_JSON__", encoded)
@@ -1549,12 +1593,14 @@ def refresh():
             import importlib.util as _ilu, os as _os
             _os.chdir("/Users/xiamingxing/Workspace")
             # 确保 panorama_helpers.py 可被导入
-            _panorama_dir = "/Users/xiamingxing/Workspace/bin/panorama"
+            _panorama_dir = "/Users/xiamingxing/.local/share/zhixing-dashboard"
             if _panorama_dir not in sys.path:
                 sys.path.insert(0, _panorama_dir)
-            _spec = _ilu.spec_from_file_location("pc", "/Users/xiamingxing/Workspace/bin/panorama/panorama-collect.py")
+            _spec = _ilu.spec_from_file_location("panorama_collect_main_20260919", "/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect-main.py")
             _m = _ilu.module_from_spec(_spec)
             _spec.loader.exec_module(_m)
+            _m.ROOT = Path("/Users/xiamingxing/Workspace")
+            _m.CODE_ROOT = Path("/Users/xiamingxing/Workspace")
             _p = _m.build_payload()
             data["knowledge_health"] = _p.get("knowledge_health", {})
             data["knowledge_growth"] = _p.get("knowledge_growth", {})
@@ -1612,7 +1658,7 @@ def refresh():
             # and projected read-only so the human UI and Agent Brief share one state.
             _local_panorama_spec = _ilu.spec_from_file_location(
                 "local_panorama_collect",
-                "/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py",
+                "/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect-legacy-pending.py",
             )
             _local_panorama = _ilu.module_from_spec(_local_panorama_spec)
             _local_panorama_spec.loader.exec_module(_local_panorama)
@@ -1649,18 +1695,16 @@ def refresh():
             _runtime_dashboard_path = Path("/Users/xiamingxing/Workspace/runtime/dashboard/data.json")
             if _runtime_dashboard_path.is_file():
                 _runtime_dashboard = json.loads(_runtime_dashboard_path.read_text(encoding="utf-8"))
-                if isinstance(_runtime_dashboard.get("objective_coverage"), dict):
-                    data["objective_coverage"] = _runtime_dashboard["objective_coverage"]
                 if isinstance(_runtime_dashboard.get("unfinished_objectives"), list):
                     data["unfinished_objectives"] = _runtime_dashboard["unfinished_objectives"]
                 _runtime_visibility = _runtime_dashboard.get("agent_visibility")
                 if isinstance(_runtime_visibility, dict):
                     _runtime_authority = _runtime_visibility.get("authority")
                     if isinstance(_runtime_authority, dict):
-                        if isinstance(_runtime_authority.get("claims_activation_request"), dict):
-                            data["claims_activation_request"] = _runtime_authority["claims_activation_request"]
-                        if isinstance(_runtime_authority.get("claims_activation_readiness"), dict):
-                            data["claims_activation_readiness"] = _runtime_authority["claims_activation_readiness"]
+                        # Claims activation fields intentionally stay sourced from
+                        # the main collector above: an older canonical checkout
+                        # must not mask the live observation projection.
+                        pass
             data["agent_read_interfaces"] = {
                 "schema": "agent-read-interfaces/v1",
                 "agent_brief": "/agent-brief.json",
