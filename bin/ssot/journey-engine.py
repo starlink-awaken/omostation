@@ -712,8 +712,6 @@ def _migrate_cards(args) -> int:
         except Exception as e: print(f"  FAILED: {cp.name}: {e}",file=sys.stderr)
     print(f"Total migrated: {migrated}"); return 0
 
-if __name__ == "__main__": raise SystemExit(main())
-
 
 def _doc_legs_module():
     """惰性加载能力腿模块 (与 journey-engine 同目录)."""
@@ -748,4 +746,7 @@ def _execute_doc_legs_action(action: str, ctx) -> dict:
     result = dl.record_result(ctx.variables, dry_run=ctx.dry_run)
     return {"status": result.get("status", "partial"), "action": action,
             "record": result.get("record")}
+
+
+if __name__ == "__main__": raise SystemExit(main())
 
