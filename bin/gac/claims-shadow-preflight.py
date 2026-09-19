@@ -275,6 +275,7 @@ def collect_preflight(
         },
         "operation_specific_authorization": "UNPROVEN",
         "activation_allowed": False,
+        "verifier_error": verifier_error,
         "recovery": recovery,
         "hard_blockers": hard_blockers,
         "advisories": advisories,
@@ -286,9 +287,20 @@ def collect_preflight(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--integration-root",
+        type=Path,
+        help=(
+            "Read-only integration root to observe. Defaults to the canonical workspace. "
+            "Use only for an isolated managed exact-main clone."
+        ),
+    )
     args = parser.parse_args()
     account_home = Path(pwd.getpwuid(os.getuid()).pw_dir)
-    integration_root = account_home / "Workspace"
+    integration_root = (
+        args.integration_root.expanduser().resolve()
+        if args.integration_root else account_home / "Workspace"
+    )
     report = collect_preflight(integration_root, account_home=account_home)
     print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
     return 0 if args.json or report["available"] else 1
