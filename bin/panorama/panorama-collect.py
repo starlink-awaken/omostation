@@ -3000,6 +3000,10 @@ def collect_agent_visibility(payload: dict) -> dict:
 
     claims_authority = payload.get("claims_authority") if isinstance(payload.get("claims_authority"), dict) else {}
     claims_task16 = payload.get("claims_task16") if isinstance(payload.get("claims_task16"), dict) else {}
+    claims_activation_request = (
+        payload.get("claims_activation_request")
+        if isinstance(payload.get("claims_activation_request"), dict) else {}
+    )
     agent_pool = payload.get("agent_cell_pool") if isinstance(payload.get("agent_cell_pool"), dict) else {}
     reference_cell = payload.get("reference_cell") if isinstance(payload.get("reference_cell"), dict) else {}
     agent_cell_semantic = payload.get("agent_cell_semantic") if isinstance(payload.get("agent_cell_semantic"), dict) else {}
@@ -3193,6 +3197,7 @@ def collect_agent_visibility(payload: dict) -> dict:
             "claims_activation_allowed": activation_allowed,
             "claims_activation_blockers": blockers,
             "claims_activation_readiness": claims_activation_readiness,
+            "claims_activation_request": claims_activation_request,
             "value_proof": "NOT_PROVEN",
             "value_proof_readiness": value_readiness,
         },

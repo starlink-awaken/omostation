@@ -260,6 +260,38 @@ def test_agent_visibility_isolated_technical_readiness_overrides_canonical_block
     assert readiness["operation_specific_authorization"] == "UNPROVEN"
 
 
+def test_agent_visibility_includes_exact_activation_request() -> None:
+    module = _module()
+    payload = _payload()
+    payload["claims_activation_request"] = {
+        "schema": "panorama-claims-activation-request/v1",
+        "available": True,
+        "status": "READY_FOR_OPERATION_SPECIFIC_HUMAN_REVIEW",
+        "execution": "NOT_EXECUTED",
+        "activation": "NOT_AUTHORIZED",
+        "request_id": "request-1",
+        "request_digest": "sha256:" + "a" * 64,
+        "descriptor_digest": "sha256:" + "b" * 64,
+        "authority_id": "omo-claims-authority-r0",
+        "operation": "activate-shadow",
+        "human_authorization_status": "UNPROVEN",
+        "human_authorization_required": True,
+        "execution_forbidden_without_human_authorization": True,
+    }
+
+    request = module.collect_agent_visibility(payload)["authority"][
+        "claims_activation_request"
+    ]
+
+    assert request["available"] is True
+    assert request["request_id"] == "request-1"
+    assert request["request_digest"] == "sha256:" + "a" * 64
+    assert request["descriptor_digest"] == "sha256:" + "b" * 64
+    assert request["execution"] == "NOT_EXECUTED"
+    assert request["activation"] == "NOT_AUTHORIZED"
+    assert request["human_authorization_status"] == "UNPROVEN"
+
+
 def test_agent_visibility_value_readiness_fails_closed_without_panel() -> None:
     module = _module()
     payload = _payload()
