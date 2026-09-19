@@ -8,6 +8,9 @@ severity: medium
 weight: 0.1
 entropy_class: low
 lifecycle_state: resolved
+closed_at: '2026-07-28'
+close_reason: >-
+  6 个 project 的 INTERFACE tests 行补 as_of 指针 + check-doc-claims.py 扩展(证据自带日期 2026-07-28)。
 owner: governance-team
 affected_roots:
 - projects/agora

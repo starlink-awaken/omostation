@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "critical"
 weight: 0.20
 entropy_class: "high"
-lifecycle_state: "resolved"
+lifecycle_state: "identified"
 resolution_evidence: "P43-ARCH-ANALYSIS-001: 声明/执行鸿沟已由 gac-drift + P71 baseline recovery 闭环治理 (PR #6-#8)"
 owner: "architecture-team"
 affected_roots:
@@ -19,7 +19,13 @@ evidence_refs:
 mitigation_refs:
   - ".omo/_knowledge/decisions/0195-architecture-convergence-isc2.md"
 opened_at: "2026-07-14"
-last_reviewed_at: "2026-07-14"
+last_reviewed_at: '2026-09-19'
 gate_level: "P0"
 x1_policy_ref: "P43-ARCH-ANALYSIS-001"
 x3_tier: "Principle"
+history:
+- at: '2026-09-19T10:27:00+00:00'
+  action: reopen
+  note: >-
+    2026-09-19 复核: 原 evidence 引用 PR #6-#8 声称闭环, 但同主题债务 DEBT-20260917021531-GAP-SEED-DISPATCH 至今 lifecycle_state=identified (debt.yaml 声明路径 27 项物理不存在) —— 同类问题仍在。且 last_reviewed_at == opened_at (2026-07-14), 从未复审。结论: 闭环声明不成立, 重开为 identified。
+  actor: governance-agent

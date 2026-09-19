@@ -8,6 +8,9 @@ severity: "high"
 weight: 0.10
 entropy_class: "low"
 lifecycle_state: "resolved"
+closed_at: '2026-09-18'
+close_reason: >-
+  ISC-2 已修复 (ADR-0195, 入仓 2026-09-18): 健康分公式改为执行面主导。2026-09-19 现场核实 bin/compass_radar.py:368 weights = governance 0.3 / freshness 0.2, 且 :375 weights[runtime] = 0.5 —— 与声称一致。
 resolution_evidence: "ISC-2 已修复 (ADR-0195): 健康分公式从声明面主导改为执行面主导 (governance 0.3 + runtime 0.5 + freshness 0.2)"
 owner: "architecture-team"
 affected_roots: []

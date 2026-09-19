@@ -7,14 +7,20 @@ scope: "workspace"
 severity: "high"
 weight: 0.15
 entropy_class: "high"
-lifecycle_state: "resolved"
+lifecycle_state: "identified"
 resolution_evidence: "P43-ARCH-ANALYSIS-002: 任务所有权已由 bet-ledger + task schema 强制 (owner/phase 必填字段校验)"
 owner: "governance-team"
 affected_roots: []
 evidence_refs: []
 mitigation_refs: []
 opened_at: "2026-07-14"
-last_reviewed_at: "2026-07-14"
+last_reviewed_at: '2026-09-19'
 gate_level: "P1"
 x1_policy_ref: "P43-ARCH-ANALYSIS-002"
 x3_tier: "Framework"
+history:
+- at: '2026-09-19T10:29:00+00:00'
+  action: reopen
+  note: >-
+    2026-09-19 复核: 证据引用 P43-ARCH-ANALYSIS-002, 同为悬空引用 (全仓检索该标识只出现在债务条目自身, 无真实文档)。且声称的 'task schema 强制 owner/phase 必填' 在活跃代码中找不到 —— 唯一相关实现 bin/_archive/bet-to-task.py 已归档。结论: 闭环不成立, 重开为 identified。
+  actor: governance-agent
