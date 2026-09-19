@@ -1,31 +1,44 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-14T10:45:40Z
-status: planned
+generated_at: 2026-09-19T08:27:09Z
+status: candidate
 counts:
-  runs: 3
+  runs: 18
   failures: 0
-  total: 3
+  total: 18
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-lifecycle: history
-owner: unassigned
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-14T10:45:40Z
+- generated_at: 2026-09-19T08:27:09Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 3 成功运行 + 0 失败模式 = 3 草稿
+- sediment 覆盖: 18 成功运行 + 0 失败模式 = 18 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
-- 20260913T230353Z-project-code-change-10ba437f.md
-- 20260914T040913Z-project-code-change-a78b5042.md
-- 20260914T082253Z-project-code-change-a90b200b.md
+- 20260917T051611Z-project-code-change-4d5ec3f1.md
+- 20260917T080631Z-project-code-change-fd9d2a75.md
+- 20260917T115033Z-project-code-change-888084cd.md
+- 20260917T121754Z-project-code-change-07512344.md
+- 20260917T124332Z-project-code-change-575d79ff.md
+- 20260917T131705Z-project-code-change-74b21ba4.md
+- 20260917T141817Z-project-code-change-707d6f37.md
+- 20260917T143937Z-project-code-change-76373ffa.md
+- 20260917T145553Z-project-code-change-42cb370e.md
+- 20260917T151432Z-project-code-change-2aa46b56.md
+- 20260917T153737Z-project-code-change-4f7dcf76.md
+- 20260917T160158Z-project-code-change-151175f8.md
+- 20260917T161916Z-project-code-change-2b6c6033.md
+- 20260917T163929Z-project-code-change-1db5d761.md
+- 20260917T165318Z-project-code-change-b8cb5f02.md
+- 20260917T170515Z-project-code-change-d1d17fb5.md
+- 20260917T172442Z-project-code-change-ce85533d.md
+- 20260917T174915Z-project-code-change-d2a62d7a.md
 
 ## 失败模式 (failures/)
 
@@ -37,21 +50,127 @@ owner: unassigned
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
-- **20260913T230353Z-project-code-change-10ba437f**
-  - 计划 (objective): [BET-Y1Q4-T6-25] OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化 (OpenHuman Local Bridge & Biometric Normalizer) (Appetite: 3 days)
+- **20260917T051611Z-project-code-change-4d5ec3f1**
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=6729.6
+- **20260917T080631Z-project-code-change-fd9d2a75**
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1896.227
+- **20260917T115033Z-project-code-change-888084cd**
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1109.854
+- **20260917T121754Z-project-code-change-07512344**
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1115.548
+- **20260917T124332Z-project-code-change-575d79ff**
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=969.272
+- **20260917T131705Z-project-code-change-74b21ba4**
+  - 计划 (objective): Implement read-only Ruflo RF0 verifier and live Panorama projection
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=2797.267
+- **20260917T141817Z-project-code-change-707d6f37**
+  - 计划 (objective): Project Agent Cell pool persistence into Panorama and ASD observability
   - workflow: project-code-change
   - 实际步骤: execute
   - 结果与证据: ok=False, status=blocked, evidence_count=1
   - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=12433.308
-- **20260914T040913Z-project-code-change-a78b5042**
-  - 计划 (objective): Unbound mechanism recovery: make ledger-safe-insert emit a semantic bets list item
+  - 指标: event_count=6, duration_s=903.221
+- **20260917T143937Z-project-code-change-76373ffa**
+  - 计划 (objective): Add controlled Agent Cell Pool live smoke with durable runtime state and receipt
   - workflow: project-code-change
-  - 指标: event_count=1, duration_s=0.0
-- **20260914T082253Z-project-code-change-a90b200b**
-  - 计划 (objective): Ledger-safe-insert semantic item repair fresh claims after stale-lock prune
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=755.263
+- **20260917T145553Z-project-code-change-42cb370e**
+  - 计划 (objective): Verify and project Agent Cell runtime receipt chains
   - workflow: project-code-change
-  - 指标: event_count=1, duration_s=0.0
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=796.608
+- **20260917T151432Z-project-code-change-2aa46b56**
+  - 计划 (objective): Schedule controlled Agent Cell runtime observation
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1099.908
+- **20260917T153737Z-project-code-change-4f7dcf76**
+  - 计划 (objective): Fix Panorama runtime refresh deployment and preserve Agent Cell projection
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1153.765
+- **20260917T160158Z-project-code-change-151175f8**
+  - 计划 (objective): Add Agent Cell semantic Role Capsule Mesh Queue live canary
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=814.934
+- **20260917T161916Z-project-code-change-2b6c6033**
+  - 计划 (objective): Project and verify Agent Cell semantic lifecycle in Panorama
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1021.124
+- **20260917T163929Z-project-code-change-1db5d761**
+  - 计划 (objective): Deploy canonical Agent Cell semantic runtime state
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=553.14
+- **20260917T165318Z-project-code-change-b8cb5f02**
+  - 计划 (objective): Schedule recurring Agent Cell semantic lifecycle canary
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=450.706
+- **20260917T170515Z-project-code-change-d1d17fb5**
+  - 计划 (objective): Observe Claims Authority read-only status in Panorama
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=887.436
+- **20260917T172442Z-project-code-change-ce85533d**
+  - 计划 (objective): Project scheduled Agent Cell and Panorama runtime health
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=771.88
+- **20260917T174915Z-project-code-change-d2a62d7a**
+  - 计划 (objective): Repair deployed zhixing dashboard refresh exit-code health signal without changing tracked files
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=298.124
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

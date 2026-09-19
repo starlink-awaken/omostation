@@ -16,12 +16,15 @@ status: archived
 |----|-------|--------|
 | kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-## Planned Tasks (7 个)
+## Planned Tasks (10 个)
 | ID | Title | Status |
 |----|-------|--------|
 | BET-Y1Q4-T10-141 | Cockpit CLI 命令可用性台账 — 106 命令逐批验证与修复 | candidate |
 | BET-Y1Q4-T11-env-resolver-unify | env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N] 硬 | candidate |
 | BET-Y1Q4-T12-arcnode-integration | arcnode-* 外部依赖纳入主仓 — 治理命令不再依赖 ~/.hermes | candidate |
+| BET-Y1Q4-T15-import-perf-regression | cockpit import 性能回归 (164ms > 120ms 预算) 排查 | candidate |
+| bet-y3h1-t7-01 | 中试 / 政策申报升 assisted | candidate |
+| bet-y3h2-t7-01 | 公文场景 routine (限格式类 | candidate |
 | cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
 | event-loop-dead-loop | 闭环回路死回路: 2 个 emit 零消费者 | candidate |
 | needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
@@ -69,5 +72,5 @@ status: archived
 | bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-09-18 (依据 `omo state sync-tasks` 与真实目录重算: done=301, planned=7, active=1, blocked=1, archived=6 顶层)*
+*Updated: 2026-09-19 (依据 `omo state sync-tasks` 与真实目录重算: done=301, planned=10, active=1, blocked=1, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
