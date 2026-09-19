@@ -32,6 +32,13 @@ BLACKLIST_PREFIXES = [
     ".omo/locks/", ".omo/_log/", ".omo/_delivery/", "__pycache__/", ".venv/",
     "node_modules/", "dist/", "build/", "target/debug/", "target/release/",
 ]
+# Spine pipeline emission targets: tracked .gitkeep placeholders (not runtime output)
+# See: .omo/_delivery/{calibration,events,scene-outcomes}/
+WHITELIST_PREFIXES = [
+    ".omo/_delivery/calibration/",
+    ".omo/_delivery/events/",
+    ".omo/_delivery/scene-outcomes/",
+]
 
 
 def main() -> int:
@@ -63,6 +70,8 @@ def main() -> int:
         if any(path.endswith(s) for s in BLACKLIST_SUFFIXES):
             violations.append(f"{path} (blacklisted suffix)")
             continue
+        if any(path.startswith(p) for p in WHITELIST_PREFIXES):
+            continue  # explicitly allowed placeholder / tracked config
         if any(path.startswith(p) for p in BLACKLIST_PREFIXES):
             violations.append(f"{path} (blacklisted prefix)")
             continue
