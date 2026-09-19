@@ -65,6 +65,11 @@ history:
   note: >-
     2026-09-19 复核补强: 确认 gap-items/ 从未入仓 (非丢失而是从未创建); 定位 3 处引用 (verify.py / autoloop-controller.py / governance-scanner.py); 实证 verify.py 真空合格 (0 对象却报门禁通过) 并已在 #4032 加防护; 查明 gap_count 与 verify.py 均有跨仓/治理面消费者, 故「补齐 vs 收敛」方向需 owner 决策, 本项不擅自选向。
   actor: governance-agent
+- at: '2026-09-19T11:52:04+00:00'
+  action: review
+  note: >-
+    2026-09-19 部分收敛: verify.py 的校验源已从幽灵 `.omo/debt/gap-items/` 改指真实注册表 `.omo/debt/items/` (同 PR 扩展 _shared.check_evidence 接受文本型 resolution_evidence —— 否则会对 19 个终态项全量误报)。该脚本由 0/0 真空合格变为真实扫描。仍待决: autoloop-controller.py 与 governance-scanner.py 的 GAP_DIR 引用 (后者的 debt.gap_count 有跨仓消费者)。
+  actor: governance-agent
 x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
 x2_freshness: ''
 x3_tier: ''

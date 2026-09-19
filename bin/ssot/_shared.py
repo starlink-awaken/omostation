@@ -138,10 +138,14 @@ def check_evidence(data: dict, root: Path) -> tuple[int, bool]:
 
     Returns (ref_count, found_any).  Used by verify.py to detect
     "resolved but no evidence" fraud.
+
+    2026-09-19 扩展: 除**路径型** `evidence_refs` 外, 也接受**文本型**证据
+    (`resolution_evidence` / `closed_evidence`)。原因: 债务注册表
+    `.omo/debt/items/` 的 schema 以文本型为主 (多数条目 `evidence_refs: []`),
+    若只认路径型, 把 verify.py 指向真实注册表会对 19 个终态项产生**全量误报** ——
+    实测确认后加此扩展。仍拒绝 `<pending>` 占位符 (那不是证据)。
     """
     refs = data.get("evidence_refs") or []
-    if not refs:
-        return 0, False
     found = False
     for ref in refs:
         p = Path(ref)
@@ -149,6 +153,13 @@ def check_evidence(data: dict, root: Path) -> tuple[int, bool]:
             p = root / ref
         if p.exists():
             found = True
+            break
+    if not found:
+        for fld in ("resolution_evidence", "closed_evidence"):
+            value = str(data.get(fld) or "").strip()
+            if value and "<pending>" not in value:
+                found = True
+                break
     return len(refs), found
 
 
