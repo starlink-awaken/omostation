@@ -270,11 +270,22 @@ def execute_journey(scene_id, signal, dry_run=False) -> ExecutionContext:
 
 
 def _find_scene_card_path(scene_id: str) -> Path | None:
-    """按约定定位场景卡文件路径 (用于结果记录)."""
+    """按约定定位场景卡文件路径 (用于结果记录).
+
+    兼容两种命名约定:
+      - {scene_id}.yaml          (例如 scene-knowledge-curation.yaml)
+      - {scene_id 去 scene- 前缀}.yaml (例如 knowledge-ingest.yaml, scene_id=scene-knowledge-ingest)
+    """
     for d in [_ROOT / ".omo" / "_truth" / "scenarios" / "v3", _ROOT / "docs" / "scene-cards"]:
         p = d / f"{scene_id}.yaml"
         if p.is_file():
             return p
+        # 回退: 去掉 scene- 前缀再试 (卡片命名可能不带前缀)
+        if scene_id.startswith("scene-"):
+            stripped = scene_id.replace("scene-", "", 1)
+            p2 = d / f"{stripped}.yaml"
+            if p2.is_file():
+                return p2
     return None
 
 
@@ -321,11 +332,16 @@ def _auto_record_calibration(ctx) -> None:
                 for step in ctx.trace
             ),
         }
+        # 子进程必须能解析 `from _shared import ...`，故把 bin/ssot 注入 PYTHONPATH。
+        ssot_dir = str(_ROOT / "bin" / "ssot")
+        cal_env = os.environ.copy()
+        cal_env["PYTHONPATH"] = ssot_dir + os.pathsep + cal_env.get("PYTHONPATH", "")
         subprocess.run(
             [sys.executable, str(cal_path), "record",
              "--scene-id", ctx.scene_id, "--run-id", ctx.run_id,
              "--result", json.dumps(result)],
             capture_output=True, text=True, timeout=10, check=False, cwd=str(_ROOT),
+            env=cal_env,
         )
     except Exception:
         pass  # calibration recording is best-effort
