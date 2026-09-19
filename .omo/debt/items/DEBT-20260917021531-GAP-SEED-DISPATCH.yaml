@@ -8,7 +8,20 @@ scope: governance_kernel
 severity: high
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: "resolved"
+closed_at: "2026-09-19T23:36:24+00:00"
+close_reason: >-
+  2026-09-19 全前提已解决, 闭环 (resolved):
+  ① `gap_seed_items`(27 条) / `gap_items_dir` / `gap_registry` 已从
+     `.omo/_truth/registry/debt.yaml` 退役 (退役而非补建: 该子系统从未入过 git,
+     且 verify 链已收敛到真实注册表 items/) —— 移前逐一确认消费者: 前两者全仓无消费者,
+     `gap_registry` 仅被 cockpit 以 required=False 读取 (优雅降级)。
+  ② 8 个 `*_ref` 并非声明/执行鸿沟: 其目标文件是 omo 的派生产物, `omo_debt.py`
+     含 11 个 write_* 写入器, 且 `omo-debt refresh|dispatch|campaign|report`
+     可实际生成 (2026-09-19 在根仓实测: 8 个产物全部物化)。
+  ③ 原文预言的 KeyError 风险已修: omo#180 把 8 个 ref 改为 registry.get(name, "")
+     (现 9 处), 缺键不再使读取路径崩溃。
+  结论: 『声明路径物理不存在』与『omo 当必填读取会 KeyError』两条前提均已消除。
 owner: governance-team
 affected_roots:
 - .omo/_truth/registry/debt.yaml
@@ -83,6 +96,13 @@ history:
   action: resolve_partial
   note: >-
     2026-09-19 部分闭环 (退役而非补建): 从 .omo/_truth/registry/debt.yaml 移除 gap_items_dir / gap_registry / gap_seed_items(27 条全部物理不存在的声明)。移前逐一确认消费者: gap_seed_items 与 gap_items_dir 全仓无消费者; gap_registry 仅被 cockpit/observatory/strategy_sources.py:491 以 required=False 读取 (优雅降级) —— 故移除零影响, 无需跨仓协同。**未完成部分**: 8 个 *_ref 字段 (dashboard/review_pack/review_queue/action_packet/owner_routing/dispatch/campaign/reporting) 指向的 .omo/debt/*/current.yaml 同样全部不存在, 但 7/8 仅被已归档脚本引用、且 projects/omo 的 omo_debt_registry.py 以 **必填** dataclass 字段读取 它们 —— 摘除需先让 omo 容忍缺省 (子模块协同), 故本轮不动, 本项保持 identified。
+  actor: governance-agent
+- at: '2026-09-19T23:36:24+00:00'
+  action: resolve
+  note: >-
+    2026-09-19 闭环: 三条前提全部解决 —— gap_* 声明退役 (#4044)、8 个 *_ref 被证明为活实现
+    (11 个 write_* 写入器, 且实测跑通生成器物化全部 8 个产物)、KeyError 风险已由 omo#180
+    的缺键容忍消除。方向由证据确定: 退役从未存在的 gap 子系统, 保留有活实现的 *_ref。
   actor: governance-agent
 x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
 x2_freshness: ''

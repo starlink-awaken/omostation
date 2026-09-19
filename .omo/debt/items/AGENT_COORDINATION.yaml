@@ -7,11 +7,37 @@ scope: "workspace"
 severity: "high"
 weight: 0.10
 entropy_class: "medium"
-lifecycle_state: "identified"
-resolution_evidence: "P43-ARCH-ANALYSIS-004: 多 Agent 协调已由 swarm-coordination + D1-D5 门禁强制执行 (ADR-0220 G-CONV.7)"
+lifecycle_state: "resolved"
+closed_at: "2026-09-19T23:35:26+00:00"
+close_reason: >-
+  2026-09-19 以**可核证据**闭环: 多 Agent 协调的强制层已落地并由 hook/cron 常态运行 ——
+  ① bin/gac/check-main-workspace-commit.py (blocking pre-commit, hook-manifest
+  'main-workspace-commit' 登记) 拦截共享工作区提交: 任何分支上提交即阻断, 避免分支
+  被并发切走后提交孤立, 以及本地 main 领先 origin/main 导致所有人 --ff-only 静默失效;
+  ② bin/gac/workspace-wip-guard.py protect 把未合入 origin/main 的分支尖端钉到
+  refs/wip/ (分支删除/gc 后仍可恢复); ③ 二者由 cron/launchd 常态巡检;
+  ④ 另有 check-task-tree-consistency.py 与 check-debt-closure-discipline.py 守卫
+  任务树/债务闭环节律。本条此前于 2026-07-14 以悬空引用 'P43-ARCH-ANALYSIS-004'
+  虚假闭环, 2026-09-19 复核不成立并重开 (见 history); 本次闭环证据全部指向真实存在
+  且已合并的脚本 (#3985/#4000/#4013/#4017)。
+resolution_evidence: >-
+  2026-09-19 以**可核证据**闭环: 多 Agent 协调的强制层已落地并由 hook/cron 常态运行 ——
+  ① bin/gac/check-main-workspace-commit.py (blocking pre-commit, hook-manifest
+  'main-workspace-commit' 登记) 拦截共享工作区提交: 任何分支上提交即阻断, 避免分支
+  被并发切走后提交孤立, 以及本地 main 领先 origin/main 导致所有人 --ff-only 静默失效;
+  ② bin/gac/workspace-wip-guard.py protect 把未合入 origin/main 的分支尖端钉到
+  refs/wip/ (分支删除/gc 后仍可恢复); ③ 二者由 cron/launchd 常态巡检;
+  ④ 另有 check-task-tree-consistency.py 与 check-debt-closure-discipline.py 守卫
+  任务树/债务闭环节律。本条此前于 2026-07-14 以悬空引用 'P43-ARCH-ANALYSIS-004'
+  虚假闭环, 2026-09-19 复核不成立并重开 (见 history); 本次闭环证据全部指向真实存在
+  且已合并的脚本 (#3985/#4000/#4013/#4017)。
 owner: "architecture-team"
 affected_roots: []
-evidence_refs: []
+evidence_refs:
+- bin/gac/check-main-workspace-commit.py
+- bin/gac/workspace-wip-guard.py
+- bin/gac/check-task-tree-consistency.py
+- bin/gac/check-debt-closure-discipline.py
 mitigation_refs: []
 opened_at: "2026-07-14"
 last_reviewed_at: '2026-09-19'
@@ -23,4 +49,9 @@ history:
   action: reopen
   note: >-
     2026-09-19 复核: 原 resolution_evidence 声称 [多 Agent 协调已由 swarm-coordination + D1-D5 门禁强制执行], 与实践不符 —— 同日为补齐该执行层提交并合并了 #3985(refs/wip 提交钉扎) / #4000(主工作区提交守卫) / #4013(守卫判据补盲区) / #4002(部署目录纳管) 等, 守卫在本 PR 之前并不存在。且本条 last_reviewed_at == opened_at (2026-07-14), 从未复审。结论: 闭环声明不成立, 重开为 identified。
+  actor: governance-agent
+- at: '2026-09-19T23:35:26+00:00'
+  action: resolve
+  note: >-
+    2026-09-19 具备可核证据后闭环 (resolved): 强制层由 check-main-workspace-commit.py (blocking pre-commit) + workspace-wip-guard.py protect (refs/wip 钉扎) + cron/launchd 常态巡检构成, 全部指向真实存在且已合并的脚本。区别于本条 2026-07-14 那次以悬空 P43 引用的虚假闭环。
   actor: governance-agent
