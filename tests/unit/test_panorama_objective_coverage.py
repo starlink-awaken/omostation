@@ -181,6 +181,49 @@ def test_observation_progress_projects_live_shadow_window(tmp_path, monkeypatch)
     assert next(item for item in report["checkpoints"] if item["id"] == "graduation")["reached"] is False
 
 
+def test_observation_progress_falls_back_to_package_observation(tmp_path, monkeypatch) -> None:
+    module = _module()
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    (evidence / "summary.json").write_text(json.dumps({
+        "started_at_utc": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+        "samples": 10,
+        "invalid": False,
+        "max_gap_seconds": 60,
+        "activation_state": "shadow-active",
+        "errors": 0,
+        "expected_last_receipt": "sha256:receipt",
+    }), encoding="utf-8")
+    package = {
+        "schema": "claims-activation-request-package/v1",
+        "status": "EXECUTED",
+        "execution": "EXECUTED",
+        "activation": "SHADOW_ACTIVE",
+        "request": {
+            "request_id": "request-1",
+            "operation": "activate-shadow",
+            "descriptor": {"digest": "sha256:descriptor"},
+        },
+        "human_authorization": {"required": True, "status": "GRANTED"},
+        "execution_receipt": {"receipt_digest": "sha256:receipt"},
+        "observation": {
+            "duration_seconds": 86400,
+            "minimum_samples": 1440,
+            "maximum_gap_seconds": 120,
+            "evidence_dir": str(evidence),
+        },
+    }
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps(package), encoding="utf-8")
+    monkeypatch.setattr(module, "CLAIMS_REQUEST_PACKAGE", request_path)
+
+    report = module.collect_claims_observation_progress()
+
+    assert report["available"] is True
+    assert report["state"] == "IN_PROGRESS"
+    assert report["evidence_dir"] == str(evidence)
+
+
 def test_objective_coverage_fails_partial_on_missing_ledger_or_gate(tmp_path, monkeypatch) -> None:
     module = _module()
     monkeypatch.setattr(module, "CODE_ROOT", tmp_path / "missing")
