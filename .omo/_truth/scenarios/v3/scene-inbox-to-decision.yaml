@@ -17,7 +17,8 @@ runtime:
   timeout: 3600s
   sandbox:
     level: isolated
-    capabilities: []
+    capabilities:
+    - bos://capability/compute/generate
     permissions: []
 quality:
   calibration:
