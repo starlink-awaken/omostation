@@ -5,7 +5,7 @@ name: Health Visit
 description: 就诊结束后记录诊断/处方/医嘱, 形成就诊结构化档案
 scene_class: business
 scene_type: inbound
-domain: work
+domain: health
 lifecycle: routine
 activation: allowed
 owner: xiamingxing

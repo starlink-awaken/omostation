@@ -1,0 +1,53 @@
+schema: scene-card/v3
+scene_id: scene-governance-drift-watch
+version: 3.0.0
+name: 架构漂移监测
+description: 持续监测架构漂移 (接口变更/依赖违规/维度偏离), 输出漂移报告与纠偏建议
+scene_class: business
+scene_type: inbound
+domain: governance
+lifecycle: supervised
+activation: allowed
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: intent-to-evidence
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - bos://governance/omo/audit
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若连续 30 天无漂移告警或监测任务，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: cron 周期触发或 webhook 事件触发 (架构变更事件)
+input_contract: 基线快照 (architecture-truth) + 当前状态 (runtime-projection)
+result_contract: 漂移报告 (偏离项/严重度/纠偏建议) + 漂移趋势指标
+outcome_metric: architecture_drift_index / drift_detection_latency
+consumer: xiamingxing
+failure_cost: 架构渐进偏离导致系统不可维护/治理失效
+data_classification: internal
+data_scope: architecture-baseline-and-drift-metrics
+operator: governance-agent-under-human-review
+sample_refs: []
+notes:
+- Created at 2026-09-19T00:00:00.000000+00:00 by build-orchestrator (scene-domain-fix)

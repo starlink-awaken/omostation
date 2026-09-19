@@ -1,0 +1,53 @@
+schema: scene-card/v3
+scene_id: scene-governance-audit
+version: 3.0.0
+name: 治理合规审计
+description: 对 workspace 治理状态进行合规审计 (OMO 基线、约束违规、策略漂移), 输出审计报告与整改建议
+scene_class: business
+scene_type: inbound
+domain: governance
+lifecycle: supervised
+activation: allowed
+owner: xiamingxing
+approver: business-governance
+approval_state: confirmed
+bet: BET-Y1Q4-T8-04
+runtime:
+  journey_ref: intent-to-evidence
+  timeout: 3600s
+  sandbox:
+    level: isolated
+    capabilities:
+    - bos://governance/omo/audit
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+    - name: success_rate
+      target: 0.9
+      weight: 0.5
+    - name: time_saved_ratio
+      target: 0.5
+      weight: 0.3
+    - name: false_positive_rate
+      target: 0.1
+      weight: 0.2
+falsifier: 若连续 30 天无治理审计任务触发，则场景无实际价值
+observability:
+  tracing: true
+  evidence_capture: full
+activation_blockers: []
+trigger: 手动触发或 cron 周期触发 (治理合规审计请求)
+input_contract: 审计范围 (project/domain) + 约束策略集 (MOF/ecos-constraint)
+result_contract: 审计报告 (合规/违规/整改建议) + 审计哈希上链
+outcome_metric: governance_audit_coverage / constraint_violation_count
+consumer: xiamingxing
+failure_cost: 治理失控导致架构腐烂/合规风险累积
+data_classification: internal
+data_scope: governance-audit-metadata-and-reports
+operator: governance-agent-under-human-review
+sample_refs: []
+notes:
+- Created at 2026-09-19T00:00:00.000000+00:00 by build-orchestrator (scene-domain-fix)

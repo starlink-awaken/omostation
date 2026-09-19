@@ -5,7 +5,7 @@ name: Research To Insight
 description: 研究任务完成后的知识沉淀与关联发现
 scene_class: business
 scene_type: inbound
-domain: work
+domain: research
 lifecycle: routine
 activation: allowed
 owner: governance-team
