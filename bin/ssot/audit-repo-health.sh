@@ -17,6 +17,19 @@ enumerate_repos() {
   done
 }
 
+# 返回当前仓库的所有子模块 repo 名 (用于识别 covered-by-parent)
+get_submodule_repos() {
+  git submodule status 2>/dev/null | awk '{print $2}' | while read -r sub; do
+    git -C "$sub" remote get-url origin 2>/dev/null | sed -E 's#(https?://|git@|//)##; s#\.git$##; s#:#/#; s#^github\.com/##' | awk -F/ '{print $(NF-1)"/"$NF}'
+  done
+}
+
+# 判断 repo 是否为当前仓库的子模块 (子模块由父仓 CI 覆盖, 无需独立审计)
+is_submodule_repo() {
+  local repo="$1"
+  get_submodule_repos 2>/dev/null | grep -qx "$repo"
+}
+
 ci_status_of() {
   local repo="$1" workflow="$2" limit="${3:-5}"
   local runs_json
@@ -147,6 +160,16 @@ render_report() {
   for repo in "${repo_list[@]}"; do
     [ -n "$repo" ] || continue
     local ci sub hook hyg score
+    if is_submodule_repo "$repo"; then
+      # 子模块由父仓 CI 覆盖, 跳过独立审计, 标记 covered-by-parent
+      echo "{\"repo\":\"$repo\",\"is_submodule\":true,\"covered_by_parent\":true," \
+           "\"ci\":{\"workflows\":[]}," \
+           "\"submodules\":{\"submodules\":[]}," \
+           "\"hooks\":{\"consistent\":true}," \
+           "\"hygiene\":{}," \
+           "\"risk_score\":0}" >> "$tmp"
+      continue
+    fi
     ci=$(audit_ci "$repo" 2>/dev/null | tr -d '\n' || echo '{"workflows":[]}')
     sub=$(audit_submodule "$repo" 2>/dev/null | tr -d '\n' || echo '{"submodules":[]}')
     hook=$(audit_hook "$repo" 2>/dev/null | tr -d '\n' || echo '{"hooks":{"consistent":true}}')
@@ -175,6 +198,9 @@ for line in sys.stdin:
     drift=sum(1 for s in d.get('submodules',{}).get('submodules',[]) if s.get('drift') not in ('aligned','unknown'))
     hook='✅' if d.get('hooks',{}).get('consistent',True) else '❌'
     score=d.get('risk_score',0)
+    if d.get('is_submodule'):
+        print(f\"| {d.get('repo','')} | — | — | — | 0 | 🟢 子模块(由父仓覆盖) |\")
+        continue
     verdict='🔴 高风险' if score>=50 else ('🟡 中风险' if score>=20 else '🟢 健康')
     print(f\"| {d.get('repo','')} | {red}红 | {drift}漂移 | {hook} | {score} | {verdict} |\")
 "
@@ -203,6 +229,7 @@ data=json.load(open('$json_file'))
 template=open('bin/ssot/debt-entry-template.yaml').read()
 repos=data.get('repos',[]) if isinstance(data,dict) else data
 for r in repos:
+    if r.get('is_submodule'): continue
     if r.get('risk_score',0) < 20: continue
     ci=r.get('ci',{}).get('workflows',[])
     red=sum(1 for w in ci if w.get('status')=='red')
