@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/gac/unified-governance-view.py
-name: Unified Governance View
+id: bin/plan/bet-closeout-auto.py
+name: Bet Closeout Auto
 category: governance
 owner: governance-team
 description: ""
