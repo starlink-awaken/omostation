@@ -128,6 +128,8 @@ def _payload():
             "ok": True,
             "records": 2,
             "v2_records": 0,
+            "legacy_records": 2,
+            "legacy_qualifying": 0,
             "qualifying": 0,
             "target": 30,
             "issues": [],
@@ -176,6 +178,11 @@ def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
     assert value["available"] is True
     assert value["samples_total"] == 2
     assert value["qualifying_samples"] == 0
+    assert value["schema"] == "panorama-value-proof-readiness/v2"
+    assert value["v2_records"] == 0
+    assert value["legacy_records"] == 2
+    assert value["remaining_to_target"] == 30
+    assert value["legacy_qualifying_samples"] == 0
     assert value["net_saved_seconds"] == 0
     assert value["thresholds"][0]["target"] == 30
     assert value["next_action"] == (
@@ -334,6 +341,28 @@ def test_agent_visibility_value_readiness_fails_closed_without_validation() -> N
     assert readiness["validation"]["ok"] is False
     assert readiness["validation"]["available"] is False
     assert "value-evidence validation unavailable or failed" in readiness["blockers"]
+
+
+def test_agent_visibility_value_target_ignores_legacy_qualifying() -> None:
+    module = _module()
+    payload = _payload()
+    payload["panel_value"]["samples"]["qualifying"] = 1
+    payload["value_evidence_validation"]["legacy_records"] = 1
+    payload["value_evidence_validation"]["legacy_qualifying"] = 1
+    payload["value_evidence_validation"]["v2_records"] = 0
+    payload["value_evidence_validation"]["qualifying"] = 0
+
+    value = module.collect_agent_visibility(payload)["authority"]["value_proof_readiness"]
+
+    assert value["schema"] == "panorama-value-proof-readiness/v2"
+    assert value["qualifying_samples"] == 0
+    assert value["v2_records"] == 0
+    assert value["legacy_records"] == 1
+    assert value["legacy_qualifying_samples"] == 1
+    assert value["remaining_to_target"] == 30
+    assert value["next_action"] == (
+        "Collect 30 more qualifying real-use records with a frozen baseline; do not backfill."
+    )
 
 
 def test_value_evidence_validation_uses_runtime_paths_and_fail_closed(tmp_path, monkeypatch) -> None:
