@@ -136,6 +136,19 @@ def _iris_list(connector: str, limit: int = 10) -> list[dict[str, Any]]:
         return []
 
 
+# Connectors that require network I/O (iris subprocess → external platform).
+# In dry-run mode these are skipped; only local file-based connectors run.
+_NETWORK_CONNECTORS = {
+    "apple_mail", "netease_mailmaster", "applenotes",
+    "zhihu", "github", "wechat", "local_files",
+}
+
+
+def _is_network_connector(connector: str) -> bool:
+    """Return True if the connector requires network I/O (iris subprocess)."""
+    return connector in _NETWORK_CONNECTORS
+
+
 def _signal_id(item: dict[str, Any]) -> str:
     """Extract a stable dedup id from a signal item."""
     for key in ("id", "message_id", "uid", "url", "subject"):
@@ -163,6 +176,7 @@ def poll(dry_run: bool = False, scene_filter: str | None = None,
 
     seen_connectors: set[str] = set()
     connector_cache: dict[str, list[dict[str, Any]]] = {}
+    skipped_network: list[dict[str, str]] = []
 
     for card in cards:
         scene_id = card.get("scene_id", "")
@@ -193,6 +207,16 @@ def poll(dry_run: bool = False, scene_filter: str | None = None,
             signal_name = trig.get("signal", "")
             connector = _resolve_connector(signal_name, trig)
             if not connector:
+                continue
+
+            # Dry-run: skip network I/O connectors (email, notes, etc.).
+            # Only local file-based connectors (workspace_docs) are safe.
+            if dry_run and _is_network_connector(connector):
+                skipped_network.append({
+                    "scene_id": scene_id,
+                    "connector": connector,
+                    "signal": signal_name,
+                })
                 continue
 
             if connector not in connector_cache:
@@ -261,6 +285,7 @@ def poll(dry_run: bool = False, scene_filter: str | None = None,
                     f.write(json.dumps({**detail, "ts": results["polled_at"]}, ensure_ascii=False) + "\n")
 
     results["connectors_polled"] = len(seen_connectors)
+    results["skipped_network_connectors"] = skipped_network
 
     if not dry_run:
         _save_watermarks(watermarks)
