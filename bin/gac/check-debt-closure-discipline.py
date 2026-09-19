@@ -15,10 +15,16 @@
   完全错误的答案 —— 本工具作者在巡查时就被它骗过一次 (读出"17 项未关闭",
   实际只有 1 项)。
 
-三项判据 (终态 = closed / resolved / done):
+两项判据 (终态 = closed / resolved / done):
   A. 字段并存     — 同时有 `status` 与 `lifecycle_state` (应统一为后者)
-  B. 终态无证据   — 无 `resolution_evidence`/`closed_evidence`, 或值含 `<pending>`
   C. 终态无闭环戳 — 无 `closed_at`
+
+**与 verify.py 的分工 (2026-09-19 消除重叠)**:
+  "终态但无证据" 的检查由 `bin/ssot/verify.py --mode task` 承担 —— 它已收敛到
+  真实注册表 `.omo/debt/items/` (#4037), 且 `_shared.check_evidence` 已扩展接受
+  文本型 `resolution_evidence`/`closed_evidence`。此前本工具也查这一条, 属**重复**;
+  现交还 verify.py, 本工具只保留**债务 schema 特有**的两条卫生规则 (A/C)。
+  一个关注点一个工具。
 
 **本工具只报不修**: 凭空补写 `closed_at`/`close_reason` 就是**伪造闭环证据**,
 违反"真实性"约束 —— 必须由 owner 用真实记录补齐。
@@ -40,20 +46,18 @@ import yaml
 _ROOT = Path(__file__).resolve().parents[2]
 ITEMS_DIR = _ROOT / ".omo" / "debt" / "items"
 TERMINAL = {"closed", "resolved", "done"}
-EVIDENCE_FIELDS = ("resolution_evidence", "closed_evidence")
 
 
 def scan(items_dir: Path | None = None) -> dict:
     base = items_dir or ITEMS_DIR
     dual_fields: list[dict] = []
-    no_evidence: list[dict] = []
     no_closed_at: list[dict] = []
     scanned = 0
     terminal_count = 0
 
     if not base.is_dir():
         return {"items_dir": str(base), "scanned": 0, "terminal": 0,
-                "dual_fields": [], "no_evidence": [], "no_closed_at": []}
+                "dual_fields": [], "no_closed_at": []}
 
     for path in sorted(base.glob("*.yaml")):
         try:
@@ -79,18 +83,6 @@ def scan(items_dir: Path | None = None) -> dict:
             continue
         terminal_count += 1
 
-        # B. 终态必须有闭环证据
-        evidence = ""
-        for fld in EVIDENCE_FIELDS:
-            value = data.get(fld)
-            if value:
-                evidence = str(value)
-                break
-        if not evidence.strip() or "<pending>" in evidence:
-            no_evidence.append({"id": item_id, "file": path.name,
-                                "lifecycle_state": lifecycle,
-                                "evidence": evidence[:60] or "(缺失)"})
-
         # C. 终态必须有闭环时间戳
         if not data.get("closed_at"):
             no_closed_at.append({
@@ -103,8 +95,7 @@ def scan(items_dir: Path | None = None) -> dict:
             })
 
     return {"items_dir": str(base), "scanned": scanned, "terminal": terminal_count,
-            "dual_fields": dual_fields, "no_evidence": no_evidence,
-            "no_closed_at": no_closed_at}
+            "dual_fields": dual_fields, "no_closed_at": no_closed_at}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -114,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     r = scan()
-    violations = len(r["dual_fields"]) + len(r["no_evidence"]) + len(r["no_closed_at"])
+    violations = len(r["dual_fields"]) + len(r["no_closed_at"])
     if args.json:
         print(json.dumps({**r, "violations": violations}, ensure_ascii=False, indent=1))
 
@@ -133,11 +124,6 @@ def main(argv: list[str] | None = None) -> int:
                 flag = "  ⚠️ 值冲突" if d["conflicting"] else ""
                 print(f"     {d['file']}: status={d['status']} vs "
                       f"lifecycle_state={d['lifecycle_state']}{flag}", file=sys.stderr)
-        if r["no_evidence"]:
-            print(f"\n  B. 终态无闭环证据 ({len(r['no_evidence'])}):", file=sys.stderr)
-            for d in r["no_evidence"]:
-                print(f"     {d['file']}: {d['lifecycle_state']} evidence={d['evidence']}",
-                      file=sys.stderr)
         if r["no_closed_at"]:
             print(f"\n  C. 终态无 closed_at ({len(r['no_closed_at'])}) —— "
                   f"闭环未留时间戳:", file=sys.stderr)

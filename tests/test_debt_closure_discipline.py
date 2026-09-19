@@ -56,7 +56,7 @@ def test_terminal_with_closed_at_passes(tmp_path):
           resolution_evidence="已修复")
     tool = _load()
     r = tool.scan(d)
-    assert r["no_closed_at"] == [] and r["no_evidence"] == []
+    assert r["no_closed_at"] == []
 
 
 def test_non_terminal_not_required_to_have_closure(tmp_path):
@@ -64,38 +64,14 @@ def test_non_terminal_not_required_to_have_closure(tmp_path):
     _item(d, "a.yaml", id="A", lifecycle_state="identified", opened_at="2026-09-01")
     tool = _load()
     r = tool.scan(d)
-    assert r["no_closed_at"] == [] and r["no_evidence"] == []
+    assert r["no_closed_at"] == []
     assert r["terminal"] == 0
 
 
 # ── B. 终态无闭环证据 ────────────────────────────────────
 
 
-def test_flags_terminal_without_evidence(tmp_path):
-    d = tmp_path / "items"
-    _item(d, "a.yaml", id="A", lifecycle_state="resolved", closed_at="2026-09-01")
-    tool = _load()
-    r = tool.scan(d)
-    assert len(r["no_evidence"]) == 1
-    assert r["no_evidence"][0]["evidence"] == "(缺失)"
 
-
-def test_flags_pending_placeholder_evidence(tmp_path):
-    d = tmp_path / "items"
-    _item(d, "a.yaml", id="A", lifecycle_state="resolved", closed_at="2026-09-01",
-          resolution_evidence="<pending>")
-    tool = _load()
-    r = tool.scan(d)
-    assert len(r["no_evidence"]) == 1
-
-
-def test_closed_evidence_field_accepted(tmp_path):
-    """resolution_evidence 缺失时, closed_evidence 可作为等价证据."""
-    d = tmp_path / "items"
-    _item(d, "a.yaml", id="A", lifecycle_state="resolved", closed_at="2026-09-01",
-          closed_evidence="S1 auto-close: verification passed")
-    tool = _load()
-    assert tool.scan(d)["no_evidence"] == []
 
 
 # ── A. 状态字段并存 ──────────────────────────────────────
@@ -251,3 +227,15 @@ def test_fixer_does_not_touch_nested_status(tmp_path):
     assert "  status: keep-me" in after, "嵌套 status 必须保留"
     assert "lifecycle_state: closed" in after
     assert not after.startswith("status:")
+
+
+# ── 与 verify.py 的分工 (2026-09-19 消除重叠) ─────────────
+
+
+def test_evidence_check_is_delegated_not_duplicated():
+    """证据存在性交还 verify.py; 本工具不再重复查 (一个关注点一个工具)."""
+    tool = _load()
+    r = tool.scan()
+    assert "no_evidence" not in r, (
+        "本工具不应再产出 no_evidence —— 该判据已交还 verify.py --mode task")
+    assert set(r) >= {"dual_fields", "no_closed_at", "scanned", "terminal"}
