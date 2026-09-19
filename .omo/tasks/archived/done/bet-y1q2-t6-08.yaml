@@ -1,5 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
-# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# 生成器已归档至 bin/_archive/ (2026-09-18; 原 plan/ 下路径已失效, 勿再引用)
+# 台账变更后的对账: python3 bin/plan/sync-planned-to-done.py
 # generated_at: 2026-08-08T04:17:10+00:00
 id: BET-Y1Q2-T6-08
 title: 100% 责任归因代理链 — Subagent 全流程继承树审计

@@ -1,5 +1,6 @@
 # AUTOGEN from docs/plans/3y-bet-ledger.yaml — 勿手改
-# 改台账后重跑: uv run --with pyyaml python bin/plan/bet-to-task.py --apply
+# 生成器已归档至 bin/_archive/ (2026-09-18; 原 plan/ 下路径已失效, 勿再引用)
+# 台账变更后的对账: python3 bin/plan/sync-planned-to-done.py
 # generated_at: 2026-08-06T12:28:20+00:00
 id: BET-Y3H1-T7-01
 title: 中试 / 政策申报升 assisted

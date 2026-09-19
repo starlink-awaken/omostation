@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 681 # 2026-09-18 680→681: 织星宿主纳管 zhixing-host-sync.py (refresh.py 以 .asset 后缀入库, 不占脚本面)
+    script_baseline: 682 # 2026-09-19 681→682: 任务投影头部悬挂引用检查 check-task-projection-headers.py
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
