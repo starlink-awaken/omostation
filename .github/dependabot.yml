@@ -1,0 +1,10 @@
+version: 2
+
+# Root checkout owns only the workspace lock. Submodule manifests live in their
+# child repositories, so Dependabot must not target projects/** from the root.
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
