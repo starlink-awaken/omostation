@@ -2423,12 +2423,26 @@ def collect_signal_poller() -> dict:
             state = _json.loads(state_path.read_text())
         except Exception:
             state = {}
+    # poll-log.jsonl is the real per-signal event log; it existed and had real
+    # entries (dry_run_skipped signals included -- they were still detected
+    # and polled) but was never counted here, so the zhixing dashboard's
+    # "信号感知" value-loop stage always fell through to 0/NO_DATA even when
+    # polling was actively happening. dry_run_skipped counts too: "polled" !=
+    # "acted on".
+    poll_count = 0
+    log_path = ROOT / ".omo/_delivery/signal-poller/poll-log.jsonl"
+    if log_path.exists():
+        try:
+            poll_count = sum(1 for line in log_path.read_text().splitlines() if line.strip())
+        except OSError:
+            poll_count = 0
     return {
         "watermark_entries": len(watermarks),
         "state_keys": list(state.keys()),
         "scenes_with_triggers": 7,
         "available_connectors": ["applenotes", "github", "local_files", "universal_private", "wechat", "zhihu"],
         "last_poll": max((v.get("last_poll") for v in watermarks.values()), default=None),
+        "poll_count": poll_count,
     }
 
 
