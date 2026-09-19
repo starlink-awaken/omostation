@@ -31026,6 +31026,66 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- accepted_specifications:
+  - content_digest: sha256:6f088b0c97328b0cd364ed3fed82814fc7c88996d8faa8add1f93e1edf2ed17b
+    decision_ref: decision://accepted/BET-Y1Q4-T10-169
+    spec_ref: repo://docs/superpowers/specs/2026-09-19-t10-169-dependabot-root-scope-design.md
+    spec_version: 1.0.0
+  appetite: 2 hours
+  circuit_breaker: Dependabot 配置变更后若仍指向 projects/**，停止追加条目并先 复核 GitHub 平台侧 dynamic workflow
+    inputs。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - Root Dependabot configuration has exactly one uv update entry at directory /.
+  - The failed submodule-directory error is no longer reproduced by the next update
+    run.
+  - Ledger lint, recursive-checkout CI, and the local governance gate pass.
+  goal: Repair repeated Dependabot dependency_file_not_found failures by scoping the
+    root checkout to its valid zero-dependency uv workspace.
+  human_gate: false
+  id: BET-Y1Q4-T10-169
+  non_goals:
+  - Do not modify submodule contents or root gitlinks.
+  - Do not add child-repository Dependabot configs from the root repository.
+  - Do not change CI workflows, branch protection, runtime state, or business value
+    evidence.
+  priority: P2
+  retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y1Q4-T10-169.md
+  risk_level: L1
+  status: candidate
+  title: Dependabot root checkout scope repair
+  track: T10-MATURITY
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 -c "import yaml; assert yaml.safe_load(open('.github/dependabot.yml'))['updates'][0]['directory']
+      == '/'"
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  window: Y1Q4
+  workflow: bet-execution
+  write_surfaces:
+  - .github/dependabot.yml
+  - docs/superpowers/specs/2026-09-19-t10-169-dependabot-root-scope-design.md
+  - docs/superpowers/specs/README.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-169.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -31164,7 +31224,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 413
+  total_bets: 414
   windows:
   - Y1Q1
   - Y1Q2
