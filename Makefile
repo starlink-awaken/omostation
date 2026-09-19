@@ -502,6 +502,9 @@ zhixing-panel-check:  ## 织星驾驶舱场景面板: 漂移检测 (缺失退出
 debt-closure-check:  ## 债务闭环节律: resolved 无闭环证据/字段并存 检测 (只报不修)
 	@python3 bin/gac/check-debt-closure-discipline.py
 
+task-tree-check:  ## 任务树一致性: planned/ 不得含已在 closed//done/ 的 id
+	@python3 bin/gac/check-task-tree-consistency.py
+
 task-projection-check:  ## 任务投影头部: 悬挂脚本引用检测 (失效路径 → exit 1)
 	@python3 bin/gac/check-task-projection-headers.py
 

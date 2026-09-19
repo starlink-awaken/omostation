@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 683 # 2026-09-19 682→683: 债务闭环节律检查 check-debt-closure-discipline.py
+    script_baseline: 684 # 2026-09-19 683→684: 任务树一致性检查 check-task-tree-consistency.py
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
