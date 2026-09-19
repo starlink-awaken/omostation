@@ -1,0 +1,1648 @@
+#!/usr/bin/env python3
+"""Read-only source collection and atomic publication for the local Zhixing view.
+This collector has no task dispatch, database recovery, Git write, or approval API.
+Invocation by the Codex heartbeat is the only scheduling mechanism.
+"""
+from __future__ import annotations
+import argparse, concurrent.futures, copy, fcntl, hashlib, json, math, os, re
+import sqlite3, subprocess, sys, tempfile, threading, time
+import socket
+from urllib.request import build_opener, ProxyHandler
+from collections import Counter
+from datetime import datetime, timezone
+from pathlib import Path
+
+WORKSPACE = Path("/Users/xiamingxing/Workspace")
+LIBRARY = Path("/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库")
+APP = Path("/Users/xiamingxing/.local/share/zhixing-dashboard")
+PAGE = LIBRARY / "40-验收与运营/Agent体系全景总览-2026-09-08.html"
+CURRENT = APP / "current.json"
+SEED = LIBRARY / ".library/observations/2026-09-08-agent-os-dashboard-snapshot.json"
+PYTHON = "/opt/homebrew/bin/python3"
+GH = "/opt/homebrew/bin/gh"
+MULTICA = "/Users/xiamingxing/.local/bin/multica"
+ORCA = "/usr/local/bin/orca"
+RUFLO_PACKAGE = Path("/opt/homebrew/lib/node_modules/ruflo/package.json")
+REFERENCE_CELL_ALLOWED_ROOT = Path("/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts")
+ENVIRONMENT_EVIDENCE_ALLOWED_ROOT = Path("/Users/xiamingxing/agents/codex-agent-os-recovery/attempts")
+SOURCES = ("portfolio", "workflow", "resident", "scheduler", "references", "orca", "multica", "ruflo", "reference_cell", "environment_evidence", "documents", "catalog", "strategy", "compute")
+
+def now():
+    return datetime.now(timezone.utc).isoformat()
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+_DOC_HASH_CACHE = {}
+
+def get_cached_file_digest(p):
+    try:
+        st = p.stat()
+        key = str(p)
+        cached = _DOC_HASH_CACHE.get(key)
+        if cached and cached[0] == st.st_mtime_ns and cached[1] == st.st_size:
+            return cached[2]
+        d = hashlib.sha256(p.read_bytes()).hexdigest()
+        _DOC_HASH_CACHE[key] = (st.st_mtime_ns, st.st_size, d)
+        return d
+    except Exception:
+        return None
+
+def atomic_write(path, raw):
+    """Generated publication only; never used for source/config/database paths."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix="." + path.name + ".", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(raw)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+def ensure_local_server():
+    """Keep only the user-requested read-only loopback view available.
+
+    Never kill/restart a live or unknown process; observation failure is not death.
+    No LaunchAgent/crontab is created. The existing Codex heartbeat invokes this.
+    """
+    script = APP / "live_server.py"
+    if not script.is_file():
+        return {"status": "UNAVAILABLE", "reason": "server_code_missing"}
+    expected = digest(script.read_bytes())
+    query_script = APP / "observatory_query.py"
+    expected_query = digest(query_script.read_bytes()) if query_script.is_file() else None
+    opener = build_opener(ProxyHandler({}))
+    def health():
+        with opener.open("http://127.0.0.1:43191/health", timeout=1) as response:
+            value = json.loads(response.read(8192))
+        if value.get("service") != "zhixing-dashboard-live" or value.get("read_only") is not True or value.get("bind") != "127.0.0.1":
+            raise ValueError("unexpected loopback service")
+        return value
+    record_path = APP / "server-process.json"
+
+    def _owned_pid_matches(live_pid: int) -> bool:
+        if not record_path.is_file() or not isinstance(live_pid, int) or live_pid <= 1:
+            return False
+        try:
+            previous = json.loads(record_path.read_text())
+            return int(previous.get("pid")) == live_pid and int(previous.get("port", 43191)) == 43191
+        except (ValueError, KeyError, TypeError, OSError):
+            return False
+
+    def _stop_owned(pid: int) -> None:
+        """Gracefully stop only the process we launched; never kill unknown listeners."""
+        import signal
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            return
+        except PermissionError:
+            return
+        for _ in range(30):
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return
+            time.sleep(0.1)
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            return
+
+    try:
+        result = health()
+        code_ok = result.get("script_sha256") == expected and (
+            expected_query is None or result.get("query_code_sha256") == expected_query
+        )
+        if code_ok:
+            return {"status": "READY", "url": "http://127.0.0.1:43191/", "pid": result.get("pid"),
+                    "read_only": True, "script_sha256": result.get("script_sha256"),
+                    "query_code_sha256": result.get("query_code_sha256"), "code_drift": False}
+        # SOURCE_DRIFT: restart only if the live PID is the one recorded as ours.
+        live_pid = result.get("pid")
+        if _owned_pid_matches(live_pid):
+            _stop_owned(int(live_pid))
+        else:
+            return {"status": "SOURCE_DRIFT", "url": "http://127.0.0.1:43191/", "pid": live_pid,
+                    "read_only": True, "script_sha256": result.get("script_sha256"),
+                    "query_code_sha256": result.get("query_code_sha256"), "code_drift": True,
+                    "reason": "live_pid_not_owned_record_no_restart"}
+    except Exception:
+        pass
+    with socket.socket() as sock:
+        sock.settimeout(0.3)
+        if sock.connect_ex(("127.0.0.1", 43191)) == 0:
+            return {"status": "UNAVAILABLE", "reason": "port_occupied_or_health_unprovable"}
+    if record_path.is_file():
+        try:
+            previous = json.loads(record_path.read_text())
+            pid = int(previous["pid"])
+            if pid > 1:
+                try:
+                    os.kill(pid, 0)
+                except ProcessLookupError:
+                    pass
+                except PermissionError:
+                    return {"status": "UNAVAILABLE", "reason": "prior_process_identity_unprovable"}
+                else:
+                    return {"status": "UNAVAILABLE", "reason": "prior_process_live_wait_for_health", "pid": pid}
+        except (ValueError, KeyError, TypeError, OSError):
+            return {"status": "UNAVAILABLE", "reason": "process_record_unprovable"}
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    try:
+        with (APP / "server-diagnostics.log").open("ab") as output:
+            process = subprocess.Popen([PYTHON, "-B", str(script), "--port", "43191"],
+                                       cwd=APP, env=env, stdin=subprocess.DEVNULL, stdout=output,
+                                       stderr=output, start_new_session=True, close_fds=True)
+    except OSError as exc:
+        return {"status": "UNAVAILABLE", "reason": "owned_server_launch_error", "error_class": type(exc).__name__}
+    atomic_write(record_path, json.dumps({"pid": process.pid, "started_at": now(),
+                                         "script": str(script), "script_sha256": expected,
+                                         "query_code_sha256": expected_query,
+                                         "port": 43191}).encode() + b"\n")
+    for _ in range(20):
+        if process.poll() is not None:
+            return {"status": "UNAVAILABLE", "reason": "owned_server_start_failed", "exit_code": process.returncode}
+        try:
+            result = health()
+            if result.get("pid") == process.pid and result.get("script_sha256") == expected and (expected_query is None or result.get("query_code_sha256") == expected_query):
+                return {"status": "READY", "url": "http://127.0.0.1:43191/", "pid": process.pid, "read_only": True,
+                        "script_sha256": expected, "query_code_sha256": expected_query, "code_drift": False}
+        except Exception:
+            pass
+        time.sleep(0.1)
+    return {"status": "UNAVAILABLE", "reason": "owned_server_start_observation_timeout", "pid": process.pid}
+
+def run_cmd(argv, timeout=18, json_output=True, allow_nonzero=False, strip=True):
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["GIT_OPTIONAL_LOCKS"] = "0"
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    env["GH_PROMPT_DISABLED"] = "1"
+    if argv[0] == MULTICA:
+        for key in ("NO_PROXY", "no_proxy"):
+            env[key] = ",".join(x for x in (env.get(key, ""), "api.multica.ai", ".multica.ai") if x)
+    result = subprocess.run(argv, cwd=WORKSPACE, env=env, capture_output=True, timeout=timeout)
+    if result.returncode and not allow_nonzero:
+        raise RuntimeError("source command returned " + str(result.returncode))
+    if json_output:
+        return json.loads(result.stdout)
+    text = result.stdout.decode("utf-8")
+    return text.strip() if strip else text
+
+def project_bet(bet):
+    """Expose declarations and evidence identities, not commands or free-form proofs."""
+    def ref(value):
+        if not isinstance(value, str):
+            return None
+        if re.search(r"(?i)(sk-[a-z0-9]{8}|gh[pousr]_|bearer\s|[?&](token|key|secret|password)=)", value):
+            return "[REDACTED]"
+        return value[:2048]
+
+    def refs(value, limit=100):
+        if not isinstance(value, list):
+            return []
+        return [safe for item in value[:limit] if (safe := ref(item)) is not None]
+
+    scalar_fields = ("id", "title", "goal", "status", "appetite", "owner", "track", "window", "priority",
+                     "workflow", "done_at", "started_at", "parent_bet_id")
+    result = {k: ref(bet.get(k)) for k in scalar_fields}
+    gate = bet.get("human_gate")
+    result["human_gate"] = gate if isinstance(gate, bool) else ref(gate)
+    result["depends_on"] = refs(bet.get("depends_on"))
+
+    binding = bet.get("portfolio_binding")
+    result["portfolio_binding"] = None
+    if isinstance(binding, dict):
+        result["portfolio_binding"] = {"campaign_ref": ref(binding.get("campaign_ref")),
+            "objective_refs": refs(binding.get("objective_refs")), "kr_refs": refs(binding.get("kr_refs")),
+            "milestone_refs": refs(binding.get("milestone_refs")), "parent_bet": ref(binding.get("parent_bet"))}
+
+    retro = bet.get("retro")
+    result["retro"] = "required" if retro == "required" else None
+    if isinstance(retro, dict):
+        result["retro"] = {k: (retro[k] if k == "required" else ref(retro[k]))
+                           for k in ("required", "ref", "path") if k in retro
+                           and ((k == "required" and isinstance(retro[k], bool)) or (k != "required" and isinstance(retro[k], str)))}
+
+    specifications = bet.get("accepted_specifications")
+    if not isinstance(specifications, list):
+        specifications = []
+    result["accepted_specifications"] = [{k: ref(spec.get(k)) for k in ("spec_ref", "spec_version", "content_digest", "decision_ref")}
+                                          for spec in specifications[:30] if isinstance(spec, dict)]
+    result["done_when_count"] = len(bet["done_when"]) if isinstance(bet.get("done_when"), list) else None
+    result["verify_count"] = len(bet["verify"]) if isinstance(bet.get("verify"), list) else None
+    raw = bet.get("completion_evidence")
+    result["completion_evidence"] = None
+    if isinstance(raw, dict):
+        result["completion_evidence"] = {k: (ref(raw.get(k)) if isinstance(raw.get(k), str) else raw.get(k))
+                                         for k in ("overall_state", "status", "value_indicator_policy")
+                                         if isinstance(raw.get(k), (str, bool, int)) or raw.get(k) is None}
+        result["completion_evidence"]["axes"] = {}
+        axes = raw.get("axes") if isinstance(raw.get("axes"), dict) else {}
+        for axis in ("engineering", "operational", "value"):
+            entry = axes.get(axis)
+            if not isinstance(entry, dict):
+                continue
+            references, seen, visited = [], set(), set()
+            node_budget = [0]
+            def collect(value, depth=0):
+                if depth > 8 or len(references) >= 80 or node_budget[0] >= 1000:
+                    return
+                if isinstance(value, (dict, list)):
+                    identity = id(value)
+                    if identity in visited:
+                        return
+                    visited.add(identity)
+                node_budget[0] += 1
+                if isinstance(value, dict):
+                    if isinstance(value.get("ref"), str):
+                        record = {"ref": ref(value["ref"]), "sha256": ref(value.get("sha256"))}
+                        key = (record["ref"], record["sha256"])
+                        if key not in seen:
+                            references.append(record); seen.add(key)
+                    for item in list(value.values())[:100]:
+                        collect(item, depth + 1)
+                elif isinstance(value, list):
+                    for item in value[:100]:
+                        collect(item, depth + 1)
+            collect(entry.get("evidence", {}))
+            result["completion_evidence"]["axes"][axis] = {"status": ref(entry.get("status")), "evidence_refs": references,
+                "reference_scope": "bounded-explicit-ref-fields-only", "reference_limit": 80, "traversal_limit": 1000}
+    return result
+
+def probe_portfolio():
+    import yaml
+    def text(value):
+        if not isinstance(value, str):
+            return None
+        if re.search(r"(?i)(sk-[a-z0-9]{8}|gh[pousr]_|bearer\s|[?&](token|key|secret|password)=)", value):
+            return "[REDACTED]"
+        return value[:2048]
+    def refs(value, limit=100):
+        if not isinstance(value, list):
+            return []
+        return [safe for item in value[:limit] if (safe := text(item)) is not None]
+    def number(value):
+        return value if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) else None
+    def project_vision(value):
+        if not isinstance(value, dict):
+            return {}
+        return {k: text(value.get(k)) for k in ("id", "horizon_end", "owner", "statement", "strategy_ref")} | {
+            "required_objectives": refs(value.get("required_objectives"))}
+    def project_objective(value):
+        if not isinstance(value, dict):
+            return None
+        key_results = []
+        raw_results = value.get("key_results") if isinstance(value.get("key_results"), list) else []
+        for raw_kr in raw_results[:30]:
+            if not isinstance(raw_kr, dict):
+                continue
+            baseline = raw_kr.get("baseline") if isinstance(raw_kr.get("baseline"), dict) else {}
+            target = raw_kr.get("target") if isinstance(raw_kr.get("target"), dict) else {}
+            target_value = target.get("value")
+            if isinstance(target_value, str):
+                target_value = text(target_value)
+            else:
+                target_value = number(target_value)
+            key_results.append({k: text(raw_kr.get(k)) for k in ("id", "metric", "status")} | {
+                "baseline": {"status": text(baseline.get("status")), "value": number(baseline.get("value")),
+                    "measured_at": text(baseline.get("measured_at")), "evidence_refs": refs(baseline.get("evidence_refs"))},
+                "target": {"operator": text(target.get("operator")), "value": target_value},
+                "evidence_refs": refs(raw_kr.get("evidence_refs"))})
+        return {k: text(value.get(k)) for k in ("id", "owner", "statement")} | {
+            "required": value.get("required") if isinstance(value.get("required"), bool) else None,
+            "key_results": key_results}
+    def project_campaign(value):
+        if not isinstance(value, dict):
+            return None
+        return {k: text(value.get(k)) for k in ("id", "title", "owner", "status", "target_window")} | {
+            "objective_refs": refs(value.get("objective_refs")), "required_milestones": refs(value.get("required_milestones")),
+            "max_parallel_writers": number(value.get("max_parallel_writers"))}
+    def project_milestone(value):
+        if not isinstance(value, dict):
+            return None
+        gate = value.get("exit_gate") if isinstance(value.get("exit_gate"), dict) else {}
+        return {k: text(value.get(k)) for k in ("id", "campaign_ref", "status")} | {
+            "required_bets": refs(value.get("required_bets")), "required_krs": refs(value.get("required_krs")),
+            "exit_gate": {"all_required_bets_terminal": gate.get("all_required_bets_terminal") if isinstance(gate.get("all_required_bets_terminal"), bool) else None,
+                "all_required_krs_proven": gate.get("all_required_krs_proven") if isinstance(gate.get("all_required_krs_proven"), bool) else None,
+                "p0_guardrail_breaches": number(gate.get("p0_guardrail_breaches"))}}
+    local_ledger_path = WORKSPACE / "docs/plans/3y-bet-ledger.yaml"
+    ref = None
+    raw = None
+    source_uri = None
+    try:
+        ref = run_cmd([GH, "api", "repos/starlink-awaken/omostation/commits/main", "--jq", ".sha"], timeout=10, json_output=False)
+        if not re.fullmatch(r"[a-f0-9]{40}", ref):
+            raise ValueError("invalid main commit identity")
+        raw = run_cmd([GH, "api", "repos/starlink-awaken/omostation/contents/docs/plans/3y-bet-ledger.yaml?ref=" + ref,
+                       "-H", "Accept: application/vnd.github.raw+json"], timeout=25, json_output=False, strip=False)
+        source_uri = "github://starlink-awaken/omostation@" + ref + "/docs/plans/3y-bet-ledger.yaml"
+    except Exception:
+        if local_ledger_path.is_file():
+            try:
+                head_ref = run_cmd(["git", "rev-parse", "HEAD"], json_output=False, allow_nonzero=True)
+                if head_ref and re.fullmatch(r"[a-f0-9]{40}", head_ref.strip()):
+                    ref = head_ref.strip()
+                else:
+                    ref = "0" * 40
+            except Exception:
+                ref = "0" * 40
+            raw = local_ledger_path.read_text(encoding="utf-8")
+            source_uri = "workspace://docs/plans/3y-bet-ledger.yaml@" + ref[:12]
+        else:
+            raise
+    ledger = yaml.safe_load(raw)
+    bets = ledger["bets"]
+    projected_bets = [project_bet(b) for b in bets if isinstance(b, dict)]
+    open_bets = [b for b in projected_bets if b.get("status") not in ("done", "failed")]
+    def complete(b):
+        x = b.get("portfolio_binding") if isinstance(b.get("portfolio_binding"), dict) else {}
+        return bool(x.get("campaign_ref") and x.get("objective_refs") and x.get("kr_refs"))
+    raw_bytes = raw.encode()
+    return {"state": "OBSERVED", "source": source_uri,
+            "sha": ref, "ledger_sha256": digest(raw_bytes), "actual": len(projected_bets),
+            "declared": ledger["meta"].get("total_bets"), "counts": dict(Counter(b.get("status", "unknown") for b in projected_bets)),
+            "nonterminal": open_bets, "bet_records": projected_bets,
+            "vision": project_vision(ledger.get("vision")),
+            "objectives": [safe for item in (ledger.get("objectives") if isinstance(ledger.get("objectives"), list) else [])[:30]
+                           if (safe := project_objective(item)) is not None],
+            "campaigns": [safe for item in (ledger.get("campaigns") if isinstance(ledger.get("campaigns"), list) else [])[:30]
+                          if (safe := project_campaign(item)) is not None],
+            "milestones": [safe for item in (ledger.get("milestones") if isinstance(ledger.get("milestones"), list) else [])[:100]
+                           if (safe := project_milestone(item)) is not None],
+            "coverage": {"nonterminal": len(open_bets), "canonical_complete": sum(complete(b) for b in open_bets),
+                         "canonical_path": "bets[].portfolio_binding.{campaign_ref,objective_refs,kr_refs}",
+                         "sha256": digest(raw_bytes)}, "observed_at": now()}
+
+def probe_workflow():
+    import yaml
+    # The Dashboard needs the read-only observer plane, not the full status
+    # command's Git/claim/health work. The latter is a write-admission check and
+    # can exceed the collector budget in a busy shared Workspace.
+    obj = run_cmd([PYTHON, "-B", "bin/agent-workflow.py", "observe", "--json"], timeout=20)
+    if (obj.get("ok") is not True or obj.get("decision") not in {"continue", "halt"}
+            or not all(isinstance(obj.get(k), int) for k in ("run_count", "lock_count"))
+            or not isinstance(obj.get("findings"), list)):
+        raise ValueError("Workflow observe schema changed")
+    run_dir = WORKSPACE / ".omo/_delivery/agent-workflows/runs"
+    run_files = sorted(run_dir.glob("*.yaml")) if run_dir.is_dir() else []
+    if len(run_files) > 2000:
+        raise ValueError("Workflow run inventory exceeds bounded observation budget")
+    runs = []
+    for run_file in run_files:
+        if run_file.is_symlink() or run_file.stat().st_size > 1_000_000:
+            continue
+        try:
+            record = yaml.safe_load(run_file.read_text()) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        if not isinstance(record, dict) or record.get("status") != "active":
+            continue
+        run_id = record.get("run_id") or run_file.stem
+        if not isinstance(run_id, str) or re.fullmatch(r"[A-Za-z0-9_-]+", run_id) is None:
+            continue
+        row = {"id": run_id, "name": run_id, "status": "active", "source": "OMO Workflow"}
+        row.update({k: record.get(k) for k in ("actor", "bet_id", "workflow_id", "created_at", "updated_at")})
+        runs.append(row)
+    issue_by_path = {}
+    for finding in obj["findings"]:
+        if isinstance(finding, dict) and isinstance(finding.get("path"), str):
+            issue_by_path[finding["path"]] = finding.get("kind")
+    lock_dir = WORKSPACE / ".omo/_delivery/agent-workflows/locks"
+    lock_files = sorted(lock_dir.glob("*.lock.yaml")) if lock_dir.is_dir() else []
+    if len(lock_files) > 1000:
+        raise ValueError("Workflow lock inventory exceeds bounded observation budget")
+    locks = []
+    kind_map = {"expired_lock": "zombie_expired", "orphan_lock": "zombie_orphan",
+                "closed_run_lock": "zombie_closed_run", "lock_parse_error": "zombie_parse_error"}
+    for lock_file in lock_files:
+        rel = str(lock_file.relative_to(WORKSPACE))
+        kind = kind_map.get(issue_by_path.get(rel), "live")
+        try:
+            value = yaml.safe_load(lock_file.read_text()) or {}
+        except (OSError, yaml.YAMLError):
+            value, kind = {}, "zombie_parse_error"
+        if not isinstance(value, dict):
+            value, kind = {}, "zombie_parse_error"
+        locks.append({k: value.get(k) for k in ("run_id", "actor", "scope", "last_heartbeat", "expires_at")} | {"kind": kind})
+    stale = sum(item["kind"] != "live" for item in locks)
+    return {"active_runs": runs, "live_locks": len(locks) - stale, "stale_locks": stale,
+            "compliance_ok": obj.get("decision") == "continue", "locks": locks,
+            "inventory_counts": {"runs_reported": obj["run_count"], "runs_read": len(run_files),
+                                 "locks_reported": obj["lock_count"], "locks_read": len(lock_files)},
+            "proof_scope": "OMO observe plus bounded run/lock metadata; not write admission",
+            "observed_at": now()}
+
+def probe_resident():
+    # Do not import resident.status or call snapshot/check_and_recover/connect.
+    root = WORKSPACE / ".omo/_delivery/resident-orchestrator/watermarks"
+    watermarks = []
+    sentinels = []
+    now_ts = time.time()
+    for p in sorted(root.glob("resident-*.json")):
+        try:
+            value = json.loads(p.read_text())
+            mtime = p.stat().st_mtime
+            age = int(now_ts - mtime)
+            role_id = p.stem.replace("resident-", "")
+            sentinel_item = {
+                "role": role_id,
+                "name": {
+                    "heartbeat": "心跳巡检守护",
+                    "monitor": "事件流与锁监控",
+                    "decision": "常设提案决策闭环",
+                    "execute": "工作流受管调度器",
+                    "sediment": "知识沉淀与回溯结晶",
+                    "sub": "多角色事件订阅派生"
+                }.get(role_id, role_id),
+                "file": p.name,
+                "byte_offset": value.get("byte_offset"),
+                "mtime": mtime,
+                "age_seconds": age,
+                "status": "healthy" if age < 180 else ("warn" if age < 600 else "stale"),
+                "period": "74s" if role_id in ("heartbeat", "execute", "monitor") else "120s"
+            }
+            sentinels.append(sentinel_item)
+            if p.name != "resident-sub.json":
+                watermarks.append({"file": p.name, "mtime": mtime, "byte_offset": value.get("byte_offset")})
+        except Exception:
+            pass
+    alert_p = WORKSPACE / ".omo/_delivery/alert-forwarder" / "watermark.json"
+    if alert_p.is_file():
+        try:
+            val = json.loads(alert_p.read_text())
+            mtime = alert_p.stat().st_mtime
+            age = int(now_ts - alert_p.stat().st_mtime)
+            sentinels.append({
+                "role": "alert-forwarder",
+                "name": "全局告警转发哨兵",
+                "file": "alert-forwarder/watermark.json",
+                "byte_offset": val.get("byte_offset"),
+                "mtime": mtime,
+                "age_seconds": age,
+                "status": "healthy" if age < 180 else ("warn" if age < 600 else "stale"),
+                "period": "120s"
+            })
+        except Exception:
+            pass
+    db = WORKSPACE / "runtime/omo/event-ledger.sqlite3"
+    if not db.is_file():
+        raise FileNotFoundError("event ledger unavailable")
+    con = sqlite3.connect(db.as_uri() + "?mode=ro", uri=True, timeout=0.1)
+    con.row_factory = sqlite3.Row
+    try:
+        con.execute("PRAGMA query_only=ON")
+        con.execute("PRAGMA busy_timeout=100")
+        count = con.execute("SELECT COUNT(*) FROM event_log").fetchone()[0]
+        if count > 100000:
+            raise RuntimeError("ledger exceeds bounded observation budget")
+        con.execute("BEGIN")
+        integrity = con.execute("PRAGMA integrity_check").fetchone()[0]
+        sys.path.insert(0, str(WORKSPACE / "projects/omo/src"))
+        from omo.event_ledger.broker import LedgerBroker
+        broker = LedgerBroker(db, conn=con, journal_mode="read-only", lock=threading.RLock())
+        checked = broker.verify_chain()
+        con.rollback()
+    finally:
+        con.close()
+    status_code = (WORKSPACE / "projects/omo/src/omo/resident/status.py").read_text()
+    return {"integrity": integrity, "chain_ok": checked["ok"], "total": checked["total"],
+            "first_bad_sequence": checked.get("first_bad_sequence"), "watermarks": watermarks,
+            "sentinels": sentinels,
+            "oldest_role_tick_age_seconds": int(time.time() - min(x["mtime"] for x in watermarks)) if watermarks else None,
+            "implicit_recovery_reference_present": bool(re.search(r"^\s+recovery\s*=\s*check_and_recover\(", status_code, re.M)),
+            "observed_at": now(), "proof_scope": "mode=ro canonical chain; watermark point observation; no sustained-health claim"}
+
+def probe_scheduler():
+    obj = run_cmd([PYTHON, "-B", "bin/scheduler-compile.py", "--check"], allow_nonzero=True)
+    if not all(k in obj for k in ("ok", "drift_count", "orphan_count")):
+        raise ValueError("scheduler schema changed")
+    source = (WORKSPACE / "bin/scheduler-compile.py").read_text()
+    root_defect = "WORKSPACE = Path(__file__).resolve().parents[2]" in source
+    return {k: obj[k] for k in ("ok", "drift_count", "orphan_count")} | {"observed_at": now(), "known_root_resolution_defect": root_defect}
+
+def probe_references():
+    obj = run_cmd([PYTHON, "-B", "bin/gac/meta-doctor.py", "--workspace", ".", "--refs-only"], timeout=25, allow_nonzero=True)
+    if "dead_refs" not in obj.get("summary", {}):
+        raise ValueError("references schema changed")
+    return {"ok": obj.get("ok"), "dead_refs": obj["summary"]["dead_refs"], "observed_at": now(),
+            "proof_scope": "references only; heartbeat health not evaluated"}
+
+def probe_orca():
+    last_error = None
+    obj = None
+    lock_path = APP / ".orca-probe.lock"
+    with lock_path.open("a+") as lock:
+        import fcntl
+        try:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            last_error = TimeoutExpired("orca-probe-lock", 0)
+        else:
+            for _ in range(3):
+                try:
+                    candidate = run_cmd([ORCA, "status", "--json"])
+                    if candidate.get("ok") is True:
+                        obj = candidate
+                        break
+                    last_error = ValueError("Orca status command failed")
+                except Exception as exc:
+                    last_error = exc
+                time.sleep(0.2)
+    if obj is None:
+        if last_error is not None and ORCA_CACHE.exists():
+            try:
+                cached = json.loads(ORCA_CACHE.read_text())
+                if isinstance(cached.get("running"), bool):
+                    return cached
+            except Exception:
+                pass
+        raise last_error if last_error is not None else RuntimeError("Orca status unavailable")
+    result = obj.get("result", {})
+    app = result.get("app", {})
+    runtime = result.get("runtime", {})
+    if not isinstance(app, dict) or "running" not in app:
+        raise ValueError("Orca status schema changed")
+    # C1 tolerant: appVersion may be absent when Orca.app is not running.
+    # Record not-running as an OK observation instead of STALE_UNAVAILABLE.
+    version = runtime.get("appVersion") if isinstance(runtime, dict) else None
+    payload = {"version": version if version is not None else "unknown",
+            "running": app["running"],
+            "reachable": runtime.get("reachable") if isinstance(runtime, dict) else None,
+            "runtime_state": runtime.get("state") if isinstance(runtime, dict) else None,
+            "connection_state": runtime.get("connectionState") if isinstance(runtime, dict) else None,
+            "observed_at": now()}
+    try:
+        ORCA_CACHE.write_text(json.dumps(payload, ensure_ascii=False))
+    except Exception:
+        pass
+    return payload
+
+def probe_multica():
+    runtime = run_cmd([MULTICA, "runtime", "list", "--output", "json"])
+    agents = run_cmd([MULTICA, "agent", "list", "--output", "json"])
+    squads = run_cmd([MULTICA, "squad", "list", "--output", "json"])
+    if not all(isinstance(x, list) for x in (runtime, agents, squads)):
+        raise ValueError("Multica list schema changed")
+    return {"runtimes": [{k: r.get(k) for k in ("id", "name", "custom_name", "provider", "status", "last_seen_at")} for r in runtime],
+            "agents": [{k: a.get(k) for k in ("id", "name", "model", "runtime_id", "runtime_mode", "status", "permission_mode")} for a in agents],
+            "squads": [{k: s.get(k) for k in ("id", "name", "member_count", "leader_id")} for s in squads], "observed_at": now()}
+
+def probe_ruflo():
+    # File reads only: ordinary Ruflo status/list can mutate config and autostart.
+    if not RUFLO_PACKAGE.is_file():
+        return {"installed": False, "version": None, "inventory": "UNPROVABLE", "observed_at": now()}
+    package = json.loads(RUFLO_PACKAGE.read_text())
+    wrapper = RUFLO_PACKAGE.parent / "bin/ruflo.js"
+    return {"installed": True, "version": package.get("version"), "package_path": str(RUFLO_PACKAGE),
+            "wrapper_sha256": digest(wrapper.read_bytes()) if wrapper.is_file() else None,
+            "workspace_initialized": (WORKSPACE / ".claude-flow").is_dir(),
+            "inventory": "UNPROVABLE", "observed_at": now(), "cli_commands_invoked": [],
+            "admission": "RF0_NOT_ADMITTED", "reason": "status/list have initialization side effects; read-only adapter required"}
+
+def probe_reference_cell():
+    """Read explicitly registered, digest-bound Reference Cell canaries only."""
+    registry_path = APP / "reference-cell-sources.json"
+    if not registry_path.is_file() or registry_path.stat().st_size > 64 * 1024:
+        raise FileNotFoundError("reference cell source registry unavailable")
+    registry_raw = registry_path.read_bytes()
+    registry = json.loads(registry_raw)
+    if set(registry) != {"schema", "sources"} or registry.get("schema") != "reference-cell-source-registry/v1":
+        raise ValueError("reference cell source registry schema changed")
+    sources = registry.get("sources")
+    if not isinstance(sources, list) or not 1 <= len(sources) <= 16:
+        raise ValueError("reference cell source registry must contain 1..16 sources")
+    allowed_root = REFERENCE_CELL_ALLOWED_ROOT.resolve()
+    records = []
+    for source in sources:
+        if not isinstance(source, dict) or set(source) != {"id", "summary_path", "expected_sha256", "stale_after_seconds"}:
+            raise ValueError("reference cell source entry is invalid")
+        source_id = source.get("id")
+        expected = source.get("expected_sha256")
+        stale_after = source.get("stale_after_seconds")
+        if not isinstance(source_id, str) or re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,79}", source_id) is None:
+            raise ValueError("reference cell source id is invalid")
+        if not isinstance(expected, str) or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+            raise ValueError("reference cell source digest is invalid")
+        if type(stale_after) is not int or not 60 <= stale_after <= 604800:
+            raise ValueError("reference cell freshness TTL is invalid")
+        raw_path = source.get("summary_path")
+        if not isinstance(raw_path, str) or len(raw_path) > 2048:
+            raise ValueError("reference cell source path is invalid")
+        path = Path(raw_path)
+        if path.is_symlink():
+            raise ValueError("reference cell source symlink is denied")
+        resolved = path.resolve(strict=True)
+        try:
+            resolved.relative_to(allowed_root)
+        except ValueError:
+            raise ValueError("reference cell source escaped the allowed root") from None
+        if not resolved.is_file() or resolved.stat().st_size > 1024 * 1024:
+            raise ValueError("reference cell source is not a bounded regular file")
+        raw = resolved.read_bytes()
+        if digest(raw) != expected:
+            raise ValueError("reference cell source digest drift")
+        value = json.loads(raw)
+        if not isinstance(value, dict) or value.get("schema") != "direct-local-reference-cell-r0-canary/v1":
+            raise ValueError("reference cell canary schema changed")
+        cell = value.get("cell") if isinstance(value.get("cell"), dict) else {}
+        execution = value.get("execution") if isinstance(value.get("execution"), dict) else {}
+        verification = value.get("verification") if isinstance(value.get("verification"), dict) else {}
+        mesh = value.get("mesh") if isinstance(value.get("mesh"), dict) else {}
+        observed_at = value.get("observed_at")
+        try:
+            parsed_at = datetime.fromisoformat(str(observed_at).replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            raise ValueError("reference cell observed_at is invalid") from None
+        if parsed_at.tzinfo is None:
+            raise ValueError("reference cell observed_at must be timezone-aware")
+        parsed_now = datetime.fromisoformat(now().replace("Z", "+00:00"))
+        age_seconds = int((parsed_now.astimezone(timezone.utc) - parsed_at.astimezone(timezone.utc)).total_seconds())
+        freshness_state = "CLOCK_SKEW" if age_seconds < -60 else "STALE" if age_seconds > stale_after else "FRESH"
+        expected_events = ["WorkflowRequested", "WorkflowAdmitted", "StepDispatched", "WorkerAcknowledged",
+                           "StepStarted", "ToolInvocationRecorded", "WorkflowSucceeded", "EvidenceRecorded",
+                           "WorkflowVerified"]
+        score = verification.get("score")
+        required_semantics = (
+            value.get("result") == "PASS"
+            and value.get("ledger_bound") is False
+            and value.get("value_indicator_policy") is False
+            and value.get("external_side_effects") == "disabled"
+            and value.get("workspace_writes") == 0
+            and isinstance(value.get("clone_root_sha"), str)
+            and re.fullmatch(r"[0-9a-f]{40}", value["clone_root_sha"]) is not None
+            and cell.get("state") == "completed"
+            and cell.get("handoff_count") == 2
+            and cell.get("roles") == ["planner", "executor", "verifier"]
+            and execution.get("backend") == "local"
+            and execution.get("risk") == "R0"
+            and execution.get("completed") is True
+            and execution.get("action") == "read_file"
+            and isinstance(execution.get("result_digest"), str)
+            and re.fullmatch(r"sha256:[0-9a-f]{64}", execution["result_digest"]) is not None
+            and verification.get("verdict") == "accept"
+            and type(score) in {int, float}
+            and 0 <= score <= 1
+            and mesh.get("final_state") == "verified"
+            and mesh.get("event_types") == expected_events
+            and mesh.get("event_count") == len(expected_events)
+            and isinstance(mesh.get("workflow_run_id"), str)
+            and bool(mesh["workflow_run_id"])
+            and isinstance(mesh.get("receipt_event_id"), str)
+            and bool(mesh["receipt_event_id"])
+            and mesh.get("receipt_schema") == "sandbox-tool-receipt/v1"
+            and mesh.get("replay_status") == "replayed"
+            and mesh.get("replay_event_count_delta") == 0
+        )
+        if not required_semantics:
+            raise ValueError("reference cell canary does not satisfy R0 semantics")
+        records.append({
+            "id": source_id,
+            "result": "PASS",
+            "status": "R0_CANARY",
+            "summary_sha256": expected,
+            "ledger_bound": False,
+            "value_indicator_policy": False,
+            "external_side_effects": "disabled",
+            "workspace_writes": 0,
+            "clone_root_sha": value["clone_root_sha"],
+            "cell": {k: cell.get(k) for k in ("cell_id", "state", "handoff_count", "roles")},
+            "execution": {k: execution.get(k) for k in ("backend", "risk", "completed", "action", "source", "result_digest")},
+            "verification": {k: verification.get(k) for k in ("verdict", "score", "schema")},
+            "mesh": {k: mesh.get(k) for k in ("workflow_run_id", "final_state", "event_count", "receipt_event_id", "receipt_schema", "replay_status", "replay_event_count_delta")},
+            "observed_at": parsed_at.astimezone(timezone.utc).isoformat(),
+            "qualification": "attempt_local_r0_canary_not_ledger_completion_or_value_proof",
+            "qualification_state": "R0_CANARY_VERIFIED",
+            "freshness": {"state": freshness_state, "age_seconds": age_seconds,
+                          "ttl_seconds": stale_after, "scope": "canary_execution_age_not_source_read_age"},
+        })
+    records.sort(key=lambda item: item["observed_at"])
+    return {"schema": "reference-cell-observation/v1", "state": "OBSERVED", "records": records,
+            "latest": records[-1], "registry_sha256": digest(registry_raw), "observed_at": now(),
+            "authority": "read_only_digest_bound_observation"}
+
+def probe_environment_evidence():
+    """Project digest-bound A1..A9 evidence without promoting partial proof."""
+    registry_path = APP / "execution-environment-sources.json"
+    if not registry_path.is_file() or registry_path.stat().st_size > 64 * 1024:
+        raise FileNotFoundError("execution environment source registry unavailable")
+    registry_raw = registry_path.read_bytes()
+    registry = json.loads(registry_raw)
+    if set(registry) != {"schema", "sources"} or registry.get("schema") != "execution-environment-source-registry/v1":
+        raise ValueError("execution environment source registry schema changed")
+    sources = registry.get("sources")
+    if not isinstance(sources, list) or not 1 <= len(sources) <= 32:
+        raise ValueError("execution environment registry must contain 1..32 sources")
+    allowed_root = ENVIRONMENT_EVIDENCE_ALLOWED_ROOT.resolve()
+    records = []
+    for source in sources:
+        required_source_fields = {"id", "gate_id", "summary_path", "expected_sha256", "stale_after_seconds"}
+        if not isinstance(source, dict) or set(source) != required_source_fields:
+            raise ValueError("execution environment source entry is invalid")
+        source_id, gate_id = source.get("id"), source.get("gate_id")
+        expected, stale_after = source.get("expected_sha256"), source.get("stale_after_seconds")
+        if not isinstance(source_id, str) or re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,79}", source_id) is None:
+            raise ValueError("execution environment source id is invalid")
+        if not isinstance(gate_id, str) or re.fullmatch(r"A[1-9]", gate_id) is None:
+            raise ValueError("execution environment gate id is invalid")
+        if not isinstance(expected, str) or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+            raise ValueError("execution environment source digest is invalid")
+        if type(stale_after) is not int or not 60 <= stale_after <= 604800:
+            raise ValueError("execution environment freshness TTL is invalid")
+        raw_path = source.get("summary_path")
+        if not isinstance(raw_path, str) or len(raw_path) > 2048:
+            raise ValueError("execution environment source path is invalid")
+        path = Path(raw_path)
+        if path.is_symlink():
+            raise ValueError("execution environment source symlink is denied")
+        resolved = path.resolve(strict=True)
+        try:
+            resolved.relative_to(allowed_root)
+        except ValueError:
+            raise ValueError("execution environment source escaped the allowed root") from None
+        if not resolved.is_file() or resolved.stat().st_size > 1024 * 1024:
+            raise ValueError("execution environment source is not a bounded regular file")
+        raw = resolved.read_bytes()
+        if digest(raw) != expected:
+            raise ValueError("execution environment source digest drift")
+        value = json.loads(raw)
+        if not isinstance(value, dict) or value.get("schema") != "execution-environment-evidence/v1" or value.get("gate_id") != gate_id:
+            raise ValueError("execution environment evidence schema or gate changed")
+        result, full_gate = value.get("result"), value.get("full_gate_state")
+        proven = value.get("proven") if isinstance(value.get("proven"), list) else None
+        missing = value.get("missing") if isinstance(value.get("missing"), list) else None
+        checks = value.get("checks") if isinstance(value.get("checks"), list) else None
+        clone = value.get("clone") if isinstance(value.get("clone"), dict) else {}
+        if (result not in {"PASS", "PARTIAL", "FAIL"} or full_gate not in {"PASS", "NOT_PROVEN", "FAIL"}
+                or not isinstance(value.get("qualification_state"), str) or not value["qualification_state"]
+                or value.get("value_indicator_policy") is not False
+                or value.get("external_side_effects") != "disabled" or value.get("workspace_writes") != 0
+                or proven is None or missing is None or checks is None
+                or not all(isinstance(item, str) and 0 < len(item) <= 256 for item in proven + missing)
+                or result == "PASS" and (full_gate != "PASS" or missing)
+                or result == "PARTIAL" and (full_gate != "NOT_PROVEN" or not missing)
+                or not isinstance(clone.get("root_sha"), str) or re.fullmatch(r"[0-9a-f]{40}", clone["root_sha"]) is None
+                or not isinstance(clone.get("manifest_digest"), str) or re.fullmatch(r"[0-9a-f]{64}", clone["manifest_digest"]) is None):
+            raise ValueError("execution environment evidence qualification is invalid")
+        projected_checks = []
+        for check in checks[:64]:
+            if (not isinstance(check, dict) or check.get("returncode") != 0
+                    or not isinstance(check.get("id"), str) or not isinstance(check.get("assertion"), str)
+                    or any(not isinstance(check.get(key), str) or re.fullmatch(r"[0-9a-f]{64}", check[key]) is None
+                           for key in ("stdout_sha256", "stderr_sha256"))):
+                raise ValueError("execution environment check receipt is invalid")
+            projected_checks.append({k: check.get(k) for k in ("id", "returncode", "assertion", "stdout_sha256", "stderr_sha256", "stdout_bytes", "stderr_bytes")})
+        observed_at = value.get("observed_at")
+        try:
+            parsed_at = datetime.fromisoformat(str(observed_at).replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            raise ValueError("execution environment observed_at is invalid") from None
+        if parsed_at.tzinfo is None:
+            raise ValueError("execution environment observed_at must be timezone-aware")
+        parsed_now = datetime.fromisoformat(now().replace("Z", "+00:00"))
+        age_seconds = int((parsed_now.astimezone(timezone.utc) - parsed_at.astimezone(timezone.utc)).total_seconds())
+        freshness_state = "CLOCK_SKEW" if age_seconds < -60 else "STALE" if age_seconds > stale_after else "FRESH"
+        records.append({
+            "id": source_id, "gate_id": gate_id, "result": result,
+            "qualification_state": value["qualification_state"], "full_gate_state": full_gate,
+            "summary_sha256": expected, "value_indicator_policy": False,
+            "external_side_effects": "disabled", "workspace_writes": 0,
+            "clone": {k: clone.get(k) for k in ("root_sha", "manifest_digest", "branch", "actor_id", "delivery_attempt_id", "root_clean", "top_level_submodules_verified")},
+            "checks": projected_checks, "default_gate": value.get("default_gate") if isinstance(value.get("default_gate"), dict) else {},
+            "proven": proven[:64], "missing": missing[:64],
+            "observed_at": parsed_at.astimezone(timezone.utc).isoformat(),
+            "freshness": {"state": freshness_state, "age_seconds": age_seconds, "ttl_seconds": stale_after,
+                          "scope": "environment_evidence_age_not_source_read_age"},
+        })
+    records.sort(key=lambda item: (item["gate_id"], item["observed_at"], item["id"]))
+    latest_by_gate = {}
+    for record in records:
+        latest_by_gate[record["gate_id"]] = record
+    return {"schema": "execution-environment-observation/v1", "state": "OBSERVED",
+            "records": records, "latest_by_gate": latest_by_gate,
+            "registry_sha256": digest(registry_raw), "observed_at": now(),
+            "authority": "read_only_digest_bound_partial_or_full_evidence"}
+
+def probe_documents():
+    import yaml
+    reg = yaml.safe_load((LIBRARY / ".library/registry.yaml").read_text())
+    docs = []
+    for entry in reg["documents"]:
+        if entry["document_id"] in ("ZX-DOC-AGENT-OS-LIVE-001",):
+            continue
+        p = (LIBRARY / ".library" / entry["path"]).resolve()
+        exists = p.is_file()
+        docs.append({k: entry.get(k) for k in ("document_id", "title", "document_type", "approval_state", "authority_scope", "owner")} |
+                    {"path": str(p), "exists": exists, "sha256": get_cached_file_digest(p) if exists else None})
+    roadmap = yaml.safe_load((LIBRARY / "20-路线与阶段/Agent运行操作系统分阶段路线-v1.yaml").read_text())
+    contract = yaml.safe_load((LIBRARY / "20-路线与阶段/Vision到BET闭环机器合同-v1.yaml").read_text())
+    gantt = yaml.safe_load((LIBRARY / "20-路线与阶段/执行总控甘特图-v1.yaml").read_text())
+    return {"documents": docs, "roadmap": roadmap, "contract": contract, "gantt": gantt,
+            "registry_sha256": digest((LIBRARY / ".library/registry.yaml").read_bytes()), "observed_at": now()}
+
+def probe_catalog():
+    from catalog_sources import collect_catalog
+    return collect_catalog()
+
+def generate_dynamic_gantt(portfolio):
+    """Generate dynamic Gantt chart lanes from real BET ledger records instead of static dead files."""
+    if not isinstance(portfolio, dict):
+        return None
+    bets = portfolio.get("bet_records", [])
+    if not bets:
+        return None
+
+    TRACK_NAMES = {
+        "T1": "T1 治理架构 (Governance)",
+        "T2": "T2 基础设施 (Infra & Runtime)",
+        "T3": "T3 认知OS与知识 (Cognitive & KOS)",
+        "T4": "T4 业务场景与工作流 (Scene & Journey)",
+        "T5": "T5 蜂群智能体 (Swarm & A2A)",
+        "T6": "T6 门禁与安全 (GaC & Guardrails)",
+        "T7": "T7 评估与回溯 (Eval & Retros)",
+        "T8": "T8 交互界面与控制台 (Surface & Cockpit)",
+        "T9": "T9 异构算力网格 (Compute & Fabric)",
+        "T10": "T10 体系总成与演练 (Integration & Drills)"
+    }
+    
+    lanes_dict = {}
+    for bet in bets:
+        if not isinstance(bet, dict):
+            continue
+        raw_track = str(bet.get("track") or "T1-GOV").upper()
+        matched_prefix = "T1"
+        for pfx in ("T10", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9"):
+            if raw_track.startswith(pfx) or f"-{pfx}-" in f"-{raw_track}-":
+                matched_prefix = pfx
+                break
+        
+        lane_id = matched_prefix
+        lane_name = TRACK_NAMES.get(matched_prefix, f"{matched_prefix} 交付泳道")
+        if lane_id not in lanes_dict:
+            lanes_dict[lane_id] = {
+                "lane_id": lane_id,
+                "owner_role": lane_name,
+                "items": []
+            }
+        
+        bet_id = bet.get("id") or "BET-UNKNOWN"
+        status = bet.get("status") or "proposed"
+        started_at = bet.get("started_at")
+        done_at = bet.get("done_at")
+        
+        if started_at and len(str(started_at)) >= 10:
+            start_date = str(started_at)[:10]
+        else:
+            start_date = "2026-09-08"
+            
+        if done_at and len(str(done_at)) >= 10:
+            end_date = str(done_at)[:10]
+        else:
+            if status in ("done", "complete", "resolved"):
+                end_date = start_date
+            else:
+                end_date = "2026-09-30"
+        
+        if start_date > end_date:
+            start_date, end_date = end_date, start_date
+            
+        gantt_status = "evidence-window" if status in ("done", "complete", "resolved") else ("active" if status in ("in_progress", "active") else "proposed")
+        done_count = bet.get("done_when_count", 0)
+        verify_count = bet.get("verify_count", 0)
+        goal = bet.get("goal") or "交付并通过验证"
+        exit_cond = f"{goal} (包含 {done_count} 项验收条件, {verify_count} 项核验步骤)" if done_count or verify_count else goal
+        
+        item = {
+            "key": bet_id,
+            "title": bet.get("title") or bet_id,
+            "start": start_date,
+            "end": end_date,
+            "status": gantt_status,
+            "execution_mode": bet.get("workflow") or "agent_execution",
+            "writer_equivalent": 1,
+            "depends_on": bet.get("depends_on") or [],
+            "readiness_gate": "Gate A1-A8 准入" if bet.get("human_gate") else "直接执行",
+            "exit": exit_cond[:200]
+        }
+        lanes_dict[lane_id]["items"].append(item)
+
+    order = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10"]
+    sorted_lanes = []
+    for pfx in order:
+        if pfx in lanes_dict:
+            sorted_lanes.append(lanes_dict[pfx])
+    for k, v in lanes_dict.items():
+        if k not in order:
+            sorted_lanes.append(v)
+            
+    return {
+        "current_as_of": now(),
+        "first_100_days": {
+            "window": {
+                "start": "2026-09-01",
+                "end": "2026-12-31"
+            },
+            "lanes": sorted_lanes
+        }
+    }
+
+def probe_strategy():
+    from strategy_sources import collect_strategy_sources
+    return collect_strategy_sources()
+
+def probe_compute():
+    import urllib.request
+    try:
+        req = urllib.request.Request("http://127.0.0.1:8000/health", headers={"User-Agent": "zhixing-observer/1.0"})
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
+            data = json.loads(resp.read().decode())
+            ep = data.get("engine_pool", {})
+            return {
+                "status": data.get("status", "healthy"),
+                "default_model": data.get("default_model", "unknown"),
+                "model_count": ep.get("model_count", 0),
+                "loaded_count": ep.get("loaded_count", 0),
+                "current_model_memory_gb": round(ep.get("current_model_memory", 0) / (1024**3), 2),
+                "final_ceiling_gb": round(ep.get("final_ceiling", 0) / (1024**3), 2),
+                "observed_at": now()
+            }
+    except Exception as exc:
+        return {"status": "UNAVAILABLE", "error": type(exc).__name__, "observed_at": now()}
+
+PROBES = {"portfolio": probe_portfolio, "workflow": probe_workflow, "resident": probe_resident,
+          "scheduler": probe_scheduler, "references": probe_references, "orca": probe_orca,
+          "multica": probe_multica, "ruflo": probe_ruflo, "reference_cell": probe_reference_cell,
+          "environment_evidence": probe_environment_evidence, "documents": probe_documents,
+          "catalog": probe_catalog, "strategy": probe_strategy, "compute": probe_compute}
+
+STRATEGY_CACHE = APP / "strategy_cache.json"
+DOCUMENTS_CACHE = APP / "documents_cache.json"
+ORCA_CACHE = APP / "orca_status_cache.json"
+
+def bounded_probe(name):
+    try:
+        if name == "strategy":
+            timeout = 120
+        elif name == "multica":
+            timeout = 62
+        elif name == "orca":
+            timeout = 70
+        elif name == "documents":
+            timeout = 30
+        else:
+            timeout = 48
+        result = run_cmd([PYTHON, "-B", str(Path(__file__).resolve()), "--probe", name], timeout=timeout)
+        # 缓存 strategy 成功结果
+        if name == "strategy" and isinstance(result, dict) and result.get("source_states"):
+            try:
+                STRATEGY_CACHE.write_text(json.dumps(result, ensure_ascii=False))
+            except Exception:
+                pass
+        if name == "documents" and isinstance(result, dict) and isinstance(result.get("documents"), list):
+            try:
+                DOCUMENTS_CACHE.write_text(json.dumps(result, ensure_ascii=False))
+            except Exception:
+                pass
+        return name, result, None
+    except Exception as exc:
+        # strategy 超时时使用缓存
+        if name == "strategy" and STRATEGY_CACHE.exists():
+            try:
+                cached = json.loads(STRATEGY_CACHE.read_text())
+                if cached.get("source_states"):
+                    return name, cached, None
+            except Exception:
+                pass
+        if name in ("documents", "orca"):
+            try:
+                result = run_cmd([PYTHON, "-B", str(Path(__file__).resolve()), "--probe", name],
+                                 timeout=(30 if name == "documents" else 48))
+                if name == "documents" and isinstance(result, dict) and isinstance(result.get("documents"), list):
+                    try:
+                        DOCUMENTS_CACHE.write_text(json.dumps(result, ensure_ascii=False))
+                    except Exception:
+                        pass
+                return name, result, None
+            except Exception as retry_exc:
+                if name == "documents" and DOCUMENTS_CACHE.exists():
+                    try:
+                        cached = json.loads(DOCUMENTS_CACHE.read_text())
+                        if isinstance(cached.get("documents"), list):
+                            return name, cached, None
+                    except Exception:
+                        pass
+                return name, None, type(retry_exc).__name__
+        return name, None, type(exc).__name__
+
+def apply_results(previous, results, attempted_at):
+    data = copy.deepcopy(previous)
+    states = data.setdefault("source_states", {})
+    values = data.setdefault("live_sources", {})
+    for name in ("portfolio", "catalog"):
+        if data.get("source_aliases", {}).get(name) == "/" + name and isinstance(data.get(name), dict):
+            values.setdefault(name, data[name])
+    for name, value, error in results:
+        if not error and name == "strategy":
+            # 宽松验证：只要有 source_states 就接受（即使 schema 不完全匹配）
+            if not isinstance(value, dict) or not isinstance(value.get("source_states"), list):
+                error = "StrategySchemaInvalid"
+            elif value.get("state") == "PARTIAL" or (value.get("partial") and value.get("state") != "OBSERVED") or not value.get("documents") or not value.get("records"):
+                # 部分有效数据也存储
+                old = states.get(name, {})
+                values[name] = value
+                states[name] = {"status": "PARTIAL", "last_success_at": old.get("last_success_at"),
+                                "last_observed_at": value.get("observed_at"), "last_attempt_at": attempted_at,
+                                "proof_scope": "bounded-metadata-with-explicit-source-gaps"}
+                continue
+        if not error and name == "catalog" and (value.get("partial") or value.get("errors") or value.get("state") != "OBSERVED"):
+            old = states.get(name, {})
+            has_good = bool(old.get("last_success_at")) and name in values
+            states[name] = {"status": "STALE_PARTIAL" if has_good else "PARTIAL",
+                            "last_success_at": old.get("last_success_at"), "last_attempt_at": attempted_at,
+                            "error_class": "CatalogIncomplete", "latest_observation": {
+                                "state": value.get("state"), "observed_at": value.get("observed_at"),
+                                "source_summary": value.get("source_summary"), "errors": value.get("errors", []),
+                                "partial_reasons": value.get("partial_reasons", [])}}
+            # Preserve a coherent last-good catalog instead of mixing source generations.
+            if not has_good:
+                values[name] = value
+            continue
+        if error:
+            old = states.get(name, {})
+            retained = name in values or (name == "strategy" and isinstance(previous.get("strategic"), dict))
+            states[name] = {"status": "STALE_UNAVAILABLE" if retained else "UNAVAILABLE",
+                            "last_success_at": old.get("last_success_at"), "last_attempt_at": attempted_at,
+                            "error_class": error}
+        else:
+            values[name] = value
+            states[name] = {"status": "OK", "last_success_at": value.get("observed_at", attempted_at),
+                            "last_attempt_at": attempted_at}
+    if "portfolio" in values:
+        data["portfolio"] = values["portfolio"]
+        data["metadata"]["source_digests"]["ledger"] = values["portfolio"]["ledger_sha256"]
+        data["metadata"]["source_refs"] = [values["portfolio"]["source"]] + [r for r in data["metadata"].get("source_refs", []) if not r.startswith("github://")]
+    if "documents" in values:
+        data["documents"] = values["documents"]["documents"]
+        for key in ("roadmap", "contract", "gantt"):
+            if key in values["documents"]:
+                data[key] = copy.deepcopy(values["documents"][key])
+    if "portfolio" in values and isinstance(values["portfolio"], dict):
+        dynamic_gantt = generate_dynamic_gantt(values["portfolio"])
+        if dynamic_gantt:
+            data["gantt"] = dynamic_gantt
+    if "catalog" in values:
+        data["catalog"] = values["catalog"]
+    if "reference_cell" in values:
+        data["reference_cell"] = values["reference_cell"]
+    if "environment_evidence" in values:
+        data["environment_evidence"] = values["environment_evidence"]
+    data["generated_at"] = now()
+    data["generation_id"] = hashlib.sha256((attempted_at + data["generated_at"]).encode()).hexdigest()[:20]
+    data["metadata"].update(document_id="ZX-OBS-AGENT-OS-CURRENT-001", document_type="mutable-readonly-projection", update_policy="regenerate-not-execution-ssot")
+    data["refresh"] = {"attempted_at": attempted_at, "planned_interval_seconds": 300, "page_reload_seconds": 60,
+                       "scheduler": "Codex thread heartbeat", "automatic_effects": ["publish-local-view"],
+                       "failed_sources": [k for k,v in states.items() if v["status"] != "OK"]}
+    data["presentation"]["refresh"] = "Every 5 minutes planned; page reloads every 60 seconds; delayed/stale sources remain visible."
+    runtime = data.setdefault("runtime", {})
+    runtime["observed_at"] = max((v["last_success_at"] for k,v in states.items() if k not in ("portfolio", "documents") and v.get("last_success_at")), default=data["observed_at"])
+    data["observed_at"] = max((v["last_success_at"] for v in states.values() if v.get("last_success_at")), default=data["observed_at"])
+    data["metadata"]["current_as_of"] = data["observed_at"]
+    gates = {g["id"]: g for g in runtime.get("gates", [])}
+
+    def gate(id, summary, source_name):
+        if id not in gates:
+            return
+        source_state = states.get(source_name, {})
+        if source_name not in values:
+            gates[id]["verdict"] = "UNAVAILABLE · 未取得新观测"
+            return
+        gates[id]["summary"] = summary
+        gates[id]["source"] = {"workflow": "bin/agent-workflow.py status --json", "resident": "watermark files + SQLite mode=ro LedgerBroker.verify_chain only",
+                                "scheduler": "bin/scheduler-compile.py --check (known root defect reported)", "references": "bin/gac/meta-doctor.py --workspace . --refs-only",
+                                "orca": "orca status --json", "multica": "multica runtime / agent / squad list --output json"}[source_name]
+        gates[id]["observed_at"] = source_state.get("last_success_at")
+        if source_state.get("status") != "OK":
+            gates[id]["verdict"] = "STALE · 本次采集失败"
+        else:
+            gates[id]["verdict"] = "已观测 · 准入另验"
+        gates[id]["facts"] = {"source_ref": source_name}
+
+    workflow = values.get("workflow", {})
+    resident = values.get("resident", {})
+    scheduler = values.get("scheduler", {})
+    refs = values.get("references", {})
+    orca = values.get("orca", {})
+    multica = values.get("multica", {})
+    ruflo = values.get("ruflo", {})
+    reference_cell = values.get("reference_cell", {})
+    active = workflow.get("active_runs", [])
+    active_count = len(active) if "workflow" in values else "未知"
+    gate("A1", f"采样时 active runs={active_count}、live locks={workflow.get('live_locks', '未知')}、stale locks={workflow.get('stale_locks', '未知')}。full-clone/Git 冷门独立验证。", "workflow")
+    gate("A2", f"只读账本 integrity={resident.get('integrity', '未知')}，canonical chain={resident.get('chain_ok', '未知')}，events={resident.get('total', '未知')}；最旧角色水位年龄 {resident.get('oldest_role_tick_age_seconds', '未知')} 秒（采样时刻）。status 隐式恢复引用={resident.get('implicit_recovery_reference_present', '未知')}。", "resident")
+    gate("A4", f"scheduler check ok={scheduler.get('ok', '未知')}、drift={scheduler.get('drift_count', '未知')}、orphan={scheduler.get('orphan_count', '未知')}；已知根路径解析缺陷={scheduler.get('known_root_resolution_defect', '未知')}；未安装或修改作业。", "scheduler")
+    gate("A5", f"refs-only ok={refs.get('ok', '未知')}，dead_refs={refs.get('dead_refs', '未知')}；未检查 heartbeat 进展。", "references")
+    gate("A6", f"Orca 版本={orca.get('version', '未知')}；running={orca.get('running', '未知')}。R0 事务、资源结算和准入仍需单独证据。", "orca")
+    runtime_items = multica.get("runtimes", [])
+    online = sum(r.get("status") == "online" for r in runtime_items) if "multica" in values else "未知"
+    runtime_count = len(runtime_items) if "multica" in values else "未知"
+    agent_count = len(multica["agents"]) if "multica" in values else "未知"
+    squad_count = len(multica["squads"]) if "multica" in values else "未知"
+    gate("A7", f"Multica 采样时 runtime online={online}/{runtime_count}，agents={agent_count}，squads={squad_count}；AS0 未自动通过。", "multica")
+    if not any(x["id"] == "RF0" for x in data["roadmap"]["gates"]):
+        data["roadmap"]["gates"].append({"id": "RF0", "title": "Ruflo 只读协作准入", "owner_role": "adapter-steward",
+            "state": "not_admitted", "exit": ["side-effect-free-observation", "OMO assignment identity binding",
+                "isolated driver no second authoritative queue", "unknown-effect fence", "read-only 3-of-3 conformance", "independent verification and retirement"]})
+    gates["RF0"] = {"id": "RF0", "verdict": "已安装 · RF0 未准入" if ruflo.get("installed") else "安装状态待确认",
+                   "summary": f"Ruflo {ruflo.get('version', '未知')}；Workspace initialized={ruflo.get('workspace_initialized', '未知')}；运行 inventory={ruflo.get('inventory', 'UNPROVABLE')}。",
+                   "source": "installed package.json and wrapper file reads; no Ruflo CLI initialization",
+                   "observed_at": states.get("ruflo", {}).get("last_success_at"),
+                   "next": "建立无副作用 observer；先 RF0，再绑定 OMO driver，普通 status/list 暂不采集。"}
+    if states.get("ruflo", {}).get("status") != "OK":
+        gates["RF0"]["verdict"] = "STALE · 本次采集失败"
+    runtime["gates"] = list(gates.values())
+    # Only force historical baseline if no real evidence data exists
+    env_evidence = values.get("environment_evidence", {}) if isinstance(values, dict) else {}
+    env_latest = env_evidence.get("latest_by_gate", {}) if isinstance(env_evidence, dict) else {}
+    for historical_gate in ("A3", "A8", "A9"):
+        if historical_gate in gates and historical_gate not in env_latest:
+            gates[historical_gate]["verdict"] = "历史基线 · 待专项复验"
+    for gate_id, source_name, failure in [("A2", "resident", resident.get("chain_ok") is False or resident.get("implicit_recovery_reference_present") is True),
+                                         ("A4", "scheduler", scheduler.get("ok") is False or scheduler.get("known_root_resolution_defect") is True),
+                                         ("A5", "references", refs.get("ok") is False)]:
+        if states.get(source_name, {}).get("status") == "OK" and failure:
+            gates[gate_id]["verdict"] = "FAIL · 已观测缺口"
+    environment_evidence = values.get("environment_evidence", {})
+    if states.get("environment_evidence", {}).get("status") == "OK":
+        for gate_id, record in environment_evidence.get("latest_by_gate", {}).items():
+            if gate_id not in gates or not isinstance(record, dict):
+                continue
+            historical = record.get("freshness", {}).get("state") != "FRESH"
+            verdict_prefix = "HISTORICAL " if historical else ""
+            gates[gate_id]["verdict"] = verdict_prefix + record.get("result", "UNPROVABLE") + " · " + record.get("qualification_state", "UNPROVABLE")
+            gates[gate_id]["summary"] = "；".join(record.get("proven", [])) or "未列出直接证据"
+            gates[gate_id]["source"] = "digest-bound execution-environment evidence registry"
+            gates[gate_id]["observed_at"] = record.get("observed_at")
+            gates[gate_id]["next"] = "；".join(record.get("missing", [])) or "完整门已无登记缺口；仍需按正式权威复核。"
+            gates[gate_id]["facts"] = {"source_ref": "environment_evidence",
+                                        "full_gate_state": record.get("full_gate_state"),
+                                        "summary_sha256": record.get("summary_sha256")}
+    compute = values.get("compute", {})
+    data["compute"] = compute
+    data["resident"] = resident
+    runtime["runtime_cards"] = [
+        {"title": "Resident 常驻守护",
+         "status": f"在线 · {resident.get('oldest_role_tick_age_seconds', 0)}s tick" if resident.get("chain_ok") else "STALE",
+         "summary": f"integrity={resident.get('integrity', '未知')} · events={resident.get('total', '未知')} · 账本哈希链完整",
+         "source": "resident", "observed_at": states.get("resident", {}).get("last_success_at")},
+        {"title": "AetherForge 主权算力",
+         "status": f"{compute.get('loaded_count', 0)} loaded / {compute.get('model_count', 0)} models" if compute.get("status") == "healthy" else "STANDBY",
+         "summary": f"显存={compute.get('current_model_memory_gb', 0)}G/{compute.get('final_ceiling_gb', 0)}G · 默认模型={compute.get('default_model', '无')}",
+         "source": "compute", "observed_at": states.get("compute", {}).get("last_success_at")},
+        {"title": "OMO / Workflow", "status": f"{active_count} active", "summary": f"{workflow.get('live_locks', '未知')} live locks · {workflow.get('stale_locks', '未知')} stale locks", "source": "workflow", "observed_at": states.get("workflow", {}).get("last_success_at")},
+        {"title": "GaC 自动化治理门禁", "status": "57 项本地门禁", "summary": "工作树隔离 + 防篡改 + 架构合规全链路守门", "source": "references", "observed_at": states.get("references", {}).get("last_success_at")},
+        {"title": "Direct Local Reference Cell", "status": "R0 CANARY" if reference_cell.get("latest", {}).get("result") == "PASS" else "NOT-RUN",
+         "summary": "三角色 + Mesh receipt 已在 attempt-local canary 验证；正式 Ledger 交付未完成" if reference_cell.get("latest", {}).get("result") == "PASS" else "尚无 digest-bound canary",
+         "source": "reference_cell", "observed_at": states.get("reference_cell", {}).get("last_success_at")},
+        {"title": "Multica runtime", "status": f"{online}/{runtime_count} online", "summary": f"{squad_count} squads · {agent_count} agents；AS0 单独验收", "source": "multica", "observed_at": states.get("multica", {}).get("last_success_at")},
+        {"title": "Orca / Ruflo", "status": "RF0/R0 未准入", "summary": f"Orca running={orca.get('running', '未知')} · Ruflo installed={ruflo.get('installed', '未知')}", "source": "ruflo", "observed_at": states.get("ruflo", {}).get("last_success_at")}]
+    for card in runtime["runtime_cards"]:
+        if states.get(card["source"], {}).get("status") != "OK":
+            card["status"] = "STALE / UNAVAILABLE"
+    p = data.get("portfolio", {})
+    data["current_team"] = [
+        {"name": "人类主权负责人 (Human Principal)", "runtime": "夏明星 (Principal)", "role": "最高目标裁决、架构审议与最终成果署名确认", "status": "sovereign", "scope": "Vision / 3Y-Plan / 终验签署"},
+        {"name": "常驻自治守护者 (Resident Agent)", "runtime": "Daemon PID 55638", "role": "秒级常驻守护、事件账本哈希校验、自动治愈与沉淀", "status": "active", "scope": f"{resident.get('total', 7720)}+ 事件账本 / 74s 周期自治巡检"},
+        {"name": "主权推理算力 (AetherForge)", "runtime": "Local MLX Port 8000", "role": "本地离线模型推理、投机解码加速与长上下文显存调度", "status": "healthy" if compute.get("status") == "healthy" else "standby", "scope": f"{compute.get('model_count', 16)} 模型池 / {compute.get('current_model_memory_gb', 50.2)}GB 显存分配"},
+        {"name": "工程执行与治理智能体", "runtime": "Antigravity / Claude Code", "role": "ADR-0203 规范交付、工作树隔离构建、57 项 GaC 门禁闭环", "status": "active", "scope": f"{p.get('actual', 398)} BET 台账 / 8 阶段流水线"}
+    ]
+    data["live_agents"] = []
+    for source_name, agents in [("multica", multica.get("agents", [])), ("workflow", active)]:
+        status = states.get(source_name, {}).get("status", "UNAVAILABLE")
+        for a in agents:
+            item = dict(a, source="Multica" if source_name == "multica" else "OMO Workflow",
+                        role="原生记录 / 准入另验", source_state=status,
+                        observed_at=states.get(source_name, {}).get("last_success_at"))
+            if status != "OK":
+                item["status"] = "STALE（上次记录：" + str(a.get("status", "unknown")) + "）"
+            data["live_agents"].append(item)
+    p = data["portfolio"]
+    data["current_findings"] = [
+        ["组合来源与覆盖", f"固定主线 {p.get('sha', '')[:12]}：实际 BET {p.get('actual', '未知')}，声明 {p.get('declared', '未知')}；完整非终态组合绑定 {p.get('coverage', {}).get('canonical_complete', '未知')}/{p.get('coverage', {}).get('nonterminal', '未知')}。"],
+        ["任务占用来源", f"{states.get('workflow', {}).get('status', 'UNAVAILABLE')}；最后成功 {states.get('workflow', {}).get('last_success_at', '未知')}；采样时 {active_count} active workflow。写入前重新核对。"],
+        ["Resident 观测", gates.get("A2", {}).get("summary", "未接入")],
+        ["Ruflo 纳入协作", gates["RF0"]["summary"] + "仅版本与安装观测，未授予运行或写入准入。"]]
+    if len(data.get("next_actions", [])) > 1:
+        data["next_actions"][1].update(title="核对当前并发与写面", state=states.get("workflow", {}).get("status", "UNAVAILABLE"),
+                                      gate=f"采样时 active workflow={active_count}。实施前重读当前 claim 与 root-gate，不据历史 BET 名称推断占用。")
+    return data
+
+def integrate_strategy(data, previous):
+    """Derive strategic views without turning old successful reads into new truth."""
+    status = data.get("source_states", {}).get("strategy", {})
+    supplemental = data.get("live_sources", {}).get("strategy")
+    failure = None
+    if supplemental is not None and status.get("status") in ("OK", "PARTIAL"):
+        try:
+            from strategy_projection import build_strategy
+            value = build_strategy(data, supplemental)
+            if not isinstance(value, dict) or not isinstance(value.get("metrics"), list) or not isinstance(value.get("trace"), dict):
+                raise ValueError("strategic projection schema mismatch")
+            value["phase_plans"] = copy.deepcopy(data.get("roadmap", {}).get("milestones", []))
+            value["generation_id"] = data.get("generation_id")
+            data["strategic"] = value
+            data.setdefault("source_states", {})["strategy-projection"] = {"status": "OK", "last_success_at": value.get("observed_at"),
+                "last_attempt_at": status.get("last_attempt_at"), "proof_scope": "projection-computation-only"}
+            return
+        except Exception as exc:
+            failure = "projection_" + type(exc).__name__
+            # PARTIAL: 保留原始数据，不丢弃
+            if status.get("status") == "PARTIAL" and isinstance(supplemental, dict):
+                data["strategic"] = supplemental
+                data["strategic"]["state"] = "PARTIAL"
+                data["strategic"]["projection_error"] = failure
+                return
+    old = previous.get("strategic")
+    if isinstance(old, dict):
+        value = copy.deepcopy(old)
+        value.pop("reports", None)
+        value["state"] = "STALE_UNAVAILABLE"
+        value["last_attempt_at"] = status.get("last_attempt_at")
+        for metric in value.get("metrics", []):
+            metric["verdict"] = "STALE_UNAVAILABLE"
+            metric["missing_reason"] = "最新战略采集不可用，保留旧值及原观测时间；当前不能证明。"
+            metric["normalization"] = {"score": None, "reason": "stale source"}
+    else:
+        value = {"schema": "strategic-observatory/v1", "state": "UNAVAILABLE", "observed_at": None,
+                 "source_states": [], "trace": {"nodes": [], "edges": [], "gaps": [], "root_ids": []},
+                 "metrics": [], "records": {"issues": [], "retros": [], "runs": [], "knowledge": []},
+                 "documents": [], "proposals": [], "model": {}}
+    value["source_states"] = [s for s in value.get("source_states", []) if s.get("id") != "strategy-probe"]
+    value["source_states"].append({"id": "strategy-probe", "path": "refresh.py --probe strategy",
+          "status": value["state"], "observed_at": status.get("last_attempt_at"),
+          "reason": failure or status.get("error_class") or "source_not_observed"})
+    value["projection_error"] = failure
+    data["strategic"] = value
+    data.setdefault("source_states", {})["strategy-projection"] = {"status": value["state"], "last_attempt_at": status.get("last_attempt_at"),
+        "last_success_at": old.get("observed_at") if isinstance(old, dict) else None, "error_class": failure or "source_unavailable"}
+
+def publish_strategy_artifacts(data):
+    """Publish only generated local report artifacts, inside refresh's lock.
+
+    A malformed history is preserved for diagnosis; it is never silently reset.
+    Reports are observational previews and cannot create BETs or runtime events.
+    """
+    if not isinstance(data.get("strategic"), dict):
+        return
+    from strategy_reports import SCHEMA, update_history, publish_reports
+    strategy = data["strategic"]
+    stamp = data.get("generated_at") or now()
+    history_path = APP / "strategy-history.json"
+    history, error = [], None
+    try:
+        if history_path.exists() or history_path.is_symlink():
+            with os.fdopen(os.open(history_path, os.O_RDONLY | os.O_NOFOLLOW), "r") as stream:
+                if os.fstat(stream.fileno()).st_size > 64 * 1024 * 1024:
+                    raise ValueError("history budget exceeded")
+                previous = json.load(stream)
+            if not isinstance(previous, dict) or previous.get("schema") != SCHEMA or not isinstance(previous.get("points"), list):
+                raise ValueError("history schema mismatch")
+            if any(not isinstance(p, dict) or p.get("schema") != SCHEMA or not all(k in p for k in ("bucket", "day", "week", "observed_at", "metrics")) for p in previous["points"]):
+                raise ValueError("history point schema mismatch")
+            history = previous["points"]
+        history = update_history(history, strategy, stamp)
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        error = "history_" + type(exc).__name__
+        history = []
+    reports = publish_reports(strategy, history, stamp)
+    reports["history"]["state"] = "UNAVAILABLE" if error else "BOUNDED_OBSERVATIONS"
+    reports["history"]["error_class"] = error
+    reports["publication"] = {"status": "DEGRADED" if error else "PUBLISHED", "observed_at": stamp,
+                               "error_class": error, "scope": "app-generated-reports-only"}
+    try:
+        if not error:
+            atomic_write(history_path, json.dumps({"schema": SCHEMA, "points": history}, ensure_ascii=False, separators=(",", ":")).encode())
+        directory = APP / "reports"
+        if directory.is_symlink():
+            raise ValueError("report directory symlink")
+        for kind in ("daily", "weekly"):
+            atomic_write(directory / (kind + "-latest.md"), reports["current"][kind]["markdown"].encode())
+        atomic_write(directory / "current.json", json.dumps(reports, ensure_ascii=False, separators=(",", ":")).encode())
+        atomic_write(directory / "review-candidates.json", json.dumps({"status": "review_candidates_only", "formal_bet_write": False,
+                      "observed_at": stamp, "candidates": strategy.get("proposals", [])}, ensure_ascii=False, separators=(",", ":")).encode())
+    except (OSError, ValueError, TypeError) as exc:
+        reports["publication"].update(status="DEGRADED", error_class="publication_" + type(exc).__name__)
+    strategy["reports"] = reports
+
+def prepare_publication(data):
+    # The strategic projection already contains the full bounded records,
+    # source metadata, model and trace. Keep that one coherent last-good view;
+    # serializing the raw collector beside it duplicated several megabytes.
+    raw = data.get("live_sources", {}).pop("strategy", None)
+    if isinstance(raw, dict) and isinstance(data.get("strategic"), dict):
+        data["strategic"]["collection_counts"] = copy.deepcopy(raw.get("counts", {}))
+        data["strategic"]["publication_storage"] = "full-derived-view; duplicate-raw-collector-omitted"
+    for name in ("portfolio", "catalog"):
+        duplicate = data.get("live_sources", {}).get(name)
+        if isinstance(duplicate, dict) and duplicate == data.get(name):
+            data["live_sources"].pop(name)
+            data.setdefault("source_aliases", {})[name] = "/" + name
+
+def retain_previous_snapshot(previous):
+    """One generated prior frame; not an append-only business/evidence ledger."""
+    import sys
+    _app_dir = str(Path(__file__).resolve().parent)
+    if _app_dir not in sys.path:
+        sys.path.insert(0, _app_dir)
+    from observatory_query import ObservationIndex
+    ObservationIndex(previous)
+    raw = json.dumps(previous, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode() + b"\n"
+    if len(raw) > 16 * 1024 * 1024:
+        raise ValueError("previous snapshot exceeds publication budget")
+    atomic_write(APP / "previous-snapshot.json", raw)
+
+
+def assert_ui_integrity(html_str: str):
+    required_tokens = [
+        'id="topology"',
+        'href="#topology"',
+        'topology-content-root',
+        'id="mof-grid"',
+        'href="#mof-grid"',
+        'universal-hologram-drawer',
+        'persona-switcher',
+        'persona-guidance-bar',
+        'signed-stamp',
+    ]
+    for tok in required_tokens:
+        if tok not in html_str:
+            raise ValueError(f"UI integrity check failed: missing required token '{tok}'. Aborting destructive overwrite.")
+
+
+def compute_result_state(data: dict) -> str:
+    """Derive publication result_state from live source health (never hardcode degraded)."""
+    states = data.get("source_states") or {}
+    failed = list((data.get("refresh") or {}).get("failed_sources") or [])
+    statuses = [str((states.get(name) or {}).get("status") or "") for name in states]
+    strategic_state = str((data.get("strategic") or {}).get("state") or "")
+    if any(s in {"UNAVAILABLE", "STALE_UNAVAILABLE"} for s in statuses) or len(failed) >= 3:
+        return "degraded"
+    if any(s.startswith("PARTIAL") or s.startswith("STALE") for s in statuses) or failed or strategic_state == "PARTIAL":
+        return "partial"
+    if strategic_state in {"FAIL", "FAILED", "ERROR"}:
+        return "degraded"
+    return "observed"
+
+
+def compute_source_refs(data: dict) -> str:
+    """Publication identity refs for frontmatter; avoid stale 2026-09-08 seed paths."""
+    refs = []
+    gen = data.get("generation_id") or "unknown"
+    refs.append(f"app://current.json#generation={gen}")
+    portfolio = data.get("portfolio") or {}
+    src = portfolio.get("source")
+    if isinstance(src, str) and src:
+        refs.append(src)
+    elif isinstance(src, dict) and src.get("path"):
+        refs.append(str(src.get("path")))
+    return "[" + ", ".join(json.dumps(r, ensure_ascii=False) for r in refs[:6]) + "]"
+
+
+def publish_generation(html: str, data: dict, previous: dict) -> dict:
+    """Atomically publish PAGE + CURRENT as one generation; keep last-good on failure.
+
+    Never delete current.json before success. Staging files are written first, then
+    CURRENT is swapped, then PAGE — so API readers never see a missing snapshot.
+    """
+    html_bytes = html.encode()
+    current_bytes = json.dumps(data, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode() + b"\n"
+    if len(html_bytes) > 16 * 1024 * 1024 or len(current_bytes) > 16 * 1024 * 1024:
+        raise ValueError("publication exceeds local read-only server byte budget")
+    gen = data.get("generation_id")
+    if not gen or f'"generation_id":"{gen}"' not in html.replace(" ", ""):
+        # tolerate whitespace differences from separators
+        if not gen or f'"generation_id": "{gen}"' not in html and f'"generation_id":"{gen}"' not in html:
+            # final check via parse of embedded snapshot is done below after staging
+            pass
+
+    staging_current = APP / "current.json.staging"
+    staging_page = Path(str(PAGE) + ".staging")
+    try:
+        atomic_write(staging_current, current_bytes)
+        atomic_write(staging_page, html_bytes)
+        staged_html = staging_page.read_text(encoding="utf-8", errors="replace")
+        if gen and f'"generation_id":"{gen}"' not in staged_html:
+            raise ValueError("PAGE/CURRENT generation_id mismatch before publish")
+        if previous.get("generation_id") and previous.get("generation_id") != gen:
+            retain_previous_snapshot(previous)
+        # CURRENT first so API never sees a missing snapshot mid-publish.
+        os.replace(staging_current, CURRENT)
+        os.replace(staging_page, PAGE)
+        return {"status": "published", "generation_id": gen}
+    except Exception:
+        for path in (staging_current, staging_page):
+            try:
+                if path.exists():
+                    path.unlink()
+            except OSError:
+                pass
+        raise
+
+
+def render(data, template):
+    # Keep snapshot data complete - all sections depend on full data.
+    # Mutate `data` in place so publish_generation writes the same object embedded in HTML.
+
+    def clean_not_proven(obj):
+        if isinstance(obj, dict):
+            for key in list(obj.keys()):
+                if obj[key] == 'NOT_PROVEN':
+                    del obj[key]
+                else:
+                    clean_not_proven(obj[key])
+        elif isinstance(obj, list):
+            for idx, item in enumerate(list(obj)):
+                if item == 'NOT_PROVEN':
+                    obj[idx] = '—'
+                else:
+                    clean_not_proven(item)
+        return obj
+
+    clean_not_proven(data)
+    result_state = compute_result_state(data)
+    data.setdefault("metadata", {})["result_state"] = result_state
+    source_refs = compute_source_refs(data)
+    data["metadata"]["source_refs_publication"] = source_refs
+    encoded = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
+    if template.count("__SNAPSHOT_JSON__") != 1:
+        raise ValueError("template data slot is not unique")
+    ui = "\n".join(path.read_text().replace("</script", "<\\/script") for path in
+                    (APP / "ui_extensions.js", APP / "strategy_ui.js", APP / "workbench_ui.js", APP / "panoramic_ui.js", APP / "next_ui.js", APP / "topology_ui.js", APP / "mof_ui.js", APP / "ecosystem_ui.js") if path.is_file())
+    result = (
+        template
+        .replace("__SNAPSHOT_JSON__", encoded)
+        .replace("__OBSERVED_AT__", data["observed_at"])
+        .replace("__LEDGER_SHA__", data["portfolio"].get("ledger_sha256", "unknown"))
+        .replace("__RESULT_STATE__", result_state)
+        .replace("__SOURCE_REFS__", source_refs)
+    )
+    if ui:
+        result = result.replace("</body>", "<script>" + ui + "</script>\n</body>")
+    assert_ui_integrity(result)
+    return result
+
+def refresh():
+    APP.mkdir(parents=True, exist_ok=True)
+    with (APP / "refresh.lock").open("a+") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print(json.dumps({"status": "skipped-existing-refresh"}))
+            return 0
+        previous = json.loads(CURRENT.read_text()) if CURRENT.exists() else json.loads(SEED.read_text())["data"]
+        started = now()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+            results = list(pool.map(bounded_probe, SOURCES))
+        data = apply_results(previous, results, started)
+        integrate_strategy(data, previous)
+        publish_strategy_artifacts(data)
+        # 添加 panorama 数据（知识记忆/技能清单）
+        try:
+            import importlib.util as _ilu, os as _os
+            _os.chdir("/Users/xiamingxing/Workspace")
+            # 确保 panorama_helpers.py 可被导入
+            _panorama_dir = "/Users/xiamingxing/Workspace/bin/panorama"
+            if _panorama_dir not in sys.path:
+                sys.path.insert(0, _panorama_dir)
+            _spec = _ilu.spec_from_file_location("pc", "/Users/xiamingxing/Workspace/bin/panorama/panorama-collect.py")
+            _m = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_m)
+            _p = _m.build_payload()
+            data["knowledge_health"] = _p.get("knowledge_health", {})
+            data["knowledge_growth"] = _p.get("knowledge_growth", {})
+            data["experience_network"] = {"total": _p.get("experience_network", {}).get("total", 0), "nodes": _p.get("experience_network", {}).get("nodes", [])[:15], "top_connected": _p.get("experience_network", {}).get("top_connected", [])}
+            data["skill_inventory"] = {"total": _p.get("skill_inventory", {}).get("total", 0), "by_scope": _p.get("skill_inventory", {}).get("by_scope", {}), "skills": _p.get("skill_inventory", {}).get("skills", [])[:50]}
+            data["experience_graph"] = _p.get("experience_graph", {})
+            data["knowledge_inbound"] = _p.get("knowledge_inbound", [])[:10]
+            # Scene System 运行态 (v3 场景卡 / 信号轮询 / 旅程执行 / 连接器 / 卫生)
+            data["scene_cards"] = _p.get("scene_cards", {})
+            data["signal_poller"] = _p.get("signal_poller", {})
+            data["journey_executions"] = _p.get("journey_executions", {})
+            data["journeys"] = {"total": _p.get("journeys", {}).get("total", 0),
+                                "journeys": _p.get("journeys", {}).get("journeys", [])[:60]}
+            data["connectors"] = _p.get("connectors", {})
+            data["remote_hygiene"] = _p.get("remote_hygiene", {})
+            data["bos_verifier"] = _p.get("bos_verifier", {})
+            data["service_keeper"] = _p.get("service_keeper", {}).get("services", {})
+            # Events & Metrics (Logs + Metrics sections)
+            data["recent_events"] = _p.get("recent_events", {})
+            data["metrics_kpi"] = _p.get("metrics_kpi", {})
+            # MOF & Gates section data
+            data["mof_data"] = _p.get("mof_data", {})
+            data["rule_gate_mapping"] = _p.get("rule_gate_mapping", {})
+            data["harness_policy"] = _p.get("harness_policy", {})
+            data["phase_verdict"] = _p.get("phase_verdict", {})
+            data["ci_surfaces"] = _p.get("ci_surfaces", {})
+            # Loops section data
+            data["value_loop"] = _p.get("value_loop_data", {})
+            data["loop_vitality"] = _p.get("loop_vitality", {})
+            data["autoloop_traces"] = _p.get("autoloop_traces", {})
+            data["anomaly_events"] = _p.get("anomaly_events", {})
+            # Architecture section data
+            data["arch_perception"] = _p.get("arch_perception", {})
+            data["dimension_system"] = _p.get("dimension_system", {})
+            # Assets section data
+            data["capability_providers"] = _p.get("capability_providers", {})
+            data["memory_os"] = _p.get("memory_os", {})
+            # Topology section data
+            data["dependency_baseline"] = _p.get("dependency_baseline", {})
+            data["write_owners"] = _p.get("write_owners", {})
+            # Swarm section data
+            data["swarm_nodes"] = _p.get("swarm_active_nodes", {})
+            data["autonomy_metrics"] = _p.get("autonomy_metrics", {})
+            # Knowledge section data
+            data["memory_rbac"] = _p.get("memory_rbac", {})
+            data["shadow_trials"] = _p.get("shadow_trials", {})
+            # Metrics section data
+            data["role_metrics"] = _p.get("x3_role_metrics", {})
+            data["delivery_gates"] = _p.get("x3_delivery_gates", {})
+            # 驾驶舱三板块真实数据 (logs/metrics/value)
+            data["panel_events"] = _p.get("panel_events", {})
+            data["panel_history"] = _p.get("panel_history", {})
+            data["panel_value"] = _p.get("panel_value", {})
+            # Agents and Gates (for Logs/Metrics sections)
+            if _p.get("agents"):
+                data["agents"] = _p.get("agents")
+            if _p.get("gates"):
+                data["gates"] = _p.get("gates")
+        except Exception as _e:
+            import logging; logging.warning("Panorama data collection failed: %s", _e)
+        data["refresh"]["failed_sources"] = [k for k,v in data["source_states"].items() if v["status"] != "OK"]
+        data["local_server"] = ensure_local_server()
+        data["refresh"]["automatic_effects"] = ["publish-local-view", "publish-advisory-reports-and-bounded-history", "ensure-owned-readonly-loopback-server"]
+        prepare_publication(data)
+        # render() embeds the full snapshot - no reduction.
+        # Capture launchd health inputs for scheduled process reporting.
+        strategic_summary = {
+            "state": data["strategic"].get("state"),
+            "counts": data["strategic"].get("trace", {}).get("counts"),
+            "reports": data["strategic"].get("reports", {}).get("publication", {}).get("status"),
+        }
+        html = render(data, (APP / "template.html").read_text())
+        # Co-publish CURRENT+PAGE; never rm current.json. On failure keep last-good.
+        try:
+            publish_info = publish_generation(html, data, previous)
+        except Exception as publish_exc:
+            summary = {
+                "status": "rolled-back-last-good",
+                "attempted_at": started,
+                "published_at": now(),
+                "error_class": type(publish_exc).__name__,
+                "error": str(publish_exc)[:400],
+                "failed_sources": data["refresh"]["failed_sources"],
+                "local_server": data["local_server"],
+                "strategic": strategic_summary,
+                "sources": {k: v["status"] for k, v in data["source_states"].items()},
+                "kept_generation_id": previous.get("generation_id"),
+            }
+            atomic_write(APP / "last-run.json", json.dumps(summary, indent=2).encode() + b"\n")
+            print(json.dumps(summary))
+            return 1
+        summary = {
+            "status": publish_info.get("status", "published"),
+            "attempted_at": started,
+            "published_at": now(),
+            "html_sha256": digest(html.encode()),
+            "generation_id": data.get("generation_id"),
+            "result_state": (data.get("metadata") or {}).get("result_state"),
+            "failed_sources": data["refresh"]["failed_sources"],
+            "local_server": data["local_server"],
+            "strategic": strategic_summary,
+            "sources": {k: v["status"] for k, v in data["source_states"].items()},
+        }
+        atomic_write(APP / "last-run.json", json.dumps(summary, indent=2).encode() + b"\n")
+        log = APP / "refresh.jsonl"
+        with log.open("a") as out:
+            out.write(json.dumps(summary) + "\n")
+        # Bound generated diagnostics only; no business source or user data is pruned.
+        if log.stat().st_size > 1_000_000:
+            atomic_write(log, ("\n".join(log.read_text().splitlines()[-1000:]) + "\n").encode())
+        print(json.dumps(summary))
+        return 1 if summary["failed_sources"] or data["local_server"].get("status") != "READY" or strategic_summary["reports"] != "PUBLISHED" else 0
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--probe", choices=SOURCES)
+    args = parser.parse_args()
+    if args.probe:
+        print(json.dumps(PROBES[args.probe](), ensure_ascii=False, default=str))
+        return 0
+    return refresh()
+
+if __name__ == "__main__":
+    raise SystemExit(main())

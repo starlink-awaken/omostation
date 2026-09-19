@@ -291,7 +291,7 @@ jobs:
 
   - name: zhixing-panel-sync-hourly-active
     schedule: "23 * * * *"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/zhixing-panel-sync.py ensure --quiet >> runtime/cron/zhixing-panel-sync.log 2>&1'
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/zhixing-panel-sync.py ensure --quiet && python3 bin/gac/zhixing-host-sync.py check >> runtime/cron/zhixing-panel-sync.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active

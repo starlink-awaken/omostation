@@ -499,6 +499,15 @@ zhixing-panel:  ## 织星驾驶舱场景面板: 幂等注入/漂移自愈
 zhixing-panel-check:  ## 织星驾驶舱场景面板: 漂移检测 (缺失退出非零)
 	@python3 bin/gac/zhixing-panel-sync.py check
 
+zhixing-host:  ## 织星宿主文件 (template.html/refresh.py): 漂移检测
+	@python3 bin/gac/zhixing-host-sync.py check
+
+zhixing-host-status:  ## 织星宿主文件: 仓库 vs 部署 漂移摘要
+	@python3 bin/gac/zhixing-host-sync.py status
+
+zhixing-host-capture:  ## 织星宿主文件: 部署 → 仓库 (版本化线上变更)
+	@python3 bin/gac/zhixing-host-sync.py capture
+
 panels-sync:  ## 驾驶舱三板块: 幂等注入/自愈 (logs/metrics/value + 场景面板)
 	@python3 bin/gac/zhixing-panel-sync.py ensure
 
