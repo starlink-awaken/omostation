@@ -229,6 +229,37 @@ def test_agent_visibility_claims_readiness_fails_closed_without_preflight() -> N
     assert readiness["activation_allowed"] is False
 
 
+def test_agent_visibility_isolated_technical_readiness_overrides_canonical_blockers() -> None:
+    module = _module()
+    payload = _payload()
+    payload["claims_task16"].update({
+        "isolated_technical_ready": True,
+        "remaining_after_isolated_recovery": [
+            "operation_specific_host_authorization_unproven"
+        ],
+        "isolated_preflight": {
+            "available": True,
+            "readiness": "AWAITING_AUTHORIZATION",
+            "hard_blockers": [],
+            "root_head_oid": "exact-main",
+        },
+    })
+    # The canonical checkout remains visibly dirty; isolated evidence is what
+    # decides technical readiness.
+    payload["claims_task16"]["preflight"]["advisories"] = [
+        "nonclosure_dirty_tracked_integration_root"
+    ]
+
+    readiness = module.collect_agent_visibility(payload)["authority"][
+        "claims_activation_readiness"
+    ]
+
+    assert readiness["isolated_technical_ready"] is True
+    assert readiness["effective_readiness"] == "AWAITING_AUTHORIZATION"
+    assert readiness["activation_allowed"] is False
+    assert readiness["operation_specific_authorization"] == "UNPROVEN"
+
+
 def test_agent_visibility_value_readiness_fails_closed_without_panel() -> None:
     module = _module()
     payload = _payload()

@@ -3047,7 +3047,7 @@ def collect_agent_visibility(payload: dict) -> dict:
     ]
     effective_readiness = (
         "AWAITING_AUTHORIZATION"
-        if isolated_technical_ready and not canonical_technical_blockers
+        if isolated_technical_ready
         else str(preflight.get("readiness") or claims_task16.get("verdict") or "UNKNOWN").upper()
     )
     claims_activation_readiness = {
