@@ -28,7 +28,6 @@ description: |-
   让 `.omo/_attic/` 回归普通空目录。附: cockpit help_map/cli.py 不一致
   (f456ce9 已修) 亦曾致 gac-gate 红，同轮确认已闭环。
 created: 2026-08-19
-status: closed
 closed_at: '2026-09-18T07:52:11+08:00'
 closed_by: governance-team
 close_reason: 'Verified already repaired on current main; reconciled stale contradictory lifecycle metadata.'

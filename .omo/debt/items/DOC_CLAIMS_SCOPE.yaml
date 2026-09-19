@@ -44,7 +44,6 @@ registered_at: '2026-07-28T00:00:00Z'
 first_seen_at: '2026-07-28T00:00:00Z'
 last_seen_at: '2026-07-28T00:00:00Z'
 occurrence_count: 2
-status: open
 resolution_evidence:
 - '2026-07-28: 6 project INTERFACE tests 行补 as_of 指针 (agora:1112 cockpit:498 ecos:859
   kairon:1810+ omo:400+ runtime:175)'
