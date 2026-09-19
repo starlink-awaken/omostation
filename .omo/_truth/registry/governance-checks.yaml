@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 684 # 2026-09-19 683→684: 任务树一致性检查 check-task-tree-consistency.py
+    script_baseline: 685 # 2026-09-19 684→685: value-operator real-use readiness doctor
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

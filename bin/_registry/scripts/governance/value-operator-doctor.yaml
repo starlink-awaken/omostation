@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/ssot/value-operator-doctor.py
+name: Value Operator Doctor
+category: governance
+owner: governance-team
+description: "Read-only preflight for authority-bound real-use value recording; validates baseline, fresh principal authority, decision evidence, and value-evidence validity"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/ssot/value-recorder.py
+triggers: []
+related:
+  - bin/ssot/value-recorder.py
+maturity: draft
+last_reviewed: "2026-09-19"
