@@ -63,6 +63,14 @@ last-reviewed: 2026-09-17
    捕获的是**注入后稳定态**（panels/补丁幂等，故不产生伪漂移）。cron 每小时
    随 `omostation-zhixing-panel` 一并巡检。
 
+   > **承载方式（2026-09-19）**：crontab **写入在系统层已坏**（连原样重写都返回
+   > `Interrupted system call`；`/var/at/tabs` 为 `root:wheel drwx------`）。
+   > 本机 dashboard 周期任务本就跑 launchd，故改用
+   > `bin/ops/launchd/com.omostation.zhixing-host-drift.plist`（每小时 :23，
+   > 与 `workspace-wip-guard.py protect` 合并为一个 job）。日志
+   > `runtime/cron/zhixing-host-drift.log`。crontab 里的对应条目在写入恢复前
+   > 不会生效。
+
    > `refresh.py` 在仓库中存为 **`refresh.py.asset`**：`script-registry` 与
    > `bin-quota` 两个门禁把 `bin/**/*.py` 一律当作**脚本**（排除规则只认
    > `bin/_*` 目录），而这是部署文件的版本化副本 —— 是资产不是脚本。用 `.asset`

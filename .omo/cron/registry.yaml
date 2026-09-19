@@ -289,6 +289,16 @@ jobs:
     sfop_slot: S
     reconciliation_note: 场景注册同步 (每日 06:15)，已在 crontab -l 运行，补齐登记。
 
+  - name: zhixing-host-drift-hourly-active
+    schedule: "23 * * * *"
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py protect && python3 bin/gac/zhixing-host-sync.py check'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: "织星宿主漂移 + 未推送提交钉扎 每小时巡检 (2026-09-19)。**crontab 写入在系统层已坏** (连原样重写都返回 Interrupted system call; /var/at/tabs 为 root:wheel drwx------), 故改用 launchd 承载 —— plist 源 bin/ops/launchd/com.omostation.zhixing-host-drift.plist, 日志 runtime/cron/zhixing-host-drift.log。"
+
   - name: zhixing-panel-sync-hourly-active
     schedule: "23 * * * *"
     command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/zhixing-panel-sync.py ensure --quiet >> runtime/cron/zhixing-panel-sync.log 2>&1'
