@@ -4,15 +4,13 @@ health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
 health_score_evidence_generated_at: '2026-09-19T13:03:56.361383+00:00'
 completed_tasks: 301
-planned_tasks: 3
+planned_tasks: 2
 active_tasks: 1
 blocked_tasks: 1
-total_tasks: 306
+total_tasks: 305
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
 next_planned_tasks:
-- BET-Y1Q4-T11-env-resolver-unify (env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N]
-  硬)
 - needs-human-batch2-physical-recovery-checklist (机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1
   物理 KPI 解锁）)
 - 'needs-human-p80-physical-hosts (P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat)'
