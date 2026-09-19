@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.zhixing-host-drift.plist — 织星宿主漂移 + 提交钉扎 每小时巡检
+
+  用途: 把两条**无法写入 crontab** 的巡检改为 launchd 承载 (2026-09-19):
+    crontab 写入在系统层已坏 (连"原样重写"都返回 `Interrupted system call`,
+    /var/at/tabs 为 root:wheel drwx------), 而本机 dashboard 周期任务本就跑
+    launchd (`com.omostation.zhixing-dashboard-refresh`), 故沿用该机制。
+
+  执行 (每小时 :23):
+    1. workspace-wip-guard.py protect  — 把未合入 origin/main 的分支尖端钉到
+       refs/wip/ (提交被并发会话切走后仍可恢复; 2026-09-18 实证 e4787d290)
+    2. zhixing-host-sync.py check      — 织星宿主文件 (template.html/refresh.py)
+       与仓库副本的漂移检测 (2026-09-17 实证: 面板被覆盖后"所有备份均无该代码")
+
+  安装:
+    cp bin/ops/launchd/com.omostation.zhixing-host-drift.plist \
+       ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) \
+       ~/Library/LaunchAgents/com.omostation.zhixing-host-drift.plist
+  卸载:
+    launchctl bootout gui/$(id -u)/com.omostation.zhixing-host-drift
+  手动触发验证:
+    launchctl kickstart -p gui/$(id -u)/com.omostation.zhixing-host-drift
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.zhixing-host-drift</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>cd /Users/xiamingxing/Workspace &amp;&amp; python3 bin/gac/workspace-wip-guard.py protect &amp;&amp; python3 bin/gac/zhixing-host-sync.py check</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Minute</key>
+        <integer>23</integer>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/zhixing-host-drift.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/zhixing-host-drift.log</string>
+</dict>
+</plist>
