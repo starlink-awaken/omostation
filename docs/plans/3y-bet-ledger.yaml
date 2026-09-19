@@ -31032,18 +31032,34 @@ bets:
     spec_ref: repo://docs/superpowers/specs/2026-09-19-t10-169-dependabot-root-scope-design.md
     spec_version: 1.0.0
   appetite: 2 hours
-  circuit_breaker: Dependabot 配置变更后若仍指向 projects/**，停止追加条目并先 复核 GitHub 平台侧 dynamic workflow
-    inputs。
+  circuit_breaker: Dependabot 配置变更后若仍指向 projects/**，停止追加条目并先 复核 GitHub 平台侧 dynamic
+    workflow inputs。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-169.md
+          merged_reachable_commit:
+            ref: git://origin/main@0a98a13afb1bfab2531d26fe3f8a2b3457d6096d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-169.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-169.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-169.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-169.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-169.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-169.md
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -31065,7 +31081,7 @@ bets:
   retro: required
   retro_path: .omo/_knowledge/retros/BET-Y1Q4-T10-169.md
   risk_level: L1
-  status: candidate
+  status: done
   title: Dependabot root checkout scope repair
   track: T10-MATURITY
   underlying_workflow: project-code-change
@@ -31086,6 +31102,9 @@ bets:
   - docs/superpowers/specs/README.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-169.md
+  done_at: '2026-09-19'
+  pr_number: 4025
+  merge_sha: 0a98a13af
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
