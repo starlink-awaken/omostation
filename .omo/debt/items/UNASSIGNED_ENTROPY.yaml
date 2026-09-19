@@ -7,8 +7,36 @@ scope: "workspace"
 severity: "high"
 weight: 0.15
 entropy_class: "high"
-lifecycle_state: "identified"
-resolution_evidence: "P43-ARCH-ANALYSIS-002: 任务所有权已由 bet-ledger + task schema 强制 (owner/phase 必填字段校验)"
+lifecycle_state: "resolved"
+closed_at: "2026-09-19T23:52:24+00:00"
+close_reason: >-
+  2026-09-19 以实测复核并闭环 (替换原悬空引用 P43-ARCH-ANALYSIS-002):
+  现场测量推翻原前提, 且原前提的『强制』本就不存在:
+  ① 非终态 omo-schema 任务 (active/planned/blocked) **100% 有 owner** —— 原声称的熵
+     在 live 任务上不成立;
+  ② 缺 owner 的全部是**终态历史记录** (closed/done, 所有权不再可行动), 或
+     remediation/ (另一套 schema, 用 assigned_to, 本不适用 owner/phase);
+  ③ phase 并非 omo 任务 schema 的字段 (实测 active 0/1、closed 0/15、done 0/11 使用;
+     仅 archived 与 remediation 使用) —— 故『phase 必填』的要求不成立, 不应虚设;
+  ④ 原文声称的『bet-ledger + task schema 强制』确不存在 (唯一相关实现
+     bin/_archive/bet-to-task.py 已归档)。
+  处置: 把『声称存在的强制』真正落地 —— 新增 bin/gac/check-task-ownership.py
+  (非终态任务必须有 owner, 范围按实测收敛, 不虚设 phase 要求) + Makefile
+  task-ownership-check。该检查实测通过 (扫描全部非终态任务, 无缺主)。
+resolution_evidence: >-
+  2026-09-19 以实测复核并闭环 (替换原悬空引用 P43-ARCH-ANALYSIS-002):
+  现场测量推翻原前提, 且原前提的『强制』本就不存在:
+  ① 非终态 omo-schema 任务 (active/planned/blocked) **100% 有 owner** —— 原声称的熵
+     在 live 任务上不成立;
+  ② 缺 owner 的全部是**终态历史记录** (closed/done, 所有权不再可行动), 或
+     remediation/ (另一套 schema, 用 assigned_to, 本不适用 owner/phase);
+  ③ phase 并非 omo 任务 schema 的字段 (实测 active 0/1、closed 0/15、done 0/11 使用;
+     仅 archived 与 remediation 使用) —— 故『phase 必填』的要求不成立, 不应虚设;
+  ④ 原文声称的『bet-ledger + task schema 强制』确不存在 (唯一相关实现
+     bin/_archive/bet-to-task.py 已归档)。
+  处置: 把『声称存在的强制』真正落地 —— 新增 bin/gac/check-task-ownership.py
+  (非终态任务必须有 owner, 范围按实测收敛, 不虚设 phase 要求) + Makefile
+  task-ownership-check。该检查实测通过 (扫描全部非终态任务, 无缺主)。
 owner: "governance-team"
 affected_roots: []
 evidence_refs: []
@@ -23,4 +51,11 @@ history:
   action: reopen
   note: >-
     2026-09-19 复核: 证据引用 P43-ARCH-ANALYSIS-002, 同为悬空引用 (全仓检索该标识只出现在债务条目自身, 无真实文档)。且声称的 'task schema 强制 owner/phase 必填' 在活跃代码中找不到 —— 唯一相关实现 bin/_archive/bet-to-task.py 已归档。结论: 闭环不成立, 重开为 identified。
+  actor: governance-agent
+- at: '2026-09-19T23:52:24+00:00'
+  action: resolve
+  note: >-
+    2026-09-19 闭环: 实测证明原前提在 live 任务上不成立 (非终态任务 100% 有 owner),
+    且原文声称的强制从不存在。改为**真正落地一个强制**: check-task-ownership.py
+    (非终态必须有 owner)。phase 不设要求 —— 实测它不是 omo 任务 schema 的字段。
   actor: governance-agent
