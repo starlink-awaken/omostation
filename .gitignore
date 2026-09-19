@@ -294,6 +294,8 @@ artifacts-*.html
 # accidental root ecos scaffold (SSOT lives in projects/ecos)
 /ecos/
 
+outline-apps/
+
 # ---------------------------------------------------------------------------
 # 11. PASW (Per-Agent Submodule Worktree) 隔离存储
 #    高冲突子模块的独立 worktree 存放目录. 不属于 root 仓库, 禁止 commit.
