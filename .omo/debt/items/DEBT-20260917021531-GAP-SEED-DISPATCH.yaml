@@ -79,6 +79,11 @@ history:
   note: >-
     2026-09-19 清理 + 更正: ① autoloop-controller._load_gap_items 与 governance-scanner.scan_debt 改为**显式暴露源缺失** (前者 stderr 告警、后者新增 debt.gap_source_present 指标) —— 行为不变, 但归零原因从不可见变为可见; ② 更正早前误记: cockpit 并非受影响消费者 (它以 required=False 优雅降级), query_engine 的 gap_* 属另一概念; ③ 确认真消费者为 verify.py(已收敛)/autoloop/governance-scanner/omo_agent_host.py(子模块)/debt.yaml(声明 27 条幽灵 seed)。
   actor: governance-agent
+- at: '2026-09-19T12:40:11+00:00'
+  action: resolve_partial
+  note: >-
+    2026-09-19 部分闭环 (退役而非补建): 从 .omo/_truth/registry/debt.yaml 移除 gap_items_dir / gap_registry / gap_seed_items(27 条全部物理不存在的声明)。移前逐一确认消费者: gap_seed_items 与 gap_items_dir 全仓无消费者; gap_registry 仅被 cockpit/observatory/strategy_sources.py:491 以 required=False 读取 (优雅降级) —— 故移除零影响, 无需跨仓协同。**未完成部分**: 8 个 *_ref 字段 (dashboard/review_pack/review_queue/action_packet/owner_routing/dispatch/campaign/reporting) 指向的 .omo/debt/*/current.yaml 同样全部不存在, 但 7/8 仅被已归档脚本引用、且 projects/omo 的 omo_debt_registry.py 以 **必填** dataclass 字段读取 它们 —— 摘除需先让 omo 容忍缺省 (子模块协同), 故本轮不动, 本项保持 identified。
+  actor: governance-agent
 x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
 x2_freshness: ''
 x3_tier: ''
