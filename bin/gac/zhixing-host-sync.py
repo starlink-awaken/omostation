@@ -56,6 +56,7 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("refresh.py", "refresh.py.asset"),
     ("live_server.py", "live_server.py.asset"),
     ("observatory_query.py", "observatory_query.py.asset"),
+    ("panorama-collect-main.py", "panorama-collect-main.py.asset"),
 )
 
 

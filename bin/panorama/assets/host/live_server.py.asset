@@ -106,6 +106,52 @@ def safe_identifier(value):
     return value
 
 
+TERMINAL_PUBLICATION_STATES = frozenset({
+    "MERGED", "CLOSED", "WITHDRAWN", "REJECTED", "SUPERSEDED",
+})
+ACTIONABLE_PUBLICATION_VERIFICATION = "READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION"
+
+
+def pending_publication_projection(pending):
+    """Project only actionable exact-commit publications without hiding history."""
+    source = pending if isinstance(pending, dict) else {}
+    items = source.get("items") if isinstance(source.get("items"), list) else []
+    actionable = []
+    terminal_count = 0
+    invalid_count = 0
+    for item in items:
+        if not isinstance(item, dict):
+            invalid_count += 1
+            continue
+        state = str(item.get("state") or "").upper()
+        verification = str(item.get("verification") or "").upper()
+        if state in TERMINAL_PUBLICATION_STATES:
+            terminal_count += 1
+        elif (
+            state not in ("", "UNKNOWN")
+            and verification == ACTIONABLE_PUBLICATION_VERIFICATION
+        ):
+            actionable.append(item)
+        else:
+            invalid_count += 1
+    projected = {
+        "schema": "pending-publication-projection/v2",
+        "available": bool(source),
+        "items": actionable,
+        "terminal_items_count": terminal_count,
+        "invalid_items_count": invalid_count,
+        "source_schema": source.get("schema"),
+        "source_manifest_sha256": source.get("manifest_sha256"),
+        "source_path": source.get("manifest_path"),
+        "checked_at": source.get("checked_at"),
+    }
+    return {key: value for key, value in projected.items() if value is not None}
+
+
+def actionable_publication_items(pending):
+    return pending_publication_projection(pending)["items"]
+
+
 def safe_timestamp(record):
     for key in ("timestamp", "ts", "created_at", "occurred_at", "published_at", "attempted_at", "observed_at", "time", "at", "adjudicated_at", "event_at"):
         value = record.get(key)
@@ -1202,7 +1248,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
                 pending = snapshot.get("pending_publications") if isinstance(snapshot.get("pending_publications"), dict) else {}
                 claims = snapshot.get("claims_activation_request") if isinstance(snapshot.get("claims_activation_request"), dict) else {}
-                publication_items = pending.get("items") if isinstance(pending.get("items"), list) else []
+                publication_items = actionable_publication_items(pending)
                 publication_decisions = []
                 for item in publication_items:
                     if not isinstance(item, dict):
@@ -1356,7 +1402,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     ],
                 }
                 payload = {
-                    "schema_version": "agent-authorization-desk/v1",
+                    "schema_version": "agent-authorization-desk/v2",
+                    "terminal_publications_count": pending_publication_projection(pending)["terminal_items_count"],
                     "authorization_mode": "single-user-loopback",
                     "read_only": True,
                     "instruction_capable": False,
@@ -1377,8 +1424,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif route.path == '/api/v1/agent/pending-authorizations':
             try:
                 snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+                projection = pending_publication_projection(snapshot.get("pending_publications"))
                 payload = {
-                    "schema_version": "agent-pending-authorizations/v1",
+                    "schema_version": "agent-pending-authorizations/v2",
                     "authorization_mode": "single-user-loopback",
                     "read_only": True,
                     "instruction_capable": False,
@@ -1386,17 +1434,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         or snapshot.get("observed_at")
                         or utc_now(),
                     "generation_id": snapshot.get("generation_id"),
-                    "pending_publications": snapshot.get("pending_publications", {
-                        "schema": "pending-publication-projection/v1",
-                        "available": False,
-                        "items": [],
-                    }),
+                    "pending_publications": projection,
                     "rule": (
                         "Exact-commit operation-specific Human authorization is required before "
                         "tag, push, PR, or merge; technical readiness never implies authorization."
                     ),
-                    "manifest_sha256": (snapshot.get("pending_publications") or {}).get("manifest_sha256"),
-                    "checked_at": (snapshot.get("pending_publications") or {}).get("checked_at"),
+                    "manifest_sha256": projection.get("source_manifest_sha256"),
+                    "checked_at": projection.get("checked_at"),
                 }
                 self._json(200, payload)
             except (OSError, ValueError, TypeError) as exc:
