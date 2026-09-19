@@ -3369,27 +3369,33 @@ def collect_agent_visibility(payload: dict) -> dict:
         if isinstance(item, dict)
     ]
     value_blockers = [str(item) for item in (panel_value.get("state_reason") or []) if item]
-    qualifying = int(value_samples.get("qualifying") or 0)
     value_validation = (
         payload.get("value_evidence_validation")
         if isinstance(payload.get("value_evidence_validation"), dict)
         else {"schema": "value-evidence-validation/v2", "ok": False, "available": False}
     )
+    qualifying = int(value_validation.get("qualifying") or 0)
+    legacy_qualifying = int(value_validation.get("legacy_qualifying") or 0)
+    v2_records = int(value_validation.get("v2_records") or 0)
     if value_validation.get("ok") is not True:
         value_blockers.append("value-evidence validation unavailable or failed")
     value_readiness = {
-        "schema": "panorama-value-proof-readiness/v1",
+        "schema": "panorama-value-proof-readiness/v2",
         "status": "NOT_PROVEN",
         "available": bool(panel_value),
         "source": panel_value.get("schema", "unavailable"),
         "samples_total": int(value_samples.get("records") or 0),
         "qualifying_samples": qualifying,
+        "v2_records": v2_records,
+        "legacy_records": int(value_validation.get("legacy_records") or 0),
+        "legacy_qualifying_samples": legacy_qualifying,
         "accepted_samples": int(value_samples.get("accepted") or 0),
         "adjudicated_samples": int(value_samples.get("adjudicated") or 0),
         "net_saved_seconds": int(value_samples.get("net_saved_seconds") or 0),
         "thresholds": value_thresholds,
         "blockers": value_blockers,
         "validation": value_validation,
+        "remaining_to_target": max(0, 30 - qualifying),
         "evidence_rule": "Only qualifying real-use records count; synthetic runs and unqualified accepted records never prove value.",
         "next_action": (
             f"Collect {max(0, 30 - qualifying)} more qualifying real-use records with a frozen baseline; do not backfill."
