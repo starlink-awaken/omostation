@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 685 # 2026-09-19 684→685: value-operator real-use readiness doctor
+    script_baseline: 686 # 2026-09-19 685→686: 任务所有权强制 check-task-ownership.py
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
