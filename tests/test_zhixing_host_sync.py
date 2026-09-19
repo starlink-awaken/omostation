@@ -38,22 +38,26 @@ def _dirs(tmp_path: Path):
 def _seed_deploy(dash: Path, *, template: str = "<html>live</html>\n",
                  refresh: str = "# refresh live\n",
                  live_server: str = "# live server\n",
-                 observatory_query: str = "# observatory query\n") -> None:
+                 observatory_query: str = "# observatory query\n",
+                 panorama_collector: str = "# panorama collector live\n") -> None:
     (dash / "template.html").write_text(template, encoding="utf-8")
     (dash / "refresh.py").write_text(refresh, encoding="utf-8")
     (dash / "live_server.py").write_text(live_server, encoding="utf-8")
     (dash / "observatory_query.py").write_text(observatory_query, encoding="utf-8")
+    (dash / "panorama-collect-main.py").write_text(panorama_collector, encoding="utf-8")
 
 
 def _seed_repo(host: Path, *, template: str, refresh: str,
                live_server: str = "# repo live server\n",
-               observatory_query: str = "# repo observatory query\n") -> None:
+               observatory_query: str = "# repo observatory query\n",
+               panorama_collector: str = "# repo panorama collector\n") -> None:
     """仓库资产名与部署名不同 (*.py 存为 *.py.asset, 见工具头注释)."""
     host.mkdir(parents=True, exist_ok=True)
     (host / "template.html").write_text(template, encoding="utf-8")
     (host / "refresh.py.asset").write_text(refresh, encoding="utf-8")
     (host / "live_server.py.asset").write_text(live_server, encoding="utf-8")
     (host / "observatory_query.py.asset").write_text(observatory_query, encoding="utf-8")
+    (host / "panorama-collect-main.py.asset").write_text(panorama_collector, encoding="utf-8")
 
 
 # ── 未版本化检测 ─────────────────────────────────────────
@@ -64,7 +68,7 @@ def test_status_reports_missing_repo_copy(tmp_path):
     _seed_deploy(dash)
     tool = _load()
     info = tool.status(dashboard_dir=dash, host_dir=host)
-    assert info["missing_repo_copy"] == 4
+    assert info["missing_repo_copy"] == 5
     assert info["ok"] is False
     assert {f["state"] for f in info["files"]} == {"no_repo_copy"}
     # 仍能报告线上 sha (便于人工确认捕获对象)
@@ -88,13 +92,20 @@ def test_capture_versions_deploy_files(tmp_path):
     r = tool.capture(dashboard_dir=dash, host_dir=host)
     assert r["ok"] is True
     assert {c["name"] for c in r["captured"]} == {
-        "template.html", "refresh.py", "live_server.py", "observatory_query.py"
+        "template.html",
+        "refresh.py",
+        "live_server.py",
+        "observatory_query.py",
+        "panorama-collect-main.py",
     }
     assert (host / "template.html").read_bytes() == (dash / "template.html").read_bytes()
     # refresh.py 以 .asset 后缀纳管 (避开 script-registry 脚本治理面)
     assert (host / "refresh.py.asset").read_bytes() == (dash / "refresh.py").read_bytes()
     assert (host / "live_server.py.asset").read_bytes() == (dash / "live_server.py").read_bytes()
     assert (host / "observatory_query.py.asset").read_bytes() == (dash / "observatory_query.py").read_bytes()
+    assert (host / "panorama-collect-main.py.asset").read_bytes() == (
+        dash / "panorama-collect-main.py"
+    ).read_bytes()
 
     info = tool.status(dashboard_dir=dash, host_dir=host)
     assert info["ok"] is True
@@ -211,7 +222,11 @@ def test_host_files_scope_includes_server_and_excludes_data():
     tool = _load()
     deploy_names = {d for d, _ in tool.HOST_FILES}
     assert deploy_names == {
-        "template.html", "refresh.py", "live_server.py", "observatory_query.py"
+        "template.html",
+        "refresh.py",
+        "live_server.py",
+        "observatory_query.py",
+        "panorama-collect-main.py",
     }
     for _, repo_name in tool.HOST_FILES:
         assert not repo_name.endswith((".py", ".sh")), (
@@ -223,7 +238,11 @@ def test_host_files_scope_includes_server_and_excludes_data():
 
 def test_real_repo_server_assets_have_no_static_credentials():
     host = Path(__file__).resolve().parents[1] / "bin/panorama/assets/host"
-    for repo_name in ("live_server.py.asset", "observatory_query.py.asset"):
+    for repo_name in (
+        "live_server.py.asset",
+        "observatory_query.py.asset",
+        "panorama-collect-main.py.asset",
+    ):
         text = (host / repo_name).read_text(encoding="utf-8")
         assert "ghp_" not in text
         assert "github_pat_" not in text
