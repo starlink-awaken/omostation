@@ -1,6 +1,6 @@
 ---
 schema: resident-retro-candidate/v1
-topic: governance-state-mutation
+topic: state-sync
 generated_at: 2026-09-19T08:37:09Z
 status: candidate
 counts:
@@ -12,7 +12,7 @@ failure_breakdown:
   by_event_type:
   trace_count: 0
 ---
-# governance-state-mutation 运行复盘聚合 (resident 事件驱动)
+# state-sync 运行复盘聚合 (resident 事件驱动)
 
 - generated_at: 2026-09-19T08:37:09Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
@@ -21,8 +21,8 @@ failure_breakdown:
 
 ## 成功运行 (runs/)
 
-- 20260915T073516Z-governance-state-mutation-d29a90cb.md
-- 20260918T021142Z-governance-state-mutation-27384e7c.md
+- 20260917T071357Z-state-sync-4345d07d.md
+- 20260918T120957Z-state-sync-62c62454.md
 
 ## 失败模式 (failures/)
 
@@ -34,20 +34,19 @@ failure_breakdown:
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
-- **20260915T073516Z-governance-state-mutation-d29a90cb**
-  - 计划 (objective): BET-Y1Q4-T10-151 post-3787 governance truth recovery
-  - workflow: governance-state-mutation
+- **20260917T071357Z-state-sync-4345d07d**
+  - workflow: state-sync
   - 实际步骤: execute
   - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=67878.215
-- **20260918T021142Z-governance-state-mutation-27384e7c**
-  - 计划 (objective): BET台账下阶段规划: 状态修正3处(M1)+宪章追认2条新BET(M2)+公文第二驱动1条新BET(M3)+存量激活(M4)
-  - workflow: governance-state-mutation
+  - 指标: event_count=6, duration_s=2240.884
+- **20260918T120957Z-state-sync-62c62454**
+  - 计划 (objective): Refresh stale system health runtime projection
+  - workflow: state-sync
   - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=5077.697
+  - 指标: event_count=6, duration_s=211.291
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

@@ -1,28 +1,27 @@
 ---
 schema: resident-retro-candidate/v1
-topic: observer-audit
+topic: submodule-pointer-bump
 generated_at: 2026-09-19T08:37:09Z
 status: candidate
 counts:
-  runs: 2
+  runs: 1
   failures: 0
-  total: 2
+  total: 1
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
 ---
-# observer-audit 运行复盘聚合 (resident 事件驱动)
+# submodule-pointer-bump 运行复盘聚合 (resident 事件驱动)
 
 - generated_at: 2026-09-19T08:37:09Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 2 成功运行 + 0 失败模式 = 2 草稿
+- sediment 覆盖: 1 成功运行 + 0 失败模式 = 1 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
-- 20260918T113617Z-observer-audit-66c48368.md
-- 20260918T113618Z-observer-audit-abf134da.md
+- 20260917T044558Z-submodule-pointer-bump-6452b882.md
 
 ## 失败模式 (failures/)
 
@@ -34,12 +33,12 @@ failure_breakdown:
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
-- **20260918T113617Z-observer-audit-66c48368**
-  - workflow: observer-audit
-  - 指标: event_count=1, duration_s=0.0
-- **20260918T113618Z-observer-audit-abf134da**
-  - workflow: observer-audit
-  - 指标: event_count=1, duration_s=0.0
+- **20260917T044558Z-submodule-pointer-bump-6452b882**
+  - workflow: submodule-pointer-bump
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1689.418
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
