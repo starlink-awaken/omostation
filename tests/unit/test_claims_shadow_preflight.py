@@ -58,6 +58,14 @@ def test_preflight_reports_blocked_but_read_only_root(tmp_path) -> None:
         def production_verifier_closure_digest():
             return "sha256:" + "c" * 64
 
+        @staticmethod
+        def production_verifier_closure_digest():
+            return "sha256:" + "c" * 64
+
+        @staticmethod
+        def production_verifier_closure_digest():
+            return "sha256:" + "c" * 64
+
     report = module.collect_preflight(
         root,
         account_home=tmp_path / "home",
@@ -95,6 +103,78 @@ def test_preflight_reports_blocked_but_read_only_root(tmp_path) -> None:
     assert recovery["items"][
         "operation_specific_host_authorization_unproven"
     ]["classification"] == "human_authorization_required"
+
+
+def test_preflight_accepts_isolated_integration_root(tmp_path) -> None:
+    module = _module()
+    canonical = tmp_path / "canonical"
+    isolated = tmp_path / "isolated"
+    for root in (canonical, isolated):
+        child = root / "projects/omo"
+        _init_repo(root)
+        child.mkdir(parents=True)
+        _init_repo(child)
+        for relative in module.CLOSURE_PATHS.values():
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("closure\n", encoding="utf-8")
+        (root / "projects/omo/.gitkeep").write_text("", encoding="utf-8")
+        _commit_all(child)
+        _commit_all(root)
+        subprocess.run(["git", "-C", str(root), "add", "projects/omo"], check=True)
+        subprocess.run(
+            ["git", "-C", str(root), "update-ref", "refs/remotes/origin/main", "HEAD"],
+            check=True,
+        )
+
+    class verifiers:
+        @staticmethod
+        def operator_authorization_verifier_digest():
+            return "sha256:" + "a" * 64
+
+        @staticmethod
+        def stopped_process_verifier_digest():
+            return "sha256:" + "b" * 64
+
+        @staticmethod
+        def production_verifier_closure_digest():
+            return "sha256:" + "c" * 64
+
+    original_digest = module.ACCEPTED_SPEC_SHA256
+    module.ACCEPTED_SPEC_SHA256 = "sha256:" + hashlib.sha256(
+        (isolated / module.CLOSURE_PATHS["spec"]).read_bytes()
+    ).hexdigest()
+
+    original_load = module._load_verifiers
+
+    def _load_isolated_verifiers(root):
+        loaded = original_load(root)
+        loaded.production_verifier_closure_digest = lambda: "sha256:" + "c" * 64
+        return loaded
+
+    module._load_verifiers = _load_isolated_verifiers
+    try:
+        (canonical / "canonical-dirty.txt").write_text(
+            "canonical-dirty\n", encoding="utf-8"
+        )
+        report = module.collect_preflight(
+            isolated,
+            account_home=tmp_path / "home",
+            observed_at="2026-09-17T00:00:00+00:00",
+            verifiers=verifiers,
+        )
+    finally:
+        module.ACCEPTED_SPEC_SHA256 = original_digest
+        module._load_verifiers = original_load
+
+    assert report["readiness"] == "AWAITING_AUTHORIZATION", {
+        "hard": report["hard_blockers"],
+        "closure": report["closure"],
+        "verifier_error": report.get("verifier_error"),
+    }
+    assert report["hard_blockers"] == [], report["hard_blockers"]
+    assert report["dirty_tracked_count"] == 0
+    assert report["child_dirty_count"] == 0
 
 
 def test_preflight_awaits_authorization_for_stale_nonclosure_dirty_root(tmp_path) -> None:

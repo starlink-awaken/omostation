@@ -28,22 +28,36 @@ def test_claims_task16_projection_parses_readonly_preflight(tmp_path, monkeypatc
     def fake_run(command, **kwargs):
         assert command[1] == str(script)
         assert command[2] == "--json"
+        assert command[3] == "--integration-root"
+        assert command[4] in {str(runtime_root), str(code_root)}
         assert kwargs["cwd"] == runtime_root
         return type("Completed", (), {"stdout": json.dumps({
             "schema": "claims-shadow-preflight/v1",
+            "available": True,
             "readiness": "BLOCKED",
             "activation_allowed": False,
+            "hard_blockers": [],
             "blockers": ["root_head_not_equal_origin_main"],
         })})()
 
     monkeypatch.setattr(module.subprocess, "run", fake_run)
     report = module.collect_claims_task16_preflight()
+    print(report)
 
     assert report["available"] is True
     assert report["verdict"] == "BLOCKED"
     assert report["activation_allowed"] is False
     assert report["blocker_count"] == 1
     assert report["preflight"]["blockers"] == ["root_head_not_equal_origin_main"]
+    assert report["isolated_preflight"]["preflight"]["blockers"] == [
+        "root_head_not_equal_origin_main"
+    ]
+    assert report["isolated_technical_ready"] is False
+
+    assert report["isolated_preflight"]["preflight"]["blockers"] == [
+        "root_head_not_equal_origin_main"
+    ]
+    assert report["isolated_technical_ready"] is False
 
 
 def test_claims_task16_projection_fails_closed_on_invalid_payload(tmp_path, monkeypatch) -> None:
@@ -64,4 +78,6 @@ def test_claims_task16_projection_fails_closed_on_invalid_payload(tmp_path, monk
 
     assert report["available"] is False
     assert report["verdict"] == "UNAVAILABLE"
-    assert report["error"] == "JSONDecodeError"
+    assert report["canonical_error"] == "JSONDecodeError"
+    assert report["isolated_error"] == "JSONDecodeError"
+    assert report["isolated_preflight"]["available"] is False

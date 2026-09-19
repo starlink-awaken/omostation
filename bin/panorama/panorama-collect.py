@@ -1013,19 +1013,16 @@ def collect_code_root_health() -> dict:
     }
 
 
-def collect_claims_task16_preflight() -> dict:
-    """Run the read-only Claims Task16 preflight for agent-visible blockers."""
+def _read_claims_preflight(root: Path) -> tuple[dict | None, dict]:
     preflight_script = CODE_ROOT / "bin/gac/claims-shadow-preflight.py"
     if not preflight_script.is_file():
-        return {
-            "schema": "panorama-claims-task16-projection/v1",
-            "available": False,
-            "verdict": "UNAVAILABLE",
-            "error": "preflight_script_missing",
-        }
+        return None, {"error": "preflight_script_missing"}
     try:
         completed = subprocess.run(
-            [sys.executable, str(preflight_script), "--json"],
+            [
+                sys.executable, str(preflight_script), "--json",
+                "--integration-root", str(root),
+            ],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -1034,18 +1031,29 @@ def collect_claims_task16_preflight() -> dict:
         )
         report = json.loads(completed.stdout)
     except Exception as exc:  # noqa: BLE001 - visibility must fail closed
-        return {
-            "schema": "panorama-claims-task16-projection/v1",
-            "available": False,
-            "verdict": "UNAVAILABLE",
+        stderr = getattr(exc, "stderr", "")
+        stdout = getattr(exc, "stdout", "")
+        return None, {
             "error": type(exc).__name__,
+            "stderr": stderr[-400:] if isinstance(stderr, str) else "",
+            "stdout": stdout[-400:] if isinstance(stdout, str) else "",
         }
     if not isinstance(report, dict) or report.get("schema") != "claims-shadow-preflight/v1":
+        return None, {
+            "error": "invalid_preflight_payload",
+            "stderr": (completed.stderr or "")[-400:],
+            "stdout": (completed.stdout or "")[-400:],
+        }
+    return report, None
+
+
+def _claims_projection(report: dict | None) -> dict:
+    if not isinstance(report, dict):
         return {
             "schema": "panorama-claims-task16-projection/v1",
             "available": False,
             "verdict": "UNAVAILABLE",
-            "error": "invalid_preflight_payload",
+            "error": "preflight_unavailable",
         }
     return {
         "schema": "panorama-claims-task16-projection/v1",
@@ -1055,6 +1063,32 @@ def collect_claims_task16_preflight() -> dict:
         "blocker_count": len(report.get("blockers") or []),
         "preflight": report,
     }
+
+
+def collect_claims_task16_preflight() -> dict:
+    """Run read-only canonical and isolated Claims preflights for agent visibility."""
+    canonical, canonical_error = _read_claims_preflight(ROOT)
+    isolated, isolated_error = _read_claims_preflight(CODE_ROOT)
+    isolated_recovery = (
+        isolated.get("recovery")
+        if isinstance(isolated, dict) and isinstance(isolated.get("recovery"), dict) else {}
+    )
+    isolated_technical_ready = bool(
+        isolated and isolated.get("available") is True
+        and isolated.get("hard_blockers") == []
+        and isolated.get("readiness") == "AWAITING_AUTHORIZATION"
+    )
+    projection = _claims_projection(canonical)
+    projection.update({
+        "canonical_error": canonical_error,
+        "isolated_preflight": _claims_projection(isolated),
+        "isolated_error": isolated_error,
+        "isolated_technical_ready": isolated_technical_ready,
+        "remaining_after_isolated_recovery": isolated_recovery.get(
+            "remaining_after_isolated_recovery", []
+        ),
+    })
+    return projection
 
 
 def _ensure_omo_path() -> None:
@@ -2991,6 +3025,31 @@ def collect_agent_visibility(payload: dict) -> dict:
         for item in (preflight.get("advisories") or [])
         if item
     })
+    isolated_preflight = (
+        claims_task16.get("isolated_preflight")
+        if isinstance(claims_task16.get("isolated_preflight"), dict) else {}
+    )
+    isolated_technical_ready = (
+        claims_task16.get("isolated_technical_ready") is True
+        and isolated_preflight.get("available") is True
+        and isolated_preflight.get("hard_blockers") == []
+        and isolated_preflight.get("readiness") == "AWAITING_AUTHORIZATION"
+    )
+    isolated_blockers = sorted({
+        str(item)
+        for source in (isolated_preflight.get("hard_blockers"), isolated_preflight.get("blockers"))
+        if isinstance(source, list)
+        for item in source
+        if item
+    })
+    canonical_technical_blockers = [
+        item for item in blockers if item != "operation_specific_host_authorization_unproven"
+    ]
+    effective_readiness = (
+        "AWAITING_AUTHORIZATION"
+        if isolated_technical_ready and not canonical_technical_blockers
+        else str(preflight.get("readiness") or claims_task16.get("verdict") or "UNKNOWN").upper()
+    )
     claims_activation_readiness = {
         "schema": "claims-activation-readiness/v1",
         "available": claims_task16.get("available") is True,
@@ -2999,7 +3058,19 @@ def collect_agent_visibility(payload: dict) -> dict:
         "operation_specific_authorization": str(
             preflight.get("operation_specific_authorization") or "UNPROVEN"
         ).upper(),
+        "canonical_readiness": str(preflight.get("readiness") or "UNKNOWN").upper(),
+        "isolated_readiness": str(isolated_preflight.get("readiness") or "UNKNOWN").upper(),
+        "isolated_technical_ready": isolated_technical_ready,
+        "isolated_blockers": isolated_blockers,
+        "isolated_root_head_oid": isolated_preflight.get("root_head_oid"),
+        "isolated_origin_main_oid": isolated_preflight.get("origin_main_oid"),
+        "isolated_child_head_oid": isolated_preflight.get("child_head_oid"),
+        "isolated_root_child_gitlink_oid": isolated_preflight.get("root_child_gitlink_oid"),
+        "remaining_after_isolated_recovery": claims_task16.get(
+            "remaining_after_isolated_recovery", []
+        ),
         "activation_allowed": activation_allowed,
+        "effective_readiness": effective_readiness,
         "blockers": blockers,
         "advisories": advisories,
         "preflight_checked_at": preflight.get("checked_at"),
@@ -3023,6 +3094,10 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "dashboard_status_or_ai_statement",
             ],
         },
+        "evidence_boundary": (
+            "Canonical blockers remain visible, but a clean managed exact-main clone proves whether technical "
+            "recovery succeeded. Operation-specific Human authorization is still always required."
+        ),
         "observation_gate": {
             "duration_seconds": 86400,
             "minimum_samples": 1440,
