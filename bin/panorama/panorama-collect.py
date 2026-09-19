@@ -37,6 +37,9 @@ MULTICA_AS0_TIMEOUT_S = 300
 MULTICA_AS0_DIRECT_HOSTS = ("multica.ai", ".multica.ai", "127.0.0.1", "localhost")
 AGENT_BRIEF_JSON = OUT_DIR / "agent-brief.json"
 INDEX_HTML = OUT_DIR / "index.html"
+CLAIMS_REQUEST_PACKAGE = (
+    Path.home() / ".local/share/zhixing-dashboard/claims-activation-request.json"
+)
 
 GATE_DECLARED = {
 }
@@ -1089,6 +1092,69 @@ def collect_claims_task16_preflight() -> dict:
         ),
     })
     return projection
+
+
+def collect_claims_activation_request() -> dict:
+    """Expose the exact pending activation request without executing it.
+
+    The source package is outside Git and contains no credentials.  Only its
+    identity and fail-closed authorization state are projected so every agent
+    can see the exact object awaiting operation-specific Human review.
+    """
+    try:
+        package = json.loads(CLAIMS_REQUEST_PACKAGE.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {
+            "schema": "panorama-claims-activation-request/v1",
+            "available": False,
+            "status": "PACKAGE_MISSING",
+            "execution": "NOT_EXECUTED",
+            "activation": "NOT_AUTHORIZED",
+        }
+    except Exception as exc:  # noqa: BLE001 - visibility must fail closed
+        return {
+            "schema": "panorama-claims-activation-request/v1",
+            "available": False,
+            "status": "PACKAGE_UNAVAILABLE",
+            "execution": "NOT_EXECUTED",
+            "activation": "NOT_AUTHORIZED",
+            "error": type(exc).__name__,
+        }
+
+    request = package.get("request") if isinstance(package.get("request"), dict) else {}
+    descriptor = request.get("descriptor") if isinstance(request.get("descriptor"), dict) else {}
+    human = package.get("human_authorization") if isinstance(package.get("human_authorization"), dict) else {}
+    rollback = package.get("rollback") if isinstance(package.get("rollback"), dict) else {}
+    if package.get("schema") != "claims-activation-request-package/v1":
+        return {
+            "schema": "panorama-claims-activation-request/v1",
+            "available": False,
+            "status": "PACKAGE_SCHEMA_INVALID",
+            "execution": "NOT_EXECUTED",
+            "activation": "NOT_AUTHORIZED",
+        }
+
+    return {
+        "schema": "panorama-claims-activation-request/v1",
+        "available": True,
+        "status": str(package.get("status") or "UNKNOWN"),
+        "execution": str(package.get("execution") or "UNKNOWN"),
+        "activation": str(package.get("activation") or "UNKNOWN"),
+        "execution_forbidden_without_human_authorization": human.get("status") != "PROVEN",
+        "request_id": request.get("request_id"),
+        "request_digest": package.get("request_digest"),
+        "descriptor_digest": descriptor.get("digest"),
+        "authority_id": request.get("authority_id"),
+        "operation": request.get("operation"),
+        "expected_authority_epoch": request.get("expected_authority_epoch"),
+        "expected_state": request.get("expected_state"),
+        "human_authorization_status": str(human.get("status") or "UNKNOWN").upper(),
+        "human_authorization_required": human.get("required") is True,
+        "human_authorization_not_sufficient": human.get("not_sufficient") or [],
+        "required_binding": human.get("required_binding") or [],
+        "observation_after_activation": human.get("observation_after_activation") or {},
+        "rollback_automatic_execution": rollback.get("automatic_execution") is True,
+    }
 
 
 def _ensure_omo_path() -> None:
@@ -3293,6 +3359,7 @@ def build_payload() -> dict:
         "agent_cell_semantic": collect_agent_cell_semantic(),
         "claims_authority": collect_claims_authority(),
         "claims_task16": collect_claims_task16_preflight(),
+        "claims_activation_request": collect_claims_activation_request(),
         "reference_cell": collect_reference_cell_gate(),
         "asd": collect_asd(),
         "role_registry": collect_role_registry(),
