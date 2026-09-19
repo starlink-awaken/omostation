@@ -1982,7 +1982,8 @@ function documents(){const q=$('doc-search').value.trim().toLowerCase(),status=$
 $('doc-status').querySelector('option[value="accepted"]').textContent='已接受（'+D.documents.filter(d=>d.approval_state==='accepted').length+'）';
 $('doc-search').oninput=documents;$('doc-status').onchange=documents;documents();
 $('actions').innerHTML=(D.next_actions||[]).map((x,i)=>'<li><span class="step-count">'+(i+1)+'</span><div><h3>'+esc(x.title||x.id||'法定行动')+'</h3><p class="small">'+esc(x.detail||x.gate||x.description||'')+'</p><span class="small muted">'+esc(x.owner||x.source||'OMO')+' · '+esc(x.state||'REQUIRED')+'</span></div></li>').join('');
-var pendingPubs=((D.pending_publications||{}).items||[]).filter(function(p){return p.verification==='READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION';});
+var terminalPublicationStates={MERGED:1,CLOSED:1,WITHDRAWN:1,REJECTED:1,SUPERSEDED:1};
+var pendingPubs=((D.pending_publications||{}).items||[]).filter(function(p){return p && !terminalPublicationStates[String(p.state||'').toUpperCase()] && p.verification==='READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION';});
 $('pending-authorizations').innerHTML=pendingPubs.map(function(p){return '<article class="loop"><h3>'+esc(p.id)+'</h3><p class="small mono">commit '+esc(p.commit)+'</p><p class="small mono">patch '+esc(p.patch_digest)+'</p><p class="small">dirty='+esc(p.dirty_count)+' · '+esc(p.authorization_scope||'exact-commit authorization required')+'</p></article>';}).join('')||'<p class="small muted">当前没有等待精确授权的发布候选。</p>';
 var objectiveCoverage=D.objective_coverage||{};
 var coverageItems=objectiveCoverage.items||[];

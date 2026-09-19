@@ -80,6 +80,18 @@ def test_panels_expose_unknown_states_rather_than_zero():
         assert token in src, f"{name}.js 缺少 {token} 诚实态"
 
 
+def test_pending_authorization_ui_excludes_terminal_states():
+    """已 merged/closed 的发布不得因 READY 验证缓存继续显示为待授权。"""
+    template = (ROOT / "bin" / "panorama" / "assets" / "host" / "template.html").read_text(
+        encoding="utf-8"
+    )
+    for state in ("MERGED", "CLOSED", "WITHDRAWN", "REJECTED", "SUPERSEDED"):
+        assert f"{state}:1" in template
+    assert "String(p.state||'').toUpperCase()" in template
+    assert "terminalPublicationStates[String(p.state||'').toUpperCase()]" in template
+    assert "p.verification==='READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION'" in template
+
+
 # ── 契约: 注入标记 ─────────────────────────────────────────────────────
 
 def test_each_panel_asset_has_single_section_block():
