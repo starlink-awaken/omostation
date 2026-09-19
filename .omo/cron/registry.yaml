@@ -291,13 +291,13 @@ jobs:
 
   - name: zhixing-panel-sync-hourly-active
     schedule: "23 * * * *"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/zhixing-panel-sync.py ensure --quiet && python3 bin/gac/zhixing-host-sync.py check >> runtime/cron/zhixing-panel-sync.log 2>&1'
+    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/zhixing-panel-sync.py ensure --quiet >> runtime/cron/zhixing-panel-sync.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
     owner: governance-team
     sfop_slot: S
-    reconciliation_note: "织星驾驶舱场景面板幂等自愈 (每小时第 23 分) — 部署目录不受版本控制, 面板曾被他 agent 覆盖 2 次; 资产版本化于 bin/panorama/assets/scene-panel.html。"
+    reconciliation_note: "织星驾驶舱场景面板幂等自愈 (每小时第 23 分)；ensure 现内嵌 host-file 漂移检查，避免依赖 setuid crontab 重装。部署目录不受版本控制, 面板曾被他 agent 覆盖 2 次; 资产版本化于 bin/panorama/assets/scene-panel.html。"
 
   - name: wip-guard-hourly-active
     schedule: "17 * * * *"
