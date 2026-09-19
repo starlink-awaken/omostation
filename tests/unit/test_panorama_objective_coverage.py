@@ -173,12 +173,22 @@ def test_observation_progress_projects_live_shadow_window(tmp_path, monkeypatch)
     assert report["available"] is True
     assert report["state"] == "IN_PROGRESS"
     assert report["activation_state"] == "shadow-active"
-    assert report["sample_count"] == 182
+    # Without immutable sample records, progress may be shown but readiness
+    # must not inherit the summary's unverified count.
+    assert report["sample_count"] == 0
+    assert {
+        "graduation_samples",
+        "graduation_span",
+        "receipt_constant",
+    } <= set(report["graduation_reasons"])
     assert report["state"] == "IN_PROGRESS"
     assert report["receipts_match"] is True
     assert report["errors"] == 0
     assert next(item for item in report["checkpoints"] if item["id"] == "smoke")["reached"] is True
     assert next(item for item in report["checkpoints"] if item["id"] == "graduation")["reached"] is False
+    assert report["graduation_ready"] is False
+    assert "graduation_samples" in report["graduation_reasons"]
+    assert "graduation_span" in report["graduation_reasons"]
 
 
 def test_observation_progress_falls_back_to_package_observation(tmp_path, monkeypatch) -> None:
@@ -222,6 +232,67 @@ def test_observation_progress_falls_back_to_package_observation(tmp_path, monkey
     assert report["available"] is True
     assert report["state"] == "IN_PROGRESS"
     assert report["evidence_dir"] == str(evidence)
+
+
+def test_observation_progress_marks_complete_evidence_graduation_ready(tmp_path, monkeypatch) -> None:
+    module = _module()
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    started = datetime.now(timezone.utc) - timedelta(hours=25)
+    (evidence / "summary.json").write_text(json.dumps({
+        "started_at_utc": started.isoformat(),
+        "samples": 1440,
+        "invalid": False,
+        "max_gap_seconds": 61.0,
+        "activation_state": "shadow-active",
+        "errors": 0,
+        "expected_last_receipt": "sha256:receipt",
+        "descriptor_digest": "sha256:descriptor",
+    }), encoding="utf-8")
+    with (evidence / "samples.jsonl").open("w", encoding="utf-8") as handle:
+        for index in range(1440):
+            sampled = started + timedelta(seconds=61 * index)
+            handle.write(json.dumps({
+                "sample_no": index + 1,
+                "sampled_at_utc": sampled.isoformat(),
+                "status": {
+                    "descriptor_digest": "sha256:descriptor",
+                    "sequence": 1,
+                    "activation_state": "shadow-active",
+                    "last_receipt_digest": "sha256:receipt",
+                },
+            }) + "\n")
+    package = {
+        "schema": "claims-activation-request-package/v1",
+        "status": "EXECUTED",
+        "execution": "EXECUTED",
+        "activation": "SHADOW_ACTIVE",
+        "request": {"authority_id": "omo-claims-authority-r0", "operation": "activate-shadow", "descriptor": {"digest": "sha256:descriptor"}},
+        "human_authorization": {
+            "status": "GRANTED",
+            "observation_after_activation": {
+                "duration_seconds": 86400,
+                "minimum_samples": 1440,
+                "maximum_gap_seconds": 120,
+                "evidence_dir": str(evidence),
+            },
+        },
+        "execution_receipt": {"receipt_digest": "sha256:receipt"},
+        "rollback": {"automatic_execution": False},
+    }
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps(package), encoding="utf-8")
+    monkeypatch.setattr(module, "CLAIMS_REQUEST_PACKAGE", request_path)
+
+    report = module.collect_claims_observation_progress()
+
+    assert report["available"] is True
+    assert report["state"] == "GRADUATION_REACHED"
+    assert report["sample_count"] == 1440
+    assert report["evidence_span_seconds"] >= 86400
+    assert report["graduation_ready"] is True
+    assert report["graduation_reasons"] == []
+    assert all(report["graduation_criteria"].values())
 
 
 def test_objective_coverage_fails_partial_on_missing_ledger_or_gate(tmp_path, monkeypatch) -> None:

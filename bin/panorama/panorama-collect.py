@@ -1193,6 +1193,7 @@ def collect_claims_observation_progress() -> dict:
         )
     evidence_dir = Path(str(observation.get("evidence_dir") or "")).expanduser()
     summary_path = evidence_dir / "summary.json"
+    samples_path = evidence_dir / "samples.jsonl"
     empty = {
         "schema": "claims-observation-progress/v1",
         "available": False,
@@ -1219,17 +1220,69 @@ def collect_claims_observation_progress() -> dict:
         max_gap = float(summary.get("max_gap_seconds") or 0)
         activation_state = str(summary.get("activation_state") or "unknown")
         elapsed_seconds = max(0.0, (datetime.now(UTC) - started_at).total_seconds())
+        expected_descriptor = str(summary.get("descriptor_digest") or "")
+        request_receipt = (
+            request.get("execution_receipt") if isinstance(request.get("execution_receipt"), dict) else {}
+        ).get("receipt_digest")
+        sampled_receipt = summary.get("expected_last_receipt")
+        receipts_match = bool(request_receipt and sampled_receipt and request_receipt == sampled_receipt)
+        records: list[dict[str, Any]] = []
+        malformed_records = 0
+        if samples_path.is_file():
+            for line in samples_path.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    item = json.loads(line)
+                    if not isinstance(item, dict):
+                        raise ValueError("record is not an object")
+                    records.append(item)
+                except (json.JSONDecodeError, ValueError, TypeError):
+                    malformed_records += 1
+        status_records = [item for item in records if isinstance(item.get("status"), dict)]
+        error_records = [item for item in records if item.get("error") is not None]
+        sampled_count = len(status_records)
+        parse_times = []
+        for item in records:
+            try:
+                parse_times.append(datetime.fromisoformat(str(item["sampled_at_utc"]).replace("Z", "+00:00")))
+            except (KeyError, TypeError, ValueError):
+                malformed_records += 1
+        recomputed_gaps = [
+            (later - earlier).total_seconds()
+            for earlier, later in zip(parse_times, parse_times[1:])
+        ]
+        if recomputed_gaps:
+            max_gap = max(max_gap, max(recomputed_gaps))
+        first_sampled = min(parse_times).isoformat() if parse_times else None
+        last_sampled = max(parse_times).isoformat() if parse_times else None
+        evidence_span_seconds = (
+            (max(parse_times) - min(parse_times)).total_seconds() if parse_times else 0.0
+        )
+        descriptor_variants = sorted({
+            str(item["status"].get("descriptor_digest"))
+            for item in status_records
+            if item["status"].get("descriptor_digest") is not None
+        })
+        activation_variants = sorted({
+            str(item["status"].get("activation_state"))
+            for item in status_records
+            if item["status"].get("activation_state") is not None
+        })
+        receipt_variants = sorted({
+            str(item["status"].get("last_receipt_digest"))
+            for item in status_records
+            if item["status"].get("last_receipt_digest") is not None
+        })
+        sequences = [int(item["status"].get("sequence") or 0) for item in status_records]
+        sequence_regressions = sum(1 for earlier, later in zip(sequences, sequences[1:]) if later < earlier)
+        errors = errors + len(error_records) + malformed_records
         protocol_healthy = (
             summary.get("invalid") is False
             and errors == 0
             and max_gap <= maximum_gap_seconds
             and activation_state == "shadow-active"
         )
-        request_receipt = (
-            request.get("execution_receipt") if isinstance(request.get("execution_receipt"), dict) else {}
-        ).get("receipt_digest")
-        sampled_receipt = summary.get("expected_last_receipt")
-        receipts_match = bool(request_receipt and sampled_receipt and request_receipt == sampled_receipt)
         if not protocol_healthy or not receipts_match:
             state = "INVALID"
         elif elapsed_seconds >= duration_seconds and sample_count >= minimum_samples:
@@ -1250,6 +1303,21 @@ def collect_claims_observation_progress() -> dict:
                 "reached": elapsed_seconds >= seconds and sample_count >= samples,
                 "diagnostic_only": name != "graduation",
             })
+        criteria = {
+            "summary_not_invalid": summary.get("invalid") is False,
+            "graduation_samples": sampled_count >= minimum_samples,
+            "graduation_span": evidence_span_seconds >= duration_seconds,
+            "maximum_gap": max_gap <= maximum_gap_seconds,
+            "descriptor_constant": descriptor_variants == [expected_descriptor],
+            "sequence_monotonic": sequence_regressions == 0,
+            "activation_constant": activation_variants == ["shadow-active"],
+            "receipt_constant": receipt_variants == [request_receipt],
+            "zero_errors": errors == 0,
+            "records_parse": malformed_records == 0,
+            "activation_receipt_matches": receipts_match,
+        }
+        graduation_ready = all(criteria.values())
+        graduation_reasons = sorted(reason for reason, passed in criteria.items() if not passed)
         return {
             "schema": "claims-observation-progress/v1",
             "available": True,
@@ -1258,12 +1326,22 @@ def collect_claims_observation_progress() -> dict:
             "started_at_utc": started_at.isoformat(),
             "elapsed_seconds": round(elapsed_seconds, 3),
             "duration_seconds": duration_seconds,
-            "sample_count": sample_count,
+            "sample_count": sampled_count,
             "minimum_samples": minimum_samples,
             "maximum_gap_seconds": maximum_gap_seconds,
             "observed_max_gap_seconds": max_gap,
             "errors": errors,
             "receipts_match": receipts_match,
+            "first_sample_at_utc": first_sampled,
+            "last_sample_at_utc": last_sampled,
+            "evidence_span_seconds": round(evidence_span_seconds, 3),
+            "descriptor_variants": descriptor_variants,
+            "activation_variants": activation_variants,
+            "receipt_variants": receipt_variants,
+            "sequence_regressions": sequence_regressions,
+            "graduation_ready": graduation_ready,
+            "graduation_reasons": graduation_reasons,
+            "graduation_criteria": criteria,
             "descriptor_digest": summary.get("descriptor_digest"),
             "evidence_dir": str(evidence_dir),
             "checkpoints": checkpoints,
