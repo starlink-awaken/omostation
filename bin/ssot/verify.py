@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -48,11 +49,26 @@ class TaskCheck:
         return self.is_completed and self.evidence_ok
 
 
+# 校验源 —— `.omo/debt/gap-items/`. 2026-09-19 实证: 该目录缺失时 scan() 静默
+# 返回空, 下游据 0/0 报 "✅ 门禁通过" —— **真空合格** (声称能检测
+# "resolved but no evidence" 却什么都没扫)。故显式暴露源状态, 缺失即失败。
+GAP_ITEMS_REL = Path(".omo") / "debt" / "gap-items"
+
+
+def scan_source(root: Path | None = None) -> tuple[Path, int]:
+    """返回 (源目录, 该目录下 *.yaml 数). 缺失时计数为 -1 (区分"空目录"与"无目录")."""
+    root = root or ROOT
+    d = root / GAP_ITEMS_REL
+    if not d.is_dir():
+        return d, -1
+    return d, len(list(d.glob("*.yaml")))
+
+
 def scan(root: Path | None = None, strict: bool = False) -> list[TaskCheck]:
     """Scan all gap-items and return TaskCheck list."""
     root = root or ROOT
     checks: list[TaskCheck] = []
-    gap_dir = root / ".omo" / "debt" / "gap-items"
+    gap_dir = root / GAP_ITEMS_REL
     if not gap_dir.is_dir():
         return checks
     for path in sorted(gap_dir.glob("*.yaml")):
@@ -188,11 +204,36 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--root", type=Path, default=None)
     args = parser.parse_args(argv)
 
+    src_dir, src_count = scan_source(args.root)
+    if src_count < 0:
+        # 真空合格防护: 校验源不存在 → 不得报通过 (config 错误)
+        msg = (
+            f"❌ 校验源不存在: {src_dir}\n"
+            f"   门禁无法校验任何对象, 因此**不构成通过**。\n"
+            f"   (2026-09-19 实证: 此前该目录缺失时 scan() 静默返回空, 下游据 0/0\n"
+            f"    输出 '✅ 门禁通过' —— 即声称能检测 'resolved but no evidence'\n"
+            f"    的检测器实际什么都没扫。)\n"
+            f"   处置: 补齐 {GAP_ITEMS_REL}/, 或修正本工具的扫描源。"
+        )
+        if args.json:
+            print(json.dumps({
+                "error": "scan_source_missing",
+                "scan_source": str(src_dir),
+                "source_exists": False,
+                "verdict": "unknown",
+                "message": msg,
+            }, ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(msg, file=sys.stderr)
+        return 1
+
     checks = scan(args.root, args.strict)
     result = build_result(checks, args.mode)
 
     if args.json:
-        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+        print(json.dumps({**result, "scan_source": str(src_dir),
+                          "scan_source_files": src_count},
+                         ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 
     if args.mode == "gap":
