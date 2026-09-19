@@ -24,7 +24,9 @@ runtime:
   timeout: 3600s
   sandbox:
     level: isolated
-    capabilities: []
+    capabilities:
+    - bos://memory/kos/search
+    - bos://capability/compute/generate
     permissions: []
 quality:
   calibration:
