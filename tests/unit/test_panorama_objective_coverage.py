@@ -1,5 +1,7 @@
 import importlib.util
+import json
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -94,6 +96,89 @@ def test_objective_coverage_maps_delivery_without_value_or_activation(tmp_path, 
     assert by_id["RUFLO_RF0"]["status"] == "PASS"
     assert by_id["CLAIMS_AUTHORITY_ACTIVATION"]["status"] == "AWAITING_AUTHORIZATION"
     assert by_id["BUSINESS_VALUE"]["status"] == "NOT_PROVEN"
+
+
+def test_objective_coverage_projects_shadow_observation_without_completion(tmp_path, monkeypatch) -> None:
+    module = _module()
+    monkeypatch.setattr(module, "CODE_ROOT", tmp_path / "code")
+    _write_ledger(tmp_path / "code/docs/plans/3y-bet-ledger.yaml")
+    payload = _payload()
+    payload["claims_authority"] = {
+        "activation_state": "shadow-active",
+        "effective_claim_authority": "v1",
+        "instruction_capable": False,
+    }
+    payload["claims_observation_progress"] = {
+        "state": "IN_PROGRESS",
+        "sample_count": 182,
+        "minimum_samples": 1440,
+        "checkpoints": [{"id": "smoke", "reached": True, "diagnostic_only": True}],
+    }
+
+    report = module.collect_objective_coverage(payload)
+
+    assert report["activation_status"] == "SHADOW_OBSERVING"
+    assert report["delivery_complete"] is False
+    item = by_id = {
+        entry["id"]: entry for entry in report["items"]
+    }["CLAIMS_AUTHORITY_ACTIVATION"]
+    assert item["status"] == "SHADOW_OBSERVING"
+    assert item["runtime_state"] == "shadow-active"
+    assert item["observation_state"] == "IN_PROGRESS"
+    assert item["value_status"] == "NOT_PROVEN"
+
+
+def test_observation_progress_projects_live_shadow_window(tmp_path, monkeypatch) -> None:
+    module = _module()
+    request = {
+        "schema": "claims-activation-request-package/v1",
+        "available": True,
+        "status": "EXECUTED",
+        "execution": "EXECUTED_AT_2026-09-19T10:15:36Z",
+        "activation": "SHADOW_ACTIVE",
+        "execution_receipt": {"receipt_digest": "sha256:receipt"},
+        "request": {
+            "authority_id": "omo-claims-authority-r0",
+            "operation": "activate-shadow",
+            "descriptor": {"digest": "sha256:descriptor"},
+        },
+        "human_authorization": {
+            "status": "GRANTED_OPERATION_SPECIFIC_2026-09-19",
+            "observation_after_activation": {
+                "duration_seconds": 86400,
+                "minimum_samples": 1440,
+                "maximum_gap_seconds": 120,
+                "evidence_dir": str(tmp_path / "evidence"),
+            },
+        },
+        "rollback": {"automatic_execution": False},
+    }
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    (evidence / "summary.json").write_text(json.dumps({
+        "started_at_utc": (datetime.now(timezone.utc) - timedelta(minutes=31)).isoformat(),
+        "samples": 182,
+        "invalid": False,
+        "max_gap_seconds": 60.1,
+        "activation_state": "shadow-active",
+        "errors": 0,
+        "expected_last_receipt": "sha256:receipt",
+        "descriptor_digest": "sha256:descriptor",
+    }), encoding="utf-8")
+    monkeypatch.setattr(module, "CLAIMS_REQUEST_PACKAGE", tmp_path / "request.json")
+    (tmp_path / "request.json").write_text(json.dumps(request), encoding="utf-8")
+
+    report = module.collect_claims_observation_progress()
+
+    assert report["available"] is True
+    assert report["state"] == "IN_PROGRESS"
+    assert report["activation_state"] == "shadow-active"
+    assert report["sample_count"] == 182
+    assert report["state"] == "IN_PROGRESS"
+    assert report["receipts_match"] is True
+    assert report["errors"] == 0
+    assert next(item for item in report["checkpoints"] if item["id"] == "smoke")["reached"] is True
+    assert next(item for item in report["checkpoints"] if item["id"] == "graduation")["reached"] is False
 
 
 def test_objective_coverage_fails_partial_on_missing_ledger_or_gate(tmp_path, monkeypatch) -> None:

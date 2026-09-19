@@ -292,6 +292,24 @@ def test_agent_visibility_includes_exact_activation_request() -> None:
     assert request["human_authorization_status"] == "UNPROVEN"
 
 
+def test_agent_visibility_exposes_shadow_observation_progress() -> None:
+    module = _module()
+    payload = _payload()
+    payload["claims_authority"] = {"activation_state": "shadow-active"}
+    payload["claims_observation_progress"] = {
+        "state": "IN_PROGRESS",
+        "sample_count": 182,
+        "minimum_samples": 1440,
+    }
+
+    authority = module.collect_agent_visibility(payload)["authority"]
+
+    assert authority["claims_activation_state"] == "shadow-active"
+    assert authority["claims_observation_progress"]["state"] == "IN_PROGRESS"
+    assert authority["claims_observation_progress"]["sample_count"] == 182
+    assert authority["value_proof"] == "NOT_PROVEN"
+
+
 def test_agent_visibility_value_readiness_fails_closed_without_panel() -> None:
     module = _module()
     payload = _payload()
