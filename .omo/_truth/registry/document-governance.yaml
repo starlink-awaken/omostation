@@ -64,6 +64,7 @@ surfaces:
       - .omo/_knowledge/decisions/**
       - .omo/_knowledge/management/**
       - .omo/_knowledge/decision-proposals/**
+      - .omo/_knowledge/design/plans/archive/**
     owner: governance-team
     lifecycle: history
     ssot: docs/INDEX-KNOWLEDGE.md
