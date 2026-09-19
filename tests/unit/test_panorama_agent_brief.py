@@ -408,6 +408,60 @@ def test_template_projects_claims_observation_progress() -> None:
     assert "不可补样或拼接窗口" in html
 
 
+def test_claims_lifecycle_authorization_projects_pending_request(tmp_path, monkeypatch) -> None:
+    module = _module()
+    package = {
+        "schema": "claims-authority-lifecycle-authorization-request/v1",
+        "status": "DRAFT_PENDING_HUMAN_APPROVAL",
+        "authority_id": "omo-claims-authority-r0",
+        "activation_binding": {
+            "activation_receipt_digest": "sha256:receipt",
+            "descriptor_digest": "sha256:descriptor",
+            "authority_epoch": 1,
+            "activation_state": "shadow-active",
+        },
+        "operations": [{"id": "managed-clone-shadow-observation"}],
+        "global_forbidden": ["force push"],
+        "stop_conditions": ["remote OID drift"],
+    }
+    draft = tmp_path / "draft.json"
+    draft.write_text(json.dumps(package), encoding="utf-8")
+    review = tmp_path / "review.md"
+    review.write_text("review", encoding="utf-8")
+    runbook = tmp_path / "runbook.md"
+    runbook.write_text("runbook", encoding="utf-8")
+    gap = tmp_path / "gap.json"
+    gap.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(module, "CLAIMS_LIFECYCLE_AUTHORIZATION_PACKAGE", draft)
+    monkeypatch.setattr(module, "CLAIMS_LIFECYCLE_REVIEW", review)
+    monkeypatch.setattr(module, "CLAIMS_LIFECYCLE_RUNBOOK", runbook)
+    monkeypatch.setattr(module, "CLAIMS_LIFECYCLE_GAP_AUDIT", gap)
+
+    report = module.collect_claims_lifecycle_authorization()
+
+    assert report["available"] is True
+    assert report["read_only"] is True
+    assert report["execution"] == "NOT_EXECUTED"
+    assert report["status"] == "DRAFT_PENDING_HUMAN_APPROVAL"
+    assert report["operations"][0]["id"] == "managed-clone-shadow-observation"
+    assert all(item["available"] for item in report["artifacts"].values())
+    assert all(value.startswith("sha256:") for value in (
+        report["artifacts"]["draft"]["sha256"],
+        report["artifacts"]["review"]["sha256"],
+        report["artifacts"]["runbook"]["sha256"],
+        report["artifacts"]["gap_audit"]["sha256"],
+    ))
+
+
+def test_template_projects_claims_lifecycle_authorization() -> None:
+    module = _module()
+    host_template = module.ROOT / "bin/panorama/assets/host/template.html"
+    html = host_template.read_text(encoding="utf-8")
+    assert 'id="claims-lifecycle-authorization"' in html
+    assert "D.claims_lifecycle_authorization" in html
+    assert "operation-specific human approval" in html
+
+
 def test_panel_value_is_materialized_before_agent_visibility() -> None:
     source = SCRIPT.read_text(encoding="utf-8")
     panel_call = source.index("payload.update(_collect_panels(payload))")

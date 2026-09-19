@@ -40,6 +40,18 @@ INDEX_HTML = OUT_DIR / "index.html"
 CLAIMS_REQUEST_PACKAGE = (
     Path.home() / ".local/share/zhixing-dashboard/claims-activation-request.json"
 )
+CLAIMS_LIFECYCLE_AUTHORIZATION_PACKAGE = (
+    Path.home() / ".local/share/zhixing-dashboard/claims-observation/lifecycle-authorization-request-draft.json"
+)
+CLAIMS_LIFECYCLE_REVIEW = (
+    Path.home() / ".local/share/zhixing-dashboard/claims-observation/lifecycle-authorization-review.md"
+)
+CLAIMS_LIFECYCLE_RUNBOOK = (
+    Path.home() / ".local/share/zhixing-dashboard/claims-observation/lifecycle-execution-runbook.md"
+)
+CLAIMS_LIFECYCLE_GAP_AUDIT = (
+    Path.home() / ".local/share/zhixing-dashboard/claims-observation/authority-lifecycle-gap-audit.json"
+)
 
 GATE_DECLARED = {
 }
@@ -1351,6 +1363,90 @@ def collect_claims_observation_progress() -> dict:
             **empty,
             "state": "INVALID",
             "error": type(exc).__name__,
+        }
+
+
+def _file_sha256(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
+def collect_claims_lifecycle_authorization() -> dict:
+    """Project the pending lifecycle authorization request without executing it."""
+    artifacts = {
+        "draft": CLAIMS_LIFECYCLE_AUTHORIZATION_PACKAGE,
+        "review": CLAIMS_LIFECYCLE_REVIEW,
+        "runbook": CLAIMS_LIFECYCLE_RUNBOOK,
+        "gap_audit": CLAIMS_LIFECYCLE_GAP_AUDIT,
+    }
+    projected_artifacts = {
+        name: {
+            "available": path.is_file(),
+            "path": str(path),
+            "sha256": _file_sha256(path),
+        }
+        for name, path in artifacts.items()
+    }
+    report = {
+        "schema": "claims-lifecycle-authorization-projection/v1",
+        "available": False,
+        "read_only": True,
+        "status": "REQUEST_UNAVAILABLE",
+        "execution": "NOT_EXECUTED",
+        "activation": "SHADOW_ACTIVE",
+        "authority_id": "omo-claims-authority-r0",
+        "artifacts": projected_artifacts,
+        "required_fields": [
+            "principal_decision_id",
+            "decision_timestamp_utc",
+            "decision_expires_at_utc",
+            "human_verbatim_quote",
+        ],
+        "forbidden": [
+            "force push",
+            "--no-verify",
+            "automatic retry after unknown outcome",
+            "historical receipt mutation",
+            "instruction capability enablement",
+            "v2 promotion above shadow",
+        ],
+        "not_sufficient": [
+            "general agent authorization",
+            "observation samples alone",
+            "dashboard status",
+            "AI statement",
+        ],
+    }
+    draft_path = artifacts["draft"]
+    if not draft_path.is_file():
+        return report
+    try:
+        package = json.loads(draft_path.read_text(encoding="utf-8"))
+        if package.get("schema") != "claims-authority-lifecycle-authorization-request/v1":
+            raise ValueError("package schema mismatch")
+        if package.get("status") != "DRAFT_PENDING_HUMAN_APPROVAL":
+            raise ValueError("package is not pending approval")
+        binding = package.get("activation_binding") if isinstance(package.get("activation_binding"), dict) else {}
+        report.update({
+            "available": True,
+            "status": str(package.get("status")),
+            "authority_id": package.get("authority_id"),
+            "activation_binding": binding,
+            "operations": package.get("operations") if isinstance(package.get("operations"), list) else [],
+            "global_forbidden": package.get("global_forbidden") if isinstance(package.get("global_forbidden"), list) else [],
+            "stop_conditions": package.get("stop_conditions") if isinstance(package.get("stop_conditions"), list) else [],
+        })
+        return report
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        return {
+            **report,
+            "status": "REQUEST_INVALID",
+            "error": f"{type(exc).__name__}: {exc}",
         }
 
 
@@ -3219,6 +3315,10 @@ def collect_agent_visibility(payload: dict) -> dict:
         payload.get("claims_observation_progress")
         if isinstance(payload.get("claims_observation_progress"), dict) else {}
     )
+    claims_lifecycle_authorization = (
+        payload.get("claims_lifecycle_authorization")
+        if isinstance(payload.get("claims_lifecycle_authorization"), dict) else {}
+    )
     agent_pool = payload.get("agent_cell_pool") if isinstance(payload.get("agent_cell_pool"), dict) else {}
     reference_cell = payload.get("reference_cell") if isinstance(payload.get("reference_cell"), dict) else {}
     agent_cell_semantic = payload.get("agent_cell_semantic") if isinstance(payload.get("agent_cell_semantic"), dict) else {}
@@ -3418,6 +3518,7 @@ def collect_agent_visibility(payload: dict) -> dict:
                 if isinstance(payload.get("claims_observation_progress"), dict)
                 else {"schema": "claims-observation-progress/v1", "available": False}
             ),
+            "claims_lifecycle_authorization": claims_lifecycle_authorization,
             "value_proof": "NOT_PROVEN",
             "value_proof_readiness": value_readiness,
         },
@@ -3598,6 +3699,7 @@ def build_payload() -> dict:
         "claims_task16": collect_claims_task16_preflight(),
         "claims_activation_request": collect_claims_activation_request(),
         "claims_observation_progress": collect_claims_observation_progress(),
+        "claims_lifecycle_authorization": collect_claims_lifecycle_authorization(),
         "reference_cell": collect_reference_cell_gate(),
         "asd": collect_asd(),
         "role_registry": collect_role_registry(),
