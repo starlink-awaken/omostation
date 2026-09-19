@@ -19,6 +19,13 @@ agent 手动补派生文档/登记脚本, 周而复始. post-commit-sync-check �
                   omo_lint_projection.py → omo_lint.py::subcommand)
   SSOT-UNSYNCED : 派生文档残缺 (totals=0) → CI 完整环境重生成, 本地勿提交
 
+Closeout-branch skip (A3, FORWARD-PLAN §A3):
+  - 当前分支匹配 closeout 模式 (含 closeout/retro/ledger/Ax-/bet-execution/t10-*)
+    时, 跳过 FRONTMATTER-MISSING 对 .omo/_knowledge/retros/*.md 的修复
+  - 强制启用: SKIP_FIX_LOOP_BRANCH=1 环境变量
+  - 原因: closeout PR 携带 retro 文件时, auto-fix 修改 last-reviewed 会产生
+    与本地 ledger 不同步的额外 diff (复盘实证 2026-09, batch 31 教训 PITFALL-COO-005)
+
 用法:
     python3 bin/gac/auto-fix-loop.py            # 干跑: 检测 + 分类 + 修复建议
     python3 bin/gac/auto-fix-loop.py --apply    # 应用可安全自动修复项
@@ -34,6 +41,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
 import subprocess
 import sys
 from datetime import UTC
@@ -58,6 +67,66 @@ DERIVED_TARGETS = (
 
 # 注册表 SSOT path
 MOF_CAPABILITIES = WORKSPACE / ".omo" / "_truth" / "registry" / "mof-capabilities.yaml"
+
+# A3: closeout-branch skip 配置.
+# 分支名含以下任一模式 → 跳过 FRONTMATTER-MISSING 对 retro 路径的修复.
+CLOSEOUT_BRANCH_PATTERNS = (
+    r"-closeout\b",
+    r"-retro\b",
+    r"-ledger\b",
+    r"-a[1-9]-",
+    r"^agent/governance-agent/a[1-9]-",
+    r"bet-execution-",
+)
+
+# retro 路径前缀 (FRONTMATTER-MISSING drift 跳过范围).
+RETRO_PATH_PREFIXES = (
+    ".omo/_knowledge/retros/",
+    ".omo/_knowledge/retrospectives/retros/",
+)
+
+
+def _git_current_branch() -> str:
+    """读取当前分支名 (空字符串 = 失败, 不抛)."""
+    try:
+        r = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        return r.stdout.strip()
+    except Exception:
+        return ""
+
+
+def is_closeout_branch(branch: str | None = None) -> bool:
+    """判断当前分支是否为 closeout 类 (应跳过 retro frontmatter 修复).
+
+    Returns True if:
+      - SKIP_FIX_LOOP_BRANCH=1 env var set, OR
+      - branch matches one of CLOSEOUT_BRANCH_PATTERNS
+    """
+    if os.environ.get("SKIP_FIX_LOOP_BRANCH", "").strip() in ("1", "true", "yes"):
+        return True
+    if branch is None:
+        branch = _git_current_branch()
+    if not branch or branch == "HEAD":
+        return False
+    for pat in CLOSEOUT_BRANCH_PATTERNS:
+        if re.search(pat, branch):
+            return True
+    return False
+
+
+def is_retro_path(path: str) -> bool:
+    """判断文件路径是否属于 retro 类 (受 A3 skip 保护)."""
+    for prefix in RETRO_PATH_PREFIXES:
+        if path.startswith(prefix) or f"/{prefix}" in path:
+            return True
+    return False
 
 
 class Drift:
@@ -199,6 +268,24 @@ def detect_drifts() -> list[Drift]:
             for line in r.stdout.splitlines():
                 if "missing_frontmatter" in line and "does not start with YAML" in line:
                     missing_files.add(line.split(":")[0])
+            # A3: closeout branch 上跳过 retro 路径的 auto-fix
+            closeout_mode = is_closeout_branch()
+            if closeout_mode and missing_files:
+                retro_skipped = {f for f in missing_files if is_retro_path(f)}
+                non_retro = missing_files - retro_skipped
+                if retro_skipped:
+                    drifts.append(
+                        Drift(
+                            "FRONTMATTER-MISSING-RETRO-SKIPPED",
+                            "info",
+                            f"closeout-branch 跳过 {len(retro_skipped)} 个 retro "
+                            f"文件的 auto-fix (避免与 ledger 同步冲突): "
+                            f"{', '.join(sorted(retro_skipped)[:3])}",
+                            "manual: 合并后再统一 batch 处理",
+                            auto_fixable=False,
+                        )
+                    )
+                missing_files = non_retro
             if missing_files:
                 files_str = " ".join(list(missing_files)[:10]) # fix up to 10 at a time
                 drifts.append(
@@ -317,6 +404,10 @@ def main() -> int:
     else:
         if not drifts:
             print("✅ AUTO-FIX: 无漂移")
+        if is_closeout_branch():
+            print(
+                f"ℹ️  closeout-branch mode (A3): FRONTMATTER-MISSING on retro paths 跳过"
+            )
         for d in remaining:
             marker = "🟡" if d.auto_fixable else "🔴"
             print(f"{marker} [{d.kind}:{d.severity}] {d.message}")

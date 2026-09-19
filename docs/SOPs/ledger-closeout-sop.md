@@ -140,6 +140,23 @@ git branch -D agent/governance-agent/<bet-id>
 
 **统一入口**: 任何 repo closeout 都遵循 5 步框架, 第 4 步 push 路径可能不同 (`agent/governance-agent/<x>` 是主仓强制; 子仓可 `feat/<x>`)。
 
+## 3.5 Closeout-branch Skip (A3, 2026-09-19)
+
+- **机制**: `bin/gac/auto-fix-loop.py` v2 新增分支检测
+- **触发**: 分支含 `-closeout`/`-retro`/`-ledger`/`a[1-9]-`/`bet-execution-` 任一模式
+- **效果**: 跳过 `FRONTMATTER-MISSING` 对 `.omo/_knowledge/retros/*.md` 的修复
+- **强制启用**: `SKIP_FIX_LOOP_BRANCH=1` 环境变量
+- **原因**: closeout PR 携带 retro 时, auto-fix 把 `last-reviewed` 改成今天会产生
+  第二个 commit, 与本地 ledger 不同步 (PITFALL-COO-005, 复盘 batch 31)
+
+```bash
+# 验证 (在 closeout 分支):
+$ python3 bin/gac/auto-fix-loop.py --json | jq '.drifts[].kind'
+"PATH-DRIFT"
+"FRONTMATTER-MISSING-RETRO-SKIPPED"   # ← A3 新增, retro 跳过
+"FRONTMATTER-MISSING"                  # ← 非 retro 仍正常修复
+```
+
 ## 4. 常见坑速查
 
 | 症状 | 根因 | 修复 |
