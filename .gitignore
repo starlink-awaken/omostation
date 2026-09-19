@@ -9,7 +9,11 @@
 .omo/.omo/
 .omo/_archive/
 .artifacts/
-.omo/_delivery/
+.omo/_delivery/*
+# Spine pipeline emission targets: re-include calibration/events/scene-outcomes for journey-engine.py
+!.omo/_delivery/calibration/
+!.omo/_delivery/events/
+!.omo/_delivery/scene-outcomes/
 .omo/_log/
 .omo/_knowledge/*.jsonl
 # workflow-mesh 运行时事件流 (高频 churn, 非治理 SSOT; governance-history.jsonl 保留入仓)
