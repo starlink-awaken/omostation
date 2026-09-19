@@ -282,6 +282,24 @@ def ensure(dry_run: bool = False) -> dict:
         tmp.replace(TEMPLATE)
     if not dry_run:
         actions["refresh_allowlist"] = {"action": apply_refresh_allowlist()}
+        try:
+            import importlib.util
+            host_path = Path(__file__).with_name("zhixing_host_sync.py")
+            spec = importlib.util.spec_from_file_location("zhixing_host_sync", host_path)
+            assert spec and spec.loader
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            host_status = module.status
+        except Exception as exc:  # noqa: BLE001 - visibility must fail closed
+            actions["host_files"] = {"action": "check_failed", "error": type(exc).__name__}
+            ok = False
+        else:
+            actions["host_files"] = {
+                "action": "checked",
+                "ok": host_status().get("ok", False),
+            }
+            if actions["host_files"]["ok"] is False:
+                ok = False
     return {"ok": ok, "dry_run": dry_run, "changed": changed, "actions": actions}
 
 
