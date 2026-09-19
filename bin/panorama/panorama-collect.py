@@ -1171,6 +1171,10 @@ def collect_claims_activation_request() -> dict:
         "human_authorization_not_sufficient": human.get("not_sufficient") or [],
         "required_binding": human.get("required_binding") or [],
         "observation_after_activation": human.get("observation_after_activation") or {},
+        "observation": (
+            package.get("observation")
+            if isinstance(package.get("observation"), dict) else {}
+        ),
         "rollback_automatic_execution": rollback.get("automatic_execution") is True,
     }
 
@@ -1182,6 +1186,11 @@ def collect_claims_observation_progress() -> dict:
         request.get("observation_after_activation")
         if isinstance(request.get("observation_after_activation"), dict) else {}
     )
+    if not observation.get("evidence_dir"):
+        observation = (
+            request.get("observation")
+            if isinstance(request.get("observation"), dict) else {}
+        )
     evidence_dir = Path(str(observation.get("evidence_dir") or "")).expanduser()
     summary_path = evidence_dir / "summary.json"
     empty = {
