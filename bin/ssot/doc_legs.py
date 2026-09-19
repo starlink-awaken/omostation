@@ -105,7 +105,8 @@ _JOURNEY_PREFIX = {
 # ── 规则 (对齐既有实现) ──────────────────────────────────────────
 
 # 工作区文档路径白名单 — 只处理工作区内的文档, 拒绝外部路径注入
-ALLOWED_DOC_ROOTS = ("docs", ".omo/_knowledge/retros", ".omo/_truth/scenarios/v3")
+# .omo/_knowledge/ 作为通用知识根目录, 支持 applenotes 等内容型连接器写入
+ALLOWED_DOC_ROOTS = ("docs", ".omo/_knowledge", ".omo/_truth/scenarios/v3")
 
 # 最小正文行数 / 最大文件大小 (防空壳 / 巨型文件)
 MIN_DOC_LINES = 3
@@ -174,14 +175,61 @@ def _doc_stub(doc: Path) -> dict[str, Any]:
 
 # ── 能力腿 ───────────────────────────────────────────────────────
 
+def _process_content(signal: dict, content: str, dry_run: bool) -> dict[str, Any]:
+    """处理内容型文档 (applenotes 等连接器直接提供文本, 无 .md 文件路径).
+
+    对齐文件型文档的规则: 非空壳 / 超限检查; 格式/敏感/依据检查需要文件路径,
+    内容型信号跳过 (连接器已做初步清洗).
+    """
+    issues: list[dict[str, Any]] = []
+    checks = 0
+    lines = content.splitlines()
+
+    # 规则 1: 非空壳
+    checks += 1
+    if len(lines) < MIN_DOC_LINES:
+        issues.append({"kind": "too_short",
+                        "detail": f"{len(lines)} 行 < {MIN_DOC_LINES}"})
+
+    # 规则 2: 不超限
+    checks += 1
+    if len(content) > MAX_DOC_CHARS:
+        issues.append({"kind": "too_large",
+                        "detail": f"{len(content)} chars > {MAX_DOC_CHARS}"})
+
+    ok = not issues
+    return {
+        "status": "succeeded" if ok else "partial",
+        "action": "process",
+        "checks": checks,
+        "passed": checks - len(issues),
+        "issues": issues,
+        "doc": {
+            "path": signal.get("source", "connector"),
+            "exists": True,
+            "lines": len(lines),
+            "chars": len(content),
+            "source": signal.get("source", ""),
+            "content_based": True,
+        },
+        "dry_run": dry_run,
+    }
+
+
 def process_document(signal: dict, *, dry_run: bool = False) -> dict[str, Any]:
     """处理文档: 路径校验 / 存在性 / 规则检查 (格式 + 敏感 + 依据).
 
+    支持两种信号源:
+      - workspace_docs: 文件路径信号 (.md 路径, 走完整路径校验 + doc-review-checks)
+      - 内容型连接器 (applenotes 等): 直接提供 content 文本, 跳过路径校验,
+        仅做非空壳 / 超限检查 (格式/敏感/依据检查需要文件路径, 由连接器预清洗)
+
     真实动作:
-      1. 路径越界拒绝 (防注入)
+      1. 路径越界拒绝 (防注入, 仅文件型信号)
       2. 文件不存在 → partial (非静默成功)
       3. 空壳 / 超大文件 → 标注
       4. 复用 doc-review-checks 跑完整检查 (若有)
+      5. 内容型信号: 直接处理 content, 不做路径校验
     返回结果被 journey 累积到 ctx.variables 供 record_result 聚合 + 置信度驱动 gate.
     """
     doc = _resolve_doc_path(signal)
@@ -189,6 +237,12 @@ def process_document(signal: dict, *, dry_run: bool = False) -> dict[str, Any]:
     checks = 0
 
     if doc is None:
+        # 内容型信号 (applenotes 等连接器): 直接提供 content 文本, 无 .md 文件路径
+        # → 按内容处理, 不做路径校验 (路径校验仅针对 workspace_docs 文件源)
+        raw = signal.get("raw_item") if isinstance(signal.get("raw_item"), dict) else {}
+        content = signal.get("content") or raw.get("content") or ""
+        if isinstance(content, str) and content.strip():
+            return _process_content(signal, content, dry_run)
         issues.append({"kind": "path_rejected", "detail": "outside_allowed_roots"})
         return {"status": "partial", "action": "process", "checks": 0,
                 "passed": 0, "issues": issues, "dry_run": dry_run}
