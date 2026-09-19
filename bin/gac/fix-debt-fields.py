@@ -5,12 +5,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
 import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+
+# 仅匹配**顶层** `status:` 键 (不缩进) —— 避免误删 lifecycle_state 或嵌套键
+_STATUS_LINE_RE = re.compile(r"^status\s*:")
+
+
+def _is_status_line(line: str) -> bool:
+    return bool(_STATUS_LINE_RE.match(line))
 
 
 def scan_debt_items(root: Path) -> tuple[list[dict], list[dict]]:
@@ -55,15 +63,16 @@ def fix_debt_items(root: Path, apply: bool) -> dict:
         "applied": [],
     }
     if apply:
-        items_dir = root / ".omo" / "debt" / "items"
         for conflict in conflicts:
             path = Path(conflict["path"])
-            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-            data.pop("status", None)
-            path.write_text(
-                yaml.dump(data, allow_unicode=True, default_flow_style=False, sort_keys=False),
-                encoding="utf-8",
-            )
+            # 行级删除 `status:` —— **不用 yaml.dump 整文件重写**.
+            # 2026-09-19 实证: yaml.dump 会重排引号风格 (双→单)、折行, 并把
+            # description 的 `|-` 块标量改成带空行的引号字符串 —— 格式严重退化,
+            # 而这些文件是**人读的债务记录**, 不该被机器重排。
+            text = path.read_text(encoding="utf-8")
+            kept = [ln for ln in text.splitlines(keepends=True)
+                    if not _is_status_line(ln)]
+            path.write_text("".join(kept), encoding="utf-8")
             report["applied"].append({"path": str(path), "action": "removed_status"})
     return report
 
