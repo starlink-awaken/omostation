@@ -3,7 +3,8 @@
 
 问题（docs/DASHBOARDS.md §3.1，2026-09-17 实证）:
 主入口 `:43191` 的部署目录 `~/.local/share/zhixing-dashboard/` **不在任何 git
-仓库中**。多 agent 并发编辑同一 `template.html` / `refresh.py` 会**互相覆盖**:
+仓库中**。多 agent 并发编辑同一 `template.html` / `refresh.py` / `live_server.py`
+会**互相覆盖**:
 
   - 场景系统面板被另一 agent 的「metrics redesign」覆盖丢失（所有备份均无该代码）
   - 该次覆盖同时回退了已修好的 `ens[n.type]` bug
@@ -53,6 +54,8 @@ DASHBOARD_DIR = Path.home() / ".local" / "share" / "zhixing-dashboard"
 HOST_FILES: tuple[tuple[str, str], ...] = (
     ("template.html", "template.html"),
     ("refresh.py", "refresh.py.asset"),
+    ("live_server.py", "live_server.py.asset"),
+    ("observatory_query.py", "observatory_query.py.asset"),
 )
 
 
