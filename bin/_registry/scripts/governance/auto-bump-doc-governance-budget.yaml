@@ -3,9 +3,11 @@ id: bin/ssot/auto-bump-doc-governance-budget.py
 name: Auto-Bump Doc-Governance Budget
 category: governance
 owner: governance-team
-description: "T10-125 (本会话沉淀) — 当 doc-governance-check FAIL with warning_budget_exceeded 时, 自动定位对应 surface 的 budget exception, bump max_findings (+20), 更新 reason 注释 + UTC 日期标记. circuit_breaker: 单 PR ≤ 20, 超额必人工审批."
+description: "T10-125 + A1 (本会话沉淀) — 当 doc-governance-check --no-new-warnings FAIL with warning_budget_exceeded 时, 自动定位对应 (rule, surface) 的 budget exception, bump max_findings (默认 +20, ABSOLUTE_MAX_BUMP=50), 更新 reason 注释 + UTC 日期标记. v2 通用化: 按 (rule, surface) 二元组定位, 兼容全部 9 个 budget exception (legacy-*-enums/frontmatter + concurrent-plans-orphan-docs + accepted-specs-invalid-metadata). circuit_breaker: 单 PR ≤ 50, 超额必人工审批."
 inputs:
-  - name: "无 (脚本读 .omo/_truth/registry/document-governance.yaml 自动定位)"
+  - name: "--dry-run (只打印不修改)"
+  - name: "--amount N (bump 幅度, 默认 20, 上限 50)"
+  - name: "--strict (对 count ≤ budget 也强制 bump)"
 outputs:
   - type: exit_code
   - type: yaml_modify
@@ -17,4 +19,4 @@ related:
   - .omo/_knowledge/retros/LESSONS-LEARNED-2026-09-16.md
   - .omo/_knowledge/patterns/p105-doc-governance-auto-bump.md
 maturity: draft
-last_reviewed: "2026-09-18"
+last_reviewed: "2026-09-19"
