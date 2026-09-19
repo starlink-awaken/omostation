@@ -55,8 +55,11 @@ spaces/*.db
 #    decayed/pitches 由 c2g 等工具自动生成，只忽略新增文件。
 # ---------------------------------------------------------------------------
 runtime/**/*.log
+runtime/**/*.log.*
 runtime/**/*.jsonl
 runtime/**/*.pid
+runtime/cron/crontab-before-*.txt
+runtime/wip-snapshots/
 runtime/data/
 # 场景/校准库的本地快照 (二进制, 由 scene-history.py backup 生成; 持久记录走
 # .omo/_knowledge/scene-history/*.json 的 git 跟踪导出)
@@ -102,6 +105,12 @@ runtime/agent-sessions/
 .omo/change-log/mutations.jsonl
 .omo/tasks/registry/done/
 .omo/_truth/registry/dependency-baseline.yaml
+
+# ADR-0404 followup: agent-cell runtime state (cell_states.json, live-smoke-receipts.jsonl)
+# 由 agent-cell runtime 持续写入, 不入仓; semantic/*.sqlite3 已单独 ignore.
+.omo/state/agent-cell/
+# value-recorder baseline (运行时状态, 不入仓)
+.omo/state/value-baselines/
 
 # ---------------------------------------------------------------------------
 # 3. Data 共享数据底座的运行时文件
@@ -229,6 +238,7 @@ tasks.json
 # 10. 系统文件
 # ---------------------------------------------------------------------------
 .DS_Store
+*.bak2
 /.c2g_data/
 
 # governance-dashboard hook transient specs
