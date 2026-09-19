@@ -1218,6 +1218,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   <article class="card" style="border-color:#f59e0b">
     <h2>Claims Authority 激活门</h2>
     <div id="claims-authorization" class="list"></div>
+    <div id="claims-observation-progress" class="list gap"></div>
     <p class="small muted gap">激活后仍需完成 24 小时 / 1440 样本观察；这里只显示等待精确授权的请求，不提供写入接口。</p>
   </article>
   <article class="card">
@@ -1974,9 +1975,9 @@ var pendingPubs=((D.pending_publications||{}).items||[]).filter(function(p){retu
 $('pending-authorizations').innerHTML=pendingPubs.map(function(p){return '<article class="loop"><h3>'+esc(p.id)+'</h3><p class="small mono">commit '+esc(p.commit)+'</p><p class="small mono">patch '+esc(p.patch_digest)+'</p><p class="small">dirty='+esc(p.dirty_count)+' · '+esc(p.authorization_scope||'exact-commit authorization required')+'</p></article>';}).join('')||'<p class="small muted">当前没有等待精确授权的发布候选。</p>';
 var objectiveCoverage=D.objective_coverage||{};
 var coverageItems=objectiveCoverage.items||[];
-function objectiveChip(state){var s=String(state||'UNKNOWN');var cls=s==='PASS'||s==='DELIVERY_ACCEPTED_RUNTIME_VERIFIED'?'good':(s==='NOT_PROVEN'||s==='AWAITING_AUTHORIZATION'||s==='PARTIAL'?'warn':'neutral');return chip(s,cls);}
+function objectiveChip(state){var s=String(state||'UNKNOWN');var cls=s==='PASS'||s==='DELIVERY_ACCEPTED_RUNTIME_VERIFIED'?'good':(s==='NOT_PROVEN'||s==='AWAITING_AUTHORIZATION'||s==='SHADOW_OBSERVING'||s==='PARTIAL'?'warn':'neutral');return chip(s,cls);}
 $('objective-coverage-summary').innerHTML='delivery='+esc(objectiveCoverage.delivery_complete===false?'false':String(objectiveCoverage.delivery_complete||'UNKNOWN'))+' · activation='+esc(objectiveCoverage.activation_status||'UNKNOWN')+' · value='+esc(objectiveCoverage.value_proof||'UNKNOWN');
-$('objective-coverage-rows').innerHTML=coverageItems.map(function(x){return '<tr><td>'+objectiveChip(x.status)+'</td><td class="mono">'+esc(x.id)+'</td><td>'+objectiveChip(x.value_status)+'</td><td>'+esc(x.runtime_status||'—')+'</td><td>'+esc(x.requirement||'')+'</td></tr>';}).join('')||'<tr><td colspan="5" class="empty">目标覆盖 NO_DATA</td></tr>';
+$('objective-coverage-rows').innerHTML=coverageItems.map(function(x){return '<tr><td>'+objectiveChip(x.status)+'</td><td class="mono">'+esc(x.id)+'</td><td>'+objectiveChip(x.value_status)+'</td><td>'+esc(x.runtime_status||x.runtime_state||'—')+'</td><td>'+esc(x.requirement||'')+'</td></tr>';}).join('')||'<tr><td colspan="5" class="empty">目标覆盖 NO_DATA</td></tr>';
 $('unfinished-objectives').innerHTML=(D.unfinished_objectives||[]).map(function(x){return '<article class="loop"><h3>'+esc(x.requirement||x.id)+'</h3><p class="small">'+esc(x.status||'UNKNOWN')+' · '+esc(x.id)+'</p></article>';}).join('')||'<p class="small muted">当前没有登记的未完成目标。</p>';
 var strategicGaps=(((D.strategic||{}).trace||{}).gaps)||[];
 var gapKinds={};strategicGaps.forEach(function(x){var k=x.kind||'unknown';gapKinds[k]=(gapKinds[k]||0)+1;});
@@ -1986,6 +1987,15 @@ var reconciliationCandidates=((D.reconciliation_candidates||{}).items||[]);
 $('reconciliation-candidates').innerHTML=reconciliationCandidates.map(function(x){return '<article class="loop"><h3>'+esc(x.id)+' · '+esc(x.state)+'</h3><p class="small mono">base '+esc(x.base_commit)+'</p><p class="small mono">patch '+esc(x.patch_sha256)+'</p><p class="small">'+esc(x.objective||'')+'</p></article>';}).join('')||'<p class="small muted">当前没有已准备的 reconciliation 候选包。</p>';
 var claimsActivationRequest=D.claims_activation_request||{};
 var claimsActivationReadiness=D.claims_activation_readiness||{};
+var claimsObjective=coverageItems.find(function(x){return x.id==='CLAIMS_AUTHORITY_ACTIVATION';})||{};
+var claimsObservation=D.claims_observation_progress||claimsObjective.observation_progress||{};
+var observationDuration=function(sec){sec=Math.max(0,Math.round(Number(sec)||0));var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return h+'h '+m+'m';};
+var observationCheckpoints=(claimsObservation.checkpoints||[]).map(function(c){
+  var reached=c.reached===true;
+  var label=c.id+' '+esc(c.minimum_samples)+' samples';
+  return '<tr><td class="mono">'+label+'</td><td>'+chip(reached?'REACHED':'WAITING',reached?'good':'neutral')+'</td><td class="mono">'+esc(c.duration_seconds+'s')+'</td><td>'+(c.diagnostic_only?'diagnostic':'graduation')+'</td></tr>';
+}).join('')||'<tr><td colspan="4" class="empty">NO_CHECKPOINTS</td></tr>';
+$('claims-observation-progress').innerHTML='<article class="loop"><h3>观察窗进度 · '+esc(claimsObservation.state||'UNAVAILABLE')+'</h3><div class="small mono">samples '+esc(claimsObservation.sample_count||0)+' / '+esc(claimsObservation.minimum_samples||1440)+' · elapsed '+esc(observationDuration(claimsObservation.elapsed_seconds))+' / '+esc(observationDuration(claimsObservation.duration_seconds||86400))+'</div><div class="small mono">max gap '+esc(claimsObservation.observed_max_gap_seconds??'—')+'s / '+esc(claimsObservation.maximum_gap_seconds||120)+'s · errors '+esc(claimsObservation.errors??'—')+' · receipts '+esc(claimsObservation.receipts_match===true?'MATCH':'UNVERIFIED')+'</div><div style="overflow-x:auto;margin-top:10px"><table class="table"><thead><tr><th>checkpoint</th><th>state</th><th>duration</th><th>scope</th></tr></thead><tbody>'+observationCheckpoints+'</tbody></table></div><p class="small muted">前三个 checkpoint 只用于提前发现问题；毕业必须连续满足 24h / 1440 samples，不可补样或拼接窗口。</p></article>';
 $('claims-authorization').innerHTML='<article class="loop"><h3>'+esc(claimsActivationRequest.authority_id||'omo-claims-authority-r0')+' · '+esc(claimsActivationRequest.operation||'activate-shadow')+'</h3><p class="small mono">request '+esc(claimsActivationRequest.request_id||'—')+'</p><p class="small mono">request digest '+esc(claimsActivationRequest.request_digest||'—')+'</p><p class="small mono">descriptor '+esc(claimsActivationRequest.descriptor_digest||'—')+'</p><p class="small">state '+esc(claimsActivationRequest.status||'—')+' · authorization '+esc(claimsActivationRequest.human_authorization_status||'UNPROVEN')+' · activation '+esc(claimsActivationRequest.activation||'NOT_AUTHORIZED')+'</p></article>';
 $('proposal-link').href=fileLink(D.library+'/30-实施与协同/Workspace组合闭环绑定实施准备-v1.md');
 $('envelope-link').href=fileLink(D.envelope.path);$('envelope-hash').textContent='SHA-256 '+D.envelope.sha256;

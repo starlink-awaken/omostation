@@ -397,6 +397,17 @@ def test_template_has_agent_brief_human_surface() -> None:
     assert "/agent-brief.json" in module.TEMPLATE
 
 
+def test_template_projects_claims_observation_progress() -> None:
+    module = _module()
+    host_template = module.ROOT / "bin/panorama/assets/host/template.html"
+    html = host_template.read_text(encoding="utf-8")
+    assert 'id="claims-observation-progress"' in html
+    assert "D.claims_observation_progress" in html
+    assert "claimsObjective.observation_progress" in html
+    assert "samples '+" in html
+    assert "不可补样或拼接窗口" in html
+
+
 def test_panel_value_is_materialized_before_agent_visibility() -> None:
     source = SCRIPT.read_text(encoding="utf-8")
     panel_call = source.index("payload.update(_collect_panels(payload))")
