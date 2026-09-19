@@ -27,19 +27,43 @@ evidence_refs:
 - "对照发现: projects/omo/.omo/(omo 包自身 dogfood 沙盒, 与本条根仓库 debt.yaml
   完全独立无关) 恰好有一套自己的 dispatch/campaign/reporting 真实数据, 但那是
   omo 包自测夹具, 不是本条声明缺失路径的隐藏来源"
+- "`.omo/debt/gap-items/` 从未入过 git: `git log --all --diff-filter=A --
+  .omo/debt/gap-items/*` 无任何结果 (2026-09-19 复核)。即不是「丢失」而是
+  从未创建; 本项 affected_roots 里的 gap-registry / dispatch / campaign /
+  reporting 同属此类。"
+- "3 个脚本引用该幽灵目录: bin/ssot/verify.py (GAP_ITEMS_REL) /
+  bin/ssot/autoloop-controller.py (GAP_DIR, _load_gap_items) /
+  bin/ssot/governance-scanner.py (GAP_DIR, 计入 debt.gap_count)。三者对缺失
+  目录一律静默返回空。"
+- "真空合格实证: bin/ssot/verify.py 扫 gap-items 得 0 对象后输出
+  「✅ 门禁通过: 所有 completed 任务都有 evidence.」, 而其 docstring 声称用于
+  检测「resolved but no evidence fraud」 —— 声称的检测器实际什么都没扫且恒真
+  通过。已在 #4032 加真空合格防护 (源缺失 → exit 1; 显式区分「目录缺失」与
+  「目录为空」)。"
+- "跨仓与治理面消费者: debt.gap_count / gap_items 被
+  projects/omo/src/omo/omo_agent_host.py、
+  projects/cockpit/src/cockpit/observatory/query_engine.py 与
+  .omo/_truth/registry/debt.yaml 读取; bin/ssot/verify.py 亦被
+  .omo/_truth/x1-governance-policies.yaml 与 autonomy-metrics.yaml 引用。
+  故「把扫描源改指 .omo/debt/items/」会波及跨仓与治理面 —— 属架构决策。"
 mitigation_refs: []
 decision_needed: >
   需要产品/架构决策: (a) 补建 gap-items/dispatch/campaign/reporting 四个子系统的
   真实实现, 使声明与代码一致; 还是 (b) 从 debt.yaml 与 omo_debt_registry.py 中
   正式摘除这几个从未落地的字段/概念。本条 debt item 只做诚实登记, 不擅自选择方向。
 opened_at: '2026-09-17T02:13:37.093499+00:00'
-last_reviewed_at: null
+last_reviewed_at: '2026-09-19'
 next_review_at: null
 gate_level: none
 history:
 - at: '2026-09-17T02:13:37.093499+00:00'
   action: register
   note: Registered debt item DEBT-20260917021531-GAP-SEED-DISPATCH.
+  actor: governance-agent
+- at: '2026-09-19T11:33:17+00:00'
+  action: review
+  note: >-
+    2026-09-19 复核补强: 确认 gap-items/ 从未入仓 (非丢失而是从未创建); 定位 3 处引用 (verify.py / autoloop-controller.py / governance-scanner.py); 实证 verify.py 真空合格 (0 对象却报门禁通过) 并已在 #4032 加防护; 查明 gap_count 与 verify.py 均有跨仓/治理面消费者, 故「补齐 vs 收敛」方向需 owner 决策, 本项不擅自选向。
   actor: governance-agent
 x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
 x2_freshness: ''
