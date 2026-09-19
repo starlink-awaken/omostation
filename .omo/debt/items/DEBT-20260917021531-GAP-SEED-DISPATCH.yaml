@@ -40,12 +40,16 @@ evidence_refs:
   检测「resolved but no evidence fraud」 —— 声称的检测器实际什么都没扫且恒真
   通过。已在 #4032 加真空合格防护 (源缺失 → exit 1; 显式区分「目录缺失」与
   「目录为空」)。"
-- "跨仓与治理面消费者: debt.gap_count / gap_items 被
-  projects/omo/src/omo/omo_agent_host.py、
-  projects/cockpit/src/cockpit/observatory/query_engine.py 与
-  .omo/_truth/registry/debt.yaml 读取; bin/ssot/verify.py 亦被
-  .omo/_truth/x1-governance-policies.yaml 与 autonomy-metrics.yaml 引用。
-  故「把扫描源改指 .omo/debt/items/」会波及跨仓与治理面 —— 属架构决策。"
+- "**真消费者清单 (2026-09-19 修正)**: 全仓引用 `.omo/debt/gap-items` 的仅
+  bin/ssot/verify.py、bin/ssot/autoloop-controller.py、
+  bin/ssot/governance-scanner.py、projects/omo/src/omo/omo_agent_host.py:604
+  与 .omo/_truth/registry/debt.yaml(声明 gap_items_dir + 27 条 gap_seed_items)。
+  更正本项早前记录: projects/cockpit 的方法如下 ——
+  cockpit/observatory/strategy_sources.py:482 以
+  `discover(..., required=False)` **同时扫 items/ 与 gap-items/**, 对缺失源
+  优雅降级并列为 empty_or_missing_directory (其测试亦断言该状态), 故 cockpit
+  无需改动; 而 cockpit/observatory/query_engine.py 的 gap_* 是 strategy
+  trace gaps, 与本路径无关 (早前 grep 误判)。"
 mitigation_refs: []
 decision_needed: >
   需要产品/架构决策: (a) 补建 gap-items/dispatch/campaign/reporting 四个子系统的
@@ -69,6 +73,11 @@ history:
   action: review
   note: >-
     2026-09-19 部分收敛: verify.py 的校验源已从幽灵 `.omo/debt/gap-items/` 改指真实注册表 `.omo/debt/items/` (同 PR 扩展 _shared.check_evidence 接受文本型 resolution_evidence —— 否则会对 19 个终态项全量误报)。该脚本由 0/0 真空合格变为真实扫描。仍待决: autoloop-controller.py 与 governance-scanner.py 的 GAP_DIR 引用 (后者的 debt.gap_count 有跨仓消费者)。
+  actor: governance-agent
+- at: '2026-09-19T12:13:30+00:00'
+  action: review
+  note: >-
+    2026-09-19 清理 + 更正: ① autoloop-controller._load_gap_items 与 governance-scanner.scan_debt 改为**显式暴露源缺失** (前者 stderr 告警、后者新增 debt.gap_source_present 指标) —— 行为不变, 但归零原因从不可见变为可见; ② 更正早前误记: cockpit 并非受影响消费者 (它以 required=False 优雅降级), query_engine 的 gap_* 属另一概念; ③ 确认真消费者为 verify.py(已收敛)/autoloop/governance-scanner/omo_agent_host.py(子模块)/debt.yaml(声明 27 条幽灵 seed)。
   actor: governance-agent
 x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
 x2_freshness: ''
