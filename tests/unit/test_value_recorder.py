@@ -109,6 +109,54 @@ def test_validate_evidence_accepts_v2_and_ignores_legacy_nonqualifying(tmp_path)
     assert report["remaining_to_target"] == 29
 
 
+def test_validate_evidence_excludes_legacy_qualifying_from_v2_target(tmp_path) -> None:
+    module = _module()
+    baseline = _baseline(module, tmp_path)
+    episode = _record(module, baseline)
+    legacy_qualifying = {
+        "schema": module.EVIDENCE_SCHEMA_V1,
+        "qualifying": True,
+        "net_saved_seconds": 90,
+        "run_id": "legacy-run-001",
+    }
+    evidence = tmp_path / "value-evidence.jsonl"
+    evidence.write_text(
+        json.dumps(legacy_qualifying) + "\n" +
+        json.dumps(episode) + "\n",
+        encoding="utf-8",
+    )
+
+    report = module.validate_evidence(evidence, tmp_path / "baselines")
+
+    assert report["ok"] is True
+    assert report["records"] == 2
+    assert report["v2_records"] == 1
+    assert report["legacy_records"] == 1
+    assert report["legacy_qualifying"] == 1
+    assert report["qualifying"] == 1
+    assert report["remaining_to_target"] == 29
+
+
+def test_validate_evidence_does_not_count_legacy_only_as_target_progress(tmp_path) -> None:
+    module = _module()
+    legacy_qualifying = {
+        "schema": module.EVIDENCE_SCHEMA_V1,
+        "qualifying": True,
+        "net_saved_seconds": 90,
+        "run_id": "legacy-run-001",
+    }
+    evidence = tmp_path / "value-evidence.jsonl"
+    evidence.write_text(json.dumps(legacy_qualifying) + "\n", encoding="utf-8")
+
+    report = module.validate_evidence(evidence, tmp_path / "baselines")
+
+    assert report["ok"] is True
+    assert report["v2_records"] == 0
+    assert report["legacy_qualifying"] == 1
+    assert report["qualifying"] == 0
+    assert report["remaining_to_target"] == 30
+
+
 def test_validate_evidence_reports_missing_baseline_binding(tmp_path) -> None:
     module = _module()
     baseline = _baseline(module, tmp_path)

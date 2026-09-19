@@ -238,12 +238,23 @@ def validate_evidence(
             frozen_epoch = _parse_timestamp(baseline.get("frozen_at"))
             if recorded_epoch is None or frozen_epoch is None or recorded_epoch <= frozen_epoch:
                 issues.append({"line": str(line_number), "reason": _PREWINDOW_ERROR})
-    qualifying = sum(1 for item in records if item.get("qualifying") is True)
+    v2_records = [
+        item for item in records if item.get("schema") == EVIDENCE_SCHEMA_V2
+    ]
+    legacy_records = [
+        item for item in records if item.get("schema") == EVIDENCE_SCHEMA_V1
+    ]
+    qualifying = sum(1 for item in v2_records if item.get("qualifying") is True)
+    legacy_qualifying = sum(
+        1 for item in legacy_records if item.get("qualifying") is True
+    )
     return {
         "schema": "value-evidence-validation/v2",
         "ok": not issues,
         "records": len(records),
-        "v2_records": sum(1 for item in records if item.get("schema") == EVIDENCE_SCHEMA_V2),
+        "v2_records": len(v2_records),
+        "legacy_records": len(legacy_records),
+        "legacy_qualifying": legacy_qualifying,
         "qualifying": qualifying,
         "target": QUALIFYING_SAMPLE_TARGET,
         "remaining_to_target": max(0, QUALIFYING_SAMPLE_TARGET - qualifying),
