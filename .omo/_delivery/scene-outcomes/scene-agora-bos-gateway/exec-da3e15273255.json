@@ -1,0 +1,20 @@
+{
+  "scene_id": "scene-agora-bos-gateway",
+  "run_id": "exec-da3e15273255",
+  "doc_path": "test",
+  "doc_sha256": null,
+  "status": "partial",
+  "checks": 2,
+  "passed": 1,
+  "issues_count": 1,
+  "issues": [
+    {
+      "kind": "too_short",
+      "detail": "1 行 < 3"
+    }
+  ],
+  "confidence": 0.5,
+  "dry_run": false,
+  "recorded_at": "2026-09-20T06:46:06.811183+00:00",
+  "record_hash": "f40ba44e5bbe776c"
+}

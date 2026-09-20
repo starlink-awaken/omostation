@@ -2,7 +2,7 @@
 schema: bet-retro/v1
 bet_id: BET-Y2Q1-T5-01
 status: active
-lifecycle: contract
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-14
 type: ssot

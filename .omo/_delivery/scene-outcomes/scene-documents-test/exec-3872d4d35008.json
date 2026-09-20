@@ -1,0 +1,20 @@
+{
+  "scene_id": "scene-documents-test",
+  "run_id": "exec-3872d4d35008",
+  "doc_path": null,
+  "doc_sha256": null,
+  "status": "partial",
+  "checks": 1,
+  "passed": 0,
+  "issues_count": 1,
+  "issues": [
+    {
+      "kind": "file_missing",
+      "detail": "docs/good.md"
+    }
+  ],
+  "confidence": 0.0,
+  "dry_run": false,
+  "recorded_at": "2026-09-20T06:57:10.899984+00:00",
+  "record_hash": "51e387a5d259597f"
+}

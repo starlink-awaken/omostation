@@ -1,33 +1,33 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-09-18T01:03:14Z
+# generated_at: 2026-09-20T07:04:02Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.3, 'freshness': 0.2, 'runtime': 0.5, 'drift': 0.1, 'staleness': 0.1, 'alignment': 0.1}
 
-generated_at: "2026-09-18T01:03:14Z"
+generated_at: "2026-09-20T07:04:02Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 50
-governance_anomaly_score: 70
-anomaly_count: 2
+health_score: 73
+governance_anomaly_score: 0
+anomaly_count: 4
 service_online_ratio: 1.000
 freshness_score: 100
-drift_score: 0
-staleness_score: 93
-alignment_score: 62
-feedback_alive: False
-feedback_last_ts: "2026-09-13T08:30:11Z"
-feedback_staleness_hours: 112.6
-total_tasks: 18
-done: 5
-planned: 13
+drift_score: 70
+staleness_score: 94
+alignment_score: 88
+feedback_alive: True
+feedback_last_ts: "2026-09-20T07:01:07Z"
+feedback_staleness_hours: 0.1
+total_tasks: 14
+done: 14
+planned: 0
 
 governance_execution_surface:
-  base_anomaly_score: 70
-  execution_deduction: 0
+  base_anomaly_score: 40
+  execution_deduction: 77
   orphan_worktrees: 0
-  adr_renumber_events: 0
-  concurrent_conflicts: 0
-  score: 70
+  adr_renumber_events: 1
+  concurrent_conflicts: 9
+  score: 0
   weights:
     orphan_worktrees: 4
     adr_renumber_events: 5
@@ -42,68 +42,64 @@ health_composite_breakdown:
     staleness: 0.1
     alignment: 0.1
   contributions:
-    governance: 21.0
+    governance: 0.0
     freshness: 20.0
     runtime: 50.0
-    drift: 0.0
-    staleness: 9.3
-    alignment: 6.2
-  raw: 81.92
+    drift: 7.0
+    staleness: 9.4
+    alignment: 8.8
+  raw: 73.23
 
 anomalies:
-  - "[WARN]  L3 高风险任务 2 个, 需重点 review"
-  - "[WARN]  Owner 集中度: human 持有 92% 待处理任务 (单点故障风险, 知识/能力集中)"
+  []
 
 drift_detail:
   source: "drift-sweep"
   total: "16"
-  pass: "7"
-  fail: "8"
-  skip: "1"
-  score: "0"
+  pass: "14"
+  fail: "2"
+  skip: "0"
+  score: "70"
 
 staleness_detail:
   source: "staleness-check"
-  checked: "529"
-  clean: "508"
+  checked: "531"
+  clean: "510"
   stale: "21"
   total_issues: "24"
-  stale_ratio: "0.0397"
-  issue_density: "0.0454"
-  score: "93"
+  stale_ratio: "0.0395"
+  issue_density: "0.0452"
+  score: "94"
 
 alignment_detail:
   source: "maturity-align"
-  reconciliation_score: "62"
-  drift_detected: "True"
-  normalised: "{'compass_radar': 73.0, 'maturity_scorecard': 62.0, 'bet_ledger': 99.5}"
+  reconciliation_score: "88"
+  drift_detected: "False"
+  normalised: "{'compass_radar': 50.0, 'maturity_scorecard': 62.0, 'bet_ledger': 100.0}"
   high_dimension: "bet_ledger"
-  low_dimension: "maturity_scorecard"
-  warnings: "['score spread = 38 (compass 73.0, scorecard 62.0, ledger 99.5)', 'maturity scorecard gap = 2.8 (target 9.0); below 80% of target']"
-  score: "62"
+  low_dimension: "compass_radar"
+  warnings: "['maturity scorecard gap = 2.8 (target 9.0); below 80% of target', '声明/执行鸿沟 = 50 (计划完成度 100 vs 系统状态 50) —— 计划已做完但未转化为系统状态; 这不是口径冲突, 是**闭环未产生价值**的信号 (见 debt item DECL_EXEC_GAP)']"
+  score: "88"
 
 distributions:
   priority_dist:
     P0: 1
-    P1: 5
-    P2: 6
-    medium: 1
-    unassigned: 5
+    P1: 1
+    P2: 4
+    unassigned: 8
   risk_dist:
-    L0: 2
-    L1: 3
-    L2: 11
+    L0: 5
+    L1: 1
+    L2: 6
     L3: 2
   owner_dist:
-    human: 12
-    unassigned: 6
+    human: 6
+    unassigned: 8
   phase_dist:
-    unphased: 18
+    unphased: 14
   status_dist:
-    candidate: 10
-    done: 5
-    pending: 3
+    done: 14
   governance_dist:
     freshness: 20
-    governance: 21
+    governance: 0
     runtime: 50

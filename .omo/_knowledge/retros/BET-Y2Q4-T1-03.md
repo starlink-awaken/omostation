@@ -4,6 +4,7 @@ title: 战略主线宪章修订 — 追认移动 Cockpit / TUI 多窗格为既�
 status: archived
 lifecycle: history
 date: 2026-09-16
+owner: unassigned
 ---
 
 # BET-Y2Q4-T1-03 Retro
