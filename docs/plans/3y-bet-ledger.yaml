@@ -29334,6 +29334,58 @@ bets:
   done_at: '2026-09-19'
   pr_number: 4025
   merge_sha: 0a98a13af
+- id: BET-Y1Q4-T10-172
+  title: OMO gitlink freshness repair
+  status: candidate
+  priority: P1
+  risk_level: L1
+  track: T10-MATURITY
+  window: Y1Q4
+  workflow: submodule-pointer-transaction
+  value_indicator_policy: false
+  human_gate: false
+  retro: required
+  appetite: 2 hours
+  goal: Advance the root OMO gitlink to merged child main and clear the freshness gate.
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-20-t10-172-omo-gitlink-freshness-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:91e9364539def7eceaa34b2431e343a694c4fcd99098e90ea0cbdd61286ee6e8
+    decision_ref: decision://accepted/BET-Y1Q4-T10-172
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - Root origin/main projects/omo equals d7feb927f97f9aca7871a6965e8211ba99c18437.
+  - Submodule freshness and governance required checks pass.
+  - Ledger lint and default governance gate pass.
+  non_goals:
+  - Do not modify child implementation code or other gitlinks.
+  - Do not rewrite child history or force push.
+  - Do not change runtime state, branch protection, completion/value evidence, or business
+    runtime.
+  verify:
+  - cmd: test "$(git ls-tree origin/main projects/omo | awk '{print $3}')" = d7feb927f97f9aca7871a6965e8211ba99c18437
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - projects/omo
+  - docs/superpowers/specs/2026-09-20-t10-172-omo-gitlink-freshness-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-172.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -29463,7 +29515,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 414
+  total_bets: 415
   windows:
   - Y1Q1
   - Y1Q2
