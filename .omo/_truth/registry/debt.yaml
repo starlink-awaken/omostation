@@ -1,17 +1,17 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-08-16
-version: 1
+last-reviewed: 2026-09-20
+version: 2
+# REMOVED (2026-09-20): dispatch_ref, campaign_ref, reporting_ref — gap management system never implemented
+#   these fields point to files that were never created; code already handles missing keys gracefully
+#   via registry.get(name, "") in omo_debt_registry.py lines 84-93
 items_dir: .omo/debt/items
 dashboard_ref: .omo/debt/dashboard/current.yaml
 review_pack_ref: .omo/debt/reviews/current.md
 review_queue_ref: .omo/debt/review-queue/current.yaml
 action_packet_ref: .omo/debt/action-packet/current.yaml
 owner_routing_ref: .omo/debt/owner-routing/current.yaml
-dispatch_ref: .omo/debt/dispatch/current.yaml
-campaign_ref: .omo/debt/campaign/current.yaml
-reporting_ref: .omo/debt/reporting/current.yaml
 seed_items:
 - .omo/debt/items/DECL_EXEC_GAP.yaml
 - .omo/debt/items/UNASSIGNED_ENTROPY.yaml
