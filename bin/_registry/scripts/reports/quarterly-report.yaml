@@ -1,0 +1,30 @@
+schema: script-registry/v1
+id: bin/reports/quarterly-report.py
+name: Quarterly Report Generator
+category: reports
+owner: governance-team
+description: "FORWARD-PLAN v2 §A2 (P0): 一键生成季度报告，从 BET ledger/health.yaml/retros 聚合数据。"
+inputs:
+  - type: argument
+    name: --quarter
+    description: 季度标签 (YYYY-QN)
+  - type: argument
+    name: --output
+    description: 输出目录
+  - type: argument
+    name: --dry-run
+    description: 仅打印不写文件
+  - type: argument
+    name: --json
+    description: 同时输出 JSON 摘要
+outputs:
+  - type: markdown
+    description: 季度报告文档
+  - type: json
+    description: JSON 摘要 (可选)
+dependencies: []
+triggers: []
+related:
+  - docs/OMOSTATION-FORWARD-PLAN-v2.md
+maturity: active
+last_reviewed: "2026-09-20"
