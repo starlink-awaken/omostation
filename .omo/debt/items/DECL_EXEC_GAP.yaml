@@ -36,6 +36,17 @@ evidence_refs:
 # 『计划做完了却没转化为系统状态』而不是『某系统算错了』。差距>=30 时新增一条
 # 可读告警, 明示这是『闭环未产生价值』的信号并指向本条。
 
+# 2026-09-19 修正 (第二段): 消除度量自指 + 反向激励 ——
+# 实测发现 alignment (健康分权重 0.1 的维度) = maturity-align 的 reconciliation_score =
+# 100 - spread{compass, scorecard, ledger}。当计划全闭 (ledger=100) 时 spread 由
+# (100 - compass) 决定, 于是 reconciliation **恒等于 compass_health** —— 健康分部分
+# 由自己算出; 且 compass 固定 70 时 ledger 50->100 (把计划做完) 会让 alignment 从 80
+# 掉到 70 —— **完成计划反而压低健康分**。
+# 修正: reconciliation 只比**同口径** (compass_health vs maturity_scorecard, 两者都答
+# 『我们现在多成熟』); 跨口径的 bet_ledger 完成度单列为 declaration_execution_gap,
+# **报告但不加权进健康分**。信号未丢: 实测同一数据 reconciliation 50->84 的同时,
+# declaration_execution_gap 仍为 50 且告警照常触发。
+
 mitigation_refs:
   - ".omo/_knowledge/decisions/0195-architecture-convergence-isc2.md"
 opened_at: "2026-07-14"
@@ -64,4 +75,12 @@ history:
     (计划完成度 vs 系统状态), 使该 critical 信号可行动。**评分语义未改** —— 既有 6 例
     测试零回退 (新增 5 例锁定新字段)。张力本身未消除 (计划 100 vs 状态 50), 本条保持
     identified。
+  actor: governance-agent
+- at: '2026-09-20T02:56:11+00:00'
+  action: review
+  note: >-
+    2026-09-19: 修正度量自指 (alignment 曾恒等于 compass_health) 与反向激励 (完成计划
+    压低健康分)。reconciliation 改为仅同口径; 跨口径差距由 declaration_execution_gap
+    承载, 仍报告并告警。**本条保持 identified** —— 张力本身 (计划 100 vs 状态 50) 未消除,
+    本次修的是『度量该张力的方式』不再自伤。
   actor: governance-agent
