@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.omo-debt-refresh.plist — 连续刷新 omo debt 衍生产物
+  每 30 min (m5 / m35) + 载入即跑一次, 保证 .omo/debt/*/current.* 常鮮。
+
+  背景 (2026-09-20):
+    state-freshness-check.py 把 .omo/debt/dashboard/current.yaml 列为新鲕度
+    監察路径。这些产物由 `omo-debt refresh|dispatch|campaign|report` 生成,
+    但生成器从未排程 → 未跑时路径虚缺 → 報 staleness。而这些 ref 的**声明**
+    (.omo/_truth/registry/debt.yaml)本身是活的 (omo_debt.py 有 write_*_packet
+    写入器) —— 不是"未实现"。正确修法: 让生成器**持续跑**, 而非删声明
+    (#4079 已硬化: 缺 ref 键不崩)。
+
+  执行 (WorkingDirectory=projects/omo, PYTHONPATH=src):
+    1. refresh --now $NOW  → dashboard/reviews/review-queue/action-packet/owner-routing
+    2. dispatch --now $NOW → dispatch
+    3. campaign            → campaign (defaults to latest run)
+    4. report              → reporting (defaults to latest run)
+  皆写 .omo/debt/<name>/current.{yaml,md} (gitignored 派生产, generator-rebuildable)。
+
+  NOTE: 生成器纯本地, 无网络 (只读 .omo/debt/items + .omo/_truth/registry/debt.yaml,
+  写 gitignored .omo/debt/*)。no_proxy 设为 loopback/github, 避免作 ClashX
+  127.0.0.1:7890 代理超时 (详见 zhixing-host-drift.plist 同款環境)。
+
+  安装 / 卸载 / 手動觸發 (同 zhixing-host-drift):
+    cp bin/ops/launchd/com.omostation.omo-debt-refresh.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist
+    launchctl bootout gui/$(id -u)/com.omostation.omo-debt-refresh
+    launchctl kickstart -p gui/$(id -u)/com.omostation.omo-debt-refresh
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.omo-debt-refresh</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>cd /Users/xiamingxing/Workspace/projects/omo &amp;&amp; NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ) &amp;&amp; PYTHONPATH=src python3 -m omo.omo_debt_cli refresh --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW &amp;&amp; PYTHONPATH=src python3 -m omo.omo_debt_cli dispatch --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW &amp;&amp; PYTHONPATH=src python3 -m omo.omo_debt_cli campaign --omo-dir /Users/xiamingxing/Workspace/.omo &amp;&amp; PYTHONPATH=src python3 -m omo.omo_debt_cli report --omo-dir /Users/xiamingxing/Workspace/.omo</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace/projects/omo</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>no_proxy</key>
+        <string>github.com,api.github.com,localhost,127.0.0.1</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Minute</key><integer>5</integer></dict>
+        <dict><key>Minute</key><integer>35</integer></dict>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log</string>
+</dict>
+</plist>
