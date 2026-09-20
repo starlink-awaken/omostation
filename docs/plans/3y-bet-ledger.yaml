@@ -29388,7 +29388,8 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T10-172.md
 - id: BET-Y1Q4-T10-173
   title: OMO promotion helper standalone binding repair
-  status: candidate
+  status: done
+  done_at: 2026-09-20
   priority: P2
   risk_level: L1
   track: T10-MATURITY
@@ -29407,17 +29408,36 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T10-173
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          merged_reachable_commit:
+            ref: git://origin/main@5562c87f1e6bbeb671b53b4190f4c288685cf2de
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
       value:
         status: NOT_PROVEN
         evidence: {}
+    notes: "Engineering and operational delivery are proven by OMO PR #184, root
+      PR #4097, required checks, focused workflow regression, and reachable
+      gitlink b4c9252. Human value remains NOT_PROVEN."
   done_when:
   - Standalone promotion import no longer raises NameError in audit trail.
   - Full workflow regression passes at the patched OMO commit.
