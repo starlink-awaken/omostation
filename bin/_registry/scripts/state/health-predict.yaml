@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/ssot/journey-spec-health.py
-name: Journey Spec Health
+id: bin/ssot/health-predict.py
+name: Health Predict
 category: state
 owner: governance-team
 description: ""
