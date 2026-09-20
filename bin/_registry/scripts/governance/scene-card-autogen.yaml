@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/ssot/prune-and-register.py
-name: Prune And Register
+id: bin/ssot/scene-card-autogen.py
+name: Scene Card Autogen
 category: governance
 owner: governance-team
 description: ""
