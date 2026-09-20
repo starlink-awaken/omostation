@@ -172,6 +172,20 @@ jobs:
     sfop_slot: S
     reconciliation_note: worktree 卫生日检 (每日 04:00)，已在 crontab -l 运行，补齐登记。
 
+  # ── 债务复审日调度补登 (2026-09-20, #4087 交付物) ──
+  - name: debt-review-daily
+    schedule: "13 7 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/gac/debt-review-scheduler.py >> runtime/cron/debt-review.log 2>&1 # omostation-debt-review (债务定期复审调度, 2026-09-20)'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >-
+      PR #4087 交付的债务定期复审调度器 (终态无实证 + 逾期未复审报告)。
+      2026-09-20 安装 crontab 时漏登记, 造成 A4 Scheduler 门禁 orphan;
+      本条为登记↔安装同改的补账。
+
   - name: worktree-retire-14d-weekly
     schedule: "30 7 * * 1"
     command: 'cd "$HOME/Workspace" && make worktree-hygiene-retire >> runtime/cron/worktree-hygiene.log 2>&1'
@@ -683,3 +697,8 @@ open_decisions:
       (不是本次改动引入)。故意没有登记进本文件(登记会让 check-sfop-slots.py 硬性
       FAIL)。需要决定: 停用这条 cron、把 harness 巡检挪到 cron 之外的机制、还是
       重新评估 l4-kernel 的 dao_layer 归类。
+
+# 外部合法孤儿: 不属于本工作区调度 SSOT、经确认保留在 crontab 的条目
+# (scheduler-compile.py check_drift 用子串匹配豁免)
+known_orphans:
+  - clash-probe.sh  # 用户本机网络探测 (~/.local/bin), 2026-09-20 确认为外部工具
