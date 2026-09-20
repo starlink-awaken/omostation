@@ -420,7 +420,7 @@ services:
   notes: Resident 编排 daemon — ledger checkpoint + 规则路由 (30s 间隔)
   depends_on: []
 - id: gac.daemon_watchdog
-  enabled: true
+  enabled: false
   scheduler: launchd
   trigger: keepalive
   label: com.l4.gac.watchdog
@@ -428,6 +428,8 @@ services:
     interpreter: stable-python3
     entrypoint: bin/gac/daemon-watchdog.py
     args: []
+  disabled_at: "2026-09-20"
+  disabled_reason: "Script archived to bin/_archive/ (bin-quota offset for quarterly-report.py)"
   resilience:
     keepalive: always
   run_at_load: true

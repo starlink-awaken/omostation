@@ -11,5 +11,7 @@ outputs:
 dependencies: []
 triggers: []
 related: []
-maturity: deprecated
-last_reviewed: "2026-08-26"
+maturity: archived
+last_reviewed: "2026-09-20"
+archived_at: "2026-09-20"
+archive_reason: "bin-quota offset for quarterly-report.py (FORWARD-PLAN v2 A2)"
