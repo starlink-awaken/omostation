@@ -26,6 +26,12 @@ Closeout-branch skip (A3, FORWARD-PLAN §A3):
   - 原因: closeout PR 携带 retro 文件时, auto-fix 修改 last-reviewed 会产生
     与本地 ledger 不同步的额外 diff (复盘实证 2026-09, batch 31 教训 PITFALL-COO-005)
 
+Retro field expansion (B1.1, 2026-09-20):
+  - 新增 2 类 drift: FRONTMATTER-MISSING-FIELD (字段缺失),
+    INVALID-METADATA (字段值不在 allowed set)
+  - 对偶 RETRO-SKIPPED 变体: closeout 模式同样跳过 retro 路径
+  - 修复入口: fix-frontmatter.py --batch .  (单次扫全仓修字段映射)
+
 用法:
     python3 bin/gac/auto-fix-loop.py            # 干跑: 检测 + 分类 + 修复建议
     python3 bin/gac/auto-fix-loop.py --apply    # 应用可安全自动修复项
@@ -265,12 +271,50 @@ def detect_drifts() -> list[Drift]:
                 check=False,
             )
             missing_files = set()
+            missing_field_files = set()
+            invalid_meta_files = set()
             for line in r.stdout.splitlines():
                 if "missing_frontmatter" in line and "does not start with YAML" in line:
                     missing_files.add(line.split(":")[0])
+                elif "missing_frontmatter" in line and "missing required frontmatter fields" in line:
+                    # B1.1: 收集字段缺失类 (frontmatter 存在但缺键)
+                    missing_field_files.add(line.split(":")[0])
+                elif "invalid_metadata" in line and (
+                    "status must be one of" in line or "lifecycle must be one of" in line
+                ):
+                    # B1.1: 收集 invalid_metadata 类 (字段值不在 allowed set)
+                    invalid_meta_files.add(line.split(":")[0])
             # A3: closeout branch 上跳过 retro 路径的 auto-fix
             closeout_mode = is_closeout_branch()
-            if closeout_mode and missing_files:
+            if closeout_mode:
+                retro_invalid = {f for f in invalid_meta_files if is_retro_path(f)}
+                if retro_invalid:
+                    drifts.append(
+                        Drift(
+                            "INVALID-METADATA-RETRO-SKIPPED",
+                            "info",
+                            f"closeout-branch 跳过 {len(retro_invalid)} 个 retro "
+                            f"文件的 invalid_metadata 修复: "
+                            f"{', '.join(sorted(retro_invalid)[:3])}",
+                            "manual: 合并后跑 fix-frontmatter.py --batch",
+                            auto_fixable=False,
+                        )
+                    )
+                invalid_meta_files -= retro_invalid
+                retro_missing_field = {f for f in missing_field_files if is_retro_path(f)}
+                if retro_missing_field:
+                    drifts.append(
+                        Drift(
+                            "FRONTMATTER-MISSING-FIELD-RETRO-SKIPPED",
+                            "info",
+                            f"closeout-branch 跳过 {len(retro_missing_field)} 个 retro "
+                            f"文件的 field 补全: "
+                            f"{', '.join(sorted(retro_missing_field)[:3])}",
+                            "manual: 合并后跑 fix-frontmatter.py --batch",
+                            auto_fixable=False,
+                        )
+                    )
+                missing_field_files -= retro_missing_field
                 retro_skipped = {f for f in missing_files if is_retro_path(f)}
                 non_retro = missing_files - retro_skipped
                 if retro_skipped:
@@ -294,6 +338,32 @@ def detect_drifts() -> list[Drift]:
                         "warning",
                         f"检测到 {len(missing_files)} 个文档缺失 Frontmatter (如: {list(missing_files)[0]})",
                         f"python3 bin/gac/fix-frontmatter.py {files_str}",
+                        auto_fixable=True,
+                    )
+                )
+            # B1.1: missing required fields drift
+            if missing_field_files:
+                sample = list(missing_field_files)[:10]
+                drifts.append(
+                    Drift(
+                        "FRONTMATTER-MISSING-FIELD",
+                        "warning",
+                        f"检测到 {len(missing_field_files)} 个文档 frontmatter 缺字段 "
+                        f"(如: {sample[0]})",
+                        "python3 bin/gac/fix-frontmatter.py --batch .",
+                        auto_fixable=True,
+                    )
+                )
+            # B1.1: invalid metadata drift (status/lifecycle 不在 allowed set)
+            if invalid_meta_files:
+                sample = list(invalid_meta_files)[:10]
+                drifts.append(
+                    Drift(
+                        "INVALID-METADATA",
+                        "warning",
+                        f"检测到 {len(invalid_meta_files)} 个文档 metadata 不合规 "
+                        f"(如: {sample[0]})",
+                        "python3 bin/gac/fix-frontmatter.py --batch .",
                         auto_fixable=True,
                     )
                 )
@@ -351,7 +421,12 @@ def apply_fix(drift: Drift) -> tuple[bool, str]:
                 check=False,
             )
             return r.returncode == 0, (r.stdout or r.stderr)[-300:]
-        if drift.kind in ("ORPHAN-SCRIPT", "FRONTMATTER-MISSING"):
+        if drift.kind in (
+            "ORPHAN-SCRIPT",
+            "FRONTMATTER-MISSING",
+            "FRONTMATTER-MISSING-FIELD",
+            "INVALID-METADATA",
+        ):
             cmd = drift.fix_cmd.split()
             r = subprocess.run(cmd, cwd=WORKSPACE, capture_output=True, text=True, timeout=60, check=False)
             return r.returncode == 0, (r.stdout or r.stderr)[-300:]
