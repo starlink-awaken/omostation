@@ -29707,6 +29707,79 @@ bets:
   - docs/superpowers/specs/2026-09-20-t10-171-live-value-readiness-v2-design.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-171.md
+- id: BET-Y2Q1-T4-01
+  title: 真实业务信号感知与价值凭证闭环采样 (BCOS W5 Value Ingress)
+  status: done
+  done_at: '2026-09-20'
+  priority: P1
+  risk_level: L2
+  track: T4-OUTCOME
+  window: Y2Q1
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: true
+  retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+  appetite: 1 week
+  circuit_breaker: 若连续 3 次价值记录校验失败或 baseline 绑定不一致，立即中止写入并复核 DefaultPrincipalAuthority
+    签发证书。
+  goal: 将本地算力中枢真实接入邮件与通知感知链路，打通公文与待办审阅流水线，签发权威收据并累积首批 v2 价值合格样本
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-20-t4-01-value-ingress-and-signal-loop-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:1809fcae17fbdfeed84b7746eb352f6b29560048262b4c812e27cf8514a5493b
+    decision_ref: decision://accepted/BET-Y2Q1-T4-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+          merged_reachable_commit:
+            ref: git://origin/main@fff5f42810a819e1d054764afb3124737a76a397
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - At least one qualifying v2 value evidence record is verified by value-recorder.py.
+  - mail_daemon.py processes real unread emails without crashing or blocking.
+  - Ledger lint and local governance gate pass.
+  non_goals:
+  - Do not fabricate or backfill synthetic value samples.
+  - Do not violate the 11 architectural gates or SFOP laws.
+  verify:
+  - cmd: python3 bin/ssot/value-recorder.py validate
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: git diff --check
+    expect: exit 0
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-20-t4-01-value-ingress-and-signal-loop-design.md
+  - docs/superpowers/specs/README.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/local-compute/compute-mesh-handbook.md
+  - .omo/_delivery/ingress/value-evidence.jsonl
+  - .omo/_knowledge/retros/BET-Y2Q1-T4-01.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -29836,7 +29909,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 433
+  total_bets: 434
   windows:
   - Y1Q1
   - Y1Q2

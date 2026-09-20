@@ -126,5 +126,6 @@ L2/L3 bet 必须绑定 accepted spec：
 | `2026-09-17-t7-02-assisted-escalation-design.md` | accepted | BET-Y3H1-T7-02 | 2026-09-17 |
 | `2026-09-17-t7-08-scene-journey-admission-convergence-design.md` | accepted | BET-Y1Q4-T7-08 | 2026-09-17 |
 | `2026-09-19-t10-169-dependabot-root-scope-design.md` | accepted | BET-Y1Q4-T10-169 | 2026-09-19 |
+| `2026-09-20-t4-01-value-ingress-and-signal-loop-design.md` | accepted | BET-Y2Q1-T4-01 | 2026-09-20 |
 
 > 旧版条目保留为历史手工登记；后续应将本表迁移为生成型索引，避免新的 accepted spec 再次脱离导航。

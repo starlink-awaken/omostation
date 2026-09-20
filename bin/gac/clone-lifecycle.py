@@ -1138,7 +1138,7 @@ def _account_authority_paths() -> dict[str, Path]:
     authority_dir = account_home / "agents/_shared/runtime/omo-claims-authority-r0"
     return {
         "account_home": account_home,
-        "integration_root": account_home / "Workspace",
+        "integration_root": Path(__file__).resolve().parents[2] if (Path(__file__).resolve().parents[2] / "bin/agent-workflow.py").is_file() else (account_home / "Workspace"),
         "authority_dir": authority_dir,
         "store": authority_dir / "store.sqlite3",
         "high_water": authority_dir / "high-water.json",
