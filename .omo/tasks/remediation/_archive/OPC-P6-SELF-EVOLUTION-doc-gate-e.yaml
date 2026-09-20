@@ -1,6 +1,6 @@
 id: OPC-P6-SELF-EVOLUTION-doc-gate-e
 title: Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml
-status: review
+status: wontfix
 task_type: governance
 risk_level: L1
 depends_on: []
@@ -49,3 +49,7 @@ metadata:
 latest_week: 2026-W29
 review_note: .omo/tasks/remediation-notes/OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md
 started_at: '2026-06-24T07:46:46Z'
+wontfix_reason: Source documents (.omo/_control/evolution/drift/2026-06-23.json, docs/OPC-PHASE4)
+  deleted; task stale 3+ months
+closed_at: '2026-09-20T06:10:00Z'
+closed_by: agent:cleanup
