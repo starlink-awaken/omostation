@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/closeout-pr.sh
+name: Closeout Pr
+category: governance
+owner: governance-team
+description: "B2.1 (本会话沉淀) — 跨 repo closeout 5 步引导: retro 模板复制 + 跨子模块状态快照 + PR/merge/清理命令提示. 不自动执行高风险 git 操作, 仅 dry-run. 默认 repo=omostation, 可指定其他子仓. 配套 bin/mof/cross-repo-status.py + bin/ssot/retro-template.md."
+inputs:
+  - name: "bet_id (BET-ID 必填)"
+  - name: "repo (默认 omostation, 可指定子仓如 omlxc/cockpit-ui)"
+outputs:
+  - type: exit_code
+  - type: stdout_report
+dependencies:
+  - bin/mof/cross-repo-status.py
+  - bin/ssot/retro-template.md
+triggers:
+  - "manual: BET closeout PR 准备时"
+related:
+  - docs/SOPs/ledger-closeout-sop.md
+  - .agents/skills/bet-closeout-chain/SKILL.md
+maturity: draft
+last_reviewed: "2026-09-20"

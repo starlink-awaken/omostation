@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/ssot/machine-config-write-lint.py
-name: Machine Config Write Lint
+id: bin/mof/cross-repo-status.py
+name: Cross Repo Status
 category: governance
 owner: governance-team
 description: ""
