@@ -1,6 +1,6 @@
 schema: script-registry/v1
-id: bin/ssot/batch-frontmatter.py
-name: Batch Frontmatter
+id: bin/ssot/claim-suggester.py
+name: Claim Suggester
 category: governance
 owner: governance-team
 description: ""
