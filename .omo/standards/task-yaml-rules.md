@@ -107,7 +107,14 @@ P36-W0 验收:
 
 **为什么**: 2026-06-13 OPC P5-P7 8 阶段演练时, 我自加 `readiness_status: passed` + `cadence_status: not_yet_passed` 两个字段, 试图"细分" gate 状态, 但这破坏了 closeout 报告的可审计性, reviewer 一票否决。
 
-**自动检查**: `omo governance audit` + `test_opc_phase_governance_alignment.py` (18 tests) 阻断 self-add 字段回归。
+**自动检查** (2026-09-19 落地, 替换原悬空声明):
+- `omo governance audit` —— debt/knowledge/schema 完整性 (CI `governance-verify`)
+- `bin/gac/check-task-field-governance.py` —— 规则 5 现场守卫, 接入 `make gac-local-gate` (硬性):
+  - `gate_status` 如出现, 必须∈ {not_yet_passed, conditionally_passed, passed}
+  - 禁止自加 `readiness_status` / `cadence_status` 等替代状态字段
+  - 无法 YAML 解析的活跃任务 → 回归
+
+> 注: 此前标准引用 `test_opc_phase_governance_alignment.py` (18 tests) 仅为**声明, 该文件从未存在于库中** —— 悬空引用, 未提供任何阻断。2026-09-19 以真实接入的 gac 守卫替换, 方为可验证。
 
 ## 规则 6: fallback 不得硬编码 mode-specific 路径 (CR-CR-MODE-ENV-01, 2026-06-13)
 

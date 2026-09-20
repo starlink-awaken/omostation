@@ -492,6 +492,22 @@ if not any(gate.get("id") == "pitfall-gat006-check" for gate in GATES_LIST):
         }
     )
 
+
+# ROOT 声明规则 5 守卫 (2026-09-19): task-yaml-rules.md 声称
+# test_opc_phase_governance_alignment.py (18 tests) 阻断 self-add status 字段,
+# 而该测试从未实现 → 悬空引用。本守卫以规则 5 真实语义落地 (gate_status 枚举 +
+# readiness_status/cadence_status 禁入), 代替该悬空声明。
+if not any(gate.get("id") == "task-field-governance" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "task-field-governance",
+            "command": ["bin/gac/check-task-field-governance.py"],
+            "note": "TASK-YAML-RULES 规则 5 守卫: 阻断自加非规范 status 字段回归 "
+                    "(OPC P5-P7 事故复演)。gate_status 枚举守卫 + readiness_status/"
+                    "cadence_status 禁入。",
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),

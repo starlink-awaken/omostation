@@ -196,6 +196,19 @@ last_updated: 2026-09-04
 - agora 路由与实际服务脱节: 18.2%→100%
 - BOS URI 命名冲突: 接受 3 段 legacy + 4 段新
 
+## 2026-09-19 — 任务 YAML 规则 5 落地
+
+- `task-yaml-rules.md` 规则 5 引用的 `test_opc_phase_governance_alignment.py` (18 tests) 
+  **从未存在** → 悬空引用。以真实可跑的 `bin/gac/check-task-field-governance.py` 守卫替
+  位, 接入 `make gac-local-gate`:
+  - `gate_status` 枚举守卫
+  - 禁入 `readiness_status`/`cadence_status` 自加字段
+  - 无法 YAML 解析的活跃任务判回归
+  (实测 48 个活跃任务 PASS; 负例 4 类违反均被拦截; 多文档 closeout appendix 不
+  视为回归。)
+- `UNASSIGNED_ENTROPY` 闭环证据核实: `check-task-ownership.py` + `Makefile`
+  `task-ownership-check` 均真实存在 (声明可信)。
+
 ## Earlier versions
 
 See git history. 6 项目独立维护.
