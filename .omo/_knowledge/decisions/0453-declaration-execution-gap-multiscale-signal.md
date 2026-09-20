@@ -1,5 +1,5 @@
 ---
-id: ADR-0402
+id: ADR-0453
 status: ACCEPTED
 lifecycle: spec
 owner: architecture-governance
@@ -9,7 +9,7 @@ related:
   - ADR-0195
 ---
 
-# ADR-0402 — 声明/执行鸿沟: 多尺度信号而非缺陷
+# ADR-0453 — 声明/执行鸿沟: 多尺度信号而非缺陷
 
 - **Status**: ACCEPTED
 - **Date**: 2026-09-20
@@ -50,7 +50,7 @@ related:
   (当前值 50 ≫ 10 ✓, 照明"计划完结 ≠ 运行恢复" —— 如设计), **不归类为缺陷**,
   **不得因其降低 maturity/reconciliation 分数**, **不得一键关闭 DECL_EXEC_GAP**。
 - `DECL_EXEC_GAP` 归结为 `resolved: accepted-design` —— 该张力已被 ADR-0195 +
-  ADR-0402 显式接受为架构意图。唯一后续行动: 推动 `compass_radar` 自身上升
+  ADR-0453 显式接受为架构意图。唯一后续行动: 推动 `compass_radar` 自身上升
   (即推动**运行面**修复, 而非改动分数)。
 
 ## 配套

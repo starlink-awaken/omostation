@@ -10,7 +10,7 @@ entropy_class: "high"
 lifecycle_state: "resolved"
 closed_at: "2026-09-20T05:55:11Z"
 close_reason: >-
-  接受为多尺度 by-design (ADR-0402): plan-completeness (ledger=100,
+  接受为多尺度 by-design (ADR-0453): plan-completeness (ledger=100,
   权重 0.3) 与 runtime health (compass=50, 权重 0.5) 的 spread=50,
   是计划先行/执行滞后的正常现象, 非缺陷。maturity-align.py 已原样
   实现: declaration_execution_gap 仅报告不加权。这决定为 accepted-design；
@@ -28,6 +28,7 @@ resolution_evidence: >-
   这是『声明 100 但执行 50』的量化本体, **系统已在告警**, 但张力未消除。
   maturity_scorecard 由 bin/gac/maturity-align.py 计算。
   结论: 保持 identified —— 这是**可测的存量张力**, 不是可一键关闭的缺陷。
+  2026-09-20 更新: 该张力经 ADR-0453 认定为由设计的多尺度信号 (报告不加权), 据此以 accepted-design 关单; 上述 09-19 复核记录保留为历史。
 owner: "architecture-team"
 affected_roots:
   - ".omo/state/health.yaml"
@@ -35,7 +36,7 @@ affected_roots:
 evidence_refs:
   - "#353 ARCHITECTURE-ANALYSIS-2026-07-14"
   - "ADR-0195"
-  - "ADR-0402"
+  - "ADR-0453"
 # 2026-09-19 进展 (本条保持 identified —— 张力未消除, 但信号已可行动):
 # 原 maturity-align 只报裸 'score spread = 50', 读者需自行推断语义。现把该差距
 # 显式命名为 `declaration_execution_gap` 并给出解释: 三个来源答的是不同问题
@@ -60,7 +61,8 @@ mitigation_refs:
 opened_at: "2026-07-14"
 last_reviewed_at: '2026-09-19'
 gate_level: "P0"
-x1_policy_ref: "P43-ARCH-ANALYSIS-001"
+# x1_policy_ref: "P43-ARCH-ANALYSIS-001"  # REMOVED 2026-09-20: 悬空引用, 全仓无该策略定义 (复核于 #4069 系列)
+x1_policy_ref: ""
 x3_tier: "Principle"
 history:
 - at: '2026-09-19T10:27:00+00:00'

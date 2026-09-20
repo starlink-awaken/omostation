@@ -459,6 +459,7 @@ type: ssot
 - ADR-0395: CI 平面净红收官 — scripts/check-* orphan 化 + drift ahead 容忍 — **ACCEPTED** | 2026-08-08 | CI plane net-red closeout | 0395-ci-plane-net-red-closeout.md
 - ADR-0397: 运行时状态文件不进 git — 运行时投影面由生成器负责, 不入版本库 — **ACCEPTED** | 2026-08-08 | Runtime state not tracked | 0397-runtime-state-not-tracked.md
 - ADR-0403: Agent 本体与模型驱动约束架构 — MOF M2 模型 + 门禁后移 — **ACCEPTED** | 2026-08-08 | Agent ontology | 0403-agent-ontology-model-driven-architecture.md
+- ADR-0453: 声明/执行鸿沟 — 多尺度信号而非缺陷 (关闭 DECL_EXEC_GAP) — **ACCEPTED** | 2026-09-20 | Declaration-execution gap as multiscale signal | 0453-declaration-execution-gap-multiscale-signal.md
 - ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
 - ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成) — **ACCEPTED** | 2026-08-08 | DoD gate | 0400-definition-of-done-task-verify.md
 - ADR-0399: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强 — **PROPOSED** | 2026-08-08 | Submodule stale auto-pull | 0399-submodule-stale-auto-pull.md

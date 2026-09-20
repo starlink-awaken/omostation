@@ -11,18 +11,18 @@ lifecycle_state: "resolved"
 closed_at: "2026-09-19T23:43:29+00:00"
 close_reason: >-
   2026-09-19 以可核证据闭环 (替换原悬空引用 P43-ARCH-ANALYSIS-005):
-  ① .omo/_truth/registry/governance-checks.yaml 现有 90 条受控检查规则;
+  ① .omo/_truth/registry/governance-checks.yaml 现有 86 条 gac 规则 (2026-09-20 实测: governance-checks.yaml gac.rules=86);
   ② governance audit 的 'test coverage' 检查实测 score=100.0 (各包均有测试);
   ③ pytest 门禁由 CI 常态运行。
-  原证据声称 '44 checks ALL GREEN' —— 数字已过时 (现 90 条规则), 但『由
+  原证据声称 '44 checks ALL GREEN' —— 数字已过时 (现 86 条 gac 规则), 但『由
   gac-local-gate + pytest 门禁守护』这一实质成立。原 P43-ARCH-ANALYSIS-005 为悬空引用,
   故本条曾于 2026-09-19 重开; 本次以实测数字闭环。
 resolution_evidence: >-
   2026-09-19 以可核证据闭环 (替换原悬空引用 P43-ARCH-ANALYSIS-005):
-  ① .omo/_truth/registry/governance-checks.yaml 现有 90 条受控检查规则;
+  ① .omo/_truth/registry/governance-checks.yaml 现有 86 条 gac 规则 (2026-09-20 实测: governance-checks.yaml gac.rules=86);
   ② governance audit 的 'test coverage' 检查实测 score=100.0 (各包均有测试);
   ③ pytest 门禁由 CI 常态运行。
-  原证据声称 '44 checks ALL GREEN' —— 数字已过时 (现 90 条规则), 但『由
+  原证据声称 '44 checks ALL GREEN' —— 数字已过时 (现 86 条 gac 规则), 但『由
   gac-local-gate + pytest 门禁守护』这一实质成立。原 P43-ARCH-ANALYSIS-005 为悬空引用,
   故本条曾于 2026-09-19 重开; 本次以实测数字闭环。
 owner: "omo-team"
@@ -32,7 +32,8 @@ mitigation_refs: []
 opened_at: "2026-07-14"
 last_reviewed_at: '2026-09-19'
 gate_level: "P2"
-x1_policy_ref: "P43-ARCH-ANALYSIS-005"
+# x1_policy_ref: "P43-ARCH-ANALYSIS-005"  # REMOVED 2026-09-20: 悬空引用, 全仓无该策略定义 (复核于 #4069 系列)
+x1_policy_ref: ""
 x3_tier: "Framework"
 history:
 - at: '2026-09-19T10:28:48+00:00'
