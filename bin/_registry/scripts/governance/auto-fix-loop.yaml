@@ -3,13 +3,23 @@ id: bin/gac/auto-fix-loop.py
 name: Auto Fix Loop
 category: governance
 owner: governance-team
-description: ""
-inputs: []
+description: "A3 (本会话沉淀) — 漂移检测→分类→修复闭环. 5 类漂移: DERIVED-STALE (make sync-all-docs) / PATH-DRIFT (需人工) / ORPHAN-SCRIPT (script-registry register) / FRONTMATTER-MISSING (fix-frontmatter) / CELL-STALE (24h 清理). v2 新增 closeout-branch skip: 分支名匹配 -closeout/-retro/-ledger/a[1-9]-/bet-execution- 模式时, 跳过 FRONTMATTER-MISSING 对 .omo/_knowledge/retros/ 路径的修复, 避免 closeout PR 携带 retro 时与 ledger 不同步 (FORWARD-PLAN §A3)."
+inputs:
+  - name: "--apply (应用可安全自动修复项, 默认干跑)"
+  - name: "--json (JSON 输出)"
+  - name: "env SKIP_FIX_LOOP_BRANCH=1 (强制 closeout-mode)"
 outputs:
   - type: exit_code
   - type: json
-dependencies: []
-triggers: []
-related: []
+dependencies:
+  - bin/gac/fix-frontmatter.py
+  - bin/gac/check-capability-ownership.py
+  - bin/ssot/doc-governance-check.py
+triggers:
+  - "manual: make gac-local-gate 自动跑"
+  - "manual: PR 准备阶段, 同步修复"
+related:
+  - .omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md
+  - docs/OMOSTATION-FORWARD-PLAN.md §A3
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: "2026-09-19"
