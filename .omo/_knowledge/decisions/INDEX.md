@@ -459,7 +459,7 @@ type: ssot
 - ADR-0395: CI 平面净红收官 — scripts/check-* orphan 化 + drift ahead 容忍 — **ACCEPTED** | 2026-08-08 | CI plane net-red closeout | 0395-ci-plane-net-red-closeout.md
 - ADR-0397: 运行时状态文件不进 git — 运行时投影面由生成器负责, 不入版本库 — **ACCEPTED** | 2026-08-08 | Runtime state not tracked | 0397-runtime-state-not-tracked.md
 - ADR-0403: Agent 本体与模型驱动约束架构 — MOF M2 模型 + 门禁后移 — **ACCEPTED** | 2026-08-08 | Agent ontology | 0403-agent-ontology-model-driven-architecture.md
-- ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
+- ADR-0402: 声明/执行鸿沟多尺度信号 — BOS 声明面与运行时执行面鸿沟的量化与分级 — **ACCEPTED** | 2026-09-20 | Declaration-execution gap multiscale signal | 0402-declaration-execution-gap-multiscale-signal.md
 - ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成) — **ACCEPTED** | 2026-08-08 | DoD gate | 0400-definition-of-done-task-verify.md
 - ADR-0399: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强 — **PROPOSED** | 2026-08-08 | Submodule stale auto-pull | 0399-submodule-stale-auto-pull.md
 - ADR-0391: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐 — **PROPOSED** | 2026-08-07 | Layer contract direction SSOT | 0391-layer-contract-direction-ssot.md
@@ -564,3 +564,4 @@ type: ssot
 - ADR-0450: cockpit-ui 以 submodule 形态回归主仓（第 15 子模块，gitlink 版本锚定） — **ACCEPTED** | 2026-09-04 | xiamingxing | 0450-cockpit-ui-submodule-reintegration.md
 - ADR-0451: HITL Proposal System — file-based approval gate for harness stage_execute — **ACCEPTED** | 2026-09-04 | xiamingxing | 0451-hitl-proposal-system.md
 - ADR-0452: Scene System v3 Architecture — BOS-driven execution, 5-tier lifecycle, calibration engine, anti-corrosion layer — **ACCEPTED** | 2026-09-07 | governance-team | 0452-scene-v3-architecture.md
+- ADR-0453: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0453-gate-shift-autonomous-review.md
