@@ -64,6 +64,7 @@ history:
   note: >-
     2026-09-20 最终闭环：Option B 正式摘除实施完成。删除 debt.yaml 中的 dispatch_ref/campaign_ref/reporting_ref 字段 (version 1→2), 代码已通过 registry.get(name, "") 容忍缺失。gap management 系统从未实现，摘除符合最小惊讶原则。
   actor: governance-agent
-x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
+# x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING  # REMOVED 2026-09-20: 全仓无该策略标签定义
+x1_policy_ref: ""
 x2_freshness: ''
 x3_tier: ''

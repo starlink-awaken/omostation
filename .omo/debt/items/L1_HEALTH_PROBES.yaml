@@ -30,7 +30,8 @@ mitigation_refs: []
 opened_at: "2026-07-14"
 last_reviewed_at: '2026-09-19'
 gate_level: "P1"
-x1_policy_ref: "P43-ARCH-ANALYSIS-003"
+# x1_policy_ref: "P43-ARCH-ANALYSIS-003"  # REMOVED 2026-09-20: 悬空引用, 全仓无该策略定义 (复核于 #4069 系列)
+x1_policy_ref: ""
 x3_tier: "Framework"
 history:
 - at: '2026-09-19T10:28:48+00:00'
