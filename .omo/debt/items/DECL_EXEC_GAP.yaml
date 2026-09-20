@@ -7,7 +7,14 @@ scope: "workspace"
 severity: "critical"
 weight: 0.20
 entropy_class: "high"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
+closed_at: "2026-09-20T05:55:11Z"
+close_reason: >-
+  接受为多尺度 by-design (ADR-0402): plan-completeness (ledger=100,
+  权重 0.3) 与 runtime health (compass=50, 权重 0.5) 的 spread=50,
+  是计划先行/执行滞后的正常现象, 非缺陷。maturity-align.py 已原样
+  实现: declaration_execution_gap 仅报告不加权。这决定为 accepted-design；
+  后续唯一行动: 提升 compass_radar (运行面修复), 而非改分数。
 resolution_evidence: >-
   2026-09-19 复核仍成立 (替换原悬空引用 P43-ARCH-ANALYSIS-001):
   本条的实质是『多个进度/健康分数互相矛盾』, 现场实测 (两个状态文件已一致):
@@ -28,6 +35,7 @@ affected_roots:
 evidence_refs:
   - "#353 ARCHITECTURE-ANALYSIS-2026-07-14"
   - "ADR-0195"
+  - "ADR-0402"
 # 2026-09-19 进展 (本条保持 identified —— 张力未消除, 但信号已可行动):
 # 原 maturity-align 只报裸 'score spread = 50', 读者需自行推断语义。现把该差距
 # 显式命名为 `declaration_execution_gap` 并给出解释: 三个来源答的是不同问题
