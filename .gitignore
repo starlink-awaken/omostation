@@ -348,3 +348,6 @@ runtime/mos/
 .claude-flow/
 runtime/dashboard/
 .omo/state/agent-cell/semantic/*.sqlite3
+
+# Runtime cache
+LADS/
