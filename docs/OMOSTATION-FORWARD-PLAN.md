@@ -1,15 +1,17 @@
 ---
-status: active
+status: superseded
 lifecycle: planning
 owner: governance-team
 last-reviewed: 2026-09-19
+superseded-by: docs/OMOSTATION-FORWARD-PLAN-v2.md
 type: roadmap
 ---
 
-# OMOSTATION-FORWARD-PLAN — 后 3 年路线图 (2026H2 - 2029H1)
+# OMOSTATION-FORWARD-PLAN — 后 3 年路线图 (2026H2 - 2029H1) [SUPERSEDED]
 
-> 2026-09-19, 三年治理计划 (`STRATEGY-3YEAR-PLAN`) 已完成. 进入"持续维护 + 新方向探索"阶段.
-> 本文档定义未来 6 个月的目标 + 探索方向, 替代年度滚动计划.
+> **Status**: SUPERSEDED by [v2](OMOSTATION-FORWARD-PLAN-v2.md) (2026-09-20)
+> v1 完成度: §A 短期 3/3 (A1/A2/A3), §B 中期 4/4 (B1.1/1.2/1.3/B2), §C 3/4 (C2.2 done, C3 done, C1 持续监测)
+> 本文档保留作历史快照; 新方向看 v2.
 
 ## 状态: 当前 (2026-09-19)
 
