@@ -3,7 +3,7 @@ phase: '26'
 priority: P1
 title: kairon架构基线修复与控制面契约收口
 description: 先修复inventory漂移、packages目录污染、agora契约回归、agent-runtime依赖错位，再推进更高层能力建设。
-status: review
+status: done
 risk_level: L3
 allowed_operation_level: L2
 human_approval_required: true
@@ -26,3 +26,6 @@ knowledge_refs:
 review_note: /Users/xiamingxing/Workspace/.omo/tasks/remediation/REMEDIATE-KAIRON-ARCH-BASELINE-review.md
 priority_note: status=review，L3 risk，剩余 15 个 agora 测试失败待修复；保持关注但不作为全局阻塞 P0。
 updated_at: '2026-06-18T23:54:20.235056+00:00'
+done_at: '2026-09-20T06:07:42Z'
+done_evidence: 'agora uv run pytest: 1799 passed, 0 failed; kairon 16 packages verified;
+  all 6 AC met'
