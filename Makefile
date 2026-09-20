@@ -505,6 +505,12 @@ debt-closure-check:  ## 债务闭环节律: resolved 无闭环证据/字段并�
 task-ownership-check:  ## 非终态任务所有权强制 (缺 owner → exit 1)
 	@python3 bin/gac/check-task-ownership.py
 
+debt-review:  ## 债务定期复审调度: 终态无实证 + 逾期未复审 报告
+	@python3 bin/gac/debt-review-scheduler.py
+
+runtime-health-scan:  ## L1 运行时健康探针 (omlxcd/matrix/KEI/GPU/surface); healthy=0 degraded=1 unhealthy=2
+	@python3 bin/runtime-health-scan.py
+
 task-tree-check:  ## 任务树一致性: planned/ 不得含已在 closed//done/ 的 id
 	@python3 bin/gac/check-task-tree-consistency.py
 
