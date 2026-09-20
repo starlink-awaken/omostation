@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/gac/check-task-field-governance.py
+name: Check Task Field Governance
+category: governance
+owner: governance-team
+description: >-
+  任务 YAML 规则 5 守卫: 阻断自加非规范 status 字段回归
+  (gate_status 枚举守卫 + readiness_status/cadence_status 禁入)。
+inputs:
+  - type: filesystem
+    path: .omo/tasks/
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - PyYAML
+triggers:
+  - make gac-local-gate
+related:
+  - .omo/standards/task-yaml-rules.md
+maturity: stable
+last_reviewed: "2026-09-19"
