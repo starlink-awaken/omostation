@@ -90,7 +90,8 @@ mitigation_refs:
 opened_at: '2026-07-14'
 last_reviewed_at: '2026-08-08'
 gate_level: P2
-x1_policy_ref: PR#351 + P43-drift-fix
+# x1_policy_ref: PR#351 + P43-drift-fix  # 2026-09-20: 摘除 P43-drift-fix (P43 系幽灵引用, 全仓无定义), 保留真实 PR 引用
+x1_policy_ref: "PR#351"
 x3_tier: Tool
 description: "Submodule gitlink drift detected: 21 issue(s).\n\n- projects/aetherforge:\
   \ DIVERGED (gitlink=aefd52c21078, origin=334aa933791f)\n  Fix: cd projects/aetherforge\
