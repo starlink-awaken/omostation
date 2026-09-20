@@ -29336,7 +29336,8 @@ bets:
   merge_sha: 0a98a13af
 - id: BET-Y1Q4-T10-172
   title: OMO gitlink freshness repair
-  status: candidate
+  status: done
+  done_at: 2026-09-20
   priority: P1
   risk_level: L1
   track: T10-MATURITY
@@ -29354,17 +29355,36 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T10-172
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          merged_reachable_commit:
+            ref: git://origin/main@f728b1f589c9adc8b2c96f4626eb435204ae5f07
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
       operational:
         status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
       value:
         status: NOT_PROVEN
         evidence: {}
+    notes: "Delivery reached main through PR #4094 and governance reconciliation
+      through PR #4096. Focused OMO tests passed 133/133 at the target commit."
   done_when:
   - Root origin/main projects/omo equals d7feb927f97f9aca7871a6965e8211ba99c18437.
   - Submodule freshness and governance required checks pass.
