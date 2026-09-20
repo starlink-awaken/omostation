@@ -224,9 +224,40 @@ def compute_reconciliation(
             f"maturity scorecard gap = {scorecard_gap:.1f} (target 9.0); below 80% of target"
         )
 
+    # 声明/执行鸿沟的显式命名 (2026-09-19)。
+    # 背景: 三个来源答的是**不同的问题** —— compass_radar = 系统当前状态,
+    # maturity_scorecard = 能力成熟度, bet_ledger = **计划完成度**。前两者同口径
+    # (都答"现在多成熟"), 而 bet_ledger 答的是"计划做完没有"。
+    # 工具的设计前提是"计划是通往成熟的路径, 故 100% 完成应伴随成熟" —— 因此
+    # ledger 显著高于系统状态时, 其含义不是"某个系统算错了", 而是
+    # **"计划做完了, 却未转化为系统状态"** (仓库内登记的 critical 债务
+    # DECL_EXEC_GAP 即此)。原先只报 "score spread = N", 读者需自行推断语义;
+    # 此处把该差距**显式命名**并给出解释, 使其可行动。
+    declaration_execution_gap = None
+    if c_norm is not None and l_norm is not None:
+        gap = round(l_norm - c_norm, 1)
+        declaration_execution_gap = {
+            "value": gap,
+            "ledger_completion": l_norm,
+            "compass_health": c_norm,
+            "meaning": (
+                "计划完成度与系统状态之差 = 声明/执行鸿沟: 计划做完了但未转化为"
+                "系统状态" if gap > 0 else
+                "系统状态高于计划完成度 (计划未完成但状态良好; 少见, 值得核查口径)"
+                if gap < 0 else "计划完成度与系统状态一致"
+            ),
+        }
+        if gap >= 30:
+            warnings.append(
+                f"声明/执行鸿沟 = {gap:.0f} (计划完成度 {l_norm:.0f} vs 系统状态 "
+                f"{c_norm:.0f}) —— 计划已做完但未转化为系统状态; 这不是口径冲突, "
+                f"是**闭环未产生价值**的信号 (见 debt item DECL_EXEC_GAP)"
+            )
+
     return {
         "drift_detected": drift_detected,
         "reconciliation_score": reconciliation_score,
+        "declaration_execution_gap": declaration_execution_gap,
         "normalised": {
             "compass_radar": c_norm,
             "maturity_scorecard": s_norm,

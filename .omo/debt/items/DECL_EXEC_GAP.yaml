@@ -28,6 +28,14 @@ affected_roots:
 evidence_refs:
   - "#353 ARCHITECTURE-ANALYSIS-2026-07-14"
   - "ADR-0195"
+# 2026-09-19 进展 (本条保持 identified —— 张力未消除, 但信号已可行动):
+# 原 maturity-align 只报裸 'score spread = 50', 读者需自行推断语义。现把该差距
+# 显式命名为 `declaration_execution_gap` 并给出解释: 三个来源答的是不同问题
+# (compass_radar=系统当前状态 / maturity_scorecard=能力成熟度 / bet_ledger=计划完成度),
+# 工具前提是『计划是通往成熟的路径』, 故 ledger 显著高于系统状态时其含义是
+# 『计划做完了却没转化为系统状态』而不是『某系统算错了』。差距>=30 时新增一条
+# 可读告警, 明示这是『闭环未产生价值』的信号并指向本条。
+
 mitigation_refs:
   - ".omo/_knowledge/decisions/0195-architecture-convergence-isc2.md"
 opened_at: "2026-07-14"
@@ -48,4 +56,12 @@ history:
     自身), 已替换为现场实测数字。本条实质成立且已量化: bet_ledger 100 vs
     compass_radar 50 (离散 50), health.yaml 已在告警。保持 identified —— 这是
     可测的存量张力, 需方向性处置 (统一口径 or 承认多口径并说明差异)。
+  actor: governance-agent
+- at: '2026-09-20T02:44:11+00:00'
+  action: review
+  note: >-
+    2026-09-19: 把原来的裸 spread 告警显式命名为 declaration_execution_gap 并解释语义
+    (计划完成度 vs 系统状态), 使该 critical 信号可行动。**评分语义未改** —— 既有 6 例
+    测试零回退 (新增 5 例锁定新字段)。张力本身未消除 (计划 100 vs 状态 50), 本条保持
+    identified。
   actor: governance-agent

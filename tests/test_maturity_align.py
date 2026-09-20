@@ -127,3 +127,61 @@ def test_cli_runs_in_dry_paths(tmp_path, monkeypatch):
     if res_json.stdout.strip().startswith("{"):
         data = _json.loads(res_json.stdout)
         assert "alignment" in data
+
+# ── 声明/执行鸿沟的显式命名 (2026-09-19) ──────────────────
+#
+# 三个来源答的是**不同的问题**: compass_radar = 系统当前状态,
+# maturity_scorecard = 能力成熟度, bet_ledger = **计划完成度**。
+# 工具前提是"计划是通往成熟的路径", 故 ledger 显著高于系统状态时其含义是
+# "计划做完了却没转化为系统状态" —— 原先只报 "score spread = N", 读者需自行
+# 推断; 现显式命名并解释 (对应仓库内 critical 债务 DECL_EXEC_GAP)。
+
+
+def test_declaration_execution_gap_named_when_ledger_leads(align):
+    """计划完成度高而系统状态低 → 鸿沟被显式命名 + 解释."""
+    out = align.compute_reconciliation(
+        {"health_score": 50},
+        {"overall": 6.6},
+        {"completion_pct": 100},
+    )
+    g = out["declaration_execution_gap"]
+    assert g is not None
+    assert g["value"] == 50.0
+    assert g["ledger_completion"] == 100.0
+    assert g["compass_health"] == 50.0
+    assert "鸿沟" in g["meaning"]
+    # 同时给出一条可读的告警 (不再只有裸 spread)
+    assert any("声明/执行鸿沟" in w for w in out["warnings"])
+
+
+def test_declaration_execution_gap_small_gap_not_warned(align):
+    """差距小于 30 → 仍计算该字段, 但不产生告警 (避免噪声)."""
+    out = align.compute_reconciliation(
+        {"health_score": 90}, {"overall": 9.0}, {"completion_pct": 100}
+    )
+    g = out["declaration_execution_gap"]
+    assert g is not None and g["value"] == 10.0
+    assert not any("声明/执行鸿沟" in w for w in out["warnings"])
+
+
+def test_declaration_execution_gap_zero_means_aligned(align):
+    out = align.compute_reconciliation(
+        {"health_score": 80}, {"overall": 8.0}, {"completion_pct": 80}
+    )
+    assert out["declaration_execution_gap"]["value"] == 0.0
+    assert "一致" in out["declaration_execution_gap"]["meaning"]
+
+
+def test_gap_is_none_when_inputs_missing(align):
+    """缺少 compass 或 ledger 时不臆造该字段."""
+    out = align.compute_reconciliation({}, {"overall": 8.0}, {})
+    assert out["declaration_execution_gap"] is None
+
+
+def test_existing_scoring_semantics_unchanged(align):
+    """**不得改动既有评分语义** (既有测试锁定的行为必须保持)."""
+    out = align.compute_reconciliation(
+        {"health_score": 100}, {"overall": 10.0}, {"completion_pct": 20}
+    )
+    assert out["drift_detected"] is True
+    assert out["reconciliation_score"] == 20.0  # 100 - spread(80)
