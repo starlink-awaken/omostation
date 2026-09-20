@@ -54,15 +54,31 @@ def test_compute_reconciliation_perfect(align):
 
 
 def test_compute_reconciliation_drift_detected(align):
-    """Compass=100 but ledger=20 → spread=80, drift_detected=True."""
+    """**同口径**漂移才判 drift (2026-09-19 语义修正).
+
+    旧语义把 bet_ledger(计划完成度) 也计入 spread; 现只比同口径的
+    compass_health 与 maturity_scorecard。
+    此处 compass=100 vs scorecard=90 → 同口径 spread=10 → 无 drift;
+    而计划完成度 20 远低于系统状态 → 体现为**负向** declaration_execution_gap。
+    """
     compass = {"health_score": 100}
     scorecard = {"overall": 9.0, "target": 9.0, "gap": 0.0}
     ledger = {"completion_pct": 20.0, "counts": {"done": 2}, "total": 10}
     out = align.compute_reconciliation(compass, scorecard, ledger)
+    assert out["drift_detected"] is False           # 同口径 100 vs 90 = 10 < 30
+    assert out["reconciliation_score"] == 90.0      # 100 - 10
+    assert out["declaration_execution_gap"]["value"] == -80.0
+
+
+def test_same_scope_drift_is_still_detected(align):
+    """同口径真漂移仍必须被检出 (放宽不得失去检出力)."""
+    out = align.compute_reconciliation(
+        {"health_score": 90}, {"overall": 3.0}, {"completion_pct": 50}
+    )
+    # normalized: compass 90 vs scorecard 30 → spread 60 > 30
     assert out["drift_detected"] is True
-    # spread = 100 - 20 = 80; reconciliation = 100 - 80 = 20
-    assert out["reconciliation_score"] == 20
-    assert len(out["warnings"]) >= 1
+    assert out["reconciliation_score"] == 40.0
+    assert any("same-scope" in w for w in out["warnings"])
 
 
 def test_compute_reconciliation_handles_missing(align):
@@ -85,14 +101,19 @@ def test_normalise_to_100_clamps(align):
 
 
 def test_compute_reconciliation_3way_spread(align):
-    """Real-world scenario: 70 / 7.5 / 89.4 → reconciliation around 80."""
+    """Real-world 场景 (语义修正后): 70 / 7.5 / 89.4.
+
+    同口径 = compass 70 vs scorecard 75 → spread 5 → reconciliation 95。
+    计划完成度 89.4 与系统状态之差单列为 declaration_execution_gap (19.4), 不计入
+    reconciliation。旧语义下该场景 scope 混算得到 ~80。
+    """
     compass = {"health_score": 70}
     scorecard = {"overall": 7.5, "target": 9.0, "gap": 1.5}
     ledger = {"completion_pct": 89.4, "counts": {"done": 126}, "total": 141}
     out = align.compute_reconciliation(compass, scorecard, ledger)
-    # normalised: 70, 75, 89.4; spread = 89.4 - 70 = 19.4
-    assert out["drift_detected"] is False  # spread < 30
-    assert 79 <= out["reconciliation_score"] <= 82
+    assert out["drift_detected"] is False
+    assert out["reconciliation_score"] == 95.0
+    assert out["declaration_execution_gap"]["value"] == 19.4
 
 
 # ---------------------------------------------------------------------------
@@ -178,10 +199,33 @@ def test_gap_is_none_when_inputs_missing(align):
     assert out["declaration_execution_gap"] is None
 
 
-def test_existing_scoring_semantics_unchanged(align):
-    """**不得改动既有评分语义** (既有测试锁定的行为必须保持)."""
-    out = align.compute_reconciliation(
-        {"health_score": 100}, {"overall": 10.0}, {"completion_pct": 20}
-    )
-    assert out["drift_detected"] is True
-    assert out["reconciliation_score"] == 20.0  # 100 - spread(80)
+def test_no_self_reference_when_plan_fully_closed(align):
+    """**核心不变量 (2026-09-19)**: 计划全闭时 reconciliation 不得等于 compass 本身.
+
+    旧语义: 计划全闭 (ledger=100) 时 spread = 100 - compass, 于是
+    reconciliation 恒等于 compass_health —— 而 alignment 以 0.1 权重进健康分,
+    即健康分部分由自己算出。现 reconciliation 只比同口径, 该自指不再可能。
+    """
+    for compass_health in (40, 55, 70, 85):
+        out = align.compute_reconciliation(
+            {"health_score": compass_health},
+            {"overall": compass_health / 10.0},
+            {"completion_pct": 100},
+        )
+        # 同口径完全一致 → reconciliation 应为 100, 而不是等于 compass
+        assert out["reconciliation_score"] == 100.0, (
+            f"compass={compass_health} 时 reconciliation 不应退化为 compass 本身")
+        assert out["reconciliation_score"] != compass_health
+
+
+def test_completing_plan_does_not_lower_reconciliation(align):
+    """**反向激励已消除**: 把计划做完不得压低同口径一致性."""
+    fixed_compass = {"health_score": 70}
+    fixed_scorecard = {"overall": 7.0}
+    before = align.compute_reconciliation(
+        fixed_compass, fixed_scorecard, {"completion_pct": 50})
+    after = align.compute_reconciliation(
+        fixed_compass, fixed_scorecard, {"completion_pct": 100})
+    assert after["reconciliation_score"] == before["reconciliation_score"] == 100.0
+    # 计划完成度的变化只体现在 gap 上
+    assert after["declaration_execution_gap"]["value"] > before["declaration_execution_gap"]["value"]

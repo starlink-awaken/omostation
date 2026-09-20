@@ -187,21 +187,37 @@ def compute_reconciliation(
     c_norm = normalise_to_100(compass.get("health_score"), 100)
     s_norm = normalise_to_100(scorecard.get("overall"), 10)
     l_norm = normalise_to_100(ledger.get("completion_pct"), 100)
-    values = [v for v in (c_norm, s_norm, l_norm) if v is not None]
+
+    # 同口径 (2026-09-19 修正): reconciliation 只用**回答同一问题的**两个来源 ——
+    # compass_radar.health_score 与 maturity_scorecard 都答"我们现在多成熟/多健康"。
+    # 而 bet_ledger 答的是"计划做完没有", 是**不同的问题**。
+    #
+    # 把 l_norm 计入 spread 会造成两个可证的恶果 (2026-09-19 实测):
+    #   ① **自指**: 计划全闭 (ledger=100) 时 spread = 100 - compass,
+    #      于是 reconciliation 恒等于 compass_health —— 而 alignment 以 0.1 权重
+    #      进健康分 (health_composite_breakdown.weights.alignment), 即健康分部分
+    #      由自己算出。
+    #   ② **反向激励**: compass 固定 70 时, ledger 50→100 (把计划做完) 会让
+    #      reconciliation 从 80 掉到 70 —— 完成计划反而压低健康分。
+    #
+    # 修正后: reconciliation 只衡量**同口径一致性**; 跨口径的比较不丢, 而是落在
+    # declaration_execution_gap (见下), **报告但不加权进健康分**。
+    state_values = [v for v in (c_norm, s_norm) if v is not None]
 
     drift_detected = False
     warnings: list[str] = []
-    if values:
-        spread = max(values) - min(values)
+    if state_values:
+        spread = max(state_values) - min(state_values)
         # > 30 points spread on a 0-100 scale = meaningful disagreement
         if spread > 30:
             drift_detected = True
             warnings.append(
-                f"score spread = {spread:.0f} (compass {c_norm}, scorecard {s_norm}, ledger {l_norm})"
+                f"same-scope score spread = {spread:.0f} "
+                f"(compass {c_norm}, scorecard {s_norm})"
             )
 
     # Reconciliation = 100 - spread (perfect = 100, max disagreement = 0)
-    if values:
+    if state_values:
         reconciliation_score = round(100.0 - spread, 1)
     else:
         reconciliation_score = None
