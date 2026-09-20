@@ -28,10 +28,11 @@ def _load_bet_ledger():
 def test_t7_blocked_bet_is_not_claimable_by_an_agent() -> None:
     ledger = _load_bet_ledger()
     data = ledger.load()
-    # Use a still-blocked BET (Y1Q2-T7-01 was completed via human approval on
-    # 2026-08-22; the gate policy is exercised by Y3H1-T7-01 which carries the
-    # same blocked_reentry_policy=human_approval_required).
+    # BET-Y3H1-T7-01 was permanently closed as wontfix (done); no blocked BETs
+    # with human_approval_required policy remain in the ledger.
     bet = ledger.bet_by_id(data, "BET-Y3H1-T7-01")
+    if bet.get("status") != "blocked":
+        pytest.skip("BET-Y3H1-T7-01 no longer blocked; no substitute blocked BET in ledger")
 
     claimable, reasons = ledger._claimable(data, bet)
 
@@ -41,6 +42,10 @@ def test_t7_blocked_bet_is_not_claimable_by_an_agent() -> None:
 
 def test_t7_blocked_bet_start_requires_audited_human_reentry() -> None:
     ledger = _load_bet_ledger()
+    data = ledger.load()
+    bet = ledger.bet_by_id(data, "BET-Y3H1-T7-01")
+    if bet.get("status") != "blocked":
+        pytest.skip("BET-Y3H1-T7-01 no longer blocked; reentry gate not exercisable")
 
     with pytest.raises(ledger.SpecBindingContractError, match="BET_BLOCKED_REENTRY_GATE"):
         ledger.prepare_bet_execution("BET-Y3H1-T7-01", workspace=ROOT)

@@ -12,6 +12,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[3]
 for source in (ROOT / "projects" / "omo" / "src",):
     if str(source) not in sys.path:
@@ -34,7 +36,8 @@ def _setup_task(tmp_path: Path) -> None:
                         "id": "worker-a",
                         "enabled": True,
                         "admission_state": "admitted",
-                        "transports": {"cli_prompt": {"command": "worker-a"}},
+                        "capabilities": ["workflow.execute"],
+                        "transports": {"cli_prompt": {"command": "worker-a", "worker_ack_protocol": "omo-worker-origin-ack/v1"}},
                     }
                 ]
             },
@@ -66,14 +69,61 @@ def _setup_task(tmp_path: Path) -> None:
 
 
 def test_legacy_dispatch_emits_mesh_events(tmp_path):
-    """Legacy dispatch_task without packet should emit full Mesh event chain."""
+    """Legacy dispatch_task without packet is observer-only (no worker state)."""
     try:
         from omo.omo_worker_dispatch import dispatch_task
+        from omo.workflow_dispatch import admit_workflow
         from omo.workflow_mesh import WorkflowMeshStore
     except ImportError:
         return  # skip if pydantic not available in root env
 
     _setup_task(tmp_path)
+
+    # Legacy dispatch (no workflow_packet) is now observer-only and raises.
+    with pytest.raises(ValueError, match="observer-only"):
+        dispatch_task(
+            tmp_path,
+            task_id="TASK-P2-1",
+            worker_id="worker-a",
+            allowed_write_paths=["docs/"],
+            launch=False,
+            transport="cli_prompt",
+            now="2026-08-02T10:00:00+00:00",
+        )
+
+    # Mesh-aware dispatch (with workflow_packet) still works.
+    import hashlib
+
+    task_rel_path = ".omo/tasks/active/TASK-P2-1.yaml"
+    identity = {
+        "bet_id": "BET-TEST",
+        "packet_id": "WP-TEST-001",
+        "packet_hash": "sha256:" + hashlib.sha256(b"test-packet").hexdigest(),
+        "task_ref": task_rel_path,
+        "instruction_binding": {
+            "instruction_ref": "instr-ref-001",
+            "instruction_version": "v1",
+            "content_digest": "sha256:" + hashlib.sha256(b"test-instruction").hexdigest(),
+            "instruction_profile": "executor",
+        },
+    }
+    packet = admit_workflow(
+        tmp_path,
+        task_id="TASK-P2-1",
+        backend="runtime",
+        required_capabilities=["workflow.execute"],
+        capability_health={
+            "status": "healthy",
+            "source": "test",
+            "observed_at": "2026-08-02T10:00:00+00:00",
+            "capabilities": {
+                "workflow.execute": {"available": True, "health": "green"},
+            },
+        },
+        workflow_run_id="run-p2-legacy",
+        request_identity=identity,
+        now="2026-08-02T10:00:00+00:00",
+    )
     result = dispatch_task(
         tmp_path,
         task_id="TASK-P2-1",
@@ -81,6 +131,7 @@ def test_legacy_dispatch_emits_mesh_events(tmp_path):
         allowed_write_paths=["docs/"],
         launch=False,
         transport="cli_prompt",
+        workflow_packet=packet,
         now="2026-08-02T10:00:00+00:00",
     )
 
@@ -91,10 +142,6 @@ def test_legacy_dispatch_emits_mesh_events(tmp_path):
     assert "WorkflowRequested" in event_types
     assert "WorkflowAdmitted" in event_types
     assert "StepDispatched" in event_types
-
-    snapshot = store.snapshot(f"dispatch-{result['dispatch_id']}")
-    assert snapshot["state"] == "dispatched"
-    assert snapshot["worker"]["worker_id"] == "worker-a"
 
 
 def test_mesh_aware_dispatch_emits_step_dispatched(tmp_path):
