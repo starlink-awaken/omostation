@@ -14,7 +14,7 @@ totals:
   mcp_tools: 643
   bos_services: 318
   bos_domains: 24
-  cli_commands: 220
+  cli_commands: 203
   skills: 40
   workflows: 25
 mcp_servers:
@@ -2225,21 +2225,15 @@ cli_commands:
 - name: approve
   description: 批准决策
 - name: archive
-  description: 归档研究记录
+  description: 归档已处理完毕的 Inbox 待办文件
 - name: ask
-  description: 对指定研究发起追问
+  description: 向大脑提问（知识检索 + LLM 回答）
 - name: audit
-  description: 扫描可疑研究记录
+  description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
 - name: audit-ledger
   description: ''
 - name: backends
   description: 列出 BOS 后端
-- name: backup
-  description: 全量备份研究数据到 JSON 文件
-- name: backup-restore
-  description: 从备份 JSON 文件恢复研究数据
-- name: batch
-  description: '批量研究模式: 逐个处理多个 topic，汇总结果'
 - name: bcos
   description: BCOS 业务域系统 (evolve/signals/north-star)
 - name: bdsk
@@ -2286,8 +2280,6 @@ cli_commands:
   description: 代码库分析与审查 (基于 codeanalyze)
 - name: compact
   description: 上下文滑动蒸馏与双区自适应量化压缩模拟
-- name: compare
-  description: 对比多个研究结果
 - name: compass
   description: 🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)
 - name: completion
@@ -2304,8 +2296,6 @@ cli_commands:
   description: 控制平面：submit / ack / nack
 - name: controller-shadow
   description: 读取 Runtime 旧控制器影子迁移回执
-- name: create
-  description: 创建新研究
 - name: daily
   description: 每日研究简报
 - name: dashboard
@@ -2322,8 +2312,6 @@ cli_commands:
   description: DFlash 2 块扩散投机解码加速与集群基准
 - name: diff
   description: 查看待处理署名 Diff 统计
-- name: digest
-  description: 提炼多个研究结果
 - name: discover
   description: 发现可用功能和资源
 - name: distill
@@ -2340,8 +2328,6 @@ cli_commands:
   description: 显示 Documents 域项目绑定与引导状态
 - name: domains
   description: 列出 L4 所有域及其状态
-- name: dossier
-  description: 查看研究的关系与产物视图
 - name: down
   description: 停止观测栈
 - name: draft
@@ -2355,7 +2341,7 @@ cli_commands:
 - name: execute
   description: '[v2] 执行场景卡 (BOS/MCP 驱动)'
 - name: export
-  description: 导出研究 (markdown/text/json)
+  description: 导出契约封套
 - name: export-research
   description: 将研究对象导出为 WorkspaceObject JSON
 - name: fabric
@@ -2370,8 +2356,6 @@ cli_commands:
   description: 家庭数字枢纽入口
 - name: finance
   description: 💰 个人财务门户引导 (场景/原则/入口, 委派 @个人 域)
-- name: follow-up
-  description: 查看追问工作台（待追问/已回答统计）
 - name: forget
   description: 遗忘传播
 - name: gac
@@ -2389,9 +2373,9 @@ cli_commands:
 - name: graph
   description: 运行语义图谱分析
 - name: health
-  description: 查看研究健康报告（衰减状态/保鲜建议）
+  description: 一键系统健康检查
 - name: heatmap
-  description: 显示研究活跃度热力图
+  description: 查看分布式 KV 内存池热力分布与投机蒸馏指标
 - name: help
   description: 查看产品地图与快速入门 (cockpit help <关键词> 模糊搜命令/工具/服务)
 - name: history
@@ -2435,7 +2419,7 @@ cli_commands:
 - name: lifecycle
   description: '[v2] 场景卡生命周期管理 (list/status/promote/demote/validate)'
 - name: list
-  description: 查看研究历史
+  description: 列债务项 (委派 omo debt)
 - name: logs
   description: 查看日志
 - name: lora
@@ -2448,8 +2432,6 @@ cli_commands:
   description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
 - name: memory-distill
   description: ''
-- name: merge
-  description: 合并多个研究结果为新研究
 - name: mesh
   description: omlx 算力网格路由入口
 - name: metrics
@@ -2476,8 +2458,6 @@ cli_commands:
   description: OMO CLI 委派 (debt/state/governance/lint/...)
 - name: onboarding
   description: 为 AI 构建项目全貌上下文
-- name: open
-  description: 打开研究全文
 - name: ops
   description: 🔧 Service Gateway — 统一运维控制面 (status/up/down/deploy/deps/logs/discover/validate/generate)
 - name: org-relation
@@ -2507,9 +2487,7 @@ cli_commands:
 - name: proxy-env
   description: 输出兼容外部客户端的本地环境变量 (OPENAI_API_BASE)
 - name: publish
-  description: 发布研究为正式 Markdown 报告
-- name: quarantine
-  description: 隔离可疑研究记录
+  description: 发布事件
 - name: quickstart
   description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
 - name: quickstart-check
@@ -2528,20 +2506,14 @@ cli_commands:
   description: 重载 BOS 配置/M1
 - name: remember
   description: 手动存入偏好/事实
-- name: rename
-  description: 重命名研究标题
 - name: render
   description: 初稿 Markdown 一键渲染导出 (GB/T 9704 DOCX / 16:9 PPTX / 矢量图)
 - name: replay
   description: 查看 Experience Replay 缓冲区状态
-- name: research
-  description: 深度研究 — 创建/查询/管理研究对象
 - name: resident
   description: Resident 常驻 Agent (status/roles/daemon/decision triage/approve/status/execute/...)
 - name: resolve
   description: 统一 BOS URI 路由解析与目标元数据提取
-- name: restore
-  description: 恢复已隔离研究记录
 - name: review
   description: 左右分栏 Diff 审阅工作台 (初稿 vs 编辑态)
 - name: route
@@ -2561,7 +2533,7 @@ cli_commands:
 - name: score
   description: 评分债务项
 - name: search
-  description: 全文搜索
+  description: 全文搜 CARDS
 - name: send
   description: 一键确认署名并经外发网关真实外发
 - name: serve
@@ -2596,14 +2568,10 @@ cli_commands:
   description: 分布式跨节点 KV 共享池与超长上下文置换基准
 - name: system
   description: 🖥️ 系统与运维正交领域 (status/health/dashboard/readiness/runtime)
-- name: tag
-  description: 为研究添加/覆盖标签
 - name: telemetry
   description: 命令遥测与 Prometheus 指标导出
 - name: test_export_formats
   description: '离线自测: 三格式导出 + GB/T 参数断言'
-- name: timeline
-  description: 查看研究的演化时间线
 - name: topics
   description: 列出已注册 topic
 - name: tree
@@ -2614,8 +2582,6 @@ cli_commands:
   description: 极客终端交互控制台 (Textual 全屏 TUI)
 - name: types
   description: 查看已注册的数据类型
-- name: unarchive
-  description: 恢复已归档研究记录
 - name: up
   description: 启动观测栈
 - name: url
