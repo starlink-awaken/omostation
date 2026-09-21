@@ -29336,7 +29336,8 @@ bets:
   merge_sha: 0a98a13af
 - id: BET-Y1Q4-T10-172
   title: OMO gitlink freshness repair
-  status: candidate
+  status: done
+  done_at: 2026-09-20
   priority: P1
   risk_level: L1
   track: T10-MATURITY
@@ -29354,17 +29355,34 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T10-172
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          merged_reachable_commit:
+            ref: git://origin/main@f728b1f589c9adc8b2c96f4626eb435204ae5f07
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
       value:
         status: NOT_PROVEN
         evidence: {}
+    notes: 'Delivery reached main through PR #4094 and governance reconciliation through PR #4096. Focused OMO tests passed 133/133 at the target commit.'
   done_when:
   - Root origin/main projects/omo equals d7feb927f97f9aca7871a6965e8211ba99c18437.
   - Submodule freshness and governance required checks pass.
@@ -29372,8 +29390,7 @@ bets:
   non_goals:
   - Do not modify child implementation code or other gitlinks.
   - Do not rewrite child history or force push.
-  - Do not change runtime state, branch protection, completion/value evidence, or business
-    runtime.
+  - Do not change runtime state, branch protection, completion/value evidence, or business runtime.
   verify:
   - cmd: test "$(git ls-tree origin/main projects/omo | awk '{print $3}')" = d7feb927f97f9aca7871a6965e8211ba99c18437
     expect: exit 0
@@ -29388,7 +29405,8 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T10-172.md
 - id: BET-Y1Q4-T10-173
   title: OMO promotion helper standalone binding repair
-  status: candidate
+  status: done
+  done_at: 2026-09-20
   priority: P2
   risk_level: L1
   track: T10-MATURITY
@@ -29398,13 +29416,157 @@ bets:
   human_gate: false
   retro: required
   appetite: 2 hours
-  goal: Make OMO ingress task promotion safe to import standalone without implicit module-load
-    ordering.
+  goal: Make OMO ingress task promotion safe to import standalone without implicit module-load ordering.
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-20-t10-173-promotion-helper-binding-design.md
     spec_version: 1.0.0
     content_digest: sha256:4d2e333b565b77eb27395483c953ce3861e82df7c3ccb669ca608a7080c2cd6c
     decision_ref: decision://accepted/BET-Y1Q4-T10-173
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          merged_reachable_commit:
+            ref: git://origin/main@5562c87f1e6bbeb671b53b4190f4c288685cf2de
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    notes: 'Engineering and operational delivery are proven by OMO PR #184, root PR #4097, required checks, focused workflow regression, and reachable gitlink b4c9252. Human value remains NOT_PROVEN.'
+  done_when:
+  - Standalone promotion import no longer raises NameError in audit trail.
+  - Full workflow regression passes at the patched OMO commit.
+  - Child CI, ledger lint, and root governance checks pass.
+  non_goals:
+  - Do not change audit trail or mutation record semantics.
+  - Do not alter Claims Authority state or lifecycle receipts.
+  - Do not modify runtime state, gitlinks, branch protection, or admission boundaries.
+  verify:
+  - cmd: cd projects/omo && PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -B -m pytest -q -p no:cacheprovider tests/test_workflow_admission.py tests/test_workflow_*.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - projects/omo
+  - docs/superpowers/specs/2026-09-20-t10-173-promotion-helper-binding-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+- id: BET-Y2Q2-T8-02
+  title: dashboard 导航统一 + panorama 目标态标注
+  track: T8-SURFACE
+  window: Y2Q2
+  appetite: 3 days
+  status: candidate
+  goal: 消除三份漂移导航数组，建立 ZHIXING_NAV_GROUPS 单一权威源；panorama 标注为目标态。
+  done_when:
+  - strategy_ui.js 导航死代码删除
+  - workbench_ui.js 导航从规范数组派生
+  - ecosystem_ui.js zhixingGroups 从规范数组派生
+  - 所有导航锚点添加 data-asd-panel 属性
+  verify:
+  - cmd: cd ~/.local/share/zhixing-dashboard && cat ui_extensions.js strategy_ui.js workbench_ui.js panoramic_ui.js next_ui.js topology_ui.js mof_ui.js ecosystem_ui.js > /tmp/zc.js && node --check /tmp/zc.js
+    expect: exit 0
+  - cmd: grep -c "ZHIXING_NAV_GROUPS" ~/.local/share/zhixing-dashboard/ui_extensions.js
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.local/share/zhixing-dashboard/**
+  pasw_required: false
+  risk_level: L1
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals: []
+- id: BET-Y2Q2-T8-03
+  title: dashboard agent-brief 接入 + orient L0 + personal 动态化
+  track: T8-SURFACE
+  window: Y2Q2
+  appetite: 4 days
+  status: candidate
+  goal: refresh.py 提取 agent_visibility/safety_boundaries/next_actions；personal 面板 next-3 动态化；orient 面板添加 ASD L0 首屏。
+  done_when:
+  - refresh.py 提取 agent_visibility 字段
+  - personal 面板 next-3 从 D.next_actions 动态渲染
+  - orient 面板首屏显示 L0 块
+  verify:
+  - cmd: grep -c "agent_visibility" ~/.local/share/zhixing-dashboard/refresh.py
+    expect: '>= 1'
+  - cmd: grep -c "D.next_actions" ~/.local/share/zhixing-dashboard/workbench_ui.js
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.local/share/zhixing-dashboard/**
+  pasw_required: false
+  risk_level: L1
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals: []
+- id: BET-Y2Q2-T8-04
+  title: dashboard 写操作诚信修复 + 跨板块合成条
+  track: T8-SURFACE
+  window: Y2Q2
+  appetite: 2 days
+  status: candidate
+  goal: 删除 workbench 重复写操作实现；页脚文案诚实披露；新增两个跨板块合成镜头卡。
+  done_when:
+  - workbench proposals Tab 删除
+  - ZhixingAdjudicateProposal 函数删除
+  - 页脚文案改为诚实披露唯一写例外
+  verify:
+  - cmd: grep -c "ZhixingAdjudicateProposal" ~/.local/share/zhixing-dashboard/workbench_ui.js
+    expect: '0'
+  - cmd: grep -c "data-synthesis-card" ~/.local/share/zhixing-dashboard/ecosystem_ui.js
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.local/share/zhixing-dashboard/**
+  pasw_required: false
+  risk_level: L1
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals: []
+- id: BET-Y1Q4-T10-170
+  title: Canonical Claims observation current-run projection repair
+  status: candidate
+  priority: P1
+  risk_level: L1
+  track: T10-MATURITY
+  window: Y1Q4
+  workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: false
+  retro: required
+  appetite: 4 hours
+  goal: Prevent Panorama from splicing prior invalid Claims observation attempts into
+    the current launchd observation window.
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-20-t10-170-claims-observation-current-run-projection-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:5297bb547c38f990def022a7609648275a750a245b3acb4f04204874b4b1c741
+    decision_ref: decision://accepted/BET-Y1Q4-T10-170
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     overall_state: evaluating
@@ -29419,26 +29581,34 @@ bets:
         status: NOT_PROVEN
         evidence: {}
   done_when:
-  - Standalone promotion import no longer raises NameError in audit trail.
-  - Full workflow regression passes at the patched OMO commit.
-  - Child CI, ledger lint, and root governance checks pass.
+  - Canonical collector and host asset remain byte-identical after current-run filtering.
+  - Focused Panorama Claims tests prove prior-attempt records are excluded and current
+    malformed records still fail closed.
+  - Host sync, ledger lint, and default governance gate pass.
   non_goals:
-  - Do not change audit trail or mutation record semantics.
-  - Do not alter Claims Authority state or lifecycle receipts.
-  - Do not modify runtime state, gitlinks, branch protection, or admission boundaries.
+  - Do not mutate Claims Authority state, lifecycle receipts, or business-value evidence.
+  - Do not restart or alter the active observation sampler.
+  - Do not change branch protection, CI authority, gitlinks, or other dashboard surfaces.
+  - Do not admit Orca, Multica, or Ruflo beyond their existing R0/AS0/RF0 boundaries.
   verify:
-  - cmd: cd projects/omo && PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
-      python -B -m pytest -q -p no:cacheprovider tests/test_workflow_admission.py tests/test_workflow_*.py
+  - cmd: PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -B -m pytest
+      -q -p no:cacheprovider tests/unit/test_panorama_claims_authority.py
+    expect: exit 0
+  - cmd: cmp bin/panorama/panorama-collect.py bin/panorama/assets/host/panorama-collect-main.py.asset
+    expect: exit 0
+  - cmd: python3 bin/gac/zhixing-host-sync.py check
     expect: exit 0
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
   write_surfaces:
-  - projects/omo
-  - docs/superpowers/specs/2026-09-20-t10-173-promotion-helper-binding-design.md
+  - bin/panorama/panorama-collect.py
+  - bin/panorama/assets/host/panorama-collect-main.py.asset
+  - tests/unit/test_panorama_claims_authority.py
+  - docs/superpowers/specs/2026-09-20-t10-170-claims-observation-current-run-projection-design.md
   - docs/plans/3y-bet-ledger.yaml
-  - .omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-170.md
 - id: BET-Y1Q4-T10-171
   title: Live value readiness v2-only projection repair
   status: candidate
@@ -29630,7 +29800,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 416
+  total_bets: 433
   windows:
   - Y1Q1
   - Y1Q2
