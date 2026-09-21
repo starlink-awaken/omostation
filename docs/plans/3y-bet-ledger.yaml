@@ -30231,6 +30231,71 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y1Q4-T10-174
+  title: Clone-lifecycle claims-authority fence adapter contract repair
+  status: candidate
+  priority: P1
+  risk_level: L2
+  track: T10-MATURITY
+  window: Y1Q4
+  appetite: 1 day
+  human_gate: false
+  value_indicator_policy: false
+  goal: Align bin/gac/clone-lifecycle.py legacy publish fence adapter requests with
+    the canonical claims-authority broker issue/enter/settle contract so the WP1 §6.4
+    post-activation fence path is executable and drift fails in CI, and keep a re-bindable
+    run surface (docs/reports) for a future lifecycle authorization.
+  depends_on:
+  - BET-Y1Q4-T10-145
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t10-174-fence-adapter-contract-repair-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:8784a5e527d64e40d6ca0bfae97748c8caa818dd0dc7deb1b00f75cb82e89aea
+    decision_ref: decision://accepted/BET-Y1Q4-T10-174
+  done_when:
+  - Adapter observation records use the claims-remote-observation/v2 exact field set
+    with 40-hex OIDs and fresh timestamps.
+  - Issue/enter/settle requests carry claim_id, claim_version, lease_epoch, head_oid,
+    path_digest, v1_allow_receipt_digest and reuse the enter receipt settlement_request_id.
+  - Contract tests validate every adapter-built request against broker validators; full
+    clone-lifecycle test file GREEN.
+  - Canonical push argv unchanged byte-for-byte; pre-activation inert behavior unchanged;
+    make gac-local-gate GREEN.
+  non_goals:
+  - Do not change claims_authority.py broker validation semantics or the v2-identity
+    v1-allow prohibition.
+  - Do not change the canonical push argv, add a second push path, or enable automatic
+    retry.
+  - Do not flip descriptor activation, execute a lifecycle transaction, or fabricate
+    or backfill lifecycle receipts.
+  verify:
+  - cmd: uv run pytest -q tests/test_clone_lifecycle.py
+    expect: exit 0
+  - cmd: python3 -m py_compile bin/gac/clone-lifecycle.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/clone-lifecycle.py
+  - tests/test_clone_lifecycle.py
+  - docs/superpowers/specs/2026-09-21-t10-174-fence-adapter-contract-repair-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-174.md
+  underlying_workflow: project-code-change
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30360,7 +30425,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 439
+  total_bets: 440
   windows:
   - Y1Q1
   - Y1Q2
