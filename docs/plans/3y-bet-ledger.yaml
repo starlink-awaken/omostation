@@ -29979,7 +29979,7 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q1-T4-02.md
 - id: BET-Y2Q2-T10-153
   title: External write-root claims bridge v1
-  status: candidate
+  status: done
   priority: P1
   risk_level: L2
   track: T10-MATURITY
@@ -30024,17 +30024,34 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T10-153
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-153.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-153.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-153.md
+          merged_reachable_commit:
+            ref: git://origin/main@f312df22d8e1881018d8b6cd51be73c8743d872a
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-153.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-153.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-153.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-153.md
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: '2026-09-21'
 - id: BET-Y2Q1-T4-03
   title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
   status: done
@@ -30483,7 +30500,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 440
+  total_bets: 439
   windows:
   - Y1Q1
   - Y1Q2
