@@ -379,8 +379,15 @@ class TestShippedCli:
         data = json.loads(proc.stdout)
         assert data["ok"] is True
         assert data["s_holders"] == ["COMP-WS-omo"]
-        assert "P" in data["vacant_slots"]
-        assert "O" in data["vacant_slots"]
+        # vacant_slots 是**派生值** (VACANT_ALLOWED 减去已占用槽)。此前断言
+        # `"P" in vacant_slots` 属 live 快照 —— P 现由 COMP-WS-ecos /
+        # COMP-WS-observability 合法占用 (CR-SFOP-04 只规定 P/O **可**空缺,
+        # 不要求其必须空缺), 故该断言随仓库演进失效。
+        # 改为断言**推导正确性**: vacant = VACANT_ALLOWED - occupied。
+        mod = _load_mod()
+        occupied = {c["sfop_slot"] for c in data["components"]}
+        assert set(data["vacant_slots"]) <= mod.VACANT_ALLOWED
+        assert data["vacant_slots"] == sorted(mod.VACANT_ALLOWED - occupied)
         assert not any("toolbox" in w for w in data["warnings"])
         assert "CR-SFOP-05" in data["constraint_ids"]
         assert "CR-SFOP-06" in data["constraint_ids"]
