@@ -8,7 +8,16 @@ related:
   - ./admin-inbox.yaml
   - ./document-review.yaml
 ---
-schema: scene-card/v2
+activation: inactive
+activation_blockers: []
+admission_track: internal_evidence_based
+approval_state: pending
+lifecycle: draft
+scene_id: family-asset-governance
+scene_type: internal_pipeline
+schema: scene-card/v1
+
+schema: scene-card/v1
 bet: BET-Y2Q3-T7-01
 falsifier: "若 30 天内无任何家庭财务数据输入，则场景无实际价值"
 scene_id: family-asset-governance

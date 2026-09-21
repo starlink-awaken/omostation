@@ -10,6 +10,7 @@ scope: workspace-root
 # directory is treated as an unregistered shadow surface.
 allowed_ignored_dirs:
   - .artifacts
+  - .benchmarks
   - .codebase-memory
   - .pytest_cache
   - .ruff_cache

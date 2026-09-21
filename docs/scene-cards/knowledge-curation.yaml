@@ -10,7 +10,7 @@ related:
 - ./document-review.yaml
 - ../../.omo/_truth/contracts/knowledge-capture-search.yaml
 ---
-schema: scene-card/v2
+schema: scene-card/v1
 scene_type: external_resource
 lifecycle: supervised
 activation: active

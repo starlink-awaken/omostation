@@ -6,7 +6,7 @@ last-reviewed: 2026-09-05
 related:
 - ./admin-inbox.yaml
 ---
-schema: scene-card/v2
+schema: scene-card/v1
 lifecycle: shadow
 bet: BET-Y1Q4-T8-04
 falsifier: 若 30 天内无 admin 类任务触发，则场景无实际价值

@@ -1,9 +1,19 @@
+activation: inactive
+activation_blockers: []
+admission_track: internal_evidence_based
+approval_state: pending
+lifecycle: draft
+scene_id: documents-weijian-control
+scene_type: internal_pipeline
+schema: scene-card/v1
+---
+
 ---
 last-reviewed: 2026-08-30
 bet: BET-Y1Q4-T8-04
 falsifier: 若 shadow 期间无文档被处理，则场景无实际价值
 
-schema: scene-card/v2
+schema: scene-card/v1
 lifecycle: supervised
 activation: active
 approval_state: confirmed

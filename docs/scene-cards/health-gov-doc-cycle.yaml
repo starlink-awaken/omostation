@@ -9,7 +9,16 @@ related:
 - ../superpowers/specs/2026-09-15-y2q1-t7-06-health-gov-doc-cycle-design.md
 - ../journey-specs/health-gov-doc-cycle-workflow.yaml
 ---
-schema: scene-card/v2
+activation: active
+activation_blockers: []
+admission_track: internal_evidence_based
+approval_state: confirmed
+lifecycle: supervised
+scene_id: health-gov-doc-cycle
+scene_type: internal_pipeline
+schema: scene-card/v1
+
+schema: scene-card/v1
 bet: BET-Y2Q1-T7-06
 falsifier: "若合成校准复跑 F1 < 0.6，或任一 e2e 的 PDF 产物缺失/要素校验不通过，则 assisted 资格自动失效"
 scene_id: health-gov-doc-cycle
