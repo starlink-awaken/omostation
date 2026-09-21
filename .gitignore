@@ -67,6 +67,13 @@ runtime/backups/
 runtime/run-continuation/*.json
 runtime/server.log
 runtime/wechat-main.png
+# worktree-hygiene workflow 自检报告 (2026-09-21 实证):
+# .github/workflows/worktree-hygiene.yml 用 `> worktree-hygiene-report.json`
+# 把审计 stdout 落到检出根目录; bash 重定向在审计启动前建空文件,
+# 审计的 git status --short 把自家报告计为 dirty=1 → merged_with_dirty →
+# --fail-on-unsafe exit 1 (09-21/09-14 两次周一 cron 同一签名)。
+# scratch 产物永不入仓, 忽略之 (upload-artifact 读文件系统, 不受 gitignore 影响)。
+/worktree-hygiene-report.json
 
 # BET-Y1Q3-T6-15 R2a: approved runtime output/cache/snapshot artifacts remain
 # local-only after repository untracking; contracts and runtime code stay visible.
