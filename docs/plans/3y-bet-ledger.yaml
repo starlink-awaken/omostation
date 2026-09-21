@@ -29545,6 +29545,11 @@ bets:
   - cmd: grep -c "data-synthesis-card" ~/.local/share/zhixing-dashboard/ecosystem_ui.js
     expect: '>= 1'
   workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:72f7f77e1bf672268e9e871a18a0f5be83f84ab547957d0dbf091f49596a2245
+    decision_ref: decision://accepted/BET-Y2Q2-T8-04
+    spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-04-dashboard-write-integrity-design.md
+    spec_version: 1.0.0
   write_surfaces:
   - ~/.local/share/zhixing-dashboard/**
   pasw_required: false

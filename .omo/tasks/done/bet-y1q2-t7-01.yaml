@@ -3,7 +3,7 @@
 # BET-Y1Q3-T4-01 on 2026-08-22. The ledger remains authoritative.
 id: BET-Y1Q2-T7-01
 title: 工程交付 dogfood 开 shadow
-status: blocked
+status: done
 task_type: bet
 priority: P0
 owner: human
@@ -19,8 +19,8 @@ non_goals:
 - 把 PR merge、reviewDecision、issue comment、测试或合成记录视为 human verdict
 assigned_to: null
 dispatch_id: null
-run_ref: null
-approval_ref: null
+run_ref: 20260921T065903Z-bet-execution-5d3ba2b1
+approval_ref: human-approval:2026-09-21T06:30:06Z
 review_ref: null
 knowledge_refs:
 - docs/reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json
@@ -34,8 +34,8 @@ depends_on:
 - BET-Y1Q1-T3-02
 risk_level: L1
 allowed_operation_level: L1
-human_approval_required: true
-blocked_reentry_policy: human_approval_required
+human_approval_required: false
+blocked_reentry_policy: default
 entry_gate:
 - '依赖已 done: BET-Y1Q1-T7-01'
 - '依赖已 done: BET-Y1Q1-T3-02'
@@ -55,10 +55,7 @@ circuit_breaker: 样本不足或无法绑定 human principal → 保持 blocked�
 retro_required: false
 retro_path: .omo/_knowledge/retros/BET-Y1Q2-T7-01.md
 agent_profile_hint: docs-agent
-started_at: null
-completed_at: null
-blocked_by:
-- 权威 query-only observer 对完整 7 日窗口直接读回 0/20，human_gate=not_ready
-- 仅经审计的人类批准可解除阻断；agent 不得自动 claim/start
+started_at: '2026-09-21T06:59:03Z'
+completed_at: '2026-09-21T07:34:35Z'
 next_check_at: null
 retry_count: 0

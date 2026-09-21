@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-09-19T08:37:09Z
+generated_at: 2026-09-21T07:41:46Z
 status: candidate
 counts:
-  runs: 4
+  runs: 5
   failures: 0
-  total: 4
+  total: 5
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-19T08:37:09Z
+- generated_at: 2026-09-21T07:41:46Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 4 成功运行 + 0 失败模式 = 4 草稿
+- sediment 覆盖: 5 成功运行 + 0 失败模式 = 5 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -25,6 +25,7 @@ failure_breakdown:
 - 20260916T022754Z-project-doc-change-780829fd.md
 - 20260917T023058Z-project-doc-change-4c8886f7.md
 - 20260917T072353Z-project-doc-change-ec96981b.md
+- 20260919T174616Z-project-doc-change-546d5464.md
 
 ## 失败模式 (failures/)
 
@@ -63,6 +64,12 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=1681.678
+- **20260919T174616Z-project-doc-change-546d5464**
+  - 计划 (objective): Unbound business value preparation: document the safe operator workflow for fresh authority, decision evidence, doctor preflight, and real-use v2 value recording without fabricating samples.
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=843.632
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

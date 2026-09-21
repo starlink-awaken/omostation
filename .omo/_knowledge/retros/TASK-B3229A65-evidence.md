@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: auto-fix-loop
+last-reviewed: 2026-09-21
+---
 # TASK-B3229A65 完成证据 — A4 调度真相收敛收尾
 
 ## 现场核实：原3处矛盾里，2处已在此前修复，本次补齐最后1处
