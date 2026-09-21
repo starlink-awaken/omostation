@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-21
+---
 # ClashX 节点架构与代理体系（2026-09-21 终版）
 
 > SSOT: ClashX 代理体系的全量文档。配置: `~/.config/clash/config.yaml` → symlink → iCloud ClashX Documents
