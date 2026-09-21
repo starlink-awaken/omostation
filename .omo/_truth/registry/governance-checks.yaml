@@ -183,7 +183,9 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 690 # 2026-09-21 689→690: 规则接线清单 check-rule-wiring-coverage.py
+    script_baseline: 698 # 2026-09-21 690→698: 本 PR 新增 test-collection 守卫
+      # (check-test-collection.py) + 并发 PR 累积未同步项; 值取自 gac-validate
+      # 建议 (= bin/ 实际活跃脚本数), 依 SCRIPT-BASELINE-SYNC 黄金规则 (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

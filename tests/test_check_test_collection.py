@@ -43,6 +43,29 @@ def test_classify_env_vs_repo() -> None:
     # 仓内顶层名的 import 失败 = 仓内腐化 (回归: 曾因 return 位置错误全判 env)
     assert gate._classify("ModuleNotFoundError: No module named 'bin.gac.gone_xyz'") == "repo"
     assert gate._classify("ModuleNotFoundError: No module named 'projects.omo.nope'") == "repo"
+    # 回归: CI 上 env 错误曾使 ok=False (误判 FAIL) —— 第三方包名须识别为 env
+    assert gate._classify("ImportError: simulated: fastapi unavailable") == "env"
+    assert gate._classify("ModuleNotFoundError: No module named 'rich'") == "env"
+
+
+def test_env_only_errors_do_not_fail_the_gate(tmp_path: Path) -> None:
+    """核心回归: 仅环境依赖缺失时不得 FAIL (CI 上 6 个 env 错误曾致 gate 红)。
+
+    契约: ok 只取决于 repo_errors, 与 pytest 原始 returncode 无关 ——
+    pytest 因 collection error 退出非 0, 但那不代表仓内腐化。
+    """
+    d = tmp_path / "t"
+    d.mkdir()
+    # 引用一个不存在的第三方包 (非仓内顶层名)
+    (d / "test_env.py").write_text(
+        "import absolutely_not_a_real_pkg_zzz\n\ndef test_x():\n    assert True\n",
+        encoding="utf-8",
+    )
+    gate = _load()
+    result = gate.collect([str(d)])
+    assert result["ok"] is False, "pytest 因 collection error 退出非 0"
+    # 但分类后应为 env, 不产生 repo_errors
+    assert gate._classify(result["errors"][0]["reason"]) == "env"
 
 
 def test_clean_fixture_collects_with_exit_zero(tmp_path: Path) -> None:

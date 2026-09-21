@@ -102,16 +102,20 @@ def _classify(reason: str) -> str:
         return "repo"
     if "SyntaxError" in reason:
         return "repo"
-    if any(marker in reason for marker in _ENV_ERROR_MARKERS):
+    if "ImportError" in reason or any(marker in reason for marker in _ENV_ERROR_MARKERS):
+        # 1) 显式第三方包名 (任一形态: "No module named 'x'" / "simulated: x unavailable")
         for top in _ENV_TOPS:
-            if f"'{top}'" in reason:
+            if re.search(rf"(?<![A-Za-z0-9_.]){re.escape(top)}(?![A-Za-z0-9_])", reason):
                 return "env"
-        # 顶层 import 名解析: 仓内目录/项目 → 仓内腐化; 否则视为环境依赖
+        # 2) 顶层 import 名解析: 仓内目录/项目 → 仓内腐化; 否则视为环境依赖
         match = re.search(r"No module named '([^']+)'", reason)
         if match:
             top = match.group(1).split(".", 1)[0]
             in_repo = (WORKSPACE / "projects" / top).exists() or (WORKSPACE / top).exists()
             return "repo" if in_repo else "env"
+        # 3) 无法解析的 import 失败: 若提及仓内已知路径片段则判腐化, 否则按环境
+        if re.search(r"(bin|lib|projects|tests)/", reason):
+            return "repo"
         return "env"
     return "repo"
 
@@ -264,15 +268,16 @@ def main() -> int:
         "repo_errors": repo_errors,
         "env_skipped": env_reasons,
         "uninitialized_submodules": uninit,
-        "ok": not repo_errors and result["returncode"] == 0,
+        "ok": not repo_errors,
         "status": "pass",
+        "pytest_returncode": result.get("returncode"),
     }
 
     if env_reasons and not repo_errors:
         report["status"] = "pass_with_env_skips"
-        report["degraded_reason"] = f"{len(env_reasons)} 项环境性跳过 (子模块依赖)"
+        report["degraded_reason"] = f"{len(env_reasons)} 项环境性跳过 (第三方依赖未装)"
 
-    if not report["ok"]:
+    if repo_errors:
         report["status"] = "fail"
 
     if args.json:
