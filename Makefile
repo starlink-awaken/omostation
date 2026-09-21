@@ -511,6 +511,9 @@ debt-review:  ## 债务定期复审调度: 终态无实证 + 逾期未复审 报
 runtime-health-scan:  ## L1 运行时健康探针 (omlxcd/matrix/KEI/GPU/surface); healthy=0 degraded=1 unhealthy=2
 	@python3 bin/runtime-health-scan.py
 
+rule-coverage:  ## 规则接线清单: 声明但未接线的候选 (报告型, 非门禁)
+	@python3 bin/gac/check-rule-wiring-coverage.py
+
 expiry-radar:  ## 过期雷达: SLA 越界前瞻 (默认 7d 窗口)
 	@python3 bin/gac/check-expiry-radar.py
 
