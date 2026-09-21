@@ -29863,6 +29863,84 @@ bets:
   - docs/superpowers/specs/README.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+- id: BET-Y2Q1-T4-03
+  title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
+  status: done
+  priority: P1
+  risk_level: L2
+  track: T4-OUTCOME
+  window: Y2Q1
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: true
+  retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+  done_at: '2026-09-21'
+  appetite: 1 week
+  circuit_breaker: 若偏好提取或脱敏规则引发敏感数据泄漏或死循环，立即熔断回退并退回纯文本记录。
+  goal: 深度捕获夏明星在 Cockpit 审阅初稿时的最终修改（Diff），自动抽取表达偏好事实，构建 DPO 偏好对数据集，基线化计量人类修订率，并打通 Persona
+    Radar 文风对齐度自适应评估。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t4-03-spine-diff-adaptation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:8f426a8ccb2210564930e8b74d1bc3e28df574439cb5b9c57b032c035259f39c
+    decision_ref: decision://accepted/BET-Y2Q1-T4-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+          merged_reachable_commit:
+            ref: git://origin/main@e48292dab838036eaef25776d3381a17937be1e6
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - cockpit spine sign supports detailed diff analysis, updates principal-revision-rate.json,
+    and appends to dpo-preference-pairs.jsonl.
+  - Circuit breaker sanitizes diffs and extracts structured preferences into personal-preferences.jsonl.
+  - Human revision rate baseline and trends are tracked.
+  - Alignment score reaches >= 0.90 on evaluation gate.
+  - Full test suite passes and local gate is green.
+  non_goals:
+  - Do not upload real modification diffs or personal style data to public clouds.
+  - Do not automatically send outgoing messages without human signature review.
+  verify:
+  - cmd: uv run --with pytest --with pyyaml python -m pytest tests/unit/test_spine_diff_adaptation.py
+    expect: exit 0
+  - cmd: python3 bin/evolution/extract-persona-diffs.py --check-gate
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/value-evolution-connector.py
+  - tests/unit/test_spine_diff_adaptation.py
+  - docs/superpowers/specs/2026-09-21-t4-03-spine-diff-adaptation-design.md
+  - docs/superpowers/specs/README.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q1-T4-03.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -29992,7 +30070,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 435
+  total_bets: 436
   windows:
   - Y1Q1
   - Y1Q2
