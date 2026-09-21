@@ -29529,6 +29529,11 @@ bets:
   window: Y2Q2
   appetite: 2 days
   status: candidate
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-04-write-integrity-recovery-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:2ffcc58d6ff14a745853a96fbfe61865e171aad558d88c14a50b96ad9955818a
+    decision_ref: decision://accepted/BET-Y2Q2-T8-04
   goal: 删除 workbench 重复写操作实现；页脚文案诚实披露；新增两个跨板块合成镜头卡。
   done_when:
   - workbench proposals Tab 删除
