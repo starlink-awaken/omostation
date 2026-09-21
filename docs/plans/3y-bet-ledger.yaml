@@ -30273,11 +30273,13 @@ bets:
         evidence: {}
 - id: BET-Y1Q4-T10-174
   title: Clone-lifecycle claims-authority fence adapter contract repair
-  status: candidate
+  status: done
+  done_at: 2026-09-21
   priority: P1
   risk_level: L2
   track: T10-MATURITY
   window: Y1Q4
+  workflow: project-code-change
   appetite: 1 day
   human_gate: false
   value_indicator_policy: false
