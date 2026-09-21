@@ -167,25 +167,32 @@ def test_ruff_baseline_rejects_new_diagnostic(tmp_path: Path) -> None:
 
 
 def test_ruff_baseline_cannot_grow_beyond_hard_cap(tmp_path: Path) -> None:
+    """hard_cap 现必须恒等于 RUFF_BASELINE_CAP (源码守卫); 偏离即拒。
+
+    历史: 曾是 "diagnostics 总数 > hard_cap 即拒", 文案 `exceeds hard cap N`,
+    且 hard_cap 可配。现改为**不可配** (must remain <CAP>) —— 防 baseline 被
+    逐步抬高绕过。测试对齐当前契约。
+    """
     module = _load_module()
+    cap = module.RUFF_BASELINE_CAP
     baseline_path = tmp_path / "ruff.yaml"
     baseline_path.write_text(
-        """\
+        f"""\
 version: 1
 policy:
   growth_policy: forbidden
-  hard_cap: 26
-  captured_diagnostic_count: 27
+  hard_cap: {cap + 1}
+  captured_diagnostic_count: {cap + 1}
 diagnostics:
   - path: projects/omo/src/omo/legacy.py
     code: F541
     message: f-string without any placeholders
-    count: 27
+    count: {cap + 1}
 """,
         encoding="utf-8",
     )
 
-    with pytest.raises(RuntimeError, match="exceeds hard cap 26"):
+    with pytest.raises(RuntimeError, match=f"hard_cap must remain {cap}"):
         module._load_ruff_baseline(baseline_path)
 
 
@@ -202,9 +209,7 @@ def test_ruff_baseline_cannot_replace_an_approved_bucket_at_same_cap(
         module._load_ruff_baseline(baseline_path)
 
 
-def test_ruff_debt_scope_does_not_require_retired_scripts_tree(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_ruff_debt_scope_does_not_require_retired_scripts_tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Live debt_scope must not list archived scripts/; _ruff_json must not demand that tree."""
     module = _load_module()
     payload = yaml.safe_load(module.BASELINE_PATH.read_text(encoding="utf-8"))
