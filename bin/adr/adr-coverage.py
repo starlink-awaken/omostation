@@ -207,6 +207,27 @@ def check_coverage(decisions_dir: Path, index_path: Path) -> dict:
     }
 
 
+def _issues_exit_code(result: dict) -> int:
+    """ADR 一致性问题的退出码契约 (0=clean, 1=有 issues).
+
+    P85/ADR-0367 C4: 该检查在 sgf-policy.yaml 中声明为「阻断性」。
+    因此任何调用形态 (含 --json) 都必须在 issues>0 时返回非零,
+    否则 gac-local-gate 的 `ok = len(hard_fails) == 0` 永远看不到失败。
+    """
+    return (
+        1
+        if (
+            result["missing_numbers"]
+            or result["duplicate_numbers"]
+            or result["frontmatter_issues"]
+            or result["id_mismatches"]
+            or result["files_not_in_index"]
+            or result["index_refs_not_in_files"]
+        )
+        else 0
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="P85: ADR coverage check")
     parser.add_argument(
@@ -247,7 +268,7 @@ def main() -> int:
 
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
-        return 0
+        return _issues_exit_code(result)
 
     print("=" * 60)
     print("🔍 P85 ADR coverage check")
@@ -310,18 +331,7 @@ def main() -> int:
     else:
         print(f"\n⚠️  {issues_count} 个问题需处理")
 
-    return (
-        1
-        if (
-            result["missing_numbers"]
-            or result["duplicate_numbers"]
-            or result["frontmatter_issues"]
-            or result["id_mismatches"]
-            or result["files_not_in_index"]
-            or result["index_refs_not_in_files"]
-        )
-        else 0
-    )
+    return _issues_exit_code(result)
 
 
 if __name__ == "__main__":
