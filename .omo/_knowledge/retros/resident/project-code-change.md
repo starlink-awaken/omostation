@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-21T07:41:46Z
+generated_at: 2026-09-21T08:52:01Z
 status: candidate
 counts:
-  runs: 24
+  runs: 25
   failures: 0
-  total: 24
+  total: 25
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-21T07:41:46Z
+- generated_at: 2026-09-21T08:52:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 24 成功运行 + 0 失败模式 = 24 草稿
+- sediment 覆盖: 25 成功运行 + 0 失败模式 = 25 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -45,6 +45,7 @@ failure_breakdown:
 - 20260919T185647Z-project-code-change-20a9bece.md
 - 20260919T193736Z-project-code-change-36bb749a.md
 - 20260919T212050Z-project-code-change-0d86f67b.md
+- 20260921T081024Z-project-code-change-b7682527.md
 
 ## 失败模式 (failures/)
 
@@ -215,6 +216,10 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=327.238
+- **20260921T081024Z-project-code-change-b7682527**
+  - 计划 (objective): [BET-Y2Q2-T8-04] dashboard 写操作诚信修复 + 跨板块合成条 (Appetite: 2 days)
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

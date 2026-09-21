@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: unclassified
-generated_at: 2026-09-21T07:41:46Z
+generated_at: 2026-09-21T08:52:01Z
 status: candidate
 counts:
-  runs: 14
+  runs: 34
   failures: 0
-  total: 14
+  total: 34
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,13 +14,33 @@ failure_breakdown:
 ---
 # unclassified 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-21T07:41:46Z
+- generated_at: 2026-09-21T08:52:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 14 成功运行 + 0 失败模式 = 14 草稿
+- sediment 覆盖: 34 成功运行 + 0 失败模式 = 34 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
+- delivery-run-pr-4125-v3.md
+- delivery-run-pr-4126-v3.md
+- delivery-run-pr-4127-v3.md
+- delivery-run-pr-4128-v3.md
+- delivery-run-pr-4129-v3.md
+- delivery-run-pr-4130-v3.md
+- delivery-run-pr-4131-v3.md
+- delivery-run-pr-4132-v3.md
+- delivery-run-pr-4133-v3.md
+- delivery-run-pr-4134-v3.md
+- delivery-run-pr-4135-v3.md
+- delivery-run-pr-4136-v3.md
+- delivery-run-pr-4137-v3.md
+- delivery-run-pr-4138-v3.md
+- delivery-run-pr-4139-v3.md
+- delivery-run-pr-4140-v3.md
+- delivery-run-pr-4141-v3.md
+- delivery-run-pr-4143-v3.md
+- delivery-run-pr-4144-v3.md
+- delivery-run-pr-4145-v3.md
 - points-calc-05bfd52149ff.md
 - points-calc-6b86071cf68c.md
 - points-calc-86828777c57c.md
@@ -46,6 +66,46 @@ failure_breakdown:
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
+- **delivery-run-pr-4125-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4126-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4127-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4128-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4129-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4130-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4131-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4132-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4133-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4134-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4135-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4136-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4137-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4138-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4139-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4140-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4141-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4143-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4144-v3**
+  - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4145-v3**
+  - 指标: event_count=1, duration_s=0.0
 - **points-calc-05bfd52149ff**
   - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None
