@@ -1,6 +1,6 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-21T06:40:43.449068Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `73/100`
+> **Generated**: `2026-09-21T07:41:10.121725Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `73/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 各卡片的直接链接见下方清单。
@@ -15,7 +15,7 @@
 | 维度 | 度量指标 | 状态 | 物理数据源 |
 |------|----------|------|------------|
 | **创意创作** | 新增发布数: `712` | 正常 | `@创意创作/_outputs` |
-| **工作交付** | 场景 episodes: 68 · accepted 64 (94%) | 正常 | `scene-outcomes.jsonl` (30d) |
+| **工作交付** | 场景 episodes: 76 · accepted 72 (95%) | 正常 | `scene-outcomes.jsonl` (30d) |
 | **知识复用** | KOS 索引篇: `0` | 正常 | `kos/` 篇目 |
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
