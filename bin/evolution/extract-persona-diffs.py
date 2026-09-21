@@ -323,8 +323,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         '--author',
-        default='xiamingxing',
-        help='Git author 筛选 (default: xiamingxing)',
+        default='xiamingxing\\|starlink-awaken',
+        help='Git author 筛选 (default: xiamingxing\\|starlink-awaken)',
     )
     parser.add_argument(
         '--max-commits',

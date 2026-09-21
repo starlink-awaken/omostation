@@ -1,8 +1,8 @@
 ---
 schema: bet-retro/v1
 bet_id: BET-Y3H1-T5-02
-status: in_progress
-lifecycle: active
+status: active
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-16
 run_id: run-bet-y3h1-t5-02-20260916t025215z

@@ -6,6 +6,7 @@ lifecycle: history
 bet_id: BET-Y3H1-T7-07
 title: documents-domain 场景卡批量 supervised→routine
 date: 2026-09-18
+owner: unassigned
 ---
 
 # BET-Y3H1-T7-07 Retro

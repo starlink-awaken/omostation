@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: history
+owner: auto-fix-loop
+last-reviewed: 2026-09-21
+---
 # Retro — BET-Y2Q1-T7-06 卫健公文全周期拟办、批阅与会议督办全闭环场景包
 
 - bet: BET-Y2Q1-T7-06

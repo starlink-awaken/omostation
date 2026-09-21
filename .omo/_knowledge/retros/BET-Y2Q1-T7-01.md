@@ -1,11 +1,12 @@
 ---
 schema_version: retro/v1
 bet_id: BET-Y2Q1-T7-01
-status: completed
+status: archived
 created: 2026-09-16
 last-reviewed: 2026-09-16
 type: ssot
 owner: engineering-agent
+lifecycle: history
 ---
 
 # BET-Y2Q1-T7-01 复盘：组织人脉图谱

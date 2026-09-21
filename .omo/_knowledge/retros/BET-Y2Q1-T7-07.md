@@ -1,11 +1,12 @@
 ---
 type: retro
 bet_id: BET-Y2Q1-T7-07
-status: completed
+status: archived
 owner: governance-team
 last-reviewed: 2026-09-16
 pr: https://github.com/starlink-awaken/omostation/pull/3803
 merge_commit: f49c76eb70ef5d81837ad277d4c4aa5c6e022ebb
+lifecycle: history
 ---
 
 # BET-Y2Q1-T7-07 复盘

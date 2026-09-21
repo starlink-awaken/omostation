@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-21
+---
 # A8 OMO 外部事务生命周期 — 现状复核报告 (BET-Y1Q4-T10-151 第一阶段)
 
 ## 目标
