@@ -1248,6 +1248,13 @@ def collect_claims_observation_progress() -> dict:
                     item = json.loads(line)
                     if not isinstance(item, dict):
                         raise ValueError("record is not an object")
+                    # The append-only samples file preserves prior invalid attempts.
+                    # Project and grade only the current summary-identified run.
+                    item_time = datetime.fromisoformat(
+                        str(item.get("sampled_at_utc")).replace("Z", "+00:00")
+                    )
+                    if item_time < started_at:
+                        continue
                     records.append(item)
                 except (json.JSONDecodeError, ValueError, TypeError):
                     malformed_records += 1
