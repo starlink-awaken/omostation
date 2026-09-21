@@ -20,11 +20,13 @@ import pytest
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 
+
 def _load_module_from_file(module_name: str, file_path: Path) -> Any:
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
 
 env_resolver = _load_module_from_file(
     "env_resolver",
@@ -33,8 +35,17 @@ env_resolver = _load_module_from_file(
 _ROOT = env_resolver.setup_workspace_paths()
 
 
-daemon_watchdog = _load_module_from_file("daemon_watchdog", WORKSPACE / "bin" / "gac" / "daemon-watchdog.py")
-real_scenario_runner = _load_module_from_file("real_scenario_runner", WORKSPACE / "bin" / "ssot" / "real-scenario-runner.py")
+# 2026-09-20/21: 这两个脚本因 bin 配额 (add1=delete1, AGENTS.md §Step B.0.5) 被归档 ——
+# 活跃路径已不存在, 但归档物仍在仓 (bin/_archive/)。此前测试仍指向活跃路径,
+# 导致模块级 import 失败 → 本文件全部 9 个测试 collection error (含 3 个与之无关的)。
+# 修复: 从归档路径加载 (保留行为契约), 并新增退役状态断言。
+_DAEMON_WATCHDOG_ARCHIVE = WORKSPACE / "bin" / "_archive" / "2026-09-20-bin-quota-offset" / "daemon-watchdog.py"
+_SCENARIO_RUNNER_ARCHIVE = WORKSPACE / "bin" / "_archive" / "2026-09-21-bin-quota-offset" / "real-scenario-runner.py"
+DAEMON_WATCHDOG_RETIRED_PATH = WORKSPACE / "bin" / "gac" / "daemon-watchdog.py"
+SCENARIO_RUNNER_RETIRED_PATH = WORKSPACE / "bin" / "ssot" / "real-scenario-runner.py"
+
+daemon_watchdog = _load_module_from_file("daemon_watchdog", _DAEMON_WATCHDOG_ARCHIVE)
+real_scenario_runner = _load_module_from_file("real_scenario_runner", _SCENARIO_RUNNER_ARCHIVE)
 
 RETIRED_COMMANDS = ["daemon", "watchdog", "scenario", "top", "run"]
 FORBIDDEN_VALUE_KEYS = {
@@ -54,9 +65,7 @@ EXPECTED_REFUSAL = {
     "value_indicator_policy": False,
 }
 
-cockpit_globals = runpy.run_path(
-    str(WORKSPACE / "bin" / "cockpit"), run_name="cockpit_test"
-)
+cockpit_globals = runpy.run_path(str(WORKSPACE / "bin" / "cockpit"), run_name="cockpit_test")
 cockpit_main = cockpit_globals["main"]
 
 
@@ -191,37 +200,40 @@ def test_daemon_watchdog_retirement_contract():
     assert daemon_watchdog.STATUS_FILE.name == "daemon-watchdog.json"
 
 
+def test_retired_scripts_are_archived_not_active():
+    """退役状态: 活跃路径不得回潮, 归档物须在仓 (防"误恢复一个已腐化脚本")。
+
+    2026-09-20/21 bin 配额归档后, services.yaml 已以
+    `enabled: false + disabled_reason` 登记, cockpit 侧为 deprecated stub。
+    本测试锁住对应的文件层事实。
+    """
+    for retired, archived in (
+        (DAEMON_WATCHDOG_RETIRED_PATH, _DAEMON_WATCHDOG_ARCHIVE),
+        (SCENARIO_RUNNER_RETIRED_PATH, _SCENARIO_RUNNER_ARCHIVE),
+    ):
+        assert not retired.exists(), f"退役脚本不得回到活跃路径: {retired}"
+        assert archived.is_file(), f"归档物须在仓: {archived}"
+
+
 def test_root_retirement_contract_covers_all_bypasses():
     assert {"daemon", "watchdog", "scenario", "top", "run"} == set(RETIRED_COMMANDS)
 
 
 def test_scenario_runner_defers_yaml_import():
-    tree = ast.parse(
-        (WORKSPACE / "bin" / "ssot" / "real-scenario-runner.py").read_text(
-            encoding="utf-8"
-        )
-    )
+    tree = ast.parse(_SCENARIO_RUNNER_ARCHIVE.read_text(encoding="utf-8"))
     top_level_yaml_imports = [
         node
         for node in tree.body
-        if (
-            isinstance(node, ast.Import)
-            and any(alias.name == "yaml" for alias in node.names)
-        )
+        if (isinstance(node, ast.Import) and any(alias.name == "yaml" for alias in node.names))
         or (isinstance(node, ast.ImportFrom) and node.module == "yaml")
     ]
     assert not top_level_yaml_imports
 
     load_scenario = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == "load_scenario"
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "load_scenario"
     )
     assert any(
-        (
-            isinstance(node, ast.Import)
-            and any(alias.name == "yaml" for alias in node.names)
-        )
+        (isinstance(node, ast.Import) and any(alias.name == "yaml" for alias in node.names))
         or (isinstance(node, ast.ImportFrom) and node.module == "yaml")
         for node in load_scenario.body
     )
