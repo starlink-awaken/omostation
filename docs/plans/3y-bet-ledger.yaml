@@ -30273,11 +30273,13 @@ bets:
         evidence: {}
 - id: BET-Y1Q4-T10-174
   title: Clone-lifecycle claims-authority fence adapter contract repair
-  status: candidate
+  status: done
+  done_at: 2026-09-21
   priority: P1
   risk_level: L2
   track: T10-MATURITY
   window: Y1Q4
+  workflow: project-code-change
   appetite: 1 day
   human_gate: false
   value_indicator_policy: false
@@ -30325,17 +30327,33 @@ bets:
   underlying_workflow: project-code-change
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d85f4124ac66d0fe85ae5c7055661a4d7a919aa8
+          tests:
+            ref: receipt://docs/reports/2026-09-21-t10-174-fence-adapter-closeout.md
+          diff:
+            ref: receipt://docs/reports/2026-09-21-t10-174-fence-adapter-closeout.md
+          rollback:
+            ref: receipt://docs/reports/2026-09-21-t10-174-fence-adapter-closeout.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-21-t10-174-fence-adapter-closeout.md
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-21-t10-174-fence-adapter-closeout.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-174.md
+          cleanup:
+            ref: receipt://docs/reports/2026-09-21-t10-174-fence-adapter-closeout.md
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
