@@ -2,16 +2,17 @@ current_phase: 29
 current_wave: W1
 health_score_evidence: 100.0
 health_score_evidence_source: bin/gac/evidence-smoke.py
-health_score_evidence_generated_at: '2026-09-21T06:10:32.563580+00:00'
+health_score_evidence_generated_at: '2026-09-21T06:40:43.269264+00:00'
 completed_tasks: 301
-planned_tasks: 0
+planned_tasks: 1
 active_tasks: 1
-blocked_tasks: 1
+blocked_tasks: 0
 total_tasks: 303
 next_active_tasks:
 - kos-q-growth-rolling (KOS 季度扩量持续监测 (rolling goal 关联 task))
-next_planned_tasks: []
-updated_at: '2026-09-21T06:10:32Z'
+next_planned_tasks:
+- bet-y1q2-t7-01 (工程交付 dogfood 开 shadow)
+updated_at: '2026-09-21T06:40:43Z'
 harness:
   last_run: null
   last_status: null
@@ -31,21 +32,21 @@ health_score: 73
 governance_anomaly_score: 0
 service_online_ratio: 1.0
 health_score_source: compass_radar_composite_isc3
-health_score_generated_at: '2026-09-21T06:10:25Z'
+health_score_generated_at: '2026-09-21T06:40:33Z'
 runtime_health_summary:
   online_services: 1
   total_services: 1
   ratio: 1.0
   health_score: 73
-  last_scan: '2026-09-21T06:10:25Z'
+  last_scan: '2026-09-21T06:40:33Z'
   source: compass_radar_isc3_daemon_ratio
   degraded: []
-governance_feedback_last_run: '2026-09-21T06:10:25Z'
+governance_feedback_last_run: '2026-09-21T06:40:32Z'
 workflow_mesh_health:
   status: healthy
-  event_count: 495
-  events_last_hour: 1
-  last_event_age_seconds: 542.8
+  event_count: 498
+  events_last_hour: 4
+  last_event_age_seconds: 1140.7
   bridges_active:
   - agent-workflow
   - ecos
