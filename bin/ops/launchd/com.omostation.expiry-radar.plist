@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.expiry-radar.plist — SLA 越界前瞻日报
+
+  用途 (2026-09-21): 把"过期"从**事故**变成**计划内工作**。
+    当天实证两颗时间炸弹同时引爆: X2-C05 (≤14d) 的 omo-governance-surfaces.yaml
+    与 doc-governance (≤90d) 的 26 个文档 —— 昨天 CI 全绿, 今天纯因日期滚动
+    而**所有 PR** 变红。根因是判定器纯二元 (`age > review_days`), 无前瞻、
+    无 grace 档; 而文档按批次复审, 于是必然按批次**集体**越界。
+
+  执行 (每日 08:50, --strict → 有 imminent 即 exit 1, 在 job 状态可见):
+    python3 bin/gac/check-expiry-radar.py --horizon 7 --strict
+
+  为什么用 launchd 而非 crontab: crontab **写入**在本机系统层已坏
+  (连原样重写都返回 `Interrupted system call`; /var/at/tabs 为 root:wheel
+  drwx------), 而本机周期任务本就跑 launchd (见 com.omostation.zhixing-*)。
+
+  安装:
+    cp bin/ops/launchd/com.omostation.expiry-radar.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) \
+       ~/Library/LaunchAgents/com.omostation.expiry-radar.plist
+  卸载:
+    launchctl bootout gui/$(id -u)/com.omostation.expiry-radar
+  手动触发:
+    launchctl kickstart -p gui/$(id -u)/com.omostation.expiry-radar
+
+  NOTE: exit 1 **不代表故障** —— 它代表"有文档即将/已经过期", 这正是本 job
+  的目的 (让风险可见)。与 zhixing-host-drift 的 check 同语义。
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.expiry-radar</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>cd /Users/xiamingxing/Workspace &amp;&amp; python3 bin/gac/check-expiry-radar.py --horizon 7 --strict</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>50</integer>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/expiry-radar.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/expiry-radar.log</string>
+</dict>
+</plist>

@@ -511,6 +511,9 @@ debt-review:  ## 债务定期复审调度: 终态无实证 + 逾期未复审 报
 runtime-health-scan:  ## L1 运行时健康探针 (omlxcd/matrix/KEI/GPU/surface); healthy=0 degraded=1 unhealthy=2
 	@python3 bin/runtime-health-scan.py
 
+expiry-radar:  ## 过期雷达: SLA 越界前瞻 (默认 7d 窗口)
+	@python3 bin/gac/check-expiry-radar.py
+
 task-tree-check:  ## 任务树一致性: planned/ 不得含已在 closed//done/ 的 id
 	@python3 bin/gac/check-task-tree-consistency.py
 
