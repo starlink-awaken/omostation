@@ -78,7 +78,7 @@ python3 bin/reports/quarterly-report.py --quarter 2026-Q4 --output docs/reports/
 
 #### B1.3 C2.4 跨域学习 (P2, 2027-Q1)
 - 学术 + 工程双线知识沉淀 (`.omo/_knowledge/` 现仅工程, 缺学术)
-- 新增 `docs/knowledge-domains.yaml`: 区分 academic / engineering / personal
+- 新增 `docs/knowledge-domains.md`: 区分 academic / engineering / personal
 - 探索 `.omo/_knowledge/scholar/` 子目录, 沉淀 paper note + concept 索引
 
 ### B2. P107 历史 baseline 累积 (P1)
