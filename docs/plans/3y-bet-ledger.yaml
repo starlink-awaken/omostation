@@ -29543,7 +29543,44 @@ bets:
   track: T8-SURFACE
   window: Y2Q2
   appetite: 4 days
-  status: candidate
+  value_indicator_policy: false
+  status: done
+  done_at: '2026-09-21'
+  retro_path: .omo/_knowledge/retros/BET-Y2Q2-T8-03.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-03-dashboard-brief-and-l0-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:18309a0d37783a5267672acf22b34739ee93636ed026e27748ce6be07f7d7e3b
+    decision_ref: decision://accepted/BET-Y2Q2-T8-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-03.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-03.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-03.md
+          merged_reachable_commit:
+            ref: git://origin/main@61b5167c7ea1b5853b49911e3b5df5b1285493b8
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-03.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-03.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-03.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-03.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
   goal: refresh.py 提取 agent_visibility/safety_boundaries/next_actions；personal 面板 next-3 动态化；orient 面板添加 ASD L0 首屏。
   done_when:
   - refresh.py 提取 agent_visibility 字段
@@ -29557,6 +29594,9 @@ bets:
   workflow: project-code-change
   write_surfaces:
   - ~/.local/share/zhixing-dashboard/**
+  - docs/superpowers/specs/2026-09-21-t8-03-dashboard-brief-and-l0-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T8-03.md
   pasw_required: false
   risk_level: L1
   priority: P1
