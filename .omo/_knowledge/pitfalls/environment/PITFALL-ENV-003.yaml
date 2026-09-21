@@ -1,0 +1,25 @@
+schema: agent-error/v1
+id: PITFALL-ENV-003
+category: environment
+severity: high
+title: GitHub push 在 22 端口不通时改用 GIT_SSH_COMMAND 443 路由，且必须保留 canonical remote URL
+symptom: git push origin 长时间挂起（pre-push hook 的 fetch 走 port 22 被墙）；或改用 ssh://git@ssh.github.com:443
+  显式 URL / insteadOf 重写后被 pre-push remote-hygiene-check.py 拦截（origin push URL 指向异常
+  / submodules origin 指向异常）
+root_cause: 本机网络对 github.com:22 不通但 443 可达；remote-hygiene-check._matches() 只允许同 host
+  的 SSH↔HTTPS 互换，ssh.github.com 主机名或 insteadOf 改写后的 URL 会被判污染
+solution: '保留 canonical git@github.com: URL 不动，仅用 export GIT_SSH_COMMAND="ssh -p 443
+  -o HostName=ssh.github.com" 改变传输层再 git push origin <branch>；实测 38s 通过全部 hook'
+prevention: 禁止用 set-url/insteadOf 改写 remote 或显式 ssh.github.com URL 来绕 port 22；端口问题一律走
+  GIT_SSH_COMMAND（env 级、临时、不写 git config）
+tags:
+- push
+- ssh
+- remote-hygiene
+- pre-push
+- network
+discovered_by: unknown
+discovered_at: '2026-09-21'
+times_encountered: 1
+last_confirmed_at: '2026-09-21'
+status: active
