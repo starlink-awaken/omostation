@@ -15,6 +15,23 @@ import pytest
 import yaml
 
 SCRIPT = Path(__file__).parents[3] / "bin/gac/codex-worker-adapter.py"
+
+# 重度环境依赖守卫 (2026-09-21): `test_worker_adapter_reconciles_both_planes_and_appends_real_origin_ack`
+# 是**集成级**测试 —— 它 symlink 真实 `projects/ecos` (work_packet_compiler) 并经
+# `uv run --project projects/omo ... omo.cli worker mesh-ack` 调用外部子进程,
+# 而后者要求 omo 的 workspace 依赖链 (bus-foundation 等) 全部可构建。
+# 缺任一项时该测试必然失败, 但其失败原因与断言正确性无关 —— 属环境性, 故优雅跳过。
+# 注: CI 的 actions/checkout 带 `submodules: recursive`, 环境齐备, 故 CI 侧会真实执行。
+_WORKSPACE_ROOT = Path(__file__).parents[3]
+_ECOS_COMPILER = _WORKSPACE_ROOT / "projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py"
+_OMO_CLI = _WORKSPACE_ROOT / "projects/omo/src/omo/cli.py"
+_BUS_FOUNDATION_PYPROJECT = _WORKSPACE_ROOT / "projects/bus-foundation/pyproject.toml"
+
+_INTEGRATION_ENV_READY = _ECOS_COMPILER.is_file() and _OMO_CLI.is_file() and _BUS_FOUNDATION_PYPROJECT.is_file()
+_INTEGRATION_ENV_REASON = (
+    "需 ecos(work_packet_compiler) + omo(src/omo/cli.py) + bus-foundation(pyproject) "
+    "三者齐备才能经 uv 构建 omo 环境; 缺项属环境性, 非断言失败"
+)
 WORKERS = Path(__file__).parents[3] / ".omo/_truth/registry/workers.yaml"
 SPEC = importlib.util.spec_from_file_location("codex_worker_adapter", SCRIPT)
 assert SPEC and SPEC.loader
@@ -1409,6 +1426,9 @@ def test_adapter_accepts_one_real_persisted_governed_run(tmp_path: Path) -> None
 def test_worker_adapter_reconciles_both_planes_and_appends_real_origin_ack(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    # 集成级: 见文件头守卫说明 —— 缺 ecos/omo/bus-foundation 时优雅跳过
+    if not _INTEGRATION_ENV_READY:
+        pytest.skip(_INTEGRATION_ENV_REASON)
     workspace = tmp_path / "workspace"
     spec_path = workspace / "docs/superpowers/specs/worker-mesh-ack.md"
     instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
