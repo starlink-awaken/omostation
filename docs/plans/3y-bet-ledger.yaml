@@ -29937,6 +29937,64 @@ bets:
   - docs/superpowers/specs/README.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+- id: BET-Y2Q2-T10-153
+  title: External write-root claims bridge v1
+  status: candidate
+  priority: P1
+  risk_level: L2
+  track: T10-MATURITY
+  window: Y2Q2
+  workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: false
+  retro: required
+  appetite: 1 day
+  goal: Allow explicit admitted local-git roots outside Workspace to be claimed through
+    deterministic synthetic paths without weakening canonical authority.
+  done_when:
+  - External write-root registry is schema-validated and fail-closed.
+  - WorkPacket, claim, lock, affected graph, and verify flows use one synthetic mapping.
+  - Zhixing dashboard root is admitted for its implementation surfaces only.
+  - Focused OMO tests, ledger lint, and governance gates pass.
+  non_goals:
+  - Do not activate Claims Authority v2 or move canonical claims storage.
+  - Do not admit arbitrary external paths, remote roots, symlinked roots, or non-git
+    directories.
+  - Do not rewrite historical claims or bypass required checks.
+  verify:
+  - cmd: cd projects/omo && PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+      uv run --with pytest --with pyyaml python -B -m pytest -q -p no:cacheprovider
+      tests/test_external_write_root_claims.py tests/test_workflow_attribution.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - projects/omo
+  - bin/plan/bet-ledger.py
+  - .omo/_truth/registry/external-write-roots.yaml
+  - docs/superpowers/specs/2026-09-21-external-write-root-claims-bridge-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-153.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-external-write-root-claims-bridge-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:cb3b3a3ae16da15efc6097f19eade96d3cada82d9d650587d2f480b60d5a27b4
+    decision_ref: decision://accepted/BET-Y2Q2-T10-153
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 - id: BET-Y2Q1-T4-03
   title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
   status: done

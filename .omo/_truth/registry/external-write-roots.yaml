@@ -1,0 +1,11 @@
+schema: external-write-root-registry/v1
+roots:
+  - id: zhixing-dashboard
+    path: ~/.local/share/zhixing-dashboard
+    kind: local_git
+    status: admitted
+    patterns:
+      - '*.js'
+      - '**/*.js'
+      - '**/*.py'
+      - '*.py'
