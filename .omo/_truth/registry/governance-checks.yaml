@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 688 # 2026-09-19 685→686: 任务所有权强制 check-task-ownership.py; 2026-09-20 686→688: 债务治理工具 debt-review-scheduler.py + runtime-health-scan.py (#4087, 闭环 L1_HEALTH_PROBES 与债务复审机制)
+    script_baseline: 689 # 2026-09-21 688→689: 过期雷达 check-expiry-radar.py (SLA 越界前瞻)
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4

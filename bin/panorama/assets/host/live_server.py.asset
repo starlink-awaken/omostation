@@ -152,6 +152,80 @@ def actionable_publication_items(pending):
     return pending_publication_projection(pending)["items"]
 
 
+def value_proof_readiness_payload(snapshot):
+    """Project v2-qualifying business value without counting legacy records."""
+    source = snapshot if isinstance(snapshot, dict) else {}
+    panel = source.get("panel_value") if isinstance(source.get("panel_value"), dict) else {}
+    validation = (
+        source.get("value_evidence_validation")
+        if isinstance(source.get("value_evidence_validation"), dict) else {}
+    )
+    samples = panel.get("samples") if isinstance(panel.get("samples"), dict) else {}
+    validation_ready = (
+        validation.get("ok") is True
+        and validation.get("available") is not False
+        and validation.get("schema") == "value-evidence-validation/v2"
+    )
+    qualifying = int(validation.get("qualifying") or 0) if validation_ready else 0
+    target = int(validation.get("target") or 30) if validation_ready else 30
+    thresholds = []
+    for item in (panel.get("thresholds") or []):
+        if not isinstance(item, dict):
+            continue
+        corrected = dict(item)
+        if corrected.get("key") == "samples":
+            corrected["current"] = qualifying
+            corrected["met"] = qualifying >= target
+            if not corrected["met"]:
+                corrected["gate"] = f"样本 {qualifying}/{target} 不足, 比率不可判定"
+            else:
+                corrected["gate"] = None
+        thresholds.append(corrected)
+    payload = {
+        "schema_version": "agent-value-proof-readiness/v2",
+        "available": True,
+        "authorization_mode": "single-user-loopback",
+        "read_only": True,
+        "instruction_capable": False,
+        "state": str(panel.get("state") or "UNKNOWN").upper(),
+        "state_reason": panel.get("state_reason") or [],
+        "samples": {
+            "records": int(samples.get("records") or 0),
+            "qualifying": qualifying,
+            "target": target,
+            "remaining": max(0, target - qualifying),
+            "v2_records": int(validation.get("v2_records") or 0),
+            "legacy_records": int(validation.get("legacy_records") or 0),
+            "legacy_qualifying": int(validation.get("legacy_qualifying") or 0),
+            "accepted": int(samples.get("accepted") or 0),
+            "adjudicated": int(samples.get("adjudicated") or 0),
+            "net_saved_seconds": int(samples.get("net_saved_seconds") or 0),
+        },
+        "revision_baseline": panel.get("revision_baseline"),
+        "thresholds": thresholds,
+        "validation": validation,
+        "operator_contract": {
+            "helper_path": "/Users/xiamingxing/.local/share/zhixing-dashboard/bin/value-operator.py",
+            "canonical_evidence": "/Users/xiamingxing/Workspace/.omo/_delivery/ingress/value-evidence.jsonl",
+            "baseline": "/Users/xiamingxing/Workspace/.omo/state/value-baselines/value-recorder-baseline-20260919-unique-exec.json",
+            "execution": "local operator CLI only; no HTTP write API",
+            "required_confirm": "--confirm-real-human-post-baseline",
+            "minimum_net_saved_seconds": 60,
+            "authority": "fresh receipt with matching deterministic digest and expiry",
+            "replay_identity": ["run_id", "scene_id", "decision_id"],
+        },
+        "evidence_rule": (
+            "Only post-baseline qualifying value-evidence/v2 records count; "
+            "legacy, synthetic, duplicate, and backfilled records are forbidden."
+        ),
+        "generated_at": source.get("generated_at")
+            or source.get("observed_at")
+            or utc_now(),
+        "generation_id": source.get("generation_id"),
+    }
+    return payload
+
+
 def safe_timestamp(record):
     for key in ("timestamp", "ts", "created_at", "occurred_at", "published_at", "attempted_at", "observed_at", "time", "at", "adjudicated_at", "event_at"):
         value = record.get(key)
@@ -1193,48 +1267,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif route.path == '/api/v1/agent/value-proof-readiness':
             try:
                 snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
-                panel = snapshot.get("panel_value") if isinstance(snapshot.get("panel_value"), dict) else {}
-                validation = snapshot.get("value_evidence_validation") if isinstance(snapshot.get("value_evidence_validation"), dict) else {}
-                samples = panel.get("samples") if isinstance(panel.get("samples"), dict) else {}
-                qualifying = int(samples.get("qualifying") or 0)
-                payload = {
-                    "schema_version": "agent-value-proof-readiness/v1",
-                    "authorization_mode": "single-user-loopback",
-                    "read_only": True,
-                    "instruction_capable": False,
-                    "state": str(panel.get("state") or "UNKNOWN").upper(),
-                    "state_reason": panel.get("state_reason") or [],
-                    "samples": {
-                        "records": int(samples.get("records") or 0),
-                        "qualifying": qualifying,
-                        "target": 30,
-                        "remaining": max(0, 30 - qualifying),
-                        "accepted": int(samples.get("accepted") or 0),
-                        "adjudicated": int(samples.get("adjudicated") or 0),
-                        "net_saved_seconds": int(samples.get("net_saved_seconds") or 0),
-                    },
-                    "revision_baseline": panel.get("revision_baseline"),
-                    "thresholds": panel.get("thresholds") or [],
-                    "validation": validation,
-                    "operator_contract": {
-                        "helper_path": "/Users/xiamingxing/.local/share/zhixing-dashboard/bin/value-operator.py",
-                        "canonical_evidence": "/Users/xiamingxing/Workspace/.omo/_delivery/ingress/value-evidence.jsonl",
-                        "baseline": "/Users/xiamingxing/Workspace/.omo/state/value-baselines/value-recorder-baseline-20260919-unique-exec.json",
-                        "execution": "local operator CLI only; no HTTP write API",
-                        "required_confirm": "--confirm-real-human-post-baseline",
-                        "minimum_net_saved_seconds": 60,
-                        "authority": "fresh receipt with matching deterministic digest and expiry",
-                        "replay_identity": ["run_id", "scene_id", "decision_id"],
-                    },
-                    "evidence_rule": (
-                        "Only post-baseline qualifying real-use records count; "
-                        "synthetic runs, duplicate projections, and backfill are forbidden."
-                    ),
-                    "generated_at": snapshot.get("generated_at")
-                        or snapshot.get("observed_at")
-                        or utc_now(),
-                    "generation_id": snapshot.get("generation_id"),
-                }
+                payload = value_proof_readiness_payload(snapshot)
                 self._json(200, payload)
             except (OSError, ValueError, TypeError) as exc:
                 self._json(503, {
