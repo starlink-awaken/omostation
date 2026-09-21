@@ -29648,7 +29648,7 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T10-171
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: blocked
+    overall_state: delivery_accepted
     axes:
       engineering:
         status: VERIFIED
@@ -29662,7 +29662,7 @@ bets:
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
       operational:
-        status: DEGRADED
+        status: PROVEN
         evidence:
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
@@ -29675,7 +29675,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    notes: 'Merged as PR #4101 (6982fc2ed); host asset installed (SHA-256 fa0f9b66..., precondition 7a6c76e0 verified). Running 43191 process not restarted — restart requires the separate explicit authorization; operational live_canary remains pending until the v2 readiness projection is observed post-restart.'
+    notes: 'Merged as PR #4101 (6982fc2ed); host asset installed (SHA-256 fa0f9b66..., precondition 7a6c76e0 verified). Restart authorization granted 2026-09-21; live check found old PID 48725 already exited and ensure_local_server respawned PID 36955 on the patched script (no SIGTERM needed). Acceptance PASS at 2026-09-21T05:18Z: /health script_sha256 == disk_script_sha256 == fa0f9b66, code_drift=false, read_only=true, readiness API reports agent-value-proof-readiness/v2 with samples.qualifying=0 and remaining=30, validation qualifying=0/legacy_qualifying=1. Receipts: canary-health-20260921T0518Z.json / canary-readiness-20260921T0518Z.json (restart package).'
   done_when:
   - The live readiness projection uses v2 validation qualifying count and fails closed
     to zero when validation is unavailable or invalid.
