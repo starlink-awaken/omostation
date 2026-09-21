@@ -29629,7 +29629,8 @@ bets:
   - .omo/_knowledge/retros/BET-Y1Q4-T10-170.md
 - id: BET-Y1Q4-T10-171
   title: Live value readiness v2-only projection repair
-  status: candidate
+  status: done
+  done_at: 2026-09-21
   priority: P1
   risk_level: L1
   track: T10-MATURITY
