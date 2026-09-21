@@ -107,11 +107,16 @@ def test_seven_day_policy_expires_and_is_durable(tmp_path):
     assert result["expired_count"] == 1
     assert result["expired"][0]["event_type"] == "ApprovalTimeout"
 
-    # Durable: a restarted process sees the unavailable projection.
+    # Durable: a restarted process sees the failed projection.
+    # NOTE: omo 侧实现 (子模块 commit 94ab81a) 一致地使用:
+    #   - 事件投影 `ApprovalTimeout` → 工作流 `"failed"` (workflow_mesh.py:48)
+    #   - approval 状态 → `"timed_out"`        (workflow_mesh.py:1117)
+    # 原断言 "unavailable" / "expired" 从写下即与该实现不符 ("unavailable"
+    # 专属 BackendUnavailable; "expired" 仅是扫描器结果的键名, 非状态值)。
     restarted = WorkflowMeshStore(tmp_path)
     snapshot = restarted.snapshot("it-approval")
-    assert snapshot["state"] == "unavailable"
-    assert snapshot["approvals"]["workflow"]["state"] == "expired"
+    assert snapshot["state"] == "failed"
+    assert snapshot["approvals"]["workflow"]["state"] == "timed_out"
 
     # Idempotent: a second scan on a fresh store persists nothing new.
     again = scan_approval_timeouts(tmp_path, now=overdue, apply=True)
