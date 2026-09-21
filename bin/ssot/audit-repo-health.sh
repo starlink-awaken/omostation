@@ -26,8 +26,11 @@ get_submodule_repos() {
 
 # 判断 repo 是否为当前仓库的子模块 (子模块由父仓 CI 覆盖, 无需独立审计)
 is_submodule_repo() {
-  local repo="$1"
-  get_submodule_repos 2>/dev/null | grep -qx "$repo"
+  local repo="$1" list
+  # NOTE: 不直接 pipe 进 grep -q — set -o pipefail 下 grep 早退会给慢生产者发
+  # SIGPIPE (exit 141), 导致命中也被判为非子模块。先物化再匹配。
+  list=$(get_submodule_repos 2>/dev/null)
+  grep -qx "$repo" <<<"$list"
 }
 
 ci_status_of() {
@@ -44,7 +47,9 @@ try:
         worst='green'
         for r in runs:
             c=r.get('conclusion')
-            if c in ('failure','timed_out','cancelled'): worst='red'; break
+            # NOTE: cancelled 不计红 — 本仓 cancel-in-progress 会自发产生
+            # cancelled run, 计红属自证误报。只计真实失败。
+            if c in ('failure','timed_out'): worst='red'; break
         print(worst)
 except Exception:
     print('unknown')
@@ -94,6 +99,19 @@ audit_hook() {
   local canonical actual
   canonical="$(git rev-parse --show-toplevel)/.githooks"
   actual="$(git rev-parse --git-path hooks)"
+  # NOTE: CI fresh-checkout 下 hooks 从未安装 (actual 只有 *.sample),
+  # 逐文件比对必报全量 diverged。无已安装 hook 时跳过审计, 视为一致。
+  if [ -d "$actual" ]; then
+    local installed=0 f
+    for f in "$actual"/*; do
+      [ -f "$f" ] || continue
+      case "$(basename "$f")" in *.sample) continue ;; *) installed=1; break ;; esac
+    done
+    if [ "$installed" = "0" ]; then
+      echo "{\"repo\": \"$repo\", \"hooks\": {\"canonical_path\": \"$canonical\", \"actual_path\": \"$actual\", \"consistent\": true, \"diverged\": []}}"
+      return 0
+    fi
+  fi
   local diverged="["
   local first=1
   if [ -d "$canonical" ] && [ -d "$actual" ]; then

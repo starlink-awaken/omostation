@@ -47,7 +47,7 @@ jobs:
           python3 - <<'PYEOF'
           import json, os
           d = json.load(open('/tmp/repo-health/report.json'))
-          high = [r for r in d.get('repos', []) if r.get('risk_score', 0) >= 50]
+          high = [r for r in d.get('repos', []) if r.get('risk_score', 0) >= 50 and not r.get('covered_by_parent')]
           if not high:
               print("✅ 无高风险仓库")
               raise SystemExit(0)
