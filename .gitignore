@@ -358,3 +358,6 @@ runtime/dashboard/
 
 # Runtime cache
 LADS/
+scripts/projects/
+scripts/scripts/
+.omo/_attic/
