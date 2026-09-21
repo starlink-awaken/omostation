@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/agora/check-submodule-pins.py
+name: Check Submodule Pins
+category: governance
+owner: governance-team
+description: "Verify submodule working trees match expected pins for critical fixes (e.g. agora PEP degraded-mode bypass)."
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-08-24"
