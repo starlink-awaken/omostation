@@ -194,6 +194,20 @@ warning_exceptions:
       expires: 2026-10-31
       owner: governance-team
       reason: Existing standard lifecycle values require controlled normalization.
+    - id: stale-review-omo-truth-docs
+      rule: stale_review
+      surface: omo-truth-docs
+      max_findings: 5  # 2026-09-21 实测 5 (CI 继承性红, P75 预存债基线化)
+      expires: 2026-10-15
+      owner: governance-team
+      reason: Existing truth docs past their review SLA; batch re-review scheduled under T10-MATURITY, budget is a bounded burn-down window.
+    - id: stale-review-omo-standards
+      rule: stale_review
+      surface: omo-standards
+      max_findings: 22  # 2026-09-21 实测 22 (CI 继承性红, P75 预存债基线化)
+      expires: 2026-10-15
+      owner: governance-team
+      reason: Existing standards past their review SLA; batch re-review scheduled under T10-MATURITY, budget is a bounded burn-down window.
     - id: legacy-docs-enums
       rule: invalid_metadata
       surface: docs-discoverable

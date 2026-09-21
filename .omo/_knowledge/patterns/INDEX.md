@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: index
+lifecycle: pattern
 owner: governance-team
 last-reviewed: 2026-09-16
 type: ssot
