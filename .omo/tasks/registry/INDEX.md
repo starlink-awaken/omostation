@@ -16,16 +16,11 @@ status: archived
 |----|-------|--------|
 | kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-## Planned Tasks (7 个)
+## Planned Tasks (1 个)
 | ID | Title | Status |
 |----|-------|--------|
-| BET-Y1Q4-T10-141 | Cockpit CLI 命令可用性台账 — 106 命令逐批验证与修复 | candidate |
-| BET-Y1Q4-T11-env-resolver-unify | env_resolver 跨 worktree/主仓兼容 — 统一替换 parents[N] 硬 | candidate |
-| BET-Y1Q4-T12-arcnode-integration | arcnode-* 外部依赖纳入主仓 — 治理命令不再依赖 ~/.hermes | candidate |
-| cockpit-debt-debt-1 | 治理技术债务：债务 | candidate |
-| event-loop-dead-loop | 闭环回路死回路: 2 个 emit 零消费者 | candidate |
-| needs-human-batch2-physical-recovery-checklist | 机器恢复日验收清单（探测→G-DEL.3→G-DEL.1→S1 物理 KPI 解锁） | candidate |
-| needs-human-p80-physical-hosts | P80 T2: expand physical hosts ≥4 + G-DEL.3 (stat | candidate |
+| bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | planned |
+
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
@@ -63,11 +58,10 @@ status: archived
 
 > **注**: 子目录 `legacy-normalized/` 中包含 REMEDIATE-ARC-CONV-P2-CACHE 至 P6-CALIBRATE 等历史收敛任务，已在 BET-ARCH-CONVERGENCE 完成上下文下归档。
 
-## Blocked Tasks (1 个)
+## Blocked Tasks (0 个)
 | ID | Title | Status |
 |----|-------|--------|
-| bet-y1q2-t7-01 | 工程交付 dogfood 开 shadow | blocked |
 
 ---
-*Updated: 2026-09-18 (依据 `omo state sync-tasks` 与真实目录重算: done=301, planned=7, active=1, blocked=1, archived=6 顶层)*
+*Updated: 2026-09-21 (依据 `omo state sync-tasks` 与真实目录重算: done=301, planned=1, active=1, blocked=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
