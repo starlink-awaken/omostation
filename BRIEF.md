@@ -1,12 +1,12 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-18T01:03:19.802245Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `50/100`
+> **Generated**: `2026-09-21T06:10:32.671086Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `73/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 各卡片的直接链接见下方清单。
 
 ### ⏳ 待处理卡片与债务 (Needs Human Decisions)
-- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/ws-sfop-task-close/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
+- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/Workspace/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
 
 > 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡.
 
@@ -15,7 +15,7 @@
 | 维度 | 度量指标 | 状态 | 物理数据源 |
 |------|----------|------|------------|
 | **创意创作** | 新增发布数: `712` | 正常 | `@创意创作/_outputs` |
-| **工作交付** | 场景裁决证据尚未产生 (等待首批场景验收) | 待验收 | `scene-outcomes.jsonl` |
+| **工作交付** | 场景 episodes: 52 · accepted 48 (92%) | 正常 | `scene-outcomes.jsonl` (30d) |
 | **知识复用** | KOS 索引篇: `0` | 正常 | `kos/` 篇目 |
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
@@ -41,6 +41,25 @@
 
 ## ⚙️ 治理健康分详情 (Health Detail)
 
-- **复合健康分**: `50/100` (警戒, 请看下方分项)
-- **GAC 异常扣分**: `70/100`
+- **复合健康分**: `73/100` (警戒, 请看下方分项)
+- **GAC 异常扣分**: `0/100`
 - **常驻 daemon 在线率**: `100.00%`
+
+## 🌐 L4 Domain Health (Harness)
+
+| 域 | ok | issues |
+|---|---|---|
+| cockpit | ✅ | 0 |
+| creative | ✅ | 0 |
+| family | ✅ | 0 |
+| opc | ✅ | 0 |
+| personal | ✅ | 0 |
+| shared | ✅ | 0 |
+| vault | ✅ | 0 |
+| work-contracts | ✅ | 0 |
+| work-docs | ✅ | 0 |
+| work-guozhuan | ✅ | 0 |
+| work-liyongke | ✅ | 0 |
+| work-weijian | ✅ | 0 |
+
+**12/12** 域 Harness 通过

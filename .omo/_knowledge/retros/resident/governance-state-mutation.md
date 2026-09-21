@@ -1,28 +1,31 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-09-19T08:37:09Z
-status: candidate
+generated_at: 2026-09-21T06:31:44Z
+status: planned
 counts:
-  runs: 2
+  runs: 3
   failures: 0
-  total: 2
+  total: 3
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
+lifecycle: history
+owner: unassigned
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-19T08:37:09Z
+- generated_at: 2026-09-21T06:31:44Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 2 成功运行 + 0 失败模式 = 2 草稿
+- sediment 覆盖: 3 成功运行 + 0 失败模式 = 3 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
 - 20260915T073516Z-governance-state-mutation-d29a90cb.md
 - 20260918T021142Z-governance-state-mutation-27384e7c.md
+- 20260921T062109Z-governance-state-mutation-b798a514.md
 
 ## 失败模式 (failures/)
 
@@ -48,6 +51,10 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=1
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=5077.697
+- **20260921T062109Z-governance-state-mutation-b798a514**
+  - 计划 (objective): A8 evidence SHA truth recovery: replace unreachable de5cafe0662e2eaac464be69f5850df1e5bafc42 with reachable 5e1f7eae9b024dccc7a5977139e2de906c25b76c
+  - workflow: governance-state-mutation
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

@@ -1,22 +1,24 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-19T08:37:09Z
-status: candidate
+generated_at: 2026-09-21T06:31:44Z
+status: planned
 counts:
-  runs: 18
+  runs: 24
   failures: 0
-  total: 18
+  total: 24
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
+lifecycle: history
+owner: unassigned
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-19T08:37:09Z
+- generated_at: 2026-09-21T06:31:44Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 18 成功运行 + 0 失败模式 = 18 草稿
+- sediment 覆盖: 24 成功运行 + 0 失败模式 = 24 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -39,6 +41,12 @@ failure_breakdown:
 - 20260917T170515Z-project-code-change-d1d17fb5.md
 - 20260917T172442Z-project-code-change-ce85533d.md
 - 20260917T174915Z-project-code-change-d2a62d7a.md
+- 20260919T172115Z-project-code-change-85063367.md
+- 20260919T181212Z-project-code-change-1c46debd.md
+- 20260919T183259Z-project-code-change-71751ad8.md
+- 20260919T185647Z-project-code-change-20a9bece.md
+- 20260919T193736Z-project-code-change-36bb749a.md
+- 20260919T212050Z-project-code-change-0d86f67b.md
 
 ## 失败模式 (failures/)
 
@@ -171,6 +179,44 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=1
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=298.124
+- **20260919T172115Z-project-code-change-85063367**
+  - 计划 (objective): Unbound observability readiness: project the pending Claims lifecycle authorization packet and immutable artifact hashes to human dashboard and agent brief.
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=786.39
+- **20260919T181212Z-project-code-change-1c46debd**
+  - 计划 (objective): Unbound dashboard mechanism maintenance: version the stable deployed host template and refresh adapter after intentional hotfixes, preventing future restore from losing live fixes.
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=788.42
+- **20260919T183259Z-project-code-change-71751ad8**
+  - 计划 (objective): Unbound regression recovery: restore Claims lifecycle authorization projection and human dashboard card lost by dashboard host capture while preserving deployed host assets.
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=716.73
+- **20260919T185647Z-project-code-change-20a9bece**
+  - 计划 (objective): Unbound dashboard mechanism hardening: version the deployed read-only live server and query engine assets, including lifecycle authorization projection, without changing the running service.
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=1346.64
+- **20260919T193736Z-project-code-change-36bb749a**
+  - 计划 (objective): Unbound dashboard API hygiene: project only actionable pending publications to the agent-facing authorization endpoint while preserving merged history as terminal counts.
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=91.149
+- **20260919T212050Z-project-code-change-0d86f67b**
+  - 计划 (objective): Unbound dashboard observability repair: version the latest collector, filter terminal publications from agent-facing pending authorization projections, and preserve terminal counts without changing runtime state.
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=327.238
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

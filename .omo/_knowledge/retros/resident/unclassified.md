@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: unclassified
-generated_at: 2026-09-12T12:41:59Z
+generated_at: 2026-09-21T06:31:44Z
 status: planned
 counts:
-  runs: 32
+  runs: 14
   failures: 0
-  total: 32
+  total: 14
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -16,45 +16,27 @@ owner: unassigned
 ---
 # unclassified 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-12T12:41:59Z
+- generated_at: 2026-09-21T06:31:44Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 32 成功运行 + 0 失败模式 = 32 草稿
+- sediment 覆盖: 14 成功运行 + 0 失败模式 = 14 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
-- 20260823T0000Z-project-code-change-int01.md
-- 20260823T0000Z-role-collab.md
-- delivery-run-pr-1869-v3.md
-- delivery-run-pr-1870-v3.md
-- delivery-run-pr-1871-v3.md
-- delivery-run-pr-1872-v3.md
-- delivery-run-pr-1873-v3.md
-- delivery-run-pr-1874-v3.md
-- delivery-run-pr-1876-v3.md
-- delivery-run-pr-1877-v3.md
-- delivery-run-pr-1880-v3.md
-- delivery-run-pr-1881-v3.md
-- delivery-run-pr-1882-v3.md
-- delivery-run-pr-1883-v3.md
-- delivery-run-pr-1884-v3.md
-- delivery-run-pr-1885-v3.md
-- delivery-run-pr-1887-v3.md
-- delivery-run-pr-1888-v3.md
-- delivery-run-pr-1889-v3.md
-- delivery-run-pr-1891-v3.md
-- delivery-run-pr-1893-v3.md
-- delivery-run-pr-1895-v3.md
-- points-calc-043db0da5c2f.md
-- points-calc-04774c653abc.md
-- points-calc-056b6520e170.md
-- points-calc-2ad8657b515a.md
-- points-calc-932d00a3e992.md
-- workflow-1593a0f41982.md
-- workflow-356d1ca06c86.md
-- workflow-5b998d332a49.md
-- workflow-c5934f665864.md
-- workflow-d61748e3a563.md
+- points-calc-05bfd52149ff.md
+- points-calc-6b86071cf68c.md
+- points-calc-86828777c57c.md
+- points-calc-af05bb62691f.md
+- points-calc-af39f2bf85f0.md
+- points-calc-c498510c6f25.md
+- points-calc-e6d512931aee.md
+- workflow-234792b569fd.md
+- workflow-4656e1511c50.md
+- workflow-48e9382b01db.md
+- workflow-5d2d95592dbf.md
+- workflow-7d77e4bdac86.md
+- workflow-7ef3255d64c3.md
+- workflow-ba94ca8e9bd8.md
 
 ## 失败模式 (failures/)
 
@@ -66,106 +48,62 @@ owner: unassigned
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
-- **delivery-run-pr-1869-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-23747.619
-- **delivery-run-pr-1870-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-23129.536
-- **delivery-run-pr-1871-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-22810.467
-- **delivery-run-pr-1872-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-22088.392
-- **delivery-run-pr-1873-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-21827.323
-- **delivery-run-pr-1874-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-21653.252
-- **delivery-run-pr-1876-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-20587.178
-- **delivery-run-pr-1877-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-16491.108
-- **delivery-run-pr-1880-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-16421.04
-- **delivery-run-pr-1881-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-15979.896
-- **delivery-run-pr-1882-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-16154.972
-- **delivery-run-pr-1883-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-15676.756
-- **delivery-run-pr-1884-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-15815.818
-- **delivery-run-pr-1885-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-15628.691
-- **delivery-run-pr-1887-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-13676.626
-- **delivery-run-pr-1888-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-13148.563
-- **delivery-run-pr-1889-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-13007.498
-- **delivery-run-pr-1891-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-2461.434
-- **delivery-run-pr-1893-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-219.306
-- **delivery-run-pr-1895-v3**
-  - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=6, duration_s=-936.371
-- **points-calc-043db0da5c2f**
+- **points-calc-05bfd52149ff**
   - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None
   - 失败根因: step=complete-quest, error=None
-  - 指标: event_count=6, duration_s=0.159
-- **points-calc-04774c653abc**
+  - 指标: event_count=6, duration_s=0.018
+- **points-calc-6b86071cf68c**
   - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None
   - 失败根因: step=complete-quest, error=None
-  - 指标: event_count=6, duration_s=0.135
-- **points-calc-056b6520e170**
+  - 指标: event_count=6, duration_s=0.019
+- **points-calc-86828777c57c**
   - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None
   - 失败根因: step=complete-quest, error=None
-  - 指标: event_count=6, duration_s=0.271
-- **points-calc-2ad8657b515a**
+  - 指标: event_count=6, duration_s=0.02
+- **points-calc-af05bb62691f**
   - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None
   - 失败根因: step=complete-quest, error=None
-  - 指标: event_count=6, duration_s=0.267
-- **points-calc-932d00a3e992**
+  - 指标: event_count=6, duration_s=0.018
+- **points-calc-af39f2bf85f0**
   - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None
   - 失败根因: step=complete-quest, error=None
-  - 指标: event_count=6, duration_s=0.259
-- **workflow-1593a0f41982**
+  - 指标: event_count=6, duration_s=0.017
+- **points-calc-c498510c6f25**
+  - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=2, duration_s=0.075
-- **workflow-356d1ca06c86**
+  - 失败根因: step=complete-quest, error=None
+  - 指标: event_count=6, duration_s=0.017
+- **points-calc-e6d512931aee**
+  - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=2, duration_s=0.077
-- **workflow-5b998d332a49**
+  - 失败根因: step=complete-quest, error=None
+  - 指标: event_count=6, duration_s=0.048
+- **workflow-234792b569fd**
   - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=2, duration_s=0.072
-- **workflow-c5934f665864**
+  - 指标: event_count=2, duration_s=0.023
+- **workflow-4656e1511c50**
   - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=2, duration_s=0.055
-- **workflow-d61748e3a563**
+  - 指标: event_count=2, duration_s=0.027
+- **workflow-48e9382b01db**
   - 结果与证据: ok=None, status=None, evidence_count=None
-  - 指标: event_count=2, duration_s=0.065
+  - 指标: event_count=2, duration_s=0.024
+- **workflow-5d2d95592dbf**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.026
+- **workflow-7d77e4bdac86**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.024
+- **workflow-7ef3255d64c3**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.026
+- **workflow-ba94ca8e9bd8**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=2, duration_s=0.061
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

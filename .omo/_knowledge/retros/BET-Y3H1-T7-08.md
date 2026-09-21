@@ -6,6 +6,7 @@ lifecycle: history
 bet_id: BET-Y3H1-T7-08
 title: assisted 场景卡 assisted→supervised→routine 两步推进
 date: 2026-09-18
+owner: unassigned
 ---
 
 # BET-Y3H1-T7-08 Retro
