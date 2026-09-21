@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 689 # 2026-09-21 688→689: 过期雷达 check-expiry-radar.py (SLA 越界前瞻)
+    script_baseline: 690 # 2026-09-21 689→690: 规则接线清单 check-rule-wiring-coverage.py
   rules:
   - id: CR-X4-HEALTH-SSOT
     dimension: X4
