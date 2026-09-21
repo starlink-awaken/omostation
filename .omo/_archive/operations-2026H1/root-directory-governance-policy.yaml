@@ -87,6 +87,11 @@ local_surfaces:
     class: client-metadata
     lifecycle: local
     reason: OpenClaude client metadata and local state
+  LADS:
+    owner: agora-team
+    class: runtime-cache
+    lifecycle: disposable
+    reason: Agora domestic mirrors cache and runtime artifacts
   ecos:
     owner: ecos-team
     class: compatibility-checkout
