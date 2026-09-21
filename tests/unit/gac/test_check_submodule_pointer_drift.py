@@ -68,7 +68,7 @@ def test_each_result_has_required_fields():
     for r in data["results"]:
         assert "submodule" in r
         assert "status" in r
-        assert r["status"] in ("aligned", "behind", "DIVERGED", "skip")
+        assert r["status"] in ("aligned", "behind", "ahead", "DIVERGED", "skip")
 
 
 def test_detects_omo_divergence():
@@ -78,7 +78,7 @@ def test_detects_omo_divergence():
     omo_results = [r for r in data["results"] if r["submodule"] == "projects/omo"]
     if omo_results:
         r = omo_results[0]
-        assert r["status"] in ("DIVERGED", "aligned", "behind")
+        assert r["status"] in ("DIVERGED", "aligned", "behind", "ahead")
 
 
 def test_submodule_git_clears_superproject_environment(
