@@ -7,7 +7,16 @@ last-reviewed: 2026-09-08
 related:
 - ./research-deep-synthesis.yaml
 ---
-schema: scene-card/v2
+activation: inactive
+activation_blockers: []
+admission_track: internal_evidence_based
+approval_state: pending
+lifecycle: draft
+scene_id: research-deep-synthesis
+scene_type: internal_pipeline
+schema: scene-card/v1
+
+schema: scene-card/v1
 lifecycle: shadow
 bet: BET-Y2Q4-T7-01
 falsifier: 若 30 天内无前沿文献精读需求触发，则场景无实际价值

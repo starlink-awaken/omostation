@@ -6,7 +6,7 @@ last-reviewed: 2026-08-26
 related:
 - ./health-visit.yaml
 ---
-schema: scene-card/v2
+schema: scene-card/v1
 bet: BET-Y1Q4-T8-04
 falsifier: "若 30 天内无 health 类任务触发，则场景无实际价值"
 scene_id: health-archive

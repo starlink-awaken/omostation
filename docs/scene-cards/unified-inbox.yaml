@@ -12,7 +12,7 @@ related:
 - ../STRATEGY-3YEAR-PANORAMA.md
 - ../../.omo/standards/external-connection-fabric.md
 ---
-schema: scene-card/v2
+schema: scene-card/v1
 scene_type: external_resource
 lifecycle: supervised
 activation: active
