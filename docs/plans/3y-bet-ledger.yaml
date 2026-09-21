@@ -27005,7 +27005,7 @@ bets:
             ref: receipt://docs/superpowers/specs/2026-09-15-a8-omo-external-transaction-lifecycle-design.md
             sha256: sha256:6e37fd46308404de2fe85d63d83cf87cb71cb841a8199022f41ac2363da94d18
           merged_reachable_commit:
-            ref: git://origin/main@de5cafe0662e2eaac464be69f5850df1e5bafc42
+            ref: git://origin/main@5e1f7eae9b024dccc7a5977139e2de906c25b76c
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
             sha256: sha256:5bcf76348b93fbb35b1958e6845520d588e2c31362108b769eed3d0db615aabd
