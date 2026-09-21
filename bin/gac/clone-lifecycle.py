@@ -1233,50 +1233,82 @@ def resolve_real_git_executable() -> str:
     return str(resolved)
 
 
+_ABSENT_REMOTE_OID = "0" * 40
+
+
+def _authority_utc_z() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
 def build_remote_observation_pair(
     *,
     clone: Path,
     git_executable: str,
     remote_ref: str,
-    expected_oid: str,
     descriptor_digest: str,
     effect_process_id: str,
+    repository: str,
 ) -> tuple[dict, dict]:
     """Descriptor-bound remote double-read owned only by clone-lifecycle."""
+    command = [git_executable, "-C", str(clone), "ls-remote", "--exit-code", "origin", remote_ref]
+    effect_process_identity_digest = _authority_digest({"effect_process_id": effect_process_id})
     observations: list[dict] = []
     for _ in range(2):
-        probe = run(
-            [git_executable, "-C", str(clone), "ls-remote", "--exit-code", "origin", remote_ref]
-        )
-        oid = ""
+        probe = run(command)
+        oid = _ABSENT_REMOTE_OID
         if probe.returncode == 0:
             rows = [line.split() for line in probe.stdout.splitlines() if line.strip()]
             if rows and re.fullmatch(r"[0-9a-f]{40}", rows[0][0] or ""):
                 oid = rows[0][0]
-        if expected_oid == "" and oid == "":
-            observed = ""
-        else:
-            observed = oid
-        record = {
-            "schema": "claims-remote-observation/v1",
-            "authority_id": CLAIMS_AUTHORITY_ID,
-            "remote_ref": remote_ref,
-            "observed_oid": observed,
-            "expected_oid": expected_oid,
-            "descriptor_digest": descriptor_digest,
-            "git_executable_digest": _authority_digest({"path": git_executable}),
-            "effect_process_id": effect_process_id,
-        }
-        record["digest"] = _authority_digest(record)
-        observations.append(record)
+        observations.append(
+            {
+                "schema": "claims-remote-observation/v2",
+                "repository_identity_digest": _authority_digest({"repository": repository}),
+                "remote_ref_digest": _authority_digest({"remote_ref": remote_ref}),
+                "observed_remote_oid": oid,
+                "monotonic_ns": time.monotonic_ns(),
+                "broker_observed_at": _authority_utc_z(),
+                "git_executable_digest": _authority_digest({"path": git_executable}),
+                "effect_process_identity_digest": effect_process_identity_digest,
+                "command_digest": _authority_digest({"command": command}),
+                "descriptor_digest": descriptor_digest,
+            }
+        )
     first, second = observations
-    if (
-        first["remote_ref"] != second["remote_ref"]
-        or first["observed_oid"] != second["observed_oid"]
-        or first["descriptor_digest"] != second["descriptor_digest"]
-    ):
+    for field in set(first) - {"monotonic_ns", "broker_observed_at"}:
+        if first[field] != second[field]:
+            raise RuntimeError("REMOTE_OID_DRIFT")
+    if second["monotonic_ns"] < first["monotonic_ns"]:
         raise RuntimeError("REMOTE_OID_DRIFT")
     return first, second
+
+
+_FENCE_CONTEXT_DIGEST_KEYS = (
+    "v1_allow_receipt_digest",
+    "v1_snapshot_digest",
+    "changeset_digest",
+    "path_digest",
+)
+
+
+def _legacy_fence_context(verification: dict) -> dict:
+    """Broker observation receipt bindings required to mint a legacy publish fence."""
+    context = verification.get("claims_authority_fence_context")
+    if not isinstance(context, dict):
+        raise RuntimeError("LEGACY_FENCE_CONTEXT_UNAVAILABLE")
+    claim_id = context.get("claim_id")
+    if not isinstance(claim_id, str) or not claim_id:
+        raise RuntimeError("LEGACY_FENCE_CONTEXT_INVALID:claim_id")
+    for key in ("claim_version", "lease_epoch"):
+        value = context.get(key)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+            raise RuntimeError(f"LEGACY_FENCE_CONTEXT_INVALID:{key}")
+    for key in _FENCE_CONTEXT_DIGEST_KEYS:
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", str(context.get(key) or "")):
+            raise RuntimeError(f"LEGACY_FENCE_CONTEXT_INVALID:{key}")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(context.get("expected_remote_oid") or "")):
+        raise RuntimeError("LEGACY_FENCE_CONTEXT_INVALID:expected_remote_oid")
+    return dict(context)
 
 
 def enter_legacy_publish_fence(
@@ -1285,49 +1317,45 @@ def enter_legacy_publish_fence(
     branch: str,
     head_sha: str,
     verification: dict,
+    repository: str,
 ) -> dict:
     """Issue + enter one consumable fence before the canonical push."""
+    context = _legacy_fence_context(verification)
     git_executable = resolve_real_git_executable()
     effect_process_id = f"integrate:{os.getpid()}:{secrets.token_hex(8)}"
+    effect_process_identity_digest = _authority_digest({"effect_process_id": effect_process_id})
     remote_ref = f"refs/heads/{branch}"
+    expected_remote_oid = str(context["expected_remote_oid"])
     status = call_claims_authority("status", None)
     descriptor_digest = status.get("descriptor_digest")
     if not isinstance(descriptor_digest, str) or not descriptor_digest:
         raise RuntimeError("AUTHORITY_DESCRIPTOR_MISMATCH")
-    # New-branch publication expects empty remote OID before push.
     first, second = build_remote_observation_pair(
         clone=clone,
         git_executable=git_executable,
         remote_ref=remote_ref,
-        expected_oid="",
         descriptor_digest=descriptor_digest,
         effect_process_id=effect_process_id,
+        repository=repository,
     )
-    if first["observed_oid"] not in {"", None}:
+    if first["observed_remote_oid"] != expected_remote_oid:
         raise RuntimeError("REMOTE_OID_DRIFT")
-    v1_snapshot_digest = _authority_digest(
-        {
-            "change_id": verification.get("change_id"),
-            "root_head_sha": verification.get("root_head_sha") or head_sha,
-            "changed_paths": verification.get("changed_paths") or [],
-        }
-    )
-    claim_version = status.get("sequence", 0)
-    lease_epoch = status.get("authority_epoch", 0)
     issue_req = {
         "schema": "claim-mutation-envelope/v2",
         "operation": "issue-legacy-fence",
         "request_id": str(__import__("uuid").uuid4()),
         "authority_id": CLAIMS_AUTHORITY_ID,
-        "v1_decision": "allow",
-        "v1_snapshot_digest": v1_snapshot_digest,
-        "claim_version": claim_version,
-        "lease_epoch": lease_epoch,
-        "changeset_digest": verification.get("change_id"),
-        "head_sha": head_sha,
-        "remote_ref": remote_ref,
-        "expected_remote_oid": "",
+        "claim_id": context["claim_id"],
+        "claim_version": context["claim_version"],
+        "lease_epoch": context["lease_epoch"],
+        "v1_allow_receipt_digest": context["v1_allow_receipt_digest"],
+        "v1_snapshot_digest": context["v1_snapshot_digest"],
+        "changeset_digest": context["changeset_digest"],
+        "path_digest": context["path_digest"],
+        "head_oid": head_sha,
         "descriptor_digest": descriptor_digest,
+        "remote_ref": remote_ref,
+        "expected_remote_oid": expected_remote_oid,
         "first_remote_observation": first,
         "second_remote_observation": second,
     }
@@ -1340,11 +1368,11 @@ def enter_legacy_publish_fence(
         clone=clone,
         git_executable=git_executable,
         remote_ref=remote_ref,
-        expected_oid="",
         descriptor_digest=descriptor_digest,
         effect_process_id=effect_process_id,
+        repository=repository,
     )
-    if first2["observed_oid"] != first["observed_oid"]:
+    if first2["observed_remote_oid"] != first["observed_remote_oid"]:
         raise RuntimeError("REMOTE_OID_DRIFT")
     enter_req = {
         "schema": "claim-mutation-envelope/v2",
@@ -1352,23 +1380,29 @@ def enter_legacy_publish_fence(
         "request_id": str(__import__("uuid").uuid4()),
         "authority_id": CLAIMS_AUTHORITY_ID,
         "fence_id": fence_id,
-        "expected_state": "issued",
-        "v1_snapshot_digest": v1_snapshot_digest,
-        "claim_version": claim_version,
-        "lease_epoch": lease_epoch,
+        "v1_snapshot_digest": context["v1_snapshot_digest"],
+        "claim_version": context["claim_version"],
+        "lease_epoch": context["lease_epoch"],
         "remote_ref": remote_ref,
-        "expected_remote_oid": "",
+        "expected_remote_oid": expected_remote_oid,
         "first_remote_observation": first2,
         "second_remote_observation": second2,
     }
     entered = call_claims_authority("enter-legacy-publishing", enter_req)
+    settlement_request_id = entered.get("settlement_request_id")
+    if not isinstance(settlement_request_id, str) or not settlement_request_id:
+        raise RuntimeError("LEGACY_FENCE_SETTLEMENT_UNAVAILABLE")
     return {
         "fence_id": fence_id,
         "git_executable": git_executable,
         "effect_process_id": effect_process_id,
+        "effect_process_identity_digest": effect_process_identity_digest,
         "remote_ref": remote_ref,
+        "repository": repository,
         "descriptor_digest": descriptor_digest,
-        "v1_snapshot_digest": v1_snapshot_digest,
+        "expected_remote_oid": expected_remote_oid,
+        "v1_snapshot_digest": context["v1_snapshot_digest"],
+        "settlement_request_id": settlement_request_id,
         "issue": issued,
         "enter": entered,
     }
@@ -1382,25 +1416,32 @@ def settle_legacy_publish_fence(
     head_sha: str,
 ) -> dict:
     """Settle the same fence from descriptor-bound remote observations. No Git from broker."""
-    outcome = "success" if push_returncode == 0 else "rejected"
     first, second = build_remote_observation_pair(
         clone=clone,
         git_executable=str(fence_session["git_executable"]),
         remote_ref=str(fence_session["remote_ref"]),
-        expected_oid=head_sha if outcome == "success" else "",
         descriptor_digest=str(fence_session["descriptor_digest"]),
         effect_process_id=str(fence_session["effect_process_id"]),
+        repository=str(fence_session["repository"]),
     )
-    if outcome == "success" and first["observed_oid"] != head_sha:
+    observed = str(first["observed_remote_oid"])
+    expected = str(fence_session["expected_remote_oid"])
+    if push_returncode == 0 and observed == head_sha:
+        outcome = "success"
+    elif push_returncode != 0 and observed == expected:
+        outcome = "rejected"
+    else:
         outcome = "unknown"
     settle_req = {
         "schema": "claim-mutation-envelope/v2",
         "operation": "settle-legacy-publication",
-        "request_id": str(__import__("uuid").uuid4()),
+        "request_id": str(fence_session["settlement_request_id"]),
         "authority_id": CLAIMS_AUTHORITY_ID,
         "fence_id": fence_session["fence_id"],
         "outcome": outcome,
-        "effect_process_id": fence_session["effect_process_id"],
+        "remote_ref": str(fence_session["remote_ref"]),
+        "observed_remote_oid": observed,
+        "effect_process_identity_digest": str(fence_session["effect_process_identity_digest"]),
         "first_remote_observation": first,
         "second_remote_observation": second,
     }
@@ -1557,6 +1598,7 @@ def cmd_integrate(args: argparse.Namespace) -> int:
                 branch=branch,
                 head_sha=head_sha,
                 verification=verification,
+                repository=repo_slug,
             )
         except RuntimeError as exc:
             return reject(
