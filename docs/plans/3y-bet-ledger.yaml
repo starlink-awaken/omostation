@@ -29785,6 +29785,84 @@ bets:
   - docs/local-compute/compute-mesh-handbook.md
   - .omo/_delivery/ingress/value-evidence.jsonl
   - .omo/_knowledge/retros/BET-Y2Q1-T4-01.md
+- id: BET-Y2Q1-T4-02
+  title: 真实业务流驱动的信号守护常驻与自主分发 (BCOS W5 Signal Daemon & Resident Loop)
+  status: done
+  done_at: '2026-09-21'
+  priority: P1
+  risk_level: L2
+  track: T4-OUTCOME
+  window: Y2Q1
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: true
+  retro: required
+  retro_path: .omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+  appetite: 1 week
+  circuit_breaker: 若守护进程出现非受控崩溃、内存泄漏或重复发射事件，立即中断常驻并退回单步模式。
+  goal: 将邮件与公文信号流完全接入常驻守护网络与事件总线，实现后台自主感知、公文初稿生成、Cockpit待办统一投影与健康观测
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t4-02-signal-daemon-and-resident-loop-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:54b5ab5ccd4556d35b6f80cf55c7f78f022d52eb1fb9599b43379ef1096bda19
+    decision_ref: decision://accepted/BET-Y2Q1-T4-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+          merged_reachable_commit:
+            ref: git://origin/main@ce4f84331ab0645f8da5c31d18030a7dc493ab90
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q1-T4-02.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - mail_daemon.py supports --status diagnosis and graceful daemon loop.
+  - Launchd plist and installer script are available.
+  - SignalIngressed event is emitted to events.jsonl and routed via resident-routes.yaml.
+  - Inbound mail tasks are projected to runtime/cockpit/inbox-tasks.json.
+  - Dedicated tests pass and local gate is green.
+  non_goals:
+  - Do not automatically send outgoing emails without human signature review.
+  - Do not add external heavy broker middleware.
+  verify:
+  - cmd: python3 bin/ssot/mail_daemon.py --status
+    expect: exit 0
+  - cmd: uv run --with pytest --with pyyaml python -m pytest tests/unit/test_mail_daemon_resident_loop.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/mail_daemon.py
+  - bin/ssot/resident-routes.yaml
+  - runtime/cron/com.starlink.mail-daemon.plist
+  - tests/unit/test_mail_daemon_resident_loop.py
+  - docs/superpowers/specs/2026-09-21-t4-02-signal-daemon-and-resident-loop-design.md
+  - docs/superpowers/specs/README.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q1-T4-02.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -29914,7 +29992,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 434
+  total_bets: 435
   windows:
   - Y1Q1
   - Y1Q2
