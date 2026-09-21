@@ -29609,6 +29609,68 @@ bets:
   - docs/superpowers/specs/2026-09-20-t10-170-claims-observation-current-run-projection-design.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-170.md
+- id: BET-Y1Q4-T10-171
+  title: Live value readiness v2-only projection repair
+  status: candidate
+  priority: P1
+  risk_level: L1
+  track: T10-MATURITY
+  window: Y1Q4
+  workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: false
+  retro: required
+  appetite: 4 hours
+  goal: Make the 43191 live value readiness API count only qualifying value-evidence/v2
+    records while preserving legacy history separately.
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-20-t10-171-live-value-readiness-v2-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:1df1f3db72b4343814861c74b688a03edd418e5f0c706158410cfa06824ae9b9
+    decision_ref: decision://accepted/BET-Y1Q4-T10-171
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - The live readiness projection uses v2 validation qualifying count and fails closed
+    to zero when validation is unavailable or invalid.
+  - Legacy qualifying records remain visible as legacy history but never increase business-value
+    readiness.
+  - Focused tests, host-sync check, ledger lint, workflow verification, and default
+    governance gate pass.
+  non_goals:
+  - Do not create, backfill, replay, proxy, or synthesize business-value evidence.
+  - Do not modify Claims Authority state, observation evidence, gitlinks, branch protection,
+    or admission boundaries.
+  - Do not change the 43191 operator contract or value target.
+  - Do not restart the live dashboard server without the separate explicit restart authorization
+    recorded in the closeout evidence.
+  verify:
+  - cmd: PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -B -m pytest
+      -q -p no:cacheprovider tests/unit/test_live_server_value_readiness.py
+    expect: exit 0
+  - cmd: python3 bin/gac/zhixing-host-sync.py check
+    expect: exit 0 before deployment; exit 0 again after restore
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/panorama/assets/host/live_server.py.asset
+  - tests/unit/test_live_server_value_readiness.py
+  - docs/superpowers/specs/2026-09-20-t10-171-live-value-readiness-v2-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-171.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -29738,7 +29800,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 432
+  total_bets: 433
   windows:
   - Y1Q1
   - Y1Q2
