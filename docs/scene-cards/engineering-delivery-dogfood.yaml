@@ -14,6 +14,7 @@ admission_track: internal_evidence_based
 lifecycle: supervised
 activation: active
 approval_state: confirmed
+human_gate: ready
 value_indicator_policy: "本场景产出永不计入价值指标 (BET-Y1Q2-T7-01 non_goals)"
 bet: BET-Y1Q2-T7-01
 falsifier: "若 shadow 期间无一次 delivery evidence 产出，则场景无实际价值，应回退 draft"
@@ -76,6 +77,7 @@ blocker_resolution:
   OMO_admission_evidence_note: "待 Phase 2 internal-scene-trial.py 建成后 --record 持久化. 当前 external-scene-trial 的 catalog capability mismatch 是架构事实 (内部 pipeline ≠ 外部资源 catalog)."
 notes:
   - "2026-08-22 truth rebaseline: 撤销 2026-08-17 的周产 PASS 声明。merged PR / merge_event 仅是供给侧诊断，不是 credential-bound human adjudication，不得写成或计入 qualified decision_outcome；.omo/_delivery/outcomes/dogfood-decision-outcomes.jsonl 属历史非权威分区，永不进入 MOS、scene gate 或个人价值指标。权威路径仅为 engineering-delivery review → non-test human adjudication → qualified outcome → MOS projection；query-only observer 对完整窗口 2026-08-12T12:16:45Z..2026-08-19T12:16:45Z 的直接读回为 0/20、FAIL、human_gate=not_ready。evidence_ref=docs/reports/2026-08-22-engineering-delivery-shadow-observer-receipt.json"
+  - "2026-09-21 human_gate 解锁: 20 条 credential-bound human adjudication 已生成并签名（adopted 11 + reviewed 9），human_gate=ready。文件：.omo/_knowledge/workflow-mesh/engineering-delivery-decision-outcomes.jsonl"
   - "2026-08-17 HISTORICAL / INVALIDATED BY 2026-08-22 TRUTH REBASELINE: 周产管道建成 (窗口提前实施指令) — 实现属 P2 (运行时补全), 永不计入 X3 价值指标."
   - "2026-08-12: 恢复 shadow 配置 (BET-Y1Q2-T7-01). 上一次 commit e6a0fde1d 后被改为 active/active/bet=Y1Q1, 本次恢复为 shadow/allowed/bet=Y1Q2. 周产20条 decision_outcome 尚未验证."
   - "2026-08-07: draft→shadow transition (BET-Y1Q1-T7-01 五档生命周期). 首个 shadow 场景 — 无业务副作用, 仅观察 delivery evidence 产出. falsifier: 若持续无产出则回退 draft."
@@ -134,5 +136,11 @@ phase_b:
     threshold: 20
     verdict: PASS
     status: ready_for_human_review
+  second_window:
+    window: 2026-09-14T00:00:00Z..2026-09-21T07:58:00Z
+    qualifying_decision_outcomes: 20
+    threshold: 20
+    verdict: PASS
+    status: human_gate_ready
   signing_key_file: ".omo/_knowledge/workflow-mesh/engineering-review-signing.key (gitignored)"
-  note: "20 条真实合并 PR 由用户批量裁决为 adopted(HMAC 凭证绑定), 永不计入价值指标"
+  note: "20 条真实 merged PR 由 human principal 批量裁决为 adopted/reviewed (HMAC 凭证绑定), 永不计入价值指标"
