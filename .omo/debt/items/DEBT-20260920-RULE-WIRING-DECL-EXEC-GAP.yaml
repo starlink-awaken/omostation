@@ -1,0 +1,69 @@
+id: DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP
+# 2026-09-19 巡查, check-rule-wiring-coverage.py 输出:
+#   governance-checks: 声明 86 / 未引用候选 42  ← 真实, 来自脚本自身
+#   L0-constraints(sub): 声明 91 / 未引用 60
+#   执行体语料出现规则 id: 200 个
+#   hook-manifest.yaml: 0 个 CR-* 引用  ← 根因: 声明注册表与执行体 ID 词汇完全解耦
+title: >-
+  RULE-WIRING-DECL-EXEC-GAP: governance-checks.yaml 的 42/86 条 CR-* 声明
+  在可执行体语料 (bin/**, .githooks/*, .github/workflows/*, hook-manifest.yaml)
+  零引用 —— 仅能报告候选、无法判 fail (ID 别名未建立为前提)
+dimension: architecture
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.15
+entropy_class: classification
+# 状态: identified —— 非 resolved. 根因是**未建立 ID 别名映射**, 这属于语义判定
+# (三个注册表 ID 词汇互异: governance-checks 的 CR-X4-*, L0-constraints 的 X1-C01/CS-10,
+#  bin executors 的 X2-C05/CR-OMO-SURFACE-01), 工具无法自动区分
+# 『真未接线』(如 CR-DEBT-GATE-ENUM-01) 与 『已实现但换了名字』。
+# 详见 bin/gac/check-rule-wiring-coverage.py docstring (line 23-32).
+# 转为门禁的前提 (owner 决策): 逐条建立别名映射, 然后 --strict 才可接入门禁。
+# 详见 CLAUDE.md §6.6.
+lifecycle_state: identified
+closed_at: null
+close_reason: null
+owner: governance-team
+affected_roots:
+- .omo/_truth/registry/governance-checks.yaml
+- projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
+- .omo/_truth/registry/hook-manifest.yaml
+- bin/gac/check-rule-wiring-coverage.py
+- CLAUDE.md
+evidence_refs:
+# === 1. 来自工具自身的真实输出 (2026-09-19 run) ===
+- "bin/gac/check-rule-wiring-coverage.py:126-129 — inventory() 输出: governance-checks declared=86 unreferenced=42"
+- "bin/gac/check-rule-wiring-coverage.py:127 - '声明 {declared} / 未引用候选 {unreferenced}' 对应真实语料"
+- "bin/gac/check-rule-wiring-coverage.py:135 — executed_ids_in_corpus = 200 (语料里真实出现的规则 id)"
+- "bin/gac/check-rule-wiring-coverage.py:75-76 — EXEC_MANIFEST 加入语料, 但 hook-manifest.yaml 文中 0 个 CR-* 引用 (grep 证实)"
+# === 2. 假阳边界 —— 脚本 docstring 自己声明 ===
+- "bin/gac/check-rule-wiring-coverage.py:23-24 — 'check-l0-constraints.py 对 governance-checks 的 86 个 id 零引用 (用自己的 X2-C05 等命名)'"
+- "bin/gac/check-rule-wiring-coverage.py:26-28 — 无法区分 『真未接线』(a) 与 『已实现但换了名字』(b) 在缺 id 映射表之前"
+- "bin/gac/check-rule-wiring-coverage.py:54-58 — EXEC_CORPUS_GLOBS 仅含 bin/**, 不含 projects/{ecos,omo,...}/** (按设计: 避免自引用)"
+# === 3. 真实例: CR-X1-AGENT-AUDIT 已锚定 (非 42 之一) —— 说明锚定是可能的 ===
+- ".omo/_truth/registry/governance-checks.yaml:330 — CR-X1-AGENT-AUDIT.source_ref=bin/gac/check-external-agent-audit.py (真实执行体)"
+- "projects/ecos/src/ecos/ssb_auth.py:3-7 → l0/ssb/ssb_auth.py:59 compute_signature / :68 verify (x1 Ed25519 信任的真实现锚)"
+- "projects/ecos/src/ecos/ssot/mof/m1/component/COMP-SWARM-ORCHESTRATOR.yaml:14-17 — auth_method: Ed25519-Signatures + governance_standard 指向 x1-swarm-trust-protocol.md"
+# === 4. 已知未实现案例: CR-DEBT-GATE-ENUM-01 ===
+- ".omo/standards/debt-gate-level-enum.md §4 — '实现位置: 待补' (声明自己未实现)"
+- "projects/omo/src/omo/omo_debt_review_queue.py:13 — GATE_ORDER 枚举 {gate,watchlist,none}, debt.yaml 用 P0/P1/P2 违约"
+mitigation_refs: []
+decision_needed: "建立 governance-checks↔L0-constraints↔bin executors↔hook-manifest 的 ID 别名映射 (owner 语义判定; 完成后本项关闭, check-rule-wiring-coverage --strict 入门禁)"
+resolution_evidence: null
+opened_at: '2026-09-20T00:00:00Z'
+last_reviewed_at: '2026-09-20'
+next_review_at: '2027-01-20'
+gate_level: none
+history:
+- at: '2026-09-20T00:00:00Z'
+  action: register
+  note: >-
+    2026-09-19 巡查发现: check-rule-wiring-coverage.py 报 governance-checks 声明
+    86 / 未引用候选 42, hook-manifest.yaml 0 个 CR-* 引用。判定为 identified (非
+    resolved): 42 为真实信号, 但工具含假阳 (ID 词汇解耦), 无法判 fail —— 需 owner
+    建立 ID 别名映射。把 42/86 写为锚点 (非口说), 详见 CLAUDE.md §6.6。x1-AGENT-AUDIT
+    已锚定为反例 (source_ref 真实); CR-DEBT-GATE-ENUM-01 仍真未实现 (P0/P1/P2 值域
+    违约)。
+  actor: governance-agent
