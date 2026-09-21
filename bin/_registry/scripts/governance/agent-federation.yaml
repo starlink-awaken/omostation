@@ -1,0 +1,45 @@
+schema: script-registry/v1
+id: bin/ssot/agent-federation.py
+name: Agent Federation Broker
+category: governance
+owner: governance-team
+description: "B1.1: 跨 agent 任务 broker + load-balancer. discover/plan/dispatch/status/complete/audit 六子命令, 复用 agent profiles + quota-ledger + A2A 消息队列."
+inputs:
+  - type: argument
+    name: --task
+    description: 任务描述 (plan/dispatch)
+  - type: argument
+    name: --agent
+    description: 目标 agent (dispatch, 可省略自动选择)
+  - type: argument
+    name: --workflow
+    description: 所需 workflow ID
+  - type: argument
+    name: --lanes
+    description: 所需写入 lanes
+  - type: argument
+    name: --capabilities
+    description: 所需能力
+  - type: argument
+    name: --dry-run
+    description: 仅打印不发送 A2A 消息
+  - type: argument
+    name: --json
+    description: JSON 输出
+outputs:
+  - type: jsonl
+    description: .omo/state/federation-tasks.jsonl 任务记录
+  - type: jsonl
+    description: .omo/state/a2a-messages.jsonl A2A 消息
+dependencies:
+  - bin/ssot/a2a-adapter.py
+  - .omo/_truth/registry/agent-workflows/profiles/_base.yaml
+  - .agents/skills/multica-squad-ops/quota-ledger.yaml
+triggers: []
+related:
+  - docs/OMOSTATION-FORWARD-PLAN-v2.md
+  - .agents/skills/multica-squad-ops/SKILL.md
+  - .agents/skills/a2a-coordination/SKILL.md
+  - .agents/skills/agent-onboarding/SKILL.md
+maturity: active
+last_reviewed: "2026-09-21"
