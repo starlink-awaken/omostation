@@ -29528,12 +29528,44 @@ bets:
   track: T8-SURFACE
   window: Y2Q2
   appetite: 2 days
-  status: candidate
+  value_indicator_policy: false
+  status: done
+  done_at: '2026-09-21'
+  retro_path: .omo/_knowledge/retros/BET-Y2Q2-T8-04.md
   accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-04-write-integrity-recovery-design.md
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-04-dashboard-write-integrity-design.md
     spec_version: 1.0.0
-    content_digest: sha256:2ffcc58d6ff14a745853a96fbfe61865e171aad558d88c14a50b96ad9955818a
+    content_digest: sha256:72f7f77e1bf672268e9e871a18a0f5be83f84ab547957d0dbf091f49596a2245
     decision_ref: decision://accepted/BET-Y2Q2-T8-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-04.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-04.md
+          merged_reachable_commit:
+            ref: git://origin/main@50819f85ca7fe0478051a84f33d7191bf97e5be0
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-04.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
   goal: 删除 workbench 重复写操作实现；页脚文案诚实披露；新增两个跨板块合成镜头卡。
   done_when:
   - workbench proposals Tab 删除
@@ -29545,12 +29577,9 @@ bets:
   - cmd: grep -c "data-synthesis-card" ~/.local/share/zhixing-dashboard/ecosystem_ui.js
     expect: '>= 1'
   workflow: project-code-change
-  accepted_specifications:
-  - content_digest: sha256:72f7f77e1bf672268e9e871a18a0f5be83f84ab547957d0dbf091f49596a2245
-    decision_ref: decision://accepted/BET-Y2Q2-T8-04
-    spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-04-dashboard-write-integrity-design.md
-    spec_version: 1.0.0
   write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T8-04.md
   - ~/.local/share/zhixing-dashboard/**
   pasw_required: false
   risk_level: L1
