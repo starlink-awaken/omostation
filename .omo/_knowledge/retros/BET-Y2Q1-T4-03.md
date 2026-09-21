@@ -24,7 +24,7 @@ type: retro
 ## Q3 过程中发现的与 plan 不符的事实（打假）
 1. **affected-graph 强制收敛机制**：
    - 启动 workflow claim 时报 `Missing or invalid affected-hash`。根据历史复盘知识库检索，这是工作流引擎要求的层级拓扑感知凭据。
-   - **架构对齐解法**：通过 `python3 bin/gac/affected-graph.py --changed-projects workspace-root cockpit --output .omo/receipts/affected-graph-t4-03.json` 生成拓扑影响收据，并在 claim 时传参 `--affected-hash`，标准合规放行。
+   - **架构对齐解法**：通过 `python3 bin/gac/affected-graph.py --changed-projects workspace-root cockpit --output .omo/_control/affected-graph-t4-03.json` 生成拓扑影响收据，并在 claim 时传参 `--affected-hash`，标准合规放行。
 2. **台账 completion_evidence 状态派生机理**：
    - 台账验证引擎要求未合入状态的 BET 在 `value_indicator_policy=false` 时，若未完成应保持 `overall_state: evaluating`，各轴状态为 `engineering: IN_PROGRESS`、`operational: NOT_PROVEN`、`value: NOT_PROVEN`；而在交付验收合入后派生为 `overall_state: delivery_accepted`。
 3. **子模块解耦与零侵入收益**：
