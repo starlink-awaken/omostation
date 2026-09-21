@@ -29477,7 +29477,44 @@ bets:
   track: T8-SURFACE
   window: Y2Q2
   appetite: 3 days
-  status: candidate
+  value_indicator_policy: false
+  status: done
+  done_at: '2026-09-21'
+  retro_path: .omo/_knowledge/retros/BET-Y2Q2-T8-02.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-02-dashboard-nav-unification-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3f6926a3d707c3dcc3b620e56ef5ddbba1c8fa9b66cb16182207a5f71f5b9c21
+    decision_ref: decision://accepted/BET-Y2Q2-T8-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-02.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-02.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-02.md
+          merged_reachable_commit:
+            ref: git://origin/main@e6da8e17e4b2169623aa786c3187289ee762fc38
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-02.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
   goal: 消除三份漂移导航数组，建立 ZHIXING_NAV_GROUPS 单一权威源；panorama 标注为目标态。
   done_when:
   - strategy_ui.js 导航死代码删除
@@ -29492,6 +29529,9 @@ bets:
   workflow: project-code-change
   write_surfaces:
   - ~/.local/share/zhixing-dashboard/**
+  - docs/superpowers/specs/2026-09-21-t8-02-dashboard-nav-unification-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T8-02.md
   pasw_required: false
   risk_level: L1
   priority: P1
