@@ -3428,6 +3428,276 @@ def test_b1_unknown_settlement_does_not_create_pr(tmp_path, monkeypatch, capsys)
     assert "legacy_publish_unknown" in capsys.readouterr().err
 
 
+def _b1_import_claims_authority():
+    root = Path(__file__).resolve().parents[1]
+    src = str(root / "projects" / "omo" / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from omo.workflow import claims_authority
+
+    return claims_authority
+
+
+def _b1_fence_context():
+    return {
+        "claim_id": "claim-0123456789abcdef",
+        "claim_version": 3,
+        "lease_epoch": 2,
+        "v1_allow_receipt_digest": "sha256:" + "2" * 64,
+        "v1_snapshot_digest": "sha256:" + "3" * 64,
+        "changeset_digest": "sha256:" + "4" * 64,
+        "path_digest": "sha256:" + "5" * 64,
+        "expected_remote_oid": "0" * 40,
+    }
+
+
+def _b1_verification():
+    return {
+        "change_id": "sha256:" + ("e" * 64),
+        "root_head_sha": "a" * 40,
+        "changed_paths": ["file.txt"],
+        "claims_authority_fence_context": _b1_fence_context(),
+    }
+
+
+def _b1_probe_run(remote_state: dict):
+    """Fake lc.run simulating `git ls-remote --exit-code` against remote_state."""
+
+    def fake_run(cmd, **_kwargs):
+        if "ls-remote" in cmd:
+            oid = remote_state.get("oid")
+            if oid is None:
+                return subprocess.CompletedProcess(cmd, 2, "", "")
+            ref = cmd[-1]
+            return subprocess.CompletedProcess(cmd, 0, f"{oid}\t{ref}\n", "")
+        raise AssertionError(f"unexpected command through fence probe seam: {cmd}")
+
+    return fake_run
+
+
+def _b1_broker_call(captured: dict, enter_receipt: dict):
+    def fake_call(verb, request=None):
+        if verb == "status":
+            return {
+                "activation_state": "shadow-active",
+                "descriptor_digest": "sha256:" + ("a" * 64),
+                "sequence": 7,
+                "authority_epoch": 9,
+            }
+        captured[verb] = request
+        if verb == "issue-legacy-fence":
+            return {"fence_id": "fence-contract", "state": "issued"}
+        if verb == "enter-legacy-publishing":
+            return dict(enter_receipt)
+        if verb == "settle-legacy-publication":
+            return {"fence_id": "fence-contract", "state": "settled"}
+        raise RuntimeError(f"unexpected verb {verb}")
+
+    return fake_call
+
+
+_B1_SETTLEMENT_ID = "6f6c7574-0000-4000-8000-000000000001"
+
+
+def test_b1_observation_pair_matches_broker_v2_validator(monkeypatch):
+    ca = _b1_import_claims_authority()
+    monkeypatch.setattr(lc, "run", _b1_probe_run({"oid": None}))
+    first, second = lc.build_remote_observation_pair(
+        clone=Path("/tmp/clone"),
+        git_executable="/usr/bin/git",
+        remote_ref="refs/heads/agent/x--attempt-1",
+        descriptor_digest="sha256:" + ("a" * 64),
+        effect_process_id="integrate:1:abc",
+        repository="owner/repository",
+    )
+    assert set(first) == set(ca._REMOTE_OBSERVATION_FIELDS)
+    assert first["observed_remote_oid"] == "0" * 40
+    request = {"first_remote_observation": first, "second_remote_observation": second}
+    ca._validate_remote_observation_pair(
+        request,
+        descriptor_digest="sha256:" + ("a" * 64),
+        remote_ref="refs/heads/agent/x--attempt-1",
+        observed_remote_oid="0" * 40,
+    )
+
+
+def test_b1_fence_requests_match_broker_contracts(monkeypatch):
+    ca = _b1_import_claims_authority()
+    captured: dict = {}
+    monkeypatch.setattr(lc, "run", _b1_probe_run({"oid": None}))
+    monkeypatch.setattr(lc, "resolve_real_git_executable", lambda: "/usr/bin/git")
+    monkeypatch.setattr(
+        lc,
+        "call_claims_authority",
+        _b1_broker_call(
+            captured,
+            {
+                "fence_id": "fence-contract",
+                "state": "publishing",
+                "settlement_request_id": _B1_SETTLEMENT_ID,
+            },
+        ),
+    )
+    context = _b1_fence_context()
+    session = lc.enter_legacy_publish_fence(
+        clone=Path("/tmp/clone"),
+        branch="agent/x--attempt-1",
+        head_sha="a" * 40,
+        verification=_b1_verification(),
+        repository="owner/repository",
+    )
+    assert session["settlement_request_id"] == _B1_SETTLEMENT_ID
+
+    issue = captured["issue-legacy-fence"]
+    assert set(issue) == {
+        "schema",
+        "request_id",
+        "authority_id",
+        "operation",
+        "claim_id",
+        "claim_version",
+        "lease_epoch",
+        "v1_allow_receipt_digest",
+        "v1_snapshot_digest",
+        "changeset_digest",
+        "path_digest",
+        "head_oid",
+        "descriptor_digest",
+        "remote_ref",
+        "expected_remote_oid",
+        "first_remote_observation",
+        "second_remote_observation",
+    }
+    assert issue["claim_id"] == context["claim_id"]
+    assert issue["claim_version"] == context["claim_version"]
+    assert issue["lease_epoch"] == context["lease_epoch"]
+    assert issue["v1_allow_receipt_digest"] == context["v1_allow_receipt_digest"]
+    assert issue["v1_snapshot_digest"] == context["v1_snapshot_digest"]
+    assert issue["path_digest"] == context["path_digest"]
+    assert issue["head_oid"] == "a" * 40
+    assert issue["expected_remote_oid"] == "0" * 40
+    ca._validate_remote_observation_pair(
+        issue,
+        descriptor_digest=issue["descriptor_digest"],
+        remote_ref=issue["remote_ref"],
+        observed_remote_oid=issue["expected_remote_oid"],
+    )
+
+    enter = captured["enter-legacy-publishing"]
+    assert set(enter) == {
+        "schema",
+        "request_id",
+        "authority_id",
+        "operation",
+        "fence_id",
+        "v1_snapshot_digest",
+        "claim_version",
+        "lease_epoch",
+        "remote_ref",
+        "expected_remote_oid",
+        "first_remote_observation",
+        "second_remote_observation",
+    }
+    assert enter["fence_id"] == "fence-contract"
+    ca._validate_remote_observation_pair(
+        enter,
+        descriptor_digest=issue["descriptor_digest"],
+        remote_ref=enter["remote_ref"],
+        observed_remote_oid=enter["expected_remote_oid"],
+    )
+
+    # Simulate the successful push landing head on the remote before settlement.
+    monkeypatch.setattr(lc, "run", _b1_probe_run({"oid": "a" * 40}))
+    settled = lc.settle_legacy_publish_fence(
+        clone=Path("/tmp/clone"),
+        fence_session=session,
+        push_returncode=0,
+        head_sha="a" * 40,
+    )
+    assert settled["_local_outcome"] == "success"
+    settle = captured["settle-legacy-publication"]
+    assert set(settle) == {
+        "schema",
+        "request_id",
+        "authority_id",
+        "operation",
+        "fence_id",
+        "outcome",
+        "remote_ref",
+        "observed_remote_oid",
+        "effect_process_identity_digest",
+        "first_remote_observation",
+        "second_remote_observation",
+    }
+    assert settle["request_id"] == _B1_SETTLEMENT_ID
+    assert settle["observed_remote_oid"] == "a" * 40
+    ca._validate_remote_observation_pair(
+        settle,
+        descriptor_digest=issue["descriptor_digest"],
+        remote_ref=settle["remote_ref"],
+        observed_remote_oid=settle["observed_remote_oid"],
+        effect_process_identity_digest=settle["effect_process_identity_digest"],
+    )
+
+
+def test_b1_settle_rejected_outcome_uses_expected_remote_oid(monkeypatch):
+    captured: dict = {}
+    monkeypatch.setattr(lc, "run", _b1_probe_run({"oid": None}))
+    monkeypatch.setattr(lc, "resolve_real_git_executable", lambda: "/usr/bin/git")
+    monkeypatch.setattr(
+        lc,
+        "call_claims_authority",
+        _b1_broker_call(
+            captured,
+            {
+                "fence_id": "fence-contract",
+                "state": "publishing",
+                "settlement_request_id": _B1_SETTLEMENT_ID,
+            },
+        ),
+    )
+    session = lc.enter_legacy_publish_fence(
+        clone=Path("/tmp/clone"),
+        branch="agent/x--attempt-1",
+        head_sha="a" * 40,
+        verification=_b1_verification(),
+        repository="owner/repository",
+    )
+    settled = lc.settle_legacy_publish_fence(
+        clone=Path("/tmp/clone"),
+        fence_session=session,
+        push_returncode=1,
+        head_sha="a" * 40,
+    )
+    assert settled["_local_outcome"] == "rejected"
+    settle = captured["settle-legacy-publication"]
+    assert settle["observed_remote_oid"] == "0" * 40
+    assert settle["outcome"] == "rejected"
+
+
+def test_b1_missing_fence_context_fails_closed_before_broker(monkeypatch):
+    invoked: list = []
+
+    def spy_call(verb, request=None):
+        invoked.append(verb)
+        raise AssertionError("broker must not be contacted without a fence context")
+
+    monkeypatch.setattr(lc, "call_claims_authority", spy_call)
+    monkeypatch.setattr(lc, "resolve_real_git_executable", lambda: "/usr/bin/git")
+    try:
+        lc.enter_legacy_publish_fence(
+            clone=Path("/tmp/clone"),
+            branch="agent/x--attempt-1",
+            head_sha="a" * 40,
+            verification={"change_id": "sha256:" + ("e" * 64), "root_head_sha": "a" * 40, "changed_paths": ["f"]},
+            repository="owner/repository",
+        )
+        raise AssertionError("fence must fail closed without a broker observation context")
+    except RuntimeError as exc:
+        assert "LEGACY_FENCE_CONTEXT_UNAVAILABLE" in str(exc)
+    assert invoked == []
+
+
 def test_b1_second_fence_replay_is_blocked(monkeypatch):
     calls = {"issue": 0}
 
@@ -3445,36 +3715,18 @@ def test_b1_second_fence_replay_is_blocked(monkeypatch):
                 raise RuntimeError("LEGACY_FENCE_REPLAY")
             return {"fence_id": "fence-once", "state": "issued"}
         if verb == "enter-legacy-publishing":
-            return {"fence_id": "fence-once", "state": "publishing"}
+            return {"fence_id": "fence-once", "state": "publishing", "settlement_request_id": _B1_SETTLEMENT_ID}
         raise RuntimeError(f"unexpected {verb}")
 
     monkeypatch.setattr(lc, "call_claims_authority", fake_call)
     monkeypatch.setattr(lc, "resolve_real_git_executable", lambda: "git")
-    monkeypatch.setattr(
-        lc,
-        "build_remote_observation_pair",
-        lambda **kwargs: (
-            {
-                "schema": "claims-remote-observation/v1",
-                "remote_ref": kwargs["remote_ref"],
-                "observed_oid": "",
-                "digest": "sha256:" + ("d" * 64),
-                "descriptor_digest": kwargs["descriptor_digest"],
-            },
-            {
-                "schema": "claims-remote-observation/v1",
-                "remote_ref": kwargs["remote_ref"],
-                "observed_oid": "",
-                "digest": "sha256:" + ("d" * 64),
-                "descriptor_digest": kwargs["descriptor_digest"],
-            },
-        ),
-    )
+    monkeypatch.setattr(lc, "run", _b1_probe_run({"oid": None}))
     first = lc.enter_legacy_publish_fence(
         clone=Path("/tmp"),
         branch="agent/x--attempt-1",
         head_sha="a" * 40,
-        verification={"change_id": "sha256:" + ("e" * 64), "root_head_sha": "a" * 40, "changed_paths": ["f"]},
+        verification=_b1_verification(),
+        repository="owner/repository",
     )
     assert first["fence_id"] == "fence-once"
     try:
@@ -3482,7 +3734,8 @@ def test_b1_second_fence_replay_is_blocked(monkeypatch):
             clone=Path("/tmp"),
             branch="agent/x--attempt-1",
             head_sha="a" * 40,
-            verification={"change_id": "sha256:" + ("e" * 64), "root_head_sha": "a" * 40, "changed_paths": ["f"]},
+            verification=_b1_verification(),
+            repository="owner/repository",
         )
         raise AssertionError("second fence must fail")
     except RuntimeError as exc:
