@@ -1,11 +1,11 @@
 ---
 name: git-discipline
-description: "多 agent 并行下的 git 纪律：隔离工作树、交付三段式（add/commit/tag）、逃生口、子模块、僵尸锁、合并型交付补 claim、agent 自身 git 写能力自检。当你要提交代码、切换分支、碰子模块、做分支合并、遇到门禁拦截或 claim 冲突、或发现自己的文件消失 / git 行为诡异时使用。Triggers on: git commit, git merge, git checkout, 合并, 分支被切走, 文件消失, 提交丢了, claim 失败, 锁被占, index.lock, Operation not permitted, no-verify, 门禁拦截, D3, swarm-d3, submodule, 子模块, worktree, PASW, swarm-git, escape, unbound variable。"
+description: "多 agent 并行下的 git 纪律：隔离工作树、交付三段式（add/commit/tag）、逃生口、子模块、僵尸锁、合并型交付补 claim、agent 自身 git 写能力自检。当你要提交代码、切换分支、碰子模块、做分支合并、遇到门禁拦截或 claim 冲突、或发现自己的文件消失 / git 行为诡异 / **命令成功但没做事**时使用。Triggers on: git commit, git merge, git checkout, 合并, 分支被切走, 文件消失, 提交丢了, claim 失败, 锁被占, index.lock, Operation not permitted, no-verify, 门禁拦截, D3, swarm-d3, submodule, 子模块, worktree, PASW, swarm-git, escape, unbound variable, ff-only, fast-forward, 同步后没生效, HEAD 没动, 分叉, diverge, git add -A, 裹入, stash, update-ref, reflog。"
 
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-21
 type: ssot
 owner: agent-skills-team
-last_updated: 2026-09-03
+last_updated: 2026-09-21
 ---
 
 # Git Discipline — 多 Agent 并行纪律
@@ -348,3 +348,117 @@ push 前必查：diff 中出现**大量删除且非你删的** → 先 rebase �
 complete/lint 等 gate 工具报错时：先本地最小复现（手动 git 命令对照），
 确认是工具 bug 而非交付问题后修工具（T4-07 complete 子串匹配 bug 实录——
 waiver 注释文本触发误判）。工具 bug 修复与交付同 PR 记录，不静默绕过。
+
+---
+
+## 2026-09-21 增补：「看起来成功了」的三类静默失效（本人一天内连踩）
+
+前面几节讲的是**别人的操作毁掉你的工作**（分支被切走、假 diff）。本节讲另一种更难的
+情况：**你自己的 git 命令返回 0、无报错、输出正常，但实际没做事**。
+
+它们的共同点是失败发生在 git 的**建议性输出**里，而不是退出码里。所以只要你依赖
+`&&` 链或 `2>/dev/null`，就会一路误判下去。2026-09-21 我一天内因此**误读了 4 次**。
+
+### A. `merge --ff-only` 在分叉态静默失败 ★ 最隐蔽
+
+```bash
+git merge --ff-only origin/main   # 分叉时: 只打印 hint, 不报错
+echo $?                            # ← 你以为是 0
+```
+
+真实行为（2026-09-21 四态实测，非推断）：
+
+| 状态 | 领先/落后 | 输出 | 退出码 | HEAD |
+|---|---|---|---|---|
+| 可快进 | 0/1 | `Updating a..b` + `Fast-forward` | 0 | **移动** |
+| 已同步 | 0/0 | `Already up to date.` | 0 | 不动（正确） |
+| **仅领先** | 1/0 | `Already up to date.` | **0** | 不动 ← 陷阱 |
+| **分叉** | 1/1 | `hint: Diverging…` + `fatal: Not possible to fast-forward, aborting.` | **128** | 不动 |
+
+**两个独立的坑，别混为一谈**：
+
+1. **仅领先态 exit=0 且输出 `Already up to date.`** —— 与"已同步"**逐字相同**，但
+   你的本地有未推送提交。把它读成"我已经最新了"是错的：你脚下多了别人没有的东西，
+   而你以为地基是共享的。
+2. **分叉态确实 exit=128，但退出码会被管道吞掉** —— 这是今天 4 次误读的**真机制**：
+
+```bash
+git merge --ff-only origin/main 2>&1 | tail -1   # 显示 fatal: ... 但管道 exit=0
+git merge --ff-only origin/main >/dev/null 2>&1 && echo "同步成功"   # 永远打印成功
+```
+
+> 我起初把这条写成"git 不报错"，**那是错的** —— git 报了（128 + fatal），是我用
+> `| tail -1` 和 `>/dev/null` 把报告扔了。**别把"我没看退出码"归因成"工具没报错"**；
+> 这个归因错误会让人去修工具，而真正该修的是自己的调用方式。
+
+分叉的成因往往是**另一个 agent 直接在共享工作区的 main 上提交**（见下 B）。后果是全局性的：
+
+> 共享工作区的 `main` 一旦领先 `origin/main`，**所有** agent 的
+> `git merge --ff-only origin/main` 从此全部静默失效 —— 各方都以为拿到了最新代码，
+> 实际停在旧提交上。2026-09-21 实证：该状态持续近 1 小时无人察觉，期间我反复
+> "同步"却看不到自己的改动生效，还误判成工具坏了。
+
+**纪律**：同步后**必须验证 HEAD 真的动了**，且**不要让管道吃掉退出码**：
+
+```bash
+before=$(git rev-parse HEAD)
+git merge --ff-only origin/main        # ← 不要 | tail / 不要 >/dev/null
+rc=$?                                   # ← 紧跟着一行取码, 中间不要插命令
+[ "$(git rev-parse HEAD)" = "$before" ] && echo "⚠️ HEAD 未移动 (rc=$rc)"
+git rev-list --count origin/main..HEAD  # >0 = 本地领先, 必须停下来查 (即使 rc=0)
+```
+
+**判读表**：`rc=0 且 HEAD 动` = 正常快进｜`rc=0 且 HEAD 没动 且 领先=0` = 本就同步｜
+`rc=0 且 HEAD 没动 且 领先>0` = **仅领先陷阱**｜`rc≠0` = 分叉，停下来。
+
+**该纪律块实测有效**（隔离仓库四态验证，非纸面）：
+- 仅领先态 → `rc=0` 但 `⚠️ HEAD 未移动` + `领先: 1` **仍触发警告**（只看 exit 必漏）
+- 真分叉态 → `rc=128` + 警告 + `fatal: Not possible to fast-forward` → 判读表指向"停下来"
+
+**判据**：`git rev-list --count origin/main..HEAD` 是这条链路上唯一可靠的体检。
+非 0 就**不要继续工作** —— 你脚下的地基不是你以为的地基。
+
+### B. 共享工作区禁止 `git add -A`（会裹入他人 45 个文件）
+
+`git add -A` 在共享工作区里裹进的是**所有 agent 的未提交改动**，不只是你的。
+2026-09-21 实证：我一次 `git add -A` 裹入 45 个文件，含他人的
+`.omo/_control/governance-data.json`、十几个 retro 文档、以及**别人尚未落库的
+新脚本**（那两个脚本后来由对方经 #4087 正常提交 —— 我的裹入纯属多余，却让对方
+的工作一度挂在我的提交上）。
+
+**纪律**：
+1. 一律**显式列路径**：`git add <file1> <file2>`（我今天的每个 PR 都这么做，
+   只有这一次图省事）
+2. 提交前 `git diff --cached --stat` 核对**文件数与自己的改动面一致**
+3. 裹入后发现 → 立即 `git reset --mixed` 还原索引，逐路径重加
+
+### C. 不要在共享工作区 stash / update-ref（会动到别人的地基）
+
+今天因此连出两件事：
+
+- `git stash` 把**别人未提交的改动**一起卷走，我随后 `git stash drop` 销毁了它。
+  侥幸没丢（内容仍在别处），但这是**运气不是流程**。
+- `git update-ref refs/heads/main origin/main` 用于"强行同步" —— 我在没检查分叉
+  的情况下执行，把**另一个 agent 未推送的提交从分支 ref 上移走了**。
+
+**纪律**：
+- 共享工作区**只读**；要动 git 状态就在自己的 worktree 里
+- 需要"同步"时用 A 节的验证式流程，不要用 `update-ref` 强行搬 ref
+- 万一搬了：`git reflog` 一定能找回来，**立刻**钉扎（`refs/wip/`）并建可见分支
+  `recover/<name>`，不要等 gc。今天的恢复就是这样完成的
+
+### D. 先量化，再相信自己的判断（跨节通用）
+
+今天我被自己的直觉打脸 6 次，全部发生在**"我觉得这个改动很简单"**的时刻：
+
+| 我的判断 | 实测 |
+|---|---|
+| "把门禁扫向真实注册表就行" | 会误报 19 个真实项 —— 必须先做使能修复 |
+| "cockpit 是跨仓消费者，要小心" | 它 `required=False` 优雅降级，根本不用改 |
+| "这些 exec-*.json 是测试垃圾" | 是**测试污染入仓证据面**的症状 |
+| "这个指针 bump 该做" | 已被另一个 PR 覆盖，做了就是回退风险 |
+| "stash 掉改动就能验证基线" | 已提交的不受 stash 影响 —— 验证无效 |
+| "有 8 个 freshness 守卫，够了" | 没有一个覆盖 `.omo/` |
+
+**纪律**：改任何东西前，先跑一次**只读的量化**（数一下会影响多少对象）；
+验证"是否预存在"时，**不要用 stash 来还原已提交的改动**。
