@@ -45,3 +45,9 @@ routes:
     topic: mesh:workflow:execution
     action: execution_agent
     safe: false
+  # 外部业务信号感知规则 (BET-Y2Q1-T4-02)
+  - event_type: SignalIngressed
+    topic: mesh:signal:mail
+    action: knowledge_sediment
+    safe: true
+
