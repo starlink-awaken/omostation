@@ -29946,6 +29946,164 @@ bets:
   - docs/superpowers/specs/README.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q1-T4-03.md
+- id: BET-Y2Q2-T5-01
+  title: team-mailbox 插件骨架与 mailbox 收发原语
+  track: T5-ORCH
+  window: Y2Q2
+  appetite: 1 week
+  status: candidate
+  goal: 为多 agent 协作提供文件队列 mailbox 收发原语，落地 team-mailbox 插件骨架并注册到 opencode 配置。
+  done_when:
+  - ~/.config/opencode/plugin/team-mailbox 插件目录存在且含入口与队列原语
+  - 发送与接收往返测试通过
+  - opencode.json 注册 team-mailbox 插件
+  verify:
+  - cmd: test -d ~/.config/opencode/plugin/team-mailbox
+    expect: exit 0
+  - cmd: cd ~/.config/opencode/plugin/team-mailbox && bun test
+    expect: exit 0
+  - cmd: grep -c "team-mailbox" ~/.config/opencode/opencode.json
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.config/opencode/plugin/team-mailbox/**
+  - ~/.config/opencode/opencode.json
+  - docs/superpowers/specs/2026-09-21-t5-01-team-mailbox-primitives-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T5-01.md
+  pasw_required: false
+  risk_level: L2
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals:
+  - 不做持久化投递语义（由 T5-02 承接）
+  - 不做多 agent 编排协议（由 T5-03 承接）
+  circuit_breaker: bun test 基线失败则先修插件骨架，不向 opencode.json 注册
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t5-01-team-mailbox-primitives-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:bac5e387ed4ecfe4181bc95f536b9bcae1700bb6e9018c66d4bb9957239e4ecb
+    decision_ref: decision://accepted/BET-Y2Q2-T5-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q2-T5-02
+  title: team-mailbox 持久化投递与回退语义
+  track: T5-ORCH
+  window: Y2Q2
+  appetite: 1 week
+  status: candidate
+  goal: 在收发原语之上实现 durable 投递语义，覆盖重试退避、dead-letter 与回退路径。
+  depends_on:
+  - BET-Y2Q2-T5-01
+  done_when:
+  - 投递失败按退避策略重试并最终进入 dead-letter
+  - 回退路径可用且有测试覆盖
+  - 持久化语义测试全部通过
+  verify:
+  - cmd: cd ~/.config/opencode/plugin/team-mailbox && bun test
+    expect: exit 0
+  - cmd: grep -r -c "dead_letter" ~/.config/opencode/plugin/team-mailbox
+    expect: exit 0
+  - cmd: grep -c "team-mailbox" ~/.config/opencode/opencode.json
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.config/opencode/plugin/team-mailbox/**
+  - docs/superpowers/specs/2026-09-21-t5-02-team-mailbox-durability-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+  pasw_required: false
+  risk_level: L2
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals:
+  - 不做多 agent 编排协议（由 T5-03 承接）
+  - 不改收发原语公开接口
+  circuit_breaker: 回退语义测试失败则保持 L1 能力描述，不对外宣称 durable
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t5-02-team-mailbox-durability-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:06939a7f9619a97772c032fd10c52c4eacbf3d281e27d86cc64a091ebc389cf8
+    decision_ref: decision://accepted/BET-Y2Q2-T5-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q2-T5-03
+  title: team-mailbox fork-join 多 agent 编排
+  track: T5-ORCH
+  window: Y2Q2
+  appetite: 1 week
+  status: candidate
+  goal: 基于持久化 mailbox 实现 fork-join 编排，支撑多 agent 任务分发与结果汇聚。
+  depends_on:
+  - BET-Y2Q2-T5-02
+  done_when:
+  - fork 分发与 join 汇聚端到端跑通
+  - 任务认领状态机接入 mailbox
+  - 编排测试全部通过
+  verify:
+  - cmd: cd ~/.config/opencode/plugin/team-mailbox && bun test
+    expect: exit 0
+  - cmd: grep -r -c "fork_join" ~/.config/opencode/plugin/team-mailbox
+    expect: exit 0
+  - cmd: grep -c "team-mailbox" ~/.config/opencode/opencode.json
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.config/opencode/plugin/team-mailbox/**
+  - docs/superpowers/specs/2026-09-21-t5-03-team-mailbox-fork-join-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+  pasw_required: false
+  risk_level: L2
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals:
+  - 不碰投递语义内部实现
+  - 不引入跨机同步
+  circuit_breaker: join 汇聚正确性不达标则退回单任务直发，不开放 fork-join
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-21-t5-03-team-mailbox-fork-join-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:af55a6b25ad944ed38fe1b48bf0ec1ffd89296c98b632f40972de02b0710af6d
+    decision_ref: decision://accepted/BET-Y2Q2-T5-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30075,7 +30233,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 436
+  total_bets: 439
   windows:
   - Y1Q1
   - Y1Q2
