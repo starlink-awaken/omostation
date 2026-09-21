@@ -609,9 +609,7 @@ def test_receipt_is_exclusive_temp_only_canonical_and_redacted(tmp_path: Path, m
         assert payload["provider_attempt"]["transport"] == "codex_exec"
         assert payload["provider_attempt"]["route_ref"] is None
         assert payload["provider_attempt"]["state"] == "succeeded"
-        assert payload["provider_attempt"]["authority"]["workspace_admission"] == (
-            "verified_independent_clone"
-        )
+        assert payload["provider_attempt"]["authority"]["workspace_admission"] == ("verified_independent_clone")
         assert payload["baseline_digest"].startswith("sha256:")
         assert payload["post_digest"].startswith("sha256:")
         assert payload["patch_digest"].startswith("sha256:")
@@ -1489,6 +1487,13 @@ def test_worker_adapter_reconciles_both_planes_and_appends_real_origin_ack(
         "step_run_ids": [step_run_id],
         "capabilities": ["verification"],
         "policy_digest": "policy-real-mesh-ack",
+        # record_step_dispatch 要求 admission.request_identity 存在且与 packet 一致
+        # (非 exact 路径只需 packet_id / packet_hash; 见 worker_lifecycle.py)。
+        "request_identity": {
+            "packet_id": packet["packet_id"],
+            "packet_hash": prepared["work_packet_hash"],
+            "instruction_binding": prepared["instruction_binding"],
+        },
         "issued_at": now.isoformat(),
         "expires_at": (now + __import__("datetime").timedelta(hours=1)).isoformat(),
     }
@@ -1517,6 +1522,7 @@ def test_worker_adapter_reconciles_both_planes_and_appends_real_origin_ack(
         worker_id="codex",
         step_run_id=step_run_id,
         admission_id=admission_id,
+        policy_digest=grant["policy_digest"],
         packet_id=packet["packet_id"],
         packet_hash=prepared["work_packet_hash"],
         instruction_binding=prepared["instruction_binding"],

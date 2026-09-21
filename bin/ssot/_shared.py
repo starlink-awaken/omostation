@@ -62,6 +62,35 @@ def scene_metrics_db_path(root: Path | None = None) -> Path:
     return (root or ROOT) / "data" / "scene-metrics.db"
 
 
+def scene_outcome_dir(scene_id: str, root: Path | None = None) -> Path:
+    """场景 outcome 记录的落盘目录 — **入仓证据面的唯一合法解析入口**.
+
+    `.omo/_delivery/scene-outcomes/` 被 .gitignore 显式反忽略 (`!` 规则, 由
+    #4023 引入) + `.gitkeep` 占位 —— 它是**要入仓的 emission 目标**, 即价值
+    证据面。故测试夹具写进这里 = 伪造证据 (与 2026-09-18 校准库被
+    gate-test-scene 夹具污染同构)。
+
+    优先级 (与 scene_metrics_db_path 一致):
+      1. 环境变量 ``SCENE_OUTCOME_DIR`` (测试隔离 / ops 迁移)
+      2. **pytest 上下文 → 进程级临时目录** (兜底: 生产证据面永不被测试写)
+      3. 默认 ``<root>/.omo/_delivery/scene-outcomes/<scene_id>``
+    """
+    import os
+    import sys
+    import tempfile
+
+    base = os.environ.get("SCENE_OUTCOME_DIR")
+    if base:
+        return Path(base).expanduser().resolve() / scene_id
+    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("PYTEST_VERSION"):
+        fallback = (Path(tempfile.gettempdir()) / "scene-outcomes-pytest"
+                    / f"pid{os.getpid()}")
+        print(f"[scene-outcomes] pytest 上下文: 落盘改写为 {fallback} "
+              f"(保护入仓证据面; 如需指定请设 SCENE_OUTCOME_DIR)", file=sys.stderr)
+        return fallback / scene_id
+    return (root or ROOT) / ".omo" / "_delivery" / "scene-outcomes" / scene_id
+
+
 # ── YAML ─────────────────────────────────────────────────────────────
 
 

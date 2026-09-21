@@ -5,6 +5,22 @@ owner: governance-team
 last-reviewed: 2026-09-21
 ---
 
+# 2026-09-21 复审 (X2-C05 ≤14d; 上次 2026-09-06 已 15d → 该 L0 检查今日对所有 PR 失败)
+# 复审方法: 逐项核对 47 项 assets 的 `ref` 与文件系统实况 + 各自写入方 + 消费者。
+#   - 37/47 ref 存在 ✓
+#   - 5 项不存在但**有活跃写入方** (运行时按需创建, 且均被 .gitignore 忽略):
+#       OMO-LOCKS (.omo/locks/) · OMO-WORKERS · OMO-TESTS · OMO-CAPABILITIES ·
+#       OMO-RUN-CONTINUATION → 声明合法 (运行时面), 保留。
+#   - ⚠️ 5 项**既无写入方也无消费者 (0 处引用)** —— 声明了、执行层为空:
+#       OMO-GENERATED (.omo/_generated/)   ← 且未被 gitignore (声明为可跟踪, 却从不出现)
+#       OMO-PITCHES (.omo/pitches/)        ← 同上
+#       OMO-REPORTS-RUNTIME (.omo/reports/)
+#       OMO-BETS-INDEX (.omo/bets.json)
+#       OMO-TASKS-INDEX-JSON (.omo/tasks.json)
+#     本次**不删除**这些条目: 静默改 SSOT 注册表会让缺口继续不可见。
+#     已登记为债务项 .omo/debt/items/OMO-SURFACES-ZOMBIE-ASSETS.yaml, 待 owner
+#     决策 (补齐写入方 vs 正式摘除声明)。
+
 version: "1.1"
 status: active
 updated_at: "2026-06-17T00:00:00Z"

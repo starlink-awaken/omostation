@@ -181,6 +181,45 @@ For task-level routing (BOS, governance, ports, ADRs, main landing, scene admiss
 Rules carry lifecycles (`added_at`/`review_before`/`justification` in `governance-checks.yaml::gac.rules`). Check health: `python3 bin/gac/rules-lifecycle.py` (weekly cron; expired → subtraction candidates). Human authority layers L1-L5 (charter/context/decision/constraints/unknown) are orthogonal — see `.omo/_knowledge/decisions/0431-anti-corrosion-five-layer-framework.md`. BOS: `bos://governance/anti-corrosion/*`. MCP: `rules_lifecycle` tool.
 
 
+## 6.6 Declaration vs Execution vs Verification (2026-09-19)
+
+今天反复撞上的主题："声明说做了, 执行层是空的, 而没人校验"。以下是该陷阱的**操作化判别与防线**:
+
+1. **`declare ≠ execute` —— 判别锚点落在哪**
+   任何标准/规则是否落地, 以**锚定实现**为判据, 而非声明存在。判定路径:
+     - 有声明 (governance-checks.yaml / debt.yaml / component spec) → ✅
+     - 有 `source_ref` / `realized_by` 指向**真实可读**的文件/函数 → ✅
+     - 在 `bin/**`/`.githooks/*`/`.github/workflows/*.yml`/`hook-manifest.yaml` **可执行体语料**里, 该 id/锚点可查 → ✅
+     - 否则 → **DECL_EXEC_GAP**, 不是"执行了却叫不出名字"。
+   坏样 (今天被打脸): 我以为 `src/a2a/server/a2a.py`/`transport.py` 实现了
+   x1-swarm —— 那两个路径**根本不存在**; x1 的真实现锚是
+   `projects/ecos/src/ecos/l0/ssb/ssb_auth.py` +
+   `COMP-SWARM-ORCHESTRATOR.yaml` (`auth_method: Ed25519-Signatures`,
+   `governance_standard: .omo/standards/x1-swarm-trust-protocol.md`) +
+   `L0-constraints.yaml::X1-C01/C02`。**声明前先验证路径/函数是否存在。**
+
+2. **核验工具清单 (优先级顺序)**
+   - `python3 bin/gac/check-rule-wiring-coverage.py` —— 扫描声明 id 在**否
+     出现在可执行体语料**里 (报告型, exit 0, 42/86 的 CR-* id 为零引用候选
+     是真实信号)。**已知假阳**: 三个注册表(id 词汇)互不相同,
+     `check-l0-constraints.py` 用 `X2-C05` 等别名; 不能判 fail 只能候选。
+   - `python3 bin/ssot/verify.py` —— 债务 evidence 扫**实际注册表目录**
+     (`.omo/debt/items/`), 缺 evidence → exit 1 (非静默 pass)。⚠ 判据:
+     evidence_ref 应为 `path`**(文件存在)** 或 `text`**(锚定字符串)**。
+   - `python3 bin/ssot/current-state-coherence.py` —— 快照与目录实验一致。
+   - `make doc-freshness` / `check-expiry-radar.py` —— `last-reviewed` 等**不得超越今日(UTC)**, 逾期 → not-proven。
+
+3. **从候选到门禁 (owner 决策)**
+   rule-wiring-coverage 本可成为门禁, 前提是把三个注册表的 id 建立**别名映射
+   (governance-checks↔L0-constraints↔bin executors↔hook-manifest)**。这是
+   **语义判定, 不是工具可自动完成** —— 见 `DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP.md`。
+
+4. **反模式勿碰**
+   - 日期农场 (bulk bump `last-reviewed`) → 视为证据伪造, 回退。
+   - `grep gap` → 同名不同义字段 → 下跨仓结论 → 必须**逐处读上下文**。
+   - 改子模块/跨仓消费者前 → 列真实消费者 (`debt.yaml`声明 / 各子仓 `source_ref`)
+     → 逐一验改动后行为。
+
 ## 7. Closeout
 
 ```bash

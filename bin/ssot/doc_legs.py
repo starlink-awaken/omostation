@@ -31,6 +31,19 @@ from typing import Any
 
 _ROOT = Path(__file__).resolve().parents[2]
 
+
+def _scene_outcome_dir(scene_id: str) -> Path:
+    """outcome 落盘目录 — 委托 _shared (唯一合法解析入口).
+
+    先补 sys.path 再导入: 不靠调用方 import 方式碰运气 —— 实测非常规导入下
+    ImportError 会静默退回硬编码路径, 保护直接失效 (#3989 同型教训)。
+    """
+    _here = str(Path(__file__).resolve().parent)
+    if _here not in sys.path:
+        sys.path.insert(0, _here)
+    from _shared import scene_outcome_dir
+    return scene_outcome_dir(scene_id, _ROOT)
+
 # ── 任务类分组 (按 journey 名 / 卡片 trigger) ─────────────────────
 
 TASK_CLASS_GROUPS = {
@@ -326,8 +339,13 @@ def record_result(ctx_variables: dict, *, dry_run: bool = False) -> dict[str, An
     record["record_hash"] = hashlib.sha256(payload).hexdigest()[:16]
 
     # 写入 outcome 记录目录 (引擎后续可消费; 不替代 _record_auto_outcome)
+    # 落盘路径走 _shared.scene_outcome_dir —— 该目录是**入仓证据面**
+    # (.gitignore 显式反忽略 + .gitkeep), 故必须经统一解析入口:
+    # 支持 SCENE_OUTCOME_DIR 覆盖, 且 pytest 上下文自动改写为临时目录,
+    # 防测试夹具污染价值证据 (2026-09-19 实证: scene-documents-test 夹具
+    # 曾被写进该目录)。
     if not dry_run:
-        out_dir = _ROOT / ".omo" / "_delivery" / "scene-outcomes" / (ctx_variables.get("scene_id") or "unknown")
+        out_dir = _scene_outcome_dir(ctx_variables.get("scene_id") or "unknown")
         out_dir.mkdir(parents=True, exist_ok=True)
         run_id = ctx_variables.get("run_id", "unknown")
         (out_dir / f"{run_id}.json").write_text(
