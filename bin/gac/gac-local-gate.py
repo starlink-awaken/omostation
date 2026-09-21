@@ -503,8 +503,8 @@ if not any(gate.get("id") == "task-field-governance" for gate in GATES_LIST):
             "id": "task-field-governance",
             "command": ["bin/gac/check-task-field-governance.py"],
             "note": "TASK-YAML-RULES 规则 5 守卫: 阻断自加非规范 status 字段回归 "
-                    "(OPC P5-P7 事故复演)。gate_status 枚举守卫 + readiness_status/"
-                    "cadence_status 禁入。",
+            "(OPC P5-P7 事故复演)。gate_status 枚举守卫 + readiness_status/"
+            "cadence_status 禁入。",
         }
     )
 
@@ -553,12 +553,19 @@ _DEFAULT_CHECK_TIMEOUTS = {
     # (2026-09-11 CI 实证, PR #3518, 与 PR #3436 同一类问题同一个修法)
     "pitfall-gat006-check": 30,
 }
-_CHECK_TIMEOUTS = {
-    g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"], 15)) for g in GATES_LIST
-}
+_CHECK_TIMEOUTS = {g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"], 15)) for g in GATES_LIST}
 # SOFT checks: finding_topics 仍输出, 但不翻转 gate (门禁降噪)
+#
+# NOTE: `governance-semantic-gate` 曾列在此处, 理由写作 "evolution/release_ready
+# 是软信号" —— 该理由已失效, 且掩盖了脚本内部的分级:
+#   blocking=True (常规模式即阻断): gac-mof-validate / adr-coverage / service-config-drift
+#   blocking=release-only:          agent-workflow-status / governance-evolution-packages
+#                                   (非 --release 时 blocking=False, 本就非阻断)
+# 把整个聚合器降级为 soft, 使上述 blocking 子检查的失败【无法翻转 gate】——
+# 与 sgf-policy.yaml 对其 "阻断性" 的声明自相矛盾。实证: ADR 一致性缺陷
+# (重复编号 / INDEX 失配) 曾因此零成本进入 main (#4113 事后修复)。
+# 移除后交回脚本自身退出码 (0 if not blocking_failures else 1) 决定。
 SOFT_CHECKS = {
-    "governance-semantic-gate",  # evolution/release_ready 是软信号, 非门禁阻断
     "brief-protect",  # BRIEF.md protect 提示手工修改, 非门禁阻断
     "current-state-coherence",  # 运行态动态推导软信号
     "ci-surfaces-check",  # CI Surface 重叠软警告
@@ -663,7 +670,8 @@ def staged_files_git() -> list[str]:
 def staged_touches_agent_workflow() -> bool:
     """staged 是否涉 agent-workflow (doctor/compliance/verify 只在涉时跑)."""
     return any(
-        f in {
+        f
+        in {
             "bin/agent-workflow.py",
             "lib/agent_workflow_projection.py",
             "tests/test_agent-workflow.py",
