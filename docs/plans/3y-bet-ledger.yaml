@@ -26770,7 +26770,7 @@ bets:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
           merged_reachable_commit:
-            ref: git://origin/main@de5cafe0662e2eaac464be69f5850df1e5bafc42
+            ref: git://origin/main@5e1f7eae9b024dccc7a5977139e2de906c25b76c
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-146.md
           tests:
