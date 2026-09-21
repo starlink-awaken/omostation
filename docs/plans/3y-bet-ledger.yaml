@@ -29369,7 +29369,6 @@ bets:
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-172.md
       operational:
-        status: NOT_PROVEN
         status: PROVEN
         evidence:
           cleanup:
@@ -29383,8 +29382,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    notes: "Delivery reached main through PR #4094 and governance reconciliation
-      through PR #4096. Focused OMO tests passed 133/133 at the target commit."
+    notes: 'Delivery reached main through PR #4094 and governance reconciliation through PR #4096. Focused OMO tests passed 133/133 at the target commit.'
   done_when:
   - Root origin/main projects/omo equals d7feb927f97f9aca7871a6965e8211ba99c18437.
   - Submodule freshness and governance required checks pass.
@@ -29392,8 +29390,7 @@ bets:
   non_goals:
   - Do not modify child implementation code or other gitlinks.
   - Do not rewrite child history or force push.
-  - Do not change runtime state, branch protection, completion/value evidence, or business
-    runtime.
+  - Do not change runtime state, branch protection, completion/value evidence, or business runtime.
   verify:
   - cmd: test "$(git ls-tree origin/main projects/omo | awk '{print $3}')" = d7feb927f97f9aca7871a6965e8211ba99c18437
     expect: exit 0
@@ -29419,8 +29416,7 @@ bets:
   human_gate: false
   retro: required
   appetite: 2 hours
-  goal: Make OMO ingress task promotion safe to import standalone without implicit module-load
-    ordering.
+  goal: Make OMO ingress task promotion safe to import standalone without implicit module-load ordering.
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-20-t10-173-promotion-helper-binding-design.md
     spec_version: 1.0.0
@@ -29455,9 +29451,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    notes: "Engineering and operational delivery are proven by OMO PR #184, root
-      PR #4097, required checks, focused workflow regression, and reachable
-      gitlink b4c9252. Human value remains NOT_PROVEN."
+    notes: 'Engineering and operational delivery are proven by OMO PR #184, root PR #4097, required checks, focused workflow regression, and reachable gitlink b4c9252. Human value remains NOT_PROVEN.'
   done_when:
   - Standalone promotion import no longer raises NameError in audit trail.
   - Full workflow regression passes at the patched OMO commit.
@@ -29467,8 +29461,7 @@ bets:
   - Do not alter Claims Authority state or lifecycle receipts.
   - Do not modify runtime state, gitlinks, branch protection, or admission boundaries.
   verify:
-  - cmd: cd projects/omo && PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
-      python -B -m pytest -q -p no:cacheprovider tests/test_workflow_admission.py tests/test_workflow_*.py
+  - cmd: cd projects/omo && PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -B -m pytest -q -p no:cacheprovider tests/test_workflow_admission.py tests/test_workflow_*.py
     expect: exit 0
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: exit 0
@@ -29479,6 +29472,82 @@ bets:
   - docs/superpowers/specs/2026-09-20-t10-173-promotion-helper-binding-design.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y1Q4-T10-173.md
+- id: BET-Y2Q2-T8-02
+  title: dashboard 导航统一 + panorama 目标态标注
+  track: T8-SURFACE
+  window: Y2Q2
+  appetite: 3 days
+  status: candidate
+  goal: 消除三份漂移导航数组，建立 ZHIXING_NAV_GROUPS 单一权威源；panorama 标注为目标态。
+  done_when:
+  - strategy_ui.js 导航死代码删除
+  - workbench_ui.js 导航从规范数组派生
+  - ecosystem_ui.js zhixingGroups 从规范数组派生
+  - 所有导航锚点添加 data-asd-panel 属性
+  verify:
+  - cmd: cd ~/.local/share/zhixing-dashboard && cat ui_extensions.js strategy_ui.js workbench_ui.js panoramic_ui.js next_ui.js topology_ui.js mof_ui.js ecosystem_ui.js > /tmp/zc.js && node --check /tmp/zc.js
+    expect: exit 0
+  - cmd: grep -c "ZHIXING_NAV_GROUPS" ~/.local/share/zhixing-dashboard/ui_extensions.js
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.local/share/zhixing-dashboard/**
+  pasw_required: false
+  risk_level: L1
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals: []
+- id: BET-Y2Q2-T8-03
+  title: dashboard agent-brief 接入 + orient L0 + personal 动态化
+  track: T8-SURFACE
+  window: Y2Q2
+  appetite: 4 days
+  status: candidate
+  goal: refresh.py 提取 agent_visibility/safety_boundaries/next_actions；personal 面板 next-3 动态化；orient 面板添加 ASD L0 首屏。
+  done_when:
+  - refresh.py 提取 agent_visibility 字段
+  - personal 面板 next-3 从 D.next_actions 动态渲染
+  - orient 面板首屏显示 L0 块
+  verify:
+  - cmd: grep -c "agent_visibility" ~/.local/share/zhixing-dashboard/refresh.py
+    expect: '>= 1'
+  - cmd: grep -c "D.next_actions" ~/.local/share/zhixing-dashboard/workbench_ui.js
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.local/share/zhixing-dashboard/**
+  pasw_required: false
+  risk_level: L1
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals: []
+- id: BET-Y2Q2-T8-04
+  title: dashboard 写操作诚信修复 + 跨板块合成条
+  track: T8-SURFACE
+  window: Y2Q2
+  appetite: 2 days
+  status: candidate
+  goal: 删除 workbench 重复写操作实现；页脚文案诚实披露；新增两个跨板块合成镜头卡。
+  done_when:
+  - workbench proposals Tab 删除
+  - ZhixingAdjudicateProposal 函数删除
+  - 页脚文案改为诚实披露唯一写例外
+  verify:
+  - cmd: grep -c "ZhixingAdjudicateProposal" ~/.local/share/zhixing-dashboard/workbench_ui.js
+    expect: '0'
+  - cmd: grep -c "data-synthesis-card" ~/.local/share/zhixing-dashboard/ecosystem_ui.js
+    expect: '>= 1'
+  workflow: project-code-change
+  write_surfaces:
+  - ~/.local/share/zhixing-dashboard/**
+  pasw_required: false
+  risk_level: L1
+  priority: P1
+  retro: required
+  human_gate: false
+  non_goals: []
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -29608,7 +29677,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 415
+  total_bets: 431
   windows:
   - Y1Q1
   - Y1Q2
