@@ -508,6 +508,23 @@ if not any(gate.get("id") == "task-field-governance" for gate in GATES_LIST):
         }
     )
 
+# Root-owned 测试集可收集性守卫 (2026-09-21): CI 只跑 ~11 个主仓测试文件
+# (governance-check.yml 7 个 + gac-gate.yml 2 个 cockpit), 余下 ~353 个是
+# "孤儿测试" —— 不运行 → 引用已删文件 / fixture 落后契约 无人知。
+# 2026-09-21 实测: 4 个文件 collection error 即让 `pytest tests/` 整体 Interrupted,
+# 使测试集既不能本地全量跑也不能接入 CI (腐化实例: 引用被 bin 配额归档的脚本)。
+# 本守卫只验"每个测试文件可 import", 不执行测试 (故不受存量逻辑失败影响);
+# 环境性缺失 (子模块未 init / 第三方包) 归 env 不 FAIL, 见脚本内分类器。
+if not any(gate.get("id") == "test-collection" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "test-collection",
+            "command": ["bin/gac/check-test-collection.py"],
+            "timeout": 300,
+            "note": "主仓测试集可收集性 (防孤儿测试腐烂); 仓内腐化 FAIL, 环境性跳过报告",
+        }
+    )
+
 # 主仓 ci_only override (followup D 治本, 2026-07-03): 这俩 check 依赖全量子模块/generated,
 # ci_only 原放 ecos sgf-policy (子模块), 被 ecos 主线开发覆盖丢失 (PR#93 ecos 184bca4 被 M3.GacRule 覆盖,
 # origin/main gitlink 悬空). 移主仓强制 ci_only (non-strict pre-commit 跳, CI strict 兜底),
