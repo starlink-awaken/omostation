@@ -29569,17 +29569,34 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T10-170
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-170.md
+          merged_reachable_commit:
+            ref: git://origin/main@2e38dbe53053184f2381aa0b6d85af86acf5b3c1
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-170.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-170.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-170.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-170.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-170.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-170.md
       value:
         status: NOT_PROVEN
         evidence: {}
+    notes: 'Merged as PR #4100 (2e38dbe); canonical collector and host asset byte-identical (SHA-256 01a26150...); host deployed copy verified and live data.json projection is a coherent single current-run claims observation.'
   done_when:
   - Canonical collector and host asset remain byte-identical after current-run filtering.
   - Focused Panorama Claims tests prove prior-attempt records are excluded and current
@@ -29630,17 +29647,34 @@ bets:
     decision_ref: decision://accepted/BET-Y1Q4-T10-171
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: blocked
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
+          merged_reachable_commit:
+            ref: git://origin/main@6982fc2edecc938bfb4bbcb4f8b47f6be4e0dd28
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: DEGRADED
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-171.md
       value:
         status: NOT_PROVEN
         evidence: {}
+    notes: 'Merged as PR #4101 (6982fc2ed); host asset installed (SHA-256 fa0f9b66..., precondition 7a6c76e0 verified). Running 43191 process not restarted — restart requires the separate explicit authorization; operational live_canary remains pending until the v2 readiness projection is observed post-restart.'
   done_when:
   - The live readiness projection uses v2 validation qualifying count and fails closed
     to zero when validation is unavailable or invalid.
