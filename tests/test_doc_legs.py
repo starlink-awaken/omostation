@@ -82,10 +82,12 @@ def test_process_dry_run_annotated(tmp_path, monkeypatch):
 
 
 def test_record_aggregates_process(tmp_path, monkeypatch):
-    """record_result 聚合 process 检查结果 + 签名."""
+    """record_result 聚合 process 检查结果 + 签名; 落盘经 SCENE_OUTCOME_DIR 注入."""
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "bad.md").write_text("# x\n", encoding="utf-8")
     monkeypatch.setattr(doc_legs, "_ROOT", tmp_path)
+    # 显式注入落盘根 (受控, 不依赖 pytest 兜底)
+    monkeypatch.setenv("SCENE_OUTCOME_DIR", str(tmp_path / "outcomes"))
     proc = doc_legs.process_document(
         {"raw_item": {"path": "docs/bad.md"}}, dry_run=False,
     )
@@ -97,7 +99,7 @@ def test_record_aggregates_process(tmp_path, monkeypatch):
     assert rec["status"] == "succeeded"
     record = rec["record"]
     assert record["record_hash"]
-    out = tmp_path / ".omo" / "_delivery" / "scene-outcomes" / "scene-documents-test" / "run-1.json"
+    out = tmp_path / "outcomes" / "scene-documents-test" / "run-1.json"
     assert out.is_file()
 
 
@@ -168,3 +170,62 @@ def test_journey_engine_process_without_checks_is_partial(tmp_path, monkeypatch)
     ctx = mod.ExecutionContext("scene-x", "journey-x", {})
     r = mod._execute_doc_legs_action("record_result", ctx)
     assert r["status"] == "partial"
+
+# ── 入仓证据面保护 (2026-09-19 实证) ─────────────────────
+#
+# `.omo/_delivery/scene-outcomes/` 被 .gitignore 显式反忽略 (! 规则, #4023 引入)
+# + .gitkeep 占位 —— 它是**要入仓的 emission 目标** (价值证据面)。
+# 事故: doc_legs 原先硬编码该路径, 测试用 scene_id="scene-documents-test" 且
+# dry_run=False, 于是**测试夹具被写进入仓证据面** (实证: 该 json 出现在
+# 7a5d58952 的裹入文件里)。这与 2026-09-18 校准库被 gate-test-scene 夹具污染
+# 同构 —— 夹具伪装成证据。
+# 修法与 #3989 同族: 落盘路径统一走 _shared.scene_outcome_dir, 并在 pytest
+# 上下文兜底改写, **不依赖调用方记得 patch**。
+
+
+def test_pytest_fallback_protects_production_evidence_dir(tmp_path, monkeypatch):
+    """核心: 不 patch _ROOT、不设 env —— 兜底也必须不碰入仓证据面."""
+    monkeypatch.delenv("SCENE_OUTCOME_DIR", raising=False)
+    real_root = Path(__file__).resolve().parents[1]
+    prod = real_root / ".omo" / "_delivery" / "scene-outcomes" / "scene-leak-probe"
+    before = set(prod.glob("*")) if prod.is_dir() else set()
+
+    proc = doc_legs.process_document({"raw_item": {"path": "nope.md"}}, dry_run=True)
+    doc_legs.record_result(
+        {"scene_id": "scene-leak-probe", "run_id": "leak-1",
+         "doc_process_result": {"status": "succeeded", "checks": 1, "passed": 1,
+                                "issues": [], "doc": {}}},
+        dry_run=False,
+    )
+    after = set(prod.glob("*")) if prod.is_dir() else set()
+    assert after == before, "测试写进了入仓证据面 .omo/_delivery/scene-outcomes/"
+
+
+def test_env_override_wins(tmp_path, monkeypatch):
+    """显式 SCENE_OUTCOME_DIR 优先级最高."""
+    monkeypatch.setenv("SCENE_OUTCOME_DIR", str(tmp_path / "custom"))
+    shared = _load("shared_probe", "bin/ssot/_shared.py")
+    assert shared.scene_outcome_dir("scene-x", tmp_path) == (
+        tmp_path / "custom" / "scene-x")
+
+
+def test_non_pytest_default_is_the_tracked_evidence_dir(tmp_path, monkeypatch):
+    """非 pytest 上下文 + 未设 env → 默认落盘到入仓证据面 (生产行为不变)."""
+    shared = _load("shared_probe2", "bin/ssot/_shared.py")
+    monkeypatch.delenv("SCENE_OUTCOME_DIR", raising=False)
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    monkeypatch.delenv("PYTEST_VERSION", raising=False)
+    assert shared.scene_outcome_dir("scene-y", tmp_path) == (
+        tmp_path / ".omo" / "_delivery" / "scene-outcomes" / "scene-y")
+
+
+def test_dry_run_writes_nothing(tmp_path, monkeypatch):
+    monkeypatch.setenv("SCENE_OUTCOME_DIR", str(tmp_path / "outcomes"))
+    rec = doc_legs.record_result(
+        {"scene_id": "scene-dry", "run_id": "d-1",
+         "doc_process_result": {"status": "succeeded", "checks": 1, "passed": 1,
+                                "issues": [], "doc": {}}},
+        dry_run=True,
+    )
+    assert rec["status"] == "succeeded"
+    assert not (tmp_path / "outcomes" / "scene-dry" / "d-1.json").exists()
