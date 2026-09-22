@@ -30119,6 +30119,64 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q2-T10-155
+  title: A9 cockpit source workspace-root execution
+  status: candidate
+  priority: P1
+  risk_level: L1
+  track: T10-MATURITY
+  window: Y2Q2
+  workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: false
+  retro: required
+  appetite: 4 hours
+  goal: Repair workflow and scheduler cockpit source execution roots so the fresh A9 gate can prove dashboard, ASD, cockpit projection, and cockpit source observability.
+  done_when:
+  - Focused collector workspace-root contract tests exit zero.
+  - Existing workflow and all-collector tests exit zero.
+  - Fresh dashboard projection reports workflow and scheduler OK with no required cockpit source unavailable.
+  - A fresh A9 gate calculation returns PASS.
+  - Ledger lint and governance gates pass.
+  non_goals:
+  - Do not change strategy sampling budgets.
+  - Do not activate Claims Authority or change branch protection.
+  - Do not add a second dispatcher, queue, control plane, or scheduler owner.
+  - Do not promote PARTIAL evidence to PASS or backfill value evidence.
+  verify:
+  - cmd: python3 /Users/xiamingxing/.local/share/zhixing-dashboard/tests/test_collector_workspace_root.py
+    expect: exit 0
+  - cmd: python3 /Users/xiamingxing/.local/share/zhixing-dashboard/tests/test_all_collectors.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - ~/.local/share/zhixing-dashboard/collectors/workflow.py
+  - ~/.local/share/zhixing-dashboard/collectors/scheduler.py
+  - ~/.local/share/zhixing-dashboard/tests/test_collector_workspace_root.py
+  - docs/superpowers/specs/2026-09-22-a9-cockpit-source-workspace-root-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-155.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-22-a9-cockpit-source-workspace-root-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:8728737731a47302c54caa3dba299edca3db5c96a8cf83798fb805565fc955ca
+    decision_ref: decision://accepted/BET-Y2Q2-T10-155
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 - id: BET-Y2Q1-T4-03
   title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
   status: done
