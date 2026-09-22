@@ -18,6 +18,7 @@ import argparse
 import hashlib
 import importlib.util
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -202,13 +203,6 @@ def main() -> int:
     lines[insert_at:insert_at] = entry_lines
     new_text = "".join(lines)
 
-    for cfg_line in lines:
-        stripped = cfg_line.strip()
-        if stripped.startswith("total_bets:"):
-            old_total = int(stripped.split(":")[1].strip())
-            new_text = new_text.replace(f"  total_bets: {old_total}", f"  total_bets: {old_total + 1}", 1)
-            break
-
     try:
         candidate = contract.parse_ledger_text(new_text, source=str(ledger))
     except contract.LedgerStructureError as error:
@@ -222,6 +216,29 @@ def main() -> int:
         or candidate_bets[-1].get("id") != bet_id
     ):
         raise SystemExit("semantic verification failed: inserted entry is not the last bets list item")
+
+    # meta.total_bets 必须由插入后的 len(bets) 绝对派生，禁止 old+1 —
+    # 若 meta 已漂移，increment 只会把错误平移一位（GAT-006 / #4189→#4201 实证）。
+    actual_total = len(candidate_bets)
+    meta_m = re.search(r"^(?P<indent>[ \t]*)total_bets:[ \t]*\d+[ \t]*$", new_text, re.MULTILINE)
+    if meta_m is None:
+        raise SystemExit("semantic verification failed: meta.total_bets line missing")
+    new_text = (
+        new_text[: meta_m.start()]
+        + f"{meta_m.group('indent')}total_bets: {actual_total}"
+        + new_text[meta_m.end() :]
+    )
+    try:
+        candidate = contract.parse_ledger_text(new_text, source=str(ledger))
+    except contract.LedgerStructureError as error:
+        for diagnostic in error.diagnostics:
+            print(f"ERROR {diagnostic}", file=sys.stderr)
+        return 1
+    declared = candidate.get("meta", {}).get("total_bets")
+    if declared != actual_total:
+        raise SystemExit(
+            f"semantic verification failed: meta.total_bets={declared!r} != len(bets)={actual_total}"
+        )
 
     fd, tmp = tempfile.mkstemp(suffix=".yaml", dir=str(ledger.parent))
     with os.fdopen(fd, "w", encoding="utf-8") as f:
