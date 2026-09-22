@@ -1,22 +1,24 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-09-21T08:52:01Z
-status: candidate
+generated_at: 2026-09-22T07:42:34Z
+status: planned
 counts:
-  runs: 5
+  runs: 7
   failures: 0
-  total: 5
+  total: 7
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
+lifecycle: history
+owner: unassigned
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-21T08:52:01Z
+- generated_at: 2026-09-22T07:42:34Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 5 成功运行 + 0 失败模式 = 5 草稿
+- sediment 覆盖: 7 成功运行 + 0 失败模式 = 7 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -26,6 +28,8 @@ failure_breakdown:
 - 20260921T062109Z-governance-state-mutation-b798a514.md
 - 20260921T065130Z-governance-state-mutation-bffb5294.md
 - 20260921T081335Z-governance-state-mutation-1f50a0b7.md
+- 20260921T100202Z-governance-state-mutation-4808c157.md
+- 20260922T012405Z-governance-state-mutation-73f3490f.md
 
 ## 失败模式 (failures/)
 
@@ -66,7 +70,21 @@ failure_breakdown:
 - **20260921T081335Z-governance-state-mutation-1f50a0b7**
   - 计划 (objective): Publish external write-root claims bridge managed successor
   - workflow: governance-state-mutation
-  - 指标: event_count=1, duration_s=0.0
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=4430.505
+- **20260921T100202Z-governance-state-mutation-4808c157**
+  - 计划 (objective): Publish T10-153 completion evidence via managed successor
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=1344.251
+- **20260922T012405Z-governance-state-mutation-73f3490f**
+  - 计划 (objective): Publish A9 strategy retro full-scan bootstrap binding
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=1359.242
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

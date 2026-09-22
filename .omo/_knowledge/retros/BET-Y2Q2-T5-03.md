@@ -2,11 +2,13 @@
 type: retro
 bet_id: BET-Y2Q2-T5-03
 title: "T5-03 Retro — team-mailbox fork-join 多 agent 编排"
-status: completed
+status: archived
 window: Y2Q2
 track: T5-ORCH
 closed_at: 2026-09-22
 schema: retro/v1
+lifecycle: history
+owner: unassigned
 ---
 
 # BET-Y2Q2-T5-03 Retro
