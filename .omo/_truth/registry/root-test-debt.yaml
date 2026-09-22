@@ -1,7 +1,8 @@
 # 根层测试债（tests/*.py）—— 判定表
 #
-# 背景: CI 以「显式列举」方式只运行 26 个根层测试文件（见 .github/workflows/*.yml），
-# 其余 218 个既无 CI 也无 cron 覆盖。全量 `pytest tests/` 实测:
+# 背景: CI 以「显式列举」方式只运行 15 个根仓测试文件（见 .github/workflows/*.yml；
+# 占 tests/**/test_*.py 共 366 个的 4.1%），其余 351 个既无 CI 也无 cron 覆盖。
+# 全量 `pytest tests/` 实测:
 #   3513 collected / 0 collection error / 160 failed + 29 setup errors / 3319 passed
 # 即 189 个失败长期不可见 —— `bin/gac/check-test-collection.py` 只守「收集完整性」,
 # 不守「通过率」, 故该守卫 PASS 而失败照旧。
@@ -13,9 +14,28 @@
 # 处置原则: 「已归档/已移除」→ 删测试; 「时间炸弹」→ 改相对时间;
 #           「环境」→ 加守卫（参照 tests/test_scene_outcome_episode_bridge.py 模式);
 #           「行为漂移」→ 逐个判定测试对错, 不得批量跳过。
-version: 1
+version: 3
 ssot_ref: CR-ROOT-TEST-DEBT
 generated: '2026-09-22'
+revisions:
+  - version: 1
+    date: '2026-09-22'
+    change: 初版判定表（44 文件 / 160 失败）
+  - version: 2
+    date: '2026-09-22'
+    change: |
+      修正 ci_coverage 计数: 26 → 14。原因是初版用字符串匹配统计 tests/*.py,
+      把 projects/{omo,cockpit,runtime}/tests/ 下的 10 个子项目测试误计为根仓测试。
+  - version: 3
+    date: '2026-09-22'
+    change: |
+      再修正 14 → 15: v2 的解析未在 step 边界重置 cwd, 致 governance-check.yml 中
+      `python3 -m pytest tests/test_spec_binding_lint.py`(cwd=根仓) 被沿用前一步的
+      `cd projects/omo` 误解析而漏计。同时**实测**全部 15 个 CI 覆盖文件
+      (362 passed / 0 failed), 将「CI 覆盖的测试全部通过」从推断升级为已验证,
+      并补记「9 个 documents 测试属条件性覆盖(路径过滤), 常规 PR 不触发」。
+      判定表主体（5 类 / 44 文件 / 160 测试）两轮均不受影响, 因其基于失败清单直接分类;
+      「CI 覆盖 ∩ 失败 = ∅」结论亦不变(重算后仍为 0)。
 measurement:
   command: python3 -m pytest tests -q
   collected: 3513
@@ -26,10 +46,44 @@ measurement:
   skipped: 9
   wall_clock_s: 1005
 ci_coverage:
-  root_test_files_total: 244
-  ci_listed_files: 26
+  root_test_files_total: 366
+  ci_covered_root_files: 15
+  uncovered_root_files: 351
+  coverage_pct: 4.1
+  coverage_ratio: '15 / 366'
   intersection_with_failures: 0
-  note: CI 覆盖的 26 个根层测试全部通过；189 个失败全部落在 CI 未覆盖的 44 个文件内。
+  covered_files_verified_passing: 362
+  covered_files:
+    - tests/test_agent_workflow.py
+    - tests/test_doc_claims.py
+    - tests/test_documents_chatgpt_tunnel.py
+    - tests/test_documents_claude_desktop_config.py
+    - tests/test_documents_client_recovery_relocation.py
+    - tests/test_documents_codex_profile.py
+    - tests/test_documents_domain_index.py
+    - tests/test_documents_domain_owner_job.py
+    - tests/test_documents_domain_project_check.py
+    - tests/test_documents_zcode_config.py
+    - tests/test_documents_zcode_state_relocation.py
+    - tests/test_documents_zed_profile.py
+    - tests/test_spec_binding_lint.py
+    - tests/integration/test_runtime_e2e.py
+    - tests/unit/gac/test_worktree_hygiene_audit.py
+  note: |
+    CI 覆盖的 15 个根仓测试**本地实测 362 passed / 0 failed**（已逐一验证，非仅推断），
+    189 个失败全部落在 CI 未覆盖的 44 个文件内。其中 9 个 documents 测试仅在 PR 触碰
+    documents 路径时运行（.github/workflows/phase-gate-enforce.yml 的 documents-changes
+    path filter），属条件性覆盖 —— 常规 PR 不会触发，故其通过状态此前从未被独立验证。
+  counting_method: |
+    逐 workflow、逐 step 解析（step 边界重置 cwd，再跟踪 cd / working-directory），
+    把 tests/*.py 相对 cwd 解析为绝对路径后据真实归属分类。
+    两轮修正:
+      ① 初版仅做字符串匹配 → 把 projects/{omo,cockpit,runtime}/tests/ 下 10 个子项目
+         测试误计为根仓，得 26。
+      ② 中途版本未在 step 边界重置 cwd → governance-check.yml 的
+         `python3 -m pytest tests/test_spec_binding_lint.py`（行 183，cwd=根）被沿用前一
+         步的 `cd projects/omo` 误解析，漏计 → 得 14。
+    最终版 15（覆盖清单 + 逐一实测通过）。
 
 categories:
   # ── A. 目标已归档/已删（CI 直接忽略归档目录）→ 建议删测试 ──
