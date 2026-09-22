@@ -69,6 +69,7 @@ env_vars:
   8185: OMLX_MYTHOS_FAST_PORT
   8766: KOS_REST_API_PORT
   8888: MCP_STDIO_DEBUG_PORT
+  9000: AETHERFORGE_TRIAGE_GATEWAY_PORT
   9100: OMO_WEBHOOK_PORT
   9190: OMO_DASHBOARD_PORT
   9290: LLM_GATEWAY_PORT
@@ -274,6 +275,12 @@ ports:
     name: mcp-stdio-debug
     status: active
     transport: stdio
+  9000:
+    name: aetherforge-triage-gateway
+    note: AetherForge local triage HTTP gateway default
+    owner: aetherforge
+    status: active
+    transport: http
   9090:
     name: ecos-dashboard
     note: 2026-06 收敛到 cockpit /api/ecos/*. P78 标记 deprecated.
