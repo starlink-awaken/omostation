@@ -180,7 +180,7 @@ def collect_preflight(
 
     authority_dir = account_home / "agents/_shared/runtime" / AUTHORITY_ID
     store = authority_dir / "store.sqlite3"
-    high_water = authority_dir / "highwater.json"
+    high_water = authority_dir / "high-water.json"
     witness = authority_dir / "activation-witness.json"
 
     hard_blockers: list[str] = []
@@ -270,6 +270,7 @@ def collect_preflight(
         "closure": closure,
         "runtime_state": {
             "store_exists": store.exists(),
+            "high_water_exists": high_water.exists(),
             "highwater_exists": high_water.exists(),
             "activation_witness_exists": witness.exists(),
         },
