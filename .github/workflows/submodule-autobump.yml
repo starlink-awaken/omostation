@@ -22,7 +22,6 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
 
       - name: Check for submodule advances
         id: check
