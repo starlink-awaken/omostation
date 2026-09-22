@@ -30135,7 +30135,8 @@ bets:
   track: T5-ORCH
   window: Y2Q2
   appetite: 1 week
-  status: candidate
+  status: done
+  done_at: 2026-09-22
   goal: 为多 agent 协作提供文件队列 mailbox 收发原语，落地 team-mailbox 插件骨架并注册到 opencode 配置。
   done_when:
   - ~/.config/opencode/plugin/team-mailbox 插件目录存在且含入口与队列原语
@@ -30160,6 +30161,7 @@ bets:
   priority: P1
   retro: required
   human_gate: false
+  value_indicator_policy: false
   non_goals:
   - 不做持久化投递语义（由 T5-02 承接）
   - 不做多 agent 编排协议（由 T5-03 承接）
@@ -30171,14 +30173,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T5-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c9bf357328261259882fb4af3e784a26674ca98f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-01.md
+            sha256: sha256:540972da80447da377653acb600b581b009a5c30823174692ff2daae1e2de6ef
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-01.md
+            sha256: sha256:540972da80447da377653acb600b581b009a5c30823174692ff2daae1e2de6ef
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-01.md
+            sha256: sha256:540972da80447da377653acb600b581b009a5c30823174692ff2daae1e2de6ef
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-01.md
+            sha256: sha256:540972da80447da377653acb600b581b009a5c30823174692ff2daae1e2de6ef
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-01.md
+            sha256: sha256:540972da80447da377653acb600b581b009a5c30823174692ff2daae1e2de6ef
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-01.md
+            sha256: sha256:540972da80447da377653acb600b581b009a5c30823174692ff2daae1e2de6ef
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-01.md
+            sha256: sha256:540972da80447da377653acb600b581b009a5c30823174692ff2daae1e2de6ef
       value:
         status: NOT_PROVEN
         evidence: {}
