@@ -459,12 +459,19 @@ def _load_agora(root: Path):
     if not agora_src.exists():
         raise ExternalResourceCatalogInputError(f"Agora source is unavailable: {agora_src}")
     try:
+        # agora uses absolute imports (`from agora.external_connections_diff import …`)
+        # so we must register the package on sys.modules before exec_module.
+        agora_pkg_path = str(agora_src)
+        if agora_pkg_path not in sys.path:
+            sys.path.insert(0, agora_pkg_path)
         module_path = agora_src / "agora/external_connections.py"
-        spec = importlib.util.spec_from_file_location("agora_external_connections_projection", module_path)
+        spec = importlib.util.spec_from_file_location("agora.external_connections", module_path)
         if spec is None or spec.loader is None:
             raise ImportError("cannot load Agora external connection boundary")
         module = importlib.util.module_from_spec(spec)
         sys.modules[spec.name] = module
+        # 子模块 iris 子进程也需要按投影名 import → 同步注册别名
+        sys.modules.setdefault("agora_external_connections_projection", module)
         spec.loader.exec_module(module)
         return (
             module.build_external_resource_catalog_snapshot,
