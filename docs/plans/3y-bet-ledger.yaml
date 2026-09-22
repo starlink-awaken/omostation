@@ -30054,7 +30054,8 @@ bets:
   done_at: '2026-09-21'
 - id: BET-Y2Q2-T10-154
   title: A9 strategy retro full-scan repair
-  status: candidate
+  status: done
+  done_at: 2026-09-22
   priority: P1
   risk_level: L1
   track: T10-MATURITY
@@ -30094,14 +30095,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T10-154
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7758c80b48d400c7f3f84e3ad5a58ebae2ac26b6
+          tests:
+            ref: receipt://docs/reports/a9-20260922-gate-receipt.yaml
+            sha256: sha256:0730db81795c870bdb29eb05f18d7ff5eb856beaf7aeed0d57d0c970813d3cab
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-154.md
+            sha256: sha256:5de46f22d313188a3f60c51e613cd14d3cb58f768b9055759b720ea4ddcb1dc0
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-154.md
+            sha256: sha256:5de46f22d313188a3f60c51e613cd14d3cb58f768b9055759b720ea4ddcb1dc0
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/a9-20260922-gate-receipt.yaml
+            sha256: sha256:0730db81795c870bdb29eb05f18d7ff5eb856beaf7aeed0d57d0c970813d3cab
+          fresh_receipt:
+            ref: receipt://docs/reports/a9-20260922-gate-receipt.yaml
+            sha256: sha256:0730db81795c870bdb29eb05f18d7ff5eb856beaf7aeed0d57d0c970813d3cab
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-154.md
+            sha256: sha256:5de46f22d313188a3f60c51e613cd14d3cb58f768b9055759b720ea4ddcb1dc0
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-154.md
+            sha256: sha256:5de46f22d313188a3f60c51e613cd14d3cb58f768b9055759b720ea4ddcb1dc0
       value:
         status: NOT_PROVEN
         evidence: {}
