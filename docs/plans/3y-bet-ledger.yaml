@@ -30052,6 +30052,59 @@ bets:
         status: NOT_PROVEN
         evidence: {}
   done_at: '2026-09-21'
+- id: BET-Y2Q2-T10-154
+  title: A9 strategy retro full-scan repair
+  status: candidate
+  priority: P1
+  risk_level: L1
+  track: T10-MATURITY
+  window: Y2Q2
+  workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: false
+  retro: required
+  appetite: 4 hours
+  goal: Remove the artificial retro sample truncation that prevents the cockpit strategy source and A9 gate from proving fresh observability.
+  done_when:
+  - Strategy collector reads the full current retro corpus without retros:sample_budget.
+  - Dashboard source_states reports strategy OK after refresh.
+  - A9 gate passes with dashboard, ASD, cockpit projection, and cockpit source evidence.
+  - Focused dashboard collector tests, ledger lint, and governance gates pass.
+  non_goals:
+  - Do not remove sampling safety budgets or read unbounded file bytes.
+  - Do not promote partial evidence to PASS when a real read error remains.
+  - Do not activate Claims Authority or change branch protection.
+  verify:
+  - cmd: python3 /Users/xiamingxing/.local/share/zhixing-dashboard/test_strategy_sources.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - ~/.local/share/zhixing-dashboard/strategy_sources.py
+  - ~/.local/share/zhixing-dashboard/test_strategy_sources.py
+  - docs/superpowers/specs/2026-09-22-a9-strategy-retro-full-scan-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-154.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-22-a9-strategy-retro-full-scan-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:d0dcd2ba0fd11916e2d6de065e7fbe78b72ba9d9071919a90a20e065e53902f4
+    decision_ref: decision://accepted/BET-Y2Q2-T10-154
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 - id: BET-Y2Q1-T4-03
   title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
   status: done
