@@ -716,3 +716,9 @@ open_decisions:
 known_orphans:
   - clash-probe.sh  # 用户本机网络探测 (~/.local/bin), 2026-09-20 确认为外部工具
   - mimo-models-sync.sh  # 用户本机外部模型同步 (~/.local/bin), 2026-09-22 确认为外部工具
+  - clash-health.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
+  - clash-proxy-guard.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
+  - clash-traffic.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
+  - clash-cert-check.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
+  - clash-bw-warn.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
+  - clash-git-sync.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
