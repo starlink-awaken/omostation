@@ -74,7 +74,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Checkout required owners
-        run: git submodule update --init projects/l4-kernel projects/runtime
+        run: git submodule update --init projects/cockpit projects/l4-kernel projects/runtime
       - uses: astral-sh/setup-uv@v4
       - name: Focused tests
         run: >-
