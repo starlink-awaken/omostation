@@ -30265,7 +30265,8 @@ bets:
   track: T5-ORCH
   window: Y2Q2
   appetite: 1 week
-  status: candidate
+  status: done
+  done_at: 2026-09-22
   goal: 在收发原语之上实现 durable 投递语义，覆盖重试退避、dead-letter 与回退路径。
   depends_on:
   - BET-Y2Q2-T5-01
@@ -30302,14 +30303,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T5-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c9bf357328261259882fb4af3e784a26674ca98f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:c67a1c4bc58ba45e20a56f393f35070bb2670f05184440eb80e6525b37bb1ee7
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:c67a1c4bc58ba45e20a56f393f35070bb2670f05184440eb80e6525b37bb1ee7
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:c67a1c4bc58ba45e20a56f393f35070bb2670f05184440eb80e6525b37bb1ee7
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:c67a1c4bc58ba45e20a56f393f35070bb2670f05184440eb80e6525b37bb1ee7
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:c67a1c4bc58ba45e20a56f393f35070bb2670f05184440eb80e6525b37bb1ee7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:c67a1c4bc58ba45e20a56f393f35070bb2670f05184440eb80e6525b37bb1ee7
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:c67a1c4bc58ba45e20a56f393f35070bb2670f05184440eb80e6525b37bb1ee7
       value:
         status: NOT_PROVEN
         evidence: {}
