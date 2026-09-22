@@ -43,7 +43,6 @@ team-mailbox fork-join 编排交付完成。team-mode-gating.ts 与 visualizatio
 
 ## 治理对齐
 
-- [x] ledger status: done
-- [x] completion_evidence: delivery_accepted
 - [x] retro 归档
-- [x] 无 write_urfaces 外溢
+- [ ] ledger status: done（待 completion_evidence 四轴齐备后升级）
+- [x] 无 write_surfaces 外溢
