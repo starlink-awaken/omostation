@@ -30121,7 +30121,7 @@ bets:
         evidence: {}
 - id: BET-Y2Q2-T10-155
   title: A9 cockpit source workspace-root execution
-  status: candidate
+  status: done
   priority: P1
   risk_level: L1
   track: T10-MATURITY
@@ -30193,6 +30193,9 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: '2026-09-22'
+  pr_number: 4181
+  merge_sha: 64f8908ff0b0f03f9963710ba0ce8deccefbbe33
 - id: BET-Y2Q1-T4-03
   title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
   status: done
