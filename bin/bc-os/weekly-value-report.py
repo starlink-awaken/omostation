@@ -19,7 +19,12 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
+try:
+    from datetime import UTC
+except ImportError:  # cron 下 python3 可能是 3.9 (<3.11 无 datetime.UTC)
+    from datetime import timezone as _timezone
+    UTC = _timezone.utc
 from pathlib import Path
 
 WS_ROOT = Path(__file__).resolve().parent.parent.parent
