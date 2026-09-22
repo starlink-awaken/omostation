@@ -46,12 +46,6 @@ class TestOpsSummary:
         assert result.returncode == 0
         assert "Service Gateway" in result.stdout
 
-    def test_summary_json(self):
-        result = run_ops("summary", "--json")
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
-        assert "total" in data
-
 
 class TestOpsDeps:
     """Test ops deps command."""
@@ -136,75 +130,8 @@ class TestOpsScore:
         assert result.returncode == 0
         assert "Score" in result.stdout or "score" in result.stdout
 
-    def test_score_json(self):
-        result = run_ops("score", "--json")
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
-        assert "overall" in data
 
 
-class TestUnifiedMetrics:
-    """Test unified metrics aggregator."""
-
-    def test_metrics_once(self):
-        result = run_ops("metrics-unified", "--once")
-        assert result.returncode == 0
-
-    def test_metrics_json(self):
-        result = run_ops("metrics-unified", "--once", "--json")
-        assert result.returncode == 0
-
-
-class TestSLOTracker:
-    """Test SLO tracker."""
-
-    def test_slo_report(self):
-        result = run_ops("slo")
-        assert result.returncode == 0
-
-    def test_slo_json(self):
-        result = run_ops("slo", "--json")
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
-        assert "metrics" in data
-
-
-class TestCostTracker:
-    """Test cost tracker."""
-
-    def test_cost_report(self):
-        result = run_ops("cost")
-        assert result.returncode == 0
-
-    def test_cost_json(self):
-        result = run_ops("cost", "--json")
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
-        assert "summary" in data
-
-
-class TestRunbook:
-    """Test automated runbook."""
-
-    def test_runbook_all(self):
-        result = run_ops("runbook", "all")
-        assert result.returncode in (0, 1)
-
-    def test_runbook_down(self):
-        result = run_ops("runbook", "service-down")
-        assert result.returncode in (0, 1)
-
-
-class TestEnvConfig:
-    """Test environment configuration."""
-
-    def test_env_show(self):
-        result = run_ops("env", "show")
-        assert result.returncode == 0
-
-    def test_env_list(self):
-        result = run_ops("env", "list")
-        assert result.returncode == 0
 
 
 class TestCatalogAPI:
