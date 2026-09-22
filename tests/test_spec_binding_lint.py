@@ -997,7 +997,6 @@ def test_governance_verify_scopes_strict_pointer_freshness_to_auto_bump_prs() ->
     normal_script = str(normal_steps[0].get("run", ""))
     assert "python3 bin/gac/check-submodule-pointer-drift.py --json" in normal_script
     assert "--strict" not in normal_script
-    assert 'status == "ahead"' in normal_script
     assert '.results | type == "array"' in normal_script
 
     assert len(strict_steps) == 1
@@ -1015,8 +1014,8 @@ def test_governance_verify_scopes_strict_pointer_freshness_to_auto_bump_prs() ->
     [
         ({"results": [{"status": "aligned"}]}, 0, 0),
         ({"results": [{"status": "behind"}]}, 0, 0),
-        ({"results": [{"status": "ahead"}]}, 0, 1),
-        ({"results": [{"status": "behind"}, {"status": "ahead"}]}, 0, 1),
+        ({"results": [{"status": "ahead"}]}, 0, 0),
+        ({"results": [{"status": "behind"}, {"status": "ahead"}]}, 0, 0),
         ({"results": [{"status": "DIVERGED"}]}, 1, 1),
         ({"results": "not-an-array"}, 0, 1),
         ({"results": [{}]}, 0, 1),

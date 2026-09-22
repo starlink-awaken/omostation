@@ -217,10 +217,10 @@ jobs:
             echo "❌ malformed submodule pointer report"
             exit 1
           fi
-          if jq -e 'any(.results[]; .status == "ahead")' "$pointer_out" > /dev/null; then
-            echo "❌ submodule pointer ahead of child main"
-            exit 1
-          fi
+          # NOTE: "ahead" is intentionally non-blocking (script reports it as OK).
+          # The reachability gate (gac-gate) separately ensures the commit is on a
+          # pushed origin branch. Removing the extra jq guard that contradicted
+          # the script's own non-blocking designation for "ahead".
       - name: Submodule pointer strict auto-bump gate
         if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'auto/submodule-bump-')
         run: |
