@@ -722,3 +722,4 @@ known_orphans:
   - clash-cert-check.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
   - clash-bw-warn.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
   - clash-git-sync.sh  # 用户本机 Clash 代理维护 (~/.local/bin→~/.config/clash), 2026-09-22 确认为外部工具
+  - clash-node-watch.sh  # 用户本机 Clash 节点守护 (~/.local/bin), 2026-09-22 确认为外部工具

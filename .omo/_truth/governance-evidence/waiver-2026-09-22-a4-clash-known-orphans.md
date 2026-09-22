@@ -30,5 +30,12 @@ A4 调度声明↔安装一致性门 FAIL：`scheduler-compile.py --check` 报�
   `{"ok": true, "drift_count": 0, "orphan_count": 0, "known_orphan_count": 7}`。
 - 未改动任何 crontab、调度定义或治理队列；fail-closed 语义保持。
 
+## 2026-09-22 补充：clash-node-watch.sh
+
+用户本机随后新增 `*/30 * * * * /Users/xiamingxing/.local/bin/clash-node-watch.sh`。
+同一 run 追加 known orphan `clash-node-watch.sh`；预期 scheduler check 变为
+`{"ok": true, "drift_count": 0, "orphan_count": 0, "known_orphan_count": 8}`。
+仍未改动 crontab、调度定义、治理队列或 authority store。
+
 范围外：A9 `cockpit_sources`（zhixing-dashboard 采集器执行根缺陷）
 属 BET-Y2Q2-T10-155 独立 lane，不在本事务内。
