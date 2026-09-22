@@ -1,12 +1,9 @@
 ---
 schema_version: governance-waiver/v1
-title: "Ledger 回退修复 — 无 bet 绑定的治理数据事务 waiver"
-scope: ledger-revert-repair-4201b (managed successor)
-run_ref: 20260922T103331Z-governance-state-mutation-ba5e48ce
-agent_profile: governance-agent
-workflow: governance-state-mutation
-date: '2026-09-22'
-status: accepted
+created: '2026-09-22'
+bet_id: unbound
+run_id: 20260922T103331Z-governance-state-mutation-ba5e48ce
+scope: ledger-revert-repair-managed-successor
 ---
 
 # Waiver · Ledger 回退修复（无 bet 绑定）
