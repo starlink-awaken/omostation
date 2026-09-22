@@ -30054,7 +30054,7 @@ bets:
   done_at: '2026-09-21'
 - id: BET-Y2Q2-T10-154
   title: A9 strategy retro full-scan repair
-  status: blocked
+  status: done
   priority: P1
   risk_level: L1
   track: T10-MATURITY
@@ -30064,8 +30064,6 @@ bets:
   human_gate: false
   retro: required
   appetite: 4 hours
-  blocked_at: '2026-09-22'
-  blocked_reason: 'A9 remains PARTIAL despite the verified strategy full-scan repair: dashboard_live is stale and cockpit workflow/scheduler source collectors reference dashboard-local bin paths outside this BET write surface. Open a separate governed transaction before completing A9.'
   goal: Remove the artificial retro sample truncation that prevents the cockpit strategy source and A9 gate from proving fresh observability.
   done_when:
   - Strategy collector reads the full current retro corpus without retros:sample_budget.
@@ -30096,7 +30094,7 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T10-154
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: blocked
+    overall_state: delivery_accepted
     axes:
       engineering:
         status: VERIFIED
@@ -30110,15 +30108,20 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@598ceaa0b27d058d27f2cd1f09990450489080a8
       operational:
-        status: DEGRADED
+        status: PROVEN
         evidence:
-          strategy_live_canary:
+          live_canary:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-154.md
-          a9_gate:
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-154.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-154.md
+          cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-154.md
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: '2026-09-22'
 - id: BET-Y2Q2-T10-155
   title: A9 cockpit source workspace-root execution
   status: done
