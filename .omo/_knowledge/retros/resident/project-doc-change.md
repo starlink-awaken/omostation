@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-09-21T07:41:46Z
+generated_at: 2026-09-21T08:52:01Z
 status: candidate
 counts:
   runs: 5
@@ -14,7 +14,7 @@ failure_breakdown:
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-21T07:41:46Z
+- generated_at: 2026-09-21T08:52:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 5 成功运行 + 0 失败模式 = 5 草稿
 - 失败率: 0.00%
