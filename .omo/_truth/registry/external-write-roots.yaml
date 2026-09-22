@@ -9,3 +9,12 @@ roots:
       - '**/*.js'
       - '**/*.py'
       - '*.py'
+  - id: opencode-config
+    path: ~/.config/opencode
+    kind: local_git
+    status: admitted
+    patterns:
+      - 'plugin/team-mailbox/*.ts'
+      - 'plugin/team-mailbox/**/*.ts'
+      - 'plugin/team-mailbox/*.js'
+      - 'plugin/team-mailbox/**/*.js'
