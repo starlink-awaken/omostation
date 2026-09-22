@@ -1,6 +1,7 @@
 ---
 type: ephemeral
 status: completed
+lifecycle: history
 date: 2026-09-22
 scope: 2026-08-22 → 2026-09-22 月度复盘
 author: governance-agent
@@ -302,4 +303,4 @@ make gac-local-gate
 
 ---
 
-*文档类型 ephemeral；status completed 后按 T6-17 可归档至 `archive/reports-2026-09/`。*
+*文档类型 ephemeral；已按 T6-17（2026-09-05）归档至 `.omo/_knowledge/design/plans/archive/reports-2026-09/`。*
