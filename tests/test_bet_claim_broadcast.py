@@ -29,6 +29,16 @@ def _setup(tmp_path: Path, status: str = "candidate") -> tuple[Path, Path, dict]
     claims = tmp_path / "bet-claims"
     claims.mkdir(parents=True)
     led.write_text(
+        "vision: {}\n"
+        "tracks: {}\n"
+        "campaigns: []\n"
+        "disciplines: {}\n"
+        "gates: {}\n"
+        "concurrency: {}\n"
+        "meta: {}\n"
+        "milestones: []\n"
+        "objectives: []\n"
+        "retro: {}\n"
         "bets:\n"
         f"- id: BET-TEST-1\n"
         f"  status: {status}\n"
@@ -102,13 +112,18 @@ def test_claim_force_takeover(tmp_path: Path) -> None:
 
 def test_claim_gc_expired(tmp_path: Path) -> None:
     """claim-gc: 过期清理 + 只删文件不动 ledger."""
+    from datetime import datetime, timedelta, UTC
     _setup(tmp_path, status="in_progress")
     bl.cmd_claim_bet(
         bl.load(), types.SimpleNamespace(bet_id="BET-TEST-1", actor="agent-c", force=False)
     )
     cf = bl.CLAIM_DIR / "BET-TEST-1.json"
     stale = json.loads(cf.read_text(encoding="utf-8"))
-    stale["claimed_at"] = "2026-08-30T00:00:00+00:00"  # 8 天前 > 7d TTL
+    # Anchor expiry at 8d ago so the default 7d TTL kicks in regardless of when
+    # the test is executed.
+    stale["claimed_at"] = (datetime.now(UTC) - timedelta(days=8)).strftime(
+        "%Y-%m-%dT%H:%M:%S+00:00"
+    )
     cf.write_text(json.dumps(stale), encoding="utf-8")
     rc = bl.cmd_claim_gc(bl.load(), types.SimpleNamespace(ttl=None, dry_run=False))
     assert rc == 0
@@ -140,6 +155,32 @@ def test_shared_anchor_resolves_main_checkout() -> None:
 
 def test_start_guard_scenarios(tmp_path: Path, monkeypatch) -> None:
     """start 拦截四场景 (agent-workflow 层, 不启动真 run)."""
+    # stub omo.workflow before spec.exec_module so the module imports without
+    # the projects/omo submodule (which is uninitialized in this worktree).
+    import types as _types
+
+    omo_pkg = _types.ModuleType("omo")
+    workflow_pkg = _types.ModuleType("omo.workflow")
+    workflow_pkg.WORKSPACE = ROOT
+    workflow_pkg.WorkflowError = Exception
+    workflow_pkg.load_registry = lambda *a, **k: {}
+    workflow_pkg.main = lambda *a, **k: 0
+    for name in ("cli", "diagnostics", "info", "lifecycle"):
+        sub = _types.ModuleType(f"omo.workflow.{name}")
+        sub.bootstrap_report = lambda *a, **k: {}
+        sub.print_bootstrap_report = lambda *a, **k: None
+        sub.build_status_report = lambda *a, **k: {}
+        sub.print_status_report = lambda *a, **k: None
+        setattr(workflow_pkg, name, sub)
+        sys.modules[f"omo.workflow.{name}"] = sub
+    omo_pkg.workflow = workflow_pkg
+    chain_bind_mod = _types.ModuleType("chain_bind")
+    sys.modules.update({
+        "omo": omo_pkg,
+        "omo.workflow": workflow_pkg,
+        "chain_bind": chain_bind_mod,
+    })
+
     claims = tmp_path / "bet-claims"
     claims.mkdir(parents=True)
     spec2 = importlib.util.spec_from_file_location("aw_t139", ROOT / "bin/agent-workflow.py")

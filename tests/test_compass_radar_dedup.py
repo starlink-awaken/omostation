@@ -7,6 +7,8 @@ in 1h inflates anomaly_count and floors governance_anomaly_score at 25
 counts as 1.
 
 Tests use synthetic events.jsonl in tmp_path, no real workspace touch.
+Timestamps are anchored to `now` (UTC) to keep the 24h cutoff assertion
+stable independent of the calendar date.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -44,13 +47,19 @@ def _write_events(ws_root: Path, events: list[dict]) -> None:
     )
 
 
+def _iso(offset_minutes: int = 0) -> str:
+    """Return an event timestamp `offset_minutes` from the production `now`."""
+    now = datetime.now(UTC).replace(microsecond=0)
+    ts = now + timedelta(minutes=offset_minutes)
+    return ts.isoformat().replace("+00:00", "Z")
+
+
 def test_dedup_collapses_repeated_same_check(radar, tmp_path: Path):
     """5 events of the same (type, check) within 1h count as 1."""
-    base_ts = "2026-08-22T12:00:00"
     events = []
     for i in range(5):
         events.append({
-            "ts": f"2026-08-22T12:{i:02d}:00Z",
+            "ts": _iso(i),  # 5 minutes spaced within the 1h dedup window
             "severity": "critical",
             "type": "governance:gate_failed",
             "payload": {"check": "doc-governance"},
@@ -67,13 +76,13 @@ def test_dedup_keeps_different_checks_separate(radar, tmp_path: Path):
     """2 different (type, check) in same hour = 2 events."""
     events = [
         {
-            "ts": "2026-08-22T12:00:00Z",
+            "ts": _iso(0),
             "severity": "critical",
             "type": "governance:gate_failed",
             "payload": {"check": "doc-governance"},
         },
         {
-            "ts": "2026-08-22T12:05:00Z",
+            "ts": _iso(5),
             "severity": "critical",
             "type": "governance:gate_failed",
             "payload": {"check": "gac-validate"},
@@ -90,13 +99,13 @@ def test_dedup_resets_after_window(radar, tmp_path: Path):
     """Same (type, check) 2h apart = 2 events (window expired)."""
     events = [
         {
-            "ts": "2026-08-22T10:00:00Z",
+            "ts": _iso(-120),  # 2h before now
             "severity": "critical",
             "type": "governance:gate_failed",
             "payload": {"check": "doc-governance"},
         },
         {
-            "ts": "2026-08-22T12:00:00Z",  # 2h later
+            "ts": _iso(0),
             "severity": "critical",
             "type": "governance:gate_failed",
             "payload": {"check": "doc-governance"},
@@ -112,13 +121,13 @@ def test_dedup_excludes_old_events(radar, tmp_path: Path):
     """Events older than 24h are dropped (not counted even if unique)."""
     events = [
         {
-            "ts": "2026-08-20T10:00:00Z",  # > 24h before now
+            "ts": _iso(-1500),  # > 24h before now
             "severity": "critical",
             "type": "governance:gate_failed",
             "payload": {"check": "doc-governance"},
         },
         {
-            "ts": "2026-08-22T12:00:00Z",
+            "ts": _iso(0),
             "severity": "critical",
             "type": "governance:gate_failed",
             "payload": {"check": "doc-governance"},
@@ -142,7 +151,7 @@ def test_dedup_handles_unparseable_timestamp(radar, tmp_path: Path):
     events = [
         {"severity": "critical", "type": "x", "payload": {"check": "y"}},
         {
-            "ts": "2026-08-22T12:00:00Z",
+            "ts": _iso(0),
             "severity": "critical",
             "type": "x",
             "payload": {"check": "y"},
@@ -161,13 +170,13 @@ def test_dedup_includes_degraded_severity(radar, tmp_path: Path):
     """Both 'critical' and 'degraded' severities are counted."""
     events = [
         {
-            "ts": "2026-08-22T12:00:00Z",
+            "ts": _iso(0),
             "severity": "critical",
             "type": "a",
             "payload": {"check": "x"},
         },
         {
-            "ts": "2026-08-22T12:01:00Z",
+            "ts": _iso(1),
             "severity": "degraded",
             "type": "b",
             "payload": {"check": "y"},

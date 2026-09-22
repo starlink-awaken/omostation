@@ -79,37 +79,47 @@ def test_load_records_sorted_by_ts(chart, tmp_path: Path):
 
 
 def test_filter_window_drops_old(chart):
-    now = datetime(2026, 8, 23, 12, 0, 0)
+    now = datetime.now(UTC)
+    recent_day = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    today = now.strftime("%Y-%m-%d")
+    old_day = (now - timedelta(days=2)).strftime("%Y-%m-%d")
     records = [
-        {"ts": "2026-08-22T00:00:00Z"},  # 1.5 days ago — outside 1d window
-        {"ts": "2026-08-22T20:00:00Z"},  # 16h ago — inside 1d
-        {"ts": "2026-08-23T11:00:00Z"},  # 1h ago — inside 1d
+        {"ts": f"{old_day}T00:00:00Z"},  # 2 days ago — outside 1d window
+        {"ts": f"{recent_day}T20:00:00Z"},  # 16h ago — inside 1d
+        {"ts": f"{today}T11:00:00Z"},  # 11h ago — inside 1d
     ]
     out = chart._filter_window(records, days=1, now=now)
     assert len(out) == 2
-    assert out[0]["ts"] == "2026-08-22T20:00:00Z"
+    assert out[0]["ts"] == f"{recent_day}T20:00:00Z"
 
 
 def test_bucket_by_day_keeps_last(chart):
     """When multiple records on the same day, only the LAST value counts."""
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     records = [
-        {"ts": "2026-08-23T01:00:00Z", "health_score": 50},
-        {"ts": "2026-08-23T12:00:00Z", "health_score": 80},
-        {"ts": "2026-08-23T18:00:00Z", "health_score": 60},
+        {"ts": f"{today}T01:00:00Z", "health_score": 50},
+        {"ts": f"{today}T12:00:00Z", "health_score": 80},
+        {"ts": f"{today}T18:00:00Z", "health_score": 60},
     ]
     buckets = chart._bucket_by_day(records, "health_score")
     assert len(buckets) == 1
-    assert buckets[0] == ("2026-08-23", 60.0, 3)
+    assert buckets[0] == (today, 60.0, 3)
 
 
 def test_bucket_by_day_orders_chronologically(chart):
+    now = datetime.now(UTC)
+    days = [
+        (now - timedelta(days=2)).strftime("%Y-%m-%d"),
+        (now - timedelta(days=1)).strftime("%Y-%m-%d"),
+        now.strftime("%Y-%m-%d"),
+    ]
     records = [
-        {"ts": "2026-08-22T12:00:00Z", "health_score": 50},
-        {"ts": "2026-08-24T12:00:00Z", "health_score": 70},
-        {"ts": "2026-08-23T12:00:00Z", "health_score": 60},
+        {"ts": f"{days[0]}T12:00:00Z", "health_score": 50},
+        {"ts": f"{days[2]}T12:00:00Z", "health_score": 70},
+        {"ts": f"{days[1]}T12:00:00Z", "health_score": 60},
     ]
     buckets = chart._bucket_by_day(records, "health_score")
-    assert [b[0] for b in buckets] == ["2026-08-22", "2026-08-23", "2026-08-24"]
+    assert [b[0] for b in buckets] == days
     assert [b[1] for b in buckets] == [50.0, 60.0, 70.0]
 
 
@@ -135,28 +145,33 @@ def test_format_table_empty(chart):
 
 
 def test_format_table_with_buckets(chart):
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    yesterday = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%d")
     buckets = [
-        ("2026-08-22", 50.0, 1),
-        ("2026-08-23", 75.0, 2),
+        (yesterday, 50.0, 1),
+        (today, 75.0, 2),
     ]
     out = chart._format_table("health_score", buckets)
-    assert "2026-08-22" in out
-    assert "2026-08-23" in out
+    assert yesterday in out
+    assert today in out
     assert "health_score" not in out  # field name not in table (just the header)
 
 
 def test_cli_json_mode(tmp_path: Path, monkeypatch, capsys):
     """--json emits machine-readable summary."""
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    yesterday = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%d")
     p = tmp_path / "h.jsonl"
     _write_history(
         p,
         [
-            {"ts": "2026-08-22T00:00:00Z", "health_score": 50, "governance_anomaly_score": 10},
-            {"ts": "2026-08-23T00:00:00Z", "health_score": 75, "governance_anomaly_score": 5},
+            {"ts": f"{yesterday}T00:00:00Z", "health_score": 50, "governance_anomaly_score": 10},
+            {"ts": f"{today}T00:00:00Z", "health_score": 75, "governance_anomaly_score": 5},
         ],
     )
     rc = _load_module().main(
-        ["--path", str(p), "--field", "health_score", "--json", "--days", "30"]
+        ["--path", str(p), "--field", "health_score",
+         "--json", "--days", "30"]
     )
     assert rc == 0
     data = json.loads(capsys.readouterr().out)
@@ -172,26 +187,28 @@ def test_cli_json_mode(tmp_path: Path, monkeypatch, capsys):
 
 def test_cli_human_mode_runs(tmp_path: Path, capsys):
     """Default (no --json) emits a human-readable report."""
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     p = tmp_path / "h.jsonl"
     _write_history(
         p,
         [
-            {"ts": "2026-08-23T01:00:00Z", "health_score": 50},
-            {"ts": "2026-08-23T12:00:00Z", "health_score": 75},
+            {"ts": f"{today}T01:00:00Z", "health_score": 50},
+            {"ts": f"{today}T12:00:00Z", "health_score": 75},
         ],
     )
     rc = _load_module().main(["--path", str(p)])
     assert rc == 0
     out = capsys.readouterr().out
     assert "health_score trend" in out
-    assert "2026-08-23" in out
+    assert today in out
     assert "sparkline" in out
 
 
 def test_cli_invalid_field(tmp_path: Path):
     """--field with unknown value exits non-zero (argparse error)."""
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     p = tmp_path / "h.jsonl"
-    _write_history(p, [{"ts": "2026-08-23T00:00:00Z", "health_score": 50}])
+    _write_history(p, [{"ts": f"{today}T00:00:00Z", "health_score": 50}])
     with pytest.raises(SystemExit):
         _load_module().main(["--path", str(p), "--field", "bogus"])
 
