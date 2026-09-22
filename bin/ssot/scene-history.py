@@ -30,7 +30,12 @@ import os
 import shutil
 import sqlite3
 import sys
-from datetime import UTC, datetime
+from datetime import datetime
+try:
+    from datetime import UTC
+except ImportError:  # cron 下 python3 可能是 3.9 (<3.11 无 datetime.UTC)
+    from datetime import timezone as _timezone
+    UTC = _timezone.utc
 from pathlib import Path
 from typing import Any
 
