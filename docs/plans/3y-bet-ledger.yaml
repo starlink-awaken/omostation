@@ -29528,7 +29528,8 @@ bets:
   track: T8-SURFACE
   window: Y2Q2
   appetite: 2 days
-  status: candidate
+  status: done
+  done_at: 2026-09-21
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-04-write-integrity-recovery-design.md
     spec_version: 1.0.0
