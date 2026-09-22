@@ -30265,7 +30265,8 @@ bets:
   track: T5-ORCH
   window: Y2Q2
   appetite: 1 week
-  status: candidate
+  status: done
+  done_at: 2026-09-22
   goal: 在收发原语之上实现 durable 投递语义，覆盖重试退避、dead-letter 与回退路径。
   depends_on:
   - BET-Y2Q2-T5-01
@@ -30291,6 +30292,7 @@ bets:
   priority: P1
   retro: required
   human_gate: false
+  value_indicator_policy: false
   non_goals:
   - 不做多 agent 编排协议（由 T5-03 承接）
   - 不改收发原语公开接口
@@ -30302,14 +30304,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T5-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c9bf357328261259882fb4af3e784a26674ca98f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:5cf945923c49b4664c0dc11a352a39995ed3db256393f0ba9aa2660925588e55
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:5cf945923c49b4664c0dc11a352a39995ed3db256393f0ba9aa2660925588e55
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:5cf945923c49b4664c0dc11a352a39995ed3db256393f0ba9aa2660925588e55
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:5cf945923c49b4664c0dc11a352a39995ed3db256393f0ba9aa2660925588e55
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:5cf945923c49b4664c0dc11a352a39995ed3db256393f0ba9aa2660925588e55
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:5cf945923c49b4664c0dc11a352a39995ed3db256393f0ba9aa2660925588e55
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-02.md
+            sha256: sha256:5cf945923c49b4664c0dc11a352a39995ed3db256393f0ba9aa2660925588e55
       value:
         status: NOT_PROVEN
         evidence: {}
