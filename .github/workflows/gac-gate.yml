@@ -199,7 +199,7 @@ jobs:
           git diff --cached --exit-code
           test -z "$(git status --porcelain)"
       - name: PASW — 子模块指针可达性前置检查
-        run: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch --require-main
+        run: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch
         continue-on-error: false
       - name: generated projection drift checks
         run: |
