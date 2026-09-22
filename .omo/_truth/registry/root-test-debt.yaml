@@ -1,0 +1,115 @@
+# 根层测试债（tests/*.py）—— 判定表
+#
+# 背景: CI 以「显式列举」方式只运行 26 个根层测试文件（见 .github/workflows/*.yml），
+# 其余 218 个既无 CI 也无 cron 覆盖。全量 `pytest tests/` 实测:
+#   3513 collected / 0 collection error / 160 failed + 29 setup errors / 3319 passed
+# 即 189 个失败长期不可见 —— `bin/gac/check-test-collection.py` 只守「收集完整性」,
+# 不守「通过率」, 故该守卫 PASS 而失败照旧。
+#
+# 本表为只读判定的产物（2026-09-22）, 未做任何处置。每项含根因与建议动作。
+# 判定依据: 目标存活（文件系统为准 —— 本仓为 shallow clone, 历史不可靠）+
+#           失败原因直读 + 隔离性分析（fixture vs 读真实仓库）。
+#
+# 处置原则: 「已归档/已移除」→ 删测试; 「时间炸弹」→ 改相对时间;
+#           「环境」→ 加守卫（参照 tests/test_scene_outcome_episode_bridge.py 模式);
+#           「行为漂移」→ 逐个判定测试对错, 不得批量跳过。
+version: 1
+ssot_ref: CR-ROOT-TEST-DEBT
+generated: '2026-09-22'
+measurement:
+  command: python3 -m pytest tests -q
+  collected: 3513
+  collection_errors: 0
+  failed: 160
+  setup_errors: 29
+  passed: 3319
+  skipped: 9
+  wall_clock_s: 1005
+ci_coverage:
+  root_test_files_total: 244
+  ci_listed_files: 26
+  intersection_with_failures: 0
+  note: CI 覆盖的 26 个根层测试全部通过；189 个失败全部落在 CI 未覆盖的 44 个文件内。
+
+categories:
+  # ── A. 目标已归档/已删（CI 直接忽略归档目录）→ 建议删测试 ──
+  A_target_archived:
+    action: delete_test
+    rationale: 目标已进 bin/_archive/ 或 .omo/_archive/，CI 忽略归档目录，测试无复活可能
+    files:
+      tests/test_collab_scenario_runner.py: {count: 30, cause: '.omo/_delivery/collab-scenarios/ADV*.yaml 已删(186 个); 该库 README frontmatter = status: archived'}
+      tests/test_cron_mypy_gate.py: {count: 8, cause: '.omo/cron/{gac,operating-rhythm}-crontab → _archived-2026-07-03/ 与 .omo/_archive/2026-09-a4-scheduler-consolidation/operating-rhythm-crontab.superseded-by-registry-v2（明示已被 registry v2 取代）'}
+      tests/test_p86_abcd_stop_and_designed.py: {count: 5, cause: 'bin/gac/check-scenario-growth.py → bin/_archive/; ADV01 场景数据已删'}
+      tests/test_skill_crystallizer.py: {count: 4, cause: 'bin/gac/skill-crystallizer.py → bin/_archive/'}
+      tests/test_collab_emergence_cli.py: {count: 3, cause: '同 collab 场景数据'}
+      tests/test_t1_12_wp_p4_legacy_retirement.py: {count: 3, cause: 'bin/gac/daemon-watchdog.py, bin/ssot/real-scenario-runner.py → bin/_archive/2026-09-2{0,1}-bin-quota-offset/'}
+      tests/test_heartbeat_wrapper.py: {count: 2, cause: '.omo/cron/operating-rhythm-crontab → _archived-2026-07-03/'}
+      tests/test_agt_integration.py: {count: 1, cause: '.omo/_knowledge/workflow-mesh/external-resource-pack-proposals/ 目录不存在'}
+      tests/test_channel_exposure_p0.py: {count: 1, cause: 'docs/operations/external-agent-attach-card.md → .omo/_archive/operations-2026H1/'}
+      tests/test_classify_planned.py: {count: 1, cause: 'bin/classify_planned.py → bin/_archive/'}
+      tests/test_collab_control_experiment.py: {count: 1, cause: '同 collab 场景数据'}
+      tests/test_fix_orphan_locks.py: {count: 1, cause: '.omo/_delivery/agent-workflows/locks/.archive 不存在'}
+      tests/test_gconv_helpers.py: {count: 1, cause: 'bin/ssot/write-owner-repair-draft.py → bin/_archive/'}
+
+  # ── B. 符号已移除（生产代码零引用）→ 建议删测试 ──
+  B_symbol_removed:
+    action: delete_test
+    rationale: 符号在生产代码中零引用（grep 仅命中失败测试自身），且无近似改名对应物
+    files:
+      tests/test_dflash2_speculative.py: {count: 9, cause: 'DFLASH2_BLOCK_SIZE_TOKENS / should_fallback_to_ar / dflash2_enabled 已从 omlxc 整体移除'}
+      tests/test_zhiyuan_oa_ingress.py: {count: 9, cause: 'projects/agora/.../spine.py 中 OAIngestResult / _parse_oa_todo / _oa_http_request / _map_urgency 已移除; zhiyuan 在生产代码零命中'}
+      tests/test_drift_sweep.py: {count: 6, cause: '_drift_sweep_test._run_check 已移除'}
+      tests/test_master_convergence.py: {count: 4, cause: 'bin.ingress / bin.memory 模块不存在; bin/gac/auto-decay-patrol.py 已移除'}
+      tests/test_generate_brief.py: {count: 1, cause: 'generate_brief.decision_checklist_reference 已移除'}
+
+  # ── C. 时间炸弹（硬编码过去日期 + 生产侧相对时间窗）→ 建议改相对时间 ──
+  C_time_bomb:
+    action: fix_test_use_relative_time
+    rationale: |
+      测试用绝对日期构造数据, 而生产代码按相对窗口过滤（近 24h / since_days / TTL）。
+      写下时通过, 随时间推移失效 —— 非代码 bug, 系统性测试缺陷。
+      已逐个验证机制（非启发式猜测）。
+    verified_mechanisms:
+      - tests/test_compass_radar_dedup.py: 硬编码 2026-08-22 事件 vs bin/compass_radar.py:983 近 24h cutoff
+      - tests/test_episode_source_aggregator.py: fixture _add_merge_commit(date="2026-08-20") vs _collect_git(since_days=30)
+    files:
+      tests/test_compass_radar_dedup.py: {count: 6, hardcoded: '2026-08-22'}
+      tests/test_episode_source_aggregator.py: {count: 7, hardcoded: '2026-08-20'}
+      tests/test_bet_claim_broadcast.py: {count: 6, hardcoded: '2026-08-30 vs 7d TTL'}
+      tests/test_swarm_discipline.py: {count: 4, hardcoded: '2026-08-01/19'}
+      tests/test_zhixing_panel_sync.py: {count: 4, hardcoded: '2026-09-17'}
+      tests/test_health_trend_chart.py: {count: 2, hardcoded: '2026-01-01/08-23'}
+      tests/test_gac_m1_tracked_truth.py: {count: 2, hardcoded: '2026-07-31'}
+      tests/test_e2_sweep_closeout.py: {count: 1, hardcoded: '2026-08-05'}
+      tests/test_external_scene_trial.py: {count: 1, hardcoded: '2026-08-03'}
+      tests/test_mof_capabilities_drift.py: {count: 1, hardcoded: '2026-06/07'}
+      tests/test_north_star_meter_v2.py: {count: 1, hardcoded: '2026-08-20'}
+      tests/test_task_tree_consistency.py: {count: 1, hardcoded: '2026-09-19'}
+
+  # ── D. 环境依赖 → 建议加守卫 ──
+  D_env:
+    action: add_env_guard
+    rationale: 缺 sys.path 或超时，非逻辑失败；参照 tests/test_scene_outcome_episode_bridge.py 的 skip 模式
+    files:
+      tests/test_external_resource_catalog.py: {count: 3, cause: 'ModuleNotFoundError: agora —— 未注入 projects/agora/src 到 sys.path'}
+      tests/test_cleanup_guard.py: {count: 1, cause: '三清理器子进程链 > pytest-timeout 180s'}
+
+  # ── E. 行为/状态漂移 → 必须逐个人工判定（不得批量跳过）──
+  E_behavior:
+    action: adjudicate_individually
+    rationale: |
+      测试读真实仓库或对生产输出做语义断言。可能是真回归，也可能是断言过时 ——
+      两者外观相同，必须逐个判定。禁止用 skip 掩埋。
+    files:
+      tests/test_ops_comprehensive.py: {count: 12, cause: 'CLI 迁移 --json → --format json 未覆盖 summary/score/metrics; 实为接口漂移, 疑似测试未跟上'}
+      tests/test_github_publication_effect_owner.py: {count: 4, cause: '4 个 workflow 使用 write-capable token —— 疑似真实安全回归, 优先排查'}
+      tests/test_scene_card_lifecycle_check.py: {count: 3, cause: 'ready/blockers 计数漂移'}
+      tests/test_chain_bind.py: {count: 2, cause: 'BET-Y1Q4-T1-08 status=done → NOT_STARTABLE'}
+      tests/test_scene_card_candidates.py: {count: 2, cause: '候选计数 1 vs 2'}
+      tests/test_closeout_audit.py: {count: 1, cause: 'collect_runs 解析真实 workspace 得 0'}
+      tests/test_cross_repo_consistency_phase3.py: {count: 1, cause: 'unregistered 41 vs 基线 34'}
+      tests/test_documents_content_plane_migration_check.py: {count: 1, cause: "phase_b 'verified' vs 期望 'in_progress'"}
+      tests/test_fix_submodule_drift.py: {count: 1, cause: '未检出 drift'}
+      tests/test_hardcoded_ports.py: {count: 1, cause: '4 个未登记端口 [9000, 6379, 43191, 18700]'}
+      tests/test_p76_principles.py: {count: 1, cause: "catalog 缺 '100 A+' 字样"}
+      tests/test_strategy_check.py: {count: 1, cause: "dim4 'GREEN' vs 'YELLOW'"}
