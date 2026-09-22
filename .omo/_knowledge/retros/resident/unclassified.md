@@ -1,26 +1,30 @@
 ---
 schema: resident-retro-candidate/v1
 topic: unclassified
-generated_at: 2026-09-21T08:52:01Z
-status: candidate
+generated_at: 2026-09-22T07:42:34Z
+status: planned
 counts:
-  runs: 34
+  runs: 40
   failures: 0
-  total: 34
+  total: 40
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
+lifecycle: history
+owner: unassigned
 ---
 # unclassified 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-21T08:52:01Z
+- generated_at: 2026-09-22T07:42:34Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 34 成功运行 + 0 失败模式 = 34 草稿
+- sediment 覆盖: 40 成功运行 + 0 失败模式 = 40 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
+- 20260823T0000Z-project-code-change-int01.md
+- 20260823T0000Z-role-collab.md
 - delivery-run-pr-4125-v3.md
 - delivery-run-pr-4126-v3.md
 - delivery-run-pr-4127-v3.md
@@ -41,6 +45,10 @@ failure_breakdown:
 - delivery-run-pr-4143-v3.md
 - delivery-run-pr-4144-v3.md
 - delivery-run-pr-4145-v3.md
+- delivery-run-pr-4146-v3.md
+- delivery-run-pr-4147-v3.md
+- delivery-run-pr-4148-v3.md
+- delivery-run-pr-4149-v3.md
 - points-calc-05bfd52149ff.md
 - points-calc-6b86071cf68c.md
 - points-calc-86828777c57c.md
@@ -106,6 +114,18 @@ failure_breakdown:
   - 指标: event_count=1, duration_s=0.0
 - **delivery-run-pr-4145-v3**
   - 指标: event_count=1, duration_s=0.0
+- **delivery-run-pr-4146-v3**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=6, duration_s=-1733.629
+- **delivery-run-pr-4147-v3**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=6, duration_s=-2175.652
+- **delivery-run-pr-4148-v3**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=6, duration_s=-841.605
+- **delivery-run-pr-4149-v3**
+  - 结果与证据: ok=None, status=None, evidence_count=None
+  - 指标: event_count=6, duration_s=-746.58
 - **points-calc-05bfd52149ff**
   - 实际步骤: complete-quest
   - 结果与证据: ok=None, status=None, evidence_count=None

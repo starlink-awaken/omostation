@@ -1,5 +1,5 @@
 ---
-status: completed
+status: archived
 lifecycle: history
 owner: governance-team
 bet_id: BET-Y2Q2-T5-01

@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-22
+---
 # Workflow Waiver Record
 
 **Date**: 2026-09-21  
