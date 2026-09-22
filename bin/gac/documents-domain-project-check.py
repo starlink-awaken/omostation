@@ -629,7 +629,6 @@ def check_domain_projects(
     }
     if selected_ids:
         report["gateway_count"] = len(set(selected_ids))
-    report["entrypoint_bindings"] = bindings_checked
     report["errors"] = errors
     return report
 
