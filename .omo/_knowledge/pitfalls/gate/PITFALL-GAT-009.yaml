@@ -1,0 +1,20 @@
+schema: agent-error/v1
+id: PITFALL-GAT-009
+category: gate
+severity: medium
+title: unbound 治理修复应走 governance-state-mutation workflow（G8 豁免），project-doc-change
+  无 unbound closeout 分支
+symptom: closeout status=ok 被 vision→retro 链拦截 missing_bet_binding：run 以 project-doc-change
+  启动且 bet_id=unbound（chain_bind.py:204-211 仅 EXEMPT_WORKFLOWS/GOVERNANCE_EVOLVE_WORKFLOWS/gate_disabled
+  三条豁免路径）
+root_cause: ''
+solution: '无业务 BET 的治理数据 mutation 直接以 governance-state-mutation 启动（G8 豁免，先例 run 20260922T012405Z-...-73f3490f
+  / PR #4176）；若已误用 project-doc-change，用 waiver 文档化的一次性 AGCP_REQUIREMENT_ITERATION_GATE=0
+  前缀完成 closeout 并在 evidence 中披露（BET-Y2Q2-T10-155 后例 #4189 run 20260922T040308Z-project-doc-change-0fac185b）'
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-09-22'
+times_encountered: 1
+last_confirmed_at: '2026-09-22'
+status: active
