@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded',function(){renderPanorama(1);});
 </script>
 <script>
 window.addEventListener('hashchange',()=>go());
+/* Call populate functions with error handling */
+renderPanorama(d);
 </script>
 </body></html>
 """
@@ -59,7 +61,7 @@ def test_check_detects_drift_on_fresh_template(tmp_path):
     assert mod.check() == 1
     info = mod.status()
     assert info["exists"] is True
-    assert info["section"] is False
+    assert info["scene_panel"] is False
 
 
 def test_ensure_injects_all_fragments(tmp_path):
