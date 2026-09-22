@@ -109,12 +109,8 @@ categories:
   B_symbol_removed:
     action: delete_test
     rationale: 符号在生产代码中零引用（grep 仅命中失败测试自身），且无近似改名对应物
-    files:
-      tests/test_dflash2_speculative.py: {count: 9, cause: 'DFLASH2_BLOCK_SIZE_TOKENS / should_fallback_to_ar / dflash2_enabled 已从 omlxc 整体移除'}
-      tests/test_zhiyuan_oa_ingress.py: {count: 9, cause: 'projects/agora/.../spine.py 中 OAIngestResult / _parse_oa_todo / _oa_http_request / _map_urgency 已移除; zhiyuan 在生产代码零命中'}
-      tests/test_drift_sweep.py: {count: 6, cause: '_drift_sweep_test._run_check 已移除'}
-      tests/test_master_convergence.py: {count: 4, cause: 'bin.ingress / bin.memory 模块不存在; bin/gac/auto-decay-patrol.py 已移除'}
-      tests/test_generate_brief.py: {count: 1, cause: 'generate_brief.decision_checklist_reference 已移除'}
+    status: cleared_2026-09-22_via_PR_#4207
+    cleared_via: 'deleted tests/test_{dflash2_speculative,zhiyuan_oa_ingress,drift_sweep,master_convergence,generate_brief}.py in commit 6c93366ce follow-up'
 
   # ── C. 时间炸弹（硬编码过去日期 + 生产侧相对时间窗）→ 建议改相对时间 ──
   C_time_bomb:
