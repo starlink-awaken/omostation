@@ -30166,14 +30166,30 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T10-155
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-155.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-155.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-155.md
+          merged_reachable_commit:
+            ref: git://origin/main@0188e3fede525a026f898826611173920bf17a48
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-155.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-155.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-155.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-155.md
       value:
         status: NOT_PROVEN
         evidence: {}
