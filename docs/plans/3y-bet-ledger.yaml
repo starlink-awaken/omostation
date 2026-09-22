@@ -30119,6 +30119,59 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q2-T10-156
+  title: Claims preflight high-water filename reconciliation
+  status: candidate
+  priority: P1
+  risk_level: L1
+  track: T10-MATURITY
+  window: Y2Q2
+  workflow: project-code-change
+  value_indicator_policy: false
+  human_gate: false
+  retro: required
+  appetite: 2 hours
+  goal: Align Claims Authority preflight with the production high-water filename so admission is not falsely blocked.
+  done_when:
+  - Focused preflight tests cover high-water-only, legacy-only, both-present, and both-missing layouts.
+  - A clean exact-main preflight no longer reports authority_store_asymmetric_presence.
+  - Remaining admission blocker is only operation-specific host authorization unless a real store defect appears.
+  - Ledger lint and governance gates pass.
+  non_goals:
+  - Do not rename, initialize, repair, or quarantine the production authority store.
+  - Do not activate Claims Authority or approve lifecycle operations.
+  - Do not rewrite receipts, enable instruction capability, or prove business value.
+  verify:
+  - cmd: uv run pytest -q tests/unit/test_claims_shadow_preflight.py
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/claims-shadow-preflight.py
+  - tests/unit/test_claims_shadow_preflight.py
+  - docs/superpowers/specs/2026-09-22-claims-preflight-high-water-reconciliation-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-156.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-22-claims-preflight-high-water-reconciliation-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:107ece8c898a44642776f14c7cb882f6f114231af112a18379d4abfecffe3aea
+    decision_ref: decision://accepted/BET-Y2Q2-T10-156
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 - id: BET-Y2Q1-T4-03
   title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
   status: done
@@ -30374,6 +30427,7 @@ bets:
   - cmd: grep -c "team-mailbox" ~/.config/opencode/opencode.json
     expect: '>= 1'
   workflow: project-code-change
+  value_indicator_policy: false
   write_surfaces:
   - ~/.config/opencode/plugin/team-mailbox/**
   - docs/superpowers/specs/2026-09-21-t5-03-team-mailbox-fork-join-design.md
@@ -30401,7 +30455,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@e55185ee2
+            ref: git://origin/main@e55185ee268064bf9cf7c2831c24e82d4d17a894
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
             sha256: sha256:e9f2a2c8f5e2e647c21708f736563abeb72054ee8f8a4a6b7034654eacf67ccc
