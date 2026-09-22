@@ -715,3 +715,4 @@ open_decisions:
 # (scheduler-compile.py check_drift 用子串匹配豁免)
 known_orphans:
   - clash-probe.sh  # 用户本机网络探测 (~/.local/bin), 2026-09-20 确认为外部工具
+  - mimo-models-sync.sh  # 用户本机外部模型同步 (~/.local/bin), 2026-09-22 确认为外部工具
