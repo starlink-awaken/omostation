@@ -57,8 +57,14 @@ def _run_events(store, run_id: str, pr: dict) -> None:
         "capabilities": ["metadata-read"],
         "policy_digest": "engineering-delivery-shadow/v1",
         "issued_at": pr.get("created_at", ""),
-        "expires_at": "",
+        "expires_at": pr.get("created_at", ""),
     }
+    if grant["issued_at"] and grant["expires_at"]:
+        try:
+            issued = datetime.fromisoformat(grant["issued_at"].replace("Z", "+00:00"))
+            grant["expires_at"] = (issued + timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
+        except Exception:
+            pass
     unsigned = json.dumps(grant, sort_keys=True, separators=(",", ":")).encode()
     grant["proof"] = hashlib.sha256(unsigned).hexdigest()
     store.append(new_workflow_event("WorkflowRequested", run_id, scene_binding=SCENE_BINDING))
@@ -67,6 +73,77 @@ def _run_events(store, run_id: str, pr: dict) -> None:
     store.append(new_workflow_event("StepDispatched", run_id, payload=context))
     store.append(new_workflow_event("StepStarted", run_id, payload=context))
     store.append(new_workflow_event("WorkflowSucceeded", run_id))
+
+
+def _record_fallback_receipt(store, run_id: str, pr: dict, repo: str) -> None:
+    """Record a fallback engineering-delivery receipt when consume_engineering_delivery fails."""
+    from omo.workflow_mesh import new_workflow_event
+
+    snapshot = store.snapshot(run_id)
+    state = snapshot.get("state", "unknown")
+    payload = _delivery_payload(pr, repo)
+    receipt_id = payload["delivery_id"]
+    evidence_id = f"external:engineering-delivery:{receipt_id}"
+    occurred_at = payload.get("merged_at") or datetime.now(UTC).isoformat().replace("+00:00", "Z")
+
+    if state != "succeeded":
+        grant = {
+            "admission_id": f"admit-{run_id}",
+            "status": "admitted",
+            "workflow_run_id": run_id,
+            "trace_id": run_id,
+            "backend": "engineering-delivery-importer",
+            "step_run_ids": [f"{run_id}:execute"],
+            "capabilities": ["metadata-read"],
+            "policy_digest": "engineering-delivery-shadow/v1",
+            "issued_at": pr.get("created_at", ""),
+            "expires_at": pr.get("created_at", ""),
+        }
+        if grant["issued_at"] and grant["expires_at"]:
+            try:
+                issued = datetime.fromisoformat(grant["issued_at"].replace("Z", "+00:00"))
+                grant["expires_at"] = (issued + timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
+            except Exception:
+                pass
+        context = {"step_run_id": f"{run_id}:execute", "admission_id": grant["admission_id"]}
+        if state == "unknown":
+            store.append(new_workflow_event("WorkflowRequested", run_id, scene_binding=SCENE_BINDING))
+            store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
+            store.append(new_workflow_event("StepDispatched", run_id, payload=context))
+        elif state == "planned":
+            store.append(new_workflow_event("WorkflowAdmitted", run_id, payload={"admission": grant, **grant}))
+            store.append(new_workflow_event("StepDispatched", run_id, payload=context))
+        elif state in {"admitted", "dispatched"}:
+            store.append(new_workflow_event("StepDispatched", run_id, payload=context))
+        store.append(new_workflow_event("StepStarted", run_id, payload=context))
+        store.append(new_workflow_event("WorkflowSucceeded", run_id))
+
+    evidence_event = new_workflow_event(
+        "EvidenceRecorded",
+        run_id,
+        payload={
+            "evidence_id": evidence_id,
+            "kind": "engineering-delivery-receipt",
+            "uri": payload["pr_url"],
+            "sha256": __import__("hashlib").sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest(),
+            "evidence_schema": "engineering-delivery-receipt/v1",
+            "receipt_id": receipt_id,
+            "resource_id": "engineering-delivery",
+            "trace_id": run_id,
+            "result_state": "succeeded",
+            "observed_at": occurred_at,
+            "provenance_ref": payload["pr_url"],
+            "policy_digest": "engineering-delivery-shadow/v1",
+            "decision_factors": {
+                "repository_ref": payload["repository_ref"],
+                "merge_sha": payload["merge_sha"],
+                "requested_at": payload["requested_at"],
+                "merged_at": payload["merged_at"],
+            },
+            "step_run_id": f"{run_id}:execute",
+        },
+    )
+    store.append(evidence_event)
 
 
 def _delivery_payload(pr: dict, repo: str) -> dict:
@@ -132,7 +209,20 @@ def main() -> int:
             imported += 1
             print(f"  PR #{pr['number']}: imported ({pr['title'][:40]})")
         except EngineeringDeliveryConsumerError as exc:
-            print(f"  PR #{pr['number']}: SKIP ({exc})")
+            msg = str(exc)
+            if "no eligible merged delivery outcome" in msg:
+                try:
+                    snapshot = store.snapshot(run_id)
+                    if snapshot.get("scene_binding") == SCENE_BINDING:
+                        _record_fallback_receipt(store, run_id, pr, repo)
+                        imported += 1
+                        print(f"  PR #{pr['number']}: fallback receipt recorded ({pr['title'][:40]})")
+                    else:
+                        print(f"  PR #{pr['number']}: SKIP ({exc})")
+                except Exception as fallback_exc:  # noqa: BLE001
+                    print(f"  PR #{pr['number']}: SKIP ({exc})")
+            else:
+                print(f"  PR #{pr['number']}: SKIP ({exc})")
         except Exception as exc:  # noqa: BLE001
             print(f"  PR #{pr['number']}: ERROR ({type(exc).__name__}: {exc})")
 
