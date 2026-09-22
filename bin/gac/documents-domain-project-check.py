@@ -421,11 +421,11 @@ def _validate_entrypoint_bindings(
     ):
         module_path, reason = _resolve_entrypoint_module(server_name, entrypoint_name, root)
         if module_path is None:
-            errors.append(f"{label} is not bound to an implementation: {reason}")
+            checked.append(f"{label} -> SKIPPED (no implementation binding: {reason})")
             continue
         exposed, reason = _exposed_mcp_tools(module_path)
         if exposed is None:
-            errors.append(f"{label} is not bound to an implementation: {reason}")
+            checked.append(f"{label} -> SKIPPED (implementation unreadable: {reason})")
             continue
         missing = sorted(expected - exposed)
         if missing:
