@@ -30434,7 +30434,8 @@ bets:
   track: T5-ORCH
   window: Y2Q2
   appetite: 1 week
-  status: candidate
+  status: done
+  done_at: 2026-09-22
   goal: 基于持久化 mailbox 实现 fork-join 编排，支撑多 agent 任务分发与结果汇聚。
   depends_on:
   - BET-Y2Q2-T5-02
@@ -30471,17 +30472,43 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T5-03
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c9bf357328261259882fb4af3e784a26674ca98f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
       value:
-        status: NOT_PROVEN
-        evidence: {}
+        status: ACCEPTED
+        evidence:
+          acceptance:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
 - id: BET-Y1Q4-T10-174
   title: Clone-lifecycle claims-authority fence adapter contract repair
   status: done
