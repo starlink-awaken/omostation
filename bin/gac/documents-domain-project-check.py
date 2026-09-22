@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
+import tomllib
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -300,6 +302,144 @@ def _validate_client_generator_ref(
     return []
 
 
+def _resolve_entrypoint_module(server_name: str, entrypoint: str, root: Path) -> tuple[Path | None, str]:
+    """Resolve a declared MCP entrypoint name to the module that implements it.
+
+    The binding is owned by the project's own packaging metadata
+    (`[project.scripts]` in `<root>/projects/<server>/pyproject.toml`), so the
+    declaration never has to duplicate a filesystem path and the two sides cannot
+    drift apart silently.
+    """
+
+    pyproject = root / "projects" / server_name / "pyproject.toml"
+    if not pyproject.is_file():
+        return None, f"packaging metadata not found ({pyproject})"
+    try:
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+        return None, f"packaging metadata unreadable ({exc})"
+    scripts = (data.get("project") or {}).get("scripts")
+    if not isinstance(scripts, dict):
+        return None, "packaging metadata declares no [project.scripts]"
+    target = scripts.get(entrypoint)
+    if not isinstance(target, str) or ":" not in target:
+        return None, f"entrypoint {entrypoint!r} is not declared in [project.scripts]"
+    module = target.split(":", 1)[0].strip()
+    if not module:
+        return None, f"entrypoint {entrypoint!r} declares an empty module path"
+    module_path = root / "projects" / server_name / "src" / Path(*module.split(".")).with_suffix(".py")
+    if not module_path.is_file():
+        return None, f"entrypoint {entrypoint!r} resolves to a missing module ({module_path})"
+    return module_path, ""
+
+
+def _exposed_mcp_tools(module_path: Path) -> tuple[set[str] | None, str]:
+    """Return the tool names a server module actually registers via `@mcp.tool()`."""
+
+    try:
+        source = module_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return None, f"module unreadable ({exc})"
+    try:
+        tree = ast.parse(source, filename=str(module_path))
+    except SyntaxError as exc:
+        return None, f"module is not valid Python ({exc})"
+    tools: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for decorator in node.decorator_list:
+            if (
+                isinstance(decorator, ast.Call)
+                and isinstance(decorator.func, ast.Attribute)
+                and decorator.func.attr == "tool"
+            ):
+                tools.add(node.name)
+    return tools, ""
+
+
+def _declared_tool_surfaces(
+    workspace_mcp: dict[str, object],
+    profiles: dict[str, object],
+    clients: object,
+) -> list[tuple[str, str, str, set[str]]]:
+    """Collect every tool surface that the declaration binds to a server entrypoint.
+
+    Two surfaces exist today: the main read surface (`workspace_mcp`) and the
+    bounded remote surface used by the ChatGPT tunnel (`tunnel_contract`).
+    """
+
+    surfaces: list[tuple[str, str, str, set[str]]] = []
+    server = workspace_mcp.get("server")
+    entrypoint = workspace_mcp.get("entrypoint")
+    declared_read = workspace_mcp.get("read_tools")
+    if isinstance(server, str) and server and isinstance(entrypoint, str) and entrypoint:
+        expected = (
+            {item for item in declared_read if isinstance(item, str) and item}
+            if isinstance(declared_read, list)
+            else set()
+        )
+        surfaces.append((f"workspace_mcp.entrypoint={entrypoint}", server, entrypoint, expected))
+
+    tunnel = (clients.get("chatgpt_web") if isinstance(clients, dict) else None) or {}
+    contract = tunnel.get("tunnel_contract") if isinstance(tunnel, dict) else None
+    if isinstance(contract, dict):
+        local = contract.get("local_entrypoint")
+        profile_id = contract.get("tool_profile")
+        profile = profiles.get(profile_id) if isinstance(profile_id, str) else None
+        allowed = profile.get("allowed_workspace_tools") if isinstance(profile, dict) else None
+        if isinstance(local, str) and local and isinstance(allowed, list):
+            expected = {item for item in allowed if isinstance(item, str) and item}
+            owner = server if isinstance(server, str) and server else "cockpit"
+            surfaces.append(
+                (f"clients.chatgpt_web.tunnel_contract.local_entrypoint={local}", owner, local, expected)
+            )
+    return surfaces
+
+
+def _validate_entrypoint_bindings(
+    workspace_mcp: dict[str, object],
+    profiles: dict[str, object],
+    clients: object,
+    root: Path,
+) -> tuple[list[str], list[str]]:
+    """Bind declared tool surfaces to the server modules that must implement them.
+
+    `read_tools` and each profile's `allowed_workspace_tools` live in the
+    declaration; the tools a server actually exposes live in code. Only this
+    comparison can catch a declaration that outruns its implementation — the
+    intra-declaration subset check cannot, because both sides of it are text.
+
+    Returns `(errors, checked)`. `checked` is reported even when empty so that
+    "nothing was bound" stays distinguishable from "everything matched".
+    """
+
+    errors: list[str] = []
+    checked: list[str] = []
+    for label, server_name, entrypoint_name, expected in _declared_tool_surfaces(
+        workspace_mcp, profiles, clients
+    ):
+        module_path, reason = _resolve_entrypoint_module(server_name, entrypoint_name, root)
+        if module_path is None:
+            errors.append(f"{label} is not bound to an implementation: {reason}")
+            continue
+        exposed, reason = _exposed_mcp_tools(module_path)
+        if exposed is None:
+            errors.append(f"{label} is not bound to an implementation: {reason}")
+            continue
+        missing = sorted(expected - exposed)
+        if missing:
+            errors.append(
+                f"{label} declares tools the implementing server does not expose: {', '.join(missing)}"
+            )
+        try:
+            shown = module_path.relative_to(root)
+        except ValueError:
+            shown = module_path
+        checked.append(f"{label} -> {shown} ({len(exposed)} tools exposed)")
+    return errors, checked
+
+
 def check_domain_projects(
     domain_registry_path: Path,
     project_registry_path: Path,
@@ -478,12 +618,18 @@ def check_domain_projects(
         for filename in gateway_files:
             errors.extend(_check_gateway_file(domain_root / filename, domain_id, domain_root))
 
+    binding_errors, bindings_checked = _validate_entrypoint_bindings(
+        workspace_mcp, profiles, clients, ROOT
+    )
+    errors.extend(binding_errors)
+
     report: dict[str, object] = {
         "ok": not errors,
         "domain_count": len(manifest_ids),
     }
     if selected_ids:
         report["gateway_count"] = len(set(selected_ids))
+    report["entrypoint_bindings"] = bindings_checked
     report["errors"] = errors
     return report
 
