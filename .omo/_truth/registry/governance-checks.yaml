@@ -183,7 +183,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 699 # 2026-09-21 698→699: PR #4131 新增 check-submodule-pins.py
+    script_baseline: 700 # 2026-09-22 699→700: PR #4178 新增 bin/ssot/tests/test_fallback_receipt.py
       # (+ check-submodule-pins.py); 值取自 gac-validate
       # 建议 (= bin/ 实际活跃脚本数), 依 SCRIPT-BASELINE-SYNC 黄金规则 (BET-Y1Q3-T6-05)
   rules:
