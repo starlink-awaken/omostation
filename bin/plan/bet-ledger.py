@@ -2947,6 +2947,11 @@ def cmd_claim_gc(data: dict, args) -> int:
 def cmd_lint(data: dict, args) -> int:
     """台账自检：ID 唯一、依赖存在、轨道/窗口/状态合法、必填字段。"""
     errs: list[str] = []
+    # GAT-006 防线：meta.total_bets 必须由 entries 派生（#4189 修复后禁止再手改/increment）
+    declared_total = data.get("meta", {}).get("total_bets")
+    actual_total = len(data.get("bets") or [])
+    if isinstance(declared_total, int) and declared_total != actual_total:
+        errs.append(f"META_TOTAL_BETS_DRIFT: declared={declared_total} actual={actual_total}")
     # done 证据守卫只对「base 非 done → 当前 done」的 transition 生效；
     # base 不可解析时守卫关闭（零新增 findings），声明了 base 却读不出才 fail closed
     base_ref = _resolve_ledger_base_ref(workspace=WS)

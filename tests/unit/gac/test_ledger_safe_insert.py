@@ -100,6 +100,29 @@ def test_inserts_mapping_as_bets_list_item_and_updates_count(tmp_path: Path, ite
     assert [bet["id"] for bet in data["bets"]] == ["BET-OLD", "BET-NEW"]
     assert "id" not in data
     assert data["meta"]["total_bets"] == 2
+    assert data["meta"]["total_bets"] == len(data["bets"])
+    assert "bets now 2" in result.stdout
+
+
+def test_insert_repairs_preexisting_meta_total_bets_drift(tmp_path: Path) -> None:
+    """meta 绝对派生自 len(bets)：已漂移的旧值不得 old+1 平移（GAT-006）。"""
+    ledger, entry = _write_case(tmp_path)
+    # 故意写错 meta（1 条 bet 却声明 0）
+    text = ledger.read_text(encoding="utf-8").replace("total_bets: 1", "total_bets: 0")
+    ledger.write_text(text, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(TOOL), "--file", str(entry), "--ledger", str(ledger)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    data = yaml.safe_load(ledger.read_text(encoding="utf-8"))
+    assert [bet["id"] for bet in data["bets"]] == ["BET-OLD", "BET-NEW"]
+    assert data["meta"]["total_bets"] == 2
+    assert data["meta"]["total_bets"] == len(data["bets"])
     assert "bets now 2" in result.stdout
 
 

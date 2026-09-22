@@ -137,8 +137,12 @@ def validate_portfolio(ledger: dict[str, Any], *, strict: bool) -> PortfolioVali
     """Validate the optional Portfolio v2 surface without filesystem writes.
 
     A legacy Ledger has no portfolio top-level entities yet, so compatibility
-    mode accepts it unchanged.  Strict enforcement is intentionally deferred to
-    the separately authorized ``meta.total_bets`` repair and W0 self-binding.
+    mode accepts it unchanged.
+
+    ``META_TOTAL_BETS_DRIFT`` is always an error (2026-09-22): the separately
+    authorized derived repair (#4189/#4212 lineage) has landed, and count
+    drift is a GAT-006-class regression risk — writers must derive
+    ``meta.total_bets`` from ``len(bets)``, never hand-edit or increment.
     """
     if not isinstance(ledger, dict):
         return PortfolioValidationResult(errors=("PORTFOLIO_SCHEMA_INVALID: ledger must be a mapping",))
@@ -152,10 +156,8 @@ def validate_portfolio(ledger: dict[str, Any], *, strict: bool) -> PortfolioVali
         actual = len(bets)
         if declared != actual:
             finding = f"{META_TOTAL_BETS_DRIFT}: declared={declared} actual={actual}"
-            if strict:
-                errors.append(finding)
-            else:
-                warnings.append(finding)
+            # Always fail-closed: repair is authorized/landed; drift is regression.
+            errors.append(finding)
 
     # Compatibility gate: a legacy v1 Ledger has no v2 top-level entities.
     contract_enabled = "vision" in ledger

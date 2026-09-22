@@ -64,14 +64,17 @@ def test_validator_rejects_duplicate_v2_entity_ids_without_mutating_input() -> N
 
 
 def test_total_bets_drift_warns_in_compatibility_and_fails_in_strict_mode() -> None:
+    """META drift is always an error (derived repair landed; GAT-006 defense)."""
     ledger = {"meta": {"total_bets": 1}, "bets": []}
 
     compatibility = PORTFOLIO_CONTRACT.validate_portfolio(ledger, strict=False)
     strict = PORTFOLIO_CONTRACT.validate_portfolio(ledger, strict=True)
 
-    assert compatibility.errors == ()
-    assert compatibility.warnings == ("META_TOTAL_BETS_DRIFT: declared=1 actual=0",)
-    assert strict.errors == ("META_TOTAL_BETS_DRIFT: declared=1 actual=0",)
+    expected = ("META_TOTAL_BETS_DRIFT: declared=1 actual=0",)
+    assert compatibility.errors == expected
+    assert strict.errors == expected
+    assert compatibility.warnings == ()
+    assert strict.warnings == ()
 
 
 def test_validator_rejects_a_v2_bet_with_a_missing_key_result_reference() -> None:
@@ -263,6 +266,17 @@ def test_strict_mode_passes_when_total_bets_equals_len() -> None:
 
     assert result.errors == ()
     assert result.ok
+
+
+def test_compatibility_mode_also_fails_on_total_bets_drift() -> None:
+    """Compat mode no longer defers META_TOTAL_BETS_DRIFT (repair authorized)."""
+    ledger = _valid_v2_ledger()
+    ledger["meta"] = {"total_bets": len(ledger["bets"]) + 3}
+
+    result = PORTFOLIO_CONTRACT.validate_portfolio(ledger, strict=False)
+
+    assert any(e.startswith("META_TOTAL_BETS_DRIFT:") for e in result.errors)
+    assert not result.ok
 
 
 def test_bootstrap_unenforced_binding_skips_required_field_enforcement() -> None:

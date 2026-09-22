@@ -29,7 +29,7 @@ jobs:
         run: |
           # T1-12 (PR #2157): done-transition 守卫接入 authoritative PR/push 路径.
           # lint 自身 exit 1 = 历史非 transition 台账债务, 保持 informational;
-          # 仅 BASE_LEDGER_UNREADABLE / BET_DONE_ finding 硬失败.
+          # 仅 BASE_LEDGER_UNREADABLE / BET_DONE_ / META_TOTAL_BETS_DRIFT 硬失败.
           # 2026-09-02 修复: lint 输出末尾可能含 '+ N 个 warning (不阻断)' 行,
           # 原 tail -n 1 检查只看单行无法匹配计数行, 改为在最后 5 行内
           # 匹配 OK/计数/warning 三种合法尾模式之一, 防止 structural false-fail.
@@ -55,7 +55,7 @@ jobs:
             echo "::error::bet-ledger lint did not complete structurally (rc=$lint_rc)"
             exit 1
           fi
-          if grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_' "$lint_out"; then
-            echo "::error::BET done-transition findings present (BASE_LEDGER_UNREADABLE / BET_DONE_)"
+          if grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT' "$lint_out"; then
+            echo "::error::BET done-transition findings present (BASE_LEDGER_UNREADABLE / BET_DONE_ / META_TOTAL_BETS_DRIFT)"
             exit 1
           fi
