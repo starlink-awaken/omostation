@@ -3,6 +3,9 @@ id: ADR-0454
 title: 治理脚本无界网络调用审计
 status: accepted
 date: 2026-09-18
+lifecycle: active
+owner: governance-team
+last-reviewed: "2026-09-18"
 ---
 
 # ADR-0454: 治理脚本无界网络调用审计
