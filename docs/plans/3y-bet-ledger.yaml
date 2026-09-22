@@ -30434,7 +30434,9 @@ bets:
   track: T5-ORCH
   window: Y2Q2
   appetite: 1 week
-  status: candidate
+  status: done
+  done_at: '2026-09-22'
+  done_note: 'PR #4184 完成 (fork-join 编排 + 测试 + lifecycle_gate)。 交付: team-mailbox fork-join 多 agent 编排实现 + 场景卡 lifecycle_gate。human_gate 批准 (用户 2026-09-22)。'
   goal: 基于持久化 mailbox 实现 fork-join 编排，支撑多 agent 任务分发与结果汇聚。
   depends_on:
   - BET-Y2Q2-T5-02
@@ -30478,20 +30480,25 @@ bets:
         evidence:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
       operational:
         status: PROVEN
         evidence:
           monitoring:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
       value:
         status: PROVEN
         evidence:
           adoption:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+            sha256: sha256:09e3354cd988db6e304b9abd1badf537bfab741b828935eca9acf1e32e33027b
 - id: BET-Y1Q4-T10-174
   title: Clone-lifecycle claims-authority fence adapter contract repair
   status: done
