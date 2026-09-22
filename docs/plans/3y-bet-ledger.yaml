@@ -30471,17 +30471,27 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T5-03
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          monitoring:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
       value:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          adoption:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T5-03.md
 - id: BET-Y1Q4-T10-174
   title: Clone-lifecycle claims-authority fence adapter contract repair
   status: done
