@@ -30373,6 +30373,7 @@ bets:
   - cmd: grep -c "team-mailbox" ~/.config/opencode/opencode.json
     expect: '>= 1'
   workflow: project-code-change
+  value_indicator_policy: false
   write_surfaces:
   - ~/.config/opencode/plugin/team-mailbox/**
   - docs/superpowers/specs/2026-09-21-t5-02-team-mailbox-durability-design.md
@@ -30451,6 +30452,7 @@ bets:
   - cmd: grep -c "team-mailbox" ~/.config/opencode/opencode.json
     expect: '>= 1'
   workflow: project-code-change
+  value_indicator_policy: false
   write_surfaces:
   - ~/.config/opencode/plugin/team-mailbox/**
   - docs/superpowers/specs/2026-09-21-t5-03-team-mailbox-fork-join-design.md
