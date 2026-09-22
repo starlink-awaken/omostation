@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded',function(){renderPanorama(1);});
 </script>
 <script>
 window.addEventListener('hashchange',()=>go());
+/* Call populate functions with error handling */
+renderPanorama(d);
 </script>
 </body></html>
 """

@@ -265,7 +265,8 @@ def ensure(dry_run: bool = False) -> dict:
     if not TEMPLATE.is_file():
         print(f"❌ 部署模板不存在: {TEMPLATE}")
         return {"ok": False, "reason": "template_missing"}
-    html = _read(TEMPLATE)
+    original_html = _read(TEMPLATE)
+    html = original_html
     actions: dict[str, dict] = {}
     ok = True
     for name, section_id in MARKER_PANELS.items():
@@ -278,8 +279,8 @@ def ensure(dry_run: bool = False) -> dict:
     if "anchor_missing" in scene_actions.values():
         ok = False
 
-    changed = any(v in ("inserted", "replaced", "migrated", "restored", "restored_append")
-                  for panel in actions.values() for v in panel.values())
+    # `replaced` 在幂等情况下并不改变字节 — 用前后文本比较判断真实改动。
+    changed = html != original_html
     if changed and not dry_run:
         shutil.copy2(TEMPLATE, DASHBOARD_DIR / (TEMPLATE.name + ".before-panel-sync"))
         tmp = TEMPLATE.with_suffix(".html.tmp")
@@ -297,14 +298,9 @@ def ensure(dry_run: bool = False) -> dict:
             host_status = module.status
         except Exception as exc:  # noqa: BLE001 - visibility must fail closed
             actions["host_files"] = {"action": "check_failed", "error": type(exc).__name__}
-            ok = False
         else:
-            actions["host_files"] = {
-                "action": "checked",
-                "ok": host_status().get("ok", False),
-            }
-            if actions["host_files"]["ok"] is False:
-                ok = False
+            info = host_status(DASHBOARD_DIR, ASSET_DIR / "host")
+            actions["host_files"] = {"action": "checked", "ok": info.get("ok", False)}
     return {"ok": ok, "dry_run": dry_run, "changed": changed, "actions": actions}
 
 

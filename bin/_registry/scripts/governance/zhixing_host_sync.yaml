@@ -1,0 +1,15 @@
+category: governance
+dependencies: []
+description: Underscore alias for zhixing-host-sync.py, re-exports status/check/capture/restore
+id: bin/gac/zhixing_host_sync.py
+inputs: []
+last_reviewed: '2026-08-24'
+maturity: draft
+name: Zhixing Host Sync (Alias)
+outputs:
+- type: exit_code
+- type: json
+owner: governance-team
+related: []
+schema: script-registry/v1
+triggers: []
