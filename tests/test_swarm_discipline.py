@@ -362,11 +362,11 @@ escape_hatch_exemptions:
 
 def test_d4_expired_alias_names_replacement_class(tmp_path):
     m = _load()
-    from datetime import UTC, datetime
+    from datetime import UTC, datetime, timedelta
 
     _write_exemptions(
         tmp_path,
-        """
+        f"""
 version: 1
 escape_hatch_exemptions:
   - id: partial-worktree
@@ -382,7 +382,7 @@ escape_hatch_exemptions:
     allow: [ci_local_skip]
     active: true
     deprecated: true
-    alias_expires: "2026-08-01T00:00:00Z"
+    alias_expires: "{(datetime.now(UTC) - timedelta(days=21)).strftime("%Y-%m-%dT%H:%M:%SZ")}"
 """,
     )
     ok, reason = m.check_escape_hatch(
@@ -390,7 +390,7 @@ escape_hatch_exemptions:
         flag="ci_local_skip",
         escape_id="submodule-reachability-partial-worktree",
         agent_id="",
-        now=datetime(2026, 8, 22, tzinfo=UTC),
+        now=datetime.now(UTC),
     )
     assert not ok
     assert "partial-worktree" in reason

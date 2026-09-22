@@ -119,22 +119,29 @@ categories:
       测试用绝对日期构造数据, 而生产代码按相对窗口过滤（近 24h / since_days / TTL）。
       写下时通过, 随时间推移失效 —— 非代码 bug, 系统性测试缺陷。
       已逐个验证机制（非启发式猜测）。
+    status: cleared_2026-09-22_via_PR_pending
+    cleared_via: |
+      compass_radar_dedup / episode_source_aggregator / bet_claim_broadcast /
+      health_trend_chart / swarm_discipline::test_d4_expired_alias_names_replacement_class
+      改写为相对时间锚定 now(UTC); zhixing_panel_sync 测试在生产代码缺 zhixing_host_sync
+      子脚本时无法通过 — 移入 D 类环境依赖清单。其余 C 类硬编码日期的失败在重测时
+      都属于 D/E 类别（子模块 / 行为漂移），不再归为时间炸弹。
     verified_mechanisms:
       - tests/test_compass_radar_dedup.py: 硬编码 2026-08-22 事件 vs bin/compass_radar.py:983 近 24h cutoff
       - tests/test_episode_source_aggregator.py: fixture _add_merge_commit(date="2026-08-20") vs _collect_git(since_days=30)
     files:
-      tests/test_compass_radar_dedup.py: {count: 6, hardcoded: '2026-08-22'}
-      tests/test_episode_source_aggregator.py: {count: 7, hardcoded: '2026-08-20'}
-      tests/test_bet_claim_broadcast.py: {count: 6, hardcoded: '2026-08-30 vs 7d TTL'}
-      tests/test_swarm_discipline.py: {count: 4, hardcoded: '2026-08-01/19'}
-      tests/test_zhixing_panel_sync.py: {count: 4, hardcoded: '2026-09-17'}
-      tests/test_health_trend_chart.py: {count: 2, hardcoded: '2026-01-01/08-23'}
-      tests/test_gac_m1_tracked_truth.py: {count: 2, hardcoded: '2026-07-31'}
-      tests/test_e2_sweep_closeout.py: {count: 1, hardcoded: '2026-08-05'}
-      tests/test_external_scene_trial.py: {count: 1, hardcoded: '2026-08-03'}
-      tests/test_mof_capabilities_drift.py: {count: 1, hardcoded: '2026-06/07'}
-      tests/test_north_star_meter_v2.py: {count: 1, hardcoded: '2026-08-20'}
-      tests/test_task_tree_consistency.py: {count: 1, hardcoded: '2026-09-19'}
+      tests/test_compass_radar_dedup.py: {count: 6, hardcoded: '2026-08-22', status: rewritten_2026-09-22}
+      tests/test_episode_source_aggregator.py: {count: 7, hardcoded: '2026-08-20', status: rewritten_2026-09-22}
+      tests/test_bet_claim_broadcast.py: {count: 6, hardcoded: '2026-08-30 vs 7d TTL', status: rewritten_2026-09-22}
+      tests/test_swarm_discipline.py: {count: 4, hardcoded: '2026-08-01/19', status: partial_rewrite_D4_only}
+      tests/test_zhixing_panel_sync.py: {count: 4, hardcoded: '2026-09-17', status: reclassified_to_D_env_2026-09-22}
+      tests/test_health_trend_chart.py: {count: 2, hardcoded: '2026-01-01/08-23', status: rewritten_2026-09-22}
+      tests/test_gac_m1_tracked_truth.py: {count: 2, hardcoded: '2026-07-31', status: reclassified_submodule_uninit_2026-09-22}
+      tests/test_e2_sweep_closeout.py: {count: 1, hardcoded: '2026-08-05', status: reclassified_E_behavior_2026-09-22}
+      tests/test_external_scene_trial.py: {count: 1, hardcoded: '2026-08-03', status: reclassified_E_behavior_2026-09-22}
+      tests/test_mof_capabilities_drift.py: {count: 1, hardcoded: '2026-06/07', status: reclassified_E_behavior_2026-09-22}
+      tests/test_north_star_meter_v2.py: {count: 1, hardcoded: '2026-08-20', status: reclassified_D_env_2026-09-22}
+      tests/test_task_tree_consistency.py: {count: 1, hardcoded: '2026-09-19', status: reclassified_E_behavior_2026-09-22}
 
   # ── D. 环境依赖 → 建议加守卫 ──
   D_env:

@@ -21,6 +21,8 @@ SPEC.loader.exec_module(AGG)
 
 
 def _make_ledger(tmp_path: Path, rows: list[dict]) -> Path:
+    from datetime import datetime, timedelta, UTC
+    default_ts = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     db = tmp_path / "event-ledger.sqlite3"
     conn = sqlite3.connect(str(db))
     conn.execute("""
@@ -68,8 +70,8 @@ def _make_ledger(tmp_path: Path, rows: list[dict]) -> Path:
                 row.get("correlation_id", f"corr-{i}"),
                 row.get("producer", "test-producer"),
                 row.get("idempotency_key", f"idem-{i}"),
-                row.get("occurred_at", "2026-08-20T00:00:00Z"),
-                row.get("recorded_at", "2026-08-20T00:00:00Z"),
+                row.get("occurred_at", default_ts),
+                row.get("recorded_at", default_ts),
                 row.get("privacy_class", "disclosure:private"),
                 json.dumps(row.get("payload_json", {})),
                 row.get("evidence_uri"),
@@ -125,7 +127,7 @@ def _init_git_repo(tmp_path: Path) -> Path:
 _merge_counter = 0
 
 
-def _add_merge_commit(repo: Path, subject: str, date: str = "2026-08-20") -> str:
+def _add_merge_commit(repo: Path, subject: str, date: str | None = None) -> str:
     global _merge_counter
     _merge_counter += 1
     branch_name = f"tmp-branch-{_merge_counter}"
@@ -139,6 +141,11 @@ def _add_merge_commit(repo: Path, subject: str, date: str = "2026-08-20") -> str
                    check=True, capture_output=True)
     subprocess.run(["git", "checkout", "main"], cwd=repo, check=True,
                    capture_output=True)
+    if date is None:
+        from datetime import datetime, timedelta, UTC
+        # Anchor merge commits to 1d ago so they survive the since_days=30 window
+        # regardless of calendar drift.
+        date = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%d")
     base_env = dict(os.environ)
     base_env["GIT_AUTHOR_DATE"] = f"{date}T12:00:00Z"
     base_env["GIT_COMMITTER_DATE"] = f"{date}T12:00:00Z"
@@ -189,16 +196,20 @@ class TestGitSource:
 
 class TestDebtSource:
     def test_closed_items_included(self, tmp_path):
+        from datetime import datetime, timedelta, UTC
+        recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
         _make_debt_item(tmp_path, "D-CLOSED", "Test closed item", "closed",
-                        closed_at="2026-08-20T00:00:00Z")
+                        closed_at=recent)
         entries = AGG._collect_debt(tmp_path / "debt" / "items")
         assert len(entries) == 1
         assert entries[0]["confidence"] == "low"
         assert entries[0]["source"] == "debt"
 
     def test_resolved_with_closed_at_included(self, tmp_path):
+        from datetime import datetime, timedelta, UTC
+        recent = (datetime.now(UTC) - timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
         _make_debt_item(tmp_path, "D-RESOLVED", "Resolved with date", "resolved",
-                        closed_at="2026-08-22T02:45:00Z")
+                        closed_at=recent)
         entries = AGG._collect_debt(tmp_path / "debt" / "items")
         assert len(entries) == 1
         assert entries[0]["confidence"] == "low"
@@ -214,8 +225,10 @@ class TestDebtSource:
         assert len(entries) == 0
 
     def test_episode_id_format(self, tmp_path):
+        from datetime import datetime, timedelta, UTC
+        recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
         _make_debt_item(tmp_path, "D-TEST", "Test item", "closed",
-                        closed_at="2026-08-20T00:00:00Z")
+                        closed_at=recent)
         entries = AGG._collect_debt(tmp_path / "debt" / "items")
         assert entries[0]["episode_id"] == "debt-D-TEST"
         assert entries[0]["ref_id"] == "debt-D-TEST"
@@ -223,11 +236,13 @@ class TestDebtSource:
 
 class TestLedgerSource:
     def test_action_succeeded_extracted(self, tmp_path):
+        from datetime import datetime, timedelta, UTC
+        recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
         db = _make_ledger(tmp_path, [
             {
                 "event_type": "Action.Succeeded.v1",
                 "episode_id": "ep-001",
-                "occurred_at": "2026-08-20T10:00:00Z",
+                "occurred_at": recent,
                 "payload_json": {
                     "episode_id": "ep-001",
                     "result": {"evidence_uri": "file:///tmp/evidence.json"},
@@ -241,11 +256,13 @@ class TestLedgerSource:
         assert entries[0]["source"] == "ledger"
 
     def test_outcome_human_extracted(self, tmp_path):
+        from datetime import datetime, timedelta, UTC
+        recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
         db = _make_ledger(tmp_path, [
             {
                 "event_type": "Outcome.Human.v1",
                 "episode_id": "ep-002",
-                "occurred_at": "2026-08-21T10:00:00Z",
+                "occurred_at": recent,
                 "payload_json": {
                     "verdict": "accept",
                     "estimated_time_saved_seconds": 120.0,
@@ -270,16 +287,18 @@ class TestLedgerSource:
 
 class TestDedupAndMerge:
     def test_same_ref_id_dedup(self, tmp_path):
+        from datetime import datetime, timedelta, UTC
+        recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
         db = _make_ledger(tmp_path, [
             {
                 "event_type": "Action.Succeeded.v1",
                 "episode_id": "ep-dup",
-                "occurred_at": "2026-08-20T10:00:00Z",
+                "occurred_at": recent,
                 "payload_json": {"episode_id": "ep-dup"},
             },
         ])
         _make_debt_item(tmp_path, "ep-dup", "Duplicate item", "closed",
-                        closed_at="2026-08-20T00:00:00Z")
+                        closed_at=recent)
 
         ledger_entries = AGG._collect_ledger(db, since_days=30)
         debt_entries = AGG._collect_debt(tmp_path / "debt" / "items")
@@ -328,11 +347,13 @@ class TestSelfTest:
 
 class TestCLI:
     def test_json_output_is_valid(self, tmp_path):
+        from datetime import datetime, timedelta, UTC
+        recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
         db = _make_ledger(tmp_path, [
             {
                 "event_type": "Action.Succeeded.v1",
                 "episode_id": "ep-cli",
-                "occurred_at": "2026-08-20T10:00:00Z",
+                "occurred_at": recent,
                 "payload_json": {"episode_id": "ep-cli"},
             },
         ])
@@ -346,11 +367,13 @@ class TestCLI:
         assert isinstance(data, list)
 
     def test_limit_respected(self, tmp_path):
+        from datetime import datetime, timedelta, UTC
+        base = datetime.now(UTC) - timedelta(days=5)
         db = _make_ledger(tmp_path, [
             {
                 "event_type": "Action.Succeeded.v1",
                 "episode_id": f"ep-{i}",
-                "occurred_at": f"2026-08-{20+i:02d}T10:00:00Z",
+                "occurred_at": (base + timedelta(hours=i * 6)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "payload_json": {"episode_id": f"ep-{i}"},
             }
             for i in range(5)
