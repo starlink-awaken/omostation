@@ -10,7 +10,7 @@ policy:
     - projects/agora/src
     - projects/cockpit/src
   select: [E4, E7, E9, F]
-  ignore: [F401, F403, F821, E402, E722, F841, E501]
+  ignore: [F401, F403, F405, F821, E402, E722, F841, E501]  # F405: cli.py star-import 有意行为 (tests monkeypatch via cli.cmd_xxx), 跟 _compat.py 设计一致
   debt_scope:
     - projects/omo/src
   debt_ignore: [F401, F821, E402, E722]

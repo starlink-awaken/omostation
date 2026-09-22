@@ -2116,6 +2116,17 @@ def _work_packet_compiler(workspace: Path) -> tuple[Any, Any]:
     return canonicalize, compute_packet_hash
 
 
+def _external_workflow_core() -> Any:
+    """Load the OMO path-mapping contract shared with lifecycle claims."""
+    core_path = WS / "projects/omo/src/omo/workflow/core.py"
+    spec = importlib.util.spec_from_file_location("_bet_ledger_external_core", core_path)
+    if spec is None or spec.loader is None:
+        raise SpecBindingContractError("EXTERNAL_WRITE_ROOT_MAPPER_UNAVAILABLE")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _capability_requirement_validator(workspace: Path) -> Any:
     ecos_src = workspace / "projects/ecos/src"
     if str(ecos_src) not in sys.path:
@@ -2149,9 +2160,15 @@ def _work_packet_from_bet(
         command = item.get("cmd") if isinstance(item, dict) else item
         if isinstance(command, str) and command.strip():
             verify_commands.append([command.strip()])
-    write_surfaces = sorted(
-        {str(item).strip().strip("/") for item in bet.get("write_surfaces") or [] if str(item).strip()}
-    )
+    external_core = _external_workflow_core()
+    normalized_surfaces: set[str] = set()
+    for raw_surface in bet.get("write_surfaces") or []:
+        surface = str(raw_surface).strip()
+        if not surface:
+            continue
+        mapped_surface = external_core.normalize_external_surface(surface)
+        normalized_surfaces.add((mapped_surface or surface).strip("/"))
+    write_surfaces = sorted(normalized_surfaces)
     spec_surface = binding["spec_ref"].removeprefix(SPEC_REF_PREFIX)
     instruction_surface = instruction_binding["instruction_ref"].removeprefix(SPEC_REF_PREFIX)
     packet = {
@@ -2261,6 +2278,10 @@ def _normalize_claim_path(raw_path: str, workspace: Path) -> str:
         try:
             path = path.resolve().relative_to(workspace.resolve())
         except ValueError as exc:
+            external_core = _external_workflow_core()
+            synthetic = external_core.external_synthetic_path(raw_path)
+            if synthetic is not None:
+                return synthetic
             raise SpecBindingContractError(f"path is outside workspace: {raw_path}") from exc
     normalized = path.as_posix().strip("/")
     if normalized in {"", "."}:

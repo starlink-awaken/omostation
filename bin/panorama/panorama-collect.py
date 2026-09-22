@@ -371,7 +371,7 @@ def collect_a7_gate() -> dict:
                 completed = subprocess.run(
                     [sys.executable, str(verifier), "--json"],
                     cwd=ROOT, capture_output=True, text=True,
-                    env=verifier_env, timeout=100, check=False,
+                    env=verifier_env, timeout=MULTICA_AS0_TIMEOUT_S, check=False,
                 )
                 candidate = json.loads(completed.stdout)
                 if isinstance(candidate, dict):
@@ -410,7 +410,7 @@ def collect_a7_gate() -> dict:
         if isinstance(last_error, subprocess.TimeoutExpired):
             return {
                 "id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED",
-                "detail": "Multica AS0 verifier timeout after 100s",
+                "detail": f"Multica AS0 verifier timeout after {MULTICA_AS0_TIMEOUT_S}s",
                 "live": False, "depends_on": ["A8"],
             }
         return {
@@ -1042,10 +1042,16 @@ def collect_code_root_health() -> dict:
     }
 
 
-def _read_claims_preflight(root: Path) -> tuple[dict | None, dict]:
+def _read_claims_preflight(root: Path) -> tuple[dict | None, str | None]:
+    """Run one read-only Claims preflight, failing closed with the error name.
+
+    Only the exception class name is propagated: this projection is published
+    into the dashboard payload, so raw stderr/stdout (which routinely echo
+    file paths and environment detail) must not travel with it.
+    """
     preflight_script = CODE_ROOT / "bin/gac/claims-shadow-preflight.py"
     if not preflight_script.is_file():
-        return None, {"error": "preflight_script_missing"}
+        return None, "preflight_script_missing"
     try:
         completed = subprocess.run(
             [
@@ -1060,19 +1066,9 @@ def _read_claims_preflight(root: Path) -> tuple[dict | None, dict]:
         )
         report = json.loads(completed.stdout)
     except Exception as exc:  # noqa: BLE001 - visibility must fail closed
-        stderr = getattr(exc, "stderr", "")
-        stdout = getattr(exc, "stdout", "")
-        return None, {
-            "error": type(exc).__name__,
-            "stderr": stderr[-400:] if isinstance(stderr, str) else "",
-            "stdout": stdout[-400:] if isinstance(stdout, str) else "",
-        }
+        return None, type(exc).__name__
     if not isinstance(report, dict) or report.get("schema") != "claims-shadow-preflight/v1":
-        return None, {
-            "error": "invalid_preflight_payload",
-            "stderr": (completed.stderr or "")[-400:],
-            "stdout": (completed.stdout or "")[-400:],
-        }
+        return None, "invalid_preflight_payload"
     return report, None
 
 

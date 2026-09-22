@@ -20,6 +20,29 @@ for source in (ROOT / "projects" / "omo" / "src",):
         sys.path.insert(0, str(source))
 
 
+def _request_identity(task_rel_path: str) -> dict:
+    """构造绑定工作流派发所需的 request_identity。
+
+    `admit_workflow` 现要求请求身份 (见 omo_worker_dispatch.py:92-94 —
+    "bound workflow dispatch requires request_identity")，据此投影
+    packet_id / packet_hash / instruction_binding 到 StepDispatched 事件。
+    """
+    import hashlib
+
+    return {
+        "bet_id": "BET-TEST",
+        "packet_id": "WP-TEST-001",
+        "packet_hash": "sha256:" + hashlib.sha256(b"test-packet").hexdigest(),
+        "task_ref": task_rel_path,
+        "instruction_binding": {
+            "instruction_ref": "instr-ref-001",
+            "instruction_version": "v1",
+            "content_digest": "sha256:" + hashlib.sha256(b"test-instruction").hexdigest(),
+            "instruction_profile": "executor",
+        },
+    }
+
+
 def _setup_task(tmp_path: Path) -> None:
     """Create minimal OMO task structure for dispatch."""
     import yaml
@@ -37,7 +60,9 @@ def _setup_task(tmp_path: Path) -> None:
                         "enabled": True,
                         "admission_state": "admitted",
                         "capabilities": ["workflow.execute"],
-                        "transports": {"cli_prompt": {"command": "worker-a", "worker_ack_protocol": "omo-worker-origin-ack/v1"}},
+                        "transports": {
+                            "cli_prompt": {"command": "worker-a", "worker_ack_protocol": "omo-worker-origin-ack/v1"}
+                        },
                     }
                 ]
             },
@@ -74,8 +99,8 @@ def test_legacy_dispatch_emits_mesh_events(tmp_path):
         from omo.omo_worker_dispatch import dispatch_task
         from omo.workflow_dispatch import admit_workflow
         from omo.workflow_mesh import WorkflowMeshStore
-    except ImportError:
-        return  # skip if pydantic not available in root env
+    except ImportError as exc:  # pragma: no cover - 环境相关
+        pytest.skip(f"omo.workflow_dispatch 不可用: {exc}")
 
     _setup_task(tmp_path)
 
@@ -92,21 +117,8 @@ def test_legacy_dispatch_emits_mesh_events(tmp_path):
         )
 
     # Mesh-aware dispatch (with workflow_packet) still works.
-    import hashlib
-
     task_rel_path = ".omo/tasks/active/TASK-P2-1.yaml"
-    identity = {
-        "bet_id": "BET-TEST",
-        "packet_id": "WP-TEST-001",
-        "packet_hash": "sha256:" + hashlib.sha256(b"test-packet").hexdigest(),
-        "task_ref": task_rel_path,
-        "instruction_binding": {
-            "instruction_ref": "instr-ref-001",
-            "instruction_version": "v1",
-            "content_digest": "sha256:" + hashlib.sha256(b"test-instruction").hexdigest(),
-            "instruction_profile": "executor",
-        },
-    }
+    identity = _request_identity(task_rel_path)
     packet = admit_workflow(
         tmp_path,
         task_id="TASK-P2-1",
@@ -150,8 +162,8 @@ def test_mesh_aware_dispatch_emits_step_dispatched(tmp_path):
         from omo.omo_worker_dispatch import dispatch_task
         from omo.workflow_dispatch import admit_workflow
         from omo.workflow_mesh import WorkflowMeshStore
-    except ImportError:
-        return  # skip if pydantic not available in root env
+    except ImportError as exc:  # pragma: no cover - 环境相关
+        pytest.skip(f"omo.workflow_dispatch 不可用: {exc}")
 
     _setup_task(tmp_path)
     packet = admit_workflow(
@@ -168,6 +180,7 @@ def test_mesh_aware_dispatch_emits_step_dispatched(tmp_path):
             },
         },
         workflow_run_id="run-p2-mesh",
+        request_identity=_request_identity(".omo/tasks/active/TASK-P2-1.yaml"),
         now="2026-08-02T10:00:00+00:00",
     )
 
@@ -193,8 +206,8 @@ def test_dispatch_admitted_no_double_step_dispatched(tmp_path):
     try:
         from omo.workflow_dispatch import dispatch_admitted_workflow
         from omo.workflow_mesh import WorkflowMeshStore
-    except ImportError:
-        return  # skip if pydantic not available in root env
+    except ImportError as exc:  # pragma: no cover - 环境相关
+        pytest.skip(f"omo.workflow_dispatch 不可用: {exc}")
 
     _setup_task(tmp_path)
     dispatch_admitted_workflow(
@@ -213,6 +226,10 @@ def test_dispatch_admitted_no_double_step_dispatched(tmp_path):
             },
         },
         workflow_run_id="run-p2-no-double",
+        request_identity=_request_identity(".omo/tasks/active/TASK-P2-1.yaml"),
+        # worker-a 在 _setup_task 的 registry 中只注册了 cli_prompt 传输;
+        # 不传则默认 acp_stdio → 准入拒绝 (reason=transport_missing)。
+        transport="cli_prompt",
         now="2026-08-02T10:00:00+00:00",
     )
 

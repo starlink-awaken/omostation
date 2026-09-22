@@ -23,7 +23,7 @@ states:
     next: [drafted]
   - name: drafted
     scene: health-gov-doc-cycle
-    next: [approved, returned, registered]
+    next: [approved, returned]
   - name: approved
     scene: health-gov-doc-cycle
     next: [dispatched]
@@ -44,9 +44,6 @@ transitions:
   - from: drafted
     to: returned
     condition: "decision == '退回'"
-  - from: drafted
-    to: registered
-    condition: "decision == '转办'"
   - from: returned
     to: drafted
     condition: "redraft_ok == true"

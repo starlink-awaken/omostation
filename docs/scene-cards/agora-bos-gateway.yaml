@@ -11,7 +11,7 @@ related:
 - ../ARCHITECTURE.md
 - ../../protocols/port-registry.yaml
 ---
-schema: scene-card/v2
+schema: scene-card/v1
 lifecycle: routine
 activation: active
 approval_state: approved
