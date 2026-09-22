@@ -669,6 +669,19 @@ jobs:
       本来就不含 LLM/Codex 调用，此前只是漏登记。本条只补声明面 parity，不改变
       已安装 schedule、command 或运行行为。
 
+  - name: mimo-models-sync
+    schedule: '*/30 * * * *'
+    command: /Users/xiamingxing/.local/bin/mimo-models-sync.sh > /tmp/mimo-sync.log 2>&1
+    planes:
+    - crontab
+    reality: crontab_installed
+    status: active
+    owner: agent-experience-steward
+    sfop_slot: S
+    reconciliation_note: '2026-09-22 登记: 此前 crontab 中以 # 待登记外部工具 尾注游离存在,
+      导致 A4 orphan_count=1。脚本为 ~/.local/bin 外部工具, 每 30min 同步 Ollama/LMStudio/OMLXC
+      本地模型到 mimo 配置; 登记进本账本使 scheduler-compile --check 归零。
+      '
 # ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
 open_decisions:
   - id: D2
