@@ -1,10 +1,15 @@
 ---
-type: spec
+type: ssot
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-24
+last_updated: 2026-09-24
 bet_id: BET-Y2Q3-T10-OMLXC-01
-status: accepted
 spec_version: 1.0.0
 schema_version: specification/v1
 ---
+
 
 
 # omlxc 体系深度诊断 + 分阶段修复计划

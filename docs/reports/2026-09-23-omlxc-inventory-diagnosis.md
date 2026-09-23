@@ -1,9 +1,13 @@
 ---
 type: report
-status: completed
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-24
 bet_id: BET-Y2Q3-T10-OMLXC-01
 created: 2026-09-23
 ---
+
 
 # omlxc inventory degraded 三问归因（2026-09-23）
 
