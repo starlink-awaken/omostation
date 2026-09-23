@@ -958,10 +958,15 @@ def test_bet_done_transition_job_has_guard_contract() -> None:
     assert script.count("bin/plan/bet-ledger.py lint") == 1
     assert "python3 bin/plan/bet-ledger.py lint" in script
 
-    # Blocking classification covers exactly the two guard finding families.
+    # Blocking classification covers exactly the three guard finding families
+    # (META_TOTAL_BETS_DRIFT added by #4221).
     assert "BASE_LEDGER_UNREADABLE" in script
     assert "BET_DONE_" in script
-    assert "grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_' \"$lint_out\"" in script
+    assert "META_TOTAL_BETS_DRIFT" in script
+    assert (
+        "grep -qE 'BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT' \"$lint_out\""
+        in script
+    )
 
     # Full lint output is printed before the classification greps.
     assert "cat " in script and "grep" in script
