@@ -106,6 +106,15 @@ def check_submodule(sub_path: str, root: str, merge_mode: bool) -> tuple[bool, s
     )
 
     if anc_result.returncode != 0:
+        # Freshness bump: staged 等于子模块自身 origin/main 时放行
+        # (根 pin 对齐远端 main；旧 pin 可能是已废弃侧支，FF 判定不适用).
+        env2 = env.copy()
+        remote_main = subprocess.run(
+            ["git", "-C", full_path, "rev-parse", "-q", "--verify", "origin/main"],
+            capture_output=True, text=True, env=env2,
+        )
+        if remote_main.returncode == 0 and remote_main.stdout.strip() == staged_sha:
+            return True, f"{sub_path} 对齐 origin/main ({staged_sha[:12]})"
         # 检查 known-debt 指纹
         import hashlib
         fingerprint = hashlib.sha256(f"{sub_path}\n{base_sha}\n{staged_sha}".encode()).hexdigest()[:16]
