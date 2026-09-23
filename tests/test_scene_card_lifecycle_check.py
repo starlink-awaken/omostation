@@ -114,7 +114,10 @@ class TestSceneCardLifecycleHonestGate:
         _write_scene_card(card_path)
         trial_log = tmp_path / ".omo" / "_knowledge" / "workflow-mesh" / "external-scene-trials.jsonl"
         trial_log.parent.mkdir(parents=True, exist_ok=True)
-        trial_log.write_text("{}", encoding="utf-8")
+        trial_log.write_text(
+            json.dumps({"scene_id": "test-scene", "status": "completed"}),
+            encoding="utf-8",
+        )
         ret = lifecycle_mod.main(["--root", str(tmp_path), "check", "--scene-card", str(card_path)])
         assert ret == 0
 
@@ -131,7 +134,13 @@ class TestSceneCardMakeAggregateGate:
         (tmp_path / "bin").symlink_to(ROOT / "bin")
         trial_log = tmp_path / ".omo" / "_knowledge" / "workflow-mesh" / "external-scene-trials.jsonl"
         trial_log.parent.mkdir(parents=True, exist_ok=True)
-        trial_log.write_text("{}", encoding="utf-8")
+        # Each fixture scene card has scene_id="test-scene" (default), so seed a
+        # single completed trial for that scene_id — covers ready cards without
+        # having to mirror the make target per filename.
+        trial_log.write_text(
+            json.dumps({"scene_id": "test-scene", "status": "completed"}) + "\n",
+            encoding="utf-8",
+        )
         for name, overrides in cards:
             _write_scene_card(tmp_path / "docs" / "scene-cards" / f"{name}.yaml", **overrides)
 

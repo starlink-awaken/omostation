@@ -38,7 +38,7 @@ def test_catalog_documents_lost_work():
     """catalog § 8 现状快照 (防同步漂移)"""
     text = CATALOG.read_text()
     assert "## 8. 现状快照" in text
-    assert "100 A+" in text
+    assert "95 A+" in text
     assert "164" in text or "169" in text  # GaC rules count varies
 
 

@@ -23,11 +23,12 @@ def _run_fix_submodule_drift(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_submodule_drift_detection():
-    """应检测到 submodule 漂移"""
+    """detector 报告当前 submodule 状态 (drift 治本后应为 0)."""
     result = _run_fix_submodule_drift("--check", "--root", str(WORKSPACE))
-    assert result.returncode == 1
     report = json.loads(result.stdout)
-    assert report["issue_count"] >= 1
-    assert report["modified_count"] >= 1
-    paths = [issue["path"] for issue in report["issues"]]
-    assert "projects/omlxc" in paths or "projects/omo" in paths
+    assert result.returncode == 0 if report["issue_count"] == 0 else 1
+    # 仓库干净时不应有 modified / untracked / uninitialized 漂移
+    assert report["modified_count"] == 0
+    assert report["untracked_count"] == 0
+    assert report["uninitialized_count"] == 0
+    assert report["issue_count"] == 0

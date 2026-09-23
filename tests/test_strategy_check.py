@@ -87,7 +87,14 @@ def test_dim4_experience_uses_compass_when_available(tool):
     ns = {"composite_5axis": 98}
     assert tool._status_for_dim4_experience(health, ns) == "GREEN"
 
+    # dim 4 takes max(compass, v3_5axis) so the strong on-disk north-star
+    # reading lifts the dim even when the daemon reports a mediocre composite.
     health = {"composite": 70, "available": True}
+    assert tool._status_for_dim4_experience(health, ns) == "GREEN"
+
+    # But when both are weak, falls into the YELLOW band (>=65, <80).
+    health = {"composite": 70, "available": True}
+    ns = {"composite_5axis": 60}
     assert tool._status_for_dim4_experience(health, ns) == "YELLOW"
 
 
