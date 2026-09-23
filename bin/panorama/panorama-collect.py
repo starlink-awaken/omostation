@@ -3732,7 +3732,7 @@ def collect_agent_visibility(payload: dict) -> dict:
                     "detail": value_readiness["next_action"],
                     "source": "panorama.value_proof_readiness",
                 }
-            ] if not activation_allowed or qualifying < 30 else []),
+            ] if qualifying < 30 or value_proof_flag != "PROVEN" else []),
         ],
         "read_interfaces": {
             "human_html": "/",
@@ -3837,9 +3837,11 @@ def build_payload() -> dict:
         "decision_proposals": collect_decision_proposals(),
         "recent_features": collect_recent_features(),
     }
-    payload["objective_coverage"] = collect_objective_coverage(payload)
     # logs / metrics / value 三板块真实数据（同时统合事件指标口径）
     payload.update(_collect_panels(payload))
+    # objective_coverage must run AFTER panel_value is attached so BUSINESS_VALUE
+    # can follow the signed full-window attestation state.
+    payload["objective_coverage"] = collect_objective_coverage(payload)
     payload["agent_visibility"] = collect_agent_visibility(payload)
     # Agent Brief owns action derivation; mirror it to the top level so all
     # agents and the Next panel can consume one stable contract without
