@@ -109,7 +109,7 @@ services:
 - id: omlxc.daemon
   enabled: true
   generate: false
-  config_source: projects/omlxc/packaging/launchd/com.omlxc.daemon.plist
+  config_source: projects/omlxc/launchd/com.omlxc.daemon.plist
   scheduler: launchd
   trigger: keepalive
   label: com.omlxc.daemon
@@ -122,8 +122,9 @@ services:
   resilience:
     keepalive: crashed
   run_at_load: true
-  notes: omlxc 私有本地算力守护进程，仅经权限受限的 Unix Socket 服务 CLI、TUI 与 AetherForge；不声明网络端口。plist
-    由 projects/omlxc 自己安装和管理， Workspace 只登记生命周期，因此 generate=false。
+  notes: omlxc 私有本地算力守护进程，仅经权限受限的 Unix Socket 服务 CLI、TUI 与 AetherForge。
+    网络探活端口 7432 仅供 liveness 使用（与「业务不暴露网络端口」不冲突）。plist 由 projects/omlxc
+    自己安装和管理， Workspace 只登记生命周期，因此 generate=false。
   ports:
   - 7432
   liveness:
@@ -134,7 +135,7 @@ services:
 - id: omlxc.dma_daemon
   enabled: false
   generate: false
-  config_source: projects/omlxc/packaging/launchd/com.omostation.omlxc-dma-daemon.plist
+  config_source: projects/omlxc/launchd/com.omostation.omlxc-dma-daemon.plist
   scheduler: launchd
   trigger: keepalive
   label: com.omostation.omlxc-dma-daemon
@@ -159,7 +160,7 @@ services:
     endpoint: .omo/state/mesh-telemetry.json
     max_stale_hours: 24
   depends_on: []
-  disabled_reason: "launchd 无 plist 且未加载: com.omostation.omlxc-dma-daemon"
+  disabled_reason: "launchd 无 plist 且未加载: com.omostation.omlxc-dma-daemon（ADR-0439 声明的常驻守护当前未启用；mesh-telemetry.json 因此为空）"
 - id: omlx.gateway
   enabled: false
   lifecycle: retired
