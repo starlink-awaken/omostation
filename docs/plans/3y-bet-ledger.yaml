@@ -30663,6 +30663,112 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q2-T4-01
+  title: North-star recovery and first real Decision Episode proof
+  status: candidate
+  priority: P0
+  risk_level: L2
+  track: T4-OUTCOME
+  window: Y2Q2
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  value_indicator_policy: true
+  human_gate: true
+  retro: required
+  pasw_required: true
+  appetite: 13 weeks
+  goal: Restore authoritative facts and one OMO/Mesh control plane, converge strategy
+    and runtime on the Decision Episode spine, and prove the first real personal Golden
+    Scenario without using governance delivery as value evidence.
+  done_when:
+  - Claims sequence 2, conflicting authorization evidence, legacy run/lock, and all
+    observed effects are preservation-reconciled without rewriting history.
+  - A successor authorization draft is bound to the current authority epoch, store sequence,
+    receipt digest, latest origin/main, and real protocol capability.
+  - Fresh A1-A9, SFOP, managed code-root health, workflow observer, and OMO single-control-plane
+    checks pass from one authoritative source set.
+  - Strategy, architecture, runtime, and Ledger map one Vision-to-Episode-to-Memory
+    chain without a parallel SSOT, dispatcher, ontology, or top-level project.
+  - One real external personal work signal completes the full Decision Episode lifecycle
+    through EpisodeClosed with a valid Mandate for every external action.
+  - Accept, edit, reject, and ignore adjudications preserve original signals, concrete
+    revision diffs, outcomes, costs, and human time burden.
+  - At least 30 qualifying v2 real records exist; no fixture, backfill, gate, test,
+    PR, commit, or agent count qualifies.
+  - Four consecutive weeks each contain at least three principal-accepted and verifiable
+    delegated outcomes.
+  - Human approval and correction time remains below system time saved; otherwise the
+    Golden Scenario is degraded or stopped.
+  non_goals:
+  - Do not rebuild BET-Y2Q2-T5-03, BET-Y1Q4-T10-155, or BET-Y1Q4-T10-156.
+  - Do not create a second dispatcher, authority queue, whitepaper, Ledger, operating
+    system, ontology, or top-level project.
+  - Do not activate Claims instruction capability, promote v2 above shadow, publish
+    the stale legacy candidate, or mutate historical receipts.
+  - Do not expand to family, organization, physical multi-host, or a generic Agent platform
+    before the personal Golden Scenario is proven.
+  circuit_breaker: Stop the pending effect on any unauthorized external action, receipt/hash
+    anomaly, unknown remote outcome, unexplained origin drift, Restricted-data egress,
+    unbound Claims request, missing real-value provenance, or human burden greater than
+    benefit. Never force, bypass hooks, auto-retry an unknown effect, or replace fact
+    with projection prose.
+  depends_on:
+  - BET-Y2Q2-T5-03
+  - BET-Y1Q4-T10-155
+  - BET-Y1Q4-T10-156
+  - BET-Y1Q4-T10-165
+  portfolio_binding:
+    campaign_ref: CMP-Y1-VALUE-PROOF
+    coverage_rationale: This is the first runtime proof tranche that joins the already-delivered
+      journey, weekly-adoption, and revision meters to one real Decision Episode. The
+      prior BETs own meter implementation; this BET owns fresh end-to-end real evidence
+      and therefore intentionally overlaps all three result KRs.
+    kr_refs:
+    - KR-VALUE-JOURNEY-COMPLETION
+    - KR-VALUE-WEEKLY-ADOPTION
+    - KR-VALUE-REVISION-RATE
+    milestone_refs: []
+    objective_refs:
+    - OBJ-VALUE
+    parent_bet: BET-Y1Q4-T1-14
+    schema_state: enforced
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-23-north-star-recovery-and-first-decision-episode-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:7d95f4c24f284c3345081359938bda11bcd8703de0329b3b3ea82b25d33147e2
+    decision_ref: decision://accepted/BET-Y2Q2-T4-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  verify:
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: no new errors relative to the bound origin/main baseline; the six pre-existing
+      completion-evidence errors for BET-Y1Q3-T10-16 and BET-Y1Q3-T10-114 remain
+      separately owned debt
+  - cmd: python3 bin/gac/check-sfop-slots.py --json
+    expect: exit 0
+  - cmd: python3 bin/gac/gate-health-check.py --json
+    expect: exit 0 from the bound runtime/code-root pair
+  - cmd: python3 bin/agent-workflow.py observe --json
+    expect: ok=true with every active or stale lock attributed
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-23-north-star-recovery-and-first-decision-episode-design.md
+  - .omo/_truth/governance-evidence/waiver-2026-09-23-north-star-bet-bootstrap.md
+  - bin/panorama/
+  - bin/ssot/value-recorder.py
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y2Q2-T4-01.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30792,7 +30898,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 444
+  total_bets: 445
   windows:
   - Y1Q1
   - Y1Q2
