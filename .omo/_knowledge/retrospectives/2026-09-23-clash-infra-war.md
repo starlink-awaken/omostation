@@ -33,6 +33,7 @@ last-reviewed: 2026-09-23
 | F6 | **收编脚本不改引用** — bootstrap SRC 相对路径 + dist 产物名两个连环 bug | ~20min | 结构迁移未 grep 全部消费者 (declare≠execute 变体) |
 | F7 | **组成员 replace(...,1) 贪心** — AI服务组漏加 Reality, `proxy not exist` | ~10min | 锚点匹配假设过强 |
 | F8 | **宿主环境隐形地雷** — cp/mv/ps/ls 全被 alias 改造 (交互确认/procs), osascript 引号 heredoc 四连败 | ~40min | 动手前未 `command -v` 验真身; 转义地狱未用"写文件执行"绕过 |
+| F10 | **smux 全系误诊** — 0922 模板化统一给 vmess 开 smux, mihomo vmess×smux 全系故障; 误诊为"阿里/GCP链路冷却/搬瓦工未复活"两轮, 0923 专项 A/B 才平反 | ~1天误导 | 共性矩阵(全死=smux族/全活=无smux族)本可首轮识别 — 跨节点共性A/B应先于逐节点深挖 (P-c 加强版) |
 | F9 | **密码框依赖用户在场** — 4 次弹框 3 次超时 (含 1 个非本会话残留框叠着) | 间接拖延 | 长时挂起的授权请求无在场确认机制 |
 
 ## 3. Meta 教训 (可固化 Pattern)
