@@ -499,3 +499,27 @@ def test_panel_value_is_materialized_before_agent_visibility() -> None:
     )
 
     assert panel_call < brief_call
+
+
+def test_resolve_failing_gates_action_is_consumer_reverifiable() -> None:
+    module = _module()
+    brief = module.collect_agent_visibility(_payload())
+    action = next(a for a in brief["next_actions"] if a["id"] == "resolve-failing-gates")
+
+    assert action["reverify"] is True
+    assert action["gate_ids"] == ["A2"]
+    assert action["snapshot_generated_at"] == "2026-09-17T00:00:00+00:00"
+    assert "gate-health-check.py" in action["reverify_command"]
+    assert "--code-root" in action["reverify_command"]
+
+
+def test_resolve_failing_gates_action_absent_when_all_gates_pass() -> None:
+    module = _module()
+    payload = _payload()
+    payload["gates"] = [
+        {"id": "A1", "title": "Workflow", "verdict": "PASS", "live": True},
+        {"id": "A2", "title": "Host", "verdict": "PASS", "live": True},
+    ]
+    brief = module.collect_agent_visibility(payload)
+
+    assert "resolve-failing-gates" not in {a["id"] for a in brief["next_actions"]}
