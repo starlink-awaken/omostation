@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-23
+---
 # Clash 节点架构 · 全量文档
 
 > 最后更新: 2026-09-23 · SSOT 真源: `SharedConf/ClashConfig` (iCloud git 仓库)
