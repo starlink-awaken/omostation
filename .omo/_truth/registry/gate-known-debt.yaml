@@ -291,3 +291,12 @@ entries:
   range: origin/main..HEAD
   recorded_at: '2026-09-23T04:03:49.776179+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|283fb40bfe4cb409
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 283fb40bfe4cb409
+  kind: gitlink-regress
+  reason: submodule projects/cockpit-ui pointer a26e57593eed rewinds a6c48358597e
+  range: origin/main..HEAD
+  recorded_at: '2026-09-23T11:11:19.910776+00:00'
+  active: true
