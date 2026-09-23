@@ -30768,13 +30768,13 @@ bets:
         status: ACCEPTED
         evidence:
           real_signal:
-            ref: receipt://.omo/_delivery/ingress/value-evidence.jsonl
+            ref: receipt://docs/operations/human-attestations/VALUE-WINDOW-20260923-accept.yaml
           human_verdict:
             ref: receipt://docs/operations/human-attestations/VALUE-WINDOW-20260923-accept.yaml
           attestation:
             ref: receipt://docs/operations/human-attestations/VALUE-WINDOW-20260923-accept.yaml
           revision:
-            ref: receipt://.omo/state/value-baselines/value-recorder-baseline-20260923-pre-v2-window.json
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
           time_burden:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
   verify:
