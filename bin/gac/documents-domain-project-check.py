@@ -397,6 +397,26 @@ def _declared_tool_surfaces(
     return surfaces
 
 
+def _declaration_workspace_root(project_registry_path: Path) -> Path:
+    """Return the workspace that owns `project_registry_path`.
+
+    Every check compares a declaration against an implementation, so both sides
+    have to come from the same workspace. The declarations live in the
+    registries the caller points at, therefore the implementations have to be
+    read from the workspace those registries describe — never from this script's
+    own checkout, which may be a different tree entirely (a test fixture, an
+    audit copy) or a checkout that happens to have the server submodules
+    initialised while the caller's does not. Using the script's own location
+    made the verdict depend on where the script lives rather than on the
+    registries it was asked to validate.
+    """
+
+    try:
+        return project_registry_path.resolve().parent.parents[2]
+    except IndexError:  # registry too shallow to imply a workspace root
+        return ROOT
+
+
 def _validate_entrypoint_bindings(
     workspace_mcp: dict[str, object],
     profiles: dict[str, object],
@@ -410,8 +430,10 @@ def _validate_entrypoint_bindings(
     comparison can catch a declaration that outruns its implementation — the
     intra-declaration subset check cannot, because both sides of it are text.
 
-    Returns `(errors, checked)`. `checked` is reported even when empty so that
-    "nothing was bound" stays distinguishable from "everything matched".
+    Returns `(errors, checked)`. `checked` never enters the JSON report — that
+    report's key set is pinned by callers — so `check_domain_projects` prints it
+    to stderr instead. Empty output there means no surface was bound at all,
+    which stays distinguishable from a surface that bound and matched.
     """
 
     errors: list[str] = []
@@ -619,9 +641,11 @@ def check_domain_projects(
             errors.extend(_check_gateway_file(domain_root / filename, domain_id, domain_root))
 
     binding_errors, bindings_checked = _validate_entrypoint_bindings(
-        workspace_mcp, profiles, clients, ROOT
+        workspace_mcp, profiles, clients, _declaration_workspace_root(project_registry_path)
     )
     errors.extend(binding_errors)
+    for line in bindings_checked:
+        print(f"binding-check: {line}", file=sys.stderr)
 
     report: dict[str, object] = {
         "ok": not errors,

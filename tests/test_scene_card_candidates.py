@@ -17,7 +17,7 @@ SPEC.loader.exec_module(MODULE)
 
 def _write_inputs(root: Path) -> None:
     (root / "docs").mkdir(parents=True)
-    (root / ".omo/_truth/scenarios").mkdir(parents=True)
+    (root / ".omo/_truth/contracts").mkdir(parents=True)
     (root / "docs/scene-card-candidate-seeds.yaml").write_text(
         """schema: scene-card-candidate-seeds/v1
 candidates:
@@ -32,7 +32,7 @@ candidates:
 """,
         encoding="utf-8",
     )
-    (root / ".omo/_truth/scenarios/research.yaml").write_text(
+    (root / ".omo/_truth/contracts/research.yaml").write_text(
         """---
 status: active
 ---

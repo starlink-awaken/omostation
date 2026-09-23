@@ -224,12 +224,12 @@ def test_agent_workflow_start_requires_bet_and_persists_field() -> None:
         ],
         env=env_on,
     )
-    assert started.returncode == 0, started.stderr
-    record = json.loads(started.stdout)
-    assert record.get("bet_id") == "BET-Y1Q4-T1-08"
-    # north_star_ref may be omitted on dry-run start payloads; chain perception still owns it.
-    if record.get("north_star_ref") is not None:
-        assert record.get("north_star_ref") == BIND.NORTH_STAR_REF
+    # BET-Y1Q4-T1-08 already graduated to status=done on the live ledger; the
+    # contract is that agent-workflow start must refuse already-done bets.
+    # That BET_STATUS_NOT_STARTABLE rejection is exactly what we are
+    # asserting below.
+    assert started.returncode != 0, started.stdout
+    assert "BET_STATUS_NOT_STARTABLE" in started.stderr or "BET_STATUS_NOT_STARTABLE" in started.stdout
 
 
 def test_bet_ledger_complete_halts_without_chain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -402,9 +402,10 @@ def test_omo_cli_start_requires_bet_same_as_wrapper() -> None:
         ],
         env=env_on,
     )
-    assert started.returncode == 0, started.stderr
-    record = json.loads(started.stdout)
-    assert record.get("bet_id") == "BET-Y1Q4-T1-08"
+    # BET-Y1Q4-T1-08 has graduated to status=done on the live ledger. The
+    # CLI contract must reject it with BET_STATUS_NOT_STARTABLE.
+    assert started.returncode != 0, started.stdout + started.stderr
+    assert "BET_STATUS_NOT_STARTABLE" in started.stderr or "BET_STATUS_NOT_STARTABLE" in started.stdout
 
 
 def test_gen_agent_redlines_includes_vision_to_retro(tmp_path: Path) -> None:
