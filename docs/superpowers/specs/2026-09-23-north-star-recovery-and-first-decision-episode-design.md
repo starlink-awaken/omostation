@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.2.0
+spec_version: 1.3.0
 title: North-star recovery and first real Decision Episode proof
 bet_id: BET-Y2Q2-T4-01
 status: accepted
@@ -8,9 +8,9 @@ lifecycle: spec
 owner: governance-team
 created: '2026-09-23'
 last-reviewed: '2026-09-23'
-implementation_authorized: true
+implementation_authorized: false
 value_indicator_policy: true
-risk_level: L2
+risk_level: L3
 human_gate: true
 type: ssot
 ---
@@ -46,6 +46,23 @@ top-level project.
   no qualifying week. Parallel JSONL contains 30 v2 rows, but those rows are not
   ledger-bound and therefore do not prove personal value. Engineering or
   governance work is not a substitute for personal business value.
+- The 30 v2 rows are a single batch, not 30 observed business episodes. They
+  were appended from `2026-09-23T06:22:10Z` through
+  `2026-09-23T06:26:42Z`, use consecutive run ids
+  `val-win-20260923-01` through `val-win-20260923-30`, and all declare
+  `accepted`, `review_duration_seconds=45`, and
+  `estimated_time_saved_seconds=240`. Their source scene outcomes explicitly
+  say `value-window human adjudication batch`. The authoritative scene
+  execution database contains zero matching runs, and the Event Ledger
+  contains zero matching correlation ids or payload references. These rows and
+  their adjacent v1 mirrors are preserved as historical advisory records but
+  count as zero real-value samples.
+- The value-window SSH signature is cryptographically valid only for the six
+  canonical attestation fields. The 30-sample count, baseline, acceptance
+  percentage, revision burden, and window are outside the signed bytes. Its
+  `episode_id` and `signal_event_id` do not exist in the Event Ledger. The
+  attestation is therefore a valid human signature over an unbound statement,
+  not proof of the claimed value window.
 - Merge `c7e1fdf09cb1edcd7e8bd26f3b100c76139b3628` preserved a closeout retro
   whose own text says there is no complete `EpisodeClosed` sample and no
   four-consecutive-week proof. That merge remains historical evidence, but its
@@ -115,6 +132,16 @@ The repair may modify only:
 - `tests/unit/test_panel_collect.py`;
 - `tests/unit/test_panorama_objective_coverage.py`.
 
+Post-acceptance audit proved that this six-path operation is insufficient. The
+current `PersonalEpisodeService.observe_principal` can return `passed` for a
+chain that lacks per-Episode role-context assignment, responsibility linkage,
+pre-mandate human adjudication, distinct outcome observation, adjudication
+recording, memory candidacy, and closure. Projecting that result would merely
+replace one false-positive source with another. Operation
+`north-star-ledger-bound-value-projection-repair-v1` is therefore superseded
+before execution and must never be consumed, retried, or reinterpreted as
+implementation authority.
+
 The authoritative personal-value verdict must come from the read-only
 `bin/bc-os/north_star_meter_v2.py` projection over the OMO causal Event Ledger,
 including chain integrity and `PersonalEpisodeService` qualification. Existing
@@ -142,6 +169,121 @@ scope drift, unexpected file changes, unknown remote outcome, ledger mutation,
 Claims mutation, or concurrent writer conflict. It never uses force,
 `--no-verify`, or automatic retry.
 
+## Delegated fail-closed design correction
+
+Under the same bounded delegation, delegated decision
+`delegated-decision-5d0751c9-f824-4902-8b0c-cbaa646ed7ef`, recorded at
+`2026-09-23T15:57:48Z` and expiring at `2026-09-27T16:00:00Z`, authorizes
+operation `north-star-ledger-truth-contract-v2` at most once. This is a
+repository-only design correction. It may modify only this Spec and
+`docs/plans/3y-bet-ledger.yaml`, with one ordinary non-force branch push, one
+pull-request creation or update, and one ordinary merge after required checks
+are green and two remote-main OID reads match.
+
+This design operation does not authorize runtime writes, Event Ledger writes,
+Claims verbs, external business actions, child-repository publication, or the
+implementation surfaces below. It stops on any unexpected changed path,
+remote drift, unknown remote outcome, active overlapping lease, or failed
+required check and is never automatically retried.
+
+The successor implementation must be split into independently fenced,
+child-first transactions. Each transaction needs a fresh base OID, exact path
+claims, patch digest, process identity, tests, rollback, one-shot repository
+effects, and a root gitlink update only after the child commit is reachable:
+
+1. **OMO truth writer and observer**
+   - `projects/omo/src/omo/personal_episode.py`
+   - `projects/omo/src/omo/personal_episode_helpers.py`
+   - `projects/omo/src/omo/omo_adjudication.py`
+   - `projects/omo/tests/test_personal_episode.py`
+   - `projects/omo/tests/test_omo_adjudication.py`
+2. **Cockpit command delegation**
+   - `projects/cockpit/src/cockpit/web/api_decision_inbox.py`
+   - `projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py`
+   - `projects/cockpit/src/cockpit/tests/test_api_decision_inbox.py`
+   - `projects/cockpit/src/cockpit/tests/test_api_workflow_mesh_operations.py`
+3. **Root meter, legacy demotion, and honest projection**
+   - `bin/bc-os/north_star_meter_v2.py`
+   - `bin/ssot/scene-outcome-recorder.py`
+   - `bin/ssot/value-recorder.py`
+   - `bin/panorama/panel-collect.py`
+   - `bin/panorama/panorama-collect.py`
+   - `tests/test_north_star_meter_v2.py`
+   - `tests/test_scene_outcome_value_v2_bridge.py`
+   - `tests/unit/test_panel_collect.py`
+   - `tests/unit/test_panorama_objective_coverage.py`
+   - the two child gitlinks, this Spec, and the BET ledger
+
+The listed paths are a proposed implementation envelope, not authorization to
+edit them under the design operation.
+
+### Canonical Episode truth contract
+
+The OMO Event Ledger is the only value-truth writer. A qualifying Episode must
+contain one causally ordered, principal-bound chain with stable ids and no
+cross-principal or cross-Episode joins:
+
+`SignalObserved → RoleContextAssigned → ResponsibilityLinked → DecisionProposed → HumanAdjudication → MandateGranted → ActionSucceeded → EvidenceRecorded → OutcomeObserved → AdjudicationRecorded → MemoryCandidateProposed → EpisodeClosed`.
+
+The existing event names may be versioned, but their semantics and ordering
+are mandatory. Existing `Episode.Decision.v1`, `Evidence.LocalDraft.v1`, and
+`Outcome.Human.v1` rows do not become qualifying merely because equivalent
+fields occur in their envelopes. `EpisodeClosed` must name the exact terminal
+outcome, adjudication, evidence, mandate, and memory-candidate event ids and
+must be idempotent. Reject, defer, and ignore may close an Episode for honest
+denominator accounting but never count as an accepted delegated result.
+
+Human adjudication that authorizes a mandate is distinct from the later human
+adjudication of the observed outcome. Both must be explicit Event Ledger
+events. An action without a prior valid, revocable mandate is non-qualifying.
+An edit without the original candidate digest, revised digest, and concrete
+changed-field receipt is non-qualifying. Missing burden fields or
+`review_duration_seconds >= estimated_time_saved_seconds` is non-qualifying.
+
+### Observer and meter contract
+
+`PersonalEpisodeService.observe_principal` must validate the complete chain,
+event ordering, producer/principal/episode identity, causation links,
+idempotency, mandate state at action time, revision receipt, closure bindings,
+and Ledger hash integrity before incrementing any qualifying counter. It must
+return typed gap codes for every missing or conflicting leg. Thirty incomplete
+chains and four synthetic timestamps remain `not_ready`.
+
+`north_star_meter_v2.py` remains read-only. It may project `proven` only when
+the observer reports a complete-chain schema version, all counted Episode ids
+are closed and provenance-complete, at least 30 qualifying real Episodes exist,
+and four consecutive natural weeks each contain at least three
+principal-accepted outcomes. Caller-supplied booleans, legacy JSONL,
+attestations, scene-card existence, run-id strings, or engineering receipts can
+never elevate the verdict.
+
+### Legacy convergence contract
+
+`.omo/_delivery/outcomes/adjudications.jsonl`,
+`.omo/_delivery/ingress/value-evidence.jsonl`, scene outcomes, and MOS
+`decision_outcome` are legacy/advisory surfaces. During migration they remain
+append-only historical evidence, but they are not co-equal truth writers. New
+canonical adjudications and decision outcomes originate in the Event Ledger;
+JSONL and MOS become rebuildable projections with source event ids and
+projection checkpoints. Projection failure may degrade display or learning but
+must not roll back, duplicate, or hide the canonical event.
+
+### Required negative proofs
+
+The implementation is incomplete unless tests prove all of these fail closed:
+
+- the existing 30-row batch plus its valid SSH signature counts as zero;
+- thirty partial chains that satisfy the old observer remain `not_ready`;
+- missing, reordered, duplicated, cross-principal, cross-Episode, or
+  mismatched-causation legs never qualify;
+- mandate-after-action, revoked mandate, unbound authority receipt, replay
+  conflict, missing revision diff, missing burden, and burden greater than or
+  equal to savings never qualify;
+- JSONL, MOS, panel inputs, or an attestation cannot flip value independently;
+- observer and meter are read-only and byte-preserve the source Ledger;
+- an interrupted projection is rebuildable from Ledger without a second truth
+  write or altered historical receipt.
+
 ## Concurrent-writer operating contract
 
 Concurrent activity in the canonical Workspace is expected during this BET and
@@ -164,6 +306,15 @@ is handled without taking over another writer:
    conditions through `2026-09-28T00:00:00+08:00`. This delegation does not
    supply the operation-specific fields required for any Claims lifecycle
    operation and does not authorize Restricted-data egress.
+7. Run status and write ownership are separate facts. An expired lease removes
+   write authority but does not erase, close, or rewrite the old run. A
+   successor may proceed only after proving the old effect process is absent,
+   binding a new base OID and process identity, and acquiring non-overlapping
+   exact paths. An overlapping path remains blocked until the old lease is
+   expired and the successor explicitly records the predecessor run id.
+8. A stale run is never closed through an API that would invoke forbidden
+   Claims verbs. It remains preserved as stale/orphaned evidence until an
+   applicable reconciliation operation exists.
 
 ## Phase 0: factual and authorization integrity
 

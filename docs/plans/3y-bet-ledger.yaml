@@ -30734,8 +30734,8 @@ bets:
     schema_state: enforced
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-23-north-star-recovery-and-first-decision-episode-design.md
-    spec_version: 1.2.0
-    content_digest: sha256:9b9e9b21129029f374724508599d1648c3c187e92a3b205df35bee5efc10fdad
+    spec_version: 1.3.0
+    content_digest: sha256:96df0c0ac7205bc7c420aeaafd6aad670296751299218d944d5f3ad32f60672b
     decision_ref: decision://accepted/BET-Y2Q2-T4-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -30755,23 +30755,12 @@ bets:
     expect: no new errors relative to the bound origin/main baseline; the six pre-existing
       completion-evidence errors for BET-Y1Q3-T10-16 and BET-Y1Q3-T10-114 remain separately
       owned debt
-  - cmd: python3 bin/gac/check-sfop-slots.py --json
-    expect: exit 0
-  - cmd: python3 bin/gac/gate-health-check.py --json
-    expect: exit 0 from the bound runtime/code-root pair
-  - cmd: python3 bin/agent-workflow.py observe --json
-    expect: ok=true with every active or stale lock attributed
-  - cmd: PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -B -m
-      pytest -q -p no:cacheprovider tests/unit/test_panel_collect.py tests/unit/test_panorama_objective_coverage.py
-    expect: all ledger-bound value projection and fail-closed objective coverage tests
-      pass
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: the accepted v1.3 design and ledger pointer satisfy the documentation SSOT
+      contract
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-23-north-star-recovery-and-first-decision-episode-design.md
-  - bin/panorama/panel-collect.py
-  - bin/panorama/panorama-collect.py
-  - tests/unit/test_panel_collect.py
-  - tests/unit/test_panorama_objective_coverage.py
 - accepted_specifications:
   - content_digest: sha256:a27dbc12b1b1dc150caf30e35c77812bc9a24e9358d476fc446d26946eac7dad
     decision_ref: decision://accepted/BET-Y2Q2-T7-04
