@@ -1055,6 +1055,74 @@ def test_profile_tools_must_be_exposed_by_workspace_mcp(tmp_path: Path) -> None:
     assert json.loads(result.stdout)["errors"] == ["profiles.content-domain references unknown tools: invented_tool"]
 
 
+def _fake_cockpit_workspace(
+    tmp_path: Path, *, main_tools: list[str], tunnel_tools: list[str]
+) -> None:
+    """Write the packaging metadata the binding check resolves entrypoints from.
+
+    The implementations are read from the workspace that owns the project
+    registry, so a fixture can describe both sides of the comparison: the
+    registry above, and a minimal `projects/cockpit` here.
+    """
+
+    project = tmp_path / "projects" / "cockpit"
+    (project / "src" / "cockpit").mkdir(parents=True)
+    (project / "pyproject.toml").write_text(
+        "[project]\n"
+        'name = "cockpit"\n'
+        "[project.scripts]\n"
+        'cockpit-mcp = "cockpit.agent_runtime_mcp_server:main"\n'
+        'cockpit-documents-mcp = "cockpit.documents_read_mcp_server:main"\n',
+        encoding="utf-8",
+    )
+    for module, tools in (
+        ("agent_runtime_mcp_server", main_tools),
+        ("documents_read_mcp_server", tunnel_tools),
+    ):
+        body = "".join(f"@mcp.tool()\ndef {tool}() -> None:\n    return None\n\n\n" for tool in tools)
+        (project / "src" / "cockpit" / f"{module}.py").write_text(body, encoding="utf-8")
+
+
+def test_declared_tools_must_be_exposed_by_the_implementing_server(tmp_path: Path) -> None:
+    """A declaration naming a tool its server does not expose must fail the check."""
+
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+    _fake_cockpit_workspace(
+        tmp_path,
+        main_tools=["workspace_context", "domain_context", "cards_status"],
+        tunnel_tools=["workspace_context", "domain_context", "cards_status", "cards_check"],
+    )
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 1
+    assert json.loads(result.stdout)["errors"] == [
+        "workspace_mcp.entrypoint=cockpit-mcp declares tools the implementing server does not expose: cards_check"
+    ]
+
+
+def test_binding_check_skips_instead_of_borrowing_another_checkout(tmp_path: Path) -> None:
+    """Declarations and implementations have to come from the same workspace.
+
+    The workspace owning the registry may have no `projects/<server>` at all
+    while the checkout this script lives in does. Borrowing the implementation
+    from there would report a mismatch for a registry that was never meant to be
+    validated against that code, and would make the verdict depend on where the
+    script happens to live. Skipping must also be announced, so that "nothing
+    was bound" never looks like "everything matched".
+    """
+
+    domain_registry = _domain_registry(tmp_path, ["vault"])
+    project_registry = _project_registry(tmp_path, ["vault"])
+
+    result = _run(domain_registry, project_registry)
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["errors"] == []
+    assert result.stderr.count("SKIPPED") == 2
+
+
 def test_profile_capability_routes_must_exist(tmp_path: Path) -> None:
     domain_registry = _domain_registry(tmp_path, ["vault"])
     project_registry = _project_registry(tmp_path, ["vault"])
