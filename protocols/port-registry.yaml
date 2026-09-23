@@ -78,6 +78,9 @@ env_vars:
   18801: WPS_OFFICE_MCP_STDIO_PORT
   18802: WPS_SKILLS_STDIO_PORT
   18803: BOS_SKILL_CLI_STDIO_PORT
+  6379: BUS_FOUNDATION_REDIS_PORT
+  43191: ZHIXING_OBSERVATORY_PORT
+  18700: EMBED_NODE_HEALTH_PORT
 ports:
   3100:
     name: mcp-stdio
@@ -87,6 +90,23 @@ ports:
     name: mcp-stdio-alt
     status: active
     transport: stdio
+  6379:
+    name: bus-foundation-redis
+    note: bus-foundation Redis pub/sub backend default (R93)
+    owner: bus-foundation
+    status: active
+    transport: redis
+  43191:
+    name: zhixing-observatory
+    note: 织星驾驶舱 HTTP 入口 (advisory endpoint; compare_43191_fidelity 拉取)
+    owner: cockpit
+    status: active
+    transport: http
+  18700:
+    name: embed-node-health
+    note: Mac mini 本地 embed node :18700/health (convergence-pulse 探活)
+    status: active
+    transport: http
   7420:
     name: bos-api
     note: BOS API service (agora tools_proxy, ecos watchdog)
