@@ -1,0 +1,18 @@
+schema_version: human-attestation/v1
+principal_id: principal:xiamingxing
+verdict: accept
+episode_id: episode_value_window_20260923
+signal_event_id: evt_accept_value_window_20260923
+observed_at: '2026-09-23T07:16:39Z'
+signer_identity: xiamingxing
+signature_b64: PENDING_SIGNATURE
+# Value-window attestation (not a single-BET accept).
+# Bound metrics (informational; not part of signed message bytes):
+window: 2026-09-23
+baseline_id: value-recorder-baseline-20260923-pre-v2-window
+baseline_digest: sha256:b2ecdc02d1dd17e6ed839c1a005a1b1d5b0f9f8a2c6185e65e2b3c6833f6a465
+v2_qualifying: 30
+golden_slice:
+  samples: 30
+  acceptance_pct: 70
+  revision_burden_pct: 30

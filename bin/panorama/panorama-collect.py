@@ -663,6 +663,10 @@ def collect_bets() -> dict:
 
 
 def collect_objective_coverage(payload: dict) -> dict:
+    panel_value = payload.get("panel_value") if isinstance(payload.get("panel_value"), dict) else {}
+    obj_value_proof = (
+        "PROVEN" if str(panel_value.get("state") or "").lower() == "proven" else "NOT_PROVEN"
+    )
     """Project the explicit objective-to-evidence boundary for Agent OS."""
     import yaml
 
@@ -814,8 +818,8 @@ def collect_objective_coverage(payload: dict) -> dict:
         {
             "id": "BUSINESS_VALUE",
             "requirement": "Human/business value proof",
-            "status": "NOT_PROVEN",
-            "value_status": "NOT_PROVEN",
+            "status": obj_value_proof,
+            "value_status": obj_value_proof,
             "evidence": evidence("ledger://BET-Y1Q4-T10-165", "projection://value_metrics"),
         },
     ]
@@ -825,7 +829,7 @@ def collect_objective_coverage(payload: dict) -> dict:
         "items": items,
         "delivery_complete": all(item["status"] in {"PASS", "DELIVERY_ACCEPTED"} for item in items),
         "activation_status": claims_activation_status,
-        "value_proof": "NOT_PROVEN",
+        "value_proof": obj_value_proof,
         "note": "Delivery coverage never proves business value; Claims Authority activation remains separately authorized.",
     }
 
@@ -3435,11 +3439,15 @@ def collect_agent_visibility(payload: dict) -> dict:
     v2_records = int(value_validation.get("v2_records") or 0)
     if value_validation.get("ok") is not True:
         value_blockers.append("value-evidence validation unavailable or failed")
+    # panel_value.state is proven only after golden slice + SSH-signed window attestation.
+    panel_state = str(panel_value.get("state") or "not_proven").lower()
+    value_proof_flag = "PROVEN" if panel_state == "proven" else "NOT_PROVEN"
     value_readiness = {
         "schema": "panorama-value-proof-readiness/v2",
-        "status": "NOT_PROVEN",
+        "status": value_proof_flag,
         "available": bool(panel_value),
         "source": panel_value.get("schema", "unavailable"),
+        "panel_state": panel_state,
         "samples_total": int(value_samples.get("records") or 0),
         "qualifying_samples": qualifying,
         "v2_records": v2_records,
@@ -3456,7 +3464,11 @@ def collect_agent_visibility(payload: dict) -> dict:
         "next_action": (
             f"Collect {max(0, 30 - qualifying)} more qualifying real-use records with a frozen baseline; do not backfill."
             if qualifying < 30 else
-            "Review all threshold gates and independently adjudicate the full value window."
+            (
+                "None — value window PROVEN via signed attestation."
+                if value_proof_flag == "PROVEN"
+                else "Review all threshold gates and independently adjudicate the full value window."
+            )
         ),
     }
 
@@ -3581,7 +3593,7 @@ def collect_agent_visibility(payload: dict) -> dict:
                 else {"schema": "claims-observation-progress/v1", "available": False}
             ),
             "claims_lifecycle_authorization": claims_lifecycle_authorization,
-            "value_proof": "NOT_PROVEN",
+            "value_proof": value_proof_flag,
             "value_proof_readiness": value_readiness,
         },
         "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},

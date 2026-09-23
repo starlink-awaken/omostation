@@ -629,13 +629,48 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
         elif post_adjudicated == 0:
             reasons.append("修订基线已冻结；等待基线后的真实记录")
 
+    # Independent full-window human attestation flips state only when
+    # golden slice is met AND SSH-signed receipt verifies (agent cannot forge).
+    # Keep lowercase to survive refresh.py clean_not_proven() filter.
+    state = "not_proven"
+    if (
+        not reasons
+        and qualifying >= GOLDEN_SLICE[0]["target"]
+        and all(bool(t.get("met")) for t in thresholds)
+    ):
+        repo_root = root if root is not None else Path(__file__).resolve().parents[2]
+        attestation_path = (
+            Path(repo_root)
+            / "docs"
+            / "operations"
+            / "human-attestations"
+            / "VALUE-WINDOW-20260923-accept.yaml"
+        )
+        if attestation_path.is_file():
+            try:
+                import importlib.util
+
+                bl_path = Path(repo_root) / "bin" / "plan" / "bet-ledger.py"
+                spec = importlib.util.spec_from_file_location("_bet_ledger_attest", bl_path)
+                if spec and spec.loader:
+                    bl = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(bl)
+                    errs = bl.validate_human_attestation(
+                        receipt_path=attestation_path,
+                        workspace=Path(repo_root),
+                    )
+                    if not errs:
+                        state = "proven"
+            except Exception:
+                state = "not_proven"
+
     return {
         "schema": "panel-value/v1",
         # 注意: 必须用小写。部署侧 refresh.py 的 render() 里有个遗留的
         # clean_not_proven(), 它会 **删除任何值恰好等于字符串 'NOT_PROVEN' 的键**
         # （本意是清掉历史占位文本），导致大写状态在嵌入快照时整键消失、
         # 页面退化成 UNKNOWN。小写可安全穿过该规则, 由视图层负责大写展示。
-        "state": "not_proven",
+        "state": state,
         "state_reason": reasons,
         "revision_baseline": None if baseline is None else {
             "schema": "value-revision-baseline-projection/v1",
