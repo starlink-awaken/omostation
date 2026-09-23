@@ -17,7 +17,7 @@ root_cause: >-
   草案三个 operation 假定能在同一生产 broker 上串完，未区分 attempts(v2) 与
   legacy publication 可能需要的非 v2 或专用路径。
 solution: >-
-  治理/设计层三选一后在 ADR-0454 落定再执行剩余 operation：
+  治理/设计层三选一后在 ADR-0455 落定再执行剩余 operation：
   A) 允许 attempts 上「legacy-publication」专用 observe 路径（仍要求 v1 allow 但
      绑定 exact changed path / fence 后效果上限）；
   B) 为 fence 增加不依赖 allow-receipt 的 publisher 类 receipt（仍 fence-aware）；

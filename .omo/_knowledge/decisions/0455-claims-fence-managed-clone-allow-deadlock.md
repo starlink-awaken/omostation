@@ -1,5 +1,5 @@
 ---
-id: ADR-0454
+id: ADR-0455
 status: PROPOSED
 lifecycle: spec
 owner: architecture-governance
@@ -10,7 +10,7 @@ related:
   - PITFALL-GAT-010
 ---
 
-# ADR-0454 — Claims legacy-publication fence 与 managed-clone allow 禁止的可满足性
+# ADR-0455 — Claims legacy-publication fence 与 managed-clone allow 禁止的可满足性
 
 - **Status**: PROPOSED（待架构评审；未授权在 PROPOSED 下改 broker 行为）
 - **Date**: 2026-09-23

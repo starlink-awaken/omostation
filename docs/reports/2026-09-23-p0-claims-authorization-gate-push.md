@@ -12,7 +12,7 @@ last-reviewed: 2026-09-23
 
 > **一句话**：Claims lifecycle 已获人工授权并完成 Op A；Op B/C 因
 > `PITFALL-GAT-010` 协议死锁按 stop condition 停止；同步修复 A2/A4/A5 并登记
-> GAT-010 + ADR-0454（PROPOSED）+ 高危告警 triage。
+> GAT-010 + ADR-0455（PROPOSED）+ 高危告警 triage。
 
 ---
 
@@ -46,7 +46,7 @@ last-reviewed: 2026-09-23
 ### 1.4 协议矛盾固化
 
 - **PITFALL-GAT-010**（high）：fence↔managed-clone allow 互斥
-- **ADR-0454**（PROPOSED）：倾向方案 A — 绑定 publication 范围的专用 allow 分支
+- **ADR-0455**（PROPOSED）：倾向方案 A — 绑定 publication 范围的专用 allow 分支
 - GitHub Issue：见 PR 描述链接
 
 ---
@@ -74,7 +74,7 @@ last-reviewed: 2026-09-23
 |-------|------|
 | Claims operation-specific 授权 | ✅ 取得并落盘 |
 | Claims 技术 preflight | ✅ hard_blockers=[]（main high-water 路径修复） |
-| Claims 三 operation 全绿 | ⚠️ **部分** — A 成；B/C 等 ADR-0454 + 有效窗内重跑 |
+| Claims 三 operation 全绿 | ⚠️ **部分** — A 成；B/C 等 ADR-0455 + 有效窗内重跑 |
 | 失败门禁 A2/A4/A5 | ✅ 本 worktree evidence PASS（待 PR 合并 + panorama 刷新） |
 | High alert triage | ✅ 分类为真债（子模块漂移 proposal），非 fixture |
 | 价值证据 30 条 | P1，未动（按计划） |
@@ -85,7 +85,7 @@ last-reviewed: 2026-09-23
 
 1. 合并本 PR（PITFALL + ADR + registry known_orphans + 本报告）
 2. 刷新 Panorama collect，确认 gates 列表
-3. ADR-0454 评审 → ACCEPTED 后实现方案 A → 续窗/新窗重跑 Op B/C
+3. ADR-0455 评审 → ACCEPTED 后实现方案 A → 续窗/新窗重跑 Op B/C
 4. Submodule Freshness：按 proposal 开 pointer-bump PR（或确认可接受漂移）
 5. P1：价值证据采集、T10-154 unblock
 
