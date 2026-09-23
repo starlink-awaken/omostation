@@ -258,7 +258,8 @@ entries:
   check_id: submodule-ancestry-gate
   signature: 16c09780d627aaa1
   kind: gitlink-regress
-  reason: submodule projects/agora pointer 9578d7b07e7f advances 24387abce0f8 via squash #76 (content-identical, non-FF by squash)
+  reason: submodule projects/agora pointer 9578d7b07e7f advances 24387abce0f8 via
+    squash
   range: origin/main..3018d3897
   recorded_at: '2026-09-11T08:02:03.623579+00:00'
   active: true
@@ -267,7 +268,8 @@ entries:
   check_id: submodule-ancestry-gate
   signature: 19ac62aac9247304
   kind: gitlink-regress
-  reason: submodule projects/knowledge/kairon pointer f616426e7771 unreachable (not in any remote ref); aligned to 38e3eb5593b9 on origin/main to fix gac-gate/governance-verify
+  reason: submodule projects/knowledge/kairon pointer f616426e7771 unreachable (not
+    in any remote ref); aligned to 38e3eb5593b9 on origin/main to fix gac-gate/governance-verify
   range: origin/main..HEAD
   recorded_at: '2026-09-13T05:02:16.272781+00:00'
   active: true
@@ -276,7 +278,16 @@ entries:
   check_id: submodule-guard
   signature: 489c94680c05efe4
   kind: gitlink-regress
-  reason: submodule projects/cockpit pointer c345004 squashed to 51c847b via PR #173 (content-identical, non-FF by squash-merge oid rewrite)
+  reason: submodule projects/cockpit pointer c345004 squashed to 51c847b via PR
   range: origin/main..HEAD
   recorded_at: '2026-09-14T03:00:00+00:00'
+  active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|a1f2b486d201a333
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: a1f2b486d201a333
+  kind: gitlink-regress
+  reason: submodule projects/cockpit-ui pointer a6c48358597e rewinds 565cbb945ae2
+  range: origin/main..HEAD
+  recorded_at: '2026-09-23T04:03:49.776179+00:00'
   active: true
