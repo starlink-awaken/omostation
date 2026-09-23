@@ -70,11 +70,11 @@ SharedConf/ClashConfig/          ← iCloud git 仓库, 全机同步
 
 ## 5. Tailscale 自建中继 (derper)
 
-- 服务: 上海机 43.142.115.242, `derper -hostname derp.fshwjw.top -a :8443 -stun -certmode manual`
+- 服务: 上海机 43.142.115.242 (09-23 重装 Rocky 9.4), `derper -a :8443 -stun-port 3478 -certmode manual` (原生 STUN)
 - 证书: acme.sh DNS-01 (CF token), 自动续期 cron active; CF 记录 DNS-only
 - 效果: **shanghai 39.8ms 登顶 Nearest DERP** (hkg 同期 274ms)
 - 接入: 管理台 ACL 加 derpMap (RegionID 900), 见 `DERP-MAP.md`
-- **STUN 桥接 (0922)**: Go epoll/kernel3.10 不兼容致 derper 自带 STUN 全死 → `-stun-port=-1` + python stun-server.py (systemd) 独占 3478; 打洞前提恢复 (双侧对称 NAT 下 direct 仍不保证)
+- **更正**: 09-22 "Go epoll/kernel 3.10 致 STUN 失效" 是误判 (derper 只回应 Tailscale 格式请求, 测试包不合格)。检测一律用 `scripts/ts_stun.py`。
 - tailscaled 客户端: plist NO_PROXY 豁免 derp.fshwjw.top (绕 Clash 转发层)
 
 ## 6. 猎豹线路体检结论 (2026-09-22)
