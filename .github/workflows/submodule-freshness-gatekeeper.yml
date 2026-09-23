@@ -24,6 +24,9 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+          # Private sibling submodules return 404 without a cross-repo PAT
+          # (same pattern as ci-lint / gac-gate / child CI workflows).
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
