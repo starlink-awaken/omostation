@@ -128,3 +128,89 @@ def test_non_main_workspace_is_skipped(tmp_path, monkeypatch):
     monkeypatch.setattr(mod, "is_main_workspace", lambda: False)
     assert mod.snapshot(reason="t", quiet=True)["skipped"] is True
     assert mod.check() == 0
+
+
+# --- prune: 保留上限 + manual 豁免 (2026-09-23) ---
+
+def _mk_snapshot(mod, name: str, reason: str = "cron-hourly"):
+    d = mod.SNAPSHOT_DIR / name
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "manifest.json").write_text(json.dumps({"files": [], "reason": reason}))
+    return d
+
+
+def test_prune_keeps_n_recent_non_manual(tmp_path):
+    mod = _load()
+    _wire(mod, _repo(tmp_path))
+    for i in range(5):
+        _mk_snapshot(mod, f"2026010{i}T000000Z", "cron-hourly")
+    result = mod.prune(keep=2)
+    assert result["ok"] is True
+    assert result["removed"] == ["20260100T000000Z", "20260101T000000Z",
+                                 "20260102T000000Z"]
+    assert sorted(p.name for p in mod.SNAPSHOT_DIR.glob("*/")) == [
+        "20260103T000000Z", "20260104T000000Z"]
+
+
+def test_prune_exempts_manual_by_default(tmp_path):
+    """manual 快照 (用户显式触发, 常被 PR/复盘引用) 默认不被自动裁剪."""
+    mod = _load()
+    _wire(mod, _repo(tmp_path))
+    _mk_snapshot(mod, "20260100T000000Z", "manual")
+    for i in range(3):
+        _mk_snapshot(mod, f"2026010{i + 1}T000000Z", "cron-hourly")
+    result = mod.prune(keep=1)
+    assert result["protected_manual"] == ["20260100T000000Z"]
+    assert "20260100T000000Z" not in result["removed"]
+    assert (mod.SNAPSHOT_DIR / "20260100T000000Z").exists()
+
+
+def test_prune_include_manual_reclaims_them(tmp_path):
+    mod = _load()
+    _wire(mod, _repo(tmp_path))
+    _mk_snapshot(mod, "20260100T000000Z", "manual")
+    _mk_snapshot(mod, "20260101T000000Z", "cron-hourly")
+    result = mod.prune(keep=1, include_manual=True)
+    assert result["include_manual"] is True
+    assert result["removed"] == ["20260100T000000Z"]
+    assert not (mod.SNAPSHOT_DIR / "20260100T000000Z").exists()
+
+
+def test_prune_dry_run_deletes_nothing(tmp_path):
+    mod = _load()
+    _wire(mod, _repo(tmp_path))
+    for i in range(3):
+        _mk_snapshot(mod, f"2026010{i}T000000Z", "cron-hourly")
+    result = mod.prune(keep=1, dry_run=True)
+    assert result["dry_run"] is True
+    assert len(result["removed"]) == 2
+    assert len(list(mod.SNAPSHOT_DIR.glob("*/"))) == 3  # 一个都没删
+
+
+def test_prune_defaults_to_module_keep_at_call_time(tmp_path, monkeypatch):
+    """keep=None 时在调用时读模块常量 (便于 monkeypatch 与后续演进)."""
+    mod = _load()
+    _wire(mod, _repo(tmp_path))
+    monkeypatch.setattr(mod, "KEEP", 2)
+    for i in range(4):
+        _mk_snapshot(mod, f"2026010{i}T000000Z", "cron-hourly")
+    assert mod.prune()["keep"] == 2
+
+
+def test_keep_reads_env_override(tmp_path, monkeypatch):
+    monkeypatch.setenv("GAC_WIP_SNAPSHOT_KEEP", "3")
+    assert _load().KEEP == 3
+
+
+def test_snapshot_triggers_prune(tmp_path, monkeypatch):
+    """snapshot() 收尾会按保留上限裁剪 (manual 豁免)."""
+    mod = _load()
+    root = _wire(mod, _repo(tmp_path))
+    monkeypatch.setattr(mod, "KEEP", 1)
+    _mk_snapshot(mod, "20260100T000000Z", "manual")
+    _mk_snapshot(mod, "20260101T000000Z", "cron-hourly")
+    (root / "a.md").write_text("dirty\n", encoding="utf-8")
+    mod.snapshot(reason="t", quiet=True)
+    names = sorted(p.name for p in mod.SNAPSHOT_DIR.glob("*/"))
+    assert "20260100T000000Z" in names        # manual 豁免
+    assert "20260101T000000Z" not in names    # 超上限被裁

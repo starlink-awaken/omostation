@@ -21,14 +21,18 @@ git 无 pre-checkout / pre-reset 钩子，无法在破坏性操作前拦截，�
 | `list-protected` | 列出已钉扎的提交 |
 | `unprotect`      | 删除钉扎 ref（提交已合入远端后清理） |
 | `list` / `restore` | 快照列举 / 恢复（默认 dry-run） |
+| `prune`          | 按保留上限裁剪快照；`--keep N` 覆盖上限（默认取 `GAC_WIP_SNAPSHOT_KEEP`，兜底 8），`--include-manual` 把 manual 快照一并裁剪，`--dry-run` 只计算 |
 | `status` / `check` | 脏文件数、分支异常、未推送提交数 / 超阈值告警（exit 1） |
 
 模式 B 的根因不是"没快照"，而是**提交不在任何远端、也不在任何长期 ref 上**。
 钉扎到 `refs/wip/` 既让对象可达（gc 不回收），又给出可发现的恢复入口：
 `git branch recover/<name> refs/wip/<...>`。
 
-安全约束: 只复制 / 只创建 ref, 从不删除业务文件或业务 ref；`restore` 默认预览；
-快照保留最近 20 份。快照与钉扎仅在**主工作区**生效（worktree 本就隔离）。
+安全约束: 只复制 / 只创建 ref, 从不删除业务文件或业务 ref；`restore` 默认预览。
+快照保留策略: 非 `manual` 快照保留最近 `KEEP` 份（默认 8，可由
+`GAC_WIP_SNAPSHOT_KEEP` 覆盖）；`manual`（用户显式触发、常被 PR/复盘引用）
+默认豁免自动裁剪，需清理时显式 `prune --include-manual`。
+快照与钉扎仅在**主工作区**生效（worktree 本就隔离）。
 """
 
 from __future__ import annotations
@@ -36,6 +40,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -49,7 +54,11 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOT_DIR = _ROOT / "runtime" / "wip-snapshots"
-KEEP = 20
+# 非 manual 快照的保留上限 (可用 GAC_WIP_SNAPSHOT_KEEP 覆盖)
+KEEP = int(os.environ.get("GAC_WIP_SNAPSHOT_KEEP", "8"))
+# manual 快照 (用户显式触发, 常被 PR/复盘记录引用) 默认豁免自动裁剪;
+# 需要清理时用 `prune --include-manual`
+MANUAL_REASON = "manual"
 # 主工作区脏文件超过该数量即视为异常（多 agent 冲突前兆）
 DIRTY_WARN_THRESHOLD = 8
 # 未推送提交超过该数量即视为异常（模式 B 前兆）
@@ -201,6 +210,47 @@ def _copy_out(src: Path, dst: Path) -> dict[str, object]:
             "sha256": hashlib.sha256(raw).hexdigest()[:16]}
 
 
+def _snapshot_reason(d: Path) -> str:
+    """读快照 manifest 的 reason; 读不到返回 "?"."""
+    try:
+        return json.loads((d / "manifest.json").read_text(encoding="utf-8")).get("reason", "?")
+    except Exception:
+        return "?"
+
+
+def prune(keep: int | None = None, include_manual: bool = False,
+          dry_run: bool = False) -> dict[str, object]:
+    """按保留上限裁剪快照目录.
+
+    - `keep`: 保留最近 N 份**非 manual** 快照; None 取模块常量 KEEP
+      (调用时才读, 便于测试 monkeypatch)
+    - `manual` 快照默认豁免 (用户显式触发, 常被 PR/复盘记录引用);
+      `include_manual=True` 时一并纳入裁剪
+    - `dry_run=True` 只计算不删除
+    """
+    keep = KEEP if keep is None else keep
+    if not SNAPSHOT_DIR.is_dir():
+        return {"ok": True, "keep": keep, "removed": [], "protected_manual": [],
+                "dry_run": dry_run}
+
+    existing = sorted(p for p in SNAPSHOT_DIR.glob("*/") if p.is_dir())
+    protected, candidates = [], []
+    for d in existing:
+        if include_manual or _snapshot_reason(d) != MANUAL_REASON:
+            candidates.append(d)
+        else:
+            protected.append(d)
+
+    survivors = candidates[-keep:] if keep > 0 else []
+    removed = [d.name for d in candidates if d not in survivors]
+    if not dry_run:
+        for name in removed:
+            shutil.rmtree(SNAPSHOT_DIR / name, ignore_errors=True)
+    return {"ok": True, "keep": keep, "include_manual": include_manual,
+            "protected_manual": [d.name for d in protected],
+            "removed": removed, "dry_run": dry_run}
+
+
 def snapshot(reason: str = "manual", quiet: bool = False) -> dict[str, object]:
     if not is_main_workspace():
         return {"ok": True, "skipped": True, "reason": "not_main_workspace"}
@@ -235,10 +285,8 @@ def snapshot(reason: str = "manual", quiet: bool = False) -> dict[str, object]:
     (dest / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
-    # 保留最近 KEEP 份
-    existing = sorted(p for p in SNAPSHOT_DIR.glob("*/") if p.is_dir())
-    for old in existing[:-KEEP]:
-        shutil.rmtree(old, ignore_errors=True)
+    # 保留最近 KEEP 份非 manual 快照 (manual 豁免, 见 prune)
+    prune()
 
     if not quiet:
         print(f"✅ WIP 快照: {len(files)} 文件 → {dest.relative_to(_ROOT)} (reason={reason})")
@@ -350,6 +398,12 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("--reason", default="manual")
     sp.add_argument("--quiet", action="store_true")
     sub.add_parser("list", help="列出快照")
+    pr = sub.add_parser("prune", help="按保留上限裁剪快照 (manual 默认豁免)")
+    pr.add_argument("--keep", type=int, default=None,
+                    help=f"保留最近 N 份非 manual 快照 (默认 {KEEP})")
+    pr.add_argument("--include-manual", action="store_true",
+                    help="把 manual 快照一并纳入裁剪 (默认豁免)")
+    pr.add_argument("--dry-run", action="store_true", help="只计算不删除")
     sub.add_parser("status", help="脏态 + 分支异常 + 未推送提交 摘要")
     sub.add_parser("check", help="异常告警 (exit 1)")
     pp = sub.add_parser("protect", help="钉扎未推送提交到 refs/wip/")
@@ -373,6 +427,11 @@ def main(argv: list[str] | None = None) -> int:
         snaps = list_snapshots()
         print(json.dumps(snaps, ensure_ascii=False, indent=1, default=str) if snaps else "无快照")
         return 0
+    if command == "prune":
+        result = prune(keep=args.keep, include_manual=args.include_manual,
+                       dry_run=args.dry_run)
+        print(json.dumps(result, ensure_ascii=False, indent=1, default=str))
+        return 0 if result.get("ok") else 1
     if command == "check":
         return check()
     if command == "protect":
