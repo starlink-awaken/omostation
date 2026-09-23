@@ -14,7 +14,7 @@
 # 处置原则: 「已归档/已移除」→ 删测试; 「时间炸弹」→ 改相对时间;
 #           「环境」→ 加守卫（参照 tests/test_scene_outcome_episode_bridge.py 模式);
 #           「行为漂移」→ 逐个判定测试对错, 不得批量跳过。
-version: 3
+version: 4
 ssot_ref: CR-ROOT-TEST-DEBT
 generated: '2026-09-22'
 revisions:
@@ -36,6 +36,24 @@ revisions:
       并补记「9 个 documents 测试属条件性覆盖(路径过滤), 常规 PR 不触发」。
       判定表主体（5 类 / 44 文件 / 160 测试）两轮均不受影响, 因其基于失败清单直接分类;
       「CI 覆盖 ∩ 失败 = ∅」结论亦不变(重算后仍为 0)。
+  - version: 4
+    date: '2026-09-23'
+    change: |
+      本轮债务清零闭环 (PR #4174 / #4175 / #4188 / #4198 / #4205 / #4207 / #4208 /
+      #4210 / #4213 / #4216 / #4219 / #4223 / #4226):
+        - A 类 13 文件 / 61 测试 → 已删 (PR #4205)
+        - B 类 5 文件 / 29 测试 → 已删 (PR #4207)
+        - C 类 5 文件 改写为相对时间 + 7 文件 重分类为 D/E (PR #4208)
+        - D 类 1 文件 → 加 host-sync alias + 环境依赖修 (PR #4210 #4213)
+        - E 类 12 文件 / 118 tests → 行为判定与 SSOT 对齐 (PR #4223 #4226)
+        - ports 3 个 → port-registry 登记 (PR #4198 #4219)
+        - github token 4 个 → 移除 (PR #4175)
+        - ops 子命令 12 个 → retired (PR #4188)
+        - sweep INDEX → 重生成 (PR #4216)
+        - root-test-debt 计数器 → 修正 (PR #4174)
+      残留 1 项 D 类 north_star_meter_v2 (omo 子模块 PersonalEpisodeService 不可在根仓 stub);
+      其余 14 个 D 类条目 (含历史 reclassified) 合并到 PR #4223 重分类。
+      重测基线: 3354 tests collected, 已知剩余失败 = 1 (north_star_meter_v2::test_measurement_reads_brokered_personal_outcome_without_mutating_ledger, 需 omo 子仓补 PersonalEpisodeService.observe_principal)
 measurement:
   command: python3 -m pytest tests -q
   collected: 3513
