@@ -47,6 +47,8 @@ last-reviewed: 2026-09-23
 
 ## 4. 迭代优化路线
 
+> ⚠️ 已并入 `SharedConf/ClashConfig/plans/2026-09-23-retro-and-roadmap.md`, 以下为历史存档。
+
 ### P0 (今天, 人工)
 - [ ] CF API Token 轮换 (曾入对话日志) → 更新上海机 acme account.conf
 - [x] 猎豹 GUI 重连 (0923 完成, socks5=up, 新出口 38.148.221.191)

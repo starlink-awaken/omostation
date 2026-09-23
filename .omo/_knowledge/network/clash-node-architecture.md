@@ -6,7 +6,7 @@ last-reviewed: 2026-09-23
 ---
 # Clash 节点架构 · 全量文档
 
-> 最后更新: 2026-09-23 · SSOT 真源: `SharedConf/ClashConfig` (iCloud git 仓库)
+> 最后更新: 2026-09-23 (下午, 探测改造后) · SSOT 真源: `SharedConf/ClashConfig` (iCloud git 仓库)
 > 本文件为知识层快照; 运行时事实以 SSOT 为准, 勿在此硬编码会漂移的值。
 
 ## 1. 内核与运行时
@@ -37,27 +37,36 @@ SharedConf/ClashConfig/          ← iCloud git 仓库, 全机同步
 - 校验: `--check` 只读 diff; lint 0 err 才允许 deploy
 - 回退: 原版 ClashX 路径由降级版覆盖 (剔除 vless, 2021 老内核不认 Reality)
 
-## 3. 节点资产 (2026-09-22)
+## 3. 节点资产 (2026-09-23, 真实转发探测口径)
+
+> 实时状态以 `check-nodes.sh` / `clash-node-states` 为准; 下表只记结构与已证实的结论。
 
 | 家族 | 节点 | 协议 | 状态 |
 |------|------|------|------|
-| 腾讯云硅谷 | Reality (43.173.115.36:8443, 伪装 www.samsung.com) | **VLESS+Reality+Vision** | ✅ 协议升级试点; 已历端口 443→8443 对抗 EOF 干扰; delay API 对 vless 恒报错为 mihomo 已知怪癖(实测通) |
-| 阿里云 | Reality (47.253.89.56:8444, 伪装 www.apple.com) | **VLESS+Reality** | ✅ 2026-09-22 铺开; 独立 xray-reality unit 零破坏并行; firewalld+安全组已放行 |
-| GCP | Reality (34.58.87.36:8444, 伪装 www.cloudflare.com) + SS-2022 + CF中转 | **VLESS+Reality** | ✅ 2026-09-22 铺开; gcloud 防火墙规则 allow-reality-8444 |
-| 腾讯云上海 | 无代理节点 (红线: 国内云禁跑翻墙服务端) | — | 定位: **Tailscale derper** |
-| 搬瓦工1/2 | CF中转 + CF优选 ×13 | VMess+WS+TLS+smux | ⏸ 流量耗尽暂停 (clash-bw-warn.sh 每小时探测恢复) |
-| 阿里云 | 直连 + CF中转 | VMess | 链路冷却观察 (服务端健康) |
-| GCP | SS-2022直连 + CF中转 | SS-2022 / VMess | SS 活; vmess 观察 |
-| 猎豹机场 | 本地 SOCKS5 51081 | SOCKS5 | 出口=Nebula Global 机房IP(非住宅); 体检结论见 §6 |
+| 腾讯云硅谷 | Reality 43.173.115.36:8443 (samsung) | VLESS+Reality+Vision | ✅ 真实转发可用 |
+| 阿里云 | Reality :8444 (apple) + VMess 直连/CF中转 | VLESS+Reality / VMess | ✅ 全部可用 |
+| GCP | Reality :8444 (cloudflare) + SS-2022 + VMess CF中转 | 同左 | ✅ 全部可用 |
+| 搬瓦工2 (CN2GIA LA, 74.211.101.240) | CF中转 (vps2) + 优选104a/b + Reality:8444 + 直连 | VMess+WS+TLS / VLESS+Reality | ✅ CF 线可用; 直连与 Reality 被墙 (v4 直连 EOF) |
+| 搬瓦工1 | CF中转 (vps) + 优选 ×8 | VMess | ⏸ 停机至 10-02 重置 |
+| 腾讯云上海 | 无代理 (国内云红线) | — | Tailscale derper |
+| 猎豹 | 本地 SOCKS5 51081 | SOCKS5 | ✅ 出口为机房 IP |
 
-**已知坑**: 密集 delay 测试曾触发 GFW 端口级 EOF 干扰 → 巡检频率克制 (probe 6h, bw-warn 1h)。
+**已证实的根因 (09-23)**:
+- smux × mihomo 的 VMess 出站全系故障 — 移除后阿里/GCP/搬瓦工 VMess 全部恢复。此前"链路冷却"是误诊。**禁止再开 smux**。
+- 搬瓦工2 重置后服务端 uuid 串成搬瓦工1 的 — 已改回。
+- CF 节点开启证书校验不影响可用性 — 已全部开启 (仅源站直连保留跳过)。
+
+**未验证 (勿当结论引用)**:
+- "Meta core 忽略 dialer-proxy" — 支撑证据无效 (cache 本不含 proxies), 待用探测端口复验。
+- "delay API 对 vless 恒报错" — 现象真实, 原因未查; 已不依赖 delay 判定。
+- claude.ai 403 与节点无关 — 所有机房 IP 都 403; API / Claude Code 不受影响。
 
 ## 4. 策略组与规则
 
-- 14 组: Proxy(总入口) / 智能路由(url-test) / 大流量 / 住宅IP(fallback) / 全局兜底 / 开发 / **AI服务**(select, 默认猎豹) / 流媒体 / 视频会议 / 猎豹-白名单 / 池-搬瓦工×2
-- 92 条规则 (home): common(直连白名单+广告拦截REJECT) + AI服务段(openai/claude/gemini/grok等10域) + 支付住宅 + 流媒体/会议 + MATCH
-- travel 场景: 回国加速 (cn→智能路由 + 默认 DIRECT)
-- Tailscale 控制台域名走代理 (本机 DNS 对 tailscale 系解析失败, 2026-09-22)
+- 组: Proxy / 智能路由(url-test) / 大流量 / 住宅IP(fallback) / 全局兜底 / 开发 / **AI服务 (fallback: 搬瓦工2-CF中转 → 搬瓦工2 优选池 → Reality ×3 → 猎豹 …)** / 流媒体 / 视频会议 / 猎豹-白名单 / 池-搬瓦工×2
+- 规则 (home): common 直连白名单 + 广告拦截 → AI 服务段 → 大流量 (含 huggingface/hf.co/lmstudio.ai) → 开发 → 支付 → 流媒体/会议 → MATCH
+- travel: 回国加速 (cn→智能路由, 其余 DIRECT)
+- Tailscale 控制台域名走代理
 
 ## 5. Tailscale 自建中继 (derper)
 
@@ -76,36 +85,19 @@ SharedConf/ClashConfig/          ← iCloud git 仓库, 全机同步
 
 ## 7. 运维脚本体系 (repo/scripts/, 软链 ~/.local/bin)
 
-| 脚本 | 功能 | cron |
-|------|------|------|
-| clash-health.sh | 全链路 (服务4项+节点delay+Reality TCP+derper+DNS泄漏+socks5) | */30 |
-| clash-proxy-guard.sh | 系统代理端口自愈 | */30 |
-| clash-traffic.sh | 流量 CSV 统计 | */30 |
-| clash-git-sync.sh | SSOT 仓库幂等提交 | 9 */2 |
-| clash-bw-warn.sh | 搬瓦工恢复探测+通知 | 11 * |
-| clash-probe.sh | 全节点 TCP 443 存活 | 0 */6 |
-| clash-cert-check.sh | 阿里/GCP xray 证书 + derp 证书 | 1 3 * |
-| clash-node-watch.sh 🆕 | 全节点状态机: 分类探测+失联告警+恢复通知 (osascript+TG) | 23 * |
-| clash-inventory.sh 🆕 | 活清单生成器 (清单即真值, 手工快照作废) | 手动 |
-| clash-status.sh / toggle / profile / notify / webrtc-check | 手动工具 | — |
-| check-nodes.sh / refresh-cf-ips.sh (repo/scripts) | 全节点 delay 巡检 / CF优选IP腐化 | 手动 |
+脚本全表与 cron 以 `clash-inventory.sh` 输出为准。关键机制:
 
-共享配置: `repo/scripts/clash-scripts.conf` (软链 ~/.local/etc/), 含 API secret/路径/DERP 变量。
-通知: `clash-notify.sh` 支持 Telegram (需自建 `~/.local/etc/clash-notify.conf`), 默认走 osascript 本地通知。
+- **真实转发探测**: build.py 为每个节点生成 `127.0.0.1:17800+i` 专用 listener; `clash_probe.py` 经端口请求 generate_204。node-watch / check-nodes / health 均用它 (不再用 nc 或 delay API 判定)。
+- **部署**: build.py lint → 双写 → 经内核 API `PUT /configs` 重载 → 规则数+节点数对账 → 不一致自动回滚。
+- **巡检**: node-watch (23 分/时) · fleet-watch (41 分/时) · bw-warn (11 分/时) · bwg-usage (6h) · health/guard/traffic (30m) · cert (03:01) · 优选 IP (03:07)
+- **通知**: osascript + `clash-notify.sh` (企业微信主 / TG 备, 配置在 `~/.local/etc/clash-notify.conf`, 未配置时只有本机通知)
+- **凭据**: 一律在 `~/.local/etc/` (repo 外, 600), 不进 git
 
 ## 8. 多机部署
 
-新 Mac: 等 iCloud 同步 → `bash repo/scripts/bootstrap-mac.sh` → 菜单勾系统代理/开机启动。
-macmini: 同流程 (脚本自适应; 其 Tailscale 数据面问题另行排查)。
+- 新 Mac 从零: `scripts/bootstrap-mac.sh`; 已装机器追平: `scripts/sync-mac.sh` (副机只挂本机轻量 cron, 对外探测只在主力机跑)
+- 服务器: `scripts/bootstrap-server.sh reality` · 清单 `fleet.yaml`
 
-## 9. 挂账 / 下一步
+## 9. 台账
 
-- [ ] CF API Token 轮换 (曾入对话日志; 轮换后更新上海机 acme account)
-- [ ] **本机 tailscaled 拉起** — plist NO_PROXY 已写好, 差 `sudo launchctl bootstrap system /Library/LaunchDaemons/com.tailscale.brew.plist` (Terminal.app 手跑; 弹框三次未输)
-- [ ] 搬瓦工流量恢复 → node-watch/bw-warn 自动探测, 恢复后评估 Reality 模板
-- [ ] 阿里云/GCP vmess 链路冷却复查 (Reality 已就位接班)
-- [ ] 原版 ClashX 降级版机制化进 build.py (当前一次性同步)
-- [x] macmini ClashX Meta 部署 (0922 17点完成, 双机同构)
-- [x] Reality 三机铺开 (硅谷+阿里+GCP 全链路)
-- [x] STUN 桥接 (打洞前提恢复)
-- [x] node-watch 全节点状态机 + inventory 活清单
+唯一台账: `SharedConf/ClashConfig/plans/2026-09-23-retro-and-roadmap.md` (§3 路线)。本节不再单独维护。
