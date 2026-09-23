@@ -75,6 +75,14 @@ runtime/wechat-main.png
 # scratch 产物永不入仓, 忽略之 (upload-artifact 读文件系统, 不受 gitignore 影响)。
 /worktree-hygiene-report.json
 
+# affected-graph receipt 产物 (2026-09-23 实证):
+# bin/gac/affected-graph.py 的 write_receipt_exclusive() 要求 output 为
+# 「规范的工作区相对路径」(无 `..`/`//`/绝对路径/符号链接父目录), 实际落地为
+# 检出根目录的 .affected-graph.json。该收据是**运行产物**, 契约与脚本
+# (bin/gac/affected-graph.py) 保持可见, 产物本身不入仓 —— 否则每个跑过它的
+# 工作区都会常年挂着一条未跟踪脏文件, 干扰 WIP 快照与脏态判定。
+/.affected-graph.json
+
 # BET-Y1Q3-T6-15 R2a: approved runtime output/cache/snapshot artifacts remain
 # local-only after repository untracking; contracts and runtime code stay visible.
 runtime/bos-neural-mesh-*
