@@ -30769,6 +30769,227 @@ bets:
   - bin/ssot/value-recorder.py
   - projects/omo
   - .omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+- accepted_specifications:
+  - content_digest: sha256:a27dbc12b1b1dc150caf30e35c77812bc9a24e9358d476fc446d26946eac7dad
+    decision_ref: decision://accepted/BET-Y2Q2-T7-04
+    spec_ref: repo://docs/superpowers/specs/2026-09-23-cockpit-ui-runtime-remediation-design.md
+    spec_version: 1.0.0
+  appetite: 2 hours
+  circuit_breaker: 复杂工作台降级为离线导流卡
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-04.md
+          merged_reachable_commit:
+            ref: git://origin/main@9bc95b3447e51355fd07412184a42355b869f3cc
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-04.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-04.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y2Q2-T7-03
+  done_at: '2026-09-23'
+  done_when:
+  - /scene-graph 路由在离线或无数据时正常渲染且无 TypeError
+  - /workbench/platform-control 正常加载且无 ReferenceError
+  - Puppeteer 55 路由全量遍历 0 fatal errors
+  - 全量 82 个单元测试套件全部 PASS
+  goal: 根治 Cockpit-UI SceneGraph 拓扑渲染白屏与 PlatformControl 变量作用域异常，实现全量 55 个路由 100% 可用且零致命异常。
+  human_gate: false
+  id: BET-Y2Q2-T7-04
+  non_goals:
+  - 不破坏已有 URL 深层跳转契约
+  - 不做后端重构
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L2
+  status: done
+  title: Cockpit-UI 全量功能自愈与运行时异常根治
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit
+    expect: exit 0
+  - cmd: cd projects/cockpit-ui && bun run build
+    expect: exit 0
+  window: Y2Q2
+  workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit-ui/src/components/scene/SceneGraphView.tsx
+  - projects/cockpit-ui/src/views/governance/PlatformControlWorkbench.tsx
+  - projects/cockpit-ui/src/views/governance/index.ts
+  - projects/cockpit-ui/src/api/hooks/sceneLifecycle.ts
+  - projects/cockpit-ui/src/views/common/LogViewerPage.tsx
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T7-04.md
+- accepted_specifications:
+  - content_digest: sha256:cbb18c0c0088010ee278080a7cfeaf24a9a07cb3ce14b8e2b6d0f419c90f61a6
+    decision_ref: decision://accepted/BET-Y2Q2-T7-05
+    spec_ref: repo://docs/superpowers/specs/2026-09-23-cockpit-ui-deep-routes-and-command-palette-design.md
+    spec_version: 1.0.0
+  appetite: 2 hours
+  circuit_breaker: 降级为仅保留可见路由
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-05.md
+          merged_reachable_commit:
+            ref: git://origin/main@a6c4835d496a7d57c79e64e1fa074fa78484fcf1
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-05.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-05.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-05.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-05.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-05.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-05.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y2Q2-T7-04
+  done_at: '2026-09-23'
+  done_when:
+  - /scenes/:id 等深层参数化页面能够直接访问并渲染，不再被通配符弹回首页
+  - ⌘K 命令面板能够秒级检索全量受控页面与控制台入口
+  - 82 个单元测试套件全部 PASS，无回归
+  - 构建产物体积与类型校验 100% 通过
+  goal: 解除 React Router 对深层受控路由（如 /scenes/:id）的通配拦截，并升级 ⌘K 全局命令面板使其索引全量有效业务路由与控制面。
+  human_gate: false
+  id: BET-Y2Q2-T7-05
+  non_goals:
+  - 不破坏侧边栏分组折叠逻辑
+  - 不在侧边栏显示参数化深层路由
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L2
+  status: done
+  title: Cockpit-UI 全量受控路由深层访问恢复与全局命令面板索引升级
+  track: T7-SCENE
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit
+    expect: exit 0
+  - cmd: cd projects/cockpit-ui && bun run build
+    expect: exit 0
+  window: Y2Q2
+  workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit-ui/src/components/Dashboard.tsx
+  - projects/cockpit-ui/src/components/dashboard-layout.css
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T7-05.md
+- accepted_specifications:
+  - content_digest: sha256:edf69ea4cfc4b0f9b3d29af0f956439768151b99a7c54dfb7c970920c7017ba7
+    decision_ref: decision://accepted/BET-Y2Q2-T10-159
+    spec_ref: repo://docs/superpowers/specs/2026-09-23-cockpit-ui-bridge-banner-and-toast-system-design.md
+    spec_version: 1.0.0
+  appetite: 2 hours
+  circuit_breaker: 复杂工作台降级为纯文本外链
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-159.md
+          merged_reachable_commit:
+            ref: git://origin/main@a6c4835d496a7d57c79e64e1fa074fa78484fcf1
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-159.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-159.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-159.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-159.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-159.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-159.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  depends_on:
+  - BET-Y2Q2-T7-05
+  done_at: '2026-09-23'
+  done_when:
+  - 下沉工作台统一展示「已下沉至知行 43191 底座」导流横幅
+  - 侧边栏底部与遥测胶囊可即时呼出 74s 哨兵巡检实时遥测抽屉
+  - 全局 Toast 提供操作成功、告警与通知提示
+  - 全量单元测试与生产打包通过
+  goal: 为平台控制、基础设施运维和系统保障工作台挂载统一知行底座导流横幅，提供 74s 哨兵巡检抽屉联动与轻量全局 Toast 微交互反馈体系。
+  human_gate: false
+  id: BET-Y2Q2-T10-159
+  non_goals:
+  - 不强行删除已有工作台以防历史链路中断
+  - 不引入重型外部 UI 组件库
+  pasw_required: false
+  priority: P2
+  retro: required
+  risk_level: L2
+  status: done
+  title: Cockpit-UI 下沉工作台统一底座导流横幅与微交互反馈体系
+  track: T10-MATURITY
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit
+    expect: exit 0
+  - cmd: cd projects/cockpit-ui && bun run build
+    expect: exit 0
+  window: Y2Q2
+  workflow: project-code-change
+  write_surfaces:
+  - projects/cockpit-ui/src/App.tsx
+  - projects/cockpit-ui/src/components/common/GovernanceBaseBridgeBanner.tsx
+  - projects/cockpit-ui/src/components/common/GuardianInspectionDrawer.tsx
+  - projects/cockpit-ui/src/components/common/Toast.tsx
+  - projects/cockpit-ui/src/components/PlatformControlWorkbench.tsx
+  - projects/cockpit-ui/src/components/InfrastructureOpsWorkbench.tsx
+  - projects/cockpit-ui/src/components/SystemAssuranceWorkbench.tsx
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-159.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -30898,7 +31119,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 445
+  total_bets: 448
   windows:
   - Y1Q1
   - Y1Q2
