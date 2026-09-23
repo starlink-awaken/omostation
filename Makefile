@@ -78,11 +78,14 @@ help:
 	@echo ""
 
 # ── 🌟 算力织网 (Compute Fabric / omlxc v3.4.0) ─────────────────────────────────
+# 别名收敛 (2026-09-23): fabric-inspect→omlxc-fabric、fabric-bench→omlxc-benchmark、
+# test-omlxc→omlxc-test 只保留 omlxc-* 主名；旧别名保留一行以免破坏既有调用。
 
-fabric-inspect: omlxc-fabric
 omlxc-fabric:  ## 检查本地算力织网状态 (温控/语义分诊/显存预算/两级缓存)
 	@echo "── omlxc 算力织网全景诊断 ────────────────────────────"
 	cd projects/omlxc && uv run omlxc fabric inspect
+
+fabric-inspect: omlxc-fabric  # deprecated alias → omlxc-fabric
 
 fabric-warm:  ## 预热系统 Prompt 前缀实现 0ms TTFT
 	@echo "── 预热系统 Prompt 前缀 ──────────────────────────────"
@@ -92,10 +95,11 @@ fabric-vram:  ## 评估模型 KV Cache 显存预算 (默认 coding 32k)
 	@echo "── 显存预算评估 ──────────────────────────────────────"
 	cd projects/omlxc && uv run omlxc fabric vram coding 32768
 
-fabric-bench: omlxc-benchmark
 omlxc-benchmark:  ## 查看本地模型基准测试大盘
 	@echo "── 本地模型基准测试榜单 ──────────────────────────────"
 	cd projects/omlxc && uv run omlxc benchmark report
+
+fabric-bench: omlxc-benchmark  # deprecated alias → omlxc-benchmark
 
 # ── 🛡️ 质量门禁 (Governance & Phase Gates) ─────────────────────────────────────
 
