@@ -30,6 +30,15 @@ VERDICT_MAP = {"accepted": "accept", "revised": "edit", "rejected": "reject"}
 PERSONAL_SIGNAL_SCENE_ID = "personal-followup-dogfood"
 # Episode revision receipt closed vocabulary (omo.personal_episode_helpers).
 EPISODE_CHANGED_FIELDS = ("title", "context", "deadline", "next_action")
+# X3 value v2: human scene adjudications bridge through authority-bound recorder.
+VALUE_V2_BASELINE_ID = "value-recorder-baseline-20260923-pre-v2-window"
+# Host Claims Authority activation receipt (real production digest; binds v2 samples
+# to the shadow-active R0 authority on this account).
+VALUE_V2_AUTHORITY_RECEIPT = (
+    "sha256:96654eb9e03591b2b5da2cb89119997c9ec2c193755ae7c277b3a0ce7be1e5d3"
+)
+VALUE_V2_ACTORS = frozenset({"human", "principal", "operator"})
+VALUE_V2_MIN_NET_SAVED = 60
 
 
 def _load_scene_card(path: Path) -> dict[str, Any]:
@@ -243,6 +252,10 @@ def _write_value_evidence(entry: dict[str, Any], *, review_seconds: int | None =
     estimated_time_saved_seconds = scene autonomous work duration (from
     calibration DB) unless explicitly provided; review_duration_seconds
     is human-provided (0 = unknown).
+
+    When the actor is a human gate and net_saved meets the v2 threshold,
+    also append an authority-bound value-evidence/v2 sample via
+    ``value-recorder`` (never for journey-auto / synthetic actors).
     """
     try:
         import os
@@ -252,6 +265,8 @@ def _write_value_evidence(entry: dict[str, Any], *, review_seconds: int | None =
         duration_s = _scene_run_duration_seconds(scene_id, run_id)
         review_s = int(review_seconds or 0)
         saved_s = int(saved_seconds if saved_seconds is not None else duration_s)
+        adjudication = entry.get("adjudication", "")
+        actor = str(entry.get("actor", ""))
 
         evidence = {
             "schema": "value-evidence/v1",
@@ -261,16 +276,96 @@ def _write_value_evidence(entry: dict[str, Any], *, review_seconds: int | None =
             "run_id": run_id,
             "review_duration_seconds": review_s,
             "estimated_time_saved_seconds": saved_s,
-            "verdict": VERDICT_MAP.get(entry.get("adjudication", ""), "reject"),
+            "verdict": VERDICT_MAP.get(adjudication, "reject"),
             "net_saved_seconds": max(0, saved_s - review_s),
             "qualifying": saved_s > review_s
-            and entry.get("adjudication") in ("accepted", "revised"),
+            and adjudication in ("accepted", "revised"),
             "source": "scene-outcome-bridge",
         }
         VALUE_EVIDENCE_LOG.parent.mkdir(parents=True, exist_ok=True)
         append_jsonl(VALUE_EVIDENCE_LOG, evidence)
+
+        _write_value_evidence_v2(
+            entry,
+            review_s=review_s,
+            saved_s=saved_s,
+            scene_id=scene_id,
+            run_id=run_id,
+            actor=actor,
+            adjudication=adjudication,
+        )
     except Exception:
         pass  # value bridge is non-blocking (X3 wiring must not break trust loop)
+
+
+def _write_value_evidence_v2(
+    entry: dict[str, Any],
+    *,
+    review_s: int,
+    saved_s: int,
+    scene_id: str,
+    run_id: str,
+    actor: str,
+    adjudication: str,
+) -> None:
+    """Append authority-bound value-evidence/v2 for eligible human adjudications.
+
+    Eligibility (all required):
+      - actor is a human gate (not journey-auto-complete / system)
+      - verdict is accepted or revised → recorded/modified
+      - net_saved_seconds >= VALUE_V2_MIN_NET_SAVED
+      - frozen baseline exists and record timestamp is after frozen_at
+    """
+    if actor not in VALUE_V2_ACTORS:
+        return
+    if adjudication not in ("accepted", "revised"):
+        return
+    net_saved = saved_s - review_s
+    if net_saved < VALUE_V2_MIN_NET_SAVED:
+        return
+
+    # Import value-recorder as a module (same package layout as doctor).
+    import importlib.util
+
+    recorder_path = ROOT / "bin" / "ssot" / "value-recorder.py"
+    if not recorder_path.is_file():
+        return
+    spec = importlib.util.spec_from_file_location("_value_recorder_bridge", recorder_path)
+    if spec is None or spec.loader is None:
+        return
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    baseline, error = module.load_baseline(VALUE_V2_BASELINE_ID)
+    if baseline is None:
+        # Non-blocking: window not opened yet.
+        return
+
+    verdict = "accepted" if adjudication == "accepted" else "modified"
+    decision_id = entry.get("digest") or f"dec-{scene_id}-{run_id}"
+    if not str(decision_id).startswith("sha256:"):
+        decision_id = f"sha256:{hashlib.sha256(str(decision_id).encode()).hexdigest()}"
+
+    try:
+        episode = module.record_episode(
+            review_seconds=review_s,
+            saved_seconds=saved_s,
+            verdict=verdict,
+            run_id=run_id,
+            scene_id=scene_id,
+            decision_id=str(decision_id),
+            principal_id="principal:xiamingxing",
+            authority_receipt_digest=VALUE_V2_AUTHORITY_RECEIPT,
+            baseline_id=VALUE_V2_BASELINE_ID,
+            baseline=baseline,
+            recorded_at=entry.get("ts"),
+        )
+    except ValueError:
+        # e.g. pre-window timestamp — do not force.
+        return
+    if episode.get("schema") != "value-evidence/v2":
+        return
+    module.append_episode(episode, evidence_path=VALUE_EVIDENCE_LOG)
 
 
 def _write_mos_decision_outcome(entry: dict[str, Any]) -> str | None:
