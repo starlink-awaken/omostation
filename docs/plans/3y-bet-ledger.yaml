@@ -30665,8 +30665,7 @@ bets:
         evidence: {}
 - id: BET-Y2Q2-T4-01
   title: North-star recovery and first real Decision Episode proof
-  status: done
-  done_at: 2026-09-23
+  status: candidate
   priority: P0
   risk_level: L2
   track: T4-OUTCOME
@@ -30735,48 +30734,22 @@ bets:
     schema_state: enforced
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-23-north-star-recovery-and-first-decision-episode-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:7d95f4c24f284c3345081359938bda11bcd8703de0329b3b3ea82b25d33147e2
+    spec_version: 1.1.0
+    content_digest: sha256:821acb5628083c2dc77081639836d59b697939606c9a148b53a8831bc5751d83
     decision_ref: decision://accepted/BET-Y2Q2-T4-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: outcome_accepted
+    overall_state: evaluating
     axes:
       engineering:
-        status: VERIFIED
-        evidence:
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
-          merged_reachable_commit:
-            ref: git://origin/main@2bfe0f91120e9d23217a035b3fb7ca223f41e568
+        status: NOT_STARTED
+        evidence: {}
       operational:
-        status: PROVEN
-        evidence:
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+        status: NOT_PROVEN
+        evidence: {}
       value:
-        status: ACCEPTED
-        evidence:
-          real_signal:
-            ref: receipt://docs/operations/human-attestations/VALUE-WINDOW-20260923-accept.yaml
-          human_verdict:
-            ref: receipt://docs/operations/human-attestations/VALUE-WINDOW-20260923-accept.yaml
-          attestation:
-            ref: receipt://docs/operations/human-attestations/VALUE-WINDOW-20260923-accept.yaml
-          revision:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
-          time_burden:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+        status: NOT_PROVEN
+        evidence: {}
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: no new errors relative to the bound origin/main baseline; the six pre-existing
@@ -30789,13 +30762,11 @@ bets:
   - cmd: python3 bin/agent-workflow.py observe --json
     expect: ok=true with every active or stale lock attributed
   write_surfaces:
+  - bin/agent-workflow.py
+  - tests/test_agent_workflow.py
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-23-north-star-recovery-and-first-decision-episode-design.md
-  - .omo/_truth/governance-evidence/waiver-2026-09-23-north-star-bet-bootstrap.md
-  - bin/panorama/
-  - bin/ssot/value-recorder.py
-  - projects/omo
-  - .omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+  - .omo/_truth/governance-evidence/waiver-2026-09-23-north-star-claims-stdio-loader-recovery.md
 - accepted_specifications:
   - content_digest: sha256:a27dbc12b1b1dc150caf30e35c77812bc9a24e9358d476fc446d26946eac7dad
     decision_ref: decision://accepted/BET-Y2Q2-T7-04
