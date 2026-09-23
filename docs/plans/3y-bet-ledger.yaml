@@ -30665,7 +30665,8 @@ bets:
         evidence: {}
 - id: BET-Y2Q2-T4-01
   title: North-star recovery and first real Decision Episode proof
-  status: candidate
+  status: done
+  done_at: 2026-09-23
   priority: P0
   risk_level: L2
   track: T4-OUTCOME
@@ -30683,8 +30684,8 @@ bets:
   done_when:
   - Claims sequence 2, conflicting authorization evidence, legacy run/lock, and all
     observed effects are preservation-reconciled without rewriting history.
-  - A successor authorization draft is bound to the current authority epoch, store sequence,
-    receipt digest, latest origin/main, and real protocol capability.
+  - A successor authorization draft is bound to the current authority epoch, store
+    sequence, receipt digest, latest origin/main, and real protocol capability.
   - Fresh A1-A9, SFOP, managed code-root health, workflow observer, and OMO single-control-plane
     checks pass from one authoritative source set.
   - Strategy, architecture, runtime, and Ledger map one Vision-to-Episode-to-Memory
@@ -30697,21 +30698,21 @@ bets:
     PR, commit, or agent count qualifies.
   - Four consecutive weeks each contain at least three principal-accepted and verifiable
     delegated outcomes.
-  - Human approval and correction time remains below system time saved; otherwise the
-    Golden Scenario is degraded or stopped.
+  - Human approval and correction time remains below system time saved; otherwise
+    the Golden Scenario is degraded or stopped.
   non_goals:
   - Do not rebuild BET-Y2Q2-T5-03, BET-Y1Q4-T10-155, or BET-Y1Q4-T10-156.
   - Do not create a second dispatcher, authority queue, whitepaper, Ledger, operating
     system, ontology, or top-level project.
   - Do not activate Claims instruction capability, promote v2 above shadow, publish
     the stale legacy candidate, or mutate historical receipts.
-  - Do not expand to family, organization, physical multi-host, or a generic Agent platform
-    before the personal Golden Scenario is proven.
+  - Do not expand to family, organization, physical multi-host, or a generic Agent
+    platform before the personal Golden Scenario is proven.
   circuit_breaker: Stop the pending effect on any unauthorized external action, receipt/hash
     anomaly, unknown remote outcome, unexplained origin drift, Restricted-data egress,
-    unbound Claims request, missing real-value provenance, or human burden greater than
-    benefit. Never force, bypass hooks, auto-retry an unknown effect, or replace fact
-    with projection prose.
+    unbound Claims request, missing real-value provenance, or human burden greater
+    than benefit. Never force, bypass hooks, auto-retry an unknown effect, or replace
+    fact with projection prose.
   depends_on:
   - BET-Y2Q2-T5-03
   - BET-Y1Q4-T10-155
@@ -30720,9 +30721,9 @@ bets:
   portfolio_binding:
     campaign_ref: CMP-Y1-VALUE-PROOF
     coverage_rationale: This is the first runtime proof tranche that joins the already-delivered
-      journey, weekly-adoption, and revision meters to one real Decision Episode. The
-      prior BETs own meter implementation; this BET owns fresh end-to-end real evidence
-      and therefore intentionally overlaps all three result KRs.
+      journey, weekly-adoption, and revision meters to one real Decision Episode.
+      The prior BETs own meter implementation; this BET owns fresh end-to-end real
+      evidence and therefore intentionally overlaps all three result KRs.
     kr_refs:
     - KR-VALUE-JOURNEY-COMPLETION
     - KR-VALUE-WEEKLY-ADOPTION
@@ -30739,22 +30740,48 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T4-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: outcome_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          merged_reachable_commit:
+            ref: git://origin/main@2bfe0f91120e9d23217a035b3fb7ca223f41e568
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
       value:
-        status: NOT_PROVEN
-        evidence: {}
+        status: ACCEPTED
+        evidence:
+          real_signal:
+            ref: receipt://.omo/_delivery/ingress/value-evidence.jsonl
+          human_verdict:
+            ref: receipt://docs/operations/human-attestations/VALUE-WINDOW-20260923-accept.yaml
+          attestation:
+            ref: receipt://docs/operations/human-attestations/VALUE-WINDOW-20260923-accept.yaml
+          revision:
+            ref: receipt://.omo/state/value-baselines/value-recorder-baseline-20260923-pre-v2-window.json
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: no new errors relative to the bound origin/main baseline; the six pre-existing
-      completion-evidence errors for BET-Y1Q3-T10-16 and BET-Y1Q3-T10-114 remain
-      separately owned debt
+      completion-evidence errors for BET-Y1Q3-T10-16 and BET-Y1Q3-T10-114 remain separately
+      owned debt
   - cmd: python3 bin/gac/check-sfop-slots.py --json
     expect: exit 0
   - cmd: python3 bin/gac/gate-health-check.py --json
