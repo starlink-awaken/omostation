@@ -80,7 +80,7 @@ def run(cmd: list[str], timeout: int = 120) -> tuple[int, str]:
         return 1, str(e)
 
 
-def collect_gates() -> list[dict]:
+def collect_gates(payload: dict | None = None) -> list[dict]:
     code, out = run([
         sys.executable, str(CODE_ROOT / "bin/gac/gate-health-check.py"),
         "--workspace", str(ROOT), "--code-root", str(CODE_ROOT), "--json",
@@ -116,7 +116,7 @@ def collect_gates() -> list[dict]:
     a8_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A7") + 1
     gates.insert(a8_index, collect_a8_gate())
     a9_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A8") + 1
-    gates.insert(a9_index, collect_a9_gate(payload=None, dashboard_live=True))
+    gates.insert(a9_index, collect_a9_gate(payload=payload, dashboard_live=True))
     rf0_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A9") + 1
     gates.insert(rf0_index, collect_rf0_gate())
     rc_index = next(i for i, gate in enumerate(gates) if gate["id"] == "RF0") + 1
@@ -3749,10 +3749,11 @@ def collect_agent_visibility(payload: dict) -> dict:
 
 def build_payload() -> dict:
     ci_data = collect_ci()
+    asd = collect_asd()
     payload = {
         "generated_at": datetime.now(UTC).isoformat(),
         "mode": "read-only-ssot-aggregation",
-        "gates": collect_gates(),
+        "gates": collect_gates({"asd": asd}),
         "bets": collect_bets(),
         "agents": collect_agents(),
         "runtime": collect_runtime(),
@@ -3769,7 +3770,7 @@ def build_payload() -> dict:
         "claims_observation_progress": collect_claims_observation_progress(),
         "claims_lifecycle_authorization": collect_claims_lifecycle_authorization(),
         "reference_cell": collect_reference_cell_gate(),
-        "asd": collect_asd(),
+        "asd": asd,
         "role_registry": collect_role_registry(),
         "probes": collect_probes(),
         "resident_agents": collect_resident_agents(),
