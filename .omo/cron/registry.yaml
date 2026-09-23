@@ -725,3 +725,4 @@ known_orphans:
   - clash-node-watch.sh  # 用户本机 Clash 节点守护 (~/.local/bin), 2026-09-22 确认为外部工具
   - fleet-watch.sh  # 用户本机 Clash fleet 巡检 (~/.local/bin→~/.config/clash), 2026-09-23 确认为外部工具
   - refresh-cf-ips.sh  # 用户本机 Clash CF 优选 IP 巡检 report-only (~/.local/bin→~/.config/clash), 2026-09-23 确认为外部工具
+  - bwg-usage.sh  # 用户本机带宽用量 (~/.local/bin), 2026-09-23 确认为外部工具
