@@ -1,0 +1,6 @@
+schema_version=human-attestation/v1
+principal_id=principal:xiamingxing
+verdict=accept
+episode_id=episode_value_window_20260923
+signal_event_id=evt_accept_value_window_20260923
+observed_at=2026-09-23T07:16:39Z
