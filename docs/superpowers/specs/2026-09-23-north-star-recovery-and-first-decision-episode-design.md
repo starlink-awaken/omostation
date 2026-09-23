@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.1.0
 title: North-star recovery and first real Decision Episode proof
 bet_id: BET-Y2Q2-T4-01
 status: accepted
@@ -42,8 +42,59 @@ top-level project.
   protocol-blocked; Operation C has not started.
 - The conflicting approval records for the old lifecycle draft are preserved
   as non-authoritative evidence and are not consumable.
-- Real v2 qualifying value evidence is 0/30. Engineering or governance work is
-  not a substitute for personal business value.
+- The authoritative OMO causal Event Ledger observes zero Personal Episodes and
+  no qualifying week. Parallel JSONL contains 30 v2 rows, but those rows are not
+  ledger-bound and therefore do not prove personal value. Engineering or
+  governance work is not a substitute for personal business value.
+- Merge `c7e1fdf09cb1edcd7e8bd26f3b100c76139b3628` preserved a closeout retro
+  whose own text says there is no complete `EpisodeClosed` sample and no
+  four-consecutive-week proof. That merge remains historical evidence, but its
+  `done`/`PROVEN` projection is non-authoritative for this Spec's completion
+  contract and must be corrected rather than deleted.
+
+## Authorized one-time stdio recovery bootstrap
+
+The principal granted operation
+`north-star-claims-stdio-loader-recovery-bootstrap-v1` at most once under
+decision
+`principal-decision-ee7eceb1-4faa-42b9-b022-aac14204b6f7`, expiring
+`2026-09-27T16:00:00Z`. It is a repository repair, not a Claims lifecycle
+operation.
+
+The bootstrap is bound to `origin/main`
+`c7e1fdf09cb1edcd7e8bd26f3b100c76139b3628`, managed clone attempt
+`north-star-cp-repair-20260923e`, authority epoch 1, store sequence 2, and last
+receipt `sha256:a660e34c55467e631f38d97e17b4d2377281fc5fe73a94b6f33548dbabe1eab7`.
+Only these repository paths may change:
+
+- `bin/agent-workflow.py`
+- `tests/test_agent_workflow.py`
+- this Spec
+- `docs/plans/3y-bet-ledger.yaml`
+- `.omo/_truth/governance-evidence/waiver-2026-09-23-north-star-claims-stdio-loader-recovery.md`
+
+The loader must execute the exact descriptor-bound broker in a private package
+namespace rooted at the pinned `projects/omo/src/omo`, preserve package-relative
+imports without consulting caller `sys.path` or the public `omo` module cache,
+verify loaded file paths, and purge partial private modules on failure. Missing
+or malformed code remains typed and fail-closed.
+
+Required proof is:
+
+1. focused loader tests cover real relative imports, poisoned module caches,
+   missing code, malformed code, and partial-module cleanup;
+2. the complete `tests/test_agent_workflow.py` file passes;
+3. canonical stdio status byte-semantically equals direct broker status on the
+   bound production store;
+4. store, high-water, activation-witness, and historical receipt hashes remain
+   unchanged;
+5. no Claims Authority verb is invoked.
+
+The only authorized external effects are one ordinary non-force branch push,
+one pull-request creation or update, and one ordinary merge after required
+checks pass and both remote OID reads match. Force, `--no-verify`, unknown
+outcome retry, legacy publication, instruction enablement, and historical
+receipt mutation remain forbidden.
 
 ## Concurrent-writer operating contract
 
@@ -174,6 +225,11 @@ The BET remains non-terminal until every axis is independently proven:
 
 If any axis is missing, it must remain `NOT_PROVEN`, `PARTIAL`, `BLOCKED`, or
 `UNPROVABLE`; delivery status cannot substitute for value.
+
+The #4249 closeout cannot terminate this BET because its own retained evidence
+marks the mandatory complete Episode and four-week criteria false. Until those
+criteria are genuinely observed, the Ledger status remains non-terminal and
+the value axis remains `NOT_PROVEN`.
 
 ## Rollback and stop conditions
 

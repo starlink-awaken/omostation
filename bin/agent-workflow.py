@@ -91,15 +91,64 @@ def _claims_authority_load_broker(broker_path):
     path = Path(broker_path)
     if not path.is_file():
         raise FileNotFoundError(str(path))
-    # Load from exact committed path; never from caller-supplied sys.path entries.
-    module_name = "_omo_claims_authority_broker_stdio"
-    spec = importlib.util.spec_from_file_location(module_name, path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load claims authority broker from {path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
+    # Load from exact committed paths without importing the public ``omo``
+    # package or consulting caller-supplied sys.path entries.  The broker uses
+    # ``from ..event_ledger.schema`` so a top-level file module cannot preserve
+    # its package-relative import contract.  Private namespace packages keep
+    # that contract while avoiding package ``__init__`` side effects.
+    package_name = "_omo_claims_authority_broker_stdio"
+    workflow_dir = path.parent
+    omo_dir = workflow_dir.parent
+    event_ledger_dir = omo_dir / "event_ledger"
+    if not event_ledger_dir.is_dir():
+        raise FileNotFoundError(str(event_ledger_dir))
+
+    def purge_namespace():
+        for loaded_name in tuple(sys.modules):
+            if loaded_name == package_name or loaded_name.startswith(package_name + "."):
+                sys.modules.pop(loaded_name, None)
+
+    # One request owns one process in production, but tests may load more than
+    # once.  Remove only this private namespace so stale private modules cannot
+    # redirect a later exact-path load.  Never touch public ``omo`` modules.
+    purge_namespace()
+
+    def install_namespace(name, directory):
+        namespace_spec = importlib.util.spec_from_loader(name, loader=None, is_package=True)
+        if namespace_spec is None:
+            raise ImportError(f"cannot create private namespace {name}")
+        namespace_spec.submodule_search_locations = [str(directory)]
+        namespace = importlib.util.module_from_spec(namespace_spec)
+        namespace.__path__ = [str(directory)]
+        sys.modules[name] = namespace
+
+    try:
+        install_namespace(package_name, omo_dir)
+        install_namespace(f"{package_name}.workflow", workflow_dir)
+        install_namespace(f"{package_name}.event_ledger", event_ledger_dir)
+
+        module_name = f"{package_name}.workflow.claims_authority"
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"cannot load claims authority broker from {path}")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+
+        module_file = getattr(module, "__file__", None)
+        if not isinstance(module_file, str) or Path(module_file).resolve() != path.resolve():
+            raise ImportError("claims authority broker path mismatch")
+        schema_name = f"{package_name}.event_ledger.schema"
+        loaded_schema = sys.modules.get(schema_name)
+        if loaded_schema is not None:
+            schema_file = getattr(loaded_schema, "__file__", None)
+            expected_schema = (event_ledger_dir / "schema.py").resolve()
+            if not isinstance(schema_file, str) or Path(schema_file).resolve() != expected_schema:
+                raise ImportError("claims authority schema path mismatch")
+        return module
+    except BaseException:
+        purge_namespace()
+        raise
 
 
 def _claims_authority_unactivated_status() -> dict:

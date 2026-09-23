@@ -11,6 +11,7 @@ import subprocess
 import sys
 import uuid
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 import pytest
@@ -3188,10 +3189,16 @@ def _b1_run_claims_authority(args: list[str], *, input_text: str | None = None, 
     )
 
 
-def test_b1_missing_broker_status_is_unactivated_shadow() -> None:
-    result = _b1_run_claims_authority(["status", "--json"])
-    assert result.returncode == 0, result.stderr
-    payload = json.loads(result.stdout.strip())
+def test_b1_missing_broker_status_is_unactivated_shadow(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    workspace = tmp_path / "Workspace"
+    workspace.mkdir()
+    module = _load_root_workflow_wrapper()
+    monkeypatch.setattr(module, "_claims_authority_integration_root", lambda: workspace)
+
+    assert module._claims_authority_early_main(["status", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out.strip())
     assert payload["ok"] is True
     assert payload["schema"] == "claims-authority-response/v2"
     assert payload["authority_id"] == "omo-claims-authority-r0"
@@ -3201,7 +3208,13 @@ def test_b1_missing_broker_status_is_unactivated_shadow() -> None:
     assert payload["result"]["effective_claim_authority"] == "v1"
 
 
-def test_b1_missing_broker_mutation_is_typed_unavailable() -> None:
+def test_b1_missing_broker_mutation_is_typed_unavailable(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    workspace = tmp_path / "Workspace"
+    workspace.mkdir()
+    module = _load_root_workflow_wrapper()
+    monkeypatch.setattr(module, "_claims_authority_integration_root", lambda: workspace)
     body = {
         "authority_id": "omo-claims-authority-r0",
         "operation": "observe-claim",
@@ -3209,9 +3222,10 @@ def test_b1_missing_broker_mutation_is_typed_unavailable() -> None:
         "schema": "claim-mutation-envelope/v2",
     }
     raw = _b1_canonical(body)
-    result = _b1_run_claims_authority(["observe-claim", "--request-json", "-"], input_text=raw)
-    assert result.returncode == 2
-    payload = json.loads(result.stdout.strip())
+    monkeypatch.setattr(sys, "stdin", __import__("io").StringIO(raw))
+
+    assert module._claims_authority_early_main(["observe-claim", "--request-json", "-"]) == 2
+    payload = json.loads(capsys.readouterr().out.strip())
     assert payload["ok"] is False
     assert payload["error"]["code"] == "AUTHORITY_UNAVAILABLE"
     assert payload["result"] is None
@@ -3232,6 +3246,7 @@ def test_b1_descriptor_bound_broker_dispatch(tmp_path: Path, monkeypatch) -> Non
     workspace = home / "Workspace"
     broker = workspace / "projects/omo/src/omo/workflow/claims_authority.py"
     broker.parent.mkdir(parents=True)
+    (broker.parent.parent / "event_ledger").mkdir()
     broker.write_text(
         "def dispatch_request(verb, request):\n"
         "    assert verb == 'status'\n"
@@ -3265,6 +3280,59 @@ def test_b1_descriptor_bound_broker_dispatch(tmp_path: Path, monkeypatch) -> Non
     monkeypatch.setattr(module, "_claims_authority_integration_root", lambda: workspace)
     rc = module._claims_authority_early_main(["status", "--json"])
     assert rc == 0
+
+
+def test_b1_exact_private_package_loader_resolves_relative_imports() -> None:
+    module = _load_root_workflow_wrapper()
+    broker_path = ROOT / "projects/omo/src/omo/workflow/claims_authority.py"
+    broker = module._claims_authority_load_broker(broker_path)
+    private_prefix = "_omo_claims_authority_broker_stdio"
+    schema = sys.modules[f"{private_prefix}.event_ledger.schema"]
+
+    assert broker.__name__ == f"{private_prefix}.workflow.claims_authority"
+    assert Path(broker.__file__).resolve() == broker_path.resolve()
+    assert Path(schema.__file__).resolve() == (
+        ROOT / "projects/omo/src/omo/event_ledger/schema.py"
+    ).resolve()
+
+
+def test_b1_public_or_stale_private_module_cannot_redirect_exact_loader(monkeypatch) -> None:
+    module = _load_root_workflow_wrapper()
+    broker_path = ROOT / "projects/omo/src/omo/workflow/claims_authority.py"
+    private_prefix = "_omo_claims_authority_broker_stdio"
+    public_omo = ModuleType("omo")
+    attacker_schema = ModuleType(f"{private_prefix}.event_ledger.schema")
+    attacker_schema.__file__ = "/attacker/schema.py"
+    monkeypatch.setitem(sys.modules, "omo", public_omo)
+    monkeypatch.setitem(sys.modules, f"{private_prefix}.event_ledger.schema", attacker_schema)
+
+    broker = module._claims_authority_load_broker(broker_path)
+    loaded_schema = sys.modules[f"{private_prefix}.event_ledger.schema"]
+
+    assert sys.modules["omo"] is public_omo
+    assert loaded_schema is not attacker_schema
+    assert Path(loaded_schema.__file__).resolve() == (
+        ROOT / "projects/omo/src/omo/event_ledger/schema.py"
+    ).resolve()
+    assert Path(broker.__file__).resolve() == broker_path.resolve()
+
+
+def test_b1_failed_private_loader_removes_partial_namespace(tmp_path: Path) -> None:
+    module = _load_root_workflow_wrapper()
+    omo_dir = tmp_path / "omo"
+    broker_path = omo_dir / "workflow/claims_authority.py"
+    broker_path.parent.mkdir(parents=True)
+    (omo_dir / "event_ledger").mkdir()
+    broker_path.write_text("this is not valid python !!!\n", encoding="utf-8")
+    private_prefix = "_omo_claims_authority_broker_stdio"
+
+    with pytest.raises(SyntaxError):
+        module._claims_authority_load_broker(broker_path)
+
+    assert not any(
+        name == private_prefix or name.startswith(private_prefix + ".")
+        for name in sys.modules
+    )
 
 
 def test_b1_env_cannot_redirect_broker_to_attacker_store(tmp_path: Path, monkeypatch) -> None:
