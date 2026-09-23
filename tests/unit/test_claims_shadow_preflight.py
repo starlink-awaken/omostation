@@ -81,6 +81,7 @@ def test_preflight_reports_blocked_but_read_only_root(tmp_path) -> None:
     assert "accepted_spec_digest_mismatch" in report["blockers"]
     assert report["runtime_state"] == {
         "store_exists": False,
+        "high_water_exists": False,
         "highwater_exists": False,
         "activation_witness_exists": False,
     }
@@ -103,6 +104,97 @@ def test_preflight_reports_blocked_but_read_only_root(tmp_path) -> None:
     assert recovery["items"][
         "operation_specific_host_authorization_unproven"
     ]["classification"] == "human_authorization_required"
+
+
+class _StubVerifiers:
+    @staticmethod
+    def operator_authorization_verifier_digest():
+        return "sha256:" + "a" * 64
+
+    @staticmethod
+    def stopped_process_verifier_digest():
+        return "sha256:" + "b" * 64
+
+    @staticmethod
+    def production_verifier_closure_digest():
+        return "sha256:" + "c" * 64
+
+
+def _prepare_valid_root(tmp_path, module):
+    root = tmp_path / "root"
+    child = root / "projects/omo"
+    _init_repo(root)
+    child.mkdir(parents=True)
+    _init_repo(child)
+    for relative in module.CLOSURE_PATHS.values():
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("closure\n", encoding="utf-8")
+    (root / "projects/omo/.gitkeep").write_text("", encoding="utf-8")
+    _commit_all(child)
+    _commit_all(root)
+    subprocess.run(["git", "-C", str(root), "add", "projects/omo"], check=True)
+    subprocess.run(
+        ["git", "-C", str(root), "update-ref", "refs/remotes/origin/main", "HEAD"],
+        check=True,
+    )
+    original_digest = module.ACCEPTED_SPEC_SHA256
+    module.ACCEPTED_SPEC_SHA256 = "sha256:" + hashlib.sha256(
+        (root / module.CLOSURE_PATHS["spec"]).read_bytes()
+    ).hexdigest()
+    return root, original_digest
+
+
+def _authority_report(tmp_path, module, *, store=False, high_water=False, legacy=False):
+    root, original_digest = _prepare_valid_root(tmp_path, module)
+    authority_dir = tmp_path / "home/agents/_shared/runtime/omo-claims-authority-r0"
+    authority_dir.mkdir(parents=True)
+    if store:
+        (authority_dir / "store.sqlite3").write_bytes(b"sqlite")
+    if high_water:
+        (authority_dir / "high-water.json").write_text("{}", encoding="utf-8")
+    if legacy:
+        (authority_dir / "highwater.json").write_text("{}", encoding="utf-8")
+    try:
+        return module.collect_preflight(
+            root,
+            account_home=tmp_path / "home",
+            observed_at="2026-09-22T00:00:00+00:00",
+            verifiers=_StubVerifiers,
+        )
+    finally:
+        module.ACCEPTED_SPEC_SHA256 = original_digest
+
+
+def test_preflight_accepts_production_high_water_filename(tmp_path) -> None:
+    report = _authority_report(
+        tmp_path, _module(), store=True, high_water=True
+    )
+    assert "authority_store_asymmetric_presence" not in report["hard_blockers"]
+    assert report["runtime_state"]["high_water_exists"] is True
+    assert report["runtime_state"]["highwater_exists"] is False
+
+
+def test_preflight_rejects_legacy_highwater_filename(tmp_path) -> None:
+    report = _authority_report(
+        tmp_path, _module(), store=True, legacy=True
+    )
+    assert "authority_store_asymmetric_presence" in report["hard_blockers"]
+    assert report["runtime_state"]["high_water_exists"] is False
+    assert report["runtime_state"]["highwater_exists"] is True
+
+
+def test_preflight_rejects_store_without_high_water(tmp_path) -> None:
+    report = _authority_report(tmp_path, _module(), store=True)
+    assert "authority_store_asymmetric_presence" in report["hard_blockers"]
+    assert report["runtime_state"]["high_water_exists"] is False
+
+
+def test_preflight_accepts_pristine_authority_layout(tmp_path) -> None:
+    report = _authority_report(tmp_path, _module())
+    assert "authority_store_asymmetric_presence" not in report["hard_blockers"]
+    assert report["runtime_state"]["high_water_exists"] is False
+    assert report["runtime_state"]["highwater_exists"] is False
 
 
 def test_preflight_accepts_isolated_integration_root(tmp_path) -> None:

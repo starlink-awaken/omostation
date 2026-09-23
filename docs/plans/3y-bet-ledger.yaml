@@ -30201,7 +30201,7 @@ bets:
   merge_sha: 64f8908ff0b0f03f9963710ba0ce8deccefbbe33
 - id: BET-Y2Q2-T10-156
   title: Claims preflight high-water filename reconciliation
-  status: candidate
+  status: done
   priority: P1
   risk_level: L1
   track: T10-MATURITY
@@ -30241,17 +30241,34 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T10-156
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-156.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-156.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-156.md
+          merged_reachable_commit:
+            ref: git://origin/main@15bb8c7344f4205e3567f5010645bcc04b786122
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-156.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-156.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-156.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-156.md
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: '2026-09-22'
 - id: BET-Y2Q1-T4-03
   title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
   status: done
