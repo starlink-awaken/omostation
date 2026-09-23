@@ -30993,6 +30993,66 @@ bets:
   - projects/cockpit-ui/src/components/SystemAssuranceWorkbench.tsx
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q2-T10-159.md
+- id: BET-Y2Q3-T10-OMLXC-01
+  title: omlxc P0 死引用修复 + inventory 诊断自愈 + CLI 契约一致性
+  goal: 按已批准计划修复 omlxc 体系 4 层问题：P0 死命令/坏引用、模型 inventory 自愈、P1 CLI 契约、P2/P3 入口收敛与文档卫生
+  status: candidate
+  window: Y2Q3
+  track: T10-PLATFORM
+  priority: P1
+  appetite: 1 week
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  circuit_breaker: inventory 自愈若 doctor 恶化即回滚，仅保留 P0/P1 代码修复
+  non_goals:
+  - 三份 omlx 副本运行时热路径收敛（只开票）
+  - cockpit mesh umbrella 大拆分（单独评审）
+  done_when:
+  - P0 三处死引用清零（gac-compute-onboard / nextgen-cognitive-mesh skill / cli_presenter）
+  - doctor inventory 失败项清零或三问归因落档
+  - schema_version 类型统一为 int，benchmark 死桩移除
+  - fabric snapshot 非法 action 不再静默成功
+  verify:
+  - cmd: grep -rn "omlxc cluster\|omlxc fabric mesh\|omlxc models resolve" bin/gac/gac-compute-onboard.py
+      .agents/skills/nextgen-cognitive-mesh/SKILL.md projects/omlxc/src/omlxc/cli_presenter.py
+    expect: no match
+  write_surfaces:
+  - bin/gac/gac-compute-onboard.py
+  - .agents/skills/nextgen-cognitive-mesh/SKILL.md
+  - projects/omlxc/src/omlxc/cli_presenter.py
+  - projects/omlxc/tests/unit/test_cli_presenter.py
+  - projects/omlxc/src/omlxc/cli.py
+  - Makefile
+  - docs/CLI-REFERENCE.md
+  - bin/README.md
+  - projects/omlxc/docs/ARCHITECTURE-FABRIC.md
+  - projects/omlxc/AGENTS.md
+  - docs/project-registry.yaml
+  - .agents/skills/omlxc-compute-fabric/SKILL.md
+  - .omo/_truth/registry/services.yaml
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-23-omlxc-health-cli-fix-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:c62db0eafd04f4960b3de8eb8ae4a1d0348e01e58c1ee5683391c2ef98a920da
+    decision_ref: decision://accepted/BET-Y2Q3-T10-OMLXC-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: in_progress
+    axes:
+      engineering:
+        status: PENDING
+        evidence: {}
+      operational:
+        status: PENDING
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -31122,7 +31182,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 448
+  total_bets: 449
   windows:
   - Y1Q1
   - Y1Q2

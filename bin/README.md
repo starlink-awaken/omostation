@@ -136,10 +136,15 @@ last-reviewed: 2026-06-29
 | `change-lane-check.py` | commit lane 校验 (pre-commit/gac-local-gate) | GaC gate |
 | `doc-ssot-lint.py` | 文档 SSOT 门禁 (CI) | gac-local-gate/CI |
 
-### 12. 杂项单例 (13) — 待归域或留根
+### 12. 杂项单例 (14) — 待归域或留根
 `cockpit-readiness.py` / `verify-spaces.py` / `venv-yaml-check.py` /
 `ts-file-analyze.py` / `register-mcp.py` / `graphify-local-extract.py` / `fix-debts.py` /
 `classify_planned.py` / `p0-event-listener.py` / `management-{categorize,cross-ref-check,migrate}.py`
+
+| 脚本 | 功能 |
+|:-----|:-----|
+| `gac/omlxc-node-wakeup.py` | omlxc 从机 WoL Magic Packet 唤醒 (`--node` / `--all`, MAC/IP 读 `docs/project-registry.yaml`) |
+| `gac/gac-compute-onboard.py` | 算力网格一体化并网自检（cc-switch/codexbar/models/litellm/omlxc 五通道） |
 
 > **已迁移** (2026-07-07): `omo-health.py` → `omo health dashboard`, `omo-manage` → `omo manage`, `omo-validate` → `omo validate`
 > **已迁移** (2026-07-07): `scripts/omo/cards_x3_metrics.py` → `omo audit cards`, `scripts/omo/vault_x1_audit.py` → `omo audit vault`, `scripts/omo/x2_freshness_audit.py` → `omo audit freshness`

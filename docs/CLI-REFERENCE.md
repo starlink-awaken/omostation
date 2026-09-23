@@ -1129,15 +1129,33 @@ cockpit fabric-mesh
 
 ### `cockpit mesh`
 
-omlx 算力网格路由入口 (nodes / route / serve)
+omlx 算力网格能力化入口：`fabric/triage/vram/warm/compact` 透传 `omlxc fabric …`；
+`nodes/status/route` 走 MOF HTTP (:7440)；`cache/dflash/cluster/tree/stream/swarm/dma/lora`
+走 demo/examples 脚本；`hud/heatmap` 渲染 Rich 面板。
 
 **用法**:
 
 ```bash
-cockpit mesh [flags]
-cockpit mesh --json          # 机器可读输出
-cockpit mesh --dry-run       # 预检 (无副作用)
-cockpit mesh --help          # 完整参数面
+cockpit mesh fabric                 # ≡ omlxc fabric inspect
+cockpit mesh nodes                  # 节点拓扑 (HTTP)
+cockpit mesh --help                 # 完整子命令面 (20 个)
+```
+
+  · 所属域: `compute`  |  成熟度: stable  |  风险: low
+
+### `omlxc` (项目 CLI)
+
+本地算力织网项目 CLI（Typer）。人类入口优先 `cockpit omlxc …` 薄委派；Agent/脚本可直调。
+
+**用法**:
+
+```bash
+omlxc status --json                 # 官方健康探针 (capability-providers health_probe)
+omlxc doctor --direct --json        # 实测探测 launchd/socket/backends/inventory
+omlxc nodes list                    # 三节点健康
+omlxc models list                   # 模型 placement 可用性
+omlxc fabric inspect                # 织网治理全景
+omlxc --help                        # 9 分组 / 44+ 子命令
 ```
 
   · 所属域: `compute`  |  成熟度: stable  |  风险: low
