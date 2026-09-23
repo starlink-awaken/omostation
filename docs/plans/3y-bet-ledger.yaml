@@ -30667,7 +30667,7 @@ bets:
   title: North-star recovery and first real Decision Episode proof
   status: candidate
   priority: P0
-  risk_level: L2
+  risk_level: L3
   track: T4-OUTCOME
   window: Y2Q2
   workflow: bet-execution
@@ -30734,8 +30734,8 @@ bets:
     schema_state: enforced
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-23-north-star-recovery-and-first-decision-episode-design.md
-    spec_version: 1.3.0
-    content_digest: sha256:96df0c0ac7205bc7c420aeaafd6aad670296751299218d944d5f3ad32f60672b
+    spec_version: 1.4.0
+    content_digest: sha256:4b987c11b8628e639d5240a87640b982bb7f4c02917e9a8189d2673ec08e4e1e
     decision_ref: decision://accepted/BET-Y2Q2-T4-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -30756,9 +30756,20 @@ bets:
       completion-evidence errors for BET-Y1Q3-T10-16 and BET-Y1Q3-T10-114 remain separately
       owned debt
   - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
-    expect: the accepted v1.3 design and ledger pointer satisfy the documentation SSOT
+    expect: the accepted v1.4 design and ledger pointer satisfy the documentation SSOT
       contract
   write_surfaces:
+  - projects/omo
+  - projects/cockpit
+  - bin/bc-os/north_star_meter_v2.py
+  - bin/ssot/scene-outcome-recorder.py
+  - bin/ssot/value-recorder.py
+  - bin/panorama/panel-collect.py
+  - bin/panorama/panorama-collect.py
+  - tests/test_north_star_meter_v2.py
+  - tests/test_scene_outcome_value_v2_bridge.py
+  - tests/unit/test_panel_collect.py
+  - tests/unit/test_panorama_objective_coverage.py
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-23-north-star-recovery-and-first-decision-episode-design.md
 - accepted_specifications:

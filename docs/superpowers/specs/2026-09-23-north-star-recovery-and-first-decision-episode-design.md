@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.3.0
+spec_version: 1.4.0
 title: North-star recovery and first real Decision Episode proof
 bet_id: BET-Y2Q2-T4-01
 status: accepted
@@ -8,7 +8,7 @@ lifecycle: spec
 owner: governance-team
 created: '2026-09-23'
 last-reviewed: '2026-09-23'
-implementation_authorized: false
+implementation_authorized: true
 value_indicator_policy: true
 risk_level: L3
 human_gate: true
@@ -214,8 +214,79 @@ effects, and a root gitlink update only after the child commit is reachable:
    - `tests/unit/test_panorama_objective_coverage.py`
    - the two child gitlinks, this Spec, and the BET ledger
 
-The listed paths are a proposed implementation envelope, not authorization to
-edit them under the design operation.
+The listed paths were a proposed implementation envelope under the completed
+design operation. They become executable only through the independently bound
+transactions below; the design decision itself remains non-executable.
+
+## Delegated implementation authorization and root integration fence
+
+Under the principal's bounded delegation through
+`2026-09-28T00:00:00+08:00`, delegated decision
+`delegated-decision-25bcd7a6-8449-4b90-a44c-bcf67c449afe`, recorded at
+`2026-09-23T17:44:28Z` and expiring at `2026-09-27T16:00:00Z`, accepts this
+v1.4 implementation WorkPacket. The decision authorizes operation
+`north-star-root-integration-workpacket-v1` at most once. It does not authorize
+a Claims Authority verb, runtime or Event Ledger mutation, legacy publication,
+instruction-capability enablement, historical receipt modification, or an
+external business action.
+
+The two child transactions are completed engineering inputs, not production
+activation and not personal-value evidence:
+
+- OMO decision `delegated-decision-47f44bcf-1b85-41ca-a2fb-94ea14599cbe`
+  merged PR `omostation-omo#190` at remote-main OID
+  `cee93aa9b58785679f1b463035dd547fd8434ab9`.
+- Cockpit decision `delegated-decision-dfdb4b91-edf8-463d-9ba1-52d9d0ecf284`
+  merged PR `omostation-cockpit#202` at remote-main OID
+  `a45722e9eadb747a2e0dff1f025cfc9c3d268ff3`.
+
+The root transaction is bound to root `origin/main`
+`cc9a166081ebd902fe9ade4dad58fd4deb9b018a` and may modify only:
+
+- `projects/omo` and `projects/cockpit`, solely as gitlinks to the two OIDs
+  above;
+- `bin/bc-os/north_star_meter_v2.py`;
+- `bin/ssot/scene-outcome-recorder.py`;
+- `bin/ssot/value-recorder.py`;
+- `bin/panorama/panel-collect.py`;
+- `bin/panorama/panorama-collect.py`;
+- `tests/test_north_star_meter_v2.py`;
+- `tests/test_scene_outcome_value_v2_bridge.py`;
+- `tests/unit/test_panel_collect.py`;
+- `tests/unit/test_panorama_objective_coverage.py`;
+- this Spec and `docs/plans/3y-bet-ledger.yaml`.
+
+Before the first root claim, the accepted Spec digest and compiled WorkPacket
+digest must be recomputed from merged `origin/main`. The claim must bind the
+fresh run id, clone identity, remote ref, expected remote OID, process identity,
+and exact affected-graph receipt. A scope mismatch supersedes that run; it is
+never refreshed, retried, force-locked, taken over, or closed through a Claims
+mutation. A successor run may start only from the merged v1.4 sources and must
+claim the exact path subset it will change.
+
+The root repository may have at most one ordinary non-force branch push, one
+pull-request creation, and one ordinary merge after required checks are green
+and two remote-main OID reads agree. Unknown push, PR, merge, or remote outcome
+stops the transaction without retry. Force, `--no-verify`, historical receipt
+mutation, projection hand-editing, and any runtime writer restart remain
+forbidden.
+
+Success requires all of the following before merge:
+
+1. both child commits are reachable from their remote `main` refs and the root
+   gitlinks name exactly those commits;
+2. legacy JSONL and signed attestations cannot elevate value readiness;
+3. the root meter consumes only the complete-chain OMO observation and remains
+   read-only;
+4. scene, panel, panorama, and value projections fail closed on absent,
+   malformed, partial, cross-principal, or non-causal Episode evidence;
+5. focused root tests, submodule-aware integration tests, governance gates, and
+   required PR checks pass from the same tree.
+
+Rollback is to leave root `origin/main` at its pre-transaction gitlinks and
+keep the two child commits as inactive engineering evidence. No compensating
+runtime write, synthetic Episode, legacy fallback, or Claims operation is
+permitted.
 
 ### Canonical Episode truth contract
 
