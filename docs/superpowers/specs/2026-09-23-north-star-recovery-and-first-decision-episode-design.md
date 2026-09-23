@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.1.0
+spec_version: 1.2.0
 title: North-star recovery and first real Decision Episode proof
 bet_id: BET-Y2Q2-T4-01
 status: accepted
@@ -95,6 +95,52 @@ one pull-request creation or update, and one ordinary merge after required
 checks pass and both remote OID reads match. Force, `--no-verify`, unknown
 outcome retry, legacy publication, instruction enablement, and historical
 receipt mutation remain forbidden.
+
+## Delegated ledger-bound value projection repair
+
+Under the principal's bounded delegation for ordinary blocking and screening
+decisions through `2026-09-28T00:00:00+08:00`, delegated decision
+`delegated-decision-e53dc119-fe70-44e3-a440-a5ab092d347b` authorizes operation
+`north-star-ledger-bound-value-projection-repair-v1` at most once. The decision
+was recorded at `2026-09-23T13:45:56Z` and expires at
+`2026-09-27T16:00:00Z`. This is a fail-closed projection repair and does not
+grant any Claims Authority operation or any external business action.
+
+The repair may modify only:
+
+- this Spec;
+- `docs/plans/3y-bet-ledger.yaml`;
+- `bin/panorama/panel-collect.py`;
+- `bin/panorama/panorama-collect.py`;
+- `tests/unit/test_panel_collect.py`;
+- `tests/unit/test_panorama_objective_coverage.py`.
+
+The authoritative personal-value verdict must come from the read-only
+`bin/bc-os/north_star_meter_v2.py` projection over the OMO causal Event Ledger,
+including chain integrity and `PersonalEpisodeService` qualification. Existing
+JSONL, revision-baseline, and signed-attestation inputs remain advisory display
+data only and cannot independently flip `panel_value.state`, `BUSINESS_VALUE`,
+or `value_proof` to proven. Missing code, ledger, principal binding, integrity,
+or observer output fails closed to `not_proven` or `unprovable` with a typed
+reason.
+
+Required tests cover:
+
+1. thirty legacy JSONL rows plus a valid legacy attestation remain
+   `not_proven` when the ledger observation is not ready;
+2. only a chain-verified ledger observation with personal-value status
+   `passed` can project `proven`;
+3. unavailable or malformed ledger observation fails closed;
+4. objective coverage refuses an unbound caller-supplied `panel_value.state`;
+5. existing advisory metrics and lowercase deployment-safe state semantics are
+   preserved.
+
+The only external repository effects are one ordinary non-force branch push,
+one pull-request creation or update, and one ordinary merge after required
+checks are green and two remote-main OID reads match. The operation stops on
+scope drift, unexpected file changes, unknown remote outcome, ledger mutation,
+Claims mutation, or concurrent writer conflict. It never uses force,
+`--no-verify`, or automatic retry.
 
 ## Concurrent-writer operating contract
 
