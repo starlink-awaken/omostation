@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-23
+---
 # 复盘：Clash/Tailscale 基础设施大战 (2026-09-22 ~ 09-23)
 
 > 范围: ClashX→Meta 迁移 · SSOT 模板化 · 三机 Reality · 自建 derper · 双机同构 · 17 脚本体系
@@ -42,24 +48,24 @@
 
 ### P0 (今天, 人工)
 - [ ] CF API Token 轮换 (曾入对话日志) → 更新上海机 acme account.conf
-- [ ] 猎豹 GUI 重连 (AI服务组当前指向可用 Reality, 不阻塞)
-- [ ] 搬瓦工复活跟进 — node-watch/bw-warn 自动探测, 复活后评估 vmess→Reality 替换
+- [x] 猎豹 GUI 重连 (0923 完成, socks5=up, 新出口 38.148.221.191)
+- [x] 搬瓦工时间表落定: #1 0923 11:30 (自动任务 0ef9f2f6) · #2 1002 (debt DEBT-20261002-BWG2)
 
 ### P1 (本周, 老王)
 - [x] **deploy 后自动对账** (本次复盘当场实现): build.py --deploy → 触发 Meta 重载 → curl API 规则数与产物对账, 不匹配 exit 1 — declare≠execute 的机制终结者第 1 件
-- [ ] 降级版同步机制化 (原版 ClashX 回退路径, 当前一次性) → build.py `--deploy-legacy` 目标
+- [x] 降级版同步机制化 (build.py --deploy-legacy, 三目标实跑 LEGACY-DEPLOY)
 - [ ] stun-server 进 node-watch 探测 (3478 STUN 挂了打洞静默退化)
-- [ ] health 的 DNS 检查跑绿验证 (6053 端口对齐后)
+- [x] health DNS 跑绿验证 (6053, "Clash DoH 解析正常" 首绿)
 
 ### P2 (本月)
-- [ ] 优选 IP 每日 cron 化 (refresh-cf-ips 报告型, 低风险)
+- [x] 优选 IP 每日 cron (03:07)
 - [ ] TG notify 配置 (等用户 token)
 - [ ] 上海机 kernel-ml 升级评估 (3.10→5.x 治 Go 兼容本; 若 python stun-server 长期稳定则降级为可选)
 - [ ] derper 冗余规划 (第二台国内机热备 — 依赖新购国内轻量)
 
-### P3 (理想态)
-- [ ] **deploy 全链路闭环**: 产物→双写→重载→API对账→失败自动回滚 .bak (P1 先做对账, 回滚后补)
-- [ ] 体系健康一页看板: inventory + node-watch + cert + derper + tailscale 聚合 (复用 omostation runtime dashboard 模式)
+### P3 (理想态) — 详版: repo/plans/P3-roadmap.md (0923)
+- [x] **deploy 全链路闭环**: 对账+失败自动回滚 (受控投毒实弹: 拦截→回滚→复验92=92)
+- [x] 体系一页看板 clash-dashboard.sh + **B1 接入 agent-brief health.clash** (2ac8404c1)
 - [ ] 协议存量清退: 搬瓦工 vmess 全族 Reality 化 (等复活后)
 
 ## 5. 成本账
