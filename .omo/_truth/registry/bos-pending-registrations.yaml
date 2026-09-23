@@ -1,0 +1,149 @@
+# BOS Pending Registrations — 待登记到 projects/agora/etc/bos-services.yaml
+# 来源: check-cross-repo-consistency.py 报告的 41 个 unregistered URIs
+# 状态: 这些 URI 在代码中被引用但未在 agora SSOT 中注册
+
+# 需要登记到 agora 子仓的 bos-services.yaml
+pending_registrations:
+  # Event domain
+  - uri: bos://brain/events/card_updated
+    source: cockpit knowledge_indexer consumer (ADR-0294 dual-accept)
+
+  - uri: bos://memory/events/card_updated
+    source: memory event migration (from brain → memory)
+
+  # Capability domain
+  - uri: bos://capability/bus/control_plane
+    source: bus-foundation/control_plane references
+
+  - uri: bos://capability/omo/governance
+    source: omo/omo_daemon.py line 370
+
+  - uri: bos://capability/perception-inbox
+    source: perception module references
+
+  - uri: bos://capability/personal-signals
+    source: personal signals module
+
+  - uri: bos://capability/runtime/cron
+    source: runtime cron scheduling
+
+  - uri: bos://capability/workflow-mesh/jsonl
+    source: workflow mesh jsonl transport
+
+  # Cockpit domain
+  - uri: bos://cockpit/context
+    source: cockpit context module
+
+  # Compute / Aetherforge domain
+  - uri: bos://compute/aetherforge/embed
+    source: aetherforge embed endpoint
+
+  - uri: bos://compute/aetherforge/fabric
+    source: aetherforge fabric endpoint
+
+  - uri: bos://compute/aetherforge/profile
+    source: aetherforge profile endpoint
+
+  - uri: bos://compute/aetherforge/rerank
+    source: aetherforge rerank endpoint
+
+  - uri: bos://compute/aetherforge/triage
+    source: aetherforge triage endpoint
+
+  - uri: bos://compute/aetherforge/vram
+    source: aetherforge vram monitoring
+
+  - uri: bos://compute/aetherforge/warm
+    source: aetherforge warm-start endpoint
+
+  # Core kernel
+  - uri: bos://core/kernel/v1
+    source: core kernel module
+
+  # Domain
+  - uri: bos://domain/package
+    source: domain package registry
+
+  - uri: bos://domain/package/action
+    source: domain package action routing
+
+  - uri: bos://domain/subdomain/action
+    source: domain subdomain action routing
+
+  # Event ledger
+  - uri: bos://event-ledger/outbox
+    source: event-ledger outbox pattern
+
+  # Execution
+  - uri: bos://execution/workers/status
+    source: execution workers status API
+
+  # Governance
+  - uri: bos://governance/cockpit/circuit_breaker
+    source: cockpit circuit breaker
+
+  - uri: bos://governance/cockpit/daily_budget
+    source: cockpit daily budget
+
+  - uri: bos://governance/cockpit/quests
+    source: cockpit quests
+
+  - uri: bos://governance/l4-kernel
+    source: l4 kernel governance
+
+  - uri: bos://governance/metaos_workflow
+    source: metaos workflow
+
+  - uri: bos://governance/mof/auth
+    source: MOF auth
+
+  - uri: bos://governance/protocols-layer/trigger
+    source: protocols layer trigger
+
+  # IM / Messaging
+  - uri: bos://im/session/triage
+    source: IM session triage
+
+  - uri: bos://inbox/mail/draft
+    source: inbox mail draft
+
+  - uri: bos://mail/draft
+    source: mail draft service
+
+  # Memory / Knowledge
+  - uri: bos://kairon/minerva
+    source: kairon minerva search
+
+  - uri: bos://memory/unified
+    source: unified memory API
+
+  # Perception
+  - uri: bos://perception/agora/ocr
+    source: perception OCR via agora
+
+  # Personal
+  - uri: bos://personal/followup/draft
+    source: personal followup
+
+  # Runtime
+  - uri: bos://runtime/client/v1
+    source: runtime client v1
+
+  # Scene
+  - uri: bos://scene/anchor
+    source: scene anchor
+
+  # Testing
+  - uri: bos://test/health/ping
+    source: test health ping
+
+  # Vault
+  - uri: bos://vault/_state
+    source: vault state
+
+  # Voice
+  - uri: bos://voice/memo/ingest
+    source: voice memo ingestion
+
+# 登记方式: 合并到 projects/agora/etc/bos-services.yaml 的 services 数组
+# 每个 entry 需要: uri, domain, package, action, status (active/pending)
