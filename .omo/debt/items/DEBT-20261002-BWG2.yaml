@@ -1,0 +1,26 @@
+id: DEBT-20261002-BWG2
+title: '搬瓦工#2重置跟进: Reality铺设(bootstrap-server)+fleet.yaml补IP+SSOT节点+vmess清退评估'
+dimension: network
+subdimension: proxy-infra
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: laowang
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-09-23T02:05:30.194354+00:00'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+history:
+- at: '2026-09-23T02:05:30.194354+00:00'
+  action: register
+  note: Registered debt item DEBT-20261002-BWG2.
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
