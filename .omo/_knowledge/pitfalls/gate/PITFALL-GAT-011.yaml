@@ -1,0 +1,26 @@
+schema: agent-error/v1
+id: PITFALL-GAT-011
+category: gate
+severity: medium
+title: GitHub Actions concurrency 取消被误读为 CI 失败
+symptom: gh run list / gh pr checks 显示某 run 'X' 且详情含 'Canceling since a higher priority
+  waiting request exists'，conclusion=cancelled，被当成 CI 红并去'修'
+root_cause: 'workflow 配置了 concurrency group + cancel-in-progress: true（如 Submodule
+  Freshness Gatekeeper / repo-health-daily）。同一并发组的后到事件会取消先到的 in-progress run；schedule/workflow_run
+  触发的那条最常被随后的 push 取消。状态 cancelled ≠ failure，它表示被自己的并发策略取代，而非检查不通过。'
+solution: 分诊时按 conclusion 分级：只有 conclusion=failure 才是红；cancelled/skipped/neutral 单独看待。判定
+  cancelled 是否良性：看同 workflow 同并发组的邻近 run 是否 success（被取代即良性）。用 gh pr view --json statusCheckRollup
+  统计时把 conclusion in (SUCCESS,SKIPPED,NEUTRAL) 视为非红，并把 cancelled 标注为'并发取消待人工确认'而非直接失败。
+prevention: P75 CI 分诊链增设一步'取消≠红：先辨 conclusion 与并发组'。任何 gh run 汇总脚本对 cancelled/skipped
+  与 failure 分列计数，不得混为失败。
+tags:
+- ci
+- concurrency
+- gac-gate
+- triage
+- p75
+discovered_by: governance-agent
+discovered_at: '2026-09-23'
+times_encountered: 1
+last_confirmed_at: '2026-09-23'
+status: active
