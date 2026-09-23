@@ -1,4 +1,4 @@
-last_scan: 1789358570.785873
+last_scan: 1790129226.979135
 services:
   cron-service:
     health_check: healthy
@@ -8,7 +8,7 @@ services:
       freshness_seconds: 0
       port: 7450
       status: running
-      timestamp: 1789358570.785873
+      timestamp: 1790129226.979135
     timestamp: 1789114876.376411
     type: daemon
   gbrain:
@@ -19,7 +19,7 @@ services:
       freshness_seconds: 0
       port: null
       status: running
-      timestamp: 1789358570.785873
+      timestamp: 1790129226.979135
     timestamp: 1789114876.376411
     type: cli
   gbrain-index:
@@ -29,7 +29,7 @@ services:
       freshness_seconds: 0
       port: null
       status: configured
-      timestamp: 1789358570.785873
+      timestamp: 1790129226.979135
     timestamp: 1789114876.376411
     type: scheduled
   kos:
@@ -40,7 +40,7 @@ services:
       freshness_seconds: 0
       port: null
       status: active
-      timestamp: 1789358570.785873
+      timestamp: 1790129226.979135
     timestamp: 1789114876.376411
     type: integrated
   ollama:
@@ -51,7 +51,7 @@ services:
       freshness_seconds: 0
       port: 11434
       status: idle
-      timestamp: 1789358570.785873
+      timestamp: 1790129226.979135
     timestamp: 1789114876.376411
     type: integrated
   runtime-mcp:
@@ -62,6 +62,6 @@ services:
       freshness_seconds: 0
       port: null
       status: active
-      timestamp: 1789358570.785873
+      timestamp: 1790129226.979135
     timestamp: 1789114876.376411
     type: mcp

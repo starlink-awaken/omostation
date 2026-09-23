@@ -1,0 +1,44 @@
+schema: agent-error/v1
+id: PITFALL-GAT-010
+category: gate
+severity: high
+title: Claims lifecycle Op B/C 协议死锁 — issue_legacy_fence 要求 effective_v1=allow，生产 managed-clone observe 禁止 v2 下 allow
+symptom: >-
+  lifecycle authorization 已人工批准且 Op A（managed-clone observe）成功产出
+  expected_managed_clone_difference receipt 后，Op B issue_legacy_fence /
+  Op C expiry-replay 无法启动。canonical production observe_claim 在
+  clone_identity_schema == agent-clone-identity/v2 时抛 V1_AUTHORITY_FORBIDDEN(managed_clone)；
+  而 issue_legacy_fence 要求 v1_allow_receipt_digest 指向 effective_v1=allow 的
+  observe-claim。所有 attempt clone 身份均为 v2 → 无法经 canonical interface 铸造
+  allow receipt → fence 永不可发。按 runbook stop condition 停止，零 push/PR。
+root_cause: >-
+  两条规则各自正确但组合不可满足：(1) managed-clone 禁止声称 v1 allow（防越权）；
+  (2) legacy publication fence 强制要求 v1 allow receipt（防未授权发布）。
+  草案三个 operation 假定能在同一生产 broker 上串完，未区分 attempts(v2) 与
+  legacy publication 可能需要的非 v2 或专用路径。
+solution: >-
+  治理/设计层三选一后在 ADR-0455 落定再执行剩余 operation：
+  A) 允许 attempts 上「legacy-publication」专用 observe 路径（仍要求 v1 allow 但
+     绑定 exact changed path / fence 后效果上限）；
+  B) 为 fence 增加不依赖 allow-receipt 的 publisher 类 receipt（仍 fence-aware）；
+  C) 将 legacy publication 迁到非 attempt 的 v1 identity 拓扑（需改 production
+     path 布局，成本最高）。执行前禁止绕过 claims_authority.observe_claim
+     直调 store。
+prevention: >-
+  起草 lifecycle operation 矩阵时必须做「canonical interface 可满足性」预演：
+  每个 broker 前置条件在 production verify 下是否有构造路径；发现互斥立即开
+  ADR，不要在授权窗口内硬闯 stop condition。
+tags:
+  - claims-authority
+  - lifecycle
+  - fence
+  - protocol-deadlock
+discovered_by: governance-agent
+discovered_at: '2026-09-23'
+times_encountered: 1
+last_confirmed_at: '2026-09-23'
+status: active
+evidence:
+  - claims-observation://lifecycle-execution-status.json
+  - decision://DEC-20260923-CLAIMS-LIFECYCLE-R0-01
+  - receipt://observe-claim/sha256:a660e34c55467e631f38d97e17b4d2377281fc5fe73a94b6f33548dbabe1eab7
