@@ -967,6 +967,59 @@ def collect_launchd_health() -> dict:
     }
 
 
+def collect_clash_health() -> dict:
+    """Clash/Fleet 体系健康投影 — 只读 ~/.local/log 状态文件, 零网络 (B1 接入 2026-09-23)."""
+    schema = "panorama-clash-health/v1"
+    log_dir = Path.home() / ".local/log"
+
+    def _states(fname: str) -> dict | None:
+        path = log_dir / fname
+        if not path.is_file():
+            return None
+        up = down = 0
+        downs: list[str] = []
+        for line in path.read_text(errors="replace").splitlines():
+            if "|" not in line:
+                continue
+            key, val = line.rsplit("|", 1)
+            if val == "up":
+                up += 1
+            elif val == "down":
+                down += 1
+                downs.append(key)
+        return {"up": up, "down": down, "total": up + down, "down_list": downs[:12]}
+
+    latest_summary = None
+    health_log = log_dir / "clash-health.log"
+    if health_log.is_file():
+        for line in reversed(health_log.read_text(errors="replace").splitlines()):
+            if "SUMMARY" in line:
+                latest_summary = line.strip()
+                break
+
+    certs = None
+    cert_state = log_dir / "clash-cert-state"
+    if cert_state.is_file():
+        certs = cert_state.read_text(errors="replace").strip()
+
+    fleet = _states("fleet-states")
+    nodes = _states("clash-node-states")
+    # verdict: fleet down≤2 视为预期 (bwg 停机窗口), 超出即 red
+    if fleet is None:
+        verdict = "UNAVAILABLE"
+    else:
+        verdict = "green" if fleet["down"] <= 2 else "red"
+    return {
+        "schema": schema,
+        "available": fleet is not None or nodes is not None,
+        "verdict": verdict,
+        "fleet": fleet,
+        "nodes": nodes,
+        "certs": certs,
+        "latest_summary": latest_summary,
+    }
+
+
 def collect_code_root_health() -> dict:
     """Report whether the managed code root is clean and equal to origin/main.
 
@@ -3566,6 +3619,11 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "latest_receipt_digest": agent_cell_semantic.get("latest_receipt_digest"),
             },
             "value_metrics": value_metrics,
+            "clash": (
+                payload.get("clash_health")
+                if isinstance(payload.get("clash_health"), dict)
+                else {"schema": "panorama-clash-health/v1", "available": False}
+            ),
         },
         "work_state": {
             "bets": {
@@ -3700,6 +3758,7 @@ def build_payload() -> dict:
         "runtime": collect_runtime(),
         "launchd_health": collect_launchd_health(),
         "code_root_health": collect_code_root_health(),
+        "clash_health": collect_clash_health(),
         "docs": collect_docs(),
         "role_admission": collect_role_admission(),
         "agent_cell_pool": collect_agent_cell_pool(),
