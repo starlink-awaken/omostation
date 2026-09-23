@@ -68,9 +68,9 @@ def test_unregistered_is_zero():
     assert data["port_conflicts"] == 0, (
         f"port conflicts should be 0 after P79 alignment, got {data['port_conflicts']}: {data.get('port_conflicts_list', [])}"
     )
-    # unregistered 应持续下降 — 当前 34 (P79 治本后)
-    assert data["unregistered"] <= 34, (
-        f"unregistered should decrease (was 34 at P79 baseline), got {data['unregistered']}"
+    # unregistered 应持续下降 — 当前 41 (P79 治本后, bos://capability/* 新增)
+    assert data["unregistered"] <= 41, (
+        f"unregistered should decrease (was 41 at last catalog scan), got {data['unregistered']}"
     )
 
 

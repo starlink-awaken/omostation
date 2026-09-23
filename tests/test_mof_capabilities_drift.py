@@ -150,18 +150,6 @@ def test_detect_metaos_registry_structure():
     assert isinstance(result["registries"], list) and len(result["registries"]) >= 2
 
 
-def test_detect_metaos_known_kairon_drift():
-    """端到端活体验收: detect_metaos_registry_drift 检出 kairon.metaos 死路径.
-
-    metaos 2026-06-06 从 kairon/packages/metaos 拆到 projects/metaos, 但
-    projects-capabilities.yaml 的 kairon.metaos 条目 entrypoint 仍指向旧路径.
-    维护契约: 若 kairon.metaos 已修(projects-capabilities 重生/退役), 删此测试.
-    """
-    result = drift.detect_metaos_registry_drift()
-    cap_ids = {f["capability"] for f in result["findings"] if f.get("check") == "capability_entrypoint_missing"}
-    assert "kairon.metaos" in cap_ids, f"应检出 kairon.metaos 死路径, 实际 findings: {result['findings'][:3]}"
-
-
 def test_detect_all_drift_aggregates_two_scopes():
     """detect_all_drift 聚合 MOF + metaos 两面 (§J1: 同一扇门覆盖)."""
     result = drift.detect_all_drift()

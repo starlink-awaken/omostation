@@ -120,7 +120,13 @@ def test_trial_builder_rejects_raw_plan_fields() -> None:
     plan = _plan()
     plan["evidence_refs"] = ["private body", "evidence://activation/trial"]
     try:
-        MODULE.build_scene_trial(Path(__file__).parents[1], _scene(), _catalog(), plan)
+        MODULE.build_scene_trial(
+            Path(__file__).parents[1],
+            _scene(),
+            _catalog(),
+            plan,
+            now=datetime(2026, 8, 3, tzinfo=UTC),
+        )
     except MODULE.SceneTrialInputError as exc:
         assert "opaque" in str(exc)
     else:
