@@ -3687,8 +3687,20 @@ def collect_agent_visibility(payload: dict) -> dict:
         "next_actions": [
             *([
                 {"id": "resolve-failing-gates", "state": "required",
-                 "detail": f"Resolve failing gates: {', '.join(g['id'] for g in failing)}",
-                 "source": "panorama.gates"}
+                 "detail": (
+                     f"Resolve failing gates: {', '.join(g['id'] for g in failing)} — "
+                     "point-in-time snapshot; re-run reverify_command before claiming, "
+                     "since a lagging managed clone or an already-healed gitlink can "
+                     "make a listed gate green by now."
+                 ),
+                 "source": "panorama.gates",
+                 "gate_ids": [g["id"] for g in failing],
+                 "snapshot_generated_at": payload.get("generated_at", ""),
+                 "reverify": True,
+                 "reverify_command": (
+                     f"{sys.executable} {CODE_ROOT / 'bin/gac/gate-health-check.py'} "
+                     f"--workspace {ROOT} --code-root {CODE_ROOT} --json"
+                 )}
             ] if failing else []),
             {
                 "id": "claims-authority-wait", "state": "authorization_required",
