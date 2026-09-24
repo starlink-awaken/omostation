@@ -176,6 +176,12 @@ def check_ci_surfaces() -> dict:
     for tool, meta in sorted(wiring.items()):
         if not _is_check_tool(tool):
             continue
+        # gate-parity 0: 引用的工具文件必须真实存在 — 2026-09-24 走查实证:
+        # 7 个并行 agent 的 untracked 临时脚本曾被补录进 sgf-policy 且畅通过
+        # gate-parity (登记校验不查文件) → "ALL GREEN" 又一次变成假绿。
+        if not (WORKSPACE / tool).is_file():
+            errors.append(f"gate-parity: sgf-policy gate 引用的检查工具文件不存在 {tool} (CR-CI-SURFACE-SSOT)")
+            continue
         if tool in registered_tools:
             continue
         if meta["gate"]:

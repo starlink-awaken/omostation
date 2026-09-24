@@ -78,5 +78,57 @@ bos-tracking-gate 若真跑会报 62 处 BOS 追踪漂移。本轮修复后：**
 ## 七、PR 链
 
 - agora: PR #96（bfd450f）— BOS 注册表契约修复
-- ecos: PR #78（74c3c77e2）— sgf-policy 14 项补录
-- 主仓: 本 commit — gitlink bump + ci-surfaces + 生成物 + 本报告
+- ecos: PR #78（74c3c77e2）— sgf-policy 14 项登记
+- 主仓: PR #4279 — gitlink bump + ci-surfaces + 生成物 + 本报告
+
+---
+
+# 第十轮：stdio 面全面覆盖 (2026-09-24 同日)
+
+## TL;DR
+
+第九轮主攻 internal transport 33 条 + 门禁旁路。第十轮按用户"全面覆盖优化"指令，
+系统性排查 **29 条 stdio/inline/mcp_proxy 占位条目的 command 真实可执行性**——
+cell-pool/status 的死语法问题（第九轮个案）被证实是**系统性模式**：22 条 stdio
+占位中 **17 条 command 无法原样执行**（8 死语法 + 9 缺 PYTHONPATH 必炸）。
+
+## 处置矩阵（每条 3 轮真实执行验证）
+
+| 处置 | 数量 | 明细 |
+|---|---|---|
+| ♻️ 复活 | 19 | agent-cell 18 条 stdio + ocr（锚定已有 bos_ocr_extract，第九轮漏判纠正） |
+| ⏸️ 保持 | 4 | pool/submit、scale、auto-scale、metrics（CLI 无对应 action，语义映射 owner 决策） |
+| 🗺️ legacy 路由 | 1 | brain-events: normalize_bos_uri 映射后删除占位条目 — legacy 名真实可路由 |
+| 🧪 测试修复 | 1 | minerva: uv workspace member 需 --package（历史预存失败转绿） |
+
+## 三轮实测暴露的层次问题
+
+1. **首轮（参数语法）**: 8 条 --json 死语法、9 条 ModuleNotFoundError
+2. **二轮（执行形态）**: uv --directory 切 cwd → 脚本路径必须相对 omo 根；pool/status
+   第九轮复活只验了参数合法性没验 resolver 运行时形态 → 本轮补强
+3. **三轮（yaml 语义）**: JSON payload 参数无引号被 yaml 解析为 flow mapping →
+   str(dict) 的单引号 JSON 让脚本 json.loads 必炸 → 单引号包裹修正
+
+## 运行时环境事实（新增沉淀）
+
+- agora stdio adapter Popen 只设 cwd=workspace，**不注入 PYTHONPATH** →
+  裸 python3 + import omo 的 command 必炸，必须 uv --directory 形式
+- uv workspace 根 venv 不自动含 members → 跨包 python -m 需 --package
+- JSON payload 参数在 yaml 列表中必须引号包裹，否则被解析为 flow mapping
+
+## 数字变化（累计两轮）
+
+| 指标 | 走查前 | 第九轮末 | 第十轮末 |
+|---|---|---|---|
+| BOS unimplemented/active | 62 漂移 | 53/352 | **33/351** |
+| 可路由 BOS 服务 | 277 | ~290 | **351** (含 19+3 复活) |
+| minerva 预存失败 | FAIL | FAIL | **PASS** |
+
+## 第十轮登记项
+
+1. 4 条 pool 系保持 unimplemented — CLI 只有 dispatch/status/complete/recover，
+   submit/scale/auto-scale/metrics 语义映射需 owner 决策
+2. omo published.jsonl 4 条测试残留清理在工作区（3 条本轮实测产生 + 1 条历史同类），
+   因并行 agent 占用 omo 仓暂不提交 — owner 择机入库
+3. 26 条 B 类（capability/governance 系）维持 unimplemented 追踪
+4. gate-parity 盲区已修（check-ci-surfaces.py 增加工具文件存在性校验，见主仓 PR）
