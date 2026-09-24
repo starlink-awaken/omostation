@@ -383,6 +383,29 @@ def test_retry_repairs_pasw_after_a_partial_worktree_add_failure(
     _assert_complete_pasw(parent, wt)
 
 
+def test_claim_syncs_stale_submodule_url_override_before_init(tmp_path: Path) -> None:
+    parent = _make_parent_with_two_submodules(tmp_path)
+    declared_url = _git(
+        parent,
+        "config",
+        "-f",
+        ".gitmodules",
+        "--get",
+        "submodule.modules/alpha.url",
+    ).stdout.strip()
+    stale_url = tmp_path / "stale-alpha"
+    _git(parent, "config", "submodule.modules/alpha.url", str(stale_url))
+
+    result = _run_claim(parent, tmp_path, "sync-url")
+    wt = _worktree(tmp_path, "sync-url")
+
+    assert result.returncode == 0, result.stderr
+    assert _git(wt, "config", "--get", "submodule.modules/alpha.url").stdout.strip() == (
+        declared_url
+    )
+    assert _pasw_path(wt, "modules/alpha").is_dir()
+
+
 def test_skip_submodule_init_is_explicit_root_only_degraded_mode(
     tmp_path: Path,
 ) -> None:

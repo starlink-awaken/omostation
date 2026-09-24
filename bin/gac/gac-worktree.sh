@@ -395,6 +395,12 @@ case "$cmd" in
       else
         echo "   浅 init 子模块 (--depth 1, 快; 需完整历史: claim --full 或 GAC_FULL_SUBMODULE_INIT=1)..."
       fi
+      # Worktrees inherit local submodule.<path>.url overrides from the canonical
+      # repository. Re-apply .gitmodules as the authority before any fetch.
+      if ! ( cd "$wt" && git submodule sync --recursive >/dev/null 2>&1 ); then
+        echo "❌ 子模块 URL 同步失败; 拒绝 PASW claim (fail-closed)" >&2
+        exit 1
+      fi
       t0=$(date +%s)
       init_rc=0
       # 网络挂起防护 (2026-09-18): bulk init 加整体超时 (默认 300s,
