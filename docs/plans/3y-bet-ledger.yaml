@@ -32873,7 +32873,7 @@ bets:
   title: OMLXC fabric inference-readiness evidence repair
   track: T10-MATURITY
   window: Y2Q2
-  status: candidate
+  status: done
   priority: P1
   risk_level: L1
   goal: Make OMLXC inference readiness reproducible by implementing the public routes
@@ -32908,17 +32908,34 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T10-161
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-161.md
+          merged_reachable_commit:
+            ref: git://origin/main@4414e6503bcf7c49a493cea2b5567a1971a26b8f
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-161.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-161.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-161.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-161.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-161.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-161.md
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: 2026-09-24
   verify:
   - cmd: cd projects/omlxc && uv run pytest tests/unit/test_daemon_client.py tests/unit/test_cli_daemon.py
       tests/unit/test_compute_mesh_pulse.py -q
