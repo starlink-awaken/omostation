@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -209,6 +210,12 @@ def _write_health_score_evidence(score: float) -> tuple[bool, str]:
     system.yaml so it can compare against `health_score` (compass_radar composite)
     and detect divergence > 5. Best-effort: failure must not break the smoke run.
     """
+    # CI 不可变检出护栏: gac-gate 的 immutable checkout postcondition 要求
+    # 运行结束后工作区零改动, 而本函数会改写 system.yaml (时间戳每次必变) —
+    # CI 中跳过落盘 (分数照常计算/输出), 落盘只应在本地开发环境发生。
+    if os.environ.get("GITHUB_ACTIONS", "").lower() == "true":
+        return False, "CI env: health_score_evidence 落盘跳过 (immutable checkout)"
+
     try:
         import yaml
 
