@@ -268,6 +268,37 @@ def test_personal_value_truth_is_bound_to_the_same_logical_ledger(tmp_path) -> N
     assert envelope["value_truth"]["status"] == "unprovable"
 
 
+def test_legacy_value_validation_is_normalized_to_non_authoritative(monkeypatch) -> None:
+    module = _module()
+
+    monkeypatch.setattr(module, "CODE_ROOT", ROOT)
+    monkeypatch.setattr(module, "ROOT", ROOT)
+    monkeypatch.setattr(
+        module.subprocess,
+        "run",
+        lambda *_args, **_kwargs: type(
+            "Completed",
+            (),
+            {
+                "stdout": json.dumps(
+                    {
+                        "schema": "value-evidence-validation/v2",
+                        "ok": True,
+                        "qualifying": 52,
+                        "authoritative_qualifying": 0,
+                    }
+                )
+            },
+        )(),
+    )
+
+    report = module.collect_value_evidence_validation()
+
+    assert report["self_reported_qualifying"] == 52
+    assert report["qualifying"] == 0
+    assert report["authority_source"] == "omo-event-ledger"
+
+
 def test_claims_projection_reads_storage_without_invoking_claims_status(
     tmp_path, monkeypatch
 ) -> None:

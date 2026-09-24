@@ -538,7 +538,26 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
     adjudicated = sum(verdicts[k] for k in ("accept", "edit", "reject", "accepted", "revised", "rejected"))
     accepted = verdicts["accept"] + verdicts["accepted"]
     samples_total = len(evidence)
-    qualifying = sum(1 for e in evidence if e["qualifying"])
+    self_reported_qualifying = sum(1 for e in evidence if e["qualifying"])
+    truth_envelope = context.get("personal_value_truth")
+    truth_envelope = truth_envelope if isinstance(truth_envelope, dict) else {}
+    truth = truth_envelope.get("value_truth")
+    truth = truth if isinstance(truth, dict) else {}
+    truth_metrics = truth.get("metrics")
+    truth_metrics = truth_metrics if isinstance(truth_metrics, dict) else {}
+    weekly_samples = [
+        item for item in (truth_metrics.get("weekly_samples") or [])
+        if isinstance(item, dict)
+    ]
+    qualifying = sum(
+        value for item in weekly_samples
+        if type(value := item.get("qualifying_episodes")) is int and value >= 0
+    )
+    ledger_episodes = (
+        truth_metrics.get("total_episodes")
+        if type(truth_metrics.get("total_episodes")) is int
+        else 0
+    )
     acceptance = round(accepted / adjudicated * 100, 1) if adjudicated else None
 
     reflections = sum(1 for _ in _read_jsonl(root / ".omo/_knowledge/workflow-mesh/scene-reflections.jsonl"))
@@ -575,7 +594,7 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
               "signal_poller"),
         stage("intent", "意图分流", active_scenes or 0, "scene_cards.active_total"),
         stage("journey", "旅程执行", journey_runs, "scene-history/execution-daily.json"),
-        stage("record", "价值记录", qualifying, "value-evidence.jsonl (qualifying)"),
+        stage("record", "价值记录", qualifying, "OMO Event Ledger (complete Episode chain)"),
         stage("feedback", "进化反馈", reflections or shadow_trials, "scene-reflections.jsonl"),
     ]
 
@@ -615,13 +634,13 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
     vision = [_entry(spec) for spec in FINAL_VISION]
 
     reasons: list[str] = []
-    if samples_total == 0:
-        reasons.append("尚无任何价值证据记录")
+    if ledger_episodes == 0:
+        reasons.append("OMO Event Ledger 尚无完整 Decision Episode；legacy JSONL 不计入个人价值门")
     else:
         if qualifying == 0:
-            reasons.append(f"已有 {samples_total} 条记录，但 qualifying=false（未产生净节省，不计入价值门）")
-        if samples_total < GOLDEN_SLICE[0]["target"]:
-            reasons.append(f"样本 {samples_total}/{GOLDEN_SLICE[0]['target']} 不足")
+            reasons.append(f"Event Ledger 已有 {ledger_episodes} 个 Episode，但无完整合格因果链")
+        if qualifying < GOLDEN_SLICE[0]["target"]:
+            reasons.append(f"权威样本 {qualifying}/{GOLDEN_SLICE[0]['target']} 不足")
         if acceptance is None:
             reasons.append("无 effective adjudication，采纳率不可计算")
         if baseline is None:
@@ -666,6 +685,7 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
 
     return {
         "schema": "panel-value/v1",
+        "authority_source": "omo-event-ledger",
         # 注意: 必须用小写。部署侧 refresh.py 的 render() 里有个遗留的
         # clean_not_proven(), 它会 **删除任何值恰好等于字符串 'NOT_PROVEN' 的键**
         # （本意是清掉历史占位文本），导致大写状态在嵌入快照时整键消失、
@@ -688,6 +708,8 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
         "samples": {
             "records": samples_total,
             "qualifying": qualifying,
+            "self_reported_qualifying": self_reported_qualifying,
+            "ledger_episodes": ledger_episodes,
             "accepted": accepted,
             "adjudicated": adjudicated,
             "by_verdict": dict(sorted(verdicts.items())),
