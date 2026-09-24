@@ -33,6 +33,18 @@ ADR-0203 的 requirement-iteration 门要求 `start --bet <BET-ID>`，但 **3Y-B
 | #4275 | `a05524920` | 二次复盘 findings H1–H3：`submodule-reachability-gate.py` 网络工作加有界预算（超时降级为 unverified 而非 unreachable）、`hook-runner.sh` 死超时参数改名并说明真相、生成物（BRIEF.md / CLAUDE.md 注入段）去除主机绝对路径 |
 | #4280 | `4f8a64705` | 把上一行 "PR 待登记" 占位符绑到真实 PR（#4275 / `a05524920`）——占位符本身就是 F1 要消灭的东西 |
 | #4285 | `0a129eb13` | 固化本次复盘教训为 error-knowledge 条目 PITFALL-GAT-012（pre-rebase 缺执行位是保护而非缺陷）+ PITFALL-MEA-004（hook-runner 死超时参数）；同一豁免（`governance-state-mutation` run 20260924T072410Z） |
+| #4287 | `6f3fc3220` | 把上两行（#4280 / #4285）登记进本表——F1 留痕补齐，单文件 docs 变更 |
+| #4295 | `eac467af8` | 修 error-knowledge 召回路径静默丢条目：`_load_all` 归一 legacy 条目、不可召回文件上报而非吞掉、`check` 与召回同源计数（`recall divergence`）、`_save_entry` 不再落盘 `_path`/`_file`（清理 6 条已被写入主机绝对路径的 pitfall 记录）+ 5 条回归测试（`project-code-change` run 20260924T133342Z） |
+
+**2026-09-24 复核**（本行由 #4295 之后的登记交付补写）：空档仍未闭合——`bets` 段全部条目 `status: done`，
+开放数 0。因总条数会随台账增长而腐坏，此处不留数字，复核用：
+
+```bash
+python3 -c "import yaml,collections;d=yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'));b=d['bets'];b=b if isinstance(b,list) else [x for v in b.values() for x in v];print(collections.Counter(str(x.get('status')) for x in b))"
+```
+
+注意 `campaigns` / `milestones` 段有 `status: active` 条目（`CMP-*` / `MS-*`），但它们不是 bet，
+不能用于 `--bet` 绑定；只统计顶层全部条目会把它们误算成开放 bet。
 
 ## User Confirmation
 
