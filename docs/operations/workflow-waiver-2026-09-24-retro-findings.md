@@ -39,6 +39,7 @@ ADR-0203 的 requirement-iteration 门要求 `start --bet <BET-ID>`，但 **3Y-B
 | #4298 | `25e20a8bf` | 把子模块指针漂移测试的状态白名单钉回发射端：`DRIFT_STATUSES` 常量 + `test_declared_statuses_match_the_emitter` 用源码扫描比对 `"status": "…"` 集合，使 `unverifiable` 不再被测试当成非法值；docstring 记录该测试文件当前无 CI job 运行 |
 | #4299 | `8ef17fe44` | 固化 2 条踩坑（PITFALL-MEA-005：一个集合多个读取入口计数不一致 = 有一条在静默丢元素；PITFALL-ENV-004：`rm`/`cp` 交互别名 exit 0 却什么都没做）+ 登记发现 I1（`closeout --from-diff` 提交后选出 0 条检查、`all([])` 真空通过却报 ok）；`governance-state-mutation` run 20260924T150736Z |
 | #4300 | `a51f4ecdc` | 自纠 I1 那行的替代路径断言：`--all` 实测在 PASW worktree 被 `omo-state-projection-guard` 的 10 条 `canonical_missing`（未入库运行时产物）阻断，改用 `--file <已 claim 路径>`（实测 4 条真检查） |
+| #4301 | `8311c4c34` | 补登记 4 条滞后豁免行（#4296/#4298/#4299/#4300，PR 号与 merged SHA 逐一 `git show` 核对）+ 记录 I2（shallow 子模块让 submit 把"已推送"读成"未推送"：graft 边界压在 pin 上，`rev-list --count` 1 vs 202）；纯 docs 交付 |
 
 一次补 4 行不是疏忽的累积，而是滞后规则的量化后果：只有**碰这份文档的交付**才会写行，
 #4295 → #4296 → #4298/#4299/#4300 之间隔了 3 次不碰本文档的交付，空档就攒到 4 行。
@@ -126,9 +127,43 @@ shallow 把历史截断在 pin 处，`--contains` 走不回 `origin/main`，检�
 **未修**：submit 的未推送检测应在 shallow 下降级为 unverified 而非阻断——与 #4275 给
 `submodule-reachability-gate.py` 加的有界预算同一方向；根治是 claim 时不产生 shallow 子模块。属需 principal 决策项。
 
+## I3（第五次复盘发现：`record` 的 fuzzy 去重把不同的坑吞成同一条）
+
+固化上一条 I2 踩坑时，`error-knowledge.py record` 连续两次把新条目判成"已存在的坑"：打印一行
+`DEDUP: matched …`、给老条目 `times_encountered++`、然后 `return 0` —— **新坑根本没写盘**。
+两次误命中的实测数据：
+
+| 被误合并进 | 其 category | overlap | 共享词 | 根因是否相同 |
+|---|---|---|---|---|
+| `PITFALL-COO-002` | coordination | 3 | `branch` / `main` / `push` | 否（本地 main 直提被分支保护拒 vs 浅历史 graft） |
+| `PITFALL-SUB-002` | submodule | 4 | `drift` / `main` / `origin` / `projects` | 否（`git show` 返回空 vs graft 边界压在 pin 上） |
+
+第一行还跨了类别——`cmd_record` 的去重循环**完全不看 category**，只看 `symptom_overlap ≥ 3` +
+`status: active`。而 `_tokens` 只是"长度 ≥4 的小写词去掉停用词"，`main` / `push` / `origin` 这类
+git 领域通用名词在两两条目间几乎必然相交：在这份语料里阈值 3 的含义是"都在说 git"，不是"同一个根因"。
+
+危害不对称，且第二条没有出口：丢一条 lesson 只是回到 #4295 刚修过的"教训不可召回"；但这个计数器是
+`ESCALATION_THRESHOLD = 5` 的唯一输入，弱信号于是**替人决定了哪条坑晋升成 governance-checks.yaml 里的规则**。
+
+**已修（本次交付）**：去重降级为建议——命中只打印 `DEDUP CANDIDATES` 并按新坑正常入库；只有显式
+`record --confirm-dup <ID>` 才计数，ID 不在候选集内直接 exit 1；匹配加 category 过滤。
+`.omo/standards/incident-to-rule-pipeline.md` §5 与 `docs/AGENT-PROFILE.md` 的过期描述（"重复即
+times_encountered++"/"自动 dedup 计数"）同步改写。3 条回归测试钉住三种行为：跨类不吞（附
+`overlap ≥ 3` 的反空转断言）、同类只报不并、`--confirm-dup` 只动被点名那条。
+
+**未修**：`symptom_overlap ≥ 3` 词阈值本身保留（改它等于重划整条管道的同坑判据，超出本次范围）；
+两条被误计数的记录已 `git restore` 归零（实测 `times_encountered` 均为 1），不留占位说明。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
+- 本次交付含一个 `governance_code` lane commit（`bin/gac/error-knowledge.py`，见 I3）与一个 `code`
+  lane commit（其回归测试），而承载 run `20260924T161254Z` 的 `governance-state-mutation` 授权
+  lanes 为 `governance_state/docs/runtime_snapshot`。原因：`project-code-change` 的 start 门
+  （`bin/plan/chain_bind.py:start_requires_bet`）要求 `--bet`，而台账 452 条 bet 已 done、3 条
+  active 均与本改动无关——绑任意 active bet 就是 F1 要消灭的纸面绑定，`AGCP_REQUIREMENT_ITERATION_GATE=0`
+  是静默绕门。两者都拒绝，改为 lane 分 commit + 在此留痕。lane 检查按 commit 单 lane 放行（`len(lanes) <= 1`），
+  未使用 `--no-verify`。
 - 未补录价值记录（30 条门保持 NOT_PROVEN）；未做 weekly-review（principal-only）。
 - 台账未改动。
 
