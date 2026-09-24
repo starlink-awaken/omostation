@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -19,9 +20,60 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 for _env in ("GIT_DIR", "GIT_WORK_TREE", "GIT_QUARANTINE_PATH"):
     os.environ.pop(_env, None)
 
+# ── 有界执行 (2026-09-24 复盘 H1) ────────────────────────────────────────
+# run() 原本无任何超时: pre-push 走 `--fetch`, 冷 `--depth 1` 子模块上 `git fetch`
+# 可无限挂起 (实测一次 push 卡死 40min, tmp_pack 字节零增长)。hook-runner 声明的
+# run_check 超时参数是死参数 (读进 local 后从未使用), 所以边界必须建在本脚本内。
+CMD_TIMEOUT_SECONDS = 60           # 本地 git 查询: 磁盘级, 60s 已属异常
+FETCH_TIMEOUT_SECONDS = 120        # 单次网络 fetch 上限
+NETWORK_BUDGET_SECONDS = 300       # 整轮网络工作总预算 (× 子模块数不再线性放大)
+TIMEOUT_RC = 124                   # 约定俗成的 timeout 退出码, 与真失败区分
+#: 「本地没能验完」的 reason 前缀 —— 让降级在汇总里可见, 而不是混进 PASS
+UNVERIFIED_PREFIX = "unverified: "
 
-def run(cmd: list[str], *, cwd: Path = WORKSPACE, check: bool = False) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=check)
+#: main() 里置为 time.monotonic() + NETWORK_BUDGET_SECONDS; 单测可为 None
+_NETWORK_DEADLINE: float | None = None
+
+
+def _remaining_network_budget() -> float:
+    """Per-fetch timeout, shrunk by the whole-run network budget."""
+    if _NETWORK_DEADLINE is None:
+        return float(FETCH_TIMEOUT_SECONDS)
+    return max(0.0, min(float(FETCH_TIMEOUT_SECONDS), _NETWORK_DEADLINE - time.monotonic()))
+
+
+def run(
+    cmd: list[str],
+    *,
+    cwd: Path = WORKSPACE,
+    check: bool = False,
+    timeout: float | None = CMD_TIMEOUT_SECONDS,
+) -> subprocess.CompletedProcess[str]:
+    """Run a command under a wall-clock bound.
+
+    A timeout returns rc=TIMEOUT_RC with the reason on stderr instead of
+    raising, so callers keep their existing non-zero handling and no caller
+    can hang the pre-push hook. Pass timeout=None to opt out deliberately.
+    """
+    try:
+        return subprocess.run(
+            cmd, cwd=cwd, capture_output=True, text=True, check=check, timeout=timeout
+        )
+    except subprocess.TimeoutExpired as exc:
+        partial = exc.stdout if isinstance(exc.stdout, str) else ""
+        return subprocess.CompletedProcess(cmd, TIMEOUT_RC, partial, f"timed out after {timeout}s")
+
+
+def _fetch_verdict(require_main: bool, detail: str) -> tuple[bool, str]:
+    """Translate an unverifiable fetch into a gate verdict.
+
+    网络不可判定 ≠ gitlink 不可达: 本地降级为「未验证」(与下方 partial worktree
+    同一哲学, CI full checkout 才是最终守门员), 拒绝把超时伪装成 unreachable 阻断 push。
+    require_main 模式 (CI) 没有更低的层兜底, 保持硬失败。
+    """
+    if require_main:
+        return False, f"{detail}; cannot verify origin/main ancestry"
+    return True, f"{UNVERIFIED_PREFIX}{detail} — CI full checkout will verify"
 
 
 def submodule_paths() -> list[str]:
@@ -77,7 +129,7 @@ def remote_contains(path: str, sha: str, *, fetch: bool, require_main: bool = Fa
             )
         return (
             True,
-            "submodule not initialized (partial worktree) - CI full checkout will verify",
+            f"{UNVERIFIED_PREFIX}submodule not initialized (partial worktree) — CI full checkout will verify",
         )
     # G1 (P79, 2026-08-04): partial worktree 降级 — 子模块目录存在但非有效 git repo
     # (PASW ISOLATED partial init / 新建 worktree 未 init) → 本地 push 降级 warning 不 block.
@@ -94,7 +146,7 @@ def remote_contains(path: str, sha: str, *, fetch: bool, require_main: bool = Fa
             )
         return (
             True,
-            "submodule not initialized (partial worktree) - CI full checkout will verify",
+            f"{UNVERIFIED_PREFIX}submodule not initialized (partial worktree) — CI full checkout will verify",
         )
 
     if fetch:
@@ -104,17 +156,40 @@ def remote_contains(path: str, sha: str, *, fetch: bool, require_main: bool = Fa
         # 单 heads refspec (heads→remotes/origin/*, 不覆盖本地 checked-out refs/heads/main).
         # 配合 unshallow (C 层) 拿全 main 历史 — unshallow 后 heads refs 已含所有可达 SHA.
         refspec = "+refs/heads/*:refs/remotes/origin/*"
+        budget = _remaining_network_budget()
+        if budget <= 0:
+            # 预算耗尽就不再派生 git (实测会白 spawn 8 个进程再瞬时超时)
+            return _fetch_verdict(require_main, f"network budget exhausted ({NETWORK_BUDGET_SECONDS}s)")
         shallow_res = run(["git", "rev-parse", "--is-shallow-repository"], cwd=submodule_dir)
         is_shallow = shallow_res.stdout.strip() == "true"
         if is_shallow:
             fetch_result = run(
                 ["git", "fetch", "--quiet", "--unshallow", "origin", refspec],
                 cwd=submodule_dir,
+                timeout=budget,
             )
+            # unshallow 超时就不再补一发 normal fetch: 预算已耗尽, 重试只把挂死换成慢死
+            if fetch_result.returncode == TIMEOUT_RC:
+                return _fetch_verdict(require_main, f"fetch timed out ({fetch_result.stderr.strip()})")
             if fetch_result.returncode != 0:
-                fetch_result = run(["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir)
+                retry_budget = _remaining_network_budget()
+                if retry_budget <= 0:
+                    return _fetch_verdict(
+                        require_main, f"network budget exhausted ({NETWORK_BUDGET_SECONDS}s)"
+                    )
+                fetch_result = run(
+                    ["git", "fetch", "--quiet", "origin", refspec],
+                    cwd=submodule_dir,
+                    timeout=retry_budget,
+                )
         else:
-            fetch_result = run(["git", "fetch", "--quiet", "origin", refspec], cwd=submodule_dir)
+            fetch_result = run(
+                ["git", "fetch", "--quiet", "origin", refspec],
+                cwd=submodule_dir,
+                timeout=budget,
+            )
+        if fetch_result.returncode == TIMEOUT_RC:
+            return _fetch_verdict(require_main, f"fetch timed out ({fetch_result.stderr.strip()})")
         if fetch_result.returncode != 0:
             return False, f"fetch failed: {fetch_result.stderr.strip()}"
 
@@ -192,10 +267,17 @@ def auto_fast_forward(path: str, gitlink_sha: str) -> tuple[bool, str]:
     if status.stdout.strip():
         return False, "submodule has uncommitted changes — refusing fast-forward"
     # Verify target is reachable (fetch first if needed)
+    budget = _remaining_network_budget()
+    if budget <= 0:
+        return False, f"fast-forward aborted: network budget exhausted ({NETWORK_BUDGET_SECONDS}s)"
     fetch_result = run(
         ["git", "fetch", "--quiet", "origin", f"+refs/heads/*:refs/remotes/origin/*"],
         cwd=submodule_dir,
+        timeout=budget,
     )
+    if fetch_result.returncode == TIMEOUT_RC:
+        # circuit_breaker: 修不动就停, 但要说清是「没验完」而不是「指针坏了」
+        return False, f"fast-forward aborted: {fetch_result.stderr.strip()}"
     if fetch_result.returncode != 0:
         return False, f"fetch failed: {fetch_result.stderr.strip()}"
     # Check if target is an ancestor of current HEAD (can only ff forward)
@@ -256,6 +338,7 @@ def check(
                 "fetch": fetch,
                 "checked": 0,
                 "skipped": 0,
+                "unverified": 0,
                 "mode": "incremental-empty",
                 "failures": [],
                 "findings": [],
@@ -282,6 +365,11 @@ def check(
         ok, detail = remote_contains(path, sha, fetch=fetch, require_main=require_main)
         findings.append({"path": path, "sha": sha, "ok": ok, "reason": detail})
     failures = [item for item in findings if not item["ok"]]
+    unverified = [
+        item
+        for item in findings
+        if item["ok"] and str(item["reason"]).startswith(UNVERIFIED_PREFIX)
+    ]
     return {
         "ok": not failures,
         "source": source,
@@ -289,6 +377,7 @@ def check(
         "require_main": require_main,
         "checked": checked,
         "skipped": skipped,
+        "unverified": len(unverified),
         "failures": failures,
         "findings": findings,
     }
@@ -342,6 +431,10 @@ def main() -> int:
             f"   worktree 可能被外部清理 (cleanup TTL?). 中止 push 避免误判 unreachable.\n"
         )
         return 2
+
+    # 整轮网络预算: N 个子模块 × 各自 timeout 不再线性放大成半小时
+    global _NETWORK_DEADLINE
+    _NETWORK_DEADLINE = time.monotonic() + NETWORK_BUDGET_SECONDS
 
     skip_paths: set[str] = set(args.skip)
     if args.skip_file:
@@ -400,7 +493,12 @@ def main() -> int:
         skip_msg = f", skipped={report['skipped']}" if report["skipped"] else ""
         mode_msg = f", mode={mode}" if mode != "full" else ""
         drift_msg = f", drift={len(drift_findings)}" if drift_findings else ""
-        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg}{mode_msg}{drift_msg})")
+        unver = [item for item in report["findings"] if str(item["reason"]).startswith(UNVERIFIED_PREFIX)]
+        unver_msg = f", unverified={len(unver)}" if unver else ""
+        print(f"submodule-reachability: PASS ({report['checked']} gitlinks, source={args.source}{skip_msg}{mode_msg}{drift_msg}{unver_msg})")
+        # 降级必须喊出来: 静默 PASS 会让「没验完」读起来像「验过了」
+        for item in unver:
+            sys.stderr.write(f"[reachability] ⚠️  {item['path']}: {item['reason']}\n")
     elif not report["ok"]:
         for item in report["failures"]:
             print(f"{item['path']}: {item['sha'] or '-'} unreachable: {item['reason']}")

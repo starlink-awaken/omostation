@@ -334,7 +334,9 @@ def main() -> int:
             src_file = item["source_file"]
             relative_path = Path(src_file).relative_to(WORKSPACE)
             clean_desc = extract_clean_description(Path(src_file))
-            consensus_lines.append(f"- **{label}** ([{relative_path.name}](file://{src_file}))")
+            # 注入目标是仓根 CLAUDE.md → 用相对路径; file://{src_file} 会把生成者的
+            # worktree 绝对路径写进被提交文档 (与 BRIEF.md 同一病根, 复盘 H3)
+            consensus_lines.append(f"- **{label}** ([{relative_path.name}](<{relative_path}>))")
             consensus_lines.append(f"  > {clean_desc}")
             consensus_lines.append("")
 

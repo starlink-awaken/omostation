@@ -94,7 +94,11 @@ run_check() {
   local id="$1"
   local script="$2"
   local blocking="${3:-true}"
-  local timeout="${4:-10}"
+  # 第 4 参历史上从未被执行 (但长得像硬超时, 骗过所有人): submodule-reachability
+  # 声明 15s, 暖态实测就要 64s —— 直接改成强制会把每次 push 变成假失败, 所以不启用。
+  # 真实墙上时间边界由被调脚本自己实现 (bin/ssot/submodule-reachability-gate.py:
+  # CMD/FETCH/BUDGET timeout)。这里只保留「预期耗时」作可读文档。
+  local _budget_hint_seconds="${4:-10}"
 
   CHECK_COUNT=$((CHECK_COUNT + 1))
   local start_time=$( (perl -MTime::HiRes=time -e 'printf "%d", time()*1_000_000_000' 2>/dev/null || echo 0) )

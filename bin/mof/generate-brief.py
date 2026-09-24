@@ -434,8 +434,11 @@ def generate_brief_content() -> str:
         if decisions:
             lines.append("### ⏳ 待处理卡片与债务 (Needs Human Decisions)")
             for d in decisions:
+                # BRIEF.md 落在仓根 → 相对链接即可移植。file://{WORKSPACE} 会把「谁在
+                # 哪个 worktree 里跑的生成器」刻进被提交的产物 (复盘 H3 实证: origin/main
+                # 上长期挂着已不存在的 ws-p0-claims-gat010 绝对路径, 对所有读者都是死链)。
                 lines.append(
-                    f"- **[{d['source'].upper()}]** {d['title']} → [`{d['path']}`](file://{WORKSPACE}/{d['path']})"
+                    f"- **[{d['source'].upper()}]** {d['title']} → [`{d['path']}`](<{d['path']}>)"
                 )
             lines.append("")
 
