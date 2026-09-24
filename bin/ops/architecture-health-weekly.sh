@@ -28,6 +28,13 @@ RAW=$(python3 "$WS/bin/arch-health-meter.py" --week 2>/dev/null) || {
 }
 
 {
+    # frontmatter 由生成器管理 (doc-lifecycle lint 豁免面 docs/reports 生成报告)
+    echo "---"
+    echo "type: ephemeral"
+    echo "status: active"
+    echo "created: $(date -u +%Y-%m-%d)"
+    echo "---"
+    echo
     echo "# 架构健康度 6 维度周报"
     echo
     echo "> 自动生成: \`bash bin/ops/architecture-health-weekly.sh\` (T6-18)"

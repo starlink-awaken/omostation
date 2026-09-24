@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-08
+---
+
 # 治理迭代战役收官复盘 (T10-139 → T10-140 → 三轮迭代)
 
 - date: 2026-09-08

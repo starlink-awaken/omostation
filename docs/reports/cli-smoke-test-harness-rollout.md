@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-18
+---
+
 # CLI smoke test harness rollout — BET-Y1Q4-T13
 
 ## Outcome

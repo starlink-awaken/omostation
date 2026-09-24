@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-11
+---
+
 # arcnode-* 集成调研报告 (BET-Y1Q4-T12)
 
 > **日期**: 2026-09-11

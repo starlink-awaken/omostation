@@ -1,6 +1,12 @@
+---
+type: ssot
+owner: governance-team
+last_updated: 2026-09-03
+---
+
 # SSOT 文档地图
 
-> 自动生成: 2026-09-03 | 由 `bin/ssot/generate-docs-index.py` 维护
+> 手工维护 (无生成器写入本文件) | 初版: 2026-09-03
 > 本文件由 doc-gov-framework.md 管理
 
 ## 文档治理 SSOT

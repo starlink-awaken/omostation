@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-18
+---
+
 # Cockpit CLI import performance recheck — BET-Y1Q4-T15
 
 ## Result

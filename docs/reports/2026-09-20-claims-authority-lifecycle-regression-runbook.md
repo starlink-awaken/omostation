@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-20
+---
+
 # Claims Authority Lifecycle Regression Authorization and Runbook
 
 ## Status

@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-08
+---
+
 # 多仓收敛盘点报告 (Multi-Repo Convergence Audit)
 
 - date: 2026-09-08
