@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.zhixing-dashboard.plist — 织星 dashboard HTTP 服务 (127.0.0.1:43191)
+
+  用途: 把 43191 的 live_server 从「纯手动 nohup」改为 launchd 承载 (2026-09-24)。
+    在此之前它无任何守护 —— 进程一旦被 kill/OOM/误操作就永久挂掉，不会自愈。
+    2026-09-24 实证: 用户报「dashboard 挂了」→ 43191 连接被拒，且 /tmp/live_server.log
+    已被 log-rotate 清掉，排障只能现场重推 (数据侧 cron 仍在更新 index.html，只有
+    HTTP 服务进程缺席 —— 这是「挂掉」的典型形态)。
+    姊妹服务 43910 panorama-dashboard 早已由 launchd 守护，本 plist 与其保持同一模式。
+
+  行为: KeepAlive=true + RunAtLoad=true ⇒ 崩溃/被 kill 后由 launchd 自动拉起
+    (2026-09-24 实测: kill 4193 → 自动重启 4770 → HTTP 仍 200)。
+
+  安装:
+    cp bin/ops/launchd/com.omostation.zhixing-dashboard.plist \
+       ~/Library/LaunchAgents/
+    plutil -lint ~/Library/LaunchAgents/com.omostation.zhixing-dashboard.plist
+    launchctl print-disabled gui/$(id -u) | grep zhixing-dashboard   # 先确认未 disabled
+    launchctl bootstrap gui/$(id -u) \
+       ~/Library/LaunchAgents/com.omostation.zhixing-dashboard.plist
+  卸载:
+    launchctl bootout gui/$(id -u)/com.omostation.zhixing-dashboard
+  重载 (改配置后):
+    launchctl bootout gui/$(id -u)/com.omostation.zhixing-dashboard 2>/dev/null
+    launchctl bootstrap gui/$(id -u) \
+       ~/Library/LaunchAgents/com.omostation.zhixing-dashboard.plist
+
+  排障:
+    ⚠️ bootstrap 报 `5: Input/output error` 的头号原因 = 服务处于 disabled 状态。
+       查 `launchctl print-disabled gui/$(id -u)`; 若为 disabled 须先
+       `launchctl enable gui/$(id -u)/com.omostation.zhixing-dashboard` 再 bootstrap
+       (仅 bootout 无效, 2026-09-24 实证)。
+    验证:
+       curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:43191/   # 期望 200
+       日志: /Users/xiamingxing/Workspace/runtime/dashboard/launchd-zhixing-43191.log
+
+  注意: 手动 nohup 启动 (调试用) 前须先 `launchctl bootout` 卸载本守护，否则端口冲突会
+    让 KeepAlive 反复重启失败；反之切回 launchd 前先 `kill $(lsof -t -i :43191)`。
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.zhixing-dashboard</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/python3</string>
+        <string>-B</string>
+        <string>/Users/xiamingxing/.local/share/zhixing-dashboard/live_server.py</string>
+        <string>--port</string>
+        <string>43191</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/.local/share/zhixing-dashboard</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>PYTHONDONTWRITEBYTECODE</key>
+        <string>1</string>
+    </dict>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/dashboard/launchd-zhixing-43191.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/dashboard/launchd-zhixing-43191.log</string>
+</dict>
+</plist>
