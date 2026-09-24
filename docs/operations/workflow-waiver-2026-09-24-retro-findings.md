@@ -31,6 +31,8 @@ ADR-0203 的 requirement-iteration 门要求 `start --bet <BET-ID>`，但 **3Y-B
 | #4246 | `5b1564662` | `docs/operations/claims-activation-checklist.md`（只读） |
 | #4266 | `af33a3e80` | 复盘 findings F1–F4 修正：豁免留痕、删除无消费方字段、Claims 数值指针化、修 `gen-knowledge-index.py` 前缀元数据丢失 + 重建知识索引 |
 | #4275 | `a05524920` | 二次复盘 findings H1–H3：`submodule-reachability-gate.py` 网络工作加有界预算（超时降级为 unverified 而非 unreachable）、`hook-runner.sh` 死超时参数改名并说明真相、生成物（BRIEF.md / CLAUDE.md 注入段）去除主机绝对路径 |
+| #4280 | `4f8a64705` | 把上一行 "PR 待登记" 占位符绑到真实 PR（#4275 / `a05524920`）——占位符本身就是 F1 要消灭的东西 |
+| #4285 | `0a129eb13` | 固化本次复盘教训为 error-knowledge 条目 PITFALL-GAT-012（pre-rebase 缺执行位是保护而非缺陷）+ PITFALL-MEA-004（hook-runner 死超时参数）；同一豁免（`governance-state-mutation` run 20260924T072410Z） |
 
 ## User Confirmation
 
