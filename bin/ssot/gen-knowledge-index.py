@@ -15,7 +15,13 @@ WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
 KNOWLEDGE_DIR = WORKSPACE_ROOT / ".omo" / "_knowledge"
 INDEX_FILE = WORKSPACE_ROOT / "docs" / "INDEX-KNOWLEDGE.md"
 
-TEMPLATE_HEADER = """# INDEX-KNOWLEDGE.md — 知识资产统一索引
+TEMPLATE_HEADER = """---
+type: ssot
+owner: governance-team
+last_updated: {last_updated}
+---
+
+# INDEX-KNOWLEDGE.md — 知识资产统一索引
 
 > **维护规则**
 > - owner: governance-team
@@ -229,11 +235,15 @@ def generate_footer():
 
 
 def main():
-    generated_at = datetime.datetime.now(UTC).isoformat()
+    now = datetime.datetime.now(UTC)
+    generated_at = now.isoformat()
 
     categories = scan_knowledge_dir()
 
-    content = TEMPLATE_HEADER.format(generated_at=generated_at)
+    content = TEMPLATE_HEADER.format(
+        generated_at=generated_at,
+        last_updated=now.date().isoformat(),
+    )
     content += generate_overview(categories)
     content += generate_adr_section(categories.get("adrs", []))
     content += generate_audit_section(categories.get("audits", []))
