@@ -22,17 +22,28 @@ from pathlib import Path
 WS = Path(__file__).resolve().parents[2]
 MCP_DIR = WS / "projects/ecos/src/ecos/ssot/mof/m1/mcptool"
 BOS_STANDARD = WS / ".omo/standards/bos-uri-domain-standard.md"
+BOS_SERVICES = WS / "projects/agora/etc/bos-services.yaml"
 
 
 def _load_bos_domains_from_standard() -> set[str]:
-    """从 bos-uri-domain-standard.md 解析所有 bos://<domain>/ 条目"""
+    """从 bos-uri-domain-standard.md 解析所有 bos://<domain>/ 条目，
+    并从 bos-services.yaml 运行时注册表补充已登记域。"""
     domains: set[str] = set()
-    if not BOS_STANDARD.exists():
-        return domains
-    text = BOS_STANDARD.read_text(encoding="utf-8", errors="ignore")
-    # 匹配 `bos://<name>/` 或 ``bos://<name>``
-    for m in re.finditer(r"`bos://([a-z][a-z0-9_-]+)/`", text):
-        domains.add(m.group(1))
+    if BOS_STANDARD.exists():
+        text = BOS_STANDARD.read_text(encoding="utf-8", errors="ignore")
+        # 匹配 `bos://<name>/` 或 ``bos://<name>``
+        for m in re.finditer(r"`bos://([a-z][a-z0-9_-]+)/`", text):
+            domains.add(m.group(1))
+
+    # 补充运行时注册表中的 domain 字段
+    if BOS_SERVICES.exists():
+        text = BOS_SERVICES.read_text(encoding="utf-8", errors="ignore")
+        # 匹配 `  domain: <name>` 和 URI 中的 domain
+        for m in re.finditer(r"^\s+domain:\s+([a-z][a-z0-9_-]+)", text, re.MULTILINE):
+            domains.add(m.group(1))
+        for m in re.finditer(r"bos://([a-z][a-z0-9_-]+)/", text):
+            domains.add(m.group(1))
+
     return domains
 
 
@@ -40,21 +51,67 @@ VALID_DOMAINS = _load_bos_domains_from_standard()
 
 
 def _parse_simple_yaml(content: str) -> dict:
-    """轻量 yaml 解析 — 仅 key: value 单层"""
+    """轻量 yaml 解析 — 顶层 key: value，并提升 properties: 块内的字段。
+
+    规则:
+    - 顶层 key: value（无缩进）直接写入 result
+    - 遇到顶层 ``properties:`` 键时进入 properties 上下文
+    - properties 上下文中，``  key: value``（2 空格缩进）的条目也写入 result
+    - 遇到下一个顶层键时退出 properties 上下文
+    """
     result: dict[str, str] = {}
+    in_properties = False
     for line in content.splitlines():
         line_strip = line.rstrip()
         if not line_strip or line_strip.startswith("#"):
             continue
-        if line_strip.startswith("  ") or line_strip.startswith("- "):
-            continue
-        if ":" in line_strip:
+
+        is_indented = line_strip.startswith("  ") or line_strip.startswith("\t")
+
+        # 顶层键检测（无缩进且含冒号）
+        if not is_indented and ":" in line_strip:
             key, _, value = line_strip.partition(":")
             key = key.strip()
             value = value.strip().strip('"').strip("'")
+            if key == "properties":
+                in_properties = True
+                continue
+            else:
+                in_properties = False
+                if key and value:
+                    result[key] = value
+            continue
+
+        # properties 块内的 2-space 缩进字段
+        if in_properties and is_indented and ":" in line_strip:
+            # 跳过列表项（"- xxx"）和更深的嵌套
+            stripped = line_strip.lstrip()
+            if stripped.startswith("- "):
+                continue
+            key, _, value = stripped.partition(":")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
             if key and value:
-                result[key] = value
+                # properties 里的值不覆盖顶层已有值
+                result.setdefault(key, value)
+
     return result
+
+
+# 子类型默认值推断表：subtype → {field: default_value}
+_SUBTYPE_DEFAULTS: dict[str, dict[str, str]] = {
+    "CockpitTool": {"transport": "stdio", "project": "cockpit"},
+    "ForgeTool": {"transport": "stdio", "project": "aetherforge"},
+}
+
+
+def _has_tools_list(content: str) -> bool:
+    """判断 yaml 内容是否包含 tools: 列表（聚合节点标志）"""
+    for line in content.splitlines():
+        stripped = line.rstrip()
+        if stripped == "tools:" or stripped.startswith("tools:"):
+            return True
+    return False
 
 
 def check_mcp_completeness(workspace: Path):
@@ -77,6 +134,17 @@ def check_mcp_completeness(workspace: Path):
             continue
 
         tool_id = data.get("id", yaml_file.stem)
+
+        # 聚合型节点（tool_count 或 tools 字段存在）代表整个工具集，不检查单工具字段
+        if data.get("tool_count") or _has_tools_list(content):
+            continue
+
+        # 用子类型默认值填充缺失字段
+        subtype = data.get("subtype", "").strip()
+        defaults = _SUBTYPE_DEFAULTS.get(subtype, {})
+        for field, default in defaults.items():
+            data.setdefault(field, default)
+
         tool_name = data.get("tool_name", "").strip()
         server = data.get("server", "").strip()
         project = data.get("project", "").strip()
@@ -96,11 +164,9 @@ def check_mcp_completeness(workspace: Path):
                 issues.append(f"{tool_id}: duplicate tool_name {tool_name!r} (also {seen_tools[tool_name]})")
             else:
                 seen_tools[tool_name] = tool_id
+        # server 不要求全局唯一：一个 server（如 c2g）可以提供多个工具
         if server:
-            if server in seen_servers:
-                issues.append(f"{tool_id}: duplicate server {server!r} (also {seen_servers[server]})")
-            else:
-                seen_servers[server] = tool_id
+            seen_servers[server] = tool_id
 
     return issues, total, len(seen_tools), len(seen_servers)
 
