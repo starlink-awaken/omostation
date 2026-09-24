@@ -1240,9 +1240,15 @@ def apply_results(previous, results, attempted_at):
         ["任务占用来源", f"{states.get('workflow', {}).get('status', 'UNAVAILABLE')}；最后成功 {states.get('workflow', {}).get('last_success_at', '未知')}；采样时 {active_count} active workflow。写入前重新核对。"],
         ["Resident 观测", gates.get("A2", {}).get("summary", "未接入")],
         ["Ruflo 纳入协作", gates["RF0"]["summary"] + "仅版本与安装观测，未授予运行或写入准入。"]]
-    if len(data.get("next_actions", [])) > 1:
-        data["next_actions"][1].update(title="核对当前并发与写面", state=states.get("workflow", {}).get("status", "UNAVAILABLE"),
-                                      gate=f"采样时 active workflow={active_count}。实施前重读当前 claim 与 root-gate，不据历史 BET 名称推断占用。")
+    # BET-Y2Q1-SURFACE-02: 不再覆盖 next_actions[1]（已被真实 agent-brief 数据填充），
+    # 改为追加一条合成项保留"并发工作流活跃度"信号
+    data.setdefault("next_actions", []).append({
+        "id": "check-concurrent-workflow",
+        "title": "核对当前并发与写面",
+        "state": states.get("workflow", {}).get("status", "UNAVAILABLE"),
+        "detail": f"采样时 active workflow={active_count}。实施前重读当前 claim 与 root-gate，不据历史 BET 名称推断占用。",
+        "source": "synthesized"
+    })
     return data
 
 def _triage_strategic_gap(gap):
@@ -1731,6 +1737,9 @@ def refresh():
                 data["agents"] = _p.get("agents")
             if _p.get("gates"):
                 data["gates"] = _p.get("gates")
+            data["agent_visibility"] = _p.get("agent_visibility", {})
+            data["safety_boundaries"] = _p.get("agent_visibility", {}).get("safety_boundaries", [])
+            data["next_actions"] = _p.get("next_actions", data.get("next_actions", []))
         except Exception as _e:
             import logging; logging.warning("Panorama data collection failed: %s", _e)
         data["refresh"]["failed_sources"] = [k for k,v in data["source_states"].items() if v["status"] != "OK"]
