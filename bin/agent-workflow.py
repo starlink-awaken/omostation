@@ -1068,17 +1068,20 @@ def wrapped_main(argv: list[str] | None = None) -> int:
             except WorkflowError as exc:
                 print(f"agent-workflow: {exc}", file=sys.stderr)
                 return 1
-        verdict = chain_bind.start_requires_bet(workflow_id, bet_id)
-        if not verdict.ok:
-            print(
-                f"agent-workflow: requirement-iteration start requires --bet <BET-ID> ({', '.join(verdict.reasons)})",
-                file=sys.stderr,
-            )
-            print(
-                f"  exempt: observer-audit, or {chain_bind.GATE_ENV}=0 recorded waiver",
-                file=sys.stderr,
-            )
-            return 1
+        if "--help" in argv or "-h" in argv:
+            pass  # help 请求优先于 BET 门控 — 门控先拦会让用户无法发现 start 参数契约 (2026-09-24 链路E卡点)
+        else:
+            verdict = chain_bind.start_requires_bet(workflow_id, bet_id)
+            if not verdict.ok:
+                print(
+                    f"agent-workflow: requirement-iteration start requires --bet <BET-ID> ({', '.join(verdict.reasons)})",
+                    file=sys.stderr,
+                )
+                print(
+                    f"  exempt: observer-audit, or {chain_bind.GATE_ENV}=0 recorded waiver",
+                    file=sys.stderr,
+                )
+                return 1
         if bet_id:
             # T10-139 双认领拦截: 他人持有 claim 广播 → 拒绝 start (fail closed)
             try:
