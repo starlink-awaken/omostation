@@ -45,5 +45,15 @@ ADR-0203 的 requirement-iteration 门要求 `start --bet <BET-ID>`，但 **3Y-B
 
 ## Follow-up
 
-本记录自身的存在即是 F1 的修正：此前三次豁免只落在 `.omo/_delivery/*`（gitignored），git 上零痕迹，
-而 `bin/gac/check-governance-ratio.py` 依赖可审计的 waiver 记录做治理配额计数。
+本记录自身的存在即是 F1 的修正：此前三次豁免只落在 `.omo/_delivery/*`（gitignored），git 上零痕迹。
+
+需要区分两套**互不相通**的 waiver 机制，避免误以为本记录会生效于门禁：
+
+| 位置 | 消费方 | 契约 |
+|------|--------|------|
+| `docs/operations/workflow-waiver-<date>-<slug>.md` | 人 / git 审计痕迹（本文件） | 无机器读取方 |
+| `.omo/_truth/governance-evidence/waiver-*.md` | `bin/gac/check-governance-ratio.py::_active_waivers()` | frontmatter `status: active` + `pr_numbers` 命中 `GITHUB_PR_NUMBER` |
+
+`check-governance-ratio.py` 只认第二处，且是**治理配额上限**的单 PR 豁免，与 `AGCP_REQUIREMENT_ITERATION_GATE`
+无关。本次交付未触配额上限，因此**未**创建第二类豁免记录——若后续需要，必须显式登记 `pr_numbers` 才有效。
+
