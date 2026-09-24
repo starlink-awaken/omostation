@@ -3,7 +3,8 @@ schema_version: phase-completion/v1
 type: phase-completion
 bet_id: BET-Y2Q2-T4-01
 phase: phase3
-status: completed
+status: archived
+lifecycle: history
 owner: governance-agent
 created: "2026-09-24"
 last-reviewed: "2026-09-24"
