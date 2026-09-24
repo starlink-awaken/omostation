@@ -31165,6 +31165,57 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T11-02
     spec_ref: repo://docs/superpowers/specs/2026-09-24-gac-submodule-url-sync-design.md
     spec_version: 1.0.0
+- appetite: 1 day
+  circuit_breaker: If the child commit is unreachable or any non-Kairon submodule pointer changes, stop without advancing the parent gitlink.
+  done_when:
+  - projects/knowledge/kairon points exactly to 642311f4728cb893e0c643f34f78407d66af4b67
+  - child lock check and focused Kairon tests pass
+  - root worktree regression, GaC local gate, and SSOT guardian pass
+  - no unrelated paths enter the integration commits
+  goal: Promote the independently verified Kairon dependency remediation into the root gitlink
+  human_gate: false
+  id: BET-Y2Q2-T11-03
+  non_goals:
+  - additional child source changes
+  - other submodule pointer changes
+  - force push, reset, or destructive cleanup
+  - value acceptance
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: pending
+  title: Kairon 父仓 gitlink 整合
+  track: T3-COGNI
+  window: Y2Q2
+  underlying_workflow: submodule-pointer-close
+  workflow: submodule-pointer-close
+  value_indicator_policy: false
+  verify:
+  - cmd: cd projects/knowledge/kairon && uv lock --check
+    expect: exit_code == 0
+  - cmd: cd projects/knowledge/kairon && uv run pytest packages/kairon-pipeline/tests -q
+    expect: exit_code == 0
+  - cmd: bash -n bin/gac/gac-worktree.sh
+    expect: exit_code == 0
+  - cmd: uv run --with pytest pytest -q tests/test_gac_worktree_claim_pasw.py
+    expect: exit_code == 0
+  - cmd: make gac-local-gate
+    expect: exit_code == 0
+  - cmd: make ssot-guardian
+    expect: exit_code == 0
+  write_surfaces:
+  - projects/knowledge/kairon
+  - docs/superpowers/specs/2026-09-24-kairon-parent-pointer-integration-design.md
+  - docs/superpowers/plans/2026-09-24-kairon-parent-pointer-integration.md
+  - .omo/_truth/governance-evidence/waiver-2026-09-24-kairon-parent-pointer-integration-bootstrap.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T11-03.md
+  accepted_specifications:
+  - content_digest: sha256:94d2983147e8b8c5fd71836216b3c8caca025dcffaa3acae9631a8d1c0c0b098
+    decision_ref: decision://accepted/BET-Y2Q2-T11-03
+    spec_ref: repo://docs/superpowers/specs/2026-09-24-kairon-parent-pointer-integration-design.md
+    spec_version: 1.0.0
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -31294,7 +31345,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 451
+  total_bets: 452
   windows:
   - Y1Q1
   - Y1Q2
