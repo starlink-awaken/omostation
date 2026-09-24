@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # spaces — Call Chain
 
 > 本文档描述 spaces 内部最核心的一条调用链 / 数据流。

@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # DOC-LIFECYCLE — `.omo/` 文档生命周期规则 (P45)
 
 > **生效日**: 2026-06-22

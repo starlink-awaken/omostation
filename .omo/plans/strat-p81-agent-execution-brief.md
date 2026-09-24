@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # STRAT-P81 Agent 执行指令 (兑现期 · 长期交接单)
 
 > Status: **ACTIVE** · SSOT 上位: `.omo/_knowledge/decisions/STRAT-P81-strategic-roadmap.md` (PROPOSED)

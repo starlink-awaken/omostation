@@ -14,7 +14,14 @@ SCRIPT_DIR = Path(__file__).parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
 INDEX_FILE = WORKSPACE_ROOT / "docs" / "INDEX-TOOLS.md"
 
-TEMPLATE_HEADER = """# INDEX-TOOLS.md — 治理工具统一目录
+TEMPLATE_HEADER = """---
+status: active
+lifecycle: generated
+owner: governance-team
+last-reviewed: 2026-09-24
+---
+
+# INDEX-TOOLS.md — 治理工具统一目录
 
 > **维护规则**
 > - owner: governance-team

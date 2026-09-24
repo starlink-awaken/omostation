@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # Pitch: L0 协议层抽象统一的调度触发器与分布式锁接口
 
 ## 1. 现状与痛点 (Context & Problem)

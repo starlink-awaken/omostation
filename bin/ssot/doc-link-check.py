@@ -55,6 +55,9 @@ def iter_docs() -> list[Path]:
 
 def normalize_target(raw: str) -> str | None:
     target = raw.strip()
+    # Markdown allows angle-bracket destinations: [x](<path with spaces>)
+    if target.startswith("<") and target.endswith(">"):
+        target = target[1:-1].strip()
     if not target or target.startswith("#"):
         return None
     parsed = urlsplit(target)

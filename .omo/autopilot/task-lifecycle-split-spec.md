@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # omo_ingress_task_lifecycle.py SRP 拆分 spec (autopilot Phase 0)
 
 > **TASK**: TASK-F7114ABA (God Module 拆分, omo_ingress_task_lifecycle 1530 行)

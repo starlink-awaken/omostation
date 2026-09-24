@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 ## [2026-08-07] P3: 会话经验固化（防复发）
 1. 技能索引 = 会话启动快照；新 skill 本会话不可见，需新会话生效
 2. CI 基线归因判据：main 同 job 同失败 ⇒ 基线预存（30 秒定性，P78 四问之反证）

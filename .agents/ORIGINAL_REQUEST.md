@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # Original User Request
 
 ## Initial Request — 2026-06-23T02:25:45Z

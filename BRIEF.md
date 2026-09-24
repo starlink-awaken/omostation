@@ -1,6 +1,13 @@
+---
+status: active
+lifecycle: generated
+owner: governance-team
+last-reviewed: 2026-09-24
+---
+
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-24T06:17:10.538596Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `86/100`
+> **Generated**: `2026-09-24T12:07:01.729634Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `86/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 各卡片的直接链接见下方清单。

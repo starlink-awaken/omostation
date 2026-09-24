@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: generated
+owner: governance-team
+last-reviewed: 2026-09-24
+---
+
 # INDEX-PROJECTS.md — 项目索引
 
 > **维护规则**
@@ -7,7 +14,7 @@
 > - validation: 与 project-registry.yaml 项目数一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-09-17T01:02:46.420133+00:00
+> - generated_at: 2026-09-24T12:01:19.658595+00:00
 
 ---
 

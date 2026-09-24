@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: generated
+owner: governance-team
+last-reviewed: 2026-09-24
+---
+
 # INDEX-TOOLS.md — 治理工具统一目录
 
 > **维护规则**
@@ -7,7 +14,7 @@
 > - validation: 工具数与实际扫描结果一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-09-17T07:37:28.833749+00:00
+> - generated_at: 2026-09-24T12:01:19.693728+00:00
 
 ---
 
@@ -21,7 +28,6 @@
 
 | 命令 | 调用 |
 |------|------|
-| `research` | `uv run --project projects/cockpit cockpit research --help` |
 | `import` | `uv run --project projects/cockpit cockpit import --help` |
 | `status` | `uv run --project projects/cockpit cockpit status --help` |
 | `org-relation` | `uv run --project projects/cockpit cockpit org-relation --help` |
@@ -132,7 +138,7 @@
 | `completion` | `uv run --project projects/cockpit cockpit completion --help` |
 | `docs` | `uv run --project projects/cockpit cockpit docs --help` |
 
-**合计**: 110 个顶层命令
+**合计**: 109 个顶层命令
 
 关键通道：`bos` · `bos list --all` · `channels` · `kems` · `agent-onboard` · `mcp` · `agent-workflow`
 ## 工具分类目录

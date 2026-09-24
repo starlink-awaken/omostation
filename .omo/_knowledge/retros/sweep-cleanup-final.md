@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # Sweep Cleanup — Final Summary (2026-09-23)
 
 ## 执行摘要

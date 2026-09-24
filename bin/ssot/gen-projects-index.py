@@ -15,7 +15,14 @@ WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
 PROJECT_REGISTRY = WORKSPACE_ROOT / "docs" / "project-registry.yaml"
 INDEX_FILE = WORKSPACE_ROOT / "docs" / "INDEX-PROJECTS.md"
 
-TEMPLATE_HEADER = """# INDEX-PROJECTS.md — 项目索引
+TEMPLATE_HEADER = """---
+status: active
+lifecycle: generated
+owner: governance-team
+last-reviewed: 2026-09-24
+---
+
+# INDEX-PROJECTS.md — 项目索引
 
 > **维护规则**
 > - owner: governance-team

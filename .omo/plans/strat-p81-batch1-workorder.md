@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # STRAT-P81 Batch 1 大工单 — 兑现期第一冲刺（多角色 + 注册中心 + 纵贯线）
 
 > Status: **CLOSED** · 2026-07-24 · Appetite: **2-3 周** · Closeout: `.omo/_knowledge/audits/2026-07-24-batch1-closeout.md`
