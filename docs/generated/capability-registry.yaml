@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 643
-  bos_services: 351
+  bos_services: 352
   bos_domains: 24
   cli_commands: 203
   skills: 40
@@ -896,7 +896,7 @@ bos_services:
     governance: 80
     harness: 9
     l4-kernel: 1
-    memory: 51
+    memory: 52
     meta: 1
     omo: 4
     perception: 5
@@ -929,77 +929,77 @@ bos_services:
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/dag/execute
-      description: Cell DAG 执行 — 跨 Cell 编排
+      description: '[UNIMPLEMENTED] Cell DAG 执行 — 跨 Cell 编排'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/publish
-      description: Memory Publish — 发布记忆到网络
+      description: '[UNIMPLEMENTED] Memory Publish — 发布记忆到网络'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/search
-      description: Memory Search — 跨 Cell 搜索
+      description: '[UNIMPLEMENTED] Memory Search — 跨 Cell 搜索'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/governance/audit
-      description: Governance Audit — 配置合规审计
+      description: '[UNIMPLEMENTED] Governance Audit — 配置合规审计'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/governance/report
-      description: Governance Report — 治理报告
+      description: '[UNIMPLEMENTED] Governance Report — 治理报告'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/config/list
-      description: Cell Config 列表 — 列出预设配置
+      description: '[UNIMPLEMENTED] Cell Config 列表 — 列出预设配置'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/config/create
-      description: Cell Config 创建 — 从预设创建 Cell
+      description: '[UNIMPLEMENTED] Cell Config 创建 — 从预设创建 Cell'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/plan
-      description: Cell Plan — 意图解析 + 任务分解 + 风险评估
+      description: '[UNIMPLEMENTED] Cell Plan — 意图解析 + 任务分解 + 风险评估'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/execute
-      description: Cell Execute — 按计划执行 + 工具调用 + 产出收集
+      description: '[UNIMPLEMENTED] Cell Execute — 按计划执行 + 工具调用 + 产出收集'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/verify
-      description: Cell Verify — 完整性 + 正确性 + 质量三维评分
+      description: '[UNIMPLEMENTED] Cell Verify — 完整性 + 正确性 + 质量三维评分'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/govern
-      description: Cell Govern — R0-R3 风险分级 + 审批决策
+      description: '[UNIMPLEMENTED] Cell Govern — R0-R3 风险分级 + 审批决策'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pdp/evaluate
-      description: PDP Evaluate — 策略决策点上下文感知评估
+      description: '[UNIMPLEMENTED] PDP Evaluate — 策略决策点上下文感知评估'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/pep/enforce
-      description: PEP Enforce — 策略执行点强制执行 + 审计
+      description: '[UNIMPLEMENTED] PEP Enforce — 策略执行点强制执行 + 审计'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/process
-      description: Memory Process — Episode → 记忆候选生成
+      description: '[UNIMPLEMENTED] Memory Process — Episode → 记忆候选生成'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/memory/consolidate
-      description: Memory Consolidate — 记忆冲突检测 + 整合
+      description: '[UNIMPLEMENTED] Memory Consolidate — 记忆冲突检测 + 整合'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/run
-      description: Replay — Episode 回放验证
+      description: '[UNIMPLEMENTED] Replay — Episode 回放验证'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/shadow
-      description: Shadow — 影子运行 (无副作用验证)
+      description: '[UNIMPLEMENTED] Shadow — 影子运行 (无副作用验证)'
       transport: stdio
-      status: active
+      status: unimplemented
     - uri: bos://agent-cell/replay/eval
-      description: Eval — 批量 Episode 性能评估
+      description: '[UNIMPLEMENTED] Eval — 批量 Episode 性能评估'
       transport: stdio
-      status: active
+      status: unimplemented
     agora:
     - uri: bos://agora/metrics
       description: agora 内部指标源 self-identifier (metrics collector source_uri)
@@ -2110,6 +2110,11 @@ bos_services:
       description: Datalog 确定性推理
       transport: internal
       status: active
+    - uri: bos://memory/brain-events/card_updated
+      description: '[UNIMPLEMENTED] [auto-registered] From cockpit knowledge_indexer consumer (ADR-0294 dual-accept). See
+        bos-pending-registrations.yaml.'
+      transport: internal
+      status: unimplemented
     - uri: bos://memory/events/card_updated
       description: '[auto-registered] From memory event migration (from brain → memory). See bos-pending-registrations.yaml.'
       transport: stdio
@@ -2150,9 +2155,9 @@ bos_services:
       transport: stdio
       status: deprecated
     - uri: bos://perception/agora/ocr
-      description: 本地 OCR 提取 (Vision framework, 无 Vision 环境诚实降级 stub) — 布局/表格/印章/手写结构化输出
+      description: '[UNIMPLEMENTED] [auto-registered] From perception OCR via agora. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://perception/scene/anchor
       description: 场景卡锚点推荐/绑定 facade (omo kernel 可用时真实打分, 否则诚实 kernel_unavailable)
       transport: internal
