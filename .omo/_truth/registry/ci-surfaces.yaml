@@ -1022,12 +1022,12 @@ surfaces:
   status: active
   note: Phase 6 alert routing for anomaly events
 - id: bin-gac-governance-dashboard-py
-  tool: bin/gac/_archive/governance-dashboard.py
+  tool: bin/gac/governance-dashboard.py
   workflow: (none)
   gate: true
   triggers: []
   status: active
-  note: 'Phase 7 governance metrics dashboard (--metrics-dashboard) | 路径同步 #2742 归档'
+  note: 'Phase 7 governance metrics dashboard (--metrics-dashboard) | 路径回迁 bin/gac/ (gate-parity 修复 2026-09-24)'
 - id: bin-gac-cross-domain-trend-py
   tool: bin/gac/cross-domain-trend.py
   workflow: (none)
@@ -1121,14 +1121,14 @@ surfaces:
   - push
   status: active
 - id: bin-gac-governance-alert-dispatch-py
-  tool: bin/gac/_archive/governance-alert-dispatch.py
+  tool: bin/gac/governance-alert-dispatch.py
   workflow: ecos-ci.yml
   also_in: []
   gate: false
   triggers:
   - push
   status: active
-  note: ' | 路径同步 #2742 归档'
+  note: ' | 路径回迁 bin/gac/ (gate-parity 修复 2026-09-24)'
 - id: bin-gac-alert-check-py
   tool: bin/gac/alert-check.py
   workflow: ecos-ci.yml

@@ -1,3 +1,9 @@
+---
+type: documentation
+owner: governance-team
+last_updated: 2026-09-12
+---
+
 # Spine — LECP Ingress Pipeline
 
 Spine 是 omostation 的邮件/日历信号入口管道，负责解析原始邮件和日历事件并通过 LECP（分类、提取、路由）分诊引擎写入系统信号流。

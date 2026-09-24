@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-09
+---
+
 # BET-Y1Q4-T10-141 Cockpit CLI 全量可用性 — 复盘报告
 
 > **时间窗**: 2026-09-08 ~ 2026-09-09 (~18h, 跨 2 个工作日)

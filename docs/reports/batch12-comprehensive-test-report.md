@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-10
+---
+
 # Cockpit CLI 批次 12 全面测试报告
 
 > **时间**: 2026-09-10 | **范围**: 106 命令 + 330 子命令 + 关键 API 端点

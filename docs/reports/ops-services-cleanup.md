@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-11
+---
+
 # BET-Y1Q4-T14 ops services 清理报告 — 注册表与现实同步
 
 > **日期**: 2026-09-11 | **执行**: xiamingxing | **结果**: ops status missing 303 → **0** (验收线 ≤ 5)

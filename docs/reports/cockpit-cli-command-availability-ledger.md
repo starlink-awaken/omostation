@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-08
+---
+
 # Cockpit CLI 命令可用性台账
 
 > **生成时间**: 2026-09-08 | **总命令数**: 106 | **关联 BET**: BET-Y1Q4-T10-141
