@@ -1,24 +1,22 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-mini
-generated_at: 2026-09-22T07:42:34Z
-status: planned
+generated_at: 2026-09-24T12:07:32Z
+status: candidate
 counts:
-  runs: 8
+  runs: 9
   failures: 0
-  total: 8
+  total: 9
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-lifecycle: history
-owner: unassigned
 ---
 # observer-mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-22T07:42:34Z
+- generated_at: 2026-09-24T12:07:32Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 8 成功运行 + 0 失败模式 = 8 草稿
+- sediment 覆盖: 9 成功运行 + 0 失败模式 = 9 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -31,6 +29,7 @@ owner: unassigned
 - 20260921T071436Z-observer-mini-7e947500.md
 - 20260922T014108Z-observer-mini-164db365.md
 - 20260922T014356Z-observer-mini-ebf7a16e.md
+- 20260923T022747Z-observer-mini-e533c58d.md
 
 ## 失败模式 (failures/)
 
@@ -71,6 +70,10 @@ owner: unassigned
   - workflow: observer-mini
   - 指标: event_count=1, duration_s=0.0
 - **20260922T014356Z-observer-mini-ebf7a16e**
+  - 计划 (objective): read only claim exempt
+  - workflow: observer-mini
+  - 指标: event_count=1, duration_s=0.0
+- **20260923T022747Z-observer-mini-e533c58d**
   - 计划 (objective): read only claim exempt
   - workflow: observer-mini
   - 指标: event_count=1, duration_s=0.0

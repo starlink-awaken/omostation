@@ -1,24 +1,22 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-22T07:42:34Z
-status: planned
+generated_at: 2026-09-24T12:07:32Z
+status: candidate
 counts:
-  runs: 28
+  runs: 31
   failures: 0
-  total: 28
+  total: 31
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-lifecycle: history
-owner: unassigned
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-22T07:42:34Z
+- generated_at: 2026-09-24T12:07:32Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 28 成功运行 + 0 失败模式 = 28 草稿
+- sediment 覆盖: 31 成功运行 + 0 失败模式 = 31 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -51,6 +49,9 @@ owner: unassigned
 - 20260921T092932Z-project-code-change-f378082b.md
 - 20260922T021833Z-project-code-change-10995240.md
 - 20260922T034633Z-project-code-change-df7c0e57.md
+- 20260922T085054Z-project-code-change-7c69278d.md
+- 20260923T032453Z-project-code-change-39bc29e2.md
+- 20260923T060006Z-project-code-change-2493cbd3.md
 
 ## 失败模式 (failures/)
 
@@ -249,6 +250,24 @@ owner: unassigned
   - 结果与证据: ok=False, status=blocked, evidence_count=1
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=9434.516
+- **20260922T085054Z-project-code-change-7c69278d**
+  - 计划 (objective): feat/cockpit-ui-panorama-live-telemetry
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=670.948
+- **20260923T032453Z-project-code-change-39bc29e2**
+  - 计划 (objective): [BET-Y2Q2-T10-156] Claims preflight high-water filename reconciliation (Appetite: 2 hours)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=437.919
+- **20260923T060006Z-project-code-change-2493cbd3**
+  - 计划 (objective): [BET-Y2Q2-T4-01] North-star recovery and first real Decision Episode proof (Appetite: 13 weeks)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=6602.232
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
