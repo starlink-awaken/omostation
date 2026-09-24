@@ -25,5 +25,3 @@ evidence:
 - 2026-08-30 projects/cockpit 误 stage（gate 拦截零污染）
 - 2026-08-30 projects/omlxc 误 stage（gate 拦截零污染）
 - 2026-08-31 projects/omo side-branch 指针（pointer-drift 拦截）
-_path: /Users/xiamingxing/ws-solidify-lessons/.omo/_knowledge/pitfalls/coordination/PITFALL-COO-003.yaml
-_file: PITFALL-COO-003.yaml
