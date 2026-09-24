@@ -36,16 +36,97 @@ source_digests:
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; manifest-src 'self'">
 <title>织星 · 体系全景</title>
 <style>
-:root{--paper:#edf2f6;--surface:#fff;--ink:#203a52;--muted:#60778c;--line:#d7e2eb;--blue:#3a64b3;--teal:#2e7e79;--amber:#ac721a;--red:#b54a54;--redwash:#fff0f1;--bluewash:#eaf0fc;--greenwash:#e7f3ef;--amberwash:#fff3df;--shadow:0 4px 24px #203a5209;--radius:13px;--display:"Songti SC","STSong",serif;--body:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft Yahei",sans-serif;--mono:"SFMono-Regular",Consolas,monospace}
-[data-theme="dark"]{--paper:#0f172a;--surface:#1e293b;--ink:#e2e8f0;--muted:#94a3b8;--line:#334155;--blue:#60a5fa;--teal:#2dd4bf;--amber:#fbbf24;--red:#f87171;--redwash:#450a0a;--bluewash:#1e3a5f;--greenwash:#064e3b;--amberwash:#451a03;--shadow:0 4px 24px #00000040}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.65 var(--body)}button,input,select{font:inherit}button,a,input,select{outline-offset:4px}a{color:var(--blue);text-underline-offset:4px}button{cursor:pointer}.skip{position:absolute;top:-60px;left:10px;z-index:10;background:white;padding:12px}.skip:focus{top:8px}
-aside{width:228px;position:fixed;inset:0 auto 0 0;background:#e3ebf2;padding:30px 18px;display:flex;flex-direction:column;border-right:1px solid var(--line);z-index:5}
-.brand{padding:0 14px 25px}.brand strong{display:block;font-family:var(--display);font-size:30px;letter-spacing:5px}.brand small{font-size:10px;letter-spacing:2px;color:var(--muted)}
-nav{display:grid;gap:7px}nav a{display:flex;gap:12px;align-items:center;color:var(--muted);text-decoration:none;padding:10px 13px;border-radius:9px;transition:background .15s}nav a[aria-current=page]{color:var(--ink);background:white;box-shadow:var(--shadow);font-weight:600}nav a:hover{background:#f5f8fb}.nav-symbol{width:24px;font:11px var(--mono);color:var(--blue);flex-shrink:0}.aside-foot{margin-top:auto;border-top:1px solid #cbd9e5;padding:18px 12px 0;color:var(--muted);font-size:11px;line-height:1.6}
+:root{
+  /* SSDS/v1 Modern Typography */
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Segoe UI",sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Segoe UI",sans-serif;
+  --font-mono:"SF Mono","SFMono-Regular","Cascadia Code","JetBrains Mono",Consolas,monospace;
+  --display:var(--font-display);
+  --body:var(--font-body);
+  --mono:var(--font-mono);
+
+  /* SSDS/v1 Semantic Color Tokens (Light Mode) */
+  --sovereign:#6366f1;
+  --sovereign-wash:#f5f5ff;
+  --blue:#2563eb;
+  --bluewash:#eff6ff;
+  --cyan:#0891b2;
+  --cyanwash:#ecfeff;
+  --teal:#059669;
+  --good:#059669;
+  --greenwash:#ecfdf5;
+  --amber:#d97706;
+  --warn:#d97706;
+  --amberwash:#fffbeb;
+  --red:#dc2626;
+  --danger:#dc2626;
+  --redwash:#fef2f2;
+
+  /* Surfaces & Neutrals */
+  --paper:#f8fafc;
+  --surface:#ffffff;
+  --surface-subtle:#f1f5f9;
+  --ink:#0f172a;
+  --ink-secondary:#334155;
+  --muted:#64748b;
+  --line:rgba(226, 232, 240, 0.8);
+  --line-light:#f1f5f9;
+  --border-subtle:rgba(226, 232, 240, 0.75);
+  --border-focus:rgba(37, 99, 235, 0.3);
+
+  /* Elevation & Shape */
+  --shadow:0 1px 3px rgba(15,23,42,0.04), 0 6px 18px rgba(15,23,42,0.02);
+  --shadow-lg:0 10px 25px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.03);
+  --card-shadow:0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.02);
+  --card-hover-shadow:0 4px 20px rgba(37, 99, 235, 0.06);
+  --radius:12px;
+}
+[data-theme="dark"]{
+  /* SSDS/v1 Semantic Color Tokens (Dark Mode) */
+  --sovereign:#818cf8;
+  --sovereign-wash:rgba(99,102,241,0.15);
+  --blue:#3b82f6;
+  --bluewash:rgba(59,130,246,0.15);
+  --cyan:#06b6d4;
+  --cyanwash:rgba(6,182,212,0.15);
+  --teal:#10b981;
+  --good:#10b981;
+  --greenwash:rgba(16,185,129,0.15);
+  --amber:#f59e0b;
+  --warn:#f59e0b;
+  --amberwash:rgba(245,158,11,0.15);
+  --red:#ef4444;
+  --danger:#ef4444;
+  --redwash:rgba(239,68,68,0.15);
+
+  /* Surfaces & Neutrals */
+  --paper:#0b0f19;
+  --surface:#111827;
+  --surface-subtle:#1e293b;
+  --ink:#f1f5f9;
+  --ink-secondary:#cbd5e1;
+  --muted:#94a3b8;
+  --line:rgba(255, 255, 255, 0.08);
+  --line-light:rgba(255, 255, 255, 0.05);
+  --border-subtle:rgba(255, 255, 255, 0.08);
+  --border-focus:rgba(59, 130, 246, 0.35);
+
+  --shadow:0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg:0 16px 40px rgba(0,0,0,0.6);
+  --card-shadow:0 4px 24px rgba(0, 0, 0, 0.4);
+  --card-hover-shadow:0 6px 28px rgba(0, 0, 0, 0.55);
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:13px/1.6 var(--body);-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button,a,input,select{outline-offset:4px}a{color:var(--blue);text-underline-offset:4px}button{cursor:pointer}.skip{position:absolute;top:-60px;left:10px;z-index:10;background:white;padding:12px}.skip:focus{top:8px}
+aside{width:232px;position:fixed;inset:0 auto 0 0;background:#f8fafc;padding:22px 12px;display:flex;flex-direction:column;border-right:1px solid var(--line);z-index:5;overflow-y:auto}
+[data-theme="dark"] aside{background:#0c121e;border-right-color:var(--line)}
+.brand{padding:0 8px 18px;display:flex;flex-direction:column;gap:2px}
+.brand strong{display:block;font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:2px;color:var(--ink)}
+.brand small{font:600 9.5px/1.2 var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+nav{display:grid;gap:3px}nav a{display:flex;gap:10px;align-items:center;color:var(--muted);text-decoration:none;padding:7px 10px;border-radius:7px;font-size:12px;transition:all .15s ease}nav a[aria-current=page]{color:var(--blue);background:var(--bluewash);font-weight:600}nav a:hover{background:var(--surface-subtle);color:var(--ink)}.nav-symbol{width:20px;font:11px var(--mono);color:var(--blue);flex-shrink:0;text-align:center}.aside-foot{margin-top:auto;border-top:1px solid var(--line);padding:14px 8px 0;color:var(--muted);font-size:10.5px;line-height:1.5}
 /* Navigation Groups Collapsible */
 .nav-group{margin-bottom:4px}
-.nav-section-title{display:flex;align-items:center;justify-content:space-between;font:10px var(--mono);letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:6px 8px;margin-top:4px;border-radius:4px;cursor:pointer;user-select:none}
-.nav-section-title:hover{background:#f1f5f9;color:var(--ink)}
+.nav-section-title{display:flex;align-items:center;justify-content:space-between;font:600 10px var(--mono);letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:5px 8px;margin-top:4px;border-radius:4px;cursor:pointer;user-select:none}
+.nav-section-title:hover{background:var(--surface-subtle);color:var(--ink)}
 .nav-group-toggle{font-size:8px;transition:transform .2s}
 .nav-section-title.collapsed .nav-group-toggle{transform:rotate(-90deg)}
 .nav-group-items{display:grid;gap:2px;overflow:hidden;transition:max-height .3s ease;max-height:500px}
@@ -54,21 +135,22 @@ nav{display:grid;gap:7px}nav a{display:flex;gap:12px;align-items:center;color:va
 aside nav{grid-template-columns:1fr!important}
 .nav-group-items{grid-template-columns:1fr!important}
 a.nav-item-core,a.nav-item-engineering{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;text-decoration:none;color:var(--muted);font-size:12px;transition:all .15s;width:100%;box-sizing:border-box}
-a.nav-item-core:hover,a.nav-item-engineering:hover{background:#f5f8fb;color:var(--ink)}
+a.nav-item-core:hover,a.nav-item-engineering:hover{background:var(--surface-subtle);color:var(--ink)}
 a.nav-item-core[aria-current=page],a.nav-item-engineering.active{background:var(--bluewash);color:var(--blue);font-weight:600}
-main{margin-left:228px;padding:24px 36px 50px;max-width:1660px}.topline{display:flex;align-items:center;justify-content:space-between;gap:14px;color:var(--muted);font-size:12px;margin-bottom:26px}.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{border:1px solid var(--line);background:white;color:var(--ink);border-radius:8px;padding:7px 12px;text-decoration:none;display:inline-block}.btn:hover{border-color:var(--blue)}.chip{display:inline-flex;align-items:center;border-radius:6px;padding:3px 8px;background:var(--bluewash);color:var(--blue);font:11px/1.5 var(--body);white-space:nowrap}.chip.warn{background:var(--amberwash);color:var(--amber)}.chip.bad{background:var(--redwash);color:var(--red)}.chip.good{background:var(--greenwash);color:var(--teal)}.chip.neutral{background:#edf1f4;color:var(--muted)}
-h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;letter-spacing:1px}h2{font-size:20px;line-height:1.4;margin-bottom:12px}h3{font-size:15px;margin-bottom:9px}.eyebrow{font:11px var(--mono);letter-spacing:1.7px;color:var(--blue);margin-bottom:12px}.lead{font-size:16px;max-width:800px;color:#466179;line-height:1.85}.muted{color:var(--muted)}.small{font-size:12px}.mono{font-family:var(--mono);font-size:11px;overflow-wrap:anywhere}.section{display:none}.section.active{display:block}.section-head{margin-bottom:24px}.grid{display:grid;gap:18px}.two{grid-template-columns:1.3fr 1fr}.three{grid-template-columns:repeat(3,1fr)}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);min-width:0}.card.flush{padding:0;overflow:hidden}.card-head{padding:20px 22px 12px}.card p:last-child{margin-bottom:0}.gap{margin-top:20px}.note{border-left:3px solid var(--amber);background:var(--amberwash);padding:13px 16px;color:#755629;border-radius:0 8px 8px 0;font-size:13px}.callout{background:var(--bluewash);padding:16px 19px;border-radius:10px;font-size:13px}
-.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:26px;align-items:center;margin-bottom:25px}.hero-copy{padding:14px 0}.spine{display:grid;grid-template-columns:1fr 40px 1fr;gap:6px;align-items:center}.spine-node{border:1px solid var(--line);background:#f5f8fc;padding:13px;border-radius:9px;min-height:75px}.spine-node.main{background:var(--ink);color:white}.spine-node small{display:block;opacity:.7;font-size:11px}.spine-arrow{text-align:center;font-size:20px;color:var(--blue)}.spine-caption{grid-column:1/-1;color:var(--muted);font-size:11px;padding-top:8px}
-.vector{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;border:1px solid var(--line);border-radius:12px;background:var(--line);overflow:hidden;margin:18px 0 25px}.vector>div{background:white;padding:18px 14px}.vector strong{display:block;font-size:15px;margin:9px 0}.vector small{color:var(--muted);font-size:11px}
-.source{font-size:11px;color:var(--muted);margin-top:16px;padding-top:10px;border-top:1px dashed var(--line);overflow-wrap:anywhere}.source a{font-size:11px}.statline{display:flex;gap:25px;flex-wrap:wrap;padding:14px 0}.statline strong{font:25px var(--mono);display:block;color:var(--ink)}.statline span{font-size:11px;color:var(--muted)}.list{list-style:none;padding:0;margin:0}.list li{padding:11px 0;border-bottom:1px solid var(--line)}.list li:last-child{border-bottom:0}.row{display:flex;justify-content:space-between;align-items:start;gap:15px}
-.tree{padding:20px 25px;border-radius:12px;background:#f5f8fc;line-height:2.1;font-size:13px}.tree .branch{padding-left:25px;border-left:1px solid #b7cbe0;margin-left:7px}.tree b{font-weight:600}.tree .selected{background:var(--bluewash);padding:4px 8px;border-radius:5px}.tree small{margin-left:8px;color:var(--muted)}
-.layer{display:grid;grid-template-columns:90px 1fr;gap:15px;border-bottom:1px solid var(--line);padding:18px 0}.layer:last-child{border:0}.layer-code{background:var(--bluewash);border-radius:8px;padding:10px;text-align:center;color:var(--blue);font:13px var(--mono);align-self:start}.layer strong{display:block;margin-bottom:4px}.flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:15px 0}.flow span{border:1px solid var(--line);background:#f5f8fc;padding:9px 12px;border-radius:7px}.flow i{align-self:center;color:var(--blue);font-style:normal}.loop{padding:16px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}
-.gates{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.gate-title{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.gate-id{font:20px var(--mono);color:var(--blue)}.gate-body{font-size:13px}.gate-evidence{font-size:12px;padding:12px;background:#f4f7fa;border-radius:8px;margin-top:12px}.exit-list{margin:7px 0 0;padding-left:18px;font-size:11px;color:var(--muted)}details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:9px 0}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}input[type=search],select{border:1px solid var(--line);border-radius:7px;padding:9px 12px;background:white;color:var(--ink)}input[type=search]{flex:1;min-width:200px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}th{text-align:left;white-space:nowrap;padding:12px 15px;background:#f4f7fa;color:var(--muted);font-weight:500}td{padding:13px 15px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border-bottom:0}td .mono{font-size:10px}td strong{font-size:13px}.empty{padding:35px;color:var(--muted);text-align:center}
-.stage-row{display:grid;grid-template-columns:45px minmax(0,1fr) 95px;gap:15px;padding:15px 0;border-bottom:1px solid var(--line)}.stage-id{font:15px var(--mono);color:var(--blue);padding-top:3px}.stage-details{font-size:12px;color:var(--muted)}.stage-row:last-child{border:0}.stage-details ul{padding-left:16px}.timeline{overflow-x:auto}.gantt{min-width:700px}.gantt-axis{display:grid;grid-template-columns:205px 1fr;gap:8px;margin-bottom:9px}.gantt-axis .months{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}.gantt-row{display:grid;grid-template-columns:205px 1fr;gap:8px;align-items:center;font-size:11px;margin:12px 0}.gantt-track{height:23px;background:repeating-linear-gradient(90deg,#f5f8fb,#f5f8fb calc(10% - 1px),#dfe8ef calc(10% - 1px),#dfe8ef 10%);position:relative;border-radius:4px}.gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:2;pointer-events:none}.gantt-today:after{content:'今日';position:absolute;top:-18px;left:-10px;font-size:10px;color:var(--red);background:white;padding:0 3px;border-radius:3px;border:1px solid var(--red)}.bar{position:absolute;top:3px;height:17px;border-radius:3px;background:#9aafd5}.bar.evidence{background:#90b9af}.gantt-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gantt-date{font:10px var(--mono);color:var(--muted)}.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.role{padding:17px;border:1px solid var(--line);border-radius:10px}.role small{color:var(--muted)}
-.docgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.doc{padding:18px;background:white;border:1px solid var(--line);border-radius:10px;min-width:0}.doc a{font-weight:600;font-size:14px}.doc-id{font:10px var(--mono);color:var(--muted);margin:9px 0;overflow-wrap:anywhere}.doc .source{margin-top:10px;font-size:10px}.doc-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-.metric{background:#f6f9fc;padding:16px;border-radius:9px}.metric b{font:23px var(--mono);display:block;margin:7px 0}.steps{counter-reset:step;list-style:none;padding:0}.steps li{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:17px 0;border-bottom:1px solid var(--line)}.step-count{width:26px;height:26px;border-radius:50%;background:var(--bluewash);color:var(--blue);text-align:center;line-height:26px;font:12px/26px var(--mono)}.steps li:last-child{border:0}.foot{color:var(--muted);font-size:11px;margin-top:35px;border-top:1px solid var(--line);padding-top:17px}noscript{display:block;background:var(--amberwash);padding:25px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-.viz-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;margin-bottom:18px;box-shadow:var(--shadow);overflow:hidden}
+main{margin-left:232px;padding:20px 32px 48px;max-width:1660px}.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px;margin-bottom:20px}.top-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.btn{border:1px solid var(--border-subtle);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:6px;box-shadow:0 1px 2px rgba(15,23,42,0.03);transition:all .15s ease}.btn:hover{border-color:var(--border-focus);color:var(--blue);background:var(--bluewash);box-shadow:0 2px 6px rgba(37,99,235,0.08)}.chip,.badge,.status-badge{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:2px 7px;background:var(--bluewash);color:var(--blue);font:600 11px/1.4 var(--mono);white-space:nowrap;border:1px solid transparent;transition:all .15s ease}.chip.warn,.badge-warn,.badge-warning,.status-badge.warning{background:var(--amberwash);color:var(--amber);border-color:rgba(217,119,6,.2)}.chip.bad,.badge-bad,.badge-danger,.status-badge.error{background:var(--redwash);color:var(--red);border-color:rgba(220,38,38,.2)}.chip.good,.chip.ok,.badge-good,.badge-success,.status-badge.success{background:var(--greenwash);color:var(--teal);border-color:rgba(5,150,105,.2)}.chip.neutral,.badge-neutral,.status-badge.neutral{background:var(--surface-subtle);color:var(--muted);border-color:var(--border-subtle)}.chip.sovereign,.badge-sovereign{background:var(--sovereign-wash);color:var(--sovereign);border-color:rgba(99,102,241,.25)}
+h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height:1.35;font-weight:700;letter-spacing:-0.02em;margin-bottom:10px;color:var(--ink)}h2{font-family:var(--display);font-size:16.5px;line-height:1.4;font-weight:650;letter-spacing:-0.01em;margin-bottom:8px;color:var(--ink)}h3{font-size:13.5px;line-height:1.45;font-weight:600;margin-bottom:7px;color:var(--ink)}.eyebrow{font:600 10.5px/1.3 var(--mono);letter-spacing:1.5px;color:var(--blue);margin-bottom:6px;text-transform:uppercase}.lead{font-size:13.5px;max-width:880px;color:var(--muted);line-height:1.75;margin-bottom:14px}.muted{color:var(--muted)}.small{font-size:11.5px;line-height:1.5}.mono{font-family:var(--mono);font-size:11px;overflow-wrap:anywhere}.section{display:none}.section.active{display:block}.section-head{margin-bottom:20px}.grid{display:grid;gap:14px}.two{grid-template-columns:1.25fr 1fr}.three{grid-template-columns:repeat(3,1fr)}.card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--card-shadow);min-width:0;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}.card:hover{border-color:var(--border-focus);box-shadow:var(--card-hover-shadow)}.card.flush{padding:0;overflow:hidden}.card-head{padding:16px 22px 10px}.card p:last-child{margin-bottom:0}.gap{margin-top:14px}.note{border-left:3.5px solid var(--amber);background:var(--amberwash);padding:12px 15px;color:#92400e;border-radius:0 8px 8px 0;font-size:12px;line-height:1.6}.callout{background:var(--bluewash);border-left:3.5px solid var(--blue);padding:13px 16px;border-radius:0 8px 8px 0;font-size:12.5px;line-height:1.6;color:var(--ink)}
+.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:26px;align-items:center;margin-bottom:25px}.hero-copy{padding:14px 0}.spine{display:grid;grid-template-columns:1fr 40px 1fr;gap:6px;align-items:center}.spine-node{border:1px solid var(--border-subtle);background:var(--surface-subtle);padding:14px;border-radius:10px;min-height:75px;transition:all .2s ease}.spine-node.main{background:var(--ink);color:white;border-color:transparent;box-shadow:0 4px 14px rgba(15,23,42,0.15)}.spine-node small{display:block;opacity:.7;font-size:11px}.spine-arrow{text-align:center;font-size:20px;color:var(--blue)}.spine-caption{grid-column:1/-1;color:var(--muted);font-size:11px;padding-top:8px}
+.vector{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--border-subtle);overflow:hidden;margin:18px 0 25px;box-shadow:var(--card-shadow)}.vector>div{background:var(--surface);padding:18px 14px;transition:background .15s ease}.vector>div:hover{background:var(--surface-subtle)}.vector strong{display:block;font-size:15px;margin:9px 0}.vector small{color:var(--muted);font-size:11px}
+.source{font-size:11px;color:var(--muted);margin-top:16px;padding-top:10px;border-top:1px dashed var(--border-subtle);overflow-wrap:anywhere}.source a{font-size:11px}.statline{display:flex;gap:25px;flex-wrap:wrap;padding:14px 0}.statline strong{font:25px var(--mono);display:block;color:var(--ink)}.statline span{font-size:11px;color:var(--muted)}.list{list-style:none;padding:0;margin:0}.list li{padding:11px 0;border-bottom:1px solid var(--border-subtle)}.list li:last-child{border-bottom:0}.row{display:flex;justify-content:space-between;align-items:start;gap:15px}
+.tree{padding:18px 22px;border-radius:12px;background:var(--surface-subtle);border:1px solid var(--border-subtle);line-height:2.1;font-size:12.5px;color:var(--ink-secondary)}.tree .branch{padding-left:22px;border-left:1.5px dashed rgba(99,102,241,0.35);margin-left:6px}.tree b{font-weight:600;color:var(--ink)}.tree .selected{background:var(--bluewash);color:var(--blue);font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid rgba(37,99,235,0.25)}.tree small{margin-left:8px;color:var(--muted);font-size:11px}
+.layer{display:flex;align-items:flex-start;gap:14px;padding:13px 15px;border-radius:9px;margin-bottom:7px;background:var(--surface-subtle);border:1px solid transparent;transition:all .18s ease}.layer:hover{background:var(--surface);border-color:rgba(37,99,235,.2);box-shadow:0 4px 14px rgba(37,99,235,.06);transform:translateX(3px)}.layer:last-child{margin-bottom:0;border-bottom:0}.layer-code{display:inline-flex;align-items:center;justify-content:center;background:var(--bluewash);color:var(--blue);border:1px solid rgba(37,99,235,.2);border-radius:6px;padding:4px 10px;font:700 11.5px/1 var(--mono);letter-spacing:.5px;min-width:52px;flex-shrink:0;box-shadow:0 1px 2px rgba(37,99,235,.06)}.layer strong{display:block;font-size:13px;font-weight:650;color:var(--ink);margin-bottom:3px}.layer div:not(.layer-code){font-size:12.5px;line-height:1.55;color:var(--ink-secondary)}.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0}.flow span{display:inline-flex;align-items:center;padding:6px 13px;border-radius:20px;background:var(--surface);border:1px solid var(--border-subtle);font-size:12px;font-weight:500;color:var(--ink);box-shadow:0 1px 2px rgba(15,23,42,0.03);transition:all .18s ease}.flow span:hover{background:var(--bluewash);color:var(--blue);border-color:rgba(37,99,235,.3);transform:translateY(-1px);box-shadow:0 3px 8px rgba(37,99,235,.1)}.flow i{display:inline-flex;align-items:center;justify-content:center;color:var(--muted);font-style:normal;font-size:12px;opacity:.6;margin:0 1px}.loop{position:relative;padding:18px 20px;border-radius:12px;background:var(--surface);border:1px solid var(--border-subtle);border-top:3px solid var(--blue);box-shadow:var(--shadow);transition:all .2s cubic-bezier(.16,1,.3,1);overflow:hidden}.loop:nth-child(2){border-top-color:var(--teal)}.loop:nth-child(3){border-top-color:var(--sovereign)}.loop:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(15,23,42,0.08)}.loop h3{font-size:14.5px;font-weight:650;margin-bottom:8px;color:var(--ink)}.loop p{color:var(--muted);line-height:1.65;margin:0}
+.section-breadcrumb{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border-subtle);font-size:11.5px;color:var(--muted);margin-bottom:14px;box-shadow:0 1px 2px rgba(15,23,42,0.03);backdrop-filter:blur(8px)}.section-breadcrumb .sep{opacity:.35;color:var(--muted);margin:0 2px}.section-breadcrumb a{color:var(--ink);text-decoration:none;font-weight:500;padding:2px 7px;border-radius:6px;transition:all .15s ease}.section-breadcrumb a:hover{background:var(--bluewash);color:var(--blue)}
+.gates{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.gate-title{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.gate-id{font:20px var(--mono);color:var(--blue)}.gate-body{font-size:13px;line-height:1.6}.gate-evidence{font-size:12px;padding:12px 14px;background:var(--surface-subtle);border:1px solid var(--border-subtle);border-radius:8px;margin-top:12px}.exit-list{margin:7px 0 0;padding-left:18px;font-size:11px;color:var(--muted)}details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:9px 0}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}input[type=search],select{border:1px solid var(--border-subtle);border-radius:7px;padding:9px 12px;background:var(--surface);color:var(--ink)}input[type=search]{flex:1;min-width:200px}.table-wrap{overflow:auto}table{border-collapse:separate;border-spacing:0;width:100%;font-size:12px}th{text-align:left;white-space:nowrap;padding:10px 14px;background:var(--surface-subtle);color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.3px;border-bottom:1px solid var(--border-subtle)}th:first-child{border-top-left-radius:8px}th:last-child{border-top-right-radius:8px}td{padding:12px 14px;border-bottom:1px solid var(--border-subtle);vertical-align:top}tr:last-child td{border-bottom:0}td .mono{font-size:10px}td strong{font-size:13px}.empty{padding:35px;color:var(--muted);text-align:center}
+.stage-row{display:grid;grid-template-columns:45px minmax(0,1fr) 95px;gap:15px;padding:15px 0;border-bottom:1px solid var(--border-subtle)}.stage-id{font:15px var(--mono);color:var(--blue);padding-top:3px}.stage-details{font-size:12px;color:var(--muted)}.stage-row:last-child{border:0}.stage-details ul{padding-left:16px}.timeline{overflow-x:auto}.gantt{min-width:700px}.gantt-axis{display:grid;grid-template-columns:205px 1fr;gap:8px;margin-bottom:9px}.gantt-axis .months{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}.gantt-row{display:grid;grid-template-columns:205px 1fr;gap:8px;align-items:center;font-size:11px;margin:12px 0}.gantt-track{height:23px;background:repeating-linear-gradient(90deg,#f5f8fb,#f5f8fb calc(10% - 1px),#dfe8ef calc(10% - 1px),#dfe8ef 10%);position:relative;border-radius:4px}.gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:2;pointer-events:none}.gantt-today:after{content:'今日';position:absolute;top:-18px;left:-10px;font-size:10px;color:var(--red);background:white;padding:0 3px;border-radius:3px;border:1px solid var(--red)}.bar{position:absolute;top:3px;height:17px;border-radius:3px;background:#9aafd5}.bar.evidence{background:#90b9af}.gantt-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gantt-date{font:10px var(--mono);color:var(--muted)}.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.role{padding:18px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--surface);box-shadow:0 1px 3px rgba(15,23,42,0.03);transition:all .2s ease}.role:hover{border-color:var(--border-focus);box-shadow:var(--card-hover-shadow);transform:translateY(-1px)}.role small{color:var(--muted)}
+.docgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.doc{padding:18px;background:var(--surface);border:1px solid var(--border-subtle);border-radius:12px;min-width:0;box-shadow:0 1px 3px rgba(15,23,42,0.03);transition:all .2s ease}.doc:hover{border-color:var(--border-focus);box-shadow:var(--card-hover-shadow);transform:translateY(-1px)}.doc a{font-weight:600;font-size:14px}.doc-id{font:10px var(--mono);color:var(--muted);margin:9px 0;overflow-wrap:anywhere}.doc .source{margin-top:10px;font-size:10px}.doc-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.metric{background:var(--surface-subtle);border:1px solid var(--border-subtle);padding:16px 18px;border-radius:10px;transition:all .2s ease}.metric:hover{background:var(--surface);border-color:var(--border-focus)}.metric b{font:23px var(--mono);display:block;margin:7px 0}.steps{counter-reset:step;list-style:none;padding:0}.steps li{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:17px 0;border-bottom:1px solid var(--border-subtle)}.step-count{width:26px;height:26px;border-radius:50%;background:var(--bluewash);color:var(--blue);text-align:center;line-height:26px;font:12px/26px var(--mono)}.steps li:last-child{border:0}.foot{color:var(--muted);font-size:11px;margin-top:35px;border-top:1px solid var(--border-subtle);padding-top:17px}noscript{display:block;background:var(--amberwash);padding:25px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.viz-card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px;box-shadow:var(--card-shadow);overflow:hidden;transition:all .2s ease}.viz-card:hover{border-color:var(--border-focus)}
 .viz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .viz-head h3{font-size:16px;margin:0}
 .viz-head .small{color:var(--muted);font-size:11px}
@@ -81,27 +163,29 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 .galaxy-svg{width:100%;height:auto;display:block}
 .value-loop-svg{width:100%;height:auto;display:block}
 .know-breakdown-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
-.know-metric-box{border:1px solid var(--line);background:#f7f9fb;border-radius:8px;padding:12px}
+.know-metric-box{border:1px solid var(--border-subtle);background:var(--surface-subtle);border-radius:10px;padding:14px;transition:all .2s ease}
+.know-metric-box:hover{background:var(--surface);border-color:var(--border-focus)}
 .know-metric-box strong{font:22px var(--mono);display:block;margin:4px 0}
 .sovereign-hex-svg{width:100%;height:auto;display:block}
 .hex-pipeline-steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:14px}
-.hex-step-box{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:9px;text-align:center;font-size:11px}
+.hex-step-box{background:var(--surface-subtle);border:1px solid var(--border-subtle);border-radius:10px;padding:10px 12px;text-align:center;font-size:11px;transition:all .2s ease}
+.hex-step-box:hover{background:var(--surface);border-color:var(--border-focus);box-shadow:0 2px 8px rgba(37,99,235,0.08)}
 .hex-step-num{font:bold 11px var(--mono);color:var(--blue);margin-bottom:3px}
 .hex-step-title{font-weight:600;margin-bottom:2px}
 .hex-step-desc{color:var(--muted);font-size:10px;line-height:1.35;overflow-wrap:anywhere}
 .panoramic-container{margin-bottom:22px}
-.panoramic-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.panoramic-card{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--card-shadow);transition:all .2s ease}
 .panoramic-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
 .panoramic-title{display:flex;align-items:center;gap:8px}
 .panoramic-title h2{margin:0;font-size:19px;font-family:var(--display)}
-.panoramic-nav-tabs{display:flex;gap:6px;background:#e9f1f7;padding:4px;border-radius:8px;border:1px solid var(--line);flex-wrap:wrap}
+.panoramic-nav-tabs{display:flex;gap:6px;background:var(--surface-subtle);padding:4px;border-radius:8px;border:1px solid var(--border-subtle);flex-wrap:wrap}
 .panoramic-tab-btn{border:0;background:transparent;padding:6px 12px;border-radius:6px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s ease;display:flex;align-items:center;gap:5px}
 .panoramic-tab-btn:hover{color:var(--ink)}
-.panoramic-tab-btn[aria-selected="true"]{background:white;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:600}
+.panoramic-tab-btn[aria-selected="true"]{background:var(--surface);color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:600}
 .panoramic-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:12px}
 .panoramic-controls label{display:flex;align-items:center;gap:6px;color:var(--muted)}
 .panoramic-controls select{padding:5px 8px;font-size:12px;border-radius:6px}
-.panoramic-action-btn{padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid var(--line);background:white;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s ease}
+.panoramic-action-btn{padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid var(--border-subtle);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s ease}
 .panoramic-action-btn:hover{border-color:var(--blue);color:var(--blue)}
 .panoramic-viewport{border:1px solid var(--line);border-radius:10px;background:linear-gradient(180deg,#fafcff 0%,#f3f7fa 100%);overflow:auto;max-width:100%;min-width:0;position:relative;transition:background .3s ease}
 .panoramic-viewport.blueprint{background-color:#0b1329;background-image:radial-gradient(rgba(255,255,255,0.18) 1px,transparent 0);background-size:24px 24px}
@@ -412,9 +496,9 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 .loading-center{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;gap:10px;color:var(--muted);font-size:12px}
 
 /* Enhanced Cards */
-.card-enhanced{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);transition:all .15s}
-.card-enhanced:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(58,100,179,.12)}
-.card-header-enhanced{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.card-enhanced{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--card-shadow);transition:all .2s ease}
+.card-enhanced:hover{border-color:var(--border-focus);box-shadow:var(--card-hover-shadow)}
+.card-header-enhanced{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)}
 
 /* Status Badges Enhanced */
 .status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:500}
@@ -498,12 +582,763 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 /* Tooltip for freshness */
 [data-freshness]{position:relative;cursor:help}
 [data-freshness]:hover::after{content:attr(data-freshness);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:4px 8px;border-radius:4px;font-size:10px;white-space:nowrap;z-index:100}
+
+/* --- Phase 1: Sovereign 4-Phase Temporal Focus Bar --- */
+.temporal-focus-bar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;margin-bottom:16px;box-shadow:var(--shadow);flex-wrap:wrap;gap:10px}
+.temporal-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.temporal-label .temporal-pulse-dot{width:7px;height:7px;border-radius:50%;background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.5);display:inline-block}
+.temporal-chips{display:flex;gap:6px;flex-wrap:wrap}
+.temporal-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#f8fafc;color:var(--ink);padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;transition:all .2s ease}
+.temporal-btn:hover{background:var(--bluewash);border-color:var(--blue);color:var(--blue)}
+.temporal-btn.active{background:var(--ink);color:white;border-color:var(--ink);box-shadow:0 2px 8px rgba(32,58,82,.2)}
+[data-theme="dark"] .temporal-btn.active{background:var(--blue);color:#0f172a;border-color:var(--blue)}
+.temporal-btn .temporal-tag{font-size:10px;opacity:.8;padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.08)}
+.temporal-btn.active .temporal-tag{background:rgba(255,255,255,.2)}
+.temporal-desk-trigger{display:flex;align-items:center;gap:8px}
+.btn-gold{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%)!important;color:white!important;border:1px solid #b45309!important;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;cursor:pointer;box-shadow:0 2px 8px rgba(217,119,6,.3);transition:all .2s ease}
+.btn-gold:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-gold .badge-count{background:#78350f;color:#fef3c7;font-size:10px;padding:1px 6px;border-radius:10px}
+
+/* --- Sovereign Authorization Desk Drawer / Modal --- */
+.sovereign-auth-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.7);backdrop-filter:blur(4px);z-index:9999;display:flex;justify-content:flex-end;animation:fadeIn .2s ease}
+.sovereign-auth-drawer{width:680px;max-width:90vw;height:100%;background:var(--surface);border-left:1px solid var(--line);box-shadow:-8px 0 32px rgba(0,0,0,.25);display:flex;flex-direction:column;animation:slideInRight .25s cubic-bezier(.16,1,.3,1);overflow:hidden}
+@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.auth-drawer-header{padding:20px 24px;background:linear-gradient(180deg,rgba(245,158,11,.08) 0%,transparent 100%);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start}
+.auth-drawer-title-group h2{font-family:var(--display);font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.auth-drawer-subtitle{font-size:12px;color:var(--muted);line-height:1.4}
+.auth-close-btn{background:transparent;border:1px solid var(--line);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;cursor:pointer}
+.auth-close-btn:hover{background:#f1f5f9;color:var(--ink)}
+.auth-drawer-body{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:18px}
+.auth-card{border:1px solid var(--line);border-radius:10px;background:#fff;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+[data-theme="dark"] .auth-card{background:#1e293b}
+.auth-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.auth-badge-ready{background:#fef3c7;color:#b45309;border:1px solid #fde68a;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:600}
+.auth-badge-signed{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:600}
+.auth-meta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:11px;margin:10px 0;background:#f8fafc;padding:10px;border-radius:6px;border:1px solid #edf2f7}
+[data-theme="dark"] .auth-meta-grid{background:#0f172a;border-color:#334155}
+.auth-action-box{margin-top:12px;display:flex;gap:8px;align-items:center}
+.auth-quote-input{flex:1;font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-family:var(--mono)}
+
+/* --- Sovereign Cockpit Drawer & HUD Capsule --- */
+.sovereign-cockpit-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:99998;display:flex;justify-content:flex-end;animation:fadeIn .2s ease}
+.sovereign-cockpit-drawer{width:760px;max-width:94vw;height:100%;background:var(--surface);border-left:1px solid var(--border-subtle);box-shadow:-12px 0 40px rgba(0,0,0,.25);display:flex;flex-direction:column;animation:slideInRight .28s cubic-bezier(.16,1,.3,1);overflow:hidden}
+.cockpit-drawer-header{padding:18px 24px;background:linear-gradient(180deg,rgba(245,158,11,.1) 0%,transparent 100%);border-bottom:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.cockpit-drawer-title-group h2{font-family:var(--display);font-size:17.5px;font-weight:700;margin:0 0 3px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.cockpit-drawer-subtitle{font-size:11.5px;color:var(--muted);line-height:1.4}
+.cockpit-drawer-body{flex:1;overflow-y:auto;padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+.sovereign-hud-capsule{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 14px;background:linear-gradient(90deg,rgba(254,243,199,0.4) 0%,rgba(255,255,255,0.85) 100%);border:1px solid rgba(245,158,11,0.25);border-radius:24px;box-shadow:0 1px 3px rgba(15,23,42,0.03);backdrop-filter:blur(8px);transition:all .2s ease}
+.sovereign-hud-capsule:hover{border-color:rgba(245,158,11,0.45);box-shadow:0 3px 12px rgba(245,158,11,0.08)}
+[data-theme="dark"] .sovereign-hud-capsule{background:linear-gradient(90deg,rgba(245,158,11,0.12) 0%,rgba(17,24,39,0.85) 100%);border-color:rgba(245,158,11,0.25)}
+.sovereign-hud-title-zone{display:flex;align-items:center;gap:8px;cursor:pointer}
+.sovereign-hud-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sovereign-hud-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500;background:var(--surface);border:1px solid var(--border-subtle);color:var(--ink-secondary)}
+.sovereign-hud-chip b{color:var(--ink)}
+.sovereign-hud-actions{display:flex;align-items:center;gap:6px}
+.sovereign-btn-drawer-trigger{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:white!important;border:none;padding:5px 12px;border-radius:16px;font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer;box-shadow:0 2px 6px rgba(217,119,6,0.25);transition:all .15s ease}
+.sovereign-btn-drawer-trigger:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.sovereign-toast-alert{position:fixed;bottom:24px;left:24px;z-index:99999;background:var(--surface);border:1.5px solid #f59e0b;border-radius:12px;box-shadow:0 12px 32px rgba(217,119,6,0.25);padding:14px 18px;display:flex;align-items:center;gap:14px;max-width:440px;animation:slideUpToast .3s cubic-bezier(.16,1,.3,1)}
+@keyframes slideUpToast{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sovereign-toast-alert .toast-icon{font-size:24px;flex-shrink:0}
+.sovereign-toast-alert .toast-body{flex:1;min-width:0}
+.sovereign-toast-alert .toast-title{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.sovereign-toast-alert .toast-desc{font-size:11.5px;color:var(--muted);line-height:1.4}
+.btn-pin-toggle{background:var(--surface);border:1px solid var(--border-subtle);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .15s}
+.btn-pin-toggle:hover{color:var(--blue);border-color:var(--blue);background:var(--bluewash)}
+.btn-pin-toggle.pinned{background:var(--bluewash);color:var(--blue);border-color:var(--blue);font-weight:600}
+
+/* --- Pulse Glow Animation for Cross-Panel Navigation --- */
+@keyframes pulseGlowRing{
+  0%{box-shadow:0 0 0 0 rgba(59,130,246,0.7);border-color:#3b82f6}
+  50%{box-shadow:0 0 0 10px rgba(59,130,246,0);border-color:#f59e0b}
+  100%{box-shadow:0 0 0 0 rgba(59,130,246,0)}
+}
+.target-pulse-highlight{
+  animation:pulseGlowRing 2.2s ease-in-out!important;
+  border-color:#f59e0b!important;
+}
+
+/* --- Universal Entity Interactive Chips --- */
+.entity-mesh-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:2px 7px;
+  border-radius:5px;
+  font-size:11px;
+  font-family:var(--mono);
+  background:var(--bluewash);
+  color:var(--blue);
+  border:1px solid rgba(58,100,179,.2);
+  cursor:pointer;
+  text-decoration:none;
+  transition:all .15s ease;
+}
+.entity-mesh-chip:hover{
+  background:var(--blue);
+  color:#fff;
+  transform:translateY(-1px);
+}
+.entity-mesh-chip.chip-gold,.entity-mesh-chip.chip-bet{background:#fef3c7;color:#b45309;border-color:#fde68a}
+.entity-mesh-chip.chip-gold:hover,.entity-mesh-chip.chip-bet:hover{background:#f59e0b;color:#fff}
+.entity-mesh-chip.chip-scene{background:#f3e8ff;color:#7e22ce;border-color:#e9d5ff}
+.entity-mesh-chip.chip-scene:hover{background:#9333ea;color:#fff}
+.entity-mesh-chip.chip-agent{background:#e0f2fe;color:#0369a1;border-color:#bae6fd}
+.entity-mesh-chip.chip-agent:hover{background:#0284c7;color:#fff}
+.entity-mesh-chip.chip-gate{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+.entity-mesh-chip.chip-gate:hover{background:#ef4444;color:#fff}
+.entity-mesh-chip.chip-decision{background:#fef9c3;color:#854d0e;border-color:#fef08a}
+.entity-mesh-chip.chip-decision:hover{background:#eab308;color:#fff}
+
+/* --- 5-Stage Value Closed-Loop Breadcrumb Bar --- */
+.value-loop-pipeline-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:10px 16px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow);
+  overflow-x:auto;
+  gap:8px;
+}
+.pipeline-step{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  font-weight:500;
+  color:var(--muted);
+  cursor:pointer;
+  padding:4px 8px;
+  border-radius:6px;
+  transition:all .15s ease;
+}
+.pipeline-step:hover{background:var(--bluewash);color:var(--blue)}
+.pipeline-step.active{color:var(--ink);font-weight:600;background:#f1f5f9}
+[data-theme="dark"] .pipeline-step.active{background:#334155;color:white}
+.pipeline-step-num{
+  width:18px;height:18px;border-radius:50%;background:var(--bluewash);
+  color:var(--blue);font:bold 10px var(--mono);display:flex;align-items:center;justify-content:center;
+}
+.pipeline-arrow{color:var(--line);font-size:11px}
+
+/* --- Horizon Dock Capsule Bar --- */
+.horizon-dock-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:6px 12px;
+  margin-bottom:10px;
+  box-shadow:var(--shadow);
+  flex-wrap:wrap;
+  gap:8px;
+}
+.horizon-dock-label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.6px;
+}
+.horizon-dock-chips{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+}
+.horizon-dock-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  border:1px solid var(--line);
+  background:#f8fafc;
+  color:var(--ink);
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:11px;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.horizon-dock-btn:hover{
+  background:var(--bluewash);
+  border-color:var(--blue);
+  color:var(--blue);
+}
+.horizon-dock-btn.active{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+  box-shadow:0 2px 6px rgba(58,100,179,.25);
+  font-weight:600;
+}
+[data-theme="dark"] .horizon-dock-btn{background:#1e293b;border-color:#334155}
+[data-theme="dark"] .horizon-dock-btn.active{background:var(--blue);color:#0f172a}
+
+/* --- Horizon Dedicated Focus Banner & Flow Linkage --- */
+.horizon-focus-banner {
+  background: linear-gradient(135deg, #f8fafc 0%, #edf4fc 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 10px rgba(58,100,179,.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all .25s ease;
+}
+[data-theme="dark"] .horizon-focus-banner {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-color: #334155;
+  box-shadow: 0 2px 10px rgba(0,0,0,.4);
+}
+.horizon-banner-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.horizon-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.horizon-banner-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.horizon-banner-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,.7);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 11.5px;
+}
+[data-theme="dark"] .horizon-banner-flow {
+  background: rgba(15,23,42,.6);
+}
+.banner-flow-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.banner-flow-arrow {
+  color: var(--muted);
+  font-weight: bold;
+}
+
+/* --- Panel Flow Linkage Connectors --- */
+.panel-flow-connector {
+  display: flex;
+  align-items: stretch;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+  gap: 8px;
+  overflow-x: auto;
+  font-size: 11px;
+}
+[data-theme="dark"] .panel-flow-connector {
+  background: #1e293b;
+  border-color: #334155;
+}
+.flow-step {
+  flex: 1;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+[data-theme="dark"] .flow-step {
+  background: #0f172a;
+}
+.flow-step:hover {
+  border-color: var(--blue);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,.08);
+}
+.flow-step.current {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-color: #818cf8;
+  box-shadow: 0 0 8px rgba(129,140,248,.25);
+  cursor: default;
+}
+[data-theme="dark"] .flow-step.current {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border-color: #6366f1;
+}
+.flow-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 4px;
+  width: fit-content;
+}
+.flow-tag.up { background: #dbeafe; color: #1e40af; }
+.flow-tag.cur { background: #ede9fe; color: #5b21b6; }
+.flow-tag.down { background: #fef3c7; color: #92400e; }
+.flow-tag.close { background: #dcfce7; color: #166534; }
+.flow-divider {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  font-weight: bold;
+}
+
+/* --- Horizon Active Focus Styles (无界通透与层深升级) --- */
+.horizon-active-focus {
+  border-color: rgba(59, 130, 246, 0.38) !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.18), 
+              0 10px 28px -4px rgba(59, 130, 246, 0.12), 
+              0 2px 8px -1px rgba(0, 0, 0, 0.04) !important;
+  position: relative;
+  transition: border-color .3s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow .3s cubic-bezier(0.16, 1, 0.3, 1), 
+              opacity .25s ease;
+}
+
+/* 左侧灵动微光聚焦指示胶囊 */
+.horizon-active-focus::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #3b82f6 0%, #60a5fa 100%);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  pointer-events: none;
+  z-index: 5;
+}
+.horizon-dimmed-card {
+  opacity: 0.45;
+  transition: opacity .25s ease;
+}
+.horizon-dimmed-card:hover {
+  opacity: 0.95;
+}
+
+/* --- Collapsible Semantic Horizon Sidebar --- */
+.nav-horizon-group{margin-bottom:8px}
+.nav-horizon-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:5px 8px;
+  border-radius:6px;
+  cursor:pointer;
+  user-select:none;
+  transition:background .15s ease;
+  font-size:11px;
+  font-weight:600;
+  color:var(--ink);
+  background:rgba(241,245,249,.6);
+  border:1px solid rgba(226,232,240,.8);
+  margin-bottom:3px;
+}
+.nav-horizon-header:hover{
+  background:var(--bluewash);
+  color:var(--blue);
+  border-color:#bfdbfe;
+}
+.nav-horizon-title{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.nav-horizon-count{
+  font-size:9.5px;
+  font-family:var(--mono);
+  color:var(--muted);
+  background:rgba(0,0,0,.05);
+  padding:1px 5px;
+  border-radius:4px;
+}
+.nav-horizon-arrow{
+  font-size:8px;
+  color:var(--muted);
+  transition:transform .2s ease;
+}
+.nav-horizon-header.collapsed .nav-horizon-arrow{
+  transform:rotate(-90deg);
+}
+.nav-horizon-items{
+  display:grid;
+  gap:2px;
+  padding-left:4px;
+  overflow:hidden;
+  transition:max-height .25s ease;
+  max-height:600px;
+}
+.nav-horizon-header.collapsed + .nav-horizon-items{
+  max-height:0!important;
+  visibility:hidden;
+  pointer-events:none;
+  margin:0;
+  padding:0;
+}
+
+/* --- Universal Contextual Flyout Inspector --- */
+.contextual-inspector-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.6);
+  backdrop-filter:blur(3px);
+  z-index:9998;
+  display:flex;
+  justify-content:flex-end;
+  animation:fadeIn .2s ease;
+}
+.contextual-inspector-drawer{
+  width:640px;
+  max-width:92vw;
+  height:100%;
+  background:var(--surface);
+  border-left:1px solid var(--line);
+  box-shadow:-8px 0 32px rgba(0,0,0,.2);
+  display:flex;
+  flex-direction:column;
+  animation:slideInRight .22s cubic-bezier(.16,1,.3,1);
+  overflow:hidden;
+}
+.inspector-head{
+  padding:18px 22px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(59,130,246,.06) 0%,transparent 100%);
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+.inspector-title-wrap h3{
+  margin:0 0 4px;
+  font-family:var(--display);
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.inspector-body{
+  flex:1;
+  overflow-y:auto;
+  padding:20px 22px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.inspector-card{
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#f8fafc;
+  padding:12px 14px;
+  font-size:12px;
+}
+[data-theme="dark"] .inspector-card{background:#1e293b}
+.inspector-foot{
+  padding:12px 22px;
+  border-top:1px solid var(--line);
+  background:var(--surface);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* --- Daily Sovereign Executive Briefing Modal --- */
+.sovereign-briefing-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.7);
+  backdrop-filter:blur(4px);
+  z-index:10000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:fadeIn .2s ease;
+  padding:20px;
+}
+.sovereign-briefing-modal{
+  width:780px;
+  max-width:94vw;
+  max-height:88vh;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 12px 48px rgba(0,0,0,.3);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.briefing-head{
+  padding:20px 24px;
+  background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);
+  border-bottom:1px solid #fcd34d;
+  color:#78350f;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.briefing-body{
+  flex:1;
+  overflow-y:auto;
+  padding:22px 26px;
+  line-height:1.6;
+  font-size:13px;
+}
+/* === SSDS/v1 Systemic Dark Mode Alignment & Component Overrides === */
+[data-theme="dark"] .next-tier-card,
+[data-theme="dark"] .next-unblock-card,
+[data-theme="dark"] .next-action-card,
+[data-theme="dark"] .next-quick-nav-bar,
+[data-theme="dark"] .doc,
+[data-theme="dark"] .auth-card,
+[data-theme="dark"] .prop-card,
+[data-theme="dark"] .kpi-card,
+[data-theme="dark"] .mof-status-card,
+[data-theme="dark"] .mof-tier-card,
+[data-theme="dark"] .mof-matrix-table,
+[data-theme="dark"] .mof-constraint-card,
+[data-theme="dark"] .vector>div,
+[data-theme="dark"] .posture-bar,
+[data-theme="dark"] .temporal-focus-bar,
+[data-theme="dark"] .horizon-dock-bar,
+[data-theme="dark"] .value-loop-pipeline-bar,
+[data-theme="dark"] .metrics-status-bar,
+[data-theme="dark"] .refresh-health-compact,
+[data-theme="dark"] .dispatch-modal-card,
+[data-theme="dark"] .omni-input-header,
+[data-theme="dark"] .panoramic-card,
+[data-theme="dark"] input[type=search],
+[data-theme="dark"] select {
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+
+[data-theme="dark"] th {
+  background: var(--surface-subtle) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+}
+
+[data-theme="dark"] td {
+  border-bottom-color: var(--line) !important;
+}
+
+[data-theme="dark"] .tree,
+[data-theme="dark"] .spine-node,
+[data-theme="dark"] .flow span,
+[data-theme="dark"] .gate-evidence,
+[data-theme="dark"] .metric,
+[data-theme="dark"] .know-metric-box,
+[data-theme="dark"] .hex-step-box,
+[data-theme="dark"] .panoramic-drawer,
+[data-theme="dark"] .next-stat-box,
+[data-theme="dark"] .next-chain-box,
+[data-theme="dark"] .next-action-details,
+[data-theme="dark"] .next-node-card,
+[data-theme="dark"] .hologram-dim-card,
+[data-theme="dark"] .auth-meta-grid,
+[data-theme="dark"] .sentinel-pill,
+[data-theme="dark"] .plane-pill-btn,
+[data-theme="dark"] .omni-filter-chips,
+[data-theme="dark"] .omni-palette-footer,
+[data-theme="dark"] .briefing-foot,
+[data-theme="dark"] .telemetry-stream-badge,
+[data-theme="dark"] .temporal-btn {
+  background: var(--surface-subtle) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+[data-theme="dark"] .hologram-pill,
+[data-theme="dark"] .next-filter-chip,
+[data-theme="dark"] .omni-chip,
+[data-theme="dark"] .panoramic-field-chip,
+[data-theme="dark"] .next-nav-btn {
+  background: var(--surface-subtle) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+
+[data-theme="dark"] .note {
+  background: rgba(245,158,11,0.1) !important;
+  color: #fde68a !important;
+  border-left-color: var(--amber) !important;
+}
+
+[data-theme="dark"] .callout {
+  background: rgba(37,99,235,0.12) !important;
+  color: #bfdbfe !important;
+}
+
+[data-theme="dark"] .section-breadcrumb {
+  background: rgba(17, 24, 39, 0.75) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--muted) !important;
+}
+[data-theme="dark"] .section-breadcrumb a {
+  color: var(--ink) !important;
+}
+[data-theme="dark"] .section-breadcrumb a:hover {
+  background: var(--bluewash) !important;
+  color: var(--blue) !important;
+}
+[data-theme="dark"] .loop {
+  background: var(--surface) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .loop:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+[data-theme="dark"] .layer {
+  background: var(--surface-subtle) !important;
+}
+[data-theme="dark"] .layer:hover {
+  background: rgba(30, 41, 59, 0.9) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+[data-theme="dark"] .card {
+  border-color: var(--border-subtle);
+  box-shadow: var(--card-shadow);
+}
+[data-theme="dark"] .card:hover {
+  border-color: var(--border-focus);
+  box-shadow: var(--card-hover-shadow);
+}
+
+/* === SSDS/v1 Master Command Bar (Layer 1: 48px) === */
+.sovereign-master-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+  min-height: 48px;
+  box-sizing: border-box;
+}
+.master-bar-left, .master-bar-center, .master-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.master-bar-center {
+  flex-shrink: 0;
+}
+.copilot-trigger-btn {
+  background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(99,102,241,0.12) 100%);
+  border: 1px solid rgba(99,102,241,0.3);
+  color: var(--blue);
+  font-weight: 600;
+  border-radius: 7px;
+  padding: 5px 11px;
+  font-size: 11.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all .2s ease;
+  user-select: none;
+}
+.copilot-trigger-btn:hover {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+}
+.copilot-trigger-btn kbd {
+  background: rgba(0,0,0,0.06);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font: bold 9.5px var(--mono);
+}
+[data-theme="dark"] .copilot-trigger-btn kbd {
+  background: rgba(255,255,255,0.15);
+}
+
+/* SSDS Legend Popover in Command Bar */
+.ssds-legend-popover-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--ink);
+  cursor: pointer;
+  user-select: none;
+  transition: all .15s ease;
+}
+.ssds-legend-popover-trigger:hover {
+  border-color: var(--blue);
+}
+.ssds-legend-popover-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 270px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  padding: 12px 14px;
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+.ssds-legend-popover-trigger:hover .ssds-legend-popover-menu,
+.ssds-legend-popover-trigger:focus-within .ssds-legend-popover-menu {
+  display: flex;
+}
+
+/* SSDS/v1 Standard 5-State Legend Dock (Fallback Strip) */
+.ssds-legend-strip {
+  display: none;
+}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">跳到内容</a>
 <aside>
 <div class="brand"><strong>织星</strong><small>SOVEREIGN INTELLIGENCE</small></div>
+<a href="http://localhost:5173/" target="_blank" rel="noopener noreferrer" class="btn" style="margin-bottom:12px;font-size:11.5px;justify-content:center;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.3);color:var(--sovereign);font-weight:600;">
+  🪐 业务主权驾驶舱 (5173) ↗
+</a>
 <div class="nav-cognitive-filter">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
     <span style="font-size:10px;font-weight:700;letter-spacing:0.8px;color:var(--muted)">视界导航</span>
@@ -516,88 +1351,202 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   <div id="nav-mode-hint" class="small muted" style="margin-top:6px;font-size:10px;line-height:1.4">默认全景：显示全部板块。点「核心」仅保留决策入口，不会删除数据。</div>
 </div>
 <nav aria-label="全景板块" id="sidebar-nav">
-<!-- Executive Mode: Core Decisions -->
-<div class="nav-group" data-nav-group="executive">
-  <div class="nav-section-title" onclick="toggleNavGroup(this)">
-    <span>核心决策</span>
-    <span class="nav-group-toggle">▼</span>
+<!-- Horizon 1: Sovereign & Executive Decision -->
+<div class="nav-group nav-horizon-group" data-nav-group="h-sovereign" data-horizon="h-sovereign">
+  <div class="nav-horizon-header" onclick="toggleNavGroup(this)">
+    <div class="nav-horizon-title"><span>👑 主权与中枢</span></div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span class="nav-horizon-count">3</span>
+      <span class="nav-horizon-arrow">▼</span>
+    </div>
   </div>
-  <div class="nav-group-items">
-    <a href="#ecosystem-map" data-system="META" class="nav-item-core"><span class="nav-symbol">🗺️</span>全域能力地图</a>
-    <a href="#personal" data-system="S1" class="nav-item-core"><span class="nav-symbol">👑</span>主权中心</a>
-    <a href="#workbench" data-system="S1,S5" class="nav-item-core"><span class="nav-symbol">🖥️</span>中枢工作台</a>
-    <a href="#orient" data-system="S1" aria-current="page" class="nav-item-core"><span class="nav-symbol">◎</span>全景总览</a>
-    <a href="#panorama" data-system="S1,S2,S3,S4,S5,S6,S7,S8" class="nav-item-core"><span class="nav-symbol">📐</span>白皮书指导</a>
-    <a href="#mof-grid" data-system="META" class="nav-item-core"><span class="nav-symbol">🛡️</span>MOF 元模型与约束</a>
-    <a href="#ledger" data-system="S4" class="nav-item-core"><span class="nav-symbol">▤</span>路线与 BET</a>
-    <a href="#next" data-system="S4,S5" class="nav-item-core"><span class="nav-symbol">→</span>接下来做什么</a>
+  <div class="nav-horizon-items">
+    <a href="#personal" data-system="S1" data-asd-panel="P-PERSONAL" class="nav-item-core"><span class="nav-symbol">👑</span>主权中心</a>
+    <a href="#orient" data-system="S1" aria-current="page" data-asd-panel="P-ORIENT" class="nav-item-core"><span class="nav-symbol">◎</span>全景总览</a>
+    <a href="#workbench" data-system="S1,S5" data-asd-panel="P-WORKBENCH" class="nav-item-core"><span class="nav-symbol">🖥️</span>中枢工作台</a>
   </div>
 </div>
-<!-- Engineering Mode: Deep Audit -->
-<div class="nav-group" data-nav-group="engineering" id="nav-eng-group">
-  <div class="nav-section-title" id="nav-eng-header" onclick="toggleNavGroup(this)">
-    <span>深度工程与审计</span>
-    <span class="nav-group-toggle">▼</span>
+
+<!-- Horizon 2: Strategy & Legal Action -->
+<div class="nav-group nav-horizon-group" data-nav-group="h-strategy" data-horizon="h-strategy">
+  <div class="nav-horizon-header" onclick="toggleNavGroup(this)">
+    <div class="nav-horizon-title"><span>🧭 战略与路线</span></div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span class="nav-horizon-count">5</span>
+      <span class="nav-horizon-arrow">▼</span>
+    </div>
   </div>
-  <div class="nav-group-items">
-    <a href="#topology" data-system="META" class="nav-item-engineering"><span class="nav-symbol">☵</span>架构拓扑</a>
-    <a href="#arch" data-system="META" class="nav-item-engineering"><span class="nav-symbol">↕</span>体系流程</a>
-    <a href="#atlas" data-system="S3" class="nav-item-engineering"><span class="nav-symbol">◇</span>架构与模型</a>
-    <a href="#capabilities" data-system="S7" class="nav-item-engineering"><span class="nav-symbol">▦</span>能力与 BOS</a>
-    <a href="#gov" data-system="S6" data-plane="CP-SEC" class="nav-item-engineering"><span class="nav-symbol">◇</span>恢复准入</a>
-    <a href="#swarm" data-system="S7" class="nav-item-engineering"><span class="nav-symbol">↔</span>Agent 协同</a>
-    <a href="#value" data-system="S8" class="nav-item-engineering"><span class="nav-symbol">↗</span>价值验收</a>
-    <a href="#metrics" data-system="S8" data-plane="CP-ECON" class="nav-item-engineering"><span class="nav-symbol">📊</span>指标度量</a>
-    <a href="#health" data-system="S7" data-plane="CP-REL" class="nav-item-engineering"><span class="nav-symbol">🏥</span>健康诊断</a>
-    <a href="#loops" data-system="S8" class="nav-item-engineering"><span class="nav-symbol">⟳</span>回路观测</a>
-    <a href="#trace" data-system="S8" data-plane="CP-TEMP" class="nav-item-engineering"><span class="nav-symbol">🔗</span>因果拓扑图谱</a>
+  <div class="nav-horizon-items">
+    <a href="#ledger" data-system="S4" data-asd-panel="P-LEDGER" class="nav-item-core"><span class="nav-symbol">▤</span>路线与 BET</a>
+    <a href="#next" data-system="S4,S5" data-asd-panel="P-NEXT" class="nav-item-core"><span class="nav-symbol">⚡</span>接下来做什么</a>
+    <a href="#arch" data-system="META" data-asd-panel="P-ARCH" class="nav-item-engineering"><span class="nav-symbol">↕</span>体系流程</a>
+    <a href="#topology" data-system="META" data-asd-panel="P-ARCH" class="nav-item-engineering"><span class="nav-symbol">☵</span>架构拓扑</a>
+    <a href="#atlas" data-system="S3" data-asd-panel="P-ARCH" class="nav-item-engineering"><span class="nav-symbol">🏛️</span>架构与模型</a>
   </div>
 </div>
-<!-- Engineering Mode: Knowledge & Ops -->
-<div class="nav-group" data-nav-group="knowledge" id="nav-know-group">
-  <div class="nav-section-title" onclick="toggleNavGroup(this)">
-    <span>知识与运维</span>
-    <span class="nav-group-toggle">▼</span>
+
+<!-- Horizon 3: Business & Scene System -->
+<div class="nav-group nav-horizon-group" data-nav-group="h-scenes" data-horizon="h-scenes">
+  <div class="nav-horizon-header" onclick="toggleNavGroup(this)">
+    <div class="nav-horizon-title"><span>🃏 场景与业务</span></div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span class="nav-horizon-count">4</span>
+      <span class="nav-horizon-arrow">▼</span>
+    </div>
   </div>
-  <div class="nav-group-items">
-    <a href="#logs" data-system="S7" data-plane="CP-REL" class="nav-item-engineering"><span class="nav-symbol">📋</span>事件日志</a>
-    <a href="#know" data-system="S3" class="nav-item-engineering"><span class="nav-symbol">▧</span>文档知识</a>
-    <a href="#knowledge-memory" data-system="S3" class="nav-item-engineering"><span class="nav-symbol">◈</span>知识记忆</a>
-    <a href="#learning" data-system="S8" class="nav-item-engineering"><span class="nav-symbol">🧬</span>经验与结晶</a>
-    <a href="#scene-system" data-system="S2" class="nav-item-engineering"><span class="nav-symbol">🃏</span>场景系统</a>
-    <a href="#skills-inventory" data-system="S7" class="nav-item-engineering"><span class="nav-symbol">⚙</span>技能清单</a>
+  <div class="nav-horizon-items">
+    <a href="#scene-system" data-system="S2" data-asd-panel="P-KNOW" class="nav-item-engineering"><span class="nav-symbol">🃏</span>场景系统</a>
+    <a href="#loops" data-system="S8" data-asd-panel="P-GOV" class="nav-item-engineering"><span class="nav-symbol">⟳</span>回路观测</a>
+    <a href="#value" data-system="S8" data-asd-panel="P-VALUE" class="nav-item-engineering"><span class="nav-symbol">↗</span>价值验收</a>
+    <a href="#metrics" data-system="S8" data-plane="CP-ECON" data-asd-panel="P-VALUE" class="nav-item-engineering"><span class="nav-symbol">📊</span>指标度量</a>
+  </div>
+</div>
+
+<!-- Horizon 4: Swarm & Collective Intelligence -->
+<div class="nav-group nav-horizon-group" data-nav-group="h-swarm" data-horizon="h-swarm">
+  <div class="nav-horizon-header" onclick="toggleNavGroup(this)">
+    <div class="nav-horizon-title"><span>🤖 蜂群与算力</span></div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span class="nav-horizon-count">3</span>
+      <span class="nav-horizon-arrow">▼</span>
+    </div>
+  </div>
+  <div class="nav-horizon-items">
+    <a href="#swarm" data-system="S7" data-asd-panel="P-SWARM" class="nav-item-engineering"><span class="nav-symbol">🤖</span>Agent 协同</a>
+    <a href="#trace" data-system="S8" data-plane="CP-TEMP" data-asd-panel="P-SWARM" class="nav-item-engineering"><span class="nav-symbol">🔗</span>因果拓扑图谱</a>
+    <a href="#logs" data-system="S7" data-plane="CP-REL" data-asd-panel="P-SWARM" class="nav-item-engineering"><span class="nav-symbol">📋</span>事件日志</a>
+  </div>
+</div>
+
+<!-- Horizon 5: Governance & Defense Assets -->
+<div class="nav-group nav-horizon-group" data-nav-group="h-governance" data-horizon="h-governance">
+  <div class="nav-horizon-header" onclick="toggleNavGroup(this)">
+    <div class="nav-horizon-title"><span>🛡️ 治理与防御</span></div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span class="nav-horizon-count">10</span>
+      <span class="nav-horizon-arrow">▼</span>
+    </div>
+  </div>
+  <div class="nav-horizon-items">
+    <a href="#gov" data-system="S6" data-plane="CP-SEC" data-asd-panel="P-GOV" class="nav-item-engineering"><span class="nav-symbol">🛡️</span>恢复准入</a>
+    <a href="#health" data-system="S7" data-plane="CP-REL" data-asd-panel="P-GOV" class="nav-item-engineering"><span class="nav-symbol">🏥</span>健康诊断</a>
+    <a href="#mof-grid" data-system="META" data-asd-panel="P-ARCH" class="nav-item-core"><span class="nav-symbol">⚖️</span>MOF 元模型与约束</a>
+    <a href="#capabilities" data-system="S7" data-asd-panel="P-ARCH" class="nav-item-engineering"><span class="nav-symbol">▦</span>能力与 BOS</a>
+    <a href="#know" data-system="S3" data-asd-panel="P-KNOW" class="nav-item-engineering"><span class="nav-symbol">📚</span>文档知识</a>
+    <a href="#knowledge-memory" data-system="S3" data-asd-panel="P-KNOW" class="nav-item-engineering"><span class="nav-symbol">🧠</span>知识记忆</a>
+    <a href="#learning" data-system="S8" data-asd-panel="P-KNOW" class="nav-item-engineering"><span class="nav-symbol">🧬</span>经验与结晶</a>
+    <a href="#skills-inventory" data-system="S7" data-asd-panel="P-KNOW" class="nav-item-engineering"><span class="nav-symbol">⚙</span>技能清单</a>
+    <a href="#ecosystem-map" data-system="META" data-asd-panel="P-ORIENT" class="nav-item-core"><span class="nav-symbol">🗺️</span>全域能力地图</a>
+    <a href="#panorama" data-system="S1,S2,S3,S4,S5,S6,S7,S8" data-asd-panel="P-ARCH" class="nav-item-core"><span class="nav-symbol">📐</span>白皮书指导（目标态）</a>
   </div>
 </div>
 </nav>
 <div class="aside-foot">单控制面 · 持久职责<br>可替换 Agent · 可复读证据<br><br>本地定时观测<br>正式入口 → Cockpit</div>
 </aside>
 <main id="main">
-<div class="topline">
-  <div style="display:flex;align-items:center;gap:12px;flex:1">
-    <span id="snapshot-time"></span>
+<!-- Layer 1: Sovereign Master Command Bar (高度 48px) -->
+<header class="sovereign-master-bar" id="sovereign-master-bar">
+  <div class="master-bar-left">
     <div class="persona-switcher-pill" id="persona-switcher">
-      <button class="persona-btn active" id="btn-persona-sovereign" onclick="switchPersona('sovereign')">👑 主权执掌者视界</button>
-      <button class="persona-btn" id="btn-persona-agent" onclick="switchPersona('agent')">🤖 智能体指引舱</button>
+      <button class="persona-btn active" id="btn-persona-sovereign" onclick="switchPersona('sovereign')">👑 主权执掌</button>
+      <button class="persona-btn" id="btn-persona-agent" onclick="switchPersona('agent')">🤖 智能体</button>
     </div>
     
     <!-- 全域全息指挥罗盘搜索触发器 (Command Palette) -->
-    <div class="omni-command-trigger" id="omni-command-trigger" onclick="openCommandPalette()">
-      <span style="font-size:13px;color:var(--muted)">🔍</span>
-      <span style="font-size:12px;color:var(--muted)" id="omni-search-hint">搜索全域实体、BET、MOF、模型与服务...</span>
+    <div class="omni-command-trigger" id="omni-command-trigger" onclick="openCommandPalette()" style="min-width:180px;max-width:250px">
+      <span style="font-size:12px;color:var(--muted)">🔍</span>
+      <span style="font-size:11.5px;color:var(--muted)" id="omni-search-hint">搜索全域实体、BET与因果...</span>
       <kbd class="omni-kbd">⌘K</kbd>
     </div>
   </div>
 
-  <div class="top-actions">
-    <!-- 实时遥测流状态胶囊 (Live Telemetry Stream) -->
-    <div class="telemetry-stream-badge" id="telemetry-stream-badge" onclick="toggleTelemetryTicker()">
-      <span class="telemetry-pulse-dot" id="telemetry-stream-dot"></span>
-      <span id="telemetry-stream-text" style="font-size:11px;font-weight:600;color:var(--ink)">实时遥测流: 已连接</span>
-      <span style="font-size:10px;color:var(--muted)">▾</span>
+  <div class="master-bar-center" id="temporal-focus-bar">
+    <div class="temporal-chips" style="gap:4px">
+      <button class="temporal-btn active" id="btn-temporal-morning" onclick="switchTemporalFocus('morning')" title="晨会扫描：HUD/Brief" style="padding:4px 8px;font-size:11.5px">
+        <span>🌅</span> <span>晨会</span>
+      </button>
+      <button class="temporal-btn" id="btn-temporal-living" onclick="switchTemporalFocus('living')" title="实时巡视：蜂群/算力" style="padding:4px 8px;font-size:11.5px">
+        <span>⚡</span> <span>巡视</span>
+      </button>
+      <button class="temporal-btn" id="btn-temporal-decision" onclick="switchTemporalFocus('decision')" title="阻断裁决：待审议事项" style="padding:4px 8px;font-size:11.5px">
+        <span>👑</span> <span>裁决</span>
+        <span class="temporal-tag" id="temporal-decision-badge" style="background:#fef3c7;color:#b45309;padding:0 4px">2</span>
+      </button>
+      <button class="temporal-btn" id="btn-temporal-closeout" onclick="switchTemporalFocus('closeout')" title="暮间复盘：北极星价值" style="padding:4px 8px;font-size:11.5px">
+        <span>🌙</span> <span>复盘</span>
+      </button>
+      <button class="btn btn-gold" id="btn-open-auth-desk" onclick="openSovereignAuthDesk()" title="打开主权授权台 (Cmd+E)" style="padding:4px 9px;font-size:11px">
+        <span>👑 授权台</span>
+        <span class="badge-count" id="header-auth-desk-count">2</span>
+      </button>
     </div>
-    <button class="btn" id="search-toggle" title="搜索 (Ctrl+K)">🔍</button>
-<button class="btn" id="view-toggle" title="视图定制">⚙️</button>
-    <span class="chip neutral">总设计审阅中</span><span class="chip warn">定时采集 · 部分可见</span><button class="btn" id="theme-toggle">🌙 暗色</button><button class="btn" id="download">导出</button><button class="btn" id="print">打印</button><button class="btn" id="reload-page">重载</button>
+  </div>
+
+  <div class="master-bar-right">
+    <!-- 知行主权副驾顶栏直通触发器 -->
+    <div class="copilot-trigger-btn" id="header-copilot-btn" onclick="if(window.openSovereignCopilot) window.openSovereignCopilot()" title="唤起知行主权副驾 (快捷键: ⌘J)">
+      <span>🤖 知行副驾</span>
+      <kbd>⌘J</kbd>
+    </div>
+
+    <!-- SSDS 5 态图例交互 Popover (代替整行常驻横条) -->
+    <div class="ssds-legend-popover-trigger" tabindex="0">
+      <span class="status-dot ok"></span>
+      <span style="font-weight:600">5态规范</span>
+      <span style="font-size:9px;color:var(--muted)">▾</span>
+      <div class="ssds-legend-popover-menu">
+        <div style="font:600 11px var(--mono);color:var(--ink);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:2px">✦ SSDS 状态设计规范</div>
+        <div style="display:flex;align-items:center;justify-content:space-between"><span class="badge badge-sovereign">👑 主权裁决</span> <span class="small muted">核心授权/签署</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between"><span class="badge badge-good">🟢 验证放行</span> <span class="small muted">门禁通过/就绪</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between"><span class="badge badge-warn">🟡 观察审议</span> <span class="small muted">漂移告警/演练</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between"><span class="badge badge-danger">🔴 违规熔断</span> <span class="small muted">阻断拦截/异常</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between"><span class="badge badge-neutral">⚪ 候选就绪</span> <span class="small muted">冷备排队/空闲</span></div>
+      </div>
+    </div>
+
+    <!-- 实时遥测流状态胶囊 (Live Telemetry Stream) -->
+    <div class="telemetry-stream-badge" id="telemetry-stream-badge" onclick="toggleTelemetryTicker()" style="padding:3px 8px">
+      <span class="telemetry-pulse-dot" id="telemetry-stream-dot"></span>
+      <span id="telemetry-stream-text" style="font-size:10.5px;font-weight:600;color:var(--ink)">遥测流</span>
+    </div>
+
+    <!-- 操作工具组 -->
+    <button class="btn" id="theme-toggle" title="切换暗色/亮色模式" style="padding:4px 8px;font-size:11px">🌙</button>
+    <button class="btn" id="reload-page" title="重载页面状态" style="padding:4px 8px;font-size:11px">↻</button>
+    <button class="btn" id="view-toggle" title="视图定制" style="padding:4px 8px;font-size:11px">⚙️</button>
+
+    <!-- 隐藏但保留契约以满足既有脚本与测试 -->
+    <div style="display:none">
+      <span id="snapshot-time"></span>
+      <button class="btn" id="search-toggle">🔍</button>
+      <button class="btn" id="download">导出</button>
+      <button class="btn" id="print">打印</button>
+      <div id="ssds-legend-strip">
+        <span class="badge badge-sovereign">👑 主权裁决</span>
+        <span class="badge badge-good">🟢 验证放行</span>
+        <span class="badge badge-warn">🟡 观察审议</span>
+        <span class="badge badge-danger">🔴 违规熔断</span>
+        <span class="badge badge-neutral">⚪ 候选就绪</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Layer 2: Horizon Dock Capsule Bar (五大战略视界切换坞 - 高度 38px) -->
+<div class="horizon-dock-bar" id="horizon-dock-bar">
+  <div class="horizon-dock-label">
+    <span style="font-size:12px">🌐</span>
+    <span style="font-size:12px;font-weight:600">战略视界</span>
+  </div>
+  <div class="horizon-dock-chips" style="gap:4px">
+    <button type="button" class="horizon-dock-btn active" id="btn-dock-all" onclick="switchHorizonFilter('all')">◎ 全部视界 (25)</button>
+    <button type="button" class="horizon-dock-btn" id="btn-dock-h-sovereign" onclick="switchHorizonFilter('h-sovereign')">👑 主权中枢 (3)</button>
+    <button type="button" class="horizon-dock-btn" id="btn-dock-h-strategy" onclick="switchHorizonFilter('h-strategy')">🧭 战略路线 (5)</button>
+    <button type="button" class="horizon-dock-btn" id="btn-dock-h-scenes" onclick="switchHorizonFilter('h-scenes')">🃏 场景业务 (4)</button>
+    <button type="button" class="horizon-dock-btn" id="btn-dock-h-swarm" onclick="switchHorizonFilter('h-swarm')">🤖 蜂群算力 (3)</button>
+    <button type="button" class="horizon-dock-btn" id="btn-dock-h-governance" onclick="switchHorizonFilter('h-governance')">🛡️ 治理防御 (10)</button>
+    <div style="border-left:1px solid var(--line);height:14px;margin:0 2px"></div>
+    <button type="button" class="horizon-dock-btn" id="btn-dock-focus-toggle" onclick="toggleHorizonFocusMode()" title="切换视界独占展开模式" style="background:var(--bluewash);color:var(--blue);font-weight:600;font-size:11px">🎯 专注模式: 关</button>
   </div>
 </div>
 <div id="sovereign-posture-bar" class="posture-bar"><div style="padding:8px 12px;display:flex;align-items:center;gap:8px"><span class="loading-spinner" style="width:12px;height:12px;border-width:1.5px"></span><span style="font-size:11px;color:var(--muted)">加载主权态势感知...</span></div></div>
@@ -619,34 +1568,145 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <div id="health-diagnostic-content"></div>
   </div>
 </div>
+<section id="personal" data-system="S1" class="section personal-section" aria-labelledby="title-personal"></section>
+<section id="workbench" data-system="S1,S5" class="section workbench-section" aria-labelledby="title-workbench"></section>
 <section id="orient" data-system="S1" class="section active" aria-labelledby="title-orient">
-<div class="hero">
-<div class="hero-copy"><div class="eyebrow">VISION → EXECUTION → EVIDENCE</div><h1 id="title-orient">让 Agent 可以更替，<br>让目标与责任持续。</h1><p class="lead">把外部信号变成你愿意署名的成果，并记住每次修改。以 OMO 承接权威、任务和证据，用可替换的 Agent 完成有边界的交付。</p><span class="chip warn">总体：尚未具备完整运行与价值证据</span></div>
-<div class="card"><div class="spine">
-<div class="spine-node"><strong>愿景与结果</strong><small>Objective · KR · Milestone</small></div><div class="spine-arrow">→</div><div class="spine-node"><strong>有界交付</strong><small>BET · Spec · WorkPacket</small></div>
-<div class="spine-node main"><strong>OMO</strong><small>唯一调度、权限与验收控制面</small></div><div class="spine-arrow">↔</div><div class="spine-node"><strong>动态 Agent Cell</strong><small>执行 · 验证 · 观察 · 接续</small></div>
-<div class="spine-node"><strong>真实结果</strong><small>Receipt · Outcome · HumanVerdict</small></div><div class="spine-arrow">↗</div><div class="spine-node"><strong>知识与进化</strong><small>复盘 · 修订 · 验证 · 退休</small></div>
-<div class="spine-caption">目标架构摘要 · 各组件的实际实现与准入状态见下方分量</div>
-</div></div></div>
-<div id="vectors" class="vector"></div>
-<div id="orient-loops-pulse" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载回路脉搏...</span></div></div>
-<div id="orient-domains-radar" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载业务领域雷达...</span></div></div>
-<div id="orient-scenes-funnel" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载场景卡漏斗...</span></div></div>
-<div id="orient-assets-map" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载资产星图...</span></div></div>
-<div id="orient-value-pipeline" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载价值闭环...</span></div></div>
-<div class="card gap" style="background:linear-gradient(135deg,#f0f7fc 0%,#e8f2f9 100%);border-left:4px solid var(--blue)">
-  <div class="row" style="align-items:center;justify-content:space-between">
-    <div>
-      <h2 style="margin:0 0 4px;font-size:17px">⛯ 系统全景架构大图与跨面因果网络</h2>
-      <p class="small muted" style="margin:0">物理主权拓扑架构 · 全生命周期因果流动管道 · 全要素模型图例与语义罗盘 · 100% 真实数据动态驱动</p>
+  <!-- 第一层：态势指挥舱与端到端闭环 -->
+  <div class="orient-command-deck" style="margin-bottom:14px">
+    <!-- 顶部端到端价值流轻量微标条 -->
+    <div class="value-loop-pipeline-bar" id="orient-pipeline-bar" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;display:flex;align-items:center;gap:6px">
+        <span>🔄 价值闭环:</span>
+      </div>
+      <div class="pipeline-step active" onclick="crossLinkEntity('panel', 'scene-system')" title="点击查看外部感知与业务场景">
+        <span class="pipeline-step-num">1</span>
+        <span>📡 外部感知 (Signal)</span>
+      </div>
+      <span class="pipeline-arrow">➔</span>
+      <div class="pipeline-step" onclick="crossLinkEntity('panel', 'next')" title="点击查看决策与法定行动">
+        <span class="pipeline-step-num">2</span>
+        <span>🧠 意图决策 (Decision)</span>
+      </div>
+      <span class="pipeline-arrow">➔</span>
+      <div class="pipeline-step" onclick="crossLinkEntity('panel', 'swarm')" title="点击查看智能体执行态势">
+        <span class="pipeline-step-num">3</span>
+        <span>🤖 蜂群执行 (Swarm)</span>
+      </div>
+      <span class="pipeline-arrow">➔</span>
+      <div class="pipeline-step" onclick="openSovereignCockpitDrawer()" title="点击打开主权自进化舱进行签署">
+        <span class="pipeline-step-num">4</span>
+        <span>👑 主权裁决 (Verdict)</span>
+      </div>
+      <span class="pipeline-arrow">➔</span>
+      <div class="pipeline-step" onclick="crossLinkEntity('panel', 'personal')" title="点击查看北极星价值结算与时间账本">
+        <span class="pipeline-step-num">5</span>
+        <span>💎 价值结算 (Value)</span>
+      </div>
     </div>
-    <a class="btn" href="#arch" style="white-space:nowrap;font-weight:600">查阅全景架构大图 →</a>
+
+    <!-- 态势核心 L0 概览 -->
+    <div class="orient-l0" style="margin-bottom:0">
+      <div class="orient-l0-header">
+        <span class="orient-l0-health">系统综合健康: <b id="orient-l0-health-val">—</b></span>
+        <span class="orient-l0-actions">
+          <a id="orient-l0-primary" href="#next" class="btn small">● <span id="orient-l0-primary-label">主行动</span></a>
+          <a id="orient-l0-alt" href="#next" class="btn btn-ghost small">○ <span id="orient-l0-alt-label">次行动</span></a>
+        </span>
+      </div>
+      <div class="orient-l0-highlights" id="orient-l0-highlights"></div>
+      <div class="orient-l0-quad">
+        <a href="#swarm" class="orient-quad-card"><span class="quad-label">🤝 Agent 蜂群</span><span class="quad-val" id="quad-swarm">—</span></a>
+        <a href="#ledger" class="orient-quad-card"><span class="quad-label">📊 BET 进度</span><span class="quad-val" id="quad-ledger">—</span></a>
+        <a href="#topology" class="orient-quad-card"><span class="quad-label">🛡️ 子模块</span><span class="quad-val" id="quad-topo">—</span></a>
+        <a href="#logs" class="orient-quad-card"><span class="quad-label">📋 事件流</span><span class="quad-val" id="quad-logs">—</span></a>
+      </div>
+      <div class="orient-focus" id="orient-focus">
+        <div class="orient-focus-title">🎯 今日焦点</div>
+        <div class="orient-focus-body" id="orient-focus-body">正在读取 agent-brief…</div>
+      </div>
+    </div>
   </div>
-</div>
-<div class="grid two"><article class="card"><h2>当前阻塞与进展</h2><ul id="current-findings" class="list"></ul><div id="summary-source" class="source"></div></article><article class="card"><h2>从文档走向执行</h2><div class="tree">Vision <small>最终结果</small><div class="branch">Objective → Required KR<div class="branch">Campaign → Milestone<div class="branch">Parent BET <small>可选</small><div class="branch"><span class="selected">Leaf BET · 0.5–5 天</span><div class="branch">WorkPacket → Run → Evidence</div></div></div></div></div></div><p class="small muted gap">当前和下一里程碑逐批细化。mandatory BET 交付还要与 KR、持续价值、P0 和人工验收一起判断。</p><a class="btn" href="#ledger">查看里程碑与依赖 →</a></article></div>
-<div class="callout gap">采集计划每 5 分钟运行，页面每 60 秒检查新版本，深度阅读或固定阅读时保留现场；休眠、离线或调度延迟会使结果过期。每源独立保留成功时间，失败时显示降级。正式 ASD / Cockpit 与统一 Agent 身份关联继续按路线交付。</div>
+
+  <!-- 第二层：业务版图与动态回路双翼网格 (Bento Row 1) -->
+  <div class="orient-bento-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));gap:14px;margin-bottom:14px">
+    <div id="orient-loops-pulse" class="viz-card" style="margin:0"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载回路脉搏...</span></div></div>
+    <div id="orient-domains-radar" class="viz-card" style="margin:0"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载业务领域雷达...</span></div></div>
+  </div>
+
+  <!-- 第三层：场景成熟度阶梯与全球主权数字资产 (Bento Row 2) -->
+  <div class="orient-bento-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));gap:14px;margin-bottom:14px">
+    <div id="orient-scenes-funnel" class="viz-card" style="margin:0"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载场景卡漏斗...</span></div></div>
+    <div id="orient-assets-map" class="viz-card" style="margin:0"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载资产星图...</span></div></div>
+  </div>
+
+  <div id="orient-value-pipeline" style="display:none"></div>
+  <div id="vectors" class="vector" style="display:none"></div>
+
+  <!-- 第四层：执行推进与交付契约 (Bento Row 3) -->
+  <div class="grid two gap" style="margin-bottom:14px">
+    <article class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h2 style="font-size:15px;margin:0">🚨 当前阻塞与推进进展</h2>
+        <a class="small" href="#gov">门禁准入 ➔</a>
+      </div>
+      <ul id="current-findings" class="list"></ul>
+      <div id="summary-source" class="source"></div>
+    </article>
+
+    <article class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h2 style="font-size:15px;margin:0">🌲 从战略文档走向有界交付</h2>
+        <a class="small" href="#ledger">路线台账 ➔</a>
+      </div>
+      <div class="tree">Vision <small>最终结果</small><div class="branch">Objective → Required KR<div class="branch">Campaign → Milestone<div class="branch">Parent BET <small>可选</small><div class="branch"><span class="selected">Leaf BET · 0.5–5 天</span><div class="branch">WorkPacket → Run → Evidence</div></div></div></div></div></div>
+      <p class="small muted gap" style="margin:8px 0 0">全要素台账滚动细化。mandatory BET 交付与 KR、持续价值、P0 约束与夏明星物理署名裁决对齐。</p>
+    </article>
+  </div>
+
+  <!-- 第五层：全景架构大图与跨面穿透导航 -->
+  <div class="card gap" style="background:linear-gradient(135deg,#f0f7fc 0%,#e8f2f9 100%);border-left:4px solid var(--blue);margin-bottom:14px">
+    <div class="row" style="align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="margin:0 0 4px;font-size:16px;color:var(--ink)">⛯ 系统全景架构大图与跨面因果网络</h2>
+        <p class="small muted" style="margin:0">物理主权拓扑架构 · 全生命周期因果流动管道 · 全要素模型图例与语义罗盘 · 100% 真实数据动态驱动</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a class="btn" href="#arch" style="white-space:nowrap;font-weight:600">🏛️ 体系流程 ➔</a>
+        <a class="btn btn-ghost" href="#topology" style="white-space:nowrap">🌐 架构拓扑 ➔</a>
+        <a class="btn btn-ghost" href="#mof-grid" style="white-space:nowrap">⚖️ MOF 规约 ➔</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 精致收敛的主权控制契约摘要 -->
+  <details class="card gap" style="background:#fffdfa;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:14px">
+    <summary style="cursor:pointer;font-size:12.5px;font-weight:600;color:#92400e;display:flex;align-items:center;gap:6px">
+      <span>👑</span>
+      <span>主权操作系统愿景与控制面原则 (Sovereign Vision & Control Principle)</span>
+      <span class="small muted" style="margin-left:auto;font-weight:normal">点击展开架构目标摘要</span>
+    </summary>
+    <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #fde68a;font-size:12px;color:#78350f;line-height:1.6">
+      <p style="margin:0 0 8px"><b>让 Agent 可以更替，让目标与责任持续。</b> 把外部信号变成你愿意署名的成果，并记住每次修改。以 OMO 承接权威、任务和证据，用可替换的 Agent 完成有边界的交付。</p>
+      <div class="spine" style="margin-top:8px">
+        <div class="spine-node"><strong>愿景与结果</strong><small>Objective · KR · Milestone</small></div><div class="spine-arrow">→</div><div class="spine-node"><strong>有界交付</strong><small>BET · Spec · WorkPacket</small></div>
+        <div class="spine-node main"><strong>OMO</strong><small>唯一调度、权限与验收控制面</small></div><div class="spine-arrow">↔</div><div class="spine-node"><strong>动态 Agent Cell</strong><small>执行 · 验证 · 观察 · 接续</small></div>
+        <div class="spine-node"><strong>真实结果</strong><small>Receipt · Outcome · HumanVerdict</small></div><div class="spine-arrow">↗</div><div class="spine-node"><strong>知识与进化</strong><small>复盘 · 修订 · 验证 · 退休</small></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="callout gap">采集计划每 5 分钟运行，页面每 60 秒检查新版本，深度阅读或固定阅读时保留现场；休眠、离线或调度延迟会使结果过期。每源独立保留成功时间，失败时显示降级。正式 ASD / Cockpit 与统一 Agent 身份关联继续按路线交付。</div>
 </section>
 <section id="arch" data-system="META" class="section" aria-labelledby="title-arch">
+<div class="section-breadcrumb">
+  <span>📍 体系流程</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#topology">架构拓扑</a>
+  <a href="#gov">恢复准入</a>
+  <a href="#mof-grid">MOF 元模型</a>
+</div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-ARCH · 物理架构</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Target Architecture</span></div><h1 id="title-arch">体系如何连成一体</h1><p class="lead">持久的是职责、合同、队列和证据；Agent 只在一次 assignment 中承担角色。</p></div>
 <div id="sovereign-hex-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载九面星环...</span></div></div>
 <div id="panoramic-architecture-container" class="panoramic-container"></div>
@@ -665,10 +1725,28 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <div class="card gap"><h2>一次交付的完整路径</h2><div class="flow"><span>意图 / 信号</span><i>→</i><span>BET + Spec</span><i>→</i><span>Capsule + Admission</span><i>→</i><span>claim / assignment</span><i>→</i><span>执行</span><i>→</i><span>独立验证</span><i>→</i><span>child-first 合并</span><i>→</i><span>运行与价值验收</span><i>→</i><span>复盘 / 退役</span></div><p class="small muted">Context Pack：C0 宪法指针＋C1 角色＋C2 当前任务＋C3 按需知识。claim、首次写入、首次副作用、closeout 时重新校验。</p></div>
 </section>
 <section id="gov" data-system="S6" data-plane="CP-SEC" class="section" aria-labelledby="title-gov">
+<div class="section-breadcrumb">
+  <span>📍 恢复准入</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#health">健康诊断</a>
+  <a href="#loops">回路观测</a>
+  <a href="#next">接下来做什么</a>
+</div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-GOV · 治理平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Recovery & Admission</span></div><h1 id="title-gov">先让每个门可证明</h1><p class="lead">A1–A5 恢复基础环境；Core 与 Direct Local 建立后，继续 A8、A6/A7 和 A9。每项分别显示既有设计基线与最新观测。</p></div>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div class="note" id="freshness" style="margin:0;flex:1"></div><div id="gov-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="gate-pipeline-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载门禁流水线...</span></div></div><div id="gate-list" class="gates gap"></div>
 </section>
 <section id="ledger" data-system="S4" class="section" aria-labelledby="title-ledger">
+<div class="section-breadcrumb">
+  <span>📍 路线与 BET</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#swarm">Agent 协同</a>
+  <a href="#value">价值验收</a>
+  <a href="#next">接下来做什么</a>
+</div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-LEDGER · 账本平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Portfolio & Roadmap</span></div><h1 id="title-ledger">结果、阶段与最小交付</h1><p class="lead">全周期覆盖到 Milestone，近端滚动细化到 leaf BET。下面同时保留当前 Ledger 与待落盘路线的边界。</p></div>
 <div class="card"><div class="row"><h2>当前主线 Ledger</h2><span class="chip">固定提交读取</span></div><div class="row" style="margin-bottom:12px"><span></span><div id="ledger-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="ledger-stats" class="statline"></div><div id="ledger-visuals"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载台账分布...</span></div></div><div id="ledger-source" class="source"></div></div>
 <div class="grid two gap"><article class="card"><h2>阶段依赖</h2><div id="stages"></div></article><article class="card"><h2>目标与 Campaign</h2><div id="objectives"></div><h3 class="gap">下一批候选</h3><div id="candidates"></div><div class="note gap">候选键尚未分配新 BET ID。写面、依赖、Spec、baseline、kill criteria 与 verifier 齐备后，再进入受管执行。</div></article></div>
@@ -676,6 +1754,15 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <div class="card gap"><h2>当前非终态 BET</h2><div class="toolbar"><label class="sr-only" for="bet-search">搜索 BET</label><input id="bet-search" type="search" placeholder="搜索 BET、标题或依赖"><label class="sr-only" for="bet-status">按状态筛选</label><select id="bet-status"><option value="">全部非终态</option><option value="in_progress">in_progress</option><option value="candidate">candidate</option><option value="blocked">blocked</option></select></div><p id="bet-count" class="small muted" aria-live="polite"></p><div class="table-wrap"><table><thead><tr><th>BET / 目标</th><th>状态</th><th>依赖</th></tr></thead><tbody id="bet-rows"></tbody></table></div><div class="source">这里只展示 Ledger 已记录的状态。可执行性仍需 fresh WorkPacket、capability、claim 和运行证据。</div></div>
 </section>
 <section id="swarm" data-system="S7" class="section" aria-labelledby="title-swarm">
+<div class="section-breadcrumb">
+  <span>📍 Agent 协同</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#ledger">路线与 BET</a>
+  <a href="#value">价值验收</a>
+  <a href="#next">接下来做什么</a>
+</div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Roles & Agents</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
 <div class="note" id="agent-coverage"></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
 <div class="card gap"><h2>当前核心协作实体与运行角色</h2><p class="small muted">包含人类主权决策者、常驻自治守护者、AetherForge 本地算力网关与受管工程智能体，数据实时保持最新。</p><div class="table-wrap"><table><thead><tr><th>协作实体 / Agent</th><th>当前职责</th><th>运行状态 / 算力与范围</th></tr></thead><tbody id="team-rows"></tbody></table></div></div>
@@ -807,7 +1894,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 .zx-nodata{padding:20px 10px;text-align:center;color:var(--muted);font-size:11.5px}
 .zx-nodata .zx-state{display:inline-block;margin-bottom:5px;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#8296a8}
 </style>
-<section id="value" data-system="S8" class="section zx-panel" aria-labelledby="title-value">
+<section id="value" class="section zx-panel" aria-labelledby="title-value">
 <div class="section-breadcrumb">
   <span>📍 价值中枢</span>
   <span class="sep">|</span>
@@ -832,10 +1919,6 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 </div>
 
 <div class="zx-v-grid2" style="margin-top:14px">
-  <div class="zx-v-card">
-    <h3>📌 冻结修订基线</h3>
-    <div id="zx-v-baseline" class="small">加载中…</div>
-  </div>
   <div class="zx-v-card">
     <h3>💎 五阶段价值回路 <span class="zx-chip dim" id="zx-v-loop-chip">—</span></h3>
     <div class="zx-v-loop" id="zx-v-stages"></div>
@@ -866,31 +1949,10 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <div><h3>失败保持可见</h3><p>缺失与过期标记为未知；替代必须证明覆盖等价，保留原失败历史。比率型指标在样本不足时判为不可判定，不显示达标。</p></div>
   </div>
 </div>
-
-<div class="zx-v-card" style="margin-top:14px">
-  <h3>🧪 真实使用样本记录协议</h3>
-  <p class="small">只有<strong>真实使用后由 principal 裁决</strong>的记录才能计入 30 个样本目标。Agent 不得代填、合成、批量生成或回填。</p>
-  <div class="zx-v-guard">
-    <div>
-      <h3>必须绑定</h3>
-      <p>真实 run_id、scene_id、decision_id、principal_id、fresh authority receipt digest，以及当前冻结 baseline。</p>
-    </div>
-    <div>
-      <h3>当前冻结 baseline</h3>
-      <p class="mono" style="word-break:break-all">value-recorder-baseline-20260919-unique-exec</p>
-      <p style="font-size:10.5px;color:var(--muted)">sha256:845fe0492c4b491559eccaa117ee1ad8cc93f2e6a7db181a39ef1ebf07ba644e</p>
-    </div>
-    <div>
-      <h3> Qualifying 条件</h3>
-      <p>post-baseline、real_human、HumanVerdict 有效，且净节省时间不少于 60 秒。</p>
-    </div>
-  </div>
-  <p class="small muted gap">记录入口使用 canonical recorder 的本地 CLI；HTTP 面板不提供写入接口，防止面板伪造价值证据。</p>
-</div>
 </section>
 <!-- ZHIXING-PANEL:value:END -->
 
-<section id="logs" data-system="S7" data-plane="CP-REL" class="section zx-panel" aria-labelledby="title-logs">
+<section id="logs" class="section zx-panel" aria-labelledby="title-logs">
 <div class="section-breadcrumb">
   <span>📍 事件与运行态</span>
   <span class="sep">|</span>
@@ -943,7 +2005,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 </section>
 <!-- ZHIXING-PANEL:logs:END -->
 
-<section id="metrics" data-system="S8" data-plane="CP-ECON" class="section zx-panel" aria-labelledby="title-metrics">
+<section id="metrics" class="section zx-panel" aria-labelledby="title-metrics">
 <div class="section-breadcrumb">
   <span>📍 指标度量</span>
   <span class="sep">|</span>
@@ -1036,9 +2098,9 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
     <div id="health-score-breakdown" style="margin-top:10px;font-size:11px;text-align:center"></div>
   </div>
   <div class="card" style="padding:16px 20px">
-    <h3 style="margin:0 0 10px">🧭 五维健康雷达</h3>
-    <div style="display:flex;justify-content:center"><div id="health-radar"><div class="loading-center" style="padding:10px"><span class="loading-spinner"></span></div></div></div>
-    <div id="health-radar-legend" style="margin-top:8px"></div>
+    <h3 style="margin:0 0 10px">🧭 健康概览</h3>
+    <div id="health-summary"><div class="small muted">正在计算健康度…</div></div>
+    <div style="margin-top:10px"><a class="small" href="#metrics">查看完整五维雷达 →</a></div>
   </div>
 </div>
 <!-- Data Source Status -->
@@ -1163,11 +2225,29 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 </div>
 </section>
 <section id="know" data-system="S3" class="section" aria-labelledby="title-know">
+<div class="section-breadcrumb">
+  <span>📍 文档知识</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#next">接下来做什么</a>
+  <a href="#learning">经验与结晶</a>
+  <a href="#scene-system">场景系统</a>
+</div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-KNOW · 知识平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Shared Context</span></div><h1 id="title-know">共享知识有入口，也有边界</h1><p class="lead">从纲领、架构到实施、验收、运营和复盘，每个文档保留身份、owner 与审阅状态。新 Agent 按任务加载必要部分。</p></div>
 <div id="knowledge-stats-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载知识库统计...</span></div></div>
 <div class="toolbar"><label class="sr-only" for="doc-search">搜索文档</label><input id="doc-search" type="search" placeholder="搜索白皮书、架构、共享知识、验收…"><label class="sr-only" for="doc-status">筛选审阅状态</label><select id="doc-status"><option value="">全部文档</option><option value="in-review">审阅中</option><option value="not-requested">导航 / 观察</option><option value="accepted">已接受</option></select></div><p id="doc-count" class="small muted" aria-live="polite"></p><div id="documents" class="docgrid"></div>
 </section>
 <section id="next" data-system="S4,S5" class="section" aria-labelledby="title-next">
+<div class="section-breadcrumb">
+  <span>📍 接下来做什么</span>
+  <span class="sep">|</span>
+  <span>关联：</span>
+  <a href="#orient">全景总览</a>
+  <a href="#ledger">路线与 BET</a>
+  <a href="#swarm">Agent 协同</a>
+  <a href="#personal">主权中心</a>
+</div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-NEXT · 行动中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Next Legal Action</span></div><h1 id="title-next">战役演进雷达与下一步法定行动中枢</h1><p class="lead">先处理证据和写面，再逐步建设控制合同。每一步都有责任人、进入条件、验收和停止条件。</p></div>
 
 <!-- 快速穿透协同中枢 -->
@@ -1249,7 +2329,7 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-TOPOLOGY · 拓扑平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Architecture & Interfaces</span></div><h1 id="title-topology">全项目架构拓扑与接口全景</h1><p class="lead">全景透视 16 个核心子模块仓库、八层架构流动分工、项目级上下游调用链与跨域接口契约 (CLI / MCP / HTTP / BOS)。</p></div>
 <div id="topology-content-root"></div>
 </section>
-<footer class="foot">织星 · 人类可持有的个人智能操作系统。此视图无派工、审批、写回、自动重试或外部网络请求能力。<span id="foot-source"></span></footer>
+<footer class="foot">织星 · 人类可持有的个人智能操作系统。除全局头部条的提案审议（approve/reject）外，本视图无其他派工、审批、写回、自动重试或外部网络请求能力。<span id="foot-source"></span></footer>
 <noscript>本地交互需要 JavaScript。请打开同目录说明文档或下载 JSON 查看原始快照。</noscript>
 
 <section id="knowledge-memory" data-system="S3" class="section" aria-labelledby="title-km">
@@ -1293,11 +2373,11 @@ h1,h2,h3,p{margin-top:0}h1{font:38px/1.4 var(--display);margin-bottom:15px;lette
   <a href="#loops">回路观测</a>
 </div>
 <div class="section-head">
-  <div class="eyebrow"><span class="eyebrow-text">📐 战略架构纲领</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Whitepaper Reference Architecture</span></div>
-  <h1 id="title-panorama">1—2—8—5—1 总体架构与八大核心体系</h1>
-  <p class="lead">来自织星主权智能操作系统白皮书 v2 的纲领性内容：一个人类主权、两个主闭环、八个核心体系、五个横切平面、一套元体系约束。此板块内容源自静态文档，不随运行时数据刷新变化。</p>
+  <div class="eyebrow"><span class="eyebrow-text">📐 战略架构纲领</span> <span style="margin-left:6px;font-size:11px;color:var(--amber);font-weight:600">🎯 目标态设计（非当前系统实况）</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Whitepaper Reference Architecture</span></div>
+  <h1 id="title-panorama">1—2—8—5—1 总体架构与八大核心体系（目标态）</h1>
+  <p class="lead">来自织星主权智能操作系统白皮书 v2 的纲领性<strong>目标态</strong>设计：一个人类主权、两个主闭环、八个核心体系、五个横切平面、一套元体系约束。<strong style="color:var(--amber)">此板块描述系统"要成为什么"，而非当前已实现的运行时状态</strong>。内容源自静态文档，不随运行时数据刷新变化。</p>
 </div>
-<div class="note" style="margin-bottom:16px">📖 来源：<code>2026-09-07-织星主权智能操作系统白皮书-v2.md</code> 第7-9章。此为纲领摘要，完整原文见文档知识板块。</div>
+<div class="note" style="margin-bottom:16px">📖 来源：<code>2026-09-07-织星主权智能操作系统白皮书-v2.md</code> 第7-9章 · 当前系统实况见 <a href="#arch">#arch 体系流程</a> · 完整原文见文档知识板块。</div>
 
 <div class="card gap">
   <h3 style="margin:0 0 12px">🏛️ 总图：从人类主权到价值反馈</h3>
@@ -1441,13 +2521,189 @@ Constitution / Vision / Values / Risk / Revocation
      (plus panorama, fixed separately above) went missing from the served output
      around 2026-09-18; the mount code itself was never touched. See git log
      in this directory for the recovery commit. -->
-<section id="ecosystem-map" data-system="META" class="section" aria-labelledby="title-ecosystem-map"></section>
-<section id="personal" data-system="S1" class="section" aria-labelledby="title-personal"></section>
-<section id="workbench" data-system="S1,S5" class="section" aria-labelledby="title-workbench"></section>
-<section id="trace" data-system="S8" data-plane="CP-TEMP" class="section" aria-labelledby="title-trace"></section>
-<section id="learning" data-system="S8" class="section" aria-labelledby="title-learning"></section>
-<section id="atlas" data-system="S3" class="section" aria-labelledby="title-atlas"></section>
-<section id="capabilities" data-system="S7" class="section" aria-labelledby="title-capabilities"></section>
+<section id="ecosystem-map" data-system="META" class="section" aria-labelledby="title-ecosystem-map">
+  <div class="section-head"><h1 id="title-ecosystem-map">🗺️ 全域能力地图</h1></div>
+  <div class="loading-center" style="padding:40px"><span class="loading-spinner"></span><span class="loading-text">加载全域能力地图…</span></div>
+</section>
+<!-- Dynamic panels: personal and workbench are created dynamically by workbench_ui.js -->
+
+<!-- 1. Causal Trace Graph Section -->
+<section id="trace" data-system="S8" data-plane="CP-TEMP" class="section" aria-labelledby="title-trace">
+  <div class="section-breadcrumb">
+    <span>📍 因果拓扑图谱</span>
+    <span class="sep">|</span>
+    <span>关联：</span>
+    <a href="#swarm">Agent 协同</a>
+    <a href="#loops">回路观测</a>
+    <a href="#topology">架构拓扑</a>
+  </div>
+  <div class="section-head">
+    <div class="eyebrow"><span class="eyebrow-text">因果追溯 · 跨面图谱</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Causal Dependency Graph</span></div>
+    <h1 id="title-trace">全域因果拓扑与跨面依存图谱</h1>
+    <p class="lead">覆盖 8 大主权意志面（意志/决策/感知/知识/元模/资产/交付/进化），贯通 5,808 实体节点与 6,499 因果边，提供上下游穿透溯源与最短因果路径探针。</p>
+  </div>
+  <div class="grid three gap" style="margin-bottom:14px">
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">主权意志面覆盖</div>
+      <div style="font-size:20px;font-weight:700;color:var(--ink);margin:4px 0">8 / 8 主权面</div>
+      <div class="small" style="color:var(--good)">✓ 跨面因果闭环 100% 连通</div>
+    </div>
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">全域图谱规模</div>
+      <div style="font-size:20px;font-weight:700;color:var(--ink);margin:4px 0">5,808 节点 / 6,499 边</div>
+      <div class="small muted">平均因果深度: 3.4 跃点</div>
+    </div>
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">动态观测回路</div>
+      <div style="font-size:20px;font-weight:700;color:var(--blue);margin:4px 0">4 条活跃闭环</div>
+      <div class="small" style="color:var(--good)">战略/OODA/知识/熔断在线</div>
+    </div>
+  </div>
+  <div class="card gap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 style="margin:0">🌐 8 大主权面因果流向看板</h3>
+      <span class="chip good">拓扑自愈 FRESH</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font-size:12px">
+      <span class="chip" style="background:#8B5CF6;color:#fff">👑 意志 (Mandate)</span> ➔
+      <span class="chip" style="background:#0284C7;color:#fff">⚖️ 决策 (Decision)</span> ➔
+      <span class="chip" style="background:#F43F5E;color:#fff">📜 元模 (Meta-Law)</span> ➔
+      <span class="chip" style="background:#F59E0B;color:#fff">💎 资产 (Asset)</span> ➔
+      <span class="chip" style="background:#10B981;color:#fff">🚀 交付 (Delivery)</span> ➔
+      <span class="chip" style="background:#EC4899;color:#fff">🧬 进化 (Evolution)</span>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Capability & BOS Registry Section -->
+<section id="capabilities" data-system="S7" class="section" aria-labelledby="title-capabilities">
+  <div class="section-breadcrumb">
+    <span>📍 能力与 BOS 目录</span>
+    <span class="sep">|</span>
+    <span>关联：</span>
+    <a href="#mof-grid">MOF 约束</a>
+    <a href="#skills-inventory">技能清单</a>
+    <a href="#topology">架构拓扑</a>
+  </div>
+  <div class="section-head">
+    <div class="eyebrow"><span class="eyebrow-text">能力中枢 · 统一网关</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Capability & BOS Registry</span></div>
+    <h1 id="title-capabilities">全域能力发现与 BOS 服务资产目录</h1>
+    <p class="lead">织星操作系统能力注册中枢：统合 306+ 项 BOS 服务路由、451+ 项 MCP 智能体工具与 33 项 Cockpit CLI 操作指令，基于 Unified Capability Registry 进行标准寻址与调用审计。</p>
+  </div>
+  <div class="grid three gap" style="margin-bottom:14px">
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">BOS 服务总数</div>
+      <div style="font-size:20px;font-weight:700;color:var(--ink);margin:4px 0">306 项服务</div>
+      <div class="small muted">覆盖 28 业务域协议</div>
+    </div>
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">MCP 智能体工具</div>
+      <div style="font-size:20px;font-weight:700;color:var(--blue);margin:4px 0">451 项工具</div>
+      <div class="small" style="color:var(--good)">✓ 统一 I0 网关路由</div>
+    </div>
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">Cockpit CLI 指令</div>
+      <div style="font-size:20px;font-weight:700;color:var(--ink);margin:4px 0">33 条核心指令</div>
+      <div class="small muted">支持 CLI + Web 双向操控</div>
+    </div>
+  </div>
+  <div class="card gap">
+    <h3 style="margin:0 0 10px">▦ 重点能力域分布概览</h3>
+    <div class="grid two gap">
+      <div class="card" style="background:var(--surface)">
+        <b>⚙️ 认知与计算域 (Compute & Cognitive)</b>
+        <p class="small muted" style="margin:4px 0 8px">AetherForge 本地大模型推理网关 · <code>bos://compute/aetherforge/infer</code> · DFlash 投机解码加速</p>
+        <span class="chip good">在线 READY</span> <span class="chip neutral">43.2GB 显存占用</span>
+      </div>
+      <div class="card" style="background:var(--surface)">
+        <b>🛡️ 主权治理域 (Governance & Defense)</b>
+        <p class="small muted" style="margin:4px 0 8px">GaC 合规防御 · <code>bos://governance/gate/audit</code> · PASW 工作树隔离检查 · 336+ 拦截记录</p>
+        <span class="chip good">100% 隔离</span> <span class="chip warn">336+ 阻断</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Learning & SEMA Crystallization Section -->
+<section id="learning" data-system="S8" class="section" aria-labelledby="title-learning">
+  <div class="section-breadcrumb">
+    <span>📍 经验与结晶</span>
+    <span class="sep">|</span>
+    <span>关联：</span>
+    <a href="#know">文档知识</a>
+    <a href="#knowledge-memory">知识记忆</a>
+    <a href="#gov">恢复准入</a>
+  </div>
+  <div class="section-head">
+    <div class="eyebrow"><span class="eyebrow-text">自进化 · 知识结晶</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Experience & SEMA Crystallization</span></div>
+    <h1 id="title-learning">经验自进化与 SEMA 踩坑信念结晶</h1>
+    <p class="lead">从历史 390+ 篇复盘战报（Retros）与夏明星主权署名 Diff 中逆向萃取智能体信念，实现「踩坑即沉淀、沉淀即固化为不可违背规则」的闭环进化系统。</p>
+  </div>
+  <div class="grid three gap" style="margin-bottom:14px">
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">复盘战报沉淀</div>
+      <div style="font-size:20px;font-weight:700;color:var(--ink);margin:4px 0">390+ 篇 Retros</div>
+      <div class="small" style="color:var(--good)">✓ 归档至 SSOT 知识库</div>
+    </div>
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">SEMA 萃取技能包</div>
+      <div style="font-size:20px;font-weight:700;color:var(--blue);margin:4px 0">5 大结晶技能</div>
+      <div class="small muted">覆盖 bet/gov/mini/code/doc</div>
+    </div>
+    <div class="card" style="background:var(--paper)">
+      <div class="small muted">MOS 踩坑信念库</div>
+      <div style="font-size:20px;font-weight:700;color:var(--ink);margin:4px 0">16 条核心信念</div>
+      <div class="small" style="color:var(--good)">固化为 GaC 阻断钩子</div>
+    </div>
+  </div>
+  <div class="card gap">
+    <h3 style="margin:0 0 8px">🧬 核心踩坑信念固化示例 (Beliefs into Hooks)</h3>
+    <div class="small" style="line-height:1.7;color:var(--ink)">
+      <div>• <b>BELIEF-001 (只叙述不落盘)</b>：模型路由异常信号，严禁盲目重试，自动触发 5 步诊断序列。</div>
+      <div>• <b>BELIEF-002 (主工作区只读)</b>：严禁向 <code>/Workspace</code> 盲目 commit，所有改动必须通过隔离 worktree。</div>
+      <div>• <b>BELIEF-003 (Ledger 物理边界)</b>：严禁按行号盲插 BET 条目，必须通过 <code>ledger-safe-insert.py</code> 校验 schema。</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Architecture Atlas & Model Section -->
+<section id="atlas" data-system="S1" class="section" aria-labelledby="title-atlas">
+  <div class="section-breadcrumb">
+    <span>📍 架构与模型</span>
+    <span class="sep">|</span>
+    <span>关联：</span>
+    <a href="#arch">体系流程</a>
+    <a href="#topology">架构拓扑</a>
+    <a href="#panorama">白皮书指导</a>
+  </div>
+  <div class="section-head">
+    <div class="eyebrow"><span class="eyebrow-text">微内核 · 模型驱动</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Architecture Atlas & Models</span></div>
+    <h1 id="title-atlas">织星微内核架构全景与模型映射 (Atlas)</h1>
+    <p class="lead">以「道法术器 (DFSQ/v1)」为总纲，以「5 业务域 + 4 治理层 + 1 自我层 + 1 扩展层」构筑织星操作系统稳固基石，支撑 M3 元模型 ➔ M2 领域模型 ➔ M1 运行时实例的贯通演进。</p>
+  </div>
+  <div class="grid two gap">
+    <div class="card" style="background:var(--paper)">
+      <b>🏛️ 道法术器 (DFSQ/v1) 分层架构</b>
+      <p class="small muted" style="margin:4px 0 10px">道 (L0 协议) · 法 (L2 规则) · 术 (L1/L3 编排入口) · 器 (I0/X 算力与工具)</p>
+      <div class="small" style="line-height:1.6">
+        <div>• <b>道 (L0)</b>: eCOS 协议契约、MOF 元模型、SSB 签名链</div>
+        <div>• <b>法 (L2)</b>: 门控决策中枢、69 场景卡约束、KEMS 质量控制</div>
+        <div>• <b>术 (L1/L3)</b>: KEI 沙箱、多智能体协同、Cockpit 统一控制台</div>
+        <div>• <b>器 (I0/X)</b>: Agora MCP 路由、AetherForge 异构算力织网</div>
+      </div>
+    </div>
+    <div class="card" style="background:var(--paper)">
+      <b>📐 5+4+1+1 全域微内核矩阵</b>
+      <p class="small muted" style="margin:4px 0 10px">统一解耦，标准总线互联</p>
+      <div class="small" style="line-height:1.6">
+        <div>• <b>5 大业务域</b>: 工作 (Work) · 健康 (Health) · 投研 (Research) · 认知 (Cognitive) · 治理 (Governance)</div>
+        <div>• <b>4 大运行层</b>: L0 协议 ➔ L1 运行时 ➔ L2 引擎 ➔ L3 入口</div>
+        <div>• <b>1 自我层 (L4)</b>: 主权自我面 · 28 域统一注册 · KEMS 状态机</div>
+        <div>• <b>1 扩展层 (X)</b>: Omni-Bus 通用总线 · 外部生态连接器</div>
+      </div>
+    </div>
+  </div>
+</section>
 <section id="mof-grid" data-system="META" class="section" aria-labelledby="title-mof">
 <div class="section-breadcrumb">
   <span>📍 MOF 元模型与门禁</span>
@@ -1758,7 +3014,7 @@ window.D=D;
 if(!window.__zxLiveData) window.__zxLiveData=D;
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fileLink=p=>{if(location.protocol==='http:'){const doc=D.documents.find(d=>d.path===p);if(doc)return '/document?id='+encodeURIComponent(doc.document_id);if(p===D.envelope.path)return '/document?id=current-envelope';}return 'file://'+encodeURI(p).replace(/#/g,'%23').replace(/\?/g,'%3F');};
+const fileLink=p=>{if(location.protocol==='http:'){const docList = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);const doc=docList.find(d=>d.path===p);if(doc)return '/document?id='+encodeURIComponent(doc.document_id);if(p===(D.envelope&&D.envelope.path))return '/document?id=current-envelope';}return 'file://'+encodeURI(p).replace(/#/g,'%23').replace(/\?/g,'%3F');};
 const dt=x=>x?new Date(x).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):'未观测';
 const chip=(s,t='')=>'<span class="chip '+t+'">'+esc(s)+'</span>';
 const p=D.portfolio, R=D.runtime||{};
@@ -1946,7 +3202,7 @@ const stageStateChip=function(m){
   return chip(m.state||'NO_DATA', 'neutral');
 };
 $('stages').innerHTML=D.roadmap.milestones.map(g=>'<div class="stage-row"><span class="stage-id">'+esc(g.id)+'</span><div><strong>'+esc(stageNames[g.id]||g.title||g.id)+'</strong><div class="stage-details">前置：'+esc((g.depends_on||[]).join(' + ')||'设计准备')+' · writer 上限 '+esc(g.writer_limit)+((g.gate_members&&g.gate_members.length)?' · 关卡 '+(g.gate_members.join(', ')):'')+'<details><summary>工作与退出条件</summary><ul>'+(g.candidate_bets||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><ul>'+(g.exit||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></details></div></div>'+stageStateChip(g)+'</div>').join('');
-$('objectives').innerHTML=(p.objectives||[]).map(o=>'<div class="list"><h3>'+esc(o.id)+'</h3><p class="small">'+esc(o.statement)+'</p><p class="small muted">'+o.key_results.map(k=>esc(k.id)+'：'+esc(k.status)+'（Ledger 记录）').join('<br>')+'</p></div>').join('')+'<h3 class="gap">当前 Campaign</h3>'+(p.campaigns||[]).map(c=>'<p class="small"><b>'+esc(c.title)+'</b><br><span class="mono">'+esc(c.id)+'</span></p>').join('')+'<div class="source">KR proven 为现有台账值；本页未重演历史价值验收，不自动推广为全组合通过。</div>';
+$('objectives').innerHTML=(p.objectives||[]).map(o=>'<div class="list"><h3>'+esc(o.id)+'</h3><p class="small">'+esc(o.statement)+'</p><p class="small muted">'+(o.key_results||[]).map(k=>esc(k.id)+'：'+esc(k.status)+'（Ledger 记录）').join('<br>')+'</p></div>').join('')+'<h3 class="gap">当前 Campaign</h3>'+(p.campaigns||[]).map(c=>'<p class="small"><b>'+esc(c.title)+'</b><br><span class="mono">'+esc(c.id)+'</span></p>').join('')+'<div class="source">KR proven 为现有台账值；本页未重演历史价值验收，不自动推广为全组合通过。</div>';
 $('candidates').innerHTML=D.contract.first_materialization_wave.candidate_keys.map(x=>'<p class="small mono">'+esc(x)+'</p>').join('');
 const start=Date.parse(D.gantt.first_100_days.window.start),end=Date.parse(D.gantt.first_100_days.window.end);
 const sDate=new Date(start),eDate=new Date(end);
@@ -1978,8 +3234,9 @@ if (D.agents && D.agents.length) {
 }
 $('team-rows').innerHTML = teamRows.join('') || '<tr><td colspan="3" class="empty">无团队数据</td></tr>';
 $('roles').innerHTML=D.role_design.map(x=>'<article class="role"><h3>'+esc(x[0])+'</h3><p class="small">'+esc(x[1])+'</p><small>权限：'+esc(x[2])+'<br>约束：'+esc(x[3])+'</small></article>').join('');
-function documents(){const q=$('doc-search').value.trim().toLowerCase(),status=$('doc-status').value;const ds=D.documents.filter(d=>(!status||d.approval_state===status)&&(d.title+' '+d.document_id+' '+d.authority_scope).toLowerCase().includes(q));$('doc-count').textContent=ds.length+' / '+D.documents.length+' 份已登记文档；审阅状态来自 Documents registry';$('documents').innerHTML=ds.length?ds.map(d=>'<article class="doc"><a href="'+esc(fileLink(d.path))+'">'+esc(d.title)+'</a><div class="doc-id">'+esc(d.document_id)+'</div><div class="small muted">'+esc(d.owner)+'</div><div class="doc-tags">'+chip(d.approval_state,d.approval_state==='accepted'?'good':'neutral')+chip(d.exists?'本地文件存在':'路径缺失',d.exists?'neutral':'bad')+'</div><details><summary>来源与摘要</summary><div class="source">'+esc(d.path)+'<br><span class="mono">'+esc(d.sha256)+'</span></div></details></article>').join(''):'<div class="empty">没有匹配文档。试试“白皮书”“Agent”或“验收”。</div>'}
-$('doc-status').querySelector('option[value="accepted"]').textContent='已接受（'+D.documents.filter(d=>d.approval_state==='accepted').length+'）';
+function documents(){const allDocs = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);const q=$('doc-search').value.trim().toLowerCase(),status=$('doc-status').value;const ds=allDocs.filter(d=>(!status||d.approval_state===status)&&(d.title+' '+d.document_id+' '+d.authority_scope).toLowerCase().includes(q));$('doc-count').textContent=ds.length+' / '+allDocs.length+' 份已登记文档；审阅状态来自 Documents registry';$('documents').innerHTML=ds.length?ds.map(d=>'<article class="doc"><a href="'+esc(fileLink(d.path))+'">'+esc(d.title)+'</a><div class="doc-id">'+esc(d.document_id)+'</div><div class="small muted">'+esc(d.owner)+'</div><div class="doc-tags">'+chip(d.approval_state,d.approval_state==='accepted'?'good':'neutral')+chip(d.exists?'本地文件存在':'路径缺失',d.exists?'neutral':'bad')+'</div><details><summary>来源与摘要</summary><div class="source">'+esc(d.path)+'<br><span class="mono">'+esc(d.sha256)+'</span></div></details></article>').join(''):'<div class="empty">没有匹配文档。试试“白皮书”“Agent”或“验收”。</div>'}
+const docFilterList = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);
+$('doc-status').querySelector('option[value="accepted"]').textContent='已接受（'+docFilterList.filter(d=>d.approval_state==='accepted').length+'）';
 $('doc-search').oninput=documents;$('doc-status').onchange=documents;documents();
 $('actions').innerHTML=(D.next_actions||[]).map((x,i)=>'<li><span class="step-count">'+(i+1)+'</span><div><h3>'+esc(x.title||x.id||'法定行动')+'</h3><p class="small">'+esc(x.detail||x.gate||x.description||'')+'</p><span class="small muted">'+esc(x.owner||x.source||'OMO')+' · '+esc(x.state||'REQUIRED')+'</span></div></li>').join('');
 var terminalPublicationStates={MERGED:1,CLOSED:1,WITHDRAWN:1,REJECTED:1,SUPERSEDED:1};
@@ -2038,33 +3295,43 @@ function setNavMode(mode, opts){
   opts = opts || {};
   if(mode !== 'executive' && mode !== 'engineering') mode = 'engineering';
   currentNavMode = mode;
+  window.currentNavMode = mode;
   const btnExec = $('btn-nav-exec');
   const btnFull = $('btn-nav-full');
   const badge = $('nav-mode-badge');
-  const engGroups = document.querySelectorAll('[data-nav-group="engineering"], [data-nav-group="knowledge"]');
-
   const hint = $('nav-mode-hint');
+  const asideNav = document.querySelector('aside nav');
+
+  if(asideNav){
+    asideNav.classList.toggle('nav-mode-executive', mode === 'executive');
+    asideNav.classList.toggle('nav-mode-engineering', mode === 'engineering');
+  }
+
+  const engItems = document.querySelectorAll('aside nav a.nav-item-engineering, aside nav a[data-nav-tier="engineering"]');
+  const groups = document.querySelectorAll('aside nav .workbench-nav-group, aside nav .nav-group');
+  const seps = document.querySelectorAll('aside nav .workbench-nav-sep');
+
   if(mode === 'executive'){
     if(btnExec) btnExec.classList.add('active');
     if(btnFull) btnFull.classList.remove('active');
     if(badge) { badge.textContent = '👑 执掌核心'; badge.className = 'chip neutral'; }
-    if(hint) hint.textContent = '核心模式：仅显示决策入口。数据与工程板块仍在，切换「全景」即可展开。';
-    // Hide deep groups cleanly (no max-height ghosts). Core decision group stays.
-    engGroups.forEach(group => {
-      group.setAttribute('data-nav-hidden', '1');
-      const title = group.querySelector('.nav-section-title');
-      if(title) title.classList.add('collapsed');
+    if(hint) hint.textContent = '核心模式：仅保留高层决策与主权入口。点「全景」可展开全部工程板块。';
+    engItems.forEach(item => { item.style.display = 'none'; });
+    groups.forEach(group => {
+      const visible = [...group.querySelectorAll('a')].filter(a => a.style.display !== 'none');
+      group.style.display = visible.length ? '' : 'none';
     });
+    seps.forEach(sep => { sep.style.display = ''; });
   } else {
     if(btnExec) btnExec.classList.remove('active');
     if(btnFull) btnFull.classList.add('active');
     if(badge) { badge.textContent = '🔬 工程全景'; badge.className = 'chip good'; }
-    if(hint) hint.textContent = '全景模式：左侧显示全部板块（拓扑/门禁/知识/场景等）。';
-    engGroups.forEach(group => {
-      group.removeAttribute('data-nav-hidden');
-      const title = group.querySelector('.nav-section-title');
-      if(title) title.classList.remove('collapsed');
+    if(hint) hint.textContent = '全景模式：显示全部 25 个板块（架构/门禁/蜂群/知识/场景等）。';
+    engItems.forEach(item => { item.style.display = ''; });
+    groups.forEach(group => {
+      group.style.display = '';
     });
+    seps.forEach(sep => { sep.style.display = ''; });
   }
   if(!opts.skipSave){
     try{ localStorage.setItem('zhixing-nav-mode', mode); }catch(e){}
@@ -2663,7 +3930,7 @@ function renderSwarmGalaxy(){
 
 function renderKnowledgeStats(){
   const el = $('knowledge-stats-viz'); if(!el) return;
-  const docs = D.documents || [];
+  const docs = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);
   const accepted = docs.filter(d => d.approval_state === 'accepted').length;
   const inReview = docs.filter(d => d.approval_state === 'in-review').length;
   const notReq = Math.max(0, docs.length - accepted - inReview);
@@ -3926,43 +5193,17 @@ function populateHealth(){
         '<span style="color:#8b5cf6">时效:'+(mkpi.staleness_score||0)+'</span>';
     }
 
-    /* Radar chart */
-    var radar=document.getElementById('health-radar');
-    if(radar){
-      var _cx=100,_cy=100,_r=75;
-      var _dims=[
-        {name:'保鲜',val:mkpi.freshness_score||0,color:'#10b981'},
-        {name:'时效',val:mkpi.staleness_score||0,color:'#8b5cf6'},
-        {name:'漂移',val:mkpi.drift_score||0,color:'#f59e0b'},
-        {name:'对齐',val:mkpi.alignment_score||0,color:'#3a64b3'},
-        {name:'治理',val:mkpi.health_score||0,color:'#ef4444'}
-      ];
-      var _angles=_dims.map(function(_,i){return (i*72-90)*Math.PI/180});
-      var _points=_angles.map(function(a){return [_cx+Math.cos(a)*_r,_cy+Math.sin(a)*_r]});
-      var _svg='<svg width="200" height="200" viewBox="0 0 200 200">';
-      for(var lvl=1;lvl<=5;lvl++){
-        var _gr=(_r*lvl/5);
-        var _gp=_angles.map(function(a){return [_cx+Math.cos(a)*_gr,_cy+Math.sin(a)*_gr]});
-        _svg+='<polygon points="'+_gp.map(function(p){return p.join(',')}).join(' ')+'" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>';
-      }
-      _points.forEach(function(p){_svg+='<line x1="'+_cx+'" y1="'+_cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="#e2e8f0" stroke-width="0.5"/>';});
-      var _dataPts=_dims.map(function(d,i){var _vr=(_r*d.val/100);return [_cx+Math.cos(_angles[i])*_vr,_cy+Math.sin(_angles[i])*_vr];});
-      _svg+='<polygon points="'+_dataPts.map(function(p){return p.join(',')}).join(' ')+'" fill="#3a64b3" fill-opacity="0.15" stroke="#3a64b3" stroke-width="2"/>';
-      _dims.forEach(function(d,i){var _pt=_dataPts[i];_svg+='<circle cx="'+_pt[0]+'" cy="'+_pt[1]+'" r="3" fill="'+d.color+'" stroke="white" stroke-width="1.5"/>';});
-      _dims.forEach(function(d,i){var _lp=_points[i];_svg+='<text x="'+(_lp[0]+(_lp[0]>_cx?6:-6))+'" y="'+(_lp[1]+(_lp[1]>_cy?4:-2))+'" text-anchor="'+(_lp[0]>_cx?'start':'end')+'" font-size="8" fill="var(--ink)">'+d.name+'</text>';});
-      _svg+='</svg>';
-      radar.innerHTML=_svg;
-    }
-
-    /* Radar legend */
-    var radarLeg=document.getElementById('health-radar-legend');
-    if(radarLeg){
-      radarLeg.innerHTML='<div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">'+[
-        {name:'保鲜',val:mkpi.freshness_score,color:'#10b981'},
-        {name:'时效',val:mkpi.staleness_score,color:'#8b5cf6'},
-        {name:'漂移',val:mkpi.drift_score,color:'#f59e0b'},
-        {name:'对齐',val:mkpi.alignment_score,color:'#3a64b3'}
-      ].map(function(d){return '<span style="display:flex;align-items:center;gap:3px;font-size:9px"><span style="width:6px;height:6px;border-radius:50%;background:'+d.color+'"></span>'+d.name+': <b>'+(d.val||0)+'</b></span>';}).join('')+'</div>';
+    /* Health summary */
+    var healthSummary=document.getElementById('health-summary');
+    if(healthSummary){
+      var _gatesPass=gates.filter(function(g){return ['PASS','OK','HEALTHY'].includes(String(g.verdict||g.status||'').toUpperCase());}).length;
+      var _sourcesOk=Object.values(sources).filter(function(s){return s&&['OK','PASS','HEALTHY'].includes(String(s.status||''));}).length;
+      var _sourcesTotal=Object.keys(sources).length;
+      healthSummary.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
+        '<div style="text-align:center;padding:8px;background:#f8fafc;border-radius:6px"><div style="font-size:20px;font-weight:700;color:#10b981">'+_gatesPass+'/'+gates.length+'</div><div class="small muted">门禁通过</div></div>' +
+        '<div style="text-align:center;padding:8px;background:#f8fafc;border-radius:6px"><div style="font-size:20px;font-weight:700;color:#3a64b3">'+_sourcesOk+'/'+_sourcesTotal+'</div><div class="small muted">数据源正常</div></div>' +
+        '<div style="text-align:center;padding:8px;background:#f8fafc;border-radius:6px"><div style="font-size:20px;font-weight:700;color:#f59e0b">'+_age+'m</div><div class="small muted">快照年龄</div></div>' +
+        '</div>';
     }
 
     /* Data sources */
@@ -4611,17 +5852,6 @@ function zxRenderValue(){
     }
     renderThr(v.thresholds,'zx-v-thr');
     renderThr(v.vision_thresholds,'zx-v-vision');
-    var baselineHost=document.getElementById('zx-v-baseline');
-    if(baselineHost){
-      var b=v.revision_baseline;
-      baselineHost.innerHTML=b ? [
-        '<div><b>'+zxVEsc(b.baseline_id||'—')+'</b></div>',
-        '<div style="color:#7a8fa3;font-size:10.5px;margin:4px 0">frozen '+zxVEsc(b.frozen_at||'—')+'</div>',
-        '<div class="mono" style="font-size:10.5px;word-break:break-all">'+zxVEsc(b.digest||'—')+'</div>',
-        '<div style="margin-top:6px">基线修订负担: <b>'+zxVEsc(b.baseline_revision_burden_percent!=null ? b.baseline_revision_burden_percent+'%' : 'UNKNOWN')+'</b></div>',
-        '<div style="color:#7a8fa3;font-size:10.5px;margin-top:4px">基线后裁决 '+zxVEsc((b.post_window||{}).adjudicated||0)+' 条；修订 '+zxVEsc((b.post_window||{}).revised||0)+' 条</div>'
-      ].join('') : '<p class="small muted">修订负担基线尚未冻结。</p>';
-    }
 
     /* ── 价值证据时间线（真实记录） ── */
     var evc=document.getElementById('zx-v-ev-chip');
@@ -4988,7 +6218,95 @@ setTimeout(checkForUpdates, 30000);
   <div class="ticker-terminal-body" id="telemetry-terminal-logs">
     <!-- 动态滚动输出日志 -->
   </div>
+<!-- Phase 1: Sovereign Authorization Desk Drawer (Level 1 Human Authority) -->
+<div class="sovereign-auth-backdrop" id="sovereign-auth-desk-modal" style="display:none" onclick="if(event.target===this)closeSovereignAuthDesk()">
+  <div class="sovereign-auth-drawer">
+    <div class="auth-drawer-header">
+      <div class="auth-drawer-title-group">
+        <h2>👑 夏明星主权授权台</h2>
+        <div class="auth-drawer-subtitle">
+          最高人类执掌者专属 · 物理单向确认 · 密码学防伪凭据 (Signed Receipt) · 零注入安全执行
+        </div>
+      </div>
+      <button class="auth-close-btn" onclick="closeSovereignAuthDesk()" aria-label="关闭授权台">✕</button>
+    </div>
+    
+    <div class="auth-drawer-body" id="auth-desk-content">
+      <div class="loading-center">
+        <span class="loading-spinner"></span>
+        <span class="loading-text">加载待审主权决议中...</span>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Universal Contextual Flyout Inspector Drawer (全息侧拉抽屉) -->
+<div class="contextual-inspector-backdrop" id="contextual-inspector-modal" style="display:none" onclick="if(event.target===this)closeEntityInspector()">
+  <div class="contextual-inspector-drawer">
+    <div class="inspector-head">
+      <div class="inspector-title-wrap">
+        <h3 id="inspector-entity-title">🔍 实体全息审视</h3>
+        <div id="inspector-entity-subtitle" class="small muted">所属视界 · 拓扑血缘 · 证据凭证</div>
+      </div>
+      <button class="auth-close-btn" onclick="closeEntityInspector()" aria-label="关闭抽屉">✕</button>
+    </div>
+    <div class="inspector-body" id="inspector-drawer-body">
+      <!-- 动态填充 -->
+    </div>
+    <div class="inspector-foot" id="inspector-drawer-foot">
+      <button class="btn" onclick="closeEntityInspector()">关闭 (Esc)</button>
+      <button class="btn btn-gold" id="inspector-btn-jump" onclick="jumpToFullEntity()">🚀 深入完整面板沉浸浏览</button>
+    </div>
+  </div>
+</div>
+
+<!-- Daily Sovereign Executive Briefing Modal (主权日结战报) -->
+<div class="sovereign-briefing-backdrop" id="sovereign-briefing-modal" style="display:none" onclick="if(event.target===this)closeSovereignBriefing()">
+  <div class="sovereign-briefing-modal">
+    <div class="briefing-head">
+      <div>
+        <h3 style="margin:0;font-size:18px;font-family:var(--display)">📜 夏明星主权日结与价值战报</h3>
+        <div style="font-size:11.5px;opacity:.9;margin-top:2px">Sovereign Daily Executive Briefing & Value Ledger</div>
+      </div>
+      <button class="auth-close-btn" onclick="closeSovereignBriefing()" aria-label="关闭日结战报">✕</button>
+    </div>
+    <div class="briefing-body" id="briefing-modal-body">
+      <!-- 动态填充 -->
+    </div>
+    <div class="briefing-foot">
+      <span class="small muted" id="briefing-timestamp">生成于 --</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-gold" onclick="copyBriefingMarkdown()">📋 复制 Markdown 战报</button>
+        <button class="btn" onclick="closeSovereignBriefing()">完成</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sovereign Cockpit Drawer (主权执掌者态势导读与署名自进化舱沉浸抽屉) -->
+<div class="sovereign-cockpit-backdrop" id="sovereign-cockpit-drawer-modal" style="display:none" onclick="if(event.target===this)closeSovereignCockpitDrawer()">
+  <div class="sovereign-cockpit-drawer">
+    <div class="cockpit-drawer-header">
+      <div class="cockpit-drawer-title-group">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">👑</span>
+          <h2 style="font-size:17.5px;margin:0">主权执掌者视界 · 夏明星态势导读与署名自进化舱</h2>
+        </div>
+        <div class="cockpit-drawer-subtitle">
+          人类意志最高控制权 (Human In Command) · 物理单向签署 · 知识沉淀与 SEMA 进化
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-pin-toggle" id="btn-pin-sovereign-card" onclick="togglePinSovereignInPage()" title="在页面内平铺展开">📌 固定在页面</button>
+        <button class="auth-close-btn" onclick="closeSovereignCockpitDrawer()" aria-label="关闭导读舱">✕</button>
+      </div>
+    </div>
+    <div class="cockpit-drawer-body" id="sovereign-cockpit-drawer-content">
+      <!-- 动态填充 -->
+    </div>
+  </div>
+</div>
+
 <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="返回顶部">↑</button>
 </body>
 </html>

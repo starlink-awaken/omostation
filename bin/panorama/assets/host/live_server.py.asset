@@ -6,6 +6,7 @@ Source injection is a Python testing seam; the executable has no path/source opt
 """
 import argparse
 import errno
+import gzip
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -63,7 +64,18 @@ MAX_DOCUMENT_BYTES = 1024 * 1024
 POLL_INTERVAL_SECONDS = 5
 SERVER_CODE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 QUERY_CODE_SHA256 = hashlib.sha256(Path(__file__).with_name('observatory_query.py').read_bytes()).hexdigest()
-PAGE_PATH = Path("/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库/40-验收与运营/Agent体系全景总览-2026-09-08.html")
+REPO_DIST_PAGE = Path(__file__).resolve().parent / "dist" / "index.html"
+REPO_ROOT_PAGE = Path(__file__).resolve().parent / "index.html"
+LEGACY_DOC_PAGE = Path("/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库/40-验收与运营/Agent体系全景总览-2026-09-08.html")
+
+def resolve_default_page_path() -> Path:
+    if REPO_DIST_PAGE.is_file():
+        return REPO_DIST_PAGE
+    if REPO_ROOT_PAGE.is_file():
+        return REPO_ROOT_PAGE
+    return LEGACY_DOC_PAGE
+
+PAGE_PATH = resolve_default_page_path()
 SNAPSHOT_PATH = Path("/Users/xiamingxing/.local/share/zhixing-dashboard/current.json")
 RUNTIME_AGENT_BRIEF = Path("/Users/xiamingxing/Workspace/runtime/dashboard/agent-brief.json")
 RUNTIME_DATA_JSON = Path("/Users/xiamingxing/Workspace/runtime/dashboard/data.json")
@@ -831,7 +843,7 @@ class DashboardServer(ThreadingHTTPServer):
 
     def get_request(self):
         request, address = super().get_request()
-        request.settimeout(5)
+        request.settimeout(30)
         return request, address
 
 
@@ -844,6 +856,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
         pass
 
     def _send(self, status, body, content_type="application/json; charset=utf-8", extra_headers=None):
+        if not isinstance(body, bytes):
+            body = body.encode("utf-8")
+        headers = dict(extra_headers or {})
+        accept_encoding = self.headers.get("Accept-Encoding", "") if hasattr(self, "headers") and self.headers else ""
+        if "gzip" in accept_encoding and len(body) > 1024:
+            body = gzip.compress(body)
+            headers["Content-Encoding"] = "gzip"
+
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
@@ -853,7 +873,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Cross-Origin-Resource-Policy", "same-origin")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; manifest-src 'self'")
-        for name, value in (extra_headers or {}).items():
+        for name, value in headers.items():
             self.send_header(name, value)
         self.end_headers()
         try:
@@ -903,7 +923,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     self._json(400, {"error": "unexpected_query"})
                     return
             try:
-                descriptor = os.open(self.server.page_path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
+                target_page_path = REPO_DIST_PAGE if REPO_DIST_PAGE.is_file() else getattr(self.server, "page_path", resolve_default_page_path())
+                descriptor = os.open(target_page_path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
                 with os.fdopen(descriptor, "rb") as stream:
                     if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
                         raise OSError("not a regular page")
@@ -993,9 +1014,30 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_header('Cache-Control', 'no-cache, no-transform')
             self.send_header('Connection', 'keep-alive')
             self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('X-Accel-Buffering', 'no')
             self.end_headers()
             import time
             try:
+                snapshot_candidates = [
+                    Path(__file__).resolve().parent / "dist/current.json",
+                    getattr(self.server, "snapshot_path", None),
+                    SNAPSHOT_PATH,
+                ]
+                active_snap_file = None
+                for c in snapshot_candidates:
+                    if c and Path(c).is_file():
+                        active_snap_file = Path(c)
+                        break
+
+                last_mtime = active_snap_file.stat().st_mtime_ns if active_snap_file else 0
+                last_gen_id = None
+                if active_snap_file:
+                    try:
+                        snap = json.loads(active_snap_file.read_text(encoding="utf-8"))
+                        last_gen_id = snap.get("generation_id")
+                    except Exception:
+                        pass
+
                 now_str = utc_now()
                 init_evt = {
                     'type': 'connected',
@@ -1004,7 +1046,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     'guardian_cadence_seconds': 74,
                     'active_loops': 4,
                     'vram_usage': '43.2GB / 152GB',
-                    'status': 'STREAM_ONLINE'
+                    'status': 'STREAM_ONLINE',
+                    'generation_id': last_gen_id,
                 }
                 self.wfile.write(f"event: connected\ndata: {json.dumps(init_evt)}\n\n".encode('utf-8'))
                 self.wfile.flush()
@@ -1012,22 +1055,45 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 cycle = 0
                 while True:
                     cycle += 1
-                    time.sleep(4)
-                    pulse = {
-                        'type': 'telemetry_pulse',
-                        'cycle': cycle,
-                        'timestamp': utc_now(),
-                        'sentinel': 'ResidentGuardian-74s',
-                        'status': 'ARMED_HEALTHY',
-                        'circuit_pulses': [
-                            {'loop': 'value_reinforcement', 'status': 'ACTIVE', 'adherence': '89.8%'},
-                            {'loop': 'execution_control', 'status': 'ARMED', 'compliance': '100%'},
-                            {'loop': 'meta_governance', 'status': 'ARMED', 'rules': '7720+'},
-                            {'loop': 'physical_isolation', 'status': 'ENFORCED', 'mode': 'PASW'}
-                        ]
-                    }
-                    self.wfile.write(f"event: pulse\ndata: {json.dumps(pulse)}\n\n".encode('utf-8'))
-                    self.wfile.flush()
+                    time.sleep(1)
+
+                    if active_snap_file and active_snap_file.is_file():
+                        try:
+                            cur_mtime = active_snap_file.stat().st_mtime_ns
+                            if cur_mtime != last_mtime:
+                                last_mtime = cur_mtime
+                                snap = json.loads(active_snap_file.read_text(encoding="utf-8"))
+                                cur_gen_id = snap.get("generation_id")
+                                if cur_gen_id != last_gen_id or not last_gen_id:
+                                    last_gen_id = cur_gen_id
+                                    update_evt = {
+                                        'type': 'snapshot_updated',
+                                        'timestamp': utc_now(),
+                                        'generation_id': cur_gen_id,
+                                        'observed_at': snap.get("observed_at") or snap.get("generated_at"),
+                                        'status': snap.get("status") or "OK",
+                                    }
+                                    self.wfile.write(f"event: snapshot_updated\ndata: {json.dumps(update_evt)}\n\n".encode('utf-8'))
+                                    self.wfile.flush()
+                        except Exception:
+                            pass
+
+                    if cycle % 4 == 0:
+                        pulse = {
+                            'type': 'telemetry_pulse',
+                            'cycle': cycle // 4,
+                            'timestamp': utc_now(),
+                            'sentinel': 'ResidentGuardian-74s',
+                            'status': 'ARMED_HEALTHY',
+                            'circuit_pulses': [
+                                {'loop': 'value_reinforcement', 'status': 'ACTIVE', 'adherence': '89.8%'},
+                                {'loop': 'execution_control', 'status': 'ARMED', 'compliance': '100%'},
+                                {'loop': 'meta_governance', 'status': 'ARMED', 'rules': '7720+'},
+                                {'loop': 'physical_isolation', 'status': 'ENFORCED', 'mode': 'PASW'}
+                            ]
+                        }
+                        self.wfile.write(f"event: pulse\ndata: {json.dumps(pulse)}\n\n".encode('utf-8'))
+                        self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError, OSError):
                 pass
             return
@@ -1529,14 +1595,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     except ValueError:
                         return None
 
-                snap_path = _Path(__file__).resolve().parent / "current.json"
+                snap_candidates = [
+                    _Path(__file__).resolve().parent / "dist/current.json",
+                    _Path(__file__).resolve().parent / "current.json",
+                ]
+                snap_path = next((p for p in snap_candidates if p.exists()), None)
                 cache_path = _Path(__file__).resolve().parent / "panorama_cache.json"
-                if snap_path.exists():
+                if snap_path and snap_path.exists():
                     full = _json.loads(snap_path.read_text())
                     embed = {
                         "generated_at": full.get("generated_at") or full.get("observed_at") or "",
                         "generation_id": full.get("generation_id"),
-                        "source": "current.json",
+                        "source": snap_path.name,
                         "knowledge_health": full.get("knowledge_health", {}),
                         "knowledge_growth": full.get("knowledge_growth", {}),
                         "experience_network": full.get("experience_network", {}),
@@ -1567,8 +1637,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif route.path == "/api/snapshot":
             # Lightweight endpoint for incremental refresh - returns only essential data
             try:
-                snap_path = Path(__file__).resolve().parent / "current.json"
-                if snap_path.exists():
+                candidates = [
+                    Path(__file__).resolve().parent / "dist/current.json",
+                    Path(__file__).resolve().parent / "current.json",
+                ]
+                snap_path = next((p for p in candidates if p.exists()), None)
+                if snap_path and snap_path.exists():
                     import json as _json
                     full = _json.loads(snap_path.read_text())
                     # Return lightweight version for polling
