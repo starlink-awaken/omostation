@@ -12,8 +12,8 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 643
-  bos_services: 359
-  bos_domains: 25
+  bos_services: 352
+  bos_domains: 24
   cli_commands: 203
   skills: 40
   workflows: 25
@@ -896,9 +896,8 @@ bos_services:
     governance: 80
     harness: 9
     l4-kernel: 1
-    memory: 53
+    memory: 52
     meta: 1
-    observatory: 6
     omo: 4
     perception: 5
     persona: 11
@@ -912,93 +911,93 @@ bos_services:
     - uri: bos://agent-cell/pool/status
       description: Cell Pool 状态 — 多 Cell 并行运行状态
       transport: stdio
-      status: unimplemented
+      status: active
     - uri: bos://agent-cell/pool/submit
-      description: Cell Pool 提交 — 提交 Episode 到 Cell Pool
+      description: '[UNIMPLEMENTED] Cell Pool 提交 — 提交 Episode 到 Cell Pool'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/pool/scale
-      description: Cell Pool 扩缩容 — 调整 Cell 数量
+      description: '[UNIMPLEMENTED] Cell Pool 扩缩容 — 调整 Cell 数量'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/pool/auto-scale
-      description: Cell Pool 自动扩缩容 — 基于负载自动调整
+      description: '[UNIMPLEMENTED] Cell Pool 自动扩缩容 — 基于负载自动调整'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/pool/metrics
-      description: Cell Pool 指标 — 详细监控指标
+      description: '[UNIMPLEMENTED] Cell Pool 指标 — 详细监控指标'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/dag/execute
-      description: Cell DAG 执行 — 跨 Cell 编排
+      description: '[UNIMPLEMENTED] Cell DAG 执行 — 跨 Cell 编排'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/memory/publish
-      description: Memory Publish — 发布记忆到网络
+      description: '[UNIMPLEMENTED] Memory Publish — 发布记忆到网络'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/memory/search
-      description: Memory Search — 跨 Cell 搜索
+      description: '[UNIMPLEMENTED] Memory Search — 跨 Cell 搜索'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/governance/audit
-      description: Governance Audit — 配置合规审计
+      description: '[UNIMPLEMENTED] Governance Audit — 配置合规审计'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/governance/report
-      description: Governance Report — 治理报告
+      description: '[UNIMPLEMENTED] Governance Report — 治理报告'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/config/list
-      description: Cell Config 列表 — 列出预设配置
+      description: '[UNIMPLEMENTED] Cell Config 列表 — 列出预设配置'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/config/create
-      description: Cell Config 创建 — 从预设创建 Cell
+      description: '[UNIMPLEMENTED] Cell Config 创建 — 从预设创建 Cell'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/plan
-      description: Cell Plan — 意图解析 + 任务分解 + 风险评估
+      description: '[UNIMPLEMENTED] Cell Plan — 意图解析 + 任务分解 + 风险评估'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/execute
-      description: Cell Execute — 按计划执行 + 工具调用 + 产出收集
+      description: '[UNIMPLEMENTED] Cell Execute — 按计划执行 + 工具调用 + 产出收集'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/verify
-      description: Cell Verify — 完整性 + 正确性 + 质量三维评分
+      description: '[UNIMPLEMENTED] Cell Verify — 完整性 + 正确性 + 质量三维评分'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/govern
-      description: Cell Govern — R0-R3 风险分级 + 审批决策
+      description: '[UNIMPLEMENTED] Cell Govern — R0-R3 风险分级 + 审批决策'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/pdp/evaluate
-      description: PDP Evaluate — 策略决策点上下文感知评估
+      description: '[UNIMPLEMENTED] PDP Evaluate — 策略决策点上下文感知评估'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/pep/enforce
-      description: PEP Enforce — 策略执行点强制执行 + 审计
+      description: '[UNIMPLEMENTED] PEP Enforce — 策略执行点强制执行 + 审计'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/memory/process
-      description: Memory Process — Episode → 记忆候选生成
+      description: '[UNIMPLEMENTED] Memory Process — Episode → 记忆候选生成'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/memory/consolidate
-      description: Memory Consolidate — 记忆冲突检测 + 整合
+      description: '[UNIMPLEMENTED] Memory Consolidate — 记忆冲突检测 + 整合'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/replay/run
-      description: Replay — Episode 回放验证
+      description: '[UNIMPLEMENTED] Replay — Episode 回放验证'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/replay/shadow
-      description: Shadow — 影子运行 (无副作用验证)
+      description: '[UNIMPLEMENTED] Shadow — 影子运行 (无副作用验证)'
       transport: stdio
       status: unimplemented
     - uri: bos://agent-cell/replay/eval
-      description: Eval — 批量 Episode 性能评估
+      description: '[UNIMPLEMENTED] Eval — 批量 Episode 性能评估'
       transport: stdio
       status: unimplemented
     agora:
@@ -1114,15 +1113,15 @@ bos_services:
     - uri: bos://analysis/iris/connect
       description: '[UNIMPLEMENTED] Iris 连接 (POC stdio)'
       transport: mcp_stdio
-      status: deprecated
+      status: unimplemented
     - uri: bos://analysis/iris/transform
       description: '[UNIMPLEMENTED] Iris 数据转换 (POC stdio)'
       transport: mcp_stdio
-      status: deprecated
+      status: unimplemented
     - uri: bos://analysis/iris/validate
       description: '[UNIMPLEMENTED] Iris 数据校验 (POC stdio)'
       transport: mcp_stdio
-      status: deprecated
+      status: unimplemented
     - uri: bos://analysis/eidos/validate
       description: Eidos 数据模型校验
       transport: stdio
@@ -1330,33 +1329,33 @@ bos_services:
       transport: stdio
       status: deprecated
     - uri: bos://capability/bus/control_plane
-      description: '[auto-registered] From bus-foundation/control_plane references. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From bus-foundation/control_plane references. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://capability/omo/governance
-      description: '[auto-registered] From omo/omo_daemon.py line 370. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From omo/omo_daemon.py line 370. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://capability/perception-inbox
-      description: '[auto-registered] From perception module references. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From perception module references. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://capability/personal-signals
-      description: '[auto-registered] From personal signals module. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From personal signals module. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://capability/runtime/cron
-      description: '[auto-registered] From runtime cron scheduling. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From runtime cron scheduling. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://capability/workflow-mesh/jsonl
-      description: '[auto-registered] From workflow mesh jsonl transport. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From workflow mesh jsonl transport. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://capability/event-ledger/outbox
-      description: '[auto-registered] From event-ledger outbox pattern. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From event-ledger outbox pattern. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     cockpit:
     - uri: bos://cockpit/tools/cards_status
       description: cockpit cards_status 工具 — mof_agora_hook 路由表入口
@@ -1391,9 +1390,9 @@ bos_services:
       transport: stdio
       status: active
     - uri: bos://cockpit/context
-      description: '[auto-registered] From cockpit context module. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From cockpit context module. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     compute:
     - uri: bos://compute/aetherforge/infer
       description: AetherForge 算力网关与 omlxc (Apple MLX/Local LLM) 本地量化模型通用推理调度端点
@@ -1493,13 +1492,13 @@ bos_services:
       transport: inline
       status: active
     - uri: bos://documents/inbox-mail/draft
-      description: '[auto-registered] From inbox mail draft. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From inbox mail draft. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://documents/mail-draft
-      description: '[auto-registered] From mail draft service. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From mail draft service. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     ecos:
     - uri: bos://ecos/workflow/list
       description: eCOS L0 工作流列表
@@ -1845,33 +1844,33 @@ bos_services:
       transport: internal
       status: active
     - uri: bos://governance/cockpit/circuit_breaker
-      description: '[auto-registered] From cockpit circuit breaker. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From cockpit circuit breaker. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://governance/cockpit/daily_budget
-      description: '[auto-registered] From cockpit daily budget. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From cockpit daily budget. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://governance/cockpit/quests
-      description: '[auto-registered] From cockpit quests. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From cockpit quests. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://governance/l4-kernel
-      description: '[auto-registered] From l4 kernel governance. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From l4 kernel governance. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://governance/metaos_workflow
-      description: '[auto-registered] From metaos workflow. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From metaos workflow. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://governance/mof/auth
-      description: '[auto-registered] From MOF auth. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From MOF auth. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://governance/protocols-layer/trigger
-      description: '[auto-registered] From protocols layer trigger. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From protocols layer trigger. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     harness:
     - uri: bos://harness/compliance/check
       description: Harness 12 章节全生命周期合规检查 (Phase 8)
@@ -2112,16 +2111,13 @@ bos_services:
       transport: internal
       status: active
     - uri: bos://memory/brain-events/card_updated
-      description: '[auto-registered] From cockpit knowledge_indexer consumer (ADR-0294 dual-accept). See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From cockpit knowledge_indexer consumer (ADR-0294 dual-accept). See
+        bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://memory/events/card_updated
       description: '[auto-registered] From memory event migration (from brain → memory). See bos-pending-registrations.yaml.'
       transport: stdio
-      status: active
-    - uri: bos://memory/kairon/minerva
-      description: '[auto-registered] From kairon minerva search. See bos-pending-registrations.yaml.'
-      transport: internal
       status: active
     - uri: bos://memory/unified
       description: '[auto-registered] From unified memory API. See bos-pending-registrations.yaml.'
@@ -2132,31 +2128,6 @@ bos_services:
       description: 发现所有可用 BOS 资源和入口
       transport: internal
       status: active
-    observatory:
-    - uri: bos://observatory/mcp-server
-      description: 织星系统官方架构拓扑、并发冲突防撞与状态哨兵 FastMCP Server
-      transport: mcp_proxy
-      status: active
-    - uri: bos://observatory/project/perception
-      description: 获取单项目的超紧凑架构感知信息与并发写冲突状态 (<800 tokens)
-      transport: mcp_proxy
-      status: unimplemented
-    - uri: bos://observatory/agents/collisions
-      description: 全局检查 42 个未合并工作树并发写争用风险与防撞守卫建议
-      transport: mcp_proxy
-      status: unimplemented
-    - uri: bos://observatory/sentinel/status
-      description: 探测 16 个子模块 Gitlink 对齐状态与 7 大主权端口健康度
-      transport: mcp_proxy
-      status: unimplemented
-    - uri: bos://observatory/callchains/get
-      description: 获取 4 大跨层调用链时序步骤与契约规约
-      transport: internal
-      status: unimplemented
-    - uri: bos://observatory/system/overview
-      description: 获取八层架构项目分布与接口大厅汇总统计
-      transport: internal
-      status: unimplemented
     omo:
     - uri: bos://omo/eidos/pipeline
       description: Eidos 治理管线调度
@@ -2184,11 +2155,11 @@ bos_services:
       transport: stdio
       status: deprecated
     - uri: bos://perception/agora/ocr
-      description: '[auto-registered] From perception OCR via agora. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From perception OCR via agora. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://perception/scene/anchor
-      description: '[auto-registered] From scene anchor. See bos-pending-registrations.yaml.'
+      description: 场景卡锚点推荐/绑定 facade (omo kernel 可用时真实打分, 否则诚实 kernel_unavailable)
       transport: internal
       status: active
     - uri: bos://perception/voice-memo/ingest
@@ -2279,13 +2250,13 @@ bos_services:
       transport: mcp_stdio
       status: active
     - uri: bos://runtime/execution-workers/status
-      description: '[auto-registered] From execution workers status API. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From execution workers status API. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://runtime/client/v1
-      description: '[auto-registered] From runtime client v1. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From runtime client v1. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     swarm:
     - uri: bos://swarm/orchestrator/status
       description: 获取分布式蜂群实时拓扑与负载状态
@@ -2337,38 +2308,38 @@ bos_services:
       transport: inline
       status: active
     - uri: bos://system/core-kernel/v1
-      description: '[auto-registered] From core kernel module. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From core kernel module. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://system/im-session/triage
-      description: '[auto-registered] From IM session triage. See bos-pending-registrations.yaml.'
+      description: IM 会话分诊 (whitelist gate + directive parse + task cards)
       transport: internal
       status: active
     - uri: bos://system/personal-followup/draft
-      description: '[auto-registered] From personal followup. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From personal followup. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://system/test-health/ping
-      description: '[auto-registered] From test health ping. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From test health ping. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://system/vault/_state
-      description: '[auto-registered] From vault state. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From vault state. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     toolbox:
     - uri: bos://toolbox/domain-package
-      description: '[auto-registered] From domain package registry. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From domain package registry. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://toolbox/domain-package-action
-      description: '[auto-registered] From domain package action routing. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From domain package action routing. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
     - uri: bos://toolbox/domain-subdomain-action
-      description: '[auto-registered] From domain subdomain action routing. See bos-pending-registrations.yaml.'
+      description: '[UNIMPLEMENTED] [auto-registered] From domain subdomain action routing. See bos-pending-registrations.yaml.'
       transport: internal
-      status: active
+      status: unimplemented
 cli_commands:
 - name: ack
   description: 确认任务完成
