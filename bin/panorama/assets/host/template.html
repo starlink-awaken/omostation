@@ -33,7 +33,7 @@ source_digests:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0f172a">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'self'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; manifest-src 'self'">
 <title>织星 · 体系全景</title>
 <style>
 :root{
@@ -1550,7 +1550,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   </div>
 </div>
 <div id="sovereign-posture-bar" class="posture-bar"><div style="padding:8px 12px;display:flex;align-items:center;gap:8px"><span class="loading-spinner" style="width:12px;height:12px;border-width:1.5px"></span><span style="font-size:11px;color:var(--muted)">加载主权态势感知...</span></div></div>
-<div id="persona-guidance-bar" style="margin-bottom:20px"></div>
+<!-- persona-guidance-bar: removed (empty div occupying layout) -->
 <div id="refresh-health-container" class="refresh-health-compact" style="margin-bottom:18px">
   <div id="refresh-health" style="display:none"></div>
   <div class="health-summary-pill" id="health-summary-pill" onclick="toggleHealthDiagnosticDrawer()">
@@ -1707,7 +1707,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#gov">恢复准入</a>
   <a href="#mof-grid">MOF 元模型</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-ARCH · 物理架构</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Target Architecture</span></div><h1 id="title-arch">体系如何连成一体</h1><p class="lead">持久的是职责、合同、队列和证据；Agent 只在一次 assignment 中承担角色。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-ARCH · 物理架构</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">目标架构</span></div><h1 id="title-arch">体系如何连成一体</h1><p class="lead">持久的是职责、合同、队列和证据；Agent 只在一次 assignment 中承担角色。</p></div>
 <div id="sovereign-hex-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载九面星环...</span></div></div>
 <div id="panoramic-architecture-container" class="panoramic-container"></div>
 <div class="grid two"><article class="card"><h2>物理分层与唯一执行脊柱</h2>
@@ -1734,7 +1734,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#loops">回路观测</a>
   <a href="#next">接下来做什么</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-GOV · 治理平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Recovery & Admission</span></div><h1 id="title-gov">先让每个门可证明</h1><p class="lead">A1–A5 恢复基础环境；Core 与 Direct Local 建立后，继续 A8、A6/A7 和 A9。每项分别显示既有设计基线与最新观测。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-GOV · 治理平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">恢复与准入</span></div><h1 id="title-gov">先让每个门可证明</h1><p class="lead">A1–A5 恢复基础环境；Core 与 Direct Local 建立后，继续 A8、A6/A7 和 A9。每项分别显示既有设计基线与最新观测。</p></div>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div class="note" id="freshness" style="margin:0;flex:1"></div><div id="gov-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="gate-pipeline-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载门禁流水线...</span></div></div><div id="gate-list" class="gates gap"></div>
 </section>
 <section id="ledger" data-system="S4" class="section" aria-labelledby="title-ledger">
@@ -1747,7 +1747,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#value">价值验收</a>
   <a href="#next">接下来做什么</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-LEDGER · 账本平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Portfolio & Roadmap</span></div><h1 id="title-ledger">结果、阶段与最小交付</h1><p class="lead">全周期覆盖到 Milestone，近端滚动细化到 leaf BET。下面同时保留当前 Ledger 与待落盘路线的边界。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-LEDGER · 账本平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">组合与路线图</span></div><h1 id="title-ledger">结果、阶段与最小交付</h1><p class="lead">全周期覆盖到 Milestone，近端滚动细化到 leaf BET。下面同时保留当前 Ledger 与待落盘路线的边界。</p></div>
 <div class="card"><div class="row"><h2>当前主线 Ledger</h2><span class="chip">固定提交读取</span></div><div class="row" style="margin-bottom:12px"><span></span><div id="ledger-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="ledger-stats" class="statline"></div><div id="ledger-visuals"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载台账分布...</span></div></div><div id="ledger-source" class="source"></div></div>
 <div class="grid two gap"><article class="card"><h2>阶段依赖</h2><div id="stages"></div></article><article class="card"><h2>目标与 Campaign</h2><div id="objectives"></div><h3 class="gap">下一批候选</h3><div id="candidates"></div><div class="note gap">候选键尚未分配新 BET ID。写面、依赖、Spec、baseline、kill criteria 与 verifier 齐备后，再进入受管执行。</div></article></div>
 <div class="card gap"><h2>容量计划 · 滚动排期</h2><p class="small muted">来自 3Y-BET-LEDGER 动态台账排期，时间范围随台账实时滚动。前置门未通过时顺延，执行完成率以最新依赖为准。</p><div class="timeline"><div id="gantt" class="gantt"></div></div></div>
@@ -1763,7 +1763,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#value">价值验收</a>
   <a href="#next">接下来做什么</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Roles & Agents</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">角色与智能体</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
 <div class="note" id="agent-coverage"></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
 <div class="card gap"><h2>当前核心协作实体与运行角色</h2><p class="small muted">包含人类主权决策者、常驻自治守护者、AetherForge 本地算力网关与受管工程智能体，数据实时保持最新。</p><div class="table-wrap"><table><thead><tr><th>协作实体 / Agent</th><th>当前职责</th><th>运行状态 / 算力与范围</th></tr></thead><tbody id="team-rows"></tbody></table></div></div>
 <div class="card gap"><h2>目标 Reference Cell</h2><div class="flow"><span>1 总控</span><i>→</i><span>1 执行</span><i>→</i><span>1 独立验证</span><i>↔</i><span>1 运行观察</span></div><p class="small muted">默认 Direct Local；每波最多两个不重叠 writer。Orca R0、Multica AS0、Ruflo RF0 各有准入门。Ruflo 原生 swarm 可以在获准 Cell 内协调，外层任务、权限与完成证据由 OMO 持有。</p><h3>token 不足或 Agent 掉线</h3><div class="flow"><span>drain / checkpoint</span><i>→</i><span>校验副作用</span><i>→</i><span>fence 旧 attempt</span><i>→</i><span>deputy 接续</span><i>→</i><span>独立重放</span></div><p class="small">结果未知时先 reconcile。第二次 failover 进入 HOLD 与根因分析。接续必须保留未完成义务、最后安全版本、权限边界与证据。</p></div>
@@ -1905,7 +1905,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#health">健康诊断</a>
 </div>
 <div class="section-head">
-  <div class="eyebrow"><span class="eyebrow-text">P-VALUE · 价值中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Outcomes &amp; Acceptance</span></div>
+  <div class="eyebrow"><span class="eyebrow-text">P-VALUE · 价值中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">成果与验收</span></div>
   <h1 id="title-value">成果被采用，才开始证明价值</h1>
   <p class="lead">交付、稳定运行与个人价值分别验收。所有计数均来自真实证据文件；样本不足时保持 NOT_PROVEN。</p>
 </div>
@@ -1963,7 +1963,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#gov">门禁状态</a>
 </div>
 <div class="section-head">
-  <div class="eyebrow"><span class="eyebrow-text">事件流 · 运行态</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Event Stream</span></div>
+  <div class="eyebrow"><span class="eyebrow-text">事件流 · 运行态</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">事件流</span></div>
   <h1 id="title-logs">事件与运行态</h1>
   <p class="lead">结构化的真实事件流 · 来源健康 · 24h 速率分布；全部数据可回溯到具体日志文件。</p>
 </div>
@@ -2018,7 +2018,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 </div>
 <div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
   <div>
-    <div class="eyebrow"><span class="eyebrow-text">KPI · 度量看板</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Metrics Dashboard</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">KPI · 度量看板</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">指标看板</span></div>
     <h1 id="title-metrics">指标度量</h1>
     <p class="lead" style="margin-bottom:0">全部序列由真实日志现场聚合（refresh.jsonl · 常驻心跳 · Agent 心跳 · 事件源），无合成波形。</p>
   </div>
@@ -2084,7 +2084,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 </div>
 <div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
   <div>
-    <div class="eyebrow"><span class="eyebrow-text">健康诊断</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Health Diagnosis</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">健康诊断</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">健康诊断</span></div>
     <h1 id="title-health">系统健康诊断</h1>
     <p class="lead" style="margin-bottom:0">综合评估系统运行状态 · 数据源健康 · 门禁态势 · Agent 活跃度</p>
   </div>
@@ -2143,7 +2143,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 </div>
 <div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
   <div>
-    <div class="eyebrow"><span class="eyebrow-text">⟳ 回路观测</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Control Loops & Feedback</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">⟳ 回路观测</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">控制回路与反馈</span></div>
     <h1 id="title-loops">控制回路与反馈观测</h1>
     <p class="lead" style="margin-bottom:0">价值循环 · 规则活跃度 · 自动循环追踪 · 异常事件流</p>
   </div>
@@ -2234,7 +2234,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#learning">经验与结晶</a>
   <a href="#scene-system">场景系统</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-KNOW · 知识平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Shared Context</span></div><h1 id="title-know">共享知识有入口，也有边界</h1><p class="lead">从纲领、架构到实施、验收、运营和复盘，每个文档保留身份、owner 与审阅状态。新 Agent 按任务加载必要部分。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-KNOW · 知识平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">共享上下文</span></div><h1 id="title-know">共享知识有入口，也有边界</h1><p class="lead">从纲领、架构到实施、验收、运营和复盘，每个文档保留身份、owner 与审阅状态。新 Agent 按任务加载必要部分。</p></div>
 <div id="knowledge-stats-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载知识库统计...</span></div></div>
 <div class="toolbar"><label class="sr-only" for="doc-search">搜索文档</label><input id="doc-search" type="search" placeholder="搜索白皮书、架构、共享知识、验收…"><label class="sr-only" for="doc-status">筛选审阅状态</label><select id="doc-status"><option value="">全部文档</option><option value="in-review">审阅中</option><option value="not-requested">导航 / 观察</option><option value="accepted">已接受</option></select></div><p id="doc-count" class="small muted" aria-live="polite"></p><div id="documents" class="docgrid"></div>
 </section>
@@ -2248,7 +2248,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#swarm">Agent 协同</a>
   <a href="#personal">主权中心</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-NEXT · 行动中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Next Legal Action</span></div><h1 id="title-next">战役演进雷达与下一步法定行动中枢</h1><p class="lead">先处理证据和写面，再逐步建设控制合同。每一步都有责任人、进入条件、验收和停止条件。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-NEXT · 行动中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">法定行动</span></div><h1 id="title-next">战役演进雷达与下一步法定行动中枢</h1><p class="lead">先处理证据和写面，再逐步建设控制合同。每一步都有责任人、进入条件、验收和停止条件。</p></div>
 
 <!-- 快速穿透协同中枢 -->
 <div id="next-penetration-bar"></div>
@@ -2326,14 +2326,14 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 </div>
 </section>
 <section id="topology" data-system="META" class="section" aria-labelledby="title-topology">
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-TOPOLOGY · 拓扑平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Architecture & Interfaces</span></div><h1 id="title-topology">全项目架构拓扑与接口全景</h1><p class="lead">全景透视 16 个核心子模块仓库、八层架构流动分工、项目级上下游调用链与跨域接口契约 (CLI / MCP / HTTP / BOS)。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-TOPOLOGY · 拓扑平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">架构与接口</span></div><h1 id="title-topology">全项目架构拓扑与接口全景</h1><p class="lead">全景透视 16 个核心子模块仓库、八层架构流动分工、项目级上下游调用链与跨域接口契约 (CLI / MCP / HTTP / BOS)。</p></div>
 <div id="topology-content-root"></div>
 </section>
 <footer class="foot">织星 · 人类可持有的个人智能操作系统。除全局头部条的提案审议（approve/reject）外，本视图无其他派工、审批、写回、自动重试或外部网络请求能力。<span id="foot-source"></span></footer>
 <noscript>本地交互需要 JavaScript。请打开同目录说明文档或下载 JSON 查看原始快照。</noscript>
 
 <section id="knowledge-memory" data-system="S3" class="section" aria-labelledby="title-km">
-<div class="section-head"><div class="eyebrow">P-KM / KNOWLEDGE & MEMORY</div><h1 id="title-km">知识记忆经验建模</h1><button onclick="refreshPanorama()" style="float:right;padding:6px 14px;background:#5b9dff;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">⟳ 刷新</button><span id="panorama-refresh-status" style="float:right;margin-right:10px;font-size:11px;color:var(--muted)"></span><div style="clear:both"></div><p class="lead">知识健康度、增长曲线、记忆双轨、经验网络、经验图谱。</p><div id="km-freshness" style="margin-top:8px;font-size:11px;color:var(--muted)"></div></div>
+<div class="section-head"><div class="eyebrow">P-KM · 知识记忆</div><h1 id="title-km">知识记忆经验建模</h1><button onclick="refreshPanorama()" style="float:right;padding:6px 14px;background:#5b9dff;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">⟳ 刷新</button><span id="panorama-refresh-status" style="float:right;margin-right:10px;font-size:11px;color:var(--muted)"></span><div style="clear:both"></div><p class="lead">知识健康度、增长曲线、记忆双轨、经验网络、经验图谱。</p><div id="km-freshness" style="margin-top:8px;font-size:11px;color:var(--muted)"></div></div>
 <div class="grid three gap" id="km-kpi"><div class="loading-center" style="padding:16px;grid-column:1/-1"><span class="loading-spinner"></span><span class="loading-text">加载知识记忆 KPI...</span></div></div>
 <div class="grid two gap" style="margin-top:14px">
   <div class="card"><h3>近 30 天知识增长</h3><div id="km-growth" style="display:flex;align-items:flex-end;gap:3px;height:60px;padding-top:10px"></div></div>
@@ -2373,7 +2373,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#loops">回路观测</a>
 </div>
 <div class="section-head">
-  <div class="eyebrow"><span class="eyebrow-text">📐 战略架构纲领</span> <span style="margin-left:6px;font-size:11px;color:var(--amber);font-weight:600">🎯 目标态设计（非当前系统实况）</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Whitepaper Reference Architecture</span></div>
+  <div class="eyebrow"><span class="eyebrow-text">📐 战略架构纲领</span> <span style="margin-left:6px;font-size:11px;color:var(--amber);font-weight:600">🎯 目标态设计（非当前系统实况）</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">白皮书参考架构</span></div>
   <h1 id="title-panorama">1—2—8—5—1 总体架构与八大核心体系（目标态）</h1>
   <p class="lead">来自织星主权智能操作系统白皮书 v2 的纲领性<strong>目标态</strong>设计：一个人类主权、两个主闭环、八个核心体系、五个横切平面、一套元体系约束。<strong style="color:var(--amber)">此板块描述系统"要成为什么"，而非当前已实现的运行时状态</strong>。内容源自静态文档，不随运行时数据刷新变化。</p>
 </div>
@@ -2538,7 +2538,7 @@ Constitution / Vision / Values / Risk / Revocation
     <a href="#topology">架构拓扑</a>
   </div>
   <div class="section-head">
-    <div class="eyebrow"><span class="eyebrow-text">因果追溯 · 跨面图谱</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Causal Dependency Graph</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">因果追溯 · 跨面图谱</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">因果依赖图谱</span></div>
     <h1 id="title-trace">全域因果拓扑与跨面依存图谱</h1>
     <p class="lead">覆盖 8 大主权意志面（意志/决策/感知/知识/元模/资产/交付/进化），贯通 5,808 实体节点与 6,499 因果边，提供上下游穿透溯源与最短因果路径探针。</p>
   </div>
@@ -2586,7 +2586,7 @@ Constitution / Vision / Values / Risk / Revocation
     <a href="#topology">架构拓扑</a>
   </div>
   <div class="section-head">
-    <div class="eyebrow"><span class="eyebrow-text">能力中枢 · 统一网关</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Capability & BOS Registry</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">能力中枢 · 统一网关</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">能力与 BOS 注册</span></div>
     <h1 id="title-capabilities">全域能力发现与 BOS 服务资产目录</h1>
     <p class="lead">织星操作系统能力注册中枢：统合 306+ 项 BOS 服务路由、451+ 项 MCP 智能体工具与 33 项 Cockpit CLI 操作指令，基于 Unified Capability Registry 进行标准寻址与调用审计。</p>
   </div>
@@ -2635,7 +2635,7 @@ Constitution / Vision / Values / Risk / Revocation
     <a href="#gov">恢复准入</a>
   </div>
   <div class="section-head">
-    <div class="eyebrow"><span class="eyebrow-text">自进化 · 知识结晶</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Experience & SEMA Crystallization</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">自进化 · 知识结晶</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">经验与 SEMA 结晶</span></div>
     <h1 id="title-learning">经验自进化与 SEMA 踩坑信念结晶</h1>
     <p class="lead">从历史 390+ 篇复盘战报（Retros）与夏明星主权署名 Diff 中逆向萃取智能体信念，实现「踩坑即沉淀、沉淀即固化为不可违背规则」的闭环进化系统。</p>
   </div>
@@ -2666,7 +2666,7 @@ Constitution / Vision / Values / Risk / Revocation
   </div>
 </section>
 
-<!-- 4. Architecture Atlas & Model Section -->
+<!-- 4. 架构图谱与模型板块 -->
 <section id="atlas" data-system="S1" class="section" aria-labelledby="title-atlas">
   <div class="section-breadcrumb">
     <span>📍 架构与模型</span>
@@ -2677,7 +2677,7 @@ Constitution / Vision / Values / Risk / Revocation
     <a href="#panorama">白皮书指导</a>
   </div>
   <div class="section-head">
-    <div class="eyebrow"><span class="eyebrow-text">微内核 · 模型驱动</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Architecture Atlas & Models</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">微内核 · 模型驱动</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">架构图谱与模型</span></div>
     <h1 id="title-atlas">织星微内核架构全景与模型映射 (Atlas)</h1>
     <p class="lead">以「道法术器 (DFSQ/v1)」为总纲，以「5 业务域 + 4 治理层 + 1 自我层 + 1 扩展层」构筑织星操作系统稳固基石，支撑 M3 元模型 ➔ M2 领域模型 ➔ M1 运行时实例的贯通演进。</p>
   </div>
@@ -2715,7 +2715,7 @@ Constitution / Vision / Values / Risk / Revocation
 </div>
 <div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
   <div>
-    <div class="eyebrow"><span class="eyebrow-text">MOF · 元模型内核</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Metamodel & Constraints</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">MOF · 元模型内核</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">元模型与约束</span></div>
     <h1 id="title-mof">MOF 元模型与全域约束中枢</h1>
     <p class="lead" style="margin-bottom:0">M0-M3 四层元模型 · 规则门禁覆盖 · 阶段解锁状态 · CI 平面健康</p>
   </div>
@@ -3738,9 +3738,9 @@ function renderGatePipeline(){
 
   const checkpoints = `
     <line x1="442" y1="8" x2="442" y2="100" stroke="#cbd9e5" stroke-dasharray="3 3"/>
-    <text x="442" y="98" font-size="8" fill="#60778c" text-anchor="middle" font-family="monospace">CORE READY</text>
+    <text x="442" y="98" font-size="8" fill="#60778c" text-anchor="middle" font-family="monospace">核心就绪</text>
     <line x1="708" y1="8" x2="708" y2="100" stroke="#cbd9e5" stroke-dasharray="3 3"/>
-    <text x="708" y="98" font-size="8" fill="#60778c" text-anchor="middle" font-family="monospace">SWARM OK</text>
+    <text x="708" y="98" font-size="8" fill="#60778c" text-anchor="middle" font-family="monospace">蜂群正常</text>
   `;
 
   const gateDenom = Math.max(gates.length, Object.keys(coords).length, 1);
@@ -4797,6 +4797,41 @@ safeRender(renderSwarmGalaxy, 'renderSwarmGalaxy failed');
 safeRender(renderAgentCapabilityMesh, 'renderAgentCapabilityMesh failed');
 safeRender(renderKnowledgeStats, 'renderKnowledgeStats failed');
 safeRender(renderGuidanceHub, 'renderGuidanceHub failed');
+
+/* === 知行主权副驾抽屉 (Sovereign Cockpit Copilot Drawer) === */
+window.openSovereignCopilot = function(){
+  var backdrop = document.getElementById('sovereign-cockpit-drawer-modal');
+  var content = document.getElementById('sovereign-cockpit-drawer-content');
+  if(!backdrop || !content) return;
+  var compute = D.compute || {};
+  var models = compute.models || compute.endpoints || [];
+  var html = '<div style="padding:18px 24px;color:var(--ink)">';
+  html += '<h3 style="margin:0 0 12px;font-size:18px;font-family:var(--display)">⚡ AetherForge 算力织网</h3>';
+  html += '<p class="small muted" style="margin:0 0 14px;line-height:1.6">本地大模型推理网关 · <code style="font-size:11px">bos://compute/aetherforge/infer</code> · 投机解码加速</p>';
+  if(models.length){
+    html += '<div style="display:grid;gap:8px;margin-bottom:16px">';
+    models.forEach(function(m){
+      var nm = m.name || m.id || m.model || '未知模型';
+      var st = (m.status || 'ready');
+      var cls = (st === 'ready' || st === 'ok' || st === 'healthy') ? 'good' : (st === 'loading' ? 'warn' : 'neutral');
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface-subtle);border-radius:6px"><span style="font-size:12.5px">'+esc(nm)+'</span><span class="chip '+cls+'" style="font-size:10px">'+esc(st)+'</span></div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="empty" style="padding:24px;text-align:center"><div style="font-size:28px;margin-bottom:8px">🖥️</div><span class="chip neutral" style="font-size:11px">静态算力面板</span><p class="small muted" style="margin-top:10px;line-height:1.6">当前快照未包含 compute 模型明细。<br>AetherForge 推理端点: <code style="font-size:10.5px">bos://compute/aetherforge/infer</code></p></div>';
+  }
+  html += '<div class="note" style="margin-top:14px;font-size:11.5px">知行副驾 · 夏明星态势导读与署名自进化舱 · 人类意志最高控制权 (Human In Command) · 物理单向签署 · 知识沉淀与 SEMA 进化</div>';
+  html += '</div>';
+  content.innerHTML = html;
+  backdrop.style.display = 'flex';
+};
+window.closeSovereignCockpitDrawer = function(){
+  var b = document.getElementById('sovereign-cockpit-drawer-modal');
+  if(b) b.style.display = 'none';
+};
+document.addEventListener('keydown', function(e){
+  if((e.metaKey || e.ctrlKey) && e.key === 'j'){ e.preventDefault(); window.openSovereignCopilot(); }
+});
 
 if(typeof initPersonaSystem === 'function') initPersonaSystem();
 if(typeof renderMofGrid === 'function') renderMofGrid();
@@ -5895,7 +5930,7 @@ safeRender(populateHealth, 'populateHealth failed');
   function buildSearchIndex() {
     searchIndex = [];
     // Sections
-    var sectionNames = {'orient':'全景总览', 'arch':'体系与流程', 'gov':'恢复与准入', 'ledger':'路线与BET', 'swarm':'Agent协同', 'value':'价值中枢', 'logs':'事件与运行态', 'metrics':'指标度量', 'health':'健康诊断', 'know':'文档与知识', 'knowledge-memory':'知识记忆', 'skills-inventory':'技能清单', 'mof-grid':'MOF元模型', 'scene-system':'场景系统', 'next':'接下来做什么', 'topology':'架构拓扑'};
+    var sectionNames = {'orient':'全景总览', 'arch':'体系与流程', 'gov':'恢复与准入', 'ledger':'路线与BET', 'swarm':'Agent协同', 'value':'价值中枢', 'logs':'事件与运行态', 'metrics':'指标度量', 'health':'健康诊断', 'loops':'回路观测', 'know':'文档与知识', 'knowledge-memory':'知识记忆', 'skills-inventory':'技能清单', 'mof-grid':'MOF元模型', 'scene-system':'场景系统', 'next':'接下来做什么', 'topology':'架构拓扑', 'panorama':'白皮书指导', 'ecosystem-map':'全域能力地图', 'trace':'因果拓扑图谱', 'capabilities':'能力与BOS', 'learning':'经验结晶', 'atlas':'架构与模型', 'personal':'主权中心', 'workbench':'中枢工作台', 'main':'主线入口'};
     Object.keys(sectionNames).forEach(function(id) {
       searchIndex.push({type:'板块', name:sectionNames[id], action:function(){go(id)}});
     });
@@ -5979,9 +6014,12 @@ safeRender(populateHealth, 'populateHealth failed');
   var sectionNames = {
     'orient':'全景总览', 'arch':'体系流程', 'gov':'恢复准入', 'ledger':'路线BET',
     'swarm':'Agent协同', 'value':'价值中枢', 'logs':'事件运行态', 'metrics':'指标度量',
-    'health':'健康诊断', 'know':'文档知识', 'knowledge-memory':'知识记忆',
+    'health':'健康诊断', 'loops':'回路观测', 'know':'文档知识', 'knowledge-memory':'知识记忆',
     'skills-inventory':'技能清单', 'mof-grid':'MOF元模型', 'scene-system':'场景系统',
-    'next':'接下来', 'topology':'架构拓扑'
+    'next':'接下来', 'topology':'架构拓扑', 'panorama':'白皮书指导',
+    'ecosystem-map':'全域能力地图', 'trace':'因果拓扑图谱', 'capabilities':'能力与BOS',
+    'learning':'经验结晶', 'atlas':'架构与模型', 'personal':'主权中心',
+    'workbench':'中枢工作台', 'main':'主线入口'
   };
 
   // Load saved preferences
@@ -6306,6 +6344,13 @@ setTimeout(checkForUpdates, 30000);
     </div>
   </div>
 </div>
+
+<!-- External UI JS modules -->
+<script src="/workbench_ui.js"></script>
+<script src="/next_ui.js"></script>
+<script src="/topology_ui.js"></script>
+<script src="/mof_ui.js"></script>
+<script src="/panoramic_ui.js"></script>
 
 <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="返回顶部">↑</button>
 </body>

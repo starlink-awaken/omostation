@@ -872,7 +872,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cross-Origin-Resource-Policy", "same-origin")
         self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; manifest-src 'self'")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'unsafe-inline' 'self'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; manifest-src 'self'")
         for name, value in headers.items():
             self.send_header(name, value)
         self.end_headers()
@@ -1667,6 +1667,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif route.path.startswith('/api/v1/'):
             # Stub API endpoints for UI extensions - return valid empty responses
             self._json(200, {"_stub": True, "endpoint": route.path, "status": "ok", "data": []})
+        elif route.path.endswith('.js') and not route.query:
+            # Serve external UI JS files (workbench, next, topology, mof, panoramic)
+            js_name = Path(route.path).name
+            js_file = Path(__file__).resolve().parent / js_name
+            if js_file.exists() and js_file.parent == Path(__file__).resolve().parent:
+                self._send(200, js_file.read_bytes(), "application/javascript; charset=utf-8")
+            else:
+                self._json(404, {"error": "js_not_found"})
+            return
         else:
             self._json(404, {"error": "not_found"})
 
