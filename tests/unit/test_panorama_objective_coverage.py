@@ -241,6 +241,24 @@ def test_projection_source_binding_rejects_broken_event_chain(tmp_path) -> None:
         )
 
 
+def test_personal_value_truth_is_bound_to_the_same_logical_ledger(tmp_path) -> None:
+    module = _module()
+    event_ledger = tmp_path / "event-ledger.sqlite3"
+    _write_event_ledger(event_ledger)
+
+    envelope = module.collect_personal_value_truth(
+        event_ledger=event_ledger,
+        environ={},
+    )
+
+    assert envelope["available"] is True
+    assert envelope["event_ledger_sha256"] == module._event_ledger_logical_digest(
+        event_ledger
+    )
+    assert envelope["value_truth"]["schema"] == "value-truth-snapshot/v1"
+    assert envelope["value_truth"]["status"] == "unprovable"
+
+
 def test_claims_projection_reads_storage_without_invoking_claims_status(
     tmp_path, monkeypatch
 ) -> None:
@@ -284,6 +302,9 @@ def test_projection_producer_identity_binds_executing_collector_to_main_tree(
     collector = repo / "bin/panorama/panorama-collect.py"
     collector.parent.mkdir(parents=True)
     collector.write_bytes(SCRIPT.read_bytes())
+    meter = repo / "bin/bc-os/north_star_meter_v2.py"
+    meter.parent.mkdir(parents=True)
+    meter.write_bytes((ROOT / "bin/bc-os/north_star_meter_v2.py").read_bytes())
 
     def git(*args: str) -> str:
         completed = subprocess.run(
@@ -297,13 +318,30 @@ def test_projection_producer_identity_binds_executing_collector_to_main_tree(
     git("init", "-q")
     git("config", "user.name", "Projection Test")
     git("config", "user.email", "projection@example.invalid")
-    git("add", "bin/panorama/panorama-collect.py")
-    git(
-        "update-index",
-        "--add",
-        "--cacheinfo",
-        "160000," + "e" * 40 + ",projects/omo",
-    )
+    git("add", "bin/panorama/panorama-collect.py", "bin/bc-os/north_star_meter_v2.py")
+    submodule_oids = {}
+    for name in ("omo", "ecos"):
+        checkout = repo / "projects" / name
+        checkout.mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", checkout], check=True)
+        subprocess.run(["git", "-C", checkout, "config", "user.name", "Projection Test"], check=True)
+        subprocess.run(["git", "-C", checkout, "config", "user.email", "projection@example.invalid"], check=True)
+        (checkout / "bound.txt").write_text(f"{name}\n", encoding="utf-8")
+        subprocess.run(["git", "-C", checkout, "add", "bound.txt"], check=True)
+        subprocess.run(["git", "-C", checkout, "commit", "-qm", "fixture"], check=True)
+        submodule_oid = subprocess.run(
+            ["git", "-C", checkout, "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        submodule_oids[name] = submodule_oid
+        git(
+            "update-index",
+            "--add",
+            "--cacheinfo",
+            f"160000,{submodule_oid},projects/{name}",
+        )
     git("commit", "-qm", "fixture")
     head = git("rev-parse", "HEAD")
     git("update-ref", "refs/remotes/origin/main", head)
@@ -311,8 +349,25 @@ def test_projection_producer_identity_binds_executing_collector_to_main_tree(
     identity = module.collect_projection_producer_identity(code_root=repo)
 
     assert identity["root_oid"] == head
-    assert identity["omo_gitlink_oid"] == "e" * 40
+    assert identity["root_tree_sha256"] == hashlib.sha256(
+        subprocess.run(
+            ["git", "-C", repo, "ls-tree", "-r", "--full-tree", "HEAD"],
+            check=True,
+            capture_output=True,
+        ).stdout
+    ).hexdigest()
+    assert identity["omo_gitlink_oid"] == submodule_oids["omo"]
+    assert identity["ecos_gitlink_oid"] == submodule_oids["ecos"]
     assert identity["collector_sha256"] == hashlib.sha256(SCRIPT.read_bytes()).hexdigest()
+    assert identity["value_meter_sha256"] == hashlib.sha256(meter.read_bytes()).hexdigest()
+
+    (repo / "projects/ecos/bound.txt").write_text("dirty\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="projection_ecos_checkout_dirty"):
+        module.collect_projection_producer_identity(code_root=repo)
+    subprocess.run(
+        ["git", "-C", repo / "projects/ecos", "restore", "bound.txt"],
+        check=True,
+    )
 
     collector.write_text("# another collector\n", encoding="utf-8")
     git("add", "bin/panorama/panorama-collect.py")
@@ -355,9 +410,33 @@ def test_publish_projection_revision_is_reader_compatible_and_leaves_legacy_snap
         "collect_projection_producer_identity",
         lambda **_kwargs: {
             "root_oid": "c" * 40,
+            "root_tree_sha256": "8" * 64,
             "omo_gitlink_oid": "e" * 40,
+            "ecos_gitlink_oid": "a" * 40,
             "collector_sha256": "d" * 64,
+            "value_meter_sha256": "9" * 64,
             "process_identity": "sha256:" + "f" * 64,
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "collect_personal_value_truth",
+        lambda **_kwargs: {
+            "available": True,
+            "event_ledger_sha256": "4" * 64,
+            "value_truth": {
+                "schema": "value-truth-snapshot/v1",
+                "status": "not_ready",
+            },
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "collect_projection_dashboard_identity",
+        lambda **_kwargs: {
+            "code_oid": "b" * 40,
+            "tree_sha256": "6" * 64,
+            "code_bundle_sha256": "7" * 64,
         },
     )
 
@@ -377,11 +456,38 @@ def test_publish_projection_revision_is_reader_compatible_and_leaves_legacy_snap
     revision_root = state_root / "revisions" / result["revision_id"]
     manifest_body = (revision_root / "manifest.json").read_bytes()
     manifest = json.loads(manifest_body)
+    published_data = json.loads((revision_root / "data.json").read_text(encoding="utf-8"))
+    assert published_data["personal_value_truth"]["event_ledger_sha256"] == "4" * 64
+    published_brief = json.loads(
+        (revision_root / "agent-brief.json").read_text(encoding="utf-8")
+    )
+    brief_value = published_brief["authority"]["value_proof_readiness"]
+    assert brief_value["event_ledger_sha256"] == "4" * 64
+    assert brief_value["legacy_metrics_excluded"] is True
+    assert brief_value["status"] == "NOT_PROVEN"
     assert hashlib.sha256(manifest_body).hexdigest() == result["manifest_sha256"]
     assert manifest["schema_version"] == "zhixing-projection-manifest/v1"
     assert manifest["fresh_until"] == "2026-09-24T03:40:00Z"
     assert manifest["producer"]["root_oid"] == "c" * 40
+    assert manifest["producer"]["root_tree_sha256"] == "8" * 64
+    assert manifest["producer"]["ecos_gitlink_oid"] == "a" * 40
+    assert manifest["producer"]["value_meter_sha256"] == "9" * 64
     assert manifest["producer"]["process_identity"] == "sha256:" + "f" * 64
+    assert manifest["dashboard"] == {
+        "code_oid": "b" * 40,
+        "tree_sha256": "6" * 64,
+        "code_bundle_sha256": "7" * 64,
+    }
+    assert manifest["state_root"] == {
+        "identity": "sha256:" + hashlib.sha256(
+            str(state_root.resolve()).encode("utf-8")
+        ).hexdigest()
+    }
+    assert manifest["contracts"] == {
+        "pointer": "zhixing-projection-pointer/v1",
+        "manifest": "zhixing-projection-manifest/v1",
+        "reader": "zhixing-dashboard-revision-reader/v1",
+    }
     assert manifest["source_hashes"]["event_ledger_sha256"] == "4" * 64
     assert manifest["claims"]["instruction_capable"] is False
     for name, filename in {
@@ -428,9 +534,33 @@ def test_publish_projection_revision_keeps_previous_pointer_on_swap_failure(
         "collect_projection_producer_identity",
         lambda **_kwargs: {
             "root_oid": "c" * 40,
+            "root_tree_sha256": "8" * 64,
             "omo_gitlink_oid": "e" * 40,
+            "ecos_gitlink_oid": "a" * 40,
             "collector_sha256": "d" * 64,
+            "value_meter_sha256": "9" * 64,
             "process_identity": "sha256:" + "f" * 64,
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "collect_personal_value_truth",
+        lambda **_kwargs: {
+            "available": True,
+            "event_ledger_sha256": "4" * 64,
+            "value_truth": {
+                "schema": "value-truth-snapshot/v1",
+                "status": "not_ready",
+            },
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "collect_projection_dashboard_identity",
+        lambda **_kwargs: {
+            "code_oid": "b" * 40,
+            "tree_sha256": "6" * 64,
+            "code_bundle_sha256": "7" * 64,
         },
     )
     original = module._atomic_replace_bytes
@@ -482,6 +612,92 @@ def test_publish_projection_revision_rejects_payload_claims_from_another_snapsho
         module.publish_projection_revision(payload, state_root=tmp_path / "state")
 
     assert not (tmp_path / "state/current-revision.json").exists()
+
+
+def test_publish_projection_revision_rejects_value_truth_from_another_ledger(
+    tmp_path, monkeypatch
+) -> None:
+    module = _module()
+    monkeypatch.setattr(
+        module,
+        "collect_projection_source_binding",
+        lambda **_kwargs: {
+            "claims": {
+                "sequence": 2,
+                "last_receipt": "sha256:" + "5" * 64,
+                "activation": "shadow-active",
+                "effective_authority": "v1",
+                "instruction_capable": False,
+            },
+            "source_hashes": {
+                "claims_store_sha256": "1" * 64,
+                "claims_high_water_sha256": "2" * 64,
+                "claims_witness_sha256": "3" * 64,
+                "event_ledger_sha256": "4" * 64,
+            },
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "collect_personal_value_truth",
+        lambda **_kwargs: {
+            "available": True,
+            "event_ledger_sha256": "9" * 64,
+            "value_truth": {"schema": "value-truth-snapshot/v1"},
+        },
+    )
+
+    with pytest.raises(RuntimeError, match="projection_value_ledger_mismatch"):
+        module.publish_projection_revision(
+            _projection_payload(), state_root=tmp_path / "state"
+        )
+
+    assert not (tmp_path / "state/current-revision.json").exists()
+
+
+def test_projection_dashboard_identity_requires_exact_release_bindings(tmp_path) -> None:
+    module = _module()
+
+    with pytest.raises(RuntimeError, match="projection_dashboard_identity_unbound"):
+        module.collect_projection_dashboard_identity(environ={})
+
+    repo = tmp_path / "dashboard"
+    repo.mkdir()
+    for name in module.PROJECTION_DASHBOARD_CODE_FILES:
+        (repo / name).write_text(f"# {name}\n", encoding="utf-8")
+    (repo / "tracked-static.txt").write_text("bound\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", repo], check=True)
+    subprocess.run(["git", "-C", repo, "config", "user.email", "test@example.invalid"], check=True)
+    subprocess.run(["git", "-C", repo, "config", "user.name", "test"], check=True)
+    subprocess.run(["git", "-C", repo, "add", "."], check=True)
+    subprocess.run(["git", "-C", repo, "commit", "-qm", "fixture"], check=True)
+    head = subprocess.run(
+        ["git", "-C", repo, "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    subprocess.run(
+        ["git", "-C", repo, "update-ref", "refs/remotes/origin/main", head],
+        check=True,
+    )
+
+    identity = module.collect_projection_dashboard_identity(
+        environ={"ZHIXING_DASHBOARD_CODE_ROOT": str(repo)}
+    )
+    tree_listing = subprocess.run(
+        ["git", "-C", repo, "ls-tree", "-r", "--full-tree", "HEAD"],
+        check=True,
+        capture_output=True,
+    ).stdout
+    assert identity["code_oid"] == head
+    assert identity["tree_sha256"] == hashlib.sha256(tree_listing).hexdigest()
+
+    (repo / "tracked-static.txt").write_text("drift\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="projection_dashboard_tree_dirty"):
+        module.collect_projection_dashboard_identity(
+            environ={"ZHIXING_DASHBOARD_CODE_ROOT": str(repo)}
+        )
 
 
 def test_objective_coverage_maps_delivery_without_value_or_activation(tmp_path, monkeypatch) -> None:

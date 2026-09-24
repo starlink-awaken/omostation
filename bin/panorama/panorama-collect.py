@@ -51,6 +51,16 @@ PROJECTION_STATE_ROOT = Path(
 ).expanduser()
 PROJECTION_POINTER_SCHEMA = "zhixing-projection-pointer/v1"
 PROJECTION_MANIFEST_SCHEMA = "zhixing-projection-manifest/v1"
+PROJECTION_READER_CONTRACT = "zhixing-dashboard-revision-reader/v1"
+PROJECTION_DASHBOARD_CODE_FILES = (
+    "live_server.py",
+    "observatory_query.py",
+    "runtime_paths.py",
+)
+PROJECTION_ROOT_CODE_FILES = (
+    "bin/panorama/panorama-collect.py",
+    "bin/bc-os/north_star_meter_v2.py",
+)
 PROJECTION_REVISIONS_NAME = "revisions"
 PROJECTION_POINTER_NAME = "current-revision.json"
 PROJECTION_LOCK_NAME = ".projection-publisher.lock"
@@ -270,6 +280,75 @@ def collect_projection_source_binding(
     return binding
 
 
+def collect_personal_value_truth(
+    *,
+    event_ledger: Path = EVENT_LEDGER,
+    environ=None,
+) -> dict:
+    """Measure personal value and bind it to one stable logical Ledger digest."""
+    env = os.environ if environ is None else environ
+    ledger = Path(event_ledger)
+    before = _event_ledger_logical_digest(ledger)
+    import importlib.util
+
+    meter_path = CODE_ROOT / "bin/bc-os/north_star_meter_v2.py"
+    spec = importlib.util.spec_from_file_location("north_star_meter_v2", meter_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("projection_value_observer_unavailable")
+    meter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(meter)
+    truth = meter.measure_value_truth(
+        db_path=ledger,
+        principal_id=str(env.get("OMO_PRINCIPAL_ID", "")).strip(),
+    )
+    after = _event_ledger_logical_digest(ledger)
+    if before != after:
+        raise RuntimeError("projection_event_ledger_changed")
+    if not isinstance(truth, dict) or truth.get("schema") != "value-truth-snapshot/v1":
+        raise RuntimeError("projection_value_truth_invalid")
+    return {
+        "available": True,
+        "event_ledger_sha256": after,
+        "value_truth": truth,
+    }
+
+
+def _ledger_bound_value_readiness(envelope: dict) -> dict:
+    truth = envelope.get("value_truth") if isinstance(envelope, dict) else {}
+    truth = truth if isinstance(truth, dict) else {}
+    metrics = truth.get("metrics") if isinstance(truth.get("metrics"), dict) else {}
+    weeks = [
+        item for item in (metrics.get("weekly_samples") or [])
+        if isinstance(item, dict)
+    ]
+    qualifying = sum(
+        value
+        for item in weeks
+        if type(value := item.get("qualifying_episodes")) is int and value >= 0
+    )
+    personal_value = str((truth.get("truth_axes") or {}).get("personal_value") or "")
+    if truth.get("status") == "proven" and personal_value == "passed":
+        status = "PROVEN"
+    elif truth.get("status") == "unprovable" or personal_value == "unprovable":
+        status = "UNPROVABLE"
+    else:
+        status = "NOT_PROVEN"
+    return {
+        "schema": "ledger-bound-value-proof-readiness/v1",
+        "status": status,
+        "available": envelope.get("available") is True,
+        "source": truth.get("schema"),
+        "event_ledger_sha256": envelope.get("event_ledger_sha256"),
+        "samples_total": int(metrics.get("total_episodes") or 0),
+        "qualifying_samples": qualifying,
+        "target_samples": 30,
+        "remaining_samples": max(0, 30 - qualifying),
+        "qualifying_weeks": sum(item.get("gate_met") is True for item in weeks),
+        "target_weeks": 4,
+        "legacy_metrics_excluded": True,
+    }
+
+
 def _git_stdout(code_root: Path, *args: str) -> str:
     completed = subprocess.run(
         ["git", "-C", str(code_root), *args],
@@ -301,12 +380,41 @@ def collect_projection_producer_identity(*, code_root: Path = CODE_ROOT) -> dict
     origin_main = _git_stdout(root, "rev-parse", "refs/remotes/origin/main")
     if head != origin_main or re.fullmatch(r"[0-9a-f]{40}", head) is None:
         raise RuntimeError("projection_code_root_not_current_main")
-    tree_entry = _git_stdout(root, "ls-tree", "HEAD", "projects/omo").split()
-    if len(tree_entry) < 3 or tree_entry[1] != "commit":
-        raise RuntimeError("projection_omo_gitlink_unavailable")
-    omo_gitlink = tree_entry[2]
-    if re.fullmatch(r"[0-9a-f]{40}", omo_gitlink) is None:
-        raise RuntimeError("projection_omo_gitlink_unavailable")
+    if _git_bytes(
+        root,
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all",
+        "--ignore-submodules=all",
+    ):
+        raise RuntimeError("projection_code_root_dirty")
+    root_tree_sha256 = _sha256_bytes(
+        _git_bytes(root, "ls-tree", "-r", "--full-tree", "HEAD")
+    )
+    submodule_oids = {}
+    for name in ("omo", "ecos"):
+        relative = f"projects/{name}"
+        tree_entry = _git_stdout(root, "ls-tree", "HEAD", relative).split()
+        if (
+            len(tree_entry) < 3
+            or tree_entry[1] != "commit"
+            or re.fullmatch(r"[0-9a-f]{40}", tree_entry[2]) is None
+        ):
+            raise RuntimeError(f"projection_{name}_gitlink_unavailable")
+        gitlink_oid = tree_entry[2]
+        checkout = root / relative
+        checkout_oid = _git_stdout(checkout, "rev-parse", "HEAD")
+        if checkout_oid != gitlink_oid:
+            raise RuntimeError(f"projection_{name}_checkout_not_at_gitlink")
+        if _git_bytes(
+            checkout,
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+            "--ignore-submodules=all",
+        ):
+            raise RuntimeError(f"projection_{name}_checkout_dirty")
+        submodule_oids[name] = gitlink_oid
     executing_collector = _read_regular_bytes(Path(__file__).resolve())
     bound_collector = _git_bytes(
         root, "show", "HEAD:bin/panorama/panorama-collect.py"
@@ -314,21 +422,65 @@ def collect_projection_producer_identity(*, code_root: Path = CODE_ROOT) -> dict
     if executing_collector != bound_collector:
         raise RuntimeError("projection_collector_not_at_bound_commit")
     collector_sha = _sha256_bytes(bound_collector)
+    meter_path = "bin/bc-os/north_star_meter_v2.py"
+    executing_meter = _read_regular_bytes(root / meter_path)
+    bound_meter = _git_bytes(root, "show", f"HEAD:{meter_path}")
+    if executing_meter != bound_meter:
+        raise RuntimeError("projection_value_meter_not_at_bound_commit")
+    value_meter_sha = _sha256_bytes(bound_meter)
     process_identity = "sha256:" + _sha256_bytes(
         _canonical_json_bytes(
             {
                 "pid": os.getpid(),
                 "process_started_ns": _PROCESS_STARTED_NS,
                 "root_oid": head,
+                "root_tree_sha256": root_tree_sha256,
+                "omo_gitlink_oid": submodule_oids["omo"],
+                "ecos_gitlink_oid": submodule_oids["ecos"],
                 "collector_sha256": collector_sha,
+                "value_meter_sha256": value_meter_sha,
             }
         )
     )
     return {
         "root_oid": head,
-        "omo_gitlink_oid": omo_gitlink,
+        "root_tree_sha256": root_tree_sha256,
+        "omo_gitlink_oid": submodule_oids["omo"],
+        "ecos_gitlink_oid": submodule_oids["ecos"],
         "collector_sha256": collector_sha,
+        "value_meter_sha256": value_meter_sha,
         "process_identity": process_identity,
+    }
+
+
+def collect_projection_dashboard_identity(*, environ=None) -> dict:
+    """Recompute the exact dashboard release identity from one clean Git root."""
+    env = os.environ if environ is None else environ
+    raw_root = str(env.get("ZHIXING_DASHBOARD_CODE_ROOT", "")).strip()
+    candidate = Path(raw_root).expanduser()
+    if not raw_root or not candidate.is_absolute():
+        raise RuntimeError("projection_dashboard_identity_unbound")
+    root = candidate.resolve()
+    code_oid = _git_stdout(root, "rev-parse", "HEAD")
+    origin_main = _git_stdout(root, "rev-parse", "refs/remotes/origin/main")
+    if code_oid != origin_main or re.fullmatch(r"[0-9a-f]{40}", code_oid) is None:
+        raise RuntimeError("projection_dashboard_not_current_main")
+    if _git_bytes(root, "status", "--porcelain=v1", "--untracked-files=all"):
+        raise RuntimeError("projection_dashboard_tree_dirty")
+    tree_sha256 = _sha256_bytes(
+        _git_bytes(root, "ls-tree", "-r", "--full-tree", "HEAD")
+    )
+    file_hashes = []
+    for name in PROJECTION_DASHBOARD_CODE_FILES:
+        bound = _git_bytes(root, "show", f"HEAD:{name}")
+        if _read_regular_bytes(root / name) != bound:
+            raise RuntimeError("projection_dashboard_tree_dirty")
+        file_hashes.append(f"{name}:{_sha256_bytes(bound)}\n")
+    code_bundle_sha256 = _sha256_bytes("".join(file_hashes).encode("ascii"))
+    return {
+        "code_oid": code_oid,
+        "tree_sha256": tree_sha256,
+        "code_bundle_sha256": code_bundle_sha256,
     }
 
 
@@ -420,18 +572,45 @@ def publish_projection_revision(
             event_ledger=Path(event_ledger),
         )
         _validate_payload_claims_binding(payload, source_binding)
+        personal_value_truth = collect_personal_value_truth(
+            event_ledger=Path(event_ledger)
+        )
+        if (
+            personal_value_truth.get("event_ledger_sha256")
+            != source_binding["source_hashes"]["event_ledger_sha256"]
+        ):
+            raise RuntimeError("projection_value_ledger_mismatch")
+        published_payload = dict(payload)
+        published_payload["personal_value_truth"] = personal_value_truth
+        value_readiness = _ledger_bound_value_readiness(personal_value_truth)
+        published_payload["value_proof_readiness"] = value_readiness
+        visibility = dict(
+            published_payload.get("agent_visibility")
+            if isinstance(published_payload.get("agent_visibility"), dict)
+            else {"schema": "panorama-agent-brief/v1", "available": False}
+        )
+        authority = dict(
+            visibility.get("authority")
+            if isinstance(visibility.get("authority"), dict)
+            else {}
+        )
+        authority["value_proof"] = value_readiness["status"]
+        authority["value_proof_readiness"] = value_readiness
+        visibility["authority"] = authority
+        published_payload["agent_visibility"] = visibility
         producer = collect_projection_producer_identity(code_root=Path(code_root))
+        dashboard = collect_projection_dashboard_identity()
         generated = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)
         fresh_until = generated + timedelta(minutes=10)
         generated_at = generated.isoformat().replace("+00:00", "Z")
         fresh_until_at = fresh_until.isoformat().replace("+00:00", "Z")
         artifact_bodies = {
             "page": TEMPLATE.replace(
-                "__DATA__", json.dumps(payload, ensure_ascii=False)
+                "__DATA__", json.dumps(published_payload, ensure_ascii=False)
             ).encode("utf-8"),
-            "data": json.dumps(payload, ensure_ascii=False, indent=1).encode("utf-8"),
+            "data": json.dumps(published_payload, ensure_ascii=False, indent=1).encode("utf-8"),
             "agent_brief": json.dumps(
-                payload.get(
+                published_payload.get(
                     "agent_visibility",
                     {"schema": "panorama-agent-brief/v1", "available": False},
                 ),
@@ -453,6 +632,17 @@ def publish_projection_revision(
             "generated_at": generated_at,
             "fresh_until": fresh_until_at,
             "producer": producer,
+            "dashboard": dashboard,
+            "state_root": {
+                "identity": "sha256:" + _sha256_bytes(
+                    str(root).encode("utf-8")
+                ),
+            },
+            "contracts": {
+                "pointer": PROJECTION_POINTER_SCHEMA,
+                "manifest": PROJECTION_MANIFEST_SCHEMA,
+                "reader": PROJECTION_READER_CONTRACT,
+            },
             "source_hashes": source_binding["source_hashes"],
             "claims": source_binding["claims"],
             "artifacts": artifacts,
@@ -4298,24 +4488,9 @@ def build_payload() -> dict:
     return payload
 
 
-def write_site(payload: dict) -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    DATA_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=1))
-    AGENT_BRIEF_JSON.write_text(
-        json.dumps(
-            payload.get("agent_visibility", {"schema": "panorama-agent-brief/v1", "available": False}),
-            ensure_ascii=False,
-            indent=1,
-        )
-    )
-    html = TEMPLATE.replace("__DATA__", json.dumps(payload, ensure_ascii=False))
-    INDEX_HTML.write_text(html)
-
-
 def check_side_effects() -> int:
     before = run(["git", "status", "--porcelain"])[1].splitlines()
-    payload = build_payload()
-    write_site(payload)
+    build_payload()
     after = run(["git", "status", "--porcelain"])[1].splitlines()
     new_repo_writes = [l for l in after if l not in before and not l.startswith("?? runtime/dashboard")]
     if new_repo_writes:
@@ -4323,7 +4498,7 @@ def check_side_effects() -> int:
         for l in new_repo_writes:
             print(" ", l)
         return 1
-    print(f"OK: 零仓库写副作用（产物仅 {OUT_DIR.relative_to(ROOT)}/, gitignored）")
+    print("OK: payload collection has zero repository write side effects")
     return 0
 
 
@@ -4338,7 +4513,6 @@ def main() -> int:
         return check_side_effects()
 
     payload = build_payload()
-    write_site(payload)
     projection = publish_projection_revision(payload)
 
     if args.gates:
@@ -4349,11 +4523,11 @@ def main() -> int:
                    "gates": {g["id"]: g["verdict"] for g in payload["gates"]},
                    "bets": payload["bets"]["counts"],
                    "agents": len(payload["agents"]),
-                   "out": str(INDEX_HTML.relative_to(ROOT)),
+                   "out": projection["pointer"],
                    "projection_revision": projection["revision_id"]}
         print(json.dumps(summary, ensure_ascii=False, indent=1))
         return 0
-    print(f"✅ 驾驶舱已生成: {INDEX_HTML.relative_to(ROOT)}  ({payload['generated_at']})")
+    print(f"✅ 驾驶舱 revision 已发布: {projection['revision_id']}  ({payload['generated_at']})")
     print(f"   服务: python3 bin/panorama/panorama-serve.py  → http://127.0.0.1:43910")
     return 0
 
