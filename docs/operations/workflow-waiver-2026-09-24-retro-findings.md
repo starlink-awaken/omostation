@@ -67,6 +67,28 @@ python3 -c "import yaml,collections;d=yaml.safe_load(open('docs/plans/3y-bet-led
 因此 H2 不修：激活危害大于收益，且修复方向（重写判定逻辑 + 真正的逃生口 + 回归测试）超出本次"有界性"范围。
 已作为需 principal 决策项上报。
 
+## I1（第三次复盘发现：closeout 的 verify 腿在提交后是空跑）
+
+实测：本日 #4295 / #4296 / #4298 三次交付的 closeout **全部**输出 `verify checks=0 ok=True`。
+
+根因是代码定位，不是推测：
+
+- `closeout_run` → `build_verify_report(execute=True)`，`--from-diff` 的文件集合来自
+  `changed_files_from_git()` = `git diff --name-only` + `git diff --cached --name-only`（工作树/索引相对 HEAD）。
+- 正常时序是 commit → push → PR → merge → closeout，此刻工作树干净 ⇒ 文件集合为空 ⇒ `select_diff_checks`
+  返回 0 条 ⇒ `ok = all([]) and claim_coverage["ok"]` 为 **True**。**零条校验执行，closeout 却报 ok。**
+- 侧效应：该函数还会扫 `load_external_write_roots()`。实测在交付后跑 `verify --from-diff` 采到 3 个
+  **他人仓库**的文件（`external/zhixing-dashboard/*`），与本 Agent 的交付毫无关系——即文件集合既可能为空，
+  也可能非我。
+
+今天可用的替代路径：`closeout <run> --status ok --all`（跑 workflow 声明的全量 checks，不依赖 diff）。
+本记录所在交付即用 `--all` 收尾，实测能真正执行 checks——不是又一个未经运行的逃生口。
+
+**未在本文档这轮直接修**：收紧 `ok` 语义会让所有并发 Agent 的 closeout 从"通过"变"失败"，且实现在
+`projects/omo` 子模块内（改动需指针事务）。属需 principal 决策项。建议方向：`from_diff` 且文件集合为空时
+fail-closed（要求显式 `--all` / `--file`），或把 `check_count=0` 记为 DEGRADED 而非 ok；并把 `--from-diff`
+的文件集合限定为该 run **已 claim** 的路径。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
@@ -86,4 +108,8 @@ python3 -c "import yaml,collections;d=yaml.safe_load(open('docs/plans/3y-bet-led
 
 `check-governance-ratio.py` 只认第二处，且是**治理配额上限**的单 PR 豁免，与 `AGCP_REQUIREMENT_ITERATION_GATE`
 无关。本次交付未触配额上限，因此**未**创建第二类豁免记录——若后续需要，必须显式登记 `pr_numbers` 才有效。
+
+**自指上限（结构性，非疏漏）**：登记表只能由"后一次"交付补写前一次，因此**本 PR 自身的行必然缺失**，
+且不会由本 PR 补上（那需要一个尚无 SHA 的占位符，正是 F1 禁止的东西）。下一次豁免交付负责补写本 PR 的行。
+台账补齐可绑定的 bet 之后，这条链条整体消失。
 
