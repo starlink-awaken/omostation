@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # C2G v4 Pitch: The Cybernetic Strategy Engine (控制论战略引擎)
 
 > **Upstream**: ECOS-V5-ARCHITECTURE (系统底座演进)

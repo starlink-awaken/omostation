@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # MOF/L0 架构现状审计 — 2026-09-05
 
 ## 总评: 🟢 健康

@@ -404,6 +404,13 @@ def generate_brief_content() -> str:
 
     # 构建 BRIEF markdown
     lines = []
+    lines.append("---")
+    lines.append("status: active")
+    lines.append("lifecycle: generated")
+    lines.append("owner: governance-team")
+    lines.append("last-reviewed: 2026-09-24")
+    lines.append("---")
+    lines.append("")
     lines.append("# BRIEF.md — 织星状态简报与决策收件箱")
     lines.append("")
     lines.append(

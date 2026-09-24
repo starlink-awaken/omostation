@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 F2 quality: PASS — alias-check+preflight ruff-clean, exit semantics verified live (0 healthy / 1 drift+failure-injection / 2 missing-config+unknown-check), preflight baseURL precedence+--check correct; 2 minor findings: (1) alias-check lacks isinstance guards for non-dict top-level JSON / provider.omlxc → uncaught AttributeError traceback exit 1 (preflight guards these — recommend aligning), (2) no unit tests for either tool (acceptable per cockpit-readiness precedent for diagnostic CLIs; pure fns compare/normalize/load_* are trivially testable — recommend small test); DRY duplication acceptable — kebab-case filenames block normal import, cockpit-readiness singleton precedent; docs P1c/P3a/P4a/P4b sibling-format clean, no stale patterns, doc-ssot-lint workspace-wide ok:true 173 files 0 findings; P3b start-work rules present; single-file worktree lint ValueError is known path artifact.
 F1 audit: 8/8 Todos PASS (alias-check/preflight live-verified, docs sibling-format, skill rules L196-197, BOS compute registered, zero commits) — notepad path note: F1 worker searched worktree, actual notepad is main-workspace .omo/notepads/; Scope OUT all respected
 F2 quality: PASS — 2 minor report-only: (1) alias-check lacks isinstance guards (malformed JSON → AttributeError exit 1 vs documented 2; preflight has guards), (2) no unit tests for diagnostic tools (acceptable, precedent cockpit-readiness also none); DRY duplication acceptable; doc-ssot-lint ok:true

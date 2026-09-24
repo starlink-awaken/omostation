@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # 🏥 卫健委医疗卫生信息化项目治理与申报标准清单
 
 ---

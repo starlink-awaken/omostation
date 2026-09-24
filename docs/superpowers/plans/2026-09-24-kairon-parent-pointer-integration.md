@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # Implementation Plan: Kairon parent gitlink integration
 
 > **Execution contract:** implement only the accepted spec for BET-Y2Q2-T11-03.

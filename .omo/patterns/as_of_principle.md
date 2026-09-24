@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # as_of principle (STRAT-P85 G2.3)
 
 > Status: established pattern · Owner: governance-team · Source: 综合方案 P0-4

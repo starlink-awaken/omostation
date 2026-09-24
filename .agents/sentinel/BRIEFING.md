@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # BRIEFING — 2026-06-24T02:25:00Z
 
 ## Mission

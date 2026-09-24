@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # BOS 契约走查报告 — 第九轮 (2026-08/09 走查序列)
 
 > 前置: 第八轮收尾后进入"收尾巩固"。双门禁终验时 bos-tracking-gate 实跑 FAIL（62 处漂移），

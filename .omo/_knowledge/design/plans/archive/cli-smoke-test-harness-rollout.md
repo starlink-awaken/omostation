@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-09-24
+---
 # CLI smoke test harness rollout — BET-Y1Q4-T13
 
 ## Outcome

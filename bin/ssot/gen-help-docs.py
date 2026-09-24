@@ -486,6 +486,13 @@ def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
 
 def gen_mcp_index(reg: dict) -> str:
     lines = [
+        "---",
+        "status: active",
+        "lifecycle: generated",
+        "owner: governance-team",
+        "last-reviewed: 2026-09-24",
+        "---",
+        "",
         "# MCP 服务器索引",
         "",
         f"> 自动生成于 {reg['generated_at']}",
