@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-09-24T12:07:32Z
+generated_at: 2026-09-24T13:38:20Z
 status: candidate
 counts:
-  runs: 18
+  runs: 22
   failures: 0
-  total: 18
+  total: 22
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-24T12:07:32Z
+- generated_at: 2026-09-24T13:38:20Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 18 成功运行 + 0 失败模式 = 18 草稿
+- sediment 覆盖: 22 成功运行 + 0 失败模式 = 22 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -39,6 +39,10 @@ failure_breakdown:
 - 20260922T014348Z-mini-92795c07.md
 - 20260923T022736Z-mini-94bc5a40.md
 - 20260923T022737Z-mini-7b1970d5.md
+- 20260924T131807Z-mini-8fafc133.md
+- 20260924T131809Z-mini-cf6cb943.md
+- 20260924T131955Z-mini-495cdf5a.md
+- 20260924T131956Z-mini-99d87d73.md
 
 ## 失败模式 (failures/)
 
@@ -167,6 +171,32 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=0
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=0.255
+- **20260924T131807Z-mini-8fafc133**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.458
+- **20260924T131809Z-mini-cf6cb943**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.372
+- **20260924T131955Z-mini-495cdf5a**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.177
+- **20260924T131956Z-mini-99d87d73**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.159
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
