@@ -296,26 +296,47 @@ def cmd_record(args):
         print(f"error: invalid category '{category}'. Valid: {', '.join(CATEGORIES)}", file=sys.stderr)
         return 1
 
-    # dedup check: fuzzy symptom match
-    symptom_lower = args.symptom.lower()
-    for e in entries:
-        common = symptom_overlap(args.symptom, str(e.get("symptom", "")))
-        if common >= 3 and e.get("status") == "active":
-            e["times_encountered"] = e.get("times_encountered", 1) + 1
-            e["last_confirmed_at"] = datetime.now(UTC).strftime("%Y-%m-%d")
-            _save_entry(e)
+    # Dedup is advisory. Three shared symptom words are far too weak a signal to
+    # auto-merge — measured 2026-09-24, it merged a shallow-clone defect into both a
+    # branch-protection entry and a git-show entry — and swallowing the new record
+    # loses knowledge while inflating a counter that drives rule escalation. So the
+    # default records, and only an explicit --confirm-dup <ID> increments.
+    matches = [
+        e
+        for e in entries
+        if e.get("category") == category
+        and e.get("status") == "active"
+        and symptom_overlap(args.symptom, str(e.get("symptom", ""))) >= 3
+    ]
+    if args.confirm_dup:
+        target = next((e for e in matches if e["id"] == args.confirm_dup), None)
+        if target is None:
+            candidates = ", ".join(str(e["id"]) for e in matches) or "none"
             print(
-                f"DEDUP: matched [{e['id']}] '{e.get('title')}' — times_encountered incremented to {e['times_encountered']}"
+                f"error: --confirm-dup {args.confirm_dup} is not a dedup candidate (candidates: {candidates})",
+                file=sys.stderr,
             )
-            if e["times_encountered"] >= ESCALATION_THRESHOLD:
-                draft_path = _promote_rule_draft(e)
-                if draft_path:
-                    print(
-                        f"⚡ ESCALATION: {e['id']} ≥{ESCALATION_THRESHOLD} 次 → 规则草案已生成 {draft_path}（等人审入册）"
-                    )
-                else:
-                    print(f"⚡ ESCALATION: {e['id']} ≥{ESCALATION_THRESHOLD} 次（草案已在 rule-drafts，勿重复生成）")
-            return 0
+            return 1
+        target["times_encountered"] = target.get("times_encountered", 1) + 1
+        target["last_confirmed_at"] = datetime.now(UTC).strftime("%Y-%m-%d")
+        _save_entry(target)
+        print(
+            f"DEDUP: confirmed [{target['id']}] '{target.get('title')}' — "
+            f"times_encountered incremented to {target['times_encountered']}"
+        )
+        if target["times_encountered"] >= ESCALATION_THRESHOLD:
+            draft_path = _promote_rule_draft(target)
+            if draft_path:
+                print(
+                    f"⚡ ESCALATION: {target['id']} ≥{ESCALATION_THRESHOLD} 次 → 规则草案已生成 {draft_path}（等人审入册）"
+                )
+            else:
+                print(f"⚡ ESCALATION: {target['id']} ≥{ESCALATION_THRESHOLD} 次（草案已在 rule-drafts，勿重复生成）")
+        return 0
+    if matches:
+        listed = "; ".join(f"{e['id']} '{e.get('title')}'" for e in matches)
+        print(f"DEDUP CANDIDATES (未自动合并，本条按新坑入库): {listed}")
+        print("  确认是同一条坑时重跑并加 --confirm-dup <ID>")
 
     seq = _next_seq(category, entries)
     entry = {
@@ -451,6 +472,12 @@ def main():
     rec.add_argument("--tags", default="")
     rec.add_argument("--agent", default="")
     rec.add_argument("--draft", action="store_true")
+    rec.add_argument(
+        "--confirm-dup",
+        metavar="PITFALL-ID",
+        default=None,
+        help="确认本次症状就是该条目：只给它计数，不新增条目",
+    )
 
     cf = sub.add_parser("confirm")
     cf.add_argument("--id", required=True)

@@ -127,3 +127,132 @@ def test_save_entry_never_persists_loader_private_keys(tmp_path: Path) -> None:
     assert "_file:" not in written
     assert "/Users/" not in written
     assert "times_encountered: 2" in written
+
+
+COORDINATION_SYMPTOM = (
+    "the push was rejected by branch protection while the commit sat on local main"
+)
+SHALLOW_SYMPTOM = (
+    "submit refuses the push because branch protection reports the pinned commit as unpushed"
+)
+
+COORDINATION = f"""schema: agent-error/v1
+id: PITFALL-COO-901
+category: coordination
+severity: medium
+title: 分支保护拒绝直推 main
+symptom: {COORDINATION_SYMPTOM}
+root_cause: 直接在 main 上提交
+solution: 走 worktree + PR
+prevention: ''
+tags:
+- push
+discovered_by: governance-agent
+discovered_at: '2026-09-24'
+times_encountered: 1
+status: active
+"""
+
+#: A genuinely different submodule defect that nonetheless shares ≥3 symptom words.
+SHALLOW_EXISTING = """schema: agent-error/v1
+id: PITFALL-SUB-901
+category: submodule
+severity: medium
+title: 子模块指针回退 — 并发合并从陈旧 base 拉回旧指针
+symptom: submit refuses the push and branch protection blocks the commit
+root_cause: 陈旧 base
+solution: rebase 后重推
+prevention: ''
+tags:
+- pointer
+discovered_by: governance-agent
+discovered_at: '2026-09-24'
+times_encountered: 1
+status: active
+"""
+
+
+def _record(module: object, **overrides: object) -> int:
+    args = {
+        "category": "submodule",
+        "severity": "high",
+        "title": "浅历史子模块让未推送判定假阳性",
+        "symptom": SHALLOW_SYMPTOM,
+        "root_cause": "graft 边界压在 pin 上",
+        "solution": "先测 --is-shallow-repository，再到全量 clone 复核",
+        "prevention": "",
+        "tags": "shallow",
+        "agent": "governance-agent",
+        "draft": False,
+        "confirm_dup": None,
+    }
+    args.update(overrides)
+    return module.cmd_record(argparse.Namespace(**args))
+
+
+def test_dedup_does_not_swallow_a_distinct_pitfall_from_another_category(
+    tmp_path: Path,
+) -> None:
+    """Three shared symptom tokens must not merge two unrelated root causes.
+
+    Measured 2026-09-24: recording the shallow-submodule defect incremented
+    ``PITFALL-COO-002`` (branch protection on ``chore(state)`` commits) and threw the
+    new lesson away — ``cmd_record`` scanned every category and returned on its first
+    fuzzy match. The inflated counter is also what drives rule escalation, so one
+    loose match both loses knowledge and promotes an unrelated entry.
+    """
+    module = _load_module()
+    # The test is only worth running while it still reproduces the trigger condition.
+    assert module.symptom_overlap(SHALLOW_SYMPTOM, COORDINATION_SYMPTOM) >= 3
+
+    module.PITFALLS_DIR = _library(tmp_path, ("coordination/PITFALL-COO-901.yaml", COORDINATION))
+
+    assert _record(module) == 0
+    created = sorted(p.name for p in (module.PITFALLS_DIR / "submodule").glob("*.yaml"))
+    assert created == ["PITFALL-SUB-001.yaml"]
+    neighbour = (module.PITFALLS_DIR / "coordination" / "PITFALL-COO-901.yaml").read_text(
+        encoding="utf-8"
+    )
+    assert "times_encountered: 1" in neighbour
+
+
+def test_same_category_lookalike_is_reported_not_merged(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    """Even inside one category, a fuzzy match warns instead of discarding the record."""
+    module = _load_module()
+    module.PITFALLS_DIR = _library(
+        tmp_path, ("submodule/PITFALL-SUB-901.yaml", SHALLOW_EXISTING)
+    )
+
+    assert _record(module) == 0
+    out = capsys.readouterr().out
+    assert "DEDUP CANDIDATES" in out and "PITFALL-SUB-901" in out
+    assert sorted(p.name for p in (module.PITFALLS_DIR / "submodule").glob("*.yaml")) == [
+        "PITFALL-SUB-901.yaml",
+        "PITFALL-SUB-902.yaml",
+    ]
+    existing = (module.PITFALLS_DIR / "submodule" / "PITFALL-SUB-901.yaml").read_text(
+        encoding="utf-8"
+    )
+    assert "times_encountered: 1" in existing
+
+
+def test_confirm_dup_increments_the_named_entry_only(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    module = _load_module()
+    module.PITFALLS_DIR = _library(
+        tmp_path, ("submodule/PITFALL-SUB-901.yaml", SHALLOW_EXISTING)
+    )
+
+    assert _record(module, confirm_dup="PITFALL-SUB-901") == 0
+    assert "times_encountered: 2" in (
+        module.PITFALLS_DIR / "submodule" / "PITFALL-SUB-901.yaml"
+    ).read_text(encoding="utf-8")
+    assert sorted(p.name for p in (module.PITFALLS_DIR / "submodule").glob("*.yaml")) == [
+        "PITFALL-SUB-901.yaml"
+    ]
+
+    assert _record(module, confirm_dup="PITFALL-SUB-777") == 1
+    assert "not a dedup candidate" in capsys.readouterr().err

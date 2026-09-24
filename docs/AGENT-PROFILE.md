@@ -50,7 +50,7 @@ make agent-workflow-compliance  # P74 合规
 
 | 类型 | 落点 | 工具/规则 |
 |---|---|---|
-| 环境/工具坑 | `.omo/_knowledge/pitfalls/{category}/` | `bin/gac/error-knowledge.py record`（自动 dedup 计数） |
+| 环境/工具坑 | `.omo/_knowledge/pitfalls/{category}/` | `bin/gac/error-knowledge.py record`（dedup 只列候选，计数需 `--confirm-dup`） |
 | 可复用模式 | `.omo/_knowledge/patterns/` | retro 提炼 → 独立 pattern 文档 |
 | 架构决策 | ADR 编号体系 | ADR 模板 + `make adr-number-check` |
 | BET 教训 | `.omo/_knowledge/retros/<BET-ID>.md` | complete 前必写（台账 DoD） |
