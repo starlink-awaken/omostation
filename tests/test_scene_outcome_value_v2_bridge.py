@@ -7,6 +7,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "bin" / "ssot"))
 
@@ -56,15 +58,16 @@ def test_value_v2_skipped_when_net_below_threshold(tmp_path, monkeypatch):
     assert all(r.get("schema") == "value-evidence/v1" for r in lines)
 
 
-def test_value_v2_written_for_human_when_baseline_present(tmp_path, monkeypatch):
+def test_legacy_scene_bridge_cannot_append_value_v2_when_baseline_present(tmp_path, monkeypatch):
     m = _load_module()
     evidence = tmp_path / "value-evidence.jsonl"
     baseline_dir = tmp_path / "baselines"
     baseline_dir.mkdir()
+    baseline_id = "value-recorder-baseline-20260923-pre-v2-window"
     # Minimal frozen baseline that value-recorder.load_baseline accepts.
     baseline = {
         "schema": "value-baseline/v1",
-        "baseline_id": m.VALUE_V2_BASELINE_ID,
+        "baseline_id": baseline_id,
         "frozen_at": "2026-09-23T00:00:00+00:00",
         "metrics": {"scope": "unit-test"},
     }
@@ -73,7 +76,7 @@ def test_value_v2_written_for_human_when_baseline_present(tmp_path, monkeypatch)
     body = {k: v for k, v in baseline.items() if k != "digest"}
     payload = json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
     baseline["digest"] = "sha256:" + hashlib.sha256(payload).hexdigest()
-    (baseline_dir / f"{m.VALUE_V2_BASELINE_ID}.json").write_text(json.dumps(baseline), encoding="utf-8")
+    (baseline_dir / f"{baseline_id}.json").write_text(json.dumps(baseline), encoding="utf-8")
 
     monkeypatch.setattr(m, "VALUE_EVIDENCE_LOG", evidence)
 
@@ -82,7 +85,7 @@ def test_value_v2_written_for_human_when_baseline_present(tmp_path, monkeypatch)
     # Instead: write baseline under the worktree path value-recorder will use.
     real_baseline_dir = ROOT / ".omo" / "state" / "value-baselines"
     real_baseline_dir.mkdir(parents=True, exist_ok=True)
-    real_path = real_baseline_dir / f"{m.VALUE_V2_BASELINE_ID}.json"
+    real_path = real_baseline_dir / f"{baseline_id}.json"
     created = not real_path.exists()
     if created:
         real_path.write_text(json.dumps(baseline), encoding="utf-8")
@@ -99,12 +102,23 @@ def test_value_v2_written_for_human_when_baseline_present(tmp_path, monkeypatch)
         lines = [json.loads(x) for x in evidence.read_text().splitlines() if x.strip()]
         schemas = [r.get("schema") for r in lines]
         assert "value-evidence/v1" in schemas
-        assert "value-evidence/v2" in schemas
-        v2 = next(r for r in lines if r.get("schema") == "value-evidence/v2")
-        assert v2["qualifying"] is True
-        assert v2["net_saved_seconds"] == 90
-        assert v2["source_class"] == "real_human"
-        assert v2["authority_receipt_digest"] == m.VALUE_V2_AUTHORITY_RECEIPT
+        assert schemas == ["value-evidence/v1"]
     finally:
         if created and real_path.exists():
             real_path.unlink()
+
+
+def test_value_recorder_rejects_direct_jsonl_append(tmp_path):
+    path = ROOT / "bin" / "ssot" / "value-recorder.py"
+    spec = importlib.util.spec_from_file_location("value_recorder_under_test", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    with pytest.raises(ValueError, match="direct_recording_retired_use_omo_event_ledger"):
+        module.append_episode(
+            {"schema": "value-evidence/v2"},
+            evidence_path=tmp_path / "value-evidence.jsonl",
+        )
+
+    assert not (tmp_path / "value-evidence.jsonl").exists()

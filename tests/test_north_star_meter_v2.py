@@ -183,7 +183,7 @@ def test_measurement_without_principal_or_ledger_is_unprovable(tmp_path):
     assert not missing.exists()
 
 
-def test_measurement_reads_brokered_personal_outcome_without_mutating_ledger(tmp_path, monkeypatch):
+def test_measurement_rejects_partial_legacy_chain_without_mutating_ledger(tmp_path, monkeypatch):
     sys.path[:0] = [str(ROOT / "projects" / "omo" / "src"), str(ROOT / "projects" / "ecos" / "src")]
     from omo.event_ledger.broker import LedgerBroker
 
@@ -269,7 +269,8 @@ def test_measurement_reads_brokered_personal_outcome_without_mutating_ledger(tmp
     assert after == before
     assert snapshot["status"] == "collecting"
     assert snapshot["truth_axes"]["operational_proof"] == "proven"
-    assert snapshot["metrics"]["current_week_qualifying_outcomes"] == 1
+    assert snapshot["metrics"]["current_week_qualifying_outcomes"] == 0
+    assert "no_qualifying_weeks" in snapshot["metrics"]["gate_gaps"]
     assert snapshot["source"]["event_count"] == 5
 
 

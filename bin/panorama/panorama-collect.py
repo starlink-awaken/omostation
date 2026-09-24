@@ -2928,6 +2928,12 @@ def collect_value_evidence_validation() -> dict:
         report = json.loads(completed.stdout)
         if not isinstance(report, dict):
             raise ValueError("validator root is not an object")
+        self_reported = int(
+            report.get("self_reported_qualifying", report.get("qualifying", 0)) or 0
+        )
+        report["self_reported_qualifying"] = self_reported
+        report["qualifying"] = int(report.get("authoritative_qualifying") or 0)
+        report["authority_source"] = "omo-event-ledger"
         report["available"] = True
         report["source"] = str(verifier)
         return report
@@ -3268,14 +3274,24 @@ def _collect_panels(payload: dict) -> dict:
     事件类指标的唯一来源是 ``panel_events``; 这里把它合并回 ``recent_events``
     与 ``metrics_kpi``，使两个板块显示的 24h 事件数/速率完全一致。
     """
+    panel_context = {
+        "scene_cards": payload.get("scene_cards") or {},
+        "signal_poller": payload.get("signal_poller") or {},
+        "journey_executions": payload.get("journey_executions") or {},
+    }
+    try:
+        panel_context["personal_value_truth"] = collect_personal_value_truth(
+            event_ledger=EVENT_LEDGER
+        )
+    except Exception:
+        panel_context["personal_value_truth"] = {
+            "available": False,
+            "value_truth": {"status": "unprovable"},
+        }
     try:
         panels = _load_panel_collect().collect_all(
             root=ROOT,   # 显式传根: 两模块必须指向同一工作区, 不依赖各自 __file__
-            context={
-                "scene_cards": payload.get("scene_cards") or {},
-                "signal_poller": payload.get("signal_poller") or {},
-                "journey_executions": payload.get("journey_executions") or {},
-            })
+            context=panel_context)
     except Exception as exc:  # 采集失败不得让整个 payload 崩掉
         import logging
         logging.warning("panel collection failed: %s", exc)

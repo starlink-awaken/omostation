@@ -31,6 +31,7 @@ QUALIFYING_VERDICTS = frozenset({"accepted", "modified"})
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$")
 _PREWINDOW_ERROR = "record timestamp must be after baseline frozen_at"
+_DIRECT_RECORDING_RETIRED = "direct_recording_retired_use_omo_event_ledger"
 
 
 def _utc_now() -> str:
@@ -193,13 +194,9 @@ def record_episode(
 
 
 def append_episode(episode: Mapping[str, Any], evidence_path: Path = EVIDENCE_FILE) -> None:
-    if episode.get("schema") != EVIDENCE_SCHEMA_V2:
-        raise ValueError("only value-evidence/v2 records may be appended")
-    evidence_path.parent.mkdir(parents=True, exist_ok=True)
-    with evidence_path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(episode, ensure_ascii=False, sort_keys=True) + "\n")
-        handle.flush()
-        os.fsync(handle.fileno())
+    """Reject the retired parallel writer; OMO Event Ledger owns value truth."""
+    del episode, evidence_path
+    raise ValueError(_DIRECT_RECORDING_RETIRED)
 
 
 def validate_evidence(
@@ -256,6 +253,9 @@ def validate_evidence(
         "legacy_records": len(legacy_records),
         "legacy_qualifying": legacy_qualifying,
         "qualifying": qualifying,
+        "authoritative_qualifying": 0,
+        "authority_source": "omo-event-ledger",
+        "direct_recording_retired": True,
         "target": QUALIFYING_SAMPLE_TARGET,
         "remaining_to_target": max(0, QUALIFYING_SAMPLE_TARGET - qualifying),
         "issues": issues,
@@ -267,8 +267,10 @@ def _print_validation(report: dict[str, Any]) -> None:
     print("  Value Evidence Validation (v2)")
     print("=" * 56)
     print(f"  Records: {report['records']} (v2: {report['v2_records']})")
-    print(f"  Qualifying: {report['qualifying']}/{report['target']}")
-    print(f"  Remaining to target: {report['remaining_to_target']}")
+    print(f"  Self-reported qualifying (non-authoritative): {report['qualifying']}")
+    print(f"  Authoritative qualifying: {report.get('authoritative_qualifying', 0)}/{report['target']}")
+    print(f"  Authority source: {report.get('authority_source', 'unavailable')}")
+    print(f"  Remaining to target: {report['target'] - report.get('authoritative_qualifying', 0)}")
     print(f"  Valid: {report['ok']}")
     for issue in report["issues"]:
         print(f"  ISSUE line {issue['line']}: {issue['reason']}")
@@ -326,7 +328,14 @@ def main() -> int:
             return 0
         report = validate_evidence(args.evidence, args.baseline_dir)
         if args.json:
-            print(json.dumps(report, ensure_ascii=False))
+            output = dict(report)
+            if "authoritative_qualifying" in output:
+                output["self_reported_qualifying"] = output.get("qualifying", 0)
+                output["qualifying"] = output["authoritative_qualifying"]
+                output["remaining_to_target"] = max(
+                    0, int(output.get("target") or 0) - output["qualifying"]
+                )
+            print(json.dumps(output, ensure_ascii=False))
         else:
             _print_validation(report)
         return 0 if report["ok"] else 1

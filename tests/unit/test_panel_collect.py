@@ -184,12 +184,33 @@ def _seed_value(root: Path, records: list[dict]) -> None:
     _write(root / ".omo/_delivery/ingress/value-evidence.jsonl", records)
 
 
+def _value_truth_context(*, qualifying: int, total: int | None = None) -> dict:
+    return {
+        "personal_value_truth": {
+            "available": True,
+            "value_truth": {
+                "schema": "value-truth-snapshot/v1",
+                "status": "collecting",
+                "metrics": {
+                    "total_episodes": qualifying if total is None else total,
+                    "weekly_samples": [
+                        {
+                            "week_key": "2026-W39",
+                            "qualifying_episodes": qualifying,
+                        }
+                    ],
+                },
+            },
+        }
+    }
+
+
 def test_value_is_not_proven_with_no_evidence(tmp_path):
     mod = _load()
     result = mod.collect_value_evidence(root=tmp_path, now=NOW)
     assert result["state"] == "not_proven"
     assert result["samples"]["records"] == 0
-    assert any("尚无任何价值证据" in r for r in result["state_reason"])
+    assert any("Event Ledger 尚无完整" in r for r in result["state_reason"])
 
 
 def test_ratio_thresholds_gated_when_sample_basis_insufficient(tmp_path):
@@ -207,7 +228,24 @@ def test_ratio_thresholds_gated_when_sample_basis_insufficient(tmp_path):
     assert acceptance["met"] is None                     # 不可判定, 不是 True
     assert "不足" in acceptance["gate"]
     samples = next(t for t in result["thresholds"] if t["key"] == "samples")
-    assert samples["current"] == 2 and samples["met"] is False
+    assert samples["current"] == 0 and samples["met"] is False
+
+
+def test_self_declared_jsonl_never_qualifies_personal_value(tmp_path):
+    mod = _load()
+    _seed_value(tmp_path, [
+        {"schema": "value-evidence/v2", "timestamp": _iso_hours_ago(1),
+         "scene_id": "self-declared", "verdict": "accepted",
+         "qualifying": True, "net_saved_seconds": 3600, "run_id": "r-self"},
+    ])
+
+    result = mod.collect_value_evidence(root=tmp_path, now=NOW)
+
+    assert result["samples"]["records"] == 1
+    assert result["samples"]["self_reported_qualifying"] == 1
+    assert result["samples"]["qualifying"] == 0
+    assert result["authority_source"] == "omo-event-ledger"
+    assert any("Event Ledger" in reason for reason in result["state_reason"])
 
 
 def test_ratio_threshold_judged_once_sample_basis_sufficient(tmp_path):
@@ -217,7 +255,11 @@ def test_ratio_threshold_judged_once_sample_basis_sufficient(tmp_path):
          "qualifying": True, "net_saved_seconds": 10, "run_id": f"r{i}"}
         for i in range(1, 31)
     ])
-    result = mod.collect_value_evidence(root=tmp_path, now=NOW)
+    result = mod.collect_value_evidence(
+        root=tmp_path,
+        now=NOW,
+        context=_value_truth_context(qualifying=30),
+    )
     acceptance = next(t for t in result["thresholds"] if t["key"] == "acceptance")
     assert acceptance["met"] is True
     samples = next(t for t in result["thresholds"] if t["key"] == "samples")
@@ -234,7 +276,7 @@ def test_non_qualifying_samples_excluded_from_value_gate(tmp_path):
     result = mod.collect_value_evidence(root=tmp_path, now=NOW)
     assert result["samples"]["records"] == 1
     assert result["samples"]["qualifying"] == 0
-    assert any("qualifying=false" in r for r in result["state_reason"])
+    assert any("legacy JSONL 不计入" in r for r in result["state_reason"])
 
 
 def test_journey_stage_reads_real_export_without_context(tmp_path):
@@ -343,7 +385,11 @@ def test_revision_burden_uses_post_baseline_window(tmp_path):
          "qualifying": True, "net_saved_seconds": 60, "run_id": "rc"},
     ])
 
-    result = mod.collect_value_evidence(root=tmp_path, now=NOW)
+    result = mod.collect_value_evidence(
+        root=tmp_path,
+        now=NOW,
+        context=_value_truth_context(qualifying=30),
+    )
     burden = next(t for t in result["thresholds"] if t["key"] == "revision_burden")
     projection = result["revision_baseline"]
 
