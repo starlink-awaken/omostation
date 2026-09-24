@@ -1,9 +1,9 @@
 ---
 id: ADR-0455
-status: PROPOSED
+status: ACCEPTED
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-09-23
+last-reviewed: 2026-09-24
 type: ssot
 related:
   - ADR-0453
@@ -12,7 +12,7 @@ related:
 
 # ADR-0455 — Claims legacy-publication fence 与 managed-clone allow 禁止的可满足性
 
-- **Status**: PROPOSED（待架构评审；未授权在 PROPOSED 下改 broker 行为）
+- **Status**: ACCEPTED（2026-09-24 principal 批准方案 A；授权实现 publication-scoped allow）
 - **Date**: 2026-09-23
 - **Owner**: architecture-governance
 - **Related**: Claims Authority WP1 lifecycle draft `07d655de…7682`；PITFALL-GAT-010；BET-Y1Q4-T10-145
@@ -65,3 +65,10 @@ lifecycle Op B/C 无法完成（2026-09-23 执行实证：Op A 成功，B/C stop
 - 执行状态：`.../lifecycle-execution-status.json`（Op A EXECUTED，B BLOCKED_PROTOCOL）
 - PITFALL：`.omo/_knowledge/pitfalls/gate/PITFALL-GAT-010.yaml`
 - 源码：`projects/omo/src/omo/workflow/claims_authority.py`（`_validate_observe_request` / `issue_legacy_fence`）
+
+## 决策记录
+
+- **2026-09-24**: principal 批准 ADR-0455 方案 A。允许在 `agent-clone-identity/v2` 上铸造
+  **绑定 exact `changed_paths` + 单次 fence 效果上限** 的 `v1 allow` observe receipt；
+  通用 allow 仍禁。实现后在有效授权窗 `DEC-20260923-CLAIMS-LIFECYCLE-R0-01`
+  （至 2026-09-25T01:47:16Z）内重跑 Op B/C。
