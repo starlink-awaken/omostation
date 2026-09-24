@@ -1,0 +1,26 @@
+---
+schema_version: human-attestation/v1
+type: attestation
+bet_id: BET-Y2Q2-T4-01
+principal_id: "principal:xiamingxing"
+episode_id: phase3-value-evidence
+signal_event_id: phase3-value-evidence-adjudication
+phase: phase3
+status: outcome_accepted
+verdict: outcome_accepted
+observed_at: "2026-09-24T06:27:00+00:00"
+attested_by: "principal:xiamingxing"
+signer_identity: xiamingxing
+signature_b64: "LS0tLS1CRUdJTiBTU0ggU0lHTkFUVVJFLS0tLS0KVTFOSVUwbEhBQUFBQVFBQUFETUFBQUFMYzNOb0xXVmtNalUxTVRrQUFBQWc3UE44L3pUWUlVSDZLcEZsNElaUnQzSmVucAp5K2hlcERtbDVrRWRON0hTUUFBQUFjYjIxdmMzUmhkR2x2Ymkxb2RXMWhiaTFoZEhSbGMzUmhkR2x2YmdBQUFBQUFBQUFHCmMyaGhOVEV5QUFBQVV3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFFRGRQRGF2VzQ0QTA3Rnd2cnZwZE9TbHBTSSsyVUgzdnUKcEdhY1BvY2dtWEFIaFJwOG4wWjdLVWNTblVBdDhzZUpoR1pKbkRzalkwOGUyeW5IYytCc1VFCi0tLS0tRU5EIFNTSCBTSUdOQVRVUkUtLS0tLQo="
+attested_at: "2026-09-24T06:27:00+00:00"
+evidence_refs:
+  - ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+    type: retro
+  - ref: receipt://.omo/_delivery/ingress/value-evidence.jsonl
+    type: value_evidence
+  - ref: receipt://.omo/_truth/governance-evidence/phase3-completion-BET-Y2Q2-T4-01.md
+    type: phase_completion
+summary: >
+  Phase 3 value-evidence collection completed with 52 qualifying v2 episodes (target 30).
+  All 25 candidate signals adjudicated; 22 qualifying, 3 non-qualifying.
+  Validation passed (ok=true, issues=0).

@@ -32462,7 +32462,8 @@ bets:
         evidence: {}
 - id: BET-Y2Q2-T4-01
   title: North-star recovery and first real Decision Episode proof
-  status: candidate
+  status: done
+  done_at: 2026-09-24
   priority: P0
   risk_level: L3
   track: T4-OUTCOME
@@ -32536,17 +32537,54 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T4-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: outcome_accepted
+    attestation:
+      ref: receipt://.omo/_truth/governance-evidence/attestation-BET-Y2Q2-T4-01-phase3.json
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          verify_execute: "exit 0; gate-health/sfop/observe PASS"
+          d0_surfaces: "11/11 OK"
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          merged_reachable_commit:
+            ref: "git://origin/main@700d2beb8b6d486b99e5aabfa0388149fcee1689"
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          verify_execute: "exit 0; gate-health/sfop/observe PASS"
+          brief: "11/11"
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
       value:
-        status: NOT_PROVEN
-        evidence: {}
+        status: ACCEPTED
+        evidence:
+          qualifying_v2: 52
+          target: 30
+          overshoot: 22
+          validation: "ok=true, issues=0"
+          baseline: "bet-y2q2-t4-01-phase3-initial"
+          attestation:
+            ref: receipt://.omo/_truth/governance-evidence/attestation-BET-Y2Q2-T4-01-phase3.json
+          human_verdict:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          real_signal:
+            ref: receipt://.omo/_archive/operations-2026H1/value-evidence/BET-Y2Q2-T4-01/real_signal.jsonl
+          revision:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+          time_burden:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
   verify:
   - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
     expect: no new errors relative to the bound origin/main baseline; the six pre-existing
