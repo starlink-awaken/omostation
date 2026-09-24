@@ -190,31 +190,39 @@ def onboard_omlxc() -> dict:
             "reason": "omlxc CLI 未在系统 PATH 注册 (omlx 留给 App，推理集群使用 omlxc)",
         }
 
-    cluster_info = run_cmd(["omlxc", "cluster"], timeout=8.0)
-    gw_info = run_cmd(["omlxc", "gw", "status"], timeout=5.0)
+    # 现代 CLI 无 cluster/gw 子命令（实测 No such command）；用 status + nodes list 探活。
+    status_info = run_cmd(["omlxc", "status", "--json"], timeout=8.0)
+    nodes_info = run_cmd(["omlxc", "nodes", "list"], timeout=8.0)
 
     # 简单分析活跃的服务和离线需要自愈唤醒的从机
     active_services = []
     nodes_down = []
-    if cluster_info:
-        for line in cluster_info.split("\n"):
-            if "○ down" in line:
-                if "mac-mini" in line:
-                    nodes_down.append("mac-mini-M4")
-                elif "Y7000P" in line:
-                    nodes_down.append("Y7000P-4070")
-            elif "● up" in line:
+    if status_info:
+        try:
+            payload = json.loads(status_info)
+            data = payload.get("data") or payload
+            if str(data.get("status", "")) == "ready":
+                active_services.append("omlxcd")
+            for warning in data.get("warnings") or []:
+                if warning.get("code") == "inventory_drop":
+                    active_services.append(f"inventory_drop:{warning.get('backend_id', '?')}")
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            pass
+    if nodes_info:
+        for line in nodes_info.split("\n"):
+            if "● healthy" in line or "● up" in line:
                 parts = line.split()
-                # 比如：MBP · M5 Max 128G   主力+网关                 coder        ● up
-                # 或者：                                          embed        ● up
-                # 这种情况下，如果 len(parts) 比较多，我们可以找 "●" 的前一个 token 作为一个服务
                 try:
-                    up_idx = parts.index("up")
-                    if up_idx > 0 and parts[up_idx - 1] == "●":
-                        service_name = parts[up_idx - 2]
-                        active_services.append(service_name)
+                    dot_idx = parts.index("●")
+                    if dot_idx > 0:
+                        active_services.append(parts[0])
                 except ValueError:
                     pass
+            elif "○ down" in line or "● down" in line:
+                if "mac-mini" in line or "macmini" in line:
+                    nodes_down.append("mac-mini-M4")
+                elif "Y7000P" in line or "y7000p" in line:
+                    nodes_down.append("Y7000P-4070")
 
     # 物理自愈：对离线从机节点发送 WoL 唤醒信号
     if nodes_down:
@@ -225,16 +233,26 @@ def onboard_omlxc() -> dict:
         for node in nodes_down:
             run_cmd(["python3", "bin/gac/omlxc-node-wakeup.py", "--node", node], timeout=5.0)
 
+    # 网关健康改走 AetherForge HTTP liveness（gw status 子命令已不存在）
+    gw_health = run_cmd(
+        ["curl", "-fsS", "--max-time", "3", "http://127.0.0.1:9290/health"],
+        timeout=5.0,
+    )
     models_route = []
-    if gw_info and "路由模型:" in gw_info:
-        models_route = [m.strip() for m in gw_info.split("路由模型:")[-1].split(",")]
+    if gw_health:
+        try:
+            gw_payload = json.loads(gw_health)
+            if gw_payload.get("status") == "ok":
+                models_route.append(gw_payload.get("service", "aetherforge"))
+        except (json.JSONDecodeError, TypeError):
+            pass
 
     return {
         "status": "OK",
         "path": which_omlxc,
         "active_services_count": len(active_services),
         "gateway_models": models_route,
-        "raw_cluster": cluster_info[:300] + "..." if cluster_info else "",
+        "raw_cluster": (nodes_info[:300] + "...") if nodes_info else "",
         "auto_healed_nodes": nodes_down,
     }
 

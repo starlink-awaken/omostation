@@ -11,7 +11,7 @@ owner: governance-team
 
 > **SSOT**: `projects/omlxc/docs/ARCHITECTURE-FABRIC.md`  
 > **使用手册**: `docs/local-compute/compute-mesh-handbook.md`  
-> **版本**: `omlxc v5.2.0` / `ADR-0439 Active` / `AetherForge Active`  
+> **版本**: `omlxc v3.4.0`（semver 真源 `pyproject.toml`；ADR 演进代号 v5.x 见 ADR-0436/0439） / `ADR-0439` / `AetherForge Active`  
 > **核心定位**: 私有化本地异构集群 (Apple Silicon 统一内存 + NVIDIA CUDA) 的 **L4/L7 智能算力网关与 Kubernetes Scheduler for LLM**。
 
 ---
@@ -32,7 +32,9 @@ owner: governance-team
 
 ---
 
-## 2. 核心架构与调度机制 (Fabric Principles & ADR-0435)
+## 2. 核心架构与调度机制 (Fabric Principles & ADR-0433/0434)
+
+> 打分公式正文见 `projects/omlxc/docs/ARCHITECTURE-FABRIC.md` § FinalScore；历史依据 ADR-0433/0434（0435 实为 launchd plist 契约）。
 
 ### 2.1 综合打分与路由公式
 每个候选模型 Placement $p$ 的最终得分：

@@ -2561,7 +2561,7 @@ cli_commands:
 - name: submit
   description: 提交控制任务
 - name: summary
-  description: 债务摘要 (委派 omo debt)
+  description: 债务摘要 (映射 omo debt report)
 - name: svg
   description: 渲染 ```diagram 代码块为矢量架构图 SVG
 - name: swarm

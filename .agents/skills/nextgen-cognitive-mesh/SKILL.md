@@ -46,10 +46,12 @@ owner: governance-team
 - **定位**：基于局域网节点自发现与显存/温度感知，实现任务跨设备的弹性溢出与 0ms 漫游。
 - **调用方式**：
   ```bash
-  # 查看局域网边缘算力拓扑与温度/显存状态
-  omlxc fabric mesh list
-  # 计算任务最佳放置与漫游决策
-  omlxc fabric mesh route --model <model_id> --priority P0
+  # 查看织网全景（温控/分诊/VRAM/缓存）与三节点状态
+  omlxc fabric inspect
+  omlxc nodes list
+  # 计算任务最佳放置：用 routes plan / resolve（fabric 下无 mesh 子命令）
+  omlxc routes plan
+  omlxc resolve <model_id>
   ```
 
 ---
