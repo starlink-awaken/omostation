@@ -1,12 +1,12 @@
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-23T02:06:23.563617Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `86/100`
+> **Generated**: `2026-09-24T06:17:10.538596Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `86/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 各卡片的直接链接见下方清单。
 
 ### ⏳ 待处理卡片与债务 (Needs Human Decisions)
-- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](file:///Users/xiamingxing/ws-p0-claims-gat010/.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml)
+- **[OMO-DEBT]** planned 卡 status 归一: deferred/backlog → pending|candidate → [`.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml`](<.omo/tasks/archived/done/w3w3-planned-status-normalize.yaml>)
 
 > 📊 **治理预算**: 40/40/20 (治理≤40%/协作≥40%/弹性20%, ADR-0249). 超40%须送卡.
 

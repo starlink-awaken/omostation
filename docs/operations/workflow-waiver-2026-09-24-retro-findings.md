@@ -29,13 +29,29 @@ ADR-0203 的 requirement-iteration 门要求 `start --bet <BET-ID>`，但 **3Y-B
 | #4244 | `b229a77da` | Agent Brief `resolve-failing-gates` 时效性提示 |
 | #4245 | `b7052a2a6` | 两条治理踩坑固化（PITFALL-GAT-011 + pattern） |
 | #4246 | `5b1564662` | `docs/operations/claims-activation-checklist.md`（只读） |
-| 本次 | PR 待登记 | 复盘 findings F1–F4 修正：豁免留痕、删除无消费方字段、Claims 数值指针化、修 `gen-knowledge-index.py` 前缀元数据丢失 + 重建知识索引 |
+| #4266 | `af33a3e80` | 复盘 findings F1–F4 修正：豁免留痕、删除无消费方字段、Claims 数值指针化、修 `gen-knowledge-index.py` 前缀元数据丢失 + 重建知识索引 |
+| 本次 | PR 待登记 | 二次复盘 findings H1–H3：`submodule-reachability-gate.py` 网络工作加有界预算（超时降级为 unverified 而非 unreachable）、`hook-runner.sh` 死超时参数改名并说明真相、生成物（BRIEF.md / CLAUDE.md 注入段）去除主机绝对路径 |
 
 ## User Confirmation
 
 - "可以，依次推进吧"（授权按 #4 → #5 → #1 顺序推进）
 - 既有常置授权链："pr 合并提交" / "我给你授权，推进吧"
 - 复盘后选择："F1 补豁免留痕、F2 删死字段、F3 数值指针化、F4 补可发现性；F5 只报告不处置"
+- 二次复盘："go"（授权处置 H1/H3；H2 经实测改判为**只报告**，见下）
+
+## H2 改判（实测推翻初始假设）
+
+初始报告称 `.githooks/pre-rebase` 缺执行位是缺陷。实测三点推翻：
+
+1. `SWARM_ESCAPE_ID=rebase-ci bash .githooks/pre-rebase HEAD^ origin/main` → 仍 exit 1，文档宣传的逃生口是死的
+   （`[ "$x" != rebase-* ]` 是字面串比较，只有 `[[ ]]` 才做模式匹配）。
+2. git 的 `pre-rebase` 签名是 `<upstream> [<branch>]`，`$2` 是被 rebase 的分支名而**不是 onto**，
+   所以脚本从未实现它声称的"拒绝 rebase onto main"。
+3. 在落后于 main 的分支上 `git rebase origin/main` 会被该 hook exit 1 拦下——而这正是 PITFALL-GAT-007
+   规定的 push 前动作。**补上执行位等于让全场 Agent 的 push 前 rebase 失败**。
+
+因此 H2 不修：激活危害大于收益，且修复方向（重写判定逻辑 + 真正的逃生口 + 回归测试）超出本次"有界性"范围。
+已作为需 principal 决策项上报。
 
 ## Boundary
 
