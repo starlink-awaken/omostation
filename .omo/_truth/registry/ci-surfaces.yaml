@@ -1221,6 +1221,60 @@ surfaces:
   - push
   status: active
   note: 单 PR 代码膨胀阻断 (BET-Y1Q4-T10-156)
+- id: bin-gac-auto-fix-loop
+  tool: bin/gac/auto-fix-loop.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+- id: bin-gac-check-capability-ownership
+  tool: bin/gac/check-capability-ownership.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+- id: bin-gac-check-derived-only-fast-track
+  tool: bin/gac/check-derived-only-fast-track.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+- id: bin-gac-check-evidence-honest-closure
+  tool: bin/gac/check-evidence-honest-closure.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+- id: bin-gac-check-gateway-status-doc
+  tool: bin/gac/check-gateway-status-doc.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+- id: bin-gac-command-discovery
+  tool: bin/gac/command-discovery.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+- id: bin-ssot-bos-tracking-gate
+  tool: bin/ssot/bos-tracking-gate.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+- id: bin-ssot-bus-usage-report
+  tool: bin/ssot/bus-usage-report.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+- id: bin-ssot-check-index-drift
+  tool: bin/ssot/check-index-drift.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
 workflow_triggers:
 - workflow: aetherforge-ci.yml
   triggers:

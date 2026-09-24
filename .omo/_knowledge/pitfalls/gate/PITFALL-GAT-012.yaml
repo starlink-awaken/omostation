@@ -1,0 +1,24 @@
+schema: agent-error/v1
+id: PITFALL-GAT-012
+category: gate
+severity: medium
+title: pre-rebase hook 缺执行位是保护而非缺陷：补 +x 会阻断全场 push 前 rebase
+symptom: git 提示 The '.githooks/pre-rebase' hook was ignored because it's not set as
+  executable，看起来像漏配权限，顺手 chmod +x 就能修好
+root_cause: 脚本本身从未通过测试：① 逃生口写死失效 —— 单引号 [ ] 里 != 是字面串比较，只有 [[ ]] 才做 glob 模式匹配，所以
+  SWARM_ESCAPE_ID=rebase-ci 永远不生效；② git pre-rebase 的签名是 <upstream> [<branch>]，第 2
+  参是被 rebase 的分支名而不是 onto，脚本声称的拒绝 rebase onto main 逻辑从来没实现过。缺执行位反而让这份未验证脚本一直是惰性的。
+solution: 先实测再动手，别把 hint 当缺陷。三条证据：逃生口 exit 1 复现；$2 语义核对 git hooks man；在落后 main 的分支上跑
+  PITFALL-GAT-007 规定的 git rebase origin/main → 该 hook exit 1，即激活 = 全场 Agent push 前动作失效。正确处置是只报告
+  + 上报 principal；真要修得重写判定逻辑（用 [[ ]] 模式匹配、正确取 onto）并补 pre-rebase 回归测试。
+prevention: 动 .githooks/ 任何脚本前先跑一次它的正向用例和逃生用例；git 的 'hook was ignored because it's not set as executable' 提示是在告知现状，不是在请求修复。改 hook 属交付面变更，需 principal 决策。
+tags:
+- githooks
+- pre-rebase
+- swarm-escape
+- PITFALL-GAT-007
+discovered_by: governance-agent
+discovered_at: '2026-09-24'
+times_encountered: 1
+last_confirmed_at: '2026-09-24'
+status: active
