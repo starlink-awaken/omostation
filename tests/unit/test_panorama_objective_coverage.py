@@ -165,6 +165,15 @@ def _projection_payload() -> dict:
     }
 
 
+def test_projection_event_ledger_honors_runtime_binding(tmp_path, monkeypatch) -> None:
+    ledger = tmp_path / "canonical-runtime" / "event-ledger.sqlite3"
+    monkeypatch.setenv("OMO_EVENT_LEDGER_DB", str(ledger))
+
+    module = _module()
+
+    assert module.EVENT_LEDGER == ledger
+
+
 def test_projection_source_binding_uses_immutable_claims_and_logical_event_chain(tmp_path) -> None:
     module = _module()
     claims_root = tmp_path / "claims"
