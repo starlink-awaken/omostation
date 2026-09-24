@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Agent Institutional Memory — 错误知识库 lookup/record/stats/check (ADR-0424 配套).
 
-体系设计: .omo/_knowledge/pitfalls/{category}/{slug}.yaml + .index.json 缓存
+体系设计: .omo/_knowledge/pitfalls/{category}/{slug}.yaml
 原则: 遇到问题先查这里 → 没有就解决并记录 → 有就直接复用
 """
 
@@ -16,15 +16,21 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 PITFALLS_DIR = WORKSPACE / ".omo" / "_knowledge" / "pitfalls"
-INDEX_FILE = PITFALLS_DIR / ".index.json"
 CATEGORIES = ["submodule", "cron", "gate", "scoring", "coordination", "environment", "measurement"]
 ROOT = Path(__file__).resolve().parents[2]
 ESCALATION_THRESHOLD = 5
 OBSOLETE_DAYS = 90
 
 
-def _load_all() -> list[dict]:
-    """Load all pitfall entries from YAML files."""
+def _load_all(issues: list[str] | None = None) -> list[dict]:
+    """Load all pitfall entries from YAML files.
+
+    A file the recall path cannot use is never dropped silently: pass ``issues``
+    and every such file is reported there (``check`` gates on it). Legacy entries
+    predating the ``agent-error/v1`` schema are normalized instead of skipped —
+    ``PITFALL-CRD-001`` used ``name:`` where the loader demanded ``title:``, so
+    recall counted 33 while ``check`` counted 34 and the lesson was unreachable.
+    """
     entries = []
     if not PITFALLS_DIR.is_dir():
         return entries
@@ -32,16 +38,30 @@ def _load_all() -> list[dict]:
         if not cat_dir.is_dir() or cat_dir.name.startswith("."):
             continue
         for f in sorted(cat_dir.glob("*.yaml")):
+            report = None
             try:
                 import yaml
 
                 d = yaml.safe_load(f.read_text())
-                if isinstance(d, dict) and d.get("title"):
-                    d["_path"] = str(f)
-                    d["_file"] = f.name
-                    entries.append(d)
-            except Exception:
+            except Exception as exc:  # noqa: BLE001
+                report = f"unparseable: {f} ({exc})"
+                d = None
+            if report is None and not isinstance(d, dict):
+                report = f"not a mapping: {f}"
+                d = None
+            if report is None and not (d.get("title") or d.get("name")):
+                report = f"no title or name: {f}"
+                d = None
+            if report is not None:
+                if issues is not None:
+                    issues.append(report)
                 continue
+            if not d.get("schema"):
+                d.setdefault("title", d.get("name", ""))
+                d.setdefault("category", cat_dir.name)
+            d["_path"] = str(f)
+            d["_file"] = f.name
+            entries.append(d)
     return entries
 
 
@@ -56,8 +76,12 @@ def _save_entry(entry: dict):
     cat_dir.mkdir(parents=True, exist_ok=True)
     import yaml
 
+    # Loader-private keys must never reach disk: record's dedup branch re-saves an
+    # entry it got from _load_all, which used to write _path (a host-absolute,
+    # often already-deleted worktree path) into 6 committed pitfall files.
+    public = {k: v for k, v in entry.items() if not k.startswith("_")}
     path = cat_dir / f"{entry['id']}.yaml"
-    path.write_text(yaml.dump(entry, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    path.write_text(yaml.dump(public, allow_unicode=True, sort_keys=False), encoding="utf-8")
     return path
 
 
@@ -347,11 +371,9 @@ def cmd_stats(args):
 
 def cmd_check(args):
     """Gate: 校验 pitfalls 库一致性 (解析/必填字段/id 唯一/category 合法). exit 1 on problem."""
-    import yaml
-
     problems: list[str] = []
-    entries: list[dict] = []
     seen_ids: dict[str, str] = {}
+    on_disk = 0
 
     if PITFALLS_DIR.is_dir():
         for cat_dir in sorted(PITFALLS_DIR.iterdir()):
@@ -359,38 +381,40 @@ def cmd_check(args):
                 continue
             if cat_dir.name not in CATEGORIES and cat_dir.name != "submodule":
                 problems.append(f"unknown category dir: {cat_dir.name}")
-            for f in sorted(cat_dir.glob("*.yaml")):
-                try:
-                    d = yaml.safe_load(f.read_text())
-                except Exception as exc:  # noqa: BLE001
-                    problems.append(f"unparseable: {f} ({exc})")
-                    continue
-                if not isinstance(d, dict):
-                    problems.append(f"not a mapping: {f}")
-                    continue
-                eid = d.get("id")
-                if not eid:
-                    problems.append(f"missing id: {f}")
-                    continue
-                if eid in seen_ids:
-                    problems.append(f"duplicate id {eid}: {f} vs {seen_ids[eid]}")
-                seen_ids[eid] = f.name
-                # schema: agent-error/v1 条目严格校验必填字段; legacy 格式 (无 schema, 如 CRD-001) 只查可解析/id
-                # auto 喂食条目 (discovered_by 含 auto:) 的 solution/prevention 允许留空待人工复盘
-                if d.get("schema") == "agent-error/v1":
-                    is_auto = "auto:" in str(d.get("discovered_by", ""))
-                    for key in ("schema", "title", "symptom", "category", "status"):
-                        if not d.get(key):
-                            problems.append(f"{eid}: missing required field '{key}'")
-                    if not d.get("solution") and not is_auto:
-                        problems.append(f"{eid}: missing required field 'solution'")
-                    if d.get("category") and d["category"] not in CATEGORIES:
-                        problems.append(f"{eid}: invalid category '{d['category']}'")
-                    if d.get("id") and not d["id"].startswith("PITFALL-"):
-                        problems.append(f"{eid}: id must start with PITFALL-")
-                d["_path"] = str(f)
-                d["_file"] = f.name
-                entries.append(d)
+            on_disk += len(list(cat_dir.glob("*.yaml")))
+
+    # check and recall now share _load_all. check used to walk the tree itself, so
+    # the two counts could diverge without anything failing — and they did (34 vs 33).
+    unrecallable: list[str] = []
+    entries = _load_all(issues=unrecallable)
+    problems.extend(unrecallable)
+    if len(entries) + len(unrecallable) != on_disk:
+        problems.append(
+            f"recall divergence: {on_disk} files on disk, {len(entries)} recallable, "
+            f"{len(unrecallable)} reported unusable"
+        )
+
+    for d in entries:
+        eid = d.get("id")
+        if not eid:
+            problems.append(f"missing id: {d['_path']}")
+            continue
+        if eid in seen_ids:
+            problems.append(f"duplicate id {eid}: {d['_path']} vs {seen_ids[eid]}")
+        seen_ids[eid] = d["_file"]
+        # schema: agent-error/v1 条目严格校验必填字段; legacy 格式 (无 schema, 如 CRD-001) 只查可解析/id
+        # auto 喂食条目 (discovered_by 含 auto:) 的 solution/prevention 允许留空待人工复盘
+        if d.get("schema") == "agent-error/v1":
+            is_auto = "auto:" in str(d.get("discovered_by", ""))
+            for key in ("schema", "title", "symptom", "category", "status"):
+                if not d.get(key):
+                    problems.append(f"{eid}: missing required field '{key}'")
+            if not d.get("solution") and not is_auto:
+                problems.append(f"{eid}: missing required field 'solution'")
+            if d.get("category") and d["category"] not in CATEGORIES:
+                problems.append(f"{eid}: invalid category '{d['category']}'")
+            if d.get("id") and not d["id"].startswith("PITFALL-"):
+                problems.append(f"{eid}: id must start with PITFALL-")
 
     # 强制至少 1 条记录 (空库视为体系未启用, 也报问题)
     if not entries:
