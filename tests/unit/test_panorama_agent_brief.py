@@ -501,16 +501,18 @@ def test_panel_value_is_materialized_before_agent_visibility() -> None:
     assert panel_call < brief_call
 
 
-def test_resolve_failing_gates_action_is_consumer_reverifiable() -> None:
+def test_resolve_failing_gates_action_stays_within_rendered_fields() -> None:
     module = _module()
     brief = module.collect_agent_visibility(_payload())
     action = next(a for a in brief["next_actions"] if a["id"] == "resolve-failing-gates")
 
-    assert action["reverify"] is True
-    assert action["gate_ids"] == ["A2"]
-    assert action["snapshot_generated_at"] == "2026-09-17T00:00:00+00:00"
-    assert "gate-health-check.py" in action["reverify_command"]
-    assert "--code-root" in action["reverify_command"]
+    # The host template renders only title|id, detail|gate|description, owner|source
+    # and state, so any other key is unread dead data.
+    assert set(action) <= {
+        "id", "title", "state", "detail", "gate", "description", "owner", "source",
+    }
+    assert "gate-health-check.py" in action["detail"]
+    assert "point-in-time snapshot" in action["detail"]
 
 
 def test_resolve_failing_gates_action_absent_when_all_gates_pass() -> None:
