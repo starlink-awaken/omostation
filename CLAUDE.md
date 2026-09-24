@@ -160,6 +160,13 @@ uv run --with "pyyaml" python "bin/agent-workflow.py" compliance  # 合规审计
 
 For the full command reference (gate & lint, SSOT tracking, agent workflow lifecycle, state sync, scene cards & journeys, tests), see [`AGENTS.md` §5](AGENTS.md).
 
+### 织星驾驶舱 (dashboard :43191) 运维
+
+- 运维手册: [`.omo/_knowledge/ops/zhixing-dashboard-runbook.md`](.omo/_knowledge/ops/zhixing-dashboard-runbook.md)
+- 宿主漂移检测 / 捕获 / 回滚: `python3 bin/gac/zhixing-host-sync.py check|capture|restore`
+- 漂移报告: `~/.local/share/zhixing-dashboard/host-drift-report.json`（每小时写入；exit 1 ≠ 服务故障，读报告定位）
+- 知行副驾真实算力: `GET /api/v1/compute/live`（omlxc 实时）、`POST /api/v1/compute/infer`（本机限流推理）
+
 ## 6. Routing Hints
 
 The authoritative SSOT map (fact types → sources) lives in [`ARCHITECTURE.md` §1](ARCHITECTURE.md). Use the INDEX docs to narrow by category:

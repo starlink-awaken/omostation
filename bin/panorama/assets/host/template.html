@@ -526,7 +526,8 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 
 /* Tooltip */
 [data-tooltip]{position:relative;cursor:help}
-[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:6px 10px;border-radius:4px;font-size:10px;white-space:nowrap;z-index:100}
+[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:6px 10px;border-radius:4px;font-size:10px;white-space:nowrap;z-index:100;border:1px solid rgba(255,255,255,0.15)}
+[data-theme="dark"] [data-tooltip]:hover::after{background:#334155;color:#f1f5f9;border:1px solid rgba(255,255,255,0.25);box-shadow:0 4px 16px rgba(0,0,0,0.5)}
 
 /* Section Transitions */
 .section{opacity:0;transform:translateY(8px);transition:opacity .25s ease,transform .25s ease}
@@ -1531,6 +1532,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
     </div>
   </div>
 </header>
+<div data-role="banner" id="zx-source-banner-host"></div>
 
 <!-- Layer 2: Horizon Dock Capsule Bar (五大战略视界切换坞 - 高度 38px) -->
 <div class="horizon-dock-bar" id="horizon-dock-bar">
@@ -1909,7 +1911,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#health">健康诊断</a>
 </div>
 <div class="section-head">
-  <div class="eyebrow"><span class="eyebrow-text">P-VALUE · 价值中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">成果与验收</span></div>
+  <div class="eyebrow"><span class="eyebrow-text">P-VALUE · 价值中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Outcomes &amp; Acceptance</span></div>
   <h1 id="title-value">成果被采用，才开始证明价值</h1>
   <p class="lead">交付、稳定运行与个人价值分别验收。所有计数均来自真实证据文件；样本不足时保持 NOT_PROVEN。</p>
 </div>
@@ -1967,7 +1969,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#gov">门禁状态</a>
 </div>
 <div class="section-head">
-  <div class="eyebrow"><span class="eyebrow-text">事件流 · 运行态</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">事件流</span></div>
+  <div class="eyebrow"><span class="eyebrow-text">事件流 · 运行态</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Event Stream</span></div>
   <h1 id="title-logs">事件与运行态</h1>
   <p class="lead">结构化的真实事件流 · 来源健康 · 24h 速率分布；全部数据可回溯到具体日志文件。</p>
 </div>
@@ -2022,7 +2024,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 </div>
 <div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
   <div>
-    <div class="eyebrow"><span class="eyebrow-text">KPI · 度量看板</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">指标看板</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">KPI · 度量看板</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Metrics Dashboard</span></div>
     <h1 id="title-metrics">指标度量</h1>
     <p class="lead" style="margin-bottom:0">全部序列由真实日志现场聚合（refresh.jsonl · 常驻心跳 · Agent 心跳 · 事件源），无合成波形。</p>
   </div>
@@ -2238,7 +2240,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#learning">经验与结晶</a>
   <a href="#scene-system">场景系统</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-KNOW · 知识平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">共享上下文</span></div><h1 id="title-know">共享知识有入口，也有边界</h1><p class="lead">从纲领、架构到实施、验收、运营和复盘，每个文档保留身份、owner 与审阅状态。新 Agent 按任务加载必要部分。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-KNOW · 知识平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">受管文档与知识入口</span></div><h1 id="title-know">共享知识有入口，也有边界</h1><p class="lead">从纲领、架构到实施、验收、运营和复盘，每个文档保留身份、owner 与审阅状态。新 Agent 按任务加载必要部分。<span style="display:block;margin-top:6px;font-size:11px;color:var(--muted)">📌 受管文档索引 · 检索与阅读 · 相关：<a href="#learning" style="color:var(--blue)">经验与结晶</a></span></p></div>
 <div id="knowledge-stats-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载知识库统计...</span></div></div>
 <div class="toolbar"><label class="sr-only" for="doc-search">搜索文档</label><input id="doc-search" type="search" placeholder="搜索白皮书、架构、共享知识、验收…"><label class="sr-only" for="doc-status">筛选审阅状态</label><select id="doc-status"><option value="">全部文档</option><option value="in-review">审阅中</option><option value="not-requested">导航 / 观察</option><option value="accepted">已接受</option></select></div><p id="doc-count" class="small muted" aria-live="polite"></p><div id="documents" class="docgrid"></div>
 </section>
@@ -2652,7 +2654,7 @@ Constitution / Vision / Values / Risk / Revocation
   <div class="section-head">
     <div class="eyebrow"><span class="eyebrow-text">自进化 · 知识结晶</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">经验与 SEMA 结晶</span></div>
     <h1 id="title-learning">经验自进化与 SEMA 踩坑信念结晶</h1>
-    <p class="lead">从历史 390+ 篇复盘战报（Retros）与夏明星主权署名 Diff 中逆向萃取智能体信念，实现「踩坑即沉淀、沉淀即固化为不可违背规则」的闭环进化系统。</p>
+    <p class="lead">从历史 390+ 篇复盘战报（Retros）与夏明星主权署名 Diff 中逆向萃取智能体信念，实现「踩坑即沉淀、沉淀即固化为不可违背规则」的闭环进化系统。<span style="display:block;margin-top:6px;font-size:11px;color:var(--muted)">📌 复盘 / 模式 / 教训的结构化沉淀 · 相关：<a href="#know" style="color:var(--blue)">文档知识</a></span></p>
   </div>
   <div class="grid three gap" style="margin-bottom:14px">
     <div class="card" style="background:var(--paper)">
@@ -4874,40 +4876,155 @@ safeRender(renderAgentCapabilityMesh, 'renderAgentCapabilityMesh failed');
 safeRender(renderKnowledgeStats, 'renderKnowledgeStats failed');
 safeRender(renderGuidanceHub, 'renderGuidanceHub failed');
 
+/* === P2-5 数据源降级横幅 === */
+function zxRenderSourceBanner(){
+  try{
+    var D=zxData();
+    var ss=D.source_states||{};
+    var refresh=D.refresh||{};
+    var failing=[];
+    Object.keys(ss).forEach(function(k){ if(ss[k]&&ss[k].status&&ss[k].status!=='OK'){ failing.push({key:k,st:ss[k].status,err:ss[k].error}); } });
+    if(!failing.length) return;
+    var host=document.getElementById('zx-source-banner-host');
+    if(!host) return;
+    var lastRefresh=refresh.attempted_at?refresh.attempted_at.replace('T',' ').slice(0,19):'未知';
+    var items=failing.map(function(f){return '<li style="margin:2px 0;font-size:11px"><b style="color:#b45309">'+esc(f.key)+'</b> '+esc(f.st)+(f.err?': '+esc(String(f.err).slice(0,80)):'')+'</li>';}).join('');
+    host.innerHTML='<div style="margin:8px 0;border-left:3.5px solid var(--amber);background:var(--amberwash);padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;color:#92400e">'+
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'+
+      '<div style="flex:1"><b>⚠ '+failing.length+' 个数据源降级</b><span class="small muted" style="margin-left:8px">最近刷新 '+esc(lastRefresh)+'</span>'+
+      '<ul style="margin:6px 0 0;padding-left:18px">'+items+'</ul></div>'+
+      '<button onclick="this.closest(\'[data-role=banner]\').remove()" style="background:none;border:none;cursor:pointer;font-size:14px;color:inherit;opacity:0.6" title="关闭">✕</button>'+
+      '</div></div>';
+    host.querySelector('[data-js]') ; // noop
+  }catch(_){}
+}
+
+safeRender(zxRenderSourceBanner, 'zxRenderSourceBanner failed');
+
 /* === 知行主权副驾抽屉 (Sovereign Cockpit Copilot Drawer) === */
-window.openSovereignCopilot = function(){
+window.openSovereignCopilot = function(tab){
   var backdrop = document.getElementById('sovereign-cockpit-drawer-modal');
   var content = document.getElementById('sovereign-cockpit-drawer-content');
   if(!backdrop || !content) return;
-  var compute = D.compute || {};
-  var models = compute.models || compute.endpoints || [];
-  var html = '<div style="padding:18px 24px;color:var(--ink)">';
-  html += '<h3 style="margin:0 0 12px;font-size:18px;font-family:var(--display)">⚡ AetherForge 算力织网</h3>';
-  html += '<p class="small muted" style="margin:0 0 14px;line-height:1.6">本地大模型推理网关 · <code style="font-size:11px">bos://compute/aetherforge/infer</code> · 投机解码加速</p>';
-  if(models.length){
-    html += '<div style="display:grid;gap:8px;margin-bottom:16px">';
-    models.forEach(function(m){
-      var nm = m.name || m.id || m.model || '未知模型';
-      var st = (m.status || 'ready');
-      var cls = (st === 'ready' || st === 'ok' || st === 'healthy') ? 'good' : (st === 'loading' ? 'warn' : 'neutral');
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface-subtle);border-radius:6px"><span style="font-size:12.5px">'+esc(nm)+'</span><span class="chip '+cls+'" style="font-size:10px">'+esc(st)+'</span></div>';
-    });
-    html += '</div>';
-  } else {
-    html += '<div class="empty" style="padding:24px;text-align:center"><div style="font-size:28px;margin-bottom:8px">🖥️</div><span class="chip neutral" style="font-size:11px">静态算力面板</span><p class="small muted" style="margin-top:10px;line-height:1.6">当前快照未包含 compute 模型明细。<br>AetherForge 推理端点: <code style="font-size:10.5px">bos://compute/aetherforge/infer</code></p></div>';
-  }
-  html += '<div class="note" style="margin-top:14px;font-size:11.5px">知行副驾 · 夏明星态势导读与署名自进化舱 · 人类意志最高控制权 (Human In Command) · 物理单向签署 · 知识沉淀与 SEMA 进化</div>';
-  html += '</div>';
-  content.innerHTML = html;
   backdrop.style.display = 'flex';
+  window._zx_copilot_tab = (tab)||window._zx_copilot_tab||'compute';
+  window._zx_copilot_log = window._zx_copilot_log || [];
+  renderCopilot();
+  if(window._zx_copilot_refresh){ clearInterval(window._zx_copilot_refresh); }
+  window._zx_copilot_refresh = setInterval(function(){ if(window._zx_copilot_tab==='compute') loadComputeLive(false); }, 30000);
 };
 window.closeSovereignCockpitDrawer = function(){
   var b = document.getElementById('sovereign-cockpit-drawer-modal');
   if(b) b.style.display = 'none';
+  if(window._zx_copilot_refresh){ clearInterval(window._zx_copilot_refresh); window._zx_copilot_refresh=null; }
 };
 document.addEventListener('keydown', function(e){
   if((e.metaKey || e.ctrlKey) && e.key === 'j'){ e.preventDefault(); window.openSovereignCopilot(); }
 });
+
+function renderCopilot(){
+  var content = document.getElementById('sovereign-cockpit-drawer-content');
+  if(!content) return;
+  var tab = window._zx_copilot_tab || 'compute';
+  var tabs=[['compute','⚡','算力状态'],['infer','🧪','本地推理']];
+  var bar='<div style="display:flex;gap:4px;padding:10px 16px;border-bottom:1px solid var(--border-subtle)">';
+  tabs.forEach(function(t){
+    var active=t[0]===tab;
+    bar+='<button onclick="window._zx_copilot_tab=\''+t[0]+'\';renderCopilot()" style="flex:1;padding:7px 8px;border-radius:6px;border:1px solid '+(active?'var(--blue)':'var(--border-subtle)')+';background:'+(active?'var(--bluewash)':'transparent')+';color:'+(active?'var(--blue)':'var(--muted)')+';font-size:11.5px;cursor:pointer;font-weight:'+(active?'600':'400')+'">'+t[1]+' '+t[2]+'</button>';
+  });
+  bar+='</div>';
+  if(tab==='compute') content.innerHTML=bar+renderComputeTab();
+  else content.innerHTML=bar+renderInferTab();
+}
+
+function fmtTime(ts){ if(!ts) return '—'; var d=new Date(ts); if(isNaN(d.getTime()))return String(ts); return d.toLocaleTimeString('zh-CN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function modelRow(m){
+  var cls = m.loaded ? 'good' : (m.available ? 'neutral' : 'dim');
+  var label = m.loaded ? '已加载' : (m.available ? '可用' : '离线');
+  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface-subtle);border-radius:6px;font-size:11.5px"><span style="font-family:var(--mono);font-size:10.5px;word-break:break-all">'+esc(m.id)+'</span><span style="font-size:10px;color:'+(m.loaded?'var(--teal)':'var(--muted)')+'">'+label+'</span></div>';
+}
+function renderComputeTab(){
+  var D=zxData(); var c=D.compute||{};
+  var h='<div style="padding:14px 16px;overflow-y:auto;max-height:60vh">';
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="chip good" style="font-size:10px">'+esc((c.status)||'local')+'</span><span class="small muted">'+esc(c.default_model||'')+'</span><span style="flex:1"></span><button onclick="loadComputeLive(true)" style="background:none;border:1px solid var(--border-subtle);border-radius:5px;font-size:11px;padding:3px 8px;cursor:pointer">刷新</button></div>';
+  h+='<div style="font-size:11px;color:var(--muted);margin-bottom:6px">模型 '+esc(String(c.loaded_count||0))+' / '+esc(String(c.model_count||0))+' 已加载 · 显存 '+esc(String(c.current_model_memory_gb||'?'))+' / '+esc(String(c.final_ceiling_gb||'?'))+' GB · '+esc(fmtTime(c.observed_at))+'</div>';
+  h+='<div id="zx-copilot-live-detail" style="font-size:11.5px"></div></div>';
+  setTimeout(function(){ window._zx_copilot_tab==='compute' && loadComputeLive(false); },0);
+  return h;
+}
+
+function loadComputeLive(force){
+  var el=document.getElementById('zx-copilot-live-detail'); if(!el) return;
+  el.innerHTML='<span class="small muted">正在从 omlxc 拉取实时算力…</span>';
+  var url='/api/v1/compute/live'+(force?'?t='+Date.now():'');
+  fetch(url,{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
+    if(!el||window._zx_copilot_tab!=='compute') return;
+    if(d.live){
+      var models=(d.models||[]);
+      var loaded=models.filter(function(m){return m.loaded;});
+      var up='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="color:var(--teal)">●</span><span style="font-size:11px">daemon '+(d.daemon&&d.daemon.status||'?')+' · '+(d.degraded===false?'健康':'降级')+'</span><span style="flex:1"></span><span class="small muted">'+esc(fmtTime(d.observed_at))+'</span></div>';
+      up+='<div class="small muted" style="margin-bottom:8px">'+esc(String(loaded.length))+' 个模型已加载：</div>';
+      up+='<div style="display:grid;gap:4px;max-height:34vh;overflow-y:auto">';
+      models.forEach(function(m){ if(m.loaded) up+=modelRow(m); });
+      up+='</div>';
+      el.innerHTML=up;
+    } else {
+      el.innerHTML='<div class="note" style="font-size:11px">实时端点未就绪'+((d.error&&d.error.length)?'：'+esc(d.error.join(' / ')):'')+'。'+(d.fallback?'显示静态快照数据。':'')+'</div>';
+      if(d.fallback){ el.innerHTML+='<div class="small muted" style="margin-top:6px">模型 '+esc(String((d.fallback.loaded_count)||0))+' / '+esc(String((d.fallback.model_count)||0))+' 已加载 · '+esc(fmtTime(d.fallback.observed_at))+'</div>'; }
+    }
+  }).catch(function(){ if(el) el.innerHTML='<div class="note" style="font-size:11px">拉取失败，稍后重试。</div>'; });
+}
+
+function renderInferTab(){
+  var log=(window._zx_copilot_log||[]);
+  var h='<div style="padding:14px 16px;overflow-y:auto;max-height:60vh">';
+  h+='<div style="margin-bottom:10px"><textarea id="zx-infer-prompt" placeholder="输入问题，本地模型作答…" style="width:100%;height:70px;border-radius:8px;border:1px solid var(--border-subtle);padding:8px;font-size:12px;resize:vertical;background:var(--surface);color:var(--ink)"></textarea></div>';
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><select id="zx-infer-model" style="flex:1;font-size:11px;padding:6px;border-radius:6px;border:1px solid var(--border-subtle);background:var(--surface);color:var(--ink)"><option value="">获取可用模型中…</select><button id="zx-infer-send" onclick="runInfer()" style="padding:6px 14px;border-radius:6px;border:none;background:var(--blue);color:white;font-size:12px;cursor:pointer">发送</button></div>';
+  h+='<div class="small muted" style="margin-bottom:6px;display:flex;justify-content:content:space-between"><span id="zx-infer-status"></span><button onclick="window._zx_copilot_log=[];renderCopilot()" style="background:none;border:none;color:var(--blue);font-size:10px;cursor:pointer">清空记录</button></div>';
+  h+='<div id="zx-infer-log" style="display:grid;gap:8px">';
+  if(!log.length) h+='<div class="empty" style="padding:16px;text-align:center"><span class="small muted">本轮暂无推理记录，发送提问开始本地推理。</span></div>';
+  log.slice().reverse().forEach(function(item){
+    h+='<div style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:4px"><span>'+esc(item.model)+'</span><span>'+esc(item.time)+'</span></div><div style="font-size:11px;color:var(--ink);white-space:pre-wrap">'+esc(item.output||item.error||'')+'</div></div>';
+  });
+  h+='</div></div>';
+  setTimeout(function(){ window._zx_copilot_tab==='infer' && loadInferModels(); },0);
+  return h;
+}
+
+function loadInferModels(){
+  var sel=document.getElementById('zx-infer-model'); if(!sel) return;
+  fetch('/api/v1/compute/live',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
+    var models=(d.models||[]).filter(function(m){return m.loaded;}).map(function(m){return m.id;});
+    if(!models.length){ sel.innerHTML='<option value="">无已加载模型</option>'; return; }
+    sel.innerHTML=models.map(function(m){return '<option value="'+esc(m)+'">'+esc(m)+'</option>'; }).join('');
+  }).catch(function(){ sel.innerHTML='<option value="">获取失败</option>'; });
+}
+
+function runInfer(){
+  var promptEl=document.getElementById('zx-infer-prompt');
+  var modelEl=document.getElementById('zx-infer-model');
+  var statusEl=document.getElementById('zx-infer-status');
+  var sendBtn=document.getElementById('zx-infer-send');
+  if(!promptEl||!modelEl) return;
+  var prompt=promptEl.value.trim(), model=modelEl.value;
+  if(!prompt){ statusEl.textContent='请先输入问题'; return; }
+  if(!model){ statusEl.textContent='请选择模型'; return; }
+  if(sendBtn) sendBtn.disabled=true;
+  statusEl.textContent='推理中… (本地 '+model+')';
+  fetch('/api/v1/compute/infer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:model,prompt:prompt})})
+   .then(function(r){ return r.json().then(function(j){return {ok:r.ok,status:r.status,body:j};}); })
+   .then(function(res){
+     var item={model:model,time:new Date().toLocaleTimeString('zh-CN',{hour12:false})};
+     if(res.ok&&res.body.ok){ item.output=res.body.output+'  ('+res.body.elapsed_ms+'ms)'; }
+     else { item.error=(res.body&&res.body.error)||('HTTP '+res.status); }
+     window._zx_copilot_log.push(item);
+     if(window._zx_copilot_log.length>10) window._zx_copilot_log=window._zx_copilot_log.slice(-10);
+     renderCopilot();
+   }).catch(function(e){
+     window._zx_copilot_log.push({model:model,time:new Date().toLocaleTimeString('zh-CN',{hour12:false}),error:String(e)});
+     renderCopilot();
+   }).finally(function(){ if(sendBtn) sendBtn.disabled=false; });
+}
 
 if(typeof initPersonaSystem === 'function') initPersonaSystem();
 if(typeof renderMofGrid === 'function') renderMofGrid();
@@ -6003,6 +6120,25 @@ safeRender(populateHealth, 'populateHealth failed');
 
   // Search data index
   var searchIndex = [];
+  // P2-7 搜索历史 (localStorage)
+  function zxLoadSearchHistory(){
+    try{ return JSON.parse(localStorage.getItem('zx.search.history')||'[]'); }catch(_){ return []; }
+  }
+  function zxSaveSearch(term){
+    if(!term) return;
+    var h=zxLoadSearchHistory().filter(function(t){return t!==term;});
+    h.unshift(term); h=h.slice(0,8);
+    try{ localStorage.setItem('zx.search.history', JSON.stringify(h)); }catch(_){}
+  }
+  function zxRenderSearchHistory(){
+    var h=zxLoadSearchHistory();
+    if(!h.length){ searchResults.innerHTML = emptyState('🔍', '输入关键词搜索', '搜索板块、Agent、门禁、事件'); return; }
+    searchResults.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:4px 8px 6px;display:flex;justify-content:space-between"><span>最近搜索</span><button id="zx-clear-sh" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:10px">清空</button></div>'+
+      h.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="searchInput.value='+JSON.stringify(t)+';zxSaveSearch('+JSON.stringify(t)+');performSearch('+JSON.stringify(t)+')"><span style="font-size:11px;color:var(--muted)">↺</span><span style="flex:1;font-size:12px">'+esc(t)+'</span></div>'; }).join('');
+    var btn=document.getElementById('zx-clear-sh');
+    if(btn) btn.onclick=function(){ try{localStorage.removeItem('zx.search.history');}catch(_){} zxRenderSearchHistory(); };
+  }
+
   function buildSearchIndex() {
     searchIndex = [];
     // Sections
@@ -6049,13 +6185,18 @@ safeRender(populateHealth, 'populateHealth failed');
     searchOverlay.style.display = 'flex';
     searchInput.focus();
     searchInput.value = '';
-    searchResults.innerHTML = emptyState('🔍', '输入关键词搜索', '搜索板块、Agent、门禁、事件');
+    zxRenderSearchHistory();
+  }
+  function runSearch(q){
+    if(!q) { zxRenderSearchHistory(); return; }
+    zxSaveSearch(q.trim());
+    performSearch(q);
   }
   function closeSearch() { searchOverlay.style.display = 'none'; }
   window.closeSearch = closeSearch;
 
   if (searchToggle) searchToggle.onclick = openSearch;
-  if (searchInput) searchInput.oninput = function() { performSearch(this.value); };
+  if (searchInput) searchInput.oninput = function() { runSearch(this.value); };
 
   // Keyboard shortcuts
   document.addEventListener('keydown', function(e) {
