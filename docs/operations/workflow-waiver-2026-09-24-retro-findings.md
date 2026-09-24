@@ -35,6 +35,14 @@ ADR-0203 的 requirement-iteration 门要求 `start --bet <BET-ID>`，但 **3Y-B
 | #4285 | `0a129eb13` | 固化本次复盘教训为 error-knowledge 条目 PITFALL-GAT-012（pre-rebase 缺执行位是保护而非缺陷）+ PITFALL-MEA-004（hook-runner 死超时参数）；同一豁免（`governance-state-mutation` run 20260924T072410Z） |
 | #4287 | `6f3fc3220` | 把上两行（#4280 / #4285）登记进本表——F1 留痕补齐，单文件 docs 变更 |
 | #4295 | `eac467af8` | 修 error-knowledge 召回路径静默丢条目：`_load_all` 归一 legacy 条目、不可召回文件上报而非吞掉、`check` 与召回同源计数（`recall divergence`）、`_save_entry` 不再落盘 `_path`/`_file`（清理 6 条已被写入主机绝对路径的 pitfall 记录）+ 5 条回归测试（`project-code-change` run 20260924T133342Z） |
+| #4296 | `11ecf8ca7` | 把上两行（#4287 / #4295）登记进本表 + 补一段台账复核（含"开放 bet 仍为 0"的可复跑命令与 `campaigns`/`milestones` 不是 bet 的告警） |
+| #4298 | `25e20a8bf` | 把子模块指针漂移测试的状态白名单钉回发射端：`DRIFT_STATUSES` 常量 + `test_declared_statuses_match_the_emitter` 用源码扫描比对 `"status": "…"` 集合，使 `unverifiable` 不再被测试当成非法值；docstring 记录该测试文件当前无 CI job 运行 |
+| #4299 | `8ef17fe44` | 固化 2 条踩坑（PITFALL-MEA-005：一个集合多个读取入口计数不一致 = 有一条在静默丢元素；PITFALL-ENV-004：`rm`/`cp` 交互别名 exit 0 却什么都没做）+ 登记发现 I1（`closeout --from-diff` 提交后选出 0 条检查、`all([])` 真空通过却报 ok）；`governance-state-mutation` run 20260924T150736Z |
+| #4300 | `a51f4ecdc` | 自纠 I1 那行的替代路径断言：`--all` 实测在 PASW worktree 被 `omo-state-projection-guard` 的 10 条 `canonical_missing`（未入库运行时产物）阻断，改用 `--file <已 claim 路径>`（实测 4 条真检查） |
+
+一次补 4 行不是疏忽的累积，而是滞后规则的量化后果：只有**碰这份文档的交付**才会写行，
+#4295 → #4296 → #4298/#4299/#4300 之间隔了 3 次不碰本文档的交付，空档就攒到 4 行。
+本行所属交付（登记上面 4 行的那次）自己同样无法入表——滞后是结构性的，不是可修掉的漏项。
 
 **2026-09-24 复核**（本行由 #4295 之后的登记交付补写）：空档仍未闭合——`bets` 段全部条目 `status: done`，
 开放数 0。因总条数会随台账增长而腐坏，此处不留数字，复核用：
@@ -94,6 +102,29 @@ python3 -c "import yaml,collections;d=yaml.safe_load(open('docs/plans/3y-bet-led
 `projects/omo` 子模块内（改动需指针事务）。属需 principal 决策项。建议方向：`from_diff` 且文件集合为空时
 fail-closed（要求显式 `--all` / `--file`），或把 `check_count=0` 记为 DEGRADED 而非 ok；并把 `--from-diff`
 的文件集合限定为该 run **已 claim** 的路径。
+
+## I2（第四次复盘发现：shallow 子模块让 submit 把"已推送"读成"未推送"）
+
+实测：本次交付 `gac-worktree.sh submit` 拒绝 push，报 `MANAGED_SUCCESSOR_REQUIRED`，指认
+`projects/cockpit-ui` 的 `a26e575` 为"未推送的子模块 commit"。但该 commit 正是 root 树在 main 里 pin 的那个
+（`git ls-tree origin/main -- projects/cockpit-ui` → `a26e57593`），且主工作区全量 clone 里
+`git branch -r --contains a26e575` 返回 `origin/main`。
+
+分歧来自 clone 深度，不是提交状态：
+
+| 位置 | `--is-shallow-repository` | `rev-list --count a26e575` | `branch -r --contains` |
+|------|---------------------------|----------------------------|------------------------|
+| PASW worktree | `true` | **1**（graft 边界正压在该 commit 上） | 空 |
+| 主工作区 | `false` | 202 | `origin/main` |
+
+shallow 把历史截断在 pin 处，`--contains` 走不回 `origin/main`，检测就把"已推送"判成"未推送"。
+这与 #4298 钉住的 `unverifiable` 是同一根因的另一个出口：drift 检测端已诚实降级，submit 端没有。
+
+**本次处置**：先确认 diff 不含 gitlink（`git diff --name-only origin/main HEAD` 只有 1 个 docs 文件），
+再直接 `git push origin HEAD`；未用 `--no-verify`，未绕任何 hook。
+
+**未修**：submit 的未推送检测应在 shallow 下降级为 unverified 而非阻断——与 #4275 给
+`submodule-reachability-gate.py` 加的有界预算同一方向；根治是 claim 时不产生 shallow 子模块。属需 principal 决策项。
 
 ## Boundary
 
