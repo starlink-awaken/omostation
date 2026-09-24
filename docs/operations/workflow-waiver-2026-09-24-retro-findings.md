@@ -81,8 +81,14 @@ python3 -c "import yaml,collections;d=yaml.safe_load(open('docs/plans/3y-bet-led
   **他人仓库**的文件（`external/zhixing-dashboard/*`），与本 Agent 的交付毫无关系——即文件集合既可能为空，
   也可能非我。
 
-今天可用的替代路径：`closeout <run> --status ok --all`（跑 workflow 声明的全量 checks，不依赖 diff）。
-本记录所在交付即用 `--all` 收尾，实测能真正执行 checks——不是又一个未经运行的逃生口。
+今天可用的替代路径：`closeout <run> --status ok --file <本 run 已 claim 的路径>`。实测它选出 **4** 条
+真检查并全部执行（`doc-ssot-lint` / `ssot-guardian` / `gac-local-gate` / `doc-claims-check`）。
+
+`--all` 反而不可用，实测记入：它确实选出 **32** 条（不空），但在 PASW worktree 里被
+`omo-state-projection-guard` 卡死——`.omo/state/runtime/*` 是**未入库的本地产物**（该目录只有 `README.md`
+被 track；主工作区有 10 个文件，新 worktree 只有 README），于是 10 条 `canonical_missing: halt` 与本次
+交付无关地阻断 closeout。换句话说：**`--all` 把"环境缺运行时产物"报成交付失败**，而 `--from-diff` 把
+"提交后无脏文件"报成交付通过——两个方向都错，只是错得相反。
 
 **未在本文档这轮直接修**：收紧 `ok` 语义会让所有并发 Agent 的 closeout 从"通过"变"失败"，且实现在
 `projects/omo` 子模块内（改动需指针事务）。属需 principal 决策项。建议方向：`from_diff` 且文件集合为空时
