@@ -31053,6 +31053,74 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q2-T10-161
+  title: OMLXC fabric inference-readiness evidence repair
+  track: T10-MATURITY
+  window: Y2Q2
+  status: candidate
+  priority: P1
+  risk_level: L1
+  goal: Make OMLXC inference readiness reproducible by implementing the public routes
+    test canary and converging compute-mesh pulse socket discovery on the daemon configuration
+    contract.
+  non_goals:
+  - Do not add a second dispatcher, gateway, model alias authority, or health registry.
+  - Do not implement route pinning or config mutation commands in this tranche.
+  - Do not change model files, credentials, remote runtimes, launchd state, or AetherForge
+    shadow mode.
+  done_when:
+  - omlxc routes test sends one bounded non-streaming request through the private daemon
+    socket and emits redacted readiness evidence.
+  - compute-mesh-pulse resolves an explicit, configured, or canonical default omlxcd
+    socket and never silently uses /tmp/omlxc.sock.
+  - Targeted unit, LM Studio readiness regression, lint, type, root governance, and
+    one real local canary checks pass.
+  circuit_breaker: Stop on any credential exposure, prompt or completion content leakage,
+    external publication, remote runtime mutation, or behavior outside the accepted
+    write surfaces.
+  human_gate: false
+  pasw_required: true
+  retro: required
+  value_indicator_policy: false
+  appetite: 0.5 day
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-23-omlxc-fabric-readiness-evidence.md
+    spec_version: 1.0.0
+    content_digest: sha256:7b621e1c0502b3b285f9952c28e50cfce46c1b2f5504195831fc1bad3e33b40a
+    decision_ref: decision://accepted/BET-Y2Q2-T10-161
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  verify:
+  - cmd: cd projects/omlxc && uv run pytest tests/unit/test_daemon_client.py tests/unit/test_cli_daemon.py
+      tests/unit/test_compute_mesh_pulse.py -q
+    expect: exit 0
+  - cmd: cd projects/omlxc && uv run pytest tests/unit/test_lmstudio_adapter.py tests/contract/test_lmstudio_contract.py
+      -q
+    expect: exit 0
+  - cmd: cd projects/omlxc && uv run ruff check src/omlxc tests scripts/compute-mesh-pulse.py
+    expect: exit 0
+  - cmd: cd projects/omlxc && uv run pyright src/omlxc
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - projects/omlxc
+  - docs/superpowers/specs/2026-09-23-omlxc-fabric-readiness-evidence.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-161.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -31182,7 +31250,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 449
+  total_bets: 450
   windows:
   - Y1Q1
   - Y1Q2
