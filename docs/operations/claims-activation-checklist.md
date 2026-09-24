@@ -64,33 +64,33 @@ principal 签署的授权必须逐字覆盖以下六项，缺一即不算操作�
 
 ---
 
-## 2. 24h / 1440-sample 观测窗**测的是什么**
+## 2. 观测窗**测的是什么**
 
-窗口一旦在 principal 授权下进入 `shadow-active`，`claims-observation-progress/v1` 只读度量以下阈值：
+窗口一旦在 principal 授权下进入 `shadow-active`，`claims-observation-progress/v1` 投影开始度量。
+**本节只讲语义，不复述数值**——阈值由授权包下发，权威定义在
+`bin/panorama/panorama-collect.py::collect_claims_observation_progress`；实际生效值一律读投影字段，
+不要照抄任何文档里的数字（含本文）。
 
-| 参数 | 值 | 含义 |
-|------|----|------|
-| `duration_seconds` | 86400 | 观测须覆盖满 24 小时**前台连续**窗口（不可补样、不可拼接窗口） |
-| `minimum_samples` | 1440 | 满 24h 的下限样本数（约每 60s 一次） |
-| `maximum_gap_seconds` | 120 | 相邻样本最大允许间隔；超过即判 INVALID |
+| 投影字段 | 语义（不写死数值） |
+|----------|--------------------|
+| `duration_seconds` | 观测须覆盖的**前台连续**时长；不可补样、不可拼接窗口 |
+| `minimum_samples` | 该时长内的样本下限 |
+| `maximum_gap_seconds` | 相邻样本允许的最大空档；超过即判 `INVALID` |
+| `sample_count` / `elapsed_seconds` | 当前进度读数 |
+| `checkpoints[]` | 分档里程碑，各带 `duration_seconds`/`minimum_samples`/`diagnostic_only` |
 
-### 2.1 四个 checkpoint（前三个仅诊断，不作为毕业依据）
+### 2.1 checkpoint 分档
 
-| id | 时长 | 最少样本 | `diagnostic_only` |
-|----|------|----------|-------------------|
-| `smoke` | 1800s (30m) | 30 | ✅ 仅诊断 |
-| `provisional` | 7200s (2h) | 120 | ✅ 仅诊断 |
-| `sustained` | 21600s (6h) | 360 | ✅ 仅诊断 |
-| `graduation` | 86400s (24h) | 1440 | ❌ **唯一毕业点** |
-
-> `first_three_are_diagnostic_only = True`：前三档只用于观察健康度，只有 graduation 能进入放行判断。
+投影按 `id` 输出若干档：`smoke` → `provisional` → `sustained` → `graduation`。
+**只有 `graduation` 参与放行判断**（`first_three_are_diagnostic_only = True`）：前三档用于观察健康度，
+其阈值数值同样以投影为准。
 
 ### 2.2 毕业判据（`graduation_criteria`，须**全部**为真）
 
 1. `summary_not_invalid` — summary 未被标记 invalid
-2. `graduation_samples` — 采样数 ≥ 1440
-3. `graduation_span` — 证据跨度 ≥ 24h
-4. `maximum_gap` — 观测最大间隔 ≤ 120s
+2. `graduation_samples` — 样本数达 `minimum_samples`
+3. `graduation_span` — 证据跨度达 `duration_seconds`
+4. `maximum_gap` — 实测最大间隔不超 `maximum_gap_seconds`
 5. `descriptor_constant` — descriptor_digest 全程恒等于期望值
 6. `sequence_monotonic` — sequence 无回退
 7. `activation_constant` — activation_state 全程恒为 `shadow-active`

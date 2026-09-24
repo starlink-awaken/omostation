@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-17
+last_updated: 2026-09-24
 ---
 
 # INDEX-KNOWLEDGE.md — 知识资产统一索引
@@ -13,7 +13,7 @@ last_updated: 2026-09-17
 > - validation: ADR 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-09-17T01:02:46.337288+00:00
+> - generated_at: 2026-09-24T02:19:18.407301+00:00
 
 ---
 
@@ -158,16 +158,22 @@ last_updated: 2026-09-17
 
 | 模式 | 文件 | 主题 |
 |------|------|------|
+| INDEX | INDEX.md | INDEX |
 | adr-concurrent-number-collision | adr-concurrent-number-collision.md | adr-concurrent-number-collision |
 | as-of-baseline-anti-drift-pattern | as-of-baseline-anti-drift-pattern.md | as-of-baseline-anti-drift-pattern |
 | ci-silent-fail-debug-chain | ci-silent-fail-debug-chain.md | ci-silent-fail-debug-chain |
 | delegation-infra-diagnosis-pattern | delegation-infra-diagnosis-pattern.md | delegation-infra-diagnosis-pattern |
+| destructive-git-blast-radius-exceeds-approval | destructive-git-blast-radius-exceeds-approval.md | destructive-git-blast-radius-exceeds-approval |
 | doc-l0-mof-mapping-governance | doc-l0-mof-mapping-governance.md | doc-l0-mof-mapping-governance |
 | host-mutation-dual-gate | host-mutation-dual-gate.md | host-mutation-dual-gate |
 | p100-unified-memory-wired-ceiling | p100-unified-memory-wired-ceiling.md | p100-unified-memory-wired-ceiling |
 | p101-sentinel-value-masquerading-as-progress | p101-sentinel-value-masquerading-as-progress.md | p101-sentinel-value-masquerading-as-progress |
 | p102-backend-model-id-drift | p102-backend-model-id-drift.md | p102-backend-model-id-drift |
 | p103-volatile-dir-symlink-signals-missing-config | p103-volatile-dir-symlink-signals-missing-config.md | p103-volatile-dir-symlink-signals-missing-config |
+| p104-ledger-closeout-reuse-existing-work | p104-ledger-closeout-reuse-existing-work.md | p104-ledger-closeout-reuse-existing-work |
+| p105-doc-governance-auto-bump | p105-doc-governance-auto-bump.md | p105-doc-governance-auto-bump |
+| p106-main-branch-edit-clobbering | p106-main-branch-edit-clobbering.md | p106-main-branch-edit-clobbering |
+| p107-spa-catch-all-xfail-pattern | p107-spa-catch-all-xfail-pattern.md | p107-spa-catch-all-xfail-pattern |
 | p43-closed-loop-pattern | p43-closed-loop-pattern.md | p43-closed-loop-pattern |
 | p44-closed-loop-pattern | p44-closed-loop-pattern.md | p44-closed-loop-pattern |
 | p71-baseline-recovery-pattern | p71-baseline-recovery-pattern.md | p71-baseline-recovery-pattern |
