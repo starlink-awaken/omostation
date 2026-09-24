@@ -18,7 +18,7 @@ type: ssot
 
 ```
 ① 事故发生（gate 拦截 / 人发现踩坑）
-   └─ ② pitfall 记录：error-knowledge.py record（fuzzy 症状去重，重复即 times_encountered++）
+   └─ ② pitfall 记录：error-knowledge.py record（fuzzy 症状只列候选；计数需显式 --confirm-dup）
         └─ ③ 阈值：times_encountered ≥ 5（ESCALATION_THRESHOLD）
              └─ ④ 草案自动生成：.omo/_delivery/rule-drafts/CR-PITFALL-*.json
                 （带 0431 契约字段：added_at / review_before=+90d / justification 引 pitfall 证据链）
@@ -34,7 +34,10 @@ type: ssot
 3. **证据链必带**：草案的 justification 必须引用 pitfall id + 遇到次数 + 首末确认日期，
    禁止无证据规则。
 4. **review_before 继承 0431**：草案规则入册后 90 天复审——规则的死期在出生时写好。
-5. **去重词阈值 ≥3**：record 的 fuzzy 匹配沿用既有语义（≥3 词命中视为同坑）。
+5. **去重词阈值 ≥3 且限同类**：record 的 fuzzy 匹配（同 category + ≥3 词命中）只**列出候选**，
+   不自动合并——默认按新坑入库，避免丢掉根因。只有 `record --confirm-dup <ID>` 才给该条目
+   `times_encountered++`（候选外的 ID 直接报错）。阈值 5→草案晋升由这个计数驱动，
+   自动合并等于让弱信号替人决定哪条规则该晋升（2026-09-24 实证两次误合并后才改）。
 
 ## 反模式（禁止）
 
