@@ -15,13 +15,19 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import re
+import shutil
+import sqlite3
+import stat
 import subprocess
 import sys
-from datetime import UTC, datetime
+import tempfile
+import time
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 _CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
@@ -37,6 +43,22 @@ MULTICA_AS0_TIMEOUT_S = 300
 MULTICA_AS0_DIRECT_HOSTS = ("multica.ai", ".multica.ai", "127.0.0.1", "localhost")
 AGENT_BRIEF_JSON = OUT_DIR / "agent-brief.json"
 INDEX_HTML = OUT_DIR / "index.html"
+PROJECTION_STATE_ROOT = Path(
+    os.environ.get(
+        "ZHIXING_DASHBOARD_STATE_ROOT",
+        str(Path.home() / ".local/share/zhixing-dashboard"),
+    )
+).expanduser()
+PROJECTION_POINTER_SCHEMA = "zhixing-projection-pointer/v1"
+PROJECTION_MANIFEST_SCHEMA = "zhixing-projection-manifest/v1"
+PROJECTION_REVISIONS_NAME = "revisions"
+PROJECTION_POINTER_NAME = "current-revision.json"
+PROJECTION_LOCK_NAME = ".projection-publisher.lock"
+CLAIMS_AUTHORITY_ROOT = (
+    Path.home() / "agents/_shared/runtime/omo-claims-authority-r0"
+)
+EVENT_LEDGER = ROOT / "runtime/omo/event-ledger.sqlite3"
+_PROCESS_STARTED_NS = time.time_ns()
 CLAIMS_REQUEST_PACKAGE = (
     Path.home() / ".local/share/zhixing-dashboard/claims-activation-request.json"
 )
@@ -70,6 +92,390 @@ DOC_ENTRIES = [
     {"name": "Agent 操作指南 AGENTS.md", "path": "AGENTS.md", "tag": "ops"},
     {"name": "Session 避坑基因 CLAUDE.md", "path": "CLAUDE.md", "tag": "ops"},
 ]
+
+
+def _canonical_json_bytes(value: object) -> bytes:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def _sha256_bytes(body: bytes) -> str:
+    return hashlib.sha256(body).hexdigest()
+
+
+def _read_regular_bytes(path: Path) -> bytes:
+    """Read one bounded regular file without following a symlink."""
+    if path.is_symlink():
+        raise RuntimeError("projection_source_symlink")
+    try:
+        descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except OSError as exc:
+        raise RuntimeError("projection_source_unavailable") from exc
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise RuntimeError("projection_source_not_regular")
+        with os.fdopen(descriptor, "rb", closefd=False) as stream:
+            return stream.read()
+    finally:
+        os.close(descriptor)
+
+
+def _read_json_object(body: bytes, *, error: str) -> dict:
+    try:
+        value = json.loads(body)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(error) from exc
+    if not isinstance(value, dict):
+        raise RuntimeError(error)
+    return value
+
+
+def _claims_revision_binding(claims_root: Path) -> dict:
+    """Bind the current Claims facts through immutable, read-only storage.
+
+    This deliberately does not invoke a Claims Authority verb.  The three
+    source files are read twice around the immutable SQLite observation; any
+    concurrent change fails closed instead of publishing a mixed revision.
+    """
+    root = claims_root.resolve()
+    paths = {
+        "store": root / "store.sqlite3",
+        "high_water": root / "high-water.json",
+        "witness": root / "activation-witness.json",
+    }
+    before = {name: _read_regular_bytes(path) for name, path in paths.items()}
+    try:
+        connection = sqlite3.connect(
+            f"file:{paths['store']}?mode=ro&immutable=1",
+            uri=True,
+        )
+        row = connection.execute(
+            """
+            SELECT m.authority_id, m.epoch, m.operating_mode,
+                   m.last_sequence, m.last_receipt_digest,
+                   a.activation_state
+              FROM authority_meta AS m
+              JOIN activation AS a USING (authority_id)
+            """
+        ).fetchone()
+    except sqlite3.Error as exc:
+        raise RuntimeError("claims_store_unavailable") from exc
+    finally:
+        if "connection" in locals():
+            connection.close()
+    after = {name: _read_regular_bytes(path) for name, path in paths.items()}
+    if before != after:
+        raise RuntimeError("claims_changed_during_projection")
+    if row is None or len(row) != 6:
+        raise RuntimeError("claims_store_invalid")
+    authority_id, epoch, operating_mode, sequence, receipt, activation = row
+    if (
+        authority_id != "omo-claims-authority-r0"
+        or type(epoch) is not int
+        or epoch < 1
+        or operating_mode != "shadow"
+        or type(sequence) is not int
+        or sequence < 1
+        or not isinstance(receipt, str)
+        or not re.fullmatch(r"sha256:[0-9a-f]{64}", receipt)
+        or activation != "shadow-active"
+    ):
+        raise RuntimeError("claims_state_not_publishable")
+    high_water = _read_json_object(before["high_water"], error="claims_high_water_invalid")
+    witness = _read_json_object(before["witness"], error="claims_witness_invalid")
+    if high_water.get("sequence") != sequence or high_water.get("receipt_digest") != receipt:
+        raise RuntimeError("claims_high_water_mismatch")
+    if witness.get("state") != activation:
+        raise RuntimeError("claims_witness_mismatch")
+    return {
+        "authority_meta": {
+            "authority_id": authority_id,
+            "authority_epoch": epoch,
+            "security_level": "R0_COOPERATIVE",
+        },
+        "claims": {
+            "sequence": sequence,
+            "last_receipt": receipt,
+            "activation": activation,
+            "effective_authority": "v1",
+            "instruction_capable": False,
+        },
+        "source_hashes": {
+            "claims_store_sha256": _sha256_bytes(before["store"]),
+            "claims_high_water_sha256": _sha256_bytes(before["high_water"]),
+            "claims_witness_sha256": _sha256_bytes(before["witness"]),
+        },
+    }
+
+
+def _event_ledger_logical_digest(event_ledger: Path) -> str:
+    """Hash the ordered causal identity, independent of SQLite page layout."""
+    if event_ledger.is_symlink() or not event_ledger.is_file():
+        raise RuntimeError("event_ledger_unavailable")
+    try:
+        connection = sqlite3.connect(
+            f"file:{event_ledger.resolve()}?mode=ro",
+            uri=True,
+        )
+        connection.execute("PRAGMA query_only = ON")
+        connection.execute("BEGIN")
+        rows = connection.execute(
+            "SELECT sequence, event_hash, previous_hash FROM event_log ORDER BY sequence"
+        ).fetchall()
+        connection.commit()
+    except sqlite3.Error as exc:
+        raise RuntimeError("event_ledger_unavailable") from exc
+    finally:
+        if "connection" in locals():
+            connection.close()
+    expected_sequence = 1
+    previous_hash = None
+    events: list[list[object]] = []
+    for sequence, event_hash, linked_previous in rows:
+        if (
+            sequence != expected_sequence
+            or not isinstance(event_hash, str)
+            or re.fullmatch(r"[0-9a-f]{64}", event_hash) is None
+            or linked_previous != previous_hash
+        ):
+            raise RuntimeError("event_ledger_chain_invalid")
+        events.append([sequence, event_hash, linked_previous])
+        expected_sequence += 1
+        previous_hash = event_hash
+    return _sha256_bytes(
+        _canonical_json_bytes(
+            {
+                "schema": "omo-event-ledger-identity/v1",
+                "event_count": len(events),
+                "events": events,
+            }
+        )
+    )
+
+
+def collect_projection_source_binding(
+    *,
+    claims_root: Path = CLAIMS_AUTHORITY_ROOT,
+    event_ledger: Path = EVENT_LEDGER,
+) -> dict:
+    binding = _claims_revision_binding(Path(claims_root))
+    binding["source_hashes"]["event_ledger_sha256"] = _event_ledger_logical_digest(
+        Path(event_ledger)
+    )
+    return binding
+
+
+def _git_stdout(code_root: Path, *args: str) -> str:
+    completed = subprocess.run(
+        ["git", "-C", str(code_root), *args],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError("projection_code_identity_unavailable")
+    return completed.stdout.strip()
+
+
+def collect_projection_producer_identity(*, code_root: Path = CODE_ROOT) -> dict:
+    root = Path(code_root).resolve()
+    head = _git_stdout(root, "rev-parse", "HEAD")
+    origin_main = _git_stdout(root, "rev-parse", "refs/remotes/origin/main")
+    if head != origin_main or re.fullmatch(r"[0-9a-f]{40}", head) is None:
+        raise RuntimeError("projection_code_root_not_current_main")
+    tree_entry = _git_stdout(root, "ls-tree", "HEAD", "projects/omo").split()
+    if len(tree_entry) < 3 or tree_entry[1] != "commit":
+        raise RuntimeError("projection_omo_gitlink_unavailable")
+    omo_gitlink = tree_entry[2]
+    if re.fullmatch(r"[0-9a-f]{40}", omo_gitlink) is None:
+        raise RuntimeError("projection_omo_gitlink_unavailable")
+    collector_sha = _sha256_bytes(_read_regular_bytes(Path(__file__).resolve()))
+    process_identity = "sha256:" + _sha256_bytes(
+        _canonical_json_bytes(
+            {
+                "pid": os.getpid(),
+                "process_started_ns": _PROCESS_STARTED_NS,
+                "root_oid": head,
+                "collector_sha256": collector_sha,
+            }
+        )
+    )
+    return {
+        "root_oid": head,
+        "omo_gitlink_oid": omo_gitlink,
+        "collector_sha256": collector_sha,
+        "process_identity": process_identity,
+    }
+
+
+def _validate_payload_claims_binding(payload: dict, source_binding: dict) -> None:
+    projected = payload.get("claims_authority")
+    claims = source_binding.get("claims")
+    if not isinstance(projected, dict) or not isinstance(claims, dict):
+        raise RuntimeError("projection_payload_claims_unavailable")
+    status = projected.get("status")
+    if not isinstance(status, dict):
+        raise RuntimeError("projection_payload_claims_unavailable")
+    observed = {
+        "sequence": projected.get("sequence"),
+        "last_receipt": status.get("last_receipt_digest"),
+        "activation": projected.get("activation_state"),
+        "effective_authority": projected.get("effective_claim_authority"),
+        "instruction_capable": projected.get("instruction_capable"),
+    }
+    if projected.get("available") is not True or observed != claims:
+        raise RuntimeError("projection_payload_claims_mismatch")
+
+
+def _fsync_directory(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _write_new_file(path: Path, body: bytes) -> None:
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(descriptor, "wb", closefd=False) as stream:
+            stream.write(body)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        os.close(descriptor)
+
+
+def _atomic_replace_bytes(path: Path, body: bytes) -> None:
+    descriptor, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temp_path = Path(temp_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(body)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp_path, path)
+        _fsync_directory(path.parent)
+    except Exception:
+        temp_path.unlink(missing_ok=True)
+        raise
+
+
+def publish_projection_revision(
+    payload: dict,
+    *,
+    state_root: Path = PROJECTION_STATE_ROOT,
+    claims_root: Path = CLAIMS_AUTHORITY_ROOT,
+    event_ledger: Path = EVENT_LEDGER,
+    code_root: Path = CODE_ROOT,
+    now: datetime | None = None,
+) -> dict:
+    """Publish one immutable, hash-bound revision then swap one pointer.
+
+    The legacy ``current.json`` is intentionally outside this protocol and is
+    never opened here.  A failed build or pointer swap leaves the last-good
+    pointer intact; revision directories remain available for rollback.
+    """
+    root = Path(state_root).expanduser().resolve()
+    if Path(state_root).expanduser().is_symlink():
+        raise RuntimeError("projection_state_root_symlink")
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    revisions = root / PROJECTION_REVISIONS_NAME
+    if revisions.is_symlink():
+        raise RuntimeError("projection_revisions_symlink")
+    revisions.mkdir(mode=0o700, exist_ok=True)
+    lock_path = root / PROJECTION_LOCK_NAME
+    with lock_path.open("a+b") as lock:
+        try:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError("projection_writer_conflict") from exc
+
+        source_binding = collect_projection_source_binding(
+            claims_root=Path(claims_root),
+            event_ledger=Path(event_ledger),
+        )
+        _validate_payload_claims_binding(payload, source_binding)
+        producer = collect_projection_producer_identity(code_root=Path(code_root))
+        generated = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)
+        fresh_until = generated + timedelta(minutes=10)
+        generated_at = generated.isoformat().replace("+00:00", "Z")
+        fresh_until_at = fresh_until.isoformat().replace("+00:00", "Z")
+        artifact_bodies = {
+            "page": TEMPLATE.replace(
+                "__DATA__", json.dumps(payload, ensure_ascii=False)
+            ).encode("utf-8"),
+            "data": json.dumps(payload, ensure_ascii=False, indent=1).encode("utf-8"),
+            "agent_brief": json.dumps(
+                payload.get(
+                    "agent_visibility",
+                    {"schema": "panorama-agent-brief/v1", "available": False},
+                ),
+                ensure_ascii=False,
+                indent=1,
+            ).encode("utf-8"),
+        }
+        filenames = {
+            "page": "index.html",
+            "data": "data.json",
+            "agent_brief": "agent-brief.json",
+        }
+        artifacts = {
+            name: {"filename": filenames[name], "sha256": _sha256_bytes(body)}
+            for name, body in artifact_bodies.items()
+        }
+        revision_basis = {
+            "schema_version": PROJECTION_MANIFEST_SCHEMA,
+            "generated_at": generated_at,
+            "fresh_until": fresh_until_at,
+            "producer": producer,
+            "source_hashes": source_binding["source_hashes"],
+            "claims": source_binding["claims"],
+            "artifacts": artifacts,
+        }
+        revision_id = _sha256_bytes(_canonical_json_bytes(revision_basis))
+        manifest = dict(revision_basis, revision_id=revision_id)
+        manifest_body = _canonical_json_bytes(manifest)
+        manifest_sha = _sha256_bytes(manifest_body)
+        staging = Path(tempfile.mkdtemp(prefix=".staging-", dir=revisions))
+        final_revision = revisions / revision_id
+        try:
+            for name, body in artifact_bodies.items():
+                _write_new_file(staging / filenames[name], body)
+            _write_new_file(staging / "manifest.json", manifest_body)
+            _fsync_directory(staging)
+            if final_revision.exists():
+                existing = _read_regular_bytes(final_revision / "manifest.json")
+                if existing != manifest_body:
+                    raise RuntimeError("projection_revision_collision")
+                shutil.rmtree(staging)
+            else:
+                os.replace(staging, final_revision)
+                _fsync_directory(revisions)
+        except Exception:
+            if staging.exists():
+                shutil.rmtree(staging)
+            raise
+        pointer = {
+            "schema_version": PROJECTION_POINTER_SCHEMA,
+            "revision_id": revision_id,
+            "manifest_sha256": manifest_sha,
+        }
+        _atomic_replace_bytes(
+            root / PROJECTION_POINTER_NAME,
+            _canonical_json_bytes(pointer),
+        )
+        return {
+            "revision_id": revision_id,
+            "manifest_sha256": manifest_sha,
+            "pointer": str(root / PROJECTION_POINTER_NAME),
+        }
 
 
 def run(cmd: list[str], timeout: int = 120) -> tuple[int, str]:
@@ -1825,7 +2231,7 @@ def collect_agent_cell_semantic() -> dict:
 
 
 def _verify_claims_authority() -> dict:
-    """Invoke the read-only Claims Authority observer and fail closed."""
+    """Observe Claims storage directly without invoking an authority verb."""
     candidates = [
         ROOT / "bin/gac/claims-authority-status.py",
         Path(__file__).with_name("claims-authority-status.py"),
@@ -1842,18 +2248,27 @@ def _verify_claims_authority() -> dict:
     if verifier is None:
         return empty
     try:
-        completed = subprocess.run(
-            [sys.executable, str(verifier), "--json"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            timeout=20,
-            check=False,
-        )
-        report = json.loads(completed.stdout)
-        if not isinstance(report, dict):
-            raise ValueError("verifier root is not an object")
-        return report
+        binding = _claims_revision_binding(CLAIMS_AUTHORITY_ROOT)
+        claims = binding["claims"]
+        authority = binding["authority_meta"]
+        return {
+            "schema": "claims-authority-observation/v1",
+            "ok": True,
+            "verdict": "READ_ONLY",
+            "available": True,
+            "mutation_performed": False,
+            "authorization_granted": False,
+            "status": {
+                **authority,
+                "activation_state": claims["activation"],
+                "effective_claim_authority": claims["effective_authority"],
+                "instruction_capable": claims["instruction_capable"],
+                "sequence": claims["sequence"],
+                "last_receipt_digest": claims["last_receipt"],
+                "fresh": True,
+                "source": "immutable-sqlite+hashed-sidecars",
+            },
+        }
     except Exception:  # noqa: BLE001 - missing authority remains visibly unadmitted
         return empty
 
@@ -1864,7 +2279,7 @@ def collect_claims_authority() -> dict:
     status = observation.get("status") if isinstance(observation.get("status"), dict) else {}
     return {
         "schema": "claims-authority-projection/v1",
-        "source": "omo://workflow/claims-authority/authority-status",
+        "source": "runtime://omo-claims-authority-r0/immutable-store",
         "available": observation.get("ok") is True,
         "verdict": observation.get("verdict", "UNAVAILABLE"),
         "activation_state": status.get("activation_state", "unknown"),
@@ -3913,6 +4328,7 @@ def main() -> int:
 
     payload = build_payload()
     write_site(payload)
+    projection = publish_projection_revision(payload)
 
     if args.gates:
         print(json.dumps(payload["gates"], ensure_ascii=False, indent=1))
@@ -3922,7 +4338,8 @@ def main() -> int:
                    "gates": {g["id"]: g["verdict"] for g in payload["gates"]},
                    "bets": payload["bets"]["counts"],
                    "agents": len(payload["agents"]),
-                   "out": str(INDEX_HTML.relative_to(ROOT))}
+                   "out": str(INDEX_HTML.relative_to(ROOT)),
+                   "projection_revision": projection["revision_id"]}
         print(json.dumps(summary, ensure_ascii=False, indent=1))
         return 0
     print(f"✅ 驾驶舱已生成: {INDEX_HTML.relative_to(ROOT)}  ({payload['generated_at']})")

@@ -1,7 +1,11 @@
 import importlib.util
+import hashlib
 import json
+import sqlite3
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -72,6 +76,364 @@ bets:
 """,
         encoding="utf-8",
     )
+
+
+def _write_claims_store(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path)
+    connection.executescript(
+        """
+        CREATE TABLE authority_meta (
+          authority_id TEXT PRIMARY KEY,
+          epoch INTEGER NOT NULL,
+          operating_mode TEXT NOT NULL,
+          descriptor_digest TEXT,
+          last_sequence INTEGER NOT NULL,
+          last_receipt_digest TEXT,
+          last_broker_time TEXT NOT NULL
+        );
+        CREATE TABLE activation (
+          authority_id TEXT PRIMARY KEY,
+          operating_mode TEXT NOT NULL,
+          activation_state TEXT NOT NULL,
+          descriptor_digest TEXT NOT NULL,
+          activated_at TEXT NOT NULL,
+          activation_receipt_digest TEXT NOT NULL
+        );
+        """
+    )
+    connection.execute(
+        "INSERT INTO authority_meta VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            "omo-claims-authority-r0",
+            1,
+            "shadow",
+            "sha256:" + "d" * 64,
+            2,
+            "sha256:" + "5" * 64,
+            "2026-09-23T01:53:20Z",
+        ),
+    )
+    connection.execute(
+        "INSERT INTO activation VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            "omo-claims-authority-r0",
+            "shadow",
+            "shadow-active",
+            "sha256:" + "d" * 64,
+            "2026-09-19T10:15:36Z",
+            "sha256:" + "6" * 64,
+        ),
+    )
+    connection.commit()
+    connection.close()
+
+
+def _write_event_ledger(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path)
+    connection.execute(
+        "CREATE TABLE event_log (sequence INTEGER PRIMARY KEY, event_hash TEXT NOT NULL, previous_hash TEXT)"
+    )
+    connection.executemany(
+        "INSERT INTO event_log VALUES (?, ?, ?)",
+        [
+            (1, "a" * 64, None),
+            (2, "b" * 64, "a" * 64),
+        ],
+    )
+    connection.commit()
+    connection.close()
+
+
+def _projection_payload() -> dict:
+    return {
+        "generated_at": "2026-09-24T03:30:00Z",
+        "claims_authority": {
+            "available": True,
+            "activation_state": "shadow-active",
+            "effective_claim_authority": "v1",
+            "instruction_capable": False,
+            "sequence": 2,
+            "status": {"last_receipt_digest": "sha256:" + "5" * 64},
+        },
+        "agent_visibility": {
+            "schema": "panorama-agent-brief/v1",
+            "generated_at": "2026-09-24T03:30:00Z",
+        },
+    }
+
+
+def test_projection_source_binding_uses_immutable_claims_and_logical_event_chain(tmp_path) -> None:
+    module = _module()
+    claims_root = tmp_path / "claims"
+    store = claims_root / "store.sqlite3"
+    _write_claims_store(store)
+    (claims_root / "high-water.json").write_text(
+        json.dumps({"sequence": 2, "receipt_digest": "sha256:" + "5" * 64}),
+        encoding="utf-8",
+    )
+    (claims_root / "activation-witness.json").write_text(
+        json.dumps({"sequence": 1, "state": "shadow-active"}), encoding="utf-8"
+    )
+    event_ledger = tmp_path / "event-ledger.sqlite3"
+    _write_event_ledger(event_ledger)
+
+    binding = module.collect_projection_source_binding(
+        claims_root=claims_root,
+        event_ledger=event_ledger,
+    )
+
+    assert binding["claims"] == {
+        "sequence": 2,
+        "last_receipt": "sha256:" + "5" * 64,
+        "activation": "shadow-active",
+        "effective_authority": "v1",
+        "instruction_capable": False,
+    }
+    assert binding["source_hashes"]["claims_store_sha256"] == hashlib.sha256(
+        store.read_bytes()
+    ).hexdigest()
+    assert binding["source_hashes"]["claims_high_water_sha256"] == hashlib.sha256(
+        (claims_root / "high-water.json").read_bytes()
+    ).hexdigest()
+    assert binding["source_hashes"]["claims_witness_sha256"] == hashlib.sha256(
+        (claims_root / "activation-witness.json").read_bytes()
+    ).hexdigest()
+    expected_event_identity = json.dumps(
+        {
+            "event_count": 2,
+            "events": [[1, "a" * 64, None], [2, "b" * 64, "a" * 64]],
+            "schema": "omo-event-ledger-identity/v1",
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    assert binding["source_hashes"]["event_ledger_sha256"] == hashlib.sha256(
+        expected_event_identity
+    ).hexdigest()
+
+
+def test_projection_source_binding_rejects_broken_event_chain(tmp_path) -> None:
+    module = _module()
+    claims_root = tmp_path / "claims"
+    _write_claims_store(claims_root / "store.sqlite3")
+    (claims_root / "high-water.json").write_text(
+        json.dumps({"sequence": 2, "receipt_digest": "sha256:" + "5" * 64}),
+        encoding="utf-8",
+    )
+    (claims_root / "activation-witness.json").write_text(
+        json.dumps({"sequence": 1, "state": "shadow-active"}), encoding="utf-8"
+    )
+    event_ledger = tmp_path / "event-ledger.sqlite3"
+    _write_event_ledger(event_ledger)
+    connection = sqlite3.connect(event_ledger)
+    connection.execute("UPDATE event_log SET previous_hash = ? WHERE sequence = 2", ("c" * 64,))
+    connection.commit()
+    connection.close()
+
+    with pytest.raises(RuntimeError, match="event_ledger_chain_invalid"):
+        module.collect_projection_source_binding(
+            claims_root=claims_root,
+            event_ledger=event_ledger,
+        )
+
+
+def test_claims_projection_reads_storage_without_invoking_claims_status(
+    tmp_path, monkeypatch
+) -> None:
+    module = _module()
+    claims_root = tmp_path / "claims"
+    _write_claims_store(claims_root / "store.sqlite3")
+    (claims_root / "high-water.json").write_text(
+        json.dumps({"sequence": 2, "receipt_digest": "sha256:" + "5" * 64}),
+        encoding="utf-8",
+    )
+    (claims_root / "activation-witness.json").write_text(
+        json.dumps({"sequence": 1, "state": "shadow-active"}), encoding="utf-8"
+    )
+    code_root = tmp_path / "code"
+    verifier = code_root / "bin/gac/claims-authority-status.py"
+    verifier.parent.mkdir(parents=True)
+    verifier.write_text("raise SystemExit('must not run')\n", encoding="utf-8")
+    monkeypatch.setattr(module, "ROOT", code_root)
+    monkeypatch.setattr(module, "CLAIMS_AUTHORITY_ROOT", claims_root)
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("Claims status subprocess must not run")
+
+    monkeypatch.setattr(module.subprocess, "run", forbidden)
+
+    report = module.collect_claims_authority()
+
+    assert report["available"] is True
+    assert report["activation_state"] == "shadow-active"
+    assert report["effective_claim_authority"] == "v1"
+    assert report["instruction_capable"] is False
+    assert report["sequence"] == 2
+    assert report["mutation_performed"] is False
+
+
+def test_publish_projection_revision_is_reader_compatible_and_leaves_legacy_snapshot_untouched(
+    tmp_path, monkeypatch
+) -> None:
+    module = _module()
+    state_root = tmp_path / "state"
+    state_root.mkdir()
+    legacy = state_root / "current.json"
+    legacy.write_text('{"legacy":true}', encoding="utf-8")
+    monkeypatch.setattr(
+        module,
+        "collect_projection_source_binding",
+        lambda **_kwargs: {
+            "claims": {
+                "sequence": 2,
+                "last_receipt": "sha256:" + "5" * 64,
+                "activation": "shadow-active",
+                "effective_authority": "v1",
+                "instruction_capable": False,
+            },
+            "source_hashes": {
+                "claims_store_sha256": "1" * 64,
+                "claims_high_water_sha256": "2" * 64,
+                "claims_witness_sha256": "3" * 64,
+                "event_ledger_sha256": "4" * 64,
+            },
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "collect_projection_producer_identity",
+        lambda **_kwargs: {
+            "root_oid": "c" * 40,
+            "omo_gitlink_oid": "e" * 40,
+            "collector_sha256": "d" * 64,
+            "process_identity": "sha256:" + "f" * 64,
+        },
+    )
+
+    result = module.publish_projection_revision(
+        _projection_payload(),
+        state_root=state_root,
+        now=datetime(2026, 9, 24, 3, 30, tzinfo=timezone.utc),
+    )
+
+    assert legacy.read_text(encoding="utf-8") == '{"legacy":true}'
+    pointer = json.loads((state_root / "current-revision.json").read_text(encoding="utf-8"))
+    assert pointer == {
+        "schema_version": "zhixing-projection-pointer/v1",
+        "revision_id": result["revision_id"],
+        "manifest_sha256": result["manifest_sha256"],
+    }
+    revision_root = state_root / "revisions" / result["revision_id"]
+    manifest_body = (revision_root / "manifest.json").read_bytes()
+    manifest = json.loads(manifest_body)
+    assert hashlib.sha256(manifest_body).hexdigest() == result["manifest_sha256"]
+    assert manifest["schema_version"] == "zhixing-projection-manifest/v1"
+    assert manifest["fresh_until"] == "2026-09-24T03:40:00Z"
+    assert manifest["producer"]["root_oid"] == "c" * 40
+    assert manifest["producer"]["process_identity"] == "sha256:" + "f" * 64
+    assert manifest["source_hashes"]["event_ledger_sha256"] == "4" * 64
+    assert manifest["claims"]["instruction_capable"] is False
+    for name, filename in {
+        "page": "index.html",
+        "data": "data.json",
+        "agent_brief": "agent-brief.json",
+    }.items():
+        body = (revision_root / filename).read_bytes()
+        assert manifest["artifacts"][name] == {
+            "filename": filename,
+            "sha256": hashlib.sha256(body).hexdigest(),
+        }
+
+
+def test_publish_projection_revision_keeps_previous_pointer_on_swap_failure(
+    tmp_path, monkeypatch
+) -> None:
+    module = _module()
+    state_root = tmp_path / "state"
+    state_root.mkdir()
+    pointer_path = state_root / "current-revision.json"
+    pointer_path.write_text('{"previous":true}', encoding="utf-8")
+    monkeypatch.setattr(
+        module,
+        "collect_projection_source_binding",
+        lambda **_kwargs: {
+            "claims": {
+                "sequence": 2,
+                "last_receipt": "sha256:" + "5" * 64,
+                "activation": "shadow-active",
+                "effective_authority": "v1",
+                "instruction_capable": False,
+            },
+            "source_hashes": {
+                "claims_store_sha256": "1" * 64,
+                "claims_high_water_sha256": "2" * 64,
+                "claims_witness_sha256": "3" * 64,
+                "event_ledger_sha256": "4" * 64,
+            },
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "collect_projection_producer_identity",
+        lambda **_kwargs: {
+            "root_oid": "c" * 40,
+            "omo_gitlink_oid": "e" * 40,
+            "collector_sha256": "d" * 64,
+            "process_identity": "sha256:" + "f" * 64,
+        },
+    )
+    original = module._atomic_replace_bytes
+
+    def fail_pointer(path, body):
+        if path.name == "current-revision.json":
+            raise OSError("simulated pointer failure")
+        return original(path, body)
+
+    monkeypatch.setattr(module, "_atomic_replace_bytes", fail_pointer)
+
+    with pytest.raises(OSError, match="simulated pointer failure"):
+        module.publish_projection_revision(
+            _projection_payload(),
+            state_root=state_root,
+            now=datetime(2026, 9, 24, 3, 30, tzinfo=timezone.utc),
+        )
+
+    assert pointer_path.read_text(encoding="utf-8") == '{"previous":true}'
+
+
+def test_publish_projection_revision_rejects_payload_claims_from_another_snapshot(
+    tmp_path, monkeypatch
+) -> None:
+    module = _module()
+    monkeypatch.setattr(
+        module,
+        "collect_projection_source_binding",
+        lambda **_kwargs: {
+            "claims": {
+                "sequence": 2,
+                "last_receipt": "sha256:" + "5" * 64,
+                "activation": "shadow-active",
+                "effective_authority": "v1",
+                "instruction_capable": False,
+            },
+            "source_hashes": {
+                "claims_store_sha256": "1" * 64,
+                "claims_high_water_sha256": "2" * 64,
+                "claims_witness_sha256": "3" * 64,
+                "event_ledger_sha256": "4" * 64,
+            },
+        },
+    )
+    payload = _projection_payload()
+    payload["claims_authority"]["sequence"] = 1
+
+    with pytest.raises(RuntimeError, match="projection_payload_claims_mismatch"):
+        module.publish_projection_revision(payload, state_root=tmp_path / "state")
+
+    assert not (tmp_path / "state/current-revision.json").exists()
 
 
 def test_objective_coverage_maps_delivery_without_value_or_activation(tmp_path, monkeypatch) -> None:
