@@ -31140,7 +31140,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: pending
+  status: done
+  done_at: 2026-09-24
   title: GAC worktree 子模块 URL 同步
   track: T6-SUBTRACT
   window: Y2Q2
@@ -31165,10 +31166,48 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T11-02
     spec_ref: repo://docs/superpowers/specs/2026-09-24-gac-submodule-url-sync-design.md
     spec_version: 1.0.0
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-02.md
+            sha256: sha256:c6e62eb087ab1c35740d6bfa9bbf7e95d75588e05263d9c9a7d0e0f882eab2b8
+          merged_reachable_commit:
+            ref: git://origin/main@05e80b88094eb8301830665a65c3a0d21090b16a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-02.md
+            sha256: sha256:c6e62eb087ab1c35740d6bfa9bbf7e95d75588e05263d9c9a7d0e0f882eab2b8
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-02.md
+            sha256: sha256:c6e62eb087ab1c35740d6bfa9bbf7e95d75588e05263d9c9a7d0e0f882eab2b8
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-02.md
+            sha256: sha256:c6e62eb087ab1c35740d6bfa9bbf7e95d75588e05263d9c9a7d0e0f882eab2b8
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-02.md
+            sha256: sha256:c6e62eb087ab1c35740d6bfa9bbf7e95d75588e05263d9c9a7d0e0f882eab2b8
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-02.md
+            sha256: sha256:c6e62eb087ab1c35740d6bfa9bbf7e95d75588e05263d9c9a7d0e0f882eab2b8
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-02.md
+            sha256: sha256:c6e62eb087ab1c35740d6bfa9bbf7e95d75588e05263d9c9a7d0e0f882eab2b8
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-24 06:42:45+00:00
+
 - appetite: 1 day
   circuit_breaker: If the child commit is unreachable or any non-Kairon submodule pointer changes, stop without advancing the parent gitlink.
   done_when:
-  - projects/knowledge/kairon points exactly to 642311f4728cb893e0c643f34f78407d66af4b67
+  - projects/knowledge/kairon points exactly to f9ad2db61557ac3e13f3c997ed2c1f31c07386e9 (merged Kairon main)
   - child lock check and focused Kairon tests pass
   - root worktree regression, GaC local gate, and SSOT guardian pass
   - no unrelated paths enter the integration commits
@@ -31184,7 +31223,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: pending
+  status: done
+  done_at: 2026-09-24
   title: Kairon 父仓 gitlink 整合
   track: T3-COGNI
   window: Y2Q2
@@ -31216,6 +31256,43 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q2-T11-03
     spec_ref: repo://docs/superpowers/specs/2026-09-24-kairon-parent-pointer-integration-design.md
     spec_version: 1.0.0
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-03.md
+            sha256: sha256:928162ab9c22f52e82e42e4ad21ba5fd0a760ff816c2e74fb662413311ff7e10
+          merged_reachable_commit:
+            ref: git://origin/main@05e80b88094eb8301830665a65c3a0d21090b16a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-03.md
+            sha256: sha256:928162ab9c22f52e82e42e4ad21ba5fd0a760ff816c2e74fb662413311ff7e10
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-03.md
+            sha256: sha256:928162ab9c22f52e82e42e4ad21ba5fd0a760ff816c2e74fb662413311ff7e10
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-03.md
+            sha256: sha256:928162ab9c22f52e82e42e4ad21ba5fd0a760ff816c2e74fb662413311ff7e10
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-03.md
+            sha256: sha256:928162ab9c22f52e82e42e4ad21ba5fd0a760ff816c2e74fb662413311ff7e10
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-03.md
+            sha256: sha256:928162ab9c22f52e82e42e4ad21ba5fd0a760ff816c2e74fb662413311ff7e10
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T11-03.md
+            sha256: sha256:928162ab9c22f52e82e42e4ad21ba5fd0a760ff816c2e74fb662413311ff7e10
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+  done_at: 2026-09-24 06:42:45+00:00
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
