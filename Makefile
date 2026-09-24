@@ -288,7 +288,7 @@ sync-all-docs: sync-help-docs  ## 全量文档同步 (注册表 + 所有派生�
 check-docs-drift: check-capability-registry  ## 检测文档漂移 (CI 门禁)
 	@echo "── 检测文档漂移 ────────────────────────────────────"
 	@$(PY) bin/ssot/gen-help-docs.py > /dev/null
-	@git diff --exit-code projects/cockpit/CAPABILITY-MAP.md docs/CLI-REFERENCE.md docs/INDEX-MCP.md 2>/dev/null || \
+	@git diff --exit-code projects/cockpit/CAPABILITY-MAP.md docs/CLI-REFERENCE.md docs/cli docs/INDEX-MCP.md 2>/dev/null || \
 		(echo "❌ 文档漂移! 运行 make sync-all-docs 修复" && exit 1)
 	@echo "✅ 文档无漂移"
 

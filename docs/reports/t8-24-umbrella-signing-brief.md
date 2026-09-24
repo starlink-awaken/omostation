@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: active
+created: 2026-09-12
+---
+
 # T8-24 总揽签署材料 — A9 全景观测终验完成
 
 > 生成: 2026-09-12 | 用途: BET-Y1Q4-T8-24 human_gate 签署依据

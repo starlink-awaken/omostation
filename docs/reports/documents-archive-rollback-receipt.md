@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-07
+---
+
 # Documents 归档族冻结回执 (rollback receipt)
 
 > BET-Y1Q4-T10-123 | 2026-09-07 | 回滚方式: 只读声明回退，不动源文件

@@ -3,7 +3,8 @@
 
 生成:
   - projects/cockpit/CAPABILITY-MAP.md  (能力地图)
-  - docs/CLI-REFERENCE.md               (CLI 命令参考)
+  - docs/CLI-REFERENCE.md               (CLI 命令参考索引: 摘要表 + 交叉节)
+  - docs/cli/*.md                       (CLI 命令分册: 按分类全量详情)
   - docs/INDEX-MCP.md                   (MCP 服务器索引)
 
 前置: 先运行 gen-capability-registry.py 生成注册表
@@ -78,7 +79,7 @@ def gen_capability_map(reg: dict) -> str:
     lines.append("")
     lines.append("## CLI 命令清单")
     lines.append("")
-    lines.append("> 完整命令参考见 [`CLI-REFERENCE.md`](CLI-REFERENCE.md)")
+    lines.append("> 完整命令参考见 [`CLI-REFERENCE.md`](../../docs/CLI-REFERENCE.md) (分类分册: [`docs/cli/`](../../docs/cli/))")
     lines.append("")
     lines.append("| 命令 | 描述 |")
     lines.append("|------|------|")
@@ -302,8 +303,41 @@ def _extract_frontmatter(path: Path) -> str:
     return ""
 
 
-def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
-    """Tier-1 全量 CLI 参考 (BET-Y1Q4-T8-16): 每个命令独立成节, 单源生成。
+# docs/cli/*.md 分册 frontmatter (derived + 静态日期: 内容稳定, 免漂移)
+_CLI_DETAIL_FM = (
+    "---\n"
+    "status: active\n"
+    "lifecycle: generated\n"
+    "owner: governance-team\n"
+    "last-reviewed: 2026-09-24\n"
+    "type: derived\n"
+    "source: bin/ssot/gen-help-docs.py\n"
+    "---\n"
+)
+_GENERATOR_MARKER = "bin/ssot/gen-help-docs.py"
+
+
+def _cat_slug(cat: str) -> str:
+    """分类名 → docs/cli/ 分册 slug (括号内容优先, 无括号 Unicode 兜底)."""
+    m = re.search(r"\(([^)]+)\)", cat)
+    if m:
+        return m.group(1).strip().lower()
+    return re.sub(r"[^\w]+", "-", cat, flags=re.UNICODE).strip("-").lower()
+
+
+def _summary_cell(text: str) -> str:
+    """摘要表单元格: 取首行 + 转义竖线, 防破表."""
+    first = (text or "").strip().splitlines()
+    cell = (first[0] if first else "—").strip().replace("|", "\\|")
+    return cell or "—"
+
+
+def gen_cli_reference(reg: dict, frontmatter: str = "") -> tuple[str, dict[str, str]]:
+    """Tier-1 全量 CLI 参考 (BET-Y1Q4-T8-16): 单源生成, 索引 + 分册。
+
+    返回 (索引内容, {slug: 分册内容}):
+      - docs/CLI-REFERENCE.md 索引: 目录 + 每分类摘要表 + 遗留/扫描/Flags/MCP 交叉节
+      - docs/cli/<slug>.md     分册: 每分类全量命令详情 (用法/元数据/示例)
 
     数据源优先级: cockpit.commands.registry.COMMAND_CATALOG (SSOT 元数据,
     含 summary/category/aliases/example) > capability-registry.yaml 的
@@ -339,6 +373,7 @@ def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
         "",
         f"> 自动生成于 {gen_at} | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml",
         "> 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑",
+        "> 分类全量详情见 [`docs/cli/`](cli/) 分册",
         "",
         f"共 **{len(set(scanned) | set(catalog) | set(legacy))}** 个命令条目。八大正交域: "
         + "、".join(f"**{d}**" for d in domains) + "。",
@@ -347,13 +382,22 @@ def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
         "",
     ])
 
-    # 按 category 分组构建目录
+    # 按 category 分组 (摘要表在索引, 详情在 docs/cli/ 分册)
     by_cat: dict[str, list[str]] = {}
     for name, meta in catalog.items():
         by_cat.setdefault(getattr(meta, "category", "其他") or "其他", []).append(name)
+
+    # 分册 slug 唯一性守卫
+    slugs: dict[str, str] = {}
+    for cat in by_cat:
+        slug = _cat_slug(cat)
+        if slug in slugs.values():
+            print(f"❌ docs/cli/ slug 冲突: {cat!r} → {slug!r}", file=sys.stderr)
+            sys.exit(2)
+        slugs[cat] = slug
+
     for cat in sorted(by_cat):
-        anchor = re.sub(r"[^a-z0-9\u4e00-\u9fff]+", "-", cat.lower()).strip("-")
-        lines.append(f"- [{cat}](#{anchor}) ({len(by_cat[cat])} 个命令)")
+        lines.append(f"- [{cat}](cli/{slugs[cat]}.md) ({len(by_cat[cat])} 个命令)")
     lines.extend([
         "- [遗留命令映射](#遗留命令映射) " + f"({len(legacy)} 个)",
         "- [全局 Flags](#全局-flags)",
@@ -363,51 +407,18 @@ def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
         "",
     ])
 
-    # 每命令详情节
+    # 每分类摘要表 (索引); 全量详情另存 docs/cli/ 分册
     for cat in sorted(by_cat):
         lines.append(f"## {cat}")
         lines.append("")
+        lines.append(f"> 全量用法与元数据: [cli/{slugs[cat]}.md](cli/{slugs[cat]}.md)")
+        lines.append("")
+        lines.append("| 命令 | 描述 |")
+        lines.append("|------|------|")
         for name in sorted(by_cat[cat]):
             meta = catalog[name]
             summary = (getattr(meta, "summary", "") or scanned.get(name, "—")).strip()
-            aliases = getattr(meta, "aliases", ()) or ()
-            example = (getattr(meta, "example", "") or "").strip()
-            maturity = getattr(meta, "maturity", "")
-            risk = getattr(meta, "risk", "")
-            delegated = getattr(meta, "delegated_target", "") or ""
-            domain = domains.get(name) or (legacy.get(name) or ("", ""))[0]
-            lines.append(f"### `cockpit {name}`")
-            lines.append("")
-            lines.append(summary or "—")
-            lines.append("")
-            lines.append("**用法**:")
-            lines.append("")
-            lines.append("```bash")
-            lines.append(f"cockpit {name} [flags]")
-            lines.append(f"cockpit {name} --json          # 机器可读输出")
-            lines.append(f"cockpit {name} --dry-run       # 预检 (无副作用)")
-            lines.append(f"cockpit {name} --help          # 完整参数面")
-            lines.append("```")
-            lines.append("")
-            meta_rows = []
-            if domain:
-                meta_rows.append(f"所属域: `{domain}`")
-            if maturity:
-                meta_rows.append(f"成熟度: {maturity}")
-            if risk:
-                meta_rows.append(f"风险: {risk}")
-            if aliases:
-                meta_rows.append(f"别名: {', '.join(f'`{a}`' for a in aliases)}")
-            if delegated:
-                meta_rows.append(f"委派目标: `{delegated}`")
-            if meta_rows:
-                lines.append("  · " + "  |  ".join(meta_rows))
-                lines.append("")
-            if example:
-                lines.append("```bash")
-                lines.append(example if example.startswith("cockpit") else f"cockpit {example}")
-                lines.append("```")
-                lines.append("")
+            lines.append(f"| `cockpit {name}` | {_summary_cell(summary)} |")
         lines.append("")
 
     # 遗留命令映射
@@ -479,7 +490,69 @@ def gen_cli_reference(reg: dict, frontmatter: str = "") -> str:
         "",
         f"*由 `bin/ssot/gen-help-docs.py` 于 {gen_at} 生成 (T8-16 全量模式)*",
     ])
-    return "\n".join(lines)
+    index_content = "\n".join(lines)
+
+    # ── 分册: 每分类全量命令详情 (docs/cli/<slug>.md) ──
+    details: dict[str, str] = {}
+    for cat in sorted(by_cat):
+        dlines: list[str] = [
+            _CLI_DETAIL_FM.rstrip("\n"),
+            "",
+            f"# Cockpit CLI · {cat}",
+            "",
+            f"> 自动生成于 {gen_at} | 分册源自 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)",
+            "> 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑",
+            "",
+            f"本册收录 **{len(by_cat[cat])}** 个命令。索引与交叉表见 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)。",
+            "",
+        ]
+        for name in sorted(by_cat[cat]):
+            meta = catalog[name]
+            summary = (getattr(meta, "summary", "") or scanned.get(name, "—")).strip()
+            aliases = getattr(meta, "aliases", ()) or ()
+            example = (getattr(meta, "example", "") or "").strip()
+            maturity = getattr(meta, "maturity", "")
+            risk = getattr(meta, "risk", "")
+            delegated = getattr(meta, "delegated_target", "") or ""
+            domain = domains.get(name) or (legacy.get(name) or ("", ""))[0]
+            dlines.append(f"## `cockpit {name}`")
+            dlines.append("")
+            dlines.append(summary or "—")
+            dlines.append("")
+            dlines.append("**用法**:")
+            dlines.append("")
+            dlines.append("```bash")
+            dlines.append(f"cockpit {name} [flags]")
+            dlines.append(f"cockpit {name} --json          # 机器可读输出")
+            dlines.append(f"cockpit {name} --dry-run       # 预检 (无副作用)")
+            dlines.append(f"cockpit {name} --help          # 完整参数面")
+            dlines.append("```")
+            dlines.append("")
+            meta_rows = []
+            if domain:
+                meta_rows.append(f"所属域: `{domain}`")
+            if maturity:
+                meta_rows.append(f"成熟度: {maturity}")
+            if risk:
+                meta_rows.append(f"风险: {risk}")
+            if aliases:
+                meta_rows.append(f"别名: {', '.join(f'`{a}`' for a in aliases)}")
+            if delegated:
+                meta_rows.append(f"委派目标: `{delegated}`")
+            if meta_rows:
+                dlines.append("  · " + "  |  ".join(meta_rows))
+                dlines.append("")
+            if example:
+                dlines.append("```bash")
+                dlines.append(example if example.startswith("cockpit") else f"cockpit {example}")
+                dlines.append("```")
+                dlines.append("")
+            dlines.append("")
+        dlines.append("---")
+        dlines.append("")
+        dlines.append(f"*由 `bin/ssot/gen-help-docs.py` 于 {gen_at} 生成*")
+        details[slugs[cat]] = "\n".join(dlines)
+    return index_content, details
 
 # ── INDEX-MCP.md ───────────────────────────────────────────────
 
@@ -528,11 +601,15 @@ def main() -> int:
     reg = load_registry()
 
     cli_ref_path = WORKSPACE / "docs" / "CLI-REFERENCE.md"
+    index_content, cli_details = gen_cli_reference(reg, _extract_frontmatter(cli_ref_path))
     outputs = {
         WORKSPACE / "projects" / "cockpit" / "CAPABILITY-MAP.md": gen_capability_map(reg),
-        cli_ref_path: gen_cli_reference(reg, _extract_frontmatter(cli_ref_path)),
+        cli_ref_path: index_content,
         WORKSPACE / "docs" / "INDEX-MCP.md": gen_mcp_index(reg),
     }
+    cli_dir = WORKSPACE / "docs" / "cli"
+    for slug, content in cli_details.items():
+        outputs[cli_dir / f"{slug}.md"] = content
     for path, content in outputs.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         # 时间戳稳定: 仅内容 (忽略 ISO 时间戳) 变化时才写
@@ -546,6 +623,20 @@ def main() -> int:
                 continue
         path.write_text(content, encoding="utf-8")
         print(f"✅ {path.relative_to(WORKSPACE)}")
+
+    # 清理过期分册: 仅删含生成器 marker 的文件 (防误删手写文档)
+    expected = {f"{slug}.md" for slug in cli_details}
+    if cli_dir.is_dir():
+        for stale in sorted(cli_dir.glob("*.md")):
+            if stale.name in expected:
+                continue
+            try:
+                text = stale.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            if _GENERATOR_MARKER in text:
+                stale.unlink()
+                print(f"🗑️  {stale.relative_to(WORKSPACE)} (过期分册已清理)")
 
     print(f"\n📊 生成完成: {reg['totals']}")
     return 0

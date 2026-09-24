@@ -9,10 +9,13 @@
      - 干净环境 → 无漂移
      - PATH-DRIFT 检测 (注册表 path 缺失)
      - 不自动应用需人工项
-  3. command-discovery (UX-NOISE):
-     - 解析场景组 + 密度分布
-     - 兜底组 ("其他") 超阈值 → dense_groups 非空
-     - JSON 结构完整
+   3. command-discovery (UX-NOISE):
+      - 解析场景组 + 密度分布
+      - 兜底组 ("其他") 超阈值 → dense_groups 非空
+      - JSON 结构完整
+   4. CLI-REFERENCE 分册拆分 (doc-audit P2):
+      - docs/cli/* 归入 derived-doc-only fast-track
+      - 分册文件 frontmatter 完整 + 索引链接存在
 """
 
 from __future__ import annotations
@@ -143,3 +146,27 @@ def test_command_discovery_cli() -> None:
     assert r.returncode == 0
     payload = json.loads(r.stdout)
     assert payload["total_commands"] >= 50
+
+
+# ── CLI-REFERENCE 分册拆分 (doc-audit P2) ───────────────────────────────────
+def test_fast_track_cli_split_derived() -> None:
+    """docs/cli/*.md 必须被识别为派生文档 → fast-track 可用."""
+    mod = _load(FAST_TRACK)
+    report = mod.check(staged=True, files=["docs/cli/governance.md"])
+    assert report["fast_track"] is True
+    assert report["change_lane"] == "derived-doc-only"
+
+
+def test_cli_split_detail_files() -> None:
+    """分册产物: docs/cli/ 存在 ≥5 个 FM 完整的 .md, 索引含 (cli/) 链接."""
+    cli_dir = ROOT / "docs" / "cli"
+    assert cli_dir.is_dir(), "docs/cli/ 分册目录未生成 (跑 bin/ssot/gen-help-docs.py)"
+    files = sorted(cli_dir.glob("*.md"))
+    assert len(files) >= 5, f"仅 {len(files)} 个分册"
+    for p in files:
+        text = p.read_text(encoding="utf-8")
+        assert text.startswith("---"), f"{p.name} 缺 frontmatter"
+        assert "type: derived" in text.split("---", 2)[1], f"{p.name} 缺 type: derived"
+    index = (ROOT / "docs" / "CLI-REFERENCE.md").read_text(encoding="utf-8")
+    assert "(cli/" in index, "索引未链接到分册"
+    assert "## 目录" in index, "索引缺 ## 目录 (test_completion_and_typo 契约)"

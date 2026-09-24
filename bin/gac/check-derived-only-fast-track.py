@@ -40,6 +40,7 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 # 派生文档面: 投影重生成产物, 无独立语义变更
 DERIVED_DOC_PATTERNS: tuple[str, ...] = (
     "docs/generated/",
+    "docs/cli/",
     "projects/cockpit/CAPABILITY-MAP.md",
     "docs/CLI-REFERENCE.md",
     "docs/INDEX-MCP.md",
@@ -50,8 +51,12 @@ FAST_TRACK_WORKFLOWS = ("project-doc-change", "state-sync", "handoff-resume")
 
 
 def _git_changed(staged: bool, files: list[str] | None) -> list[str]:
-    """取变更文件列表 (staged/unstaged/显式)."""
-    if files:
+    """取变更文件列表 (staged/unstaged/显式).
+
+    files is not None 时显式生效 — files=[] 表示"无变更",
+    不能回退到真实 staged 清单 (否则测试/调用方的空列表语义被 git 状态污染).
+    """
+    if files is not None:
         return files
     cmd = ["git", "diff", "--cached", "--name-only"] if staged else ["git", "diff", "--name-only"]
     r = subprocess.run(cmd, cwd=WORKSPACE, capture_output=True, text=True, check=False)

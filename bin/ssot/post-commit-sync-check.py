@@ -106,6 +106,7 @@ def _has_doc_drift() -> bool:
         "docs/generated/",
         "projects/cockpit/CAPABILITY-MAP.md",
         "docs/CLI-REFERENCE.md",
+        "docs/cli/",
         "docs/INDEX-MCP.md",
     ]
     try:
@@ -186,7 +187,7 @@ def main() -> int:
         return 0
 
     if _has_doc_drift():
-        print("[sync-check] ⚠️ 派生文档已更新 (capability-registry/CLI-REFERENCE/INDEX-MCP)")
+        print("[sync-check] ⚠️ 派生文档已更新 (capability-registry/CLI-REFERENCE/docs/cli/INDEX-MCP)")
         print("[sync-check] 请随下次 commit 提交这些派生文档 (CI check-docs-drift 依赖)")
         return 1
     print("[sync-check] ✅ 派生文档无漂移")

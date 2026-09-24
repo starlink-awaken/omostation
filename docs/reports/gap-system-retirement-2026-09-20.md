@@ -1,3 +1,9 @@
+---
+type: ephemeral
+status: completed
+created: 2026-09-20
+---
+
 # Gap Management System Retirement Decision
 
 **Date**: 2026-09-20  

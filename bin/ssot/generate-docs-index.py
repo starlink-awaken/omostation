@@ -382,8 +382,18 @@ def main():
     issues = check_compliance(files)
     orphans = find_orphans(files)
 
-    # 生成 Markdown 报告
+    # 生成 Markdown 报告 (前置 date-free frontmatter, 满足 doc-lifecycle lint;
+    # derived 类型必须带 source 以通过 check_compliance [DERIVED-NO-SOURCE])
     report = generate_inventory(files, issues, orphans)
+    if not report.startswith("---"):
+        report = (
+            "---\n"
+            "type: derived\n"
+            "lifecycle: generated\n"
+            "owner: governance-team\n"
+            "source: bin/ssot/generate-docs-index.py\n"
+            "---\n\n"
+        ) + report
     OUTPUT_FILE.write_text(report, encoding="utf-8")
 
     print(f"[doc-index] 扫描 {len(files)} 个 MD 文件 → {OUTPUT_FILE}")

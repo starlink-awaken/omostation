@@ -68,6 +68,7 @@ DERIVED_TARGETS = (
     "docs/generated/capability-registry.yaml",
     "projects/cockpit/CAPABILITY-MAP.md",
     "docs/CLI-REFERENCE.md",
+    "docs/cli/",
     "docs/INDEX-MCP.md",
 )
 
