@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -11,6 +12,10 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = REPO_ROOT / "bin" / "gac" / "check-submodule-pointer-drift.py"
+
+#: Every status ``check_drift`` can report. Kept in sync with the emitter by
+#: ``test_declared_statuses_match_the_emitter``.
+DRIFT_STATUSES = ("aligned", "behind", "ahead", "DIVERGED", "skip", "unverifiable")
 
 
 def _load_module():
@@ -68,7 +73,22 @@ def test_each_result_has_required_fields():
     for r in data["results"]:
         assert "submodule" in r
         assert "status" in r
-        assert r["status"] in ("aligned", "behind", "ahead", "DIVERGED", "skip")
+        assert r["status"] in DRIFT_STATUSES
+
+
+def test_declared_statuses_match_the_emitter() -> None:
+    """The contract list must cover every status the detector can produce.
+
+    ``unverifiable`` was added for shallow clones without updating this file. No
+    CI job runs it (``integration.yml`` names two other ``tests/unit/`` files), so
+    the stale tuple only surfaced where a submodule genuinely is shallow — a PASW
+    worktree, measured 2026-09-24: ``projects/cockpit-ui`` reports
+    ``--is-shallow-repository=true`` and failed the sampled assertion.
+    """
+    source = SCRIPT.read_text(encoding="utf-8")
+    emitted = set(re.findall(r'"status": "(\w+)"', source))
+
+    assert emitted == set(DRIFT_STATUSES)
 
 
 def test_detects_omo_divergence():
@@ -78,7 +98,7 @@ def test_detects_omo_divergence():
     omo_results = [r for r in data["results"] if r["submodule"] == "projects/omo"]
     if omo_results:
         r = omo_results[0]
-        assert r["status"] in ("DIVERGED", "aligned", "behind", "ahead")
+        assert r["status"] in DRIFT_STATUSES
 
 
 def test_submodule_git_clears_superproject_environment(
