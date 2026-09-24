@@ -26,7 +26,7 @@ last-reviewed: 2026-09-23
 | # | 失误 | 损失 | 根因 |
 |---|------|------|------|
 | F1 | **两次 x25519 生成错对** — Reality 服务器写第一对私钥、客户端写第二对公钥, 节点瘫痪 `REALITY authentication failed` | ~1h | 并行调用未共享随机源; 后续修正为"单次调用取 PRIV+PUB 双值"流程 |
-| F2 | **STUN 诊断绕路 5 层** — 报文格式→安全组→iptables→strace假阴性→最后 A/B 才切中 Go/kernel 真因 | ~2h | 没有先做最小对照实验 (python 绑同端口 30 秒就能一锤定音) |
+| F2 | **STUN 误诊** — 5 层排查后认定"Go epoll/kernel 3.10 致 STUN 失效", 上了 python 补丁; 09-23 重装后证实是错的: derper 只回应 Tailscale 格式请求 (SOFTWARE+FINGERPRINT), 手写测试包不合格, strace 又漏了 -f。后果: 看门狗用同一坏包每 5 分钟误杀 derper | ~2h + 一次误杀 | A/B 对照的"对照组"本身就错了 — 测试工具必须先对已知正常的目标验证过, 才能用来判异常 |
 | F3 | **iCloud 双写真相缺失** — Meta `kUserEnableiCloud=1` 读容器, bootstrap 只写本地, 容器占位文件致**规则消失事故** (92→6 条) | ~30min | 部署目标枚举不完整; "真身在哪"未文档化 |
 | F4 | **DNS 三连环** — 5353 被 Chrome mDNS 抢占 + nameserver 用国外 DoH(被墙) + health 脚本端口 5354 写错 | ~1.5h (含 macmini 黑洞连带) | DNS 从未按国内环境设计; 端口选择无冲突检测 |
 | F5 | **密集 delay 测试炸出 GFW EOF** — 377 次 `connect error: EOF` 是自己测出来的 | ~1h 误判为服务器故障 | 测试行为改变系统状态, 未节制未记录 |
@@ -46,6 +46,8 @@ last-reviewed: 2026-09-23
 - **P-f 密钥一次生成双值**: 凡 keypair 生成, 单次调用内取齐 PRIV/PUB, 严禁两次调用拼对。
 
 ## 4. 迭代优化路线
+
+> ⚠️ 已并入 `SharedConf/ClashConfig/plans/2026-09-23-retro-and-roadmap.md`, 以下为历史存档。
 
 ### P0 (今天, 人工)
 - [ ] CF API Token 轮换 (曾入对话日志) → 更新上海机 acme account.conf
