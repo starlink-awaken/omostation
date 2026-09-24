@@ -105,7 +105,27 @@ def _load_module(path: Path, name: str):
 def _find_journey_spec(journey_id: str) -> Path:
     path = ROOT / "docs" / "journey-specs" / f"{journey_id}.yaml"
     if not path.exists():
-        raise FileNotFoundError(f"journey spec not found: {path}")
+        # SSOT 优先: spec 内声明的 journey_id 才是权威标识, 文件名可与之不同
+        # (如 health-gov-doc-cycle 声明于 health-gov-doc-cycle-workflow.yaml)。
+        # 文件名直查失败后扫描全部 spec 的 journey_id 字段做二次匹配。
+        specs_dir = ROOT / "docs" / "journey-specs"
+        if specs_dir.is_dir():
+            for candidate in sorted(specs_dir.glob("*.yaml")):
+                try:
+                    head = candidate.read_text(encoding="utf-8", errors="replace")[:2000]
+                except OSError:
+                    continue
+                for line in head.splitlines():
+                    stripped = line.strip()
+                    if stripped.startswith("journey_id:"):
+                        declared = stripped.split(":", 1)[1].strip()
+                        if declared == journey_id:
+                            return candidate
+                        break  # 只看 journey_id 行
+        raise FileNotFoundError(
+            f"journey spec not found: {path} "
+            f"(journey_id '{journey_id}' 也未在任何 journey-specs/*.yaml 的 journey_id 字段中声明)"
+        )
     return path
 
 
