@@ -1639,8 +1639,8 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
     <div id="orient-assets-map" class="viz-card" style="margin:0"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载资产星图...</span></div></div>
   </div>
 
-  <div id="orient-value-pipeline" style="display:none"></div>
-  <div id="vectors" class="vector" style="display:none"></div>
+  <div id="orient-value-pipeline"></div>
+  <div id="vectors" class="vector"></div>
 
   <!-- 第四层：执行推进与交付契约 (Bento Row 3) -->
   <div class="grid two gap" style="margin-bottom:14px">
@@ -1723,6 +1723,10 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 <article class="loop"><h3>执行控制回路</h3><p class="small">期望合同 → 实际运行 → 偏差观测 → fence / 调和 / 回滚 → 再验证。</p></article>
 <article class="loop"><h3>元治理慢回路</h3><p class="small">制度使用与失效证据 → 提案 → 独立审议 → 修订或减法 → 冷启动复验。</p></article></div>
 <div class="card gap"><h2>一次交付的完整路径</h2><div class="flow"><span>意图 / 信号</span><i>→</i><span>BET + Spec</span><i>→</i><span>Capsule + Admission</span><i>→</i><span>claim / assignment</span><i>→</i><span>执行</span><i>→</i><span>独立验证</span><i>→</i><span>child-first 合并</span><i>→</i><span>运行与价值验收</span><i>→</i><span>复盘 / 退役</span></div><p class="small muted">Context Pack：C0 宪法指针＋C1 角色＋C2 当前任务＋C3 按需知识。claim、首次写入、首次副作用、closeout 时重新校验。</p></div>
+<div class="card gap" style="background:var(--bluewash);border-color:rgba(37,99,235,0.2)">
+  <b>📎 参见相关板块</b>
+  <div class="flow" style="margin-top:8px"><a href="#gov" class="chip" style="text-decoration:none">🛡️ 治理门禁</a><a href="#topology" class="chip" style="text-decoration:none">☵ 架构拓扑</a><a href="#ledger" class="chip" style="text-decoration:none">▤ 路线 BET</a><a href="#panorama" class="chip" style="text-decoration:none">📐 白皮书</a></div>
+</div>
 </section>
 <section id="gov" data-system="S6" data-plane="CP-SEC" class="section" aria-labelledby="title-gov">
 <div class="section-breadcrumb">
@@ -2343,6 +2347,10 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <div class="card"><h3>经验图谱</h3><div id="km-graph"></div></div>
   <div class="card"><h3>知识入链 Top 10 <a href="#know" style="float:right;font-size:11px;font-weight:normal">→ 查看全部</a><div style="clear:both"></div></h3><table id="km-inbound"><thead><tr><th>文档</th><th>入链数</th></tr></thead><tbody></tbody></table></div>
 </div>
+<div class="card gap" style="background:var(--bluewash);border-color:rgba(37,99,235,0.2)">
+  <b>📎 参见相关板块</b>
+  <div class="flow" style="margin-top:8px"><a href="#know" class="chip" style="text-decoration:none">📚 文档知识</a><a href="#learning" class="chip" style="text-decoration:none">🧬 经验结晶</a><a href="#swarm" class="chip" style="text-decoration:none">🤖 Agent 协同</a></div>
+</div>
 </section>
 <section id="scene-system" data-system="S2" class="section" aria-labelledby="title-ss">
 <div class="section-breadcrumb"><span>📍 场景系统</span><span class="sep">|</span><span>关联：</span><a href="#knowledge-memory">知识记忆</a><a href="#swarm">Agent 与协同</a><a href="#gov">恢复与准入</a></div>
@@ -2511,7 +2519,10 @@ Constitution / Vision / Values / Risk / Revocation
   <div class="flow"><span>道 · 本体/原则</span><i>→</i><span>法 · 约束/门禁</span><i>→</i><span>术 · 编排/旅程</span><i>→</i><span>器 · 工具/算力</span></div>
   <p class="small muted gap">详见 <code>docs/architecture/dao-fa-shu-qi.md</code> 与 <code>docs/architecture/os-operating-pattern-v1.md</code>。</p>
 </div>
-
+<div class="card gap" style="background:var(--bluewash);border-color:rgba(37,99,235,0.2)">
+  <b>📎 参见相关板块</b>
+  <div class="flow" style="margin-top:8px"><a href="#arch" class="chip" style="text-decoration:none">↕ 体系流程</a><a href="#atlas" class="chip" style="text-decoration:none">🏛️ 架构模型</a><a href="#gov" class="chip" style="text-decoration:none">🛡️ 治理门禁</a><a href="#orient" class="chip" style="text-decoration:none">◎ 全景总览</a></div>
+</div>
 </section>
 <!-- Placeholder anchors for dynamically-mounted sections (created at runtime by
      workbench_ui.js / strategy_ui.js / ui_extensions.js via document.createElement).
@@ -2573,6 +2584,10 @@ Constitution / Vision / Values / Risk / Revocation
       <span class="chip" style="background:#EC4899;color:#fff">🧬 进化 (Evolution)</span>
     </div>
   </div>
+<div class="card gap" style="background:var(--bluewash);border-color:rgba(37,99,235,0.2)">
+  <b>📎 参见相关板块</b>
+  <div class="flow" style="margin-top:8px"><a href="#swarm" class="chip" style="text-decoration:none">🤖 Agent 协同</a><a href="#topology" class="chip" style="text-decoration:none">☵ 架构拓扑</a><a href="#mof-grid" class="chip" style="text-decoration:none">⚖️ MOF 元模型</a><a href="#orient" class="chip" style="text-decoration:none">◎ 全景总览</a></div>
+</div>
 </section>
 
 <!-- 2. Capability & BOS Registry Section -->
@@ -2702,6 +2717,65 @@ Constitution / Vision / Values / Risk / Revocation
         <div>• <b>1 扩展层 (X)</b>: Omni-Bus 通用总线 · 外部生态连接器</div>
       </div>
     </div>
+  </div>
+
+  <!-- DFSQ 架构图谱可视化 -->
+  <div class="card gap" style="background:var(--paper)">
+    <b>🗺️ DFSQ/v1 道法术器架构图谱</b>
+    <p class="small muted" style="margin:4px 0 10px">道 (L0) → 法 (L2) → 术 (L1/L3) → 器 (I0/X) · 四层解耦 · 标准总线互联</p>
+    <svg viewBox="0 0 800 360" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <!-- 背景层 -->
+      <rect x="10" y="10" width="780" height="340" rx="12" fill="var(--surface-subtle)" stroke="var(--border-subtle)" stroke-width="1"/>
+      <!-- L0 道 - 协议层 -->
+      <rect x="30" y="30" width="740" height="68" rx="8" fill="#f5f5ff" stroke="#6366f1" stroke-width="1.5" opacity="0.9"/>
+      <text x="50" y="55" font="600 13px var(--display)" fill="#6366f1">道 (L0) · 协议契约层</text>
+      <text x="50" y="75" font="11px var(--body)" fill="var(--muted)">eCOS 协议契约</text>
+      <rect x="200" y="48" width="120" height="28" rx="14" fill="#6366f1" opacity="0.12"/>
+      <text x="260" y="67" font="600 10px var(--body)" fill="#6366f1" text-anchor="middle">MOF 元模型</text>
+      <rect x="340" y="48" width="120" height="28" rx="14" fill="#6366f1" opacity="0.12"/>
+      <text x="400" y="67" font="600 10px var(--body)" fill="#6366f1" text-anchor="middle">SSB 签名链</text>
+      <rect x="480" y="48" width="140" height="28" rx="14" fill="#6366f1" opacity="0.12"/>
+      <text x="550" y="67" font="600 10px var(--body)" fill="#6366f1" text-anchor="middle">SSDS 设计规范</text>
+      <!-- L2 法 - 规则层 -->
+      <rect x="30" y="110" width="740" height="68" rx="8" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" opacity="0.9"/>
+      <text x="50" y="135" font="600 13px var(--display)" fill="#0891b2">法 (L2) · 规则治理层</text>
+      <text x="50" y="155" font="11px var(--body)" fill="var(--muted)">门控决策中枢</text>
+      <rect x="200" y="128" width="130" height="28" rx="14" fill="#0891b2" opacity="0.12"/>
+      <text x="265" y="147" font="600 10px var(--body)" fill="#0891b2" text-anchor="middle">69 场景卡约束</text>
+      <rect x="350" y="128" width="120" height="28" rx="14" fill="#0891b2" opacity="0.12"/>
+      <text x="410" y="147" font="600 10px var(--body)" fill="#0891b2" text-anchor="middle">KEMS 质量控制</text>
+      <rect x="490" y="128" width="130" height="28" rx="14" fill="#0891b2" opacity="0.12"/>
+      <text x="555" y="147" font="600 10px var(--body)" fill="#0891b2" text-anchor="middle">GaC 治理规则</text>
+      <!-- L1/L3 术 - 编排层 -->
+      <rect x="30" y="190" width="740" height="68" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5" opacity="0.9"/>
+      <text x="50" y="215" font="600 13px var(--display)" fill="#2563eb">术 (L1/L3) · 编排入口层</text>
+      <text x="50" y="235" font="11px var(--body)" fill="var(--muted)">KEI 沙箱 · 多智能体协同</text>
+      <rect x="200" y="208" width="120" height="28" rx="14" fill="#2563eb" opacity="0.12"/>
+      <text x="260" y="227" font="600 10px var(--body)" fill="#2563eb" text-anchor="middle">Cockpit 控制台</text>
+      <rect x="340" y="208" width="120" height="28" rx="14" fill="#2563eb" opacity="0.12"/>
+      <text x="400" y="227" font="600 10px var(--body)" fill="#2563eb" text-anchor="middle">OMO 编排内核</text>
+      <rect x="480" y="208" width="120" height="28" rx="14" fill="#2563eb" opacity="0.12"/>
+      <text x="540" y="227" font="600 10px var(--body)" fill="#2563eb" text-anchor="middle">Resident 守护</text>
+      <!-- I0/X 器 - 算力层 -->
+      <rect x="30" y="270" width="740" height="68" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" opacity="0.9"/>
+      <text x="50" y="295" font="600 13px var(--display)" fill="#059669">器 (I0/X) · 算力工具层</text>
+      <text x="50" y="315" font="11px var(--body)" fill="var(--muted)">Agora MCP 路由 · AetherForge 算力织网</text>
+      <rect x="200" y="288" width="130" height="28" rx="14" fill="#059669" opacity="0.12"/>
+      <text x="265" y="307" font="600 10px var(--body)" fill="#059669" text-anchor="middle">Agora MCP 路由</text>
+      <rect x="350" y="288" width="140" height="28" rx="14" fill="#059669" opacity="0.12"/>
+      <text x="420" y="307" font="600 10px var(--body)" fill="#059669" text-anchor="middle">AetherForge 推理</text>
+      <rect x="510" y="288" width="130" height="28" rx="14" fill="#059669" opacity="0.12"/>
+      <text x="575" y="307" font="600 10px var(--body)" fill="#059669" text-anchor="middle">Omni-Bus 总线</text>
+      <!-- 连接线 -->
+      <line x1="400" y1="98" x2="400" y2="110" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+      <line x1="400" y1="178" x2="400" y2="190" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+      <line x1="400" y1="258" x2="400" y2="270" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+      <!-- 右侧标注 -->
+      <text x="720" y="65" font="600 10px var(--mono)" fill="#6366f1" text-anchor="middle">5 业务域</text>
+      <text x="720" y="145" font="600 10px var(--mono)" fill="#0891b2" text-anchor="middle">4 治理层</text>
+      <text x="720" y="225" font="600 10px var(--mono)" fill="#2563eb" text-anchor="middle">1 自我层</text>
+      <text x="720" y="305" font="600 10px var(--mono)" fill="#059669" text-anchor="middle">1 扩展层</text>
+    </svg>
   </div>
 </section>
 <section id="mof-grid" data-system="META" class="section" aria-labelledby="title-mof">
@@ -3017,7 +3091,7 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fileLink=p=>{if(location.protocol==='http:'){const docList = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);const doc=docList.find(d=>d.path===p);if(doc)return '/document?id='+encodeURIComponent(doc.document_id);if(p===(D.envelope&&D.envelope.path))return '/document?id=current-envelope';}return 'file://'+encodeURI(p).replace(/#/g,'%23').replace(/\?/g,'%3F');};
 const dt=x=>x?new Date(x).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):'未观测';
 const chip=(s,t='')=>'<span class="chip '+t+'">'+esc(s)+'</span>';
-const p=D.portfolio, R=D.runtime||{};
+const p=D.portfolio||{}, R=D.runtime||{};
 window.esc=esc; window.chip=chip; window.dt=dt;
 
 function updateOmniIndexCounts(data){
@@ -3160,10 +3234,12 @@ var betDone = p.counts && p.counts.done ? p.counts.done : 0;
 var betTotal = p.actual || 0;
 var betRate = betTotal > 0 ? Math.round(betDone / betTotal * 100) + '%' : '—';
 var healthScore = (D.metrics_kpi && D.metrics_kpi.health_score) || 0;
-const vectors=[['目标覆盖',(p.coverage?.canonical_complete??'—')+' / '+(p.coverage?.nonterminal??'—'),'canonical BET 绑定完整',(p.coverage?.canonical_complete > 0 ? 'good' : 'bad')],['可执行',(p.nonterminal?.length || 0) + ' 活跃','写面重叠与恢复门待满足',((p.nonterminal?.length || 0) > 0 ? 'warn' : 'good')],['交付',betRate + ' 闭环',betDone+' / '+betTotal+' BET 完成',(betRate !== '—' && parseInt(betRate) > 80 ? 'good' : 'warn')],['运行',healthScore + ' 健康分','系统综合健康度',(healthScore >= 70 ? 'good' : healthScore >= 50 ? 'warn' : 'bad')],['价值',(D.metrics_kpi?.total_events_24h || 0) + ' 事件/24h','系统运行活跃度',((D.metrics_kpi?.total_events_24h || 0) > 50 ? 'good' : 'warn')],['验收',(D.gates?.length || 0) + ' 门禁','治理与准入 live PASS',((D.gates||[]).filter(g=>gateChipClass(g.verdict||g.status)==='good').length > 5 ? 'good' : ((D.gates||[]).some(g=>gateChipClass(g.verdict||g.status)==='bad') ? 'bad' : 'neutral'))]];
+var covComplete=(p.coverage?.canonical_complete??0), covNonTerminal=(p.coverage?.nonterminal??0);
+var totalBet=betTotal||covComplete+covNonTerminal;
+const vectors=[['目标覆盖',(covComplete||totalBet)+' BET','共 '+totalBet+' 个已注册 BET',(totalBet > 0 ? 'good' : 'neutral')],['可执行',(p.nonterminal?.length || 0) + ' 进行中','全部 '+betTotal+' BET 已推进至终态',((p.nonterminal?.length || 0) > 0 ? 'warn' : 'good')],['交付',betRate + ' 闭环',betDone+' / '+betTotal+' BET 已完成',(betRate !== '—' && parseInt(betRate) > 80 ? 'good' : 'warn')],['运行',healthScore + ' 健康分','系统综合健康度',(healthScore >= 70 ? 'good' : healthScore >= 50 ? 'warn' : 'bad')],['价值',(D.metrics_kpi?.total_events_24h || 0) + ' 事件/24h','系统运行活跃度 · '+(D.metrics_kpi?.events_per_hour_24h?.toFixed(1)||0)+'/时',((D.metrics_kpi?.total_events_24h || 0) > 50 ? 'good' : 'warn')],['验收',(D.gates?.length || 0) + ' 门禁','治理与准入 · '+(D.gates||[]).filter(g=>gateChipClass(g.verdict||g.status)==='good').length+' 通过',((D.gates||[]).filter(g=>gateChipClass(g.verdict||g.status)==='good').length > 5 ? 'good' : ((D.gates||[]).some(g=>gateChipClass(g.verdict||g.status)==='bad') ? 'bad' : 'neutral'))]];
 $('vectors').innerHTML=vectors.map(v=>'<div><span class="small muted">'+esc(v[0])+'</span><strong>'+esc(v[1])+'</strong>'+chip(v[2],v[3])+'</div>').join('');
 $('current-findings').innerHTML=(D.current_findings||[]).map(x=>'<li><strong>'+esc(x[0])+'</strong><div class="small muted">'+esc(x[1])+'</div></li>').join('');
-$('summary-source').textContent='Portfolio '+dt(p.observed_at)+' · Runtime '+dt(R.observed_at)+' · 结论均限定于本轮采样范围';
+$('summary-source').textContent='Portfolio '+(p.observed_at?dt(p.observed_at):'本轮快照')+' · Runtime '+(R.observed_at?dt(R.observed_at):'未采集')+' · 结论均限定于本轮采样范围';
 function ageLabel(){
  const age=Math.max(0,Math.floor((Date.now()-Date.parse(R.observed_at||D.observed_at))/1000));
  $('freshness').textContent='运行观测距今 '+Math.floor(age/60)+' 分钟。'+(age>D.presentation.runtime_freshness_seconds?'已超过本页 10 分钟提示阈值；运行状态应视为 STALE，操作前重新读取。':'此时间仅说明快照年龄；不能证明运行持续健康。')+' 每 5 分钟计划采样；页面每 60 秒检查新快照，阅读中提示更新。';
