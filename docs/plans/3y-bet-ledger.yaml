@@ -33169,6 +33169,277 @@ bets:
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   done_at: 2026-09-24 06:42:45+00:00
+- id: BET-Y2Q2-T8-06
+  title: 统一治理 React Query Hooks 与双模供给层实现
+  track: T8-SURFACE
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-24'
+  depends_on:
+  - BET-Y2Q2-T8-05
+  goal: 封装 useGovernancePanorama Hook，支持动态端点请求并在失败时静默降级读取内置静态快照，提供子域 hooks 与 74s 哨兵轮询同步。
+  non_goals:
+  - 不破坏现有其他 React Query hooks
+  priority: P1
+  risk_level: L2
+  appetite: 2 hours
+  circuit_breaker: 回退为纯静态数据直接 import
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:808933ac35bd9b01db4b83f98032111d05564cc4e601177560369a9da229e3d4
+    decision_ref: decision://accepted/BET-Y2Q2-T8-06
+    spec_ref: repo://docs/superpowers/specs/2026-09-24-panorama-governance-hooks-design.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/api/hooks/useGovernancePanorama.ts
+  - projects/cockpit-ui/src/api/hooks/__tests__/useGovernancePanorama.test.ts
+  - projects/cockpit-ui/src/api/hooks/index.ts
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T8-06.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/api/hooks/__tests__/useGovernancePanorama.test.ts
+    expect: exit 0
+  done_when:
+  - 单元测试覆盖 API 正常返回与离线 fallback 本地静态两种情况
+  - 提供 refetch() 刷新接口并对齐 74s 哨兵巡检
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-06.md
+          merged_reachable_commit:
+            ref: git://origin/main@174a96356a8f7af2faaa475e6cf8a68a98cb9257
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-06.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-06.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-06.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-06.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-06.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-06.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T8-05
+  title: 全景治理数据契约与 TypeScript 类型体系沉淀
+  track: T8-SURFACE
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-24'
+  depends_on:
+  - BET-Y2Q2-T8-04
+  goal: 在 projects/cockpit-ui 中定义门禁（A1-A9、RF0）、74s 哨兵、道法术器拓扑与姿态指标的严格 TypeScript 类型契约。
+  non_goals:
+  - 不修改后端现有数据产出格式
+  priority: P1
+  risk_level: L1
+  appetite: 1.5 hours
+  circuit_breaker: 回退为使用宽松 any 类型
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:afb93e64942f67710ac0ef09aae7e9475c2a98e38d116292bcad7f186efa42ef
+    decision_ref: decision://accepted/BET-Y2Q2-T8-05
+    spec_ref: repo://docs/superpowers/specs/2026-09-24-panorama-governance-types-contract-design.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/api/types/panorama.ts
+  - projects/cockpit-ui/src/api/types/index.ts
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T8-05.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run typecheck
+    expect: exit 0
+  done_when:
+  - TypeScript 类型完备定义门禁节点、证据路径、退出状态与巡检指标
+  - bun run typecheck 0 报错通过
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-05.md
+          merged_reachable_commit:
+            ref: git://origin/main@68141c5b30d511dc2cd2fa56e973920bf5cb7339
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-05.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-05.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-05.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-05.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-05.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T8-05.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T7-06
+  title: 门禁全景矩阵组件研发 (GatesMatrixView)
+  track: T7-SCENE
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-24'
+  depends_on:
+  - BET-Y2Q2-T8-06
+  goal: 彻底替代旧底座门禁面板，以 React 19 + Tailwind 实现现代化卡片式 GatesMatrixView，呈现 A1-A9、RF0 判定依据、退出码与证据路径。
+  non_goals:
+  - 不修改门禁脚本本身的退出判定
+  priority: P1
+  risk_level: L2
+  appetite: 3 hours
+  circuit_breaker: 回退为使用静态列表表格呈现
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:0ed584a42831b61ab58f1d94ed59b556d64a9422be0487021c4b35df42bf5628
+    decision_ref: decision://accepted/BET-Y2Q2-T7-06
+    spec_ref: repo://docs/superpowers/specs/2026-09-24-gates-matrix-view-design.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/views/panorama/GatesMatrixView.tsx
+  - projects/cockpit-ui/src/views/panorama/__tests__/GatesMatrixView.test.tsx
+  - projects/cockpit-ui/src/views/panorama/index.ts
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T7-06.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/views/panorama/__tests__/GatesMatrixView.test.tsx
+    expect: exit 0
+  done_when:
+  - 完整呈现 A1-A9 与 RF0；支持点击卡片展开详情与证据文件指引
+  - 包含流光骨架屏加载状态；单测全部通过
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-06.md
+          merged_reachable_commit:
+            ref: git://origin/main@b91c119b1664a5dbd9592153e245c97342fc8ddc
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-06.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-06.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-06.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-06.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-06.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-06.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T7-07
+  title: 74s 哨兵守护与健康大屏组件研发 (GuardianInspectionWallboard)
+  track: T7-SCENE
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-24'
+  depends_on:
+  - BET-Y2Q2-T8-06
+  goal: 升级现有抽屉为全尺寸常态守护大屏 GuardianInspectionWallboard，呈现 74s 哨兵雷达扫描、分层健康度与自愈记录。
+  non_goals:
+  - 不修改哨兵底层探针执行脚本
+  priority: P1
+  risk_level: L2
+  appetite: 2.5 hours
+  circuit_breaker: 回退为使用静态健康状态列表
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:16c48e13e648f982c2c5b4ff4d01504e2790ccea753dea5ce915ca088c4ab164
+    decision_ref: decision://accepted/BET-Y2Q2-T7-07
+    spec_ref: repo://docs/superpowers/specs/2026-09-24-guardian-inspection-wallboard-design.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/views/panorama/GuardianInspectionWallboard.tsx
+  - projects/cockpit-ui/src/views/panorama/__tests__/GuardianInspectionWallboard.test.tsx
+  - projects/cockpit-ui/src/views/panorama/index.ts
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T7-07.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/views/panorama/__tests__/GuardianInspectionWallboard.test.tsx
+    expect: exit 0
+  done_when:
+  - 具备雷达脉冲可视化、告警严重级别筛选与一键排障行动
+  - 包含流光骨架屏加载状态；单测全部通过
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-07.md
+          merged_reachable_commit:
+            ref: git://origin/main@767f375ce07cac09be1aa1341d174e0c8c20ed3f
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-07.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-07.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-07.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-07.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-07.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-07.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -33307,7 +33578,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 452
+  total_bets: 456
   windows:
   - Y1Q1
   - Y1Q2
