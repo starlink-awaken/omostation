@@ -2,6 +2,7 @@ import importlib.util
 import hashlib
 import json
 import sqlite3
+import subprocess
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
@@ -273,6 +274,53 @@ def test_claims_projection_reads_storage_without_invoking_claims_status(
     assert report["instruction_capable"] is False
     assert report["sequence"] == 2
     assert report["mutation_performed"] is False
+
+
+def test_projection_producer_identity_binds_executing_collector_to_main_tree(
+    tmp_path
+) -> None:
+    module = _module()
+    repo = tmp_path / "repo"
+    collector = repo / "bin/panorama/panorama-collect.py"
+    collector.parent.mkdir(parents=True)
+    collector.write_bytes(SCRIPT.read_bytes())
+
+    def git(*args: str) -> str:
+        completed = subprocess.run(
+            ["git", "-C", str(repo), *args],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return completed.stdout.strip()
+
+    git("init", "-q")
+    git("config", "user.name", "Projection Test")
+    git("config", "user.email", "projection@example.invalid")
+    git("add", "bin/panorama/panorama-collect.py")
+    git(
+        "update-index",
+        "--add",
+        "--cacheinfo",
+        "160000," + "e" * 40 + ",projects/omo",
+    )
+    git("commit", "-qm", "fixture")
+    head = git("rev-parse", "HEAD")
+    git("update-ref", "refs/remotes/origin/main", head)
+
+    identity = module.collect_projection_producer_identity(code_root=repo)
+
+    assert identity["root_oid"] == head
+    assert identity["omo_gitlink_oid"] == "e" * 40
+    assert identity["collector_sha256"] == hashlib.sha256(SCRIPT.read_bytes()).hexdigest()
+
+    collector.write_text("# another collector\n", encoding="utf-8")
+    git("add", "bin/panorama/panorama-collect.py")
+    git("commit", "-qm", "different collector")
+    git("update-ref", "refs/remotes/origin/main", git("rev-parse", "HEAD"))
+
+    with pytest.raises(RuntimeError, match="projection_collector_not_at_bound_commit"):
+        module.collect_projection_producer_identity(code_root=repo)
 
 
 def test_publish_projection_revision_is_reader_compatible_and_leaves_legacy_snapshot_untouched(

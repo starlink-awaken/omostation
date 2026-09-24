@@ -283,6 +283,18 @@ def _git_stdout(code_root: Path, *args: str) -> str:
     return completed.stdout.strip()
 
 
+def _git_bytes(code_root: Path, *args: str) -> bytes:
+    completed = subprocess.run(
+        ["git", "-C", str(code_root), *args],
+        capture_output=True,
+        timeout=10,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError("projection_code_identity_unavailable")
+    return completed.stdout
+
+
 def collect_projection_producer_identity(*, code_root: Path = CODE_ROOT) -> dict:
     root = Path(code_root).resolve()
     head = _git_stdout(root, "rev-parse", "HEAD")
@@ -295,7 +307,13 @@ def collect_projection_producer_identity(*, code_root: Path = CODE_ROOT) -> dict
     omo_gitlink = tree_entry[2]
     if re.fullmatch(r"[0-9a-f]{40}", omo_gitlink) is None:
         raise RuntimeError("projection_omo_gitlink_unavailable")
-    collector_sha = _sha256_bytes(_read_regular_bytes(Path(__file__).resolve()))
+    executing_collector = _read_regular_bytes(Path(__file__).resolve())
+    bound_collector = _git_bytes(
+        root, "show", "HEAD:bin/panorama/panorama-collect.py"
+    )
+    if executing_collector != bound_collector:
+        raise RuntimeError("projection_collector_not_at_bound_commit")
+    collector_sha = _sha256_bytes(bound_collector)
     process_identity = "sha256:" + _sha256_bytes(
         _canonical_json_bytes(
             {
