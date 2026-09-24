@@ -17,7 +17,7 @@
 |----------|------|
 | `capture` | 部署目录 → 仓库（把当前线上态版本化; 人工确认后用） |
 | `status`  | 逐文件 sha 对比（仓库 vs 部署）+ 漂移汇总 |
-| `check`   | 有漂移 → exit 1（供 cron/patrol/门禁调用） |
+| `check`   | 有漂移 → exit 1（供 cron/patrol/门禁调用）; 每次运行把结构化报告原子写入 `~/.local/share/zhixing-dashboard/host-drift-report.json`（launchd 下比翻 stderr 系统日志易查） |
 | `restore` | 仓库 → 部署（默认 dry-run; `--force` 才写） |
 
 **为什么捕获"注入后"的态**: panels 由 `zhixing-panel-sync.py ensure` 幂等注入
@@ -26,7 +26,7 @@
 
 用法:
     python3 bin/gac/zhixing-host-sync.py status
-    python3 bin/gac/zhixing-host-sync.py check          # 漂移 → exit 1
+    python3 bin/gac/zhixing-host-sync.py check          # 漂移 → exit 1; 报告: ~/.local/share/zhixing-dashboard/host-drift-report.json
     python3 bin/gac/zhixing-host-sync.py capture        # 线上 → 仓库
     python3 bin/gac/zhixing-host-sync.py restore --force
 """
@@ -36,8 +36,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
@@ -58,6 +60,10 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("observatory_query.py", "observatory_query.py.asset"),
     ("panorama-collect-main.py", "panorama-collect-main.py.asset"),
 )
+
+# check() 每次运行把漂移结果结构化写入部署目录的此文件 (原子写), 供 launchd
+# 巡检后判读 —— exit 1 时详情只在 stderr (进系统日志不便查阅), 报告永远新鲜。
+REPORT_NAME = "host-drift-report.json"
 
 
 def _sha(path: Path) -> str | None:
@@ -156,10 +162,50 @@ def restore(force: bool = False, dashboard_dir: Path | None = None,
     return {"ok": True, "dry_run": not force, "restored": planned, "missing_repo": missing}
 
 
+def _write_drift_report(info: dict, dashboard_dir: Path) -> None:
+    """把每次 check 的结果原子写入部署目录的 host-drift-report.json。
+
+    launchd 下 stderr 进系统日志不便查阅，结构化 JSON 可由 dashboard 读取展示，
+    也可被 grep/告警脚本消费。始终写入（含无漂移），以便观察"最近一次检测时间"。
+    """
+    report = {
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "ok": bool(info.get("ok")),
+        "drifted": int(info.get("drifted", 0)),
+        "missing_repo_copy": int(info.get("missing_repo_copy", 0)),
+        "missing_deploy_copy": int(info.get("missing_deploy_copy", 0)),
+        "files": [
+            {
+                "name": f["name"],
+                "state": f["state"],
+                "repo_sha": f.get("repo_sha"),
+                "deploy_sha": f.get("deploy_sha"),
+                "repo_bytes": int(f.get("repo_bytes") or 0),
+                "deploy_bytes": int(f.get("deploy_bytes") or 0),
+            }
+            for f in info.get("files", [])
+        ],
+    }
+    out = dashboard_dir / "host-drift-report.json"
+    tmp = out.with_suffix(".json.tmp")
+    try:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        tmp.write_text(json.dumps(report, ensure_ascii=False, indent=2),
+                       encoding="utf-8")
+        os.replace(tmp, out)
+    except OSError as exc:
+        # 报告写入失败绝不能阻断 check 的 exit 语义；仅 stderr 提示。
+        print(f"⚠️  漂移报告写入失败 ({exc}); check 结论仍按文件对比",
+              file=sys.stderr)
+
+
 def check(dashboard_dir: Path | None = None, host_dir: Path | None = None) -> int:
     info = status(dashboard_dir, host_dir)
-    if not Path(info["dashboard_dir"]).is_dir():
+    dash = Path(info["dashboard_dir"])
+    if not dash.is_dir():
         return 0  # 非本机 / 未部署 → 天然跳过
+    # 始终写报告（含无漂移），让 dashboard/告警能读"最近一次检测"。
+    _write_drift_report(info, dash)
     if info["missing_repo_copy"]:
         print("⚠️  织星宿主文件未版本化: "
               + ", ".join(f["name"] for f in info["files"] if f["state"] == "no_repo_copy"),

@@ -18,9 +18,118 @@ from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlsplit
 
 from observatory_query import SnapshotStore, QueryError, integer, json_bytes
+import subprocess
+import threading
+import time
+from http.client import HTTPConnection, HTTPException
 
 
 DEFAULT_PORT = 43191
+AETHERFORGE_PROXY = os.environ.get("ZHIXING_AI_PROXY", "http://127.0.0.1:9290")
+
+# ── 算力端点: 缓存 / 限流 / 模型白名单 ──────────────────────
+_compute_cache: dict = {"live": None, "live_until": 0.0, "models_whitelist": None,
+                        "whitelist_until": 0.0, "gateway_key": None, "gateway_key_until": 0.0}
+_compute_lock = threading.Lock()
+_infer_calls: dict = {}  # client_ip -> [timestamp, ...]
+_INFER_RPM = 6
+_INFER_TTL = 60.0
+_WHITELIST_TTL = 60.0
+_GATEWAY_KEY_TTL = 300.0
+_COMPUTE_LIVE_TTL = 10.0
+
+
+def _omlxc_json(cmd: list[str], t: float = 5.0):
+    """跑 omlxc 子命令并解析 JSON; 失败返回 None（不抛）。"""
+    try:
+        r = subprocess.run(["omlxc", *cmd, "--json"], capture_output=True, text=True, timeout=t)
+        if r.returncode != 0:
+            return None
+        return json.loads(r.stdout)
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+        return None
+
+
+def _get_gateway_key():
+    """取 AetherForge Bearer key（与 aetherforge-gw-guard 同路径：Keychain）。"""
+    now = time.monotonic()
+    with _compute_lock:
+        k = _compute_cache["gateway_key"]
+        if k and now < _compute_cache["gateway_key_until"]:
+            return k
+    try:
+        r = subprocess.run(["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
+                           capture_output=True, text=True, timeout=5)
+        if r.returncode != 0 or not r.stdout.strip():
+            return None
+        key = r.stdout.strip()
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    with _compute_lock:
+        _compute_cache["gateway_key"] = key
+        _compute_cache["gateway_key_until"] = now + _GATEWAY_KEY_TTL
+    return key
+
+
+def _get_models_whitelist():
+    """从 omlxc models list 取 loaded 模型 id 白名单; 失败返回 None。"""
+    now = time.monotonic()
+    with _compute_lock:
+        w = _compute_cache["models_whitelist"]
+        if w is not None and now < _compute_cache["whitelist_until"]:
+            return w
+    data = _omlxc_json(["models", "list"], t=8.0)
+    if not data or "data" not in data:
+        return None
+    items = data["data"].get("items") or []
+    ids = [it["id"] for it in items if it.get("loaded") and it.get("id")]
+    with _compute_lock:
+        _compute_cache["models_whitelist"] = ids
+        _compute_cache["whitelist_until"] = now + _WHITELIST_TTL
+    return ids
+
+
+def _acquire_infer_slot(client_ip: str):
+    """令牌桶: 每 IP 每 _INFER_TTL 秒 _INFER_RPM 次; 成功返回 True。"""
+    now = time.monotonic()
+    with _compute_lock:
+        ts = _infer_calls.get(client_ip, [])
+        ts = [x for x in ts if now - x < _INFER_TTL]
+        _infer_calls[client_ip] = ts
+        if len(ts) >= _INFER_RPM:
+            return False
+        ts.append(now)
+        return True
+
+
+def _call_aetherforge(model: str, system_prompt: str, user_prompt: str, max_tokens: int):
+    """调用 AetherForge OpenAI 兼容代理; 返回 (ok, output_or_error, usage_dict)。"""
+    key = _get_gateway_key()
+    if not key:
+        return False, "gateway_key_unavailable", None
+    body = json.dumps({"model": model,
+                       "messages": [{"role": "system", "content": system_prompt},
+                                   {"role": "user", "content": user_prompt}],
+                       "max_tokens": max_tokens, "stream": False}).encode("utf-8")
+    u = urlsplit(AETHERFORGE_PROXY)
+    try:
+        conn = HTTPConnection(u.hostname, u.port, timeout=120)
+        conn.request("POST", "/v1/chat/completions", body=body,
+                     headers={"Content-Type": "application/json",
+                              "Authorization": f"Bearer {key}"})
+        resp = conn.getresponse()
+        raw = resp.read().decode("utf-8", "replace")
+        if resp.status != 200:
+            return False, f"upstream_{resp.status}", None
+        data = json.loads(raw)
+        choice = (data.get("choices") or [{}])[0]
+        msg = choice.get("message") or {}
+        output = msg.get("content")
+        if output is None:
+            return False, "upstream_no_content", None
+        return True, output.strip(), data.get("usage")
+    except (HTTPException, OSError, json.JSONDecodeError) as exc:
+        return False, f"upstream_error:{type(exc).__name__}", None
 DYNAMIC_HASH_ROUTE_SCRIPT = b"""<script>
 (function () {
   function routeDynamicHash() {
@@ -908,6 +1017,110 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return False
         return True
 
+    # ── 知行主权副驾：真实算力端点 ────────────────────────────
+    def _handle_compute_live(self):
+        """GET /api/v1/compute/live — omlxc 实时算力；失败降级到快照静态数据。"""
+        now = time.monotonic()
+        with _compute_lock:
+            cached = _compute_cache["live"]
+            if cached is not None and now < _compute_cache["live_until"]:
+                self._json(200, cached)
+                return
+        observed_at = datetime.now(timezone.utc).isoformat()
+        daemon = _omlxc_json(["status"], t=6.0)
+        models_raw = _omlxc_json(["models", "list"], t=8.0)
+        errors = []
+        daemon_view = None
+        models_view = []
+        if daemon and "data" in daemon:
+            d = daemon["data"]
+            daemon_view = {"status": d.get("status"), "degraded": d.get("degraded"),
+                           "diagnostic": d.get("diagnostic")}
+        else:
+            errors.append("omlxc_status_unavailable")
+        if models_raw and "data" in models_raw:
+            for it in models_raw["data"].get("items") or []:
+                models_view.append({"id": it.get("id"), "role": it.get("role"),
+                                    "loaded": it.get("loaded"), "ready": it.get("ready"),
+                                    "available": it.get("available")})
+        else:
+            errors.append("omlxc_models_unavailable")
+        live = daemon_view is not None or models_view
+        if not live:
+            # 降级到快照里的静态 compute
+            try:
+                snap_dir = Path(__file__).resolve().parent
+                for cand in ("current.json", "dist/current.json"):
+                    p = snap_dir / cand
+                    if p.exists():
+                        static = json.loads(p.read_text()).get("compute")
+                        if static:
+                            self._json(200, {"live": False, "observed_at": observed_at,
+                                             "error": errors, "fallback": static,
+                                             "models": []})
+                            return
+            except Exception:
+                pass
+        resp = {"live": live, "observed_at": observed_at,
+                "daemon": daemon_view, "models": models_view, "errors": errors}
+        with _compute_lock:
+            _compute_cache["live"] = resp
+            _compute_cache["live_until"] = now + _COMPUTE_LIVE_TTL
+        self._json(200, resp)
+
+    def _handle_compute_infer(self):
+        """POST /api/v1/compute/infer — 本机限流 + 白名单模型的本地推理。"""
+        client_ip = self.client_address[0] if self.client_address else "unknown"
+        if client_ip not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
+            self._json(403, {"ok": False, "error": "localhost_only"})
+            return
+        if not _acquire_infer_slot(client_ip):
+            self._json(429, {"ok": False, "error": "rate_limited",
+                             "detail": f"{_INFER_RPM} per minute per IP"})
+            return
+        try:
+            content_len = int(self.headers.get("Content-Length", 0))
+            if not (0 < content_len <= 65536):
+                self._json(400, {"ok": False, "error": "invalid_content_length"})
+                return
+            raw = self.rfile.read(content_len) if content_len > 0 else b"{}"
+            params = json.loads(raw.decode("utf-8"))
+            if not isinstance(params, dict):
+                raise ValueError
+        except Exception:
+            self._json(400, {"ok": False, "error": "invalid_json"})
+            return
+        model = (params.get("model") or "").strip()
+        prompt = (params.get("prompt") or "").strip()
+        system_prompt = (params.get("system") or "你是织星驾驶舱的本地推理助手，简洁、准确、中文作答。").strip()
+        if not model:
+            self._json(400, {"ok": False, "error": "model_required"})
+            return
+        if not (1 <= len(prompt) <= 4000):
+            self._json(400, {"ok": False, "error": "prompt_length_1_4000"})
+            return
+        if len(system_prompt) > 2000:
+            self._json(400, {"ok": False, "error": "system_prompt_too_long"})
+            return
+        whitelist = _get_models_whitelist()
+        if whitelist is None:
+            self._json(503, {"ok": False, "error": "model_whitelist_unavailable"})
+            return
+        if model not in whitelist:
+            self._json(400, {"ok": False, "error": "model_not_in_whitelist",
+                             "whitelist": whitelist})
+            return
+        max_tokens = min(int(params.get("max_tokens") or 512), 2048)
+        t0 = time.monotonic()
+        ok, output, usage = _call_aetherforge(model, system_prompt, prompt, max_tokens)
+        elapsed_ms = int((time.monotonic() - t0) * 1000)
+        if not ok:
+            status = 502 if output.startswith("upstream") else 500
+            self._json(status, {"ok": False, "error": output, "elapsed_ms": elapsed_ms})
+            return
+        self._json(200, {"ok": True, "output": output, "model": model,
+                         "usage": usage, "elapsed_ms": elapsed_ms})
+
     def do_GET(self):
         if not self._allowed():
             return
@@ -1549,6 +1762,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     "read_only": True,
                 })
             return
+        elif route.path == "/api/v1/compute/live":
+            self._handle_compute_live()
         elif route.path.startswith('/api/v1/'):
             operation = route.path[len('/api/v1/'):]
             try:
@@ -1683,6 +1898,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if not self._allowed():
             return
         route = urlsplit(self.path)
+        if route.path == "/api/v1/compute/infer":
+            self._handle_compute_infer()
+            return
         if route.path.startswith('/api/v1/'):
             operation = route.path[len('/api/v1/'):]
             if operation in ('copilot/ask', 'proposals/submit', 'proposals/adjudicate', 'health/auto-heal', 'health/execute-heal', 'bos/invoke', 'loops/step'):

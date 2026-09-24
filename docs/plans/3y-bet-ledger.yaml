@@ -33576,6 +33576,59 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+- accepted_specifications:
+  - content_digest: sha256:043305f4d501d30f24d6a107d09139bbf1318e9d4e1e09c3dee5c26b83e329c3
+    decision_ref: decision://accepted/BET-Y2Q3-T9-01
+    spec_ref: repo://docs/superpowers/specs/2026-09-25-y2q3-t9-01-zhixing-dashboard-p2-compute-copilot.md
+    spec_version: 1.0.0
+  appetite: 3 days
+  circuit_breaker: 副驾推理调用异常时回退为只读状态展示；页面 JS 语法错误时由 launchd watchdog 重启并可用 zhixing-host-sync.py restore 回滚到仓库版本
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: NOT_STARTED
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
+  done_when:
+  - P2-5/11/7/3/10 五项体验优化落地且 26 个板块无 JS 语法错误（node --check 全过）
+  - drift check 漂移时生成结构化 host-drift-report.json 且 runbook 判读已更新
+  - 副驾展示 omlxc 实时算力并可 localhost 发起推理（白名单模型 + 限流）
+  - PR 合并且 zhixing-host-sync.py check exit 0
+  goal: 织星驾驶舱质量迭代——审计 P2 子集落地（数据源降级视觉提示 P2-5 / 价值回路五阶段可视化时间线 P2-11 / 搜索历史 P2-7 / 暗色 popover 对比度 P2-3 / know 与 learnings 差异化 P2-10），宿主漂移检测可观测化（结构化漂移报告 + runbook 判读），知行主权副驾从静态快照升级为 omlxc/AetherForge 真实算力接入（实时端点状态 + localhost 推理控制台），审计发现台账化登记防睡大觉。
+  human_gate: false
+  id: BET-Y2Q3-T9-01
+  non_goals:
+  - 不改动 omlxc daemon 与 AetherForge 服务本体配置
+  - 不对 cockpit-ui 本体做改造
+  - 副驾推理能力仅绑定 localhost，不做任何对外暴露
+  priority: P2
+  retro: required
+  risk_level: L2
+  status: in_progress
+  title: 织星驾驶舱 P2 体验迭代、漂移可观测与真实算力副驾
+  track: T9-OBSERV
+  underlying_workflow: project-code-change
+  verify:
+  - cmd: python3 bin/gac/zhixing-host-sync.py check
+    expect: exit 0
+  - cmd: curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:43191/
+    expect: "200"
+  window: Y2Q3
+  workflow: project-code-change
+  write_surfaces:
+  - bin/panorama/assets/host/
+  - bin/gac/zhixing-host-sync.py
+  - bin/ops/launchd/
+  - .omo/_knowledge/ops/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-25-y2q3-t9-01-zhixing-dashboard-p2-compute-copilot.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -33714,7 +33767,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 458
+  total_bets: 459
   windows:
   - Y1Q1
   - Y1Q2
