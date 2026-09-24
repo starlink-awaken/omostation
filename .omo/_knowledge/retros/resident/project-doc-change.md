@@ -1,24 +1,22 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-09-22T07:42:34Z
-status: planned
+generated_at: 2026-09-24T12:07:32Z
+status: candidate
 counts:
-  runs: 5
+  runs: 6
   failures: 0
-  total: 5
+  total: 6
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-lifecycle: history
-owner: unassigned
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-22T07:42:34Z
+- generated_at: 2026-09-24T12:07:32Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 5 成功运行 + 0 失败模式 = 5 草稿
+- sediment 覆盖: 6 成功运行 + 0 失败模式 = 6 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -28,6 +26,7 @@ owner: unassigned
 - 20260917T023058Z-project-doc-change-4c8886f7.md
 - 20260917T072353Z-project-doc-change-ec96981b.md
 - 20260919T174616Z-project-doc-change-546d5464.md
+- 20260924T021135Z-project-doc-change-db6d7446.md
 
 ## 失败模式 (failures/)
 
@@ -72,6 +71,12 @@ owner: unassigned
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=3
   - 指标: event_count=6, duration_s=843.632
+- **20260924T021135Z-project-doc-change-db6d7446**
+  - 计划 (objective): [BOOTSTRAP BET-Y2Q2-T10-161] Bind accepted OMLXC readiness specification, append the new ledger entry, and record the user-authorized requirement-iteration waiver only.
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=4763.307
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

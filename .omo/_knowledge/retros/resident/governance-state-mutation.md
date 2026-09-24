@@ -1,24 +1,22 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-09-22T07:42:34Z
-status: planned
+generated_at: 2026-09-24T12:07:32Z
+status: candidate
 counts:
-  runs: 7
+  runs: 8
   failures: 0
-  total: 7
+  total: 8
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
   trace_count: 0
-lifecycle: history
-owner: unassigned
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-22T07:42:34Z
+- generated_at: 2026-09-24T12:07:32Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 7 成功运行 + 0 失败模式 = 7 草稿
+- sediment 覆盖: 8 成功运行 + 0 失败模式 = 8 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -30,6 +28,7 @@ owner: unassigned
 - 20260921T081335Z-governance-state-mutation-1f50a0b7.md
 - 20260921T100202Z-governance-state-mutation-4808c157.md
 - 20260922T012405Z-governance-state-mutation-73f3490f.md
+- 20260922T084422Z-governance-state-mutation-0ecfa313.md
 
 ## 失败模式 (failures/)
 
@@ -85,6 +84,10 @@ owner: unassigned
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=3
   - 指标: event_count=6, duration_s=1359.242
+- **20260922T084422Z-governance-state-mutation-0ecfa313**
+  - 计划 (objective): Repair ledger regression from stale-base PR #4201: restore T10-154 done evidence, re-add deleted T10-155 entry, re-derive meta.total_bets
+  - workflow: governance-state-mutation
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

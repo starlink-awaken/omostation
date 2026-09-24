@@ -32834,7 +32834,7 @@ bets:
   goal: 按已批准计划修复 omlxc 体系 4 层问题：P0 死命令/坏引用、模型 inventory 自愈、P1 CLI 契约、P2/P3 入口收敛与文档卫生
   status: done
   window: Y2Q3
-  track: T10-PLATFORM
+  track: T10-MATURITY
   priority: P1
   appetite: 1 week
   risk_level: L2
