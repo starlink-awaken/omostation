@@ -67,7 +67,12 @@ PROJECTION_LOCK_NAME = ".projection-publisher.lock"
 CLAIMS_AUTHORITY_ROOT = (
     Path.home() / "agents/_shared/runtime/omo-claims-authority-r0"
 )
-EVENT_LEDGER = ROOT / "runtime/omo/event-ledger.sqlite3"
+EVENT_LEDGER = Path(
+    os.environ.get(
+        "OMO_EVENT_LEDGER_DB",
+        str(ROOT / "runtime/omo/event-ledger.sqlite3"),
+    )
+).expanduser()
 _PROCESS_STARTED_NS = time.time_ns()
 CLAIMS_REQUEST_PACKAGE = (
     Path.home() / ".local/share/zhixing-dashboard/claims-activation-request.json"
