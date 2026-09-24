@@ -309,3 +309,12 @@ entries:
   range: origin/main..ae7c45f88519
   recorded_at: '2026-09-23T23:03:55.377818+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|7711ced8b27e1f53
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 7711ced8b27e1f53
+  kind: gitlink-regress
+  reason: submodule projects/agora pointer 48b558a59d90 rewinds d6d58e2357b2
+  range: origin/main..f5788965be15
+  recorded_at: '2026-09-24T02:09:44.764748+00:00'
+  active: true
