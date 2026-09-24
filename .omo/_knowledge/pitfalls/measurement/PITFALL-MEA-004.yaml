@@ -1,0 +1,24 @@
+schema: agent-error/v1
+id: PITFALL-MEA-004
+category: measurement
+severity: medium
+title: hook-runner 的 run_check 第 4 参看着像超时其实从未生效：声明值还是过期值
+symptom: pre-push 卡死数十分钟（实测 40min，tmp_pack 字节零增长）。翻开 bin/gac/hook-runner.sh 看到 run_check
+  有第 4 参 timeout 且每条检查都声明了秒数，于是判定已有超时保护，转而怀疑别处；或反向操作——把这个参数改成强制生效，结果每次 push 都假失败
+root_cause: local timeout="${4:-10}" 把值读进局部变量后再没传给任何子进程，参数纯属装饰。更糟的是声明值与实测值脱节：submodule-reachability
+  声明 15s，暖态实测就要 64s。所以它同时骗过两种人——读它的人以为有保护，启用它的人制造假失败。
+solution: 不要相信长得像超时的参数，先量再用。步骤：读被调脚本确认值是否真的传给了 subprocess；对目标命令实测暖态耗时；边界建在真正执行网络工作的那一层（本次落在
+  bin/ssot/submodule-reachability-gate.py 的 CMD/FETCH/NETWORK_BUDGET 三个常量）。对已经广泛存在的死参数，改名
+  + 写明为何不启用，比悄悄启用或悄悄删掉都诚实。
+prevention: 给门禁/hook 加参数时必须同时验证它真的到达执行点（打印/断言被测命令收到的 argv），否则改口的参数就是谎言；写文档里的秒数若无人维护就标成 hint 而不是 budget。
+tags:
+- hook-runner
+- run_check
+- timeout
+- pre-push
+- submodule-reachability
+discovered_by: governance-agent
+discovered_at: '2026-09-24'
+times_encountered: 1
+last_confirmed_at: '2026-09-24'
+status: active
