@@ -98,6 +98,6 @@ bash ~/.local/share/zhixing-dashboard/liveness-watchdog.sh
 | 端口不通 | ① `launchctl list \| grep zhixing` ② `launchctl print-disabled` ③ launchd-zhixing-43191.log |
 | 页面数据不刷新 | launchd-refresh.log；手动 `python3 ~/.local/share/zhixing-dashboard/orchestrator.py` |
 | 看门狗误报 | watchdog.log；连续 2 次失败才动作，单次只计数 |
-| 宿主文件漂移（zhixing-host-drift 退出码 1） | `python3 bin/gac/zhixing-host-sync.py check`；有意变更→capture，意外覆盖→restore |
+| 宿主文件漂移（zhixing-host-drift 退出码 1） | 检测机制在正常报警，非服务故障。读 `~/.local/share/zhixing-dashboard/host-drift-report.json`：`ok`=全 in_sync；`files[].state`=drifted/no_repo_copy/no_deploy_copy。有意变更→capture，意外覆盖→restore --force（原文件留 .before-restore） |
 | 子模块门禁阻塞 | `submodule-reachability-gate.py --source head --json`；查 squash/force-push 后 gitlink 是否同步 |
 | launchd bootstrap error 5 | `launchctl print-disabled gui/$(id -u)/<label>`；`launchctl enable` 后再 bootstrap |
