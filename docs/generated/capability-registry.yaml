@@ -12,8 +12,8 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 643
-  bos_services: 318
-  bos_domains: 24
+  bos_services: 359
+  bos_domains: 25
   cli_commands: 203
   skills: 40
   workflows: 25
@@ -886,26 +886,27 @@ bos_services:
     agora: 6
     analysis: 28
     bcos: 3
-    capability: 44
-    cockpit: 8
-    compute: 14
-    documents: 3
+    capability: 51
+    cockpit: 9
+    compute: 21
+    documents: 5
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 73
+    governance: 80
     harness: 9
     l4-kernel: 1
-    memory: 49
+    memory: 53
     meta: 1
     observatory: 6
     omo: 4
-    perception: 2
+    perception: 5
     persona: 11
     resident: 8
-    runtime: 1
+    runtime: 3
     swarm: 1
-    system: 11
+    system: 16
+    toolbox: 3
   domains:
     agent-cell:
     - uri: bos://agent-cell/pool/status
@@ -1328,6 +1329,34 @@ bos_services:
       description: AGT Lightning 快速通道与缓存服务 (Agent Governance Toolkit)
       transport: stdio
       status: deprecated
+    - uri: bos://capability/bus/control_plane
+      description: '[auto-registered] From bus-foundation/control_plane references. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://capability/omo/governance
+      description: '[auto-registered] From omo/omo_daemon.py line 370. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://capability/perception-inbox
+      description: '[auto-registered] From perception module references. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://capability/personal-signals
+      description: '[auto-registered] From personal signals module. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://capability/runtime/cron
+      description: '[auto-registered] From runtime cron scheduling. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://capability/workflow-mesh/jsonl
+      description: '[auto-registered] From workflow mesh jsonl transport. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://capability/event-ledger/outbox
+      description: '[auto-registered] From event-ledger outbox pattern. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
     cockpit:
     - uri: bos://cockpit/tools/cards_status
       description: cockpit cards_status 工具 — mof_agora_hook 路由表入口
@@ -1360,6 +1389,10 @@ bos_services:
     - uri: bos://cockpit/spine/replay
       description: Cockpit/Spine 经验回放水塘状态、容量与样本域分布查看
       transport: stdio
+      status: active
+    - uri: bos://cockpit/context
+      description: '[auto-registered] From cockpit context module. See bos-pending-registrations.yaml.'
+      transport: internal
       status: active
     compute:
     - uri: bos://compute/aetherforge/infer
@@ -1418,6 +1451,34 @@ bos_services:
       description: omlxc 端侧在线 LoRA 持续微调与毫秒级热插拔服务 (ADR-0435)
       transport: stdio
       status: active
+    - uri: bos://compute/aetherforge/embed
+      description: '[auto-registered] From aetherforge embed endpoint. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
+    - uri: bos://compute/aetherforge/fabric
+      description: '[auto-registered] From aetherforge fabric endpoint. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
+    - uri: bos://compute/aetherforge/profile
+      description: '[auto-registered] From aetherforge profile endpoint. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
+    - uri: bos://compute/aetherforge/rerank
+      description: '[auto-registered] From aetherforge rerank endpoint. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
+    - uri: bos://compute/aetherforge/triage
+      description: '[auto-registered] From aetherforge triage endpoint. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
+    - uri: bos://compute/aetherforge/vram
+      description: '[auto-registered] From aetherforge vram monitoring. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
+    - uri: bos://compute/aetherforge/warm
+      description: '[auto-registered] From aetherforge warm-start endpoint. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
     documents:
     - uri: bos://documents/registry
       description: Documents L4 域注册表只读查询 (域元数据/客户端契约/能力路由)
@@ -1430,6 +1491,14 @@ bos_services:
     - uri: bos://documents/state
       description: Documents 运行时状态只读查询
       transport: inline
+      status: active
+    - uri: bos://documents/inbox-mail/draft
+      description: '[auto-registered] From inbox mail draft. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://documents/mail-draft
+      description: '[auto-registered] From mail draft service. See bos-pending-registrations.yaml.'
+      transport: internal
       status: active
     ecos:
     - uri: bos://ecos/workflow/list
@@ -1775,6 +1844,34 @@ bos_services:
       description: 追溯决策的下游影响面
       transport: internal
       status: active
+    - uri: bos://governance/cockpit/circuit_breaker
+      description: '[auto-registered] From cockpit circuit breaker. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://governance/cockpit/daily_budget
+      description: '[auto-registered] From cockpit daily budget. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://governance/cockpit/quests
+      description: '[auto-registered] From cockpit quests. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://governance/l4-kernel
+      description: '[auto-registered] From l4 kernel governance. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://governance/metaos_workflow
+      description: '[auto-registered] From metaos workflow. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://governance/mof/auth
+      description: '[auto-registered] From MOF auth. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://governance/protocols-layer/trigger
+      description: '[auto-registered] From protocols layer trigger. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
     harness:
     - uri: bos://harness/compliance/check
       description: Harness 12 章节全生命周期合规检查 (Phase 8)
@@ -2014,6 +2111,22 @@ bos_services:
       description: Datalog 确定性推理
       transport: internal
       status: active
+    - uri: bos://memory/brain-events/card_updated
+      description: '[auto-registered] From cockpit knowledge_indexer consumer (ADR-0294 dual-accept). See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://memory/events/card_updated
+      description: '[auto-registered] From memory event migration (from brain → memory). See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
+    - uri: bos://memory/kairon/minerva
+      description: '[auto-registered] From kairon minerva search. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://memory/unified
+      description: '[auto-registered] From unified memory API. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
     meta:
     - uri: bos://meta/discover
       description: 发现所有可用 BOS 资源和入口
@@ -2070,6 +2183,18 @@ bos_services:
       description: 信号源健康探测与降级报告
       transport: stdio
       status: deprecated
+    - uri: bos://perception/agora/ocr
+      description: '[auto-registered] From perception OCR via agora. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://perception/scene/anchor
+      description: '[auto-registered] From scene anchor. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://perception/voice-memo/ingest
+      description: '[auto-registered] From voice memo ingestion. See bos-pending-registrations.yaml.'
+      transport: stdio
+      status: active
     persona:
     - uri: bos://persona/core-models/schema
       description: Core Models Schema 查询
@@ -2153,6 +2278,14 @@ bos_services:
       description: Runtime MCP (短路径别名)
       transport: mcp_stdio
       status: active
+    - uri: bos://runtime/execution-workers/status
+      description: '[auto-registered] From execution workers status API. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://runtime/client/v1
+      description: '[auto-registered] From runtime client v1. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
     swarm:
     - uri: bos://swarm/orchestrator/status
       description: 获取分布式蜂群实时拓扑与负载状态
@@ -2202,6 +2335,39 @@ bos_services:
     - uri: bos://system/vault/state
       description: vault _state 端点 (ecos services integration gateway 引用)
       transport: inline
+      status: active
+    - uri: bos://system/core-kernel/v1
+      description: '[auto-registered] From core kernel module. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://system/im-session/triage
+      description: '[auto-registered] From IM session triage. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://system/personal-followup/draft
+      description: '[auto-registered] From personal followup. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://system/test-health/ping
+      description: '[auto-registered] From test health ping. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://system/vault/_state
+      description: '[auto-registered] From vault state. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    toolbox:
+    - uri: bos://toolbox/domain-package
+      description: '[auto-registered] From domain package registry. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://toolbox/domain-package-action
+      description: '[auto-registered] From domain package action routing. See bos-pending-registrations.yaml.'
+      transport: internal
+      status: active
+    - uri: bos://toolbox/domain-subdomain-action
+      description: '[auto-registered] From domain subdomain action routing. See bos-pending-registrations.yaml.'
+      transport: internal
       status: active
 cli_commands:
 - name: ack
