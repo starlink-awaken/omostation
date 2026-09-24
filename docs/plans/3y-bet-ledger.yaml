@@ -33440,6 +33440,142 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T7-08
+  title: 道法术器架构拓扑大屏研发 (SystemTopologyWallboard)
+  track: T7-SCENE
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-24'
+  depends_on:
+  - BET-Y2Q2-T8-06
+  goal: 替代底座 500 行手工拼接的静态 SVG，利用现代 CSS Grid 与卡片流呈现道、法、术、器四层架构与 COMP 槽位。
+  non_goals:
+  - 不修改底层道法术器理论定义
+  priority: P1
+  risk_level: L2
+  appetite: 2.5 hours
+  circuit_breaker: 回退为使用静态文本列表
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:26de6c2261a932f7d4bf16fe372fb255b9bd42443345f079e40c8b4e1ab07dba
+    decision_ref: decision://accepted/BET-Y2Q2-T7-08
+    spec_ref: repo://docs/superpowers/specs/2026-09-24-system-topology-wallboard-design.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/views/panorama/SystemTopologyWallboard.tsx
+  - projects/cockpit-ui/src/views/panorama/__tests__/SystemTopologyWallboard.test.tsx
+  - projects/cockpit-ui/src/views/panorama/index.ts
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T7-08.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/views/panorama/__tests__/SystemTopologyWallboard.test.tsx
+    expect: exit 0
+  done_when:
+  - 清晰呈现道法术器 5+4+1+1 层次结构；节点高亮响应良好
+  - 包含流光骨架屏加载状态；单测全部通过
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-08.md
+          merged_reachable_commit:
+            ref: git://origin/main@c2d6d8d902b1fa70c3c7f11216e22cf407db0047
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-08.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-08.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-08.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-08.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-08.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-08.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T7-09
+  title: BCOS 主权进化链与学习图谱组件研发 (BcosEvolutionChainView)
+  track: T7-SCENE
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-24'
+  depends_on:
+  - BET-Y2Q2-T8-06
+  goal: 构建 BcosEvolutionChainView，呈现系统记忆自蒸馏与知识自进化轨迹。
+  non_goals:
+  - 不修改 BCOS 底层自进化算法
+  priority: P2
+  risk_level: L1
+  appetite: 2 hours
+  circuit_breaker: 回退为使用静态文本展示
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:95df75a2da5630d9ed8f7605d705fec4c74389c28759705d13dcc0216b13a57e
+    decision_ref: decision://accepted/BET-Y2Q2-T7-09
+    spec_ref: repo://docs/superpowers/specs/2026-09-24-bcos-evolution-chain-view-design.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/views/panorama/BcosEvolutionChainView.tsx
+  - projects/cockpit-ui/src/views/panorama/__tests__/BcosEvolutionChainView.test.tsx
+  - projects/cockpit-ui/src/views/panorama/index.ts
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T7-09.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/views/panorama/__tests__/BcosEvolutionChainView.test.tsx
+    expect: exit 0
+  done_when:
+  - 进化记录时间轴与自愈指标可视化展示正常
+  - 包含流光骨架屏加载状态；单测全部通过
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-09.md
+          merged_reachable_commit:
+            ref: git://origin/main@84a1b6704736308592e188c7880eea9ed57bdbfb
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-09.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-09.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-09.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-09.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-09.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T7-09.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -33578,7 +33714,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 456
+  total_bets: 458
   windows:
   - Y1Q1
   - Y1Q2

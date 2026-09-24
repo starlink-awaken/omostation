@@ -1,18 +1,18 @@
 # resident retro 索引 (promote 自动生成)
 
-- generated_at: 2026-09-24T13:28:20Z
+- generated_at: 2026-09-24T13:38:20Z
 - 主题数: 11 · 草稿总数: 146 · five_q_filled: 11
 
 | 主题 | 草稿数 | runs | failures | failure_rate | 生成时间 |
 |------|-------|------|----------|-------------|----------|
-| unclassified | 40 | 40 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| project-code-change | 31 | 31 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| mini | 22 | 22 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| observer-audit | 22 | 22 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| observer-mini | 11 | 11 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| governance-state-mutation | 8 | 8 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| project-doc-change | 6 | 6 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| bet-execution | 2 | 2 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| state-sync | 2 | 2 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| closeout-with-retro | 1 | 1 | 0 | 0.0 | 2026-09-24T13:28:20Z |
-| submodule-pointer-bump | 1 | 1 | 0 | 0.0 | 2026-09-24T13:28:20Z |
+| unclassified | 40 | 40 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| project-code-change | 31 | 31 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| mini | 22 | 22 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| observer-audit | 22 | 22 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| observer-mini | 11 | 11 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| governance-state-mutation | 8 | 8 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| project-doc-change | 6 | 6 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| bet-execution | 2 | 2 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| state-sync | 2 | 2 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| closeout-with-retro | 1 | 1 | 0 | 0.0 | 2026-09-24T13:38:20Z |
+| submodule-pointer-bump | 1 | 1 | 0 | 0.0 | 2026-09-24T13:38:20Z |
