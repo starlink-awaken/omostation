@@ -103,6 +103,29 @@ python3 -c "import yaml,collections;d=yaml.safe_load(open('docs/plans/3y-bet-led
 fail-closed（要求显式 `--all` / `--file`），或把 `check_count=0` 记为 DEGRADED 而非 ok；并把 `--from-diff`
 的文件集合限定为该 run **已 claim** 的路径。
 
+## I2（第四次复盘发现：shallow 子模块让 submit 把"已推送"读成"未推送"）
+
+实测：本次交付 `gac-worktree.sh submit` 拒绝 push，报 `MANAGED_SUCCESSOR_REQUIRED`，指认
+`projects/cockpit-ui` 的 `a26e575` 为"未推送的子模块 commit"。但该 commit 正是 root 树在 main 里 pin 的那个
+（`git ls-tree origin/main -- projects/cockpit-ui` → `a26e57593`），且主工作区全量 clone 里
+`git branch -r --contains a26e575` 返回 `origin/main`。
+
+分歧来自 clone 深度，不是提交状态：
+
+| 位置 | `--is-shallow-repository` | `rev-list --count a26e575` | `branch -r --contains` |
+|------|---------------------------|----------------------------|------------------------|
+| PASW worktree | `true` | **1**（graft 边界正压在该 commit 上） | 空 |
+| 主工作区 | `false` | 202 | `origin/main` |
+
+shallow 把历史截断在 pin 处，`--contains` 走不回 `origin/main`，检测就把"已推送"判成"未推送"。
+这与 #4298 钉住的 `unverifiable` 是同一根因的另一个出口：drift 检测端已诚实降级，submit 端没有。
+
+**本次处置**：先确认 diff 不含 gitlink（`git diff --name-only origin/main HEAD` 只有 1 个 docs 文件），
+再直接 `git push origin HEAD`；未用 `--no-verify`，未绕任何 hook。
+
+**未修**：submit 的未推送检测应在 shallow 下降级为 unverified 而非阻断——与 #4275 给
+`submodule-reachability-gate.py` 加的有界预算同一方向；根治是 claim 时不产生 shallow 子模块。属需 principal 决策项。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
