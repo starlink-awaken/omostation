@@ -7,11 +7,24 @@ scope: "repo"
 severity: "medium"
 weight: 0.05
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
+closed_at: "2026-09-25T14:38:25+00:00"
+close_reason: >-
+  2026-09-25 以可核证据闭环：#4345 合并（squash）。根因订正为二进制解码
+  （staged .pyc/sqlite-wal 使 git 输出的严格 UTF-8 解码抛 UnicodeDecodeError，
+  非 CalledProcessError故未被捕获；gitlink 场景实测返回 None 不崩）。
+  修复：三处 git 文本输出收敛经 _run_text(errors="replace")；
+  6 例回归测试（tests/unit/gac/test_check_conflict_markers.py），
+  20/20 含既有 purity；ruff clean；PR 全套 CI green 后合并。
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
 - bin/gac/check-conflict-markers.py
+- tests/unit/gac/test_check_conflict_markers.py
+resolution_evidence: >-
+  #4345 (squash merge 2026-09-25T14:38:25Z): _run_text(errors="replace") 收敛
+  三处 git 文本输出；回归测试 6 例；本地 20/20；ruff clean；PR CI 全绿 CLEAN 后合并。
+  根因订正：二进制解码（非 gitlink，gitlink 实测返回 None 不崩）。
 mitigation_refs: []
 opened_at: "2026-09-25"
 last_reviewed_at: '2026-09-25'
@@ -30,4 +43,10 @@ history:
     完全无关的提交被 blocking 拦截。当时以 --no-verify 绕过一个零内容空提交
     （CI 侧跑同样门禁，风险≈0），但根因未修：任何暂存了子模块指针的提交都会
     被误拦。复现：在 index 有 M/aetherforge 等 gitlink 条目时提交任意文件。
+- at: '2026-09-25T14:40:00+00:00'
+  action: resolve
+  note: >-
+    以可核证据闭环：#4345 已 squash 合并。修复内容见 close_reason /
+    resolution_evidence；decision_needed 的 gitlink 假设被实测推翻
+    （实为二进制解码问题），此处一并订正。
   actor: governance-agent
