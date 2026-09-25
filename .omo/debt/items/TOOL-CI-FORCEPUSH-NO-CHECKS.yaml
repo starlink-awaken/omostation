@@ -1,0 +1,31 @@
+id: "TOOL-CI-FORCEPUSH-NO-CHECKS"
+title: "force-push（树相同的大改写）25 分钟无 check-runs"
+dimension: "governance"
+subdimension: "ci"
+domain: "tooling"
+scope: "repo"
+severity: "medium"
+weight: 0.05
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/_knowledge/retros/2026-09-25-pr-4308-merge-support-retro.md
+mitigation_refs: []
+opened_at: "2026-09-25"
+last_reviewed_at: '2026-09-25'
+next_review_at: '2026-10-25'
+gate_level: "P2"
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "复现确认（同树 force-push 是否稳定丢 push 事件），若确认则立约：改写推送后 5 分钟无 check-runs 即视同丢事件，直接空提交 retrigger，不用再等"
+history:
+- at: '2026-09-25T12:00:00+00:00'
+  action: identify
+  note: >-
+    2026-09-25 PR #4308 支援中实证：filter-branch purge 后的 force-push
+    （a5736a2f5）25 分钟后 commits API 仍 total_count=0，而同分支一次新的
+    push（含空提交）立即触发全套 checks。疑似 GitHub 对“树相同的大改写推送”
+    丢 push 事件，尚未复现确认。影响：等待者会误判为 CI 静默失败而反复排查。
+  actor: governance-agent

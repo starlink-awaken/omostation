@@ -1,0 +1,32 @@
+id: "TOOL-GRAPHQL-FLAKY-EMPTY-MEANS-UNKNOWN"
+title: "gh GraphQL 抖动：超时与空返回必须当 UNKNOWN，不可当空结论"
+dimension: "governance"
+subdimension: "tooling"
+domain: "meta"
+scope: "workspace"
+severity: "medium"
+weight: 0.05
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/_knowledge/retros/2026-09-25-pr-4308-merge-support-retro.md
+mitigation_refs: []
+opened_at: "2026-09-25"
+last_reviewed_at: '2026-09-25'
+next_review_at: '2026-10-25'
+gate_level: "P2"
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "给常用 gh 查询包一层重试+空保护（失败/空时 abort 而不是继续删东西）；排查脚本一律用 REST（commits/check-runs、runs list）为主，GraphQL 只做展示"
+history:
+- at: '2026-09-25T12:00:00+00:00'
+  action: identify
+  note: >-
+    2026-09-25 前后两起实证：① `gh pr checks`（GraphQL）在网络抖动时直接
+    i/o timeout，而同等 REST（gh api commits/check-runs、gh run list）可用，
+    排查一度卡住；② 更早一次 `gh pr list --state open` 抖动返回空，被脚本
+    当成“无 OPEN PR”继续执行，误删了一个 OPEN PR 的 worktree（后恢复，未丢
+    工作）。规则：外部查询失败/空 = UNKNOWN，直接中止流程，绝不能当否定结论用。
+  actor: governance-agent
