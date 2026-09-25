@@ -275,6 +275,71 @@ main 的 #4304 在 `bets` 列表尾部插入 `BET-Y2Q3-T9-01`，本 bet 同位�
 - 结构性修法（属 principal，本次未做）：把 `total_bets` 从人写常量改为生成器派生，
   或让门禁比对 `len(bets)`；`ledger-safe-insert.py` 目前只在**单侧插入**时校验，管不到合并。
 
+## I10（`gitlink-ancestry` 把"分支落后 main"读成"子模块指针回退"）
+
+`--force-with-lease` push 被 pre-push 的 `gitlink-ancestry`
+（`bin/gac/check-submodule-rewind.py --range origin/main $PUSH_LOCAL_SHA`）拦下：
+"projects/omo — 指针由 `7fb39ec1e226` 回退至 `87865ac87924`（非前进）"。实测这**不是回退**：
+
+- `git log --oneline origin/main..HEAD -- projects/omo` 为空 —— 本分支没有一个 commit 碰过该 gitlink；
+- 差值来自 push 期间 main 又前进了两个 commit（#4309 / #4314），是它们把 `projects/omo` bump 上去的，
+  我的分支只是**落后**，不是**倒退**。检查比的是两个 tip 的树，而不是本次 push 的 ref delta，
+  所以连快进推送也可能被这条判据挡下。
+
+两条给出的修复指引对这种情形都是错的，都不能照做：
+
+1. `git checkout origin/main -- projects/omo && git commit` —— 会让本 PR 捎带一条**不属于自己交付**的
+   子模块指针 bump（且 `projects/omo` 不在本 bet 的 `write_surfaces` 里）；这正是"顺手提交别人的东西"。
+2. 在 commit body 加 `[gitlink-regress: <理由>]` —— 降级为 warning 并把指纹**追加**进
+   `gate-known-debt.yaml`（`growth_policy=shrink_only`）。为一个并不存在的债登记债，等于污染只减不增的台账。
+
+正确处置是 rebase 到新的 `origin/main`（第三次 rebase，这次无冲突），检查随即 `OK`。
+可改进项（属 principal）：该检查在报"回退"前先判 `HEAD` 是否为 `origin/main` 的祖先 —— 落后应提示
+`rebase`，而不是提示"恢复前进指针"或登记 known-debt。
+
+## I11（`rerere` 会把手工解决台账冲突的旧方案回放进新冲突）
+
+台账这种"多条并行往同一个列表尾部追加"的文件，第二次 rebase 的冲突形态与第一次不同，
+但 `rerere` 仍介入了：第二次 rebase 的 `docs/plans/3y-bet-ledger.yaml` 有**两处**冲突区
+（`bets` 尾部 + `meta.total_bets`），而我第一版解决脚本只切了第一处，两件事叠出来的结果是
+文件里条目数 = **465**，而 `main(463) + 本 bet(1)` 应为 **464** —— 多出一份重复条目，
+`meta.total_bets` 却是 464。若只看"yaml 能解析、没有残留 `<<<<<<<`"，这条会带着重复 bet 直接进 PR。
+
+- 实测 `git config --get rerere.enabled` = `true`（写在**共享** config 里，`rr-cache` 也在公共 git 目录，
+  一个 worktree 记录的解决方案可被其他 worktree 回放）。Agent 不得改 git config，故本次用
+  **单次调用级**开关：`git -c rerere.enabled=false rebase origin/main`（不落盘、不改配置）。
+- `git rebase --abort` 可完整回到 push 前的 tip（实测 `0a548d033` 复原），是这类"解决方案本身可疑"
+  场景的正确逃生口；比重抠冲突标记便宜。
+- 换成确定性重建后一次通过：`checkout origin/main` 版全文 → 从**当步 commit** 抽出本 bet 的 YAML 块
+  原样插回 `campaigns:` 之前 → 按重建后的实际条目数重写 `meta.total_bets` → 断言
+  （条目数 == `total_bets`、id 无重复、`origin/main` 侧 463 条 bet 全部保留、本 bet 的 digest/surfaces 与预期一致；
+  实测合并后 `f122c9794` = 464 条 / 重复 0，其父 `3aa552c81` = 463 条且不含本 bet）。
+- 可改进项（属 principal）：台账合并应成为工具动作（`ledger-safe-insert.py` 增"合并后重插入"模式），
+  或对 `docs/plans/*.yaml` 关闭 rerere —— 人肉解决追加型列表 + 自动回放旧方案，是把同一个坑挖两次。
+
+## I12（收案证据自己也需要一条 `write_surface`，而这条面我漏声明了）
+
+写 closeout 收据时才发现：本 bet 的 17 条 `write_surfaces` 覆盖代码、测试、spec、台账、retro、
+findings，却没有 `docs/reports` —— 也就是**没有为"证明这次交付完成"这件事预留任何面**。
+台账里 464 条 bet 有 113 条声明了 `docs/reports`，可见它不是偏门而是常态需求（`bet-closeout-chain`
+步 4 的 `receipt://docs/reports/<date>-<slug>-closeout.md` 就是默认形状）。
+
+- 实测（`agent-workflow.py claim … --path docs/reports/2026-09-25-rule-drafts-durability-closeout.md`）：
+  `WORK_PACKET_SCOPE_MISMATCH: … is outside [17 surfaces]`。失败的 claim 不改 run（校验在
+  `run_update_lock` 与 `_authority_mutation_locked` 之前）：`status` 仍 `active`、claims 仍 17、
+  `updated_at` 未推进 —— 探测是安全的，可以拿来做能力判定。
+- **事后扩面不是出路**：`bin/plan/bet-ledger.py::validate_work_packet_run` 会用
+  `prepare_bet_execution` 从"台账 + spec"**重建** packet 并比对 `work_packet_hash`；往台账
+  `write_surfaces` 里加一项，重建 hash 就变了 → 该 run 的全部 claim 立刻
+  `WORK_PACKET_SOURCE_DRIFT`。这正是 I7 那条"自指型 bet 必须一次算全改动面"的第二次显形，
+  只是这次漏的不是代码面，而是**证据面**。
+- 本次落点：收据写进 `.omo/_knowledge/retros/BET-Y2Q3-T10-202.md` 的 Q5 小节（已在声明面内），
+  `completion_evidence` 的 6 个文件键全部 `receipt://` 指向 retro 与 findings 两份、绑各自 `sha256`。
+  代价是收据与复盘同文件，`replay` 与 `fresh_receipt` 的边界变淡。
+- 结构性修法（属 principal，本次未做）：spec/`ledger-safe-insert.py` 模板把 `docs/reports`
+  列为"会走 done 转换的 bet"的默认 surface；或者给 `complete` 一条合法路径——只允许追加收据
+  路径这一类 surface 而不触发 packet 重建（需要一个"证据面"与"交付面"分开的概念，属 packet 契约变更）。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。

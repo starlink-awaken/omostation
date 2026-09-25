@@ -33861,7 +33861,8 @@ bets:
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
   window: Y2Q3
-  status: in_progress
+  status: done
+  done_at: 2026-09-25
   priority: P1
   risk_level: L2
   goal: Make the incident→rule pipeline's human-review queue observable and make the
@@ -33903,14 +33904,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q3-T10-202
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f122c9794a981d824bc0d5977afb1db7fd099477
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
+          diff:
+            ref: receipt://docs/operations/workflow-waiver-2026-09-24-retro-findings.md
+            sha256: sha256:f18640fe2d7cd4631d7dd56c67729a50280f1a2051d283408cf8d4ba5e95a639
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
+          replay:
+            ref: receipt://docs/operations/workflow-waiver-2026-09-24-retro-findings.md
+            sha256: sha256:f18640fe2d7cd4631d7dd56c67729a50280f1a2051d283408cf8d4ba5e95a639
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
       value:
         status: NOT_PROVEN
         evidence: {}
