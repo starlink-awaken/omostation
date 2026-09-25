@@ -226,9 +226,39 @@ roundtrip 入册 → 删草案）。**未**实现 `confirm`/`reject` 的正面�
 根治方向（属 principal 决策，未 implement）：refresh 允许以 run base commit 为权威 ref，
 或提供显式留痕的 `--extend-surface`。
 
+**第二型（同一函数、不同触发面，15 面重开之后才撞上）**：packet 在 `start` 时把 spec 的
+`content_digest` 钉进 `work_packet.spec_binding`（本 run 实测钉的是 `sha256:8688a2ef…`）。
+start 之后我按实测继续更正 spec（G5 段、E1/E5 措辞、验收第 4/6 条），文件 digest 变成
+`sha256:bdb7400e…`，于是**任何** claim 都被 `WORK_PACKET_SOURCE_DRIFT` 拒绝 —— 连 claim 一个
+本来就在面上的路径都不行。这不是"改动面算窄"，是"spec 是活文档而 packet 把它当冻结输入"：
+`bet-closeout-chain` 明写"spec 内容再改必须重算 digest"，但重算只落在台账，run 侧无对应动作。
+代价：`20260924T234703Z-governance-audit-19edbaca` 也以 `--status failed` 收案，第三个 run 才起跑，
+且顺序被迫固定为「spec 定稿 → 台账 digest → start → 只改代码」。
+可执行的缓解（未 implement，属 principal）：`refresh-packet` 支持以工作区当前 spec 重绑 digest
+（ledger 的 `content_digest` 已是权威声明，无需 origin/main 对比），或 claim 时只校验 write_surfaces
+集合、把 digest 漂移降级为告警。
+
 **顺带闭合的一项**：`bin/agent-workflow.py` 的 start 拦截提示原先只列 `observer-audit` 与 ENV 豁免。
 G5 之后继续留着，等于把下一个 agent 又推回去签豁免 —— 原计划"off-packet 只登记不修改"改为
 随 G5 一并更正并纳入 write_surfaces（同一根因，不是搭车清理）。
+
+## I8（草案抽屉有第二道锁，且两份同源实现已漂移）
+
+`findings I4` 说队列"落在 `.gitignore:12`"。这话只对了一半，实施时被确定性打脸：
+`.gitignore` 加 `!` 后 `git add` 正常，`git commit` 却被 pre-commit 的 `runtime-artifacts`
+检查拦下并给出"fix: git rm --cached + add to .gitignore"——一个把"别提交"当成唯一出路的提示。
+
+- 锁在 `bin/gac/check-runtime-artifacts.py:31-34`（`BLACKLIST_PREFIXES` 含 `.omo/_delivery/`），
+  而**同一文件 37-41 行已有**为 `calibration/events/scene-outcomes` 开的 `WHITELIST_PREFIXES`。
+  即：那三个目录能入仓不是因为 `.gitignore` 的 `!`，是因为两道锁都解了。我照先例只解了一道。
+- 同一黑名单在 `bin/gac/ci-local-fast.py::run_runtime_artifact_gate()` 有第二份实现，
+  且**没有** `WHITELIST_PREFIXES` —— 两份早已漂移。后果要限定住，不夸大：那份扫
+  `git diff --cached`，CI 里没有暂存区，所以今天不显形；任何本地跑 `ci-local-fast` 的人
+  连那三个既有目录的新文件都提交不了。
+- 本次处置：把 4 条白名单前缀（三个既有 + `rule-drafts/`）同步进第二份实现，使两处收敛为
+  一个语义，并由回归测试断言两集合相等（漂移是这里真正的病灶，多一个目录只是又一次暴露它）。
+- 未处置（属 principal）：`runtime-artifacts` 的 fix 提示语把"不提交"当成唯一出路，
+  与仓内已存在的白名单机制相互矛盾 —— 这正是 I4「证据放在别人当垃圾的抽屉里」的措辞版复现。
 
 ## Boundary
 
@@ -246,12 +276,13 @@ G5 之后继续留着，等于把下一个 agent 又推回去签豁免 —— �
   > 3 `candidate` + 2 `pending`）。结论不变（无一条与本改动相关，绑谁都是纸面绑定），但"当时确有非 done
   > 条目"被这段文字抹掉了 —— 留痕文档的证据也要能被复跑推翻。
 - **本交付（`BET-Y2Q3-T10-202`）不在这条豁免序列里**：`start` 绑定真实 bet、未设任何 `AGCP_*`、
-  未新增 waiver 文件；台账因此**有**改动（新增 1 条 bet，与上面"台账未改动"分属不同交付）。
-  15 条 `write_surfaces` 先 claim 后编辑；因 packet 面算窄而作废的前一个 run
-  （`20260924T233640Z-governance-audit-61f70aad`）以 `failed` 关闭并注明替代关系（见 I7）。
+  未新增 waiver 文件；台账因此**有**改动（新增 1 条 bet，与上面那条 run 的"台账未改动"分属不同交付）。
+  17 条 `write_surfaces` 先 claim 后编辑；因 packet 面算窄（`20260924T233640Z-governance-audit-61f70aad`）
+  与 spec digest 漂移（`20260924T234703Z-governance-audit-19edbaca`）作废的两个 run 都以 `--status failed`
+  关闭并注明替代关系（见 I7），第三个 run 才按「spec 定稿 → 台账 digest → start → 只改代码」的顺序跑通。
   I5 的对称豁免落地后，治理演进类 workflow 的这条豁免链应当整体终止。
 - 未补录价值记录（30 条门保持 NOT_PROVEN）；未做 weekly-review（principal-only）。
-- 台账未改动。
+- 台账未改动。（作用域是上面 `20260924T161254Z` 那次交付；`BET-Y2Q3-T10-202` 有改动，见上一条。）
 
 ## Follow-up
 
