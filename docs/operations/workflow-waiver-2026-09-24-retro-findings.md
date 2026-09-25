@@ -317,6 +317,29 @@ main 的 #4304 在 `bets` 列表尾部插入 `BET-Y2Q3-T9-01`，本 bet 同位�
 - 可改进项（属 principal）：台账合并应成为工具动作（`ledger-safe-insert.py` 增"合并后重插入"模式），
   或对 `docs/plans/*.yaml` 关闭 rerere —— 人肉解决追加型列表 + 自动回放旧方案，是把同一个坑挖两次。
 
+## I12（收案证据自己也需要一条 `write_surface`，而这条面我漏声明了）
+
+写 closeout 收据时才发现：本 bet 的 17 条 `write_surfaces` 覆盖代码、测试、spec、台账、retro、
+findings，却没有 `docs/reports` —— 也就是**没有为"证明这次交付完成"这件事预留任何面**。
+台账里 464 条 bet 有 113 条声明了 `docs/reports`，可见它不是偏门而是常态需求（`bet-closeout-chain`
+步 4 的 `receipt://docs/reports/<date>-<slug>-closeout.md` 就是默认形状）。
+
+- 实测（`agent-workflow.py claim … --path docs/reports/2026-09-25-rule-drafts-durability-closeout.md`）：
+  `WORK_PACKET_SCOPE_MISMATCH: … is outside [17 surfaces]`。失败的 claim 不改 run（校验在
+  `run_update_lock` 与 `_authority_mutation_locked` 之前）：`status` 仍 `active`、claims 仍 17、
+  `updated_at` 未推进 —— 探测是安全的，可以拿来做能力判定。
+- **事后扩面不是出路**：`bin/plan/bet-ledger.py::validate_work_packet_run` 会用
+  `prepare_bet_execution` 从"台账 + spec"**重建** packet 并比对 `work_packet_hash`；往台账
+  `write_surfaces` 里加一项，重建 hash 就变了 → 该 run 的全部 claim 立刻
+  `WORK_PACKET_SOURCE_DRIFT`。这正是 I7 那条"自指型 bet 必须一次算全改动面"的第二次显形，
+  只是这次漏的不是代码面，而是**证据面**。
+- 本次落点：收据写进 `.omo/_knowledge/retros/BET-Y2Q3-T10-202.md` 的 Q5 小节（已在声明面内），
+  `completion_evidence` 的 6 个文件键全部 `receipt://` 指向 retro 与 findings 两份、绑各自 `sha256`。
+  代价是收据与复盘同文件，`replay` 与 `fresh_receipt` 的边界变淡。
+- 结构性修法（属 principal，本次未做）：spec/`ledger-safe-insert.py` 模板把 `docs/reports`
+  列为"会走 done 转换的 bet"的默认 surface；或者给 `complete` 一条合法路径——只允许追加收据
+  路径这一类 surface 而不触发 packet 重建（需要一个"证据面"与"交付面"分开的概念，属 packet 契约变更）。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
