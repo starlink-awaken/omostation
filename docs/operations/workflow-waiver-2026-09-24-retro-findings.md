@@ -260,6 +260,21 @@ G5 之后继续留着，等于把下一个 agent 又推回去签豁免 —— �
 - 未处置（属 principal）：`runtime-artifacts` 的 fix 提示语把"不提交"当成唯一出路，
   与仓内已存在的白名单机制相互矛盾 —— 这正是 I4「证据放在别人当垃圾的抽屉里」的措辞版复现。
 
+## I9（台账的 `total_bets` 是派生值，冲突合并"干净"恰恰是它的失效方式）
+
+rebase 到 main（已前进 6 个 commit）时，`docs/plans/3y-bet-ledger.yaml` 只有一处冲突：
+main 的 #4304 在 `bets` 列表尾部插入 `BET-Y2Q3-T9-01`，本 bet 同位置插入 `BET-Y2Q3-T10-202`。
+两侧把条目都保留后，**`meta.total_bets` 却没有冲突** —— 因为两侧写的都是 `459`
+（各自从 `458` 往上加一条），git 视作同一处同一改，直接吞掉。结果：实际 460 条、声明 459 条，
+而 `git diff --check` 之类的"有没有残留标记"检查全绿。
+
+- 判据不是"合并有没有报冲突"，而是"派生值有没有按合并后的事实重算"。本次在解决冲突的同一步里
+  断言 `len(bets) == meta.total_bets`（并断言两条 bet 都在、无重复 id）才把 `459 → 460` 暴露出来。
+- 与 PITFALL-GAT-006 同源而不同形：那条是"并行 PR 回退 main 的正确值"，这条是"双方写同一个数字，
+  于是数字对不上一件事实且无人被提示"。计数越界不会失败，只会静默说谎。
+- 结构性修法（属 principal，本次未做）：把 `total_bets` 从人写常量改为生成器派生，
+  或让门禁比对 `len(bets)`；`ledger-safe-insert.py` 目前只在**单侧插入**时校验，管不到合并。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
