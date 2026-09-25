@@ -1,0 +1,23 @@
+{
+  "draft_rule": {
+    "added_at": "2026-09-24",
+    "dimension": "X4",
+    "executor": "gac_local_gate",
+    "id": "CR-PITFALL-COO-003",
+    "justification": "pitfall PITFALL-COO-003 encountered 5 times (threshold 5): git add -A 误 stage 子仓旧指针（worktree 共享环境）",
+    "review_before": "2026-12-23"
+  },
+  "evidence": {
+    "first_seen": "2026-08-31",
+    "last_confirmed": "2026-09-05",
+    "prevention": "永远 git add <具体路径> 替代 -A；add 前自检 git diff --cached --submodule=short",
+    "symptom": "add -A 后 commit 含 projects/<sub> gitlink 指向 side-branch/旧 checkout；被 submodule-guard/pointer-drift/gitlink-ancestry 任一 gate 以 \"指针回退 NOT on origin/main\" 拦截",
+    "times_encountered": 5
+  },
+  "generated_at": "2026-09-24T23:50:34Z",
+  "generated_by": "ADR-0443 incident-to-rule pipeline",
+  "rule_id": "CR-PITFALL-COO-003",
+  "schema": "gac-rule-draft/v1",
+  "source_pitfall": "PITFALL-COO-003",
+  "status": "awaiting_human_review"
+}
