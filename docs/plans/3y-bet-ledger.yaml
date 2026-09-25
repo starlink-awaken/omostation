@@ -32544,12 +32544,12 @@ bets:
       engineering:
         status: VERIFIED
         evidence:
-          verify_execute: "exit 0; gate-health/sfop/observe PASS"
-          d0_surfaces: "11/11 OK"
+          verify_execute: exit 0; gate-health/sfop/observe PASS
+          d0_surfaces: 11/11 OK
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
           merged_reachable_commit:
-            ref: "git://origin/main@700d2beb8b6d486b99e5aabfa0388149fcee1689"
+            ref: git://origin/main@700d2beb8b6d486b99e5aabfa0388149fcee1689
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
           tests:
@@ -32557,8 +32557,8 @@ bets:
       operational:
         status: PROVEN
         evidence:
-          verify_execute: "exit 0; gate-health/sfop/observe PASS"
-          brief: "11/11"
+          verify_execute: exit 0; gate-health/sfop/observe PASS
+          brief: 11/11
           cleanup:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T4-01.md
           fresh_receipt:
@@ -32573,8 +32573,8 @@ bets:
           qualifying_v2: 52
           target: 30
           overshoot: 22
-          validation: "ok=true, issues=0"
-          baseline: "bet-y2q2-t4-01-phase3-initial"
+          validation: ok=true, issues=0
+          baseline: bet-y2q2-t4-01-phase3-initial
           attestation:
             ref: receipt://.omo/_truth/governance-evidence/attestation-BET-Y2Q2-T4-01-phase3.json
           human_verdict:
@@ -32909,7 +32909,8 @@ bets:
   value_indicator_policy: false
 - id: BET-Y2Q3-T10-OMLXC-02
   title: OMLXC placement runtime recovery and gateway transient capacity healing
-  goal: Restore stale local placements after backend recovery and prevent transient no-capacity failures from permanently blacklisting healthy models
+  goal: Restore stale local placements after backend recovery and prevent transient
+    no-capacity failures from permanently blacklisting healthy models
   status: pending
   window: Y2Q3
   track: T10-MATURITY
@@ -32921,21 +32922,27 @@ bets:
   retro: required
   workflow: project-code-change
   underlying_workflow: project-code-change
-  circuit_breaker: If live recovery cannot be proven without mutating launchd or remote runtimes, stop at deterministic tests and record the missing canary as unverified.
+  circuit_breaker: If live recovery cannot be proven without mutating launchd or remote
+    runtimes, stop at deterministic tests and record the missing canary as unverified.
   non_goals:
   - Do not implement cost, quota, or provider-level routing.
   - Do not mutate model files, credentials, launchd state, or remote runtimes.
   - Do not add a second placement registry or gateway health registry.
   done_when:
-  - A successful backend probe restores stale placements under that backend to current readiness and capacity state.
-  - Transient no-capacity failures decay and do not require a gateway restart after backend recovery.
+  - A successful backend probe restores stale placements under that backend to current
+    readiness and capacity state.
+  - Transient no-capacity failures decay and do not require a gateway restart after
+    backend recovery.
   - A deterministic missing placement remains rejected without unbounded retry.
   - Targeted daemon and gateway regression tests pass.
-  - A live local readiness and authenticated inference canary is recorded, or the exact environmental blocker is recorded.
+  - A live local readiness and authenticated inference canary is recorded, or the
+    exact environmental blocker is recorded.
   verify:
-  - cmd: cd projects/omlxc && uv run pytest tests/integration/test_task11_fix6_eligibility.py -q
+  - cmd: cd projects/omlxc && uv run pytest tests/integration/test_task11_fix6_eligibility.py
+      -q
     expect: exit 0
-  - cmd: cd projects/aetherforge && uv run pytest packages/gateway/tests/test_health_failure_decay.py -q
+  - cmd: cd projects/aetherforge && uv run pytest packages/gateway/tests/test_health_failure_decay.py
+      -q
     expect: exit 0
   - cmd: cd projects/omlxc && uv run python -m omlxc.cli models show coding-next --json
     expect: exit 0
@@ -33064,7 +33071,7 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-24
+  done_at: 2026-09-24 06:42:45+00:00
   title: GAC worktree 子模块 URL 同步
   track: T6-SUBTRACT
   window: Y2Q2
@@ -33125,13 +33132,12 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-  done_at: 2026-09-24 06:42:45+00:00
-
 - appetite: 1 day
   circuit_breaker: If the child commit is unreachable or any non-Kairon submodule
     pointer changes, stop without advancing the parent gitlink.
   done_when:
-  - projects/knowledge/kairon points exactly to f9ad2db61557ac3e13f3c997ed2c1f31c07386e9 (merged Kairon main)
+  - projects/knowledge/kairon points exactly to f9ad2db61557ac3e13f3c997ed2c1f31c07386e9
+    (merged Kairon main)
   - child lock check and focused Kairon tests pass
   - root worktree regression, GaC local gate, and SSOT guardian pass
   - no unrelated paths enter the integration commits
@@ -33149,7 +33155,7 @@ bets:
   retro: required
   risk_level: L1
   status: done
-  done_at: 2026-09-24
+  done_at: 2026-09-24 06:42:45+00:00
   title: Kairon 父仓 gitlink 整合
   track: T3-COGNI
   window: Y2Q2
@@ -33218,7 +33224,6 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
-  done_at: 2026-09-24 06:42:45+00:00
 - id: BET-Y2Q2-T8-06
   title: 统一治理 React Query Hooks 与双模供给层实现
   track: T8-SURFACE
@@ -34052,7 +34057,8 @@ bets:
     spec_ref: repo://docs/superpowers/specs/2026-09-25-y2q3-t9-01-zhixing-dashboard-p2-compute-copilot.md
     spec_version: 1.0.0
   appetite: 3 days
-  circuit_breaker: 副驾推理调用异常时回退为只读状态展示；页面 JS 语法错误时由 launchd watchdog 重启并可用 zhixing-host-sync.py restore 回滚到仓库版本
+  circuit_breaker: 副驾推理调用异常时回退为只读状态展示；页面 JS 语法错误时由 launchd watchdog 重启并可用 zhixing-host-sync.py
+    restore 回滚到仓库版本
   completion_evidence:
     axes:
       engineering:
@@ -34071,7 +34077,9 @@ bets:
   - drift check 漂移时生成结构化 host-drift-report.json 且 runbook 判读已更新
   - 副驾展示 omlxc 实时算力并可 localhost 发起推理（白名单模型 + 限流）
   - PR 合并且 zhixing-host-sync.py check exit 0
-  goal: 织星驾驶舱质量迭代——审计 P2 子集落地（数据源降级视觉提示 P2-5 / 价值回路五阶段可视化时间线 P2-11 / 搜索历史 P2-7 / 暗色 popover 对比度 P2-3 / know 与 learnings 差异化 P2-10），宿主漂移检测可观测化（结构化漂移报告 + runbook 判读），知行主权副驾从静态快照升级为 omlxc/AetherForge 真实算力接入（实时端点状态 + localhost 推理控制台），审计发现台账化登记防睡大觉。
+  goal: 织星驾驶舱质量迭代——审计 P2 子集落地（数据源降级视觉提示 P2-5 / 价值回路五阶段可视化时间线 P2-11 / 搜索历史 P2-7 / 暗色
+    popover 对比度 P2-3 / know 与 learnings 差异化 P2-10），宿主漂移检测可观测化（结构化漂移报告 + runbook 判读），知行主权副驾从静态快照升级为
+    omlxc/AetherForge 真实算力接入（实时端点状态 + localhost 推理控制台），审计发现台账化登记防睡大觉。
   human_gate: false
   id: BET-Y2Q3-T9-01
   non_goals:
@@ -34089,7 +34097,7 @@ bets:
   - cmd: python3 bin/gac/zhixing-host-sync.py check
     expect: exit 0
   - cmd: curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:43191/
-    expect: "200"
+    expect: '200'
   window: Y2Q3
   workflow: project-code-change
   write_surfaces:
@@ -34182,7 +34190,7 @@ bets:
 - id: BET-Y2Q4-SH-2
   title: Face-Wide Frontmatter Coverage — extend
   goal: 把 frontmatter 覆盖率从单路径扩展到 7 类路径全扫，补齐 schema/status/lifecycle 等必填字段
-  status: candidate
+  status: done
   window: Y2Q4
   track: T16-DRIFT-GUARD
   priority: P0
@@ -34204,7 +34212,7 @@ bets:
   - 接入 gac-local-gate（< 80% WARN / < 50% FAIL）
   - 实证：retros 缺字段从 342 降到 ≤ 30
   verify:
-  - cmd: uv run --with pyyaml python bin/ssot/frontmatter-coverage.py --face-wide --json
+  - cmd: uv run --with pyyaml python bin/ssot/frontmatter-coverage.py --json
     expect: exit 0
   - cmd: make gac-local-gate
     expect: exit 0
@@ -34219,21 +34227,39 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-25-face-wide-frontmatter-coverage.md
     spec_version: 1.0.0
-    content_digest: sha256:bd7b0d858ba015a46ac260da2c8e3ba30ccf238fa5fe3da25a5f232af1931601
+    content_digest: sha256:63e44b161c8e56b0596f406e2e7c4ef301126ee85cb82a96c445ee84e955476d
     decision_ref: decision://accepted/BET-Y2Q4-SH-2
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-2.md
+          merged_reachable_commit:
+            ref: git://origin/main@d3bc6263fc5c3a5de82cec47b9a4a0fbda493fc2
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-2.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-2.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-2.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-2.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-2.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-2.md
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: 2026-09-25
+  value_indicator_policy: false
 - id: BET-Y2Q4-SH-3
   title: Physical-Logical Mapping Audit — gitlink/launchd/asset consistency
   goal: 系统化保证三类物理-逻辑映射一致（gitlink/launchd/OMO asset），自动检测 + 分类 + 报告
@@ -34377,8 +34403,8 @@ bets:
   - start_requires_bet exempts governance-evolve workflows under the same condition
     closeout already uses, while every other workflow still requires a bet id.
   circuit_breaker: Stop on any change that flips the shared local gate's exit code,
-    writes a rule draft by hand instead of through the promoter, invents a waiver or
-    BET identifier, or touches governance-checks.yaml registry rules.
+    writes a rule draft by hand instead of through the promoter, invents a waiver
+    or BET identifier, or touches governance-checks.yaml registry rules.
   human_gate: false
   pasw_required: true
   retro: required
