@@ -34375,7 +34375,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-25-multi-registry-alias-resolver.md
     spec_version: 1.0.0
-    content_digest: sha256:c2fd2dae73078e315dcfab290af86814a5139843d6d5a823ad6d5ab056d4d3e2
+    content_digest: sha256:03cb17324bc15cf312089bedffd01e3d419d106070d349cc28cddb6a06389473
     decision_ref: decision://accepted/BET-Y2Q4-SH-4
   completion_evidence:
     schema_version: completion-evidence-matrix/v1

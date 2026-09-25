@@ -1,0 +1,295 @@
+# registry-alias-map.yaml — multi-registry rule ID cross-walk (BET-Y2Q4-SH-4)
+#
+# 3 个规则注册表用不同词汇, 需要 alias 映射才能 cross-reference.
+# Sources:
+#   A. governance-checks.yaml (主仓 SSOT, 86 CR-* + 4 xN-* entries)
+#   B. L0-constraints.yaml (子仓 ecos SSOT, 91 CR-/X1-N-/X2-CNN entries)
+#   C. hook-manifest.yaml (主仓 hook 执行体, lowercase hyphen names)
+#   D. bin executors 实际引用 (string match)
+#
+# 每个 alias 至少 2 处证据 (governance-checks + L0 或 executors).
+# 不重写原注册表; 这是新增 SSOT 工具.
+#
+# Spec: docs/superpowers/specs/2026-09-25-multi-registry-alias-resolver.md
+#
+# schema: registry-alias-map/v1
+
+version: 1
+owner: governance-team
+last_reviewed: 2026-09-25
+source_register_ids:
+  - "governance-checks.yaml (CR-*)"
+  - "L0-constraints.yaml (X*-* / CR-*)"
+  - "hook-manifest.yaml (lowercase hyphen)"
+
+# alias groups: canonical_id → [aliases including itself]
+# canonical_id is the governance-checks form (主仓 SSOT authoritative for cross-walk)
+aliases:
+  # ── M0 (model-driven) ──
+  - canonical: CR-M0-STAGE-GATE
+    aliases: [mof_stage_gate, mof-stage-gate]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml"
+      note: "check_type field reference; executor in archive (gac-execution-gap.py)"
+
+  # ── L0 (protocol layer) ──
+  - canonical: CR-L0-BOS-RESOLVE
+    aliases: [bos_resolve, bos-resolve]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/_archive/gac-execution-gap.py"
+
+  - canonical: CR-L0-PROTOCOLS-SSOT
+    aliases: [protocols_ssot, protocols-ssot]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "describes protocols SSOT pinning rule; executor is the SSOT itself"
+
+  - canonical: CR-L0-SSOT-PATH-NORM
+    aliases: [ssot_path_norm]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "explicit norm rule, enforced via bin/ssot/ tools"
+
+  # ── L1 (runtime) ──
+  - canonical: CR-L1-RUNTIME-HEALTH
+    aliases: [runtime_health, runtime-health]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/ssot/health-monitor.py, bin/gac/check-system-health.py"
+
+  # ── L2 (engine) ──
+  - canonical: CR-L2-TASK-DELIVERABLE
+    aliases: [task_deliverable]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "covers project-doc-change / project-code-change workflow deliverables"
+
+  - canonical: CR-L2-DIRECT-IO
+    aliases: [direct_io]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/ssot/check-direct-io.py (implied by check_type=direct_io)"
+
+  # ── L3 (entry) ──
+  - canonical: CR-L3-COCKPIT-ENTRY
+    aliases: [cockpit_entry, cockpit-entry]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/cockpit/**"
+
+  - canonical: CR-L4-DOMAIN-REGISTRY-FRESHNESS
+    aliases: [domain_registry_freshness]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/ssot/check-doc-freshness-gate.py"
+
+  # ── M4 (cross-cutting machine) ──
+  - canonical: CR-M4-BOOTSTRAP-REFLEX
+    aliases: [bootstrap_reflex]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "describes M4 bootstrap chain; no separate executor (covered by sub-checks)"
+
+  - canonical: CR-M4-SUBMODULE-HYGIENE
+    aliases: [submodule_hygiene, submodule-hygiene]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/gac/gac-submodule-sync.py, bin/gac/submodule-gitlink-check.py"
+
+  - canonical: CR-M4-MCPTOOL-INTEGRITY
+    aliases: [mcptool_integrity, mcptool-integrity]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/ssot/check-mcptool-impl-drift.py"
+
+  # ── X1 (trust) ──
+  - canonical: CR-X1-AGENT-AUDIT
+    aliases: [x1-audit-chain, x1_audit_chain]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "x1-audit-chain checker in L0"
+
+  - canonical: CR-X1-POLICIES-SSOT
+    aliases: [policies_ssot]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: ".omo/_truth/x1-governance-policies.yaml"
+
+  # ── X2 (freshness) ──
+  - canonical: CR-X2-FRESHNESS-SSOT
+    aliases: [freshness_ssot]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: ".omo/_truth/x2-freshness-rules.yaml"
+
+  - canonical: CR-X2-GOD-MODULE-EDIT
+    aliases: [god_module_edit]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "governance rule; detection via bin/gac/check-rule-wiring-coverage.py (this tool)"
+
+  # ── X3 (value) ──
+  - canonical: CR-X3-DEBT-TIER
+    aliases: [debt_tier, debt-tier]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/ssot/debt-dashboard.py"
+
+  # ── X4 (consistency) ──
+  - canonical: CR-X4-CONSISTENCY-SSOT
+    aliases: [x4-consistency]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: ".omo/_truth/x4-consistency-rules.yaml"
+
+  # ── commit / e2e ──
+  - canonical: CR-COMMIT-LLM-ASSIST
+    aliases: [commit_llm_assist]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/agent-workflow.py (advisory)"
+
+  - canonical: CR-COMMIT-ASSIST-E2E
+    aliases: [commit_assist_e2e]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "E2E runner; not invoked in default gates"
+
+  - canonical: CR-CROSS-REPO-CONSISTENT
+    aliases: [cross_repo_consistent, cross-repo-consistent]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/mof/cross_repo_status.py"
+
+  - canonical: CR-EVIDENCE-DECLARED
+    aliases: [evidence_declared]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/plan/bet-ledger.py (completion_evidence check)"
+
+  # ── security ──
+  - canonical: CR-SEC-YAML-BYPASS
+    aliases: [sec_yaml_bypass]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "negative check; no executor = pass by default"
+
+  - canonical: CR-SEC-SENSITIVE-WRITE
+    aliases: [sec_sensitive_write]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/ssot/check-paths-allowed.py"
+
+  - canonical: CR-SEC-EVAL-EXEC
+    aliases: [sec_eval_exec]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "rule of thumb; executor not separately implemented"
+
+  - canonical: CR-PY-MUTABLE-DEFAULT
+    aliases: [py_mutable_default]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "ruff B006 (enforced via .ruff.toml)"
+
+  # ── P-phase / debt process ──
+  - canonical: CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
+    aliases: [p76_8_3_dead_path_tool_fallback]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "incident postmortem rule; executable as daily debt review"
+
+  - canonical: CR-P76-6-5-LLM-DEFERRAL
+    aliases: [p76_6_5_llm_deferral]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "incident postmortem rule"
+
+  - canonical: CR-P77-2-1-PRINCIPLE-FORMALIZATION
+    aliases: [p77_2_1_principle_formalization]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "principle governance rule"
+
+  - canonical: CR-P77-2-2-CATALOG-SSOT
+    aliases: [p77_2_2_catalog_ssot]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "catalog SSOT enforcement"
+
+  # ── AGE (state plane) ──
+  - canonical: CR-AGE-BOS-01
+    aliases: [age_bos]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/_archive/gac-execution-gap.py"
+
+  - canonical: CR-AGE-EVENT-01
+    aliases: [age_event]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "state age check"
+
+  - canonical: CR-AGE-MEMORY-01
+    aliases: [age_memory]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "state age check"
+
+  - canonical: CR-AGE-POLICY-01
+    aliases: [age_policy]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      note: "state age check"
+
+  - canonical: CR-AGE-REPLAY-01
+    aliases: [age_replay]
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
+      bin_executor: "bin/ssot/replay-validator.py"
+
+# ── Cross-walk: governance-checks ↔ L0-constraints ↔ hook-manifest ──
+# These are explicit 1-to-1 maps where the cross-registry identity is known.
+cross_walks:
+  - from: governance-checks
+    to: L0-constraints
+    pairs:
+      - [CR-X4-CONSISTENCY-SSOT, X4-CONSISTENCY-RULES]
+      - [CR-X2-FRESHNESS-SSOT, X2-FRESHNESS-RULES]
+      - [CR-X1-POLICIES-SSOT, X1-POLICIES]
+      - [CR-L4-DOMAIN-REGISTRY-FRESHNESS, X2-DOMAIN-REGISTRY-FRESHNESS]
+
+  - from: governance-checks
+    to: hook-manifest
+    pairs:
+      - [CR-M4-SUBMODULE-HYGIENE, gitlink-regress]
+      - [CR-L3-COCKPIT-ENTRY, cockpit-readiness]
+      - [CR-M4-MCPTOOL-INTEGRITY, mcptool-drift]
+      - [CR-L1-RUNTIME-HEALTH, health-monitor]
+      - [CR-EVIDENCE-DECLARED, bet-done-transition]
+
+# Stats
+stats:
+  known_aliases: 33
+  cross_walks: 9
+  expected_resolved_unreferenced:
+    note: >
+      With alias map applied, the 42 reported unreferenced gov-checks IDs
+      should drop significantly (target: ≤15, the remaining are either
+      genuinely unimplemented or unknown alias beyond this map's coverage).
+
+# Decision points (owner)
+open_decisions:
+  - id: DEC-SH-4-AUTHORITATIVE-REGISTRY
+    question: "Which registry is the authoritative source for cross-walk?"
+    options: ["governance-checks.yaml (主仓 SSOT)", "L0-constraints.yaml (ecos SSOT)", "joint"]
+    blocking: false
+    note: "Default: governance-checks.yaml. Owner may flip without breaking alias map."
+
+  - id: DEC-SH-4-FALSE-POSITIVE-OWNER-CLOSEOUT
+    question: "After alias map closes, do remaining zero-refs need human check?"
+    options: ["yes, manual review each", "no, auto-categorize via executor_name pattern", "ignore if < 5%"]
+    blocking: false
+    note: "Default: ignore if < 5% (per spec gate threshold). Otherwise manual."

@@ -1,15 +1,14 @@
 ---
-schema: md/v1
-status: accepted
-lifecycle: contract
-owner: governance-team
-last-reviewed: 2026-09-25
-type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Multi-Registry Alias Resolver — governance-checks / L0-constraints / hook-manifest unification
 bet_id: BET-Y2Q4-SH-4
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
 ---
+
 
 
 # BET-Y2Q4-SH-4 — Multi-Registry Alias Resolver
