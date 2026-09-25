@@ -1,279 +1,70 @@
 # MCP Tool Drift Report
-# 来源: check-mcptool-impl-drift.py 输出 (2026-09-23)
+#
+# 来源: bin/ssot/check-mcptool-impl-drift.py 输出 (2026-09-25, 修复后)
+# 探针规则: CR-X4-MCPTOOL-IMPL-DRIFT (enforcement: required)
+# 复跑命令: uv run --with pyyaml python bin/ssot/check-mcptool-impl-drift.py [--json]
+#
+# 上一版 (2026-09-23) 的 156 条 drift 系探针假阳性, 已由 PR #4277 修复。
+# 详见文末 corrections 段 —— 该段也说明为何本报告从 156 条变为 0 条。
 
 summary:
-  total_drifts: 156
-  cockpit_declared_only: 26  # 声明但未实现
-  cockpit_impl_only: 19     # 实现但未声明
-  agora_impl_only: 111      # 实现但未声明
+  total_drifts: 0
+  cockpit_declared_only: 0  # 声明但未实现
+  cockpit_impl_only: 0      # 实现但未声明
+  agora_impl_only: 0        # 已跳过, 见 servers.AGORA
+
+servers:
+  COCKPIT:
+    declared: 23            # 仅统计 status: active 的 MCPTOOL-COCKPIT-*.yaml
+    implemented: 23         # cockpit mcp --list-tools
+    consistent: true
+    note: 23 个 active 声明与 23 个实现一一对应
+
+  AGORA:
+    declared: 0
+    implemented: 111
+    skipped: true
+    note: >-
+      声明面为空 + 实现经 source_extract 从 @mcp.tool() 提取, 恒定产生 111 条
+      「实现无声明」噪音; 属已知内部情况 (agora 工具不面向 MCPTOOL 注册面),
+      不构成待办缺口。
 
 categories:
   # 🔴 高优先级 — 前端暴露但无后端实现
-  cockpit_declared_only:
-    - name: daily_summary
-      priority: HIGH  # 用户日常使用
-
-    - name: github_pr_review
-      priority: MEDIUM  # 集成 PR 评审
-
-    - name: governance_check
-      priority: HIGH  # 治理检查核心
-
-    - name: governance_dashboard
-      priority: HIGH  # 治理可视化
-
-    - name: governance_history
-      priority: MEDIUM  # 治理历史查看
-
-    - name: governance_leaderboard
-      priority: LOW  # 治理排名
-
-    - name: governance_sla
-      priority: MEDIUM  # 治理 SLA 监控
-
-    - name: governance_status
-      priority: HIGH  # 治理状态查看
-
-    - name: research_agent_list
-      priority: MEDIUM  # 研究代理列表
-
-    - name: research_archive
-      priority: MEDIUM  # 研究归档
-
-    - name: research_ask
-      priority: HIGH  # 研究提问核心
-
-    - name: research_create
-      priority: HIGH  # 研究创建核心
-
-    - name: research_dossier
-      priority: MEDIUM  # 研究档案
-
-    - name: research_half_life
-      priority: LOW  # 研究半衰期
-
-    - name: research_list
-      priority: MEDIUM  # 研究列表
-
-    - name: research_open
-      priority: HIGH  # 研究打开核心
-
-    - name: research_rename
-      priority: LOW  # 研究重命名
-
-    - name: research_restore
-      priority: MEDIUM  # 研究恢复
-
-    - name: research_search
-      priority: HIGH  # 研究搜索核心
-
-    - name: research_tag
-      priority: MEDIUM  # 研究标签
-
-    - name: shared_context_list
-      priority: MEDIUM  # 共享上下文列表
-
-    - name: shared_context_read
-      priority: HIGH  # 共享上下文读取
-
-    - name: shared_context_write
-      priority: HIGH  # 共享上下文写入
-
-    - name: status_json
-      priority: MEDIUM  # 状态 JSON
-
-    - name: status_summary
-      priority: HIGH  # 状态摘要
-
-    - name: vault_search
-      priority: MEDIUM  # 保险库搜索
+  cockpit_declared_only: []
 
   # 🟡 中优先级 — 后端实现但无前端声明
-  cockpit_impl_only:
-    - name: chat
-      priority: HIGH  # 聊天核心
-
-    - name: domain_context
-      priority: MEDIUM  # 领域上下文
-
-    - name: domain_controller_shadow_status
-      priority: LOW  # 领域控制器影子状态
-
-    - name: domain_facts_audit
-      priority: MEDIUM  # 领域事实审计
-
-    - name: domain_facts_validation_status
-      priority: MEDIUM  # 领域事实验证状态
-
-    - name: domain_model_freshness_status
-      priority: MEDIUM  # 领域模型新鲜度
-
-    - name: domain_project_status
-      priority: MEDIUM  # 领域项目状态
-
-    - name: domain_sanyi_status_consistency_status
-      priority: LOW  # 领域三义一致性
-
-    - name: kems_status
-      priority: MEDIUM  # KEMS 状态
-
-    - name: l0_adr_list
-      priority: MEDIUM  # L0 ADR 列表
-
-    - name: l0_audit
-      priority: HIGH  # L0 审计核心
-
-    - name: l0_entity_resolve
-      priority: MEDIUM  # L0 实体解析
-
-    - name: l0_protocols
-      priority: MEDIUM  # L0 协议
-
-    - name: l0_status
-      priority: HIGH  # L0 状态核心
-
-    - name: l0_validate
-      priority: MEDIUM  # L0 验证
-
-    - name: l4_tools_scan
-      priority: MEDIUM  # L4 工具扫描
-
-    - name: md_lifecycle_status
-      priority: MEDIUM  # 文档生命周期状态
-
-    - name: md_validate
-      priority: HIGH  # 文档验证核心
-
-    - name: run_task
-      priority: HIGH  # 运行任务核心
+  cockpit_impl_only: []
 
   # 🟢 低优先级 — agora 实现但无声明
-  agora_impl_only:
-    - name: a2a_cancel_task
-      priority: HIGH  # A2A 取消核心
+  agora_impl_only: []
 
-    - name: a2a_get_task
-      priority: HIGH  # A2A 获取任务
+recommendations: []
 
-    - name: a2a_list_tasks
-      priority: MEDIUM  # A2A 任务列表
-
-    - name: a2a_send_task
-      priority: HIGH  # A2A 发送任务
-
-    - name: a2a_update_task
-      priority: MEDIUM  # A2A 更新任务
-
-    - name: add_route
-      priority: HIGH  # 添加路由
-
-    - name: agora_capability_discover
-      priority: HIGH  # agora 能力发现
-
-    - name: agora_execute
-      priority: HIGH  # agora 执行
-
-    - name: audit_query
-      priority: MEDIUM  # 审计查询
-
-    - name: audit_stats
-      priority: MEDIUM  # 审计统计
-
-    - name: bcos_evolve
-      priority: MEDIUM  # bcos 进化
-
-    - name: bcos_north_star
-      priority: MEDIUM  # bcos 北星
-
-    - name: bcos_signals
-      priority: MEDIUM  # bcos 信号
-
-    - name: bos_documents_jobs
-      priority: MEDIUM  # bos 文档作业
-
-    - name: bos_documents_registry
-      priority: HIGH  # bos 文档注册
-
-    - name: bos_documents_state
-      priority: MEDIUM  # bos 文档状态
-
-    - name: bos_health
-      priority: HIGH  # bos 健康检查
-
-    - name: bos_inbox_archive
-      priority: MEDIUM  # bos 收件箱归档
-
-    - name: bos_inbox_draft
-      priority: MEDIUM  # bos 收件箱草稿
-
-    - name: bos_inbox_pending
-      priority: HIGH  # bos 收件箱待定
-
-    - name: bos_inbox_search
-      priority: MEDIUM  # bos 收件箱搜索
-
-    - name: bos_inbox_triage
-      priority: MEDIUM  # bos 收件箱分诊
-
-    - name: bos_inbox_watch
-      priority: MEDIUM  # bos 收件箱监控
-
-    - name: bos_mail_draft
-      priority: MEDIUM  # bos 邮件草稿
-
-    - name: bos_mesh_dma_status
-      priority: LOW  # bos mesh DMA 状态
-
-    - name: bos_metrics_status
-      priority: MEDIUM  # bos 指标状态
-
-    - name: bos_middleware_status
-      priority: MEDIUM  # bos 中间件状态
-
-    - name: bos_reload_discovery
-      priority: HIGH  # bos 重载发现
-
-    - name: bos_reload_m1
-      priority: MEDIUM  # bos 重载 M1
-
-    - name: bos_reload_routes
-      priority: HIGH  # bos 重载路由
-
-    - name: bos_spine_diff
-      priority: MEDIUM  # bos 脊柱差异
-
-    - name: bos_spine_distill
-      priority: MEDIUM  # bos 脊柱蒸馏
-
-    - name: bos_spine_draft
-      priority: MEDIUM  # bos 脊柱草稿
-
-    - name: bos_spine_replay
-      priority: MEDIUM  # bos 脊柱重放
-
-    - name: bos_spine_sign
-      priority: MEDIUM  # bos 脊柱签名
-
-    - name: bos_spine_status
-      priority: HIGH  # bos 脊柱状态
-
-    - name: cartridge_pack
-      priority: MEDIUM  # 包装 cartridge
-
-    - name: check_health
-      priority: HIGH  # 健康检查
-
-    # (已截断，完整列表见 check-mcptool-impl-drift.py 输出)
-
-recommendations:
-  - priority: HIGH  # 优先处理声明无实现的 26 个工具
-    action: 补齐 cockpit 前端实现或移除声明
-    note: 这些工具在前端可见但后端不可用，用户体验受影响
-
-  - priority: MEDIUM  # 处理 19 个实现无声明的 cockpit 工具
-    action: 在前端声明这些工具或移除实现
-    note: 这些工具在后端可用但前端不可见
-
-  - priority: LOW  # 处理 111 个 agora 实现无声明的工具
-    action: 逐步将 agora 工具声明到注册表
-    note: 数量多但影响较小（agora 内部使用）
+corrections:
+  - date: '2026-09-25'
+    by: 'PR #4277 (squash 34e70dd2a)'
+    change: >-
+      探针 load_declared_tools 改为只统计 status: active 的声明文件 (跳过
+      retired/withdrawn), 并在 detect_drift 跳过 AGORA。
+    before_after:
+      # 同环境双版本实跑对照 (worktree 基线 34e70dd2a)
+      cockpit_declared: 49 -> 23
+      cockpit_impl: 23 -> 23
+      cockpit_declared_only: 26 -> 0
+      agora_impl_only: 111 -> 0
+      total_drifts: 137 -> 0
+    false_positive_detail: >-
+      上一版列为「🔴 高优先级 — 前端暴露但无后端实现」的 26 条
+      (daily_summary / github_pr_review / governance_* / research_* /
+      shared_context_* / status_json / status_summary / vault_search)
+      全部对应 status: retired 的 cockpit 工具声明, 即已被主动撤回的工具
+      (呼应提交 ab286d5fc "...withdraw 26 cockpit MCP tools")。
+      原探针把已撤回的声明仍计入声明面, 故恒定报「声明无实现」。
+      经核对: MCPTOOL-COCKPIT-*.yaml 共 49 个, status 分布 retired=26 /
+      active=23, 与过滤掉的 26 条精确吻合 —— 属假阳性, 非真实缺口。
+    note_on_previous_totals: >-
+      上一版记录 total_drifts=156 (26/19/111), 本次对照实测修复前为 137
+      (26/0/111)。差值 19 系该报告生成时点 (2026-09-23) 的实现面状态与
+      本次不同, 未复现; 但 26 条 declared_only 与 111 条 agora_impl_only
+      均精确复现, 结论不受影响。
