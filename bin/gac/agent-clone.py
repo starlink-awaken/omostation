@@ -3369,6 +3369,15 @@ def build_claims_authority_shadow_projection(
         "observed_at": observed_at,
         "fresh": False,
     }
+    if os.environ.get("CLAIMS_AUTHORITY_HERMETIC_UNACTIVATED") == "1":
+        # Hermetic test seam: never consult the passwd-derived real Workspace
+        # broker, so fixture changesets stay host-independent (shadow_unprovable).
+        if claim_verification is not None:
+            projection["comparison_ref"] = {
+                "all_covered": claim_verification.get("all_covered"),
+                "enabled": claim_verification.get("enabled"),
+            }
+        return projection
     # Lazy stdio status against passwd-derived Workspace broker entry.
     runner = account_workspace_root() / "bin" / "agent-workflow.py"
     if not runner.is_file():

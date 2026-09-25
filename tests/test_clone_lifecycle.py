@@ -22,6 +22,21 @@ lc = importlib.import_module("clone-lifecycle")
 ac = importlib.import_module("agent-clone")
 REAL_AGENT_CLONE = lc.AGENT_CLONE
 
+
+@pytest.fixture(autouse=True)
+def _hermetic_claims_authority(monkeypatch):
+    """Host-independent: never consult the real ~/agents/_shared authority store.
+
+    The dev machine's claims-authority broker is shadow-active, which would
+    make integrate mandate a legacy publish fence that hermetic fixture
+    changesets never carry. Tests exercising shadow-active behavior override
+    this via monkeypatch.setattr(lc, "claims_authority_activation_mode", ...).
+    The env var keeps subprocess-built changesets (agent-clone.py changeset)
+    on the same not_activated projection.
+    """
+    monkeypatch.setattr(lc, "claims_authority_activation_mode", lambda: "unactivated")
+    monkeypatch.setenv("CLAIMS_AUTHORITY_HERMETIC_UNACTIVATED", "1")
+
 _GIT_ENV = {
     "GIT_CONFIG_NOSYSTEM": "1",
     "GIT_CONFIG_GLOBAL": os.devnull,
