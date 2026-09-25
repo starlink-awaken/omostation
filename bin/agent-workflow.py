@@ -1078,7 +1078,8 @@ def wrapped_main(argv: list[str] | None = None) -> int:
                     file=sys.stderr,
                 )
                 print(
-                    f"  exempt: observer-audit, or {chain_bind.GATE_ENV}=0 recorded waiver",
+                    f"  exempt: observer-audit, governance-evolve workflows (when the ledger carries a governance bet),"
+                    f" or {chain_bind.GATE_ENV}=0 recorded waiver",
                     file=sys.stderr,
                 )
                 return 1
