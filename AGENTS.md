@@ -193,6 +193,12 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 - **禁止按行号盲插**：bets 序列被顶层键 (`campaigns/disciplines/gates/meta/milestones/objectives`) 切断，盲插会把条目塞进错误段落。用 `python3 bin/gac/ledger-safe-insert.py --file <entry.yaml>` 自动定位（yaml.compose 物理边界）+ schema/digest/id 校验 + 原子写入。
 - **dry-run 先行**：`--dry-run` 校验通过后再正式写入。
 
+### 并发 agent 分支隔离（2026-09-25 复盘固化）
+
+- **问题**：多 agent 同时向同一分支 push/重放提交（常见于 squash-merge 后对方基于旧 tip 继续叠 commit），导致反复 non-fast-forward 被拒；若直接 merge 对方的重放提交，会回流已被清理的 junk / 覆盖自己的修复（本轮 Kilo 二次 merge 回流 5,322 文件实录）。
+- **解法**：争议改动在**隔离 worktree** 完成，cherry-pick 到自己的最新 commit 上、rebase 到远端最新 tip，再 push。**不要**在原共享分支上 `merge` 对方的重放提交。
+- **识别信号**：`git push` 报 "hint: use 'git pull' before pushing again" + 对方 commit message 与自己高度近似（重放迹象）→ 走干净室 cherry-pick 路径。
+
 ---
 
 ## 7. Common Pitfalls（2026-09-12 实证）
@@ -204,6 +210,8 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 - **并发 agent 争用**：stash+checkout main 恢复；不替并发 agent 写 retro
 - **主工作区共享改动丢失（2026-09-17 实证）**：`/Users/xiamingxing/Workspace` 被多 agent 共享——他人分支切换/`reset --hard` 会静默丢掉你未提交的改动，反之你提交时也会裹入他人暂存内容（本人两件都经历过）。git 无 pre-checkout/pre-reset 钩子，无法在破坏性操作前拦截，故采用**快照兜底 + 脏态告警**：① post-checkout 钩子自动快照（仅主工作区）② cron 每小时快照（`omostation-wip-guard`）③ `python3 bin/gac/workspace-wip-guard.py status|check`。**纪律：主工作区只读，凡改动必 worktree**；若不得不在主工作区留改动，先 `make wip-snapshot`。恢复：`python3 bin/gac/workspace-wip-guard.py restore <snapshot> --force`（默认 dry-run）。
 - **Diff 工具 ref 解析**：已加 `_resolve_ref` fallback 到 origin/<ref>
+- **生成物 CI 口径 ≠ 本地（2026-09-25 实证）**：`gen-*.py --check` / drift / ledger 等生成物依赖子模块检出完整度。本地 worktree 常只 init 部分子模块，CI 递归检出全部，导致 registry tools 计数等偏差（本轮 capability-registry 本地 566、CI 643）。**解法**：生成物验证前用 `git clone --recurse-submodule` 做 fresh 复刻，双环境逐字节 diff 一致后再 push。
+- **hermetic 测试泄漏 host 状态（2026-09-25 实证）**：fixture/集成测试不得依赖 host 运行时状态（authority broker / shared store / 网络 / 本机端口）。开发机 broker 状态变化会让测试从绿变红，CI 无此状态则绿，形成环境类假绿。**解法**：通过 env seam 切断（如 `CLAIMS_AUTHORITY_HERMETIC_UNACTIVATED=1`），生产路径零变更；测真实状态的用例显式自行 patch。
 
 ---
 
