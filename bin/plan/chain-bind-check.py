@@ -139,18 +139,37 @@ def cmd_self_check(_args: argparse.Namespace) -> int:
     cases = [
         (
             "start-missing-bet",
-            chain_bind.start_requires_bet("governance-state-mutation", ""),
+            chain_bind.start_requires_bet("project-code-change", "", env={}),
             False,
         ),
         (
             "start-with-bet",
-            chain_bind.start_requires_bet("governance-state-mutation", "BET-Y1Q1-T6-02"),
+            chain_bind.start_requires_bet("governance-state-mutation", "BET-Y1Q1-T6-02", env={}),
             True,
         ),
         (
             "start-observer-exempt",
-            chain_bind.start_requires_bet("observer-audit", ""),
+            chain_bind.start_requires_bet("observer-audit", "", env={}),
             True,
+        ),
+        # G5 (BET-Y2Q3-T10-202): start exempts governance-evolve workflows under the
+        # same predicate closeout uses — and only under it.
+        (
+            "start-governance-evolve-no-bet",
+            chain_bind.start_requires_bet("governance-audit", "", env={}),
+            True,
+        ),
+        (
+            "start-governance-evolve-no-bet-no-ldg",
+            chain_bind.start_requires_bet(
+                "governance-audit", "", env={}, workspace=Path("/nonexistent-workspace")
+            ),
+            False,
+        ),
+        (
+            "start-business-no-bet-still-halts",
+            chain_bind.start_requires_bet("round-engineering", "", env={}),
+            False,
         ),
         (
             "closeout-missing-retro",

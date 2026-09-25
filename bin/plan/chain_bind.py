@@ -36,6 +36,10 @@ GATE_ENV = "AGCP_REQUIREMENT_ITERATION_GATE"
 RETRO_REL = ".omo/_knowledge/retros"
 RUNS_REL = ".omo/_delivery/agent-workflows/runs"
 LEDGER_REL = "docs/plans/3y-bet-ledger.yaml"
+# bin/plan/chain_bind.py lives two levels under the repository root, which in a
+# linked worktree is that worktree — never the checkout another session happens
+# to hold.
+DEFAULT_WORKSPACE = Path(__file__).resolve().parents[2]
 
 
 @dataclass(frozen=True)
@@ -59,11 +63,24 @@ def start_requires_bet(
     bet_id: str,
     *,
     env: dict[str, str] | None = None,
+    workspace: Path | None = None,
 ) -> BindVerdict:
-    """Reject requirement-iteration start unless a ledger bet id is supplied."""
+    """Reject requirement-iteration start unless a ledger bet id is supplied.
+
+    Governance-evolve workflows carry their chain through the governance bet
+    (G8/T10-08) and are already excused from a business bet at closeout by
+    :func:`evaluate_closeout`. Enforcing it only at start bought nothing: the
+    ledger can be fully closed while self-evolution work is still required, and
+    measured 2026-09-24 the sole way out was a one-time gate waiver — 70 of the
+    136 waiver records on file are exactly that. The exemption is therefore
+    granted under the same predicate closeout uses, never a looser one.
+    """
     wf = (workflow_id or "").strip()
     if wf in EXEMPT_WORKFLOWS or gate_disabled(env):
         return BindVerdict(True, [])
+    if not (bet_id or "").strip() and wf in GOVERNANCE_EVOLVE_WORKFLOWS:
+        if _has_governance_bet(workspace if workspace is not None else DEFAULT_WORKSPACE):
+            return BindVerdict(True, ["governance_evolve_exempt"])
     if not (bet_id or "").strip():
         return BindVerdict(False, ["missing_bet_id"])
     return BindVerdict(True, [])
