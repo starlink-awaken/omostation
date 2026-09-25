@@ -327,3 +327,17 @@ entries:
   range: origin/main..272ec451d795
   recorded_at: '2026-09-24T02:33:35.458366+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|aed6d0e993dc9e0c
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: aed6d0e993dc9e0c
+  kind: gitlink-regress
+  reason: submodule projects/omlxc pointer 2b4ccf654237 rewinds 05d8605690da
+  range: origin/main..6376228e5c952c123e4e29586d5977a09e31e56b
+  base_sha: 2ccddd4894a0108d5ec6e16cfc85d3a507e3fb37
+  head_sha: 6376228e5c952c123e4e29586d5977a09e31e56b
+  merge_base: 2ccddd4894a0108d5ec6e16cfc85d3a507e3fb37
+  exempt_reason: '05d86056 为 omlxc PR #88 head、origin 分支不可达; omlxc 侧 squash merge
+    致 2b4ccf6 血缘相对其侧移, 内容为 05d86056 等价物加 #89 修复, 非内容回退'
+  recorded_at: '2026-09-25T14:05:31.641626+00:00'
+  active: true
