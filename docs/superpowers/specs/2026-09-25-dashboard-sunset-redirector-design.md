@@ -1,9 +1,12 @@
 ---
-status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-09-25
 title: "Spec: Dashboard Sunset Redirector and Port Convergence (BET-Y2Q2-T6-02)"
+schema_version: specification/v1
+status: accepted
+spec_version: 1.0.0
+bet_id: BET-Y2Q2-T6-02
 ---
 # Spec: Dashboard Sunset Redirector and Port Convergence (BET-Y2Q2-T6-02)
 

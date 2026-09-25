@@ -1,9 +1,12 @@
 ---
-status: active
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-09-25
 title: "Spec: Panorama Wallboard Auto-rotation and Micro-interactions (BET-Y2Q2-T10-164)"
+schema_version: specification/v1
+status: accepted
+spec_version: 1.0.0
+bet_id: BET-Y2Q2-T10-164
 ---
 # Spec: Panorama Wallboard Auto-rotation and Micro-interactions (BET-Y2Q2-T10-164)
 

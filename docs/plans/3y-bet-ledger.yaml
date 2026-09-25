@@ -34591,7 +34591,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 464
+  total_bets: 471
   windows:
   - Y1Q1
   - Y1Q2
@@ -34794,6 +34794,15 @@ tracks:
     - .omo/_knowledge/retros/**
     scope: 工作区文档收敛 / 导航指针修复 / spec 注册表可发现性
     title: 文档收敛
+  T10-TOOLING:
+    agent_profile_hint: engineering-agent
+    default_workflow: project-code-change
+    pasw_required: false
+    primary_write_surfaces:
+    - bin/**
+    - tests/**
+    scope: 工程工具链 / CLI 易用性 / 命令面板与导航集成
+    title: 工具链
   T10-MATURITY:
     agent_profile_hint: governance-agent
     default_workflow: governance-audit

@@ -1,9 +1,5 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
 title: Cockpit-UI 体系全景主航道路由与侧边栏首要导航装配
-bet_id: BET-Y2Q2-T10-162
-status: accepted
 lifecycle: spec
 owner: governance-team
 created: '2026-09-24'
@@ -13,6 +9,10 @@ value_indicator_policy: false
 risk_level: L2
 human_gate: false
 type: ssot
+schema_version: specification/v1
+status: accepted
+spec_version: 1.0.0
+bet_id: BET-Y2Q2-T10-162
 ---
 
 # Cockpit-UI 体系全景主航道路由与侧边栏首要导航装配设计规约
