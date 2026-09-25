@@ -33,6 +33,13 @@ if ! "${PYTHON_BIN}" -c "from datetime import UTC" 2>/dev/null; then
   done
 fi
 
+# 上面的探测跑在交互 shell (PATH 含 Homebrew), cron 的 PATH 只有 /usr/bin:/bin ——
+# 裸名 "python3" 在 cron 下解析到 Xcode 3.9 (无 datetime.UTC) → 每条 job 启动即
+# ImportError, 水位停滞 (PITFALL-CRO-004)。固化为绝对路径, 使 cron 不依赖 PATH。
+if _resolved="$(command -v "${PYTHON_BIN}" 2>/dev/null)" && [ -n "${_resolved}" ]; then
+  PYTHON_BIN="${_resolved}"
+fi
+
 CRON_MARKER="# resident-agent-schedule (managed by install-resident-cron.sh)"
 
 # M4.3: 五类角色独立 projector 并行调度 (替换单一 daemon, 分片覆盖全部规则事件)
@@ -53,9 +60,22 @@ CRON_PROMOTE="*/10 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_
 CRON_PROPOSAL_ADR="0 1 * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} bin/ssot/proposal-to-adr.py >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/proposal-to-adr.log 2>&1"
 CRON_HEALTH="10 2 * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} bin/ssot/system-health-check.py --emit >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/health.log 2>&1"
 
-# 移除旧 marker 块(幂等),再追加新块
+# 移除旧 managed 块(幂等),再追加新块。
+# PITFALL-CRO-004: 旧实现 grep -v 只删 marker 注释行, 其下 11 行 managed 条目残留
+# → 每次重跑复制一份块 (cron 双跑: 双倍事件/双水位竞争)。改为剥离 marker 行与全部
+# managed 条目 (含 marker 缺失的孤儿块), 并折叠连续空行。
+# awk 失败时依赖 set -e 中止 —— 绝不把空 CLEANED 写进 crontab。
 CURRENT_CRON="$(crontab -l 2>/dev/null || true)"
-CLEANED_CRON="$(printf '%s\n' "${CURRENT_CRON}" | grep -v -F "${CRON_MARKER}" | sed '/^$/N;/^\n$/D' || true)"
+CLEANED_CRON="$(printf '%s\n' "${CURRENT_CRON}" | awk -v marker="${CRON_MARKER}" '
+  function managed(l) {
+    return (l ~ /^\*\/(2|5|10) \* \* \* \* / || l ~ /^0 1 \* \* \* / || l ~ /^10 2 \* \* \* /) &&
+      (l ~ /omo\.cli resident/ || l ~ /proposal-to-adr\.py/ || l ~ /system-health-check\.py/)
+  }
+  $0 == marker { next }
+  managed($0) { next }
+  /^$/ { if (!blank) { print; blank = 1 }; next }
+  { blank = 0; print }
+')"
 
 cat << EOF | crontab -
 ${CLEANED_CRON}
