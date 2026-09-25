@@ -1778,7 +1778,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   <a href="#next">接下来做什么</a>
 </div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">角色与智能体</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
-<div class="note" id="agent-coverage"></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div><div id="zx-resident-bar" class="viz-card" style="margin-bottom:10px"><div class="loading-center" style="padding:14px"><span class="loading-spinner"></span><span class="loading-text">加载居民执行环境状态...</span></div></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
+<div class="note" id="agent-coverage"></div><div id="zx-resident-bar" class="viz-card" style="margin-bottom:10px"><div class="loading-center" style="padding:14px"><span class="loading-spinner"></span><span class="loading-text">加载居民执行环境状态...</span></div></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
 <div class="card gap"><h2>当前核心协作实体与运行角色</h2><p class="small muted">包含人类主权决策者、常驻自治守护者、AetherForge 本地算力网关与受管工程智能体，数据实时保持最新。</p><div class="table-wrap"><table><thead><tr><th>协作实体 / Agent</th><th>当前职责</th><th>运行状态 / 算力与范围</th></tr></thead><tbody id="team-rows"></tbody></table></div></div>
 <div class="card gap"><h2>目标 Reference Cell</h2><div class="flow"><span>1 总控</span><i>→</i><span>1 执行</span><i>→</i><span>1 独立验证</span><i>↔</i><span>1 运行观察</span></div><p class="small muted">默认 Direct Local；每波最多两个不重叠 writer。Orca R0、Multica AS0、Ruflo RF0 各有准入门。Ruflo 原生 swarm 可以在获准 Cell 内协调，外层任务、权限与完成证据由 OMO 持有。</p><h3>token 不足或 Agent 掉线</h3><div class="flow"><span>drain / checkpoint</span><i>→</i><span>校验副作用</span><i>→</i><span>fence 旧 attempt</span><i>→</i><span>deputy 接续</span><i>→</i><span>独立重放</span></div><p class="small">结果未知时先 reconcile。第二次 failover 进入 HOLD 与根因分析。接续必须保留未完成义务、最后安全版本、权限边界与证据。</p></div>
 <div class="card gap"><h2>当前可见 Agent / Runtime</h2><p class="small muted">名单来自 Multica inventory 和 OMO Workflow；尚未统一 assignment identity。Ruflo 仅采集版本，运行清单待安全只读适配。</p><div class="table-wrap"><table><thead><tr><th>来源 / Agent</th><th>状态</th><th>模型 / 角色 / 运行关联</th></tr></thead><tbody id="live-agent-rows"></tbody></table></div></div><h2 class="gap">持久角色合同 · 待实施</h2><div id="roles" class="role-grid"></div>
@@ -5728,20 +5728,28 @@ function zxRenderMetrics(){
     var hs=hist.series||{}, es=ev.series||{};
     var cov=hist.coverage||{};
 
-    /* ── KPI: 数值 + 单位 + 真实 sparkline + 真实环比 ── */
+    /* ── KPI: 数值 + 单位 + 真实 sparkline + 真实环比 + 说明 + 关联面板 ── */
     var cards=[
-      {v:kpi.total_events_24h||0,u:'',l:'24h 事件',pts:es.hourly_24h,c:'#3a64b3'},
-      {v:kpi.events_per_hour_24h||0,u:'/h',l:'事件速率',pts:es.hourly_24h,c:'#2e7e79'},
-      {v:(kpi.failure_rate_24h==null?'—':kpi.failure_rate_24h),u:kpi.failure_rate_24h==null?'':'%',l:'失败/阻塞率',pts:((hs.heartbeat_degraded_hourly||{}).points),c:'#ef4444'},
-      {v:(kpi.health_score==null?'—':kpi.health_score),u:'',l:'健康总分',pts:null,c:'#10b981'},
-      {v:((hs.tick_ok_hourly||{}).points?((hs.tick_ok_hourly||{}).points).reduce(function(s,p){return s+p[1]},0):0),u:'',l:'24h Tick 成功',pts:((hs.tick_ok_hourly||{}).points),c:'#8b5cf6'},
-      {v:(kpi.sources_live||0),u:'/'+((kpi.sources_live||0)+(kpi.sources_missing||0)),l:'存活事件源',pts:null,c:'#2e7e79'}
+      {v:kpi.total_events_24h||0,u:'',l:'24h 事件',pts:es.hourly_24h,c:'#3a64b3',
+       tip:'过去 24 小时事件流中记录的全部事件数（含 workflow 生命周期、心跳、告警）',goto:'#logs'},
+      {v:kpi.events_per_hour_24h||0,u:'/h',l:'事件速率',pts:es.hourly_24h,c:'#2e7e79',
+       tip:'事件流平均产出速率；持续为 0 表示事件生产中断',goto:'#logs'},
+      {v:(kpi.failure_rate_24h==null?'—':kpi.failure_rate_24h),u:kpi.failure_rate_24h==null?'':'%',l:'失败/阻塞率',pts:((hs.heartbeat_degraded_hourly||{}).points),c:'#ef4444',
+       tip:'失败或阻塞事件占比；>5% 需关注 resident decision 角色是否生成提案',goto:'#gov'},
+      {v:(kpi.health_score==null?'—':kpi.health_score),u:'',l:'健康总分',pts:null,c:'#10b981',
+       tip:'基于保鲜/时效/漂移/对齐/治理五维的综合健康度 (0-100)',goto:'#health'},
+      {v:((hs.tick_ok_hourly||{}).points?((hs.tick_ok_hourly||{}).points).reduce(function(s,p){return s+p[1]},0):0),u:'',l:'24h Tick 成功',pts:((hs.tick_ok_hourly||{}).points),c:'#8b5cf6',
+       tip:'五类角色（心跳/监控/沉淀/决策/执行）在 24 小时内的成功 tick 总数',goto:'#swarm'},
+      {v:(kpi.sources_live||0),u:'/'+((kpi.sources_live||0)+(kpi.sources_missing||0)),l:'存活事件源',pts:null,c:'#2e7e79',
+       tip:'已声明且文件系统可达的事件源数量；缺失源不计入统计',goto:'#health'}
     ];
     host.innerHTML=cards.map(function(c){
       var d=zxMDelta(c.pts);
       var dcls=d==null?'flat':(d>0?'up':'down');
       var dtxt=d==null?'环比 —':(d>0?'▲ +':'▼ ')+d+'%';
-      return '<div class="zx-m-kpi"><div class="zx-m-top"><div>'+
+      var tipAttr=c.tip?' title="'+zxMEsc(c.tip)+'"':'';
+      var clickAttr=c.goto?' onclick="go(\''+(c.goto.slice(1))+'\')" style="cursor:pointer"':'';
+      return '<div class="zx-m-kpi"'+clickAttr+tipAttr+'><div class="zx-m-top"><div>'+
         '<div class="zx-m-v">'+c.v+'<span class="zx-m-u">'+c.u+'</span></div>'+
         '<div class="zx-m-l">'+c.l+'</div></div>'+
         '<span class="zx-m-d '+dcls+'" title="与相邻等长窗口的真实比较">'+dtxt+'</span></div>'+
@@ -6164,14 +6172,23 @@ function zxRenderValue(){
     if(chip) chip.textContent=okN+' / '+stages.length+' 阶段有数据';
     var numerals=['①','②','③','④','⑤'];
     var palette=['#3a64b3','#2e7e79','#ac721a','#2e7e79','#8b5cf6'];
+    /* 阶段 → 关联面板跳转 (跨面板钻取) */
+    var stageLinks=[{goto:'#health',tip:'查看原始信号源与健康上下文'},
+                    {goto:'#workbench',tip:'查看意图分流的 BET 路线'},
+                    {goto:'#scene-system',tip:'查看旅程执行与场景卡'},
+                    {goto:'#value',tip:'查看价值记录门槛与证据'},
+                    {goto:'#swarm',tip:'查看进化反馈如何驱动角色迭代'}];
     host.innerHTML=stages.length?stages.map(function(stg,i){
       var has=stg.count>0;
-      return '<div class="zx-v-stage'+(has?'':' nodata')+'">'+
+      var lnk=stageLinks[i]||{};
+      var clickAttr=lnk.goto?' onclick="go(\''+(lnk.goto.slice(1))+'\')" style="cursor:pointer"':'';
+      var tipAttr=lnk.tip?' title="'+zxMEsc(lnk.tip)+'"':'';
+      return '<div class="zx-v-stage'+(has?'':' nodata')+'"'+clickAttr+tipAttr+'>'+
         '<span class="zx-v-edge" style="background:'+(has?palette[i%5]:'#dde5ee')+'"></span>'+
         '<div class="zx-v-n">'+(numerals[i]||'')+'</div>'+
         '<div class="zx-v-name">'+zxVEsc(stg.name)+'</div>'+
         '<div class="zx-v-count" style="color:'+(has?'inherit':'#a8b8c8')+'">'+(has?stg.count:'—')+'</div>'+
-        '<div class="zx-v-src">'+(has?'':'NO_DATA · ')+zxVEsc(stg.source)+'</div></div>';
+        '<div class="zx-v-src">'+(has?'':'NO_DATA · ')+zxVEsc(stg.source)+(lnk.goto?'<span style="color:#3a64b3;font-size:9px"> →</span>':'')+'</div></div>';
     }).join(''):'<div class="zx-nodata">无阶段数据</div>';
 
     /* ── 门槛进度：真实 current / target, 不可判定显示 UNKNOWN ── */
