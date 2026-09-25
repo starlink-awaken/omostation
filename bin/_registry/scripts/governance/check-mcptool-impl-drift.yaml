@@ -3,13 +3,16 @@ id: bin/ssot/check-mcptool-impl-drift.py
 name: Check Mcptool Impl Drift
 category: governance
 owner: governance-team
-description: ""
+description: "MOF M1 MCPTOOL 声明面 (status: active) ↔ cockpit 实现 drift 探针; rule CR-X4-MCPTOOL-IMPL-DRIFT; --report 生成 .omo/_truth/registry/mcptool-drift-report.yaml"
 inputs: []
 outputs:
   - type: exit_code
   - type: json
+  - type: yaml
 dependencies: []
-triggers: []
+triggers:
+  - ci_gate
+  - cron
 related: []
-maturity: draft
-last_reviewed: "2026-08-24"
+maturity: active
+last_reviewed: "2026-09-25"
