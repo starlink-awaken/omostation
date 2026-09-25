@@ -32907,6 +32907,56 @@ bets:
         evidence: {}
   done_at: 2026-09-24
   value_indicator_policy: false
+- id: BET-Y2Q3-T10-OMLXC-02
+  title: OMLXC placement runtime recovery and gateway transient capacity healing
+  goal: Restore stale local placements after backend recovery and prevent transient no-capacity failures from permanently blacklisting healthy models
+  status: pending
+  window: Y2Q3
+  track: T10-MATURITY
+  priority: P0
+  appetite: 2 days
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: If live recovery cannot be proven without mutating launchd or remote runtimes, stop at deterministic tests and record the missing canary as unverified.
+  non_goals:
+  - Do not implement cost, quota, or provider-level routing.
+  - Do not mutate model files, credentials, launchd state, or remote runtimes.
+  - Do not add a second placement registry or gateway health registry.
+  done_when:
+  - A successful backend probe restores stale placements under that backend to current readiness and capacity state.
+  - Transient no-capacity failures decay and do not require a gateway restart after backend recovery.
+  - A deterministic missing placement remains rejected without unbounded retry.
+  - Targeted daemon and gateway regression tests pass.
+  - A live local readiness and authenticated inference canary is recorded, or the exact environmental blocker is recorded.
+  verify:
+  - cmd: cd projects/omlxc && uv run pytest tests/integration/test_task11_fix6_eligibility.py -q
+    expect: exit 0
+  - cmd: cd projects/aetherforge && uv run pytest packages/gateway/tests/test_health_failure_decay.py -q
+    expect: exit 0
+  - cmd: cd projects/omlxc && uv run python -m omlxc.cli models show coding-next --json
+    expect: exit 0
+  - cmd: cd projects/omlxc && uv run python -m omlxc.cli route plan coding-next --json
+    expect: exit 0
+  write_surfaces:
+  - docs/operations/workflow-waiver-2026-09-25-omlxc-placement-recovery.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-25-omlxc-placement-runtime-recovery-design.md
+  - docs/superpowers/plans/2026-09-25-omlxc-placement-runtime-recovery.md
+  - projects/omlxc/src/omlxc/daemon/composition.py
+  - projects/omlxc/tests/integration/test_task11_fix6_eligibility.py
+  - projects/aetherforge/packages/gateway/src/llm_gateway/gateway.py
+  - projects/aetherforge/packages/gateway/tests/test_health_failure_decay.py
+  - .omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-omlxc-placement-runtime-recovery-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:350abd4615778e7b970ca79990be4f73e8b8f76e9bd8ae11e94458e95b54f7ee
+    decision_ref: decision://accepted/BET-Y2Q3-T10-OMLXC-02
 - id: BET-Y2Q2-T10-161
   title: OMLXC fabric inference-readiness evidence repair
   track: T10-MATURITY
@@ -33576,6 +33626,426 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T10-162
+  title: Cockpit-UI 体系全景主航道路由与侧边栏首要导航装配
+  track: T10-MATURITY
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-24'
+  depends_on:
+  - BET-Y2Q2-T7-06
+  - BET-Y2Q2-T7-07
+  - BET-Y2Q2-T7-08
+  - BET-Y2Q2-T7-09
+  goal: 在 Cockpit-UI 建立 /panorama 顶层路由，将四大治理视图与执掌者总控整合为 Tab 式主视窗，在侧边栏最醒目位置与 ⌘K 面板中挂载。
+  non_goals:
+  - 不破坏原有宏观英雄视图与夏明星签署抽屉
+  priority: P1
+  risk_level: L2
+  appetite: 2 hours
+  circuit_breaker: 回退为独立多路由分散挂载
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:376c116a4c7181bf5d03a5260a21d2349e9813aacaf4243885fac086a85fbdd9
+    decision_ref: decision://accepted/BET-Y2Q2-T10-162
+    spec_ref: repo://docs/superpowers/specs/2026-09-24-panorama-master-route-and-navigation-design.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/views/panorama/PanoramaMasterView.tsx
+  - projects/cockpit-ui/src/views/panorama/__tests__/PanoramaMasterView.test.tsx
+  - projects/cockpit-ui/src/views/panorama/index.ts
+  - projects/cockpit-ui/src/routes.tsx
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-162.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/views/panorama/__tests__/PanoramaMasterView.test.tsx
+    expect: exit 0
+  done_when:
+  - 访问 /panorama 可无缝切换门禁、哨兵、架构与进化视图
+  - 侧边栏与 ⌘K 均可秒级唤起；支持 F 键一键沉浸大屏模式
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-162.md
+          merged_reachable_commit:
+            ref: git://origin/main@4d783b9970c0be34046c0a6b7e4ddc01327593e3
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-162.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-162.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-162.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-162.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-162.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-162.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T10-163
+  title: 全局导航集成与命令面板索引联动
+  track: T10-TOOLING
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-25'
+  depends_on:
+  - BET-Y2Q2-T10-162
+  goal: 将治理全景主航道与细分子视图深度集成至 CommandPalette 关键字搜索、QuickActionsPanel、全局 Ctrl+P 快捷键及侧边栏原生主控卡片。
+  non_goals:
+  - 不对非治理相关的导航与命令做破坏性变更
+  priority: P1
+  risk_level: L2
+  appetite: 2 hours
+  circuit_breaker: 保持原有仅按 label 过滤与原有快捷动作
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:7531cd5900857ef061c3aff6ef3f38c145f3b2755300842d962aede0fde8bc2d
+    decision_ref: decision://accepted/BET-Y2Q2-T10-163
+    spec_ref: repo://docs/superpowers/specs/2026-09-25-panorama-command-palette-and-navigation-integration.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/components/common/CommandPalette.tsx
+  - projects/cockpit-ui/src/components/common/QuickActionsPanel.tsx
+  - projects/cockpit-ui/src/components/common/__tests__/CommandPalette.test.tsx
+  - projects/cockpit-ui/src/components/common/__tests__/QuickActionsPanel.test.tsx
+  - projects/cockpit-ui/src/components/layout/AppLayout.tsx
+  - projects/cockpit-ui/src/components/layout/Sidebar.tsx
+  - projects/cockpit-ui/src/components/layout/__tests__/Sidebar.test.tsx
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-163.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/components/common/__tests__/CommandPalette.test.tsx
+    expect: exit 0
+  done_when:
+  - CommandPalette 支持 keywords 匹配，输入 74s、门禁、道法术器、bcos 即可秒级直达
+  - 注册 Ctrl+P 全局快捷键直达治理全景
+  - 侧边栏底部移除外部 43191 链接，升级为原生全景大屏主控卡片
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-163.md
+          merged_reachable_commit:
+            ref: git://origin/main@bc9356edf5f96c63babebd5bb62d11509751e60e
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-163.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-163.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-163.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-163.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-163.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-163.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T10-164
+  title: 大屏轮播与美学微交互完备化
+  track: T10-TOOLING
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-25'
+  depends_on:
+  - BET-Y2Q2-T10-163
+  goal: 为 PanoramaMasterView 打造适配长屏挂机的自动巡检轮播模式、交互感知暂停、数字键 1-5 直达与暗夜毛玻璃 Toast 微交互系统。
+  non_goals:
+  - 不在轮播中破坏夏明星在位签署通道的独立性
+  priority: P1
+  risk_level: L2
+  appetite: 2 hours
+  circuit_breaker: 降级为纯手动 Tab 切换与固定状态
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:2090b0649fa46dfcf606c5ee77fdaa3a0007492d6113ad67835e3e8722717530
+    decision_ref: decision://accepted/BET-Y2Q2-T10-164
+    spec_ref: repo://docs/superpowers/specs/2026-09-25-panorama-wallboard-auto-rotation-and-micro-interactions.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/views/panorama/PanoramaMasterView.tsx
+  - projects/cockpit-ui/src/views/panorama/__tests__/PanoramaMasterView.test.tsx
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-164.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/views/panorama/__tests__/PanoramaMasterView.test.tsx
+    expect: exit 0
+  done_when:
+  - 大屏自动巡检轮播可正常按 25s 周期在 4 大核心视图间轮转
+  - 监听鼠标移动与键盘操作自动暂停轮播并在 12s 闲置后恢复
+  - 数字键 1-5 快速切 Tab，A 键切轮播，F 键切沉浸全屏，并伴随毛玻璃 Toast 反馈
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-164.md
+          merged_reachable_commit:
+            ref: git://origin/main@c09bc27cddeb53f66ba21409dffa9901dd21b949
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-164.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-164.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-164.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-164.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-164.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-164.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T10-165
+  title: 前端全量单元测试与无障碍合规矩阵
+  track: T10-TOOLING
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-25'
+  depends_on:
+  - BET-Y2Q2-T10-164
+  goal: 为治理全景大屏注入 WAI-ARIA 语义架构与键盘导航，并通过前端全量单元测试矩阵（94 测试文件、815 用例）验证。
+  non_goals:
+  - 不对无障碍无关的历史业务页面强制进行大重构
+  priority: P1
+  risk_level: L2
+  appetite: 2 hours
+  circuit_breaker: 降级为基础 HTML 标签展示
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:515591c875207166ed44b9b0a5d968da1380aa608e03080349cc2a81ef7b4053
+    decision_ref: decision://accepted/BET-Y2Q2-T10-165
+    spec_ref: repo://docs/superpowers/specs/2026-09-25-panorama-a11y-and-full-test-suite.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - projects/cockpit-ui/src/views/panorama/PanoramaMasterView.tsx
+  - projects/cockpit-ui/src/views/panorama/__tests__/PanoramaA11y.test.tsx
+  - projects/cockpit-ui/src/views/panorama/__tests__/PanoramaMasterView.test.tsx
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-165.md
+  verify:
+  - cmd: cd projects/cockpit-ui && bun run test:unit src/views/panorama/__tests__/PanoramaA11y.test.tsx
+    expect: exit 0
+  done_when:
+  - 全景大屏组件具备完整的 tablist, tab, tabpanel, aria-selected, aria-controls 与 aria-pressed
+    属性
+  - 94 个测试套件，815 个单元测试全部 100% 通过
+  - PR
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-165.md
+          merged_reachable_commit:
+            ref: git://origin/main@30d8f20b0e31fcc3d0b35601a4871d65bf5a8326
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-165.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-165.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-165.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-165.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-165.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-165.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T6-02
+  title: 端口导流与双核下线守护
+  track: T6-SUBTRACT
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-25'
+  depends_on:
+  - BET-Y2Q2-T10-165
+  goal: 为原 :43191 与 :43910 端口构建轻量 Sunset 导流守护器，人类浏览器请求 302 重定向至 Cockpit-UI 全景控制舱，API
+    保持快照兼容。
+  non_goals:
+  - 不对除 43191 和 43910 之外的其他正在运行的系统服务端口做修改
+  priority: P1
+  risk_level: L2
+  appetite: 2 hours
+  circuit_breaker: 停止导流守护并保留原端口静态报错页面
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-code-change
+  workflow: project-code-change
+  accepted_specifications:
+  - content_digest: sha256:0cc9a727bef5365518072302b603cbf2deaf646d454265b9a32ac49fa61199ac
+    decision_ref: decision://accepted/BET-Y2Q2-T6-02
+    spec_ref: repo://docs/superpowers/specs/2026-09-25-dashboard-sunset-redirector-design.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - bin/panorama/sunset_redirector.py
+  - bin/panorama/sunset-redirector.py
+  - tests/test_sunset_redirector.py
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T6-02.md
+  verify:
+  - cmd: uv run pytest tests/test_sunset_redirector.py
+    expect: exit 0
+  done_when:
+  - 导流器对浏览器请求响应 302 重定向到 http://localhost:5173/panorama
+  - 对 /api/* 数据请求兼容返回遥测数据 JSON
+  - pytest 单元测试全部通过
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-02.md
+          merged_reachable_commit:
+            ref: git://origin/main@30d8f20b0e31fcc3d0b35601a4871d65bf5a8326
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-02.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-02.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T6-02.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q2-T10-166
+  title: 治理协议与文档 SSOT 锚定
+  track: T10-DOCS
+  window: Y2Q2
+  status: done
+  done_at: '2026-09-25'
+  depends_on:
+  - BET-Y2Q2-T6-02
+  goal: 将 Cockpit-UI 全景控制舱确立为唯一人类总控入口，更新 DASHBOARDS.md、端口注册表与 PANORAMA-DASHBOARD.md。
+  non_goals:
+  - 不对与驾驶舱无关的业务文档进行批量重写
+  priority: P1
+  risk_level: L2
+  appetite: 2 hours
+  circuit_breaker: 恢复为旧三套入口表述
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  underlying_workflow: project-doc-change
+  workflow: project-doc-change
+  accepted_specifications:
+  - content_digest: sha256:de0c01bb7373b80d8531aa1924c2446854c9fd0073bdb3bbab4c7c766b1b6398
+    decision_ref: decision://accepted/BET-Y2Q2-T10-166
+    spec_ref: repo://docs/superpowers/specs/2026-09-25-dashboard-ssot-documentation-convergence.md
+    spec_version: 1.0.0
+  write_surfaces:
+  - docs/DASHBOARDS.md
+  - docs/PANORAMA-DASHBOARD.md
+  - protocols/port-registry.yaml
+  - AGENTS.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q2-T10-166.md
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  done_when:
+  - DASHBOARDS.md 明确 Cockpit-UI (/panorama) 为单一人类主入口
+  - protocols/port-registry.yaml 标记 43191 与 43910 为 converged
+  - AGENTS.md 记录历史双核下线与全面收敛
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-166.md
+          merged_reachable_commit:
+            ref: git://origin/main@30d8f20b0e31fcc3d0b35601a4871d65bf5a8326
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-166.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-166.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-166.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-166.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-166.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q2-T10-166.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -33714,7 +34184,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 458
+  total_bets: 464
   windows:
   - Y1Q1
   - Y1Q2

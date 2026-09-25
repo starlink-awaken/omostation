@@ -6,9 +6,9 @@ last-reviewed: 2026-09-06
 ---
 # Agent Workflows Index
 
-> 自动生成，共 24 个 workflows
+> 自动生成，共 25 个 workflows
 
-最后更新: 2026-09-05
+最后更新: 2026-09-25
 
 ## 工作流列表
 
@@ -20,7 +20,9 @@ last-reviewed: 2026-09-06
 | closeout-with-retro | workflows/closeout-with-retro.yaml |
 | cognitive-governance-delivery | workflows/cognitive-governance-delivery.yaml |
 | convergence-pulse-weekly | workflows/convergence-pulse-weekly.yaml |
+| dashboard-evolution | workflows/dashboard-evolution.yaml |
 | documents-consumer-audit-weekly | workflows/documents-consumer-audit-weekly.yaml |
+
 | external-adapter-sync | workflows/external-adapter-sync.yaml |
 | governance-audit | workflows/governance-audit.yaml |
 | governance-state-mutation | workflows/governance-state-mutation.yaml |

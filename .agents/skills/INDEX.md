@@ -1,8 +1,8 @@
 # Skills Index
 
-> 自动生成，共 42 个 skills
+> 自动生成，共 44 个 skills
 
-最后更新: 2026-09-18
+最后更新: 2026-09-25
 
 使用 `agent-workflow.py suggest` 或 `grill-me` 技能进行智能推荐
 
@@ -15,7 +15,10 @@
 | bet-closeout-chain | BET Closeout Chain | BET 交付 PR 已合并, bet-ledger complete 需要闭环 | .agents/skills/bet-closeout-chain/SKILL.md |
 | bet-execution | Bet Execution | general | .agents/skills/bet-execution/SKILL.md |
 | cognitive-governance | Cognitive Governance | general | .agents/skills/cognitive-governance/SKILL.md |
+| dashboard-component-evolution | Dashboard Component Evolution | 驾驶舱组件开发, TS 契约扩展, ARIA 1.2 无障碍合规 | .agents/skills/dashboard-component-evolution/SKILL.md |
+| dashboard-governance-patrol | Dashboard Governance Patrol | 驾驶舱巡检, 端口导流状态, 门禁与 agent-brief 新鲜度 | .agents/skills/dashboard-governance-patrol/SKILL.md |
 | domain-cartridge-governance | Domain Cartridge Governance | general | .agents/skills/domain-cartridge-governance/SKILL.md |
+
 | ecos-test-cycle | Ecos Test Cycle | general | .agents/skills/ecos-test-cycle/SKILL.md |
 | governance-phase-orchestrator | Governance Phase Orchestrator | general | .agents/skills/governance-phase-orchestrator/SKILL.md |
 | governance-ssot-edit | Governance Ssot Edit | general | .agents/skills/governance-ssot-edit/SKILL.md |
