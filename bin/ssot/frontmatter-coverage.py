@@ -62,7 +62,7 @@ DEFAULT_FIELD_VALUES = {
     "type": "ephemeral",
 }
 
-# 跳过路径（archive / runtime）
+# 跳过路径（archive / runtime / templates）
 SKIP_PATH_SUBSTRINGS = [
     "/_archive/",
     "/archive/",
@@ -70,6 +70,8 @@ SKIP_PATH_SUBSTRINGS = [
     "/.git/",
     "/_delivery/",
     "/resident/",
+    "/specs/templates/",
+    "/standards/templates/",
 ]
 
 # sub-grep for projects/*/*
@@ -103,24 +105,23 @@ def _walk_projects(pattern_filename: str):
 
 
 def _parse_fm(text: str) -> tuple[dict | None, int, int]:
-    """Parse YAML frontmatter (very loose: just key: value lines)."""
+    """Parse YAML frontmatter (uses yaml.safe_load to handle multiline scalars)."""
     if not text.startswith("---"):
         return None, 0, 0
     parts = text.split("---", 2)
     if len(parts) < 3:
         return None, 0, 0
-    fm_text = parts[1].strip()
+    fm_text = parts[1]
     fm_start = 3  # past opening "---"
     fm_end = len(parts[0]) + 3 + len(parts[1]) + 3  # closing "---"
-    fm = {}
-    for line in fm_text.splitlines():
-        line = line.rstrip()
-        if not line or line.startswith("#"):
-            continue
-        m = re.match(r"^([\w-]+)\s*:\s*(.*)$", line)
-        if m:
-            fm[m.group(1)] = m.group(2).strip()
-    return fm, fm_start, fm_end
+    try:
+        import yaml as _yaml
+        meta = _yaml.safe_load(fm_text)
+    except Exception:
+        return None, fm_start, fm_end
+    if not isinstance(meta, dict):
+        return None, fm_start, fm_end
+    return meta, fm_start, fm_end
 
 
 def _has_field(fm: dict | None, field: str) -> bool:
@@ -211,23 +212,28 @@ def _apply_patch_one(p: Path, fm: dict | None, fm_start: int, fm_end: int, origi
                 val = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             new_fm[f] = val
             added.append(f)
-    # rebuild fm_text
-    fm_lines = []
-    for k, v in new_fm.items():
-        fm_lines.append(f"{k}: {v}")
-    # ensure last-reviewed updated to today if already present
+    # always bump last-reviewed
     new_fm["last-reviewed"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    if "last-reviewed" not in fm and "last-reviewed" not in added:
+    if "last-reviewed" not in fm:
         added.append("last-reviewed")
-    # dedup + reorder: rebuild with REQUIRED_FIELDS first
-    fm_lines = []
+    # rebuild fm_text via yaml.dump so multiline scalars (description: > ...) survive
+    import yaml as _yaml
+    # reorder: REQUIRED_FIELDS first, then extras
+    ordered = {}
     for f in REQUIRED_FIELDS:
         if f in new_fm:
-            fm_lines.append(f"{f}: {new_fm[f]}")
+            ordered[f] = new_fm[f]
     for k, v in new_fm.items():
         if k not in REQUIRED_FIELDS:
-            fm_lines.append(f"{k}: {v}")
-    new_text = "---\n" + "\n".join(fm_lines) + "\n---\n" + original_text[fm_end:]
+            ordered[k] = v
+    fm_text = _yaml.safe_dump(
+        ordered,
+        default_flow_style=False,
+        allow_unicode=True,
+        sort_keys=False,
+        width=4096,
+    )
+    new_text = "---\n" + fm_text + "---\n" + original_text[fm_end:]
     return new_text, added
 
 

@@ -43,7 +43,7 @@ class FrontmatterCoverageTests(unittest.TestCase):
         fm, s, e = m._parse_fm(text)
         self.assertIsNotNone(fm)
         self.assertEqual(fm.get("foo"), "bar")
-        self.assertEqual(fm.get("baz"), "1")
+        self.assertEqual(fm.get("baz"), 1)
 
     def test_parse_fm_missing(self):
         text = "# no fm\n"
@@ -106,8 +106,8 @@ class FrontmatterCoverageTests(unittest.TestCase):
         self.assertEqual(added, [])
         # foo still preserved
         self.assertIn("foo: bar", new_text)
-        # last-reviewed bumped to today (2026-09-25)
-        self.assertIn("last-reviewed: 2026-09-25", new_text)
+        # last-reviewed bumped to today (2026-09-25), yaml may quote
+        self.assertIn("2026-09-25", new_text)
 
     def test_coverage_one_basic(self):
         # write 3 files with various FM states
