@@ -40,6 +40,7 @@ ADR-0203 的 requirement-iteration 门要求 `start --bet <BET-ID>`，但 **3Y-B
 | #4299 | `8ef17fe44` | 固化 2 条踩坑（PITFALL-MEA-005：一个集合多个读取入口计数不一致 = 有一条在静默丢元素；PITFALL-ENV-004：`rm`/`cp` 交互别名 exit 0 却什么都没做）+ 登记发现 I1（`closeout --from-diff` 提交后选出 0 条检查、`all([])` 真空通过却报 ok）；`governance-state-mutation` run 20260924T150736Z |
 | #4300 | `a51f4ecdc` | 自纠 I1 那行的替代路径断言：`--all` 实测在 PASW worktree 被 `omo-state-projection-guard` 的 10 条 `canonical_missing`（未入库运行时产物）阻断，改用 `--file <已 claim 路径>`（实测 4 条真检查） |
 | #4301 | `8311c4c34` | 补登记 4 条滞后豁免行（#4296/#4298/#4299/#4300，PR 号与 merged SHA 逐一 `git show` 核对）+ 记录 I2（shallow 子模块让 submit 把"已推送"读成"未推送"：graft 边界压在 pin 上，`rev-list --count` 1 vs 202）；纯 docs 交付 |
+| #4302 | `9fdbb19b7` | I3 的修复交付本体：`error-knowledge.py record` 去重降级为建议式（`DEDUP CANDIDATES` 只列不并）、匹配加 category 过滤、`--confirm-dup` 才计数（候选外 exit 1）；固化 PITFALL-SUB-006；同步 `incident-to-rule-pipeline.md` §5 与 `docs/AGENT-PROFILE.md` 的过期描述；5 条回归测试。同一豁免交付（`governance-state-mutation` run 20260924T161254Z）——即 I3 那句"已修（本次交付）"所属的行，由本次交付补写 |
 
 一次补 4 行不是疏忽的累积，而是滞后规则的量化后果：只有**碰这份文档的交付**才会写行，
 #4295 → #4296 → #4298/#4299/#4300 之间隔了 3 次不碰本文档的交付，空档就攒到 4 行。
@@ -154,6 +155,126 @@ times_encountered++"/"自动 dedup 计数"）同步改写。3 条回归测试钉
 **未修**：`symptom_overlap ≥ 3` 词阈值本身保留（改它等于重划整条管道的同坑判据，超出本次范围）；
 两条被误计数的记录已 `git restore` 归零（实测 `times_encountered` 均为 1），不留占位说明。
 
+## I4（第六次复盘发现：管道后半段的队列既不可见也不存在）
+
+`error-knowledge.py promote-drafts --dry-run` 的实测输出是本次的起点：37 个坑里 **3 条已过阈值**
+（`PITFALL-GAT-004` 46 次、`PITFALL-GAT-005` 18 次、`PITFALL-COO-003` 5 次），而
+`.omo/_delivery/rule-drafts/` **整个目录不存在**（`find ~ -type d -name rule-drafts` → 0 命中）。
+`stats` 与 `check` 当时都不报这个缺口 —— ⑤ 从未有过审查对象，整条 ADR-0443 管道的末端没被走到过。
+
+根因是触发面而非阈值：晋升只挂在 ① `feed_from_escapes` 的内层循环（要求 worktree-local 的
+`.omo/_delivery/swarm-escape/` 存在）和 ② `record --confirm-dup` 上；而草案目录本身落在
+`.gitignore:12` 的 `.omo/_delivery/*` 里，即便生成也随 worktree 回收消失。
+
+**同族的证据灭失（未修，需 principal 决策）**：workflow run record 落在
+`.omo/_delivery/agent-workflows/runs/`，同样被忽略。承载 I3 修复的 run
+`20260924T161254Z-governance-state-mutation-9e761918` 已随 `ws-pitfall-i2` 的 release 被销毁，
+"那一次 start 到底有没有带 bet" 现在无法审计；本日报表里 13 条无 bet 治理 run 同样不可追。
+要么把 run record 纳入版本控制，要么接受豁免审计只能靠 `docs/operations/` 这类人写留痕。
+
+**已修（BET-Y2Q3-T10-202）**：`promote-drafts` 独立扫描已入库的坑（缺 escape 台账时 `feed-escapes`
+也照跑一次扫描）；`stats`/`check` 增 `overdue_rule_drafts`/`rule_drafts_stale_review` 只读报告；
+`.gitignore` 以 `!.omo/_delivery/rule-drafts/` 重纳队列（与 calibration/events/scene-outcomes 同先例）；
+3 份草案经 `_promote_rule_draft` 本身补齐并入库。`check` 退出码经与 `origin/main` 版本逐字段对拍：
+同一份库下两者 `exit=0`、`problems` 相同。
+
+## I5（第七次复盘发现：70 条 waiver 是入口不对称的价格，不是偷懒的疏漏）
+
+`.omo/_truth/governance-evidence/` 下 136 个 waiver 文件里 **70 个记录
+`AGCP_REQUIREMENT_ITERATION_GATE=0`**。机制定位到行：`chain_bind.start_requires_bet` 自
+`737da2b52`（2026-08-16）起只豁免 `observer-audit`，而同一文件的 `evaluate_closeout` 早已对
+`GOVERNANCE_EVOLVE_WORKFLOWS`（5 个治理演进 workflow）在 `_has_governance_bet` 时放行（G8/T10-08）。
+治理自进化在出口无债、在入口被拦，唯一合规出路退化成每次签一条一次性豁免。
+
+假设 "`start` 的 CLI 可能有绕过口" 已实测否定：除 `--help` 短路外无第二条路径。台账侧
+`3dcf73a1c` 复核当时 459 条 bet 仅 1 条 `in_progress`，且属并发交付（`BET-Y2Q3-T9-01`），
+绑它等于 F1 要消灭的纸面绑定 + 抢坑。
+
+**principal 决策（2026-09-24）**：开一条治理 bet 绑定（`BET-Y2Q3-T10-202`），并把
+**start 端对称豁免**纳入同一交付，从根因上消灭这 70 条 waiver 的需求。实施后本交付
+零 `AGCP_*` 豁免、零 waiver 文件；豁免谓词与 closeout 完全同一条（不更宽），并由
+`tests/unit/gac/test_chain_bind_start_gate.py` + `chain-bind-check.py self-check` 双向钉住。
+
+**spec 与实现的偏差（已回写 spec，不藏）**：spec §4 G5 原写"两个调用点传各自的 workspace"。
+实测两个调用点都从 `<root>/bin/plan/chain_bind.py` 动态加载模块，`DEFAULT_WORKSPACE =
+Path(__file__).resolve().parents[2]` 已经天然解析到所在工作树，**调用点无需改动**
+（`projects/omo` 侧还是子模块，本就不该由主仓交付顺手改）。契约反转还必须同步两处钉住旧行为的
+断言：`bin/plan/chain-bind-check.py self-check` 与 `tests/test_chain_bind.py`。
+
+## I6（`confirm`/`reject` 是从未接线的死面）
+
+`error-knowledge.py` 有 `confirm` / `reject` 两个子命令解析器，但**没有** `cmd_confirm`/`cmd_reject`，
+`handlers` 表里也没有它们 —— 实测 `error-knowledge.py confirm --id PITFALL-COO-003` 打印 help 并
+**exit=0**，仓内零调用方。危害与 I1 同构：人审队列的"处置"这一步在 CLI 上看起来存在，实际静默 no-op，
+而 exit 0 会让任何脚本以为草案已被处理。
+
+**处置**：改为显式 `NOT_IMPLEMENTED` 退 2，并把真正的处置面写进报错文本（人审 → `lib/yaml_ssot_edit.py`
+roundtrip 入册 → 删草案）。**未**实现 `confirm`/`reject` 的正面语义 —— 那是 ADR-0431 HITL 边界的设计，
+超出"让队列可见"的范围，且 Agent 无权替 principal 定义人审契约。
+
+## I7（`refresh-packet` 对"自己改台账的 bet"结构不可用）
+
+`refresh-packet` 拿工作区字节比 `git show origin/main:<path>`（`authoritative_ref="origin/main"`）。
+本 bet 的 `write_surfaces` 含 `docs/plans/3y-bet-ledger.yaml` 自身，于是任何 refresh 都必然
+`WORK_PACKET_REFRESH_SOURCE_UNMERGED`（未合并前，工作区台账永远 ≠ origin/main）。
+
+**后果（本轮真实付出的代价）**：packet 面必须在 `start` 前一次算全。G5 实施时才暴露
+`chain-bind-check.py` 与 `tests/test_chain_bind.py` 也钉着旧契约，只能把
+`20260924T233640Z-governance-audit-61f70aad` 以 `--status failed` 关闭（evidence 写明替代关系与
+"关闭前无未声明面被改动"），扩 `write_surfaces` 到 15 面后重开
+`20260924T234703Z-governance-audit-19edbaca`。已写进 spec 验收第 6 条。
+根治方向（属 principal 决策，未 implement）：refresh 允许以 run base commit 为权威 ref，
+或提供显式留痕的 `--extend-surface`。
+
+**第二型（同一函数、不同触发面，15 面重开之后才撞上）**：packet 在 `start` 时把 spec 的
+`content_digest` 钉进 `work_packet.spec_binding`（本 run 实测钉的是 `sha256:8688a2ef…`）。
+start 之后我按实测继续更正 spec（G5 段、E1/E5 措辞、验收第 4/6 条），文件 digest 变成
+`sha256:bdb7400e…`，于是**任何** claim 都被 `WORK_PACKET_SOURCE_DRIFT` 拒绝 —— 连 claim 一个
+本来就在面上的路径都不行。这不是"改动面算窄"，是"spec 是活文档而 packet 把它当冻结输入"：
+`bet-closeout-chain` 明写"spec 内容再改必须重算 digest"，但重算只落在台账，run 侧无对应动作。
+代价：`20260924T234703Z-governance-audit-19edbaca` 也以 `--status failed` 收案，第三个 run 才起跑，
+且顺序被迫固定为「spec 定稿 → 台账 digest → start → 只改代码」。
+可执行的缓解（未 implement，属 principal）：`refresh-packet` 支持以工作区当前 spec 重绑 digest
+（ledger 的 `content_digest` 已是权威声明，无需 origin/main 对比），或 claim 时只校验 write_surfaces
+集合、把 digest 漂移降级为告警。
+
+**顺带闭合的一项**：`bin/agent-workflow.py` 的 start 拦截提示原先只列 `observer-audit` 与 ENV 豁免。
+G5 之后继续留着，等于把下一个 agent 又推回去签豁免 —— 原计划"off-packet 只登记不修改"改为
+随 G5 一并更正并纳入 write_surfaces（同一根因，不是搭车清理）。
+
+## I8（草案抽屉有第二道锁，且两份同源实现已漂移）
+
+`findings I4` 说队列"落在 `.gitignore:12`"。这话只对了一半，实施时被确定性打脸：
+`.gitignore` 加 `!` 后 `git add` 正常，`git commit` 却被 pre-commit 的 `runtime-artifacts`
+检查拦下并给出"fix: git rm --cached + add to .gitignore"——一个把"别提交"当成唯一出路的提示。
+
+- 锁在 `bin/gac/check-runtime-artifacts.py:31-34`（`BLACKLIST_PREFIXES` 含 `.omo/_delivery/`），
+  而**同一文件 37-41 行已有**为 `calibration/events/scene-outcomes` 开的 `WHITELIST_PREFIXES`。
+  即：那三个目录能入仓不是因为 `.gitignore` 的 `!`，是因为两道锁都解了。我照先例只解了一道。
+- 同一黑名单在 `bin/gac/ci-local-fast.py::run_runtime_artifact_gate()` 有第二份实现，
+  且**没有** `WHITELIST_PREFIXES` —— 两份早已漂移。后果要限定住，不夸大：那份扫
+  `git diff --cached`，CI 里没有暂存区，所以今天不显形；任何本地跑 `ci-local-fast` 的人
+  连那三个既有目录的新文件都提交不了。
+- 本次处置：把 4 条白名单前缀（三个既有 + `rule-drafts/`）同步进第二份实现，使两处收敛为
+  一个语义，并由回归测试断言两集合相等（漂移是这里真正的病灶，多一个目录只是又一次暴露它）。
+- 未处置（属 principal）：`runtime-artifacts` 的 fix 提示语把"不提交"当成唯一出路，
+  与仓内已存在的白名单机制相互矛盾 —— 这正是 I4「证据放在别人当垃圾的抽屉里」的措辞版复现。
+
+## I9（台账的 `total_bets` 是派生值，冲突合并"干净"恰恰是它的失效方式）
+
+rebase 到 main（已前进 6 个 commit）时，`docs/plans/3y-bet-ledger.yaml` 只有一处冲突：
+main 的 #4304 在 `bets` 列表尾部插入 `BET-Y2Q3-T9-01`，本 bet 同位置插入 `BET-Y2Q3-T10-202`。
+两侧把条目都保留后，**`meta.total_bets` 却没有冲突** —— 因为两侧写的都是 `459`
+（各自从 `458` 往上加一条），git 视作同一处同一改，直接吞掉。结果：实际 460 条、声明 459 条，
+而 `git diff --check` 之类的"有没有残留标记"检查全绿。
+
+- 判据不是"合并有没有报冲突"，而是"派生值有没有按合并后的事实重算"。本次在解决冲突的同一步里
+  断言 `len(bets) == meta.total_bets`（并断言两条 bet 都在、无重复 id）才把 `459 → 460` 暴露出来。
+- 与 PITFALL-GAT-006 同源而不同形：那条是"并行 PR 回退 main 的正确值"，这条是"双方写同一个数字，
+  于是数字对不上一件事实且无人被提示"。计数越界不会失败，只会静默说谎。
+- 结构性修法（属 principal，本次未做）：把 `total_bets` 从人写常量改为生成器派生，
+  或让门禁比对 `len(bets)`；`ledger-safe-insert.py` 目前只在**单侧插入**时校验，管不到合并。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
@@ -164,8 +285,19 @@ times_encountered++"/"自动 dedup 计数"）同步改写。3 条回归测试钉
   active 均与本改动无关——绑任意 active bet 就是 F1 要消灭的纸面绑定，`AGCP_REQUIREMENT_ITERATION_GATE=0`
   是静默绕门。两者都拒绝，改为 lane 分 commit + 在此留痕。lane 检查按 commit 单 lane 放行（`len(lanes) <= 1`），
   未使用 `--no-verify`。
+
+  > **上一行的台账计数有误（在 `9fdbb19b7~1` 上复核）**：那次交付的基线是 452 条 bet **全部 `done`、
+  > 非 done = 0**；"3 条 active" 属于更早两次交付（`af33a3e80`：3 条 `candidate`；`4f8a64705`：
+  > 3 `candidate` + 2 `pending`）。结论不变（无一条与本改动相关，绑谁都是纸面绑定），但"当时确有非 done
+  > 条目"被这段文字抹掉了 —— 留痕文档的证据也要能被复跑推翻。
+- **本交付（`BET-Y2Q3-T10-202`）不在这条豁免序列里**：`start` 绑定真实 bet、未设任何 `AGCP_*`、
+  未新增 waiver 文件；台账因此**有**改动（新增 1 条 bet，与上面那条 run 的"台账未改动"分属不同交付）。
+  17 条 `write_surfaces` 先 claim 后编辑；因 packet 面算窄（`20260924T233640Z-governance-audit-61f70aad`）
+  与 spec digest 漂移（`20260924T234703Z-governance-audit-19edbaca`）作废的两个 run 都以 `--status failed`
+  关闭并注明替代关系（见 I7），第三个 run 才按「spec 定稿 → 台账 digest → start → 只改代码」的顺序跑通。
+  I5 的对称豁免落地后，治理演进类 workflow 的这条豁免链应当整体终止。
 - 未补录价值记录（30 条门保持 NOT_PROVEN）；未做 weekly-review（principal-only）。
-- 台账未改动。
+- 台账未改动。（作用域是上面 `20260924T161254Z` 那次交付；`BET-Y2Q3-T10-202` 有改动，见上一条。）
 
 ## Follow-up
 

@@ -127,7 +127,9 @@ def feed_from_escapes(escape_dir: Path | None = None, *, min_count: int = FEED_M
 
     directory = escape_dir or (ROOT / ".omo/_delivery/swarm-escape")
     if not directory.is_dir():
-        return {"fed": 0, "bumped": 0, "promoted": 0}
+        # 没有 escape 台账（worktree-local，常不存在）只等于「本轮无新观测」，
+        # 不等于「已入库的坑不需要人审草案」。晋升扫描照跑。
+        return {"fed": 0, "bumped": 0, "promoted": len(promote_overdue())}
     counter: dict[str, int] = {}
     excerpt: dict[str, str] = {}
     for path in sorted(directory.glob("*.json")):
@@ -143,16 +145,23 @@ def feed_from_escapes(escape_dir: Path | None = None, *, min_count: int = FEED_M
             fps = record.get("fingerprints") or []
             excerpt[key] = str(fps[0].get("output_excerpt", ""))[:200] if fps and isinstance(fps[0], dict) else key
     entries = _load_all()
-    fed = bumped = promoted = 0
+    fed = bumped = 0
     for key, count in counter.items():
         if count < min_count:
             continue
         surface = key.split("|", 1)[0]
         check_id = key.split("|")[1] if "|" in key else key
         symptom = excerpt.get(key, key)
+        # ADR-0443 v7 (BET-Y2Q3-T10-202): 喂食目标类别必须先于匹配确定。v6 之前
+        # 匹配是类别盲的，一个 submodule 面的 escape 只要词面撞上就把 gate 坑的
+        # times_encountered 加上去 —— 而该计数正是规则晋升的证据，跨类污染会
+        # 把不相关的坑推过阈值生成草案。新条目沿用同一类别，两者不会分叉。
+        category = _SURFACE_CATEGORY.get(surface, "gate")
         matched = False
         for e in entries:
             if e.get("status") != "active":
+                continue
+            if e.get("category") != category:
                 continue
             common = symptom_overlap(symptom, str(e.get("symptom", "")))
             if common >= 3:
@@ -170,7 +179,6 @@ def feed_from_escapes(escape_dir: Path | None = None, *, min_count: int = FEED_M
                 matched = True
                 break
         if not matched:
-            category = _SURFACE_CATEGORY.get(surface, "gate")
             seq = _next_seq(category, entries)
             entry = {
                 "schema": "agent-error/v1",
@@ -192,10 +200,10 @@ def feed_from_escapes(escape_dir: Path | None = None, *, min_count: int = FEED_M
             entries.append(entry)
             _save_entry(entry)
             fed += 1
-        # 晋升检查（周喂食直达阈值的常见路径：count>=5 首次即晋升）
-        for e in entries:
-            if e.get("times_encountered", 0) >= ESCALATION_THRESHOLD and _promote_rule_draft(e) is not None:
-                promoted += 1
+    # 晋升检查（周喂食直达阈值的常见路径：count>=5 首次即晋升）。v6 把它放在
+    # 每个 key 的内层循环里、遍历全表，既 O(n²) 又让「无 escape 台账」时整段
+    # 不执行；改喂完扫一次，与 promote-drafts 共用同一个谓词。
+    promoted = len(promote_overdue(entries))
     return {"fed": fed, "bumped": bumped, "promoted": promoted}
 
 
@@ -289,6 +297,63 @@ def _promote_rule_draft(entry: dict) -> Path | None:
     return out
 
 
+def _rule_id_for(pitfall_id: str) -> str:
+    return f"CR-PITFALL-{pitfall_id.removeprefix('PITFALL-')}"
+
+
+def _display(path: Path) -> str:
+    """仓内路径显示成相对路径；被重定向到仓外（测试、别的 checkout）时照原样报。"""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def rule_draft_queue(entries: list[dict] | None = None) -> dict[str, list[str]]:
+    """人审队列点名：达阈值的坑有没有对应草案躺在队列里。
+
+    晋升过去只在两个地方被触发，两者都不是「随时可查」：喂食内层循环（要求
+    ``.omo/_delivery/swarm-escape/`` 存在，而它是 worktree-local、随 worktree 回收
+    消失）和 ``record --confirm-dup``。实测 2026-09-24：37 个坑里 3 个已过阈值、
+    队列里 0 份草案，且 ``stats``/``check`` 都不报缺草案 —— 管道末端从未被走到。
+    """
+    source = _load_all() if entries is None else entries
+    queue: dict[str, list[str]] = {"drafted": [], "overdue": [], "stale_review": []}
+    for e in source:
+        if e.get("times_encountered", 0) < ESCALATION_THRESHOLD:
+            continue
+        eid = str(e.get("id", ""))
+        path = RULE_DRAFTS_DIR / f"{_rule_id_for(eid)}.json"
+        if not path.is_file():
+            if e.get("status") != "obsolete":
+                queue["overdue"].append(eid)
+            continue
+        queue["drafted"].append(eid)
+        try:
+            review_before = json.loads(path.read_text(encoding="utf-8")).get("draft_rule", {}).get("review_before")
+        except (OSError, json.JSONDecodeError):
+            queue["stale_review"].append(eid)
+            continue
+        if review_before and str(review_before) < datetime.now(UTC).strftime("%Y-%m-%d"):
+            queue["stale_review"].append(eid)
+    for key in queue:
+        queue[key].sort()
+    return queue
+
+
+def promote_overdue(entries: list[dict] | None = None) -> list[Path]:
+    """过一遍阈值以上的坑，缺草案的交给 ``_promote_rule_draft``（幂等，不覆盖人审结果）。"""
+    source = _load_all() if entries is None else entries
+    created = []
+    for e in source:
+        if e.get("status") not in ("active", "draft") or e.get("times_encountered", 0) < ESCALATION_THRESHOLD:
+            continue
+        path = _promote_rule_draft(e)
+        if path is not None:
+            created.append(path)
+    return created
+
+
 def cmd_record(args):
     entries = _load_all()
     category = args.category
@@ -377,7 +442,16 @@ def cmd_stats(args):
         by_status[st] = by_status.get(st, 0) + 1
         if e.get("times_encountered", 0) >= ESCALATION_THRESHOLD:
             escalated.append(e["id"])
-    result = {"total": len(entries), "by_category": by_cat, "by_status": by_status, "escalated": escalated}
+    queue = rule_draft_queue(entries)
+    result = {
+        "total": len(entries),
+        "by_category": by_cat,
+        "by_status": by_status,
+        "escalated": escalated,
+        "rule_drafts_drafted": queue["drafted"],
+        "overdue_rule_drafts": queue["overdue"],
+        "rule_drafts_stale_review": queue["stale_review"],
+    }
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
@@ -387,6 +461,11 @@ def cmd_stats(args):
         print(f"  status: {by_status}")
         if escalated:
             print(f"  ⚡ escalation candidates: {escalated}")
+        print(f"  rule-drafts: {len(queue['drafted'])} 在队列, {len(queue['overdue'])} overdue")
+        for eid in queue["overdue"]:
+            print(f"    ⏳ overdue: {eid} → CR-PITFALL-{eid.removeprefix('PITFALL-')} (跑 promote-drafts)")
+        for eid in queue["stale_review"]:
+            print(f"    🕰 review_before 已过期: {eid} 的草案等人复审")
     return 0
 
 
@@ -443,11 +522,63 @@ def cmd_check(args):
 
     ok = not problems
     result = {"ok": ok, "total": len(entries), "problems": problems}
+    # 只读段落：人审队列健康度。故意不并进 problems —— 本 check 挂在 gac-local-gate
+    # (error-knowledge-check) 上，让「草案尚等人审」flip 共享门禁退出码等于把 HITL
+    # 队列变红灯（spec §4 G4 与 non_goals）。
+    queue = rule_draft_queue(entries)
+    result["rule_drafts"] = {
+        "threshold": ESCALATION_THRESHOLD,
+        "dir": _display(RULE_DRAFTS_DIR),
+        "drafted": queue["drafted"],
+        "overdue": queue["overdue"],
+        "stale_review": queue["stale_review"],
+    }
     if args.json or not ok:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
         print(f"error-knowledge check: ok ({len(entries)} pitfalls)")
+    if not args.json:  # --json 的 stdout 必须保持单个 JSON 文档（gac-local-gate 会 parse）
+        for eid in queue["overdue"]:
+            print(f"  ⏳ rule-drafts overdue: {eid} → CR-PITFALL-{eid.removeprefix('PITFALL-')} (跑 promote-drafts)")
+        for eid in queue["stale_review"]:
+            print(f"  🕰 review_before 已过期: {eid} 的草案等人复审")
     return 0 if ok else 1
+
+
+def cmd_promote_drafts(args):
+    """补管道回边：扫描已入库的坑，缺草案的用 _promote_rule_draft 生成（幂等）。"""
+    before = rule_draft_queue()
+    payload = {
+        "schema": "error-knowledge.promote.v1",
+        "threshold": ESCALATION_THRESHOLD,
+        "overdue_before": before["overdue"],
+        "dry_run": bool(args.dry_run),
+        "created": [],
+        "overdue_after": before["overdue"],
+    }
+    if args.dry_run:
+        payload["would_create"] = before["overdue"]
+    else:
+        created = promote_overdue()
+        payload["created"] = [_display(p) for p in created]
+        payload["overdue_after"] = rule_draft_queue()["overdue"]
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_review_unwired(args):
+    """``confirm``/``reject`` 从未接线：解析器存在但 handlers 表里没有，过去打 help 并 exit 0，
+
+    于是「草案被人审处置」这条路在 CLI 上看起来存在、实际是空的。改成显式失败，
+    真正的处置面是 ADR-0431 的人审 + ``lib/yaml_ssot_edit.py`` roundtrip 入册。
+    """
+    print(
+        f"NOT_IMPLEMENTED: {args.cmd} --id {args.id} 没有 handler（历史上静默 exit 0）。"
+        f"草案处置 = 人审后用 lib/yaml_ssot_edit.py roundtrip 写入 governance-checks.yaml"
+        f"（ADR-0431 D4）；队列现状用 stats / promote-drafts --dry-run 看。",
+        file=sys.stderr,
+    )
+    return 2
 
 
 def main():
@@ -479,19 +610,30 @@ def main():
         help="确认本次症状就是该条目：只给它计数，不新增条目",
     )
 
-    cf = sub.add_parser("confirm")
+    cf = sub.add_parser("confirm", help="未实现 — 见 promote-drafts / stats")
     cf.add_argument("--id", required=True)
-    rj = sub.add_parser("reject")
+    rj = sub.add_parser("reject", help="未实现 — 见 promote-drafts / stats")
     rj.add_argument("--id", required=True)
 
     fd = sub.add_parser("feed-escapes")
+    pd = sub.add_parser("promote-drafts", help="扫描过阈值的坑，补齐人审草案队列")
+    pd.add_argument("--dry-run", action="store_true", help="只报告会生成哪些，不落盘")
     st = sub.add_parser("stats")
     st.add_argument("--json", action="store_true")
     ck = sub.add_parser("check")
     ck.add_argument("--json", action="store_true")
 
     args = ap.parse_args()
-    handlers = {"lookup": cmd_lookup, "record": cmd_record, "stats": cmd_stats, "feed-escapes": cmd_feed_escapes, "check": cmd_check}
+    handlers = {
+        "lookup": cmd_lookup,
+        "record": cmd_record,
+        "stats": cmd_stats,
+        "feed-escapes": cmd_feed_escapes,
+        "promote-drafts": cmd_promote_drafts,
+        "confirm": cmd_review_unwired,
+        "reject": cmd_review_unwired,
+        "check": cmd_check,
+    }
     fn = handlers.get(args.cmd)
     if fn:
         raise SystemExit(fn(args) or 0)

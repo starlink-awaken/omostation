@@ -33857,6 +33857,89 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q3-T10-202
+  title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
+  track: T10-MATURITY
+  window: Y2Q3
+  status: in_progress
+  priority: P1
+  risk_level: L2
+  goal: Make the incident→rule pipeline's human-review queue observable and make the
+    requirement-iteration start gate symmetric with its closeout counterpart, so that
+    overdue pitfall rule drafts can actually be reviewed and governance self-evolution
+    stops paying for one-time gate waivers.
+  non_goals:
+  - Do not lower ESCALATION_THRESHOLD or change the >=3 symptom-word criterion.
+  - Do not merge any rule draft into governance-checks.yaml; human review stays the
+    boundary between draft and registry.
+  - Do not tighten error-knowledge check's exit code, which is wired into the shared
+    local governance gate.
+  - Do not touch existing ledger bets, run-record ignore semantics, or PITFALL-GAT-004
+    evidence quality beyond reporting it.
+  done_when:
+  - .omo/_delivery/rule-drafts/ is tracked and git check-ignore reports no match for
+    the generated drafts, and committing them passes the pre-commit runtime-artifacts
+    check in both of its same-source implementations (check-runtime-artifacts.py and
+    ci-local-fast.py carry equal whitelist prefixes).
+  - The three threshold-passing pitfalls (PITFALL-GAT-004, PITFALL-GAT-005, PITFALL-COO-003)
+    have tool-generated CR-PITFALL-*.json drafts and stats reports zero overdue.
+  - feed_from_escapes cannot add an encounter to a pitfall of a different category.
+  - start_requires_bet exempts governance-evolve workflows under the same condition
+    closeout already uses, while every other workflow still requires a bet id.
+  circuit_breaker: Stop on any change that flips the shared local gate's exit code,
+    writes a rule draft by hand instead of through the promoter, invents a waiver or
+    BET identifier, or touches governance-checks.yaml registry rules.
+  human_gate: false
+  pasw_required: true
+  retro: required
+  value_indicator_policy: false
+  appetite: 0.5 day
+  workflow: governance-audit
+  underlying_workflow: governance-audit
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-24-rule-drafts-queue-durability-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:e9ec0a53ff66835c3c48ee71bbeb98a13b3348a2e448b7ce5acb01f125cfd65c
+    decision_ref: decision://accepted/BET-Y2Q3-T10-202
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  verify:
+  - cmd: python3 -m pytest tests/unit/gac/test_error_knowledge_recall.py tests/unit/gac/test_error_knowledge_rule_drafts.py
+      tests/unit/gac/test_chain_bind_start_gate.py -q
+    expect: exit 0
+  - cmd: python3 bin/gac/error-knowledge.py stats --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-24-rule-drafts-queue-durability-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .gitignore
+  - bin/gac/error-knowledge.py
+  - bin/plan/chain_bind.py
+  - bin/plan/chain-bind-check.py
+  - tests/test_chain_bind.py
+  - bin/agent-workflow.py
+  - tests/unit/gac/test_chain_bind_start_gate.py
+  - tests/unit/gac/test_error_knowledge_rule_drafts.py
+  - tests/unit/gac/test_error_knowledge_recall.py
+  - .omo/_delivery/rule-drafts/
+  - .omo/standards/incident-to-rule-pipeline.md
+  - docs/operations/workflow-waiver-2026-09-24-retro-findings.md
+  - .omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+  - bin/gac/check-runtime-artifacts.py
+  - bin/gac/ci-local-fast.py
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -33995,7 +34078,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 463
+  total_bets: 464
   windows:
   - Y1Q1
   - Y1Q2

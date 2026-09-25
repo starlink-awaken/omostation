@@ -34,10 +34,12 @@ BLACKLIST_PREFIXES = [
 ]
 # Spine pipeline emission targets: tracked .gitkeep placeholders (not runtime output)
 # See: .omo/_delivery/{calibration,events,scene-outcomes}/
+# rule-drafts/: incident→rule promotion queue (ADR-0443), human-review input that must be durable
 WHITELIST_PREFIXES = [
     ".omo/_delivery/calibration/",
     ".omo/_delivery/events/",
     ".omo/_delivery/scene-outcomes/",
+    ".omo/_delivery/rule-drafts/",
 ]
 
 
