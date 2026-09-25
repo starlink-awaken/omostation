@@ -14,9 +14,9 @@ totals:
   mcp_tools: 643
   bos_services: 351
   bos_domains: 24
-  cli_commands: 203
-  skills: 40
-  workflows: 25
+  cli_commands: 197
+  skills: 42
+  workflows: 26
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -2362,8 +2362,6 @@ cli_commands:
   description: 向大脑提问（知识检索 + LLM 回答）
 - name: audit
   description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
-- name: audit-ledger
-  description: ''
 - name: backends
   description: 列出 BOS 后端
 - name: bcos
@@ -2478,8 +2476,6 @@ cli_commands:
   description: 将研究对象导出为 WorkspaceObject JSON
 - name: fabric
   description: 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存)
-- name: fabric-mesh
-  description: ''
 - name: facts-audit
   description: 审计 Documents 文档域 facts 文件
 - name: facts-validation
@@ -2562,16 +2558,12 @@ cli_commands:
   description: 启动 MCP server 或列出工具
 - name: memory
   description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
-- name: memory-distill
-  description: ''
 - name: mesh
   description: omlx 算力网格路由入口
 - name: metrics
   description: 查看 bus metrics 快照
 - name: minutes
   description: 会议转写文本 → 交办事项督办清单
-- name: model-driven
-  description: ''
 - name: model-freshness
   description: 读取 Runtime 模型新鲜度回执
 - name: mof
@@ -2680,8 +2672,6 @@ cli_commands:
   description: 本地首选投机推演评估
 - name: spine
   description: Spine 主干真值流与署名自进化操作 (ADR-0439)
-- name: ssb
-  description: ''
 - name: stats
   description: 索引统计
 - name: status
@@ -2734,8 +2724,6 @@ cli_commands:
   description: 预热系统 Prompt 前缀缓存以实现 0ms TTFT
 - name: watch
   description: 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)
-- name: watchdog
-  description: 🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器)
 - name: wave2
   description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
 - name: workflow
@@ -2775,6 +2763,12 @@ skills:
   exists: true
 - id: cognitive-governance
   file: .agents/skills/cognitive-governance/SKILL.md
+  exists: true
+- id: dashboard-component-evolution
+  file: .agents/skills/dashboard-component-evolution/SKILL.md
+  exists: true
+- id: dashboard-governance-patrol
+  file: .agents/skills/dashboard-governance-patrol/SKILL.md
   exists: true
 - id: delegation-guardrails
   file: .agents/skills/delegation-guardrails/SKILL.md
@@ -2881,6 +2875,9 @@ workflows:
   exists: true
 - id: convergence-pulse-weekly
   file: .omo/_truth/registry/agent-workflows/workflows/convergence-pulse-weekly.yaml
+  exists: true
+- id: dashboard-evolution
+  file: .omo/_truth/registry/agent-workflows/workflows/dashboard-evolution.yaml
   exists: true
 - id: documents-consumer-audit-weekly
   file: .omo/_truth/registry/agent-workflows/workflows/documents-consumer-audit-weekly.yaml
