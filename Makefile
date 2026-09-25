@@ -360,6 +360,20 @@ hygiene-patrol-strict:  ## 全域治理严格模式巡检 (存在任何违规/�
 	@echo "── 全域严格治理巡检 (Strict Gate) ───────────────────"
 	python3 bin/ssot/weekly-hygiene-patrol.py --strict
 
+drift-face-detect:  ## SH-1 self-healing: 扫描 5 类 drift (dashboard/brief/ephemeral/runs/ritual)
+	@echo "── L2.5 drift-face-detector (BET-Y2Q4-SH-1) ──────────"
+	python3 bin/ssot/drift-face-detector.py
+
+drift-face-prune-dry:  ## SH-1 self-healing: 干跑 auto-pruner (4 类可自动修; 默认 dry-run)
+	@echo "── L2.5 auto-pruner (dry-run, BET-Y2Q4-SH-1) ──────────"
+	python3 bin/ssot/auto-pruner.py
+
+drift-face-prune-apply:  ## SH-1 self-healing: 实际修复 (ephemeral 归档 + runs 关闭; ritual/dashboard 仅报告)
+	@echo "── L2.5 auto-pruner (apply, BET-Y2Q4-SH-1) ────────────"
+	python3 bin/ssot/auto-pruner.py --apply
+
+drift-face-clean: drift-face-detect drift-face-prune-apply  ## SH-1 一键 detect + apply (人类/CI 入口)
+
 sync-documents-clients:  ## 同步生成多客户端 Documents MCP 隔离挂载配置
 	@echo "── 同步多客户端 Documents MCP 挂载配置 ───────────────"
 	uv run --project projects/ecos ecos-constraint documents sync-clients --mode install

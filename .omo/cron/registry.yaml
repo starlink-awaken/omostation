@@ -97,6 +97,39 @@ jobs:
     sfop_slot: S
     reconciliation_note: ops check-signals 每日巡检 (每日 06:20, BET-Y1Q4-T16)，已在 crontab -l 运行，补齐登记。
 
+  # SH-1 daily drift sweep (BET-Y2Q4-SH-1): drift-face-detector daily + auto-pruner
+  # 仅 ephemeral + runs 两类自动修, ritual/dashboard 仍 owner 决策.
+  - name: drift-face-daily
+    schedule: "50 4 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/drift-face-detector.py --json >> runtime/cron/drift-face-detector.log 2>&1'
+    planes: [crontab]
+    reality: pending
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: BET-Y2Q4-SH-1 self-healing layer — daily drift face scan; runs detect only, no fix.
+
+  - name: drift-prune-daily
+    schedule: "55 4 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/auto-pruner.py --apply --class ephemeral --class runs >> runtime/cron/auto-pruner.log 2>&1'
+    planes: [crontab]
+    reality: pending
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: BET-Y2Q4-SH-1 auto-pruner — daily prune ephemeral + close stale runs; ritual/dashboard 由 owner 处理.
+
+  # SH-1 weekly face-wide hygiene
+  - name: drift-face-weekly
+    schedule: "0 7 * * 1"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/drift-face-detector.py --json && python3 bin/ssot/auto-pruner.py --apply >> runtime/cron/drift-face-weekly.log 2>&1'
+    planes: [crontab]
+    reality: pending
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: BET-Y2Q4-SH-1 weekly face-wide drift sweep (周一 07:00, 与 weekly-hygiene-patrol 错开).
+
   # l4-harness-6h — D7 已决议 (2026-09-11, 方案 A: dao_layer 重归类 dao→fa,
   # ecos#74): 本体矛盾消除后正式登记, CR-DFSQ-01 不再触发 (fa 允许上 cron 账本)。
   - name: l4-harness-6h
