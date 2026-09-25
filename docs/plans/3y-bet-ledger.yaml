@@ -34337,7 +34337,7 @@ bets:
   title: Multi-Registry Alias Resolver — governance-checks / L0-constraints / hook-manifest
     unification
   goal: 建立跨注册表 alias map，统一 3 套 id 词汇，把 49% 零引用降到 ≤ 15%
-  status: candidate
+  status: done
   window: Y2Q4
   track: T16-DRIFT-GUARD
   priority: P1
@@ -34379,17 +34379,35 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-SH-4
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-4.md
+          merged_reachable_commit:
+            ref: git://origin/main@2c296c4acfba801a08904588fc7d6f0fda549095
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-4.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-4.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-4.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-4.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-4.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-4.md
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: 2026-09-25
+  value_indicator_policy: false
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
