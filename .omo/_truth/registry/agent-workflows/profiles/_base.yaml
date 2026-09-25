@@ -42,6 +42,7 @@ agent_profiles:
     - round-engineering
     - round-type-router
     - closeout-with-retro
+    - dashboard-evolution
     can_write_lanes:
     - code
     - config
@@ -54,6 +55,7 @@ agent_profiles:
     - project-code-change
     - pyright-sweep
     - closeout-with-retro
+    - dashboard-evolution
     can_write_lanes:
     - code
     closeout_required:
@@ -73,6 +75,7 @@ agent_profiles:
     - observer-audit
     - governance-audit
     - state-sync
+    - dashboard-evolution
     - agent-onboarding
     - bet-execution
     - resident-runtime-observe

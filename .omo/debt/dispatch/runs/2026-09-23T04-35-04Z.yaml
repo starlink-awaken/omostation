@@ -1,0 +1,55 @@
+dispatched_at: '2026-09-23T04:35:04Z'
+source_owner_routing_ref: .omo/debt/owner-routing/current.yaml
+source_owner_routing_generated_at: '2026-09-23T04:35:04Z'
+latest_run_ref: .omo/debt/dispatch/runs/2026-09-23T04-35-04Z.yaml
+owners:
+- owner: laowang
+  dispatched_at: '2026-09-23T04:35:04Z'
+  item_count: 1
+  summary:
+    total_count: 1
+    lane_counts:
+      revalidate_now: 0
+      schedule_now: 1
+      escalate_now: 0
+      continue_mitigation: 0
+      watch_only: 0
+  entries:
+  - id: DEBT-20261002-BWG2
+    title: '搬瓦工#2重置跟进: Reality铺设(bootstrap-server)+fleet.yaml补IP+SSOT节点+vmess清退评估'
+    owner: laowang
+    severity: medium
+    dimension: network
+    subdimension: proxy-infra
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-20261002-BWG2
+      --next-review-at 2026-09-30T04:35:04Z
+summary:
+  owner_count: 1
+  total_dispatched_items: 1
+  lane_counts:
+    revalidate_now: 0
+    schedule_now: 1
+    escalate_now: 0
+    continue_mitigation: 0
+    watch_only: 0
+artifact_meta:
+  artifact_kind: debt_dispatch_packet
+  broker_ref: null
+  writer_ref: projects/omo/src/omo/omo_debt.py
+  retention_mode: manual_archive
+  lifecycle_state: active

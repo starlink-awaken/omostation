@@ -2,6 +2,9 @@
 type: ssot
 owner: governance-team
 last_updated: 2026-09-03
+status: active
+lifecycle: plan
+last-reviewed: 2026-09-25
 ---
 
 # CC Switch Recovery-State Relocation Implementation Plan

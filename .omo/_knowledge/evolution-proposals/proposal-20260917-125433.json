@@ -1,0 +1,33 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-17T12:54:02.084880+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] Iran school bombing: grounds to believe US was behind atrocity, UN finds",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Neovim have a ~$800k Bitcoin donation sitting untouched since 2023",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}

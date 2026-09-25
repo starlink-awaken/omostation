@@ -15,8 +15,8 @@ totals:
   bos_services: 351
   bos_domains: 24
   cli_commands: 203
-  skills: 40
-  workflows: 25
+  skills: 42
+  workflows: 26
 mcp_servers:
 - id: omo
   name: OMO Agent OS Kernel
@@ -2776,6 +2776,12 @@ skills:
 - id: cognitive-governance
   file: .agents/skills/cognitive-governance/SKILL.md
   exists: true
+- id: dashboard-component-evolution
+  file: .agents/skills/dashboard-component-evolution/SKILL.md
+  exists: true
+- id: dashboard-governance-patrol
+  file: .agents/skills/dashboard-governance-patrol/SKILL.md
+  exists: true
 - id: delegation-guardrails
   file: .agents/skills/delegation-guardrails/SKILL.md
   exists: true
@@ -2881,6 +2887,9 @@ workflows:
   exists: true
 - id: convergence-pulse-weekly
   file: .omo/_truth/registry/agent-workflows/workflows/convergence-pulse-weekly.yaml
+  exists: true
+- id: dashboard-evolution
+  file: .omo/_truth/registry/agent-workflows/workflows/dashboard-evolution.yaml
   exists: true
 - id: documents-consumer-audit-weekly
   file: .omo/_truth/registry/agent-workflows/workflows/documents-consumer-audit-weekly.yaml

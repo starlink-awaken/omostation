@@ -1,0 +1,218 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-23T19:40:21.353988+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "persisted_to": ".omo/_knowledge/evolution-proposals/proposal-20260923-194050.json",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] Cloud Agents Are Inevitable AI Prisons",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Claude discovers a novel enzyme system with CRISPR-like repeats",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 0,
+    "S3": 0
+  },
+  "external_proposals": 0,
+  "generated_at": "2026-09-24T01:40:50.415724+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "proposals": [],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 0
+}
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-24T07:41:36.765066+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "persisted_to": ".omo/_knowledge/evolution-proposals/proposal-20260924-074206.json",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] Can open-source prompt-injection detectors catch realistic AI agent attacks?",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Early rogue AI agent activity and attempts to hack found on urlquery.net",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-24T10:54:58.348488+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "persisted_to": ".omo/_knowledge/evolution-proposals/proposal-20260924-105534.json",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] Starlink ground station in Poland hit by fire in suspected arson attack",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Nokia Design Archive (2025)",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-24T11:07:31.434753+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "persisted_to": ".omo/_knowledge/evolution-proposals/proposal-20260924-110817.json",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] Starlink ground station in Poland hit by fire in suspected arson attack",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Nokia Design Archive (2025)",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-24T17:08:17.551783+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "persisted_to": ".omo/_knowledge/evolution-proposals/proposal-20260924-170846.json",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] LinkedIn wins court order blocking mass scraping of user data",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] I Have a Confession: I Built This Site with AI – Please Forgive Me",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-24T23:08:47.038325+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "persisted_to": ".omo/_knowledge/evolution-proposals/proposal-20260924-230916.json",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] Back and shoulder surgery is often worse than useless",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Show HN: Koi.rest – watch some fish and regain your balance",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}

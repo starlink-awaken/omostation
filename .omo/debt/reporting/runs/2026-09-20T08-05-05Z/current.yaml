@@ -1,0 +1,71 @@
+generated_at: '2026-09-20T08:05:05Z'
+dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-05-05Z.yaml
+run_stamp: 2026-09-20T08-05-05Z
+summary:
+  owner_count: 5
+  total_items: 18
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 18
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0
+owners:
+- owner: architecture-team
+  item_count: 3
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 3
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0
+- owner: governance-team
+  item_count: 12
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 12
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0
+- owner: agent-runtime
+  item_count: 1
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 1
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0
+- owner: omo-team
+  item_count: 1
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 1
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0
+- owner: runtime
+  item_count: 1
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 1
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0

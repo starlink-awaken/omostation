@@ -1,0 +1,11 @@
+{
+  "proposal_count": 0,
+  "proposals": [],
+  "schema": "resident-decision/v1",
+  "trigger_event": {
+    "event_id": "98b1e4f6feb34d6ba023b058dd4266b2",
+    "event_type": "StepFailed",
+    "trace_id": "20260917T161916Z-project-code-change-2b6c6033",
+    "workflow_run_id": "20260917T161916Z-project-code-change-2b6c6033"
+  }
+}

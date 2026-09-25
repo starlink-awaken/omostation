@@ -1,0 +1,33 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-16T18:52:26.088532+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] ER visits for gambling disorders doubled after expanded online gambling market",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Claude Cowork and chat are now one Claude",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}

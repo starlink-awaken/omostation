@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-09-24T13:38:20Z
+generated_at: 2026-09-25T03:08:52Z
 status: candidate
 counts:
-  runs: 22
+  runs: 28
   failures: 0
-  total: 22
+  total: 28
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-24T13:38:20Z
+- generated_at: 2026-09-25T03:08:52Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 22 成功运行 + 0 失败模式 = 22 草稿
+- sediment 覆盖: 28 成功运行 + 0 失败模式 = 28 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -43,6 +43,12 @@ failure_breakdown:
 - 20260924T131809Z-mini-cf6cb943.md
 - 20260924T131955Z-mini-495cdf5a.md
 - 20260924T131956Z-mini-99d87d73.md
+- 20260925T015106Z-mini-1f2d97d7.md
+- 20260925T015106Z-mini-74e37236.md
+- 20260925T015341Z-mini-9baebfca.md
+- 20260925T015342Z-mini-bb00802a.md
+- 20260925T015711Z-mini-ce108e32.md
+- 20260925T015712Z-mini-78cd0a2e.md
 
 ## 失败模式 (failures/)
 
@@ -197,6 +203,45 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=0
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=0.159
+- **20260925T015106Z-mini-1f2d97d7**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.153
+- **20260925T015106Z-mini-74e37236**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.158
+- **20260925T015341Z-mini-9baebfca**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.176
+- **20260925T015342Z-mini-bb00802a**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.18
+- **20260925T015711Z-mini-ce108e32**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.19
+- **20260925T015712Z-mini-78cd0a2e**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.189
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

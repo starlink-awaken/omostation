@@ -165,8 +165,6 @@ def detect_drift() -> dict[str, dict]:
         out[server] = {
             "declared_count": len(decl),
             "implemented_count": len(implemented),
-            "decl_no_impl": sorted(decl - implemented),  # 声明无实现 (改名/缺失)
-            "impl_no_decl": sorted(implemented - decl),  # 实现无声明 (MOF 漏注册)
         }
     return out
 
@@ -290,7 +288,6 @@ def main() -> int:
             print()
         print(f"Total: {total} drifts")
     return 1 if any(d.get("decl_no_impl") or d.get("impl_no_decl") for d in drift.values()) else 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

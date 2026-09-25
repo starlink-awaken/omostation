@@ -74,6 +74,7 @@ agent_profiles:
     - round-engineering
     - round-type-router
     - closeout-with-retro
+    - dashboard-evolution
     can_write_lanes:
     - code
     - config
@@ -118,6 +119,7 @@ agent_profiles:
     - observer-audit
     - governance-audit
     - state-sync
+    - dashboard-evolution
     - agent-onboarding
     - bet-execution
     - resident-runtime-observe
@@ -178,6 +180,7 @@ agent_profiles:
     - project-code-change
     - pyright-sweep
     - closeout-with-retro
+    - dashboard-evolution
     can_write_lanes:
     - code
     closeout_required:
@@ -1325,7 +1328,7 @@ projection:
   lifecycle: read_only_generated_compatibility
   schema: agent-workflow-compat-projection/v1
   source: .omo/_truth/registry/agent-workflows
-  source_digest: sha256:69b97a5f1d6bc26395a3a36c06ee23a51eda21c826c65264368c303d8834b52e
+  source_digest: sha256:d1c8cb6d0b2898842fcbeda1cca72518eca38698317bda673f05c981e0eef2f7
   writer: bin/agent-workflow.py projection-sync
 requirement_iteration_policy:
   adr: ADR-0203
@@ -2062,6 +2065,93 @@ workflows:
     write:
     - .omo/state/convergence-pulse-*.json
   title: 收敛脉搏周报（ADR-0443 产出/收敛平衡 + 防腐三巡检接线）
+- agents:
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  id: dashboard-evolution
+  lock_scopes:
+  - project:cockpit-ui
+  - root-gate
+  phases:
+    closeout:
+    - command:
+      - git
+      - diff
+      - --stat
+      id: diff-stat
+      mode: required
+    execute:
+    - command:
+      - agent
+      - edit
+      - cockpit-ui-panorama
+      id: implement-components
+      mode: manual
+    preflight:
+    - command:
+      - git
+      - status
+      - --short
+      id: root-status
+      mode: required
+    - command:
+      - python3
+      - bin/panorama/sunset-redirector.py
+      - --check
+      id: sunset-check
+      mode: required
+    - command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+      id: workflow-lint
+      mode: required
+    verification:
+    - command:
+      - npx
+      - vitest
+      - run
+      - src/views/panorama/__tests__/
+      cwd: projects/cockpit-ui
+      id: panorama-unit-tests
+      mode: required
+    - command:
+      - python3
+      - -m
+      - unittest
+      - tests/test_sunset_redirector.py
+      id: sunset-redirector-verification
+      mode: required
+    - command:
+      - make
+      - gac-local-gate
+      id: gac-local-gate
+      mode: required
+  purpose: Route sovereign dashboard and panorama enhancements through strict contract binding, dual-mode supply, WAI-ARIA 1.2 compliance, and sunset redirector safety checks.
+  run_frequency: on_demand
+  surfaces:
+    read:
+    - projects/cockpit-ui/**
+    - bin/panorama/**
+    - runtime/dashboard/**
+    - docs/DASHBOARDS.md
+    - docs/PANORAMA-DASHBOARD.md
+    write:
+    - projects/cockpit-ui/**
+    - docs/DASHBOARDS.md
+    - docs/PANORAMA-DASHBOARD.md
+  title: Dashboard & Panorama Evolution Workflow
 - agents:
     observer_policy: optional
     roles:
