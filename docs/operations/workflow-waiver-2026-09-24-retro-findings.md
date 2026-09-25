@@ -360,6 +360,10 @@ head 指针仍等于 merge-base 指针时按"落后"放行，输出 `[INFO]` 行
 - **第二次缺陷（本次未做）**：`record_known_debt` 写入的指纹不含 merge-base，因此已登记的
   31 条 `kind: gitlink-regress` 债无法事后重判"落后"还是"回退"。要么改注册格式带上 merge-base，
   要么逐条人工重跑 —— 属 principal，且需要先定新格式。
+
+  > **这里的"31 条"是错的，正确值是 30**（I14 复跑更正）。那一版计数取自主工作区
+  > `gate-known-debt.yaml` 的**未提交工作树副本** = 30 条已跟踪 + 1 条他人未提交的写入，
+  > 而不是 `git show origin/main:` 的已跟踪状态。数错位的这一条本身正是 I14 的成因之一。
 - **本 run 是 bet-less 起步的**：`governance-audit` ∈ `GOVERNANCE_EVOLVE_WORKFLOWS`，
   `chain_bind.start_requires_bet(workspace=…)` 的 G5 对称豁免命中（`_has_governance_bet` = True），
   返回 `["governance_evolve_exempt"]`。实测 run payload 无 `bet_id`、无 `work_packet` 键，
@@ -369,6 +373,47 @@ head 指针仍等于 merge-base 指针时按"落后"放行，输出 `[INFO]` 行
   spec 事后被改也不再触发 drift 检查。豁免买到的是"不绑无关 bet"，付出的是"这 4 条路径的边界由本文件
   的留痕而非 packet 契约保证"。两者兼得需要一个不依赖 bet 的 packet 来源（治理演进类 workflow 自有
   授权面），属 principal。
+
+## I14（债账的 `range` 记的是符号 ref，于是 30 条豁免里没有一条能被后一次交付复审）
+
+I13 把"指纹不落 merge-base"记成一条待办。真去复跑时发现它不是一条字段缺失，而是**写盘格式不支持复审**：
+`record_known_debt` 落的是 `f"{base[:12]}..{head[:12]}"`，而 base 侧一律是 pre-push 传进来的字面
+`origin/main`（11 字符，恰好躲过截断）。实测 `origin/main @ 52fd5147c` 上 35 条债、其中
+`surface: gitlink-ancestry` 30 条：
+
+| 事实 | 计数 |
+|------|------|
+| base 侧记为字面 `origin/main`（随 main 换指） | **30 / 30** |
+| head 侧记为完整 40 位 commit | **0 / 30**（23 条 12 位缩写、3 条字面 `HEAD`、1 条分支名） |
+| head 对象本地可解析 → 可重判 | 4 条，且这 4 条**全是真回退**（`ptr@head ≠ ptr@merge-base`，与 `reason` 里的 new/old 吻合） |
+| head 仅存在于 `refs/pull/*/head`（普通 clone 取不到） | 2 条 |
+| head 对象在本地与 4307 条 PR ref 中皆不存在 | 17 条 |
+| `reason` 根本不是回退陈述（`realigns after … force-push dropped` / `advances … via squash` / `unreachable (not in any remote ref)`） | 3 条 |
+| 带 `owner` 或 `expires_at` | **0 / 30** |
+
+- **可复审率 0/30，与 head 能不能解析无关**：base 侧 30 条全是 `origin/main`，所以"当时比的到底是
+  哪个 base commit"这条信息在写盘那一刻就没保存。`head=HEAD` 那 3 条更彻底 —— 它记的是"写盘那一刻
+  检出是什么"，连缩写都没有。
+- **`expires_at` 缺失不是漏填而是永久有效**：`swarm_discipline.known_debt_active()` 只在
+  `expires_at` 可解析时判过期，缺失直接落到 `return True`。而 `.agents/skills/ci-red-triage` 让人
+  "登记 known-debt（owner+过期）"。文档要求的两个字段，存量 0/30 有；`harness-compliance-check`
+  只检查 `growth_policy` 和 `escape`，不检查条目级 owner/expiry，所以这个漂移没人拦。
+- **phantom 债务仍在被生成，且在修复合并前 10 分钟刚生成一条**：主工作区的 `gate-known-debt.yaml`
+  **未提交**副本比 `origin/main` 多 1 条 ——
+  `fingerprint gitlink-ancestry|submodule-ancestry-gate|b8375f8829cf1573`，
+  `range origin/main..0945482a943b`，`reason submodule projects/aetherforge pointer 37e7af86e003
+  rewinds 6d8d7caff158`，`recorded_at 2026-09-25T09:56:59Z`。这正是 I10 判据下的"落后"：
+  `6d8d7caff158` 是 #4323 在 09:5x bump 上去的，任何在它之前切出的分支都不动该指针。
+  #4324（I13 的修法）10:06:34 才合并。**若那条未提交写入随后被其作者提交，一条为不存在的回退登记的
+  债就永久进了 `shrink_only` 台账。** 处置属他人交付，本次按"只报告，不处置"没有碰主工作区。
+- 修法（见 `docs/superpowers/specs/2026-09-25-known-debt-range-must-resolve.md` 的 C1–C5）：写盘时
+  `git rev-parse --verify --quiet <ref>^{commit}` 解析出 `base_sha` / `head_sha` / `merge_base`
+  三个完整 commit（解析不出则留空串，让缺口显形而不是伪装成证据），`range` 降级为纯 provenance
+  保留原文不截断，并首次把 `[gitlink-regress: <理由>]` 的理由原文存进 `exempt_reason` —— 此前
+  human 授权凭据只活在被 squash 掉的 commit body 里，随分支一起消失。`signature`/`fingerprint`
+  算法与 exit code、去重、`--no-write-debt` 语义一律不变（新条目与存量条目仍在同一身份空间）。
+- **未做（属 principal）**：30 条存量条目内容一字未改（`git diff` 不含该文件）。多数已不可补
+  （17 条对象已不存在），逐条人工重判或批量降级都要人来定；`owner`/`expires_at` 的强制同理。
 
 ## Boundary
 
@@ -395,6 +440,10 @@ head 指针仍等于 merge-base 指针时按"落后"放行，输出 `[INFO]` 行
   台账零改动（`total_bets` 与 `len(bets)` 均不受影响），改动面就是 checker + 其单测 + spec + 本文件四处。
   所以它不在上面那条"lane 分 commit 留痕"的序列里 —— 那条序列存在的理由（治理演进 workflow 被要求
   `--bet` 而台账无可绑 bet）已被 G5 消掉。
+- **I14 的那次交付（与本文件同批）是 G5 豁免的第二次真实使用**：workflow `governance-audit`、
+  bet-less 起步、**台账与 `gate-known-debt.yaml` 都零改动**（只改写盘格式，不动存量条目），
+  改动面就是 checker + 其单测 + spec + 本文件四处。连续两次交付走同一条豁免路径，
+  说明 I5 那条"要么绑无关 bet、要么静默绕门"的两难已经不是当前形态。
 - 未补录价值记录（30 条门保持 NOT_PROVEN）；未做 weekly-review（principal-only）。
 - 台账未改动。（作用域是上面 `20260924T161254Z` 那次交付；`BET-Y2Q3-T10-202` 有改动，见上一条。）
 
