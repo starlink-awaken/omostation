@@ -1,15 +1,16 @@
 ---
-id: ADR-0347
-title: External Resource Connection Plan Cockpit Surface
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
 type: decision
+id: ADR-0347
+title: External Resource Connection Plan Cockpit Surface
 scope: Cockpit external connection fabric
 date: 2026-08-03
 ---
+
 
 # ADR-0347: Cockpit 外部能力连接计划只读触达面
 

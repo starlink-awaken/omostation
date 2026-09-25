@@ -1,12 +1,14 @@
 ---
-type: derived
+schema: md/v1
 status: draft
 lifecycle: active
 owner: governance-team
-last-reviewed: 2026-09-14
+last-reviewed: 2026-09-25
+type: derived
 source: <SSOT 路径>
 last_synced: <YYYY-MM-DD>
 ---
+
 
 # <标题>
 

@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-04
-title: BET-Y1Q4-T6-02 复盘
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q4-T6-02 复盘
 ---
+
 
 # BET-Y1Q4-T6-02 复盘
 

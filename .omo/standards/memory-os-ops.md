@@ -1,17 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-05
-related:
-  - ../_knowledge/decisions/0372-memory-os-control-plane.md
-  - ../_truth/registry/memory-os.yaml
-  - ../../docs/operations/memory-os-neo4j-local.md
-  - ../../docs/operations/memory-os-epic-retro.md
-  - ../../docs/operations/memory-os-phase10-retro.md
-  - ../../docs/architecture/memory-os.md
+last-reviewed: 2026-09-25
 type: ssot
+related: 
 ---
+
 
 # Memory OS 运维契约（Phase 8–9）
 

@@ -1,11 +1,13 @@
 ---
-id: ADR-0093
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0093
 ---
+
 
 # ADR-0093: P99 ADR-0092 self-ref 清 + omo_lint 兑现路径 (10 轮推迟 → 11 轮)
 

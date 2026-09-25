@@ -1,8 +1,13 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 created: 2026-09-12
 ---
+
 
 # T8-24 总揽签署材料 — A9 全景观测终验完成
 

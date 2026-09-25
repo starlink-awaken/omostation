@@ -1,18 +1,17 @@
 ---
-id: ADR-0214
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0214
 omo_task_ref: null
 agent_workflow_run: 20260715T084136Z-governance-state-mutation-25182a6a
 supersedes: []
-related:
-  - 0211-p74-run-frequency-field-and-excluded-workflows-removal.md
-  - 0209-ledger-trim-and-adr-ssot-renumbering.md
-  - 0130-p74-workflow-solidification.md
-type: ssot
+related: 
 ---
+
 
 # ADR-0213 — P74 silent 治本 D6：diff_checks 覆盖 4 silent workflow
 

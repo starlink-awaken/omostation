@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0387
 title: 双轨场景准入 — 内部 pipeline 场景的独立准入轨道
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-07
-lifecycle: spec
-last-reviewed: 2026-08-07
-related:
-  - 0297-external-connection-fabric-and-product-truth.md
-  - 0326-external-activation-preflight.md
-  - 0340-external-scene-trial-contract.md
+related: 
 ---
+
 
 # ADR-0385: 双轨场景准入 — 内部 pipeline 场景的独立准入轨道
 

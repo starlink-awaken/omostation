@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: BET-Y2Q1-T7-02 Closeout Retro — shadow 试验记录机制
-bet_id: BET-Y2Q1-T7-02
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: BET-Y2Q1-T7-02 Closeout Retro — shadow 试验记录机制
+bet_id: BET-Y2Q1-T7-02
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # BET-Y2Q1-T7-02 Closeout Retro
 

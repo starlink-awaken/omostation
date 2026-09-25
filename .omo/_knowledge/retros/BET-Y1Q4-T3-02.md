@@ -1,17 +1,18 @@
 ---
-schema_version: retro/v1
-status: active
+schema: md/v1
+status: archived
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: retro/v1
 created: 2026-09-01
-last-reviewed: 2026-09-01
 bet: BET-Y1Q4-T3-02
 title: 本地 MPS 嵌入引擎
 symptom: 冷启动 757ms 惊乍；SOCKS 代理炸模型加载
 solution: median-of-N 稳态测量 + HF_HUB_OFFLINE 代码级红线
-type: ephemeral
-status: archived
 ---
+
 
 # BET-Y1Q4-T3-02 复盘
 

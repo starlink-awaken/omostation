@@ -1,19 +1,19 @@
 ---
-title: 战略-治理-场景收敛总纲 · 落地包（草案）
+schema: md/v1
 status: active
-type: landing-package
+lifecycle: entry
 owner: 夏明星（人类执行）
+last-reviewed: 2026-09-25
+type: landing-package
+title: 战略-治理-场景收敛总纲 · 落地包（草案）
 created: 2026-08-15
 adopted: 2026-08-15
-lifecycle: entry
 companion-doc: docs/STRATEGY-CONVERGENCE-MASTER-2026-08.md
 executed_in: work/bet-y1q1-t6-01
 bet: BET-Y1Q1-T6-01
 note: >
-  2026-08-15 按 grill Q1–Q7 在隔离 worktree 执行。
-  原稿 does_not_change 仅描述云端起草阶段，不约束本次落地。
-last-reviewed: 2026-08-18
 ---
+
 
 # 说明
 

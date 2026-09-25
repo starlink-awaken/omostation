@@ -1,15 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: plan
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 门禁迭代 — Gatekeeper baseline/grace + hook-runner 处方化报错
 bet_id: BET-Y1Q4-T10-134
-status: accepted
-lifecycle: contract
-last-reviewed: 2026-09-06
-type: plan
-owner: governance-team
 last_updated: 2026-09-06
 ---
+
 
 # 门禁基线与处方化规格 (BET-Y1Q4-T10-134)
 

@@ -1,14 +1,16 @@
 ---
-schema_version: specification/v1
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-29
+last-reviewed: 2026-09-25
+type: doc
+schema_version: specification/v1
 bet_id: BET-Y1Q3-T10-62
 spec_version: 1.0.0
 title: T10-62 Authority-Binding Contract Alignment — Design
-type: doc
 ---
+
 
 # T10-62 Authority-Binding Contract Alignment — Design
 

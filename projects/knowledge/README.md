@@ -1,8 +1,13 @@
 ---
-type: documentation
+schema: md/v1
+status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: documentation
 last_updated: 2026-09-06
 ---
+
 # Knowledge Engineering Complex (知识工程复合体)
 
 > **Layer**: L2  

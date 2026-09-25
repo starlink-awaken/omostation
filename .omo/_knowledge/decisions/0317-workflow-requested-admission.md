@@ -1,14 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: engineering-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0317
 title: WorkflowRequested 到受治理 admission 的晋升边界
-status: ACCEPTED
 date: 2026-08-03
-owner: engineering-team
 scope: Workflow Mesh / OMO / Cockpit
-lifecycle: spec
-last-reviewed: 2026-08-03
-type: ssot
 ---
+
 
 # ADR-0317: WorkflowRequested 到受治理 admission 的晋升边界
 

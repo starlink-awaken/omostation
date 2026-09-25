@@ -1,19 +1,17 @@
 ---
-id: ADR-0418
-title: 对外扩展决策 — 默认不做（BET-Y3H2-T1-01）
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: 夏明星
-created: 2026-08-18
-last-reviewed: 2026-08-18
-deciders:
-  - 夏明星 (最终确认)
-  - governance-agent (起草)
-related:
-  - .omo/_knowledge/decisions/0415-reject-agt-integration-adopt-capability-parity.md
-  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md §2.1 边界
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0418
+title: 对外扩展决策 — 默认不做（BET-Y3H2-T1-01）
+created: 2026-08-18
+deciders: 
+related: 
 ---
+
 
 # ADR-0418: 对外扩展决策 — 默认不做
 

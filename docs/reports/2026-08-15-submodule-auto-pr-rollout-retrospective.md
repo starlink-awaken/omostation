@@ -1,8 +1,13 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 created: 2026-09-03
 ---
+
 
 # 2026-08-15 系统落地复盘：全仓子模块秒级更新与 Auto-PR 自动化流水线
 

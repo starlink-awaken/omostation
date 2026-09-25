@@ -1,14 +1,16 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: deep-retrospective
 owner: governance-team
+last-reviewed: 2026-09-25
+type: deep-retrospective
+schema_version: report/v1
 created: 2026-08-31
-last-reviewed: 2026-08-31
 adr: ADR-0443
 scope: multi-agent collaboration failure modes (session 2026-08-30/31, ADR-443 v1-v7)
 ---
+
 
 # 多 agent 协作事故深度复盘（deep retro，非点修）
 

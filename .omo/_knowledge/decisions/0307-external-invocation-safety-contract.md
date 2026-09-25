@@ -1,18 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0307
 title: Workflow Mesh 外部调用安全契约
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../.omo/standards/external-connection-fabric.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../projects/agora/src/agora/external_connections.py
-  - ./0303-workflow-mesh-external-receipt-broker.md
+related: 
 ---
+
 
 # ADR-0307: Workflow Mesh 外部调用安全契约
 

@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: active
 owner: governance-team
-last-reviewed: 2026-08-27
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 
 # AGE-v2 Agent Cell — 全面架构分析与复盘
 

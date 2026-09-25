@@ -1,11 +1,12 @@
 ---
-status: active
+schema: md/v1
+status: archived
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-29
+last-reviewed: 2026-09-25
 type: ephemeral
-status: archived
 ---
+
 # BET-Y1Q3-T4-04 Retrospective — Product P0 WP4 Principal Authority Binding
 
 - date: 2026-08-29

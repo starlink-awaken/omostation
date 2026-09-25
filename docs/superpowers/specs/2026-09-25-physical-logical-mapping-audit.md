@@ -1,13 +1,16 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Physical-Logical Mapping Audit — gitlink/launchd/asset consistency
-bet_id: BET-Y2Q4-SH-3
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
+title: Physical-Logical Mapping Audit — gitlink/launchd/asset consistency
+bet_id: BET-Y2Q4-SH-3
 ---
+
 
 # BET-Y2Q4-SH-3 — Physical-Logical Mapping Audit
 

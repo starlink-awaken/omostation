@@ -1,17 +1,19 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: family-hub
+last-reviewed: 2026-09-25
+type: doc
 created: 2026-08-30
-last-reviewed: 2026-09-02
 last_updated: 2026-09-03
 title: Family dashboard runtime-state and HITL writes Phase B implementation plan
-type: doc
 bet_id: BET-Y1Q3-T10-122
 spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-runtime-state-and-hitl-writes-phase-b-design.md
 spec_version: 1.2.0
 spec_digest: sha256:46f904e4f299ea02a1491fbfbfee2e271f2999e7c84786632e770de7c1212926
 ---
+
 
 # Family Dashboard Runtime-State and HITL Writes Phase B Implementation Plan
 

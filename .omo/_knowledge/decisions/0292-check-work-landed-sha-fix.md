@@ -1,13 +1,14 @@
 ---
-id: ADR-0292
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-07-30
-related:
-  - 0293-phase45-governance-observability.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0292
+related: 
 ---
+
 
 # ADR-0292: check-work-landed SHA Detection Fix + M3 Grace Baseline
 

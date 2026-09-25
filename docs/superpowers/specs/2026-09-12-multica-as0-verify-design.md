@@ -1,11 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-11
-last-reviewed: 2026-09-11
 title: Multica AS0 read-only admission verify toolchain
 bet_id: BET-Y1Q4-T10-150
 implementation_authorized: true
@@ -13,6 +15,7 @@ value_indicator_policy: false
 risk_level: L2
 human_gate: true
 ---
+
 
 # Multica AS0 read-only admission verify toolchain
 

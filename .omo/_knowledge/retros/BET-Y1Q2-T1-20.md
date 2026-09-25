@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: BET-Y1Q2-T1-20 复盘 — 子模块指针自动化 PR 流水线试点与全仓推广
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q2-T1-20 复盘 — 子模块指针自动化 PR 流水线试点与全仓推广
 ---
+
 # BET-Y1Q2-T1-20 复盘 — 子模块指针自动化 PR 流水线试点与全仓推广
 
 ## Q1 实际耗时 vs appetite？

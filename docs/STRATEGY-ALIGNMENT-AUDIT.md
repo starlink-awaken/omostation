@@ -1,25 +1,20 @@
 ---
-title: 三年战略 · c2g 对齐审计报告
+schema: md/v1
 status: archived
-type: strategy-audit
+lifecycle: contract
 owner: 夏明星
+last-reviewed: 2026-09-25
+type: strategy-audit
+title: 三年战略 · c2g 对齐审计报告
 created: 2026-07-15
 archived: 2026-08-15
 superseded-by: docs/STRATEGY-CONVERGENCE-MASTER-2026-08.md
-related:
-  - docs/STRATEGY-3YEAR-PANORAMA.md
-  - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
-  - projects/c2g/.c2g_data/bets.json
-  - projects/c2g/.c2g_data/tasks.json
+related: 
 note: >
-  本报告记录 ADR-0210 三年战略经 c2g (Concept→Pitch→Bet→Task) 管线拆解后的
-  战略对齐审计 (radar) 结果。任务属性为 local adapter 草案态，正式入 .omo 需
-  切 ecos adapter + ADR-0203 workflow。
-lifecycle: contract
-last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
+
 
 # 三年战略 · c2g 对齐审计报告（2026-07-15）
 

@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
+schema: md/v1
+status: archived
+lifecycle: history
+owner: agora-team
+last-reviewed: 2026-09-25
 type: retro
+schema_version: retrospective/v1
 title: BET-Y1Q4-T8-01 Closeout Retro — Agora FastMCP 工具生态全域自动化测试与动态沙箱权限隔离
 bet_id: BET-Y1Q4-T8-01
-status: archived
-owner: agora-team
 created: 2026-09-04
-last-reviewed: 2026-09-04
-lifecycle: history
 ---
+
 
 # BET-Y1Q4-T8-01 Closeout Retro
 

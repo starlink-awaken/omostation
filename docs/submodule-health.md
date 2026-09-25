@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-11
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # 子模块健康度报告
 
 > 生成时间: 2026-09-06 23:47 UTC

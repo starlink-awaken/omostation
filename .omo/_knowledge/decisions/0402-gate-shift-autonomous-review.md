@@ -1,11 +1,13 @@
 ---
-id: ADR-0402
+schema: md/v1
 status: active
 lifecycle: spec
 owner: '@Builder'
-last-reviewed: '2026-08-09'
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0402
 ---
+
 
 # ADR-0402: 门禁后移与自主审查架构
 

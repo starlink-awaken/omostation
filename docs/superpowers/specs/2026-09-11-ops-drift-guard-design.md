@@ -1,16 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-11
-last-reviewed: 2026-09-11
 title: ops 注册表防漂移双闸 (check-signals + cron 准入)
 bet_id: BET-Y1Q4-T16
 implementation_authorized: true
 value_indicator_policy: false
 ---
+
 
 # ops 注册表防漂移双闸 — 设计规格
 

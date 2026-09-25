@@ -1,9 +1,14 @@
 ---
+schema: md/v1
+status: verified
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 title: OMO extracted delivery consumer contract repair evidence
 date: 2026-08-29
-status: verified
-type: ephemeral
 ---
+
 
 # OMO 拆分后 delivery consumer 契约修复证据
 

@@ -1,19 +1,17 @@
 ---
-title: Wave/Gate ↔ BET 台账差异对齐
+schema: md/v1
 status: active
-type: architecture-map
+lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: architecture-map
+title: Wave/Gate ↔ BET 台账差异对齐
 created: 2026-08-15
 bet: BET-Y1Q1-T6-02
-lifecycle: contract
 does_not_invent: 第四套 ID。Wave/Gate 名称保留蓝图原文；BET 轨道保留 3y-bet-ledger.yaml。
-ssot:
-  waves: docs/architecture/digital-twin-blueprint-v1.md
-  gates: docs/architecture/blueprint-multi-agent-execution-control-v1.md
-  bets: docs/plans/3y-bet-ledger.yaml
-  north_star: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-last-reviewed: 2026-08-18
+ssot: 
 ---
+
 
 # Wave / Gate ↔ BET 映射
 

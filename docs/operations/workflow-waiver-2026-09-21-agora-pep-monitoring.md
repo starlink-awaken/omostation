@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-22
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Workflow Waiver Record
 
 **Date**: 2026-09-21  

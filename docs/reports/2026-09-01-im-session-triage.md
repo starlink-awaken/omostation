@@ -1,13 +1,15 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: delivery-report
 owner: governance-team
+last-reviewed: 2026-09-25
+type: delivery-report
+schema_version: report/v1
 created: 2026-09-01
-last-reviewed: 2026-09-01
 bet: BET-Y1Q4-T2-02
 ---
+
 
 # IM 会话感知与指令式即时办结（协议面交付报告）
 

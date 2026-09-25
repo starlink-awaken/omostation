@@ -1,20 +1,17 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-17
+last-reviewed: 2026-09-25
+type: ssot
 review-state: content-reviewed-20260917
 review-note: >
-  2026-08-17 内容级重读 (T6-07 r3): 全文 341 行通读。分层表/项目链接已随 T6-01
-  knowledge 归并更新 (kairon/gbrain 指向 projects/knowledge/*, 链接实测有效)。
-  本文档定位: 系统全景参考 (BOS 路由/分层), 非战略主线 — 战略见
-  STRATEGY-3YEAR-PLAN (ADR-0410, PANORAMA 战略部分已 superseded, 全景部分仍有效)。
-  三入口 (README/SYSTEM-INDEX/ARCHITECTURE) 仍引用, 保留。
 metadata-migrated-at: 2026-07-31
 stale-reason: body frozen 2026-06-30; metadata-only review 2026-07-31; not a strategy mainline
-type: ssot
 last_updated: 2026-09-18
 ---
+
 # PANORAMA.md — eCOS 系统全景架构
 
 > 本文是全景骨架与导航，不是运行时快照。

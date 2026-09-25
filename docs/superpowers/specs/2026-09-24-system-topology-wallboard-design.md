@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 道法术器架构拓扑大屏研发 (SystemTopologyWallboard)
 bet_id: BET-Y2Q2-T7-08
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-24'
-last-reviewed: '2026-09-24'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L2
 human_gate: false
-type: ssot
 ---
+
 
 # 道法术器架构拓扑大屏研发 (SystemTopologyWallboard) 设计规约
 

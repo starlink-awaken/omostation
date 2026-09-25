@@ -1,11 +1,13 @@
 ---
-id: ADR-0185
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0185
 ---
+
 
 # ADR-0185 — Wave 2 Phase B: 预测增强 + 可视化导出
 

@@ -1,13 +1,15 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
+last-reviewed: 2026-09-25
+type: implementation-evidence
+schema_version: report/v1
 created: 2026-08-30
-last-reviewed: 2026-08-30
 bet_id: BET-Y1Q3-T10-107
 ---
+
 
 # Convergence pulse capability projection sync
 

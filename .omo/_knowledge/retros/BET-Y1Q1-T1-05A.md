@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: Retro — BET-Y1Q1-T1-05A 共享运行时协调层 (shadow)
+last-reviewed: 2026-09-25
 type: retro
+title: Retro — BET-Y1Q1-T1-05A 共享运行时协调层 (shadow)
 ---
+
 # Retro — BET-Y1Q1-T1-05A 共享运行时协调层 (shadow)
 
 > 状态: shadow 窗口进行中 (窗口起点 2026-08-14T12:56:00Z, 7d)

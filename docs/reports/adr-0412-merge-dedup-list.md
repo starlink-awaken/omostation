@@ -1,8 +1,13 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 created: 2026-09-03
 ---
+
 
 # ADR-0412 归并去重清单 (BET-Y1Q2-T1-01)
 

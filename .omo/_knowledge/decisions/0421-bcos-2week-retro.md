@@ -1,19 +1,18 @@
 ---
-id: ADR-0421
-
-title: "ADR-0421: BCOS 2 周落地复盘 (W1 执行+知识, W2 治理+进化)"
+schema: md/v1
 status: archived
 lifecycle: spec
-type: retrospective
 owner: governance-team
+last-reviewed: 2026-09-25
+type: retrospective
+id: ADR-0421
+title: "ADR-0421: BCOS 2 周落地复盘 (W1 执行+知识, W2 治理+进化)"
 date: 2026-08-19
-last-reviewed: 2026-08-20
 tags: [bcos, retrospective, 2-week]
 supersedes: []
-related:
-  - ADR-0419 (BCOS 业务落地计划)
-  - .omo/_knowledge/decisions/0420-bcos-evolution-engine.md
+related: 
 ---
+
 
 # BCOS 2 周落地复盘
 

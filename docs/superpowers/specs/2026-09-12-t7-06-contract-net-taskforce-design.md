@@ -1,14 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 合同网协议 (CNP) 任务自主竞标与临时突击队动态自组织编排设计
 bet_id: BET-Y1Q4-T7-06
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-12
 value_indicator_policy: false
 ---
+
 
 # T7-06 — Contract Net Protocol & TaskForce 编排设计
 

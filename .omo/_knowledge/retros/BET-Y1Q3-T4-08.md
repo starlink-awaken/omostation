@@ -1,11 +1,12 @@
 ---
-status: active
+schema: md/v1
+status: archived
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-30
+last-reviewed: 2026-09-25
 type: ephemeral
-status: archived
 ---
+
 # BET-Y1Q3-T4-08 Retrospective — WP6 Physical Backup Restore Integrity Drill
 
 - date: 2026-08-29

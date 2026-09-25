@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
-created: 2026-09-07
-last-reviewed: 2026-09-07
-title: BET-Y1Q4-T6-31 RLM 变量命名空间 GC 与 GaC 安全门禁设计
+last-reviewed: 2026-09-25
 type: doc
+created: 2026-09-07
+title: BET-Y1Q4-T6-31 RLM 变量命名空间 GC 与 GaC 安全门禁设计
 ---
+
 
 # BET-Y1Q4-T6-31: RLM 变量命名空间生命周期 GC、资源核算与 GaC 安全门禁
 

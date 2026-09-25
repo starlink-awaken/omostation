@@ -1,12 +1,15 @@
 ---
-type: retro
-bet_id: BET-Y1Q4-T6-29
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+bet_id: BET-Y1Q4-T6-29
 created: 2026-09-13
 last_reviewed: 2026-09-13
 ---
+
 
 # BET-Y1Q4-T6-29 复盘 — 仿生清醒-睡眠双相记忆巩固
 

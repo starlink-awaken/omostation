@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0356
 title: Manifest-bound Shadow Evaluation 报告与激活边界
-status: ACCEPTED
 date: 2026-08-03
-owner: governance-team
-lifecycle: spec
-last-reviewed: 2026-08-03
-type: ssot
 ---
+
 
 # ADR-0356: Manifest-bound Shadow Evaluation 报告与激活边界
 

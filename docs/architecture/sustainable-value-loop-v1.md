@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
-title: 可持续价值闭环与自进化治理 v1 — 架构方案 SSOT
+last-reviewed: 2026-09-25
 type: doc
+title: 可持续价值闭环与自进化治理 v1 — 架构方案 SSOT
 ---
+
 
 # 可持续价值闭环与自进化治理 v1 — 架构方案 SSOT
 

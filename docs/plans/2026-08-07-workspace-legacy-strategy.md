@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: archived
 lifecycle: plan
 owner: 夏明星
+last-reviewed: 2026-09-25
+type: ephemeral
 created: 2026-08-07
 archived: 2026-08-15
 superseded-by: docs/STRATEGY-CONVERGENCE-MASTER-2026-08.md
-last-reviewed: 2026-08-18
-type: ephemeral
 ---
+
 # 工作区遗留项目架构战略规划 + 战术落地 Roadmap (2026-08-07)
 
 > 基于全面调研 (12 子模块现状 + 治理体系 + agora 衔接点) 制定。

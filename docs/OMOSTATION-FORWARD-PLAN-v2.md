@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-25
 type: roadmap
 ---
+
 
 # OMOSTATION-FORWARD-PLAN-v2 — 持续维护 + 新方向探索 (2026H2 - 2027H1)
 

@@ -1,17 +1,16 @@
 ---
-title: Y1Q4 年度门重基线提案 — code_loc
-type: plan
+schema: md/v1
 status: draft
-owner: governance-team
-created: 2026-08-18
-related:
-  - BET-Y1Q3-T1-04
-  - BET-Y1Q3-T1-03
-  - docs/plans/3y-bet-ledger.yaml (Y1Q4 annual_gate)
-review_by: 2026-08-25
 lifecycle: plan
-last-reviewed: 2026-08-18
+owner: governance-team
+last-reviewed: 2026-09-25
+type: plan
+title: Y1Q4 年度门重基线提案 — code_loc
+created: 2026-08-18
+related: 
+review_by: 2026-08-25
 ---
+
 
 # Y1Q4 年度门重基线提案 (BET-Y1Q3-T1-04)
 

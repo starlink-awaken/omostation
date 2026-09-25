@@ -1,12 +1,14 @@
 ---
-id: ADR-0377
-title: Drift-noise convergence — runtime-derived plane exclusion + release_ready semantics
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0377
+title: Drift-noise convergence — runtime-derived plane exclusion + release_ready semantics
 ---
+
 
 # 0377 — Drift-Noise Convergence Round
 

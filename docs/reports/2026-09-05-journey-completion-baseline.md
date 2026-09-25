@@ -1,16 +1,18 @@
 ---
-schema_version: receipt/v1
-type: report
-title: Journey Completion Rate Baseline — First Receipt
-bet_id: BET-Y1Q4-T4-02
-kr_id: KR-VALUE-JOURNEY-COMPLETION
+schema: md/v1
 status: archived
 lifecycle: contract
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: report
+schema_version: receipt/v1
+title: Journey Completion Rate Baseline — First Receipt
+bet_id: BET-Y1Q4-T4-02
+kr_id: KR-VALUE-JOURNEY-COMPLETION
 created: 2026-09-05
-last-reviewed: 2026-09-05
 last_updated: 2026-09-05
 ---
+
 
 # Journey Completion Rate Baseline — First Receipt
 

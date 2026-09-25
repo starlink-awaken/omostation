@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: T1-02 Squash-Successor Clone Retirement — TDD Implementation Plan
 bet_id: BET-Y1Q4-T1-02
-status: accepted
-lifecycle: plan
-owner: governance-team
 created: 2026-09-03
-last-reviewed: 2026-09-03
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # T1-02 TDD Implementation Plan
 

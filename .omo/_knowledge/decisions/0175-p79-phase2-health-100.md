@@ -1,15 +1,15 @@
 ---
-id: ADR-0175
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related:
-  - STRAT-P79-strategic-roadmap.md
-  - 0174-p79-phase1-foundry-v2-cron.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0175
+related: 
+supersedes: []
 ---
+
 
 # ADR-0175: P79 Phase 2 — Health 100 (bare ports 分类 + env var 迁移)
 

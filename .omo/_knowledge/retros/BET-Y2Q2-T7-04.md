@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-09-23
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Retro — BET-Y2Q2-T7-04 Cockpit-UI 全量功能自愈与运行时异常根治
 
 - bet: BET-Y2Q2-T7-04

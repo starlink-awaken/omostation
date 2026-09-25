@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
 bet_id: BET-Y3H2-T7-01
 date: 2026-08-20
-lifecycle: history
-last-reviewed: 2026-09-16
-status: archived
-owner: governance-team
 title: BET-Y3H2-T7-01 Retro — 公文场景 routine (限格式类)
-type: retro
 ---
+
 
 # BET-Y3H2-T7-01 Retro — 公文场景 routine (限格式类)
 

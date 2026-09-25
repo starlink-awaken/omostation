@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: engineering-agent
-bet: BET-Y1Q3-T7-02
-last-reviewed: 2026-08-27
-title: 复盘：CI 存量债清理战役 (2026-08-26 → 08-27)
+last-reviewed: 2026-09-25
 type: retro
+bet: BET-Y1Q3-T7-02
+title: 复盘：CI 存量债清理战役 (2026-08-26 → 08-27)
 ---
+
 # 复盘：CI 存量债清理战役 (2026-08-26 → 08-27)
 
 > 触发: 用户指令"规则数放宽到 180" → "修复存在的问题" → "做复盘, 需要迭代机制和治理的就迭代"

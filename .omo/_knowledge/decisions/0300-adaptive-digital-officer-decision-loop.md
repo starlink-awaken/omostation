@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0300
 title: Adaptive Digital 副官决策循环的 Workflow Mesh 边界
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/agent-cli-worker-collaboration.md
+related: 
 ---
+
 
 # ADR-0300: Adaptive Digital 副官决策循环的 Workflow Mesh 边界
 

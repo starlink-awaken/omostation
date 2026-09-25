@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Clone-lifecycle claims-authority fence adapter contract repair
 bet_id: BET-Y1Q4-T10-174
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-21'
-last-reviewed: '2026-09-21'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L2
 human_gate: false
-type: ssot
 ---
+
 
 # Clone-lifecycle claims-authority fence adapter contract repair
 

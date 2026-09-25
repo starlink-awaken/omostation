@@ -1,11 +1,13 @@
 ---
-id: ADR-0088
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0088
 ---
+
 
 # ADR-0088: P94 adr-drift-apply + 13 god-module list + REAL_BUG 修复
 

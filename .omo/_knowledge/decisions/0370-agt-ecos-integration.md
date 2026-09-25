@@ -1,13 +1,15 @@
 ---
-id: ADR-0370
-title: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-04
-note: "Reissues the AGT × eCOS v6 contract under a fresh id (replaces the placeholder that collided with ADR-0366); see ADR-0366 for the Pyright sweep algorithm."
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0370
+title: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern
+note: "Reissues the AGT × eCOS v6 contract under a fresh id (replaces the placeholder that collided with ADR-0366); see ADR-0366 for the Pyright sweep algorithm."
 ---
+
 
 # ADR-0370: AGT × eCOS v6 Integration via BOS URI External Adapter Pattern
 

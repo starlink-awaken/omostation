@@ -1,10 +1,16 @@
 ---
+schema: md/v1
+status: completed
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 bet_id: BET-Y1Q3-T10-122
 run_id: 20260905T022225Z-bet-execution-9ecde217
-status: completed
 date: '2026-09-05'
 scope: "Task 11+12 — Danger-gate approval & BET closeout"
 ---
+
 
 # BET-Y1Q3-T10-122 Final Report
 

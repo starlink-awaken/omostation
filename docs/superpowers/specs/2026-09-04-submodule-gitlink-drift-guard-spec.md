@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 子模块 gitlink 漂移自动防护 + sync-check 机制强化
 bet_id: BET-Y1Q4-T6-03
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-04
-last-reviewed: 2026-09-04
-type: ssot
 last_updated: 2026-09-04
 ---
+
 
 # 子模块 gitlink 漂移自动防护 + sync-check 机制强化（BET-Y1Q4-T6-03）
 

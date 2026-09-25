@@ -1,12 +1,16 @@
 ---
+schema: md/v1
+status: done
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
 bet_id: BET-Y1Q4-T6-26
 title: "Semantica 嵌入式图引擎内核集成与统一 BOS 决策网格"
 retro_type: bet-retro
-status: done
 done_at: "2026-09-12"
-lifecycle: history
-owner: unassigned
 ---
+
 
 # BET-Y1Q4-T6-26 Retro
 

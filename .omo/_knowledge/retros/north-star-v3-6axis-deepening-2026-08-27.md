@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
-last-reviewed: 2026-08-27
-title: 6-axis north_star v3 深化 — 本轮迭代教训
+last-reviewed: 2026-09-25
 type: retro
+title: 6-axis north_star v3 深化 — 本轮迭代教训
 ---
+
 # 6-axis north_star v3 深化 — 本轮迭代教训
 
 ## 范围

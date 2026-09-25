@@ -1,16 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: skill
 name: bet-closeout-chain
 title: BET Closeout Chain
 description: "BET 完成闭环全链路 skill：从 spec binding 到 ledger complete 的 8 步 checklist（spec 规范/start 绑定/交付 PR/evidence matrix/complete/retro/closeout），固化 2026-09 两日 4 次（T10-02/T10-04/T7-02/T7-03）实战流程"
-type: skill
-owner: governance-team
 version: "1.0"
-status: active
-triggers:
-  - BET 交付 PR 已合并
-  - bet-ledger complete 需要闭环
-  - closeout 被守卫拦 (SPEC_BINDING_REQUIRED / missing_bet_binding / missing_retro)
+triggers: 
 ---
+
 
 # bet-closeout-chain — BET 完成闭环 8 步
 

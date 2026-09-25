@@ -1,16 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: skill
 name: round-gate-check
 description: "回合门禁检查 skill：回合制执行的 gate 结果核验与放行判定"
 title: Round Gate Check
-type: skill
-owner: governance-team
 version: "1.0"
-status: active
-triggers:
-  - round start
-  - PR creation
-  - architecture change
+triggers: 
 ---
+
 
 # round-gate-check — Round 三门槛守门
 

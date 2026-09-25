@@ -1,16 +1,16 @@
 ---
-id: ADR-0242
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-26
-related:
-  - 0238-mof-m4-phase0-registry-self-governance.md
-  - .omo/plans/metaos-governance-batch-workorder.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0242
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0242: metaos registry drift 门扩展 (§J1, 承接 ADR-0238)
 

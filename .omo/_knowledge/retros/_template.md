@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: "<BET-ID> Closeout Retro — <简短标题>"
-bet_id: "<BET-ID>"
+schema: md/v1
 status: draft
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: "<BET-ID> Closeout Retro — <简短标题>"
+bet_id: "<BET-ID>"
 created: "<YYYY-MM-DD>"
-last-reviewed: "<YYYY-MM-DD>"
 ---
+
 
 # <BET-ID> Closeout Retro
 

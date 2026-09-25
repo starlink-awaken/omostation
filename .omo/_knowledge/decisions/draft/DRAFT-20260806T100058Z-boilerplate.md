@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: DRAFT
 lifecycle: history
 owner: bootloader
-last-reviewed: 2026-08-06
-related: []
+last-reviewed: 2026-09-25
 type: ssot
+related: []
 ---
+
 
 # DRAFT ADR (omostation-bootloader)
 

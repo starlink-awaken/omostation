@@ -1,8 +1,13 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 created: 2026-09-03
 ---
+
 
 # 三年战略诚实体检 · 2026-07-23（周四）
 

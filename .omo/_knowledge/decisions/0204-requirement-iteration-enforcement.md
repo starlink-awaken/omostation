@@ -1,11 +1,13 @@
 ---
-id: ADR-0204
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0204
 ---
+
 
 # ADR-0204 — ADR-0203 可执行闸门 + pre-push 路径 + worktree/ADR 占号
 

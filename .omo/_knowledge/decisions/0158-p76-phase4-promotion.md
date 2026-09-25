@@ -1,17 +1,15 @@
 ---
-id: ADR-0158
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0157-p76-phase3-self-meta.md
-  - 0156-p76-phase2-call-direction.md
-  - 0155-p76-phase1-cleanup.md
-  - STRAT-P76-strategic-roadmap.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0158
+related: 
+supersedes: []
 ---
+
 
 # ADR-0158: P76 Phase 4 — X 扩展晋升机制 + 主仓-子仓对称修复
 

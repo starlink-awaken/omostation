@@ -1,24 +1,16 @@
 ---
-title: 会话级系统性复盘 — T1-05A 协调层 × 信任修复 × 乙流清欠
-type: retro
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-15
-last-reviewed: 2026-08-15
 lifecycle: history
-related:
-  - docs/plans/3y-bet-ledger.yaml
-  - .omo/_knowledge/audits/ledger-integrity-spotcheck-20260814.md
-  - .omo/_knowledge/audits/surface-area-source-breakdown-20260815.md
-  - .omo/_knowledge/retros/BET-Y1Q1-T1-05A.md
-  - .omo/_knowledge/retros/BET-Y1Q3-T1-02.md
-  - .omo/_knowledge/retros/BET-Y1Q1-T1-08.md
-  - .omo/_knowledge/retros/BET-Y1Q2-T7-01.md
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+title: 会话级系统性复盘 — T1-05A 协调层 × 信任修复 × 乙流清欠
+created: 2026-08-15
+related: 
 context: >
-  2026-08-14 → 08-15 完整会话弧：从 T1-05A 协调层交付开始，经信任修复两轮、
-  乙流清欠一轮，累计 12 个 PR 全部 merge。本轮不做五问模板堆砌，而是把整条链
-  当系统来解剖——模式、根因、制度缺陷、个人失误。
 ---
+
 
 # 会话级系统性复盘 — 2026-08-14 → 08-15
 

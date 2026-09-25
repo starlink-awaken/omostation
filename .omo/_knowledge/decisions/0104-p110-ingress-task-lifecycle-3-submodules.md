@@ -1,11 +1,13 @@
 ---
-id: ADR-0104
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0104
 ---
+
 
 # ADR-0104: P110 omo_ingress_task_lifecycle 3 子模块化 (1530→614L, <800L warn 清零)
 

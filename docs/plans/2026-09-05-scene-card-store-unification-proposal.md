@@ -1,10 +1,15 @@
 ---
-title: 场景卡存储归一提案 — 三套存储对账与收敛路线
-type: plan
+schema: md/v1
+status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: plan
+title: 场景卡存储归一提案 — 三套存储对账与收敛路线
 last_updated: 2026-09-05
 bet: BET-Y2Q1-T7-03
 ---
+
 
 # 场景卡存储归一提案 (BET-Y2Q1-T7-03)
 

@@ -1,18 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: engineering-team
-last-reviewed: 2026-08-05
-related:
-  - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
-  - ../../.omo/_truth/registry/memory-os.yaml
-  - ../../.omo/standards/memory-os-ops.md
-  - ../architecture/memory-os.md
-  - ./memory-os-phase8-closeout.md
-  - ./memory-os-adapter-audit.md
-title: Memory OS 史诗复盘（ADR-0372 · Phase 0–8 + 收口）
+last-reviewed: 2026-09-25
 type: doc
+related: 
+title: Memory OS 史诗复盘（ADR-0372 · Phase 0–8 + 收口）
 ---
+
 
 # Memory OS 史诗复盘（ADR-0372 · Phase 0–8 + 收口）
 

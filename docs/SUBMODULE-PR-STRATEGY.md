@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # 子模块 PR 策略 — Phase 2a-4 设计
 
 > 状态: 📋 设计完成(方案 A' 推荐) · 2026-06-30 · 关联: [`docs/AGENT-ISOLATION-ROLLOUT.md`](AGENT-ISOLATION-ROLLOUT.md) §4 Phase 2

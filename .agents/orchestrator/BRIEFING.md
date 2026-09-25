@@ -1,8 +1,12 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-05
+last-reviewed: 2026-09-25
+type: ssot
 ---
+
 
 # BRIEFING — 2026-06-23T10:26:11+08:00
 

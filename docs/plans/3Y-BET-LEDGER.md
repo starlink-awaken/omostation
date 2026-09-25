@@ -1,19 +1,19 @@
 ---
-title: 三年规划执行台账 — 多 Agent 并行认领手册
+schema: md/v1
 status: draft
-type: execution-ledger
-owner: 夏明星
-created: 2026-08-06
 lifecycle: plan
+owner: 夏明星
+last-reviewed: 2026-09-25
+type: execution-ledger
+title: 三年规划执行台账 — 多 Agent 并行认领手册
+created: 2026-08-06
 ssot: docs/plans/3y-bet-ledger.yaml
 cli: bin/plan/bet-ledger.py
 strategy: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
 audit: docs/reports/2026-08-06-deep-review-proactive-agent-and-scenario-orchestration.md
 note: >
-  本文是人类视图。机器可读 SSOT 是 docs/plans/3y-bet-ledger.yaml，
-  两者不一致时以 YAML 为准，且必须修 YAML 而非改本文。
-last-reviewed: 2026-08-18
 ---
+
 
 # 三年规划执行台账
 

@@ -1,20 +1,17 @@
 ---
-id: ADR-0423
-
-title: "ADR-0423: CONV-3 项目收敛 — family-hub / metaos / mesh-router 三态定案"
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-date: 2026-08-24
-last-reviewed: 2026-08-24
-tags: [convergence, conv3, gap-governance, project-registry, mesh-router, family-hub, metaos]
-related:
-  - docs/operations/convergence-decision-cards-2026-08-24.md (决策卡)
-  - .omo/_truth/governance-evidence/waiver-2026-08-24-gap-governance.md (用户授权证据)
-  - BET-Y1Q3-T1-06 (mesh-router 双 owner 收敛)
-  - ADR-0162 (P76 Phase 7)
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0423
+title: "ADR-0423: CONV-3 项目收敛 — family-hub / metaos / mesh-router 三态定案"
+date: 2026-08-24
+tags: [convergence, conv3, gap-governance, project-registry, mesh-router, family-hub, metaos]
+related: 
 ---
+
 
 # CONV-3 项目收敛 — family-hub / metaos / mesh-router 三态定案
 

@@ -1,14 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Semantica 嵌入式图引擎内核集成与 BOS 决策网格设计
 bet_id: BET-Y1Q4-T6-26
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-12
 value_indicator_policy: false
 ---
+
 
 # T6-26 — Semantica Graph Kernel & BOS Decision Mesh 设计
 

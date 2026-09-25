@@ -1,11 +1,14 @@
 ---
-bet_id: BET-Y3H1-T7-06
-title: "health-medical-workflow 场景冷启动 — draft→routine"
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-18
+last-reviewed: 2026-09-25
+type: ephemeral
+bet_id: BET-Y3H1-T7-06
+title: "health-medical-workflow 场景冷启动 — draft→routine"
 ---
+
 
 # BET-Y3H1-T7-06 Retrospective
 

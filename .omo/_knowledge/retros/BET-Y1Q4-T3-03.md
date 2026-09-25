@@ -1,17 +1,18 @@
 ---
-schema_version: retro/v1
-status: active
+schema: md/v1
+status: archived
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: retro/v1
 created: 2026-09-03
-last-reviewed: 2026-09-03
 bet: BET-Y1Q4-T3-03
 title: 三层投机路由
 symptom: squash 语义修复两次被并行覆盖 (commit 从未落库); 工作树材料被 checkout 挤掉
 solution: 专属文件立即 commit + git show --stat 验证锁定; stash 恢复链
-type: ephemeral
-status: archived
 ---
+
 
 # BET-Y1Q4-T3-03 复盘
 

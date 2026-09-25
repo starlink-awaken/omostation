@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
 type: ssot
 last_updated: 2026-09-03
 ---
+
 # 统一可观测性架构 — 可观测 × 事件 × 治理三体系联动设计
 
 > 状态: PROPOSED | 日期: 2026-08-08 | Owner: governance-team

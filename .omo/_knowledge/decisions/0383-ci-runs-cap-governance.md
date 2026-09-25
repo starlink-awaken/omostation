@@ -1,12 +1,14 @@
 ---
-id: ADR-0383
-title: CI runs cap governance + E-5 path-filter SSOT completion
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0383
+title: CI runs cap governance + E-5 path-filter SSOT completion
 ---
+
 
 # 0383 — CI Runs Cap Governance + E-5 Completion Round
 

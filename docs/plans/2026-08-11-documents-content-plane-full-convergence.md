@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 # Documents Content Plane Full Convergence Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use `subagent-driven-development` task-by-task. Each implementation task gets a fresh implementer, then a specification review and a code-quality review. Use `verification-before-completion` before every commit/PR and final closeout.

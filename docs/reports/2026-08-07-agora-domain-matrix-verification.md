@@ -1,8 +1,13 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 created: 2026-09-03
 ---
+
 
 # agora 全领域真实场景验证评估 (第二期: Documents 领域矩阵, 2026-08-07)
 

@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: family-hub
-created: 2026-08-30
-last-reviewed: 2026-08-31
-title: Family dashboard Workspace owner migration Phase A evidence
+last-reviewed: 2026-09-25
 type: doc
+created: 2026-08-30
+title: Family dashboard Workspace owner migration Phase A evidence
 bet_id: BET-Y1Q3-T10-111
 ---
+
 
 # Family dashboard Workspace owner migration Phase A evidence
 

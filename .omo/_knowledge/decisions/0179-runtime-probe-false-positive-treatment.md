@@ -1,18 +1,15 @@
 ---
-id: ADR-0179
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-10
-related:
-  - 0178-p79-phase5-closeout.md
-  - ../patterns/p76-launcher-zombie-false-positive.md
-  - ../../projects/runtime/src/runtime/scheduler.py
-  - ../../projects/agora/src/agora/mcp_proxy/manager.py
-  - ../../projects/agora/src/agora/core/service_base.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0179
+related: 
+supersedes: []
 ---
+
 
 # ADR-0179: runtime 探测假阳性根治本 (launcher-zombie + import 断裂 + self-heal 死循环)
 

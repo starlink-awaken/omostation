@@ -1,17 +1,17 @@
 ---
-id: ADR-0212
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0212
 omo_task_ref: null
 agent_workflow_run: 20260715T083144Z-governance-audit-7f6b088e
 supersedes: []
-related:
-  - 0209-ledger-trim-and-adr-ssot-renumbering.md
-  - 0211-p74-run-frequency-field-and-excluded-workflows-removal.md
-type: ssot
+related: 
 ---
+
 
 # ADR-0212 — ledger trim 现象修正：history gap 而非物理 trim
 

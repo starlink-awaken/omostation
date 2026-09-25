@@ -1,3 +1,11 @@
+---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+---
 # AGENTS.md — .agents
 
 ## Scope

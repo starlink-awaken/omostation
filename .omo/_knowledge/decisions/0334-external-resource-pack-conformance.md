@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0334
 title: External Resource Pack Conformance Before Dynamic Discovery
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/external-connection-fabric.md
-  - 0333-scene-card-preflight-readiness.md
+related: 
 ---
+
 
 # ADR-0334: External Resource Pack Conformance Before Dynamic Discovery
 

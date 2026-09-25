@@ -1,16 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: skill
 name: round-workflow
 description: "回合工作流 skill：回合制任务的状态机管理与轮次推进"
 title: Round Workflow
-type: skill
-owner: governance-team
 version: "1.0"
-status: active
-triggers:
-  - new feature work
-  - architecture change
-  - multi-PR effort
+triggers: 
 ---
+
 
 # round-workflow — Round 工程闭环
 

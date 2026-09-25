@@ -1,15 +1,17 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: resident
+last-reviewed: 2026-09-25
+type: ssot
 created: 2026-08-26
-last-reviewed: 2026-08-26
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-16
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # Resident monitor/heartbeat 空转治理：角色私有 tick 接线
 

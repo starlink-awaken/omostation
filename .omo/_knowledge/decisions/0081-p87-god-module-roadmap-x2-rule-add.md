@@ -1,11 +1,13 @@
 ---
-id: ADR-0081
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0081
 ---
+
 
 # ADR-0081: P87 god-module 拆解 roadmap + X2 rule 交互式添加
 

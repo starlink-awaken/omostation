@@ -1,19 +1,15 @@
 ---
-id: ADR-0151
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
-related:
-  - 0150-submodule-pr-reverse-review.md
-  - 0149-p71-baseline-no-replay.md
-  - 0141-m2-base-schema.md
-  - ../../../../bin/check-submodule-hygiene.py
-  - ../../../../.gitignore
-  - ../../../runtime/.gitignore
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0151
+related: 
+supersedes: []
 ---
+
 
 # ADR-0151: 子模块 gitignore 守门 (Round 5f)
 

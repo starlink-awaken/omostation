@@ -1,12 +1,14 @@
 ---
-id: ADR-0376
-title: M1 tracked-truth convergence — health checks read git HEAD, not working tree
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0376
+title: M1 tracked-truth convergence — health checks read git HEAD, not working tree
 ---
+
 
 # 0376 — M1 Tracked-Truth Convergence Round
 

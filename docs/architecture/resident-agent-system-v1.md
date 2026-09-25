@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-17
-title: Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)
+last-reviewed: 2026-09-25
 type: doc
+title: Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)
 ---
+
 
 # Resident Agent System v1 (ADR-0396 DigitalAgent / WP-A~I)
 

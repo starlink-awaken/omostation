@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
+last-reviewed: 2026-09-25
+type: doc
 created: 2026-08-30
-last-reviewed: 2026-08-30
 last_updated: 2026-09-03
 title: L4 context-aware machine-log classification implementation plan
-type: doc
 ---
+
 
 # L4 Context-Aware Machine-Log Classification Implementation Plan
 

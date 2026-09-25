@@ -1,12 +1,14 @@
 ---
-id: ADR-0373
-title: Sweep-tooling Convergence — A4 / C5 / D3 / B2 / E2 plus GaC iteration
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0373
+title: Sweep-tooling Convergence — A4 / C5 / D3 / B2 / E2 plus GaC iteration
 ---
+
 
 # 0373 — Sweep-tooling Convergence Round
 

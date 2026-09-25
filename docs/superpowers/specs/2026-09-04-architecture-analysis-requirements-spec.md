@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: omostation 架构分析与需求收敛
 bet_id: BET-Y1Q4-T10-03
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-04
-last-reviewed: 2026-09-04
-type: ssot
 last_updated: 2026-09-04
 ---
+
 
 # omostation 架构分析与需求收敛（BET-Y1Q4-T10-03）
 

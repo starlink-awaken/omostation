@@ -1,14 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0345
 title: External Capability Directory 只读能力地图
-status: ACCEPTED
 date: 2026-08-03
-owner: architecture-governance
-last-reviewed: 2026-08-03
-lifecycle: spec
 scope: Workflow Mesh external connection fabric
-type: ssot
 ---
+
 
 # ADR-0345: External Capability Directory 只读能力地图
 

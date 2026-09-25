@@ -1,17 +1,18 @@
 ---
-schema_version: retro/v1
-status: active
+schema: md/v1
+status: archived
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: retro/v1
 created: 2026-09-05
-last-reviewed: 2026-09-05
 bet: BET-Y1Q4-T8-19
 title: Web UI (cockpit-ui) 8 大正交一级领域重组与包体瘦身
 symptom: 旧版 cockpit-ui 42 个散乱路由缺乏清晰信息架构，静态 import 导致首页 Bundle >1MB 超大告警，无头测试环境出现 React Lazy 接收到 undefined 抛错
 solution: 基于 8 大正交一级领域重构路由拓扑与 SurfaceDomainType 映射，采用 React.lazy() 路由级代码分割与 Vite manualChunks 细粒度分包，将主入口包体从 1,052 KB 压降至 65 KB，修复 GBrain 组件 default export
-type: ephemeral
-status: archived
 ---
+
 
 # BET-Y1Q4-T8-19 复盘
 

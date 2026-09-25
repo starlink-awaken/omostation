@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: T10-48 root-resolvable completion evidence repair
 bet_id: BET-Y1Q3-T10-52
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-08-29
-last-reviewed: 2026-08-29
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # T10-48 根仓证据可解析性修复
 

@@ -1,20 +1,15 @@
 ---
-id: ADR-0153
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0152-m4-gac-rules.md
-  - 0151-submodule-hygiene-gate.md
-  - ../../../../.omo/_truth/registry/agent-workflows.yaml
-  - ../../../../bin/mof-bootstrap.py
-  - ../../../../bin/m4-health-score.py
-  - ../../../../bin/check-submodule-hygiene.py
-  - ../../../../bin/mcp-tool-data-complete.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0153
+related: 
+supersedes: []
 ---
+
 
 # ADR-0153: M4 4 工具入 agent-workflows (Phase 2b)
 

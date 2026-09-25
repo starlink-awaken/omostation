@@ -1,17 +1,18 @@
 ---
-schema_version: retro/v1
-status: active
+schema: md/v1
+status: archived
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: retro/v1
 created: 2026-09-01
-last-reviewed: 2026-09-01
 bet: BET-Y1Q4-T2-03
 title: 纸质公文扫描件 OCR 版面还原
 symptom: 无（按计划交付，无故障）
 solution: pyobjc CGImage 通道 + 印章词典双通道 + 几何版面引擎
-type: ephemeral
-status: archived
 ---
+
 
 # BET-Y1Q4-T2-03 复盘
 

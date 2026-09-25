@@ -1,11 +1,16 @@
 ---
-title: BET-Y1Q4-T10-174 fence adapter contract repair — closeout receipt
-type: report
-bet_id: BET-Y1Q4-T10-174
+schema: md/v1
 status: completed
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: report
+title: BET-Y1Q4-T10-174 fence adapter contract repair — closeout receipt
+bet_id: BET-Y1Q4-T10-174
 created: '2026-09-21'
 run_id: 20260921T084356Z-project-code-change-57dcd804
 ---
+
 
 # BET-Y1Q4-T10-174 Closeout Receipt
 

@@ -1,25 +1,19 @@
 ---
-id: ADR-0413
-title: gbrain + kairon 归并为 knowledge — 决策补档
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0413
+title: gbrain + kairon 归并为 knowledge — 决策补档
 created: 2026-08-17
-last-reviewed: 2026-08-18
-deciders:
-  - 夏明星 (最终确认 pending)
-  - engineering-agent (起草, 依据既有授权链)
-related:
-  - .omo/_knowledge/decisions/0410-strategy-mainline-plan-supersedes-panorama.md
-  - .omo/_knowledge/decisions/0412-model-driven-disposition.md
-  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  - docs/plans/2026-08-16-t6-01-knowledge-merge-spec.md
-  - docs/plans/2026-08-16-t6-01-dedup-ledger.md
-  - .omo/_knowledge/retros/BET-Y1Q3-T6-01.md
+deciders: 
+related: 
 supersedes: []
 session: strategy-convergence-r3
-type: ssot
 ---
+
 
 # ADR-0413: gbrain + kairon 归并为 knowledge — 决策补档
 

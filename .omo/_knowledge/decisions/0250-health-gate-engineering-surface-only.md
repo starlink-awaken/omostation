@@ -1,16 +1,16 @@
 ---
-id: ADR-0250
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-27
-related:
-  - 0249-governance-budget-cap-40-40-20.md
-  - 0247-strategic-pivot-collab-first-physical-deferred.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0250
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0250: health 门禁改为只卡工程执行面 (owner 集中度不再阻断)
 

@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: BET-Y1Q4-T1-14 Closeout Retro — Portfolio OBJ-VALUE + 3 KR registration
-bet_id: BET-Y1Q4-T1-14
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: BET-Y1Q4-T1-14 Closeout Retro — Portfolio OBJ-VALUE + 3 KR registration
+bet_id: BET-Y1Q4-T1-14
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # BET-Y1Q4-T1-14 复盘
 

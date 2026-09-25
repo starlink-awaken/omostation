@@ -1,11 +1,13 @@
 ---
-id: ADR-0187
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0187
 ---
+
 
 # ADR-0187 — Scheme C 5c L1: `omo lint path-acl` 只读巡检
 

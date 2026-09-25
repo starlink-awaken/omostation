@@ -1,11 +1,13 @@
 ---
-id: ADR-0296
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-09-01
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0296
 ---
+
 
 # Cell 模块激活方案 (chain_4 修复)
 

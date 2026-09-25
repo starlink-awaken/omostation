@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-09
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 
 # Cockpit CLI 命令参考
 

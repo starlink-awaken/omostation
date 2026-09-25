@@ -1,22 +1,18 @@
 ---
-title: 收敛期 P1 · health_score ISC-3 重构设计
+schema: md/v1
 status: active
-type: design-spec
-owner: 夏明星
-created: 2026-07-15
-related:
-  - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
-  - .omo/state/health.yaml
-  - docs/RUNTIME-DAEMON-REMEDIATION.md
-  - docs/STRATEGY-M1-EVIDENCE.md
-note: >
-  health_score 口径重构设计。权威源 .omo/state/health.yaml（ISC-1 guarded，
-  改动须走 OMO broker，不得直写 health_score）。本文是设计，非落地。
 lifecycle: contract
-last-reviewed: 2026-07-31
+owner: 夏明星
+last-reviewed: 2026-09-25
+type: design-spec
+title: 收敛期 P1 · health_score ISC-3 重构设计
+created: 2026-07-15
+related: 
+note: >
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
+
 
 # 收敛期 P1 · health_score ISC-3 重构设计（2026-07-15）
 

@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # Phase 2 兑现期 · 门禁诚实看板
 
 > 禁止用 sim 数字填物理门禁。SSOT：`phase-scope.yaml::metrics_caliber`。

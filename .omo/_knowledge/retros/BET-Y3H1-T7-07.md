@@ -1,13 +1,16 @@
 ---
-type: bet-retro
-schema_version: bet-retro/v1
+schema: md/v1
 status: archived
 lifecycle: history
+owner: unassigned
+last-reviewed: 2026-09-25
+type: bet-retro
+schema_version: bet-retro/v1
 bet_id: BET-Y3H1-T7-07
 title: documents-domain 场景卡批量 supervised→routine
 date: 2026-09-18
-owner: unassigned
 ---
+
 
 # BET-Y3H1-T7-07 Retro
 

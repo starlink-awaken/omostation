@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 ---
+
 # Workorder Authoring Standard (STRAT-P85 G2.2)
 
 Every workflow-supporting task under `.omo/tasks/` must use this

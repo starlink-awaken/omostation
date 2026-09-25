@@ -1,18 +1,14 @@
 ---
+schema: md/v1
 status: PROPOSED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-24
-related:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0225-g-del-physical-multihost-gate-caliber.md
-  - 0226-g-del-1-blocked-until-four-hosts.md
-  - 0227-governance-ideal-architecture.md
-  - STRAT-P79-strategic-roadmap.md
-  - phase45-plan.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+related: 
+supersedes: []
 ---
+
 
 > 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: SUPERSEDED — M1 提前与收敛期精神已由 ADR-0410 主线 + T 系执行覆盖
 

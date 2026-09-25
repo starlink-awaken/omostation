@@ -1,16 +1,15 @@
 ---
-id: ADR-0215
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - 0202-fake-green-prevention.md
-  - 0179-runtime-probe-false-positive-treatment.md
-  - 0212-ledger-history-gap-not-physical-trim.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0215
+related: 
+supersedes: []
 ---
+
 
 # ADR-0215 — agora-gateway 假绿灯治本（PID 重置 + health_check 落盘）
 

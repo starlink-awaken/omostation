@@ -1,17 +1,15 @@
 ---
-id: ADR-0163
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0162-p76-phase8-real-engineering.md
-  - 0161-p76-phase7-llm-cron-tasks-mesh.md
-  - ../../../../../.githooks/prepare-commit-msg-commit-assist
-  - ../../../../../bin/commit-assist.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0163
+related: 
+supersedes: []
 ---
+
 
 # ADR-0163: P76 Phase 9A — commit-assist pre-commit-msg 集成 (advisory 硬门)
 

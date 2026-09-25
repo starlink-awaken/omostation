@@ -1,12 +1,16 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: standard/v1
 standard: documents-workspace-collab-v1
 created: 2026-08-30
-last-reviewed: 2026-08-30
-owner: governance-team
 adr: ADR-0441
-type: ssot
 ---
+
 
 # DW 协同契约 v1（Documents↔Workspace 三原语）
 

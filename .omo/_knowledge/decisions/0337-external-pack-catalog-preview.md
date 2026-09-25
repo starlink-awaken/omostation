@@ -1,18 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: product-architecture
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0337
 title: External Resource Pack Catalog Preview Semantics
-status: archived
-type: decision
-owner: product-architecture
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/external-connection-fabric.md
-  - 0334-external-resource-pack-conformance.md
-  - 0336-external-resource-pack-ui-surface.md
+related: 
 ---
+
 
 # ADR-0337: External Resource Pack Catalog Preview Semantics
 

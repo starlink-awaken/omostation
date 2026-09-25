@@ -1,17 +1,15 @@
 ---
-id: ADR-0157
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0156-p76-phase2-call-direction.md
-  - 0155-p76-phase1-cleanup.md
-  - STRAT-P76-strategic-roadmap.md
-  - 0115-bin-governance-rationalize.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0157
+related: 
+supersedes: []
 ---
+
 
 # ADR-0157: P76 Phase 3 — 元治全自 + debt-closed-per-feature 指标
 

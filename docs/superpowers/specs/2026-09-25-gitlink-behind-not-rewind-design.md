@@ -1,12 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: "gitlink ancestry gate: 区分『落后于 main』与『回退指针』"
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
+title: "gitlink ancestry gate: 区分『落后于 main』与『回退指针』"
 ---
+
 
 # gitlink ancestry gate: 区分「落后于 main」与「回退指针」
 

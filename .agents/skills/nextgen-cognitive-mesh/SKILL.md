@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: nextgen-cognitive-mesh
 description: "Master governance skill for OMOStation Next-Gen Cognitive Mesh V3.0 (ADR-0200~0203). Guides memory self-distillation, cryptographic Merkle action ledgering, zero-config local edge compute roaming, and domain cartridge capsule packaging."
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # 🧠 Next-Gen Cognitive Mesh V3.0 智能体感知与治理规范 (ADR-0200 ~ ADR-0203)
 

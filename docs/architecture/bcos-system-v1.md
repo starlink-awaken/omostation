@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
-title: BCOS 业务域系统 v1 — 功能规格 SSOT
+last-reviewed: 2026-09-25
 type: doc
+title: BCOS 业务域系统 v1 — 功能规格 SSOT
 ---
+
 
 # BCOS 业务域系统 v1 — 功能规格 SSOT
 

@@ -1,18 +1,14 @@
 ---
-id: ADR-0129
+schema: md/v1
 status: proposed
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
-related:
-  - 0128-state-generation-concurrency.md
-  - ../../.omo/standards/omo-governance-surfaces.md
-  - ../../.omo/standards/agent-workflow-contract.md
-  - ../../bin/change-lane-check.py
-  - ../../projects/omo/src/omo/omo_ingress_state.py
-  - ../../projects/omo/src/omo/omo_state.py
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0129
+related: 
 ---
+
 
 # ADR-0129: 运行时投影面分离（ADR-0128 Phase 3 治本设计）
 

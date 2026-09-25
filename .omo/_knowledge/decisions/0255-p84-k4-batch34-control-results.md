@@ -1,18 +1,16 @@
 ---
-id: ADR-0255
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-28
-related:
-  - 0253-p84-collab-mode-routing-after-k4.md
-  - 0254-p84-w22-cclass-collab-detectors.md
-  - .omo/_knowledge/audits/2026-07-28-p84-k4-batch34-control-experiment.md
-supersedes: []
-amends:
-  - 0253-p84-collab-mode-routing-after-k4.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0255
+related: 
+supersedes: []
+amends: 
 ---
+
 
 # ADR-0255: K4 批次3/4 对照结果 — 强化 ADR-0253 路由表
 

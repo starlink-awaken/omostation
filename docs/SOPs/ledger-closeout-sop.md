@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-19
+last-reviewed: 2026-09-25
+type: doc
 review-state: metadata-fresh
 title: BET Ledger Closeout SOP — 5 步标准流程 (A2)
-type: doc
 ---
+
 # BET Ledger Closeout SOP — 5 步标准流程
 
 > **Status**: ACTIVE · **Owner**: governance-team · **Last updated**: 2026-09-19

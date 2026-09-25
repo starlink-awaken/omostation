@@ -1,15 +1,16 @@
 ---
-id: ADR-0249
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-26
-related:
-  - 0247-strategic-pivot-collab-first-physical-deferred.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0249
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0249: 治理自省预算封顶 (40/40/20, 用户已同意)
 

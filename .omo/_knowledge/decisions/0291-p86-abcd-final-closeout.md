@@ -1,15 +1,14 @@
 ---
-id: ADR-0291
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-29
-related:
-  - 0287-p86-abcd-wave-closeout.md
-  - 0289-p86-a2-type1-demote-true-dispatch-shortfall.md
-  - 0290-p86-review-followup-ssot-hygiene.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0291
+related: 
 ---
+
 
 # ADR-0291: P86 A/B/C/D 最终结案
 

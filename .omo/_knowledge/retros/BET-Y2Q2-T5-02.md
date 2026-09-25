@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-team
-bet_id: BET-Y2Q2-T5-02
-last-reviewed: 2026-09-22
-title: BET-Y2Q2-T5-02 复盘
+last-reviewed: 2026-09-25
 type: retro
+bet_id: BET-Y2Q2-T5-02
+title: BET-Y2Q2-T5-02 复盘
 ---
+
 # BET-Y2Q2-T5-02 复盘
 
 ## Q1 实际耗时 vs appetite？超出比例？

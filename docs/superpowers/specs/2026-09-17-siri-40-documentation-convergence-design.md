@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Recent workspace documentation convergence
 bet_id: BET-Y1Q4-T10-168
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-17
-last-reviewed: 2026-09-17
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L1
 human_gate: false
-type: ssot
 ---
+
 
 # Recent workspace documentation convergence
 

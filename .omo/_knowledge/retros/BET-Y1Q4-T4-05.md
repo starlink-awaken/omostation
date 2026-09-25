@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-09-05
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Retro: BET-Y1Q4-T4-05 — Spine Done 价值证明债清册与抽样回填
 
 ## 1. What went well

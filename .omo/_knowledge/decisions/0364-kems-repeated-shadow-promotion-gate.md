@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0364
 title: KEMS repeated shadow evaluation and human promotion gate
-status: ACCEPTED
 date: 2026-08-04
-owner: architecture-governance
-lifecycle: spec
-last-reviewed: 2026-08-04
-type: ssot
 ---
+
 
 # ADR-0364: KEMS Repeated Shadow Evaluation and Human Promotion Gate
 

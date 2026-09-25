@@ -1,11 +1,13 @@
 ---
-id: ADR-0083
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0083
 ---
+
 
 # ADR-0083: P89 X2 rule 状态洞察 + ADR drift check + 治理深化
 

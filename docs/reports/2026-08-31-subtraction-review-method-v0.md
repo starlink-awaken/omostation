@@ -1,13 +1,15 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: review-material
 owner: governance-team
+last-reviewed: 2026-09-25
+type: review-material
+schema_version: report/v1
 created: 2026-08-31
-last-reviewed: 2026-08-31
 adr: ADR-0443
 ---
+
 
 # 减法评审画像方法 v0（含已知缺陷，正式评审仍按 Q4 时机）
 

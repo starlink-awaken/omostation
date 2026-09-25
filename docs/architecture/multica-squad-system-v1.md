@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: draft
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-05
-title: multica Squad System v1 — 日常工程协作轨道
+last-reviewed: 2026-09-25
 type: doc
+title: multica Squad System v1 — 日常工程协作轨道
 ---
+
 
 # multica Squad System v1 — 日常工程协作轨道
 

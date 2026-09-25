@@ -1,19 +1,15 @@
 ---
-id: ADR-0141
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0132-l0-mof-m4-metamodel.md
-  - 0136-m3-yaml-extension-p5.md
-  - 0140-m4-health-score.md
-  - ../../../projects/ecos/src/ecos/ssot/mof/m2/m2_base_schema.yaml
-  - ../../../../bin/mof-bootstrap.py
-  - ../../../../bin/m4-health-score.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0141
+related: 
+supersedes: []
 ---
+
 
 # ADR-0141: M2BaseSchema 抽象基类 + check_5 (Round 3a)
 

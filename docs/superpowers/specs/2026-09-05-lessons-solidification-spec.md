@@ -1,15 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: plan
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 两日会战经验固化 — PITFALL×2 + skill×2 + submit auto-rebase
 bet_id: BET-Y2Q1-T10-02
-status: accepted
-lifecycle: contract
-last-reviewed: 2026-09-05
-type: plan
-owner: governance-team
 last_updated: 2026-09-05
 ---
+
 
 # 经验固化规格 (BET-Y2Q1-T10-02)
 

@@ -1,17 +1,15 @@
 ---
-id: ADR-0140
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0132-l0-mof-m4-metamodel.md
-  - 0129-state-projection-plane-phase3.md
-  - ../../../../bin/m4-health-score.py
-  - ../../../projects/ecos/.omo/_derived/m4-health.json
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0140
+related: 
+supersedes: []
 ---
+
 
 # ADR-0140: M4 Health Score 量化与派生面落地 (Round 3b)
 

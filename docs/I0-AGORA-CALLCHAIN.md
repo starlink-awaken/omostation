@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # I0 织层 — BOS URI 派发调用链
 
 > 本文档白盒梳理 `agora` 作为 I0 织层时，一条 `bos://` URI 从 MCP 入口到后端服务执行的完整路径。

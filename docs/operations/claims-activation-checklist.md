@@ -1,12 +1,15 @@
 ---
-type: operations
+schema: md/v1
 status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: operations
 created: 2026-09-23
-last-reviewed: 2026-09-23
 scope: claims-authority-activation
 execution: forbidden-by-agent
 ---
+
 
 # Claims Authority 激活清单（只读）
 

@@ -1,18 +1,20 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Reconcile current completion evidence digests for T10-02 and T10-06
 bet_id: BET-Y1Q3-T10-97
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
 risk_level: L1
 human_gate: false
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # Reconcile current completion evidence digests for T10-02 and T10-06
 

@@ -1,18 +1,16 @@
 ---
-title: 多仓库 × 多子仓 × 多 Agent 协作复盘 v2 — 差量与决策
-type: report
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-15
 lifecycle: history
-related:
-  - docs/reports/2026-08-06-multi-agent-git-topology.md
-  - docs/architecture/blueprint-collab-consolidation-v1.md
-  - .omo/_knowledge/retros/SESSION-RETROSPECTIVE-20260814-15.md
+owner: governance-team
+last-reviewed: 2026-09-25
+type: report
+title: 多仓库 × 多子仓 × 多 Agent 协作复盘 v2 — 差量与决策
+created: 2026-08-15
+related: 
 context: >-
-  08-06 报告定下「多实例单写者」根治方案后 9 天的差量复盘：哪些落地了、哪些没走、
-  新出了什么事故、暴露了什么报告没覆盖的病根。产出 D2 铺开决策备忘。
 ---
+
 
 # 多仓库协作复盘 v2 — 2026-08-15
 

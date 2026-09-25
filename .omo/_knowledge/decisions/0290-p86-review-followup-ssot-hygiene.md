@@ -1,14 +1,14 @@
 ---
-id: ADR-0290
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-29
-related:
-  - 0247-strategic-pivot-collab-first-physical-deferred.md
-  - 0289-p86-a2-type1-demote-true-dispatch-shortfall.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0290
+related: 
 ---
+
 
 # ADR-0290: ABCD review follow-up — SSOT hygiene
 

@@ -1,15 +1,14 @@
 ---
-id: ADR-0293
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-07-30
-related:
-  - 0247-strategic-pivot-collab-first-physical-deferred.md
-  - 0291-p86-abcd-final-closeout.md
-  - 0292-check-work-landed-sha-fix.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0293
+related: 
 ---
+
 
 # ADR-0293: Phase 45 — Governance Observability Layer
 

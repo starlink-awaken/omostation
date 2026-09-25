@@ -1,21 +1,18 @@
 ---
-title: 收敛期 · Goal 模式命令下发模版
+schema: md/v1
 status: active
-type: dispatch-template
-owner: 夏明星
-created: 2026-07-15
-related:
-  - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
-  - docs/CONVERGENCE-EXECUTION-STATUS.md
-  - .omo/goals/current.yaml
-note: >
-  按 eCOS goal 模式 + agent-workflow 生命周期封装的收敛期落地下发单。
-  每个 G-CONV.* block 可独立下发给一个 agent 执行。运行时数字以 .omo/state/*.yaml 为准。
 lifecycle: contract
-last-reviewed: 2026-07-31
+owner: 夏明星
+last-reviewed: 2026-09-25
+type: dispatch-template
+title: 收敛期 · Goal 模式命令下发模版
+created: 2026-07-15
+related: 
+note: >
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
+
 
 # 收敛期 · Goal 模式命令下发模版
 

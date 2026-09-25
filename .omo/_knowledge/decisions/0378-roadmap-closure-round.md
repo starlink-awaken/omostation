@@ -1,12 +1,14 @@
 ---
-id: ADR-0378
-title: Roadmap closure round — verify and close all delivered governance initiatives
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0378
+title: Roadmap closure round — verify and close all delivered governance initiatives
 ---
+
 
 # 0378 — Roadmap Closure Round (R-archive)
 

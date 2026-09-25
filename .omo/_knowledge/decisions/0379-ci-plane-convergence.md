@@ -1,12 +1,14 @@
 ---
-id: ADR-0379
-title: CI plane convergence — surface SSOT, observability, dedup, registry-driven runner
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0379
+title: CI plane convergence — surface SSOT, observability, dedup, registry-driven runner
 ---
+
 
 # 0379 — CI Plane Convergence Round
 

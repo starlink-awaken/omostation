@@ -1,18 +1,15 @@
 ---
-id: ADR-0218
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-15
-related:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0202-fake-green-prevention.md
-  - ../patterns/p73-truth-driven-engineering-pattern.md
-  - ../../../docs/AGENT-ISOLATION-ROLLOUT.md
-  - ../../../docs/ARCHITECTURE-ANALYSIS-2026-07-14.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0218
+related: 
+supersedes: []
 ---
+
 
 # ADR-0218: Agent Isolation P0 落地 — 核实生效态 + worktree 卫生固化
 

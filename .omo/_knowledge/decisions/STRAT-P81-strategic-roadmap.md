@@ -1,16 +1,14 @@
 ---
+schema: md/v1
 status: PROPOSED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-24
-related:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0225-g-del-physical-multihost-gate-caliber.md
-  - 0226-g-del-1-blocked-until-four-hosts.md
-  - STRAT-P80-strategic-roadmap.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+related: 
+supersedes: []
 ---
+
 
 # STRAT-P81: 兑现期启动 — 蜂群从图纸到真机 (2026-08 ~ 2027-06)
 

@@ -1,17 +1,14 @@
 ---
-id: ADR-0155
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - STRAT-P76-strategic-roadmap.md
-  - 0152-m4-gac-rules.md
-  - 0153-m4-agent-workflows-tools.md
-  - 0154-m4-omo-cron-integration.md
-  - ../../../../../docs/SOP-GOD-MODULE-SPLIT.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0155
+related: 
 ---
+
 
 # ADR-0155: P76 Phase 1 收口 (积压清理)
 

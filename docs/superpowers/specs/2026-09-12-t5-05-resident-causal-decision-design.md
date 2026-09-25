@@ -1,14 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 常驻 Agent 2.0 决策因果图化与多 Agent 先例仲裁引擎设计
 bet_id: BET-Y1Q4-T5-05
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-12
 value_indicator_policy: false
 ---
+
 
 # T5-05 — Resident 因果决策图 + 先例仲裁设计
 

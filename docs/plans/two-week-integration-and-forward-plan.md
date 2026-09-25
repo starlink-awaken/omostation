@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: superseded
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-25
-superseded-by: docs/plans/2026-08-25-y1-value-loop-phase.md
+last-reviewed: 2026-09-25
 type: ephemeral
+superseded-by: docs/plans/2026-08-25-y1-value-loop-phase.md
 ---
+
 
 # Two-Week System Integration & Forward Plan
 

@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-04
-last_updated: 2026-09-04
+last-reviewed: 2026-09-25
 type: ssot
+last_updated: 2026-09-04
 ---
+
 
 # ADR-0201: 子模块指针暂存纪律 (Submodule Pin Stage Discipline)
 

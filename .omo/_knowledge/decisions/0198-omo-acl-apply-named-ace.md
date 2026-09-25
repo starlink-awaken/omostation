@@ -1,11 +1,13 @@
 ---
-id: ADR-0198
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0198
 ---
+
 
 # ADR-0198 — `omo acl apply --yes --acl` 命名 ACE 执行
 

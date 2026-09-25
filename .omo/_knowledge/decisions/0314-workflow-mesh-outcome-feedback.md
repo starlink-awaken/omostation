@@ -1,18 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: engineering-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0314
 title: Workflow Mesh explicit outcome feedback contract
-status: ACCEPTED
 date: 2026-08-02
-last-reviewed: 2026-08-02
-owner: engineering-team
-lifecycle: spec
-related:
-  - ../../../docs/operations/outcome-feedback.md
-  - ../../../docs/operations/workflow-mesh-operations.md
-  - ../../../projects/omo/src/omo/outcome_feedback.py
-  - ../../../projects/cockpit-ui/src/components/WorkflowMeshOperationsView.tsx
-type: ssot
+related: 
 ---
+
 
 # ADR-0314: Workflow Mesh 显式结果消费反馈契约
 

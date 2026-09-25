@@ -1,20 +1,18 @@
 ---
-id: ADR-0342
-title: Workflow Mesh Bridge 四阶段桥接策略
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
+type: adr
+id: ADR-0342
+title: Workflow Mesh Bridge 四阶段桥接策略
 date: 2026-08-02
 deciders: architecture-governance
 supersedes: []
-related:
-  - 0298-external-connection-fabric-runtime-boundary.md
-  - 0303-workflow-mesh-external-receipt-broker.md
-  - 0304-runtime-effect-outcome-receipts.md
-  - 0307-external-invocation-safety-contract.md
+related: 
 ---
+
 
 # ADR-0342: Workflow Mesh Bridge 四阶段桥接策略
 

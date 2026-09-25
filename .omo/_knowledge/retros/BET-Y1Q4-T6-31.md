@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-09-11
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Retro: BET-Y1Q4-T6-31
 
 **Title**: RLM 变量命名空间生命周期 GC、资源核算与 GaC 安全门禁

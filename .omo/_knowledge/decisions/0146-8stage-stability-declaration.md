@@ -1,20 +1,15 @@
 ---
-id: ADR-0146
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0117-p52-undo-p60-stage-8.md
-  - 0139-model-driven-8stage-revival-rejected.md
-  - 0145-mcptool-collection-skip.md
-  - 0140-m4-health-score.md
-  - ../../../projects/ecos/src/ecos/ssot/m3.yaml::GovernanceElement
-  - ../../../projects/ecos/src/ecos/ssot/m3.yaml::Decision
-  - ../../../projects/ecos/src/ecos/ssot/m3.yaml::Constraint
-supersedes: []  # 不 supersede ADR-0139, 是稳定性升级而非内容替换
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0146
+related: 
+supersedes: []  # 不 supersede ADR-0139, 是稳定性升级而非内容替换
 ---
+
 
 # ADR-0146: 8 阶段反向 ADR 稳定性声明 (M4 Health = 100/100)
 

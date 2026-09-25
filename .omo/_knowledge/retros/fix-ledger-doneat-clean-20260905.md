@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: 台账 T8-14/T8-16 重复 done_at 清理
-bet_id: fix-ledger-doneat-clean
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: 台账 T8-14/T8-16 重复 done_at 清理
+bet_id: fix-ledger-doneat-clean
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # fix-ledger-doneat-clean 复盘
 

@@ -1,18 +1,20 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游
 bet_id: BET-Y1Q4-T8-22
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-14
-last-reviewed: 2026-09-15
 risk_level: L2
 human_gate: false
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # TinyBOS 极简边缘具身协议与家庭局域网算力网格漫游（BET-Y1Q4-T8-22）
 

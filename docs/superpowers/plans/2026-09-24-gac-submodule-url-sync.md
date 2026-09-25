@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Implementation Plan: GAC worktree submodule URL synchronization
 
 > **Execution contract:** implement only the accepted spec for BET-Y2Q2-T11-02.

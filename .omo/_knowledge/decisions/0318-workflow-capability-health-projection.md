@@ -1,14 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0318
 title: Agora 能力健康作为 Cockpit 准入证据
-status: ACCEPTED
 date: 2026-08-03
-owner: architecture-governance
 scope: Workflow Mesh / Cockpit / Agora
-lifecycle: spec
-last-reviewed: 2026-08-03
-type: ssot
 ---
+
 
 # ADR-0318: Agora 能力健康作为 Cockpit 准入证据
 

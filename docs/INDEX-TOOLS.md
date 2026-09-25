@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 
 # INDEX-TOOLS.md — 治理工具统一目录
 

@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: BET-Y1Q1-T1-08 复盘 — 子模块指针快速更新机制 (bump-fast)
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q1-T1-08 复盘 — 子模块指针快速更新机制 (bump-fast)
 ---
+
 # BET-Y1Q1-T1-08 复盘 — 子模块指针快速更新机制 (bump-fast)
 
 ## Q1 实际耗时 vs appetite？

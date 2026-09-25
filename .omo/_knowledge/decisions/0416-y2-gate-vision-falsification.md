@@ -1,20 +1,17 @@
 ---
-id: ADR-0416
-title: Y2 年度门 — 愿景证伪判定（BET-Y2Q4-T1-01）
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: 夏明星
-created: 2026-08-18
-last-reviewed: 2026-08-18
-deciders:
-  - 夏明星 (最终确认)
-  - governance-agent (起草)
-related:
-  - .omo/_knowledge/decisions/0415-reject-agt-integration-adopt-capability-parity.md
-  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  - docs/plans/BET-EXECUTION-ROADMAP-2026H2.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0416
+title: Y2 年度门 — 愿景证伪判定（BET-Y2Q4-T1-01）
+created: 2026-08-18
+deciders: 
+related: 
 ---
+
 
 # ADR-0416: Y2 年度门 — 愿景证伪判定
 

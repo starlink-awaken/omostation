@@ -1,11 +1,13 @@
 ---
-id: ADR-0188
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0188
 ---
+
 
 # ADR-0188 — Wave 2 Phase C: C2G → OMO 治理提案联动（无自动改规则）
 

@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-03
-last_updated: 2026-09-03
+last-reviewed: 2026-09-25
 type: doc
+last_updated: 2026-09-03
 ---
+
 
 # T1-07 Legacy BET Migration Manifest Implementation Plan
 

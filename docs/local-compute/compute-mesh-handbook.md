@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: production
 owner: compute-fabric-team
-last-reviewed: 2026-09-19
+last-reviewed: 2026-09-25
 type: ssot
 ---
+
 
 # 🧠 OMOStation 算力中枢对外接入与使用指引手册 (Compute Mesh Handbook)
 

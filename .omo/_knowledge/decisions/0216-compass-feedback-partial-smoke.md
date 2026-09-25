@@ -1,16 +1,15 @@
 ---
-id: ADR-0216
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - 0202-fake-green-prevention.md
-  - 0215-agora-gateway-false-green-pid-health-check.md
-  - 0179-runtime-probe-false-positive-treatment.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0216
+related: 
+supersedes: []
 ---
+
 
 # ADR-0216 — compass 健康刷新：feedback partial smoke + c2g 降级
 

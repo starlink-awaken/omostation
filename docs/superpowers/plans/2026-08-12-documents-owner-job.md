@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
+type: doc
 last_updated: 2026-09-03
 title: Documents Owner Job MVP Implementation Plan
-type: doc
 ---
+
 # Documents Owner Job MVP Implementation Plan
 
 1. Extend the Workspace binding registry schema with one explicit Runtime job.

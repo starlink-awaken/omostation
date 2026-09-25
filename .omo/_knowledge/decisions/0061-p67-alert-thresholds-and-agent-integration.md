@@ -1,11 +1,13 @@
 ---
-id: ADR-0061
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0061
 ---
+
 
 # ADR-0061: P67 告警阈值参数化 (P0/P1/P2/P3) + governance-agent 集成 alert-aggregator
 

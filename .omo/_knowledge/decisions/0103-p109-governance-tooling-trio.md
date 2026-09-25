@@ -1,11 +1,13 @@
 ---
-id: ADR-0103
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0103
 ---
+
 
 # ADR-0103: P109 治理赋能三件套 (验证模板 + 智能化 + TS 工具)
 

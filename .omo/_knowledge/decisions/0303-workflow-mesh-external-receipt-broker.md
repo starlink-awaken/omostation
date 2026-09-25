@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0303
 title: Workflow Mesh 外部 receipt 回写 broker
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/external-connection-fabric.md
-  - ../../_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
+related: 
 ---
+
 
 # ADR-0303: Workflow Mesh 外部 receipt 回写 broker
 

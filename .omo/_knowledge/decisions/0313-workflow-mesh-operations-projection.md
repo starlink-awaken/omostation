@@ -1,18 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: engineering-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0313
 title: Workflow Mesh operations projection and explicit consumption boundary
-status: ACCEPTED
 date: 2026-08-02
-last-reviewed: 2026-08-02
-owner: engineering-team
-lifecycle: spec
-related:
-  - ../../../docs/operations/workflow-mesh-operations.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../projects/omo/src/omo/workflow_eval.py
-  - ../../../projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py
-type: ssot
+related: 
 ---
+
 
 # ADR-0313: Workflow Mesh 运营投影与显式消费边界
 

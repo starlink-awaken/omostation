@@ -1,13 +1,15 @@
 ---
-title: "BET-Y1Q3-T1-09 retro — D4 escape-hatch solidification"
+schema: md/v1
 status: archived
-bet: BET-Y1Q3-T1-09
-date: 2026-08-21
-last-reviewed: 2026-08-25
 lifecycle: history
 owner: unassigned
+last-reviewed: 2026-09-25
 type: retro
+title: "BET-Y1Q3-T1-09 retro — D4 escape-hatch solidification"
+bet: BET-Y1Q3-T1-09
+date: 2026-08-21
 ---
+
 
 # BET-Y1Q3-T1-09 复盘
 

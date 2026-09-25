@@ -1,12 +1,14 @@
 ---
-title: BET-Y1Q3-T1-02 复盘
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-15
 lifecycle: history
-last-reviewed: 2026-08-15
+owner: governance-team
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q3-T1-02 复盘
+created: 2026-08-15
 ---
+
 
 # BET-Y1Q3-T1-02 复盘 — mof-deepen 落账追溯（先斩后奏的补账）
 

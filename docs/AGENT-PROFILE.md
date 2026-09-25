@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-11
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # omostation · 智能体协作设定（项目版）
 
 > 本文件承载 omostation 项目特有的知识互通路由与项目事实。

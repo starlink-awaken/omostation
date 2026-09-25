@@ -1,11 +1,14 @@
 ---
-type: operations
+schema: md/v1
 status: active
+lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: operations
 created: 2026-09-24
-last-reviewed: 2026-09-24
 scope: workflow-requirement-iteration-waiver
 ---
+
 # Workflow Waiver Record
 
 **Date**: 2026-09-23（三次交付）/ 2026-09-24（本记录 + 修正交付）

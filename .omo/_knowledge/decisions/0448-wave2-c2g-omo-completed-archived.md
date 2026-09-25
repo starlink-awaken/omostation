@@ -1,11 +1,13 @@
 ---
-id: ADR-0448
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-08-01
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0448
 ---
+
 
 # ADR-0295: Wave 2 (C2G + OMO) — Completed & Archived
 

@@ -1,11 +1,13 @@
 ---
-id: ADR-0201
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0201
 ---
+
 
 # ADR-0201 — Doctor-cron 状态 API + path-acl 连续 warn 告警
 

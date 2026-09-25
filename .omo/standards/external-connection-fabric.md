@@ -1,18 +1,14 @@
 ---
-title: External Connection Fabric Standard
+schema: md/v1
 status: active
-type: standard
-owner: architecture-governance
-last-reviewed: 2026-08-03
-related:
-  - ../_truth/registry/external-connection-fabric.yaml
-  - ../../ARCHITECTURE.md
-  - ../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
-  - ../_knowledge/decisions/0320-external-resource-evaluation-and-explainable-selection.md
-  - ../_knowledge/decisions/0321-external-resource-selection-evaluation-evidence.md
 lifecycle: contract
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: standard
+title: External Connection Fabric Standard
+related: 
 ---
+
 
 # External Connection Fabric 标准
 

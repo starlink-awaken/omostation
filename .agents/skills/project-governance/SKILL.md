@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: project-governance
 description: Use when an agent changes this workspace or a child project and needs executable governance workflow routing instead of relying on AGENTS.md or CLAUDE.md memory. ADR-0203 — all requirement iterations MUST start an agent-workflow run before edits.
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # Project Governance Workflow
 

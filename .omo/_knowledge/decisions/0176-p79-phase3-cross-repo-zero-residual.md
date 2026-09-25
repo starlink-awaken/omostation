@@ -1,20 +1,15 @@
 ---
-id: ADR-0176
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related:
-  - STRAT-P79-strategic-roadmap.md
-  - 0174-p79-phase1-foundry-v2-cron.md
-  - 0172-p78-port-registry-convergence.md
-  - 0164-p77-phase1-cross-repo-consistency.md
-  - ../../../../../projects/ecos/port-registry.yaml
-  - ../../../../../protocols/port-registry.yaml
-  - ../../../../../projects/agora/etc/bos-services.yaml
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0176
+related: 
+supersedes: []
 ---
+
 
 # ADR-0176: P79 Phase 3 — 跨仓零残留 (ecos 对齐 + 孤儿 URI 清理)
 

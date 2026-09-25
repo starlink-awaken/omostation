@@ -1,20 +1,16 @@
 ---
-title: 织星项目架构战略基线与 Workflow Mesh 长周期落地规划
+schema: md/v1
 status: active
-type: architecture-strategy
-owner: 夏明星
-created: 2026-08-04
-last-reviewed: 2026-08-04
-version: v1.0
 lifecycle: contract
-related:
-  - ARCHITECTURE.md
-  - docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - docs/KEMS-PRODUCTION-PLAN.md
-  - docs/ARCHITECTURE-EVOLUTION-2026H2.md
-  - .omo/_truth/registry/external-connection-fabric.yaml
-  - .omo/standards/external-connection-fabric.md
+owner: 夏明星
+last-reviewed: 2026-09-25
+type: architecture-strategy
+title: 织星项目架构战略基线与 Workflow Mesh 长周期落地规划
+created: 2026-08-04
+version: v1.0
+related: 
 ---
+
 
 # 织星项目架构战略基线与长周期落地规划
 

@@ -1,11 +1,13 @@
 ---
-id: ADR-0119
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-01
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0119
 ---
+
 
 # ADR-0119: Workspace 系统性优化 Roadmap (2026 H2)
 

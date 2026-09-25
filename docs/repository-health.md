@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-11
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Repository Health 周报 (自动生成)
 
 > 生成: 2026-09-06 | 工具: check-readme-hardcoded.py --update-health (T10-127)

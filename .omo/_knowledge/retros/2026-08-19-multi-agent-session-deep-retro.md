@@ -1,17 +1,16 @@
 ---
-title: 2026-08-17→19 多Agent会战深度复盘
-type: retro
+schema: md/v1
 status: active
 lifecycle: history
 owner: laowang-agent
-last-reviewed: 2026-08-19
+last-reviewed: 2026-09-25
+type: retro
+title: 2026-08-17→19 多Agent会战深度复盘
 created: 2026-08-19
 scope: T6-01归并/aetherforge减法/年度门/CI解阻/国转冻结
-related:
-  - .omo/_knowledge/retros/BET-Y1Q3-T6-01.md
-  - .omo/_knowledge/retros/BET-Y1Q4-T6-01.md
-  - .omo/_knowledge/retros/BET-Y1Q4-T7-01.md
+related: 
 ---
+
 
 # 深度复盘 · 2026-08-17 → 08-19 多 Agent 会战
 

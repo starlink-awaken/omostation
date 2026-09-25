@@ -1,11 +1,13 @@
 ---
-id: ADR-0401
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-24
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0401
 ---
+
 
 # ADR-0401 — AGE-v2 动态 Agent Cell 架构
 

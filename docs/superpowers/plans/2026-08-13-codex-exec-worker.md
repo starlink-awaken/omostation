@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-13
+last-reviewed: 2026-09-25
+type: doc
 last_updated: 2026-09-03
 title: Codex Exec Unattended Worker Implementation Plan
-type: doc
 ---
+
 
 # Codex Exec Unattended Worker Implementation Plan
 

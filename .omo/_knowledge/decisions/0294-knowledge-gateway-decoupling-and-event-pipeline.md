@@ -1,12 +1,14 @@
 ---
-id: ADR-0294
-title: 知识网关解耦与增量事件索引管道
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: engineering-agent
-last-reviewed: 2026-08-01
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0294
+title: 知识网关解耦与增量事件索引管道
 ---
+
 
 # ADR-0294: 知识网关解耦与增量事件索引管道
 

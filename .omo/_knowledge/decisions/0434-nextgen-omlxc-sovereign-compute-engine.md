@@ -1,11 +1,13 @@
 ---
-id: ADR-0434
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-29
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0434
 ---
+
 
 # ADR-0434: 次世代 omlxc V4.0 主权算力织网引擎、自适应树状投机与分布式流式协同体系
 

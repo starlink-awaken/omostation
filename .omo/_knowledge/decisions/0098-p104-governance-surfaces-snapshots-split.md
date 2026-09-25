@@ -1,11 +1,13 @@
 ---
-id: ADR-0098
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0098
 ---
+
 
 # ADR-0098: P104 omo_governance_surfaces snapshots 子模块拆分 (1762→1244L, 13→12 god-module)
 

@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: draft
 lifecycle: spec
 owner: @YOUR_NAME
-created: YYYY-MM-DD
-last-reviewed: YYYY-MM-DD
+last-reviewed: 2026-09-25
 type: ssot
+created: YYYY-MM-DD
 last_updated: 2026-09-03
 ---
+
 
 # [spec 标题]
 

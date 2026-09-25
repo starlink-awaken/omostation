@@ -1,14 +1,14 @@
 ---
-id: ADR-0257
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-28
-related:
-  - 0240-mof-d1d4-decisions-aaaa-phase1.md
-  - 0256-p84-w3-throughput-wave.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0257
+related: 
 ---
+
 
 # ADR-0257: W3 wave2 — MOF D4 模板投影 + L0 gac 债关闭
 

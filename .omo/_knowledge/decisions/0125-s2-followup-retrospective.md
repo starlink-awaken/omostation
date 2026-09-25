@@ -1,15 +1,14 @@
 ---
-id: ADR-0125
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-02
-related:
-  - ../decisions/0122-system-audit-followup-plan.md
-  - 0124-s1-followup-retrospective.md
-  - ../patterns/p72-follow-up-completion-pattern.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0125
+related: 
 ---
+
 
 # ADR-0125: S2 阶段 S1 部分完结复盘 — F-2 + ADR-0115 Phase 2/4 (5 commit, 1 PR)
 

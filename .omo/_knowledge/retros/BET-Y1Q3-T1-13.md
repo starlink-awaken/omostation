@@ -1,14 +1,16 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-04
-title: BET-Y1Q3-T1-13 复盘
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q3-T1-13 复盘
 bet: BET-Y1Q3-T1-13
 date: 2026-09-04
 run: 20260904T015823Z-bet-execution-5dfabb6f
 ---
+
 
 # BET-Y1Q3-T1-13 复盘
 

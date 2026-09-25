@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: '2026-09-24'
-title: BET-Y2Q2-T7-07 复盘
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y2Q2-T7-07 复盘
 ---
+
 # BET-Y2Q2-T7-07 复盘：74s 哨兵守护与健康大屏组件研发 (GuardianInspectionWallboard)
 
 ## Q1 实际耗时 vs appetite？超出比例？

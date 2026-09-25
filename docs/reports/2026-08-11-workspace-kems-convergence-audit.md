@@ -1,15 +1,17 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-11
+last-reviewed: 2026-09-25
+type: ephemeral
 snapshot-kind: derived-report
 implementation-status: mixed
 canonical-source: /Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/基建架构/10-Workspace-KEMS整体架构分析-2026-08-11.md
 canonical-sha256: fecc039202fd93ddde73b7f48bef6eb30c70def682d1d87ad715598b4aab768f
 baseline-root-commit: a4b08255e8a918a1b52dd32226d36c64db4f2c2e
-type: ephemeral
 ---
+
 
 # Workspace × KEMS 架构收敛审计（2026-08-11）
 

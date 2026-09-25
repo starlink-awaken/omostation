@@ -1,15 +1,14 @@
 ---
-title: Scene Card 候选人工评审运行手册
+schema: md/v1
 status: active
-type: runbook
-owner: product-architecture
-last-reviewed: 2026-08-02
-related:
-  - ./WORKFLOW-MESH-IMPLEMENTATION.md
-  - ./scene-card-candidate-seeds.yaml
-  - ../.omo/standards/scene-card-candidate.schema.yaml
 lifecycle: entry
+owner: product-architecture
+last-reviewed: 2026-09-25
+type: runbook
+title: Scene Card 候选人工评审运行手册
+related: 
 ---
+
 
 # Scene Card 候选人工评审运行手册
 

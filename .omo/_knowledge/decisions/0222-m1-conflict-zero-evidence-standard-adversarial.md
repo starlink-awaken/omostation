@@ -1,21 +1,17 @@
 ---
-id: ADR-0222
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 架构师
-last-reviewed: 2026-07-18
-related:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0220-swarm-coordination-discipline-m1-gate.md
-  - 0221-g-del-5a-emergence-collective-decision-risk-review.md
-  - 0224-m1-conflict-count-rootcause-before-adversarial-pass.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0222
+related: 
 supersedes: []
 amended_by: [0224]
 note: >
-  ADR-0224 收紧：当被动窗 conflict_count>0 时，path B 不得单独 pass，
-  必须 rootcause 证明无 coverage_gap_bypass / unresolved。
-type: ssot
 ---
+
 
 # ADR-0222: M1「冲突=0」证据标准扩展 — 对抗验证等效于 72h 被动窗
 

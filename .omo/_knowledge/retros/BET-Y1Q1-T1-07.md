@@ -1,15 +1,17 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-agent
-last-reviewed: 2026-08-08
+last-reviewed: 2026-09-25
+type: retro
 bet: BET-Y1Q1-T1-07
 track: T1-TRUTH
 window: Y1Q1
 run_ref: 20260807T063711Z-bet-execution-66b7ef2c
 title: BET-Y1Q1-T1-07 复盘
-type: retro
 ---
+
 # BET-Y1Q1-T1-07 复盘
 
 > git 入口收口 — shim 强制走 swarm-git

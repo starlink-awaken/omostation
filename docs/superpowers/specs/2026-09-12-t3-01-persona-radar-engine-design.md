@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 个人文风一致性多维雷达评估与语气自适应调节引擎
 bet_id: BET-Y2Q2-T3-01
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-12
-last-reviewed: 2026-09-12
 risk_level: L1
 human_gate: true
-type: ssot
 last_updated: 2026-09-12
 decision_ref: decision://accepted/BET-Y2Q2-T3-01
 ---
+
 
 # T3-01 — 个人文风一致性多维雷达评估与语气自适应调节引擎
 

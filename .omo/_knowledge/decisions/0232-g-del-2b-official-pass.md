@@ -1,17 +1,15 @@
 ---
-id: ADR-0232
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-24
-related:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0225-g-del-physical-multihost-gate-caliber.md
-  - 0228-m1-acceptance-physical-deferred-reorder.md
-  - STRAT-P81-strategic-roadmap.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0232
+related: 
+supersedes: []
 ---
+
 
 # ADR-0232: G-DEL.2b 官方达标宣布（3 角色协作完成率 100%）+ Batch 2 批准
 

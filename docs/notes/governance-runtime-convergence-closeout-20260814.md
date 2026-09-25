@@ -1,13 +1,14 @@
 ---
-title: "governance-runtime-convergence 交付闭环说明"
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-15
-last_updated: 2026-09-03
+last-reviewed: 2026-09-25
 type: ssot
+title: "governance-runtime-convergence 交付闭环说明"
 last_updated: 2026-09-03
 ---
+
 
 # 交付闭环说明：governance-runtime-convergence
 

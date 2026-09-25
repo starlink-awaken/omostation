@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: architecture-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # ARCHITECTURE-DIAGRAM.md — eCOS v6 Workspace Architecture Overview
 
 > 工作区架构概览：5 层（L0-L4）+ 4 维治理（X1-X4）+ 1 织层（I0）+ M0 制造面。

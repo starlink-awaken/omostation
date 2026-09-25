@@ -1,11 +1,13 @@
 ---
-id: ADR-0053
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0053
 ---
+
 
 # ADR-0053: P56 frontmatter 100% + doc-lifecycle 健康度 100/100
 

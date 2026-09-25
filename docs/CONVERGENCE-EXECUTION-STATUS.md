@@ -1,25 +1,19 @@
 ---
-title: 收敛期六项 · 落地执行总表
+schema: md/v1
 status: active
-type: execution-status
+lifecycle: contract
 owner: 夏明星
+last-reviewed: 2026-09-25
+type: execution-status
+title: 收敛期六项 · 落地执行总表
 created: 2026-07-15
 updated: 2026-07-17
-related:
-  - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
-  - .omo/_knowledge/decisions/0218-agent-isolation-p0-verify-and-hygiene.md
-  - docs/RUNTIME-DAEMON-REMEDIATION.md
-  - docs/HEALTH-SCORE-ISC3-DESIGN.md
-  - docs/CONVERGENCE-GOAL-DISPATCH.md
-  - docs/STRATEGY-INDEX.md
+related: 
 note: >
-  ADR-0210 收敛期 6 项落地实况。2026-07-15 沙箱盘点 → 2026-07-17 授权终端激活收口。
-  运行时数字权威源 .omo/state/*.yaml。
-lifecycle: contract
-last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
+
 
 # 收敛期六项 · 落地执行总表
 

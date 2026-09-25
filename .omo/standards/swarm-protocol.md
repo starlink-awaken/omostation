@@ -1,11 +1,13 @@
 ---
-title: Swarm Protocol — 多twin协作标准
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-08
+last-reviewed: 2026-09-25
 type: ssot
+title: Swarm Protocol — 多twin协作标准
 ---
+
 
 # Swarm Protocol — 多twin协作标准
 

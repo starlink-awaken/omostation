@@ -1,14 +1,16 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: content-reviewed
 content-reviewed-at: 2026-07-31
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # KEMS 分阶段落地路线
 

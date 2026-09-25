@@ -1,16 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: strategy-team
-last-reviewed: 2026-08-09
-related:
-  - ../../ARCHITECTURE.md
-  - ../STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  - ../plans/3y-bet-ledger.yaml
-  - ./blueprint-multi-agent-execution-control-v1.md
-title: 织星第二数字分身总体架构蓝图 v1
+last-reviewed: 2026-09-25
 type: doc
+related: 
+title: 织星第二数字分身总体架构蓝图 v1
 ---
+
 
 # 织星第二数字分身总体架构蓝图 v1
 

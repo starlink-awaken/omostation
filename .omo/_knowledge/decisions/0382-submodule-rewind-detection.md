@@ -1,12 +1,14 @@
 ---
-id: ADR-0382
-title: 子模块指针回退检测 (CR-SUBMODULE-REWIND)
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-07
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0382
+title: 子模块指针回退检测 (CR-SUBMODULE-REWIND)
 ---
+
 
 # ADR-0380: 子模块指针回退检测
 

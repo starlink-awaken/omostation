@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Cockpit-UI 全量功能自愈与运行时异常根治
 bet_id: BET-Y2Q2-T7-04
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-23'
-last-reviewed: '2026-09-23'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L2
 human_gate: false
-type: ssot
 ---
+
 
 # Cockpit-UI 全量功能自愈与运行时异常根治
 

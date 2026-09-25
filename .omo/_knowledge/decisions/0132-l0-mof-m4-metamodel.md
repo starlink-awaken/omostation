@@ -1,30 +1,16 @@
 ---
-id: ADR-0132
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - ../audits/2026-06-29-l0-ssot-m0-mof-alignment.md
-  - ../audits/2026-06-28-comprehensive-system-audit.md
-  - ../patterns/p71-baseline-recovery-pattern.md
-  - ../patterns/p72-follow-up-completion-pattern.md
-  - ../patterns/p74-workflow-solidification-pattern.md
-  - 0115-p52-model-driven-8-stages.md
-  - 0117-p52-undo-p60-stage-8.md
-  - 0128-state-generation-concurrency.md
-  - 0129-state-projection-plane-phase3.md
-  - ../../../projects/ecos/src/ecos/ssot/mof/m3.yaml
-  - ../../../projects/ecos/src/ecos/ssot/LAYER-L0.yaml
-  - ../../../projects/ecos/src/ecos/l0/ssot/meta_model.py
-  - ../../../../docs/M4-ROADMAP.md
-precedents:
-  - 0054-p60-governance-internalization.md
-  - 0090-mof-schema-design.md
-  - 0091-layer-modeling-spec.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0132
+related: 
+precedents: 
+supersedes: []
 ---
+
 
 # ADR-0132: L0 / M0 / MOF 统一元模型 (M4 升级)
 

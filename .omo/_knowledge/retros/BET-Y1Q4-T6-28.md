@@ -1,13 +1,16 @@
 ---
-bet: BET-Y1Q4-T6-28
-title: "四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎"
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-13
+last-reviewed: 2026-09-25
+type: ephemeral
+bet: BET-Y1Q4-T6-28
+title: "四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎"
 date: 2026-09-13
 track: T6-EVOLUTION
 ---
+
 
 # BET-Y1Q4-T6-28 Retro: 四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎
 

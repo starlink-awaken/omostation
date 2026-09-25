@@ -1,8 +1,13 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 last_updated: 2026-09-17
 ---
+
 
 # INDEX-AGENTS.md — Agent 能力索引
 

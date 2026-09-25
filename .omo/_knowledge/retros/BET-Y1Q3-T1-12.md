@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-03
-title: BET-Y1Q3-T1-12 复盘（premature completion invalidated）
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q3-T1-12 复盘（premature completion invalidated）
 ---
+
 # BET-Y1Q3-T1-12 复盘（premature completion invalidated）
 
 > **完成声明作废。** 本文件在 PR #2143 中提前生成，并错误声称 T1-12 已完成、全部 done_when

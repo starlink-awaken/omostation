@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # Submodule PR 反向 Review Guide (ADR-0150, Round 5e)
 
 > **配套 ADR-0150** (R5e, 2026-07-06)

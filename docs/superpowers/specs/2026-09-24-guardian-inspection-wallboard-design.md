@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 74s 哨兵守护与健康大屏组件研发 (GuardianInspectionWallboard)
 bet_id: BET-Y2Q2-T7-07
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-24'
-last-reviewed: '2026-09-24'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L2
 human_gate: false
-type: ssot
 ---
+
 
 # 74s 哨兵守护与健康大屏组件研发 (GuardianInspectionWallboard) 设计规约
 

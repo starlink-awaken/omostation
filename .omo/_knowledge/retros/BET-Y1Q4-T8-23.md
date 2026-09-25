@@ -1,12 +1,15 @@
 ---
-type: retro
-bet_id: BET-Y1Q4-T8-23
+schema: md/v1
 status: done
-done_at: 2026-09-13
-merged_reachable_commit: c37ad9ad30
 lifecycle: history
 owner: unassigned
+last-reviewed: 2026-09-25
+type: retro
+bet_id: BET-Y1Q4-T8-23
+done_at: 2026-09-13
+merged_reachable_commit: c37ad9ad30
 ---
+
 
 # BET-Y1Q4-T8-23 Retro: Resident Flight Deck L1-L4 授权网关 + 四维透明指挥舱
 

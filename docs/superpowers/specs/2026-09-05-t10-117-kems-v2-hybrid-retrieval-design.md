@@ -1,17 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-05
-last-reviewed: 2026-09-05
 bet_id: BET-Y1Q3-T10-117
 risk_level: L2
 human_gate: false
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # T10-117 KEMS-v2 知识图谱混合检索设计
 

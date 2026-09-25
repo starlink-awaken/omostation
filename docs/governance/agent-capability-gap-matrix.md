@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-19
-last_updated: 2026-09-03
+last-reviewed: 2026-09-25
 type: ssot
+last_updated: 2026-09-03
 ---
+
 # Agent Capability Gap Matrix — 对齐 AGT 能力基线
 
 > **维护规则**

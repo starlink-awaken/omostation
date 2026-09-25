@@ -1,11 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-09
-last-reviewed: 2026-09-09
 title: OMO Canonical Claims Authority Bridge
 bet_id: BET-Y1Q4-T10-143
 implementation_authorized: false
@@ -13,6 +15,7 @@ value_indicator_policy: false
 risk_level: L2
 human_gate: true
 ---
+
 
 # OMO Canonical Claims Authority Bridge
 

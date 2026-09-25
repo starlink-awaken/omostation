@@ -1,19 +1,18 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0372
 title: Memory OS 控制面 — 统一记忆写读巩固与适配器边界
-status: ACCEPTED
 date: 2026-08-04
-owner: governance-team
-lifecycle: spec
-last-reviewed: 2026-08-04
 workflow_run: 20260804T115206Z-project-doc-change-7e6535ab
 session: memory-os-p0
-related:
-  - 0294-knowledge-gateway-decoupling-and-event-pipeline.md
-  - 0315-knowledge-to-action-loop.md
-  - 0156-p76-phase2-call-direction.md
-type: ssot
+related: 
 ---
+
 
 # ADR-0372: Memory OS 控制面
 

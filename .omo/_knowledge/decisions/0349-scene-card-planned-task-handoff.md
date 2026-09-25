@@ -1,15 +1,16 @@
 ---
-id: ADR-0349
-title: Scene Card planned task handoff
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
 type: decision
+id: ADR-0349
+title: Scene Card planned task handoff
 scope: workflow-mesh scene intake and cockpit task center
 date: 2026-08-03
 ---
+
 
 # ADR-0349: Scene Card 到 OMO planned task 的场景承接
 

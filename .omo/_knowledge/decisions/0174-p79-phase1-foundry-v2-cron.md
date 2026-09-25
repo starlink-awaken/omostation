@@ -1,18 +1,15 @@
 ---
-id: ADR-0174
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related:
-  - STRAT-P79-strategic-roadmap.md
-  - 0173-p78-phase2-baseline-foundry-v2.md
-  - ../../../../../bin/knowledge-foundry-cron.py
-  - ../../../../../bin/_archive/2026-08-conv3/port-governance-deck.py
-  - ../../../../../docs/operations/knowledge-foundry-monitor.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0174
+related: 
+supersedes: []
 ---
+
 
 # ADR-0174: P79 Phase 1 — Foundry v2 cron 集成 (10-deck)
 

@@ -1,12 +1,14 @@
 ---
-title: BOS 多源私有知识与 Workflow Mesh 场景战略架构
+schema: md/v1
 status: active
-type: strategy-architecture
-date: 2026-08-03
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
+type: strategy-architecture
+title: BOS 多源私有知识与 Workflow Mesh 场景战略架构
+date: 2026-08-03
 ---
+
 
 # BOS 多源私有知识与 Workflow Mesh 场景战略架构
 

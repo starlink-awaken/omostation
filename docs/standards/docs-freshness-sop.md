@@ -1,11 +1,13 @@
 ---
-schema_version: standard/v1
-type: ssot
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-05
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: standard/v1
 ---
+
 
 # 文档保鲜 SOP (Docs Freshness SOP)
 

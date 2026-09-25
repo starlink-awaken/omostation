@@ -1,20 +1,15 @@
 ---
-id: ADR-0169
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0163-p76-phase9a-commit-assist-hook.md
-  - 0165-p77-phase2-evolution-guardrails.md
-  - 0168-p77-phase5-hardcoded-ports.md
-  - STRAT-P77-strategic-roadmap.md (Phase 6)
-  - ../../../../../bin/commit-assist.py
-  - ../../../../../tests/test_commit_assist_e2e.py
-  - ../../../../../.githooks/prepare-commit-msg-commit-assist
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0169
+related: 
+supersedes: []
 ---
+
 
 # ADR-0169: P77 Phase 6 — LLM-assisted commit 端到端验收 (19 测试 + heuristic bug 修)
 

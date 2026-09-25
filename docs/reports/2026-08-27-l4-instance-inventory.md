@@ -1,11 +1,15 @@
 ---
-schema_version: evidence-report/v1
+schema: md/v1
 status: observed
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: evidence-report/v1
 observed_at: 2026-08-27
 bet_id: BET-Y1Q3-T10-21
-type: ephemeral
 ---
+
 
 # L4 实例与 Documents 边界盘点
 

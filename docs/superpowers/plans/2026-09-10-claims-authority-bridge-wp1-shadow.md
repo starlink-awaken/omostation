@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-11
-last_updated: 2026-09-11
+last-reviewed: 2026-09-25
 type: doc
+last_updated: 2026-09-11
 ---
+
 
 # Claims Authority Bridge WP1 R0 Shadow Implementation Plan
 

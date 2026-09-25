@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: "BET-Y1Q2-T6-02 Retro: ADR 分层"
+last-reviewed: 2026-09-25
 type: retro
+title: "BET-Y1Q2-T6-02 Retro: ADR 分层"
 ---
+
 # BET-Y1Q2-T6-02 Retro: ADR 分层
 
 ## 完成日期

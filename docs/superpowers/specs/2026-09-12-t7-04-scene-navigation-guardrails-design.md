@@ -1,15 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 title: 多 Agent 场景导航锚点与运行时防跑偏护栏机制设计
 bet_id: BET-Y1Q4-T7-04
-status: accepted
 schema_version: specification/v1
 spec_version: 1.0.0
 value_indicator_policy: false
 created: 2026-09-12
-owner: governance-team
-lifecycle: spec
-last-reviewed: 2026-09-12
 ---
+
 
 # T7-04 — Scene Navigation Anchor & Runtime Guardrails 设计
 

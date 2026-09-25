@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-13
+last-reviewed: 2026-09-25
+type: doc
 last_updated: 2026-09-03
 title: 编排器无关交付合同 MVP 实施计划
-type: doc
 ---
+
 
 # 编排器无关交付合同 MVP 实施计划
 

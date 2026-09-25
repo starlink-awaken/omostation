@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: BET-Y1Q4-T1-06 Closeout Retro — Milestone/Vision derived gates
-bet_id: BET-Y1Q4-T1-06
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: BET-Y1Q4-T1-06 Closeout Retro — Milestone/Vision derived gates
+bet_id: BET-Y1Q4-T1-06
 created: 2026-09-04
-last-reviewed: 2026-09-04
 ---
+
 
 # BET-Y1Q4-T1-06 Closeout Retro
 

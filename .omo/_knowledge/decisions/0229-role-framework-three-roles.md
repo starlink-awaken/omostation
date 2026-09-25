@@ -1,17 +1,16 @@
 ---
-id: ADR-0229
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-24
-related:
-  - 0228-m1-acceptance-physical-deferred-reorder.md
-  - STRAT-P81-strategic-roadmap.md
-  - docs/G-DEL-2a-role-framework-contract.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0229
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0229: Role framework — engineering / governance / audit first-ship
 

@@ -1,15 +1,17 @@
 ---
-schema_version: report/v1
-type: report
-title: W0 Portfolio v2 dogfood canary receipt
-bet_id: BET-Y1Q4-T1-09
+schema: md/v1
 status: archived
 lifecycle: evidence
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: report
+schema_version: report/v1
+title: W0 Portfolio v2 dogfood canary receipt
+bet_id: BET-Y1Q4-T1-09
 created: 2026-09-04
-last-reviewed: 2026-09-04
 value_indicator_policy: false
 ---
+
 
 # W0 Portfolio v2 Dogfood Canary Receipt
 

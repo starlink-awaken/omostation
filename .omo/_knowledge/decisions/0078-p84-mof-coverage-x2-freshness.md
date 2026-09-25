@@ -1,11 +1,13 @@
 ---
-id: ADR-0078
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0078
 ---
+
 
 # ADR-0078: P84 M2 coverage 修正 + X2 freshness check + rule 修正
 

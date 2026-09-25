@@ -1,15 +1,16 @@
 ---
-id: ADR-0352
-title: Workflow Mesh result receipt and evaluation readiness projection
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
 type: decision
+id: ADR-0352
+title: Workflow Mesh result receipt and evaluation readiness projection
 scope: omo workflow mesh evaluation and cockpit operations
 date: 2026-08-03
 ---
+
 
 # ADR-0352: Workflow Mesh 结果回执与评测样本准备度投影
 

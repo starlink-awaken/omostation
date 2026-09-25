@@ -1,15 +1,15 @@
 ---
-title: BET-Y1Q3-T3-02 复盘 — Neo4j 生产启用 (L2 停审)
-type: retro
+schema: md/v1
 status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+title: BET-Y1Q3-T3-02 复盘 — Neo4j 生产启用 (L2 停审)
 created: 2026-08-16
 context: >-
-  核实性收口: 代码面 (routing/neo4j-writer/env.sh/port-registry) 已由 ADR-0372 Phase 6-8
-  轮次交付, 本 bet 完成生产启用验证 + 本机配置生效。human_gate: true → 实施完停审。
-lifecycle: history
-last-reviewed: 2026-08-18
 ---
+
 
 # BET-Y1Q3-T3-02 复盘 (实施完毕, 待 human gate)
 

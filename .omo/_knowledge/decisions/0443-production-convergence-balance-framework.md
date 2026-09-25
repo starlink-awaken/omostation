@@ -1,11 +1,13 @@
 ---
-id: ADR-0443
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-30
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0443
 ---
+
 
 # ADR-0443: 产出/收敛平衡框架
 

@@ -1,11 +1,13 @@
 ---
-id: ADR-0184
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0184
 ---
+
 
 # ADR-0184 — Scheme C Phase 5b: Container Executor 运行时模型
 

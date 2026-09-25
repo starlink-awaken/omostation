@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Orthogonal domain tree and dual-track transparent router
 bet_id: BET-Y1Q4-T8-11
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-05
-last-reviewed: 2026-09-05
-type: ssot
 last_updated: 2026-09-05
 ---
+
 
 # Orthogonal domain tree and dual-track transparent router (T8-11)
 

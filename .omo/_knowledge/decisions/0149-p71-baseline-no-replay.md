@@ -1,17 +1,15 @@
 ---
-id: ADR-0149
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
-related:
-  - 0146-8stage-stability-declaration.md
-  - 0148-round-trip-playbook.md
-  - ../../patterns/p71-baseline-recovery-pattern.md
-  - ../../audits/2026-07-02-p0-baseline-recovery-closeout.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0149
+related: 
+supersedes: []
 ---
+
 
 # ADR-0149: P71 Baseline 防重做 (Round 5d)
 

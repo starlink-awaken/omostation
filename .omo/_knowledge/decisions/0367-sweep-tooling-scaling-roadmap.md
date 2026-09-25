@@ -1,19 +1,16 @@
 ---
+schema: md/v1
+status: PROPOSED
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0367
 title: Python 质量扫描基础设施规模化路线图
-status: PROPOSED
 date: 2026-08-04
-owner: governance-team
-lifecycle: spec
-last-reviewed: 2026-08-04
-related:
-  - 0366-pyright-sweep-algorithm.md
-  - 0130-p74-workflow-solidification.md
-  - 0220-gconv7-concurrency-discipline.md
-  - ../decisions/0371-pasw-submodule-isolation.md
-  - ../../standards/agent-workflow-contract.md
-type: ssot
+related: 
 ---
+
 
 > 📋 **处置 (2026-08-17 分类, 推演文档 §4 分支B)**: 保持 PROPOSED — 仍相关 (质量扫描规模化持续议题, 留待 Y1Q4/Q2 排期)
 

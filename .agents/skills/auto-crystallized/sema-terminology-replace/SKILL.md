@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 name: sema-terminology-replace
 description: 术语统一：「高度重视」应替换为署名偏好用语
-metadata:
-  node_type: skill
-  origin: sema-crystallizer
-  trigger_key: "terminology_replace:\u9ad8\u5ea6\u91cd\u89c6"
-  evidence_count: 2
-  created: 2026-09-06
+metadata: 
 ---
+
 
 # 术语统一：「高度重视」应替换为署名偏好用语
 

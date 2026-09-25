@@ -1,17 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: xiamingxing
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-08-31
-last-reviewed: 2026-08-31
 bet_id: BET-Y1Q3-T1-14
 risk_level: L2
 human_gate: false
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # T1-14 Harness E2E 真实场景验证 — 强约束强感知
 

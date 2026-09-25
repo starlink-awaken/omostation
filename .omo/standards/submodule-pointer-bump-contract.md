@@ -1,13 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: standard/v1
 standard: submodule-pointer-bump-contract
 created: 2026-08-30
-last-reviewed: 2026-08-30
-owner: governance-team
 origin_bets: BET-Y1Q3-T4-04 / BET-Y1Q3-T4-05 (指针污染事故 ×2 的根治)
 review_before: 2026-11-28
-type: ssot
 ---
+
 
 # 子模块指针 Bump 契约（强约束）
 

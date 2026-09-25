@@ -1,15 +1,16 @@
 ---
-id: ADR-0353
-title: External resource governed refresh and freshness recovery projection
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
 type: decision
+id: ADR-0353
+title: External resource governed refresh and freshness recovery projection
 scope: external connection fabric and cockpit operations
 date: 2026-08-03
 ---
+
 
 # ADR-0353: 外部资源受治理刷新与 freshness 恢复投影
 

@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: '2026-09-24'
-title: BET-Y2Q2-T7-09 复盘
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y2Q2-T7-09 复盘
 ---
+
 # BET-Y2Q2-T7-09 复盘：BCOS 主权进化链与学习图谱组件研发 (BcosEvolutionChainView)
 
 ## Q1 实际耗时 vs appetite？超出比例？

@@ -1,11 +1,13 @@
 ---
-id: ADR-0069
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0069
 ---
+
 
 # ADR-0069: P75 management 142 分类 + alert-history 多维深化 + graphify 重生 wrapper
 

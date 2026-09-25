@@ -1,16 +1,14 @@
 ---
+schema: md/v1
 status: draft
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - ../../../.omo/_knowledge/decisions/0163-p76-phase9a-commit-assist-hook.md (Phase 9A 上游)
-  - ../../../.omo/_knowledge/decisions/0162-p76-phase8-real-engineering.md (P76 Phase 8 上游)
-  - STRAT-P76-strategic-roadmap.md (上一路线图, 已 100% closed)
-supersedes:
-  - STRAT-P76 (P77 接替 P76 路线图目标)
+last-reviewed: 2026-09-25
 type: ssot
+related: 
+supersedes: 
 ---
+
 
 # STRATEGY-DECISION: P77 战略路线图 — 12 周 5 phase 跨仓一致性 + 演化护栏
 

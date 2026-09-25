@@ -1,11 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-18
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
 ---
+
 
 # BET-Y3H1-T7-05: admin-notification-workflow 场景冷启动 — draft→routine
 

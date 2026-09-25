@@ -1,17 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-17
-last-reviewed: 2026-09-17
 bet_id: BET-Y3H1-T7-04
 risk_level: L2
 human_gate: true
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # BET-Y3H1-T7-04 — admin-notification-workflow 场景批量 routine 推进
 

@@ -1,11 +1,13 @@
 ---
-id: ADR-0062
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0062
 ---
+
 
 # ADR-0062: P68 告警抑制时间窗 + 告警历史趋势报告
 

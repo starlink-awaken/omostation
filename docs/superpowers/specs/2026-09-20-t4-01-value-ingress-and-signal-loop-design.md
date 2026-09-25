@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 真实业务信号感知与价值凭证闭环采样 (BCOS W5 Value Ingress)
 bet_id: BET-Y2Q1-T4-01
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-20
-last-reviewed: 2026-09-20
 implementation_authorized: true
 value_indicator_policy: true
 risk_level: L2
 human_gate: true
-type: ssot
 ---
+
 
 # 真实业务信号感知与价值凭证闭环采样 (BCOS W5 Value Ingress)
 

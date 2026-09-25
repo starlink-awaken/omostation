@@ -1,18 +1,20 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: runtime-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Workspace owner parity for learning decay inspection
 bet_id: BET-Y1Q3-T10-99
-status: accepted
-lifecycle: contract
-owner: runtime-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
 risk_level: L2
 human_gate: true
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # Workspace owner parity for learning decay inspection
 

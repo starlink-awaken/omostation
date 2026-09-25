@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-09-23
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Retro — BET-Y2Q2-T7-05 Cockpit-UI 全量受控路由深层访问恢复与全局命令面板索引升级
 
 - bet: BET-Y2Q2-T7-05

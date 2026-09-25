@@ -1,22 +1,17 @@
 ---
-title: 织星道法术器 — MOF 嵌套的理论体系与硬约束
+schema: md/v1
 status: active
 lifecycle: contract
 owner: 夏明星
-created: 2026-08-25
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-25
 type: theoretical-system
+title: 织星道法术器 — MOF 嵌套的理论体系与硬约束
+created: 2026-08-25
 id: DFSQ/v1
-does_not_supersede:
-  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  - ARCHITECTURE.md
-  - projects/ecos/src/ecos/ssot/mof/m3.yaml
-  - docs/architecture/os-operating-pattern-v1.md
+does_not_supersede: 
 note: >
-  道法术器不是第五套本体。它是对已有 MOF 金字塔的中文读法，
-  加上 SFOP 槽位作为 Component 的运行时分类。硬检查入口：
-  python3 bin/gac/check-sfop-slots.py （gate id sfop-slots，阻断）。
 ---
+
 
 # 织星道法术器（DFSQ/v1）
 

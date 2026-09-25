@@ -1,12 +1,15 @@
 ---
-title: A8 OMO external adapter transaction authoritative review
-type: report
-owner: governance-team
-last_updated: '2026-09-15'
-bet: BET-Y1Q4-T10-151
+schema: md/v1
 status: active
 lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: report
+title: A8 OMO external adapter transaction authoritative review
+last_updated: '2026-09-15'
+bet: BET-Y1Q4-T10-151
 ---
+
 
 # A8 external adapter transaction — authoritative current state
 

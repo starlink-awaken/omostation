@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: GAC worktree submodule URL synchronization
 bet_id: BET-Y2Q2-T11-02
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-24'
-last-reviewed: '2026-09-24'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L1
 human_gate: false
-type: ssot
 ---
+
 
 # BET-Y2Q2-T11-02: GAC worktree submodule URL synchronization
 

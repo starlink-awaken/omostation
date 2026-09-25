@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: ssot
 owner: engineering-agent
-last-reviewed: 2026-08-28
-title: omostation (eCOS v6) 全生态架构图解
+last-reviewed: 2026-09-25
 type: doc
+title: omostation (eCOS v6) 全生态架构图解
 ---
+
 
 # omostation (eCOS v6) 全生态架构图解
 

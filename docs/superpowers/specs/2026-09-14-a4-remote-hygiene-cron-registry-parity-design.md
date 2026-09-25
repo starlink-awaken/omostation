@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: A4 remote-hygiene cron registry parity recovery
 bet_id: BET-Y1Q4-T16-02
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: '2026-09-14'
-last-reviewed: '2026-09-14'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L1
 human_gate: false
-type: ssot
 ---
+
 
 # A4 remote-hygiene cron registry parity recovery
 

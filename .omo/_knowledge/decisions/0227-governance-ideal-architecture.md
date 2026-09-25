@@ -1,16 +1,15 @@
 ---
-id: ADR-0227
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-21
-related:
-  - 0220-swarm-coordination-discipline-m1-gate.md
-  - 0218-agent-isolation-p0-verify-and-hygiene.md
-  - ../patterns/p73-truth-driven-engineering-pattern.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0227
+related: 
+supersedes: []
 ---
+
 
 # ADR-0227: 治理架构理想态 — 4 原则 (分层/单源/自审/闭环)
 

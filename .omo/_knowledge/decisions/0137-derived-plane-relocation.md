@@ -1,23 +1,15 @@
 ---
-id: ADR-0137
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0129-state-projection-plane-phase3.md
-  - 0132-l0-mof-m4-metamodel.md
-  - 0133-l0-constraints-v2-cutover.md
-  - 0136-m3-yaml-extension-p5.md
-  - ../../../../bin/l0-constraints-migrate.py
-  - ../../../../bin/omo-state-cleanup.py
-  - ../../../projects/ecos/src/ecos/ssot/mof/m0/mof_driven.py
-  - ../../../projects/ecos/.gitignore
-  - ../../../../.gitignore
-supersedes:
-  - 0133 (partial: the v2 derived-path default)
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0137
+related: 
+supersedes: 
 ---
+
 
 # ADR-0137: 派生面落点纠偏 — 跟随 SSOT 源所在子模块
 

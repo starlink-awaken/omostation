@@ -1,15 +1,15 @@
 ---
-id: ADR-0219
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - 0216-compass-feedback-partial-smoke.md
-  - 0217-workflow-hygiene-layer-check-and-evidence.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0219
+related: 
+supersedes: []
 ---
+
 
 # ADR-0219 — BOS 全量 evidence-smoke 可复现路径
 

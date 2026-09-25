@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: T7-06/T10-151 合入后评审缺陷校正
 bet_id: BET-Y2Q1-T7-07
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-15
 ---
+
 
 # T7-07 — 合入后评审缺陷校正
 

@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: product-architecture
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0335
 title: Cockpit External Resource Pack Review Surface
-status: archived
-type: decision
-owner: product-architecture
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - 0334-external-resource-pack-conformance.md
-  - 0330-external-resource-review-queue.md
+related: 
 ---
+
 
 # ADR-0335: Cockpit External Resource Pack Review Surface
 

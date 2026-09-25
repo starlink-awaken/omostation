@@ -1,11 +1,13 @@
 ---
-id: ADR-0450
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-09-04
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0450
 ---
+
 
 # ADR-0450: cockpit-ui 以 submodule 形态回归主仓
 

@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-agent
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: BET-Y2Q4-T7-01 specification
 bet_id: BET-Y2Q4-T7-01
-status: accepted
-lifecycle: contract
-owner: governance-agent
-last-reviewed: 2026-09-08
 ---
+
 
 
 # Spec: 生命科学与大模型架构前沿文献自动精读与技术选型沙盘

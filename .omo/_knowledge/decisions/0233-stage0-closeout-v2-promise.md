@@ -1,23 +1,21 @@
 ---
-id: ADR-0233
-title: "STRAT-P81 Stage 0 closeout v2 占位"
+schema: md/v1
 status: SUPERSEDED
 lifecycle: spec
-date: 2026-07-24
-last-reviewed: 2026-07-24
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0233
+title: "STRAT-P81 Stage 0 closeout v2 占位"
+date: 2026-07-24
 supersedes: null
 superseded_by: 0234-bet-c87a-closeout
 deciders: governance-team
 strat: STRAT-P81
 stage: S0
-related:
-  - ADR-0228 m1-acceptance-physical-deferred-reorder
-  - ADR-0232 g-del-2b-official-pass
-  - STRAT-P81-strategic-roadmap.md
-  - 2026-07-24-p81-stage0-closeout-v2 (audit)
-type: ssot
+related: 
 ---
+
 
 # 0233 - STRAT-P81 Stage 0 closeout v2 占位
 

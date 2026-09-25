@@ -1,15 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: memory-recall
 description: >
-  Unified memory recall/write routing for omostation agents (Memory OS).
-  Use when searching knowledge, recalling user preferences, writing episodic
-  memory, forgetting facts, or deciding between kos / gbrain / cards / inbox.
-  Prefer bos://memory/mos/* (phase1+ live; phase10 as_of + optional live backends).
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # Memory Recall — Agent 默认记忆入口
 

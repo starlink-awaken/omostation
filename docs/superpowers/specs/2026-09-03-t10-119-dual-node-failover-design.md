@@ -1,15 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: ml-platform
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 双机雷雳 5 算力织网双向备份与断网容灾自愈
 bet_id: BET-Y1Q3-T10-119
-status: accepted
-lifecycle: contract
-owner: ml-platform
 created: 2026-09-03
-last-reviewed: 2026-09-03
-type: ssot
 ---
+
 
 # 双机雷雳 5 算力织网双向备份与断网容灾自愈
 

@@ -1,12 +1,16 @@
 ---
-bet_id: BET-Y2Q1-T6-01
+schema: md/v1
 status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
+bet_id: BET-Y2Q1-T6-01
 completed_at: 2026-09-07
 run_id: 20260907T03-memory-decay-engine
 pr: "https://github.com/starlink-awaken/omostation/pull/3361"
-lifecycle: history
-owner: unassigned
 ---
+
 
 # Retro: BET-Y2Q1-T6-01 — 跨生命周期记忆衰减与冲突消除引擎
 

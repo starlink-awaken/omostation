@@ -1,17 +1,16 @@
 ---
-id: ADR-0253
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-28
-related:
-  - .omo/_knowledge/audits/2026-07-28-p84-k4-batch2-control-experiment.md
-  - .omo/plans/strat-p84-scenario-driven-longplan.md
-  - 0247-strategic-pivot-collab-first-physical-deferred.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0253
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0253: P84 协作模式路由 — K4 批次2「协作劣」后的路线 A
 

@@ -1,14 +1,14 @@
 ---
-id: ADR-0455
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-25
 type: ssot
-related:
-  - ADR-0453
-  - PITFALL-GAT-010
+id: ADR-0455
+related: 
 ---
+
 
 # ADR-0455 — Claims legacy-publication fence 与 managed-clone allow 禁止的可满足性
 

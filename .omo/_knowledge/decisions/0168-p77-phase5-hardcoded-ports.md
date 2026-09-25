@@ -1,20 +1,15 @@
 ---
-id: ADR-0168
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0164-p77-phase1-cross-repo-consistency.md
-  - 0165-p77-phase2-evolution-guardrails.md
-  - 0166-p77-phase3-cross-repo-remediation.md
-  - 0167-p77-phase4-port-registry-consistency.md
-  - STRAT-P77-strategic-roadmap.md (Phase 5 收口)
-  - ../../../../../bin/check-hardcoded-ports.py
-  - ../../../../../tests/test_hardcoded_ports.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0168
+related: 
+supersedes: []
 ---
+
 
 # ADR-0168: P77 Phase 5 — 跨仓端口硬编码扫描 (硬门 + 5 port 补登)
 

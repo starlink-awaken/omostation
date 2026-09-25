@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: experimental
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-13
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 
 # T1-18 Codex Dogfood Canary
 Validation time: `2026-08-14 03:12:44+08:00`

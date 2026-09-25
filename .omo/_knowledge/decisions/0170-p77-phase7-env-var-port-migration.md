@@ -1,20 +1,15 @@
 ---
-id: ADR-0170
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0168-p77-phase5-hardcoded-ports.md
-  - 0169-p77-phase6-commit-assist-e2e.md
-  - STRAT-P77-strategic-roadmap.md (Phase 7)
-  - ../../../../../protocols/port-registry.yaml
-  - ../../../../../bin/migrate-port-env-var.py
-  - ../../../../../bin/start-gateway.sh
-  - ../../../../../bin/gac-mesh-router.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0170
+related: 
+supersedes: []
 ---
+
 
 # ADR-0170: P77 Phase 7 — 端口硬编码 → Env Var 重构 (P77-5-3 治本)
 

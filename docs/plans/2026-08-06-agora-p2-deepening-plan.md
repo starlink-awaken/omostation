@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 # agora P2 + 深层落地方案 (2026-08-06)
 
 > 基于 explore 深度调查 6 项问题的实施方案。先方案 → review → 执行。

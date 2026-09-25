@@ -1,17 +1,16 @@
 ---
-id: ADR-0226
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 架构师
-last-reviewed: 2026-07-19
-related:
-  - 0414-physical-multihost-tension-resolution.md
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0225-g-del-physical-multihost-gate-caliber.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0226
+related: 
 supersedes: []
 amends: [0225]
-type: ssot
 ---
+
 
 # ADR-0226: G-DEL.1 正式 BLOCKED 直至 4 物理节点（fail-closed）
 

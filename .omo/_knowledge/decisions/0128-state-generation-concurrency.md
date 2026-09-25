@@ -1,20 +1,14 @@
 ---
-id: ADR-0128
+schema: md/v1
 status: proposed
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
-related:
-  - ../patterns/p73-truth-driven-engineering-pattern.md
-  - ../../.omo/standards/omo-governance-surfaces.md
-  - ../../.omo/standards/agent-mutation-protocol.md
-  - ../../.omo/standards/agent-workflow-contract.md
-  - ../../bin/compass_radar.py
-  - ../../bin/generate-brief.py
-  - ../../scripts/sync_omo_state.py
-  - ../../scripts/generate-governance-data.py
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0128
+related: 
 ---
+
 
 # ADR-0128: 多 Agent 并发下治理状态生成的架构收敛
 

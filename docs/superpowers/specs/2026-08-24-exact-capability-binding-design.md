@@ -1,17 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.1.2
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.1.2
 created: 2026-08-24
-last-reviewed: 2026-08-26
 bet_id: BET-Y1Q3-T1-12
 risk_level: L2
 human_gate: false
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # Wave B Exact Capability Binding 设计
 

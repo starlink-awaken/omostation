@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: agent-quickstart
 description: "Minimal 5-minute quickstart for AI agents working in the omostation workspace. Covers: run a gate, claim a path, edit + test, submit a PR, and where to find docs. Use when you're a new agent session and need to know 'what do I actually do'. NOT for full onboarding (use agent-onboarding skill instead)."
-
-last-reviewed: 2026-09-17
-type: ssot
-owner: governance-team
 ---
+
 
 # Agent Quickstart — What Do I Actually Do?
 

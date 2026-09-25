@@ -1,11 +1,13 @@
 ---
-id: ADR-0433
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-29
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0433
 ---
+
 
 # ADR-0433: omlxc DFlash 2 块扩散投机解码、异构三节点智能调度与三级分层缓存体系
 

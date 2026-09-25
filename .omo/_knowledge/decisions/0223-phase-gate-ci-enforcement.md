@@ -1,17 +1,15 @@
 ---
-id: ADR-0223
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 架构师
-last-reviewed: 2026-07-18
-related:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0220-swarm-coordination-discipline-m1-gate.md
-  - 0222-m1-conflict-zero-evidence-standard-adversarial.md
-  - 0202-fake-green-prevention.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0223
+related: 
+supersedes: []
 ---
+
 
 # ADR-0223: 阶段门禁 CI 硬阻断 — phase gate 从 advisory 升为 enforcing
 

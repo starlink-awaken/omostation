@@ -1,9 +1,13 @@
 ---
+schema: md/v1
 status: active
+lifecycle: history
 owner: runtime-control
-scope: documents-read-only-audit
+last-reviewed: 2026-09-25
 type: ephemeral
+scope: documents-read-only-audit
 ---
+
 
 # CR08 卫健委三医态势安装态审计复盘
 

@@ -1,24 +1,15 @@
 ---
-id: ADR-0142
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
-related:
-  - 0132-l0-mof-m4-metamodel.md
-  - 0133-l0-constraints-v2-cutover.md
-  - 0134-m3-meta-cutover.md
-  - 0135-derived-plane-unification.md
-  - 0136-m3-yaml-extension-p5.md
-  - 0137-derived-plane-relocation.md
-  - 0138-meta-element-promotion.md
-  - 0139-model-driven-8stage-revival-rejected.md
-  - 0140-m4-health-score.md
-  - 0141-m2-base-schema.md
-  - ../../../docs/M4-DECISIONS-INDEX.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0142
+related: 
+supersedes: []
 ---
+
 
 # ADR-0142: M4 决策速查表 (Round 4b)
 

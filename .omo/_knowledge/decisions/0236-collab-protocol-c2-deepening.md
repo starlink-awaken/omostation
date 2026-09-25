@@ -1,17 +1,16 @@
 ---
-id: ADR-0236
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-25
-related:
-  - 0235-role-catalog-c1-research-delivery.md
-  - 0229-role-framework-three-roles.md
-  - STRAT-P81-strategic-roadmap.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0236
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0236: C2 协作协议加深 — 多轮协商 + 冲突消解 + 任务分解
 

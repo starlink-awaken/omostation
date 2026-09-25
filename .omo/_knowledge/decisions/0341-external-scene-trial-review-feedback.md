@@ -1,14 +1,16 @@
 ---
-id: ADR-0341
-title: External scene trial review feedback boundary
+schema: md/v1
 status: archived
-type: adr
-date: 2026-08-03
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
+type: adr
+id: ADR-0341
+title: External scene trial review feedback boundary
+date: 2026-08-03
 decision: "把 observation-only 场景试运行的人工评审固化为 OMO proposal-only 回执，并通过 Cockpit 只读投影和受限写入口形成可审计反馈闭环；不把评审当作执行或业务结果。"
 ---
+
 
 # ADR-0341: 外部场景试运行审阅反馈边界
 

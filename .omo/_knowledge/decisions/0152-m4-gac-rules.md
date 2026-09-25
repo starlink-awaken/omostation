@@ -1,22 +1,15 @@
 ---
-id: ADR-0152
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0106-gac-governance-as-code.md
-  - 0150-submodule-pr-reverse-review.md
-  - 0151-submodule-hygiene-gate.md
-  - 0132-l0-mof-m4-metamodel.md
-  - ../../../../bin/mof-bootstrap.py
-  - ../../../../bin/m4-health-score.py
-  - ../../../../bin/check-submodule-hygiene.py
-  - ../../../../bin/mcp-tool-data-complete.py
-  - ../../../../bin/omo-state-cleanup.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0152
+related: 
+supersedes: []
 ---
+
 
 # ADR-0152: M4 5 GaC 规则追加 (Phase 1)
 

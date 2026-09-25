@@ -1,14 +1,16 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: family-hub
+last-reviewed: 2026-09-25
+type: ssot
 created: 2026-08-30
-last-reviewed: 2026-08-30
 bet_id: BET-Y1Q3-T10-111
 spec_ref: repo://docs/superpowers/specs/2026-08-31-family-dashboard-owner-migration-phase-a-design.md
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # Family Dashboard Workspace Owner Migration Phase A Implementation Plan
 

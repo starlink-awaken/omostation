@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: OMO 持久 Role/Capsule/Handoff/Claim/Verification/ASD 语义落地设计
 bet_id: BET-Y1Q4-T10-165
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-12
 ---
+
 
 
 # T10-165 — OMO 持久语义五件设计

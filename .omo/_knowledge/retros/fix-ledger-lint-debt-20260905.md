@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: 台账 lint 归零 — T8-04 spec_ref 修复 + T6-17/18/19 字段补全
-bet_id: fix-ledger-lint-debt
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: 台账 lint 归零 — T8-04 spec_ref 修复 + T6-17/18/19 字段补全
+bet_id: fix-ledger-lint-debt
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # fix-ledger-lint-debt 复盘
 

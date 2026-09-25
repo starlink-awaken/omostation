@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
-title: BET-Y1Q2-T7-01 Retro — 工程交付 dogfood 开 shadow
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q2-T7-01 Retro — 工程交付 dogfood 开 shadow
 ---
+
 
 # BET-Y1Q2-T7-01 Retro — 工程交付 dogfood 开 shadow
 

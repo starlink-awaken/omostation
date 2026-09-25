@@ -1,11 +1,15 @@
 ---
-adr_id: ADR-0435
+schema: md/v1
 status: accepted
-title: Machine-level launchd plists are generator output; broken invocations are repaired via services.yaml + wrapper scripts
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
 type: doc
+adr_id: ADR-0435
+title: Machine-level launchd plists are generator output; broken invocations are repaired via services.yaml + wrapper scripts
 created: 2026-08-30
-last-reviewed: 2026-08-30
 ---
+
 
 # ADR-0435 — launchd plist 修复必须走生成器 + 注册表，不允许手改 plist
 

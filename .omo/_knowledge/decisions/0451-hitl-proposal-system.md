@@ -1,11 +1,13 @@
 ---
-id: ADR-0451
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-09-04
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0451
 ---
+
 
 # ADR-0451: HITL Proposal System — file-based approval gate for harness stage_execute
 

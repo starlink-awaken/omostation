@@ -1,19 +1,17 @@
 ---
-title: 四 Agent 并行持续推进 — Goal 模式指令
+schema: md/v1
 status: draft
-type: agent-goal-templates
-owner: 夏明星
-created: 2026-08-06
 lifecycle: plan
+owner: 夏明星
+last-reviewed: 2026-09-25
+type: agent-goal-templates
+title: 四 Agent 并行持续推进 — Goal 模式指令
+created: 2026-08-06
 ssot: docs/plans/3y-bet-ledger.yaml
-related:
-  - docs/plans/AGENT-TEMPLATES.md
-  - docs/plans/AGENT-BRIEF.md
+related: 
 note: >
-  与 AGENT-TEMPLATES.md 的区别：那份是「派一个 bet」的单次指令，
-  本文是「给一条轨道一个长期目标，agent 自己循环取活」的 goal 模式。
-last-reviewed: 2026-08-18
 ---
+
 
 # 四 Agent 并行 — Goal 模式
 

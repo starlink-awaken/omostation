@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
 type: ssot
 last_updated: 2026-09-03
 ---
+
 # Documents Owner Job MVP Design
 
 ## Goal

@@ -1,14 +1,16 @@
 ---
-title: BET-Y1Q2-T1-19 复盘 — Codex ACP stdio permission-broker cutover
-type: retro
+schema: md/v1
 status: stale
+lifecycle: history
 owner: engineering-agent
+last-reviewed: 2026-09-25
+type: retro
+title: BET-Y1Q2-T1-19 复盘 — Codex ACP stdio permission-broker cutover
 created: 2026-08-20
 bet: BET-Y1Q2-T1-19
-lifecycle: history
-last-reviewed: 2026-08-21
 evidence_cutoff: 2026-08-20T16:23:15Z
 ---
+
 
 # BET-Y1Q2-T1-19 复盘
 

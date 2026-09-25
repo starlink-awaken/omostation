@@ -1,17 +1,15 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
 type: ssot
 name: harness-compliance
 description: Harness 全生命周期合规检查 — 12 章节完整性 + MOF 约束联动 + OMO 状态同步
-triggers:
-  - 用户询问 Harness 合规状态
-  - 修改 harness-policy.yaml 时
-  - 新增 bin/gac/harness*.py 脚本时
-  - 编辑 MOF 相关文件时
-  - PR 提交前
-  - CI 失败排查时
-owner: governance-team
-last-reviewed: 2026-09-04
+triggers: 
 ---
+
 
 # Skill: harness-compliance
 

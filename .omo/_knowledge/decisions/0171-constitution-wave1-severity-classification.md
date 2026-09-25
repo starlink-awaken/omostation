@@ -1,12 +1,14 @@
 ---
-id: ADR-0171
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related: [ADR-0106, 宪法-Wave-1, PR-178]
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0171
+related: [ADR-0106, 宪法-Wave-1, PR-178]
 ---
+
 
 # ADR-0171: 宪法 Wave 1 — 治理规则 severity 分层 (red/gray)
 

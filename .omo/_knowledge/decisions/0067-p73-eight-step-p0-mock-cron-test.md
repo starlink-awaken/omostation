@@ -1,11 +1,13 @@
 ---
-id: ADR-0067
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0067
 ---
+
 
 # ADR-0067: P73 governance-agent 8 步闭环 + P0 mock 集成 + cron --test 模式
 

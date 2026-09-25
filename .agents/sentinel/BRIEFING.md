@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # BRIEFING — 2026-06-24T02:25:00Z
 
 ## Mission

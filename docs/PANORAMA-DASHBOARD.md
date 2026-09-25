@@ -1,8 +1,13 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 last_updated: 2026-09-12
 ---
+
 
 # 织星全景驾驶舱（Panorama Dashboard）
 

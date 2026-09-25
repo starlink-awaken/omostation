@@ -1,7 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 
 # BET-Y1Q3-T10-119 Validation Report
 

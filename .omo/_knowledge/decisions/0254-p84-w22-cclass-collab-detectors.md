@@ -1,16 +1,16 @@
 ---
-id: ADR-0254
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-28
-related:
-  - 0253-p84-collab-mode-routing-after-k4.md
-  - .omo/_knowledge/audits/2026-07-28-p84-w2-27fail-retry-triage.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0254
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0254: P84 W2.2 C/S 类协作检测器落地
 

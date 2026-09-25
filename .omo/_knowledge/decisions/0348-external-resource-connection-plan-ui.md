@@ -1,15 +1,16 @@
 ---
-id: ADR-0348
-title: External Resource Connection Plan UI
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
 type: decision
+id: ADR-0348
+title: External Resource Connection Plan UI
 scope: cockpit-ui external connection fabric
 date: 2026-08-03
 ---
+
 
 # ADR-0348: 外部能力连接计划 UI 产品化
 

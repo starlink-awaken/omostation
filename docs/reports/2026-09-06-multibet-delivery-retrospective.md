@@ -1,15 +1,19 @@
 ---
+schema: session-retrospective/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
 type: report
 title: 多 bet 连续交付复盘 — 治理流水线压力测试（2026-09-05）
-schema: session-retrospective/v1
 created: 2026-09-06
-owner: governance-team
 window: 2026-09-05T14:00 — 2026-09-06T08:00 (CST)
 bets_delivered: [BET-Y1Q3-T6-15, BET-Y1Q4-T8-14, BET-Y2Q1-T3-04, BET-Y1Q3-T10-115, BET-Y1Q3-T10-116, BET-Y1Q3-T10-113]
 bets_yielded: [BET-Y1Q3-T6-16, BET-Y2Q1-T10-01, BET-Y1Q3-T10-117]
 bets_partial: [BET-Y1Q3-T10-105 (管线工程，样本收账由并发会话完成)]
 value_indicator_policy: false
 ---
+
 
 # 多 bet 连续交付复盘 — 治理流水线压力测试
 

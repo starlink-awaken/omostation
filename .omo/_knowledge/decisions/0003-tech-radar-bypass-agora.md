@@ -1,13 +1,15 @@
 ---
-id: ADR-0003
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0003
 archived-since: 2026-06-22
 note: "P45 审计: 历史决策/phase closeout, 标记 archived"
-type: ssot
 ---
+
 
 # ADR-0003: P28 TECH-RADAR 实施绕过 agora 网关
 

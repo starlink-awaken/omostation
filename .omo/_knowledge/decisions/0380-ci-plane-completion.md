@@ -1,12 +1,14 @@
 ---
-id: ADR-0380
-title: CI plane completion — runner migration, orphan cleanup, concurrent-drift absorption
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0380
+title: CI plane completion — runner migration, orphan cleanup, concurrent-drift absorption
 ---
+
 
 # 0380 — CI Plane Completion Round
 

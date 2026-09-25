@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: omlxc-compute-fabric
 description: "omlxc 异构算力织网、DFlash 2 块扩散投机解码、Radix 前缀树与 Paged KV 块内存、双区自适应量化与 75% 阶梯显存治理操作指南。当 Agent 需要执行本地大模型推理、预估长上下文显存、分析 Prompt 复杂度或调度本地算力时调用。"
-
-last-reviewed: 2026-09-19
-type: ssot
-owner: governance-team
 ---
+
 
 # omlxc Compute Fabric — 本地异构算力织网与智能调度操作体系
 

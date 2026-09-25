@@ -1,11 +1,13 @@
 ---
-id: ADR-0440
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-30
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0440
 ---
+
 
 # ADR-0440: 全生态服务 SSOT 登记、BOS URI 全生命周期路由注册与 Agora FastMCP 主权算力工具链挂载
 

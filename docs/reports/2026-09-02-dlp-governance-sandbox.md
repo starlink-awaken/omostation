@@ -1,13 +1,15 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: delivery-report
 owner: governance-team
+last-reviewed: 2026-09-25
+type: delivery-report
+schema_version: report/v1
 created: 2026-09-02
-last-reviewed: 2026-09-02
 bet: BET-Y1Q4-T10-01
 ---
+
 
 # DLP 防泄密围栏与自动脱敏沙箱（交付报告）
 

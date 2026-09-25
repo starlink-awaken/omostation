@@ -1,16 +1,18 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-03
-title: BET-Y1Q3-T10-200 复盘 batch2
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q3-T10-200 复盘 batch2
 bet: BET-Y1Q3-T10-200
 date: 2026-09-03
 run: 20260903T082945Z-bet-execution-3f457408
 pr: https://github.com/starlink-awaken/omostation/pull/2997
 merge: 84474c2671db0fbad66da779f201f0ea443f0cd3
 ---
+
 
 # BET-Y1Q3-T10-200 复盘 batch2
 

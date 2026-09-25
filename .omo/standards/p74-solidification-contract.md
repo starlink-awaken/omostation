@@ -1,17 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-03
-related:
-  - ../_knowledge/decisions/0130-p74-workflow-solidification.md
-  - ../_knowledge/patterns/p74-workflow-solidification-pattern.md
-  - ../_truth/registry/agent-workflows/_root.yaml
-  - ../_truth/registry/governance-checks.yaml
+last-reviewed: 2026-09-25
+type: ssot
+related: 
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 ---
+
 
 # P74 Solidification Contract — 操作契约
 

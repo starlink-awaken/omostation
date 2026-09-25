@@ -1,10 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: architecture-team
+last-reviewed: 2026-09-25
 type: plan
 title: scene-navigation-guardrails-and-system-expansion-plan
 last_updated: 2026-09-06
-owner: architecture-team
-status: active
 ---
+
 
 # 场景导航锚点与运行时防跑偏护栏机制（SNARF）及系统扩展方案深度调研报告
 

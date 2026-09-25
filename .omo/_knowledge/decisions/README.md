@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-29
-note: "P45 曾标记 archived, 但 ADR 制度仍活跃 (113 ADR), 2026-06-29 恢复 active"
+last-reviewed: 2026-09-25
 type: ssot
+note: "P45 曾标记 archived, 但 ADR 制度仍活跃 (113 ADR), 2026-06-29 恢复 active"
 ---
+
 
 # Architecture Decision Records (ADR)
 

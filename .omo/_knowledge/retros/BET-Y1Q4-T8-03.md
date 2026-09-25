@@ -1,17 +1,18 @@
 ---
-schema_version: retro/v1
-status: active
+schema: md/v1
+status: archived
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: retro/v1
 created: 2026-09-01
-last-reviewed: 2026-09-01
 bet: BET-Y1Q4-T8-03
 title: 红头 DOCX/PPTX/SVG 渲染引擎
 symptom: 无（按计划交付）；外围 gate 债务两处随车清理
 solution: GOV_SPEC 单源 + cockpit venv 依赖隔离 + subprocess 委派测试
-type: ephemeral
-status: archived
 ---
+
 
 # BET-Y1Q4-T8-03 复盘
 

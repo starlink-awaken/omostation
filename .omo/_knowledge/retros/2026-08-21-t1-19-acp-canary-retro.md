@@ -1,16 +1,17 @@
 ---
-type: bet-retro
+schema: md/v1
 status: active
 lifecycle: history
 owner: laowang-agent
-last-reviewed: 2026-08-21
+last-reviewed: 2026-09-25
+type: bet-retro
 bet: BET-Y1Q2-T1-19
 date: 2026-08-21
 operator: laowang (claude-code)
-runs:
-  - 20260821T020119Z-bet-execution-f21e7fdc (closed ok)
+runs: 
 title: BET-Y1Q2-T1-19 Retro — ACP stdio cutover 的三轮真 canary
 ---
+
 
 # BET-Y1Q2-T1-19 Retro — ACP stdio cutover 的三轮真 canary
 

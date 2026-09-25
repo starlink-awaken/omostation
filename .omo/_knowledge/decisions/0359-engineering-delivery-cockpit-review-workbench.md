@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0359
 title: Engineering Delivery Cockpit 人工复核工作台边界
-status: ACCEPTED
 date: 2026-08-03
-owner: governance-team
-lifecycle: spec
-last-reviewed: 2026-08-03
-type: ssot
 ---
+
 
 # ADR-0359: Engineering Delivery Cockpit 人工复核工作台边界
 

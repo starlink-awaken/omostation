@@ -1,19 +1,18 @@
 ---
-title: KOS 季度扩量目标（跃迁期前置）
+schema: md/v1
 status: active
-type: goals-support
-related:
-  - G-CONV.6
-  - BET-b8c5
-  - .omo/goals/current.yaml
-created: 2026-07-18
-updated: 2026-07-20
 lifecycle: contract
 owner: kems-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: goals-support
+title: KOS 季度扩量目标（跃迁期前置）
+related: 
+created: 2026-07-18
+updated: 2026-07-20
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
+
 
 # KOS 季度扩量目标
 

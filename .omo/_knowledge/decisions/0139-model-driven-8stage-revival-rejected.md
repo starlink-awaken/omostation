@@ -1,20 +1,15 @@
 ---
-id: ADR-0139
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0117-p52-undo-p60-stage-8.md
-  - 0115-p52-model-driven-8-stages.md
-  - 0132-l0-mof-m4-metamodel.md
-  - 0136-m3-yaml-extension-p5.md
-  - 0138-meta-element-promotion.md
-  - ../../../projects/model-driven/src/model_driven/mof/m3_extended.py
-  - ../../../projects/ecos/src/ecos/ssot/mof/m3.yaml
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0139
+related: 
+supersedes: []
 ---
+
 
 # ADR-0139: model-driven 8 阶段复活评估 — 拒回 (Round 2c)
 

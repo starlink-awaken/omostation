@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: ml-platform
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 混沌工程常态化注入套件与防腐护栏自动化巡检
 bet_id: BET-Y1Q3-T10-120
-status: accepted
-lifecycle: contract
-owner: ml-platform
 created: 2026-09-02
-last-reviewed: 2026-09-02
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # 混沌工程常态化注入套件与防腐护栏自动化巡检
 

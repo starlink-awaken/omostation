@@ -1,20 +1,17 @@
 ---
-id: ADR-0225
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 架构师
-last-reviewed: 2026-07-19
-related:
-  - 0414-physical-multihost-tension-resolution.md
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0221-g-del-5a-emergence-collective-decision-risk-review.md
-  - 0223-phase-gate-ci-enforcement.md
-  - 0224-m1-conflict-count-rootcause-before-adversarial-pass.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0225
+related: 
 supersedes: []
 amends: [0210]
 amended_by: [0226]
-type: ssot
 ---
+
 
 # ADR-0225: G-DEL 兑现期门禁维持物理多机口径（方案 A）
 

@@ -1,16 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: skill
 name: closeout-retro
 description: "关闭与回溯 skill：负责 workflow 收尾、retro 归档、evidence 记录和 closeout 报告生成"
 title: Closeout & Retrospective
-type: skill
-owner: governance-team
 version: "1.0"
-status: active
-triggers:
-  - pull_request merged
-  - workflow completed
-  - user requests closeout
+triggers: 
 ---
+
 
 # closeout-retro — 闭环收尾与复盘
 

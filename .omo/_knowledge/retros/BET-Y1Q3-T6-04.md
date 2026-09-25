@@ -1,26 +1,21 @@
 ---
-id: BET-Y1Q3-T6-04
-type: retro
+schema: md/v1
 status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+id: BET-Y1Q3-T6-04
 date: 2026-08-18
 bet_id: BET-Y1Q3-T6-04
 north_star_ref: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
 repo: omostation-gbrain
-merged_prs:
-  - 8
-  - 9
-  - 10
-gbrain_merge_commits:
-  - 42d02bdd
-  - 9e4a9f19
-  - afef89e8
-scope:
-  - gbrain src
-lifecycle: history
-owner: governance-team
-last-reviewed: 2026-08-18
+merged_prs: 
+gbrain_merge_commits: 
+scope: 
 title: "BET-Y1Q3-T6-04 Retro: gbrain god-module SRP 拆分"
 ---
+
 
 # BET-Y1Q3-T6-04 Retro: gbrain god-module SRP 拆分
 

@@ -1,16 +1,16 @@
 ---
-id: ADR-0412
-title: "model-driven (M0) 定位判定 — 接入主链 (保留独立子仓)"
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-created: 2026-08-16
-last-reviewed: 2026-08-16
-related:
-  - ./0399-blueprint-consolidation.md
-  - ../../../docs/plans/3y-bet-ledger.yaml#BET-Y1Q2-T1-02
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0412
+title: "model-driven (M0) 定位判定 — 接入主链 (保留独立子仓)"
+created: 2026-08-16
+related: 
 ---
+
 
 # ADR-0412: model-driven (M0) 定位判定 — 接入主链 (保留独立子仓)
 

@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: 机制 22c Git Hook 调度引擎完整化 — runner/manifest 接线 + 缺失检查脚本补齐 + 净减配平
-bet_id: BET-Y1Q4-T6-24
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: 机制 22c Git Hook 调度引擎完整化 — runner/manifest 接线 + 缺失检查脚本补齐 + 净减配平
+bet_id: BET-Y1Q4-T6-24
 created: 2026-09-06
-last-reviewed: 2026-09-06
 ---
+
 
 # BET-Y1Q4-T6-24 复盘
 

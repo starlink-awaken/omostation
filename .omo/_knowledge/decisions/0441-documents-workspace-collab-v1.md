@@ -1,11 +1,13 @@
 ---
-id: ADR-0441
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-30
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0441
 ---
+
 
 # ADR-0441: Documents↔Workspace 协同机制 v1（DW 三原语）
 

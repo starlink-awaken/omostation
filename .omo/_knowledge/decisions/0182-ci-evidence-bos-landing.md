@@ -1,11 +1,13 @@
 ---
-id: ADR-0182
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-14
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0182
 ---
+
 
 # ADR-0182 — CI · evidence · BOS registry 常态化落地
 

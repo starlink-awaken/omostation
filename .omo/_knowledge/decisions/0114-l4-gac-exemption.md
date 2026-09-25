@@ -1,12 +1,14 @@
 ---
-id: ADR-0114
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-29
-next-review-date: '2026-10-29'  # ISC-26: 配合 Revisit triggers, 3 个月后评估 L4 是否需补规则
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0114
+next-review-date: '2026-10-29'  # ISC-26: 配合 Revisit triggers, 3 个月后评估 L4 是否需补规则
 ---
+
 
 # ADR-0114: L4 自我层 GaC 强约束豁免
 

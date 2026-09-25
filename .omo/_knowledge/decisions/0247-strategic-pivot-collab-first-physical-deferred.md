@@ -1,22 +1,16 @@
 ---
-id: ADR-0247
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-26
-related:
-  - 0414-physical-multihost-tension-resolution.md
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0228-physical-hosts-failclosed.md
-  - 0235-c1-role-directory.md
-  - 0236-c2-collab-protocol.md
-  - 0237-c3-gbrain-blackboard.md
-supersedes: []
-amends:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0228-physical-hosts-failclosed.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0247
+related: 
+supersedes: []
+amends: 
 ---
+
 
 # ADR-0247: 战略转向 — 多 agent 协作优先, 物理多机 DEFERRED (补立)
 

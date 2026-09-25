@@ -1,16 +1,16 @@
 ---
-id: ADR-0240
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-28
-related:
-  - 0238-mof-m4-phase0-registry-self-governance.md
-  - docs/proposals/2026-07-25-mof-m4-governance-optimization-plan.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0240
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0240: MOF/M4 D1-D4 决策 (A/A/A/A) — Phase 1 启动
 

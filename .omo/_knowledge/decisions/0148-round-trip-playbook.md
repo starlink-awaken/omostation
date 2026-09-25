@@ -1,17 +1,15 @@
 ---
-id: ADR-0148
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0146-8stage-stability-declaration.md
-  - 0147-mcptool-adder-guide.md
-  - 0140-m4-health-score.md
-  - ../../../AGENTS.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0148
+related: 
+supersedes: []
 ---
+
 
 # ADR-0148: Round-Trip 流程文档化 (Round 5c)
 

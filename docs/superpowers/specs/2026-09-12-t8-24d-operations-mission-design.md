@@ -1,17 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-12
-last-reviewed: 2026-09-12
 bet_id: BET-Y1Q4-T8-24D
 risk_level: L2
 human_gate: false
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # T8-24D Operations 与 Mission 工作台设计
 

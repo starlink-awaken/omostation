@@ -1,14 +1,14 @@
 ---
-id: ADR-0287
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-29
-related:
-  - 0247-strategic-pivot-collab-first-physical-deferred.md
-  - 0249-governance-budget-cap-40-40-20.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0287
+related: 
 ---
+
 
 # ADR-0287: P86 A/B/C/D 波关闭 + §STOP 冻结
 
