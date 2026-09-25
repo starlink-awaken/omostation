@@ -1,0 +1,140 @@
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260917T213305Z-2da7da1f",
+  "cell_id": "cell-ee2c441db16b",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260917T213305Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260917T213305Z-2da7da1f/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260918T111211Z-66b9de3c",
+  "cell_id": "cell-c92df3d5767a",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260918T111211Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260918T111211Z-66b9de3c/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260918T231211Z-888041d8",
+  "cell_id": "cell-6a251a0fa452",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260918T231211Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260918T231211Z-888041d8/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260919T111212Z-fd01c616",
+  "cell_id": "cell-b36e7941e179",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260919T111212Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260919T111212Z-fd01c616/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260919T231212Z-24ba54e1",
+  "cell_id": "cell-9dce27c0cd2f",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260919T231212Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260919T231212Z-24ba54e1/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260920T132157Z-d720724a",
+  "cell_id": "cell-7368c2e47c0c",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260920T132157Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260920T132157Z-d720724a/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260921T012158Z-202d7d05",
+  "cell_id": "cell-edf34bf12b41",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260921T012158Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260921T012158Z-202d7d05/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260921T132158Z-1cfa14ee",
+  "cell_id": "cell-77230ae3ed90",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260921T132158Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260921T132158Z-1cfa14ee/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260922T012159Z-f17fcd0a",
+  "cell_id": "cell-9042638946ca",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260922T012159Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260922T012159Z-f17fcd0a/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260922T132220Z-6ec598b9",
+  "cell_id": "cell-5f4429b4d40a",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260922T132220Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260922T132220Z-6ec598b9/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260923T012220Z-dc338515",
+  "cell_id": "cell-90e90734572b",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260923T012220Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260923T012220Z-dc338515/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260923T132221Z-90c3f82d",
+  "cell_id": "cell-630060804964",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260923T132221Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260923T132221Z-90c3f82d/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260924T012221Z-3b2a26f3",
+  "cell_id": "cell-df575f9a1364",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260924T012221Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260924T012221Z-3b2a26f3/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}
+{
+  "attempt": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260924T230632Z-d84a1e97",
+  "cell_id": "cell-a6acb8a69719",
+  "ok": true,
+  "run_id": "direct-local-reference-cell-r0-20260924T230632Z",
+  "schema": "direct-local-reference-cell-r0-canary/v1",
+  "source_digest": "sha256:77cec3a304f8e5d5b0ea33827511d5685518bbcf1f213485b45fd97432d37aa6",
+  "summary_path": "/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts/direct-local-reference-cell-probe-20260924T230632Z-d84a1e97/evidence/direct-local-reference-cell-r0/summary.json",
+  "value_claim": "NOT_PROVEN"
+}

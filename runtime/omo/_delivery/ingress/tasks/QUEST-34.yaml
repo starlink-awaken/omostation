@@ -1,0 +1,15 @@
+kind: planned_task_created
+task_id: QUEST-34
+title: 测试每日打扫
+ingress_plane: projects/cockpit
+source_ref: cockpit:quest:create:QUEST-34
+created_at: '2026-09-20T07:14:29Z'
+task_ref: .omo/tasks/planned/QUEST-34.yaml
+evidence_required:
+- 由 child 在家庭枢纽标记完成
+source_docs:
+- .omo/tasks/planned/quest_template.yaml
+artifact_ref: runtime/omo/_delivery/ingress/tasks/QUEST-34.yaml
+broker_ref: projects/omo/src/omo/omo_ingress.py
+retention_mode: manual_archive
+lifecycle_state: active

@@ -1,0 +1,40 @@
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ops/cli.py", line 21, in <module>
+    from datetime import UTC, datetime, timezone
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)

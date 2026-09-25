@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2026-09-21T10:21:10.340861+00:00",
+    "minutes_saved": 5.0,
+    "task_id": "test-unit-zero-1789986070340",
+    "axis": "A"
+  },
+  {
+    "timestamp": "2026-09-21T10:21:10.342452+00:00",
+    "minutes_saved": 5.0,
+    "task_id": "gov-admin-1789986070341",
+    "axis": "A"
+  },
+  {
+    "timestamp": "2026-09-21T10:21:10.380696+00:00",
+    "minutes_saved": 5.0,
+    "task_id": "test-cli-1789986070379",
+    "axis": "A"
+  },
+  {
+    "timestamp": "2026-09-21T10:45:33.635030+00:00",
+    "minutes_saved": 5.0,
+    "task_id": "test-unit-zero-1789987533634",
+    "axis": "A"
+  },
+  {
+    "timestamp": "2026-09-21T10:45:33.636634+00:00",
+    "minutes_saved": 5.0,
+    "task_id": "gov-admin-1789987533636",
+    "axis": "A"
+  },
+  {
+    "timestamp": "2026-09-21T10:45:33.674432+00:00",
+    "minutes_saved": 5.0,
+    "task_id": "test-cli-1789987533673",
+    "axis": "A"
+  }
+]

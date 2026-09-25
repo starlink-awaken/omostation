@@ -1,0 +1,14 @@
+{
+  "schema": "value-baseline/v1",
+  "baseline_id": "bet-y2q2-t4-01-phase3-initial",
+  "frozen_at": "2026-09-24T01:41:15+00:00",
+  "metrics": {
+    "scope": "BET-Y2Q2-T4-01 Phase 3 initial baseline frozen before value-evidence collection",
+    "frozen_at": "2026-09-24T01:41:15+00:00",
+    "prior_records_total": 0,
+    "prior_v2_records": 0,
+    "prior_v2_qualifying": 0,
+    "note": "Phase 3 window starts after this baseline; no backfill allowed"
+  },
+  "digest": "sha256:293371a8227b93dd65d3016a392bc692ef51904362f3de6074a9b36750492ff3"
+}

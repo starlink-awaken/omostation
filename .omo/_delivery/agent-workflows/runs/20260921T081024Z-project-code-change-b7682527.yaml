@@ -1,0 +1,158 @@
+run_id: 20260921T081024Z-project-code-change-b7682527
+workflow_id: project-code-change
+status: blocked
+actor: xiamingxing
+agent_profile: governance-agent
+objective: '[BET-Y2Q2-T8-04] dashboard 写操作诚信修复 + 跨板块合成条 (Appetite: 2 days)'
+created_at: '2026-09-21T08:10:24Z'
+updated_at: '2026-09-21T09:28:41Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260921T081024Z-project-code-change-b7682527
+  actor: xiamingxing
+  profile: governance-agent
+  bet_id: BET-Y2Q2-T8-04
+locks:
+- .omo/_delivery/agent-workflows/locks/project.lock.yaml
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+plan:
+  id: project-code-change
+  title: Project code change
+  purpose: Route code changes through project-local verification and workspace governance
+    gates.
+  agents:
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  lock_scopes:
+  - 'project:'
+  - root-gate
+  phases:
+    preflight:
+    - id: root-status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: project-status
+      mode: advisory
+      cwd: projects/
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: implement
+      mode: manual
+      command:
+      - agent
+      - edit
+      - project-code
+    verification:
+    - id: project-tests
+      mode: manual
+      cwd: projects/
+      command:
+      - project-local
+      - test-command
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- Stale pre-bridge T8-04 run with no claims and no heartbeat; superseded after external
+  write-root bridge merged. Restart with default gates before any dashboard edits.
+- 'agent-workflow verify: 6 checks ok=True'
+- 'agent-workflow observe: continue'
+bet_id: BET-Y2Q2-T8-04
+spec_binding: &id001
+  content_digest: sha256:72f7f77e1bf672268e9e871a18a0f5be83f84ab547957d0dbf091f49596a2245
+  decision_ref: decision://accepted/BET-Y2Q2-T8-04
+  spec_ref: repo://docs/superpowers/specs/2026-09-21-t8-04-dashboard-write-integrity-design.md
+  spec_version: 1.0.0
+instruction_binding: &id002
+  instruction_ref: repo://docs/operations/blueprint-agent-instruction-pack-v1.md
+  instruction_version: blueprint-agent-instruction-pack/v1
+  content_digest: sha256:b81909ddfdeb85d6c724e53a02f92b293ea8238cc007817e5d2f6268fba6ba53
+  instruction_profile: executor
+work_packet:
+  packet_id: WP-BET-Y2Q2-T8-04
+  schema_version: work-packet/v2
+  blueprint_ref: blueprint://multi-agent-execution-control/v1
+  wave: Y2Q2
+  bet_id: BET-Y2Q2-T8-04
+  strategic_outcome: 删除 workbench 重复写操作实现；页脚文案诚实披露；新增两个跨板块合成镜头卡。
+  objective: 删除 workbench 重复写操作实现；页脚文案诚实披露；新增两个跨板块合成镜头卡。
+  why_now: priority=P1; appetite=2 days
+  status: active
+  authority:
+    strategist: 3y-bet-ledger
+    human_gate: false
+    risk_level: R1
+  scope:
+    read_surfaces:
+    - docs/plans/3y-bet-ledger.yaml
+    - docs/superpowers/specs/2026-09-21-t8-04-dashboard-write-integrity-design.md
+    - docs/operations/blueprint-agent-instruction-pack-v1.md
+    write_surfaces:
+    - ~/.local/share/zhixing-dashboard/**
+    non_goals: []
+  dependencies:
+    required_packets: []
+    required_decisions:
+    - decision://accepted/BET-Y2Q2-T8-04
+  acceptance:
+    done_when:
+    - id: AC-01
+      assertion: workbench proposals Tab 删除
+      evidence_type: structured_report
+    - id: AC-02
+      assertion: ZhixingAdjudicateProposal 函数删除
+      evidence_type: structured_report
+    - id: AC-03
+      assertion: 页脚文案改为诚实披露唯一写例外
+      evidence_type: structured_report
+    verify_commands:
+    - - grep -c "ZhixingAdjudicateProposal" ~/.local/share/zhixing-dashboard/workbench_ui.js
+    - - grep -c "data-synthesis-card" ~/.local/share/zhixing-dashboard/ecosystem_ui.js
+  rollback:
+    strategy: stop and escalate
+    data_migration: false
+  circuit_breaker:
+    when:
+    - contract cannot be proven
+    action: stop_and_escalate
+  spec_binding: *id001
+  instruction_binding: *id002
+work_packet_hash: sha256:318a969d8ddd94de95330bf9a70831f7751a0ee6de51f3b74e69a7fccf587b02
+closed_at: '2026-09-21T09:28:41Z'
+released_locks:
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- .omo/_delivery/agent-workflows/locks/project.lock.yaml

@@ -1,0 +1,10 @@
+{
+  "active": true,
+  "started_at": "2026-09-05T14:04:40.734Z",
+  "original_prompt": "[AUTOPILOT - Phase: unknown] Autopilot not complete. Continue working. When all phases are complete, run /oh-my-claudecode:cancel to cleanly exit and clean up this session's autopilot state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.",
+  "session_id": "1af211eb-6aa8-47a6-aa25-743f7b4783f9",
+  "project_path": "/Users/xiamingxing/Workspace",
+  "reinforcement_count": 0,
+  "awaiting_confirmation": true,
+  "last_checked_at": "2026-09-05T14:04:40.735Z"
+}

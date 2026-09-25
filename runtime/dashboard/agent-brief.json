@@ -1,0 +1,1337 @@
+{
+ "schema": "panorama-agent-brief/v1",
+ "available": true,
+ "generated_at": "2026-09-24T03:46:41.927211+00:00",
+ "objective_coverage": {
+  "schema": "panorama-objective-coverage/v1",
+  "source": "repo://docs/plans/3y-bet-ledger.yaml + panorama gates",
+  "items": [
+   {
+    "id": "EXECUTION_ENVIRONMENT_A1_A9",
+    "requirement": "A1–A9 execution environment recovery",
+    "status": "PASS",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A1"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A2"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A3"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A4"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A5"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A6"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A7"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A8"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A9"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "ledger://BET-Y1Q4-T10-164"
+     }
+    ]
+   },
+   {
+    "id": "OMO_SINGLE_CONTROL_PLANE",
+    "requirement": "OMO is the single control plane and dispatcher",
+    "status": "PARTIAL",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A8"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "repo://bin/gac/check-sfop-slots.py"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "repo://docs/plans/3y-bet-ledger.yaml"
+     }
+    ]
+   },
+   {
+    "id": "PERSISTENT_ROLE_CAPSULE_HANDOFF_CLAIM_VERIFICATION_ASD",
+    "requirement": "Persistent Role, Capsule, Handoff, Claim, Verification, and ASD semantics",
+    "status": "DELIVERY_ACCEPTED_RUNTIME_VERIFIED",
+    "value_status": "NOT_PROVEN",
+    "runtime_status": "VERIFIED",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "ledger://BET-Y1Q4-T10-165"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "projection://role_registry"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "projection://agent_cell_semantic"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "repo://projects/omo/src/omo/workflow/role_registry.py"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "repo://projects/omo/src/omo/workflow/capsule.py"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "repo://projects/omo/src/omo/workflow/asd.py"
+     }
+    ]
+   },
+   {
+    "id": "REFERENCE_CELL_DIRECT_LOCAL",
+    "requirement": "Reference Cell prefers Direct Local and remains evidenced",
+    "status": "PASS",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://RC-DL"
+     }
+    ]
+   },
+   {
+    "id": "ORCA_R0",
+    "requirement": "Orca remains admitted only at R0",
+    "status": "PASS",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A6"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "ledger://BET-Y1Q4-T10-149"
+     }
+    ]
+   },
+   {
+    "id": "MULTICA_AS0",
+    "requirement": "Multica remains admitted only at AS0",
+    "status": "PASS",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A7"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "ledger://BET-Y1Q4-T10-150"
+     }
+    ]
+   },
+   {
+    "id": "RUFLO_RF0",
+    "requirement": "Ruflo remains read-only at RF0",
+    "status": "PASS",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://RF0"
+     }
+    ]
+   },
+   {
+    "id": "EXTERNAL_TRANSACTION_LIFECYCLE",
+    "requirement": "External execution uses the OMO transaction lifecycle",
+    "status": "PASS",
+    "value_status": "NOT_PROVEN",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "gate://A8"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "ledger://BET-Y1Q4-T10-151"
+     }
+    ]
+   },
+   {
+    "id": "CLAIMS_AUTHORITY_ACTIVATION",
+    "requirement": "Claims Authority instruction capability requires separate authorization and observation",
+    "status": "AWAITING_AUTHORIZATION",
+    "value_status": "NOT_PROVEN",
+    "runtime_state": "shadow-active",
+    "observation_state": "GRADUATION_REACHED",
+    "observation_progress": {
+     "schema": "claims-observation-progress/v1",
+     "available": true,
+     "state": "GRADUATION_REACHED",
+     "activation_state": "shadow-active",
+     "started_at_utc": "2026-09-20T01:31:06.510188+00:00",
+     "elapsed_seconds": 353767.87,
+     "duration_seconds": 86400,
+     "sample_count": 1440,
+     "minimum_samples": 1440,
+     "maximum_gap_seconds": 120.0,
+     "observed_max_gap_seconds": 60.370746,
+     "errors": 0,
+     "receipts_match": true,
+     "first_sample_at_utc": "2026-09-20T01:31:06.517921+00:00",
+     "last_sample_at_utc": "2026-09-21T01:33:06.228218+00:00",
+     "evidence_span_seconds": 86519.71,
+     "descriptor_variants": [
+      "sha256:e2be953eb9d04d421f184c60c7d1c4196d6698a874bcf0827795a8b4e8d357cd"
+     ],
+     "activation_variants": [
+      "shadow-active"
+     ],
+     "receipt_variants": [
+      "sha256:96654eb9e03591b2b5da2cb89119997c9ec2c193755ae7c277b3a0ce7be1e5d3"
+     ],
+     "sequence_regressions": 0,
+     "graduation_ready": true,
+     "graduation_reasons": [],
+     "graduation_criteria": {
+      "summary_not_invalid": true,
+      "graduation_samples": true,
+      "graduation_span": true,
+      "maximum_gap": true,
+      "descriptor_constant": true,
+      "sequence_monotonic": true,
+      "activation_constant": true,
+      "receipt_constant": true,
+      "zero_errors": true,
+      "records_parse": true,
+      "activation_receipt_matches": true
+     },
+     "descriptor_digest": "sha256:e2be953eb9d04d421f184c60c7d1c4196d6698a874bcf0827795a8b4e8d357cd",
+     "evidence_dir": "/Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation",
+     "checkpoints": [
+      {
+       "id": "smoke",
+       "duration_seconds": 1800,
+       "minimum_samples": 30,
+       "reached": true,
+       "diagnostic_only": true
+      },
+      {
+       "id": "provisional",
+       "duration_seconds": 7200,
+       "minimum_samples": 120,
+       "reached": true,
+       "diagnostic_only": true
+      },
+      {
+       "id": "sustained",
+       "duration_seconds": 21600,
+       "minimum_samples": 360,
+       "reached": true,
+       "diagnostic_only": true
+      },
+      {
+       "id": "graduation",
+       "duration_seconds": 86400,
+       "minimum_samples": 1440,
+       "reached": true,
+       "diagnostic_only": false
+      }
+     ]
+    },
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "projection://claims_authority"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "projection://claims_task16"
+     }
+    ]
+   },
+   {
+    "id": "BUSINESS_VALUE",
+    "requirement": "Human/business value proof",
+    "status": "PROVEN",
+    "value_status": "PROVEN",
+    "evidence": [
+     {
+      "kind": "authority_or_test",
+      "ref": "ledger://BET-Y1Q4-T10-165"
+     },
+     {
+      "kind": "authority_or_test",
+      "ref": "projection://value_metrics"
+     }
+    ]
+   }
+  ],
+  "delivery_complete": false,
+  "activation_status": "AWAITING_AUTHORIZATION",
+  "value_proof": "PROVEN",
+  "note": "Delivery coverage never proves business value; Claims Authority activation remains separately authorized."
+ },
+ "role_registry": {
+  "schema": "panorama-role-registry/v1",
+  "source": "runtime://.omo/state/agent-cell/semantic/roles.jsonl",
+  "available": true,
+  "verdict": "PASS",
+  "total": 2,
+  "by_state": {
+   "admitted": 2
+  },
+  "records": [
+   {
+    "role_id": "role:agent-cell-semantic-executor",
+    "capabilities": [
+     "semantic.execute"
+    ],
+    "admission_state": "admitted",
+    "version": 2,
+    "updated_at": "2026-09-19T10:30:55.370380+00:00",
+    "digest": "sha256:fdd65ce218110af8624d451d6b860a8522cb00656e29a20600a3174448b5314c",
+    "intact": true
+   },
+   {
+    "role_id": "role:agent-cell-semantic-planner",
+    "capabilities": [
+     "semantic.plan"
+    ],
+    "admission_state": "admitted",
+    "version": 2,
+    "updated_at": "2026-09-19T10:30:55.370046+00:00",
+    "digest": "sha256:434e47c6bf47ecebcfd4a421fb9a6201462b4feabf7f082e1bfb2ab2ed7fdccc",
+    "intact": true
+   }
+  ],
+  "integrity_ok": true,
+  "errors": []
+ },
+ "authority": {
+  "control_plane": "OMO",
+  "single_dispatcher": true,
+  "effective_claim_authority": "v1",
+  "claims_activation_state": "shadow-active",
+  "claims_instruction_capable": false,
+  "claims_activation_allowed": false,
+  "claims_activation_blockers": [
+   "dirty_tracked_closure_path",
+   "operation_specific_host_authorization_unproven"
+  ],
+  "claims_activation_readiness": {
+   "schema": "claims-activation-readiness/v1",
+   "available": true,
+   "verdict": "BLOCKED",
+   "readiness": "BLOCKED",
+   "operation_specific_authorization": "UNPROVEN",
+   "canonical_readiness": "BLOCKED",
+   "isolated_readiness": "UNKNOWN",
+   "isolated_technical_ready": false,
+   "isolated_blockers": [],
+   "isolated_root_head_oid": null,
+   "isolated_origin_main_oid": null,
+   "isolated_child_head_oid": null,
+   "isolated_root_child_gitlink_oid": null,
+   "remaining_after_isolated_recovery": [
+    "operation_specific_host_authorization_unproven"
+   ],
+   "activation_allowed": false,
+   "effective_readiness": "BLOCKED",
+   "blockers": [
+    "dirty_tracked_closure_path",
+    "operation_specific_host_authorization_unproven"
+   ],
+   "advisories": [
+    "nonclosure_dirty_tracked_integration_root",
+    "root_head_not_equal_origin_main"
+   ],
+   "preflight_checked_at": "2026-09-24T03:47:13.789475+00:00",
+   "authority_id": "omo-claims-authority-r0",
+   "effective_claim_authority": "v1",
+   "authorization_packet": {
+    "scope": "claims-authority activate-shadow, exact R0 descriptor only",
+    "required_fields": [
+     "principal_decision_id",
+     "decision_timestamp",
+     "authorized_surface=agents/_shared/runtime/omo-claims-authority-r0",
+     "rollback_surface=agents/_shared/backups/omo-claims-authority-r0",
+     "expiry_or_no_expiry",
+     "observation_requirement=24h foreground/1440 samples"
+    ],
+    "not_sufficient": [
+     "general_agent_authorization",
+     "accepted_spec_binding_alone",
+     "dashboard_status_or_ai_statement"
+    ]
+   },
+   "evidence_boundary": "Canonical blockers remain visible, but a clean managed exact-main clone proves whether technical recovery succeeded. Operation-specific Human authorization is still always required.",
+   "observation_gate": {
+    "duration_seconds": 86400,
+    "minimum_samples": 1440,
+    "maximum_gap_seconds": 120,
+    "checkpoints": {
+     "smoke": {
+      "seconds": 1800,
+      "samples": 30
+     },
+     "provisional": {
+      "seconds": 7200,
+      "samples": 120
+     },
+     "sustained": {
+      "seconds": 21600,
+      "samples": 360
+     },
+     "graduation": {
+      "seconds": 86400,
+      "samples": 1440
+     }
+    },
+    "first_three_are_diagnostic_only": true
+   }
+  },
+  "claims_activation_request": {
+   "schema": "panorama-claims-activation-request/v1",
+   "available": true,
+   "status": "EXECUTED",
+   "execution": "EXECUTED_AT_2026-09-19T10:15:36Z",
+   "activation": "SHADOW_ACTIVE",
+   "execution_forbidden_without_human_authorization": true,
+   "request_id": "2893a502-72d0-44a7-b899-0bb82adbdd85",
+   "request_digest": "sha256:7b03ef7b8c0f48166042dd536fe011554fc3a13b88beeeaef9a7c97f46427594",
+   "descriptor_digest": "sha256:e2be953eb9d04d421f184c60c7d1c4196d6698a874bcf0827795a8b4e8d357cd",
+   "authority_id": "omo-claims-authority-r0",
+   "operation": "activate-shadow",
+   "expected_authority_epoch": 0,
+   "expected_state": "unactivated",
+   "human_authorization_status": "GRANTED_OPERATION_SPECIFIC_2026-09-19",
+   "execution_receipt": {
+    "receipt_id": "sha256:08bce79eadebdde34bd1803ec3e85f5e796e0a7024a0eb5cb5278eba10b15c8e",
+    "receipt_digest": "sha256:96654eb9e03591b2b5da2cb89119997c9ec2c193755ae7c277b3a0ce7be1e5d3",
+    "authority_epoch": 1,
+    "sequence": 1,
+    "issued_at": "2026-09-19T10:15:36.926809Z"
+   },
+   "human_authorization_required": true,
+   "human_authorization_not_sufficient": [
+    "general agent authorization",
+    "accepted spec binding alone",
+    "dashboard status",
+    "AI statement"
+   ],
+   "required_binding": [
+    "exact request_digest",
+    "exact descriptor_digest",
+    "authority_id=omo-claims-authority-r0",
+    "operation=activate-shadow",
+    "fresh authorization at execution time"
+   ],
+   "observation_after_activation": {
+    "duration_seconds": 86400,
+    "maximum_gap_seconds": 120,
+    "minimum_samples": 1440
+   },
+   "observation": {
+    "schema": "claims-authority-observation-window/v1",
+    "started_at_utc": "2026-09-19T10:26:12Z",
+    "duration_seconds": 86400,
+    "minimum_samples": 1440,
+    "maximum_gap_seconds": 120,
+    "carrier": "launchd:com.omostation.claims-observation-r0",
+    "evidence_dir": "/Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation",
+    "authorization_record": "claims-activation-authorization-20260919.json"
+   },
+   "rollback_automatic_execution": false
+  },
+  "claims_observation_progress": {
+   "schema": "claims-observation-progress/v1",
+   "available": true,
+   "state": "GRADUATION_REACHED",
+   "activation_state": "shadow-active",
+   "started_at_utc": "2026-09-20T01:31:06.510188+00:00",
+   "elapsed_seconds": 353767.87,
+   "duration_seconds": 86400,
+   "sample_count": 1440,
+   "minimum_samples": 1440,
+   "maximum_gap_seconds": 120.0,
+   "observed_max_gap_seconds": 60.370746,
+   "errors": 0,
+   "receipts_match": true,
+   "first_sample_at_utc": "2026-09-20T01:31:06.517921+00:00",
+   "last_sample_at_utc": "2026-09-21T01:33:06.228218+00:00",
+   "evidence_span_seconds": 86519.71,
+   "descriptor_variants": [
+    "sha256:e2be953eb9d04d421f184c60c7d1c4196d6698a874bcf0827795a8b4e8d357cd"
+   ],
+   "activation_variants": [
+    "shadow-active"
+   ],
+   "receipt_variants": [
+    "sha256:96654eb9e03591b2b5da2cb89119997c9ec2c193755ae7c277b3a0ce7be1e5d3"
+   ],
+   "sequence_regressions": 0,
+   "graduation_ready": true,
+   "graduation_reasons": [],
+   "graduation_criteria": {
+    "summary_not_invalid": true,
+    "graduation_samples": true,
+    "graduation_span": true,
+    "maximum_gap": true,
+    "descriptor_constant": true,
+    "sequence_monotonic": true,
+    "activation_constant": true,
+    "receipt_constant": true,
+    "zero_errors": true,
+    "records_parse": true,
+    "activation_receipt_matches": true
+   },
+   "descriptor_digest": "sha256:e2be953eb9d04d421f184c60c7d1c4196d6698a874bcf0827795a8b4e8d357cd",
+   "evidence_dir": "/Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation",
+   "checkpoints": [
+    {
+     "id": "smoke",
+     "duration_seconds": 1800,
+     "minimum_samples": 30,
+     "reached": true,
+     "diagnostic_only": true
+    },
+    {
+     "id": "provisional",
+     "duration_seconds": 7200,
+     "minimum_samples": 120,
+     "reached": true,
+     "diagnostic_only": true
+    },
+    {
+     "id": "sustained",
+     "duration_seconds": 21600,
+     "minimum_samples": 360,
+     "reached": true,
+     "diagnostic_only": true
+    },
+    {
+     "id": "graduation",
+     "duration_seconds": 86400,
+     "minimum_samples": 1440,
+     "reached": true,
+     "diagnostic_only": false
+    }
+   ]
+  },
+  "claims_lifecycle_authorization": {
+   "schema": "claims-lifecycle-authorization-projection/v1",
+   "available": true,
+   "read_only": true,
+   "status": "DRAFT_PENDING_HUMAN_APPROVAL",
+   "execution": "NOT_EXECUTED",
+   "activation": "SHADOW_ACTIVE",
+   "authority_id": "omo-claims-authority-r0",
+   "artifacts": {
+    "draft": {
+     "available": true,
+     "path": "/Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/lifecycle-authorization-request-draft.json",
+     "sha256": "sha256:07d655deb0f90e8a888f8a65b634a280aa28cfec48335cbfca9f12d6e36f7682"
+    },
+    "review": {
+     "available": true,
+     "path": "/Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/lifecycle-authorization-review.md",
+     "sha256": "sha256:331c8b46339f98766eed7017d6343a3d9594621f94a1e08654577e5ab5a46701"
+    },
+    "runbook": {
+     "available": true,
+     "path": "/Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/lifecycle-execution-runbook.md",
+     "sha256": "sha256:21c5005d76712fe504e06a414e864e18682ddd2a191298ef22f621d2388dc438"
+    },
+    "gap_audit": {
+     "available": true,
+     "path": "/Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/authority-lifecycle-gap-audit.json",
+     "sha256": "sha256:3237f13e698971650227ac61f92bf3ac35372cde0b69f9de2567be051f73d79e"
+    }
+   },
+   "required_fields": [
+    "principal_decision_id",
+    "decision_timestamp_utc",
+    "decision_expires_at_utc",
+    "human_verbatim_quote"
+   ],
+   "forbidden": [
+    "force push",
+    "--no-verify",
+    "automatic retry after unknown outcome",
+    "historical receipt mutation",
+    "instruction capability enablement",
+    "v2 promotion above shadow"
+   ],
+   "not_sufficient": [
+    "general agent authorization",
+    "observation samples alone",
+    "dashboard status",
+    "AI statement"
+   ],
+   "activation_binding": {
+    "activation_receipt_digest": "sha256:96654eb9e03591b2b5da2cb89119997c9ec2c193755ae7c277b3a0ce7be1e5d3",
+    "descriptor_digest": "sha256:e2be953eb9d04d421f184c60c7d1c4196d6698a874bcf0827795a8b4e8d357cd",
+    "authority_epoch": 1,
+    "activation_state": "shadow-active"
+   },
+   "operations": [
+    {
+     "id": "managed-clone-shadow-observation",
+     "purpose": "Prove valid managed clone: v1 fixed-root deny and v2 would_allow, classified expected_managed_clone_difference.",
+     "broker_operations": [
+      "observe-claim"
+     ],
+     "external_effects_allowed": [
+      "one managed full clone under agents/<authorized attempts root>"
+     ],
+     "external_effects_forbidden": [
+      "git push",
+      "pull request creation",
+      "merge",
+      "branch deletion",
+      "authority mode change"
+     ],
+     "must_bind_before_execution": [
+      "run_id",
+      "work_packet_id",
+      "work_packet_digest",
+      "spec_ref",
+      "spec_digest",
+      "clone_root_digest",
+      "clone_identity_digest",
+      "manifest_digest",
+      "readiness_digest",
+      "frozen_base",
+      "head_oid",
+      "affected_graph_digest",
+      "requested_paths_digest"
+     ]
+    },
+    {
+     "id": "legacy-publication-regression",
+     "purpose": "Prove a v1-allowed legacy publication remains fence-aware: issue fence, enter publishing, execute the one bound effect, double-read remote, settle fence.",
+     "broker_operations": [
+      "observe-claim",
+      "issue-legacy-fence",
+      "enter-legacy-publishing",
+      "settle-legacy-publication"
+     ],
+     "external_effects_allowed": [
+      "one repository-only tracked change",
+      "one annotated tag",
+      "one non-force branch push",
+      "one pull request",
+      "one squash merge only after required contexts pass"
+     ],
+     "external_effects_forbidden": [
+      "force push",
+      "retry after unknown outcome",
+      "second push for the same head",
+      "changes to gitlinks",
+      "changes to Ledger completion/value evidence",
+      "branch protection mutation"
+     ],
+     "must_bind_before_execution": [
+      "accepted_spec_ref",
+      "accepted_spec_digest",
+      "work_packet_id",
+      "work_packet_digest",
+      "exact_changed_paths",
+      "patch_digest",
+      "run_id",
+      "clone_root_digest",
+      "clone_identity_digest",
+      "manifest_digest",
+      "readiness_digest",
+      "frozen_base",
+      "head_oid",
+      "affected_graph_digest",
+      "requested_paths_digest",
+      "remote_ref",
+      "expected_remote_oid",
+      "first_remote_observation",
+      "second_remote_observation",
+      "effect_process_identity_digest"
+     ]
+    },
+    {
+     "id": "expiry-replay-nonpublication",
+     "purpose": "Prove expiry/replay safety: a real production fence expires, replay is rejected, and zero remote effect occurs.",
+     "broker_operations": [
+      "observe-claim",
+      "issue-legacy-fence",
+      "replay-after-expiry (rejected)"
+     ],
+     "external_effects_allowed": [
+      "one separately scoped non-publication workflow observation"
+     ],
+     "external_effects_forbidden": [
+      "git push",
+      "pull request creation",
+      "merge",
+      "replacement fence for the expired fence",
+      "authority mode change"
+     ],
+     "must_bind_before_execution": [
+      "run_id",
+      "work_packet_id",
+      "work_packet_digest",
+      "spec_ref",
+      "spec_digest",
+      "remote_ref",
+      "expected_remote_oid",
+      "fence_expiry_observation"
+     ]
+    }
+   ],
+   "global_forbidden": [
+    "auto-retry after unknown outcome",
+    "force push",
+    "--no-verify",
+    "skip or shorten the 24-hour observation",
+    "fabricate or backfill lifecycle receipts",
+    "promote v2 above shadow before separate cutover authorization",
+    "enable Claims instruction capability",
+    "modify historical receipts"
+   ],
+   "stop_conditions": [
+    "any remote result unknown",
+    "remote OID drift",
+    "descriptor or epoch mismatch",
+    "unexplained v1/v2 difference",
+    "v2 false allow",
+    "scope drift beyond exact changed paths",
+    "required context failure",
+    "active conflicting writer or lock"
+   ]
+  },
+  "value_proof": "PROVEN",
+  "value_proof_readiness": {
+   "schema": "panorama-value-proof-readiness/v2",
+   "status": "PROVEN",
+   "available": true,
+   "source": "panel-value/v1",
+   "panel_state": "proven",
+   "samples_total": 396,
+   "qualifying_samples": 40,
+   "v2_records": 40,
+   "legacy_records": 168,
+   "legacy_qualifying_samples": 32,
+   "accepted_samples": 387,
+   "adjudicated_samples": 396,
+   "net_saved_seconds": 28440,
+   "thresholds": [
+    {
+     "key": "samples",
+     "label": "真实样本",
+     "target": 30,
+     "unit": "个",
+     "comparator": "gte",
+     "current": 72,
+     "met": true,
+     "gate": null
+    },
+    {
+     "key": "acceptance",
+     "label": "采纳率",
+     "target": 70,
+     "unit": "%",
+     "comparator": "gte",
+     "current": 97.7,
+     "met": true,
+     "gate": null
+    },
+    {
+     "key": "revision_burden",
+     "label": "修订负担下降",
+     "target": 30,
+     "unit": "%",
+     "comparator": "gte",
+     "current": 98.3,
+     "met": true,
+     "gate": null
+    }
+   ],
+   "blockers": [],
+   "validation": {
+    "schema": "value-evidence-validation/v2",
+    "ok": true,
+    "records": 208,
+    "v2_records": 40,
+    "legacy_records": 168,
+    "legacy_qualifying": 32,
+    "qualifying": 40,
+    "target": 30,
+    "remaining_to_target": 0,
+    "issues": [],
+    "available": true,
+    "source": "/Users/xiamingxing/Workspace/bin/ssot/value-recorder.py"
+   },
+   "remaining_to_target": 0,
+   "evidence_rule": "Only qualifying real-use records count; synthetic runs and unqualified accepted records never prove value.",
+   "next_action": "None — value window PROVEN via signed attestation."
+  }
+ },
+ "health": {
+  "gates_total": 11,
+  "gates_pass": 11,
+  "gates_failing": [],
+  "reference_cell": {
+   "id": "RC-DL",
+   "verdict": "PASS"
+  },
+  "agent_cells": {
+   "available": true,
+   "total": 360,
+   "active": 0,
+   "failed": 0
+  },
+  "persistent_roles": {
+   "available": true,
+   "total": 2,
+   "admitted": 2,
+   "integrity_ok": true,
+   "verdict": "PASS"
+  },
+  "semantic_lifecycle": {
+   "available": true,
+   "verdict": "PASS",
+   "receipt_chain_ok": true,
+   "receipt_digests_ok": true,
+   "role_bindings_ok": true,
+   "capsule_bindings_ok": true,
+   "mesh_bindings_ok": true,
+   "queue_bindings_ok": true,
+   "latest_run_id": "semantic-smoke-20260924T012205Z-633823ad45",
+   "latest_receipt_digest": "sha256:117cc565141080f4e4db7e82c3bbb0edadd345d7aa5566e6e6c26feffcd6924f"
+  },
+  "value_metrics": {
+   "x3-value-stack": {
+    "available": true,
+    "domain_count": 11,
+    "entries": 11
+   },
+   "x3-delivery-soft-gate": {
+    "available": true,
+    "status": "deprecated",
+    "deprecated": true,
+    "enabled": false,
+    "superseded_by": "BET-Y1Q1-T1-01"
+   }
+  },
+  "clash": {
+   "schema": "panorama-clash-health/v1",
+   "available": true,
+   "verdict": "green",
+   "fleet": {
+    "up": 9,
+    "down": 1,
+    "total": 10,
+    "down_list": [
+     "bwg1"
+    ]
+   },
+   "nodes": {
+    "up": 10,
+    "down": 12,
+    "total": 22,
+    "down_list": [
+     "搬瓦工2-VMess-直连",
+     "搬瓦工1-VMess-CF中转",
+     "搬瓦工1-VMess-优选-248",
+     "搬瓦工1-VMess-优选-192",
+     "搬瓦工1-VMess-优选-232",
+     "搬瓦工1-VMess-优选-188",
+     "搬瓦工1-VMess-优选-141",
+     "搬瓦工1-VMess-优选-104a",
+     "搬瓦工1-VMess-优选-104b",
+     "搬瓦工1-VMess-优选-193",
+     "猎豹-SOCKS5-直连",
+     "搬瓦工2-Reality"
+    ]
+   },
+   "certs": "aly-阿里云:OK gcp-GCP:OK derp:OK",
+   "latest_summary": "2026-09-24 11:30 SUMMARY errors=1 claude=403 chatgpt=200 google=204 bulk=200 socks5=down reality=up derper=204 stun=ok"
+  }
+ },
+ "work_state": {
+  "bets": {
+   "available": true,
+   "total": 448,
+   "counts": {
+    "done": 448
+   },
+   "in_progress": [],
+   "blocked": [],
+   "milestones": [
+    {
+     "id": "ledger-window:Y1Q1",
+     "title": "Y1Q1",
+     "total": 23,
+     "done": 23,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y1Q2",
+     "title": "Y1Q2",
+     "total": 38,
+     "done": 38,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y1Q3",
+     "title": "Y1Q3",
+     "total": 170,
+     "done": 170,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y1Q4",
+     "title": "Y1Q4",
+     "total": 147,
+     "done": 147,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y2Q1",
+     "title": "Y2Q1",
+     "total": 23,
+     "done": 23,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y2Q2",
+     "title": "Y2Q2",
+     "total": 21,
+     "done": 21,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y2Q3",
+     "title": "Y2Q3",
+     "total": 4,
+     "done": 4,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y2Q4",
+     "title": "Y2Q4",
+     "total": 7,
+     "done": 7,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y3H1",
+     "title": "Y3H1",
+     "total": 11,
+     "done": 11,
+     "remaining": 0,
+     "completion_pct": 100.0
+    },
+    {
+     "id": "ledger-window:Y3H2",
+     "title": "Y3H2",
+     "total": 4,
+     "done": 4,
+     "remaining": 0,
+     "completion_pct": 100.0
+    }
+   ]
+  },
+  "workflows": {
+   "active": [],
+   "active_count": 0,
+   "blocked_recent": [
+    {
+     "id": "20260922T034633Z-project-code-change-df7c0e57",
+     "workflow": "project-code-change",
+     "status": "blocked"
+    },
+    {
+     "id": "20260922T021833Z-project-code-change-10995240",
+     "workflow": "project-code-change",
+     "status": "blocked"
+    },
+    {
+     "id": "20260921T092932Z-project-code-change-f378082b",
+     "workflow": "project-code-change",
+     "status": "blocked"
+    },
+    {
+     "id": "20260921T081024Z-project-code-change-b7682527",
+     "workflow": "project-code-change",
+     "status": "blocked"
+    }
+   ],
+   "blocked_recent_count": 4
+  },
+  "tasks": {
+   "available": true,
+   "total": 13,
+   "open_count": 1,
+   "by_status": {
+    "pending": 1,
+    "done": 12
+   },
+   "by_bucket": {
+    "active": 1,
+    "done": 12
+   },
+   "duplicates": [],
+   "open_recent": [
+    {
+     "id": "KOS-Q-GROWTH-ROLLING",
+     "title": "KOS 季度扩量持续监测 (rolling goal 关联 task)",
+     "status": "pending",
+     "bucket": "active",
+     "owner": "agent",
+     "priority": "P3",
+     "path": ".omo/tasks/active/kos-q-growth-rolling.yaml"
+    }
+   ],
+   "recent": [
+    {
+     "id": "KOS-Q-GROWTH-ROLLING",
+     "title": "KOS 季度扩量持续监测 (rolling goal 关联 task)",
+     "status": "pending",
+     "bucket": "active",
+     "owner": "agent",
+     "priority": "P3",
+     "path": ".omo/tasks/active/kos-q-growth-rolling.yaml"
+    },
+    {
+     "id": "BET-Y1Q4-T13",
+     "title": "Cockpit CLI 106 命令 smoke test 接入 Harness — 每 6h 周期化监控",
+     "status": "done",
+     "bucket": "done",
+     "owner": "human",
+     "priority": "P2",
+     "path": ".omo/tasks/done/BET-Y1Q4-T13-cli-smoke-test-harness.yaml"
+    },
+    {
+     "id": "BET-Y1Q4-T14",
+     "title": "ops services 20 missing 清理 — 注册表与现实同步",
+     "status": "done",
+     "bucket": "done",
+     "owner": "human",
+     "priority": "P2",
+     "path": ".omo/tasks/done/BET-Y1Q4-T14-ops-services-cleanup.yaml"
+    },
+    {
+     "id": "BET-Y1Q4-T15",
+     "title": "cockpit import 性能回归 (164ms > 120ms 预算) 排查",
+     "status": "done",
+     "bucket": "done",
+     "owner": "human",
+     "priority": "P2",
+     "path": ".omo/tasks/done/BET-Y1Q4-T15-import-perf-regression.yaml"
+    },
+    {
+     "id": "BET-Y1Q4-T16",
+     "title": "ops 注册表防漂移双闸 — check-signals drift 检测 + cron 准入校验",
+     "status": "done",
+     "bucket": "done",
+     "owner": "human",
+     "priority": "P2",
+     "path": ".omo/tasks/done/BET-Y1Q4-T16-ops-drift-guard.yaml"
+    },
+    {
+     "id": "QUEST-26",
+     "title": "测试每日打扫",
+     "status": "done",
+     "bucket": "done",
+     "owner": "unassigned",
+     "priority": "unspecified",
+     "path": ".omo/tasks/done/QUEST-26.yaml"
+    },
+    {
+     "id": "QUEST-27",
+     "title": "测试每日打扫",
+     "status": "done",
+     "bucket": "done",
+     "owner": "unassigned",
+     "priority": "unspecified",
+     "path": ".omo/tasks/done/QUEST-27.yaml"
+    },
+    {
+     "id": "TASK-117310A1",
+     "title": "AGE-v2 Agent Cell 违反 SFOP 八律第3条(后端不拥有收件箱): omo cli.py 直连路由需改经 Mesh 分发",
+     "status": "done",
+     "bucket": "done",
+     "owner": "unassigned",
+     "priority": "unspecified",
+     "path": ".omo/tasks/done/TASK-117310A1.yaml"
+    },
+    {
+     "id": "TASK-262B9E59",
+     "title": "退役 mof-model.py 弃用 CLI: --save 默认覆写 nodes/ + 每分钟调度链待定位",
+     "status": "done",
+     "bucket": "done",
+     "owner": "unassigned",
+     "priority": "unspecified",
+     "path": ".omo/tasks/done/TASK-262B9E59.yaml"
+    },
+    {
+     "id": "TASK-B3229A65",
+     "title": "A4 调度真相收敛: 统一三源声明 + 修复死引用 + 面板刷新退出 token 自动化",
+     "status": "done",
+     "bucket": "done",
+     "owner": "unassigned",
+     "priority": "unspecified",
+     "path": ".omo/tasks/done/TASK-B3229A65.yaml"
+    },
+    {
+     "id": "BET-Y1Q2-T7-01",
+     "title": "工程交付 dogfood 开 shadow",
+     "status": "done",
+     "bucket": "done",
+     "owner": "human",
+     "priority": "P0",
+     "path": ".omo/tasks/done/bet-y1q2-t7-01.yaml"
+    },
+    {
+     "id": "BET-Y3H1-T7-01",
+     "title": "中试 / 政策申报升 assisted",
+     "status": "done",
+     "bucket": "done",
+     "owner": "human",
+     "priority": "P1",
+     "path": ".omo/tasks/done/bet-y3h1-t7-01.yaml"
+    },
+    {
+     "id": "BET-Y3H2-T7-01",
+     "title": "公文场景 routine (限格式类)",
+     "status": "done",
+     "bucket": "done",
+     "owner": "human",
+     "priority": "P0",
+     "path": ".omo/tasks/done/bet-y3h2-t7-01.yaml"
+    }
+   ]
+  },
+  "services": {
+   "available": true,
+   "total": 77,
+   "by_lifecycle": {
+    "active": 58,
+    "proposed": 13,
+    "degraded": 4,
+    "retired": 2
+   },
+   "recent": [
+    {
+     "id": "omlxc-daemon",
+     "system": "compute",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "omlx 控制面 daemon: 路由/探测/数据面"
+    },
+    {
+     "id": "omlxc-watchdog",
+     "system": "compute",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "算力链路守护: 进程自愈+常驻补齐+保活+内存哨兵+节点告警"
+    },
+    {
+     "id": "aetherforge-gateway",
+     "system": "compute",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "云端模型池网关: 路由/凭据复验/free池扫描/weekly对账"
+    },
+    {
+     "id": "lmstudio-server",
+     "system": "compute",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "LM Studio 推理服务(懒加载空仓策略)"
+    },
+    {
+     "id": "ollama-app",
+     "system": "compute",
+     "carrier": "login-item",
+     "lifecycle": "active",
+     "purpose": "Ollama 推理兜底(懒加载)"
+    },
+    {
+     "id": "omlxc-ollama-env",
+     "system": "compute",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "launchctl setenv OLLAMA_HOST 环境设置"
+    },
+    {
+     "id": "omo-mail-daemon",
+     "system": "omostation",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "数字大脑P0邮件感知: 读信+LLM分类(已修: 走云端glm-4.7-flash)"
+    },
+    {
+     "id": "omo-agent-tick",
+     "system": "omostation",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "agent tick 心跳"
+    },
+    {
+     "id": "omo-signal-poller",
+     "system": "omostation",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "信号轮询(常驻watch模式; 2026-08-25已砍cron --once冗余轨)"
+    },
+    {
+     "id": "omo-governance-scanner",
+     "system": "omostation",
+     "carrier": "launchd",
+     "lifecycle": "active",
+     "purpose": "治理扫描(30min)"
+    },
+    {
+     "id": "omo-resident-decision",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "resident五角色·决策"
+    },
+    {
+     "id": "omo-resident-execute",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "resident五角色·执行"
+    },
+    {
+     "id": "omo-resident-heartbeat",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "resident五角色·心跳"
+    },
+    {
+     "id": "omo-resident-monitor",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "resident五角色·监控"
+    },
+    {
+     "id": "omo-resident-sediment",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "resident五角色·沉淀"
+    },
+    {
+     "id": "omo-alert-forwarder",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "告警转发(dry-run)"
+    },
+    {
+     "id": "omo-personal-signals",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "个人信号处理"
+    },
+    {
+     "id": "omo-system-health-check",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "系统健康检查+emit"
+    },
+    {
+     "id": "omo-remediation",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "GaC文档腐化修复(08-24新增, 08-25修通logs目录后复活)"
+    },
+    {
+     "id": "omo-anti-corrosion",
+     "system": "omostation",
+     "carrier": "cron",
+     "lifecycle": "active",
+     "purpose": "GaC防腐检查(同上复活)"
+    }
+   ]
+  },
+  "alerts": {
+   "total": 0,
+   "high": 0,
+   "recent": []
+  }
+ },
+ "next_actions": [
+  {
+   "id": "claims-authority-wait",
+   "state": "authorization_required",
+   "detail": "Keep Claims Authority read-only until a fresh operation-specific authorization and its 24-hour observation gate pass.",
+   "source": "panorama.claims_authority"
+  }
+ ],
+ "read_interfaces": {
+  "human_html": "/",
+  "data_json": "/data.json",
+  "agent_brief_json": "/agent-brief.json",
+  "filesystem": {
+   "data": "runtime/dashboard/data.json",
+   "brief": "runtime/dashboard/agent-brief.json"
+  },
+  "refresh": "python3 bin/panorama/panorama-collect.py"
+ },
+ "required_context": [
+  {
+   "name": "Workspace operating rules",
+   "path": "AGENTS.md"
+  },
+  {
+   "name": "Panorama agent interface",
+   "path": "docs/PANORAMA.md"
+  },
+  {
+   "name": "Architecture contracts",
+   "path": "ARCHITECTURE.md"
+  },
+  {
+   "name": "Strategy and roadmap",
+   "path": "docs/VISION-ROADMAP.md"
+  }
+ ],
+ "safety_boundaries": [
+  "Do not activate Claims Authority without a fresh operation-specific authorization.",
+  "Do not write the canonical Workspace directly; use a managed worktree and PR.",
+  "Do not add a second dispatcher or authority queue.",
+  "Do not claim completion or proven value without authoritative evidence."
+ ]
+}

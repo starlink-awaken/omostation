@@ -1,0 +1,276 @@
+run_id: 20260921T065903Z-bet-execution-5d3ba2b1
+workflow_id: bet-execution
+status: ok
+actor: xiamingxing
+agent_profile: governance-agent
+objective: '[BET-Y1Q2-T7-01] 工程交付 dogfood 开 shadow (Appetite: 1 week)'
+created_at: '2026-09-21T06:59:03Z'
+updated_at: '2026-09-21T07:34:35Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260921T065903Z-bet-execution-5d3ba2b1
+  actor: xiamingxing
+  profile: governance-agent
+  bet_id: BET-Y1Q2-T7-01
+locks:
+- .omo/_delivery/agent-workflows/locks/bet_BET-Y1Q2-T7-01.lock.yaml
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_docs_scene-cards_engineering-delivery-dogfood.yaml.lock.yaml
+plan:
+  id: bet-execution
+  title: 3Y bet execution
+  purpose: '执行三年规划台账(docs/plans/3y-bet-ledger.yaml)里的单个 bet。 把 claim / 执行 / 验收 / 表面积记账
+    / 复盘 / 钉死 六段固化为可复核的 phases, 避免每个 agent 各自记流程, 也避免继续错位挂在通用 project-code-change
+    上(P74)。
+
+    '
+  agents:
+    roles:
+    - engineering-agent
+    - governance-agent
+    observer_policy: optional
+  allowed_lanes:
+  - docs
+  - code
+  - governance_code
+  - governance_state
+  - config
+  lock_scopes:
+  - bet:BET-Y1Q2-T7-01
+  - root-gate
+  phases:
+    preflight:
+    - id: status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: ledger-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - lint
+    - id: claim-check
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - claim-check
+      - BET-Y1Q2-T7-01
+    - id: worktree-claim
+      mode: required
+      command:
+      - bash
+      - bin/gac/gac-worktree.sh
+      - claim
+      - BET-Y1Q2-T7-01
+    execute:
+    - id: read-bet
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - show
+      - BET-Y1Q2-T7-01
+    - id: implement
+      mode: manual
+      command:
+      - agent
+      - edit
+      - bet-write-surfaces-only
+      note: 只改 bet.write_surfaces 列出的路径; non_goals 是硬边界; 每写完一个文件立刻 git add (D0)
+    verification:
+    - id: bet-verify
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - verify
+      - BET-Y1Q2-T7-01
+      - --execute
+    - id: surface-accounting
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - surface
+      note: D2 — 必须把净增减写进复盘 Q4
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    - id: ssot-guardian
+      mode: required
+      command:
+      - make
+      - ssot-guardian
+    - id: sync-check
+      mode: required
+      command:
+      - python3
+      - bin/ssot/post-commit-sync-check.py
+      note: 迭代后派生文档同步检查 (子模块指针变更 → sync-all-docs + 提示提交)
+    closeout:
+    - id: retro-written
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - retro-due
+      note: D5 — 本 bet 的 .omo/_knowledge/retros/BET-Y1Q2-T7-01.md 必须存在且五问齐全
+    - id: pin-tag
+      mode: required
+      command:
+      - agent
+      - run
+      - git tag -a bet/BET-Y1Q2-T7-01-$(date -u +%Y%m%dT%H%M%SZ) -m "BET-Y1Q2-T7-01
+        deliverable"
+      note: D0 — commit 只是暂时安全, 共享分支 rebase 会挤掉提交; tag ref 不会
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+    - id: worktree-submit
+      mode: manual
+      command:
+      - bash
+      - bin/gac/gac-worktree.sh
+      - submit
+      - BET-Y1Q2-T7-01
+    - id: bet-complete
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/plan/bet-ledger.py
+      - complete
+      - BET-Y1Q2-T7-01
+      note: 'P1: 台账回写 — retro 通过后置 done (防 done 状态滞后)'
+evidence:
+- 'agent-workflow verify: 2 checks ok=True'
+- 'agent-workflow observe: continue'
+bet_id: BET-Y1Q2-T7-01
+spec_binding: &id001
+  content_digest: sha256:1cd6a0faeb9386637963573bc55781a901a303bc46e1fff252a70d25400b907f
+  decision_ref: decision://accepted/BET-Y1Q2-T7-01
+  spec_ref: repo://docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md
+  spec_version: 1.0.0
+instruction_binding: &id002
+  instruction_ref: repo://docs/operations/blueprint-agent-instruction-pack-v1.md
+  instruction_version: blueprint-agent-instruction-pack/v1
+  content_digest: sha256:b81909ddfdeb85d6c724e53a02f92b293ea8238cc007817e5d2f6268fba6ba53
+  instruction_profile: executor
+work_packet:
+  packet_id: WP-BET-Y1Q2-T7-01
+  schema_version: work-packet/v2
+  blueprint_ref: blueprint://multi-agent-execution-control/v1
+  wave: Y1Q2
+  bet_id: BET-Y1Q2-T7-01
+  strategic_outcome: 建立高频低风险、可绑定显式 reviewer credential 与 human adjudication 的真实 decision_outcome
+    样本源
+  objective: 建立高频低风险、可绑定显式 reviewer credential 与 human adjudication 的真实 decision_outcome
+    样本源
+  why_now: priority=P0; appetite=1 week
+  status: active
+  authority:
+    strategist: 3y-bet-ledger
+    human_gate: true
+    risk_level: R1
+  scope:
+    read_surfaces:
+    - docs/plans/3y-bet-ledger.yaml
+    - docs/superpowers/specs/2026-08-22-engineering-delivery-shadow-observer-design.md
+    - docs/operations/blueprint-agent-instruction-pack-v1.md
+    write_surfaces:
+    - docs/scene-cards/**
+    non_goals:
+    - 计入 X3 价值指标
+    - 自动合并 PR
+    - 把 PR merge、reviewDecision、issue comment、测试或合成记录视为 human verdict
+  dependencies:
+    required_packets:
+    - WP-BET-Y1Q1-T7-01
+    - WP-BET-Y1Q1-T3-02
+    required_decisions:
+    - decision://accepted/BET-Y1Q2-T7-01
+  acceptance:
+    done_when:
+    - id: AC-01
+      assertion: engineering-delivery 场景 lifecycle=shadow
+      evidence_type: structured_report
+    - id: AC-02
+      assertion: 完整 7 日窗口内产出 >= 20 条可关联非测试 human adjudication 的 qualified decision_outcome
+      evidence_type: structured_report
+    - id: AC-03
+      assertion: 明确标注"本场景产出永不计入价值指标"
+      evidence_type: structured_report
+    verify_commands:
+    - - 'grep -c ''lifecycle: shadow'' docs/scene-cards/engineering-delivery-dogfood.yaml'
+  rollback:
+    strategy: 样本不足或无法绑定 human principal → 保持 blocked，不扩大代理口径、不自动决定 human_gate
+    data_migration: false
+  circuit_breaker:
+    when:
+    - 样本不足或无法绑定 human principal → 保持 blocked，不扩大代理口径、不自动决定 human_gate
+    action: stop_and_escalate
+  spec_binding: *id001
+  instruction_binding: *id002
+work_packet_hash: sha256:6507a9279ac138f26e98c0969d6e2e9a31da2add459e95e85a58da2cd166b8f1
+claims:
+- claimed_at: '2026-09-21T07:31:30Z'
+  actor: xiamingxing
+  paths:
+  - docs/scene-cards/engineering-delivery-dogfood.yaml
+  surfaces: []
+  scopes:
+  - path:docs/scene-cards/engineering-delivery-dogfood.yaml
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_docs_scene-cards_engineering-delivery-dogfood.yaml.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/_delivery/agent-workflows/receipts/affected-bet-y1q2-t7-01.json
+closed_at: '2026-09-21T07:34:35Z'
+released_locks:
+- .omo/_delivery/agent-workflows/locks/bet_BET-Y1Q2-T7-01.lock.yaml
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_docs_scene-cards_engineering-delivery-dogfood.yaml.lock.yaml

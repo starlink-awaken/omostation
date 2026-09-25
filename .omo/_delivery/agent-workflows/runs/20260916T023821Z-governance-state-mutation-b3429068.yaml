@@ -1,0 +1,133 @@
+run_id: 20260916T023821Z-governance-state-mutation-b3429068
+workflow_id: governance-state-mutation
+status: closed
+actor: xiamingxing
+agent_profile: governance-agent
+objective: T10-151 A8 governance truth cleanup (unbound)
+created_at: '2026-09-16T02:38:21Z'
+updated_at: '2026-09-18T03:35:05Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260916T023821Z-governance-state-mutation-b3429068
+  actor: xiamingxing
+  profile: governance-agent
+locks:
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/.omo.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/spaces.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/omo-broker.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_.omo__truth_registry_document-governance.yaml.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_.omo__knowledge_retros_BET-Y1Q4-T10-151.md.lock.yaml
+plan:
+  id: governance-state-mutation
+  title: Governed OMO or spaces mutation
+  purpose: Force state-plane changes through OMO/C2G broker paths instead of ad-hoc
+    file writes.
+  agents:
+    roles:
+    - governance-agent
+    - c2g-agent
+    observer_policy: recommended
+  allowed_lanes:
+  - governance_state
+  - docs
+  - runtime_snapshot
+  lock_scopes:
+  - .omo
+  - spaces
+  - omo-broker
+  phases:
+    preflight:
+    - id: status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: broker-write
+      mode: manual
+      command:
+      - omo-or-c2g
+      - broker
+      - mutate-state
+    verification:
+    - id: ssot-guardian
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: mutation-ledger
+      mode: manual
+      command:
+      - omo
+      - event
+      - emit
+      - agent_mutation_complete
+evidence:
+- Verified cleanup locally, but remote main advanced to b5a29340f9e0aeae9c676d9455401fd9623187b9
+  before commit; immutable successor required. Staged patch retained outside clone.
+- 'agent-workflow verify: 3 checks ok=True'
+- 'agent-workflow observe: continue'
+- 'agent-workflow verify: 5 checks ok=False'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-16T02:42:12Z'
+  actor: xiamingxing
+  paths:
+  - .omo/_truth/registry/document-governance.yaml
+  surfaces: []
+  scopes:
+  - path:.omo/_truth/registry/document-governance.yaml
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_.omo__truth_registry_document-governance.yaml.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T023821Z-governance-state-mutation-b3429068/affected-graph.json
+- claimed_at: '2026-09-16T02:42:13Z'
+  actor: xiamingxing
+  paths:
+  - .omo/_knowledge/retros/BET-Y1Q4-T10-151.md
+  surfaces: []
+  scopes:
+  - path:.omo/_knowledge/retros/BET-Y1Q4-T10-151.md
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_.omo__knowledge_retros_BET-Y1Q4-T10-151.md.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T023821Z-governance-state-mutation-b3429068/affected-graph.json
+closed_at: '2026-09-18T03:35:05Z'
+released_locks: []

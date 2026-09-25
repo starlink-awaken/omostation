@@ -1,0 +1,127 @@
+run_id: 20260917T161916Z-project-code-change-2b6c6033
+workflow_id: project-code-change
+status: closed
+actor: xiamingxing
+agent_profile: engineering-agent
+objective: Project and verify Agent Cell semantic lifecycle in Panorama
+created_at: '2026-09-17T16:19:16Z'
+updated_at: '2026-09-18T03:35:13Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260917T161916Z-project-code-change-2b6c6033
+  actor: xiamingxing
+  profile: engineering-agent
+locks:
+- .omo/_delivery/agent-workflows/locks/project.lock.yaml
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_bin_panorama_panorama-collect.py.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_bin_ssot_agent-cell-semantic-smoke.py.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_tests_unit_test_agent_cell_semantic_smoke.py.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_tests_unit_test_panorama_agent_cell.py.lock.yaml
+plan:
+  id: project-code-change
+  title: Project code change
+  purpose: Route code changes through project-local verification and workspace governance
+    gates.
+  agents:
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  lock_scopes:
+  - 'project:'
+  - root-gate
+  phases:
+    preflight:
+    - id: root-status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: project-status
+      mode: advisory
+      cwd: projects/
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: implement
+      mode: manual
+      command:
+      - agent
+      - edit
+      - project-code
+    verification:
+    - id: project-tests
+      mode: manual
+      cwd: projects/
+      command:
+      - project-local
+      - test-command
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- 'Unbound transaction closeout: PR #3900 squash-merged at 8bef90490552035ebd32d59c07656a1382770ca9;
+  semantic cross-store verifier and Panorama projection delivered; claims authority
+  not invoked; no BET completion/value claim'
+- 'agent-workflow verify: 5 checks ok=False'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-17T16:19:29Z'
+  actor: xiamingxing
+  paths:
+  - bin/panorama/panorama-collect.py
+  - bin/ssot/agent-cell-semantic-smoke.py
+  - tests/unit/test_agent_cell_semantic_smoke.py
+  - tests/unit/test_panorama_agent_cell.py
+  surfaces: []
+  scopes:
+  - path:bin/panorama/panorama-collect.py
+  - path:bin/ssot/agent-cell-semantic-smoke.py
+  - path:tests/unit/test_agent_cell_semantic_smoke.py
+  - path:tests/unit/test_panorama_agent_cell.py
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_bin_panorama_panorama-collect.py.lock.yaml
+  - .omo/_delivery/agent-workflows/locks/path_bin_ssot_agent-cell-semantic-smoke.py.lock.yaml
+  - .omo/_delivery/agent-workflows/locks/path_tests_unit_test_agent_cell_semantic_smoke.py.lock.yaml
+  - .omo/_delivery/agent-workflows/locks/path_tests_unit_test_panorama_agent_cell.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/_delivery/agent-workflows/affected/20260917T161916Z-project-code-change-2b6c6033.json
+closed_at: '2026-09-18T03:35:13Z'
+released_locks: []

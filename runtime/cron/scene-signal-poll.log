@@ -1,0 +1,1177 @@
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+/Applications/Xcode.app/Contents/Developer/usr/bin/python3: can't open file '/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py': [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/scene-signal-poller.py", line 25, in <module>
+    from datetime import UTC, datetime
+ImportError: cannot import name 'UTC' from 'datetime' (/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/datetime.py)

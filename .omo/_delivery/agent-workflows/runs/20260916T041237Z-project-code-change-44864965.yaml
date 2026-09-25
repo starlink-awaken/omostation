@@ -1,0 +1,384 @@
+run_id: 20260916T041237Z-project-code-change-44864965
+workflow_id: project-code-change
+status: ok
+actor: xiamingxing
+agent_profile: governance-agent
+objective: Cockpit direct OMO I/O baseline broker repair
+created_at: '2026-09-16T04:12:37Z'
+updated_at: '2026-09-16T06:52:01Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260916T041237Z-project-code-change-44864965
+  actor: xiamingxing
+  profile: governance-agent
+locks:
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/project.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo_src_omo_omo_cockpit_bridge.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo_tests_test_omo_cockpit_bridge.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_console_bos_invoker.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_console_harness_runner.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_tests_test_console_omo_io_brokers.py.lock.yaml
+plan:
+  id: project-code-change
+  title: Project code change
+  purpose: Route code changes through project-local verification and workspace governance
+    gates.
+  agents:
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  lock_scopes:
+  - 'project:'
+  - root-gate
+  phases:
+    preflight:
+    - id: root-status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: project-status
+      mode: advisory
+      cwd: projects/
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: implement
+      mode: manual
+      command:
+      - agent
+      - edit
+      - project-code
+    verification:
+    - id: project-tests
+      mode: manual
+      cwd: projects/
+      command:
+      - project-local
+      - test-command
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- 'PR #3817 merged at root main d14dc12fc3d953f6ceea5a1e1efe55f8d3456248. Child PRs
+  omostation-omo#174 and omostation-cockpit#179/#180 merged. Required PR checks and
+  post-merge Governance/GaC/Integration/Cascading passed. Local gitlink ancestry verified
+  for OMO e39325fe and Cockpit 723f642e. Submodule Freshness post-merge failure is
+  checkout-stage private repository access, with drift checks skipped.'
+- 'agent-workflow verify: 0 checks ok=True'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-16T04:13:22Z'
+  actor: xiamingxing
+  paths:
+  - projects/omo
+  surfaces: []
+  scopes:
+  - path:projects/omo
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo.lock.yaml
+  affected_graph:
+    affected_projects:
+    - aetherforge
+    - agora
+    - bus-foundation
+    - c2g
+    - cockpit
+    - cockpit-ui
+    - domain-cartridges
+    - ecos
+    - family-hub
+    - knowledge
+    - l4-kernel
+    - mesh-router
+    - metaos
+    - model-driven
+    - observability
+    - omlxc
+    - omo
+    - omo-debt
+    - runtime
+    - spine
+    - surface
+    changed_projects:
+    - omo
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: d057a03ee18378885bb686e79f7383f3b53b9c75d5ff9ca08558a68a85552252
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T041237Z-project-code-change-44864965/affected-graph-omo.json
+- claimed_at: '2026-09-16T04:13:22Z'
+  actor: xiamingxing
+  paths:
+  - projects/omo/src/omo/omo_cockpit_bridge.py
+  surfaces: []
+  scopes:
+  - path:projects/omo/src/omo/omo_cockpit_bridge.py
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo_src_omo_omo_cockpit_bridge.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - aetherforge
+    - agora
+    - bus-foundation
+    - c2g
+    - cockpit
+    - cockpit-ui
+    - domain-cartridges
+    - ecos
+    - family-hub
+    - knowledge
+    - l4-kernel
+    - mesh-router
+    - metaos
+    - model-driven
+    - observability
+    - omlxc
+    - omo
+    - omo-debt
+    - runtime
+    - spine
+    - surface
+    changed_projects:
+    - omo
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: d057a03ee18378885bb686e79f7383f3b53b9c75d5ff9ca08558a68a85552252
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T041237Z-project-code-change-44864965/affected-graph-omo.json
+- claimed_at: '2026-09-16T04:13:23Z'
+  actor: xiamingxing
+  paths:
+  - projects/omo/tests/test_omo_cockpit_bridge.py
+  surfaces: []
+  scopes:
+  - path:projects/omo/tests/test_omo_cockpit_bridge.py
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo_tests_test_omo_cockpit_bridge.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - aetherforge
+    - agora
+    - bus-foundation
+    - c2g
+    - cockpit
+    - cockpit-ui
+    - domain-cartridges
+    - ecos
+    - family-hub
+    - knowledge
+    - l4-kernel
+    - mesh-router
+    - metaos
+    - model-driven
+    - observability
+    - omlxc
+    - omo
+    - omo-debt
+    - runtime
+    - spine
+    - surface
+    changed_projects:
+    - omo
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: d057a03ee18378885bb686e79f7383f3b53b9c75d5ff9ca08558a68a85552252
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T041237Z-project-code-change-44864965/affected-graph-omo.json
+- claimed_at: '2026-09-16T04:19:25Z'
+  actor: xiamingxing
+  paths:
+  - projects/cockpit
+  surfaces: []
+  scopes:
+  - path:projects/cockpit
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit.lock.yaml
+  affected_graph:
+    affected_projects:
+    - aetherforge
+    - agora
+    - bus-foundation
+    - c2g
+    - cockpit
+    - cockpit-ui
+    - domain-cartridges
+    - ecos
+    - family-hub
+    - knowledge
+    - l4-kernel
+    - mesh-router
+    - metaos
+    - model-driven
+    - observability
+    - omlxc
+    - omo
+    - omo-debt
+    - runtime
+    - spine
+    - surface
+    changed_projects:
+    - cockpit
+    - omo
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 7afbd1ca3aee6490ddf696d9c4da7ec590b677c8cc78250cb37068bdc9346e88
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T041237Z-project-code-change-44864965/affected-graph-omo-cockpit.json
+- claimed_at: '2026-09-16T04:19:25Z'
+  actor: xiamingxing
+  paths:
+  - projects/cockpit/src/cockpit/console/bos_invoker.py
+  surfaces: []
+  scopes:
+  - path:projects/cockpit/src/cockpit/console/bos_invoker.py
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_console_bos_invoker.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - aetherforge
+    - agora
+    - bus-foundation
+    - c2g
+    - cockpit
+    - cockpit-ui
+    - domain-cartridges
+    - ecos
+    - family-hub
+    - knowledge
+    - l4-kernel
+    - mesh-router
+    - metaos
+    - model-driven
+    - observability
+    - omlxc
+    - omo
+    - omo-debt
+    - runtime
+    - spine
+    - surface
+    changed_projects:
+    - cockpit
+    - omo
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 7afbd1ca3aee6490ddf696d9c4da7ec590b677c8cc78250cb37068bdc9346e88
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T041237Z-project-code-change-44864965/affected-graph-omo-cockpit.json
+- claimed_at: '2026-09-16T04:19:25Z'
+  actor: xiamingxing
+  paths:
+  - projects/cockpit/src/cockpit/console/harness_runner.py
+  surfaces: []
+  scopes:
+  - path:projects/cockpit/src/cockpit/console/harness_runner.py
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_console_harness_runner.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - aetherforge
+    - agora
+    - bus-foundation
+    - c2g
+    - cockpit
+    - cockpit-ui
+    - domain-cartridges
+    - ecos
+    - family-hub
+    - knowledge
+    - l4-kernel
+    - mesh-router
+    - metaos
+    - model-driven
+    - observability
+    - omlxc
+    - omo
+    - omo-debt
+    - runtime
+    - spine
+    - surface
+    changed_projects:
+    - cockpit
+    - omo
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 7afbd1ca3aee6490ddf696d9c4da7ec590b677c8cc78250cb37068bdc9346e88
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T041237Z-project-code-change-44864965/affected-graph-omo-cockpit.json
+- claimed_at: '2026-09-16T04:19:25Z'
+  actor: xiamingxing
+  paths:
+  - projects/cockpit/src/cockpit/tests/test_console_omo_io_brokers.py
+  surfaces: []
+  scopes:
+  - path:projects/cockpit/src/cockpit/tests/test_console_omo_io_brokers.py
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_tests_test_console_omo_io_brokers.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - aetherforge
+    - agora
+    - bus-foundation
+    - c2g
+    - cockpit
+    - cockpit-ui
+    - domain-cartridges
+    - ecos
+    - family-hub
+    - knowledge
+    - l4-kernel
+    - mesh-router
+    - metaos
+    - model-driven
+    - observability
+    - omlxc
+    - omo
+    - omo-debt
+    - runtime
+    - spine
+    - surface
+    changed_projects:
+    - cockpit
+    - omo
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 7afbd1ca3aee6490ddf696d9c4da7ec590b677c8cc78250cb37068bdc9346e88
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260916T041237Z-project-code-change-44864965/affected-graph-omo-cockpit.json
+closed_at: '2026-09-16T06:52:01Z'
+released_locks:
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo_tests_test_omo_cockpit_bridge.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_console_harness_runner.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_console_bos_invoker.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit_src_cockpit_tests_test_console_omo_io_brokers.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_cockpit.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_projects_omo_src_omo_omo_cockpit_bridge.py.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/project.lock.yaml

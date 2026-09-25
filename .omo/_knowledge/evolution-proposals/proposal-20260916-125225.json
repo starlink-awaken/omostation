@@ -1,0 +1,33 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-16T12:51:56.388967+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] Kyber (YC W23) Is Hiring a Forward Deployed Engineer",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] Original Sony PlayStation 2 security chip 'broken wide open' after 26 years",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}

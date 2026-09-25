@@ -1,0 +1,120 @@
+run_id: 20260917T013208Z-project-code-change-40e18887
+workflow_id: project-code-change
+status: ok
+actor: xiamingxing
+agent_profile: governance-agent
+objective: Fix Submodule Freshness private repository checkout auth
+created_at: '2026-09-17T01:32:08Z'
+updated_at: '2026-09-17T02:01:54Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260917T013208Z-project-code-change-40e18887
+  actor: xiamingxing
+  profile: governance-agent
+locks:
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/project.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_.github_workflows_submodule-freshness-gatekeeper.yml.lock.yaml
+plan:
+  id: project-code-change
+  title: Project code change
+  purpose: Route code changes through project-local verification and workspace governance
+    gates.
+  agents:
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  lock_scopes:
+  - 'project:'
+  - root-gate
+  phases:
+    preflight:
+    - id: root-status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: project-status
+      mode: advisory
+      cwd: projects/
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: implement
+      mode: manual
+      command:
+      - agent
+      - edit
+      - project-code
+    verification:
+    - id: project-tests
+      mode: manual
+      cwd: projects/
+      command:
+      - project-local
+      - test-command
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- 'PR #3842 merged as b338fd92fb54a8329227ba7bc64f682ffb36662a at head 7cc53dd65a43bb8874ba0997c9b26b5a56dc7957;
+  required phase-gate/bet-done-transition/gac-gate PASS; exact workflow blob 0ed6a6c718e766c4d1ce77fab5b4fd5d4289d164
+  matches main. Post-merge run 35172533693 proved recursive private checkout/reachability/tests
+  pass, then fail-closed on unrelated remote-forward gitlink drift cockpit/omlxc/runtime;
+  follow-up recovery required.'
+- 'agent-workflow verify: 0 checks ok=True'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-17T01:32:09Z'
+  actor: xiamingxing
+  paths:
+  - .github/workflows/submodule-freshness-gatekeeper.yml
+  surfaces: []
+  scopes:
+  - path:.github/workflows/submodule-freshness-gatekeeper.yml
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_.github_workflows_submodule-freshness-gatekeeper.yml.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260917T013208Z-project-code-change-40e18887/affected-graph.json
+closed_at: '2026-09-17T02:01:54Z'
+released_locks:
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_.github_workflows_submodule-freshness-gatekeeper.yml.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/project.lock.yaml

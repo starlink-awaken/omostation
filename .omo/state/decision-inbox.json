@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "id": "MDEAD-HB-SYSTEM_HEALTH-YAML",
+      "title": "[防腐] .omo/state/system_health.yaml 的 last_scan 已过期 61.7h (SLA: 48h)",
+      "status": "pending",
+      "source": "corrosion-pipeline",
+      "severity": "P2",
+      "auto_fixable": true,
+      "created": "2026-09-23T02:33:24.624676+00:00"
+    }
+  ],
+  "version": "1.0"
+}

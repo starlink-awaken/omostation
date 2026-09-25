@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-24T13:38:20Z
+generated_at: 2026-09-25T03:08:52Z
 status: candidate
 counts:
-  runs: 31
+  runs: 33
   failures: 0
-  total: 31
+  total: 33
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-24T13:38:20Z
+- generated_at: 2026-09-25T03:08:52Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 31 成功运行 + 0 失败模式 = 31 草稿
+- sediment 覆盖: 33 成功运行 + 0 失败模式 = 33 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -52,6 +52,8 @@ failure_breakdown:
 - 20260922T085054Z-project-code-change-7c69278d.md
 - 20260923T032453Z-project-code-change-39bc29e2.md
 - 20260923T060006Z-project-code-change-2493cbd3.md
+- 20260925T013721Z-project-code-change-114a9adf.md
+- 20260925T014237Z-project-code-change-44d6eaf9.md
 
 ## 失败模式 (failures/)
 
@@ -268,6 +270,20 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=2
   - 指标: event_count=6, duration_s=6602.232
+- **20260925T013721Z-project-code-change-114a9adf**
+  - 计划 (objective): [BET-Y2Q3-T10-OMLXC-02] OMLXC placement runtime recovery and gateway transient capacity healing (Appetite: 2 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=305.519
+- **20260925T014237Z-project-code-change-44d6eaf9**
+  - 计划 (objective): [BET-Y2Q3-T10-OMLXC-02] OMLXC placement runtime recovery and gateway transient capacity healing (Appetite: 2 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=692.159
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

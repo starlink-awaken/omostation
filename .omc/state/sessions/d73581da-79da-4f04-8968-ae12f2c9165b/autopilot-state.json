@@ -1,0 +1,11 @@
+{
+  "active": false,
+  "current_phase": "completed-dev-track",
+  "task_description": "v10 全面落地 dev 轨完成: α.5 (journey 条件边+agent_decisions) + α.3 MVP (agent_host). 等 operator α.1/α.2, 中长期 β/γ/δ.",
+  "_meta": {
+    "mode": "autopilot",
+    "sessionId": "d73581da-79da-4f04-8968-ae12f2c9165b",
+    "updatedAt": "2026-08-05T23:07:56.227Z",
+    "updatedBy": "state_write_tool"
+  }
+}

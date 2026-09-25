@@ -1,0 +1,87 @@
+id: dashboard-evolution
+run_frequency: on_demand
+title: Dashboard & Panorama Evolution Workflow
+purpose: Route sovereign dashboard and panorama enhancements through strict contract binding, dual-mode supply, WAI-ARIA 1.2 compliance, and sunset redirector safety checks.
+agents:
+  roles:
+  - engineering-agent
+  - qa-agent
+  - governance-agent
+  observer_policy: use_for_high_blast_radius_or_unattended_runs
+allowed_lanes:
+- code
+- governance_code
+- config
+lock_scopes:
+- project:cockpit-ui
+- root-gate
+surfaces:
+  read:
+  - projects/cockpit-ui/**
+  - bin/panorama/**
+  - runtime/dashboard/**
+  - docs/DASHBOARDS.md
+  - docs/PANORAMA-DASHBOARD.md
+  write:
+  - projects/cockpit-ui/**
+  - docs/DASHBOARDS.md
+  - docs/PANORAMA-DASHBOARD.md
+phases:
+  preflight:
+  - id: root-status
+    mode: required
+    command:
+    - git
+    - status
+    - --short
+  - id: sunset-check
+    mode: required
+    command:
+    - python3
+    - bin/panorama/sunset-redirector.py
+    - --check
+  - id: workflow-lint
+    mode: required
+    command:
+    - uv
+    - run
+    - --with
+    - pyyaml
+    - python
+    - bin/agent-workflow.py
+    - lint
+  execute:
+  - id: implement-components
+    mode: manual
+    command:
+    - agent
+    - edit
+    - cockpit-ui-panorama
+  verification:
+  - id: panorama-unit-tests
+    mode: required
+    cwd: projects/cockpit-ui
+    command:
+    - npx
+    - vitest
+    - run
+    - src/views/panorama/__tests__/
+  - id: sunset-redirector-verification
+    mode: required
+    command:
+    - python3
+    - -m
+    - unittest
+    - tests/test_sunset_redirector.py
+  - id: gac-local-gate
+    mode: required
+    command:
+    - make
+    - gac-local-gate
+  closeout:
+  - id: diff-stat
+    mode: required
+    command:
+    - git
+    - diff
+    - --stat

@@ -1,0 +1,313 @@
+INFO:     Started server process [25141]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8090 (Press CTRL+C to quit)
+16:25:28 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1163, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xiamingxing/Workspace/projects/cockpit/src/cockpit/web/versioning.py", line 182, in version_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 88, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/routing.py", line 670, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2734, in app
+    await route.handle(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1780, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2789, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1800, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1279, in handle
+    await app(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 158, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 144, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 706, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/xiamingxing/Workspace/projects/cockpit/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 352, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xiamingxing/Workspace/projects/cockpit/src/cockpit/web/api_workflow_mesh_operations.py", line 953, in get_personal_episode_status
+    projection = build_episode_projection_snapshot_from_path(db_path, principal_id=principal_id)
+  File "/Users/xiamingxing/Workspace/projects/omo/src/omo/episode_projection.py", line 179, in build_episode_projection_snapshot_from_path
+    broker = LedgerBroker.connect(db_path)
+  File "/Users/xiamingxing/Workspace/projects/omo/src/omo/event_ledger/broker.py", line 205, in connect
+    journal_mode = cls._configure_journal_mode(conn, allow_wal=version_ok)
+  File "/Users/xiamingxing/Workspace/projects/omo/src/omo/event_ledger/broker.py", line 236, in _configure_journal_mode
+    mode = conn.execute("PRAGMA journal_mode=DELETE").fetchone()[0]
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+16:30:29 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+16:35:29 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [25141]
+INFO:     Started server process [12755]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8090 (Press CTRL+C to quit)
+16:39:53 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [12755]
+INFO:     Started server process [42780]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8090 (Press CTRL+C to quit)
+16:44:56 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+16:49:56 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+16:54:56 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+16:59:56 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:04:56 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:09:56 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:14:56 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:19:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:24:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:29:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:34:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:39:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:44:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:49:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:54:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+17:59:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:04:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:09:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:14:57 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:19:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:24:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:29:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:34:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:39:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:44:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:49:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:54:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+18:59:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:04:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:09:58 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:14:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:19:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:24:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:29:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:34:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:39:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:44:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:49:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:54:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+19:59:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:04:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:09:59 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:15:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:20:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:25:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:30:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:35:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:40:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:45:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:50:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+20:55:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:00:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:05:00 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:10:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:15:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:20:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:25:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:30:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:35:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:40:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:45:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:50:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+21:55:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:00:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:05:01 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:10:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:15:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:20:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:25:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:30:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:35:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+/Users/xiamingxing/.local/share/zhixing-dashboard/cockpit-dashboard-py314/lib/python3.14/site-packages/fastapi/openapi/utils.py:303: UserWarning: Duplicate Operation ID memory_status_api_memory_status_get for function memory_status at /Users/xiamingxing/Workspace/projects/cockpit/src/cockpit/web/api_memory.py
+  warnings.warn(message, stacklevel=1)
+/Users/xiamingxing/.local/share/zhixing-dashboard/cockpit-dashboard-py314/lib/python3.14/site-packages/fastapi/openapi/utils.py:303: UserWarning: Duplicate Operation ID memory_write_api_memory_write_post for function memory_write at /Users/xiamingxing/Workspace/projects/cockpit/src/cockpit/web/api_memory.py
+  warnings.warn(message, stacklevel=1)
+/Users/xiamingxing/.local/share/zhixing-dashboard/cockpit-dashboard-py314/lib/python3.14/site-packages/fastapi/openapi/utils.py:303: UserWarning: Duplicate Operation ID memory_recall_api_memory_recall_post for function memory_recall at /Users/xiamingxing/Workspace/projects/cockpit/src/cockpit/web/api_memory.py
+  warnings.warn(message, stacklevel=1)
+/Users/xiamingxing/.local/share/zhixing-dashboard/cockpit-dashboard-py314/lib/python3.14/site-packages/fastapi/openapi/utils.py:303: UserWarning: Duplicate Operation ID memory_forget_api_memory_forget_post for function memory_forget at /Users/xiamingxing/Workspace/projects/cockpit/src/cockpit/web/api_memory.py
+  warnings.warn(message, stacklevel=1)
+/Users/xiamingxing/.local/share/zhixing-dashboard/cockpit-dashboard-py314/lib/python3.14/site-packages/fastapi/openapi/utils.py:303: UserWarning: Duplicate Operation ID memory_knowledge_ref_api_memory_knowledge_ref_post for function memory_knowledge_ref at /Users/xiamingxing/Workspace/projects/cockpit/src/cockpit/web/api_memory.py
+  warnings.warn(message, stacklevel=1)
+/Users/xiamingxing/.local/share/zhixing-dashboard/cockpit-dashboard-py314/lib/python3.14/site-packages/fastapi/openapi/utils.py:303: UserWarning: Duplicate Operation ID memory_consolidate_api_memory_consolidate_post for function memory_consolidate at /Users/xiamingxing/Workspace/projects/cockpit/src/cockpit/web/api_memory.py
+  warnings.warn(message, stacklevel=1)
+22:40:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:45:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:50:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+22:55:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:00:02 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:05:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:10:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:15:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:20:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:25:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:30:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:35:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:40:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:45:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:50:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+23:55:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:00:03 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:05:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:10:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:15:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:20:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:25:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:30:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:35:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:40:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:45:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:50:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+00:55:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:00:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:05:04 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:10:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:15:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:20:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:25:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:30:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:35:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:40:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:45:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:50:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+01:55:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:00:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:05:05 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:10:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:15:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:20:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:25:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:30:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:35:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:40:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:45:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:50:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+02:55:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:00:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:05:06 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:10:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:15:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:20:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:25:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:30:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:35:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:40:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:45:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:50:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+03:55:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:00:07 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:05:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:10:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:15:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:20:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:25:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:30:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:35:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:40:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:45:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:50:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+04:55:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:00:08 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:05:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:10:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:15:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:20:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:25:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:30:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:35:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:40:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:45:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:50:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+05:55:09 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:00:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:05:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:10:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:15:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:20:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:25:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:30:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:35:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:40:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:45:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:50:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+06:55:10 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:00:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:05:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:10:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:15:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:20:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:25:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:30:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:35:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:40:11 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:45:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:50:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+07:55:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:00:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:05:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:10:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:15:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:20:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:25:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:30:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:35:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:40:12 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+08:45:13 [WARNING] cockpit.web.knowledge_indexer: knowledge_indexer: could not subscribe after 5 attempts — indexer will retry on next startup. Cards written while Agora offline are NOT lost (files persisted).
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [42780]

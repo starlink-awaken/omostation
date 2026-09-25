@@ -1,0 +1,30 @@
+schema: gate-evidence-receipt/v1
+gate: A7
+title: Multica AS0 qualification
+owner: multica-steward
+generated_at: '2026-09-24T03:32:07Z'
+verdict: NOT_ADMITTED
+live: false
+exit_criteria:
+- id: thirty-of-thirty-sequential-api-probes-pass
+  status: not_evaluated
+  evidence: 声明态 not_admitted，解锁后复算
+- id: seven-of-seven-live-topology-matches-manifest
+  status: not_evaluated
+  evidence: 声明态 not_admitted，解锁后复算
+- id: trust-domain-leaders-separated
+  status: not_evaluated
+  evidence: 声明态 not_admitted，解锁后复算
+- id: observer-zero-mutation
+  status: not_evaluated
+  evidence: 声明态 not_admitted，解锁后复算
+- id: sensitive-local-zero-cloud
+  status: not_evaluated
+  evidence: 声明态 not_admitted，解锁后复算
+- id: stale-issue-and-task-directories-reconciled
+  status: not_evaluated
+  evidence: 声明态 not_admitted，解锁后复算
+depends_on:
+- A8
+unlock_conditions: 先完成 T10-150 只读验证工具链 + A8；未过门零写入零自治
+evidence_sha256: sha256:ed3c2bb90deb946592df5cb78299a988d8b188389d40f6cc53f5d888bcbe3d4c

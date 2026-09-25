@@ -1,0 +1,152 @@
+run_id: 20260917T071357Z-state-sync-4345d07d
+workflow_id: state-sync
+status: closed
+actor: xiamingxing
+agent_profile: governance-agent
+objective: ''
+created_at: '2026-09-17T07:13:57Z'
+updated_at: '2026-09-18T03:35:08Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260917T071357Z-state-sync-4345d07d
+  actor: xiamingxing
+  profile: governance-agent
+locks:
+- .omo/_delivery/agent-workflows/locks/surface_omo-state-sync-projection.lock.yaml
+- .omo/_delivery/agent-workflows/locks/.omo_state.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_.omo_state_system_health.yaml.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_.omo_state_runtime_system_health.yaml.lock.yaml
+plan:
+  id: state-sync
+  title: Runtime state projection sync
+  purpose: Refresh high-churn runtime projections through the OMO state-sync broker
+    instead of ad-hoc agent writes.
+  agents:
+    roles:
+    - state-sync-agent
+    - governance-agent
+    observer_policy: recommended_for_unattended_runs
+  allowed_lanes:
+  - governance_state
+  - docs
+  - runtime_snapshot
+  lock_scopes:
+  - surface:omo-state-sync-projection
+  - .omo/state
+  phases:
+    preflight:
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    - id: state-sync-dry-run
+      mode: required
+      command:
+      - uv
+      - run
+      - --project
+      - projects/omo
+      - omo
+      - state
+      - sync
+      - --dry-run
+      - --json
+    execute:
+    - id: state-sync
+      mode: required
+      command:
+      - uv
+      - run
+      - --project
+      - projects/omo
+      - omo
+      - state
+      - sync
+      - --json
+    verification:
+    - id: state-freshness
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/gac/state-freshness-check.py
+      - --json
+    - id: ssot-guardian
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+    closeout:
+    - id: observe
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - observe
+evidence:
+- 'Runtime refresh completed through authorized omo state refresh and state sync;
+  stale_beats 1 -> 0, state freshness PASS, gate-health all_ok true. Receipt generator
+  PR #3866 merged as 19e146e5609acecf0cfd4661aabc5525a1a68ec1. Closed blocked only
+  because unbound operational run lacks vision-to-retro BET binding.'
+- 'agent-workflow verify: 3 checks ok=False'
+- 'agent-workflow observe: continue'
+- 'agent-workflow verify: 5 checks ok=False'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-17T07:13:57Z'
+  actor: xiamingxing
+  paths:
+  - .omo/state/system_health.yaml
+  surfaces: []
+  scopes:
+  - path:.omo/state/system_health.yaml
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_.omo_state_system_health.yaml.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260917T071357Z-state-sync-4345d07d/affected-graph.json
+- claimed_at: '2026-09-17T07:13:57Z'
+  actor: xiamingxing
+  paths:
+  - .omo/state/runtime/system_health.yaml
+  surfaces: []
+  scopes:
+  - path:.omo/state/runtime/system_health.yaml
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_.omo_state_runtime_system_health.yaml.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260917T071357Z-state-sync-4345d07d/affected-graph.json
+closed_at: '2026-09-18T03:35:08Z'
+released_locks: []

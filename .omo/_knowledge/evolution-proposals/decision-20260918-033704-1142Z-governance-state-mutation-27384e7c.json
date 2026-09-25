@@ -1,0 +1,11 @@
+{
+  "proposal_count": 0,
+  "proposals": [],
+  "schema": "resident-decision/v1",
+  "trigger_event": {
+    "event_id": "8ff0c98a57274807b788239f43f515b3",
+    "event_type": "StepFailed",
+    "trace_id": "20260918T021142Z-governance-state-mutation-27384e7c",
+    "workflow_run_id": "20260918T021142Z-governance-state-mutation-27384e7c"
+  }
+}

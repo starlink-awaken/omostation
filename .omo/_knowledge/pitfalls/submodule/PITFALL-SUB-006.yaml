@@ -1,0 +1,28 @@
+schema: agent-error/v1
+id: PITFALL-SUB-006
+category: submodule
+severity: high
+title: worktree 的 shallow 子模块让「是否已推送」判断假阳性
+symptom: gac-worktree.sh submit 拒绝 push 并报 MANAGED_SUCCESSOR_REQUIRED，指认 projects/cockpit-ui
+  的 a26e575 未推送；但 a26e575 正是 root 树在 origin/main 里 pin 的那个 commit，主工作区全量 clone 里 git
+  branch -r --contains 明确返回 origin/main。同一位置此前 check-submodule-pointer-drift 也报过 unverifiable。
+root_cause: PASW worktree 的子模块 clone 是 shallow（git rev-parse --is-shallow-repository
+  在 worktree=true、主工作区=false），graft 边界正好压在 root 树 pin 的 commit 上：rev-list --count
+  a26e575 在 worktree 数到 1、在主工作区数到 202。凡依赖沿历史走回 origin/branch 的判定（branch --contains
+  / merge-base --is-ancestor / rev-list）在浅历史上都走不到，于是把已推送读成未推送。判断逻辑没错，错在把浅历史的走不到当成不存在。
+solution: '先定性再处置：并测 --is-shallow-repository 与 rev-list --count（1 说明边界就压在目标 commit
+  上），确认后到全量 clone 复核 branch -r --contains，再决定要不要按门禁结论行动。检测端应在 shallow 下把结论降级为 unverified
+  而非阻断，与 #4275 给 submodule-reachability-gate.py 加有界预算同一方向。'
+prevention: 任何以历史遍历为依据的子模块判定，先问这个 clone 完整吗。交付侧安全边界：确认 git diff --name-only origin/main
+  HEAD 不含 gitlink 时，docs 变更可直接 push 根分支，不为绕过误报而动子模块指针。根治是 claim 时不产生 shallow 子模块。
+tags:
+- shallow
+- submodule
+- false-positive
+- reachability
+- worktree
+discovered_by: governance-agent
+discovered_at: '2026-09-24'
+times_encountered: 1
+last_confirmed_at: '2026-09-24'
+status: active

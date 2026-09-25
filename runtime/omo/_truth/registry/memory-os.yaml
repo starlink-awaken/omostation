@@ -1,0 +1,13 @@
+schema: memory-os/v1
+as_of: '2026-09-25T03:13:01Z'
+total_beliefs: 16
+tables:
+- agent_belief
+- agent_lesson
+- agent_context
+- world_snapshot
+- capability_calibration
+- decision_outcome
+total_world_snapshots: 84
+total_capability_calibrations: 17138
+total_decision_outcomes: 170

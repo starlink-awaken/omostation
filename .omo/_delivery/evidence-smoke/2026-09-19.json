@@ -1,0 +1,85 @@
+{
+  "generated_at": "2026-09-19T23:42:08Z",
+  "source": "bin/gac/evidence-smoke.py (real audit, no mock)",
+  "bos": {
+    "declaration_count": 267,
+    "resolvable_count": 267,
+    "gap": 0,
+    "deprecated_count": 0,
+    "deprecated_expires": "2026-10-13",
+    "resolve_rate": 1.0,
+    "by_transport": {
+      "internal": 36,
+      "stdio": 154,
+      "mcp_proxy": 15,
+      "http": 5,
+      "mcp_stdio": 26,
+      "inline": 31
+    },
+    "failure_buckets": {}
+  },
+  "deprecated": [],
+  "working_tree": {
+    "dirty_count": 9
+  },
+  "feedback_loop": {
+    "alive": true,
+    "last_ts": "2026-09-19T23:38:51+00:00",
+    "staleness_hours": 0.1,
+    "sources": {
+      "governance_history": {
+        "exists": true,
+        "entry_count": 2083,
+        "last_ts": "2026-09-13T08:30:11Z",
+        "staleness_hours": 159.2,
+        "alive": false
+      },
+      "omo_events": {
+        "exists": true,
+        "entry_count": 39,
+        "last_ts": "2026-09-18T14:11:19Z",
+        "staleness_hours": 33.5,
+        "alive": false
+      },
+      "git_activity": {
+        "exists": true,
+        "last_ts": "2026-09-19T23:38:51+00:00",
+        "staleness_hours": 0.1,
+        "alive": true
+      }
+    }
+  },
+  "evidence_health_score": 100.0,
+  "score_breakdown": {
+    "bos_resolve": {
+      "score": 60.0,
+      "weight": 60,
+      "rate": 1.0
+    },
+    "working_tree": {
+      "score": 20,
+      "weight": 20,
+      "dirty": 9
+    },
+    "feedback_loop": {
+      "score": 20,
+      "weight": 20,
+      "alive": true
+    }
+  },
+  "container_executor": {
+    "default_backend_setting": "local",
+    "effective_backend": "local",
+    "default_profile": "default",
+    "profiles": [
+      "default",
+      "strict-netnone",
+      "trusted-local"
+    ],
+    "docker_available": false,
+    "docker_image": "python:3.13-slim@sha256:bffeb7bd6a85767587059c6ba23e1e9122078e3aa3fa836099171b9bb5a9bb00",
+    "profiles_source": "/Users/xiamingxing/Workspace/projects/agora/etc/container-executor-profiles.yaml",
+    "strict": false,
+    "error": null
+  }
+}

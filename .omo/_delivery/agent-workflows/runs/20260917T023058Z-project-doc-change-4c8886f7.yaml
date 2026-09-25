@@ -1,0 +1,215 @@
+run_id: 20260917T023058Z-project-doc-change-4c8886f7
+workflow_id: project-doc-change
+status: closed
+actor: xiamingxing
+agent_profile: governance-agent
+objective: '[BET-Y1Q4-T10-168] Recent workspace documentation convergence (Appetite:
+  )'
+created_at: '2026-09-17T02:30:58Z'
+updated_at: '2026-09-18T03:35:07Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260917T023058Z-project-doc-change-4c8886f7
+  actor: xiamingxing
+  profile: governance-agent
+  bet_id: BET-Y1Q4-T10-168
+locks:
+- .omo/_delivery/agent-workflows/locks/docs.lock.yaml
+- .omo/_delivery/agent-workflows/locks/doc-ssot.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_docs_superpowers_specs_README.md.lock.yaml
+plan:
+  id: project-doc-change
+  title: Project documentation change
+  purpose: Keep documentation changes executable, SSOT-safe, and verifiable.
+  agents:
+    roles:
+    - docs-agent
+    - governance-agent
+    observer_policy: optional_for_broad_doc_rewrites
+  allowed_lanes:
+  - docs
+  - governance_code
+  - config
+  lock_scopes:
+  - docs
+  - doc-ssot
+  phases:
+    preflight:
+    - id: status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: edit-docs
+      mode: manual
+      command:
+      - agent
+      - edit
+      - docs-with-ssot-pointers
+    verification:
+    - id: doc-ssot-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/doc-ssot-lint.py
+      - --json
+    - id: ssot-guardian
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- 'Run heartbeat stale for over 4 hours; closing zombie to release docs and root-gate
+  locks. Delivery PR #3853 and its authoritative state remain untouched.'
+- 'agent-workflow verify: 5 checks ok=False'
+- 'agent-workflow observe: continue'
+- 'agent-workflow verify: 5 checks ok=False'
+- 'agent-workflow observe: continue'
+bet_id: BET-Y1Q4-T10-168
+spec_binding: &id001
+  content_digest: sha256:b6338e4318bff847409e2f0cbebf229f2ad59c7cd89975e28401f27bc34280e9
+  decision_ref: decision://accepted/BET-Y1Q4-T10-168
+  spec_ref: repo://docs/superpowers/specs/2026-09-17-siri-40-documentation-convergence-design.md
+  spec_version: 1.0.0
+instruction_binding: &id002
+  instruction_ref: repo://docs/operations/blueprint-agent-instruction-pack-v1.md
+  instruction_version: blueprint-agent-instruction-pack/v1
+  content_digest: sha256:b81909ddfdeb85d6c724e53a02f92b293ea8238cc007817e5d2f6268fba6ba53
+  instruction_profile: executor
+work_packet:
+  packet_id: WP-BET-Y1Q4-T10-168
+  schema_version: work-packet/v2
+  blueprint_ref: blueprint://multi-agent-execution-control/v1
+  wave: Y1Q4
+  bet_id: BET-Y1Q4-T10-168
+  strategic_outcome: Restore discoverability and truthfulness for the workspace documentation
+    surfaces affected by the 2026-09-02 through 2026-09-16 delivery wave.
+  objective: Restore discoverability and truthfulness for the workspace documentation
+    surfaces affected by the 2026-09-02 through 2026-09-16 delivery wave.
+  why_now: priority=P2; appetite=unspecified
+  status: active
+  authority:
+    strategist: 3y-bet-ledger
+    human_gate: false
+    risk_level: R1
+  scope:
+    read_surfaces:
+    - docs/plans/3y-bet-ledger.yaml
+    - docs/superpowers/specs/2026-09-17-siri-40-documentation-convergence-design.md
+    - docs/operations/blueprint-agent-instruction-pack-v1.md
+    write_surfaces:
+    - .omo/_knowledge/retros/BET-Y1Q4-T10-168.md
+    - docs/INDEX-AGENTS.md
+    - docs/INDEX-KNOWLEDGE.md
+    - docs/INDEX-PROJECTS.md
+    - docs/INDEX-TOOLS.md
+    - docs/SYSTEM-INDEX.md
+    - docs/architecture/resident-agent-system-v1.md
+    - docs/plans/3y-bet-ledger.yaml
+    - docs/superpowers/specs/2026-09-17-siri-40-documentation-convergence-design.md
+    - docs/superpowers/specs/README.md
+    non_goals:
+    - Do not edit runtime projections, BRIEF.md, or concurrent agent artifacts.
+    - Do not modify submodule contents or pointers.
+    - Do not redesign accepted implementation specifications.
+    - Do not convert the specification registry to a generated index in this BET.
+  dependencies:
+    required_packets: []
+    required_decisions:
+    - decision://accepted/BET-Y1Q4-T10-168
+  acceptance:
+    done_when:
+    - id: AC-01
+      assertion: All in-scope navigation pointers resolve to existing authoritative
+        files.
+      evidence_type: structured_report
+    - id: AC-02
+      assertion: SYSTEM-INDEX no longer hard-codes stale scene or Journey counts.
+      evidence_type: structured_report
+    - id: AC-03
+      assertion: Recent accepted specifications are discoverable from the spec registry.
+      evidence_type: structured_report
+    - id: AC-04
+      assertion: Resident architecture documents the delivered Flight Deck surface
+        without claiming unimplemented BOS or CLI integration.
+      evidence_type: structured_report
+    - id: AC-05
+      assertion: Documentation lint, cross-reference checks, and the local governance
+        gate pass.
+      evidence_type: structured_report
+    verify_commands:
+    - - python3 bin/ssot/doc-ssot-lint.py --json
+    - - python3 bin/ssot/doc-governance-check.py --json
+    - - python3 bin/ssot/check-index-drift.py
+    - - python3 bin/ssot/check-cross-refs.py
+    - - python3 bin/ssot/dir-hygiene-check.py
+    - - make gac-local-gate
+  rollback:
+    strategy: If a generated index produces unrelated churn or a referenced fact cannot
+      be proven from current SSOT, keep the surgical documentation changes only and
+      record the unresolved item in the retrospective.
+    data_migration: false
+  circuit_breaker:
+    when:
+    - If a generated index produces unrelated churn or a referenced fact cannot be
+      proven from current SSOT, keep the surgical documentation changes only and record
+      the unresolved item in the retrospective.
+    action: stop_and_escalate
+  spec_binding: *id001
+  instruction_binding: *id002
+work_packet_hash: sha256:766107f5894aeb0600ca4d9fed295a758785611d23834a7e8920d0ac91ec1c91
+claims:
+- claimed_at: '2026-09-17T02:37:19Z'
+  actor: xiamingxing
+  paths:
+  - docs/superpowers/specs/README.md
+  surfaces: []
+  scopes:
+  - path:docs/superpowers/specs/README.md
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_docs_superpowers_specs_README.md.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/_delivery/agent-workflows/receipts/t10-168-affected.json
+closed_at: '2026-09-18T03:35:07Z'
+released_locks: []

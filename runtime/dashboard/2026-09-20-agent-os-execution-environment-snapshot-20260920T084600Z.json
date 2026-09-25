@@ -1,0 +1,84 @@
+{
+  "schema": "agent-os-execution-environment-snapshot/v2",
+  "captured_at_utc": "2026-09-20T08:46:45Z",
+  "projection_generated_at_utc": "2026-09-20T08:45:54.193215Z",
+  "source": "http://127.0.0.1:43910/data.json",
+  "gates": {
+    "a1_a9": "PASS",
+    "rf0": "PASS",
+    "rc_dl": "PASS",
+    "all_pass": true
+  },
+  "omo_single_control_plane": {
+    "status": "PASS",
+    "code_root_health": {
+      "verdict": "PASS",
+      "head": "25adbd70cd9c67f78276f390a03a15b97bad2765",
+      "origin_main": "25adbd70cd9c67f78276f390a03a15b97bad2765",
+      "behind": 0,
+      "ahead": 0,
+      "dirty_count": 0
+    }
+  },
+  "code_main_sync": {
+    "previous_head": "22ee77d404109f2e94af0beae5417e200f6fdc1f",
+    "new_head": "25adbd70cd9c67f78276f390a03a15b97bad2765",
+    "method": "stash registry; merge --ff-only origin/main; pop registry",
+    "registry_clean": true,
+    "scheduler_replay": {
+      "ok": true,
+      "drift_count": 0,
+      "orphan_count": 0,
+      "known_orphan_count": 1
+    },
+    "submodules_restored_to_superproject_pins": [
+      {
+        "path": "projects/cockpit",
+        "previous_tip": "3b40b240a476ddd16562cf8343f493fb75476818",
+        "pinned": "10f813913997725b0f0a2c2b2df41b40dd221bb6"
+      },
+      {
+        "path": "projects/knowledge/kairon",
+        "previous_tip": "d25ad0f1795e15712abad8ad027732de2912f6e3",
+        "pinned": "6885c35cb15cd2b4c82736aad52bf442c06f8852"
+      },
+      {
+        "path": "projects/omo",
+        "previous_tip": "7bd7ec661895a857a68635be0825a321e16b44b6",
+        "pinned": "022ba3001219e1c7684643e977e46c15b1af54de"
+      }
+    ]
+  },
+  "claims_observation": {
+    "state": "IN_PROGRESS",
+    "activation_state": "shadow-active",
+    "started_at_utc": "2026-09-20T01:31:06.510188Z",
+    "last_sample_at_utc": "2026-09-20T08:45:46.778090Z",
+    "sample_count": 435,
+    "minimum_samples": 1440,
+    "errors": 0,
+    "observed_max_gap_seconds": 60.370746,
+    "graduation_ready": false,
+    "graduation_reasons": ["graduation_samples", "graduation_span"]
+  },
+  "business_value": {
+    "status": "NOT_PROVEN",
+    "qualifying_v2_samples": 0,
+    "target": 30
+  },
+  "projection_incident": {
+    "classification": "EXPECTED_UNMERGED_T10_170_GAP",
+    "description": "A test generation using origin/main's unpatched collector projected prior-attempt history and showed Claims INVALID with max gap 1190.495414s.",
+    "restoration": "Regenerated using the already-deployed patched host collector SHA-256 01a2615077eea01afdc704ca6bb656a7de0e89e89a3f0cc93eeaa5d93fce6228.",
+    "canonical_repo_collector_sha256": "2855f76eb26e3e97f4408aa965d714d1ce8b014affd93cdbdeb49218662e5c30",
+    "t10_170_still_required": true
+  },
+  "remaining_blockers": [
+    "T10-170 exact approval required to merge current-run projection repair.",
+    "T10-171 exact approval required for live v2-only API repair; restart remains separately gated.",
+    "Claims lifecycle runbook v2 promotion requires exact approval.",
+    "T10-172 exact approval required for root OMO gitlink freshness repair.",
+    "T10-173 exact approval required for promotion helper binding repair.",
+    "Business value requires 30 real post-baseline v2 human samples; agents must not synthesize evidence."
+  ]
+}

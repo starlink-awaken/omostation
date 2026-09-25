@@ -1,0 +1,16 @@
+{
+  "schema": "value-baseline/v1",
+  "baseline_id": "value-recorder-baseline-20260923-pre-v2-window",
+  "frozen_at": "2026-09-23T03:36:53.810493+00:00",
+  "metrics": {
+    "scope": "pre-window snapshot before 2026-09-23 value collection restart",
+    "prior_records_total": 107,
+    "prior_v2_records": 0,
+    "prior_v2_qualifying": 0,
+    "prior_legacy_records": 107,
+    "prior_legacy_qualifying": 2,
+    "note": "legacy v1 samples do not count toward v2 target; no backfill",
+    "linked_panorama_snapshot": "runtime/dashboard/agent-brief.json@2026-09-23"
+  },
+  "digest": "sha256:b2ecdc02d1dd17e6ed839c1a005a1b1d5b0f9f8a2c6185e65e2b3c6833f6a465"
+}

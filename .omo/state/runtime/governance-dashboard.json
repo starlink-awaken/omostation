@@ -1,0 +1,485 @@
+{
+  "generated_at": "2026-09-21T10:22:48.302567+00:00",
+  "total_entries": 59,
+  "overall_pass_rate": 1.0,
+  "checks": [
+    {
+      "check": "adr-coverage",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 224.0
+    },
+    {
+      "check": "auto-fix-loop",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 1002.0
+    },
+    {
+      "check": "bet-retro-due-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 1187.0
+    },
+    {
+      "check": "bin-quota-diff",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 193.0
+    },
+    {
+      "check": "bin-scripts-convergence-audit",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 43.0
+    },
+    {
+      "check": "brief-protect",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 163.0
+    },
+    {
+      "check": "capability-ownership",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 168.0
+    },
+    {
+      "check": "change-lane-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 64.0
+    },
+    {
+      "check": "check-adversarial-effectiveness",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 40.0
+    },
+    {
+      "check": "check-cockpit-ui-dist",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 32.0
+    },
+    {
+      "check": "check-conflict-markers",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 1561.0
+    },
+    {
+      "check": "check-dashboard-registry-consistency",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 32.0
+    },
+    {
+      "check": "check-domain-m1-alignment",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 595.0
+    },
+    {
+      "check": "check-dual-track-purity",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 40.0
+    },
+    {
+      "check": "check-governance-ratio",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 42.0
+    },
+    {
+      "check": "check-llm-gateway-only",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 516.0
+    },
+    {
+      "check": "check-redline-coverage",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 43.0
+    },
+    {
+      "check": "check-severity-registry",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 57.0
+    },
+    {
+      "check": "check-silent-loss",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 39.0
+    },
+    {
+      "check": "check-swarm-collision",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 32.0
+    },
+    {
+      "check": "check-toolbox-ssot",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 99.0
+    },
+    {
+      "check": "check-work-landed",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 4128.0
+    },
+    {
+      "check": "check-workorder-schema",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 41.0
+    },
+    {
+      "check": "ci-surfaces-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 77.0
+    },
+    {
+      "check": "command-discovery",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 38.0
+    },
+    {
+      "check": "current-state-coherence",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 117.0
+    },
+    {
+      "check": "derived-only-fast-track",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 48.0
+    },
+    {
+      "check": "doc-claims-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 37.0
+    },
+    {
+      "check": "doc-governance",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 806.0
+    },
+    {
+      "check": "doc-ssot-snapshots",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 829.0
+    },
+    {
+      "check": "execution-chain",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 390.0
+    },
+    {
+      "check": "gac-drift",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 3698.0
+    },
+    {
+      "check": "gac-validate",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 284.0
+    },
+    {
+      "check": "governance-semantic-gate",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 5328.0
+    },
+    {
+      "check": "layer-call-direction-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 2846.0
+    },
+    {
+      "check": "m4-bootstrap-reflex",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 442.0
+    },
+    {
+      "check": "m4-mcp-tool-integrity",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 38.0
+    },
+    {
+      "check": "matrix-consistency",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 57.0
+    },
+    {
+      "check": "mof-capabilities-drift-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 56.0
+    },
+    {
+      "check": "mof-drift",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 237.0
+    },
+    {
+      "check": "mof-schema-validate",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 1857.0
+    },
+    {
+      "check": "mof-state-bridge",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 145.0
+    },
+    {
+      "check": "omo-runtime-final-tree",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 87.0
+    },
+    {
+      "check": "omo-state-write-guard",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 47.0
+    },
+    {
+      "check": "p74-silent-workflows",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 288.0
+    },
+    {
+      "check": "pitfall-gat006-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 3186.0
+    },
+    {
+      "check": "resident-bos-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 101.0
+    },
+    {
+      "check": "resident-mof-sync-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 32.0
+    },
+    {
+      "check": "resident-status-check",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 23.0
+    },
+    {
+      "check": "root-directory-governance",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 1169.0
+    },
+    {
+      "check": "script-registry-validate",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 383.0
+    },
+    {
+      "check": "service-config-drift",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 147.0
+    },
+    {
+      "check": "service-config-validate",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 147.0
+    },
+    {
+      "check": "sfop-slots",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 909.0
+    },
+    {
+      "check": "task-field-governance",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 67.0
+    },
+    {
+      "check": "test-collection",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 56.0
+    },
+    {
+      "check": "test-gac-engine",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 96.0
+    },
+    {
+      "check": "test-mcp-kos",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 33.0
+    },
+    {
+      "check": "write-owner-audit",
+      "count": 1,
+      "ok_count": 1,
+      "fail_count": 0,
+      "pass_rate": 1.0,
+      "avg_duration_ms": 103.0
+    }
+  ],
+  "time_series": {
+    "2026-09-21": {
+      "count": 59,
+      "pass_rate": 1.0
+    }
+  }
+}

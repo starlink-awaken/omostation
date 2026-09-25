@@ -1,0 +1,11 @@
+{
+  "proposal_count": 0,
+  "proposals": [],
+  "schema": "resident-decision/v1",
+  "trigger_event": {
+    "event_id": "2cd3db75935a4657bbfe84cb99fc8d93",
+    "event_type": "StepFailed",
+    "trace_id": "points-calc-c498510c6f25",
+    "workflow_run_id": "points-calc-c498510c6f25"
+  }
+}

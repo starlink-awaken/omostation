@@ -1,0 +1,6 @@
+{
+  "branch": "agent/governance-agent/gemini-api-adapter",
+  "session": "gemini-api-adapter",
+  "claimed_at": "2026-09-25T03:11:23Z",
+  "gate": "d2_branch_occupancy"
+}

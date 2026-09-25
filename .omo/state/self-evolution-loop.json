@@ -1,0 +1,19 @@
+{
+  "cycles": [
+    {
+      "cycle_id": "cycle-1",
+      "timestamp": "2026-09-23T02:33:26.890267+00:00",
+      "proposals_generated": 1,
+      "triaged_high": 0,
+      "approved": 0,
+      "executed": 0,
+      "feedback": {
+        "total_executed": 0,
+        "success_rate": 0.0,
+        "feedback": "All executed proposals completed successfully",
+        "new_proposals_suggested": 0
+      }
+    }
+  ],
+  "version": "1.0"
+}

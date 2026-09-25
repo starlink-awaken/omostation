@@ -1,0 +1,1824 @@
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 164, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'
+Traceback (most recent call last):
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 330, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/xiamingxing/Workspace/bin/ssot/mail_daemon.py", line 286, in main
+    print(f"📧 邮件处理 ({result['ts']}): {result['mails']}封 {result['tasks']}任务 {result['drafts']}草稿 事件:{result.get('events_emitted', 0)}")
+                                                               ~~~~~~^^^^^^^^^
+KeyError: 'tasks'

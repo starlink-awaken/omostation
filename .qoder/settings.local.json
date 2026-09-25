@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status --short | head -40)",
+      "Bash(ls:*)",
+      "Bash(git --no-pager status --short | head -30)",
+      "Bash(uv run --with pyyaml python bin/plan/bet-ledger.py status 2>/dev/null || echo \"--- fallback: reading yaml directly ---\" && uv run --with pyyaml python -c \"\nimport yaml\nwith open\\('docs/plans/3y-bet-ledger.yaml'\\) as f:\n    data = yaml.safe_load\\(f\\)\nfor bet in data.get\\('bets', []\\):\n    print\\(f\\\\\"{bet.get\\('id','?'\\):20s} | {bet.get\\('status','?'\\):12s} | {bet.get\\('title','?'\\)}\\\\\"\\)\n\" 2>/dev/null || cat docs/plans/3y-bet-ledger.yaml | head -100)",
+      "Bash(cd /Users/xiamingxing/Workspace && python3 bin/agent-workflow.py list 2>&1 | head -30)",
+      "Bash(cd /Users/xiamingxing/Workspace && D=$\\(git rev-parse --show-toplevel\\)/.omo/_delivery/agent-workflows; command ls -1 \"$D\" 2>/dev/null | head -5; echo \"=== runs dirs ===\"; command find \"$D\" -maxdepth 2 -name \"*.json\" -newermt \"2026-09-24 00:00\" 2>/dev/null | head -10)",
+      "Bash(cd /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows && echo \"=== locks ===\"; command ls -1 locks/ 2>/dev/null | head -20; echo \"=== today runs ===\"; command ls -1 runs/ 2>/dev/null | command grep \"20260924\" | head -20)"
+    ]
+  }
+}

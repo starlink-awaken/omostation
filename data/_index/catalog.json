@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-09-25T01:29:58Z",
+  "workspace_root": "/Users/xiamingxing/Workspace",
+  "registry_ref": "spaces/registry.yaml",
+  "directories": [
+    "data/cards",
+    "data/驾驶舱",
+    "data/驾驶舱/CARDS",
+    "data/驾驶舱/CARDS/debts",
+    "data/驾驶舱/CARDS/deliverys",
+    "data/驾驶舱/CARDS/ideas",
+    "data/驾驶舱/CARDS/tasks"
+  ],
+  "spaces": [
+    "system-space",
+    "runtime-space",
+    "personal-space"
+  ],
+  "roots": [
+    {
+      "space_id": "system-space",
+      "roots": {
+        "governance": ".omo",
+        "spaces": "spaces",
+        "data": "data",
+        "runtime": "runtime"
+      }
+    },
+    {
+      "space_id": "runtime-space",
+      "roots": {
+        "governance": ".omo",
+        "spaces": "spaces",
+        "data": "data",
+        "runtime": "runtime"
+      }
+    },
+    {
+      "space_id": "personal-space",
+      "roots": {
+        "governance": ".omo",
+        "spaces": "spaces",
+        "data": "data",
+        "runtime": "runtime",
+        "knowledge": "../Documents"
+      }
+    }
+  ]
+}

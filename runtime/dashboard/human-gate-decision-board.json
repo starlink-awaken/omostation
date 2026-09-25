@@ -1,0 +1,600 @@
+{
+  "schema": "agent-os-human-gate-decision-board/v1",
+  "refreshed_at": "2026-09-21T07:35:00Z",
+  "gate_regression_stale_beats": {
+    "status": "ACTIVE",
+    "failed_gates": [
+      "A2",
+      "A5"
+    ],
+    "cause": {
+      "kind": "STALE_BEATS",
+      "meta_doctor_dead_refs": 0,
+      "stale_beats": 1,
+      "system_health_last_scan_age_hours_over_sla": 48.3,
+      "weekly_review_heartbeat_age_days_over_sla": 14
+    },
+    "classification": "MAINTENANCE_REFRESH_OVERDUE_PLUS_HUMAN_REVIEW_OVERDUE",
+    "transaction_action": "No canonical state mutation, heartbeat fabrication, or owner review substitution."
+  },
+  "delivery_completion": {
+    "T10-172": {
+      "status": "DONE_ON_MAIN",
+      "implementation_pr": 4094,
+      "governance_reconciliation_pr": 4096,
+      "ledger_completion_pr": 4099
+    },
+    "T10-173": {
+      "status": "DONE_ON_MAIN",
+      "child_pr": 184,
+      "root_delivery_pr": 4097,
+      "ledger_completion_pr": 4098
+    },
+    "T10-170": {
+      "status": "DONE_ON_MAIN",
+      "implementation_pr": 4100,
+      "evidence_retro_pr": 4119,
+      "ledger_completion_pr": 4120
+    },
+    "T10-171": {
+      "status": "DONE_ON_MAIN",
+      "implementation_pr": 4101,
+      "evidence_retro_pr": 4119,
+      "canary_evidence_pr": 4130,
+      "ledger_completion_pr": 4134
+    }
+  },
+  "t10_172_reconciliation_proposal": {
+    "status": "MERGED_REQUIRED_CHECKS_PASS",
+    "path": "/Users/xiamingxing/Documents/学习进化/基建架构/2026-09-20-t10-172-pr4094-governance-reconciliation-proposal.md",
+    "sha256": "0bbc51e5b56024f1048e62d359ec60b0c9642417607154cf61e4dc855b4d7e4f",
+    "base_main": "f728b1f589c9adc8b2c96f4626eb435204ae5f07",
+    "write_surfaces": [
+      "docs/superpowers/specs/2026-09-20-t10-172-omo-gitlink-freshness-design.md",
+      "docs/plans/3y-bet-ledger.yaml",
+      ".omo/_knowledge/retros/BET-Y1Q4-T10-172.md"
+    ],
+    "pr": 4096,
+    "merge_commit": "c033a210bbf11aa7644ffb434489d7d695c68b87",
+    "merged_at": "2026-09-20T10:44:11Z"
+  },
+  "pr_4088_triage": {
+    "status": "CLOSED",
+    "classification": "RELEVANT_DASHBOARD_LEDGER_REGISTRATION",
+    "mergeable": "MERGEABLE",
+    "merge_state": "BLOCKED",
+    "failed_required_checks": [],
+    "local_ledger_lint": "PASS: 429 bets, 14 tracks, no errors",
+    "target_bets_present": [
+      "BET-Y2Q2-T8-02",
+      "BET-Y2Q2-T8-03",
+      "BET-Y2Q2-T8-04"
+    ],
+    "risk": "The branch diff also rewraps large portions of the ledger and combines the OMO gitlink advance with documentation registration.",
+    "failed_log_evidence": "UNPROVABLE: GitHub Actions job-log API returned transient EOF after three read-only attempts.",
+    "failed_required_checks_restored": [
+      "gac-gate",
+      "governance-verify"
+    ],
+    "closed_by_owner": true,
+    "action": "No reopen or duplicate. Dashboard BET registration remains unmerged and must be re-prepared through a later governed transaction."
+  },
+  "pr_4090_triage": {
+    "status": "CLOSED",
+    "classification": "SUPERSEDED_BY_MERGED_ADR_REPAIR",
+    "merged_repair": "PR #4092 / commit b17e7e9a6",
+    "local_branch_state": "Still contains broad resident/state/ledger/OMO changes beyond ADR repair and diverges from main.",
+    "action": "No reopen, rerun, merge, branch deletion, or cleanup."
+  },
+  "pr_4094_triage": {
+    "status": "MERGED_REQUIRED_CHECKS_PASS",
+    "classification": "QUARTERLY_REPORT_AUTOMATION_WITH_BROAD_LEDGER_REWRITE_AND_OMO_GITLINK",
+    "mergeable": "MERGEABLE",
+    "merge_state": "BLOCKED",
+    "failed_required_checks": [],
+    "merged_at": "2026-09-20T10:01:47Z",
+    "merge_commit": "f728b1f589c9adc8b2c96f4626eb435204ae5f07",
+    "local_ledger_lint": "PASS: 426 bets, 14 tracks, no errors",
+    "omo_gitlink": "d7feb927f97f9aca7871a6965e8211ba99c18437",
+    "risk": "The branch combines quarterly-report automation with a large ledger rewrite and the same projects/omo advance already present in PR #4088 and targeted by accepted T10-172.",
+    "failed_log_evidence": "Original failed jobs were superseded by a successful rerun after cde5c1f2; earlier log access was blocked by transient GitHub API EOF.",
+    "head_evidence": {
+      "oid": "cde5c1f2d211e914398a46ff0ce85012500239c0",
+      "checks_passed": true,
+      "failed_checks_at_snapshot": []
+    },
+    "owner_fix_in_progress": {
+      "status": "COMMITTED",
+      "evidence": [
+        "Commit cde5c1f2 deletes bin/_registry/scripts/governance/daemon-watchdog.yaml",
+        "Commit cde5c1f2 disables .omo/_truth/registry/services.yaml service gac.daemon_watchdog",
+        "Commit cde5c1f2 registers bin/reports/quarterly-report.py"
+      ],
+      "assessment": "Registry/service configuration retirement is committed and merged; host launchd retirement was completed separately with a backed-up plist."
+    },
+    "action": "No duplicate T10-172 implementation. Verify origin/main after network recovery and preserve #4094 as the merge provenance."
+  },
+  "code_main_sync": {
+    "status": "PASS",
+    "head": "25adbd70cd9c67f78276f390a03a15b97bad2765",
+    "origin_main": "25adbd70cd9c67f78276f390a03a15b97bad2765",
+    "dirty_count": 0,
+    "omo_single_control_plane": "PASS"
+  },
+  "projection_incident": {
+    "status": "RESTORED_WITH_DEPLOYED_COLLECTOR",
+    "classification": "EXPECTED_UNMERGED_T10_170_GAP",
+    "t10_170_still_required": true
+  },
+  "evidence_snapshots": [
+    {
+      "id": "execution-environment-20260920T083400Z",
+      "json_path": "/Users/xiamingxing/Documents/学习进化/基建架构/2026-09-20-agent-os-execution-environment-snapshot-20260920T083400Z.json",
+      "json_sha256": "4a1377b269250d0ace1c1b77fe513e27f458f2fa9b00e686f10592d9aee2090c",
+      "md_path": "/Users/xiamingxing/Documents/学习进化/基建架构/2026-09-20-agent-os-execution-environment-snapshot-20260920T083400Z.md",
+      "md_sha256": "9bddedb91cdf86f668160eaa8da67dc0cfeaed471458f658166e516c586fde05",
+      "gates_all_pass": true,
+      "claims_samples": 419
+    },
+    {
+      "id": "execution-environment-20260920T084600Z",
+      "json_path": "/Users/xiamingxing/Documents/学习进化/基建架构/2026-09-20-agent-os-execution-environment-snapshot-20260920T084600Z.json",
+      "json_sha256": "26ce57374ade05609eee1847d9459cba5b8c1496b71fca525288e425de0e918d",
+      "md_path": "/Users/xiamingxing/Documents/学习进化/基建架构/2026-09-20-agent-os-execution-environment-snapshot-20260920T084600Z.md",
+      "md_sha256": "44cabbf117e538c6aabd4e41c87759f57ca9f78e33b34ca39ed86f1ee4e00d58",
+      "gates_all_pass": true,
+      "code_root_health": "PASS",
+      "omo_single_control_plane": "PASS",
+      "claims_samples": 435
+    }
+  ],
+  "alert_triage": {
+    "id": "submodule-freshness-gatekeeper",
+    "severity": "high",
+    "classification": "REAL_DEBT",
+    "status": "TARGET_REACHED_BY_PR4094_RECONCILIATION_REQUIRED",
+    "evidence": {
+      "recent_failures": 3,
+      "latest_runs": [
+        35498243723,
+        35497969606,
+        35497835777
+      ],
+      "main_origin_pin": "d7feb927f97f9aca7871a6965e8211ba99c18437",
+      "child_target": "d7feb927f97f9aca7871a6965e8211ba99c18437",
+      "child_pr": "omostation-omo#182",
+      "child_pr_state": "MERGED",
+      "child_pr_merge_commit": "20449f40877d302bd40e430a1e371e8020d93997",
+      "merge_commit_in_target": true,
+      "old_pin_is_ancestor_of_target": true
+    },
+    "not_a_stale_fixture": true,
+    "reconciliation_required": true
+  },
+  "remote_main": "f96a182c53d5b64cf0438282765a8e8776be7f3b",
+  "a4_recovery": {
+    "status": "PASS_ON_ORIGIN_MAIN",
+    "merge_pr": 4093,
+    "merge_commit": "25adbd70cd9c67f78276f390a03a15b97bad2765",
+    "post_merge_replay": {
+      "ok": true,
+      "drift_count": 0,
+      "orphan_count": 0,
+      "known_orphan_count": 1
+    },
+    "host_deployment": {
+      "status": "PASS",
+      "registry_sha256": "4aaded5eb448c6fcca38cd90f35fc360c07638cc2832d237c03d88480765a4e9",
+      "origin_registry_sha256": "4aaded5eb448c6fcca38cd90f35fc360c07638cc2832d237c03d88480765a4e9",
+      "backup_sha256": "f8ee9d9ece3cb722ccdd87bf94fc7ee85dca9a865b9f2f830016d9e42de629e8",
+      "backup_path": "/Users/xiamingxing/.local/share/zhixing-dashboard/code-main/.omo/cron/registry.yaml.pre-4093-20260920T081044Z"
+    },
+    "live_gate_recheck": {
+      "A1": "PASS",
+      "A2": "PASS",
+      "A3": "PASS",
+      "A4": "PASS",
+      "A5": "PASS",
+      "note": "A1.3 Cockpit-UI check reports the host code-main deployment tree lacks an initialized cockpit-ui checkout; canonical projects/cockpit-ui has the correct remote."
+    }
+  },
+  "canonical_workspace_warning": {
+    "status": "WARN",
+    "branch": "feat/quarterly-report-automation-20260920",
+    "ahead": 5,
+    "behind": 0,
+    "reason": "The shared Workspace remains on feat/quarterly-report-automation-20260920. Its head cde5c1f2 was merged through PR #4094 as origin/main f728b1f5, but the local cached origin/main ref still points to 25adbd70 because the last fetch failed. The worktree also has resident/state edits and a mode-only guard change. No reset, checkout, or cleanup was performed.",
+    "action": "Treat GitHub main f728b1f5 as decision truth; do not push, reset, update, or clean shared-tree work from this transaction."
+  },
+  "gate_regression_launchd_resolved": {
+    "status": "RESOLVED",
+    "failed_gates": [],
+    "omo_single_control_plane": "PASS",
+    "code_root_health": "PASS",
+    "cause": {
+      "kind": "DEAD_REF",
+      "launchd_label": "com.l4.gac.watchdog",
+      "target": "/Users/xiamingxing/Workspace/bin/gac/daemon-watchdog.py",
+      "exists": false,
+      "archived_path": "/Users/xiamingxing/Workspace/bin/_archive/2026-09-20-bin-quota-offset/daemon-watchdog.py",
+      "archived_exists": true
+    },
+    "classification": "RESOLVED_CONCURRENT_PR4094_RUNTIME_CUTOFF_GAP",
+    "introducing_commit": "d852ca5855ba792b7fcbfec634b8ec938771f587",
+    "resolution": {
+      "committed_service_disabled": true,
+      "committed_script_registry_deleted": true,
+      "fix_commit": "cde5c1f2d211e914398a46ff0ce85012500239c0",
+      "launchd_plist_backed_up": true,
+      "backup_sha256": "4d9050542cfd91c69cf53ffd9dc6642daf24e8c756f6c184d49d71e49aa3cf2f",
+      "launchd_target_removed": true,
+      "meta_doctor_dead_refs": 0,
+      "a2": "PASS",
+      "a5": "PASS",
+      "assessment": "The stale retired launchd registration was bootout-ed and its plist moved to the launchd backup directory after #4094 merged."
+    },
+    "owner_action": "None; the runtime cutover is complete.",
+    "transaction_action": "Applied exact retired-service cleanup after #4094 merged; plist backup retained."
+  },
+  "workflow": {
+    "active_runs": 0,
+    "locks": 0,
+    "stale_locks": 0
+  },
+  "runtime": {
+    "claims_observation": {
+      "samples": 650,
+      "target": 1440,
+      "errors": 0,
+      "max_gap_seconds": 60.21,
+      "state": "shadow-active",
+      "diagnostic_snapshot": "/Users/xiamingxing/Documents/学习进化/基建架构/2026-09-20-claims-observation-4h-diagnostic/snapshot.json",
+      "sustained_diagnostic_snapshot": "/Users/xiamingxing/Workspace/runtime/dashboard/claims-observation-6h-sustained-diagnostic.json"
+    },
+    "gates": {
+      "A1": "PASS",
+      "A2": "PASS",
+      "A3": "PASS",
+      "A4": "PASS",
+      "A5": "PASS",
+      "A6": "PASS",
+      "A7": "PASS",
+      "A8": "PASS",
+      "A9": "PASS",
+      "RF0": "PASS",
+      "RC-DL": "PASS"
+    },
+    "business_value": {
+      "state": "NOT_PROVEN",
+      "v2_qualifying": 0,
+      "target": 30,
+      "legacy_qualifying": 1,
+      "legacy_counts_toward_target": false
+    }
+  },
+  "decisions": [
+    {
+      "id": "T10-170-IMPLEMENT",
+      "status": "LEDGER_CLOSED_DONE_ON_MAIN",
+      "spec_sha256": "d52e3e1fe22fa047bc103b897a6d38df9043032ef5e9a02a8ebd8f9e3ca5feba",
+      "ready": true,
+      "revalidated_at": "2026-09-20T12:18:50Z",
+      "revalidated_base": "5e47191fb575eb2bf9463c33398e531a1f50bff0",
+      "apply_check": "PASS",
+      "focused_tests": "4 passed",
+      "focused_test_verified_at": "2026-09-20T12:18:50Z",
+      "focused_test_base": "5e47191fb575eb2bf9463c33398e531a1f50bff0",
+      "expected_accepted_spec_sha256": "5297bb547c38f990def022a7609648275a750a245b3acb4f04204874b4b1c741",
+      "delivered_at": "2026-09-21T03:30:00Z",
+      "merged_commit": "2e38dbe53053184f2381aa0b6d85af86acf5b3c1",
+      "deployed_sha256": "01a2615077eea01afdc704ca6bb656a7de0e89e89a3f0cc93eeaa5d93fce6228",
+      "ledger_status": "done",
+      "done_at": "2026-09-21",
+      "evidence_retro_pr": 4119,
+      "evidence_retro_merge_commit": "561a69022",
+      "ledger_completion_pr": 4120,
+      "ledger_completion_merge_commit": "1f67edad7",
+      "workflow_run": "20260921T042502Z-project-doc-change-0aedb093",
+      "closeout": "ok",
+      "overall_state": "delivery_accepted"
+    },
+    {
+      "id": "T10-171-IMPLEMENT",
+      "status": "LEDGER_CLOSED_DONE_ON_MAIN",
+      "spec_sha256": "fe7bc2866848f9ffc38599e9385269341566cb99d5b8f373582128efa38dd7ed",
+      "ready": true,
+      "revalidated_at": "2026-09-20T12:18:50Z",
+      "revalidated_base": "5e47191fb575eb2bf9463c33398e531a1f50bff0",
+      "apply_check": "PASS",
+      "focused_tests": "3 passed",
+      "focused_test_verified_at": "2026-09-20T12:18:50Z",
+      "focused_test_base": "5e47191fb575eb2bf9463c33398e531a1f50bff0",
+      "expected_accepted_spec_sha256": "1df1f3db72b4343814861c74b688a03edd418e5f0c706158410cfa06824ae9b9",
+      "restart_runbook_sha256": "d343e64ef05386922f31748663e4e1d47efaad92e0fe0a3e449dfcd57ac614ac",
+      "delivered_at": "2026-09-21T03:30:00Z",
+      "merged_commit": "6982fc2ed",
+      "installed_sha256": "fa0f9b66054f598867ecf74f01047729e05e015e40f1fea265dd49b0575dc95f",
+      "note": "merged #4101 (6982fc2ed); asset fa0f9b66… installed; v2 canary observed 2026-09-21T05:18Z via respawn (PID 36955); evidence PR #4130; ledger done PR #4134",
+      "ledger_status": "done",
+      "evidence_retro_pr": 4119,
+      "evidence_retro_merge_commit": "561a69022",
+      "engineering": "VERIFIED",
+      "operational": "PROVEN",
+      "overall_state": "delivery_accepted",
+      "done_at": "2026-09-21",
+      "restart_disposition": "satisfied by ensure_local_server respawn (PID 36955); no kill needed",
+      "canary": {
+        "api": "agent-value-proof-readiness/v2",
+        "qualifying": 0,
+        "remaining": 30,
+        "receipts": [
+          "canary-health-20260921T0518Z.json",
+          "canary-readiness-20260921T0518Z.json"
+        ]
+      },
+      "canary_evidence_pr": 4130,
+      "canary_evidence_merge_commit": "8132e4a91",
+      "ledger_completion_pr": 4134,
+      "ledger_completion_merge_commit": "f96a182c5",
+      "workflow_run": "20260921T054308Z-project-doc-change-1b01c91e",
+      "closeout": "ok",
+      "value": "NOT_PROVEN"
+    },
+    {
+      "id": "CLAIMS-LIFECYCLE-RUNBOOK-V2-PROMOTE",
+      "status": "PROMOTED_V2_IS_SOLE_EXECUTION_RUNBOOK",
+      "candidate_sha256": "21c5005d76712fe504e06a414e864e18682ddd2a191298ef22f621d2388dc438",
+      "ready": true,
+      "authorizes_lifecycle_execution": false,
+      "promoted_at_utc": "2026-09-21T06:10:00Z",
+      "installed_runbook_sha256": "21c5005d76712fe504e06a414e864e18682ddd2a191298ef22f621d2388dc438",
+      "stale_v1_preserved_as": "lifecycle-execution-runbook.v1-stale-f188b76631007a566d20972d73ca76f02b02726cbc3ef7bccd426ecdb1b2e0ca.md",
+      "receipt": "PROMOTION-EXECUTED-20260921T0610Z.json",
+      "approval_form": "principal direct-reply authorization (verbatim quote not relayed; recorded in receipt)",
+      "binding_assertions": "PASS",
+      "lifecycle_execution_authorized": false
+    },
+    {
+      "id": "CLAIMS-LIFECYCLE-EXECUTE",
+      "status": "TERMINATED_AT_BINDING_VALIDATION",
+      "requires_separate_exact_quote": true,
+      "requires_decision_metadata": [
+        "principal_decision_id",
+        "decision_timestamp_utc",
+        "decision_expires_at_utc"
+      ],
+      "terminated_at_utc": "2026-09-21T07:35:00Z",
+      "principal_decision_id": "DEC-D4-20260921-01",
+      "evidence_dir": "~/.omo-evidence/d4-lifecycle-20260921/",
+      "outcome_document": "execution-outcome-TERMINATED.md",
+      "broker_state_change": "none (sequence=1, store sha256 matches preflight baseline)",
+      "external_effects_consumed": 0,
+      "root_causes": [
+        "WP-BET-Y1Q4-T10-145 done: no public interface can create a bound production run (BET_STATUS_NOT_STARTABLE; no parent run in 46-run registry)",
+        "approved publication path docs/reports/... absent from packet write_surfaces (exact-subset claim validation would fail)",
+        "clone-lifecycle.py fence request shape incompatible with broker issue-legacy-fence contract; v1-allow observe forbidden for v2 clone identities (claims_authority.py:534)"
+      ],
+      "graduation_rerun": "WP1_LIFECYCLE_EVIDENCE_INCOMPLETE (lifecycle finding now fully explained; AC-08 remains unproven per draft clause)",
+      "requires_for_retry": [
+        "re-bindable startable bet containing docs/reports write surface",
+        "fence-adapter contract fix on main",
+        "explicit decision on claims_authority.py:534 prohibition"
+      ]
+    },
+    {
+      "id": "T10-172-OMO-GITLINK-FRESHNESS",
+      "status": "TARGET_REACHED_BY_PR4094_DEDUPLICATION_RECONCILIATION_REQUIRED",
+      "spec_sha256": "91e9364539def7eceaa34b2431e343a694c4fcd99098e90ea0cbdd61286ee6e8",
+      "root_pin": "022ba3001219e1c7684643e977e46c15b1af54de",
+      "child_main": "d7feb927f97f9aca7871a6965e8211ba99c18437",
+      "focused_tests": "133 passed",
+      "focused_tests_verified_at_target_commit": true,
+      "ready": true,
+      "revalidated_at": "2026-09-20T08:18:00Z",
+      "revalidated_tests_at": "2026-09-20T08:56:30Z",
+      "child_origin_main_at_recheck": "d7feb927f97f9aca7871a6965e8211ba99c18437",
+      "old_pin_is_ancestor": true,
+      "focused_test_replay": "133 passed",
+      "focused_test_paths": [
+        "tests/test_workflow_claims_authority_bridge.py",
+        "tests/test_workflow_start_preflight.py"
+      ],
+      "clears_high_alerts": [
+        "Submodule Freshness Gatekeeper",
+        "Submodule Auto-Bump"
+      ],
+      "implementation_ready": true,
+      "write_surface_collision": {
+        "resolved_by_pr": 4094,
+        "merge_commit": "f728b1f589c9adc8b2c96f4626eb435204ae5f07",
+        "origin_main_omo_gitlink": "d7feb927f97f9aca7871a6965e8211ba99c18437",
+        "reason": "PR #4094 reached the same gitlink target, so a separate T10-172 PR would duplicate the write surface."
+      }
+    },
+    {
+      "id": "T10-172-GOVERNANCE-RECONCILIATION",
+      "status": "MERGED_REQUIRED_CHECKS_PASS",
+      "proposal_sha256": "0bbc51e5b56024f1048e62d359ec60b0c9642417607154cf61e4dc855b4d7e4f",
+      "base_main": "f728b1f589c9adc8b2c96f4626eb435204ae5f07",
+      "ready": true,
+      "pr": 4096,
+      "merge_commit": "c033a210bbf11aa7644ffb434489d7d695c68b87",
+      "merged_at": "2026-09-20T10:44:11Z",
+      "forbidden": [
+        "projects/omo",
+        "child repo",
+        "runtime",
+        "launchd",
+        "other BETs",
+        "completion/value evidence"
+      ]
+    },
+    {
+      "id": "T10-173-PROMOTION-HELPER-BINDING",
+      "status": "MERGED_DONE_ON_MAIN",
+      "spec_sha256": "15d90aceb6231bfad7d1d4fef8dbc10fbc9d496176c80cbc8aff1e241791dada",
+      "patch_sha256": "07c4941bd7ee0f6a87c7ec576350eb28a8556de3f41291a2d4b04f0f92aaf8fd",
+      "base": "d7feb927f97f9aca7871a6965e8211ba99c18437",
+      "standalone_test": "1 passed",
+      "workflow_regression": "320 passed",
+      "ready": true,
+      "revalidated_at": "2026-09-20T08:18:00Z",
+      "revalidated_tests_at": "2026-09-20T08:57:30Z",
+      "expected_accepted_spec_sha256": "4d2e333b565b77eb27395483c953ce3861e82df7c3ccb669ca608a7080c2cd6c",
+      "apply_check": "PASS",
+      "patched_import_check": "PASS",
+      "broader_workflow_regression_replay": "320 passed",
+      "base_import_red_reproduction_note": "Current uv environment did not reproduce the original base-import failure; the package's prior red evidence is retained unchanged.",
+      "root_gitlink_bump_separate": true,
+      "pr": 4097,
+      "merge_commit": "5562c87f1e6bbeb671b53b4190f4c288685cf2de",
+      "ledger_completion_pr": 4098,
+      "ledger_completion_merge_commit": "9f8753c3f692341e0dab3490330550f7c1f00078"
+    },
+    {
+      "id": "T10-174-ADR-NUMBERING-REPAIR",
+      "status": "RESOLVED_BY_MAIN_D96BE316A4D52FAFD60AA2A75C436E333FB32DC0",
+      "spec_sha256": "319c0b2eada7c2d4eedbd6c0e7f897762f8a44e0075e0b5e74217ff674651b74",
+      "patch_sha256": "d3855f2cb306728b0629317dc3955ad371953872c1be1851535815adc8487d6f",
+      "base": "f54202c84d8b960c4a02ae088d91d656436bf191",
+      "clears_gate": "A3",
+      "ready": false,
+      "resolved_by": "PR #4087 / commit d96be316a4d52fafd60aa2a75c436e333fb32dc0",
+      "evidence": "origin/main contains ADR-0453, INDEX.md, and DECL_EXEC_GAP references; no duplicate implementation approval is required."
+    }
+  ],
+  "claims_observation_live": {
+    "schema": "claims-observation-progress/v1",
+    "state": "IN_PROGRESS",
+    "activation_state": "shadow-active",
+    "window_started_at_utc": "2026-09-20T01:31:06.510188+00:00",
+    "sample_count": 868,
+    "minimum_samples": 1440,
+    "errors": 0,
+    "invalid": false,
+    "observed_max_gap_seconds": 60.210682,
+    "projected_window_end_utc": "2026-09-21T01:31:06Z",
+    "graduation_precheck": {
+      "last_checked_at_utc": "2026-09-20T05:32:02Z",
+      "verdict": "GRADUATION_FAIL_AT_CHECK_TIME",
+      "missing_lifecycle_evidence": [
+        "claim_observation_evidence",
+        "legacy_fence_publication_evidence",
+        "claim_mutation_lifecycle_evidence",
+        "expiry_or_replay_evidence"
+      ],
+      "note": "sample_count alone is insufficient; lifecycle evidence classes gate graduation."
+    },
+    "synced_at_utc": "2026-09-20T16:01:54Z"
+  },
+  "environment_findings": {
+    "git_remote_transport": {
+      "root_cause": "git global http.https://github.com.proxy and http.proxy point at 127.0.0.1:7890 which is currently failing SSL; direct connectivity works.",
+      "safe_workaround": "per-invocation empty proxy override (-c http.proxy= -c https.proxy= -c http.https://github.com.proxy= with proxy env unset)",
+      "origin_main_verified": "5e47191fb575eb2bf9463c33398e531a1f50bff0",
+      "action": "read-only fetch only; no config mutation"
+    },
+    "system_health_freshness": {
+      "canonical_age_hours": 48.6,
+      "legacy_age_hours": 152.7,
+      "standard_refresh_path": "omo state refresh (omo.cli; supports --dry-run) scanning runtime matrix, KEI audit, Agora health",
+      "action": "EXECUTED via omo state refresh (dry-run first; writes gitignored canonical projection only, no git-tree effect)",
+      "result": "6 services updated; meta-doctor stale_beats=0, system_health age 0.0h",
+      "remaining_failure": "ritual_lapsed=1 (human weekly-review heartbeat; agent must not fabricate)",
+      "live_projection": "CONFIRMED: 43910 projection 2026-09-20T12:52:49Z shows A2 PASS and A5 PASS; A1-A9/RF0/RC-DL all PASS on live gates. Only remaining meta-doctor item is ritual_lapsed=1 (human weekly review).",
+      "durable_fix": "no scheduler registered yet; needs separate authorization"
+    },
+    "handoff_package_verifier": {
+      "verifier_status": "FAIL_EXPECTED_DRIFT",
+      "manifest_pinned_local": "2026-09-20 15:25:19+08",
+      "manifest_verified_root_main": "4202a949edcfc965af35ee855fd424a6e06f85e5",
+      "board_hash_drifts": "3 (legit: live sync at 12:43Z updated json/md/html)",
+      "package_file_drifts": "4 (post-manifest revalidation edits 16:57-18:38+08 for T10-170 runbook, T10-172 design+runbook, T10-173 runbook; live files are the revalidated versions vs 5e47191f)",
+      "decision_id_drift": "found 8 vs expected 7; extra T10-172-GOVERNANCE-RECONCILIATION added after #4094",
+      "resolution": "manifest NOT mutated; at execution time re-verify current bytes and the quoted Spec/patch SHAs before any effect"
+    },
+    "system_health_scheduler": {
+      "crontab_entries": 0,
+      "launchd_entries": 0,
+      "conclusion": "no scheduler exists; last_scan staleness is structural, not a broken timer",
+      "safe_manual_path": "omo state refresh (--dry-run available); execution paused while shared Workspace is dirty on concurrent branch",
+      "durable_fix": "registering a scheduler mutates user config and needs its own explicit authorization"
+    },
+    "git_proxy": {
+      "clashx_listening": true,
+      "upstream_ssl_to_github": "failing through proxy; direct connection works",
+      "recommended_user_fix": "git config --global --unset http.https://github.com.proxy (user decision; not applied)"
+    },
+    "decision_4_ready": {
+      "exact_quote_source": ".local/share/zhixing-dashboard/claims-observation/lifecycle-authorization-review.md",
+      "extra_required_metadata": [
+        "principal_decision_id",
+        "decision_timestamp_utc",
+        "decision_expires_at_utc"
+      ],
+      "staged_at": "2026-09-20T12:47:35Z"
+    },
+    "t10_174_status": {
+      "status": "VERIFIED_RESOLVED",
+      "evidence": "single 0402-gate-shift-autonomous-review.md in decisions dir; INDEX.md has exactly one ADR-0402 entry"
+    },
+    "pr_4088_reprep_facts": {
+      "pr_state": "CLOSED_NOT_MERGED",
+      "title": "docs(bet): 登记 dashboard 战略重组 3 BET (Y2Q2-T8-02/03/04)",
+      "files": [
+        "docs/plans/3y-bet-ledger.yaml",
+        "projects/omo"
+      ],
+      "note": "read-only fetch via no-proxy gh; future governed re-prep must redo the 3 BET registrations + OMO gitlink from then-latest main"
+    },
+    "dashboard_refresh_cadence": {
+      "status": "NOMINAL_RETRACTED_DEBT",
+      "observed_ticks": [
+        "12:47:40Z",
+        "12:52:49Z",
+        "12:58:08Z"
+      ],
+      "interval": "~5m20s (matches StartInterval=300 + ~74s run duration)",
+      "note": "earlier stale read sampled before write completion; no scheduler fix needed"
+    },
+    "agent_brief_gap": {
+      "issue": "pending exact approvals (T10-170/T10-171/runbook-v2/D4) are absent from agent-brief next_actions; pending-authorizations v2 API returns empty",
+      "impact": "agents reading the brief cannot see what awaits the principal",
+      "fix_requires": "extend collector sources to include the decision-board pending list — governed code change (asset + deployed copy), separate authorization"
+    },
+    "weekly_review_principal_action": {
+      "command": "make weekly-review   # = python3 bin/gac/weekly-review.py --generate",
+      "note": "principal-only; agents must not run it (heartbeat fabrication forbidden)",
+      "last_generated": "2026-08-24T11:21:25Z"
+    },
+    "approval_quote_binding": {
+      "verified_at": "2026-09-20T13:07:22Z",
+      "t10_170_spec": "MATCH d52e3e1f...",
+      "t10_171_spec": "MATCH fe7bc286...",
+      "restart_runbook": "MATCH d343e64e...",
+      "collector_patch": "MATCH 64275d2c...",
+      "t10_170_test_patch": "MATCH 5987e531...",
+      "live_server_patch": "MATCH c3a33ed2...",
+      "t10_171_test": "MATCH b99d91f4...",
+      "conclusion": "all quoted SHAs in Decisions 1-2 bind to live package bytes; approvals are executable as written"
+    }
+  },
+  "awaiting_principal": [
+    {
+      "id": "weekly-review-heartbeat",
+      "action": "make weekly-review",
+      "status": "principal_only"
+    },
+    {
+      "id": "CLAIMS-LIFECYCLE-EXECUTE",
+      "status": "awaiting_exact_quote_plus_principal_decision_id_timestamp_expiry",
+      "quote_ref": "Decision 4",
+      "note": "D3 promoted 2026-09-21T06:10Z; execution quote lives in lifecycle-authorization-review.md (331c8b46…)"
+    },
+    {
+      "id": "AGENT-BRIEF-PENDING-SURFACING",
+      "status": "opt_in_package_ready",
+      "package": "/Users/xiamingxing/Documents/学习进化/基建架构/2026-09-20-agent-brief-pending-surfacing-package"
+    }
+  ]
+}

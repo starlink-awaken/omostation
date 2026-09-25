@@ -1,0 +1,166 @@
+{
+ "note": "derived from data/scene-metrics.db — DB 是唯一写入口, 勿手编",
+ "rows": [
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-17",
+   "runs": 1,
+   "scene_id": "scene-agora-bos-gateway",
+   "successes": 1,
+   "total_duration_ms": 4086
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-18",
+   "runs": 1,
+   "scene_id": "document-review",
+   "successes": 1,
+   "total_duration_ms": 8795
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-18",
+   "runs": 3,
+   "scene_id": "inbox-to-decision",
+   "successes": 3,
+   "total_duration_ms": 20751
+  },
+  {
+   "avg_confidence": 0.575,
+   "day": "2026-09-18",
+   "runs": 2,
+   "scene_id": "scene-agora-bos-gateway",
+   "successes": 1,
+   "total_duration_ms": 9092
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-18",
+   "runs": 2,
+   "scene_id": "scene-inbox-to-decision",
+   "successes": 2,
+   "total_duration_ms": 14958
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-18",
+   "runs": 2,
+   "scene_id": "scene-knowledge-ingest",
+   "successes": 2,
+   "total_duration_ms": 2
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-19",
+   "runs": 6,
+   "scene_id": "scene-agora-bos-gateway",
+   "successes": 2,
+   "total_duration_ms": 17008
+  },
+  {
+   "avg_confidence": 0.6833,
+   "day": "2026-09-19",
+   "runs": 3,
+   "scene_id": "scene-document-review",
+   "successes": 1,
+   "total_duration_ms": 10836
+  },
+  {
+   "avg_confidence": 0.0,
+   "day": "2026-09-19",
+   "runs": 2,
+   "scene_id": "scene-knowledge-ingest",
+   "successes": 2,
+   "total_duration_ms": 2
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-admin-classify",
+   "successes": 3,
+   "total_duration_ms": 28018
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-admin-collect",
+   "successes": 3,
+   "total_duration_ms": 28318
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-admin-compile",
+   "successes": 3,
+   "total_duration_ms": 27819
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-admin-forward",
+   "successes": 3,
+   "total_duration_ms": 27900
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-admin-inbox",
+   "successes": 3,
+   "total_duration_ms": 28051
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-admin-review",
+   "successes": 3,
+   "total_duration_ms": 28142
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-admin-submit",
+   "successes": 3,
+   "total_duration_ms": 28189
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-agora-bos-gateway",
+   "successes": 3,
+   "total_duration_ms": 27964
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-document-review",
+   "successes": 3,
+   "total_duration_ms": 28737
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 1,
+   "scene_id": "scene-documents-accepted-release",
+   "successes": 1,
+   "total_duration_ms": 11169
+  },
+  {
+   "avg_confidence": 0.85,
+   "day": "2026-09-23",
+   "runs": 3,
+   "scene_id": "scene-knowledge-ingest",
+   "successes": 3,
+   "total_duration_ms": 28096
+  }
+ ],
+ "schema": "scene-history-export/v1"
+}

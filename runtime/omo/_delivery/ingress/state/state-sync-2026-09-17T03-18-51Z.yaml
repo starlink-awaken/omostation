@@ -1,0 +1,22 @@
+kind: state_projection_sync
+actor: omo state sync
+source_ref: omo-state:sync
+created_at: '2026-09-17T03:18:51Z'
+target: .omo/state/health.yaml + .omo/state/system.yaml + BRIEF.md + .omo/_control/governance-data.json
+changed_paths:
+- .omo/state/runtime/health.yaml
+- .omo/state/system.yaml
+write_count: 2
+writes:
+- path: .omo/state/runtime/health.yaml
+  changed: true
+  reason: written
+- path: .omo/state/system.yaml
+  changed: true
+  reason: written
+- path: .omo/state/runtime/brief.md
+  changed: false
+  reason: unchanged
+- path: .omo/state/runtime/governance-data.json
+  changed: false
+  reason: unchanged

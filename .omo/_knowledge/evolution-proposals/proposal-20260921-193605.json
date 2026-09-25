@@ -1,0 +1,33 @@
+{
+  "by_level": {
+    "S1": 0,
+    "S2": 1,
+    "S3": 1
+  },
+  "external_proposals": 2,
+  "generated_at": "2026-09-21T19:35:21.575777+00:00",
+  "internal_proposals": 0,
+  "mode": "standard",
+  "proposals": [
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S3",
+      "proposal": "[hacker_news] In Search of a Compositional Theory of Self-Stabilization",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    },
+    {
+      "action": "research_task",
+      "feed": "hacker_news",
+      "level": "S2",
+      "proposal": "[hacker_news] US halts flights at busy East Coast airports, says fiber line cut",
+      "severity": "low",
+      "source": "external_rss",
+      "type": "trend_signal"
+    }
+  ],
+  "schema": "evolution-proposal/v1",
+  "total_proposals": 2
+}

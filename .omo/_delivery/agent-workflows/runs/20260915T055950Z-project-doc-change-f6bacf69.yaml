@@ -1,0 +1,139 @@
+run_id: 20260915T055950Z-project-doc-change-f6bacf69
+workflow_id: project-doc-change
+status: closed
+actor: xiamingxing
+agent_profile: governance-agent
+objective: BET-Y1Q4-T10-151 A8 accepted specification binding
+created_at: '2026-09-15T05:59:50Z'
+updated_at: '2026-09-18T03:35:03Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260915T055950Z-project-doc-change-f6bacf69
+  actor: xiamingxing
+  profile: governance-agent
+locks:
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/docs.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/doc-ssot.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_docs_superpowers_specs.lock.yaml
+- /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_docs_plans_3y-bet-ledger.yaml.lock.yaml
+plan:
+  id: project-doc-change
+  title: Project documentation change
+  purpose: Keep documentation changes executable, SSOT-safe, and verifiable.
+  agents:
+    roles:
+    - docs-agent
+    - governance-agent
+    observer_policy: optional_for_broad_doc_rewrites
+  allowed_lanes:
+  - docs
+  - governance_code
+  - config
+  lock_scopes:
+  - docs
+  - doc-ssot
+  phases:
+    preflight:
+    - id: status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: edit-docs
+      mode: manual
+      command:
+      - agent
+      - edit
+      - docs-with-ssot-pointers
+    verification:
+    - id: doc-ssot-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/doc-ssot-lint.py
+      - --json
+    - id: ssot-guardian
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- 'Superseded by governed BET-Y1Q4-T10-151 truth recovery; PR #3806 merged as 15644ffe6d885dcf1f86b4442bb7bef69797efe4.
+  No further work remains in this unbound legacy run.'
+- 'agent-workflow verify: 2 checks ok=False'
+- 'agent-workflow observe: continue'
+- 'agent-workflow verify: 5 checks ok=False'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-15T07:22:52Z'
+  actor: xiamingxing
+  paths:
+  - docs/superpowers/specs
+  surfaces: []
+  scopes:
+  - path:docs/superpowers/specs
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_docs_superpowers_specs.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260915T055950Z-project-doc-change-f6bacf69/affected-graph.json
+- claimed_at: '2026-09-15T07:22:52Z'
+  actor: xiamingxing
+  paths:
+  - docs/plans/3y-bet-ledger.yaml
+  surfaces: []
+  scopes:
+  - path:docs/plans/3y-bet-ledger.yaml
+  locks:
+  - /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/locks/path_docs_plans_3y-bet-ledger.yaml.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260915T055950Z-project-doc-change-f6bacf69/affected-graph.json
+closed_at: '2026-09-18T03:35:03Z'
+released_locks: []

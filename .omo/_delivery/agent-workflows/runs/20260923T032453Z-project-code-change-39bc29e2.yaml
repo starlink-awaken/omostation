@@ -1,0 +1,203 @@
+run_id: 20260923T032453Z-project-code-change-39bc29e2
+workflow_id: project-code-change
+status: ok
+actor: xiamingxing
+agent_profile: engineering-agent
+objective: '[BET-Y2Q2-T10-156] Claims preflight high-water filename reconciliation
+  (Appetite: 2 hours)'
+created_at: '2026-09-23T03:24:53Z'
+updated_at: '2026-09-23T03:32:03Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260923T032453Z-project-code-change-39bc29e2
+  actor: xiamingxing
+  profile: engineering-agent
+  bet_id: BET-Y2Q2-T10-156
+locks:
+- .omo/_delivery/agent-workflows/locks/project.lock.yaml
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_bin_gac_claims-shadow-preflight.py.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_docs_plans_3y-bet-ledger.yaml.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_tests_unit_test_claims_shadow_preflight.py.lock.yaml
+plan:
+  id: project-code-change
+  title: Project code change
+  purpose: Route code changes through project-local verification and workspace governance
+    gates.
+  agents:
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  lock_scopes:
+  - 'project:'
+  - root-gate
+  phases:
+    preflight:
+    - id: root-status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: project-status
+      mode: advisory
+      cwd: projects/
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: implement
+      mode: manual
+      command:
+      - agent
+      - edit
+      - project-code
+    verification:
+    - id: project-tests
+      mode: manual
+      cwd: projects/
+      command:
+      - project-local
+      - test-command
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- 'agent-workflow verify: 1 checks ok=True'
+- 'agent-workflow observe: continue'
+bet_id: BET-Y2Q2-T10-156
+spec_binding: &id001
+  content_digest: sha256:107ece8c898a44642776f14c7cb882f6f114231af112a18379d4abfecffe3aea
+  decision_ref: decision://accepted/BET-Y2Q2-T10-156
+  spec_ref: repo://docs/superpowers/specs/2026-09-22-claims-preflight-high-water-reconciliation-design.md
+  spec_version: 1.0.0
+instruction_binding: &id002
+  instruction_ref: repo://docs/operations/blueprint-agent-instruction-pack-v1.md
+  instruction_version: blueprint-agent-instruction-pack/v1
+  content_digest: sha256:b81909ddfdeb85d6c724e53a02f92b293ea8238cc007817e5d2f6268fba6ba53
+  instruction_profile: executor
+work_packet:
+  packet_id: WP-BET-Y2Q2-T10-156
+  schema_version: work-packet/v2
+  blueprint_ref: blueprint://multi-agent-execution-control/v1
+  wave: Y2Q2
+  bet_id: BET-Y2Q2-T10-156
+  strategic_outcome: Align Claims Authority preflight with the production high-water
+    filename so admission is not falsely blocked.
+  objective: Align Claims Authority preflight with the production high-water filename
+    so admission is not falsely blocked.
+  why_now: priority=P1; appetite=2 hours
+  status: active
+  authority:
+    strategist: 3y-bet-ledger
+    human_gate: false
+    risk_level: R1
+  scope:
+    read_surfaces:
+    - docs/plans/3y-bet-ledger.yaml
+    - docs/superpowers/specs/2026-09-22-claims-preflight-high-water-reconciliation-design.md
+    - docs/operations/blueprint-agent-instruction-pack-v1.md
+    write_surfaces:
+    - .omo/_knowledge/retros/BET-Y2Q2-T10-156.md
+    - bin/gac/claims-shadow-preflight.py
+    - docs/plans/3y-bet-ledger.yaml
+    - docs/superpowers/specs/2026-09-22-claims-preflight-high-water-reconciliation-design.md
+    - tests/unit/test_claims_shadow_preflight.py
+    non_goals:
+    - Do not rename, initialize, repair, or quarantine the production authority store.
+    - Do not activate Claims Authority or approve lifecycle operations.
+    - Do not rewrite receipts, enable instruction capability, or prove business value.
+  dependencies:
+    required_packets: []
+    required_decisions:
+    - decision://accepted/BET-Y2Q2-T10-156
+  acceptance:
+    done_when:
+    - id: AC-01
+      assertion: Focused preflight tests cover high-water-only, legacy-only, both-present,
+        and both-missing layouts.
+      evidence_type: structured_report
+    - id: AC-02
+      assertion: A clean exact-main preflight no longer reports authority_store_asymmetric_presence.
+      evidence_type: structured_report
+    - id: AC-03
+      assertion: Remaining admission blocker is only operation-specific host authorization
+        unless a real store defect appears.
+      evidence_type: structured_report
+    - id: AC-04
+      assertion: Ledger lint and governance gates pass.
+      evidence_type: structured_report
+    verify_commands:
+    - - uv run pytest -q tests/unit/test_claims_shadow_preflight.py
+    - - uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    - - make gac-local-gate
+  rollback:
+    strategy: stop and escalate
+    data_migration: false
+  circuit_breaker:
+    when:
+    - contract cannot be proven
+    action: stop_and_escalate
+  spec_binding: *id001
+  instruction_binding: *id002
+work_packet_hash: sha256:701ba28ce1b238be386d65978cb23662d82c368469a0a7d3c802cabcb650d582
+claims:
+- claimed_at: '2026-09-23T03:29:28Z'
+  actor: xiamingxing
+  paths:
+  - bin/gac/claims-shadow-preflight.py
+  - docs/plans/3y-bet-ledger.yaml
+  - tests/unit/test_claims_shadow_preflight.py
+  surfaces: []
+  scopes:
+  - path:bin/gac/claims-shadow-preflight.py
+  - path:docs/plans/3y-bet-ledger.yaml
+  - path:tests/unit/test_claims_shadow_preflight.py
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_bin_gac_claims-shadow-preflight.py.lock.yaml
+  - .omo/_delivery/agent-workflows/locks/path_docs_plans_3y-bet-ledger.yaml.lock.yaml
+  - .omo/_delivery/agent-workflows/locks/path_tests_unit_test_claims_shadow_preflight.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .affected-graph.json
+closed_at: '2026-09-23T03:32:03Z'
+released_locks:
+- .omo/_delivery/agent-workflows/locks/path_docs_plans_3y-bet-ledger.yaml.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_tests_unit_test_claims_shadow_preflight.py.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_bin_gac_claims-shadow-preflight.py.lock.yaml
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- .omo/_delivery/agent-workflows/locks/project.lock.yaml

@@ -1,0 +1,137 @@
+run_id: 20260917T124332Z-project-code-change-575d79ff
+workflow_id: project-code-change
+status: closed
+actor: xiamingxing
+agent_profile: governance-agent
+objective: ''
+created_at: '2026-09-17T12:43:32Z'
+updated_at: '2026-09-18T03:35:10Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260917T124332Z-project-code-change-575d79ff
+  actor: xiamingxing
+  profile: governance-agent
+locks:
+- .omo/_delivery/agent-workflows/locks/project.lock.yaml
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_bin_panorama_panorama-collect.py.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_docs_environment-evidence.lock.yaml
+plan:
+  id: project-code-change
+  title: Project code change
+  purpose: Route code changes through project-local verification and workspace governance
+    gates.
+  agents:
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  lock_scopes:
+  - 'project:'
+  - root-gate
+  phases:
+    preflight:
+    - id: root-status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: project-status
+      mode: advisory
+      cwd: projects/
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: implement
+      mode: manual
+      command:
+      - agent
+      - edit
+      - project-code
+    verification:
+    - id: project-tests
+      mode: manual
+      cwd: projects/
+      command:
+      - project-local
+      - test-command
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- 'PR #3890 merged as 9dc7daa5fc51ad9ffaeab60bd299a4c4b20c60a4 from exact head 129d93907d3aa50ec4c8af5cf35be9732c64d272.
+  origin/main now projects A6 proven/PASS/live=true from the read-only Orca R0 verifier:
+  runtime ready, probes 6/6, R0 dispatch/worker/reclaim evidence accepted, write guard
+  OK. Closed blocked only because unbound run lacks vision-to-retro BET binding.'
+- 'agent-workflow verify: 7 checks ok=False'
+- 'agent-workflow observe: continue'
+- 'agent-workflow verify: 5 checks ok=False'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-17T12:43:32Z'
+  actor: xiamingxing
+  paths:
+  - bin/panorama/panorama-collect.py
+  surfaces: []
+  scopes:
+  - path:bin/panorama/panorama-collect.py
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_bin_panorama_panorama-collect.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260917T124332Z-project-code-change-575d79ff/affected-graph.json
+- claimed_at: '2026-09-17T12:43:32Z'
+  actor: xiamingxing
+  paths:
+  - docs/environment-evidence
+  surfaces: []
+  scopes:
+  - path:docs/environment-evidence
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_docs_environment-evidence.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/evidence/20260917T124332Z-project-code-change-575d79ff/affected-graph.json
+closed_at: '2026-09-18T03:35:10Z'
+released_locks: []

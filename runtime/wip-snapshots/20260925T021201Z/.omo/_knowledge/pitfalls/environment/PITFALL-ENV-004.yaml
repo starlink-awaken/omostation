@@ -1,0 +1,24 @@
+schema: agent-error/v1
+id: PITFALL-ENV-004
+category: environment
+severity: high
+title: shell 里 rm/cp 是交互式 alias：命令退出码 0 但什么都没做
+symptom: 用 cp 恢复被临时改坏的文件，命令返回成功且无报错，后续测试仍跑在旧内容上；同一会话里 rm 删一个文件也没删掉，&& echo 被 alias
+  的交互提示吞掉
+root_cause: 用户 shell 把 rm/cp alias 成 rm -i / cp -i；目标已存在时 cp 打印 overwrite? (y/n [n])
+  not overwritten 后以退出码 0 结束，非交互执行环境下等于静默 no-op
+solution: 脚本化/代理执行一律用 command rm -f / command cp -f 绕开 alias，或直接用编辑工具改文件；恢复类操作执行后立即用内容标记（grep
+  关键行）验证真的生效
+prevention: 任何'成功但没改变世界'的命令都按故障处理：写完必须读回验证，不把退出码当效果证明；跨 worktree 恢复文件优先用版本控制 checkout
+  而不是 cp
+tags:
+- shell-alias
+- silent-noop
+- cp
+- rm
+- verification
+discovered_by: governance-agent
+discovered_at: '2026-09-24'
+times_encountered: 1
+last_confirmed_at: '2026-09-24'
+status: active

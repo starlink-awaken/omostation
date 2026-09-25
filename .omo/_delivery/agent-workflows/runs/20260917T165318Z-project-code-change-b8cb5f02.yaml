@@ -1,0 +1,123 @@
+run_id: 20260917T165318Z-project-code-change-b8cb5f02
+workflow_id: project-code-change
+status: closed
+actor: xiamingxing
+agent_profile: engineering-agent
+objective: Schedule recurring Agent Cell semantic lifecycle canary
+created_at: '2026-09-17T16:53:18Z'
+updated_at: '2026-09-18T03:35:14Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260917T165318Z-project-code-change-b8cb5f02
+  actor: xiamingxing
+  profile: engineering-agent
+locks:
+- .omo/_delivery/agent-workflows/locks/project.lock.yaml
+- .omo/_delivery/agent-workflows/locks/root-gate.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_.omo_cron_registry.yaml.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_runtime_cron_com.omostation.agent-cell-semantic-smoke.plist.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_tests_unit_test_agent_cell_semantic_scheduler.py.lock.yaml
+plan:
+  id: project-code-change
+  title: Project code change
+  purpose: Route code changes through project-local verification and workspace governance
+    gates.
+  agents:
+    roles:
+    - engineering-agent
+    - qa-agent
+    - governance-agent
+    observer_policy: use_for_high_blast_radius_or_unattended_runs
+  allowed_lanes:
+  - code
+  - governance_code
+  - config
+  lock_scopes:
+  - 'project:'
+  - root-gate
+  phases:
+    preflight:
+    - id: root-status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: project-status
+      mode: advisory
+      cwd: projects/
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: implement
+      mode: manual
+      command:
+      - agent
+      - edit
+      - project-code
+    verification:
+    - id: project-tests
+      mode: manual
+      cwd: projects/
+      command:
+      - project-local
+      - test-command
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: diff-stat
+      mode: required
+      command:
+      - git
+      - diff
+      - --stat
+evidence:
+- 'Unbound transaction closeout: PR #3902 squash-merged at 8f9cdcc857717a229e781140bd0d49960b94bb0f;
+  semantic lifecycle canary scheduled and kickstarted PASS; claims authority not invoked;
+  no BET completion/value claim'
+- 'agent-workflow verify: 5 checks ok=False'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-17T16:53:31Z'
+  actor: xiamingxing
+  paths:
+  - .omo/cron/registry.yaml
+  - runtime/cron/com.omostation.agent-cell-semantic-smoke.plist
+  - tests/unit/test_agent_cell_semantic_scheduler.py
+  surfaces: []
+  scopes:
+  - path:.omo/cron/registry.yaml
+  - path:runtime/cron/com.omostation.agent-cell-semantic-smoke.plist
+  - path:tests/unit/test_agent_cell_semantic_scheduler.py
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_.omo_cron_registry.yaml.lock.yaml
+  - .omo/_delivery/agent-workflows/locks/path_runtime_cron_com.omostation.agent-cell-semantic-smoke.plist.lock.yaml
+  - .omo/_delivery/agent-workflows/locks/path_tests_unit_test_agent_cell_semantic_scheduler.py.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/_delivery/agent-workflows/affected/20260917T165318Z-project-code-change-b8cb5f02.json
+closed_at: '2026-09-18T03:35:14Z'
+released_locks: []

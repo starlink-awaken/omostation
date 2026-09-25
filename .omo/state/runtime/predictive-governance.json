@@ -1,0 +1,10 @@
+{
+  "check": "check-x",
+  "simulated_threshold": 0,
+  "window": 7,
+  "recent_fail_rate": 0.2,
+  "recent_total": 5,
+  "recent_fails": 1,
+  "would_trigger": true,
+  "recommendation": "threshold=0 would trigger 1 failures in last 7 runs"
+}

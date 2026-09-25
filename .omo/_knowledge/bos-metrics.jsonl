@@ -1,0 +1,12 @@
+{"uri": "bos://system/health", "status": "resolved", "elapsed_ms": 10000, "transport": "http", "recorded_at": "2026-09-16T03:20:52.162262+00:00"}
+{"uri": "bos://system/health", "status": "resolved", "elapsed_ms": 10000, "transport": "in_process", "recorded_at": "2026-09-16T03:20:52.170971+00:00"}
+{"uri": "bos://system/health", "status": "resolved", "elapsed_ms": 500, "transport": "http", "recorded_at": "2026-09-16T03:20:52.179344+00:00"}
+{"uri": "bos://system/health", "status": "resolved", "elapsed_ms": 10000, "transport": "http", "recorded_at": "2026-09-16T03:20:52.183053+00:00"}
+{"uri": "bos://system/health", "status": "resolved", "elapsed_ms": 10000, "transport": "in_process", "recorded_at": "2026-09-16T03:22:38.372034+00:00"}
+{"elapsed_ms": 10000.0, "error": "", "recorded_at": "2026-09-16T07:31:48Z", "status": "resolved", "transport": "in_process", "uri": "bos://memory/kos/search"}
+{"elapsed_ms": 10000.0, "error": "", "recorded_at": "2026-09-16T07:32:47Z", "status": "resolved", "transport": "in_process", "uri": "bos://harness/run/start"}
+{"elapsed_ms": 10000.0, "error": "", "recorded_at": "2026-09-25T01:29:57Z", "status": "resolved", "transport": "http", "uri": "bos://system/health"}
+{"elapsed_ms": 10000.0, "error": "", "recorded_at": "2026-09-25T01:29:57Z", "status": "resolved", "transport": "in_process", "uri": "bos://system/health"}
+{"elapsed_ms": 500.0, "error": "", "recorded_at": "2026-09-25T01:29:57Z", "status": "resolved", "transport": "http", "uri": "bos://system/health"}
+{"elapsed_ms": 10000.0, "error": "", "recorded_at": "2026-09-25T01:29:57Z", "status": "resolved", "transport": "http", "uri": "bos://system/health"}
+{"uri": "bos://system/health", "status": "resolved", "elapsed_ms": 123.0, "transport": "http"}

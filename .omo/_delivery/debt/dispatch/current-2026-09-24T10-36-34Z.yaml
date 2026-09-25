@@ -1,0 +1,21 @@
+kind: debt_dispatch_artifact
+carrier_ref: .omo/debt/dispatch/current.yaml
+artifact_generated_at: '2026-09-24T10:36:34Z'
+artifact_meta:
+  artifact_kind: debt_dispatch_artifact
+  broker_ref: null
+  writer_ref: projects/omo/src/omo/omo_debt.py
+  retention_mode: until_replaced
+  lifecycle_state: active
+payload_summary:
+  dispatched_at: '2026-09-24T10:36:34Z'
+  latest_run_ref: .omo/debt/dispatch/runs/2026-09-24T10-36-34Z.yaml
+  summary:
+    owner_count: 0
+    total_dispatched_items: 0
+    lane_counts:
+      revalidate_now: 0
+      schedule_now: 0
+      escalate_now: 0
+      continue_mitigation: 0
+      watch_only: 0

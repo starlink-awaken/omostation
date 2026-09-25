@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/aetherforge" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/agora" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/bus-foundation" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/c2g" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/cockpit" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/cockpit-ui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/ecos" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/family-hub" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/gbrain" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/kairon" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/l4-kernel" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/metaos" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/model-driven" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/observability" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/omo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/omo-debt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/runtime" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/projects/runtime/scripts" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/scripts" vcs="Git" />
+  </component>
+</project>

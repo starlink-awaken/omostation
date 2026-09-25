@@ -1,0 +1,21 @@
+generated_at: '2026-09-25T03:05:06Z'
+source_action_packet_ref: .omo/debt/action-packet/current.yaml
+defaults:
+  review_window_days: 7
+  escalation_threshold_days: 3
+owners: []
+summary:
+  owner_count: 0
+  total_routed_items: 0
+  lane_counts:
+    revalidate_now: 0
+    schedule_now: 0
+    escalate_now: 0
+    continue_mitigation: 0
+    watch_only: 0
+artifact_meta:
+  artifact_kind: debt_owner_routing
+  broker_ref: null
+  writer_ref: projects/omo/src/omo/omo_debt.py
+  retention_mode: until_replaced
+  lifecycle_state: active

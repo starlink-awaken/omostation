@@ -1,0 +1,176 @@
+run_id: 20260922T012405Z-governance-state-mutation-73f3490f
+workflow_id: governance-state-mutation
+status: ok
+actor: xiamingxing
+agent_profile: governance-agent
+objective: Publish A9 strategy retro full-scan bootstrap binding
+created_at: '2026-09-22T01:24:05Z'
+updated_at: '2026-09-22T01:46:29Z'
+context:
+  project: ''
+  format: openspec
+  source_file: ''
+  run_id: 20260922T012405Z-governance-state-mutation-73f3490f
+  actor: xiamingxing
+  profile: governance-agent
+locks:
+- .omo/_delivery/agent-workflows/locks/.omo.lock.yaml
+- .omo/_delivery/agent-workflows/locks/spaces.lock.yaml
+- .omo/_delivery/agent-workflows/locks/omo-broker.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_docs_superpowers_specs_2026-09-22-a9-strategy-retro-full-scan-design.md.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_docs_plans_3y-bet-ledger.yaml.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_.omo__control_governance-data.json.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_BRIEF.md.lock.yaml
+plan:
+  id: governance-state-mutation
+  title: Governed OMO or spaces mutation
+  purpose: Force state-plane changes through OMO/C2G broker paths instead of ad-hoc
+    file writes.
+  agents:
+    roles:
+    - governance-agent
+    - c2g-agent
+    observer_policy: recommended
+  allowed_lanes:
+  - governance_state
+  - docs
+  - runtime_snapshot
+  lock_scopes:
+  - .omo
+  - spaces
+  - omo-broker
+  phases:
+    preflight:
+    - id: status
+      mode: required
+      command:
+      - git
+      - status
+      - --short
+    - id: workflow-lint
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/agent-workflow.py
+      - lint
+    execute:
+    - id: broker-write
+      mode: manual
+      command:
+      - omo-or-c2g
+      - broker
+      - mutate-state
+    verification:
+    - id: ssot-guardian
+      mode: required
+      command:
+      - uv
+      - run
+      - --with
+      - pyyaml
+      - python
+      - bin/ssot/ssot-guardian.py
+    - id: gac-local-gate
+      mode: required
+      command:
+      - make
+      - gac-local-gate
+    closeout:
+    - id: mutation-ledger
+      mode: manual
+      command:
+      - omo
+      - event
+      - emit
+      - agent_mutation_complete
+evidence:
+- 'Bootstrap binding for BET-Y2Q2-T10-154 merged via PR #4169, merge SHA 7758c80b48d400c7f3f84e3ad5a58ebae2ac26b6;
+  claims all_covered=true and required checks green.'
+- 'agent-workflow verify: 7 checks ok=True'
+- 'agent-workflow observe: continue'
+claims:
+- claimed_at: '2026-09-22T01:24:06Z'
+  actor: codex-agent-os-recovery
+  paths:
+  - docs/superpowers/specs/2026-09-22-a9-strategy-retro-full-scan-design.md
+  surfaces: []
+  scopes:
+  - path:docs/superpowers/specs/2026-09-22-a9-strategy-retro-full-scan-design.md
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_docs_superpowers_specs_2026-09-22-a9-strategy-retro-full-scan-design.md.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/_delivery/affected/a9-retro-budget-bootstrap.json
+- claimed_at: '2026-09-22T01:24:07Z'
+  actor: codex-agent-os-recovery
+  paths:
+  - docs/plans/3y-bet-ledger.yaml
+  surfaces: []
+  scopes:
+  - path:docs/plans/3y-bet-ledger.yaml
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_docs_plans_3y-bet-ledger.yaml.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/_delivery/affected/a9-retro-budget-bootstrap.json
+- claimed_at: '2026-09-22T01:44:06Z'
+  actor: xiamingxing
+  paths:
+  - .omo/_control/governance-data.json
+  surfaces: []
+  scopes:
+  - path:.omo/_control/governance-data.json
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_.omo__control_governance-data.json.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/_delivery/affected/a9-retro-budget-bootstrap.json
+- claimed_at: '2026-09-22T01:44:07Z'
+  actor: xiamingxing
+  paths:
+  - BRIEF.md
+  surfaces: []
+  scopes:
+  - path:BRIEF.md
+  locks:
+  - .omo/_delivery/agent-workflows/locks/path_BRIEF.md.lock.yaml
+  affected_graph:
+    affected_projects:
+    - workspace-root
+    changed_projects:
+    - workspace-root
+    layer_contract_digest: 39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8
+    receipt_hash: 79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7
+    schema: affected-graph-receipt/v1
+    receipt_ref: .omo/_delivery/affected/a9-retro-budget-bootstrap.json
+closed_at: '2026-09-22T01:46:29Z'
+released_locks:
+- .omo/_delivery/agent-workflows/locks/path_docs_plans_3y-bet-ledger.yaml.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_BRIEF.md.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_.omo__control_governance-data.json.lock.yaml
+- .omo/_delivery/agent-workflows/locks/path_docs_superpowers_specs_2026-09-22-a9-strategy-retro-full-scan-design.md.lock.yaml
+- .omo/_delivery/agent-workflows/locks/.omo.lock.yaml
+- .omo/_delivery/agent-workflows/locks/omo-broker.lock.yaml
+- .omo/_delivery/agent-workflows/locks/spaces.lock.yaml

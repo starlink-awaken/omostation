@@ -1,0 +1,14 @@
+{
+  "bet_id": "BET-Y1Q4-T10-146",
+  "dry_run": false,
+  "elapsed_ms": 77.0,
+  "exit_code": 2,
+  "objective": "test",
+  "pid": 3871,
+  "profile": "governance-agent",
+  "run_id": "cr-20260916T080324Z-6ab8",
+  "stage": "admission",
+  "started_at": "2026-09-16T08:03:24.743556+00:00",
+  "status": "failed",
+  "worktree_path": "/Users/xiamingxing/ws-bet-y1q4-t6-28"
+}

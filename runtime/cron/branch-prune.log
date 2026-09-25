@@ -1,0 +1,140 @@
+Makefile:818: warning: overriding commands for target `ops-metrics-server'
+Makefile:782: warning: ignoring old commands for target `ops-metrics-server'
+Makefile:878: warning: overriding commands for target `ops-dashboard'
+Makefile:776: warning: ignoring old commands for target `ops-dashboard'
+Makefile:882: warning: overriding commands for target `ops-alert'
+Makefile:785: warning: ignoring old commands for target `ops-alert'
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-15T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+   ✅ Done
+── 2. 清理已合并的 work 分支 ──
+   ✅ 已清理 0 个已合并分支
+── 3. 清理过期 work 分支 (TTL: 24h) --
+   过期 (87h): work/bet-y1q4-t8-24d
+   ⛔ 跳过 (引用保护 unpushed
+DELETABLE): work/bet-y1q4-t8-24d
+   ✅ 已清理 0 个过期分支
+── 4. 清理过期 agent 分支 (TTL: 168h, T10-128) --
+   ✅ 已清理 0 个过期 agent 分支
+=== Branch Prune 完成: 合并=0, 过期=0, agent过期=0 ===
+Makefile:818: warning: overriding commands for target `ops-metrics-server'
+Makefile:782: warning: ignoring old commands for target `ops-metrics-server'
+Makefile:878: warning: overriding commands for target `ops-dashboard'
+Makefile:776: warning: ignoring old commands for target `ops-dashboard'
+Makefile:882: warning: overriding commands for target `ops-alert'
+Makefile:785: warning: ignoring old commands for target `ops-alert'
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-16T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+   ✅ Done
+── 2. 清理已合并的 work 分支 ──
+   ✅ 已清理 0 个已合并分支
+── 3. 清理过期 work 分支 (TTL: 24h) --
+   过期 (111h): work/bet-y1q4-t8-24d
+   ⛔ 跳过 (引用保护 unpushed
+DELETABLE): work/bet-y1q4-t8-24d
+   ✅ 已清理 0 个过期分支
+── 4. 清理过期 agent 分支 (TTL: 168h, T10-128) --
+   ✅ 已清理 0 个过期 agent 分支
+=== Branch Prune 完成: 合并=0, 过期=0, agent过期=0 ===
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-17T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+ - [deleted]             (none)     -> origin/agent/xiamingxing/panorama-gate-projection
+ - [deleted]             (none)     -> origin/agent/xiamingxing/panorama-runtime-refresh-20260917
+ - [deleted]             (none)     -> origin/agent/xiamingxing/ruflo-rf0-verifier-20260917-01
+   ✅ Done
+── 2. 清理已合并的 work 分支 ──
+   ✅ 已清理 0 个已合并分支
+── 3. 清理过期 work 分支 (TTL: 24h) --
+   过期 (135h): work/bet-y1q4-t8-24d
+   ⛔ 跳过 (引用保护 unpushed
+DELETABLE): work/bet-y1q4-t8-24d
+   ✅ 已清理 0 个过期分支
+── 4. 清理过期 agent 分支 (TTL: 168h, T10-128) --
+   ✅ 已清理 0 个过期 agent 分支
+=== Branch Prune 完成: 合并=0, 过期=0, agent过期=0 ===
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-18T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+ * [new branch]          work/mof-l4-hardening   -> origin/work/mof-l4-hardening
+ * [new branch]          work/t10-135-status     -> origin/work/t10-135-status
+ * [new branch]          work/t10-136-lock       -> origin/work/t10-136-lock
+   ✅ Done
+── 2. 清理已合并的 work 分支 ──
+   ✅ 已清理 0 个已合并分支
+── 3. 清理过期 work 分支 (TTL: 24h) --
+   ✅ 已清理 0 个过期分支
+── 4. 清理过期 agent 分支 (TTL: 168h, T10-128) --
+   ✅ 已清理 0 个过期 agent 分支
+=== Branch Prune 完成: 合并=0, 过期=0, agent过期=0 ===
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-19T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+fatal: unable to access 'https://github.com/starlink-awaken/omostation.git/': LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to github.com:443 
+make: *** [worktree-prune] Error 128
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-20T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+fatal: unable to access 'https://github.com/starlink-awaken/omostation.git/': LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to github.com:443 
+make: *** [worktree-prune] Error 128
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-21T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+From https://github.com/starlink-awaken/omostation
+   452b8a89b..82d13c753  main       -> origin/main
+   ✅ Done
+── 2. 清理已合并的 work 分支 ──
+   ✅ 已清理 0 个已合并分支
+── 3. 清理过期 work 分支 (TTL: 24h) --
+   ✅ 已清理 0 个过期分支
+── 4. 清理过期 agent 分支 (TTL: 168h, T10-128) --
+   过期 (199h): agent/governance-agent/t10-165-persistent-semantics-root-20260913
+   ⛔ 跳过 (引用保护 unpushed
+DELETABLE): agent/governance-agent/t10-165-persistent-semantics-root-20260913
+   ✅ 已清理 0 个过期 agent 分支
+=== Branch Prune 完成: 合并=0, 过期=0, agent过期=0 ===
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-22T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+ * [new branch]          agent/governance-agent/hardcoded-ports-rest -> origin/agent/governance-agent/hardcoded-ports-rest
+ * [new branch]          agent/governance-agent/t10-156-claims-preflight -> origin/agent/governance-agent/t10-156-claims-preflight
+   f70c38030..914ea3809  main       -> origin/main
+   ✅ Done
+── 2. 清理已合并的 work 分支 ──
+   ✅ 已清理 0 个已合并分支
+── 3. 清理过期 work 分支 (TTL: 24h) --
+   ✅ 已清理 0 个过期分支
+── 4. 清理过期 agent 分支 (TTL: 168h, T10-128) --
+   ✅ 已清理 0 个过期 agent 分支
+=== Branch Prune 完成: 合并=0, 过期=0, agent过期=0 ===
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-23T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+ - [deleted]             (none)     -> origin/agent/governance-agent/north-star-ledger-truth-20260923
+ - [deleted]             (none)     -> origin/codex/north-star-root-integration-spec-v14
+   61447c2ab..cc4daa61b  main       -> origin/main
+   ✅ Done
+── 2. 清理已合并的 work 分支 ──
+   ✅ 已清理 0 个已合并分支
+── 3. 清理过期 work 分支 (TTL: 24h) --
+   ✅ 已清理 0 个过期分支
+── 4. 清理过期 agent 分支 (TTL: 168h, T10-128) --
+   ✅ 已清理 0 个过期 agent 分支
+=== Branch Prune 完成: 合并=0, 过期=0, agent过期=0 ===
+bash bin/gac/gac-branch-prune.sh
+=== GaC Branch Prune 2026-09-24T20:30:UTC dry=false ===
+── 1. Prune 远程已删除的分支 ──
+ - [deleted]             (none)     -> origin/work/bet-y2q2-t11-closeout
+ - [deleted]             (none)     -> origin/work/gac-submodule-sync-integration
+   68b91d014..6235866ab  chore/main-repo-retros-ledger-specs -> origin/chore/main-repo-retros-ledger-specs
+   ✅ Done
+── 2. 清理已合并的 work 分支 ──
+   已合并: work/residual-governance-audit
+   ✅ 已清理 1 个已合并分支
+── 3. 清理过期 work 分支 (TTL: 24h) --
+   ✅ 已清理 0 个过期分支
+── 4. 清理过期 agent 分支 (TTL: 168h, T10-128) --
+   ✅ 已清理 0 个过期 agent 分支
+=== Branch Prune 完成: 合并=1, 过期=0, agent过期=0 ===

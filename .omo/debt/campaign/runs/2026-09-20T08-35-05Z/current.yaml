@@ -1,0 +1,530 @@
+generated_at: '2026-09-20T08:35:05Z'
+dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+run_stamp: 2026-09-20T08-35-05Z
+source_dispatch_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+summary:
+  owner_count: 5
+  total_items: 18
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 18
+    executed: 0
+owners:
+- owner: architecture-team
+  item_count: 3
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 3
+    executed: 0
+  entries:
+  - id: DECL_EXEC_GAP
+    title: 声明/执行鸿沟 — maturity 100 但 health 68/debt_adjusted 61.6
+    owner: architecture-team
+    severity: critical
+    dimension: governance
+    subdimension: maturity
+    lifecycle_state: resolved
+    gate_level: P0
+    next_review_at: null
+    last_reviewed_at: '2026-09-19'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - .omo/state/health.yaml
+    - .omo/state/system.yaml
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DECL_EXEC_GAP
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: AGENT_COORDINATION
+    title: 多 Agent 协调无强制执行
+    owner: architecture-team
+    severity: high
+    dimension: governance
+    subdimension: agent
+    lifecycle_state: resolved
+    gate_level: P1
+    next_review_at: null
+    last_reviewed_at: '2026-09-19'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots: []
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id AGENT_COORDINATION
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: HEALTH_SCORE_FORMULA
+    title: 健康分公式声明面偏重 — ISC-1→ISC-2
+    owner: architecture-team
+    severity: high
+    dimension: governance
+    subdimension: maturity
+    lifecycle_state: resolved
+    gate_level: P0
+    next_review_at: null
+    last_reviewed_at: '2026-07-14'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots: []
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id HEALTH_SCORE_FORMULA
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+- owner: governance-team
+  item_count: 12
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 12
+    executed: 0
+  entries:
+  - id: DEBT-20260917021531-GAP-SEED-DISPATCH
+    title: debt.yaml 声明/执行鸿沟 — gap_seed_items(27 项)/gap_registry/dispatch_ref/campaign_ref/reporting_ref
+      路径全部物理不存在但被 omo_debt_registry.py 当必填读取
+    owner: governance-team
+    severity: high
+    dimension: architecture
+    subdimension: consistency
+    lifecycle_state: resolved
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: '2026-09-20'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - .omo/_truth/registry/debt.yaml
+    - projects/omo/src/omo/omo_debt_registry.py
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-20260917021531-GAP-SEED-DISPATCH
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: UNASSIGNED_ENTROPY
+    title: 任务所有权熵 — 15/104 无 owner, 38/104 无 phase
+    owner: governance-team
+    severity: high
+    dimension: governance
+    subdimension: entropy
+    lifecycle_state: resolved
+    gate_level: P1
+    next_review_at: null
+    last_reviewed_at: '2026-09-19'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots: []
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id UNASSIGNED_ENTROPY
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: D-1
+    title: 治理入口未统一 — bin/ 489 脚本 vs cockpit 仅 5 委派, 四重入口
+    owner: governance-team
+    severity: medium
+    dimension: architecture
+    subdimension: entrypoint
+    lifecycle_state: resolved
+    gate_level: P1
+    next_review_at: null
+    last_reviewed_at: '2026-08-22'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - bin/
+    - projects/cockpit/src/cockpit/commands/
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id D-1 --next-review-at
+      2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: D-2
+    title: bus-foundation 僵尸候选 — 07-14 后冻结 1 个月+
+    owner: governance-team
+    severity: medium
+    dimension: architecture
+    subdimension: zombie
+    lifecycle_state: resolved
+    gate_level: P2
+    next_review_at: null
+    last_reviewed_at: '2026-08-22'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - projects/bus-foundation/
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id D-2 --next-review-at
+      2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: D-4
+    title: c2g + omo-debt 待并入 omo — 职责与治理内核重叠
+    owner: governance-team
+    severity: medium
+    dimension: architecture
+    subdimension: convergence
+    lifecycle_state: resolved
+    gate_level: P1
+    next_review_at: null
+    last_reviewed_at: '2026-08-22'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - projects/c2g/
+    - projects/omo-debt/
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id D-4 --next-review-at
+      2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: D-5
+    title: gate 链冗余 — 71 实际 gate vs 140 SSOT 定义 vs 99 Makefile target 三层叠加
+    owner: governance-team
+    severity: medium
+    dimension: architecture
+    subdimension: redundancy
+    lifecycle_state: resolved
+    gate_level: P1
+    next_review_at: null
+    last_reviewed_at: '2026-08-22'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - .omo/_truth/registry/governance-checks.yaml
+    - bin/gac/gac-local-gate.py
+    - Makefile
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id D-5 --next-review-at
+      2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: D-7
+    title: 业务/治理提交比失衡 — 实际业务能力仅 23%
+    owner: governance-team
+    severity: medium
+    dimension: architecture
+    subdimension: value
+    lifecycle_state: resolved
+    gate_level: P1
+    next_review_at: null
+    last_reviewed_at: '2026-08-22'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - docs/plans/3y-bet-ledger.yaml
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id D-7 --next-review-at
+      2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: DOC_CLAIMS_SCOPE
+    title: doc-claims gate scope 仅 metaos — 6 project INTERFACE tests 裸数字漏过门禁 (已修复)
+    owner: governance-team
+    severity: medium
+    dimension: governance
+    subdimension: coverage
+    lifecycle_state: resolved
+    gate_level: P2
+    next_review_at: null
+    last_reviewed_at: '2026-07-28'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - projects/agora
+    - projects/cockpit
+    - projects/ecos
+    - projects/knowledge/kairon
+    - projects/omo
+    - projects/runtime
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DOC_CLAIMS_SCOPE
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: MDEAD-17-heartbeat-wrapper
+    title: '引用断链: bin/gac/heartbeat-wrapper.sh'
+    owner: governance-team
+    severity: medium
+    dimension: governance
+    subdimension: reference
+    lifecycle_state: resolved
+    gate_level: P2
+    next_review_at: null
+    last_reviewed_at: '2026-08-23'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots: []
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id MDEAD-17-heartbeat-wrapper
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: SUBMODULE_DRIFT
+    title: Submodule gitlink 漂移 — 3/17 曾漂移, 巡检已落地
+    owner: governance-team
+    severity: medium
+    dimension: governance
+    subdimension: consistency
+    lifecycle_state: resolved
+    gate_level: P2
+    next_review_at: null
+    last_reviewed_at: '2026-08-08'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - projects/agora
+    - projects/omo
+    - projects/agora
+    - projects/omo
+    - projects/aetherforge
+    - projects/agora
+    - projects/bus-foundation
+    - projects/c2g
+    - projects/cockpit
+    - projects/cockpit-ui
+    - projects/ecos
+    - projects/family-hub
+    - projects/knowledge/gbrain
+    - projects/knowledge/kairon
+    - projects/l4-kernel
+    - projects/metaos
+    - projects/model-driven
+    - projects/observability
+    - projects/omo
+    - projects/omo-debt
+    - projects/runtime
+    - scripts
+    - .subtrees/gbrain
+    - .subtrees/cockpit
+    - .subtrees/agora
+    - projects/aetherforge
+    - projects/agora
+    - projects/bus-foundation
+    - projects/c2g
+    - projects/cockpit
+    - projects/cockpit-ui
+    - projects/ecos
+    - projects/family-hub
+    - projects/knowledge/gbrain
+    - projects/knowledge/kairon
+    - projects/l4-kernel
+    - projects/metaos
+    - projects/model-driven
+    - projects/observability
+    - projects/omo
+    - projects/omo-debt
+    - projects/runtime
+    - scripts
+    - .subtrees/gbrain
+    - .subtrees/cockpit
+    - .subtrees/agora
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id SUBMODULE_DRIFT
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: D-3
+    title: metaos 收敛期漂移风险 — Y1 终点并/留未判
+    owner: governance-team
+    severity: low
+    dimension: architecture
+    subdimension: convergence
+    lifecycle_state: resolved
+    gate_level: P2
+    next_review_at: null
+    last_reviewed_at: '2026-08-22'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - projects/metaos/
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id D-3 --next-review-at
+      2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+  - id: D-6
+    title: swarm broadcast-bus 广播机制未真正启用 — 仅 2 行初始公告
+    owner: governance-team
+    severity: low
+    dimension: architecture
+    subdimension: observability
+    lifecycle_state: resolved
+    gate_level: P2
+    next_review_at: null
+    last_reviewed_at: '2026-08-22'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - .omo/state/swarm/broadcast-bus.jsonl
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id D-6 --next-review-at
+      2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+- owner: agent-runtime
+  item_count: 1
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 1
+    executed: 0
+  entries:
+  - id: L1_HEALTH_PROBES
+    title: L1 运行时可观测性不足
+    owner: agent-runtime
+    severity: high
+    dimension: governance
+    subdimension: runtime
+    lifecycle_state: resolved
+    gate_level: P1
+    next_review_at: null
+    last_reviewed_at: '2026-09-19'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots: []
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id L1_HEALTH_PROBES
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+- owner: omo-team
+  item_count: 1
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 1
+    executed: 0
+  entries:
+  - id: TEST_COVERAGE
+    title: 测试覆盖缺口 — 部分层无测试框架
+    owner: omo-team
+    severity: medium
+    dimension: governance
+    subdimension: quality
+    lifecycle_state: resolved
+    gate_level: P2
+    next_review_at: null
+    last_reviewed_at: '2026-09-19'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots: []
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id TEST_COVERAGE
+      --next-review-at 2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml
+- owner: runtime
+  item_count: 1
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 1
+    executed: 0
+  entries:
+  - id: D-8
+    title: kems-v2 工具链 v2.2.0 重建（v2.1.1 字节级丢失后）
+    owner: runtime
+    severity: medium
+    dimension: capability
+    subdimension: toolchain
+    lifecycle_state: resolved
+    gate_level: P2
+    next_review_at: null
+    last_reviewed_at: '2026-09-18'
+    stale_evidence: false
+    overdue_by: 0
+    affected_roots:
+    - projects/runtime/scripts
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags: []
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id D-8 --next-review-at
+      2026-09-27T08:35:05Z
+    campaign_state: ready_to_execute
+    dispatch_run_ref: .omo/debt/dispatch/runs/2026-09-20T08-35-05Z.yaml

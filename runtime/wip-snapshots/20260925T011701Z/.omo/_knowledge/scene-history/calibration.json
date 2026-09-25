@@ -1,0 +1,21 @@
+{
+ "note": "derived from data/scene-metrics.db — DB 是唯一写入口, 勿手编",
+ "rows": [
+  {
+   "avg_duration_ms": 1.0,
+   "avg_token_usage": 0.0,
+   "calibration_score": 0.955,
+   "computed_at": "2026-09-18T11:35:51.783973+00:00",
+   "false_positive_rate": 0.0,
+   "id": 6,
+   "intervention_rate": 0.0,
+   "precision": 1.0,
+   "recall": 0.0,
+   "sample_count": 2,
+   "scene_id": "scene-knowledge-ingest",
+   "trend_14d": 0.85,
+   "window_days": 30
+  }
+ ],
+ "schema": "scene-history-export/v1"
+}

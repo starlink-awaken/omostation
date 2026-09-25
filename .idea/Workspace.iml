@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/aetherforge/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/agora/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/bus-foundation/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/c2g/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/cockpit/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/ecos/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/family-hub/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/kairon/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/l4-kernel/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/metaos/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/model-driven/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/omo-debt/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/omo/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/projects/runtime/.venv" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

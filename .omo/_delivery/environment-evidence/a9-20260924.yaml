@@ -1,0 +1,28 @@
+schema: gate-evidence-receipt/v1
+gate: A9
+title: ASD and Cockpit observability
+owner: agent-experience-steward
+generated_at: '2026-09-24T03:31:59Z'
+verdict: PARTIAL
+live: false
+exit_criteria:
+- id: bet-y1q4-t9-04-lawfully-materialized-and-delivered
+  status: not_evaluated
+  evidence: 声明态 partial，解锁后复算
+- id: machine-asd-five-core-panels-pass
+  status: not_evaluated
+  evidence: 声明态 partial，解锁后复算
+- id: separate-cockpit-agent-operations-child-delivered
+  status: not_evaluated
+  evidence: 声明态 partial，解锁后复算
+- id: per-panel-provenance-freshness-and-degradation-pass
+  status: not_evaluated
+  evidence: 声明态 partial，解锁后复算
+- id: observer-blindness-never-yields-green
+  status: not_evaluated
+  evidence: 声明态 partial，解锁后复算
+depends_on:
+- G2
+- G3
+unlock_conditions: T10-166 ASD 面板契约 + 驾驶舱(T10-163)呈现；PARTIAL≠PASS
+evidence_sha256: sha256:545e7f2385e18d4c24e9c1da045c6a5afc41e2f31c668930cd299e2e689aaea3
