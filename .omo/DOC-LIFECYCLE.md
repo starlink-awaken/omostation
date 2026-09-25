@@ -234,7 +234,11 @@ cd projects/omo && uv run omo governance
 - **X2 保鲜规则**: `.omo/_truth/x2-freshness-rules.yaml`
 - **omo_lint 14 维度**: `projects/omo/src/omo/omo_lint.py:cmd_lint_doc_lifecycle`
 - **omo governance 第 7 项**: `projects/omo/src/omo/omo_governance.py:check_doc_lifecycle`
-- **pre-commit 钩子**: `.pre-commit-config.yaml:omo-doc-lifecycle-gate`
+- **CI 强制面**: `.github/workflows/governance-check.yml` 跑 `python -m omo.cli lint doc-lifecycle`
+- **声明表条目（非生效钩子）**: `.pre-commit-config.yaml:omo-doc-lifecycle-gate` —— 本仓
+  `core.hooksPath=.githooks`，该条不接本地提交流程，`hook-manifest.yaml` 里也没有对应项，
+  故**没有**"本地提交时拦截"的保证；约束力只在上条 CI 面。详见
+  `docs/operations/precommit-hook-registry-split-2026-09-25.md`。
 - **l4-kernel capability**: `projects/l4-kernel/src/l4_kernel/registry.py:audit.doc_lifecycle`
 - **AGENTS.md SSOT 治理表**: `AGENTS.md:§SSOT 治理`
 - **MCP 自动发现**: `projects/agora/src/agora/server/mcp.py:321` (兼容扩展)
