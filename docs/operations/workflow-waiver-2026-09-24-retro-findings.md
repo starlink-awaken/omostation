@@ -275,6 +275,48 @@ main 的 #4304 在 `bets` 列表尾部插入 `BET-Y2Q3-T9-01`，本 bet 同位�
 - 结构性修法（属 principal，本次未做）：把 `total_bets` 从人写常量改为生成器派生，
   或让门禁比对 `len(bets)`；`ledger-safe-insert.py` 目前只在**单侧插入**时校验，管不到合并。
 
+## I10（`gitlink-ancestry` 把"分支落后 main"读成"子模块指针回退"）
+
+`--force-with-lease` push 被 pre-push 的 `gitlink-ancestry`
+（`bin/gac/check-submodule-rewind.py --range origin/main $PUSH_LOCAL_SHA`）拦下：
+"projects/omo — 指针由 `7fb39ec1e226` 回退至 `87865ac87924`（非前进）"。实测这**不是回退**：
+
+- `git log --oneline origin/main..HEAD -- projects/omo` 为空 —— 本分支没有一个 commit 碰过该 gitlink；
+- 差值来自 push 期间 main 又前进了两个 commit（#4309 / #4314），是它们把 `projects/omo` bump 上去的，
+  我的分支只是**落后**，不是**倒退**。检查比的是两个 tip 的树，而不是本次 push 的 ref delta，
+  所以连快进推送也可能被这条判据挡下。
+
+两条给出的修复指引对这种情形都是错的，都不能照做：
+
+1. `git checkout origin/main -- projects/omo && git commit` —— 会让本 PR 捎带一条**不属于自己交付**的
+   子模块指针 bump（且 `projects/omo` 不在本 bet 的 `write_surfaces` 里）；这正是"顺手提交别人的东西"。
+2. 在 commit body 加 `[gitlink-regress: <理由>]` —— 降级为 warning 并把指纹**追加**进
+   `gate-known-debt.yaml`（`growth_policy=shrink_only`）。为一个并不存在的债登记债，等于污染只减不增的台账。
+
+正确处置是 rebase 到新的 `origin/main`（第三次 rebase，这次无冲突），检查随即 `OK`。
+可改进项（属 principal）：该检查在报"回退"前先判 `HEAD` 是否为 `origin/main` 的祖先 —— 落后应提示
+`rebase`，而不是提示"恢复前进指针"或登记 known-debt。
+
+## I11（`rerere` 会把手工解决台账冲突的旧方案回放进新冲突）
+
+台账这种"多条并行往同一个列表尾部追加"的文件，第二次 rebase 的冲突形态与第一次不同，
+但 `rerere` 仍介入了：第二次 rebase 的 `docs/plans/3y-bet-ledger.yaml` 有**两处**冲突区
+（`bets` 尾部 + `meta.total_bets`），而我第一版解决脚本只切了第一处，两件事叠出来的结果是
+文件里条目数 = **465**，而 `main(463) + 本 bet(1)` 应为 **464** —— 多出一份重复条目，
+`meta.total_bets` 却是 464。若只看"yaml 能解析、没有残留 `<<<<<<<`"，这条会带着重复 bet 直接进 PR。
+
+- 实测 `git config --get rerere.enabled` = `true`（写在**共享** config 里，`rr-cache` 也在公共 git 目录，
+  一个 worktree 记录的解决方案可被其他 worktree 回放）。Agent 不得改 git config，故本次用
+  **单次调用级**开关：`git -c rerere.enabled=false rebase origin/main`（不落盘、不改配置）。
+- `git rebase --abort` 可完整回到 push 前的 tip（实测 `0a548d033` 复原），是这类"解决方案本身可疑"
+  场景的正确逃生口；比重抠冲突标记便宜。
+- 换成确定性重建后一次通过：`checkout origin/main` 版全文 → 从**当步 commit** 抽出本 bet 的 YAML 块
+  原样插回 `campaigns:` 之前 → 按重建后的实际条目数重写 `meta.total_bets` → 断言
+  （条目数 == `total_bets`、id 无重复、`origin/main` 侧 463 条 bet 全部保留、本 bet 的 digest/surfaces 与预期一致；
+  实测合并后 `f122c9794` = 464 条 / 重复 0，其父 `3aa552c81` = 463 条且不含本 bet）。
+- 可改进项（属 principal）：台账合并应成为工具动作（`ledger-safe-insert.py` 增"合并后重插入"模式），
+  或对 `docs/plans/*.yaml` 关闭 rerere —— 人肉解决追加型列表 + 自动回放旧方案，是把同一个坑挖两次。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
