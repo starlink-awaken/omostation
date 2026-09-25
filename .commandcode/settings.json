@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Shell(git show --stat e4787d290 2>&1 | head -30; echo \"===BRANCHES-CONTAIN===\"; git branch --all --contains e4787d290 2>&1 | head; echo \"===DOC_LEGS===\"; ls -l bin/ssot/doc_legs.py tests/test_doc_legs.py 2>&1; echo \"===WORKTREES===\"; git worktree list 2>&1 | head -20)"
-    ],
-    "deny": [],
-    "defaultMode": "default"
-  }
-}

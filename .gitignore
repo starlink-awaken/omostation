@@ -206,6 +206,8 @@ projects/knowledge/kairon-security/
 #    以下仅保留项目特有的忽略规则；本地面一律不入仓。
 # ---------------------------------------------------------------------------
 .claude/
+.kilo/
+.venv/
 .mimocode/worktrees/
 .mimocode/logs/
 .mimocode/sessions/
