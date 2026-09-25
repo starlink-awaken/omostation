@@ -1770,7 +1770,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#next">接下来做什么</a>
 </div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">角色与智能体</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
-<div class="note" id="agent-coverage"></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
+<div class="note" id="agent-coverage"></div><div id="zx-resident-bar" class="viz-card" style="margin-bottom:10px"><div class="loading-center" style="padding:14px"><span class="loading-spinner"></span><span class="loading-text">加载居民执行环境状态...</span></div></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
 <div class="card gap"><h2>当前核心协作实体与运行角色</h2><p class="small muted">包含人类主权决策者、常驻自治守护者、AetherForge 本地算力网关与受管工程智能体，数据实时保持最新。</p><div class="table-wrap"><table><thead><tr><th>协作实体 / Agent</th><th>当前职责</th><th>运行状态 / 算力与范围</th></tr></thead><tbody id="team-rows"></tbody></table></div></div>
 <div class="card gap"><h2>目标 Reference Cell</h2><div class="flow"><span>1 总控</span><i>→</i><span>1 执行</span><i>→</i><span>1 独立验证</span><i>↔</i><span>1 运行观察</span></div><p class="small muted">默认 Direct Local；每波最多两个不重叠 writer。Orca R0、Multica AS0、Ruflo RF0 各有准入门。Ruflo 原生 swarm 可以在获准 Cell 内协调，外层任务、权限与完成证据由 OMO 持有。</p><h3>token 不足或 Agent 掉线</h3><div class="flow"><span>drain / checkpoint</span><i>→</i><span>校验副作用</span><i>→</i><span>fence 旧 attempt</span><i>→</i><span>deputy 接续</span><i>→</i><span>独立重放</span></div><p class="small">结果未知时先 reconcile。第二次 failover 进入 HOLD 与根因分析。接续必须保留未完成义务、最后安全版本、权限边界与证据。</p></div>
 <div class="card gap"><h2>当前可见 Agent / Runtime</h2><p class="small muted">名单来自 Multica inventory 和 OMO Workflow；尚未统一 assignment identity。Ruflo 仅采集版本，运行清单待安全只读适配。</p><div class="table-wrap"><table><thead><tr><th>来源 / Agent</th><th>状态</th><th>模型 / 角色 / 运行关联</th></tr></thead><tbody id="live-agent-rows"></tbody></table></div></div><h2 class="gap">持久角色合同 · 待实施</h2><div id="roles" class="role-grid"></div>
@@ -4006,6 +4006,41 @@ function renderSwarmGalaxy(){
   `;
 }
 
+/* === 居民执行环境活性条 (功能 2 前端) === */
+function zxRenderResidentBar(){
+  const el=document.getElementById('zx-resident-bar'); if(!el) return;
+  el.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:12px"><span class="loading-spinner"></span><span class="small muted">正在拉取 /api/v1/resident …</span></div>';
+  fetch('/api/v1/resident',{cache:'no-store'}).then(r=>r.json()).then(function(d){
+    if(!el) return;
+    const roles=d.roles||[];
+    const tone={active:'#10b981',stale:'#f59e0b',idle:'#94a3b8',unknown:'#94a3b8'};
+    const label={active:'活跃',stale:'滞后',idle:'待命',unknown:'未知'};
+    const roleDots=roles.map(function(r){
+      const c=tone[r.status]||'#94a3b8';
+      const lag=(r.lag_seconds!=null)?(' · '+r.lag_seconds+'s'):'';
+      return '<div style="display:flex;align-items:center;gap:5px;font-size:11px" title="'+esc(r.status)+' · '+esc(r.last_seen||'无')+'"><span style="width:9px;height:9px;border-radius:50%;background:'+c+';display:inline-block"></span><span>'+esc(r.role)+'</span><span style="color:var(--muted)">'+(label[r.status]||r.status)+lag+'</span></div>';
+    }).join('');
+    const recv=d.receipts||{};
+    const daemonStr=(d.daemon_running?'<span class="chip good" style="font-size:10px">运行中 PID '+esc(String(d.daemon_pid||'?'))+'</span>':'<span class="chip bad" style="font-size:10px">未运行</span>');
+    var recentHtml='';
+    (d.recent_receipts||[]).slice(-5).reverse().forEach(function(r){
+      var c=(r.status==='ok')?'#10b981':(r.status==='error'||r.status==='blocked')?'#ef4444':'#94a3b8';
+      var line='<div style="display:flex;gap:6px;font-size:10px;padding:2px 0"><span style="color:'+c+'">●</span><span style="font-family:var(--mono);color:var(--muted)">'+esc(r.ts||'')+'</span><span style="font-family:var(--mono)">'+esc(r.action||r.handler||'')+'</span><span style="color:'+c+'">'+esc(r.status)+'</span>';
+      if(r.err){line=line+'<span style="color:#92400e"> '+esc(r.err)+'</span>';}
+      recentHtml=line+'</div>';
+    });
+    if(!recentHtml){recentHtml='<div class="small muted" style="padding:4px 0">暂无 receipt</div>';}
+    el.innerHTML='<div style="padding:10px 12px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">'+
+      '<div><h3 style="margin:0;font-size:13px">🏠 居民执行环境 (Resident Orchestrator)</h3>'+
+      '<div class="small muted" style="margin-top:2px">守护进程 '+daemonStr+' · 事件 '+esc(String((d.heartbeat&&d.heartbeat.events_total)||0))+' · 收据 '+esc(String(recv.total||0))+' (ok '+esc(String(recv.ok||0))+')</div></div>'+
+      '<button onclick="zxRenderResidentBar()" style="background:none;border:1px solid var(--border-subtle);border-radius:5px;font-size:10px;padding:3px 8px;cursor:pointer">刷新</button></div>'+
+      '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px">'+roleDots+'</div>'+
+      '<details><summary style="font-size:11px;cursor:pointer;color:var(--muted)">最近 5 条 receipt</summary><div style="margin-top:6px;padding:6px;background:var(--surface-subtle);border-radius:6px;max-height:160px;overflow-y:auto">'+recent+'</div></details>'+
+      '</div>';
+  }).catch(function(){if(el) el.innerHTML='<div class="note" style="font-size:11px;margin:0">居民状态拉取失败。</div>';});
+}
+
 function renderKnowledgeStats(){
   const el = $('knowledge-stats-viz'); if(!el) return;
   const docs = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);
@@ -4872,6 +4907,7 @@ safeRender(renderDynamicLoopsDashboard, 'renderDynamicLoopsDashboard failed');
 safeRender(renderGatePipeline, 'renderGatePipeline failed');
 safeRender(renderLedgerVisuals, 'renderLedgerVisuals failed');
 safeRender(renderSwarmGalaxy, 'renderSwarmGalaxy failed');
+safeRender(zxRenderResidentBar, 'zxRenderResidentBar failed');
 safeRender(renderAgentCapabilityMesh, 'renderAgentCapabilityMesh failed');
 safeRender(renderKnowledgeStats, 'renderKnowledgeStats failed');
 safeRender(renderGuidanceHub, 'renderGuidanceHub failed');
@@ -6124,7 +6160,7 @@ safeRender(populateHealth, 'populateHealth failed');
   function zxLoadSearchHistory(){
     try{ return JSON.parse(localStorage.getItem('zx.search.history')||'[]'); }catch(_){ return []; }
   }
-  function zxSaveSearch(term){
+  function zxSaveSearchHistory(term){
     if(!term) return;
     var h=zxLoadSearchHistory().filter(function(t){return t!==term;});
     h.unshift(term); h=h.slice(0,8);
@@ -6134,7 +6170,7 @@ safeRender(populateHealth, 'populateHealth failed');
     var h=zxLoadSearchHistory();
     if(!h.length){ searchResults.innerHTML = emptyState('🔍', '输入关键词搜索', '搜索板块、Agent、门禁、事件'); return; }
     searchResults.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:4px 8px 6px;display:flex;justify-content:space-between"><span>最近搜索</span><button id="zx-clear-sh" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:10px">清空</button></div>'+
-      h.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="searchInput.value='+JSON.stringify(t)+';zxSaveSearch('+JSON.stringify(t)+');performSearch('+JSON.stringify(t)+')"><span style="font-size:11px;color:var(--muted)">↺</span><span style="flex:1;font-size:12px">'+esc(t)+'</span></div>'; }).join('');
+      h.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="searchInput.value='+JSON.stringify(t)+';zxSaveSearchHistory('+JSON.stringify(t)+');performSearch('+JSON.stringify(t)+')"><span style="font-size:11px;color:var(--muted)">↺</span><span style="flex:1;font-size:12px">'+esc(t)+'</span></div>'; }).join('');
     var btn=document.getElementById('zx-clear-sh');
     if(btn) btn.onclick=function(){ try{localStorage.removeItem('zx.search.history');}catch(_){} zxRenderSearchHistory(); };
   }
@@ -6189,7 +6225,7 @@ safeRender(populateHealth, 'populateHealth failed');
   }
   function runSearch(q){
     if(!q) { zxRenderSearchHistory(); return; }
-    zxSaveSearch(q.trim());
+    zxSaveSearchHistory(q.trim());
     performSearch(q);
   }
   function closeSearch() { searchOverlay.style.display = 'none'; }
