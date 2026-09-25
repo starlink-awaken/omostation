@@ -75,6 +75,7 @@ uv run --with pyyaml python bin/gac/gac-local-gate.py --scope staged --json   # 
 | **D5** tracked 运行快照 stale | CI 拿 commit 旧值误判过期 | R-GOV-3 `governance_feedback_last_run` / health.yaml `generated_at` (>24h, 本地服务新鲜) |
 | **D6** 生成器输出格式 | 自动注入段 lint fail | consensus-inject `*` (MD004) / 引用内 ``` (MD031) — 修生成器非修输出 |
 | **D7** 本地绝对路径 | CI 无本地工具 | evidence `--directory ~/ToolBox/bos-skill-cli` (本地工具不入 repo) |
+| **D8** 门禁超时假红 | gate 报 `TIMEOUT after 15s` / `returncode=-1`，形似内容漂移 | 新 claim 的 worktree 首跑 `gac-local-gate`：`check-evidence-freshness` 被 15s 预算杀（冷 env 解析）；同一条直接跑 0.09s `PASS (score=100.0)`，二跑 gate 55ms `ok=true` → **先直接给该 checker 计时跑一遍再判归属**，`-1` 不是 fail |
 
 ## 6. 修复决策树
 
