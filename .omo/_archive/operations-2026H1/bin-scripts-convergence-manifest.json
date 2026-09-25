@@ -3133,12 +3133,12 @@
     },
     {
       "name": "resolve_root_remote",
-      "bin": "bin/_archive/2026-09-25-sh2-quota/resolve-root-remote.sh",
+      "bin": "bin/gac/resolve-root-remote.sh",
       "scripts": "scripts/bin/gac/resolve-root-remote.sh",
-      "status": "archived",
-      "action": "archived",
+      "status": "managed",
+      "action": "bin-master, scripts-retired",
       "owner": "governance",
-      "note": "SH-2 bin-quota offset — archived 2026-09-25 (unused 6mo)",
+      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry. (SH-2 归档经复核撤销 2026-09-25: gac-worktree.sh:30 与 tests/gac/test-resolve-root-remote.sh:12 仍 source 该路径, 归档即悬空引用; 消费者未同步, 'unused 6mo' 判断不成立)",
       "evidence": {
         "active_files": [
           "bin/gac/resolve-root-remote.sh"
