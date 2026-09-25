@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: submodule-pointer-bump
-generated_at: 2026-09-25T12:12:31Z
+generated_at: 2026-09-25T12:32:35Z
 status: candidate
 counts:
   runs: 2
@@ -14,7 +14,7 @@ failure_breakdown:
 ---
 # submodule-pointer-bump 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-25T12:12:31Z
+- generated_at: 2026-09-25T12:32:35Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 2 成功运行 + 0 失败模式 = 2 草稿
 - 失败率: 0.00%
