@@ -393,6 +393,10 @@ def _format_rewind_block(base: str, head: str, findings: list[dict]) -> str:
     lines.append("     [gitlink-regress: <理由>]   (须独立成行, 理由非占位符)")
     lines.append("     该回退降级为 warning, 指纹记入 .omo/_truth/registry/gate-known-debt.yaml")
     lines.append("     (growth_policy=shrink_only, 只追加本次条目); 豁免指纹需随本次交付提交")
+    lines.append(
+        "  3. 分支落后于 base: 若本分支从未改动该指针, 门禁已按落后放行; "
+        f"若确已改动, git rebase {base} 后重试 (不要 commit 他人的 gitlink, 也不要为不存在的回退登记豁免)"
+    )
     return "\n".join(lines)
 
 
@@ -425,11 +429,24 @@ def run_ancestry_gate(base: str, head: str, root: Path, *, write_debt: bool, jso
         unresolvable = True
 
     violations: list[dict] = []
+    behind: list[dict] = []
     if not unresolvable:
+        # "rewind" must describe what head DID, not how new it is. base is origin/main in
+        # the pre-push hook, so every branch cut before someone else's submodule bump would
+        # otherwise read as rewinding a pointer it never touched.
+        merge_base = _git("merge-base", base, head, cwd=root)
         for path in declared_submodules(root):
             old = _gitlink_pointer_at(base, path, cwd=root)
             new = _gitlink_pointer_at(head, path, cwd=root)
             if new is None or old is None or old == new:
+                continue
+            at_merge_base = _gitlink_pointer_at(merge_base, path, cwd=root) if merge_base else None
+            if at_merge_base is not None and new == at_merge_base:
+                behind.append({"path": path, "base_sha": old, "head_sha": new, "merge_base": merge_base})
+                warnings.append(
+                    f"[INFO] {path}: 分支未改动该 gitlink (仍等于 merge-base "
+                    f"{merge_base[:12]} 的 {new[:12]}); base 侧的 bump 属落后, 非回退"
+                )
                 continue
             subdir = root / path
             if not is_submodule_initialized(subdir):
@@ -462,6 +479,7 @@ def run_ancestry_gate(base: str, head: str, root: Path, *, write_debt: bool, jso
                     "base": base,
                     "head": head,
                     "violations": violations,
+                    "behind": behind,
                     "warns": warnings,
                     "exempted": exempted,
                     "exempt_tags": tags,

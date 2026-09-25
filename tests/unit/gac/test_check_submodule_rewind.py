@@ -174,3 +174,117 @@ class TestToleranceLayerDetection:
         for detail in data["details"]:
             reason_prefix = detail["reason"].split(":")[0]
             assert reason_prefix in KNOWN_REASONS, f"Unknown reason: {detail['reason']}"
+
+
+class TestRangeGateBehindVsRewind:
+    """"--range must judge what head DID, not how new it is.
+
+    base is origin/main in the pre-push hook, so a branch cut before someone else's
+    submodule bump used to be reported as rewinding a pointer it never touched — and
+    the offered remedies were to commit that foreign gitlink or to register a
+    gitlink-regress debt fingerprint for a rewind that did not happen.
+    Repos here are synthetic so both verdicts are deterministic and offline.
+    """
+
+    @staticmethod
+    def _load():
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "check_submodule_rewind",
+            REPO_ROOT / "bin" / "gac" / "check-submodule-rewind.py",
+        )
+        mod = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _g(cwd, *args):
+        cmd = ["git", "-c", "user.name=tester", "-c", "user.email=tester@example.invalid"]
+        cmd += list(args)
+        return subprocess.run(
+            cmd,
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+    @classmethod
+    def _fixture(cls, tmp_path):
+        sub_src = tmp_path / "sub-src"
+        sub_src.mkdir()
+        cls._g(sub_src, "init", "-b", "main")
+        (sub_src / "file.txt").write_text("s1\n", encoding="utf-8")
+        cls._g(sub_src, "add", "file.txt")
+        cls._g(sub_src, "commit", "-m", "s1")
+
+        parent = tmp_path / "parent"
+        parent.mkdir()
+        cls._g(parent, "init", "-b", "main")
+        (parent / "README.md").write_text("parent\n", encoding="utf-8")
+        cls._g(parent, "add", "README.md")
+        cls._g(parent, "commit", "-m", "init")
+        cls._g(
+            parent,
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            str(sub_src),
+            "sub",
+        )
+        cls._g(parent, "commit", "-m", "add submodule at s1")
+        return parent
+
+    @staticmethod
+    def _sub_commit(parent, message):
+        sub = parent / "sub"
+        (sub / "file.txt").write_text(message + "\n", encoding="utf-8")
+        TestRangeGateBehindVsRewind._g(sub, "add", "file.txt")
+        TestRangeGateBehindVsRewind._g(sub, "commit", "-m", message)
+        return TestRangeGateBehindVsRewind._g(sub, "rev-parse", "HEAD").stdout.strip()
+
+    def test_branch_behind_base_is_not_a_rewind(self, tmp_path, capsys):
+        parent = self._fixture(tmp_path)
+        self._g(parent, "branch", "feature")
+        self._g(parent, "checkout", "feature")
+        (parent / "work.txt").write_text("unrelated delivery\n", encoding="utf-8")
+        self._g(parent, "add", "work.txt")
+        self._g(parent, "commit", "-m", "unrelated change")
+        self._g(parent, "checkout", "main")
+        self._sub_commit(parent, "s2")
+        self._g(parent, "add", "sub")
+        self._g(parent, "commit", "-m", "main bumps submodule pointer")
+
+        rc = self._load().run_ancestry_gate(
+            "main", "feature", parent, write_debt=False, json_out=False
+        )
+
+        out = capsys.readouterr().out
+        assert rc == 0, "a branch that never touched the gitlink must not read as rewind"
+        assert "[INFO] sub:" in out
+        assert "FAIL" not in out
+
+    def test_real_pointer_rewind_still_fails(self, tmp_path, capsys):
+        parent = self._fixture(tmp_path)
+        self._g(parent, "branch", "feature")
+        self._g(parent, "checkout", "feature")
+        self._sub_commit(parent, "s2-feature")
+        self._g(parent, "add", "sub")
+        self._g(parent, "commit", "-m", "feature moves pointer")
+        self._g(parent, "checkout", "main")
+        self._g(parent / "sub", "checkout", "-b", "side-line", "HEAD~1")
+        self._sub_commit(parent, "s2-main")
+        self._g(parent, "add", "sub")
+        self._g(parent, "commit", "-m", "main moves pointer elsewhere")
+
+        rc = self._load().run_ancestry_gate(
+            "main", "feature", parent, write_debt=False, json_out=True
+        )
+
+        payload = json.loads(capsys.readouterr().out)
+        assert rc == 1, "head moving the pointer to a non-descendant is still a rewind"
+        assert [v["path"] for v in payload["violations"]] == ["sub"]
+        assert payload["behind"] == []
