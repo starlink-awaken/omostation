@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+title: "Spec: Panorama Accessibility (A11y) and Comprehensive Test Suite (BET-Y2Q2-T10-165)"
+---
 # Spec: Panorama Accessibility (A11y) and Comprehensive Test Suite (BET-Y2Q2-T10-165)
 
 ## 1. 概述与设计意图 (Overview & Intent)

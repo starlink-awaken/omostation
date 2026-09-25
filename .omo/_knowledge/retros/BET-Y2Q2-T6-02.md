@@ -1,3 +1,11 @@
+---
+type: bet-retro
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+title: "复盘报告: BET-Y2Q2-T6-02 端口导流与双核下线守护"
+---
 # 复盘报告: BET-Y2Q2-T6-02 端口导流与双核下线守护
 
 ## 1. 任务背景与目标

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+title: "Spec: Dashboard SSOT Documentation and Architecture Convergence (BET-Y2Q2-T10-166)"
+---
 # Spec: Dashboard SSOT Documentation and Architecture Convergence (BET-Y2Q2-T10-166)
 
 ## 1. 概述与设计意图 (Overview & Intent)

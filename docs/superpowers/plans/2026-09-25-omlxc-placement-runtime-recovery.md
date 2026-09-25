@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: plan
+owner: governance-team
+last-reviewed: 2026-09-25
+title: "OMLXC Placement Runtime Recovery Implementation Plan"
+---
 # OMLXC Placement Runtime Recovery Implementation Plan
 
 > **Execution rule:** follow `skill://subagent-driven-development` only if work is delegated; otherwise execute each task in order. Run the specified test immediately after each production change.

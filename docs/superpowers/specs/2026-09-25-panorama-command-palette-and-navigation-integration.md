@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+title: "Spec: Panorama Command Palette and Navigation Integration (BET-Y2Q2-T10-163)"
+---
 # Spec: Panorama Command Palette and Navigation Integration (BET-Y2Q2-T10-163)
 
 ## 1. 概述与设计意图 (Overview & Intent)
