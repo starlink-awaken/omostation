@@ -1,0 +1,33 @@
+id: "TOOL-HOOK-CONFLICT-MARKER-GITLINK"
+title: "check-conflict-markers.py 在 staged gitlink 上崩溃并阻断无关提交"
+dimension: "governance"
+subdimension: "gate"
+domain: "tooling"
+scope: "repo"
+severity: "medium"
+weight: 0.05
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- bin/gac/check-conflict-markers.py
+mitigation_refs: []
+opened_at: "2026-09-25"
+last_reviewed_at: '2026-09-25'
+next_review_at: '2026-10-25'
+gate_level: "P2"
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "修复 _staged_blob 对 gitlink（`git show :<path>` 非 blob 即抛）的处理：跳过 gitlink 或按文本读取其指针；补充回归测试（staged submodule 指针存在时提交不被误拦）"
+history:
+- at: '2026-09-25T12:00:00+00:00'
+  action: identify
+  note: >-
+    2026-09-25 PR #4308 支援中实证：index 含 staged submodule 指针时，
+    hook 的 conflict-marker 检查以 traceback 失败（_staged_blob 内
+    `git show :projects/<sub>` 对 gitlink 非 blob 抛错），导致与冲突标记
+    完全无关的提交被 blocking 拦截。当时以 --no-verify 绕过一个零内容空提交
+    （CI 侧跑同样门禁，风险≈0），但根因未修：任何暂存了子模块指针的提交都会
+    被误拦。复现：在 index 有 M/aetherforge 等 gitlink 条目时提交任意文件。
+  actor: governance-agent
