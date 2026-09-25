@@ -2000,7 +2000,12 @@ def _verify_delivery_base(dest: Path, source_head: str, pr_base: str,
 
 def _verify_squash_topology(dest: Path, merge_commit: str, pr_base: str,
                             source_head: str) -> tuple[bool, str | None]:
-    """P7: one-parent squash topology。"""
+    """P7: one-parent squash topology。
+
+    GitHub baseRefOid 是 PR 创建时刻的 base 快照；base 分支在 PR 存续
+    期间前进后（并发合并常态），squash parent 会是更晚的 main 提交。
+    因此要求 parent 包含 pr_base（血缘约束），不强求精确相等。
+    """
     cat = run(["git", "-C", str(dest), "cat-file", "-t", merge_commit])
     if cat.returncode != 0 or cat.stdout.strip() != "commit":
         return False, f"merge commit {merge_commit[:12]} not found"
@@ -2011,7 +2016,13 @@ def _verify_squash_topology(dest: Path, merge_commit: str, pr_base: str,
     if len(parent_list) != 1:
         return False, f"merge commit has {len(parent_list)} parents, expected 1"
     if parent_list[0] != pr_base:
-        return False, f"merge parent {parent_list[0][:12]} != PR base {pr_base[:12]}"
+        anc = run(["git", "-C", str(dest), "merge-base", "--is-ancestor",
+                   pr_base, parent_list[0]])
+        if anc.returncode != 0:
+            return False, (
+                f"merge parent {parent_list[0][:12]} does not contain PR base "
+                f"{pr_base[:12]} (base snapshot not an ancestor)"
+            )
     return True, None
 
 
@@ -2198,6 +2209,7 @@ def _retire_squash_successor(args: argparse.Namespace, dest: Path,
 
     # P11: external receipt chain — proof
     merge_tree_sha = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^{{tree}}"]).stdout.strip()
+    squash_parent_sha = run(["git", "-C", str(dest), "rev-parse", f"{merge_commit}^"]).stdout.strip()
     proof_payload = {
         "schema": _SQUASH_PROOF_SCHEMA,
         "canonical_repository": repo_slug,
@@ -2213,7 +2225,7 @@ def _retire_squash_successor(args: argparse.Namespace, dest: Path,
         "peeled_tag_target": tag_info["peeled_commit"],
         "pr_base": pr["base_ref_oid"],
         "squash_commit": merge_commit,
-        "squash_parent": pr["base_ref_oid"],
+        "squash_parent": squash_parent_sha,
         "squash_tree": merge_tree_sha,
         "current_main": main_sha,
         "changed_path_count": tree_info["changed_path_count"],
