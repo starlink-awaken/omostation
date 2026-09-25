@@ -33629,6 +33629,234 @@ bets:
   - .omo/_knowledge/ops/
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-25-y2q3-t9-01-zhixing-dashboard-p2-compute-copilot.md
+- id: BET-Y2Q4-SH-1
+  title: Self-Healing Drifts Foundation — L2.5 layer introduction
+  goal: 引入 L2.5 self-healing layer，自动守护 5 类 drift（dashboard/brief/ephemeral/runs/ritual）
+  status: candidate
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P0
+  appetite: 2 weeks
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  non_goals:
+  - 不改 SSOT 文档
+  - 不直接 push PR
+  - 不替 owner 决策
+  - 不取代 P74
+  done_when:
+  - drift-face-detector.py 覆盖 5 类 drift
+  - auto-pruner.py 自动修 4 类可自动修
+  - .omo/cron/registry.yaml 增加 daily+weekly 两条 cron
+  - make drift-face-clean 一键入口
+  - 实证修复
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/drift-face-detector.py --json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/auto-pruner.py --dry-run --json
+    expect: exit 0
+  - cmd: make drift-face-clean && make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/drift-face-detector.py
+  - bin/ssot/auto-pruner.py
+  - .omo/cron/registry.yaml
+  - Makefile
+  - tests/bin/test_drift_face_detector.py
+  - tests/bin/test_auto_pruner.py
+  - docs/superpowers/specs/2026-09-25-self-healing-drifts-foundation.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-1.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-self-healing-drifts-foundation.md
+    spec_version: 1.0.0
+    content_digest: sha256:8aa9827aa5abfaba1e2b2c35e05b94c4e7e7625506b75174d266dd5fa316af7c
+    decision_ref: decision://accepted/BET-Y2Q4-SH-1
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q4-SH-2
+  title: Face-Wide Frontmatter Coverage — extend
+  goal: 把 frontmatter 覆盖率从单路径扩展到 7 类路径全扫，补齐 schema/status/lifecycle 等必填字段
+  status: candidate
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P0
+  appetite: 1 week
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  non_goals:
+  - 不改 SSOT 文档
+  - 不重命名字段
+  - 不扫 archived 路径
+  done_when:
+  - frontmatter-coverage.py 扫 7 类路径 × 6 字段
+  - 覆盖率 matrix 输出
+  - --apply 模式自动 patch
+  - 接入 gac-local-gate（< 80% WARN / < 50% FAIL）
+  - 实证：retros 缺字段从 342 降到 ≤ 30
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/frontmatter-coverage.py --face-wide --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/frontmatter-coverage.py
+  - tests/bin/test_frontmatter_coverage.py
+  - Makefile
+  - docs/superpowers/specs/2026-09-25-face-wide-frontmatter-coverage.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-2.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-face-wide-frontmatter-coverage.md
+    spec_version: 1.0.0
+    content_digest: sha256:bd7b0d858ba015a46ac260da2c8e3ba30ccf238fa5fe3da25a5f232af1931601
+    decision_ref: decision://accepted/BET-Y2Q4-SH-2
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q4-SH-3
+  title: Physical-Logical Mapping Audit — gitlink/launchd/asset consistency
+  goal: 系统化保证三类物理-逻辑映射一致（gitlink/launchd/OMO asset），自动检测 + 分类 + 报告
+  status: candidate
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 2 weeks
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  non_goals:
+  - 不直接 push gitlink bump PR
+  - 不替 owner 决策 OMO zombie
+  - 不重写 plist
+  done_when:
+  - physical-logical-audit.py 扫 3 类映射
+  - 每个发现给 drift 类型 + 严重性 + 修复路径
+  - 接入 gac-local-gate（WARN 不阻断）
+  - 接入 panorama health
+  - 实证：3 gitlink + 2 launchd + 5 OMO zombie 全识别
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/physical-logical-audit.py --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/physical-logical-audit.py
+  - tests/bin/test_physical_logical_audit.py
+  - Makefile
+  - docs/superpowers/specs/2026-09-25-physical-logical-mapping-audit.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-3.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-physical-logical-mapping-audit.md
+    spec_version: 1.0.0
+    content_digest: sha256:607eb5df5770081f0b16fe372be1fd01d7c65ac5e0ac81d52dc0dd2add9232e1
+    decision_ref: decision://accepted/BET-Y2Q4-SH-3
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q4-SH-4
+  title: Multi-Registry Alias Resolver — governance-checks / L0-constraints / hook-manifest
+    unification
+  goal: 建立跨注册表 alias map，统一 3 套 id 词汇，把 49% 零引用降到 ≤ 15%
+  status: candidate
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 1.5 weeks
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  non_goals:
+  - 不重写注册表
+  - 不替 owner 决定权威源
+  - 不强行覆盖零引用
+  done_when:
+  - registry-alias-map.yaml 含 3 套注册表等价映射
+  - check-rule-wiring-coverage.py --strict 使用 alias map
+  - 49% 零引用降到 ≤ 15%
+  - 接入 gac-local-gate（真零引用 ≥ 5% WARN）
+  verify:
+  - cmd: uv run --with pyyaml python bin/gac/check-rule-wiring-coverage.py --strict
+      --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/registry-alias-map.yaml
+  - bin/gac/check-rule-wiring-coverage.py
+  - tests/bin/test_registry_alias_resolver.py
+  - Makefile
+  - docs/superpowers/specs/2026-09-25-multi-registry-alias-resolver.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-4.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-multi-registry-alias-resolver.md
+    spec_version: 1.0.0
+    content_digest: sha256:c2fd2dae73078e315dcfab290af86814a5139843d6d5a823ad6d5ab056d4d3e2
+    decision_ref: decision://accepted/BET-Y2Q4-SH-4
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -33767,7 +33995,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 459
+  total_bets: 463
   windows:
   - Y1Q1
   - Y1Q2
