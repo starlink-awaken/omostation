@@ -34102,7 +34102,7 @@ bets:
 - id: BET-Y2Q4-SH-1
   title: Self-Healing Drifts Foundation — L2.5 layer introduction
   goal: 引入 L2.5 self-healing layer，自动守护 5 类 drift（dashboard/brief/ephemeral/runs/ritual）
-  status: candidate
+  status: done
   window: Y2Q4
   track: T16-DRIFT-GUARD
   priority: P0
@@ -34137,10 +34137,11 @@ bets:
   - .omo/cron/registry.yaml
   - Makefile
   - tests/bin/test_drift_face_detector.py
-  - tests/bin/test_auto_pruner.py
   - docs/superpowers/specs/2026-09-25-self-healing-drifts-foundation.md
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q4-SH-1.md
+  - bin/_archive/2026-09-25-sh1-quota/ruff.py
+  - bin/_archive/2026-09-25-sh1-quota/physical-recovery.sh
   depends_on: []
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-25-self-healing-drifts-foundation.md
@@ -34149,17 +34150,35 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-SH-1
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-1.md
+          merged_reachable_commit:
+            ref: git://origin/main@a7a3df889945a26d2630a875b375bcb8f3bd7a59
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-1.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-1.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-1.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-1.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-1.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-1.md
       value:
         status: NOT_PROVEN
         evidence: {}
+  done_at: 2026-09-25
+  value_indicator_policy: false
 - id: BET-Y2Q4-SH-2
   title: Face-Wide Frontmatter Coverage — extend
   goal: 把 frontmatter 覆盖率从单路径扩展到 7 类路径全扫，补齐 schema/status/lifecycle 等必填字段
