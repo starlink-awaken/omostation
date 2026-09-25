@@ -1,7 +1,14 @@
 # Pre-commit hooks for omostation (Round 12 P0 + P1)
 #
-# Installs: pre-commit install
-# Run manually: pre-commit run --all-files
+# ⚠️ 本文件是**声明表**，不是生效面。本仓 `core.hooksPath=.githooks`（机制 22c，
+#   BET-Y1Q4-T6-24），git 只执行 `.githooks/` 下的钩子，`pre-commit install` 在此仓
+#   永远不会触发；真正的本地提交门禁是 `.omo/_truth/registry/hook-manifest.yaml`
+#   （`.githooks/pre-commit` → `bin/gac/hook-runner.sh` 派发）。全仓对本框架的唯一
+#   调用是 `.github/workflows/ci-lint.yml` 里的 `pre-commit run --all-files check-yaml`，
+#   其余条目的实际执行面由 `.omo/_truth/registry/ci-surfaces.yaml` 承接。
+#   重新核验的判据与实测见 `docs/operations/precommit-hook-registry-split-2026-09-25.md`。
+#
+# 手动自查单条（不改变提交门禁）: pre-commit run --all-files <hook-id>
 #
 # Hook 设计 (Round 12 P1 扩展):
 #   - check-yaml:        官方 pre-commit-hooks, 校验所有 .yml/.yaml 可解析
@@ -10,8 +17,8 @@
 #                        若 .omo/_knowledge/ 下没有 .jsonl, 跳过 (新项目可零数据启动).
 #   - ruff:              各项目自带 ruff (在 kairon/agora/omo 等 pyproject.toml 中配).
 #
-# 性能考虑: omo logs audit 是 IO-bound (读 .jsonl), 不会显著拖慢 commit.
-#          check-yaml 是纯文本解析, <1s. 两者组合 < 3s per commit.
+# 性能预估（假设性 —— 本文件当前没有 per-commit 调用面，见顶部声明）:
+#   omo logs audit 是 IO-bound (读 .jsonl); check-yaml 是纯文本解析 <1s.
 # 走 CI 周期跑的 (见 .github/workflows/ci-lint.yml):
 #   - actionlint (GitHub Actions 工作流静态分析, 二进制 1.5MB, 不在 pre-commit 拉)
 #   - shellcheck (scripts/*.sh, 系统包, CI 装一次)
