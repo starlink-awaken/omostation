@@ -38,6 +38,11 @@ CI fail 按 "洋葱剥层" 诊断. 每修一层 → push → CI 暴露下一层.
 | **L5 生成器格式** | 自动注入段 MD004/031 | consensus-inject 输出 `*` / 引用 fence | **修生成器** (非修输出, 避免下次覆盖) |
 | **L6 本地工具** | `--directory` 绝对路径 CI 无 | evidence-smoke 绝对路径 | `local-only` (诚实区分本地工具 vs 真鸿沟) |
 
+> **L4 的 MD0xx 判定必须先确认工具与作用域**：本仓 markdown lint = Python `pymarkdown`
+> （`.pre-commit-config.yaml` 的 `markdownlint` hook），`files:` 只覆盖
+> `^(README|CLAUDE|AGENTS|ARCHITECTURE|LAYER-INDEX)\.md$`；用 node `markdownlint-cli` 或去 lint
+> `docs/**` 得到的报错都不算 CI 真拦。判据与命令见 `.agents/skills/ci-red-triage/SKILL.md` §2。
+
 ## 3. 真假 fail 区分 (P73 truth-driven)
 
 每个 fail 先判定 (避免瞎修):
