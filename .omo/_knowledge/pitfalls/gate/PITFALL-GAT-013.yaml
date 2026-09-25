@@ -1,0 +1,20 @@
+schema: agent-error/v1
+id: PITFALL-GAT-013
+category: gate
+severity: medium
+title: 新忽略根目录未登记触发 root-directory-governance FAIL
+symptom: 'gac-local-gate root-directory-governance FAIL: .kilo (1017 files) ignored-unregistered
+  policy_allowed=false; 根因 PR #4308 把 .kilo/ 加入 .gitignore 但未同步登记 policy (既有 .artifacts
+  同类问题, retro BET-Y1Q3-T6-08 先例)'
+root_cause: ''
+solution: '在 .omo/_archive/operations-2026H1/root-directory-governance-policy.yaml
+  的 local_surfaces 登记 .kilo (owner: workspace-tooling, class: client-metadata, lifecycle:
+  local); 判定链: policy_allowed = allowed_ignored_dir OR surface_policy 存在 (scan L186);
+  先例 PR #4114 登记 LADS/'
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-09-25'
+times_encountered: 1
+last_confirmed_at: '2026-09-25'
+status: active

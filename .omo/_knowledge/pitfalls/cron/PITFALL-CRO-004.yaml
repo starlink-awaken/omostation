@@ -1,0 +1,36 @@
+schema: agent-error/v1
+id: PITFALL-CRO-004
+category: cron
+severity: high
+title: install-resident-cron.sh 探测盲区 + 去重不全致 cron 静默失败与条目复制
+symptom: >-
+  cron-*.log 每 2min 输出 "ImportError: cannot import name 'UTC' from 'datetime'
+  (Python3.framework/Versions/3.9/...)" 且水位长时间停滞; 重跑 installer 后
+  crontab 出现两份 managed 块 (role 行数 10 而非 5, 同一 job 每分钟被调度两次);
+  另一诊断陷阱: `crontab -l | head -40` 截断输出让人误判"crontab 被并发覆盖"
+root_cause: >-
+  ① UTC 探测 (L27-34) 在交互 shell 执行且通过时保留裸名 python3, 而 cron 的受限
+  PATH (/usr/bin:/bin) 把它解析到 /usr/bin/python3 = Xcode 3.9 (无 datetime.UTC),
+  每条 job 启动即 ImportError —— 探测对 cron 环境是盲区; ② 幂等去重
+  `grep -v -F "${CRON_MARKER}"` 只删 marker 注释行, 其下 11 行 managed 条目残留,
+  每次重跑 append 新块 → 复制 (双跑水位竞争/双倍事件); ③ 诊断期用 head 截断
+  crontab 输出得出"条目丢失"的错误结论, 浪费排查方向
+solution: >-
+  探测后用 `command -v "${PYTHON_BIN}"` 固化绝对路径 (失败保留原值), 使 cron 不依赖
+  PATH; 去重改为 awk 单遍剥离: marker 行 + 全部 managed 行 (schedule 前缀
+  */2|*/5|*/10/0 1/10 2 且含 omo.cli resident|proposal-to-adr.py|
+  system-health-check.py, 覆盖无 marker 的孤儿块) + 连续空行折叠; 验收: 连跑两次
+  installer 断言 1 marker + 5 role 行 + 路径为绝对值, 等下一个 */2 边界确认
+  cron-*.log 新增块无 ImportError 且水位 mtime 前进, `check-resident-status.py`
+  PASS
+prevention: >-
+  涉及 cron 的安装脚本: ① 写入 crontab 的解释器/路径必须绝对化 (勿信任交互 shell
+  探测结果); ② 幂等删除勿只锚注释 marker —— marker 只是块首标记, 本体条目才是主体;
+  ③ 查看 crontab/日志用完整输出 (grep -n / awk / wc -l 断言行数), 禁用 head/tail
+  截断后下结论
+tags: [cron, resident, installer, idempotency, path-resolution, diagnosis-trap]
+discovered_by: governance-agent
+discovered_at: '2026-09-25'
+times_encountered: 1
+last_confirmed_at: '2026-09-25'
+status: active

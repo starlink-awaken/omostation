@@ -1,0 +1,19 @@
+schema: agent-error/v1
+id: PITFALL-CRO-003
+category: cron
+severity: medium
+title: resident-agent-schedule cron 缺失导致 CR-RESIDENT-STATUS-01 全局 FAIL
+symptom: 'gac-local-gate resident-status-check FAIL: last daemon tick 5000s+ ago (stale
+  >1800s), watermark=resident-heartbeat.json; crontab 中无 resident-agent-schedule 条目;
+  omo resident daemon --once 手动 tick 只推进部分角色水位'
+root_cause: ''
+solution: bash bin/ssot/install-resident-cron.sh 幂等安装五角色 */2min cron; 立即补 5 次 python3
+  -m omo.cli resident daemon --once --role <sediment|decision|execute|monitor|heartbeat>
+  --ledger runtime/omo/event-ledger.sqlite3 使全部水位即时新鲜; cron 接管后每 2min 自续
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-09-25'
+times_encountered: 1
+last_confirmed_at: '2026-09-25'
+status: active
