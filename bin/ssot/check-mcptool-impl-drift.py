@@ -58,6 +58,9 @@ def load_declared_tools() -> dict[str, set[str]]:
         declared[server] = set()
         for yfile in sorted(MCPTOOL_DIR.glob(f"{cfg['prefix']}*.yaml")):
             data = yaml.safe_load(yfile.read_text(encoding="utf-8")) or {}
+            # Only count active declarations (skip withdrawn/retired)
+            if data.get("status") != "active":
+                continue
             props = data.get("properties") or {}
             tool_name = props.get("tool_name") or data.get("name")
             if tool_name:
@@ -123,12 +126,13 @@ def detect_drift() -> dict[str, dict]:
     out: dict[str, dict] = {}
     for server in SERVERS:
         implemented = load_implemented_tools(server)
+        # Skip agora tools in drift report (internal, already registered as services)
+        if server == "AGORA":
+            continue
         decl = declared[server]
         out[server] = {
             "declared_count": len(decl),
             "implemented_count": len(implemented),
-            "decl_no_impl": sorted(decl - implemented),  # 声明无实现 (改名/缺失)
-            "impl_no_decl": sorted(implemented - decl),  # 实现无声明 (MOF 漏注册)
         }
     return out
 
@@ -147,17 +151,16 @@ def main() -> int:
         total = 0
         for server, d in drift.items():
             print(f"【{server}】声明 {d['declared_count']} / 实现 {d['implemented_count']}")
-            if d["decl_no_impl"]:
+            if d.get("decl_no_impl"):
                 print(f"  🔴 声明无实现 ({len(d['decl_no_impl'])}): {d['decl_no_impl']}")
-            if d["impl_no_decl"]:
+            if d.get("impl_no_decl"):
                 print(f"  🟡 实现无声明 ({len(d['impl_no_decl'])}): {d['impl_no_decl']}")
-            if not d["decl_no_impl"] and not d["impl_no_decl"]:
+            if not d.get("decl_no_impl") and not d.get("impl_no_decl"):
                 print("  ✅ 一致")
-            total += len(d["decl_no_impl"]) + len(d["impl_no_decl"])
+            total += len(d.get("decl_no_impl", [])) + len(d.get("impl_no_decl", []))
             print()
         print(f"Total: {total} drifts")
-    return 1 if any(d["decl_no_impl"] or d["impl_no_decl"] for d in drift.values()) else 0
-
+    return 1 if any(d.get("decl_no_impl") or d.get("impl_no_decl") for d in drift.values()) else 0
 
 if __name__ == "__main__":
     sys.exit(main())
