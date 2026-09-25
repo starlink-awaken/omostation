@@ -3191,8 +3191,39 @@ function go(name){
    } else if(name==='orient'){
      if(typeof renderOrientLoopsPulse==='function') renderOrientLoopsPulse();
      if(typeof renderSovereignPostureBar==='function') renderSovereignPostureBar();
-   }
- } catch(e){ console.warn('section activate render failed', name, e); }
+	   } else if(name==='scene-system'){
+	     if(typeof renderSceneSystem==='function') renderSceneSystem(D);
+	   } else if(name==='value'){
+	     if(typeof zxRenderValue==='function') zxRenderValue();
+	   } else if(name==='metrics'){
+	     if(typeof zxRenderMetrics==='function') zxRenderMetrics();
+	   } else if(name==='swarm'){
+	     if(typeof renderSwarmGalaxy==='function') renderSwarmGalaxy();
+	   } else if(name==='gov'){
+	     if(typeof renderGatePipeline==='function') renderGatePipeline();
+	   } else if(name==='health'){
+	     if(typeof refreshHealth==='function') refreshHealth();
+	     if(typeof populateHealth==='function') populateHealth();
+	   } else if(name==='workbench'){
+	     if(typeof renderBetsTab==='function') renderBetsTab();
+	     if(typeof renderSceneFunnel==='function') renderSceneFunnel();
+	   } else if(name==='personal'){
+	     if(typeof renderPersonalSummary==='function') renderPersonalSummary();
+	     if(typeof renderPersonalNextActions==='function') renderPersonalNextActions();
+	   } else if(name==='ledger'){
+	     if(typeof renderLedgerVisuals==='function') renderLedgerVisuals();
+	     if(typeof renderBets==='function') renderBets();
+	   } else if(name==='capabilities'){
+	     if(typeof renderCaps==='function') renderCaps();
+	     if(typeof renderBOSTab==='function') renderBOSTab();
+	   } else if(name==='know'){
+	     if(typeof renderKnowledgeStats==='function') renderKnowledgeStats();
+	   } else if(name==='atlas'){
+	     if(typeof renderAgentCapabilityMesh==='function') renderAgentCapabilityMesh();
+	   } else if(name==='logs'){
+	     if(typeof zxRenderLogs==='function') zxRenderLogs();
+	   }
+	 } catch(e){ console.warn('section activate render failed', name, e); }
 }
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)));go(location.hash.slice(1));
 renderSceneSystem(D);
