@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: 台账 status 收口 — 3 个已交付 bet candidate→done
-bet_id: fix-ledger-status-sync
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: 台账 status 收口 — 3 个已交付 bet candidate→done
+bet_id: fix-ledger-status-sync
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # fix-ledger-status-sync 复盘
 

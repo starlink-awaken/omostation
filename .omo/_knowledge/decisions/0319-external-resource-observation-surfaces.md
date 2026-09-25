@@ -1,14 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0319
 title: External Connection Fabric 观察与候选评审产品边界
-status: ACCEPTED
 date: 2026-08-03
-owner: architecture-governance
 scope: Workflow Mesh / Cockpit / External Connection Fabric
-lifecycle: spec
-last-reviewed: 2026-08-03
-type: ssot
 ---
+
 
 # ADR-0319: External Connection Fabric 观察与候选评审产品边界
 

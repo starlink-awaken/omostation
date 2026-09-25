@@ -1,9 +1,14 @@
 ---
+schema: md/v1
+status: draft
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
 id: BET-Y2Q3-T9-01
 date: 2026-09-25
-type: retro
-status: draft
 ---
+
 
 # BET-Y2Q3-T9-01 Retro — 织星驾驶舱 P2 体验迭代、漂移可观测与真实算力副驾
 

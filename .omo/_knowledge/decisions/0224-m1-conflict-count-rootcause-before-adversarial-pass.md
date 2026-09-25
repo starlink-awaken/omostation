@@ -1,17 +1,16 @@
 ---
-id: ADR-0224
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 架构师
-last-reviewed: 2026-07-18
-related:
-  - 0222-m1-conflict-zero-evidence-standard-adversarial.md
-  - 0220-swarm-coordination-discipline-m1-gate.md
-  - 0210-three-year-strategy-execution-convergence.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0224
+related: 
 supersedes: []
 amends: [0222]
-type: ssot
 ---
+
 
 # ADR-0224: 被动窗 conflict_count>0 时对抗路径不得单独判 M1 达标
 

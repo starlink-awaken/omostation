@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 
 # Knowledge Indexing Plan — #7 from Architectural Review
 

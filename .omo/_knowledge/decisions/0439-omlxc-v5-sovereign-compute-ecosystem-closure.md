@@ -1,11 +1,13 @@
 ---
-id: ADR-0439
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-30
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0439
 ---
+
 
 # ADR-0439: 次世代 omlxc V5.0 主权算力织网全生态闭环与长期治理运维体系 (DMA Daemon、署名Diff自进化闭环、Cockpit Spine CLI、Experience Replay 防灾难遗忘)
 

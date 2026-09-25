@@ -1,17 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-05
-last-reviewed: 2026-09-05
 bet_id: BET-Y2Q1-T10-01
 risk_level: L3
 human_gate: true
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # T10-01 零知识加密冷备份与单键还原脚本设计
 

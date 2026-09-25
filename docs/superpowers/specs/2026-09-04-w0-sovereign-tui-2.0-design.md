@@ -1,18 +1,20 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-04
-last-reviewed: 2026-09-04
 bet_id: BET-Y1Q4-T8-18
 risk_level: L1
 human_gate: false
 value_indicator_policy: false
 implementation_authorized: true
-type: ssot
 ---
+
 
 # Sovereign TUI 2.0 旗舰多窗格终端控制台架构设计规范
 

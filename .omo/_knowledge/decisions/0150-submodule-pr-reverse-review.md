@@ -1,18 +1,15 @@
 ---
-id: ADR-0150
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
-related:
-  - 0142-decisions-quick-ref.md
-  - 0147-mcptool-adder-guide.md
-  - 0148-round-trip-playbook.md
-  - 0149-p71-baseline-no-replay.md
-  - ../../../../docs/SUBMODULE-PR-REVIEW-GUIDE.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0150
+related: 
+supersedes: []
 ---
+
 
 # ADR-0150: Submodule PR 反向 Review (Round 5e)
 

@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0297
 title: 收敛产品真相与外部连接织层
-status: ACCEPTED
-type: decision
-owner: architecture-governance
 created: 2026-08-02
-last-reviewed: 2026-08-02
-lifecycle: spec
-related:
-  - ../../standards/external-connection-fabric.md
-  - ../../_truth/registry/external-connection-fabric.yaml
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
+related: 
 ---
+
 
 # ADR-0297 收敛产品真相与外部连接织层
 

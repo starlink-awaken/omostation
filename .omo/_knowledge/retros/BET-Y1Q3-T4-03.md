@@ -1,13 +1,15 @@
 ---
-title: BET-Y1Q3-T4-03 回顾 — Honest Scene Card Gate
-type: retro
+schema: md/v1
 status: active
 lifecycle: history
 owner: laowang-agent
-last-reviewed: 2026-08-28
+last-reviewed: 2026-09-25
+type: retro
+title: BET-Y1Q3-T4-03 回顾 — Honest Scene Card Gate
 created: 2026-08-28
 related: []
 ---
+
 # BET-Y1Q3-T4-03 Retrospective — Honest Scene Card Gate
 
 - date: 2026-08-28

@@ -1,13 +1,15 @@
 ---
-title: BET-Y3H2-T4-01 retro — 3Y 战略全景复利收益与抗脆弱性归因
-type: retro
+schema: md/v1
 status: active
+lifecycle: history
 owner: engineering-agent
+last-reviewed: 2026-09-25
+type: retro
+title: BET-Y3H2-T4-01 retro — 3Y 战略全景复利收益与抗脆弱性归因
 created: 2026-08-20
 bet: BET-Y3H2-T4-01
-lifecycle: history
-last-reviewed: 2026-08-20
 ---
+
 
 # BET-Y3H2-T4-01 复盘（五问）
 

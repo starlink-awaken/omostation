@@ -1,18 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0321
 title: External Resource Selection 评测证据与提案边界
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../standards/external-connection-fabric.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../docs/STRATEGY-3YEAR-PANORAMA.md
-  - 0320-external-resource-evaluation-and-explainable-selection.md
+related: 
 ---
+
 
 # ADR-0321: External Resource Selection 评测证据与提案边界
 

@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-25
 type: derived
 source: bin/ssot/gen-help-docs.py
 ---
+
 
 # Cockpit CLI · 🤖 Agent 协作
 

@@ -1,16 +1,15 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0301
 title: Workflow Mesh Watchdog 只写过期事件
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
-last-reviewed: 2026-08-02
-related:
-  - ../../standards/agent-cli-worker-collaboration.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../_truth/registry/agent-workflows.yaml
+related: 
 ---
+
 
 # ADR-0301: Workflow Mesh Watchdog 只写过期事件
 

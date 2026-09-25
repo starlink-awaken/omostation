@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: BET-Y1Q4-T8-13 Closeout Retro — P0 core command dry-run/JSON contract
-bet_id: BET-Y1Q4-T8-13
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: BET-Y1Q4-T8-13 Closeout Retro — P0 core command dry-run/JSON contract
+bet_id: BET-Y1Q4-T8-13
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # BET-Y1Q4-T8-13 Closeout Retro
 

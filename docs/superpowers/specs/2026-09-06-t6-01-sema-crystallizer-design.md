@@ -1,17 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-06
-last-reviewed: 2026-09-06
 bet_id: BET-Y2Q2-T6-01
 risk_level: L2
 human_gate: false
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # T6-01 SEMA 防踩坑信念自结晶与技能热重载设计
 

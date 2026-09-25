@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: draft
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 ---
+
 
 # BOS URI Domain Standard (5 域锁定 + 命名规范)
 

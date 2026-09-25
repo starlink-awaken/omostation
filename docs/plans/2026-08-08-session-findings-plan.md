@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 # 会话发现项方案 (2026-08-08)
 
 > 覆盖 6 项发现, 按价值排序。每项含现状/方案/落地步骤/验证。

@@ -1,11 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-04
-last-reviewed: 2026-09-04
 bet_id: BET-Y1Q4-T1-10
 risk_level: L2
 human_gate: false
@@ -14,8 +16,8 @@ source_design_sha256: d6c9aa76d4e1a9f6e4a2a4d1b21f1c1b2b3f4f5f6f7f8f9fafbfcfdfef
 source_proposal_sha256: d6c9aa76d4e1a9f6e4a2a4d1b21f1c1b2b3f4f5f6f7f8f9fafbfcfdfeff0002
 source_amendment_sha256: d6c9aa76d4e1a9f6e4a2a4d1b21f1c1b2b3f4f5f6f7f8f9fafbfcfdfeff0003
 implementation_authorized: true
-type: ssot
 ---
+
 
 # W0 Portfolio v2 Validator Full §6 Check Expansion
 

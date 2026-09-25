@@ -1,17 +1,15 @@
 ---
-id: ADR-0213
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - 0209-ledger-trim-and-adr-ssot-renumbering.md
-  - 0203-requirement-iteration-workflow-mandatory.md
-  - 0204-requirement-iteration-enforcement.md
-  - 0211-p74-run-frequency-field-and-excluded-workflows-removal.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0213
+related: 
+supersedes: []
 ---
+
 
 # ADR-0213 — ADR-0209 附录 A 收口（A2 / A4 / A6）
 

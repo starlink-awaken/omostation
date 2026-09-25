@@ -1,17 +1,15 @@
 ---
-id: ADR-0172
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related:
-  - 0170-p77-phase7-env-var-port-migration.md
-  - 0168-p77-phase5-hardcoded-ports.md
-  - 0167-p77-phase4-port-registry-consistency.md
-  - ../../../../../protocols/port-registry.yaml
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0172
+related: 
+supersedes: []
 ---
+
 
 # ADR-0172: P78 — 端口注册表收敛 (deprecated 清理 + transport 字段)
 

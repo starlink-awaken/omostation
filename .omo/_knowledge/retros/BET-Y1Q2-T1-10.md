@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: BET-Y1Q2-T1-10 Retrospective
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q2-T1-10 Retrospective
 ---
+
 # BET-Y1Q2-T1-10 Retrospective
 
 ## Q1. What was delivered?

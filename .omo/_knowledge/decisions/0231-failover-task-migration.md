@@ -1,16 +1,16 @@
 ---
-id: ADR-0231
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-24
-related:
-  - 0230-agent-registry-node-role-capability.md
-  - 0228-m1-acceptance-physical-deferred-reorder.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0231
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0231: Failover — task migration on node loss
 

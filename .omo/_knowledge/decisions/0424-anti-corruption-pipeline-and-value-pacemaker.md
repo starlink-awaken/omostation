@@ -1,19 +1,17 @@
 ---
-id: ADR-0424
-
-title: "ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀"
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-date: 2026-08-24
-last-reviewed: 2026-08-24
-tags: [anti-corruption, value-pacemaker, uhs, governance, multi-agent, north-star]
-related:
-  - docs/operations/engineering-golden-rules.md (SCRIPT-BASELINE-SYNC)
-  - bin/gac/unified-health-score.py (UHS 度量)
-  - BET-Y1Q3-T10-11 (sediment promotion pipeline)
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0424
+title: "ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀"
+date: 2026-08-24
+tags: [anti-corruption, value-pacemaker, uhs, governance, multi-agent, north-star]
+related: 
 ---
+
 
 # ADR-0424: 防腐流水线与价值起搏器 — 48 小时全弧线架构决策沉淀
 

@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0316
 title: 知识行动任务到 Workflow Mesh 请求的晋升边界
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../docs/STRATEGY-3YEAR-PANORAMA.md
-  - 0300-adaptive-digital-officer-decision-loop.md
+related: 
 ---
+
 
 # ADR-0316: 知识行动任务到 Workflow Mesh 请求的晋升边界
 

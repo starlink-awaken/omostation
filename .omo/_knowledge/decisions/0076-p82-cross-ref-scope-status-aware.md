@@ -1,11 +1,13 @@
 ---
-id: ADR-0076
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0076
 ---
+
 
 # ADR-0076: P82 cross-ref scope-aware + status-aware + 死链治理收口
 

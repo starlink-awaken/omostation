@@ -1,13 +1,15 @@
 ---
-title: BET-Y1Q3-T6-12 retro — MOSBeliefManager 运行时计数解耦
-type: retro
+schema: md/v1
 status: active
+lifecycle: history
 owner: engineering-agent
+last-reviewed: 2026-09-25
+type: retro
+title: BET-Y1Q3-T6-12 retro — MOSBeliefManager 运行时计数解耦
 created: 2026-08-20
 bet: BET-Y1Q3-T6-12
-lifecycle: history
-last-reviewed: 2026-08-20
 ---
+
 
 # BET-Y1Q3-T6-12 复盘（五问）
 

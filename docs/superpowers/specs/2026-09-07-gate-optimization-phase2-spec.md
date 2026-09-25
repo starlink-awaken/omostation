@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 门禁机制优化二期 — 文档 PR 风险分级 + spec-init 一键工具
 bet_id: BET-Y1Q4-T10-135
-status: accepted
-lifecycle: contract
-owner: governance-team
-last-reviewed: 2026-09-07
 ---
+
 
 
 

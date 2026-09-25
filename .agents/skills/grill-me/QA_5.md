@@ -1,8 +1,12 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-05
+last-reviewed: 2026-09-25
+type: ssot
 ---
+
 
 # Grill 5Q — 边界/反模式/容量/回滚/可观测
 

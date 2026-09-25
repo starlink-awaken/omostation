@@ -1,11 +1,13 @@
 ---
-id: ADR-0106
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-26
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0106
 ---
+
 
 # ADR-0106: GaC 治理即代码架构 (Governance-as-Code)
 

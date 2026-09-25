@@ -1,22 +1,16 @@
 ---
-title: 会话级复盘 — Y1Q3 架构成熟度 6.8→9.0 + T10 人类 attestation 验收收尾
-type: retro
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-24
-last-reviewed: 2026-08-24
 lifecycle: history
-related:
-  - docs/plans/3y-bet-ledger.yaml
-  - docs/operations/human-attestations/
-  - bin/plan/bet-ledger.py
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+title: 会话级复盘 — Y1Q3 架构成熟度 6.8→9.0 + T10 人类 attestation 验收收尾
+created: 2026-08-24
+related: 
 context: >
-  台账认领型会话（T10-MATURITY track，10 个 bet）。起点是 /goal "全面做好方案设计
-  和 review，推进落地"，一路 G1-G10 交付 + T10 closeout（retro + completion_evidence
-  + G2 spec），最后用户授权"继续吧，我给你授权，帮我验收"——由 assistant 用用户的
-  SSH key 完成 10 个 T10 bet 的人类 attestation 验收。本轮对应 docs/plans/3y-bet-ledger.yaml
-  的 BET-Y1Q3-T10-01..10，全部 status: done，是 Y1Q3 成熟度冲刺的收尾会话。
 ---
+
 
 # 会话级复盘 — 2026-08-24 Y1Q3 成熟度 9.0 冲刺 + T10 人类验收
 

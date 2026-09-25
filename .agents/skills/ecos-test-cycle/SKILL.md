@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: ecos-test-cycle
 description: "Edit→test→commit cycle for the ecos project. Run full test suite after code changes, verify results, commit on pass, recover on failure. Use whenever modifying ecos source code."
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # Ecos Test Cycle — Edit → Verify → Commit
 

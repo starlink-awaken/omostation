@@ -1,13 +1,15 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: delivery-report
 owner: governance-team
+last-reviewed: 2026-09-25
+type: delivery-report
+schema_version: report/v1
 created: 2026-09-01
-last-reviewed: 2026-09-01
 bet: BET-Y1Q4-T8-03
 ---
+
 
 # GB/T 红头 DOCX / 16:9 PPTX / 矢量图渲染引擎（交付报告）
 

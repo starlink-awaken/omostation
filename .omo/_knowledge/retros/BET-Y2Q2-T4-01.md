@@ -1,15 +1,17 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: "BET-Y2Q2-T4-01 Closeout Retro — North-star recovery & Decision Episode proof"
-bet_id: BET-Y2Q2-T4-01
+schema: md/v1
 status: completed
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: "BET-Y2Q2-T4-01 Closeout Retro — North-star recovery & Decision Episode proof"
+bet_id: BET-Y2Q2-T4-01
 created: "2026-09-23"
-last-reviewed: "2026-09-23"
 run_id: 20260923T110523Z-bet-execution-3d555b07
 ---
+
 
 # BET-Y2Q2-T4-01 Closeout Retro
 

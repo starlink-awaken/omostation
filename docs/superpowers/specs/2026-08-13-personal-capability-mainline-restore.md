@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-version: 1.0.0
-last-reviewed: 2026-08-13
+last-reviewed: 2026-09-25
 type: ssot
+version: 1.0.0
 last_updated: 2026-09-03
 ---
+
 
 # 个人价值能力主线恢复与子模块防回退规范
 

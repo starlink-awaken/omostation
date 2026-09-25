@@ -1,12 +1,16 @@
 ---
-bet_id: BET-Y2Q3-T7-01
+schema: md/v1
 status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
+bet_id: BET-Y2Q3-T7-01
 completed_at: 2026-09-16
 run_id: 20260916T03-t7-01-y2q3-closeout
 pr: "https://github.com/starlink-awaken/omostation/pull/3807"
-lifecycle: history
-owner: unassigned
 ---
+
 
 # Retro: BET-Y2Q3-T7-01 — 家庭资产负债平水审计、大额支出预警与法务合同审查场景包
 

@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎设计
 bet_id: BET-Y1Q4-T6-28
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-13
 ---
+
 
 # BET-Y1Q4-T6-28: 四级认知阶梯分级投机推理与 Radix 前缀树热缓存加速引擎
 

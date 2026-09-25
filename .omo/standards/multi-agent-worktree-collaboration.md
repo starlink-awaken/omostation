@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-25
 type: ssot
 ---
+
 
 # 多 Agent 共享工作区协作标准 (Multi-Agent Worktree Collaboration)
 

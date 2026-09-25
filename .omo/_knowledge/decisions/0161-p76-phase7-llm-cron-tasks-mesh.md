@@ -1,21 +1,15 @@
 ---
-id: ADR-0161
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - STRAT-P76-strategic-roadmap.md
-  - 0161-p76-phase7-llm-cron-tasks-mesh.md (本 ADR)
-  - 0160-p76-phase6-foundry-runtime.md
-  - 0159-p76-phase5-foundry.md
-  - ../../../../../runtime/cron/com.omostation.knowledge-foundry.plist
-  - ../../../../../runtime/cron/systemd/omostation-knowledge-foundry.timer
-  - ../../../../../bin/commit-assist.py
-supersedes:
-  - STRAT-P76 §6 (Phase 7+ entries formerly deferred)
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0161
+related: 
+supersedes: 
 ---
+
 
 # ADR-0161: P76 Phase 7 — LLM-assisted commit + foundry timer + 8 planned tasks + mesh-router 真正落地
 

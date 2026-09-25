@@ -1,10 +1,12 @@
 ---
-type: ssot
-lifecycle: active
+schema: md/v1
 status: draft
+lifecycle: active
 owner: governance-team
-last-reviewed: 2026-09-03
+last-reviewed: 2026-09-25
+type: ssot
 ---
+
 
 # ZCode Workspace Runtime State Relocation Implementation Plan
 

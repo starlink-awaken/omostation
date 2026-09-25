@@ -1,15 +1,16 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: agent-skills-team
+last-reviewed: 2026-09-25
+type: ssot
 name: architecture-perception
 description: Agent 感知当前架构状态，检查架构合规性
-triggers:
-  - 用户询问架构相关问题
-  - 创建/修改场景卡时
-  - 新增 bin/ 脚本时
-  - 架构变更时
-type: ssot
-owner: agent-skills-team
+triggers: 
 last_updated: 2026-09-03
 ---
+
 
 # Skill: architecture-perception
 

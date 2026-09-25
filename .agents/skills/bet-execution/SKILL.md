@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: bet-execution
 description: "认领并执行三年规划台账（3Y-BET-LEDGER）里的 bet。当你要开始一项工程/治理任务、需要知道现在该做什么、或被要求「领一个 bet」时使用。Triggers on: bet, 台账, ledger, BET-Y1Q1, bet-ledger, 认领任务, claim bet, 三年规划, 我该做什么, what should I work on, 下一步做什么。"
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # Bet Execution — 台账认领与执行
 

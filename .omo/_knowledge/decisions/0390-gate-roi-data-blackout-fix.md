@@ -1,12 +1,14 @@
 ---
-id: ADR-0390
-title: M5 数据黑障修复 — omo_daemon governance-history checks 丢失
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-08
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0390
+title: M5 数据黑障修复 — omo_daemon governance-history checks 丢失
 ---
+
 
 # ADR-0390 Decision: M5 数据黑障修复 + 减法治理 Phase 2
 

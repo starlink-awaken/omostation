@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: 文档 SSOT 全量治理 — 去重/合并/指针化
-bet_id: BET-Y1Q4-T6-17
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: 文档 SSOT 全量治理 — 去重/合并/指针化
+bet_id: BET-Y1Q4-T6-17
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # BET-Y1Q4-T6-17 复盘
 

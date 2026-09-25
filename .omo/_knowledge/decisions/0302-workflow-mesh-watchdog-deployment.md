@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0302
 title: Workflow Mesh watchdog 真实 cadence 与运行账本
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/agent-cli-worker-collaboration.md
-  - ../../_knowledge/decisions/0301-workflow-mesh-watchdog.md
+related: 
 ---
+
 
 # ADR-0302: Workflow Mesh watchdog 真实 cadence 与运行账本
 

@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0329
 title: 外部资源目录变化风险分类与人工复核投影
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - 0319-external-resource-observation-surfaces.md
-  - 0328-external-resource-catalog-freshness.md
+related: 
 ---
+
 
 # ADR-0329: 外部资源目录变化风险分类与人工复核投影
 

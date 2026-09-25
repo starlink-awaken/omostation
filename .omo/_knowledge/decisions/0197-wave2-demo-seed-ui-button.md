@@ -1,11 +1,13 @@
 ---
-id: ADR-0197
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0197
 ---
+
 
 # ADR-0197 — Cockpit「加载演示数据」按钮
 

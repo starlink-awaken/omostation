@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-09-12
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # BET-Y1Q4-T8-24B Retro — 六面正交 Store 底座与 ⌘K 命令面板
 
 > 日期: 2026-09-12 | 状态: engineering VERIFIED (operational/value 待 24C/D/E 前端消费后单独证明)

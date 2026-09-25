@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: CLI behavior contract — ExitCode / ANSI purity / Trace-ID
 bet_id: BET-Y1Q4-T8-12
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-05
-last-reviewed: 2026-09-05
-type: ssot
 last_updated: 2026-09-05
 ---
+
 
 # CLI behavior contract (T8-12)
 

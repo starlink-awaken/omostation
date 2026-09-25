@@ -1,11 +1,13 @@
 ---
-id: ADR-0115
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-30
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0115
 ---
+
 
 # ADR-0115: model-driven LifecycleStage 7→8 阶段 (P60 GOVERNANCE_MAINTENANCE)
 

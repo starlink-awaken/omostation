@@ -1,11 +1,15 @@
 ---
+schema: report/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
 type: report
 title: Documents 5 大内容归档族只读冻结与迁移注册表收口
-schema: report/v1
 created: 2026-09-07
-owner: governance-team
 bet: BET-Y1Q4-T10-123
 ---
+
 
 # Documents 5 大内容归档族只读冻结报告
 

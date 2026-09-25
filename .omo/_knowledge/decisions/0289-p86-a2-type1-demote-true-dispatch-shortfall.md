@@ -1,14 +1,14 @@
 ---
-id: ADR-0289
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-29
-related:
-  - 0288-p86-abcd-skeptic-honest-map-and-target15.md
-  - 0287-p86-abcd-wave-closeout.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0289
+related: 
 ---
+
 
 # ADR-0289: A2 type1 demote — batch5 非多 agent 真 dispatch
 

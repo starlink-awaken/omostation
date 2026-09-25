@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-09-11
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Retro — BET-Y1Q4-T4-06: Cockpit 一键署名外发真实网关与业务消费追踪
 
 - status: delivered (cockpit #140 + 主仓 PR; 真实收件箱 E2E 留 operator)

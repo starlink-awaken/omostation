@@ -1,13 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: architecture-team
-last-reviewed: 2026-08-12
-last_updated: 2026-09-03
-review-state: verified-v3
+last-reviewed: 2026-09-25
 type: ssot
 last_updated: 2026-09-03
+review-state: verified-v3
 ---
+
 # omlxc v3 × AetherForge 本地算力中枢
 
 > `omlxc` 管本地物理算力，AetherForge 管公共推理策略；唯一公共算力入口是

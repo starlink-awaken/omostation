@@ -1,9 +1,13 @@
 ---
-type: derived
+schema: md/v1
+status: active
 lifecycle: generated
 owner: governance-team
+last-reviewed: 2026-09-25
+type: derived
 source: bin/ssot/generate-docs-index.py
 ---
+
 
 # 文档索引 (自动生成)
 

@@ -1,18 +1,15 @@
 ---
-id: ADR-0173
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related:
-  - 0172-p78-port-registry-convergence.md
-  - 0160-p76-phase6-foundry-runtime.md
-  - ../../../../../.omo/state/health.yaml
-  - ../../../../../bin/_archive/2026-08-conv3/port-governance-deck.py
-  - ../../../../../docs/operations/knowledge-foundry-monitor.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0173
+related: 
+supersedes: []
 ---
+
 
 # ADR-0173: P78 Phase 2 — 基线重放 + Foundry v2
 

@@ -1,12 +1,14 @@
 ---
-id: ADR-0386
-title: CI Consolidation — scope dedup, pytest merge, integration filter, workflow health
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-07
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0386
+title: CI Consolidation — scope dedup, pytest merge, integration filter, workflow health
 ---
+
 
 # ADR-0386 Decision: CI Check Consolidation (Architecture Analysis + Plan)
 

@@ -1,11 +1,16 @@
 ---
+schema: md/v1
+status: active-baseline
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 title: 织星近期架构、战略与执行体系深度复盘
 date: 2026-08-20
-status: active-baseline
 bet_id: BET-Y1Q3-T4-01
 evidence_cutoff: 2026-08-20T04:10:00Z
-type: ephemeral
 ---
+
 
 # 织星近期架构、战略与执行体系深度复盘
 

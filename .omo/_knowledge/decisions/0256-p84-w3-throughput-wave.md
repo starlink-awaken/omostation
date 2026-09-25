@@ -1,14 +1,14 @@
 ---
-id: ADR-0256
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-28
-related:
-  - .omo/plans/strat-p84-scenario-driven-longplan.md
-  - 0252-metaos-d1d4-aaaa-phase12.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0256
+related: 
 ---
+
 
 # ADR-0256: P84 W3 产能轨波次 — 真实任务记账纪律
 

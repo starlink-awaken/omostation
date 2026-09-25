@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
-title: BET-Y1Q3-T4-01 Retro — 真实个人价值证据脊柱与战略事实重基线
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q3-T4-01 Retro — 真实个人价值证据脊柱与战略事实重基线
 ---
+
 
 # BET-Y1Q3-T4-01 Retro — 真实个人价值证据脊柱与战略事实重基线
 

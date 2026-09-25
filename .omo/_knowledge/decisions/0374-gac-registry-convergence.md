@@ -1,12 +1,14 @@
 ---
-id: ADR-0374
-title: GaC Registry Convergence — indexed-drift fix, m1 orphan purge, stat auto-bump, symmetry tests
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-05
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0374
+title: GaC Registry Convergence — indexed-drift fix, m1 orphan purge, stat auto-bump, symmetry tests
 ---
+
 
 # 0374 — GaC Registry Convergence Round
 

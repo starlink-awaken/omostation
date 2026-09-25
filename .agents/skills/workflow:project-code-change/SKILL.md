@@ -1,12 +1,15 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: workflow:project-code-change
 description: SEMA 自动结晶技能包 — 基于 3 条 MOS 踩坑信念反向萃取
 category: SEMA-Crystallized-Skill
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # Skill: workflow:project-code-change
 

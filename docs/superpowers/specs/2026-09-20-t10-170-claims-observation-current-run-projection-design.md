@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Canonical Claims observation current-run projection repair
 bet_id: BET-Y1Q4-T10-170
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-20'
-last-reviewed: '2026-09-20'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L1
 human_gate: false
-type: ssot
 ---
+
 
 # Canonical Claims observation current-run projection repair
 

@@ -1,9 +1,14 @@
 ---
+schema: md/v1
+status: verified
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 title: T10-48 resident ledger test and replay evidence
 date: 2026-08-29
-status: verified
-type: ephemeral
 ---
+
 
 # T10-48 测试与回放证据
 

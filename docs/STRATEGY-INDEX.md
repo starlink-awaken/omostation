@@ -1,17 +1,17 @@
 ---
-title: 长期战略与执行索引
+schema: md/v1
 status: active
-type: strategy-index
+lifecycle: contract
 owner: 夏明星
+last-reviewed: 2026-09-25
+type: strategy-index
+title: 长期战略与执行索引
 created: 2026-07-15
 updated: 2026-08-15
-lifecycle: contract
-last-reviewed: 2026-08-17
 review-state: plan-mainline-adr-0410
 note: >
-  从愿景、战略、ADR、执行任务到运行证据的一页导航。动态事实必须读取对应 SSOT，
-  本页不维护当前 Phase、健康分、项目数、服务数或任务数。
 ---
+
 
 # 长期战略与执行索引
 

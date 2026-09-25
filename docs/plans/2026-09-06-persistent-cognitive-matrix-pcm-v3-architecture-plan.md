@@ -1,12 +1,15 @@
 ---
-title: 持久化智能体认知矩阵 (PCM-v3) 架构方案与工程规划
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
+last-reviewed: 2026-09-25
+type: plan
+title: 持久化智能体认知矩阵 (PCM-v3) 架构方案与工程规划
 created: 2026-09-06
 last_updated: 2026-09-06
-type: plan
 ---
+
 
 # 持久化智能体认知矩阵 (Persistent Cognitive Matrix, PCM-v3) 全生命周期架构方案与实施规划
 

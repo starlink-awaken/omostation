@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: product-architecture
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0332
 title: Scene Card 业务输入闸门与提案态归一化
-status: archived
-type: decision
-owner: product-architecture
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - 0326-external-activation-preflight.md
-  - 0317-workflow-requested-admission.md
+related: 
 ---
+
 
 # ADR-0332: Scene Card 业务输入闸门与提案态归一化
 

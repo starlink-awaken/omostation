@@ -1,11 +1,13 @@
 ---
-id: ADR-0446
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-09-01
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0446
 ---
+
 
 # ADR-0446: cockpit chain 声明式多命令链路 (spec v1)
 

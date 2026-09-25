@@ -1,12 +1,14 @@
 ---
-schema_version: standard/v1
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-05
+last-reviewed: 2026-09-25
 type: ssot
+schema_version: standard/v1
 bet_id: BET-Y1Q4-T6-18
 ---
+
 
 # 架构健康度 6 维度量化标准 (T6-18 SSOT)
 

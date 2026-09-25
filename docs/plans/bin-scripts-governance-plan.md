@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: superseded
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-22
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 
 # bin/ 与 scripts/ 收敛治理实施计划
 

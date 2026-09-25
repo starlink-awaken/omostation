@@ -1,19 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0306
 title: KEMS 生产持久化恢复证据作为放行前置条件
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../docs/KEMS-PRODUCTION-PLAN.md
-  - ../../../docs/KEMS-PILOT-ROADMAP.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../projects/runtime/scripts/kems_production_preflight.py
-  - ../../../projects/runtime/docs/KEMS-PRODUCTION-HANDOFF.md
+related: 
 ---
+
 
 # ADR-0306: KEMS 生产持久化恢复证据作为放行前置条件
 

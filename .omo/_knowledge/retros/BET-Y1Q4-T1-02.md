@@ -1,12 +1,14 @@
 ---
-title: BET-Y1Q4-T1-02 复盘
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-09-04
 lifecycle: history
-last-reviewed: 2026-09-04
+owner: governance-team
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q4-T1-02 复盘
+created: 2026-09-04
 ---
+
 
 # BET-Y1Q4-T1-02 复盘 — squash-successor 独立 clone 退役 provenance 收敛
 

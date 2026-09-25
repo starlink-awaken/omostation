@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0323
 title: Workflow Mesh Sandbox ToolPack 失败、不可用与恢复契约
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - 0322-sandbox-toolpack-mesh-execution.md
-  - 0299-workflow-mesh-worker-lease-and-reclaim.md
+related: 
 ---
+
 
 # ADR-0323: Workflow Mesh Sandbox ToolPack 失败、不可用与恢复契约
 

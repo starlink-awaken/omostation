@@ -1,38 +1,22 @@
 ---
-title: eCOS v6 愿景驱动的长期架构与战略执行方案
+schema: md/v1
 status: superseded
-type: strategy
+lifecycle: entry
 owner: 夏明星
+last-reviewed: 2026-09-25
+type: strategy
+title: eCOS v6 愿景驱动的长期架构与战略执行方案
 created: 2026-07-15
 updated: 2026-08-15
 horizon: 2026H2-2029
 version: v2.3
-lifecycle: entry
-last-reviewed: 2026-08-15
 review-state: superseded-by-plan
 superseded-by: docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
 superseded-by-adr: ADR-0410
 note: >
-  正文（五平面、四条黄金旅程）保留为 Plan 的产品投影，不再自称主方案。
-  「已完成从工具集合到 OS 骨架的跨越」不再作为当前成熟度声明。
-related:
-  - docs/VISION-ROADMAP.md
-  - docs/PROJECT-COMPLETE-GUIDE.md
-  - docs/ARCHITECTURE-EVOLUTION.md
-  - docs/proposals/2026-08-01-ECOS-NEXT-STAGE-AGENT-TASK-PACKS.md
-  - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
-  - .omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md
-  - .omo/_knowledge/decisions/0297-external-connection-fabric-and-product-truth.md
-  - .omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md
-  - .omo/_knowledge/decisions/0319-external-resource-observation-surfaces.md
-  - .omo/_knowledge/decisions/0320-external-resource-evaluation-and-explainable-selection.md
-  - .omo/_knowledge/decisions/0321-external-resource-selection-evaluation-evidence.md
-  - .omo/_truth/registry/external-connection-fabric.yaml
-  - .omo/standards/external-connection-fabric.md
-note: >
-  本文是战略叙事与执行框架，不拥有当前 Phase、健康分、服务数、项目数、端口、
-  测试数或任务数。所有运行时事实必须从对应 SSOT 动态读取，不得从本文反向抄录。
+related: 
 ---
+
 
 # eCOS v6 愿景驱动的长期架构与战略执行方案
 

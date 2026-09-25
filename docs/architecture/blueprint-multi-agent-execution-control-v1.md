@@ -1,17 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: strategy-team
-last-reviewed: 2026-08-09
-related:
-  - ../../ARCHITECTURE.md
-  - ./digital-twin-blueprint-v1.md
-  - ../operations/blueprint-agent-instruction-pack-v1.md
-  - ../plans/3y-bet-ledger.yaml
-  - ../../.omo/standards/agent-workflow-contract.md
-title: 织星蓝图多 Agent 战略执行与合规控制体系 v1
+last-reviewed: 2026-09-25
 type: doc
+related: 
+title: 织星蓝图多 Agent 战略执行与合规控制体系 v1
 ---
+
 
 # 织星蓝图多 Agent 战略执行与合规控制体系 v1
 

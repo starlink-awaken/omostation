@@ -1,21 +1,16 @@
 ---
-title: 会话级复盘 — AetherForge 网关深度重构(流式/工具链路/凭据自治/预算)
-type: retro
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-23
-last-reviewed: 2026-08-23
 lifecycle: history
-related:
-  - projects/aetherforge (submodule)
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+title: 会话级复盘 — AetherForge 网关深度重构(流式/工具链路/凭据自治/预算)
+created: 2026-08-23
+related: 
 context: >
-  非台账认领型会话。起点是用户直接请求"omlxc 性能稳定性优化"，中途转向
-  "AetherForge 网关全链路测试验证 + 免费云端算力池"调研，随后连续多轮
-  "继续优化迭代"开放授权，演变成对 AetherForge 网关的一整天深度重构。
-  本轮不对应 docs/plans/3y-bet-ledger.yaml 任何既有 BET-ID —— 台账当前
-  0 个可认领项(121 done/2 blocked)，这次工作不挂靠台账，独立记录进
-  知识库，供下一个接触 AetherForge 的 agent 检索。
 ---
+
 
 # 会话级复盘 — 2026-08-23 AetherForge 网关深度重构
 

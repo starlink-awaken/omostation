@@ -1,10 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: multica-squad-ops
 description: "用 multica CLI 落地日常工程协作 4 个 squad（交付流水线/架构评审/研究情报/运维监控）+ 配额动态分派台账。与 R3-executor 的 multica 后端物理隔离，不替代 ADR-0203 workflow。"
-last-reviewed: 2026-09-05
-type: ssot
-owner: governance-team
 ---
+
 
 # multica Squad Ops
 

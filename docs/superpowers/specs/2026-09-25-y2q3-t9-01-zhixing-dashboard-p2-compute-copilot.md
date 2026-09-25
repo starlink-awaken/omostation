@@ -1,13 +1,16 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: BET-Y2Q3-T9-01 specification
-bet_id: BET-Y2Q3-T9-01
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: engineering-agent
 last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
+title: BET-Y2Q3-T9-01 specification
+bet_id: BET-Y2Q3-T9-01
 ---
+
 
 
 # BET-Y2Q3-T9-01 Spec — 织星驾驶舱 P2 体验迭代、漂移可观测与真实算力副驾

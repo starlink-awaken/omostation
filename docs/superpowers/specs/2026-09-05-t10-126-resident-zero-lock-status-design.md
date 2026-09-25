@@ -1,18 +1,20 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: T10-126 Resident 只读观测零锁加固与 WAL 并发防腐
 bet_id: BET-Y1Q4-T10-126
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-05
-last-reviewed: 2026-09-05
 risk_level: L1
 human_gate: false
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # T10-126 Resident 只读观测零锁加固
 

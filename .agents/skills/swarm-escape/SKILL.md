@@ -1,16 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: skill
 name: swarm-escape
 description: "蜂群逃生 skill：多 agent 冲突/死锁时的逃生阀与冲突升级路径"
 title: Swarm Escape
-type: skill
-owner: governance-team
 version: "1.0"
-status: active
-triggers:
-  - git hook blocked
-  - CI failure bypass needed
-  - emergency state sync
+triggers: 
 ---
+
 
 # swarm-escape — 蜂群逃生口
 

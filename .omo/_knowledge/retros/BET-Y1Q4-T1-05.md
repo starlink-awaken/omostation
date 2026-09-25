@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: BET-Y1Q4-T1-05 Closeout Retro — Objective/KR/BET coverage graph 与 critical path
-bet_id: BET-Y1Q4-T1-05
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: BET-Y1Q4-T1-05 Closeout Retro — Objective/KR/BET coverage graph 与 critical path
+bet_id: BET-Y1Q4-T1-05
 created: 2026-09-04
-last-reviewed: 2026-09-04
 ---
+
 
 # BET-Y1Q4-T1-05 Closeout Retro
 

@@ -1,12 +1,15 @@
 ---
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-14
+last-reviewed: 2026-09-25
+type: ephemeral
 bet: BET-Y1Q4-T4-07
 track: T4-OUTCOME
 date: 2026-09-14
 ---
+
 # Retro — BET-Y1Q4-T4-07: T4-06 外发网关真实收件箱一键实测
 
 - status: human_gate (待 operator 执行)

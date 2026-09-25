@@ -1,13 +1,15 @@
 ---
-id: ADR-0394
-title: scripts/ 子模块镜像债治理 — 已退役并迁移到 root bin/
+schema: md/v1
 status: superseded
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-22
-superseded_by: 迁移已完成 (PR #1839 + scripts PR #27/#28)
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0394
+title: scripts/ 子模块镜像债治理 — 已退役并迁移到 root bin/
+superseded_by: 迁移已完成 (PR #1839 + scripts PR #27/#28)
 ---
+
 
 # ADR-0394 Decision: scripts/ 子模块镜像债治理 — 已退役
 

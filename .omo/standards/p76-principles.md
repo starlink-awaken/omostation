@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
 ---
+
 
 # omostation 演化护栏 (P76 + P77 沉淀 40 原则)
 

@@ -1,12 +1,14 @@
 ---
-id: ADR-0384
-title: Meta-meta governance — rebase-regen automation + gate effectiveness tool + roadmap A1-A3/B1
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0384
+title: Meta-meta governance — rebase-regen automation + gate effectiveness tool + roadmap A1-A3/B1
 ---
+
 
 # 0384 — Meta-Meta Governance Round (PLANNED)
 

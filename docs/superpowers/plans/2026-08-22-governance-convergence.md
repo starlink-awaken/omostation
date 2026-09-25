@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last-reviewed: 2026-09-25
+type: doc
 last_updated: 2026-09-03
 title: Governance Convergence Implementation Plan
-type: doc
 ---
+
 
 # Governance Convergence Implementation Plan
 

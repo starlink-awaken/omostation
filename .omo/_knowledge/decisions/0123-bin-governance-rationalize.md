@@ -1,11 +1,13 @@
 ---
-id: ADR-0123
+schema: md/v1
 status: proposed
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-02
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0123
 ---
+
 
 # ADR-0123: bin/ 治理工具集重整 (命名归一 + 孤立工具接入 gate)
 

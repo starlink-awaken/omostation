@@ -1,17 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-06
-last-reviewed: 2026-09-06
 bet_id: BET-Y1Q4-T10-130
 risk_level: L1
 human_gate: false
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # T10-130 仓库健康度可视化周报设计
 

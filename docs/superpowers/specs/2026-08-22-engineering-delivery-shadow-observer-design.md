@@ -1,18 +1,18 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
-
-bet_id: BET-Y1Q2-T7-01
 owner: human-principal
-last-reviewed: 2026-08-24
-
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
+bet_id: BET-Y1Q2-T7-01
 risk_level: L1
 human_gate: false
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # 工程交付 dogfood shadow 决策样本观测
 

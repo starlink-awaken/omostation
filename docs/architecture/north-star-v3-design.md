@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: stable
 owner: governance-team
-last-reviewed: 2026-08-24
-title: North Star v3 — 复合制价值证明设计
+last-reviewed: 2026-09-25
 type: doc
+title: North Star v3 — 复合制价值证明设计
 ---
+
 
 # North Star v3 — 复合制价值证明设计
 

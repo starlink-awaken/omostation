@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 常驻决策提案 (Decision Proposals) 闭环消费与 Cockpit 审批自进化通道
 bet_id: BET-Y1Q4-T8-21
-status: accepted
-lifecycle: contract
-owner: governance-team
-last-reviewed: 2026-09-12
 ---
+
 
 
 # 常驻决策提案闭环消费与 Cockpit 审批自进化通道（BET-Y1Q4-T8-21）

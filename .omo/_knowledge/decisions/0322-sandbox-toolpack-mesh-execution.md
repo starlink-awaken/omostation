@@ -1,19 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0322
 title: Workflow Mesh 受控 Sandbox ToolPack 执行闭环
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../docs/STRATEGY-3YEAR-PANORAMA.md
-  - ../../standards/external-connection-fabric.md
-  - 0303-workflow-mesh-external-receipt-broker.md
-  - 0307-external-invocation-safety-contract.md
+related: 
 ---
+
 
 # ADR-0322: Workflow Mesh 受控 Sandbox ToolPack 执行闭环
 

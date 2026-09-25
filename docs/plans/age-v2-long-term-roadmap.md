@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 
 # AGE-v2 长期演进规划 (2026 Q4 - 2027 Q2)
 

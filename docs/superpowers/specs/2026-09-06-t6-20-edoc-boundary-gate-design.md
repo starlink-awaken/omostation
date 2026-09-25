@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: "E-DOC 双平面边界门禁落地"
 bet_id: BET-Y1Q4-T6-20
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-06
-last-reviewed: 2026-09-06
-type: ssot
 last_updated: 2026-09-06
 ---
+
 
 # E-DOC 双平面边界门禁落地 (T6-20)
 

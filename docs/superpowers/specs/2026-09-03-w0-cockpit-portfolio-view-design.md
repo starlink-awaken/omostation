@@ -1,11 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.1
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.1
 created: 2026-09-03
-last-reviewed: 2026-09-03
 bet_id: BET-Y1Q4-T8-05
 risk_level: L2
 human_gate: false
@@ -15,8 +17,8 @@ source_proposal_sha256: 26bd1b3df552e693f2ac2684df255436522ff816d7844459523fafe1
 source_amendment_sha256: 5b1bb03274d8f7383b67f88953cf0c7074a571a9a1d5aebb1ab68bb234042409
 source_id_collision_amendment_sha256: 1a6a63d4fc20b6d3f385b27518018fdb633e5cd38ee9c171db1c08773eecd992
 implementation_authorized: true
-type: ssot
 ---
+
 
 # W0 Cockpit Portfolio Read-Only View Design
 

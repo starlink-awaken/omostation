@@ -1,11 +1,15 @@
 ---
-bet: BET-Y2Q4-T1-02
-title: 战略主线宪章修订 — family 域正式纳编入三年计划
+schema: md/v1
 status: archived
 lifecycle: history
-date: 2026-09-16
 owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
+bet: BET-Y2Q4-T1-02
+title: 战略主线宪章修订 — family 域正式纳编入三年计划
+date: 2026-09-16
 ---
+
 
 # BET-Y2Q4-T1-02 Retro
 

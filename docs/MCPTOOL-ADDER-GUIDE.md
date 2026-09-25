@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-23
+last-reviewed: 2026-09-25
+type: ssot
 review-state: contract-reviewed
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # MCPTOOL M1 实例 Adder Guide (Round 5b)
 
 > **配套 ADR-0147** (Round 5b, 2026-07-06)

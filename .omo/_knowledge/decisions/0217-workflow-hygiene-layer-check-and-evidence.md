@@ -1,15 +1,15 @@
 ---
-id: ADR-0217
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - 0203-requirement-iteration-workflow-mandatory.md
-  - 0216-compass-feedback-partial-smoke.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0217
+related: 
+supersedes: []
 ---
+
 
 # ADR-0217 — Workflow 卫生：layer-check 误报修复 + 契约对齐 + evidence 愈合
 

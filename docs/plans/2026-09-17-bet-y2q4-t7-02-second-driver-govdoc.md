@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-09-17
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 
 # BET-Y2Q4-T7-02 — 公文场景第二业务驱动探索
 

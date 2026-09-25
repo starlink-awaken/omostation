@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0328
 title: 外部资源目录 freshness、失效与回退边界
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - 0319-external-resource-observation-surfaces.md
-  - 0326-external-activation-preflight.md
+related: 
 ---
+
 
 # ADR-0328: 外部资源目录 freshness、失效与回退边界
 

@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 # 里程碑薄文档 — 2026 Q3/Q4 战术编排
 
 > 类型: 编排层（只放台账放不下的依赖关系与节律约定）

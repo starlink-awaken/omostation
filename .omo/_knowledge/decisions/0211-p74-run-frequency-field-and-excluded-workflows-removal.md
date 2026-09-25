@@ -1,17 +1,17 @@
 ---
-id: ADR-0211
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0211
 omo_task_ref: null
 agent_workflow_run: 20260715T080633Z-governance-state-mutation-1f020416
 supersedes: []
-related:
-  - 0209-ledger-trim-and-adr-ssot-renumbering.md
-  - 0130-p74-workflow-solidification.md
-type: ssot
+related: 
 ---
+
 
 # ADR-0211 — P74 `excluded_workflows` 字段废弃 → `run_frequency` 落地
 

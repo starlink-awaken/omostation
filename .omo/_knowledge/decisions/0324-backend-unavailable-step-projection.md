@@ -1,16 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0324
 title: BackendUnavailable 的 WorkflowRun 与 StepRun 投影一致性
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - 0323-sandbox-toolpack-failure-recovery.md
+related: 
 ---
+
 
 # ADR-0324: BackendUnavailable 的 WorkflowRun 与 StepRun 投影一致性
 

@@ -1,14 +1,14 @@
 ---
-id: ADR-0127
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
-related:
-  - ../decisions/0126-s2-final-analysis.md
-  - ../../.omo/_knowledge/decisions/0126-s2-final-analysis.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0127
+related: 
 ---
+
 
 # Code Review: S2 阶段主仓 PR + 后续 (2026-07-03)
 

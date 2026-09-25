@@ -1,17 +1,15 @@
 ---
-id: ADR-0164
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - STRAT-P77-strategic-roadmap.md
-  - ../../../../../bin/check-cross-repo-consistency.py
-  - ../../../../../tests/test_cross_repo_consistency.py
-  - 0162-p76-phase8-real-engineering.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0164
+related: 
+supersedes: []
 ---
+
 
 # ADR-0164: P77 Phase 1 — 跨仓一致性 detector (CR-CROSS-REPO-CONSISTENT)
 

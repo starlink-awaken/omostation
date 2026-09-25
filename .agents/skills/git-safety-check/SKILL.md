@@ -1,17 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: skill
 name: git-safety-check
 description: "git 安全检查 skill：高危 git 操作（reset/push/子模块指针）前置校验与守门"
 title: Git Safety Check
-type: skill
-owner: governance-team
 version: "1.0"
-status: active
-triggers:
-  - git reset --hard
-  - git push --force
-  - branch deletion
-  - submodule operations
+triggers: 
 ---
+
 
 # git-safety-check — Git 高危操作守门
 

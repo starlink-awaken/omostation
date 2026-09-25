@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-18
-last_updated: 2026-09-03
+last-reviewed: 2026-09-25
 type: ssot
+last_updated: 2026-09-03
 ---
+
 # ADR-0191: Workspace × Documents 全域双平面架构与长期治理体系
 
 - **Status**: Accepted

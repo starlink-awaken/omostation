@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-09-25
 type: ssot
 ---
+
 
 # Agent Registry Heartbeat, Cache & Identity Gate — M2.2
 

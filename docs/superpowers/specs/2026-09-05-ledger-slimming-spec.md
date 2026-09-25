@@ -1,15 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: plan
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 台账瘦身 — 306 done 归档 + 消费方合并读 + submit 双预检
 bet_id: BET-Y2Q1-T10-03
-status: accepted
-lifecycle: contract
-last-reviewed: 2026-09-06
-type: plan
-owner: governance-team
 last_updated: 2026-09-06
 ---
+
 
 # 台账瘦身规格 (BET-Y2Q1-T10-03)
 

@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: BET-Y1Q4-T1-04 Closeout Retro — Portfolio v2 schema 与兼容 validator
-bet_id: BET-Y1Q4-T1-04
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: BET-Y1Q4-T1-04 Closeout Retro — Portfolio v2 schema 与兼容 validator
+bet_id: BET-Y1Q4-T1-04
 created: 2026-09-04
-last-reviewed: 2026-09-04
 ---
+
 
 # BET-Y1Q4-T1-04 Closeout Retro
 

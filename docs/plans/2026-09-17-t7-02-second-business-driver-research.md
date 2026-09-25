@@ -1,12 +1,15 @@
 ---
-bet_id: BET-Y2Q4-T7-02
-title: 公文场景第二业务驱动调研 — 脱离国转中心借调依赖
-type: research
+schema: md/v1
 status: accepted
 lifecycle: history
-date: 2026-09-17
 owner: xiamingxing
+last-reviewed: 2026-09-25
+type: research
+bet_id: BET-Y2Q4-T7-02
+title: 公文场景第二业务驱动调研 — 脱离国转中心借调依赖
+date: 2026-09-17
 ---
+
 
 # BET-Y2Q4-T7-02 调研报告：公文场景第二业务驱动
 

@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0326
 title: 外部连接激活前置检查与只读提案边界
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../docs/SCENE-CARD-REVIEW-RUNBOOK.md
-  - 0325-external-route-admission-closure.md
+related: 
 ---
+
 
 # ADR-0326: 外部连接激活前置检查与只读提案边界
 

@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 真实业务流驱动的信号守护常驻与自主分发 (BCOS W5 Signal Daemon & Resident Loop)
 bet_id: BET-Y2Q1-T4-02
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-21
-last-reviewed: 2026-09-21
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L2
 human_gate: true
-type: ssot
 ---
+
 
 # BET-Y2Q1-T4-02: 真实业务流驱动的信号守护常驻与自主分发设计规范 (BCOS W5 Signal Daemon & Resident Loop)
 

@@ -1,17 +1,15 @@
 ---
-id: ADR-0410
-title: 三年战略主线归属 — Plan supersede Panorama
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-08-15
-related:
-  - ADR-0203
-  - ADR-0210
-  - ADR-0247
-  - ADR-0365
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0410
+title: 三年战略主线归属 — Plan supersede Panorama
+related: 
 ---
+
 
 # ADR-0410: 三年战略主线归属 — Plan supersede Panorama
 

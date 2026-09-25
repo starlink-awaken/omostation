@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0311
 title: 当前状态一致性与场景激活门
-status: ACCEPTED
-type: decision
-owner: architecture-governance
 created: 2026-08-02
-last-reviewed: 2026-08-02
-lifecycle: spec
-related:
-  - ../../standards/external-connection-fabric.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../docs/operations/current-state-coherence.md
+related: 
 ---
+
 
 # ADR-0311 当前状态一致性与场景激活门
 

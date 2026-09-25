@@ -1,11 +1,15 @@
 ---
-bet: BET-Y2Q4-T1-03
-title: 战略主线宪章修订 — 追认移动 Cockpit / TUI 多窗格为既定应用形态
+schema: md/v1
 status: archived
 lifecycle: history
-date: 2026-09-16
 owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
+bet: BET-Y2Q4-T1-03
+title: 战略主线宪章修订 — 追认移动 Cockpit / TUI 多窗格为既定应用形态
+date: 2026-09-16
 ---
+
 
 # BET-Y2Q4-T1-03 Retro
 

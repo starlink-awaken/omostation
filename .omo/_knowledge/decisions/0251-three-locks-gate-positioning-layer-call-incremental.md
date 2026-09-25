@@ -1,17 +1,16 @@
 ---
-id: ADR-0251
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-28
-related:
-  - 0250-health-gate-engineering-surface-only.md
-  - 0249-governance-budget-cap-40-40-20.md
-  - 0238-mof-m4-phase0-registry-self-governance.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0251
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0251: 三把锁 gate 定位 (layer-call/drift/doc-claims) + layer-call 增量快路径
 

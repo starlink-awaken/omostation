@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
 bet_id: BET-Y3H1-T7-02
 date: 2026-09-17
-lifecycle: history
-last-reviewed: 2026-09-17
-status: archived
-owner: governance-team
 title: BET-Y3H1-T7-02 Retro — 公文场景 assisted 升档
-type: retro
 ---
+
 
 # BET-Y3H1-T7-02 Retro — 公文场景 assisted 升档
 

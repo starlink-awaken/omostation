@@ -1,17 +1,16 @@
 ---
-id: ADR-0252
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-28
-related:
-  - 0242-metaos-registry-drift-gate-extension.md
-  - docs/proposals/2026-07-25-metaos-governance-optimization-plan.md
-  - 0240-mof-d1d4-decisions-aaaa-phase1.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0252
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0252: metaos Phase 1/2 前提 D1-D4 决策 (A/A/B/A)
 

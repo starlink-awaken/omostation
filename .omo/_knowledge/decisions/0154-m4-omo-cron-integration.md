@@ -1,21 +1,15 @@
 ---
-id: ADR-0154
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
-related:
-  - 0152-m4-gac-rules.md
-  - 0153-m4-agent-workflows-tools.md
-  - 0140-m4-health-score.md
-  - 0151-submodule-hygiene-gate.md
-  - 0144-m4-cron-hook.md
-  - ../../../../.omo/cron/operating-rhythm-crontab
-  - ../../../../bin/m4-health-score.py
-  - ../../../../bin/check-submodule-hygiene.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0154
+related: 
+supersedes: []
 ---
+
 
 # ADR-0154: M4 OMO cron 集成 (Phase 4)
 

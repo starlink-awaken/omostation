@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 # agora 全面规划与方案设计 (2026-08-06)
 
 > 架构/战略/场景/功能对齐 + 文档配置规则依赖同步。

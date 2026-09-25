@@ -1,15 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: omo-platform-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: HITL Proposal System — harness 层人类审批提案生成与 Cockpit 集成
 bet_id: BET-Y1Q4-T8-04
-status: accepted
-lifecycle: contract
-owner: omo-platform-team
 created: 2026-09-04
-last-reviewed: 2026-09-04
-type: ssot
 ---
+
 
 # HITL Proposal System
 

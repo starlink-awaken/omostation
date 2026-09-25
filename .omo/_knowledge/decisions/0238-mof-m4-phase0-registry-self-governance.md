@@ -1,16 +1,16 @@
 ---
-id: ADR-0238
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-25
-related:
-  - docs/proposals/2026-07-25-mof-m4-governance-optimization-plan.md
-  - 0152-m4-gac-rules.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0238
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0238: MOF/M4 Phase 0 注册面守自止血 (P0-1..P0-4)
 

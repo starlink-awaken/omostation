@@ -1,12 +1,14 @@
 ---
-type: ephemeral
-lifecycle: active
+schema: md/v1
 status: draft
+lifecycle: active
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 created: <YYYY-MM-DD>
 expires: <YYYY-MM-DD | "completion">
-owner: governance-team
-last-reviewed: 2026-09-14
 ---
+
 
 # <标题>
 

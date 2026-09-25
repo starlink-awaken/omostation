@@ -1,12 +1,16 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: standard/v1
 standard: incident-to-rule-pipeline
 created: 2026-08-30
-last-reviewed: 2026-09-24
-owner: governance-team
 adr: ADR-0443
-type: ssot
 ---
+
 
 # 事故→规则流水线（incident-to-rule pipeline）
 

@@ -1,15 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: omo-platform-team
+last-reviewed: 2026-09-25
+type: integration-runbook
 schema_version: specification/v1
 spec_version: 1.0.0
 title: HITL Proposal System — Adoption Runbook for BET Owners
 bet_id: BET-Y1Q4-T1-12
-status: accepted
-lifecycle: spec
-type: integration-runbook
-owner: omo-platform-team
 created: 2026-09-04
-last-reviewed: 2026-09-04
 ---
+
 
 # HITL Proposal System — Adoption Runbook
 

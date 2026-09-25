@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: BET-Y1Q3-T1-06 复盘
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q3-T1-06 复盘
 ---
+
 # BET-Y1Q3-T1-06 复盘
 
 > 2026-08-16 · aetherforge 双副本指针同步 + 算力路由双 owner 收敛决策 · PR #1603 MERGED

@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: bos-service-discovery
 description: "Browse and call BOS URI services in the omostation workspace. Lists available domains, services, and transports. Use when an agent needs to find a service by domain, understand BOS URI routing, or resolve a URI for the first time."
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # BOS Service Discovery - Domain Browsing and URI Resolution
 

@@ -1,22 +1,20 @@
 ---
-id: ADR-0234
-title: "BET-c87a http-mcp-convergence 收尾正式立项"
+schema: md/v1
 status: DONE
 lifecycle: spec
-date: 2026-07-24
-last-reviewed: 2026-07-31
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0234
+title: "BET-c87a http-mcp-convergence 收尾正式立项"
+date: 2026-07-24
 supersedes: BET-C87A-CLOSEOUT-PREP-2026-07-24.md (evidence-only)
 deciders: governance-team
 strat: STRAT-P81
 stage: post-S0
-related:
-  - BET-c87a (c2g:bet:BET-c87a, goal L217)
-  - ADR-0228 m1-acceptance-physical-deferred-reorder
-  - ADR-0232 g-del-2b-official-pass
-  - STRAT-P81-strategic-roadmap.md
-type: ssot
+related: 
 ---
+
 
 # 0234 - BET-c87a http-mcp-convergence 收尾
 

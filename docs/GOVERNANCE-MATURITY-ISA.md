@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # Governance Maturity ISA — 治理体系成熟度 (master)
 
 > **Tier**: E4 (12-section) · **创建**: 2026-06-30 · **类型**: master ISA

@@ -1,12 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-18
-last_updated: 2026-09-03
+last-reviewed: 2026-09-25
 type: ssot
 last_updated: 2026-09-03
 ---
+
 # 🛠️ omlxc Compute Fabric 运维与多 Agent 协作工作流 (Runbook & Workflow)
 
 ## 1. 概述与生命周期模型

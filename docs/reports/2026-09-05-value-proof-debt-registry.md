@@ -1,13 +1,16 @@
 ---
-schema_version: receipt/v1
-type: report
-title: Value-Proof Debt Registry — Spine done BETs
+schema: md/v1
 status: archived
 lifecycle: contract
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: report
+schema_version: receipt/v1
+title: Value-Proof Debt Registry — Spine done BETs
 created: 2026-09-05
 last_updated: 2026-09-05
 ---
+
 
 # Value-Proof Debt Registry
 

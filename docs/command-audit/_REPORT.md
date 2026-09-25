@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-04
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Cockpit 命令评分卡报告 (command-audit)
 
 > 生成: 2026-09-04 · 节点总数: 346 · 评分卡: 0 · 覆盖率: 0%

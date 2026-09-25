@@ -1,12 +1,14 @@
 ---
-id: ADR-0381
-title: Agent-workflow test restoration — v10 load_registry regression fix + CI coverage + E-5 trigger SSOT
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-06
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0381
+title: Agent-workflow test restoration — v10 load_registry regression fix + CI coverage + E-5 trigger SSOT
 ---
+
 
 # 0381 — Agent-Workflow Test Restoration Round
 

@@ -1,17 +1,16 @@
 ---
-id: ADR-0371
-title: PASW — Per-Agent Submodule Worktree 隔离
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-08-04
-related:
-  - 0220-swarm-coordination-discipline-m1-gate.md
-  - 0106-gac-governance-as-code.md
-  - ../patterns/p74-workflow-solidification-pattern.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0371
+title: PASW — Per-Agent Submodule Worktree 隔离
+related: 
+supersedes: []
 ---
+
 
 # ADR-0371: PASW — Per-Agent Submodule Worktree 隔离
 

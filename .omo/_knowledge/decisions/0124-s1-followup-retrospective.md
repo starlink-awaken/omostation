@@ -1,17 +1,14 @@
 ---
-id: ADR-0124
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-02
-related:
-  - 0122-system-audit-followup-plan.md
-  - ../patterns/p71-baseline-recovery-pattern.md
-  - ../patterns/p72-follow-up-completion-pattern.md
-  - ../audits/2026-07-02-system-comprehensive-audit.md
-  - 0121-governance-convergence-initiative.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0124
+related: 
 ---
+
 
 # ADR-0124: S1 阶段完结复盘 — 5 PR + 1 修 + 1 cleanup (6 commit, 1 工作日)
 

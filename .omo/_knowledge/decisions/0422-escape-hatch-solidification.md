@@ -1,19 +1,17 @@
 ---
-id: ADR-0422
-
-title: "ADR-0422: D4 逃生口固化 — 权限类 vs fingerprint 债"
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-date: 2026-08-21
-last-reviewed: 2026-08-21
-tags: [d4, escape-hatch, swarm, gac]
-related:
-  - ADR-0220 (swarm coordination D4)
-  - BET-Y1Q1-T1-07 (git-shim / swarm-git)
-  - BET-Y1Q3-T1-09
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0422
+title: "ADR-0422: D4 逃生口固化 — 权限类 vs fingerprint 债"
+date: 2026-08-21
+tags: [d4, escape-hatch, swarm, gac]
+related: 
 ---
+
 
 # D4 逃生口固化 — 权限类 vs fingerprint 债
 

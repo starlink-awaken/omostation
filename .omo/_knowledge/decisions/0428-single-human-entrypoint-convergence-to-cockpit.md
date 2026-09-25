@@ -1,11 +1,13 @@
 ---
-id: ADR-0428
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: cockpit
-last-reviewed: '2026-08-26'
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0428
 ---
+
 
 # ADR-0428: L3 单一人类入口收敛与 Cockpit 全域网关固化
 

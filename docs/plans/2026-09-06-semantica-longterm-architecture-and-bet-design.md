@@ -1,10 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: architecture-team
+last-reviewed: 2026-09-25
 type: plan
 title: semantica-longterm-architecture-and-bet-design
 last_updated: 2026-09-06
-owner: architecture-team
-status: active
 ---
+
 
 # Semantica 与 OMOStation/eCOS 深度融合长远架构设计方案
 

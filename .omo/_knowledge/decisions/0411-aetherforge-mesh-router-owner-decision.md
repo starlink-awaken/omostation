@@ -1,15 +1,16 @@
 ---
-id: ADR-0411
-title: "算力路由双 Owner 收敛决策 — AetherForge 单一所有权"
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-created: 2026-08-16
-last-reviewed: 2026-08-16
-related:
-  - ./0409-documents-capability-route-owner-convergence.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0411
+title: "算力路由双 Owner 收敛决策 — AetherForge 单一所有权"
+created: 2026-08-16
+related: 
 ---
+
 
 # ADR-0411: 算力路由双 Owner 收敛决策 — AetherForge 单一所有权
 

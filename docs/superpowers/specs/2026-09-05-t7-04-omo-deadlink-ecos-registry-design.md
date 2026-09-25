@@ -1,18 +1,20 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: T7-04 场景卡归一遗留 — omo phase15/16 死链清理 + ecos 第四家存储收口
 bet_id: BET-Y2Q1-T7-04
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-05
-last-reviewed: 2026-09-05
 risk_level: L2
 human_gate: false
 value_indicator_policy: false
-type: ssot
 ---
+
 
 # T7-04 场景卡归一遗留 — 死链 + 第四家存储
 

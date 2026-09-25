@@ -1,16 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: skill
 name: kos-cold-start
 description: "KOS 冷启动 skill：会话启动时从 KOS 加载 BRIEF/ADR/实体，对齐历史架构决策"
 title: KOS Cold Start
-type: skill
-owner: governance-team
 version: "1.0"
-status: active
-triggers:
-  - new session
-  - context compaction
-  - architecture realignment
+triggers: 
 ---
+
 
 # kos-cold-start — KOS 知识冷启动
 

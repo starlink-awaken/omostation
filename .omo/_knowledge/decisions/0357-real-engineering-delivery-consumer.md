@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0357
 title: Engineering Delivery 真实元数据消费者与 Workflow Mesh 回执顺序
-status: ACCEPTED
 date: 2026-08-03
-owner: governance-team
-lifecycle: spec
-last-reviewed: 2026-08-03
-type: ssot
 ---
+
 
 # ADR-0357: Engineering Delivery 真实元数据消费者与 Workflow Mesh 回执顺序
 

@@ -1,13 +1,16 @@
 ---
-id: ADR-0452
-title: Scene System v3 Architecture
+schema: md/v1
 status: archived
 lifecycle: spec
-date: 2026-09-07
 owner: governance-team
-last-reviewed: 2026-09-07
+last-reviewed: 2026-09-25
+type: ephemeral
+id: ADR-0452
+title: Scene System v3 Architecture
+date: 2026-09-07
 tags: [scene, architecture, v3, lifecycle, calibration]
 ---
+
 
 # ADR-0452: Scene System v3 Architecture
 

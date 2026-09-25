@@ -1,11 +1,13 @@
 ---
-id: ADR-0295
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-agent
-last-reviewed: 2026-09-01
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0295
 ---
+
 
 # 断链修复方案 (Phase 8 联动)
 

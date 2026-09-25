@@ -1,11 +1,13 @@
 ---
-id: ADR-0089
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0089
 ---
+
 
 # ADR-0089: P95 adr-drift-apply --apply + adr-typo-fix + 7-step roadmap
 

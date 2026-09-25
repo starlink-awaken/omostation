@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-11
+last-reviewed: 2026-09-25
+type: retro
 bet_id: BET-Y1Q2-T6-03
 title: "BET-Y1Q2-T6-03 Retro: bin 脚本清理"
-type: retro
 ---
+
 
 # BET-Y1Q2-T6-03 Retro: bin 脚本清理
 

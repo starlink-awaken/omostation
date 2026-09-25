@@ -1,17 +1,18 @@
 ---
-schema_version: retro/v1
-status: active
+schema: md/v1
+status: archived
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: retro/v1
 created: 2026-09-01
-last-reviewed: 2026-09-01
 bet: BET-Y1Q4-T2-02
 title: IM 会话感知协议面
 symptom: 首测暴露白名单 gate 语义漏洞（可解析指令被关键词闸误杀）
 solution: gate 扩展为 @|关键词|指令 三通道命中
-type: ephemeral
-status: archived
 ---
+
 
 # BET-Y1Q4-T2-02 复盘
 

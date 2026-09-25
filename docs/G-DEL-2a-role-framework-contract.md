@@ -1,24 +1,20 @@
 ---
-title: G-DEL.2a 角色框架 + 协作协议契约（仅 spec）
+schema: md/v1
 status: active
+lifecycle: contract
+owner: 架构师
+last-reviewed: 2026-09-25
 type: contract
+title: G-DEL.2a 角色框架 + 协作协议契约（仅 spec）
 bet: BET-664e3
 gate: G-DEL.2a
-related:
-  - ADR-0210
-  - ADR-0220
-  - BET-7e074 (G-DEL.1 runtime — NOT this document)
-  - docs/STRATEGY-3YEAR-PANORAMA.md
-owner: 架构师
+related: 
 created: 2026-07-18
 note: >
-  Pre-M1 allowed. Spec/interfaces only — no multi-machine registry, scheduler,
-  or collab runtime. Implements nothing of G-DEL.1/3/5.
-lifecycle: contract
-last-reviewed: 2026-07-31
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
+
 
 # G-DEL.2a · 角色定义框架与协作协议契约
 

@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0358
 title: Engineering Delivery 机器摄取与人工复核反馈边界
-status: ACCEPTED
 date: 2026-08-03
-owner: governance-team
-lifecycle: spec
-last-reviewed: 2026-08-03
-type: ssot
 ---
+
 
 # ADR-0358: Engineering Delivery 机器摄取与人工复核反馈边界
 

@@ -1,19 +1,15 @@
 ---
-id: ADR-0178
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related:
-  - STRAT-P79-strategic-roadmap.md
-  - 0177-p79-phase4-docs-refresh.md
-  - 0176-p79-phase3-cross-repo-zero-residual.md
-  - 0174-p79-phase1-foundry-v2-cron.md
-  - ../../../../../docs/operations/knowledge-foundry-sop.md
-  - ../../../../../.omo/_truth/registry/governance-checks.yaml
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0178
+related: 
+supersedes: []
 ---
+
 
 # ADR-0178: P79 Phase 5 — 收官 (SOP + GaC 冻结 + 路线图结项)
 

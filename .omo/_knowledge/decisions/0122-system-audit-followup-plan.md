@@ -1,18 +1,14 @@
 ---
-id: ADR-0122
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-02
-related:
-  - ../audits/2026-07-02-system-comprehensive-audit.md
-  - ../patterns/p71-baseline-recovery-pattern.md
-  - 0123-bin-governance-rationalize.md
-  - 0119-systemic-optimization-roadmap-2026h2.md
-  - 0120-runtime-health-semantics-fix.md
-  - 0121-gcsi-governance-convergence-special-initiative.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0122
+related: 
 ---
+
 
 # ADR-0122: 系统全面审计 18 项 Follow-up 实施计划 (排除 god-module)
 

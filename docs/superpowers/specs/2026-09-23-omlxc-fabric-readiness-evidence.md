@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: OMLXC fabric inference-readiness evidence repair
 bet_id: BET-Y2Q2-T10-161
-status: accepted
-lifecycle: contract
-owner: governance-team
-last-reviewed: 2026-09-24
 ---
+
 
 # T10-161 — OMLXC fabric inference-readiness evidence repair
 

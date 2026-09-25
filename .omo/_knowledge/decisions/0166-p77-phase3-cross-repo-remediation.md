@@ -1,18 +1,15 @@
 ---
-id: ADR-0166
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0164-p77-phase1-cross-repo-consistency.md
-  - 0165-p77-phase2-evolution-guardrails.md
-  - STRAT-P77-strategic-roadmap.md (Phase 3 收口)
-  - ../../../../../bin/check-cross-repo-consistency.py
-  - ../../../../../tests/test_cross_repo_consistency_phase3.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0166
+related: 
+supersedes: []
 ---
+
 
 # ADR-0166: P77 Phase 3 — 跨仓 unregistered 治本 (threshold 20→0 + 升 hard)
 

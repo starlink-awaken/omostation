@@ -1,19 +1,16 @@
 ---
-id: ADR-0228
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-24
-related:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0225-g-del-physical-multihost-gate-caliber.md
-  - 0226-g-del-1-blocked-until-four-hosts.md
-  - STRAT-P80-strategic-roadmap.md
-  - STRAT-P81-strategic-roadmap.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0228
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0228: M1 收敛期验收通过 + 物理底座挂起下的兑现期推进顺序
 

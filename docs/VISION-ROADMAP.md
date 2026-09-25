@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-02
+last-reviewed: 2026-09-25
+type: ssot
 review-state: scenario-first-converged
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # eCOS v6 愿景与 Roadmap
 
 > 个人工作与决策执行操作系统：从信号和意图到可靠结果、证据、记忆与受控进化。

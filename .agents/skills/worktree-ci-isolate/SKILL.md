@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: worktree-ci-isolate
 description: "Create isolated git worktrees for CI fixes and parallel development. Init submodules, work in isolation, clean up when done. Use when fixing CI issues or needing conflict-free parallel work."
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # Worktree CI Isolation — Parallel Development Workflow
 

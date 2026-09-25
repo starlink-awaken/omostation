@@ -1,14 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化设计
 bet_id: BET-Y1Q4-T6-25
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-12
 value_indicator_policy: false
 ---
+
 
 # T6-25 — OpenHuman Local Bridge & Biometric Normalizer 设计
 

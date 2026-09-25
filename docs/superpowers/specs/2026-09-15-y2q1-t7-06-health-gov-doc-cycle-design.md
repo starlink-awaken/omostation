@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 卫健公文全周期拟办、批阅与会议督办全闭环场景包设计
 bet_id: BET-Y2Q1-T7-06
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-15
 ---
+
 
 # T7-06 — 卫健公文全周期拟办、批阅与会议督办全闭环设计
 

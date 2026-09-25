@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-04
-last_updated: 2026-09-04
+last-reviewed: 2026-09-25
 type: doc
+last_updated: 2026-09-04
 ---
+
 
 # BET-Y1Q4-T1-02 Smash-successor Clone Retirement Provenance Implementation Plan
 

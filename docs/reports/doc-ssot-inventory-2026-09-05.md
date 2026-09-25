@@ -1,10 +1,15 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-agent
+last-reviewed: 2026-09-25
 type: report
 title: 主仓 Markdown 文档 SSOT 判定盘点
 date: 2026-09-05
-owner: governance-agent
 bet: BET-Y1Q4-T6-17
 ---
+
 
 # 主仓 Markdown 文档 SSOT 判定盘点
 

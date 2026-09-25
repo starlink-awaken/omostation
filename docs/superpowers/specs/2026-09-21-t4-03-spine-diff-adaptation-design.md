@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 人机共生署名修改 Diff 捕获与偏好自适应对齐 (Spine Diff Capture & Continuous Adaptation Loop)
 bet_id: BET-Y2Q1-T4-03
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-21
-last-reviewed: 2026-09-21
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L2
 human_gate: true
-type: ssot
 ---
+
 
 # BET-Y2Q1-T4-03: 人机共生署名修改 Diff 捕获与偏好自适应对齐设计规范 (Spine Diff Capture & Continuous Adaptation Loop)
 

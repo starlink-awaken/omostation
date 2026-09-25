@@ -1,16 +1,16 @@
 ---
-id: ADR-0235
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 夏明星
-last-reviewed: 2026-07-25
-related:
-  - 0230-agent-registry-node-role-capability.md
-  - STRAT-P81-strategic-roadmap.md
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0235
+related: 
 supersedes: []
 amends: []
-type: ssot
 ---
+
 
 # ADR-0235: ROLE_CATALOG C1 扩展 — research/delivery 第二波角色
 

@@ -1,15 +1,16 @@
 ---
-id: ADR-0354
-title: Workflow Mesh evaluation label receipt and dual-review release queue
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
 type: decision
+id: ADR-0354
+title: Workflow Mesh evaluation label receipt and dual-review release queue
 scope: workflow mesh evaluation and cockpit operations
 date: 2026-08-03
 ---
+
 
 # ADR-0354: Workflow Mesh 人工评测标签回执与双人放行队列
 

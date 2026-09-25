@@ -1,10 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-25
+type: ephemeral
 title: 三年计划 — 季度评估 (2026 Q3)
 ---
+
 
 # 三年计划 — 季度评估 (2026 Q3)
 

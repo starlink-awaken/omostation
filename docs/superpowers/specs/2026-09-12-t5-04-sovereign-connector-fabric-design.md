@@ -1,14 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 主权连接器架构升级与 Kairon/Iris 外部数据源统一 BOS 网关化设计
 bet_id: BET-Y1Q4-T5-04
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-12
 value_indicator_policy: false
 ---
+
 
 # T5-04 — Sovereign Connector Fabric & 统一 BOS 网关设计
 

@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: omo-audit-baseline
 description: "Governance audit baseline workflow for the omostation workspace. Run omo audit, check results, commit governance data. Use when syncing governance state or running audit checks."
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # OMO Audit Baseline — Governance State Sync
 

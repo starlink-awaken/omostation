@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Original User Request
 
 ## Initial Request — 2026-06-23T02:25:45Z

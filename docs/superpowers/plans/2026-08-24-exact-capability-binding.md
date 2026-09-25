@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-29
+last-reviewed: 2026-09-25
+type: doc
 last_updated: 2026-09-03
 title: Wave B Exact Capability Binding Implementation Plan
-type: doc
 ---
+
 
 # Wave B Exact Capability Binding Implementation Plan
 

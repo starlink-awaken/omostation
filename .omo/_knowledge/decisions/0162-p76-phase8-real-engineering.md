@@ -1,18 +1,15 @@
 ---
-id: ADR-0162
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0161-p76-phase7-llm-cron-tasks-mesh.md
-  - STRAT-P76-strategic-roadmap.md
-  - ../../../../../projects/aetherforge/src/aetherforge/l0_consumer.py (Phase 8.1 PR)
-  - ../../../../../projects/aetherforge/packages/gateway/src/llm_gateway/quota_engine.py (Phase 8.2 PR)
-  - ../../../../../projects/c2g/src/c2g/cli.py (Phase 8.3 PR)
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0162
+related: 
+supersedes: []
 ---
+
 
 # ADR-0162: P76 Phase 8 — 4 真工程 follow-up 治本收口
 

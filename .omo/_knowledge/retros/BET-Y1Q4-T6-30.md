@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: "BET-Y1Q4-T6-30 Closeout Retro — delivery_accepted 台账闭环"
-bet_id: "BET-Y1Q4-T6-30"
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: "BET-Y1Q4-T6-30 Closeout Retro — delivery_accepted 台账闭环"
+bet_id: "BET-Y1Q4-T6-30"
 created: "2026-09-16"
-last-reviewed: "2026-09-16"
 ---
+
 
 # BET-Y1Q4-T6-30 Closeout Retro
 

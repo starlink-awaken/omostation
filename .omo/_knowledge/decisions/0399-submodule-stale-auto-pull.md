@@ -1,11 +1,13 @@
 ---
-id: ADR-0399
+schema: md/v1
 status: active
 lifecycle: spec
 owner: '@Builder'
-last-reviewed: '2026-08-09'
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0399
 ---
+
 
 # ADR-0399: 治本 E — 子模块 stale 自动 pull + PASW 漂移检测增强
 

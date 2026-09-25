@@ -1,11 +1,13 @@
 ---
-id: ADR-0099
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0099
 ---
+
 
 # ADR-0099: P105 omo_governance_surfaces ingress-check 子模块拆分 (1244→1022L)
 

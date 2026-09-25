@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: runtime-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # eCOS v6 本地运行时一键启动
 
 > **目标**: 把 eCOS v6 核心运行时服务从“手动逐个启动”变成“一条命令拉起”。

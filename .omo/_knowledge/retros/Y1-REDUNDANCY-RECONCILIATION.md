@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: Y1 冗余清单对账
+last-reviewed: 2026-09-25
 type: retro
+title: Y1 冗余清单对账
 ---
+
 # Y1 冗余清单对账
 
 > 创建: 2026-08-08 | 来源: 3Y-BET-LEDGER §减法配额 + tool-usage-audit

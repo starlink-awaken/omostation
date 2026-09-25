@@ -1,11 +1,16 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: bet-retro/v1
 bet_id: BET-Y1Q4-T6-25
 retro_type: delivery
 date: 2026-09-12
-lifecycle: history
-owner: unassigned
 ---
+
 
 # BET-Y1Q4-T6-25 复盘 — OpenHuman 本地桥接器升级与多源健康生物标记物 Schema 归一化
 

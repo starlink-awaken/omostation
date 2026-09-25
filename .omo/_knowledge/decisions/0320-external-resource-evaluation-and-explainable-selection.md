@@ -1,18 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0320
 title: External Resource 评估与可解释选择边界
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../standards/external-connection-fabric.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../docs/STRATEGY-3YEAR-PANORAMA.md
-  - 0319-external-resource-observation-surfaces.md
+related: 
 ---
+
 
 # ADR-0320: External Resource 评估与可解释选择边界
 

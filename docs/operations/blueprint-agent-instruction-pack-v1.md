@@ -1,17 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-09
-related:
-  - ../../ARCHITECTURE.md
-  - ../architecture/digital-twin-blueprint-v1.md
-  - ../architecture/blueprint-multi-agent-execution-control-v1.md
-  - ../../.omo/standards/agent-workflow-contract.md
-  - ../plans/AGENT-BRIEF.md
-title: 织星蓝图通用 Agent 执行指令 v1
+last-reviewed: 2026-09-25
 type: doc
+related: 
+title: 织星蓝图通用 Agent 执行指令 v1
 ---
+
 
 # 织星蓝图通用 Agent 执行指令 v1
 

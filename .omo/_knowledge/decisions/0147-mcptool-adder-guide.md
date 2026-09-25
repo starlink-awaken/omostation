@@ -1,19 +1,15 @@
 ---
-id: ADR-0147
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0145-mcptool-collection-skip.md
-  - 0140-m4-health-score.md
-  - 0141-m2-base-schema.md
-  - 0146-8stage-stability-declaration.md
-  - ../../../../docs/MCPTOOL-ADDER-GUIDE.md
-  - ../../../../bin/mcp-tool-data-complete.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0147
+related: 
+supersedes: []
 ---
+
 
 # ADR-0147: MCPTOOL M1 Adder Guide (Round 5b)
 

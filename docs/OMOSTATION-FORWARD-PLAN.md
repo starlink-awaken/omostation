@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: superseded
 lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-09-19
-superseded-by: docs/OMOSTATION-FORWARD-PLAN-v2.md
+last-reviewed: 2026-09-25
 type: roadmap
+superseded-by: docs/OMOSTATION-FORWARD-PLAN-v2.md
 ---
+
 
 # OMOSTATION-FORWARD-PLAN — 后 3 年路线图 (2026H2 - 2029H1) [SUPERSEDED]
 

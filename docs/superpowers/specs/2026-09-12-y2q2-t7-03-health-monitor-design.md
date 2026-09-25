@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 主动健康连续体征监测、异常预警与就诊咨询闭环场景包设计
 bet_id: BET-Y2Q2-T7-03
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-12
 ---
+
 
 
 

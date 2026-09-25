@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.4.0
 title: North-star recovery and first real Decision Episode proof
 bet_id: BET-Y2Q2-T4-01
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-23'
-last-reviewed: '2026-09-23'
 implementation_authorized: true
 value_indicator_policy: true
 risk_level: L3
 human_gate: true
-type: ssot
 ---
+
 
 # BET-Y2Q2-T4-01: North-star recovery and first real Decision Episode proof
 

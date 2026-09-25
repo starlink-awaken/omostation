@@ -1,17 +1,16 @@
 ---
+schema: md/v1
 status: draft
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - ../../../.omo/_knowledge/decisions/0158-p76-phase4-promotion.md
-  - ../../../.omo/_knowledge/decisions/STRAT-P76-strategic-roadmap.md
-  - ../../../docs/SOP-GOD-MODULE-SPLIT.md
+last-reviewed: 2026-09-25
+type: doc
+related: 
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 title: Knowledge Foundry · 4-cron 编排 (P76 Phase 5 雏形)
-type: doc
 ---
+
 
 # Knowledge Foundry · 4-cron 编排 (P76 Phase 5 雏形)
 

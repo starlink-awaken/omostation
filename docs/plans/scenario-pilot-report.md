@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: draft
 lifecycle: plan
 owner: system-owner
-last-reviewed: 2026-08-07
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 
 # Scenario Phase 1 试点报告
 

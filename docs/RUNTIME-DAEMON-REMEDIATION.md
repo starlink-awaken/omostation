@@ -1,22 +1,18 @@
 ---
-title: 收敛期 P0 · L1 runtime daemon 整改盘点
+schema: md/v1
 status: active
-type: remediation-spec
-owner: 夏明星
-created: 2026-07-15
-related:
-  - .omo/_knowledge/decisions/0210-three-year-strategy-execution-convergence.md
-  - .omo/_knowledge/decisions/0179-runtime-probe-false-positive-treatment.md
-  - docs/STRATEGY-M1-EVIDENCE.md
-  - projects/runtime/src/runtime/health/agora_gateway_probe.py
-note: >
-  daemon 在线率 0.6 的根因盘点。运行时数字为 2026-07-15 沙箱实测快照，
-  权威源 .omo/state/system_health.yaml。整改代码/PR 在授权 dev 环境执行。
 lifecycle: contract
-last-reviewed: 2026-07-31
+owner: 夏明星
+last-reviewed: 2026-09-25
+type: remediation-spec
+title: 收敛期 P0 · L1 runtime daemon 整改盘点
+created: 2026-07-15
+related: 
+note: >
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 ---
+
 
 # 收敛期 P0 · L1 runtime daemon 整改盘点（2026-07-15）
 

@@ -1,17 +1,15 @@
 ---
-id: ADR-0165
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0164-p77-phase1-cross-repo-consistency.md
-  - STRAT-P77-strategic-roadmap.md (Phase 2 启动)
-  - ../../../standards/p76-principles.md
-  - ../../../../../tests/test_p76_principles.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0165
+related: 
+supersedes: []
 ---
+
 
 # ADR-0165: P77 Phase 2 — 演化护栏 catalog (15 原则形式化 + 5 新 GaC rules)
 

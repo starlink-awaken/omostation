@@ -1,16 +1,18 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: family-hub
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Family dashboard Workspace owner migration Phase A
 bet_id: BET-Y1Q3-T10-111
-status: accepted
-lifecycle: contract
-owner: family-hub
 created: 2026-08-30
-last-reviewed: 2026-08-30
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # Family dashboard Workspace owner migration Phase A
 

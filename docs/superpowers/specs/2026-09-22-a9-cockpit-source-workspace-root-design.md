@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: A9 cockpit source workspace-root execution
 bet_id: BET-Y2Q2-T10-155
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-22'
-last-reviewed: '2026-09-22'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L1
 human_gate: false
-type: ssot
 ---
+
 
 # A9 cockpit source workspace-root execution
 

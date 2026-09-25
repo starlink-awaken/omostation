@@ -1,11 +1,16 @@
 ---
-schema_version: report/v1
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
 type: report
+schema_version: report/v1
 title: 北极星价值报告 (monthly) — 2026-09-03
 period: monthly
 generated_at: 2026-09-03
-owner: governance-team
 ---
+
 
 # 北极星价值报告 (monthly) — 2026-09-03
 

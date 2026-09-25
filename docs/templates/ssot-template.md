@@ -1,11 +1,13 @@
 ---
-type: ssot
-lifecycle: active
-version: "1.0"
+schema: md/v1
 status: active
+lifecycle: active
 owner: <team-or-role>
-last-reviewed: 2026-09-14
+last-reviewed: 2026-09-25
+type: ssot
+version: "1.0"
 ---
+
 
 # <标题>
 

@@ -1,11 +1,13 @@
 ---
-id: ADR-0100
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-25
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0100
 ---
+
 
 # ADR-0100: P106 omo_governance_surfaces 4 子模块化 (1022→763L, <800L warn 清零, P104 re-export 修复)
 

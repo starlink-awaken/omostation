@@ -1,18 +1,16 @@
 ---
-title: Workflow Mesh 实施架构与交付路线
+schema: md/v1
 status: active
 lifecycle: plan
 owner: engineering-team
-last-reviewed: 2026-08-03
-review-state: evidence-refreshed
-related:
-  - docs/STRATEGY-3YEAR-PANORAMA.md
-  - ARCHITECTURE.md
-  - .omo/standards/agent-workflow-contract.md
-  - .omo/standards/external-connection-fabric.md
+last-reviewed: 2026-09-25
 type: ssot
+title: Workflow Mesh 实施架构与交付路线
+review-state: evidence-refreshed
+related: 
 last_updated: 2026-09-03
 ---
+
 
 # Workflow Mesh 实施架构与交付路线
 

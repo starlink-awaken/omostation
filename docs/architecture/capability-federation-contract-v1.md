@@ -1,11 +1,13 @@
 ---
-title: Capability Federation Contract v1
+schema: md/v1
 status: active
 lifecycle: contract
 owner: architecture-governance
-last-reviewed: 2026-08-23
+last-reviewed: 2026-09-25
 type: doc
+title: Capability Federation Contract v1
 ---
+
 
 # Capability Federation Contract v1
 

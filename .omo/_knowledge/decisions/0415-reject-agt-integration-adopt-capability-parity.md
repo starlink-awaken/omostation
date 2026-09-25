@@ -1,19 +1,17 @@
 ---
-id: ADR-0415
-title: 拒绝 AGT 整体接入，确立能力对齐路线
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-created: 2026-08-18
-last-reviewed: 2026-08-18
-deciders:
-  - 夏明星 (最终确认)
-  - governance-agent (起草, grilling 三轮共识)
-related:
-  - docs/governance/agent-capability-gap-matrix.md
-  - https://github.com/microsoft/agent-governance-toolkit
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0415
+title: 拒绝 AGT 整体接入，确立能力对齐路线
+created: 2026-08-18
+deciders: 
+related: 
 ---
+
 
 # ADR-0415: 拒绝 AGT 整体接入，确立能力对齐路线
 

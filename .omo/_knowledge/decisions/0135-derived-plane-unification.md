@@ -1,17 +1,15 @@
 ---
-id: ADR-0135
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
-related:
-  - 0132-l0-mof-m4-metamodel.md
-  - 0128-state-generation-concurrency.md
-  - 0129-state-projection-plane-phase3.md
-  - ../../../../bin/omo-state-cleanup.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0135
+related: 
+supersedes: []
 ---
+
 
 # ADR-0135: 派生面统一收口 (ADR-0129 范式 enforcement)
 

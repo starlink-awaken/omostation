@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: engineering-agent
-last-reviewed: 2026-08-27
-title: 深度复盘：业务流程全链路 × Agent 协作机制 (2026-08-27)
+last-reviewed: 2026-09-25
 type: retro
+title: 深度复盘：业务流程全链路 × Agent 协作机制 (2026-08-27)
 ---
+
 # 深度复盘：业务流程全链路 × Agent 协作机制 (2026-08-27)
 
 > 数据基线: 近 48h main 144 commits, 4 worktrees, resident health=recovered, mail 700 分类

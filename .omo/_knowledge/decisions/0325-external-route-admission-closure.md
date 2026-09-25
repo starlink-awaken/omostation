@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0325
 title: 外部动态路由注册的统一准入闭环
-status: archived
-type: decision
-owner: architecture-governance
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - 0319-external-resource-observation-surfaces.md
-  - 0320-external-resource-evaluation-and-explainable-selection.md
+related: 
 ---
+
 
 # ADR-0325: 外部动态路由注册的统一准入闭环
 

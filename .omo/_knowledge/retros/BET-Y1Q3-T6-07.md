@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
 bet_id: BET-Y1Q3-T6-07
 date: 2026-08-19
-lifecycle: history
-last-reviewed: 2026-08-19
-status: archived
-owner: governance-team
 title: BET-Y1Q3-T6-07 Retro — 根目录与项目废弃面清理
-type: retro
 ---
+
 
 # BET-Y1Q3-T6-07 Retro — 根目录与项目废弃面清理
 

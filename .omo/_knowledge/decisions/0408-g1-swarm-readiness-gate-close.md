@@ -1,16 +1,15 @@
 ---
-id: ADR-0408
-title: G-1 Swarm Readiness Gate Close — six SR direct evidence
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-11
-related:
-  - ADR-0407
-  - ADR-0371
-  - ADR-0220
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0408
+title: G-1 Swarm Readiness Gate Close — six SR direct evidence
+related: 
 ---
+
 
 # ADR-0408: G-1 Swarm Readiness Gate Close — Six SR Direct Evidence
 

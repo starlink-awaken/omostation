@@ -1,17 +1,15 @@
 ---
-id: ADR-0407
-title: ci-local-fast 真实退出码与 Ruff 有界债务门
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-11
-related:
-  - ADR-0379
-  - ADR-0388
-  - ADR-0390
-  - BET-Y1Q2-T6-03
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0407
+title: ci-local-fast 真实退出码与 Ruff 有界债务门
+related: 
 ---
+
 
 # ADR-0407: ci-local-fast 真实退出码与 Ruff 有界债务门
 

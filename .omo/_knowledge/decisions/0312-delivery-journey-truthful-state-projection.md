@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: engineering-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0312
 title: Cockpit Delivery Journey truthful state projection
-status: ACCEPTED
 date: 2026-08-02
-last-reviewed: 2026-08-02
-owner: engineering-team
-lifecycle: spec
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/agent-workflow-contract.md
-  - ../../../projects/cockpit/src/cockpit/delivery_journey.py
-type: ssot
+related: 
 ---
+
 
 # ADR-0312: Cockpit Delivery Journey truthful state projection
 

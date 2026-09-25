@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-09-25
 type: ssot
 ---
+
 
 # Interface Contract (架构版本见根 ARCHITECTURE.md)
 

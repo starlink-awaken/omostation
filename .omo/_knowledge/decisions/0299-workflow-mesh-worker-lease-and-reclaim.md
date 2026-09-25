@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0299
 title: Workflow Mesh worker 租约、失效与接管证据
-status: ACCEPTED
-type: decision
-owner: architecture-governance
 created: 2026-08-02
-last-reviewed: 2026-08-02
-lifecycle: spec
-related:
-  - ../../standards/agent-cli-worker-collaboration.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../_truth/registry/external-connection-fabric.yaml
+related: 
 ---
+
 
 # ADR-0299 Workflow Mesh worker 租约、失效与接管证据
 

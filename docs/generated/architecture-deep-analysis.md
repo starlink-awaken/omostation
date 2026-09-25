@@ -1,8 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
 type: derived
 source: bin/ssot/architecture-deep-analysis.py
 last_synced: 2026-09-03
 ---
+
 
 # 织星 eCOS v6 — 架构深度剖析
 

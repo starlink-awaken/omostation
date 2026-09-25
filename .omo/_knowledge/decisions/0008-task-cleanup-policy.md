@@ -1,13 +1,15 @@
 ---
-id: ADR-0008
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0008
 archived-since: 2026-06-22
 note: "P45 审计: 历史决策/phase closeout, 标记 archived"
-type: ssot
 ---
+
 
 # ADR-0008: in_progress 任务列表清理原则
 

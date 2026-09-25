@@ -1,19 +1,15 @@
 ---
-id: ADR-0145
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0136-m3-yaml-extension-p5.md
-  - 0140-m4-health-score.md
-  - 0141-m2-base-schema.md
-  - ../../../projects/ecos/src/ecos/ssot/tools/mof-validate.py
-  - ../../../../bin/mcp-tool-data-complete.py
-  - ../../../../tests/integration/m4_metamodel/run_all.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0145
+related: 
+supersedes: []
 ---
+
 
 # ADR-0145: MCPTOOL 集合占位识别 (Round 4a) — 100/100 Health Score
 

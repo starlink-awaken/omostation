@@ -1,20 +1,15 @@
 ---
-id: ADR-0144
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-06
-related:
-  - 0121-governance-convergence-initiative.md
-  - 0140-m4-health-score.md
-  - 0142-decisions-quick-ref.md
-  - 0137-derived-plane-relocation.md
-  - ../../../../bin/m4-cron-hook.py
-  - ../../../../.omo/_derived/m4-cron-log.json
-  - ../../../../.omo/cron/operating-rhythm-crontab
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0144
+related: 
+supersedes: []
 ---
+
 
 # ADR-0144: M4 Cron Hook (Round 4d)
 

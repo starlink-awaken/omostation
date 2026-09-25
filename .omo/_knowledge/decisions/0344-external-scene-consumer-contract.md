@@ -1,14 +1,16 @@
 ---
-id: ADR-0344
-title: External scene consumer contract
+schema: md/v1
 status: archived
-type: adr
-date: 2026-08-03
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
+type: adr
+id: ADR-0344
+title: External scene consumer contract
+date: 2026-08-03
 decision: "以 external-scene-consumer/v1 登记真实消费者边界，并将其作为晋升就绪度的必需事实；声明不授予执行权限。"
 ---
+
 
 # ADR-0344: 外部场景消费者契约
 

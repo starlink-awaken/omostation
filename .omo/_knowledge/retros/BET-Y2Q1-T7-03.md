@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-created: 2026-09-05
-last-reviewed: 2026-09-05
-title: BET-Y2Q1-T7-03 retrospective
+last-reviewed: 2026-09-25
 type: doc
+created: 2026-09-05
+title: BET-Y2Q1-T7-03 retrospective
 bet_id: BET-Y2Q1-T7-03
 ---
+
 
 # BET-Y2Q1-T7-03 retrospective
 

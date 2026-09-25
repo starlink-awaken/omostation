@@ -1,11 +1,13 @@
 ---
-id: ADR-0191
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0191
 ---
+
 
 # ADR-0191 — Cockpit UI 消费 Wave2 dashboard JSON
 

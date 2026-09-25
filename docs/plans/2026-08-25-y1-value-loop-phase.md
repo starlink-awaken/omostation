@@ -1,33 +1,19 @@
 ---
-title: 织星中段蓝图迭代 — 日历重同步、四面一脊与 Y1 收口
+schema: md/v1
 status: active
 lifecycle: plan
 owner: 夏明星
-created: 2026-08-25
-last-reviewed: 2026-08-25
+last-reviewed: 2026-09-25
 type: phase-blueprint
+title: 织星中段蓝图迭代 — 日历重同步、四面一脊与 Y1 收口
+created: 2026-08-25
 horizon: 2026-08 → 2027-07 (Y1 日历剩余) · 2027H2 仅在 Y1 总门通过后解冻
-supersedes:
-  - docs/plans/two-week-integration-and-forward-plan.md
-does_not_supersede:
-  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  - docs/plans/3y-bet-ledger.yaml
-  - .omo/_knowledge/decisions/0410-strategy-mainline-plan-supersedes-panorama.md
-related:
-  - ARCHITECTURE.md
-  - docs/architecture/project-strategy-v1.md
-  - docs/architecture/memory-os.md
-  - docs/architecture/digital-twin-blueprint-v1.md
-  - docs/reports/2026-08-20-blueprint-strategy-retrospective.md
-  - docs/reports/2026-08-24-resident-system-deep-review.md
-  - .omo/_knowledge/decisions/0412-model-driven-disposition.md
-  - .omo/_knowledge/decisions/0413-gbrain-kairon-merge-disposition.md
-  - .omo/_knowledge/decisions/0423-conv3-project-convergence.md
+supersedes: 
+does_not_supersede: 
+related: 
 note: >
-  本文是阶段契约，不是第二套三年规划。愿景/证伪/Y1–Y3 总门只引用 Plan。
-  规模读 `bet-ledger.py surface|status`，成熟度读 `maturity-scorecard.py`，不在正文追更。
-  前一短版（四周 VL-1）降为 S0 的打开波次，不再作为阶段本身。
 ---
+
 
 # 织星中段蓝图迭代 — 日历重同步、四面一脊与 Y1 收口
 

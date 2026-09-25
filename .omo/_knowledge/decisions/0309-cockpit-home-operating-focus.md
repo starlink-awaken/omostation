@@ -1,18 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: product-architecture
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0309
 title: Cockpit 首页工作焦点只读投影与日常入口
-status: archived
-type: decision
-owner: product-architecture
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../docs/STRATEGY-3YEAR-PANORAMA.md
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../../projects/cockpit-ui/src/components/home/HomeFocusSection.tsx
-  - ../../../projects/cockpit/src/cockpit/web/api_system_map.py
+related: 
 ---
+
 
 # ADR-0309: Cockpit 首页工作焦点只读投影与日常入口
 

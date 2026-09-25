@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Resident BOS 双向任务网关与异步队列调度中枢
 bet_id: BET-Y1Q4-T10-125
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-09-11
-last-reviewed: 2026-09-11
 risk_level: L2
 human_gate: false
-type: ssot
 last_updated: 2026-09-11
 decision_ref: decision://accepted/BET-Y1Q4-T10-125
 ---
+
 
 # Resident BOS 双向任务网关与异步队列调度中枢（BET-Y1Q4-T10-125）
 

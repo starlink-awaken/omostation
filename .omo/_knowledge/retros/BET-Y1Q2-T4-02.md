@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: BET-Y1Q2-T4-02 复盘：个人结果观测与真实价值采样
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q2-T4-02 复盘：个人结果观测与真实价值采样
 ---
+
 # BET-Y1Q2-T4-02 复盘：个人结果观测与真实价值采样
 
 > 日期：2026-08-12

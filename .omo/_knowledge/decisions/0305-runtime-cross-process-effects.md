@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0305
 title: Runtime 跨进程 effect journal 与显式补偿边界
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/external-connection-fabric.md
-  - ./0304-runtime-effect-outcome-receipts.md
+related: 
 ---
+
 
 # ADR-0305: Runtime 跨进程 effect journal 与显式补偿边界
 

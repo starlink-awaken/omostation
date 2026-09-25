@@ -1,8 +1,12 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-17
+last-reviewed: 2026-09-25
+type: ssot
 ---
+
 
 # 驾驶舱面（Dashboards）职责边界
 

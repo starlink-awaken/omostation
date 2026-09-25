@@ -1,13 +1,15 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
+last-reviewed: 2026-09-25
+type: implementation-evidence
+schema_version: report/v1
 created: 2026-08-31
-last-reviewed: 2026-08-31
 bet_id: BET-Y1Q4-T7-03
 ---
+
 
 # Policy Radar 每日晨报 — implementation evidence
 

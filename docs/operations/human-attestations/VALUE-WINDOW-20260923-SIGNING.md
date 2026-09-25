@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-23
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # 价值全窗独立裁决签名步骤（VALUE-WINDOW-20260923）
 
 Agent **不能代签**。principal（夏明星）本地 `ssh-keygen -Y sign` 后，

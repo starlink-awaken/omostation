@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-30
-title: BET-Y1Q3-T4-05 WP2 Honest Agent Cell Effect Receipt retro
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q3-T4-05 WP2 Honest Agent Cell Effect Receipt retro
 ---
+
 
 # BET-Y1Q3-T4-05 复盘
 

@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-29
+last-reviewed: 2026-09-25
 type: ssot
 ---
+
 
 # SSOT 7 Domain Schema — Full Execution Governance Standard
 

@@ -1,25 +1,20 @@
 ---
-id: ADR-0414
-title: ADR-0247 与 ADR-0225/0226 物理多机张力 — 关系澄清
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-created: 2026-08-17
-last-reviewed: 2026-08-18
-deciders:
-  - 夏明星 (最终确认 pending)
-  - governance-agent (起草)
-related:
-  - .omo/_knowledge/decisions/0225-g-del-physical-multihost-gate-caliber.md
-  - .omo/_knowledge/decisions/0226-g-del-1-blocked-until-four-hosts.md
-  - .omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md
-supersedes: []
-amends:
-  - 0225-g-del-physical-multihost-gate-caliber.md
-  - 0226-g-del-1-blocked-until-four-hosts.md
-session: strategy-convergence-r3
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0414
+title: ADR-0247 与 ADR-0225/0226 物理多机张力 — 关系澄清
+created: 2026-08-17
+deciders: 
+related: 
+supersedes: []
+amends: 
+session: strategy-convergence-r3
 ---
+
 
 # ADR-0414: 物理多机张力 — 0247 与 0225/0226 的关系澄清
 

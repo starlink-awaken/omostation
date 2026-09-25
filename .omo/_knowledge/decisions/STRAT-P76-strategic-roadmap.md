@@ -1,18 +1,13 @@
 ---
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0155-p76-phase1-cleanup.md
-  - 0156-p76-phase2-call-direction.md
-  - 0157-p76-phase3-self-meta.md
-  - 0158-p76-phase4-promotion.md
-  - 0159-p76-phase5-foundry.md
-  - ../../../.omo/_knowledge/audits/2026-07-02-system-comprehensive-audit.md
-  - ../../../.omo/_knowledge/patterns/p74-workflow-solidification-pattern.md
+last-reviewed: 2026-09-25
 type: ssot
+related: 
 ---
+
 
 # STRATEGY-DECISION: P76 战略 5-phase 迭代路线图 — **已收口 (2026-07-07)**
 

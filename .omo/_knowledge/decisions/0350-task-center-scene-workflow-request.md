@@ -1,15 +1,16 @@
 ---
-id: ADR-0350
-title: Task Center scene-bound Workflow request
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
 type: decision
+id: ADR-0350
+title: Task Center scene-bound Workflow request
 scope: cockpit task center and workflow mesh promotion
 date: 2026-08-03
 ---
+
 
 # ADR-0350: 任务中心的场景化 Workflow 请求
 

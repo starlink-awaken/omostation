@@ -1,11 +1,13 @@
 ---
-id: ADR-0431
+schema: md/v1
 status: planned
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-28
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0431
 ---
+
 
 # ADR-0431: 防腐五层框架 — 人的权威分层 × 三机制 + MAPE-K 对齐
 

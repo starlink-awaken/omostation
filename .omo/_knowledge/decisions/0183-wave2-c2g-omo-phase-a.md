@@ -1,11 +1,13 @@
 ---
-id: ADR-0183
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-14
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0183
 ---
+
 
 # ADR-0183 — Wave 2 Phase A 范围锁定
 

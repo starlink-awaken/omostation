@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
-type: ssot
 last_updated: 2026-09-03
 ---
+
 # M4 元模型路线图 (eCOS v6 L0/M0/MOF 统一)
 
 > **配套 ADR**: [ADR-0132](../.omo/_knowledge/decisions/0132-l0-mof-m4-metamodel.md)

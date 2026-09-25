@@ -1,15 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: plan
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 场景卡存储归一 — 选项 A 执行规格 (归一到 docs/scene-cards)
 bet_id: BET-Y2Q1-T7-03
-status: accepted
-lifecycle: contract
-last-reviewed: 2026-09-05
-type: plan
-owner: governance-team
 last_updated: 2026-09-05
 ---
+
 
 
 # 场景卡存储归一提案 (BET-Y2Q1-T7-03)

@@ -1,23 +1,14 @@
 ---
-id: ADR-0130
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
-related:
-  - 0128-state-generation-concurrency.md
-  - 0129-state-projection-plane-phase3.md
-  - ../../standards/p74-solidification-contract.md
-  - ../patterns/p74-workflow-solidification-pattern.md
-  - ../../_truth/registry/agent-workflows.yaml
-  - ../../_truth/registry/mof-capabilities.yaml
-  - ../../../projects/ecos/src/ecos/ssot/mof/m3.yaml#GacRule
-  - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-STATE-PROJECTION-GUARD.yaml
-  - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-RUNTIME-STAMP-POLICY.yaml
-  - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-WORKFLOW-SILENCE.yaml
-  - ../../../projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-CR-P74-WORKFLOW-SUGGEST.yaml
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0130
+related: 
 ---
+
 
 # ADR-0130: P74 Workflow Solidification — 常态化工作流沉默治理
 

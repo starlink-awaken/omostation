@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-18
-last_updated: 2026-09-03
+last-reviewed: 2026-09-25
 type: ssot
+last_updated: 2026-09-03
 ---
+
 # ADR-0192: 领域智能体事实萃取、长程显存自愈与全域自动化治理巡检体系
 
 - **Status**: Accepted

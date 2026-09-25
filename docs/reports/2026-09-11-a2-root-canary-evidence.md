@@ -1,9 +1,15 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
 type: report
 title: A2 Resident Status 只读 Host Canary 证据 (100/100)
 created: 2026-09-11
 bet: BET-Y1Q4-T10-144
 ---
+
 
 # A2 WP-A2-ROOT Host Canary 证据
 

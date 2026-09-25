@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0365
 title: Adopt a scenario-first architecture strategy and Workflow Mesh as the sole execution spine
-status: ACCEPTED
 date: 2026-08-04
-owner: architecture-governance
-lifecycle: spec
-last-reviewed: 2026-08-04
-type: ssot
 ---
+
 
 # ADR-0365: Adopt a scenario-first architecture strategy and Workflow Mesh as the sole execution spine
 

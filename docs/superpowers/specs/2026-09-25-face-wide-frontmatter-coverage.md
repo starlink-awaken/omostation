@@ -1,13 +1,16 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Face-Wide Frontmatter Coverage — extend #4291 to all paths
-bet_id: BET-Y2Q4-SH-2
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
+title: Face-Wide Frontmatter Coverage — extend #4291 to all paths
+bet_id: BET-Y2Q4-SH-2
 ---
+
 
 # BET-Y2Q4-SH-2 — Face-Wide Frontmatter Coverage
 

@@ -1,17 +1,16 @@
 ---
-id: ADR-0310
-title: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: engineering-team
-date: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - docs/scene-cards/engineering-delivery-dogfood.yaml
-  - .omo/_knowledge/decisions/0309-cockpit-home-operating-focus.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0310
+title: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递
+date: 2026-08-02
+related: 
 ---
+
 
 # ADR-0310: Workflow Mesh 工程 dogfood 端到端验收与场景绑定传递
 

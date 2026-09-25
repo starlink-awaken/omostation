@@ -1,19 +1,15 @@
 ---
-id: ADR-0167
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0164-p77-phase1-cross-repo-consistency.md
-  - 0165-p77-phase2-evolution-guardrails.md
-  - 0166-p77-phase3-cross-repo-remediation.md
-  - STRAT-P77-strategic-roadmap.md (Phase 4 收口)
-  - ../../../../../bin/check-cross-repo-consistency.py
-  - ../../../../../tests/test_cross_repo_consistency_phase4.py
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0167
+related: 
+supersedes: []
 ---
+
 
 # ADR-0167: P77 Phase 4 — 跨仓 port-registry 一致性 (bug 修复 + 6 端口对齐)
 

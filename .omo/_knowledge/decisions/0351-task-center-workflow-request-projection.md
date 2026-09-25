@@ -1,15 +1,16 @@
 ---
-id: ADR-0351
-title: Task Center Workflow request projection and admission navigation
+schema: md/v1
 status: archived
-type: adr
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
 type: decision
+id: ADR-0351
+title: Task Center Workflow request projection and admission navigation
 scope: cockpit task center and workflow mesh operations
 date: 2026-08-03
 ---
+
 
 # ADR-0351: 任务中心 Workflow 请求投影与准入触达
 

@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-created: 2026-08-30
-last-reviewed: 2026-08-30
-title: T10-109 L4 machine-log classification delivery report
+last-reviewed: 2026-09-25
 type: doc
+created: 2026-08-30
+title: T10-109 L4 machine-log classification delivery report
 ---
+
 
 # T10-109 L4 machine-log classification delivery report
 

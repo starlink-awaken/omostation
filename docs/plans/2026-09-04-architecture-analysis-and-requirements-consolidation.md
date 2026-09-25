@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-04
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Architecture Analysis & Requirements Consolidation
 
 ## 1. 背景与目的

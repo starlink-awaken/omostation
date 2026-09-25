@@ -1,12 +1,14 @@
 ---
-id: ADR-0385
-title: CI Pruner + SSOT Usage — scheduled prune-ci-runs cron + SSOT freshness monitor
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-07
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0385
+title: CI Pruner + SSOT Usage — scheduled prune-ci-runs cron + SSOT freshness monitor
 ---
+
 
 # 0385 — CI Pruner + SSOT Usage Round
 

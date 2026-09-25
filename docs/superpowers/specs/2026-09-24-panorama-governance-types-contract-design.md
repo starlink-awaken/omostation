@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 全景治理数据契约与 TypeScript 类型体系沉淀
 bet_id: BET-Y2Q2-T8-05
-status: accepted
-lifecycle: spec
-owner: governance-team
 created: '2026-09-24'
-last-reviewed: '2026-09-24'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L1
 human_gate: false
-type: ssot
 ---
+
 
 # 全景治理数据契约与 TypeScript 类型体系设计规约
 

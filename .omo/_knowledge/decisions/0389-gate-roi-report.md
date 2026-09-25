@@ -1,12 +1,14 @@
 ---
-id: ADR-0389
-title: M5 gate ROI 治理价值报告 — 量化 gate 价值的减法决策输入
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-07
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0389
+title: M5 gate ROI 治理价值报告 — 量化 gate 价值的减法决策输入
 ---
+
 
 # ADR-0389 Decision: M5 gate ROI 治理价值报告
 

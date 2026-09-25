@@ -1,16 +1,19 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
+schema_version: specification/v1
+spec_version: 1.0.0
 created: 2026-09-12
-last-reviewed: 2026-09-12
 title: Studio 机理工坊与知识记忆中枢深度交付 (升级)
 bet_id: BET-Y1Q4-T8-24C
 implementation_authorized: true
 value_indicator_policy: false
 ---
+
 
 # Studio 机理工坊与知识记忆中枢深度交付 — 设计规格
 

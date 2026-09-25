@@ -1,17 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: engineering-team
-last-reviewed: 2026-08-05
-related:
-  - ./memory-os-phase6-retro.md
-  - ./memory-os-phase10-retro.md
-  - ./minerva-local.md
-  - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
-  - ../../.omo/standards/memory-os-ops.md
-title: Memory OS — 本机 Neo4j 启动
+last-reviewed: 2026-09-25
 type: doc
+related: 
+title: Memory OS — 本机 Neo4j 启动
 ---
+
 
 # Memory OS — 本机 Neo4j 启动
 

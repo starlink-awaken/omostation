@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0304
 title: Runtime effect outcome 与 Workflow Mesh receipt 边界
-status: archived
-type: decision
-owner: architecture-governance
-lifecycle: spec
 created: 2026-08-02
-last-reviewed: 2026-08-02
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/external-connection-fabric.md
-  - ./0303-workflow-mesh-external-receipt-broker.md
+related: 
 ---
+
 
 # ADR-0304: Runtime effect outcome 与 Workflow Mesh receipt 边界
 

@@ -1,14 +1,17 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Git 子模块稳定性与 remote 配置完整性防护设计
 bet_id: BET-Y1Q4-T10-161
-status: accepted
-lifecycle: spec
-owner: governance-team
-last-reviewed: 2026-09-12
 value_indicator_policy: false
 ---
+
 
 # T10-161 — Gitlink Freshness & Remote Integrity Guard 设计
 

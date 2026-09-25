@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # SOP: Squad A（交付流水线小队）实兑流程
 
 > 2026-09-05 实测跑通一次，记录真实命令、真实报错和治本方式。后续真实交付照抄本流程，

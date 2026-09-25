@@ -1,18 +1,20 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Restore T10-92 artifacts dropped from the mainline merge tree
 bet_id: BET-Y1Q3-T10-94
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: 2026-08-30
-last-reviewed: 2026-08-30
 risk_level: L1
 human_gate: false
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # Restore T10-92 artifacts dropped from the mainline merge tree
 

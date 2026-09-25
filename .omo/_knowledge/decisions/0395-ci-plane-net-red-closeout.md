@@ -1,12 +1,14 @@
 ---
-id: ADR-0395
-title: CI 平面净红收官 — scripts/check-* orphan 化 + drift 检测 ahead 容忍
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-08
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0395
+title: CI 平面净红收官 — scripts/check-* orphan 化 + drift 检测 ahead 容忍
 ---
+
 
 # ADR-0395 Decision: CI 平面净红收官
 

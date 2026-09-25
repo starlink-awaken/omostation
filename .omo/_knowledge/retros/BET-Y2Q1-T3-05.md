@@ -1,12 +1,16 @@
 ---
-bet_id: BET-Y2Q1-T3-05
+schema: md/v1
 status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
+bet_id: BET-Y2Q1-T3-05
 completed_at: 2026-09-13
 run_id: 20260913T13-mind-model-quartet
 pr: "https://github.com/starlink-awaken/omostation/pull/3757"
-lifecycle: history
-owner: unassigned
 ---
+
 
 # Retro: BET-Y2Q1-T3-05 — 心智模型四件套首期落地与有状态 SceneWatcher
 

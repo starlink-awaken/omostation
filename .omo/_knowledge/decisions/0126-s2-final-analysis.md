@@ -1,16 +1,14 @@
 ---
-id: ADR-0126
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-03
-related:
-  - ../decisions/0122-system-audit-followup-plan.md
-  - 0125-s2-followup-retrospective.md
-  - 0124-s1-followup-retrospective.md
-  - ../../SYSTEM-INDEX.md
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0126
+related: 
 ---
+
 
 # S2 阶段深度分析 (2026-07-03) — 当前状态 + 后续建议
 

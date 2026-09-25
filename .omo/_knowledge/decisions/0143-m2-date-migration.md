@@ -1,17 +1,15 @@
 ---
-id: ADR-0143
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team + eCOS team
-last-reviewed: 2026-07-06
-related:
-  - 0141-m2-base-schema.md
-  - 0132-l0-mof-m4-metamodel.md
-  - ../../../../bin/m2-date-migrate.py
-  - ../../../projects/ecos/src/ecos/ssot/mof/m2/
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0143
+related: 
+supersedes: []
 ---
+
 
 # ADR-0143: 45 m2 schema date → datetime 迁移 (Round 4c)
 

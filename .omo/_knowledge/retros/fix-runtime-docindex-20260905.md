@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: runtime 子模块 STRAT-P81 doc-index 硬阻塞修复 + gitlink bump
-bet_id: fix-runtime-docindex
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: runtime 子模块 STRAT-P81 doc-index 硬阻塞修复 + gitlink bump
+bet_id: fix-runtime-docindex
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # fix-runtime-docindex 复盘
 

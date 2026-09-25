@@ -1,8 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
 type: derived
 source: bin/ssot/kos-ontology-graph.py
 last_synced: 2026-09-03
 ---
+
 
 # eCOS v6 物理拓扑与架构依赖图谱
 

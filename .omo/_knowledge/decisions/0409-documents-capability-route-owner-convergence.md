@@ -1,14 +1,15 @@
 ---
-id: ADR-0409
-title: Documents capability routes converge on Workspace owners
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-08-13
-related:
-  - ADR-0342
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0409
+title: Documents capability routes converge on Workspace owners
+related: 
 ---
+
 
 # ADR-0409: Documents Capability Routes Converge on Workspace Owners
 

@@ -1,14 +1,16 @@
 ---
-schema_version: report/v1
-type: report
-title: BET-Y1Q4-T8-11 hierarchy closeout receipt
-bet_id: BET-Y1Q4-T8-11
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: report
+schema_version: report/v1
+title: BET-Y1Q4-T8-11 hierarchy closeout receipt
+bet_id: BET-Y1Q4-T8-11
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # BET-Y1Q4-T8-11 hierarchy closeout receipt
 

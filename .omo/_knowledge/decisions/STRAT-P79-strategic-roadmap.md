@@ -1,18 +1,14 @@
 ---
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related:
-  - STRAT-P76-strategic-roadmap.md
-  - STRAT-P77-strategic-roadmap.md
-  - 0173-p78-phase2-baseline-foundry-v2.md
-  - 0172-p78-port-registry-convergence.md
-  - 0170-p77-phase7-env-var-port-migration.md
-  - 0164-p77-phase1-cross-repo-consistency.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+related: 
+supersedes: []
 ---
+
 
 # STRAT-P79: 2026H2 治理巩固 + Foundry 运营化路线图
 

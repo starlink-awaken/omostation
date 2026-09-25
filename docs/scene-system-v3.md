@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-09-11
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Scene System v3 — 场景系统全面体系化设计
 
 > 版本：v3.2.0 | 日期：2026-09-11 | 状态：全链路落地

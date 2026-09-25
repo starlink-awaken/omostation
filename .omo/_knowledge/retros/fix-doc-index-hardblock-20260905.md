@@ -1,14 +1,16 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: doc-index 硬阻塞修复 — t10-122 证据文件 SSOT owner/date
-bet_id: fix-doc-index-hardblock
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: doc-index 硬阻塞修复 — t10-122 证据文件 SSOT owner/date
+bet_id: fix-doc-index-hardblock
 created: 2026-09-05
-last-reviewed: 2026-09-05
 ---
+
 
 # fix-doc-index-hardblock 复盘
 

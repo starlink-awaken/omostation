@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-18
-last_updated: 2026-09-03
+last-reviewed: 2026-09-25
 type: ssot
+last_updated: 2026-09-03
 ---
+
 # 🏛️ Monorepo 脚本与工具治理架构规范 (bin/ & scripts/ & Makefile)
 
 ---

@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: product-architecture
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0336
 title: Cockpit UI External Resource Pack Preflight Surface
-status: archived
-type: decision
-owner: product-architecture
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - 0335-external-resource-pack-review-surface.md
-  - 0334-external-resource-pack-conformance.md
+related: 
 ---
+
 
 # ADR-0336: Cockpit UI External Resource Pack Preflight Surface
 

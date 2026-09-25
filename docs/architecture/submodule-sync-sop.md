@@ -1,9 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-05
+last-reviewed: 2026-09-25
+type: ephemeral
 ---
+
 # Submodule Sync SOP
 
 > Status: active | Lifecycle: contract | Owner: governance-team | Last-reviewed: 2026-09-04

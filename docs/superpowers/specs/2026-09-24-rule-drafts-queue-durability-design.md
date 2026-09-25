@@ -1,19 +1,21 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: specification/v1
 spec_version: 1.0.0
 title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
 bet_id: BET-Y2Q3-T10-202
-status: accepted
-lifecycle: contract
-owner: governance-team
 created: '2026-09-24'
-last-reviewed: '2026-09-24'
 implementation_authorized: true
 value_indicator_policy: false
 risk_level: L2
 human_gate: false
-type: ssot
 ---
+
 
 # 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
 

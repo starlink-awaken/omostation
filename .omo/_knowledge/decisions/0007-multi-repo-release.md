@@ -1,13 +1,15 @@
 ---
-id: ADR-0007
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-09-25
+type: ssot
+id: ADR-0007
 archived-since: 2026-06-22
 note: "P45 审计: 历史决策/phase closeout, 标记 archived"
-type: ssot
 ---
+
 
 # ADR-0007: 多仓库统一版本发布策略
 

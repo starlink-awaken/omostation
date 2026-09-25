@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: "2026-07-29"
+last-reviewed: 2026-09-25
 type: ssot
 ---
+
 # P84 自动推进终止条件 (Q1, ADV 传送带停)
 
 > Status: MANDATORY | 上位: goal Q1 · P86 §B1' (P3 红线延伸)

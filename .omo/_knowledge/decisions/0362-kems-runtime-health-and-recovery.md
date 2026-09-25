@@ -1,14 +1,16 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 number: 362
 id: ADR-0362
 title: KEMS runtime health and verified SQLite recovery
-status: ACCEPTED
 date: 2026-08-04
-owner: governance-team
-lifecycle: spec
-last-reviewed: 2026-08-04
-type: ssot
 ---
+
 
 # ADR-0362: KEMS runtime health and verified SQLite recovery
 

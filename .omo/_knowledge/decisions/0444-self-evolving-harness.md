@@ -1,11 +1,13 @@
 ---
-id: ADR-0444
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-08-31
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0444
 ---
+
 
 # ADR-0444: 自进化 Harness 异构生态收束
 

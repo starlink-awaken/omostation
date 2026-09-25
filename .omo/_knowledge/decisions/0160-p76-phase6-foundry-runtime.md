@@ -1,17 +1,15 @@
 ---
-id: ADR-0160
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-07
-related:
-  - 0159-p76-phase5-foundry.md
-  - 0158-p76-phase4-promotion.md
-  - STRAT-P76-strategic-roadmap.md
-  - ../../../../../docs/architecture/knowledge-foundry-cron.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0160
+related: 
+supersedes: []
 ---
+
 
 # ADR-0160: P76 Phase 6 — Knowledge Foundry 真正集成 (radar_cron + cockpit 监控 + LLM-assisted commit)
 

@@ -1,12 +1,15 @@
 ---
 schema: retro/v1
-bet_id: BET-Y1Q4-T6-23
-title: "Resident Daemon & CellPool Integration — Retrospective"
-date: 2026-09-11
 status: draft
 lifecycle: history
 owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
+bet_id: BET-Y1Q4-T6-23
+title: "Resident Daemon & CellPool Integration — Retrospective"
+date: 2026-09-11
 ---
+
 
 # BET-Y1Q4-T6-23 Retrospective
 

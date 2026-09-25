@@ -1,17 +1,15 @@
 ---
-id: ADR-0221
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: 架构师
-last-reviewed: 2026-07-18
-related:
-  - 0210-three-year-strategy-execution-convergence.md
-  - 0220-swarm-coordination-discipline-m1-gate.md
-  - docs/STRATEGY-INDEX.md
-  - BET-8c7c
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0221
+related: 
+supersedes: []
 ---
+
 
 # ADR-0221: G-DEL.5a 涌现检测与集体决策 · L3 专项风险评审
 

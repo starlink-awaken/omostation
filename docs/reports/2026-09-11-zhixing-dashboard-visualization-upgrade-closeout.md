@@ -1,14 +1,16 @@
 ---
-schema_version: report/v1
-type: report
-title: BET-Y1Q4-T8-25 43191 织星全要素控制面全维度交互式可视化落地与验证 Closeout Receipt
-bet_id: BET-Y1Q4-T8-25
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: report
+schema_version: report/v1
+title: BET-Y1Q4-T8-25 43191 织星全要素控制面全维度交互式可视化落地与验证 Closeout Receipt
+bet_id: BET-Y1Q4-T8-25
 created: 2026-09-11
-last-reviewed: 2026-09-11
 ---
+
 
 # BET-Y1Q4-T8-25 43191 织星全要素控制面全维度交互式可视化落地与验证 Closeout Receipt
 

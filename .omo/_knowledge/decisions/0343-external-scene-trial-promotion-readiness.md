@@ -1,14 +1,16 @@
 ---
-id: ADR-0343
-title: External scene trial promotion readiness projection
+schema: md/v1
 status: archived
-type: adr
-date: 2026-08-03
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-08-03
+last-reviewed: 2026-09-25
+type: adr
+id: ADR-0343
+title: External scene trial promotion readiness projection
+date: 2026-08-03
 decision: "以 append-only 试运行、评审、WorkflowRun、外部 receipt 和 outcome-feedback 重建只读晋升就绪度；ready 只表示可以提交人工晋升提案。"
 ---
+
 
 # ADR-0343: 外部场景试运行晋升就绪度投影
 

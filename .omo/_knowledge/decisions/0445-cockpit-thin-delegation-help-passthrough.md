@@ -1,11 +1,13 @@
 ---
-id: ADR-0445
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: xiamingxing
-last-reviewed: 2026-09-01
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0445
 ---
+
 
 # ADR-0445: cockpit 薄委派命令体系与 --help 透传
 

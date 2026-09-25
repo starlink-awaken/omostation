@@ -1,11 +1,15 @@
 ---
-type: plan
+schema: md/v1
 status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: plan
 last_updated: 2026-09-06
 bet: BET-Y1Q4-T9-03
 campaign: CMP-Y1-AGENT-ORIENT
 ---
+
 
 # Agent Session Dashboard（ASD）规格
 

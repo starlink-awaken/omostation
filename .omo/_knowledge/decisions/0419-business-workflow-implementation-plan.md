@@ -1,21 +1,18 @@
 ---
-id: ADR-0419
-
-title: "ADR-0419: 从基建转向业务 — knowledge-ingest  shadow 落地 + 信号源修复"
+schema: md/v1
 status: archived
 lifecycle: spec
-type: adr
 owner: governance-team
+last-reviewed: 2026-09-25
+type: adr
+id: ADR-0419
+title: "ADR-0419: 从基建转向业务 — knowledge-ingest  shadow 落地 + 信号源修复"
 date: 2026-08-19
-last-reviewed: 2026-08-20
 tags: [business, knowledge-ingest, shadow-mode, signal-sources]
 supersedes: []
-related:
-  - ADR-0415 (能力对齐)
-  - ADR-0416 (Y2 年度门)
-  - BET-Y3H1-T3-01 (冷启动)
-  - BET-Y2Q2-T7-01 (知识入库 assisted)
+related: 
 ---
+
 
 # ADR-0419: 从基建转向业务 — 业务工作流落地
 

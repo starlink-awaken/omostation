@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-18
-title: BET-Y1Q1-T1-05 阶段复盘 — 独立 writer clone 硬门
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y1Q1-T1-05 阶段复盘 — 独立 writer clone 硬门
 ---
+
 # BET-Y1Q1-T1-05 阶段复盘 — 独立 writer clone 硬门
 
 > 日期：2026-08-13  

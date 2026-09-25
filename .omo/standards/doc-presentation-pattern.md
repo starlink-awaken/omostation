@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-06-29
-related-contract: doc-ssot-contract.md
+last-reviewed: 2026-09-25
 type: ssot
+related-contract: doc-ssot-contract.md
 ---
+
 
 # 文档呈现模式: digest + pointer + lint
 

@@ -1,11 +1,16 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: agent-skills-team
+last-reviewed: 2026-09-25
+type: ssot
 name: workflow:bet-execution
 description: SEMA 自动结晶技能包 — 基于 3 条 MOS 踩坑信念反向萃取
 category: SEMA-Crystallized-Skill
-type: ssot
-owner: agent-skills-team
 last_updated: 2026-09-03
 ---
+
 
 # Skill: workflow:bet-execution
 

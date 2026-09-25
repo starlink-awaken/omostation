@@ -1,12 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: history
+owner: unassigned
+last-reviewed: 2026-09-25
+type: ephemeral
 bet: BET-Y2Q4-T7-01
 title: 生命科学与大模型架构前沿文献自动精读与技术选型沙盘
 phase: Phase 1
 date: 2026-09-08
-status: archived
-lifecycle: history
-owner: unassigned
 ---
+
 
 # BET-Y2Q4-T7-01 复盘
 

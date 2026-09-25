@@ -1,18 +1,15 @@
 ---
-id: ADR-0177
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-08
-related:
-  - STRAT-P79-strategic-roadmap.md
-  - 0176-p79-phase3-cross-repo-zero-residual.md
-  - ../../../../../ARCHITECTURE.md
-  - ../../../../../docs/project-registry.yaml
-  - ../../../../../protocols/port-registry.yaml
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0177
+related: 
+supersedes: []
 ---
+
 
 # ADR-0177: P79 Phase 4 — 文档刷新 (ARCHITECTURE.md + SSOT 契约)
 

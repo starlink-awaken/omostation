@@ -1,11 +1,14 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 name: cognitive-governance
 description: V2.0 Cognitive OS & Sovereign Governance Skill. Enables agents to deconstruct vague human intents into structured execution DAGs, bind regulatory policies, warm KV cache snapshots (0ms TTFT), mount vertical domain cartridges, and run adversarial shadow challenge with auto-patching before final delivery.
-
-last-reviewed: 2026-08-26
-type: ssot
-owner: governance-team
 ---
+
 
 # 🧠 Cognitive Governance & Adversarial QA Skill (ADR-0195 - ADR-0199)
 

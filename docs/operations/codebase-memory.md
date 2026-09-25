@@ -1,13 +1,15 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: runtime-team
-last-reviewed: 2026-07-31
+last-reviewed: 2026-09-25
+type: doc
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
 title: Codebase Memory — Agent 知识图谱用法
-type: doc
 ---
+
 # Codebase Memory — Agent 知识图谱用法
 
 > **状态**: active

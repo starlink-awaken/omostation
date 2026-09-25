@@ -1,17 +1,16 @@
 ---
+schema: md/v1
+status: archived
+lifecycle: spec
+owner: product-architecture
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0338
 title: External Resource Pack Proposal Observation Receipt
-status: archived
-type: decision
-owner: product-architecture
 date: 2026-08-03
-lifecycle: spec
-last-reviewed: 2026-08-03
-related:
-  - ../../../docs/WORKFLOW-MESH-IMPLEMENTATION.md
-  - ../../standards/external-connection-fabric.md
-  - 0337-external-pack-catalog-preview.md
+related: 
 ---
+
 
 # ADR-0338: External Resource Pack Proposal Observation Receipt
 

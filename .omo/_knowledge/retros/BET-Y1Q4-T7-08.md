@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-17
+last-reviewed: 2026-09-25
+type: retro
 bet_id: BET-Y1Q4-T7-08
 title: BET-Y1Q4-T7-08 复盘
-type: retro
 ---
+
 # BET-Y1Q4-T7-08 复盘
 
 ## Q1 实际耗时 vs appetite？超出比例？

@@ -1,16 +1,16 @@
 ---
+schema: md/v1
+status: proposed
+lifecycle: spec
+owner: architecture-governance
+last-reviewed: 2026-09-25
+type: decision
 id: ADR-0396
 title: 分层契约方向单源 — layer-contract.yaml 为权威, check-layer-call-direction.py 对齐
-status: proposed
-type: decision
-owner: architecture-governance
 date: 2026-08-07
-lifecycle: spec
-last-reviewed: 2026-08-07
-related:
-  - 0156-p76-phase2-call-direction.md
-  - 0217-workflow-hygiene-layer-check-and-evidence.md
+related: 
 ---
+
 
 # ADR-0396: 分层契约方向单源 — layer-contract.yaml 为权威
 

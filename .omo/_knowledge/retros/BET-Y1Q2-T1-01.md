@@ -1,15 +1,15 @@
 ---
-title: BET-Y1Q2-T1-01 复盘 — omo-debt + c2g 并入 omo (L3, 停审)
-type: retro
+schema: md/v1
 status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+title: BET-Y1Q2-T1-01 复盘 — omo-debt + c2g 并入 omo (L3, 停审)
 created: 2026-08-16
 context: >-
-  L3 不可逆归并, human_gate: true — 实施完成, 停在接受审。前置 ADR-0412 (T1-02 判定
-  model-driven 不在归并范围)。
-lifecycle: history
-last-reviewed: 2026-08-18
 ---
+
 
 # BET-Y1Q2-T1-01 复盘 (实施完毕, 待 human gate)
 

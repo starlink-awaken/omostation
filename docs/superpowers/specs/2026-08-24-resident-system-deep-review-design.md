@@ -1,18 +1,18 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
-
-bet_id: BET-Y1Q3-T6-14
 owner: human-principal
-last-reviewed: 2026-08-24
-
+last-reviewed: 2026-09-25
+type: ssot
+schema_version: specification/v1
+spec_version: 1.0.0
+bet_id: BET-Y1Q3-T6-14
 risk_level: L1
 human_gate: false
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # resident 常驻体系与治理接线深度复盘
 

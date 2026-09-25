@@ -1,10 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: plan
 owner: governance-team
-last-reviewed: 2026-08-18
+last-reviewed: 2026-09-25
 type: ephemeral
 ---
+
 # agora 系统性分析与战略规划 (2026-08-07)
 
 > 本方案系统审视 agora 从 P1 到 P8 的全部成果与验证暴露的短板,

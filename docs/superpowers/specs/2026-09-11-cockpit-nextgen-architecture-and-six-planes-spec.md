@@ -1,13 +1,16 @@
 ---
+schema: md/v1
+status: accepted
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Cockpit-UI Next-Gen Architecture & Six-Planes Convergence Spec
 bet_id: BET-Y1Q4-T8-24
-status: accepted
-lifecycle: contract
-owner: governance-team
-last-reviewed: 2026-09-11
 ---
+
 
 # Cockpit-UI Next-Gen Architecture & Six-Planes Convergence Spec
 

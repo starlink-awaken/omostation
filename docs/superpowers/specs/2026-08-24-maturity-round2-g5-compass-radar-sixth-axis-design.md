@@ -1,15 +1,17 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 created: 2026-08-24
-last-reviewed: 2026-08-24
 schema_version: specification/v1
 spec_version: 1.0.0
 bet_id: BET-Y1Q3-T10-05
-type: ssot
 last_updated: 2026-09-03
 ---
+
 
 # Maturity Round 2 — G5: compass_radar 集成第 6 可观测轴 (observable 8→9)
 

@@ -1,15 +1,17 @@
 ---
-schema_version: retrospective/v1
-type: retro
-title: BET-Y1Q4-HITL-01 Closeout Retro — HITL Proposal System
-bet_id: BET-Y1Q4-HITL-01
+schema: md/v1
 status: archived
 lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+schema_version: retrospective/v1
+title: BET-Y1Q4-HITL-01 Closeout Retro — HITL Proposal System
+bet_id: BET-Y1Q4-HITL-01
 created: 2026-09-04
-last-reviewed: 2026-09-04
 updated: 2026-09-04
 ---
+
 
 # BET-Y1Q4-HITL-01 Closeout Retro
 

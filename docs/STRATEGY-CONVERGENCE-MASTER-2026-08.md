@@ -1,54 +1,23 @@
 ---
-title: 织星 / eCOS v6 战略-治理-场景全域收敛总纲（草案）
+schema: md/v1
 status: active
-type: strategy-convergence-master
+lifecycle: entry
 owner: 夏明星 (人类主权) · Claude (协作起草)
+last-reviewed: 2026-09-25
+type: strategy-convergence-master
+title: 织星 / eCOS v6 战略-治理-场景全域收敛总纲（草案）
 created: 2026-08-15
 adopted: 2026-08-15
-lifecycle: entry
-grill_locks:
-  D1: plan-mainline-supersede-panorama
-  D2: plan-one-sentence-north-star
-  D3: deferred-not-in-this-bet
-  D4: archive-truth-research-pipeline
-  D5: deferred-not-in-this-bet
-  D6: register-BET-Y1Q1-T6-02-only
-  D7: stale-gen2-narrative-keep-x1-x4
-related:
-  - docs/STRATEGY-CONVERGENCE-LANDING-PACKAGE-2026-08.md
-  - .omo/_knowledge/decisions/0410-strategy-mainline-plan-supersedes-panorama.md
-supersedes-candidate:
-  - docs/STRATEGY-INDEX.md（导航职责）
-  - docs/STRATEGY-ALIGNMENT-AUDIT.md（归档，已脱钩）
-  - docs/STRATEGY-SCENARIO-AND-EXTERNAL-EXPANSION.md（并入本纲要 §6/§9）
-  - docs/plans/2026-08-07-workspace-legacy-strategy.md（归档，结论已被后续文档吸收）
-partially-supersedes:
-  - docs/STRATEGY-3YEAR-PANORAMA.md（v2.3，主方案地位待人类裁决，见 §11 D1）
-builds-on:
-  - docs/VISION-ROADMAP.md
-  - docs/STRATEGY-INDEX.md
-  - docs/STRATEGY-3YEAR-PANORAMA.md
-  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  - docs/ARCHITECTURE-STRATEGY-CLOSEOUT-2026-08.md
-  - docs/GOVERNANCE-META-ROADMAP.md
-  - docs/GOVERNANCE-EVOLUTION-ROADMAP.md
-  - docs/plans/3Y-BET-LEDGER.md
-  - docs/plans/AGENT-BRIEF.md
-  - docs/scene-cards/*.yaml（9）
-  - docs/journey-specs/*.yaml（11）
-  - .omo/_truth/scenarios/*.yaml
-  - .omo/_truth/goals/current.yaml
-  - .omo/_truth/registry/document-governance.yaml
-  - .omo/standards/doc-ssot-contract.md
-  - .omo/_knowledge/decisions/INDEX.md
-  - docs/architecture/digital-twin-blueprint-v1.md
-  - docs/architecture/blueprint-multi-agent-execution-control-v1.md
-  - 20260815织星多Agent架构与当前工作全量交接手册.md（最新执行快照，2026-08-15 20:08）
+grill_locks: 
+related: 
+supersedes-candidate: 
+partially-supersedes: 
+builds-on: 
 execution_ledger: docs/plans/3Y-BET-LEDGER.md（不变更，本纲要不覆盖其数据）
 does_not_change: 任何仓库文件（本文件在云端沙箱生成，未对 /Users/xiamingxing/Workspace 做任何写操作）
 review-state: draft-for-human-decision
-last-reviewed: 2026-08-18
 ---
+
 
 # 0. 这份文档是什么 / 不是什么 / 如何生效
 

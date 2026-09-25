@@ -1,11 +1,13 @@
 ---
-id: ADR-0059
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0059
 ---
+
 
 # ADR-0059: P65 cockpit 集成 + 告警聚合 (避免 alert storm)
 

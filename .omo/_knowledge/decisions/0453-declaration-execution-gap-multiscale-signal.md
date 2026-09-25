@@ -1,13 +1,14 @@
 ---
-id: ADR-0453
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: architecture-governance
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-25
 type: ssot
-related:
-  - ADR-0195
+id: ADR-0453
+related: 
 ---
+
 
 # ADR-0453 — 声明/执行鸿沟: 多尺度信号而非缺陷
 

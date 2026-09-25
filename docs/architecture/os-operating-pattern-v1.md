@@ -1,22 +1,18 @@
 ---
-title: 织星脊面运行模式 v1 — Spine-Face Operating Pattern
+schema: md/v1
 status: active
 lifecycle: contract
 owner: 夏明星
-created: 2026-08-25
-last-reviewed: 2026-09-12
+last-reviewed: 2026-09-25
 type: architecture-pattern
+title: 织星脊面运行模式 v1 — Spine-Face Operating Pattern
+created: 2026-08-25
 id: SFOP/v1
-does_not_supersede:
-  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  - ARCHITECTURE.md
-  - docs/plans/3y-bet-ledger.yaml
-related:
-  - docs/architecture/dao-fa-shu-qi.md
+does_not_supersede: 
+related: 
 note: >
-  运行时槽位语法。愿景只引用 Plan。硬检查：
-  python3 bin/gac/check-sfop-slots.py （gate id sfop-slots）。
 ---
+
 
 # 织星脊面运行模式 v1（SFOP）
 

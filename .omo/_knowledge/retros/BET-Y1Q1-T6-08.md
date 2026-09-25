@@ -1,15 +1,16 @@
 ---
-title: BET-Y1Q1-T6-08 retro — OPS-INFRA 四件核实
-type: retro
+schema: md/v1
 status: active
+lifecycle: history
 owner: governance-agent
+last-reviewed: 2026-09-25
+type: retro
+title: BET-Y1Q1-T6-08 retro — OPS-INFRA 四件核实
 created: 2026-08-17
 bet: BET-Y1Q1-T6-08
-related:
-  - /Users/xiamingxing/Downloads/AGENT-BRIEF-OPS-INFRA-GOVERNANCE.md
-lifecycle: history
-last-reviewed: 2026-08-18
+related: 
 ---
+
 
 # BET-Y1Q1-T6-08 复盘
 

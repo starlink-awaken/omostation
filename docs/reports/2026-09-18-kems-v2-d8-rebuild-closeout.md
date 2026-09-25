@@ -1,12 +1,14 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: runtime
+last-reviewed: 2026-09-25
+type: implementation-evidence
+schema_version: report/v1
 created: 2026-09-18
-last-reviewed: 2026-09-18
 ---
+
 
 # kems-v2 D-8 rebuild closeout
 

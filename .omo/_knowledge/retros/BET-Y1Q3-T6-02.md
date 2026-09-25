@@ -1,15 +1,15 @@
 ---
-title: BET-Y1Q3-T6-02 复盘 — cockpit Phase 4 清理债务
-type: retro
+schema: md/v1
 status: active
+lifecycle: history
 owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
+title: BET-Y1Q3-T6-02 复盘 — cockpit Phase 4 清理债务
 created: 2026-08-16
 context: >-
-  Phase 4 (cockpit_mcp 退役) 遗留三件: 残留 import / l4bridge 降级 / 指针同步。
-  老王亲推 (subagent 故障期), 落地于本 worktree。
-lifecycle: history
-last-reviewed: 2026-08-18
 ---
+
 
 # BET-Y1Q3-T6-02 复盘
 

@@ -1,13 +1,15 @@
 ---
+schema: md/v1
+status: ACCEPTED
+lifecycle: spec
+owner: engineering-team
+last-reviewed: 2026-09-25
+type: ssot
 id: ADR-0315
 title: Knowledge to Action 以引用、任务和行动回执组成 J2 垂直切片
-status: ACCEPTED
 date: 2026-08-02
-owner: engineering-team
-lifecycle: spec
-last-reviewed: 2026-08-02
-type: ssot
 ---
+
 
 # ADR-0315: Knowledge to Action 以引用、任务和行动回执组成 J2 垂直切片
 

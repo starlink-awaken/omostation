@@ -1,13 +1,14 @@
 ---
-title: "开发任务 Closeout 模板（5分钟）"
+schema: md/v1
 status: active
 lifecycle: entry
 owner: governance-team
-last-reviewed: 2026-08-15
-last_updated: 2026-09-03
+last-reviewed: 2026-09-25
 type: ssot
+title: "开发任务 Closeout 模板（5分钟）"
 last_updated: 2026-09-03
 ---
+
 
 # 开发任务 Closeout 模板（5分钟）
 

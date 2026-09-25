@@ -1,11 +1,15 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: ssot
 schema_version: standard/v1
 standard: honest-degrade-contract
 created: 2026-09-18
-last-reviewed: 2026-09-18
-owner: governance-team
-type: ssot
 ---
+
 
 # Honest-Degrade Contract
 

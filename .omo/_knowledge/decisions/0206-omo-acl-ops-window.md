@@ -1,11 +1,13 @@
 ---
-id: ADR-0206
+schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0206
 ---
+
 
 # ADR-0206 — `omo-acl-ops-window` 运维窗口脚本
 

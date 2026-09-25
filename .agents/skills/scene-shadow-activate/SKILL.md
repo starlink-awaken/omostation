@@ -1,16 +1,17 @@
 ---
+schema: md/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: skill
 name: scene-shadow-activate
 description: "场景影子激活 skill：将 scene card 从 draft/shadow 阶段推进到 assisted/supervised 生命周期"
 title: Scene Shadow Activate
-type: skill
-owner: governance-team
 version: "1.0"
-status: active
-triggers:
-  - new scene card
-  - scene promotion request
-  - Y1 scenario activation
+triggers: 
 ---
+
 
 # scene-shadow-activate — 场景卡 Shadow 模式激活
 

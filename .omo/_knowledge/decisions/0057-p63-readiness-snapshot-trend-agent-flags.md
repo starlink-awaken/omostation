@@ -1,11 +1,13 @@
 ---
-id: ADR-0057
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-06-23
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0057
 ---
+
 
 # ADR-0057: P63 readiness 历史快照 + trend 报告 + agent 增强 (--dry-run/--snapshot-only/--include-trend)
 

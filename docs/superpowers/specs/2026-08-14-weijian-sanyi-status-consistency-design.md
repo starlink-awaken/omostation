@@ -1,12 +1,14 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-version: 1.0.0
-last-reviewed: 2026-08-14
+last-reviewed: 2026-09-25
 type: ssot
+version: 1.0.0
 last_updated: 2026-09-03
 ---
+
 
 # 卫健委 CR08 三医态势一致性审计设计
 

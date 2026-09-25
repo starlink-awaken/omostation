@@ -1,9 +1,14 @@
 ---
+schema: md/v1
+status: draft
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-25
+type: retro
 id: BET-Y2Q3-T9-02
 date: 2026-09-25
-type: retro
-status: draft
 ---
+
 
 # BET-Y2Q3-T9-02 Receipt 持久化 + Dashboard 居民状态
 

@@ -1,11 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: '2026-09-24'
-title: BET-Y2Q2-T7-08 复盘
+last-reviewed: 2026-09-25
 type: retro
+title: BET-Y2Q2-T7-08 复盘
 ---
+
 # BET-Y2Q2-T7-08 复盘：道法术器架构拓扑大屏研发 (SystemTopologyWallboard)
 
 ## Q1 实际耗时 vs appetite？超出比例？

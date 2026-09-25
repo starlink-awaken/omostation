@@ -1,16 +1,15 @@
 ---
-id: ADR-0202
+schema: md/v1
 status: active
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - 0179-runtime-probe-false-positive-treatment.md
-  - 0195-architecture-convergence-isc2.md
-  - ../patterns/p73-truth-driven-engineering-pattern.md
-supersedes: []
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0202
+related: 
+supersedes: []
 ---
+
 
 # ADR-0202: 假绿灯防线三件套 — 非空守卫 / 迁移保内容 / 并发验证纪律
 

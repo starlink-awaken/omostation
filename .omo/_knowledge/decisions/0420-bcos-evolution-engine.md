@@ -1,20 +1,17 @@
 ---
-id: ADR-0420
-title: BCOS evolution engine 占位决策
+schema: md/v1
 status: archived
 lifecycle: spec
 owner: governance-team
-created: 2026-08-20
-last-reviewed: 2026-08-20
-deciders:
-  - 夏明星
-  - governance-agent
-related:
-  - ADR-0419-business-workflow-implementation-plan.md
-  - ADR-0421-bcos-2week-retro.md
-  - bin/bc-os/evolution_engine.py
+last-reviewed: 2026-09-25
 type: ssot
+id: ADR-0420
+title: BCOS evolution engine 占位决策
+created: 2026-08-20
+deciders: 
+related: 
 ---
+
 
 # ADR-0420: BCOS evolution engine 占位决策
 

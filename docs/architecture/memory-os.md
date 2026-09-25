@@ -1,20 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-05
-related:
-  - ../../.omo/_knowledge/decisions/0372-memory-os-control-plane.md
-  - ../../.omo/_truth/registry/memory-os.yaml
-  - ../../.omo/standards/memory-os-ops.md
-  - ./gbrain-three-stack-split.md
-  - ../operations/memory-os-adapter-audit.md
-  - ../operations/memory-os-epic-retro.md
-  - ../operations/memory-os-neo4j-local.md
-  - ../operations/knowledge-foundry-sop.md
-title: Memory OS（MOS）— 架构导航
+last-reviewed: 2026-09-25
 type: doc
+related: 
+title: Memory OS（MOS）— 架构导航
 ---
+
 
 # Memory OS（MOS）— 架构导航
 
