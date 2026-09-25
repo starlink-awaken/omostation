@@ -23,24 +23,63 @@ WS = Path(__file__).resolve().parents[2]
 MCP_DIR = WS / "projects/ecos/src/ecos/ssot/mof/m1/mcptool"
 BOS_STANDARD = WS / ".omo/standards/bos-uri-domain-standard.md"
 BOS_SERVICES = WS / "projects/agora/etc/bos-services.yaml"
+BOS_ROUTES_DIR = WS / "projects/ecos/src/ecos/ssot/mof/m1/bosroute"
+BOS_DOMAINS_DIR = WS / "projects/ecos/src/ecos/ssot/mof/m1/domain"
+BOS_PENDING = WS / ".omo/_truth/registry/bos-pending-registrations.yaml"
+
+# 测试/示例专用域，不在任何注册表但允许在测试代码里出现
+_EXEMPT_TEST_DOMAINS: frozenset[str] = frozenset({
+    "nonexistent", "example", "bad", "test",
+    "_workflow",   # ecos 内部 workflow engine 保留域（下划线开头，正则不匹配）
+})
 
 
 def _load_bos_domains_from_standard() -> set[str]:
-    """从 bos-uri-domain-standard.md 解析所有 bos://<domain>/ 条目，
-    并从 bos-services.yaml 运行时注册表补充已登记域。"""
+    """从多个权威来源聚合所有合法 BOS domain：
+    1. bos-uri-domain-standard.md — 规范文档
+    2. bos-services.yaml — 运行时注册表
+    3. BOSROUTE-*.yaml name 字段 — ecos 路由规范声明
+    4. DOMAIN-*.yaml — ecos 域节点声明（文件名即域名）
+    5. bos-pending-registrations.yaml — 已追踪待登记 URI
+    6. _EXEMPT_TEST_DOMAINS — 测试/示例豁免域
+    """
     domains: set[str] = set()
+    domains.update(_EXEMPT_TEST_DOMAINS)
+
     if BOS_STANDARD.exists():
         text = BOS_STANDARD.read_text(encoding="utf-8", errors="ignore")
-        # 匹配 `bos://<name>/` 或 ``bos://<name>``
-        for m in re.finditer(r"`bos://([a-z][a-z0-9_-]+)/`", text):
+        for m in re.finditer(r"`bos://([a-z][a-z0-9_-]+)/?`", text):
             domains.add(m.group(1))
 
-    # 补充运行时注册表中的 domain 字段
+    # 运行时注册表 — domain 字段 + URI 路径
     if BOS_SERVICES.exists():
         text = BOS_SERVICES.read_text(encoding="utf-8", errors="ignore")
-        # 匹配 `  domain: <name>` 和 URI 中的 domain
         for m in re.finditer(r"^\s+domain:\s+([a-z][a-z0-9_-]+)", text, re.MULTILINE):
             domains.add(m.group(1))
+        for m in re.finditer(r"bos://([a-z][a-z0-9_-]+)/", text):
+            domains.add(m.group(1))
+
+    # BOSROUTE yaml name 字段（`name: bos://<domain>/**`）
+    if BOS_ROUTES_DIR.exists():
+        for f in BOS_ROUTES_DIR.glob("BOSROUTE-*.yaml"):
+            try:
+                content = f.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                continue
+            for m in re.finditer(r"^name:\s+bos://([a-z][a-z0-9_-]+)", content, re.MULTILINE):
+                domains.add(m.group(1))
+
+    # DOMAIN-*.yaml 文件名（去掉 DOMAIN- 前缀和 .yaml 后缀即域名）
+    if BOS_DOMAINS_DIR.exists():
+        for f in BOS_DOMAINS_DIR.glob("DOMAIN-*.yaml"):
+            # 文件名格式: DOMAIN-<name>.yaml，name 须为小写
+            stem = f.stem[len("DOMAIN-"):]
+            if re.match(r"^[a-z][a-z0-9_-]*$", stem):
+                domains.add(stem)
+
+    # 已追踪的待登记 URI（bos-pending-registrations.yaml）
+    if BOS_PENDING.exists():
+        text = BOS_PENDING.read_text(encoding="utf-8", errors="ignore")
         for m in re.finditer(r"bos://([a-z][a-z0-9_-]+)/", text):
             domains.add(m.group(1))
 
@@ -192,7 +231,7 @@ def check_bos_uri_standard(workspace: Path):
                 domains_seen.add(m.group(1))
 
     for d in sorted(domains_seen):
-        if d not in VALID_DOMAINS:
+        if d not in VALID_DOMAINS and d not in _EXEMPT_TEST_DOMAINS:
             issues.append(f"BOS domain {d!r} not in standard ({sorted(VALID_DOMAINS)})")
 
     return issues, domains_seen
