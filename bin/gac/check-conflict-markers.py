@@ -34,30 +34,35 @@ CONFLICT_BASE = re.compile(r"^\|{7} ", re.MULTILINE)
 CONFLICT_SEP = re.compile(r"^={7}$", re.MULTILINE)
 
 
+def _run_text(args: list[str]) -> str:
+    """跑 git 并取文本输出。二进制 blob（如 staged .pyc/sqlite-wal）会导致
+    严格 UTF-8 解码抛 UnicodeDecodeError（2026-09-25 实证：hook 以 traceback
+    失败并阻断无关提交）——用 replace 容错，标记扫描不受影响。"""
+    out = subprocess.run(
+        args,
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        errors="replace",
+        check=True,
+    )
+    return out.stdout
+
+
 def _staged_files() -> list[str]:
     try:
-        out = subprocess.run(
-            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMRTUXB"],
-            cwd=WORKSPACE,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return [f for f in out.stdout.splitlines() if f.strip()]
+        return [
+            f
+            for f in _run_text(["git", "diff", "--cached", "--name-only", "--diff-filter=ACMRTUXB"]).splitlines()
+            if f.strip()
+        ]
     except subprocess.CalledProcessError:
         return []
 
 
 def _tracked_files() -> list[str]:
     try:
-        out = subprocess.run(
-            ["git", "ls-files"],
-            cwd=WORKSPACE,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return [f for f in out.stdout.splitlines() if f.strip()]
+        return [f for f in _run_text(["git", "ls-files"]).splitlines() if f.strip()]
     except subprocess.CalledProcessError:
         return []
 
@@ -65,14 +70,7 @@ def _tracked_files() -> list[str]:
 def _staged_blob(path: str) -> str | None:
     """读 index blob (staged 内容), 非磁盘 — pre-commit 场景必须读 index."""
     try:
-        out = subprocess.run(
-            ["git", "show", f":{path}"],
-            cwd=WORKSPACE,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return out.stdout
+        return _run_text(["git", "show", f":{path}"])
     except subprocess.CalledProcessError:
         return None
 
