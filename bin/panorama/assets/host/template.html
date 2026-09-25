@@ -3964,13 +3964,14 @@ function renderSwarmGalaxy(){
   const ls = D.live_sources || {};
   const gatePass = (D.gates || []).filter(g => gateChipClass(g.verdict || g.status) === 'good').length;
   const gateTotal = (D.gates || []).length;
+  // 节点 → 点击跳转的板块 + 详细 tooltip
   const nodes = [
-    { id: 'compute', label: 'AetherForge', sub: (cmp.status || 'NO_DATA') + (cmp.model_count != null ? (' · ' + cmp.model_count + ' 模型') : ''), tone: (cmp.status === 'healthy' || cmp.status === 'ok') ? 'good' : 'warn' },
-    { id: 'agents', label: 'Live Agents', sub: agents.length + ' 观测', tone: agents.length ? 'good' : 'warn' },
-    { id: 'bos', label: 'BOS Services', sub: cat.bos_services != null ? (cat.bos_services + '') : 'NO_DATA', tone: cat.bos_services ? 'good' : 'neutral' },
-    { id: 'caps', label: 'Capabilities', sub: cat.capabilities != null ? (cat.capabilities + '') : 'NO_DATA', tone: cat.capabilities ? 'good' : 'neutral' },
-    { id: 'gates', label: 'Live Gates', sub: gateTotal ? (gatePass + '/' + gateTotal + ' PASS') : 'NO_DATA', tone: gateTotal && gatePass === gateTotal ? 'good' : 'warn' },
-    { id: 'sources', label: 'Live Sources', sub: Object.keys(ls).length ? (Object.keys(ls).length + ' 源') : 'NO_DATA', tone: Object.keys(ls).length ? 'good' : 'warn' },
+    { id: 'compute', label: 'AetherForge', sub: (cmp.status || 'NO_DATA') + (cmp.model_count != null ? (' · ' + cmp.model_count + ' 模型') : ''), tone: (cmp.status === 'healthy' || cmp.status === 'ok') ? 'good' : 'warn', goto: '#logs', tip: '本地推理网关 · 显存 ' + (cmp.current_model_memory_gb != null ? cmp.current_model_memory_gb : '—') + '/' + (cmp.final_ceiling_gb != null ? cmp.final_ceiling_gb : '—') + ' GB · 点击查看运行态' },
+    { id: 'agents', label: 'Live Agents', sub: agents.length + ' 观测', tone: agents.length ? 'good' : 'warn', goto: '#swarm', tip: '当前观测到 ' + agents.length + ' 个 Agent · 点击查看协同详情' },
+    { id: 'bos', label: 'BOS Services', sub: cat.bos_services != null ? (cat.bos_services + '') : 'NO_DATA', tone: cat.bos_services ? 'good' : 'neutral', goto: '#capabilities', tip: 'BOS 服务注册 · ' + (cat.bos_services != null ? cat.bos_services : 'NO_DATA') + ' 项已登记 · 点击查看能力全景' },
+    { id: 'caps', label: 'Capabilities', sub: cat.capabilities != null ? (cat.capabilities + '') : 'NO_DATA', tone: cat.capabilities ? 'good' : 'neutral', goto: '#capabilities', tip: '能力注册 · ' + (cat.capabilities != null ? cat.capabilities : 'NO_DATA') + ' 项能力 · 点击查看' },
+    { id: 'gates', label: 'Live Gates', sub: gateTotal ? (gatePass + '/' + gateTotal + ' PASS') : 'NO_DATA', tone: gateTotal && gatePass === gateTotal ? 'good' : 'warn', goto: '#gov', tip: '实时门禁 · ' + gatePass + '/' + gateTotal + ' 通过 · 点击查看准入状态' },
+    { id: 'sources', label: 'Live Sources', sub: Object.keys(ls).length ? (Object.keys(ls).length + ' 源') : 'NO_DATA', tone: Object.keys(ls).length ? 'good' : 'warn', goto: '#health', tip: '数据源 · ' + Object.keys(ls).length + ' 个实时在线 · 点击查看健康诊断' },
   ];
   const sourceRows = Object.keys(ls).slice(0, 8).map(k => {
     const s = ls[k] || {};
@@ -3985,8 +3986,8 @@ function renderSwarmGalaxy(){
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px">
       ${nodes.map(n => `
-        <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;border-top:3px solid ${n.tone==='good'?'#2e7e79':(n.tone==='warn'?'#ac721a':'#9fb5c5')}">
-          <strong style="font-size:12px">${esc(n.label)}</strong>
+        <div onclick="go('${n.goto.slice(1)}')" title="${esc(n.tip)}" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;border-top:3px solid ${n.tone==='good'?'#2e7e79':(n.tone==='warn'?'#ac721a':'#9fb5c5')};cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--card-hover-shadow)';this.style.borderColor='var(--border-focus)'" onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--line)'">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start"><strong style="font-size:12px">${esc(n.label)}</strong><span style="font-size:9px;color:var(--blue)">→</span></div>
           <div class="small muted" style="margin-top:4px">${esc(n.sub)}</div>
         </div>`).join('')}
     </div>
