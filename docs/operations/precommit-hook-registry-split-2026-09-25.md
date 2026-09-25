@@ -11,8 +11,9 @@ scope: precommit-hook-registry-split
 
 # 两份 hook 注册表的分裂（report-only，不处置）
 
-> **状态更新（见 §6）**：本文写作时是 report-only；principal 选定选项 A 后，"把声明做诚实"
-> 这一半已落地，B / C 仍未处置。原标题与正文的测量结论不改（当时的真值记录）。
+> **状态更新（见 §6–§7）**：本文写作时是 report-only；principal 选定选项 A 后，"把声明做诚实"
+> 这一半已落地，B / C 仍未处置，但 §7 用 PR #4346 的 CI 实证把 B/C 的前置量（存量红的形状与条数）跑了出来。
+> 原标题与正文的测量结论不改（当时的真值记录）；§7.1 修正了 §2 判据漏掉的一个维度。
 
 > 结论先行：本仓有**两份互不重叠的 hook 注册表**。生效的那份是
 > `.omo/_truth/registry/hook-manifest.yaml` → `bin/gac/hook-runner.sh`；
@@ -121,7 +122,74 @@ A 用最小改动消灭下一次误判，且不会把存量债一次性引爆。
 | §关联 里"pre-commit 钩子"这条失效承诺改成并列两条：真强制面 `governance-check.yml` 跑 `lint doc-lifecycle`，与"声明表条目（非生效钩子）" | `.omo/DOC-LIFECYCLE.md` |
 | 把"verify 失败先分诊 → 预存则 `--status blocked` 如实入账 → 禁自签豁免"写成指令层规则 | `.agents/skills/bet-closeout-chain/SKILL.md` |
 
-**有意留在 A 之外**：§3 的历史审计 `.omo/_knowledge/audits/2026-06-28-debt-status-delta.md` 按其时点
-真值保留、不改写；§2 的 `verify-spaces` 断声明与无消费者条目属 B/C 范围，动它们之前要先量存量红；
+**有意留在 A 之外**：§3 的历史审计 `.omo/_knowledge/audits/2026-06-28-debt-status-delta.md` 按其时点真值
+保留、不改写；§2 的 `verify-spaces` 断声明与无消费者条目属 B/C 范围，动它们之前要先量存量红；
 B（真接框架）还额外撞"不擅自改 git config"这条约束。
+
+## 7. B/C 的前置量已经跑出来了（PR #4346 的 CI 实证，2026-09-25）
+
+本 PR 是 6 个文件、**零 `.py`、零 gitlink** 的文档/注释改动。CI 上 `Pre-commit hooks check`
+（即 `pre-commit run --all-files`）**8 条 hook 全红**，而整份日志里指到我这 6 个路径的行数为 **0**
+（逐路径 `grep -c` 各 0 命中）。也就是说这 8 条红是 §5 里"B 会立刻引爆存量债"的**实测样本**，
+不必等 B 落地就能看到存量红的形状。
+
+| 失败 hook | 根因 | 与本 diff 的关系 |
+|-----------|------|------------------|
+| `port-hardcode-check` / `cross-deps-check` / `future-annotations` / `verify-spaces` | entry 指向的脚本**在 main 上根本不存在**（见 §7.1） → `python3: can't open file …: No such file`，exit 2 | 无关 |
+| `health-ssot-consistency` | `system.yaml 缺 health_score_ref 字段`（`bin/check_health_ssot.py`） | 无关；main 现状同缺 |
+| `ruff` | 根仓 13 个 `bin/**.py` 的 E741 / F405 等存量（`check-pitfall-gat006.py`、`repo-health-metrics.py`、`session-handoff.py` …），且该 hook 带 autofix → CI 额外报 `files were modified by this hook` | 无关 |
+| `markdownlint` | 只命中根文档：`CLAUDE.md` 39、`AGENTS.md` 33、`README.md` 18、`ARCHITECTURE.md` 14、`LAYER-INDEX.md` 9 条 | 无关（`docs/**` 按 `files:` 作用域故意不 lint，见 §4） |
+
+### 7.1 断声明的实测计数比 §2 更多
+
+§2 用字符串搜索只抓到 1 条断链（`verify-spaces`）。CI 日志直接给出 **4 条**，且三条是 §2 判据下
+"有消费者"的：
+
+```
+$ for p in scripts/check-vault-paths.py scripts/check-cross-deps.py \
+           scripts/check-future-annotations.py bin/ssot/verify-spaces.py; do
+      git cat-file -e origin/main:$p 2>/dev/null && echo "EXISTS $p" || echo "MISSING $p"; done
+MISSING scripts/check-vault-paths.py        # entry of hook id: port-hardcode-check
+MISSING scripts/check-cross-deps.py         #                    cross-deps-check
+MISSING scripts/check-future-annotations.py #                    future-annotations
+MISSING bin/ssot/verify-spaces.py           #                    verify-spaces
+```
+
+这修正 §2 的一个口径偏差：**"有没有消费者"和"entry 目标存不存在"是两个独立维度**，
+前一节的探测串判据只看前者，所以漏了后者的 3 条。B/C 动手时两条都要量。
+
+### 7.2 ruff 红可在子模块 pin 上本地复现（判预存的通用手法）
+
+`Ruff lint (tracked projects)` 的 66 条 `F405` 全在 `projects/cockpit/src/cockpit/cli.py` 一个文件里。
+本分支的 cockpit gitlink 与 `origin/main` **完全相同**（`d33aab44c`），于是可以直接在 pin 上复算，
+不必猜：
+
+```
+$ git ls-tree origin/main projects/cockpit   # d33aab44c…
+$ git ls-tree HEAD        projects/cockpit   # d33aab44c…   ← 同
+$ cd projects/cockpit && ruff check --no-cache --select F src/cockpit/cli.py | tail -1
+Found 68 errors.        # 其中 F405 = 66，与 CI 报数一致（本地 ruff 0.16.8 / CI 0.16.9）
+```
+
+### 7.3 两条子模块门禁红来自 main 侧，本分支无法自证清白
+
+`test` 与 `gac-gate` 都停在 `submodule-reachability`：
+`projects/omlxc: 05d860569 unreachable: not contained in fetched origin branches`。
+真值方向与直觉相反 —— **坏的是 main，不是我**：
+
+| ref | `projects/omlxc` pin | 对 omlxc `main` 的位置关系 |
+|-----|----------------------|----------------------------|
+| `origin/main`（含 `faaf782e9` #4336） | `05d860569` | `diverged`（ahead 4 / behind 2）→ 只在旁支上，不在任何被 fetch 的分支里 |
+| 本分支 base `2f7ea9af8` 与本分支 tip | `676392753` | `behind`（ahead 0）→ 是 omlxc `main` 的祖先，可达 |
+
+判据命令：`gh api repos/starlink-awaken/omostation-omlxc/compare/main...<pin> -q .status`。
+
+因为 GitHub 的 `pull_request` CI 跑的是 **main 合进分支的 auto-merge 提交**，gitlink 这一侧
+main 变了、我未变 → 取 main 的坏 pin。所以**这条红在本分支上不可修**：要么 omlxc lane 的 owner
+把 main 重新 pin 回可达提交，要么我改 gitlink —— 后者是抢坑（`faaf782e9` 几分钟前刚落地），
+且会把单 lane 提交性质打破。
+
+**反向教训**：为"消陈旧 base 红"而 `git merge origin/main` 之前，先量两侧 gitlink 谁可达。
+本轮实测 merge 后 HEAD 反而从可达的 `676392753` 变成不可达的 `05d860569`，
+随即 `git reset --hard <origin tip>` 回退（目标 == 远端分支 tip、工作树仅该项脏、脏态本身是 merge 造成的）。
 
