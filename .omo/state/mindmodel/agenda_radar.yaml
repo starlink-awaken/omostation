@@ -1,9 +1,0 @@
-version: "1.0.0"
-priority_axis: impact-first
-risk_appetite: moderate
-time_horizon: weekly
-decision_heuristics:
-  - first-principles
-  - inversion
-  - second-order
-updated_at: "2026-09-14T00:00:00Z"

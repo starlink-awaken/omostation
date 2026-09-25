@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-audit
-generated_at: 2026-09-25T03:08:52Z
+generated_at: 2026-09-25T12:12:31Z
 status: candidate
 counts:
-  runs: 28
+  runs: 30
   failures: 0
-  total: 28
+  total: 30
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # observer-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-25T03:08:52Z
+- generated_at: 2026-09-25T12:12:31Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 28 成功运行 + 0 失败模式 = 28 草稿
+- sediment 覆盖: 30 成功运行 + 0 失败模式 = 30 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -49,6 +49,8 @@ failure_breakdown:
 - 20260925T015256Z-observer-audit-e045a202.md
 - 20260925T015637Z-observer-audit-f19d1f5f.md
 - 20260925T015638Z-observer-audit-70b7cbfe.md
+- 20260925T031626Z-observer-audit-a29265ec.md
+- 20260925T031627Z-observer-audit-aa7d930f.md
 
 ## 失败模式 (failures/)
 
