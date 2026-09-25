@@ -48,6 +48,11 @@ local_surfaces:
     class: client-metadata
     lifecycle: local
     reason: IntelliJ project metadata
+  .kilo:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: Kilo client metadata, caches, and local worktrees
   .omc:
     owner: governance-team
     class: runtime-state
