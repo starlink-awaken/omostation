@@ -1,0 +1,37 @@
+schema: agent-error/v1
+id: PITFALL-CRO-005
+category: cron
+severity: high
+title: 管道改 crontab 时 BSD sed 语法错误 + 无 pipefail → 空 crontab 装入，74 行全丢
+symptom: >-
+  `crontab -l | sed '62{/^$/d}' | crontab -` 后 `crontab -l | wc -l` = 0，全部
+  定时任务（含 resident 5 role、clash、wip-guard 等）静默消失；且因脚本里 `echo
+  REMOVED` 无条件执行，表面日志显示"删除成功"；更糟：下一步复查时用
+  `/usr/bin/crontab -l > snapshot` 覆盖了唯一的抢救快照，把 75 行原貌写成 0 行
+root_cause: >-
+  ① BSD/macOS sed 对 `62{/^$/d}`（右花括号前无分号/换行）报 "extra characters at
+  the end of d command" 并输出空流；② 管道最后一环 `crontab -` 读到空 stdin 却
+  正常成功退出，管道整体无 pipefail → 失败被吞；③ 中间命令无空输出守卫，`if`
+  分支里的 `echo` 无 `&&` 连接制造假成功；④ 恢复流程里"重读实时状态覆盖快照"，
+  把被破坏后的状态当成备份写回，销毁唯一证据
+solution: >-
+  用等价捕获快照恢复：此前以 capture 模式（crontab shim：`-l` 读真实、写入重定向
+  到文件）跑过规范 installer，`captured_crontab`（74 行、PYTHONPATH 无污染）即恢复
+  源 —— sed 换 worktree 前缀为 Workspace 后 `crontab /tmp/crontab_restore.txt`
+  直装文件（不走管道），断言 lines=74 / marker=1 / roles=5 / managed=11 /
+  0 worktree 路径；随后重跑 capture 得 `EQUIVALENCE_EXACT_FINAL`（归一化后 diff
+  为空），等下一个 */2 边界确认 5 role 触发、0 ImportError、watermark 推进
+prevention: >-
+  改 crontab 铁律：① 永远 `crontab <file>` 直装，禁止 `crontab -l | filter |
+  crontab -` 裸管道；确需管道时 `set -o pipefail` + 空输出守卫（`[ -s tmpfile ]
+  || abort`）；② 改 crontab 前先 `crontab -l > /tmp/crontab.bak.$(date +%s)` 冻结
+  带时间戳快照，且恢复/复查流程**只读不覆盖**快照（快照文件写后即只读）；③
+  macOS sed 单行地址-块命令需 `62{/^$/d;}`（尾分号）或独立一行 —— 优先用 awk
+  （`awk 'NR!=62 || NF'`）替代 sed 表达式；④ `echo DONE` 必须 `&&` 连在被验命令
+  后，防假成功；⑤ 验证命令与写入命令分离，先写临时文件验证行数/断言，再直装
+tags: [cron, crontab, data-loss, pipefail, bsd-sed, snapshot-hygiene, recovery]
+discovered_by: governance-agent
+discovered_at: '2026-09-25'
+times_encountered: 1
+last_confirmed_at: '2026-09-25'
+status: active
