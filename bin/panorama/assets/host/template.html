@@ -1331,6 +1331,13 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 .ssds-legend-strip {
   display: none;
 }
+/* P2-9 门禁/详情展开动画 — details[open] 内容淡入滑入 */
+@keyframes zxDetailsIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+details[open] > summary ~ *{animation:zxDetailsIn .22s cubic-bezier(.16,1,.3,1)}
+summary{list-style:none;position:relative}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'▸';position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--muted);transition:transform .2s cubic-bezier(.16,1,.3,1)}
+details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
 </style>
 </head>
 <body>
@@ -1742,6 +1749,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 </div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-GOV · 治理平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">恢复与准入</span></div><h1 id="title-gov">先让每个门可证明</h1><p class="lead">A1–A5 恢复基础环境；Core 与 Direct Local 建立后，继续 A8、A6/A7 和 A9。每项分别显示既有设计基线与最新观测。</p></div>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div class="note" id="freshness" style="margin:0;flex:1"></div><div id="gov-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="gate-pipeline-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载门禁流水线...</span></div></div><div id="gate-list" class="gates gap"></div>
+<div id="zx-harness-runs" class="viz-card gap"><div class="loading-center" style="padding:14px"><span class="loading-spinner"></span><span class="loading-text">加载 Harness 8 阶段运行...</span></div></div>
 </section>
 <section id="ledger" data-system="S4" class="section" aria-labelledby="title-ledger">
 <div class="section-breadcrumb">
@@ -3221,12 +3229,21 @@ $('download').onclick=function(){
       var blob = new Blob([csv], {type: 'text/csv'});
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.dashboard = 'agent-os-events-' + (D.generated_at || 'current').slice(0, 10) + '.csv';
+      a.download = 'agent-os-events-' + (D.generated_at || 'current').slice(0, 10) + '.csv';
       a.click();
       setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
       menu.remove();
     };
     $('#exp-close').onclick = function() { menu.remove(); };
+    // 点击菜单外部自动关闭 (P2-8)
+    setTimeout(function() {
+      document.addEventListener('click', function expOutside(e) {
+        if (menu.parentNode && !menu.contains(e.target) && e.target.id !== 'download') {
+          menu.remove();
+          document.removeEventListener('click', expOutside);
+        }
+      });
+    }, 0);
   } else {
     menu.remove();
   }
@@ -4005,6 +4022,37 @@ function renderSwarmGalaxy(){
       </div>
     </div>
   `;
+}
+
+/* === Harness 8 阶段 DAG 运行面板 === */
+function zxRenderHarnessRuns(){
+  const el=document.getElementById('zx-harness-runs'); if(!el) return;
+  fetch('/api/v1/harness/runs?limit=10',{cache:'no-store'}).then(r=>r.json()).then(function(d){
+    if(!el) return;
+    const runs=d.runs||[];
+    const stageNames=['admission','spec','grill','dispatch','execute','verify','audit','accept'];
+    const stageLabels={admission:'准入',spec:'规格',grill:'质询',dispatch:'派发',execute:'执行',verify:'验证',audit:'审计',accept:'验收'};
+    let h='<div class="viz-head"><h3>⚙️ Harness 8 阶段 DAG 运行</h3><span class="small">'+esc(String(d.total||0))+' 次 · 成功 '+esc(String(d.ok||0))+' · 失败 '+esc(String(d.failed||0))+'</span></div>';
+    if(!runs.length){ el.innerHTML=h+'<div class="empty" style="padding:12px">暂无 harness 运行记录</div>'; return; }
+    h+='<div style="display:grid;gap:8px;margin-top:8px">';
+    runs.slice(0,6).forEach(function(run){
+      const ok=run.ok;
+      const stages=run.stages||{};
+      const stageDots=stageNames.map(function(sn){
+        const s=stages[sn];
+        const c=s===true?'#10b981':s===false?'#ef4444':'#c3cfdb';
+        return '<span title="'+esc(stageLabels[sn]||sn)+': '+(s===true?'PASS':s===false?'FAIL':'未执行')+'" style="width:8px;height:8px;border-radius:50%;background:'+c+';display:inline-block"></span>';
+      }).join('');
+      h+='<details style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;background:var(--surface)"><summary style="display:flex;align-items:center;gap:8px;font-size:11.5px;cursor:pointer;list-style:none"><span style="color:'+(ok?'#10b981':'#ef4444')+'">●</span><span style="font-family:var(--mono);font-weight:600">'+esc(run.bet_id||'—')+'</span><span style="flex:1"></span><span style="display:flex;gap:3px">'+stageDots+'</span><span class="small muted">'+esc((run.started_at||'').slice(0,16).replace('T',' '))+'</span></summary>'+
+        '<div style="margin-top:8px;font-size:11px;color:var(--muted)">'+
+        '<div>run_id: <span class="mono" style="font-size:10px">'+esc(run.run_id||'—')+'</span></div>'+
+        '<div>profile: '+esc(run.profile||'—')+' · 结果: <span style="color:'+(ok?'#10b981':'#ef4444')+'">'+(ok?'COMPLETE':'FAILED')+'</span></div>'+
+        '<div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">'+stageNames.map(function(sn){const s=stages[sn];return '<span class="chip '+(s===true?'good':s===false?'bad':'neutral')+'" style="font-size:9px">'+esc(stageLabels[sn]||sn)+'</span>';}).join('')+'</div>'+
+        '</div></details>';
+    });
+    h+='</div>';
+    el.innerHTML=h;
+  }).catch(function(){if(el) el.innerHTML='<div class="note" style="font-size:11px;margin:0">Harness 运行记录拉取失败。</div>';});
 }
 
 /* === 居民执行环境活性条 (功能 2 前端) === */
@@ -4906,6 +4954,7 @@ safeRender(renderOrientAssetsMap, 'renderOrientAssetsMap failed');
 safeRender(renderOrientValuePipeline, 'renderOrientValuePipeline failed');
 safeRender(renderDynamicLoopsDashboard, 'renderDynamicLoopsDashboard failed');
 safeRender(renderGatePipeline, 'renderGatePipeline failed');
+safeRender(zxRenderHarnessRuns, 'zxRenderHarnessRuns failed');
 safeRender(renderLedgerVisuals, 'renderLedgerVisuals failed');
 safeRender(renderSwarmGalaxy, 'renderSwarmGalaxy failed');
 safeRender(zxRenderResidentBar, 'zxRenderResidentBar failed');
