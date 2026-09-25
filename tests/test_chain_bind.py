@@ -83,14 +83,45 @@ def test_evaluate_bind_halts_each_missing_link() -> None:
     assert ok.reasons == []
 
 
-def test_start_requires_bet_uses_shipped_predicate() -> None:
-    denied = BIND.start_requires_bet("governance-state-mutation", "")
+def _start_ledger(tmp_path: Path, bets: list[dict]) -> Path:
+    ledger = tmp_path / "docs/plans/3y-bet-ledger.yaml"
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    ledger.write_text(yaml.safe_dump({"bets": bets}, allow_unicode=True), encoding="utf-8")
+    return tmp_path
+
+
+def test_start_requires_bet_uses_shipped_predicate(tmp_path: Path) -> None:
+    governance = _start_ledger(
+        tmp_path / "governance", [{"id": "BET-Y2Q3-T10-202", "track": "T10-MATURITY", "status": "in_progress"}]
+    )
+    business_only = _start_ledger(
+        tmp_path / "business", [{"id": "BET-Y1Q1-T6-02", "track": "T6-OPS", "status": "done"}]
+    )
+
+    # Ordinary requirement iterations fail closed without a bet id, governance bet or not.
+    denied = BIND.start_requires_bet("project-code-change", "", workspace=governance)
     assert denied.ok is False
-    allowed = BIND.start_requires_bet("governance-state-mutation", "BET-Y1Q1-T6-02")
+    assert denied.reasons == ["missing_bet_id"]
+    allowed = BIND.start_requires_bet("project-code-change", "BET-Y1Q1-T6-02", workspace=governance)
     assert allowed.ok is True
-    exempt = BIND.start_requires_bet("observer-audit", "")
+
+    # Governance-evolve workflows carry their chain through the governance bet, so
+    # start excuses them under exactly the predicate closeout already uses (principal
+    # decision 2026-09-24; the alternative was a recorded gate waiver, and 70 waiver
+    # files on 2026-09-24 were that one line). Pinned both ways so it can drift
+    # neither stricter nor looser.
+    evolve = BIND.start_requires_bet("governance-state-mutation", "", workspace=governance)
+    assert evolve.ok is True
+    assert evolve.reasons == ["governance_evolve_exempt"]
+    unbacked = BIND.start_requires_bet("governance-state-mutation", "", workspace=business_only)
+    assert unbacked.ok is False
+    assert unbacked.reasons == ["missing_bet_id"]
+
+    exempt = BIND.start_requires_bet("observer-audit", "", workspace=business_only)
     assert exempt.ok is True
-    waived = BIND.start_requires_bet("governance-state-mutation", "", env={"AGCP_REQUIREMENT_ITERATION_GATE": "0"})
+    waived = BIND.start_requires_bet(
+        "project-code-change", "", env={"AGCP_REQUIREMENT_ITERATION_GATE": "0"}, workspace=business_only
+    )
     assert waived.ok is True
 
 
@@ -105,7 +136,7 @@ def test_chain_bind_check_cli_self_check_and_start_gate() -> None:
             str(CHECK_CLI),
             "start",
             "--workflow",
-            "governance-state-mutation",
+            "project-code-change",
         ]
     )
     assert missing.returncode != 0

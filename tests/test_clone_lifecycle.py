@@ -3064,6 +3064,50 @@ def test_retire_squash_successor_ordinary_retire_fails(tmp_path, monkeypatch, ca
     assert clone.exists()
 
 
+def _make_squash_lineage(tmp_path: Path) -> tuple[Path, str, str]:
+    """构造 base 快照落后于 squash parent 的 lineage。
+
+    返回 (repo, pr_base, squash_commit)：squash 的 parent 是 pr_base 的
+    子提交（base 分支前进），模拟 GitHub baseRefOid 创建时快照。
+    """
+    repo = tmp_path / "lineage"
+    repo.mkdir()
+    git(repo, "init", "-b", "main")
+    (repo / "a.txt").write_text("a\n")
+    git(repo, "add", "a.txt")
+    git(repo, "commit", "-m", "base")
+    pr_base = git(repo, "rev-parse", "HEAD").stdout.strip()
+    (repo / "b.txt").write_text("b\n")
+    git(repo, "add", "b.txt")
+    git(repo, "commit", "-m", "main advanced after PR creation")
+    (repo / "c.txt").write_text("c\n")
+    git(repo, "add", "c.txt")
+    git(repo, "commit", "-m", "squash merge")
+    squash = git(repo, "rev-parse", "HEAD").stdout.strip()
+    return repo, pr_base, squash
+
+
+def test_squash_topology_accepts_base_snapshot_behind_merge_parent(tmp_path):
+    """baseRefOid 是 PR 创建时快照；base 前进后 parent != pr_base → 血缘检查应通过。"""
+    repo, pr_base, squash = _make_squash_lineage(tmp_path)
+    ok, err = lc._verify_squash_topology(repo, squash, pr_base, squash)
+    assert ok, err
+
+
+def test_squash_topology_rejects_parent_without_base_lineage(tmp_path):
+    """parent 历史不含 pr_base（发散 base）→ 应拒绝。"""
+    repo, pr_base, squash = _make_squash_lineage(tmp_path)
+    git(repo, "checkout", "-b", "side", pr_base)
+    (repo / "side.txt").write_text("s\n")
+    git(repo, "add", "side.txt")
+    git(repo, "commit", "-m", "divergent base")
+    side_base = git(repo, "rev-parse", "HEAD").stdout.strip()
+    git(repo, "switch", "main")
+    ok, err = lc._verify_squash_topology(repo, squash, side_base, squash)
+    assert not ok
+    assert "does not contain" in (err or "")
+
+
 def _squash_pr_runner(head: str, merge_commit: str, pr_base: str,
                       calls: list[list[str]] | None = None, provenance_ok: bool = True):
     """Mock runner for squash-merged PR retirement test."""

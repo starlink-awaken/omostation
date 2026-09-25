@@ -22,6 +22,7 @@ import subprocess
 import threading
 import time
 from http.client import HTTPConnection, HTTPException
+import yaml as _yaml
 
 
 DEFAULT_PORT = 43191
@@ -271,6 +272,254 @@ def pending_publication_projection(pending):
 
 def actionable_publication_items(pending):
     return pending_publication_projection(pending)["items"]
+
+
+# ── 居民执行环境状态端点 ────────────────────────────────────
+def _resolve_workspace() -> Path:
+    """定位 Workspace 根 (含 .omo/_truth). 兼容 launchd / 直接运行 / 模块导入."""
+    base = Path(__file__).resolve().parent
+    for p in [base, *base.parents]:
+        if (p / ".omo" / "_truth").is_dir():
+            return p
+    env = os.environ.get("ZHIXING_WORKSPACE")
+    if env and (Path(env) / ".omo").is_dir():
+        return Path(env)
+    return Path.home() / "Workspace"
+
+
+_WORKSPACE = _resolve_workspace()
+_RESIDENT_DIR = _WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator"
+_HARNESS_RUNS_DIR = _WORKSPACE / ".omo" / "_delivery" / "harness-runs"
+_PID_FILE = _RESIDENT_DIR / "daemon.pid"
+_WATERMARKS_DIR = _RESIDENT_DIR / "watermarks"
+_HEARTBEAT_JSONL = _WORKSPACE / ".omo" / "state" / "resident-heartbeat.jsonl"
+_MONITOR_JSONL = _WORKSPACE / ".omo" / "state" / "resident-monitor.jsonl"
+_RECEIPTS_JSONL = _RESIDENT_DIR / "receipts.jsonl"
+_DAEMON_LOG = _RESIDENT_DIR / "daemon.log"
+# 5 个 resident role → 对应 watermark / projector 文件
+_ROLE_WATERMARKS = {
+    "sediment": "resident-sediment",
+    "decision": "resident-decision",
+    "execute": "resident-execute",
+    "monitor": "resident-monitor",
+    "heartbeat": "resident-heartbeat",
+}
+
+
+def _tail_jsonl(path: Path, max_lines: int = 60) -> list[dict]:
+    """读 JSONL 尾部 N 行 (轻量, 逐行 split 避免载入大文件)."""
+    if not path.is_file():
+        return []
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return []
+    out: list[dict] = []
+    for line in lines[-max_lines:]:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return out
+
+
+def _read_watermark(projector: str) -> dict | None:
+    p = _WATERMARKS_DIR / f"{projector}.json"
+    if not p.is_file():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _daemon_pid() -> tuple[int | None, bool]:
+    """检测居民守护进程. 优先 pidfile, 否则按进程名兜底."""
+    # 1) pidfile
+    if _PID_FILE.is_file():
+        try:
+            pid = int(_PID_FILE.read_text(encoding="utf-8").strip())
+            os.kill(pid, 0)
+            return pid, True
+        except (OSError, ValueError):
+            pass
+    # 2) 按进程名兜底 (pidfile 可能未生成或被清理)
+    try:
+        r = subprocess.run(["pgrep", "-f", "omo.cli resident daemon"],
+                           capture_output=True, text=True, timeout=5)
+        if r.returncode == 0 and r.stdout.strip():
+            pid = int(r.stdout.strip().split("\n")[0])
+            return pid, True
+    except (subprocess.TimeoutExpired, ValueError):
+        pass
+    return None, False
+
+
+_ROLE_SOURCE = {  # role → heartbeat.jsonl 中的 source 标记
+    "heartbeat": "resident-heartbeat",
+    "monitor": "resident-monitor",
+    "sediment": "resident-sediment",
+    "decision": "resident-decision",
+    "execute": "resident-execute",
+}
+
+
+def _last_source_ts(source: str, jsonl: Path) -> str | None:
+    """从 JSONL 尾部找 source 匹配的最后一条 ts."""
+    if not jsonl.is_file():
+        return None
+    last = None
+    try:
+        for line in jsonl.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line or source not in line:
+                continue
+            try:
+                e = json.loads(line)
+                if e.get("source") == source:
+                    last = e.get("occurred_at") or e.get("ts") or last
+            except json.JSONDecodeError:
+                continue
+    except OSError:
+        pass
+    return last
+
+
+def _role_activity(max_gap_seconds: float = 1800.0) -> list[dict]:
+    """每个 role 的最后活跃时间 + 状态 (基于 JSONL source 字段)."""
+    import datetime as _dt
+    now = _dt.datetime.now(_dt.timezone.utc)
+    items: list[dict] = []
+    for role in sorted(_ROLE_WATERMARKS):
+        src = _ROLE_SOURCE.get(role, f"resident-{role}")
+        # 优先 monitor/heartbeat 对应 jsonl, 其次从 daemon.log 兜底
+        jsonl = _MONITOR_JSONL if role == "monitor" else _HEARTBEAT_JSONL
+        last_ts = _last_source_ts(src, jsonl)
+        lag = None
+        status = "idle"
+        if last_ts:
+            try:
+                t = _dt.datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
+                lag = (now - t).total_seconds()
+                status = "active" if lag <= max_gap_seconds else "stale"
+            except (ValueError, TypeError):
+                status = "active"
+        items.append({"role": role, "status": status, "source": src,
+                      "last_seen": last_ts, "lag_seconds": int(lag) if lag is not None else None})
+    return items
+
+
+def build_harness_runs(limit: int = 20) -> dict:
+    """读 harness-runs 目录, 返回最近 N 次 8 阶段 DAG 运行摘要."""
+    runs = []
+    if _HARNESS_RUNS_DIR.is_dir():
+        files = sorted(_HARNESS_RUNS_DIR.glob("*.json"),
+                       key=lambda p: p.stat().st_mtime if p.exists() else 0,
+                       reverse=True)[:limit]
+        for f in files:
+            try:
+                d = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if not isinstance(d, dict) or "stages" not in d:
+                continue  # 跳过非 harness-run 格式
+            runs.append({
+                "run_id": d.get("run_id"),
+                "bet_id": d.get("bet_id"),
+                "profile": d.get("profile"),
+                "ok": d.get("ok"),
+                "started_at": d.get("started_at"),
+                "finished_at": d.get("finished_at"),
+                "stages": {k: v.get("ok") for k, v in (d.get("stages") or {}).items()
+                           if isinstance(v, dict)},
+            })
+    ok_n = sum(1 for r in runs if r.get("ok"))
+    return {"total": len(runs), "ok": ok_n, "failed": len(runs) - ok_n, "runs": runs}
+
+
+def build_resident_status() -> dict:
+    """聚合居民守护进程可观测状态, 供 /api/v1/resident 返回."""
+    import datetime as _dt
+    pid, alive = _daemon_pid()
+    hb_tail = _tail_jsonl(_HEARTBEAT_JSONL, 80)
+    mon_tail = _tail_jsonl(_MONITOR_JSONL, 40)
+    receipts_tail = _tail_jsonl(_RECEIPTS_JSONL, 30)
+    # daemon.log 末行
+    log_last = None
+    if _DAEMON_LOG.is_file():
+        try:
+            log_lines = _DAEMON_LOG.read_text(encoding="utf-8", errors="replace").splitlines()
+            log_last = [l for l in log_lines[-10:] if l.strip()][-3:]
+        except OSError:
+            pass
+    # heartbeat 统计: 总数 + 最后时间 + 按 event_type 计数
+    hb_total = 0
+    hb_last = None
+    hb_by_type: dict[str, int] = {}
+    if _HEARTBEAT_JSONL.is_file():
+        try:
+            with _HEARTBEAT_JSONL.open(encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    hb_total += 1
+                    try:
+                        e = json.loads(line)
+                        hb_last = e.get("occurred_at") or e.get("ts") or hb_last
+                        et = e.get("event_type") or e.get("source")
+                        if et:
+                            hb_by_type[et] = hb_by_type.get(et, 0) + 1
+                    except json.JSONDecodeError:
+                        continue
+        except OSError:
+            pass
+    # monitor: 24h 告警数
+    mon_alerts_24h = 0
+    mon_last = None
+    cutoff = _dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(hours=24)
+    for e in mon_tail[-200:]:
+        mon_last = e.get("occurred_at") or e.get("ts") or mon_last
+    # receipt 统计
+    r_total = r_ok = r_err = r_blocked = 0
+    r_last = None
+    if _RECEIPTS_JSONL.is_file():
+        try:
+            for line in _RECEIPTS_JSONL.read_text(encoding="utf-8", errors="replace").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                r_total += 1
+                try:
+                    e = json.loads(line)
+                    s = e.get("status")
+                    r_last = e.get("ts") or r_last
+                    if s == "ok":
+                        r_ok += 1
+                    elif s == "error":
+                        r_err += 1
+                    elif s == "blocked":
+                        r_blocked += 1
+                except json.JSONDecodeError:
+                    continue
+        except OSError:
+            pass
+    return {
+        "daemon_running": bool(alive),
+        "daemon_pid": pid,
+        "heartbeat": {"events_total": hb_total, "last_seen": hb_last,
+                     "by_event_type": hb_by_type},
+        "monitor": {"recent_tail_len": len(mon_tail), "last_seen": mon_last,
+                    "alerts_count_24h": mon_alerts_24h},
+        "receipts": {"total": r_total, "ok": r_ok, "error": r_err,
+                     "blocked": r_blocked, "last_ts": r_last},
+        "roles": _role_activity(),
+        "daemon_log_tail": log_last or [],
+        "recent_receipts": receipts_tail[-8:],
+    }
 
 
 def value_proof_readiness_payload(snapshot):
@@ -1017,6 +1266,25 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return False
         return True
 
+    def _handle_harness_runs(self):
+        """GET /api/v1/harness/runs — 最近 8 阶段 DAG 运行摘要."""
+        try:
+            params = parse_qs(urlsplit(self.path).query)
+            limit = int(params.get("limit", ["20"])[0])
+            limit = max(1, min(limit, 50))
+            self._json(200, build_harness_runs(limit))
+        except (ValueError, IndexError):
+            self._json(200, build_harness_runs())
+        except Exception as exc:  # noqa: BLE001
+            self._json(500, {"error": f"harness_runs_failed:{type(exc).__name__}"})
+
+    def _handle_resident_status(self):
+        """GET /api/v1/resident — 居民守护进程可观测状态."""
+        try:
+            self._json(200, build_resident_status())
+        except Exception as exc:  # noqa: BLE001
+            self._json(500, {"error": f"resident_status_failed:{type(exc).__name__}"})
+
     # ── 知行主权副驾：真实算力端点 ────────────────────────────
     def _handle_compute_live(self):
         """GET /api/v1/compute/live — omlxc 实时算力；失败降级到快照静态数据。"""
@@ -1762,6 +2030,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     "read_only": True,
                 })
             return
+        elif route.path == "/api/v1/harness/runs":
+            self._handle_harness_runs()
+        elif route.path == "/api/v1/resident":
+            self._handle_resident_status()
         elif route.path == "/api/v1/compute/live":
             self._handle_compute_live()
         elif route.path.startswith('/api/v1/'):

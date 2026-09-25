@@ -34046,6 +34046,394 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+- accepted_specifications:
+  - content_digest: sha256:043305f4d501d30f24d6a107d09139bbf1318e9d4e1e09c3dee5c26b83e329c3
+    decision_ref: decision://accepted/BET-Y2Q3-T9-01
+    spec_ref: repo://docs/superpowers/specs/2026-09-25-y2q3-t9-01-zhixing-dashboard-p2-compute-copilot.md
+    spec_version: 1.0.0
+  appetite: 3 days
+  circuit_breaker: 副驾推理调用异常时回退为只读状态展示；页面 JS 语法错误时由 launchd watchdog 重启并可用 zhixing-host-sync.py restore 回滚到仓库版本
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: NOT_STARTED
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
+  done_when:
+  - P2-5/11/7/3/10 五项体验优化落地且 26 个板块无 JS 语法错误（node --check 全过）
+  - drift check 漂移时生成结构化 host-drift-report.json 且 runbook 判读已更新
+  - 副驾展示 omlxc 实时算力并可 localhost 发起推理（白名单模型 + 限流）
+  - PR 合并且 zhixing-host-sync.py check exit 0
+  goal: 织星驾驶舱质量迭代——审计 P2 子集落地（数据源降级视觉提示 P2-5 / 价值回路五阶段可视化时间线 P2-11 / 搜索历史 P2-7 / 暗色 popover 对比度 P2-3 / know 与 learnings 差异化 P2-10），宿主漂移检测可观测化（结构化漂移报告 + runbook 判读），知行主权副驾从静态快照升级为 omlxc/AetherForge 真实算力接入（实时端点状态 + localhost 推理控制台），审计发现台账化登记防睡大觉。
+  human_gate: false
+  id: BET-Y2Q3-T9-01
+  non_goals:
+  - 不改动 omlxc daemon 与 AetherForge 服务本体配置
+  - 不对 cockpit-ui 本体做改造
+  - 副驾推理能力仅绑定 localhost，不做任何对外暴露
+  priority: P2
+  retro: required
+  risk_level: L2
+  status: in_progress
+  title: 织星驾驶舱 P2 体验迭代、漂移可观测与真实算力副驾
+  track: T9-OBSERV
+  underlying_workflow: project-code-change
+  verify:
+  - cmd: python3 bin/gac/zhixing-host-sync.py check
+    expect: exit 0
+  - cmd: curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:43191/
+    expect: "200"
+  window: Y2Q3
+  workflow: project-code-change
+  write_surfaces:
+  - bin/panorama/assets/host/
+  - bin/gac/zhixing-host-sync.py
+  - bin/ops/launchd/
+  - .omo/_knowledge/ops/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-25-y2q3-t9-01-zhixing-dashboard-p2-compute-copilot.md
+- id: BET-Y2Q4-SH-1
+  title: Self-Healing Drifts Foundation — L2.5 layer introduction
+  goal: 引入 L2.5 self-healing layer，自动守护 5 类 drift（dashboard/brief/ephemeral/runs/ritual）
+  status: candidate
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P0
+  appetite: 2 weeks
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  non_goals:
+  - 不改 SSOT 文档
+  - 不直接 push PR
+  - 不替 owner 决策
+  - 不取代 P74
+  done_when:
+  - drift-face-detector.py 覆盖 5 类 drift
+  - auto-pruner.py 自动修 4 类可自动修
+  - .omo/cron/registry.yaml 增加 daily+weekly 两条 cron
+  - make drift-face-clean 一键入口
+  - 实证修复
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/drift-face-detector.py --json
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/auto-pruner.py --dry-run --json
+    expect: exit 0
+  - cmd: make drift-face-clean && make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/drift-face-detector.py
+  - bin/ssot/auto-pruner.py
+  - .omo/cron/registry.yaml
+  - Makefile
+  - tests/bin/test_drift_face_detector.py
+  - tests/bin/test_auto_pruner.py
+  - docs/superpowers/specs/2026-09-25-self-healing-drifts-foundation.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-1.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-self-healing-drifts-foundation.md
+    spec_version: 1.0.0
+    content_digest: sha256:8aa9827aa5abfaba1e2b2c35e05b94c4e7e7625506b75174d266dd5fa316af7c
+    decision_ref: decision://accepted/BET-Y2Q4-SH-1
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q4-SH-2
+  title: Face-Wide Frontmatter Coverage — extend
+  goal: 把 frontmatter 覆盖率从单路径扩展到 7 类路径全扫，补齐 schema/status/lifecycle 等必填字段
+  status: candidate
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P0
+  appetite: 1 week
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  non_goals:
+  - 不改 SSOT 文档
+  - 不重命名字段
+  - 不扫 archived 路径
+  done_when:
+  - frontmatter-coverage.py 扫 7 类路径 × 6 字段
+  - 覆盖率 matrix 输出
+  - --apply 模式自动 patch
+  - 接入 gac-local-gate（< 80% WARN / < 50% FAIL）
+  - 实证：retros 缺字段从 342 降到 ≤ 30
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/frontmatter-coverage.py --face-wide --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/frontmatter-coverage.py
+  - tests/bin/test_frontmatter_coverage.py
+  - Makefile
+  - docs/superpowers/specs/2026-09-25-face-wide-frontmatter-coverage.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-2.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-face-wide-frontmatter-coverage.md
+    spec_version: 1.0.0
+    content_digest: sha256:bd7b0d858ba015a46ac260da2c8e3ba30ccf238fa5fe3da25a5f232af1931601
+    decision_ref: decision://accepted/BET-Y2Q4-SH-2
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q4-SH-3
+  title: Physical-Logical Mapping Audit — gitlink/launchd/asset consistency
+  goal: 系统化保证三类物理-逻辑映射一致（gitlink/launchd/OMO asset），自动检测 + 分类 + 报告
+  status: candidate
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 2 weeks
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  non_goals:
+  - 不直接 push gitlink bump PR
+  - 不替 owner 决策 OMO zombie
+  - 不重写 plist
+  done_when:
+  - physical-logical-audit.py 扫 3 类映射
+  - 每个发现给 drift 类型 + 严重性 + 修复路径
+  - 接入 gac-local-gate（WARN 不阻断）
+  - 接入 panorama health
+  - 实证：3 gitlink + 2 launchd + 5 OMO zombie 全识别
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/physical-logical-audit.py --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/physical-logical-audit.py
+  - tests/bin/test_physical_logical_audit.py
+  - Makefile
+  - docs/superpowers/specs/2026-09-25-physical-logical-mapping-audit.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-3.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-physical-logical-mapping-audit.md
+    spec_version: 1.0.0
+    content_digest: sha256:607eb5df5770081f0b16fe372be1fd01d7c65ac5e0ac81d52dc0dd2add9232e1
+    decision_ref: decision://accepted/BET-Y2Q4-SH-3
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q4-SH-4
+  title: Multi-Registry Alias Resolver — governance-checks / L0-constraints / hook-manifest
+    unification
+  goal: 建立跨注册表 alias map，统一 3 套 id 词汇，把 49% 零引用降到 ≤ 15%
+  status: candidate
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 1.5 weeks
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  non_goals:
+  - 不重写注册表
+  - 不替 owner 决定权威源
+  - 不强行覆盖零引用
+  done_when:
+  - registry-alias-map.yaml 含 3 套注册表等价映射
+  - check-rule-wiring-coverage.py --strict 使用 alias map
+  - 49% 零引用降到 ≤ 15%
+  - 接入 gac-local-gate（真零引用 ≥ 5% WARN）
+  verify:
+  - cmd: uv run --with pyyaml python bin/gac/check-rule-wiring-coverage.py --strict
+      --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/registry-alias-map.yaml
+  - bin/gac/check-rule-wiring-coverage.py
+  - tests/bin/test_registry_alias_resolver.py
+  - Makefile
+  - docs/superpowers/specs/2026-09-25-multi-registry-alias-resolver.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-4.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-multi-registry-alias-resolver.md
+    spec_version: 1.0.0
+    content_digest: sha256:c2fd2dae73078e315dcfab290af86814a5139843d6d5a823ad6d5ab056d4d3e2
+    decision_ref: decision://accepted/BET-Y2Q4-SH-4
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q3-T10-202
+  title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
+  track: T10-MATURITY
+  window: Y2Q3
+  status: done
+  done_at: 2026-09-25
+  priority: P1
+  risk_level: L2
+  goal: Make the incident→rule pipeline's human-review queue observable and make the
+    requirement-iteration start gate symmetric with its closeout counterpart, so that
+    overdue pitfall rule drafts can actually be reviewed and governance self-evolution
+    stops paying for one-time gate waivers.
+  non_goals:
+  - Do not lower ESCALATION_THRESHOLD or change the >=3 symptom-word criterion.
+  - Do not merge any rule draft into governance-checks.yaml; human review stays the
+    boundary between draft and registry.
+  - Do not tighten error-knowledge check's exit code, which is wired into the shared
+    local governance gate.
+  - Do not touch existing ledger bets, run-record ignore semantics, or PITFALL-GAT-004
+    evidence quality beyond reporting it.
+  done_when:
+  - .omo/_delivery/rule-drafts/ is tracked and git check-ignore reports no match for
+    the generated drafts, and committing them passes the pre-commit runtime-artifacts
+    check in both of its same-source implementations (check-runtime-artifacts.py and
+    ci-local-fast.py carry equal whitelist prefixes).
+  - The three threshold-passing pitfalls (PITFALL-GAT-004, PITFALL-GAT-005, PITFALL-COO-003)
+    have tool-generated CR-PITFALL-*.json drafts and stats reports zero overdue.
+  - feed_from_escapes cannot add an encounter to a pitfall of a different category.
+  - start_requires_bet exempts governance-evolve workflows under the same condition
+    closeout already uses, while every other workflow still requires a bet id.
+  circuit_breaker: Stop on any change that flips the shared local gate's exit code,
+    writes a rule draft by hand instead of through the promoter, invents a waiver or
+    BET identifier, or touches governance-checks.yaml registry rules.
+  human_gate: false
+  pasw_required: true
+  retro: required
+  value_indicator_policy: false
+  appetite: 0.5 day
+  workflow: governance-audit
+  underlying_workflow: governance-audit
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-24-rule-drafts-queue-durability-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:e9ec0a53ff66835c3c48ee71bbeb98a13b3348a2e448b7ce5acb01f125cfd65c
+    decision_ref: decision://accepted/BET-Y2Q3-T10-202
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f122c9794a981d824bc0d5977afb1db7fd099477
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
+          diff:
+            ref: receipt://docs/operations/workflow-waiver-2026-09-24-retro-findings.md
+            sha256: sha256:f18640fe2d7cd4631d7dd56c67729a50280f1a2051d283408cf8d4ba5e95a639
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
+          replay:
+            ref: receipt://docs/operations/workflow-waiver-2026-09-24-retro-findings.md
+            sha256: sha256:f18640fe2d7cd4631d7dd56c67729a50280f1a2051d283408cf8d4ba5e95a639
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+            sha256: sha256:f2c68b91d401fd18f50630f885e8e7b10b6949254d91013ac06c13d61336219d
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  verify:
+  - cmd: python3 -m pytest tests/unit/gac/test_error_knowledge_recall.py tests/unit/gac/test_error_knowledge_rule_drafts.py
+      tests/unit/gac/test_chain_bind_start_gate.py -q
+    expect: exit 0
+  - cmd: python3 bin/gac/error-knowledge.py stats --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/superpowers/specs/2026-09-24-rule-drafts-queue-durability-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .gitignore
+  - bin/gac/error-knowledge.py
+  - bin/plan/chain_bind.py
+  - bin/plan/chain-bind-check.py
+  - tests/test_chain_bind.py
+  - bin/agent-workflow.py
+  - tests/unit/gac/test_chain_bind_start_gate.py
+  - tests/unit/gac/test_error_knowledge_rule_drafts.py
+  - tests/unit/gac/test_error_knowledge_recall.py
+  - .omo/_delivery/rule-drafts/
+  - .omo/standards/incident-to-rule-pipeline.md
+  - docs/operations/workflow-waiver-2026-09-24-retro-findings.md
+  - .omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+  - bin/gac/check-runtime-artifacts.py
+  - bin/gac/ci-local-fast.py
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2

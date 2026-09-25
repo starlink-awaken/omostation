@@ -1331,6 +1331,13 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 .ssds-legend-strip {
   display: none;
 }
+/* P2-9 门禁/详情展开动画 — details[open] 内容淡入滑入 */
+@keyframes zxDetailsIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+details[open] > summary ~ *{animation:zxDetailsIn .22s cubic-bezier(.16,1,.3,1)}
+summary{list-style:none;position:relative}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'▸';position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--muted);transition:transform .2s cubic-bezier(.16,1,.3,1)}
+details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
 </style>
 </head>
 <body>
@@ -1742,6 +1749,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 </div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-GOV · 治理平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">恢复与准入</span></div><h1 id="title-gov">先让每个门可证明</h1><p class="lead">A1–A5 恢复基础环境；Core 与 Direct Local 建立后，继续 A8、A6/A7 和 A9。每项分别显示既有设计基线与最新观测。</p></div>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div class="note" id="freshness" style="margin:0;flex:1"></div><div id="gov-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="gate-pipeline-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载门禁流水线...</span></div></div><div id="gate-list" class="gates gap"></div>
+<div id="zx-harness-runs" class="viz-card gap"><div class="loading-center" style="padding:14px"><span class="loading-spinner"></span><span class="loading-text">加载 Harness 8 阶段运行...</span></div></div>
 </section>
 <section id="ledger" data-system="S4" class="section" aria-labelledby="title-ledger">
 <div class="section-breadcrumb">
@@ -1770,7 +1778,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <a href="#next">接下来做什么</a>
 </div>
 <div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">角色与智能体</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
-<div class="note" id="agent-coverage"></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
+<div class="note" id="agent-coverage"></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div><div id="zx-resident-bar" class="viz-card" style="margin-bottom:10px"><div class="loading-center" style="padding:14px"><span class="loading-spinner"></span><span class="loading-text">加载居民执行环境状态...</span></div></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
 <div class="card gap"><h2>当前核心协作实体与运行角色</h2><p class="small muted">包含人类主权决策者、常驻自治守护者、AetherForge 本地算力网关与受管工程智能体，数据实时保持最新。</p><div class="table-wrap"><table><thead><tr><th>协作实体 / Agent</th><th>当前职责</th><th>运行状态 / 算力与范围</th></tr></thead><tbody id="team-rows"></tbody></table></div></div>
 <div class="card gap"><h2>目标 Reference Cell</h2><div class="flow"><span>1 总控</span><i>→</i><span>1 执行</span><i>→</i><span>1 独立验证</span><i>↔</i><span>1 运行观察</span></div><p class="small muted">默认 Direct Local；每波最多两个不重叠 writer。Orca R0、Multica AS0、Ruflo RF0 各有准入门。Ruflo 原生 swarm 可以在获准 Cell 内协调，外层任务、权限与完成证据由 OMO 持有。</p><h3>token 不足或 Agent 掉线</h3><div class="flow"><span>drain / checkpoint</span><i>→</i><span>校验副作用</span><i>→</i><span>fence 旧 attempt</span><i>→</i><span>deputy 接续</span><i>→</i><span>独立重放</span></div><p class="small">结果未知时先 reconcile。第二次 failover 进入 HOLD 与根因分析。接续必须保留未完成义务、最后安全版本、权限边界与证据。</p></div>
 <div class="card gap"><h2>当前可见 Agent / Runtime</h2><p class="small muted">名单来自 Multica inventory 和 OMO Workflow；尚未统一 assignment identity。Ruflo 仅采集版本，运行清单待安全只读适配。</p><div class="table-wrap"><table><thead><tr><th>来源 / Agent</th><th>状态</th><th>模型 / 角色 / 运行关联</th></tr></thead><tbody id="live-agent-rows"></tbody></table></div></div><h2 class="gap">持久角色合同 · 待实施</h2><div id="roles" class="role-grid"></div>
@@ -3221,12 +3229,21 @@ $('download').onclick=function(){
       var blob = new Blob([csv], {type: 'text/csv'});
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.dashboard = 'agent-os-events-' + (D.generated_at || 'current').slice(0, 10) + '.csv';
+      a.download = 'agent-os-events-' + (D.generated_at || 'current').slice(0, 10) + '.csv';
       a.click();
       setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
       menu.remove();
     };
     $('#exp-close').onclick = function() { menu.remove(); };
+    // 点击菜单外部自动关闭 (P2-8)
+    setTimeout(function() {
+      document.addEventListener('click', function expOutside(e) {
+        if (menu.parentNode && !menu.contains(e.target) && e.target.id !== 'download') {
+          menu.remove();
+          document.removeEventListener('click', expOutside);
+        }
+      });
+    }, 0);
   } else {
     menu.remove();
   }
@@ -3964,13 +3981,14 @@ function renderSwarmGalaxy(){
   const ls = D.live_sources || {};
   const gatePass = (D.gates || []).filter(g => gateChipClass(g.verdict || g.status) === 'good').length;
   const gateTotal = (D.gates || []).length;
+  // 节点 → 点击跳转的板块 + 详细 tooltip
   const nodes = [
-    { id: 'compute', label: 'AetherForge', sub: (cmp.status || 'NO_DATA') + (cmp.model_count != null ? (' · ' + cmp.model_count + ' 模型') : ''), tone: (cmp.status === 'healthy' || cmp.status === 'ok') ? 'good' : 'warn' },
-    { id: 'agents', label: 'Live Agents', sub: agents.length + ' 观测', tone: agents.length ? 'good' : 'warn' },
-    { id: 'bos', label: 'BOS Services', sub: cat.bos_services != null ? (cat.bos_services + '') : 'NO_DATA', tone: cat.bos_services ? 'good' : 'neutral' },
-    { id: 'caps', label: 'Capabilities', sub: cat.capabilities != null ? (cat.capabilities + '') : 'NO_DATA', tone: cat.capabilities ? 'good' : 'neutral' },
-    { id: 'gates', label: 'Live Gates', sub: gateTotal ? (gatePass + '/' + gateTotal + ' PASS') : 'NO_DATA', tone: gateTotal && gatePass === gateTotal ? 'good' : 'warn' },
-    { id: 'sources', label: 'Live Sources', sub: Object.keys(ls).length ? (Object.keys(ls).length + ' 源') : 'NO_DATA', tone: Object.keys(ls).length ? 'good' : 'warn' },
+    { id: 'compute', label: 'AetherForge', sub: (cmp.status || 'NO_DATA') + (cmp.model_count != null ? (' · ' + cmp.model_count + ' 模型') : ''), tone: (cmp.status === 'healthy' || cmp.status === 'ok') ? 'good' : 'warn', goto: '#logs', tip: '本地推理网关 · 显存 ' + (cmp.current_model_memory_gb != null ? cmp.current_model_memory_gb : '—') + '/' + (cmp.final_ceiling_gb != null ? cmp.final_ceiling_gb : '—') + ' GB · 点击查看运行态' },
+    { id: 'agents', label: 'Live Agents', sub: agents.length + ' 观测', tone: agents.length ? 'good' : 'warn', goto: '#swarm', tip: '当前观测到 ' + agents.length + ' 个 Agent · 点击查看协同详情' },
+    { id: 'bos', label: 'BOS Services', sub: cat.bos_services != null ? (cat.bos_services + '') : 'NO_DATA', tone: cat.bos_services ? 'good' : 'neutral', goto: '#capabilities', tip: 'BOS 服务注册 · ' + (cat.bos_services != null ? cat.bos_services : 'NO_DATA') + ' 项已登记 · 点击查看能力全景' },
+    { id: 'caps', label: 'Capabilities', sub: cat.capabilities != null ? (cat.capabilities + '') : 'NO_DATA', tone: cat.capabilities ? 'good' : 'neutral', goto: '#capabilities', tip: '能力注册 · ' + (cat.capabilities != null ? cat.capabilities : 'NO_DATA') + ' 项能力 · 点击查看' },
+    { id: 'gates', label: 'Live Gates', sub: gateTotal ? (gatePass + '/' + gateTotal + ' PASS') : 'NO_DATA', tone: gateTotal && gatePass === gateTotal ? 'good' : 'warn', goto: '#gov', tip: '实时门禁 · ' + gatePass + '/' + gateTotal + ' 通过 · 点击查看准入状态' },
+    { id: 'sources', label: 'Live Sources', sub: Object.keys(ls).length ? (Object.keys(ls).length + ' 源') : 'NO_DATA', tone: Object.keys(ls).length ? 'good' : 'warn', goto: '#health', tip: '数据源 · ' + Object.keys(ls).length + ' 个实时在线 · 点击查看健康诊断' },
   ];
   const sourceRows = Object.keys(ls).slice(0, 8).map(k => {
     const s = ls[k] || {};
@@ -3985,8 +4003,8 @@ function renderSwarmGalaxy(){
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px">
       ${nodes.map(n => `
-        <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;border-top:3px solid ${n.tone==='good'?'#2e7e79':(n.tone==='warn'?'#ac721a':'#9fb5c5')}">
-          <strong style="font-size:12px">${esc(n.label)}</strong>
+        <div onclick="go('${n.goto.slice(1)}')" title="${esc(n.tip)}" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;border-top:3px solid ${n.tone==='good'?'#2e7e79':(n.tone==='warn'?'#ac721a':'#9fb5c5')};cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--card-hover-shadow)';this.style.borderColor='var(--border-focus)'" onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--line)'">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start"><strong style="font-size:12px">${esc(n.label)}</strong><span style="font-size:9px;color:var(--blue)">→</span></div>
           <div class="small muted" style="margin-top:4px">${esc(n.sub)}</div>
         </div>`).join('')}
     </div>
@@ -4004,6 +4022,72 @@ function renderSwarmGalaxy(){
       </div>
     </div>
   `;
+}
+
+/* === Harness 8 阶段 DAG 运行面板 === */
+function zxRenderHarnessRuns(){
+  const el=document.getElementById('zx-harness-runs'); if(!el) return;
+  fetch('/api/v1/harness/runs?limit=10',{cache:'no-store'}).then(r=>r.json()).then(function(d){
+    if(!el) return;
+    const runs=d.runs||[];
+    const stageNames=['admission','spec','grill','dispatch','execute','verify','audit','accept'];
+    const stageLabels={admission:'准入',spec:'规格',grill:'质询',dispatch:'派发',execute:'执行',verify:'验证',audit:'审计',accept:'验收'};
+    let h='<div class="viz-head"><h3>⚙️ Harness 8 阶段 DAG 运行</h3><span class="small">'+esc(String(d.total||0))+' 次 · 成功 '+esc(String(d.ok||0))+' · 失败 '+esc(String(d.failed||0))+'</span></div>';
+    if(!runs.length){ el.innerHTML=h+'<div class="empty" style="padding:12px">暂无 harness 运行记录</div>'; return; }
+    h+='<div style="display:grid;gap:8px;margin-top:8px">';
+    runs.slice(0,6).forEach(function(run){
+      const ok=run.ok;
+      const stages=run.stages||{};
+      const stageDots=stageNames.map(function(sn){
+        const s=stages[sn];
+        const c=s===true?'#10b981':s===false?'#ef4444':'#c3cfdb';
+        return '<span title="'+esc(stageLabels[sn]||sn)+': '+(s===true?'PASS':s===false?'FAIL':'未执行')+'" style="width:8px;height:8px;border-radius:50%;background:'+c+';display:inline-block"></span>';
+      }).join('');
+      h+='<details style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;background:var(--surface)"><summary style="display:flex;align-items:center;gap:8px;font-size:11.5px;cursor:pointer;list-style:none"><span style="color:'+(ok?'#10b981':'#ef4444')+'">●</span><span style="font-family:var(--mono);font-weight:600">'+esc(run.bet_id||'—')+'</span><span style="flex:1"></span><span style="display:flex;gap:3px">'+stageDots+'</span><span class="small muted">'+esc((run.started_at||'').slice(0,16).replace('T',' '))+'</span></summary>'+
+        '<div style="margin-top:8px;font-size:11px;color:var(--muted)">'+
+        '<div>run_id: <span class="mono" style="font-size:10px">'+esc(run.run_id||'—')+'</span></div>'+
+        '<div>profile: '+esc(run.profile||'—')+' · 结果: <span style="color:'+(ok?'#10b981':'#ef4444')+'">'+(ok?'COMPLETE':'FAILED')+'</span></div>'+
+        '<div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">'+stageNames.map(function(sn){const s=stages[sn];return '<span class="chip '+(s===true?'good':s===false?'bad':'neutral')+'" style="font-size:9px">'+esc(stageLabels[sn]||sn)+'</span>';}).join('')+'</div>'+
+        '</div></details>';
+    });
+    h+='</div>';
+    el.innerHTML=h;
+  }).catch(function(){if(el) el.innerHTML='<div class="note" style="font-size:11px;margin:0">Harness 运行记录拉取失败。</div>';});
+}
+
+/* === 居民执行环境活性条 (功能 2 前端) === */
+function zxRenderResidentBar(){
+  const el=document.getElementById('zx-resident-bar'); if(!el) return;
+  el.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:12px"><span class="loading-spinner"></span><span class="small muted">正在拉取 /api/v1/resident …</span></div>';
+  fetch('/api/v1/resident',{cache:'no-store'}).then(r=>r.json()).then(function(d){
+    if(!el) return;
+    const roles=d.roles||[];
+    const tone={active:'#10b981',stale:'#f59e0b',idle:'#94a3b8',unknown:'#94a3b8'};
+    const label={active:'活跃',stale:'滞后',idle:'待命',unknown:'未知'};
+    const roleDots=roles.map(function(r){
+      const c=tone[r.status]||'#94a3b8';
+      const lag=(r.lag_seconds!=null)?(' · '+r.lag_seconds+'s'):'';
+      return '<div style="display:flex;align-items:center;gap:5px;font-size:11px" title="'+esc(r.status)+' · '+esc(r.last_seen||'无')+'"><span style="width:9px;height:9px;border-radius:50%;background:'+c+';display:inline-block"></span><span>'+esc(r.role)+'</span><span style="color:var(--muted)">'+(label[r.status]||r.status)+lag+'</span></div>';
+    }).join('');
+    const recv=d.receipts||{};
+    const daemonStr=(d.daemon_running?'<span class="chip good" style="font-size:10px">运行中 PID '+esc(String(d.daemon_pid||'?'))+'</span>':'<span class="chip bad" style="font-size:10px">未运行</span>');
+    var recentHtml='';
+    (d.recent_receipts||[]).slice(-5).reverse().forEach(function(r){
+      var c=(r.status==='ok')?'#10b981':(r.status==='error'||r.status==='blocked')?'#ef4444':'#94a3b8';
+      var line='<div style="display:flex;gap:6px;font-size:10px;padding:2px 0"><span style="color:'+c+'">●</span><span style="font-family:var(--mono);color:var(--muted)">'+esc(r.ts||'')+'</span><span style="font-family:var(--mono)">'+esc(r.action||r.handler||'')+'</span><span style="color:'+c+'">'+esc(r.status)+'</span>';
+      if(r.err){line=line+'<span style="color:#92400e"> '+esc(r.err)+'</span>';}
+      recentHtml=line+'</div>';
+    });
+    if(!recentHtml){recentHtml='<div class="small muted" style="padding:4px 0">暂无 receipt</div>';}
+    el.innerHTML='<div style="padding:10px 12px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">'+
+      '<div><h3 style="margin:0;font-size:13px">🏠 居民执行环境 (Resident Orchestrator)</h3>'+
+      '<div class="small muted" style="margin-top:2px">守护进程 '+daemonStr+' · 事件 '+esc(String((d.heartbeat&&d.heartbeat.events_total)||0))+' · 收据 '+esc(String(recv.total||0))+' (ok '+esc(String(recv.ok||0))+')</div></div>'+
+      '<button onclick="zxRenderResidentBar()" style="background:none;border:1px solid var(--border-subtle);border-radius:5px;font-size:10px;padding:3px 8px;cursor:pointer">刷新</button></div>'+
+      '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px">'+roleDots+'</div>'+
+      '<details><summary style="font-size:11px;cursor:pointer;color:var(--muted)">最近 5 条 receipt</summary><div style="margin-top:6px;padding:6px;background:var(--surface-subtle);border-radius:6px;max-height:160px;overflow-y:auto">'+recent+'</div></details>'+
+      '</div>';
+  }).catch(function(){if(el) el.innerHTML='<div class="note" style="font-size:11px;margin:0">居民状态拉取失败。</div>';});
 }
 
 function renderKnowledgeStats(){
@@ -4870,8 +4954,10 @@ safeRender(renderOrientAssetsMap, 'renderOrientAssetsMap failed');
 safeRender(renderOrientValuePipeline, 'renderOrientValuePipeline failed');
 safeRender(renderDynamicLoopsDashboard, 'renderDynamicLoopsDashboard failed');
 safeRender(renderGatePipeline, 'renderGatePipeline failed');
+safeRender(zxRenderHarnessRuns, 'zxRenderHarnessRuns failed');
 safeRender(renderLedgerVisuals, 'renderLedgerVisuals failed');
 safeRender(renderSwarmGalaxy, 'renderSwarmGalaxy failed');
+safeRender(zxRenderResidentBar, 'zxRenderResidentBar failed');
 safeRender(renderAgentCapabilityMesh, 'renderAgentCapabilityMesh failed');
 safeRender(renderKnowledgeStats, 'renderKnowledgeStats failed');
 safeRender(renderGuidanceHub, 'renderGuidanceHub failed');
@@ -6124,7 +6210,7 @@ safeRender(populateHealth, 'populateHealth failed');
   function zxLoadSearchHistory(){
     try{ return JSON.parse(localStorage.getItem('zx.search.history')||'[]'); }catch(_){ return []; }
   }
-  function zxSaveSearch(term){
+  function zxSaveSearchHistory(term){
     if(!term) return;
     var h=zxLoadSearchHistory().filter(function(t){return t!==term;});
     h.unshift(term); h=h.slice(0,8);
@@ -6134,7 +6220,7 @@ safeRender(populateHealth, 'populateHealth failed');
     var h=zxLoadSearchHistory();
     if(!h.length){ searchResults.innerHTML = emptyState('🔍', '输入关键词搜索', '搜索板块、Agent、门禁、事件'); return; }
     searchResults.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:4px 8px 6px;display:flex;justify-content:space-between"><span>最近搜索</span><button id="zx-clear-sh" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:10px">清空</button></div>'+
-      h.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="searchInput.value='+JSON.stringify(t)+';zxSaveSearch('+JSON.stringify(t)+');performSearch('+JSON.stringify(t)+')"><span style="font-size:11px;color:var(--muted)">↺</span><span style="flex:1;font-size:12px">'+esc(t)+'</span></div>'; }).join('');
+      h.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="searchInput.value='+JSON.stringify(t)+';zxSaveSearchHistory('+JSON.stringify(t)+');performSearch('+JSON.stringify(t)+')"><span style="font-size:11px;color:var(--muted)">↺</span><span style="flex:1;font-size:12px">'+esc(t)+'</span></div>'; }).join('');
     var btn=document.getElementById('zx-clear-sh');
     if(btn) btn.onclick=function(){ try{localStorage.removeItem('zx.search.history');}catch(_){} zxRenderSearchHistory(); };
   }
@@ -6189,7 +6275,7 @@ safeRender(populateHealth, 'populateHealth failed');
   }
   function runSearch(q){
     if(!q) { zxRenderSearchHistory(); return; }
-    zxSaveSearch(q.trim());
+    zxSaveSearchHistory(q.trim());
     performSearch(q);
   }
   function closeSearch() { searchOverlay.style.display = 'none'; }

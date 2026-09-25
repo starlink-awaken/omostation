@@ -97,6 +97,39 @@ jobs:
     sfop_slot: S
     reconciliation_note: ops check-signals 每日巡检 (每日 06:20, BET-Y1Q4-T16)，已在 crontab -l 运行，补齐登记。
 
+  # SH-1 daily drift sweep (BET-Y2Q4-SH-1): drift-face-detector daily + auto-pruner
+  # 仅 ephemeral + runs 两类自动修, ritual/dashboard 仍 owner 决策.
+  - name: drift-face-daily
+    schedule: "50 4 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/drift-face-detector.py --json >> runtime/cron/drift-face-detector.log 2>&1'
+    planes: [crontab]
+    reality: pending
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: BET-Y2Q4-SH-1 self-healing layer — daily drift face scan; runs detect only, no fix.
+
+  - name: drift-prune-daily
+    schedule: "55 4 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/auto-pruner.py --apply --class ephemeral --class runs >> runtime/cron/auto-pruner.log 2>&1'
+    planes: [crontab]
+    reality: pending
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: BET-Y2Q4-SH-1 auto-pruner — daily prune ephemeral + close stale runs; ritual/dashboard 由 owner 处理.
+
+  # SH-1 weekly face-wide hygiene
+  - name: drift-face-weekly
+    schedule: "0 7 * * 1"
+    command: 'cd "$HOME/Workspace" && python3 bin/ssot/drift-face-detector.py --json && python3 bin/ssot/auto-pruner.py --apply >> runtime/cron/drift-face-weekly.log 2>&1'
+    planes: [crontab]
+    reality: pending
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: BET-Y2Q4-SH-1 weekly face-wide drift sweep (周一 07:00, 与 weekly-hygiene-patrol 错开).
+
   # l4-harness-6h — D7 已决议 (2026-09-11, 方案 A: dao_layer 重归类 dao→fa,
   # ecos#74): 本体矛盾消除后正式登记, CR-DFSQ-01 不再触发 (fa 允许上 cron 账本)。
   - name: l4-harness-6h
@@ -682,6 +715,27 @@ jobs:
       导致 A4 orphan_count=1。脚本为 ~/.local/bin 外部工具, 每 30min 同步 Ollama/LMStudio/OMLXC
       本地模型到 mimo 配置; 登记进本账本使 scheduler-compile --check 归零。
       '
+
+  - name: mcptool-drift-report-daily
+    schedule: '45 5 * * *'
+    command: 'cd "$HOME/Workspace" ; if [ "$(git symbolic-ref -q --short HEAD)" = main ] ; then PATH=/opt/homebrew/bin:/usr/bin:/bin python3 bin/ssot/check-mcptool-impl-drift.py --report >> runtime/cron/mcptool-drift-report.log 2>&1 ; git add .omo/_truth/registry/mcptool-drift-report.yaml 2>/dev/null ; git diff --cached --quiet || git commit -m "chore(auto): mcptool drift report sync [skip ci]" >> runtime/cron/mcptool-drift-report.log 2>&1 ; else echo "skip: HEAD != main" >> runtime/cron/mcptool-drift-report.log ; fi'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-25 新增: mcptool-drift-report.yaml 此前是手工维护的孤儿文件 (零引用、
+      无生成器), 曾滞留 26 条 retired 工具假阳性 2 天 (PR #4277 / #4311)。本条把它
+      改为探针 --report 的产物, 每日自动重生成, 并按 capability-registry-sync-daily
+      同款模式自动提交 (git add + commit, 故不会持续留脏)。
+      ⚠️ PATH 必须显式带 /opt/homebrew/bin: 探针内部要调 uv run --project
+      projects/cockpit cockpit mcp --list-tools, 而 cron 默认 PATH (/usr/bin:/bin)
+      找不到 uv (实测 FileNotFoundError: No such file or directory: 'uv')。
+      探针有 drift 时 exit 1, 故与其后命令用 ';' 而非 '&&' 连接, 避免 drift 时跳过后续步骤。
+      ⚠️ 加了 HEAD == main 守卫: 主工作区常被并发 agent 占用在 feature 分支上,
+      无条件 git add/commit 会把报告提交进别人的分支 (污染其 PR)。非 main 时整条 job 跳过并记日志。
+
 # ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
 open_decisions:
   - id: D2
