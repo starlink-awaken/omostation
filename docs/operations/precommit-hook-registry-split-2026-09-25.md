@@ -11,6 +11,9 @@ scope: precommit-hook-registry-split
 
 # 两份 hook 注册表的分裂（report-only，不处置）
 
+> **状态更新（见 §6）**：本文写作时是 report-only；principal 选定选项 A 后，"把声明做诚实"
+> 这一半已落地，B / C 仍未处置。原标题与正文的测量结论不改（当时的真值记录）。
+
 > 结论先行：本仓有**两份互不重叠的 hook 注册表**。生效的那份是
 > `.omo/_truth/registry/hook-manifest.yaml` → `bin/gac/hook-runner.sh`；
 > `.pre-commit-config.yaml` 是第二份，它的 29 条声明**只有 1 条真正经过 pre-commit 框架执行**
@@ -109,3 +112,16 @@ scope: precommit-hook-registry-split
 
 我的建议是 **A**：当前真正缺的不是检查，而是"声明表在 advertised 一个它没提供的保证"。
 A 用最小改动消灭下一次误判，且不会把存量债一次性引爆。B/C 都需要先量存量红多少条。
+
+## 6. 处置结果（2026-09-25，principal 选 A）
+
+| 动作 | 落点 |
+|------|------|
+| 顶部注释改成"声明表 / 全仓唯一框架调用是 `ci-lint.yml` 的 `check-yaml` / 其余执行面由 `ci-surfaces.yaml` 承接"，并删掉 `Installs: pre-commit install` 与假设性的 per-commit 性能承诺 | `.pre-commit-config.yaml` |
+| §关联 里"pre-commit 钩子"这条失效承诺改成并列两条：真强制面 `governance-check.yml` 跑 `lint doc-lifecycle`，与"声明表条目（非生效钩子）" | `.omo/DOC-LIFECYCLE.md` |
+| 把"verify 失败先分诊 → 预存则 `--status blocked` 如实入账 → 禁自签豁免"写成指令层规则 | `.agents/skills/bet-closeout-chain/SKILL.md` |
+
+**有意留在 A 之外**：§3 的历史审计 `.omo/_knowledge/audits/2026-06-28-debt-status-delta.md` 按其时点
+真值保留、不改写；§2 的 `verify-spaces` 断声明与无消费者条目属 B/C 范围，动它们之前要先量存量红；
+B（真接框架）还额外撞"不擅自改 git config"这条约束。
+
