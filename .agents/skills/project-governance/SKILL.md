@@ -185,7 +185,7 @@ uv run --with pyyaml python bin/agent-workflow.py verify "<run-id>" \
   --from-diff \
   --execute
 
-uv run --with pyyaml python bin/gac-local-gate.py --scope files --file "<path>" --json
+uv run --with pyyaml python bin/gac/gac-local-gate.py --scope files --file "<path>" --json
 ```
 
 Manual commands in the registry are intentional handoffs to the agent or the project-local docs. Do not pretend they ran.
