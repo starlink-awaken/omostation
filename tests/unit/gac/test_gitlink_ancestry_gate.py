@@ -272,3 +272,51 @@ class TestTolerances:
         fx = make_fixture(tmp_path)
         result = run_gate(fx["m"], "--range", fx["commit_b"], "--cwd", str(fx["m"]))
         assert result.returncode in (0, 1), "single-arg range must accept default head"
+
+
+class TestDebtEntryReDerivable:
+    """豁免条目必须在符号 ref 与分支都消失之后仍可重判 (2026-09-25 存量审计)。
+
+    pre-push 的真实传参是 `--range origin/main $PUSH_LOCAL_SHA`: base 是会随 main
+    前进换指的符号 ref，head 侧分支在 squash 合并后会被删除。旧落盘写 `base[:12]..head[:12]`，
+    于是"origin/main"与"HEAD"这类值原样进了只减不增的债账，事后无从复原当时比较的是哪两个 commit。
+    """
+
+    @staticmethod
+    def _entry(m: Path) -> dict:
+        import yaml
+
+        debt = m / ".omo" / "_truth" / "registry" / "gate-known-debt.yaml"
+        rows = yaml.safe_load(debt.read_text(encoding="utf-8"))["entries"]
+        hits = [e for e in rows if e.get("surface") == "gitlink-ancestry"]
+        assert len(hits) == 1, f"expected exactly one debt entry, got {len(hits)}"
+        return hits[0]
+
+    def test_symbolic_range_is_written_as_full_commits(self, tmp_path):
+        import re
+
+        fx = make_fixture(tmp_path)
+        m = Path(str(fx["m"]))
+        base_tip = str(fx["commit_b"])
+        _git_ok(m, "branch", "gone-after-merge", base_tip)
+
+        # 用符号 ref 传参（HEAD 即 commit_d，携带 [gitlink-regress: ...] 标签）
+        result = run_gate(m, "--range", "gone-after-merge", "HEAD", "--cwd", str(m))
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "WARN" in result.stdout
+
+        entry = self._entry(m)
+        # 原文保留为 provenance，但重判只能依赖解析后的完整 commit
+        assert entry["range"] == "gone-after-merge..HEAD"
+        assert entry["base_sha"] == base_tip
+        assert entry["head_sha"] == str(fx["commit_d"])
+        assert entry["merge_base"] == base_tip
+        for key in ("base_sha", "head_sha", "merge_base"):
+            assert re.fullmatch(r"[0-9a-f]{40}", entry[key]), f"{key} must be a full commit: {entry[key]!r}"
+
+        # 制造存量债的真实结局：符号 ref 被删，条目仍须自证
+        _git_ok(m, "branch", "-D", "gone-after-merge")
+        assert entry["exempt_reason"] == "deliberate downgrade test"
+        for key in ("base_sha", "head_sha", "merge_base"):
+            assert _git(m, "cat-file", "-e", f"{entry[key]}^{{commit}}").returncode == 0, f"{key} unresolvable"
+        assert _git_ok(m, "merge-base", entry["base_sha"], entry["head_sha"]) == entry["merge_base"]
