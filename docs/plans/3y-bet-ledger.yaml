@@ -33878,7 +33878,9 @@ bets:
     evidence quality beyond reporting it.
   done_when:
   - .omo/_delivery/rule-drafts/ is tracked and git check-ignore reports no match for
-    the generated drafts.
+    the generated drafts, and committing them passes the pre-commit runtime-artifacts
+    check in both of its same-source implementations (check-runtime-artifacts.py and
+    ci-local-fast.py carry equal whitelist prefixes).
   - The three threshold-passing pitfalls (PITFALL-GAT-004, PITFALL-GAT-005, PITFALL-COO-003)
     have tool-generated CR-PITFALL-*.json drafts and stats reports zero overdue.
   - feed_from_escapes cannot add an encounter to a pitfall of a different category.
@@ -33897,7 +33899,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-24-rule-drafts-queue-durability-design.md
     spec_version: 1.0.0
-    content_digest: sha256:bdb7400e182bd1db69eef91e455f31699a0303ba19b1787409843f376afc2f08
+    content_digest: sha256:e9ec0a53ff66835c3c48ee71bbeb98a13b3348a2e448b7ce5acb01f125cfd65c
     decision_ref: decision://accepted/BET-Y2Q3-T10-202
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -33936,6 +33938,8 @@ bets:
   - .omo/standards/incident-to-rule-pipeline.md
   - docs/operations/workflow-waiver-2026-09-24-retro-findings.md
   - .omo/_knowledge/retros/BET-Y2Q3-T10-202.md
+  - bin/gac/check-runtime-artifacts.py
+  - bin/gac/ci-local-fast.py
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
