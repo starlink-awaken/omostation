@@ -74,7 +74,17 @@ value_indicator_policy: false     # 不加则要求 value=ACCEPTED+真人签名 
 python3 bin/plan/bet-ledger.py complete <BET-ID>
 python3 bin/agent-workflow.py closeout <run-id> --status ok --evidence "PR #N merged as <sha>; <验证摘要>" --from-diff
 ```
-- closeout 常见拦：`missing_retro`（步 5 没落盘）、verify 失败（带 `--from-diff` 重试）
+- closeout 常见拦：`missing_retro`（步 5 没落盘）；**verify 失败**（`closeout blocked: verify failed`）。
+- verify 失败要**先分诊，不要靠重试 `--from-diff` 绕**——`--from-diff` 只改文件采集范围，不重算判定；
+  且 `lifecycle.py` 里只有 `--status ok` 会被 verify 拦：
+  1. `python3 bin/agent-workflow.py verify <run-id> --from-diff --execute` 取具体 `[FAIL] <check> :: <cmd>`；
+  2. 判预存：`git diff --name-only origin/main...HEAD` 是否含该 check 读取的任何文件；再用
+     `git show origin/main:<path>` / `git cat-file -s origin/main:<path>` 直接量 main 现状
+     （不信本地工作树——共享主工作区的 HEAD 可能是别人的，PITFALL-COO-006）；
+  3. 预存成立 → 用 `--status blocked` 收尾，把失败项**原文**、判据命令、"为何与本 diff 无关"写进
+     `--evidence`。`blocked` 不是绕门禁，它把 `verify_ok=false` 如实入账；
+  4. **禁止自签豁免**：known-debt 逃生口要求 `SWARM_ESCAPE_ID=local-preflight-preexisting && human_gate`
+     且必须提交指纹（`harness-policy.yaml` § `known_debt.escape`），那是 principal 的权限。
 
 ## 步 7 · 收尾 PR + 清理
 
@@ -88,6 +98,7 @@ python3 bin/agent-workflow.py closeout <run-id> --status ok --evidence "PR #N me
 | SPEC_BINDING_REQUIRED | 步 1-2 |
 | missing_bet_binding | 步 2（没 start） |
 | BET_DONE_AT_REQUIRED | 台账缺 `done_at` |
+| `closeout blocked: verify failed` | 步 6 分诊（先量预存，禁自签豁免；预存则 `--status blocked`） |
 | vision→retro 链未闭合 | 步 2 + 步 5 |
 
 ## 相关
