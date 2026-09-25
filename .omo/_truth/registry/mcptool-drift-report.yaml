@@ -1,70 +1,63 @@
 # MCP Tool Drift Report
 #
-# 来源: bin/ssot/check-mcptool-impl-drift.py 输出 (2026-09-25, 修复后)
-# 探针规则: CR-X4-MCPTOOL-IMPL-DRIFT (enforcement: required)
-# 复跑命令: uv run --with pyyaml python bin/ssot/check-mcptool-impl-drift.py [--json]
+# ⚠️ GENERATED FILE — 除 corrections 段(人工留痕)外请勿手改。
+#    生成器 / 重生成命令:
+#      uv run --with pyyaml python bin/ssot/check-mcptool-impl-drift.py --report
+#    规则: CR-X4-MCPTOOL-IMPL-DRIFT (enforcement: required)
+#    安装: .omo/cron/registry.yaml → mcptool-drift-report-daily
 #
-# 上一版 (2026-09-23) 的 156 条 drift 系探针假阳性, 已由 PR #4277 修复。
-# 详见文末 corrections 段 —— 该段也说明为何本报告从 156 条变为 0 条。
-
+# 本报告由探针输出直接派生, 故不会再与探针不同步 (2026-09-25 前是手工维护的
+# 孤儿文件, 曾滞留 26 条 retired 工具假阳性长达 2 天)。
 summary:
   total_drifts: 0
-  cockpit_declared_only: 0  # 声明但未实现
-  cockpit_impl_only: 0      # 实现但未声明
-  agora_impl_only: 0        # 已跳过, 见 servers.AGORA
-
+  cockpit_declared_only: 0
+  cockpit_impl_only: 0
+  agora_impl_only: 0
 servers:
   COCKPIT:
-    declared: 23            # 仅统计 status: active 的 MCPTOOL-COCKPIT-*.yaml
-    implemented: 23         # cockpit mcp --list-tools
+    declared: 23
+    implemented: 23
     consistent: true
-    note: 23 个 active 声明与 23 个实现一一对应
-
+    declared_only: []
+    impl_only: []
   AGORA:
-    declared: 0
-    implemented: 111
     skipped: true
-    note: >-
-      声明面为空 + 实现经 source_extract 从 @mcp.tool() 提取, 恒定产生 111 条
-      「实现无声明」噪音; 属已知内部情况 (agora 工具不面向 MCPTOOL 注册面),
-      不构成待办缺口。
-
+    reason: 声明面为空 + 实现经 source_extract 从 @mcp.tool() 提取, 恒定产生大量「实现无声明」噪音; 属已知内部情况
+      (agora 工具不面向 MCPTOOL 注册面),不构成待办缺口。
 categories:
-  # 🔴 高优先级 — 前端暴露但无后端实现
   cockpit_declared_only: []
-
-  # 🟡 中优先级 — 后端实现但无前端声明
   cockpit_impl_only: []
-
-  # 🟢 低优先级 — agora 实现但无声明
   agora_impl_only: []
-
 recommendations: []
-
 corrections:
-  - date: '2026-09-25'
-    by: 'PR #4277 (squash 34e70dd2a)'
-    change: >-
-      探针 load_declared_tools 改为只统计 status: active 的声明文件 (跳过
-      retired/withdrawn), 并在 detect_drift 跳过 AGORA。
-    before_after:
-      # 同环境双版本实跑对照 (worktree 基线 34e70dd2a)
-      cockpit_declared: 49 -> 23
-      cockpit_impl: 23 -> 23
-      cockpit_declared_only: 26 -> 0
-      agora_impl_only: 111 -> 0
-      total_drifts: 137 -> 0
-    false_positive_detail: >-
-      上一版列为「🔴 高优先级 — 前端暴露但无后端实现」的 26 条
-      (daily_summary / github_pr_review / governance_* / research_* /
-      shared_context_* / status_json / status_summary / vault_search)
-      全部对应 status: retired 的 cockpit 工具声明, 即已被主动撤回的工具
-      (呼应提交 ab286d5fc "...withdraw 26 cockpit MCP tools")。
-      原探针把已撤回的声明仍计入声明面, 故恒定报「声明无实现」。
-      经核对: MCPTOOL-COCKPIT-*.yaml 共 49 个, status 分布 retired=26 /
-      active=23, 与过滤掉的 26 条精确吻合 —— 属假阳性, 非真实缺口。
-    note_on_previous_totals: >-
-      上一版记录 total_drifts=156 (26/19/111), 本次对照实测修复前为 137
-      (26/0/111)。差值 19 系该报告生成时点 (2026-09-23) 的实现面状态与
-      本次不同, 未复现; 但 26 条 declared_only 与 111 条 agora_impl_only
-      均精确复现, 结论不受影响。
+- date: '2026-09-25'
+  by: 'PR #4277 (squash 34e70dd2a)'
+  change: '探针 load_declared_tools 改为只统计 status: active 的声明文件 (跳过 retired/withdrawn),
+    并在 detect_drift 跳过 AGORA。'
+  before_after:
+    cockpit_declared: 49 -> 23
+    cockpit_impl: 23 -> 23
+    cockpit_declared_only: 26 -> 0
+    agora_impl_only: 111 -> 0
+    total_drifts: 137 -> 0
+  false_positive_detail: '上一版列为「🔴 高优先级 — 前端暴露但无后端实现」的 26 条 (daily_summary / github_pr_review
+    / governance_* / research_* / shared_context_* / status_json / status_summary
+    / vault_search) 全部对应 status: retired 的 cockpit 工具声明, 即已被主动撤回的工具 (呼应提交 ab286d5fc
+    "...withdraw 26 cockpit MCP tools")。 原探针把已撤回的声明仍计入声明面, 故恒定报「声明无实现」。 经核对: MCPTOOL-COCKPIT-*.yaml
+    共 49 个, status 分布 retired=26 / active=23, 与过滤掉的 26 条精确吻合 —— 属假阳性, 非真实缺口。'
+  note_on_previous_totals: 上一版记录 total_drifts=156 (26/19/111), 本次对照实测修复前为 137 (26/0/111)。差值
+    19 系该报告生成时点 (2026-09-23) 的实现面状态与 本次不同, 未复现; 但 26 条 declared_only 与 111 条 agora_impl_only
+    均精确复现, 结论不受影响。
+- date: '2026-09-25'
+  by: '回归修复 PR (2026-09-25, #4277 的 follow-up)'
+  change: 恢复 detect_drift 中 decl_no_impl / impl_no_decl 的计算。
+  detail: '这两个差异集是判定 drift 的唯一依据 —— main() 与 build_report() 都靠它们算 total 与退出码。#4277
+    改探针时误删了这两行(只保留 declared_count / implemented_count), 而 main() 用 d.get(...) 读取故不报错,
+    结果是探针 恒报「✅ 一致 / Total 0」且恒 exit 0 —— 规则 CR-X4-MCPTOOL-IMPL-DRIFT (enforcement:
+    required) 从此无法发现任何真实 drift (门禁失明), 比原先的假阳性更危险。'
+  regression_evidence: '合成 drift 实测 (临时注入 status: active 的假声明 MCPTOOL-COCKPIT-ZZZTESTFIXTURE.yaml,
+    其 tool_name 无实现): 修复前 声明 23 / 实现 23 → Total 0 drifts, exit 0 (漏报); 修复后 声明 24 /
+    实现 23 → 🔴 声明无实现 (1), Total 1 drifts, exit 1 (检出)。 对照: 同一 fixture 改为 status: retired
+    → 被正确忽略 (Total 0, exit 0)。'
+  mechanism: 本次同时把本报告改为由探针 --report 自动生成并挂 cron (mcptool-drift-report-daily), 消除本文件此前「手工维护
+    + 零引用」 导致的长期腐化。
