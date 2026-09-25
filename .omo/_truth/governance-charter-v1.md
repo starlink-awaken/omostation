@@ -2,7 +2,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-09-25
 type: ssot
 ---
 
@@ -52,10 +52,10 @@ L0 协议编织 · 数据定义
 
 | 切面 | 核心 | 实现位置 |
 |------|------|---------|
-| **X1 审计** | KEI 沙箱 + 审计链 | runtime/kei_sandbox.py |
-| **X2 抗熵** | 健康监控 + 自愈 | runtime/scheduler.py + autoheal.sh |
-| **X3 价值栈** | LLM 成本 + 服务计量 | llm-gateway + omo/omo_cost.py |
-| **X4 一致性** | CLI/端口/依赖/文档/CI/Phase 全量检查 | LAYER-INDEX.md + scripts/audit |
+| **X1 审计** | KEI 沙箱 + 审计链 | projects/runtime/src/runtime/kei_sandbox.py |
+| **X2 抗熵** | 健康监控 + 自愈 | projects/runtime/src/runtime/scheduler.py + cron 探针（实现位置以 runtime 内三件套为准） |
+| **X3 价值栈** | LLM 成本 + 服务计量 | projects/omo/src/omo/omo_cost.py + `.omo/_truth/x3-value-stack.yaml` |
+| **X4 一致性** | CLI/端口/依赖/文档/CI/Phase 全量检查 | LAYER-INDEX.md |
 
 ### §1.3 不变法则
 
@@ -122,7 +122,7 @@ L0 协议编织 · 数据定义
 
 | 规则 | 值 |
 |------|-----|
-| 版本 | >=3.10 (kairon), >=3.13 (omo/metaos) |
+| 版本 | >=3.13 (kairon, omo, metaos) |
 | 包管理 | uv (禁止 pip/poetry) |
 | 格式化 | ruff format (双引号, 120 行宽) |
 | Lint | ruff check (E,F,W,I,N,UP,S,PLE,RUF100) |
@@ -244,5 +244,5 @@ Agent 启动:
 
 ---
 
-*宪章版本: v1.0 | 生效日期: 2026-06-06 | 下次审查: 2026-09-06*
+*宪章版本: v1.0 | 生效日期: 2026-06-06 | 下次审查: 2026-12-24*
 *审批人: 夏明星 | SSOT 位置: `.omo/_truth/governance-charter-v1.md`*

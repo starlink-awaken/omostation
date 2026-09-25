@@ -2,7 +2,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-09-25
 type: ssot
 ---
 
@@ -38,7 +38,8 @@ type: ssot
 
 #### 机制 A：感知与熵增阻断 (Perception & Anti-Entropy)
 系统必须具备“痛觉”。当架构偏离、代码腐化、死锁产生时，系统需要自动标红。
-*   **落地形态**：`projects/omo-debt` (Pattern 09 技术债评估系统)。
+*   **落地形态**：债务评估能力（原 `projects/omo-debt`，2026-09 起经 ADR-0412
+    内包进 `runtime` + `projects/omo`）。
 *   **运作方式**：独立于主线任务之外，巡逻代码库和 `_truth` 平面，动态计算项目的“诚实度”和“技术债跑分”，如果跑分掉入 P0 危险区，则自动强行在 `_control/` 面插入阻断任务。
 
 #### 机制 B：代谢与垃圾回收 (Metabolism & GC)
