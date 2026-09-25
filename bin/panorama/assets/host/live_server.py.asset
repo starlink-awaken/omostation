@@ -289,6 +289,7 @@ def _resolve_workspace() -> Path:
 
 _WORKSPACE = _resolve_workspace()
 _RESIDENT_DIR = _WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator"
+_HARNESS_RUNS_DIR = _WORKSPACE / ".omo" / "_delivery" / "harness-runs"
 _PID_FILE = _RESIDENT_DIR / "daemon.pid"
 _WATERMARKS_DIR = _RESIDENT_DIR / "watermarks"
 _HEARTBEAT_JSONL = _WORKSPACE / ".omo" / "state" / "resident-heartbeat.jsonl"
@@ -409,6 +410,34 @@ def _role_activity(max_gap_seconds: float = 1800.0) -> list[dict]:
         items.append({"role": role, "status": status, "source": src,
                       "last_seen": last_ts, "lag_seconds": int(lag) if lag is not None else None})
     return items
+
+
+def build_harness_runs(limit: int = 20) -> dict:
+    """读 harness-runs 目录, 返回最近 N 次 8 阶段 DAG 运行摘要."""
+    runs = []
+    if _HARNESS_RUNS_DIR.is_dir():
+        files = sorted(_HARNESS_RUNS_DIR.glob("*.json"),
+                       key=lambda p: p.stat().st_mtime if p.exists() else 0,
+                       reverse=True)[:limit]
+        for f in files:
+            try:
+                d = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if not isinstance(d, dict) or "stages" not in d:
+                continue  # 跳过非 harness-run 格式
+            runs.append({
+                "run_id": d.get("run_id"),
+                "bet_id": d.get("bet_id"),
+                "profile": d.get("profile"),
+                "ok": d.get("ok"),
+                "started_at": d.get("started_at"),
+                "finished_at": d.get("finished_at"),
+                "stages": {k: v.get("ok") for k, v in (d.get("stages") or {}).items()
+                           if isinstance(v, dict)},
+            })
+    ok_n = sum(1 for r in runs if r.get("ok"))
+    return {"total": len(runs), "ok": ok_n, "failed": len(runs) - ok_n, "runs": runs}
 
 
 def build_resident_status() -> dict:
@@ -1237,6 +1266,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return False
         return True
 
+    def _handle_harness_runs(self):
+        """GET /api/v1/harness/runs — 最近 8 阶段 DAG 运行摘要."""
+        try:
+            params = parse_qs(urlsplit(self.path).query)
+            limit = int(params.get("limit", ["20"])[0])
+            limit = max(1, min(limit, 50))
+            self._json(200, build_harness_runs(limit))
+        except (ValueError, IndexError):
+            self._json(200, build_harness_runs())
+        except Exception as exc:  # noqa: BLE001
+            self._json(500, {"error": f"harness_runs_failed:{type(exc).__name__}"})
+
     def _handle_resident_status(self):
         """GET /api/v1/resident — 居民守护进程可观测状态."""
         try:
@@ -1989,6 +2030,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     "read_only": True,
                 })
             return
+        elif route.path == "/api/v1/harness/runs":
+            self._handle_harness_runs()
         elif route.path == "/api/v1/resident":
             self._handle_resident_status()
         elif route.path == "/api/v1/compute/live":
