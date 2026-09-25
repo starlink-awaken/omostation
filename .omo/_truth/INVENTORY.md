@@ -2,13 +2,13 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-29
+last-reviewed: 2026-09-25
 type: ssot
 ---
 
 # Workspace 项目资产索引
 
-> 更新: 2026-06-21 (post-P43 R5)
+> 更新: 2026-09-25 (truth-docs 到期复核: c2g/omo-debt 内包、_archived 引用移除、hermes/agora-dashboard 收敛口径对齐 registry)
 > 性质: 项目资产导航，不是 live runtime snapshot。
 > 当前项目身份、状态、路径与技术栈以 [../../docs/project-registry.yaml](../../docs/project-registry.yaml) 为准；
 > 项目级边界与调用链以各项目 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` 为准。
@@ -46,17 +46,17 @@ type: ssot
 - `projects/ecos/` — L0 协议层
 - `projects/aetherforge/` — X 横切能力与算力框架
 - `projects/model-driven/` — M0 生命周期横切框架
-- `projects/c2g/` — 战略需求入口
 - `projects/bus-foundation/` — 总线能力
 - `projects/family-hub/` — 家庭数字枢纽
-- `projects/hermes-console/` — 已挂载到 `cockpit /hermes/*` 的前端子应用
+- `projects/hermes-console/` — 已合并进 `cockpit-ui`（见 `docs/project-registry.yaml` 收敛记录）
 - `projects/observability/` — 可观测性栈
-- `projects/omo-debt/` — 债务评分工具
 
-### 1.2 Archived / Legacy
+### 1.2 Archived / Legacy / 内包收敛
 
-- `projects/agora-dashboard/` — 历史快照；独立入口已收敛，不再作为当前 Web 面
-- `projects/_archived/` — 历史项目和迁移资料归档区
+- `projects/c2g/`、`projects/omo-debt/` — 2026-09 起经 ADR-0412 内包进 `runtime` + `projects/omo`，不再作为独立项目存在；身份以 `docs/project-registry.yaml` 为准
+- `projects/_archived/` — 子模块引用已移除；历史迁移资料见各项目归档区与 `docs/PANORAMA.md` 项目附录
+
+- `projects/agora-dashboard/` — 已合并进 cockpit HTTP 入口（见 `docs/project-registry.yaml` 收敛记录）；独立入口已收敛，不再作为当前 Web 面
 - 其他已归档能力以 [../../docs/PANORAMA.md](../../docs/PANORAMA.md) 的项目附录为准
 
 ### 1.3 使用原则

@@ -2,7 +2,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-06-22
+last-reviewed: 2026-09-25
 type: ssot
 ---
 
@@ -58,12 +58,13 @@ graph TD
     *   **防脑裂机制**：内置基于 SQLite `EXCLUSIVE LOCK` 的文件锁 (`locks.db`)，确保多 Agent 抢占同一个 `.omo/tasks/` 时的事务原子性。
 *   **边界**：绝不包含具体业务逻辑（如技术债如何计算）。它只管“流水线与心跳”。
 
-### 2.3 `projects/omo-debt` (扩展领域引擎)
-*   **职责**：这是一个专注于代码质量与技术债评估的**垂直领域工具**（Pattern 09 模型）。
-*   **能力扩展性**：
-    *   **独立技术栈**：它拥有自己的依赖生态（`click`, `rich`, `pydantic`, `gitpython`），支持复杂的报表渲染和计算。
-    *   **即插即用**：作为一个独立的 CLI 工具 (`omo-debt`) 注册，未来可以被 `projects/omo` 编排，也可以被开发者直接独立调用。
-*   **边界**：专注于计算与分析，它的分析结果最终会以 `.yaml` 或 `.md` 的形式回写进 `.omo/_control/debt-dashboard/`，交还给数据面。
+### 2.3 债务评估能力（原 `projects/omo-debt`，已内包）
+*   **职责**：代码质量与技术债评估（Pattern 09 模型）。2026-09 起经 ADR-0412
+    内包进 `runtime` + `projects/omo`，不再作为独立仓库存在；
+    项目身份以 `docs/project-registry.yaml` 为准。
+*   **能力扩展性**：债务登记 `omo debt create` → `.omo/debt/items/`；
+    分析结果以 `.yaml`/`.md` 回写 `.omo/_control/debt-dashboard/`，交还数据面。
+*   **边界**：专注于计算与分析，不碰实例状态写入（经 OMO broker）。
 
 ### 2.4 `.omo/` (实例数据中心)
 *   **职责**：作为 OMO 系统的存储底座，它是系统的 RAM 和 HDD。
