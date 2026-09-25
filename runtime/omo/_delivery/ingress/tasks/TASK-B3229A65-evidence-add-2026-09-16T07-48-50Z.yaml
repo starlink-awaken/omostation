@@ -1,8 +1,0 @@
-kind: planned_task_evidence_paths_added
-task_ref: tasks/planned/TASK-B3229A65.yaml
-evidence_paths:
-- .omo/_knowledge/retros/TASK-B3229A65-evidence.md
-- .omo/cron/registry.yaml
-actor: projects/omo
-source_ref: session-2026-09-16-a4-scheduler-closeout
-updated_at: '2026-09-16T07:48:50Z'

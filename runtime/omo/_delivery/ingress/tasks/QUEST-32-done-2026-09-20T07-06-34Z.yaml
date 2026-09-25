@@ -1,8 +1,0 @@
-kind: task_completed
-task_id: QUEST-32
-source_group: planned
-task_ref_before: .omo/tasks/planned/QUEST-32.yaml
-task_ref_after: .omo/tasks/done/QUEST-32.yaml
-actor: projects/cockpit
-source_ref: cockpit:quest:done:QUEST-32
-completed_at: '2026-09-20T07:06:34Z'

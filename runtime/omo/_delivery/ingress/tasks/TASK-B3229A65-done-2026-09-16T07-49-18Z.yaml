@@ -1,8 +1,0 @@
-kind: task_completed
-task_id: TASK-B3229A65
-source_group: planned
-task_ref_before: .omo/tasks/planned/TASK-B3229A65.yaml
-task_ref_after: .omo/tasks/done/TASK-B3229A65.yaml
-actor: projects/omo
-source_ref: omo:task:done:TASK-B3229A65
-completed_at: '2026-09-16T07:49:18Z'
