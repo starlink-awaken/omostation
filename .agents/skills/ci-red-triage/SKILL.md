@@ -48,13 +48,20 @@ Classify each fail (P73 truth-driven):
 | **L5 生成器格式** | 自动注入段 MD004/031 | **修生成器** (非修输出, 避免下次覆盖) |
 | **L6 本地工具** | `--directory` 绝对路径 CI 无 | `local-only` (诚实区分, 非 gap) |
 
+**markdownlint 的实际口径**（L4/L5 高发误判）：本仓的 markdown lint 是 **Python `pymarkdown`**
+（`.pre-commit-config.yaml` 的 `markdownlint` hook：`uv run --with pymarkdownlnt pymarkdown scan`），
+**不是** node `markdownlint-cli` —— 后者会对同一文件报一批 `MD060` 之类本仓不承认的 rule，属于工具用错。
+且该 hook 的 `files:` 只匹配 `^(README|CLAUDE|AGENTS|ARCHITECTURE|LAYER-INDEX)\.md$`，
+`docs/**` 与 `.omo/**` **故意不 lint**（"详细文档格式灵活不 lint"）：对 `docs/` 下的文件跑 lint 报出来的
+错，不是 CI 会拦的错。判 fail 归属前，先读 `.pre-commit-config.yaml` 里该 hook 的 `files:`。
+
 ### 3. Verify local (复现 + 验证修复)
 
 ```bash
 uv run --project projects/<sub> python -c "import <pkg>"   # resolve 验证
 uv run --project projects/<sub> pytest tests/<test> -q     # test 复现
 uv run --directory projects/agora python bin/evidence-smoke.py --gate 95  # evidence
-uv run --with pyyaml python bin/gac-local-gate.py --scope staged --json   # 本地 gate
+uv run --with pyyaml python bin/gac/gac-local-gate.py --scope staged --json  # 本地 gate
 ```
 
 ### 4. Commit + PR (per worktree-pr-landing-sop)

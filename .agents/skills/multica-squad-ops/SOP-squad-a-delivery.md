@@ -44,11 +44,19 @@ uv run --with pyyaml python bin/agent-workflow.py claim <run_id> \
 - `start` 不带 `--profile` 会报 `project-doc-change requires --profile (docs-agent, governance-agent)`。
 - `claim` 不带 `--affected-hash` 会报 `Missing or invalid affected-hash`；这不是占位字符串，
   是真的会校验收据内容和 claim 的 path 是否对得上（`validate_affected_graph_receipt`）。
+  该参数值是**收据文件的 workspace-relative 路径**（不是哈希串）：
+  `uv run --with pyyaml python bin/gac/affected-graph.py --changed-projects workspace-root --output <rel>.json --json`
+  生成后再 `claim --affected-hash <rel>.json`。凡不在 `projects/` 下的 claimed path 都归到
+  `workspace-root` 这一个 project，所以 `--changed-projects workspace-root` 覆盖仓库级改动；
+  收据还绑了 `docs/layer-contract.yaml` 的 digest，contract 变了要重生成。
 - `--bet` 这一层门禁（`bin/plan/chain_bind.py::start_requires_bet`）只校验非空字符串，
   不校验 BET 是否真存在于 ledger——**但这不代表可以随便编一个假 BET**，真实交付必须用
-  `docs/plans/3y-bet-ledger.yaml` 里真实存在的条目。唯一合法的"跳过"是
-  `AGCP_REQUIREMENT_ITERATION_GATE=0`（测试套件自己也这么用），**仅限本 SOP 这种纯演练/
-  自测场景**，真实交付绝不能长期这样跑。
+  `docs/plans/3y-bet-ledger.yaml` 里真实存在的条目。治理演进类 workflow
+  （`GOVERNANCE_EVOLVE_WORKFLOWS`）在台账**存在**治理演进 bet（`_has_governance_bet`：
+  `track: T10-MATURITY` 或 id 含 `-T10-`）时，start 不带 `--bet` 即由 G5 对称豁免放行
+  （判据与 closeout 完全同一条，reason = `governance_evolve_exempt`），不需要签任何豁免。
+  剩下的唯一"跳过"是 `AGCP_REQUIREMENT_ITERATION_GATE=0`（测试套件自己也这么用），
+  **仅限本 SOP 这种纯演练/自测场景**，真实交付绝不能长期这样跑。
 
 ## 2. Worktree 隔离（不得在主工作树直接改）
 
