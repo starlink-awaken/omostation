@@ -304,7 +304,15 @@ def scan_exemption_tags(base: str, head: str, root: Path) -> list[str]:
     return tags
 
 
-def record_known_debt(root: Path, findings: list[dict], base: str, head: str) -> tuple[list[str], int]:
+def record_known_debt(
+    root: Path,
+    findings: list[dict],
+    base: str,
+    head: str,
+    *,
+    merge_base: str = "",
+    exempt_reason: str = "",
+) -> tuple[list[str], int]:
     """Append gitlink-regress fingerprints to gate-known-debt.yaml.
 
     growth_policy=shrink_only: 只追加本次指纹条目, 不清除他人已有条目。
@@ -318,6 +326,12 @@ def record_known_debt(root: Path, findings: list[dict], base: str, head: str) ->
     except ImportError:
         return [], 0
 
+    # 条目必须能在分支与符号 ref 都消失之后重判, 故落盘时就把两侧解析成完整 commit。
+    # 曾写 `base[:12]..head[:12]`: 符号 ref 截断后仍是符号 ref (origin/main 会随 main 前进
+    # 换指、`HEAD` 干脆指向"写盘那一刻的检出"), 而被 squash 合并的分支 tip 事后既不在
+    # 任何 ref 上、对象也可能已被回收 —— 实测 30 条存量债里 21 条因此无法重导。
+    base_sha = _git("rev-parse", "--verify", "--quiet", f"{base}^{{commit}}", cwd=root)
+    head_sha = _git("rev-parse", "--verify", "--quiet", f"{head}^{{commit}}", cwd=root)
     debt_path = root / KNOWN_DEBT_REL
     existing = load_known_debt(root)
     existing_keys = {e.get("fingerprint") or fingerprint_key(e) for e in existing}
@@ -348,7 +362,11 @@ def record_known_debt(root: Path, findings: list[dict], base: str, head: str) ->
                     f"submodule {finding['path']} pointer {finding['new_sha'][:12]} "
                     f"rewinds {finding['old_sha'][:12]}"
                 ),
-                "range": f"{base[:12]}..{head[:12]}",
+                "range": f"{base}..{head}",
+                "base_sha": base_sha,
+                "head_sha": head_sha,
+                "merge_base": merge_base,
+                "exempt_reason": exempt_reason,
                 "recorded_at": now,
                 "active": True,
             }
@@ -430,6 +448,7 @@ def run_ancestry_gate(base: str, head: str, root: Path, *, write_debt: bool, jso
 
     violations: list[dict] = []
     behind: list[dict] = []
+    merge_base = ""
     if not unresolvable:
         # "rewind" must describe what head DID, not how new it is. base is origin/main in
         # the pre-push hook, so every branch cut before someone else's submodule bump would
@@ -467,7 +486,14 @@ def run_ancestry_gate(base: str, head: str, root: Path, *, write_debt: bool, jso
     debt_keys: list[str] = []
     debt_skipped = 0
     if exempted and write_debt:
-        debt_keys, debt_skipped = record_known_debt(root, violations, base, head)
+        debt_keys, debt_skipped = record_known_debt(
+            root,
+            violations,
+            base,
+            head,
+            merge_base=merge_base,
+            exempt_reason=tags[0],
+        )
 
     ok = not violations or exempted
     if json_out:
