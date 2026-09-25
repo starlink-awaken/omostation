@@ -383,6 +383,14 @@ def run_runtime_artifact_gate(*, root: Path = WORKSPACE, output: TextIO = sys.st
         ".omo/locks/", ".omo/_log/", ".omo/_delivery/", "__pycache__/", ".venv/",
         "node_modules/", "dist/", "build/", "target/debug/", "target/release/",
     ]
+    # Must stay equal to check-runtime-artifacts.py::WHITELIST_PREFIXES (same semantics,
+    # two call sites). Asserted by tests/unit/gac/test_error_knowledge_rule_drafts.py.
+    WHITELIST_PREFIXES = [
+        ".omo/_delivery/calibration/",
+        ".omo/_delivery/events/",
+        ".omo/_delivery/scene-outcomes/",
+        ".omo/_delivery/rule-drafts/",
+    ]
 
     r = _sp.run(
         ["git", "diff", "--cached", "--name-only", "--diff-filter=A"],
@@ -402,6 +410,8 @@ def run_runtime_artifact_gate(*, root: Path = WORKSPACE, output: TextIO = sys.st
             continue
         if any(path.endswith(s) for s in BLACKLIST_SUFFIXES):
             violations.append(f"{path} (blacklisted suffix)")
+            continue
+        if any(path.startswith(p) for p in WHITELIST_PREFIXES):
             continue
         if any(path.startswith(p) for p in BLACKLIST_PREFIXES):
             violations.append(f"{path} (blacklisted prefix)")

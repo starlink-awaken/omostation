@@ -14,11 +14,13 @@ unrelated pitfall of another category.
 from __future__ import annotations
 
 import argparse
+import ast
 import contextlib
 import importlib.util
 import io
 import json
 import subprocess
+import sys
 import types
 from pathlib import Path
 
@@ -26,6 +28,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = ROOT / "bin" / "gac" / "error-knowledge.py"
+ARTIFACT_HOOK = ROOT / "bin" / "gac" / "check-runtime-artifacts.py"
+ARTIFACT_FAST = ROOT / "bin" / "gac" / "ci-local-fast.py"
 
 # 4 shared distinctive tokens: enough to clear symptom_overlap's >=3 word bar, so
 # a miss below is the category filter talking, not the fuzzy matcher being weak.
@@ -242,3 +246,81 @@ def yaml_load(path: Path) -> dict:
     import yaml
 
     return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def _whitelist_literals(path: Path) -> list[str]:
+    """Read ``WHITELIST_PREFIXES`` without importing either gate.
+
+    One copy is module-level, the other is function-local, so only AST extraction
+    compares them on equal terms.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    found = [
+        ast.literal_eval(node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign)
+        for target in node.targets
+        if isinstance(target, ast.Name) and target.id == "WHITELIST_PREFIXES"
+    ]
+    assert len(found) == 1, f"{path.name}: expected exactly one WHITELIST_PREFIXES, got {len(found)}"
+    return found[0]
+
+
+def _stage(repo: Path, *paths: str) -> None:
+    for rel in paths:
+        target = repo / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("{}\n", encoding="utf-8")
+    subprocess.run(["git", "add", "--", *paths], cwd=repo, check=True, capture_output=True)
+
+
+def _run_hook_gate(repo: Path) -> int:
+    return subprocess.run(
+        [sys.executable, str(ARTIFACT_HOOK), "--staged"], cwd=repo, capture_output=True, text=True
+    ).returncode
+
+
+def _run_fast_gate(repo: Path) -> int:
+    spec = importlib.util.spec_from_file_location("ci_local_fast_artifacts", ARTIFACT_FAST)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module  # dataclass field resolution needs the module registered
+    spec.loader.exec_module(module)
+    return module.run_runtime_artifact_gate(root=repo, output=io.StringIO())
+
+
+@pytest.fixture
+def git_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True, capture_output=True)
+    return repo
+
+
+def test_both_runtime_artifact_gates_share_one_whitelist(git_repo: Path):
+    """I8: the drawer had two locks that did not know about each other.
+
+    ``check-runtime-artifacts.py`` documents itself as a port of
+    ``ci-local-fast.py::run_runtime_artifact_gate()``, yet only the hook copy grew
+    ``WHITELIST_PREFIXES`` — drift is the failure mode this test exists to kill.
+    """
+    hook, fast = _whitelist_literals(ARTIFACT_HOOK), _whitelist_literals(ARTIFACT_FAST)
+    assert hook == fast, f"runtime-artifacts whitelist drift: hook={hook} fast={fast}"
+    assert ".omo/_delivery/rule-drafts/" in hook
+    assert {p for p in hook if p.startswith(".omo/_delivery/")} == {
+        ".omo/_delivery/calibration/",
+        ".omo/_delivery/events/",
+        ".omo/_delivery/scene-outcomes/",
+        ".omo/_delivery/rule-drafts/",
+    }, "widening the drawer needs a principal decision, not another prefix appended here"
+
+
+@pytest.mark.parametrize("run_gate", [_run_hook_gate, _run_fast_gate], ids=["pre-commit", "ci-local-fast"])
+def test_drafts_may_be_committed_without_opening_the_drawer(git_repo: Path, run_gate):
+    """.gitignore alone still loses at `git commit`; the tracked queue must pass both gates."""
+    _stage(git_repo, ".omo/_delivery/rule-drafts/CR-PITFALL-GAT-910.json")
+    assert run_gate(git_repo) == 0, "promotion queue is still blacklisted from version control"
+
+    _stage(git_repo, ".omo/_delivery/runtime-junk.json")
+    assert run_gate(git_repo) == 1, "whitelisting the drafts directory un-protected _delivery"
+
