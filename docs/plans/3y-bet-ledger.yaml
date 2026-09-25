@@ -34300,7 +34300,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-25-physical-logical-mapping-audit.md
     spec_version: 1.0.0
-    content_digest: sha256:607eb5df5770081f0b16fe372be1fd01d7c65ac5e0ac81d52dc0dd2add9232e1
+    content_digest: sha256:76a2b2ecb3cd774f7afa8426315487e20698de827b568f2139991cead6c67efb
     decision_ref: decision://accepted/BET-Y2Q4-SH-3
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
