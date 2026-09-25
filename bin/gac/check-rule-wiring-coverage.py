@@ -47,6 +47,7 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parents[2]
 GOV_CHECKS = _ROOT / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
 L0_SUBMODULE = _ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "L0-constraints.yaml"
+ALIAS_MAP = _ROOT / "bin" / "gac" / "registry-alias-map.yaml"
 
 # 可执行语料: 真正的执行体所在处 (不含注册表自身, 否则自引用会全绿)
 EXEC_CORPUS_GLOBS = [
@@ -58,6 +59,49 @@ EXEC_CORPUS_GLOBS = [
 EXEC_MANIFEST = _ROOT / ".omo" / "_truth" / "registry" / "hook-manifest.yaml"
 
 _ID_RE = re.compile(r"^CR-[A-Z0-9-]+$|^X[1-4]-C\d{2}$|^CS-\d+$")
+
+# governance-checks has 4 entries using lowercase hyphen form (x1-audit-chain etc.)
+# while 86 use CR-* form. The regex above matches only CR-*, so we add
+# lowercase xN-name as a valid id form for both _rule_ids extraction AND
+# _implemented_ids corpus scan.
+_ID_RE_LOWER = re.compile(r"^[xX][1-4]-[a-z][a-z0-9-]+$")
+
+
+def _load_alias_map() -> dict[str, set[str]]:
+    """Load alias map → {canonical_id: {aliases including self}}.
+
+    Used by inventory() to detect "implemented but renamed" IDs.
+    """
+    if not ALIAS_MAP.is_file():
+        return {}
+    try:
+        import yaml
+        with ALIAS_MAP.open(encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except Exception:
+        return {}
+    out: dict[str, set[str]] = {}
+    for entry in data.get("aliases", []) or []:
+        canon = str(entry.get("canonical", "")).strip()
+        if not canon:
+            continue
+        aliases = {canon}
+        for a in entry.get("aliases", []) or []:
+            aliases.add(str(a).strip())
+        out[canon] = aliases
+    return out
+
+
+def _resolve_via_alias(rule_id: str, alias_map: dict[str, set[str]]) -> str | None:
+    """Return canonical id if rule_id matches any alias (case-insensitive)."""
+    rule_lower = rule_id.lower()
+    for canon, aliases in alias_map.items():
+        if rule_id in aliases or canon == rule_id:
+            return canon
+        lowered = {a.lower() for a in aliases}
+        if rule_lower in lowered:
+            return canon
+    return None
 
 
 def _exec_corpus() -> str:
@@ -91,7 +135,7 @@ def _rule_ids(path: Path) -> list[str]:
     def walk(o):
         if isinstance(o, dict):
             v = o.get("id")
-            if isinstance(v, str) and _ID_RE.match(v):
+            if isinstance(v, str) and (_ID_RE.match(v) or _ID_RE_LOWER.match(v)):
                 ids.append(v)
             for x in o.values():
                 walk(x)
@@ -115,16 +159,45 @@ def inventory() -> dict:
     gov = _rule_ids(GOV_CHECKS)
     l0 = _rule_ids(L0_SUBMODULE)
     l0_available = bool(l0)
+    alias_map = _load_alias_map()
+
+    # An ID is "wired" if:
+    #   (a) its string form appears literally in the corpus, OR
+    #   (b) any alias of it appears in the corpus (alias map cross-walk)
+    def is_wired(rule_id: str) -> bool:
+        if rule_id in corpus:
+            return True
+        canon = _resolve_via_alias(rule_id, alias_map)
+        if not canon:
+            return False
+        aliases = alias_map[canon]
+        return any(a in corpus for a in aliases)
 
     def unreferenced(ids):
-        return [i for i in ids if i not in corpus]
+        return [i for i in ids if not is_wired(i)]
 
     gov_un = unreferenced(gov)
     l0_un = unreferenced(l0)
     impl = _implemented_ids(corpus)
+
+    # also: IDs implemented but not declared (alias-resolved count)
+    declared_all = set(gov) | set(l0)
+    impl_resolved = []
+    for iid in impl:
+        if iid in declared_all:
+            continue
+        canon = _resolve_via_alias(iid, alias_map)
+        if canon and canon in declared_all:
+            impl_resolved.append({"id": iid, "canonical": canon})
+
     return {
         "sources": {
-            "governance-checks": {"declared": len(gov), "unreferenced": len(gov_un)},
+            "governance-checks": {
+                "declared": len(gov),
+                "unreferenced": len(gov_un),
+                "alias_map_loaded": bool(alias_map),
+                "alias_map_size": len(alias_map),
+            },
             "L0-constraints(submodule)": {
                 "declared": len(l0), "unreferenced": len(l0_un),
                 "available": l0_available,
@@ -137,6 +210,7 @@ def inventory() -> dict:
             "governance-checks": gov_un,
             "L0-constraints": l0_un,
         },
+        "implemented_via_alias": impl_resolved,
         "caveat": (
             "无法区分『真未接线』与『已实现但换了名字』—— 三个注册表 id 词汇互异, "
             "且 check-l0-constraints.py 对 governance-checks 的 id 零引用 (用自己的 "
