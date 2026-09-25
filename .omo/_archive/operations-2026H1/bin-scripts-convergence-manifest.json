@@ -3133,12 +3133,12 @@
     },
     {
       "name": "resolve_root_remote",
-      "bin": "bin/gac/resolve-root-remote.sh",
+      "bin": "bin/_archive/2026-09-25-sh2-quota/resolve-root-remote.sh",
       "scripts": "scripts/bin/gac/resolve-root-remote.sh",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
+      "status": "archived",
+      "action": "archived",
       "owner": "governance",
-      "note": "Converged capability: keep bin as primary implementation, scripts as compatibility entry.",
+      "note": "SH-2 bin-quota offset — archived 2026-09-25 (unused 6mo)",
       "evidence": {
         "active_files": [
           "bin/gac/resolve-root-remote.sh"
