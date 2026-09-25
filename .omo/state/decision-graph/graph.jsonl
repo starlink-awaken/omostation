@@ -1,5 +1,0 @@
-{"node_id": "t1", "kind": "patrol", "actor": "bot-a", "action": "scan", "ts": "2026-09-13T00:00:00Z"}
-{"node_id": "t2", "kind": "healing", "actor": "bot-b", "action": "fix", "ts": "2026-09-13T00:01:00Z", "decision": "fixed"}
-{"node_id": "t3", "kind": "decision", "actor": "human", "action": "approve", "ts": "2026-09-13T00:02:00Z", "decision": "yes"}
-{"from_node": "t1", "to_node": "t2", "relation": "caused"}
-{"from_node": "t2", "to_node": "t3", "relation": "influenced"}

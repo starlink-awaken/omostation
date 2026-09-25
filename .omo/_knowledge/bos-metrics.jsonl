@@ -9,4 +9,4 @@
 {"elapsed_ms": 10000.0, "error": "", "recorded_at": "2026-09-25T01:29:57Z", "status": "resolved", "transport": "in_process", "uri": "bos://system/health"}
 {"elapsed_ms": 500.0, "error": "", "recorded_at": "2026-09-25T01:29:57Z", "status": "resolved", "transport": "http", "uri": "bos://system/health"}
 {"elapsed_ms": 10000.0, "error": "", "recorded_at": "2026-09-25T01:29:57Z", "status": "resolved", "transport": "http", "uri": "bos://system/health"}
-{"uri": "bos://system/health", "status": "resolved", "elapsed_ms": 123.0, "transport": "http"}
+{"uri": "bos://system/health", "status": "resolved", "recorded_at": "2026-09-25T10:12:00Z", "elapsed_ms": 123.0, "transport": "http"}
