@@ -1,526 +1,4 @@
 {
-  "cell-b25fcbcb9b07": {
-    "cell_id": "cell-b25fcbcb9b07",
-    "state": "idle",
-    "current_role": null,
-    "episode_id": null,
-    "context": {
-      "intent": {
-        "schema": "agent-cell-smoke-intent/v1",
-        "scenario": "pool_lifecycle",
-        "external_side_effects": "none"
-      },
-      "plan": {
-        "schema": "agent-cell-smoke-plan/v1",
-        "steps": [
-          "verify_scheduler"
-        ]
-      },
-      "result": {
-        "schema": "agent-cell-smoke-result/v1",
-        "status": "ok"
-      },
-      "verdict": "accept"
-    },
-    "handoff_log": [
-      {
-        "schema": "handoff/v1",
-        "from_role": "planner",
-        "to_role": "executor",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": null,
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "plan",
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "plan_sha256": "d8322a07d5cd3905c9d59d3d22a160fd0cf3d31e94fdfd4ef9484b1bac934214"
-        },
-        "timestamp": "2026-09-24T03:16:15.780186+00:00",
-        "evidence_ref": "evidence://cell/cell-b25fcbcb9b07/handoff/0"
-      },
-      {
-        "schema": "handoff/v1",
-        "from_role": "executor",
-        "to_role": "verifier",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "result",
-          "result": {
-            "schema": "agent-cell-smoke-result/v1",
-            "status": "ok"
-          },
-          "result_sha256": "c80fa572b2db1002da14f9d0405b40064ce0422597850f3c68d5b86a92aea2b0"
-        },
-        "timestamp": "2026-09-24T03:16:15.780203+00:00",
-        "evidence_ref": "evidence://cell/cell-b25fcbcb9b07/handoff/1"
-      }
-    ],
-    "state_id": "cell-b25fcbcb9b07",
-    "saved_at": "2026-09-24T03:16:15.780214+00:00"
-  },
-  "cell-30589678f361": {
-    "cell_id": "cell-30589678f361",
-    "state": "idle",
-    "current_role": null,
-    "episode_id": null,
-    "context": {
-      "intent": {
-        "schema": "agent-cell-smoke-intent/v1",
-        "scenario": "pool_lifecycle",
-        "external_side_effects": "none"
-      },
-      "plan": {
-        "schema": "agent-cell-smoke-plan/v1",
-        "steps": [
-          "verify_scheduler"
-        ]
-      },
-      "result": {
-        "schema": "agent-cell-smoke-result/v1",
-        "status": "ok"
-      },
-      "verdict": "accept"
-    },
-    "handoff_log": [
-      {
-        "schema": "handoff/v1",
-        "from_role": "planner",
-        "to_role": "executor",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": null,
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "plan",
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "plan_sha256": "d8322a07d5cd3905c9d59d3d22a160fd0cf3d31e94fdfd4ef9484b1bac934214"
-        },
-        "timestamp": "2026-09-24T03:20:15.939375+00:00",
-        "evidence_ref": "evidence://cell/cell-30589678f361/handoff/0"
-      },
-      {
-        "schema": "handoff/v1",
-        "from_role": "executor",
-        "to_role": "verifier",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "result",
-          "result": {
-            "schema": "agent-cell-smoke-result/v1",
-            "status": "ok"
-          },
-          "result_sha256": "c80fa572b2db1002da14f9d0405b40064ce0422597850f3c68d5b86a92aea2b0"
-        },
-        "timestamp": "2026-09-24T03:20:15.939392+00:00",
-        "evidence_ref": "evidence://cell/cell-30589678f361/handoff/1"
-      }
-    ],
-    "state_id": "cell-30589678f361",
-    "saved_at": "2026-09-24T03:20:15.939403+00:00"
-  },
-  "cell-3b307754b886": {
-    "cell_id": "cell-3b307754b886",
-    "state": "idle",
-    "current_role": null,
-    "episode_id": null,
-    "context": {
-      "intent": {
-        "schema": "agent-cell-smoke-intent/v1",
-        "scenario": "pool_lifecycle",
-        "external_side_effects": "none"
-      },
-      "plan": {
-        "schema": "agent-cell-smoke-plan/v1",
-        "steps": [
-          "verify_scheduler"
-        ]
-      },
-      "result": {
-        "schema": "agent-cell-smoke-result/v1",
-        "status": "ok"
-      },
-      "verdict": "accept"
-    },
-    "handoff_log": [
-      {
-        "schema": "handoff/v1",
-        "from_role": "planner",
-        "to_role": "executor",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": null,
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "plan",
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "plan_sha256": "d8322a07d5cd3905c9d59d3d22a160fd0cf3d31e94fdfd4ef9484b1bac934214"
-        },
-        "timestamp": "2026-09-24T03:24:16.124066+00:00",
-        "evidence_ref": "evidence://cell/cell-3b307754b886/handoff/0"
-      },
-      {
-        "schema": "handoff/v1",
-        "from_role": "executor",
-        "to_role": "verifier",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "result",
-          "result": {
-            "schema": "agent-cell-smoke-result/v1",
-            "status": "ok"
-          },
-          "result_sha256": "c80fa572b2db1002da14f9d0405b40064ce0422597850f3c68d5b86a92aea2b0"
-        },
-        "timestamp": "2026-09-24T03:24:16.124083+00:00",
-        "evidence_ref": "evidence://cell/cell-3b307754b886/handoff/1"
-      }
-    ],
-    "state_id": "cell-3b307754b886",
-    "saved_at": "2026-09-24T03:24:16.124093+00:00"
-  },
-  "cell-da286d956214": {
-    "cell_id": "cell-da286d956214",
-    "state": "idle",
-    "current_role": null,
-    "episode_id": null,
-    "context": {
-      "intent": {
-        "schema": "agent-cell-smoke-intent/v1",
-        "scenario": "pool_lifecycle",
-        "external_side_effects": "none"
-      },
-      "plan": {
-        "schema": "agent-cell-smoke-plan/v1",
-        "steps": [
-          "verify_scheduler"
-        ]
-      },
-      "result": {
-        "schema": "agent-cell-smoke-result/v1",
-        "status": "ok"
-      },
-      "verdict": "accept"
-    },
-    "handoff_log": [
-      {
-        "schema": "handoff/v1",
-        "from_role": "planner",
-        "to_role": "executor",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": null,
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "plan",
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "plan_sha256": "d8322a07d5cd3905c9d59d3d22a160fd0cf3d31e94fdfd4ef9484b1bac934214"
-        },
-        "timestamp": "2026-09-24T03:28:16.292183+00:00",
-        "evidence_ref": "evidence://cell/cell-da286d956214/handoff/0"
-      },
-      {
-        "schema": "handoff/v1",
-        "from_role": "executor",
-        "to_role": "verifier",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "result",
-          "result": {
-            "schema": "agent-cell-smoke-result/v1",
-            "status": "ok"
-          },
-          "result_sha256": "c80fa572b2db1002da14f9d0405b40064ce0422597850f3c68d5b86a92aea2b0"
-        },
-        "timestamp": "2026-09-24T03:28:16.292202+00:00",
-        "evidence_ref": "evidence://cell/cell-da286d956214/handoff/1"
-      }
-    ],
-    "state_id": "cell-da286d956214",
-    "saved_at": "2026-09-24T03:28:16.292212+00:00"
-  },
-  "cell-8f09bbf06353": {
-    "cell_id": "cell-8f09bbf06353",
-    "state": "idle",
-    "current_role": null,
-    "episode_id": null,
-    "context": {
-      "intent": {
-        "schema": "agent-cell-smoke-intent/v1",
-        "scenario": "pool_lifecycle",
-        "external_side_effects": "none"
-      },
-      "plan": {
-        "schema": "agent-cell-smoke-plan/v1",
-        "steps": [
-          "verify_scheduler"
-        ]
-      },
-      "result": {
-        "schema": "agent-cell-smoke-result/v1",
-        "status": "ok"
-      },
-      "verdict": "accept"
-    },
-    "handoff_log": [
-      {
-        "schema": "handoff/v1",
-        "from_role": "planner",
-        "to_role": "executor",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": null,
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "plan",
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "plan_sha256": "d8322a07d5cd3905c9d59d3d22a160fd0cf3d31e94fdfd4ef9484b1bac934214"
-        },
-        "timestamp": "2026-09-24T03:32:16.519234+00:00",
-        "evidence_ref": "evidence://cell/cell-8f09bbf06353/handoff/0"
-      },
-      {
-        "schema": "handoff/v1",
-        "from_role": "executor",
-        "to_role": "verifier",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "result",
-          "result": {
-            "schema": "agent-cell-smoke-result/v1",
-            "status": "ok"
-          },
-          "result_sha256": "c80fa572b2db1002da14f9d0405b40064ce0422597850f3c68d5b86a92aea2b0"
-        },
-        "timestamp": "2026-09-24T03:32:16.519262+00:00",
-        "evidence_ref": "evidence://cell/cell-8f09bbf06353/handoff/1"
-      }
-    ],
-    "state_id": "cell-8f09bbf06353",
-    "saved_at": "2026-09-24T03:32:16.519278+00:00"
-  },
-  "cell-c506099673b8": {
-    "cell_id": "cell-c506099673b8",
-    "state": "idle",
-    "current_role": null,
-    "episode_id": null,
-    "context": {
-      "intent": {
-        "schema": "agent-cell-smoke-intent/v1",
-        "scenario": "pool_lifecycle",
-        "external_side_effects": "none"
-      },
-      "plan": {
-        "schema": "agent-cell-smoke-plan/v1",
-        "steps": [
-          "verify_scheduler"
-        ]
-      },
-      "result": {
-        "schema": "agent-cell-smoke-result/v1",
-        "status": "ok"
-      },
-      "verdict": "accept"
-    },
-    "handoff_log": [
-      {
-        "schema": "handoff/v1",
-        "from_role": "planner",
-        "to_role": "executor",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": null,
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "plan",
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "plan_sha256": "d8322a07d5cd3905c9d59d3d22a160fd0cf3d31e94fdfd4ef9484b1bac934214"
-        },
-        "timestamp": "2026-09-24T03:36:16.728537+00:00",
-        "evidence_ref": "evidence://cell/cell-c506099673b8/handoff/0"
-      },
-      {
-        "schema": "handoff/v1",
-        "from_role": "executor",
-        "to_role": "verifier",
-        "context": {
-          "intent": {
-            "schema": "agent-cell-smoke-intent/v1",
-            "scenario": "pool_lifecycle",
-            "external_side_effects": "none"
-          },
-          "plan": {
-            "schema": "agent-cell-smoke-plan/v1",
-            "steps": [
-              "verify_scheduler"
-            ]
-          },
-          "result": null,
-          "verdict": null
-        },
-        "artifacts": {
-          "schema": "agent-cell-smoke-artifacts/v1",
-          "kind": "result",
-          "result": {
-            "schema": "agent-cell-smoke-result/v1",
-            "status": "ok"
-          },
-          "result_sha256": "c80fa572b2db1002da14f9d0405b40064ce0422597850f3c68d5b86a92aea2b0"
-        },
-        "timestamp": "2026-09-24T03:36:16.728557+00:00",
-        "evidence_ref": "evidence://cell/cell-c506099673b8/handoff/1"
-      }
-    ],
-    "state_id": "cell-c506099673b8",
-    "saved_at": "2026-09-24T03:36:16.728568+00:00"
-  },
   "cell-4f1793e183b7": {
     "cell_id": "cell-4f1793e183b7",
     "state": "idle",
@@ -26707,5 +26185,92 @@
     ],
     "state_id": "cell-a0200fbe8afc",
     "saved_at": "2026-09-25T03:12:47.491340+00:00"
+  },
+  "cell-97a823d00f7c": {
+    "cell_id": "cell-97a823d00f7c",
+    "state": "idle",
+    "current_role": null,
+    "episode_id": null,
+    "context": {
+      "intent": {
+        "schema": "agent-cell-smoke-intent/v1",
+        "scenario": "pool_lifecycle",
+        "external_side_effects": "none"
+      },
+      "plan": {
+        "schema": "agent-cell-smoke-plan/v1",
+        "steps": [
+          "verify_scheduler"
+        ]
+      },
+      "result": {
+        "schema": "agent-cell-smoke-result/v1",
+        "status": "ok"
+      },
+      "verdict": "accept"
+    },
+    "handoff_log": [
+      {
+        "schema": "handoff/v1",
+        "from_role": "planner",
+        "to_role": "executor",
+        "context": {
+          "intent": {
+            "schema": "agent-cell-smoke-intent/v1",
+            "scenario": "pool_lifecycle",
+            "external_side_effects": "none"
+          },
+          "plan": null,
+          "result": null,
+          "verdict": null
+        },
+        "artifacts": {
+          "schema": "agent-cell-smoke-artifacts/v1",
+          "kind": "plan",
+          "plan": {
+            "schema": "agent-cell-smoke-plan/v1",
+            "steps": [
+              "verify_scheduler"
+            ]
+          },
+          "plan_sha256": "d8322a07d5cd3905c9d59d3d22a160fd0cf3d31e94fdfd4ef9484b1bac934214"
+        },
+        "timestamp": "2026-09-25T03:36:49.012859+00:00",
+        "evidence_ref": "evidence://cell/cell-97a823d00f7c/handoff/0"
+      },
+      {
+        "schema": "handoff/v1",
+        "from_role": "executor",
+        "to_role": "verifier",
+        "context": {
+          "intent": {
+            "schema": "agent-cell-smoke-intent/v1",
+            "scenario": "pool_lifecycle",
+            "external_side_effects": "none"
+          },
+          "plan": {
+            "schema": "agent-cell-smoke-plan/v1",
+            "steps": [
+              "verify_scheduler"
+            ]
+          },
+          "result": null,
+          "verdict": null
+        },
+        "artifacts": {
+          "schema": "agent-cell-smoke-artifacts/v1",
+          "kind": "result",
+          "result": {
+            "schema": "agent-cell-smoke-result/v1",
+            "status": "ok"
+          },
+          "result_sha256": "c80fa572b2db1002da14f9d0405b40064ce0422597850f3c68d5b86a92aea2b0"
+        },
+        "timestamp": "2026-09-25T03:36:49.012887+00:00",
+        "evidence_ref": "evidence://cell/cell-97a823d00f7c/handoff/1"
+      }
+    ],
+    "state_id": "cell-97a823d00f7c",
+    "saved_at": "2026-09-25T03:36:49.012903+00:00"
   }
 }

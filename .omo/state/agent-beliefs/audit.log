@@ -23328,3 +23328,13 @@
 [2026-09-25T03:06:58Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-10508 agent=advisor outcome=positive
 [2026-09-25T03:12:41Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-10509 agent=advisor outcome=positive
 [2026-09-25T03:13:01Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-17138 ref=agent:health-monitor:tick:noop rate=1.0
+[2026-09-25T03:35:43Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-10510 agent=advisor outcome=positive
+[2026-09-25T03:36:03Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-17139 ref=agent:health-monitor:tick:noop rate=1.0
+[2026-09-25T03:36:14Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-17140 ref=agent:knowledge-curator:tick:learn rate=1.0
+[2026-09-25T03:36:26Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-17141 ref=agent:journey-runner:tick:noop rate=1.0
+[2026-09-25T03:36:35Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-17142 ref=agent:governor:tick:alert rate=1.0
+[2026-09-25T03:36:44Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-17143 ref=agent:advisor:tick:evaluate rate=1.0
+[2026-09-25T03:36:55Z] ACTION=RECORD_CAPABILITY_CALIBRATION DETAILS=id=cc-17144 ref=agent:autonomy-assessment:tick:evaluate rate=1.0
+[2026-09-25T03:37:07Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-10511 agent=knowledge-curator outcome=positive
+[2026-09-25T03:37:19Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-10512 agent=governor outcome=positive
+[2026-09-25T03:37:29Z] ACTION=RECORD_EXPERIENCE DETAILS=id=exp-10513 agent=advisor outcome=positive

@@ -3965,3 +3965,6 @@
 {"events_in_file": 1040, "processed": 0, "start_index": 1040, "task_queue": {"completed": 0, "failed": 0, "picked": 0, "skipped": true}}
 {"events_in_file": 1040, "processed": 0, "start_index": 1040, "task_queue": {"completed": 0, "failed": 0, "picked": 0, "skipped": true}}
 {"events_in_file": 1041, "processed": 1, "start_index": 1040, "task_queue": {"completed": 0, "failed": 0, "picked": 0, "skipped": true}}
+{"events_in_file": 973, "processed": 0, "start_index": 973, "task_queue": {"completed": 0, "failed": 0, "picked": 0, "skipped": true}}
+{"events_in_file": 973, "processed": 0, "start_index": 973, "task_queue": {"completed": 0, "failed": 0, "picked": 0, "skipped": true}}
+{"events_in_file": 973, "processed": 0, "start_index": 973, "task_queue": {"completed": 0, "failed": 0, "picked": 0, "skipped": true}}

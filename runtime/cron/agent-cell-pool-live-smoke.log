@@ -2602,3 +2602,4 @@ agent-cell-pool-live-smoke: ok=True cell=cell-ba04aec2bf5c receipt=8889b197935e1
 agent-cell-pool-live-smoke: ok=True cell=cell-47a73f4185a9 receipt=9720b3d64b25267d6c86151794a4aec3ee2681146c56220fdd55a04bb9461949
 agent-cell-pool-live-smoke: ok=True cell=cell-dc05de88723c receipt=8cbcaba70146a8c17a69a27ac635a7d5ca4b0fec34c24eaea6369f6886bd9c06
 agent-cell-pool-live-smoke: ok=True cell=cell-a0200fbe8afc receipt=373e56b43e6d6c7d473bd49a4e0c2b3b54a146281b9055f1ebccde38d11942b0
+agent-cell-pool-live-smoke: ok=True cell=cell-97a823d00f7c receipt=1691157ba6eb5dc5ef0f863d4cf8d9ba543a0a45174594a7103f5699001aa27f

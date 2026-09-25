@@ -121196,6 +121196,48 @@ capability_calibrations:
   avg_latency_ms: 0.0
   sample_size: 1
   last_run_id: null
+- id: cc-17139
+  capability_ref: agent:health-monitor:tick:noop
+  measured_at: '2026-09-25T03:35:59Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-17140
+  capability_ref: agent:knowledge-curator:tick:learn
+  measured_at: '2026-09-25T03:36:10Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-17141
+  capability_ref: agent:journey-runner:tick:noop
+  measured_at: '2026-09-25T03:36:22Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-17142
+  capability_ref: agent:governor:tick:alert
+  measured_at: '2026-09-25T03:36:32Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-17143
+  capability_ref: agent:advisor:tick:evaluate
+  measured_at: '2026-09-25T03:36:41Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
+- id: cc-17144
+  capability_ref: agent:autonomy-assessment:tick:evaluate
+  measured_at: '2026-09-25T03:36:51Z'
+  success_rate: 1.0
+  avg_latency_ms: 0.0
+  sample_size: 1
+  last_run_id: null
 decision_outcomes:
 - id: do-0001
   decision_at: '2026-09-13T23:18:11Z'
@@ -185783,3 +185825,27 @@ agent_experiences:
   outcome: positive
   context: ''
   recorded_at: '2026-09-25T03:12:37Z'
+- id: exp-10510
+  agent_id: advisor
+  experience: 'A2A task: investigated low_trust_capabilities'
+  outcome: positive
+  context: ''
+  recorded_at: '2026-09-25T03:35:39Z'
+- id: exp-10511
+  agent_id: knowledge-curator
+  experience: tick:learn on knowledge-curator
+  outcome: positive
+  context: ''
+  recorded_at: '2026-09-25T03:37:02Z'
+- id: exp-10512
+  agent_id: governor
+  experience: tick:alert on governor
+  outcome: positive
+  context: ''
+  recorded_at: '2026-09-25T03:37:15Z'
+- id: exp-10513
+  agent_id: advisor
+  experience: tick:evaluate on advisor
+  outcome: positive
+  context: ''
+  recorded_at: '2026-09-25T03:37:26Z'

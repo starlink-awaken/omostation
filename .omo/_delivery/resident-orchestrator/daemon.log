@@ -214574,3 +214574,95 @@ expected ',' or ']', but got '<stream end>'
 2026-09-25T03:11:59Z tick_done projector=resident-sub processed=0 events_in_file=1041
 2026-09-25T03:12:29Z tick_done projector=resident-sub processed=0 events_in_file=1041
 2026-09-25T03:12:59Z tick_done projector=resident-sub processed=0 events_in_file=1041
+2026-09-25T03:33:26Z tick_done projector=resident-sub processed=0 events_in_file=1056
+2026-09-25T03:33:53Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:33:53Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:33:53Z default_handlers registered (decision_agent)
+2026-09-25T03:33:53Z default_handlers registered (decision_agent)
+2026-09-25T03:33:53Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:33:53Z default_handlers registered (decision_agent)
+2026-09-25T03:33:53Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:33:53Z default_handlers registered (decision_agent)
+2026-09-25T03:33:53Z default_handlers registered (execution_agent)
+2026-09-25T03:33:53Z default_handlers registered (execution_agent)
+2026-09-25T03:33:53Z default_handlers registered (execution_agent)
+2026-09-25T03:33:53Z default_handlers registered (execution_agent)
+2026-09-25T03:33:53Z default_handlers registered (alert)
+2026-09-25T03:33:53Z default_handlers registered (alert)
+2026-09-25T03:33:53Z default_handlers registered (alert)
+2026-09-25T03:33:53Z default_handlers registered (heartbeat)
+2026-09-25T03:33:53Z default_handlers registered (heartbeat)
+2026-09-25T03:33:53Z default_handlers registered (heartbeat)
+2026-09-25T03:33:53Z default_handlers registered (alert)
+2026-09-25T03:33:53Z default_handlers registered (heartbeat)
+2026-09-25T03:33:53Z role_publish projector=resident-monitor published=0
+2026-09-25T03:33:53Z role_publish projector=resident-heartbeat published=0
+2026-09-25T03:33:56Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:34:21Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:34:21Z default_handlers registered (decision_agent)
+2026-09-25T03:34:21Z default_handlers registered (execution_agent)
+2026-09-25T03:34:21Z default_handlers registered (alert)
+2026-09-25T03:34:21Z default_handlers registered (heartbeat)
+2026-09-25T03:34:26Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:34:56Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:35:26Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:35:54Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:35:54Z default_handlers registered (decision_agent)
+2026-09-25T03:35:54Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:35:54Z default_handlers registered (decision_agent)
+2026-09-25T03:35:54Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:35:54Z default_handlers registered (decision_agent)
+2026-09-25T03:35:54Z default_handlers registered (execution_agent)
+2026-09-25T03:35:54Z default_handlers registered (alert)
+2026-09-25T03:35:54Z default_handlers registered (heartbeat)
+2026-09-25T03:35:54Z default_handlers registered (execution_agent)
+2026-09-25T03:35:54Z default_handlers registered (alert)
+2026-09-25T03:35:54Z default_handlers registered (heartbeat)
+2026-09-25T03:35:54Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:35:54Z default_handlers registered (decision_agent)
+2026-09-25T03:35:54Z default_handlers registered (execution_agent)
+2026-09-25T03:35:54Z default_handlers registered (alert)
+2026-09-25T03:35:54Z default_handlers registered (heartbeat)
+2026-09-25T03:35:54Z default_handlers registered (execution_agent)
+2026-09-25T03:35:54Z default_handlers registered (alert)
+2026-09-25T03:35:54Z default_handlers registered (heartbeat)
+2026-09-25T03:35:54Z role_publish projector=resident-monitor published=0
+2026-09-25T03:35:54Z role_publish projector=resident-heartbeat published=0
+2026-09-25T03:35:56Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:36:22Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:36:22Z default_handlers registered (decision_agent)
+2026-09-25T03:36:22Z default_handlers registered (execution_agent)
+2026-09-25T03:36:22Z default_handlers registered (alert)
+2026-09-25T03:36:22Z default_handlers registered (heartbeat)
+2026-09-25T03:36:27Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:36:57Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:37:27Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:37:54Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:37:54Z default_handlers registered (decision_agent)
+2026-09-25T03:37:54Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:37:54Z default_handlers registered (decision_agent)
+2026-09-25T03:37:54Z default_handlers registered (execution_agent)
+2026-09-25T03:37:54Z default_handlers registered (alert)
+2026-09-25T03:37:54Z default_handlers registered (execution_agent)
+2026-09-25T03:37:54Z default_handlers registered (heartbeat)
+2026-09-25T03:37:54Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:37:54Z default_handlers registered (alert)
+2026-09-25T03:37:54Z default_handlers registered (heartbeat)
+2026-09-25T03:37:54Z default_handlers registered (decision_agent)
+2026-09-25T03:37:54Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:37:54Z default_handlers registered (decision_agent)
+2026-09-25T03:37:54Z default_handlers registered (execution_agent)
+2026-09-25T03:37:54Z default_handlers registered (alert)
+2026-09-25T03:37:54Z default_handlers registered (heartbeat)
+2026-09-25T03:37:54Z default_handlers registered (execution_agent)
+2026-09-25T03:37:54Z default_handlers registered (alert)
+2026-09-25T03:37:54Z default_handlers registered (heartbeat)
+2026-09-25T03:37:54Z role_publish projector=resident-monitor published=0
+2026-09-25T03:37:54Z role_publish projector=resident-heartbeat published=0
+2026-09-25T03:37:57Z tick_done projector=resident-sub processed=0 events_in_file=973
+2026-09-25T03:38:22Z default_handlers registered (knowledge_sediment)
+2026-09-25T03:38:22Z default_handlers registered (decision_agent)
+2026-09-25T03:38:22Z default_handlers registered (execution_agent)
+2026-09-25T03:38:22Z default_handlers registered (alert)
+2026-09-25T03:38:22Z default_handlers registered (heartbeat)
+2026-09-25T03:38:27Z tick_done projector=resident-sub processed=0 events_in_file=973
