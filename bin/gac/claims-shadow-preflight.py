@@ -22,7 +22,7 @@ from typing import Optional
 
 SCHEMA = "claims-shadow-preflight/v1"
 AUTHORITY_ID = "omo-claims-authority-r0"
-ACCEPTED_SPEC_SHA256 = "sha256:b643890f3fda5bee575630018b155fb68ba0ce6f58af9c2b6772a2ff29bb0197"
+ACCEPTED_SPEC_SHA256 = "sha256:83ebe7a5b35fad86807e289007d962b90ba28c260cd53dad85532ce4d8888bb0"
 CLOSURE_PATHS = {
     "spec": "docs/superpowers/specs/2026-09-10-claims-authority-bridge-wp1-shadow-design.md",
     "ledger": "docs/plans/3y-bet-ledger.yaml",
