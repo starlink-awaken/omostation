@@ -342,3 +342,24 @@ def test_preflight_awaits_authorization_for_stale_nonclosure_dirty_root(tmp_path
     ]
     assert "fresh managed exact-main clone" not in recovery["next_safe_action"]
     assert "inactive" in recovery["next_safe_action"]
+
+def test_accepted_spec_digest_binding_matches_current_source() -> None:
+    """防漂移: ACCEPTED_SPEC_SHA256 必须与当前 spec 源文件摘要一致.
+
+    该常量是 claims 激活的**冻结绑定**: spec 一旦改动而未同步重绑定, preflight
+    就会以 accepted_spec_digest_mismatch 硬阻塞激活。2026-09-25 #4328 的
+    「面向前端全量 frontmatter 补全」批量改写了本 spec 的字节 (仅元数据, +6/-4),
+    而该 preflight 的 trigger 仅为 manual, 故无人察觉 —— 直到人工跑 preflight
+    才发现。此测试把该漂移提前到 CI 可见: spec 若需变更, 必须在**同一 PR** 内
+    重绑定常量并接受治理审查 (canonical_mutation_required=true; 绝不改写历史 receipt)。
+    """
+    module = _module()
+    spec_path = ROOT / module.CLOSURE_PATHS["spec"]
+    actual = "sha256:" + hashlib.sha256(spec_path.read_bytes()).hexdigest()
+    assert actual == module.ACCEPTED_SPEC_SHA256, (
+        "accepted spec digest drifted:\n"
+        f"  constant = {module.ACCEPTED_SPEC_SHA256}\n"
+        f"  actual   = {actual}\n"
+        "若 spec 变更属预期, 请在同一 PR 内重绑定 ACCEPTED_SPEC_SHA256 "
+        "(bin/gac/claims-shadow-preflight.py) 并走治理审查; 勿改写历史 receipt。"
+    )
