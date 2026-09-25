@@ -340,6 +340,36 @@ findings，却没有 `docs/reports` —— 也就是**没有为"证明这次交�
   列为"会走 done 转换的 bet"的默认 surface；或者给 `complete` 一条合法路径——只允许追加收据
   路径这一类 surface 而不触发 packet 重建（需要一个"证据面"与"交付面"分开的概念，属 packet 契约变更）。
 
+## I13（I10 的修法，以及 G5 对称豁免的第一次真实使用）
+
+I10 当时报告为"属 principal 的可改进项"，本交付把它做掉了：`run_ancestry_gate` 在判"回退"前先算
+`git merge-base base head`，只有当 head 相对 merge-base **确实动过**该 gitlink 才继续走 ancestry 判定；
+head 指针仍等于 merge-base 指针时按"落后"放行，输出 `[INFO]` 行并把 merge-base 与两侧指针写进
+`--json` 的 `behind` 数组（可解释、可复核，不是静默跳过）。判定契约：**`P_head ≠ P_merge_base` 是
+"回退"成立的前置条件**。base↔head 的 ancestry 比较、三条 skip-WARN 容错、index 模式与
+`is_descendant_or_equal` 的 8 层容错一律未动 —— 这次只多问了一个前置问题，没有放宽任何既有判据。
+
+真实复测（上一交付的分支 tip vs bump 了同一 gitlink 的 main tip）：
+
+| 情形 | 结果 |
+|------|------|
+| 修前 `--range f49727e4a 93b19c8a1` | `exit=1`：`FAIL projects/aetherforge 37e7af86e003 → d24ef719665e`；两条指引（commit 他人的 gitlink / 登记 known-debt 豁免）都是在为不存在的改动制造改动 |
+| 修后 同一区间 | `exit=0`：`[INFO] … 仍等于 merge-base 312d67082238 的 d24ef719665e` |
+| 真回退（合成仓库：分支把指针挪到 base 侧不可达的兄弟 commit） | `exit=1`：`violations` 命中该 path，`behind` 为空 |
+
+- **第二次缺陷（本次未做）**：`record_known_debt` 写入的指纹不含 merge-base，因此已登记的
+  31 条 `kind: gitlink-regress` 债无法事后重判"落后"还是"回退"。要么改注册格式带上 merge-base，
+  要么逐条人工重跑 —— 属 principal，且需要先定新格式。
+- **本 run 是 bet-less 起步的**：`governance-audit` ∈ `GOVERNANCE_EVOLVE_WORKFLOWS`，
+  `chain_bind.start_requires_bet(workspace=…)` 的 G5 对称豁免命中（`_has_governance_bet` = True），
+  返回 `["governance_evolve_exempt"]`。实测 run payload 无 `bet_id`、无 `work_packet` 键，
+  环境零 `AGCP_*`，未新增任何 waiver 文件。上面 Boundary 那条"绑任意 active bet 就是 F1 要消灭的
+  纸面绑定"的两难，在这条路径上不再出现 —— 这是 I5 豁免链应有的终态，第一次跑到真交付上。
+- 代价（同一枚硬币）：没有 `work_packet` 就没有 `write_surfaces` 约束，claim 只登记路径而不校验范围，
+  spec 事后被改也不再触发 drift 检查。豁免买到的是"不绑无关 bet"，付出的是"这 4 条路径的边界由本文件
+  的留痕而非 packet 契约保证"。两者兼得需要一个不依赖 bet 的 packet 来源（治理演进类 workflow 自有
+  授权面），属 principal。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
@@ -361,6 +391,10 @@ findings，却没有 `docs/reports` —— 也就是**没有为"证明这次交�
   与 spec digest 漂移（`20260924T234703Z-governance-audit-19edbaca`）作废的两个 run 都以 `--status failed`
   关闭并注明替代关系（见 I7），第三个 run 才按「spec 定稿 → 台账 digest → start → 只改代码」的顺序跑通。
   I5 的对称豁免落地后，治理演进类 workflow 的这条豁免链应当整体终止。
+- **I13 的那次交付（与本文件同批）走的正是 G5 豁免本身**：workflow `governance-audit`、bet-less 起步、
+  台账零改动（`total_bets` 与 `len(bets)` 均不受影响），改动面就是 checker + 其单测 + spec + 本文件四处。
+  所以它不在上面那条"lane 分 commit 留痕"的序列里 —— 那条序列存在的理由（治理演进 workflow 被要求
+  `--bet` 而台账无可绑 bet）已被 G5 消掉。
 - 未补录价值记录（30 条门保持 NOT_PROVEN）；未做 weekly-review（principal-only）。
 - 台账未改动。（作用域是上面 `20260924T161254Z` 那次交付；`BET-Y2Q3-T10-202` 有改动，见上一条。）
 
