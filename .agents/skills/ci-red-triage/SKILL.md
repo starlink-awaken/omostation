@@ -87,6 +87,8 @@ uv run --with pyyaml python bin/gac/gac-local-gate.py --scope staged --json  # �
 - **D5** tracked 运行快照 (governance_feedback_last_run / health.yaml generated_at) CI stale
 - **D6** 生成器输出格式 (consensus-inject `*` MD004 / 引用 ``` MD031)
 - **D7** 本地绝对路径 (evidence `--directory ~/ToolBox/`) CI 无
+- **D8** 门禁 `TIMEOUT after 15s` / `returncode=-1` = **假红**：冷 worktree 首跑 env 解析吃满预算。
+  判归属前先单独给该 checker 计时跑一遍（`bin/gac/<check>.py` 直跑），别把 `-1` 当 fail
 
 详见 p75 pattern §5.
 
