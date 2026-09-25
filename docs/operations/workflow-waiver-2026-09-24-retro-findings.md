@@ -418,6 +418,58 @@ I13 把"指纹不落 merge-base"记成一条待办。真去复跑时发现它不
 - **未做（属 principal）**：30 条存量条目内容一字未改（`git diff` 不含该文件）。多数已不可补
   （17 条对象已不存在），逐条人工重判或批量降级都要人来定；`owner`/`expires_at` 的强制同理。
 
+## I15（同一指纹被两次 push 各写一次：豁免台账 35 条只记着 34 次豁免）
+
+复跑 I14 时对口径。`origin/main @ a19691df0` 上 `gate-known-debt.yaml`：
+
+| 口径 | list 长度 | distinct `fingerprint` |
+|------|-----------|------------------------|
+| 全台账 | **35** | **34** |
+| `surface: gitlink-ancestry` | **30** | **29** |
+
+下文的比例除注明外都在 gitlink-ancestry 这 30 条上量 —— I13/I14 说的"30 条存量债"一直是这个 surface 的计数，
+不是全台账；两个口径别混。
+
+- 重复项：`gitlink-ancestry|submodule-ancestry-gate|41dc601cfea79771`（`projects/ecos` `e5327d3a4393` rewinds `afcb377cfd9d`）
+  在文件里出现两次（全台账 `entries` 下标 5 与 7），`range` 分别为 `origin/main..4bc830c7bb59`（`23:03:18Z`）与
+  `origin/main..a5fb62b60f2b`（`15:02:28Z`）—— 同一个指针回退被**两次不同的 push 各豁免了一次**，相隔 8 小时。
+- 为什么 `record_known_debt` 的去重没拦住：它的 `existing_keys` 只覆盖**写盘那一刻从本 worktree 读到的**条目。
+  两个并发 worktree 各自 load → 各自 miss → 各自 append → 两次合并后同指纹两份。即使只有一个 worktree，
+  只要前一次的写入没随交付提交而被还原，第二次也会重新 append。**去重不是跨 worktree 的**，
+  而本仓多 agent 并发是常态 —— 指纹身份因此不具合并幂等性。
+- 后果分两面：放行行为不受影响 —— 且这一句是**量出来的**，不是推断：重复的两条 `active` 键不对称
+  （下标 7 有 `active: True`，下标 5 **根本没有这个键**），而 `swarm_discipline.py:776` 写的是
+  `entry.get("active", True)`，缺键默认生效；`known_debt_active()` 又按 fingerprint 首命中即返回，
+  所以两份与一份等价。全台账 35 条里缺 `active` 键的是 2 条。
+  坏的是账本本身 —— `gate-known-debt.yaml` 是"这张工作区一共豁免过几次"的唯一台账，
+  而它把 **29 次**豁免记成了 **30 条**债。`growth_policy: shrink_only` 承诺的是只减不增，
+  没有任何一条门禁检查过"条目数 == distinct 指纹数"。
+- **对 I14 的更正**：I14 表里的"30 条"是 list 计数，distinct 豁免为 **29**。其余按 surface 过滤的比例
+  （base 符号 ref 30/30、head 完整 SHA 0/30、owner/expiry 0/30）不受影响 —— 重复的那两条同样记
+  `origin/main`、同样没有 owner。
+- **补 I14 表的一处口径**：I14 的 head 词形三行（缩写 23 + 符号 4）加起来只有 27 条，缺 3 条归类。
+  本次穷尽枚举 30 条（下标为 gitlink-ancestry 过滤后的列表）：
+  完整 40 位 **0**、12 位缩写 **23**（与 I14 一致）、9 位缩写 **1**（下标 23 `3018d3897`，I14 漏归）、
+  字面 `HEAD` **5**（下标 4/13/24/25/26，I14 记为 3）、具名分支 **1**（`followup/agora-pointer-fix-20260827`，已删）；
+  0+23+1+5+1 = 30，base 侧 **30/30** 均为字面 `origin/main`。
+  "head 本地可解析"本次为 **5** 而 I14 记 4：差额正是它漏归的那条 9 位缩写 —— 4 是"在它归了类的 23 条里数"，
+  不是全量口径。可解析的 5 条是下标 5/23/27/28/29。
+  但要注意：**可解析数属于环境相关读数**，随本机 fetch/对象历史变（I14 另记 2 条只能经 `refs/pull/*/head` 取回，
+  普通 clone 拿不到）；词形计数（0/23/1/5/1）与 base 计数（30/30）才是与仓库历史无关的稳定读数。
+  I14 的结论不受影响 —— 可复审率仍是 **0/30**，因为 base 侧 30/30 全是符号 ref，与 head 侧无关。
+- **写盘侧已生效、存量未动**：35 条里携带 `base_sha` 的 **0** 条，即 I14 只改了未来写入路径，
+  与 spec 验收 #5（存量内容不变）一致。
+- **顺带（只报告，不处置）**：主工作区 `~/Workspace` 的 `gate-known-debt.yaml` 工作树副本比 `origin/main`
+  多一条未提交条目 —— `gitlink-ancestry|submodule-ancestry-gate|b8375f8829cf1573`
+  （`projects/aetherforge` `37e7af86e003` rewinds `6d8d7caff158`），`recorded_at = 2026-09-25T09:56:59Z`，
+  早于 I14 合并，`range` 因此仍是旧格式 `origin/main..0945482a943b`（该 head 在本 worktree 可解析）。
+  它指纹独立（不构成新的重复），但一旦随某次交付落库，就是"台账 +1 条不可复审债"的又一个实例。
+  处置属 principal：要么由写它的人按 C1 重导后提交，要么让它停在未提交态自然消失。本次不碰。
+- **未做（属 principal）**：不删重复条目 —— 那是他人交付写下的记录，且删除一条债本身就是一次 shrink 处置，
+  该由人来做。可考虑的方向（本次不实施，因为写盘侧改不动这个不变量）：把身份让给 `signature` 并在
+  **读取侧**折叠（`swarm_discipline.load_known_debt` 按 fingerprint 去重），或提供一个 `--compact`
+  审计动作由人显式执行；两者都需要先定"重复条目算不算一条独立债"。
+
 ## Boundary
 
 - Claims Authority 激活保持 fail-closed，未由 Agent 代办；#4246 仅为只读文档。
@@ -447,6 +499,13 @@ I13 把"指纹不落 merge-base"记成一条待办。真去复跑时发现它不
   bet-less 起步、**台账与 `gate-known-debt.yaml` 都零改动**（只改写盘格式，不动存量条目），
   改动面就是 checker + 其单测 + spec + 本文件四处。连续两次交付走同一条豁免路径，
   说明 I5 那条"要么绑无关 bet、要么静默绕门"的两难已经不是当前形态。
+- **I15 的这次更正（G5 豁免第三次使用）只动一个文件**：workflow `governance-audit`、bet-less 起步、
+  单条 claim（本文件）、docs 单 lane、台账与 `gate-known-debt.yaml` 零改动（全程只读复跑）。
+  诚实记一笔过程缺陷：I15 的初稿**标题**写的是"30 条 list 条目只有 29 条 distinct 豁免"，
+  没带 surface 限定词（正文其实写了 `surface: gitlink-ancestry`）—— 读者会把 surface 计数当成全台账计数。
+  提交前复跑 `origin/main` 才量出全台账真值是 35 / 34，于是把两个口径拆成一张表列清楚。
+  **"复跑推翻自己上一版的表述"正是本文件存在的理由**：上面 I3 那条"上一行的台账计数有误"
+  引用块是同一种错误的更早一次，那一次已经落到 main 上了，这次在落库前被抓住。
 - 未补录价值记录（30 条门保持 NOT_PROVEN）；未做 weekly-review（principal-only）。
 - 台账未改动。（作用域是上面 `20260924T161254Z` 那次交付；`BET-Y2Q3-T10-202` 有改动，见上一条。）
 
