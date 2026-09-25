@@ -477,12 +477,33 @@ def build_resident_status() -> dict:
                         continue
         except OSError:
             pass
-    # monitor: 24h 告警数
+    # monitor: 24h 告警数 (从主事件流统计 alert 类型, 非 resident-monitor 心跳记录)
     mon_alerts_24h = 0
     mon_last = None
     cutoff = _dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(hours=24)
     for e in mon_tail[-200:]:
         mon_last = e.get("occurred_at") or e.get("ts") or mon_last
+    events_jsonl = _WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
+    try:
+        if events_jsonl.is_file():
+            for line in events_jsonl.read_text(encoding="utf-8", errors="replace").splitlines():
+                line = line.strip()
+                if not line or '"alert"' not in line:
+                    continue
+                try:
+                    ev = json.loads(line)
+                    if ev.get("event_type") != "alert":
+                        continue
+                    ts_raw = ev.get("occurred_at") or ev.get("ts") or ev.get("timestamp")
+                    if not ts_raw:
+                        continue
+                    ts = _dt.datetime.fromisoformat(str(ts_raw).replace("Z", "+00:00"))
+                    if ts >= cutoff:
+                        mon_alerts_24h += 1
+                except (ValueError, TypeError, json.JSONDecodeError):
+                    continue
+    except OSError:
+        pass
     # receipt 统计
     r_total = r_ok = r_err = r_blocked = 0
     r_last = None
