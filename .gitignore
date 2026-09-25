@@ -14,6 +14,9 @@
 !.omo/_delivery/calibration/
 !.omo/_delivery/events/
 !.omo/_delivery/scene-outcomes/
+# ADR-0443 事故→规则管道的人审队列：草案是等人审的输入，不是运行时垃圾。
+# 不入仓则 promote 一次即被下一次 worktree 回收抹掉，队列对任何人都不可见（2026-09-24 实证 0 份）。
+!.omo/_delivery/rule-drafts/
 .omo/_log/
 .omo/_knowledge/*.jsonl
 # workflow-mesh 运行时事件流 (高频 churn, 非治理 SSOT; governance-history.jsonl 保留入仓)
