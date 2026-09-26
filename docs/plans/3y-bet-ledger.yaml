@@ -35071,7 +35071,8 @@ bets:
     fail。关单前提 = owner 逐条建立 ID 别名映射。本 bet 为批次一：导出清单，≥20 条完成四态判定（别名映射/真未实现/弃用/存疑升级 owner），映射落
     governance-checks.yaml（CR-X1-AGENT-AUDIT.source_ref 先例），重跑 coverage 验证下降，债务 item
     追加 history 不关单（批次二另立 bet 收 --strict 门禁与关单）。
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-MATURITY
   priority: P1
