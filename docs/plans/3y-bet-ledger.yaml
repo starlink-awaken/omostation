@@ -35518,6 +35518,130 @@ bets:
             三案并陈归 owner 决策——价值兑现待指标语义 ADR。done_when 的「≤2」在不删
             他人活跃 worktree 的红线内不可达，如实记录。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-203
+  title: Profile Root Convergence — code_root / state_root 双根与 9 处 event-ledger 常量收口
+    (ADR-0456 B1)
+  goal: 'Make the workspace root a parameter instead of a fact, so the runtime install
+    can be relocated (ADR-0456 B2-B5) without first rewriting 1,699 literal path references.
+    Measured on 2026-09-26: 43 of 56 ~/Library/LaunchAgents plists and ~40 crontab entries
+    execute from the git working copy, so a worktree branch switch pulls code out from
+    under running processes. Two root resolvers exist and have forked — bin/lib/repo_root.py:canonical_root()
+    resolves $OMOSTATION_ROOT -> ~/Workspace -> raise and its docstring records the
+    shared root cause of two 2026-08-08 incidents, while projects/omo/src/omo/omo_paths.py
+    is the one central module that ignores it (WORKSPACE_ROOT = _MODULE_DIR.parents[3],
+    from which OMO_ROOT / TRUTH_DIR / STATE_DIR / RUNTIME_OMO_ROOT all derive). Seam
+    adoption is near zero: exactly one live consumer (bin/gac/install-watch-agent.py:18),
+    and the lint that enforced the rule (bin/_archive/2026-09-20-b2-archive/machine-config-write-lint.py)
+    was itself archived on 2026-09-20 — which is why it never spread. Nine sites under
+    bin/ additionally compute the event-ledger default path independently. Converge
+    all of it onto one seam — code_root follows the checkout (this is what keeps a dev
+    checkout runnable at any time), state_root is profile-declared and carries only
+    the write targets — with zero path change when no profile env is set, and leave
+    a regression guard that outlives the bet.'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that alters a resolved path when no profile env
+    is set (the live production layout must be reproduced byte-for-byte), modifies governance-checks.yaml
+    registry rules, moves OMO_ROOT / TRUTH_DIR / _truth/registry reads off code_root,
+    writes into .omo/state/** during verification, edits .omo/cron/registry.yaml or
+    an installed plist, or touches a single crontab entry (that is B4, blocked behind
+    B3 set-equality).
+  non_goals:
+  - Do not relocate the runtime install, migrate state, or cut over any cron/plist —
+    ADR-0456 B4, gated behind B3's registry==installed set equality.
+  - Do not untrack generated state (.omo/state/**, BRIEF.md) via the ADR-0129 canonical
+    projections — B5.
+  - Do not parameterize .omo/cron/registry.yaml (24 host literals) or the two scheduler
+    tests that assert it (tests/unit/test_agent_cell_scheduler.py 5, tests/unit/test_panorama_runtime_scheduler.py
+    8). That registry is the source of installed launchd job content, so it is B3's
+    surface with its own set-equality gate, not a root-seam change.
+  - Do not declare ~/.local/share/zhixing-dashboard as an external dependency or introduce
+    ZHIXING_DASHBOARD_ROOT — ADR-0456 decision 6, tracked separately.
+  - Do not touch OMO_PRINCIPAL_ID or brief generation — the concurrent brief/principal
+    delivery (PR
+  - Do not repoint OMO_ROOT / TRUTH_DIR / CONTROL_DIR or any _truth/registry read off
+    code_root; registry reads must follow the current checkout or a worktree resolves
+    governance truth out of the main workspace.
+  - Do not add a new entrypoint under bin/ (net-new script quota, check-bin-quota-diff.py);
+    operator entrypoints go in the Makefile, and the guard for this bet is a pytest
+    file.
+  done_when:
+  - 'bin/lib/repo_root.py exposes one profile resolution: code_root follows __file__,
+    state_root resolves from OMOSTATION_STATE_ROOT, and with no profile env set every
+    derived path equals its pre-change value.'
+  - 'Eight of the nine independently computed event-ledger defaults under bin/ route
+    through that seam and honor OMO_EVENT_LEDGER_DB first. The ninth, bin/panorama/panorama-collect.py,
+    is excluded by design: it deploys as a single file outside any checkout, its root
+    is already owned by PANORAMA_ROOT, and it must stay byte-identical to its .asset;
+    it honors OMO_EVENT_LEDGER_DB first.'
+  - projects/omo/src/omo/omo_paths.py derives STATE_DIR and RUNTIME_OMO_ROOT from state_root
+    while OMO_ROOT / TRUTH_DIR / CONTROL_DIR stay on code_root.
+  - 'A regression guard ships with the bet: tests/unit/test_repo_root_profile.py fails
+    if a bin/ script re-introduces a hard-coded runtime/omo/event-ledger default, so
+    the seam cannot decay the way it did after machine-config-write-lint.py was archived.'
+  verify:
+  - cmd: OMOSTATION_STATE_ROOT=/tmp/omostation-b1-check python3 -c "import sys; sys.path.insert(0,\"projects/omo/src\");
+      from omo import omo_paths as p; assert str(p.STATE_DIR).startswith(\"/tmp/omostation-b1-check\")"
+    expect: exit 0 — state writes follow the profile
+  - cmd: env -u OMOSTATION_STATE_ROOT -u OMOSTATION_PROFILE -u OMOSTATION_ROOT python3
+      -c "import sys; sys.path.insert(0,\"projects/omo/src\"); from omo import omo_paths
+      as p; from pathlib import Path; root=Path(\".\").resolve(); assert p.STATE_DIR==root/\".omo/state\"
+      and p.RUNTIME_OMO_ROOT==root/\"runtime/omo\" and p.OMO_ROOT==root/\".omo\""
+    expect: exit 0 — unset profile reproduces the pre-change layout exactly
+  - cmd: grep -rEn "^(DEFAULT_(EVENT_)?LEDGER|LEDGER|DEFAULT_DB) *=" bin/ | grep -c
+      "event-ledger" || true
+    expect: 0 — no bin/ script computes the event-ledger default itself any more
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/test_repo_root_profile.py
+      -q
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/lib/repo_root.py
+  - bin/bc-os/north_star_meter_v2.py
+  - bin/bc-os/north_star_meter_v3.py
+  - bin/bc-os/weekly-value-report.py
+  - bin/ssot/episode-source-aggregator.py
+  - bin/ssot/resident-orchestrator-daemon.py
+  - bin/ssot/system-health-check.py
+  - bin/gac/compound-attribution-report.py
+  - bin/gac/check-episode-pipeline.py
+  - bin/panorama/panorama-collect.py
+  - projects/omo/src/omo/omo_paths.py
+  - tests/unit/test_repo_root_profile.py
+  - docs/superpowers/specs/2026-09-26-dev-runtime-profile-root.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
+  - .omo/_knowledge/decisions/INDEX.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-203.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-dev-runtime-profile-root.md
+    spec_version: 1.0.0
+    content_digest: sha256:6ff35d73f6c454e51af9ead800544163b73c91599a5d0ec34d36f76da47e8a5c
+    decision_ref: decision://accepted/BET-Y2Q4-T10-203
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -35656,7 +35780,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 482
+  total_bets: 483
   windows:
   - Y1Q1
   - Y1Q2
