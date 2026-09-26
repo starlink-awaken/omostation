@@ -40,6 +40,17 @@ _GATEWAY_KEY_TTL = 300.0
 _COMPUTE_LIVE_TTL = 10.0
 
 
+def _aictl_compute(t: float = 10.0) -> dict | None:
+    """跑 aictl compute 并解析 JSON; 失败返回 None。"""
+    try:
+        r = subprocess.run(["aictl", "compute"], capture_output=True, text=True, timeout=t)
+        if r.returncode != 0:
+            return None
+        return json.loads(r.stdout)
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+        return None
+
+
 def _omlxc_json(cmd: list[str], t: float = 5.0):
     """跑 omlxc 子命令并解析 JSON; 失败返回 None（不抛）。"""
     try:
@@ -1316,22 +1327,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(200, cached)
                 return
         observed_at = datetime.now(timezone.utc).isoformat()
-        daemon = _omlxc_json(["status"], t=6.0)
-        models_raw = _omlxc_json(["models", "list"], t=8.0)
+        ac = _aictl_compute(t=10.0)
         errors = []
         daemon_view = None
         models_view = []
-        if daemon and "data" in daemon:
-            d = daemon["data"]
-            daemon_view = {"status": d.get("status"), "degraded": d.get("degraded"),
-                           "diagnostic": d.get("diagnostic")}
+        if ac and "daemon" in ac:
+            daemon_view = ac["daemon"]
         else:
             errors.append("omlxc_status_unavailable")
-        if models_raw and "data" in models_raw:
-            for it in models_raw["data"].get("items") or []:
-                models_view.append({"id": it.get("id"), "role": it.get("role"),
-                                    "loaded": it.get("loaded"), "ready": it.get("ready"),
-                                    "available": it.get("available")})
+        if ac and "models" in ac:
+            models_view = ac["models"]
         else:
             errors.append("omlxc_models_unavailable")
         live = daemon_view is not None or models_view
