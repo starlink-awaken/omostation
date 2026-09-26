@@ -35694,7 +35694,8 @@ bets:
     commit. Land the child change through omo#197 (now omo origin/main e925214), move
     the root pin onto it through the single canonical entry point, and pin the rule
     as a contract spec so the next agent does not repeat the four-day loss.'
-  status: in_progress
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -35756,14 +35757,37 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ba7b3787d8e2280ace4cbfa0599997260b9d235d
+          tests:
+            ref: receipt://docs/reports/2026-09-26-omo-pin-regression-closeout.md
+            sha256: sha256:56c954dd763769dd171e72f523fadf6d0686915f9a5d36e6e2a5de301ef93b58
+          diff:
+            ref: receipt://docs/reports/2026-09-26-omo-pin-regression-closeout.md
+            sha256: sha256:56c954dd763769dd171e72f523fadf6d0686915f9a5d36e6e2a5de301ef93b58
+          rollback:
+            ref: receipt://docs/reports/2026-09-26-omo-pin-regression-closeout.md
+            sha256: sha256:56c954dd763769dd171e72f523fadf6d0686915f9a5d36e6e2a5de301ef93b58
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-26-omo-pin-regression-closeout.md
+            sha256: sha256:56c954dd763769dd171e72f523fadf6d0686915f9a5d36e6e2a5de301ef93b58
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-26-omo-pin-regression-closeout.md
+            sha256: sha256:56c954dd763769dd171e72f523fadf6d0686915f9a5d36e6e2a5de301ef93b58
+          replay:
+            ref: receipt://docs/reports/2026-09-26-omo-pin-regression-closeout.md
+            sha256: sha256:56c954dd763769dd171e72f523fadf6d0686915f9a5d36e6e2a5de301ef93b58
+          cleanup:
+            ref: receipt://docs/reports/2026-09-26-omo-pin-regression-closeout.md
+            sha256: sha256:56c954dd763769dd171e72f523fadf6d0686915f9a5d36e6e2a5de301ef93b58
       value:
         status: NOT_PROVEN
         evidence: {}
