@@ -34699,6 +34699,87 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q3-T10-202.md
   - bin/gac/check-runtime-artifacts.py
   - bin/gac/ci-local-fast.py
+- id: BET-Y2Q4-SH-5.2
+  title: Episode Pipeline Verification Closure — SH-5 done_when unmet, probe measures
+    a proxy
+  goal: Close the gap between BET-Y2Q4-SH-5's recorded done state and its machine-checkable
+    first done_when criterion, which still measures 0 rows of producer=scene-outcome-recorder
+    in runtime/omo/event-ledger.sqlite3 even after PR 4368, PR 4369 and PR 4370 all
+    landed. Rewrite the pipeline probe so it asserts on the bridge's own producer instead
+    of the omo-personal-episode count, resolve where the bridge's ledger write actually
+    lands, and make _bridge_closeout_to_scene's malformed-input path observable rather
+    than silently successful.
+  status: pending
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P0
+  appetite: 2 days
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that flips the shared local gate's exit code,
+    modifies governance-checks.yaml registry rules, rewrites SH-5 or SH-5.1 historical
+    done records, or backfills episodes for closeouts that never happened.
+  non_goals:
+  - Do not backfill historical closeouts as episodes (inherited verbatim from SH-5 non_goals).
+  - Do not modify PersonalEpisodeService gate algorithm (30 qualifying + 4-week floor).
+  - Do not claim BET-Y2Q4-SH-6; SH-5.1 non_goals already defer the OMO_PRINCIPAL_ID
+    caller refactor to that id, so this bet takes the SH-5.2 sub-number and leaves SH-6
+    free.
+  - Do not edit .gitignore; episode-store retention under .omo/_knowledge/workflow-mesh/
+    is reported to the owner as an investigation finding, not changed unilaterally.
+  - Do not alter governance-checks.yaml registry rules.
+  done_when:
+  - check-episode-pipeline.py's ok predicate is demonstrably bound to the bridge's own
+    producer (or is explicitly redefined with the reason recorded in its docstring),
+    and a case exists where 0 bridge-produced rows makes the check report false.
+  - After one real (non-mock) closeout, measurement yields exactly one of two conclusions.
+    Either a bridge-written row is present in event_log with its producer label quoted
+    as measured, or a written determination that SH-5 done_when criterion 1 named the
+    wrong metric, in which case SH-5.2's own done_when is revised accordingly.
+  - _bridge_closeout_to_scene no longer reports success silently on malformed input;
+    a test or a recorded trace path proves that state is observable.
+  verify:
+  - cmd: python3 bin/gac/check-episode-pipeline.py --json
+    expect: exit 0
+  - cmd: python3 bin/ssot/test-episode-bridge.py --count 5
+    expect: exit 0
+  - cmd: OMO_PRINCIPAL_ID=xiamingxing python3 bin/bc-os/north_star_meter_v2.py --json
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/check-episode-pipeline.py
+  - bin/agent-workflow.py
+  - bin/ssot/scene-outcome-recorder.py
+  - bin/ssot/workflow-scene-map.yaml
+  - docs/superpowers/specs/2026-09-26-episode-pipeline-verification-gap.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-5.2.md
+  depends_on:
+  - BET-Y2Q4-SH-5
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-episode-pipeline-verification-gap.md
+    spec_version: 1.0.0
+    content_digest: sha256:e317ad7a480b2fc38674924cf20fd1046b315281cc5efa935c1b02d3032d3bf4
+    decision_ref: decision://accepted/BET-Y2Q4-SH-5.2
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -34837,7 +34918,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 473
+  total_bets: 474
   windows:
   - Y1Q1
   - Y1Q2
