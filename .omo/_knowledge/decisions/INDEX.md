@@ -464,6 +464,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0453: 声明/执行鸿沟 — 多尺度信号而非缺陷 (关闭 DECL_EXEC_GAP) — **ACCEPTED** | 2026-09-20 | Declaration-execution gap as multiscale signal | 0453-declaration-execution-gap-multiscale-signal.md
 - ADR-0454: 治理脚本无界网络调用审计 — **ACCEPTED** | 2026-09-18 | GAC timeout audit for bounded network calls | 0454-gac-timeout-audit.md
 - ADR-0455: Claims legacy-publication fence 与 managed-clone allow 禁止可满足性 — **ACCEPTED** | 2026-09-24 | Claims fence vs managed-clone allow deadlock | 0455-claims-fence-managed-clone-allow-deadlock.md
+- ADR-0456: 同机双安装位 — code_root / state_root 分离与 profile 收敛 — **PROPOSED** | 2026-09-26 | Same-host dual install: profile-root convergence | 0456-dev-runtime-profile-root.md
 
 - ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
 - ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成) — **ACCEPTED** | 2026-08-08 | DoD gate | 0400-definition-of-done-task-verify.md
