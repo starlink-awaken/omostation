@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-09-25T12:32:35Z
+generated_at: 2026-09-26T08:23:43Z
 status: candidate
 counts:
-  runs: 8
+  runs: 11
   failures: 0
-  total: 8
+  total: 11
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-25T12:32:35Z
+- generated_at: 2026-09-26T08:23:43Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 8 成功运行 + 0 失败模式 = 8 草稿
+- sediment 覆盖: 11 成功运行 + 0 失败模式 = 11 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -29,6 +29,9 @@ failure_breakdown:
 - 20260921T100202Z-governance-state-mutation-4808c157.md
 - 20260922T012405Z-governance-state-mutation-73f3490f.md
 - 20260922T084422Z-governance-state-mutation-0ecfa313.md
+- 20260925T131535Z-governance-state-mutation-14aac9c3.md
+- 20260925T145236Z-governance-state-mutation-221beeb4.md
+- 20260925T153042Z-governance-state-mutation-dc5a9ada.md
 
 ## 失败模式 (failures/)
 
@@ -88,6 +91,24 @@ failure_breakdown:
   - 计划 (objective): Repair ledger regression from stale-base PR #4201: restore T10-154 done evidence, re-add deleted T10-155 entry, re-derive meta.total_bets
   - workflow: governance-state-mutation
   - 指标: event_count=1, duration_s=0.0
+- **20260925T131535Z-governance-state-mutation-14aac9c3**
+  - 计划 (objective): 固化 Dependabot gitlink 复评盲区与 dismiss API 教训到 AGENTS.md 协议层 Common Pitfalls
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=4
+  - 指标: event_count=6, duration_s=5745.056
+- **20260925T145236Z-governance-state-mutation-221beeb4**
+  - 计划 (objective): register .kilo/ in root-directory-governance local_surfaces to unblock gac-local-gate
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=683.408
+- **20260925T153042Z-governance-state-mutation-dc5a9ada**
+  - 计划 (objective): fix install-resident-cron.sh: absolute python for cron PATH + marker-block dedup; deliver PITFALL-CRO-003/GAT-013/CRO-004
+  - workflow: governance-state-mutation
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=1942.915
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

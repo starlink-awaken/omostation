@@ -63,5 +63,5 @@ status: archived
 
 
 ---
-*Updated: 2026-09-25 (依据 `omo state sync-tasks` 与真实目录重算: done=302, planned=0, active=1, blocked=0, archived=6 顶层)*
+*Updated: 2026-09-26 (依据 `omo state sync-tasks` 与真实目录重算: done=302, planned=0, active=1, blocked=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
