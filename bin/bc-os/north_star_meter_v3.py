@@ -184,7 +184,10 @@ def measure_revision_rate(
     result["value"] = round(rate, 4)
     result["evidence_refs"] = [f"repo://{path.relative_to(WS_ROOT).as_posix()}"]
     return result
-DEFAULT_EVENT_LEDGER = WS_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
+sys.path.insert(0, str(WS_ROOT / "bin" / "lib"))
+from repo_root import event_ledger_path
+
+DEFAULT_EVENT_LEDGER = event_ledger_path()
 MIN_JOURNEY_WINDOW_DAYS = 7
 
 

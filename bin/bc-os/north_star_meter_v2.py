@@ -31,7 +31,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_LEDGER = ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
+sys.path.insert(0, str(ROOT / "bin" / "lib"))
+from repo_root import event_ledger_path
+
+DEFAULT_LEDGER = event_ledger_path()
 
 # Kept only so callers can prove the legacy state writer is retired. No
 # production path writes this file anymore.
