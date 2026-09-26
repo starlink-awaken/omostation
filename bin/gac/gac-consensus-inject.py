@@ -9,6 +9,7 @@ import math
 import os
 import re
 import sqlite3
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -18,10 +19,39 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 db_path = WORKSPACE / "kos/kos-index.sqlite"
 claude_md_path = WORKSPACE / "CLAUDE.md"
 
+
 # omlx 统一网关 (Tailscale MBP)
-OMLX_GATEWAY = "http://100.96.126.35:4000"
-EMBED_MODEL = "embed-bge"  # omlx embed-bge 模型 (MBP 本机)
-OMLX_API_KEY = os.environ.get("OMLX_API_KEY", "")
+def _gateway_url() -> str:
+    """aetherforge 门面地址: LLM_GATEWAY_URL / AETHERFORGE_URL / OMLX_URL, 默认本机 loopback。
+
+    旧值写死 mbp 旧 tailnet IP(100.96.126.35, 已失效)。与 kairon kos.llm_gateway 同一解析顺序。
+    """
+    for name in ("LLM_GATEWAY_URL", "AETHERFORGE_URL", "OMLX_URL"):
+        if os.environ.get(name):
+            return os.environ[name].rstrip("/")
+    return "http://127.0.0.1:4000"
+
+
+def _gateway_key() -> str:
+    """门面密钥: 环境变量优先, 否则读 Keychain(aetherforge-gateway); 旧实现发空 key → 401。"""
+    for name in ("LLM_GATEWAY_KEY", "AETHERFORGE_API_KEY", "OMLX_API_KEY"):
+        if os.environ.get(name):
+            return os.environ[name]
+    try:
+        out = subprocess.run(
+            ["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
+OMLX_GATEWAY = _gateway_url()
+EMBED_MODEL = "embed-bge"  # 门面别名 → bge-m3
+OMLX_API_KEY = _gateway_key()
 TOP_K = 2  # 每次只注入最相关的 Top-2 Consensus，极限节省 Token
 
 
