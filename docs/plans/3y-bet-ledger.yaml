@@ -34709,7 +34709,8 @@ bets:
     of the omo-personal-episode count, resolve where the bridge's ledger write actually
     lands, and make _bridge_closeout_to_scene's malformed-input path observable rather
     than silently successful.
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T4-OUTCOME
   priority: P0
@@ -34775,17 +34776,41 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f8095a2a313ada255fda56b07998f20e17d1292b
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.2.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.2.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.2.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.2.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.2.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.2.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.2.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >
+            SH-5.2 closes a verification defect, not a value stream. The bridge
+            now has 10 event_log rows across 5 closeout correlation_ids, but
+            PersonalEpisodeService still requires 30 qualifying episodes plus a
+            4-week floor before any personal-value claim, and this bet's non_goals
+            forbid backfilling closeouts that never happened. Value accumulation is
+            left to real closeouts; no indicator is asserted here
+            (value_indicator_policy: false).
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
