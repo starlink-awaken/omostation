@@ -34471,7 +34471,7 @@ bets:
     content_digest: sha256:cd3322bedb94e74fbd0a85397d15da99999ec85b5d3b75bf0d3c8d7c2a64d547
     decision_ref: decision://accepted/BET-Y2Q4-SH-5
   done_at: 2026-09-26
-  value_indicator_policy: true
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     overall_state: delivery_accepted
