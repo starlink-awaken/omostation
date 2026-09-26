@@ -1162,6 +1162,39 @@ def wrapped_main(argv: list[str] | None = None) -> int:
         sys.argv = previous
 
 
+def _scene_card_from_map(scene_map: object, workflow_id: str) -> tuple[str, str]:
+    """Resolve ``workflow_id`` to a scene card path per workflow-scene-map/v1.
+
+    Returns ``(path, notice)``; an empty path means unresolved.  ``notice``
+    accompanies every unresolved case and every fallback hit so neither can go
+    silent.
+
+    The bridge used to read ``map:`` only, which dropped the declared rule-3
+    fallback and lost an episode for every workflow absent from the map
+    (BET-Y2Q4-SH-5.3).  The fallback is deliberately no looser than the direct
+    lookup — a missing card it resolves to is still unresolved.
+    """
+    mapping: object = {}
+    default_card = ""
+    fallback = ""
+    if isinstance(scene_map, dict):
+        mapping = scene_map.get("map")
+        default_card = str(scene_map.get("default") or "").strip()
+        fallback = str(scene_map.get("fallback_resolution") or "").strip()
+    direct = str(mapping.get(workflow_id) or "").strip() if isinstance(mapping, dict) else ""
+    if direct:
+        return direct, ""
+    if fallback == "default" and default_card:
+        return default_card, (
+            f"workflow_id '{workflow_id}' is not in scene map 'map:' section; "
+            f"resolved through 'fallback_resolution: default'"
+        )
+    return "", (
+        f"workflow_id '{workflow_id}' is not in scene map 'map:' section and no usable "
+        f"'fallback_resolution: default' (default: {'empty' if not default_card else default_card})"
+    )
+
+
 def _bridge_closeout_to_scene(run_id: str) -> None:
     """Bridge agent-workflow closeout → scene-outcome-recorder (BET-Y2Q4-SH-5).
 
@@ -1169,11 +1202,9 @@ def _bridge_closeout_to_scene(run_id: str) -> None:
     scene card via ``bin/ssot/workflow-scene-map.yaml``, and invokes the
     recorder in a subprocess so ledger write failures never block closeout.
 
-    Every bail-out names its reason on stderr (BET-Y2Q4-SH-5.2).  Control flow
-    is unchanged — the bridge still never blocks closeout — but a run that
-    produced no episode is now distinguishable from a run whose episode landed.
-    Before this, a malformed scene map surfaced as total silence, which is how
-    SH-5 could read healthy while emitting nothing at all.
+    Every bail-out names its reason on stderr (BET-Y2Q4-SH-5.2) — a run that
+    produced no episode must stay distinguishable from one whose episode
+    landed, which is how SH-5 could read healthy while emitting nothing.
     """
     import json as _json
     import shutil as _shutil
@@ -1215,10 +1246,12 @@ def _bridge_closeout_to_scene(run_id: str) -> None:
         # A multi-document YAML stream lands here: safe_load raises ComposerError.
         _bail(f"scene map unparseable: {type(exc).__name__}: {exc}")
         return
-    scene_card_rel = str((scene_map.get("map") or {}).get(workflow_id) or "").strip()
+    scene_card_rel, notice = _scene_card_from_map(scene_map, workflow_id)
     if not scene_card_rel:
-        _bail(f"workflow_id '{workflow_id}' not in scene map 'map:' section")
+        _bail(notice)
         return
+    if notice:
+        print(f"  [INFO] SH-5 bridge: {notice} (run={run_id})", file=sys.stderr)
     scene_card = workspace_root / scene_card_rel
     if not scene_card.is_file():
         _bail(f"scene card resolved but absent: {scene_card}")

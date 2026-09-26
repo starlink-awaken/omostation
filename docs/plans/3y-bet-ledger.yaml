@@ -34842,6 +34842,98 @@ bets:
             forbid backfilling closeouts that never happened. Value accumulation is
             left to real closeouts; no indicator is asserted here
             (value_indicator_policy: false).
+- id: BET-Y2Q4-SH-5.3
+  title: Scene-Map Fallback Closure — workflow-scene-map/v1 声明的 default 无人实现
+  goal: 'Make the closeout→scene bridge honor the resolution rules its own SSOT declares.
+    bin/ssot/workflow-scene-map.yaml carries `default:` and `fallback_resolution: default`
+    and documents rule 3 ("otherwise fall back to default, covers new workflows added
+    before this map is updated"), but bin/agent-workflow.py:_bridge_closeout_to_scene
+    reads only scene_map["map"]. Measured on origin/main@a3b4852a5, 26 workflows are
+    registered under .omo/_truth/registry/agent-workflows/workflows/, the map holds
+    19 entries, so 7 workflows (agent-onboarding, round-type-router, scene-execution,
+    scene-lifecycle, state-sync, submodule-pointer-bump, submodule-pointer-close) drop
+    their episode on every closeout. BET-Y2Q4-SH-5.2 made that path observable via a
+    stderr WARN but deliberately did not change the outcome. Implement the declared
+    fallback, keep it discoverable, and prove all four resolution paths with a hermetic
+    test on a pure resolver.
+
+    '
+  status: pending
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 'Stop on any change that flips the shared local gate''s exit code,
+    modifies governance-checks.yaml registry rules, edits bin/ssot/workflow-scene-map.yaml
+    content, changes scene-outcome-recorder.py producer semantics, or backfills episodes
+    for closeouts that never happened.
+
+    '
+  non_goals:
+  - Do not add explicit `map:` entries for the 7 unmapped workflows — assigning them
+    a scene card is an ownership decision for the scene-card owner, not this bet.
+  - Do not edit workflow-scene-map.yaml (including `default:` and `fallback_resolution:`);
+    this bet closes the consumer-and-declaration gap, not the data.
+  - Do not change scene-outcome-recorder.py's producer label (omo-personal-episode is
+    deliberate so PersonalEpisodeService.observe_principal can find the row, per BET-Y2Q4-SH-5.2).
+  - Do not add a new script under bin/ — bin/ caps net-new scripts (check-bin-quota-diff.py),
+    so the regression cases live in an existing pytest file.
+  - Do not edit .gitignore or backfill historical closeouts as episodes.
+  done_when:
+  - '_bridge_closeout_to_scene resolves scene cards through the full rule set its SSOT
+    declares — `map:` first, then `fallback_resolution: default` feeding `default:`.
+    The fallback is never looser than the direct lookup; an unresolvable or missing
+    fallback card yields no episode.'
+  - All four resolution paths are proven by cases in tests/test_scene_outcome_episode_bridge.py
+    — direct hit, fallback hit, no fallback_resolution declared, and fallback_resolution
+    naming an empty default — and a fallback hit is asserted distinguishable from an
+    unresolved bail.
+  - A fallback hit emits a discoverable stderr notice so mapping drift cannot become
+    a new false-green, while the bridge stays non-blocking for closeout in every path.
+  verify:
+  - cmd: uv run --project projects/omo python -m pytest tests/test_scene_outcome_episode_bridge.py
+      -q
+    expect: exit 0, and the four resolver cases pass
+  - cmd: python3 bin/gac/check-episode-pipeline.py --self-test --json
+    expect: exit 0 with ok true (SH-5.2 guard stays green after the resolver change)
+  - cmd: git diff --name-only origin/main..HEAD
+    expect: bin/ssot/workflow-scene-map.yaml and bin/ssot/scene-outcome-recorder.py
+      are absent
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/agent-workflow.py
+  - tests/test_scene_outcome_episode_bridge.py
+  - docs/superpowers/specs/2026-09-26-scene-map-fallback-gap.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-5.3.md
+  depends_on:
+  - BET-Y2Q4-SH-5.2
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-scene-map-fallback-gap.md
+    spec_version: 1.0.0
+    content_digest: sha256:6aa32b7baceb59727ec299cdfc92822f37c3ab1e1d840a714f81ae5f20a4b030
+    decision_ref: decision://accepted/BET-Y2Q4-SH-5.3
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -34980,7 +35072,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 474
+  total_bets: 475
   windows:
   - Y1Q1
   - Y1Q2
