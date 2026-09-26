@@ -31,7 +31,10 @@ import tempfile
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-DEFAULT_DB = WORKSPACE / "runtime" / "omo" / "event-ledger.sqlite3"
+sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+from repo_root import event_ledger_path
+
+DEFAULT_DB = event_ledger_path()
 PRODUCER = "omo-personal-episode"
 # Discriminator the closeout→scene bridge stamps on every event it writes.
 # Not the producer: the producer is omo-personal-episode by design (SH-5.2).
@@ -41,10 +44,7 @@ BRIDGE_SOURCE = "scene-outcome-bridge"
 def _resolve_db(explicit: str | None) -> Path:
     if explicit:
         return Path(explicit).resolve()
-    env = os.environ.get("OMO_EVENT_LEDGER_DB")
-    if env:
-        return Path(env).resolve()
-    return DEFAULT_DB
+    return DEFAULT_DB.resolve()
 
 
 def check(db_path: Path) -> dict:
