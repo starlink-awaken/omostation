@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: closeout-with-retro
-generated_at: 2026-09-25T12:32:35Z
+generated_at: 2026-09-26T08:23:43Z
 status: candidate
 counts:
   runs: 1
@@ -14,7 +14,7 @@ failure_breakdown:
 ---
 # closeout-with-retro 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-25T12:32:35Z
+- generated_at: 2026-09-26T08:23:43Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 1 成功运行 + 0 失败模式 = 1 草稿
 - 失败率: 0.00%
@@ -36,7 +36,9 @@ failure_breakdown:
 - **20260924T063316Z-closeout-with-retro-20e87bd1**
   - 计划 (objective): [BET-Y2Q2-T4-01] North-star recovery and first real Decision Episode proof (Appetite: 13 weeks)
   - workflow: closeout-with-retro
-  - 指标: event_count=1, duration_s=0.0
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=169719.519
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

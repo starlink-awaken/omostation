@@ -1,32 +1,32 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-09-25T23:45:05Z
+# generated_at: 2026-09-26T08:16:30Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 # health_score: composite (ISC-3) = {'governance': 0.8, 'freshness': 0.2, 'drift': 0.1, 'staleness': 0.1, 'alignment': 0.1}
 
-generated_at: "2026-09-25T23:45:05Z"
+generated_at: "2026-09-26T08:16:30Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 37
+health_score: 34
 governance_anomaly_score: 0
 anomaly_count: 0
 service_online_ratio: "unavailable"
 freshness_score: 100
-drift_score: 85
-staleness_score: 95
-alignment_score: 100
+drift_score: 70
+staleness_score: 96
+alignment_score: 72
 feedback_alive: True
-feedback_last_ts: "2026-09-25T23:45:19+00:00"
-feedback_staleness_hours: 0.0
+feedback_last_ts: "2026-09-26T07:01:02+00:00"
+feedback_staleness_hours: 1.3
 total_tasks: 12
 done: 12
 planned: 0
 
 governance_execution_surface:
   base_anomaly_score: 100
-  execution_deduction: 168
+  execution_deduction: 120
   orphan_worktrees: 0
   adr_renumber_events: 0
-  concurrent_conflicts: 21
+  concurrent_conflicts: 15
   score: 0
   weights:
     orphan_worktrees: 4
@@ -43,10 +43,10 @@ health_composite_breakdown:
   contributions:
     governance: 0.0
     freshness: 20.0
-    drift: 8.5
-    staleness: 9.5
-    alignment: 10.0
-  raw: 36.92
+    drift: 7.0
+    staleness: 9.600000000000001
+    alignment: 7.2
+  raw: 33.69
 
 anomalies:
   []
@@ -54,30 +54,30 @@ anomalies:
 drift_detail:
   source: "drift-sweep"
   total: "16"
-  pass: "15"
-  fail: "1"
+  pass: "14"
+  fail: "2"
   skip: "0"
-  score: "85"
+  score: "70"
 
 staleness_detail:
   source: "staleness-check"
   checked: "540"
-  clean: "527"
-  stale: "13"
+  clean: "528"
+  stale: "12"
   total_issues: "18"
-  stale_ratio: "0.0241"
+  stale_ratio: "0.0222"
   issue_density: "0.0333"
-  score: "95"
+  score: "96"
 
 alignment_detail:
   source: "maturity-align"
-  reconciliation_score: "100"
+  reconciliation_score: "72"
   drift_detected: "False"
-  normalised: "{'compass_radar': None, 'maturity_scorecard': 70.0, 'bet_ledger': 99.6}"
+  normalised: "{'compass_radar': 34.0, 'maturity_scorecard': 62.0, 'bet_ledger': 99.8}"
   high_dimension: "bet_ledger"
-  low_dimension: "maturity_scorecard"
-  warnings: "[]"
-  score: "100"
+  low_dimension: "compass_radar"
+  warnings: "['maturity scorecard gap = 2.8 (target 9.0); below 80% of target', '声明/执行鸿沟 = 66 (计划完成度 100 vs 系统状态 34) —— 计划已做完但未转化为系统状态; 这不是口径冲突, 是**闭环未产生价值**的信号 (见 debt item DECL_EXEC_GAP)']"
+  score: "72"
 
 distributions:
   priority_dist:
