@@ -35732,12 +35732,12 @@ bets:
   - docs/superpowers/specs/2026-09-26-submodule-gitlink-reachability.md is accepted
     and bound to this bet.
   verify:
-  - cmd: git -C projects/omo merge-base --is-ancestor "$(git rev-parse projects/omo)"
+  - cmd: git -C projects/omo merge-base --is-ancestor "$(git rev-parse HEAD:projects/omo)"
       origin/main
     expect: exit 0 — the root pin is reachable from the child default branch
   - cmd: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch --require-main
     expect: exit 0 — all gitlinks pass the strict form of the gate
-  - cmd: git -C projects/omo show "$(git rev-parse projects/omo):src/omo/omo_paths.py"
+  - cmd: git -C projects/omo show "$(git rev-parse HEAD:projects/omo):src/omo/omo_paths.py"
       | grep -c STATE_ROOT
     expect: non-zero match count — B1 kernel seam present at the pinned commit
   - cmd: make gac-local-gate
