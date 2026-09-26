@@ -35234,17 +35234,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T3-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@20f90138ae3cdefc409b5a5a71d9cb3a5632b96f
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-02.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-02.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-02.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-02.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            消费回路今日不可用于治理知识冷启动：ADR 命中如实记 0（索引 12,553 篇中
+            workspace 治理语料为 0，摄入被本 bet 红线禁止）。已交付 skill v1.1 勘误、
+            kos-cli 今日路径、挂载与摄入提案——价值待摄入落地后由后续工单复验（D1）。
   value_indicator_policy: false
 - id: BET-Y2Q4-T4-01
   title: 业务首单候选盘点 — 真实 backlog 首个交付项的决策收件箱卡
