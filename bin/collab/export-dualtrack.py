@@ -187,6 +187,8 @@ def main() -> int:
     out = {
         "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "schema": "p84-dualtrack-v1",
+        # BET-Y2Q4-T1-04: 枚举命令随状态文件留档, 计数可复算 (防陈旧快照再次误导)
+        "refresh_command": "python3 bin/collab/export-dualtrack.py",
         "capability_track": cap,
         "throughput_track": export_throughput_track(),
         "redline_note": "两轨数据源独立, 禁止合并; 构造场景计产能轨=最高级违规 (P84 §0)",
