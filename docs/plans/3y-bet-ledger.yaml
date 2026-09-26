@@ -34736,25 +34736,31 @@ bets:
   - check-episode-pipeline.py's ok predicate is demonstrably bound to the bridge's own
     producer (or is explicitly redefined with the reason recorded in its docstring),
     and a case exists where 0 bridge-produced rows makes the check report false.
-  - After one real (non-mock) closeout, measurement yields exactly one of two conclusions.
-    Either a bridge-written row is present in event_log with its producer label quoted
-    as measured, or a written determination that SH-5 done_when criterion 1 named the
-    wrong metric, in which case SH-5.2's own done_when is revised accordingly.
+  - 'Determination (this criterion''s own escape clause exercised): SH-5 done_when criterion
+    1 named the wrong metric. Measurement after real closeouts finds 10 event_log rows carrying
+    payload.source=''scene-outcome-bridge'' across 5 distinct closeout correlation_ids, every
+    one labelled producer=''omo-personal-episode'', because scene-outcome-recorder stamps that
+    producer deliberately so PersonalEpisodeService.observe_principal can find the row. producer=''scene-outcome-recorder''
+    has 0 rows and structurally cannot have any, so SH-5''s criterion is unsatisfiable as written
+    while the bridge it implied was dead was in fact writing. SH-5.2 therefore closes the verification,
+    not the pipeline: the probe is re-bound to payload.source, and the false-green path is guarded
+    by bin/gac/test-episode-pipeline-probe.py.'
   - _bridge_closeout_to_scene no longer reports success silently on malformed input;
     a test or a recorded trace path proves that state is observable.
   verify:
   - cmd: python3 bin/gac/check-episode-pipeline.py --json
-    expect: exit 0
+    expect: exit 0, and bridge_event_count >= 1 against the live ledger (live ledger required — a fresh worktree has no gitignored runtime/omo/event-ledger.sqlite3, so it reports ledger db missing / event_ledger_missing)
   - cmd: python3 bin/ssot/test-episode-bridge.py --count 5
     expect: exit 0
   - cmd: OMO_PRINCIPAL_ID=xiamingxing python3 bin/bc-os/north_star_meter_v2.py --json
-    expect: exit 0
+    expect: exit 0 and status != unprovable (live ledger required — a fresh worktree has no gitignored runtime/omo/event-ledger.sqlite3, so it reports ledger db missing / event_ledger_missing)
   - cmd: make gac-local-gate
     expect: exit 0
   write_surfaces:
   - bin/gac/check-episode-pipeline.py
   - bin/agent-workflow.py
   - bin/ssot/scene-outcome-recorder.py
+  - bin/gac/test-episode-pipeline-probe.py
   - bin/ssot/workflow-scene-map.yaml
   - docs/superpowers/specs/2026-09-26-episode-pipeline-verification-gap.md
   - docs/plans/3y-bet-ledger.yaml
