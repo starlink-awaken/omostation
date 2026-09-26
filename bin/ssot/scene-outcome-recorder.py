@@ -28,6 +28,17 @@ VALUE_EVIDENCE_LOG = ROOT / ".omo" / "_delivery" / "ingress" / "value-evidence.j
 VERDICT_MAP = {"accepted": "accept", "revised": "edit", "rejected": "reject"}
 
 
+def _warn_write_failure(bridge: str, exc: BaseException) -> None:
+    """Announce a swallowed write failure (BET-Y2Q4-SH-5.2).
+
+    The bridges stay non-blocking — an episode is never worth failing a
+    closeout for — but "we tried to write and did not" must not look identical to
+    "nothing to write".  Absent-kernel paths are deliberately quiet; this fires
+    only where a write was attempted.
+    """
+    print(f"  [WARN] {bridge} wrote nothing: {type(exc).__name__}: {exc}", file=sys.stderr)
+
+
 def _canonical_principal_id(raw: str | None) -> str:
     """Normalize an OMO_PRINCIPAL_ID to the canonical ``principal:<id>`` form.
 
@@ -194,8 +205,8 @@ def _write_event_ledger_outcome(entry: dict[str, Any], *, review_seconds: int | 
             },
         )
         surface.close()
-    except Exception:
-        pass  # North Star bridge is non-blocking
+    except Exception as exc:
+        _warn_write_failure("event-ledger", exc)  # non-blocking, but never silent
 
 
 def _write_personal_episode_outcome(entry: dict[str, Any], *, review_seconds: int | None = None,
@@ -334,8 +345,9 @@ def _write_value_evidence(entry: dict[str, Any], *, review_seconds: int | None =
         VALUE_EVIDENCE_LOG.parent.mkdir(parents=True, exist_ok=True)
         append_jsonl(VALUE_EVIDENCE_LOG, evidence)
 
-    except Exception:
-        pass  # value bridge is non-blocking (X3 wiring must not break trust loop)
+    except Exception as exc:
+        # X3 wiring must not break the trust loop, but a failed write is reported.
+        _warn_write_failure("value-evidence", exc)
 
 
 def _write_mos_decision_outcome(entry: dict[str, Any]) -> str | None:
