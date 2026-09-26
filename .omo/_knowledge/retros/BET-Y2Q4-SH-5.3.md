@@ -147,3 +147,38 @@ nor `scene-outcome-recorder.py`, so the circuit breaker held.
    default. Whether that card is the *right* scene for e.g. `state-sync` is the
    scene-card owner's decision; a `map:` entry added later overrides it with no
    code change.
+
+## Closeout trace
+
+- PR #4381 squash-merged as `4c468499b2f18e102ca63cfa474add36718797a7`;
+  `mergeStateStatus=CLEAN`, and every non-skipping check passed, with the three
+  required contexts `phase-gate`, `bet-done-transition`, `gac-gate` green.
+- `bet-ledger.py complete BET-Y2Q4-SH-5.3` → `status: done`,
+  `done_at: 2026-09-26`, evidence matrix `overall_state: delivery_accepted`.
+- Governed run `20260926T084606Z-project-code-change-772ad14a` closed `ok`
+  (`verify checks=2 ok=True`) — from inside the exec worktree, which is where
+  its run record and event ledger live.
+- Live trace of the changed code path, in the **production** ledger
+  (`/Users/xiamingxing/Workspace/runtime/omo/event-ledger.sqlite3`): the
+  closeout spawned the recorder, which wrote `event_log` sequences 16–17
+  (`Episode.Decision.v1` + `Outcome.Human.v1`, `producer:
+  omo-personal-episode`, `payload.source: scene-outcome-bridge`,
+  `correlation_id` = the run id) with no bail `[WARN]`. `check-episode-pipeline.py`
+  moved from 12 rows / 6 closeouts to **14 / 7** on that one closeout.
+
+### The measurement that upgrades follow-up 1 from inference to fact
+
+Re-running that same closeout gave the first chance to read the production
+store through the distinction this bet introduced, and the answer is stark: the
+live ledger holds **8 `Outcome.Human.v1` rows, of which 0 are kernel-landed**
+(none carries `feedback_id`). `PersonalEpisodeService.observe_principal` for the
+real principal reports `total_episodes=2`, `qualifying_episodes=0` of 30,
+`system_evidence_count=0`, `user_evidence_count=0`, `gate_gaps=2` — so the
+kernel branch has correctly declined to attach an outcome, on every closeout in
+this chain's history (SH-5, SH-5.1, SH-5.2's runs likewise produced mirror rows
+only). What the four-bet chain has therefore proven so far is the **emission**
+half of the pipeline end to end; the **landing** half has never fired in
+production and cannot until episodes carry evidence. Reported, not fixed: no
+episode or evidence row was manufactured to make the canary look complete, and
+the bet's ledger `value.note` carries this limit explicitly so
+`operational: PROVEN` cannot be read as "an episode received an outcome".
