@@ -59,6 +59,10 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("live_server.py", "live_server.py.asset"),
     ("observatory_query.py", "observatory_query.py.asset"),
     ("panorama-collect-main.py", "panorama-collect-main.py.asset"),
+    # 2026-09-26: 驾驶舱推理引擎(副驾对话 / RAG 向量+重排)纳管 —— 此前不在任何仓库,
+    # 直连 oMLX :8000 且无鉴权; 已改经 aetherforge 门面。
+    ("copilot_service.py", "copilot_service.py.asset"),
+    ("rag_engine.py", "rag_engine.py.asset"),
 )
 
 # check() 每次运行把漂移结果结构化写入部署目录的此文件 (原子写), 供 launchd

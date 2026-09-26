@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""llm_provider.py — LLM 提供方适配器（aetherforge BOS + omlxc 回退）
+"""llm_provider.py — LLM 提供方适配器（aetherforge BOS + 门面 HTTP 回退）
 
 依据 .omo/_knowledge/patterns/doc-l0-mof-mapping-governance.md Wave 2:
 OntoEKG 的 LLM 增强层可注入后端。默认 aetherforge（BOS MCP proxy），
@@ -12,12 +12,13 @@ OntoEKG 的 LLM 增强层可注入后端。默认 aetherforge（BOS MCP proxy）
 
 import json
 import os
+import subprocess
 import urllib.error
 import urllib.request
 
 AETHERFORGE_URI = os.environ.get("AETHERFORGE_BOS_URI", "bos://memory/aetherforge/mcp-server")
-OMLXC_BASE = os.environ.get("OMLXC_BASE_URL", "http://127.0.0.1:8000/v1")
-OMLXC_MODEL = os.environ.get("OMLXC_MODEL", "GLM-4.7-Flash-MLX-8bit")
+# 回退改走 aetherforge 门面(原直连 oMLX :8000 + 已删除的 GLM-4.7-Flash-MLX-8bit, 恒失败)
+OMLXC_MODEL = os.environ.get("OMLXC_MODEL", "fast")
 
 
 def _aetherforge_call(prompt: str, timeout: int = 15) -> str | None:
@@ -52,8 +53,33 @@ def _aetherforge_call(prompt: str, timeout: int = 15) -> str | None:
         return None
 
 
+def _gateway_url() -> str:
+    """aetherforge 门面: LLM_GATEWAY_URL / AETHERFORGE_URL / OMLX_URL, 默认本机 loopback。"""
+    for name in ("LLM_GATEWAY_URL", "AETHERFORGE_URL", "OMLX_URL"):
+        if os.environ.get(name):
+            return os.environ[name].rstrip("/")
+    return "http://127.0.0.1:4000"
+
+
+def _gateway_key() -> str:
+    """门面密钥: 环境变量优先, 否则 Keychain(aetherforge-gateway)。"""
+    for name in ("LLM_GATEWAY_KEY", "AETHERFORGE_API_KEY", "OMLX_API_KEY"):
+        if os.environ.get(name):
+            return os.environ[name]
+    try:
+        out = subprocess.run(
+            ["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
 def _omlxc_call(prompt: str, timeout: int = 30) -> str | None:
-    """回退: omlxc OpenAI 兼容端点。失败返回 None。"""
+    """回退: aetherforge 门面 OpenAI 兼容端点。失败返回 None。"""
     payload = {
         "model": OMLXC_MODEL,
         "messages": [{"role": "user", "content": prompt}],
@@ -61,9 +87,9 @@ def _omlxc_call(prompt: str, timeout: int = 30) -> str | None:
     }
     try:
         req = urllib.request.Request(
-            f"{OMLXC_BASE}/chat/completions",
+            f"{_gateway_url()}/v1/chat/completions",
             data=json.dumps(payload).encode(),
-            headers={"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {_gateway_key()}"},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=timeout) as resp:

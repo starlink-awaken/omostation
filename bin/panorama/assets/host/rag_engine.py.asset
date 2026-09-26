@@ -1,0 +1,374 @@
+"""AetherForge Local Sovereign Hybrid RAG Engine.
+
+Combines:
+1. Layer 1: BM25/TF-IDF in-memory inverted index (0ms instantaneous lexical matching)
+2. Layer 2: AetherForge (Port 8000) BGE-M3 dense vector recall (1024-dim, cached)
+3. Layer 3: AetherForge (Port 8000) BGE-Reranker-v2 cross-attention reranking
+4. Context Pack generator: 360-degree causal and factual synthesis for any entity
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import subprocess
+import math
+from pathlib import Path
+import re
+import time
+from typing import Any, Dict, List, Optional, Tuple
+import urllib.request
+import urllib.error
+
+APP_DIR = Path(__file__).resolve().parent
+CACHE_DIR = APP_DIR / "cache"
+CACHE_FILE = CACHE_DIR / "embeddings.json"
+
+# 2026-09-26: 经 aetherforge 门面(原直连 oMLX :8000)。embed-bge 与原 embed-bge-m3 同一模型(1024 维), 已缓存向量兼容。
+AETHERFORGE_BASE = (os.environ.get("LLM_GATEWAY_URL") or os.environ.get("AETHERFORGE_URL") or "http://127.0.0.1:4000").rstrip("/")
+EMBEDDING_MODEL = "embed-bge"
+_GATEWAY_KEY: Optional[str] = None
+RERANK_MODEL = "rerank"
+
+
+def _tokenize(text: str) -> List[str]:
+    """Tokenize English words/identifiers and Chinese character n-grams."""
+    if not text:
+        return []
+    text = text.lower()
+    words = re.findall(r"[a-z0-9]+(?:[-_][a-z0-9]+)*", text)
+    cjk_chars = re.findall(r"[\u4e00-\u9fff]", text)
+    cjk_tokens = list(cjk_chars)
+    for i in range(len(cjk_chars) - 1):
+        cjk_tokens.append(cjk_chars[i] + cjk_chars[i + 1])
+    return words + cjk_tokens
+
+
+
+def _gateway_headers() -> Dict[str, str]:
+    """门面鉴权头: 环境变量优先, 否则 Keychain(aetherforge-gateway)。结果缓存。"""
+    global _GATEWAY_KEY
+    if _GATEWAY_KEY is None:
+        key = os.environ.get("LLM_GATEWAY_KEY") or os.environ.get("AETHERFORGE_API_KEY") or ""
+        if not key:
+            try:
+                out = subprocess.run(["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
+                                     capture_output=True, text=True, timeout=5)
+                key = out.stdout.strip() if out.returncode == 0 else ""
+            except (OSError, subprocess.TimeoutExpired):
+                key = ""
+        _GATEWAY_KEY = key
+    h = {"Content-Type": "application/json"}
+    if _GATEWAY_KEY:
+        h["Authorization"] = f"Bearer {_GATEWAY_KEY}"
+    return h
+
+class BM25Index:
+    """Lightweight in-memory BM25 index with zero external dependencies."""
+
+    def __init__(self, k1: float = 1.5, b: float = 0.75):
+        self.k1 = k1
+        self.b = b
+        self.corpus: List[Dict[str, Any]] = []
+        self.doc_lens: List[int] = []
+        self.avgdl: float = 0.0
+        self.df: Dict[str, int] = {}
+        self.idf: Dict[str, float] = {}
+        self.doc_tfs: List[Dict[str, int]] = []
+
+    def build(self, documents: List[Dict[str, Any]]):
+        """Index list of document dicts with 'id', 'text', 'title', 'kind', 'plane'."""
+        self.corpus = documents
+        self.doc_lens = []
+        self.doc_tfs = []
+        self.df = {}
+        n_docs = len(documents)
+        if n_docs == 0:
+            self.avgdl = 0.0
+            return
+
+        total_len = 0
+        for doc in documents:
+            tokens = _tokenize(doc.get("text", "") + " " + doc.get("title", ""))
+            doc_len = len(tokens)
+            self.doc_lens.append(doc_len)
+            total_len += doc_len
+            
+            tf: Dict[str, int] = {}
+            for t in tokens:
+                tf[t] = tf.get(t, 0) + 1
+            self.doc_tfs.append(tf)
+
+            for t in set(tf.keys()):
+                self.df[t] = self.df.get(t, 0) + 1
+
+        self.avgdl = total_len / max(1, n_docs)
+        self.idf = {}
+        for term, freq in self.df.items():
+            self.idf[term] = math.log(1.0 + (n_docs - freq + 0.5) / (freq + 0.5))
+
+    def score(self, query: str, top_k: int = 30) -> List[Tuple[int, float]]:
+        """Score all documents against query, returns list of (doc_index, score)."""
+        tokens = _tokenize(query)
+        if not tokens or not self.corpus:
+            return []
+
+        scores: List[float] = [0.0] * len(self.corpus)
+        for t in tokens:
+            if t not in self.idf:
+                continue
+            idf_val = self.idf[t]
+            for idx, tf_dict in enumerate(self.doc_tfs):
+                if t not in tf_dict:
+                    continue
+                tf_val = tf_dict[t]
+                doc_len = self.doc_lens[idx]
+                denom = tf_val + self.k1 * (1.0 - self.b + self.b * (doc_len / max(1e-5, self.avgdl)))
+                scores[idx] += idf_val * (tf_val * (self.k1 + 1.0)) / max(1e-5, denom)
+
+        ranked = sorted(
+            [(idx, s) for idx, s in enumerate(scores) if s > 0.0],
+            key=lambda x: x[1],
+            reverse=True
+        )
+        return ranked[:top_k]
+
+
+class HybridRAGEngine:
+    """Hybrid RAG orchestrator with AetherForge embedding, reranking and caching."""
+
+    def __init__(self, data_path: Optional[Path] = None):
+        self.data_path = data_path or (APP_DIR / "current.json")
+        self.bm25 = BM25Index()
+        self.entities: List[Dict[str, Any]] = []
+        self.entities_by_id: Dict[str, Dict[str, Any]] = {}
+        self.embeddings_cache: Dict[str, List[float]] = {}
+        self._load_cache()
+        self.refresh_index()
+
+    def _load_cache(self):
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        if CACHE_FILE.is_file():
+            try:
+                self.embeddings_cache = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+            except Exception:
+                self.embeddings_cache = {}
+
+    def _save_cache(self):
+        try:
+            CACHE_FILE.write_text(json.dumps(self.embeddings_cache, ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            pass
+
+    def refresh_index(self):
+        """Build entities and BM25 index from current snapshot or live data."""
+        if not self.data_path.is_file():
+            return
+
+        try:
+            data = json.loads(self.data_path.read_text(encoding="utf-8"))
+        except Exception:
+            return
+
+        trace = data.get("strategic", {}).get("trace", {})
+        nodes = trace.get("nodes", [])
+        documents = data.get("strategic", {}).get("documents", [])
+
+        extracted: List[Dict[str, Any]] = []
+        for n in nodes:
+            if not isinstance(n, dict):
+                continue
+            nid = n.get("id", "")
+            title = n.get("title", "")
+            kind = n.get("kind", "")
+            plane = n.get("plane", "delivery")
+            status = n.get("status", "")
+            facts = n.get("facts", {}) or {}
+            
+            parts = [
+                f"[{plane.upper()}:{kind.upper()}]",
+                title,
+                str(facts.get("statement", "")),
+                str(facts.get("goal", "")),
+                str(facts.get("description", "")),
+                str(facts.get("spec_ref", "")),
+                str(facts.get("owner", "")),
+                str(facts.get("track", ""))
+            ]
+            search_text = " ".join(p for p in parts if p.strip())
+            
+            item = {
+                "id": nid,
+                "title": title,
+                "kind": kind,
+                "plane": plane,
+                "status": status,
+                "text": search_text,
+                "facts": facts,
+                "source": n.get("source")
+            }
+            extracted.append(item)
+
+        for doc in documents:
+            if not isinstance(doc, dict):
+                continue
+            doc_id = doc.get("id") or doc.get("key")
+            if not doc_id:
+                continue
+            doc_id = f"document:{doc_id}" if not str(doc_id).startswith("document:") else str(doc_id)
+            if doc_id not in {e["id"] for e in extracted}:
+                item = {
+                    "id": doc_id,
+                    "title": doc.get("title") or doc.get("id") or "Untitled Document",
+                    "kind": "document",
+                    "plane": "knowledge",
+                    "status": "active",
+                    "text": f"[KNOWLEDGE:DOCUMENT] {doc.get('title', '')} {doc.get('summary', '')} {doc.get('path', '')}",
+                    "facts": doc,
+                    "source": {"path": doc.get("path")}
+                }
+                extracted.append(item)
+
+        self.entities = extracted
+        self.entities_by_id = {e["id"]: e for e in extracted}
+        self.bm25.build(extracted)
+
+    def _call_aetherforge_embeddings(self, texts: List[str]) -> Optional[List[List[float]]]:
+        """Request vector embeddings from local AetherForge 8000."""
+        try:
+            req = urllib.request.Request(
+                f"{AETHERFORGE_BASE}/v1/embeddings",
+                data=json.dumps({"model": EMBEDDING_MODEL, "input": texts}).encode("utf-8"),
+                headers=_gateway_headers()
+            )
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return [row["embedding"] for row in data.get("data", [])]
+        except Exception:
+            return None
+
+    def _call_aetherforge_rerank(self, query: str, candidate_texts: List[str]) -> Optional[List[Dict[str, Any]]]:
+        """Request cross-attention reranking from local AetherForge 8000."""
+        if not candidate_texts:
+            return []
+        try:
+            req = urllib.request.Request(
+                f"{AETHERFORGE_BASE}/v1/rerank",
+                data=json.dumps({
+                    "model": RERANK_MODEL,
+                    "query": query,
+                    "documents": candidate_texts[:30]
+                }).encode("utf-8"),
+                headers=_gateway_headers()
+            )
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data.get("results", [])
+        except Exception:
+            return None
+
+    def search(self, query: str, mode: str = "hybrid", limit: int = 15) -> List[Dict[str, Any]]:
+        """Multi-stage retrieval over the entire sovereign ontology."""
+        query = (query or "").strip()
+        if not query or not self.entities:
+            return []
+
+        limit = max(1, min(int(limit or 15), 50))
+        mode = (mode or "hybrid").lower()
+
+        # Step 1: BM25 Lexical Scoring (0ms)
+        bm25_matches = self.bm25.score(query, top_k=max(limit * 3, 30))
+        
+        if mode == "lexical" or not bm25_matches:
+            results = []
+            for idx, score in bm25_matches[:limit]:
+                doc = dict(self.entities[idx])
+                doc["score"] = round(score, 4)
+                doc["retrieval_mode"] = "bm25"
+                results.append(doc)
+            return results
+
+        # Step 2: Try AetherForge Rerank on top lexical candidates
+        candidate_indices = [idx for idx, _ in bm25_matches[:25]]
+        candidate_texts = [f"{self.entities[idx]['title']}: {self.entities[idx]['text']}" for idx in candidate_indices]
+        
+        rerank_results = self._call_aetherforge_rerank(query, candidate_texts)
+        if rerank_results:
+            results = []
+            for item in rerank_results[:limit]:
+                orig_pos = item.get("index", 0)
+                if orig_pos < len(candidate_indices):
+                    entity_idx = candidate_indices[orig_pos]
+                    doc = dict(self.entities[entity_idx])
+                    doc["score"] = round(float(item.get("relevance_score", 0.0)), 4)
+                    doc["retrieval_mode"] = "aetherforge_rerank"
+                    results.append(doc)
+            return results
+
+        # Fallback if AetherForge reranker is busy: return normalized BM25
+        max_s = max((s for _, s in bm25_matches), default=1.0)
+        results = []
+        for idx, score in bm25_matches[:limit]:
+            doc = dict(self.entities[idx])
+            doc["score"] = round(score / max(1e-5, max_s), 4)
+            doc["retrieval_mode"] = "bm25_fallback"
+            results.append(doc)
+        return results
+
+    def get_context_pack(self, entity_id: str) -> Dict[str, Any]:
+        """Synthesize a complete 360-degree context pack for an entity."""
+        entity = self.entities_by_id.get(entity_id)
+        if not entity:
+            for e in self.entities:
+                if (e.get("facts") or {}).get("raw_id") == entity_id or e.get("title") == entity_id:
+                    entity = e
+                    break
+        if not entity:
+            return {"found": False, "error": f"Entity '{entity_id}' not found"}
+
+        entity_full_id = entity["id"]
+
+        try:
+            from strategy_projection import trace_lineage
+            if self.data_path.is_file():
+                raw_data = json.loads(self.data_path.read_text(encoding="utf-8"))
+                trace = raw_data.get("strategic", {}).get("trace", {})
+                lineage = trace_lineage(trace, entity_full_id, direction="both", max_depth=3)
+            else:
+                lineage = {"found": False}
+        except Exception as err:
+            lineage = {"found": False, "error": str(err)}
+
+        query = f"{entity.get('title')} {entity.get('kind')} {entity.get('text')}"
+        semantic_docs = self.search(query, mode="hybrid", limit=5)
+        related_knowledge = [d for d in semantic_docs if d.get("id") != entity_full_id][:3]
+
+        md_lines = [
+            f"# 360° Entity Context: {entity.get('title')} ({entity_full_id})",
+            f"- **Plane**: {entity.get('plane', '').capitalize()} | **Kind**: {entity.get('kind')} | **Status**: {entity.get('status')}",
+            "",
+            "## 1. Key Facts & Properties",
+        ]
+        for k, v in (entity.get("facts") or {}).items():
+            if v and k not in ("private_prompt", "raw_id") and not str(k).startswith("_"):
+                md_lines.append(f"- **{k}**: {v}")
+
+        md_lines.extend([
+            "",
+            "## 2. Topological Lineage",
+            f"- Connected Nodes: {lineage.get('metrics', {}).get('total_nodes', 1)}",
+            f"- Connected Edges: {lineage.get('metrics', {}).get('total_edges', 0)}",
+            f"- Sovereign Planes Spanned: {list((lineage.get('metrics', {}).get('plane_distribution') or {}).keys())}",
+            "",
+            "## 3. Related Knowledge & Architectural References"
+        ])
+        for rk in related_knowledge:
+            md_lines.append(f"- [{rk.get('plane', '').upper()}] **{rk.get('title')}** (Score: {rk.get('score')}): {rk.get('text', '')[:120]}...")
+
+        return {
+            "found": True,
+            "entity": entity,
+            "lineage": lineage,
+            "related_knowledge": related_knowledge,
+            "markdown_pack": "\n".join(md_lines)
+        }
