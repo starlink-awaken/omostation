@@ -34743,8 +34743,9 @@ bets:
     producer deliberately so PersonalEpisodeService.observe_principal can find the row. producer=''scene-outcome-recorder''
     has 0 rows and structurally cannot have any, so SH-5''s criterion is unsatisfiable as written
     while the bridge it implied was dead was in fact writing. SH-5.2 therefore closes the verification,
-    not the pipeline: the probe is re-bound to payload.source, and the false-green path is guarded
-    by bin/gac/test-episode-pipeline-probe.py.'
+    not the pipeline: the probe is re-bound to payload.source, and the false-green path is covered
+    by check-episode-pipeline.py --self-test, which stays quota-neutral because bin/ caps net-new
+    scripts.'
   - _bridge_closeout_to_scene no longer reports success silently on malformed input;
     a test or a recorded trace path proves that state is observable.
   verify:
@@ -34760,7 +34761,6 @@ bets:
   - bin/gac/check-episode-pipeline.py
   - bin/agent-workflow.py
   - bin/ssot/scene-outcome-recorder.py
-  - bin/gac/test-episode-pipeline-probe.py
   - bin/ssot/workflow-scene-map.yaml
   - docs/superpowers/specs/2026-09-26-episode-pipeline-verification-gap.md
   - docs/plans/3y-bet-ledger.yaml
