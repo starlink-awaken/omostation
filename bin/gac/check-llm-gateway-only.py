@@ -28,6 +28,12 @@ DIRECT_PATTERNS = [
     re.compile(r"curl\b.*https?://(?:localhost|127\.0\.0\.1):11434"),
     re.compile(r"urlopen\(.*https?://(?:localhost|127\.0\.0\.1):11434"),
     re.compile(r"base_url\s*=\s*[\"']https?://(?:localhost|127\.0\.0\.1):11434"),
+    # 死 IP (mbp 旧 tailnet) / 已下线端口 / 假 key / 已删路由
+    re.compile(r"https?://100\.96\.126\.35"),
+    re.compile(r"https?://[\w.]+:(?:9000|8081|8082|8083|8084|8085|8183|8185|8188)/"),
+    re.compile(r"[\"']sk-omlx-admin[\"']"),
+    re.compile(r"[\"']123456[\"']"),
+    re.compile(r"/v1/generate[\"\s]"),
 ]
 
 # 多行调用检测: requests.post( / httpx.post( 等调用开头, URL 换行在同语句后续行
