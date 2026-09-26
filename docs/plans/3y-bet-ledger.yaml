@@ -35079,7 +35079,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-26-dev-runtime-profile-root.md
     spec_version: 1.0.0
-    content_digest: sha256:e005337256f1abe06977c8a0955bb3992446e67036cc6d3deb9d23e6f5163717
+    content_digest: sha256:6ff35d73f6c454e51af9ead800544163b73c91599a5d0ec34d36f76da47e8a5c
     decision_ref: decision://accepted/BET-Y2Q4-T10-203
   value_indicator_policy: false
   completion_evidence:

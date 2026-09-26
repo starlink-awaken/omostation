@@ -5,6 +5,7 @@ title: Dev/Runtime Profile Root Convergence (B1)
 bet_id: BET-Y2Q4-T10-203
 status: accepted
 lifecycle: contract
+owner: governance-team
 last-reviewed: 2026-09-26
 adr: ADR-0456
 ---
