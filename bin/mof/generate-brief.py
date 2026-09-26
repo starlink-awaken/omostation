@@ -274,8 +274,9 @@ def scan_x3_metrics() -> dict:
             break
 
     # 2. 知识复用度量 (真实查询 KOS SQLite 检索库)
-    kos_dir = WORKSPACE / "kos"
-    sqlite_db = kos_dir / "kos-index.sqlite"
+    # BET-Y2Q4-T1-04: 真实索引在 data/kos/kos-index.sqlite (2026-09-26 实测 12,553 篇);
+    # 旧路径 kos/ 不存在导致指标恒 0. sqlite 缺失时如实报 0 (D1: 禁代理量顶替).
+    sqlite_db = WORKSPACE / "data" / "kos" / "kos-index.sqlite"
     if sqlite_db.is_file():
         import sqlite3
 
@@ -289,10 +290,9 @@ def scan_x3_metrics() -> dict:
             metrics["knowledge_reuse"] = doc_count + entity_count
             conn.close()
         except Exception:
-            # 降级降速扫描
-            metrics["knowledge_reuse"] = len([f for f in kos_dir.rglob("*") if f.is_file()])
+            metrics["knowledge_reuse"] = 0
     else:
-        metrics["knowledge_reuse"] = len([f for f in kos_dir.rglob("*") if f.is_file()])
+        metrics["knowledge_reuse"] = 0
 
     return metrics
 
@@ -460,7 +460,7 @@ def generate_brief_content() -> str:
     lines.append("|------|----------|------|------------|")
     lines.append(f"| **创意创作** | 新增发布数: `{x3['creations']}` | 正常 | `@创意创作/_outputs` |")
     lines.append(_x3_work_delivery_row())
-    lines.append(f"| **知识复用** | KOS 索引篇: `{x3['knowledge_reuse']}` | 正常 | `kos/` 篇目 |")
+    lines.append(f"| **知识复用** | KOS 索引篇: `{x3['knowledge_reuse']}` | 正常 | `data/kos/kos-index.sqlite` |")
     # B5: per-role completion/cost rows (pointerized X3)
     role_metrics_path = WORKSPACE / ".omo" / "_truth" / "registry" / "x3-role-metrics.yaml"
     if role_metrics_path.is_file():
