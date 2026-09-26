@@ -35354,7 +35354,8 @@ bets:
     99.6%、12/12 域 Harness 绿），应进入降档不降纪律的消费期。本 bet 起草 ADR-0456：分级方案（P0/P1 全量 closeout
     + retro；P2 及以下轻量模板）、before/after 文档强度数字、风险评估、回滚方案、前 10 个关闭 bet 的 shadow 对比计划；强制生效前须
     principal 显式批准（human_gate: true）。'
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T6-SUBTRACT
   priority: P2
