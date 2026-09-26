@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-17
+last_updated: 2026-09-26
 ---
 
 # AGENTS.md — Workspace Development Guide
@@ -169,10 +169,22 @@ python3 bin/gac/meta-doctor.py --workspace .
 ### PR 工作流
 
 ```bash
-bash bin/gac/gac-worktree.sh claim <session>   # 起隔离 worktree
-bash bin/gac/gac-worktree.sh submit <session>   # push 分支 + 开 PR
-bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
+bash bin/gac/gac-worktree.sh claim <session>    # 起隔离 worktree
+git push -u origin <branch>                      # 交付：手动 push（submit 不做这件事）
+gh pr create --base main --head <branch> --title ... --body-file ...
+bash bin/gac/gac-worktree.sh merge <session>     # squash 合并【已存在的】open PR
+bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW 子树
 ```
+
+- **`submit` 自 WP1 Wave B2 起是 proposal-only**：`bin/gac/gac-worktree.sh:683-691` 在跑完门禁/子模块预检后
+  只打印 `MANAGED_SUCCESSOR_REQUIRED` + `patch_digest` 然后 **`exit 2`**，**不 push、不开 PR、不调 integrate**。
+  实证（2026-09-26，同一分支两次 submit）：两次都 exit 2，远端零效应。
+  所以 **`exit 2` 不是拦截，是终态** —— 别把它读成"base 太旧、需要先造一个 successor"而白跑一轮 claim。
+- `merge` 仍然可用，但它查的是"该分支已有 open PR"（`:780-783`，查不到就报 `先 submit 开 PR` 退出）。
+  由于 submit 不再开 PR，**这句提示已失效**；真实前置条件是上面两行手动 push + `gh pr create`。
+- `origin/main 前进 N commits` 的告警同理：它伴随 proposal 一起打印，不是要求你 rebase
+  （本仓明确禁止用 rebase/merge/pull 吸收上游，见 `:507`）。改动只碰文档且与上游无交集时，
+  直接 push 即可；CI 评的是 merge tree，不含 base 漂移。
 
 ### Hook 机制 22c（2026-09-06, BET-Y1Q4-T6-24）
 
@@ -205,6 +217,12 @@ bash bin/gac/gac-worktree.sh merge <session>    # squash 合并 PR
 
 - **frontmatter UTC 时区**：`last-reviewed` 必须用 UTC 当天或更早，否则 gac-gate FAIL（PITFALL-004）
 - **ci-surfaces 不加自引用路径**：严格匹配 workflow `on.paths`
+- **生成态会被交付动作扫进 commit**（2026-09-26 实证）：commit / claim 期间 hook 会重写
+  `.omo/state/system.yaml` 的 `health_score_evidence_generated_at`（纯时间戳），一次文档 PR
+  因此多带一个 `wip:` commit。判据：交付前跑 `git diff --name-status origin/main..HEAD`，
+  把 `.omo/state/**` / `BRIEF.md` 这类生成态与你的真实改动分开数 —— 出现 `M .omo/state/...`
+  而你没碰过它 = hook 产物，剔除（#4346 / #4359 均剔除，生成态不随文档 PR 走）。
+  同一命令还能一眼看出 base 漂移带来的反向条目（主仓已改的文件会显示为 `D`/`M`，非你所为）。
 - **mergeStateStatus**：值是 CLEAN/BLOCKED/DIRTY（非 MERGEABLE）
 - **worktree 创建后立即** `git submodule update --init`：防指针回退
 - **并发 agent 争用**：stash+checkout main 恢复；不替并发 agent 写 retro
