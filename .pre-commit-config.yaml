@@ -91,6 +91,11 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit]
+      # ⚠️ DEAD 声明（2026-09-26 实测）：entry 目标 `scripts/check-vault-paths.py` 在本仓
+      #    一个字节都不存在（`git ls-tree -r origin/main` 零命中，含归档）。这条从未执行过，
+      #    删除它不会改变任何约束（本文件本就无 per-commit 调用面，见顶部）；保留是为了让
+      #    "端口 hardcode 检查"这个能力已失踪这件事留在原地，而不是被静默抹掉。
+      #    复验：git cat-file -e origin/main:scripts/check-vault-paths.py
       - id: port-hardcode-check
         name: port hardcode check (端口必须在 protocols/port-registry.yaml)
         entry: python3 scripts/check-vault-paths.py --check-ports
@@ -102,6 +107,9 @@ repos:
         # 增量 enforce: --check-ports 自动读 protocols/port-hardcode-baseline.yaml, 只拦新违规.
         # 刷新 baseline (锚定已知历史): python3 scripts/check-vault-paths.py --baseline-init
         # 全景审计: 加 --strict 显示全部含历史.
+      # ⚠️ DEAD 声明（2026-09-26 实测）：entry 目标 `scripts/check-cross-deps.py` 在本仓不存在
+      #    （含归档零命中）。下面 P47+ 注释描述的"跨层 enforce"因此没有任何执行面承接。
+      #    复验：git cat-file -e origin/main:scripts/check-cross-deps.py
       - id: cross-deps-check
         name: cross-layer deps check (跨层 import 违规)
         entry: python3 scripts/check-cross-deps.py
@@ -211,6 +219,9 @@ repos:
         #  持续在代理提交中出现 → 忽略未修复项, pre-commit 不应阻断.
         # 作业级 lint (quality.yml) 仍然检查这些.
 
+      # ⚠️ DEAD 声明（2026-09-26 实测）：entry 目标 `scripts/check-future-annotations.py`
+      #    在本仓不存在（含归档零命中）。复验：
+      #    git cat-file -e origin/main:scripts/check-future-annotations.py
       - id: future-annotations
         name: future annotations check
         entry: python3 scripts/check-future-annotations.py
@@ -257,6 +268,12 @@ repos:
         files: ^(README|CLAUDE|AGENTS|ARCHITECTURE|LAYER-INDEX)\.md$  # 只核心入口, docs/ 详细文档格式灵活不 lint
         stages: [pre-commit]
 
+      # ⚠️ DEAD 声明（2026-09-26 实测）：entry 目标 `bin/ssot/verify-spaces.py` 已不在盘上，
+      #    脚本只存在于归档件 `bin/_archive/verify-spaces.py` 与
+      #    `bin/_archive/migrated_low_value/verify-spaces.py` —— 即这条是**主动退役**后被
+      #    声明遗留下来的，与上面 3 条"目标从未存在/已失踪"性质不同。真跑必挂：
+      #    python3 bin/ssot/verify-spaces.py → can't open file, exit 2
+      #    复验：git ls-tree -r --name-only origin/main | grep verify-spaces
       - id: verify-spaces
         name: Verify Spaces YAML Schema
         entry: uv run --with jsonschema --with pyyaml python3 bin/ssot/verify-spaces.py
