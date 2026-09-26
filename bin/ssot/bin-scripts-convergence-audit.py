@@ -62,8 +62,13 @@ def audit(root: Path, manifest_path: Path, execution_path: Path) -> dict[str, ob
         bin_rel = str(entry.get("bin", ""))
         scripts_rel = str(entry.get("scripts", ""))
         action = str(entry.get("action", ""))
-        bin_exists = bool(bin_rel) and (root / bin_rel).is_file()
-        scripts_exists = bool(scripts_rel) and (root / scripts_rel).is_file()
+        status = str(entry.get("status", ""))
+        # Archived entries (status="archived" or null bin/scripts) are
+        # intentionally absent from the working tree; skip them.
+        if status == "archived":
+            continue
+        bin_exists = bool(bin_rel) and bin_rel != "None" and (root / bin_rel).is_file()
+        scripts_exists = bool(scripts_rel) and scripts_rel != "None" and (root / scripts_rel).is_file()
         report = execution.get(name)
 
         if not bin_exists:

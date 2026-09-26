@@ -43,23 +43,22 @@
     },
     {
       "name": "adr_drift_auto_fix",
-      "bin": "bin/adr/adr-drift-auto-fix.py",
-      "scripts": "scripts/bin/adr/adr-drift-auto-fix.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
+      "bin": null,
+      "scripts": null,
+      "status": "archived",
+      "action": "archived-2026-09-26-sh7-quota",
       "owner": "adr",
-      "note": "Execution report confirms retirement of the scripts duplicate; bin remains the single implementation.",
+      "note": "Archived as part of BET-Y2Q4-SH-7 bin-quota offset; bin-master removed.",
       "evidence": {
-        "active_files": [
-          "bin/adr/adr-drift-auto-fix.py"
-        ],
+        "active_files": [],
         "risk_score": 15,
         "decision_round": "round7",
         "due_date": "2026-09-01",
         "retired_files": [
           "scripts/bin/adr/adr-drift-auto-fix.py"
         ],
-        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/_archive/2026-09-26-sh7-quota/adr_drift_auto_fix.yaml"
       }
     },
     {
@@ -85,44 +84,42 @@
     },
     {
       "name": "adr_drift_classify",
-      "bin": "bin/adr/adr-drift-classify.py",
-      "scripts": "scripts/bin/adr/adr-drift-classify.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
+      "bin": null,
+      "scripts": null,
+      "status": "archived",
+      "action": "archived-2026-09-26-sh7-quota",
       "owner": "adr",
-      "note": "Execution report confirms retirement of the scripts duplicate; bin remains the single implementation.",
+      "note": "Archived as part of BET-Y2Q4-SH-7 bin-quota offset; bin-master removed.",
       "evidence": {
-        "active_files": [
-          "bin/adr/adr-drift-classify.py"
-        ],
+        "active_files": [],
         "risk_score": 15,
         "decision_round": "round7",
         "due_date": "2026-09-01",
         "retired_files": [
           "scripts/bin/adr/adr-drift-classify.py"
         ],
-        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/_archive/2026-09-26-sh7-quota/adr_drift_classify.yaml"
       }
     },
     {
       "name": "adr_trend_insight",
-      "bin": "bin/adr/adr-trend-insight.py",
-      "scripts": "scripts/bin/adr/adr-trend-insight.py",
-      "status": "managed",
-      "action": "bin-master, scripts-retired",
+      "bin": null,
+      "scripts": null,
+      "status": "archived",
+      "action": "archived-2026-09-26-sh7-quota",
       "owner": "adr",
-      "note": "Execution report confirms retirement of the scripts duplicate; bin remains the single implementation.",
+      "note": "Archived as part of BET-Y2Q4-SH-7 bin-quota offset; bin-master removed.",
       "evidence": {
-        "active_files": [
-          "bin/adr/adr-trend-insight.py"
-        ],
+        "active_files": [],
         "risk_score": 15,
         "decision_round": "round7",
         "due_date": "2026-09-01",
         "retired_files": [
           "scripts/bin/adr/adr-trend-insight.py"
         ],
-        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md"
+        "execution_report": "/private/tmp/governance-continuation-20260817/docs/operations/bin-scripts-close-duplicate-exec.md",
+        "archive_path": "bin/_archive/2026-09-26-sh7-quota/adr_trend_insight.yaml"
       }
     },
     {
