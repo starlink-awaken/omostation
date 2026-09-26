@@ -368,3 +368,18 @@ entries:
     对齐子仓 origin/main 以解除 CI pointer-drift DIVERGED 阻塞, 属对齐上游现值而非内容回退 (BET-Y2Q4-T9-01)
   recorded_at: '2026-09-26T13:08:33.627332+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|82351fa1a91c3a5f
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 82351fa1a91c3a5f
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer c91b203e15e6 rewinds 0790f8977ec3
+  range: origin/main..HEAD
+  base_sha: d69fb5e2ec7153913993365a5bbe74727e97f27e
+  head_sha: a9bf2cb1245c96fa549d1b9fa6d40d2c4a79ba17
+  merge_base: d69fb5e2ec7153913993365a5bbe74727e97f27e
+  exempt_reason: parent pin 0790f897 sits only on omo feature branch agent/governance-agent/ws-devruntime-b1s
+    (ADR-0456), not on omo origin/main — freshness gate requires the pin to be the
+    child main tip; c91b203e IS omo origin/main
+  recorded_at: '2026-09-26T14:34:02.129410+00:00'
+  active: true
