@@ -34858,7 +34858,8 @@ bets:
     test on a pure resolver.
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
@@ -34923,17 +34924,53 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4c468499b2f18e102ca63cfa474add36718797a7
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.3.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.3.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.3.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.3.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.3.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.3.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.3.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >
+            SH-5.3 reopens a path that was emitting nothing, it does not add a value
+            stream. What is proven operationally is that the resolver runs in
+            production and its output is observable: the run closed by this bet
+            resolved through the direct `map:` lookup with the new code in place, and
+            the fallback branch is asserted hermetically plus censused against real
+            registry data (26 registered workflows = 19 direct + 7 fallback + 0
+            unresolved). The fallback branch has no live canary yet — it gets one the
+            next time any of agent-onboarding, round-type-router, scene-execution,
+            scene-lifecycle, state-sync, submodule-pointer-bump,
+            submodule-pointer-close closes out, and it will say so on stderr with an
+            [INFO] notice. No episode was backfilled for a past closeout to manufacture
+            that canary (circuit breaker). Measured limit on the payoff, recorded here so
+            the matrix is not read as more than it is: the live ledger holds 8
+            Outcome.Human.v1 rows and 0 of them are kernel-landed, because principal
+            xiamingxing has 2 episodes with qualifying_episodes=0 and no evidence rows at
+            all, so no closeout in this chain has ever reached an episode. PersonalEpisodeService
+            still requires 30 qualifying episodes plus a 4-week floor before any
+            personal-value claim, so no indicator is asserted here
+            (value_indicator_policy: false).
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
