@@ -106,27 +106,65 @@ def record_outcome(
 
 def _write_event_ledger_outcome(entry: dict[str, Any], *, review_seconds: int | None = None,
                                 saved_seconds: int | None = None) -> None:
-    """Bridge scene outcome to Outcome.Human.v1 in event-ledger (North Star source)."""
+    """Bridge scene outcome → Episode.Decision.v1 + Outcome.Human.v1 in event-ledger.
+
+    BET-Y2Q4-SH-5: emit a paired Decision + Outcome event so
+    PersonalEpisodeService.observe_principal can count it as a qualifying
+    episode.  Each scene outcome becomes its own episode (decision = scene
+    adjudication, outcome = the human verdict).
+
+    Failures are silent — the trust loop never blocks outcome recording.
+    """
     try:
         import os as _os
+        import uuid as _uuid
 
         omo_src = str(ROOT / "projects" / "omo" / "src")
         if omo_src not in sys.path:
             sys.path.insert(0, omo_src)
         from omo.event_ledger.surface import EventLedgerSurface
 
-        surface = EventLedgerSurface()
+        principal_id = _os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        scene_id = str(entry.get("scene_id", ""))
+        run_id = str(entry.get("run_id", ""))
         verdict = VERDICT_MAP.get(entry.get("adjudication", ""), "reject")
+        episode_id = f"episode-{_uuid.uuid5(_uuid.NAMESPACE_DNS, f'{scene_id}:{run_id}')}"
+        # PersonalEpisodeService.observe_principal filters on
+        # ``producer == PERSONAL_EPISODE_PRODUCER`` ("omo-personal-episode")
+        # so episode-scoped events must carry that producer to be counted.
+        episode_producer = "omo-personal-episode"
+
+        surface = EventLedgerSurface()
+        # Step 1: Episode.Decision.v1 — the principal accepted/rejected the scene.
+        surface.append(
+            event_type="Episode.Decision.v1",
+            producer=episode_producer,
+            principal_id=principal_id,
+            space_id="personal",
+            episode_id=episode_id,
+            correlation_id=run_id,
+            idempotency_key=f"decision:{scene_id}:{run_id}",
+            payload={
+                "scene_id": scene_id,
+                "run_id": run_id,
+                "decision": "closeout",
+                "verdict": verdict,
+                "source": "scene-outcome-bridge",
+            },
+        )
+        # Step 2: Outcome.Human.v1 — the actual human verdict.
         surface.append(
             event_type="Outcome.Human.v1",
-            producer="scene-outcome-recorder",
-            principal_id=_os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing"),
-            correlation_id=str(entry.get("run_id", "")),
-            idempotency_key=f"scene:{entry.get('scene_id')}:{entry.get('run_id')}",
+            producer=episode_producer,
+            principal_id=principal_id,
+            space_id="personal",
+            episode_id=episode_id,
+            correlation_id=run_id,
+            idempotency_key=f"outcome:{scene_id}:{run_id}",
             payload={
                 "verdict": verdict,
-                "scene_id": entry.get("scene_id", ""),
-                "run_id": entry.get("run_id", ""),
+                "scene_id": scene_id,
+                "run_id": run_id,
                 "review_duration_seconds": review_seconds,
                 "estimated_time_saved_seconds": saved_seconds,
                 "source": "scene-outcome-bridge",

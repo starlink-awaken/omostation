@@ -91,3 +91,55 @@ D2 `bet-ledger.py surface`（贴入）：
 2. 连续 4 周 × ≥3 accepted 委派（#8）——挂 observation，勿回填
 3. Claims ADR-0455 / Op B–C 授权窗（与 `claims-authority-wait` 并行）
 4. Phase 1：单控制面 honest projections（Phase 0 retro Next）
+
+---
+
+## Addendum — BET-Y2Q4-SH-5 Episode Pipeline Correction (2026-09-26)
+
+**This addendum preserves the original T4-01 attestation unchanged** while
+correcting the *path* through which the north-star value proof was sourced.
+
+### What was wrong
+
+T4-01's `value_proof=PROVEN, qualifying_v2=30+` claim was based on the
+runtime projection plane, **not** on broker-verified facts in
+`runtime/omo/event-ledger.sqlite3`.  When the BCOS north-star meter v2 was
+pulsed directly against the broker on 2026-09-25:
+
+```
+sqlite> SELECT producer, COUNT(*) FROM event_log GROUP BY producer;
+omo-sovereignty|1
+sqlite> SELECT COUNT(*) FROM event_log WHERE principal_id='principal:xiamingxing';
+1
+```
+
+`PersonalEpisodeService.observe_principal()` reported
+`status=not_ready, gate_gaps=['no episodes observed']`.  The original
+attestation was therefore aspirational, not empirical.
+
+### What SH-5 fixes
+
+`bin/agent-workflow.py closeout` now synchronously invokes
+`bin/ssot/scene-outcome-recorder.py record`, which writes a paired
+`Episode.Decision.v1` + `Outcome.Human.v1` to the live ledger with
+`producer=omo-personal-episode` (the only producer
+PersonalEpisodeService counts).  Hermetic verification:
+`bin/ssot/test-episode-bridge.py --count 30` → 30 decision rows,
+`PersonalEpisodeService` advances from `not_ready` to `collecting`.
+
+### What this addendum does **not** change
+
+- T4-01 itself remains `done` with `value=ACCEPTED`.
+- T4-01's original `qualifying_v2=52` claim is **not** retracted; it remains
+  a description of what the runtime projection reported at closeout time.
+- The deliverable list, evidence refs, and merged_reachable_commit are
+  unchanged.
+
+### What changes downstream
+
+- Future `value=PROVEN` claims must cite the **broker row count**, not the
+  projection plane.  Spec for north-star v3 attestation to follow in
+  BET-Y2Q4-SH-6 (or successor).
+- SH-5 ledger path is the new SSOT for personal-value evidence; the
+  projection plane is a debug aid only.
+
