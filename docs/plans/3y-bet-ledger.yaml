@@ -35132,7 +35132,8 @@ bets:
   goal: '近 30 天提交构成 feat 501 / fix 424 / test 34（test:feat ≈ 1:15），缺陷修复密度高但回归覆盖薄，同类问题有复发风险（如
     #3282 回退 #3277 实录）。不做一次性大补测，把 fix 必带回归测试（或留痕豁免）规则化进交付面：PR 模板检查项 + 可复算度量基线（30 天 ≥1:5
     目标）+ 豁免路径。'
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -35175,17 +35176,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6c958ce74ee77b6b6ce492dd95f18d6b39d37d47
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-02.md
+          tests:
+            ref: receipt://docs/reports/test-density-baseline-2026-09-26.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-02.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-02.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            规则是观察期提示而非强制门禁，test:fix 实际回升待 2026-10-26 复算同命令验证
+            （目标 1:5，未达标则如实记录降目标或延长窗口，禁止改口径）。价值兑现是后续 30 天
+            的交付行为，非本次提交本身。
   value_indicator_policy: false
 - id: BET-Y2Q4-T3-02
   title: KOS 复用消费端闭环 — kos-cold-start 端到端验证与命中证明
