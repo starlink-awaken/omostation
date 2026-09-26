@@ -35678,6 +35678,95 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-204
+  title: Gitlink 落位契约收口 — 恢复 projects/omo pin 至 child main e925214 (ADR-0456 B1 内核侧回归)
+  goal: 'Re-deliver the ADR-0456 B1 kernel-side seam that silently vanished from main.
+    The root commit of BET-Y2Q4-T10-203 pointed projects/omo at 0790f897, a commit that
+    lived only on the child feature branch agent/governance-agent/ws-devruntime-b1s,
+    so root CI stayed green and PR #4406 merged normally — then the next freshness wave
+    (28158b9bc, PR #4405) rewound the pin to c91b203e (child origin/main tip) and the
+    change disappeared from main with no gate error. The rewind was deliberate and self-documented:
+    the commit body carries "[gitlink-regress: parent pin 0790f897 sits only on omo
+    feature branch ... freshness gate requires the pin to be the child main tip]". Root
+    cause is therefore on the delivery side, not the harness: a gitlink is not a delivery
+    mechanism, and PR 4209 removed --require-main from the gac-gate reachability step
+    on 2026-09-22, so nothing on the merge path reports an unmergeable-but-pinned child
+    commit. Land the child change through omo#197 (now omo origin/main e925214), move
+    the root pin onto it through the single canonical entry point, and pin the rule
+    as a contract spec so the next agent does not repeat the four-day loss.'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: submodule-pointer-bump
+  underlying_workflow: submodule-pointer-bump
+  circuit_breaker: Stop on any change that alters the resolved path of a process running
+    with no profile env set, modifies governance-checks.yaml registry rules, edits .github/workflows/**
+    or .githooks/** (including restoring --require-main to gac-gate.yml, which PR 4209
+    removed deliberately and whose reversal is a principal call), edits .omo/cron/registry.yaml
+    or an installed plist, touches a crontab entry, rewinds or skips any gitlink other
+    than projects/omo, or backfills lifecycle evidence for BET-Y2Q4-T10-203.
+  non_goals:
+  - Do not reconcile tests/test_gac_gate_workflow_purity.py::test_reachability_and_generators_are_check_only,
+    which has been red on main since PR 4209 removed --require-main from the CI step
+    it asserts. Both sides are owned by a principal decision about the cross-repo PR
+    pattern; register it in the spec as an adjacent finding and report it.
+  - Do not change the freshness gate child-main-tip requirement, and do not weaken or
+    widen the gitlink-regress exemption semantics in any script.
+  - Do not re-run B1 bin/ seam work or touch projects/omo content — the child side is
+    already merged as omo#197; this bet moves the pointer only.
+  - Do not relocate the runtime install, cut over cron/plist, or untrack generated state
+    — ADR-0456 B2-B5.
+  done_when:
+  - The root gitlink for projects/omo equals e9252141d9c737c2d99edd76fb6bd1e12650a3ea
+    on origin/main and is an ancestor of the child default branch.
+  - The restored pointer carries the B1 seam content rather than a dangling SHA, provable
+    by reading src/omo/omo_paths.py at the pinned commit.
+  - The pointer change was produced by bin/ssot/submodule-pointer-transaction.sh, not
+    by a manual git add of projects/omo.
+  - docs/superpowers/specs/2026-09-26-submodule-gitlink-reachability.md is accepted
+    and bound to this bet.
+  verify:
+  - cmd: git -C projects/omo merge-base --is-ancestor "$(git rev-parse HEAD:projects/omo)"
+      origin/main
+    expect: exit 0 — the root pin is reachable from the child default branch
+  - cmd: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch --require-main
+    expect: exit 0 — all gitlinks pass the strict form of the gate
+  - cmd: git -C projects/omo show "$(git rev-parse HEAD:projects/omo):src/omo/omo_paths.py"
+      | grep -c STATE_ROOT
+    expect: non-zero match count — B1 kernel seam present at the pinned commit
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-submodule-gitlink-reachability.md
+  - projects/omo
+  - docs/reports/2026-09-26-omo-pin-regression-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-204.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-submodule-gitlink-reachability.md
+    spec_version: 1.0.0
+    content_digest: sha256:2d4fc9bb91f247dbde4c0cfc1e1158656f122c7b291fdd3759c50d2388d068ba
+    decision_ref: decision://accepted/BET-Y2Q4-T10-204
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -35816,7 +35905,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 483
+  total_bets: 484
   windows:
   - Y1Q1
   - Y1Q2
