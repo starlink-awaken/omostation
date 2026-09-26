@@ -140,6 +140,13 @@ check-episode-pipeline-strict:  ## SH-5 strict mode (exit 1 on empty producer di
 test-episode-bridge:  ## BET-Y2Q4-SH-5 hermetic episode bridge test (30 mock closeouts)
 	uv run --with pyyaml --with pydantic python bin/ssot/test-episode-bridge.py --count 30
 
+test-auto-pruner:  ## BET-Y2Q4-SH-6 unit tests for auto-pruner handlers (incl. brief regen)
+	$(PY) bin/ssot/test-auto-pruner.py
+
+drift-face-clean:  ## SH-6 self-heal: detect drift + auto-prune ephemeral/runs/brief
+	uv run --with pyyaml python bin/ssot/drift-face-detector.py --json | tee /tmp/sh6-drift.json
+	uv run --with pyyaml python bin/ssot/auto-pruner.py --apply
+
 gac-healthcheck:  ## GaC 13-point 健康检查
 	$(PY) bin/gac/gac-healthcheck.py
 
