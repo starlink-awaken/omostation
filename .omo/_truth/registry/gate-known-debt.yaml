@@ -341,3 +341,16 @@ entries:
     致 2b4ccf6 血缘相对其侧移, 内容为 05d86056 等价物加 #89 修复, 非内容回退'
   recorded_at: '2026-09-25T14:05:31.641626+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|d34401604aa21864
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: d34401604aa21864
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer 650e08ea4999 rewinds 67d1c8697943
+  range: origin/main..HEAD
+  base_sha: f8095a2a313ada255fda56b07998f20e17d1292b
+  head_sha: f99ac45e46a5b0e0b420ceefc212734ac01bffaa
+  merge_base: c2808d8c39dc619f62a282676dc68d96b30938db
+  exempt_reason: 'squash 语义分叉 — 650e08ea 内容为 67d1c869 经 omo main #194/#195 重写, 非真实代码回退'
+  recorded_at: '2026-09-26T06:55:02.021331+00:00'
+  active: true
