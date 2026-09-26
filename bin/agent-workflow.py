@@ -1175,7 +1175,7 @@ def _bridge_closeout_to_scene(run_id: str) -> None:
 
     try:
         from omo.workflow import lifecycle as _lifecycle
-        from omo.workflow.registry import load_registry as _load_registry
+        from omo.workflow import load_registry as _load_registry
     except Exception as exc:
         print(f"  [WARN] SH-5 bridge import failed: {exc}", file=sys.stderr)
         return
