@@ -15,6 +15,7 @@ import importlib.util
 import json
 import os
 import re
+import sys
 from collections import Counter
 from collections.abc import Mapping
 from datetime import datetime, timezone
@@ -22,10 +23,13 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "bin" / "lib"))
+from repo_root import event_ledger_path
+
 REPORT_SCHEMA = "compound-attribution-report/v2"
 VALUE_SCHEMA = "value-truth-snapshot/v1"
 VALUE_METER = REPO_ROOT / "bin" / "bc-os" / "north_star_meter_v2.py"
-DEFAULT_LEDGER = REPO_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
+DEFAULT_LEDGER = event_ledger_path()
 UNPROVEN_METRICS = (
     "parallel_acceleration_ratio",
     "local_tokens_substituted",
