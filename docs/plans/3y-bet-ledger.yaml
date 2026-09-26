@@ -34413,7 +34413,8 @@ bets:
   goal: Wire agent-workflow closeout → scene-outcome-recorder so PersonalEpisodeService
     observes real Outcome.Human.v1 events from agent closeouts, activating the north-star
     personal_value gate (currently not_ready with 0 episodes).
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T4-OUTCOME
   priority: P0
@@ -34469,7 +34470,43 @@ bets:
     spec_version: 0.1.0
     content_digest: sha256:cd3322bedb94e74fbd0a85397d15da99999ec85b5d3b75bf0d3c8d7c2a64d547
     decision_ref: decision://accepted/BET-Y2Q4-SH-5
-  value_indicator_policy: true
+  done_at: 2026-09-26
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@013c9197429c5111fd7ba9abbb81f7b82b399841
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >
+            PersonalEpisodeService requires real closeout events to qualify
+            episodes (Evidence/Action/Revision chain).  Bridge is wired
+            (verified via hermetic test-episode-bridge: 30 episodes observed);
+            qualifying_episodes accumulates naturally after first closeout
+            in main, not retroactively.
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
