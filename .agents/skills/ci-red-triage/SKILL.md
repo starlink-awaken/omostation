@@ -70,13 +70,40 @@ uv run --with pyyaml python bin/gac/gac-local-gate.py --scope staged --json  # �
 - `--no-verify` 仅限 submodule_pointer_drift bump 中间态 (非绕 gate)。预存失败走 known-debt / `local-preflight-preexisting`，agent 禁止 `emergency-human-hotfix`
 - push → CI → 递归 (回到 §1, 直到全绿)
 
-### 5. Admin merge (CI 非全绿时, 三条件全部满足)
+### 5. Admin merge —— 作用域只有**非必需检查**，不是"CI 红的逃生口"
+
+先分清红的是哪一类检查，再决定 §5 能不能用。本仓 main 分支保护实测
+（`gh api …/branches/main/protection` + `/required_status_checks` + `/enforce_admins`，2026-09-25）：
+
+| 事实 | 值 |
+|------|-----|
+| `enforce_admins.enabled` | **true** |
+| required contexts | **3 条**：`phase-gate` / `bet-done-transition` / `gac-gate` |
+| 单个 PR 上的检查名总数 | 31（#4346 实测去重） |
+
+`--admin` 只绕过那 **28 条非必需**检查；`enforce_admins=true` 的含义正是 **required 那 3 条对 admin 同样硬**。
+
+三条件（全部满足才走）：
 
 1. 本地 GaC gate 绿 (`gac-local-gate --scope staged --json` ok=True)
 2. CI fail 全预存/环境 (main 同红 或 本地 PASS/CI FAIL)
 3. 用户授权 (盲修/合并明确)
 
-→ `gh pr merge <PR> --admin --squash`. 否则继续 §2.
+→ `gh pr merge <PR> --admin --squash`. 否则继续 §2。
+
+**红落在 required 3 条里 → §5 结构性不可用，不要试**（下方一条实证拒绝）。剩余两条路：
+
+- **main 侧修**：required 红的根因常不在本分支（陈旧 base / gitlink 不可达）。
+  `gh pr update-branch` 重生成 merge ref 即可消掉，**不必动本分支任何文件**。
+- **known-debt 登记**：`.omo/_truth/registry/gate-known-debt.yaml`（owner + 过期）。
+  其 escape 是 `SWARM_ESCAPE_ID=local-preflight-preexisting && human_gate` ——
+  **human_gate 那半边 agent 不能自签**，缺它就是自签豁免。
+
+> 实证（#4346，2026-09-25）：`gh pr merge 4346 --admin --squash` 被拒
+> `Required status check "gac-gate" is failing`。根因是 main 侧 omlxc gitlink 不可达，
+> 本分支 6 个文件零 `.py` 零 gitlink，与这条红无因果。另一 agent 在 main 重新 pin 可达
+> commit 后 → `gh pr update-branch` → `gac-gate` 转绿 → 普通 `--squash` 合并。
+> 本 §5 此前把 `--admin` 写成 CI 非全绿时的通用出口，是错的。
 
 ## 7 Pitfalls (PR#107+#108 实战, 高发)
 

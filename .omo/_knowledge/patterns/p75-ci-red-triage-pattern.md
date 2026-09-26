@@ -48,7 +48,7 @@ CI fail 按 "洋葱剥层" 诊断. 每修一层 → push → CI 暴露下一层.
 每个 fail 先判定 (避免瞎修):
 
 - **真 bug (引入)**: 我改的文件相关 + main 绿 → **立即修**.
-- **预存 (主仓同红)**: `gh run list --branch main` 同 FAIL → 修或 admin merge (§7 三条件).
+- **预存 (主仓同红)**: `gh run list --branch main` 同 FAIL → 修, 或 admin merge (**仅当红不在 required 3 条里**, 见 §7).
 - **环境 (CI 独有)**: 本地 PASS / CI FAIL (tracked 运行快照 / 子模块 checkout / 本地工具) → **降级** (git fallback / local-only) 或 CI 适配.
 
 ## 4. 工具链
@@ -89,13 +89,21 @@ CI fail
 └─ 绝对路径 / 本地工具 (本地 0 gap, CI 1)? → L6 local-only
 ```
 
-## 7. admin merge 三条件 (CI 非全绿时)
+## 7. admin merge 三条件 —— 只覆盖**非必需**检查
 
 CI fail 非全绿但需 merge 时, 三条件**全部满足**才 admin merge:
 
 1. **本地 GaC gate 绿** (`gac-local-gate --scope staged --json` ok=True, 我改的部分全绿).
 2. **CI fail 全预存/环境** (`gh run list --branch main` 同 FAIL, 或本地 PASS/CI FAIL 的环境差异).
 3. **用户授权** (盲修/合并明确授权).
+
+**前置判据 (2026-09-25 实测, 三条件之前先过这一关)**: 本仓 `enforce_admins.enabled=true`,
+required contexts 只有 `phase-gate` / `bet-done-transition` / `gac-gate` 3 条, 而单个 PR 有 31 个检查名.
+`--admin` 只绕过那 28 条非必需的; **required 3 条对 admin 同样硬**。红若落在这 3 条里, §7 结构性不可用 ——
+`gh pr merge --admin` 会被 API 直接拒 (`Required status check "gac-gate" is failing`, #4346 实证)。
+那时的两条出路: main 侧修根因 + `gh pr update-branch` 重生成 merge ref, 或走 known-debt 登记
+(escape 的 `human_gate` 半边 agent 不能自签)。测量命令与完整判据见
+`.agents/skills/ci-red-triage/SKILL.md` §5 (SSOT 在 skill, 本处只留判据结论).
 
 否则继续修 (按 §6 决策树). 见 [[worktree-pr-landing-sop]].
 
