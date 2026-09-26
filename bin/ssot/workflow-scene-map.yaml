@@ -30,19 +30,22 @@ map:
   external-adapter-sync: scenes/agent-workflow-closeout.yaml
 default: scenes/agent-workflow-closeout.yaml
 fallback_resolution: default
----
-
-# workflow-scene-map.yaml
-
-## Resolution Rules
-
-1. Look up the closeout run's `workflow_id`.
-2. If present in `map`, use the corresponding scene card path.
-3. Otherwise fall back to `default` (covers new workflows added
-   before this map is updated).
-
-## Adding a Workflow
-
-Append a new entry to `map` and link a scene card under `scenes/`.
-The bridge will only emit episodes for workflows listed here or
-that fall back to `default`.
+# 以下为说明文字。此前它挂在第二个 `---` 之后成为第二个 YAML 文档，
+# 使 `yaml.safe_load` 抛 "expected a single document in the stream" ——
+# 调用方 bin/agent-workflow.py 的 closeout bridge 捕获异常后静默 return，
+# 导致整张 map 失效。故说明必须留在注释里，不能再作为文档体。
+#
+# # workflow-scene-map.yaml
+#
+# ## Resolution Rules
+#
+# 1. Look up the closeout run's `workflow_id`.
+# 2. If present in `map`, use the corresponding scene card path.
+# 3. Otherwise fall back to `default` (covers new workflows added
+# before this map is updated).
+#
+# ## Adding a Workflow
+#
+# Append a new entry to `map` and link a scene card under `scenes/`.
+# The bridge will only emit episodes for workflows listed here or
+# that fall back to `default`.
