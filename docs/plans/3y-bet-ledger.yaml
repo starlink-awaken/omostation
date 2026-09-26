@@ -35192,7 +35192,8 @@ bets:
   goal: KOS 索引健在（data/kos/kos-index.sqlite 12,553 篇当日更新；扩量任务 KOS-Q-GROWTH-ROLLING 记录
     measured_documents=5193 已翻倍），但消费端未证明：kos-cold-start skill 依赖 mcp-server-kos（query_custom_sql
     / search_kos / list_entities），其挂载状态与端到端命中能力未验证。知识只生产不消费，复利未发生。本 bet 证明冷启动回路端到端可走通，失败则如实记录缺口并出提案。
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T3-COGNI
   priority: P1
