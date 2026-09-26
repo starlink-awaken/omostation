@@ -35031,17 +35031,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T1-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c23fb2c7c3ef58306be679c892c13fd174169ee6
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-04.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-04.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-04.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            指标口径校准不新增价值流：它让产能轨如实反映真实 backlog 池（11 done/0 planned，
+            为 T4-01 业务首单立项提供真实基线），并让知识复用指标从恒 0 恢复可度量
+            （12,616，与 sqlite 逐位一致）。价值归属后续消费动作。
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-01
   title: 规则接线收口批次一 — 42 条 CR-* 零引用的四态判定与别名映射
