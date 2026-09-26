@@ -32911,7 +32911,7 @@ bets:
   title: OMLXC placement runtime recovery and gateway transient capacity healing
   goal: Restore stale local placements after backend recovery and prevent transient
     no-capacity failures from permanently blacklisting healthy models
-  status: pending
+  status: done
   window: Y2Q3
   track: T10-MATURITY
   priority: P0
@@ -32946,8 +32946,39 @@ bets:
     expect: exit 0
   - cmd: cd projects/omlxc && uv run python -m omlxc.cli models show coding-next --json
     expect: exit 0
-  - cmd: cd projects/omlxc && uv run python -m omlxc.cli route plan coding-next --json
+  - cmd: cd projects/omlxc && uv run python -m omlxc.cli routes plan coding-next --json
     expect: exit 0
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
+          merged_reachable_commit:
+            ref: git://origin/main@faaf782e9ad1d2e40fe6f2d7b94dd5cc8f61220c
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_at: 2026-09-26
+  value_indicator_policy: false
   write_surfaces:
   - docs/operations/workflow-waiver-2026-09-25-omlxc-placement-recovery.md
   - docs/plans/3y-bet-ledger.yaml
