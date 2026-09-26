@@ -35398,17 +35398,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T6-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d791bd8003f7d7707ff69454aff5883f4783b4d8
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T6-01.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T6-01.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T6-01.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T6-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T6-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T6-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T6-01.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            降档价值（docs+chore 45%→≤35%）按 done_when 的等待批准分支如实挂起：ADR 以
+            PROPOSED 状态交付，human gate（decision://accepted/BET-Y2Q4-T6-01 回填位）未过，
+            未改任何强制行为。价值兑现 = 批准后 shadow 10 单 + 30 天占比复算。
   value_indicator_policy: false
 - id: BET-Y2Q4-T9-01
   title: 并发冲突信号溯源 — health 执行面 12 信号的逐个判定与根因处置
