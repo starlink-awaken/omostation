@@ -19,9 +19,12 @@ db_path = WORKSPACE / "kos/kos-index.sqlite"
 claude_md_path = WORKSPACE / "CLAUDE.md"
 
 # omlx 统一网关 (Tailscale MBP)
-OMLX_GATEWAY = "http://100.96.126.35:4000"
-EMBED_MODEL = "embed-bge"  # omlx embed-bge 模型 (MBP 本机)
-OMLX_API_KEY = os.environ.get("OMLX_API_KEY", "")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from llm_gateway import gateway_key, gateway_url  # noqa: E402
+
+OMLX_GATEWAY = gateway_url()
+EMBED_MODEL = "embed-bge"  # 门面别名 → bge-m3
+OMLX_API_KEY = gateway_key()
 TOP_K = 2  # 每次只注入最相关的 Top-2 Consensus，极限节省 Token
 
 

@@ -145,13 +145,17 @@ def onboard_models() -> dict:
 def onboard_litellm() -> dict:
     """连通并测试 LiteLLM / AetherForge completions 路由"""
     print("🚀 [4/5] litellm / AetherForge API 路由自检...")
-    gateway_url = "http://100.96.126.35:4000/v1/chat/completions"
-    api_key = os.environ.get("OMLX_API_KEY", "")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+    from llm_gateway import gateway_key
+    from llm_gateway import gateway_url as _gw
+
+    gateway_url = f"{_gw()}/v1/chat/completions"
+    api_key = gateway_key()
 
     # 发送一个极简 prompt
     payload = json.dumps(
         {
-            "model": "mini-9b",
+            "model": "mythos-fast",
             "messages": [{"role": "user", "content": "ping"}],
             "max_tokens": 5,
         }

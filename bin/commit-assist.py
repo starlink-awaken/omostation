@@ -50,7 +50,10 @@ CONVENTIONAL_TYPES = {
     "revert": "回退",
 }
 
-AETHERFORGE_GATEWAY = os.environ.get("AETHERFORGE_URL", "http://100.96.126.35:4000")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from llm_gateway import gateway_key, gateway_url  # noqa: E402
+
+AETHERFORGE_GATEWAY = gateway_url()
 AETHERFORGE_MODEL = os.environ.get("AETHERFORGE_MODEL", "mid")  # 紧凑小模型, mini-9b 把 budget 耗光返空
 AETHERFORGE_TIMEOUT = int(os.environ.get("AETHERFORGE_TIMEOUT", "60"))  # 实测 ~32s 但留 buffer
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:31b-mlx")
@@ -118,7 +121,7 @@ def query_aetherforge(model: str, prompt: str, timeout: int) -> str | None:
     req = urllib.request.Request(
         url,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {gateway_key()}"},
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
