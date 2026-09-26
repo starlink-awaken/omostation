@@ -34507,6 +34507,54 @@ bets:
             (verified via hermetic test-episode-bridge: 30 episodes observed);
             qualifying_episodes accumulates naturally after first closeout
             in main, not retroactively.
+- id: BET-Y2Q4-SH-5.1
+  title: Episode Pipeline Principal-ID Normalization — fix SH-5 silent failure
+  goal: Auto-normalize OMO_PRINCIPAL_ID to canonical principal:<id> form in
+    scene-outcome-recorder._write_event_ledger_outcome so emitted events
+    match PersonalEpisodeService.observe_principal filter.
+  status: pending
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P0
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that flips ledger chain integrity, breaks
+    existing closeout tests, or modifies sovereignty _ID_PREFIXES.
+  non_goals:
+  - Do not refactor OMO_PRINCIPAL_ID usage across all callers (deferred to SH-6).
+  - Do not extend ledger schema or change broker semantics.
+  done_when:
+  - scene-outcome-recorder.py emits Episode.Decision.v1 + Outcome.Human.v1 with
+    principal_id matching the canonical principal:<id> form.
+  - bin/ssot/test-episode-bridge.py asserts observed_episodes under
+    principal:xiamingxing (not bare xiamingxing).
+  - live north-star pulse after a real closeout shows
+    status=collecting with episodes > 0.
+  verify:
+  - cmd: cd projects/omo && uv run pytest tests/test_personal_episode.py -q
+    expect: exit 0
+  - cmd: python3 bin/ssot/test-episode-bridge.py --count 5
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/scene-outcome-recorder.py
+  - bin/ssot/test-episode-bridge.py
+  - docs/superpowers/specs/2026-09-26-episode-pipeline-principal-normalization.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-5.1.md
+  depends_on:
+  - BET-Y2Q4-SH-5
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-episode-pipeline-principal-normalization.md
+    spec_version: 1.0.0
+    content_digest: sha256:e3c7ae938e5c7c449ec0403d1bcce3c129e3f36d152a5547e2a9b565a1205032
+    decision_ref: decision://accepted/BET-Y2Q4-SH-5.1
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
@@ -34752,7 +34800,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 472
+  total_bets: 473
   windows:
   - Y1Q1
   - Y1Q2

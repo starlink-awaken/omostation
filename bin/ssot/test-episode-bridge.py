@@ -119,8 +119,14 @@ def run(count: int) -> dict:
         boot.close()
 
         # Seed sovereignty role-assignment so PersonalEpisodeService can resolve
-        # responsibility context for the principal.
-        principal_id = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        # responsibility context for the principal.  Use the canonical
+        # ``principal:<id>`` form so the recorder's emitted events match the
+        # sovereignty-assigned key (BET-Y2Q4-SH-5.1).
+        raw_principal = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        principal_id = (
+            raw_principal if raw_principal.startswith("principal:")
+            else f"principal:{raw_principal}"
+        )
         _seed_sovereignty(hermetic_db, principal_id)
 
         # Scene card to drive the recorder with.
