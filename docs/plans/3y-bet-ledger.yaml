@@ -35395,7 +35395,8 @@ bets:
     2026-09-26）。radar 的 orphan worktree 自动 prune 已上线（N1 治本）但 12 个信号仍在 —— 每个信号的生产者是谁、真残留还是假信号，未逐个判定过。教训约束：禁止调权重（预算
     whack-a-mole 教训 8→15→20→50 四轮才过 CI）。真残留 → hygienic release/归档 ≥14 天不活跃 worktree；假信号
     → 修计数根因加 hermetic 回归测试。
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T9-OBSERV
   priority: P1
@@ -35441,17 +35442,39 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T9-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@1a2b5fa1ae8ab1d3d800fc667bf91e6bf1508fe4
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T9-01.md
+          tests:
+            ref: receipt://tests/test_compass_radar_concurrency.py
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T9-01.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T9-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T9-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T9-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T9-01.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            归因结论推翻立项假设：12 信号全为真实并发负载（run_pressure=0，wt_pressure=12），
+            零假信号零可清残留，health 无残留性回升可期；复测 12→10 系并发 agent 自愈。
+            真价值在结构性发现（wt−2 免费额度 vs 常态并发 8–11 → 信号饱和无信息），
+            三案并陈归 owner 决策——价值兑现待指标语义 ADR。done_when 的「≤2」在不删
+            他人活跃 worktree 的红线内不可达，如实记录。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH

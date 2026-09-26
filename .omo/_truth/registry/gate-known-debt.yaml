@@ -354,3 +354,17 @@ entries:
   exempt_reason: 'squash 语义分叉 — 650e08ea 内容为 67d1c869 经 omo main #194/#195 重写, 非真实代码回退'
   recorded_at: '2026-09-26T06:55:02.021331+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|b0b1f87082f44ecd
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: b0b1f87082f44ecd
+  kind: gitlink-regress
+  reason: submodule projects/cockpit pointer fec7364b10c3 rewinds 7e1d4c87f3b8
+  range: origin/main..aecff7a080661fe5af057bdeb659aceb0905c257
+  base_sha: 3b55e3ca79e63c3005d7ebc5e5a82586196a77d0
+  head_sha: aecff7a080661fe5af057bdeb659aceb0905c257
+  merge_base: 3b55e3ca79e63c3005d7ebc5e5a82586196a77d0
+  exempt_reason: cockpit 子仓 main 曾被强推, 7e1d4c87f3b8 非 fec7364b10c3 的祖先; 本 PR 将 pin
+    对齐子仓 origin/main 以解除 CI pointer-drift DIVERGED 阻塞, 属对齐上游现值而非内容回退 (BET-Y2Q4-T9-01)
+  recorded_at: '2026-09-26T13:08:33.627332+00:00'
+  active: true
