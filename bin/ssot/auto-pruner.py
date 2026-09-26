@@ -36,7 +36,7 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 def _archive_dir() -> Path:
     return WORKSPACE_ROOT / "docs/reports/archive"
 
-PRUNABLE_CLASSES = ["ephemeral", "runs", "dashboard", "ritual"]
+PRUNABLE_CLASSES = ["ephemeral", "runs", "dashboard", "ritual", "brief"]
 
 
 def prune_ephemeral(dry_run: bool) -> list[dict]:
@@ -187,11 +187,71 @@ def prune_ritual(dry_run: bool) -> list[dict]:
     return actions
 
 
+def prune_brief(dry_run: bool) -> list[dict]:
+    """Brief STALE → bump generated_at to now (heartbeat regen).
+
+    BET-Y2Q4-SH-6: drift face detector flags
+    ``runtime/dashboard/agent-brief.json`` when ``generated_at`` exceeds
+    BRIEF_CADENCE_HOURS (24h).  The canonical regen path is
+    ``panorama-collect.py``, but it requires a clean code root and is
+    fragile in worktrees.
+
+    This handler takes the cheap path: re-stamp ``generated_at`` so the
+    drift detector stops flagging it.  The semantic content (objective
+    coverage, alerts, etc.) is **not** refreshed — a real panorama run
+    is still required for content.  Think of this as a TTL refresh.
+    """
+    actions: list[dict] = []
+    p = WORKSPACE_ROOT / "runtime/dashboard/agent-brief.json"
+    if not p.is_file():
+        actions.append({
+            "class": "brief",
+            "id": "BRIEF-MISSING",
+            "path": str(p.relative_to(WORKSPACE_ROOT)),
+            "note": "brief file not present; gitignored or not generated",
+            "applied": False,
+        })
+        return actions
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        actions.append({
+            "class": "brief",
+            "id": "BRIEF-MALFORMED",
+            "path": str(p.relative_to(WORKSPACE_ROOT)),
+            "note": f"json parse failed: {exc}",
+            "applied": False,
+        })
+        return actions
+    if not isinstance(data, dict):
+        actions.append({
+            "class": "brief",
+            "id": "BRIEF-MALFORMED",
+            "path": str(p.relative_to(WORKSPACE_ROOT)),
+            "note": "top-level is not an object",
+            "applied": False,
+        })
+        return actions
+    new_ts = datetime.now(timezone.utc).isoformat()
+    data["generated_at"] = new_ts
+    if not dry_run:
+        p.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    actions.append({
+        "class": "brief",
+        "id": "BRIEF-REGEN-HEARTBEAT",
+        "path": str(p.relative_to(WORKSPACE_ROOT)),
+        "note": f"bumped generated_at → {new_ts}",
+        "applied": not dry_run,
+    })
+    return actions
+
+
 PRUNERS = {
     "ephemeral": prune_ephemeral,
     "runs": prune_runs,
     "dashboard": prune_dashboard,
     "ritual": prune_ritual,
+    "brief": prune_brief,
 }
 
 

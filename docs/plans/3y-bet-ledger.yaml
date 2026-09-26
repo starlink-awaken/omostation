@@ -34592,6 +34592,98 @@ bets:
             Evidence/Action/Revision chain for qualifying_episodes.
             SH-5.1 fix advances readiness from not_ready to collecting;
             value accumulation needs continued real closeouts.
+- id: BET-Y2Q4-SH-6
+  title: Brief Auto-Refresh — close BRIEF-STALE drift face gap
+  goal: Add prune_brief() to auto-pruner so BRIEF-STALE drift can self-heal
+    without depending on panorama-collect.
+  status: pending
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that touches the brief JSON schema or
+    modifies panorama-collect / drift-face-detector contracts.
+  non_goals:
+  - Do not implement debt-dashboard-regen.py (different file; SH-1 TODO).
+  - Do not depend on panorama-collect.
+  done_when:
+  - bin/ssot/auto-pruner.py exposes prune_brief(dry_run) that bumps
+    runtime/dashboard/agent-brief.json:generated_at to now.
+  - PRUNABLE_CLASSES includes "brief".
+  - bin/ssot/test-auto-pruner.py covers brief case.
+  - make drift-face-clean produces 0 brief findings.
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/test-auto-pruner.py
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/auto-pruner.py
+  - bin/ssot/test-auto-pruner.py
+  - docs/superpowers/specs/2026-09-26-brief-auto-refresh.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+  depends_on:
+  - BET-Y2Q4-SH-1
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-brief-auto-refresh.md
+    spec_version: 1.0.0
+    content_digest: sha256:a31be37c26df18c615a01798cada9b777f4af50336afb28f92915bc34cabb592
+    decision_ref: decision://accepted/BET-Y2Q4-SH-6
+- id: BET-Y2Q4-SH-7
+  title: Principal-ID Canonicalization Audit — single source of truth
+  goal: Promote _canonical_principal_id to a shared utility and add an audit
+    that enumerates all OMO_PRINCIPAL_ID callers.
+  status: pending
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change to sovereignty prefix constants or
+    ledger schema.
+  non_goals:
+  - Do not refactor every caller (audit only).
+  - Do not extend ledger schema.
+  done_when:
+  - bin/ssot/_principal_id.py exports canonical_principal_id() and
+    principal_id_from_env().
+  - bin/ssot/scene-outcome-recorder.py uses the helper in all 3 paths.
+  - bin/ssot/audit-principal-id-canonicalization.py enumerates callers.
+  - bin/gac/gac-local-gate.py runs the audit (warn mode).
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: python3 bin/ssot/test-principal-id-canonical.py
+    expect: exit 0
+  - cmd: python3 bin/ssot/audit-principal-id-canonicalization.py
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/_principal_id.py
+  - bin/ssot/scene-outcome-recorder.py
+  - bin/ssot/test-principal-id-canonical.py
+  - bin/ssot/audit-principal-id-canonicalization.py
+  - docs/superpowers/specs/2026-09-26-principal-id-canonicalization-audit.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+  depends_on:
+  - BET-Y2Q4-SH-5.1
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-principal-id-canonicalization-audit.md
+    spec_version: 1.0.0
+    content_digest: sha256:d5005d8a203847c188e752ab102a810518f8c819b3a88016e8f6fe3d8eb7bf5c
+    decision_ref: decision://accepted/BET-Y2Q4-SH-7
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
@@ -34837,7 +34929,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 473
+  total_bets: 475
   windows:
   - Y1Q1
   - Y1Q2
