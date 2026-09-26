@@ -1168,42 +1168,60 @@ def _bridge_closeout_to_scene(run_id: str) -> None:
     Resolves the workflow id from the run payload, looks up the matching
     scene card via ``bin/ssot/workflow-scene-map.yaml``, and invokes the
     recorder in a subprocess so ledger write failures never block closeout.
+
+    Every bail-out names its reason on stderr (BET-Y2Q4-SH-5.2).  Control flow
+    is unchanged — the bridge still never blocks closeout — but a run that
+    produced no episode is now distinguishable from a run whose episode landed.
+    Before this, a malformed scene map surfaced as total silence, which is how
+    SH-5 could read healthy while emitting nothing at all.
     """
     import json as _json
     import shutil as _shutil
     import subprocess as _subprocess
 
+    def _bail(reason: str) -> None:
+        print(f"  [WARN] SH-5 bridge emitted no episode: {reason} (run={run_id})",
+              file=sys.stderr)
+
     try:
         from omo.workflow import lifecycle as _lifecycle
         from omo.workflow import load_registry as _load_registry
     except Exception as exc:
-        print(f"  [WARN] SH-5 bridge import failed: {exc}", file=sys.stderr)
+        _bail(f"import failed: {exc}")
         return
 
     workspace_root = WORKSPACE
     try:
         _path, payload = _lifecycle.read_run(_load_registry(), run_id)
-    except Exception:
+    except Exception as exc:
+        _bail(f"run record unreadable: {exc}")
         return
     if not isinstance(payload, dict):
+        _bail("run payload is not a mapping")
         return
     workflow_id = str(payload.get("workflow_id") or "").strip()
     if not workflow_id:
+        _bail("run payload has no workflow_id")
         return
     map_path = workspace_root / "bin" / "ssot" / "workflow-scene-map.yaml"
     if not map_path.is_file():
+        _bail(f"scene map missing: {map_path}")
         return
     try:
         import yaml as _yaml
 
         scene_map = _yaml.safe_load(map_path.read_text(encoding="utf-8")) or {}
-    except Exception:
+    except Exception as exc:
+        # A multi-document YAML stream lands here: safe_load raises ComposerError.
+        _bail(f"scene map unparseable: {type(exc).__name__}: {exc}")
         return
     scene_card_rel = str((scene_map.get("map") or {}).get(workflow_id) or "").strip()
     if not scene_card_rel:
+        _bail(f"workflow_id '{workflow_id}' not in scene map 'map:' section")
         return
     scene_card = workspace_root / scene_card_rel
     if not scene_card.is_file():
+        _bail(f"scene card resolved but absent: {scene_card}")
         return
     notes = _json.dumps({
         "source": "agent-workflow closeout bridge",
