@@ -35694,7 +35694,8 @@ bets:
     commit. Land the child change through omo#197 (now omo origin/main e925214), move
     the root pin onto it through the single canonical entry point, and pin the rule
     as a contract spec so the next agent does not repeat the four-day loss.'
-  status: in_progress
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
