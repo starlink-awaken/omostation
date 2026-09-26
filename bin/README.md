@@ -2,7 +2,7 @@
 status: active
 lifecycle: index
 owner: governance-team
-last-reviewed: 2026-06-29
+last-reviewed: 2026-09-26
 ---
 
 # bin/ — 治理工具入口层
@@ -202,6 +202,28 @@ SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin
 
 > **并行 gap 语义** (2026-08-16 固化): `missing_manifest_entry` = bin/scripts 同名镜像未登记; 内部模块 (`__init__.py` / `_lib.py` / `_*.py`) 由 `_is_internal_module()` 排除, 非命令不计 gap. 5 个多文件条目 (control_experiment / git_health_hook / physical_recovery / submodule_reachability_gate / sync_submodules_push) 是 root-wrapper→ssot 合法模式, 登记 bin 取 ssot 主路径.
 > **并发风险** (2026-08-16): 该域是多 agent 高频并行域, 并发 agent 会把共享 checkout 上 staged 改动直接 commit 成混合 commit (见 memory `feedback_shared_checkout_concurrent_absorb_20260816.md`); 动工前查 `git worktree list` + `agent-workflow status`.
+
+---
+
+## `bin/lib/` — 共享库（非入口）
+
+`bin/lib/` 不计入上面的 15 个脚本域：它是被 import 的库，不是可执行入口。
+
+### `lib/repo_root.py` — 根解析唯一处（契约 ADR-0456）
+
+写任何指向仓内路径的东西之前先选对根。**不要** `Path(__file__).resolve().parents[N]` 反推，
+也不要写字面量 `/Users/…/Workspace` —— 在 worktree 里跑就把临时路径写进了长期存在的配置
+（2026-08-08 两起事故的共同根因）。
+
+| 你要做的事 | 用哪个 | 解析顺序 |
+|:-----------|:-------|:---------|
+| 只读仓内文件（治理 SSOT、registry） | `code_root()` | 当前检出（跟随 worktree，这是"开发环境随时可跑"的前提） |
+| 写机器级配置（`~/Library/LaunchAgents`、`~/.config`、cron） | `canonical_root()` | `$OMOSTATION_ROOT` → `~/Workspace` → 硬失败 |
+| 写运行态（event ledger、`.omo/state/**`、projections） | `state_root()` / `event_ledger_path()` | `$OMO_EVENT_LEDGER_DB` → `$OMOSTATION_STATE_ROOT` → `code_root()` |
+
+未声明 profile 时 `state_root() == code_root()`，即与历史布局逐字节一致；这条不变量由
+`tests/unit/test_repo_root_profile.py` 钉住，回归即红。`projects/omo/` 内核不能反向 import 父仓，
+它自行声明同名 env，两处变量名一致性同样有测试兜底。
 
 ---
 

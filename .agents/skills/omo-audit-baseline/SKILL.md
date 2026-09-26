@@ -26,9 +26,9 @@ The most repeated governance workflow in this workspace (22+ occurrences across 
 ### Step 1: Run Audit Baseline
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 uv run --no-sync python -m omo.cli logs audit \
-  --baseline-init /Users/xiamingxing/Workspace/.omo/_knowledge/_audit_baseline.json \
+  --baseline-init "${OMOSTATION_ROOT:-$HOME/Workspace}"/.omo/_knowledge/_audit_baseline.json \
   2>&1 | tail -3
 ```
 
@@ -37,16 +37,16 @@ uv run --no-sync python -m omo.cli logs audit \
 If the command fails, retry with a different path (common path drift):
 
 ```bash
-cd /Users/xiamingxing/Workspace/projects/omo
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"/projects/omo
 uv run --no-sync python -m omo.cli logs audit \
-  --baseline-init /Users/xiamingxing/Workspace/.omo/_knowledge/_audit_baseline.json \
+  --baseline-init "${OMOSTATION_ROOT:-$HOME/Workspace}"/.omo/_knowledge/_audit_baseline.json \
   2>&1 | tail -3
 ```
 
 ### Step 2: Sync OMO State
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 python3 scripts/sync_omo_state.py 2>&1
 ```
 
@@ -59,7 +59,7 @@ python3 scripts/sync_omo_state.py --check 2>&1
 ### Step 3: Run Governance Check
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 uv run --no-sync python -m omo.cli governance audit 2>&1 | tail -5
 ```
 
@@ -68,7 +68,7 @@ uv run --no-sync python -m omo.cli governance audit 2>&1 | tail -5
 Stage only governance-related files:
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 git add .omo/_knowledge/management/append-only-log-pattern-*.json \
         .omo/_knowledge/_audit_baseline.json \
         .omo/change-log/mutations.jsonl

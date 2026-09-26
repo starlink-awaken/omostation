@@ -91,7 +91,7 @@ git add -A
 git commit -m "feat(scope): what this does and why"
 
 # Back to root workspace for submit
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 bash bin/gac/gac-worktree.sh submit my-session-HHMM
 ```
 

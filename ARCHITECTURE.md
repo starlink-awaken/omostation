@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-12
+last_updated: 2026-09-26
 ---
 
 # ARCHITECTURE.md — eCOS v6 Architecture Contracts
@@ -14,6 +14,8 @@ last_updated: 2026-09-12
 
 | Fact Type | Authoritative Source |
 |-----------|----------------------|
+| Code root (checkout, read plane) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `code_root()` · contract [`ADR-0456`](.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md) |
+| State root (write plane, `$OMOSTATION_STATE_ROOT`) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `state_root()` / `event_ledger_path()` |
 | Runtime state, health, active tasks | [`.omo/state/system.yaml`](.omo/state/system.yaml) |
 | Current goals | [`.omo/goals/current.yaml`](.omo/goals/current.yaml) |
 | Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |

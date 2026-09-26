@@ -33,6 +33,10 @@ last_updated: 2026-09-26
 8. Check the Panorama Agent Brief before choosing work: `runtime/dashboard/agent-brief.json`
    (human page: Panorama → Agent Brief). It is a read-only aggregation of authority, gates,
    unfinished work, alerts, next actions, read interfaces, and safety boundaries.
+9. **Never hard-code the workspace root.** Resolve it: `bin/lib/repo_root.py` gives `code_root()`
+   (the checkout — read planes, governance truth) and `state_root()` (write targets — ledgers,
+   `.omo/state/**` runtime, projections). Inside `projects/omo/` use `omo.omo_paths` instead.
+   Contract: `ADR-0456`, guard: `tests/unit/test_repo_root_profile.py`.
 
 ### Key SSOT Registries
 
@@ -43,6 +47,7 @@ last_updated: 2026-09-26
 | `.omo/_truth/registry/runtime-projections.yaml` | Runtime projections |
 | `.omo/_truth/registry/governance-checks.yaml` | GaC rules |
 | `docs/project-registry.yaml` | Project metadata |
+| `.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md` | code_root / state_root 双根契约 + profile env 面 |
 
 ### Governance Quick Reference
 
@@ -216,6 +221,13 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 ## 7. Common Pitfalls（2026-09-12 实证）
 
 - **frontmatter UTC 时区**：`last-reviewed` 必须用 UTC 当天或更早，否则 gac-gate FAIL（PITFALL-004）
+- **根目录是参数，不是事实**（2026-09-26, ADR-0456 / BET-Y2Q4-T10-203）：写机器级配置、launchd plist、
+  cron 或任何指向仓内路径的工具，一律经 `bin/lib/repo_root.py`（`code_root()` / `state_root()` /
+  `event_ledger_path()`）取根，不要 `__file__` 反推、更不要写字面量 `/Users/…/Workspace`。
+  两个根含义不同：**读**（治理 SSOT、`.omo/_truth/registry/**`）跟随当前检出；**写**（ledger、
+  `.omo/state/**` 运行态、projections）跟随 profile。可用 env：`OMOSTATION_ROOT`、
+  `OMOSTATION_STATE_ROOT`、`OMO_EVENT_LEDGER_DB`（优先级最高）。未声明 profile 时二者相等，
+  即与历史布局逐字节一致 —— 这条不变量由 `tests/unit/test_repo_root_profile.py` 钉住。
 - **ci-surfaces 不加自引用路径**：严格匹配 workflow `on.paths`
 - **生成态会被交付动作扫进 commit**（2026-09-26 实证）：commit / claim 期间 hook 会重写
   `.omo/state/system.yaml` 的 `health_score_evidence_generated_at`（纯时间戳），一次文档 PR

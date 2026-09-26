@@ -26,7 +26,7 @@ The agent isolation pattern for this workspace (10+ occurrences). Create an isol
 ### Step 1: Create Worktree
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 git fetch origin 2>&1 | tail -1
 git worktree add ws-ci-roundN -b work/ci-roundN origin/main 2>&1 | tail -2
 ```
@@ -38,7 +38,7 @@ git worktree add ws-ci-roundN -b work/ci-roundN origin/main 2>&1 | tail -2
 Only init the submodules you need (not all — saves time):
 
 ```bash
-cd /Users/xiamingxing/Workspace/ws-ci-roundN
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"/ws-ci-roundN
 
 # For ecos/omo work:
 git submodule update --init projects/ecos projects/omo scripts 2>&1 | tail -3
@@ -55,7 +55,7 @@ git submodule update --init projects/l4-kernel 2>&1 | tail -3
 All edits happen inside the worktree:
 
 ```bash
-cd /Users/xiamingxing/Workspace/ws-ci-roundN
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"/ws-ci-roundN
 # ... make changes, run tests, commit ...
 ```
 
@@ -67,7 +67,7 @@ cd /Users/xiamingxing/Workspace/ws-ci-roundN
 ### Step 4: Verify Before Cleanup
 
 ```bash
-cd /Users/xiamingxing/Workspace/ws-ci-roundN
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"/ws-ci-roundN
 git status --short | wc -l  # Should be 0 if committed
 git log --oneline -3        # Verify commits landed
 ```
@@ -75,7 +75,7 @@ git log --oneline -3        # Verify commits landed
 ### Step 5: Clean Up
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 
 # Remove worktree
 git worktree remove --force ws-ci-roundN 2>&1
@@ -87,7 +87,7 @@ git branch -D work/ci-roundN 2>&1
 **Bulk cleanup** (when multiple stale worktrees exist):
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 for wt in ws-ci-round12 ws-ci-round13 ws-ci-round14; do
   echo "Removing: $wt"
   git worktree remove --force "$wt" 2>&1 | sed 's/^/  /'
@@ -98,7 +98,7 @@ done
 ### Step 6: Push and Create PR (If Applicable)
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 git push origin work/ci-roundN 2>&1 | head -5
 gh pr create --base main --head work/ci-roundN \
   --title "fix: <description>" \
@@ -141,7 +141,7 @@ gh pr create --base main --head work/ci-roundN \
 Before committing in a worktree, run the GaC gate:
 
 ```bash
-cd /Users/xiamingxing/Workspace/ws-ci-roundN
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"/ws-ci-roundN
 make gac-local-gate  # or targeted scope
 ```
 
