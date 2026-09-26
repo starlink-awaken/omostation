@@ -34512,7 +34512,8 @@ bets:
   goal: Auto-normalize OMO_PRINCIPAL_ID to canonical principal:<id> form in
     scene-outcome-recorder._write_event_ledger_outcome so emitted events
     match PersonalEpisodeService.observe_principal filter.
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T4-OUTCOME
   priority: P0
@@ -34555,6 +34556,42 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:e3c7ae938e5c7c449ec0403d1bcce3c129e3f36d152a5547e2a9b565a1205032
     decision_ref: decision://accepted/BET-Y2Q4-SH-5.1
+  done_at: 2026-09-26
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7fb98c4adb55c7277f7de9ac7ba2ce9c62b46260
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.1.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.1.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.1.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.1.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.1.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.1.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-5.1.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >
+            Same constraint as SH-5: PersonalEpisodeService requires full
+            Evidence/Action/Revision chain for qualifying_episodes.
+            SH-5.1 fix advances readiness from not_ready to collecting;
+            value accumulation needs continued real closeouts.
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
