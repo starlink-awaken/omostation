@@ -34980,7 +34980,8 @@ bets:
     池计数改为可复算的物理枚举，KOS 指标改读 sqlite 真实计数；若决策收件箱 w3w3-planned-status-normalize 卡同根源则一并落地。写入者
     bin/collab/export-dualtrack.py，消费者 generate-brief.py / check-dual-track-purity.py
     / check-silent-loss.py。
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T1-TRUTH
   priority: P0
