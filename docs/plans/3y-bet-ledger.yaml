@@ -34971,6 +34971,446 @@ bets:
             still requires 30 qualifying episodes plus a 4-week floor before any
             personal-value claim, so no indicator is asserted here
             (value_indicator_policy: false).
+- id: BET-Y2Q4-T1-04
+  title: 产能轨与知识复用指标口径校准 — dualtrack planned 池陈旧计数与 KOS 死路径归零
+  goal: 两个 BRIEF 指标与物理现实脱节（2026-09-26 实测）：(1) .omo/state/collab-dualtrack.yaml::throughput_track
+    声明 data_source=.omo/tasks/done+planned/ 并记 63 planned/0 done，但物理池仅存 2 个 OBSOLETE
+    标记 —— 陈旧快照误导决策收件箱与双轨纯度检查；(2) bin/mof/generate-brief.py 把知识复用 KOS 索引篇计在 kos/ 目录（目录不存在恒为
+    0），而真实索引 data/kos/kos-index.sqlite 有 12,553 篇且当日仍在更新。本 bet 把两个指标校准为度量物理现实：planned
+    池计数改为可复算的物理枚举，KOS 指标改读 sqlite 真实计数；若决策收件箱 w3w3-planned-status-normalize 卡同根源则一并落地。写入者
+    bin/collab/export-dualtrack.py，消费者 generate-brief.py / check-dual-track-purity.py
+    / check-silent-loss.py。
+  status: pending
+  window: Y2Q4
+  track: T1-TRUTH
+  priority: P0
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  circuit_breaker: 校准不得改变指标语义（如重定义 completion_rate 公式）；不得触碰 .omo/tasks/** 任务文件本体、config/**、kos-index.sqlite
+    数据；不得为让指标变好看而改计数口径（D1/D6）。
+  non_goals:
+  - 不铸造业务首单（由 BET-Y2Q4-T4-01 承接候选盘点）
+  - 不重写 KOS 索引器或迁移 sqlite（索引本身健康）
+  - 不编辑 config/**（机器身份）
+  - 不回溯改写已归档任务
+  done_when:
+  - collab-dualtrack.yaml throughput_track 的 done/planned 计数来自可复算的物理枚举（枚举命令记录在状态文件内），同日重算与
+    BRIEF 产能轨数字一致
+  - generate-brief.py 知识复用指标改读 data/kos/kos-index.sqlite documents 计数，输出 >0 且与 sqlite
+    查询一致；kos/ 死路径被移除或显式标注废弃
+  - check-dual-track-purity.py 在校准后数据上通过
+  - retro 记录 before/after 数字与枚举命令
+  verify:
+  - cmd: sqlite3 data/kos/kos-index.sqlite "SELECT COUNT(*) FROM documents;"
+    expect: ≥12000，且 generate-brief 输出的知识复用指标与该值一致
+  - cmd: python3 bin/gac/check-dual-track-purity.py
+    expect: exit 0
+  - cmd: python3 bin/mof/generate-brief.py
+    expect: 产能轨与知识复用指标反映物理现实（非 63/0）
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误（T9-01 digest mismatch 为 pre-existing）
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - .omo/state/collab-dualtrack.yaml
+  - bin/collab/export-dualtrack.py
+  - bin/mof/generate-brief.py
+  - bin/gac/check-dual-track-purity.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-dualtrack-kos-metric-calibration.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T1-04.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-dualtrack-kos-metric-calibration.md
+    spec_version: 1.0.0
+    content_digest: sha256:c66aa66b47654dd77cbb407f0fd13c275a72c312fe86fc2ee78f6e77cac7c9d1
+    decision_ref: decision://accepted/BET-Y2Q4-T1-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+- id: BET-Y2Q4-T10-01
+  title: 规则接线收口批次一 — 42 条 CR-* 零引用的四态判定与别名映射
+  goal: DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP（2026-09-19 巡查实证）：check-rule-wiring-coverage.py
+    报 governance-checks 声明 86 / 未引用候选 42；三个注册表 ID 词汇完全解耦（CR-X4-* / X1-C01 / X2-C05），工具无法区分已实现换名与真未接线，只能报候选不能判
+    fail。关单前提 = owner 逐条建立 ID 别名映射。本 bet 为批次一：导出清单，≥20 条完成四态判定（别名映射/真未实现/弃用/存疑升级 owner），映射落
+    governance-checks.yaml（CR-X1-AGENT-AUDIT.source_ref 先例），重跑 coverage 验证下降，债务 item
+    追加 history 不关单（批次二另立 bet 收 --strict 门禁与关单）。
+  status: pending
+  window: Y2Q4
+  track: T10-MATURITY
+  priority: P1
+  appetite: 2 days
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: governance-audit
+  underlying_workflow: governance-audit
+  circuit_breaker: 禁止无执行体 文件:行 锚就标已实现换名（假闭环教训）；本批次不得把 --strict 接成强制门禁；不得删除/改写既有规则语义，只允许加
+    source_ref/alias/status 标注。
+  non_goals:
+  - 不实现批次二内容（--strict 门禁接线与债务关单）
+  - 不新增治理规则（只处理既有 42 条的接线状态）
+  - 不动 L0-constraints 子仓注册表（其 60 条零引用另案处理）
+  done_when:
+  - 42 条清单导出，≥20 条完成四态判定且每条带 rationale 与证据指针（docs/plans/ 判定表）
+  - 批内所有已实现换名条目的别名映射落地（source_ref 指向真实执行体 文件:行）
+  - coverage 重跑未引用数下降且新旧数值均记录
+  - 债务 item history 追加本批结论（不关单）；retro 固化三注册表共享词根命名规范建议
+  verify:
+  - cmd: python3 bin/gac/check-rule-wiring-coverage.py
+    expect: 未引用候选数 < 42（记录新值）
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - .omo/_truth/registry/governance-checks.yaml
+  - bin/gac/check-rule-wiring-coverage.py
+  - .omo/debt/items/
+  - docs/plans/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-rule-wiring-adjudication-batch1.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-rule-wiring-adjudication-batch1.md
+    spec_version: 1.0.0
+    content_digest: sha256:42873baae48d462bf2afa7779d26b93638e915f7e430887f3d0ede4c096cdf7e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+- id: BET-Y2Q4-T10-02
+  title: 测试密度规则化 — fix 类交付必带回归测试的门禁提示与度量
+  goal: '近 30 天提交构成 feat 501 / fix 424 / test 34（test:feat ≈ 1:15），缺陷修复密度高但回归覆盖薄，同类问题有复发风险（如
+    #3282 回退 #3277 实录）。不做一次性大补测，把 fix 必带回归测试（或留痕豁免）规则化进交付面：PR 模板检查项 + 可复算度量基线（30 天 ≥1:5
+    目标）+ 豁免路径。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 不改 CI 强制门禁（先提示后收紧，观察期由后续 bet 决定）；统计口径必须可复算（git log 过滤规则写进报告），禁止人工报数（D1/D6）。
+  non_goals:
+  - 不批量补写历史回归测试
+  - 不新建 lint/hook 强制检查（观察期后再议）
+  - 不动子仓 CI 配置
+  done_when:
+  - PR 模板含回归测试检查项（fix 类强制声明新增回归测试或豁免理由）
+  - 基线报告落 docs/reports/：含可复算统计命令、34:501 基线、30 天 ≥1:5 目标
+  - 豁免路径成文（纯文档/生成态/子模块指针类 fix 可豁免，理由留 PR body）
+  - retro 固化规则采纳理由与预期阻力
+  verify:
+  - cmd: grep -l "回归测试" .github/pull_request_template.md
+    expect: 命中检查项
+  - cmd: 执行基线报告中的统计命令
+    expect: 输出与报告数字一致
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - .github/
+  - docs/reports/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-test-density-rule.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-02.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-test-density-rule.md
+    spec_version: 1.0.0
+    content_digest: sha256:917885df6844025272c2b4f22c14c1aeded44cdfc19a4b66b81a8cdc7b30d530
+    decision_ref: decision://accepted/BET-Y2Q4-T10-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+- id: BET-Y2Q4-T3-02
+  title: KOS 复用消费端闭环 — kos-cold-start 端到端验证与命中证明
+  goal: KOS 索引健在（data/kos/kos-index.sqlite 12,553 篇当日更新；扩量任务 KOS-Q-GROWTH-ROLLING 记录
+    measured_documents=5193 已翻倍），但消费端未证明：kos-cold-start skill 依赖 mcp-server-kos（query_custom_sql
+    / search_kos / list_entities），其挂载状态与端到端命中能力未验证。知识只生产不消费，复利未发生。本 bet 证明冷启动回路端到端可走通，失败则如实记录缺口并出提案。
+  status: pending
+  window: Y2Q4
+  track: T3-COGNI
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 不得编辑 config/**（机器身份）—— 只出提案；不得修改 kos-index.sqlite 数据或重跑全量索引；不得把命中
+    0 条包装成通过（D1）—— 0 命中是失败，如实关 blocked 并记录原因。
+  non_goals:
+  - 不建新索引/不迁移数据源（索引健康，缺的是消费端）
+  - 不改动 kairon kos 包检索实现（除非 skill 层证明必要且另立 bet）
+  - 不挂靠改写 KOS-Q-GROWTH-ROLLING 任务状态
+  done_when:
+  - 端到端运行记录：skill 三步各步输出留档（BRIEF 路径解析、ADR 命中 ≥3、实体样本）
+  - MCP 未挂载时的处置：挂载提案文档 + skill 文档更新至真实状态（不虚报可用）
+  - skill 触发条件/文档与实际流程一致
+  - retro 附命中证据（引用命中条目的 doc_id/title）
+  verify:
+  - cmd: 依 .agents/skills/kos-cold-start/SKILL.md 执行三步并留档输出
+    expect: ADR 命中 ≥3 条且 doc_id 留档；0 命中即关 blocked
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - .agents/skills/kos-cold-start/**
+  - docs/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-kos-reuse-consumer-loop.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T3-02.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-kos-reuse-consumer-loop.md
+    spec_version: 1.0.0
+    content_digest: sha256:2900c9bc663498977818aced35437a9dc58c97dbf7153c658b75e2771cada18a
+    decision_ref: decision://accepted/BET-Y2Q4-T3-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+- id: BET-Y2Q4-T4-01
+  title: 业务首单候选盘点 — 真实 backlog 首个交付项的决策收件箱卡
+  goal: ADR-0419 决策从基建转向业务（2026-08），但产能轨（真实 backlog）完成率 0%，基建完成度 99.6% 与业务产出 0% 形成临界落差。选题是人类决策点（本仓自诊断人类决策是当前系统瓶颈）。本
+    bet 盘点 docs/plans vision-roadmap（4 YAML + 5 MD）与活跃 goals，提炼 ≥3 个候选业务交付项，每项带工作量/价值/风险评估与推荐排序，产出一张决策收件箱卡供人类拍板。
+  status: pending
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: 候选不得是纯治理/基建项（正是要纠正的偏差）；卡不得承诺没有可度量 done_when 的产出；本 bet 不替代人类拍板 ——
+    卡是输入，选择权在收件箱。
+  non_goals:
+  - 不铸造首单 BET 本体（拍板后另铸，走 claim → 交付全流程）
+  - 不实现任何候选（盘点与卡片是全部交付物）
+  - 不修改 .omo/tasks/ 既有任务状态
+  done_when:
+  - 候选清单（≥3 项）落在 docs/plans/ 分析文档：每项含 goal 草案、effort（天）、value 判据、risk、推荐顺序与理由
+  - '一张决策卡 yaml 落在 .omo/tasks/planned/（needs-human: true，链接候选、写明选择判据）'
+  - generate-brief.py 决策收件箱渲染该卡（或如实记录渲染条件不满足的原因）
+  - 首单原则进卡：≤3 天可完成、走完整 BET 流程验证通道、不先建新基建
+  verify:
+  - cmd: python3 -c "import yaml,glob; [yaml.safe_load(open(f)) for f in glob.glob('.omo/tasks/planned/*.yaml')]"
+    expect: exit 0（决策卡 YAML 合法）
+  - cmd: python3 bin/mof/generate-brief.py
+    expect: 决策收件箱含该卡（或记录渲染条件）
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - .omo/tasks/planned/**
+  - docs/plans/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-real-backlog-first-bet-shortlist.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-real-backlog-first-bet-shortlist.md
+    spec_version: 1.0.0
+    content_digest: sha256:5bec96f408b74f3f2c34e8b7a9f8c320295159c6c72c7a88ea1d88aa2d751f3c
+    decision_ref: decision://accepted/BET-Y2Q4-T4-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+- id: BET-Y2Q4-T6-01
+  title: 治理降档 ADR — closeout/retro 分级与 docs+chore 占比回落机制（human_gate）
+  goal: '近 30 天 docs+chore 提交占比 45%，贴 40/40/20 治理预算红线（ADR-0249）；closeout 文档对所有 BET 等级统一强度，边际收益递减。治理基建已建成（BET
+    99.6%、12/12 域 Harness 绿），应进入降档不降纪律的消费期。本 bet 起草 ADR-0456：分级方案（P0/P1 全量 closeout
+    + retro；P2 及以下轻量模板）、before/after 文档强度数字、风险评估、回滚方案、前 10 个关闭 bet 的 shadow 对比计划；强制生效前须
+    principal 显式批准（human_gate: true）。'
+  status: pending
+  window: Y2Q4
+  track: T6-SUBTRACT
+  priority: P2
+  appetite: 1 day
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  circuit_breaker: 强制执行前必须有人类批准 —— 批准缺失只能关 blocked 或 pending，不得自行生效；三轴证据矩阵（engineering/operational/value）的
+    REQUIRED 键集不得减少；不得顺带清理/归档任何既有 retro（历史证据）。
+  non_goals:
+  - 不直接修改 .omo/standards/ 强制条款（本 bet 只出提案与 ADR）
+  - 不调整治理预算比例公式本身
+  - 不批量归档历史文档
+  done_when:
+  - ADR-0456 完稿（含 before/after 数字基线 45% → 目标 ≤35%、分级判据、风险评估、回滚节）
+  - 标准 delta 提案文档就绪（明确改哪些条款、改成什么）
+  - shadow 对比计划成文（10 bet 样本、审计质量抽检判据）
+  - 人类批准 decision_ref 落 ADR，或如实以 pending/blocked 状态记录等待批准
+  - retro
+  verify:
+  - cmd: ls .omo/_knowledge/decisions/ | grep 0456
+    expect: ADR-0456 文件存在且含回滚节
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - .omo/_knowledge/decisions/
+  - .omo/standards/
+  - docs/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-governance-downshift-adr.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T6-01.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-governance-downshift-adr.md
+    spec_version: 1.0.0
+    content_digest: sha256:6e2015b6b1d4b4352d01a2f2b8de18e1e7d2a899208752a904693c754151e934
+    decision_ref: decision://accepted/BET-Y2Q4-T6-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+- id: BET-Y2Q4-T9-01
+  title: 并发冲突信号溯源 — health 执行面 12 信号的逐个判定与根因处置
+  goal: 复合健康分 36/100 的主扣分项：governance 执行面 4/100，concurrent_conflicts=12×权重8=96 分扣光（health.yaml
+    2026-09-26）。radar 的 orphan worktree 自动 prune 已上线（N1 治本）但 12 个信号仍在 —— 每个信号的生产者是谁、真残留还是假信号，未逐个判定过。教训约束：禁止调权重（预算
+    whack-a-mole 教训 8→15→20→50 四轮才过 CI）。真残留 → hygienic release/归档 ≥14 天不活跃 worktree；假信号
+    → 修计数根因加 hermetic 回归测试。
+  status: pending
+  window: Y2Q4
+  track: T9-OBSERV
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: governance-state-mutation
+  underlying_workflow: governance-state-mutation
+  circuit_breaker: 不得调 _W_ORPHAN_WORKTREE/_W_ADR_RENUMBER/_W_CONCURRENT_CONFLICT 任何权重；不得删除他人活跃
+    worktree（只处置 ≥14 天不活跃或已失主的记录）；计数修复不得改信号语义（仍如实报告真实冲突）。
+  non_goals:
+  - 不改 health.yaml 手工值（radar 产出物，只经工具重算）
+  - 不动治理预算公式（40/40/20 ADR-0249）
+  - 不做全仓 worktree 大扫除（仅信号涉及的个体）
+  done_when:
+  - 12 信号逐个归因表进 retro（来源/首次出现/生产者路径/真假判定，无法归因项如实标注）
+  - 真残留清理逐项留痕（worktree 名 + 处置命令 + 结果）
+  - 假信号根因修复带 hermetic 回归测试（不依赖 host 运行时状态）
+  - radar --dry-run 复测 concurrent_conflicts ≤ 2 且执行面分显著回升
+  - git diff 证明未改任何权重值；retro 记录 before/after 执行面分
+  verify:
+  - cmd: python3 bin/compass_radar.py --dry-run
+    expect: concurrent_conflicts ≤ 2 且执行面分 > 60
+  - cmd: git diff origin/main..HEAD -- bin/compass_radar.py
+    expect: 权重常量行无改动
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/compass_radar.py
+  - tests/
+  - docs/plans/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-concurrent-conflict-signal-provenance.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T9-01.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-concurrent-conflict-signal-provenance.md
+    spec_version: 1.0.0
+    content_digest: sha256:a65d0a525c4cfffa9d01983d7a07ee22e05befb7a92cde8cce7b3d53b2a67666
+    decision_ref: decision://accepted/BET-Y2Q4-T9-01
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -35109,7 +35549,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 475
+  total_bets: 482
   windows:
   - Y1Q1
   - Y1Q2
