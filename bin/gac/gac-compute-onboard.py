@@ -142,15 +142,39 @@ def onboard_models() -> dict:
     return {"status": "OK", "path": which_models, "top_models": model_list}
 
 
+def _gateway_url() -> str:
+    """aetherforge 门面地址: LLM_GATEWAY_URL / AETHERFORGE_URL / OMLX_URL, 默认本机 loopback。
+
+    旧值写死 mbp 旧 tailnet IP(100.96.126.35, 已失效)。与 kairon kos.llm_gateway 同一解析顺序。
+    """
+    for name in ("LLM_GATEWAY_URL", "AETHERFORGE_URL", "OMLX_URL"):
+        if os.environ.get(name):
+            return os.environ[name].rstrip("/")
+    return "http://127.0.0.1:4000"
+
+
+def _gateway_key() -> str:
+    """门面密钥: 环境变量优先, 否则读 Keychain(aetherforge-gateway); 旧实现发空 key → 401。"""
+    for name in ("LLM_GATEWAY_KEY", "AETHERFORGE_API_KEY", "OMLX_API_KEY"):
+        if os.environ.get(name):
+            return os.environ[name]
+    try:
+        out = subprocess.run(
+            ["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
 def onboard_litellm() -> dict:
     """连通并测试 LiteLLM / AetherForge completions 路由"""
     print("🚀 [4/5] litellm / AetherForge API 路由自检...")
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
-    from llm_gateway import gateway_key
-    from llm_gateway import gateway_url as _gw
-
-    gateway_url = f"{_gw()}/v1/chat/completions"
-    api_key = gateway_key()
+    gateway_url = f"{_gateway_url()}/v1/chat/completions"
+    api_key = _gateway_key()
 
     # 发送一个极简 prompt
     payload = json.dumps(
