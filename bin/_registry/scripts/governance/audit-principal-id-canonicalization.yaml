@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/audit-principal-id-canonicalization.py
+name: Audit Principal Id Canonicalization
+category: governance
+owner: governance-team
+description: BET-Y2Q4-SH-7 — grep-based audit of all OMO_PRINCIPAL_ID callers
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/ssot/_principal_id.py
+maturity: shadow
+last_reviewed: "2026-09-26"

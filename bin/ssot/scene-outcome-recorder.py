@@ -234,7 +234,7 @@ def _write_personal_episode_outcome(entry: dict[str, Any], *, review_seconds: in
         if verdict == "edit" and (not entry.get("revision_diff") or not fields):
             return None  # edit verdict requires a revision receipt the kernel accepts
 
-        principal_id = _os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        principal_id = _canonical_principal_id(_os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing"))
         feedback_id = f"scene:{entry.get('scene_id')}:{entry.get('run_id')}"
         broker = LedgerBroker.connect(str(_resolve_db_path()))
         try:
@@ -320,7 +320,7 @@ def _write_value_evidence(entry: dict[str, Any], *, review_seconds: int | None =
         evidence = {
             "schema": "value-evidence/v1",
             "timestamp": entry.get("ts", ""),
-            "principal_id": os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing"),
+            "principal_id": _canonical_principal_id(os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")),
             "scene_id": scene_id,
             "run_id": run_id,
             "review_duration_seconds": review_s,
