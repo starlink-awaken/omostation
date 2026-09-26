@@ -7,7 +7,7 @@ last-reviewed: 2026-09-24
 
 # BRIEF.md — 织星状态简报与决策收件箱
 
-> **Generated**: `2026-09-25T23:46:06.262640Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `37/100`
+> **Generated**: `2026-09-26T12:22:54.978214Z` | **SSOT Source**: `.omo/state/system.yaml::health_score` | **ISC-3 复合分**: `46/100`
 
 ## 📥 待决策收件箱 (Decision Inbox)
 > ⏳ **决策积压**: 1 张待人类拍板 — 人类决策是当前系统瓶颈 (非技术问题). 各卡片的直接链接见下方清单。
@@ -22,8 +22,8 @@ last-reviewed: 2026-09-24
 | 维度 | 度量指标 | 状态 | 物理数据源 |
 |------|----------|------|------------|
 | **创意创作** | 新增发布数: `712` | 正常 | `@创意创作/_outputs` |
-| **工作交付** | 场景 episodes: 188 · accepted 183 (97%) | 正常 | `scene-outcomes.jsonl` (30d) |
-| **知识复用** | KOS 索引篇: `0` | 正常 | `kos/` 篇目 |
+| **工作交付** | 场景 episodes: 192 · accepted 187 (97%) | 正常 | `scene-outcomes.jsonl` (30d) |
+| **知识复用** | KOS 索引篇: `12616` | 正常 | `data/kos/kos-index.sqlite` |
 | **角色·engineering** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·governance** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
 | **角色·audit** | 完成率 `100.00%` · 成本单位 `?` | 正常 | `.omo/_truth/registry/x3-role-metrics.yaml` |
@@ -33,23 +33,23 @@ last-reviewed: 2026-09-24
 > 🔴 **能力轨与产能轨数据源物理隔离, 禁止合并** (P84 §0 最高级红线). 构造场景只计能力轨, 真实 backlog 只计产能轨.
 
 ### 🎯 能力轨 (Capability · 构造场景, 可加速)
-> 数据源: `构造场景 (.omo/_delivery/collab-scenarios/, 可批量注入加速)`
+> 数据源: `?`
 
-- 场景总数: `4` | 通过率: `100.0%`
+- 场景总数: `0` | 通过率: `0.0%`
 - 对抗集: `0` 个, 失败率 `0%` (P84: 全过=对抗不足须加强)
-- 冲突消解成功率: `100%` | 平均协商轮次: `0.25`
+- 冲突消解成功率: `—` | 平均协商轮次: `0`
 
 ### 📦 产能轨 (Throughput · 真实 backlog, 不可造)
 > 数据源: `真实 backlog (.omo/tasks/done+planned/, 不可造), Z4 去污后 (剔自产)`
 
-- 真实任务: `0` done / `63` planned (完成率 `0.0%`)
-- 人工直做占比: `0%` (0/0)
+- 真实任务: `11` done / `0` planned (完成率 `100.0%`)
+- 人工直做占比: `0%` (0/11)
 - **静默丢失: `0`** ✅ 硬红线达成
 
 ## ⚙️ 治理健康分详情 (Health Detail)
 
-- **复合健康分**: `37/100` (警戒, 请看下方分项)
-- **GAC 异常扣分**: `0/100`
+- **复合健康分**: `46/100` (警戒, 请看下方分项)
+- **GAC 异常扣分**: `20/100`
 - **常驻 daemon 在线率**: `100.00%`
 
 ## 🌐 L4 Domain Health (Harness)
