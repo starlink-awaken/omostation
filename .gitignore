@@ -227,6 +227,8 @@ config/
 .idea/
 # zcode 客户端 ignore 文件（本地工具配置，不入库；文件级——root-directory-governance 仅管目录）
 .zcodeignore
+# Poolside 客户端本地配置目录（settings.local.yaml 工具白名单；目录级——已注册 local_surfaces）
+.poolside/
 
 # ---------------------------------------------------------------------------
 # 8. 本地开发沙箱与一次性脚本

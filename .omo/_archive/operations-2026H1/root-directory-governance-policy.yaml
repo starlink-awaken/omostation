@@ -93,6 +93,11 @@ local_surfaces:
     class: client-metadata
     lifecycle: local
     reason: OpenClaude client metadata and local state
+  .poolside:
+    owner: workspace-tooling
+    class: client-metadata
+    lifecycle: local
+    reason: Poolside client local settings and tool allowlist
   LADS:
     owner: agora-team
     class: runtime-cache
