@@ -35132,7 +35132,8 @@ bets:
   goal: '近 30 天提交构成 feat 501 / fix 424 / test 34（test:feat ≈ 1:15），缺陷修复密度高但回归覆盖薄，同类问题有复发风险（如
     #3282 回退 #3277 实录）。不做一次性大补测，把 fix 必带回归测试（或留痕豁免）规则化进交付面：PR 模板检查项 + 可复算度量基线（30 天 ≥1:5
     目标）+ 豁免路径。'
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
