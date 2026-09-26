@@ -67,7 +67,7 @@ cd projects/ecos && git push origin main 2>&1 | head -5
 Then update root pointer if pushing to a tracked branch:
 
 ```bash
-cd /Users/xiamingxing/Workspace && git add projects/ecos && git commit -m "chore: update ecos pointer" && git push origin main
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}" && git add projects/ecos && git commit -m "chore: update ecos pointer" && git push origin main
 ```
 
 ## Recovery Workflow

@@ -3,13 +3,15 @@ id: bin/lib/repo_root.py
 name: Repo Root
 category: governance
 owner: governance-team
-description: ""
+description: "库模块（非可执行入口）：仓库根的唯一解析处 —— code_root() 读侧跟随检出、canonical_root() 锚定写机器级配置、state_root()/event_ledger_path() 承载 profile 声明的写侧。契约 ADR-0456，护栏 tests/unit/test_repo_root_profile.py。"
 inputs: []
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
 triggers: []
-related: []
+related:
+  - tests/unit/test_repo_root_profile.py
+  - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: "2026-09-26"

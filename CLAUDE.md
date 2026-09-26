@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-17
+last_updated: 2026-09-26
 ---
 
 # CLAUDE.md — omostation AI Context Loader
@@ -138,6 +138,12 @@ It must not duplicate project tables, architecture diagrams, historical closeout
 ## 3. Mandatory Boundaries
 
 The authoritative SSOT map (all fact types, sources, and boundaries) lives in [`ARCHITECTURE.md` §1](ARCHITECTURE.md). Read it before hard-coding any runtime fact, port, vault path, or governed-state write.
+
+**Roots are resolved, never written out.** `bin/lib/repo_root.py` owns the two roots: `code_root()`
+for reads (governance truth follows the current checkout), `state_root()` for writes (ledgers and
+runtime state, profile-declared via `OMOSTATION_STATE_ROOT`; defaults to the checkout). `OMO_EVENT_LEDGER_DB`
+overrides the ledger path. Inside `projects/omo/` import `omo.omo_paths` instead. Contract: `ADR-0456`;
+enforced by `tests/unit/test_repo_root_profile.py`.
 
 ## 4. Working Discipline
 

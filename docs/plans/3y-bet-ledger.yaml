@@ -35538,7 +35538,8 @@ bets:
     checkout runnable at any time), state_root is profile-declared and carries only
     the write targets — with zero path change when no profile env is set, and leave
     a regression guard that outlives the bet.'
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -35623,6 +35624,18 @@ bets:
   - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
   - .omo/_knowledge/decisions/INDEX.md
   - .omo/_knowledge/retros/BET-Y2Q4-T10-203.md
+  - docs/reports/2026-09-26-dev-runtime-profile-root-closeout.md
+  - AGENTS.md
+  - CLAUDE.md
+  - ARCHITECTURE.md
+  - bin/README.md
+  - bin/_registry/scripts/governance/repo_root.yaml
+  - .env.example
+  - .agents/skills/agent-quickstart/SKILL.md
+  - .agents/skills/ecos-test-cycle/SKILL.md
+  - .agents/skills/workflow-silence-detection/SKILL.md
+  - .agents/skills/worktree-ci-isolate/SKILL.md
+  - .agents/skills/omo-audit-baseline/SKILL.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-26-dev-runtime-profile-root.md
     spec_version: 1.0.0
@@ -35631,14 +35644,37 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@4be9125a0654e45fd3abff61c82e2231aa1d44ff
+          tests:
+            ref: receipt://docs/reports/2026-09-26-dev-runtime-profile-root-closeout.md
+            sha256: sha256:f7b73762cd5dd8ba2ed377847067f398dbb533aa75796a3474364023f354d78e
+          diff:
+            ref: receipt://docs/reports/2026-09-26-dev-runtime-profile-root-closeout.md
+            sha256: sha256:f7b73762cd5dd8ba2ed377847067f398dbb533aa75796a3474364023f354d78e
+          rollback:
+            ref: receipt://docs/reports/2026-09-26-dev-runtime-profile-root-closeout.md
+            sha256: sha256:f7b73762cd5dd8ba2ed377847067f398dbb533aa75796a3474364023f354d78e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-26-dev-runtime-profile-root-closeout.md
+            sha256: sha256:f7b73762cd5dd8ba2ed377847067f398dbb533aa75796a3474364023f354d78e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-26-dev-runtime-profile-root-closeout.md
+            sha256: sha256:f7b73762cd5dd8ba2ed377847067f398dbb533aa75796a3474364023f354d78e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-203.md
+            sha256: sha256:a6fc7c9ee842ffd1b436aed5fab1b26565fb04dc3a1460f1c5ee887a026c6b33
+          cleanup:
+            ref: receipt://docs/reports/2026-09-26-dev-runtime-profile-root-closeout.md
+            sha256: sha256:f7b73762cd5dd8ba2ed377847067f398dbb533aa75796a3474364023f354d78e
       value:
         status: NOT_PROVEN
         evidence: {}

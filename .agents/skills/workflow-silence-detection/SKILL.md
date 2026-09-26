@@ -27,7 +27,7 @@ The skill for diagnosing and resolving silent workflows per ADR-0130.
 ### Step 1: Read the P74 report
 
 ```bash
-cd /Users/xiamingxing/Workspace
+cd "${OMOSTATION_ROOT:-$HOME/Workspace}"
 uv run --with pyyaml python bin/agent-workflow.py compliance --json | python3 -c "
 import json,sys
 d=json.load(sys.stdin)
