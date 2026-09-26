@@ -35538,7 +35538,8 @@ bets:
     checkout runnable at any time), state_root is profile-declared and carries only
     the write targets — with zero path change when no profile env is set, and leave
     a regression guard that outlives the bet.'
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
