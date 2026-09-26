@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: history
 owner: governance-agent
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-26
 type: operations
 created: 2026-09-25
 scope: precommit-hook-registry-split
@@ -11,8 +11,10 @@ scope: precommit-hook-registry-split
 
 # 两份 hook 注册表的分裂（report-only，不处置）
 
-> **状态更新（见 §6–§7）**：本文写作时是 report-only；principal 选定选项 A 后，"把声明做诚实"
+> **状态更新（见 §6–§8）**：本文写作时是 report-only；principal 选定选项 A 后，"把声明做诚实"
 > 这一半已落地，B / C 仍未处置，但 §7 用 PR #4346 的 CI 实证把 B/C 的前置量（存量红的形状与条数）跑了出来。
+> §8 是 2026-09-26 的后续：4 条断声明已就地标注（含"失踪 / 退役 / 假阳性"分型），
+> known-debt 与 B/C 的主体仍在 principal 手上（原因见 §8 末）。
 > 原标题与正文的测量结论不改（当时的真值记录）；§7.1 修正了 §2 判据漏掉的一个维度。
 
 > 结论先行：本仓有**两份互不重叠的 hook 注册表**。生效的那份是
@@ -193,3 +195,32 @@ main 变了、我未变 → 取 main 的坏 pin。所以**这条红在本分支�
 本轮实测 merge 后 HEAD 反而从可达的 `676392753` 变成不可达的 `05d860569`，
 随即 `git reset --hard <origin tip>` 回退（目标 == 远端分支 tip、工作树仅该项脏、脏态本身是 merge 造成的）。
 
+
+## 8. 4 条断声明落地标注 + 一个更细的分型（2026-09-26）
+
+principal 授权"把 §7 量出来的东西处理掉、最后我来确认"。动手前把 §7.1 那 4 条按
+**"目标为什么不存在"**重新分型 —— 这一步改变了处置结论，否则会把"能力失踪"和"主动退役"
+当成同一件事抹掉：
+
+| 型 | hook id | 实测 | 判据 |
+|----|---------|------|------|
+| **失踪**（entry 目标全仓零命中，含归档） | `port-hardcode-check`、`cross-deps-check`、`future-annotations` | `git ls-tree -r origin/main \| grep <basename>` 无输出 | 3 条。`cross-deps-check` 尤其值得留痕：它下方的 P47+ 注释详细描述了"跨层 enforce"规则，而执行面一个字节都不存在 |
+| **主动退役后遗留** | `verify-spaces` | 只存在于 `bin/_archive/verify-spaces.py` 与 `bin/_archive/migrated_low_value/verify-spaces.py` | 1 条。归档 = 有人判断过它该退，声明是漏删的尾巴 |
+| ~~假阳性~~ | `mof-schema-validate` | 根仓零命中，**但** `git -C projects/ecos cat-file -e HEAD:src/ecos/ssot/tools/mof-schema-validate.py` 存在 | 1 条。它的路径相对子模块根，在根仓测必然 MISSING —— 我第一版测量就把它错归进了 4 条 |
+
+**做了**：给前 4 条各加一段 `# ⚠️ DEAD 声明（2026-09-26 实测）` 注释，写明分型 + 复验命令。
+纯增行：`git diff -U0` 统计 **非注释新增 0 行、删除 0 行**，`yaml.safe_load` 后仍是
+2 repos / 29 hooks，4 条 id 全部保留。
+
+**没做删除，是有意的**：这 4 条的约束增量本来就是 0（脚本不存在 → 从未执行；且本文件无
+per-commit 调用面），删掉只是让噪音消失，同时**销毁"这个能力不见了"的唯一现场证据**。
+标注严格优于删除 —— 后续要删随时可删，删了就问不回来了。
+
+**仍在 principal 手上、我没碰的**：
+- **known-debt 指纹登记**：escape 条件是 `SWARM_ESCAPE_ID=local-preflight-preexisting && human_gate`，
+  `human_gate` 那半边按定义不能由 agent 代签。`gate-known-debt.yaml` 的 `growth_policy: shrink_only`
+  也说明它只能由人往里加。
+- **选项 B**（让框架真生效）：要动 `core.hooksPath`，撞"不擅自改 git config"这条硬约束。
+- **选项 C 的剩余部分**：把 §2 那 7 条无消费者声明逐条判 owner 后接进 `ci-surfaces.yaml`。
+  §7 现在两条维度都量齐了（谁有消费者 / entry 目标存不存在），可以动手，但每条要 owner 判断，
+  且改 registry 是另一级授权。
