@@ -34408,6 +34408,68 @@ bets:
         evidence: {}
   done_at: 2026-09-25
   value_indicator_policy: false
+- id: BET-Y2Q4-SH-5
+  title: Episode Pipeline Activation — closeout → Outcome.Human.v1 bridge
+  goal: Wire agent-workflow closeout → scene-outcome-recorder so PersonalEpisodeService
+    observes real Outcome.Human.v1 events from agent closeouts, activating the north-star
+    personal_value gate (currently not_ready with 0 episodes).
+  status: pending
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P0
+  appetite: 2 days
+  risk_level: L2
+  human_gate: true
+  pasw_required: true
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that flips ledger chain integrity, breaks existing
+    closeout tests, or modifies governance-checks.yaml registry rules.
+  non_goals:
+  - Do not backfill historical closeouts as episodes.
+  - Do not modify PersonalEpisodeService gate algorithm (30 qualifying + 4-week floor).
+  - Do not extend ledger schema or change broker semantics.
+  - Do not replace cockpit /api/v1/scenes/adjudicate path.
+  done_when:
+  - bin/agent-workflow.py closeout synchronously invokes scene-outcome-recorder; ledger
+    accumulates ≥1 producer=scene-outcome-recorder row within 24h of deployment.
+  - OMO_PRINCIPAL_ID=xiamingxing python3 bin/bc-os/north_star_meter_v2.py reports
+    qualifying_episodes > 0 and gate_gaps removes no_episodes_observed.
+  - bin/ssot/test-episode-bridge.py runs 30 mock closeouts in hermetic tmpdir broker;
+    PersonalEpisodeService observes 30 qualifying episodes.
+  - bin/gac/check-episode-pipeline.py wired into gac-local-gate (warn-only initially);
+    reports producer distribution of event_log.
+  - T4-01 retro receives addendum noting corrected ledger path (addendum only, original
+    attestation untouched).
+  verify:
+  - cmd: OMO_PRINCIPAL_ID=xiamingxing python3 bin/bc-os/north_star_meter_v2.py --json
+    expect: exit 0
+  - cmd: cd projects/omo && uv run pytest tests/test_personal_episode.py -q
+    expect: exit 0
+  - cmd: python3 bin/ssot/test-episode-bridge.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/agent-workflow.py
+  - bin/ssot/scene-outcome-recorder.py
+  - bin/ssot/workflow-scene-map.yaml
+  - bin/ssot/test-episode-bridge.py
+  - bin/gac/check-episode-pipeline.py
+  - scenes/agent-workflow-closeout.yaml
+  - scenes/bet-closeout.yaml
+  - docs/superpowers/specs/2026-09-25-episode-pipeline-activation.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-5.md
+  - .omo/_knowledge/retros/BET-Y2Q2-T4-01.md
+  depends_on: []
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-25-episode-pipeline-activation.md
+    spec_version: 0.1.0
+    content_digest: sha256:cd3322bedb94e74fbd0a85397d15da99999ec85b5d3b75bf0d3c8d7c2a64d547
+    decision_ref: decision://accepted/BET-Y2Q4-SH-5
+  value_indicator_policy: true
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
@@ -34653,7 +34715,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 471
+  total_bets: 472
   windows:
   - Y1Q1
   - Y1Q2

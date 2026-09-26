@@ -131,6 +131,15 @@ mof-bootstrap:  ## MOF 5-check strict 校验
 gac-local-gate:  ## 全量治理门禁 (纯验证，不初始化或写入子模块)
 	$(PY) bin/gac/gac-local-gate.py
 
+check-episode-pipeline:  ## BET-Y2Q4-SH-5 episode pipeline producer guard (warn-only by default)
+	$(PY) bin/gac/check-episode-pipeline.py
+
+check-episode-pipeline-strict:  ## SH-5 strict mode (exit 1 on empty producer distribution)
+	$(PY) bin/gac/check-episode-pipeline.py --strict
+
+test-episode-bridge:  ## BET-Y2Q4-SH-5 hermetic episode bridge test (30 mock closeouts)
+	uv run --with pyyaml --with pydantic python bin/ssot/test-episode-bridge.py --count 30
+
 gac-healthcheck:  ## GaC 13-point 健康检查
 	$(PY) bin/gac/gac-healthcheck.py
 

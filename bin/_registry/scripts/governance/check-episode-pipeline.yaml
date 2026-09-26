@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/check-episode-pipeline.py
+name: Check Episode Pipeline
+category: governance
+owner: governance-team
+description: BET-Y2Q4-SH-5 ledger producer distribution guard
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related:
+  - bin/ssot/test-episode-bridge.py
+maturity: shadow
+last_reviewed: "2026-09-25"

@@ -1,0 +1,48 @@
+---
+schema: workflow-scene-map/v1
+version: 1.0.0
+owner: governance-team
+last_updated: 2026-09-25
+description: |
+  Maps agent-workflow workflow_id → scene-card path used by the
+  closeout bridge (BET-Y2Q4-SH-5).  Resolution is consumed by
+  ``bin/agent-workflow.py:_bridge_closeout_to_scene`` after every
+  successful closeout.
+map:
+  project-code-change: scenes/agent-workflow-closeout.yaml
+  project-doc-change: scenes/agent-workflow-closeout.yaml
+  governance-state-mutation: scenes/agent-workflow-closeout.yaml
+  governance-audit: scenes/agent-workflow-closeout.yaml
+  bet-execution: scenes/bet-closeout.yaml
+  closeout-with-retro: scenes/bet-closeout.yaml
+  c2g-spec-ingress: scenes/agent-workflow-closeout.yaml
+  mof-state-bridge-audit: scenes/agent-workflow-closeout.yaml
+  mof-model-change: scenes/agent-workflow-closeout.yaml
+  documents-consumer-audit-weekly: scenes/agent-workflow-closeout.yaml
+  dashboard-evolution: scenes/agent-workflow-closeout.yaml
+  round-engineering: scenes/agent-workflow-closeout.yaml
+  cognitive-governance-delivery: scenes/agent-workflow-closeout.yaml
+  convergence-pulse-weekly: scenes/agent-workflow-closeout.yaml
+  handoff-resume: scenes/agent-workflow-closeout.yaml
+  observer-audit: scenes/agent-workflow-closeout.yaml
+  pyright-sweep: scenes/agent-workflow-closeout.yaml
+  resident-runtime-observe: scenes/agent-workflow-closeout.yaml
+  external-adapter-sync: scenes/agent-workflow-closeout.yaml
+default: scenes/agent-workflow-closeout.yaml
+fallback_resolution: default
+---
+
+# workflow-scene-map.yaml
+
+## Resolution Rules
+
+1. Look up the closeout run's `workflow_id`.
+2. If present in `map`, use the corresponding scene card path.
+3. Otherwise fall back to `default` (covers new workflows added
+   before this map is updated).
+
+## Adding a Workflow
+
+Append a new entry to `map` and link a scene card under `scenes/`.
+The bridge will only emit episodes for workflows listed here or
+that fall back to `default`.

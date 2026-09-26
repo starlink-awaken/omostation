@@ -1,0 +1,50 @@
+---
+schema: scene-card/v3
+scene_id: scene-bet-closeout
+version: 0.1.0
+name: BET Closeout
+description: |
+  Auto-bridged scene for bet-execution closeout events (BET-Y2Q4-SH-5).
+  BET closeouts are higher-stakes decisions than generic project changes,
+  so they are routed through a dedicated scene card that captures
+  Outcome.Human.v1 events with stronger observability hooks.
+scene_class: governance
+scene_type: inbound
+domain: governance
+lifecycle: shadow
+activation: allowed
+owner: governance-team
+approver: governance-agent
+approval_state: draft
+bet: BET-Y2Q4-SH-5
+triggers:
+  - type: signal
+    signal: bet.closed
+    debounce: 0s
+runtime:
+  journey_ref: journey-bet-closeout
+  timeout: 60s
+  sandbox:
+    level: isolated
+    capabilities:
+      - bos://memory/kos/append
+    permissions: []
+quality:
+  calibration:
+    min_samples: 30
+    min_calibration: 0.6
+    metrics:
+      - name: bridge_success_rate
+        target: 0.95
+        weight: 0.5
+      - name: episode_recorded_rate
+        target: 1.0
+        weight: 0.5
+falsifier: |
+  If after 30 bet-execution closeouts the ledger has fewer than 30
+  Outcome.Human.v1 rows, the bridge is broken.
+observability:
+  tracing: true
+  evidence_capture: ledger_event
+activation_blockers: []
+trigger: "agent-workflow.py closeout completes for a bet-execution workflow"

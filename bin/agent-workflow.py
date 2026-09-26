@@ -1149,9 +1149,84 @@ def wrapped_main(argv: list[str] | None = None) -> int:
     try:
         previous = sys.argv
         sys.argv = [sys.argv[0], *argv]
-        return int(_ORIG_MAIN(start_preflight=start_preflight) or 0)
+        rc = int(_ORIG_MAIN(start_preflight=start_preflight) or 0)
+        # BET-Y2Q4-SH-5: bridge closeout → scene-outcome-recorder for north-star pipeline.
+        # Only fires when (a) closeout succeeded, (b) run_id resolvable, (c) --status ok.
+        if rc == 0 and command == "closeout" and status == "ok" and run_id:
+            try:
+                _bridge_closeout_to_scene(run_id)
+            except Exception as exc:  # noqa: BLE001 — bridge is best-effort.
+                print(f"  [WARN] SH-5 episode bridge skipped: {exc}", file=sys.stderr)
+        return rc
     finally:
         sys.argv = previous
+
+
+def _bridge_closeout_to_scene(run_id: str) -> None:
+    """Bridge agent-workflow closeout → scene-outcome-recorder (BET-Y2Q4-SH-5).
+
+    Resolves the workflow id from the run payload, looks up the matching
+    scene card via ``bin/ssot/workflow-scene-map.yaml``, and invokes the
+    recorder in a subprocess so ledger write failures never block closeout.
+    """
+    import json as _json
+    import shutil as _shutil
+    import subprocess as _subprocess
+
+    try:
+        from omo.workflow import lifecycle as _lifecycle
+        from omo.workflow import load_registry as _load_registry
+    except Exception as exc:
+        print(f"  [WARN] SH-5 bridge import failed: {exc}", file=sys.stderr)
+        return
+
+    workspace_root = WORKSPACE
+    try:
+        _path, payload = _lifecycle.read_run(_load_registry(), run_id)
+    except Exception:
+        return
+    if not isinstance(payload, dict):
+        return
+    workflow_id = str(payload.get("workflow_id") or "").strip()
+    if not workflow_id:
+        return
+    map_path = workspace_root / "bin" / "ssot" / "workflow-scene-map.yaml"
+    if not map_path.is_file():
+        return
+    try:
+        import yaml as _yaml
+
+        scene_map = _yaml.safe_load(map_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return
+    scene_card_rel = str((scene_map.get("map") or {}).get(workflow_id) or "").strip()
+    if not scene_card_rel:
+        return
+    scene_card = workspace_root / scene_card_rel
+    if not scene_card.is_file():
+        return
+    notes = _json.dumps({
+        "source": "agent-workflow closeout bridge",
+        "workflow_id": workflow_id,
+        "objective": str(payload.get("objective") or "")[:280],
+        "bet_id": str(payload.get("context", {}).get("bet_id") or ""),
+    }, ensure_ascii=False)
+    cmd = [
+        _shutil.which(sys.executable) or sys.executable,
+        str(workspace_root / "bin" / "ssot" / "scene-outcome-recorder.py"),
+        "record",
+        "--scene-card", str(scene_card),
+        "--run-id", run_id,
+        "--adjudication", "accepted",
+        "--actor", "closeout-bridge",
+        "--notes", notes,
+    ]
+    try:
+        result = _subprocess.run(cmd, cwd=str(workspace_root), capture_output=True, text=True, timeout=15)
+        if result.returncode != 0:
+            print(f"  [WARN] SH-5 bridge non-zero exit: rc={result.returncode}", file=sys.stderr)
+    except (_subprocess.TimeoutExpired, OSError) as exc:
+        print(f"  [WARN] SH-5 bridge subprocess error: {exc}", file=sys.stderr)
 
 
 
