@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: history
 owner: governance-agent
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-26
 type: operations
 created: 2026-09-25
 scope: precommit-hook-registry-split
@@ -11,8 +11,10 @@ scope: precommit-hook-registry-split
 
 # 两份 hook 注册表的分裂（report-only，不处置）
 
-> **状态更新（见 §6–§7）**：本文写作时是 report-only；principal 选定选项 A 后，"把声明做诚实"
+> **状态更新（见 §6–§8）**：本文写作时是 report-only；principal 选定选项 A 后，"把声明做诚实"
 > 这一半已落地，B / C 仍未处置，但 §7 用 PR #4346 的 CI 实证把 B/C 的前置量（存量红的形状与条数）跑了出来。
+> §8 是 2026-09-26 的后续：4 条断声明已就地标注（含"失踪 / 退役 / 假阳性"分型），
+> known-debt 与 B/C 的主体仍在 principal 手上（原因见 §8 末）。
 > 原标题与正文的测量结论不改（当时的真值记录）；§7.1 修正了 §2 判据漏掉的一个维度。
 
 > 结论先行：本仓有**两份互不重叠的 hook 注册表**。生效的那份是
@@ -193,3 +195,82 @@ main 变了、我未变 → 取 main 的坏 pin。所以**这条红在本分支�
 本轮实测 merge 后 HEAD 反而从可达的 `676392753` 变成不可达的 `05d860569`，
 随即 `git reset --hard <origin tip>` 回退（目标 == 远端分支 tip、工作树仅该项脏、脏态本身是 merge 造成的）。
 
+
+## 8. 4 条断声明落地标注 + 分型（2026-09-26，含一次自我更正）
+
+principal 授权"把 §7 量出来的东西处理掉、最后我来确认"。动手前把 §7.1 那 4 条按
+**"目标为什么不存在"**重新分型 —— 这一步改变了处置结论，否则会把"能力改名遗留的断指针"、
+"能力真的失踪"和"主动退役"当成同一件事抹掉。
+
+### 8.1 分型（四型，不是三型）
+
+| 型 | hook id | 实测判据 | 处置含义 |
+|----|---------|----------|----------|
+| **指针过期**（能力改名后存活） | `port-hardcode-check` | entry `scripts/check-vault-paths.py` 不存在，**但** `bin/ssot/check-hardcoded-ports.py` 在盘上且 ci-surfaces `status: active`；`port-registry-enforce.yml` 头注释自认"复用 bin/ssot/check-hardcoded-ports.py（与本地 pre-commit 同一检查）" | 正解是**把 entry 指回新路径**，不是宣告死亡 |
+| **真失踪**（无替代品） | `cross-deps-check`、`future-annotations` | `git ls-tree -r origin/main \| grep cross-deps` 只剩 workflow 文件本身；ci-surfaces 独立判定这两条 `status: orphan` | 只能宣告死亡或重建能力，指不回别处。`cross-deps-check` 尤其值得留痕：它下方的 P47+ 注释详细描述了"跨层 enforce"规则，而执行面一个字节都不存在 |
+| **主动退役后遗留** | `verify-spaces` | 只存在于 `bin/_archive/verify-spaces.py` 与 `bin/_archive/migrated_low_value/verify-spaces.py` | 1 条。归档 = 有人判断过它该退，声明是漏删的尾巴 |
+| ~~假阳性~~ | `mof-schema-validate` | 根仓零命中，**但** `git -C projects/ecos cat-file -e HEAD:src/ecos/ssot/tools/mof-schema-validate.py` 存在 | 1 条。它的路径相对子模块根，在根仓测必然 MISSING —— 我第一版测量就把它错归进了 4 条 |
+
+### 8.2 更正：这 4 条**确实执行**，而且每个 PR 都在 CI 里红
+
+§7 和本文更靠前的一版把"本文件无 per-commit 调用面"（顶部 banner，讲的是**本地 git commit**
+被 `core.hooksPath=.githooks` 接管）读成了"这 4 条从未执行、是静默无副作用的死声明"。
+**这是错的，而且错的方向恰好掩盖了真正的代价。** CI 有 job `Pre-commit hooks check` 跑
+`pre-commit run --all-files`，2026-09-26 在 PR #4365 run 36206145971 逐条实测：
+
+```
+hook id: port-hardcode-check    → can't open file '.../scripts/check-vault-paths.py'
+hook id: cross-deps-check       → can't open file '.../scripts/check-cross-deps.py'
+hook id: future-annotations     → can't open file '.../scripts/check-future-annotations.py'
+hook id: verify-spaces          → can't open file '.../bin/ssot/verify-spaces.py'
+```
+
+该 job 共 8 个 hook id 失败，**其中 4 个正好就是这 4 条断声明**（另 4 个 check-yaml /
+markdownlint / ruff / health-ssot-consistency 与本文件无关）。所以这 4 条的真实代价不是"噪音"，
+而是**每一个 PR 的 `Pre-commit hooks check` 恒红** —— 它们是"每次都红一次的断指针"，
+不是"安静躺着的死声明"。
+
+### 8.3 顺带量出来的第二个缺陷：`ci-check-runner` 不认 `also_in`
+
+`bin/gac/ci-check-runner.py:65` 的选择条件是 `s.get("workflow") == workflow`，只看主
+`workflow` 键，**完全忽略 `also_in` 列表**。后果实测（本地直跑，非推断）：
+
+| workflow | 登记表绑定的 surface | runner 实际选中 | 退出码 |
+|----------|--------------------|----------------|--------|
+| `cross-deps-enforce.yml` | 仅 1 条，`status: orphan` | **0 checks** | **0（绿）** |
+| `port-registry-enforce.yml` | 1 active（其主 workflow 是 `mof-update.yml`）+ 1 orphan | **0 checks** | **0（绿）** |
+
+即 job "port hardcode check" **在 PR 上恒绿**，尽管它头注释声称在 enforce 端口注册。
+真正会跑扫描器的只有 `mof-update.yml`，而它 `on: schedule (周一 06:00) + workflow_dispatch`
+—— **不在 PR 门禁路径上**。端口硬编码因此没有任何 per-PR 执行面。
+
+### 8.4 做了什么 / 刻意没做什么
+
+给 4 条各加一段 `# ⚠️ …（2026-09-26 实测 + CI 实证）` 注释，写明所属分型 + 复验命令；
+`port-hardcode-check` 那条额外写清"能力存活于何处 / 为什么仍需在别处修"。纯增行：
+`git diff -U0` 统计**非注释新增 0 行、删除 0 行**，`yaml.safe_load` 后仍是 2 repos / 29 hooks，
+4 条 id 全部保留。
+
+- **不删**：删掉只是让噪音消失，同时**销毁"这个能力不见了 / 这个指针过期了"的唯一现场证据**。
+  标注严格优于删除 —— 后续要删随时可删，删了就问不回来了。
+- **不把 `port-hardcode-check` 的 entry 改指 `bin/ssot/check-hardcoded-ports.py`**：技术上是一行
+  修复，但它是**行为变更** —— 本文件在 CI 真的执行，重定位会让一个从未成功跑过的检查突然开始
+  跑，直接冲击共享门禁退出码（治理红线：翻转共享门禁退出码要先停下来）。且 `--check-ports` 语义
+  在改名迁移后是否等价于旧 vault-paths，需要 owner 判断。→ 留给 principal。
+
+### 8.5 仍然在 principal 手上的
+
+1. **`port-hardcode-check` entry 重定位**（§8.4 说明了为什么不自作主张）+ 确认 `--check-ports`
+   语义迁移是否完整。
+2. **`ci-check-runner.py:65` 支持 `also_in`**，或反向把 `port-registry-enforce.yml` /
+   `cross-deps-enforce.yml` 这类恒绿空 job 显式摘掉。这是"CI 报绿但没检查"的信任问题，
+   比断声明本身严重。
+3. **`cross-deps-check` / `future-annotations` 是重建能力还是正式宣告死亡** —— 前者牵涉一套真实
+   跨层 import 规则（cockpit→kairon / agora→cockpit / ecos→kairon / omo→kairon），后者牵涉 pyright 面。
+4. **known-debt 指纹登记**：escape 条件是 `SWARM_ESCAPE_ID=local-preflight-preexisting && human_gate`，
+   `human_gate` 那半边按定义不能由 agent 代签。`gate-known-debt.yaml` 的 `growth_policy: shrink_only`
+   也说明它只能由人往里加。
+5. **选项 B**（让框架真生效）：要动 `core.hooksPath`，撞"不擅自改 git config"这条硬约束。
+6. **选项 C 的剩余部分**：把 §2 那 7 条无消费者声明逐条判 owner 后接进 `ci-surfaces.yaml`。
+   §7 现在两条维度都量齐了（谁有消费者 / entry 目标存不存在），可以动手，但每条要 owner 判断，
+   且改 registry 是另一级授权。

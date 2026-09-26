@@ -26,6 +26,29 @@ OUTCOME_LOG = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.j
 VALID_ADJUDICATIONS = {"accepted", "rejected", "revised"}
 VALUE_EVIDENCE_LOG = ROOT / ".omo" / "_delivery" / "ingress" / "value-evidence.jsonl"
 VERDICT_MAP = {"accepted": "accept", "revised": "edit", "rejected": "reject"}
+
+
+def _canonical_principal_id(raw: str | None) -> str:
+    """Normalize an OMO_PRINCIPAL_ID to the canonical ``principal:<id>`` form.
+
+    Sovereignty enforces a strict ``principal:`` prefix on principal
+    references (see ``projects/omo/src/omo/sovereignty/roles.py
+    _ID_PREFIXES['principal']``).  Event-ledger rows emitted without
+    that prefix are invisible to
+    ``PersonalEpisodeService.observe_principal``, which filters
+    ``principal_id == principal_id`` exactly.  SH-5.1 fixes the silent
+    filter mismatch at the recorder boundary; SH-6 may audit the
+    broader OMO_PRINCIPAL_ID usage across all call sites.
+    """
+    value = str(raw or "").strip()
+    if not value:
+        return ""
+    if ":" in value:
+        # Already prefixed (e.g., ``principal:x``, ``role:y``) — trust it.
+        return value
+    return f"principal:{value}"
+
+
 # W2-05 personal episode kernel scene (must match omo.personal_episode).
 PERSONAL_SIGNAL_SCENE_ID = "personal-followup-dogfood"
 # Episode revision receipt closed vocabulary (omo.personal_episode_helpers).
@@ -124,7 +147,7 @@ def _write_event_ledger_outcome(entry: dict[str, Any], *, review_seconds: int | 
             sys.path.insert(0, omo_src)
         from omo.event_ledger.surface import EventLedgerSurface
 
-        principal_id = _os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        principal_id = _canonical_principal_id(_os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing"))
         scene_id = str(entry.get("scene_id", ""))
         run_id = str(entry.get("run_id", ""))
         verdict = VERDICT_MAP.get(entry.get("adjudication", ""), "reject")
