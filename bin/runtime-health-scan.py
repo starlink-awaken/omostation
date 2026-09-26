@@ -15,6 +15,7 @@ Usage:
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from datetime import UTC, datetime, timezone
@@ -106,33 +107,37 @@ class RuntimeHealthProbe:
         return result
 
     def check_aetherforge_gpu(self) -> dict:
-        """检查 AetherForge GPU 利用率"""
+        """检查本地算力栈(aetherforge 门面 + 各运行时)。
+
+        组件名沿用 aetherforge_gpu 以兼容下游; 原实现调 nvidia-smi, 在 Apple Silicon
+        上恒为 not_available, 从未反映真实算力状态。改读 aictl(本机 AI 栈运维入口)。
+        """
         result = {"component": "aetherforge_gpu", "status": "unknown", "checks": []}
-
-        # 检查 nvidia-smi (如果有)
-        try:
-            proc = subprocess.run(
-                ["nvidia-smi", "--query-gpu=name,utilization.gpu,memory.used --format=csv,noheader"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-
-            if proc.returncode == 0:
-                gpu_info = proc.stdout.strip()
-                result["status"] = "healthy"
-                result["checks"].append(f"GPU info: {gpu_info[:100]}...")
-            else:
-                result["status"] = "not_available"
-                result["checks"].append("nvidia-smi not available or no GPU detected")
-
-        except FileNotFoundError:
+        aictl = shutil.which("aictl") or os.path.expanduser("~/.local/bin/aictl")
+        if not os.path.exists(aictl):
             result["status"] = "not_available"
-            result["checks"].append("nvidia-smi command not found")
-        except Exception as e:
+            result["checks"].append("aictl not installed")
+            return result
+        try:
+            proc = subprocess.run([aictl, "status", "--json"], capture_output=True, text=True, timeout=30)
+            data = json.loads(proc.stdout)
+        except (subprocess.TimeoutExpired, OSError, json.JSONDecodeError) as e:
             result["status"] = "error"
-            result["checks"].append(f"GPU check failed: {e}")
-
+            result["checks"].append(f"aictl status failed: {e}")
+            return result
+        services = data.get("services", [])
+        down = [s["name"] for s in services if not s.get("healthy")]
+        gateway_ok = any(s["name"] == "gateway" and s.get("healthy") for s in services)
+        mem = data.get("memory", {})
+        result["checks"].append(
+            f"services {len(services) - len(down)}/{len(services)} healthy"
+            + (f" (down: {', '.join(down)})" if down else "")
+        )
+        result["checks"].append(
+            f"memory {mem.get('used_gb')}/{mem.get('total_gb')}G pressure={mem.get('pressure')}"
+        )
+        result["checks"].append(f"models loaded: {len(data.get('models', []))}")
+        result["status"] = "healthy" if gateway_ok and not down else ("degraded" if gateway_ok else "unhealthy")
         return result
 
     def check_surface_sensor_bridge(self) -> dict:

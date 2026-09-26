@@ -1,0 +1,234 @@
+"""Sovereign AI Copilot for Zhixing Dashboard.
+
+Integrates local AetherForge inference (Port 8000) with HybridRAGEngine (BM25 + BGE Reranker)
+to provide sovereign, zero-leakage, grounded Q&A and governance insights.
+"""
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import logging
+import hashlib
+from pathlib import Path
+import time
+from typing import Any, Dict, List, Optional
+import urllib.error
+import urllib.request
+
+logger = logging.getLogger("copilot_service")
+
+# 2026-09-26: 经 aetherforge 门面(原直连 oMLX :8000, 无鉴权; coder-precise 已不存在 → 恒兜底 mythos-fast)
+AETHERFORGE_URL = (os.environ.get("LLM_GATEWAY_URL") or os.environ.get("AETHERFORGE_URL") or "http://127.0.0.1:4000").rstrip("/")
+DEFAULT_CHAT_MODEL = "coder"
+_GATEWAY_KEY: Optional[str] = None
+FALLBACK_CHAT_MODEL = "mythos-fast"
+REQUEST_TIMEOUT_SECONDS = 3.5
+
+PRESETS = [
+    {
+        "id": "today_brief",
+        "title": "⚡ 今日演进简报",
+        "prompt": "请基于当前驾驶舱实测数据，总结系统目前的整体状态、核心实体规模、价值净节省与当前关键进展。",
+        "scope": "overview"
+    },
+    {
+        "id": "risk_diagnosis",
+        "title": "🔍 风险与阻塞诊断",
+        "prompt": "请检查当前所有处于 blocked 或停滞状态的 BET、场景卡及门禁，指出首要瓶颈并给出自愈行动方案。",
+        "scope": "governance"
+    },
+    {
+        "id": "pasw_review",
+        "title": "🛡️ 熔断与门禁复盘",
+        "prompt": "请分析近期 PASW 物理只读熔断拦截（336次）及夏明星主权裁决的模式，说明这些安全防线如何保护了主仓纯净度。",
+        "scope": "security"
+    },
+    {
+        "id": "scene_funnel",
+        "title": "📊 场景卡漏斗分析",
+        "prompt": "请分析 42 张业务场景卡在 draft -> shadow -> assisted -> supervised -> routine 五级漏斗中的分布，指出哪些场景已具备晋级条件。",
+        "scope": "business"
+    }
+]
+
+
+
+def _gateway_headers() -> Dict[str, str]:
+    """门面鉴权头: 环境变量优先, 否则 Keychain(aetherforge-gateway)。结果缓存。"""
+    global _GATEWAY_KEY
+    if _GATEWAY_KEY is None:
+        key = os.environ.get("LLM_GATEWAY_KEY") or os.environ.get("AETHERFORGE_API_KEY") or ""
+        if not key:
+            try:
+                out = subprocess.run(["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
+                                     capture_output=True, text=True, timeout=5)
+                key = out.stdout.strip() if out.returncode == 0 else ""
+            except (OSError, subprocess.TimeoutExpired):
+                key = ""
+        _GATEWAY_KEY = key
+    h = {"Content-Type": "application/json"}
+    if _GATEWAY_KEY:
+        h["Authorization"] = f"Bearer {_GATEWAY_KEY}"
+    return h
+
+class SovereignCopilot:
+    """Sovereign Copilot communicating with local AetherForge and RAG."""
+
+    def __init__(self, rag_engine=None, base_url: str = AETHERFORGE_URL):
+        self.base_url = base_url.rstrip("/")
+        self._rag = rag_engine
+        self._cache = {}  # query_hash -> result
+        self._cache_ttl = 300  # 5 minutes
+
+    @property
+    def rag(self):
+        if self._rag is None:
+            try:
+                from rag_engine import HybridRAGEngine
+                self._rag = HybridRAGEngine()
+            except Exception as err:
+                logger.warning("Failed to initialize HybridRAGEngine: %s", err)
+                self._rag = None
+        return self._rag
+
+    def get_presets(self) -> List[Dict[str, Any]]:
+        return PRESETS
+
+    def _build_system_prompt(self, candidates: List[Dict[str, Any]]) -> str:
+        facts_lines = []
+        for i, c in enumerate(candidates, 1):
+            title = c.get("title") or c.get("id")
+            plane = c.get("plane", "general").upper()
+            kind = c.get("kind", "entity")
+            text = c.get("text", "")[:280].replace("\n", " ")
+            facts_lines.append(f"[{i}] ({plane}|{kind}) {title}: {text}")
+
+        facts_block = "\n".join(facts_lines) if facts_lines else "暂无直接检索证据，依赖全局系统常识。"
+
+        return f"""你是知行全景驾驶舱主权智能副驾（Sovereign Copilot），服务最高决策者夏明星。
+核心法则：
+1. 9大主权面 + 4大控制环（OODA/GaC/Value/Learning）
+2. 主工作区 100% 物理只读隔离（PASW）
+3. 已累计 950 分钟净节省，336 次 PASW 熔断拦截
+
+相关系统事实证据：
+{facts_block}
+
+回答准则：专业严谨、结构清晰、优先中文、给出可执行命令。"""
+
+    def _call_aetherforge(self, model: str, system_prompt: str, user_query: str) -> Optional[str]:
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_query}
+            ],
+            "max_tokens": 300,
+            "temperature": 0.2
+        }
+        req = urllib.request.Request(
+            f"{self.base_url}/v1/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers=_gateway_headers()
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                choices = data.get("choices") or []
+                if choices:
+                    return choices[0].get("message", {}).get("content", "").strip()
+        except Exception as err:
+            logger.warning("AetherForge call failed for model %s: %s", model, err)
+        return None
+
+    def _generate_fallback_response(self, query: str, candidates: List[Dict[str, Any]]) -> str:
+        lines = [
+            "### 🤖 知行副驾·主权事实速览（本地推理降级模式）",
+            "> 本地 AetherForge 算力通道响应延迟，已自动无缝切换为 **Hybrid RAG 知识检索提炼模式**。",
+            "",
+            f"针对您的查询：**「{query}」**，全景驾驶舱提取到以下核心事实与因果实体：",
+            ""
+        ]
+        for i, c in enumerate(candidates[:4], 1):
+            title = c.get("title") or c.get("id")
+            plane = c.get("plane", "general").upper()
+            kind = c.get("kind", "entity")
+            score = c.get("score", 1.0)
+            text = c.get("text", "")[:160].replace("\n", " ")
+            lines.append(f"{i}. **[{plane}] {title}** (`{kind}`, 相关度: {score}):\n   - {text}")
+
+        lines.extend([
+            "",
+            "**建议操作**：",
+            "- 可在主权工作台（Workbench）进一步点击实体查看多跳因果链；",
+            "- 针对阻断项，请使用 `cockpit harness status` 或通过 Agent 提案工作台提报修复草稿。"
+        ])
+        return "\n".join(lines)
+
+    def ask(self, query: str, context_scope: str = "all", model: Optional[str] = None) -> Dict[str, Any]:
+        start_t = time.time()
+        query = (query or "").strip()
+        # Check cache
+        cache_key = hashlib.md5(f"{query}:{model}".encode()).hexdigest()
+        cached = self._cache.get(cache_key)
+        if cached and (time.time() - cached.get("_ts", 0)) < self._cache_ttl:
+            cached["cached"] = True
+            return cached
+        if not query:
+            return {
+                "success": False,
+                "error": "Query cannot be empty",
+                "reply": "请输入您需要咨询的治理、工程或架构问题。",
+                "references": [],
+                "latency_ms": 0
+            }
+
+        candidates = []
+        if self.rag:
+            try:
+                candidates = self.rag.search(query, mode="hybrid", limit=3)
+            except Exception as err:
+                logger.warning("RAG search failed: %s", err)
+
+        system_prompt = self._build_system_prompt(candidates)
+
+        target_model = model or DEFAULT_CHAT_MODEL
+        reply = self._call_aetherforge(target_model, system_prompt, query)
+        model_used = target_model
+
+        if not reply and target_model != FALLBACK_CHAT_MODEL:
+            reply = self._call_aetherforge(FALLBACK_CHAT_MODEL, system_prompt, query)
+            if reply:
+                model_used = FALLBACK_CHAT_MODEL
+
+        if not reply:
+            reply = self._generate_fallback_response(query, candidates)
+            model_used = "rag_fallback"
+
+        latency_ms = round((time.time() - start_t) * 1000, 1)
+
+        references = [
+            {
+                "id": c.get("id"),
+                "title": c.get("title") or c.get("id"),
+                "plane": c.get("plane"),
+                "kind": c.get("kind"),
+                "score": c.get("score")
+            }
+            for c in candidates
+        ]
+
+        result = {
+            "success": True,
+            "query": query,
+            "reply": reply,
+            "model_used": model_used,
+            "references": references,
+            "latency_ms": latency_ms,
+            "cached": False
+        }
+        # Cache successful responses
+        if reply and model_used != "rag_fallback":
+            self._cache[cache_key] = {**result, "_ts": time.time()}
+        return result

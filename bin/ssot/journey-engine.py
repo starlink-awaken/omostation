@@ -593,27 +593,58 @@ def _call_kos_status() -> dict:
 
 
 def _call_llm_generate(ctx) -> dict:
-    """LLM inference via AetherForge (:9290) or fallback stub."""
+    """LLM inference via the aetherforge gateway.
+
+    失败如实返回 failed —— 旧实现不带 key、用不存在的模型名 "default", 每次都 401,
+    却以 status=succeeded + stub 返回, 旅程看起来成功、实际从未生成过内容。
+    """
+    import urllib.error
+    import urllib.request
+
+    prompt = ctx.signal.get("prompt", ctx.signal.get("content", "Summarize the input."))
+    model = ctx.signal.get("model", "fast")
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": prompt}]}).encode("utf-8")
+    req = urllib.request.Request(  # noqa: S310 — 内部门面地址
+        f"{_gateway_url()}/v1/chat/completions",
+        data=body,
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {_gateway_key()}"},
+        method="POST",
+    )
     try:
-        import urllib.request
-        prompt = ctx.signal.get("prompt", ctx.signal.get("content", "Summarize the input."))
-        body = json.dumps({
-            "model": "default",
-            "messages": [{"role": "user", "content": prompt}],
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            "http://localhost:9290/v1/chat/completions",
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310
             data = json.loads(resp.read().decode("utf-8"))
-        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        return {"status": "succeeded", "generated": True, "content": content[:500], "source": "aetherforge"}
-    except Exception:
-        return {"status": "succeeded", "generated": True,
-                "note": "AetherForge :9290 unreachable — LLM stub fallback"}
+    except (urllib.error.URLError, OSError, ValueError) as exc:
+        return {"status": "failed", "generated": False, "error": f"aetherforge gateway: {exc}"[:300]}
+    content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+    if not content:
+        return {"status": "failed", "generated": False, "error": "aetherforge gateway returned empty content"}
+    return {"status": "succeeded", "generated": True, "content": content[:500],
+            "source": "aetherforge", "model": data.get("model", model)}
+
+
+def _gateway_url() -> str:
+    """aetherforge 门面: LLM_GATEWAY_URL / AETHERFORGE_URL / OMLX_URL, 默认本机 loopback。"""
+    for name in ("LLM_GATEWAY_URL", "AETHERFORGE_URL", "OMLX_URL"):
+        if os.environ.get(name):
+            return os.environ[name].rstrip("/")
+    return "http://127.0.0.1:4000"
+
+
+def _gateway_key() -> str:
+    """门面密钥: 环境变量优先, 否则 Keychain(aetherforge-gateway)。"""
+    for name in ("LLM_GATEWAY_KEY", "AETHERFORGE_API_KEY", "OMLX_API_KEY"):
+        if os.environ.get(name):
+            return os.environ[name]
+    try:
+        out = subprocess.run(
+            ["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
 
 
 def _invoke_scene(target_scene: str, ctx) -> dict:
