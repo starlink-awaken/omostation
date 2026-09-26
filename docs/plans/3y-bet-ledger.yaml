@@ -35535,7 +35535,7 @@ bets:
   - cmd: grep -rEn "^(DEFAULT_(EVENT_)?LEDGER|LEDGER|DEFAULT_DB) *=" bin/ | grep -c
       "event-ledger" || true
     expect: 0 — no bin/ script computes the event-ledger default itself any more
-  - cmd: uv run --with pyyaml python -m pytest tests/unit/test_repo_root_profile.py
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/test_repo_root_profile.py
       -q
     expect: exit 0
   - cmd: make gac-local-gate
