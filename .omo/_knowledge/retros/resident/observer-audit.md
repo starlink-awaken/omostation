@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-audit
-generated_at: 2026-09-25T12:32:35Z
+generated_at: 2026-09-26T08:23:43Z
 status: candidate
 counts:
-  runs: 30
+  runs: 36
   failures: 0
-  total: 30
+  total: 36
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # observer-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-25T12:32:35Z
+- generated_at: 2026-09-26T08:23:43Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 30 成功运行 + 0 失败模式 = 30 草稿
+- sediment 覆盖: 36 成功运行 + 0 失败模式 = 36 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -51,6 +51,12 @@ failure_breakdown:
 - 20260925T015638Z-observer-audit-70b7cbfe.md
 - 20260925T031626Z-observer-audit-a29265ec.md
 - 20260925T031627Z-observer-audit-aa7d930f.md
+- 20260926T060955Z-observer-audit-0d31d156.md
+- 20260926T060957Z-observer-audit-9ef27cc7.md
+- 20260926T061438Z-observer-audit-729cf2ae.md
+- 20260926T061439Z-observer-audit-c1afc52d.md
+- 20260926T062653Z-observer-audit-2e2228fe.md
+- 20260926T062654Z-observer-audit-e5c83181.md
 
 ## 失败模式 (failures/)
 
@@ -144,6 +150,24 @@ failure_breakdown:
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 - **20260925T015638Z-observer-audit-70b7cbfe**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260926T060955Z-observer-audit-0d31d156**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260926T060957Z-observer-audit-9ef27cc7**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260926T061438Z-observer-audit-729cf2ae**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260926T061439Z-observer-audit-c1afc52d**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260926T062653Z-observer-audit-2e2228fe**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260926T062654Z-observer-audit-e5c83181**
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
 
