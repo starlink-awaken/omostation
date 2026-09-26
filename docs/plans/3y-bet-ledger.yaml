@@ -35395,7 +35395,8 @@ bets:
     2026-09-26）。radar 的 orphan worktree 自动 prune 已上线（N1 治本）但 12 个信号仍在 —— 每个信号的生产者是谁、真残留还是假信号，未逐个判定过。教训约束：禁止调权重（预算
     whack-a-mole 教训 8→15→20→50 四轮才过 CI）。真残留 → hygienic release/归档 ≥14 天不活跃 worktree；假信号
     → 修计数根因加 hermetic 回归测试。
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T9-OBSERV
   priority: P1
