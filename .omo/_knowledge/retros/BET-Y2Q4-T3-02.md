@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: completed
+status: active
 lifecycle: history
 owner: engineering-agent
 last-reviewed: 2026-09-26

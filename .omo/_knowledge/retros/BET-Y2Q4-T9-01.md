@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: completed
+status: active
 lifecycle: history
 owner: governance-agent
 last-reviewed: 2026-09-26
@@ -47,6 +47,15 @@ run_id: 20260926T121053Z-governance-state-mutation-5c4122d0
    正确的下一步不是本 bet 越权改数，而是把决策卡递上去。
 3. 并发生态的自愈力被实测证实：快照到复测的 2 个 worktree 由其他 agent 自行 release，
    卫生习惯已内化。
+
+## CI 拦截与元数据卫生（2026-09-26 补记）
+
+首次 CI：gac-gate FAIL 于 `legacy-omo-knowledge-enums` 预算（71 > 70）——本会话
+T1-04/T3-02/T9-01 三个 retro 均用了 legacy 枚举 `status: completed`（沿袭 SH-5.x
+样例，而该样例本身即在 legacy 预算内）。处置：**降预算而非抬预算**——三个 retro
+（含已合并入 main 的 T1-04/T3-02，均本会话产物）统一改为合规 `status: active`
+（283 篇存量主流惯例），本地 doc-governance-check PASS（4420 文件）。跨 BET 触碰
+仅限本会话自产文件的 1 行元数据修正，在此如实记录。
 
 ## 后续
 
