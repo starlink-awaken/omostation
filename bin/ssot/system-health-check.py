@@ -21,10 +21,13 @@ from pathlib import Path
 from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+from repo_root import event_ledger_path
+
 DELIVERY = WORKSPACE / ".omo" / "_delivery"
 DAEMON_WATERMARKS = DELIVERY / "resident-orchestrator" / "watermarks"
 EVENTS_JSONL = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
-LEDGER = WORKSPACE / "runtime" / "omo" / "event-ledger.sqlite3"
+LEDGER = event_ledger_path()
 # 阈值: 组件状态文件超过该时长视为 stale
 STALE_THRESHOLD_SECONDS = 1800  # 30min
 

@@ -32,7 +32,10 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-DEFAULT_LEDGER = WORKSPACE / "runtime" / "omo" / "event-ledger.sqlite3"
+sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+from repo_root import event_ledger_path
+
+DEFAULT_LEDGER = event_ledger_path()
 DEFAULT_DEBT_DIR = WORKSPACE / ".omo" / "debt" / "items"
 DEFAULT_STATE_DIR = WORKSPACE / ".omo" / "state"
 NEGATIVE_SAMPLES_FILE = "attest-negative-samples.json"

@@ -24,7 +24,10 @@ from pathlib import Path
 from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-DEFAULT_LEDGER = WORKSPACE / "runtime" / "omo" / "event-ledger.sqlite3"
+sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+from repo_root import event_ledger_path
+
+DEFAULT_LEDGER = event_ledger_path()
 DEFAULT_EVENTS_JSONL = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
 PID_FILE = WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "daemon.pid"
 LOG_FILE = WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "daemon.log"

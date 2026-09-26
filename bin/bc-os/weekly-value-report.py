@@ -32,7 +32,10 @@ STATE_DIR = WS_ROOT / ".omo" / "state"
 REPORT_FILE = STATE_DIR / "weekly-review.json"
 
 # Weekly adoption-falsification snapshot (BET-Y1Q4-T4-03)
-DEFAULT_EVENT_LEDGER = WS_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
+sys.path.insert(0, str(WS_ROOT / "bin" / "lib"))
+from repo_root import event_ledger_path
+
+DEFAULT_EVENT_LEDGER = event_ledger_path()
 SNAPSHOT_LOG = WS_ROOT / "docs" / "reports" / "weekly-value-snapshots.jsonl"
 SNAPSHOT_SCHEMA = "weekly-value-snapshot/v1"
 THRESHOLD_GREEN = 3
