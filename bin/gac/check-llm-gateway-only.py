@@ -7,6 +7,9 @@ CR-LLM-GATEWAY-ONLY — 禁止业务代码硬编码直连 ollama (localhost:1143
   - os.environ.get / .get(...) / x or "..." 可配置默认值 (运行时可通过环境变量指向网关)
   - 注释 / docstring / logger 消息 (非调用)
   - 多行调用: requests.post( 开头 + 下一行内联 11434 URL
+严格规则(不吃 .get( 豁免 —— 默认值本身就指向裸运行时, 等于默认绕过网关):
+  - 本机运行时(Ollama 11434 / oMLX 8000 / LM Studio 1234)的推理端点或 OpenAI 根 /v1
+  - `ollama run` 子进程推理
 
 用法: python3 bin/gac/check-llm-gateway-only.py [--warn] [--json]
 退出码: 0 = 通过; 1 = 存在违规; --warn 下违规仅告警不失败
@@ -36,14 +39,28 @@ DIRECT_PATTERNS = [
     re.compile(r"/v1/generate[\"\s]"),
 ]
 
+# 严格规则: 裸运行时推理端点 / OpenAI 根 / `ollama run` 子进程 —— 即使写在 .get(默认值) 里也算绕过
+_RUNTIME = r"(?:localhost|127\.0\.0\.1):(?:11434|8000|1234)"
+STRICT_PATTERNS = [
+    re.compile(_RUNTIME + r"(?:/v1)?/(?:chat/completions|completions|embeddings|audio/|images/|rerank)"),
+    re.compile(_RUNTIME + r"/api/(?:generate|chat|embed)"),
+    re.compile(_RUNTIME + r"/v1[\"'/]?\s*[\"',)]"),
+    re.compile(r"[\"']ollama[\"']\s*,\s*[\"']run[\"']"),
+    re.compile(r"[\"']ollama run "),
+]
+
 # 多行调用检测: requests.post( / httpx.post( 等调用开头, URL 换行在同语句后续行
 MULTILINE_CALL_START = re.compile(r"(?:httpx|requests|urllib|openai)\.\w+\(\s*$")
 MULTILINE_URL_LINE = re.compile(r"[\"']https?://(?:localhost|127\.0\.0\.1):11434")
 
-# 允许直连的路径 (网关自身 + 统一接入层)
+# 允许直连的路径 (网关自身 + 统一接入层 + 运行时控制面)
 ALLOW_PATHS = (
     "projects/aetherforge",
     "projects/cockpit/src/cockpit/llm_router.py",
+    # omlxc 是运行时控制面: 探活/落位/加载本就要直连各运行时, 不是推理调用方
+    "projects/omlxc",
+    # 本检查器自身的规则文本
+    "bin/gac/check-llm-gateway-only.py",
 )
 
 # 扫描范围: 所有项目的业务代码
@@ -51,6 +68,12 @@ SCAN_GLOBS = (
     "projects/*/src/**/*.py",
     "projects/*/packages/**/src/**/*.py",
     "projects/*/*.py",
+    # 嵌套 monorepo (projects/knowledge/kairon/packages/*) —— 原先漏扫, kronos/minerva/ontoderive 的直连没被发现
+    "projects/*/*/packages/**/src/**/*.py",
+    # 部署资产(驾驶舱 *.py.asset 由 zhixing-host-sync 拷到宿主运行)
+    "projects/*/src/**/*.py.asset",
+    # 主仓脚本
+    "bin/**/*.py",
 )
 
 
@@ -65,11 +88,20 @@ def scan() -> list[dict]:
                 continue
             if any(seg.startswith(".") for seg in path.parts):
                 continue
+            # 已归档脚本不再运行
+            if "/_archive/" in f"/{rel}":
+                continue
             try:
                 lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
             except OSError:
                 continue
             for idx, line in enumerate(lines, start=1):
+                # 行注释不是调用(文档说明里提到旧端口/旧路由是正常的)
+                if line.lstrip().startswith("#"):
+                    continue
+                if any(p.search(line) for p in STRICT_PATTERNS):
+                    findings.append({"file": rel, "line": idx, "text": line.strip()[:120]})
+                    continue
                 if any(p.search(line) for p in DIRECT_PATTERNS):
                     # 行级豁免 1: GET /api/tags 探活是健康检查(只读、非推理)
                     if "api/tags" in line:
