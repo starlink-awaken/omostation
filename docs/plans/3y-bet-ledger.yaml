@@ -36225,6 +36225,36 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:3fbbe9a4b7e1ba42e1f2b109a0f3f32e17d97ac2e99a6e9373e02ed8c3c8d1d9
     decision_ref: decision://accepted/BET-Y2Q4-T10-04
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9317e48ab
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     overall_state: delivery_accepted
