@@ -16,10 +16,10 @@ status: archived
 |----|-------|--------|
 | kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-## Planned Tasks (0 个)
+## Planned Tasks (1 个)
 | ID | Title | Status |
 |----|-------|--------|
-
+| BET-Y2Q4-T4-01-DECISION | 选择真实业务首单交付项 | candidate |
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
@@ -63,5 +63,5 @@ status: archived
 
 
 ---
-*Updated: 2026-09-26 (依据 `omo state sync-tasks` 与真实目录重算: done=302, planned=0, active=1, blocked=0, archived=6 顶层)*
+*Updated: 2026-09-27 (依据 `omo state sync-tasks` 与真实目录重算: done=302, planned=1, active=1, blocked=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*
