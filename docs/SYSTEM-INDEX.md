@@ -104,7 +104,7 @@ last_updated: 2026-09-17
 
 → [设计方案](proposals/) — 设计提案和历史方案（详见 `docs/proposals/`）
 
-→ [本地计算集群](local-compute/) — omlx 集群架构（详见 `docs/local-compute/`）
+→ [本地计算集群](local-compute/) — omlx 集群架构（详见 `docs/local-compute/`）；运维与验证见 [ai-stack-ops-runbook](local-compute/ai-stack-ops-runbook.md)
 
 → [战略体检报告](reports/) — c2g.strategy 周期产出的战略/治理健康周报（详见 `docs/reports/`）
 
