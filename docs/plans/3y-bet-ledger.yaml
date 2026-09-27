@@ -35358,17 +35358,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T4-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@54d47844a844497fb3ce73cd1ac59de2da11f6a3
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+          tests:
+            ref: receipt://.omo/tasks/planned/BET-Y2Q4-T4-01-DECISION.yaml
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值 = 决策输入就位（3+1 候选 + 决策卡入收件箱），首单的实际业务价值在人类拍板
+            并由正式交付 BET 产出后计量——本 bet 的边界明确是盘点与卡片，不做选择、
+            不预支价值。
   value_indicator_policy: false
 - id: BET-Y2Q4-T6-01
   title: 治理降档 ADR — closeout/retro 分级与 docs+chore 占比回落机制（human_gate）
