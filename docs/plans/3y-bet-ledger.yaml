@@ -36049,6 +36049,66 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-04
+  title: 根仓 Makefile 整理与兼容入口收敛
+  goal: 在不改变既有目标语义的前提下，整理根仓 Makefile 的公共变量、目标声明、帮助输出与标准聚合入口，降低维护和调用成本。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 若兼容性验证发现既有目标输出或退出码变化，立即停止结构调整，回退到仅补注释和变量的最小整理。
+  non_goals:
+  - 不删除既有 Makefile 目标或别名
+  - 不修改下游脚本、CI 工作流和子模块 Makefile
+  - 不新增独立 Makefile include 文件
+  done_when:
+  - 既有目标与别名均保留，Makefile 解析无错误
+  - 公共解释器、根目录与执行约定完成统一，重复硬编码明显减少
+  - 新增 check、test、lint、ci-local、sync、status 聚合入口并在 help 中可发现
+  - help 输出与可执行目标清单一致，缺失目标和孤立帮助项为零
+  - 关键只读 smoke checks 与根仓治理门禁通过
+  - retro 固化兼容性验证结果与表面积净变化
+  verify:
+  - cmd: make -n help check test lint ci-local sync status
+    expect: 所有目标均可解析并展开，无 Makefile 语法错误
+  - cmd: make help
+    expect: 标准入口和兼容入口均可发现
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  write_surfaces:
+  - Makefile
+  - docs/superpowers/specs/2026-09-26-makefile-maintenance-design.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+  - docs/superpowers/plans/2026-09-26-makefile-maintenance.md
+  - docs/plans/3y-bet-ledger.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-makefile-maintenance-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:3fbbe9a4b7e1ba42e1f2b109a0f3f32e17d97ac2e99a6e9373e02ed8c3c8d1d9
+    decision_ref: decision://accepted/BET-Y2Q4-T10-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 - id: BET-Y2Q4-T10-205
   title: ADR-0456 B2 端口段注册 — dev 端口带、未注册端口收口与生产 UI 入口事实修正
   goal: 'Let dev and prod run side by side without port collisions, and close the registry
