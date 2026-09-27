@@ -37146,6 +37146,78 @@ bets:
             价值 = 规则接线缺口 27→25 且 15 条零悬空（每条有明确处置或带证据的待决），
             --strict 上门禁的路径与门槛已显式化（批次三归零 + shadow 一周）。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-06
+  title: 规则接线批次三 — 孤儿接线 ×3 + 债务值域迁移（CR-DEBT-GATE-ENUM-01 实现）+ 处置落档
+  goal: '批次三：① 三个孤儿执行器（mcp-tool-data-complete / check-cross-repo-consistency / timeout-audit，本地全
+    rc=0）接入 governance workflow 检查步骤，规则 wired； ② CR-DEBT-GATE-ENUM-01 实现：check-debt-closure-discipline.py
+    加 gate_level 值域校验， 并迁移存量 20 条违反项（P0→gate / P1→watchlist / P2→none 自然映射），修复 review
+    队列 rank=99 缺陷；③ 批次二遗留 d 类 8 条处置注释落档（L4 留 mac lane、其余收窄/ 并入 SH-4 决策）；④ coverage 复跑；⑤
+    SEC×4/AGE×5 幻影处置呈报 owner 表态。
+
+    '
+  status: pending
+  window: Y2Q4
+  track: T10-MATURITY
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: governance-audit
+  underlying_workflow: governance-audit
+  circuit_breaker: 'CI 只加步骤不改既有步骤；三脚本任一在 CI 失败即回退该步骤并如实记录； 债务迁移逐条留痕不做静默改写；声明条目不删除；SEC/AGE
+    幻影不经 owner 表态不处置。
+
+    '
+  non_goals:
+  - 不删除 governance-checks 条目
+  - 不动 L0 子仓注册表
+  - 不在本批次强制 --strict 门禁
+  - 不实现 SEC 检查器系列（owner 表态后另案）
+  done_when:
+  - workflow 新步骤含 3 脚本调用，coverage wired +3（复跑记录）
+  - check-debt-closure-discipline.py 值域校验生效（引用 CR-DEBT-GATE-ENUM-01）+ 20 条迁移完成且校验通过
+  - 8 条 d 类处置注释落 governance-checks.yaml + 批次三文档
+  - coverage 复跑记录 + 债务 DEBT-20260920 history 追加
+  - retro 固化（含 SEC×4/AGE×5 owner 待决清单）
+  verify:
+  - cmd: python3 bin/gac/check-rule-wiring-coverage.py --json
+    expect: unreferenced = 21（25-3-1）
+  - cmd: python3 bin/gac/check-debt-closure-discipline.py
+    expect: exit 0（值域校验通过）
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - .github/workflows/governance-check.yml
+  - bin/gac/check-debt-closure-discipline.py
+  - .omo/debt/items/
+  - .omo/_truth/registry/governance-checks.yaml
+  - docs/plans/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-rule-wiring-batch3.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-06.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-rule-wiring-batch3.md
+    spec_version: 1.0.0
+    content_digest: sha256:05b8d18384d0e80c6d371987871cb3ca5796108cff9bdf111c8f96b599696378
+    decision_ref: decision://accepted/BET-Y2Q4-T10-06
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -37284,7 +37356,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 496
+  total_bets: 497
   windows:
   - Y1Q1
   - Y1Q2
