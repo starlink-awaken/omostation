@@ -51,12 +51,12 @@ history:
       复审 omo-governance-surfaces.yaml 时查出 (该文件因 X2-C05 ≤14d 已到期,
       触发逐项核对)。5 项 assets 声明与执行脱节: 无写入方、零消费者。
     actor: governance-agent
+  - at: '2026-09-27T00:00:00+00:00'
+    action: resolve-removal
+    note: >-
+      处置 (b) 执行: 5 项 assets 声明摘除（OMO-GENERATED/OMO-PITCHES/OMO-REPORTS-RUNTIME/
+      OMO-BETS-INDEX/OMO-TASKS-INDEX-JSON），摘除前当日复核写入方全 0。头部注释同步标记。
+    actor: governance-agent
 x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
 x2_freshness: ""
 x3_tier: ""
-- at: '2026-09-27T00:00:00+00:00'
-  action: resolve-removal
-  note: >-
-    处置 (b) 执行: 5 项 assets 声明摘除（OMO-GENERATED/OMO-PITCHES/OMO-REPORTS-RUNTIME/
-    OMO-BETS-INDEX/OMO-TASKS-INDEX-JSON），摘除前当日复核写入方全 0。头部注释同步标记。
-  actor: governance-agent
