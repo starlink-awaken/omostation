@@ -37263,6 +37263,80 @@ bets:
             价值 = 孤儿执行器×3 获得真实 CI 执行面 + 债务 review 队列首次按真实严重度
             排序（rank=99 缺陷修复）+ 剩余 20 条全部显式化待 owner 表态。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-07
+  title: 规则接线批次四 — 归零收口（真 bug 修复 + B006 启用 + retired 机制）
+  goal: 'principal 批次三遗留幻影批复「同意，go」（安全组接线 ruff，AGE×5 退役）。① 修复 bin/gac/check-episode-pipeline.py:101
+    缩进损坏（#4442 迁移产物，main 不可编译， ast/自测炸）——dedent 2 行；② pyproject ruff select 启 B006（bin/
+    基线零违规实测） → CR-PY-MUTABLE-DEFAULT 接线，CR-SEC-EVAL-EXEC 经 S307（已在 select）接线； ③ check-rule-wiring-coverage.py
+    支持 alias map retired: 清单——弃用/收窄/并入 条目从未引用候选分离单独计数；④ AGE×5 + BIN-RETIREMENT + L2-TASK
+    + L0-SSOT-PATH-NORM + X1/X2 + EVIDENCE-DECLARED 共 11 条入 retired，未引用归零； ⑤ --strict
+    shadow 起跑，DEBT-20260920 关单待 shadow 周期。
+
+    '
+  status: pending
+  window: Y2Q4
+  track: T10-MATURITY
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: governance-audit
+  underlying_workflow: governance-audit
+  circuit_breaker: 'retired 条目仅从接线候选统计分离，注册表条目保留（可见性不灭）；缩进修复最小化 （2 行 dedent 不改 SH-9
+    迁移逻辑语义）；B006 启用前基线零违规（已实测）。
+
+    '
+  non_goals:
+  - 不删除 governance-checks 条目
+  - 不实现 AGE 检查器（descope 退役）
+  - 不在本批次强制 --strict（shadow 起跑后观察一周）
+  done_when:
+  - check-episode-pipeline.py ast 可编译 + --self-test rc=0
+  - pyproject 含 B006，uv run ruff check bin/ rc=0
+  - coverage unreferenced = 0 且 retired 计数 11 可见
+  - lint 0 新增 / gac-local-gate PASS
+  - retro 固化（--strict shadow 起跑 + DEBT 关单条件记录）
+  verify:
+  - cmd: python3 bin/gac/check-episode-pipeline.py --self-test
+    expect: exit 0
+  - cmd: python3 bin/gac/check-rule-wiring-coverage.py --json
+    expect: unreferenced = 0, retired = 11
+  - cmd: uv run ruff check bin/
+    expect: exit 0（B006 生效且无违规）
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/check-episode-pipeline.py
+  - pyproject.toml
+  - bin/gac/check-rule-wiring-coverage.py
+  - bin/gac/registry-alias-map.yaml
+  - docs/plans/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-rule-wiring-batch4.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-07.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-rule-wiring-batch4.md
+    spec_version: 1.0.0
+    content_digest: sha256:c3d578ebb674da47ae20abdc8ac5d6cbdfbfc9498224657bb9cf3fa0007f7f8d
+    decision_ref: decision://accepted/BET-Y2Q4-T10-07
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -37401,7 +37475,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 497
+  total_bets: 498
   windows:
   - Y1Q1
   - Y1Q2
