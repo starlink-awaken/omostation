@@ -1,0 +1,981 @@
+#!/usr/bin/env python3
+"""Claims Authority R0 shadow observation sampler + corruption WATCHDOG.
+
+Wiring (2026-09-27, incident 2026-09-26):
+
+    source   bin/claims-observation/sampler.py.asset   (repo-canonical copy)
+    deploy   ~/.local/share/zhixing-dashboard/claims-observation/sampler.py
+             (copy source -> deployed, exactly like the zhixing-host-sync
+              *.py.asset pattern; the deployed dir is not a git worktree)
+    launchd  ~/Library/LaunchAgents/com.omostation.claims-observation-r0.plist
+             /opt/homebrew/bin/python3 <deployed sampler.py>, 60s, KeepAlive
+             reload: launchctl kickstart -k gui/$(id -u)/com.omostation.claims-observation-r0
+    outputs  <deployed dir>/{summary.json,samples.jsonl,alerts.jsonl}
+
+Sampling protocol (unchanged): 24h / 1440 samples / max gap 120s. Any
+descriptor change, sequence regression or >120s gap marks the window invalid
+(full restart required by policy — recorded honestly, never papered over).
+
+Watchdog contract (why: a concurrent agent raw-sqlite-wrote the authority store
+and left the receipt chain UNAVAILABLE for ~6h before anyone noticed):
+
+  detect    every tick, production verification, strictly read-only
+            (`file:...?mode=ro`, no pragma that can write):
+            path safety + journal_mode/user_version/integrity_check +
+            `_verify_receipt_chain` + `verify_high_water` +
+            `reconcile_activation_witness` (shadow-active branch is read-only;
+            the prepared branch can write, so it is never called here).
+            No code path here writes any store-plane file; the probe leaves
+            sqlite's own sidecars (`store.sqlite3-wal`, 0 bytes, +
+            `store.sqlite3-shm`, 32 KB) which sqlite creates for *any*
+            connection on a WAL database and unlinks again on the next
+            writer close — deliberately not unlinked by us, because removing
+            a shared-memory file another connection may hold is exactly the
+            kind of interference that causes false UNAVAILABLE verdicts.
+            (`immutable=1` was rejected: it hides committed WAL frames and
+            therefore misreads the store.) The sqlite *version* gate
+            (`wal_allowed_for_current`) is deliberately NOT evaluated: a
+            venv sqlite < gate is an environment problem, never store
+            corruption, and must not trigger a restore.
+  snapshot  on FAILURE: <backups>/incident-<ts>/{store.sqlite3,
+            high-water.json, activation-witness.json} + SHA256SUMS.txt,
+            read-only perms (0400 files / 0555 dir), plus a non-empty
+            `store.sqlite3-wal` when one exists (evidence must show the
+            frames the probe actually read). Evidence before action:
+            a failed snapshot blocks the restore for that window.
+  alert     append-only alerts.jsonl + summary.json["watchdog"] + stderr line
+            (the observation dir is what this workspace's agents read; the
+            panorama/agent-brief surfaces are other lanes' code).
+  restore   two tiers, selected by what actually failed:
+            * `plane_rebuild` (tier 1) — the receipt chain verified, only the
+              derived `high-water.json` / `activation-witness.json` were
+              rewritten or lost. They are rebuilt from the *live* chain with
+              the official `_high_water_payload` / `_witness_payload`, so no
+              receipt is ever dropped for a file that can be recomputed.
+            * `full_restore` (tier 2) — the chain itself is broken: ONLY from
+              the pinned RESTORE_BASE_* below (the official `backup_now`
+              output, manifest digest re-checked immediately before use),
+              writing exactly the three store-plane files atomically
+              (tmp + os.replace, mode 0600) with the official
+              `_atomic_write_json`, then re-running verification.
+              A full restore rolls the store back to the pinned sequence: when
+              the live chain was still readable and had advanced past it, a
+              `restore_rollback` alert records both sequences plus the snapshot
+              that holds the discarded receipts (they are never lost silently).
+  rails     at most one auto-repair per COOLDOWN_SECONDS so a live legitimate
+            writer is never fought in a loop; a repair that does not reverify
+            disables auto-repair until an operator retries with
+            --force-restore (loud alert, no loop).
+
+Modes:
+    (default)          observation loop (+ one watchdog cycle per tick)
+    --watchdog-once    one detect/snapshot/alert/restore cycle, JSON, exit 3
+                       when the plane is still unhealthy
+    --force-restore    manual re-arm of the auto-restore (with --watchdog-once)
+
+Test-only env seams (never set by launchd):
+    CLAIMS_WATCHDOG_AUTHORITY_DIR  point detection/restore at a throwaway copy
+    CLAIMS_WATCHDOG_OBS_DIR        point alerts at a throwaway observation dir
+    OMOSTATION_ROOT                repo root used to import omo (deployed copy
+                                   falls back to $HOME/Workspace)
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import pwd
+import shutil
+import sqlite3
+import subprocess
+import sys
+import tempfile
+import time
+import uuid
+from datetime import UTC, datetime, timezone
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+SAMPLES = HERE / "samples.jsonl"
+SUMMARY = HERE / "summary.json"
+ALERTS_NAME = "alerts.jsonl"
+
+TOTAL, INTERVAL, MAXGAP = 1440, 60, 120
+
+ALERT_SCHEMA = "claims-authority-watchdog-alert/v1"
+REPORT_SCHEMA = "claims-authority-watchdog/v1"
+COOLDOWN_SECONDS = 30 * 60
+STORE_PLANE_FILES = ("store.sqlite3", "high-water.json", "activation-witness.json")
+
+# Pinned restore base: official `backup_now` output, provisioned 2026-09-27
+# AFTER the store repair, manifest digest + store digest + production chain
+# verification all passing offline. Evidence:
+# <observation dir>/restore-base-provision-20260927031913Z.json.
+RESTORE_BASE_DATABASE = "backup-20260927031913Z.sqlite3"
+RESTORE_BASE_MANIFEST = "backup-20260927031913Z.manifest.json"
+RESTORE_BASE_STORE_DIGEST = "sha256:9b9a908d4ac53a6f4ddd117e633e38f72331eb2554c9516b01dc851817b443a9"
+
+
+def _repo_root() -> Path | None:
+    """Locate the checkout that carries omo source; never assume CWD."""
+    env = os.environ.get("OMOSTATION_ROOT")
+    if env:
+        return Path(env).expanduser()
+    for candidate in (HERE, *HERE.parents):
+        if (candidate / "projects/omo/src/omo/workflow/claims_authority.py").is_file():
+            return candidate
+    home_workspace = Path(pwd.getpwuid(os.getuid()).pw_dir) / "Workspace"
+    if (home_workspace / "projects/omo/src/omo/workflow/claims_authority.py").is_file():
+        return home_workspace
+    return None
+
+
+WS = _repo_root()
+if WS is None:  # pragma: no cover - deployment misconfiguration, fail loudly
+    raise SystemExit("claims-observation sampler: omo source not found; set OMOSTATION_ROOT")
+sys.path.insert(0, str(WS / "projects/omo/src"))
+
+from omo.workflow.claims_authority import (  # noqa: E402
+    _PRODUCTION_AUTHORITY_ID,
+    AuthorityError,
+    AuthorityPaths,
+    _assert_safe_existing_path,
+    _atomic_write_json,
+    _AuthorityStore,
+    _high_water_payload,
+    _read_json_mapping,
+    _witness_payload,
+    authority_status,
+    canonical_digest,
+    resolve_authority_paths,
+)
+
+# ── observation plumbing ────────────────────────────────────────────────
+
+
+def now() -> datetime:
+    return datetime.now(UTC)
+
+
+def _iso(moment: datetime) -> str:
+    return moment.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+def _parse_ts(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def write_summary(state: dict) -> None:
+    SUMMARY.write_text(json.dumps(state, ensure_ascii=False, indent=1))
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return f"sha256:{digest.hexdigest()}"
+
+
+def resolve_obs_dir() -> Path:
+    override = os.environ.get("CLAIMS_WATCHDOG_OBS_DIR")
+    return Path(override).expanduser() if override else HERE
+
+
+def authority_paths_for(authority_dir: Path) -> AuthorityPaths:
+    """Build the plane descriptor for an explicit authority dir (tests/fault)."""
+    authority_dir = Path(authority_dir).expanduser().absolute()
+    return AuthorityPaths(
+        account_home=authority_dir.parent,
+        integration_root=authority_dir.parent,
+        authority_dir=authority_dir,
+        store=authority_dir / "store.sqlite3",
+        high_water=authority_dir / "high-water.json",
+        backups=authority_dir / "backups",
+        activation_witness=authority_dir / "activation-witness.json",
+    )
+
+
+def resolve_watchdog_paths() -> AuthorityPaths:
+    override = os.environ.get("CLAIMS_WATCHDOG_AUTHORITY_DIR")
+    if override:
+        return authority_paths_for(Path(override).expanduser())
+    return resolve_authority_paths()
+
+
+def read_live_sequence(paths: AuthorityPaths) -> int | None:
+    """Highest receipt sequence still readable in the live store (best effort).
+
+    ``None`` means the chain cannot be read at all — exactly the case a full
+    restore exists for. A number lets the watchdog say out loud when a restore
+    would roll committed receipts back instead of doing it quietly.
+    """
+    try:
+        connection = sqlite3.connect(f"file:{paths.store}?mode=ro", uri=True, timeout=5.0, isolation_level=None)
+        try:
+            row = connection.execute("SELECT MAX(sequence) FROM receipts").fetchone()
+            value = row[0] if row else None
+            return int(value) if value is not None else None
+        finally:
+            connection.close()
+    except (sqlite3.Error, OSError, ValueError, TypeError):
+        return None
+
+
+def read_pinned_sequence(paths: AuthorityPaths) -> int | None:
+    """Sequence recorded in the pinned restore-base manifest (best effort)."""
+    try:
+        manifest = json.loads((paths.backups / RESTORE_BASE_MANIFEST).read_text(encoding="utf-8"))
+        sequence = manifest.get("sequence")
+        return int(sequence) if sequence is not None else None
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+# ── detection (read-only production verification) ───────────────────────
+
+
+def verify_authority_plane(paths: AuthorityPaths) -> dict:
+    """Run the production chain verification against a plane, never mutating.
+
+    Returns ``{"ok": bool, "checks": {...}, "error": {...} | None}``.
+    """
+    checks: dict[str, object] = {}
+    connection: sqlite3.Connection | None = None
+    try:
+        for path in (paths.authority_dir, paths.store, paths.high_water, paths.activation_witness):
+            # production lstat guard: symlink / owner / group-or-other writable
+            _assert_safe_existing_path(path)
+        checks["path_safety"] = "ok"
+        connection = sqlite3.connect(f"file:{paths.store}?mode=ro", uri=True, timeout=5.0, isolation_level=None)
+        connection.row_factory = sqlite3.Row
+        journal = str(connection.execute("PRAGMA journal_mode").fetchone()[0]).lower()
+        if journal != "wal":
+            raise AuthorityError("AUTHORITY_STORE_UNSAFE", "wal_unavailable")
+        checks["journal_mode"] = journal
+        if int(connection.execute("PRAGMA user_version").fetchone()[0]) != 1:
+            raise AuthorityError("AUTHORITY_STORE_CORRUPT", "user_version")
+        if str(connection.execute("PRAGMA integrity_check").fetchone()[0]).lower() != "ok":
+            raise AuthorityError("AUTHORITY_STORE_CORRUPT", "integrity_check")
+        store = _AuthorityStore(connection, paths, _PRODUCTION_AUTHORITY_ID)
+        sequence, tip = store._verify_receipt_chain()
+        checks["receipt_chain"] = {"sequence": sequence, "tip": tip}
+        checks["high_water"] = store.verify_high_water()
+        witness = _read_json_mapping(paths.activation_witness, code="AUTHORITY_ACTIVATION_WITNESS_INVALID")
+        if witness.get("digest") != canonical_digest(witness):
+            raise AuthorityError("AUTHORITY_ACTIVATION_WITNESS_INVALID", "digest")
+        state = witness.get("state")
+        if state == "shadow-active":
+            # read-only branch of reconcile_activation_witness (no write path)
+            active = store.reconcile_activation_witness()
+            checks["activation_witness"] = {"state": active.get("state"), "sequence": active.get("sequence")}
+        elif state == "unactivated":
+            checks["activation_witness"] = {"state": "unactivated"}
+        else:
+            raise AuthorityError("AUTHORITY_ACTIVATION_WITNESS_INVALID", "activation_state")
+        return {"ok": True, "checks": checks, "error": None}
+    except AuthorityError as exc:
+        return {"ok": False, "checks": checks, "error": {"code": exc.code, "detail": exc.detail}}
+    except sqlite3.Error as exc:
+        return {
+            "ok": False,
+            "checks": checks,
+            "error": {"code": "AUTHORITY_STORE_CORRUPT", "detail": f"{type(exc).__name__}: {exc}"},
+        }
+    except OSError as exc:
+        return {
+            "ok": False,
+            "checks": checks,
+            "error": {"code": "AUTHORITY_STORE_UNSAFE", "detail": f"{type(exc).__name__}: {exc}"},
+        }
+    finally:
+        if connection is not None:
+            connection.close()
+
+
+# ── restore source ──────────────────────────────────────────────────────
+
+
+def rebuild_plane_payloads(db_path: Path, manifest: dict) -> tuple[dict, dict]:
+    """Rebuild high-water + activation witness from the backup database alone.
+
+    The rebuild is byte-identical to what the production writer emits
+    (proved against the live files at provisioning time), which is what lets a
+    restore rewrite all three store-plane files consistently.
+    """
+    connection = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True, isolation_level=None)
+    connection.row_factory = sqlite3.Row
+    try:
+        meta = connection.execute(
+            "SELECT last_sequence, last_receipt_digest, descriptor_digest FROM authority_meta WHERE authority_id=?",
+            (_PRODUCTION_AUTHORITY_ID,),
+        ).fetchone()
+        if meta is None:
+            raise AuthorityError("AUTHORITY_STORE_CORRUPT", "authority_meta")
+        descriptor = meta["descriptor_digest"] or manifest.get("descriptor_digest")
+        high_water = _high_water_payload(
+            _PRODUCTION_AUTHORITY_ID,
+            sequence=int(meta["last_sequence"]),
+            receipt_digest=meta["last_receipt_digest"],
+            descriptor_digest=descriptor,
+        )
+        activation = connection.execute(
+            "SELECT activation_receipt_digest FROM activation WHERE authority_id=?",
+            (_PRODUCTION_AUTHORITY_ID,),
+        ).fetchone()
+        receipt_digest = str(activation["activation_receipt_digest"]) if activation is not None else None
+        if not receipt_digest:
+            witness = _witness_payload(
+                _PRODUCTION_AUTHORITY_ID,
+                state="unactivated",
+                sequence=int(meta["last_sequence"]),
+                descriptor_digest=descriptor,
+                activation_receipt_digest=None,
+                request_digest=None,
+            )
+            return high_water, witness
+        receipt_row = connection.execute(
+            "SELECT sequence, receipt_json FROM receipts WHERE authority_id=? AND receipt_digest=?",
+            (_PRODUCTION_AUTHORITY_ID, receipt_digest),
+        ).fetchone()
+        if receipt_row is None:
+            raise AuthorityError("AUTHORITY_ACTIVATION_WITNESS_INVALID", "activation_receipt_missing")
+        receipt = json.loads(receipt_row["receipt_json"])
+        if not isinstance(receipt, dict):
+            raise AuthorityError("AUTHORITY_ACTIVATION_WITNESS_INVALID", "activation_receipt_malformed")
+        witness = _witness_payload(
+            _PRODUCTION_AUTHORITY_ID,
+            state="shadow-active",
+            sequence=int(receipt_row["sequence"]),
+            descriptor_digest=descriptor,
+            activation_receipt_digest=receipt_digest,
+            request_digest=receipt.get("request_digest"),
+        )
+        return high_water, witness
+    finally:
+        connection.close()
+
+
+def verify_restore_source(
+    paths: AuthorityPaths,
+    *,
+    database: str | None = None,
+    manifest_name: str | None = None,
+    store_digest: str | None = None,
+) -> dict:
+    """Validate the pinned restore base: manifest digest, store digest, plane.
+
+    The plane check rebuilds high-water + witness from the backup alone and
+    then runs the full production verification on that *future* state, so a
+    corrupt live plane can never poison the judgement of the restore source.
+    """
+    database = database or RESTORE_BASE_DATABASE
+    manifest_name = manifest_name or RESTORE_BASE_MANIFEST
+    store_digest = store_digest or RESTORE_BASE_STORE_DIGEST
+    report: dict = {
+        "schema": "claims-restore-source/v1",
+        "database": database,
+        "manifest": manifest_name,
+        "store_digest": store_digest,
+        "ok": False,
+        "checks": {},
+        "error": None,
+    }
+    try:
+        manifest_path = paths.backups / manifest_name
+        raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError("manifest_not_object")
+        if raw.get("database") != database:
+            raise ValueError(f"manifest_database_mismatch: {raw.get('database')!r}")
+        if raw.get("digest") != canonical_digest(raw):
+            raise ValueError("manifest_digest_mismatch")
+        report["checks"]["manifest_digest"] = "ok"
+        database_path = paths.backups / database
+        actual = _sha256_file(database_path)
+        if actual != store_digest:
+            raise ValueError(f"store_digest_mismatch_pinned: {actual}")
+        if raw.get("store_digest") != store_digest:
+            raise ValueError("store_digest_mismatch_manifest")
+        report["checks"]["store_digest"] = "ok"
+        with tempfile.TemporaryDirectory(prefix="claims-restore-source-") as tmp:
+            tmp_dir = Path(tmp)
+            db_copy = tmp_dir / "store.sqlite3"
+            shutil.copyfile(database_path, db_copy)
+            os.chmod(db_copy, 0o600)
+            high_water, witness = rebuild_plane_payloads(db_copy, raw)
+            _atomic_write_json(tmp_dir / "high-water.json", high_water)
+            _atomic_write_json(tmp_dir / "activation-witness.json", witness)
+            rebuilt = verify_authority_plane(authority_paths_for(tmp_dir))
+            if not rebuilt["ok"]:
+                raise ValueError(f"rebuilt_plane_invalid: {rebuilt['error']}")
+            report["checks"]["rebuilt_plane"] = rebuilt["checks"]
+        report["ok"] = True
+        return report
+    except AuthorityError as exc:
+        report["error"] = {"code": exc.code, "detail": exc.detail}
+    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        report["error"] = {"code": "RESTORE_SOURCE_INVALID", "detail": f"{type(exc).__name__}: {exc}"}
+    except sqlite3.Error as exc:
+        report["error"] = {"code": "RESTORE_SOURCE_INVALID", "detail": f"{type(exc).__name__}: {exc}"}
+    return report
+
+
+def restore_from_backup(paths: AuthorityPaths, *, now_moment: datetime | None = None) -> dict:
+    """Atomic restore of the three store-plane files from the pinned backup."""
+    moment = now_moment or now()
+    result: dict = {
+        "schema": "claims-restore-attempt/v1",
+        "attempted_at": _iso(moment),
+        "database": RESTORE_BASE_DATABASE,
+        "stage": "source_check",
+        "ok": False,
+        "source": None,
+        "reverify": None,
+        "error": None,
+    }
+    source = verify_restore_source(paths)
+    result["source"] = source
+    if not source["ok"]:
+        result["stage"] = "source_invalid"
+        result["error"] = source.get("error")
+        return result
+
+    tmp_store = paths.authority_dir / f".store.sqlite3.{uuid.uuid4().hex}.tmp"
+    try:
+        database_path = paths.backups / (source.get("database") or RESTORE_BASE_DATABASE)
+        manifest = json.loads((paths.backups / RESTORE_BASE_MANIFEST).read_text(encoding="utf-8"))
+        high_water, witness = rebuild_plane_payloads(database_path, manifest)
+        with tmp_store.open("wb") as handle:
+            with database_path.open("rb") as source_handle:
+                shutil.copyfileobj(source_handle, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(tmp_store, 0o600)
+        # Drop stale WAL sidecars BEFORE the swap: a fresh file must never be
+        # recovered against frames that belong to the pre-restore database.
+        for suffix in ("-wal", "-shm"):
+            sidecar = Path(str(paths.store) + suffix)
+            try:
+                sidecar.unlink()
+            except FileNotFoundError:
+                pass
+        os.replace(tmp_store, paths.store)
+        os.chmod(paths.store, 0o600)
+        _fsync_dir(paths.authority_dir)
+        _atomic_write_json(paths.high_water, high_water)
+        _atomic_write_json(paths.activation_witness, witness)
+        result["stage"] = "restored"
+    except (OSError, ValueError, TypeError, AuthorityError, sqlite3.Error) as exc:
+        result["stage"] = "exception"
+        result["error"] = {"code": type(exc).__name__, "detail": str(exc)}
+        return result
+    finally:
+        try:
+            tmp_store.unlink()
+        except FileNotFoundError:
+            pass
+
+    reverify = verify_authority_plane(paths)
+    result["reverify"] = reverify
+    result["ok"] = bool(reverify["ok"])
+    if not reverify["ok"]:
+        result["stage"] = "reverify_failed"
+        result["error"] = reverify.get("error")
+    return result
+
+
+def _fsync_dir(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def rebuild_live_plane(paths: AuthorityPaths, *, now_moment: datetime | None = None) -> dict:
+    """Tier-1 repair: rewrite only the derived files from the *live* chain.
+
+    Selected when the receipt chain itself verified, so no receipt is at risk;
+    ``high-water.json`` / ``activation-witness.json`` are recomputable and are
+    rebuilt with the official payload writers. The store file is never opened
+    for writing here.
+    """
+    moment = now_moment or now()
+    result: dict = {
+        "schema": "claims-plane-rebuild/v1",
+        "attempted_at": _iso(moment),
+        "tier": "plane_rebuild",
+        "stage": "source_check",
+        "ok": False,
+        "reverify": None,
+        "error": None,
+    }
+    try:
+        manifest = json.loads((paths.backups / RESTORE_BASE_MANIFEST).read_text(encoding="utf-8"))
+        high_water, witness = rebuild_plane_payloads(paths.store, manifest)
+        _atomic_write_json(paths.high_water, high_water)
+        _atomic_write_json(paths.activation_witness, witness)
+        result["stage"] = "rebuilt"
+    except (OSError, ValueError, TypeError, AuthorityError, sqlite3.Error) as exc:
+        result["stage"] = "exception"
+        result["error"] = {"code": type(exc).__name__, "detail": str(exc)}
+        return result
+    reverify = verify_authority_plane(paths)
+    result["reverify"] = reverify
+    result["ok"] = bool(reverify["ok"])
+    if not reverify["ok"]:
+        result["stage"] = "reverify_failed"
+        result["error"] = reverify.get("error")
+    return result
+
+
+def repair_tier(detection: dict) -> str:
+    """``plane_rebuild`` when the chain verified, else ``full_restore``.
+
+    Everything the chain check reports is downstream of it (high water,
+    witness); anything the chain check itself rejects (integrity, receipt
+    chain, meta tip) is store corruption and only the pinned base can help.
+    """
+    if (detection.get("checks") or {}).get("receipt_chain"):
+        return "plane_rebuild"
+    return "full_restore"
+
+
+# ── evidence + alerts ───────────────────────────────────────────────────
+
+
+def snapshot_corruption(paths: AuthorityPaths, moment: datetime | None = None) -> dict:
+    """Copy the store plane (+ a hot WAL, if any) into <backups>/incident-<ts>/ (read-only).
+
+    The WAL sidecar is copied only when it carries frames: a 0-byte
+    ``store.sqlite3-wal`` left by our own read-only probe is noise, while a
+    hot WAL holds commits the probe actually replayed — evidence that drops it
+    would show a cleaner store than the one that failed verification.
+    """
+    moment = moment or now()
+    stamp = moment.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
+    destination = paths.backups / f"incident-{stamp}"
+    suffix = 1
+    while destination.exists():
+        destination = paths.backups / f"incident-{stamp}-{suffix}"
+        suffix += 1
+    destination.mkdir(mode=0o700, parents=True, exist_ok=True)
+    names = list(STORE_PLANE_FILES)
+    wal = Path(str(paths.store) + "-wal")
+    try:
+        if wal.is_file() and wal.stat().st_size > 0:
+            names.append(wal.name)
+    except OSError:
+        pass
+    recorded: list[dict] = []
+    missing: list[str] = []
+    for name in names:
+        source = paths.authority_dir / name
+        try:
+            data = source.read_bytes()
+        except OSError:
+            missing.append(name)
+            continue
+        target = destination / name
+        with target.open("wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(target, 0o400)
+        recorded.append({"file": name, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)})
+    sums = destination / "SHA256SUMS.txt"
+    sums.write_text(
+        "".join(f"{item['sha256']}  {destination / item['file']}\n" for item in recorded),
+        encoding="utf-8",
+    )
+    os.chmod(sums, 0o444)
+    os.chmod(destination, 0o555)
+    return {
+        "dir": str(destination),
+        "files": recorded,
+        "missing": missing,
+        "sha256sums": str(sums),
+    }
+
+
+def alerts_path(obs_dir: Path) -> Path:
+    return Path(obs_dir) / ALERTS_NAME
+
+
+def append_alert(obs_dir: Path, record: dict) -> Path:
+    directory = Path(obs_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    path = alerts_path(directory)
+    payload = json.dumps(record, ensure_ascii=False, sort_keys=True)
+    with path.open("a") as handle:
+        handle.write(payload + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    return path
+
+
+def read_alert_state(path: Path) -> dict:
+    """Derive cooldown state from the append-only alert log (no extra state file)."""
+    state: dict = {
+        "last_detection": None,
+        "last_restore_attempt": None,
+        "last_restore_outcome": None,
+        "records": 0,
+    }
+    try:
+        raw = Path(path).read_text(encoding="utf-8")
+    except OSError:
+        return state
+    for line in raw.splitlines():
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(record, dict):
+            continue
+        state["records"] += 1
+        kind = record.get("kind")
+        if kind == "corruption_detected":
+            state["last_detection"] = _parse_ts(record.get("detected_at_utc")) or state["last_detection"]
+        elif kind == "restore_attempt":
+            state["last_restore_attempt"] = _parse_ts(record.get("at_utc")) or state["last_restore_attempt"]
+        elif kind == "restore_outcome":
+            state["last_restore_outcome"] = str(record.get("outcome") or "")
+    return state
+
+
+# ── watchdog cycle ──────────────────────────────────────────────────────
+
+
+def run_watchdog(
+    paths: AuthorityPaths | None = None,
+    obs_dir: Path | None = None,
+    *,
+    moment: datetime | None = None,
+    force_restore: bool = False,
+) -> dict:
+    """One detection cycle: detect → snapshot → alert → (cooldown) → restore."""
+    paths = paths or resolve_watchdog_paths()
+    obs_dir = Path(obs_dir) if obs_dir is not None else resolve_obs_dir()
+    moment = moment or now()
+    path_alerts = alerts_path(obs_dir)
+    report: dict = {
+        "schema": REPORT_SCHEMA,
+        "checked_at_utc": _iso(moment),
+        "authority_dir": str(paths.authority_dir),
+        "alerts_path": str(path_alerts),
+        "ok": False,
+        "detected": False,
+        "action": "monitor_healthy",
+        "error": None,
+        "checks": {},
+        "snapshot": None,
+        "restore": None,
+        "restore_source": None,
+        "rollback": None,
+        "sequences": None,
+    }
+
+    detection = verify_authority_plane(paths)
+    report["checks"] = detection["checks"]
+    report["error"] = detection["error"]
+    report["detected"] = not detection["ok"]
+    if detection["ok"]:
+        report["ok"] = True
+        return report
+
+    state = read_alert_state(path_alerts)
+    should_alert = (
+        state["last_detection"] is None or (moment - state["last_detection"]).total_seconds() >= COOLDOWN_SECONDS
+    )
+    # Captured before any write: what a full restore would roll back to.
+    live_sequence = read_live_sequence(paths)
+    pinned_sequence = read_pinned_sequence(paths)
+    report["sequences"] = {"live": live_sequence, "pinned": pinned_sequence}
+
+    if should_alert:
+        try:
+            report["snapshot"] = snapshot_corruption(paths, moment)
+        except (OSError, shutil.Error, ValueError) as exc:
+            report["snapshot"] = {"error": f"{type(exc).__name__}: {exc}"}
+
+    snapshot = report["snapshot"]
+    if should_alert and snapshot is None:
+        action = "deferred_no_snapshot"
+    elif snapshot is not None and "error" in snapshot:
+        # Evidence first: never rewrite the store plane without a snapshot.
+        action = "blocked_snapshot_failed"
+    elif not force_restore and state["last_restore_outcome"] in {"failed", "refused_source_invalid"}:
+        action = "suppressed_after_failure"
+    elif (
+        not force_restore
+        and state["last_restore_attempt"] is not None
+        and (moment - state["last_restore_attempt"]).total_seconds() < COOLDOWN_SECONDS
+    ):
+        action = "suppressed_cooldown"
+    elif snapshot is None:
+        # Inside an already-claimed detection window: that window's snapshot is
+        # the evidence, so no new restore is started here (the cooldown branch
+        # above already covers an attempt made in this window).
+        action = "deferred_no_snapshot"
+    else:
+        tier = repair_tier(detection)
+        action = "restore_attempted"
+        append_alert(
+            obs_dir,
+            {
+                "schema": ALERT_SCHEMA,
+                "kind": "restore_attempt",
+                "at_utc": _iso(moment),
+                "authority_dir": str(paths.authority_dir),
+                "tier": tier,
+                "database": RESTORE_BASE_DATABASE if tier == "full_restore" else None,
+                "force": bool(force_restore),
+            },
+        )
+        try:
+            if tier == "plane_rebuild":
+                restore = rebuild_live_plane(paths, now_moment=moment)
+            else:
+                restore = restore_from_backup(paths, now_moment=moment)
+        except Exception as exc:  # noqa: BLE001 - a watchdog must never die mid-repair
+            restore = {
+                "stage": "exception",
+                "ok": False,
+                "error": {"code": type(exc).__name__, "detail": str(exc)},
+            }
+        outcome = (
+            "success"
+            if restore.get("ok")
+            else ("refused_source_invalid" if restore.get("stage") == "source_invalid" else "failed")
+        )
+        report["restore"] = {**restore, "outcome": outcome, "tier": tier}
+        report["restore_source"] = restore.get("source")
+        append_alert(
+            obs_dir,
+            {
+                "schema": ALERT_SCHEMA,
+                "kind": "restore_outcome",
+                "at_utc": _iso(moment),
+                "authority_dir": str(paths.authority_dir),
+                "tier": tier,
+                "database": RESTORE_BASE_DATABASE if tier == "full_restore" else None,
+                "outcome": outcome,
+                "stage": restore.get("stage"),
+                "source": restore.get("source"),
+                "reverify": restore.get("reverify"),
+                "error": restore.get("error"),
+            },
+        )
+        if (
+            tier == "full_restore"
+            and outcome == "success"
+            and live_sequence is not None
+            and pinned_sequence is not None
+            and live_sequence > pinned_sequence
+        ):
+            # Loud, recoverable rollback: the receipts between the pinned base
+            # and the corrupt live chain are only in the incident snapshot.
+            report["rollback"] = {
+                "live_sequence": live_sequence,
+                "restored_sequence": pinned_sequence,
+                "snapshot": (report.get("snapshot") or {}).get("dir"),
+            }
+            append_alert(
+                obs_dir,
+                {
+                    "schema": ALERT_SCHEMA,
+                    "kind": "restore_rollback",
+                    "at_utc": _iso(moment),
+                    "authority_dir": str(paths.authority_dir),
+                    **report["rollback"],
+                },
+            )
+
+    report["action"] = action
+    restored_ok = bool((report.get("restore") or {}).get("ok"))
+    report["ok"] = restored_ok
+
+    if should_alert or report.get("restore") is not None:
+        append_alert(
+            obs_dir,
+            {
+                "schema": ALERT_SCHEMA,
+                "kind": "corruption_detected",
+                "detected_at_utc": _iso(moment),
+                "authority_dir": str(paths.authority_dir),
+                "error": detection["error"],
+                "checks": detection["checks"],
+                "snapshot": report["snapshot"],
+                "action": action,
+                "sequences": report.get("sequences"),
+                "restore": {
+                    "action": action,
+                    "tier": (report.get("restore") or {}).get("tier"),
+                    "outcome": (report.get("restore") or {}).get("outcome"),
+                },
+                "auto_restore_base": {
+                    "database": RESTORE_BASE_DATABASE,
+                    "store_digest": RESTORE_BASE_STORE_DIGEST,
+                },
+            },
+        )
+        print(
+            "claims-watchdog ALERT "
+            + json.dumps(
+                {
+                    "authority_dir": str(paths.authority_dir),
+                    "error": detection["error"],
+                    "action": action,
+                    "tier": (report.get("restore") or {}).get("tier"),
+                    "restore_outcome": (report.get("restore") or {}).get("outcome"),
+                    "rollback": report.get("rollback"),
+                    "snapshot": (report.get("snapshot") or {}).get("dir"),
+                },
+                ensure_ascii=False,
+            ),
+            file=sys.stderr,
+            flush=True,
+        )
+    return report
+
+
+def watchdog_summary(report: dict) -> dict:
+    """Compact projection of a watchdog cycle for summary.json["watchdog"]."""
+    restore = report.get("restore") or {}
+    snapshot = report.get("snapshot") or {}
+    return {
+        "ok": bool(report.get("ok")),
+        "detected": bool(report.get("detected")),
+        "action": report.get("action"),
+        "error": report.get("error"),
+        "snapshot": snapshot.get("dir"),
+        "tier": restore.get("tier"),
+        "restore_outcome": restore.get("outcome"),
+        "restore_stage": restore.get("stage"),
+        "rollback": report.get("rollback"),
+        "sequences": report.get("sequences"),
+        "checked_at_utc": report.get("checked_at_utc"),
+        "alerts_path": report.get("alerts_path"),
+    }
+
+
+# ── observation loop (original protocol, unchanged) ─────────────────────
+
+
+def run_sampler() -> int:
+    # KeepAlive completion guard: when the full valid window has been written, a
+    # launchd restart must enter an idle supervisor loop instead of resetting the
+    # immutable evidence.  The currently running process is never restarted by this
+    # guard; it applies only to a future process launched after normal completion.
+    if SUMMARY.exists():
+        try:
+            completed = json.loads(SUMMARY.read_text())
+            if (
+                completed.get("invalid") is False
+                and completed.get("window_valid") is True
+                and int(completed.get("samples") or 0) >= TOTAL
+            ):
+                result = HERE / "graduation-result.json"
+                checker = HERE / "graduation-check.py"
+                if not result.exists() and checker.exists():
+                    return subprocess.run([sys.executable, str(checker)]).returncode
+                while True:
+                    time.sleep(3600)
+        except (OSError, ValueError, TypeError):
+            # Fall through to the normal protocol; malformed prior state is made
+            # visible by a fresh run rather than silently treated as graduation.
+            pass
+
+    state = {
+        "started_at_utc": now().isoformat(),
+        "samples": 0,
+        "invalid": False,
+        "invalid_reason": None,
+        "max_gap_seconds": 0.0,
+        "last_seq": 0,
+        "descriptor_digest": "sha256:e2be953eb9d04d421f184c60c7d1c4196d6698a874bcf0827795a8b4e8d357cd",
+        "expected_last_receipt": "sha256:96654eb9e03591b2b5da2cb89119997c9ec2c193755ae7c277b3a0ce7be1e5d3",
+        "activation_state": "shadow-active",
+        "errors": 0,
+        "window_valid": None,
+    }
+    write_summary(state)
+    prev = now()
+    for i in range(1, TOTAL + 1):
+        if state["invalid"]:
+            break
+        gap = (now() - prev).total_seconds()
+        state["max_gap_seconds"] = max(state["max_gap_seconds"], gap)
+        if gap > MAXGAP:
+            state["invalid"] = True
+            state["invalid_reason"] = f"sample_gap={gap:.0f}s>{MAXGAP}s at sample {i}"
+            write_summary(state)
+            break
+        try:
+            st = authority_status()
+            rec = {"sample_no": i, "sampled_at_utc": now().isoformat(), "status": st}
+            with SAMPLES.open("a") as f:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            state["samples"] = i
+            if st.get("descriptor_digest") != state["descriptor_digest"]:
+                state["invalid"] = True
+                state["invalid_reason"] = f"descriptor_changed at sample {i}"
+            seq = st.get("sequence") or 0
+            if seq < state["last_seq"]:
+                state["invalid"] = True
+                state["invalid_reason"] = f"sequence_regression at sample {i}"
+            state["last_seq"] = max(state["last_seq"], seq)
+            if st.get("activation_state") != state["activation_state"]:
+                state["invalid"] = True
+                state["invalid_reason"] = f"activation_state_changed at sample {i}: {st.get('activation_state')}"
+        except Exception as exc:
+            state["errors"] += 1
+            rec = {"sample_no": i, "sampled_at_utc": now().isoformat(), "error": type(exc).__name__}
+            with SAMPLES.open("a") as f:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        # Corruption watchdog: after the sample, so a corrupt tick is still
+        # counted honestly in `errors` before the plane is repaired.
+        try:
+            state["watchdog"] = watchdog_summary(run_watchdog())
+        except Exception as exc:  # noqa: BLE001 - watchdog failure must stay visible
+            state["watchdog"] = {"ok": False, "action": "watchdog_error", "error": type(exc).__name__}
+        write_summary(state)
+        prev = now()
+        if i < TOTAL:
+            time.sleep(INTERVAL)
+
+    state["window_valid"] = (not state["invalid"]) and state["samples"] >= TOTAL
+    state["completed_at_utc"] = now().isoformat()
+    write_summary(state)
+    print(json.dumps(state, ensure_ascii=False))
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Claims Authority R0 sampler + corruption watchdog")
+    parser.add_argument("--watchdog-once", action="store_true", help="run one watchdog cycle and exit")
+    parser.add_argument("--force-restore", action="store_true", help="re-arm auto-restore after a failed attempt")
+    args = parser.parse_args(argv)
+    if args.watchdog_once or args.force_restore:
+        report = run_watchdog(force_restore=args.force_restore)
+        print(json.dumps(report, ensure_ascii=False, indent=1))
+        return 0 if report["ok"] else 3
+    return run_sampler()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
