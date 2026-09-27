@@ -1210,6 +1210,7 @@ gac:
     added_at: '2026-08-28'
     review_before: '2027-01-24'
     justification: '[ADR-0431 D2] CR-SUBMODULE-REWIND — 待补存在理由 (90 天内补齐)'
+  # [T10-05 弃用标注 2026-09-27] 原则类不入 GaC 机器清单（principal 批准工作簿）；保留条目供历史追溯
   - id: CR-P76-6-5-LLM-DEFERRAL
     dimension: X1
     layer: meta
@@ -1233,6 +1234,7 @@ gac:
     added_at: '2026-08-28'
     review_before: '2027-01-01'
     justification: '[ADR-0431 D2] CR-P76-6-5-LLM-DEFERRAL — 待补存在理由 (90 天内补齐)'
+  # [T10-05 弃用标注 2026-09-27] 同上
   - id: CR-P77-2-1-PRINCIPLE-FORMALIZATION
     dimension: X1
     layer: meta
@@ -1258,6 +1260,7 @@ gac:
     review_before: '2026-12-14'
     justification: '[ADR-0431 D2] CR-P77-2-1-PRINCIPLE-FORMALIZATION — 待补存在理由 (90
       天内补齐)'
+  # [T10-05 弃用标注 2026-09-27] 同上
   - id: CR-P77-2-2-CATALOG-SSOT
     dimension: X1
     layer: meta
@@ -2333,6 +2336,7 @@ gac:
     remediation: bump gitlink to origin/main SHA only; use gac-worktree.sh bump-fast
       for safe updates.
     related_runbooks: []
+  # [T10-05 收窄 2026-09-27] 声明口径收窄至 spec binding digest（complete 校验范围）；全锚重算未实现
   - id: CR-EVIDENCE-SHA-FRESHNESS
     created_at: '2026-08-30'
     version: 1.0.0
@@ -2357,6 +2361,7 @@ gac:
     remediation: Recompute completion_evidence sha256 after any ledger or receipt
       edit.
     related_runbooks: []
+  # [T10-05 收窄 2026-09-27] 机器执行面仅 quota-diff 层；六层登记为人工流程
   - id: CR-BIN-RETIREMENT-CHECKLIST
     created_at: '2026-08-30'
     version: 1.0.0
