@@ -35791,6 +35791,86 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-03
+  title: 主仓文档生命周期元数据漂移治理 — 批次一
+  goal: 修复隔离 origin/main 审计发现的 docs/ 生命周期元数据问题；18 份文档、19 条 finding，需逐份按正文语义正确填写 frontmatter，保持正文与历史含义不变。
+  status: pending
+  window: Y2Q4
+  track: T10-MATURITY
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: 若任何文档的 status/lifecycle 无法从正文、用途与引用关系可靠判定，则保留该文档并报告，不猜测、不批量统一填值；不得扩大到
+    .omo/、子模块或修改 warning baseline。
+  non_goals:
+  - 不改 .omo/ 历史或证据文档，不直接写入受治理状态面
+  - 不改 projects/* 子模块拥有的文档；后续按各子仓 owner 与仓库工作流处理
+  - 不删除或合并精确重复的 GOVERNANCE.md 模板副本
+  - 不增删 GaC 规则、扫描范围或 warning baseline
+  - 不归档、删除、移动文档，不改正文，不 commit/push
+  done_when:
+  - docs/ 范围内 missing_frontmatter 与 invalid_metadata findings 均为 0；每项字段取值均有文档语义依据
+  - 全仓 doc-governance 检查 errors 为 0，warnings 不超过现有登记基线/预算
+  - doc-ssot-lint、doc-link-check 与 check-index-drift 全部通过
+  verify:
+  - cmd: uv run --with pyyaml python bin/ssot/doc-governance-check.py --scope tracked
+      --no-new-warnings --json
+    expect: exit 0、summary.errors=0、warning baseline 无超额，且 path 以 docs/ 开头的 finding
+      为 0
+  - cmd: uv run --with pyyaml python bin/ssot/doc-ssot-lint.py --json
+    expect: ok=true
+  - cmd: uv run --with pyyaml python bin/ssot/doc-link-check.py --json
+    expect: ok=true
+  - cmd: uv run --with pyyaml python bin/ssot/check-index-drift.py
+    expect: ALL INDEX CHECKS PASSED
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/OMOSTATION-FORWARD-PLAN-v2.md
+  - docs/OMOSTATION-FORWARD-PLAN.md
+  - docs/adr/0435-reserved.md
+  - docs/architecture/90pct-maturity-architecture.md
+  - docs/architecture/l4-documents-agora-convergence-v1.md
+  - docs/architecture/north-star-v3-design.md
+  - docs/architecture/project-strategy-v1.md
+  - docs/knowledge-domains.md
+  - docs/local-compute/compute-mesh-handbook.md
+  - docs/plans/2026-09-03-t1-02-squash-retirement-tdd-plan.md
+  - docs/plans/2026-09-17-t7-02-second-business-driver-research.md
+  - docs/retros/2026-09-25-main-cleanup-session.md
+  - docs/superpowers/plans/2026-08-30-documents-consumer-audit-path-tokenization.md
+  - docs/superpowers/plans/2026-08-30-vault-daily-health-workspace-owner-cutover.md
+  - docs/superpowers/plans/2026-08-30-zcode-workspace-runtime-state-relocation.md
+  - docs/templates/derived-template.md
+  - docs/templates/ephemeral-template.md
+  - docs/templates/ssot-template.md
+  - docs/superpowers/specs/2026-09-26-doc-governance-batch1.md
+  - docs/plans/3y-bet-ledger.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-doc-governance-batch1.md
+    spec_version: 1.0.0
+    content_digest: sha256:88ba94f5754d4d04fe38c615efc9d4e7daa678d4dc90bbc5bdd29d70220b4fd3
+    decision_ref: decision://accepted/BET-Y2Q4-T10-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+  depends_on: []
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -35929,7 +36009,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 484
+  total_bets: 485
   windows:
   - Y1Q1
   - Y1Q2
