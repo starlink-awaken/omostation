@@ -4684,6 +4684,7 @@ def build_payload() -> dict:
                          "knowledge_health", "knowledge_growth",
                          "experience_network", "skill_inventory",
                          "scene_cards", "journeys", "connectors",
+                         "roadmap", "gantt", "refresh",
                          "agent_visibility", "next_actions",
                          "value_proof_readiness", "claims_activation_readiness"):
                 if _key not in payload or payload[_key] is None:
