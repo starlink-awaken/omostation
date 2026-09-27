@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-26
+last_updated: 2026-09-27
 ---
 
 # AGENTS.md — Workspace Development Guide
@@ -245,6 +245,8 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 - **gac-worktree.sh claim 可能超时但实际已建成（2026-09-25 实证）**：claim 被 timeout 杀死后 worktree 可能停在子模块半初始化态——先 `git worktree list` 确认存在，再 `git submodule update --init --recursive` 对齐（防指针回退），勿重复 claim。
 - **生成物 CI 口径 ≠ 本地（2026-09-25 实证）**：`gen-*.py --check` / drift / ledger 等生成物依赖子模块检出完整度。本地 worktree 常只 init 部分子模块，CI 递归检出全部，导致 registry tools 计数等偏差（本轮 capability-registry 本地 566、CI 643）。**解法**：生成物验证前用 `git clone --recurse-submodule` 做 fresh 复刻，双环境逐字节 diff 一致后再 push。
 - **hermetic 测试泄漏 host 状态（2026-09-25 实证）**：fixture/集成测试不得依赖 host 运行时状态（authority broker / shared store / 网络 / 本机端口）。开发机 broker 状态变化会让测试从绿变红，CI 无此状态则绿，形成环境类假绿。**解法**：通过 env seam 切断（如 `CLAIMS_AUTHORITY_HERMETIC_UNACTIVATED=1`），生产路径零变更；测真实状态的用例显式自行 patch。
+- **僵尸 `.git/index.lock` 静默中断 `gac-worktree.sh merge` 清理段（2026-09-27, #4419 实证）**：0 字节 + 旧 mtime 的 stale lock 会让**合并成功后**的 checkout/pull 段失败退出（脚本 `set -e`，且 `cmd | tail` 吞 exit code，末行没有显式报错 ≠ 跑完），worktree/分支/claim 全部残留。判据：`ls -l .git/index.lock`（0 字节即可疑）+ `lsof .git/index.lock`（**无输出 = 无持有者** → 可 `rm -f`；有输出则先查持有进程，禁删）。**合并本身发生在锁之前**：先 `gh pr view <n> --json state,mergedAt` 确认 MERGED 再清理，别把清理失败误读成合并失败而重跑一轮。
+- **merge 脚本主区 `checkout`/`pull` 撞脏树中止，清理段需补跑（2026-09-27, #4420 实证）**：脚本在 `gh` squash 合并成功后才在主区 `git checkout main` + `git pull --ff-only`；共享主区有未提交改动时 git 打印 `Aborting` 拒绝推进（**只保护不丢弃，不会丢改动**），脚本随即中止 → worktree/分支/claim 残留。补跑：`bash bin/gac/gac-worktree.sh release <session>`（清 worktree + claim，**不删本地分支**）→ `git branch -D agent/governance-agent/<session>`。三查判据应全空：`git worktree list | grep ws-<session>`、`git branch --list agent/governance-agent/<session>`、`ls .omo/_delivery/branch-claims/<session>.json`。
 
 ---
 
