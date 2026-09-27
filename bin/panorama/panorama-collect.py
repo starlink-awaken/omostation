@@ -4691,6 +4691,19 @@ def build_payload() -> dict:
                     _val = _orch_data.get(_key)
                     if _val is not None:
                         payload[_key] = _val
+            # roadmap/gantt live in the refresh-era previous-snapshot.json
+            # (orchestrator doesn't carry them); read from there if missing.
+            for _key in ("roadmap", "gantt"):
+                if not payload.get(_key):
+                    try:
+                        _prev = _orch_current.with_name("previous-snapshot.json")
+                        if _prev.is_file():
+                            _prev_data = _json.loads(_prev.read_text(encoding="utf-8"))
+                            _val = _prev_data.get(_key)
+                            if _val is not None:
+                                payload[_key] = _val
+                    except Exception:
+                        pass
     except Exception:
         _strategic = None
     payload["strategic"] = _strategic or _build_strategic_projection(payload)
