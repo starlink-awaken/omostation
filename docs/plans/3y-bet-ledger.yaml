@@ -34091,7 +34091,7 @@ bets:
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
 - accepted_specifications:
-  - content_digest: sha256:043305f4d501d30f24d6a107d09139bbf1318e9d4e1e09c3dee5c26b83e329c3
+  - content_digest: sha256:9ce5cd31e1f788d9e3d6f15abbfc7c948ba6263d6ed03f9de9cc5df33af95808
     decision_ref: decision://accepted/BET-Y2Q3-T9-01
     spec_ref: repo://docs/superpowers/specs/2026-09-25-y2q3-t9-01-zhixing-dashboard-p2-compute-copilot.md
     spec_version: 1.0.0
