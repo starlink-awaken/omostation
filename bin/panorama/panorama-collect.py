@@ -641,12 +641,28 @@ def publish_projection_revision(
             else TEMPLATE
         )
         _data_json = json.dumps(published_payload, ensure_ascii=False)
+        # Concatenate UI scripts into the page (matching orchestrator behavior),
+        # so published revisions have the same interactive panels as the
+        # orchestrator-produced dist/index.html.
+        _dash_root = Path(os.environ.get(
+            "ZHIXING_DASHBOARD_CODE_ROOT",
+            str(Path.home() / ".local/share/zhixing-dashboard"),
+        ))
+        _ui_files = [
+            "data_access.js", "ui_extensions.js", "strategy_ui.js", "workbench_ui.js",
+            "panoramic_ui.js", "next_ui.js", "topology_ui.js", "mof_ui.js", "ecosystem_ui.js",
+        ]
+        _ui_parts = []
+        for _fname in _ui_files:
+            _fpath = _dash_root / _fname
+            if _fpath.is_file():
+                _ui_parts.append(_fpath.read_text(encoding="utf-8").replace("</script", "<\\/script"))
+        _ui_block = "\n".join(_ui_parts)
+        _page = _page_template.replace("__SNAPSHOT_JSON__", _data_json).replace("__DATA__", _data_json)
+        if _ui_block:
+            _page = _page.replace("</body>", "<script>" + _ui_block + "</script>\n</body>")
         artifact_bodies = {
-            "page": _page_template.replace(
-                "__SNAPSHOT_JSON__", _data_json
-            ).replace(
-                "__DATA__", _data_json
-            ).encode("utf-8"),
+            "page": _page.encode("utf-8"),
             "data": json.dumps(published_payload, ensure_ascii=False, indent=1).encode("utf-8"),
             "agent_brief": json.dumps(
                 published_payload.get(
