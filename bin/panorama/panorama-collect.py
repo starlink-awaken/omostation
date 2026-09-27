@@ -4677,6 +4677,19 @@ def build_payload() -> dict:
                 # Keep generation_id consistent with the orchestrator's
                 if isinstance(_orch_data.get("generation_id"), str):
                     payload["generation_id"] = _orch_data["generation_id"]
+            # Fill in top-level fields the publisher doesn't collect
+            # (portfolio, catalog, etc.) from the orchestrator's data.
+            for _key in ("portfolio", "catalog", "bets", "agents", "gates",
+                         "runtime", "docs", "metrics_kpi", "recent_events",
+                         "knowledge_health", "knowledge_growth",
+                         "experience_network", "skill_inventory",
+                         "scene_cards", "journeys", "connectors",
+                         "agent_visibility", "next_actions",
+                         "value_proof_readiness", "claims_activation_readiness"):
+                if _key not in payload or payload[_key] is None:
+                    _val = _orch_data.get(_key)
+                    if _val is not None:
+                        payload[_key] = _val
     except Exception:
         _strategic = None
     payload["strategic"] = _strategic or _build_strategic_projection(payload)
