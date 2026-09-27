@@ -36324,6 +36324,72 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T4-02
+  title: 交付周报证据包 — 09-20→09-27 真实交付记录 → principal 可签发周报（业务首单）
+  goal: '按 BET-Y2Q4-T4-01-DECISION 的 principal 选择（② 周报证据包，2026-09-27 批准开工， decision_ref
+    decision://accepted/BET-Y2Q4-T4-02），用 2026-09-20→09-27 的真实交付记录 （主仓 345 commits /
+    PR #4376-#4429 / 7 个复盘 BET 关单 / ADR-0456 批准）产出一期 principal 可签发的交付周报 + 逐项证据包：每条完成/阻塞声明锚定可核验来源
+    （PR 号/commit/ledger id），报告含证据索引节与证据完整率。principal 签发为价值门槛—— 未签发不记价值。人工基线对比项留槽（用户自估分钟数，未提供则
+    UNPROVABLE 不填假数）。
+
+    '
+  status: pending
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: '报告只陈述可核验事实，无锚判断句标注推断或删除（D1）；人工基线未提供时 UNPROVABLE 禁止编造（D6）；签发前不得计为已创造价值；不改写历史
+    PR/ledger 记录（只引用）。
+
+    '
+  non_goals:
+  - 不代替 principal 做签发（签发是价值门槛，只能由 principal 做出）
+  - 不建新基建/不写新采集器（全部复用 git/gh/ledger 既有事实）
+  - 不覆盖其他 agent 的并行交付叙事（如实分线归属）
+  done_when:
+  - 周报落 docs/reports/weekly-2026-09-20-27.md：覆盖 09-20→09-27 全部主仓合并 PR（含多 agent 并行线），每条声明带锚
+  - 证据完整率 = 带锚声明/总声明 = 100%，报告内附证据索引节
+  - 决策卡 BET-Y2Q4-T4-01-DECISION 状态落账（已决策 ② + 回执指向本 BET）
+  - principal 签发节留槽，交付后请求签发；未签发时 value 如实 NOT_PROVEN
+  - retro（含签发请求时点与人工基线槽位状态）
+  verify:
+  - cmd: 抽 3 条声明锚点原样核验（gh pr view / git show）
+    expect: 与声明一致
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/reports/weekly-2026-09-20-27.md
+  - .omo/tasks/planned/**
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-weekly-evidence-pack.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T4-02.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-weekly-evidence-pack.md
+    spec_version: 1.0.0
+    content_digest: sha256:e8eaef3fb42620af9a159f26b07f6451a7a034df294fe3211b0a9c17c293b3f3
+    decision_ref: decision://accepted/BET-Y2Q4-T4-02
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -36462,7 +36528,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 489
+  total_bets: 490
   windows:
   - Y1Q1
   - Y1Q2
