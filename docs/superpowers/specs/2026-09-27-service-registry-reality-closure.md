@@ -5,6 +5,7 @@ title: ADR-0456 B3 — 服务注册现实收口（installed 枚举口径 / 所�
 bet_id: BET-Y2Q4-T10-206
 status: accepted
 lifecycle: contract
+owner: governance-team
 last-reviewed: 2026-09-27
 ---
 

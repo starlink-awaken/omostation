@@ -36228,7 +36228,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-27-service-registry-reality-closure.md
     spec_version: 1.0.0
-    content_digest: sha256:e2e2852d102ff45e8f173570591796307c68232519779ec1ba7eaf1be79c9cf6
+    content_digest: sha256:192ecc2ab17b67b04ffae59b19458d68d7d9ee87c7aef0cb47b58e0328dbdef9
     decision_ref: decision://accepted/BET-Y2Q4-T10-206
   value_indicator_policy: false
   completion_evidence:
