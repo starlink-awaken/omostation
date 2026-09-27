@@ -35314,7 +35314,8 @@ bets:
   title: 业务首单候选盘点 — 真实 backlog 首个交付项的决策收件箱卡
   goal: ADR-0419 决策从基建转向业务（2026-08），但产能轨（真实 backlog）完成率 0%，基建完成度 99.6% 与业务产出 0% 形成临界落差。选题是人类决策点（本仓自诊断人类决策是当前系统瓶颈）。本
     bet 盘点 docs/plans vision-roadmap（4 YAML + 5 MD）与活跃 goals，提炼 ≥3 个候选业务交付项，每项带工作量/价值/风险评估与推荐排序，产出一张决策收件箱卡供人类拍板。
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
