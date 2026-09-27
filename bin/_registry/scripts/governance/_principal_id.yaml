@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/_principal_id.py
+name: Principal Id Canonical
+category: governance
+owner: governance-team
+description: BET-Y2Q4-SH-7 — shared canonicalization for OMO_PRINCIPAL_ID (principal:<id> form)
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
+triggers: []
+related:
+  - bin/ssot/scene-outcome-recorder.py
+maturity: shadow
+last_reviewed: "2026-09-26"
