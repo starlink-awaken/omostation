@@ -34810,8 +34810,8 @@ bets:
   - Do not run panorama or refresh dashboard.
   done_when:
   - All 3 files moved to docs/reports/archive/.
-  - documents-content-plane-migrations.yaml: 5 rollback_ref lines updated.
-  - docs/plans/3y-bet-ledger.yaml (BET-Y1Q4-T10-123): rollback receipt ref updated.
+  - 'documents-content-plane-migrations.yaml: 5 rollback_ref lines updated.'
+  - 'docs/plans/3y-bet-ledger.yaml (BET-Y1Q4-T10-123): rollback receipt ref updated.'
   - make drift-face-clean produces 0 ephemeral findings.
   - make gac-local-gate passes 68/68.
   verify:
@@ -36456,7 +36456,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 488
+  total_bets: 489
   windows:
   - Y1Q1
   - Y1Q2
