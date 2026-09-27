@@ -99,12 +99,15 @@ jobs:
 
   # SH-1 daily drift sweep (BET-Y2Q4-SH-1): drift-face-detector daily + auto-pruner
   # 仅 ephemeral + runs 两类自动修, ritual/dashboard 仍 owner 决策.
+  # 2026-09-27 核验: `crontab -l` 无任何对应行 → reality: pending 属实, 但原
+  # `status: active` 声明与安装态不符, 三条一律降级为 proposed (对齐 ADR-A 语义:
+  # proposed = 尚未正式启用的治理巡检 backlog)。是否真装属 D4 新增自动化决策。
   - name: drift-face-daily
     schedule: "50 4 * * *"
     command: 'cd "$HOME/Workspace" && python3 bin/ssot/drift-face-detector.py --json >> runtime/cron/drift-face-detector.log 2>&1'
     planes: [crontab]
     reality: pending
-    status: active
+    status: proposed
     owner: governance-team
     sfop_slot: S
     reconciliation_note: BET-Y2Q4-SH-1 self-healing layer — daily drift face scan; runs detect only, no fix.
@@ -114,7 +117,7 @@ jobs:
     command: 'cd "$HOME/Workspace" && python3 bin/ssot/auto-pruner.py --apply --class ephemeral --class runs >> runtime/cron/auto-pruner.log 2>&1'
     planes: [crontab]
     reality: pending
-    status: active
+    status: proposed
     owner: governance-team
     sfop_slot: S
     reconciliation_note: BET-Y2Q4-SH-1 auto-pruner — daily prune ephemeral + close stale runs; ritual/dashboard 由 owner 处理.
@@ -125,7 +128,7 @@ jobs:
     command: 'cd "$HOME/Workspace" && python3 bin/ssot/drift-face-detector.py --json && python3 bin/ssot/auto-pruner.py --apply >> runtime/cron/drift-face-weekly.log 2>&1'
     planes: [crontab]
     reality: pending
-    status: active
+    status: proposed
     owner: governance-team
     sfop_slot: S
     reconciliation_note: BET-Y2Q4-SH-1 weekly face-wide drift sweep (周一 07:00, 与 weekly-hygiene-patrol 错开).
@@ -377,7 +380,9 @@ jobs:
     reconciliation_note: "场景历史耐久性 (每日 03:20) — 持久导出 + 本地快照(保留14) + 行数暴跌检测; verify 失败退出非零, 防 2026-09-17 校准数据静默清空复发。"
 
   # ── 面板刷新: 织星全景驾驶舱（BET-Y1Q4-T10-163, 2026-09-12 登记）──
-  # 常驻静态服务(KeepAlive) + 服务内 5min 自动刷新; 与 Serena 观测站(43191)互补。
+  # serve job 已于 2026-09-25 下线 (BET-Y2Q2-T6-02): :43910 改由
+  # com.omostation.sunset-redirector (KeepAlive) 302 导流至 Cockpit-UI /panorama。
+  # 刷新由独立的 panorama-dashboard-refresh 承担 (部署版 collector, 每 240s)。
 
   - name: panorama-dashboard
     schedule: "always"
@@ -385,15 +390,20 @@ jobs:
       PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
       /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-serve.py --port 43910 --no-refresh
     planes: [launchd]
-    reality: installed
+    reality: declared_only
     status: active
     owner: agent-experience-steward
     sfop_slot: S
     reconciliation_note: >
       plist ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
-      (runtime/cron/ 同源)。常驻 serve(KeepAlive=true) 只负责静态站点；
-      刷新由 panorama-dashboard-refresh 独立执行，避免共享主仓旧 collector
-      覆盖最新运行态投影。产物 runtime/dashboard/(gitignored)。
+      (runtime/cron/ 同源) 已卸载、文件保留。2026-09-25 日落 (BET-Y2Q2-T6-02):
+      :43910 由 com.omostation.sunset-redirector 持有, 本 serve job 未加载 ——
+      2026-09-27 launchctl print 确认 "Could not find service", 故 reality 由
+      installed 降级为 declared_only (原声明与 launchd 实际状态不符)。
+      status 保持 active 表示条目仍是受治理的契约登记; 是否重新加载属 owner 决策。
+      常驻 serve(KeepAlive=true) 只负责静态站点；刷新由 panorama-dashboard-refresh
+      独立执行，避免共享主仓旧 collector 覆盖最新运行态投影。
+      产物 runtime/dashboard/(gitignored)。
 
   - name: panorama-dashboard-refresh
     schedule: "*/4 * * * *"
@@ -413,6 +423,10 @@ jobs:
       gate 引用/registry 代码真值，避免旧 checkout 把 A2/A4/A5 投影为假失败。
       4分钟频率与 Agent Cell smoke 闭环。plist 同源:
       runtime/cron/com.omostation.panorama-dashboard-refresh.plist。
+      运维记录: 该 job 曾于 2026-09-23T15:44Z 后被无记录 disable+unload
+      (registry 仍声明 installed/active, 属 4 天声明漂移)；2026-09-27 已
+      launchctl enable + bootstrap + kickstart 复用, 核验 runs>=1、
+      last exit code=0、run interval=240s, 扁平三件套 mtime/generated_at 随之刷新。
 
   - name: agent-cell-pool-live-smoke
     schedule: "*/4 * * * *"

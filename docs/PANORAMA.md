@@ -3,13 +3,13 @@ schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-27
 type: ssot
 review-state: content-reviewed-20260917
 review-note: >
 metadata-migrated-at: 2026-07-31
 stale-reason: body frozen 2026-06-30; metadata-only review 2026-07-31; not a strategy mainline
-last_updated: 2026-09-18
+last_updated: 2026-09-27
 ---
 
 # PANORAMA.md — eCOS 系统全景架构
@@ -25,8 +25,12 @@ Panorama 同时提供人类站点与机器可读投影。Agent 应优先读取 `
 （HTTP: `/agent-brief.json`）获取权威控制面、门禁摘要、Claims 边界、未完成 BET、里程碑窗口、
 活动/阻塞工作流、任务、告警、下一步事务、读取接口和安全约束；人类站点的 **Agent Brief**
 页签以同一份投影展示这些要点；
-完整字段使用 `runtime/dashboard/data.json`（HTTP: `/data.json`）。两者均由
-`bin/panorama/panorama-collect.py` 只读聚合生成，不引入第二个控制面或写入队列。
+完整字段使用 `runtime/dashboard/data.json`（HTTP: `/data.json`）。两者的**扁平文件唯一写入者**
+是部署版 collector `~/.local/share/zhixing-dashboard/panorama-collect.py`：它经
+`PANORAMA_ROOT` 绑定本 checkout，由 launchd `com.omostation.panorama-dashboard-refresh`
+每 240 秒刷新一次（`PANORAMA_CODE_ROOT` 指向受管 fresh-main 引用根）。仓内
+`bin/panorama/panorama-collect.py` 是 revision 协议变体，只发布 `revisions/` 与
+`current-revision.json`，**不写**扁平三件套。两者都只读聚合，不引入第二个控制面或写入队列。
 任务投影只读取 managed code root 下的 `.omo/tasks/{active,planned,blocked,done}/*.yaml`；
 `.omo/state/task-registry.yaml` 单独投影为服务生命周期台账，不与执行任务混淆。
 债务与告警投影同样读取 managed code root，并以 `lifecycle_state` 为闭合真值，
@@ -353,7 +357,7 @@ script / wrapper / cron
 | runtime | L1 | [ARCHITECTURE.md](../projects/runtime/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/runtime/CALLCHAIN.md) · [BOUNDARY.md](../projects/runtime/BOUNDARY.md) |
 | ecos | L0 | [ARCHITECTURE.md](../projects/ecos/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/ecos/CALLCHAIN.md) · [BOUNDARY.md](../projects/ecos/BOUNDARY.md) |
 | aetherforge | X | [ARCHITECTURE.md](../projects/aetherforge/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/aetherforge/CALLCHAIN.md) · [BOUNDARY.md](../projects/aetherforge/BOUNDARY.md) |
-| aetherforge-swarm-ext | X | **ARCHIVED** — 快照在 `/_archived/aetherforge-swarm-ext/`，扩展已并入 [aetherforge/packages/swarm/src/swarm_engine/ext](../projects/aetherforge/packages/swarm/src/swarm_engine/ext/) |
+| aetherforge-swarm-ext | X | **ARCHIVED** — 快照在 `/_archived/aetherforge-swarm-ext/`，扩展已并入 [aetherforge/src/aetherforge/swarm](../projects/aetherforge/src/aetherforge/swarm/) |
 | agora-dashboard | L3 | **LEGACY SNAPSHOT** — 独立入口已收敛；快照在 `_archived/agora-dashboard/` |
 | bus-foundation | X | [ARCHITECTURE.md](../projects/bus-foundation/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/bus-foundation/CALLCHAIN.md) · [BOUNDARY.md](../projects/bus-foundation/BOUNDARY.md) |
 | c2g | X | **LOCAL-ONLY** — 未在 `.gitmodules` 注册，仅部分成员本地 clone（CI 跳过，见 `kairon-ci.yml` 注释） |
@@ -367,6 +371,6 @@ script / wrapper / cron
 | toolbox | X | **EXTERNAL** — 非 git 子模块，通过 `bos://capability/` 暴露 3 个 L3 实例 (见 project-registry.yaml) |
 | omo-debt | L2 | **LOCAL-ONLY** — 未在 `.gitmodules` 注册，仅部分成员本地 clone（CI 跳过） |
 | spaces | L0/L1 | [ARCHITECTURE.md](../spaces/ARCHITECTURE.md) · [CALLCHAIN.md](../spaces/CALLCHAIN.md) · [BOUNDARY.md](../spaces/BOUNDARY.md) |
-| swarm-engine | X | **ARCHIVED** — 快照在 `/_archived/swarm-engine/`，能力已并入 [aetherforge/packages/swarm](../projects/aetherforge/packages/swarm/) |
+| swarm-engine | X | **ARCHIVED** — 快照在 `/_archived/swarm-engine/`，能力已并入 [aetherforge/src/aetherforge/swarm](../projects/aetherforge/src/aetherforge/swarm/) |
 
 *最后更新: 2026-06-30 · 本文只保留全景骨架与指针，不再维护运行时快照*

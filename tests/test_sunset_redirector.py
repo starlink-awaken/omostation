@@ -57,6 +57,9 @@ def test_health_endpoint(redirector_server):
         data = json.loads(resp.read().decode("utf-8"))
         assert data.get("status") == "SUNSET_REDIRECTING"
         assert data.get("converged") is True
+        # 新鲜度必须在探活面可见 (stale 不再静默)
+        assert "data_stale" in data
+        assert "data_age_seconds" in data
 
 
 def test_api_endpoint_compatibility(redirector_server):
@@ -66,3 +69,58 @@ def test_api_endpoint_compatibility(redirector_server):
         assert resp.headers.get_content_type() == "application/json"
         data = json.loads(resp.read().decode("utf-8"))
         assert isinstance(data, dict)
+
+
+def test_telemetry_marks_missing_snapshot_as_stale(tmp_path, monkeypatch):
+    """没有扁平快照时必须显式 stale=True, 不能静默返回降级载荷冒充最新遥测."""
+    monkeypatch.setattr(sunset_mod, "RUNTIME_DATA_PATH", tmp_path / "nope.json")
+    data = get_latest_telemetry()
+    meta = data["_meta"]
+    assert meta["stale"] is True
+    assert meta["generated_at"] is None
+    assert meta["age_seconds"] is None
+    assert data["status"] == "CONVERGED_TO_COCKPIT"
+
+
+def test_telemetry_marks_fresh_snapshot_not_stale(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    payload = {"generated_at": (now - timedelta(seconds=30)).isoformat()}
+    path = tmp_path / "data.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(sunset_mod, "RUNTIME_DATA_PATH", path)
+
+    data = get_latest_telemetry()
+    meta = data["_meta"]
+    assert meta["stale"] is False
+    assert meta["generated_at"] == payload["generated_at"]
+    assert 0 <= meta["age_seconds"] <= 60
+
+
+def test_telemetry_marks_out_of_cadence_snapshot_as_stale(tmp_path, monkeypatch):
+    """refresh job 断档时(> stale_after_seconds) 必须把 stale 暴露给调用方."""
+    from datetime import datetime, timedelta, timezone
+
+    stale_at = datetime.now(timezone.utc) - timedelta(seconds=sunset_mod.DATA_STALE_SECONDS + 60)
+    payload = {"generated_at": stale_at.isoformat()}
+    path = tmp_path / "data.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(sunset_mod, "RUNTIME_DATA_PATH", path)
+
+    data = get_latest_telemetry()
+    meta = data["_meta"]
+    assert meta["stale"] is True
+    assert meta["age_seconds"] > sunset_mod.DATA_STALE_SECONDS
+    assert meta["stale_after_seconds"] == sunset_mod.DATA_STALE_SECONDS
+
+
+def test_telemetry_survives_malformed_snapshot(tmp_path, monkeypatch):
+    """坏 JSON → 降级载荷 + stale, 不抛异常 (兼容层绝不 500)."""
+    path = tmp_path / "data.json"
+    path.write_text("{not json", encoding="utf-8")
+    monkeypatch.setattr(sunset_mod, "RUNTIME_DATA_PATH", path)
+
+    data = get_latest_telemetry()
+    assert data["status"] == "CONVERGED_TO_COCKPIT"
+    assert data["_meta"]["stale"] is True

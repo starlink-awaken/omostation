@@ -16,23 +16,72 @@ import http.server
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 DEFAULT_TARGET = os.environ.get("PANORAMA_TARGET_URL", "http://localhost:5173/panorama")
 DEFAULT_PORT = int(os.environ.get("SUNSET_PORT", "43910"))
-ROOT = Path(__file__).resolve().parents[2]
+# 根是参数不是事实 (ADR-0456)：优先 PANORAMA_ROOT（与 collector 同一 seam），
+# 未声明时回退到本文件的相对布局，行为与历史逐字节一致。
+ROOT = Path(os.environ.get("PANORAMA_ROOT") or Path(__file__).resolve().parents[2])
 RUNTIME_DATA_PATH = ROOT / "runtime" / "dashboard" / "data.json"
+# 扁平 data.json 由 launchd com.omostation.panorama-dashboard-refresh 每 240s 写入。
+# 2026-09-23→09-27 该 job 被静默 disable 期间，:43910 对外把 2 天前的旧快照当
+# "最新遥测" 提供且无任何标记 —— 因此超 cadence 必须显式标注 stale。
+REFRESH_CADENCE_SECONDS = int(os.environ.get("PANORAMA_REFRESH_SECONDS", "240"))
+DATA_STALE_SECONDS = int(
+    os.environ.get("SUNSET_DATA_STALE_SECONDS", str(REFRESH_CADENCE_SECONDS * 3))
+)
+
+
+def _read_runtime_snapshot() -> dict[str, Any] | None:
+    """读扁平 data.json；缺失或不可解析时返回 None（交由降级载荷兜底）。"""
+    if not RUNTIME_DATA_PATH.is_file():
+        return None
+    try:
+        with open(RUNTIME_DATA_PATH, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except Exception:  # noqa: BLE001 - 兼容层绝不因坏数据 500
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def runtime_freshness(snapshot: dict[str, Any] | None = None) -> dict[str, Any]:
+    """扁平快照新鲜度：生成时间 / 年龄秒 / 是否 stale。
+
+    generated_at 缺失或不可解析一律按 stale 处理（fail-visible，不 fail-closed）。
+    """
+    if snapshot is None:
+        snapshot = _read_runtime_snapshot()
+    generated_at = snapshot.get("generated_at") if snapshot else None
+    age_seconds: float | None = None
+    if isinstance(generated_at, str):
+        try:
+            generated = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+            if generated.tzinfo is None:
+                generated = generated.replace(tzinfo=timezone.utc)
+            age_seconds = round((datetime.now(timezone.utc) - generated).total_seconds(), 1)
+        except ValueError:
+            age_seconds = None
+    return {
+        "path": str(RUNTIME_DATA_PATH),
+        "generated_at": generated_at if isinstance(generated_at, str) else None,
+        "age_seconds": age_seconds,
+        "stale": age_seconds is None or age_seconds > DATA_STALE_SECONDS,
+        "stale_after_seconds": DATA_STALE_SECONDS,
+    }
 
 
 def get_latest_telemetry() -> dict[str, Any]:
-    """读取最新的运行态遥测数据快照，如果不存在则返回基础降级载荷."""
-    if RUNTIME_DATA_PATH.is_file():
-        try:
-            with open(RUNTIME_DATA_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:  # noqa: BLE001
-            pass
+    """读取最新的运行态遥测数据快照，如果不存在则返回基础降级载荷.
+
+    返回值始终附带 ``_meta`` 新鲜度标签，调用方一眼可见数据是否已过 cadence。
+    """
+    snapshot = _read_runtime_snapshot()
+    if snapshot is not None:
+        snapshot["_meta"] = runtime_freshness(snapshot)
+        return snapshot
 
     return {
         "status": "CONVERGED_TO_COCKPIT",
@@ -40,6 +89,7 @@ def get_latest_telemetry() -> dict[str, Any]:
         "target": DEFAULT_TARGET,
         "gates": [],
         "guardian": {"healthScore": 100.0, "status": "HEALTHY"},
+        "_meta": runtime_freshness(),
     }
 
 
@@ -53,12 +103,16 @@ class SunsetRedirectHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         path = self.path.split("?")[0]
 
-        # 1. 探活健康检查
+        # 1. 探活健康检查（同时暴露扁平快照新鲜度，stale 不再静默）
         if path == "/health":
+            freshness = runtime_freshness()
             body = json.dumps({
                 "status": "SUNSET_REDIRECTING",
                 "target": self.target_url,
                 "converged": True,
+                "data_generated_at": freshness["generated_at"],
+                "data_age_seconds": freshness["age_seconds"],
+                "data_stale": freshness["stale"],
             }).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
