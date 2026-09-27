@@ -37057,6 +37057,75 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-05
+  title: 规则接线批次二 — 15 条存疑规则处置（工作簿批准执行）
+  goal: '判定工作簿（2026-09-27 会话呈报）获 principal「继续吧」全按建议执行。15 条存疑规则 全部落处置：接线 2 条（CR-L0-PROTOCOLS-SSOT
+    → check-hardcoded-ports，port-registry-enforce.yml 调用 #4411；x2-staleness → compass_radar
+    staleness 子分）；收窄声明 2 条 （CR-EVIDENCE-SHA-FRESHNESS 收窄到 spec digest 口径、CR-BIN-RETIREMENT-CHECKLIST
+    收窄到 quota-diff 层）；弃用注释标注 3 条原则族（CR-P76-6-5/CR-P77-2-1/CR-P77-2-2， 条目保留不删）；记录待决 8
+    条（每条带证据与建议，含 CR-L4-DOMAIN-REGISTRY-FRESHNESS 需 CI 接线、CR-X1/X2 并入 SH-4 权威注册表决策）。债务
+    history 追加，coverage 复跑 27→25。--strict 强制不在本批次（剩余 >0，shadow 记录于 retro）。
+
+    '
+  status: pending
+  window: Y2Q4
+  track: T10-MATURITY
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: governance-audit
+  underlying_workflow: governance-audit
+  circuit_breaker: '声明条目不删除（弃用仅注释标注，可见性保留）；接线别名必须语料可证（2 处证据）； --strict 门禁强制不在本批次；不改动
+    L0 子仓注册表（60 条零引用另案）。
+
+    '
+  non_goals:
+  - 不删除任何 governance-checks 声明条目
+  - 不实现新检查器（CR-DEBT-GATE-ENUM-01 等实现项另立单）
+  - 不动 L0-constraints 子仓 60 条零引用
+  - 不强制接 --strict 门禁
+  done_when:
+  - 2 组接线落地（check-hardcoded-ports / staleness），coverage 27→25 复跑记录
+  - 15 条处置全部落 docs/plans/ 批次二文档（含 8 条待决的证据与建议）
+  - 收窄/弃用以注释标注落 governance-checks.yaml（条目保留）
+  - 债务 DEBT-20260920 history 追加批次二进度
+  - retro 固化（含 --strict shadow 状态）
+  verify:
+  - cmd: python3 bin/gac/check-rule-wiring-coverage.py --json
+    expect: unreferenced = 25
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 不引入新错误
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/registry-alias-map.yaml
+  - .omo/_truth/registry/governance-checks.yaml
+  - docs/plans/
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-rule-wiring-batch2.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-05.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-rule-wiring-batch2.md
+    spec_version: 1.0.0
+    content_digest: sha256:d1fc6aa75bf368a76820f47b568c9f826ff3b712cb430a917b9a5d5353510359
+    decision_ref: decision://accepted/BET-Y2Q4-T10-05
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -37195,7 +37264,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 495
+  total_bets: 496
   windows:
   - Y1Q1
   - Y1Q2
