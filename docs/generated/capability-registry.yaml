@@ -12,9 +12,9 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 643
-  bos_services: 351
+  bos_services: 345
   bos_domains: 24
-  cli_commands: 203
+  cli_commands: 197
   skills: 42
   workflows: 26
 mcp_servers:
@@ -888,7 +888,7 @@ bos_services:
     bcos: 3
     capability: 51
     cockpit: 9
-    compute: 21
+    compute: 15
     documents: 5
     ecos: 10
     fabric: 1
@@ -1450,32 +1450,8 @@ bos_services:
       description: omlxc 端侧在线 LoRA 持续微调与毫秒级热插拔服务 (ADR-0435)
       transport: stdio
       status: active
-    - uri: bos://compute/aetherforge/embed
-      description: '[auto-registered] From aetherforge embed endpoint. See bos-pending-registrations.yaml.'
-      transport: stdio
-      status: active
-    - uri: bos://compute/aetherforge/fabric
-      description: '[auto-registered] From aetherforge fabric endpoint. See bos-pending-registrations.yaml.'
-      transport: stdio
-      status: active
-    - uri: bos://compute/aetherforge/profile
-      description: '[auto-registered] From aetherforge profile endpoint. See bos-pending-registrations.yaml.'
-      transport: stdio
-      status: active
-    - uri: bos://compute/aetherforge/rerank
-      description: '[auto-registered] From aetherforge rerank endpoint. See bos-pending-registrations.yaml.'
-      transport: stdio
-      status: active
     - uri: bos://compute/aetherforge/triage
       description: '[auto-registered] From aetherforge triage endpoint. See bos-pending-registrations.yaml.'
-      transport: stdio
-      status: active
-    - uri: bos://compute/aetherforge/vram
-      description: '[auto-registered] From aetherforge vram monitoring. See bos-pending-registrations.yaml.'
-      transport: stdio
-      status: active
-    - uri: bos://compute/aetherforge/warm
-      description: '[auto-registered] From aetherforge warm-start endpoint. See bos-pending-registrations.yaml.'
       transport: stdio
       status: active
     documents:
@@ -2362,8 +2338,6 @@ cli_commands:
   description: 向大脑提问（知识检索 + LLM 回答）
 - name: audit
   description: 🔍 6 维度全方位审计 (调 bin/workspace-audit)
-- name: audit-ledger
-  description: ''
 - name: backends
   description: 列出 BOS 后端
 - name: bcos
@@ -2478,8 +2452,6 @@ cli_commands:
   description: 将研究对象导出为 WorkspaceObject JSON
 - name: fabric
   description: 检查 omlxc 智能算力织网 (温控/分诊/显存/缓存)
-- name: fabric-mesh
-  description: ''
 - name: facts-audit
   description: 审计 Documents 文档域 facts 文件
 - name: facts-validation
@@ -2562,16 +2534,12 @@ cli_commands:
   description: 启动 MCP server 或列出工具
 - name: memory
   description: 🧠 Memory OS (status/recall/write/forget/consolidate/knowledge-ref)
-- name: memory-distill
-  description: ''
 - name: mesh
   description: omlx 算力网格路由入口
 - name: metrics
   description: 查看 bus metrics 快照
 - name: minutes
   description: 会议转写文本 → 交办事项督办清单
-- name: model-driven
-  description: ''
 - name: model-freshness
   description: 读取 Runtime 模型新鲜度回执
 - name: mof
@@ -2597,7 +2565,7 @@ cli_commands:
 - name: pack
   description: 将代码库打包为 LLM 友好格式
 - name: panorama
-  description: 🌐 7 维全景终极可观测仪表盘 (执行过程/服务/内容/知识/数据/异常/债务资产)
+  description: 🌐 体系全景治理控制舱 (终端 7 维全景快照 / --web 唤起原生控制舱)
 - name: pending
   description: 查看未决待办快照预览
 - name: persona-radar
@@ -2680,8 +2648,6 @@ cli_commands:
   description: 本地首选投机推演评估
 - name: spine
   description: Spine 主干真值流与署名自进化操作 (ADR-0439)
-- name: ssb
-  description: ''
 - name: stats
   description: 索引统计
 - name: status
@@ -2734,8 +2700,6 @@ cli_commands:
   description: 预热系统 Prompt 前缀缓存以实现 0ms TTFT
 - name: watch
   description: 监听 BOS Inbox 紧急待办与提醒快照 (Event-Driven Watcher)
-- name: watchdog
-  description: 🐕 自治守护犬与自愈探针 (Agora Bus / Resident 监视器)
 - name: wave2
   description: 📈 Wave2 预测治理面板 (dashboard/proposals/predictive JSON)
 - name: workflow

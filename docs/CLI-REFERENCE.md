@@ -7,30 +7,29 @@ last-reviewed: 2026-09-25
 type: ephemeral
 ---
 
-
 # Cockpit CLI 命令参考
 
 > 自动生成于 1970-01-01T00:00:00Z | 源: cockpit.commands.registry (SSOT) + capability-registry.yaml
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 > 分类全量详情见 [`docs/cli/`](cli/) 分册
 
-共 **207** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **201** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
-- [🏛️ 治理 (Governance)](cli/governance.md) (16 个命令)
+- [🏛️ 治理 (Governance)](cli/governance.md) (15 个命令)
 - [👤 用户 (User)](cli/user.md) (8 个命令)
 - [📄 专项工具 (Domain)](cli/domain.md) (13 个命令)
 - [📋 项目 (Project)](cli/project.md) (12 个命令)
-- [📚 研究 (Research)](cli/research.md) (8 个命令)
-- [📡 通讯 (Messaging)](cli/messaging.md) (5 个命令)
+- [📚 研究 (Research)](cli/research.md) (7 个命令)
+- [📡 通讯 (Messaging)](cli/messaging.md) (4 个命令)
 - [📦 数据 (Data)](cli/data.md) (3 个命令)
 - [🔌 总线接入 (ECCP)](cli/eccp.md) (1 个命令)
-- [🖥️ 基础设施 (Infra)](cli/infra.md) (11 个命令)
+- [🖥️ 基础设施 (Infra)](cli/infra.md) (8 个命令)
 - [🛠️ 系统 (System)](cli/system.md) (15 个命令)
 - [🤖 Agent 协作](cli/agent-协作.md) (4 个命令)
 - [🧠 知识引擎 (BOS)](cli/bos.md) (10 个命令)
-- [遗留命令映射](#遗留命令映射) (46 个)
+- [遗留命令映射](#遗留命令映射) (45 个)
 - [全局 Flags](#全局-flags)
 - [MCP 工具映射](#mcp-工具映射)
 
@@ -42,7 +41,6 @@ type: ephemeral
 
 | 命令 | 描述 |
 |------|------|
-| `cockpit audit-ledger` | 📒 [DEPRECATED] 治理审计账本 ADR-0201 → 查询 .omo/_knowledge/decisions/ + cockpit command-audit |
 | `cockpit bdsk` | B.D.S.K. 虚拟董事会 (4角对抗辩论与 0-Touch 影子预演) |
 | `cockpit cards` | CARDS 卡片状态管理 (list / get / search / serve) |
 | `cockpit command-audit` | 15 维命令评分卡管理 (init/validate/report/lint) |
@@ -124,7 +122,6 @@ type: ephemeral
 | `cockpit discover` | 发现可用功能和资源 |
 | `cockpit knowledge` | 本地知识库管理 (import / query / stats) |
 | `cockpit memory` | Memory OS 统一控制面 (status/recall/write/forget → bos://memory/mos/*) |
-| `cockpit memory-distill` | 🧠 [DEPRECATED] 记忆蒸馏 ADR-0200 → KOS pipeline (gbrain + eidos) |
 | `cockpit research` | 深度研究工作台 (ask / publish / list / audit / …) |
 | `cockpit search` | 跨源搜索 (数据库 + BOS 知识引擎) |
 
@@ -138,7 +135,6 @@ type: ephemeral
 | `cockpit bus` | Omni-Bus 三平面入口 (status / topics / publish) |
 | `cockpit events` | 实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard) |
 | `cockpit events-watch` | 监听 BOS Inbox 紧急待办与提醒快照 |
-| `cockpit ssb` | [DEPRECATED] SSB 签名链操作 — ECOS SSB 独立 CLI 已弃用，请使用 cockpit 替代 |
 
 ## 📦 数据 (Data)
 
@@ -167,14 +163,11 @@ type: ephemeral
 | `cockpit chain` | 多命令联动链路编排 (list/show/run/validate/init, YAML 声明式) |
 | `cockpit dashboard` | 打开 Web Dashboard |
 | `cockpit fabric` | 🧑‍💻 主权混合算力与 KV 缓存快照 (ADR-0197) |
-| `cockpit fabric-mesh` | 🕸️ [DEPRECATED] 算力网格检视 ADR-0202 → omlxc-compute-fabric skill |
 | `cockpit mesh` | omlx 算力网格路由入口 (nodes / route / serve) |
-| `cockpit model-driven` | [DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行 |
 | `cockpit mof` | MOF 元模型操作 (委派 mof CLI) |
 | `cockpit observe` | 可观测性栈（Langfuse）入口 (up / down / logs) |
 | `cockpit ops` | 🔧 Service Gateway — 统一运维控制面 |
 | `cockpit telemetry` | 命令全生命周期可观测性与 Prometheus 指标导出 |
-| `cockpit watchdog` | 🐕 [DEPRECATED] 自治守护犬已退役 → Mesh-bound capability admission (Cockpit PR #78) |
 
 ## 🛠️ 系统 (System)
 
@@ -275,7 +268,6 @@ type: ephemeral
 | `cockpit vault` | memory | vault |
 | `cockpit vram` | compute | vram |
 | `cockpit warm` | compute | warm |
-| `cockpit watchdog` | governance | watchdog |
 
 ## 扫描发现的其他命令
 
