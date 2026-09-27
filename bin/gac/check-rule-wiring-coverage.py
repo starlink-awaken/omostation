@@ -104,6 +104,20 @@ def _resolve_via_alias(rule_id: str, alias_map: dict[str, set[str]]) -> str | No
     return None
 
 
+
+def _load_retired() -> set[str]:
+    """retired: 清单 — 弃用/收窄/并入决策条目, 从接线候选统计分离 (T10-07 批次四)."""
+    if not ALIAS_MAP.is_file():
+        return set()
+    try:
+        import yaml
+        with ALIAS_MAP.open(encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except Exception:
+        return set()
+    return {str(x).strip() for x in (data.get("retired") or []) if str(x).strip()}
+
+
 def _exec_corpus() -> str:
     parts = []
     for pat in EXEC_CORPUS_GLOBS:
@@ -160,6 +174,7 @@ def inventory() -> dict:
     l0 = _rule_ids(L0_SUBMODULE)
     l0_available = bool(l0)
     alias_map = _load_alias_map()
+    retired = _load_retired()
 
     # An ID is "wired" if:
     #   (a) its string form appears literally in the corpus, OR
@@ -176,7 +191,7 @@ def inventory() -> dict:
     def unreferenced(ids):
         return [i for i in ids if not is_wired(i)]
 
-    gov_un = unreferenced(gov)
+    gov_un = [i for i in unreferenced(gov) if i not in retired]
     l0_un = unreferenced(l0)
     impl = _implemented_ids(corpus)
 
@@ -195,6 +210,8 @@ def inventory() -> dict:
             "governance-checks": {
                 "declared": len(gov),
                 "unreferenced": len(gov_un),
+                "retired": sorted(retired & set(gov)),
+                "retired_count": len(retired & set(gov)),
                 "alias_map_loaded": bool(alias_map),
                 "alias_map_size": len(alias_map),
             },

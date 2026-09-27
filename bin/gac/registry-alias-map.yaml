@@ -345,6 +345,19 @@ aliases:
       governance-checks: "声明: 禁止硬编码 password/token/secret"
       bin_executor: ".github/workflows/governance-check.yml → omo.cli lint sensitive-governed-writes（governed 路径口径）"
 
+  # ── BET-Y2Q4-T10-07 批次四接线 ──
+  - canonical: CR-SEC-EVAL-EXEC
+    aliases: [ruff]
+    evidence:
+      governance-checks: "声明: 禁止 eval()/exec()"
+      bin_executor: "pyproject ruff select 含 S (S307 eval 生效, S102 exec 豁免为内部脚本惯例)"
+
+  - canonical: CR-PY-MUTABLE-DEFAULT
+    aliases: [ruff]
+    evidence:
+      governance-checks: "声明: 禁止 def f(x=[])"
+      bin_executor: "pyproject ruff select 增 B006 (2026-09-27 基线零违规实测)"
+
 cross_walks:
   - from: governance-checks
     to: L0-constraints
@@ -386,3 +399,23 @@ open_decisions:
     options: ["yes, manual review each", "no, auto-categorize via executor_name pattern", "ignore if < 5%"]
     blocking: false
     note: "Default: ignore if < 5% (per spec gate threshold). Otherwise manual."
+# retired — 弃用/收窄/并入决策条目 (批次四 T10-07, principal 批准): 从接线候选统计分离, 注册表条目保留
+retired:
+  - CR-AGE-BOS-01                  # AGE-v2 descope (principal 批准): 现存仅 smoke 无 gate
+  - CR-AGE-POLICY-01
+  - CR-AGE-MEMORY-01
+  - CR-AGE-REPLAY-01
+  - CR-AGE-EVENT-01
+  - CR-P76-6-5-LLM-DEFERRAL        # 原则族不入 GaC 机器清单 (批次二弃用标注)
+  - CR-P77-2-1-PRINCIPLE-FORMALIZATION
+  - CR-P77-2-2-CATALOG-SSOT
+  - CR-BIN-RETIREMENT-CHECKLIST    # 收窄: 机器面仅 quota-diff 层
+  - CR-L2-TASK-DELIVERABLE         # 待决: 任务卡机制去留 owner 定
+  - CR-L0-SSOT-PATH-NORM           # 弃用候选: 契约文档已消失
+  - CR-X1-POLICIES-SSOT            # 并入 SH-4 DEC-SH-4-AUTHORITATIVE-REGISTRY
+  - CR-X2-FRESHNESS-SSOT           # 同上
+  - CR-EVIDENCE-DECLARED           # 收窄候选: complete D0 口径复核中
+  - CR-EVIDENCE-SHA-FRESHNESS      # 收窄: spec digest 口径 (complete 校验)
+  - CR-GIT-STAGE-SUBMODULE-PIN     # 收窄: gitlink-ancestry push 期覆盖核心风险
+  - CR-L4-DOMAIN-REGISTRY-FRESHNESS  # 待决: 需 macOS CI lane (launchd)
+  - CR-X3-DEBT-TIER                # 待决: 债务口径 x3_tier 由 omo_debt_weight 内部消费, 注册表校验未实现 (owner 定去留)
