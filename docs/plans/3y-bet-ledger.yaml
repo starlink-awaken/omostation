@@ -36393,7 +36393,8 @@ bets:
     UNPROVABLE 不填假数）。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
