@@ -34627,7 +34627,8 @@ bets:
   title: Brief Auto-Refresh — close BRIEF-STALE drift face gap
   goal: Add prune_brief() to auto-pruner so BRIEF-STALE drift can self-heal
     without depending on panorama-collect.
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T16-DRIFT-GUARD
   priority: P1
@@ -34667,11 +34668,47 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:a31be37c26df18c615a01798cada9b777f4af50336afb28f92915bc34cabb592
     decision_ref: decision://accepted/BET-Y2Q4-SH-6
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@998afc541da0e7bd40933c9afcb8a8287c75b910
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >
+            Drift-face drift count is the value indicator; brief drift
+            closure is verified via drift-face-detector returning 0 brief
+            findings after auto-pruner --apply.  Not on the principal_value
+            axis (that's BCOS north-star).
 - id: BET-Y2Q4-SH-7
   title: Principal-ID Canonicalization Audit — single source of truth
   goal: Promote _canonical_principal_id to a shared utility and add an audit
     that enumerates all OMO_PRINCIPAL_ID callers.
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T16-DRIFT-GUARD
   priority: P1
@@ -34715,6 +34752,40 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d5005d8a203847c188e752ab102a810518f8c819b3a88016e8f6fe3d8eb7bf5c
     decision_ref: decision://accepted/BET-Y2Q4-SH-7
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@998afc541da0e7bd40933c9afcb8a8287c75b910
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >
+            Audit-only BET (per spec).  Recorder is now CANONICAL; the
+            7 UNSAFE sites are out of scope (read-only meters/gates).
+            Future SH-8 may migrate them.
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
