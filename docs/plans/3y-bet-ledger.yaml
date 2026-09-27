@@ -36972,6 +36972,94 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+- id: BET-Y2Q4-T10-209
+  title: ADR-0456 交付运行态 worktree 归集 — agent-workflow runs/locks/events 锚定 canonical
+    (linked-worktree symlink 桥 + release 兜底)
+  goal: '#4435 实证: 在 worktree 内 agent-workflow start 写出的 run 记录 (.omo/_delivery/agent-workflows/runs/<run_id>.yaml
+    及 locks/、events.jsonl) 落在该 worktree 检出内, 而 .gitignore:12 忽略 .omo/_delivery/*, git
+    worktree remove --force (release/merge/TTL) 一并抹除 —— closeout 不可能、审计链断裂 (run 20260927T074411Z-project-doc-change-8713c068
+    当场丢失, 拒绝伪造补录)。根因是 core.py:15 WORKSPACE = Path(__file__).resolve().parents[5] 按 __file__
+    推导仓库根, 与 repo_root.py:3-6 docstring 点名的故障类同源; state_root() 在未声明 env 时 == code_root()
+    == worktree (test_repo_root_profile.py:51-56 钉死), 所以单纯改走 state_root() 修不了。交付运行态是机器级、跨检出、生命周期长于
+    单检出的状态: 物理锚定 canonical (OMOSTATION_STATE_ROOT 已声明则用之, 否则 canonical_root()), canonical
+    的 linked worktree 以自愈 symlink 桥呈现 (git worktree remove 只摘链接不碰目标), 读侧 ~15 个工具零改动
+    —— 单一物理存储使读写天然一致。附 gac-worktree.sh release/merge/TTL 在 remove 前 对遗留真实目录做 merge-rescue
+    兜底 (现有 7 个 legacy worktree 不会再跑内核代码)。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 hours
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change to what canonical_root() / code_root() / state_root()
+    resolve to; any write outside .omo/_delivery/agent-workflows/** and the listed write_surfaces;
+    any edit to the ~15 run-reader tools (A′ 方案读侧零改动是硬约束); any rm -rf 递归跟随 symlink 删除
+    canonical 交付态; 任何绕过 ledger-safe-insert 的台账行号盲插。
+  non_goals:
+  - 不改 state_root()/canonical_root()/code_root() 的解析语义 (ADR-0456 B4b 边界, test_repo_root_profile.py:51-56/:131-144
+    钉住的不变量一律保持)。
+  - 不改任何 run 读侧工具 (~15 个 root/cockpit reader)、不改 chain_bind.py (其 isolation 注释管辖的是 tracked
+    SSOT 读, 对 untracked 机器态不再适用但无需重释)。
+  - 不碰 branch-claims / workflow-mesh events / event_ledger_path() 三个同类残留 (各自需要独立契约决策,
+    另立 bet)。
+  - 不把 run/lock/events 入仓 (git 跟踪高 churn 运行态, 且 worktree remove --force 连未提交外的已跟踪文件都会删,
+    只留 committed = 每个 PR 都带运行时噪音)。
+  done_when:
+  - '内核: projects/omo 新增 src/omo/workflow/delivery_anchor.py, core.py _runner_path 相对分支在生产布局下调用
+    ensure_delivery_anchor (非 worktree / 外来 worktree / 无 canonical / 自定义 runner 配置一律
+    no-op 保持字节等价)。'
+  - '桥: canonical 的 linked worktree 内 .omo/_delivery/agent-workflows 为指向 canonical 同名目录的自愈
+    symlink; 首次触发时真实目录 merge 迁移 (canonical wins + conflict log + verify-then-rmtree)。'
+  - '兜底: gac-worktree.sh release/merge/TTL 三处在 git worktree remove --force 前 对仍是真实目录的
+    .omo/_delivery/agent-workflows 做 merge-rescue。'
+  - '契约: repo_root.py docstring 第四条判据 + ADR-0456 addendum (含禁止 rm -rf <link>/ 尾斜杠删除)。'
+  - '测试: projects/omo/tests/test_delivery_anchor.py (placement/migration/no-op/ env
+    优先级/hermeticity 五组) + tests/unit/test_delivery_anchor_contract.py (跨边界契约 + 读写一致
+    + #4435 git-removal-survival 集成回归) + 既有 workspace_isolation/agent_workflow 扩展, 既有测试套件全绿。'
+  verify:
+  - cmd: cd projects/omo && uv run pytest tests/ -q
+    expect: exit 0
+  - cmd: uv run pytest tests/unit tests/test_agent_workflow.py -q
+    expect: exit 0
+  - cmd: bash -n bin/gac/gac-worktree.sh
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - projects/omo/src/omo/workflow/delivery_anchor.py
+  - projects/omo/src/omo/workflow/core.py
+  - projects/omo/tests/test_delivery_anchor.py
+  - projects/omo/tests/test_workflow_workspace_isolation.py
+  - bin/lib/repo_root.py
+  - bin/gac/gac-worktree.sh
+  - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
+  - tests/unit/test_delivery_anchor_contract.py
+  - tests/test_agent_workflow.py
+  - docs/plans/3y-bet-ledger.yaml
+  depends_on: []
+  accepted_specifications:
+  - content_digest: sha256:5204a90d837a70d9d399ba315a9d40f82706f7aabcfecd9f27bb6e2841269f25
+    decision_ref: decision://accepted/BET-Y2Q4-T10-209
+    spec_ref: repo://docs/superpowers/specs/2026-09-27-delivery-state-worktree-anchor-design.md
+    spec_version: 1.0.0
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -37110,7 +37198,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 494
+  total_bets: 495
   windows:
   - Y1Q1
   - Y1Q2

@@ -1,20 +1,18 @@
 ---
-schema: md/v1
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-24
 type: derived
 source: bin/ssot/gen-help-docs.py
 ---
-
 
 # Cockpit CLI · 🖥️ 基础设施 (Infra)
 
 > 自动生成于 1970-01-01T00:00:00Z | 分册源自 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-本册收录 **11** 个命令。索引与交叉表见 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)。
+本册收录 **8** 个命令。索引与交叉表见 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)。
 
 ## `cockpit chain`
 
@@ -64,27 +62,6 @@ cockpit fabric --help          # 完整参数面
   · 所属域: `compute`  |  成熟度: stable  |  风险: low
 
 
-## `cockpit fabric-mesh`
-
-🕸️ [DEPRECATED] 算力网格检视 ADR-0202 → omlxc-compute-fabric skill
-
-**用法**:
-
-```bash
-cockpit fabric-mesh [flags]
-cockpit fabric-mesh --json          # 机器可读输出
-cockpit fabric-mesh --dry-run       # 预检 (无副作用)
-cockpit fabric-mesh --help          # 完整参数面
-```
-
-  · 成熟度: deprecated  |  风险: low
-
-```bash
-cockpit fabric-mesh
-  # → 提示: 改用 skill: omlxc-compute-fabric (本地大模型推理 + 算力调度)
-```
-
-
 ## `cockpit mesh`
 
 omlx 算力网格路由入口 (nodes / route / serve)
@@ -99,22 +76,6 @@ cockpit mesh --help          # 完整参数面
 ```
 
   · 所属域: `compute`  |  成熟度: stable  |  风险: low
-
-
-## `cockpit model-driven`
-
-[DEPRECATED] 模型驱动生命周期入口 (ADR-0240 D1) — 拒绝执行
-
-**用法**:
-
-```bash
-cockpit model-driven [flags]
-cockpit model-driven --json          # 机器可读输出
-cockpit model-driven --dry-run       # 预检 (无副作用)
-cockpit model-driven --help          # 完整参数面
-```
-
-  · 成熟度: deprecated  |  风险: low
 
 
 ## `cockpit mof`
@@ -179,27 +140,6 @@ cockpit telemetry --help          # 完整参数面
 ```
 
   · 所属域: `system`  |  成熟度: stable  |  风险: low
-
-
-## `cockpit watchdog`
-
-🐕 [DEPRECATED] 自治守护犬已退役 → Mesh-bound capability admission (Cockpit PR #78)
-
-**用法**:
-
-```bash
-cockpit watchdog [flags]
-cockpit watchdog --json          # 机器可读输出
-cockpit watchdog --dry-run       # 预检 (无副作用)
-cockpit watchdog --help          # 完整参数面
-```
-
-  · 所属域: `governance`  |  成熟度: deprecated  |  风险: low
-
-```bash
-cockpit watchdog --help
-  # → 提示: 守护犬已退役, 请用 mesh capability admission (cockpit mesh fabric)
-```
 
 
 ---
