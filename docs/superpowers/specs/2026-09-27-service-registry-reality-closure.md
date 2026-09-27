@@ -301,7 +301,7 @@ registry 走 `canonical_root()`，与 C5 之前逐字节相同）。回填的 30
 - `python3 bin/mof/gen-service-configs.py --reality-check --json` → `exit 0` 且
   `e1_drift==0 && e1_status=="ok" && e2_undeclared==0 && e4_prefix_ok==true && ok==true`；
   计数 `installed_total==56`、`workspace_scoped==43`、`owned_installed==49`、
-  `owned_declared==49`、`e3_lint_debt==2`、`undecided==4`、`foreign==3`、
+  `owned_declared==49`、`e3_lint_debt==2`、`unclassified==4`、`external==3`、
   `registry_declared_total==64`（= 34 原有 + 30 回填）
   （报告键与 registry 里 `classification` 的取值同名：`unclassified` / `external`，
   §1/§3 散文里的"需署名裁决 / foreign"是同一批东西的叙述名）

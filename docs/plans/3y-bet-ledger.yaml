@@ -36135,7 +36135,7 @@ bets:
     equality over the whole set is a category error, because the undeclared set contains
     third-party jobs (com.amazon.codewhisperer.launcher, com.macpaw.CleanMyMac5.Updater);
     scoping equality to this repository''s own namespaces gives the number the gate
-    must actually drive to zero: 29 (47 owned installed minus 18 owned already declared).
+    must actually drive to zero: 30 (49 owned installed minus 19 owned already declared).
     The existing checker bin/mof/gen-service-configs.py --check reports drift_count
     0 and cannot see this class at all, because it compares registry to plist bytes
     in one direction only. A second blind spot is the enumerator: 2 of the 56 plists
@@ -36144,9 +36144,9 @@ bets:
     has both loaded and running; bin/gac/meta-doctor.py:364-367 swallows that exception
     with continue, so two live jobs silently do not exist in its launchd reality check.
     This bet fixes the enumeration contract, states the ownership predicate as three
-    explicit tables (owned 47 / undecided 6 / foreign 3), adds E2/E3/E4 as a read-only
+    explicit tables (owned 49 / unclassified 4 / external 3), adds E2/E3/E4 as a read-only
     --reality-check mode of the existing generator (bin/ has a net-new script quota,
-    so no new script and no quota-baseline edit), backfills the 29 as observe-only entries
+    so no new script and no quota-baseline edit), backfills the 30 as observe-only entries
     with generate false plus per-plist content digests, and converges gen-service-configs.py:26-43
     onto repo_root.canonical_root() instead of its own duplicated three-tier resolution
     whose third tier falls back to __file__. It starts, stops, bootstraps and writes
@@ -36174,12 +36174,12 @@ bets:
   non_goals:
   - Do not relocate any install root, rewrite a plist path, or cut cron over — that
     is ADR-0456 B4 and it is gated on this bet's E2 reaching zero.
-  - Do not sign the ownership verdict for the 6 namespace-neutral labels (com.user.cron-service,
-    com.learningevolution.concept-weave.monthly, com.local.decision-svc, com.local.phosphene,
-    com.lifeos.pulse, com.opencode.quota-monitor). They are recorded under launchd_namespace.undecided
-    with per-label measured evidence and a reason; the equality assertion deliberately
-    excludes them so this bet cannot be blocked pending a principal ruling. Changing
-    a ruling means moving a label between tables, not changing code.
+  - Do not sign the ownership verdict for the 4 unclassified labels (com.learningevolution.concept-weave.monthly,
+    com.lifeos.pulse, com.local.decision-svc, com.opencode.quota-monitor). They are recorded in
+    launchd_namespace.exempt_labels with classification unclassified and a measured reason per
+    label; the equality assertion deliberately excludes them so this bet cannot be blocked
+    pending a principal ruling. Changing a ruling means moving a label between tables, not
+    changing code.
   - 'Do not make E1 stricter or looser: gen-service-configs.py --check keeps its exact
     byte-comparison semantics, and the backfill must not change a single byte on disk
     (verified by shasum over all 56 plists before and after).'
@@ -36190,23 +36190,27 @@ bets:
   done_when:
   - python3 bin/mof/gen-service-configs.py --reality-check --json exits 0 with e1_drift
     0, e2_undeclared 0, e4_prefix_ok true, installed_total 56, workspace_scoped 43,
-    owned_installed 47, owned_declared 47, e3_lint_debt 2, undecided 6, foreign 3.
-  - services.yaml carries a launchd_namespace section with owned / undecided / foreign
-    tables where every entry states a reason, and the 29 backfilled service entries
-    all set generate to false and carry label, scheduler, enabled (taken from launchctl
-    print, not from directory presence), owner, a source pointer to the plist, and that
-    plist's content_digest.
+    owned_installed 49, owned_declared 49, e3_lint_debt 2, unclassified 4, external 3.
+  - services.yaml carries a launchd_namespace section in the same YAML document as services,
+    with workspace_prefixes (11 dot-segment prefixes), exempt_labels (7 exact labels, each
+    carrying classification external or unclassified plus a measured reason) and dev_label_prefix.
+    The 30 backfilled service entries all set generate to false and carry label, scheduler,
+    trigger, enabled, program, outputs, config_source pointing at the plist, a content_digest
+    equal to the sha256 of those plist bytes, and notes stating why the entry exists. No owner
+    key is added because no existing entry or consumer reads one.
   - gen-service-configs.py --check still reports drift_count 0 and shasum -a 256 over
     all 56 ~/Library/LaunchAgents/*.plist is byte-identical before and after the bet.
   - Enumeration reads plists through plutil -convert json; plistlib appears only inside
     the E3 strict well-formedness report and is never used as a filter that drops files.
   - 'gen-service-configs.py no longer infers the repository root from a hard-coded home
-    directory literal: grep -n Workspace bin/mof/gen-service-configs.py returns no match.'
+    directory literal. The criterion is absolute-path literals, not the word Workspace (which
+    legitimately appears in prose and in the report label): grep -c /Users/xiamingxing
+    bin/mof/gen-service-configs.py returns 0.'
   verify:
   - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json
     expect: exit 0; e1_drift==0 && e2_undeclared==0 && e4_prefix_ok==true && installed_total==56
-      && workspace_scoped==43 && owned_installed==47 && owned_declared==47 && e3_lint_debt==2
-      && undecided==6 && foreign==3
+      && workspace_scoped==43 && owned_installed==49 && owned_declared==49 && e3_lint_debt==2
+      && unclassified==4 && external==3 && registry_declared_total==64
   - cmd: python3 bin/mof/gen-service-configs.py --check --json
     expect: exit 0; drift_count 0 (E1 semantics unchanged by this bet)
   - cmd: shasum -a 256 ~/Library/LaunchAgents/*.plist
@@ -36228,7 +36232,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-27-service-registry-reality-closure.md
     spec_version: 1.0.0
-    content_digest: sha256:192ecc2ab17b67b04ffae59b19458d68d7d9ee87c7aef0cb47b58e0328dbdef9
+    content_digest: sha256:50d4ef53508f8ae3f61206d3f7c35d75af4c506ddad7621693e668d5e329471f
     decision_ref: decision://accepted/BET-Y2Q4-T10-206
   value_indicator_policy: false
   completion_evidence:
