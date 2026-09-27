@@ -3,7 +3,7 @@ schema: md/v1
 status: draft
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-27
 type: ssot
 review-state: metadata-only
 metadata-migrated-at: 2026-07-31
@@ -69,6 +69,31 @@ metadata-migrated-at: 2026-07-31
 3. **Phase 3 (consumer PR)**: agora/metaos/omo 各 submodule 起 PR 切到新 URI
 4. **Phase 4 (主仓 bump)**: 根仓 bump submodule 指针, 验证 gac-local-gate + tests
 5. **Phase 5 (gc)**: radar_cron 跑 gac-gc 确认 0 consumer 引用旧 URI 后, 删除 deprecated 字段
+
+## 遗留域 (legacy — 只允许出现在历史文档/旧名引用中, 禁止用于新 URI)
+
+这些域名仍出现在仓内文档或代码旧名里, `bin/gac/check-mcp-bos-uri-completeness.py` 以本节为合法来源
+(2026-09-28 前它把 `bos-pending-registrations.yaml` 当域白名单, 待登记清单因此无法清理)。
+新增 URI 一律用上文的主域/扩展域; 本节只减不增。
+
+**代码旧名** — agora 解析器 `_LEGACY_BOS_URI_ALIASES` 把旧名映射到规范名, 新代码应直接写规范名:
+
+| 旧域 | 规范名 (示例) |
+|------|---------------|
+| `bos://brain/` | `bos://memory/events/card_updated` |
+| `bos://voice/` | `bos://perception/voice-memo/ingest` |
+| `bos://scene/` | `bos://perception/scene/anchor` |
+| `bos://im/` | `bos://system/im-session/triage` |
+| `bos://inbox/` | `bos://documents/inbox-mail/draft` |
+| `bos://execution/` | `bos://system/runtime/workers/status` |
+
+**非服务命名空间** — 注册表里用作事件/连接标识, 不对应 BOS 服务:
+`bos://observability/` (observability-events.yaml 事件名), `bos://knowledge/` (external-connection-fabric.yaml 连接标识)。
+
+**历史规划/设想** — ADR、复盘、设计稿里出现过但未落地的域:
+`bos://asset/`, `bos://bus/`, `bos://connectors/`, `bos://decision/`, `bos://gateway/`, `bos://graph/`,
+`bos://ingress/`, `bos://mail/`, `bos://metaos/`, `bos://mof/`, `bos://ontology/`, `bos://ops/`,
+`bos://product/`, `bos://service/`, `bos://shadow/`, `bos://spine/`, `bos://tool/`, `bos://work/`。
 
 ## 5 域守护规则 (CR-L0-BOS-DOMAIN-NORM, 计划)
 
