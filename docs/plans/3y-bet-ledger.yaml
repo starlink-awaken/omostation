@@ -37408,7 +37408,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-27-agent-perception-shallow-history-head-tree.md
     spec_version: 1.0.0
-    content_digest: sha256:fd0a8e3dd9518f5861aa890ffbaa361cad49dbcff30f1dcdfb534a64e955fae5
+    content_digest: sha256:03a4b3b15b09a6311d7fe8f09bb9abcd4e9e6131e0ad33d38aa6af99ba40c41f
     decision_ref: decision://accepted/BET-Y2Q4-T10-210
   value_indicator_policy: false
   completion_evidence:

@@ -5,6 +5,7 @@ title: 固化两条仓库自身历史/CI 认知到 AGENTS.md（浅历史与 head
 bet_id: BET-Y2Q4-T10-210
 status: accepted
 lifecycle: contract
+owner: governance-team
 last-reviewed: 2026-09-27
 ---
 
