@@ -36225,36 +36225,6 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:3fbbe9a4b7e1ba42e1f2b109a0f3f32e17d97ac2e99a6e9373e02ed8c3c8d1d9
     decision_ref: decision://accepted/BET-Y2Q4-T10-04
-  value_indicator_policy: false
-  completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    overall_state: delivery_accepted
-    axes:
-      engineering:
-        status: VERIFIED
-        evidence:
-          merged_reachable_commit:
-            ref: git://origin/main@9317e48ab
-          diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
-          tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
-          rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
-      operational:
-        status: PROVEN
-        evidence:
-          cleanup:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
-          fresh_receipt:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
-          live_canary:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
-          replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
-      value:
-        status: NOT_PROVEN
-        evidence: {}
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     overall_state: delivery_accepted
@@ -36985,7 +36955,8 @@ bets:
     的 linked worktree 以自愈 symlink 桥呈现 (git worktree remove 只摘链接不碰目标), 读侧 ~15 个工具零改动
     —— 单一物理存储使读写天然一致。附 gac-worktree.sh release/merge/TTL 在 remove 前 对遗留真实目录做 merge-rescue
     兜底 (现有 7 个 legacy worktree 不会再跑内核代码)。'
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -37041,25 +37012,51 @@ bets:
   - tests/unit/test_delivery_anchor_contract.py
   - tests/test_agent_workflow.py
   - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-09-27-worktree-anchor-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-209.md
   depends_on: []
   accepted_specifications:
   - content_digest: sha256:5204a90d837a70d9d399ba315a9d40f82706f7aabcfecd9f27bb6e2841269f25
     decision_ref: decision://accepted/BET-Y2Q4-T10-209
     spec_ref: repo://docs/superpowers/specs/2026-09-27-delivery-state-worktree-anchor-design.md
     spec_version: 1.0.0
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@65611d5ba776ad18dae9d723fb9ea2b27f9e2da7
+          tests:
+            ref: receipt://docs/reports/2026-09-27-worktree-anchor-closeout.md
+            sha256: sha256:eec9d25d4f91d03d9ede7473a731ab1ecf8d9644c1289379a2ed78c3ed6bd6e8
+          diff:
+            ref: receipt://docs/reports/2026-09-27-worktree-anchor-closeout.md
+            sha256: sha256:eec9d25d4f91d03d9ede7473a731ab1ecf8d9644c1289379a2ed78c3ed6bd6e8
+          rollback:
+            ref: receipt://docs/reports/2026-09-27-worktree-anchor-closeout.md
+            sha256: sha256:eec9d25d4f91d03d9ede7473a731ab1ecf8d9644c1289379a2ed78c3ed6bd6e8
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-27-worktree-anchor-closeout.md
+            sha256: sha256:eec9d25d4f91d03d9ede7473a731ab1ecf8d9644c1289379a2ed78c3ed6bd6e8
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-27-worktree-anchor-closeout.md
+            sha256: sha256:eec9d25d4f91d03d9ede7473a731ab1ecf8d9644c1289379a2ed78c3ed6bd6e8
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-209.md
+            sha256: sha256:9003414730d73c9ceecbb4edc38eb2ffa86945eb4c74559eae80dd1dbac0d740
+          cleanup:
+            ref: receipt://docs/reports/2026-09-27-worktree-anchor-closeout.md
+            sha256: sha256:eec9d25d4f91d03d9ede7473a731ab1ecf8d9644c1289379a2ed78c3ed6bd6e8
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
