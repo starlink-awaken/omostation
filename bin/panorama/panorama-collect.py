@@ -4658,8 +4658,28 @@ def build_payload() -> dict:
     # Revision-bound generation + strategic projection — required by
     # observatory_query.ObservationIndex (generation_id + strategic.trace).
     import hashlib as _hashlib
+    import json as _json
     payload["generation_id"] = _hashlib.sha256(payload["generated_at"].encode()).hexdigest()[:20]
-    payload["strategic"] = _build_strategic_projection(payload)
+    # Prefer the orchestrator's full strategic projection from current.json
+    # (produced every 300s with integrate_strategy). Fall back to the
+    # minimal local projection only when current.json is unavailable.
+    _orch_current = Path(os.environ.get(
+        "ZHIXING_DASHBOARD_CODE_ROOT",
+        str(Path.home() / ".local/share/zhixing-dashboard"),
+    )) / "current.json"
+    _strategic = None
+    try:
+        if _orch_current.is_file():
+            _orch_data = _json.loads(_orch_current.read_text(encoding="utf-8"))
+            _orch_strat = _orch_data.get("strategic")
+            if isinstance(_orch_strat, dict) and isinstance(_orch_strat.get("trace"), dict):
+                _strategic = _orch_strat
+                # Keep generation_id consistent with the orchestrator's
+                if isinstance(_orch_data.get("generation_id"), str):
+                    payload["generation_id"] = _orch_data["generation_id"]
+    except Exception:
+        _strategic = None
+    payload["strategic"] = _strategic or _build_strategic_projection(payload)
     return payload
 
 
