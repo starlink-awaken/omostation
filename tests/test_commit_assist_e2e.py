@@ -6,7 +6,7 @@ P77 STRAT § 2 Phase 6: commit-assist 当前实现 (bin/commit-assist.py) 的
 测试策略:
 - unit: import from bin/commit-assist.py, test pure functions
 - integration: temp git repo + staged diff → run script → verify output
-- tier verification: aetherforge → ollama → heuristic fallback chain
+- tier verification: aetherforge → heuristic fallback chain
 """
 
 from __future__ import annotations
@@ -30,7 +30,6 @@ CONVENTIONAL_TYPES = _COMMIT_ASSIST.CONVENTIONAL_TYPES
 clean_suggestion = _COMMIT_ASSIST.clean_suggestion
 heuristic_subject = _COMMIT_ASSIST.heuristic_subject
 query_aetherforge = _COMMIT_ASSIST.query_aetherforge
-query_ollama = _COMMIT_ASSIST.query_ollama
 AETHERFORGE_MODEL = _COMMIT_ASSIST.AETHERFORGE_MODEL
 
 
@@ -202,10 +201,4 @@ def test_empty_staged_diff():
 def test_aetherforge_unreachable_graceful():
     """aetherforge gateway unreachable -> returns None (not crash)"""
     result = query_aetherforge(AETHERFORGE_MODEL, "test", 1)
-    assert result is None, f"expected None, got {result!r}"
-
-
-def test_ollama_unreachable_graceful():
-    """ollama not available -> returns None (not crash)"""
-    result = query_ollama("nonexistent-model-xyz", "test", 3)
     assert result is None, f"expected None, got {result!r}"
