@@ -4621,7 +4621,63 @@ def build_payload() -> dict:
         ]
         payload["value_proof_readiness"] = authority.get("value_proof_readiness") or {"schema": "panorama-value-proof-readiness/v1", "available": False, "status": "UNKNOWN"}
         payload["claims_activation_readiness"] = authority.get("claims_activation_readiness") or {"schema": "claims-activation-readiness/v1", "available": False, "readiness": "UNKNOWN"}
+    # Revision-bound generation + strategic projection — required by
+    # observatory_query.ObservationIndex (generation_id + strategic.trace).
+    import hashlib as _hashlib
+    payload["generation_id"] = _hashlib.sha256(payload["generated_at"].encode()).hexdigest()[:20]
+    payload["strategic"] = _build_strategic_projection(payload)
     return payload
+
+
+def _build_strategic_projection(payload: dict) -> dict:
+    """Build a minimal valid strategic projection for ObservationIndex.
+
+    The full strategy projection (strategy_projection.build_strategy) lives
+    in the dashboard repo; this produces a bounded, schema-valid subset
+    from the publisher's own payload so the revision store can serve it.
+    """
+    nodes = []
+    edges = []
+    for bet in (payload.get("bets") or {}).get("in_progress", [])[:50]:
+        if isinstance(bet, dict) and bet.get("id"):
+            nodes.append({"id": "bet:" + str(bet["id"]), "kind": "bet",
+                          "title": str(bet.get("title", ""))[:80],
+                          "status": str(bet.get("status", "in_progress")),
+                          "facts": {"raw_id": bet["id"]}})
+    for gate in (payload.get("gates") or [])[:50]:
+        if isinstance(gate, dict) and gate.get("id"):
+            nodes.append({"id": "gate:" + str(gate["id"]), "kind": "gate",
+                          "title": str(gate.get("id")),
+                          "status": str(gate.get("verdict", "UNKNOWN")),
+                          "facts": {"summary": gate.get("summary", "")}})
+    for agent in (payload.get("agents") or [])[:50]:
+        if isinstance(agent, dict) and agent.get("id"):
+            nodes.append({"id": "agent:" + str(agent["id"]), "kind": "agent",
+                          "title": str(agent.get("name", agent["id"]))[:80],
+                          "status": str(agent.get("status", "UNKNOWN")),
+                          "facts": {}})
+    loops = payload.get("loops") or {}
+    live_loops = {}
+    for key, focus in (("loop_strategic", "战略履约"), ("loop_ooda", "OODA/算力"),
+                       ("loop_knowledge", "知识演进"), ("loop_breaker", "门禁熔断")):
+        loop = loops.get(key) or {}
+        live_loops[key] = {
+            "status": loop.get("status") or "NO_DATA",
+            "health_level": loop.get("health_level"),
+            "metrics": loop.get("metrics") or {},
+            "focus": focus,
+            "source": loop.get("source") or "NO_DATA",
+        }
+    return {
+        "schema": "strategic-observatory/v1",
+        "state": "PARTIAL",
+        "trace": {"nodes": nodes, "edges": edges, "gaps": [], "scope": {"truncated": False}},
+        "cross_plane_mesh": {"live_loops": live_loops},
+        "metrics": [],
+        "documents": [],
+        "proposals": [],
+        "model": {"macro": {"nodes": [], "edges": []}, "loops": [], "contradictions": []},
+    }
 
 
 def check_side_effects() -> int:
