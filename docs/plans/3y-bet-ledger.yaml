@@ -37365,7 +37365,8 @@ bets:
     声明执行鸿沟"）≥3 命中且指向 decisions/；抽查 ADR-0453/pattern/ pitfall 索引记录正确；摄入报告落 docs/reports/。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T3-COGNI
   priority: P1
@@ -37408,17 +37409,36 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T3-03
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e966f2db27a88c8b4bc82db334112d23f3d49039
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+          tests:
+            ref: receipt://docs/reports/kos-governance-ingestion-2026-09-27.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            治理知识检索已可用（ADR-0453 等命中实证）；真实消费（会话冷启动命中、
+            业务单引用）随使用累积计量。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
