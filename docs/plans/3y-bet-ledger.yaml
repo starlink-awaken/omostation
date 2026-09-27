@@ -37067,7 +37067,8 @@ bets:
     history 追加，coverage 复跑 27→25。--strict 强制不在本批次（剩余 >0，shadow 记录于 retro）。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-MATURITY
   priority: P1
