@@ -888,7 +888,7 @@ gac:
       '
     check_type: drift_audit
     target: bin/gac/commit-assist.py
-    source_ref: bin/gac/commit-assist.py::query_llm
+    source_ref: bin/commit-assist.py  # 2026-09-27 路径笔误修正: 真实执行体在 bin/ 根 (T10-01 判定表误判幽灵, 本 run 改判换名)::query_llm
     executor:
     - omo_audit
     - gac_local_gate
