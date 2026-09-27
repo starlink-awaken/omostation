@@ -34545,6 +34545,63 @@ bets:
             (verified via hermetic test-episode-bridge: 30 episodes observed);
             qualifying_episodes accumulates naturally after first closeout
             in main, not retroactively.
+- id: BET-Y2Q4-SH-9
+  title: Principal-ID Caller Migration — close SH-7 audit UNSAFE sites
+  goal: Migrate 7 OMO_PRINCIPAL_ID callers (read-only meters/gates/tests) to
+    principal_id_from_env() so future emit-paths that treat their output
+    as authoritative cannot silently corrupt the ledger.
+  status: pending
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P2
+  appetite: 0.25 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that mutates the recorder, the canonical
+    helper, or the ledger.
+  non_goals:
+  - Do not refactor scene-outcome-recorder (already CANONICAL).
+  - Do not change _principal_id helper (already complete).
+  - Do not introduce new principal-name mapping.
+  - Do not alter SH-5..SH-8 ledger entries.
+  done_when:
+  - All 7 UNSAFE sites migrated to principal_id_from_env().
+  - "bin/ssot/audit-principal-id-canonicalization.py reports unsafe_count is 0."
+  - bin/ssot/test-principal-id-canonical.py 4/4 pass.
+  - bin/ssot/test-episode-bridge.py --count 5 still passes (episodes=5,
+    readiness=collecting).
+  - make gac-local-gate 68/68 green.
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: bin/ssot/audit-principal-id-canonicalization.py
+    expect: exit 0, unsafe_count=0
+  - cmd: bin/ssot/test-principal-id-canonical.py
+    expect: exit 0 (4/4 pass)
+  - cmd: bin/ssot/test-episode-bridge.py --count 5
+    expect: exit 0
+  write_surfaces:
+  - bin/bc-os/north_star_meter_v2.py
+  - bin/gac/check-episode-pipeline.py
+  - bin/gac/compound-attribution-report.py
+  - bin/gac/unified-health-score.py
+  - bin/panorama/panorama-collect.py
+  - bin/ssot/test-episode-bridge.py
+  - bin/ssot/weekly-review.py
+  - docs/superpowers/specs/2026-09-27-principal-id-caller-migration.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-9.md
+  depends_on:
+  - BET-Y2Q4-SH-7
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-principal-id-caller-migration.md
+    spec_version: 1.0.0
+    content_digest: sha256:5ca51ecd92d272cd997f980d7b4f50d4241ecfd1379b13f5f7a0d166a4b69349
+    decision_ref: decision://accepted/BET-Y2Q4-SH-9
 - id: BET-Y2Q4-SH-5.1
   title: Episode Pipeline Principal-ID Normalization — fix SH-5 silent failure
   goal: Auto-normalize OMO_PRINCIPAL_ID to canonical principal:<id> form in

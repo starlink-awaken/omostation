@@ -16,10 +16,27 @@ import json
 import os
 import re
 import sys
+
 from collections import Counter
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
+# SH-9 (BET-Y2Q4-SH-9): canonicalize OMO_PRINCIPAL_ID via the shared helper.
+# Keeps the ``principal:<id>`` form preserved end-to-end and prevents
+# future emit-paths that treat this caller's output as authoritative
+# from silently mismatching the recorder's prefix.
+import importlib.util as _importlib_util
+
+_SSOT_DIR = str(Path(__file__).resolve().parents[1] / "ssot")
+if _SSOT_DIR not in sys.path:
+    sys.path.insert(0, _SSOT_DIR)
+_pid_spec = _importlib_util.spec_from_file_location(
+    "_ssot_principal_id", str(Path(_SSOT_DIR) / "_principal_id.py"),
+)
+_pid_module = _importlib_util.module_from_spec(_pid_spec)
+assert _pid_spec.loader is not None
+_pid_spec.loader.exec_module(_pid_module)
+principal_id_from_env = _pid_module.principal_id_from_env
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -266,7 +283,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--value-truth-receipt", type=Path)
     parser.add_argument("--db-path", type=Path, default=DEFAULT_LEDGER)
-    parser.add_argument("--principal-id", default=os.environ.get("OMO_PRINCIPAL_ID", ""))
+    parser.add_argument("--principal-id", default=principal_id_from_env())
     parser.add_argument(
         "--bet-ledger",
         type=Path,

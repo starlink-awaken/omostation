@@ -25,10 +25,27 @@ import sqlite3
 import stat
 import subprocess
 import sys
+
 import tempfile
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+# SH-9 (BET-Y2Q4-SH-9): canonicalize OMO_PRINCIPAL_ID via the shared helper.
+# Keeps the ``principal:<id>`` form preserved end-to-end and prevents
+# future emit-paths that treat this caller's output as authoritative
+# from silently mismatching the recorder's prefix.
+import importlib.util as _importlib_util
+
+_SSOT_DIR = str(Path(__file__).resolve().parents[1] / "ssot")
+if _SSOT_DIR not in sys.path:
+    sys.path.insert(0, _SSOT_DIR)
+_pid_spec = _importlib_util.spec_from_file_location(
+    "_ssot_principal_id", str(Path(_SSOT_DIR) / "_principal_id.py"),
+)
+_pid_module = _importlib_util.module_from_spec(_pid_spec)
+assert _pid_spec.loader is not None
+_pid_spec.loader.exec_module(_pid_module)
+principal_id_from_env = _pid_module.principal_id_from_env
 
 _CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
 ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
@@ -304,7 +321,7 @@ def collect_personal_value_truth(
     spec.loader.exec_module(meter)
     truth = meter.measure_value_truth(
         db_path=ledger,
-        principal_id=str(env.get("OMO_PRINCIPAL_ID", "")).strip(),
+        principal_id=str(principal_id_from_env()).strip(),
     )
     after = _event_ledger_logical_digest(ledger)
     if before != after:

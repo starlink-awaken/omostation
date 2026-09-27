@@ -30,6 +30,23 @@ import sys
 import tempfile
 from pathlib import Path
 
+# SH-9 (BET-Y2Q4-SH-9): route OMO_PRINCIPAL_ID via the shared canonicalizer
+# at bin/ssot/_principal_id.py so future emit-paths that treat this
+# guard's principal as authoritative cannot silently mismatch the
+# recorder's prefix.
+import importlib.util as _importlib_util
+
+_SSOT_DIR = str(Path(__file__).resolve().parents[1] / "ssot")
+if _SSOT_DIR not in sys.path:
+    sys.path.insert(0, _SSOT_DIR)
+_pid_spec = _importlib_util.spec_from_file_location(
+    "_ssot_principal_id", str(Path(_SSOT_DIR) / "_principal_id.py"),
+)
+_pid_module = _importlib_util.module_from_spec(_pid_spec)
+assert _pid_spec.loader is not None
+_pid_spec.loader.exec_module(_pid_module)
+principal_id_from_env = _pid_module.principal_id_from_env
+
 WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
 from repo_root import event_ledger_path
@@ -81,8 +98,8 @@ def check(db_path: Path) -> dict:
         ).fetchone()
         bridge_closeouts = int(closeout_row[0]) if closeout_row else 0
         # recent episodes for principal (last 7 days)
-        principal = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
-        recent_row = conn.execute(
+          principal = principal_id_from_env()
+          recent_row = conn.execute(
             """
             SELECT COUNT(*) FROM event_log
             WHERE producer = ?
