@@ -37155,7 +37155,8 @@ bets:
     SEC×4/AGE×5 幻影处置呈报 owner 表态。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-MATURITY
   priority: P1
@@ -37195,6 +37196,7 @@ bets:
   - bin/gac/check-debt-closure-discipline.py
   - .omo/debt/items/
   - .omo/_truth/registry/governance-checks.yaml
+  - bin/gac/registry-alias-map.yaml
   - docs/plans/
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-27-rule-wiring-batch3.md
