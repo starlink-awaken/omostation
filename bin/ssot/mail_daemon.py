@@ -180,7 +180,8 @@ def run_cycle() -> dict[str, Any]:
     ts = utc_now()
     mails = read_all(limit=20, unread_only=True)
     if not mails:
-        result = {"ts": ts, "mails": 0, "status": "no_unread"}
+        # 字段与正常轮次同形: 此前缺 tasks/drafts, main() 打印时 KeyError → 每个无新邮件轮次 exit 1
+        result = {"ts": ts, "mails": 0, "tasks": 0, "drafts": 0, "events_emitted": 0, "status": "no_unread"}
         append_jsonl(HEARTBEAT, result)
         return result
 
