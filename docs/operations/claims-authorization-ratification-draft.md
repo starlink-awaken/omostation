@@ -46,7 +46,7 @@ principal 签署前必须重跑同一组命令 —— 若 `sequence` / `last_rec
 | `fresh` | `false` —— 语义：tip 回执 `issued_at` 距今不在 0–120s 内（`claims_authority.authority_status()`），即**近期无新变更**，不是缓存陈旧 |
 | 激活回执（witness） | `sha256:96654eb9e03591b2b5da2cb89119997c9ec2c193755ae7c277b3a0ce7be1e5d3`，witness `sequence: 1` |
 | high-water | `sequence: 9`，`receipt_digest` == tip `last_receipt_digest`（一致） |
-| 观测采样进程 | `claims-observation/sampler.py`（pid 53065，launchd `com.omostation.claims-observation-r0`）在跑 |
+| 观测采样进程 | `claims-observation/sampler.py`（draft 时 pid 53065；#4425 watchdog 上线时经 launchd 重启为 pid 75568，见 §5.2 / §7.5 复核），launchd `com.omostation.claims-observation-r0` 持续拉起 |
 
 > **读法纪律（沿用 checklist §0/§2）**：上表是「签署时点的绑定快照」，不是新的事实读源。
 > 任何时刻的权威读源仍是运行时投影：`claims-authority-status/v2`、`panorama-claims-activation-request/v1`、
@@ -169,8 +169,15 @@ principal 签署前必须重跑同一组命令 —— 若 `sequence` / `last_rec
 - **可证**：观测采样器 `claims-observation/sampler.py` 由 launchd `com.omostation.claims-observation-r0`
   持续拉起（draft 时 pid 53065 在跑）；宿主侧活性看门狗 `liveness-watchdog.sh` +
   `com.omostation.zhixing-dashboard-watchdog` 存在；`omlxc` watchdog KeepAlive 修复（#92）于 2026-09-27 经 #4416 合入 main。
-- **简报口径**：「当前有 watchdog 工作在进行中」→ `reported-unverified`（draft 时未找到以 claims watchdog
-  为主题的 open PR / 分支 / 专门工件；open PR 仅 #4419、#4420，均与本包无关且**未被本包触碰**）。
+- **可证（2026-09-27T06:45Z 复核，晚于本 draft 初稿采集时点 03:20Z）**：以 claims store 链校验为主题的
+  watchdog **已交付并合并** —— PR #4425（squash 合并 `2026-09-27T06:41:40Z`）给采样器加了每 tick 只读链校验 →
+  incident 快照 → 告警 → 两级自动修复（30min 冷却，仅可从新签名校验备份恢复）。部署实测：
+  `~/.local/share/zhixing-dashboard/claims-observation/sampler.py` `sha256:15fb34f59eed047866a6700681b0795435de5b09bda3c0cd1484cbac602852c8`
+  （回滚副本 `sampler.py.before-watchdog-20260927T043206Z`），launchd 已重启（pid 75568）；
+  `summary.json["watchdog"]` 实测 `{"ok": true, "detected": false, "action": "monitor_healthy",
+  "checked_at_utc": "2026-09-27T06:45:54.841350Z"}`，`alerts.jsonl` 至复核时点无告警记录。
+  → 初稿「draft 时未找到以 claims watchdog 为主题的专门工件」仅对 03:20Z 时点成立，**本行取代该口径**；
+  与 #4419 / #4420 一样，#4425 **未被本包触碰**（本包只读引用，不改其内容）。
 
 ### 5.3 历史授权（**属于别的操作**，不覆盖本包）
 
@@ -377,6 +384,22 @@ $ (cd /Users/xiamingxing/agents/_shared/backups/omo-claims-authority-r0/incident
 $ pgrep -fl "claims-observation/sampler.py"
 53065 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/sampler.py
 ```
+
+**复核（2026-09-27T06:45Z，PR #4425 watchdog 部署后；与初稿采集同为只读观测）**：
+
+```console
+$ pgrep -fl "claims-observation/sampler.py"
+75568 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/sampler.py
+
+$ launchctl list | grep claims-observation
+75568	-15	com.omostation.claims-observation-r0
+
+$ shasum -a 256 /Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/sampler.py
+15fb34f59eed047866a6700681b0795435de5b09bda3c0cd1484cbac602852c8  /Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/sampler.py
+```
+
+（pid 53065 → 75568 仅因 #4425 上线时按 launchd 重启采样器；进程路径与 launchd 标签不变；
+`-15` 为重启时的上一次退出码 SIGTERM，非故障。）
 
 ---
 
