@@ -1,6 +1,9 @@
 ---
 type: retro
-status: active
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-09-26
 bet_id: BET-Y2Q3-T10-OMLXC-02
 workflow_run: 20260925T014237Z-project-code-change-44d6eaf9
 created: 2026-09-25
