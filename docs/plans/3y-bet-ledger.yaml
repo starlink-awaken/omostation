@@ -37067,7 +37067,8 @@ bets:
     history 追加，coverage 复跑 27→25。--strict 强制不在本批次（剩余 >0，shadow 记录于 retro）。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-MATURITY
   priority: P1
@@ -37114,17 +37115,36 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@cd2f50268aa528f5b793f95f60838f842127acfa
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-05.md
+          tests:
+            ref: receipt://bin/gac/check-rule-wiring-coverage.py
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-05.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-05.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-05.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-05.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-05.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值 = 规则接线缺口 27→25 且 15 条零悬空（每条有明确处置或带证据的待决），
+            --strict 上门禁的路径与门槛已显式化（批次三归零 + shadow 一周）。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
