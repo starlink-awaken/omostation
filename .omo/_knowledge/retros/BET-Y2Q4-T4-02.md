@@ -51,3 +51,15 @@ run_id: 20260927T080057Z-project-doc-change-28565e49
 - principal 签发 → 本 retro 补记签发回执（日期/确认人），value 轴升级记录；
 - 人工基线填写后纳入下期对比；
 - 第二单候选 ①（会议纪要行动包）待 principal 提供真实纪要。
+
+---
+
+# 签发回执补记（2026-09-27）
+
+- **principal 签发**：2026-09-27 会话内明确「签发」，针对交付周报 09-20→09-27
+  （PR #4436 交付版）。零修订意见（revision: 无）。
+- **价值轴处置**：value ACCEPTED 契约需 4 键（real_signal/human_verdict/revision/time_burden）；
+  time_burden 人工基线 principal 未提供——按 D1 不编造，value 轴维持 NOT_PROVEN，
+  键补齐（principal 报一个自估分钟数即可）后另行升级入账。
+- **消费信号**：principal 在同一会话内完整接收本报告并签发 = 首个"产物被真实消费"
+  事件；后续每期周报的消费记录按 X3 计量累积。
