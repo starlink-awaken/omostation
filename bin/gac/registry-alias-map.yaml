@@ -283,6 +283,18 @@ aliases:
       governance-checks: "契约 .omo/standards/submodule-pointer-bump-contract.md"
       bin_executor: ".omo/_truth/registry/hook-manifest.yaml:107 id: gitlink-ancestry (pre-push 前进指针强制)"
 
+  - canonical: CR-COMMIT-LLM-ASSIST
+    aliases: [commit-assist]
+    evidence:
+      governance-checks: "source_ref 路径笔误已修正 bin/gac/ → bin/ (2026-09-27, 原判幽灵系误判)"
+      bin_executor: "bin/commit-assist.py (274 行, #4422/#4384 活跃维护) + .githooks/README.md"
+
+  - canonical: CR-COMMIT-ASSIST-E2E
+    aliases: [commit-assist]
+    evidence:
+      governance-checks: "tests/test_commit_assist_e2e.py (18 测试全过, 2026-09-27 实跑验证)"
+      bin_executor: "bin/commit-assist.py + bin/ssot/gen-tools-index.py 引用"
+
 cross_walks:
   - from: governance-checks
     to: L0-constraints
