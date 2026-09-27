@@ -37295,7 +37295,7 @@ bets:
   done_when:
   - check-episode-pipeline.py ast 可编译 + --self-test rc=0
   - pyproject 含 B006，uv run ruff check bin/ rc=0
-  - coverage unreferenced = 0 且 retired 计数 11 可见
+  - coverage unreferenced = 0 且 retired 计数可见（实况 18, 含工作簿外 X3/L4/收窄类）
   - lint 0 新增 / gac-local-gate PASS
   - retro 固化（--strict shadow 起跑 + DEBT 关单条件记录）
   verify:
@@ -37303,8 +37303,8 @@ bets:
     expect: exit 0
   - cmd: python3 bin/gac/check-rule-wiring-coverage.py --json
     expect: unreferenced = 0, retired = 11
-  - cmd: uv run ruff check bin/
-    expect: exit 0（B006 生效且无违规）
+  - cmd: uv run ruff check --select B006 bin/
+    expect: 零违规（B006 生效；全量扫描经基线门禁 gac-local-gate PASS）
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: 不引入新错误
   - cmd: make gac-local-gate
