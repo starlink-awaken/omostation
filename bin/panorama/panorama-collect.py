@@ -609,8 +609,22 @@ def publish_projection_revision(
         fresh_until = generated + timedelta(minutes=10)
         generated_at = generated.isoformat().replace("+00:00", "Z")
         fresh_until_at = fresh_until.isoformat().replace("+00:00", "Z")
+        # Use the dashboard repo's template (kept in sync with the orchestrator)
+        # instead of the embedded legacy TEMPLATE, so published revisions serve
+        # the same page the orchestrator produces.
+        _dash_template_path = Path(
+            os.environ.get(
+                "ZHIXING_DASHBOARD_CODE_ROOT",
+                str(Path.home() / ".local/share/zhixing-dashboard"),
+            )
+        ) / "template.html"
+        _page_template = (
+            _dash_template_path.read_text(encoding="utf-8")
+            if _dash_template_path.is_file()
+            else TEMPLATE
+        )
         artifact_bodies = {
-            "page": TEMPLATE.replace(
+            "page": _page_template.replace(
                 "__DATA__", json.dumps(published_payload, ensure_ascii=False)
             ).encode("utf-8"),
             "data": json.dumps(published_payload, ensure_ascii=False, indent=1).encode("utf-8"),
