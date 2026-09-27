@@ -36181,7 +36181,8 @@ bets:
 - id: BET-Y2Q4-T10-04
   title: 根仓 Makefile 整理与兼容入口收敛
   goal: 在不改变既有目标语义的前提下，整理根仓 Makefile 的公共变量、目标声明、帮助输出与标准聚合入口，降低维护和调用成本。
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -36226,17 +36227,36 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@86d89fc924d333a015a3c7ca6eab373c36c34d43
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          tests:
+            ref: receipt://Makefile
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            维护成本下降（新目标默认用 $(PYTHON)，解释器切换单点改动）是长期收益，
+            本期无直接业务产物。
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-205
   title: ADR-0456 B2 端口段注册 — dev 端口带、未注册端口收口与生产 UI 入口事实修正

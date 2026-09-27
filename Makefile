@@ -23,6 +23,7 @@
 	check test lint ci-local sync status
 
 UV ?= uv
+PYTHON ?= python3
 PY := $(UV) run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
 
@@ -117,11 +118,11 @@ ci-local-fast: check-layers  ## 本地极速门禁
 
 gate-skills:  ## Agent 技能静态合规检查
 	@echo "── 检查 Agent Skills 规范 ────────────────────────────"
-	python3 bin/ssot/check-agent-skills.py
+	$(PYTHON) bin/ssot/check-agent-skills.py
 
 gate-ci-surfaces:  ## CI 工作流与注册表防漂移检查
 	@echo "── 检查 CI Surfaces 注册表 ───────────────────────────"
-	python3 bin/gac/check-ci-surfaces.py
+	$(PYTHON) bin/gac/check-ci-surfaces.py
 
 gate-layers: check-layers
 check-layers:  ## 分层依赖检查 (docs/layer-contract.yaml)
@@ -189,19 +190,19 @@ script-registry-validate:  ## 验证全域脚本 444 是否悉数挂号
 	$(PY) bin/ssot/script-registry.py validate
 
 adr-iteration-rate:  ## ADR 迭代速率限制 (ADR-4443 教训)
-	python3 bin/gac/check-adr-iteration-rate.py
+	$(PYTHON) bin/gac/check-adr-iteration-rate.py
 
 quota-pressure:  ## 治理配额压力监控
-	python3 bin/gac/check-quota-pressure.py
+	$(PYTHON) bin/gac/check-quota-pressure.py
 
 gov-health-metrics:  ## 治理健康度量聚合
-	python3 bin/gac/governance-health-metrics.py
+	$(PYTHON) bin/gac/governance-health-metrics.py
 
 capability-chain-boundary:  ## MCP 能力链端到端覆盖
-	python3 bin/gac/check-capability-chain-boundary.py
+	$(PYTHON) bin/gac/check-capability-chain-boundary.py
 
 pr-lifecycle:  ## PR 生命周期可见性
-	python3 bin/gac/check-pr-lifecycle.py
+	$(PYTHON) bin/gac/check-pr-lifecycle.py
 
 m4-health:  ## M4 health score
 	$(PY) bin/mof/m4-health-score.py --emit
@@ -216,10 +217,10 @@ service-registry-reality:  ## launchd 现实双向门禁 E1-E4 (只读, 绝不�
 	$(PY) bin/mof/gen-service-configs.py --reality-check
 
 runtime-install-root:  ## 三层根 + 运行时安装位只读报告 (ADR-0456 B4a; 不写任何配置)
-	@python3 bin/lib/repo_root.py --json
+	@$(PYTHON) bin/lib/repo_root.py --json
 	@if [ ! -f "$$HOME/.local/opt/omostation/docs/project-registry.yaml" ]; then \
 		echo "# 安装位未落位: $$HOME/.local/opt/omostation"; \
-	elif ! out=$$(cd "$$HOME/.local/opt/omostation" && python3 bin/lib/repo_root.py --json 2>/dev/null) || [ -z "$$out" ]; then \
+	elif ! out=$$(cd "$$HOME/.local/opt/omostation" && $(PYTHON) bin/lib/repo_root.py --json 2>/dev/null) || [ -z "$$out" ]; then \
 		echo "# 安装位落后于本轮: 该 clone 的 repo_root.py 还没有 --json CLI (它只 print 退出码)"; \
 		echo "# 重新 detach 到含 install_root() 的 main SHA 后这里才会自报 —— ADR-0456 B4a done_when #2 只在合并后可满足"; \
 	else \
@@ -260,7 +261,7 @@ goal-mode-test:  ## Goal 模式全流程测试
 
 test-all:  ## 触发全仓拓扑级联测试
 	@echo "── 全仓受影响项目级联测试 ────────────────────────────"
-	@python3 bin/gac/affected-graph.py --changed-projects omlxc,aetherforge,cockpit --json
+	@$(PYTHON) bin/gac/affected-graph.py --changed-projects omlxc,aetherforge,cockpit --json
 
 test-omlxc: omlxc-test
 omlxc-test:  ## 运行 omlxc 全量单测 (pytest)
@@ -333,7 +334,7 @@ capability-federation-audit:  ## 只读审计 provider/worker/workflow/capabilit
 
 sync-help-docs: sync-capability-registry  ## 从注册表生成派生文档
 	@echo "── 生成派生文档 ────────────────────────────────────"
-	python3 bin/ssot/gen-help-docs.py
+	$(PYTHON) bin/ssot/gen-help-docs.py
 
 sync-all-docs: sync-help-docs  ## 全量文档同步 (注册表 + 所有派生文档)
 	@echo "── 全量文档同步完成 ────────────────────────────────"
@@ -374,17 +375,17 @@ submodule-pointer-transaction:
 
 hygiene-worktree: worktree-hygiene
 worktree-hygiene:  ## worktree 卫生审计与自动清理
-	python3 bin/gac/worktree-hygiene-audit.py --auto-clean --fail-on-unsafe
+	$(PYTHON) bin/gac/worktree-hygiene-audit.py --auto-clean --fail-on-unsafe
 worktree-hygiene-retire:  ## N=14 天闲置 worktree 退役候选报告 (GOVERNANCE.md, dry-run 只报告不删除)
-	python3 bin/gac/worktree-hygiene-audit.py --auto-clean --fail-on-unsafe --stale-days 14
+	$(PYTHON) bin/gac/worktree-hygiene-audit.py --auto-clean --fail-on-unsafe --stale-days 14
 
 hygiene-audit: worktree-audit
 worktree-audit:  ## 列出可清理的冗余分支
-	python3 bin/ssot/check-branch-redundant.py --json
+	$(PYTHON) bin/ssot/check-branch-redundant.py --json
 
 hygiene-janitor: worktree-janitor
 worktree-janitor:  ## worktree/废弃分支安全清理
-	python3 bin/gac/worktree-janitor.py
+	$(PYTHON) bin/gac/worktree-janitor.py
 
 root-directory-governance:  ## 根目录治理策略与未登记 shadow surface 门禁
 	$(PY) bin/ssot/root-directory-governance-scan.py --check --json
@@ -403,27 +404,27 @@ worktree-prune:  ## 清理已合并/冗余 worktree
 	bash bin/gac/gac-branch-prune.sh
 
 escape-digest:  ## D4 逃逸台账只读聚类 (不改白名单, ADR-0422)
-	python3 bin/gac/escape-digest.py --dry-run
+	$(PYTHON) bin/gac/escape-digest.py --dry-run
 
 hygiene-patrol:  ## 执行全域周度治理自动化巡检 (ADR-0192, 含 escape-digest)
 	@echo "── 全域周度治理自动化巡检 ────────────────────────────"
-	python3 bin/ssot/weekly-hygiene-patrol.py
+	$(PYTHON) bin/ssot/weekly-hygiene-patrol.py
 
 hygiene-patrol-strict:  ## 全域治理严格模式巡检 (存在任何违规/漂移时非0退出)
 	@echo "── 全域严格治理巡检 (Strict Gate) ───────────────────"
-	python3 bin/ssot/weekly-hygiene-patrol.py --strict
+	$(PYTHON) bin/ssot/weekly-hygiene-patrol.py --strict
 
 drift-face-detect:  ## SH-1 self-healing: 扫描 5 类 drift (dashboard/brief/ephemeral/runs/ritual)
 	@echo "── L2.5 drift-face-detector (BET-Y2Q4-SH-1) ──────────"
-	python3 bin/ssot/drift-face-detector.py
+	$(PYTHON) bin/ssot/drift-face-detector.py
 
 drift-face-prune-dry:  ## SH-1 self-healing: 干跑 auto-pruner (4 类可自动修; 默认 dry-run)
 	@echo "── L2.5 auto-pruner (dry-run, BET-Y2Q4-SH-1) ──────────"
-	python3 bin/ssot/auto-pruner.py
+	$(PYTHON) bin/ssot/auto-pruner.py
 
 drift-face-prune-apply:  ## SH-1 self-healing: 实际修复 (ephemeral 归档 + runs 关闭; ritual/dashboard 仅报告)
 	@echo "── L2.5 auto-pruner (apply, BET-Y2Q4-SH-1) ────────────"
-	python3 bin/ssot/auto-pruner.py --apply
+	$(PYTHON) bin/ssot/auto-pruner.py --apply
 
 drift-face-clean: drift-face-detect drift-face-prune-apply  ## SH-1 一键 detect + apply (人类/CI 入口)
 
@@ -487,7 +488,7 @@ clone-onboard-apply:  ## D2: 真正创建 clone
 # ── 🧠 Memory OS (记忆中枢) ───────────────────────────────────────────────────
 
 memory-os-check:  ## Memory OS 门禁
-	python3 bin/gac/check-memory-os-surfaces.py
+	$(PYTHON) bin/gac/check-memory-os-surfaces.py
 
 memory-os-env:  ## 查看 Memory OS 环境变量
 	bash bin/memory-os-env.sh --check
@@ -513,16 +514,16 @@ omo-top:  ## Multi-Agent Swarm 4 象限实时互动大盘 (Textual 1.x)
 	@bash bin/omo-top
 
 swarm-activity:  ## 多 agent 实时活动面板
-	python3 bin/gac/swarm-activity-dashboard.py
+	$(PYTHON) bin/gac/swarm-activity-dashboard.py
 
 panorama-serve:  ## 织星全景驾驶舱 :43910 (前台, Ctrl-C 停)
-	python3 bin/panorama/panorama-serve.py
+	$(PYTHON) bin/panorama/panorama-serve.py
 
 panorama-status:  ## 驾驶舱数据快照
-	python3 bin/panorama/panorama-collect.py --json
+	$(PYTHON) bin/panorama/panorama-collect.py --json
 
 swarm-prune:  ## 清理僵尸 Agent 锁与临时状态
-	python3 bin/gac/swarm-prune-zombies.py --apply
+	$(PYTHON) bin/gac/swarm-prune-zombies.py --apply
 
 observability-events:  ## 统一事件面: emit/search/trace
 	$(PY) bin/ssot/observability-events.py $(OBS_CMD)
@@ -545,92 +546,92 @@ delegation-alias-check:  ## 检查网关别名交叉匹配
 	$(PY) bin/delegation-alias-check.py --json
 
 scene-feedback:  ## 列出最近的 scene feedback
-	@python3 bin/ssot/scene-feedback-collector.py list --limit 10
+	@$(PYTHON) bin/ssot/scene-feedback-collector.py list --limit 10
 
 scene-outcome:  ## 列出最近的 scene outcome
-	@python3 bin/ssot/scene-outcome-recorder.py list --limit 10
+	@$(PYTHON) bin/ssot/scene-outcome-recorder.py list --limit 10
 
 scene-history:  ## 场景历史耐久性: 导出 + 快照 + 暴跌检测 (失败退出非零)
-	@python3 bin/ssot/scene-history.py export
-	@python3 bin/ssot/scene-history.py backup
-	@python3 bin/ssot/scene-history.py verify
+	@$(PYTHON) bin/ssot/scene-history.py export
+	@$(PYTHON) bin/ssot/scene-history.py backup
+	@$(PYTHON) bin/ssot/scene-history.py verify
 
 scene-history-status:  ## 场景历史状态摘要 (行数/导出/快照/基线)
-	@python3 bin/ssot/scene-history.py status
+	@$(PYTHON) bin/ssot/scene-history.py status
 
 wip-snapshot:  ## 主工作区脏态快照 (共享工作区改动兜底)
-	@python3 bin/gac/workspace-wip-guard.py snapshot --reason manual
+	@$(PYTHON) bin/gac/workspace-wip-guard.py snapshot --reason manual
 
 wip-status:  ## 主工作区脏态摘要 + 最近快照
-	@python3 bin/gac/workspace-wip-guard.py status
+	@$(PYTHON) bin/gac/workspace-wip-guard.py status
 
 zhixing-panel:  ## 织星驾驶舱场景面板: 幂等注入/漂移自愈
-	@python3 bin/gac/zhixing-panel-sync.py ensure
+	@$(PYTHON) bin/gac/zhixing-panel-sync.py ensure
 
 zhixing-panel-check:  ## 织星驾驶舱场景面板: 漂移检测 (缺失退出非零)
-	@python3 bin/gac/zhixing-panel-sync.py check
+	@$(PYTHON) bin/gac/zhixing-panel-sync.py check
 
 debt-closure-check:  ## 债务闭环节律: resolved 无闭环证据/字段并存 检测 (只报不修)
-	@python3 bin/gac/check-debt-closure-discipline.py
+	@$(PYTHON) bin/gac/check-debt-closure-discipline.py
 
 task-ownership-check:  ## 非终态任务所有权强制 (缺 owner → exit 1)
-	@python3 bin/gac/check-task-ownership.py
+	@$(PYTHON) bin/gac/check-task-ownership.py
 
 debt-review:  ## 债务定期复审调度: 终态无实证 + 逾期未复审 报告
-	@python3 bin/gac/debt-review-scheduler.py
+	@$(PYTHON) bin/gac/debt-review-scheduler.py
 
 runtime-health-scan:  ## L1 运行时健康探针 (omlxcd/matrix/KEI/GPU/surface); healthy=0 degraded=1 unhealthy=2
-	@python3 bin/runtime-health-scan.py
+	@$(PYTHON) bin/runtime-health-scan.py
 
 rule-coverage:  ## 规则接线清单: 声明但未接线的候选 (报告型, 非门禁)
-	@python3 bin/gac/check-rule-wiring-coverage.py
+	@$(PYTHON) bin/gac/check-rule-wiring-coverage.py
 
 expiry-radar:  ## 过期雷达: SLA 越界前瞻 (默认 7d 窗口)
-	@python3 bin/gac/check-expiry-radar.py
+	@$(PYTHON) bin/gac/check-expiry-radar.py
 
 task-tree-check:  ## 任务树一致性: planned/ 不得含已在 closed//done/ 的 id
-	@python3 bin/gac/check-task-tree-consistency.py
+	@$(PYTHON) bin/gac/check-task-tree-consistency.py
 
 task-projection-check:  ## 任务投影头部: 悬挂脚本引用检测 (失效路径 → exit 1)
-	@python3 bin/gac/check-task-projection-headers.py
+	@$(PYTHON) bin/gac/check-task-projection-headers.py
 
 zhixing-host:  ## 织星宿主文件 (template.html/refresh.py): 漂移检测
-	@python3 bin/gac/zhixing-host-sync.py check
+	@$(PYTHON) bin/gac/zhixing-host-sync.py check
 
 zhixing-host-status:  ## 织星宿主文件: 仓库 vs 部署 漂移摘要
-	@python3 bin/gac/zhixing-host-sync.py status
+	@$(PYTHON) bin/gac/zhixing-host-sync.py status
 
 zhixing-host-capture:  ## 织星宿主文件: 部署 → 仓库 (版本化线上变更)
-	@python3 bin/gac/zhixing-host-sync.py capture
+	@$(PYTHON) bin/gac/zhixing-host-sync.py capture
 
 panels-sync:  ## 驾驶舱三板块: 幂等注入/自愈 (logs/metrics/value + 场景面板)
-	@python3 bin/gac/zhixing-panel-sync.py ensure
+	@$(PYTHON) bin/gac/zhixing-panel-sync.py ensure
 
 panels-check:  ## 驾驶舱面板漂移检测 (任一缺失退出非零)
-	@python3 bin/gac/zhixing-panel-sync.py check
+	@$(PYTHON) bin/gac/zhixing-panel-sync.py check
 
 panels-data:  ## 三板块真实数据采集预览 (events/history/value)
-	@python3 bin/panorama/panel-collect.py --key all | head -60
+	@$(PYTHON) bin/panorama/panel-collect.py --key all | head -60
 
 journey-validate:  ## 校验全部旅程 spec (states/transitions/deadlocks) — AGENTS.md §1.8
-	@python3 bin/ssot/journey-validator.py
+	@$(PYTHON) bin/ssot/journey-validator.py
 
 scene-card-check:  ## 场景卡就绪度报告 — 任一 blocker 即非零退出 (BET-Y1Q3-T4-03 honest gate)
 	@ready=0; blocked=0; for f in docs/scene-cards/*.yaml; do \
 		[ -e "$$f" ] || continue; \
-		if python3 bin/ssot/scene-card-lifecycle.py --root . check --scene-card "$$f" >/dev/null 2>&1; then \
+		if $(PYTHON) bin/ssot/scene-card-lifecycle.py --root . check --scene-card "$$f" >/dev/null 2>&1; then \
 			ready=$$((ready+1)); else blocked=$$((blocked+1)); fi; \
 	done; echo "scene-cards: ready=$$ready with-blockers=$$blocked"; \
 	echo "单卡详情: python3 bin/ssot/scene-card-lifecycle.py check --scene-card <file>"; \
 	test "$$blocked" -eq 0
 
 signal-poll:  ## 手动执行感知面信号轮询
-	@python3 bin/ssot/signal-poller.py
+	@$(PYTHON) bin/ssot/signal-poller.py
 
 evidence-smoke:  ## BOS evidence smoke
 	@echo "── evidence-smoke (ADR-0219) ────────────────────────────"
 	@test -d projects/agora || (echo "init agora: git submodule update --init projects/agora" && git submodule update --init projects/agora)
-	python3 bin/gac/evidence-smoke.py --json | python3 -c "import sys,json;d=json.load(sys.stdin);b=d.get('bos') or {};print(f\"score={d.get('evidence_health_score')} partial={d.get('partial')} resolve={b.get('resolve_rate')} gap={b.get('gap')} feedback={ (d.get('feedback_loop') or {}).get('alive')}\")"
+	$(PYTHON) bin/gac/evidence-smoke.py --json | $(PYTHON) -c "import sys,json;d=json.load(sys.stdin);b=d.get('bos') or {};print(f\"score={d.get('evidence_health_score')} partial={d.get('partial')} resolve={b.get('resolve_rate')} gap={b.get('gap')} feedback={ (d.get('feedback_loop') or {}).get('alive')}\")"
 
 governance-verify:
 	bash bin/ssot/verify-omo.sh
@@ -657,10 +658,10 @@ doc-lint:
 	@echo "=== 文档检查完成 ==="
 
 governance-dashboard:
-	python3 bin/gac/governance-dashboard.py
+	$(PYTHON) bin/gac/governance-dashboard.py
 
 debt-audit:
-	python3 bin/gac/debt-integrity-check.py
+	$(PYTHON) bin/gac/debt-integrity-check.py
 
 agent-workflows:
 	$(PY) bin/agent-workflow.py list
@@ -753,24 +754,24 @@ ssot-guardian:
 
 adr-claim:
 	@test -n "$(SESSION)" || (echo "SESSION is required"; exit 2)
-	python3 bin/adr/next-adr-id.py --session "$(SESSION)" --claim
+	$(PYTHON) bin/adr/next-adr-id.py --session "$(SESSION)" --claim
 
 mesh-orphan-cleanup:
-	python3 bin/mesh/mesh-orphan-cleanup.py
+	$(PYTHON) bin/mesh/mesh-orphan-cleanup.py
 
 mesh-orphan-cleanup-apply:
-	python3 bin/mesh/mesh-orphan-cleanup.py --apply
+	$(PYTHON) bin/mesh/mesh-orphan-cleanup.py --apply
 
 chaos-drill:  ## 运行全域混沌注入与红蓝对抗演练 (ADR-0194)
 	@echo "── 全域混沌注入与红蓝对抗演练 ────────────────────────────"
-	python3 bin/ssot/chaos-governance-drill.py
+	$(PYTHON) bin/ssot/chaos-governance-drill.py
 
 chaos-drill-strict:  ## 严格模式运行全域混沌演练 (发现未通过项即失败)
-	python3 bin/ssot/chaos-governance-drill.py --strict
+	$(PYTHON) bin/ssot/chaos-governance-drill.py --strict
 
 chaos-drill-full:  ## 12 项全套混沌演练 (BET-Y1Q3-T10-120: strict + JSON report + 防腐护栏巡检)
 	@echo "── 12 项全套混沌演练 + 防腐护栏自动化巡检 ────────────────"
-	python3 bin/ssot/chaos-governance-drill.py --strict --json | tee docs/reports/2026-09-09-chaos-suite-validation.md
+	$(PYTHON) bin/ssot/chaos-governance-drill.py --strict --json | tee docs/reports/2026-09-09-chaos-suite-validation.md
 	@echo "── 防腐护栏 GaC 巡检 ──────────────────────────────────────"
 	make gac-local-gate
 	@echo "── chaos-drill-full COMPLETE ────────────────────────────────"
@@ -832,13 +833,13 @@ resident-ingest:  ## resident 事件摄入 (WP-A)
 # ==============================================================================
 
 bcos-evolve:  ## BCOS 进化引擎四阶段 (observe/propose/evaluate/approve, dry-run 默认)
-	python3 bin/bc-os/evolution_engine.py
+	$(PYTHON) bin/bc-os/evolution_engine.py
 
 bcos-signals:  ## BCOS 统一信号路由 (W1-D2, 公文/会议/调研/代码)
-	python3 bin/bc-os/signal_router.py --inbox "$$HOME/Documents/@感知信号" || true
+	$(PYTHON) bin/bc-os/signal_router.py --inbox "$$HOME/Documents/@感知信号" || true
 
 bcos-north-star:  ## BCOS 北极星价值度量 v2 (排除 self-data)
-	python3 bin/bc-os/north_star_meter_v2.py --json || true
+	$(PYTHON) bin/bc-os/north_star_meter_v2.py --json || true
 
 # ==============================================================================
 # 自治蜂群与防腐体系 (Self-Governing Swarm & Anti-Corrosion)
@@ -849,190 +850,190 @@ swarm-status:  ## 蜂群 4 域守卫态势与因果黑板概览
 	@uv run --directory projects/cockpit python -m cockpit.cli swarm status
 
 swarm-chaos:  ## @Devil 红队混沌变异注入攻击测试
-	@python3 bin/gac/devil-chaos-runner.py --inject all
+	@$(PYTHON) bin/gac/devil-chaos-runner.py --inject all
 
 swarm-decide:  ## @Sage & @Keeper Decision-Inbox 架构裁决工作台
 	@uv run --directory projects/cockpit python -m cockpit.cli decide
 
 swarm-audit:  ## @Keeper 减法配额与资产健康度核算
-	@python3 bin/gac/keeper-subtraction-engine.py --audit
+	@$(PYTHON) bin/gac/keeper-subtraction-engine.py --audit
 
 swarm-demo:   ## 蜂群自治全链路真实场景演练 (6 幕闭环)
-	@python3 bin/gac/swarm-e2e-scenario.py
+	@$(PYTHON) bin/gac/swarm-e2e-scenario.py
 
 # ==============================================================================
 # AST 语义调用链与爆炸半径 (AST Semantic Callgraph & Blast Radius)
 # ==============================================================================
 
 ast-bootstrap: ## 全仓 AST 语义符号与调用链自举构建
-	@python3 bin/gac/ast-index-bootstrap.py
+	@$(PYTHON) bin/gac/ast-index-bootstrap.py
 
 ast-blast:     ## 分析当前 Git 暂存改动的 AST 爆炸半径 (0.3ms 极速反查)
-	@python3 bin/gac/ast-blast-radius.py --diff
+	@$(PYTHON) bin/gac/ast-blast-radius.py --diff
 
 ast-audit:     ## AST 语义引擎物理自检与证伪测试
-	@python3 bin/gac/ast-blast-radius.py --selftest
+	@$(PYTHON) bin/gac/ast-blast-radius.py --selftest
 
 # ==============================================================================
 # Service Gateway (ops 控制面)
 # ==============================================================================
 
 ops:  ## ops 状态总览
-	python3 bin/ops/cli.py status
+	$(PYTHON) bin/ops/cli.py status
 
 ops-summary:  ## 系统概览
-	python3 bin/ops/cli.py summary
+	$(PYTHON) bin/ops/cli.py summary
 
 ops-up:  ## 启动所有服务 (DAG 分层)
-	python3 bin/ops/cli.py up
+	$(PYTHON) bin/ops/cli.py up
 
 ops-down:  ## 停止所有服务 (逆拓扑)
-	python3 bin/ops/cli.py down
+	$(PYTHON) bin/ops/cli.py down
 
 ops-deps:  ## 依赖图
-	python3 bin/ops/cli.py deps
+	$(PYTHON) bin/ops/cli.py deps
 
 ops-discover:  ## 自动发现服务
-	python3 bin/ops/cli.py discover
+	$(PYTHON) bin/ops/cli.py discover
 
 ops-validate:  ## 配置校验
-	python3 bin/ops/cli.py validate
+	$(PYTHON) bin/ops/cli.py validate
 
 ops-generate:  ## 生成部署配置
-	python3 bin/ops/cli.py generate
+	$(PYTHON) bin/ops/cli.py generate
 
 ops-recover:  ## 自动恢复失败服务
-	python3 bin/ops/cli.py recover
+	$(PYTHON) bin/ops/cli.py recover
 
 ops-health-cron:  ## 健康检查定时任务 (每 5 分钟)
-	python3 bin/ops/health-check-cron.py
+	$(PYTHON) bin/ops/health-check-cron.py
 
 ops-dashboard-serve:  ## Web 仪表盘 (本地 Python 服务, 8091)
-	python3 bin/ops/dashboard.py --port 8091
+	$(PYTHON) bin/ops/dashboard.py --port 8091
 
 ops-metrics:  ## Prometheus 指标导出
-	python3 bin/ops/cli.py metrics --text
+	$(PYTHON) bin/ops/cli.py metrics --text
 
 ops-metrics-server-cli:  ## Prometheus 指标服务器 (cli.py, 9090)
-	python3 bin/ops/cli.py metrics --port 9090
+	$(PYTHON) bin/ops/cli.py metrics --port 9090
 
 ops-alert-basic:  ## 告警检查 (基础版)
-	python3 bin/ops/alert.py --check
+	$(PYTHON) bin/ops/alert.py --check
 
 ops-template:  ## 服务模板列表
-	python3 bin/ops/cli.py template list
+	$(PYTHON) bin/ops/cli.py template list
 
 ops-batch-up:  ## 批量启动服务
-	python3 bin/ops/cli.py batch up
+	$(PYTHON) bin/ops/cli.py batch up
 
 ops-batch-down:  ## 批量停止服务
-	python3 bin/ops/cli.py batch down
+	$(PYTHON) bin/ops/cli.py batch down
 
 ops-drift:  ## 配置漂移检测
-	python3 bin/ops/cli.py drift
+	$(PYTHON) bin/ops/cli.py drift
 
 ops-drift-fix:  ## 配置漂移检测 + 自动修复
-	python3 bin/ops/cli.py drift --fix
+	$(PYTHON) bin/ops/cli.py drift --fix
 
 ops-catalog:  ## 服务目录
-	python3 bin/ops/cli.py catalog
+	$(PYTHON) bin/ops/cli.py catalog
 
 ops-graph:  ## 可视化依赖图
-	python3 bin/ops/cli.py graph
+	$(PYTHON) bin/ops/cli.py graph
 
 ops-score:  ## 系统健康评分
-	python3 bin/ops/cli.py score
+	$(PYTHON) bin/ops/cli.py score
 
 ops-history:  ## 服务健康历史
-	python3 bin/ops/cli.py history
+	$(PYTHON) bin/ops/cli.py history
 
 ops-metrics-unified:  ## 统一指标聚合
-	python3 bin/ops/unified_metrics.py --once
+	$(PYTHON) bin/ops/unified_metrics.py --once
 
 ops-metrics-server:  ## 统一指标服务器
-	python3 bin/ops/unified_metrics.py --port 9091
+	$(PYTHON) bin/ops/unified_metrics.py --port 9091
 
 ops-slo:  ## SLO 追踪报告
-	python3 bin/ops/slo_tracker.py --report
+	$(PYTHON) bin/ops/slo_tracker.py --report
 
 ops-slo-record:  ## 记录 SLO 指标
-	python3 bin/ops/slo_tracker.py --record
+	$(PYTHON) bin/ops/slo_tracker.py --record
 
 ops-slo-json:  ## SLO JSON 输出
-	python3 bin/ops/slo_tracker.py --json
+	$(PYTHON) bin/ops/slo_tracker.py --json
 
 ops-cost:  ## 成本追踪报告
-	python3 bin/ops/cost_tracker.py --report
+	$(PYTHON) bin/ops/cost_tracker.py --report
 
 ops-cost-record:  ## 记录成本
-	python3 bin/ops/cost_tracker.py --record
+	$(PYTHON) bin/ops/cost_tracker.py --record
 
 ops-cost-json:  ## 成本 JSON 输出
-	python3 bin/ops/cost_tracker.py --json
+	$(PYTHON) bin/ops/cost_tracker.py --json
 
 ops-runbook:  ## 自动化 Runbook (全部场景)
-	python3 bin/ops/runbook.py all
+	$(PYTHON) bin/ops/runbook.py all
 
 ops-runbook-down:  ## 服务宕机检测+恢复
-	python3 bin/ops/runbook.py service-down
+	$(PYTHON) bin/ops/runbook.py service-down
 
 ops-runbook-latency:  ## 高延迟诊断
-	python3 bin/ops/runbook.py high-latency
+	$(PYTHON) bin/ops/runbook.py high-latency
 
 ops-runbook-resource:  ## 资源耗尽检测
-	python3 bin/ops/runbook.py resource-exhaustion
+	$(PYTHON) bin/ops/runbook.py resource-exhaustion
 
 ops-runbook-deps:  ## 依赖故障追踪
-	python3 bin/ops/runbook.py dependency-failure
+	$(PYTHON) bin/ops/runbook.py dependency-failure
 
 ops-env:  ## 显示当前环境配置
-	python3 bin/ops/env_config.py show
+	$(PYTHON) bin/ops/env_config.py show
 
 ops-env-list:  ## 列出所有环境
-	python3 bin/ops/env_config.py list
+	$(PYTHON) bin/ops/env_config.py list
 
 ops-env-apply:  ## 应用环境配置
-	python3 bin/ops/env_config.py apply
+	$(PYTHON) bin/ops/env_config.py apply
 
 ops-env-apply-dry:  ## 预览环境配置变更
-	python3 bin/ops/env_config.py apply --dry-run
+	$(PYTHON) bin/ops/env_config.py apply --dry-run
 
 ops-monitor:  ## 持续监控守护进程
-	python3 bin/ops/monitor_daemon.py
+	$(PYTHON) bin/ops/monitor_daemon.py
 
 ops-monitor-once:  ## 单次健康检查
-	python3 bin/ops/monitor_daemon.py --once
+	$(PYTHON) bin/ops/monitor_daemon.py --once
 
 ops-monitor-json:  ## 健康检查 JSON 输出
-	python3 bin/ops/monitor_daemon.py --once --json
+	$(PYTHON) bin/ops/monitor_daemon.py --once --json
 
 ops-catalog-api:  ## 服务目录 API
-	python3 bin/ops/catalog_api.py --port 8092
+	$(PYTHON) bin/ops/catalog_api.py --port 8092
 
 ops-dashboard:  ## Web 仪表盘
 	@echo "Opening Service Gateway Dashboard..."
 	@open docs/observability/dashboard.html 2>/dev/null || xdg-open docs/observability/dashboard.html 2>/dev/null || echo "Open docs/observability/dashboard.html in your browser"
 
 ops-alert:  ## 智能告警检查
-	python3 bin/ops/smart_alert.py --check
+	$(PYTHON) bin/ops/smart_alert.py --check
 
 ops-alert-report:  ## 告警报告
-	python3 bin/ops/smart_alert.py --report
+	$(PYTHON) bin/ops/smart_alert.py --report
 
 ops-capacity:  ## 容量规划报告
-	python3 bin/ops/capacity_planner.py --report
+	$(PYTHON) bin/ops/capacity_planner.py --report
 
 ops-capacity-json:  ## 容量规划 JSON
-	python3 bin/ops/capacity_planner.py --json
+	$(PYTHON) bin/ops/capacity_planner.py --json
 
 ops-templates:  ## 服务模板列表
-	python3 bin/ops/templates.py list
+	$(PYTHON) bin/ops/templates.py list
 
 ops-template-show:  ## 显示模板详情
-	python3 bin/ops/templates.py show
+	$(PYTHON) bin/ops/templates.py show
 
 ops-template-apply:  ## 应用模板创建服务
-	python3 bin/ops/templates.py apply
+	$(PYTHON) bin/ops/templates.py apply
 
 # ── Git Hooks 安装 ──────────────────────────────────────────────────────────────
 
