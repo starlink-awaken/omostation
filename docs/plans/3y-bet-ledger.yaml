@@ -37365,7 +37365,8 @@ bets:
     声明执行鸿沟"）≥3 命中且指向 decisions/；抽查 ADR-0453/pattern/ pitfall 索引记录正确；摄入报告落 docs/reports/。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T3-COGNI
   priority: P1
