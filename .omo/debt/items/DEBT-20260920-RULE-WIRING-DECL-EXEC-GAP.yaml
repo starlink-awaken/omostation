@@ -78,3 +78,12 @@ history:
     COMMIT-LLM-ASSIST 零 git 历史); c) 僵尸 1 (commit-assist e2e 测试引用从未存在的脚本);
     d) owner 存疑 15。--strict 门禁待批次二 (owner 逐条复核 d 类后)。
   actor: governance-agent
+- at: '2026-09-28T00:00:00+00:00'
+  action: batch2-dispositions
+  note: >-
+    BET-Y2Q4-T10-05 批次二: 判定工作簿获 principal 全建议授权。接线 2 组
+    (CR-L0-PROTOCOLS-SSOT→check-hardcoded-ports, x2-staleness→staleness),
+    未引用 27→25; 收窄声明 2 条; 弃用注释标注 3 条原则族; 待决 8 条全量落档
+    (docs/plans/t10-05-batch2-dispositions.md, 含 CR-L4 待 CI 接线、CR-X1/X2
+    并入 SH-4 权威注册表决策)。15 条零悬空。--strict 仍未上 (剩余 25>0)。
+  actor: governance-agent
