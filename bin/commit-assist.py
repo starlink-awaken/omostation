@@ -4,9 +4,9 @@
 按 Conventional Commits 规范: type(scope): subject
 
 LLM provider 优先级:
-  1. aetherforge 网关 (100.96.126.35:4000, OpenAI compatible) — prefer
-  2. ollama 本地 (env OLLAMA_MODEL, fallback) — sub-zero latency
-  3. heuristic (--no-llm 硬门) — last resort
+  1. aetherforge 网关 (本机门面, OpenAI compatible; 网关内部自带跨后端兜底链)
+  2. heuristic (--no-llm 硬门) — last resort
+  (原 Tier 2 `ollama run` 子进程已删: 绕过网关的路由/鉴权/用量统计, 且网关自己会兜底到 Ollama)
 
 工作流 (硬门 — LLM 永远不自己 commit):
   1. 收集 git diff --staged
@@ -18,7 +18,7 @@ LLM provider 优先级:
 约束 (P76-7.1 原则):
   - LLM output 是 advisory, 不替代 developer
   - 必须有 --dry-run / --apply / --no-llm modes
-  - 网关不可达 → fallback ollama → fallback heuristic (3-tier graceful)
+  - 网关不可达 → fallback heuristic (graceful)
   - 不发任何 commit (硬门)
 """
 
@@ -82,8 +82,6 @@ def _gateway_key() -> str:
 AETHERFORGE_GATEWAY = _gateway_url()
 AETHERFORGE_MODEL = os.environ.get("AETHERFORGE_MODEL", "mid")  # 紧凑小模型, mini-9b 把 budget 耗光返空
 AETHERFORGE_TIMEOUT = int(os.environ.get("AETHERFORGE_TIMEOUT", "60"))  # 实测 ~32s 但留 buffer
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:31b-mlx")
-OLLAMA_TIMEOUT = int(os.environ.get("OLLAMA_TIMEOUT", "60"))  # ollama gemma4:e4b 已知慢
 
 
 def git(*args: str, cwd: Path | None = None) -> str:
@@ -161,24 +159,8 @@ def query_aetherforge(model: str, prompt: str, timeout: int) -> str | None:
         return None
 
 
-def query_ollama(model: str, prompt: str, timeout: int) -> str | None:
-    try:
-        result = subprocess.run(
-            ["ollama", "run", model, prompt],
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-        print(f"⚠️ ollama: {e}", file=sys.stderr)
-        return None
-    if result.returncode != 0:
-        return None
-    return result.stdout.strip()
-
-
 def query_llm(stat: str, diff: str) -> tuple[str, str]:
-    """3-tier LLM query: aetherforge → ollama → heuristic."""
+    """2-tier LLM query: aetherforge → heuristic."""
     types_list = ", ".join(CONVENTIONAL_TYPES.keys())
     prompt = f"""按 Conventional Commits 规范生成 1 个 commit message.
 types: {types_list}
@@ -201,12 +183,7 @@ NO preamble, NO closing remark."""
     if out:
         return "aetherforge", out
 
-    # Tier 2: ollama
-    out = query_ollama(OLLAMA_MODEL, prompt, OLLAMA_TIMEOUT)
-    if out:
-        return "ollama", out
-
-    # Tier 3: heuristic
+    # Tier 2: heuristic
     scope, subject = heuristic_subject(stat)
     body = (
         f"\n\nWHY: omostation 治理态按现有策略更新\nWHAT: {len(stat.splitlines())} 文件改动\nNEXT: cross-feature on PR"
