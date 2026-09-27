@@ -36543,7 +36543,8 @@ bets:
     it belongs to the B4b cutover. The bet writes no plist, edits no crontab, moves
     no ledger, starts and stops nothing, and does not run make worktree-prune (it would
     delete other agents'' merged branches in this shared repository).'
-  status: in_progress
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -36601,8 +36602,8 @@ bets:
   - A guard test asserts the install root is outside the sweep candidates ($HOME/ws-*
     / $HOME/workspace-* globs), so widening that scope fails the test rather than silently
     threatening the runtime.
-  - make install-root-check exists and runs the report from the install root; no net-new
-    file is added under bin/.
+  - make runtime-install-root exists and runs the root report from the main checkout and, when
+    present, from the install root; no net-new file is added under bin/.
   - AGENTS.md and ARCHITECTURE.md state the third root's name, path, the fact that it
     is not a worktree, and that canonical_root() still resolves to ~/Workspace until
     B4b, so other agents learn it exists.
@@ -36642,15 +36643,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+            merged_reachable_commit:
+              ref: git://origin/main@1b5f02cb35ef6bc27363bbaa9458b90c710f4157
+            tests:
+              ref: receipt://docs/reports/2026-09-27-install-root-landing-closeout.md
+              sha256: sha256:97c90f3c31c9b350ce20a9a664eb2bc5d7acdfe9c8de954db6197d2dc5d47ab2
+            diff:
+              ref: receipt://docs/reports/2026-09-27-install-root-landing-closeout.md
+              sha256: sha256:97c90f3c31c9b350ce20a9a664eb2bc5d7acdfe9c8de954db6197d2dc5d47ab2
+            rollback:
+              ref: receipt://docs/reports/2026-09-27-install-root-landing-closeout.md
+              sha256: sha256:97c90f3c31c9b350ce20a9a664eb2bc5d7acdfe9c8de954db6197d2dc5d47ab2
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+            live_canary:
+              ref: receipt://docs/reports/2026-09-27-install-root-landing-closeout.md
+              sha256: sha256:97c90f3c31c9b350ce20a9a664eb2bc5d7acdfe9c8de954db6197d2dc5d47ab2
+            fresh_receipt:
+              ref: receipt://docs/reports/2026-09-27-install-root-landing-closeout.md
+              sha256: sha256:97c90f3c31c9b350ce20a9a664eb2bc5d7acdfe9c8de954db6197d2dc5d47ab2
+            replay:
+              ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-207.md
+              sha256: sha256:28db0b361bcdd5ec45642bbb4b6012031dabe81df55baf8c0226f0a9b171de54
+            cleanup:
+              ref: receipt://docs/reports/2026-09-27-install-root-landing-closeout.md
+              sha256: sha256:97c90f3c31c9b350ce20a9a664eb2bc5d7acdfe9c8de954db6197d2dc5d47ab2
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
