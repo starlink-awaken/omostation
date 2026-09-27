@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: draft
-lifecycle: active
+lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-09-25
 type: ssot

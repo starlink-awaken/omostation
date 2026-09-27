@@ -1,7 +1,7 @@
 ---
 schema: knowledge-domains/v1
 status: active
-lifecycle: active
+lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-09-20
 type: taxonomy

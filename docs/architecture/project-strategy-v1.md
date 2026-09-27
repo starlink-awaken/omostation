@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: active
-lifecycle: stable
+lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-09-25
 type: doc

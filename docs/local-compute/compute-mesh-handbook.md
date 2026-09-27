@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: active
-lifecycle: production
+lifecycle: contract
 owner: compute-fabric-team
 last-reviewed: 2026-09-25
 type: ssot

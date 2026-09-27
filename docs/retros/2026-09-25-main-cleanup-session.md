@@ -1,7 +1,9 @@
 ---
 schema: session-retro/v1
-status: final
+status: archived
+lifecycle: history
 owner: main-session-agent
+last-reviewed: 2026-09-26
 date: 2026-09-25
 type: closeout
 scope: scripts-repo cleanup + dashboard + CI 全链路 + 架构审视

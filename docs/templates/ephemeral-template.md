@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: draft
-lifecycle: active
+lifecycle: contract
 owner: governance-team
 last-reviewed: 2026-09-25
 type: ephemeral

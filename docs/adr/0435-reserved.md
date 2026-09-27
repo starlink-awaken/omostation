@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: accepted
+status: active
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-25

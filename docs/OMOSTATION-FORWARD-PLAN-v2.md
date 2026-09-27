@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: active
-lifecycle: planning
+lifecycle: plan
 owner: governance-team
 last-reviewed: 2026-09-25
 type: roadmap
