@@ -8,6 +8,7 @@
   python3 bin/mof/gen-service-configs.py              # dry-run 打印 plist
   python3 bin/mof/gen-service-configs.py --write      # 生成写盘
   python3 bin/mof/gen-service-configs.py --check      # drift 检测 (plist vs services.yaml)
+  python3 bin/mof/gen-service-configs.py --reality-check  # 注册表 vs 本机 launchd 现实 (E1-E4, 只读)
 """
 
 from __future__ import annotations
@@ -15,15 +16,22 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import plistlib
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import canonical_root
 
-def _canonical_workspace() -> Path:
+_WORKSPACE_CACHE: Path | None = None
+
+
+def workspace() -> Path:
     """本工具写的是机器级配置(~/Library/LaunchAgents), 必须锚定规范检出。
 
     2026-08-08 事故: 原实现用 parents[2], 于是在哪个 worktree 里跑就把 plist
@@ -31,23 +39,26 @@ def _canonical_workspace() -> Path:
     autopilot / agora / cockpit 七个 plist 的程序路径先后被改写成
     ws-mass-deletion-gate、ws-observability-impl…… 全部失效。
     worktree 是临时的, 机器级配置不能指向它。
+
+    解析规则只有一份, 在 bin/lib/repo_root.py:canonical_root() —— 它定位不到规范检出时
+    raise, 而不是退回 __file__。原实现在环境变量与 ~/Workspace 都不命中时恰恰退回了
+    __file__, 也就是把上面那类事故重新打开。
+
+    惰性: 无规范检出时 raise 是规定行为, 但 `bin/ops/cli.py` 与单元测试只要本文件的
+    纯函数(路径展开/plist 生成), 不该被 import 副作用判死。只有真要落笔机器级配置
+    的那条调用路径才付这个解析。
     """
-    env = os.environ.get("OMOSTATION_ROOT")
-    if env and (Path(env) / "docs" / "project-registry.yaml").is_file():
-        return Path(env)
-    canonical = Path.home() / "Workspace"
-    if (canonical / "docs" / "project-registry.yaml").is_file():
-        return canonical
-    return Path(__file__).resolve().parents[2]
+    global _WORKSPACE_CACHE
+    if _WORKSPACE_CACHE is None:
+        _WORKSPACE_CACHE = canonical_root()
+    return _WORKSPACE_CACHE
 
 
-WORKSPACE = _canonical_workspace()
-REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "services.yaml"
+def services_yaml_path() -> Path:
+    return workspace() / ".omo" / "_truth" / "registry" / "services.yaml"
 
 
 def _stable_python3() -> str:
-    import os
-
     # Prefer machine-stable installations before scanning PATH.  `uv run`
     # prepends temporary/venv directories and, after those are skipped, can
     # make `/usr/bin/python3` win even when the installed plist was generated
@@ -135,7 +146,7 @@ def validate_service_declaration(svc: dict) -> list[str]:
 
 
 def load_services(path: Path | None = None) -> list[dict]:
-    reg = path or REGISTRY
+    reg = path or services_yaml_path()
     docs = [d for d in yaml.safe_load_all(reg.read_text(encoding="utf-8")) if d]
     return (docs[-1] if docs else {}).get("services", []) or []
 
@@ -145,7 +156,7 @@ def _launchd_dir() -> Path:
 
 
 def _resolve_path(p: str) -> str:
-    """~ 展开、绝对路径原样、其余相对 WORKSPACE。
+    """~ 展开、绝对路径原样、其余相对规范检出根。
 
     原实现无条件 `WORKSPACE / p`, 于是 "~/.local/bin/x" 变成
     "<workspace>/~/.local/bin/x" —— 带字面量 ~ 的死路径。
@@ -155,7 +166,7 @@ def _resolve_path(p: str) -> str:
         return str(Path(p).expanduser())
     if p.startswith("/"):
         return p
-    return str(WORKSPACE / p)
+    return str(workspace() / p)
 
 
 def resolve_interpreter(spec: str) -> str:
@@ -196,7 +207,7 @@ def gen_launchd_plist(svc: dict) -> str:
     args = [interp, entry, *svc["program"].get("args", [])]
     prog_xml = "".join(f"        <string>{a}</string>\n" for a in args)
     watch = svc.get("watch_paths", [])
-    watch_xml = "".join(f"        <string>{WORKSPACE / w}</string>\n" for w in watch)
+    watch_xml = "".join(f"        <string>{workspace() / w}</string>\n" for w in watch)
     env = svc.get("environment", {})
     env_xml = ""
     if env:
@@ -257,15 +268,270 @@ def gen_launchd_plist(svc: dict) -> str:
     )
 
 
+NAMESPACE_KEY = "launchd_namespace"
+EXEMPT_CLASSES = {"external", "unclassified"}
+
+
+def _registry_docs(path: Path) -> list[dict]:
+    return [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if d]
+
+
+def load_namespace_policy(path: Path) -> dict:
+    """读取 launchd 命名空间分区 (与 services 同文档, 不是独立文档)。
+
+    分区必须是**注册表数据**而非代码常量: "哪些 label 归本仓管"是会随
+    新服务增长的判断, 写在代码里就等于每次判断都要改生成器。
+
+    放置位置是硬约束: `load_services()` 取 docs[-1]["services"], 若把本块
+    做成第三个 YAML 文档, docs[-1] 就变成只有 namespace 的文档 → services
+    解析为空列表 → --check 在零服务上"漂移 0"通过。门禁自己变成假绿。
+    """
+    for doc in reversed(_registry_docs(path)):
+        if NAMESPACE_KEY in doc:
+            policy = doc[NAMESPACE_KEY] or {}
+            return {
+                "workspace_prefixes": list(policy.get("workspace_prefixes") or []),
+                "exempt_labels": list(policy.get("exempt_labels") or []),
+                "dev_label_prefix": str(policy.get("dev_label_prefix") or ""),
+            }
+    return {}
+
+
+def match_workspace_prefix(label: str, prefixes: list[str]) -> str | None:
+    """点段边界匹配, 不是字符串前缀。
+
+    `com.omo` 是 `com.omostation` 的字符串前缀, 但不是它的点段前缀 ——
+    用 startswith 会把 23 条 com.omostation.* 划进 com.omo, 分区看着完整,
+    实际把两个命名空间的归属混成一份。
+    """
+    for prefix in prefixes:
+        if label == prefix or label.startswith(prefix + "."):
+            return prefix
+    return None
+
+
+def classify_label(label: str, policy: dict) -> str:
+    """workspace / external / unclassified / unmanaged_unknown。
+
+    classification 拼错时落到 unmanaged_unknown(分区外), 而不是默认当成 external:
+    后者会让一条本仓服务静默退出等式。E4 的非法分类断言在同一份数据上另行报出。
+    """
+    if match_workspace_prefix(label, policy.get("workspace_prefixes", [])):
+        return "workspace"
+    for item in policy.get("exempt_labels", []):
+        if item.get("label") == label:
+            classification = str(item.get("classification") or "")
+            return classification if classification in EXEMPT_CLASSES else "unmanaged_unknown"
+    return "unmanaged_unknown"
+
+
+def enumerate_launchd_plists(launchd_dir: Path) -> list[dict]:
+    """本机 LaunchAgents 现实。用 plutil 解析, 不用 plistlib。
+
+    实测 56 条 plist 全部可被 plutil 解析, 但其中 2 条
+    (com.omostation.expiry-radar / com.omostation.zhixing-host-drift) 的注释里
+    含 `--`, plistlib/expat 因此拒绝 —— 而 launchd 照跑。用 plistlib 枚举本机现实
+    会静默丢掉这两条正在跑的常驻 (bin/gac/meta-doctor.py:364 就是 try/except continue)。
+    所以枚举走 plutil, plistlib 的拒绝单独作为 E3 的 lint 债报告。
+    """
+    rows: list[dict] = []
+    for path in sorted(launchd_dir.glob("*.plist")):
+        result = subprocess.run(
+            ["/usr/bin/plutil", "-convert", "json", "-o", "-", str(path)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = {}
+        if result.returncode == 0:
+            try:
+                payload = json.loads(result.stdout)
+            except ValueError:
+                payload = {}
+        args = payload.get("ProgramArguments") or []
+        if isinstance(args, str):
+            args = [args]
+        rows.append(
+            {
+                "file": path.name,
+                "path": path,
+                "label": str(payload.get("Label") or path.stem),
+                "plutil_ok": result.returncode == 0 and bool(payload),
+                "blob": json.dumps(payload, ensure_ascii=False),
+                "program_arguments": [str(a) for a in args],
+            }
+        )
+    return rows
+
+
+def plist_strict_well_formed(path: Path) -> bool:
+    try:
+        plistlib.loads(path.read_bytes())
+        return True
+    except Exception:
+        return False
+
+
+def declared_labels(services: list[dict]) -> set[str]:
+    return {str(svc["label"]) for svc in services if isinstance(svc.get("label"), str) and svc["label"].strip()}
+
+
+def run_e1_drift() -> dict:
+    """E1 = 现有 --check 逐字节原样调用 (不改环境、不改注册表解析)。
+
+    不传 OMOSTATION_ROOT: --check 的根解析维持 canonical, 生成文本里的相对
+    entrypoint 才会与已安装 plist 一致。若在 worktree 里改根, 16 条相对路径服务
+    会全部报 drift —— 那是测量方法造假, 不是现实。
+    """
+    cmd = [sys.executable, str(Path(__file__).resolve()), "--check", "--json"]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    try:
+        payload = json.loads(result.stdout)
+    except ValueError:
+        return {"status": "error", "drift_count": None, "detail": (result.stderr or result.stdout)[:200]}
+    if payload.get("skipped"):
+        return {"status": "skipped", "drift_count": None, "reason": payload.get("reason", "")}
+    return {
+        "status": "ok" if payload.get("ok") else "drift",
+        "drift_count": int(payload.get("drift_count", 0)),
+        "drifts": list(payload.get("drifts") or [])[:20],
+    }
+
+
+def reality_check(
+    registry_path: Path,
+    launchd_dir: Path,
+    e1: dict | None = None,
+    workspace_root: Path | str | None = None,
+) -> dict:
+    """注册表 vs 本机 launchd 现实的双向门禁 (只读)。"""
+    services = load_services(registry_path)
+    policy = load_namespace_policy(registry_path)
+    rows = enumerate_launchd_plists(launchd_dir) if launchd_dir.is_dir() else []
+    declared = declared_labels(services)
+    e1 = e1 if e1 is not None else run_e1_drift()
+    root_str = str(workspace_root or workspace())
+
+    buckets: dict[str, list[str]] = {"workspace": [], "external": [], "unclassified": [], "unmanaged_unknown": []}
+    for row in rows:
+        buckets[classify_label(row["label"], policy)].append(row["label"])
+    scoped = [row for row in rows if root_str in row["blob"]]
+
+    e2_gap = sorted(set(buckets["workspace"]) - declared)
+    e3_debt = sorted(row["label"] for row in rows if not plist_strict_well_formed(row["path"]))
+
+    findings: list[str] = []
+    unparseable = sorted(row["file"] for row in rows if not row["plutil_ok"])
+    if unparseable:
+        findings.append(f"E4 plutil 无法解析的 plist (连 Label 都取不到): {unparseable}")
+    prefixes = list(policy.get("workspace_prefixes") or [])
+    if not prefixes:
+        findings.append(f"E4 {NAMESPACE_KEY}.workspace_prefixes 缺失 → 分区不可证, 门禁 fail-closed")
+    if len(prefixes) != len(set(prefixes)):
+        findings.append("E4 workspace_prefixes 有重复项")
+    exempt_items = [str(i.get("label") or "") for i in policy.get("exempt_labels", [])]
+    if len(exempt_items) != len(set(exempt_items)):
+        findings.append("E4 exempt_labels 有重复项")
+    shadowed = [i for i in exempt_items if match_workspace_prefix(i, prefixes)]
+    if shadowed:
+        findings.append(f"E4 exempt 项被 workspace 前缀遮蔽 (死数据): {shadowed}")
+    if buckets["unmanaged_unknown"]:
+        findings.append(
+            f"E4 未分区 label {len(buckets['unmanaged_unknown'])} 条: {sorted(buckets['unmanaged_unknown'])}"
+        )
+    bad_class = [str(i.get("label")) for i in policy.get("exempt_labels", []) if i.get("classification") not in EXEMPT_CLASSES]
+    if bad_class:
+        findings.append(f"E4 exempt classification 非法: {bad_class}")
+    installed = {row["label"] for row in rows}
+    if len(installed) != len(rows):
+        findings.append("E4 同一 Label 出现在多个 plist 文件 (Label 与文件名不一致)")
+    mismatched = sorted(row["file"] for row in rows if row["label"] != Path(row["file"]).stem)
+    if mismatched:
+        findings.append(f"E4 Label 与文件名不一致 (launchd 按内容注册, 工具按文件名核对): {mismatched}")
+    if sum(len(v) for v in buckets.values()) != len(rows):
+        findings.append(f"E4 分区不闭合: 分类 {sum(len(v) for v in buckets.values())} != 本机 {len(rows)}")
+    dangling_exempt = sorted({i for i in exempt_items} - installed)
+    if dangling_exempt:
+        findings.append(f"E4 exempt 项已不在本机 (登记陈旧, 需删): {dangling_exempt}")
+    if e2_gap:
+        findings.append(f"E2 本机已装但注册表未声明 {len(e2_gap)} 条: {e2_gap}")
+    if e1["status"] == "drift":
+        findings.append(f"E1 plist 与注册表漂移 {e1['drift_count']} 条: {e1.get('drifts', [])}")
+    if e1["status"] == "error":
+        findings.append(f"E1 --check 无法解析: {e1.get('detail', '')}")
+
+    return {
+        "ok": not findings,
+        "findings": findings,
+        "e1_status": e1["status"],
+        "e1_drift": e1["drift_count"] if e1["drift_count"] is not None else -1,
+        "e2_undeclared": len(e2_gap),
+        "e2_undeclared_labels": e2_gap,
+        "e3_lint_debt": len(e3_debt),
+        "e3_malformed_labels": e3_debt,
+        "e4_prefix_ok": not any(f.startswith("E4") for f in findings),
+        "installed_total": len(rows),
+        "workspace_scoped": len(scoped),
+        "workspace_scoped_labels": sorted(row["label"] for row in scoped),
+        "owned_installed": len(buckets["workspace"]),
+        "owned_declared": len(buckets["workspace"]) - len(e2_gap),
+        "unclassified": len(buckets["unclassified"]),
+        "external": len(buckets["external"]),
+        "registry_declared_total": len(declared),
+        "dev_label_prefix": policy.get("dev_label_prefix", ""),
+    }
+
+
+def reality_check_main(local_root: Path, registry: Path | None, as_json: bool) -> int:
+    report = reality_check(
+        registry or (local_root / ".omo" / "_truth" / "registry" / "services.yaml"),
+        _launchd_dir(),
+    )
+    if as_json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print(
+            f"E1 drift={report['e1_drift']} ({report['e1_status']})  "
+            f"E2 undeclared={report['e2_undeclared']}  E3 lint_debt={report['e3_lint_debt']}  "
+            f"E4 prefix_ok={report['e4_prefix_ok']}"
+        )
+        print(
+            f"本机 {report['installed_total']} = workspace {report['owned_installed']} + "
+            f"unclassified {report['unclassified']} + external {report['external']}  |  "
+            f"Workspace 作用域 {report['workspace_scoped']}"
+        )
+        for f in report["findings"]:
+            print(f"❌ {f}")
+        if report["ok"]:
+            print("✅ 注册表与本机 launchd 现实闭合")
+    return 0 if report["ok"] else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--json", action="store_true", help="JSON 输出 (--check/--validate)")
     parser.add_argument("--validate", action="store_true", help="验注册自洽 (CI, 不依赖本机 plist)")
+    parser.add_argument(
+        "--reality-check",
+        action="store_true",
+        help="双向门禁 E1-E4 (注册表 vs 本机 ~/Library/LaunchAgents; 只读, 不写盘)",
+    )
+    parser.add_argument(
+        "--registry",
+        default="",
+        help="--reality-check 用: 指定 services.yaml (默认取当前检出的那份)",
+    )
     args = parser.parse_args()
     local_root = Path(__file__).resolve().parents[2]
-    registry_path = local_root / ".omo" / "_truth" / "registry" / "services.yaml" if args.validate else REGISTRY
+    if args.reality_check:
+        return reality_check_main(local_root, Path(args.registry) if args.registry else None, args.json)
+    registry_path = (
+        local_root / ".omo" / "_truth" / "registry" / "services.yaml"
+        if args.validate
+        else services_yaml_path()
+    )
     if not registry_path.exists():
         print(f"❌ 注册不存在: {registry_path}", file=sys.stderr)
         return 1
