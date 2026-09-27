@@ -4,7 +4,7 @@
 
 .PHONY: help \
 	fabric-inspect fabric-warm fabric-vram fabric-bench omlxc-fabric omlxc-benchmark \
-	gate-local gate-skills gate-ci-surfaces gate-layers gate-phase gate-reachability gate-mof check-layers gac-local-gate \
+	gate-local gate-skills gate-ci-surfaces gate-layers gate-phase gate-reachability gate-mof check-layers gac-local-gate gac-local-gate-strict ci-preflight \
 	test-all test-omlxc test-aetherforge test-cockpit test-kairon test-agora test-omo test-ecos lint-all \
 	omlxc-test omlxc-lint kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-lint kairon-build \
 	sync-all-docs sync-capability-registry check-capability-registry capability-sync capability-check capability-federation-audit sync-help-docs check-docs-drift sync-submodules ssot-status ssot-log ssot-sync \
@@ -136,6 +136,17 @@ governance-release-gate:  ## 子模块可达性门禁
 gate-mof: mof-bootstrap
 mof-bootstrap:  ## MOF 5-check strict 校验
 	$(PY) bin/mof/mof-bootstrap.py all
+
+gac-local-gate-strict:  ## 全量治理门禁 --strict (与 CI 的 gac-gate 对等)
+	$(PY) bin/gac/gac-local-gate.py --strict
+
+ci-preflight:  ## push 前快检: 3 个 required check 的本地等价物 (不减 CI 时间, 减往返轮次)
+	@echo "── ci-preflight [1/3] bet-done-transition ──────────"
+	$(PY) bin/plan/bet-ledger.py lint
+	@echo "── ci-preflight [2/3] phase-gate --base origin/main ─"
+	$(PY) bin/gac/phase-gate-check.py --base origin/main
+	@echo "── ci-preflight [3/3] gac-gate --strict ─────────────"
+	$(PY) bin/gac/gac-local-gate.py --strict
 
 gac-local-gate:  ## 全量治理门禁 (纯验证，不初始化或写入子模块)
 	$(PY) bin/gac/gac-local-gate.py
