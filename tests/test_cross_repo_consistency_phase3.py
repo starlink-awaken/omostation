@@ -103,12 +103,12 @@ def test_principle_p77_3_strict_threshold():
 
 
 def test_threshold_explicit_low_fails():
-    """--threshold 1 (强制) + unregistered=34 → ok=true (threshold 容忍 34 < 1 失败).
-    P79 修正后: 9 个假 port 冲突已治本; unregistered=34 但 threshold=1 仍 fail.
+    """threshold 仍生效: 负阈值下 (新增未登记 0 > -1) 必须 fail。
+    2026-09-28 起 threshold 只作用于新增未登记 URI; bos-pending-registrations.yaml 里的
+    已知积压单列 unregistered_pending, 不再计入阻断 (见 test_cross_repo_consistency_pending.py)。
     """
-    r = run(["--threshold", "1"])
-    # 34 unregistered > 1 threshold → returncode 1
-    assert r.returncode == 1, f"expected fail rc=1 (34 unregistered > 1 threshold), got {r.returncode}"
+    r = run(["--threshold", "-1"])
+    assert r.returncode == 1, f"expected fail rc=1 (0 new > -1 threshold), got {r.returncode}"
 
 
 def test_principle_cross_repo_remediation():

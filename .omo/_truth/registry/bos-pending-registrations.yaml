@@ -11,6 +11,12 @@ pending_registrations:
   - uri: bos://memory/events/card_updated
     source: memory event migration (from brain → memory)
 
+  - uri: bos://memory/brain-events/card_updated
+    source: agora mcp/resolver/api.py legacy 别名键 (→ bos://memory/events/card_updated), 2026-09-28 补登
+
+  - uri: bos://im/session
+    source: cockpit commands/im_triage.py 与 agora tools_bos/im.py 的 bos://im/session/triage 网关族前缀引用, 2026-09-28 补登
+
   # Capability domain
   - uri: bos://capability/bus/control_plane
     source: bus-foundation/control_plane references
