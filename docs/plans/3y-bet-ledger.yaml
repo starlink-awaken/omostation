@@ -36846,7 +36846,8 @@ bets:
     pin moves through bin/ssot/submodule-pointer-transaction.sh, then the parent PR
     lands. A pin sitting only on a child feature branch gets silently reverted by freshness
     automation, which is how B1 lost its kernel seam for four days.'
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -36963,15 +36964,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+            merged_reachable_commit:
+              ref: git://origin/main@d83c1b6b17d18e07913e36893daf8554ee1dd473
+            tests:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:21e0e1a4ea915a7a5bb33f7391434ba9066db1fcbeedfc5bc9b0c87e3f2a326e
+            diff:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:21e0e1a4ea915a7a5bb33f7391434ba9066db1fcbeedfc5bc9b0c87e3f2a326e
+            rollback:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:21e0e1a4ea915a7a5bb33f7391434ba9066db1fcbeedfc5bc9b0c87e3f2a326e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+            live_canary:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:21e0e1a4ea915a7a5bb33f7391434ba9066db1fcbeedfc5bc9b0c87e3f2a326e
+            fresh_receipt:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:21e0e1a4ea915a7a5bb33f7391434ba9066db1fcbeedfc5bc9b0c87e3f2a326e
+            replay:
+              ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-208.md
+              sha256: sha256:ac4ca92112ed771a9ae88b46c78230f75784ff04e685cb34efe8d5fbe2a33e20
+            cleanup:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:21e0e1a4ea915a7a5bb33f7391434ba9066db1fcbeedfc5bc9b0c87e3f2a326e
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
