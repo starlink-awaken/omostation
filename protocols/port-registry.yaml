@@ -126,6 +126,7 @@ ports:
     note: '本仓自有 dev-profile UI 端口 (projects/cockpit-ui vite)。生产人类入口是 cockpit-dashboard
       :8090 + projects/cockpit-ui/dist 静态产物。2026-09-26 由 LEGACY_OK_PORTS 的"外部工具默认"豁免
       改判为已注册自有端口 —— 豁免表只容纳不归本仓管的端口。'
+    owner: cockpit-ui
     status: active
     transport: http
   6379:
