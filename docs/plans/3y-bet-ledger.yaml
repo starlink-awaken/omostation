@@ -36151,7 +36151,8 @@ bets:
     onto repo_root.canonical_root() instead of its own duplicated three-tier resolution
     whose third tier falls back to __file__. It starts, stops, bootstraps and writes
     nothing outside the repository.'
-  status: in_progress
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -36239,15 +36240,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@02f4dfee3446757884562be83001f518408fc0bd
+          tests:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+          diff:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+          rollback:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-206.md
+            sha256: sha256:1595ceaa8e696bd97ec4a92e9b7c4ec316b42529f9d9122a3541fa04abab5588
+          cleanup:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
