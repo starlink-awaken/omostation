@@ -37337,6 +37337,93 @@ bets:
         status: NOT_PROVEN
         evidence: {}
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-210
+  title: 固化两条历史/CI 认知到 AGENTS.md — 浅历史边界与 governance-verify 评 head tree
+  goal: 'AGENTS.md 是 agent 交付前必读的一段，而它当前有两条关于**证据判断装置**的陈述是错的或缺失的，会让 agent 在门禁评估上得出反向结论。第一条：`:195`
+    断言「CI 评的是 merge tree，不含 base 漂移」。实测 .github/workflows/governance-check.yml 四个 job
+    里只有 meta-doctor(:51)/interface-check(:64)/doc-freshness(:146) 用默认 checkout（PR 事件即
+    merge commit）；governance-verify 在 :176 显式 ref: github.event.pull_request.head.sha
+    并以 :177 fetch-depth: 0 取全历史 —— 恰好是跑台账 done-transition 守卫与 evidence/ledger 校验的那个
+    job 评的是分支自己的 head tree，base 漂移真的改变它的判定。第二条：本机仓库是浅历史且从未写下。实测主仓 git rev-parse --is-shallow-repository=true，.git/shallow
+    单点边界在 6ba6bf28e（2026-08-01），本地可达 8,326 个 commit；而 gac-worktree.sh 默认用 git submodule
+    update --init --depth 1（:484/:504）建 claim worktree，实测历史 claim worktree 的 projects/omo
+    只有 1 个 commit（canonical 同一子模块 767 个，HEAD~1 直接 unknown revision），而本次 claim 又是深的 766 个：
+    深浅取决于 claim 路径，不能靠记忆假设。后果具体：gitlink 可达性判据（merge-base
+    --is-ancestor <child> origin/main）在浅检出里没有意义，跑出 false 不是回归而是测量装置没有历史；CI 侧 governance-verify 用 fetch-depth: 0 +
+    submodules: recursive 取完整历史，于是产生"本地 false / CI 绿"的分歧。本 BET 只把这两条写成可复算的认知，不动任何工具或
+    CI 配置。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: Stop on any edit outside AGENTS.md and this bet's spec/ledger/retro/receipt
+    paths, any change to .github/workflows/** (changing what CI evaluates is a governance-surface
+    change requiring its own bet), any change to bin/gac/gac-worktree.sh's default submodule
+    depth (the --depth 1 default exists to dodge the 120s claim timeout recorded at
+    :479, and flipping it silently would trade a documented trap for an unmeasured slowdown),
+    any git fetch --unshallow or object-database rewrite of the main repository, any
+    hard-coded commit count presented as a standing fact rather than a dated measurement
+    with its recompute command, and backfill of lifecycle evidence for any other bet.
+  non_goals:
+  - 不 unshallow 主仓，也不给 claim 的浅 init 改默认值：本 BET 只补认知，不动装置。
+  - 不新增 CI job、不改 governance-check 的 ref 表达式；把「按 job 区分评审对象」写进文档不等于改它。
+  - 不改 meta-doctor / interface-check / doc-freshness 的行为 —— 三者确实评 merge commit，陈述无需修正。
+  - 不在 AGENTS.md 里留下会漂移的裸数字：每条数字同时给出复算命令与测量日期。
+  done_when:
+  - AGENTS.md 不再出现「CI 评的是 merge tree，不含 base 漂移」；替代文字点名 governance-verify 与 pull_request.head.sha，并说明其余三个
+    job 走默认 merge-commit checkout。
+  - AGENTS.md 新增一条浅历史条目：写明主仓 .git/shallow 边界、claim 默认 --depth 1、逃逸口 claim --full / GAC_FULL_SUBMODULE_INIT=1，并给出「gitlink
+    可达性只在 canonical 或 --full 检出里验」的判据。
+  - 条目里每个数字当场可复算（git rev-parse --is-shallow-repository、wc -l < .git/shallow、git rev-list
+    --count HEAD、git -C <wt>/projects/omo rev-list --count、rg -n 'depth 1' bin/gac/gac-worktree.sh、rg
+    -n 'pull_request.head.sha' .github/workflows/governance-check.yml）。
+  - make gac-local-gate 绿，且交付 diff 只含 AGENTS.md + 本 BET 的 spec/ledger/retro/receipt
+    文件。
+  verify:
+  - cmd: rg -n 'CI 评的是 merge tree' AGENTS.md
+    expect: no match (the false blanket claim is gone)
+  - cmd: rg -n 'pull_request\.head\.sha' AGENTS.md .github/workflows/governance-check.yml
+    expect: both files match — the doc names the same ref expression the workflow actually
+      uses at :176
+  - cmd: rg -n 'is-shallow-repository|depth 1|GAC_FULL_SUBMODULE_INIT' AGENTS.md
+    expect: the shallow-history entry exists and points at the real escape hatches
+  - cmd: git diff --name-only origin/main...HEAD
+    expect: only AGENTS.md, docs/plans/3y-bet-ledger.yaml, this spec, the retro and
+      the closeout receipt
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - AGENTS.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-agent-perception-shallow-history-head-tree.md
+  - docs/reports/2026-09-27-agent-perception-shallow-history-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-210.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-agent-perception-shallow-history-head-tree.md
+    spec_version: 1.0.0
+    content_digest: sha256:fd0a8e3dd9518f5861aa890ffbaa361cad49dbcff30f1dcdfb534a64e955fae5
+    decision_ref: decision://accepted/BET-Y2Q4-T10-210
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -37475,7 +37562,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 498
+  total_bets: 499
   windows:
   - Y1Q1
   - Y1Q2
