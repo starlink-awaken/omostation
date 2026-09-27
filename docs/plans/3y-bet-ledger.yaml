@@ -35621,7 +35621,7 @@ bets:
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
           tests:
-            ref: receipt://.omo/tasks/planned/BET-Y2Q4-T4-01-DECISION.yaml
+            ref: receipt://.omo/tasks/done/BET-Y2Q4-T4-01-DECISION.yaml
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
       operational:
@@ -36504,9 +36504,9 @@ bets:
         status: NOT_PROVEN
         evidence:
           note: >-
-            价值门槛 = principal 签发（spec/circuit_breaker/报告 §六三处写死）。报告已交付
-            并随本 PR 请求签发；签发回执将在获得后补记入 retro 与 value 轴。人工基线槽位
-            UNPROVABLE 如实留白。
+            principal 已签发（2026-09-27，回执 report §六 + retro 补记；零修订）。
+            value 升 ACCEPTED 待 time_burden 人工基线补齐（ACCEPTED 契约 4 键之一，
+            D1 不编造），补齐或 X3 消费计量落地后另行升级入账。
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-207
   title: ADR-0456 B4a — 运行时代码安装位落位（~/.local/opt/omostation 独立 clone + repo_root 定位器
