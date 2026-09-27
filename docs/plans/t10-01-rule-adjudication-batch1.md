@@ -45,7 +45,7 @@ title: "规则接线批次一判定表 — 36 条候选四态归因（BET-Y2Q4-T
 | CR-SEC-EVAL-EXEC | source_ref 不存在；无等价机制 |
 | CR-PY-MUTABLE-DEFAULT | source_ref 不存在；pyproject 无 B006 |
 | CR-AGE-BOS-01 / -POLICY-01 / -MEMORY-01 / -REPLAY-01 / -EVENT-01 | 5 个 check-age-*.py 全部不存在；现存 agent-cell-* 仅为 smoke/canary，非规则检查器 |
-| CR-COMMIT-LLM-ASSIST | bin/gac/commit-assist.py **零 git 历史**（从未存在）；策略本身由 AGENTS.md 文化约束承载 |
+| ~~CR-COMMIT-LLM-ASSIST~~ → **改判 a) 换名**（2026-09-27 复核）| source_ref 路径笔误（bin/gac/ → bin/commit-assist.py 真实存在、274 行、#4422 活跃维护）；已修 source_ref + 接线别名 |
 
 → 建议：SEC 四条接 ruff（S-band/B006）一次收口；AGE 五条 owner 确认 AGE-v2 是否仍活跃（否→转退役）；COMMIT-LLM-ASSIST 连同僵尸测试转 c)。
 
