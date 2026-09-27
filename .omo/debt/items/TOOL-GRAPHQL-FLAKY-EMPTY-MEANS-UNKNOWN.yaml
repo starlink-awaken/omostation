@@ -16,7 +16,7 @@ mitigation_refs: []
 opened_at: "2026-09-25"
 last_reviewed_at: '2026-09-25'
 next_review_at: '2026-10-25'
-gate_level: "P2"
+gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
 decision_needed: "给常用 gh 查询包一层重试+空保护（失败/空时 abort 而不是继续删东西）；排查脚本一律用 REST（commits/check-runs、runs list）为主，GraphQL 只做展示"

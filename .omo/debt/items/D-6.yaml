@@ -12,7 +12,7 @@ affected_roots:
 opened_at: "2026-08-16"
 last_reviewed_at: "2026-08-22"
 review_by: "2026-09-15"
-gate_level: "P2"
+gate_level: none
 resolution_evidence: "docs/reports/2026-08-22-metaos-c2g-broadcast-convergence.md — 广播机制保留声明，冲突感知仍以 claim 锁为主，移除强制接线要求"
 closed_at: "2026-08-22T04:10:00Z"
 closed_by: "sisyphus"

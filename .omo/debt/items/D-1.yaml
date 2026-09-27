@@ -13,7 +13,7 @@ affected_roots:
 opened_at: "2026-08-16"
 last_reviewed_at: "2026-08-22"
 review_by: "2026-09-15"
-gate_level: "P1"
+gate_level: watchlist
 resolution_evidence: "docs/reports/2026-08-22-bin-cockpit-gate-convergence.md — bin→cockpit help_map 三件套 SSOT 收敛，cockpit 为 L3 唯一入口"
 closed_at: "2026-08-22T02:45:00Z"
 closed_by: "sisyphus"

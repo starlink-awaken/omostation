@@ -16,7 +16,7 @@ mitigation_refs: []
 opened_at: "2026-09-25"
 last_reviewed_at: '2026-09-25'
 next_review_at: '2026-10-25'
-gate_level: "P2"
+gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
 decision_needed: "复现确认（同树 force-push 是否稳定丢 push 事件），若确认则立约：改写推送后 5 分钟无 check-runs 即视同丢事件，直接空提交 retrigger，不用再等"

@@ -308,7 +308,44 @@ aliases:
       governance-checks: "声明: 检查数据是否新鲜: 债务新鲜度 + 健康度趋势"
       bin_executor: "bin/compass_radar.py staleness 子分 (staleness-check 540 文件扫描, health.yaml staleness_detail)"
 
-cross_walks:cross_walks:
+  # ── BET-Y2Q4-T10-06 批次三追加 ──
+  - canonical: CR-M4-MCPTOOL-INTEGRITY
+    aliases: [mcp-tool-data-complete]
+    evidence:
+      governance-checks: "source_ref bin/gac/mcp-tool-data-complete.py（孤儿改接线, 本批次入 governance workflow）"
+      bin_executor: ".github/workflows/governance-check.yml 调用"
+
+  - canonical: CR-CROSS-REPO-CONSISTENT
+    aliases: [check-cross-repo-consistency]
+    evidence:
+      governance-checks: "source_ref bin/ssot/check-cross-repo-consistency.py（孤儿改接线）"
+      bin_executor: ".github/workflows/governance-check.yml 调用"
+
+  - canonical: CR-GAC-TIMEOUT-AUDIT
+    aliases: [timeout-audit]
+    evidence:
+      governance-checks: "source_ref bin/gac/timeout-audit.py（孤儿改接线）"
+      bin_executor: ".github/workflows/governance-check.yml 调用"
+
+  - canonical: CR-DEBT-GATE-ENUM-01
+    aliases: [check-debt-closure-discipline]
+    evidence:
+      governance-checks: "标准 debt-gate-level-enum.md §4（原'实现位置: 待补'）"
+      bin_executor: "bin/gac/check-debt-closure-discipline.py scan_gate_level_enum（2026-09-27 实现 + 20 条迁移）"
+
+  - canonical: CR-SEC-YAML-BYPASS
+    aliases: [yaml-bypass]
+    evidence:
+      governance-checks: "声明: 禁止 yaml.load 必 safe_load"
+      bin_executor: ".github/workflows/governance-check.yml → omo.cli lint yaml-bypass"
+
+  - canonical: CR-SEC-SENSITIVE-WRITE
+    aliases: [sensitive-governed-writes]
+    evidence:
+      governance-checks: "声明: 禁止硬编码 password/token/secret"
+      bin_executor: ".github/workflows/governance-check.yml → omo.cli lint sensitive-governed-writes（governed 路径口径）"
+
+cross_walks:
   - from: governance-checks
     to: L0-constraints
     pairs:

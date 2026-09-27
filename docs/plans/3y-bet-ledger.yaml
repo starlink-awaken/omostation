@@ -37179,7 +37179,8 @@ bets:
     SEC×4/AGE×5 幻影处置呈报 owner 表态。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-MATURITY
   priority: P1
@@ -37219,6 +37220,7 @@ bets:
   - bin/gac/check-debt-closure-discipline.py
   - .omo/debt/items/
   - .omo/_truth/registry/governance-checks.yaml
+  - bin/gac/registry-alias-map.yaml
   - docs/plans/
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-27-rule-wiring-batch3.md
@@ -37230,17 +37232,36 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-06
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@516be2cf4024c6a24d7c927e3d81f69af3685ff1
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-06.md
+          tests:
+            ref: receipt://bin/gac/check-debt-closure-discipline.py
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-06.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-06.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-06.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-06.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-06.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值 = 孤儿执行器×3 获得真实 CI 执行面 + 债务 review 队列首次按真实严重度
+            排序（rank=99 缺陷修复）+ 剩余 20 条全部显式化待 owner 表态。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH

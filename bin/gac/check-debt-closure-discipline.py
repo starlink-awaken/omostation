@@ -98,6 +98,41 @@ def scan(items_dir: Path | None = None) -> dict:
             "dual_fields": dual_fields, "no_closed_at": no_closed_at}
 
 
+
+def scan_gate_level_enum(items_dir: Path) -> list[dict]:
+    """检查 D (CR-DEBT-GATE-ENUM-01): gate_level 必须在 {gate, watchlist, none} 值域.
+
+    契约: .omo/standards/debt-gate-level-enum.md; omo GATE_ORDER 同值域.
+    2026-09-21 实证: 17 项债务用契约外 P0/P1/P2 → rank=99, 高严重度在 review
+    queue 反而最后被看. 2026-09-27 批量迁移 (P0→gate / P1→watchlist / P2→none).
+    """
+    from collections import Counter
+
+    valid = {"gate", "watchlist", "none"}
+    findings: list[dict] = []
+    counts: Counter = Counter()
+    for f in sorted(items_dir.glob("*.yaml")):
+        try:
+            doc = yaml.safe_load(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not isinstance(doc, dict):
+            continue
+        gl = str(doc.get("gate_level", "")).strip().lower()
+        if not gl:
+            continue
+        counts[gl] += 1
+        if gl not in valid:
+            findings.append({
+                "file": f.name,
+                "gate_level": gl,
+                "message": f"gate_level={gl!r} 不在契约值域 {sorted(valid)}",
+            })
+    if counts:
+        print(f"  gate_level 分布: {dict(counts)}")
+    return findings
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -105,9 +140,11 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     r = scan()
-    violations = len(r["dual_fields"]) + len(r["no_closed_at"])
+    gate_findings = scan_gate_level_enum(Path(".omo/debt/items"))
+    violations = len(r["dual_fields"]) + len(r["no_closed_at"]) + len(gate_findings)
     if args.json:
-        print(json.dumps({**r, "violations": violations}, ensure_ascii=False, indent=1))
+        print(json.dumps({**r, "gate_level_enum": gate_findings,
+                          "violations": violations}, ensure_ascii=False, indent=1))
 
     if not violations:
         if not args.json:
@@ -131,6 +168,11 @@ def main(argv: list[str] | None = None) -> int:
                 extra = "  ← last_reviewed == opened (从未复审)" if d["never_reviewed"] else ""
                 print(f"     {d['file']}: {d['lifecycle_state']} "
                       f"opened={d['opened_at']}{extra}", file=sys.stderr)
+        if gate_findings:
+            print(f"\n  D. gate_level 值域违约 ({len(gate_findings)}) —— "
+                  "契约 {gate,watchlist,none} (CR-DEBT-GATE-ENUM-01):", file=sys.stderr)
+            for d in gate_findings:
+                print(f"     {d['file']}: {d['message']}", file=sys.stderr)
         print("\n  注: 本检查**只报不修** —— 凭空补写 closed_at/close_reason 即"
               "伪造闭环证据;\n      须由 owner 用真实记录补齐。"
               "\n  A 类可机械修复: python3 bin/gac/fix-debt-fields.py --apply",

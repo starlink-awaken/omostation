@@ -89,6 +89,11 @@ jobs:
           python3 bin/gac/ci-check-runner.py --workflow governance-check.yml || FAILED=1
           python3 bin/gac/check-submodule-rewind.py --json > /tmp/rewind-report.json || FAILED=1
           python3 -c "import json,sys; d=json.load(open('/tmp/rewind-report.json')); v=d.get('violations',[]); w=d.get('warns',[]); print(f'rewind violations={len(v)}, warns={len(w)}'); sys.exit(1 if v else 0)" || FAILED=1
+          # BET-Y2Q4-T10-06: 孤儿执行器接线 (规则接线批次三) — 三脚本本地 rc=0 实测
+          python3 bin/gac/mcp-tool-data-complete.py || FAILED=1
+          python3 bin/ssot/check-cross-repo-consistency.py || FAILED=1
+          python3 bin/gac/timeout-audit.py || FAILED=1
+          python3 bin/gac/check-debt-closure-discipline.py || FAILED=1
           cd projects/omo
           uv sync --quiet   # 显式 sync (确保 pydantic 等依赖装好)
           uv run --no-sync --directory . python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json || { echo "=== governance surfaces FAIL, output: ==="; cat /tmp/omo-governance-surfaces.json 2>/dev/null; FAILED=1; }

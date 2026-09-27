@@ -87,3 +87,13 @@ history:
     (docs/plans/t10-05-batch2-dispositions.md, 含 CR-L4 待 CI 接线、CR-X1/X2
     并入 SH-4 权威注册表决策)。15 条零悬空。--strict 仍未上 (剩余 25>0)。
   actor: governance-agent
+- at: '2026-09-28T00:00:00+00:00'
+  action: batch3-wiring
+  note: >-
+    BET-Y2Q4-T10-06 批次三: 孤儿执行器×3 入 governance workflow（真 CI 接线）;
+    CR-DEBT-GATE-ENUM-01 实现（scan_gate_level_enum）+ 20 条债务值域迁移
+    (P0→gate/P1→watchlist/P2→none, 修复 review 队列 rank=99 缺陷);
+    SEC-YAML-BYPASS/SEC-SENSITIVE-WRITE 发现已被 omo.cli lint 覆盖接线;
+    未引用 25→20, 20 条全部有显式标注零无主。剩余 9 条幻影(SEC×2/AGE×5+
+    eval/mutable)待 owner 表态（接线 or 退役）。
+  actor: governance-agent

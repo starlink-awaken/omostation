@@ -2194,6 +2194,7 @@ gac:
     added_at: '2026-08-28'
     review_before: '2026-11-30'
     justification: '[ADR-0431 D2] CR-RESIDENT-BOS-01 — 待补存在理由 (90 天内补齐)'
+  # [T10-06 幻影待决 2026-09-27] 声明的 check-age-*.py 从未建；agent-cell 现存仅 smoke；owner 表态: AGE-v2 活跃则立项实现，否则退役
   - id: CR-AGE-BOS-01
     dimension: X1
     layer: L2
@@ -2218,6 +2219,7 @@ gac:
     added_at: '2026-08-28'
     review_before: '2026-12-18'
     justification: '[ADR-0431 D2] CR-AGE-BOS-01 — 待补存在理由 (90 天内补齐)'
+  # [T10-06 幻影待决 2026-09-27] 声明的 check-age-*.py 从未建；agent-cell 现存仅 smoke；owner 表态: AGE-v2 活跃则立项实现，否则退役
   - id: CR-AGE-POLICY-01
     dimension: X1
     layer: L2
@@ -2242,6 +2244,7 @@ gac:
     added_at: '2026-08-28'
     review_before: '2026-12-29'
     justification: '[ADR-0431 D2] CR-AGE-POLICY-01 — 待补存在理由 (90 天内补齐)'
+  # [T10-06 幻影待决 2026-09-27] 声明的 check-age-*.py 从未建；agent-cell 现存仅 smoke；owner 表态: AGE-v2 活跃则立项实现，否则退役
   - id: CR-AGE-MEMORY-01
     dimension: X2
     layer: L2
@@ -2266,6 +2269,7 @@ gac:
     added_at: '2026-08-28'
     review_before: '2026-12-22'
     justification: '[ADR-0431 D2] CR-AGE-MEMORY-01 — 待补存在理由 (90 天内补齐)'
+  # [T10-06 幻影待决 2026-09-27] 声明的 check-age-*.py 从未建；agent-cell 现存仅 smoke；owner 表态: AGE-v2 活跃则立项实现，否则退役
   - id: CR-AGE-REPLAY-01
     dimension: X4
     layer: L2
@@ -2290,6 +2294,7 @@ gac:
     added_at: '2026-08-28'
     review_before: '2027-01-10'
     justification: '[ADR-0431 D2] CR-AGE-REPLAY-01 — 待补存在理由 (90 天内补齐)'
+  # [T10-06 幻影待决 2026-09-27] 声明的 check-age-*.py 从未建；agent-cell 现存仅 smoke；owner 表态: AGE-v2 活跃则立项实现，否则退役
   - id: CR-AGE-EVENT-01
     dimension: X3
     layer: L2
