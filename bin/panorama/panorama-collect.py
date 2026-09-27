@@ -4691,9 +4691,12 @@ def build_payload() -> dict:
                     _val = _orch_data.get(_key)
                     if _val is not None:
                         payload[_key] = _val
-            # roadmap/gantt/contract live in the refresh-era previous-snapshot.json
-            # (orchestrator doesn't carry them); read from there if missing.
-            for _key in ("roadmap", "gantt", "contract"):
+            # roadmap/gantt/contract/presentation/compute/envelope/resident*
+            # live in the refresh-era previous-snapshot.json (orchestrator
+            # doesn't carry them); read from there if missing.
+            for _key in ("roadmap", "gantt", "contract", "presentation",
+                         "compute", "envelope", "resident_agents", "resident",
+                         "role_design", "current_team", "live_agents"):
                 if not payload.get(_key):
                     try:
                         _prev = _orch_current.with_name("previous-snapshot.json")
