@@ -11,7 +11,7 @@
   写运行态(ledger/state)  → state_root(), 由 profile 声明, 未声明时等于 code_root()
   定位运行时安装位        → install_root(), 未落位返回 None; 它只回答"在哪", 不改任何解析结果
 
-第四条 placement 判据 (BET-Y2Q4-T10-208, 交付运行态):
+第四条 placement 判据 (BET-Y2Q4-T10-209, 交付运行态):
   机器级、长于单检出的交付运行态 (delivery runs/locks/events, 即
   `.omo/_delivery/agent-workflows/` 下的 runs/ locks/ events.jsonl)
     → 已声明 env (OMOSTATION_STATE_ROOT) 用之, 否则 canonical_root();

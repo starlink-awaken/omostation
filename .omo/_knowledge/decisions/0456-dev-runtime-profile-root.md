@@ -270,7 +270,7 @@ B1→B2→B3 完成后，B4b 本质是 `launchctl bootstrap` 换路径：
 `bin/ssot/install-resident-cron.sh` 已用 `BASH_SOURCE` 自推 WORKSPACE，从安装位跑它
 就得到安装位的路径，不需要重写 40 条 cron。
 
-## Addendum — 交付运行态 (delivery-state) placement 与 merge-rescue（BET-Y2Q4-T10-208，2026-09-27）
+## Addendum — 交付运行态 (delivery-state) placement 与 merge-rescue（BET-Y2Q4-T10-209，2026-09-27）
 
 **新 placement 类：交付运行态。** `.omo/_delivery/agent-workflows/` 下的 `runs/`、`locks/`、
 `events.jsonl`（连带 `affected/`、`receipts/`）是**机器级、跨检出、生命周期长于单个检出**的

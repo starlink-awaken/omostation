@@ -36225,6 +36225,36 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:3fbbe9a4b7e1ba42e1f2b109a0f3f32e17d97ac2e99a6e9373e02ed8c3c8d1d9
     decision_ref: decision://accepted/BET-Y2Q4-T10-04
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9317e48ab
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-04.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     overall_state: delivery_accepted
@@ -36788,6 +36818,161 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-208
+  title: ADR-0456 B4b 批次 1 — 事件账本在线快照到 XDG 状态根（不翻转权威）
+  goal: 'Prove the state-relocation mechanism works against the real production ledger
+    without moving authority off it. ADR-0456 B4a landed the code install root, so the
+    remaining half of B4b is the state root, ~/.local/state/omostation/{prod,dev}. Two
+    measured facts shape this bet. First, the source store is live and its write-ahead
+    log is un-checkpointed (journal_mode=wal, the -wal file is far larger than the main
+    database file and newer than it, and a resident process holds a write handle), so
+    copying the .sqlite3 file with cp yields a snapshot missing committed events that
+    fails chain verification; the only correct mechanism is the SQLite online-backup
+    API, whose precedent in this repository is bin/ssot/scene-history.py. Second, the
+    kernel-side resolver projects/omo/src/omo/event_ledger/surface.py never reads OMOSTATION_STATE_ROOT,
+    it honors only OMO_EVENT_LEDGER_DB and otherwise falls back to WORKSPACE_ROOT, so
+    until some process environment injects that variable, placing a copy at the new
+    path changes what nobody reads. That makes this batch genuinely zero-runtime-effect,
+    and it also means any claim that the state root has been moved would be false; this
+    bet ships a verified snapshot plus an explicitly non-authoritative provenance marker
+    and leaves the cutover to a later batch. The capability is added to the omo ledger
+    subcommand surface rather than to bin/, because bin/gac/check-bin-quota-diff.py
+    fails any change with more added than deleted scripts under bin/**/*.py, which includes
+    bin/lib/. Continuity across the migration boundary is proved by comparing the event_hash
+    values already stored in each row between the source and the copy over the sequence
+    range the copy covers, deliberately not by recomputing hashes, since a second implementation
+    of the kernel''s canonicalization is exactly the duplicate-truth pattern ADR-0456
+    exists to remove. The delivery order is fixed by the gitlink contract in docs/superpowers/specs/2026-09-26-submodule-gitlink-reachability.md:
+    the child commit must merge into projects/omo origin/main first, then the parent
+    pin moves through bin/ssot/submodule-pointer-transaction.sh, then the parent PR
+    lands. A pin sitting only on a child feature branch gets silently reverted by freshness
+    automation, which is how B1 lost its kernel seam for four days.'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 4 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any write to ~/Library/LaunchAgents/*.plist or to a crontab
+    entry, any launchctl bootstrap/bootout/kickstart, any start/stop or restart of a
+    service, any injection of OMO_EVENT_LEDGER_DB or OMOSTATION_STATE_ROOT into a running
+    process environment, any change to what canonical_root() / code_root() / state_root()
+    / event_ledger_path() resolve to when no new environment variable is set (the source
+    store must stay the only writer until a later batch says otherwise), any write PRAGMA
+    against the source store (no wal_checkpoint, no VACUUM, no journal_mode change,
+    since truncating a WAL another process is writing to is not a read-only act), any
+    overwrite of an existing destination database, any net-new file under bin/ (the
+    script-quota gate bin/gac/check-bin-quota-diff.py counts additions against deletions),
+    any hand-made git add of projects/omo instead of bin/ssot/submodule-pointer-transaction.sh,
+    any parent gitlink that is not already an ancestor of projects/omo origin/main,
+    any change to .omo/_truth/registry/governance-checks.yaml or to the enforcement
+    wiring in .omo/_truth/registry/ci-surfaces.yaml and .pre-commit-config.yaml, any
+    flip of ADR-0456 status (two files both claim the identifier ADR-0456 on origin/main
+    and the ACCEPTED recorded by PR 4413 belongs to the other one), any edit of the
+    completed BET-Y2Q4-T10-207 entry (this bet supersedes its .backup prohibition for
+    this scoped action by declaration, not by rewriting a closed record), and backfill
+    of lifecycle evidence for any other bet.
+  non_goals:
+  - Do not cut any service over. No plist path rewrite, no cron cutover, no environment
+    variable injected into a running job. The production store remains the single writer,
+    and the copy at ~/.local/state/omostation/prod is a snapshot whose provenance file
+    marks authoritative=false.
+  - Do not delete, move, rename or checkpoint the source store or its -wal / -shm sidecar
+    files. Read-only is the whole safety argument of this batch.
+  - Do not declare omostation.profile.toml for the install root. Nothing reads it yet,
+    and shipping an unread file would turn the claim that a profile is in place into
+    an unfalsifiable one, the same ruling BET-Y2Q4-T10-203.md and BET-Y2Q4-T10-207 recorded.
+  - Do not recompute event_hash or root_hash on the parent-repo side. The contract compares
+    stored values across the boundary and defers all hash computation to the kernel
+    verify_chain, so no second canonicalization is born.
+  - Do not create integrity anchors as part of this batch. The anchor table is empty
+    by fact, anchors are unsigned (plain SHA-256, no key material), and blessing a range
+    is a governance act that does not follow from copying a file.
+  - Do not resolve the duplicate ADR identifiers, the shallow main repository, or the
+    fork between the kernel and parent declarations of the ledger env-var constant.
+    All are reported to the principal.
+  done_when:
+  - omo ledger snapshot --bootstrap creates an empty store at the dev path through the
+    same LedgerBroker.connect() entry production uses, with verify_chain() ok, count()==0,
+    and a schema_fingerprint equal to the production store's.
+  - omo ledger snapshot --source and --dest creates the prod store through SQLite's
+    online-backup API, and on the copy PRAGMA integrity_check reports ok while LedgerBroker.verify_chain()
+    reports ok with no first_bad_sequence.
+  - Prefix continuity is proved without recomputing any hash. For every sequence in
+    1..dest_head_sequence the stored event_hash equals the source row for that sequence,
+    with no gap. Events the source appended during the copy window are reported as source_ahead
+    and are not a failure; that number is the evidence the source is still the live
+    authority.
+  - The command fails closed with a non-zero exit when the destination already exists
+    and leaves the existing file untouched, and any partial artifact created before
+    a failure is removed, so a half-written snapshot cannot be mistaken for a completed
+    one.
+  - Each new store is accompanied by a provenance sidecar recording source, destination,
+    both head sequences, source_ahead, integrity and chain results, created_at, the
+    sqlite version, authoritative=false, and an explanatory note.
+  - tests/test_event_ledger_snapshot.py covers the five behaviors above under tmp_path
+    only, so no test reads the host real home directory or the real production ledger
+    (the hermetic-test leak rule recorded in AGENTS.md).
+  - Zero runtime effect is measured, not asserted. gen-service-configs.py --reality-check
+    --json reports identical e1_drift / e2_undeclared / installed_total / workspace_scoped
+    / owned_installed / owned_declared before and after the snapshot; repo_root.py --json
+    is byte-identical before and after; the count of plists pointing at Workspace is
+    unchanged.
+  - make runtime-state-snapshot exists as the entry point and no net-new file appears
+    under bin/.
+  - AGENTS.md and ARCHITECTURE.md name both new state roots and state plainly that they
+    are not yet authoritative, so no other agent assumes the runtime was redirected.
+  - The child commit is merged into projects/omo origin/main before the parent pin moves,
+    and the parent pin change goes through bin/ssot/submodule-pointer-transaction.sh,
+    so git -C projects/omo merge-base --is-ancestor with the root pin as the first argument
+    exits 0.
+  verify:
+  - cmd: uv run --directory projects/omo python -m pytest tests/test_event_ledger_snapshot.py
+      -q
+    expect: exit 0, all passed, no test touching ~/.local/state or the real production
+      ledger
+  - cmd: python3 bin/lib/repo_root.py --json
+    expect: byte-identical output before and after the snapshot; state_root still equals
+      code_root and event_ledger_override stays false
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json
+    expect: exit 0 with e1_drift=0 and e2_undeclared=0, and all six counters identical
+      to the pre-snapshot baseline
+  - cmd: git -C projects/omo merge-base --is-ancestor <root-pin> origin/main
+    expect: exit 0, the gitlink lands on the child default branch per the B4 regression
+      contract
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-event-ledger-state-snapshot.md
+  - projects/omo
+  - Makefile
+  - AGENTS.md
+  - ARCHITECTURE.md
+  - docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-208.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-event-ledger-state-snapshot.md
+    spec_version: 1.0.0
+    content_digest: sha256:0bea20f2ee5a53642c1319462f6a58dfa1f575069e5e4730132d25469d9a7855
+    decision_ref: decision://accepted/BET-Y2Q4-T10-208
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+- id: BET-Y2Q4-T10-209
   title: ADR-0456 交付运行态 worktree 归集 — agent-workflow runs/locks/events 锚定 canonical
     (linked-worktree symlink 桥 + release 兜底)
   goal: '#4435 实证: 在 worktree 内 agent-workflow start 写出的 run 记录 (.omo/_delivery/agent-workflows/runs/<run_id>.yaml
@@ -36858,8 +37043,8 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   depends_on: []
   accepted_specifications:
-  - content_digest: sha256:9a1fd9a67e5cdf82bcfaa647e23936c8f80c36fb9086e7ec096ecccf9b6015e0
-    decision_ref: decision://accepted/BET-Y2Q4-T10-208
+  - content_digest: sha256:5204a90d837a70d9d399ba315a9d40f82706f7aabcfecd9f27bb6e2841269f25
+    decision_ref: decision://accepted/BET-Y2Q4-T10-209
     spec_ref: repo://docs/superpowers/specs/2026-09-27-delivery-state-worktree-anchor-design.md
     spec_version: 1.0.0
   completion_evidence:
@@ -36867,7 +37052,7 @@ bets:
     overall_state: evaluating
     axes:
       engineering:
-        status: NOT_PROVEN
+        status: IN_PROGRESS
         evidence: {}
       operational:
         status: NOT_PROVEN
@@ -37013,7 +37198,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 494
+  total_bets: 495
   windows:
   - Y1Q1
   - Y1Q2

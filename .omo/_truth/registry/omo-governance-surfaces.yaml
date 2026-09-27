@@ -12,7 +12,7 @@ last-reviewed: 2026-09-21
 #       OMO-LOCKS (.omo/locks/) · OMO-WORKERS · OMO-TESTS · OMO-CAPABILITIES ·
 #       OMO-RUN-CONTINUATION → 声明合法 (运行时面), 保留。
 #   - ⚠️ 5 项**既无写入方也无消费者 (0 处引用)** —— 声明了、执行层为空:
-#       OMO-GENERATED (.omo/_generated/)   ← 且未被 gitignore (声明为可跟踪, 却从不出现)
+#       OMO-GENERATED (.omo/_generated/)   ← 已于 2026-09-27 摘除 (principal 批准 ADR-0456 减法; OMO-SURFACES-ZOMBIE-ASSETS 关单)
 #       OMO-PITCHES (.omo/pitches/)        ← 同上
 #       OMO-REPORTS-RUNTIME (.omo/reports/)
 #       OMO-BETS-INDEX (.omo/bets.json)
@@ -449,21 +449,6 @@ assets:
       - projects/c2g
       - agents
     status: active
-  - id: OMO-PITCHES
-    ref: .omo/pitches/
-    plane: state_plane
-    asset_type: strategic_input
-    persistence_mode: durable
-    retention_mode: manual_archive
-    truth_owner: governance
-    write_via:
-      - projects/c2g
-      - humans
-    consumed_by:
-      - projects/c2g
-      - reviewers
-    status: active
-    runtime: true
   - id: OMO-TESTS
     ref: .omo/tests/
     plane: state_plane
@@ -591,32 +576,6 @@ assets:
       - projects/omo
     notes: personal governance constitution for principal identity, roles, decision preferences, and value-measurement boundaries
     status: active
-  - id: OMO-BETS-INDEX
-    ref: .omo/bets.json
-    plane: state_plane
-    asset_type: bets_registry
-    persistence_mode: durable
-    retention_mode: until_replaced
-    truth_owner: governance
-    write_via:
-      - projects/c2g
-    consumed_by:
-      - agents
-    status: active
-    runtime: true
-  - id: OMO-TASKS-INDEX-JSON
-    ref: .omo/tasks.json
-    plane: state_plane
-    asset_type: tasks_index
-    persistence_mode: durable
-    retention_mode: until_replaced
-    truth_owner: governance
-    write_via:
-      - projects/omo
-    consumed_by:
-      - agents
-    status: active
-    runtime: true
   - id: OMO-EVIDENCE-LEGACY
     ref: .omo/evidence/
     plane: state_plane
@@ -633,22 +592,6 @@ assets:
     status: active
     alias_target: .omo/_delivery/evidence-legacy/
     note: compatibility alias only; real storage must live under .omo/_delivery/
-    runtime: true
-  - id: OMO-GENERATED
-    ref: .omo/_generated/
-    plane: state_plane
-    asset_type: derived_state
-    persistence_mode: derived
-    retention_mode: until_replaced
-    truth_owner: governance
-    write_via:
-      - agents
-      - scripts
-    consumed_by:
-      - agents
-      - humans
-    notes: "P3 work 真治本: 2026-06 新加, 之前未在 SSOT 注册"
-    status: active
     runtime: true
   - id: OMO-AUTOPILOT
     ref: .omo/autopilot/
@@ -677,22 +620,6 @@ assets:
       - cascading-test.yml
       - agents
     notes: "affected-graph receipt (schema affected-graph-receipt/v1): 拓扑受影响项目计算的可验证收据; bin/gac/affected-graph.py 生成, .github/workflows/cascading-test.yml 消费; 曾因误提交 git 树导致 governance surfaces 报 unregistered top-level asset, 补注册"
-    status: active
-    runtime: true
-  - id: OMO-REPORTS-RUNTIME
-    ref: .omo/reports/
-    plane: state_plane
-    asset_type: runtime_receipt
-    persistence_mode: operational
-    retention_mode: until_replaced
-    truth_owner: agents
-    write_via:
-      - bin/gac
-      - agents
-    consumed_by:
-      - agents
-      - auditors
-    notes: "运行态 affected/receipt 报告产物目录 (gitignored); governance surfaces 补注册以消除本地 unregistered top-level asset 报错"
     status: active
     runtime: true
   - id: OMO-RUN-CONTINUATION

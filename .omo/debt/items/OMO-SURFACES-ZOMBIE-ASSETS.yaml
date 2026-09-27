@@ -7,7 +7,12 @@ scope: "workspace"
 severity: "medium"
 weight: 0.05
 entropy_class: "classification"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
+closed_at: "2026-09-27"
+close_reason: >-
+  处置 (b) 摘除: principal 批准减法清理计划（ADR-0456 方向确认后的「继续」授权），
+  5 项零写入方/零消费者资产声明摘除（摘除前当日复核写入方仍全 0），
+  声明与执行一致性由摘除达成，头部注释同步标记（非静默删除）。
 owner: "governance-team"
 affected_roots:
   - ".omo/_truth/registry/omo-governance-surfaces.yaml"
@@ -49,3 +54,9 @@ history:
 x1_policy_ref: P73-TRUTH-DRIVEN-ENGINEERING
 x2_freshness: ""
 x3_tier: ""
+- at: '2026-09-27T00:00:00+00:00'
+  action: resolve-removal
+  note: >-
+    处置 (b) 执行: 5 项 assets 声明摘除（OMO-GENERATED/OMO-PITCHES/OMO-REPORTS-RUNTIME/
+    OMO-BETS-INDEX/OMO-TASKS-INDEX-JSON），摘除前当日复核写入方全 0。头部注释同步标记。
+  actor: governance-agent

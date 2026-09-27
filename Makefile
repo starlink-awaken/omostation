@@ -12,7 +12,7 @@
 	memory-os-check memory-os-env memory-os-env-export memory-os-up memory-os-smoke memory-os-asof-seed \
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
-	mof-bootstrap m4-health m4-health-compare registry-drift service-registry-reality runtime-install-root gac-healthcheck gac-drift gac-validate \
+	mof-bootstrap m4-health m4-health-compare registry-drift service-registry-reality runtime-install-root runtime-state-snapshot gac-healthcheck gac-drift gac-validate \
 	bridge-runtime corrosion-pipeline scene-journey value-tracker self-evolution weekly-review monthly-healthcheck probe-heartbeat goal-mode-test \
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
 	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
@@ -215,6 +215,13 @@ registry-drift:  ## 注册表漂移检测
 
 service-registry-reality:  ## launchd 现实双向门禁 E1-E4 (只读, 绝不写 plist; BET-Y2Q4-T10-206)
 	$(PY) bin/mof/gen-service-configs.py --reality-check
+
+runtime-state-snapshot:  ## 权威 ledger 的验证快照 + dev 空库引导 (ADR-0456 B4b-1; 只读源、不改道、dest 已存在即拒绝)
+	@dest_root="$$HOME/.local/state/omostation"; \
+	source="$$(python3 bin/lib/repo_root.py | awk '$$1 == "event_ledger_path" { print $$2 }')"; \
+	echo "# source (仍是唯一权威, 本目标不改动它): $$source"; \
+	$(UV) run --project projects/omo omo ledger snapshot --source "$$source" --dest "$$dest_root/prod/event-ledger.sqlite3" --json && \
+	$(UV) run --project projects/omo omo ledger snapshot --bootstrap --dest "$$dest_root/dev/event-ledger.sqlite3" --json
 
 runtime-install-root:  ## 三层根 + 运行时安装位只读报告 (ADR-0456 B4a; 不写任何配置)
 	@$(PYTHON) bin/lib/repo_root.py --json

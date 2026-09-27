@@ -4691,9 +4691,12 @@ def build_payload() -> dict:
                     _val = _orch_data.get(_key)
                     if _val is not None:
                         payload[_key] = _val
-            # roadmap/gantt/contract live in the refresh-era previous-snapshot.json
-            # (orchestrator doesn't carry them); read from there if missing.
-            for _key in ("roadmap", "gantt", "contract"):
+            # roadmap/gantt/contract/presentation/compute/envelope/resident*
+            # live in the refresh-era previous-snapshot.json (orchestrator
+            # doesn't carry them); read from there if missing.
+            for _key in ("roadmap", "gantt", "contract", "presentation",
+                         "compute", "envelope", "resident_agents", "resident",
+                         "role_design", "current_team", "live_agents"):
                 if not payload.get(_key):
                     try:
                         _prev = _orch_current.with_name("previous-snapshot.json")
@@ -4708,6 +4711,33 @@ def build_payload() -> dict:
         _strategic = None
     payload["strategic"] = _strategic or _build_strategic_projection(payload)
     return payload
+
+
+def _check_template_data_consistency(payload: dict) -> None:
+    """Scan the dashboard template for D.* references and warn about
+    top-level fields the payload doesn't provide.
+
+    This is a build-time guard against undefined-field crashes in the
+    browser. It does NOT block publication — it only warns.
+    """
+    import re as _re
+    template_path = Path(os.environ.get(
+        "ZHIXING_DASHBOARD_CODE_ROOT",
+        str(Path.home() / ".local/share/zhixing-dashboard"),
+    )) / "template.html"
+    if not template_path.is_file():
+        return
+    try:
+        template = template_path.read_text(encoding="utf-8")
+    except Exception:
+        return
+    # Extract D.<field> references (top-level only)
+    refs = set(_re.findall(r"D\.([a-z_][a-z0-9_]*)", template))
+    missing = sorted(r for r in refs if r not in payload or payload[r] is None)
+    if missing:
+        print(f"  ⚠️  template-data consistency: {len(missing)} fields "
+              f"referenced in template but missing from payload: "
+              f"{', '.join(missing[:10])}")
 
 
 def _build_strategic_projection(payload: dict) -> dict:
@@ -4785,6 +4815,10 @@ def main() -> int:
     if args.check_side_effects:
         return check_side_effects()
 
+    # Auto-discard .omo/ runtime side effects from a previous publish so the
+    # cleanliness check below passes without external stash/unstash.
+    run(["git", "checkout", "--", ".omo/", "BRIEF.md"], )
+
     # Cleanliness must be verified BEFORE build_payload(): collectors write
     # .omo/state/* side effects that would otherwise fail the identity check.
     collect_projection_producer_identity()
@@ -4794,6 +4828,9 @@ def main() -> int:
     # Discard .omo/ runtime side effects from collectors so the internal
     # cleanliness check inside publish_projection_revision passes.
     run(["git", "checkout", "--", ".omo/", "BRIEF.md"])
+    # Template-data consistency check: scan template for D.* references
+    # and warn about fields the payload doesn't provide.
+    _check_template_data_consistency(payload)
     projection = publish_projection_revision(payload)
 
     if args.gates:

@@ -1,4 +1,4 @@
-"""BET-Y2Q4-T10-208 — root-level contract tests for the delivery-state anchor.
+"""BET-Y2Q4-T10-209 — root-level contract tests for the delivery-state anchor.
 
 Contract surface from the root consumer's perspective: public API shape, the
 pure-fallback anchor resolution order, the three byte-identical no-op gates,

@@ -3376,7 +3376,7 @@ def test_b1_frozen_verbs_are_recognized() -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# BET-Y2Q4-T10-208 — delivery-state canonical anchor (worktree integration)
+# BET-Y2Q4-T10-209 — delivery-state canonical anchor (worktree integration)
 #
 # Additive: fake checkouts only. Every tree is constructed under ``tmp_path``
 # and every CLI subprocess inherits HOME / OMOSTATION_ROOT /

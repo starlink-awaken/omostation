@@ -8,10 +8,10 @@ type: ephemeral
 schema_version: specification/v1
 spec_version: 1.0.0
 title: ADR-0456 交付运行态 worktree 归集 — runs/locks/events 锚定 canonical (symlink 桥)
-bet_id: BET-Y2Q4-T10-208
+bet_id: BET-Y2Q4-T10-209
 ---
 
-# BET-Y2Q4-T10-208 — 交付运行态 worktree 归集 (delivery-state canonical anchor)
+# BET-Y2Q4-T10-209 — 交付运行态 worktree 归集 (delivery-state canonical anchor)
 
 ## Context
 

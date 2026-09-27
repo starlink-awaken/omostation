@@ -204,7 +204,7 @@ remove_verified_pasw() {
   rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
 }
 
-# ── delivery-state merge-rescue (BET-Y2Q4-T10-208, belt-and-suspenders) ────
+# ── delivery-state merge-rescue (BET-Y2Q4-T10-209, belt-and-suspenders) ────
 # worktree 内 `.omo/_delivery/agent-workflows/` (runs/ locks/ events.jsonl,
 # .gitignore:12 忽略) 是**真实目录**时, 在 `git worktree remove --force` 之前
 # merge 进 canonical 检出: 子项拷入 canonical 胜 (cp -Rn), events.jsonl 只
@@ -804,7 +804,7 @@ except Exception: print('')" 2>/dev/null || true)"
     verify_clean_for_force_removal "$wt" || exit 1
     # PASW: only remove verified Git worktrees; no filesystem fallback.
     remove_verified_pasw "$wt" || exit 1
-    # BET-Y2Q4-T10-208: delivery-state merge-rescue (best-effort, 永不阻断移除)
+    # BET-Y2Q4-T10-209: delivery-state merge-rescue (best-effort, 永不阻断移除)
     rescue_delivery_state "$wt" || true
     git worktree remove --force "$wt" 2>&1
     echo "✅ worktree 释放: $wt"
@@ -896,7 +896,7 @@ except Exception: print('')" 2>/dev/null || true)"
       verify_clean_for_force_removal "$wt" || exit 1
       # PASW: only remove verified Git worktrees; no filesystem fallback.
       remove_verified_pasw "$wt" || exit 1
-      # BET-Y2Q4-T10-208: delivery-state merge-rescue (best-effort, 永不阻断移除)
+      # BET-Y2Q4-T10-209: delivery-state merge-rescue (best-effort, 永不阻断移除)
       rescue_delivery_state "$wt" || true
       # 释放 worktree (verified clean; --force needed for initialized submodules)
       git worktree remove --force "$wt" 2>&1
@@ -1279,7 +1279,7 @@ PYEOF
       if [ "$DRY" = true ]; then
         echo "  🧹 [dry-run] 将回收: $wt_name (age=${age_hours}h)"
       else
-        # BET-Y2Q4-T10-208: delivery-state merge-rescue (best-effort, 永不阻断移除)
+        # BET-Y2Q4-T10-209: delivery-state merge-rescue (best-effort, 永不阻断移除)
         rescue_delivery_state "$wt_path" || true
         git worktree remove --force "$wt_path" 2>&1 | head -1
         branch="work/${wt_name#ws-}"
