@@ -14,7 +14,7 @@ totals:
   mcp_tools: 643
   bos_services: 345
   bos_domains: 24
-  cli_commands: 197
+  cli_commands: 200
   skills: 42
   workflows: 26
 mcp_servers:
@@ -2592,6 +2592,8 @@ cli_commands:
   description: 🚀 新用户快速上手向导（环境核验 + 上手指引）
 - name: quickstart-check
   description: 快速检查新用户环境核验状态
+- name: rag
+  description: 🔎 本地文档问答 (向量召回 embed-bge → 重排 rerank → 作答)
 - name: read
   description: 通过 BOS 网关统一读取指定 URI 资源
 - name: readiness
@@ -2634,6 +2636,8 @@ cli_commands:
   description: 评分债务项
 - name: search
   description: 全文搜 CARDS
+- name: see
+  description: 👁 看图理解 / 文字识别 (vision / ocr)
 - name: send
   description: 一键确认署名并经外发网关真实外发
 - name: serve
@@ -2644,6 +2648,8 @@ cli_commands:
   description: 运行 L4 定时技能
 - name: snapshot
   description: KV 缓存快照管理与预热
+- name: speak
+  description: 🔊 语音合成 (tts-zh / tts-en)
 - name: speculative-eval
   description: 本地首选投机推演评估
 - name: spine
