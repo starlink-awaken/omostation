@@ -384,3 +384,9 @@ scripts/scripts/
 scripts/projects/
 scripts/scripts/
 .omo/_attic/
+
+# Projection publisher requires clean tree; these are runtime artifacts
+.omo/tasks/done/
+.omo/tasks/planned/
+.omo/_knowledge/signals/
+live-server.pid
