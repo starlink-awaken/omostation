@@ -34550,7 +34550,8 @@ bets:
   goal: Migrate 7 OMO_PRINCIPAL_ID callers (read-only meters/gates/tests) to
     principal_id_from_env() so future emit-paths that treat their output
     as authoritative cannot silently corrupt the ledger.
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T16-DRIFT-GUARD
   priority: P2
@@ -34602,6 +34603,40 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:5ca51ecd92d272cd997f980d7b4f50d4241ecfd1379b13f5f7a0d166a4b69349
     decision_ref: decision://accepted/BET-Y2Q4-SH-9
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@606ad8b024d53981b053f261a6ca85a52f1cde46
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-9.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-9.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-9.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-9.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-9.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-9.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-9.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >
+            Audit-only migration BET. All 11 OMO_PRINCIPAL_ID callers
+            now route through canonical principal:<id> normalization;
+            value axis remains outside this BET's scope.
 - id: BET-Y2Q4-SH-5.1
   title: Episode Pipeline Principal-ID Normalization — fix SH-5 silent failure
   goal: Auto-normalize OMO_PRINCIPAL_ID to canonical principal:<id> form in
