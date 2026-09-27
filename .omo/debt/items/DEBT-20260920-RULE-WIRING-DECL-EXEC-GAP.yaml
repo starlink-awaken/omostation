@@ -67,3 +67,14 @@ history:
     已锚定为反例 (source_ref 真实); CR-DEBT-GATE-ENUM-01 仍真未实现 (P0/P1/P2 值域
     违约)。
   actor: governance-agent
+- at: '2026-09-27T00:00:00Z'
+  action: batch1-adjudication
+  note: >-
+    BET-Y2Q4-T10-01 批次一: SH-4 (#4337) 的 35 组别名已使候选 42→36; 本批追加 7 组
+    语料可证别名 (mof-bootstrap×2 / CR-HARNESS-SECTION|MOF|OMO|ENFORCE / gitlink-ancestry),
+    候选 36→29。36 条全量四态归因见 docs/plans/t10-01-rule-adjudication-batch1.md:
+    a) 换名已映射 7; b-1) 执行器孤儿 3 (mcp-tool-data-complete / check-cross-repo-consistency /
+    timeout-audit 均无调用面); b-2) 幽灵声明 10 (SEC×4 无等价机制, AGE×5 脚本从未建,
+    COMMIT-LLM-ASSIST 零 git 历史); c) 僵尸 1 (commit-assist e2e 测试引用从未存在的脚本);
+    d) owner 存疑 15。--strict 门禁待批次二 (owner 逐条复核 d 类后)。
+  actor: governance-agent

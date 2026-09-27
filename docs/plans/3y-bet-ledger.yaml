@@ -35071,7 +35071,8 @@ bets:
     fail。关单前提 = owner 逐条建立 ID 别名映射。本 bet 为批次一：导出清单，≥20 条完成四态判定（别名映射/真未实现/弃用/存疑升级 owner），映射落
     governance-checks.yaml（CR-X1-AGENT-AUDIT.source_ref 先例），重跑 coverage 验证下降，债务 item
     追加 history 不关单（批次二另立 bet 收 --strict 门禁与关单）。
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-MATURITY
   priority: P1
@@ -35102,6 +35103,7 @@ bets:
     expect: exit 0
   write_surfaces:
   - .omo/_truth/registry/governance-checks.yaml
+  - bin/gac/registry-alias-map.yaml
   - bin/gac/check-rule-wiring-coverage.py
   - .omo/debt/items/
   - docs/plans/
@@ -35115,17 +35117,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9c7fd3f4ce7cb037c88d217f9fd0495fd227a640
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+          tests:
+            ref: receipt://bin/gac/check-rule-wiring-coverage.py
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            批次一价值 = 判定资产（36 条全量归因 + 21 条锚定 + 幽灵/孤儿/僵尸三类新分类），
+            非门禁收紧本身——--strict 接入按设计留批次二（d 类 15 条 owner 复核后）。
+            未引用 36→29 可用 check-rule-wiring-coverage.py 复算。
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-02
   title: 测试密度规则化 — fix 类交付必带回归测试的门禁提示与度量
