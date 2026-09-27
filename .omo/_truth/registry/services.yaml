@@ -5456,3 +5456,644 @@ services:
     max_stale_hours: 24
   notes: 每日 ops check-signals 巡检 — enabled 条目 anchor 漂移检测 (BET-Y1Q4-T16)
   depends_on: []
+- id: ecos.bos-registry-daemon
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.ecos.bos-registry-daemon.plist
+  content_digest: sha256:326150f518ddcce38f1c0e77dace0a5452a3018ef93289be9500a3fa7524f24c
+  scheduler: launchd
+  trigger: keepalive
+  label: com.ecos.bos-registry-daemon
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/projects/ecos/scripts/bos-registry-daemon.py
+    args:
+    - --interval
+    - '60'
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/.ecos/bos/daemon-stdout.log
+    stderr: /Users/xiamingxing/.ecos/bos/daemon-stderr.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。'
+  depends_on: []
+- id: ecos.pasw-worktree-cleanup
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.ecos.pasw-worktree-cleanup.plist
+  content_digest: sha256:0d828b9b27207f0d8403f288f04aa510bb25f8f4dcc2db93a9876e9747faec96
+  scheduler: launchd
+  trigger: interval
+  label: com.ecos.pasw-worktree-cleanup
+  program:
+    interpreter: /bin/bash
+    entrypoint: /Users/xiamingxing/Workspace/bin/gac/gac-worktree-cleanup.sh
+    args: []
+  run_at_load: false
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/.omo/_log/pasw-cleanup.log
+    stderr: /Users/xiamingxing/Workspace/.omo/_log/pasw-cleanup.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。'
+  depends_on: []
+- id: kos.web
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.kos.web.plist
+  content_digest: sha256:c5efba421c92342de0cabcd5781d080f22e723d877e07cc30aed9cbdc8b8bf15
+  scheduler: launchd
+  trigger: keepalive
+  label: com.kos.web
+  program:
+    interpreter: /bin/bash
+    entrypoint: -lc
+    args:
+    - export KOS_HOME=/Users/xiamingxing/Workspace/data/kos; cd /Users/xiamingxing/Workspace/projects/knowledge/kairon/packages/kos; exec uv run uvicorn kos.web.app:app --host 127.0.0.1 --port 8766
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Library/Logs/kos-web.log
+    stderr: /Users/xiamingxing/Library/Logs/kos-web.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。'
+  depends_on: []
+- id: omlxc.ollama-env
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omlxc.ollama-env.plist
+  content_digest: sha256:8688bc90f19f0e06264ba726f3e9d500e21ba7ce8d30b59b7c5f6fdaaf3012d7
+  scheduler: launchd
+  trigger: run_at_load
+  label: com.omlxc.ollama-env
+  program:
+    interpreter: /bin/launchctl
+    entrypoint: setenv
+    args:
+    - OLLAMA_HOST
+    - 127.0.0.1:11434
+  run_at_load: true
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omlxc.watchdog
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omlxc.watchdog.plist
+  content_digest: sha256:974dcebb01c034107447f95da3e0636c1463268d04a70f35dc6dc5c9c27ba9cf
+  scheduler: launchd
+  trigger: interval
+  label: com.omlxc.watchdog
+  program:
+    interpreter: /bin/bash
+    entrypoint: /Users/xiamingxing/Workspace/projects/omlxc/scripts/pipeline-watchdog.sh
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/.config/omlxc/watchdog-stdout.log
+    stderr: /Users/xiamingxing/.config/omlxc/watchdog-stderr.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omo.model-scheduler
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omo.model-scheduler.plist
+  content_digest: sha256:4eae240831baa041679278db47a36dc694cdf48ad953e5837709244377805001
+  scheduler: launchd
+  trigger: calendar
+  label: com.omo.model-scheduler
+  program:
+    interpreter: /bin/bash
+    entrypoint: /Users/xiamingxing/.config/opencode/scripts/model-scheduler.sh
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: /tmp/model-scheduler.out.log
+    stderr: /tmp/model-scheduler.err.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omostation.agent-cell-pool-live-smoke
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.agent-cell-pool-live-smoke.plist
+  content_digest: sha256:4148d3f94a27e8e7d0349a4b24d4c7aa04b3b6484ed8349f36f701bb677df289
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.agent-cell-pool-live-smoke
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - /Users/xiamingxing/.local/share/zhixing-dashboard/agent-cell-pool-live-smoke.py
+    - --state-file
+    - /Users/xiamingxing/Workspace/.omo/state/agent-cell/cell_states.json
+  run_at_load: false
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/agent-cell-pool-live-smoke.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/agent-cell-pool-live-smoke.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.agent-cell-semantic-smoke
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.agent-cell-semantic-smoke.plist
+  content_digest: sha256:47c6aaaacdf9c70744e060ccc5cd851c909fc19cc8ae640441da6e9dc62553eb
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.agent-cell-semantic-smoke
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - /Users/xiamingxing/.local/share/zhixing-dashboard/agent-cell-semantic-smoke.py
+    - --state-dir
+    - /Users/xiamingxing/Workspace/.omo/state/agent-cell/semantic
+  run_at_load: false
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/agent-cell-semantic-smoke.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/agent-cell-semantic-smoke.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.agent-tick-daemon
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.agent-tick-daemon.plist
+  content_digest: sha256:4fe15a4725bfcba8b2ad61b3669340217b1ead88f566939d583ac72f0654e493
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.agent-tick-daemon
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/agent-tick-daemon.py
+    args:
+    - --run
+    - --interval
+    - '300'
+    - --workspace-root
+    - /Users/xiamingxing/Workspace
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/.omo/_log/agent-tick-daemon.log
+    stderr: /Users/xiamingxing/Workspace/.omo/_log/agent-tick-daemon.err
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。'
+  depends_on: []
+- id: omostation.autoloop-daily
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.autoloop-daily.plist
+  content_digest: sha256:f9d2811026e6f57cf058babc6fe6af988181e8e085ee5e8cd0618a6a28e83d18
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.autoloop-daily
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/autoloop-controller.py
+    args:
+    - --json
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/.omo/_log/autoloop-daily.log
+    stderr: /Users/xiamingxing/Workspace/.omo/_log/autoloop-daily.err
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.claims-observation-r0
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.claims-observation-r0.plist
+  content_digest: sha256:b87a63511f850c05b858b891fcb7258f684a23c0fffa2b1e21da1d6cc36bc2aa
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.claims-observation-r0
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/sampler.py
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/sampler.log
+    stderr: /Users/xiamingxing/.local/share/zhixing-dashboard/claims-observation/sampler.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omostation.deadline-tracker
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.deadline-tracker.plist
+  content_digest: sha256:f230ead1045047b7394e44ba80d1d779478ecf5387caa1550e7116e27e01fa8b
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.deadline-tracker
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/runtime/ssot-stable/deadline_tracker.py
+    args:
+    - --json
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/.omo/_log/deadline-tracker.log
+    stderr: /Users/xiamingxing/Workspace/.omo/_log/deadline-tracker.err
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.evolution-agent
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.evolution-agent.plist
+  content_digest: sha256:3b8b6871af983a504de35a2f4d9d1dfaee28b6c9216e9b184989cc0515770895
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.evolution-agent
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/evolution-agent.py
+    args:
+    - --json
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/.omo/_log/evolution-agent.log
+    stderr: /Users/xiamingxing/Workspace/.omo/_log/evolution-agent.err
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.expiry-radar
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.expiry-radar.plist
+  content_digest: sha256:d3ae5b1f3ae124a08cc2369111823a84c0bdfaac8bf86263469595c6f35f6657
+  scheduler: launchd
+  trigger: calendar
+  label: com.omostation.expiry-radar
+  program:
+    interpreter: /bin/bash
+    entrypoint: -c
+    args:
+    - cd /Users/xiamingxing/Workspace && python3 bin/gac/check-expiry-radar.py --horizon 7 --strict
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/expiry-radar.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/expiry-radar.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.knowledge-foundry
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.knowledge-foundry.plist
+  content_digest: sha256:1b5b852538c8ba3aeb58642421f60685ae9382702191bc39a03e02ad6200632d
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.knowledge-foundry
+  program:
+    interpreter: /bin/bash
+    entrypoint: -c
+    args:
+    - cd $WORKSPACE && uv run python bin/gac/knowledge-foundry-cron.py >> $HOME/.local/state/omostation/foundry.log 2>&1
+  run_at_load: false
+  outputs:
+    stdout: /Users/xiamingxing/.local/state/omostation/foundry.out.log
+    stderr: /Users/xiamingxing/.local/state/omostation/foundry.err.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omostation.mail-daemon
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.mail-daemon.plist
+  content_digest: sha256:fb19e86173d461e683baa3b777fc9942bfeb26c4dab116bdcff116fe4a0dd892
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.mail-daemon
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/runtime/ssot-stable/mail_daemon.py
+    args:
+    - --once
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/.omo/_log/mail-daemon.log
+    stderr: /Users/xiamingxing/Workspace/.omo/_log/mail-daemon.err
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.omo-debt-refresh
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist
+  content_digest: sha256:3b920d105a7aa364aa3b74a4288d536dff0253baa7b1dbd2c6acc59a25ac5402
+  scheduler: launchd
+  trigger: calendar
+  label: com.omostation.omo-debt-refresh
+  program:
+    interpreter: /bin/bash
+    entrypoint: -c
+    args:
+    - cd /Users/xiamingxing/Workspace/projects/omo && NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ) && PYTHONPATH=src python3 -m omo.omo_debt_cli refresh --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW && PYTHONPATH=src python3 -m omo.omo_debt_cli dispatch --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW && PYTHONPATH=src python3 -m omo.omo_debt_cli campaign --omo-dir /Users/xiamingxing/Workspace/.omo && PYTHONPATH=src python3 -m omo.omo_debt_cli report --omo-dir /Users/xiamingxing/Workspace/.omo
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.panorama-dashboard
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
+  content_digest: sha256:c66985874e30d8fcf8ae26adc9113dc50d3197211a5f87ca2797f33ba22fee78
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.panorama-dashboard
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-serve.py
+    - --port
+    - '43910'
+    - --no-refresh
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/dashboard/launchd.log
+    stderr: /Users/xiamingxing/Workspace/runtime/dashboard/launchd.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omostation.panorama-dashboard-refresh
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.panorama-dashboard-refresh.plist
+  content_digest: sha256:5fb99690dc29cada854bf8a87cb6b7c9b959c06da41d6ad08953f8d3b118779a
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.panorama-dashboard-refresh
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py
+  run_at_load: false
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/panorama-dashboard-refresh.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/panorama-dashboard-refresh.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omostation.problem-detector
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.problem-detector.plist
+  content_digest: sha256:bdf95e051fd1aed9c318b2b248103ba5bee68d53905cd75d6c0b667fd51ca767
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.problem-detector
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/problem-detector.py
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/.omo/_log/problem-detector-launchd.log
+    stderr: /Users/xiamingxing/Workspace/.omo/_log/problem-detector-launchd.err
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.reference-cell-direct-local-smoke
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.reference-cell-direct-local-smoke.plist
+  content_digest: sha256:983837086d75e09ab3749879979cb45f0578f0a79d3ae9edff25e0c3a832f76a
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.reference-cell-direct-local-smoke
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - /Users/xiamingxing/.local/share/zhixing-dashboard/reference-cell-direct-local-smoke.py
+    - --code-root
+    - /Users/xiamingxing/.local/share/zhixing-dashboard/code-main
+    - --attempts-root
+    - /Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts
+    - --omo-src
+    - /Users/xiamingxing/Workspace/projects/omo/src
+    - --json
+  run_at_load: false
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/reference-cell-direct-local-smoke.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/reference-cell-direct-local-smoke.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.resident-daemon
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.resident-daemon.plist
+  content_digest: sha256:ec6a0be3d8fed632007aa0e5519b749f90321fe286113ede1fa3110be6809124
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.resident-daemon
+  program:
+    interpreter: /Users/xiamingxing/Workspace/projects/omo/.venv/bin/python
+    entrypoint: -m
+    args:
+    - omo.cli
+    - resident
+    - daemon
+  run_at_load: true
+  outputs:
+    stdout: /tmp/resident-daemon.log
+    stderr: /tmp/resident-daemon.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。'
+  depends_on: []
+- id: omostation.signal-poller
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.signal-poller.plist
+  content_digest: sha256:a9fdea0173041782cf1485335582734eb85c4f1f9244c3884307af6ba2f9e414
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.signal-poller
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/signal-poller.py
+    args:
+    - --watch
+    - --interval
+    - '300'
+    - --auto-trigger
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/.omo/_log/signal-poller-launchd.log
+    stderr: /Users/xiamingxing/Workspace/.omo/_log/signal-poller-launchd.err
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。'
+  depends_on: []
+- id: omostation.sunset-redirector
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.sunset-redirector.plist
+  content_digest: sha256:df6ec69029c083e6ac5ef32d7bfabf200c652be22336ff60335b7be712d5bfd4
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.sunset-redirector
+  program:
+    interpreter: /usr/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/bin/panorama/sunset_redirector.py
+    args:
+    - --port
+    - '43910'
+    - --target
+    - http://localhost:5173/panorama
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/.omo/_log/sunset-redirector-stdout.log
+    stderr: /Users/xiamingxing/.omo/_log/sunset-redirector-stderr.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。'
+  depends_on: []
+- id: omostation.tailscale-heartbeat
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.tailscale-heartbeat.plist
+  content_digest: sha256:3b267608064895ad230b1af3a8d2d9ce69601cb690e0fcfcb916b9df5982a951
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.tailscale-heartbeat
+  program:
+    interpreter: /bin/bash
+    entrypoint: /Users/xiamingxing/Workspace/bin/health/tailscale-heartbeat.sh
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: /tmp/tailscale-heartbeat.log
+    stderr: /tmp/tailscale-heartbeat.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: omostation.zhixing-dashboard
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.zhixing-dashboard.plist
+  content_digest: sha256:4dbb22ddb419c1f9c9fbaa4e892c7e64441d6db41007c3eb9095b548aeb89718
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.zhixing-dashboard
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - /Users/xiamingxing/.local/share/zhixing-dashboard/live_server.py
+    - --port
+    - '43191'
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/dashboard/launchd-zhixing-43191.log
+    stderr: /Users/xiamingxing/Workspace/runtime/dashboard/launchd-zhixing-43191.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omostation.zhixing-dashboard-refresh
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.zhixing-dashboard-refresh.plist
+  content_digest: sha256:25028d443593be5cb766a9f2cc6c524bfdf73e6d41aad5944cb12065adfd72db
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.zhixing-dashboard-refresh
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - /Users/xiamingxing/.local/share/zhixing-dashboard/orchestrator.py
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/.local/share/zhixing-dashboard/launchd-refresh.log
+    stderr: /Users/xiamingxing/.local/share/zhixing-dashboard/launchd-refresh.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omostation.zhixing-dashboard-watchdog
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.zhixing-dashboard-watchdog.plist
+  content_digest: sha256:6badcc1e9d1cd6a5c08a3885a5cf59f1402847005681ddb20ccae8bf1c684565
+  scheduler: launchd
+  trigger: interval
+  label: com.omostation.zhixing-dashboard-watchdog
+  program:
+    interpreter: /bin/bash
+    entrypoint: /Users/xiamingxing/.local/share/zhixing-dashboard/liveness-watchdog.sh
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/dashboard/watchdog-launchd.log
+    stderr: /Users/xiamingxing/Workspace/runtime/dashboard/watchdog-launchd.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  depends_on: []
+- id: omostation.zhixing-host-drift
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.zhixing-host-drift.plist
+  content_digest: sha256:3644b0c8842ea5c4fd7d61a20f320561247387fc04ca88685c36055f1b6efa20
+  scheduler: launchd
+  trigger: calendar
+  label: com.omostation.zhixing-host-drift
+  program:
+    interpreter: /bin/bash
+    entrypoint: -c
+    args:
+    - cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py protect && python3 bin/gac/zhixing-host-sync.py check
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/zhixing-host-drift.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/zhixing-host-drift.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  depends_on: []
+- id: user.cron-service
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.user.cron-service.plist
+  content_digest: sha256:6a467badfcb0b67e0dc89dfe791d2ed6fe5d409921837a7b479d5139551014de
+  scheduler: launchd
+  trigger: keepalive
+  label: com.user.cron-service
+  program:
+    interpreter: /opt/homebrew/bin/uv
+    entrypoint: run
+    args:
+    - --directory
+    - /Users/xiamingxing/Workspace/projects/runtime
+    - python
+    - -m
+    - runtime.cron_service.server
+    - --http
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/runtime/logs/cron-service.out.log
+    stderr: /Users/xiamingxing/runtime/logs/cron-service.err.log
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。'
+  depends_on: []
+
+# ── launchd 命名空间分区 (BET-Y2Q4-T10-206) ─────────────────────────────────
+# 「本机已装 label == 注册表声明」要可证, 前提是先有『哪些 label 归本仓管』的判断。
+# 这个判断是注册表数据, 不是代码常量: 新服务会增长, 写死在生成器里等于每次判断都改代码。
+# workspace_prefixes 按点段边界匹配 (com.omo 不含 com.omostation); exempt_labels 必须逐条
+# 精确列名 —— 只有本仓命名空间可以用前缀通配, 豁免面收窄到具体 label, 新装的第三方 job
+# 才不会自动落进豁免清单。门禁: bin/mof/gen-service-configs.py --reality-check
+# 必须与 services 同文档: load_services() 取 docs[-1]['services'], 独立文档会让 services 变空,
+# 于是 --check 在零服务上「漂移 0」通过 —— 门禁自己变成假绿。
+
+launchd_namespace:
+  workspace_prefixes:
+    - com.aetherforge
+    - com.agora
+    - com.cockpit
+    - com.ecos
+    - com.kos
+    - com.l4
+    - com.lmstudio
+    - com.omostation
+    - com.omlxc
+    - com.omo
+    - com.user
+  dev_label_prefix: com.omostation.dev.
+  exempt_labels:
+    - label: com.amazon.codewhisperer.launcher
+      classification: external
+      reason: Kiro CLI 自带的登录项, 程序在 /Applications 内
+    - label: com.macpaw.CleanMyMac5.Updater
+      classification: external
+      reason: CleanMyMac 商业软件自带更新器
+    - label: com.local.phosphene
+      classification: external
+      reason: pinokio 拉取的第三方 app (~/pinokio/api/phosphene.git); aetherforge 以外部服务适配它, 不接管其生命周期
+    - label: com.learningevolution.concept-weave.monthly
+      classification: unclassified
+      reason: ProgramArguments=/usr/bin/true 空转占位, 无实际执行体
+    - label: com.lifeos.pulse
+      classification: unclassified
+      reason: 跑 ~/.claude/LIFEOS/PULSE, 个人 PAI 域, 生命周期未裁定
+    - label: com.local.decision-svc
+      classification: unclassified
+      reason: 跑 ~/.local/share/decision-svc 自带 venv, 源码不在检出内
+    - label: com.opencode.quota-monitor
+      classification: unclassified
+      reason: 本仓作者写的脚本, 但装在 ~/.config/opencode 下, 归属未裁定
