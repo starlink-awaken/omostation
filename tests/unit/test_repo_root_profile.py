@@ -9,6 +9,8 @@
 from __future__ import annotations
 
 import ast
+import importlib.util
+import json
 import os
 import subprocess
 import sys
@@ -146,3 +148,137 @@ def test_projection_falls_back_to_committed_legacy_path(tmp_path: Path) -> None:
     (tmp_path / ".omo" / "state" / "runtime").mkdir(parents=True)
     _, _, _, _, health = _probe(str(tmp_path))
     assert health == str(REPO / ".omo" / "state" / "health.yaml")
+
+
+# ── B4a (BET-Y2Q4-T10-207): 安装位是定位器, 不是开关 ──────
+#
+# 三条一起才构成这一轮的契约: 安装位可定位、canonical 解析结果没被搬走、
+# 每日清扫扫不到它。全部在假 $HOME 下测, 不读真机的 ~/.local 或 ~/Workspace。
+
+
+def _make_checkout(root: Path) -> Path:
+    """造一个看起来像规范检出的目录 (只需要 MARKER)。"""
+    (root / repo_root.MARKER).parent.mkdir(parents=True, exist_ok=True)
+    (root / repo_root.MARKER).write_text("projects: []\n", encoding="utf-8")
+    return root
+
+
+@pytest.fixture()
+def fake_home(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> Path:
+    """假 $HOME: 里面有 ~/Workspace 检出, 且 profile env 全部清空。"""
+    for var in (
+        "HOME",
+        "OMOSTATION_ROOT",
+        "OMOSTATION_INSTALL_ROOT",
+        "OMOSTATION_STATE_ROOT",
+        "OMO_EVENT_LEDGER_DB",
+    ):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    _make_checkout(tmp_path / "Workspace")
+    return tmp_path
+
+
+def test_install_root_absent_is_none_not_error(fake_home: Path) -> None:
+    """没装过运行时的机器(CI、别人的电脑)必须能正常问这一句, 不能靠异常回答。"""
+    assert repo_root.install_root() is None
+
+
+def test_install_root_default_is_under_local_opt(fake_home: Path) -> None:
+    located = _make_checkout(fake_home / repo_root.INSTALL_ROOT_RELATIVE)
+    assert repo_root.install_root() == located
+
+
+def test_install_root_env_wins_and_still_requires_marker(
+    monkeypatch: pytest.MonkeyPatch, fake_home: Path
+) -> None:
+    elsewhere = fake_home / "somewhere-else"
+    monkeypatch.setenv("OMOSTATION_INSTALL_ROOT", str(elsewhere))
+    assert repo_root.install_root() is None  # 没 MARKER 的目录不算安装位
+    _make_checkout(elsewhere)
+    assert repo_root.install_root() == elsewhere
+
+
+def test_landing_an_install_root_does_not_move_any_existing_root(fake_home: Path) -> None:
+    """B4a 的全部要点: 装上安装位, 但 canonical_root/state_root/ledger 一个都不改道。
+
+    改道是 B4b 的切换动作。此刻 43 个 plist 仍指向 ~/Workspace 且在跑, 让解析器
+    在新目录出现的那一刻换目标 = 静默重定向所有写机器级配置的工具。
+    """
+    before_canonical = repo_root.canonical_root()
+    before_state = repo_root.state_root()
+    before_ledger = repo_root.event_ledger_path()
+
+    located = _make_checkout(fake_home / repo_root.INSTALL_ROOT_RELATIVE)
+
+    assert repo_root.install_root() == located
+    assert repo_root.canonical_root() == before_canonical == fake_home / "Workspace"
+    assert repo_root.state_root() == before_state == repo_root.code_root()
+    assert repo_root.event_ledger_path() == before_ledger
+
+
+def test_roots_report_cli_is_read_only_and_names_every_root(tmp_path: Path) -> None:
+    """`--json` 是这轮唯一的新入口; 它的键就是 agent 的感知面。"""
+    located = _make_checkout(tmp_path / "opt" / "omostation")
+    state = tmp_path / "state"
+    env = {
+        **os.environ,
+        "OMOSTATION_INSTALL_ROOT": str(located),
+        "OMOSTATION_STATE_ROOT": str(state),
+    }
+    out = subprocess.run(
+        [sys.executable, str(REPO / "bin" / "lib" / "repo_root.py"), "--json"],
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=located,
+        check=True,
+    )
+    report = json.loads(out.stdout)
+    assert {
+        "code_root",
+        "canonical_root",
+        "state_root",
+        "state_root_declared",
+        "event_ledger_path",
+        "event_ledger_override",
+        "install_root",
+        "cwd_is_install_root",
+        "cwd_is_canonical_root",
+    } <= set(report)
+    assert report["install_root"] == str(located)
+    assert report["code_root"] == str(repo_root.code_root())
+    assert report["state_root"] == str(state)
+    assert report["state_root_declared"] is True
+    assert report["event_ledger_path"] == str(state / repo_root.LEDGER_RELATIVE)
+    # code_root 由 __file__ 推导, 所以跑在哪个 cwd 与它无关 —— 这两条钉住"读侧跟随检出"
+    assert report["cwd_is_install_root"] is True
+    assert report["cwd_is_canonical_root"] is False
+
+
+def test_hygiene_sweep_cannot_select_the_install_root(
+    monkeypatch: pytest.MonkeyPatch, fake_home: Path
+) -> None:
+    """plan 原写"加排除清单"; 实测清扫根本扫不到这里, 于是把事实钉成测试。
+
+    worktree-hygiene-audit 的候选面只有 $HOME 的 `ws-*` / `workspace-*` 直接子目录
+    (外加登记进共享 .git 的 worktree)。谁把 glob 扩宽到 `$HOME/*` 或 `.local/**`,
+    这条就红 —— 那正是"运行时被一次清理残留扫掉"的事故形状。
+    """
+    located = _make_checkout(fake_home / repo_root.INSTALL_ROOT_RELATIVE)
+    (fake_home / "ws-example").mkdir()
+
+    spec = importlib.util.spec_from_file_location(
+        "worktree_hygiene_audit", REPO / "bin" / "gac" / "worktree-hygiene-audit.py"
+    )
+    assert spec and spec.loader
+    audit = importlib.util.module_from_spec(spec)
+    # dataclass 字段解析要按 __module__ 反查 sys.modules, 不登记就会在 exec_module 里炸
+    sys.modules[spec.name] = audit
+    spec.loader.exec_module(audit)
+
+    candidates = {str(path) for path in audit._candidate_dirs()}
+    assert str(fake_home / "ws-example") in candidates  # 候选面确实生效
+    assert not any(str(located).startswith(cand) for cand in candidates)

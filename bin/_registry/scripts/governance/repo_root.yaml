@@ -3,15 +3,18 @@ id: bin/lib/repo_root.py
 name: Repo Root
 category: governance
 owner: governance-team
-description: "库模块（非可执行入口）：仓库根的唯一解析处 —— code_root() 读侧跟随检出、canonical_root() 锚定写机器级配置、state_root()/event_ledger_path() 承载 profile 声明的写侧。契约 ADR-0456，护栏 tests/unit/test_repo_root_profile.py。"
-inputs: []
+description: "仓库根的唯一解析处（库模块 + 只读 CLI）：code_root() 读侧跟随检出、canonical_root() 锚定写机器级配置、state_root()/event_ledger_path() 承载 profile 声明的写侧、install_root() 定位运行时安装位（B4a 起存在；只定位，不改变任何解析结果）。`--json` 打印各层根，供人与 agent 问一句「我在哪个根」。契约 ADR-0456，护栏 tests/unit/test_repo_root_profile.py。"
+inputs:
+  - "OMOSTATION_ROOT / OMOSTATION_STATE_ROOT / OMO_EVENT_LEDGER_DB / OMOSTATION_INSTALL_ROOT（全部可选，未设即历史布局）"
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
-triggers: []
+triggers:
+  - make runtime-install-root
 related:
   - tests/unit/test_repo_root_profile.py
   - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
+  - docs/superpowers/specs/2026-09-27-runtime-install-root-landing.md
 maturity: draft
-last_reviewed: "2026-09-26"
+last_reviewed: "2026-09-27"

@@ -36508,6 +36508,149 @@ bets:
             并随本 PR 请求签发；签发回执将在获得后补记入 retro 与 value 轴。人工基线槽位
             UNPROVABLE 如实留白。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-207
+  title: ADR-0456 B4a — 运行时代码安装位落位（~/.local/opt/omostation 独立 clone + repo_root 定位器
+    + 零运行时效应）
+  goal: 'Give the runtime a second place to live without moving anything that is currently
+    running. ADR-0456 B1 parameterized the root but there is still exactly one root
+    to point at, so development, the running system and every machine-level-config writer
+    share /Users/xiamingxing/Workspace. This bet lands the code install root as an independent
+    clone (its own .git, not a worktree, detached at a recorded origin/main SHA) at
+    ~/.local/opt/omostation and adds the locator that lets a tool ask which root it
+    is in: repo_root.install_root() plus a --json root report (repo_root.py has no CLI
+    at all on origin/main, measured: no __main__/argparse). It deliberately does NOT
+    change what canonical_root(), code_root(), state_root() or event_ledger_path() resolve
+    to, because 43 of 56 launchd plists point at Workspace and are running: retargeting
+    the resolver in the same commit that creates a directory would silently redirect
+    every machine-level writer, which is the B4b cutover and not this bet. Three plan
+    premises were measured and replaced: (1) there is no usable release-tag series (481
+    tags, last v* is v2026-06-15-r1 from three months ago) so the anchor is a recorded
+    SHA, not an invented tag; (2) the main repo is a shallow repository, so git clone
+    --local prints "source repository is shallow, ignoring --local" and the 183 MB of
+    objects are copied rather than hardlinked, which changes the plan''s "cost is approximately
+    zero" disk premise to "about 250 MB, still acceptable"; (3) the planned "add the
+    install root to the worktree-hygiene-audit.py / gac-branch-prune.sh exclusion list"
+    is a no-op — _candidate_dirs() only globs $HOME/ws-* and $HOME/workspace-* plus
+    registered worktrees, and gac-branch-prune.sh deletes merged work/* branches without
+    touching any directory — so the precaution becomes a guard test that pins the invisibility
+    itself and turns red if the sweep''s candidate scope is ever widened. The path itself
+    moved off the plan: ~/Runtime is the same inode as ~/runtime (case-insensitive volume,
+    inode 146632641), which is projects/runtime''s live Tier-1 data domain whose own
+    CLAUDE.md says writes need confirmation, and projects/runtime/scripts/service-ctl.sh:10
+    already treats $HOME/runtime as RUNTIME_HOME; the principal chose ~/.local/opt/omostation
+    on 2026-09-27. omostation.profile.toml is deliberately NOT shipped this round (zero
+    consumers, the same ruling .omo/_knowledge/retros/BET-Y2Q4-T10-203.md:44 recorded);
+    it belongs to the B4b cutover. The bet writes no plist, edits no crontab, moves
+    no ledger, starts and stops nothing, and does not run make worktree-prune (it would
+    delete other agents'' merged branches in this shared repository).'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any write to ~/Library/LaunchAgents/*.plist or to a crontab
+    entry, any launchctl bootstrap/bootout/kickstart, any start/stop of a service, any
+    physical move or .backup of runtime/omo/event-ledger.sqlite3, any change to what
+    canonical_root() / code_root() / state_root() / event_ledger_path() resolve to when
+    no new environment variable is set (that is the B4b switch), any git fetch --unshallow
+    or other rewrite of the shared main repository, any run of make worktree-prune or
+    gac-branch-prune.sh, any net-new file under bin/ (the script-quota gate bin/gac/check-bin-quota-diff.py
+    counts additions against deletions), any change to .omo/_truth/registry/governance-checks.yaml
+    (including gac.subtraction_quota.script_baseline) or to the enforcement wiring in
+    .omo/_truth/registry/ci-surfaces.yaml and .pre-commit-config.yaml, any edit under
+    projects/ (all child repos), any flip of ADR-0456 status (two files both claim the
+    identifier ADR-0456 on origin/main and the ACCEPTED recorded by PR 4413 belongs
+    to the other one, so a status change here would cement a misattribution), and backfill
+    of lifecycle evidence for any other bet.
+  non_goals:
+  - Do not relocate the running system — no plist path rewrite, no cron cutover, no
+    ledger migration. B4b is a separate bet gated on a per-batch confirmation from the
+    principal, and stops if --reality-check E2 is non-zero after any batch.
+  - Do not ship omostation.profile.toml or declare OMOSTATION_STATE_ROOT for the install
+    root. Nothing reads them yet; shipping an empty shell would make "profile is in
+    place" an unfalsifiable claim.
+  - Do not add an exclusion list entry to worktree-hygiene-audit.py or gac-branch-prune.sh.
+    Measured — neither can select ~/.local/opt/omostation. Pin the boundary with a test
+    instead of patching a guard for an edge that does not exist.
+  - Do not initialize the 16 submodules in the install root, and do not fetch from GitHub.
+    B4a's verification needs only the root locator; a recursive clone is 16 network
+    clones whose need belongs to the cutover.
+  - Do not resolve the duplicate ADR ids (0456 and 0401) or the shallow main repository.
+    Both are reported to the principal; renaming a cited ADR file or unshallowing a
+    shared repository is a bigger blast radius than this bet.
+  done_when:
+  - ~/.local/opt/omostation exists as an independent clone with its own .git (rev-parse
+    --git-dir returns .git, not a path under the main repository), detached at the recorded
+    origin/main SHA, and git worktree list run in the main repository does not contain
+    it.
+  - python3 bin/lib/repo_root.py --json executed inside the install root reports code_root
+    == install_root == ~/.local/opt/omostation and canonical_root == ~/Workspace at
+    the same time. Both halves together are the B4a shape — the install root is locatable
+    and the resolution result has not been moved.
+  - install_root() returns None rather than raising when the marker is absent, resolves
+    $OMOSTATION_INSTALL_ROOT first, and never changes state_root() or event_ledger_path().
+  - tests/unit/test_repo_root_profile.py covers install-root absence, the canonical_root-unchanged
+    invariant, and the --json CLI, all under a monkeypatched HOME or explicit subprocess
+    env so no test reads the host's real home directory.
+  - A guard test asserts the install root is outside the sweep candidates ($HOME/ws-*
+    / $HOME/workspace-* globs), so widening that scope fails the test rather than silently
+    threatening the runtime.
+  - make install-root-check exists and runs the report from the install root; no net-new
+    file is added under bin/.
+  - AGENTS.md and ARCHITECTURE.md state the third root's name, path, the fact that it
+    is not a worktree, and that canonical_root() still resolves to ~/Workspace until
+    B4b, so other agents learn it exists.
+  - ADR-0456 is amended for the path change, the release-tag to recorded-SHA substitution,
+    the exclusion-list-to-guard-test reversal, and carries the duplicate-identifier
+    warning requiring citations to name the file rather than ADR-0456 alone.
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_repo_root_profile.py -q
+    expect: exit 0, all passed, including the invariant that an existing install root
+      does not move canonical_root()
+  - cmd: cd ~/.local/opt/omostation && python3 bin/lib/repo_root.py --json
+    expect: exit 0; code_root and install_root both equal ~/.local/opt/omostation while
+      canonical_root equals /Users/xiamingxing/Workspace
+  - cmd: git -C /Users/xiamingxing/Workspace worktree list
+    expect: no line contains .local/opt/omostation (the install root is not a worktree)
+  - cmd: python3 bin/gac/worktree-hygiene-audit.py --json
+    expect: exit 0 with no --execute (dry-run); the report contains no path under ~/.local/opt/omostation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-runtime-install-root-landing.md
+  - bin/lib/repo_root.py
+  - bin/_registry/scripts/governance/repo_root.yaml
+  - tests/unit/test_repo_root_profile.py
+  - Makefile
+  - AGENTS.md
+  - ARCHITECTURE.md
+  - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
+  - docs/reports/2026-09-27-install-root-landing-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-207.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-runtime-install-root-landing.md
+    spec_version: 1.0.1
+    content_digest: sha256:b9b469f9cf8f75a7f709cfb94f8b8e44178c0c77b297742e9d9575a2fea462d6
+    decision_ref: decision://accepted/BET-Y2Q4-T10-207
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -36646,7 +36789,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 491
+  total_bets: 492
   windows:
   - Y1Q1
   - Y1Q2
