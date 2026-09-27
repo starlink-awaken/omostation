@@ -36438,17 +36438,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T4-02
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ca71f5d2f87febc9f4bb176a942911437eba2bdb
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-02.md
+          tests:
+            ref: receipt://docs/reports/weekly-2026-09-20-27.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-02.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-02.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-02.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-02.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-02.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值门槛 = principal 签发（spec/circuit_breaker/报告 §六三处写死）。报告已交付
+            并随本 PR 请求签发；签发回执将在获得后补记入 retro 与 value 轴。人工基线槽位
+            UNPROVABLE 如实留白。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
