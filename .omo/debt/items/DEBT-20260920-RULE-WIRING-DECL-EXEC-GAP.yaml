@@ -97,3 +97,12 @@ history:
     未引用 25→20, 20 条全部有显式标注零无主。剩余 9 条幻影(SEC×2/AGE×5+
     eval/mutable)待 owner 表态（接线 or 退役）。
   actor: governance-agent
+- at: '2026-09-28T00:00:00+00:00'
+  action: batch4-zero
+  note: >-
+    BET-Y2Q4-T10-07 批次四: 未引用归零（42→0, 四批次）。附带修复
+    check-episode-pipeline.py 缩进损坏（#4442 迁移产物, main 不可编译）、
+    B006 启用（基线零违规）、retired 统计口径分离（18 条弃用/收窄/并入条目,
+    注册表保留）。--strict shadow 起跑; 关单待 shadow 一周无回归 + retired
+    清单 owner 复核维持。
+  actor: governance-agent
