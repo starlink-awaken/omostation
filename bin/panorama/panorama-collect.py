@@ -4746,7 +4746,7 @@ def main() -> int:
     payload = build_payload()
     # Discard .omo/ runtime side effects from collectors so the internal
     # cleanliness check inside publish_projection_revision passes.
-    run(["git", "checkout", "--", ".omo/", "BRIEF.md"], check=False)
+    run(["git", "checkout", "--", ".omo/", "BRIEF.md"])
     projection = publish_projection_revision(payload)
 
     if args.gates:
