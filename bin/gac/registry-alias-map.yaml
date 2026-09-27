@@ -295,7 +295,20 @@ aliases:
       governance-checks: "tests/test_commit_assist_e2e.py (18 测试全过, 2026-09-27 实跑验证)"
       bin_executor: "bin/commit-assist.py + bin/ssot/gen-tools-index.py 引用"
 
-cross_walks:
+  # ── BET-Y2Q4-T10-05 批次二追加 ──
+  - canonical: CR-L0-PROTOCOLS-SSOT
+    aliases: [check-hardcoded-ports]
+    evidence:
+      governance-checks: "描述自述 scripts/check-vault-paths.py CI 校验; 执行体演进为端口注册收口门禁"
+      bin_executor: ".github/workflows/port-registry-enforce.yml 调用 check-hardcoded-ports.py (#4411 扩展 dev 端口段)"
+
+  - canonical: x2-staleness
+    aliases: [staleness]
+    evidence:
+      governance-checks: "声明: 检查数据是否新鲜: 债务新鲜度 + 健康度趋势"
+      bin_executor: "bin/compass_radar.py staleness 子分 (staleness-check 540 文件扫描, health.yaml staleness_detail)"
+
+cross_walks:cross_walks:
   - from: governance-checks
     to: L0-constraints
     pairs:

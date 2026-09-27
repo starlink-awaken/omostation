@@ -307,8 +307,6 @@ surfaces:
 - id: bin-gac-gac-local-gate-py
   tool: bin/gac/gac-local-gate.py
   workflow: gac-gate.yml
-  also_in:
-  - governance-check.yml
   gate: false
   triggers:
   - manual

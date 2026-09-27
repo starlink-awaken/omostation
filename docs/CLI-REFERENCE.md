@@ -13,7 +13,7 @@ type: ephemeral
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 > 分类全量详情见 [`docs/cli/`](cli/) 分册
 
-共 **201** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
+共 **204** 个命令条目。八大正交域: **governance**、**workflow**、**memory**、**compute**、**bus**、**scene**、**system**、**user**。
 
 ## 目录
 
@@ -333,6 +333,7 @@ type: ephemeral
 | `cockpit pptx` | 渲染为 16:9 高管技术汇报 PPTX |
 | `cockpit prebrief` | ICS 日历事件 → 会前速递简报 |
 | `cockpit publish` | 发布事件 |
+| `cockpit rag` | 🔎 本地文档问答 (向量召回 embed-bge → 重排 rerank → 作答) |
 | `cockpit read` | 通过 BOS 网关统一读取指定 URI 资源 |
 | `cockpit recall` | 意图路由召回（neo4j/temporal 支持 --as-of） |
 | `cockpit register` | 注册 BOS 服务 |
@@ -347,10 +348,12 @@ type: ephemeral
 | `cockpit scan` | 平面扫描 |
 | `cockpit scene` | 🗺️ 业务场景正交领域 (scenario/journey/gongwen/brief/family-hub) |
 | `cockpit score` | 评分债务项 |
+| `cockpit see` | 👁 看图理解 / 文字识别 (vision / ocr) |
 | `cockpit send` | 一键确认署名并经外发网关真实外发 |
 | `cockpit serve` | stdio JSON-RPC serve mode |
 | `cockpit sign` | 提交用户署名 Diff 并入队 Experience Replay |
 | `cockpit snapshot` | KV 缓存快照管理与预热 |
+| `cockpit speak` | 🔊 语音合成 (tts-zh / tts-en) |
 | `cockpit speculative-eval` | 本地首选投机推演评估 |
 | `cockpit stats` | 索引统计 |
 | `cockpit strategy` | 🎲 战略决策沙盘 → 蒙特卡洛多智能体推演 (T5-01) |

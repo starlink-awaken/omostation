@@ -3113,7 +3113,12 @@ def test_status_command_exposes_agcp_control_plane_fields() -> None:
 def _load_workflow_core():
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location("workflow_core_p0", ROOT / "projects/omo/src/omo/workflow/core.py")
+    # Package-less load (top-level name): core.py detects __package__ == "" and
+    # binds delivery_anchor itself, exercising the same fallback production uses
+    # (bin/plan/bet-ledger._external_workflow_core).
+    spec = importlib.util.spec_from_file_location(
+        "workflow_core_p0", ROOT / "projects/omo/src/omo/workflow/core.py"
+    )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -3368,3 +3373,248 @@ def test_b1_frozen_verbs_are_recognized() -> None:
         "status",
     }
     assert module._CLAIMS_AUTHORITY_FROZEN_VERBS == expected
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BET-Y2Q4-T10-209 — delivery-state canonical anchor (worktree integration)
+#
+# Additive: fake checkouts only. Every tree is constructed under ``tmp_path``
+# and every CLI subprocess inherits HOME / OMOSTATION_ROOT /
+# OMOSTATION_STATE_ROOT pointed at tmp dirs, so the real worktree's live
+# governance run can never be bridged from this file (H1). An explicit
+# before/after fingerprint of the real delivery entry closes the loop.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_ANCHOR_DELIVERY_REL = Path(".omo") / "_delivery" / "agent-workflows"
+_ANCHOR_MARKER = Path("docs") / "project-registry.yaml"
+_ANCHOR_RUN_ID = "20260927T125149Z-anchor-fake-run"
+_ANCHOR_SCOPE = "anchor-scope.py"
+_ANCHOR_GIT_ENV = {
+    **os.environ,
+    "GIT_CONFIG_GLOBAL": os.devnull,
+    "GIT_CONFIG_SYSTEM": os.devnull,
+    "GIT_AUTHOR_NAME": "delivery-anchor-test",
+    "GIT_AUTHOR_EMAIL": "delivery-anchor-test@example.com",
+    "GIT_COMMITTER_NAME": "delivery-anchor-test",
+    "GIT_COMMITTER_EMAIL": "delivery-anchor-test@example.com",
+}
+
+
+def _real_delivery_state() -> tuple[str | None, tuple[str, ...], str]:
+    """H1 fingerprint of this worktree's delivery entry: symlink target (or
+    None), ``runs/`` listing and ``runs/`` content hash — the run records are
+    what ``worktree remove --force`` used to destroy (#4435)."""
+    real = ROOT / _ANCHOR_DELIVERY_REL
+    link = os.readlink(real) if real.is_symlink() else None
+    runs = real / "runs"
+    if not runs.is_dir():
+        return link, (), hashlib.sha256(b"").hexdigest()
+    names = tuple(sorted(path.name for path in runs.iterdir()))
+    digest = hashlib.sha256()
+    for name in names:
+        path = runs / name
+        if path.is_file():
+            digest.update(name.encode())
+            digest.update(path.read_bytes())
+    return link, names, digest.hexdigest()
+
+
+def _anchor_tree_hash(root: Path) -> str:
+    """Recursive content hash used to prove read-side zero-change on fakes."""
+    digest = hashlib.sha256()
+    if not root.exists() and not root.is_symlink():
+        return digest.hexdigest()
+    for path in sorted(root.rglob("*")):
+        rel = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            digest.update(f"{rel}\0link\0{os.readlink(path)}\n".encode())
+        elif path.is_dir():
+            digest.update(f"{rel}\0dir\n".encode())
+        else:
+            digest.update(f"{rel}\0file\0".encode())
+            digest.update(path.read_bytes())
+            digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def _anchor_git(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *args],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+        env=_ANCHOR_GIT_ENV,
+    )
+
+
+def _build_fake_linked_checkout(tmp_path: Path) -> tuple[Path, Path]:
+    """Build a fake canonical checkout + a REAL linked worktree of it.
+
+    The worktree checkout carries only the marker; the CLI runtime content
+    (wrapper, kernel, chain_bind, registry) is copied in untracked — git
+    ``diff`` (what the CLI inspects) never lists untracked files.
+    """
+    canonical = tmp_path / "canonical"
+    canonical.mkdir()
+    (canonical / _ANCHOR_MARKER).parent.mkdir(parents=True, exist_ok=True)
+    (canonical / _ANCHOR_MARKER).write_text("schema: project-registry/v1\n", encoding="utf-8")
+    _anchor_git(canonical, "init", "-q")
+    _anchor_git(canonical, "add", "-A")
+    _anchor_git(canonical, "commit", "-q", "-m", "fake canonical checkout")
+    ws = tmp_path / "ws"
+    _anchor_git(canonical, "worktree", "add", "-q", "-b", "agent/test-delivery-anchor", str(ws))
+
+    ignore = shutil.ignore_patterns("__pycache__")
+    (ws / "bin").mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / "bin" / "agent-workflow.py", ws / "bin" / "agent-workflow.py")
+    shutil.copytree(ROOT / "bin" / "plan", ws / "bin" / "plan", ignore=ignore)
+    shutil.copy2(ROOT / "bin" / "change-lane-check.py", ws / "bin" / "change-lane-check.py")
+    shutil.copytree(ROOT / "projects" / "omo" / "src", ws / "projects" / "omo" / "src", ignore=ignore)
+    registry_dst = ws / ".omo" / "_truth" / "registry" / "agent-workflows"
+    shutil.copytree(
+        ROOT / ".omo" / "_truth" / "registry" / "agent-workflows", registry_dst, ignore=ignore
+    )
+    external_roots = ROOT / ".omo" / "_truth" / "registry" / "external-write-roots.yaml"
+    if external_roots.is_file():
+        shutil.copy2(external_roots, registry_dst.parent / external_roots.name)
+    return canonical, ws
+
+
+def _anchor_cli_env(canonical: Path, tmp_path: Path) -> dict[str, str]:
+    """Subprocess env: H1 requires OMOSTATION_STATE_ROOT → a tmp dir so a
+    mis-resolved workspace can never reach the real canonical checkout."""
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env["OMOSTATION_STATE_ROOT"] = str(canonical)
+    env["OMOSTATION_ROOT"] = str(canonical)
+    env["HOME"] = str(tmp_path / "fake-home")
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env.setdefault("AGCP_REQUIREMENT_ITERATION_GATE", "0")
+    return env
+
+
+def _seed_real_delivery(ws: Path) -> Path:
+    """A REAL (non-symlink) delivery dir holding the run record ``start`` wrote."""
+    delivery = ws / _ANCHOR_DELIVERY_REL
+    runs = delivery / "runs"
+    runs.mkdir(parents=True)
+    (runs / f"{_ANCHOR_RUN_ID}.yaml").write_text(
+        f"run_id: {_ANCHOR_RUN_ID}\n"
+        "workflow_id: observer-audit\n"
+        "status: active\n"
+        "objective: fake anchored run\n"
+        "locks: []\n"
+        "created_at: '2026-09-27T12:51:49Z'\n"
+        "updated_at: '2026-09-27T12:51:49Z'\n",
+        encoding="utf-8",
+    )
+    return delivery
+
+
+def _run_anchor_cli(ws: Path, env: dict[str, str], *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(ws / "bin" / "agent-workflow.py"), *args],
+        cwd=ws,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+
+
+def _import_delivery_kernel():
+    src = str(ROOT / "projects" / "omo" / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from omo.workflow import core as omo_core
+    from omo.workflow import lifecycle_locks as omo_locks
+
+    return omo_core, omo_locks
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git unavailable")
+def test_worktree_status_and_closeout_read_through_canonical_anchor(tmp_path: Path) -> None:
+    """Spec §Test strategy 3: worktree status→closeout CLI level, ensure-before-read.
+
+    The delivery dir starts as a REAL directory holding a run record; the very
+    first kernel read (``status``) must bridge it to the fake canonical BEFORE
+    the path is returned, and the read must still see the run.
+    """
+    real_before = _real_delivery_state()
+    canonical, ws = _build_fake_linked_checkout(tmp_path)
+    delivery = _seed_real_delivery(ws)
+    assert not delivery.is_symlink()
+    env = _anchor_cli_env(canonical, tmp_path)
+    assert env["OMOSTATION_STATE_ROOT"].startswith(str(tmp_path))
+
+    status = _run_anchor_cli(ws, env, "status", "--json")
+    assert status.returncode == 0, status.stderr
+    report = json.loads(status.stdout)
+    assert report["run_count"] == 1
+    assert report["active_runs"] == [_ANCHOR_RUN_ID]
+
+    # ensure-before-read: the real dir was bridged during this read invocation
+    assert delivery.is_symlink()
+    assert Path(os.readlink(delivery)) == canonical / _ANCHOR_DELIVERY_REL
+    canonical_run = canonical / _ANCHOR_DELIVERY_REL / "runs" / f"{_ANCHOR_RUN_ID}.yaml"
+    assert canonical_run.is_file()
+    assert (delivery / "runs" / f"{_ANCHOR_RUN_ID}.yaml").is_file()
+    assert os.path.samefile(delivery / "runs" / f"{_ANCHOR_RUN_ID}.yaml", canonical_run)
+
+    closeout = _run_anchor_cli(ws, env, "closeout", _ANCHOR_RUN_ID, "--status", "ok")
+    assert closeout.returncode == 0, closeout.stderr
+    assert f"closeout {_ANCHOR_RUN_ID} as ok" in closeout.stdout
+    assert yaml.safe_load(canonical_run.read_text(encoding="utf-8"))["status"] == "ok"
+
+    # dict-path read still resolves the same physical anchored dir after closeout
+    status_after = _run_anchor_cli(ws, env, "status", "--json")
+    assert status_after.returncode == 0, status_after.stderr
+    assert _ANCHOR_RUN_ID in json.loads(status_after.stdout)["closed_runs"]
+
+    assert _real_delivery_state() == real_before
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git unavailable")
+def test_anchored_worktree_lock_lands_in_canonical_and_second_open_conflicts(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Lock half of the anchor contract: the lock file lands in canonical, a
+    second open of the same scope through the symlinked path conflicts, and the
+    conflicting attempt changes nothing (read-side zero-change)."""
+    real_before = _real_delivery_state()
+    canonical, ws = _build_fake_linked_checkout(tmp_path)
+    delivery = _seed_real_delivery(ws)
+    monkeypatch.setenv("HOME", str(tmp_path / "fake-home"))
+    monkeypatch.setenv("OMOSTATION_ROOT", str(canonical))
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(canonical))
+
+    omo_core, omo_locks = _import_delivery_kernel()
+    registry = copy.deepcopy(omo_core.load_registry())
+    registry.setdefault("runner", {})["workspace_root"] = str(ws)
+
+    omo_core.lock_state_dir(registry)  # production layout → fires the anchor hook
+    assert delivery.is_symlink()
+    assert Path(os.readlink(delivery)) == canonical / _ANCHOR_DELIVERY_REL
+    assert (canonical / _ANCHOR_DELIVERY_REL / "runs" / f"{_ANCHOR_RUN_ID}.yaml").is_file()
+
+    acquired = omo_locks.acquire_locks(
+        registry, [_ANCHOR_SCOPE], _ANCHOR_RUN_ID, actor="anchor-test", force=False
+    )
+    canonical_lock = canonical / _ANCHOR_DELIVERY_REL / "locks" / f"{_ANCHOR_SCOPE}.lock.yaml"
+    assert canonical_lock.is_file()
+    ws_lock = ws / _ANCHOR_DELIVERY_REL / "locks" / f"{_ANCHOR_SCOPE}.lock.yaml"
+    assert os.path.samefile(ws_lock, canonical_lock)
+    # display path stays dict-relative — no absolute canonical path leaks into records
+    assert Path(acquired[0]) == ws_lock
+    assert str(canonical) not in acquired[0]
+
+    before = _anchor_tree_hash(canonical / _ANCHOR_DELIVERY_REL)
+    with pytest.raises(omo_core.WorkflowError, match="lock HELD"):
+        omo_locks.acquire_locks(
+            registry, [_ANCHOR_SCOPE], "other-run", actor="anchor-test", force=False
+        )
+    assert _anchor_tree_hash(canonical / _ANCHOR_DELIVERY_REL) == before
+
+    released = omo_locks.release_locks(registry, _ANCHOR_RUN_ID)
+    assert released and not canonical_lock.exists()
+    assert _real_delivery_state() == real_before

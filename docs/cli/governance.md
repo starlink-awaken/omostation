@@ -1,41 +1,18 @@
 ---
-schema: md/v1
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-24
 type: derived
 source: bin/ssot/gen-help-docs.py
 ---
-
 
 # Cockpit CLI · 🏛️ 治理 (Governance)
 
 > 自动生成于 1970-01-01T00:00:00Z | 分册源自 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-本册收录 **16** 个命令。索引与交叉表见 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)。
-
-## `cockpit audit-ledger`
-
-📒 [DEPRECATED] 治理审计账本 ADR-0201 → 查询 .omo/_knowledge/decisions/ + cockpit command-audit
-
-**用法**:
-
-```bash
-cockpit audit-ledger [flags]
-cockpit audit-ledger --json          # 机器可读输出
-cockpit audit-ledger --dry-run       # 预检 (无副作用)
-cockpit audit-ledger --help          # 完整参数面
-```
-
-  · 成熟度: deprecated  |  风险: low
-
-```bash
-cockpit audit-ledger
-  # → 提示: 决策查询改用: ls .omo/_knowledge/decisions/ | grep ADR-0201
-```
-
+本册收录 **15** 个命令。索引与交叉表见 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)。
 
 ## `cockpit bdsk`
 

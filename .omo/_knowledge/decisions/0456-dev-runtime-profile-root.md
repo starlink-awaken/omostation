@@ -269,3 +269,32 @@ plist 做半程切换，严格比现状更糟。B4a（零运行时效应的落�
 B1→B2→B3 完成后，B4b 本质是 `launchctl bootstrap` 换路径：
 `bin/ssot/install-resident-cron.sh` 已用 `BASH_SOURCE` 自推 WORKSPACE，从安装位跑它
 就得到安装位的路径，不需要重写 40 条 cron。
+
+## Addendum — 交付运行态 (delivery-state) placement 与 merge-rescue（BET-Y2Q4-T10-209，2026-09-27）
+
+**新 placement 类：交付运行态。** `.omo/_delivery/agent-workflows/` 下的 `runs/`、`locks/`、
+`events.jsonl`（连带 `affected/`、`receipts/`）是**机器级、跨检出、生命周期长于单个检出**的
+状态（`.gitignore:12` 忽略，不入仓）。它与 §1 的 `state_root()` 面不同 —— 不是"运行态写进
+profile state root"，而是：
+
+- **canonical anchor**：写入锚定 `canonical_root()`；已声明 `OMOSTATION_STATE_ROOT` 时用之。
+  规则落在 `bin/lib/repo_root.py` docstring 第四条判据；解析语义（`code_root()/state_root()/
+  canonical_root()`）**不变**，`tests/unit/test_repo_root_profile.py` 钉住的不变量全数保持。
+- **symlink 桥**：linked worktree 内以自愈 symlink 呈现（内核写侧咽喉点
+  `workflow/delivery_anchor.py::ensure_delivery_anchor` 负责重建/迁移）。读侧字典路径经
+  link 解析到同一物理目录 ⇒ ~15 个读侧工具零改动；不同 worktree 对同一 scope 的锁终于互斥。
+
+**merge-rescue belt-and-suspenders**（`bin/gac/gac-worktree.sh`）：release、merge、TTL cleanup
+三个 `git worktree remove --force` 调用点之前调 `rescue_delivery_state <wt>` —— 目录是**真实
+目录**（现存 legacy worktree）时 merge 进 canonical：子项 `cp -Rn` 拷入且 **canonical 胜**、
+`events.jsonl` 只追加 canonical 没有的行（从不覆盖）、幂等；是 symlink 或缺席则 no-op；全程
+best-effort（`|| true` + 警告），**永不阻断 git 移除**。兜底对象是现存 7 个 legacy worktree：
+它们可能再也不跑内核代码就被 release。这是内核 symlink 桥之外的第二道防线，不是替代。
+
+**跨迁移 run 的 caveat**：一次 run 横跨迁移边界时，**锁也随迁移 relocate**（locks 与 runs/
+events 一并归集，包含性检查是 resolve-both-sides）。同 scope 的下一次 takeover 可能需要
+**一次** `force` 重锁 —— 旧位置的锁记录不再可见，takeover 无法感知它。一次性动作，非常态。
+
+**禁止操作**：`rm -rf <link>/`（带尾斜杠）—— 尾斜杠使 rm 跟随 symlink 删除**目标目录的内容**
+（= canonical 侧交付运行态全灭）。删除桥本身用 `unlink <link>`；worktree remove 只 unlink、
+不跟随，这正是 symlink 桥在移除路径上安全的原因。

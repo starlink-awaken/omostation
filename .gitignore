@@ -390,3 +390,7 @@ scripts/scripts/
 .omo/tasks/planned/
 .omo/_knowledge/signals/
 live-server.pid
+
+# Runtime artifacts created by omo-health-refresh orchestrator
+.omo/state/system_health.yaml
+bin/ops/launchd/

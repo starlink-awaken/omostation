@@ -1,20 +1,18 @@
 ---
-schema: md/v1
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-24
 type: derived
 source: bin/ssot/gen-help-docs.py
 ---
-
 
 # Cockpit CLI · 📚 研究 (Research)
 
 > 自动生成于 1970-01-01T00:00:00Z | 分册源自 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)
 > 生成器: `bin/ssot/gen-help-docs.py` | 请勿手动编辑
 
-本册收录 **8** 个命令。索引与交叉表见 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)。
+本册收录 **7** 个命令。索引与交叉表见 [docs/CLI-REFERENCE.md](../CLI-REFERENCE.md)。
 
 ## `cockpit brief`
 
@@ -94,27 +92,6 @@ cockpit memory --help          # 完整参数面
 ```
 
   · 所属域: `🧠 记忆与认知 (Memory OS, Knowledge Graph, Search, Brain)`  |  成熟度: stable  |  风险: low  |  别名: `mos`
-
-
-## `cockpit memory-distill`
-
-🧠 [DEPRECATED] 记忆蒸馏 ADR-0200 → KOS pipeline (gbrain + eidos)
-
-**用法**:
-
-```bash
-cockpit memory-distill [flags]
-cockpit memory-distill --json          # 机器可读输出
-cockpit memory-distill --dry-run       # 预检 (无副作用)
-cockpit memory-distill --help          # 完整参数面
-```
-
-  · 成熟度: deprecated  |  风险: low
-
-```bash
-cockpit memory-distill
-  # → 提示: 改用: cockpit kairon --distill + cockpit gbrain --digest
-```
 
 
 ## `cockpit research`
