@@ -36122,6 +36122,128 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-206
+  title: ADR-0456 B3 — 服务注册现实收口（installed 枚举口径 / owned 分区等式门禁 E1–E4 / 30 条 observe-only
+    回填）
+  goal: 'Make the service registry able to say every launchd job that is actually installed,
+    so that B4 (relocating the runtime to a second install root) can use "registry ==
+    installed" as its detector for a plist that silently keeps running old code. Measured
+    2026-09-27 on this host and in this checkout: ~/Library/LaunchAgents holds 56 plists,
+    43 of which literally reference /Users/xiamingxing/Workspace, while .omo/_truth/registry/services.yaml
+    (340 service entries, multi-document YAML) declares labels for only 34 services
+    and 19 of those are installed. That leaves 37 installed but undeclared jobs. Requiring
+    equality over the whole set is a category error, because the undeclared set contains
+    third-party jobs (com.amazon.codewhisperer.launcher, com.macpaw.CleanMyMac5.Updater);
+    scoping equality to this repository''s own namespaces gives the number the gate
+    must actually drive to zero: 29 (47 owned installed minus 18 owned already declared).
+    The existing checker bin/mof/gen-service-configs.py --check reports drift_count
+    0 and cannot see this class at all, because it compares registry to plist bytes
+    in one direction only. A second blind spot is the enumerator: 2 of the 56 plists
+    (com.omostation.expiry-radar, com.omostation.zhixing-host-drift) fail plistlib/expat
+    because their comment blocks contain "--", yet plutil -lint says OK and launchd
+    has both loaded and running; bin/gac/meta-doctor.py:364-367 swallows that exception
+    with continue, so two live jobs silently do not exist in its launchd reality check.
+    This bet fixes the enumeration contract, states the ownership predicate as three
+    explicit tables (owned 47 / undecided 6 / foreign 3), adds E2/E3/E4 as a read-only
+    --reality-check mode of the existing generator (bin/ has a net-new script quota,
+    so no new script and no quota-baseline edit), backfills the 29 as observe-only entries
+    with generate false plus per-plist content digests, and converges gen-service-configs.py:26-43
+    onto repo_root.canonical_root() instead of its own duplicated three-tier resolution
+    whose third tier falls back to __file__. It starts, stops, bootstraps and writes
+    nothing outside the repository.'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any launchctl bootstrap/bootout/kickstart, any write to ~/Library/LaunchAgents/*.plist
+    or to a crontab entry, any start/stop of com.cockpit.dashboard (deferred to ADR-0456
+    B2-B by the principal), any net-new file under bin/ (the script-quota gate bin/gac/check-bin-quota-diff.py
+    counts additions against deletions), any change to .omo/_truth/registry/governance-checks.yaml
+    (including gac.subtraction_quota.script_baseline) or to the enforcement wiring in
+    .omo/_truth/registry/ci-surfaces.yaml and .pre-commit-config.yaml, any edit under
+    projects/ (all child repos), or backfill of lifecycle evidence for any other bet.
+    The 2 non-well-formed XML plists are registered as known debt and NOT repaired,
+    because repairing them means rewriting a running plist.
+  non_goals:
+  - Do not relocate any install root, rewrite a plist path, or cut cron over — that
+    is ADR-0456 B4 and it is gated on this bet's E2 reaching zero.
+  - Do not sign the ownership verdict for the 6 namespace-neutral labels (com.user.cron-service,
+    com.learningevolution.concept-weave.monthly, com.local.decision-svc, com.local.phosphene,
+    com.lifeos.pulse, com.opencode.quota-monitor). They are recorded under launchd_namespace.undecided
+    with per-label measured evidence and a reason; the equality assertion deliberately
+    excludes them so this bet cannot be blocked pending a principal ruling. Changing
+    a ruling means moving a label between tables, not changing code.
+  - 'Do not make E1 stricter or looser: gen-service-configs.py --check keeps its exact
+    byte-comparison semantics, and the backfill must not change a single byte on disk
+    (verified by shasum over all 56 plists before and after).'
+  - Do not wire the new reality gate into a CI surface. Registration in ci-surfaces.yaml
+    or governance-checks.yaml changes whether a gate executes, which is a principal
+    decision (same class as PR 4209 removing --require-main). Report the hook-up options
+    instead.
+  done_when:
+  - python3 bin/mof/gen-service-configs.py --reality-check --json exits 0 with e1_drift
+    0, e2_undeclared 0, e4_prefix_ok true, installed_total 56, workspace_scoped 43,
+    owned_installed 47, owned_declared 47, e3_lint_debt 2, undecided 6, foreign 3.
+  - services.yaml carries a launchd_namespace section with owned / undecided / foreign
+    tables where every entry states a reason, and the 29 backfilled service entries
+    all set generate to false and carry label, scheduler, enabled (taken from launchctl
+    print, not from directory presence), owner, a source pointer to the plist, and that
+    plist's content_digest.
+  - gen-service-configs.py --check still reports drift_count 0 and shasum -a 256 over
+    all 56 ~/Library/LaunchAgents/*.plist is byte-identical before and after the bet.
+  - Enumeration reads plists through plutil -convert json; plistlib appears only inside
+    the E3 strict well-formedness report and is never used as a filter that drops files.
+  - 'gen-service-configs.py no longer infers the repository root from a hard-coded home
+    directory literal: grep -n Workspace bin/mof/gen-service-configs.py returns no match.'
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json
+    expect: exit 0; e1_drift==0 && e2_undeclared==0 && e4_prefix_ok==true && installed_total==56
+      && workspace_scoped==43 && owned_installed==47 && owned_declared==47 && e3_lint_debt==2
+      && undecided==6 && foreign==3
+  - cmd: python3 bin/mof/gen-service-configs.py --check --json
+    expect: exit 0; drift_count 0 (E1 semantics unchanged by this bet)
+  - cmd: shasum -a 256 ~/Library/LaunchAgents/*.plist
+    expect: byte-identical to the pre-bet snapshot recorded in the closeout receipt
+      (zero disk-write effect on running services)
+  - cmd: python3 -m pytest tests/test_service_registry_reality.py -q
+    expect: 'exit 0, all passed, including one negative case: an owned label that is
+      declared but not installed, or installed but not declared, must turn the gate
+      red (guards against a second zero-check green)'
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-service-registry-reality-closure.md
+  - .omo/_truth/registry/services.yaml
+  - bin/mof/gen-service-configs.py
+  - tests/test_service_registry_reality.py
+  - Makefile
+  - docs/reports/2026-09-27-service-registry-reality-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-206.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-service-registry-reality-closure.md
+    spec_version: 1.0.0
+    content_digest: sha256:e2e2852d102ff45e8f173570591796307c68232519779ec1ba7eaf1be79c9cf6
+    decision_ref: decision://accepted/BET-Y2Q4-T10-206
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -36260,7 +36382,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 487
+  total_bets: 488
   windows:
   - Y1Q1
   - Y1Q2
