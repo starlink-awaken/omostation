@@ -25,11 +25,11 @@ BOS_STANDARD = WS / ".omo/standards/bos-uri-domain-standard.md"
 BOS_SERVICES = WS / "projects/agora/etc/bos-services.yaml"
 BOS_ROUTES_DIR = WS / "projects/ecos/src/ecos/ssot/mof/m1/bosroute"
 BOS_DOMAINS_DIR = WS / "projects/ecos/src/ecos/ssot/mof/m1/domain"
-BOS_PENDING = WS / ".omo/_truth/registry/bos-pending-registrations.yaml"
 
 # 测试/示例专用域，不在任何注册表但允许在测试代码里出现
 _EXEMPT_TEST_DOMAINS: frozenset[str] = frozenset({
     "nonexistent", "example", "bad", "test",
+    "domain", "custom",  # 文档里的占位示例: bos://domain/package/action、bos://custom/my-agent/invoke
     "_workflow",   # ecos 内部 workflow engine 保留域（下划线开头，正则不匹配）
 })
 
@@ -40,7 +40,8 @@ def _load_bos_domains_from_standard() -> set[str]:
     2. bos-services.yaml — 运行时注册表
     3. BOSROUTE-*.yaml name 字段 — ecos 路由规范声明
     4. DOMAIN-*.yaml — ecos 域节点声明（文件名即域名）
-    5. bos-pending-registrations.yaml — 已追踪待登记 URI
+    (2026-09-28 起不再读 bos-pending-registrations.yaml: 待登记清单只追踪积压, 不作合法域来源;
+     历史/遗留域登记在 bos-uri-domain-standard.md 的「遗留域」一节)
     6. _EXEMPT_TEST_DOMAINS — 测试/示例豁免域
     """
     domains: set[str] = set()
@@ -76,12 +77,6 @@ def _load_bos_domains_from_standard() -> set[str]:
             stem = f.stem[len("DOMAIN-"):]
             if re.match(r"^[a-z][a-z0-9_-]*$", stem):
                 domains.add(stem)
-
-    # 已追踪的待登记 URI（bos-pending-registrations.yaml）
-    if BOS_PENDING.exists():
-        text = BOS_PENDING.read_text(encoding="utf-8", errors="ignore")
-        for m in re.finditer(r"bos://([a-z][a-z0-9_-]+)/", text):
-            domains.add(m.group(1))
 
     return domains
 
@@ -210,6 +205,12 @@ def check_mcp_completeness(workspace: Path):
     return issues, total, len(seen_tools), len(seen_servers)
 
 
+# 不扫: 版本库/依赖与虚拟环境、索引缓存、其他 worktree 与 wip 快照的副本 (同一文件多份, 可能是旧内容)、归档
+_SKIP_SCAN_PARTS = frozenset(
+    {".git", "node_modules", ".venv", "site-packages", ".codebase-memory", ".worktrees", "wip-snapshots", "_archive", "archive", "archived"}
+)
+
+
 def check_bos_uri_standard(workspace: Path):
     """校验 bos:// URI 引用的 domain 都在标准内, 返回 (issues, domains)"""
     issues: list[str] = []
@@ -221,7 +222,8 @@ def check_bos_uri_standard(workspace: Path):
     uri_re = re.compile(r"bos://([a-zA-Z0-9_-]+)/")
     for ext in ("*.yaml", "*.md"):
         for f in workspace.rglob(ext):
-            if "/.git/" in str(f) or "/node_modules/" in str(f):
+            rel = f.relative_to(workspace).parts
+            if _SKIP_SCAN_PARTS.intersection(rel):
                 continue
             try:
                 content = f.read_text(encoding="utf-8", errors="ignore")
