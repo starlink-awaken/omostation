@@ -36816,7 +36816,8 @@ bets:
     pin moves through bin/ssot/submodule-pointer-transaction.sh, then the parent PR
     lands. A pin sitting only on a child feature branch gets silently reverted by freshness
     automation, which is how B1 lost its kernel seam for four days.'
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -36933,15 +36934,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+            merged_reachable_commit:
+              ref: git://origin/main@d83c1b6b17d18e07913e36893daf8554ee1dd473
+            tests:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:aaf4d5a23a7825dc8190bb945910e31e98a8e83f55aa12d4be49f01950a44d68
+            diff:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:aaf4d5a23a7825dc8190bb945910e31e98a8e83f55aa12d4be49f01950a44d68
+            rollback:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:aaf4d5a23a7825dc8190bb945910e31e98a8e83f55aa12d4be49f01950a44d68
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+            live_canary:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:aaf4d5a23a7825dc8190bb945910e31e98a8e83f55aa12d4be49f01950a44d68
+            fresh_receipt:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:aaf4d5a23a7825dc8190bb945910e31e98a8e83f55aa12d4be49f01950a44d68
+            replay:
+              ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-208.md
+              sha256: sha256:4d93441341375070e951adedad160a15bb69e5acead5f68de9ec0092616aa1e8
+            cleanup:
+              ref: receipt://docs/reports/2026-09-27-event-ledger-snapshot-closeout.md
+              sha256: sha256:aaf4d5a23a7825dc8190bb945910e31e98a8e83f55aa12d4be49f01950a44d68
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-209
   title: ADR-0456 交付运行态 worktree 归集 — agent-workflow runs/locks/events 锚定 canonical
     (linked-worktree symlink 桥 + release 兜底)
