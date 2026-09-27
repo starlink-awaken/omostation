@@ -34797,7 +34797,8 @@ bets:
   goal: Archive 3 stale ephemeral files (T10-122-final-report, kos-reuse-loop,
     documents-archive-rollback-receipt) and update SSOT/ledger refs to keep
     the pointers valid; drift face 3 → 0 (ephemeral class empty).
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T16-DRIFT-GUARD
   priority: P1
@@ -34838,6 +34839,39 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:7ae4fa784381aff50c280f60332788adf6fffa8cd42b318e9e3fa52d83990b66
     decision_ref: decision://accepted/BET-Y2Q4-SH-8
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@49d1d68cddc587eb3b021a85374f454b4d232ef3
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+      value:
+        status: PROVEN
+        evidence:
+          note: >
+            Drift face detector reports 0 ephemeral findings (was 3).
+            First drift face 0 since SH-1 introduced the detector.
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
