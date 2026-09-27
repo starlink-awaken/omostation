@@ -398,8 +398,9 @@ $ pgrep -fl "claims-observation/sampler.py"
 
 **签署后落点（principal 或经授权的记录者写，Git 之外）**：
 `~/.local/share/zhixing-dashboard/claims-observation/claims-state-ratification-principal-authorization-<decision_id>.json`
-（与 `claims-activation-principal-authorization-CA-R0-20260926-01.json` 同构：`status: PROVEN` +
-`binding` + `authorization_source` / `source_binding`）。
+（与 `claims-activation-principal-authorization-CA-R0-20260926-01.json` 同构：该类记录**签署之后**才允许写
+`status: PROVEN`，并带 `binding` + `authorization_source` / `source_binding`；**本包当前仍是 `UNPROVEN`，
+且这份同构描述不表示任何已存在的签署**）。
 
 ---
 
