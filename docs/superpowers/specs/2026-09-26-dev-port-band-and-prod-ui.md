@@ -78,7 +78,8 @@ dev 值进源码就等于把 dev profile 写死成第二套生产配置。
 
 | 发现 | 为什么不在本 bet 修 |
 |---|---|
-| 端口门禁的 CI 接线是**死信**：`.github/workflows/port-registry-enforce.yml` 经 `ci-check-runner.py` 解析 `ci-surfaces.yaml:358-362`，该 scanner 记为 `status: orphan` → 命中 0 项检查；`.pre-commit-config.yaml` 的 `port-hardcode-check` 指向不存在的 `scripts/check-vault-paths.py --check-ports`；而 root 扫描器 `bin/ssot/check-hardcoded-ports.py` 根本没有 `--check-ports` 这个参数（实测 argparse 只有 `--json / --threshold / --env-var-check`，2026-09-26 本 bet 加 `--dev-env / --profile`）。即"增量 enforce"在三处被描述、零处存在 | 翻这条接线等价于改变门禁效力，属 principal 决策（同 #4209 移除 `--require-main` 的量级）。本 bet 只把"门禁红"变成真值，不动"门禁是否执行" |
+| 端口门禁的执行面一半空转（2026-09-27 实测，**修正本 bet 初稿"`status: orphan`"的误判**）：`ci-surfaces.yaml` 把 scanner 记为 `status: active` + `gate: false` + `workflow: mof-update.yml` + `also_in: [port-registry-enforce.yml]`；而 `bin/gac/ci-check-runner.py:65` 只按 `surface.workflow == <file>` 精确匹配，全文既不读 `also_in` 也不读 `gate` | 后果可测：`--workflow port-registry-enforce.yml` → `(0 checks) ✅`，而该 workflow `on: pull_request` 每次 PR 都跑，Job 名 "port hardcode check" 恒绿而实际零检查；`--workflow mof-update.yml` → `(1 checks) ✅ bin/ssot/check-hardcoded-ports.py` 是真跑（runner `:77-78` 无 `args` ⇒ 默认 `--threshold 0`），但 `mof-update.yml` 只有 `schedule: "0 6 * * 1"` + `workflow_dispatch`，不挂 PR。净效果：端口真值每周一才被检查一次并开 issue |
+| 另两条是真死信：`.pre-commit-config.yaml` 的 `port-hardcode-check` 指向不存在的 `scripts/check-vault-paths.py --check-ports`；root 扫描器 argparse 从无 `--check-ports` / `--baseline-init`，而 `port-registry-enforce.yml` 头部注释声称"复用"它们 —— `protocols/port-hardcode-baseline.yaml` 因此没有任何执行者，只被 ecos 的 MOF 协议节点 `PROTOCOL-WS-port-hardcode-baseline.yaml` 声明 | 翻这条接线等价于改变门禁效力（把 PR 面的空转绿灯变成阻断），属 principal 决策（同 #4209 移除 `--require-main` 的量级）。本 bet 只把"门禁红"变成真值，不动"门禁是否执行" |
 | `projects/agora/bin/ssot/check-hardcoded-ports.py` 是 root 扫描器的 vendored 副本，`LEGACY_OK_PORTS` 相同、仅格式漂移 | 同步它要开子仓 PR + 合并 + 主仓 bump gitlink，为零门禁收益付出跨仓链 |
 | `cockpit.dashboard` 注册为 `enabled: true` 却不在 launchd 里 | 这是 B3「registry == 已安装 label 集合」门禁要抓的那一类，本 bet 只留证据 |
 | 340 条服务里只有 2 条声明 `environment`；无任何已注册服务声明 `OMOSTATION_*` | profile 注入点的收口属 B3/B4 |
@@ -103,6 +104,8 @@ dev 值进源码就等于把 dev profile 写死成第二套生产配置。
 - `python3 bin/ssot/check-hardcoded-ports.py --dev-env --profile prod` → 不打印任何覆盖、exit 0
 - `python3 bin/ssot/check-hardcoded-ports.py --dev-env`（无 `--profile`）→ 非 0 退出：宁可拒绝，也不猜 profile
 - 运行时判据（本地）：`lsof -nP -iTCP -sTCP:LISTEN` 的端口集合 ∩ `dev_band` 区间 == 空
+- 新顶层键不破坏既有消费者：注册表 9 个消费者一律 `data.get("ports")` 显式取段，无一处迭代顶层键；`python3 bin/ssot/check-cross-repo-consistency.py --json` → `ports 57` / `port_conflicts 0`（dev_ports 未被并入 union，由 `test_dev_ports_are_not_registered_ports` 钉住）
+- `make gac-local-gate` → PASS（68 checks，全绿），工作树零生成态漂移
 
 ## Out of scope
 
