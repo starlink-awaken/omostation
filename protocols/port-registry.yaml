@@ -46,6 +46,28 @@ conflicts_resolved:
   9290:
   - llm-gateway
   - aetherforge
+dev_band:
+  from: 15000
+  note: 'ADR-0456 B2: dev-profile 专用端口段。段内端口只能取自 dev_ports 显式表, 禁止算术推导
+    (15000+p%1000 段内自撞 12 处; p+20000 把 43191 送进 ephemeral 区)。分配即固定, 只追加不重排。'
+  to: 15099
+dev_ports:
+  cockpit-dashboard:
+    env: COCKPIT_DASHBOARD_PORT
+    port: 15090
+    prod_port: 8090
+  ecos-event-listener:
+    env: ECOS_EVENT_LISTENER_PORT
+    port: 15093
+    prod_port: 7432
+  kos-rest-api:
+    env: KOS_REST_API_PORT
+    port: 15092
+    prod_port: 8766
+  llm-gateway:
+    env: LLM_GATEWAY_PORT
+    port: 15091
+    prod_port: 9290
 env_vars:
   7420: BOS_API_PORT
   7422: AGORA_MCP_HTTP_PORT
@@ -81,6 +103,7 @@ env_vars:
   6379: BUS_FOUNDATION_REDIS_PORT
   43191: ZHIXING_OBSERVATORY_PORT
   18700: EMBED_NODE_HEALTH_PORT
+  43910: SUNSET_PORT
 ports:
   3100:
     name: mcp-stdio
@@ -90,6 +113,21 @@ ports:
     name: mcp-stdio-alt
     status: active
     transport: stdio
+  4000:
+    name: aetherforge-openai-proxy
+    note: 'llm_gateway.openai_proxy 的第二监听 (OpenAI 兼容面); 与 9290 同一进程 —— 实测
+      python -m llm_gateway.openai_proxy --port 9290,4000 --bind tailnet。消费侧 seam 是 URL 型
+      (C2G_LLM_URL / LLM_GATEWAY_URL), 无独立 *_PORT 变量, 故不进 env_vars。'
+    owner: aetherforge
+    status: active
+    transport: http
+  5173:
+    name: cockpit-ui-vite-dev
+    note: '本仓自有 dev-profile UI 端口 (projects/cockpit-ui vite)。生产人类入口是 cockpit-dashboard
+      :8090 + projects/cockpit-ui/dist 静态产物。2026-09-26 由 LEGACY_OK_PORTS 的"外部工具默认"豁免
+      改判为已注册自有端口 —— 豁免表只容纳不归本仓管的端口。'
+    status: active
+    transport: http
   6379:
     name: bus-foundation-redis
     note: bus-foundation Redis pub/sub backend default (R93)
@@ -100,6 +138,13 @@ ports:
     name: zhixing-observatory
     note: 织星驾驶舱 HTTP 入口 (advisory endpoint; compare_43191_fidelity 拉取)
     owner: cockpit
+    status: active
+    transport: http
+  43910:
+    name: panorama-sunset-redirector
+    note: 'bin/panorama/sunset_redirector.py 默认端口 (SUNSET_PORT); 被占用时自增 —— 实测同一时刻
+      有 43910/43922/43924 三个实例在听, 均非 launchd 声明服务。'
+    owner: panorama
     status: active
     transport: http
   18700:

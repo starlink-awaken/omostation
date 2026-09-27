@@ -35813,6 +35813,103 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-205
+  title: ADR-0456 B2 端口段注册 — dev 端口带、未注册端口收口与生产 UI 入口事实修正
+  goal: 'Let dev and prod run side by side without port collisions, and close the registry
+    gap that hides which port is the real human entry point. Measured on 2026-09-26
+    in this checkout: port 4000 is the aetherforge local LLM facade (the same process
+    binds registered 9290 and unregistered 4000 — "llm_gateway.openai_proxy --port 9290,4000"),
+    it appears in 20 scanned sites, and it is absent from protocols/port-registry.yaml,
+    which is what keeps tests/test_hardcoded_ports.py::test_unregistered_is_zero red
+    on main. Port 5173 is whitelisted in LEGACY_OK_PORTS as "Vite dev server (工具默认)",
+    an external-tool exemption, although the listener on it is this workspace''s own
+    UI process — so the gate structurally cannot express what serves the human UI. And
+    :8090 cockpit-dashboard, declared in .omo/_truth/registry/services.yaml as "唯一人类
+    Web 入口" with enabled true, has no listener at all (curl :8090/health -> connection
+    refused; launchctl reports the service absent from gui/501), while a vite process
+    manually started on 2026-09-25 answers :5173 with a 932-byte dev-mode shell whose
+    /api proxy returns 502 because its upstream :8090 is dead. This bet registers those
+    facts, declares a dev port band that a check enforces, and reclassifies 5173 as
+    ours. It starts, stops and bootstraps nothing: making cockpit serve the built dist
+    is a separate live action with its own confirmation.'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that starts, stops, bootstraps, unloads or edits
+    a launchd plist or a crontab entry, alters the port any currently running process
+    binds, modifies .omo/_truth/registry/governance-checks.yaml, edits the enforcement
+    wiring in .omo/_truth/registry/ci-surfaces.yaml or .pre-commit-config.yaml, changes
+    the semantics of protocols/port-hardcode-baseline.yaml, touches any path under projects/
+    (all child repos, including the vendored projects/agora/bin/ssot/check-hardcoded-ports.py
+    copy), or backfills lifecycle evidence for any other bet.
+  non_goals:
+  - 'Do not cut over the human UI entry point: loading com.cockpit.dashboard so cockpit
+    serves projects/cockpit-ui/dist on :8090, and retiring the manual vite process,
+    changes what a running service binds and is a separately confirmed live action.'
+  - 'Do not re-wire port gate enforcement. .omo/_truth/registry/ci-surfaces.yaml records
+    the scanner as status: orphan on workflow mof-update.yml, so the port-registry-enforce
+    CI job resolves to zero checks; that mismatch is a principal decision like PR 4209''s
+    --require-main removal. Report it, do not flip it.'
+  - Do not sync the vendored projects/agora/bin/ssot/check-hardcoded-ports.py copy.
+    Its LEGACY_OK_PORTS is identical to the root copy and only formatting diverges;
+    touching it would force a child-repo merge plus pointer bump for no gate effect.
+    Report the duplication instead.
+  - Do not backfill unregistered launchd labels or reach registry==installed equality
+    — that is ADR-0456 B3 and it carries the abort criterion for B4.
+  done_when:
+  - python3 bin/ssot/check-hardcoded-ports.py --json reports unregistered == 0 with
+    ok true, and the whole tests/test_hardcoded_ports.py file passes on the branch.
+  - Port 4000 and port 5173 are declared in protocols/port-registry.yaml with owner
+    and transport, and 5173 no longer appears in LEGACY_OK_PORTS in the root scanner.
+  - The declared dev port band is provably disjoint from every registered production
+    port, injective as a mapping, and no dev port collides with a port listening at
+    measurement time.
+  - docs/superpowers/specs/2026-09-26-dev-port-band-and-prod-ui.md is accepted and bound
+    to this bet.
+  verify:
+  - cmd: python3 bin/ssot/check-hardcoded-ports.py --json
+    expect: 'exit 0; stdout reports "unregistered": 0 and "ok": true'
+  - cmd: python3 -m pytest tests/test_hardcoded_ports.py -q -p no:cacheprovider
+    expect: exit 0, 20 passed (10 原有 + 10 新增 dev-band 一致性与打印模式)
+  - cmd: python3 bin/ssot/check-hardcoded-ports.py --dev-env --profile dev
+    expect: exit 0; 每条 dev_ports 打印一行 NAME=PORT (如 COCKPIT_DASHBOARD_PORT=15090),
+      且打印前重验 contained/injective/disjoint 三条, 违反则 exit 1
+  - cmd: python3 bin/ssot/check-hardcoded-ports.py --dev-env --profile prod
+    expect: exit 0 且无 stdout — prod 永不接收 dev 端口覆盖。原写法 --check-ports 在 root
+      扫描器里不存在 (2026-09-26 实测 argparse 无此参数), 属死信描述的复制
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-dev-port-band-and-prod-ui.md
+  - protocols/port-registry.yaml
+  - bin/ssot/check-hardcoded-ports.py
+  - tests/test_hardcoded_ports.py
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-dev-port-band-and-prod-ui.md
+    spec_version: 1.0.0
+    content_digest: sha256:054922c8233accb04540294a755f39b7b7773949cd6e20ae5f24dc6a8beba8e2
+    decision_ref: decision://accepted/BET-Y2Q4-T10-205
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -35951,7 +36048,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 484
+  total_bets: 485
   windows:
   - Y1Q1
   - Y1Q2

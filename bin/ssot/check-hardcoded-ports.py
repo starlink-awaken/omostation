@@ -10,18 +10,24 @@
 5. 读 env_vars SSOT, 为 bare_hardcoded 显示建议的 env var
 6. --env-var-check: env-only 类型端口 (7422/7456/8090) 裸硬编码 → warning
 7. 输出 violations table + threshold (默认 0) + exit code
+8. --dev-env --profile dev: 打印 dev-profile 端口覆盖 (NAME=PORT), 取值只来自
+   protocols/port-registry.yaml 的 dev_ports 显式表 (ADR-0456 B2)
 
 适用原则 (P77-5):
 - port-registration-mandatory: 任何 service 端口必须先在 SSOT 注册, 否则 hard fail
-- legacy-external-allowlist: 外部服务 (otel/vite/lm-studio/family-hub) 允许硬编码
+- legacy-external-allowlist: 不归本仓管的外部服务 (otel / lm-studio / family-hub) 允许硬编码;
+  本仓自己拉起的进程用的端口不算外部工具 (5173 于 2026-09-26 由此改判为已注册自有端口)
 - environment-variable-preferred: 优先用 env var, 而不是字面量
 
 数据源:
 - ecos port: projects/ecos/port-registry.yaml
 - protocols port: protocols/port-registry.yaml
+- dev 端口段: protocols/port-registry.yaml 的 dev_band + dev_ports
 - 每仓 src/ 代码
 
-豁免 (LEGACY_OK_PORTS): 外部标准 / 工具端口 (otel 4318 / vite 5173 / lm-studio 1234)
+豁免 (LEGACY_OK_PORTS): 外部标准 / 外部仓端口 (otel 4318 / lm-studio 1234 / family-hub 3000+3001)。
+准入判据是"不归本仓管", 不是"是某个工具的默认值"。dev 端口 (15000-15099) 故意**不**进注册 union:
+字面量出现在源码里必须被判为未注册, dev 值只能从 --dev-env 打印的环境变量来。
 """
 
 from __future__ import annotations
@@ -37,12 +43,14 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 
 # 外部标准 / 工具端口 (允许硬编码, 不算 unregistered)
 # rationale: 这些是行业标准或外部服务, 不归我们 SSOT 管
+# 准入判据 (ADR-0456 B2): 只有"不归本仓管的端口"才能进这张表。本仓自己拉起的进程
+# 用的端口必须进 protocols/port-registry.yaml 的 ports: —— 否则门禁无法表达"谁在听"。
+# 5173 (cockpit-ui vite) 曾以此处"工具默认"名义被豁免, 2026-09-26 改判为已注册自有端口。
 LEGACY_OK_PORTS = {
     1234,  # LM Studio (本地 LLM)
     3000,  # family-hub dashboard (外部仓)
     3001,  # family-hub api (外部仓)
     4318,  # OpenTelemetry OTLP (行业标准)
-    5173,  # Vite dev server (工具默认)
 }
 
 
@@ -112,6 +120,34 @@ def load_env_vars() -> dict[int, str]:
     return env_vars
 
 
+def load_dev_ports() -> tuple[dict[str, dict], tuple[int, int]]:
+    """Read the dev-profile port band + explicit dev_ports table (ADR-0456 B2).
+
+    Returns ({service_name: {env, port, prod_port}}, (band_from, band_to)).
+    dev_ports is intentionally NOT merged into the registered union: a dev port
+    written as a literal in source must still count as unregistered.
+    """
+    data = load_yaml(WORKSPACE / "protocols" / "port-registry.yaml") or {}
+    band = data.get("dev_band") or {}
+    try:
+        edges = (int(band["from"]), int(band["to"]))
+    except (KeyError, TypeError, ValueError):
+        raise SystemExit("protocols/port-registry.yaml 缺 dev_band.from/to") from None
+    table: dict[str, dict] = {}
+    for name, entry in (data.get("dev_ports") or {}).items():
+        if not isinstance(entry, dict):
+            raise SystemExit(f"dev_ports.{name} 必须是 mapping")
+        try:
+            table[str(name)] = {
+                "env": str(entry["env"]),
+                "port": int(entry["port"]),
+                "prod_port": int(entry["prod_port"]),
+            }
+        except (KeyError, TypeError, ValueError) as exc:
+            raise SystemExit(f"dev_ports.{name} 缺 env/port/prod_port: {exc}") from None
+    return table, edges
+
+
 def collect_hardcoded_ports() -> dict[int, list[dict]]:
     """扫 projects/*/src/ 真代码 (非 test, 非 docstring) 中硬编码 port."""
     found: dict[int, list[dict]] = {}
@@ -150,6 +186,39 @@ def collect_hardcoded_ports() -> dict[int, list[dict]]:
     return found
 
 
+def render_dev_env(profile: str, registered: set[int]) -> int:
+    """Print the dev-profile port overlay as NAME=PORT lines (one per dev_ports entry).
+
+    prod prints nothing: production takes its ports from the registry defaults.
+    dev re-asserts the C3 invariants before emitting, so an overlay that would
+    collide with a live production port fails here instead of silently binding it.
+    """
+    if profile != "dev":
+        return 0
+    table, (band_from, band_to) = load_dev_ports()
+    if not table:
+        raise SystemExit("dev_ports 表为空 — 无法为 dev profile 生成端口覆盖")
+    dev_ports = [entry["port"] for entry in table.values()]
+    errors = []
+    for name, entry in sorted(table.items()):
+        if not band_from <= entry["port"] <= band_to:
+            errors.append(f"dev_ports.{name}.port {entry['port']} 不在 dev_band {band_from}-{band_to}")
+        if entry["prod_port"] not in registered:
+            errors.append(f"dev_ports.{name}.prod_port {entry['prod_port']} 未在 ports: 注册")
+    if len(set(dev_ports)) != len(dev_ports):
+        errors.append(f"dev_ports 端口不唯一 (非单射): {sorted(dev_ports)}")
+    clash = set(dev_ports) & (registered | LEGACY_OK_PORTS)
+    if clash:
+        errors.append(f"dev 端口与已注册/豁免端口重叠: {sorted(clash)}")
+    if errors:
+        for err in errors:
+            print(f"❌ {err}", file=sys.stderr)
+        return 1
+    for name, entry in sorted(table.items()):
+        print(f"{entry['env']}={entry['port']}  # dev 覆盖 {entry['prod_port']} ({name})")
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--json", action="store_true", help="JSON output")
@@ -159,9 +228,25 @@ def main() -> int:
         action="store_true",
         help="env-only 端口检查: 标记需要 env var 的 bare 硬编码",
     )
+    p.add_argument(
+        "--dev-env",
+        action="store_true",
+        help="打印 dev-profile 端口覆盖 (NAME=PORT), 取值只来自 protocols/port-registry.yaml dev_ports",
+    )
+    p.add_argument(
+        "--profile",
+        choices=["dev", "prod"],
+        help="配合 --dev-env 使用。故意不读 OMOSTATION_PROFILE: 该 env 的首个消费者是 B3 服务注册 "
+        "(ADR-0456 §契约面), 端口打印不抢这个顺序",
+    )
     args = p.parse_args()
 
     registered = load_registered_ports()
+    if args.dev_env:
+        if not args.profile:
+            p.error("--dev-env 需要显式 --profile dev|prod")
+        return render_dev_env(args.profile, registered)
+
     env_vars = load_env_vars()
     hardcoded = collect_hardcoded_ports()
 
@@ -198,8 +283,11 @@ def main() -> int:
 
     fc = sum(x["count"] for x in env_fallback_usages)
     bc = sum(x["count"] for x in bare_hardcoded_usages)
+    dev_table, dev_band = load_dev_ports()
     summary = {
         "registered_total": len(registered),
+        "dev_band": list(dev_band),
+        "dev_ports": {name: entry["port"] for name, entry in sorted(dev_table.items())},
         "hardcoded_distinct_ports": len(hardcoded),
         "unregistered": len(unregistered_list),
         "env_fallback_usages_count": fc,
@@ -227,6 +315,8 @@ def main() -> int:
         print(f"  bare hardcoded (修真修真, should use env var): {summary['bare_hardcoded_usages_count']}")
         print(f"  env vars defined in SSOT: {summary['env_vars_defined']}")
         print(f"  legacy usages (external/standard, 豁免): {summary['legacy_usages_count']}")
+        print(f"  dev band {summary['dev_band'][0]}-{summary['dev_band'][1]}: {summary['dev_ports']}")
+        print("  (dev 取值: --dev-env --profile dev; dev 端口不进注册 union, 写字面量仍算未注册)")
         print()
         if summary["bare_hardcoded_usages_count"] > 0:
             print("📋 需要迁移的硬编码端口:")
