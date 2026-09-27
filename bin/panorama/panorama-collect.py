@@ -623,9 +623,12 @@ def publish_projection_revision(
             if _dash_template_path.is_file()
             else TEMPLATE
         )
+        _data_json = json.dumps(published_payload, ensure_ascii=False)
         artifact_bodies = {
             "page": _page_template.replace(
-                "__DATA__", json.dumps(published_payload, ensure_ascii=False)
+                "__SNAPSHOT_JSON__", _data_json
+            ).replace(
+                "__DATA__", _data_json
             ).encode("utf-8"),
             "data": json.dumps(published_payload, ensure_ascii=False, indent=1).encode("utf-8"),
             "agent_brief": json.dumps(
