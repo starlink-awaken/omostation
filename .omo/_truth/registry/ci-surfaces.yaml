@@ -416,10 +416,44 @@ surfaces:
   status: active
 - id: bin-gac-mcp-tool-data-complete-py
   tool: bin/gac/mcp-tool-data-complete.py
-  workflow: (none)
+  workflow: governance-check.yml
   gate: true
-  triggers: []
+  triggers:
+  - manual
+  - per_pr
+  - push
   status: active
+  note: BET-Y2Q4-T10-06 接入 governance-check (原登记 workflow 为 none, 2026-09-28 校正)
+- id: bin-ssot-check-cross-repo-consistency-py
+  tool: bin/ssot/check-cross-repo-consistency.py
+  workflow: governance-check.yml
+  gate: true
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: 代码 bos:// 引用 vs agora SSOT; 已知积压见 bos-pending-registrations.yaml, 只拦新增 (BET-Y2Q4-T10-06 接入)
+- id: bin-gac-timeout-audit-py
+  tool: bin/gac/timeout-audit.py
+  workflow: governance-check.yml
+  gate: true
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: BET-Y2Q4-T10-06 接入 governance-check
+- id: bin-gac-check-debt-closure-discipline-py
+  tool: bin/gac/check-debt-closure-discipline.py
+  workflow: governance-check.yml
+  gate: true
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: 债务关单纪律 + gate_level 值域 (CR-DEBT-GATE-ENUM-01, BET-Y2Q4-T10-06 接入)
 - id: bin-gac-omo-state-write-guard-py
   tool: bin/gac/omo-state-write-guard.py
   workflow: (none)
