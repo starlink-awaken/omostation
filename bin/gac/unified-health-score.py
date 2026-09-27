@@ -16,8 +16,25 @@
 
 import json
 import sys
+
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
+# SH-9 (BET-Y2Q4-SH-9): canonicalize OMO_PRINCIPAL_ID via the shared helper.
+# Keeps the ``principal:<id>`` form preserved end-to-end and prevents
+# future emit-paths that treat this caller's output as authoritative
+# from silently mismatching the recorder's prefix.
+import importlib.util as _importlib_util
+
+_SSOT_DIR = str(Path(__file__).resolve().parents[1] / "ssot")
+if _SSOT_DIR not in sys.path:
+    sys.path.insert(0, _SSOT_DIR)
+_pid_spec = _importlib_util.spec_from_file_location(
+    "_ssot_principal_id", str(Path(_SSOT_DIR) / "_principal_id.py"),
+)
+_pid_module = _importlib_util.module_from_spec(_pid_spec)
+assert _pid_spec.loader is not None
+_pid_spec.loader.exec_module(_pid_module)
+principal_id_from_env = _pid_module.principal_id_from_env
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REPO = Path(__file__).resolve().parents[2]  # bin/gac/ → Workspace/
@@ -208,7 +225,7 @@ def score_value() -> float:
     import subprocess
 
     try:
-        principal = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        principal = principal_id_from_env()
         meter = REPO / "bin/bc-os/north_star_meter_v2.py"
         proc = subprocess.run(
             ["python3", str(meter), "--json", "--principal-id", principal],

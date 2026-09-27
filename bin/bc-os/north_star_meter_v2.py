@@ -12,6 +12,10 @@ Run with the OMO project environment::
 
     uv run --project projects/omo python bin/bc-os/north_star_meter_v2.py \
       --principal-id <principal-id> --json
+
+SH-9 (BET-Y2Q4-SH-9): ``--principal-id`` default uses
+``principal_id_from_env()`` (bin/ssot/_principal_id.py) so the
+canonical ``principal:<id>`` form is preserved end-to-end.
 """
 
 from __future__ import annotations
@@ -32,6 +36,31 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "bin" / "lib"))
+
+
+# SH-9 (BET-Y2Q4-SH-9): canonicalize OMO_PRINCIPAL_ID via the shared helper
+# rather than reading the env var directly.  Keeps the
+# ``principal:<id>`` form preserved end-to-end and prevents any future
+# emit-paths that treat this meter's output as authoritative from
+# silently mismatching the recorder's prefix.
+import importlib.util as _importlib_util
+
+_SSOT_DIR = str(Path(__file__).resolve().parents[1])
+if _SSOT_DIR not in sys.path:
+    sys.path.insert(0, _SSOT_DIR)
+_pid_spec = _importlib_util.spec_from_file_location(
+    "_ssot_principal_id",
+    str(Path(__file__).resolve().parents[1] / "ssot" / "_principal_id.py"),
+)
+_pid_module = _importlib_util.module_from_spec(_pid_spec)
+assert _pid_spec.loader is not None
+_pid_spec.loader.exec_module(_pid_module)
+principal_id_from_env = _pid_module.principal_id_from_env
+
+
+def _sys_path_principal_id() -> str:
+    """SH-9 wrapper: route the CLI default through ``principal_id_from_env``."""
+    return principal_id_from_env()
 from repo_root import event_ledger_path
 
 DEFAULT_LEDGER = event_ledger_path()
@@ -426,7 +455,7 @@ def main() -> int:
     parser.add_argument("--action")
     parser.add_argument("--consumer", default="human")
     parser.add_argument("--journey-id")
-    parser.add_argument("--principal-id", default=os.environ.get("OMO_PRINCIPAL_ID", ""))
+    parser.add_argument("--principal-id", default=_sys_path_principal_id())
     parser.add_argument("--db-path", type=Path, default=DEFAULT_LEDGER)
     parser.add_argument("--observed-at")
     args = parser.parse_args()

@@ -19,8 +19,25 @@ import os
 import shutil
 import subprocess
 import sys
+
 import tempfile
 from pathlib import Path
+# SH-9 (BET-Y2Q4-SH-9): canonicalize OMO_PRINCIPAL_ID via the shared helper.
+# Keeps the ``principal:<id>`` form preserved end-to-end and prevents
+# future emit-paths that treat this caller's output as authoritative
+# from silently mismatching the recorder's prefix.
+import importlib.util as _importlib_util
+
+_SSOT_DIR = str(Path(__file__).resolve().parents[1] / "ssot")
+if _SSOT_DIR not in sys.path:
+    sys.path.insert(0, _SSOT_DIR)
+_pid_spec = _importlib_util.spec_from_file_location(
+    "_ssot_principal_id", str(Path(_SSOT_DIR) / "_principal_id.py"),
+)
+_pid_module = _importlib_util.module_from_spec(_pid_spec)
+assert _pid_spec.loader is not None
+_pid_spec.loader.exec_module(_pid_module)
+principal_id_from_env = _pid_module.principal_id_from_env
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 OMO_SRC = WORKSPACE / "projects" / "omo" / "src"
@@ -37,7 +54,7 @@ def _run_recorder(*, hermetic_db: Path, scene_card: Path, run_id: str) -> tuple[
     """Invoke the scene-outcome-recorder CLI with OMO_EVENT_LEDGER_DB pinned."""
     env = os.environ.copy()
     env["OMO_EVENT_LEDGER_DB"] = str(hermetic_db.resolve())
-    env["OMO_PRINCIPAL_ID"] = env.get("OMO_PRINCIPAL_ID", "xiamingxing")
+    env["OMO_PRINCIPAL_ID"] = principal_id_from_env()
     notes = json.dumps({
         "source": "test-episode-bridge",
         "run_id": run_id,
@@ -122,7 +139,7 @@ def run(count: int) -> dict:
         # responsibility context for the principal.  Use the canonical
         # ``principal:<id>`` form so the recorder's emitted events match the
         # sovereignty-assigned key (BET-Y2Q4-SH-5.1).
-        raw_principal = os.environ.get("OMO_PRINCIPAL_ID", "xiamingxing")
+        raw_principal = principal_id_from_env()
         principal_id = (
             raw_principal if raw_principal.startswith("principal:")
             else f"principal:{raw_principal}"
