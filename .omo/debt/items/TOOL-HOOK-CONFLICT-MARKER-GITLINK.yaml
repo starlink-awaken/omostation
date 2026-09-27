@@ -29,7 +29,7 @@ mitigation_refs: []
 opened_at: "2026-09-25"
 last_reviewed_at: '2026-09-25'
 next_review_at: '2026-10-25'
-gate_level: "P2"
+gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
 decision_needed: "修复 _staged_blob 对 gitlink（`git show :<path>` 非 blob 即抛）的处理：跳过 gitlink 或按文本读取其指针；补充回归测试（staged submodule 指针存在时提交不被误拦）"

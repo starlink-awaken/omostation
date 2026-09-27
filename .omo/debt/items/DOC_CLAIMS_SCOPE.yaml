@@ -28,7 +28,7 @@ mitigation_refs:
 - 6 project INTERFACE.yaml tests 行补 as_of 指针 (B1 协作管线第一个任务)
 opened_at: '2026-07-28'
 last_reviewed_at: '2026-07-28'
-gate_level: P2
+gate_level: none
 x1_policy_ref: P0-A 核实 2026-07-28 + Stage B B1 协作管线任务#1
 x3_tier: Tool
 source_ref: ''

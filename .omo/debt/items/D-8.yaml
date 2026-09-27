@@ -21,7 +21,7 @@ mitigation_refs:
   - "omostation-runtime#70 scripts/kems-toolkit（6 月部署版工具集，已 git 托管）"
 opened_at: "2026-08-30"
 last_reviewed_at: "2026-09-18"
-gate_level: "P2"
+gate_level: none
 x3_tier: "Capability"
 description: |
   kems-v2 v2.1.1（12 脚本，四域单点维护设计）随 #2596 搬迁后 quarantine 包丢失，
