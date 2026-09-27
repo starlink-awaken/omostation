@@ -2599,7 +2599,7 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@16740cd86b92aa68b323443aa44c433be4433388
           rollback:
-            ref: receipt://docs/reports/documents-archive-rollback-receipt.md
+            ref: receipt://docs/reports/archive/documents-archive-rollback-receipt.md
             sha256: sha256:27e5b338f9f9841faff1133895c2072ea7a2d230a46d0cf3e934d2b3d0854c8e
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-123.md
@@ -34786,6 +34786,52 @@ bets:
             Audit-only BET (per spec).  Recorder is now CANONICAL; the
             7 UNSAFE sites are out of scope (read-only meters/gates).
             Future SH-8 may migrate them.
+- id: BET-Y2Q4-SH-8
+  title: Ephemeral Cleanup — close last 3 drift face findings
+  goal: Archive 3 stale ephemeral files (T10-122-final-report, kos-reuse-loop,
+    documents-archive-rollback-receipt) and update SSOT/ledger refs to keep
+    the pointers valid; drift face 3 → 0 (ephemeral class empty).
+  status: pending
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 0.25 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any path deletion that removes a file without
+    archive copy.
+  non_goals:
+  - Do not delete files outright (archive preserves history).
+  - Do not modify SSOT semantic intent (path suffix only).
+  - Do not run panorama or refresh dashboard.
+  done_when:
+  - All 3 files moved to docs/reports/archive/.
+  - documents-content-plane-migrations.yaml: 5 rollback_ref lines updated.
+  - docs/plans/3y-bet-ledger.yaml (BET-Y1Q4-T10-123): rollback receipt ref updated.
+  - make drift-face-clean produces 0 ephemeral findings.
+  - make gac-local-gate passes 68/68.
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/drift-face-detector.py --class ephemeral
+    expect: exit 0 with 0 findings
+  write_surfaces:
+  - docs/reports/archive/
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-ephemeral-cleanup.md
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+  depends_on:
+  - BET-Y2Q4-SH-7
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-ephemeral-cleanup.md
+    spec_version: 1.0.0
+    content_digest: sha256:7ae4fa784381aff50c280f60332788adf6fffa8cd42b318e9e3fa52d83990b66
+    decision_ref: decision://accepted/BET-Y2Q4-SH-8
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
