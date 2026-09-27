@@ -239,6 +239,15 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   （`~/Runtime/omostation` 已作废，那个 inode 是 `projects/runtime` 的数据域），也别把它当清理残留
   扫掉（`worktree-hygiene-audit` 的候选面只有 `$HOME/ws-*` / `$HOME/workspace-*`，扫不到它，
   边界由测试钉住）。问根：`python3 bin/lib/repo_root.py --json` 或 `make runtime-install-root`。
+- **XDG 状态根上已有两份 ledger 产物，都不是权威**（2026-09-27, ADR-0456 B4b 批次 1 / BET-Y2Q4-T10-208）：
+  `~/.local/state/omostation/prod/` 是生产库的**在线备份快照**（`Connection.backup()`，WAL 安全，
+  非 `cp`），`~/.local/state/omostation/dev/` 是 dev profile 的**自有空库**。权威仍是
+  `$(state_root())/runtime/omo/event-ledger.sqlite3`，launchd plist 与 crontab 一行未改。
+  辨认依据不是"像不像一个 ledger"，而是同目录 `*.provenance.json` 里的 `authoritative: false`
+  —— 别把它当已改道，也别复制一份出来冒充历史。机制：`omo ledger snapshot --source … --dest …`
+  / `--bootstrap`，入口 `make runtime-state-snapshot`（`--dest` 已存在即拒绝，不静默覆盖）；
+  契约 `docs/superpowers/specs/2026-09-27-event-ledger-state-snapshot.md`。
+  把权威真正翻过去属 B4b 批次 2+，需逐批授权。
 - **ci-surfaces 不加自引用路径**：严格匹配 workflow `on.paths`
 - **生成态会被交付动作扫进 commit**（2026-09-26 实证）：commit / claim 期间 hook 会重写
   `.omo/state/system.yaml` 的 `health_score_evidence_generated_at`（纯时间戳），一次文档 PR
