@@ -1,0 +1,50 @@
+id: BET-Y2Q4-T4-01-DECISION
+title: 选择真实业务首单交付项
+description: 从三项有场景合同的业务候选中选择一个真实输入驱动的首单，或说明暂缓原因；本卡只请求人类决策，不派发或执行候选。
+track: flex
+task_type: product
+appetite: 1d
+授权范围: 只可复读候选分析和来源，形成选择建议；不得读取无权私有原文、自动外发或创建正式交付 BET。
+需人类拍板项:
+- 选择会议决议行动包、周期报告证据包、项目监督简报之一，或明确暂缓及原因
+- 指定可合法使用的真实输入、签发者、允许的输出渠道和人工基线
+熔断条件:
+- 无可合法使用的真实业务输入或无法建立人工基线
+- 候选实现超出三天或转为纯治理/基建工作
+- 任一候选需要未经授权的外部效果
+验收标准:
+- 人类决策明确选择 A/B/C 或暂缓并记录理由
+- 被选候选有真实输入、产物、人工裁决及实际消费的可测量 done_when
+- 选择后再由合法流程铸造正式交付 BET，不复用本卡代替交付
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: true
+status: pending
+priority: high
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- docs/plans/2026-09-26-business-first-delivery-shortlist.md
+- docs/superpowers/specs/2026-09-26-real-backlog-first-bet-shortlist.md
+- docs/plans/3y-bet-ledger.yaml
+entry_gate:
+- 三项候选均有来源、三天内工作量假设、价值判据、风险和排序理由
+- 决策人拥有候选输入与执行范围的实际选择权
+evidence_required:
+- docs/plans/2026-09-26-business-first-delivery-shortlist.md
+- 人类选择或暂缓的独立回执
+deliverables:
+- 一项人类确认的业务首单选择或暂缓结论
+test_plan:
+- python3 bin/mof/generate-brief.py
+- python3 bin/gac/check-workorder-schema.py --strict
+needs-human: true
+metadata:
+  ingress_plane: agent-workflow
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: repo://docs/plans/2026-09-26-business-first-delivery-shortlist.md#decision
