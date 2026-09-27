@@ -12,7 +12,7 @@
 	memory-os-check memory-os-env memory-os-env-export memory-os-up memory-os-smoke memory-os-asof-seed \
 	omo-status omo-top swarm-activity observability-events observability-adapters observability-trace log-rotate \
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
-	mof-bootstrap m4-health m4-health-compare registry-drift service-registry-reality gac-healthcheck gac-drift gac-validate \
+	mof-bootstrap m4-health m4-health-compare registry-drift service-registry-reality runtime-install-root gac-healthcheck gac-drift gac-validate \
 	bridge-runtime corrosion-pipeline scene-journey value-tracker self-evolution weekly-review monthly-healthcheck probe-heartbeat goal-mode-test \
 	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
 	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
@@ -206,6 +206,15 @@ registry-drift:  ## 注册表漂移检测
 
 service-registry-reality:  ## launchd 现实双向门禁 E1-E4 (只读, 绝不写 plist; BET-Y2Q4-T10-206)
 	$(PY) bin/mof/gen-service-configs.py --reality-check
+
+runtime-install-root:  ## 三层根 + 运行时安装位只读报告 (ADR-0456 B4a; 不写任何配置)
+	$(PY) bin/lib/repo_root.py --json
+	@if [ -f "$$HOME/.local/opt/omostation/docs/project-registry.yaml" ]; then \
+		echo "# 安装位内自报 (code_root 应等于安装位, canonical_root 仍是 ~/Workspace):"; \
+		cd "$$HOME/.local/opt/omostation" && $(PY) bin/lib/repo_root.py --json; \
+	else \
+		echo "# 安装位未落位: $$HOME/.local/opt/omostation"; \
+	fi
 
 # ── 🔗 链路闭环工具 (Phase 1-3) ──────────────────────────────────────────────
 
