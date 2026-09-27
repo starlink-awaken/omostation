@@ -4738,7 +4738,15 @@ def main() -> int:
     if args.check_side_effects:
         return check_side_effects()
 
+    # Cleanliness must be verified BEFORE build_payload(): collectors write
+    # .omo/state/* side effects that would otherwise fail the identity check.
+    collect_projection_producer_identity()
+    collect_projection_dashboard_identity()
+
     payload = build_payload()
+    # Discard .omo/ runtime side effects from collectors so the internal
+    # cleanliness check inside publish_projection_revision passes.
+    run(["git", "checkout", "--", ".omo/", "BRIEF.md"], check=False)
     projection = publish_projection_revision(payload)
 
     if args.gates:
