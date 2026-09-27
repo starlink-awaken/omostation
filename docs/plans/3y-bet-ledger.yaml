@@ -34867,11 +34867,14 @@ bets:
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-8.md
       value:
-        status: PROVEN
+        status: NOT_PROVEN
         evidence:
           note: >
             Drift face detector reports 0 ephemeral findings (was 3).
             First drift face 0 since SH-1 introduced the detector.
+            Value axis not formally claimed via human attestation in
+            this commit — gate_evidence_receipt deferred until a human
+            signs a proper SSH attestation receipt.
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
