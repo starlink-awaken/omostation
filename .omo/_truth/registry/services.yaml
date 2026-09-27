@@ -5,7 +5,7 @@ last-reviewed: 2026-07-03
 ---
 services:
 - id: governance.watch
-  enabled: true
+  enabled: false
   scheduler: launchd
   trigger: watchpaths
   label: com.l4.governance.watch
@@ -40,6 +40,7 @@ services:
   generated_by: bin/mof/gen-service-configs.py
   note: 原 install-watch-agent.py 硬编码 plist (sys.executable 炸弹), 治本后从本注册生成
   depends_on: []
+  disabled_reason: "macOS 系统设置「允许在后台」已关闭 (sfltool dumpbtm: disallowed), launchd 不加载; 注册表对齐现实, 重新允许后改回 true (TASK-F54F176A, 2026-09-28)"
 - id: evidence-smoke
   enabled: true
   scheduler: gha
@@ -264,7 +265,7 @@ services:
     endpoint: http://localhost:7431/health
     max_stale_hours: 24
 - id: cockpit.dashboard
-  enabled: true
+  enabled: false
   generate: false
   config_source: 手写 plist (~/Library/LaunchAgents/com.cockpit.dashboard.plist)
   scheduler: launchd
@@ -296,6 +297,7 @@ services:
     endpoint: http://localhost:8090/health
     max_stale_hours: 24
   depends_on: []
+  disabled_reason: "刻意不加载: BET 台账约束「不切换人类 UI 入口」, 待 ADR-0456; 解释器 venv cockpit-dashboard-py314 亦不存在 (TASK-F54F176A, 2026-09-28)"
 - id: docker.observability-db
   enabled: false
   generate: false
@@ -397,7 +399,7 @@ services:
   notes: OMO sync daemon — 30min tick, audit→history→sync (dry-run), 只读
   depends_on: []
 - id: resident.orchestrator
-  enabled: true
+  enabled: false
   scheduler: launchd
   trigger: interval
   interval_sec: 30
@@ -420,6 +422,7 @@ services:
     max_stale_hours: 1
   notes: Resident 编排 daemon — ledger checkpoint + 规则路由 (30s 间隔)
   depends_on: []
+  disabled_reason: "单角色 job 未加载; 同职能由 com.omostation.resident-daemon (omo resident daemon, 全 topic) 承担, `make resident-status` health=ok (sediment 192 runs/0 fail); 再启用会重复消费 (TASK-F54F176A, 2026-09-28)"
 - id: gac.daemon_watchdog
   enabled: false
   scheduler: launchd
@@ -598,7 +601,7 @@ services:
     max_stale_hours: 168
   disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: resident.sediment
-  enabled: true
+  enabled: false
   scheduler: launchd
   trigger: interval
   interval_sec: 120
@@ -621,6 +624,7 @@ services:
   liveness:
     signal: runtime/logs/resident-sediment-stdout.log
     max_stale_hours: 2
+  disabled_reason: "单角色 job 未加载; 同职能由 com.omostation.resident-daemon (omo resident daemon, 全 topic) 承担, `make resident-status` health=ok (sediment 192 runs/0 fail); 再启用会重复消费 (TASK-F54F176A, 2026-09-28)"
 - id: resident.decision
   enabled: true
   scheduler: launchd
@@ -664,7 +668,7 @@ services:
     signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.execute.plist
     max_stale_hours: 2
 - id: resident.monitor
-  enabled: true
+  enabled: false
   scheduler: launchd
   trigger: interval
   interval_sec: 120
@@ -684,8 +688,9 @@ services:
   liveness:
     signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.monitor.plist
     max_stale_hours: 2
+  disabled_reason: "单角色 job 未加载; 同职能由 com.omostation.resident-daemon (omo resident daemon, 全 topic) 承担, `make resident-status` health=ok (sediment 192 runs/0 fail); 再启用会重复消费 (TASK-F54F176A, 2026-09-28)"
 - id: resident.heartbeat
-  enabled: true
+  enabled: false
   scheduler: launchd
   trigger: interval
   interval_sec: 120
@@ -705,6 +710,7 @@ services:
   liveness:
     signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.heartbeat.plist
     max_stale_hours: 2
+  disabled_reason: "单角色 job 未加载; 同职能由 com.omostation.resident-daemon (omo resident daemon, 全 topic) 承担, `make resident-status` health=ok (sediment 192 runs/0 fail); 再启用会重复消费 (TASK-F54F176A, 2026-09-28)"
 - id: resident.event_ingest
   enabled: true
   scheduler: launchd
@@ -5457,7 +5463,7 @@ services:
   notes: 每日 ops check-signals 巡检 — enabled 条目 anchor 漂移检测 (BET-Y1Q4-T16)
   depends_on: []
 - id: ecos.bos-registry-daemon
-  enabled: true
+  enabled: false
   generate: false
   config_source: ~/Library/LaunchAgents/com.ecos.bos-registry-daemon.plist
   content_digest: sha256:326150f518ddcce38f1c0e77dace0a5452a3018ef93289be9500a3fa7524f24c
@@ -5476,8 +5482,10 @@ services:
     stderr: /Users/xiamingxing/.ecos/bos/daemon-stderr.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。'
   depends_on: []
+  disabled_reason: "macOS 系统设置「允许在后台」已关闭 (sfltool dumpbtm: disallowed), launchd 不加载; 注册表对齐现实, 重新允许后改回 true (TASK-F54F176A, 2026-09-28)"
 - id: ecos.pasw-worktree-cleanup
-  enabled: true
+  enabled: false
+  lifecycle: retired
   generate: false
   config_source: ~/Library/LaunchAgents/com.ecos.pasw-worktree-cleanup.plist
   content_digest: sha256:0d828b9b27207f0d8403f288f04aa510bb25f8f4dcc2db93a9876e9747faec96
@@ -5494,6 +5502,7 @@ services:
     stderr: /Users/xiamingxing/Workspace/.omo/_log/pasw-cleanup.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。'
   depends_on: []
+  disabled_reason: "入口脚本 bin/gac/gac-worktree-cleanup.sh 已归档至 bin/_archive/, 任务随之退役; plist 已移入 ~/Library/LaunchAgents/archived/ (TASK-F54F176A, 2026-09-28)"
 - id: kos.web
   enabled: true
   generate: false
@@ -5549,7 +5558,7 @@ services:
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: omo.model-scheduler
-  enabled: true
+  enabled: false
   generate: false
   config_source: ~/Library/LaunchAgents/com.omo.model-scheduler.plist
   content_digest: sha256:4eae240831baa041679278db47a36dc694cdf48ad953e5837709244377805001
@@ -5566,6 +5575,7 @@ services:
     stderr: /tmp/model-scheduler.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
   depends_on: []
+  disabled_reason: "macOS 系统设置「允许在后台」已关闭 (sfltool dumpbtm: disallowed), launchd 不加载; 注册表对齐现实, 重新允许后改回 true (TASK-F54F176A, 2026-09-28)"
 - id: omostation.agent-cell-pool-live-smoke
   enabled: true
   generate: false
@@ -5726,7 +5736,7 @@ services:
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: omostation.knowledge-foundry
-  enabled: true
+  enabled: false
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.knowledge-foundry.plist
   content_digest: sha256:1b5b852538c8ba3aeb58642421f60685ae9382702191bc39a03e02ad6200632d
@@ -5744,8 +5754,9 @@ services:
     stderr: /Users/xiamingxing/.local/state/omostation/foundry.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
   depends_on: []
+  disabled_reason: "macOS 系统设置「允许在后台」已关闭 (sfltool dumpbtm: disallowed), launchd 不加载; 注册表对齐现实, 重新允许后改回 true (TASK-F54F176A, 2026-09-28)"
 - id: omostation.mail-daemon
-  enabled: true
+  enabled: false
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.mail-daemon.plist
   content_digest: sha256:fb19e86173d461e683baa3b777fc9942bfeb26c4dab116bdcff116fe4a0dd892
@@ -5763,6 +5774,7 @@ services:
     stderr: /Users/xiamingxing/Workspace/.omo/_log/mail-daemon.err
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
+  disabled_reason: "与 mail.daemon (com.l4.mail.daemon) 重复: 同一邮件任务每 30min 各跑一次; 保留生成器管理且代码更新(事件发射/cockpit 投影)的 com.l4.mail.daemon; 本机 plist 已 bootout 并移入 ~/Library/LaunchAgents/disabled/ (TASK-F54F176A, 2026-09-28)"
 - id: omostation.omo-debt-refresh
   enabled: true
   generate: false
@@ -5783,7 +5795,8 @@ services:
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: omostation.panorama-dashboard
-  enabled: true
+  enabled: false
+  lifecycle: retired
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
   content_digest: sha256:c66985874e30d8fcf8ae26adc9113dc50d3197211a5f87ca2797f33ba22fee78
@@ -5804,6 +5817,7 @@ services:
     stderr: /Users/xiamingxing/Workspace/runtime/dashboard/launchd.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
   depends_on: []
+  disabled_reason: ":43910 已由 com.omostation.sunset-redirector 接管 (302 → 织星驾驶舱), panorama-serve 退役; 数据采集 panorama-dashboard-refresh 仍在用(产出 runtime/dashboard/data.json + agent-brief.json) (TASK-F54F176A, 2026-09-28)"
 - id: omostation.panorama-dashboard-refresh
   enabled: true
   generate: false
@@ -6028,7 +6042,7 @@ services:
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: user.cron-service
-  enabled: true
+  enabled: false
   generate: false
   config_source: ~/Library/LaunchAgents/com.user.cron-service.plist
   content_digest: sha256:6a467badfcb0b67e0dc89dfe791d2ed6fe5d409921837a7b479d5139551014de
@@ -6051,6 +6065,7 @@ services:
     stderr: /Users/xiamingxing/runtime/logs/cron-service.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。'
   depends_on: []
+  disabled_reason: "macOS 系统设置「允许在后台」已关闭 (sfltool dumpbtm: disallowed), launchd 不加载; 注册表对齐现实, 重新允许后改回 true (TASK-F54F176A, 2026-09-28)"
 
 # ── launchd 命名空间分区 (BET-Y2Q4-T10-206) ─────────────────────────────────
 # 「本机已装 label == 注册表声明」要可证, 前提是先有『哪些 label 归本仓管』的判断。
@@ -6076,12 +6091,12 @@ launchd_namespace:
     - com.user
   dev_label_prefix: com.omostation.dev.
   exempt_labels:
-    - label: com.amazon.codewhisperer.launcher
+    - label: com.local.aictl-verify-daily
       classification: external
-      reason: Kiro CLI 自带的登录项, 程序在 /Applications 内
-    - label: com.macpaw.CleanMyMac5.Updater
+      reason: 本地算力栈每日回归 (aictl verify quick), 属私有运维工具仓, 不归本仓生成/管理
+    - label: com.local.aictl-verify-weekly
       classification: external
-      reason: CleanMyMac 商业软件自带更新器
+      reason: 本地算力栈每周回归 (aictl e2e cockpit 场景), 属私有运维工具仓, 不归本仓生成/管理
     - label: com.local.phosphene
       classification: external
       reason: pinokio 拉取的第三方 app (~/pinokio/api/phosphene.git); aetherforge 以外部服务适配它, 不接管其生命周期

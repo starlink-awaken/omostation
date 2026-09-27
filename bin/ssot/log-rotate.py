@@ -5,7 +5,10 @@
 规则:
   - 超过 --max-bytes (默认 5MB) 的文件 → 轮转 (保留 --keep 份 .1/.2/...)
   - 保留份数 (--keep, 默认 3)
-  - 轮转 = rename 链 (log → log.1 → log.2 → ...), 与 logrotate 语义一致
+  - 轮转 = 历史份 rename 链 (log.1 → log.2 → ...) + 当前份 copytruncate (复制到 log.1 后原地截断)
+    当前份不能 rename: launchd 守护的 StandardOutPath 在进程启动时打开一次, rename 后进程继续写
+    旧 inode, 下一轮删掉 .N 即写进已删除文件 → 日志不可见 (agent-tick-daemon 2026-09-28 实测)。
+    launchd 以 O_APPEND 打开, 截断后进程从 0 续写, 与 logrotate copytruncate 语义一致。
 
 用法:
   python3 bin/ssot/log-rotate.py --dry-run     # 只看不动
@@ -16,6 +19,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
 import time
 from pathlib import Path
 
@@ -71,8 +76,10 @@ def _rotate_one(path: Path, keep: int, dry_run: bool) -> bool:
     if dry_run:
         print(f"  [dry-run] {path.name} ({size} bytes) -> {path.name}.1")
     else:
-        path.with_name(f"{path.name}.1").unlink(missing_ok=True)
-        path.rename(path.with_name(f"{path.name}.1"))
+        dst = path.with_name(f"{path.name}.1")
+        dst.unlink(missing_ok=True)
+        shutil.copyfile(path, dst)
+        os.truncate(path, 0)
     return True
 
 
