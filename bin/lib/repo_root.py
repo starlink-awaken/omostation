@@ -11,6 +11,14 @@
   写运行态(ledger/state)  → state_root(), 由 profile 声明, 未声明时等于 code_root()
   定位运行时安装位        → install_root(), 未落位返回 None; 它只回答"在哪", 不改任何解析结果
 
+第四条 placement 判据 (BET-Y2Q4-T10-208, 交付运行态):
+  机器级、长于单检出的交付运行态 (delivery runs/locks/events, 即
+  `.omo/_delivery/agent-workflows/` 下的 runs/ locks/ events.jsonl)
+    → 已声明 env (OMOSTATION_STATE_ROOT) 用之, 否则 canonical_root();
+  linked worktree 内以 symlink 呈现 —— worktree remove 只 unlink 该链接, 不跟随
+  删除目标内容 (canonical 侧保留);
+  禁止 `rm -rf <link>/` —— 尾斜杠会让 rm 跟随 symlink 删除目标目录的内容。
+
 ADR-0456: 开发与运行时同在一套检出, 所以开发动作直接打击在跑的系统。解法不是搬家,
 是先把"根"参数化 —— code_root 跟随检出(保证开发环境随时可跑), state_root 由
 $OMOSTATION_STATE_ROOT 声明(保证运行态可独立落位)。本轮只提供机制与取值口径,

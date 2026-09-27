@@ -204,6 +204,94 @@ remove_verified_pasw() {
   rmdir "$wt/$PASW_SUBTREE_DIR" 2>/dev/null || true
 }
 
+# ── delivery-state merge-rescue (BET-Y2Q4-T10-208, belt-and-suspenders) ────
+# worktree 内 `.omo/_delivery/agent-workflows/` (runs/ locks/ events.jsonl,
+# .gitignore:12 忽略) 是**真实目录**时, 在 `git worktree remove --force` 之前
+# merge 进 canonical 检出: 子项拷入 canonical 胜 (cp -Rn), events.jsonl 只
+# 追加 canonical 没有的行 (从不覆盖)。内核侧自愈 symlink 桥 (delivery_anchor)
+# 管新 run; 本函数兜底 7 个 legacy 真实目录 worktree —— 它们可能再也不跑内核
+# 代码就被 release。symlink / 缺席 → no-op; 全程 best-effort, 永不阻断 git 移除。
+# 用法: rescue_delivery_state <worktree-dir> (绝对路径; 任意 cwd 可调)。
+rescue_delivery_state() {
+  local wt_dir="${1:-}" d dest canonical repo_root_py cp_err="" events_pre=0 src_events=0
+  [ -n "$wt_dir" ] || return 0
+  d="$wt_dir/.omo/_delivery/agent-workflows"
+  # 真实目录才 rescue; symlink 桥 (新内核) 或缺席 → no-op ([ -e ] && [ ! -L ])
+  if [ ! -e "$d" ] || [ -L "$d" ] || [ ! -d "$d" ]; then
+    return 0
+  fi
+  # canonical 解析与本脚本其余部分同源 (WS_ROOT / SCRIPT_DIR), 不写死主机路径。
+  # repo_root.py 的 canonical_root() 走 $OMOSTATION_ROOT → ~/Workspace, 与
+  # __file__ 反推无关 —— 所以从哪个检出调用都解析到同一个 canonical。
+  repo_root_py="${WS_ROOT:-}/bin/lib/repo_root.py"
+  if [ ! -f "$repo_root_py" ]; then
+    repo_root_py="$SCRIPT_DIR/../lib/repo_root.py"
+  fi
+  canonical=""
+  if [ -f "$repo_root_py" ] && command -v python3 >/dev/null 2>&1; then
+    canonical="$({ python3 "$repo_root_py" --json 2>/dev/null || true; } \
+      | python3 -c 'import json, sys
+try:
+    print(json.load(sys.stdin).get("canonical_root") or "")
+except Exception:
+    print("")' 2>/dev/null || true)"
+  fi
+  if [ -z "$canonical" ] || [ "$canonical" = "null" ] || [ ! -d "$canonical" ]; then
+    echo "⚠️  rescue_delivery_state: 定位不到 canonical_root, 跳过 delivery-state 兜底: $d" >&2
+    return 0
+  fi
+  dest="$canonical/.omo/_delivery/agent-workflows"
+  # 同一物理目录 (理论上不会发生) → no-op, 防止 cp 拷向自身
+  if [ -e "$dest" ]; then
+    local d_phys="" dest_phys=""
+    d_phys="$(cd "$d" 2>/dev/null && pwd -P)" || return 0
+    dest_phys="$(cd "$dest" 2>/dev/null && pwd -P)" || return 0
+    [ "$d_phys" = "$dest_phys" ] && return 0
+  fi
+  # 记录 cp 之前两边 events.jsonl 的存在性: 仅当两边先前都有时才走"追加"
+  # (只有一边有 → cp -Rn 自己处理, 不重复追加 → 幂等)。
+  if [ -f "$dest/events.jsonl" ]; then events_pre=1; fi
+  if [ -f "$d/events.jsonl" ]; then src_events=1; fi
+  if ! mkdir -p "$dest" 2>/dev/null; then
+    echo "⚠️  rescue_delivery_state: 无法创建 $dest (best-effort, 继续移除)" >&2
+    return 0
+  fi
+  # canonical 胜: 已存在的同名文件不被覆盖 (cp -Rn / --no-clobber 语义)。
+  # macOS/BSD cp 在因 -n 跳过已有文件时**也退非 0 且不打印任何东西** —— 所以只把
+  # stderr 非空当真失败; 真失败也只警告、继续 (events 追加与拷贝相互独立, rescue
+  # 必须永不阻断调用方的 git worktree remove)。
+  cp_err="$(cp -Rn "$d/." "$dest/" 2>&1)" || {
+    if [ -n "$cp_err" ]; then
+      echo "⚠️  rescue_delivery_state: 拷贝报告错误 (best-effort, 继续移除): $cp_err" >&2
+    fi
+  }
+  if [ "$events_pre" -eq 1 ] && [ "$src_events" -eq 1 ]; then
+    # 只追加 worktree 独有的行 (canonical 已有行逐字节保留); 行集合差 → 二次调用无新增, 幂等
+    if ! python3 - "$d/events.jsonl" "$dest/events.jsonl" 2>/dev/null <<'PY'
+import sys
+
+src, dst = sys.argv[1], sys.argv[2]
+
+
+def _lines(path):
+    with open(path, encoding="utf-8", errors="surrogateescape") as fh:
+        return [ln.rstrip("\n") for ln in fh if ln.strip()]
+
+
+existing = set(_lines(dst))
+fresh = [ln for ln in _lines(src) if ln not in existing]
+if fresh:
+    with open(dst, "a", encoding="utf-8", errors="surrogateescape") as fh:
+        fh.write("".join(ln + "\n" for ln in fresh))
+PY
+    then
+      echo "⚠️  rescue_delivery_state: events.jsonl 追加失败 (best-effort, 继续移除): $d/events.jsonl" >&2
+    fi
+  fi
+  echo "   📦 rescued delivery state: $d → $dest"
+  return 0
+}
+
 # ── 网络挂起防护 (2026-09-18, TLS 握手间歇性超时实证 x2) ──────────────
 # macOS 无 GNU timeout: 此处用纯 bash 后台进程 + 轮询实现可移植超时.
 # bash 3.2 兼容 (无关联数组/新式扩展). 用法:
@@ -716,6 +804,8 @@ except Exception: print('')" 2>/dev/null || true)"
     verify_clean_for_force_removal "$wt" || exit 1
     # PASW: only remove verified Git worktrees; no filesystem fallback.
     remove_verified_pasw "$wt" || exit 1
+    # BET-Y2Q4-T10-208: delivery-state merge-rescue (best-effort, 永不阻断移除)
+    rescue_delivery_state "$wt" || true
     git worktree remove --force "$wt" 2>&1
     echo "✅ worktree 释放: $wt"
     # PASW: 清理 claim 记录
@@ -806,6 +896,8 @@ except Exception: print('')" 2>/dev/null || true)"
       verify_clean_for_force_removal "$wt" || exit 1
       # PASW: only remove verified Git worktrees; no filesystem fallback.
       remove_verified_pasw "$wt" || exit 1
+      # BET-Y2Q4-T10-208: delivery-state merge-rescue (best-effort, 永不阻断移除)
+      rescue_delivery_state "$wt" || true
       # 释放 worktree (verified clean; --force needed for initialized submodules)
       git worktree remove --force "$wt" 2>&1
       echo "✅ worktree 释放: $wt"
@@ -1187,6 +1279,8 @@ PYEOF
       if [ "$DRY" = true ]; then
         echo "  🧹 [dry-run] 将回收: $wt_name (age=${age_hours}h)"
       else
+        # BET-Y2Q4-T10-208: delivery-state merge-rescue (best-effort, 永不阻断移除)
+        rescue_delivery_state "$wt_path" || true
         git worktree remove --force "$wt_path" 2>&1 | head -1
         branch="work/${wt_name#ws-}"
         git branch -D "$branch" 2>/dev/null | head -1
