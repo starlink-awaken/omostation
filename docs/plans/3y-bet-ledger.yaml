@@ -35832,7 +35832,8 @@ bets:
     facts, declares a dev port band that a check enforces, and reclassifies 5173 as
     ours. It starts, stops and bootstraps nothing: making cockpit serve the built dist
     is a separate live action with its own confirmation.'
-  status: in_progress
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -35854,10 +35855,12 @@ bets:
   - 'Do not cut over the human UI entry point: loading com.cockpit.dashboard so cockpit
     serves projects/cockpit-ui/dist on :8090, and retiring the manual vite process,
     changes what a running service binds and is a separately confirmed live action.'
-  - 'Do not re-wire port gate enforcement. .omo/_truth/registry/ci-surfaces.yaml records
-    the scanner as status: orphan on workflow mof-update.yml, so the port-registry-enforce
-    CI job resolves to zero checks; that mismatch is a principal decision like PR 4209''s
-    --require-main removal. Report it, do not flip it.'
+  - 'Do not re-wire port gate enforcement. ci-check-runner.py selects a surface only on
+    workflow == the requested workflow file (and status != orphan); it never reads also_in
+    or gate. The scanner is registered status: active with workflow mof-update.yml and
+    gate: false, so the port-registry-enforce CI job resolves to zero checks while the real
+    scan runs only under mof-update.yml''s Monday schedule; that mismatch is a principal
+    decision like PR 4209''s --require-main removal. Report it, do not flip it.'
   - Do not sync the vendored projects/agora/bin/ssot/check-hardcoded-ports.py copy.
     Its LEGACY_OK_PORTS is identical to the root copy and only formatting diverges;
     touching it would force a child-repo merge plus pointer bump for no gate effect.
@@ -35891,6 +35894,8 @@ bets:
   - protocols/port-registry.yaml
   - bin/ssot/check-hardcoded-ports.py
   - tests/test_hardcoded_ports.py
+  - docs/reports/2026-09-27-dev-port-band-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-205.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-26-dev-port-band-and-prod-ui.md
     spec_version: 1.0.0
@@ -35901,15 +35906,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d2b97b2ee8b85b15140da79c545a35f92015243e
+          tests:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+          diff:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+          rollback:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-205.md
+            sha256: sha256:bd9ffcab5cbe28575361adf3166481a6b343091ccae8a5040794dff7dd6adf46
+          cleanup:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
