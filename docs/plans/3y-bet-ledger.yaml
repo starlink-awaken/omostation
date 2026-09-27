@@ -32976,7 +32976,15 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >
+            value_indicator_policy=false for BET-Y2Q3-T10-OMLXC-02: value proof
+            is intentionally not claimed, so the value axis stays NOT_PROVEN
+            with no direct evidence keys (completion-evidence-matrix/v1 derives
+            delivery_accepted from engineering VERIFIED + operational PROVEN).
+            Delivery evidence lives in the receipt
+            .omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md; value proof debt
+            stays trackable via bin/plan/value-proof-debt-registry.py.
   done_at: 2026-09-26
   value_indicator_policy: false
   write_surfaces:
@@ -34501,7 +34509,6 @@ bets:
     spec_version: 0.1.0
     content_digest: sha256:cd3322bedb94e74fbd0a85397d15da99999ec85b5d3b75bf0d3c8d7c2a64d547
     decision_ref: decision://accepted/BET-Y2Q4-SH-5
-  done_at: 2026-09-26
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -34587,7 +34594,6 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:e3c7ae938e5c7c449ec0403d1bcce3c129e3f36d152a5547e2a9b565a1205032
     decision_ref: decision://accepted/BET-Y2Q4-SH-5.1
-  done_at: 2026-09-26
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
