@@ -1,9 +1,9 @@
 ---
 schema: md/v1
-status: PROPOSED
+status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-09-26
+last-reviewed: 2026-09-27
 type: ssot
 id: ADR-0456
 related: ADR-0249, ADR-0453
@@ -12,8 +12,8 @@ related: ADR-0249, ADR-0453
 
 # ADR-0456 — 治理降档：closeout/retro 分级与 docs+chore 占比回落机制
 
-- **Status**: PROPOSED（等待 principal 批准；批准前本 ADR 不改变任何强制行为）
-- **Date**: 2026-09-26
+- **Status**: ACCEPTED（2026-09-27 principal 批准：分级方案 + shadow 启动；观察期满转常规强制须另走一次确认）
+- **Date**: 2026-09-26（批准 2026-09-27）
 - **Related**: ADR-0249（治理预算 40/40/20）、ADR-0453（声明/执行鸿沟定性）、BET-Y2Q4-T6-01
 
 ## 背景与问题
@@ -69,5 +69,8 @@ related: ADR-0249, ADR-0453
 
 ## 人类门禁记录
 
-- [ ] principal 批准（decision_ref: `decision://accepted/BET-Y2Q4-T6-01` 批准时回填）
-- 批准范围 = 分级方案 + shadow 启动；**强制收紧（若观察期满转常规）另走一次确认**。
+- [x] principal 批准：**2026-09-27 会话内批准**（"批准"），decision_ref:
+  `decision://accepted/BET-Y2Q4-T6-01`
+- 批准范围 = 分级方案 + shadow 启动（本节即生效记录）；**强制收紧（若观察期满转常规）另走一次确认**。
+- Shadow 运行登记：shadow 双轨产物落 `.omo/_delivery/shadow-closeouts/`（gitignored 运行面），
+  目录内 README 载明补写协议；shadow 期从本 ADR 合入 main 后的第一个 P2 BET closeout 起算。

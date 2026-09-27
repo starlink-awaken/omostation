@@ -3,9 +3,9 @@ schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-27
 type: ssot
-last_updated: 2026-09-12
+last_updated: 2026-09-27
 ---
 
 
@@ -17,17 +17,36 @@ last_updated: 2026-09-12
 ## 访问
 
 ```bash
-python3 bin/panorama/panorama-serve.py          # 前台 → http://127.0.0.1:43910
-make panorama-serve                             # 同上（Makefile 入口）
-open http://127.0.0.1:43910                     # 浏览器查看
+open http://localhost:5173/panorama             # 人类主入口（Cockpit-UI）
+open http://127.0.0.1:43910                     # 历史端口 → 302 → Cockpit-UI /panorama
 ```
 
-常驻安装（launchd，KeepAlive + 5min 自动刷新）：
+> 2026-09-27 核验：`:43910` 由 `com.omostation.sunset-redirector`（KeepAlive）持有并 302 导流；
+> 旧 serve job `com.omostation.panorama-dashboard` 已下线（BET-Y2Q2-T6-02）。
+> `make panorama-serve` 会与导流器抢 `:43910`，前台调试请显式 `--port <空闲端口>`。
+
+## 刷新（唯一写入者与节奏）
+
+扁平三件套 `runtime/dashboard/{data.json,agent-brief.json,index.html}` 的**唯一写入者**
+是部署版 collector `~/.local/share/zhixing-dashboard/panorama-collect.py`，
+由 launchd `com.omostation.panorama-dashboard-refresh` 驱动（`StartInterval=240`，即每 4 分钟）：
+
+- `PANORAMA_ROOT=/Users/xiamingxing/Workspace` —— canonical 根
+- `PANORAMA_CODE_ROOT=~/.local/share/zhixing-dashboard/code-main` —— 受管 fresh-main 引用根
+- 仓内 `bin/panorama/panorama-collect.py` 只发布 revision 投影，**不写**扁平文件
 
 ```bash
-cp runtime/cron/com.omostation.panorama-dashboard.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
-launchctl list | grep panorama-dashboard
+launchctl kickstart gui/$(id -u)/com.omostation.panorama-dashboard-refresh   # 手动触发一轮
+launchctl print gui/$(id -u)/com.omostation.panorama-dashboard-refresh       # 核验 state / runs
+stat -f "%Sm %N" runtime/dashboard/agent-brief.json                          # mtime 应为刚刚
+```
+
+plist 安装/重装（同源 `runtime/cron/`）：
+
+```bash
+cp runtime/cron/com.omostation.panorama-dashboard-refresh.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.omostation.panorama-dashboard-refresh.plist
+launchctl enable gui/$(id -u)/com.omostation.panorama-dashboard-refresh
 ```
 
 ## 七大板块
@@ -55,4 +74,4 @@ launchctl list | grep panorama-dashboard
 - 规划：BET-Y1Q4-T10-163（驾驶舱）/ T10-164（A1-A9 receipt）/ T10-165（Role/Capsule 语义）/ T10-166（ASD 契约）
 - 采集器：`bin/panorama/panorama-collect.py` · 服务：`bin/panorama/panorama-serve.py`
 - 产物：`runtime/dashboard/`（gitignored，勿手编）
-- 刷新：launchd `com.omostation.panorama-dashboard`（登记于 `.omo/cron/registry.yaml`，sfop_slot=S）
+- 刷新：launchd `com.omostation.panorama-dashboard-refresh`（登记于 `.omo/cron/registry.yaml`，sfop_slot=S）

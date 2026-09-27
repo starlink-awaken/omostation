@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """CR-P76-7-2-TIER-GRACEFUL-FALLBACK: 检查 LLM provider 3-tier fallback 配置.
 
-LLM provider 必须配置 3-tier 优雅降级: aetherforge → ollama → heuristic.
+LLM provider 必须配置优雅降级: aetherforge 网关(网关内部自带跨后端兜底, 含 Ollama) → heuristic.
 检查 bin/ 和 scripts/ 中使用 LLM 的脚本是否实现了至少 2-tier fallback。
+脚本自己再直连 Ollama(如 `ollama run`)属于绕过网关, 由 CR-LLM-GATEWAY-ONLY 拦截。
 """
 
 import sys

@@ -1,12 +1,9 @@
 ---
-schema: md/v1
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-25
-type: ephemeral
+last-reviewed: 2026-09-24
 ---
-
 
 # MCP 服务器索引
 

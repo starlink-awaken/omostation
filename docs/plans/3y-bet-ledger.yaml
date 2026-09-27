@@ -2599,7 +2599,7 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@16740cd86b92aa68b323443aa44c433be4433388
           rollback:
-            ref: receipt://docs/reports/documents-archive-rollback-receipt.md
+            ref: receipt://docs/reports/archive/documents-archive-rollback-receipt.md
             sha256: sha256:27e5b338f9f9841faff1133895c2072ea7a2d230a46d0cf3e934d2b3d0854c8e
           tests:
             ref: receipt://.omo/_knowledge/retros/BET-Y1Q4-T10-123.md
@@ -32976,7 +32976,15 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >
+            value_indicator_policy=false for BET-Y2Q3-T10-OMLXC-02: value proof
+            is intentionally not claimed, so the value axis stays NOT_PROVEN
+            with no direct evidence keys (completion-evidence-matrix/v1 derives
+            delivery_accepted from engineering VERIFIED + operational PROVEN).
+            Delivery evidence lives in the receipt
+            .omo/_knowledge/retros/BET-Y2Q3-T10-OMLXC-02.md; value proof debt
+            stays trackable via bin/plan/value-proof-debt-registry.py.
   done_at: 2026-09-26
   value_indicator_policy: false
   write_surfaces:
@@ -34501,7 +34509,6 @@ bets:
     spec_version: 0.1.0
     content_digest: sha256:cd3322bedb94e74fbd0a85397d15da99999ec85b5d3b75bf0d3c8d7c2a64d547
     decision_ref: decision://accepted/BET-Y2Q4-SH-5
-  done_at: 2026-09-26
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -34587,7 +34594,6 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:e3c7ae938e5c7c449ec0403d1bcce3c129e3f36d152a5547e2a9b565a1205032
     decision_ref: decision://accepted/BET-Y2Q4-SH-5.1
-  done_at: 2026-09-26
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -34623,6 +34629,215 @@ bets:
             Evidence/Action/Revision chain for qualifying_episodes.
             SH-5.1 fix advances readiness from not_ready to collecting;
             value accumulation needs continued real closeouts.
+- id: BET-Y2Q4-SH-6
+  title: Brief Auto-Refresh — close BRIEF-STALE drift face gap
+  goal: Add prune_brief() to auto-pruner so BRIEF-STALE drift can self-heal
+    without depending on panorama-collect.
+  status: done
+  done_at: 2026-09-26
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that touches the brief JSON schema or
+    modifies panorama-collect / drift-face-detector contracts.
+  non_goals:
+  - Do not implement debt-dashboard-regen.py (different file; SH-1 TODO).
+  - Do not depend on panorama-collect.
+  done_when:
+  - bin/ssot/auto-pruner.py exposes prune_brief(dry_run) that bumps
+    runtime/dashboard/agent-brief.json:generated_at to now.
+  - PRUNABLE_CLASSES includes "brief".
+  - bin/ssot/test-auto-pruner.py covers brief case.
+  - make drift-face-clean produces 0 brief findings.
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/test-auto-pruner.py
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/auto-pruner.py
+  - bin/ssot/test-auto-pruner.py
+  - docs/superpowers/specs/2026-09-26-brief-auto-refresh.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+  depends_on:
+  - BET-Y2Q4-SH-1
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-brief-auto-refresh.md
+    spec_version: 1.0.0
+    content_digest: sha256:a31be37c26df18c615a01798cada9b777f4af50336afb28f92915bc34cabb592
+    decision_ref: decision://accepted/BET-Y2Q4-SH-6
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@998afc541da0e7bd40933c9afcb8a8287c75b910
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-6.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >
+            Drift-face drift count is the value indicator; brief drift
+            closure is verified via drift-face-detector returning 0 brief
+            findings after auto-pruner --apply.  Not on the principal_value
+            axis (that's BCOS north-star).
+- id: BET-Y2Q4-SH-7
+  title: Principal-ID Canonicalization Audit — single source of truth
+  goal: Promote _canonical_principal_id to a shared utility and add an audit
+    that enumerates all OMO_PRINCIPAL_ID callers.
+  status: done
+  done_at: 2026-09-26
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change to sovereignty prefix constants or
+    ledger schema.
+  non_goals:
+  - Do not refactor every caller (audit only).
+  - Do not extend ledger schema.
+  done_when:
+  - bin/ssot/_principal_id.py exports canonical_principal_id() and
+    principal_id_from_env().
+  - bin/ssot/scene-outcome-recorder.py uses the helper in all 3 paths.
+  - bin/ssot/audit-principal-id-canonicalization.py enumerates callers.
+  - bin/gac/gac-local-gate.py runs the audit (warn mode).
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: python3 bin/ssot/test-principal-id-canonical.py
+    expect: exit 0
+  - cmd: python3 bin/ssot/audit-principal-id-canonicalization.py
+    expect: exit 0
+  write_surfaces:
+  - bin/ssot/_principal_id.py
+  - bin/ssot/scene-outcome-recorder.py
+  - bin/ssot/test-principal-id-canonical.py
+  - bin/ssot/audit-principal-id-canonicalization.py
+  - docs/superpowers/specs/2026-09-26-principal-id-canonicalization-audit.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+  depends_on:
+  - BET-Y2Q4-SH-5.1
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-principal-id-canonicalization-audit.md
+    spec_version: 1.0.0
+    content_digest: sha256:d5005d8a203847c188e752ab102a810518f8c819b3a88016e8f6fe3d8eb7bf5c
+    decision_ref: decision://accepted/BET-Y2Q4-SH-7
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@998afc541da0e7bd40933c9afcb8a8287c75b910
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-SH-7.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >
+            Audit-only BET (per spec).  Recorder is now CANONICAL; the
+            7 UNSAFE sites are out of scope (read-only meters/gates).
+            Future SH-8 may migrate them.
+- id: BET-Y2Q4-SH-8
+  title: Ephemeral Cleanup — close last 3 drift face findings
+  goal: Archive 3 stale ephemeral files (T10-122-final-report, kos-reuse-loop,
+    documents-archive-rollback-receipt) and update SSOT/ledger refs to keep
+    the pointers valid; drift face 3 → 0 (ephemeral class empty).
+  status: pending
+  window: Y2Q4
+  track: T16-DRIFT-GUARD
+  priority: P1
+  appetite: 0.25 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any path deletion that removes a file without
+    archive copy.
+  non_goals:
+  - Do not delete files outright (archive preserves history).
+  - Do not modify SSOT semantic intent (path suffix only).
+  - Do not run panorama or refresh dashboard.
+  done_when:
+  - All 3 files moved to docs/reports/archive/.
+  - 'documents-content-plane-migrations.yaml: 5 rollback_ref lines updated.'
+  - 'docs/plans/3y-bet-ledger.yaml (BET-Y1Q4-T10-123): rollback receipt ref updated.'
+  - make drift-face-clean produces 0 ephemeral findings.
+  - make gac-local-gate passes 68/68.
+  verify:
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: uv run --with pyyaml python bin/ssot/drift-face-detector.py --class ephemeral
+    expect: exit 0 with 0 findings
+  write_surfaces:
+  - docs/reports/archive/
+  - .omo/_truth/registry/documents-content-plane-migrations.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-ephemeral-cleanup.md
+  - .omo/_knowledge/retros/BET-Y2Q4-SH-8.md
+  depends_on:
+  - BET-Y2Q4-SH-7
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-ephemeral-cleanup.md
+    spec_version: 1.0.0
+    content_digest: sha256:7ae4fa784381aff50c280f60332788adf6fffa8cd42b318e9e3fa52d83990b66
+    decision_ref: decision://accepted/BET-Y2Q4-SH-8
 - id: BET-Y2Q3-T10-202
   title: 事故→规则管道人审队列耐久性与治理演进 start 门对称豁免
   track: T10-MATURITY
@@ -35071,7 +35286,8 @@ bets:
     fail。关单前提 = owner 逐条建立 ID 别名映射。本 bet 为批次一：导出清单，≥20 条完成四态判定（别名映射/真未实现/弃用/存疑升级 owner），映射落
     governance-checks.yaml（CR-X1-AGENT-AUDIT.source_ref 先例），重跑 coverage 验证下降，债务 item
     追加 history 不关单（批次二另立 bet 收 --strict 门禁与关单）。
-  status: pending
+  status: done
+  done_at: 2026-09-26
   window: Y2Q4
   track: T10-MATURITY
   priority: P1
@@ -35102,6 +35318,7 @@ bets:
     expect: exit 0
   write_surfaces:
   - .omo/_truth/registry/governance-checks.yaml
+  - bin/gac/registry-alias-map.yaml
   - bin/gac/check-rule-wiring-coverage.py
   - .omo/debt/items/
   - docs/plans/
@@ -35115,17 +35332,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9c7fd3f4ce7cb037c88d217f9fd0495fd227a640
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+          tests:
+            ref: receipt://bin/gac/check-rule-wiring-coverage.py
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-01.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            批次一价值 = 判定资产（36 条全量归因 + 21 条锚定 + 幽灵/孤儿/僵尸三类新分类），
+            非门禁收紧本身——--strict 接入按设计留批次二（d 类 15 条 owner 复核后）。
+            未引用 36→29 可用 check-rule-wiring-coverage.py 复算。
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-02
   title: 测试密度规则化 — fix 类交付必带回归测试的门禁提示与度量
@@ -35292,7 +35529,8 @@ bets:
   title: 业务首单候选盘点 — 真实 backlog 首个交付项的决策收件箱卡
   goal: ADR-0419 决策从基建转向业务（2026-08），但产能轨（真实 backlog）完成率 0%，基建完成度 99.6% 与业务产出 0% 形成临界落差。选题是人类决策点（本仓自诊断人类决策是当前系统瓶颈）。本
     bet 盘点 docs/plans vision-roadmap（4 YAML + 5 MD）与活跃 goals，提炼 ≥3 个候选业务交付项，每项带工作量/价值/风险评估与推荐排序，产出一张决策收件箱卡供人类拍板。
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
@@ -35336,17 +35574,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T4-01
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@54d47844a844497fb3ce73cd1ac59de2da11f6a3
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+          tests:
+            ref: receipt://.omo/tasks/planned/BET-Y2Q4-T4-01-DECISION.yaml
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-01.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值 = 决策输入就位（3+1 候选 + 决策卡入收件箱），首单的实际业务价值在人类拍板
+            并由正式交付 BET 产出后计量——本 bet 的边界明确是盘点与卡片，不做选择、
+            不预支价值。
   value_indicator_policy: false
 - id: BET-Y2Q4-T6-01
   title: 治理降档 ADR — closeout/retro 分级与 docs+chore 占比回落机制（human_gate）
@@ -35851,6 +36109,281 @@ bets:
         status: NOT_PROVEN
         evidence: {}
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-205
+  title: ADR-0456 B2 端口段注册 — dev 端口带、未注册端口收口与生产 UI 入口事实修正
+  goal: 'Let dev and prod run side by side without port collisions, and close the registry
+    gap that hides which port is the real human entry point. Measured on 2026-09-26
+    in this checkout: port 4000 is the aetherforge local LLM facade (the same process
+    binds registered 9290 and unregistered 4000 — "llm_gateway.openai_proxy --port 9290,4000"),
+    it appears in 20 scanned sites, and it is absent from protocols/port-registry.yaml,
+    which is what keeps tests/test_hardcoded_ports.py::test_unregistered_is_zero red
+    on main. Port 5173 is whitelisted in LEGACY_OK_PORTS as "Vite dev server (工具默认)",
+    an external-tool exemption, although the listener on it is this workspace''s own
+    UI process — so the gate structurally cannot express what serves the human UI. And
+    :8090 cockpit-dashboard, declared in .omo/_truth/registry/services.yaml as "唯一人类
+    Web 入口" with enabled true, has no listener at all (curl :8090/health -> connection
+    refused; launchctl reports the service absent from gui/501), while a vite process
+    manually started on 2026-09-25 answers :5173 with a 932-byte dev-mode shell whose
+    /api proxy returns 502 because its upstream :8090 is dead. This bet registers those
+    facts, declares a dev port band that a check enforces, and reclassifies 5173 as
+    ours. It starts, stops and bootstraps nothing: making cockpit serve the built dist
+    is a separate live action with its own confirmation.'
+  status: done
+  done_at: 2026-09-27
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any change that starts, stops, bootstraps, unloads or edits
+    a launchd plist or a crontab entry, alters the port any currently running process
+    binds, modifies .omo/_truth/registry/governance-checks.yaml, edits the enforcement
+    wiring in .omo/_truth/registry/ci-surfaces.yaml or .pre-commit-config.yaml, changes
+    the semantics of protocols/port-hardcode-baseline.yaml, touches any path under projects/
+    (all child repos, including the vendored projects/agora/bin/ssot/check-hardcoded-ports.py
+    copy), or backfills lifecycle evidence for any other bet.
+  non_goals:
+  - 'Do not cut over the human UI entry point: loading com.cockpit.dashboard so cockpit
+    serves projects/cockpit-ui/dist on :8090, and retiring the manual vite process,
+    changes what a running service binds and is a separately confirmed live action.'
+  - 'Do not re-wire port gate enforcement. ci-check-runner.py selects a surface only on
+    workflow == the requested workflow file (and status != orphan); it never reads also_in
+    or gate. The scanner is registered status: active with workflow mof-update.yml and
+    gate: false, so the port-registry-enforce CI job resolves to zero checks while the real
+    scan runs only under mof-update.yml''s Monday schedule; that mismatch is a principal
+    decision like PR 4209''s --require-main removal. Report it, do not flip it.'
+  - Do not sync the vendored projects/agora/bin/ssot/check-hardcoded-ports.py copy.
+    Its LEGACY_OK_PORTS is identical to the root copy and only formatting diverges;
+    touching it would force a child-repo merge plus pointer bump for no gate effect.
+    Report the duplication instead.
+  - Do not backfill unregistered launchd labels or reach registry==installed equality
+    — that is ADR-0456 B3 and it carries the abort criterion for B4.
+  done_when:
+  - python3 bin/ssot/check-hardcoded-ports.py --json reports unregistered == 0 with
+    ok true, and the whole tests/test_hardcoded_ports.py file passes on the branch.
+  - Port 4000 and port 5173 are declared in protocols/port-registry.yaml with owner
+    and transport, and 5173 no longer appears in LEGACY_OK_PORTS in the root scanner.
+  - The declared dev port band is provably disjoint from every registered production
+    port, injective as a mapping, and no dev port collides with a port listening at
+    measurement time.
+  - docs/superpowers/specs/2026-09-26-dev-port-band-and-prod-ui.md is accepted and bound
+    to this bet.
+  verify:
+  - cmd: python3 bin/ssot/check-hardcoded-ports.py --json
+    expect: 'exit 0; stdout reports "unregistered": 0 and "ok": true'
+  - cmd: python3 -m pytest tests/test_hardcoded_ports.py -q -p no:cacheprovider
+    expect: exit 0, 20 passed (10 原有 + 10 新增 dev-band 一致性与打印模式)
+  - cmd: python3 bin/ssot/check-hardcoded-ports.py --dev-env --profile dev
+    expect: exit 0; 每条 dev_ports 打印一行 NAME=PORT (如 COCKPIT_DASHBOARD_PORT=15090),
+      且打印前重验 contained/injective/disjoint 三条, 违反则 exit 1
+  - cmd: python3 bin/ssot/check-hardcoded-ports.py --dev-env --profile prod
+    expect: exit 0 且无 stdout — prod 永不接收 dev 端口覆盖。原写法 --check-ports 在 root
+      扫描器里不存在 (2026-09-26 实测 argparse 无此参数), 属死信描述的复制
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-26-dev-port-band-and-prod-ui.md
+  - protocols/port-registry.yaml
+  - bin/ssot/check-hardcoded-ports.py
+  - tests/test_hardcoded_ports.py
+  - docs/reports/2026-09-27-dev-port-band-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-205.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-26-dev-port-band-and-prod-ui.md
+    spec_version: 1.0.0
+    content_digest: sha256:054922c8233accb04540294a755f39b7b7773949cd6e20ae5f24dc6a8beba8e2
+    decision_ref: decision://accepted/BET-Y2Q4-T10-205
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d2b97b2ee8b85b15140da79c545a35f92015243e
+          tests:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+          diff:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+          rollback:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-205.md
+            sha256: sha256:bd9ffcab5cbe28575361adf3166481a6b343091ccae8a5040794dff7dd6adf46
+          cleanup:
+            ref: receipt://docs/reports/2026-09-27-dev-port-band-closeout.md
+            sha256: sha256:542290baf4c765a7ac450990219903e7349a48c4d44d2cc1039b0dcbde013d4b
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-206
+  title: ADR-0456 B3 — 服务注册现实收口（installed 枚举口径 / owned 分区等式门禁 E1–E4 / 30 条 observe-only
+    回填）
+  goal: 'Make the service registry able to say every launchd job that is actually installed,
+    so that B4 (relocating the runtime to a second install root) can use "registry ==
+    installed" as its detector for a plist that silently keeps running old code. Measured
+    2026-09-27 on this host and in this checkout: ~/Library/LaunchAgents holds 56 plists,
+    43 of which literally reference /Users/xiamingxing/Workspace, while .omo/_truth/registry/services.yaml
+    (340 service entries, multi-document YAML) declares labels for only 34 services
+    and 19 of those are installed. That leaves 37 installed but undeclared jobs. Requiring
+    equality over the whole set is a category error, because the undeclared set contains
+    third-party jobs (com.amazon.codewhisperer.launcher, com.macpaw.CleanMyMac5.Updater);
+    scoping equality to this repository''s own namespaces gives the number the gate
+    must actually drive to zero: 30 (49 owned installed minus 19 owned already declared).
+    The existing checker bin/mof/gen-service-configs.py --check reports drift_count
+    0 and cannot see this class at all, because it compares registry to plist bytes
+    in one direction only. A second blind spot is the enumerator: 2 of the 56 plists
+    (com.omostation.expiry-radar, com.omostation.zhixing-host-drift) fail plistlib/expat
+    because their comment blocks contain "--", yet plutil -lint says OK and launchd
+    has both loaded and running; bin/gac/meta-doctor.py:364-367 swallows that exception
+    with continue, so two live jobs silently do not exist in its launchd reality check.
+    This bet fixes the enumeration contract, states the ownership predicate as three
+    explicit tables (owned 49 / unclassified 4 / external 3), adds E2/E3/E4 as a read-only
+    --reality-check mode of the existing generator (bin/ has a net-new script quota,
+    so no new script and no quota-baseline edit), backfills the 30 as observe-only entries
+    with generate false plus per-plist content digests, and converges gen-service-configs.py:26-43
+    onto repo_root.canonical_root() instead of its own duplicated three-tier resolution
+    whose third tier falls back to __file__. It starts, stops, bootstraps and writes
+    nothing outside the repository.'
+  status: done
+  done_at: 2026-09-27
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop on any launchctl bootstrap/bootout/kickstart, any write to ~/Library/LaunchAgents/*.plist
+    or to a crontab entry, any start/stop of com.cockpit.dashboard (deferred to ADR-0456
+    B2-B by the principal), any net-new file under bin/ (the script-quota gate bin/gac/check-bin-quota-diff.py
+    counts additions against deletions), any change to .omo/_truth/registry/governance-checks.yaml
+    (including gac.subtraction_quota.script_baseline) or to the enforcement wiring in
+    .omo/_truth/registry/ci-surfaces.yaml and .pre-commit-config.yaml, any edit under
+    projects/ (all child repos), or backfill of lifecycle evidence for any other bet.
+    The 2 non-well-formed XML plists are registered as known debt and NOT repaired,
+    because repairing them means rewriting a running plist.
+  non_goals:
+  - Do not relocate any install root, rewrite a plist path, or cut cron over — that
+    is ADR-0456 B4 and it is gated on this bet's E2 reaching zero.
+  - Do not sign the ownership verdict for the 4 unclassified labels (com.learningevolution.concept-weave.monthly,
+    com.lifeos.pulse, com.local.decision-svc, com.opencode.quota-monitor). They are recorded in
+    launchd_namespace.exempt_labels with classification unclassified and a measured reason per
+    label; the equality assertion deliberately excludes them so this bet cannot be blocked
+    pending a principal ruling. Changing a ruling means moving a label between tables, not
+    changing code.
+  - 'Do not make E1 stricter or looser: gen-service-configs.py --check keeps its exact
+    byte-comparison semantics, and the backfill must not change a single byte on disk
+    (verified by shasum over all 56 plists before and after).'
+  - Do not wire the new reality gate into a CI surface. Registration in ci-surfaces.yaml
+    or governance-checks.yaml changes whether a gate executes, which is a principal
+    decision (same class as PR 4209 removing --require-main). Report the hook-up options
+    instead.
+  done_when:
+  - python3 bin/mof/gen-service-configs.py --reality-check --json exits 0 with e1_drift
+    0, e2_undeclared 0, e4_prefix_ok true, installed_total 56, workspace_scoped 43,
+    owned_installed 49, owned_declared 49, e3_lint_debt 2, unclassified 4, external 3.
+  - services.yaml carries a launchd_namespace section in the same YAML document as services,
+    with workspace_prefixes (11 dot-segment prefixes), exempt_labels (7 exact labels, each
+    carrying classification external or unclassified plus a measured reason) and dev_label_prefix.
+    The 30 backfilled service entries all set generate to false and carry label, scheduler,
+    trigger, enabled, program, outputs, config_source pointing at the plist, a content_digest
+    equal to the sha256 of those plist bytes, and notes stating why the entry exists. No owner
+    key is added because no existing entry or consumer reads one.
+  - gen-service-configs.py --check still reports drift_count 0 and shasum -a 256 over
+    all 56 ~/Library/LaunchAgents/*.plist is byte-identical before and after the bet.
+  - Enumeration reads plists through plutil -convert json; plistlib appears only inside
+    the E3 strict well-formedness report and is never used as a filter that drops files.
+  - 'gen-service-configs.py no longer infers the repository root from a hard-coded home
+    directory literal. The criterion is absolute-path literals, not the word Workspace (which
+    legitimately appears in prose and in the report label): grep -c /Users/xiamingxing
+    bin/mof/gen-service-configs.py returns 0.'
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json
+    expect: exit 0; e1_drift==0 && e2_undeclared==0 && e4_prefix_ok==true && installed_total==56
+      && workspace_scoped==43 && owned_installed==49 && owned_declared==49 && e3_lint_debt==2
+      && unclassified==4 && external==3 && registry_declared_total==64
+  - cmd: python3 bin/mof/gen-service-configs.py --check --json
+    expect: exit 0; drift_count 0 (E1 semantics unchanged by this bet)
+  - cmd: shasum -a 256 ~/Library/LaunchAgents/*.plist
+    expect: byte-identical to the pre-bet snapshot recorded in the closeout receipt
+      (zero disk-write effect on running services)
+  - cmd: python3 -m pytest tests/test_service_registry_reality.py -q
+    expect: 'exit 0, all passed, including one negative case: an owned label that is
+      declared but not installed, or installed but not declared, must turn the gate
+      red (guards against a second zero-check green)'
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-service-registry-reality-closure.md
+  - .omo/_truth/registry/services.yaml
+  - bin/mof/gen-service-configs.py
+  - tests/test_service_registry_reality.py
+  - Makefile
+  - docs/reports/2026-09-27-service-registry-reality-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-206.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-service-registry-reality-closure.md
+    spec_version: 1.0.0
+    content_digest: sha256:50d4ef53508f8ae3f61206d3f7c35d75af4c506ddad7621693e668d5e329471f
+    decision_ref: decision://accepted/BET-Y2Q4-T10-206
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@02f4dfee3446757884562be83001f518408fc0bd
+          tests:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+          diff:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+          rollback:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-206.md
+            sha256: sha256:1595ceaa8e696bd97ec4a92e9b7c4ec316b42529f9d9122a3541fa04abab5588
+          cleanup:
+            ref: receipt://docs/reports/2026-09-27-service-registry-reality-closeout.md
+            sha256: sha256:088c6084f52017bc9e5772675a2cf824a24f97d3d482393fff960ef9fb7e88d5
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -35989,7 +36522,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 485
+  total_bets: 489
   windows:
   - Y1Q1
   - Y1Q2

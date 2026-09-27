@@ -5,7 +5,7 @@
 
 3 类映射漂移检测:
   1. gitlink: 主仓 .gitmodules ↔ origin/<sub>/main HEAD ↔ 主仓 gitlink commit (3-way)
-  2. launchd: .omo/cron/*.plist Label ↔ launchctl list 实际 entry
+  2. launchd: {.omo/cron, runtime/cron}/*.plist Label ↔ launchctl list 实际 entry
   3. OMO asset: .omo/_truth/registry/omo-governance-surfaces.yaml ref ↔ 文件系统存在 + gitignore 状态
 
 每个发现给:
@@ -38,6 +38,10 @@ from pathlib import Path
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 
 CLASSES = ["gitlink", "launchd", "omo-asset"]
+
+# plist 声明面（相对 WORKSPACE_ROOT）。runtime/cron/ 是 plist 实际落点，
+# .omo/cron/ 是历史登记目录；两处都扫，否则声明↔实际的 launchd 漂移不可见。
+PLIST_DECLARATION_DIRS = (".omo/cron", "runtime/cron")
 
 
 def _git(args: list[str], cwd: str | None = None) -> subprocess.CompletedProcess:
@@ -126,10 +130,19 @@ def audit_gitlink() -> list[dict]:
 
 
 def audit_launchd() -> list[dict]:
-    """Audit .omo/cron/*.plist Labels vs `launchctl list` actual entries."""
+    """Audit declared *.plist Labels vs `launchctl list` actual entries.
+
+    扫描两个声明面: `.omo/cron/`(登记目录) + `runtime/cron/`(plist 实际落点)。
+    只扫 `.omo/cron/` 时该目录 0 个 plist, 结构性永远 0 finding —— panorama
+    serve job 下线数天也报不出来 (2026-09-27 实证)。
+    """
     findings: list[dict] = []
-    cron_dir = WORKSPACE_ROOT / ".omo/cron"
-    if not cron_dir.is_dir():
+    plist_paths: list[Path] = []
+    for rel in PLIST_DECLARATION_DIRS:
+        cron_dir = WORKSPACE_ROOT / rel
+        if cron_dir.is_dir():
+            plist_paths.extend(sorted(cron_dir.glob("*.plist")))
+    if not plist_paths:
         return findings
     # launchctl list output: "<pid>\t<status>\t<label>"
     lc = subprocess.run(
@@ -145,7 +158,7 @@ def audit_launchd() -> list[dict]:
             if len(parts) >= 3:
                 running_labels.add(parts[2].strip())
     # parse plist files
-    for plist in sorted(cron_dir.glob("*.plist")):
+    for plist in plist_paths:
         try:
             text = plist.read_text(encoding="utf-8", errors="ignore")
         except OSError:

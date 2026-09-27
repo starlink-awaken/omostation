@@ -139,7 +139,12 @@ def detect_brief() -> list[dict]:
             "severity": "high" if age > BRIEF_CADENCE_HOURS * 3 else "medium",
             "age_hours": round(age, 1),
             "sla_hours": BRIEF_CADENCE_HOURS,
-            "fix_hint": "run bin/panorama/panorama-collect.py",
+            "fix_hint": (
+                "launchctl kickstart gui/$(id -u)/com.omostation.panorama-dashboard-refresh "
+                "(deployed collector ~/.local/share/zhixing-dashboard/panorama-collect.py "
+                "is the sole flat-brief writer; repo bin/panorama/panorama-collect.py "
+                "only publishes revisions/ and never writes the flat trio)"
+            ),
         })
     return findings
 

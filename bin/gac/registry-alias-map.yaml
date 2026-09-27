@@ -27,7 +27,7 @@ source_register_ids:
 aliases:
   # ── M0 (model-driven) ──
   - canonical: CR-M0-STAGE-GATE
-    aliases: [mof_stage_gate, mof-stage-gate]
+    aliases: [mof_stage_gate, mof-stage-gate, mof-bootstrap]  # BET-Y2Q4-T10-01: ecos-ci.yml:81 tool-loop 调用 mof-bootstrap
     evidence:
       governance-checks: ".omo/_truth/registry/governance-checks.yaml"
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml"
@@ -87,7 +87,7 @@ aliases:
 
   # ── M4 (cross-cutting machine) ──
   - canonical: CR-M4-BOOTSTRAP-REFLEX
-    aliases: [bootstrap_reflex]
+    aliases: [bootstrap_reflex, mof-bootstrap]  # BET-Y2Q4-T10-01: 同 mof-bootstrap 执行体 (bin/mof/mof-bootstrap.py)
     evidence:
       governance-checks: ".omo/_truth/registry/governance-checks.yaml"
       note: "describes M4 bootstrap chain; no separate executor (covered by sub-checks)"
@@ -252,6 +252,37 @@ aliases:
 
 # ── Cross-walk: governance-checks ↔ L0-constraints ↔ hook-manifest ──
 # These are explicit 1-to-1 maps where the cross-registry identity is known.
+  # ── BET-Y2Q4-T10-01 批次一追加（语料可证别名；证据 = 合并说明 + CI step 名/hook-manifest）──
+  - canonical: CR-HARNESS-STRUCTURE
+    aliases: [CR-HARNESS-SECTION]
+    evidence:
+      governance-checks: "description 自述合并自 CR-HARNESS-SECTION-COMPLETENESS 等"
+      bin_executor: ".github/workflows/gac-gate.yml:154 CR-HARNESS-SECTION — Harness 12 章节完整性 (required)"
+
+  - canonical: CR-HARNESS-MOF-INTEGRATION
+    aliases: [CR-HARNESS-MOF]
+    evidence:
+      governance-checks: "description 自述合并自 CR-HARNESS-SFOP-SLOT + CR-HARNESS-MOF-CONSTRAINT"
+      bin_executor: ".github/workflows/gac-gate.yml CR-HARNESS-MOF step"
+
+  - canonical: CR-HARNESS-OPERATIONS
+    aliases: [CR-HARNESS-ENFORCE]
+    evidence:
+      governance-checks: "description 自述合并自 CR-HARNESS-PROBE-STANDARDIZATION + CR-HARNESS-VALUE-LOOP"
+      bin_executor: ".github/workflows/gac-gate.yml CR-HARNESS-ENFORCE step (排除法对应, 中置信)"
+
+  - canonical: CR-HARNESS-GOVERNANCE
+    aliases: [CR-HARNESS-OMO]
+    evidence:
+      governance-checks: "description 自述合并自 CR-HARNESS-KNOWN-DEBT + CR-HARNESS-OMO-*"
+      bin_executor: ".github/workflows/gac-gate.yml CR-HARNESS-OMO step"
+
+  - canonical: CR-GITLINK-BUMP-SQUASH-MAIN
+    aliases: [gitlink-ancestry]
+    evidence:
+      governance-checks: "契约 .omo/standards/submodule-pointer-bump-contract.md"
+      bin_executor: ".omo/_truth/registry/hook-manifest.yaml:107 id: gitlink-ancestry (pre-push 前进指针强制)"
+
 cross_walks:
   - from: governance-checks
     to: L0-constraints
