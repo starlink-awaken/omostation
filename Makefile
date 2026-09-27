@@ -19,9 +19,11 @@
 	bcos-evolve bcos-signals bcos-north-star \
 	swarm-status swarm-chaos swarm-decide swarm-audit swarm-demo \
 	ast-bootstrap ast-blast ast-audit \
-	adr-iteration-rate quota-pressure gov-health-metrics capability-chain-boundary pr-lifecycle
+	adr-iteration-rate quota-pressure gov-health-metrics capability-chain-boundary pr-lifecycle \
+	check test lint ci-local sync status
 
-PY := uv run --with pyyaml python
+UV ?= uv
+PY := $(UV) run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
 
 # ── 帮助大盘 ────────────────────────────────────────────────────────────────────
@@ -48,6 +50,12 @@ help:
 	@echo "\033[1;33m🧪 测试与代码质量 (Test Suites & QA):\033[0m"
 	@echo "  make test-all               触发全仓级联测试 (cascading-test)"
 	@echo "  make test-omlxc             运行 omlxc 算力织网 1043+ 单测"
+	@echo "  make check                  标准本地质量门禁聚合入口"
+	@echo "  make test                   标准测试聚合入口"
+	@echo "  make lint                   标准 Lint 聚合入口"
+	@echo "  make ci-local               本地 CI 综合聚合入口"
+	@echo "  make sync                   标准 SSOT/文档同步入口"
+	@echo "  make status                 标准状态摘要入口"
 	@echo "  make test-aetherforge       运行 AetherForge 547+ 单测"
 	@echo "  make test-cockpit           运行 Cockpit 门禁与单测"
 	@echo "  make test-kairon            运行 Kairon 知识引擎单测"
@@ -279,6 +287,20 @@ omlxc-lint:  ## 运行 omlxc ruff + pyright 严格类型检查
 
 kairon-lint:
 	cd projects/knowledge/kairon && ruff check packages/
+
+# ── 🧭 标准聚合入口 (Compatibility-preserving) ────────────────────────────────
+
+check: gate-local  ## 标准本地质量门禁聚合入口
+
+test: test-all  ## 标准测试聚合入口
+
+lint: lint-all  ## 标准 Lint 聚合入口
+
+ci-local: check lint test  ## 本地 CI 综合聚合入口
+
+sync: sync-all-docs  ## 标准 SSOT/文档同步入口
+
+status: ssot-status  ## 标准状态摘要入口
 
 # ── 📚 SSOT 注册表与文档同步 (SSOT & Registry) ──────────────────────────────────
 
