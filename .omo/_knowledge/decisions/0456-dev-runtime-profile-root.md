@@ -3,7 +3,7 @@ schema: md/v1
 status: PROPOSED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-09-26
+last-reviewed: 2026-09-27
 type: ssot
 id: ADR-0456
 related:
@@ -83,8 +83,20 @@ hook 与 cron 会改写 git 跟踪文件（`.omo/state/system.yaml`、`BRIEF.md`
 
 ### 2. 运行时装在哪
 
-代码安装位 **`~/Runtime/omostation`**：`git clone --local`（hardlink 对象）、
-**独立 clone 而非 git worktree**、detached 在 release tag。
+代码安装位 **`~/.local/opt/omostation`**（B4a 落位修正，本 ADR 初稿写 `~/Runtime/omostation`）：
+**独立 clone 而非 git worktree**、detached 在**记录在案的 `origin/main` SHA**。
+
+`~/Runtime` 作废的理由比初稿更强：实测 `~/Runtime` 与 `~/runtime` 在大小写不敏感卷上是同一
+inode，而该目录是 `projects/runtime` 拥有的 Tier-1 运行时数据域（`matrix.yaml` /
+`scheduler_state.json` / `taskobject_envelopes.jsonl`），其 `CLAUDE.md` 明写"读自由 / 写需确认"。
+
+初稿的两处前提已被 B4a 实测否证，按实测改写：
+
+- **没有可用的 release-tag 序列** —— `v*` 最后一个停在 `v2026-06-15-r1`，落后 main 三个多月，
+  拿它当版本锚点会让运行时静默跑在旧代码上。锚点改为落位时记录的 SHA，见 §5 与 B4b 验收。
+- **主仓是 shallow 仓** —— `git clone --local` 打印 `source repository is shallow,
+  ignoring --local`，对象因此是**复制**而非硬链接（安装位 `.git` 183 MB）。
+  未执行 `--unshallow`：那是对共享仓的一次大网络写，且不属于"零运行时效应"的范围。
 
 不做成 worktree 是硬约束：本仓每日自动清理例程 `make worktree-hygiene`（04:00，
 `worktree-hygiene-audit.py --auto-clean --fail-on-unsafe`）与 `make worktree-prune`（04:30）
@@ -124,8 +136,24 @@ ledger 内的 single-writer 声明行。
 
 ### 5. 安装位防呆
 
-搬迁落位后必须同步：把安装位写进 `bin/lib/repo_root.py` 的解析序，并加入
-`worktree-hygiene-audit.py` / `gac-branch-prune.sh` 的排除清单。
+初稿要求"把安装位写进解析序 + 加进 `worktree-hygiene-audit.py` / `gac-branch-prune.sh` 的
+排除清单"。B4a 实测把这条从**加排除清单**改判成**钉住边界**：
+
+- 排除清单是多余的。`worktree-hygiene-audit.py` 只扫 `Path.home()` 下**名字形如工作树**的
+  候选目录，`~/.local/opt/` 从来不在它的视野里；`gac-branch-prune.sh` 只剪**分支**，与目录无关。
+  为不存在的选择路径写排除项，等于给一条没有威胁的防线。
+- 真正的风险是**解析器改道**。`canonical_root()` 的返回值 B4a 刻意未动：43 个 plist 仍指向
+  `~/Workspace` 且正在跑，在同一次 commit 里把解析器指向安装位，会让所有写机器级配置的工具
+  静默换目标 —— 那是 B4b 的切换动作，不是一次"落位"。
+- 替代落地物是可执行的守卫：`tests/unit/test_repo_root_profile.py` 钉住
+  ① 安装位落位后 `canonical_root()` / `state_root()` / ledger 路径逐字节不变；
+  ② 清扫候选集合包含工作树样例但不包含安装位。
+  引用本契约的机器级工具一律走 `install_root()`（未落位返回 `None`，不抛异常）。
+
+- **标识冲突（principal 待处置，本 ADR 不改 status）**：origin/main 上有两个文件同时声明
+  `id: ADR-0456`，其中记为 ACCEPTED 的那份属于另一个决策。引用本契约必须写文件名
+  `0456-dev-runtime-profile-root.md`，不要只写 "ADR-0456"；在冲突消解前翻动 status 会把
+  误归属固化进治理态。
 
 ### 6. 三个离群项直接定性
 
@@ -189,12 +217,12 @@ goal 明写"消除旧代码版本污染运行时 truth 的风险"）。必须先
 
 因此本 ADR 把消解条件写成硬要求，而不是留作实施细节：
 
-1. **版本锚点**：安装位 detached 在 release tag，dev 与 prod 钉同一 tag；
-   `git describe` 不一致即告警（进 CI，不靠人记得）。
+1. **版本锚点**：安装位 detached 在**记录在案的 SHA**（初稿写 release tag；本仓无可用 tag 序列，
+   见 §2）。dev 与 prod 钉同一 SHA，比对 `git rev-parse HEAD`，不一致即告警（进 CI，不靠人记得）。
 2. **集合相等门禁**：`services.yaml` registry 集合 == 已安装 launchd label 集合
    （`gen-service-configs.py --check` exit 0），配合 `meta-doctor` launchd 现实核对。
    这是发现"静默跑旧代码"的唯一可靠机制。
-3. **中止判据**：做不到第 2 条就不做搬迁（B4 停在 B3 之后）。带 20 个无人管理的 plist
+3. **中止判据**：做不到第 2 条就不做搬迁（B4b 停在 B3 之后）。带 20 个无人管理的 plist
    做半程切换，严格比现状更糟。
 
 ## Consequences
@@ -211,7 +239,7 @@ goal 明写"消除旧代码版本污染运行时 truth 的风险"）。必须先
 
 - 双实例可能抢写 ledger → 靠 seq 连续性检查 + 既有 `REASON_LEDGER_UNAVAILABLE` fail-closed。
 - "dev 能跑"可能退化成 dev/prod 漂移 → verify 在两个 profile 上各跑一遍进 CI；
-  dev 钉在同一 release tag，`git describe` 不一致即告警。
+  dev 钉在同一 SHA，`git rev-parse HEAD` 不一致即告警。
 - 漏改的 plist 会永远跑旧代码 → 服务 registry 与已安装 label **集合相等**门禁 +
   `meta-doctor` launchd 现实核对。
 - agent 误写 prod 状态 → 进程启动时 `state_root != profile 声明` 直接硬退出。
@@ -229,13 +257,15 @@ goal 明写"消除旧代码版本污染运行时 truth 的风险"）。必须先
 | B1 | profile 收敛（双根 + 8/9 处 ledger 常量 + 回归守卫；第 9 处 panorama 单文件宿主按 §7 例外） | dev profile 运行只写 dev state root；未设 profile 时逐字节同今天；`bin/` 内自算 ledger 默认路径归零（守卫测试拦截回归） |
 | B2 | dev 端口段注册；UI 改走 `dist` | prod 全量在跑时本地 gate 绿，未注册端口 0 |
 | B3 | 未登记 label 回填 `services.yaml`；label 加 profile 前缀；`.omo/cron/registry.yaml` 去主机字面量化 | `gen-service-configs.py --check` exit 0 且 registry == 已安装集合 |
-| B4 | 安装位落地 + `.backup` 状态迁移 + 分批切 cron/plist | `PRAGMA integrity_check` ok；ledger 哈希链迁移边界无缺口；指向 Workspace 的 plist 归零 |
+| B4a | 安装位**落位**（独立 clone + `install_root()` 定位器 + 守卫测试）；**零运行时效应** —— 不启停服务、不改 plist/cron、不改 `canonical_root()` | 安装位内 `python3 bin/lib/repo_root.py --json` 自报 `code_root` = 安装位而 `canonical_root` 仍是 `~/Workspace`（**这条只能在合并后成立**：先建 clone、后写 CLI，所以要把 clone 重新 detach 到含 `install_root()` 的 main SHA 再验；`make runtime-install-root` 在此之前显式打印「安装位落后于本轮」，不把空输出当通过）；`git worktree list` 不含该路径；清扫审计不选中它 |
+| B4b | `.backup` 状态迁移 + 分批切 cron/plist（每批单独授权） | `PRAGMA integrity_check` ok；ledger 哈希链迁移边界无缺口；指向 Workspace 的 plist 归零；每批后 `--reality-check` E2 仍为 0 |
 | B5 | 生成态摘库（走 ADR-0129 canonical 路径） | 一次 dev 运行后 `git status --short .omo/state` 为空 |
 
-**中止判据**：B3 若做不到 registry == 已安装集合，**停在 B4 之前** —— 带着 20 个无人管理的
-plist 做半程切换，严格比现状更糟。
+**中止判据**：B3 若做不到 registry == 已安装集合，**停在 B4b 之前** —— 带着 20 个无人管理的
+plist 做半程切换，严格比现状更糟。B4a（零运行时效应的落位 + 定位器）不受此判据约束，
+因为它不启停任何服务、不改 plist/cron、不改现有解析结果。
 
 搬迁成本在代码与 per-submodule venv，不在数据（`runtime/` 仅 51M）。
-B1→B2→B3 完成后，B4 本质是 `launchctl bootstrap` 换路径：
+B1→B2→B3 完成后，B4b 本质是 `launchctl bootstrap` 换路径：
 `bin/ssot/install-resident-cron.sh` 已用 `BASH_SOURCE` 自推 WORKSPACE，从安装位跑它
 就得到安装位的路径，不需要重写 40 条 cron。

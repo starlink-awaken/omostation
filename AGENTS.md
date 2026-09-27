@@ -34,8 +34,11 @@ last_updated: 2026-09-26
    (human page: Panorama → Agent Brief). It is a read-only aggregation of authority, gates,
    unfinished work, alerts, next actions, read interfaces, and safety boundaries.
 9. **Never hard-code the workspace root.** Resolve it: `bin/lib/repo_root.py` gives `code_root()`
-   (the checkout — read planes, governance truth) and `state_root()` (write targets — ledgers,
-   `.omo/state/**` runtime, projections). Inside `projects/omo/` use `omo.omo_paths` instead.
+   (the checkout — read planes, governance truth), `state_root()` (write targets — ledgers,
+   `.omo/state/**` runtime, projections) and `install_root()` (where the runtime code lives,
+   `None` on machines without it — a locator, it moves nothing). Ask "which root am I in?"
+   with `python3 bin/lib/repo_root.py --json` or `make runtime-install-root`.
+   Inside `projects/omo/` use `omo.omo_paths` instead.
    Contract: `ADR-0456`, guard: `tests/unit/test_repo_root_profile.py`.
 
 ### Key SSOT Registries
@@ -228,6 +231,14 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   `.omo/state/**` 运行态、projections）跟随 profile。可用 env：`OMOSTATION_ROOT`、
   `OMOSTATION_STATE_ROOT`、`OMO_EVENT_LEDGER_DB`（优先级最高）。未声明 profile 时二者相等，
   即与历史布局逐字节一致 —— 这条不变量由 `tests/unit/test_repo_root_profile.py` 钉住。
+- **运行时安装位已存在，但它不是第三个可写的根**（2026-09-27, ADR-0456 B4a / BET-Y2Q4-T10-207）：
+  `~/.local/opt/omostation` 是运行时代码的**独立 clone**（自有 `.git`，**不是 git worktree**，
+  detached 在记录在案的 `origin/main` SHA —— 本仓没有可用的 release-tag 序列）。
+  `repo_root.install_root()` 只负责定位它；`canonical_root()` 仍解析到 `~/Workspace`，43 个 plist
+  也仍指向 Workspace —— **改道是 B4b，不属于这一轮**。两条纪律：别按 plan 时代的旧路径找运行时
+  （`~/Runtime/omostation` 已作废，那个 inode 是 `projects/runtime` 的数据域），也别把它当清理残留
+  扫掉（`worktree-hygiene-audit` 的候选面只有 `$HOME/ws-*` / `$HOME/workspace-*`，扫不到它，
+  边界由测试钉住）。问根：`python3 bin/lib/repo_root.py --json` 或 `make runtime-install-root`。
 - **ci-surfaces 不加自引用路径**：严格匹配 workflow `on.paths`
 - **生成态会被交付动作扫进 commit**（2026-09-26 实证）：commit / claim 期间 hook 会重写
   `.omo/state/system.yaml` 的 `health_score_evidence_generated_at`（纯时间戳），一次文档 PR
