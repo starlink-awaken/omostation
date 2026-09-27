@@ -43,6 +43,16 @@ LEGACY_OK_URI_FRAGMENTS = {
 }
 
 
+PENDING_REGISTRATIONS = WORKSPACE / ".omo" / "_truth" / "registry" / "bos-pending-registrations.yaml"
+
+
+def load_pending_uris() -> set[str]:
+    """已知待登记积压 (bos-pending-registrations.yaml): 单列计数, 不阻断; 门禁只拦新增未登记。"""
+    data = load_yaml(PENDING_REGISTRATIONS)
+    items = data.get("pending_registrations", []) if isinstance(data, dict) else []
+    return {str(i["uri"]) for i in items if isinstance(i, dict) and i.get("uri")}
+
+
 def load_yaml(p: Path) -> dict | list | None:
     import yaml
 
@@ -205,6 +215,10 @@ def main() -> int:
         if not u.endswith("/") and not is_covered_by_prefix(u, registered)
     )
     unregistered = strict_unregistered
+    # 已登记在 bos-pending-registrations.yaml 的是已知积压 (baseline), 新增的才阻断
+    pending = load_pending_uris()
+    unregistered_pending = [u for u in unregistered if u in pending]
+    unregistered_new = [u for u in unregistered if u not in pending]
     orphan = sorted(set(registered.keys()) - referenced)
 
     ports = load_ecos_ports()
@@ -228,9 +242,12 @@ def main() -> int:
         "port_duplicates": len([c for c in port_conflicts if c["type"] == "duplicate"]),
         "port_conflicts_list": port_conflicts,
         "threshold": args.threshold,
-        # ok = unregistered=0 AND 真 port conflicts=0
-        "ok": len(unregistered) <= args.threshold and len(real_port_conflicts) == 0,
+        "unregistered_new": len(unregistered_new),
+        "unregistered_pending": len(unregistered_pending),
+        # ok = 新增未登记 ≤ threshold AND 真 port conflicts=0 (已知积压见 unregistered_pending)
+        "ok": len(unregistered_new) <= args.threshold and len(real_port_conflicts) == 0,
         "unregistered_list": unregistered[:50],  # truncate for output
+        "unregistered_new_list": unregistered_new[:50],
         "orphan_list": orphan[:50],
     }
 
@@ -251,14 +268,16 @@ def main() -> int:
             for c in summary["port_conflicts_list"][:5]:
                 print(f"    port={c['port']} type={c['type']} ecos={c['ecos']!r} protocols={c['protocols']!r}")
         print()
-        if summary["unregistered"] > args.threshold:
-            print(f"❌ {summary['unregistered']} unregistered URIs 超过 threshold ({args.threshold})")
-            for u in unregistered[:10]:
-                print(f"  - {u}")
-            if len(unregistered) > 10:
-                print(f"  ... and {len(unregistered) - 10} more")
+        print(
+            f"  └─ 其中已知待登记积压 (bos-pending-registrations.yaml): {summary['unregistered_pending']}, "
+            f"新增: {summary['unregistered_new']}"
+        )
+        if summary["unregistered_new"] > args.threshold:
+            print(f"❌ {summary['unregistered_new']} 个新增 unregistered URI 超过 threshold ({args.threshold}):")
+            for u in summary["unregistered_new_list"]:
+                print(f"    {u}  → 登记到 projects/agora/etc/bos-services.yaml 或 bos-pending-registrations.yaml")
         else:
-            print(f"✅ unregistered URIs {summary['unregistered']} ≤ threshold {args.threshold}")
+            print(f"✅ 新增 unregistered URIs {summary['unregistered_new']} ≤ threshold {args.threshold}")
         if summary["port_conflicts"] > 0:
             real_conflicts = [c for c in summary["port_conflicts_list"] if c["type"] == "conflict"]
             if real_conflicts:
