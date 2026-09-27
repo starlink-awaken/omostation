@@ -19,7 +19,7 @@ appetite: 1d
 risk_level: L0
 allowed_operation_level: L0
 human_approval_required: true
-status: pending
+status: done
 priority: high
 assigned_to: null
 dispatch_id: null
@@ -43,8 +43,19 @@ deliverables:
 test_plan:
 - python3 bin/mof/generate-brief.py
 - python3 bin/gac/check-workorder-schema.py --strict
-needs-human: true
+needs-human: false
 metadata:
   ingress_plane: agent-workflow
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: repo://docs/plans/2026-09-26-business-first-delivery-shortlist.md#decision
+decision:
+  selected: B-周期报告证据包
+  decided_at: '2026-09-27'
+  decided_by: principal (会话内明确选择「② 周报证据包，现在开工」)
+  inputs_confirmed:
+    真实输入: '2026-09-20→09-27 workspace 交付记录 (PR #4376-#4429, 7 BET, ADR-0456, 345 commits)'
+    产出渠道: docs/reports/weekly 报告文件 + 会话摘要
+    签发者: principal 本人
+  receipt: decision://accepted/BET-Y2Q4-T4-02 (正式交付 BET 铸造记录即回执)
+  reason: 输入就绪度(零摩擦)/消费概率(用户已实际消费此类产物)/可度量性(逐条锚 PR) 三项最优；① 待用户提供真实纪要后做第二单
+completed_at: '2026-09-27'
