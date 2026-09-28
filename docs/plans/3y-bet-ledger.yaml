@@ -37526,6 +37526,75 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+- id: BET-Y2Q4-T10-08
+  title: gh 查询安全层 — 重试+空保护共享助手（GRAPHQL-FLAKY 处置）
+  goal: 'TOOL-GRAPHQL-FLAKY-EMPTY-MEANS-UNKNOWN 处置实现：bin/lib/gh_query.py 共享助手 （gh_json
+    重试瞬态失败 + GhQueryUnknown 空保护语义，破坏性调用方默认拒绝空）； clone-lifecycle.py integrate 的 PR 列表查询接线——空列表重试
+    ×3 后仍空则 reject pr_query_unknown（消除网络抖动自动建重复 PR 的模式，原始事故同款）； prune-ci-runs.py 内联
+    gh_api 换共享助手去重；hermetic 测试钉住三种路径。 gen-real-evalset 不接线（非破坏性、设计即优雅降级）。债务 TOOL-GRAPHQL-FLAKY
+    待本单合并 + shadow 验证后关单。
+
+    '
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: '不改变既有成功路径的输出语义；clone-lifecycle 空列表从"静默建 PR"改为"重试后 拒绝"是债务规则明令的行为变更（测试钉住）；gen-real-evalset
+    不动。
+
+    '
+  non_goals:
+  - 不给 gen-real-evalset 接线（优雅降级设计合理）
+  - 不改 hook-manifest/githooks（gh 调用不在 hook 面）
+  - 不实现完整 REST 迁移（排查脚本 REST 化为后续项）
+  done_when:
+  - bin/lib/gh_query.py 落地（重试 + GhQueryUnknown 空保护语义）
+  - clone-lifecycle integrate 空列表 → 重试后 reject pr_query_unknown（行为变更测试钉住）
+  - prune-ci-runs 换共享助手（行为不变）
+  - hermetic 测试覆盖三路径，make gac-local-gate PASS，lint 0 新增
+  - retro 固化（含 gen-real-evalset 不接线理由 + 债务关单条件）
+  verify:
+  - cmd: uv run --with pytest --with pyyaml python -m pytest tests/test_gh_query_safety.py
+      -q
+    expect: 全过
+  - cmd: python3 bin/gac/clone-lifecycle.py --help
+    expect: exit 0（模块可导入）
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/lib/gh_query.py
+  - bin/gac/clone-lifecycle.py
+  - bin/ssot/prune-ci-runs.py
+  - tests/test_gh_query_safety.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-gh-query-safety.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-08.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-gh-query-safety.md
+    spec_version: 1.0.0
+    content_digest: sha256:c9de581e34fd48a26b3d9a624a1649e00a56b4a094de40ab5fc33e4216fe875b
+    decision_ref: decision://accepted/BET-Y2Q4-T10-08
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -37664,7 +37733,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 500
+  total_bets: 501
   windows:
   - Y1Q1
   - Y1Q2
