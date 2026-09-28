@@ -192,7 +192,16 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   由于 submit 不再开 PR，**这句提示已失效**；真实前置条件是上面两行手动 push + `gh pr create`。
 - `origin/main 前进 N commits` 的告警同理：它伴随 proposal 一起打印，不是要求你 rebase
   （本仓明确禁止用 rebase/merge/pull 吸收上游，见 `:507`）。改动只碰文档且与上游无交集时，
-  直接 push 即可；CI 评的是 merge tree，不含 base 漂移。
+  直接 push 即可。
+- **但别据此推论"CI 只评 merge tree、base 漂移无所谓"**（2026-09-27 实测，BET-Y2Q4-T10-210）。
+  `.github/workflows/governance-check.yml` 四个 job 的评审对象**不同**：`meta-doctor`(`:51`)、
+  `interface-check`(`:64`)、`doc-freshness`(`:146`) 用默认 checkout（PR 事件 = merge commit），
+  而 `governance-verify`(`:169`) 显式 `ref: github.event.pull_request.head.sha`(`:176`) 且
+  `fetch-depth: 0`(`:177`) —— 它评的是**分支自己的 head tree**。台账 `done`-transition 守卫与
+  evidence/ledger 校验都在 `governance-verify` 里，所以 base 漂移**会**改变它的判定。
+  该选择是刻意的（`:171-175`：GitHub 的合成 merge ref 会把冲突 gitlink 解析到 base 一侧，
+  让检查看到与 PR 交付不同的子模块图）。判据：怀疑某条治理门禁看的是哪棵树时，
+  `rg -n "pull_request.head.sha" .github/workflows/` 而不是引用本文件的措辞。
 
 ### Hook 机制 22c（2026-09-06, BET-Y1Q4-T6-24）
 
@@ -203,7 +212,22 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 
 ### worktree 子模块与 remote 完整性（2026-09-12, BET-Y1Q4-T10-161）
 
-- **gitlink 新鲜度**：worktree claim 默认全量 init 子模块；`SKIP_SUBMODULE_INIT=1` 快速路径与 `git worktree add` 直创路径由 post-checkout 守卫兜底——对 pin 不一致的子模块做本地无网络 `submodule update --init --no-fetch` 对齐（只动子模块工作树，**不改根指针**）。本地缺 pin 对象时打印修复命令，不联网。
+- **gitlink 新鲜度**：worktree claim **默认浅 init 子模块** —— `git submodule update --init --depth 1`
+  （`bin/gac/gac-worktree.sh:504`，措辞见 `:484`）；完整 init 要 `claim --full` 或
+  `GAC_FULL_SUBMODULE_INIT=1`（`:373`），`SKIP_SUBMODULE_INIT=1` 则只做 root worktree 不建子模块
+  （`:473`）。`SKIP_SUBMODULE_INIT=1` 快速路径与 `git worktree add` 直创路径由 post-checkout 守卫兜底——对 pin 不一致的子模块做本地无网络 `submodule update --init --no-fetch` 对齐（只动子模块工作树，**不改根指针**）。本地缺 pin 对象时打印修复命令，不联网。
+- **本机是浅历史，且 worktree 子模块深浅不定 —— 可达性判据必须换地方验**（2026-09-27 实测，BET-Y2Q4-T10-210）：
+  主仓 `git rev-parse --is-shallow-repository` = `true`，`.git/shallow` 只有一个边界 `6ba6bf28e`（2026-08-01），
+  本地可达 commit 8,326 个（历史从这里截断，不是整仓）。子模块侧更 tricky：canonical `projects/omo` 非浅
+  （767 commit），而历史 claim worktree 里的 `projects/omo` **各只有 1 个 commit**（`HEAD~1` 直接
+  `unknown revision`），另一些 claim 又是深的（本次 worktree 766）——**深浅取决于 claim 路径，不能靠记忆假设**。
+  后果：`git -C projects/omo merge-base --is-ancestor <child> origin/main` 这类 gitlink 可达性判据
+  在 1-commit 检出里**没有意义**，跑出 false 是测量装置没历史，不是回归。而 CI 的
+  `governance-verify` 在 `governance-check.yml:177-178` 用 `fetch-depth: 0` + `submodules: recursive`
+  取完整历史，于是会出现"本地 false / CI 绿"的分歧 —— 别把它读成 CI 假绿。
+  **判据**：可达性/祖先类检查只在 canonical 工作区或 `claim --full`（`GAC_FULL_SUBMODULE_INIT=1`）
+  的 worktree 里做；动手前先测 `git -C <path> rev-parse --is-shallow-repository`。
+  主仓 unshallow（`git fetch --unshallow`）是机器级对象库重写，未经确认不要做。
 - **remote 污染特征**：主仓 remote URL 落入 `.gitmodules` 子仓 URL 集合即为污染（实证：origin 被并发会话改写成 cockpit-ui 仓后，一切 origin/main 验证静默失效）。**强制约束（2026-09-13 三层）**：① post-checkout hook `remote-hygiene-fix` 幂等自愈（checkout/worktree add 是污染窗口）② pre-push `remote-hygiene-check.py` 阻断（fetch+push URL 双校验）③ cron 每小时 `fix-remotes.py` 巡检自愈（`runtime/cron/remote-hygiene.log`）。push URL 可被单独改写，两层都要查。
 - **污染根因（2026-09-13 实证）**：旧 `fix-remotes.sh`（bash 版）本身就是污染源——① `[ -d .git ]` 在 worktree 中恒 false → 自愈静默失效；② 对未初始化子模块（目录存在无 `.git`）执行 `git -C <sub> remote set-url` 会向上解析写进主仓共享 config（串联覆盖，最后写的赢）→ root origin 被写成最后一个子模块 URL（omostation-runtime）。已 Python 重写（`fix-remotes.py`，sh 为 shim）：worktree 兼容 + 跳过未初始化子模块 + 幂等。检查端同理：未初始化子模块不读 remote（防误报）。
 - **手工核验**：`bash bin/gac/gac-worktree.sh guard-submodules [--fix]`；跳过守卫：`GAC_SKIP_POST_CHEKOUT_GUARD=1`。
