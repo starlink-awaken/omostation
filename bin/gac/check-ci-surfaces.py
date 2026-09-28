@@ -3,6 +3,7 @@
 
 基于 .omo/_truth/registry/ci-surfaces.yaml SSOT 检查 CI 平面健康:
 
+0. missing-tool (error) — SSOT 登记的工具文件不存在 (死登记).
 1. unregistered-check (error) — workflows / sgf-policy 中执行的 check 类工具
    未在 SSOT 登记 (新增检查未登记 = CI 面 drift).
 2. gate-parity (error) — sgf-policy gate 命令引用的工具未在 SSOT 登记.
@@ -169,6 +170,14 @@ def check_ci_surfaces() -> dict:
     surfaces = registry.get("surfaces") or []
     registered_tools = {str(s.get("tool") or ""): s for s in surfaces if isinstance(s, dict) and s.get("tool")}
     orphan_registered = {str(s.get("tool")) for s in surfaces if isinstance(s, dict) and s.get("status") == "orphan"}
+
+    # 0. missing-tool: 登记的工具文件必须存在 —— 2026-09-28 清出 25 条指向已不存在 scripts/ 的
+    #    status: orphan 死登记 (scripts 子模块退役后遗留), 登记校验此前不查文件。
+    for tool in sorted(registered_tools):
+        if not (WORKSPACE / tool).is_file():
+            errors.append(
+                f"missing-tool: ci-surfaces 登记的工具文件不存在 {tool} (删登记或恢复文件, CR-CI-SURFACE-SSOT)"
+            )
 
     wiring = _discover_wiring()
 
