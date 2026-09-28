@@ -98,8 +98,8 @@ def check(db_path: Path) -> dict:
         ).fetchone()
         bridge_closeouts = int(closeout_row[0]) if closeout_row else 0
         # recent episodes for principal (last 7 days)
-          principal = principal_id_from_env()
-          recent_row = conn.execute(
+        principal = principal_id_from_env()
+        recent_row = conn.execute(
             """
             SELECT COUNT(*) FROM event_log
             WHERE producer = ?

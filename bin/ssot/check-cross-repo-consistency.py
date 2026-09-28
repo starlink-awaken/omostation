@@ -22,14 +22,19 @@
 - 每仓 M1: projects/ecos/src/ecos/ssot/mof/m1/{<ns>}/*.yaml
 
 豁免 (LEGACY_OK_URIS): 测试夹具 / docstring 例子 (regex 自识别)。
+引用口径 (2026-09-28): 只计「整个字符串字面量就是一个 URI」(可带 ?query), 注释 / docstring /
+help 文案里的示例不算; agora 解析器 _LEGACY_BOS_URI_ALIASES 中目标已登记的旧名视为已覆盖。
 """
 
 from __future__ import annotations
 
 import argparse
+import ast
+import io
 import json
 import re
 import sys
+import tokenize
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -41,6 +46,16 @@ LEGACY_OK_URI_FRAGMENTS = {
     "bos://example/",  # docstring examples
     "bos://bad/foo/bar",  # omo BOS schema validation test (故意 invalid domain, P77-3 验收)
 }
+
+
+PENDING_REGISTRATIONS = WORKSPACE / ".omo" / "_truth" / "registry" / "bos-pending-registrations.yaml"
+
+
+def load_pending_uris() -> set[str]:
+    """已知待登记积压 (bos-pending-registrations.yaml): 单列计数, 不阻断; 门禁只拦新增未登记。"""
+    data = load_yaml(PENDING_REGISTRATIONS)
+    items = data.get("pending_registrations", []) if isinstance(data, dict) else []
+    return {str(i["uri"]) for i in items if isinstance(i, dict) and i.get("uri")}
 
 
 def load_yaml(p: Path) -> dict | list | None:
@@ -74,6 +89,48 @@ def load_agora_registered_uris() -> dict[str, dict]:
     return out
 
 
+def _literal_uris(text: str) -> set[str]:
+    """源码中「整个字符串字面量就是一个 bos:// URI」的引用 (tokenize: 注释天然跳过)。
+
+    此前对全文跑正则, 注释 / docstring / argparse help 里的示例 (bos://domain/package/action、
+    "e.g. bos://mail/draft") 都被当成真实消费, 登记积压里 7 条是这类假阳性。
+    """
+    out: set[str] = set()
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+            if tok.type != tokenize.STRING:
+                continue
+            try:
+                value = ast.literal_eval(tok.string)
+            except (ValueError, SyntaxError):
+                continue  # f-string 等非常量字面量
+            if isinstance(value, str):
+                candidate = value.strip().split("?", 1)[0]
+                if BOS_URI_RE.fullmatch(candidate):
+                    out.add(candidate)
+    except (tokenize.TokenError, SyntaxError):
+        pass
+    return out
+
+
+def load_agora_aliases() -> dict[str, str]:
+    """agora 解析器的旧名 → 规范名别名表 (静态解析, 不 import agora)。"""
+    api = WORKSPACE / "projects" / "agora" / "src" / "agora" / "mcp" / "resolver" / "api.py"
+    if not api.exists():
+        return {}
+    for node in ast.walk(ast.parse(api.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Assign) and any(
+            isinstance(t, ast.Name) and t.id == "_LEGACY_BOS_URI_ALIASES" for t in node.targets
+        ):
+            if isinstance(node.value, ast.Dict):
+                return {
+                    k.value: v.value
+                    for k, v in zip(node.value.keys, node.value.values, strict=True)
+                    if isinstance(k, ast.Constant) and isinstance(v, ast.Constant)
+                }
+    return {}
+
+
 def collect_referenced_uris() -> set[str]:
     """扫 projects/*/src/ — 非 docstring/非 test 的 bos:// 引用."""
     found: set[str] = set()
@@ -88,8 +145,7 @@ def collect_referenced_uris() -> set[str]:
             if "test" in parts or "tests" in parts or "__pycache__" in parts:
                 continue
             text = f.read_text(encoding="utf-8", errors="ignore")
-            for m in BOS_URI_RE.finditer(text):
-                uri = m.group(0)
+            for uri in _literal_uris(text):
                 # 跳过 fixture / example / 模板类
                 if any(frag in uri for frag in LEGACY_OK_URI_FRAGMENTS):
                     continue
@@ -195,6 +251,7 @@ def main() -> int:
 
     registered = load_agora_registered_uris()
     referenced = collect_referenced_uris()
+    aliases = load_agora_aliases()  # 旧名 → 规范名; 规范名已登记则旧名视为已覆盖
     # unregistered = 真缺注册
     # 1. 排除 prefix-pattern 形式 (URI 末尾以 / 结尾, 表示 routing 前缀, 不是真服务)
     #    e.g. "bos://analysis/code/" 用作 startswith() 前缀匹配, 不需具体服务
@@ -202,9 +259,13 @@ def main() -> int:
     strict_unregistered = sorted(
         u
         for u in (referenced - set(registered.keys()))
-        if not u.endswith("/") and not is_covered_by_prefix(u, registered)
+        if not u.endswith("/") and not is_covered_by_prefix(u, registered) and aliases.get(u) not in registered
     )
     unregistered = strict_unregistered
+    # 已登记在 bos-pending-registrations.yaml 的是已知积压 (baseline), 新增的才阻断
+    pending = load_pending_uris()
+    unregistered_pending = [u for u in unregistered if u in pending]
+    unregistered_new = [u for u in unregistered if u not in pending]
     orphan = sorted(set(registered.keys()) - referenced)
 
     ports = load_ecos_ports()
@@ -228,9 +289,12 @@ def main() -> int:
         "port_duplicates": len([c for c in port_conflicts if c["type"] == "duplicate"]),
         "port_conflicts_list": port_conflicts,
         "threshold": args.threshold,
-        # ok = unregistered=0 AND 真 port conflicts=0
-        "ok": len(unregistered) <= args.threshold and len(real_port_conflicts) == 0,
+        "unregistered_new": len(unregistered_new),
+        "unregistered_pending": len(unregistered_pending),
+        # ok = 新增未登记 ≤ threshold AND 真 port conflicts=0 (已知积压见 unregistered_pending)
+        "ok": len(unregistered_new) <= args.threshold and len(real_port_conflicts) == 0,
         "unregistered_list": unregistered[:50],  # truncate for output
+        "unregistered_new_list": unregistered_new[:50],
         "orphan_list": orphan[:50],
     }
 
@@ -251,14 +315,16 @@ def main() -> int:
             for c in summary["port_conflicts_list"][:5]:
                 print(f"    port={c['port']} type={c['type']} ecos={c['ecos']!r} protocols={c['protocols']!r}")
         print()
-        if summary["unregistered"] > args.threshold:
-            print(f"❌ {summary['unregistered']} unregistered URIs 超过 threshold ({args.threshold})")
-            for u in unregistered[:10]:
-                print(f"  - {u}")
-            if len(unregistered) > 10:
-                print(f"  ... and {len(unregistered) - 10} more")
+        print(
+            f"  └─ 其中已知待登记积压 (bos-pending-registrations.yaml): {summary['unregistered_pending']}, "
+            f"新增: {summary['unregistered_new']}"
+        )
+        if summary["unregistered_new"] > args.threshold:
+            print(f"❌ {summary['unregistered_new']} 个新增 unregistered URI 超过 threshold ({args.threshold}):")
+            for u in summary["unregistered_new_list"]:
+                print(f"    {u}  → 登记到 projects/agora/etc/bos-services.yaml 或 bos-pending-registrations.yaml")
         else:
-            print(f"✅ unregistered URIs {summary['unregistered']} ≤ threshold {args.threshold}")
+            print(f"✅ 新增 unregistered URIs {summary['unregistered_new']} ≤ threshold {args.threshold}")
         if summary["port_conflicts"] > 0:
             real_conflicts = [c for c in summary["port_conflicts_list"] if c["type"] == "conflict"]
             if real_conflicts:
