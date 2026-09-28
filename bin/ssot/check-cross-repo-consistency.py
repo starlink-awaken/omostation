@@ -6,7 +6,7 @@
 1. 读 projects/agora/etc/bos-services.yaml (BOS URI SSOT) → 已注册 set
 2. 扫 projects/*/src/ 真**代码字符串** (非 docstring / 非 test) 中 bos://xxx 引用
 3. 找 unregistered (referenced but NOT in SSOT)
-4. 找 orphan (in registry 但 0 代码引用 — 可能 zombie)
+4. 找 orphan (in registry 但 0 代码字面量引用; 仅非 active 的列为清理候选, active 的可执行性由 evidence-smoke 验)
 5. 跨 projects/* 的 port-registry.yaml 看端口冲突
 6. 输出 violations table + threshold + exit code
 
@@ -266,7 +266,13 @@ def main() -> int:
     pending = load_pending_uris()
     unregistered_pending = [u for u in unregistered if u in pending]
     unregistered_new = [u for u in unregistered if u not in pending]
-    orphan = sorted(set(registered.keys()) - referenced)
+    # 旧名被引用 → 其规范目标也算被引用
+    referenced_canonical = referenced | {aliases[u] for u in referenced if u in aliases}
+    # orphan = 未被代码字面量引用。BOS 以 agent 运行时发现 (list_services → 按 URI 调用) 为主要消费方式,
+    # 未引用不是僵尸判据 —— active 服务的可执行性由 bin/gac/evidence-smoke.py 验证 (2026-09-28: 294/294 可解析)。
+    # 这里只把非 active (deprecated / unimplemented) 且无引用的列为清理候选。
+    orphan = sorted(set(registered.keys()) - referenced_canonical)
+    cleanup_candidates = [u for u in orphan if str(registered[u].get("status") or "active") != "active"]
 
     ports = load_ecos_ports()
     protocols_ports = load_protocols_ports()
@@ -296,6 +302,7 @@ def main() -> int:
         "unregistered_list": unregistered[:50],  # truncate for output
         "unregistered_new_list": unregistered_new[:50],
         "orphan_list": orphan[:50],
+        "orphan_cleanup_candidates": cleanup_candidates,
     }
 
     if args.json:
@@ -305,7 +312,10 @@ def main() -> int:
         print(f"  registered (agora BOS SSOT): {summary['registered']}")
         print(f"  referenced (project code): {summary['referenced']}")
         print(f"  unregistered (referenced but not in SSOT): {summary['unregistered']}")
-        print(f"  orphan (in SSOT but not referenced): {summary['orphan']}")
+        print(
+            f"  orphan (未被代码字面量引用; BOS 主要经运行时发现消费, 非僵尸判据, 可执行性见 evidence-smoke): "
+            f"{summary['orphan']}"
+        )
         print(
             f"  ports (union ecos+protocols): {summary['ports']} "
             f"(ecos={summary['port_count_ecos']}, protocols={summary['port_count_protocols']})"
@@ -332,11 +342,11 @@ def main() -> int:
                 print(f"❌ {len(real_conflicts)} port conflicts (同号不同名, 修真修真):")
                 for c in real_conflicts[:5]:
                     print(f"  - port={c['port']}: ecos='{c['ecos']}' vs protocols='{c['protocols']}'")
-        if summary["orphan"] > 0:
+        if cleanup_candidates:
             print()
-            print("⚠️ orphan URIs (在 SSOT 但无引用, 可能僵尸):")
-            for u in orphan[:5]:
-                print(f"  - {u}")
+            print("⚠️ 清理候选 (非 active 且无代码引用, 确认零消费者后可删):")
+            for u in cleanup_candidates[:20]:
+                print(f"  - {u} [{registered[u].get('status')}]")
 
     return 0 if summary["ok"] else 1
 

@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 643
-  bos_services: 343
+  bos_services: 338
   bos_domains: 23
   cli_commands: 200
   skills: 42
@@ -889,7 +889,7 @@ bos_services:
     capability: 51
     cockpit: 9
     compute: 16
-    documents: 5
+    documents: 4
     ecos: 10
     fabric: 1
     forge: 1
@@ -899,12 +899,12 @@ bos_services:
     memory: 51
     meta: 1
     omo: 4
-    perception: 5
+    perception: 4
     persona: 11
     resident: 8
-    runtime: 3
+    runtime: 2
     swarm: 1
-    system: 16
+    system: 14
   domains:
     agent-cell:
     - uri: bos://agent-cell/pool/status
@@ -1474,10 +1474,6 @@ bos_services:
       description: 邮件三档拟复 + 附件表格提取 (tools_bos.mail.bos_mail_draft, BET-Y1Q3-T10-113)
       transport: internal
       status: active
-    - uri: bos://documents/mail-draft
-      description: '[UNIMPLEMENTED] [auto-registered] From mail draft service. See bos-pending-registrations.yaml.'
-      transport: internal
-      status: unimplemented
     ecos:
     - uri: bos://ecos/workflow/list
       description: eCOS L0 工作流列表
@@ -2124,10 +2120,6 @@ bos_services:
       description: Apple Mail 收件箱信号采集 (BET-Y1Q1-T2-01 感知面)
       transport: stdio
       status: deprecated
-    - uri: bos://perception/signal_monitor/health
-      description: 信号源健康探测与降级报告
-      transport: stdio
-      status: deprecated
     - uri: bos://perception/agora/ocr
       description: 本地 OCR 提取 (Vision framework, 无 Vision 环境诚实降级 stub) — 布局/表格/印章/手写结构化输出
       transport: internal
@@ -2223,10 +2215,6 @@ bos_services:
       description: Runtime MCP (短路径别名)
       transport: mcp_stdio
       status: active
-    - uri: bos://runtime/execution-workers/status
-      description: '[UNIMPLEMENTED] [auto-registered] From execution workers status API. See bos-pending-registrations.yaml.'
-      transport: internal
-      status: unimplemented
     - uri: bos://runtime/client/v1
       description: '[UNIMPLEMENTED] [auto-registered] From runtime client v1. See bos-pending-registrations.yaml.'
       transport: internal
@@ -2281,10 +2269,6 @@ bos_services:
       description: vault _state 端点 (ecos services integration gateway 引用)
       transport: inline
       status: active
-    - uri: bos://system/core-kernel/v1
-      description: '[UNIMPLEMENTED] [auto-registered] From core kernel module. See bos-pending-registrations.yaml.'
-      transport: internal
-      status: unimplemented
     - uri: bos://system/im-session/triage
       description: IM 会话分诊 (whitelist gate + directive parse + task cards)
       transport: internal
@@ -2295,10 +2279,6 @@ bos_services:
       status: unimplemented
     - uri: bos://system/test-health/ping
       description: '[UNIMPLEMENTED] [auto-registered] From test health ping. See bos-pending-registrations.yaml.'
-      transport: internal
-      status: unimplemented
-    - uri: bos://system/vault/_state
-      description: '[UNIMPLEMENTED] [auto-registered] From vault state. See bos-pending-registrations.yaml.'
       transport: internal
       status: unimplemented
 cli_commands:
