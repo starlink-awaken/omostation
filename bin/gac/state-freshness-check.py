@@ -46,8 +46,8 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 # 是 source-of-truth 不带 generated_at, 不在本检查范围.
 # 元组第三元素 (可选): {"optional": True} 表示 runtime/gitignored 文件, 缺失不 block.
 STATE_FILES = [
-    (".omo/state/health.yaml", ("generated_at",)),
-    (".omo/state/system_health.yaml", ("last_scan",)),
+    (".omo/state/health.yaml", ("generated_at",), {"optional": True}),
+    (".omo/state/system_health.yaml", ("last_scan",), {"optional": True}),
     # governance.jsonl: runtime 产物 (非 tracked), fresh checkout 不存在 → optional
     (".omo/state/governance.jsonl", ("timestamp", "generated_at"), {"optional": True}),
     # debt-dashboard: tracked at _control/debt-dashboard/ (非 gitignored .omo/debt/)
@@ -55,7 +55,8 @@ STATE_FILES = [
         ".omo/_control/debt-dashboard/current.yaml",
         ("generated_at", "last_reconciled_at"),
     ),
-    (".omo/_control/governance-data.json", ("generated_at",)),
+    # ADR-0129 Phase 2: untracked runtime product, absent until first generation.
+    (".omo/_control/governance-data.json", ("generated_at",), {"optional": True}),
 ]
 
 # Derived projections moved to state/runtime (runtime-projections.yaml).  The
@@ -64,6 +65,7 @@ STATE_FILES = [
 CANONICAL_STATE_FILES = {
     ".omo/state/system_health.yaml": ".omo/state/runtime/system_health.yaml",
     ".omo/state/health.yaml": ".omo/state/runtime/health.yaml",
+    ".omo/_control/governance-data.json": ".omo/state/runtime/governance-data.json",
 }
 
 # 各文件类型用哪个字段作为 generated_at (JSONL 用首行, YAML 用顶层 key)
