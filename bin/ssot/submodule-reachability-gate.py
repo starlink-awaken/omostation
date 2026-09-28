@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Verify that root gitlinks point to commits reachable from submodule remotes."""
+"""Verify that root gitlinks point to commits reachable from submodule remotes.
+
+16 个子模块的判定彼此独立, 故默认并发 (env `PASW_JOBS` 覆盖并发度, `=1` 完全回退
+串行)。结果按 index 归位, 与串行逐项一致 —— 并发只改墙钟, 不改结论。
+"""
 
 from __future__ import annotations
 
@@ -9,6 +13,7 @@ import os
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -31,8 +36,32 @@ TIMEOUT_RC = 124                   # 约定俗成的 timeout 退出码, 与真�
 #: 「本地没能验完」的 reason 前缀 —— 让降级在汇总里可见, 而不是混进 PASS
 UNVERIFIED_PREFIX = "unverified: "
 
+# ── 子模块并发 (2026-09-28, E2-A) ───────────────────────────────────────
+# 实测: CI 里 16 个子模块逐个 `fetch --unshallow` + `branch --contains` **全串行**,
+# 占 gac-gate job 32–47s (仅次于 strict), 本地 pre-push 同一条命令 64s+。
+# 子模块之间无数据依赖 ⇒ 可并发; 结果按 index 归位 ⇒ 与串行**逐项一致**
+# (findings 顺序/内容、report/JSON/stdout 都不变)。
+# `PASW_JOBS=1` 一键回退完全串行 —— 出问题无需回滚代码。
+DEFAULT_PASW_JOBS = 4  # 网络为主: 并发再高只增加 remote 限流/带宽争用风险
+
 #: main() 里置为 time.monotonic() + NETWORK_BUDGET_SECONDS; 单测可为 None
 _NETWORK_DEADLINE: float | None = None
+
+
+def _pasw_jobs(targets: int) -> int:
+    """并发度: `PASW_JOBS` 覆盖, 默认 min(DEFAULT_PASW_JOBS, cpu_count)。<=1 即串行。
+
+    上限再取 min(targets) —— 待检子模块少于并发度时不该空转线程。
+    """
+    try:
+        configured = int(os.environ.get("PASW_JOBS", "0"))
+    except ValueError:
+        configured = 0
+    if configured > 0:
+        jobs = configured
+    else:
+        jobs = min(DEFAULT_PASW_JOBS, max(1, os.cpu_count() or 1))
+    return max(1, min(jobs, max(1, targets)))
 
 
 def _remaining_network_budget() -> float:
@@ -316,6 +345,19 @@ def changed_submodules(base_ref: str, source: str) -> set[str] | None:
     return changed
 
 
+def check_one(path: str, source: str, *, fetch: bool, require_main: bool) -> dict[str, object]:
+    """单个子模块的可达性判定 —— 与串行循环里的分支逐项同语义。
+
+    拆成独立函数是为了能进线程池 (check() 里并发调用); 它自身不写全局状态,
+    因此可并发 (网络预算 `_NETWORK_DEADLINE` 只在 main() 写一次, 并发只读)。
+    """
+    sha = gitlink_sha(path, source)
+    if sha is None:
+        return {"path": path, "sha": None, "ok": False, "reason": f"no {source} gitlink"}
+    ok, detail = remote_contains(path, sha, fetch=fetch, require_main=require_main)
+    return {"path": path, "sha": sha, "ok": ok, "reason": detail}
+
+
 def check(
     source: str,
     *,
@@ -343,6 +385,7 @@ def check(
                 "failures": [],
                 "findings": [],
             }
+    pending: list[str] = []
     for path in paths:
         if skip_paths and path in skip_paths:
             skipped += 1
@@ -350,20 +393,28 @@ def check(
         if only_paths is not None and path not in only_paths:
             skipped += 1
             continue
-        sha = gitlink_sha(path, source)
-        if sha is None:
-            findings.append(
-                {
-                    "path": path,
-                    "sha": None,
-                    "ok": False,
-                    "reason": f"no {source} gitlink",
-                }
-            )
-            continue
-        checked += 1
-        ok, detail = remote_contains(path, sha, fetch=fetch, require_main=require_main)
-        findings.append({"path": path, "sha": sha, "ok": ok, "reason": detail})
+        pending.append(path)
+
+    jobs = _pasw_jobs(len(pending))
+    if len(pending) > 1 and jobs > 1:
+        # 并发只改墙钟, 不改结论: 池内 future → index 映射, 完成后按 index 归位
+        # ⇒ findings 顺序与串行逐项一致 (report/JSON/stdout 均不变)。
+        slots: list[dict[str, object] | None] = [None] * len(pending)
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = {
+                pool.submit(check_one, path, source, fetch=fetch, require_main=require_main): index
+                for index, path in enumerate(pending)
+            }
+            for future in as_completed(futures):
+                slots[futures[future]] = future.result()
+        per_path = [item for item in slots if item is not None]
+    else:
+        per_path = [check_one(path, source, fetch=fetch, require_main=require_main) for path in pending]
+
+    for item in per_path:
+        if item["sha"] is not None:
+            checked += 1
+        findings.append(item)
     failures = [item for item in findings if not item["ok"]]
     unverified = [
         item

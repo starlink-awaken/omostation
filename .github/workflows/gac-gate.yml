@@ -30,18 +30,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: Cache uv store
-        uses: actions/cache@v4
+      # E2-B (2026-09-28): uv 前移并开官方缓存。
+      # 原先这里有一步 `actions/cache` on ~/.cache/uv —— **对 uv 无效**: setup-uv 会把
+      # UV_CACHE_DIR 指到 $RUNNER_TEMP/setup-uv-cache (作业日志 env 实证), 那个目录才是
+      # uv 真正读写的位置; 缓存 ~/.cache/uv 永远是空命中。改用 setup-uv 自带 enable-cache。
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
         with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
       - name: install pyyaml and pytest
         # pytest 供 `test-collection` 守卫 (bin/gac/check-test-collection.py) 使用 ——
         # 它只 `--collect-only` 验证每个测试文件可 import, 防孤儿测试腐烂。
         # 该守卫在无 pytest 时优雅跳过 (env_skip), 但 CI 应让其真正生效。
-        run: pip install pyyaml pytest
+        # 走 uv (命中上面的缓存) 而不是 pip: 免去每次作业重新下载/解析。
+        # `--break-system-packages` 是给「解释器带 EXTERNALLY-MANAGED 标记」的保险
+        # (本机 Homebrew Python 实测会撞 PEP 668); runner 上该标记通常不存在, 无标记时此参数为空操作。
+        run: uv pip install --system --break-system-packages pyyaml pytest
       - name: CR-L4-DOCUMENTS-MIGRATION-COVERAGE — Documents 迁移 registry 覆盖
         run: python3 bin/gac/documents-content-plane-migration-check.py --json
       - name: CR-PR-DESCRIPTION-NON-EMPTY — PR 描述非空校验
@@ -90,10 +95,9 @@ jobs:
       - name: CR-X4-MEMORY-OS-SURFACE-INTEGRITY — Memory OS light gate
         # SSOT/ports/env/help catalog surfaces; blocking (no Neo4j required)
         run: python3 bin/gac/check-memory-os-surfaces.py
-      - name: Setup uv (Memory OS catalog SSOT)
-        uses: astral-sh/setup-uv@v4
       - name: Memory OS catalog SSOT tests (cockpit help/discover)
         # help_map catalog ⊆ CLI parsers; discover shares help_map (no Neo4j)
+        # uv 已在作业开头 setup (E2-B), 此处不再重复 setup。
         run: |
           if [[ -d projects/cockpit/src/cockpit/tests ]]; then
             cd projects/cockpit
