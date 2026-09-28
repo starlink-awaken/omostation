@@ -1,0 +1,21 @@
+schema: script-registry/v1
+id: bin/lib/gh_query.py
+name: gh Query Safety Layer
+category: governance
+owner: governance-team
+description: "gh 查询安全层（库模块）：gh_json() 对 gh 子命令做瞬态失败重试（EOF/timeout/network 签名）+ 空输出重试（rc=0+空 = GraphQL 抖动签名）+ GhQueryUnknown/GhQueryFailed 双异常分层。破坏性调用方默认拒绝空结果（空 = UNKNOWN 不得当否定结论）。处置债务 TOOL-GRAPHQL-FLAKY-EMPTY-MEANS-UNKNOWN（2026-09-25/27 双实证：gh pr list 空 → 误删 OPEN PR worktree；分页触顶截断 → 差点写错周报）。接线：bin/gac/clone-lifecycle.py integrate。"
+inputs:
+  - "gh CLI（用户级 token）"
+outputs:
+  - type: json
+  - type: exception
+dependencies:
+  - gh
+triggers:
+  - bin/gac/clone-lifecycle.py integrate
+related:
+  - .omo/debt/items/TOOL-GRAPHQL-FLAKY-EMPTY-MEANS-UNKNOWN.yaml
+  - tests/test_gh_query_safety.py
+maturity: draft
+last_reviewed: "2026-09-27"
+---
