@@ -1,0 +1,55 @@
+# Content Schema Registry — unified index
+# All content entity schemas are registered here for version management
+# and reference integrity checking.
+
+version: 1
+last_updated: 2026-09-28
+
+schemas:
+  # docs/contracts schemas (3)
+  - id: workspace-object
+    path: contracts/workspace-object.schema.json
+    source: docs/contracts/workspace-object.schema.json
+    type: json-schema
+    domain: core
+
+  - id: identity-envelope
+    path: contracts/identity-envelope.schema.json
+    source: docs/contracts/identity-envelope.schema.json
+    type: json-schema
+    domain: core
+
+  - id: event-envelope
+    path: contracts/event-envelope.schema.json
+    source: docs/contracts/event-envelope.schema.json
+    type: json-schema
+    domain: core
+
+  # kairon eidos schemas (25) — registered by reference
+  - id: kairon-eidos
+    path: kairon/
+    source: projects/knowledge/kairon/packages/eidos/schemas/
+    type: json-schema-collection
+    domain: knowledge
+    count: 25
+
+  # omo_io_schemas Pydantic models (7) — registered by reference
+  - id: omo-io-schemas
+    path: omo/
+    source: projects/omo/src/omo/omo_io_schemas.py
+    type: pydantic-models
+    domain: core
+    count: 7
+
+  # fact_inspector hardcoded fields — registered by reference
+  - id: fact-inspector
+    path: core/
+    source: projects/ecos/src/ecos/ssot/compiler/fact_inspector.py
+    type: hardcoded-fields
+    domain: core
+    count: 2
+
+reference_integrity:
+  check_script: bin/ssot/schema-ref-check.py
+  last_check: 2026-09-28
+  status: pending
