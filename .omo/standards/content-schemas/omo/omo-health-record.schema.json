@@ -1,0 +1,54 @@
+{
+  "$defs": {
+    "OmoHealthLaunchdState": {
+      "description": "launchd 守护进程状态 (Round 20 P0).",
+      "enum": [
+        "running",
+        "down"
+      ],
+      "title": "OmoHealthLaunchdState",
+      "type": "string"
+    }
+  },
+  "description": "健康监控记录 (Round 20 P0 — 第 8 个 consumer).\n\n区别于 omo_history: dashboard_monitor 是健康监控点, 不参与治理评分.\n拆到独立 .jsonl (omo-health.jsonl), 治理历史不被健康监控污染.\n字段集: launchd 状态 + HTTP 探活 + PID + port + 时间戳.",
+  "properties": {
+    "source": {
+      "minLength": 1,
+      "title": "Source",
+      "type": "string"
+    },
+    "launchd_state": {
+      "$ref": "#/$defs/OmoHealthLaunchdState"
+    },
+    "http_code": {
+      "minLength": 1,
+      "title": "Http Code",
+      "type": "string"
+    },
+    "pid": {
+      "minLength": 1,
+      "title": "Pid",
+      "type": "string"
+    },
+    "port": {
+      "maximum": 65535,
+      "minimum": 0,
+      "title": "Port",
+      "type": "integer"
+    },
+    "timestamp": {
+      "title": "Timestamp",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source",
+    "launchd_state",
+    "http_code",
+    "pid",
+    "port",
+    "timestamp"
+  ],
+  "title": "OmoHealthRecord",
+  "type": "object"
+}

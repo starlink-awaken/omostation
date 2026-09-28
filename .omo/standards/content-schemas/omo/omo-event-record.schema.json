@@ -1,0 +1,32 @@
+{
+  "description": "用户面向 emit 事件记录 (Round 5 P3 样板).",
+  "properties": {
+    "ts": {
+      "title": "Ts",
+      "type": "string"
+    },
+    "kind": {
+      "minLength": 1,
+      "title": "Kind",
+      "type": "string"
+    },
+    "source": {
+      "default": "cli",
+      "minLength": 1,
+      "title": "Source",
+      "type": "string"
+    },
+    "payload": {
+      "default": "{}",
+      "minLength": 1,
+      "title": "Payload",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ts",
+    "kind"
+  ],
+  "title": "OmoEventRecord",
+  "type": "object"
+}

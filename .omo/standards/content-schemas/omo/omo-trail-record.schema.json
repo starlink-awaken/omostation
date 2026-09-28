@@ -1,0 +1,59 @@
+{
+  "$defs": {
+    "OmoTrailStatus": {
+      "description": "trail step 执行状态 (Round 12 P0).",
+      "enum": [
+        "ok",
+        "fail",
+        "skip"
+      ],
+      "title": "OmoTrailStatus",
+      "type": "string"
+    }
+  },
+  "description": "trail step 记录 (Round 12 P0 — 第 7 个 consumer).\n\n区别于 omo_audit / omo_event:\n  - 强制 actor (谁做的) + duration_ms (耗时)\n  - 支持 parent_step_id (嵌套调用图)\n  - 细粒度 step-by-step, 适合\"agent 走完几步完成任务\"场景",
+  "properties": {
+    "ts": {
+      "title": "Ts",
+      "type": "string"
+    },
+    "actor": {
+      "minLength": 1,
+      "title": "Actor",
+      "type": "string"
+    },
+    "action": {
+      "minLength": 1,
+      "title": "Action",
+      "type": "string"
+    },
+    "target": {
+      "minLength": 1,
+      "title": "Target",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/OmoTrailStatus"
+    },
+    "duration_ms": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "parent_step_id": {
+      "default": "",
+      "title": "Parent Step Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ts",
+    "actor",
+    "action",
+    "target",
+    "status"
+  ],
+  "title": "OmoTrailRecord",
+  "type": "object"
+}

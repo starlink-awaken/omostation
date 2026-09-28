@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "OmoHistoryGrade": {
+      "enum": [
+        "A+",
+        "A",
+        "B",
+        "C",
+        "D",
+        "F"
+      ],
+      "title": "OmoHistoryGrade",
+      "type": "string"
+    }
+  },
+  "additionalProperties": true,
+  "description": "治理审计历史记录 (Round 8 P2 SSOT).\n\nnote: source 标 Optional — 老记录 (Round 8 P2 之前) 没有此字段.",
+  "properties": {
+    "date": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "title": "Date",
+      "type": "string"
+    },
+    "timestamp": {
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "total_score": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Total Score",
+      "type": "number"
+    },
+    "grade": {
+      "$ref": "#/$defs/OmoHistoryGrade"
+    },
+    "watchlist_count": {
+      "minimum": 0,
+      "title": "Watchlist Count",
+      "type": "integer"
+    },
+    "source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source"
+    }
+  },
+  "required": [
+    "date",
+    "timestamp",
+    "total_score",
+    "grade",
+    "watchlist_count"
+  ],
+  "title": "OmoHistoryRecord",
+  "type": "object"
+}

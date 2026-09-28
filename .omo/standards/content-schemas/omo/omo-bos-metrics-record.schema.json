@@ -1,0 +1,56 @@
+{
+  "$defs": {
+    "BosStatus": {
+      "description": "BOS invoke 状态枚举 (Round 8 P2 SSOT).",
+      "enum": [
+        "resolved",
+        "agora_unavailable",
+        "invalid_uri",
+        "endpoint_missing",
+        "timeout",
+        "error"
+      ],
+      "title": "BosStatus",
+      "type": "string"
+    }
+  },
+  "description": "BOS invoke 监控记录.",
+  "properties": {
+    "uri": {
+      "minLength": 1,
+      "title": "Uri",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/BosStatus"
+    },
+    "elapsed_ms": {
+      "minimum": 0,
+      "title": "Elapsed Ms",
+      "type": "number"
+    },
+    "transport": {
+      "default": "",
+      "title": "Transport",
+      "type": "string"
+    },
+    "error": {
+      "default": "",
+      "maxLength": 200,
+      "title": "Error",
+      "type": "string"
+    },
+    "recorded_at": {
+      "title": "Recorded At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "uri",
+    "status",
+    "elapsed_ms",
+    "recorded_at"
+  ],
+  "title": "OmoBosMetricsRecord",
+  "type": "object"
+}
