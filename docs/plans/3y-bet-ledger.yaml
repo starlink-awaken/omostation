@@ -37771,6 +37771,151 @@ bets:
             真实输入（市政府纪要 144 号）→ 结构化行动包的转换已交付；签发/派发后按
             首单先例回填签发回执。
   value_indicator_policy: false
+- id: BET-Y2Q4-T16-01
+  title: launchd 平面漂移门 — 补齐登记↔安装校验并三段式收敛 27 条未声明存量
+  track: T16-DRIFT-GUARD
+  window: Y2Q4
+  status: pending
+  priority: P1
+  appetite: 1 week
+  risk_level: L1
+  human_gate: false
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  goal: '给 launchd 平面补上漂移校验。bin/scheduler-compile.py::check_drift() 只比对 crontab 平面（`if
+    "crontab" not in j.get("planes", []): continue`），launchd 平面既无生成 （--generate launchd
+    因 __main__ 覆写 argparse 而静默无操作仍 rc=0）也无校验。 2026-09-28 实测 57 个已装 plist 仅 6 条登记，约 86%
+    未声明；同日确认三个互不相关、 长期未被发现缺陷全部落在该盲区：从未排程的 omo state refresh、crontab + launchd 双重驱动的
+    6 个 resident 角色、plist 已装但从未 load 的 com.l4.resident.orchestrator。 本单先以 shadow 阶段落地校验口径并清点存量，warning/fail
+    转段须另走一次 principal 确认。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-t16-launchd-drift-gate-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:f72c2eb4690e504047124af6795b0e8e6e5eff1e51758629a604cc6ddfcc74de
+    decision_ref: decision://accepted/BET-Y2Q4-T16-01
+  write_surfaces:
+  - bin/scheduler-compile.py
+  - .omo/cron/registry.yaml
+  - docs/superpowers/specs/2026-09-28-t16-launchd-drift-gate-design.md
+  - .omo/_knowledge/decisions/0457-launchd-drift-gate-three-stage.md
+  non_goals:
+  - 不自动 unload / bootout / 改写任何 launchd 作业（本单为只读观测）
+  - 不在本单决定 resident 双驱动收敛方向（保留为独立决策项）
+  - 不把 27 条存量一次性登记充数
+  - 不改 crontab 平面既有语义与 known_orphans 机制
+  - 不修 adr-number-check.py 的 ADR- 前缀盲区（独立发现，另立单）
+  circuit_breaker: 新门禁必须按 shadow → warning → fail 三段落地。shadow 阶段 launchd 段不得影响 `ok`
+    判定。依据 E5 事故（ADR-0380 CR-SUBMODULE-REWIND 上线即检出 18 个 rewind 并锁死主干）；若发现新增门禁使主干无法提交，立即回退至
+    shadow 纯报告模式。
+  verify:
+  - cmd: python3 bin/scheduler-compile.py --check --json
+    expect: 输出含 launchd 段且可复算出 57 装 / 6 登记基线；shadow 阶段 ok 判定不被 launchd 段影响
+  - cmd: python3 bin/scheduler-compile.py --generate launchd
+    expect: 产出非空 JSON；rc=0 必须伴随内容（消除静默无操作）
+  - cmd: python3 -c "import plistlib,glob;[plistlib.loads(open(p,'rb').read()) for p
+      in glob.glob('/Users/xiamingxing/Library/LaunchAgents/*.plist')]"
+    expect: 解析失败者被报告而非静默跳过（当前基线 3 例）
+  - cmd: python3 bin/ssot/adr-number-check.py
+    expect: OK，latest=0457
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - check_drift() 含 launchd 分支，双向差集（登记有安装无 / 安装有登记无）可复算
+  - --generate launchd 不再静默无操作，rc=0 时必有非空 JSON
+  - 3 例 plistlib 解析失败在报告中可见
+  - 27 条 W 组存量完成 owner 分类并各有处置结论，方可申请转 warning 段
+  - shadow 段跑满 1 周且主干提交未受阻断
+  depends_on: []
+- id: BET-Y2Q4-T16-02
+  title: 日志面分类 SSOT — 轮转资格登记驱动, 消除静默清零证据链的失败模式
+  track: T16-DRIFT-GUARD
+  window: Y2Q4
+  status: pending
+  priority: P1
+  appetite: 1 week
+  risk_level: L1
+  human_gate: false
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  goal: 'bin/ssot/log-rotate.py 判定轮转资格靠文件名 pattern 加硬编码 SKIP_NAMES, 仓内无 「日志 vs 追加式状态」SSOT,
+    每新增一个日志目录就要重做一次人工判定, 且漏判代价是 **静默的**: --daily 语义为「跨天即轮转不看阈值」(log-rotate.py:101-108),
+    crontab 每天 03:00 执行, 追加式账本一旦被纳入扫描范围, 次日即被 copytruncate 清零 —— 无报错无告警, 只是文件变空。四个已确认处于该风险面、当前靠「目录尚未被加进
+    LOG_PATHS」侥幸未暴露的 账本: agent-workflows/events.jsonl (468KB)、resident-orchestrator/receipts.jsonl
+    (674KB)、 ingress/value-evidence.jsonl (89KB, BET 价值证据)、observability/events.jsonl
+    (21KB)。 本单建立 .omo/_truth/registry/log-surfaces.yaml (log-surfaces/v1) 并由 log-rotate
+    消费, 使轮转资格登记驱动而非人工枚举。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-t16-log-surface-classification-ssot.md
+    spec_version: 1.0.0
+    content_digest: sha256:e80574da190a1bddec8aba2f076f92700358ed3d8bf60084a678b08cf8715dcd
+    decision_ref: decision://accepted/BET-Y2Q4-T16-02
+  write_surfaces:
+  - .omo/_truth/registry/log-surfaces.yaml
+  - bin/ssot/log-rotate.py
+  - docs/superpowers/specs/2026-09-28-t16-log-surface-classification-ssot.md
+  - .omo/_knowledge/decisions/0458-log-surface-classification-ssot.md
+  - .omo/_knowledge/decisions/INDEX.md
+  non_goals:
+  - 不做通用保留期策略引擎 (不引入 TTL / 分层存储); retention 字段先只登记不执行
+  - 不改 5MB 阈值与 --daily 语义
+  - 不决定各面保留时长
+  - 不改 /tmp 的扫描范围 (仍只扫 LOG_PATHS 声明的根, 非递归)
+  - 不修 adr-number-check.py 的 ADR- 前缀盲区 (ADR-0457 已记录, 独立立项)
+  circuit_breaker: 新门禁必须按 shadow -> warning -> fail 三段落地。依据 E5 事故 (ADR-0380 CR-SUBMODULE-REWIND
+    上线即检出 18 个 rewind 并锁死主干); 若新增校验使主干无法提交, 立即回退至 shadow 纯报告模式。state 路径的排除在任何阶段都不得被关闭
+    —— 那是本单要消除的静默数据丢失路径, 不是可调项。
+  verify:
+  - cmd: python3 -c "import yaml,sys;d=yaml.safe_load(open('.omo/_truth/registry/log-surfaces.yaml'));sys.exit(0
+      if d.get('schema')=='log-surfaces/v1' else 1)"
+    expect: 注册表 schema 为 log-surfaces/v1
+  - cmd: python3 bin/ssot/log-rotate.py --dry-run
+    expect: 四个 state 账本 (events/receipts/value-evidence/observability) 均不出现在 rotate
+      行; 输出含「未分类路径」与「被排除的 state 路径」两段计数
+  - cmd: python3 bin/ssot/log-rotate.py --dry-run
+    expect: 四个此前漏扫的日志目录 (event-ingest / perception-inbox / personal-signals / agent-workflows)
+      出现在候选中
+  - cmd: python3 -m pytest tests/unit/test_log_rotate_copytruncate.py -q
+    expect: 2 passed (既有 copytruncate 契约不回归)
+  - cmd: python3 bin/ssot/adr-number-check.py
+    expect: OK, latest=0458
+  done_when:
+  - log-surfaces.yaml 存在且 log-rotate.py 消费之, 硬编码 SKIP_NAMES 不再是唯一防线
+  - 上表 4 个追加式账本全部登记为 class state, 且任何轮转模式下均不出现于 rotate 行
+  - 4 个此前漏扫的日志目录登记为 class log 并进入实际扫描
+  - --dry-run 输出新增「未分类路径」与「被排除 state 路径」两段计数
+  - 候选数可由注册表复算
+  - shadow 段跑满 1 周且主干提交未受阻断
+  depends_on: []
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -37909,7 +38054,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 503
+  total_bets: 505
   windows:
   - Y1Q1
   - Y1Q2
