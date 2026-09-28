@@ -30,3 +30,12 @@ history:
     当成“无 OPEN PR”继续执行，误删了一个 OPEN PR 的 worktree（后恢复，未丢
     工作）。规则：外部查询失败/空 = UNKNOWN，直接中止流程，绝不能当否定结论用。
   actor: governance-agent
+- at: '2026-09-28T00:00:00+00:00'
+  action: evidence-reinforce
+  note: >-
+    新增实证（BET-Y2Q4-T4-02 周报编制时）: gh pr list --limit 分页触顶两次
+    (100/200) 被截断计数, 若无 git 口径交叉验证会把 200 当全量写进周报
+    （D1 险情, 被 git subject 计数 293 揭穿）; 同窗口 gh merge POST 一次
+    瞬时 EOF。处置方向按 decision_needed: 查询包重试+空保护, 计数类断言
+    必须 git/gh 双口径交叉。
+  actor: governance-agent
