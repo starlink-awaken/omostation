@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/rule_engine.py
+name: Rule Engine.py
+category: governance
+owner: governance-team
+description: "Generic rule engine — loads YAML rule files and executes predicate checks against target files, emitting violations (content-model Phase 2)"
+inputs:
+  - type: path
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-09-28"

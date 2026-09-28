@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/coverage_report.py
+name: Coverage Report.py
+category: governance
+owner: governance-team
+description: "Constraint coverage report — scans content directories, classifies by type, and reports rule/surface coverage matrix with frontmatter coverage (content-model Phase 4)"
+inputs:
+  - type: path
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-09-28"

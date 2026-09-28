@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/fm_schema_migrate.py
+name: Fm Schema Migrate.py
+category: governance
+owner: governance-team
+description: "Frontmatter schema migration — normalizes legacy frontmatter to md/v1 schema with valid enum inference (content-model Phase 3)"
+inputs:
+  - type: path
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-09-28"
