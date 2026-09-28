@@ -37535,7 +37535,8 @@ bets:
     待本单合并 + shadow 验证后关单。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-28
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -37583,17 +37584,36 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-08
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@29d5b6f111e0a98154065fe38d4d896ea5945e6c
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-08.md
+          tests:
+            ref: receipt://tests/test_gh_query_safety.py
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-08.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-08.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-08.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-08.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-08.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值 = 网络抖动不再能触发重复 PR/误删类事故（clone-lifecycle 空列表
+            分流 + UNKNOWN 语义）；实战消费随下次 integrate 累积。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
