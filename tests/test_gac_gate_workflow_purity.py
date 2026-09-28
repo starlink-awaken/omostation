@@ -63,9 +63,11 @@ def test_reachability_and_generators_are_check_only() -> None:
     reachability = _step("PASW — 子模块指针可达性前置检查")
     projections = _step("generated projection drift checks")
 
+    # --require-main 已在 #4209 (2026-09-22) 移除: 跨仓 PR 模式下子模块指针指向
+    # 尚未合并的子仓分支是合法状态, require-main 会误杀。用例同步到现状。
     assert reachability["run"] == (
         "python3 bin/ssot/submodule-reachability-gate.py "
-        "--source head --fetch --require-main"
+        "--source head --fetch"
     )
     assert reachability.get("continue-on-error", False) is False
     assert "project-layer-index.py --check" in projections["run"]
