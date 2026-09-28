@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: active
-lifecycle: planning
+lifecycle: plan
 owner: auto-fix-loop
 type: ssot
 last-reviewed: 2026-08-24

@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: planned
-lifecycle: planning
+lifecycle: plan
 owner: governance-team
 type: ssot
 last-reviewed: 2026-08-25

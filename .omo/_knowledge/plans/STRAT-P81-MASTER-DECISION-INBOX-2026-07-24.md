@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: active
-lifecycle: planning
+lifecycle: plan
 owner: 夏明星
 type: ssot
 last-reviewed: 2026-08-25

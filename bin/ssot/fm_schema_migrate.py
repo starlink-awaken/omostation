@@ -71,7 +71,7 @@ def infer_lifecycle(status: str) -> str:
         "ACCEPTED": "contract",
         "superseded": "history",
         "archived": "history",
-        "draft": "planning",
+        "draft": "plan",
         "DEPRECATED": "history",
     }
     return mapping.get(status, "entry")
@@ -91,13 +91,11 @@ def generate_fm(filepath: str, content: str, existing_fm: dict) -> str:
     """Generate md/v1 frontmatter."""
     status = existing_fm.get("status", "active")
     if status == "ACCEPTED":
-        status = "accepted"
+        status = "active"
     elif status == "DEPRECATED":
         status = "archived"
 
     lifecycle = existing_fm.get("lifecycle", infer_lifecycle(status))
-    if lifecycle == "plan":
-        lifecycle = "planning"
 
     owner = existing_fm.get("owner", infer_owner(content))
     doc_type = existing_fm.get("type", infer_type(filepath, content))

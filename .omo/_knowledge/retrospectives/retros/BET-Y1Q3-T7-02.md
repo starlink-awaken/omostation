@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: accepted
+status: active
 lifecycle: history
 owner: engineering-agent
 type: retro
