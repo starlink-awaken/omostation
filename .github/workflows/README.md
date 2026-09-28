@@ -10,7 +10,7 @@
 | `governance-check.yml` | push + schedule (6h) | Full governance check (GaC + SSOT + link + layer digest) |
 | `gac-gate.yml` | push | GaC validation gate (rule structure + drift) |
 | `evidence-smoke-gate.yml` | push | BOS declaration vs execution gap audit |
-| `submodule-freshness-gatekeeper.yml` | push + schedule (daily) | Submodule pointer freshness (blocks stale submodules) |
+| `submodule-freshness-gatekeeper.yml` | push + schedule (daily) | Submodule pointer freshness (push: warn on drift; schedule/dispatch: fail closed) |
 
 ## Enforcement (Policy CI)
 
