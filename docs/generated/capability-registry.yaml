@@ -12,8 +12,8 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 643
-  bos_services: 345
-  bos_domains: 24
+  bos_services: 343
+  bos_domains: 23
   cli_commands: 200
   skills: 42
   workflows: 26
@@ -888,7 +888,7 @@ bos_services:
     bcos: 3
     capability: 51
     cockpit: 9
-    compute: 15
+    compute: 16
     documents: 5
     ecos: 10
     fabric: 1
@@ -905,7 +905,6 @@ bos_services:
     runtime: 3
     swarm: 1
     system: 16
-    toolbox: 3
   domains:
     agent-cell:
     - uri: bos://agent-cell/pool/status
@@ -1410,6 +1409,10 @@ bos_services:
       description: omlxc 异构算力织网、温控、显存预算与分层缓存状态
       transport: stdio
       status: active
+    - uri: bos://compute/omlxc/warm
+      description: omlxc 高频系统提示词前缀预热 (降低首 token 延迟)
+      transport: stdio
+      status: active
     - uri: bos://compute/omlxc/triage
       description: omlxc 意图复杂度分诊 (FAST / STANDARD / REASONING)
       transport: stdio
@@ -1468,9 +1471,9 @@ bos_services:
       transport: inline
       status: active
     - uri: bos://documents/inbox-mail/draft
-      description: '[UNIMPLEMENTED] [auto-registered] From inbox mail draft. See bos-pending-registrations.yaml.'
+      description: 邮件三档拟复 + 附件表格提取 (tools_bos.mail.bos_mail_draft, BET-Y1Q3-T10-113)
       transport: internal
-      status: unimplemented
+      status: active
     - uri: bos://documents/mail-draft
       description: '[UNIMPLEMENTED] [auto-registered] From mail draft service. See bos-pending-registrations.yaml.'
       transport: internal
@@ -2296,19 +2299,6 @@ bos_services:
       status: unimplemented
     - uri: bos://system/vault/_state
       description: '[UNIMPLEMENTED] [auto-registered] From vault state. See bos-pending-registrations.yaml.'
-      transport: internal
-      status: unimplemented
-    toolbox:
-    - uri: bos://toolbox/domain-package
-      description: '[UNIMPLEMENTED] [auto-registered] From domain package registry. See bos-pending-registrations.yaml.'
-      transport: internal
-      status: unimplemented
-    - uri: bos://toolbox/domain-package-action
-      description: '[UNIMPLEMENTED] [auto-registered] From domain package action routing. See bos-pending-registrations.yaml.'
-      transport: internal
-      status: unimplemented
-    - uri: bos://toolbox/domain-subdomain-action
-      description: '[UNIMPLEMENTED] [auto-registered] From domain subdomain action routing. See bos-pending-registrations.yaml.'
       transport: internal
       status: unimplemented
 cli_commands:
