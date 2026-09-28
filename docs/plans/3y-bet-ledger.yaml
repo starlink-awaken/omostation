@@ -37647,7 +37647,8 @@ bets:
     噪声/ 财务系统清单）+ 修订与派发节。行动包只落 Documents 域，仓库内仅路径引用零正文。 零自动外发，派发权在 principal。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-28
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
@@ -37697,7 +37698,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@PENDING_SHA
+            ref: git://origin/main@97d72b17e4cb4741c1cfe3e89a47339b59a8fea3
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
           tests:
