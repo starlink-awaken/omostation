@@ -172,13 +172,15 @@ def test_no_blocking_step_lives_outside_the_required_gate_job() -> None:
 
 
 def test_advisory_job_still_runs_every_moved_step() -> None:
-    """搬迁不能顺手丢步骤：原 28 个 advisory 步应逐个出现在 aux job 里。"""
-    steps = _steps(ADVISORY_JOB)
-    setup, moved = steps[:4], steps[4:]
+    """搬迁不能顺手丢步骤：原 28 个 advisory 步应逐个出现在 aux job 里。
 
-    assert [s.get("uses") or s.get("name") for s in setup][0] == "actions/checkout@v4"
+    按**内容属性**（`continue-on-error`）筛选，不按位置切片 —— 早先写成 `steps[:4]` 当 setup、
+    `steps[4:]` 当搬迁集，结果任何在 job 首位新增的步骤（如 checkout 前的并行抓取配置）都会
+    把这个测试打红，与它要守的语义无关。
+    """
+    moved = [step for step in _steps(ADVISORY_JOB) if step.get("continue-on-error", False)]
+
     assert len(moved) == 28, [step.get("name") for step in moved][:5]
-    assert all(step.get("continue-on-error", False) is True for step in moved)
     named = {step.get("name") for step in moved}
     assert "CR-X2-EVIDENCE-FRESHNESS — 证据新鲜度检查 (advisory)" in named
     assert "mof-check (L0 约束对齐验证, advisory)" in named

@@ -22,6 +22,16 @@ jobs:
   gac-gate:
     runs-on: ubuntu-latest
     steps:
+      - name: Speed up submodule fetch (parallel)
+        # actions/checkout 跑的是 `git -c protocol.version=2 submodule update --init --force
+        # --depth=1 --recursive` —— **不带 --jobs**，于是 16 个子模块**串行**抓取
+        # （CI 日志时间戳实证：`submodule sync` → `foreach gc.auto` 间隔 9.8~21.1s，
+        #  而根部 fetch 只需 ~2.3s ⇒ checkout 的耗时几乎全是这段）。
+        # `submodule.fetchJobs` 就是给这条命令用的开关，必须在 checkout **之前**写入
+        # global config（该步不需要仓库已存在）。末行回显，便于日志直接核对是否生效。
+        run: |
+          git config --global submodule.fetchJobs 8
+          echo "submodule.fetchJobs=$(git config --global --get submodule.fetchJobs)"
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -144,6 +154,16 @@ jobs:
   gac-gate-aux:
     runs-on: ubuntu-latest
     steps:
+      - name: Speed up submodule fetch (parallel)
+        # actions/checkout 跑的是 `git -c protocol.version=2 submodule update --init --force
+        # --depth=1 --recursive` —— **不带 --jobs**，于是 16 个子模块**串行**抓取
+        # （CI 日志时间戳实证：`submodule sync` → `foreach gc.auto` 间隔 9.8~21.1s，
+        #  而根部 fetch 只需 ~2.3s ⇒ checkout 的耗时几乎全是这段）。
+        # `submodule.fetchJobs` 就是给这条命令用的开关，必须在 checkout **之前**写入
+        # global config（该步不需要仓库已存在）。末行回显，便于日志直接核对是否生效。
+        run: |
+          git config --global submodule.fetchJobs 8
+          echo "submodule.fetchJobs=$(git config --global --get submodule.fetchJobs)"
       - uses: actions/checkout@v4
         with:
           submodules: recursive
