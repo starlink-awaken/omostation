@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -336,3 +337,138 @@ def test_exhausted_network_budget_stops_touching_the_network(
     assert ok is True
     assert detail.startswith(module.UNVERIFIED_PREFIX)
     assert "network budget exhausted" in detail
+
+
+# ── 子模块并发 (E2-A): 并发只改墙钟, 不改结论 ──────────────────────────────
+
+
+def _fake_submodules(module: object, monkeypatch: pytest.MonkeyPatch, count: int = 8) -> list[str]:
+    """把模块伪装成有 `count` 个已登记子模块 (不碰真实 repo/网络)。"""
+    paths = [f"projects/sub{i:02d}" for i in range(count)]
+    monkeypatch.setattr(module, "submodule_paths", lambda: list(paths))
+    monkeypatch.setattr(module, "gitlink_sha", lambda _path, _source: "0" * 39 + "1")
+    return paths
+
+
+def test_pasw_jobs_env_override_and_bounds(monkeypatch: pytest.MonkeyPatch) -> None:
+    module = _load_module()
+
+    monkeypatch.setenv("PASW_JOBS", "1")
+    assert module._pasw_jobs(16) == 1  # 一键回退串行
+
+    monkeypatch.setenv("PASW_JOBS", "6")
+    assert module._pasw_jobs(16) == 6
+
+    monkeypatch.setenv("PASW_JOBS", "99")
+    assert module._pasw_jobs(3) == 3  # 不超过待检子模块数, 不空转线程
+
+    monkeypatch.setenv("PASW_JOBS", "bogus")
+    assert 1 <= module._pasw_jobs(16) <= module.DEFAULT_PASW_JOBS
+
+    monkeypatch.delenv("PASW_JOBS", raising=False)
+    assert 1 <= module._pasw_jobs(16) <= module.DEFAULT_PASW_JOBS
+
+    assert module._pasw_jobs(0) == 1
+
+
+def test_parallel_check_is_identical_to_serial(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """并发版必须与串行版**完全相等**(顺序/内容/计数), 否则 report 会漂移。"""
+    module = _load_module()
+    module.WORKSPACE = tmp_path
+    paths = _fake_submodules(module, monkeypatch)
+
+    def fake_remote_contains(path: str, _sha: str, *, fetch: bool, require_main: bool = False) -> tuple[bool, str]:
+        del fetch, require_main
+        index = int(path[-2:])
+        if index % 4 == 3:
+            return False, "not contained in fetched origin branches"
+        if index % 4 == 2:
+            return True, f"{module.UNVERIFIED_PREFIX}fetch timed out"
+        return True, "origin/main"
+
+    monkeypatch.setattr(module, "remote_contains", fake_remote_contains)
+
+    monkeypatch.setenv("PASW_JOBS", "1")
+    serial = module.check("head", fetch=True)
+    monkeypatch.setenv("PASW_JOBS", "4")
+    parallel = module.check("head", fetch=True)
+
+    assert parallel == serial
+    # 正控制: 样本确实覆盖了三种结论, 否则「相等」是空洞的真
+    assert [item["path"] for item in parallel["findings"]] == paths
+    assert parallel["checked"] == len(paths)
+    assert len(parallel["failures"]) == 2
+    assert parallel["unverified"] == 2
+
+
+def test_parallel_order_survives_out_of_order_completion(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """index 归位: 先提交的可能后完成, findings 仍按原序 —— 这是不破契约的关键。"""
+    module = _load_module()
+    module.WORKSPACE = tmp_path
+    paths = _fake_submodules(module, monkeypatch)
+    completed: list[str] = []
+
+    def fake_remote_contains(path: str, _sha: str, *, fetch: bool, require_main: bool = False) -> tuple[bool, str]:
+        del fetch, require_main
+        if path == paths[0]:
+            time.sleep(0.25)  # 第一个最后完成
+        completed.append(path)
+        return True, "origin/main"
+
+    monkeypatch.setattr(module, "remote_contains", fake_remote_contains)
+    monkeypatch.setenv("PASW_JOBS", str(len(paths)))
+
+    report = module.check("head", fetch=True)
+
+    # 正控制: 完成顺序确实乱序(否则下面的顺序断言无意义)
+    assert completed[-1] == paths[0]
+    assert [item["path"] for item in report["findings"]] == paths
+
+
+def test_parallel_path_uses_worker_threads_and_jobs_one_degrades_to_serial(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_module()
+    module.WORKSPACE = tmp_path
+    _fake_submodules(module, monkeypatch)
+    main_thread = threading.main_thread().name
+    seen: list[str] = []
+
+    def fake_remote_contains(_path: str, _sha: str, *, fetch: bool, require_main: bool = False) -> tuple[bool, str]:
+        del fetch, require_main
+        seen.append(threading.current_thread().name)
+        return True, "origin/main"
+
+    monkeypatch.setattr(module, "remote_contains", fake_remote_contains)
+
+    monkeypatch.setenv("PASW_JOBS", "4")
+    module.check("head", fetch=True)
+    assert seen and all(name != main_thread for name in seen)  # 并发路径真的进池
+
+    seen.clear()
+    monkeypatch.setenv("PASW_JOBS", "1")
+    module.check("head", fetch=True)
+    assert set(seen) == {main_thread}  # 回归串行: 全在主线程
+
+
+def test_skip_and_incremental_filters_survive_the_parallel_refactor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """过滤逻辑被重排过, 必须仍然: skip 计数 / only_paths 子集 / 空集早退。"""
+    module = _load_module()
+    module.WORKSPACE = tmp_path
+    paths = _fake_submodules(module, monkeypatch)
+    monkeypatch.setattr(module, "remote_contains", lambda *_a, **_k: (True, "origin/main"))
+
+    skipped = module.check("head", fetch=False, skip_paths={paths[7]})
+    assert skipped["skipped"] == 1
+    assert [item["path"] for item in skipped["findings"]] == paths[:7]
+
+    subset = {"projects/sub02", "projects/sub05"}
+    incremental = module.check("head", fetch=False, only_paths=subset)
+    assert incremental["checked"] == 2
+    assert [item["path"] for item in incremental["findings"]] == ["projects/sub02", "projects/sub05"]
+
+    empty = module.check("head", fetch=False, only_paths=set())
+    assert empty["mode"] == "incremental-empty"
+    assert empty["findings"] == []
