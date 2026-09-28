@@ -74,17 +74,48 @@ agent_id 的 claim**，进而 `changeset --verify-claims` 必然报
 | `integrate` | 双重读校验 trusted main revision | main 前进后 `claims_authority_revision_unavailable` |
 
 实测两小时内 main 从 `aedb8a75f` 推进到 `e258da3c1`（并发 agent 持续提交），
-每次推进都作废一轮绑定。**`snapshot → changeset → integrate` 的完整周期长于
-main 的推进间隔时，管道在结构上无法收敛。**
+每次推进都作废一轮绑定。
+
+### 精确根因：循环依赖（非调参问题）
+
+`verify_clone_provenance` 的最终判定包含：
+
+```python
+commit_identities_match(repo_root, identity["frozen_root_sha"],
+                        author["identity_digest"], "HEAD")
+```
+
+它要求 **`[frozen_root_sha, HEAD]` 区间内每一个提交的 author 与 committer
+都等于 clone 绑定的身份**。而 `frozen_root_sha` 是 clone 建立时的 main。
+
+于是形成闭环：
+
+1. `provenance` 在 clone 建立时绑定 `frozen_root_sha`
+2. `commit_identities_match` 要求该 SHA 到 HEAD 之间所有提交均为绑定身份
+3. 他人向 main 提交，会把**他们的提交插入这个区间**
+4. clone 产生提交后，`provenance_late_binding` **禁止重绑** provenance
+
+**结论：管道仅在「clone 建立到 integrate 之间无人向 main 提交」时可用。**
+2026-09-28 实测该区间内已有 3 个 `starlink-awaken` 的提交
+（`ecfdfc932` / `bd43786e4` / `e258da3c1`），
+其中 `ecfdfc932` 正是 `BET-Y2Q4-T10-210` 的收尾合并 ——
+证明并发提交是常态而非例外。
+
+在本仓（6+ 并发 agent，main 约每 2 分钟推进一次），
+完成「建 clone → 签名 → 放入 7 个提交 → 补 claim → changeset → integrate」
+所需时间长于 main 的推进间隔，**该竞态无法稳定取胜**。
 
 ### 建议修法（择一或组合，需 principal 定）
 
-1. **绑定漂移容忍**：对 `changeset`/`integrate` 的 authority binding 允许在
+1. **收窄 `commit_identities_match` 的区间**：只校验本 clone 自身产生的提交
+   （例如 `[merge-base(frozen_root, <first-own-commit>), HEAD]` 中排除
+   mainline 提交），而非整个 frozen_root..HEAD。这是直击循环依赖的最小改动。
+2. **绑定漂移容忍**：对 `changeset`/`integrate` 的 authority binding 允许在
    显式 `--allow-drift <sha>` 下重生成，而非直接失败。
-2. **静止窗口门控**：`integrate` 前置检查 main 在 N 分钟内无推进，否则
-   fail-closed 并给出「等窗口」的可执行提示 —— 把竞态变成可诊断的等待而非
-   逐门试错。
-3. **明确适用范围**：在 `clone-lifecycle.py` 顶部文档声明该管道仅适用于
+3. **静止窗口门控**：`integrate` 前置检查「自 clone 建立以来 main 无他人提交」，
+   否则 fail-closed 并给出「等窗口 / 或走常规 PR」的可执行指引 ——
+   把当前这种逐门试错才能定位的失败，变成一次可诊断的等待。
+4. **明确适用范围**：在 `clone-lifecycle.py` 顶部文档声明该管道仅适用于
    单 agent 或已静止的主干；多 agent 并发场景走常规 PR 流程。
 
 > 注：ADR-0422 的 escape-hatch 机制**不适用**于此。claim 漏绑与 provenance
