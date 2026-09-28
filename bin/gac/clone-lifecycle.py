@@ -1663,32 +1663,26 @@ def cmd_integrate(args: argparse.Namespace) -> int:
             "remote attempt ref was not newly created by this integration",
         )
     base = getattr(args, "base", "main")
-    existing = run(
-        [
-            "gh",
-            "pr",
-            "list",
-            "--repo",
-            repo_slug,
-            "--head",
-            branch,
-            "--base",
-            base,
-            "--state",
-            "open",
-            "--json",
-            "url,headRefName,headRefOid,headRepositoryOwner",
-            "--limit",
-            "1",
-        ],
-        cwd=str(clone),
-    )
-    if existing.returncode != 0:
-        return reject("integrate", "pr_query_failed", existing.stderr.strip() or "gh pr list failed")
     try:
-        prs = json.loads(existing.stdout or "[]")
-    except json.JSONDecodeError:
-        return reject("integrate", "pr_query_invalid", "gh pr list returned invalid JSON")
+        # BET-Y2Q4-T10-08: gh 查询安全层 — 瞬态失败/空输出重试 ×3（GraphQL 抖动
+        # 签名 rc=0+空），耗尽仍空 = 真无 PR → 走建 PR 路径；rc 非零瞬态耗尽 =
+        # GhQueryUnknown → 拒绝（debt: 空时 abort, 不静默当否定结论）。
+        prs = gh_json(
+            "pr", "list",
+            "--repo", repo_slug,
+            "--head", branch,
+            "--base", base,
+            "--state", "open",
+            "--json", "url,headRefName,headRefOid,headRepositoryOwner",
+            "--limit", "1",
+            retries=3,
+            treat_empty_as_unknown=False,
+            cwd=str(clone),
+        )
+    except GhQueryUnknown as exc:
+        return reject("integrate", "pr_query_unknown", str(exc))
+    except GhQueryFailed as exc:
+        return reject("integrate", "pr_query_failed", str(exc))
     matching_prs = [
         pr
         for pr in prs
