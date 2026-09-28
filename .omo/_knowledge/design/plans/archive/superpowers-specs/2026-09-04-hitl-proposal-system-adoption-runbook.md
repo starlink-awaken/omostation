@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: HITL Proposal System — Adoption Runbook for BET Owners
-bet_id: BET-Y1Q4-T1-12
+schema: md/v1
 status: accepted
 lifecycle: spec
-type: integration-runbook
 owner: omo-platform-team
-created: 2026-09-04
+type: integration-runbook
 last-reviewed: 2026-09-04
+title: HITL Proposal System — Adoption Runbook for BET Owners
+created: 2026-09-04
+bet_id: BET-Y1Q4-T1-12
 ---
-
 # HITL Proposal System — Adoption Runbook
 
 > **Audience**: BET owners adding new L2/L0 risk BETs that need human approval before execution.

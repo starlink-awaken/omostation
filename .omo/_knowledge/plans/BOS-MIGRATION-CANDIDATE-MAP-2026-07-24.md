@@ -1,22 +1,13 @@
 ---
-id: BOS-MIGRATION-CANDIDATE-MAP
-title: bos_stdio 真实迁移候选服务图谱（P81 S0.4 evidence）
-owner: governance-team
+schema: md/v1
 status: planned
-created_at: 2026-07-24T08:55:00Z
-stage: S0
-strat: STRAT-P81
-decisions: STRAT-P81-MASTER-DECISION-INBOX-2026-07-24.md
-supersedes: 2026-07-24-p81-s0-phase45-residuals.md (audit 的 117/169=0.692 数字已 outdated)
-source: projects/agora/etc/bos-services.yaml
-warning: |
-  Stage 0 evidence 包。仅在 P81 S0.4 (bos_stdio 真实迁移) 立项后启用。
-  Agent 不得在立项前自行修改 bos-services.yaml 的 transport 字段。
-last-reviewed: 2026-08-25
-lifecycle: plan
+lifecycle: planning
+owner: governance-team
 type: ssot
+last-reviewed: 2026-08-25
+title: bos_stdio 真实迁移候选服务图谱（P81 S0.4 evidence）
+id: BOS-MIGRATION-CANDIDATE-MAP
 ---
-
 # BOS 迁移候选图谱 (P81 S0.4 evidence)
 
 ## 0. 数字更正

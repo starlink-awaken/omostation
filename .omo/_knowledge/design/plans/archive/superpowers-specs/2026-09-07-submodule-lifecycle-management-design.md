@@ -1,16 +1,14 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-07
-last-reviewed: 2026-09-07
-schema_version: specification/v1
-spec_version: 1.0.0
-bet_id: BET-Y1Q4-T10-129
 type: ssot
+last-reviewed: 2026-09-07
+created: 2026-09-07
 last_updated: 2026-09-07
+bet_id: BET-Y1Q4-T10-129
 ---
-
 # Submodule Lifecycle Management — 指针漂移检测、分支清理、Tags 管理
 
 > 日期：2026-09-07

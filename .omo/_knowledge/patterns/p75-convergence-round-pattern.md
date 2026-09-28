@@ -1,14 +1,13 @@
 ---
-id: P75
-title: Convergence Round Pattern — close multiple deferred ADR follow-ups in one coordinated round
+schema: md/v1
 status: active
-created_at: '2026-08-05'
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-08-18
 type: ssot
+last-reviewed: 2026-08-18
+title: Convergence Round Pattern — close multiple deferred ADR follow-ups in one coordinated round
+id: P75
 ---
-
 # P75 — Convergence Round Pattern (ADR-0373, 5 方向合一)
 
 > Adoptees: When 3+ follow-up items accumulate on the same parent's

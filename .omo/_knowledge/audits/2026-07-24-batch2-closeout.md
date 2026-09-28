@@ -1,14 +1,12 @@
 ---
-title: STRAT-P81 Batch 2 closeout (11 items)
-date: 2026-07-24
-type: audit
-stage: batch2
-workorder: .omo/plans/strat-p81-batch2-workorder.md
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: STRAT-P81 Batch 2 closeout (11 items)
 ---
-
 # Batch 2 closeout — 11-item reconciliation
 
 | ID | Item | Status | Evidence |

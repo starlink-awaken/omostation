@@ -1,20 +1,14 @@
 ---
-title: 织星 / eCOS v6 深度 Review — 主动 Agent 心智模型与业务场景编排
+schema: md/v1
 status: draft
-type: review
-owner: 夏明星
-created: 2026-08-06
 lifecycle: report
-review-state: evidence-based-audit
-note: >
-  本文是评审报告，不是 SSOT。所有事实断言均标注取证命令或文件路径，可复核。
-  ⚠️ 本文前两版为 untracked 文件，均在并发 agent 的工作树清理中被删除（2026-08-06 当天两次）。
-  这本身是本文 F5 的实例，已固化为台账 D0 铁律：未 git add 的产物不算交付。
-related:
-  - docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md
-  - docs/plans/3Y-BET-LEDGER.md
+owner: 夏明星
+type: review
+last-reviewed: 2026-09-28
+title: 织星 / eCOS v6 深度 Review — 主动 Agent 心智模型与业务场景编排
+related: 
+created: 2026-08-06
 ---
-
 # 织星 / eCOS v6 深度 Review
 
 ## 0. 结论先行

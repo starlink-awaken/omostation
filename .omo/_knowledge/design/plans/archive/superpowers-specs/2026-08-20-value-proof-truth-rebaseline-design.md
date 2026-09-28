@@ -1,21 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
-
-bet_id: BET-Y1Q3-T4-01
 owner: human-principal
-last-reviewed: 2026-08-24
-
-risk_level: L2
-human_gate: true
-accepted_at: 2026-08-20T04:10:00Z
-accepted_authority: delegated-strategic-director
 type: ssot
+last-reviewed: 2026-08-24
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T4-01
 ---
-
 # 真实个人价值证据脊柱与战略事实重基线设计
 
 ## 1. 一句话结论

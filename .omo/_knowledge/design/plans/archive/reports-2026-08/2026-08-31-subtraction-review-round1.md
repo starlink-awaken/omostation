@@ -1,15 +1,12 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: review-evidence
 owner: governance-team
-created: 2026-08-31
+type: review-evidence
 last-reviewed: 2026-08-31
-adr: ADR-0443
-supersedes: docs/reports/2026-08-31-subtraction-review-method-v0.md
+created: 2026-08-31
 ---
-
 # 减法评审第一轮（真执行版）
 
 ## 方法修复（supersede v0 报告的缺陷）

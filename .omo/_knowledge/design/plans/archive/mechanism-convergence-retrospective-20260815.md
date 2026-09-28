@@ -1,14 +1,13 @@
 ---
-title: "机制收敛复盘（2026-08-15）"
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-15
-last_updated: 2026-09-03
 type: ssot
+last-reviewed: 2026-08-15
+title: "机制收敛复盘（2026-08-15）"
 last_updated: 2026-09-03
 ---
-
 # 机制收敛复盘（2026-08-15）
 
 ## 结论

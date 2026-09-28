@@ -1,14 +1,13 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
-created: 2026-08-30
+type: implementation-evidence
 last-reviewed: 2026-08-30
+created: 2026-08-30
 bet_id: BET-Y1Q3-T10-98
 ---
-
 # Governance and CI baseline repair — implementation evidence
 
 This report records the final verification of the declared root and child

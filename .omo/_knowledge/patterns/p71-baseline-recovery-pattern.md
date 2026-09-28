@@ -1,16 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-18
-related:
-  - 0114-l4-gac-exemption.md
-  - 0115-bin-governance-rationalize.md
-  - 0120-runtime-health-semantics-fix.md
-  - ../audits/2026-07-02-p0-baseline-recovery-closeout.md
 type: ssot
+last-reviewed: 2026-09-18
+related: 
 ---
-
 # P71 Baseline Recovery Pattern — 5 阶段声明/执行鸿沟修复
 
 > **Generated**: 2026-07-02 (post-PR#6/#7/#8)

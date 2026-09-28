@@ -1,20 +1,12 @@
 ---
-title: D3 closeout — R 波 health 91→96 达成对账
-date: 2026-07-25
-type: audit
-strat: STRAT-P81
-related_cards:
-  - needs-human-p81-m1-acceptance
-  - strat-p81-batch3-workorder
-related_runs:
-  - 20260724T123554Z-governance-state-mutation-a80749a7
-  - 20260724T234622Z-submodule-pointer-close-07c79661
-  - 20260725T004310Z-governance-state-mutation-af63978e
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: D3 closeout — R 波 health 91→96 达成对账
 ---
-
 # D3 closeout · R 波 health 91→96 达成对账
 
 ## 验收结论

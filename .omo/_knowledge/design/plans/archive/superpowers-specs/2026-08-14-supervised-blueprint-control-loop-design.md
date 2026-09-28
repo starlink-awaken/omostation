@@ -1,12 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-08-13
 type: ssot
+last-reviewed: 2026-08-13
 last_updated: 2026-09-03
 ---
-
 # 受监督 Blueprint 控制闭环设计
 
 > 日期：2026-08-14  

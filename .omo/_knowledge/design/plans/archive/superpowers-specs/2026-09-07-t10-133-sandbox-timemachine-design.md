@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Git Worktree 物理沙箱秒级 CoW 快照克隆与试错安全回滚时光机
-bet_id: BET-Y1Q4-T10-133
+schema: md/v1
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-09-07
-type: plan
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-07
+title: Git Worktree 物理沙箱秒级 CoW 快照克隆与试错安全回滚时光机
 last_updated: 2026-09-07
+bet_id: BET-Y1Q4-T10-133
 ---
-
 # Git Worktree 物理沙箱与时光机回滚规格 (BET-Y1Q4-T10-133)
 
 ## 动机

@@ -1,10 +1,12 @@
 ---
-title: T10-48 resident ledger test and replay evidence
-date: 2026-08-29
+schema: md/v1
 status: verified
+lifecycle: entry
+owner: governance-team
 type: ephemeral
+last-reviewed: 2026-09-28
+title: T10-48 resident ledger test and replay evidence
 ---
-
 # T10-48 测试与回放证据
 
 本报告是根仓可解析的持久证据。`projects/omo` 是 gitlink，不能作为根仓

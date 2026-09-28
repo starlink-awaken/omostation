@@ -1,12 +1,12 @@
 ---
-title: Batch1 D2 compliance/P74/health patrol
-date: 2026-07-24
-type: audit
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: Batch1 D2 compliance/P74/health patrol
 ---
-
 # Governance weekly patrol
 
 - ts: 2026-07-24T05:51:44.673584+00:00

@@ -1,15 +1,12 @@
 ---
-title: Batch1 real backlog collab trail — REMEDIATE-GBRAIN-INTEGRATION
-date: 2026-07-24
-type: collab-trail
-backlog: true
-task_id: REMEDIATE-GBRAIN-INTEGRATION
-task_path: .omo/tasks/remediation/REMEDIATE-GBRAIN-INTEGRATION.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch1 real backlog collab trail — REMEDIATE-GBRAIN-INTEGRATION
 ---
-
 # Real backlog collab: `REMEDIATE-GBRAIN-INTEGRATION`
 
 | Field | Value |

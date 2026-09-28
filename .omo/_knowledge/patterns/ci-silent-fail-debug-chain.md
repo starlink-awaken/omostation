@@ -1,22 +1,11 @@
 ---
-name: ci-silent-fail-debug-chain
-description: interface-check step 用 cmd || FAILED=1 累积模式, silent return 1 无 ❌ 输出难定位 — set -x + cat 重定向输出 + 解析 violation 字段的系统定位法
-triggers:
-  - "One or more governance checks failed"
-  - "interface-check failure"
-  - "silent fail CI"
-  - "FAILED=1 exit 1"
-  - "check pass but CI fail"
-  - "本地全 pass CI fail"
+schema: md/v1
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
 type: ssot
+last-reviewed: 2026-07-31
 ---
-
 # CI Silent Fail Debug Chain
 
 ## The Insight

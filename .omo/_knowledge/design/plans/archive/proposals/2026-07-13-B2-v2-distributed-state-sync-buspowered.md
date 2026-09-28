@@ -1,11 +1,10 @@
 ---
+schema: md/v1
 status: planned
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
 type: ephemeral
+last-reviewed: 2026-07-31
 ---
 # B2 · 分布式状态同步设计 v2（bus-foundation 驱动版）
 

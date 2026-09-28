@@ -1,12 +1,12 @@
 ---
-title: Batch1 D1 KOS remeasure (with seed growth)
-date: 2026-07-24
-type: audit
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: Batch1 D1 KOS remeasure (with seed growth)
 ---
-
 # KOS incremental remeasure
 
 - previous measured_documents: **5152**

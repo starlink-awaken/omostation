@@ -1,18 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.1
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-06
-last-reviewed: 2026-09-06
-bet_id: BET-Y1Q4-T9-03
-risk_level: L1
-human_gate: false
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-06
+created: 2026-09-06
+bet_id: BET-Y1Q4-T9-03
 ---
-
 # Agent Session Dashboard（ASD）规格
 
 > **定位**：新 agent 会话冷启动时加载的**无 UI 信息聚合面板**。  

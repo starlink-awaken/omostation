@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: 仓库维护 Cron 化 — 三脚本吸收三旧脚本 + 周报 + cron 接线
-bet_id: BET-Y1Q4-T10-127
+schema: md/v1
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-09-06
-type: plan
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-06
+title: 仓库维护 Cron 化 — 三脚本吸收三旧脚本 + 周报 + cron 接线
 last_updated: 2026-09-06
+bet_id: BET-Y1Q4-T10-127
 ---
-
 # 仓库维护 Cron 化规格 (BET-Y1Q4-T10-127)
 
 ## 三脚本 (bin/ 配额: 各吸收一个近亲旧脚本并归档)

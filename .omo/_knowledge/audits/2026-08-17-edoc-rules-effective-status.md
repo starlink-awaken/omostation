@@ -1,17 +1,14 @@
 ---
-title: E-DOC 边界规则生效状态核实报告 (OPS-INFRA 任务 1)
-type: audit
+schema: md/v1
 status: active
-owner: governance-agent
-created: 2026-08-17
-bet: BET-Y1Q1-T6-08
-related:
-  - docs/adr/ADR-0191-workspace-documents-dual-plane-architecture.md
-  - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
-last-reviewed: 2026-08-25
 lifecycle: history
+owner: governance-agent
+type: audit
+last-reviewed: 2026-08-25
+title: E-DOC 边界规则生效状态核实报告 (OPS-INFRA 任务 1)
+related: 
+created: 2026-08-17
 ---
-
 # E-DOC-001~005 (即 ADR-0191 §2.2 ln 规则集) 生效状态核实
 
 ## 结论速览

@@ -1,15 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Cockpit 一键署名外发真实网关 — 风控/重放/频次熔断/回执/真实通道
-bet_id: BET-Y1Q4-T4-06
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-09
+title: Cockpit 一键署名外发真实网关 — 风控/重放/频次熔断/回执/真实通道
+bet_id: BET-Y1Q4-T4-06
 ---
-
-
 # T4-06: 外发真实网关增量 (在 T10-116 spool 状态机之上)
 
 ## 现状 (T10-116 已交付, 本 BET 不重做)

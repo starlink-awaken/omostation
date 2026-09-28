@@ -1,9 +1,10 @@
 ---
+schema: md/v1
 status: active
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-08-18
 type: ephemeral
+last-reviewed: 2026-08-18
 ---
 # 会话发现项方案 (2026-08-08)
 

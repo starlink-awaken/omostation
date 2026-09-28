@@ -1,24 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
-created: 2026-09-03
-last-reviewed: 2026-09-03
-bet_id: BET-Y1Q4-T1-03
-risk_level: L2
-human_gate: true
-value_indicator_policy: false
-source_design_sha256: cbdee89004d0156e262daa63a1c38cfd660c0d5efbf0fce1a8eec8a92027c30b
-source_proposal_sha256: 26bd1b3df552e693f2ac2684df255436522ff816d7844459523fafe130587100
-source_amendment_sha256: 5b1bb03274d8f7383b67f88953cf0c7074a571a9a1d5aebb1ab68bb234042409
-source_id_collision_amendment_sha256: 1a6a63d4fc20b6d3f385b27518018fdb633e5cd38ee9c171db1c08773eecd992
-implementation_authorized: false
 type: ssot
+last-reviewed: 2026-09-03
+created: 2026-09-03
+bet_id: BET-Y1Q4-T1-03
 ---
-
-
 # Vision-to-BET Portfolio v2 机制升级设计
 
 ## 0. 执行摘要

@@ -1,11 +1,10 @@
 ---
+schema: md/v1
 status: planned
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
 type: ephemeral
+last-reviewed: 2026-07-31
 ---
 # MetaOS 深度架构治理优化方案（战略 + 战术 + 落地规划）
 

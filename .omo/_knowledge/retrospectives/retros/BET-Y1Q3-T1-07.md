@@ -1,16 +1,14 @@
 ---
-title: BET-Y1Q3-T1-07 retro — clone 迁移量产完成
-type: retro
+schema: md/v1
 status: active
-owner: governance-agent
-created: 2026-08-19
-bet: BET-Y1Q3-T1-07
-related:
-  - docs/plans/3y-bet-ledger.yaml#BET-Y1Q3-T1-07
 lifecycle: history
+owner: governance-agent
+type: retro
 last-reviewed: 2026-08-19
+title: BET-Y1Q3-T1-07 retro — clone 迁移量产完成
+related: 
+created: 2026-08-19
 ---
-
 # BET-Y1Q3-T1-07 复盘（五问）
 
 ## Q1 实际耗时 vs appetite?

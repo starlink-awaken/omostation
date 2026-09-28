@@ -1,12 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+type: retro
 last-reviewed: 2026-08-18
 title: BET-Y1Q3-T2-03
-type: retro
 ---
-
 ---
 
 ## 追记 2026-08-16：24h 落盘窗口收口

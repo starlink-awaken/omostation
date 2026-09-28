@@ -1,12 +1,12 @@
 ---
+schema: md/v1
 status: milestone
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-18
 type: retro
+last-reviewed: 2026-09-18
 bet_id: STRATEGIC-3YEAR-PLAN-COMPLETION
 ---
-
 # STRATEGIC-3YEAR-PLAN-COMPLETION — 三年度治理计划完成里程碑
 
 ## 状态: 425/425 BETs 完成 (100%)

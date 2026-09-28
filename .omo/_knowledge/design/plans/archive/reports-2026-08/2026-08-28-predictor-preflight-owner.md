@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # Predictor preflight owner evidence — 2026-08-28
 
 The legacy Weijian predictor writes a dated forecast Markdown file below

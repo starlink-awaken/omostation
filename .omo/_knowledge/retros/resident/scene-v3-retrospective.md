@@ -1,7 +1,9 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
+type: retrospective
 last-reviewed: 2026-09-11
 ---
 # Scene System v3 — 全面复盘

@@ -1,14 +1,13 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
-created: 2026-08-29
+type: implementation-evidence
 last-reviewed: 2026-08-30
+created: 2026-08-29
 bet_id: BET-Y1Q3-T10-76
 ---
-
 # System task projection reconciliation — implementation evidence
 
 > **2026-08-30 spec correction note**: The original spec direction

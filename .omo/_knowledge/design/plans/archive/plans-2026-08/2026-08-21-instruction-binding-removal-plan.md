@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
 type: ephemeral
+last-reviewed: 2026-08-24
 ---
-
 # Instruction Binding 全链移除方案(独立 BET 候选)
 
 - 状态: PROPOSED(2026-08-21)

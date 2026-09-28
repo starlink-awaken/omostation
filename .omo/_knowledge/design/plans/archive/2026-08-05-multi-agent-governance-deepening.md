@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # 多 Agent 治理体系深化 — 深度复盘报告
 
 > 时间: 2026-08-04 ~ 2026-08-05

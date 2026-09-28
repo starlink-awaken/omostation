@@ -1,13 +1,13 @@
 ---
-title: BET-Y1Q1-T2-02 复盘
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-15
 lifecycle: history
-last-reviewed: 2026-08-15
+owner: governance-team
 type: retro
+last-reviewed: 2026-08-15
+title: BET-Y1Q1-T2-02 复盘
+created: 2026-08-15
 ---
-
 # BET-Y1Q1-T2-02 复盘
 
 ## Q1 实际耗时 vs appetite？超出比例？

@@ -1,11 +1,12 @@
 ---
+schema: md/v1
+status: active
+lifecycle: entry
+owner: governance-team
 type: runbook
-domain: ops
-service: zhixing-dashboard
-port: 43191
+last-reviewed: 2026-09-24
 last_updated: 2026-09-24
 ---
-
 # 织星驾驶舱 (:43191) 运维手册
 
 ## 架构

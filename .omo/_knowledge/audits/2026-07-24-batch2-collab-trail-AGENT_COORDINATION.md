@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — AGENT_COORDINATION
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: AGENT_COORDINATION
-task_path: .omo/debt/items/AGENT_COORDINATION.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — AGENT_COORDINATION
 ---
-
 # `AGENT_COORDINATION`
 
 | Field | Value |

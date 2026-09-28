@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
-lifecycle: plan
+lifecycle: planning
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
 type: ssot
+last-reviewed: 2026-08-24
 ---
-
 # BOS Contract Linter Phase 3 — 预部署分析与评估
 
 > 日期: 2026-06-25

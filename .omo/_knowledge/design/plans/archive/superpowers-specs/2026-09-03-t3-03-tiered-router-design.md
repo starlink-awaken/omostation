@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Tiered speculative router (light/mid/heavy)
-bet_id: BET-Y1Q4-T3-03
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-03
-last-reviewed: 2026-09-03
 type: ssot
+last-reviewed: 2026-09-03
+title: Tiered speculative router (light/mid/heavy)
+created: 2026-09-03
 last_updated: 2026-09-03
+bet_id: BET-Y1Q4-T3-03
 ---
-
 # Tiered speculative router (T3-03)
 
 三层分级 (extends ADR-0197): light 1.5B/3B (意图+槽位 <5ms) / mid 8B/14B

@@ -1,14 +1,13 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
-created: 2026-08-28
+type: implementation-evidence
 last-reviewed: 2026-08-28
+created: 2026-08-28
 bet_id: BET-Y1Q3-T10-46
 ---
-
 # Installed owner release-root convergence
 
 ## Scope

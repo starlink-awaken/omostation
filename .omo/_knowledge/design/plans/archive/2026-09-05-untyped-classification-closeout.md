@@ -1,11 +1,13 @@
 ---
-title: BET-Y1Q4-T10-04 收尾报告 — 知识文档 type 批量分类
-type: report
+schema: md/v1
+status: active
+lifecycle: entry
 owner: governance-team
+type: report
+last-reviewed: 2026-09-05
+title: BET-Y1Q4-T10-04 收尾报告 — 知识文档 type 批量分类
 last_updated: 2026-09-05
-bet: BET-Y1Q4-T10-04
 ---
-
 # BET-Y1Q4-T10-04 收尾报告
 
 > 生成: 2026-09-05 | owner: governance-team | 状态: done

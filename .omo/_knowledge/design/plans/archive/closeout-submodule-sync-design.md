@@ -1,9 +1,10 @@
 ---
+schema: md/v1
 status: active
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-08-18
 type: ephemeral
+last-reviewed: 2026-08-18
 ---
 # 子模块漂移治理 — 深度设计方案
 

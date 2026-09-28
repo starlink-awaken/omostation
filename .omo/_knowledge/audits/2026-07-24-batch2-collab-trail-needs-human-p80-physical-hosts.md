@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — needs-human-p80-physical-hosts
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: needs-human-p80-physical-hosts
-task_path: .omo/tasks/planned/needs-human-p80-physical-hosts.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — needs-human-p80-physical-hosts
 ---
-
 # `needs-human-p80-physical-hosts`
 
 | Field | Value |

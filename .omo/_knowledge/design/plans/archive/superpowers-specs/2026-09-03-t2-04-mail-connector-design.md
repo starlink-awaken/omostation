@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Unified mail connector (multi-source)
-bet_id: BET-Y1Q4-T2-04
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-03
-last-reviewed: 2026-09-03
 type: ssot
+last-reviewed: 2026-09-03
+title: Unified mail connector (multi-source)
+created: 2026-09-03
 last_updated: 2026-09-03
+bet_id: BET-Y1Q4-T2-04
 ---
-
 # Unified mail connector (T2-04)
 
 ## Intent

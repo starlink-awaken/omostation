@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-31
 type: ssot
+last-reviewed: 2026-07-31
 ---
-
 # management/ INDEX — P77 物理迁移后结构
 
 > P77 R1: 144 文件按 P75 category 物理迁移到 3 子目录

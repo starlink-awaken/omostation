@@ -1,13 +1,11 @@
 ---
-type: retro
-domain: governance
-bet: BET-Y1Q4-T6-24
+schema: md/v1
 status: final
-owner: governance-agent
-last-reviewed: 2026-09-11
 lifecycle: history
+owner: governance-agent
+type: retro
+last-reviewed: 2026-09-11
 ---
-
 # Scene System v3 — 13 轮迭代全面复盘
 
 > 范围：13 轮 · 20+ PR（主仓 + 3 子模块） · 2026-09-06 → 2026-09-11 · 状态：全链路生产运行

@@ -1,14 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: projects/aetherforge root gitlink pointer closeout (Anthropic Messages API)
-bet_id: BET-Y1Q4-T10-159
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-12
+title: projects/aetherforge root gitlink pointer closeout (Anthropic Messages API)
+bet_id: BET-Y1Q4-T10-159
 ---
-
 # T10-159 — projects/aetherforge root gitlink pointer closeout (Anthropic Messages API)
 
 ## Context

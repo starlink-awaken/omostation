@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: L4 live content-plane audit stability
-bet_id: BET-Y1Q3-T10-57
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-08-29
-last-reviewed: 2026-08-29
 type: ssot
+last-reviewed: 2026-08-29
+title: L4 live content-plane audit stability
+created: 2026-08-29
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-57
 ---
-
 # L4 live content-plane audit stability
 
 ## Intent

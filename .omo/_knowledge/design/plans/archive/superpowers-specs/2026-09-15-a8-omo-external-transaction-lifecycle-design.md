@@ -1,20 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: A8 OMO external adapter transaction lifecycle
-bet_id: BET-Y1Q4-T10-151
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
-created: '2026-09-15'
-last-reviewed: '2026-09-15'
-implementation_authorized: true
-value_indicator_policy: false
-risk_level: L2
-human_gate: true
 type: ssot
+last-reviewed: '2026-09-15'
+title: A8 OMO external adapter transaction lifecycle
+created: '2026-09-15'
+bet_id: BET-Y1Q4-T10-151
 ---
-
 # A8 OMO external adapter transaction lifecycle
 
 ## Problem

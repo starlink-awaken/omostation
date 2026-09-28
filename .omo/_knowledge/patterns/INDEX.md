@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-16
 type: ssot
+last-reviewed: 2026-09-16
 ---
-
 # Patterns INDEX — 可复用模式目录
 
 > 跨任务踩坑经验沉淀. 每个 pattern 至少经过一次失败 + 一次修复实证.

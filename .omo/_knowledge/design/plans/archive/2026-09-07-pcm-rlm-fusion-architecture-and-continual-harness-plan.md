@@ -1,13 +1,14 @@
 ---
-title: PCM-RLM 认知矩阵与递归语言模型自演化机架深度融合架构方案与实施规划
+schema: md/v1
 status: active
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-07
+title: PCM-RLM 认知矩阵与递归语言模型自演化机架深度融合架构方案与实施规划
 created: 2026-09-07
 last_updated: 2026-09-07
-type: plan
 ---
-
 # PCM-RLM: 持久化智能体认知矩阵与递归语言模型自演化机架深度融合架构方案 (Persistent Cognitive Matrix with Recursive Self-Improving Harness)
 
 > **发布日期**：2026-09-07  

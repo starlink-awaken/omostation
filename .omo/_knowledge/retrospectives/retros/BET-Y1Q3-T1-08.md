@@ -1,12 +1,13 @@
 ---
-title: BET-Y1Q3-T1-08 Retro — 退役 coordination-daemon 独立 clone 部署
-type: retro
+schema: md/v1
 status: active
 lifecycle: history
 owner: laowang-agent
+type: retro
 last-reviewed: 2026-08-20
-created: 2026-08-20
+title: BET-Y1Q3-T1-08 Retro — 退役 coordination-daemon 独立 clone 部署
 related: []
+created: 2026-08-20
 ---
 ---
 bet_id: BET-Y1Q3-T1-08

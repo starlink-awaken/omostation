@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # OpenCode · OMLXC · MCP 全面优化报告 — 2026-08-22
 
 > 目标：子 agent 合理接入 omlxc、限额熔断自愈、MCP 全绿、首启 0.1s、文档感知闭环

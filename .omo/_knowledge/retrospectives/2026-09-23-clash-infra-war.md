@@ -1,7 +1,9 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
+type: retrospective
 last-reviewed: 2026-09-23
 ---
 # 复盘：Clash/Tailscale 基础设施大战 (2026-09-22 ~ 09-23)

@@ -1,16 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - p76-launcher-zombie-false-positive.md
-  - decl-exec-gap-meta-pattern.md
-  - ../../projects/agora/src/agora/mcp_proxy/health.py
-  - ../../projects/runtime/src/runtime/health/agora_gateway_probe.py
 type: ssot
+last-reviewed: 2026-07-15
+related: 
 ---
-
 # P77 — Agora Heartbeat Transport Mismatch (stdio 按需服务被当 daemon heartbeat 验活 → 永久假 dead)
 
 > **适用范围**: agora hub (MCP ProxyManager) 注册的 backend, stdio 按需 spawn 服务被一视同仁用常驻 heartbeat 验活, 导致永久假 dead 噪音淹死真病.

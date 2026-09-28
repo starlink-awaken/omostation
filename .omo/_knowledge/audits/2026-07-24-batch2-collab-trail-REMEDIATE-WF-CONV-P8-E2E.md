@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — REMEDIATE-WF-CONV-P8-E2E
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: REMEDIATE-WF-CONV-P8-E2E
-task_path: .omo/tasks/remediation/REMEDIATE-WF-CONV-P8-E2E.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — REMEDIATE-WF-CONV-P8-E2E
 ---
-
 # `REMEDIATE-WF-CONV-P8-E2E`
 
 | Field | Value |

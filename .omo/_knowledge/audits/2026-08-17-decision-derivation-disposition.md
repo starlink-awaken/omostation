@@ -1,16 +1,14 @@
 ---
-title: 决策推演文档落地处置报告 (DECISION-SCENARIO-DERIVATION)
-type: audit
+schema: md/v1
 status: active
-owner: governance-agent
-created: 2026-08-17
-related:
-  - /Users/xiamingxing/Downloads/DECISION-SCENARIO-DERIVATION-CONFIRMATION-2026-08.md
-  - docs/ARCHITECTURE-STRATEGY-OUTLOOK-2026-08.md
-last-reviewed: 2026-08-25
 lifecycle: history
+owner: governance-agent
+type: audit
+last-reviewed: 2026-08-25
+title: 决策推演文档落地处置报告 (DECISION-SCENARIO-DERIVATION)
+related: 
+created: 2026-08-17
 ---
-
 # 推演文档 7 项落地处置（2026-08-17，用户指令"ABCE 都批准，运维决策推进落地"+ 深调研指令）
 
 | # | 项 | 推演建议 | 实际落地 | 证据 |

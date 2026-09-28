@@ -1,13 +1,12 @@
 ---
-title: Physical hosts + G-DEL.3 fail-closed (STRAT-P80 T2)
-date: 2026-07-24
-type: audit
-needs-human: true
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: Physical hosts + G-DEL.3 fail-closed (STRAT-P80 T2)
 ---
-
 # Physical base probe (fail-closed)
 
 ## Probe (2026-07-24T02:29:04.787388+00:00)

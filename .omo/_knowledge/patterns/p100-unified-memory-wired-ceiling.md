@@ -1,9 +1,11 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: entry
 owner: governance-team
+type: ssot
 last-reviewed: 2026-09-06
 ---
-
 # P100 — 统一内存机器上的 wired 天花板与自愈守护冲突
 
 **Pattern observed**: 2026-09-05/06，Qwen3.8-Flash-Next 4bit (103.8GB) 在 M5 Max 128GB 上落地。

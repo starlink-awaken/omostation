@@ -1,16 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Persistent Queue — ledger-backed durable queue for omo.sovereignty
-bet_id: BET-Y1Q4-T10-147
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-11
+title: Persistent Queue — ledger-backed durable queue for omo.sovereignty
+bet_id: BET-Y1Q4-T10-147
 ---
-
-
-
 # Persistent Queue — ledger-backed durable queue
 
 ## 1. Problem

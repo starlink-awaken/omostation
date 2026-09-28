@@ -1,9 +1,10 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-08-18
 type: ssot
+last-reviewed: 2026-08-18
 ---
 # Autopoiesis 设计 — 架构自创生机制 (META-04)
 

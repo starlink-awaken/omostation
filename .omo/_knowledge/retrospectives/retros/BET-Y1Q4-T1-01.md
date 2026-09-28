@@ -1,17 +1,14 @@
 ---
-title: BET-Y1Q4-T1-01 retro — Y1 表面积盘点与年度门
-type: retro
+schema: md/v1
 status: active
-owner: governance-agent
-created: 2026-08-18
-bet: BET-Y1Q4-T1-01
-related:
-  - .omo/_knowledge/retros/gates/Y1-surface-audit.md
-  - docs/adr/ADR-0200-y1q4-code-loc-gate-rebaseline.md
 lifecycle: history
+owner: governance-agent
+type: retro
 last-reviewed: 2026-08-19
+title: BET-Y1Q4-T1-01 retro — Y1 表面积盘点与年度门
+related: 
+created: 2026-08-18
 ---
-
 # BET-Y1Q4-T1-01 复盘（五问）
 
 ## Q1 实际耗时 vs appetite?

@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: 两日会战经验固化 — PITFALL×2 + skill×2 + submit auto-rebase
-bet_id: BET-Y2Q1-T10-02
+schema: md/v1
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-09-05
-type: plan
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-05
+title: 两日会战经验固化 — PITFALL×2 + skill×2 + submit auto-rebase
 last_updated: 2026-09-05
+bet_id: BET-Y2Q1-T10-02
 ---
-
 # 经验固化规格 (BET-Y2Q1-T10-02)
 
 > 2026-09-04~05 两日会战复盘产物, 夏明星批准全量固化。

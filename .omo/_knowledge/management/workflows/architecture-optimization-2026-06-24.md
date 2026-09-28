@@ -1,15 +1,11 @@
 ---
-category: workflows
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-06-24
-migrated_to: architecture-optimization-2026-06-24.md
-deprecated-since: 2026-06-23
-
 type: ssot
+last-reviewed: 2026-06-24
 ---
-
 # 整体架构优化建议 — 2026-06-24
 
 > 基于当前 workspace 状态扫描:

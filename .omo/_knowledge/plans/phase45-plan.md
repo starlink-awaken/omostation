@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
-lifecycle: plan
+lifecycle: planning
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
 type: ssot
+last-reviewed: 2026-08-24
 ---
-
 # Phase 45 — 治理可观测性: 从"执行"到"自维护"
 
 > Status: **PLANNED** · 基于: 2026-07-14 深度复盘

@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: 门禁迭代 — Gatekeeper baseline/grace + hook-runner 处方化报错
-bet_id: BET-Y1Q4-T10-134
+schema: md/v1
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-09-06
-type: plan
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-06
+title: 门禁迭代 — Gatekeeper baseline/grace + hook-runner 处方化报错
 last_updated: 2026-09-06
+bet_id: BET-Y1Q4-T10-134
 ---
-
 # 门禁基线与处方化规格 (BET-Y1Q4-T10-134)
 
 ## 动机 (三日会战实测)

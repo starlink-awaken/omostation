@@ -1,15 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: 业务场景五档生命周期自动巡航与金牌样例自学习闭环设计
-bet_id: BET-Y1Q4-T7-05
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-12
+title: 业务场景五档生命周期自动巡航与金牌样例自学习闭环设计
+bet_id: BET-Y1Q4-T7-05
 ---
-
-
 # T7-05 — Scene Lifecycle Cruiser & Golden Sample Loop 设计
 
 ## 1. 问题

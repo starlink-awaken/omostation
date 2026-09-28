@@ -1,10 +1,12 @@
 ---
-title: T10-56 ledger key hygiene audit
-date: 2026-08-29
+schema: md/v1
 status: verified
+lifecycle: entry
+owner: governance-team
 type: ephemeral
+last-reviewed: 2026-09-28
+title: T10-56 ledger key hygiene audit
 ---
-
 # T10-56 ledger key hygiene audit
 
 审计发现 T10-55 的 YAML entry 曾重复写入 `done_at: 2026-08-29`。删除一个

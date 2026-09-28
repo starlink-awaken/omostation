@@ -1,10 +1,10 @@
 ---
+schema: md/v1
 status: active
 lifecycle: ssot
 owner: governance-team
+type: analysis
 last-reviewed: 2026-07-31
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
 ---
 # 系统性战略分析 — omostation 项目
 

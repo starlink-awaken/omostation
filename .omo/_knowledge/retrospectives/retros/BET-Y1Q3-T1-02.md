@@ -1,13 +1,13 @@
 ---
-title: BET-Y1Q3-T1-02 复盘
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-15
 lifecycle: history
-last-reviewed: 2026-08-15
+owner: governance-team
 type: retro
+last-reviewed: 2026-08-15
+title: BET-Y1Q3-T1-02 复盘
+created: 2026-08-15
 ---
-
 # BET-Y1Q3-T1-02 复盘 — mof-deepen 落账追溯（先斩后奏的补账）
 
 > 详细审计：`.omo/_knowledge/retros/audit-mof-deepen-landing-20260815.md`（PR #1498 已入库）。

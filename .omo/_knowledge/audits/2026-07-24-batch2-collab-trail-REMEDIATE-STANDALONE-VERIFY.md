@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — REMEDIATE-STANDALONE-VERIFY
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: REMEDIATE-STANDALONE-VERIFY
-task_path: .omo/tasks/remediation/REMEDIATE-STANDALONE-VERIFY.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — REMEDIATE-STANDALONE-VERIFY
 ---
-
 # `REMEDIATE-STANDALONE-VERIFY`
 
 | Field | Value |

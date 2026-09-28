@@ -1,14 +1,11 @@
 ---
+schema: md/v1
 status: deprecated
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-06-23
-deprecated-since: 2026-06-23
-deprecation-reason: "P53 R2: designs/ 目录仅含 1 个 memtheta 算子设计文档,与 design/(单数)命名冲突且无 README。沿用不动路径原则,保留目录+加 deprecated frontmatter + 加 README 明确职责。新增设计文档统一入 design/specs/ 或 superpowers/specs/。"
-superseded-by: "design/specs/memtheta-operators.md (待迁移)"
 type: ssot
+last-reviewed: 2026-06-23
 ---
-
 # `.omo/_knowledge/designs/` — 历史设计目录 (DEPRECATED)
 
 > ⚠️ **本目录已 deprecated (P53 R2)** — 沿用"不动路径"原则,保留目录但不再写入新内容。

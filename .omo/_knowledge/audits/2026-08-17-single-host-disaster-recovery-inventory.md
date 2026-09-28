@@ -1,17 +1,14 @@
 ---
-title: 单机灾难恢复清单 (OPS-INFRA 任务 4)
-type: audit
+schema: md/v1
 status: active
-owner: governance-agent
-created: 2026-08-17
-bet: BET-Y1Q1-T6-08
-related:
-  - docs/OPS-INFRA-GOVERNANCE-LONGTERM-BLUEPRINT-2026-08.md
-  - docs/operations/hermes-governance-boundary.md
-last-reviewed: 2026-08-25
 lifecycle: history
+owner: governance-agent
+type: audit
+last-reviewed: 2026-08-25
+title: 单机灾难恢复清单 (OPS-INFRA 任务 4)
+related: 
+created: 2026-08-17
 ---
-
 # 单机灾难恢复清单（"这台 Mac 明天全损会丢什么"）
 
 实测基础：2026-08-17 本机直读。

@@ -1,10 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
+type: documentation
 last-reviewed: 2026-06-30
 ---
-
 # P52 真治本范式 — Guide for Future Phases
 
 > 2026-06-30 治本路线 (Phase 1.1, 1.2, 2) 沉淀的**真治本判定 + 实施方法**。

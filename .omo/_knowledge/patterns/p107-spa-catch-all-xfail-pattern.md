@@ -1,13 +1,13 @@
 ---
-id: P107
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-created: 2026-09-17
-last-reviewed: 2026-09-17
 type: ssot
+last-reviewed: 2026-09-17
+created: 2026-09-17
+id: P107
 ---
-
 # P107: SPA Catch-All Route vs Test Expectation xfail Pattern
 
 > **2026-09-17 沉淀** · 来源: cockpit dashboard favicon 404 修复 + test_unknown_path_returns_404 冲突

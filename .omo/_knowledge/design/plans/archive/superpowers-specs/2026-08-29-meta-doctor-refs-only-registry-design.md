@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-08-29
-last-reviewed: 2026-08-29
-bet_id: BET-Y1Q3-T10-61
-spec_version: 1.0.0
-title: Registry-driven meta-doctor refs-only CI binding
 type: ssot
+last-reviewed: 2026-08-29
+title: Registry-driven meta-doctor refs-only CI binding
+created: 2026-08-29
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-61
 ---
-
 # T10-61: Registry-driven meta-doctor refs-only binding
 
 ## Context

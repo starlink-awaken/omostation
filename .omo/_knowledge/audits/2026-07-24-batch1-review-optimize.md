@@ -1,13 +1,12 @@
 ---
-title: STRAT-P81 Batch1 code review + optimize pass
-date: 2026-07-24
-type: audit
-pr: https://github.com/starlink-awaken/omostation/pull/483
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: STRAT-P81 Batch1 code review + optimize pass
 ---
-
 # Batch1 review / optimize
 
 ## Scope

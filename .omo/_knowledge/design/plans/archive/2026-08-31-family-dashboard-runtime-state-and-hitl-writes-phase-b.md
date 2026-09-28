@@ -1,14 +1,14 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: family-hub
-created: 2026-09-02
+type: doc
 last-reviewed: 2026-09-02
 title: Family dashboard Phase B runtime and HITL evidence
-type: doc
+created: 2026-09-02
 bet_id: BET-Y1Q3-T10-122
 ---
-
 # Family dashboard Phase B runtime and HITL evidence
 
 ## Verdict

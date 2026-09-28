@@ -1,3 +1,11 @@
+---
+schema: md/v1
+status: active
+lifecycle: entry
+owner: governance-team
+type: documentation
+last-reviewed: 2026-09-28
+---
 # Sweep 扫描历史归档 (A5, ADR-0367 + ADR-0373)
 
 > 本目录只存**指针与索引**, 不复制数据. 报告本体: `<date>.json` (由 `bin/sweep/scan.py` 落盘).

@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Documents retired runner-log exact quarantine
-bet_id: BET-Y1Q3-T10-110
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-08-30
-last-reviewed: 2026-08-30
 type: ssot
+last-reviewed: 2026-08-30
+title: Documents retired runner-log exact quarantine
+created: 2026-08-30
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-110
 ---
-
 # Documents retired runner-log exact quarantine
 
 ## Context

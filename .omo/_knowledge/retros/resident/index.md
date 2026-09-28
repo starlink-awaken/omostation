@@ -1,3 +1,11 @@
+---
+schema: md/v1
+status: active
+lifecycle: entry
+owner: governance-team
+type: retrospective
+last-reviewed: 2026-09-28
+---
 # resident retro 索引 (promote 自动生成)
 
 - generated_at: 2026-09-26T12:40:03Z

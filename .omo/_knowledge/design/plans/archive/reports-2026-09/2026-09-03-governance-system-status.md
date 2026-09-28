@@ -1,14 +1,12 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: delivery-report
 owner: governance-team
-created: 2026-09-03
+type: delivery-report
 last-reviewed: 2026-09-03
-bet: BET-Y1Q3-T10-19
+created: 2026-09-03
 ---
-
 # 治理体系现状报告（Governance System Status）
 
 > 日期：2026-09-03（UTC，只读快照）

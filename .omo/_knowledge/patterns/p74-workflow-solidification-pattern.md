@@ -1,19 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-18
-related:
-  - ../decisions/0130-p74-workflow-solidification.md
-  - ../decisions/0129-state-projection-plane-phase3.md
-  - ../decisions/0128-state-generation-concurrency.md
-  - ../../standards/p74-solidification-contract.md
-  - p71-baseline-recovery-pattern.md
-  - p72-follow-up-completion-pattern.md
-  - p73-truth-driven-engineering-pattern.md
 type: ssot
+last-reviewed: 2026-09-18
+related: 
 ---
-
 # P74 — Workflow Solidification Pattern (常态化工作流沉默治理)
 
 > **适用范围**: 对 registry 已登记但未被实际触发、或被反复触发但缺乏专属流程的 workflow,进行系统性固化与回收。

@@ -1,14 +1,12 @@
 ---
-title: Batch2 D3 governance patrol P2
-date: 2026-07-24
-type: audit
-batch: 2
-period: P2
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: Batch2 D3 governance patrol P2
 ---
-
 # Governance weekly patrol — P2
 
 | Check | Result |

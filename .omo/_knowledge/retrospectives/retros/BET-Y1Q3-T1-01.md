@@ -1,16 +1,13 @@
 ---
-title: BET-Y1Q3-T1-01 复盘 — cockpit SSOT 漂移治理 (核实性收口)
-type: retro
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-16
-context: >-
-  立账时的三处漂移 (catalog 缺 4 命令/help_map 缺 5/ssb+model-driven 裸注册) 在本收口轮
-  实测全部已修复 — 由并发 cockpit PR 完成。核实性收口, 无新代码。
 lifecycle: history
+owner: governance-team
+type: retro
 last-reviewed: 2026-08-18
+title: BET-Y1Q3-T1-01 复盘 — cockpit SSOT 漂移治理 (核实性收口)
+created: 2026-08-16
 ---
-
 # BET-Y1Q3-T1-01 复盘 (核实性收口)
 
 ## 核验证据 (2026-08-16, 最新 main)

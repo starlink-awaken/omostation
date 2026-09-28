@@ -1,17 +1,14 @@
 ---
-title: BET-Y1Q3-T6-01 retro — gbrain+kairon 归并 knowledge (L3 停审)
-type: retro
+schema: md/v1
 status: active
-owner: engineering-agent
-created: 2026-08-16
-bet: BET-Y1Q3-T6-01
-related:
-  - docs/plans/2026-08-16-t6-01-knowledge-merge-spec.md
-  - docs/plans/2026-08-16-t6-01-dedup-ledger.md
 lifecycle: history
+owner: engineering-agent
+type: retro
 last-reviewed: 2026-08-18
+title: BET-Y1Q3-T6-01 retro — gbrain+kairon 归并 knowledge (L3 停审)
+related: 
+created: 2026-08-16
 ---
-
 # BET-Y1Q3-T6-01 复盘（五问）— 停审版
 
 ## Q1 做了什么（事实）

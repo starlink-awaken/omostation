@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: 夏明星
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # 次世代主权智能体全域常态化运营、业务真值流演进与全生命周期自进化治理规划
 
 > **规划版本**：v3.0.0 (Master Strategic Architecture Plan)  

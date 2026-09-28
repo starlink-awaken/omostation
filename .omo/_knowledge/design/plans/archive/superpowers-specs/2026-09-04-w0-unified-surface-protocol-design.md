@@ -1,19 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
-created: 2026-09-04
-last-reviewed: 2026-09-04
-bet_id: BET-Y1Q4-T8-17
-risk_level: L1
-human_gate: false
-value_indicator_policy: false
-implementation_authorized: true
 type: ssot
+last-reviewed: 2026-09-04
+created: 2026-09-04
+bet_id: BET-Y1Q4-T8-17
 ---
-
 # W0 Unified Surface Protocol (USP v1) & Universal Card Primitives Specification
 
 ## 1. Decision & Background

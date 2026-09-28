@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # T10-63 Governance waiver frontmatter repair — Delivery Report
 
 Date: 2026-08-29 · Bet: `BET-Y1Q3-T10-63` · Spec:

@@ -1,16 +1,12 @@
 ---
-title: macmini 网络可达性确认（sandbox 探测 · 非官方门禁 evidence）
-date: 2026-07-24
-type: audit
-strat: STRAT-P81
-related_cards:
-  - needs-human-p80-physical-hosts
-  - needs-human-batch2-physical-recovery-checklist
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: macmini 网络可达性确认（sandbox 探测 · 非官方门禁 evidence）
 ---
-
 # macmini 恢复可达 — 网络层探测
 
 ## 探测结果（2026-07-24, workspace sandbox 局域网侧）

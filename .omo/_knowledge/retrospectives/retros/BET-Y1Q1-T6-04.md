@@ -1,13 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-bet: BET-Y1Q1-T6-04
+type: retro
 last-reviewed: 2026-08-16
 title: BET-Y1Q1-T6-04 复盘
-type: retro
 ---
-
 # BET-Y1Q1-T6-04 复盘
 
 ## Q1 实际耗时 vs appetite？

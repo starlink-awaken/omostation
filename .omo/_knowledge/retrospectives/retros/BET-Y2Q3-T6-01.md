@@ -1,10 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+type: retro
 last-reviewed: 2026-08-19
 title: BET-Y2Q3-T6-01 复盘
-type: retro
 ---
 # BET-Y2Q3-T6-01 复盘
 

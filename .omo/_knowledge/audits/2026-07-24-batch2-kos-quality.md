@@ -1,13 +1,12 @@
 ---
-title: Batch2 D1 KOS quality deepening (≥50 sample)
-date: 2026-07-24
-type: audit
-batch: 2
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: Batch2 D1 KOS quality deepening (≥50 sample)
 ---
-
 # KOS quality + retrieval baseline
 
 - sampled: **50** docs (repo knowledge surfaces: audits/decisions/plans/docs)

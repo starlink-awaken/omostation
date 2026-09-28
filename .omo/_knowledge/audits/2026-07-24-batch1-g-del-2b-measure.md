@@ -1,13 +1,12 @@
 ---
-title: Batch1 G-DEL.2b measure (≥30 tasks)
-date: 2026-07-24
-type: audit
-gate: G-DEL.2b
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: Batch1 G-DEL.2b measure (≥30 tasks)
 ---
-
 # G-DEL.2b measure report
 
 - n_tasks: **30**

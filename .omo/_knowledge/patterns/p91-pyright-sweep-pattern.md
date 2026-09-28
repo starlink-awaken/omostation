@@ -1,14 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-08-04
-related:
-  - ../decisions/0364-pyright-sweep-algorithm.md
-  - p74-workflow-solidification-pattern.md
 type: ssot
+last-reviewed: 2026-08-04
+related: 
 ---
-
 # P91 — Pyright Sweep Pattern
 
 ## 1. 触发条件

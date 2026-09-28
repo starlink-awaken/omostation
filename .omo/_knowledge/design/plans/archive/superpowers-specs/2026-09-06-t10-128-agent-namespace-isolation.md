@@ -1,14 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-bet_id: BET-Y1Q4-T10-128
-created: 2026-09-06
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-agent
+type: plan
 last-reviewed: 2026-09-07
+created: 2026-09-06
+bet_id: BET-Y1Q4-T10-128
 ---
-
 # Spec: 并发 Agent 分支命名空间隔离
 
 ## Problem

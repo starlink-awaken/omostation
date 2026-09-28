@@ -1,15 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-18
-related:
-  - p73-truth-driven-engineering-pattern.md
-  - p71-baseline-recovery-pattern.md
-  - ../audits/2026-07-17-static-vs-runtime-diagnostic-audit.md
 type: ssot
+last-reviewed: 2026-09-18
+related: 
 ---
-
 # P78 Triple-Axis Diagnostic Pattern — 声明/执行鸿沟系统的三维查证纪律
 
 > **Generated**: 2026-07-17 (9 轮静态误判翻案后提炼)

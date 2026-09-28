@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — REMEDIATE-WF-CONV-P7-BACKENDS
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: REMEDIATE-WF-CONV-P7-BACKENDS
-task_path: .omo/tasks/remediation/REMEDIATE-WF-CONV-P7-BACKENDS.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — REMEDIATE-WF-CONV-P7-BACKENDS
 ---
-
 # `REMEDIATE-WF-CONV-P7-BACKENDS`
 
 | Field | Value |

@@ -1,14 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-bet_id: BET-Y2Q1-T6-02
-created: 2026-09-07
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-agent
+type: plan
 last-reviewed: 2026-09-07
+created: 2026-09-07
+bet_id: BET-Y2Q1-T6-02
 ---
-
 # Spec: 知识层统一归并首期 — bos://memory/unified 统一接口与 adapter 去重
 
 ## Motivation

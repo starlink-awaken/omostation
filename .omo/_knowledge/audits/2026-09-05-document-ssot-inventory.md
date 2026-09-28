@@ -1,7 +1,9 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
+type: audit
 last-reviewed: 2026-09-24
 ---
 # 文档 SSOT 清单 — 2026-09-05

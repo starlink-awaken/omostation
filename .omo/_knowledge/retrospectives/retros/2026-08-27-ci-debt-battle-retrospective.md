@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: engineering-agent
-bet: BET-Y1Q3-T7-02
+type: retro
 last-reviewed: 2026-08-27
 title: 复盘：CI 存量债清理战役 (2026-08-26 → 08-27)
-type: retro
 ---
 # 复盘：CI 存量债清理战役 (2026-08-26 → 08-27)
 

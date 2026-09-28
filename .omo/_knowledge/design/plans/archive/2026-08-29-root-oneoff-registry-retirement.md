@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # T10-59 root one-off registry retirement evidence
 
 The physical `root-oneoff-assets` quarantine was completed under the earlier

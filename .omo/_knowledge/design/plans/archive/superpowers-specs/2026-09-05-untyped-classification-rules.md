@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: UNTYPED 批量分类规则表 — BET-Y1Q4-T10-04
-bet_id: BET-Y1Q4-T10-04
+schema: md/v1
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-09-05
-type: plan
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-05
+title: UNTYPED 批量分类规则表 — BET-Y1Q4-T10-04
 last_updated: 2026-09-05
+bet_id: BET-Y1Q4-T10-04
 ---
-
 # UNTYPED 批量分类规则表 (BET-Y1Q4-T10-04)
 
 > 基线: 2026-09-05, UNTYPED 软信号 1939 | 目标: <300 且硬阻塞维持 0

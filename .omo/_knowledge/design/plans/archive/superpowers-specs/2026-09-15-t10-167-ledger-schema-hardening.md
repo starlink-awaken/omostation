@@ -1,20 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: 3Y BET ledger schema hardening
-bet_id: BET-Y1Q4-T10-167
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-15
-last-reviewed: 2026-09-15
-implementation_authorized: true
-value_indicator_policy: false
-risk_level: L1
-human_gate: false
 type: ssot
+last-reviewed: 2026-09-15
+title: 3Y BET ledger schema hardening
+created: 2026-09-15
+bet_id: BET-Y1Q4-T10-167
 ---
-
 # 3Y BET ledger schema hardening
 
 ## Background and problem

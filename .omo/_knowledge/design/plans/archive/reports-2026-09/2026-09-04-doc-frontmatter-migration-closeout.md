@@ -1,11 +1,13 @@
 ---
-title: BET-Y1Q4-T10-02 收尾报告 — doc frontmatter 批量迁移与 doc-index 合规收口
-type: report
+schema: md/v1
+status: active
+lifecycle: entry
 owner: governance-team
+type: report
+last-reviewed: 2026-09-04
+title: BET-Y1Q4-T10-02 收尾报告 — doc frontmatter 批量迁移与 doc-index 合规收口
 last_updated: 2026-09-04
-bet: BET-Y1Q4-T10-02
 ---
-
 # BET-Y1Q4-T10-02 收尾报告
 
 > 生成: 2026-09-04 | owner: governance-team | 状态: done

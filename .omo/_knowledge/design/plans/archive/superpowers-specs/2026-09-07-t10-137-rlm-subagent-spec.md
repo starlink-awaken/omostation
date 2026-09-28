@@ -1,13 +1,13 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
-created: 2026-09-07
+type: doc
 last-reviewed: 2026-09-07
 title: BET-Y1Q4-T10-137 异步递归子代理编排与低阻保护膜设计
-type: doc
+created: 2026-09-07
 ---
-
 # BET-Y1Q4-T10-137: 异步递归子代理编排契约与 Low-Friction 低阻保护膜机制
 
 ## Context

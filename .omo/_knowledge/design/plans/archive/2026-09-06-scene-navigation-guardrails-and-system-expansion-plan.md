@@ -1,11 +1,13 @@
 ---
+schema: md/v1
+status: active
+lifecycle: entry
+owner: architecture-team
 type: plan
+last-reviewed: 2026-09-06
 title: scene-navigation-guardrails-and-system-expansion-plan
 last_updated: 2026-09-06
-owner: architecture-team
-status: active
 ---
-
 # 场景导航锚点与运行时防跑偏护栏机制（SNARF）及系统扩展方案深度调研报告
 
 > **编制宗旨**：解决多 Agent 协同中的“执行跑偏、自发散、越界破坏与上下文漂移”痛点，将现有静态场景卡资产激活为动态运行时护栏与导航仪；同时细化系统前瞻扩展方向（TinyBOS 边缘具身与 4-Tier 认知分级），实现从战略愿景到工程落地的闭环。  

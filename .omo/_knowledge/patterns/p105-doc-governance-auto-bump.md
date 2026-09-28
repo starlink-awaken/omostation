@@ -1,9 +1,10 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-16
 type: ssot
+last-reviewed: 2026-09-16
 ---
 # P105 — Doc-Governance Auto-Bump Pattern
 

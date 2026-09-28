@@ -1,16 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-11
-snapshot-kind: derived-report
-implementation-status: mixed
-canonical-source: /Users/xiamingxing/Documents/@学习进化/_knowledge/10-systems/基建架构/10-Workspace-KEMS整体架构分析-2026-08-11.md
-canonical-sha256: fecc039202fd93ddde73b7f48bef6eb30c70def682d1d87ad715598b4aab768f
-baseline-root-commit: a4b08255e8a918a1b52dd32226d36c64db4f2c2e
 type: ephemeral
+last-reviewed: 2026-08-11
 ---
-
 # Workspace × KEMS 架构收敛审计（2026-08-11）
 
 > 本文件是 Documents 私有 canonical 报告的 Workspace 派生审计快照，用于代码评审、治理追踪和长期取证。它不是 Documents 知识正文的第二 SSOT；发生差异时，以 frontmatter 中的 `canonical-source` 和 `canonical-sha256` 对应版本为准。

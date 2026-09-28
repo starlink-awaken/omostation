@@ -1,9 +1,11 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: entry
 owner: governance-team
+type: ssot
 last-reviewed: 2026-09-06
 ---
-
 # P102 — backend_model_id 漂移：调度器指着一个不存在的模型
 
 **Pattern observed**: 2026-09-06，omlxc `models unload` 反复失败的真实根因。

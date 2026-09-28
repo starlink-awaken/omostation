@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: docs last_updated保鲜 batch1-6
-bet_id: BET-Y1Q3-T10-200
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-03
-last-reviewed: 2026-09-03
 type: ssot
+last-reviewed: 2026-09-03
+title: docs last_updated保鲜 batch1-6
+created: 2026-09-03
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-200
 ---
-
 # docs last_updated保鲜 batch1-6（BET-Y1Q3-T10-200）
 
 ## 背景（Context）

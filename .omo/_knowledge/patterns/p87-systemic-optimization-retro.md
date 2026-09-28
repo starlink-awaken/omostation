@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-08-24
 type: ssot
+last-reviewed: 2026-08-24
 ---
-
 # P87: 系统性优化复盘
 
 > 触发: 2026-08-23 系统性优化返工后复盘

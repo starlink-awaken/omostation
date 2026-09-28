@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: HITL Proposal System v1.1 — Wait + Multi-channel
-bet_id: BET-Y1Q4-HITL-02
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: omo-platform-team
-created: 2026-09-04
-last-reviewed: 2026-09-05
 type: ssot
+last-reviewed: 2026-09-05
+title: HITL Proposal System v1.1 — Wait + Multi-channel
+created: 2026-09-04
+bet_id: BET-Y1Q4-HITL-02
 ---
-
 # HITL Proposal System v1.1 — Wait + Multi-channel
 
 ## Intent

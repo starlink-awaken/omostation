@@ -1,19 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-05
-last-reviewed: 2026-09-05
-bet_id: BET-Y1Q4-T1-14
-risk_level: L1
-human_gate: false
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-05
+created: 2026-09-05
 last_updated: 2026-09-05
+bet_id: BET-Y1Q4-T1-14
 ---
-
 # OBJ-VALUE Portfolio Split — Design
 
 ## Problem

@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — DECL_EXEC_GAP
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: DECL_EXEC_GAP
-task_path: .omo/debt/items/DECL_EXEC_GAP.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — DECL_EXEC_GAP
 ---
-
 # `DECL_EXEC_GAP`
 
 | Field | Value |

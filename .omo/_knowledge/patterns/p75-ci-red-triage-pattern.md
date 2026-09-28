@@ -1,15 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-18
-related:
-  - p71-baseline-recovery-pattern.md
-  - p73-truth-driven-engineering-pattern.md
-  - p74-workflow-solidification-pattern.md
 type: ssot
+last-reviewed: 2026-09-18
+related: 
 ---
-
 # P75 — CI Red Recursive Triage Pattern (CI 红递归分层诊断)
 
 > **适用范围**: omostation CI 红 (`gh pr checks` fail) 的系统性诊断与修复. CI 红是 "递归洋葱" — 修一层暴露下一层, 单轮 CI 只报顶层.

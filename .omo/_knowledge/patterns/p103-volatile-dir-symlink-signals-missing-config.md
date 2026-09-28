@@ -1,9 +1,11 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: entry
 owner: governance-team
+type: ssot
 last-reviewed: 2026-09-06
 ---
-
 # P103 — `/var/run` 符号链接是"缺配置项"的信号，不是修复
 
 **Pattern observed**: 2026-09-06，omlxc `doctor` 报 5 个看似独立的探测失败

@@ -1,14 +1,13 @@
 ---
-title: BET-Y1Q3-T6-12 retro — MOSBeliefManager 运行时计数解耦
-type: retro
+schema: md/v1
 status: active
-owner: engineering-agent
-created: 2026-08-20
-bet: BET-Y1Q3-T6-12
 lifecycle: history
+owner: engineering-agent
+type: retro
 last-reviewed: 2026-08-20
+title: BET-Y1Q3-T6-12 retro — MOSBeliefManager 运行时计数解耦
+created: 2026-08-20
 ---
-
 # BET-Y1Q3-T6-12 复盘（五问）
 
 ## Q1 实际耗时 vs appetite?

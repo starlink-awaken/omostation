@@ -1,16 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-23
-related:
-  - host-mutation-dual-gate.md
-  - p73-truth-driven-engineering-pattern.md
-  - ../pitfalls/gate/PITFALL-GAT-011.yaml
-source: session-2026-09-23-governance-debt-convergence
 type: ssot
+last-reviewed: 2026-09-23
+related: 
 ---
-
 # Pattern — 破坏性操作的真实爆炸半径可能远超授权前提
 
 ## The Insight

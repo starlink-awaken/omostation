@@ -1,12 +1,12 @@
 ---
-schema_version: evidence-report/v1
+schema: md/v1
 status: observed
+lifecycle: entry
 owner: governance-team
-observed_at: 2026-08-27
-bet_id: BET-Y1Q3-T10-21
 type: ephemeral
+last-reviewed: 2026-09-28
+bet_id: BET-Y1Q3-T10-21
 ---
-
 # L4 实例与 Documents 边界盘点
 
 ## 1. 盘点范围

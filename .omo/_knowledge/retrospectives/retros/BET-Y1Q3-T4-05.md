@@ -1,12 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+type: retro
 last-reviewed: 2026-08-30
 title: BET-Y1Q3-T4-05 WP2 Honest Agent Cell Effect Receipt retro
-type: retro
 ---
-
 # BET-Y1Q3-T4-05 复盘
 
 ## Q1 实际耗时 vs appetite

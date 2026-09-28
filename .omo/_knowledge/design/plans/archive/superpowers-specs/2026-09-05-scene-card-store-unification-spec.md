@@ -1,17 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: 场景卡存储归一 — 选项 A 执行规格 (归一到 docs/scene-cards)
-bet_id: BET-Y2Q1-T7-03
+schema: md/v1
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-09-05
-type: plan
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-05
+title: 场景卡存储归一 — 选项 A 执行规格 (归一到 docs/scene-cards)
 last_updated: 2026-09-05
+bet_id: BET-Y2Q1-T7-03
 ---
-
-
 # 场景卡存储归一提案 (BET-Y2Q1-T7-03)
 
 > 状态: **待夏明星架构拍板** — 本提案只陈述事实与选项, 不含已执行的迁移

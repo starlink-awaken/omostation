@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # Documents Runtime Source/Owner Parity Inventory — Task 7B (work-weijian)
 
 > Date: 2026-08-27

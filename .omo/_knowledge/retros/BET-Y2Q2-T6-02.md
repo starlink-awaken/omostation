@@ -1,8 +1,9 @@
 ---
-type: bet-retro
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+type: bet-retro
 last-reviewed: 2026-09-25
 title: "复盘报告: BET-Y2Q2-T6-02 端口导流与双核下线守护"
 ---

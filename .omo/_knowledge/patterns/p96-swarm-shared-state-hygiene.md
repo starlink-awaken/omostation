@@ -1,18 +1,14 @@
 ---
-id: P96
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-created: 2026-08-31
-last-reviewed: 2026-08-31
-related:
-- ADR-0443
-- CR-GIT-STAGE-SUBMODULE-PIN
-origin_reports:
-- docs/reports/2026-08-31-swarm-collaboration-retro.md
 type: ssot
+last-reviewed: 2026-08-31
+related: 
+created: 2026-08-31
+id: P96
 ---
-
 # P96: 多 agent 共享状态卫生（swarm shared-state hygiene）
 
 ## 陷阱表

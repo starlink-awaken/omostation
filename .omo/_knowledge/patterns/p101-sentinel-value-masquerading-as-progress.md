@@ -1,9 +1,11 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: entry
 owner: governance-team
+type: ssot
 last-reviewed: 2026-09-06
 ---
-
 # P101 — 哨兵值伪装成进度：把"失败"读成"卡住"
 
 **Pattern observed**: 2026-09-06，追查 omlxc `models unload` 不释放内存

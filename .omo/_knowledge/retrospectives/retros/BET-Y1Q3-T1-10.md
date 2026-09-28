@@ -1,12 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: auto-fix-loop
+type: retro
 last-reviewed: 2026-08-24
 title: BET-Y1Q3-T1-10 Retro
-type: retro
 ---
-
 # BET-Y1Q3-T1-10 Retro
 
 ## 五问

@@ -1,18 +1,14 @@
 ---
-id: P106
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-created: 2026-09-17
-last-reviewed: 2026-09-17
-related:
-- p96-swarm-shared-state-hygiene.md
-- p73-truth-driven-engineering-pattern.md
-origin_reports:
-- .omo/_knowledge/retros/BET-Y1Q4-T10-146.md
 type: ssot
+last-reviewed: 2026-09-17
+related: 
+created: 2026-09-17
+id: P106
 ---
-
 # P106: Main-Branch Edit Clobbering by Concurrent Agents
 
 > **2026-09-17 沉淀** · 来源: 本会话 4 次实证（generate-brief.py / Makefile / AGENTS.md 编辑被覆盖 + pattern 文件被 reset 清除）

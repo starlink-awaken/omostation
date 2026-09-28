@@ -1,14 +1,13 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
-created: 2026-08-29
+type: implementation-evidence
 last-reviewed: 2026-08-29
+created: 2026-08-29
 bet_id: BET-Y1Q3-T10-74
 ---
-
 # OMLXC BOS service path reconciliation — implementation evidence
 
 ## Scope

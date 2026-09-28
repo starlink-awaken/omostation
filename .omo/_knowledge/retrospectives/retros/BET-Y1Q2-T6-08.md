@@ -1,13 +1,13 @@
 ---
-title: BET-Y1Q2-T6-08 复盘（追溯补记）
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-15
 lifecycle: history
-last-reviewed: 2026-08-15
+owner: governance-team
 type: retro
+last-reviewed: 2026-08-15
+title: BET-Y1Q2-T6-08 复盘（追溯补记）
+created: 2026-08-15
 ---
-
 # BET-Y1Q2-T6-08 复盘（追溯补记 2026-08-15，台账信任修复 r2 处置 D3）
 
 > 本文件由治理轮按 D5 铁律补记——bet 标 done 时无 retro（spotcheck 机械违例单列）。

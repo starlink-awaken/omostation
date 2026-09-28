@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — OPT-TEST-COVERAGE
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: OPT-TEST-COVERAGE
-task_path: .omo/tasks/planned/vision-roadmap/OPT-TEST-COVERAGE.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — OPT-TEST-COVERAGE
 ---
-
 # `OPT-TEST-COVERAGE`
 
 | Field | Value |

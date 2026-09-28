@@ -1,14 +1,12 @@
 ---
-title: KOS 2027Q1 floor (≥5000) + G-DEL.4 cockpit MCP shared-context
-date: 2026-07-20
-type: audit
-goal: KOS-Q-GROWTH
-gate: G-DEL.4
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: KOS 2027Q1 floor (≥5000) + G-DEL.4 cockpit MCP shared-context
 ---
-
 # KOS ≥5000 + shared-context MCP
 
 ## 1. KOS 实测

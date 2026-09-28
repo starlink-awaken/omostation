@@ -1,19 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Task state projection reconciliation after planned-task reappearance
-bet_id: BET-Y1Q3-T10-90
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-08-29
-last-reviewed: 2026-08-29
-risk_level: L1
-human_gate: false
 type: ssot
+last-reviewed: 2026-08-29
+title: Task state projection reconciliation after planned-task reappearance
+created: 2026-08-29
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-90
 ---
-
 # Task state projection reconciliation
 
 ## Intent

@@ -1,14 +1,12 @@
 ---
-title: Batch2 role ops weekly report W2
-date: 2026-07-24
-type: weekly-report
-batch: 2
-period: W2
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: weekly-report
+last-reviewed: 2026-08-25
+title: Batch2 role ops weekly report W2
 ---
-
 # Role collaboration weekly — W2
 
 | Metric | Value |

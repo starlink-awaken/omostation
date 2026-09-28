@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — L1_HEALTH_PROBES
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: L1_HEALTH_PROBES
-task_path: .omo/debt/items/L1_HEALTH_PROBES.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — L1_HEALTH_PROBES
 ---
-
 # `L1_HEALTH_PROBES`
 
 | Field | Value |

@@ -1,15 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-02
-related:
-  - ../decisions/0124-s1-followup-retrospective.md
-  - ../decisions/0122-system-audit-followup-plan.md
-  - p71-baseline-recovery-pattern.md
 type: ssot
+last-reviewed: 2026-07-02
+related: 
 ---
-
 # P72 Follow-up Completion Pattern — 阶段路线图执行守门
 
 > **Generated**: 2026-07-02 (post-PR #17/#18/#19)

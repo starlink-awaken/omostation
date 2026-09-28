@@ -1,18 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-05
-last-reviewed: 2026-09-05
-bet_id: BET-Y2Q1-T7-02
-risk_level: L1
-human_gate: false
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-05
+created: 2026-09-05
+bet_id: BET-Y2Q1-T7-02
 ---
-
 # T7-02 shadow 试验记录机制设计
 
 ## 1. 目标

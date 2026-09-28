@@ -1,16 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-10
-related:
-  - ../decisions/0179-runtime-probe-false-positive-treatment.md
-  - ../../projects/runtime/src/runtime/scheduler.py
-  - p73-truth-driven-engineering-pattern.md
-  - decl-exec-gap-meta-pattern.md
 type: ssot
+last-reviewed: 2026-07-10
+related: 
 ---
-
 # P76 — Launcher Zombie False Positive Pattern (launchd 保活掩盖子服务死亡)
 
 > **适用范围**: launchd/docker KeepAlive 管理的 daemon, launcher 进程被保活但实际服务子进程已崩溃, 导致健康探测假阳性.

@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # T10-106 DMA Daemon Chaos Drill Report
 
 > Date: 2026-08-31 (chaos drill executed)

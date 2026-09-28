@@ -1,16 +1,14 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: resident
-created: 2026-08-25
-last-reviewed: 2026-08-25
-schema_version: specification/v1
-spec_version: 1.0.0
-bet_id: BET-Y1Q3-T10-11
 type: ssot
+last-reviewed: 2026-08-25
+created: 2026-08-25
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-11
 ---
-
 # Resident sediment 草稿→完整知识晋升管线 (promote 增强 + 自动化)
 
 > 日期：2026-08-25

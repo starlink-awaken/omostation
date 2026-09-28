@@ -1,15 +1,13 @@
 ---
-schema_version: specification/v1
+schema: md/v1
 status: accepted
 lifecycle: spec
-type: design
 owner: governance-team
-created: 2026-08-30
+type: design
 last-reviewed: 2026-08-30
+created: 2026-08-30
 bet_id: BET-Y1Q3-T10-98
-spec_version: 1.0.0
 ---
-
 # Governance and CI baseline repair
 
 ## Problem

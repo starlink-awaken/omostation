@@ -1,13 +1,12 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
-created: 2026-08-30
+type: implementation-evidence
 last-reviewed: 2026-08-30
+created: 2026-08-30
 ---
-
 # Documents 控制面残留下沉 — implementation evidence（④②① 三事务）
 
 ## 事务记录（全部 run 20260830T065121Z-bet-execution-c648875e）

@@ -1,18 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-17
-last-reviewed: 2026-09-17
-bet_id: BET-Y3H1-T7-02
-risk_level: L2
-human_gate: true
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-17
+created: 2026-09-17
+bet_id: BET-Y3H1-T7-02
 ---
-
 # BET-Y3H1-T7-02 — 公文场景 assisted 升档设计
 
 ## 1. 目标
