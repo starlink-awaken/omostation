@@ -4858,51 +4858,6 @@ services:
     signal: .omo/_delivery/bos.agent_cell.pool.submit/
     max_stale_hours: 168
   disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
-- id: bos.agent_cell.pool.scale
-  enabled: false
-  scheduler: manual
-  trigger: on_demand
-  transport: stdio
-  uri: bos://agent-cell/pool/scale
-  program:
-    interpreter: uv
-    entrypoint: projects/agora
-  depends_on:
-  - mcp.agora
-  liveness:
-    signal: .omo/_delivery/bos.agent_cell.pool.scale/
-    max_stale_hours: 168
-  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
-- id: bos.agent_cell.pool.auto_scale
-  enabled: false
-  scheduler: manual
-  trigger: on_demand
-  transport: stdio
-  uri: bos://agent-cell/pool/auto-scale
-  program:
-    interpreter: uv
-    entrypoint: projects/agora
-  depends_on:
-  - mcp.agora
-  liveness:
-    signal: .omo/_delivery/bos.agent_cell.pool.auto_scale/
-    max_stale_hours: 168
-  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
-- id: bos.agent_cell.pool.metrics
-  enabled: false
-  scheduler: manual
-  trigger: on_demand
-  transport: stdio
-  uri: bos://agent-cell/pool/metrics
-  program:
-    interpreter: uv
-    entrypoint: projects/agora
-  depends_on:
-  - mcp.agora
-  liveness:
-    signal: .omo/_delivery/bos.agent_cell.pool.metrics/
-    max_stale_hours: 168
-  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.agent_cell.dag.execute
   enabled: false
   scheduler: manual
