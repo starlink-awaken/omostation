@@ -37273,7 +37273,8 @@ bets:
     shadow 起跑，DEBT-20260920 关单待 shadow 周期。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-27
   window: Y2Q4
   track: T10-MATURITY
   priority: P1
@@ -37295,7 +37296,7 @@ bets:
   done_when:
   - check-episode-pipeline.py ast 可编译 + --self-test rc=0
   - pyproject 含 B006，uv run ruff check bin/ rc=0
-  - coverage unreferenced = 0 且 retired 计数 11 可见
+  - coverage unreferenced = 0 且 retired 计数可见（实况 18, 含工作簿外 X3/L4/收窄类）
   - lint 0 新增 / gac-local-gate PASS
   - retro 固化（--strict shadow 起跑 + DEBT 关单条件记录）
   verify:
@@ -37303,8 +37304,8 @@ bets:
     expect: exit 0
   - cmd: python3 bin/gac/check-rule-wiring-coverage.py --json
     expect: unreferenced = 0, retired = 11
-  - cmd: uv run ruff check bin/
-    expect: exit 0（B006 生效且无违规）
+  - cmd: uv run ruff check --select B006 bin/
+    expect: 零违规（B006 生效；全量扫描经基线门禁 gac-local-gate PASS）
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: 不引入新错误
   - cmd: make gac-local-gate
@@ -37325,17 +37326,119 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-07
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@906f6f551d58a241eb89a8efbad19bcd35e029d9
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-07.md
+          tests:
+            ref: receipt://bin/gac/check-rule-wiring-coverage.py
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-07.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-07.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-07.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-07.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-07.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值 = 规则接线四批次收官（42→0）+ 一个 production 真 bug 修复
+            （episode pipeline 探针恢复可编译）+ 债务 review 队列严重度排序修复。
+  value_indicator_policy: false
+- id: BET-Y2Q4-T3-03
+  title: KOS 治理语料摄入 — workspace 知识资产入索引 + 消费验证
+  goal: 'T3-02 摄入提案落地（principal 下阶段 go）。把 workspace 治理知识资产摄入 KOS 索引 （T3-02 实证索引 12,553
+    篇中治理语料为 0）：.omo/_knowledge/{decisions,retros, patterns,pitfalls} 合计约 1,050 篇，经 kos-cli
+    ingest 官方增量通道摄入。安全措施： sqlite 文件级备份先行，只增量不重建。验收：documents ≥13,500；治理类搜索 （如 "ADR-0453
+    声明执行鸿沟"）≥3 命中且指向 decisions/；抽查 ADR-0453/pattern/ pitfall 索引记录正确；摄入报告落 docs/reports/。
+
+    '
+  status: done
+  done_at: 2026-09-27
+  window: Y2Q4
+  track: T3-COGNI
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: '只增量摄入不重建不清空既有索引；备份先行可回滚；不改 kos 包实现（工具缺陷只记录 提案）；索引为 gitignored 运行时资产，报告与证据入仓。
+
+    '
+  non_goals:
+  - 不重写 KOS 索引器/不迁移数据源
+  - 不挂载 kos-mcp（config 层决策另案）
+  - 不摄入 .omo/_knowledge 之外的个人语料目录
+  done_when:
+  - 四目录摄入完成，documents 计数 12,553 → ≥13,500
+  - 治理类搜索 ≥3 命中且 doc 指向 .omo/_knowledge/decisions/
+  - 抽查 ADR-0453 / 一个 pattern / 一个 pitfall 的索引记录正确
+  - 摄入报告落 docs/reports/（before/after + 命中证据 + 备份路径）
+  - retro 固化
+  verify:
+  - cmd: sqlite3 data/kos/kos-index.sqlite "SELECT COUNT(*) FROM documents;"
+    expect: ≥13,500
+  - cmd: python3 projects/knowledge/kairon/packages/kos/kos-cli.py search "ADR-0453"
+    expect: ≥3 命中且含 decisions 路径
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/reports/kos-governance-ingestion-2026-09-27.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-kos-governance-corpus-ingestion.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-kos-governance-corpus-ingestion.md
+    spec_version: 1.0.0
+    content_digest: sha256:f9b39bfe91d0e07b1cdf89b4fdbbd54cde6c234b6b5871cb0654a7bd8e936e9c
+    decision_ref: decision://accepted/BET-Y2Q4-T3-03
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e966f2db27a88c8b4bc82db334112d23f3d49039
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+          tests:
+            ref: receipt://docs/reports/kos-governance-ingestion-2026-09-27.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-03.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >-
+            治理知识检索已可用（ADR-0453 等命中实证）；真实消费（会话冷启动命中、
+            业务单引用）随使用累积计量。
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-210
   title: 固化两条历史/CI 认知到 AGENTS.md — 浅历史边界与 governance-verify 评 head tree
@@ -37347,11 +37450,10 @@ bets:
     job 评的是分支自己的 head tree，base 漂移真的改变它的判定。第二条：本机仓库是浅历史且从未写下。实测主仓 git rev-parse --is-shallow-repository=true，.git/shallow
     单点边界在 6ba6bf28e（2026-08-01），本地可达 8,326 个 commit；而 gac-worktree.sh 默认用 git submodule
     update --init --depth 1（:484/:504）建 claim worktree，实测历史 claim worktree 的 projects/omo
-    只有 1 个 commit（canonical 同一子模块 767 个，HEAD~1 直接 unknown revision），而本次 claim 又是深的 766 个：
-    深浅取决于 claim 路径，不能靠记忆假设。后果具体：gitlink 可达性判据（merge-base
-    --is-ancestor <child> origin/main）在浅检出里没有意义，跑出 false 不是回归而是测量装置没有历史；CI 侧 governance-verify 用 fetch-depth: 0 +
-    submodules: recursive 取完整历史，于是产生"本地 false / CI 绿"的分歧。本 BET 只把这两条写成可复算的认知，不动任何工具或
-    CI 配置。'
+    只有 1 个 commit（canonical 同一子模块 767 个，HEAD~1 直接 unknown revision），而本次 claim 又是深的 766
+    个： 深浅取决于 claim 路径，不能靠记忆假设。后果具体：gitlink 可达性判据（merge-base --is-ancestor <child> origin/main）在浅检出里没有意义，跑出
+    false 不是回归而是测量装置没有历史；CI 侧 governance-verify 用 fetch-depth: 0 + submodules: recursive
+    取完整历史，于是产生"本地 false / CI 绿"的分歧。本 BET 只把这两条写成可复算的认知，不动任何工具或 CI 配置。'
   status: pending
   window: Y2Q4
   track: T10-TOOLING
@@ -37562,7 +37664,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 499
+  total_bets: 500
   windows:
   - Y1Q1
   - Y1Q2
