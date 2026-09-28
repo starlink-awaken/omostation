@@ -134,8 +134,8 @@ def test_removed_mutators_are_not_bound_to_gac_gate() -> None:
     assert exporter["triggers"] == []
 
     sync = surfaces["bin-ssot-sync-submodule-pointers-sh"]
-    assert sync["workflow"] == "workspace.yml"
-    assert sync["triggers"] == ["per_pr", "push"]
+    assert sync["workflow"] == "(none)"  # workspace.yml 已删除 (与 gac-gate 可达性检查重复)
+    assert sync["triggers"] == []
     assert "also_in" not in sync
 
 
@@ -313,3 +313,17 @@ def test_ssot_usage_module_loads():
     findings = mod.check_sots(max_age_days=36500)  # 100 年 → 0 stale
     assert len(findings) > 0, "应检测到至少 1 个 SSOT"
     assert all(not f["stale"] for f in findings)
+
+
+def test_missing_tool_detected(cs, tmp_path) -> None:
+    """登记的工具文件不存在 → missing-tool error (死登记, 2026-09-28 清出 25 条)."""
+    _write(tmp_path / "scripts" / "check-real.py", "print('ok')\n")
+    _write(
+        tmp_path / "ci-surfaces.yaml",
+        "version: 1\nsurfaces:\n"
+        "  - id: real\n    tool: scripts/check-real.py\n    workflow: (none)\n    status: active\n"
+        "  - id: gone\n    tool: scripts/check-gone.py\n    workflow: (none)\n    status: orphan\n",
+    )
+    report = cs.check_ci_surfaces()
+    missing = [e for e in report["errors"] if e.startswith("missing-tool")]
+    assert len(missing) == 1 and "scripts/check-gone.py" in missing[0]

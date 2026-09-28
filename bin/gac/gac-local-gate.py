@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -593,6 +594,54 @@ SOFT_CHECKS = {
 }
 
 
+# ── E1 (2026-09-28): gate 并行执行 ──────────────────────────────────────
+# gate 默认进线程池并行; 下列 gate 因【写工作区/state/子模块】、【走网络/远程】
+# 或【独占本机资源】必须串行 —— 并行会引入数据竞争或 remote 冲突。
+# 分类依据: 2026-09-27 对 87 个 gate 的逐项普查(命令级读写判定)。
+# 新增 gate 默认走并行 ⇒ 配静态守卫 + tests/unit/gac/test_gac_local_gate_parallel.py
+# 断言本集合覆盖全部已知写类, 防未来新增写类 gate 漏登记。
+SERIAL_ONLY: frozenset[str] = frozenset(
+    {
+        # 写类: 会改工作区 / .omo/state / 子模块指针
+        "gac-validate",  # 有规则级错误时追加写 .omo/_knowledge/rule-violations.jsonl
+        "install-watch-agent",  # --write + shutil 写 launchd (ops_only, 自动运行恒跳过)
+        "agent-workflow-lint",
+        "agent-workflow-integrations",
+        "agent-workflow-adapters",
+        "agent-workflow-bootstrap",  # 必写 run state
+        "agent-workflow-verify-plan",
+        "agent-workflow-compliance",
+        "agent-workflow-doctor",
+        "agent-workflow-observe",
+        # 网络/远程: 并行会引发 remote 争用
+        "pitfall-gat006-check",  # 实跑 git fetch origin main
+        "gac-compute-onboard-check",  # curl/urllib 探测本地算力服务 (broken)
+        # 独占本机资源: socket / sqlite
+        "bus-e2e-harness",  # 起本机 ZMQ loopback socket + 子进程
+        "gac-consensus-inject-check",  # 可能 ALTER sqlite (kos DB)
+    }
+)
+
+# 静态守卫: SERIAL_ONLY 里若有拼错/未登记的 id, 并行化就不会生效于该名称 —— 显式告警
+_unknown_serial_only = SERIAL_ONLY - {g["id"] for g in GATES_LIST}
+if _unknown_serial_only:  # pragma: no cover - 配置错误提示
+    print(
+        f"[WARN] SERIAL_ONLY 含未登记/拼错的 gate（并行化对它们无效）: {sorted(_unknown_serial_only)}",
+        file=sys.stderr,
+    )
+
+
+def _gate_jobs() -> int:
+    """并行度: GAC_GATE_JOBS 覆盖, 默认 min(8, cpu_count)。<=1 即完全回退串行。"""
+    try:
+        configured = int(os.environ.get("GAC_GATE_JOBS", "0"))
+    except ValueError:
+        configured = 0
+    if configured > 0:
+        return configured
+    return max(1, min(8, os.cpu_count() or 1))
+
+
 # Concurrent-write isolation (P79 治本):
 #   多 agent 共享主树时, 一个 gate run 期间另一个 agent 写入 .omo/state/*.yaml
 #   会让 read-then-check 的子进程看到 torn state. 解决方案: 在 gate 启动时
@@ -991,6 +1040,37 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
         }
 
 
+def run_checks(checks: Any) -> list[dict[str, object]]:
+    """按 `checks` 原序返回 results; 无副作用 gate 并行, SERIAL_ONLY 串行。
+
+    与串行实现**结果逐项等价**: results[i] 恒对应 checks[i]（按 index 归位），
+    因此 stdout 行序 / finding_topics 序 / --metrics 记录序都与串行完全一致。
+
+    串行项在池启动**之前**按序跑完（而非与池并发）—— 让写类 gate 独占时段，
+    避免"写类正在写、读类同时读"的竞争。
+
+    GAC_GATE_JOBS<=1 时完全回退串行（零成本回退开关）。
+    """
+    results: list[Any] = [None] * len(checks)
+    parallel_idx: list[int] = []
+    for i, (name, _command) in enumerate(checks):
+        if name in SERIAL_ONLY:
+            results[i] = run_check(*checks[i])
+        else:
+            parallel_idx.append(i)
+
+    jobs = _gate_jobs()
+    if parallel_idx and jobs > 1:
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = {pool.submit(run_check, *checks[i]): i for i in parallel_idx}
+            for future in as_completed(futures):
+                results[futures[future]] = future.result()
+    else:
+        for i in parallel_idx:
+            results[i] = run_check(*checks[i])
+    return results
+
+
 def extract_finding_topics(results: list[dict[str, object]]) -> list[dict[str, object]]:
     """Expand A6 checks into classified finding topics for agents/dashboards.
 
@@ -1093,7 +1173,7 @@ def run_gate(
     metrics_file = WORKSPACE / ".omo" / "state" / "metrics-store.jsonl"
     if adaptive:
         checks = _apply_adaptive_thresholds(checks, metrics_file)
-    results = [run_check(name, command) for name, command in checks]
+    results = run_checks(checks)
     if agt_backend:
         agt_results = run_agt_policy_engine()
         results.extend(agt_results)

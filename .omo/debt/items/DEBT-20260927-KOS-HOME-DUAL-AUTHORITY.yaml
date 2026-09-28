@@ -1,0 +1,38 @@
+id: "DEBT-20260927-KOS-HOME-DUAL-AUTHORITY"
+title: "KOS 双库权威性无契约 — KOS_HOME 默认 ~/.kos 与工作区 data/kos 各持一份索引"
+dimension: "knowledge"
+subdimension: "ssot-hygiene"
+domain: "meta"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "classification"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+  - "data/kos/kos-index.sqlite"
+  - "~/.kos/kos-index.sqlite"
+  - "projects/knowledge/kairon/packages/kos/src/kos/config.py"
+evidence_refs:
+- "2026-09-27 BET-Y2Q4-T3-03 摄入实证: kos-cli 默认写 ~/.kos（KOS_HOME 默认）,
+    首轮 1,038 篇治理语料落错库（'indexed 1,038 但 data/kos 计数不动'暴露）;
+    复核后 KOS_HOME 双库同摄, 现两库各 13,588 篇。"
+- "config.py:35 — get_vault_ops_dir 默认 Path.home()/.kos, KOS_HOME 环境变量可覆盖;
+    generate-brief.py 的知识复用指标读 data/kos（T1-04 修正后口径）。"
+mitigation_refs: []
+decision_needed: >
+  哪个库是 kos-mcp / 消费端的权威源: (a) data/kos（随工作区）或 (b) ~/.kos（用户级）。
+  定权威后: 另一库降级为导出物或废弃; KOS_HOME 解析写入 standards。
+opened_at: "2026-09-27"
+last_reviewed_at: '2026-09-27'
+next_review_at: '2026-10-27'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+history:
+- at: '2026-09-27T00:00:00+00:00'
+  action: identify
+  note: >-
+    BET-Y2Q4-T3-03 摄入时实证双库漂移; 权威性无契约导致 ingest 通道默认行为与
+    工作区消费口径脱节。登记时两库暂双摄同步（临时缓解）。
+  actor: governance-agent
