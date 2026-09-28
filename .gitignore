@@ -391,6 +391,14 @@ scripts/scripts/
 .omo/_knowledge/signals/
 live-server.pid
 
-# Runtime artifacts created by omo-health-refresh orchestrator
+# Runtime artifact written by `omo state refresh` (ADR-0397 运行时投影不入版本库)
 .omo/state/system_health.yaml
-bin/ops/launchd/
+# 注意: bin/ops/launchd/ 曾于 78d7dcc7f (#4475) 被整目录加入忽略, 理由是
+# 「orchestrator 产生的未跟踪文件让 publisher 报 projection_code_dirty」。该判断有误:
+#   - 无任何代码生成或写入该目录 —— 全仓对 ops/launchd 的命中只有 arch-health-weekly.sh
+#     的一行注释引用, 以及 retro/design/registry 的声明面, 均将其当作**源文件**
+#   - 该目录已有 5 个 plist 处于 git 跟踪状态 (arch-health-weekly / expiry-radar /
+#     omo-debt-refresh / zhixing-dashboard / zhixing-host-drift)
+#   - .omo/cron/registry.yaml 多条条目以「plist 源 bin/ops/launchd/...」引用它
+# 忽略该目录会让这些声明失去被版本化的实现背书, 且使新 plist 无法入库。
+# 真正的 publisher 摩擦是「未跟踪文件」, 正解是把源文件提交, 而非忽略源目录。
