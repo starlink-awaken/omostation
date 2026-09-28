@@ -37647,7 +37647,8 @@ bets:
     噪声/ 财务系统清单）+ 修订与派发节。行动包只落 Documents 域，仓库内仅路径引用零正文。 零自动外发，派发权在 principal。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-28
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
@@ -37691,17 +37692,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T4-04
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@97d72b17e4cb4741c1cfe3e89a47339b59a8fea3
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          tests:
+            ref: receipt://docs/reports/business-2nd-action-pack-2026-09-28.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值门槛 = principal 修订/派发决定（行动包 §四留槽，git grep 证零正文入仓）。
+            真实输入（市政府纪要 144 号）→ 结构化行动包的转换已交付；签发/派发后按
+            首单先例回填签发回执。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
