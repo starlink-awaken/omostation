@@ -37454,7 +37454,8 @@ bets:
     个： 深浅取决于 claim 路径，不能靠记忆假设。后果具体：gitlink 可达性判据（merge-base --is-ancestor <child> origin/main）在浅检出里没有意义，跑出
     false 不是回归而是测量装置没有历史；CI 侧 governance-verify 用 fetch-depth: 0 + submodules: recursive
     取完整历史，于是产生"本地 false / CI 绿"的分歧。本 BET 只把这两条写成可复算的认知，不动任何工具或 CI 配置。'
-  status: pending
+  status: done
+  done_at: 2026-09-28
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -37517,15 +37518,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@fcb6eabeac3c3670930251a6d539a405459be013
+          tests:
+            ref: receipt://docs/reports/2026-09-27-agent-perception-shallow-history-closeout.md
+            sha256: sha256:9b3c8d189751ac5608791e04ae173654d88fcbee2efd4a3a2a216245f611e243
+          diff:
+            ref: receipt://docs/reports/2026-09-27-agent-perception-shallow-history-closeout.md
+            sha256: sha256:9b3c8d189751ac5608791e04ae173654d88fcbee2efd4a3a2a216245f611e243
+          rollback:
+            ref: receipt://docs/reports/2026-09-27-agent-perception-shallow-history-closeout.md
+            sha256: sha256:9b3c8d189751ac5608791e04ae173654d88fcbee2efd4a3a2a216245f611e243
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-27-agent-perception-shallow-history-closeout.md
+            sha256: sha256:9b3c8d189751ac5608791e04ae173654d88fcbee2efd4a3a2a216245f611e243
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-27-agent-perception-shallow-history-closeout.md
+            sha256: sha256:9b3c8d189751ac5608791e04ae173654d88fcbee2efd4a3a2a216245f611e243
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-210.md
+            sha256: sha256:2dc08a0fc635ee60b7e410d244e74bdbb240d9be8fb9c68c1c2836b690ece414
+          cleanup:
+            ref: receipt://docs/reports/2026-09-27-agent-perception-shallow-history-closeout.md
+            sha256: sha256:9b3c8d189751ac5608791e04ae173654d88fcbee2efd4a3a2a216245f611e243
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-08
   title: gh 查询安全层 — 重试+空保护共享助手（GRAPHQL-FLAKY 处置）
   goal: 'TOOL-GRAPHQL-FLAKY-EMPTY-MEANS-UNKNOWN 处置实现：bin/lib/gh_query.py 共享助手 （gh_json
