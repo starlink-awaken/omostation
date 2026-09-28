@@ -10,9 +10,10 @@ related: ADR-A, ADR-0422, ADR-0457, ADR-0458
 tags: [clone-lifecycle, claim-scope, provenance, multi-agent, wrapper-defect]
 ---
 
-# ADR-0459 — clone-lifecycle 交付管道的两处阻塞:wrapper 丢参与多 agent 并发不兼容
+# ADR-0459 — clone-lifecycle 交付管道的三类阻塞:claim 身份 / 并发不兼容 / 产物路径与发布栅栏
 
-- **Status**: PROPOSED（2026-09-28 提案；未实施。provenance 绑定项需 principal 决定是否放宽）
+- **Status**: PROPOSED（2026-09-28 提案；三类阻塞均已定位，`changeset_ok` 已达成，
+  但 `integrate` 仍停在问题三的发布栅栏；未实施。绑定强度与栅栏口径需 principal 决定）
 - **Date**: 2026-09-28
 - **Related**: ADR-A（调度编译器）、ADR-0422（escape hatch / fingerprint）、BET-Y2Q4-T16-01、T16-02
 
@@ -122,6 +123,52 @@ commit_identities_match(repo_root, identity["frozen_root_sha"],
 > 失配都不是「门禁误伤」，走逃生口会在 `.omo/_delivery/swarm-escape/` 留下
 > 不该有的记录，且丢失这项发现。正确处置是修管道本身。
 
+## 问题三：产物路径约定不一致，且重跑语义未文档化
+
+在绕过问题二的重排尝试中，连续踩到四处产物约定问题。它们单独都能浪费一整轮试错：
+
+### ① provenance receipt 有两个不同的期望位置
+
+- 写：`provenance --output <path>` 接受任意路径
+- 读：`provenance_path()` = `git_common_dir(clone)/agent-clone-provenance.json`，
+  即 **clone 内部**的固定文件名
+
+按 `--output` 写到 clone 外（父目录）时，写入成功且内容正确，但校验永远失败。
+
+### ② 回执位置与 receipt 位置规则相反
+
+- `snapshot` / `readiness` / `provenance` 的回执若落在 **clone 根内**，会成为
+  untracked 文件，使 `snapshot` 报 `root_dirty` → 须放 **clone 外**
+- 而 provenance receipt 必须在 **clone 内**（见 ①）
+
+两者规则相反，工具未在任何位置说明。
+
+### ③ 产物是「写一次」语义，重跑须换名
+
+`snapshot` 与 `changeset` 对已存在的 `--output` 直接报 `output_collision`。
+管道失败后重试必须换文件名，而失败信息只说「碰撞」，不说「换个名字」。
+
+### ④ `integrate` 存在未文档化的发布栅栏
+
+`changeset_ok` 之后，`integrate --apply` 仍可能失败于：
+
+```
+legacy_publish_fence_required: LEGACY_FENCE_CONTEXT_UNAVAILABLE
+```
+
+该栅栏的触发条件、可获取的上下文来源、以及恢复路径均未在任何文档中说明。
+它是本轮遇到的**第 21 道** fail-closed 门，也是最终阻断点。
+
+### 建议修法
+
+1. 统一产物路径：`snapshot` / `readiness` 回执走 clone 外，provenance receipt
+   走 clone 内固定路径，并在 `--help` 中写明；`provenance --output` 缺省即写
+   `provenance_path()`。
+2. `output_collision` 的失败信息补充「请使用新的 --output 路径」并支持
+   `--force` 覆盖。
+3. 为 `LEGACY_FENCE_CONTEXT_UNAVAILABLE` 补文档：触发条件、上下文来源、
+   恢复步骤；否则它只是一道无法诊断的墙。
+
 ## 影响面与不做的事
 
 - **不改**：claim 的 actor 语义（仍以受支持入口为准）、provenance 的绑定强度
@@ -135,3 +182,19 @@ commit_identities_match(repo_root, identity["frozen_root_sha"],
 2. 在 main 推进的场景下，`integrate` 给出的是可诊断的等待/重生成指引，
    而非逐门试错才能定位的 `clone_provenance_mismatch`
 3. `provenance_late_binding` 在「合法工作导致 rebase」后有明确的恢复路径
+4. `provenance --output` 缺省即写校验器读取的固定位置；回执与 receipt 的
+   内外规则在 `--help` 中可查
+5. `LEGACY_FENCE_CONTEXT_UNAVAILABLE` 有明确触发条件与恢复路径的文档
+
+## 2026-09-28 补充：发布仍未完成
+
+问题一、二、三修完后 `changeset_ok` 已达成（11 路径全覆盖），
+但 `integrate --apply` 最终停在问题三的 ④。交付内容本身完备：
+
+- 8 提交 / 11 文件，全部 `author == committer == xiamingxing`
+- 台账 lint `OK -- 505 bets, no errors`；`adr-number-check` `latest=0459`
+- 运行时侧独立生效：`omo-health-refresh` exit 0、A2/A5 PASS、`stale_beats 0`
+
+**即：内容完备，发布通道不通。** 本 ADR 记录的三类问题共同构成阻塞；
+在问题二④修好前，`clone-lifecycle integrate` 在本仓（6+ 并发 agent）
+不具备可用性，应走常规 PR 流程。
