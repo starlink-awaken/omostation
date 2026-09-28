@@ -1,0 +1,38 @@
+id: "DEBT-20260927-RUN-REGISTRY-RACE"
+title: "全局 runs 注册表跨会话写竞态 — run 文件可被并发会话覆写（bet_id/objective 丢失）"
+dimension: "governance"
+subdimension: "tooling"
+domain: "meta"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "coordination"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+  - ".omo/_delivery/agent-workflows/runs/"
+evidence_refs:
+- "2026-09-27 BET-Y2Q4-T3-03 实证: run 20260927T230315Z-project-code-change-b4efea8b
+    （本会话 start, objective=KOS 摄入）随后被并发会话的 BOS 清理 objective 覆写
+    （同 run 文件, bet_id 字段消失）→ complete 报 missing_bet_binding。
+    .omo/_delivery/agent-workflows 已被符号链接化为全局共享目录（多会话写同一路径）。"
+- "当时的缓解: complete --force 逃生（实质检查人工确认: spec binding/D0/retro 均在案）。"
+mitigation_refs: []
+decision_needed: >
+  run 文件写入需要会话隔离或原子性: (a) run 文件按会话分目录; (b) 写入加文件锁;
+  (c) start 后 run 文件只允许属主会话追加。当前 last-writer-wins 使 run 身份可被
+  并发覆写, complete 的链检查是唯一护栏。
+opened_at: "2026-09-27"
+last_reviewed_at: '2026-09-27'
+next_review_at: '2026-10-27'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+history:
+- at: '2026-09-28T00:00:00+00:00'
+  action: identify
+  note: >-
+    跨会话写覆写实证一例; 受害会话用 complete --force 收账（实质检查人工确认）。
+    前一 PR #4497 因本会话 grep -c 链断只含 GRAPHQL 补强, 两个登记文件丢失,
+    本 run 为恢复重铸。
+  actor: governance-agent
