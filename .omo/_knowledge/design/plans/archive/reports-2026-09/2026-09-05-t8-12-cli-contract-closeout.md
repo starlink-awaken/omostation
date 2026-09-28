@@ -1,15 +1,14 @@
 ---
-schema_version: report/v1
-type: report
-title: BET-Y1Q4-T8-12 CLI behavior contract closeout
-bet_id: BET-Y1Q4-T8-12
+schema: md/v1
 status: final
 lifecycle: evidence
 owner: governance-team
-created: 2026-09-05
+type: report
 last-reviewed: 2026-09-05
+title: BET-Y1Q4-T8-12 CLI behavior contract closeout
+created: 2026-09-05
+bet_id: BET-Y1Q4-T8-12
 ---
-
 # BET-Y1Q4-T8-12 Closeout Receipt
 
 ## Verify

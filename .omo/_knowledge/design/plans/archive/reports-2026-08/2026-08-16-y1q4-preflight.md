@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # Y1Q4 六 Bet 可行性预检报告
 
 **类型**: report

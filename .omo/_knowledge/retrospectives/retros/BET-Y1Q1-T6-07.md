@@ -1,18 +1,14 @@
 ---
-title: BET-Y1Q1-T6-07 retro — 战略收敛 r3 剩余件
-type: retro
+schema: md/v1
 status: active
-owner: governance-agent
-created: 2026-08-17
-bet: BET-Y1Q1-T6-07
-related:
-  - /Users/xiamingxing/Downloads/AGENT-BRIEF-STRATEGY-CONVERGENCE-REMAINDER.md
-  - .omo/_knowledge/decisions/0413-gbrain-kairon-merge-disposition.md
-  - .omo/_knowledge/decisions/0414-physical-multihost-tension-resolution.md
 lifecycle: history
+owner: governance-agent
+type: retro
 last-reviewed: 2026-08-18
+title: BET-Y1Q1-T6-07 retro — 战略收敛 r3 剩余件
+related: 
+created: 2026-08-17
 ---
-
 # BET-Y1Q1-T6-07 复盘 — 战略收敛第三轮派工
 
 ## Q1 做了什么

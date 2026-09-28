@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Policy radar & morning brief
-bet_id: BET-Y1Q4-T7-03
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-08-31
-last-reviewed: 2026-08-31
 type: ssot
+last-reviewed: 2026-08-31
+title: Policy radar & morning brief
+created: 2026-08-31
 last_updated: 2026-09-03
+bet_id: BET-Y1Q4-T7-03
 ---
-
 # Policy radar & morning brief (T7-03)
 
 ## Intent

@@ -1,0 +1,59 @@
+{
+  "$defs": {
+    "OmoAlertSeverity": {
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "info"
+      ],
+      "title": "OmoAlertSeverity",
+      "type": "string"
+    }
+  },
+  "description": "KEI threshold alert 记录 (Round 8 P2 SSOT).",
+  "properties": {
+    "ts": {
+      "title": "Ts",
+      "type": "string"
+    },
+    "kind": {
+      "const": "kei_threshold",
+      "default": "kei_threshold",
+      "title": "Kind",
+      "type": "string"
+    },
+    "severity": {
+      "$ref": "#/$defs/OmoAlertSeverity"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "blocked_rate": {
+      "minimum": 0,
+      "title": "Blocked Rate",
+      "type": "integer"
+    },
+    "failed_rate": {
+      "minimum": 0,
+      "title": "Failed Rate",
+      "type": "integer"
+    },
+    "threshold": {
+      "minimum": 1,
+      "title": "Threshold",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "ts",
+    "severity",
+    "message",
+    "blocked_rate",
+    "failed_rate",
+    "threshold"
+  ],
+  "title": "OmoAlertRecord",
+  "type": "object"
+}

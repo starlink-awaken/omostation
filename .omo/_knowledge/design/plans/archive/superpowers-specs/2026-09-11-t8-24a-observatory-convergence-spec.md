@@ -1,14 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Observatory 统一数据面收敛与增量流式投影服务规范 (BET-Y1Q4-T8-24A)
-bet_id: BET-Y1Q4-T8-24A
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-11
+title: Observatory 统一数据面收敛与增量流式投影服务规范 (BET-Y1Q4-T8-24A)
+bet_id: BET-Y1Q4-T8-24A
 ---
-
 # Observatory 统一数据面收敛与增量流式投影服务规范 (BET-Y1Q4-T8-24A)
 
 ## 1. 目标与背景

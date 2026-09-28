@@ -1,15 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-08-07
-related:
-  - ../../../docs/operations/delegation-infra-config.md
-  - p71-baseline-recovery-pattern.md
-  - p78-triple-axis-diagnostic-pattern.md
 type: ssot
+last-reviewed: 2026-08-07
+related: 
 ---
-
 # Delegation Infra Diagnosis Pattern — 子代理委托基础设施四层故障诊断 Runbook
 
 > **Generated**: 2026-08-07 (post delegation-infra-reliability P3a)

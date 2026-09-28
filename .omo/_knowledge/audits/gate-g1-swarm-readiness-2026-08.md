@@ -1,19 +1,14 @@
 ---
-title: G-1 Swarm Readiness Gate 证据包
-type: audit
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-15
 lifecycle: history
-related:
-  - docs/architecture/blueprint-multi-agent-execution-control-v1.md
-  - docs/architecture/blueprint-collab-consolidation-v1.md
-context: >-
-  蓝图 §18 红线: SR-01~06 全过之前禁止开业务蜂群。本包为 SR-01~05 机器证据;
-  SR-06 双轮演练 (reject→rollback / accept) 另行执行后回填。
+owner: governance-team
+type: audit
 last-reviewed: 2026-08-25
+title: G-1 Swarm Readiness Gate 证据包
+related: 
+created: 2026-08-15
 ---
-
 # G-1 Swarm Readiness Gate 证据包 — 2026-08-15
 
 ## 0. 裁决摘要

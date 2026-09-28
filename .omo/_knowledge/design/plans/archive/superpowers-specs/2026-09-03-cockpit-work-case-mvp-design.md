@@ -1,17 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
-created: 2026-09-03
-last-reviewed: 2026-09-03
-bet_id: BET-Y1Q4-T8-04
-risk_level: L3
 type: ssot
+last-reviewed: 2026-09-03
+created: 2026-09-03
 last_updated: 2026-09-03
+bet_id: BET-Y1Q4-T8-04
 ---
-
 # Cockpit 个人工作案件台 MVP
 
 ## 决策

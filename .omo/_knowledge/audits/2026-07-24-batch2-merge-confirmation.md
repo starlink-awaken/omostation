@@ -1,15 +1,12 @@
 ---
-title: STRAT-P81 Batch2 合并后确认巡检
-date: 2026-07-24
-type: audit
-stage: batch2-closeout
-strat: STRAT-P81
-run: 20260724T064622Z-governance-state-mutation-5246576d (verify 以 CI 为准, 见下)
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: STRAT-P81 Batch2 合并后确认巡检
 ---
-
 # Batch2 合并后确认 (2026-07-24)
 
 ## 合并结果

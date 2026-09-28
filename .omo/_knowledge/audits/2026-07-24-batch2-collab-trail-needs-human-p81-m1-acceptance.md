@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — needs-human-p81-m1-acceptance
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: needs-human-p81-m1-acceptance
-task_path: .omo/tasks/planned/needs-human-p81-m1-acceptance.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — needs-human-p81-m1-acceptance
 ---
-
 # `needs-human-p81-m1-acceptance`
 
 | Field | Value |

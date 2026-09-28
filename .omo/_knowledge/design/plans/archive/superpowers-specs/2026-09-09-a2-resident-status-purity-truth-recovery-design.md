@@ -1,20 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.3.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-09
+type: plan
 last-reviewed: 2026-09-11
-last_updated: 2026-09-11
 title: A2 Resident Status Purity Truth Recovery
+created: 2026-09-09
+last_updated: 2026-09-11
 bet_id: BET-Y1Q4-T10-144
-implementation_authorized: true
-value_indicator_policy: false
-risk_level: L2
-human_gate: true
 ---
-
 # A2 Resident Status Purity Truth Recovery
 
 ## 1. Status and authority

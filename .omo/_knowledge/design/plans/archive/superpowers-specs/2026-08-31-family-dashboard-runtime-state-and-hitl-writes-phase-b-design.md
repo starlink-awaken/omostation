@@ -1,19 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.2.0
-title: Family dashboard runtime-state and HITL writes Phase B
-bet_id: BET-Y1Q3-T10-122
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: family-hub
-created: 2026-08-30
-last-reviewed: 2026-09-02
-risk_level: L3
-human_gate: true
 type: ssot
+last-reviewed: 2026-09-02
+title: Family dashboard runtime-state and HITL writes Phase B
+created: 2026-08-30
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-122
 ---
-
 # Family dashboard runtime-state and HITL writes Phase B
 
 ## Context

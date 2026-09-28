@@ -1,17 +1,12 @@
 ---
-title: STRAT-P81 Stage 0 closeout (review-hardened · v2)
-date: 2026-07-24
-type: audit
-stage: S0
-strat: STRAT-P81
-workorder: .omo/plans/strat-p81-stage0-handoff.md
-pr: null
-supersedes: 2026-07-24-p81-stage0-closeout.md
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: STRAT-P81 Stage 0 closeout (review-hardened · v2)
 ---
-
 # STRAT-P81 Stage 0 closeout (v2 · review-hardened)
 
 ## 0. TL;DR

@@ -1,7 +1,9 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
+type: plan
 last-reviewed: 2026-09-24
 ---
 # Cockpit CLI 批次 12 全面测试报告

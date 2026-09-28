@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # agora P1+P2 深化深度复盘报告 (2026-08-06)
 
 > 复盘范围: P1 (ProcessPool/ProxyManager收口/路径env化) + P2 (/metrics/hashchain/双进程统一/本地调用放行) 全链路。

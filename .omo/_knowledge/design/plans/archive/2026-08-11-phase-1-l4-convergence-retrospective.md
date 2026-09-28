@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # Phase 1 Retrospective — L4 Content Boundary and Declarative Domains
 
 > Date: 2026-08-11

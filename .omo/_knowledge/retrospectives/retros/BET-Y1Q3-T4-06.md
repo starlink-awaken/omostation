@@ -1,15 +1,14 @@
 ---
-title: BET-Y1Q3-T4-06 回顾
-type: retro
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+type: retro
 last-reviewed: 2026-08-29
+title: BET-Y1Q3-T4-06 回顾
+related: 
 created: 2026-08-29
-related:
-- BET-Y1Q3-T4-05
 ---
-
 # BET-Y1Q3-T4-06 retro
 
 ## 正式 closeout

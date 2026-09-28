@@ -1,12 +1,12 @@
 ---
-type: plan
+schema: md/v1
 status: active
+lifecycle: entry
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-06
 last_updated: 2026-09-06
-bet: BET-Y1Q4-T9-03
-campaign: CMP-Y1-AGENT-ORIENT
 ---
-
 # Agent Session Dashboard（ASD）规格
 
 > **定位**：新 agent 会话冷启动时加载的**无 UI 信息聚合面板**。  

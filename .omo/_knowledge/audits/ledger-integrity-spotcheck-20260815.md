@@ -1,22 +1,14 @@
 ---
-title: 台账 done 状态完整性抽样审计
-type: audit
+schema: md/v1
 status: final
-owner: governance-team
-created: 2026-08-15
 lifecycle: history
-related:
-  - docs/plans/3y-bet-ledger.yaml
-  - .omo/_knowledge/retros/BET-Y1Q3-T3-01.md
-context: >
-  触发事件: BET-Y1Q3-T3-01 被标 done 而其 retro 记录 done_when 两条未过 (87.5% vs
-  99%, 窗口仅 1 周), 属 AGENT-BRIEF §1.3「声明 ≠ 事实」真实案例。本审计按人类
-  2026-08-15 指令对 52 个 done bet 做分层抽样核实。判定分级: A=机械重跑 verify 命令
-  (只读), B=信 retro Q2/验证节逐条判定, C=语义模糊不判交人。时间窗口条款强制
-  算术核对 (done_at 距窗口起算点)。
+owner: governance-team
+type: audit
 last-reviewed: 2026-08-25
+title: 台账 done 状态完整性抽样审计
+related: 
+created: 2026-08-15
 ---
-
 # 台账 done 状态完整性抽样审计 — 2026-08-15
 
 ## 1. 抽样方法（可复现）

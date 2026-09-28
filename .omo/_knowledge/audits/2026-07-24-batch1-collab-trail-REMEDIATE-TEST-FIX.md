@@ -1,15 +1,12 @@
 ---
-title: Batch1 real backlog collab trail — REMEDIATE-TEST-FIX
-date: 2026-07-24
-type: collab-trail
-backlog: true
-task_id: REMEDIATE-TEST-FIX
-task_path: .omo/tasks/remediation/REMEDIATE-TEST-FIX.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch1 real backlog collab trail — REMEDIATE-TEST-FIX
 ---
-
 # Real backlog collab: `REMEDIATE-TEST-FIX`
 
 | Field | Value |

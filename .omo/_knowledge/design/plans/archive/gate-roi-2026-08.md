@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # Gate ROI 季度治理价值报告
 
 > 数据源: governance-history.jsonl | 事件数: 693 | 趋势窗口: 近 30 天 | 估算总节省: **65.3 小时**

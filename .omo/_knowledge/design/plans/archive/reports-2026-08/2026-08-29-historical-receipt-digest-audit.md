@@ -1,10 +1,12 @@
 ---
-title: Historical completion receipt digest audit
-date: 2026-08-29
+schema: md/v1
 status: verified
+lifecycle: entry
+owner: governance-team
 type: ephemeral
+last-reviewed: 2026-09-28
+title: Historical completion receipt digest audit
 ---
-
 # 历史 completion receipt digest 审计
 
 ## Scope

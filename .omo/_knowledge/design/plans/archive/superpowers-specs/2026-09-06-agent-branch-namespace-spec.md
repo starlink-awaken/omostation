@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: 并发 Agent 分支命名空间隔离 — agent/{actor}/{session} 三段式
-bet_id: BET-Y1Q4-T10-128
+schema: md/v1
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-09-06
-type: plan
 owner: governance-team
+type: plan
+last-reviewed: 2026-09-06
+title: 并发 Agent 分支命名空间隔离 — agent/{actor}/{session} 三段式
 last_updated: 2026-09-06
+bet_id: BET-Y1Q4-T10-128
 ---
-
 # Agent 分支命名空间规格 (BET-Y1Q4-T10-128)
 
 ## 决策

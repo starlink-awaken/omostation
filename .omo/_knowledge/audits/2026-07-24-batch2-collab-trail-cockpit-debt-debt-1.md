@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — cockpit-debt-debt-1
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: cockpit-debt-debt-1
-task_path: .omo/tasks/planned/cockpit-debt-debt-1.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — cockpit-debt-debt-1
 ---
-
 # `cockpit-debt-debt-1`
 
 | Field | Value |

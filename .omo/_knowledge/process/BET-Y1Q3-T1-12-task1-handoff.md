@@ -1,12 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-26
 type: task-handoff
-related-retro: .omo/_knowledge/retros/BET-Y1Q3-T1-12.md
+last-reviewed: 2026-08-26
 ---
-
 # BET-Y1Q3-T1-12 · Task 1 交付交接（ecos WorkPacket v2 CapabilityRequirement）
 
 > 本文记录 Task 1 从 RED→GREEN → commit/tag → PR/merge → 根仓 gitlink 吸收的完整证据链，

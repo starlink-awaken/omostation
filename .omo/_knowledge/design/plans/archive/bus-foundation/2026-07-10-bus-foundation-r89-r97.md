@@ -1,14 +1,12 @@
 ---
+schema: md/v1
 status: planned
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
 type: ssot
+last-reviewed: 2026-07-31
 last_updated: 2026-09-03
 ---
-
 # bus-foundation R89–R97 实施 Plan
 
 > **配套 spec**: [`2026-07-10-bus-foundation-r89-r97-spec.md`](./2026-07-10-bus-foundation-r89-r97-spec.md) — 必读

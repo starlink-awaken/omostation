@@ -1,9 +1,10 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-11
 type: ssot
+last-reviewed: 2026-09-11
 ---
 # PITFALL-004: doc-governance `last-reviewed` UTC 时区陷阱
 

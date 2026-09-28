@@ -1,7 +1,9 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
+type: audit
 last-reviewed: 2026-09-24
 ---
 # BOS 契约走查报告 — 第九轮 (2026-08/09 走查序列)

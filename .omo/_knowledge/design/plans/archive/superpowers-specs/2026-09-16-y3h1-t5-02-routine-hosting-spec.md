@@ -1,15 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: BET-Y3H1-T5-02 specification
-bet_id: BET-Y3H1-T5-02
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: "@xiamingxing"
+type: plan
 last-reviewed: 2026-09-16
+title: BET-Y3H1-T5-02 specification
+bet_id: BET-Y3H1-T5-02
 ---
-
-
 # BET-Y3H1-T5-02 超级个体数字分身高可信 Routine 自动受托托管引擎
 
 > 日期：2026-09-16

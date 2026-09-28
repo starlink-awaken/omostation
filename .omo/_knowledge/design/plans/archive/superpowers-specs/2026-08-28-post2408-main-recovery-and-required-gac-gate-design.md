@@ -1,19 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.4
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
-created: 2026-08-28
-last-reviewed: 2026-09-02
-bet_id: BET-Y1Q3-T6-15
-risk_level: L3
-human_gate: true
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-02
+created: 2026-08-28
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T6-15
 ---
-
 # Post-2408 Main Recovery 与 Required GaC Gate 设计
 
 ## 1. 决策与目标

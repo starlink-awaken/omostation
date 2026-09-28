@@ -1,7 +1,9 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
+type: plan
 last-reviewed: 2026-09-24
 ---
 # 治理迭代战役收官复盘 (T10-139 → T10-140 → 三轮迭代)

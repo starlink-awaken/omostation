@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/content-model-check.py
+name: Content Model Check.py
+category: governance
+owner: governance-team
+description: "Content model pre-commit check — validates frontmatter schema/status/lifecycle enums on changed markdown files (content-model Phase 5)"
+inputs:
+  - type: path
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-09-28"

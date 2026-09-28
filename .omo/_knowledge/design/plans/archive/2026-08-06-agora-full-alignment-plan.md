@@ -1,9 +1,10 @@
 ---
+schema: md/v1
 status: active
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-08-18
 type: ephemeral
+last-reviewed: 2026-08-18
 ---
 # agora 全面规划与方案设计 (2026-08-06)
 

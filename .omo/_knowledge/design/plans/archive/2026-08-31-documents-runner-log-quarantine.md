@@ -1,13 +1,13 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-created: 2026-08-30
+type: doc
 last-reviewed: 2026-08-30
 title: T10-110 Documents runner-log exact quarantine report
-type: doc
+created: 2026-08-30
 ---
-
 # T10-110 Documents runner-log exact quarantine report
 
 ## Outcome

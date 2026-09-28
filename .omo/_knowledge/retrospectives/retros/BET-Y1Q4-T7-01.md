@@ -1,17 +1,14 @@
 ---
-title: BET-Y1Q4-T7-01 retro — 公文 format_check L2 守门 (shadow 维持)
-type: retro
+schema: md/v1
 status: active
-owner: governance-agent
-created: 2026-08-18
-bet: BET-Y1Q4-T7-01
-related:
-  - docs/operations/document-review-outcome-tracking.md
-  - docs/scene-cards/document-review.yaml
 lifecycle: history
+owner: governance-agent
+type: retro
 last-reviewed: 2026-08-19
+title: BET-Y1Q4-T7-01 retro — 公文 format_check L2 守门 (shadow 维持)
+related: 
+created: 2026-08-18
 ---
-
 # BET-Y1Q4-T7-01 复盘（五问）— 守门版
 
 ## Q1 实际耗时 vs appetite?

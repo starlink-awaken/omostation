@@ -1,16 +1,13 @@
 ---
-title: BET-Y1Q3-T5-04 复盘 — SR-06 四缺口修复
-type: retro
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-16
-context: >-
-  T1-18 retro Q3 记录的四个产品缺口, 本轮全部修复。全部为 fail-closed 误伤
-  (防御正确但拦了不该拦的), 修复不改语义只修误伤路径。
 lifecycle: history
+owner: governance-team
+type: retro
 last-reviewed: 2026-08-18
+title: BET-Y1Q3-T5-04 复盘 — SR-06 四缺口修复
+created: 2026-08-16
 ---
-
 # BET-Y1Q3-T5-04 复盘
 
 ## 四缺口对照 (2026-08-16)

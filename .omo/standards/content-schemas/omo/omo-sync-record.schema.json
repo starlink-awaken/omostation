@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "OmoSyncStatus": {
+      "enum": [
+        "ok",
+        "error"
+      ],
+      "title": "OmoSyncStatus",
+      "type": "string"
+    }
+  },
+  "description": "omo state sync 记录 (Round 8 P2 SSOT).",
+  "properties": {
+    "ts": {
+      "title": "Ts",
+      "type": "string"
+    },
+    "kind": {
+      "const": "omo_sync",
+      "default": "omo_sync",
+      "title": "Kind",
+      "type": "string"
+    },
+    "phase": {
+      "title": "Phase",
+      "type": "integer"
+    },
+    "health_score": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Health Score",
+      "type": "number"
+    },
+    "dry_run": {
+      "title": "Dry Run",
+      "type": "boolean"
+    },
+    "audit_checks": {
+      "minimum": 0,
+      "title": "Audit Checks",
+      "type": "integer"
+    },
+    "status": {
+      "$ref": "#/$defs/OmoSyncStatus"
+    },
+    "error": {
+      "default": "",
+      "title": "Error",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ts",
+    "phase",
+    "health_score",
+    "dry_run",
+    "audit_checks",
+    "status"
+  ],
+  "title": "OmoSyncRecord",
+  "type": "object"
+}

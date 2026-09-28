@@ -1,10 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+type: retro
 last-reviewed: 2026-08-18
 title: Y1 冗余清单对账
-type: retro
 ---
 # Y1 冗余清单对账
 

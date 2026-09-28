@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — OPC-P6-SELF-EVOLUTION-doc-gate-e
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: OPC-P6-SELF-EVOLUTION-doc-gate-e
-task_path: .omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — OPC-P6-SELF-EVOLUTION-doc-gate-e
 ---
-
 # `OPC-P6-SELF-EVOLUTION-doc-gate-e`
 
 | Field | Value |

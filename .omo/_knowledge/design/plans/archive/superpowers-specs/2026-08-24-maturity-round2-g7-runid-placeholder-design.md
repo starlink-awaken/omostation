@@ -1,16 +1,14 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
-created: 2026-08-24
-last-reviewed: 2026-08-24
-schema_version: specification/v1
-spec_version: 1.0.0
-bet_id: BET-Y1Q3-T10-07
 type: ssot
+last-reviewed: 2026-08-24
+created: 2026-08-24
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-07
 ---
-
 # Maturity Round 2 — G7: Droid-Shield run-id 误报治理
 
 > 日期：2026-08-24

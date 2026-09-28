@@ -1,11 +1,12 @@
 ---
-title: "卫健委控制器影子迁移阶段复盘"
-date: 2026-08-14
+schema: md/v1
 status: in_progress
-scope: "Runtime 影子作业、Cockpit 只读投影、Workspace Documents binding"
+lifecycle: entry
+owner: governance-team
 type: ephemeral
+last-reviewed: 2026-09-28
+title: "卫健委控制器影子迁移阶段复盘"
 ---
-
 # 卫健委控制器影子迁移阶段复盘
 
 ## 本阶段结论

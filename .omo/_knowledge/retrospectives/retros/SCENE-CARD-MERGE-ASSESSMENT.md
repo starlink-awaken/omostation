@@ -1,10 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
+type: retro
 last-reviewed: 2026-08-18
 title: Scene Card 变体合并评估
-type: retro
 ---
 # Scene Card 变体合并评估
 

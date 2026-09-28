@@ -1,16 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-18
-related:
-  - ../../../.agents/skills/governance-ssot-edit/SKILL.md
-  - ../../../docs/AGENT-ISOLATION-ROLLOUT.md
-  - p72-follow-up-completion-pattern.md
-  - p71-baseline-recovery-pattern.md
 type: ssot
+last-reviewed: 2026-09-18
+related: 
 ---
-
 # P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律
 
 > **Generated**: 2026-07-03 (post-PR #60 GaC executor enum 5源对齐)

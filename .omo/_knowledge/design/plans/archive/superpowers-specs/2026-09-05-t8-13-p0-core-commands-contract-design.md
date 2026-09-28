@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: P0 core command group dry-run / JSON contract
-bet_id: BET-Y1Q4-T8-13
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-05
-last-reviewed: 2026-09-05
 type: ssot
+last-reviewed: 2026-09-05
+title: P0 core command group dry-run / JSON contract
+created: 2026-09-05
 last_updated: 2026-09-05
+bet_id: BET-Y1Q4-T8-13
 ---
-
 # P0 core command group dry-run / JSON contract (T8-13)
 
 ## Intent

@@ -1,3 +1,11 @@
+---
+schema: md/v1
+status: active
+lifecycle: entry
+owner: governance-team
+type: retrospective
+last-reviewed: 2026-09-28
+---
 # cockpit deep audit — closeout retrospective
 
 > Date: 2026-09-25  

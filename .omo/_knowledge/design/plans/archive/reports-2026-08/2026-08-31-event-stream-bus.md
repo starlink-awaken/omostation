@@ -1,14 +1,13 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
-created: 2026-08-31
+type: implementation-evidence
 last-reviewed: 2026-08-31
+created: 2026-08-31
 bet_id: BET-Y1Q4-T2-01
 ---
-
 # Event Stream Bus — implementation evidence
 
 ## 交付

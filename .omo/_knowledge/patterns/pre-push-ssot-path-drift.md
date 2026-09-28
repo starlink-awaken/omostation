@@ -1,14 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - ../../bin/ssot/sync-submodules-push.sh
-source: learner-2026-07-15-stack-retro
 type: ssot
+last-reviewed: 2026-07-15
+related: 
 ---
-
 # Pattern — pre-push 脚本路径漂移（bin rationalization）
 
 ## The Insight

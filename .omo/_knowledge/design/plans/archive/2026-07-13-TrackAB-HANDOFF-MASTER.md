@@ -1,11 +1,10 @@
 ---
+schema: md/v1
 status: planned
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
 type: ephemeral
+last-reviewed: 2026-07-31
 ---
 # Track A/B · 全面交接总索引（durable，放 outputs 免被并发 clean）
 

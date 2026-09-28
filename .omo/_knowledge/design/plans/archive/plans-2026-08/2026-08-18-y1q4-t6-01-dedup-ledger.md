@@ -1,17 +1,14 @@
 ---
-title: Y1Q4-T6-01 去重清单终版 — aetherforge → runtime (内包)
-type: evidence
+schema: md/v1
 status: draft
+lifecycle: planning
 owner: engineering-agent
-created: 2026-08-18
-bet: BET-Y1Q4-T6-01
-related:
-  - docs/plans/3y-bet-ledger.yaml#BET-Y1Q4-T6-01
-  - .omo/_knowledge/retros/BET-Y1Q3-T6-01.md
-lifecycle: plan
+type: evidence
 last-reviewed: 2026-08-18
+title: Y1Q4-T6-01 去重清单终版 — aetherforge → runtime (内包)
+related: 
+created: 2026-08-18
 ---
-
 # Y1Q4-T6-01 去重清单终版（逐项可复核）
 
 ## 口径声明

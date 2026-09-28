@@ -1,9 +1,10 @@
 ---
+schema: md/v1
 status: active
-lifecycle: plan
+lifecycle: planning
 owner: governance-team
-last-reviewed: 2026-08-18
 type: ephemeral
+last-reviewed: 2026-08-18
 ---
 # agora P5-P8 战略深化方案 (2026-08-07)
 

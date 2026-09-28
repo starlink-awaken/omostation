@@ -1,19 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-11
+type: plan
 last-reviewed: 2026-09-11
 title: Orca R0 read-only admission verify toolchain
+created: 2026-09-11
 bet_id: BET-Y1Q4-T10-149
-implementation_authorized: true
-value_indicator_policy: false
-risk_level: L2
-human_gate: true
 ---
-
 # Orca R0 read-only admission verify toolchain
 
 ## 1. Status and authority

@@ -1,19 +1,14 @@
 ---
-id: P95
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-created: 2026-08-30
-last-reviewed: 2026-08-30
-related:
-- ADR-0443
-- ADR-0431
-- ADR-0389
-origin_bets:
-- ADR-0443 v1-v5
 type: ssot
+last-reviewed: 2026-08-30
+related: 
+created: 2026-08-30
+id: P95
 ---
-
 # P95: 产出/收敛平衡的迭代节奏（复盘产入口）
 
 ## 陷阱表

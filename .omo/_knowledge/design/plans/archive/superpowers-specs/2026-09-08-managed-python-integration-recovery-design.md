@@ -1,17 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-09
+type: plan
 last-reviewed: 2026-09-09
 title: A3 Managed Python test-only integration recovery
+created: 2026-09-09
 bet_id: BET-Y1Q4-T10-142
-value_indicator_policy: false
-implementation_authorized: true
 ---
-
 # A3 Managed Python test-only integration recovery
 
 ## 1. Context and verified baseline

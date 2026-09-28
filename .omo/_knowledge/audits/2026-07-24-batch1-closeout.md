@@ -1,15 +1,12 @@
 ---
-title: STRAT-P81 Batch 1 closeout (12 items) — review-hardened
-date: 2026-07-24
-type: audit
-stage: batch1
-workorder: .omo/plans/strat-p81-batch1-workorder.md
-pr: https://github.com/starlink-awaken/omostation/pull/483
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: STRAT-P81 Batch 1 closeout (12 items) — review-hardened
 ---
-
 # Batch 1 closeout — 12-item reconciliation
 
 | ID | Item | Status | Evidence |

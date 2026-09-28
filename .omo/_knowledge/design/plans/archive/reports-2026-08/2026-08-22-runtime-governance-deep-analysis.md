@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # 运行时治理深度分析 — 为何时间一久就失控 & 自进化框架
 
 > 2026-08-22 · 依据本日全量运行时盘点证据链（crontab 手术 / #1918 / #1922 / 服务重扫）

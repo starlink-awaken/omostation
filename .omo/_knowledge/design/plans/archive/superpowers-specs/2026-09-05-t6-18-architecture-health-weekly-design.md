@@ -1,19 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: T6-18 架构健康度 6 维度量化 + 周报自动化
-bet_id: BET-Y1Q4-T6-18
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-05
-last-reviewed: 2026-09-05
-risk_level: L1
-human_gate: false
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-05
+title: T6-18 架构健康度 6 维度量化 + 周报自动化
+created: 2026-09-05
+bet_id: BET-Y1Q4-T6-18
 ---
-
 # T6-18 架构健康度 6 维度量化 + 周报自动化
 
 ## 1. 目标

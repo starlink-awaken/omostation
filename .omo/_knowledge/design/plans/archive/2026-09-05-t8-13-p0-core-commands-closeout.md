@@ -1,15 +1,14 @@
 ---
-schema_version: report/v1
-type: report
-title: BET-Y1Q4-T8-13 P0 core commands contract closeout
-bet_id: BET-Y1Q4-T8-13
+schema: md/v1
 status: final
 lifecycle: evidence
 owner: governance-team
-created: 2026-09-05
+type: report
 last-reviewed: 2026-09-05
+title: BET-Y1Q4-T8-13 P0 core commands contract closeout
+created: 2026-09-05
+bet_id: BET-Y1Q4-T8-13
 ---
-
 # BET-Y1Q4-T8-13 Closeout Receipt
 
 ## Verify

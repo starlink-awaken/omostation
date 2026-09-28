@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.2
-title: CC Switch recovery-state relocation from Documents
-bet_id: BET-Y1Q3-T10-108
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-08-30
-last-reviewed: 2026-08-30
 type: ssot
+last-reviewed: 2026-08-30
+title: CC Switch recovery-state relocation from Documents
+created: 2026-08-30
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-108
 ---
-
 # CC Switch recovery-state relocation from Documents
 
 ## Context

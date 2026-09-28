@@ -179,8 +179,10 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 705 # 2026-09-27 704→705: PR T10-08 bin/lib/gh_query.py（gh 查询安全层库模块）注册
-      # (+ check-submodule-pins.py); 值取自 gac-validate
+    script_baseline: 712 # 2026-09-28 705→712: PR #4512 content-model Phase 2-5 工具注册
+      # (+ rule_engine.py, coverage_report.py, content-model-check.py,
+      # + incremental-check.py, schema-ref-check.py, fm_schema_migrate.py,
+      # + pydantic-to-json-schema.py); 值取自 gac-validate
       # 建议 (= bin/ 实际活跃脚本数), 依 SCRIPT-BASELINE-SYNC 黄金规则 (BET-Y1Q3-T6-05)
   rules:
   - id: CR-X4-HEALTH-SSOT

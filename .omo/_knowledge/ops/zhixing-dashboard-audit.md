@@ -1,3 +1,11 @@
+---
+schema: md/v1
+status: active
+lifecycle: entry
+owner: governance-team
+type: audit
+last-reviewed: 2026-09-28
+---
 # 织星驾驶舱质量审计报告
 
 日期：2026-09-24  

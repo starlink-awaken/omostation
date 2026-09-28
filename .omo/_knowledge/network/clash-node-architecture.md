@@ -1,7 +1,9 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
+type: documentation
 last-reviewed: 2026-09-23
 ---
 # Clash 节点架构 · 全量文档

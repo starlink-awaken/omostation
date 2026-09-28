@@ -1,17 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: human-principal
-created: 2026-08-28
-last-reviewed: 2026-08-27
-bet_id: BET-Y1Q3-T10-35
-risk_level: L1
 type: ssot
+last-reviewed: 2026-08-27
+created: 2026-08-28
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-35
 ---
-
 # Weijian controller preflight owner design
 
 ## Objective

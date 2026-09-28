@@ -1,18 +1,14 @@
 ---
-title: T6-01 gbrain + kairon 归并 knowledge 迁移设计 spec
-type: plan
+schema: md/v1
 status: draft
+lifecycle: planning
 owner: engineering-agent
-created: 2026-08-16
-bet: BET-Y1Q3-T6-01
-related:
-  - docs/plans/3y-bet-ledger.yaml
-  - .omo/_knowledge/decisions/0412-model-driven-disposition.md
-  - docs/plans/closeout-submodule-sync-design.md
-lifecycle: plan
+type: plan
 last-reviewed: 2026-08-18
+title: T6-01 gbrain + kairon 归并 knowledge 迁移设计 spec
+related: 
+created: 2026-08-16
 ---
-
 # T6-01 迁移设计 spec — gbrain + kairon → `projects/knowledge/`
 
 ## 0. 一句话形态

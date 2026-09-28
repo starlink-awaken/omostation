@@ -1,16 +1,12 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-15
-related:
-  - ../decisions/0186-scheme-c-5c-os-acl-design.md
-  - ../decisions/0189-scheme-c-5c-l2-acl-plan-apply.md
-  - ../decisions/0198-omo-acl-apply-named-ace.md
-source: learner-2026-07-15-stack-retro
 type: ssot
+last-reviewed: 2026-07-15
+related: 
 ---
-
 # Pattern — 主机写面双闸门（Scheme C 5c）
 
 ## The Insight

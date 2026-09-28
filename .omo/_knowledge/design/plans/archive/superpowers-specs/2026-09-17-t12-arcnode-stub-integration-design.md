@@ -1,19 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: arcnode-* 外部依赖纳入主仓 (stub 占位集成)
-bet_id: BET-Y1Q4-T12
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-17
+type: plan
 last-reviewed: 2026-09-17
-implementation_authorized: true
-value_indicator_policy: false
-risk_level: L2
-human_gate: false
+title: arcnode-* 外部依赖纳入主仓 (stub 占位集成)
+created: 2026-09-17
+bet_id: BET-Y1Q4-T12
 ---
-
 # arcnode-* 外部依赖纳入主仓 — Stub 占位集成 (BET-Y1Q4-T12)
 
 ## 背景

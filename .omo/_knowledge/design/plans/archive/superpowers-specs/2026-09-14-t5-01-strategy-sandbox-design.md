@@ -1,18 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-14
-last-reviewed: 2026-09-14
-bet_id: BET-Y2Q1-T5-01
-risk_level: L1
-human_gate: true
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-14
+created: 2026-09-14
+bet_id: BET-Y2Q1-T5-01
 ---
-
 # T5-01 个人战略决策沙盘（Strategy Sandbox）设计
 
 ## 1. 目标

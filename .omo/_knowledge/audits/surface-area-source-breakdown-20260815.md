@@ -1,23 +1,14 @@
 ---
-title: 表面积暴涨溯源审计 — +926K 行增量归因
-type: audit
+schema: md/v1
 status: final
-owner: governance-team
-created: 2026-08-15
 lifecycle: history
-related:
-  - bin/plan/bet-ledger.py
-  - docs/plans/3y-bet-ledger.yaml
-context: >
-  触发: bet-ledger.py surface 显示 src_loc 较基线 726,412 → 1,652,857 (+926,445,
-  +128%)。本审计回答"增量主要来自哪里"。双口径: (1) git numstat 增量归因 (自
-  基线日 2026-08-06, 主仓 + 19 子模块各自 git log --numstat 累计); (2) 现状
-  LOC 快照 (os.walk 按扩展名累计, 排除 .git/node_modules/__pycache__/.venv/dist)。
-  两口径统计范围不同 (surface 用 git tracked 口径, 现状快照含工作树全部文件),
-  数字不直接可比, 差额如实标注。
+owner: governance-team
+type: audit
 last-reviewed: 2026-08-25
+title: 表面积暴涨溯源审计 — +926K 行增量归因
+related: 
+created: 2026-08-15
 ---
-
 # 表面积暴涨溯源 — 2026-08-15
 
 ## 1. 结论先行

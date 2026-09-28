@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — IMPORTED-3268f8
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: IMPORTED-3268f8
-task_path: .omo/tasks/archived/archive/IMPORTED-3268f8.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — IMPORTED-3268f8
 ---
-
 # `IMPORTED-3268f8`
 
 | Field | Value |

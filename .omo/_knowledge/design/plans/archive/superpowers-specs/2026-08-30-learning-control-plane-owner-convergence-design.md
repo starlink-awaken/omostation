@@ -1,19 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Learning L4 control-plane owner convergence
-bet_id: BET-Y1Q3-T10-101
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-08-30
-last-reviewed: 2026-08-30
-risk_level: L2
-human_gate: true
 type: ssot
+last-reviewed: 2026-08-30
+title: Learning L4 control-plane owner convergence
+created: 2026-08-30
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-101
 ---
-
 # Learning L4 control-plane owner convergence
 
 ## Intent

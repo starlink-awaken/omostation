@@ -1,0 +1,36 @@
+{
+  "description": "governance action 审计记录 (Round 8 P2 SSOT).",
+  "properties": {
+    "ts": {
+      "title": "Ts",
+      "type": "string"
+    },
+    "action": {
+      "minLength": 1,
+      "title": "Action",
+      "type": "string"
+    },
+    "debt_id": {
+      "default": "",
+      "title": "Debt Id",
+      "type": "string"
+    },
+    "actor": {
+      "minLength": 1,
+      "title": "Actor",
+      "type": "string"
+    },
+    "details": {
+      "default": "",
+      "title": "Details",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ts",
+    "action",
+    "actor"
+  ],
+  "title": "OmoAuditRecord",
+  "type": "object"
+}

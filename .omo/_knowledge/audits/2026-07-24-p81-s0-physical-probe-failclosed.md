@@ -1,15 +1,12 @@
 ---
-title: STRAT-P81 Stage0 S0.3 — physical 4-host probe fail-closed
-date: 2026-07-24
-type: audit
-stage: S0
-strat: STRAT-P81
-needs-human: true
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: STRAT-P81 Stage0 S0.3 — physical 4-host probe fail-closed
 ---
-
 # Physical base probe (S0.3 · fail-closed)
 
 ## Probe (2026-07-24T03:39:25Z)

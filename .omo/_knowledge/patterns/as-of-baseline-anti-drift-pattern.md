@@ -1,12 +1,11 @@
 ---
-category: patterns
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-07-27
 type: ssot
+last-reviewed: 2026-07-27
 ---
-
 # Pattern: as_of 基线锚点（治理方案防脱钩）
 
 > 承接 P73 decl-exec-gap 家族。防止"第五份方案"再次脱钩的治本项。

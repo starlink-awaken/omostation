@@ -1,20 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Scene and Journey admission validator convergence
-bet_id: BET-Y1Q4-T7-08
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-17
-last-reviewed: 2026-09-17
-implementation_authorized: true
-value_indicator_policy: false
-risk_level: L1
-human_gate: false
 type: ssot
+last-reviewed: 2026-09-17
+title: Scene and Journey admission validator convergence
+created: 2026-09-17
+bet_id: BET-Y1Q4-T7-08
 ---
-
 # Scene and Journey admission validator convergence
 
 ## Background and problem

@@ -1,13 +1,12 @@
 ---
-title: KOS remeasure (STRAT-P80 T3)
-date: 2026-07-24
-type: audit
-goal: KOS-Q-GROWTH
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: KOS remeasure (STRAT-P80 T3)
 ---
-
 # KOS documents remeasure
 
 | 项 | 值 |

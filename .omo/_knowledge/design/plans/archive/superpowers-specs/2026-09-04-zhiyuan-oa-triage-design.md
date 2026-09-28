@@ -1,16 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: 致远 OA 待办与审批流逆向感知与公文智能分拣
-bet_id: BET-Y1Q3-T10-112
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: omo-platform-team
-created: 2026-09-04
-last-reviewed: 2026-09-04
 type: ssot
+last-reviewed: 2026-09-04
+title: 致远 OA 待办与审批流逆向感知与公文智能分拣
+created: 2026-09-04
+bet_id: BET-Y1Q3-T10-112
 ---
-
 # 致远 OA 待办与审批流逆向感知与公文智能分拣
 
 ## Intent

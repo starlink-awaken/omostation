@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # Workspace watch owner evidence — 2026-08-29
 
 The legacy minute watcher executed Documents `domain-sync`, `bridge-refresh`,

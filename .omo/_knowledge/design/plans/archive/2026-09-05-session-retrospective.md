@@ -1,14 +1,12 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: session-retrospective
 owner: governance-team
-created: 2026-09-05
+type: session-retrospective
 last-reviewed: 2026-09-05
-bet: BET-Y1Q4-T4-05
+created: 2026-09-05
 ---
-
 # Session Retrospective — 09-03→09-05 交付复盘
 
 > 日期：2026-09-05（UTC+8 快照）

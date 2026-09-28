@@ -1,14 +1,10 @@
 ---
-plane: knowledge
-type: design
+schema: md/v1
 status: active
-freshness: 2026-05-31
-maintainer: auto
 lifecycle: history
 owner: kems-team
+type: design
 last-reviewed: 2026-07-31
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
 ---
 lifecycle: contract
 owner: governance-team

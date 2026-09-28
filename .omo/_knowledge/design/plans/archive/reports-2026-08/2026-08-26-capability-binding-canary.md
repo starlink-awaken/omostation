@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # Production-topology canary — exact capability binding (2026-08-26)
 
 Scope-honest execution receipt for plan Task 7 step 3. Driver: real subprocess

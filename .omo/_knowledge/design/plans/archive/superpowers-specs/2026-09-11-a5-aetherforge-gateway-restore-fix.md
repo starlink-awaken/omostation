@@ -1,14 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: A5 AetherForge 门面常驻化恢复 — launchd 服务缺失修复
-bet_id: BET-Y1Q4-T10-153
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-11
+title: A5 AetherForge 门面常驻化恢复 — launchd 服务缺失修复
+bet_id: BET-Y1Q4-T10-153
 ---
-
 # A5 AetherForge 门面常驻化恢复
 
 ## 1. Problem

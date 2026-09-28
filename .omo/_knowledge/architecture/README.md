@@ -1,10 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
+type: documentation
 last-reviewed: 2026-06-23
 ---
-
 # `.omo/_knowledge/architecture/` — 审计/治理架构文档
 
 > ⚠️ **本目录仅承载审计/治理架构文档**,不承载系统总架构。

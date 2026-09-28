@@ -1,11 +1,13 @@
 ---
+schema: md/v1
+status: active
+lifecycle: entry
+owner: architecture-team
 type: plan
+last-reviewed: 2026-09-06
 title: semantica-longterm-architecture-and-bet-design
 last_updated: 2026-09-06
-owner: architecture-team
-status: active
 ---
-
 # Semantica 与 OMOStation/eCOS 深度融合长远架构设计方案
 
 > **设计宗旨**：立足 3~5 年主权操作系统演进，构建以“确定性因果图谱”与“可问责决策智能”为基石的认知底座。  

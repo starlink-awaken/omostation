@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — needs-human-p80-phase45-bos-stdio
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: needs-human-p80-phase45-bos-stdio
-task_path: .omo/tasks/planned/needs-human-p80-phase45-bos-stdio.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — needs-human-p80-phase45-bos-stdio
 ---
-
 # `needs-human-p80-phase45-bos-stdio`
 
 | Field | Value |

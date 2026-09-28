@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: "文档生命周期体系落地与主仓+Documents 存量文档深度去重指针化"
-bet_id: BET-Y1Q4-T6-22
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-06
-last-reviewed: 2026-09-06
 type: ssot
+last-reviewed: 2026-09-06
+title: "文档生命周期体系落地与主仓+Documents 存量文档深度去重指针化"
+created: 2026-09-06
 last_updated: 2026-09-06
+bet_id: BET-Y1Q4-T6-22
 ---
-
 # 文档生命周期体系落地与主仓+Documents 存量文档深度去重指针化 (T6-22)
 
 ## Intent

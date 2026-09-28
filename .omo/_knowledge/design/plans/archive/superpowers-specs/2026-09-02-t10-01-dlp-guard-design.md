@@ -1,17 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: DLP quarantine sandbox & auto-sanitize
-bet_id: BET-Y1Q4-T10-01
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-02
-last-reviewed: 2026-09-02
 type: ssot
+last-reviewed: 2026-09-02
+title: DLP quarantine sandbox & auto-sanitize
+created: 2026-09-02
 last_updated: 2026-09-03
+bet_id: BET-Y1Q4-T10-01
 ---
-
 # DLP quarantine sandbox & auto-sanitize (T10-01)
 
 ## Intent

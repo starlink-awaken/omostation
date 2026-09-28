@@ -1,13 +1,13 @@
 ---
-id: PITFALL-005
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-created: 2026-09-17
-last-reviewed: 2026-09-17
 type: ssot
+last-reviewed: 2026-09-17
+created: 2026-09-17
+id: PITFALL-005
 ---
-
 # PITFALL-005: CI Failure Baseline Comparison (CI 失败先做基线对比)
 
 > **2026-09-17 沉淀** · 来源: PR#3843 cascading_test 2 个失败（test_favicon / test_unknown_path）实证

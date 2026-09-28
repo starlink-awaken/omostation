@@ -1,18 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-15
-last-reviewed: 2026-09-15
-bet_id: BET-Y2Q2-T3-02
-risk_level: L1
-human_gate: true
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-15
+created: 2026-09-15
+bet_id: BET-Y2Q2-T3-02
 ---
-
 # T3-02 个人文风四域 LoRA 适配器矩阵与语气自适应调节设计
 
 ## 0. 背景与依赖

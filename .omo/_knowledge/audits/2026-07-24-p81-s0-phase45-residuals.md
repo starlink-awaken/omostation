@@ -1,14 +1,12 @@
 ---
-title: STRAT-P81 Stage0 S0.2 — P80 phase45 residual closeout (skeptic-hardened)
-date: 2026-07-24
-type: audit
-stage: S0
-strat: STRAT-P81
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: STRAT-P81 Stage0 S0.2 — P80 phase45 residual closeout (skeptic-hardened)
 ---
-
 # P81 S0.2 phase45 residual re-verify (post-skeptic)
 
 ## Endpoint matrix

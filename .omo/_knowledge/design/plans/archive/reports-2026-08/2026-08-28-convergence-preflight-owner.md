@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # Convergence preflight owner evidence — 2026-08-28
 
 The legacy `@公共/_runtime/check-convergence.py` is a Documents-side writer:

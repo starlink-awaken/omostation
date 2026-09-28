@@ -1,18 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-07
-last-reviewed: 2026-09-06
-bet_id: BET-Y1Q4-T10-132
-risk_level: L2
-human_gate: false
-value_indicator_policy: false
 type: ssot
+last-reviewed: 2026-09-06
+created: 2026-09-07
+bet_id: BET-Y1Q4-T10-132
 ---
-
 # T10-132 DBOS 离散状态水合与 SQLite WAL 原子调度设计
 
 ## 1. 目标

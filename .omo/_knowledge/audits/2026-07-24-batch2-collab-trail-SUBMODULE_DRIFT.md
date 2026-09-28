@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — SUBMODULE_DRIFT
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: SUBMODULE_DRIFT
-task_path: .omo/debt/items/SUBMODULE_DRIFT.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — SUBMODULE_DRIFT
 ---
-
 # `SUBMODULE_DRIFT`
 
 | Field | Value |

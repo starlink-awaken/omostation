@@ -1,15 +1,14 @@
 ---
-schema_version: specification/v1
-title: 跨生命周期记忆衰减与冲突消除引擎
-bet_id: BET-Y2Q1-T6-01
-spec_version: "1.0.0"
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-07
+title: 跨生命周期记忆衰减与冲突消除引擎
 created: 2026-09-07
+bet_id: BET-Y2Q1-T6-01
 ---
-
 # 跨生命周期记忆衰减与冲突消除引擎
 
 > BET: BET-Y2Q1-T6-01 | Track: T6-EVOLUTION | Appetite: 2 days

@@ -1,15 +1,14 @@
 ---
-title: eCOS 下一阶段独立 Agent 任务包
+schema: md/v1
 status: active
-type: execution-plan
+lifecycle: planning
 owner: 夏明星
+type: execution-plan
+last-reviewed: 2026-08-18
+title: eCOS 下一阶段独立 Agent 任务包
 created: 2026-08-01
 updated: 2026-08-01
-lifecycle: plan
-strategy_ref: docs/STRATEGY-3YEAR-PANORAMA.md
-last-reviewed: 2026-08-18
 ---
-
 # eCOS 下一阶段独立 Agent 任务包
 
 ## 1. 目标

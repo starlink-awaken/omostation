@@ -1,20 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
-type: ssot
-bet_id: BET-Y1Q4-T6-30
-decision_ref: decision://accepted/BET-Y1Q4-T6-30
-track: T6-EVOLUTION
-priority: P2
-risk_level: L2
-window: Y1Q4
 owner: engineering-agent
-created: 2026-09-16
+type: ssot
 last-reviewed: 2026-09-16
+created: 2026-09-16
+bet_id: BET-Y1Q4-T6-30
 ---
-
 # BET-Y1Q4-T6-30: 夏明星数字化 Persona 心智镜像微调与主权分身共生体系
 
 ## 1. Problem

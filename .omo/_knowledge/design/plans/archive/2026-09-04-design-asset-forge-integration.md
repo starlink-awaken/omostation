@@ -1,7 +1,9 @@
 ---
+schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
+type: plan
 last-reviewed: 2026-09-05
 ---
 # 2026-09-04 Design Asset Forge Integration

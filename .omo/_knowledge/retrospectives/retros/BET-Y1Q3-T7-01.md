@@ -1,15 +1,13 @@
 ---
-title: BET-Y1Q3-T7-01 复盘 — 知识召回被引用率上线
-type: retro
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-16
-context: >-
-  subagent 半途挂 (cockpit 侧已写), 主会话补 omo 侧并收口。
 lifecycle: history
+owner: governance-team
+type: retro
 last-reviewed: 2026-08-18
+title: BET-Y1Q3-T7-01 复盘 — 知识召回被引用率上线
+created: 2026-08-16
 ---
-
 # BET-Y1Q3-T7-01 复盘
 
 ## done_when 对照 (2026-08-16 实测)

@@ -1,10 +1,10 @@
 ---
+schema: md/v1
 status: active
 lifecycle: ssot
 owner: governance-team
+type: documentation
 last-reviewed: 2026-07-31
-review-state: metadata-only
-metadata-migrated-at: 2026-07-31
 ---
 # 治本方案 — 治理状态平面写协议
 

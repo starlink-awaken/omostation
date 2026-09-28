@@ -1,15 +1,13 @@
 ---
-type: ssot
+schema: md/v1
 status: active
 lifecycle: design
 owner: governance-team
+type: ssot
 last-reviewed: 2026-09-25
-bet_id: __unassigned__
 created: 2026-09-25
-supersedes: __none__
-schema_version: design/v1
+bet_id: __unassigned__
 ---
-
 # 根因分析与治本路径 (2026-09-25)
 
 > **基线**: `.omo/_knowledge/reports/diag-2026-09-25.md` (#4310) — 31 个发现已落地。

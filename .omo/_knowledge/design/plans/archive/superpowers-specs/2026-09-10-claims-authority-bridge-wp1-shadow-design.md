@@ -1,21 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.9.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-09
+type: ssot
 last-reviewed: 2026-09-11
 title: Claims Authority Bridge WP1 R0 Shadow
-bet_id: BET-Y1Q4-T10-145
-implementation_authorized: true
-value_indicator_policy: false
-risk_level: L2
-human_gate: true
-type: ssot
+created: 2026-09-09
 last_updated: 2026-09-11
+bet_id: BET-Y1Q4-T10-145
 ---
-
 # Claims Authority Bridge WP1 R0 Shadow
 
 ## 1. One-sentence architecture

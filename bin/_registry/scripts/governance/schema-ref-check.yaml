@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/schema-ref-check.py
+name: Schema Ref Check.py
+category: governance
+owner: governance-team
+description: "Schema reference integrity checker — verifies all schema registry entries point to existing files and sources (content-model Phase 3)"
+inputs:
+  - type: path
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-09-28"

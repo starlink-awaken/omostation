@@ -1,13 +1,12 @@
 ---
-title: Batch2 B3 — 第 4/5 角色扩容评估（不实装）
-date: 2026-07-24
-type: audit
-batch: 2
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: Batch2 B3 — 第 4/5 角色扩容评估（不实装）
 ---
-
 # 角色扩容评估（research / delivery）
 
 ## 候选

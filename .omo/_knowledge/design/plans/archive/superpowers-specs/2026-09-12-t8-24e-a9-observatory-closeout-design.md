@@ -1,20 +1,15 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: A9 全景观测终验对账、43191 进程平稳退役与 Closeout
-bet_id: BET-Y1Q4-T8-24E
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-12
-last-reviewed: 2026-09-12
-risk_level: L1
-human_gate: true
 type: ssot
+last-reviewed: 2026-09-12
+title: A9 全景观测终验对账、43191 进程平稳退役与 Closeout
+created: 2026-09-12
 last_updated: 2026-09-12
-decision_ref: decision://accepted/BET-Y1Q4-T8-24E
+bet_id: BET-Y1Q4-T8-24E
 ---
-
 # T8-24E — A9 全景观测终验对账与 Closeout
 
 ## Context

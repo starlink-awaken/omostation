@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — REMEDIATE-HERMES-PHASEA
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: REMEDIATE-HERMES-PHASEA
-task_path: .omo/tasks/remediation/REMEDIATE-HERMES-PHASEA.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — REMEDIATE-HERMES-PHASEA
 ---
-
 # `REMEDIATE-HERMES-PHASEA`
 
 | Field | Value |

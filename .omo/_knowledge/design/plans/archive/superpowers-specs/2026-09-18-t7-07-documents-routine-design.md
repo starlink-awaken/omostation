@@ -1,12 +1,11 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-18
 ---
-
 # T7-07: documents-domain 场景卡批量 supervised→routine
 
 ## 目标

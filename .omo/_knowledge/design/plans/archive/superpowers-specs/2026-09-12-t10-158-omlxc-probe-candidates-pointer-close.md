@@ -1,14 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: projects/omlxc root gitlink pointer closeout (probe-candidate availability fix)
-bet_id: BET-Y1Q4-T10-158
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-12
+title: projects/omlxc root gitlink pointer closeout (probe-candidate availability fix)
+bet_id: BET-Y1Q4-T10-158
 ---
-
 # T10-158 — projects/omlxc root gitlink pointer closeout
 
 ## Context

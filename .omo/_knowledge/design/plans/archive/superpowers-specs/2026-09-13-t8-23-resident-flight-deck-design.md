@@ -1,16 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: Resident Flight Deck L1-L4 授权网关 + 四维透明指挥舱
-bet_id: BET-Y1Q4-T8-23
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
+type: plan
 last-reviewed: 2026-09-13
+title: Resident Flight Deck L1-L4 授权网关 + 四维透明指挥舱
+bet_id: BET-Y1Q4-T8-23
 ---
-
-
-
 # Resident Flight Deck L1-L4 授权网关 + 四维透明指挥舱（BET-Y1Q4-T8-23）
 
 ## 背景（Context）

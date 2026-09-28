@@ -1,16 +1,14 @@
 ---
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: resident
-created: 2026-08-26
-last-reviewed: 2026-08-26
-schema_version: specification/v1
-spec_version: 1.0.0
-bet_id: BET-Y1Q3-T10-18
 type: ssot
+last-reviewed: 2026-08-26
+created: 2026-08-26
 last_updated: 2026-09-03
+bet_id: BET-Y1Q3-T10-18
 ---
-
 # Resident 知识兑现闭环：promote 自动化 + 五问提炼真实入库 + 草稿 retention + retro 索引
 
 > 日期：2026-08-26

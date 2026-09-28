@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # W0 Fact Baseline Report — 2026-08-10
 
 > **Type**: Evidence-backed baseline inventory · Read-only probe results

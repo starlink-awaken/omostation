@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IdentityEnvelope",
+  "description": "Workspace 用户/身份对象封装契约",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "version",
+    "owner",
+    "profile",
+    "workspace_version",
+    "created_at",
+    "schema_ref"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "type": { "type": "string" },
+    "version": { "type": "string" },
+    "owner": {
+      "type": "object",
+      "required": ["subject_id", "subject_type"],
+      "properties": {
+        "subject_id": { "type": "string" },
+        "subject_type": { "type": "string" }
+      }
+    },
+    "profile": { "type": "object" },
+    "workspace_version": { "type": "string" },
+    "created_at": { "type": "string" },
+    "schema_ref": { "type": "string" }
+  }
+}

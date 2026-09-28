@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-07-02
 type: ssot
+last-reviewed: 2026-07-02
 ---
-
 # 治理主索引
 
 > 汇聚 .omo/_knowledge/management/ 下 governance 关键文档入口。不维护运行时计数/健康分快照。

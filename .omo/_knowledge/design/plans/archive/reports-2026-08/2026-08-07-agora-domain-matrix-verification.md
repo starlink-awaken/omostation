@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # agora 全领域真实场景验证评估 (第二期: Documents 领域矩阵, 2026-08-07)
 
 > 验证方式: 提取 /Users/xiamingxing/Documents 13 个领域 → 每个领域 3-5 个不同类型场景

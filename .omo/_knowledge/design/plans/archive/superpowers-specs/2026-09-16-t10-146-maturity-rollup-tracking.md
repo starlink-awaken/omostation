@@ -1,15 +1,13 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
-title: OMO Agent OS maturity-gap rollup — tracking and dependency ordering
-bet_id: BET-Y1Q4-T10-146
+schema: md/v1
 status: accepted
 lifecycle: spec
 owner: governance-team
+type: plan
 last-reviewed: '2026-09-16'
+title: OMO Agent OS maturity-gap rollup — tracking and dependency ordering
+bet_id: BET-Y1Q4-T10-146
 ---
-
-
 # OMO Agent OS maturity-gap rollup — tracking and dependency ordering
 
 ## Problem

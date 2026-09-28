@@ -1,0 +1,42 @@
+# Content Model Rules — generic rule engine input
+# These rules check content structure (FM schema, references, etc.)
+# without modifying core L0 constraints.
+
+rules:
+  - rule_id: CR-CONTENT-001
+    predicate: fm_field_exists
+    field: schema
+    target: "docs/**/*.md"
+    severity: blocking
+    remediation: "Add 'schema: md/v1' to frontmatter"
+    dimension: X2
+
+  - rule_id: CR-CONTENT-002
+    predicate: fm_field_exists
+    field: status
+    target: "docs/**/*.md"
+    severity: blocking
+    remediation: "Add 'status: active' to frontmatter"
+    dimension: X2
+
+  - rule_id: CR-CONTENT-003
+    predicate: fm_field_exists
+    field: owner
+    target: "docs/**/*.md"
+    severity: blocking
+    remediation: "Add 'owner: <team>' to frontmatter"
+    dimension: X2
+
+  - rule_id: CR-CONTENT-004
+    predicate: file_exists
+    target: "docs/adr/INDEX.md"
+    severity: info
+    remediation: "Create ADR index"
+    dimension: X4
+
+  - rule_id: CR-CONTENT-005
+    predicate: file_exists
+    target: "docs/INDEX-TYPES.md"
+    severity: info
+    remediation: "Create docs type index"
+    dimension: X4

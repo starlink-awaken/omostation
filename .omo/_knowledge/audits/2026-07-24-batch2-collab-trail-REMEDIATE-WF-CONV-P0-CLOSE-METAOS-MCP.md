@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP
-task_path: .omo/tasks/remediation/REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP
 ---
-
 # `REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP`
 
 | Field | Value |

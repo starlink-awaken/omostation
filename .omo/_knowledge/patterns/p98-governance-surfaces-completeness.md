@@ -1,9 +1,11 @@
 ---
-type: ssot
+schema: md/v1
+status: active
+lifecycle: entry
 owner: governance-team
+type: ssot
 last-reviewed: 2026-09-05
 ---
-
 # P98 — Governance Surfaces Completeness
 
 **Pattern observed**: 2026-09-04 in BET-Y1Q4-HITL-01 (PR #3077).

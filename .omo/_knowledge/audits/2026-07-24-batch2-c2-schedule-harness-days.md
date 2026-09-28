@@ -1,13 +1,12 @@
 ---
-title: Batch2 B1 C2 schedule harness wall-clock days (honest)
-date: 2026-07-24
-type: audit
-batch: 2
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: audit
+last-reviewed: 2026-08-25
+title: Batch2 B1 C2 schedule harness wall-clock days (honest)
 ---
-
 # C2 schedule harness — wall-clock day coverage
 
 - distinct calendar days in reports: **1** → ['2026-07-24']

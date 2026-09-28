@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/ssot/incremental-check.py
+name: Incremental Check.py
+category: governance
+owner: governance-team
+description: "Incremental content model check — diffs against a base commit and validates only newly changed files (content-model Phase 5)"
+inputs:
+  - type: path
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-09-28"

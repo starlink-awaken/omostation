@@ -1,11 +1,11 @@
 ---
+schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-08-25
 type: ephemeral
+last-reviewed: 2026-08-25
 ---
-
 # resident 常驻体系与治理接线深度复盘
 
 > BET-Y1Q3-T6-14 · 项目粒度复盘 · 基于 2026-08-24T22:28Z 实测数据

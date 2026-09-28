@@ -1,18 +1,14 @@
 ---
-title: BET-Y1Q3-T1-03 复盘 — surface numstat 净值口径
-type: retro
+schema: md/v1
 status: active
-owner: governance-team
-created: 2026-08-15
-related:
-  - .omo/_knowledge/audits/surface-area-source-breakdown-20260815.md
-context: >-
-  surface 审计发现总量口径对重写型变更失真。本 bet 让 surface 输出三口径对照。
-  PR #1525 (主仓 56e12f18c)。
 lifecycle: history
+owner: governance-team
+type: retro
 last-reviewed: 2026-08-18
+title: BET-Y1Q3-T1-03 复盘 — surface numstat 净值口径
+related: 
+created: 2026-08-15
 ---
-
 # BET-Y1Q3-T1-03 复盘
 
 ## Q1 实际耗时 vs appetite

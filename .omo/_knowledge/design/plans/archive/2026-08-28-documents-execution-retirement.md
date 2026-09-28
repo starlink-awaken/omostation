@@ -1,14 +1,13 @@
 ---
-schema_version: report/v1
+schema: md/v1
 status: active
 lifecycle: history
-type: implementation-evidence
 owner: governance-team
-created: 2026-08-27
+type: implementation-evidence
 last-reviewed: 2026-08-27
+created: 2026-08-27
 bet_id: BET-Y1Q3-T10-41
 ---
-
 # Documents execution retirement — implementation evidence
 
 ## Current implementation

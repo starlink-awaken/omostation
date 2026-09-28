@@ -1,9 +1,12 @@
 ---
-type: ephemeral
+schema: md/v1
 status: active
+lifecycle: entry
+owner: governance-team
+type: ephemeral
+last-reviewed: 2026-09-28
 created: 2026-09-03
 ---
-
 # bin ↔ cockpit ↔ gate 收敛报告 — D-1 / D-5 闭环 2026-08-22
 
 > debts: D-1 四入口不统一 + D-5 gate 2倍冗余 → 单一事实源收敛

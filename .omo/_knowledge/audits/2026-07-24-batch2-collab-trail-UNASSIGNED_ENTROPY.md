@@ -1,15 +1,12 @@
 ---
-title: Batch2 collab trail — UNASSIGNED_ENTROPY
-date: 2026-07-24
-type: collab-trail
-batch: 2
-task_id: UNASSIGNED_ENTROPY
-task_path: .omo/debt/items/UNASSIGNED_ENTROPY.yaml
-last-reviewed: 2026-08-25
+schema: md/v1
+status: active
 lifecycle: history
 owner: unassigned
+type: collab-trail
+last-reviewed: 2026-08-25
+title: Batch2 collab trail — UNASSIGNED_ENTROPY
 ---
-
 # `UNASSIGNED_ENTROPY`
 
 | Field | Value |

@@ -1,15 +1,14 @@
 ---
-schema_version: specification/v1
-spec_version: 1.0.0
+schema: md/v1
 status: accepted
 lifecycle: contract
 owner: governance-team
-created: 2026-09-07
+type: plan
 last-reviewed: 2026-09-07
 title: BET-Y1Q4-T10-136 RLM 变量内核设计
+created: 2026-09-07
 bet_id: BET-Y1Q4-T10-136
 ---
-
 # BET-Y1Q4-T10-136: RLM 交互式变量执行空间与 Context-as-Variables 引擎
 
 ## Context

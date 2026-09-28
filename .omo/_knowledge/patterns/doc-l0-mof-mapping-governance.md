@@ -1,14 +1,12 @@
 ---
-title: 文档 ↔ L0 ↔ MOF 映射治理方案
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance
-last-reviewed: 2026-08-08
-surface: L3
-dimension: X1
 type: ssot
+last-reviewed: 2026-08-08
+title: 文档 ↔ L0 ↔ MOF 映射治理方案
 ---
-
 # 文档 ↔ L0 ↔ MOF 映射治理方案
 
 > SSOT 关联: 文档治理契约 = `.omo/standards/doc-ssot-contract.md` §L0/MOF 映射关联

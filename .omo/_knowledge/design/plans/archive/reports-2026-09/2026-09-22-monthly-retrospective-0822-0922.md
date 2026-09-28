@@ -1,14 +1,11 @@
 ---
-type: ephemeral
+schema: md/v1
 status: completed
 lifecycle: history
-date: 2026-09-22
-scope: 2026-08-22 → 2026-09-22 月度复盘
-author: governance-agent
-session: monthly-retro-0922
+owner: governance-team
+type: ephemeral
 last-reviewed: 2026-09-22
 ---
-
 # 月度复盘：2026-08-22 → 2026-09-22
 
 > **执行摘要**：窗口内 GitHub 合并 **1959** 个 PR（100% 单账号 agent 交付）；BET 台账窗口关闭 **321** 条（done_at ≥ 08-22）；门禁快照 **11/11 PASS**（截至 2026-09-22T08:43Z）；主线债务为 Claims Authority 待授权、价值证明缺口、`meta.total_bets` 漂移与 T10-154 blocked。

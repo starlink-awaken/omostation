@@ -1,9 +1,10 @@
 ---
+schema: md/v1
 status: active
 lifecycle: pattern
 owner: governance-team
-last-reviewed: 2026-09-16
 type: ssot
+last-reviewed: 2026-09-16
 ---
 # P104 — Ledger Closeout Reuse-Existing-Work Pattern
 

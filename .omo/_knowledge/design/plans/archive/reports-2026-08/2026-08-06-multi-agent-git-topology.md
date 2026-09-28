@@ -1,20 +1,14 @@
 ---
-title: 多 Agent 并行的 Git 拓扑分析与根治方案
+schema: md/v1
 status: draft
-type: analysis-and-strategy
-owner: 夏明星
-created: 2026-08-06
 lifecycle: report
-related:
-  - .omo/_knowledge/decisions/0220-swarm-coordination-discipline-m1-gate.md
-  - .omo/_knowledge/decisions/0371-pasw-submodule-isolation.md
-  - .omo/_truth/registry/swarm-coordination.yaml
-  - docs/plans/3Y-BET-LEDGER.md
-note: >
-  所有数据为 2026-08-06 实测，附录 A 给取证命令。
-  本文只诊断与给方案，执行拆解见台账 BET-Y1Q1-T1-00/05/06/07。
+owner: 夏明星
+type: analysis-and-strategy
+last-reviewed: 2026-09-28
+title: 多 Agent 并行的 Git 拓扑分析与根治方案
+related: 
+created: 2026-08-06
 ---
-
 # 多 Agent 并行的 Git 拓扑分析与根治方案
 
 ## 0. 一句话诊断
