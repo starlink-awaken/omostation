@@ -55,16 +55,124 @@ jobs:
       - name: CR-RUFF-SCOPE-STABLE — Ruff scope 稳定校验
         # 防止 X-Plane 项目改变 ruff scope 导致 lint 面漂移
         run: python3 bin/gac/check-ruff-scope-stable.py
-      - name: CR-PRINCIPLE-ENFORCEMENT — 原则执行化校验 (advisory)
-        # 验证工程原则是否被工具/流程执行, 非阻塞 advisory
-        continue-on-error: true
-        run: python3 bin/gac/check-principle-enforcement.py
       - name: CR-P76-7-1-LLM-ADVISORY-ONLY — LLM auto-apply 检查
         # LLM 只 generate suggestion, 永不 auto-apply
         run: python3 bin/gac/check-llm-advisory-only.py
       - name: CR-P76-8-1-SUBMODULE-PR-INDEPENDENT — 子模块 PR 独立性检查
         # 跨仓 PR 独立提交, 不在主仓 commit submodule 内容
         run: python3 bin/gac/check-submodule-pr-independent.py
+      - name: CR-X4-SUBMODULE-POINTER-INTEGRITY — 子模块指针完整性检查
+        # 子模块指针必须与远程同步, 禁止超前指针
+        run: python3 bin/gac/check-submodule-pointer-integrity.py
+      - name: CR-X4-MEMORY-OS-SURFACE-INTEGRITY — Memory OS light gate
+        # SSOT/ports/env/help catalog surfaces; blocking (no Neo4j required)
+        run: python3 bin/gac/check-memory-os-surfaces.py
+      - name: Cache cockpit venv (Memory OS SSOT tests)
+        # E2 第二批: cockpit 的 uv.lock 是生成物 (被 .gitignore 忽略) ⇒ CI 每次都要重新解析
+        # 依赖 + 建 venv (实测 11~14s)。缓存 venv+lock, key 用受跟踪的 pyproject.toml 指纹,
+        # 还原后 `uv sync` 命中即 0.1s (本机实测)。
+        uses: actions/cache@v4
+        with:
+          path: |
+            projects/cockpit/.venv
+            projects/cockpit/uv.lock
+          key: cockpit-venv-${{ runner.os }}-${{ hashFiles('projects/cockpit/pyproject.toml') }}
+          restore-keys: |
+            cockpit-venv-${{ runner.os }}-
+      - name: Memory OS catalog SSOT tests (cockpit help/discover)
+        # help_map catalog ⊆ CLI parsers; discover shares help_map (no Neo4j)
+        # uv 已在作业开头 setup (E2-B), 此处不再重复 setup。
+        run: |
+          if [[ -d projects/cockpit/src/cockpit/tests ]]; then
+            cd projects/cockpit
+            uv sync --quiet
+            uv run pytest src/cockpit/tests/test_help_discover_ssot.py src/cockpit/tests/test_status_memory_os_line.py -q
+          else
+            echo "SKIP cockpit submodule tests absent"
+          fi
+      - name: CR-X2-GAC-DRIFT — GaC drift 自检 (注册表 vs 实际执行)
+        run: python3 bin/gac/gac-drift.py
+      - name: CR-L0-ENFORCE — L0 协议约束 CI 校验 (required)
+        # 校验 X1-C01/CS-10/X2-C01/X2-C03/X4-C01, 任一 FAIL 则 CI 红
+        run: python3 bin/gac/check-l0-constraints.py
+      # ── Phase 8: Harness 全生命周期合规 (ADR-0444) ──
+      - name: CR-HARNESS-SECTION — Harness 12 章节完整性 (required)
+        # harness-policy.yaml 必须包含 12 必现章节 + SFOP S 槽位唯一
+        run: python3 bin/gac/harness-compliance-check.py --gate
+      - name: CR-HARNESS-MOF — MOF 约束联动检查 (required)
+        # 8 条 Agent-MOF 规则接入 Harness 全生命周期
+        run: python3 bin/gac/harness-mof-bridge.py --state
+      - name: immutable checkout precondition
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+          test -z "$(git status --porcelain)"
+      - name: PASW — 子模块指针可达性前置检查
+        run: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch
+        continue-on-error: false
+      - name: generated projection drift checks
+        run: |
+          python3 bin/mof/project-layer-index.py --check
+          python3 bin/gac/gac-drift.py
+      - name: check-layers (跨层依赖检查)
+        run: python3 bin/layer-dependency-check.py
+      - name: gac-local-gate (strict)
+        # H1a: the strict full-workspace gate is merge-blocking after the R1 canary.
+        env:
+          # 4019+ waiver 机制: env GITHUB_PR_NUMBER 命中 .omo/_truth/governance-evidence/waiver-*.md
+          # frontmatter 的 pr_numbers 列表时, check-governance-ratio 单次 merge bypass.
+          GITHUB_PR_NUMBER: \${{ github.event.pull_request.number }}
+        run: python3 bin/gac/gac-local-gate.py --strict
+      - name: immutable checkout postcondition
+        if: always()
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+          test -z "$(git status --porcelain)"
+      - name: worktree guard (数量上限门禁)
+        # P74: 防 worktree 堆积 — 超 MAX_WORKTREES 即 fail, 触发人工清理
+        run: bash bin/gac/gac-worktree-guard.sh --check
+        continue-on-error: false
+
+  # ── E2 第二批 (2026-09-28): advisory 步骤搬到并行 job ─────────────────────
+  # 这 28 步本来就 `continue-on-error: true`（**不阻塞合并**），却串行占着核心 job 的
+  # 临界路径（实测 8~13s）。搬到独立 job 后与 gac-gate 并行，合入等待时间不再包含它们。
+  #
+  # 关键不变量: **任何阻塞步骤都不得离开 `gac-gate`** —— 否则 required check 形同虚设。
+  # 由 tests/test_gac_gate_workflow_purity.py::
+  #   test_no_blocking_step_lives_outside_the_required_gate_job 钉住。
+  gac-gate-aux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+        # PASW: 子模块 checkout 失败必须 fail fast — 指针不可达说明 bump-pointer 前未 push 子模块
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      # E2-B (2026-09-28): uv 前移并开官方缓存。
+      # 原先这里有一步 `actions/cache` on ~/.cache/uv —— **对 uv 无效**: setup-uv 会把
+      # UV_CACHE_DIR 指到 $RUNNER_TEMP/setup-uv-cache (作业日志 env 实证), 那个目录才是
+      # uv 真正读写的位置; 缓存 ~/.cache/uv 永远是空命中。改用 setup-uv 自带 enable-cache。
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+      - name: install pyyaml and pytest
+        # pytest 供 `test-collection` 守卫 (bin/gac/check-test-collection.py) 使用 ——
+        # 它只 `--collect-only` 验证每个测试文件可 import, 防孤儿测试腐烂。
+        # 该守卫在无 pytest 时优雅跳过 (env_skip), 但 CI 应让其真正生效。
+        # 走 uv (命中上面的缓存) 而不是 pip: 免去每次作业重新下载/解析。
+        # `--break-system-packages` 是给「解释器带 EXTERNALLY-MANAGED 标记」的保险
+        # (本机 Homebrew Python 实测会撞 PEP 668); runner 上该标记通常不存在, 无标记时此参数为空操作。
+        run: uv pip install --system --break-system-packages pyyaml pytest
+      - name: CR-PRINCIPLE-ENFORCEMENT — 原则执行化校验 (advisory)
+        # 验证工程原则是否被工具/流程执行, 非阻塞 advisory
+        continue-on-error: true
+        run: python3 bin/gac/check-principle-enforcement.py
       - name: CR-P76-9A-4-HEURISTIC-DEFAULT — LLM fallback 检查 (advisory)
         # 本地工具应有 --no-llm 或 heuristic fallback, 非阻塞 advisory
         continue-on-error: true
@@ -85,27 +193,10 @@ jobs:
         # 每 sub-task 完成立即 commit, 防 X-Plane clean worktree 丢失工作, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-incremental-commit.py
-      - name: CR-X4-SUBMODULE-POINTER-INTEGRITY — 子模块指针完整性检查
-        # 子模块指针必须与远程同步, 禁止超前指针
-        run: python3 bin/gac/check-submodule-pointer-integrity.py
       - name: CR-X4-MESH-EXECUTOR-RELIABILITY — Mesh executor 可靠性检查 (advisory)
         # mesh executor 脚本必须有超时控制、错误处理、日志记录, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-mesh-executor-reliability.py
-      - name: CR-X4-MEMORY-OS-SURFACE-INTEGRITY — Memory OS light gate
-        # SSOT/ports/env/help catalog surfaces; blocking (no Neo4j required)
-        run: python3 bin/gac/check-memory-os-surfaces.py
-      - name: Memory OS catalog SSOT tests (cockpit help/discover)
-        # help_map catalog ⊆ CLI parsers; discover shares help_map (no Neo4j)
-        # uv 已在作业开头 setup (E2-B), 此处不再重复 setup。
-        run: |
-          if [[ -d projects/cockpit/src/cockpit/tests ]]; then
-            cd projects/cockpit
-            uv sync --quiet
-            uv run pytest src/cockpit/tests/test_help_discover_ssot.py src/cockpit/tests/test_status_memory_os_line.py -q
-          else
-            echo "SKIP cockpit submodule tests absent"
-          fi
       - name: CR-X1-EXTERNAL-AGENT-AUDIT — 外部 agent 审计检查 (advisory)
         # 外部 agent 接入必须注册 MCP 入口 + 审计链, 非阻塞 advisory
         continue-on-error: true
@@ -146,21 +237,9 @@ jobs:
         # 治理系统自身健康度: 规则数 ≤ freeze, 无重复 ID, 无过期 draft
         continue-on-error: true
         run: python3 bin/gac/check-meta-health.py
-      - name: CR-X2-GAC-DRIFT — GaC drift 自检 (注册表 vs 实际执行)
-        run: python3 bin/gac/gac-drift.py
       - name: CR-M4-HEALTH-SCORE — M4 Health Score 量化 (advisory)
         continue-on-error: true
         run: python3 bin/mof/m4-health-score.py --json
-      - name: CR-L0-ENFORCE — L0 协议约束 CI 校验 (required)
-        # 校验 X1-C01/CS-10/X2-C01/X2-C03/X4-C01, 任一 FAIL 则 CI 红
-        run: python3 bin/gac/check-l0-constraints.py
-      # ── Phase 8: Harness 全生命周期合规 (ADR-0444) ──
-      - name: CR-HARNESS-SECTION — Harness 12 章节完整性 (required)
-        # harness-policy.yaml 必须包含 12 必现章节 + SFOP S 槽位唯一
-        run: python3 bin/gac/harness-compliance-check.py --gate
-      - name: CR-HARNESS-MOF — MOF 约束联动检查 (required)
-        # 8 条 Agent-MOF 规则接入 Harness 全生命周期
-        run: python3 bin/gac/harness-mof-bridge.py --state
       - name: CR-HARNESS-OMO — OMO 状态同步检查 (advisory)
         # Harness 运行状态同步到 OMO system.yaml, 非阻塞
         continue-on-error: true
@@ -197,18 +276,6 @@ jobs:
         # 检查 governance-evolution 指标趋势, 确认关键指标未恶化, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-metric-trend.py
-      - name: immutable checkout precondition
-        run: |
-          git diff --exit-code
-          git diff --cached --exit-code
-          test -z "$(git status --porcelain)"
-      - name: PASW — 子模块指针可达性前置检查
-        run: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch
-        continue-on-error: false
-      - name: generated projection drift checks
-        run: |
-          python3 bin/mof/project-layer-index.py --check
-          python3 bin/gac/gac-drift.py
       - name: mof-check (L0 约束对齐验证, advisory)
         # MOF 全量检查: gate + validate + audit + enforce
         # 非阻塞: 周度 mof-update.yml 已覆盖, 这里作为日常快速探测
@@ -216,22 +283,3 @@ jobs:
         working-directory: projects/ecos
         run: |
           uv run mof check 2>&1 | tail -20
-      - name: check-layers (跨层依赖检查)
-        run: python3 bin/layer-dependency-check.py
-      - name: gac-local-gate (strict)
-        # H1a: the strict full-workspace gate is merge-blocking after the R1 canary.
-        env:
-          # 4019+ waiver 机制: env GITHUB_PR_NUMBER 命中 .omo/_truth/governance-evidence/waiver-*.md
-          # frontmatter 的 pr_numbers 列表时, check-governance-ratio 单次 merge bypass.
-          GITHUB_PR_NUMBER: \${{ github.event.pull_request.number }}
-        run: python3 bin/gac/gac-local-gate.py --strict
-      - name: immutable checkout postcondition
-        if: always()
-        run: |
-          git diff --exit-code
-          git diff --cached --exit-code
-          test -z "$(git status --porcelain)"
-      - name: worktree guard (数量上限门禁)
-        # P74: 防 worktree 堆积 — 超 MAX_WORKTREES 即 fail, 触发人工清理
-        run: bash bin/gac/gac-worktree-guard.sh --check
-        continue-on-error: false

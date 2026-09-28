@@ -14,6 +14,96 @@ surfaces:
   triggers:
   - manual
   status: active
+- id: bin-gac-check-uri-prefix-pattern-py
+  tool: bin/gac/check-uri-prefix-pattern.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-P77-3-2-PREFIX-PATTERN) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
+- id: bin-gac-check-sweep-tool-integrity-py
+  tool: bin/gac/check-sweep-tool-integrity.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-X4-SWEEP-TOOL-INTEGRITY) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
+- id: bin-gac-check-project-health-freshness-py
+  tool: bin/gac/check-project-health-freshness.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-X2-PROJECT-HEALTH-FRESHNESS) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
+- id: bin-gac-check-mesh-routing-consistency-py
+  tool: bin/gac/check-mesh-routing-consistency.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-X4-MESH-ROUTING-CONSISTENCY) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
+- id: bin-gac-check-fallback-test-coverage-py
+  tool: bin/gac/check-fallback-test-coverage.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-P77-6-2-TIER-FALLBACK-TEST) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
+- id: bin-gac-check-external-agent-audit-py
+  tool: bin/gac/check-external-agent-audit.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-X1-EXTERNAL-AGENT-AUDIT) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
+- id: bin-gac-check-delivery-value-gate-py
+  tool: bin/gac/check-delivery-value-gate.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-X3-DELIVERY-VALUE-GATE) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
+- id: bin-gac-check-delivery-cadence-py
+  tool: bin/gac/check-delivery-cadence.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-X3-DELIVERY-CADENCE) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
+- id: bin-gac-check-catalog-health-py
+  tool: bin/gac/check-catalog-health.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-P79-4-CATALOG-HEALTH-METRIC) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
 - id: bin-gac-ci-local-fast-py
   tool: bin/gac/ci-local-fast.py
   workflow: (none)
@@ -314,6 +404,16 @@ surfaces:
   - push
   - scheduled
   status: active
+- id: bin-mof-m4-health-score-py
+  tool: bin/mof/m4-health-score.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: advisory 步 (CR-M4-HEALTH-SCORE) 补登记 — E2 第二批重排 gac-gate.yml 时暴露 (2026-09-28)
 - id: bin-ssot-root-directory-governance-scan-py
   tool: bin/ssot/root-directory-governance-scan.py
   workflow: gac-gate.yml
