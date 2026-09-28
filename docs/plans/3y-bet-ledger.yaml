@@ -37686,6 +37686,91 @@ bets:
             价值 = 网络抖动不再能触发重复 PR/误删类事故（clone-lifecycle 空列表
             分流 + UNKNOWN 语义）；实战消费随下次 integrate 累积。
   value_indicator_policy: false
+- id: BET-Y2Q4-T4-04
+  title: 业务第二单 — 市政府会议纪要 144 号 → 决议行动包（"三医"信息化）
+  goal: '候选 ① 落地（principal 授权输入自提取："业务从 documents 下提炼"）。真实输入： ~/Documents/@工作文档/卫健委/_ocr_text/
+    市政府会议纪要第 144 号（"三医"信息化专题会， 2026-07-16 印发，4 大类 15 项任务，OCR 文本在域内）。产出决议行动包至该域 _drafts/：
+    15 项全量映射（类别/事项/牵头/会同/时限）+ 房山区视角速览（区属医院接入预约平台、 区级影像平台停建、AI 病历区级覆盖等）+ OCR 缺口显式标注（陪诊条缺字/KERMA
+    噪声/ 财务系统清单）+ 修订与派发节。行动包只落 Documents 域，仓库内仅路径引用零正文。 零自动外发，派发权在 principal。
+
+    '
+  status: done
+  done_at: 2026-09-28
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: '行动包内容只落 principal Documents 域，不入 omostation 仓（零正文）；零自动外发/ 零派发；OCR
+    不可恢复处标注待对照原件，禁止臆测补全（D1）。
+
+    '
+  non_goals:
+  - 不自动派发/转办/发送任何产物
+  - 不把纪要正文或行动包内容提交进 omostation 仓
+  - 不处理 144 号之外的纪要（聚焦首单）
+  done_when:
+  - 行动包落 ~/Documents/@工作文档/卫健委/_drafts/（15 项全覆盖带页码锚点）
+  - 房山区视角节 ≥3 条区级相关项
+  - OCR 缺口 ≥2 处显式标注
+  - 报告/retro 入仓（仅路径引用）
+  - principal 修订/派发节留槽待回
+  verify:
+  - cmd: 检查 _drafts/ 行动包 15 项计数与页码锚点
+    expect: 15/15 且逐项带牵头单位
+  - cmd: git grep 确认仓内无纪要正文
+    expect: 0 命中
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/reports/business-2nd-action-pack-2026-09-28.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-minute-144-action-pack.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-minute-144-action-pack.md
+    spec_version: 1.0.0
+    content_digest: sha256:57747f2e17bc5d903866a75070276818fe79e240aff2a68190c079d6ff416b90
+    decision_ref: decision://accepted/BET-Y2Q4-T4-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@97d72b17e4cb4741c1cfe3e89a47339b59a8fea3
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          tests:
+            ref: receipt://docs/reports/business-2nd-action-pack-2026-09-28.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >-
+            价值门槛 = principal 修订/派发决定（行动包 §四留槽，git grep 证零正文入仓）。
+            真实输入（市政府纪要 144 号）→ 结构化行动包的转换已交付；签发/派发后按
+            首单先例回填签发回执。
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2

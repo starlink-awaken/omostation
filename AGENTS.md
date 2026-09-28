@@ -366,6 +366,10 @@ cockpit harness compliance|full|status
 
 ---
 
+- **管道计数命令零匹配断链（2026-09-27 会话实证 ×3）**：`cmd | grep -c pattern && next` 在零匹配时 grep exit 1 直接断链（最重一次：两个债务登记文件从未提交、worktree 释放即丢失，#4498 重铸恢复）。纪律：`grep -c` 后接 `|| true`，或用 python 计数断言；**worktree 释放前必查 `git status --short` 确认交付物全部已提交**。
+- **幽灵判定双检（2026-09-27, T10-01/T10-08 实证）**：声明契约的 source_ref 指向不存在脚本 ≠ 脚本不存在——commit-assist 在 `bin/` 根（声明写 `bin/gac/`）、SEC×2 被 `omo.cli lint` 覆盖。纪律：全库 `find bin -name "$(basename <声明脚本>)"` + `omo.cli lint --help` 双检后再定"幻影"，否则误删活测试/漏接线。
+- **验收条款先实证通道行为（2026-09-27 实证）**：done_when 写"doc 指向 X"前先跑一次真实通道——ingest 的 canonical_path 是 `kos::default::<文件名>` 不保目录、gh pr list 分页会静默触顶。想象中的通道行为写进验收 = 埋假红/假绿。
+
 ## 12. 归档/收敛项目说明
 
 - agora-dashboard 独立入口已收敛 (能力并入 cockpit/agora)
