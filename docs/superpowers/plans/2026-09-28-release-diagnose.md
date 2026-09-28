@@ -1,3 +1,12 @@
+---
+schema: md/v1
+status: active
+lifecycle: plan
+owner: governance-agent
+last-reviewed: 2026-09-28
+type: plan
+---
+
 # Worktree release-diagnose Implementation Plan
 
 > **For agentic workers:** execute this plan in the isolated release-diagnose worktree.

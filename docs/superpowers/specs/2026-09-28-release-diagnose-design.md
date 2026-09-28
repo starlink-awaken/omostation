@@ -6,6 +6,7 @@ title: "Worktree release-diagnose 只读残留诊断"
 bet_id: BET-Y2Q4-T10-211
 status: accepted
 lifecycle: contract
+owner: governance-agent
 last-reviewed: 2026-09-28
 ---
 
