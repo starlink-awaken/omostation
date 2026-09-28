@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.omo-health-refresh.plist — 每小时刷新 system_health.yaml 运行时健康快照
+
+  背景 (2026-09-28, meta-doctor M1 心跳巡检发现):
+    `.omo/state/runtime/system_health.yaml` 的 `last_scan` 停在 2026-09-23 10:50,
+    相对 48h SLA 已过 114.3h → meta-doctor `stale_beats=1`, 连带织星驾驶舱
+    A2 (Resident 与宿主健康真值) 与 A5 (引用与 launchd 完整性) 双双 FAIL。
+
+  根因 (已逐层验证, 非声明缺失):
+    1. 声明面是**活的** —— `.omo/_truth/registry/write-owners.yaml` 登记
+       `.omo/state/{,runtime/}system_health.yaml` 的 owner 为 `script:runtime-scan`;
+       `runtime-projections.yaml` 也把 system_health 列为 active 投影。
+       写入器 `cmd_state_refresh` (projects/omo/src/omo/omo_state.py:101) 确实存在,
+       `omo state refresh` 的 dry-run 模式实测可跑通 (6 services)。
+    2. 缺的**只是排程** —— 真正在跑的 launchd `com.l4.omo.sync` 执行的是
+       `omo state sync`, 它只写 health.yaml / system.yaml / governance-data.json /
+       brief.md, **从不写 system_health.yaml**。而写它的 `omo state refresh`
+       (omo_state.py:525 子命令) 在 crontab 与 launchd 中均无任何注册。
+    3. 即 DECL_EXEC_GAP 的「第三形态」: 声明 ✓ / 进程存活 ✓ / 落盘 ✗。
+       同款先例见 com.omostation.omo-debt-refresh.plist 注释 (生成器从未排程 → 报 staleness)。
+
+  正确修法: 让生成器**持续跑**, 而非删声明或改 SLA (沿用 omo-debt-refresh 已验证范式)。
+
+  顺带修复的下游消费者 (它们读 legacy 面 `.omo/state/system_health.yaml`,
+  该路径当前**不存在**, 属 canonical 迁移后遗留):
+    - bin/compass_radar.py:99 / bin/meta/compass_radar.py:87 (常驻 daemon 在线率)
+    - bin/ssot/problem-detector.py:25 (launchd com.omostation.problem-detector 退出码 1)
+    - bin/gac/state-freshness-check.py:50
+  依据 omo_state.py:184-188, refresh 对 canonical 与 legacy **双写** (write_text_atomic),
+  故本任务一次激活即可同时修复以上三者, 无需各自改路径。
+
+  为何走 launchd 而非 crontab —— 架构性理由, 非能力性:
+    registry.yaml 为调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面是
+    遗留面, 不应新增条目。见 .omo/cron/registry.yaml zhixing-host-drift 条目的
+    reconciliation_note。
+
+  2026-09-28 更正: 本注释初版称「宿主 crontab 写入在系统层已坏 (原样重写返回
+  Interrupted system call)」, 该结论已不成立。实测原样回写 rc=0, 且惰性注释探针
+  写入后 74→75 行真实生效 —— 仅原样回写不足以证明, 因回读内容本就一致。
+  crontab 现已可写。launchd 承载的结论不变, 但理由已改为架构性。
+
+  环境说明 (同 zhixing-host-drift / omo-debt-refresh):
+    no_proxy 设为 loopback/github, 避免走 ClashX 127.0.0.1:7890 代理超时
+    (Agora :7430/health 与 runtime matrix 均为本地回环调用)。
+
+  安装 / 卸载 / 手动触发 (同 zhixing-host-drift):
+    cp bin/ops/launchd/com.omostation.omo-health-refresh.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.omostation.omo-health-refresh.plist
+    launchctl bootout gui/$(id -u)/com.omostation.omo-health-refresh
+    launchctl kickstart -p gui/$(id -u)/com.omostation.omo-health-refresh
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.omo-health-refresh</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>/Users/xiamingxing/Workspace/projects/omo/.venv/bin/omo state refresh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace/projects/omo</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>no_proxy</key>
+        <string>github.com,api.github.com,localhost,127.0.0.1</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Minute</key><integer>17</integer></dict>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/omo-health-refresh.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/omo-health-refresh.log</string>
+</dict>
+</plist>
