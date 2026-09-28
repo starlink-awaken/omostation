@@ -118,6 +118,10 @@ def check_heartbeats(ws_root: Path, now: datetime | None = None) -> list[dict]:
             "checked_file": checked_rel,
             "source": "canonical" if checked_rel != rel else "legacy",
             "exists": f.exists(), "age_hours": None, "ok": False,
+            # Absent means the generator has not run in this checkout — a
+            # runtime product, not a lapsed heartbeat. Tracked heartbeats always
+            # exist, so this flag can only be true for untracked state.
+            "absent": not f.exists(),
         }
         if f.exists():
             m = None
@@ -513,7 +517,8 @@ def main(argv: list[str] | None = None) -> int:
     submodule_regressions = ([] if args.refs_only
                              else _submodule_ff_check(reference_root))
 
-    stale_beats = [b for b in beats if not b["ok"]]
+    absent_beats = [b for b in beats if b.get("absent")]
+    stale_beats = [b for b in beats if not b["ok"] and not b.get("absent")]
     dead_refs = [r for r in refs if r.get("status") == "dead"]
     ritual_proposals = [] if args.refs_only else check_ritual(ws_root)
     all_proposals = build_debt_proposals(dead_refs) + ritual_proposals
@@ -530,6 +535,7 @@ def main(argv: list[str] | None = None) -> int:
         "submodule_regressions": submodule_regressions,
         "summary": {
             "stale_beats": len(stale_beats),
+            "absent_beats": len(absent_beats),
             "dead_refs": len(dead_refs),
             "ritual_lapsed": len(ritual_proposals),
             "untracked_refs": len(untracked_refs),

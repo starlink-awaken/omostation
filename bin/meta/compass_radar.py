@@ -674,6 +674,19 @@ def _write_text_if_changed(path: Path, payload: str, *, normalize=None) -> bool:
     return True
 
 
+def _health_history_dir(health_yaml_path: Path) -> Path:
+    """Anchor the health time series at ``<…>/state/history``.
+
+    The projection moves between ``state/`` and ``state/runtime/`` (ADR-0129),
+    so deriving the history directory from the file's depth would silently
+    relocate the JSONL series.
+    """
+    for parent in health_yaml_path.parents:
+        if parent.name == "state":
+            return parent / "history"
+    return health_yaml_path.parent / "history"
+
+
 def _append_health_history(health_yaml_path: Path, report: dict[str, Any]) -> None:
     """Append a compact snapshot to .omo/state/history/health.jsonl.
 
@@ -699,7 +712,7 @@ def _append_health_history(health_yaml_path: Path, report: dict[str, Any]) -> No
     """
     import json as _json
     try:
-        history_dir = health_yaml_path.parent.parent / "state" / "history"
+        history_dir = _health_history_dir(health_yaml_path)
         history_dir.mkdir(parents=True, exist_ok=True)
         history_file = history_dir / "health.jsonl"
         snapshot = {
