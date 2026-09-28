@@ -37479,6 +37479,8 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-28-release-diagnose-design.md
   - .omo/_knowledge/retros/BET-Y2Q4-T10-211.md
+  - docs/superpowers/plans/2026-09-28-release-diagnose.md
+  - docs/reports/2026-09-28-release-diagnose-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-28-release-diagnose-design.md
     spec_version: 1.0.0
