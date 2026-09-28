@@ -9,8 +9,19 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path("/Users/xiamingxing/Workspace")
-MATRIX_FILE = REPO / ".omo" / "_truth" / "registry" / "probe-heartbeat-matrix.yaml"
+_CHECKOUT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_CHECKOUT / "bin" / "lib"))
+from repo_root import code_root, state_root
+
+MATRIX_FILE = code_root() / ".omo" / "_truth" / "registry" / "probe-heartbeat-matrix.yaml"
+
+# ADR-0129 Phase 2: the matrix keeps the legacy key for report continuity, but
+# canonical evidence under state/runtime/ wins whenever it exists.
+CANONICAL_FILES: dict[str, str] = {
+    ".omo/state/system_health.yaml": ".omo/state/runtime/system_health.yaml",
+    ".omo/state/health.yaml": ".omo/state/runtime/health.yaml",
+    ".omo/_control/governance-data.json": ".omo/state/runtime/governance-data.json",
+}
 
 
 def _load_yaml_simple(path: Path) -> dict:
@@ -68,10 +79,31 @@ def _age_hours(ts_str: str) -> float:
 def check_heartbeats() -> dict:
     matrix = _load_yaml_simple(MATRIX_FILE)
     heartbeats = matrix.get("heartbeats", [])
+    root = state_root()
     results = []
     failed = []
+    absent = []
     for hb in heartbeats:
-        file_path = REPO / hb["file"]
+        rel = hb["file"]
+        canonical_rel = CANONICAL_FILES.get(rel)
+        file_path = root / rel
+        if canonical_rel and (root / canonical_rel).is_file():
+            file_path = root / canonical_rel
+        result = {
+            "file": rel,
+            "checked_file": str(file_path.relative_to(root)) if file_path.is_relative_to(root) else str(file_path),
+            "sla_hours": hb["sla_hours"],
+            "severity": hb.get("severity", "P3"),
+            "description": hb.get("description", ""),
+        }
+        if not file_path.exists():
+            # Absent means the generator has not run here yet — a runtime
+            # product, not a lapsed heartbeat. Reported, never counted as a
+            # failure, so fresh checkouts do not inherit a permanent red.
+            result.update({"age_hours": None, "ok": True, "absent": True})
+            results.append(result)
+            absent.append(result)
+            continue
         # 根据文件扩展名选择读取方式 (.json 和 .jsonl 用 JSON 解析)
         if file_path.suffix in (".json", ".jsonl"):
             ts_str = _read_json_field(file_path, hb["field"])
@@ -81,24 +113,19 @@ def check_heartbeats() -> dict:
             ts_str = str(ts_str) if ts_str is not None else None
         age = _age_hours(ts_str) if ts_str else 9999
         ok = age <= hb["sla_hours"]
-        result = {
-            "file": hb["file"],
-            "sla_hours": hb["sla_hours"],
-            "age_hours": round(age, 1),
-            "ok": ok,
-            "severity": hb.get("severity", "P3"),
-            "description": hb.get("description", ""),
-        }
+        result.update({"age_hours": round(age, 1), "ok": ok, "absent": False})
         results.append(result)
         if not ok:
             failed.append(result)
     return {
         "timestamp": datetime.now(UTC).isoformat(),
         "total": len(results),
-        "ok": len(results) - len(failed),
+        "ok": len(results) - len(failed) - len(absent),
         "failed_count": len(failed),
+        "absent_count": len(absent),
         "results": results,
         "failures": failed,
+        "absences": absent,
     }
 
 
@@ -111,7 +138,10 @@ def main() -> int:
     if args.status or args.report:
         result = check_heartbeats()
         print(f"探测器心跳矩阵 — {result['timestamp']}")
-        print(f"  总计: {result['total']}, 正常: {result['ok']}, 异常: {result['failed_count']}")
+        print(
+            f"  总计: {result['total']}, 正常: {result['ok']}, "
+            f"异常: {result['failed_count']}, 未生成: {result['absent_count']}"
+        )
         if result["failures"]:
             print("\n异常探测器:")
             for f in result["failures"]:

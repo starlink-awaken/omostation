@@ -37440,6 +37440,53 @@ bets:
             治理知识检索已可用（ADR-0453 等命中实证）；真实消费（会话冷启动命中、
             业务单引用）随使用累积计量。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-211
+  title: worktree release-diagnose 只读残留诊断
+  goal: 在不修改工作树的前提下，让 release 前置检查能够分类 root、子模块、PASW 和派生文件残留，降低误删与重复排查风险。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 只读诊断；禁止 reset、stash、clean、worktree remove、branch delete、文件写入；现有 release 成功/拒绝语义不得改变。
+  non_goals:
+  - 不自动丢弃或修复任何残留
+  - 不把 shell 扫描逻辑迁移到 Python
+  - 不改变 PASW 默认初始化深度或 worktree 生命周期策略
+  done_when:
+  - 新增 release-diagnose <session> 命令并复用现有 release session/PASW 发现规则
+  - root、普通子模块、PASW 子树和未跟踪文件均有可读分类与建议
+  - 退出码 0/1/2 分别表示 clean、发现阻塞项、无法读取元数据
+  - 诊断命令不执行任何写操作，现有 release 行为不变
+  - shell 回归测试覆盖 clean、dirty root、dirty submodule、invalid PASW metadata
+  - retro 固化真实 worktree 残留案例和清理边界
+  verify:
+  - cmd: bash bin/gac/gac-worktree.sh release-diagnose --help
+    expect: 输出只读诊断用法且不创建/删除文件
+  - cmd: bash tests/test_gac_worktree_release_diagnose.sh
+    expect: all cases pass
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/gac-worktree.sh
+  - tests/test_gac_worktree_release_diagnose.sh
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-28-release-diagnose-design.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-211.md
+  - docs/superpowers/plans/2026-09-28-release-diagnose.md
+  - docs/reports/2026-09-28-release-diagnose-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-release-diagnose-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:42ab3197c5ddd5e16befaa411db00310e33210c36a8fc2969cf36b54fa6f9b07
+    decision_ref: decision://accepted/BET-Y2Q4-T10-211
+  value_indicator_policy: false
 - id: BET-Y2Q4-T10-210
   title: 固化两条历史/CI 认知到 AGENTS.md — 浅历史边界与 governance-verify 评 head tree
   goal: 'AGENTS.md 是 agent 交付前必读的一段，而它当前有两条关于**证据判断装置**的陈述是错的或缺失的，会让 agent 在门禁评估上得出反向结论。第一条：`:195`
@@ -37639,6 +37686,236 @@ bets:
             价值 = 网络抖动不再能触发重复 PR/误删类事故（clone-lifecycle 空列表
             分流 + UNKNOWN 语义）；实战消费随下次 integrate 累积。
   value_indicator_policy: false
+- id: BET-Y2Q4-T4-04
+  title: 业务第二单 — 市政府会议纪要 144 号 → 决议行动包（"三医"信息化）
+  goal: '候选 ① 落地（principal 授权输入自提取："业务从 documents 下提炼"）。真实输入： ~/Documents/@工作文档/卫健委/_ocr_text/
+    市政府会议纪要第 144 号（"三医"信息化专题会， 2026-07-16 印发，4 大类 15 项任务，OCR 文本在域内）。产出决议行动包至该域 _drafts/：
+    15 项全量映射（类别/事项/牵头/会同/时限）+ 房山区视角速览（区属医院接入预约平台、 区级影像平台停建、AI 病历区级覆盖等）+ OCR 缺口显式标注（陪诊条缺字/KERMA
+    噪声/ 财务系统清单）+ 修订与派发节。行动包只落 Documents 域，仓库内仅路径引用零正文。 零自动外发，派发权在 principal。
+
+    '
+  status: done
+  done_at: 2026-09-28
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: '行动包内容只落 principal Documents 域，不入 omostation 仓（零正文）；零自动外发/ 零派发；OCR
+    不可恢复处标注待对照原件，禁止臆测补全（D1）。
+
+    '
+  non_goals:
+  - 不自动派发/转办/发送任何产物
+  - 不把纪要正文或行动包内容提交进 omostation 仓
+  - 不处理 144 号之外的纪要（聚焦首单）
+  done_when:
+  - 行动包落 ~/Documents/@工作文档/卫健委/_drafts/（15 项全覆盖带页码锚点）
+  - 房山区视角节 ≥3 条区级相关项
+  - OCR 缺口 ≥2 处显式标注
+  - 报告/retro 入仓（仅路径引用）
+  - principal 修订/派发节留槽待回
+  verify:
+  - cmd: 检查 _drafts/ 行动包 15 项计数与页码锚点
+    expect: 15/15 且逐项带牵头单位
+  - cmd: git grep 确认仓内无纪要正文
+    expect: 0 命中
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/reports/business-2nd-action-pack-2026-09-28.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-27-minute-144-action-pack.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-27-minute-144-action-pack.md
+    spec_version: 1.0.0
+    content_digest: sha256:57747f2e17bc5d903866a75070276818fe79e240aff2a68190c079d6ff416b90
+    decision_ref: decision://accepted/BET-Y2Q4-T4-04
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@97d72b17e4cb4741c1cfe3e89a47339b59a8fea3
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          tests:
+            ref: receipt://docs/reports/business-2nd-action-pack-2026-09-28.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-04.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >-
+            价值门槛 = principal 修订/派发决定（行动包 §四留槽，git grep 证零正文入仓）。
+            真实输入（市政府纪要 144 号）→ 结构化行动包的转换已交付；签发/派发后按
+            首单先例回填签发回执。
+  value_indicator_policy: false
+- id: BET-Y2Q4-T16-01
+  title: launchd 平面漂移门 — 补齐登记↔安装校验并三段式收敛 27 条未声明存量
+  track: T16-DRIFT-GUARD
+  window: Y2Q4
+  status: pending
+  priority: P1
+  appetite: 1 week
+  risk_level: L1
+  human_gate: false
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  goal: '给 launchd 平面补上漂移校验。bin/scheduler-compile.py::check_drift() 只比对 crontab 平面（`if
+    "crontab" not in j.get("planes", []): continue`），launchd 平面既无生成 （--generate launchd
+    因 __main__ 覆写 argparse 而静默无操作仍 rc=0）也无校验。 2026-09-28 实测 57 个已装 plist 仅 6 条登记，约 86%
+    未声明；同日确认三个互不相关、 长期未被发现缺陷全部落在该盲区：从未排程的 omo state refresh、crontab + launchd 双重驱动的
+    6 个 resident 角色、plist 已装但从未 load 的 com.l4.resident.orchestrator。 本单先以 shadow 阶段落地校验口径并清点存量，warning/fail
+    转段须另走一次 principal 确认。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-t16-launchd-drift-gate-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:f72c2eb4690e504047124af6795b0e8e6e5eff1e51758629a604cc6ddfcc74de
+    decision_ref: decision://accepted/BET-Y2Q4-T16-01
+  write_surfaces:
+  - bin/scheduler-compile.py
+  - .omo/cron/registry.yaml
+  - docs/superpowers/specs/2026-09-28-t16-launchd-drift-gate-design.md
+  - .omo/_knowledge/decisions/0457-launchd-drift-gate-three-stage.md
+  non_goals:
+  - 不自动 unload / bootout / 改写任何 launchd 作业（本单为只读观测）
+  - 不在本单决定 resident 双驱动收敛方向（保留为独立决策项）
+  - 不把 27 条存量一次性登记充数
+  - 不改 crontab 平面既有语义与 known_orphans 机制
+  - 不修 adr-number-check.py 的 ADR- 前缀盲区（独立发现，另立单）
+  circuit_breaker: 新门禁必须按 shadow → warning → fail 三段落地。shadow 阶段 launchd 段不得影响 `ok`
+    判定。依据 E5 事故（ADR-0380 CR-SUBMODULE-REWIND 上线即检出 18 个 rewind 并锁死主干）；若发现新增门禁使主干无法提交，立即回退至
+    shadow 纯报告模式。
+  verify:
+  - cmd: python3 bin/scheduler-compile.py --check --json
+    expect: 输出含 launchd 段且可复算出 57 装 / 6 登记基线；shadow 阶段 ok 判定不被 launchd 段影响
+  - cmd: python3 bin/scheduler-compile.py --generate launchd
+    expect: 产出非空 JSON；rc=0 必须伴随内容（消除静默无操作）
+  - cmd: python3 -c "import plistlib,glob;[plistlib.loads(open(p,'rb').read()) for p
+      in glob.glob('/Users/xiamingxing/Library/LaunchAgents/*.plist')]"
+    expect: 解析失败者被报告而非静默跳过（当前基线 3 例）
+  - cmd: python3 bin/ssot/adr-number-check.py
+    expect: OK，latest=0457
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - check_drift() 含 launchd 分支，双向差集（登记有安装无 / 安装有登记无）可复算
+  - --generate launchd 不再静默无操作，rc=0 时必有非空 JSON
+  - 3 例 plistlib 解析失败在报告中可见
+  - 27 条 W 组存量完成 owner 分类并各有处置结论，方可申请转 warning 段
+  - shadow 段跑满 1 周且主干提交未受阻断
+  depends_on: []
+- id: BET-Y2Q4-T16-02
+  title: 日志面分类 SSOT — 轮转资格登记驱动, 消除静默清零证据链的失败模式
+  track: T16-DRIFT-GUARD
+  window: Y2Q4
+  status: pending
+  priority: P1
+  appetite: 1 week
+  risk_level: L1
+  human_gate: false
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  goal: 'bin/ssot/log-rotate.py 判定轮转资格靠文件名 pattern 加硬编码 SKIP_NAMES, 仓内无 「日志 vs 追加式状态」SSOT,
+    每新增一个日志目录就要重做一次人工判定, 且漏判代价是 **静默的**: --daily 语义为「跨天即轮转不看阈值」(log-rotate.py:101-108),
+    crontab 每天 03:00 执行, 追加式账本一旦被纳入扫描范围, 次日即被 copytruncate 清零 —— 无报错无告警, 只是文件变空。四个已确认处于该风险面、当前靠「目录尚未被加进
+    LOG_PATHS」侥幸未暴露的 账本: agent-workflows/events.jsonl (468KB)、resident-orchestrator/receipts.jsonl
+    (674KB)、 ingress/value-evidence.jsonl (89KB, BET 价值证据)、observability/events.jsonl
+    (21KB)。 本单建立 .omo/_truth/registry/log-surfaces.yaml (log-surfaces/v1) 并由 log-rotate
+    消费, 使轮转资格登记驱动而非人工枚举。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-t16-log-surface-classification-ssot.md
+    spec_version: 1.0.0
+    content_digest: sha256:e80574da190a1bddec8aba2f076f92700358ed3d8bf60084a678b08cf8715dcd
+    decision_ref: decision://accepted/BET-Y2Q4-T16-02
+  write_surfaces:
+  - .omo/_truth/registry/log-surfaces.yaml
+  - bin/ssot/log-rotate.py
+  - docs/superpowers/specs/2026-09-28-t16-log-surface-classification-ssot.md
+  - .omo/_knowledge/decisions/0458-log-surface-classification-ssot.md
+  - .omo/_knowledge/decisions/INDEX.md
+  non_goals:
+  - 不做通用保留期策略引擎 (不引入 TTL / 分层存储); retention 字段先只登记不执行
+  - 不改 5MB 阈值与 --daily 语义
+  - 不决定各面保留时长
+  - 不改 /tmp 的扫描范围 (仍只扫 LOG_PATHS 声明的根, 非递归)
+  - 不修 adr-number-check.py 的 ADR- 前缀盲区 (ADR-0457 已记录, 独立立项)
+  circuit_breaker: 新门禁必须按 shadow -> warning -> fail 三段落地。依据 E5 事故 (ADR-0380 CR-SUBMODULE-REWIND
+    上线即检出 18 个 rewind 并锁死主干); 若新增校验使主干无法提交, 立即回退至 shadow 纯报告模式。state 路径的排除在任何阶段都不得被关闭
+    —— 那是本单要消除的静默数据丢失路径, 不是可调项。
+  verify:
+  - cmd: python3 -c "import yaml,sys;d=yaml.safe_load(open('.omo/_truth/registry/log-surfaces.yaml'));sys.exit(0
+      if d.get('schema')=='log-surfaces/v1' else 1)"
+    expect: 注册表 schema 为 log-surfaces/v1
+  - cmd: python3 bin/ssot/log-rotate.py --dry-run
+    expect: 四个 state 账本 (events/receipts/value-evidence/observability) 均不出现在 rotate
+      行; 输出含「未分类路径」与「被排除的 state 路径」两段计数
+  - cmd: python3 bin/ssot/log-rotate.py --dry-run
+    expect: 四个此前漏扫的日志目录 (event-ingest / perception-inbox / personal-signals / agent-workflows)
+      出现在候选中
+  - cmd: python3 -m pytest tests/unit/test_log_rotate_copytruncate.py -q
+    expect: 2 passed (既有 copytruncate 契约不回归)
+  - cmd: python3 bin/ssot/adr-number-check.py
+    expect: OK, latest=0458
+  done_when:
+  - log-surfaces.yaml 存在且 log-rotate.py 消费之, 硬编码 SKIP_NAMES 不再是唯一防线
+  - 上表 4 个追加式账本全部登记为 class state, 且任何轮转模式下均不出现于 rotate 行
+  - 4 个此前漏扫的日志目录登记为 class log 并进入实际扫描
+  - --dry-run 输出新增「未分类路径」与「被排除 state 路径」两段计数
+  - 候选数可由注册表复算
+  - shadow 段跑满 1 周且主干提交未受阻断
+  depends_on: []
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -37777,7 +38054,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 501
+  total_bets: 505
   windows:
   - Y1Q1
   - Y1Q2

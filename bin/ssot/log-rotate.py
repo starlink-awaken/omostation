@@ -31,6 +31,13 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 LOG_PATHS = [
     HOME / ".agora" / "logs",
     WORKSPACE / ".omo" / "_delivery",
+    # 2026-09-28: .omo/_delivery 直属无 .log, 日志全在子目录, 非递归 glob 漏掉
+    # resident-orchestrator/daemon.log (18.75MB, 超 5MB 阈值 3.7 倍, 2026-09-15 起
+    # 持续增长而从不轮转 —— --dry-run 曾报 "0 over 5242880 bytes")。
+    # 此处**只补这一个目录**, 不改成 rglob: /tmp 同在 LOG_PATHS 内, rglob 会扫到
+    # 并发 agent 的 worktree/scratchpad (101 个文件), 且 .omo/_delivery 下的
+    # 追加式账本 (*.jsonl) 会被 --daily 按 mtime 轮转清零。详见下方 SKIP_NAMES。
+    WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator",
     WORKSPACE / ".omo" / "_log",
     WORKSPACE / "runtime" / "logs",
     HOME / ".local" / "state" / "omostation",
@@ -40,7 +47,19 @@ LOG_PATHS = [
 LOG_PATTERNS = ("*.log", "*.out.log", "*.err.log", "*.jsonl", "*.err")
 # T9-01 ②: 裸 .err (launchd StandardErrorPath) 此前不匹配任何 pattern —
 # 旧错误无限累积并被误读为当前问题 (2026-08-08 Xcode 路径旧错案)
-SKIP_NAMES = {"agora-events.json", "agora-proxy-services.json", "agora-audit.db"}
+SKIP_NAMES = {
+    "agora-events.json",
+    "agora-proxy-services.json",
+    "agora-audit.db",
+    # 2026-09-28: 追加式账本不是日志 —— 轮转 = copytruncate = 清零 = 证据链丢失。
+    # receipts.jsonl 随新增的 resident-orchestrator 目录进入扫描范围, 必须排除。
+    # 同族账本 (未纳入本 LOG_PATHS, 故暂无暴露, 一并登记以防将来被加进来):
+    #   .omo/_delivery/agent-workflows/events.jsonl   workflow 事件账本
+    #   .omo/_delivery/ingress/value-evidence.jsonl  BET 价值证据
+    #   .omo/_delivery/observability/events.jsonl
+    # 根本缺口: 仓内无「日志 vs 追加式状态」SSOT, 靠人工枚举。已记录待立项。
+    "receipts.jsonl",
+}
 
 
 def _candidate_files() -> list[Path]:

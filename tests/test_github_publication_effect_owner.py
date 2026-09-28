@@ -29,8 +29,16 @@ FORBIDDEN_PUBLICATION_PATTERNS = (
     re.compile(r"\bgit\s+push\b[^\n]*--force\b"),
 )
 
+# Deliberate exception (#4231 gatekeeper, #4501 autopilot, autobump):
+# CROSS_REPO_TOKEN is the cross-repo PAT required to check out private
+# sibling submodules — without it those checkouts 404. Publication safety
+# is enforced by FORBIDDEN_PUBLICATION_PATTERNS and the no-contents:write
+# assertions, not by its absence. Any OTHER write-capable secret token
+# remains banned below.
+ALLOWED_READONLY_TOKEN_RE = re.compile(r"^\$\{\{\s*secrets\.CROSS_REPO_TOKEN\s*\}\}$")
+
 WRITE_CAPABLE_TOKEN_RE = re.compile(
-    r"token\s*:\s*\$\{\{\s*secrets\.(CROSS_REPO_TOKEN|bot_token|[A-Z0-9_]*TOKEN)\s*\}\}"
+    r"token\s*:\s*\$\{\{\s*secrets\.(?!CROSS_REPO_TOKEN\s*\}\})(?:bot_token|[A-Z0-9_]*TOKEN)\s*\}\}"
 )
 
 PROPOSAL_KEY_GROUPS = (
@@ -111,7 +119,11 @@ def test_no_write_capable_checkout_token(path: Path) -> None:
         with_block = step.get("with") or {}
         assert isinstance(with_block, dict)
         token = with_block.get("token")
-        assert token is None, f"{path.name} checkout uses write-capable token: {token}"
+        if token is None:
+            continue
+        assert ALLOWED_READONLY_TOKEN_RE.match(str(token)) is not None, (
+            f"{path.name} checkout uses a non-exempt token: {token}"
+        )
     assert WRITE_CAPABLE_TOKEN_RE.search(text) is None, (
         f"{path.name} still references a write-capable checkout token"
     )

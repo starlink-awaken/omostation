@@ -364,10 +364,92 @@ guard_submodules() {
   return 0
 }
 
+release_diagnose() {
+  local diagnose_session="$1"
+  validate_session "$diagnose_session"
+  local diagnose_wt="$WS_PARENT/ws-$diagnose_session"
+  local finding=0 line path sub_path sub_status sub_name pasw_wt
+
+  if [ ! -d "$diagnose_wt" ] || ! git -C "$diagnose_wt" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "release-diagnose: unable to inspect worktree: $diagnose_wt" >&2
+    return 2
+  fi
+  echo "release-diagnose: session=$diagnose_session worktree=$diagnose_wt"
+
+  classify_diagnose_path() {
+    local diagnose_path="$1"
+    case "$diagnose_path" in
+      .omo/*|docs/generated/*|docs/cli/*)
+        printf '[generated] path=%s recommendation=review-generated\n' "$diagnose_path"
+        ;;
+      projects/*)
+        printf '[pointer] path=%s recommendation=review-pointer\n' "$diagnose_path"
+        ;;
+      *)
+        printf '[dirty-root] path=%s recommendation=preserve-and-review\n' "$diagnose_path"
+        ;;
+    esac
+  }
+
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    path="${line:3}"
+    [ -n "$path" ] || continue
+    classify_diagnose_path "$path"
+    finding=1
+  done < <(git -C "$diagnose_wt" status --porcelain --untracked-files=all)
+
+  if ! sub_paths=$(git -C "$diagnose_wt" submodule foreach --quiet --recursive 'printf "%s\n" "$displaypath"' 2>/dev/null); then
+    echo "release-diagnose: unable to enumerate submodules" >&2
+    return 2
+  fi
+  while IFS= read -r sub_path; do
+    [ -z "$sub_path" ] && continue
+    if ! sub_status=$(git -C "$diagnose_wt/$sub_path" status --porcelain --untracked-files=all 2>/dev/null); then
+      echo "release-diagnose: unable to inspect submodule: $sub_path" >&2
+      return 2
+    fi
+    if [ -n "$sub_status" ]; then
+      printf '[dirty-submodule] path=%s recommendation=preserve-and-review\n' "$sub_path"
+      finding=1
+    fi
+  done <<< "$sub_paths"
+
+  for sub_path in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+    [ -n "$sub_path" ] || continue
+    sub_name=$(basename "$sub_path")
+    pasw_wt="$diagnose_wt/$PASW_SUBTREE_DIR/$sub_name"
+    [ -d "$pasw_wt" ] || continue
+    if ! git -C "$pasw_wt" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      printf '[invalid-pasw] path=%s recommendation=remove-stale-metadata\n' "$pasw_wt"
+      finding=1
+    fi
+  done
+
+  if [ -d "$diagnose_wt/$PASW_SUBTREE_DIR" ]; then
+    for pasw_wt in "$diagnose_wt/$PASW_SUBTREE_DIR"/*; do
+      [ -d "$pasw_wt" ] || continue
+      if ! git -C "$pasw_wt" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        printf '[invalid-pasw] path=%s recommendation=remove-stale-metadata\n' "$pasw_wt"
+        finding=1
+      fi
+    done
+  fi
+
+  if [ "$finding" -eq 1 ]; then
+    return 1
+  fi
+  return 0
+}
+
 case "$cmd" in
-  guard-submodules)
-    # BET-Y1Q4-T10-161: gitlink 新鲜度 + remote 完整性守卫 (advisory, 恒 exit 0)
-    guard_submodules "${session:-}"
+  release-diagnose)
+    if [ "$session" = "--help" ]; then
+      echo "用法: release-diagnose <session>  (只读, 不修改 worktree)"
+      exit 0
+    fi
+    [ -z "$session" ] && echo "用法: release-diagnose <session>" >&2 && exit 2
+    release_diagnose "$session"
     ;;
   claim)
     # 子模块 init 默认为浅 (--depth 1, 快); --full 或 GAC_FULL_SUBMODULE_INIT=1
@@ -1294,13 +1376,14 @@ PYEOF
   *)
     echo "GaC worktree per session (ADR-0106 P2)"
     echo ""
-    echo "用法: gac-worktree.sh {claim|submit [--strict]|merge|release|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
+    echo "用法: gac-worktree.sh {claim|submit [--strict]|merge|release|release-diagnose|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
     echo ""
     echo "  claim <session>      创建 worktree + 分支 work/<session>"
     echo "  submit [--strict] <session>  proposal-only → MANAGED_SUCCESSOR_REQUIRED"
     echo "                       --strict: 子模块 pointer 不可达时阻止提案 (默认仅 warning)"
     echo "  merge <session>      squash 合并 PR + release worktree + 删分支"
     echo "  release <session>    清理 worktree (手动, 合并后)"
+    echo "  release-diagnose <session>  只读诊断 release 阻塞项 (不修改 worktree)"
     echo "  bump-fast <submodule-path> [--sha <sha>|--latest-main]  流程内快速更新单个子模块指针"
     echo "  bump-pointer <session> <submodule>  更新子模块指针到 worktree HEAD"
     echo "  list                 列所有 worktree + PASW 状态"
