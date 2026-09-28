@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 643
-  bos_services: 338
+  bos_services: 325
   bos_domains: 23
   cli_commands: 200
   skills: 42
@@ -882,24 +882,24 @@ mcp_servers:
   tool_count: 75
 bos_services:
   _domain_counts:
-    agent-cell: 23
+    agent-cell: 20
     agora: 6
     analysis: 28
     bcos: 3
-    capability: 51
+    capability: 45
     cockpit: 9
     compute: 16
     documents: 4
     ecos: 10
     fabric: 1
     forge: 1
-    governance: 80
+    governance: 78
     harness: 9
     l4-kernel: 1
-    memory: 51
+    memory: 50
     meta: 1
     omo: 4
-    perception: 4
+    perception: 3
     persona: 11
     resident: 8
     runtime: 2
@@ -912,21 +912,9 @@ bos_services:
       transport: stdio
       status: active
     - uri: bos://agent-cell/pool/submit
-      description: '[UNIMPLEMENTED] Cell Pool 提交 — 提交 Episode 到 Cell Pool'
+      description: Cell Pool 提交 — 向 Cell Pool 派发 Episode (cell_pool.py --action dispatch)
       transport: stdio
-      status: unimplemented
-    - uri: bos://agent-cell/pool/scale
-      description: '[UNIMPLEMENTED] Cell Pool 扩缩容 — 调整 Cell 数量'
-      transport: stdio
-      status: unimplemented
-    - uri: bos://agent-cell/pool/auto-scale
-      description: '[UNIMPLEMENTED] Cell Pool 自动扩缩容 — 基于负载自动调整'
-      transport: stdio
-      status: unimplemented
-    - uri: bos://agent-cell/pool/metrics
-      description: '[UNIMPLEMENTED] Cell Pool 指标 — 详细监控指标'
-      transport: stdio
-      status: unimplemented
+      status: active
     - uri: bos://agent-cell/dag/execute
       description: Cell DAG 执行 — 跨 Cell 编排
       transport: stdio
@@ -1303,30 +1291,6 @@ bos_services:
       description: evaluator 域 (CR-RBAC-01 强制权限, role='evaluator' or 'admin')
       transport: inline
       status: active
-    - uri: bos://capability/agt/trust
-      description: AGT 信任评分与身份验证服务 (Agent Governance Toolkit)
-      transport: stdio
-      status: deprecated
-    - uri: bos://capability/agt/sandbox
-      description: AGT 沙箱隔离与权限控制服务 (Agent Governance Toolkit)
-      transport: stdio
-      status: deprecated
-    - uri: bos://capability/agt/sre
-      description: AGT SRE 监控与健康检查服务 (Agent Governance Toolkit)
-      transport: stdio
-      status: deprecated
-    - uri: bos://capability/agt/mcp-security
-      description: AGT MCP 安全审计与权限检查服务 (Agent Governance Toolkit)
-      transport: stdio
-      status: deprecated
-    - uri: bos://capability/agt/marketplace
-      description: AGT 能力市场与发现服务 (Agent Governance Toolkit)
-      transport: stdio
-      status: deprecated
-    - uri: bos://capability/agt/lightning
-      description: AGT Lightning 快速通道与缓存服务 (Agent Governance Toolkit)
-      transport: stdio
-      status: deprecated
     - uri: bos://capability/bus/control_plane
       description: '[UNIMPLEMENTED] [auto-registered] From bus-foundation/control_plane references. See bos-pending-registrations.yaml.'
       transport: internal
@@ -1678,14 +1642,6 @@ bos_services:
       description: B.D.S.K. Virtual Board consensus engine & Mode-A/B execution
       transport: inline
       status: active
-    - uri: bos://governance/agt/policy
-      description: AGT 策略评估与合规检查引擎 (Agent Governance Toolkit)
-      transport: stdio
-      status: deprecated
-    - uri: bos://governance/agt/hypervisor
-      description: AGT Hypervisor 审计哈希链与完整性验证服务 (Agent Governance Toolkit)
-      transport: stdio
-      status: deprecated
     - uri: bos://governance/mof/io
       description: 模型导入/导出 (JSON)
       transport: stdio
@@ -1925,10 +1881,6 @@ bos_services:
       description: Forge MCP Server (HTTP proxy mode)
       transport: mcp_proxy
       status: active
-    - uri: bos://memory/metaos/mcp-server
-      description: MetaOS MCP Server (HTTP proxy mode)
-      transport: mcp_proxy
-      status: deprecated
     - uri: bos://memory/ecos/mcp-server
       description: ECOS MCP Server (HTTP proxy mode)
       transport: mcp_proxy
@@ -2116,10 +2068,6 @@ bos_services:
       transport: inline
       status: active
     perception:
-    - uri: bos://perception/apple_mail/inbox
-      description: Apple Mail 收件箱信号采集 (BET-Y1Q1-T2-01 感知面)
-      transport: stdio
-      status: deprecated
     - uri: bos://perception/agora/ocr
       description: 本地 OCR 提取 (Vision framework, 无 Vision 环境诚实降级 stub) — 布局/表格/印章/手写结构化输出
       transport: internal
