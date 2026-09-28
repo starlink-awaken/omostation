@@ -157,8 +157,16 @@ jobs:
           path: proposal-artifact/publication-proposal.json
           retention-days: 30
 
+      # Push runs fire on every main merge while a submodule has advanced upstream;
+      # failing there trains reviewers to ignore red (it once masked a real outage).
+      # The hard signal stays on the daily schedule + manual dispatch runs.
       - name: Fail closed on detected drift (no self-heal)
-        if: steps.drift.outputs.has_changes == 'true'
+        if: steps.drift.outputs.has_changes == 'true' && github.event_name != 'push'
         run: |
           echo "::error::stale/drifted submodule gitlink detected; proposal artifact uploaded, no cloud publication performed"
           exit 1
+
+      - name: Warn on detected drift (push runs are soft)
+        if: steps.drift.outputs.has_changes == 'true' && github.event_name == 'push'
+        run: |
+          echo "::warning::stale/drifted submodule gitlink detected; proposal artifact uploaded, no cloud publication performed (push run warns only; daily schedule run fails closed)"
