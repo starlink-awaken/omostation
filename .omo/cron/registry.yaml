@@ -347,7 +347,34 @@ jobs:
     status: active
     owner: governance-team
     sfop_slot: S
-    reconciliation_note: "织星宿主漂移 + 未推送提交钉扎 每小时巡检 (2026-09-19)。**crontab 写入在系统层已坏** (连原样重写都返回 Interrupted system call; /var/at/tabs 为 root:wheel drwx------), 故改用 launchd 承载 —— plist 源 bin/ops/launchd/com.omostation.zhixing-host-drift.plist, 日志 runtime/cron/zhixing-host-drift.log。"
+    reconciliation_note: "织星宿主漂移 + 未推送提交钉扎 每小时巡检 (2026-09-19)。**历史事实**: 当时 crontab 写入在系统层失败 (原样重写返回 Interrupted system call; /var/at/tabs 为 root:wheel 且仅 root 可读写), 故改用 launchd 承载 —— plist 源 bin/ops/launchd/com.omostation.zhixing-host-drift.plist, 日志 runtime/cron/zhixing-host-drift.log。**2026-09-28 更正**: 该 crontab 故障已不成立, 实测原样回写 rc=0, 且惰性注释探针写入后 74→75 行真实生效 (仅原样回写不足以证明, 因回读内容本就一致)。故 crontab 现已可写, 退役或登记 crontab 侧条目不再受系统层阻挡。**launchd 承载的结论不变, 但理由改为架构性**: registry.yaml 为调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面是遗留面, 不应再新增。引用本条时勿再以「crontab 已坏」为据。"
+
+  - name: omo-health-refresh
+    schedule: "17 * * * *"
+    command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/projects/omo/.venv/bin/omo state refresh >> runtime/cron/omo-health-refresh.log 2>&1'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >-
+      补登 system_health.yaml 的真正写入者 (2026-09-28, meta-doctor M1 stale_beat 根因)。
+      声明面一直健康 (write-owners.yaml owner=script:runtime-scan;
+      runtime-projections.yaml 列为 active 投影), 写入器 cmd_state_refresh
+      (projects/omo/src/omo/omo_state.py:101) 也存在且 `omo state refresh --dry-run` 实测通过,
+      但**从未排程**: 在跑的 com.l4.omo.sync 执行的是 `omo state sync`, 只写 health.yaml /
+      system.yaml / governance-data.json / brief.md, 从不写 system_health.yaml。属 DECL_EXEC_GAP
+      的「声明 ✓ / 进程存活 ✓ / 落盘 ✗」第三形态, 同款先例见 omo-debt-refresh 注释。
+      正确修法是让生成器持续跑, 而非删声明或放宽 48h SLA。
+      激活后连带修好三个读 legacy 面 (`.omo/state/system_health.yaml`, canonical 迁移后已不存在)
+      的消费者: bin/compass_radar.py:99、bin/ssot/problem-detector.py:25 (原 exit 1)、
+      bin/gac/state-freshness-check.py:50 —— 依据 omo_state.py:184-188 对 canonical 与 legacy 双写。
+      走 launchd 而非 crontab —— 理由是架构性的而非能力性的: registry.yaml 为调度 SSOT
+      (ADR-A / ADR-0119 / ADR-0121), crontab 平面是遗留面不应新增条目。
+      注: 本条目初版曾写「宿主 crontab 写入在系统层已坏」, 该理由已于 2026-09-28 更正
+      (实测 crontab 现已可写, 见 zhixing-host-drift 条目的更正与探针证据)。
+      plist 源 bin/ops/launchd/com.omostation.omo-health-refresh.plist。
+      效果: meta-doctor stale_beats 1→0, composite health_score 46→73, governance_anomaly 20→0。
 
   - name: zhixing-panel-sync-hourly-active
     schedule: "23 * * * *"
