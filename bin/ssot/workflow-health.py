@@ -58,7 +58,6 @@ UNPATHED_DESIGN_EXEMPT = {
     "port-registry-enforce.yml",
     "state-goals-enforce.yml",
     "task-schema-enforce.yml",
-    "workspace.yml",
 }
 
 

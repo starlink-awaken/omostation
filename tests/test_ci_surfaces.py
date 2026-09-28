@@ -134,8 +134,8 @@ def test_removed_mutators_are_not_bound_to_gac_gate() -> None:
     assert exporter["triggers"] == []
 
     sync = surfaces["bin-ssot-sync-submodule-pointers-sh"]
-    assert sync["workflow"] == "workspace.yml"
-    assert sync["triggers"] == ["per_pr", "push"]
+    assert sync["workflow"] == "(none)"  # workspace.yml 已删除 (与 gac-gate 可达性检查重复)
+    assert sync["triggers"] == []
     assert "also_in" not in sync
 
 

@@ -8,7 +8,7 @@
 2. gate-parity (error) — sgf-policy gate 命令引用的工具未在 SSOT 登记.
 3. orphan-script (warn) — scripts/check-*.py 存在但未接线到任何 workflow/gate,
    且未在 SSOT 显式登记 status: orphan.
-4. overlap (warn) — 同一 tool 在 2+ 个 workflow 执行 (重复计算嫌疑).
+4. overlap (warn) — 同一 tool 在 2+ 个 workflow 执行且未在 also_in 声明 (重复计算嫌疑).
 5. double-trigger (error) — workflow 用 `on: [push, pull_request]` 无 main 分支限制,
    PR 分支每个 push 跑两遍 (E-4 根因).
 
@@ -213,9 +213,16 @@ def check_ci_surfaces() -> dict:
         if tool in OVERLAP_EXEMPT:
             continue
         if len(meta["workflows"]) > 1:
-            warnings.append(
-                f"overlap: {tool} 在 {len(meta['workflows'])} 个 workflow 执行: {','.join(meta['workflows'])}"
-            )
+            # 登记里 workflow + also_in 已声明的多处执行是有意为之 (不同触发/模式), 不再告警;
+            # 只报未声明的重复
+            entry = registered_tools.get(tool) or {}
+            declared = {str(entry.get("workflow") or "")} | {str(w) for w in (entry.get("also_in") or [])}
+            undeclared = sorted(set(meta["workflows"]) - declared)
+            if undeclared:
+                warnings.append(
+                    f"overlap: {tool} 在 {len(meta['workflows'])} 个 workflow 执行: {','.join(meta['workflows'])}"
+                    f" (未在 also_in 声明: {','.join(undeclared)})"
+                )
 
     # 5. double-trigger: on: [push, pull_request] 无 main 分支限制
     for wf in sorted(WORKFLOWS_DIR.glob("*.yml")):
