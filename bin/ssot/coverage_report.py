@@ -3,16 +3,44 @@
 
 Usage:
     python bin/ssot/coverage_report.py --rules .omo/standards/rules/ --content docs/ .omo/_knowledge/
+    python bin/ssot/coverage_report.py --all
 """
 import argparse
 import sys
 from pathlib import Path
+from collections import defaultdict
 
 try:
     import yaml
 except ImportError:
     print("PyYAML required: uv run --with pyyaml python bin/ssot/coverage_report.py")
     sys.exit(1)
+
+
+# Content type classification
+CONTENT_TYPES = {
+    "docs": ["docs/", "README.md", "CHANGELOG.md", "CONTRIBUTING.md"],
+    "omo_knowledge": [".omo/_knowledge/"],
+    "omo_truth": [".omo/_truth/"],
+    "omo_state": [".omo/state/"],
+    "protocols": ["protocols/"],
+    "standards": [".omo/standards/"],
+    "config": ["config/"],
+    "bin_tools": ["bin/"],
+    "projects": ["projects/"],
+}
+
+# Constraint type classification
+CONSTRAINT_TYPES = {
+    "L0": ["L0-constraints", "CR-L0"],
+    "X1": ["x1-governance", "X1-Audit"],
+    "X2": ["x2-freshness", "X2-Staleness"],
+    "X3": ["x3-value", "X3-Value"],
+    "X4": ["x4-consistency", "X4-Consistency"],
+    "SFOP": ["SFOP", "CR-SFOP"],
+    "DFSQ": ["DFSQ", "CR-DFSQ"],
+    "MOF": ["MOF", "CR-MOF"],
+}
 
 
 def load_rules(rules_dir: str) -> list:
@@ -31,12 +59,33 @@ def load_rules(rules_dir: str) -> list:
     return rules
 
 
+def classify_content(filepath: str) -> str:
+    """Classify file into content type."""
+    for ctype, patterns in CONTENT_TYPES.items():
+        for pattern in patterns:
+            if pattern in filepath:
+                return ctype
+    return "other"
+
+
+def classify_constraint(rule: dict) -> str:
+    """Classify rule into constraint type."""
+    rule_id = rule.get("rule_id", "")
+    rule_str = str(rule)
+    for ctype, patterns in CONSTRAINT_TYPES.items():
+        for pattern in patterns:
+            if pattern in rule_str or pattern in rule_id:
+                return ctype
+    return "other"
+
+
 def scan_content(content_dirs: list) -> dict:
     """Scan content directories and categorize by type."""
     stats = {
         "total_files": 0,
-        "by_extension": {},
-        "by_directory": {},
+        "by_type": defaultdict(int),
+        "by_extension": defaultdict(int),
+        "uncovered": [],
     }
     for d in content_dirs:
         p = Path(d)
@@ -45,37 +94,27 @@ def scan_content(content_dirs: list) -> dict:
         for f in p.rglob("*"):
             if f.is_file():
                 stats["total_files"] += 1
+                ftype = classify_content(str(f))
+                stats["by_type"][ftype] += 1
                 ext = f.suffix or "(none)"
-                stats["by_extension"][ext] = stats["by_extension"].get(ext, 0) + 1
-                top_dir = f.relative_to(p).parts[0] if len(f.relative_to(p).parts) > 1 else "(root)"
-                stats["by_directory"][top_dir] = stats["by_directory"].get(top_dir, 0) + 1
+                stats["by_extension"][ext] += 1
+                # Check if file has frontmatter
+                if f.suffix == ".md":
+                    try:
+                        content = f.read_text(encoding="utf-8")
+                        if not content.startswith("---"):
+                            stats["uncovered"].append(str(f))
+                    except:
+                        pass
     return stats
 
 
 def generate_coverage_matrix(rules: list, content_stats: dict) -> dict:
     """Generate coverage matrix: content type x constraint type."""
-    matrix = {}
+    matrix = defaultdict(lambda: defaultdict(int))
     for rule in rules:
-        rule_id = rule.get("rule_id", "unknown")
-        predicate = rule.get("predicate", "unknown")
-        target = rule.get("target", "")
-        severity = rule.get("severity", "unknown")
-
-        # Determine content type from target
-        if "docs/" in target:
-            content_type = "docs"
-        elif ".omo/" in target:
-            content_type = ".omo"
-        else:
-            content_type = "other"
-
-        if content_type not in matrix:
-            matrix[content_type] = []
-        matrix[content_type].append({
-            "rule_id": rule_id,
-            "predicate": predicate,
-            "severity": severity,
-        })
+        ctype = classify_constraint(rule)
+        matrix["all"][ctype] += 1
     return matrix
 
 
@@ -83,8 +122,12 @@ def main():
     parser = argparse.ArgumentParser(description="Constraint Coverage Report")
     parser.add_argument("--rules", default=".omo/standards/rules/",
                         help="Path to rules directory")
-    parser.add_argument("--content", nargs="+", default=["docs/", ".omo/_knowledge/"],
+    parser.add_argument("--content", nargs="+",
+                        default=["docs/", ".omo/_knowledge/", ".omo/_truth/",
+                                 "protocols/", ".omo/standards/", "config/"],
                         help="Content directories to scan")
+    parser.add_argument("--all", action="store_true",
+                        help="Run full coverage analysis")
     args = parser.parse_args()
 
     rules = load_rules(args.rules)
@@ -96,39 +139,38 @@ def main():
     matrix = generate_coverage_matrix(rules, content_stats)
 
     print("\n=== Coverage Matrix ===")
-    print(f"{'Content Type':<20} {'Rules':<10} {'Predicates'}")
+    print(f"{'Content Type':<20} {'Rules':<10} {'Coverage'}")
     print("-" * 60)
-    for content_type, rule_list in sorted(matrix.items()):
-        predicates = ", ".join(sorted(set(r["predicate"] for r in rule_list)))
-        print(f"{content_type:<20} {len(rule_list):<10} {predicates}")
+    for content_type in sorted(content_stats["by_type"].keys()):
+        file_count = content_stats["by_type"][content_type]
+        rule_count = len([r for r in rules if classify_content(str(r)) == content_type])
+        print(f"{content_type:<20} {file_count:<10} {rule_count}")
 
-    # Find uncovered content types
-    all_exts = set(content_stats["by_extension"].keys())
-    covered_exts = set()
-    for rule in rules:
-        target = rule.get("target", "")
-        if "docs/" in target:
-            covered_exts.add(".md")
-        elif ".omo/" in target:
-            covered_exts.add(".yaml")
+    print("\n=== Constraint Type Distribution ===")
+    print(f"{'Constraint Type':<20} {'Count'}")
+    print("-" * 40)
+    for ctype in sorted(matrix["all"].keys()):
+        count = matrix["all"][ctype]
+        print(f"{ctype:<20} {count}")
 
-    uncovered = all_exts - covered_exts
+    # Find uncovered content
+    uncovered = content_stats["uncovered"]
     if uncovered:
-        print(f"\n⚠️  Uncovered extensions: {', '.join(sorted(uncovered))}")
-    else:
-        print(f"\n✅ All extensions covered")
+        print(f"\n⚠️  {len(uncovered)} markdown files without frontmatter:")
+        for f in uncovered[:10]:
+            print(f"  - {f}")
+        if len(uncovered) > 10:
+            print(f"  ... and {len(uncovered) - 10} more")
 
-    # Find zombie constraints (rules with no matching content)
-    print("\n=== Zombie Constraint Check ===")
-    zombie_count = 0
-    for rule in rules:
-        target = rule.get("target", "")
-        if target and not any(target in d for d in args.content):
-            zombie_count += 1
-            print(f"  ⚠️  {rule.get('rule_id', 'unknown')}: target '{target}' not in scanned dirs")
-    if zombie_count == 0:
-        print("  ✅ No zombie constraints found")
+    if args.all:
+        print("\n=== Full Coverage Analysis ===")
+        print(f"Total rules: {len(rules)}")
+        print(f"Total files: {content_stats['total_files']}")
+        print(f"Files with frontmatter: {content_stats['total_files'] - len(uncovered)}")
+        print(f"Files without frontmatter: {len(uncovered)}")
+        coverage_pct = (content_stats["total_files"] - len(uncovered)) / max(content_stats["total_files"], 1) * 100
+        print(f"Frontmatter coverage: {coverage_pct:.1f}%")
 
 
 if __name__ == "__main__":
-    main()
+    main
