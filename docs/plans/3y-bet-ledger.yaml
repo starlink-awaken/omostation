@@ -37440,6 +37440,51 @@ bets:
             治理知识检索已可用（ADR-0453 等命中实证）；真实消费（会话冷启动命中、
             业务单引用）随使用累积计量。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-211
+  title: worktree release-diagnose 只读残留诊断
+  goal: 在不修改工作树的前提下，让 release 前置检查能够分类 root、子模块、PASW 和派生文件残留，降低误删与重复排查风险。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 只读诊断；禁止 reset、stash、clean、worktree remove、branch delete、文件写入；现有 release 成功/拒绝语义不得改变。
+  non_goals:
+  - 不自动丢弃或修复任何残留
+  - 不把 shell 扫描逻辑迁移到 Python
+  - 不改变 PASW 默认初始化深度或 worktree 生命周期策略
+  done_when:
+  - 新增 release-diagnose <session> 命令并复用现有 release session/PASW 发现规则
+  - root、普通子模块、PASW 子树和未跟踪文件均有可读分类与建议
+  - 退出码 0/1/2 分别表示 clean、发现阻塞项、无法读取元数据
+  - 诊断命令不执行任何写操作，现有 release 行为不变
+  - shell 回归测试覆盖 clean、dirty root、dirty submodule、invalid PASW metadata
+  - retro 固化真实 worktree 残留案例和清理边界
+  verify:
+  - cmd: bash bin/gac/gac-worktree.sh release-diagnose --help
+    expect: 输出只读诊断用法且不创建/删除文件
+  - cmd: bash tests/test_gac_worktree_release_diagnose.sh
+    expect: all cases pass
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - bin/gac/gac-worktree.sh
+  - tests/test_gac_worktree_release_diagnose.sh
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-28-release-diagnose-design.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-211.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-release-diagnose-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:c4f6cc2533aedff704268a7d66b8ad248622032c9febc0a1645f348e55a5c6e4
+    decision_ref: decision://accepted/BET-Y2Q4-T10-211
+  value_indicator_policy: false
 - id: BET-Y2Q4-T10-210
   title: 固化两条历史/CI 认知到 AGENTS.md — 浅历史边界与 governance-verify 评 head tree
   goal: 'AGENTS.md 是 agent 交付前必读的一段，而它当前有两条关于**证据判断装置**的陈述是错的或缺失的，会让 agent 在门禁评估上得出反向结论。第一条：`:195`
@@ -37777,7 +37822,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 501
+  total_bets: 502
   windows:
   - Y1Q1
   - Y1Q2
