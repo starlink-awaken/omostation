@@ -48,6 +48,7 @@ schemas:
     type: hardcoded-fields
     domain: core
     count: 2
+    reference_only: true
 
 reference_integrity:
   check_script: bin/ssot/schema-ref-check.py

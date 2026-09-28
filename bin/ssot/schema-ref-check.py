@@ -52,7 +52,13 @@ def main():
     for schema in schemas:
         schema_id = schema.get("id", "unknown")
 
-        if not check_schema_exists(schema, base_path):
+        if schema.get("reference_only"):
+            # Registered by reference — no local schema file expected
+            if check_source_exists(schema, base_path):
+                print(f"  ✅ {schema_id}: OK (reference_only)")
+            else:
+                violations.append(f"  ⚠️  {schema_id}: source not found: {schema.get('source', '')}")
+        elif not check_schema_exists(schema, base_path):
             violations.append(f"  ❌ {schema_id}: registry path not found: {schema['path']}")
         elif not check_source_exists(schema, base_path):
             violations.append(f"  ⚠️  {schema_id}: source not found: {schema.get('source', '')}")
