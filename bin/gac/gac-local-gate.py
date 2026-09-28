@@ -1160,7 +1160,6 @@ def run_gate(
     files: list[str] | None = None,
     run_id: str = "",
     strict: bool = False,
-    agt_backend: bool = False,
     adaptive: bool = False,
     risk_profile: str | None = None,
 ) -> dict[str, object]:
@@ -1174,9 +1173,6 @@ def run_gate(
     if adaptive:
         checks = _apply_adaptive_thresholds(checks, metrics_file)
     results = run_checks(checks)
-    if agt_backend:
-        agt_results = run_agt_policy_engine()
-        results.extend(agt_results)
     finding_topics = extract_finding_topics(results)
 
     # HARD/SOFT 分离: soft checks 不翻转 gate
@@ -1195,66 +1191,9 @@ def run_gate(
         "change_lane_files": change_lane_files,
         "checks": results,
         "finding_topics": finding_topics,
-        "agt_backend": agt_backend,
     }
     _update_drift_topic(report, drift)
     return report
-
-
-def run_agt_policy_engine() -> list[dict[str, object]]:
-    results: list[dict[str, object]] = []
-    try:
-        proc = subprocess.run(
-            ["agora", "resolve", "bos://governance/agt/policy"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        if proc.returncode == 0:
-            results.append(
-                {
-                    "name": "agt-policy-engine",
-                    "ok": True,
-                    "command": ["agora", "resolve", "bos://governance/agt/policy"],
-                    "stdout": "AGT Policy Engine backend active",
-                    "stderr": "",
-                    "duration_ms": 0,
-                }
-            )
-        else:
-            results.append(
-                {
-                    "name": "agt-policy-engine",
-                    "ok": False,
-                    "command": ["agora", "resolve", "bos://governance/agt/policy"],
-                    "stdout": "",
-                    "stderr": proc.stderr or "AGT policy engine unavailable",
-                    "duration_ms": 0,
-                }
-            )
-    except FileNotFoundError:
-        results.append(
-            {
-                "name": "agt-policy-engine",
-                "ok": False,
-                "command": ["agora", "resolve", "bos://governance/agt/policy"],
-                "stdout": "",
-                "stderr": "AGT policy engine unavailable (agora CLI not found)",
-                "duration_ms": 0,
-            }
-        )
-    except subprocess.TimeoutExpired:
-        results.append(
-            {
-                "name": "agt-policy-engine",
-                "ok": False,
-                "command": ["agora", "resolve", "bos://governance/agt/policy"],
-                "stdout": "",
-                "stderr": "AGT policy engine timeout",
-                "duration_ms": 5000,
-            }
-        )
-    return results
 
 
 def print_human(
@@ -1490,11 +1429,6 @@ def main() -> int:
         help="Print passing gate details under slim mode",
     )
     parser.add_argument(
-        "--agt-backend",
-        action="store_true",
-        help="Use AGT Policy Engine as GaC rule execution backend",
-    )
-    parser.add_argument(
         "--metrics",
         action="store_true",
         help="Record check results to metrics-store.jsonl",
@@ -1527,7 +1461,6 @@ def main() -> int:
             args.file,
             args.run_id,
             args.strict,
-            args.agt_backend,
             args.adaptive,
             args.risk_profile,
         )
