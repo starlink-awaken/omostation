@@ -37483,8 +37483,8 @@ bets:
   - docs/reports/2026-09-28-release-diagnose-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-28-release-diagnose-design.md
-    spec_version: 1.0.0
-    content_digest: sha256:42ab3197c5ddd5e16befaa411db00310e33210c36a8fc2969cf36b54fa6f9b07
+    spec_version: 1.1.0
+    content_digest: sha256:b3a006596fa5e2144ced8cb4e370575da8b69808a4b244bf3d771460d8a0946e
     decision_ref: decision://accepted/BET-Y2Q4-T10-211
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-210
