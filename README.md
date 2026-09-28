@@ -7,7 +7,7 @@ last_updated: 2026-09-04
 # omostation · eCOS v6
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/starlink-awaken/omostation/actions/workflows/workspace.yml/badge.svg)](https://github.com/starlink-awaken/omostation/actions)
+[![CI](https://github.com/starlink-awaken/omostation/actions/workflows/gac-gate.yml/badge.svg)](https://github.com/starlink-awaken/omostation/actions)
 
 > 知识工程与 AI 操作系统工作区 — 多项目、多语言、多层次。
 

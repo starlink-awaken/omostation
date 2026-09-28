@@ -638,7 +638,7 @@ surfaces:
   workflow: gac-gate.yml
   also_in:
   - submodule-freshness-gatekeeper.yml
-  - workspace.yml
+  - post-merge-validate.yml
   gate: false
   triggers:
   - manual
@@ -657,12 +657,11 @@ surfaces:
   status: active
 - id: bin-ssot-sync-submodule-pointers-sh
   tool: bin/ssot/sync-submodule-pointers.sh
-  workflow: workspace.yml
+  workflow: (none)
   gate: false
-  triggers:
-  - per_pr
-  - push
+  triggers: []
   status: active
+  note: 本地修复工具; 原唯一 CI 调用方 workspace.yml 已删除 (2026-09-28, 与 gac-gate 可达性检查重复)
 - id: bin-ssot-test-gac-engine-py
   tool: bin/ssot/test-gac-engine.py
   workflow: (none)
@@ -1689,11 +1688,6 @@ workflow_triggers:
   - scheduled
   path_filtered: false
 - workflow: task-schema-enforce.yml
-  triggers:
-  - per_pr
-  - push
-  path_filtered: false
-- workflow: workspace.yml
   triggers:
   - per_pr
   - push
