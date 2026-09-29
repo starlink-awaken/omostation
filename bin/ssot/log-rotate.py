@@ -101,7 +101,14 @@ def _load_log_surfaces() -> dict:
         p = Path(raw)
         target = p if p.is_absolute() else (WORKSPACE / p)
         if cls == "state":
+            # 同时登记原始与 resolve 后的路径: 若 WORKSPACE 本身是软链(仓库迁移 /
+            # 挂载 / 容器 bind), 扫描出的 p.resolve() 会是真路径而注册表里是软链路径,
+            # 二者不相等 → 排除**静默失效**。两种形态都收, 该失效形态即被根除。
             state_paths.add(target)
+            try:
+                state_paths.add(target.resolve())
+            except OSError:
+                pass
         elif cls == "log" and p.is_dir():
             # 登记为可轮转但所在目录不在 LOG_PATHS → 非递归 glob 扫不到
             scanned = {base.resolve() for base in LOG_PATHS if base.is_dir()}
