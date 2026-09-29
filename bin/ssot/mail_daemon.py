@@ -31,7 +31,6 @@ STABLE_JR = ROOT / "runtime" / "ssot-stable" / "journey-runner.py"
 JOURNEY_TRIGGERED = ROOT / ".omo" / "state" / "mail-journey-triggered.json"
 PID_FILE = ROOT / "runtime" / "mail-daemon" / "daemon.pid"
 EVENTS_JSONL = ROOT / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
-COCKPIT_INBOX_TASKS = ROOT / "runtime" / "cockpit" / "inbox-tasks.json"
 
 # 主题级黑名单 (2026-08-28 P1a: JetBrains 仓库通知刷屏占 91.9%, 分类前直接跳过 —
 # 比 RULE_PRECLASSIFY 更省: 不分类不落库不占 briefing 名额, 让真任务浮出来)
@@ -57,39 +56,27 @@ def _emit_signal_ingressed(mail: Any, cls: dict[str, Any], task: dict[str, Any],
     return event
 
 
-def _project_to_cockpit_inbox(mail: Any, cls: dict[str, Any], task: dict[str, Any], journey_res: dict[str, Any] | None) -> None:
-    """将提炼出的待办与初稿原子投影到 Cockpit 统一待办池 (BET-Y2Q1-T4-02)."""
-    try:
-        data = json.loads(COCKPIT_INBOX_TASKS.read_text(encoding="utf-8")) if COCKPIT_INBOX_TASKS.exists() else {}
-    except Exception:
-        data = {}
-    tasks = data.get("tasks", []) if isinstance(data, dict) else []
-    key = getattr(mail, "subject", "")[:80]
-    if any(isinstance(t, dict) and t.get("subject") == key for t in tasks):
-        return
+def _register_tracked_task(mail: Any, cls: dict[str, Any], task: dict[str, Any], journey_res: dict[str, Any] | None) -> None:
+    """任务落 deadline-tracker 台账 —— 它有周期检查与到期告警, 是唯一被消费的督办台账。
 
-    import hashlib
-    task_id = "mail-" + hashlib.sha256(key.encode("utf-8")).hexdigest()[:12]
-    new_task = {
-        "id": task_id,
-        "source": "mail",
-        "subject": key,
-        "sender": getattr(mail, "sender", "")[:50],
-        "category": cls.get("category", "任务"),
-        "priority": cls.get("priority", "normal"),
-        "status": "pending_review",
-        "created_at": utc_now(),
-        "task_detail": task if isinstance(task, dict) else {},
-        "journey_status": journey_res.get("ok") if journey_res else None,
-    }
-    tasks.insert(0, new_task)
-    data = {
-        "schema_version": "cockpit-inbox-tasks/v1",
-        "updated_at": utc_now(),
-        "tasks": tasks[:100],
-    }
-    COCKPIT_INBOX_TASKS.parent.mkdir(parents=True, exist_ok=True)
-    COCKPIT_INBOX_TASKS.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    此前写到 runtime/cockpit/inbox-tasks.json, 但全仓没有任何读取方(全链路场景实测
+    2026-09-29): 生产者没有消费者, 写了等于没写。
+    """
+    from deadline_tracker import register_task
+
+    subject = (getattr(mail, "subject", "") or "")[:80]
+    deadline = ""
+    if isinstance(task, dict):
+        m = re.search(r"(\d{4})年(\d{1,2})月(\d{1,2})日|(\d{4})-(\d{1,2})-(\d{1,2})", str(task.get("deadline", "") or ""))
+        if m:
+            y, mo, d = (m.group(1), m.group(2), m.group(3)) if m.group(1) else (m.group(4), m.group(5), m.group(6))
+            deadline = f"{int(y):04d}-{int(mo):02d}-{int(d):02d}"
+    register_task(
+        subject,
+        deadline,
+        target=(getattr(mail, "sender", "") or "")[:60],
+        task_type=task.get("task_type", "work_plan") if isinstance(task, dict) else "work_plan",
+    )
 
 
 def get_status() -> dict[str, Any]:
@@ -116,12 +103,12 @@ def get_status() -> dict[str, Any]:
             pass
 
     pending_inbox = 0
-    if COCKPIT_INBOX_TASKS.exists():
-        try:
-            data = json.loads(COCKPIT_INBOX_TASKS.read_text(encoding="utf-8"))
-            pending_inbox = len(data.get("tasks", []))
-        except Exception:
-            pass
+    try:
+        import deadline_tracker as _dt
+
+        pending_inbox = sum(1 for t in _dt.load_tasks() if t.get("status") == "pending")
+    except Exception:
+        pass
 
     return {
         "daemon": "mail_daemon",
@@ -252,7 +239,7 @@ def run_cycle() -> dict[str, Any]:
         j_match = next((item for item in journeys if item.get("subject") == getattr(mail, "subject", "")[:80]), None)
         ev = _emit_signal_ingressed(mail, cls, task, j_match)
         emitted_events.append(ev)
-        _project_to_cockpit_inbox(mail, cls, task, j_match)
+        _register_tracked_task(mail, cls, task, j_match)
 
     result = {
         "ts": ts,

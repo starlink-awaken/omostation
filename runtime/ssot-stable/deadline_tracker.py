@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
@@ -26,7 +27,8 @@ from mail_reader import Mail, read_netease_mail
 
 DRAFTS_DIR = Path.home() / "Documents" / "@工作文档" / "卫健委" / "_drafts"
 INBOX = Path.home() / "Documents" / "_inbox"
-TASKS_FILE = ROOT / ".omo" / "state" / "tracked-tasks.json"
+# OMO_TRACKED_TASKS: 沙箱/测试重定向(与 value-evolution-connector 的 OMO_* 写面同约定)
+TASKS_FILE = Path(os.environ.get("OMO_TRACKED_TASKS") or (ROOT / ".omo" / "state" / "tracked-tasks.json"))
 HEARTBEAT = ROOT / ".omo" / "state" / "deadline-tracker.jsonl"
 
 
@@ -46,15 +48,18 @@ def save_tasks(tasks: list[dict[str, Any]]) -> None:
     TASKS_FILE.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def register_task(subject: str, deadline: str, target: str, task_type: str) -> None:
-    """注册新任务到追踪列表."""
+def register_task(subject: str, deadline: str, target: str, task_type: str, owner: str = "") -> None:
+    """注册新任务到追踪列表(同 subject+deadline 且未完成的重复注册跳过)."""
     tasks = load_tasks()
+    if any(t.get("subject") == subject and t.get("deadline") == deadline and t.get("status") != "compiled" for t in tasks):
+        return
     tasks.append(
         {
             "subject": subject,
             "deadline": deadline,
             "target": target,
             "task_type": task_type,
+            "owner": owner,
             "registered_at": utc_now(),
             "status": "pending",  # pending → replied → compiled
             "replies": [],
@@ -65,6 +70,9 @@ def register_task(subject: str, deadline: str, target: str, task_type: str) -> N
 
 def check_replies(task: dict) -> list[Mail]:
     """检查是否有回复邮件 (匹配标题关键词)."""
+    # 会议督办不按邮件回复闭环: 标题关键词撞上任何相关邮件都会被误判为「已回复」
+    if str(task.get("task_type", "")).startswith("meeting"):
+        return []
     keywords = task.get("subject", "")[:10]
     if not keywords:
         return []
