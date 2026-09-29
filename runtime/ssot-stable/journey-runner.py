@@ -37,6 +37,12 @@ def _detect_backedges(spec: dict) -> set[tuple[str, str]]:
         dst = t.get("to", "")
         if src and dst:
             adj.setdefault(src, []).append(dst)
+    # states[].next 里的兜底边也会被运行器走到(无显式 transition 时的 fallback), 也要进图,
+    # 否则 escalated → status_collected 这类环检测不到
+    for st in spec.get("states", []):
+        for dst in st.get("next") or []:
+            if st.get("name") and dst not in adj.get(st["name"], []):
+                adj.setdefault(st["name"], []).append(dst)
 
     backedges: set[tuple[str, str]] = set()
     visited: set[str] = set()
@@ -210,6 +216,15 @@ def _has_real_data(output: dict[str, Any]) -> bool:
         output.get(k)
         for k in ("notice_draft", "form_draft", "report_draft", "leader_email_draft", "submission_draft")
     ):
+        return True
+    # 2026-09-29 全链路实测: 以下输出都是真实产出, 此前被误标 degraded
+    #   admin-classify: 大模型任务分解(task_type/requires_forwarding)
+    #   admin-collect: 截止时间已登记; periodic-reporting: report.pr_count 在嵌套字段里
+    if output.get("task_type") and "requires_forwarding" in output:
+        return True
+    if output.get("deadline_registered") is True:
+        return True
+    if (output.get("report") or {}).get("pr_count", 0) > 0:
         return True
     if output.get("messages"):
         return True
@@ -726,35 +741,6 @@ def run_journey(
                 next_state = to
                 print(f"     → transition: {current_state_name} → {to} (condition: {condition})")
 
-                # Backedge tracking (BET-Y1Q2-T5-02): use pre-computed DFS backedges
-                if (current_state_name, to) in backedges:
-                    retry_counts[to] = retry_counts.get(to, 0) + 1
-                    if retry_counts[to] > effective_limit:
-                        state_store.save_state(
-                            ROOT,
-                            journey_id,
-                            run_id,
-                            current_state_name,
-                            scene_id=scene_id,
-                            status="human_hold",
-                            context=context,
-                            checkpoint={
-                                "require": "human_intervention",
-                                "reason": "backedge_limit_exceeded",
-                            },
-                            dry_run=dry_run,
-                        )
-                        _emit_escalation_event(journey_id, run_id, current_state_name, effective_limit)
-                        print(
-                            f"  ⛔ Backedge limit ({effective_limit}) exceeded for {to}. Holding for human intervention."
-                        )
-                        return {
-                            "status": "human_hold",
-                            "journey_id": journey_id,
-                            "run_id": run_id,
-                            "state": current_state_name,
-                            "backedge_limit": effective_limit,
-                        }
                 break
 
         if not next_state:
@@ -769,6 +755,37 @@ def run_journey(
         if not next_state:
             print(f"  ⚠️  No matching transition from {current_state_name}. Ending.")
             break
+
+        # Backedge tracking (BET-Y1Q2-T5-02): 条件转移与兜底转移都要计数 —— 此前只在条件分支里,
+        # 无条件兜底(如 escalated → status_collected)绕过计数, 同一输入原地打转到 50 步上限
+        if (current_state_name, next_state) in backedges:
+            retry_counts[next_state] = retry_counts.get(next_state, 0) + 1
+            if retry_counts[next_state] > effective_limit:
+                state_store.save_state(
+                    ROOT,
+                    journey_id,
+                    run_id,
+                    current_state_name,
+                    scene_id=scene_id,
+                    status="human_hold",
+                    context=context,
+                    checkpoint={
+                        "require": "human_intervention",
+                        "reason": "backedge_limit_exceeded",
+                    },
+                    dry_run=dry_run,
+                )
+                _emit_escalation_event(journey_id, run_id, current_state_name, effective_limit)
+                print(
+                    f"  ⛔ Backedge limit ({effective_limit}) exceeded for {next_state}. Holding for human intervention."
+                )
+                return {
+                    "status": "human_hold",
+                    "journey_id": journey_id,
+                    "run_id": run_id,
+                    "state": current_state_name,
+                    "backedge_limit": effective_limit,
+                }
 
         # Record this state as completed (needed for join source counting).
         completed_states.add(current_state_name)

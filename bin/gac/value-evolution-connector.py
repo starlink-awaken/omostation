@@ -40,7 +40,7 @@ def _detect_repo() -> Path:
 REPO = _detect_repo()
 NORTH_STAR = REPO / "bin" / "bc-os" / "north_star_meter_v3.py"
 EVOLUTION = REPO / "bin" / "bc-os" / "evolution_engine.py"
-VALUE_LOG = REPO / ".omo" / "state" / "value-executions.json"
+VALUE_LOG = Path(os.environ.get("OMO_VALUE_LOG") or (REPO / ".omo" / "state" / "value-executions.json"))
 LORA_REPLAY_LOG = Path(os.environ.get("OMO_LORA_REPLAY_LOG") or (REPO / ".omo" / "state" / "lora-replay-buffer.jsonl"))
 REVISION_RATE_LOG = Path(os.environ.get("OMO_REVISION_RATE_LOG") or (REPO / ".omo" / "state" / "principal-revision-rate.json"))
 DPO_PAIRS_LOG = Path(os.environ.get("OMO_DPO_PAIRS_LOG") or (REPO / ".omo" / "state" / "dpo-preference-pairs.jsonl"))
