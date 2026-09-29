@@ -1366,16 +1366,75 @@ def write_json_exclusive_or_match(output_path: str, payload: dict, failure_reaso
         )
 
 
+def _mainline_refs(repo_root: str, identity: dict) -> list[str]:
+    """Resolve the mainline refs that bound "this clone's own commits" (ADR-0460).
+
+    Returns ref names that MUST all resolve; raises ToolError (fail closed) otherwise.
+    `requested_revision` is typically a local ref such as refs/heads/main, which a
+    fetch does NOT advance — so the remote-tracking ref is required as well, or the
+    own-commit set would keep absorbing mainline commits after a fetch.
+    """
+    refs: list[str] = []
+    requested = identity.get("requested_revision")
+    if isinstance(requested, str) and requested:
+        refs.append(requested)
+    remote_names = git(repo_root, "remote").stdout.split()
+    if not remote_names:
+        raise ToolError(
+            "clone_mainline_ref_unavailable",
+            "no git remote is configured; cannot bound the clone's own commits",
+            EXIT_POLICY,
+        )
+    for name in remote_names:
+        refs.append(f"refs/remotes/{name}/main")
+    for ref in refs:
+        probe = git(repo_root, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}")
+        if probe.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", probe.stdout.strip()):
+            raise ToolError(
+                "clone_mainline_ref_unavailable",
+                f"required mainline ref does not resolve: {ref}",
+                EXIT_POLICY,
+            )
+    return refs
+
+
+def own_commit_shas(repo_root: str, head_sha: str, mainline_refs: list[str]) -> list[str]:
+    """Commits reachable from head but not from any mainline ref (ADR-0460).
+
+    Replaces the former `<base>..<head>` window, which silently included every
+    commit other agents merged into main after the clone was created — and thus
+    made the identity check fail in any concurrently active repository.
+    """
+    args = ["rev-list", head_sha, "--not", *mainline_refs]
+    listed = git(repo_root, *args)
+    if listed.returncode != 0:
+        raise ToolError(
+            "clone_own_commit_enumeration_failed",
+            "could not enumerate the clone's own commits",
+            EXIT_POLICY,
+        )
+    return [line.strip() for line in listed.stdout.splitlines() if line.strip()]
+
+
 def commit_identities_match(
     repo_root: str,
     base_sha: str,
     expected_digest: str,
     head_sha: str = "HEAD",
+    *,
+    mainline_refs: list[str] | None = None,
 ) -> bool:
-    commits = git(repo_root, "rev-list", f"{base_sha}..{head_sha}")
-    if commits.returncode != 0:
-        return False
-    for commit_sha in (line.strip() for line in commits.stdout.splitlines() if line.strip()):
+    if mainline_refs is not None:
+        try:
+            commit_shas = own_commit_shas(repo_root, head_sha, mainline_refs)
+        except ToolError:
+            return False
+    else:
+        commits = git(repo_root, "rev-list", f"{base_sha}..{head_sha}")
+        if commits.returncode != 0:
+            return False
+        commit_shas = [line.strip() for line in commits.stdout.splitlines() if line.strip()]
+    for commit_sha in commit_shas:
         ident = git(
             repo_root,
             "show",
@@ -1470,6 +1529,15 @@ def verify_clone_provenance(
     identity_base = frozen_sha
     identity_head = "HEAD"
     platform_binding_ok = True
+    mainline_refs: list[str] | None = None
+    try:
+        mainline_refs = _mainline_refs(repo_root, identity)
+    except ToolError:
+        # fail closed: 无法界定自身提交区间时不得放行 (ADR-0460)
+        mainline_refs = None
+        mainline_ok = False
+    else:
+        mainline_ok = True
     if platform_base_sha is not None and platform_head_sha is not None:
         frozen_to_base = git(
             repo_root,
@@ -1561,11 +1629,13 @@ def verify_clone_provenance(
         or live_author != author
         or ancestor.returncode != 0
         or not platform_binding_ok
+        or not mainline_ok
         or not commit_identities_match(
             repo_root,
             identity_base,
             author["identity_digest"],
             identity_head,
+            mainline_refs=mainline_refs,
         )
     ):
         raise ToolError(
@@ -2698,11 +2768,24 @@ def transfer_live_author_identity(repo_root: str) -> dict[str, str | bool]:
     }
 
 
-def transfer_commit_identities_match(repo_root: str, frozen_sha: str, expected_digest: str) -> bool:
-    commits = transfer_git(repo_root, "rev-list", f"{frozen_sha}..HEAD")
-    if commits.returncode != 0:
-        return False
-    for commit_sha in (line.strip() for line in commits.stdout.splitlines() if line.strip()):
+def transfer_commit_identities_match(
+    repo_root: str,
+    frozen_sha: str,
+    expected_digest: str,
+    *,
+    mainline_refs: list[str] | None = None,
+) -> bool:
+    if mainline_refs is not None:
+        listed = transfer_git(repo_root, "rev-list", "HEAD", "--not", *mainline_refs)
+        if listed.returncode != 0:
+            return False
+        commit_shas = [line.strip() for line in listed.stdout.splitlines() if line.strip()]
+    else:
+        commits = transfer_git(repo_root, "rev-list", f"{frozen_sha}..HEAD")
+        if commits.returncode != 0:
+            return False
+        commit_shas = [line.strip() for line in commits.stdout.splitlines() if line.strip()]
+    for commit_sha in commit_shas:
         ident = transfer_git(repo_root, "show", "-s", "--format=%an%x00%ae%x00%cn%x00%ce", commit_sha)
         if ident.returncode != 0:
             return False
@@ -2748,11 +2831,22 @@ def verify_transfer_provenance(repo_root: str, identity: dict) -> dict:
         live_author = transfer_live_author_identity(repo_root)
     except ToolError as exc:
         raise ToolError("transfer_provenance_mismatch", "live repository or author provenance no longer matches") from exc
+    try:
+        transfer_mainline = _mainline_refs(repo_root, identity)
+        transfer_mainline_ok = True
+    except ToolError:
+        transfer_mainline, transfer_mainline_ok = None, False
     if (
         live_repository != repository
         or live_author != author
         or not transfer_is_ancestor(repo_root, identity["frozen_root_sha"], "HEAD")
-        or not transfer_commit_identities_match(repo_root, identity["frozen_root_sha"], author["identity_digest"])
+        or not transfer_mainline_ok
+        or not transfer_commit_identities_match(
+            repo_root,
+            identity["frozen_root_sha"],
+            author["identity_digest"],
+            mainline_refs=transfer_mainline,
+        )
     ):
         raise ToolError("transfer_provenance_mismatch", "live provenance no longer matches identity")
     return receipt
