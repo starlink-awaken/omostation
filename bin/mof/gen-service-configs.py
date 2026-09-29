@@ -234,6 +234,15 @@ def gen_launchd_plist(svc: dict) -> str:
         f"    <key>StartInterval</key>\n    <integer>{int(interval_sec)}</integer>\n"
         if trigger == "interval" and interval_sec else ""
     )
+    # trigger: calendar → StartCalendarInterval(此前不支持: 每日定时的服务只能手写
+    # plist, 全仓 4 个 calendar 型服务全是 generate:false 手工件 —— 2026-09-29)
+    cal = svc.get("calendar") or {}
+    start_calendar_xml = ""
+    if trigger == "calendar" and cal.get("Hour") is not None:
+        cal_items = f"        <key>Hour</key>\n        <integer>{int(cal['Hour'])}</integer>\n"
+        if cal.get("Minute") is not None:
+            cal_items += f"        <key>Minute</key>\n        <integer>{int(cal['Minute'])}</integer>\n"
+        start_calendar_xml = f"    <key>StartCalendarInterval</key>\n    <dict>\n{cal_items}    </dict>\n"
     run_at_load_xml = "    <key>RunAtLoad</key>\n    <true/>\n" if svc.get("run_at_load") else ""
     out = svc.get("outputs", {})
     # 与 entrypoint 同样要过 _resolve_path —— 否则 "~/Library/Logs/x.log" 会被
@@ -262,6 +271,7 @@ def gen_launchd_plist(svc: dict) -> str:
         + throttle_xml
         + run_at_load_xml
         + start_interval_xml
+        + start_calendar_xml
         + stdout_xml
         + stderr_xml
         + "</dict>\n</plist>\n"
