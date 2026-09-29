@@ -99,6 +99,76 @@ def main():
     return 0
 
 
+def _launchd_prefixes():
+    return ("com.omostation.", "com.opencode.", "com.l4.", "com.aetherforge.", "com.omlxc.")
+
+
+def check_launchd_plane(registered):
+    """T16-01 shadow: launchd 平面三项检查, **只报告, 不参与 ok 判定**.
+
+    C1 登记↔安装 label 双向差集; C2 plistlib 可解析性 (不以 plutil 为准);
+    C3 ProgramArguments 目标是否存在.
+
+    label 合成现状: 18 条 launchd 登记中仅 7 条能由 `com.omostation.{name}` 命中,
+    其余用其他 label 方案且**无显式 label 字段**。故本阶段 label 匹配一律标记为
+    heuristic, 只作存量盘点用, 不作为漂移判据 (ADR-0457 三段式: shadow 不阻断)。
+    """
+    import plistlib
+    from pathlib import Path
+
+    home = Path.home()
+    la = home / "Library" / "LaunchAgents"
+    reg_labels, unparseable, dead_targets, installed = set(), [], [], set()
+    try:
+        installed_labels = {p.stem for p in la.glob("com.*.plist")} if la.is_dir() else set()
+    except Exception:
+        installed_labels = set()
+
+    for pref in _launchd_prefixes():
+        for pf in sorted(la.glob(pref + "*.plist")) if la.is_dir() else []:
+            try:
+                data = plistlib.loads(pf.read_bytes())
+            except Exception as exc:  # noqa: BLE001 — C2: 不可解析须可见而非静默
+                unparseable.append({"file": pf.name, "error": type(exc).__name__})
+                continue
+            label = str(data.get("Label") or pf.stem)
+            installed.add(label)
+            for tok in data.get("ProgramArguments") or []:
+                if not isinstance(tok, str) or not tok.startswith("/"):
+                    continue
+                if not (tok.endswith((".py", ".sh")) or "/bin/" in tok):
+                    continue
+                if not Path(tok).exists():
+                    dead_targets.append({"label": label, "target": tok})
+                break
+
+    reg_entries = [
+        j for j in registered
+        if j.get("status", "active") == "active" and "launchd" in (j.get("planes") or [])
+    ]
+    for j in reg_entries:
+        explicit = j.get("label")
+        reg_labels.add(str(explicit) if explicit else f"com.omostation.{j['name']}")
+    matched = {lbl for lbl in reg_labels if lbl in installed}
+
+    return {
+        "mode": "shadow",
+        "blocks_gate": False,
+        "registered_count": len(reg_entries),
+        "installed_count": len(installed),
+        "undeclared_installed_count": len(installed - reg_labels),
+        "label_match_heuristic": {
+            "matched": len(matched),
+            "registered": len(reg_labels),
+            "note": "合成 label = 显式 label 字段或 com.omostation.{name}; 命中率偏低, "
+                    "仅作存量盘点, 不作漂移判据",
+        },
+        "unparseable_plists": unparseable,
+        "dead_targets": dead_targets,
+        "undeclared_installed_sample": sorted(installed - reg_labels)[:15],
+    }
+
+
 def check_drift():
     """校验登记源 vs crontab 安装态一致性.
 
@@ -139,6 +209,11 @@ def check_drift():
     res = {"ok": ok, "drift_count": len(drift), "orphan_count": len(orphan)}
     if known_orphans:
         res["known_orphan_count"] = len(raw_orphan) - len(orphan)
+    # T16-01 shadow: launchd 平面只报告, **不参与 ok 判定** (ADR-0457 三段式)
+    try:
+        res["launchd"] = check_launchd_plane(registered)
+    except Exception as exc:  # noqa: BLE001 — shadow 段自身故障不得阻断 crontab 判定
+        res["launchd"] = {"mode": "shadow", "blocks_gate": False, "error": str(exc)[:200]}
     return res
 
 
@@ -151,9 +226,15 @@ if __name__ == "__main__":
     if "--generate" in args and "crontab" in args:
         for line in compile_crontab(jobs):
             print(line)
+    elif "--generate" in args and "launchd" in args:
+        # T16-01: 此前 main() 支持而本 __main__ 块未实现, 导致 `--generate launchd`
+        # 落入 else 分支打印 usage 却返回 rc=0 —— 命令成功但什么都没做。
+        print(_json.dumps(compile_launchd(jobs), ensure_ascii=False, indent=2))
     elif "--check" in args:
         result = check_drift()
         print(_json.dumps(result, ensure_ascii=False))
         sys.exit(0 if result["ok"] else 1)
     else:
-        print("usage: scheduler-compile.py [--check | --generate crontab]")
+        print("usage: scheduler-compile.py [--check | --generate crontab | --generate launchd]",
+              file=sys.stderr)
+        sys.exit(2)
