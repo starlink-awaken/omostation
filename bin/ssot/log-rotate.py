@@ -101,7 +101,14 @@ def _load_log_surfaces() -> dict:
         p = Path(raw)
         target = p if p.is_absolute() else (WORKSPACE / p)
         if cls == "state":
+            # 同时登记原始与 resolve 后的路径: 若 WORKSPACE 本身是软链(仓库迁移 /
+            # 挂载 / 容器 bind), 扫描出的 p.resolve() 会是真路径而注册表里是软链路径,
+            # 二者不相等 → 排除**静默失效**。两种形态都收, 该失效形态即被根除。
             state_paths.add(target)
+            try:
+                state_paths.add(target.resolve())
+            except OSError:
+                pass
         elif cls == "log" and p.is_dir():
             # 登记为可轮转但所在目录不在 LOG_PATHS → 非递归 glob 扫不到
             scanned = {base.resolve() for base in LOG_PATHS if base.is_dir()}
@@ -122,17 +129,20 @@ def _candidate_files() -> tuple[list[Path], list[Path]]:
             continue
         for pattern in LOG_PATTERNS:
             for p in base.glob(pattern):
-                if p.name in SKIP_NAMES:
-                    continue
                 if p.name.startswith("."):
                     continue
-                # T16-02: 注册表 class=state 的路径硬性排除 (按路径, 不按文件名)
+                # T16-02: 注册表 class=state 的路径硬性排除 (按路径, 不按文件名)。
+                # **必须排在 SKIP_NAMES 之前** —— 否则被旧的文件名规则先拦下的文件
+                # 永远不会走到这里, --dry-run 会报 "0 state excluded" 而实际是靠
+                # 旧规则挡住的, 使报告与真实防护来源不符 (实测 receipts.jsonl 即如此)。
                 try:
                     resolved = p.resolve()
                 except OSError:
                     resolved = p
                 if resolved in state_paths or p in state_paths:
                     excluded.append(p)
+                    continue
+                if p.name in SKIP_NAMES:
                     continue
                 out.append(p)
     # 去重 (可能有重叠 glob)

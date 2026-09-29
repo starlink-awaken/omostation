@@ -119,3 +119,74 @@ def test_missing_registry_falls_back_without_raising(tmp_path: Path, monkeypatch
     assert surfaces["registry_present"] is False
     assert some_log in candidates
     assert excluded == []
+
+
+def test_state_exclusion_survives_symlinked_workspace(tmp_path: Path, monkeypatch) -> None:
+    """WORKSPACE 是软链时排除不得静默失效 (T16-02 加固).
+
+    复现方式: 让 WORKSPACE 指向一个软链目录, 而账本实体在其解析目标下。
+    此时扫描得到的 p.resolve() 是真路径, 若注册表只存 WORKSPACE/p (软链路径)
+    则二者不相等 → 排除失效 → 追加式账本会被 copytruncate 清零。
+    """
+    real_root = tmp_path / "real"
+    scanned = real_root / "delivery" / "resident-orchestrator"
+    scanned.mkdir(parents=True)
+    state_file = scanned / "receipts.jsonl"
+    state_file.write_text('{"evidence": "irreplaceable"}\n')
+
+    link_root = tmp_path / "linked"
+    link_root.symlink_to(real_root, target_is_directory=True)
+
+    # 关键: 注册表写**相对路径**(与真实 log-surfaces.yaml 一致), 于是
+    # WORKSPACE / rel = 软链路径, 而 glob 结果 p.resolve() = 真路径 —— 二者不等,
+    # 这正是排除会静默失效的那一形态。
+    registry = link_root / ".omo" / "_truth" / "registry" / "log-surfaces.yaml"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text(
+        "schema: log-surfaces/v1\n"
+        "surfaces:\n"
+        f"  - path: delivery/resident-orchestrator/receipts.jsonl\n"
+        "    class: state\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(log_rotate, "LOG_PATHS", [scanned])
+    monkeypatch.setattr(log_rotate, "SKIP_NAMES", set())
+    monkeypatch.setattr(log_rotate, "WORKSPACE", link_root)
+
+    assert link_root != link_root.resolve(), "本用例要求 WORKSPACE 是软链"
+    candidates, excluded = log_rotate._candidate_files()
+
+    assert state_file not in candidates, "软链 WORKSPACE 下排除失效 = 证据链会被清零"
+    assert state_file in excluded
+
+
+def test_state_check_precedes_skip_names(tmp_path: Path, monkeypatch) -> None:
+    """state 判定必须排在 SKIP_NAMES 之前, 否则报告与真实防护来源不符.
+
+    回归场景: receipts.jsonl 同时被注册表(class=state)与旧 SKIP_NAMES 按文件名命中。
+    若 SKIP_NAMES 先判, 该文件会被静默丢弃且**不计入** excluded, 使 --dry-run 报
+    "0 state excluded" —— 看起来像注册表没生效, 实际靠旧规则挡着。
+    """
+    scanned = tmp_path / "delivery" / "resident-orchestrator"
+    scanned.mkdir(parents=True)
+    state_file = scanned / "receipts.jsonl"
+    state_file.write_text('{"evidence": "irreplaceable"}\n')
+
+    registry = tmp_path / ".omo" / "_truth" / "registry" / "log-surfaces.yaml"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text(
+        "schema: log-surfaces/v1\n"
+        "surfaces:\n"
+        f"  - path: {state_file}\n"
+        "    class: state\n",
+        encoding="utf-8",
+    )
+    # SKIP_NAMES 同时命中该文件名 —— 正是 receipts.jsonl 的真实处境
+    monkeypatch.setattr(log_rotate, "LOG_PATHS", [scanned])
+    monkeypatch.setattr(log_rotate, "SKIP_NAMES", {"receipts.jsonl"})
+    monkeypatch.setattr(log_rotate, "WORKSPACE", tmp_path)
+
+    candidates, excluded = log_rotate._candidate_files()
+
+    assert state_file not in candidates
+    assert state_file in excluded, "被 SKIP_NAMES 先拦下时不得从 state 报告中消失"
