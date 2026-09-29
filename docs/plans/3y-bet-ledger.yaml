@@ -38387,17 +38387,36 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T4-06
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@PENDING_SHA
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+          tests:
+            ref: receipt://docs/reports/business-4th-summary-sections-2026-09-28.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值门槛 = principal 采纳合并进 docx。直接解决了 T4-05 发现的
+            最大报送事故风险（四空章节）。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
