@@ -1,0 +1,90 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-09-29
+type: ssot
+schema: log-surfaces/v1
+related:
+  - ../../_knowledge/decisions/0458-log-surface-classification-ssot.md
+  - ../../_knowledge/decisions/0457-launchd-drift-gate-three-stage.md
+---
+
+# 日志面分类注册表 — 轮转资格登记驱动, 不由文件名与人工名单决定
+#
+# 消费方: bin/ssot/log-rotate.py (class=state 硬性排除, 且排除须在 --dry-run 可见)
+# 背景与阶段门: ADR-0458 / BET-Y2Q4-T16-02
+#
+# class 三类互斥:
+#   log        可丢弃的运行日志            —— 可轮转
+#   state      追加式状态 / 证据账本        —— **禁止轮转**。轮转 = copytruncate =
+#              清零 = 证据链丢失, 且无报错无告警
+#   projection 生成器可重建的运行时投影     —— 默认不轮转, 由投影面自身策略决定
+#
+# 关键事实 (2026-09-28 实测): --daily 的语义是「跨天即轮转, **不看阈值**」
+# (log-rotate.py main()), crontab 每天 03:00 执行。故把追加式账本误纳入扫描范围
+# **不是潜在风险而是即时风险** —— 次日 03:00 即被清零。
+#
+# 根本缺口: 此前该区分靠 SKIP_NAMES 人工枚举, 每新增一个日志目录就要重做一次判定,
+# 且漏判代价是静默的。本表把分类变为可登记的。
+
+surfaces:
+
+  # ── state · 追加式账本 · 硬性排除 ──
+  # 这四条是 ADR-0458 记录的风险面。events.jsonl 与 receipts.jsonl 已因
+  # resident-orchestrator 目录进入 LOG_PATHS 而部分暴露, 靠 SKIP_NAMES 硬堵。
+
+  - path: .omo/_delivery/agent-workflows/events.jsonl
+    class: state
+    owner: governance-team
+    retention: indefinite
+    note: >-
+      workflow 事件账本。agent-workflow compliance / P74 巡检读它。
+      2026-09-28 实测 580KB 且持续增长。
+
+  - path: .omo/_delivery/resident-orchestrator/receipts.jsonl
+    class: state
+    owner: governance-team
+    retention: indefinite
+    note: >-
+      resident 回执账本。因 resident-orchestrator 目录被加入 LOG_PATHS 而进入扫描
+      范围, 此前仅靠 SKIP_NAMES 的 "receipts.jsonl" 文件名硬堵 —— 按文件名堵是
+      脆弱的 (同名不同路径), 本表按路径登记。2026-09-28 实测 806KB。
+
+  - path: .omo/_delivery/ingress/value-evidence.jsonl
+    class: state
+    owner: governance-team
+    retention: indefinite
+    note: >-
+      **BET 完成价值证据**。清零即断三轴证据链中的 value 轴。
+      当前靠「ingress 目录未被加入 LOG_PATHS」侥幸未暴露, 属隐性依赖。
+
+  - path: .omo/_delivery/observability/events.jsonl
+    class: state
+    owner: governance-team
+    retention: indefinite
+    note: 可观测事件流, 供 dashboard 回放。同为隐性依赖。
+
+  # ── log · 可轮转 · 此前未纳入 LOG_PATHS 而漏扫 ──
+  # 这四条所在目录不在 LOG_PATHS, 故非递归 glob 扫不到 (同 ADR-0457 的覆盖面问题)。
+  # 登记后由 log-rotate 的「未覆盖告警」报出, 待人工确认是否纳入扫描面。
+
+  - path: .omo/_delivery/event-ingest
+    class: log
+    owner: governance-team
+    note: 事件入站 cron 日志 (cron.log, 2026-09-28 实测 219KB)
+
+  - path: .omo/_delivery/perception-inbox
+    class: log
+    owner: governance-team
+    note: 感知收件箱 cron 日志 (cron.log, 200KB)
+
+  - path: .omo/_delivery/personal-signals
+    class: log
+    owner: governance-team
+    note: 个人信号 cron 日志 (cron.log, 200KB)
+
+  - path: .omo/_delivery/agent-workflows/.delivery-anchor-conflicts.log
+    class: log
+    owner: governance-team
+    note: 交付锚点冲突记录 (2026-09-28 实测 1.1KB)
