@@ -302,9 +302,10 @@ git 跟踪面：回滚需与 `.gitignore` 同批 revert（PR-2 的摘库与忽�
      本报告）；operational `PROVEN`（live_canary / fresh_receipt / cleanup 指向本报告，
      replay 指向 retro）；value `NOT_PROVEN`；`value_indicator_policy: false`；
      `overall_state: delivery_accepted`。
-  6. **workflow run**：PR-3 代码面 `20260929T044531Z-project-code-change-e23ad439`、
-     收尾文档面 `20260929T073730Z-project-doc-change-3a7a7ec8`；两者的 `closeout` 在本 PR
-     合并后执行，不在合并前声称已闭环。
+  6. **workflow run 时间线更正**：代码面 `20260929T044531Z-project-code-change-e23ad439`
+     于 `2026-09-29T07:21:24Z` 以 `blocked` 关闭，早于 PR #4534 于 `07:34:56Z` 合并；
+     收尾文档面 `20260929T073730Z-project-doc-change-3a7a7ec8` 于 `07:37:30Z` 启动，
+     并于 `2026-09-29T08:16:23Z` 以 `ok` 关闭，晚于 PR #4544 于 `08:14:47Z` 合并。
   7. **done-transition 的 CI 侧实测**：`bet-ledger.py lint` 在置 `done` 之后 =
      `OK -- 506 bets, 16 tracks, no errors`（bet 总数未变，故 `META_TOTAL_BETS_DRIFT` 不触发；
      `BET_DONE_*` 零命中；残留的 WARN 全是历史 BET 的 squash-merge ancestry 提示，非本 BET）。
