@@ -35,6 +35,8 @@ NETWORK_BUDGET_SECONDS = 300       # 整轮网络工作总预算 (× 子模块�
 TIMEOUT_RC = 124                   # 约定俗成的 timeout 退出码, 与真失败区分
 #: 「本地没能验完」的 reason 前缀 —— 让降级在汇总里可见, 而不是混进 PASS
 UNVERIFIED_PREFIX = "unverified: "
+# 陈旧 shallow.lock 的最小年龄: 低于此值视为可能仍有活跃 fetch 在用, 不清除。
+STALE_LOCK_MIN_AGE_SECONDS = 30.0
 
 # ── 子模块并发 (2026-09-28, E2-A) ───────────────────────────────────────
 # 实测: CI 里 16 个子模块逐个 `fetch --unshallow` + `branch --contains` **全串行**,
@@ -91,6 +93,45 @@ def run(
     except subprocess.TimeoutExpired as exc:
         partial = exc.stdout if isinstance(exc.stdout, str) else ""
         return subprocess.CompletedProcess(cmd, TIMEOUT_RC, partial, f"timed out after {timeout}s")
+
+
+def _looks_like_locked(stderr: str) -> bool:
+    """True when a git fetch failed because another process holds a lock."""
+    text = (stderr or "").lower()
+    return (
+        "another git process" in text
+        or "index.lock" in text
+        or "shallow.lock" in text
+        or "unable to create" in text and "lock" in text
+        or "cannot lock ref" in text
+        or ("lock" in text and "exists" in text)
+    )
+
+
+def _clear_stale_shallow_lock(submodule_dir: Path) -> bool:
+    """Remove a stale ``shallow.lock`` left by an interrupted fetch.
+
+    Returns True only when a lock file was actually removed. The lock lives in the
+    submodule's git dir, not the working tree. We only ever reach this after a
+    fetch that *reported a lock error*, so a lock held by a live process would mean
+    git's own locking failed; to stay conservative the removal is skipped when the
+    lock is younger than ``STALE_LOCK_MIN_AGE_SECONDS``.
+    """
+    try:
+        probe = run(["git", "rev-parse", "--absolute-git-dir"], cwd=submodule_dir)
+        git_dir = probe.stdout.strip()
+        if not git_dir:
+            return False
+        lock = Path(git_dir) / "shallow.lock"
+        if not lock.is_file():
+            return False
+        age = time.time() - lock.stat().st_mtime
+        if age < STALE_LOCK_MIN_AGE_SECONDS:
+            return False
+        lock.unlink()
+        return True
+    except OSError:
+        return False
 
 
 def _fetch_verdict(require_main: bool, detail: str) -> tuple[bool, str]:
@@ -197,6 +238,20 @@ def remote_contains(path: str, sha: str, *, fetch: bool, require_main: bool = Fa
                 cwd=submodule_dir,
                 timeout=budget,
             )
+            # 2026-09-29: 上一次 unshallow 超时会留下 shallow.lock, 使本次 fetch 立即
+            # 失败于 "Another git process seems to be running" → 仓库永远停在浅克隆 →
+            # 祖先链走不通 → 误报 unreachable → **push 被永久阻断**, 而唯一能修好它的
+            # 正是这个被阻断的 push (自我阻断死循环, #907 同一类)。
+            # 只在 fetch 报锁错误时才清锁并重试一次 —— 活跃进程的锁不会被误删。
+            if fetch_result.returncode not in {0, TIMEOUT_RC} and _looks_like_locked(
+                fetch_result.stderr
+            ):
+                if _clear_stale_shallow_lock(submodule_dir):
+                    fetch_result = run(
+                        ["git", "fetch", "--quiet", "--unshallow", "origin", refspec],
+                        cwd=submodule_dir,
+                        timeout=_remaining_network_budget() or budget,
+                    )
             # unshallow 超时就不再补一发 normal fetch: 预算已耗尽, 重试只把挂死换成慢死
             if fetch_result.returncode == TIMEOUT_RC:
                 return _fetch_verdict(require_main, f"fetch timed out ({fetch_result.stderr.strip()})")
@@ -220,7 +275,37 @@ def remote_contains(path: str, sha: str, *, fetch: bool, require_main: bool = Fa
         if fetch_result.returncode == TIMEOUT_RC:
             return _fetch_verdict(require_main, f"fetch timed out ({fetch_result.stderr.strip()})")
         if fetch_result.returncode != 0:
-            return False, f"fetch failed: {fetch_result.stderr.strip()}"
+            # 2026-09-29: 此分支原先直接硬失败, 绕过了 _fetch_verdict 的降级哲学 ——
+            # 而 _fetch_verdict 的 docstring 明写「网络不可判定 ≠ gitlink 不可达,
+            # 拒绝把超时伪装成 unreachable 阻断 push」。本地原因导致 fetch 失败
+            # (陈旧锁 / 认证 / 离线) 同样属于「不可判定」, 不应阻断 push。
+            # require_main (CI) 无更低层兜底, _fetch_verdict 仍返回硬失败, 语义不变。
+            return _fetch_verdict(require_main, f"fetch failed: {fetch_result.stderr.strip()}")
+
+        # 2026-09-29: fetch 返回 0 **不代表仓库已加深**。unshallow 失败后回退的普通
+        # fetch 会在浅克隆上成功返回, 历史仍然截断 —— 此时祖先关系是「不可判定」而非
+        # 「不可达」。原实现继续走 branch --contains, 拿到空结果就断言 unreachable,
+        # 正是本函数 docstring 明确拒绝的那种「把不可判定伪装成不可达」。
+        still_shallow = (
+            run(["git", "rev-parse", "--is-shallow-repository"], cwd=submodule_dir).stdout.strip()
+            == "true"
+        )
+        if still_shallow:
+            return _fetch_verdict(
+                require_main, "submodule still shallow after fetch; ancestry not decidable"
+            )
+        # 2026-09-29: 还存在「非浅克隆但对象缺失」的残缺 clone —— 2026-09-29 实测
+        # 某 PASW 工作树的 kairon: is-shallow=false 但 `rev-parse HEAD` 直接报
+        # unknown revision, origin/main 引用却是新的。此时 `branch -r --contains <sha>`
+        # 因对象不存在而**静默返回空**, 同样被误判为 unreachable。
+        # 判定锚点: SHA 对象本地是否存在 —— 不存在则可达性根本无从计算。
+        have_object = run(
+            ["git", "cat-file", "-e", f"{sha}^{{commit}}"], cwd=submodule_dir
+        ).returncode == 0
+        if not have_object:
+            return _fetch_verdict(
+                require_main, f"commit object {sha[:12]} absent locally; ancestry not decidable"
+            )
 
     if require_main:
         main_ref = "refs/remotes/origin/main"
@@ -232,11 +317,47 @@ def remote_contains(path: str, sha: str, *, fetch: bool, require_main: bool = Fa
             return False, f"main ancestry query failed: {detail}"
         return False, f"not contained in {main_ref}"
 
-    contains = run(["git", "branch", "-r", "--contains", sha], cwd=submodule_dir)
-    branches = [line.strip() for line in contains.stdout.splitlines() if line.strip() and "origin/HEAD" not in line]
-    if branches:
-        return True, ", ".join(branches[:3])
-    return False, "not contained in fetched origin branches"
+    # 2026-09-29: 原实现用 `git branch -r --contains`, 它**依赖一个可解析的 HEAD**。
+    # PASW 工作树里存在 HEAD 不可解析的残缺 clone (2026-09-29 实测某 kairon:
+    # `rev-parse HEAD` -> unknown revision, 而 gitlink 本身可达), 此时该命令
+    # 以 rc=128 + "failed to resolve HEAD as a valid ref" 失败, stdout 为空。
+    # 而此处**从不检查 returncode** —— 报错与「真的不可达」被当成同一件事,
+    # 于是误报 unreachable 并阻断 push。
+    # 改为直接回答真正的问题: gitlink 是否是**主线** ref 的祖先。
+    #
+    # 只认远端跟踪 ref (refs/remotes/*), **不认 refs/heads/main**: clone 里的本地
+    # main 可能领先于 origin/main 甚至含孤立提交, 拿它当主线等于给不可达提交开后门
+    # (2026-09-29 回归测试实测抓到这一点)。
+    mainline_candidates = [
+        line.strip()
+        for line in run(
+            ["git", "for-each-ref", "--format=%(refname)", "refs/remotes/"],
+            cwd=submodule_dir,
+        ).stdout.splitlines()
+        if line.strip() and not line.strip().endswith("/HEAD")
+    ]
+    ancestry_errors: list[str] = []
+    matched: list[str] = []
+    for ref in mainline_candidates:
+        is_ancestor = run(["git", "merge-base", "--is-ancestor", sha, ref], cwd=submodule_dir)
+        if is_ancestor.returncode == 0:
+            matched.append(ref)
+        elif is_ancestor.returncode == 1:
+            continue  # 明确不是祖先
+        else:
+            ancestry_errors.append(is_ancestor.stderr.strip() or f"exit {is_ancestor.returncode}")
+    if matched:
+        return True, ", ".join(matched[:3])
+    if not mainline_candidates:
+        return _fetch_verdict(
+            require_main, "no remote-tracking ref present; mainline unknown"
+        )
+    if ancestry_errors:
+        # 可达性无法判定 (而非不可达) —— 降级, 不阻断 push
+        return _fetch_verdict(
+            require_main, f"ancestry query failed: {ancestry_errors[0]}"
+        )
+    return False, "not an ancestor of any mainline ref"
 
 
 def detect_drift(path: str) -> dict[str, object] | None:
