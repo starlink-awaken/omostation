@@ -12,8 +12,8 @@
     (#4079 已硬化: 缺 ref 键不崩)。
 
   执行 (WorkingDirectory=projects/omo, PYTHONPATH=src):
-    1. refresh --now $NOW  → dashboard/reviews/review-queue/action-packet/owner-routing
-    2. dispatch --now $NOW → dispatch
+    1. refresh (传 now=$NOW) → dashboard/reviews/review-queue/action-packet/owner-routing
+    2. dispatch (传 now=$NOW) → dispatch
     3. campaign            → campaign (defaults to latest run)
     4. report              → reporting (defaults to latest run)
   皆写 .omo/debt/<name>/current.{yaml,md} (gitignored 派生产, generator-rebuildable)。

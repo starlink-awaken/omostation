@@ -8,12 +8,17 @@
     而**所有 PR** 变红。根因是判定器纯二元 (`age > review_days`), 无前瞻、
     无 grace 档; 而文档按批次复审, 于是必然按批次**集体**越界。
 
-  执行 (每日 08:50, --strict → 有 imminent 即 exit 1, 在 job 状态可见):
-    python3 bin/gac/check-expiry-radar.py --horizon 7 --strict
+  执行 (每日 08:50, strict 档 → 有 imminent 即 exit 1, 在 job 状态可见):
+    python3 bin/gac/check-expiry-radar.py (horizon=7, strict)
 
-  为什么用 launchd 而非 crontab: crontab **写入**在本机系统层已坏
-  (连原样重写都返回 `Interrupted system call`; /var/at/tabs 为 root:wheel
-  drwx------), 而本机周期任务本就跑 launchd (见 com.omostation.zhixing-*)。
+  为什么用 launchd 而非 crontab:
+    原以为 crontab 写入在本机系统层已坏, 但 **2026-09-28 实测推翻** (探针写入后
+    行数真实变化, 仅「原样回写 rc=0」不足为证)。当前改用 launchd 的理由是架构性的 ——
+    registry.yaml 为调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面是遗留面。
+    注: 本注释块不得含连续两个半角连字符 (XML 规范禁止, 该序列与本注释的
+    起止定界符同形), 否则 plistlib 解析失败而 plutil/launchd 解析器更宽容会放过
+    → 该 plist 被 meta-doctor 静默跳过出 M2 引用校验 (T16-01 shadow 的 C2 即按
+    plistlib 检出本文件)。
 
   安装:
     cp bin/ops/launchd/com.omostation.expiry-radar.plist ~/Library/LaunchAgents/
