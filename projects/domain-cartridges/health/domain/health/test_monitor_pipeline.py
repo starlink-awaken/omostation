@@ -213,5 +213,54 @@ def run_all() -> int:
     return 0
 
 
+
+# 2026-09-29 全链路实测回归: 好方向偏离(睡眠偏多)不应入异常
+import datetime as _dt
+import random as _random
+
+_random.seed(7)
+_rows = []
+for _i in range(30):
+    _day = _dt.date(2026, 8, 31) + _dt.timedelta(days=_i)
+    _v = _random.uniform(8.4, 8.8) if _i >= 25 else _random.uniform(7.3, 7.6)
+    _rows.append(VitalReading(str(_day), "sleep_hours", _v, "test"))
+_sleep_findings = [f for f in detect_anomalies(build_ledger(_rows), "2026-09-29") if f.metric == "sleep_hours"]
+check("good-direction sleep not flagged", not _sleep_findings, str([(x.kind, x.days) for x in _sleep_findings]))
+
 if __name__ == "__main__":
     raise SystemExit(run_all())
+
+
+# 2026-09-29 全链路实测回归: 好方向偏离(睡眠偏多)不应入异常
+import datetime as _dt
+import random as _random
+
+_random.seed(7)
+_rows = []
+for _i in range(30):
+    _day = _dt.date(2026, 8, 31) + _dt.timedelta(days=_i)
+    _v = _random.uniform(8.4, 8.8) if _i >= 25 else _random.uniform(7.3, 7.6)
+    _rows.append(VitalReading(str(_day), "sleep_hours", _v, "test"))
+_sleep_findings = [f for f in detect_anomalies(build_ledger(_rows), "2026-09-29") if f.metric == "sleep_hours"]
+check("good-direction sleep not flagged", not _sleep_findings, str([(x.kind, x.days) for x in _sleep_findings]))
+
+if __name__ == "__main__":
+    raise SystemExit(run_all())
+
+
+def test_good_direction_not_flagged() -> None:
+    """偏离基线但朝好方向(睡眠偏多)不算异常 —— 此前 |z| 不分方向, 参考区间内的
+    好方向偏离被并入恶化区间(2026-09-29 全链路实测: 7.6h 睡眠被报异常)。"""
+    import datetime as dt
+    import random
+
+    random.seed(7)
+    rows = []
+    for i in range(30):
+        d = dt.date(2026, 8, 31) + dt.timedelta(days=i)
+        # 后 5 天睡眠从 7.5h 升到 8.8h: 偏离基线但方向为「多睡」, 且在 7-9h 参考区间
+        v = random.uniform(8.4, 8.8) if i >= 25 else random.uniform(7.3, 7.6)
+        rows.append(VitalReading(str(d), "sleep_hours", v, "test"))
+    findings = detect_anomalies(build_ledger(rows), "2026-09-29")
+    sleep = [f for f in findings if f.metric == "sleep_hours"]
+    assert not sleep, f"好方向(多睡)不应报异常: {[(x.kind, x.days) for x in sleep]}"
