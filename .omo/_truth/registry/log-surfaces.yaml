@@ -65,9 +65,34 @@ surfaces:
     retention: indefinite
     note: 可观测事件流, 供 dashboard 回放。同为隐性依赖。
 
-  # ── log · 可轮转 · 此前未纳入 LOG_PATHS 而漏扫 ──
-  # 这四条所在目录不在 LOG_PATHS, 故非递归 glob 扫不到 (同 ADR-0457 的覆盖面问题)。
-  # 登记后由 log-rotate 的「未覆盖告警」报出, 待人工确认是否纳入扫描面。
+  # ── state · 去重水位 · 防御性登记 ──
+  # 2026-09-29 新增: 这三个目录纳入 LOG_PATHS 时发现同目录下还有 watermark.json ——
+  # 内容是去重水位 (last event id / 已处理文件的 hash), 属**状态**。
+  # 当前 LOG_PATTERNS 不含 *.json 故它们天然不被扫到, 但若日后有人加 *.json 就会
+  # 被 copytruncate 清零 → 通道去重失效、重复摄入。故显式登记为 state 做防御。
+
+  - path: .omo/_delivery/event-ingest/watermark.json
+    class: state
+    owner: governance-team
+    retention: indefinite
+    note: 事件入站去重水位 (workflow_mesh_last_event_id)。清零 = 重复摄入。
+
+  - path: .omo/_delivery/perception-inbox/watermark.json
+    class: state
+    owner: governance-team
+    retention: indefinite
+    note: 感知收件箱已处理文件 hash 映射。清零 = 重复处理已消费信号。
+
+  - path: .omo/_delivery/personal-signals/watermark.json
+    class: state
+    owner: governance-team
+    retention: indefinite
+    note: 个人信号已处理文件 hash 映射。同上。
+
+  # ── log · 可轮转 · 2026-09-29 已纳入 LOG_PATHS ──
+  # 此前登记时这三个目录不在 LOG_PATHS, 非递归 glob 扫不到 (同 ADR-0457 的覆盖面
+  # 问题), 由 log-rotate 的 uncovered(log) 告警报出。已确认内容安全 (仅 cron.log,
+  # 同目录的 watermark.json 已在上方登记为 state), 故纳入扫描面。
 
   - path: .omo/_delivery/event-ingest
     class: log

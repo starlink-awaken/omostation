@@ -38,6 +38,13 @@ LOG_PATHS = [
     # 并发 agent 的 worktree/scratchpad (101 个文件), 且 .omo/_delivery 下的
     # 追加式账本 (*.jsonl) 会被 --daily 按 mtime 轮转清零。详见下方 SKIP_NAMES。
     WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator",
+    # 2026-09-29: T16-02 shadow 报出的 3 个 uncovered(log) 目录, 纳入扫描面。
+    # 三个目录各含 cron.log (~200KB) + watermark.json (去重状态)。后者当前
+    # 不匹配任何 LOG_PATTERN (.json 不在列), 但已在 log-surfaces.yaml 登记为
+    # class=state 做防御 —— 若日后有人往 LOG_PATTERNS 加 *.json, 它不会被动到。
+    WORKSPACE / ".omo" / "_delivery" / "event-ingest",
+    WORKSPACE / ".omo" / "_delivery" / "perception-inbox",
+    WORKSPACE / ".omo" / "_delivery" / "personal-signals",
     WORKSPACE / ".omo" / "_log",
     WORKSPACE / "runtime" / "logs",
     HOME / ".local" / "state" / "omostation",
