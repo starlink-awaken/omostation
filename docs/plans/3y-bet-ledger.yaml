@@ -38344,7 +38344,8 @@ bets:
     principal 对照采纳后自行合并。仓库零正文。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-29
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
@@ -38393,7 +38394,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@PENDING_SHA
+            ref: git://origin/main@fedc79e08e02a2689d78f104b46465c6214bb306
           diff:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
           tests:
