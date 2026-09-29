@@ -9,6 +9,5 @@
 
 tests/integration/run-all.sh                  # 聚合器: 自己会跑其它套件, 再被聚合会重复执行/递归
 tests/test_submodule_autobump.sh              # 慢 (>40s, 2026-09-29 实测): 瘦身或拆分后可纳入
-tests/bin/test_pasw_coverage.sh               # 预存红 (rc=1, 2026-09-29 实测): 待排查 (未纳入故长期无人知)
-tests/integration/e2e-smoke.sh                # 预存红 (rc=1, 2026-09-29 实测): 疑似需运行环境, 待排查
-tests/integration/test-sandbox-timemachine.sh # 预存红 (rc=1, 2026-09-29 实测): 疑似需运行环境, 待排查
+tests/integration/e2e-smoke.sh                # 真需运行环境 (2026-09-29 定位): 第 1 段要已起的 agora SSE :7431 / cron-service :7450, 第 2/3 段要各子项目 uv 环境与依赖; 拆分出「CLI 入口」子集后部分可纳入
+tests/integration/test-sandbox-timemachine.sh # 工具熔断预算失效 (2026-09-29 定位): SANDBOX_TIMEOUT_S=5 < 本仓 git worktree add 实测 8.0s (post-checkout 钩子跑 guard-submodules); 熔断提高/可 env 覆盖后即可纳入
