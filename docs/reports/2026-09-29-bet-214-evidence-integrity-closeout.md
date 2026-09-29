@@ -37,8 +37,13 @@ run 链：`20260929T112658Z-project-doc-change-79b25579`（登记+修复）→
    bet 被删即拒，实测 **3 passed**）。缺的是**接线**：registry 条目
    `bin/_registry/scripts/governance/sync-bet-digests.yaml` 的 `triggers: []`，且 `.github/`、
    `Makefile`、`.omo/_truth/registry/` 对该脚本**零调用点**。
-2. ❌「缺口修法二选一 —— lint 逐条比对，或钉 `git://`」→ 顺序错了。同一副本跑
-   `--report` 实测全库 **1,882 条 mismatch / 329 个 BET**（本 BET 与 T10-213 各 0 条）。
+2. ❌「缺口修法二选一 —— lint 逐条比对，或钉 `git://`」→ 顺序错了。`--report` 实测全库存量债
+   （登记批读数 **1,882 条 mismatch / 329 个 BET**）。**当时的括号注解「本 BET 与 T10-213 各 0 条」
+   是过期读数，closeout 批复跑已否证**：那次 `--report` 跑在登记批编辑
+   `2026-09-29-projection-plane-phase2-pr3-closeout.md`（`b24c353c3` 里 54/3）**之前**，而该报告一被
+   编辑，T10-213 的 5 条 receipt 立即陈旧 —— 那就是 G2。现在复跑：T10-212 **0 条**（本 BET 的修复项，
+   已归零）、T10-213 **5 条**、T10-214 **6 条**（本报告摘要在编辑中，属本批瞬态，见 §4 同类）——
+   摘要回钉后复跑降至 **0 条**，全库从 1,893 条 / 331 个 BET 降到 **1,887 条 / 330 个 BET**。
    把它直接做成仓级硬门禁会让 CI 第一天就红。**先量存量债，再接线**：
    ① 按 diff 范围核对（只查本 PR 触碰的文件被哪些 receipt 引用）；
    ② 存量走 `gate-known-debt.yaml` 登记；
@@ -81,12 +86,12 @@ tests/test_sync_bet_digests_integrity.py -q` —— **`No module named pytest`**
 
 | 判据 | 命令 | 结果 |
 |---|---|---|
-| C1 receipt 逐键一致 | 读 `origin/main` 台账，对每个 `receipt://`/`repo://` 键比 `sha256` 与 `git show` 出的文件字节 | T10-212 **8/8 match**（6 report + 1 retro + 1 spec binding），T10-214 spec binding **1/1 match**，合计 **9 match / 0 mismatch / 0 missing** |
-| 台账可读 + 计数 | `python3 bin/plan/bet-ledger.py lint` | `OK -- 509 bets, 16 tracks, no errors`；`meta.total_bets: 509` == `len(bets)` 509 |
+| C1 receipt 逐键一致 | 读台账，对每个 `receipt://`/`repo://` 键比 `sha256` 与文件字节（已落地的取 `git show origin/main:` 的字节，本批新引入的取工作树字节） | 登记批读数：T10-212 **8/8 match**，T10-214 spec binding **1/1 match**，合计 9 match / 0 mismatch / 0 missing。closeout 批终态读数（报告摘要重算并回钉之后）：**T10-212 8/8、T10-214 8/8**（1 spec binding + 7 receipt 键），`sync-bet-digests.py --report` 对这两个条目各报 **0 条**；T10-213 仍 5 条（= G2，别人的活） |
+| 台账可读 + 计数 | `python3 bin/plan/bet-ledger.py lint` | 登记批读数：`OK -- 509 bets, 16 tracks, no errors`，`meta.total_bets: 509` == `len(bets)`。closeout 批复跑：`meta.total_bets == len(bets)` 仍成立，但**全局 `no errors` 已被别人的铸造证伪** —— 10 条 ERROR 全部属于 `BET-Y2Q4-T4-06`（#4564 铸造：spec 文件未落地 + 7 条 receipt ref 不解析 + 由此推出的 `OVERALL_STATE_MISMATCH`/`BET_DONE_REQUIRES_DELIVERY_ACCEPTED`），而本 BET 修的 T10-212/T10-214 两侧 **0 条 ERROR**。故 `verify[2]` 从"整仓 OK"改成**逐条归属判据**，T4-06 登记为 §8 G7 |
 | C2 verify 可逐字跑 | 台账 `verify[].cmd` 原文执行 | `3 passed`（`test_sync_bet_digests_integrity.py`）、`18 passed`（`test_projection_reader_resolution.py`） |
 | C3 无死锚 | 报告终节为 §9，`expect` 指向 §9 第 8 条 | 无 `§10` 引用 |
-| 合并树无冲突/无回退 | 只读 `git merge-tree --write-tree` 对推进后的 `origin/main` 探测；合并后比对 bet 集合 | 干净；main bets 509 == 分支 509，重复 id 0，差异**只有** `BET-Y2Q4-T10-214` 新增 |
-| 门禁 | `make gac-local-gate` | PASS（69 checks，6 项 known-unavailable skip），lane = `docs` + `docs_data`（`bin/change-lane-check.py --staged`） |
+| 合并树无冲突/无回退 | 只读 `git merge-tree --write-tree` 对推进后的 `origin/main` 探测；合并后比对 bet 集合 | 干净；登记时点 main bets == 分支 bets，重复 id 0，差异**只有** `BET-Y2Q4-T10-214` 新增 |
+| 门禁 | `make gac-local-gate` | 登记批读数：PASS（69 checks，6 项 known-unavailable skip），lane = `docs` + `docs_data`（`bin/change-lane-check.py --staged`）；closeout 批读数见 §6.1 |
 | 安全 | L3 深度评审（提交态变更集） | 无发现 |
 | CI | `gh pr checks 4561` | 全部 pass（`doc-freshness` 与一个 docs domain job 按 `on.paths` skipping），合并前零非 pass 项 |
 
@@ -110,19 +115,45 @@ tests/test_sync_bet_digests_integrity.py -q` —— **`No module named pytest`**
 
 - `verify[3]` → `git show --numstat --format= b24c353c3 -- docs/plans/3y-bet-ledger.yaml`
   （登记批，`b24c353c3` = #4561 squash 落地 SHA）
-- `verify[6]`（新增）→ `git diff --numstat b24c353c3..HEAD -- docs/plans/3y-bet-ledger.yaml`
-  （closeout 批，只允许动 T10-214 自己的 `write_surfaces`/`completion_evidence`/`status`/`done_at`）
+- `verify[6]` → `python3 bin/plan/bet-ledger.py show BET-Y2Q4-T10-214`
+  （closeout 批，判据是**条目自身的状态**：`status: done` + `done_at` + 7 条 verify +
+  6 条 `write_surfaces` + `completion_evidence.overall_state` 求值为 `delivery_accepted`）
 
-判据固化：**凡是"diff 工作树"形态的 verify 命令，合并后必然不可验**；要么钉 commit 范围，
-要么改成对已落地内容的结构断言。改前后逐条比对：其余 508 个条目 parse 后与原文件**逐项相等**，
-`- id:` 边界计数不变。
+判据固化（三级，本批实测逐级收紧）：**①「diff 工作树」合并后必然不可验** —— 工作树干净，命令返回空。
+**②「钉 commit 范围」（`b24c353c3..HEAD`）仍不可靠** —— 范围会把 base 漂移期间别人落地的 commit
+一起算进来：实测该范围的台账 diff 里含 `BET-Y2Q4-T4-06`（#4564 铸造）的条目行，而那些行不是本批写的
+（故此处刻意不写 numstat 数字 —— 它随下一条 mint 过期，同 ④）。
+**③ 只有两种形态能在任意时刻逐字复验**：单个落地 commit 的自 diff（`git show --numstat <merge-sha>`，
+squash 合并保证它恰等于本批）与对已落地内容的**结构断言**。登记批的合并 SHA 已知 → 走 ③ 前者；
+closeout 批写条目时自己的合并 SHA 还不存在 → 走 ③ 后者。
+**④ 全局性判据不能写进条目级 verify** —— "整仓 no errors"、写死的 bet 计数都会被别人的铸造证伪，
+而证伪时本批并没有错：实测 `lint` 在 main 上因 #4564 的 `T4-06` 报 10 条 ERROR（§6 表 + G7）。
+判据形态因此改成**逐条归属**。改前后逐条比对：其余条目 parse 后与原文件
+**逐项相等**，`- id:` 边界计数不变。
+
+### 6.2 closeout 批的台账重对齐（base 漂移，实测驱动）
+
+登记后 `origin/main` 前进 5 个 commit，其中 **#4564 铸造 `BET-Y2Q4-T4-06`** —— 与台账同文件。两点后果：
+
+1. `meta.total_bets` 在 main 上是 **510**、我的分支 509。`verify[2]` 若把数字写死，就会随并发 mint
+   变成假红，故改为 `<N>` + `meta.total_bets == len(bets)` 的一致性判据（"计数"类期望同理不可写死）。
+2. 台账 blob 必须重对齐到 main 再交付：未对齐时 `git diff --numstat origin/main -- <台账>` 是
+   `43 / 74` —— 那 74 行就是别人刚铸的条目，squash 合并会把它抹掉。做法是取
+   `git show origin/main:<台账>` 为底，只把 `BET-Y2Q4-T10-214` 条目段替换为终版，然后断言除
+   T10-214 外其余 509 条 parse 结果与 main **逐位、逐项相等**，非 `bets` 的每个顶层键不变。
+
+**这一批我自己踩到的边界**：第一次替换用"下一个 `- id: ` 锚点"当条目终点，而 main 里 `bets` 段最后
+一个条目后面紧跟顶层键 `campaigns:`，于是 `campaigns:` 那行被当成本条目的一部分搬走，把 `T4-06`
+挤进了 `campaigns` 段 —— AGENTS.md「bets 序列被顶层键切断，盲插会把条目塞进错误段落」记录的那类事故，
+用"锚点感知"的写法仍复现了一遍。判据：条目终点 = **下一个 col-0 `- ` 项** 与 **下一个 col-0 顶层键**
+二者取先；替换后 `[b['id'] for b in bets]` 必须与 main 逐位相等。
 
 ## 7 回滚
 
 单 commit `18c64e3b0`（squash 后 `b24c353c3`），4 文件全为文档/台账，无代码、无 CI、无生成态：
 `git revert --no-commit b24c353c3` 即回到修复前状态。回滚的后果是**可预期的**：T10-212 的 6 条
 report receipt 重新变陈旧、`verify[0]` 重新跑不起来 —— 即回到本 BET 要修的起点；
-`BET-Y2Q4-T10-214` 条目消失且 `meta.total_bets` 回到 508（该值由 `len(bets)` 派生，不会留偏）。
+`BET-Y2Q4-T10-214` 条目消失且 `meta.total_bets` 减 1（该值由 `len(bets)` 派生，不会留偏；登记时点 509→508，main 现因 #4564 铸 `T4-06` 为 510）。
 子模块指针未触碰，`git submodule status` 在 revert 后不受影响。
 
 closeout 批次（本 retro/report/台账面）在它自己的 commit 里，回滚方式相同：revert 该 commit 会把
@@ -132,7 +163,10 @@ closeout 批次（本 retro/report/台账面）在它自己的 commit 里，回�
 
 ## 8 后续项（登记，不在本 BET 修）
 
-- **G1 receipt 摘要检测器存在但未接线**，且存量债巨大（1,882/329）。接法见 §2 的三步顺序。
+- **G1 receipt 摘要检测器存在但未接线**，且存量债巨大（登记批 1,882 条 / 329 个 BET；closeout 批
+  终态 1,887 条 / 330 个 BET —— 净增的 5 条恰是本批编辑 PR-3 报告后 T10-213 变陈旧的那 5 条，
+  即 G2；本批自己的 6 条在摘要回钉后归零）。两条读数都是瞬态，接线时以当时的
+  `--report` 为准。接法见 §2 的三步顺序。
 - **G2 `BET-Y2Q4-T10-213` 的 5 条 receipt 需从 `bd2ed573…` 重算为 `15ba278f44b1f…`**。
 - **G3 `#`-静默截断**：`done_when`/`non_goals` 标量含 `" #"` 会被当注释吃掉后半段且无报错
   （T10-213 登记时实证，#4553 用引号修复）。新条目一律经 `yaml.safe_dump` 构造并**回读解析**核对。
@@ -150,3 +184,11 @@ closeout 批次（本 retro/report/台账面）在它自己的 commit 里，回�
   分布：`stable-python3` 19 条、`python3` 1 条（就是它）。修法是一行改 `stable-python3`（别名在
   `:82`），但 `services.yaml` 不在本 BET 的 `write_surfaces` 内，且该红是本批交付的环境底噪，
   故只登记不顺手改。判据留给下一个人：**看到 service-config-drift 红先问"用哪个解释器调的"**。
+- **G7（closeout 批次新增）`BET-Y2Q4-T4-06` 让 `lint` 在 main 上不再是 `no errors`**：#4564 铸造的
+  条目绑定 `docs/superpowers/specs/2026-09-28-summary-four-sections.md`（该文件从未落地），7 条
+  `completion_evidence` ref 不解析，由此派生 `OVERALL_STATE_MISMATCH: declared='delivery_accepted'
+  derived='blocked'` 与 `BET_DONE_REQUIRES_DELIVERY_ACCEPTED`，`bet-ledger.py lint` 汇总为
+  `10 个问题`（全部 owner = `T4-06`，本 BET 的 212/214 两侧 0 条）。不动它：本 BET 的
+  `circuit_breaker` 把"给别的 bet 回填生命周期证据"列为停止条件，与 G2 同一条边界。接手要做的是
+  补 spec 文件（或改 `spec_ref`）并把 7 条 ref 指向真实落地的 receipt —— 而这正是 G1 那条**未接线**
+  的检测器（`bin/ssot/sync-bet-digests.py`）本该在登记时就拦住的形态。
