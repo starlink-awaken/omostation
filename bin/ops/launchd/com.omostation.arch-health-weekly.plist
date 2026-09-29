@@ -18,7 +18,7 @@
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>cd /Users/xiamingxing/Workspace && bash bin/ops/architecture-health-weekly.sh</string>
+        <string>cd /Users/xiamingxing/Workspace &amp;&amp; bash bin/ops/architecture-health-weekly.sh</string>
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/xiamingxing/Workspace</string>
