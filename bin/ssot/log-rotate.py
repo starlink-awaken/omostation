@@ -129,17 +129,20 @@ def _candidate_files() -> tuple[list[Path], list[Path]]:
             continue
         for pattern in LOG_PATTERNS:
             for p in base.glob(pattern):
-                if p.name in SKIP_NAMES:
-                    continue
                 if p.name.startswith("."):
                     continue
-                # T16-02: 注册表 class=state 的路径硬性排除 (按路径, 不按文件名)
+                # T16-02: 注册表 class=state 的路径硬性排除 (按路径, 不按文件名)。
+                # **必须排在 SKIP_NAMES 之前** —— 否则被旧的文件名规则先拦下的文件
+                # 永远不会走到这里, --dry-run 会报 "0 state excluded" 而实际是靠
+                # 旧规则挡住的, 使报告与真实防护来源不符 (实测 receipts.jsonl 即如此)。
                 try:
                     resolved = p.resolve()
                 except OSError:
                     resolved = p
                 if resolved in state_paths or p in state_paths:
                     excluded.append(p)
+                    continue
+                if p.name in SKIP_NAMES:
                     continue
                 out.append(p)
     # 去重 (可能有重叠 glob)

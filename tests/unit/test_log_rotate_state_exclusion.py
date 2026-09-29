@@ -158,3 +158,35 @@ def test_state_exclusion_survives_symlinked_workspace(tmp_path: Path, monkeypatc
 
     assert state_file not in candidates, "软链 WORKSPACE 下排除失效 = 证据链会被清零"
     assert state_file in excluded
+
+
+def test_state_check_precedes_skip_names(tmp_path: Path, monkeypatch) -> None:
+    """state 判定必须排在 SKIP_NAMES 之前, 否则报告与真实防护来源不符.
+
+    回归场景: receipts.jsonl 同时被注册表(class=state)与旧 SKIP_NAMES 按文件名命中。
+    若 SKIP_NAMES 先判, 该文件会被静默丢弃且**不计入** excluded, 使 --dry-run 报
+    "0 state excluded" —— 看起来像注册表没生效, 实际靠旧规则挡着。
+    """
+    scanned = tmp_path / "delivery" / "resident-orchestrator"
+    scanned.mkdir(parents=True)
+    state_file = scanned / "receipts.jsonl"
+    state_file.write_text('{"evidence": "irreplaceable"}\n')
+
+    registry = tmp_path / ".omo" / "_truth" / "registry" / "log-surfaces.yaml"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text(
+        "schema: log-surfaces/v1\n"
+        "surfaces:\n"
+        f"  - path: {state_file}\n"
+        "    class: state\n",
+        encoding="utf-8",
+    )
+    # SKIP_NAMES 同时命中该文件名 —— 正是 receipts.jsonl 的真实处境
+    monkeypatch.setattr(log_rotate, "LOG_PATHS", [scanned])
+    monkeypatch.setattr(log_rotate, "SKIP_NAMES", {"receipts.jsonl"})
+    monkeypatch.setattr(log_rotate, "WORKSPACE", tmp_path)
+
+    candidates, excluded = log_rotate._candidate_files()
+
+    assert state_file not in candidates
+    assert state_file in excluded, "被 SKIP_NAMES 先拦下时不得从 state 报告中消失"
