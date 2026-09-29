@@ -36,18 +36,24 @@ fixture_init() {
   export GIT_COMMITTER_NAME=fixture GIT_COMMITTER_EMAIL=fixture@example.test
   export GIT_ALLOW_PROTOCOL=file
 
+  # `-b main` on BOTH the bare remote and the seed: the fixture must not depend on the
+  # host's `init.defaultBranch`.  Without it the bare remote's HEAD points at the local
+  # default (e.g. `master` on CI runners), so every later `git clone` lands on an unborn
+  # branch; `advance_remote`'s push is then rejected, the script under test sees "nothing
+  # pending", and T2-T7 fail -- silently, with rc=0 instead of the expected non-zero.
+  # Measured 2026-09-29: CI gave PASS=19/FAIL=17, reproduced exactly on macOS by running
+  # this suite with init.defaultBranch=master.
   local name seed path remote
   for name in alpha beta gamma delta; do
-    "$REAL_GIT" init -q --bare "$REMOTES/$name.git"
+    "$REAL_GIT" init -q --bare -b main "$REMOTES/$name.git"
     seed="$FIXTURE_ROOT/seed-$name"
-    "$REAL_GIT" clone -q "file://$REMOTES/$name.git" "$seed"
+    "$REAL_GIT" init -q -b main "$seed"
     (
       cd "$seed" || exit 1
       printf 'init %s\n' "$name" > state.txt
       "$REAL_GIT" add state.txt
       "$REAL_GIT" commit -qm "init $name"
-      "$REAL_GIT" branch -M main
-      "$REAL_GIT" push -q origin main
+      "$REAL_GIT" push -q "file://$REMOTES/$name.git" main
     )
   done
 
@@ -81,7 +87,7 @@ index_clean() { [ -z "$("$REAL_GIT" -C "$SUPER" diff --cached --name-only)" ]; }
 
 advance_remote() {
   local name="$1" clone="$FIXTURE_ROOT/advance-$1"
-  "$REAL_GIT" clone -q "file://$REMOTES/$name.git" "$clone"
+  "$REAL_GIT" clone -q -b main "file://$REMOTES/$name.git" "$clone"
   (
     cd "$clone" || exit 1
     "$REAL_GIT" config user.name fixture
