@@ -38036,6 +38036,70 @@ bets:
         evidence: {}
     overall_state: evaluating
   campaigns: null
+- id: BET-Y2Q4-T4-05
+  title: 业务第三单 — 卫健委域三份 docx 的结构化审阅支持（文档审阅环首跑）
+  goal: 'principal 批准文档审阅形态。三份真实文档实勘（1,922/2,899/7,540 字）：① 信息科五年 工作总结（2000 字报送稿，实 1,922）→
+    审阅意见（字数核对余量 78、结构映射、亮点、 与 144 号纪要新部署衔接建议）；② 心理健康平台申报材料审核意见 → 第二双眼睛复核 （预算算术独立复算 163+157=320
+    / 90.55×1.8≈163、材料清单与汇编交叉核对、遗漏建议）； ③ 申报材料清单及模板汇编（7,540 字）→ 可复用申报完整性核对清单（markdown
+    checkbox， 落 _templates/）。三份产物只落 principal Documents 域（_drafts/ ×2 + _templates/
+    ×1）， 仓库零正文。
+
+    '
+  status: pending
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: '三份产物只落 principal Documents 域，仓库零正文；审阅意见标注"供 principal 参考采纳" 不直接改写原报送稿；预算复核如实呈现（对/错/存疑）不臆断。
+
+    '
+  non_goals:
+  - 不改写原报送稿/审核意见（只出并行审阅产物）
+  - 不把文档正文提交进 omostation 仓
+  - 不做报送/提交动作（principal 决定）
+  done_when:
+  - 五年总结审阅意见落 _drafts/（字数核对含余量结论 + 结构映射 + 衔接建议）
+  - 审核意见复核笔记落 _drafts/（预算独立复算 + 交叉核对 + 遗漏建议）
+  - 申报核对清单落 _templates/（checkbox 化可复用）
+  - 报告/retro 入仓零正文；principal 采纳节留槽
+  - lint 0 / gac-local-gate PASS
+  verify:
+  - cmd: 检查 _drafts/ 与 _templates/ 三产物落位
+    expect: 3/3
+  - cmd: 独立复算 163+157 与 90.55×1.8
+    expect: =320 / ≈163（与审核意见结论一致或如实指出差异）
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/reports/business-3rd-doc-review-2026-09-28.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-28-doc-review-loop.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T4-05.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-doc-review-loop.md
+    spec_version: 1.0.0
+    content_digest: sha256:5bb9440364ef119ab802226ca8b14d31eebc12e9b7b64e71a5cd539047a70bb8
+    decision_ref: decision://accepted/BET-Y2Q4-T4-05
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -38174,7 +38238,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 506
+  total_bets: 507
   windows:
   - Y1Q1
   - Y1Q2
