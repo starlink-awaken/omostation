@@ -442,6 +442,80 @@ release_diagnose() {
   return 0
 }
 
+# merge 收尾的主仓镜像同步: 切 main + ff-only 拉取.
+#
+# 为什么必须 best-effort (2026-09-29 加固): PR 合并成功后, 本地镜像陈旧只是**次要问题**,
+# 但旧实现用 `set -euo pipefail` 在这里直接退出 ⇒ 后面的清理段一步都不执行,
+# worktree / 本地分支 / branch-claim 三者全残留, 每次都要人肉补 `release`.
+# 已实证三类触发源 (都是"环境态"而非"合并失败"): 僵尸 .git/index.lock、主区脏树、
+# 本地 main 被 reset 到特性分支导致 `--ff-only` 必失败.
+#
+# 且**绝不做破坏性回退** (不 reset / 不 merge): 本地 main 可能正载着并发 agent 的在制提交.
+# 契约: tests/gac/test-gac-worktree-canonical-repo.sh 断言脚本内含
+#       `git pull --ff-only "$ROOT_REMOTE" main` —— 该字面量必须保留.
+sync_local_main_best_effort() {
+  local out rc=0
+  if ! out=$(git checkout main 2>&1); then
+    echo "⚠️  本地镜像未同步: git checkout main 失败" >&2
+    printf '%s\n' "$out" | tail -2 | sed 's/^/     /' >&2
+    rc=1
+  elif ! out=$(git pull --ff-only "$ROOT_REMOTE" main 2>&1); then
+    echo "⚠️  本地镜像未同步: git pull --ff-only 失败 (PR 已合并, 不影响交付)" >&2
+    printf '%s\n' "$out" | tail -3 | sed 's/^/     /' >&2
+    rc=1
+  fi
+  [ "$rc" -eq 0 ] && return 0
+
+  local ahead behind
+  ahead=$(git rev-list --count origin/main..main 2>/dev/null || echo "?")
+  behind=$(git rev-list --count main..origin/main 2>/dev/null || echo "?")
+  echo "     本地 main: 领先 origin/main ${ahead} 个 / 落后 ${behind} 个" >&2
+  if [ "$ahead" != "0" ] && [ "$ahead" != "?" ]; then
+    echo "     ⚠️  本地 main 载有 main 之外的提交 (可能是并发 agent 在制) —— 本脚本不会 reset。" >&2
+    echo "        人工修复 (确认无在制改动后再动): bash bin/gac/sync-main.sh" >&2
+    git log --oneline origin/main..main 2>/dev/null | head -3 | sed 's/^/        /' >&2
+  fi
+  return 1
+}
+
+# merge 收尾: 移除 worktree + 删本地分支 + 清 branch-claim.
+#
+# 抽成独立函数 (2026-09-29) 的理由有二:
+#   ① 可独立回归 (tests/test_gac_worktree_merge_cleanup.sh 用夹具直接调它, 不必绕过
+#      resolve_root_remote 的 canonical 守卫);
+#   ② 职责清晰: 「释放与清账」与「本地镜像同步」是两件事, 后者失败不得阻断前者.
+# 前置: 调用方必须已跑 fail-closed 校验 (verify_clean_for_force_removal / remove_verified_pasw).
+# 返回: 0 = worktree 已释放 (分支与 claim 已尽力清理); 1 = worktree 未移除 (保留分支与 claim).
+post_merge_release() {
+  local session="$1" branch="$2" wt="$3"
+  # BET-Y2Q4-T10-209: delivery-state merge-rescue (best-effort, 永不阻断移除)
+  rescue_delivery_state "$wt" || true
+  if ! git worktree remove --force "$wt" 2>&1; then
+    echo "⚠️  worktree 移除失败 (保留分支与 claim, 稍后手动 release): $wt" >&2
+    return 1
+  fi
+  echo "✅ worktree 释放: $wt"
+  # 删本地分支 (远程已由 gh --delete-branch 删除). 失败不致命.
+  git branch -D "$branch" 2>&1 | tail -1 || true
+  # claim 清理: 与 release 对齐.
+  # 旧版 merge **从不**清理 ⇒ `.omo/_delivery/branch-claims/<session>.json` 每次残留,
+  # 必须再跑一次 release 才清 (2026-09-28 E2-2 / 09-29 E2-3 两次实证).
+  pasw_claim_clean "$session"
+  if [ -f "$WS_ROOT/bin/gac/swarm-discipline-cli.py" ]; then
+    python3 "$WS_ROOT/bin/gac/swarm-discipline-cli.py" branch-release \
+      --session "$session" >/dev/null 2>&1 || true
+  fi
+  echo "✅ claim 已清: $session"
+  return 0
+}
+
+# 单元测试/复用入口: 只装载函数与环境, 不执行命令分发.
+#   GAC_WORKTREE_LIB_ONLY=1 source bin/gac/gac-worktree.sh
+# (各 case 分支都以显式 exit 结束, 故默认无法 source; 正常执行不受此开关影响.)
+if [ "${GAC_WORKTREE_LIB_ONLY:-0}" = "1" ]; then
+  return 0 2>/dev/null || true
+fi
+
 case "$cmd" in
   release-diagnose)
     if [ "$session" = "--help" ]; then
@@ -971,22 +1045,28 @@ except Exception: print('')" 2>/dev/null || true)"
         exit 1
       fi
       echo "✅ PR #$pr_number 已 squash 合并"
-      # 主仓切 main + 拉最新 (含刚合并的)
-      git checkout main 2>&1 | tail -1
-      git pull --ff-only "$ROOT_REMOTE" main 2>&1 | tail -2
+      # 主仓切 main + 拉最新 (含刚合并的) —— **best-effort**: 本地镜像失败不得阻断清理
+      # (旧版在此 exit ⇒ worktree/分支/claim 全残留; 见 helper 注释的三类实证触发源)
+      LOCAL_SYNC_RC=0
+      sync_local_main_best_effort || LOCAL_SYNC_RC=1
       # Fail-closed: verify clean before --force (plain remove fails on initialized submodules)
       verify_clean_for_force_removal "$wt" || exit 1
       # PASW: only remove verified Git worktrees; no filesystem fallback.
       remove_verified_pasw "$wt" || exit 1
       # BET-Y2Q4-T10-209: delivery-state merge-rescue (best-effort, 永不阻断移除)
       rescue_delivery_state "$wt" || true
-      # 释放 worktree (verified clean; --force needed for initialized submodules)
-      git worktree remove --force "$wt" 2>&1
-      echo "✅ worktree 释放: $wt"
-      # 删本地分支 (远程已 --delete-branch)
-      git branch -D "$branch" 2>&1 | tail -1
+      # 释放与清账 (worktree + 本地分支 + claim) —— 见 post_merge_release 注释
+      WT_RC=0
+      post_merge_release "$session" "$branch" "$wt" || WT_RC=1
       echo ""
-      echo "🎉 merge 完成: PR #$pr_number → main, worktree + 分支已清理"
+      if [ "$LOCAL_SYNC_RC" -eq 0 ] && [ "$WT_RC" -eq 0 ]; then
+        echo "🎉 merge 完成: PR #$pr_number → main, worktree + 分支 + claim 已清理"
+      else
+        echo "⚠️  PR #$pr_number 已合并, 但收尾有未完成项:"
+        [ "$LOCAL_SYNC_RC" -ne 0 ] && echo "     · 本地 main 未同步 (见上方诊断; 修复: bash bin/gac/sync-main.sh)"
+        [ "$WT_RC" -ne 0 ] && echo "     · worktree 未移除: $wt (修复: bash bin/gac/gac-worktree.sh release $session)"
+        echo "   已尽力完成其余清理; 上面的命令不会重跑合并."
+      fi
     fi
     ;;
 
