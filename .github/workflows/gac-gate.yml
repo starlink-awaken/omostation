@@ -112,6 +112,14 @@ jobs:
       - name: CR-HARNESS-MOF — MOF 约束联动检查 (required)
         # 8 条 Agent-MOF 规则接入 Harness 全生命周期
         run: python3 bin/gac/harness-mof-bridge.py --state
+      - name: shell 测试套件 (tests/**/*.sh)
+        # 原本**没有任何执行入口** —— CI 不跑、pytest 不收集、Makefile 不调 ⇒ 回归保护为零
+        # (2026-09-29 实测: 4 个已烂掉却长期无人知)。
+        # 纳入/排除规则见 tests/run-shell-suites.sh 与 tests/shell-suites.exclude
+        # (新测试默认自动纳入; 排除项须写原因, 且 runner 会校验名单不腐烂)。
+        # 放 required job 里且**阻塞**: 红测试就该拦住合并; 本套件实测 ~25s。
+        # 位置刻意留在 immutable sandwich 之外 (它不写工作树, 但也不必进那条不变量).
+        run: bash tests/run-shell-suites.sh
       - name: immutable checkout precondition
         run: |
           git diff --exit-code
