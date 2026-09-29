@@ -38303,8 +38303,13 @@ bets:
       verbatim. Prerequisite: projects/omo must be initialized, else three omo-side
       cases raise FileNotFoundError.'
   - cmd: python3 bin/plan/bet-ledger.py lint
-    expect: OK -- 509 bets, 16 tracks, no errors (the inserted bet and meta.total_bets
-      stay consistent; no new error).
+    expect: 'No ERROR line names BET-Y2Q4-T10-212 or BET-Y2Q4-T10-214, and meta.total_bets == len(bets).
+        Both are per-owner judgements on purpose: the previous wording (''OK -- <N> bets ... no errors'')
+        asserted a repo-wide property that any concurrent mint can falsify without this batch being
+        wrong - measured on main after #4564, lint reports 10 ERRORs all owned by BET-Y2Q4-T4-06 (SPEC_FILE_MISSING
+        plus seven COMPLETION_FILE_REF_MISSING, which then derive OVERALL_STATE_MISMATCH and BET_DONE_REQUIRES_DELIVERY_ACCEPTED),
+        while the two bets repaired here report 0. <N> itself is not a constant either: 509 at #4561,
+        510 after #4564.'
   - cmd: git show --numstat --format= b24c353c3 -- docs/plans/3y-bet-ledger.yaml
     expect: 'Registration batch (landed as b24c353c3): only the BET-Y2Q4-T10-212 verify block,
       its six report receipt sha256 lines, and the inserted BET-Y2Q4-T10-214 entry appear; zero
@@ -38313,12 +38318,13 @@ bets:
     expect: no whitespace errors.
   - cmd: make gac-local-gate
     expect: no new hard failures relative to baseline.
-  - cmd: git diff --numstat b24c353c3..HEAD -- docs/plans/3y-bet-ledger.yaml
-    expect: 'Closeout batch: only BET-Y2Q4-T10-214''s own entry changes - write_surfaces +2
-      (its closeout report and retro), the completion_evidence matrix (overall_state evaluating
-      -> delivery_accepted, engineering NOT_STARTED -> VERIFIED, operational -> PROVEN, 7 receipt
-      keys), status -> done and done_at added; zero added or deleted ''- id:'' lines; meta.total_bets
-      stays == len(bets).'
+  - cmd: python3 bin/plan/bet-ledger.py show BET-Y2Q4-T10-214
+    expect: 'Closeout batch judged by this entry''s own state, not by a diff scope: status done, done_at
+        2026-09-29, seven verify items, six write_surfaces, and a completion_evidence block whose overall_state
+        evaluates to delivery_accepted. The previous wording was ''git diff --numstat b24c353c3..HEAD
+        -- <ledger>'' and claimed only this entry changes; that is unverifiable after merge, because
+        main accumulates concurrent work between the batch base and the merged tree (measured: BET-Y2Q4-T4-06
+        minted by #4564), so the numstat legitimately carries lines this batch did not write.'
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-29-bet-214-closeout-evidence-integrity.md
@@ -38341,32 +38347,115 @@ bets:
               ref: git://origin/main@b24c353c37f1a1b97fc5f562b55f401a0641744f
             tests:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
             diff:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
             rollback:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
       operational:
         status: PROVEN
         evidence:
             live_canary:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
             fresh_receipt:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
             replay:
               ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-214.md
-              sha256: sha256:569231a402875312761d8d33c76fdffe2d20f1fba7bbd7b33666adc5a6d50d55
+              sha256: sha256:37dcdb5ac6da21b04c92ca4d0a26fe7d9a2db68cbba7a48b02bd53c4f1a3a5dc
             cleanup:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
       value:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  value_indicator_policy: false
+- id: BET-Y2Q4-T4-06
+  title: 业务第四单 — 五年总结四节补写建议稿（网络安全/统计/正版化/视频会议）
+  goal: 'T4-05 审阅发现二/三/四/五节空壳，素材底座四节俱全（含字数建议 300/250/250/250 与口径决策 13 条）。产出四节补写建议稿落
+    Documents 域 _drafts/：网络安全（46 系统/ 177 实例、勒索病毒链 21 个月整改六阶段、护网 2025）、卫生健康统计（第七次卫生服务
+    调查、统计督察零违规）、软件正版化（2022 市检、四化建设）、视频会议保障（23·7 洪灾、 2024/2025 场次）。匹配口径决策 13 条（委工委表述、模糊化条款等）。不直接改写原报送稿，
+    principal 对照采纳后自行合并。仓库零正文。
+
+    '
+  status: done
+  done_at: 2026-09-29
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: '补写稿只落 principal Documents 域 _drafts/，仓库零正文；不直接改写原报送稿； 素材底座没有的细节不臆造（标注"按素材底座口径"待
+    principal 核）。
+
+    '
+  non_goals:
+  - 不改写原报送稿 docx
+  - 不把总结正文提交进 omostation 仓
+  - 不虚构场次数字/四化定义等素材底座没有的细节
+  done_when:
+  - 四节补写稿落 _drafts/（合计 ~1050 字 + 字数分配说明）
+  - 逐节带素材来源锚点 + 口径决策匹配标注
+  - 报告/retro 入仓零正文；principal 采纳节留槽
+  - lint 0 / gac-local-gate PASS
+  verify:
+  - cmd: 检查 _drafts/ 补写稿四节齐全
+    expect: 4/4 且字数分配与素材底座建议一致
+  - cmd: git grep 确认仓内无总结正文
+    expect: 0 命中
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - docs/reports/business-4th-summary-sections-2026-09-28.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-28-summary-four-sections.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-summary-four-sections.md
+    spec_version: 1.0.0
+    content_digest: sha256:d4455741cd5ca3dc01202d7d3d1128157241935f31126eba222e71cbf2a050aa
+    decision_ref: decision://accepted/BET-Y2Q4-T4-06
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@fedc79e08e02a2689d78f104b46465c6214bb306
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+          tests:
+            ref: receipt://docs/reports/business-4th-summary-sections-2026-09-28.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-06.md
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >-
+            价值门槛 = principal 采纳合并进 docx。直接解决了 T4-05 发现的
+            最大报送事故风险（四空章节）。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
@@ -38506,7 +38595,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 509
+  total_bets: 510
   windows:
   - Y1Q1
   - Y1Q2
