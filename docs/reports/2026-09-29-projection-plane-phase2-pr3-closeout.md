@@ -285,12 +285,16 @@ git 跟踪面：回滚需与 `.gitignore` 同批 revert（PR-2 的摘库与忽�
      **`ok=True, reasons=[]`**（绑定 run `20260928T153338Z-project-code-change-15187bd7`、
      北极星文档在位、retro 在盘）。**不改共享闸来让自己通过**；D0 缺"删除型交付物"这一格
      登记为后续项。
+     实测边界：retro 入库后再跑一次**不带** `--force` 的 `complete`，D0 报出的恰好只有这三件
+     （其余 23 条 surface 全部 `root index`）—— 冲突面就是摘库交付物本身，不是清单没整理干净。
      `--force` 不会把红留给 CI：`.github/workflows/bet-done-gate.yml:38-59` 的硬失败只有
      `BASE_LEDGER_UNREADABLE` / `BET_DONE_*` / `META_TOTAL_BETS_DRIFT`，都不查 D0 —— 实测读源码，
      非推断。
-  4. **lane 分批**：docs lane（本报告 + `.omo/_knowledge/retros/BET-Y2Q4-T10-212.md`）一笔，
-     governance_state lane（`docs/plans/3y-bet-ledger.yaml`，由 `complete` 写 `status: done` +
-     `done_at`）一笔；`.omo/state/system.yaml` 仍是 hook 的纯时间戳产物，不进任何一笔。
+  4. **lane 分批**（按 `bin/change-lane-check.py` 的实测分类，不是按直觉）：本报告 = `docs`
+     一笔，`.omo/_knowledge/retros/BET-Y2Q4-T10-212.md` = `governance_state` 一笔，
+     `docs/plans/3y-bet-ledger.yaml`（由 `complete` 写 `status: done` + `done_at`）= `docs_data`
+     一笔 —— 台账被分类器判为 `docs_data` 而非 `governance_state`，这是这一轮才测出来的；
+     `.omo/state/system.yaml` 仍是 hook 的纯时间戳产物，不进任何一笔。
   5. **evidence matrix**：engineering `VERIFIED`（`merged_reachable_commit:
      git://origin/main@ebea1fd187dad6266c0aecbba528f240a8da9a62`，tests/diff/rollback 三键指向
      本报告）；operational `PROVEN`（live_canary / fresh_receipt / cleanup 指向本报告，
@@ -299,4 +303,7 @@ git 跟踪面：回滚需与 `.gitignore` 同批 revert（PR-2 的摘库与忽�
   6. **workflow run**：PR-3 代码面 `20260929T044531Z-project-code-change-e23ad439`、
      收尾文档面 `20260929T073730Z-project-doc-change-3a7a7ec8`；两者的 `closeout` 在本 PR
      合并后执行，不在合并前声称已闭环。
+  7. **done-transition 的 CI 侧实测**：`bet-ledger.py lint` 在置 `done` 之后 =
+     `OK -- 506 bets, 16 tracks, no errors`（bet 总数未变，故 `META_TOTAL_BETS_DRIFT` 不触发；
+     `BET_DONE_*` 零命中；残留的 WARN 全是历史 BET 的 squash-merge ancestry 提示，非本 BET）。
 
