@@ -21,11 +21,12 @@ def test_mail_daemon_status_stopped(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     """验证守护进程停止状态下的诊断输出。"""
     fake_pid_file = tmp_path / "daemon.pid"
     fake_heartbeat = tmp_path / "heartbeat.jsonl"
-    fake_inbox_tasks = tmp_path / "inbox-tasks.json"
+    import deadline_tracker
 
+    fake_ledger = tmp_path / "tracked-tasks.json"
+    monkeypatch.setattr(deadline_tracker, "TASKS_FILE", fake_ledger)
     monkeypatch.setattr(mail_daemon, "PID_FILE", fake_pid_file)
     monkeypatch.setattr(mail_daemon, "HEARTBEAT", fake_heartbeat)
-    monkeypatch.setattr(mail_daemon, "COCKPIT_INBOX_TASKS", fake_inbox_tasks)
 
     st = mail_daemon.get_status()
     assert st["daemon"] == "mail_daemon"
@@ -39,15 +40,17 @@ def test_mail_daemon_status_running(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     """验证当 PID 存活时，诊断报告 running 状态。"""
     fake_pid_file = tmp_path / "daemon.pid"
     fake_heartbeat = tmp_path / "heartbeat.jsonl"
-    fake_inbox_tasks = tmp_path / "inbox-tasks.json"
+    fake_ledger = tmp_path / "tracked-tasks.json"
 
     my_pid = os.getpid()
     fake_pid_file.write_text(str(my_pid), encoding="utf-8")
     fake_heartbeat.write_text(json.dumps({"ts": "2026-09-21T07:00:00Z", "mails": 5, "tasks": 1, "drafts": 1}) + "\n", encoding="utf-8")
 
+    import deadline_tracker
+
     monkeypatch.setattr(mail_daemon, "PID_FILE", fake_pid_file)
     monkeypatch.setattr(mail_daemon, "HEARTBEAT", fake_heartbeat)
-    monkeypatch.setattr(mail_daemon, "COCKPIT_INBOX_TASKS", fake_inbox_tasks)
+    monkeypatch.setattr(deadline_tracker, "TASKS_FILE", fake_ledger)
 
     st = mail_daemon.get_status()
     assert st["running"] is True
@@ -83,29 +86,31 @@ def test_emit_signal_ingressed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     assert recorded["event_type"] == "SignalIngressed"
 
 
-def test_project_to_cockpit_inbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    """验证待办与初稿原子投影到 Cockpit inbox-tasks.json 且支持去重。"""
-    fake_inbox = tmp_path / "inbox-tasks.json"
-    monkeypatch.setattr(mail_daemon, "COCKPIT_INBOX_TASKS", fake_inbox)
+def test_register_tracked_task(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """邮件任务落 deadline-tracker 台账(唯一被消费的督办台账), 且去重、中文期限可解析。"""
+    import deadline_tracker
+
+    fake_ledger = tmp_path / "tracked-tasks.json"
+    monkeypatch.setattr(deadline_tracker, "TASKS_FILE", fake_ledger)
 
     fake_mail = MagicMock()
-    fake_mail.subject = "新药审批流程改革征求意见稿"
-    fake_mail.sender = "fda-review@gov.cn"
-    fake_cls = {"category": "任务", "priority": "normal"}
-    fake_task = {"task_type": "forward_notice", "summary": "征求科室意见"}
+    fake_mail.subject = "关于报送2026年第三季度自查数据的通知"
+    fake_mail.sender = "yizheng@wjw.example.gov.cn"
+    fake_cls = {"category": "任务", "priority": "high"}
+    fake_task = {"task_type": "收集数据", "deadline": "2026年10月12日前"}
 
-    # 第一次投影
-    mail_daemon._project_to_cockpit_inbox(fake_mail, fake_cls, fake_task, {"ok": True})
-    assert fake_inbox.exists()
-    data = json.loads(fake_inbox.read_text(encoding="utf-8"))
-    assert len(data["tasks"]) == 1
-    assert data["tasks"][0]["subject"] == "新药审批流程改革征求意见稿"
-    assert data["tasks"][0]["status"] == "pending_review"
+    mail_daemon._register_tracked_task(fake_mail, fake_cls, fake_task, {"ok": True})
+    tasks = deadline_tracker.load_tasks()
+    assert len(tasks) == 1
+    assert tasks[0]["deadline"] == "2026-10-12"
+    assert tasks[0]["status"] == "pending"
 
-    # 第二次重复投影（防重入）
-    mail_daemon._project_to_cockpit_inbox(fake_mail, fake_cls, fake_task, {"ok": True})
-    data2 = json.loads(fake_inbox.read_text(encoding="utf-8"))
-    assert len(data2["tasks"]) == 1
+    mail_daemon._register_tracked_task(fake_mail, fake_cls, fake_task, {"ok": True})  # 去重
+    assert len(deadline_tracker.load_tasks()) == 1
+
+    mail_daemon._register_tracked_task(MagicMock(subject="另一通知", sender="x@y"), fake_cls, {"task_type": "提交报告"}, None)
+    rows = deadline_tracker.load_tasks()
+    assert len(rows) == 2 and rows[1]["deadline"] == ""
 
 
 def test_resident_routes_has_signal_ingressed():
