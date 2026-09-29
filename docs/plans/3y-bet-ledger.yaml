@@ -37997,10 +37997,11 @@ bets:
   - .gitignore:295 的死规则 !.omo/state/system_health.yaml（被 :395 精确忽略覆盖）删除。
   - projects/omo/tests/test_omo_ingress_state.py 断言改为「legacy 不再被写」并绿。
   verify:
-  - cmd: uv run --with pyyaml python -m pytest tests/unit/test_projection_reader_resolution.py -q
-    expect: 三件投影 absent≠stale、外置 state_root、epoch 老化与 JSON generated_at 均通过；当前
-      工作副本中的 state-freshness/meta-doctor 原始命令另有既存 stale 投影与 ritual 警告，不能用其
-      非零退出码替代 fresh-clone 行为断言，详见 PR-3 closeout report §10
+  - cmd: uv run --quiet --with pyyaml --with pytest python -m pytest tests/unit/test_projection_reader_resolution.py -q
+    expect: 18 passed —— 三件投影 absent≠stale、外置 state_root、epoch 老化与 JSON generated_at 均通过。
+      前置条件 projects/omo 已 init（未 init 时 3 条 omo 用例 FileNotFoundError ⇒ 3 failed / 15 passed，
+      非回归）。当前工作副本的 state-freshness/meta-doctor 原始命令另有既存 stale 投影与 ritual 警告，
+      不能用其非零退出码替代 fresh-clone 行为断言，详见 PR-3 closeout report §9 第 1、8、9 条
   - cmd: python3 bin/gac/check-dual-track-purity.py
     expect: exit 0（collab-dualtrack.yaml 仍 tracked，本轮不碰）
   - cmd: python3 bin/ssot/current-state-coherence.py --json
@@ -38031,28 +38032,28 @@ bets:
               ref: git://origin/main@ebea1fd187dad6266c0aecbba528f240a8da9a62
             tests:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:2a7ead19d56e095f3a19de011908c9cedb4b5bc36b659def3255c0fa83de1c1c
             diff:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:2a7ead19d56e095f3a19de011908c9cedb4b5bc36b659def3255c0fa83de1c1c
             rollback:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:2a7ead19d56e095f3a19de011908c9cedb4b5bc36b659def3255c0fa83de1c1c
       operational:
         status: PROVEN
         evidence:
             live_canary:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:2a7ead19d56e095f3a19de011908c9cedb4b5bc36b659def3255c0fa83de1c1c
             fresh_receipt:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:2a7ead19d56e095f3a19de011908c9cedb4b5bc36b659def3255c0fa83de1c1c
             replay:
               ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-212.md
               sha256: sha256:61d1de905285fdd3ecb6821a2d8c2d692620ef0e811a973b3579cc1d26dfc128
             cleanup:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0e3c4bcbbbd09a4df0d35a0334534b78464adf31786b16ef22f9b14572f68a9b
+              sha256: sha256:2a7ead19d56e095f3a19de011908c9cedb4b5bc36b659def3255c0fa83de1c1c
       value:
         status: NOT_PROVEN
         evidence: {}
