@@ -35,6 +35,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "lib"))
+from repo_root import projection_read, state_root as runtime_state_root  # noqa: E402
+
 
 def _utc_now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -84,7 +87,9 @@ def collect_runtime_health(ws_root: Path) -> tuple[float | None, dict]:
     """
     import yaml
 
-    health_yaml = ws_root / ".omo" / "state" / "system_health.yaml"
+    health_yaml = projection_read(
+        ws_root, "system_health", registry_root=ws_root, state_root=runtime_state_root()
+    )[0]
     if not health_yaml.is_file():
         return (None, {})
     try:
@@ -674,20 +679,31 @@ def _write_text_if_changed(path: Path, payload: str, *, normalize=None) -> bool:
     return True
 
 
-def _health_history_dir(health_yaml_path: Path) -> Path:
-    """Anchor the health time series at ``<…>/state/history``.
+HEALTH_HISTORY_RELATIVE = Path(".omo") / "state" / "history"
 
-    The projection moves between ``state/`` and ``state/runtime/`` (ADR-0129),
-    so deriving the history directory from the file's depth would silently
-    relocate the JSONL series.
+
+def _health_history_dir(health_yaml_path: Path, *, root: Path | None = None) -> Path:
+    """Anchor the health time series at ``<root>/.omo/state/history``.
+
+    历史面的归属是**根**, 不是投影文件的位置: health.yaml 在 ``state/`` 与
+    ``state/runtime/`` 之间迁移过 (ADR-0129), 从投影位置反推会让 JSONL 序列跟着
+    静默搬家 —— "上周健康分是多少"就再也查不到了 (spec §2.4 / done_when-4)。
+    所以生产路径恒传 ``root``, 目录名一次算定, 与投影落在哪一层无关。
+
+    省略 ``root`` 时才退回按 ``state`` 目录名反推: 那是仓外调用方 (临时目录里
+    没有 ``.omo``, 见 tests/test_compass_radar_history.py) 唯一的入口。
     """
+    if root is not None:
+        return root / HEALTH_HISTORY_RELATIVE
     for parent in health_yaml_path.parents:
         if parent.name == "state":
             return parent / "history"
     return health_yaml_path.parent / "history"
 
 
-def _append_health_history(health_yaml_path: Path, report: dict[str, Any]) -> None:
+def _append_health_history(
+    health_yaml_path: Path, report: dict[str, Any], *, root: Path | None = None
+) -> None:
     """Append a compact snapshot to .omo/state/history/health.jsonl.
 
     The current health.yaml is regenerated on every radar run, so its
@@ -712,7 +728,7 @@ def _append_health_history(health_yaml_path: Path, report: dict[str, Any]) -> No
     """
     import json as _json
     try:
-        history_dir = _health_history_dir(health_yaml_path)
+        history_dir = _health_history_dir(health_yaml_path, root=root)
         history_dir.mkdir(parents=True, exist_ok=True)
         history_file = history_dir / "health.jsonl"
         snapshot = {
@@ -1006,7 +1022,7 @@ def main() -> int:
 
     # 历史快照: append 一个轻量记录到 .omo/state/history/health.jsonl
     # (P79 治本 — 让 trend 文档和未来 dashboard 有真实时间序列)
-    _append_health_history(output, report)
+    _append_health_history(output, report, root=ws_root)
 
     # 同步刷新 system.yaml 的健康分相关字段 (避免 SSOT 偏差告警)
     sync_system_yaml(

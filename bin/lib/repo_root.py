@@ -10,6 +10,11 @@
   写仓外(机器级)路径      → 必须 canonical_root(), 锚定规范检出
   写运行态(ledger/state)  → state_root(), 由 profile 声明, 未声明时等于 code_root()
   定位运行时安装位        → install_root(), 未落位返回 None; 它只回答"在哪", 不改任何解析结果
+  读运行态投影(health/brief/governance-data…) →
+    projection_read(code_root, name, state_root=state_root()),
+                            映射单源自 .omo/_truth/registry/runtime-projections.yaml,
+                            不要写死 legacy 路径 —— ADR-0129 Phase 2 之后 legacy 那份
+                            在 fresh checkout 里根本不存在, 在生产机上又是冻结的。
 
 第四条 placement 判据 (BET-Y2Q4-T10-209, 交付运行态):
   机器级、长于单检出的交付运行态 (delivery runs/locks/events, 即
@@ -36,7 +41,7 @@ import argparse
 import json
 import os
 from collections.abc import Sequence
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 MARKER = Path("docs") / "project-registry.yaml"
 
@@ -46,6 +51,17 @@ LEDGER_RELATIVE = Path("runtime") / "omo" / "event-ledger.sqlite3"
 
 INSTALL_ROOT_ENV = "OMOSTATION_INSTALL_ROOT"
 INSTALL_ROOT_RELATIVE = Path(".local") / "opt" / "omostation"
+
+PROJECTIONS_REGISTRY_RELATIVE = Path(".omo") / "_truth" / "registry" / "runtime-projections.yaml"
+
+# Used when the registry itself is not in this checkout (fresh clone of a tool
+# that ships without .omo). Same values runtime-projections.yaml declares today.
+_PROJECTION_FALLBACK_RELS: dict[str, tuple[str, str]] = {
+    "health": (".omo/state/runtime/health.yaml", ".omo/state/health.yaml"),
+    "system_health": (".omo/state/runtime/system_health.yaml", ".omo/state/system_health.yaml"),
+    "governance_data": (".omo/state/runtime/governance-data.json", ".omo/_control/governance-data.json"),
+    "brief": (".omo/state/runtime/brief.md", "BRIEF.md"),
+}
 
 
 def code_root() -> Path:
@@ -103,6 +119,88 @@ def install_root() -> Path | None:
     return candidate if (candidate / MARKER).is_file() else None
 
 
+def _projection_registry(registry_root: Path | None = None) -> dict[str, tuple[str, str]]:
+    """投影登记表: name → (canonical_rel, legacy_rel)。
+
+    只读 canonical / legacy 两个键, 且不 import yaml —— meta-doctor 与 cron 用裸
+    python3 跑, 依赖一旦变成 pyyaml 就会在那里 ImportError。登记表格式由
+    tests/unit/test_projection_reader_resolution.py 拿 yaml.safe_load_all 逐名对拍钉住。
+    """
+    path = (registry_root or code_root()) / PROJECTIONS_REGISTRY_RELATIVE
+    if not path.is_file():
+        return dict(_PROJECTION_FALLBACK_RELS)
+
+    table: dict[str, tuple[str, str]] = {}
+    name: str | None = None
+    in_block = False
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        indent = len(line) - len(line.lstrip())
+        key, sep, value = line.strip().partition(":")
+        if not sep:
+            continue
+        value = value.strip().strip('"').strip("'")
+        if indent == 0:
+            in_block, name = (key == "projections"), None
+            continue
+        if not in_block:
+            continue
+        if indent == 2:
+            name = key
+            table[name] = ("", "")
+        elif indent == 4 and name and key in ("canonical", "legacy"):
+            canonical, legacy = table[name]
+            table[name] = (value, legacy) if key == "canonical" else (canonical, value)
+    return {k: v for k, v in table.items() if all(v)}
+
+
+def projection_rels(name: str, *, registry_root: Path | None = None) -> tuple[str, str]:
+    """已登记投影的 (canonical, legacy) 相对路径。
+
+    返回相对路径而不是绝对路径: 每个读取方把自己那一侧的根 (--workspace /
+    state_root / code_root) 锚上去, 于是映射只有一处真源, 解析仍跟着 profile 走。
+    未登记的名字抛 KeyError —— 与 omo_paths.projection_path 同口径, 静默回退会把
+    读错文件伪装成读到了。
+    """
+    rels = _projection_registry(registry_root).get(name)
+    if rels is None:
+        raise KeyError(f"Unknown runtime projection: {name}")
+    return rels
+
+
+def projection_name_for(relative: str | Path, *, registry_root: Path | None = None) -> str | None:
+    """该相对路径若是某个投影的 legacy 位, 返回投影名; 否则 None。"""
+    target = PurePosixPath(str(relative))
+    for name, (_canonical, legacy) in _projection_registry(registry_root).items():
+        if PurePosixPath(legacy) == target:
+            return name
+    return None
+
+
+def projection_read(
+    root: Path | str,
+    name: str,
+    *,
+    registry_root: Path | None = None,
+    state_root: Path | str | None = None,
+) -> tuple[Path, str]:
+    """读取侧解析: (该读哪个文件, 它是 canonical 还是 legacy)。
+
+    canonical 挂 state_root (省略时与 root 相同), legacy 挂当前 checkout root。
+    canonical 存在就读 canonical; 否则退回 legacy —— 那可能是旧检出自带的、
+    也可能是根本没生成过的。**文件不存在不是错误**, 所以这里不判存在性,
+    调用方拿 Path 自己判 absent, 从而把"没生成"和"跑过但老化"分开计。
+    """
+    base = Path(root)
+    canonical_rel, legacy_rel = projection_rels(name, registry_root=registry_root)
+    canonical = Path(state_root) / canonical_rel if state_root is not None else base / canonical_rel
+    if canonical.is_file():
+        return canonical, "canonical"
+    return base / legacy_rel, "legacy"
+
+
 def roots_report() -> dict[str, object]:
     """回答"我现在在哪个根" —— CLI 与测试共用这一份, 不在两处各算各的。"""
     cwd = Path.cwd()
@@ -145,12 +243,16 @@ __all__ = (
     "LEDGER_DB_ENV",
     "LEDGER_RELATIVE",
     "MARKER",
+    "PROJECTIONS_REGISTRY_RELATIVE",
     "STATE_ROOT_ENV",
     "canonical_root",
     "code_root",
     "event_ledger_path",
     "install_root",
     "is_worktree",
+    "projection_name_for",
+    "projection_read",
+    "projection_rels",
     "roots_report",
     "state_root",
 )

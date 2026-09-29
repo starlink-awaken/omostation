@@ -25,12 +25,25 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-HEALTH = WORKSPACE / ".omo" / "state" / "health.yaml"
+sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+from repo_root import projection_read, state_root as runtime_state_root  # noqa: E402
+
+def health_file() -> Path:
+    """本检出该读的 health 投影.
+
+    每次读都重新解析, 不冻结成模块常量: health.yaml 自 ADR-0129 Phase 2 起只在
+    canonical 面 (.omo/state/runtime/) 生成, legacy 路径已摘库 —— 写死的常量会让
+    预测去读一个"只存在于迁移前旧检出"的文件。
+    """
+    return projection_read(
+        WORKSPACE, "health", registry_root=WORKSPACE, state_root=runtime_state_root()
+    )[0]
 
 
 def load_health_snapshot() -> dict:
     """简易 YAML 解析: 读 health.yaml 顶层 + 已知 nested 段."""
-    if not HEALTH.exists():
+    HEALTH = health_file()
+    if not HEALTH.is_file():
         return {}
     out: dict = {}
     in_alignment_detail = False
@@ -206,7 +219,14 @@ def main() -> int:
 
     current = load_health_snapshot()
     if not current:
-        print("⚠️ health.yaml 不存在或无有效字段")
+        checked = health_file()
+        if not checked.is_file():
+            # 未生成 ≠ 失败: 投影是运行态产物, 没跑过 generator 的检出里没有它
+            # 是正常状态。报出来但不让调用方 (人工 / 后续 cron) 读成"预测出错"。
+            display_path = checked.relative_to(WORKSPACE) if checked.is_relative_to(WORKSPACE) else checked
+            print(f"health 投影未生成: {display_path} (canonical 与 legacy 皆缺) — 跳过预测")
+            return 0
+        print(f"⚠️ {checked.name} 存在但无有效字段")
         return 1
 
     retro = count_retro_drift()
