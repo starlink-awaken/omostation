@@ -166,6 +166,11 @@ after 侧把"未生成"如实报成 `status="skipped"` + `complete=false`，不�
 | 7 | `test_omo_ingress_state.py` 断言改为"legacy 不再被写"并绿 | ✅ | PR-2 |
 | 8 | PR-3 四个读取方给出原地 A/B 前后退出码 | ✅ | 本报告 §3.1–§3.5（2026-09-29 同夹具重跑） |
 
+台账 `done_when` 的编号与此表不同，其中**本表未列的一条**是「`.gitignore:295` 的死规则
+`!.omo/state/system_health.yaml` 删除」—— 实测由 PR-2 `cf6d4ac78` 关闭
+（`git log -S` 该字符串命中它与此前的 #1237；main 上现在只剩 `:393`
+的忽略行，无反向豁免行）。
+
 ## 5. 测试与门禁
 
 - `tests/unit/test_projection_reader_resolution.py` —— **18 passed**（新建，453 行）。含登记表 stdlib 扫描 vs
@@ -217,7 +222,8 @@ after 侧把"未生成"如实报成 `status="skipped"` + `complete=false`，不�
 ## 7. 偏差
 
 - 台账 `write_surfaces` 列出的 `docs/reports/2026-09-28-projection-plane-phase2-closeout.md`
-  实际未落盘（PR-1/PR-2 都没写 receipt）。本报告覆盖 PR-1..PR-3 全段，充当 evidence matrix 的 receipt。
+  实际未落盘（PR-1/PR-2 都没写 receipt）。本报告覆盖 PR-1..PR-3 全段，充当 evidence matrix 的 receipt；
+  该 phantom 条目在收尾 PR 里从 `write_surfaces` 删除（见 §9-2）。
 - 台账 `verify` 里 `meta-doctor.py --workspace . --json` 这条命令不存在 `--json` 选项（实测
   `unrecognized arguments`）。在收尾 PR 里改为可复跑的真实命令。
 - 台账 goal 里"顺带治一处既有假红"举的两个数字（`meta-doctor stale_beats 1→2`、
@@ -244,11 +250,53 @@ git 跟踪面：回滚需与 `.gitignore` 同批 revert（PR-2 的摘库与忽�
      `PASS (68 checks executed, ALL GREEN)`。
   3. **根仓 governance_code lane** `854062e03`：暂存 `bin/compass_radar.py` + 六个 `bin/gac/*.py`
      ⇒ `PASS (7 files, lanes=governance_code)`，同一门禁 rc=0。
-  4. **docs lane**：本报告一笔。
-  5. **submodule_pointer lane**：根仓 `projects/omo` gitlink 重钉一笔
-     （`gac-worktree.sh bump-pointer`）。
+  4. **docs lane** `1de20febc`：本报告一笔 ⇒ `PASS (1 files, lanes=docs)`，门禁 rc=0
+     （`PASS (69 checks executed, ALL GREEN)`；比 code lane 多一条 docs surface）。
+  5. **submodule_pointer lane** `a2cf9f368` → `d6184ea6d`：根仓 `projects/omo` gitlink 两笔。
+     第一笔钉 omo 分支头 `8b0ae0f`；omo #203 squash 合并后改钉 main 上的 `e3537ca`
+     （与 `8b0ae0f` 树逐字节相同），使 `merge-base --is-ancestor <gitlink> origin/main` 成立，
+     指针不依赖 agent 分支存活。
+     ⚠️ `gac-worktree.sh bump-pointer` 在这个 worktree 里把指针**倒退**到了 `6bbb908`
+     （`PASW_SUBTREE_DIR` 下它读的是另一份 omo 检出）—— 该 gitlink 是本次手工 `git add projects/omo`
+     重做的，不是脚本产物。
   全部一起暂存时门禁只红在 `change-lane-check: FAIL mixed lanes=code,docs,governance_code`
   这一条 hard fail 上 —— 分批不是偏好，是 `bin/change-lane-check.py` 的强制。
   `.omo/state/system.yaml` 是 hook 的纯时间戳产物，按 AGENTS.md §7 不进任何一笔。
-- 远端效应：push → PR → CI → squash 合并；BET closeout（evidence matrix + retro +
-  `bet-ledger.py complete` + workflow closeout）走第二笔收尾 PR，其中一并修掉 §7 的伪 verify 命令。
+- 远端效应（实测）：omo **#203** 首轮 `lint` 红（`ruff format --check` 要求那行条件表达式合行），
+  修成 `8b0ae0f` 后 lint/test/test-cov 全绿，squash 合并为 omo main `e3537ca`；
+  根仓 **#4534** head `d6184ea6d`，`interface-check` 之外的 checks 全 pass、两条 docs surface 为
+  path-filter skip，`mergeStateStatus=CLEAN`，squash 合并为 **`ebea1fd18`**。
+  合并前对这批 commit 跑过 L3 深度安全评审，两仓均零发现。
+- BET closeout（本 PR 承担，2026-09-29 实测）：
+  1. **台账 `verify` 第 2 条**改为可复跑的真实命令 `python3 bin/gac/meta-doctor.py --workspace .`
+     （`--json` 不存在，§7）。
+  2. **`write_surfaces` 去掉计划期预填的 phantom report 路径**。`bet-ledger.py lint` 自带
+     `PHANTOM_REPORT_PATH` 检查（lint 里的 warning 段，非阻断），它抓到台账注册时写下的
+     `docs/reports/2026-09-28-projection-plane-phase2-closeout.md` 从未落盘 —— 实测
+     `git log --all -- <path>` 零命中，PR-1 `18c355e06` / PR-2 `cf6d4ac78` 都没有 `A` 状态的
+     报告文件。receipt 由本报告承担，路径条目删除而不是"补一份报告凑数"。
+  3. **D0 前置与摘库交付语义冲突**（这条是本 BET 收尾真正的收获，也是 retro Q3-10）：
+     `bet-ledger.py complete` 在置 `done` 前要求每条 `write_surfaces` 都能在根 index 里
+     `ls-files --error-unmatch`，而 `.omo/state/health.yaml` / `.omo/_control/governance-data.json`
+     / `BRIEF.md` 三件的"不在 index"正是 done_when-5 的判据 —— 一个成功交付的摘库 BET 会被
+     完成闸按其成功的证据判死。处理：三件**保留**在 `write_surfaces`（删掉等于抹掉"本 BET
+     动过它们"的记录），改跑 `complete --force`；但 `--force` 会连 vision→retro 链检一起跳过，
+     所以链检先独立跑 —— `chain_bind.evaluate_complete(bet, WS, force=False)` ⇒
+     **`ok=True, reasons=[]`**（绑定 run `20260928T153338Z-project-code-change-15187bd7`、
+     北极星文档在位、retro 在盘）。**不改共享闸来让自己通过**；D0 缺"删除型交付物"这一格
+     登记为后续项。
+     `--force` 不会把红留给 CI：`.github/workflows/bet-done-gate.yml:38-59` 的硬失败只有
+     `BASE_LEDGER_UNREADABLE` / `BET_DONE_*` / `META_TOTAL_BETS_DRIFT`，都不查 D0 —— 实测读源码，
+     非推断。
+  4. **lane 分批**：docs lane（本报告 + `.omo/_knowledge/retros/BET-Y2Q4-T10-212.md`）一笔，
+     governance_state lane（`docs/plans/3y-bet-ledger.yaml`，由 `complete` 写 `status: done` +
+     `done_at`）一笔；`.omo/state/system.yaml` 仍是 hook 的纯时间戳产物，不进任何一笔。
+  5. **evidence matrix**：engineering `VERIFIED`（`merged_reachable_commit:
+     git://origin/main@ebea1fd187dad6266c0aecbba528f240a8da9a62`，tests/diff/rollback 三键指向
+     本报告）；operational `PROVEN`（live_canary / fresh_receipt / cleanup 指向本报告，
+     replay 指向 retro）；value `NOT_PROVEN`；`value_indicator_policy: false`；
+     `overall_state: delivery_accepted`。
+  6. **workflow run**：PR-3 代码面 `20260929T044531Z-project-code-change-e23ad439`、
+     收尾文档面 `20260929T073730Z-project-doc-change-3a7a7ec8`；两者的 `closeout` 在本 PR
+     合并后执行，不在合并前声称已闭环。
+
