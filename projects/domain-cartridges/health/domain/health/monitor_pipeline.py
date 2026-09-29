@@ -114,12 +114,23 @@ def daily_health_score(date: str, ledger: Ledger) -> DayScore:
     return DayScore(date, score, status, parts)
 
 
+def _bad_z(metric: str, value_z: float) -> float:
+    """只朝坏方向计入 |z|: 好方向返回 0(2026-09-29 实测睡眠偏高被误判恶化)。"""
+    spec = METRICS.get(metric) or {}
+    direction = spec.get("bad_direction", "both")
+    if direction == "high" and value_z < 0:
+        return 0.0
+    if direction == "low" and value_z > 0:
+        return 0.0
+    return abs(value_z)
+
+
 def _day_z(metric: str, date: str, ledger: Ledger, exclude: tuple[str, ...] = ()) -> float:
     reading = ledger.get(date, metric)
     if reading is None:
         return 0.0
     base = personal_baseline(ledger, metric, date, exclude)
-    return abs(base.z(reading.value))
+    return _bad_z(metric, base.z(reading.value))
 
 
 def _detect_pass(ledger: Ledger, upto: str, exclude: tuple[str, ...]) -> list[Finding]:

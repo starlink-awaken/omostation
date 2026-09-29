@@ -12,10 +12,13 @@ from statistics import mean, pstdev
 
 # metric -> (unit, healthy reference interval, general adult, NON-individual
 # advice; shown on cards as "参考区间，非个体医嘱").
+# bad_direction: 偏离个人基线只有朝「坏方向」才算异常 —— 静息心率/空腹血糖偏高为坏,
+# 睡眠偏低为坏(2026-09-29 全链路实测: 睡眠 7.6h 比基线多、仍在 7-9h 参考区间内,
+# 却被 |z| 判成异常并并入恶化区间)。缺省 "both" 保持旧行为。
 METRICS: dict[str, dict[str, object]] = {
-    "hr_rest": {"unit": "bpm", "ref_lo": 60.0, "ref_hi": 100.0},
-    "sleep_hours": {"unit": "h", "ref_lo": 7.0, "ref_hi": 9.0},
-    "fasting_glucose": {"unit": "mmol/L", "ref_lo": 3.9, "ref_hi": 6.1},
+    "hr_rest": {"unit": "bpm", "ref_lo": 60.0, "ref_hi": 100.0, "bad_direction": "high"},
+    "sleep_hours": {"unit": "h", "ref_lo": 7.0, "ref_hi": 9.0, "bad_direction": "low"},
+    "fasting_glucose": {"unit": "mmol/L", "ref_lo": 3.9, "ref_hi": 6.1, "bad_direction": "high"},
     "steps": {"unit": "count", "ref_lo": 0.0, "ref_hi": float("inf")},
 }
 
