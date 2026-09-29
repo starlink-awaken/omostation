@@ -74,16 +74,27 @@ def _workflow_triggers(text: str) -> list[str]:
     return triggers
 
 
+#: 「workflow 执行了某检查」的判据 —— 解释器与工具路径必须**同一行**。
+#:
+#: ⚠️ 旧式 `uv run[^|]*` 的 `[^|]` **会匹配换行**且贪婪 ⇒ 一处 `uv run pytest src/...`
+#: 会吞掉其后所有 step 的 `bin/*.py` 只捕获最后一个 (2026-09-29 实证:
+#: `bin/gac/check-l0-constraints.py` 这条**单行执行**的 required L0 检查因此长期对本检查器失明;
+#: 而 `documents_domain_jobs.py` 是被这个 bug 的「取最后一个」顺手捕获的 — 两者都是错的)。
+#:
+#: 现式两点:
+#: 1. `[^|\n]*?` 非贪婪 + 同行 ⇒ 一行内多条 `python3 bin/a.py && python3 bin/b.py` 都会捕获;
+#: 2. 折叠块 (`run: >-` 后逐行的文件列表, 如 `uv run --with ruff ruff check` 的 lint 目标)
+#:    不再被误判为「执行该工具」(它们是 lint 参数, 不是被执行的检查)。
+WIRED_COMMAND_RE = re.compile(r"(python3|python|uv run[^|\n]*?|bash)[ \t]+((?:bin|scripts)/[\w./-]+\.(?:py|sh))")
+
+
 def _discover_wiring() -> dict[str, dict]:
     """扫描 workflows + sgf-policy, 返回 tool -> {workflows, gate}."""
     tools: dict[str, dict] = {}
     for wf in sorted(WORKFLOWS_DIR.glob("*.yml")):
         text = wf.read_text(encoding="utf-8", errors="ignore")
         name = wf.name
-        for m in re.finditer(
-            r"(python3|python|uv run[^|]*|bash)\s+((?:bin|scripts)/[\w./-]+\.(?:py|sh))",
-            text,
-        ):
+        for m in WIRED_COMMAND_RE.finditer(text):
             tool = m.group(2)
             entry = tools.setdefault(tool, {"workflows": [], "gate": False})
             if name not in entry["workflows"]:
