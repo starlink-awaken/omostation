@@ -36,6 +36,11 @@ assert _pid_spec.loader is not None
 _pid_spec.loader.exec_module(_pid_module)
 principal_id_from_env = _pid_module.principal_id_from_env
 
+_LIB_DIR = str(Path(__file__).resolve().parents[1] / "lib")
+if _LIB_DIR not in sys.path:
+    sys.path.insert(0, _LIB_DIR)
+from repo_root import projection_read, state_root as runtime_state_root  # noqa: E402
+
 WORKSPACE = Path(__file__).resolve().parents[2]
 REPO = Path(__file__).resolve().parents[2]  # bin/gac/ → Workspace/
 ECOS = REPO / "projects/ecos"
@@ -245,11 +250,19 @@ def score_value() -> float:
     return 0.0
 
 
-def score_runtime() -> float:
-    """运行时健康度 (0-100)."""
-    health_file = REPO / ".omo/state/health.yaml"
-    if not health_file.exists():
-        return 0.0
+def score_runtime() -> float | None:
+    """运行时健康度 (0-100); 投影未生成时返回 None = 该轴不参评.
+
+    缺失不能记成 0.0: health.yaml 自 ADR-0129 Phase 2 起只在
+    .omo/state/runtime/ 生成, 硬编码 legacy 路径的读法在没跑过 radar 的检出里
+    恒为"文件不存在", 于是 0.0 会被当成真实的运行时健康度写进 uhs.jsonl, --sync
+    时还会覆盖 system.yaml::health_score —— 一个从未测量被记成了一个分数。
+    """
+    health_file, _source = projection_read(
+        REPO, "health", registry_root=REPO, state_root=runtime_state_root()
+    )
+    if not health_file.is_file():
+        return None
 
     try:
         import yaml
@@ -272,9 +285,17 @@ def score_runtime() -> float:
     return 100.0  # 默认健康
 
 
-def compute_uhs(scores: dict[str, float]) -> float:
-    """计算统一健康评分."""
-    return round(sum(WEIGHTS[k] * scores[k] for k in WEIGHTS), 1)
+def compute_uhs(scores: dict[str, float | None]) -> float:
+    """计算统一健康评分 — 只在有观测值的轴上归一.
+
+    None 轴不参与加权, 其权重从分母里扣除 (未测量 ≠ 零分)。全轴皆 None 时返回
+    0.0 保持旧口径, 由调用方按 unscored_axes 决定是否落盘。
+    """
+    present = {k: v for k, v in scores.items() if v is not None}
+    weight_sum = sum(WEIGHTS[k] for k in present)
+    if not weight_sum:
+        return 0.0
+    return round(sum(WEIGHTS[k] * present[k] for k in present) / weight_sum, 1)
 
 
 def grade(uhs: float) -> str:
@@ -291,7 +312,7 @@ def grade(uhs: float) -> str:
         return "F"
 
 
-def record_history(uhs: float, scores: dict[str, float]):
+def record_history(uhs: float, scores: dict[str, float | None]):
     """记录健康分历史."""
     HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
     record = {
@@ -357,24 +378,31 @@ def main():
 
     uhs = compute_uhs(scores)
     g = grade(uhs)
+    unscored_axes = [k for k, v in scores.items() if v is None]
 
     # 记录历史
     record_history(uhs, scores)
 
     # --sync: 写入 system.yaml::health_score (整合方案#1: UHS 为唯一权威分数)
     if getattr(args, "sync", False):
-        try:
-            import yaml as _y
-            sys_yaml_path = WORKSPACE / ".omo" / "state" / "system.yaml"
-            if sys_yaml_path.is_file():
-                sd = _y.safe_load(sys_yaml_path.read_text()) or {}
-                sd["health_score"] = int(round(uhs))
-                sys_yaml_path.write_text(
-                    _y.dump(sd, allow_unicode=True, sort_keys=False), encoding="utf-8"
-                )
-                print(f"  ✅ system.yaml::health_score synced = {int(round(uhs))}")
-        except Exception as e:
-            print(f"  ⚠️ sync failed: {e}", file=__import__("sys").stderr)
+        if unscored_axes:
+            print(
+                f"  ⚠️ sync 跳过: {', '.join(unscored_axes)} 投影未生成, 不写 system.yaml::health_score",
+                file=sys.stderr,
+            )
+        else:
+            try:
+                import yaml as _y
+                sys_yaml_path = runtime_state_root() / ".omo" / "state" / "system.yaml"
+                if sys_yaml_path.is_file():
+                    sd = _y.safe_load(sys_yaml_path.read_text()) or {}
+                    sd["health_score"] = int(round(uhs))
+                    sys_yaml_path.write_text(
+                        _y.dump(sd, allow_unicode=True, sort_keys=False), encoding="utf-8"
+                    )
+                    print(f"  ✅ system.yaml::health_score synced = {int(round(uhs))}")
+            except Exception as e:
+                print(f"  ⚠️ sync failed: {e}", file=__import__("sys").stderr)
 
     if args.json:
         print(json.dumps({
@@ -382,8 +410,13 @@ def main():
             "uhs": uhs,
             "grade": g,
             "scores": scores,
+            "unscored_axes": unscored_axes,
             "targets": TARGETS,
-            "gaps": {k: TARGETS[k] - scores[k] for k in TARGETS if scores[k] < TARGETS[k]},
+            "gaps": {
+                k: TARGETS[k] - scores[k]
+                for k in TARGETS
+                if scores[k] is not None and scores[k] < TARGETS[k]
+            },
         }, ensure_ascii=False, indent=2))
         return
 
@@ -394,13 +427,20 @@ def main():
     print()
     for k, v in scores.items():
         target = TARGETS[k]
+        if v is None:
+            print(f"  {k:12s}:     — / {target}  [未生成, 不参评]")
+            continue
         gap = v - target
         status = "✓" if gap >= 0 else f"↓ {gap:.0f}"
         print(f"  {k:12s}: {v:5.1f} / {target}  [{status}]")
     print()
 
     # 差距分析
-    gaps = {k: TARGETS[k] - scores[k] for k in TARGETS if scores[k] < TARGETS[k]}
+    gaps = {
+        k: TARGETS[k] - scores[k]
+        for k in TARGETS
+        if scores[k] is not None and scores[k] < TARGETS[k]
+    }
     if gaps:
         print("  Gaps to 90%:")
         for k, gap in sorted(gaps.items(), key=lambda x: -x[1]):

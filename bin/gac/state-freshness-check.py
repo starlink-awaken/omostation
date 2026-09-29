@@ -9,11 +9,9 @@
 
 检查对象 (状态面 SSOT):
 - .omo/state/system.yaml
-- .omo/state/health.yaml
-- .omo/state/system_health.yaml
+- health / system_health / governance_data 三件投影 (经 runtime-projections.yaml 解析)
 - .omo/state/governance.jsonl
-- .omo/debt/dashboard/current.yaml
-- .omo/_control/governance-data.json
+- .omo/_control/debt-dashboard/current.yaml
 
 新鲜度阈值 (ISC-1 复合分 freshness 段一致):
 - ≤1h   → 100 (新鲜)
@@ -36,8 +34,17 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import (
+    projection_name_for,
+    projection_read,
+    projection_rels,
+    state_root as runtime_state_root,
+)  # noqa: E402
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 
@@ -45,9 +52,11 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 # 注: 仅检查"派生快照"文件 (有 generated_at 时间戳); 配置型文件 (如 system.yaml)
 # 是 source-of-truth 不带 generated_at, 不在本检查范围.
 # 元组第三元素 (可选): {"optional": True} 表示 runtime/gitignored 文件, 缺失不 block.
+# 首元素给投影名时, 报告键与读取路径一律由 runtime-projections.yaml 解析
+# (ADR-0129 Phase 2 之后 legacy 那份已摘库: 新检出里没有它, 生产机上是冻结的)。
 STATE_FILES = [
-    (".omo/state/health.yaml", ("generated_at",), {"optional": True}),
-    (".omo/state/system_health.yaml", ("last_scan",), {"optional": True}),
+    ("health", ("generated_at",), {"optional": True}),
+    ("system_health", ("last_scan",), {"optional": True}),
     # governance.jsonl: runtime 产物 (非 tracked), fresh checkout 不存在 → optional
     (".omo/state/governance.jsonl", ("timestamp", "generated_at"), {"optional": True}),
     # debt-dashboard: tracked at _control/debt-dashboard/ (非 gitignored .omo/debt/)
@@ -56,17 +65,16 @@ STATE_FILES = [
         ("generated_at", "last_reconciled_at"),
     ),
     # ADR-0129 Phase 2: untracked runtime product, absent until first generation.
-    (".omo/_control/governance-data.json", ("generated_at",), {"optional": True}),
+    ("governance_data", ("generated_at",), {"optional": True}),
 ]
 
-# Derived projections moved to state/runtime (runtime-projections.yaml).  The
-# legacy paths remain the report keys and a compatibility fallback, but fresh
-# canonical evidence wins when both exist.
-CANONICAL_STATE_FILES = {
-    ".omo/state/system_health.yaml": ".omo/state/runtime/system_health.yaml",
-    ".omo/state/health.yaml": ".omo/state/runtime/health.yaml",
-    ".omo/_control/governance-data.json": ".omo/state/runtime/governance-data.json",
-}
+
+def entry_rel(entry: str) -> str:
+    """报告键 = 该条目对应的 legacy 相对路径 (未登记的名字原样返回)。"""
+    try:
+        return projection_rels(entry, registry_root=WORKSPACE)[1]
+    except KeyError:
+        return entry
 
 # 各文件类型用哪个字段作为 generated_at (JSONL 用首行, YAML 用顶层 key)
 GENERATED_AT_KEYS = (
@@ -171,18 +179,22 @@ def check_file(
     path_str: str,
     now: datetime | None = None,
     keys: tuple[str, ...] = GENERATED_AT_KEYS,
+    state_root: Path | None = None,
 ) -> dict:
     """检查单个状态文件的 freshness."""
     now = now or datetime.now(UTC)
-    canonical_str = CANONICAL_STATE_FILES.get(path_str)
-    canonical_path = WORKSPACE / canonical_str if canonical_str else None
-    if canonical_path and canonical_path.is_file():
-        checked_str = canonical_str
-        source = "canonical"
-        path = canonical_path
+    name = projection_name_for(path_str, registry_root=WORKSPACE)
+    if name:
+        path, source = projection_read(
+            WORKSPACE,
+            name,
+            registry_root=WORKSPACE,
+            state_root=state_root or WORKSPACE,
+        )
+        checked_str = str(path.relative_to(WORKSPACE)) if path.is_relative_to(WORKSPACE) else str(path)
     else:
-        checked_str = path_str
         source = "legacy"
+        checked_str = path_str
         path = WORKSPACE / path_str
     if not path.is_file():
         return {
@@ -232,20 +244,25 @@ def check_file(
     }
 
 
-def run_check(file_filter: str | None = None, now: datetime | None = None) -> dict:
+def run_check(
+    file_filter: str | None = None,
+    now: datetime | None = None,
+    state_root: Path | None = None,
+) -> dict:
     """运行 freshness 检查, 返回报告."""
     now = now or datetime.now(UTC)
     targets: list[tuple[str, tuple[str, ...], dict]] = []
     for entry in STATE_FILES:
-        path_str = entry[0]
+        name = entry[0]
+        path_str = entry_rel(name)
         keys = entry[1] if len(entry) > 1 else GENERATED_AT_KEYS
         opts = entry[2] if len(entry) > 2 else {}
-        if file_filter and file_filter not in path_str:
+        if file_filter and file_filter not in path_str and file_filter != name:
             continue
         targets.append((path_str, keys, opts))
     if file_filter and not targets:
         targets = [(file_filter, GENERATED_AT_KEYS, {})]
-    results = [check_file(p, now=now, keys=k) for p, k, _ in targets]
+    results = [check_file(p, now=now, keys=k, state_root=state_root) for p, k, _ in targets]
     # 标记 optional 文件 (缺失不 block)
     for r, (_, _, opts) in zip(results, targets):
         if opts.get("optional") and not r.get("exists"):
@@ -299,7 +316,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="JSON output")
     parser.add_argument("--file", help="Check single file (substring match)")
     args = parser.parse_args()
-    report = run_check(file_filter=args.file)
+    report = run_check(file_filter=args.file, state_root=runtime_state_root())
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
