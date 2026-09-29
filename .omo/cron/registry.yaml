@@ -154,43 +154,99 @@ jobs:
   # ── 面板刷新: 2026-09-11 退出 Codex LLM automation (token 耗尽即停摆),
   #    改用 launchd，零推理需求、零 token 依赖 ──
 
+  - name: resident-launchd-decision
+    schedule: "every 120s"
+    command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh decision"'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-28 收敛: 原 crontab 有一条**同命令同频率**的重复条目 (已退役, 见本次提交),
+      launchd 侧承接。plist 源 ~/Library/LaunchAgents/com.l4.resident.decision.plist;
+      wrapper 调 omo.resident.cli daemon --once --role decision。StartInterval=120 与原 crontab 频率逐项一致, 故退役不改变覆盖。
+      resident 家族另有常驻 daemon (com.omostation.resident-daemon, KeepAlive) 做事件驱动,
+      与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
+
+  - name: resident-launchd-execute
+    schedule: "every 120s"
+    command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh execute"'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-28 收敛: 原 crontab 有一条**同命令同频率**的重复条目 (已退役, 见本次提交),
+      launchd 侧承接。plist 源 ~/Library/LaunchAgents/com.l4.resident.execute.plist;
+      wrapper 调 omo.resident.cli daemon --once --role execute。StartInterval=120 与原 crontab 频率逐项一致, 故退役不改变覆盖。
+      resident 家族另有常驻 daemon (com.omostation.resident-daemon, KeepAlive) 做事件驱动,
+      与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
+
+  - name: resident-launchd-signals
+    schedule: "every 300s"
+    command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh signals"'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-28 收敛: 原 crontab 有一条**同命令同频率**的重复条目 (已退役, 见本次提交),
+      launchd 侧承接。plist 源 ~/Library/LaunchAgents/com.l4.resident.signals.plist;
+      wrapper 调 omo.resident.cli signals。StartInterval=300 与原 crontab 频率逐项一致, 故退役不改变覆盖。
+      resident 家族另有常驻 daemon (com.omostation.resident-daemon, KeepAlive) 做事件驱动,
+      与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
+
+  - name: resident-launchd-inbox
+    schedule: "every 300s"
+    command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh inbox"'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-28 收敛: 原 crontab 有一条**同命令同频率**的重复条目 (已退役, 见本次提交),
+      launchd 侧承接。plist 源 ~/Library/LaunchAgents/com.l4.resident.inbox.plist;
+      wrapper 调 omo.resident.cli inbox。StartInterval=300 与原 crontab 频率逐项一致, 故退役不改变覆盖。
+      resident 家族另有常驻 daemon (com.omostation.resident-daemon, KeepAlive) 做事件驱动,
+      与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
+
+  - name: resident-launchd-promote
+    schedule: "every 600s"
+    command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh promote"'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-28 收敛: 原 crontab 有一条**同命令同频率**的重复条目 (已退役, 见本次提交),
+      launchd 侧承接。plist 源 ~/Library/LaunchAgents/com.l4.resident.promote.plist;
+      wrapper 调 omo.resident.cli promote。StartInterval=600 与原 crontab 频率逐项一致, 故退役不改变覆盖。
+      resident 家族另有常驻 daemon (com.omostation.resident-daemon, KeepAlive) 做事件驱动,
+      与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
+
+  - name: resident-launchd-event-ingest
+    schedule: "every 300s"
+    command: '/bin/bash "$HOME/Workspace/lib/resident-event-ingest.sh"'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-09-28 收敛: 原 crontab 有一条**同命令同频率**的重复条目 (已退役, 见本次提交),
+      launchd 侧承接。plist 源 ~/Library/LaunchAgents/com.l4.resident.ingest.plist;
+      wrapper 调 omo.resident.cli ingest。StartInterval=300 与原 crontab 频率逐项一致, 故退役不改变覆盖。
+      resident 家族另有常驻 daemon (com.omostation.resident-daemon, KeepAlive) 做事件驱动,
+      与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
+
   - name: resident-cron-sediment
     schedule: "*/2 * * * *"
     command: 'cd "$HOME/Workspace" && PYTHONPATH="$HOME/Workspace"/projects/omo/src:"$HOME/Workspace"/projects/bus-foundation/src: /opt/homebrew/bin/python3 -m omo.cli resident daemon --once --role sediment --ledger "$HOME/Workspace"/runtime/omo/event-ledger.sqlite3 >> "$HOME/Workspace"/.omo/_delivery/resident-orchestrator/cron-sediment.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: >
-      2026-09-28 补登 (A4 orphan 清零): 该条实际已在 crontab 运行但从未进入本登记源,
-      故 scheduler-compile 长期报为孤儿。补登只让声明追上现实, 不改任何调度行为。
-      resident 家族存在**三重驱动** —— 本 crontab 条目 + com.l4.resident.* launchd
-      + 常驻 daemon (com.omostation.resident-daemon, KeepAlive, omo.cli resident daemon)。
-      三者调用同一底层 (omo/cli.py:29-32 为纯转发壳)。保留本条是因为退役属运行态变更,
-      需单独的人类门禁与对照观察; 该收敛为已知未决项, 不在本单范围。
-      queue 侧有 BEGIN IMMEDIATE 保护 (task_queue.py:341), 故重复执行功能安全。
-
-  - name: resident-cron-decision
-    schedule: "*/2 * * * *"
-    command: 'cd "$HOME/Workspace" && PYTHONPATH="$HOME/Workspace"/projects/omo/src:"$HOME/Workspace"/projects/bus-foundation/src: /opt/homebrew/bin/python3 -m omo.cli resident daemon --once --role decision --ledger "$HOME/Workspace"/runtime/omo/event-ledger.sqlite3 >> "$HOME/Workspace"/.omo/_delivery/resident-orchestrator/cron-decision.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: >
-      2026-09-28 补登 (A4 orphan 清零): 该条实际已在 crontab 运行但从未进入本登记源,
-      故 scheduler-compile 长期报为孤儿。补登只让声明追上现实, 不改任何调度行为。
-      resident 家族存在**三重驱动** —— 本 crontab 条目 + com.l4.resident.* launchd
-      + 常驻 daemon (com.omostation.resident-daemon, KeepAlive, omo.cli resident daemon)。
-      三者调用同一底层 (omo/cli.py:29-32 为纯转发壳)。保留本条是因为退役属运行态变更,
-      需单独的人类门禁与对照观察; 该收敛为已知未决项, 不在本单范围。
-      queue 侧有 BEGIN IMMEDIATE 保护 (task_queue.py:341), 故重复执行功能安全。
-
-  - name: resident-cron-execute
-    schedule: "*/2 * * * *"
-    command: 'cd "$HOME/Workspace" && PYTHONPATH="$HOME/Workspace"/projects/omo/src:"$HOME/Workspace"/projects/bus-foundation/src: /opt/homebrew/bin/python3 -m omo.cli resident daemon --once --role execute --ledger "$HOME/Workspace"/runtime/omo/event-ledger.sqlite3 >> "$HOME/Workspace"/.omo/_delivery/resident-orchestrator/cron-execute.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -225,74 +281,6 @@ jobs:
   - name: resident-cron-heartbeat
     schedule: "*/2 * * * *"
     command: 'cd "$HOME/Workspace" && PYTHONPATH="$HOME/Workspace"/projects/omo/src:"$HOME/Workspace"/projects/bus-foundation/src: /opt/homebrew/bin/python3 -m omo.cli resident daemon --once --role heartbeat --ledger "$HOME/Workspace"/runtime/omo/event-ledger.sqlite3 >> "$HOME/Workspace"/.omo/_delivery/resident-orchestrator/cron-heartbeat.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: >
-      2026-09-28 补登 (A4 orphan 清零): 该条实际已在 crontab 运行但从未进入本登记源,
-      故 scheduler-compile 长期报为孤儿。补登只让声明追上现实, 不改任何调度行为。
-      resident 家族存在**三重驱动** —— 本 crontab 条目 + com.l4.resident.* launchd
-      + 常驻 daemon (com.omostation.resident-daemon, KeepAlive, omo.cli resident daemon)。
-      三者调用同一底层 (omo/cli.py:29-32 为纯转发壳)。保留本条是因为退役属运行态变更,
-      需单独的人类门禁与对照观察; 该收敛为已知未决项, 不在本单范围。
-      queue 侧有 BEGIN IMMEDIATE 保护 (task_queue.py:341), 故重复执行功能安全。
-
-  - name: resident-cron-ingest
-    schedule: "*/5 * * * *"
-    command: 'cd "$HOME/Workspace" && PYTHONPATH="$HOME/Workspace"/projects/omo/src:"$HOME/Workspace"/projects/bus-foundation/src: /opt/homebrew/bin/python3 -m omo.cli resident ingest --ledger "$HOME/Workspace"/runtime/omo/event-ledger.sqlite3 >> "$HOME/Workspace"/.omo/_delivery/event-ingest/cron.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: >
-      2026-09-28 补登 (A4 orphan 清零): 该条实际已在 crontab 运行但从未进入本登记源,
-      故 scheduler-compile 长期报为孤儿。补登只让声明追上现实, 不改任何调度行为。
-      resident 家族存在**三重驱动** —— 本 crontab 条目 + com.l4.resident.* launchd
-      + 常驻 daemon (com.omostation.resident-daemon, KeepAlive, omo.cli resident daemon)。
-      三者调用同一底层 (omo/cli.py:29-32 为纯转发壳)。保留本条是因为退役属运行态变更,
-      需单独的人类门禁与对照观察; 该收敛为已知未决项, 不在本单范围。
-      queue 侧有 BEGIN IMMEDIATE 保护 (task_queue.py:341), 故重复执行功能安全。
-
-  - name: resident-cron-signals
-    schedule: "*/5 * * * *"
-    command: 'cd "$HOME/Workspace" && PYTHONPATH="$HOME/Workspace"/projects/omo/src:"$HOME/Workspace"/projects/bus-foundation/src: /opt/homebrew/bin/python3 -m omo.cli resident signals >> "$HOME/Workspace"/.omo/_delivery/personal-signals/cron.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: >
-      2026-09-28 补登 (A4 orphan 清零): 该条实际已在 crontab 运行但从未进入本登记源,
-      故 scheduler-compile 长期报为孤儿。补登只让声明追上现实, 不改任何调度行为。
-      resident 家族存在**三重驱动** —— 本 crontab 条目 + com.l4.resident.* launchd
-      + 常驻 daemon (com.omostation.resident-daemon, KeepAlive, omo.cli resident daemon)。
-      三者调用同一底层 (omo/cli.py:29-32 为纯转发壳)。保留本条是因为退役属运行态变更,
-      需单独的人类门禁与对照观察; 该收敛为已知未决项, 不在本单范围。
-      queue 侧有 BEGIN IMMEDIATE 保护 (task_queue.py:341), 故重复执行功能安全。
-
-  - name: resident-cron-inbox
-    schedule: "*/5 * * * *"
-    command: 'cd "$HOME/Workspace" && PYTHONPATH="$HOME/Workspace"/projects/omo/src:"$HOME/Workspace"/projects/bus-foundation/src: /opt/homebrew/bin/python3 -m omo.cli resident inbox >> "$HOME/Workspace"/.omo/_delivery/perception-inbox/cron.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: >
-      2026-09-28 补登 (A4 orphan 清零): 该条实际已在 crontab 运行但从未进入本登记源,
-      故 scheduler-compile 长期报为孤儿。补登只让声明追上现实, 不改任何调度行为。
-      resident 家族存在**三重驱动** —— 本 crontab 条目 + com.l4.resident.* launchd
-      + 常驻 daemon (com.omostation.resident-daemon, KeepAlive, omo.cli resident daemon)。
-      三者调用同一底层 (omo/cli.py:29-32 为纯转发壳)。保留本条是因为退役属运行态变更,
-      需单独的人类门禁与对照观察; 该收敛为已知未决项, 不在本单范围。
-      queue 侧有 BEGIN IMMEDIATE 保护 (task_queue.py:341), 故重复执行功能安全。
-
-  - name: resident-cron-promote
-    schedule: "*/10 * * * *"
-    command: 'cd "$HOME/Workspace" && PYTHONPATH="$HOME/Workspace"/projects/omo/src:"$HOME/Workspace"/projects/bus-foundation/src: /opt/homebrew/bin/python3 -m omo.cli resident promote >> "$HOME/Workspace"/.omo/_delivery/resident-orchestrator/promote.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
