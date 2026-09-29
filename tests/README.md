@@ -24,7 +24,8 @@ Run all: `bash tests/integration/run-all.sh`
 | File | What It Tests |
 |------|---------------|
 | `run-all.sh` | Unified test harness — runs all integration tests in sequence |
-| `e2e-smoke.sh` | End-to-end smoke test — quick workspace health verification |
+| `e2e-smoke.sh` | End-to-end smoke test — full mode needs agora SSE `:7431` / cron-service `:7450` online (so it is **not** in CI); supports `--no-services` / `--no-imports` |
+| `e2e-cli-smoke.sh` | `e2e-smoke.sh --no-services --no-imports` — CLI entry reachability subset; this is the part that **runs in CI** (`tests/run-shell-suites.sh`) |
 | `test-02-pipeline.sh` | Pipeline integration test (numbered: 02) |
 | `test-05-pricing.sh` | Pricing integration test (numbered: 05) |
 | `test-10-runtime-check.sh` | Runtime health check integration test (numbered: 10) |
