@@ -38247,7 +38247,8 @@ bets:
     already compares these digests and is tested, but is unwired, so the follow-up is
     wiring plus debt registration against the measured repo-wide backlog, not writing
     a new detector.'
-  status: in_progress
+  status: done
+  done_at: 2026-09-29
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -38304,19 +38305,27 @@ bets:
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: OK -- 509 bets, 16 tracks, no errors (the inserted bet and meta.total_bets
       stay consistent; no new error).
-  - cmd: git diff HEAD --numstat -- docs/plans/3y-bet-ledger.yaml
-    expect: Only the BET-Y2Q4-T10-212 verify block, its six report receipt sha256 lines,
-      and the inserted BET-Y2Q4-T10-214 entry appear; zero added or deleted '- id:'
-      lines besides the insertion.
+  - cmd: git show --numstat --format= b24c353c3 -- docs/plans/3y-bet-ledger.yaml
+    expect: 'Registration batch (landed as b24c353c3): only the BET-Y2Q4-T10-212 verify block,
+      its six report receipt sha256 lines, and the inserted BET-Y2Q4-T10-214 entry appear; zero
+      added or deleted ''- id:'' lines besides the insertion.'
   - cmd: git diff --check
     expect: no whitespace errors.
   - cmd: make gac-local-gate
     expect: no new hard failures relative to baseline.
+  - cmd: git diff --numstat b24c353c3..HEAD -- docs/plans/3y-bet-ledger.yaml
+    expect: 'Closeout batch: only BET-Y2Q4-T10-214''s own entry changes - write_surfaces +2
+      (its closeout report and retro), the completion_evidence matrix (overall_state evaluating
+      -> delivery_accepted, engineering NOT_STARTED -> VERIFIED, operational -> PROVEN, 7 receipt
+      keys), status -> done and done_at added; zero added or deleted ''- id:'' lines; meta.total_bets
+      stays == len(bets).'
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-29-bet-214-closeout-evidence-integrity.md
   - docs/operations/workflow-waiver-2026-09-29-bet-214-registration.md
   - docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+  - docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-214.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-29-bet-214-closeout-evidence-integrity.md
     spec_version: 1.0.0
@@ -38324,17 +38333,40 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-214
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+            merged_reachable_commit:
+              ref: git://origin/main@b24c353c37f1a1b97fc5f562b55f401a0641744f
+            tests:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+            diff:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+            rollback:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+            live_canary:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+            fresh_receipt:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
+            replay:
+              ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-214.md
+              sha256: sha256:569231a402875312761d8d33c76fdffe2d20f1fba7bbd7b33666adc5a6d50d55
+            cleanup:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:ac0c26ffef6dcea4acc2290cc570b77f44fd82c544176398c5f7ad5070566dbb
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
