@@ -38147,7 +38147,8 @@ bets:
   goal: Correct one factual sentence in the BET-212 PR-3 closeout report using immutable
     workflow-run records and PR merge metadata; preserve all BET-212 status, evidence,
     spec, and retrospective content.
-  status: candidate
+  status: done
+  done_at: 2026-09-29
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -38167,9 +38168,8 @@ bets:
   - Do not alter historical workflow run records or other report sections.
   - Do not introduce new workflow policy or rewrite prior closeout conclusions.
   done_when:
-  - The report identifies the code run as blocked at 2026-09-29T07:21:24Z, before PR
-  - The report identifies the documentation run as ok at 2026-09-29T08:16:23Z, after
-    PR
+  - "The report identifies the code run as blocked at 2026-09-29T07:21:24Z, before PR #4534 merged at 07:34:56Z."
+  - "The report identifies the documentation run as ok at 2026-09-29T08:16:23Z, after PR #4544 merged at 08:14:47Z."
   - The report statements match the authoritative run records and GitHub merge metadata.
   - BET-212's ledger status/evidence, accepted spec bytes/digest, and retrospective
     are unchanged.
@@ -38193,14 +38193,38 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-213
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@edc3a2192d8c8f28da1aeb69cfc5dce1aa229312
+          tests:
+            ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+            sha256: sha256:bd2ed573524348628f47b9b0823b087d844952d755870531dba5e31c7212ca19
+          diff:
+            ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+            sha256: sha256:bd2ed573524348628f47b9b0823b087d844952d755870531dba5e31c7212ca19
+          rollback:
+            ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+            sha256: sha256:bd2ed573524348628f47b9b0823b087d844952d755870531dba5e31c7212ca19
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+            sha256: sha256:bd2ed573524348628f47b9b0823b087d844952d755870531dba5e31c7212ca19
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+            sha256: sha256:bd2ed573524348628f47b9b0823b087d844952d755870531dba5e31c7212ca19
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-213.md
+            sha256: sha256:8b7af6d763e23ced4f6db0b94320cd11bdc6cb1c379fb8d32676cf8e7291a8e6
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-213.md
+            sha256: sha256:8b7af6d763e23ced4f6db0b94320cd11bdc6cb1c379fb8d32676cf8e7291a8e6
+          scope_note: Documentation publication evidence only; no runtime canary or business-value claim.
       value:
         status: NOT_PROVEN
         evidence: {}
