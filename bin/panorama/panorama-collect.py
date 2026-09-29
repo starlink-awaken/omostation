@@ -4833,7 +4833,10 @@ def main() -> int:
 
     # Auto-discard .omo/ runtime side effects from a previous publish so the
     # cleanliness check below passes without external stash/unstash.
-    run(["git", "checkout", "--", ".omo/", "BRIEF.md"], )
+    # BRIEF.md is deliberately absent: it is untracked since ADR-0129 Phase 2,
+    # and a pathspec that matches no tracked file aborts the whole checkout —
+    # taking the .omo/ discard down with it.
+    run(["git", "checkout", "--", ".omo/"])
 
     # Cleanliness must be verified BEFORE build_payload(): collectors write
     # .omo/state/* side effects that would otherwise fail the identity check.
@@ -4843,7 +4846,7 @@ def main() -> int:
     payload = build_payload()
     # Discard .omo/ runtime side effects from collectors so the internal
     # cleanliness check inside publish_projection_revision passes.
-    run(["git", "checkout", "--", ".omo/", "BRIEF.md"])
+    run(["git", "checkout", "--", ".omo/"])
     # Template-data consistency check: scan template for D.* references
     # and warn about fields the payload doesn't provide.
     _check_template_data_consistency(payload)

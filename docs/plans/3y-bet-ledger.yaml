@@ -37916,6 +37916,117 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-212
+  title: ADR-0129 Phase 2 — 投影面停止 legacy 双写并把三件生成态摘出 git（ADR-0456 B5）
+  goal: '开发动作直接打击在跑的系统，根因之一是 ADR-0129 Phase 1 把每个投影写成 canonical + legacy 两份（projects/omo/src/omo/omo_ingress_state.py:234-298
+    自陈 "Legacy paths kept during Phase 1 dual-write"），而 legacy 那一份**既是 git 跟踪文件又被 cron
+    改写**。后果已被反复实证：一次文档 PR 会多带一个纯时间戳的 wip: commit（#4346 / #4359），gac-worktree.sh release
+    会被生成态挡住（#4419 / #4420）。上一轮尝试 PR #4334 用整片清扫解决它，连带删掉了真正的权限面 SSOT（.omo/_control/INDEX.md、
+    north-star.md、governance-overlay/*.yaml），随即被 #4358 逐文件回滚——这轮不得重复该失败模式。本 BET 做的是
+    Phase 2 本体：三件已入册投影（health / governance_data / brief）停止 legacy 双写、 消费端一律经 omo_paths.projection_path()
+    解析、并把 legacy 文件与对应 .gitignore 规则同批摘除。 入册与摘库的判据是可复算的两个测试（P1 已入册可解析、P2 在 canonical
+    也不存在的最坏形态下退出码不高于基线）， 不是「看起来像状态」。据此判定 system.yaml 与 collab-dualtrack.yaml 本轮不摘：前者实测让
+    current-state-coherence.py 退出码 0→2 且被 .github/workflows/state-goals-enforce.yml:28
+    直接调用， 其写方 omo_ingress.py:126 在文件缺失时 raise FileNotFoundError（先决条件不存在，另立 Phase 2b）；
+    后者无 projection 条目（projection_path 会 KeyError）且实测让 check-dual-track-purity.py 0→1。
+    顺带治一处既有假红：已摘库的 system_health.yaml 今天在任何 fresh clone 上恒报缺失 （实测 meta-doctor stale_beats
+    1→2、probe-heartbeat-monitor 「系统健康巡检 9999h/48h」）。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-28-projection-plane-phase2-untrack.md
+  - projects/omo/src/omo/omo_ingress_state.py
+  - projects/omo/tests/test_omo_ingress_state.py
+  - bin/gac/state-freshness-check.py
+  - bin/gac/meta-doctor.py
+  - bin/gac/probe-heartbeat-monitor.py
+  - .omo/_truth/registry/probe-heartbeat-matrix.yaml
+  - bin/panorama/panorama-collect.py
+  - bin/mof/generate-brief.py
+  - bin/compass_radar.py
+  - bin/meta/compass_radar.py
+  - .gitignore
+  - docs/reports/2026-09-28-projection-plane-phase2-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-212.md
+  - .omo/state/health.yaml
+  - .omo/_control/governance-data.json
+  - BRIEF.md
+  non_goals:
+  - 不动 .omo/state/system.yaml 与 .omo/state/collab-dualtrack.yaml 的跟踪状态 —— §1 判据判定不摘，理由写进契约。
+  - 不做 PR4334 式整片清扫：.omo/_control/ 下的真 SSOT 一个都不碰，.gitignore 反向豁免只撤销本轮摘掉的那几行。
+  - 不新增 projection 条目；collab_dualtrack 若要入册需先定 generator 归属，另立 BET。
+  - 不改 .omo/_truth/registry/** 的跟踪状态（权限面，非状态面）。
+  - 不改任何 CI workflow 的 ref 表达式或 job 结构 —— 只改被 workflow 调用的脚本行为。
+  circuit_breaker: Stop on any edit outside this bet's write_surfaces plus the three
+    untracked legacy paths (.omo/state/health.yaml, .omo/_control/governance-data.json,
+    BRIEF.md), any change under .github/workflows/**, any untracking of .omo/state/system.yaml
+    or .omo/state/collab-dualtrack.yaml (both measured to turn a CI-invoked checker
+    from exit 0 to non-zero), any edit to .omo/_truth/registry/** tracking state, any
+    blanket git rm --cached over a directory (the PR4334 failure mode this bet exists
+    to avoid), and backfill of lifecycle evidence for any other bet.
+  done_when:
+  - omo_ingress_state.py 中三次 _mirror_projection() 调用与三个 legacy_*_path 局部变量消失，canonical
+    三件仍由 omo_paths 解析。
+  - state-freshness-check.py / meta-doctor.py / probe-heartbeat-monitor.py 对三件投影经 projection_path()
+    解析，且把「canonical 尚不存在」与「跑过但老化」分开——前者不计为 expired。
+  - panorama-collect.py 的两处 git checkout pathspec 不再含 BRIEF.md（BRIEF.md 摘库后该 pathspec
+    匹配不到任何 tracked 文件，会让整条 checkout 失败并把 .omo/ 的恢复一起带走）。
+  - compass_radar 两份副本的 history_dir 锚定到根，不再由 health_yaml 位置反推（tests/test_compass_radar_history.py
+    钉的是 .omo/state/history/health.jsonl）。
+  - 三件 legacy 路径 git ls-files 不再命中，且 .gitignore 新增规则与之同批，git status --short 摘库后为空。
+  - .gitignore:295 的死规则 !.omo/state/system_health.yaml（被 :395 精确忽略覆盖）删除。
+  - projects/omo/tests/test_omo_ingress_state.py 断言改为「legacy 不再被写」并绿。
+  verify:
+  - cmd: python3 bin/gac/state-freshness-check.py
+    expect: 退出码等于基线，且报告不再把 health.yaml / governance-data.json / system_health.yaml 的
+      "file missing" 计为 expired
+  - cmd: python3 bin/gac/meta-doctor.py --workspace . --json
+    expect: 三件投影 heartbeat 段 exists=false 时不计入 summary.stale_beats
+  - cmd: python3 bin/gac/check-dual-track-purity.py
+    expect: exit 0（collab-dualtrack.yaml 仍 tracked，本轮不碰）
+  - cmd: python3 bin/ssot/current-state-coherence.py --json
+    expect: exit 0（system.yaml 仍 tracked，本轮不碰）
+  - cmd: git ls-files .omo/state/health.yaml .omo/_control/governance-data.json BRIEF.md
+    expect: 空输出（三件已摘库）
+  - cmd: git status --short
+    expect: 摘库后为空 —— 证明 .gitignore 与摘库同批，gac-gate.yml:204 的 porcelain 断言成立
+  - cmd: git ls-files .omo/state/system.yaml .omo/state/collab-dualtrack.yaml
+    expect: 两行都在 —— 反向证明没有越界成 PR4334 式清扫
+  - cmd: uv run --project projects/omo python -m pytest projects/omo/tests/test_omo_ingress_state.py
+      -q
+    expect: 绿，且 legacy 镜像断言已反转
+  - cmd: make gac-local-gate
+    expect: 相对基线无新增 hard fail
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-projection-plane-phase2-untrack.md
+    spec_version: 1.1.0
+    content_digest: sha256:7b500b2761a5911d7730fee1a7dbb2f961f55c544b29239b8b51304b198f0d8e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-212
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  campaigns: null
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -38054,7 +38165,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 505
+  total_bets: 506
   windows:
   - Y1Q1
   - Y1Q2
