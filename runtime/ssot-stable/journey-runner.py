@@ -14,6 +14,7 @@ import argparse
 import importlib.util
 import json
 import subprocess
+import time
 import sys
 from pathlib import Path
 from typing import Any
@@ -379,28 +380,44 @@ def dispatch_real_research(input_data: dict, token: dict) -> dict[str, Any]:
     }
 
 
-def dispatch_real_reporting(input_data: dict, token: dict) -> dict[str, Any]:
-    """Real dispatch: git log recent PRs for periodic report."""
+def _ledger_stats() -> dict[str, Any] | None:
+    """督办台账(deadline-tracker, 唯一被周期检查消费)统计; 读不到返回 None。"""
     try:
-        result = subprocess.run(
-            ["git", "log", "--oneline", "--since", "7 days", "--grep", "#[0-9]"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-            cwd=str(ROOT),
-        )
-        prs = (
-            [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
-            if result.returncode == 0
-            else []
-        )
-    except Exception:
-        prs = []
+        from deadline_tracker import load_tasks
+    except ImportError:
+        return None
+    today = time.strftime("%Y-%m-%d")
+    tasks = load_tasks()
+    pending = [t for t in tasks if t.get("status") == "pending"]
+    overdue = [t for t in pending if t.get("deadline") and t["deadline"] < today]
     return {
-        "status": "succeeded",
-        "report": {"compiled": True, "pr_count": len(prs)},
+        "total": len(tasks),
+        "pending": len(pending),
+        "replied": sum(1 for t in tasks if t.get("status") == "replied"),
+        "compiled": sum(1 for t in tasks if t.get("status") == "compiled"),
+        "overdue": len(overdue),
+        "overdue_items": [t.get("subject", "")[:40] for t in overdue[:5]],
     }
+
+
+def dispatch_real_reporting(input_data: dict, token: dict) -> dict[str, Any]:
+    """Real dispatch: 周期报告 = 督办台账统计 + 调用方给的业务指标。
+
+    此前统计的是代码仓 7 天 git PR 数 —— 工程自用指标冒充业务报送(全链路实测
+    2026-09-29)。台账与指标都没有时 compiled=False, journey 走 needs_more_evidence。
+    """
+    ledger = _ledger_stats()
+    metrics = input_data.get("metrics") or {}
+    if ledger is None and not metrics:
+        return {"status": "succeeded", "report": {"compiled": False, "reason": "no_ledger_no_metrics"}}
+    report: dict[str, Any] = {"compiled": True}
+    if ledger:
+        report["ledger"] = ledger
+    if metrics:
+        report["metrics"] = metrics
+    # pr_count 字段保留(真实数据启发式按它判), 语义改为台账任务总数
+    report["pr_count"] = ledger["total"] if ledger else 0
+    return {"status": "succeeded", "report": report}
 
 
 def dispatch_real_meeting(input_data: dict, token: dict) -> dict[str, Any]:
@@ -422,16 +439,18 @@ def dispatch_real_meeting(input_data: dict, token: dict) -> dict[str, Any]:
 
 
 def dispatch_real_supervision(input_data: dict, token: dict) -> dict[str, Any]:
-    """Real dispatch: assess risk from recent journey history."""
-    risk_level = "low"
-    if input_data.get("blocked_count", 0) > 2:
-        risk_level = "high"
-    elif input_data.get("blocked_count", 0) > 0:
-        risk_level = "medium"
-    return {
-        "status": "succeeded",
-        "supervision": {"risk_level": risk_level},
-    }
+    """Real dispatch: 按督办台账的逾期/临期评估风险; 调用方显式给 blocked_count 时优先。"""
+    blocked = input_data.get("blocked_count")
+    overdue_n = None
+    if blocked is None:
+        ledger = _ledger_stats()
+        overdue_n = ledger["overdue"] if ledger else 0
+        blocked = overdue_n
+    risk_level = "high" if blocked > 2 else ("medium" if blocked > 0 else "low")
+    sup: dict[str, Any] = {"risk_level": risk_level, "blocked_count": blocked}
+    if overdue_n is not None:
+        sup["source"] = "deadline-tracker 台账逾期数"
+    return {"status": "succeeded", "supervision": sup}
 
 
 def dispatch_real_review(input_data: dict, token: dict) -> dict[str, Any]:
