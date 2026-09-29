@@ -3,6 +3,8 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
+STATE_ROOT_ENV = "OMOSTATION_STATE_ROOT"
+
 
 def _load_evidence_smoke():
     root = Path(__file__).resolve().parents[1]
@@ -50,3 +52,35 @@ def test_stdio_script_without_directory_remains_workspace_relative(tmp_path, mon
     ok, reason = module._check_stdio(["python", "scripts/live.py"])
 
     assert (ok, reason) == (True, "ok (script)")
+
+
+# ── ADR-0456 C6: system.yaml 的写目标跟随 profile，不写宿主检出 ──────────────
+
+
+def test_declared_profile_moves_health_score_evidence_write_off_the_checkout(tmp_path, monkeypatch):
+    import yaml
+
+    module = _load_evidence_smoke()
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    state_root = tmp_path / "state"
+    (state_root / ".omo" / "state").mkdir(parents=True)
+    state_yaml = state_root / ".omo" / "state" / "system.yaml"
+    state_yaml.write_text("health_score: 91\n", encoding="utf-8")
+    monkeypatch.setenv(STATE_ROOT_ENV, str(state_root))
+
+    ok, msg = module._write_health_score_evidence(91.0)
+
+    assert ok is True, msg
+    assert module._system_yaml() == state_yaml
+    data = yaml.safe_load(state_yaml.read_text(encoding="utf-8"))
+    assert data["health_score_evidence"] == 91.0
+    assert data["health_score_evidence_source"] == "bin/gac/evidence-smoke.py"
+    # 写面闭合的判据不是「看起来对了」，而是它确实不在检出里 (否则 sync 一次就脏 git status)
+    assert module.WORKSPACE not in module._system_yaml().parents
+
+
+def test_undeclared_profile_keeps_the_legacy_system_yaml_path_string(tmp_path, monkeypatch):
+    module = _load_evidence_smoke()
+    monkeypatch.delenv(STATE_ROOT_ENV, raising=False)
+
+    assert str(module._system_yaml()) == str(module.WORKSPACE / ".omo" / "state" / "system.yaml")
