@@ -24,6 +24,11 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent))
 
 
+def _about(subject: str) -> str:
+    """公文标题多以「关于」开头, 再拼「关于…」会成「关于关于…」。"""
+    return subject if subject.startswith("关于") else f"关于{subject}"
+
+
 def dispatch_admin_inbox(input_data: dict, token: dict) -> dict[str, Any]:
     """State: received → 读邮件 + LLM分类."""
     from mail_agent import classify_mail
@@ -211,7 +216,7 @@ def dispatch_admin_compile(input_data: dict, token: dict) -> dict[str, Any]:
 
     subject = input_data.get("latest_subject", "工作报告")
     context = {
-        "title": f"关于{subject}的汇总报告",
+        "title": f"{_about(subject)}的汇总报告",
         "source_subject": subject,
         "deadline": input_data.get("deadline", ""),
     }
@@ -248,8 +253,8 @@ def dispatch_admin_review(input_data: dict, token: dict) -> dict[str, Any]:
 
     draft_path = create_draft(
         to="leader@bjfsh.gov.cn",  # 占位, 人审阅时修改
-        subject=f"关于{subject}的报告（请审阅）",
-        body=f"领导您好：\n\n关于{subject}的工作已完成汇总，报告见附件。\n请审阅指示。\n\n此致\n敬礼",
+        subject=f"{_about(subject)}的报告（请审阅）",
+        body=f"领导您好：\n\n{_about(subject)}的工作已完成汇总，报告见附件。\n请审阅指示。\n\n此致\n敬礼",
         attachments=attachments,
     )
 
@@ -284,7 +289,7 @@ def dispatch_admin_submit(input_data: dict, token: dict) -> dict[str, Any]:
 
     draft_path = create_draft(
         to="superior@bjfsh.gov.cn",
-        subject=f"关于{subject}的提交",
+        subject=f"{_about(subject)}的提交",
         body=f"根据通知要求，现将{subject}相关材料提交，请查收。",
         attachments=attachments,
     )

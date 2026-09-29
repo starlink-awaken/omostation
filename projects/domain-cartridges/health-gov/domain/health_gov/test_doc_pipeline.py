@@ -191,6 +191,18 @@ def test_calibration(tmp: Path) -> None:
     check("calib-f1", f1 >= 0.6, f"F1={f1:.3f}")
 
 
+def test_explicit_deadline() -> None:
+    """正文写明的期限早于按缓急计算的期限时, 以正文为准; 晚于时仍按缓急。"""
+    d = register_incoming(**base_doc(doc_id="DL-1", urgency="normal", received_date="2026-09-28",
+                                     text="请于10月1日前报送自查报告。"))
+    draft_opinion(d, drafter="夏明星")
+    check("deadline-explicit-earlier", d.deadline == "2026-10-01", d.deadline)
+    d2 = register_incoming(**base_doc(doc_id="DL-2", urgency="urgent", received_date="2026-09-28",
+                                      text="请于2026年10月15日前报送。"))
+    draft_opinion(d2, drafter="夏明星")
+    check("deadline-urgency-earlier", d2.deadline == "2026-10-01", d2.deadline)
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
@@ -198,6 +210,7 @@ def main() -> int:
         test_e2e_letter(tmp)
         test_e2e_minutes()
         test_negatives()
+        test_explicit_deadline()
         test_calibration(tmp)
     if FAILURES:
         print(f"\n{len(FAILURES)} FAILURES")

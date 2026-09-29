@@ -122,6 +122,23 @@ def register_incoming(**kwargs) -> IncomingDoc:
     return doc
 
 
+_EXPLICIT_DEADLINE = re.compile(r"(?:(\d{4})年)?(\d{1,2})月(\d{1,2})日(?:之)?前")
+
+
+def _explicit_deadline(text: str, base: date) -> str:
+    """正文里最早的「(YYYY年)M月D日前」; 省略年份时取收文当年(已过则顺延一年)。"""
+    found = []
+    for y, m, d in _EXPLICIT_DEADLINE.findall(text or ""):
+        try:
+            day = date(int(y) if y else base.year, int(m), int(d))
+        except ValueError:
+            continue
+        if not y and day < base:
+            day = day.replace(year=day.year + 1)
+        found.append(day.isoformat())
+    return min(found) if found else ""
+
+
 def draft_opinion(doc: IncomingDoc, drafter: str, route: str = "") -> DraftOpinion:
     """拟办. registered/returned 可拟办；返回拟办单并回填 doc.deadline."""
     if doc.status not in ("registered", "returned"):
@@ -134,6 +151,11 @@ def draft_opinion(doc: IncomingDoc, drafter: str, route: str = "") -> DraftOpini
     days = DEADLINE_DAYS[doc.urgency]
     base = _parse_day(doc.received_date) if doc.received_date else date.today()
     deadline = (base + timedelta(days=days)).isoformat()
+    # 正文写明了期限(「于2026年10月15日前报送」)时不能晚于它: 此前只按缓急固定天数算,
+    # 一份标「一般」、正文要求 3 天内报送的来文会被排到 15 天后
+    explicit = _explicit_deadline(doc.text, base)
+    if explicit and explicit < deadline:
+        deadline = explicit
     doc.deadline = deadline
     doc.status = "drafted"
     return DraftOpinion(doc_id=doc.doc_id, drafter=drafter, opinion=opinion,
