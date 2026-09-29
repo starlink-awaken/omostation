@@ -57,13 +57,66 @@ SKIP_NAMES = {
     #   .omo/_delivery/agent-workflows/events.jsonl   workflow 事件账本
     #   .omo/_delivery/ingress/value-evidence.jsonl  BET 价值证据
     #   .omo/_delivery/observability/events.jsonl
-    # 根本缺口: 仓内无「日志 vs 追加式状态」SSOT, 靠人工枚举。已记录待立项。
+    # T16-02 起: 追加式账本的分类权威已迁至 .omo/_truth/registry/log-surfaces.yaml
+    # (schema: log-surfaces/v1, 按**路径**登记 class=state)。此处仅作历史兜底, 且按
+    # 文件名匹配本就脆弱 —— 同名不同路径挡不住。
     "receipts.jsonl",
 }
 
 
-def _candidate_files() -> list[Path]:
+def _load_log_surfaces() -> dict:
+    """T16-02: 读日志面分类注册表 (schema: log-surfaces/v1, ADR-0458).
+
+    返回 {state_paths: set[Path], uncovered_logs: list[Path], counts: {...}}。
+    注册表缺失时返回空结构 —— 保持与「无注册表」等价的旧行为, 不静默改变语义。
+    """
+    import yaml
+
+    reg = WORKSPACE / ".omo" / "_truth" / "registry" / "log-surfaces.yaml"
+    state_paths: set[Path] = set()
+    uncovered: list[Path] = []
+    counts = {"log": 0, "state": 0, "projection": 0}
+    if not reg.is_file():
+        return {"state_paths": state_paths, "uncovered_logs": uncovered, "counts": counts,
+                "registry": str(reg), "registry_present": False}
+    try:
+        # 本仓注册表惯例是「frontmatter + markdown body」= 多文档 YAML (safe_load 会报
+        # "expected a single document")。schema 在 frontmatter 文档、surfaces 在正文
+        # 文档, 故合并全部 dict 文档后再取。
+        merged: dict = {}
+        for doc in yaml.safe_load_all(reg.read_text(encoding="utf-8")):
+            if isinstance(doc, dict):
+                merged.update(doc)
+        data = merged
+    except Exception:  # noqa: BLE001 — 注册表坏掉不得阻断轮转, 但也不能假装有分类
+        return {"state_paths": state_paths, "uncovered_logs": uncovered, "counts": counts,
+                "registry": str(reg), "registry_present": False}
+    for item in data.get("surfaces") or []:
+        if not isinstance(item, dict):
+            continue
+        raw, cls = item.get("path"), item.get("class")
+        if not isinstance(raw, str) or not raw or not isinstance(cls, str):
+            continue
+        counts[cls] = counts.get(cls, 0) + 1
+        p = Path(raw)
+        target = p if p.is_absolute() else (WORKSPACE / p)
+        if cls == "state":
+            state_paths.add(target)
+        elif cls == "log" and p.is_dir():
+            # 登记为可轮转但所在目录不在 LOG_PATHS → 非递归 glob 扫不到
+            scanned = {base.resolve() for base in LOG_PATHS if base.is_dir()}
+            if target.resolve() not in scanned:
+                uncovered.append(target)
+    return {"state_paths": state_paths, "uncovered_logs": uncovered, "counts": counts,
+            "registry": str(reg), "registry_present": True}
+
+
+def _candidate_files() -> tuple[list[Path], list[Path]]:
+    """返回 (候选, 被 state 排除)。T16-02 起 state 排除为**路径级**且可观测。"""
+    surfaces = _load_log_surfaces()
+    state_paths = surfaces["state_paths"]
     out: list[Path] = []
+    excluded: list[Path] = []
     for base in LOG_PATHS:
         if not base.is_dir():
             continue
@@ -73,9 +126,17 @@ def _candidate_files() -> list[Path]:
                     continue
                 if p.name.startswith("."):
                     continue
+                # T16-02: 注册表 class=state 的路径硬性排除 (按路径, 不按文件名)
+                try:
+                    resolved = p.resolve()
+                except OSError:
+                    resolved = p
+                if resolved in state_paths or p in state_paths:
+                    excluded.append(p)
+                    continue
                 out.append(p)
     # 去重 (可能有重叠 glob)
-    return sorted(set(out))
+    return sorted(set(out)), sorted(set(excluded))
 
 
 def _rotate_one(path: Path, keep: int, dry_run: bool) -> bool:
@@ -114,7 +175,8 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    candidates = _candidate_files()
+    candidates, excluded_state = _candidate_files()
+    surfaces = _load_log_surfaces()
     over = [p for p in candidates if p.stat().st_size > args.max_bytes]
     if args.daily:
         today = time.strftime("%Y-%m-%d", time.localtime())
@@ -127,6 +189,25 @@ def main() -> int:
         ]
         over = over + stale_daily
     print(f"log-rotate: {len(candidates)} candidate(s), {len(over)} over {args.max_bytes} bytes")
+    # T16-02: 排除必须可见, 不允许像旧 SKIP_NAMES 那样静默生效
+    reg = surfaces["registry"]
+    state_flag = "present" if surfaces["registry_present"] else "ABSENT(退回 SKIP_NAMES)"
+    print(
+        f"log-rotate: log-surfaces {state_flag} "
+        f"(log={surfaces['counts'].get('log', 0)} "
+        f"state={surfaces['counts'].get('state', 0)} "
+        f"projection={surfaces['counts'].get('projection', 0)})"
+    )
+    print(f"log-rotate: {len(excluded_state)} state surface(s) excluded from rotation")
+    for p in excluded_state:
+        print(f"  exclude(state): {p}")
+    if surfaces["uncovered_logs"]:
+        print(
+            f"log-rotate: {len(surfaces['uncovered_logs'])} registered log dir(s) NOT scanned "
+            f"(非递归 glob 的覆盖面缺口, ADR-0457 同族)"
+        )
+        for p in surfaces["uncovered_logs"]:
+            print(f"  uncovered(log): {p}")
     rotated = 0
     for p in over:
         print(f"  rotate: {p} ({p.stat().st_size} bytes)")
