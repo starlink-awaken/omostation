@@ -155,6 +155,7 @@ jobs:
   #    改用 launchd，零推理需求、零 token 依赖 ──
 
   - name: resident-launchd-sediment
+    label: com.l4.resident.sediment
     schedule: "every 120s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh" sediment'
     planes: [launchd]
@@ -170,6 +171,7 @@ jobs:
       调用 daemon --once --role sediment, 与被退役条目字节等价。
 
   - name: resident-launchd-monitor
+    label: com.l4.resident.monitor
     schedule: "every 120s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh" monitor'
     planes: [launchd]
@@ -185,6 +187,7 @@ jobs:
       调用 daemon --once --role monitor, 与被退役条目字节等价。
 
   - name: resident-launchd-heartbeat
+    label: com.l4.resident.heartbeat
     schedule: "every 120s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh" heartbeat'
     planes: [launchd]
@@ -200,6 +203,7 @@ jobs:
       调用 daemon --once --role heartbeat, 与被退役条目字节等价。
 
   - name: resident-launchd-decision
+    label: com.l4.resident.decision
     schedule: "every 120s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh decision"'
     planes: [launchd]
@@ -215,6 +219,7 @@ jobs:
       与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
 
   - name: resident-launchd-execute
+    label: com.l4.resident.execute
     schedule: "every 120s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh execute"'
     planes: [launchd]
@@ -230,6 +235,7 @@ jobs:
       与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
 
   - name: resident-launchd-signals
+    label: com.l4.resident.signals
     schedule: "every 300s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh signals"'
     planes: [launchd]
@@ -245,6 +251,7 @@ jobs:
       与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
 
   - name: resident-launchd-inbox
+    label: com.l4.resident.inbox
     schedule: "every 300s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh inbox"'
     planes: [launchd]
@@ -260,6 +267,7 @@ jobs:
       与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
 
   - name: resident-launchd-promote
+    label: com.l4.resident.promote
     schedule: "every 600s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh promote"'
     planes: [launchd]
@@ -275,6 +283,7 @@ jobs:
       与本组的时间驱动角色互补而非重复 —— 二者机制不同, 未合并。
 
   - name: resident-launchd-event-ingest
+    label: com.l4.resident.event-ingest
     schedule: "every 300s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-event-ingest.sh"'
     planes: [launchd]
@@ -509,6 +518,7 @@ jobs:
     reconciliation_note: 场景注册同步 (每日 06:15)，已在 crontab -l 运行，补齐登记。
 
   - name: zhixing-host-drift-hourly-active
+    label: com.omostation.zhixing-host-drift
     schedule: "23 * * * *"
     command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py protect && python3 bin/gac/zhixing-host-sync.py check'
     planes: [launchd]

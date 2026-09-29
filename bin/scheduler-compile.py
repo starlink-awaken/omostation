@@ -157,11 +157,13 @@ def check_launchd_plane(registered):
         "registered_count": len(reg_entries),
         "installed_count": len(installed),
         "undeclared_installed_count": len(installed - reg_labels),
-        "label_match_heuristic": {
+        "label_match": {
             "matched": len(matched),
             "registered": len(reg_labels),
-            "note": "合成 label = 显式 label 字段或 com.omostation.{name}; 命中率偏低, "
-                    "仅作存量盘点, 不作漂移判据",
+            "rate": round(len(matched) / len(reg_labels), 3) if reg_labels else None,
+            "note": "label 取显式 label 字段, 缺省才合成 com.omostation.{name}。"
+                    "2026-09-29 已为全部 17 条登记补齐显式 label, 命中率 17/17 —— "
+                    "这是本项升 warning 的前置条件 (ADR-0457 阶段门)。",
         },
         "unparseable_plists": unparseable,
         "dead_targets": dead_targets,
