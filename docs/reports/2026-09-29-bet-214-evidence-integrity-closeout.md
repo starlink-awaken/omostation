@@ -82,14 +82,14 @@ tests/test_sync_bet_digests_integrity.py -q` —— **`No module named pytest`**
 - **未改 T10-212 的 `status`/`done_at`/spec binding/retro**（C5）：`status: done`、
   `done_at: 2026-09-29`、`merged_reachable_commit: git://origin/main@ebea1fd187…` 原样。
 
-## 6 验证（合并后在 main 上复跑，非交付前读数）
+## 6 验证（每行标注批别与检出范围，不标注即登记批在合并后的 main 上复跑）
 
 | 判据 | 命令 | 结果 |
 |---|---|---|
 | C1 receipt 逐键一致 | 读台账，对每个 `receipt://`/`repo://` 键比 `sha256` 与文件字节（已落地的取 `git show origin/main:` 的字节，本批新引入的取工作树字节） | 登记批读数：T10-212 **8/8 match**，T10-214 spec binding **1/1 match**，合计 9 match / 0 mismatch / 0 missing。closeout 批终态读数（报告摘要重算并回钉之后）：**T10-212 8/8、T10-214 8/8**（1 spec binding + 7 receipt 键），`sync-bet-digests.py --report` 对这两个条目各报 **0 条**；T10-213 仍 5 条（= G2，别人的活） |
-| 台账可读 + 计数 | `python3 bin/plan/bet-ledger.py lint` | 登记批读数：`OK -- 509 bets, 16 tracks, no errors`，`meta.total_bets: 509` == `len(bets)`。closeout 批复跑：`meta.total_bets == len(bets)` 仍成立，但**全局 `no errors` 已被别人的铸造证伪** —— 10 条 ERROR 全部属于 `BET-Y2Q4-T4-06`（#4564 铸造：spec 文件未落地 + 7 条 receipt ref 不解析 + 由此推出的 `OVERALL_STATE_MISMATCH`/`BET_DONE_REQUIRES_DELIVERY_ACCEPTED`），而本 BET 修的 T10-212/T10-214 两侧 **0 条 ERROR**。故 `verify[2]` 从"整仓 OK"改成**逐条归属判据**，T4-06 登记为 §8 G7 |
-| C2 verify 可逐字跑 | 台账 `verify[].cmd` 原文执行 | `3 passed`（`test_sync_bet_digests_integrity.py`）、`18 passed`（`test_projection_reader_resolution.py`） |
-| C3 无死锚 | 报告终节为 §9，`expect` 指向 §9 第 8 条 | 无 `§10` 引用 |
+| 台账可读 + 计数 | `python3 bin/plan/bet-ledger.py lint` | 登记批读数：`OK -- 509 bets, 16 tracks, no errors`，`meta.total_bets: 509` == `len(bets)`。closeout 批在**本分支**（base `b24c353c3`）复跑：`meta.total_bets == len(bets)` 仍成立，但多出 **10 条 ERROR，全部点名 `BET-Y2Q4-T4-06`** —— 而这不是 main 的债：同一份 main 台账按 `git show origin/main:<path>` 的字节逐键复核，`T4-06` 的 stale / unresolvable **均为 0**（它绑的 spec、report、retro 三个文件确实由 #4564 落地，只是不在我这棵检出的树里）。故 lint 的 ERROR 集合随**检出范围**变化，`verify[2]` 改成逐 owner 判据，检出范围这条本身登记为 §8 G7 |
+| C2 verify 可逐字跑 | 台账 `verify[].cmd` 原文执行 | 登记批复跑 `3 passed`（`test_sync_bet_digests_integrity.py`）、`18 passed`（`test_projection_reader_resolution.py`）；closeout 批摘要回钉后同一对命令再次逐字复跑，读数不变 |
+| C3 无死锚 | **PR-3 报告**终节为 §9，`verify[0].expect` 指向其 §9 第 8 条 | 无 `§10` 引用 |
 | 合并树无冲突/无回退 | 只读 `git merge-tree --write-tree` 对推进后的 `origin/main` 探测；合并后比对 bet 集合 | 干净；登记时点 main bets == 分支 bets，重复 id 0，差异**只有** `BET-Y2Q4-T10-214` 新增 |
 | 门禁 | `make gac-local-gate` | 登记批读数：PASS（69 checks，6 项 known-unavailable skip），lane = `docs` + `docs_data`（`bin/change-lane-check.py --staged`）；closeout 批读数见 §6.1 |
 | 安全 | L3 深度评审（提交态变更集） | 无发现 |
@@ -106,6 +106,24 @@ tests/test_sync_bet_digests_integrity.py -q` —— **`No module named pytest`**
 | `governance-semantic-gate` → `service-config-drift` FAIL | 同一 worktree 同一内容：`uv run python bin/mof/gen-service-configs.py --validate` → 1 条 `omostation.morning-brief: interpreter 含 uv 临时路径 …/builds-v0/.tmpDtiDHB/bin/python3`；裸 `python3` 同命令 → `ok: true, violation_count: 0`。`.tmpXXXX` 每次调用都换 | 调用环境产物，非仓内事实（详见 §8 G6） |
 | `change-lane-check --staged` FAIL `mixed lanes=docs,docs_data,governance_state` | 读 `bin/change-lane-check.py`：`ALLOWED_COMBOS` 含 `{docs, docs_data}`（`:19`），而 `governance_state` 参与混合即拒（`:207`） | 真实约束，按 lane 拆 commit 解：台账+报告一 commit，retro 单独一 commit |
 | `check-work-landed` / `auto-fix-loop` / `doc-governance` / `check-conflict-markers` 在批量门禁里 FAIL | 四条单跑全部 exit 0 | 并发负载/超时抖动，非失败 |
+
+**终版读数**（最后一次全量门禁：`make gac-local-gate`，base 已漂移 6 个 commit；65 项 PASS、3 项 FAIL）。
+三条 FAIL 全部按"同机换调用方式 / 换检出 / 查 CI 接线"分诊，无一条由本批引入：
+
+| 终版读数 | 分类判据（实测） | 定性 |
+|---|---|---|
+| `bet-retro-due-check` FAIL：`BET-Y2Q4-T4-06` 已 done 缺 retro | `git cat-file -e origin/main:.omo/_knowledge/retros/BET-Y2Q4-T4-06.md` → **在 main 上存在**；`ls` 本 worktree → **不存在**（base `b24c353c3` 早于 #4564 那 3 个落地面，见 G7）。且该检查**不在任何 workflow 里**：`grep -rn retro-due .github/workflows/` 零命中 | 检出范围产物，非仓级事实，也非 CI 判据 |
+| `service-config-drift`（`--check`）FAIL：`com.omostation.morning-brief: plist 与 services.yaml 不一致` | 本机现实三查：`[ -f ~/Library/LaunchAgents/com.omostation.morning-brief.plist ]` → ABSENT（同目录 58 个 plist / 23 个 omostation）、`launchctl print gui/501/…` → `Could not find service`、`~/.local/log/morning-brief.log` → 不存在；`crontab -l` 亦无。注册表侧 `enabled: true + generate: true + scheduler: launchd`（`services.yaml:321`）。同一条目在 `uv run` 下不进 drift 比较（先被 interpreter 守卫丢进 `bad_services`，所以那次打印 `✅ 0 drift` 却仍 exit 1） | 真实运行态缺口：声明在案但从未安装/从未运行（登记为 G8，属 B3/B4b 面，不在本 BET 修）。注：`--check` 的注册表读自 **canonical root** 而非本 worktree，读数与本批 diff 无关 |
+| `check-evidence-freshness` FAIL：`low_score — score 83.1 < 90.0 min` | 读数依赖**状态文件的有无**：`_latest_report()` 命中已有 JSON 时才套 `MIN_SCORE`（`:24`、`:86`），报告不存在时走生成支路、**永不检查分数**（`:93-99`）——我单跑一次即 `PASS (score=83.1)`，随后门禁跑同一份内容就 `FAIL`。且那次单跑把生成结果写回了**跟踪文件** `.omo/state/system.yaml`（`health_score_evidence: 100.0 → 83.1` + 时间戳），本批交付已 `git restore` 剔除 | 分数是本机 evidence-smoke 存量（`pydantic` 缺失致 partial，同登记批 `score=50` 的改进态），非本批引入；"首跑必绿 + 副作用落跟踪文件"这条接线缺陷登记为 G9 |
+
+**CI 与本地的 ref 分歧（本轮实测，决定"要不要为此重造 base"）**：`.github/workflows/bet-done-gate.yml:20-23`
+用默认 checkout（PR 事件 = **merge tree**）跑 `bet-ledger.py lint`，而 `governance-check.yml:176` 的
+`governance-verify` 显式 `ref: pull_request.head.sha`（**head tree**）。上面 G7 那 10 条 T4-06 ERROR 和
+这条 retro-due 红都只在 head tree / 本地检出上成立，因此**不需要**为重造 base 而另起 clean-room worktree。
+head-tree 侧唯一会因"新增文档"而受影响的是 CI 里 `|| FAILED=1` 的 `omo.cli lint doc-lifecycle`
+（`governance-check.yml:111`），实测两把读数：本 worktree（含本报告）`exit 0`、`评分 89/100`；
+canonical `~/Workspace`（main，不含本报告）同样 `exit 0`、`89/100` —— 即本批的 3 个文档没有移动这条指标，
+输出里也零次点名本报告。
 
 **本批还修了自己台账条目里的一处死锚**（正是本 BET 要修的那一类，出现在我自己的 `verify[3]` 上）：
 原 `verify[3]` 是 `git diff HEAD --numstat -- docs/plans/3y-bet-ledger.yaml`，
@@ -126,8 +144,9 @@ tests/test_sync_bet_digests_integrity.py -q` —— **`No module named pytest`**
 **③ 只有两种形态能在任意时刻逐字复验**：单个落地 commit 的自 diff（`git show --numstat <merge-sha>`，
 squash 合并保证它恰等于本批）与对已落地内容的**结构断言**。登记批的合并 SHA 已知 → 走 ③ 前者；
 closeout 批写条目时自己的合并 SHA 还不存在 → 走 ③ 后者。
-**④ 全局性判据不能写进条目级 verify** —— "整仓 no errors"、写死的 bet 计数都会被别人的铸造证伪，
-而证伪时本批并没有错：实测 `lint` 在 main 上因 #4564 的 `T4-06` 报 10 条 ERROR（§6 表 + G7）。
+**④ 全局性判据不能写进条目级 verify** —— "整仓 no errors"、写死的 bet 计数都是**整仓 × 当前检出**的属性，
+被证伪时本批并没有错：同一份台账在本分支（树里缺 #4564 落地的 3 个文件）让 `lint` 报 10 条 ERROR，
+按 `origin/main` 自己的 blob 逐键复核则是 0 条（§6 表 + G7）；bet 计数也会随下一条 mint 变（509→510）。
 判据形态因此改成**逐条归属**。改前后逐条比对：其余条目 parse 后与原文件
 **逐项相等**，`- id:` 边界计数不变。
 
@@ -165,8 +184,10 @@ closeout 批次（本 retro/report/台账面）在它自己的 commit 里，回�
 
 - **G1 receipt 摘要检测器存在但未接线**，且存量债巨大（登记批 1,882 条 / 329 个 BET；closeout 批
   终态 1,887 条 / 330 个 BET —— 净增的 5 条恰是本批编辑 PR-3 报告后 T10-213 变陈旧的那 5 条，
-  即 G2；本批自己的 6 条在摘要回钉后归零）。两条读数都是瞬态，接线时以当时的
-  `--report` 为准。接法见 §2 的三步顺序。
+  即 G2；本批自己的 6 条在摘要回钉后归零）。换一把独立仪器复核：取 `origin/main` 的台账与
+  `git show origin/main:<path>` 的字节逐键比，分母 **2,250** 条带摘要的键、陈旧 **1,887** 条 /
+  **330** 个 BET —— 与 `sync-bet-digests.py --report`（工作树基准）逐位一致，所以这个数不是本地脏树造出来的。
+  两条读数都是瞬态，接线时以当时的 `--report` 为准。接法见 §2 的三步顺序。
 - **G2 `BET-Y2Q4-T10-213` 的 5 条 receipt 需从 `bd2ed573…` 重算为 `15ba278f44b1f…`**。
 - **G3 `#`-静默截断**：`done_when`/`non_goals` 标量含 `" #"` 会被当注释吃掉后半段且无报错
   （T10-213 登记时实证，#4553 用引号修复）。新条目一律经 `yaml.safe_dump` 构造并**回读解析**核对。
@@ -184,11 +205,39 @@ closeout 批次（本 retro/report/台账面）在它自己的 commit 里，回�
   分布：`stable-python3` 19 条、`python3` 1 条（就是它）。修法是一行改 `stable-python3`（别名在
   `:82`），但 `services.yaml` 不在本 BET 的 `write_surfaces` 内，且该红是本批交付的环境底噪，
   故只登记不顺手改。判据留给下一个人：**看到 service-config-drift 红先问"用哪个解释器调的"**。
-- **G7（closeout 批次新增）`BET-Y2Q4-T4-06` 让 `lint` 在 main 上不再是 `no errors`**：#4564 铸造的
-  条目绑定 `docs/superpowers/specs/2026-09-28-summary-four-sections.md`（该文件从未落地），7 条
-  `completion_evidence` ref 不解析，由此派生 `OVERALL_STATE_MISMATCH: declared='delivery_accepted'
-  derived='blocked'` 与 `BET_DONE_REQUIRES_DELIVERY_ACCEPTED`，`bet-ledger.py lint` 汇总为
-  `10 个问题`（全部 owner = `T4-06`，本 BET 的 212/214 两侧 0 条）。不动它：本 BET 的
-  `circuit_breaker` 把"给别的 bet 回填生命周期证据"列为停止条件，与 G2 同一条边界。接手要做的是
-  补 spec 文件（或改 `spec_ref`）并把 7 条 ref 指向真实落地的 receipt —— 而这正是 G1 那条**未接线**
-  的检测器（`bin/ssot/sync-bet-digests.py`）本该在登记时就拦住的形态。
+- **G7（closeout 批次新增）`bet-ledger.py lint` 的 ERROR 集合绑定"当前检出的文件树"，不是台账的属性**。
+  在本分支（base `b24c353c3`，树里没有 #4564 落地的
+  `docs/superpowers/specs/2026-09-28-summary-four-sections.md`、
+  `docs/reports/business-4th-summary-sections-2026-09-28.md`、`.omo/_knowledge/retros/BET-Y2Q4-T4-06.md`）
+  复跑得 `10 个问题`：8 条 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`，加由此派生的
+  `OVERALL_STATE_MISMATCH: declared='delivery_accepted' derived='blocked'` 与
+  `BET_DONE_REQUIRES_DELIVERY_ACCEPTED`，owner 全是 `BET-Y2Q4-T4-06`。但把同一份 main 台账按
+  `git show origin/main:<path>` 的字节逐键复核，`T4-06` 的 stale 与 unresolvable **都是 0** ——
+  那三件产物都随 #4564 落地了，只是不在我这棵树上。**本条初稿写成"`T4-06` 让 main 不再是
+  `no errors`"，是把自己的检出范围当成仓级事实，已被这个复核否证并就地改写**（同一 BET 判 T10-212
+  死锚时用的正是这把尺子）。留给下一个人：在新 base 上看到这批红，先问"我的检出含 #4564 吗"，
+  别去给别人补 evidence；条目级 verify 因此一律按 owner 收窄。
+- **G8（终版门禁新增）`omostation.morning-brief` 是"注册表声明在案、机器上从未存在"的服务**。
+  四查皆空：`~/Library/LaunchAgents/com.omostation.morning-brief.plist` ABSENT（同目录 58 个 plist，
+  其中 23 个 `com.omostation.*`）、`launchctl print gui/501/com.omostation.morning-brief` → `Could not
+  find service`、`~/.local/log/morning-brief.log` 不存在、`crontab -l` 无该任务；而
+  `.omo/_truth/registry/services.yaml:321` 是 `enabled: true / generate: true / scheduler: launchd /
+  calendar {Hour: 7}`，notes 还写着"2026-09-29 起含督办台账超期/临期与当日邮件简报"。
+  即**这条早报从未在 07:00 跑过**，属 B3/B4b 的"已安装 label 集合 == registry 集合"缺口（正是 ADR-0456
+  风险表里"漏改的 plist 永远跑旧代码"的镜像形态：不是跑旧代码，是根本没跑）。
+  修法需要机器级写权限（`gen-service-configs.py --write` + `launchctl bootstrap`），超出本 BET 的
+  `write_surfaces` 与本轮授权，故只登记。判据留给下一个人：`--check` 报 drift 时先 `[ -f … ]` 分清
+  "内容不一致"与"文件不存在"，两者在输出里是同一句话。
+- **G9（终版门禁新增）`check-evidence-freshness.py` 的读数依赖状态文件有无，且生成支路会写回跟踪文件**。
+  `_latest_report()` 命中时套 `MIN_SCORE = 90.0`（`:24`、`:86`），未命中时走 `_run_evidence_smoke()`
+  生成支路，**该支路只检查 `error` 键、从不检查分数**（`:93-99`）—— 所以"首次跑必绿"，第二次跑同一份
+  内容才可能红；我在本批里实测到 `PASS (score=83.1)` 与 `FAIL (low_score 83.1 < 90.0)` 同源于同一棵树。
+  同一次单跑还把结果写回 `.omo/state/system.yaml`（`health_score_evidence: 100.0 → 83.1` +
+  `…_generated_at`），本批交付前已 `git restore` 剔除（AGENTS.md §7 生成态不随文档 PR 走）。
+  这条与 ADR-0129/B5 的"生成态摘库"是同一问题的两个面：**门禁自身**在 dev 检出里改写机器级跟踪状态，
+  就是本 plan 开头"开发打击运行"的实测样本。修法（登记，不在本 BET 修）：生成支路同样套 `MIN_SCORE`；
+  落点侧 `system.yaml` **尚未**登记为 projection —— `runtime-projections.yaml` 里有
+  `health.yaml`/`system_health.yaml`/`brief.md` 等 canonical 条目，`grep system.yaml` 零命中，且
+  `git cat-file -e origin/main:.omo/state/system.yaml` 证明它在 main 上**仍是跟踪文件**。所以 B5 的
+  "生成态摘库"对它是未完面：要么登记成 canonical（随即吃到 `.gitignore` 里 ADR-0128 那段 projection
+  平面的忽略规则），要么让 dev profile 下的 evidence-smoke 只写 state root。

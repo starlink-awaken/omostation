@@ -38304,12 +38304,13 @@ bets:
       cases raise FileNotFoundError.'
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: 'No ERROR line names BET-Y2Q4-T10-212 or BET-Y2Q4-T10-214, and meta.total_bets == len(bets).
-        Both are per-owner judgements on purpose: the previous wording (''OK -- <N> bets ... no errors'')
-        asserted a repo-wide property that any concurrent mint can falsify without this batch being
-        wrong - measured on main after #4564, lint reports 10 ERRORs all owned by BET-Y2Q4-T4-06 (SPEC_FILE_MISSING
-        plus seven COMPLETION_FILE_REF_MISSING, which then derive OVERALL_STATE_MISMATCH and BET_DONE_REQUIRES_DELIVERY_ACCEPTED),
-        while the two bets repaired here report 0. <N> itself is not a constant either: 509 at #4561,
-        510 after #4564.'
+        The judgement is per-owner on purpose, because lint''s ERROR set is a property of the checkout
+        it runs in, not of this entry: measured on a branch based at b24c353c3 (whose tree lacks the
+        three files #4564 landed), lint reports 10 ERRORs all owned by BET-Y2Q4-T4-06, while comparing
+        the same refs and digests against origin/main''s own blobs gives that bet zero stale and zero
+        unresolvable keys. A repo-wide ''OK -- <N> bets, no errors'' claim can thus be falsified by
+        checkout scope or by any concurrent mint (<N> was 509 at #4561 and 510 after #4564) without
+        this batch being wrong.'
   - cmd: git show --numstat --format= b24c353c3 -- docs/plans/3y-bet-ledger.yaml
     expect: 'Registration batch (landed as b24c353c3): only the BET-Y2Q4-T10-212 verify block,
       its six report receipt sha256 lines, and the inserted BET-Y2Q4-T10-214 entry appear; zero
@@ -38317,7 +38318,23 @@ bets:
   - cmd: git diff --check
     expect: no whitespace errors.
   - cmd: make gac-local-gate
-    expect: no new hard failures relative to baseline.
+    expect: the FAIL set after this batch is exactly three entries, each shown by an
+      alternate instrument on the same tree to be independent of this diff --
+      (a) bet-retro-due-check names only BET-Y2Q4-T4-06, whose retro is present on
+      origin/main (`git cat-file -e origin/main:.omo/_knowledge/retros/BET-Y2Q4-T4-06.md`)
+      but absent in a checkout whose base predates PR#4564, and no workflow runs this
+      check (`grep -rn retro-due .github/workflows/` -> no hit); (b) service-config-validate
+      and service-config-drift are one registry entry -- com.omostation.morning-brief
+      is
+      declared enabled+generate yet has no plist under ~/Library/LaunchAgents, no
+      launchctl entry and no ~/.local/log/morning-brief.log on this machine, and its
+      interpreter declared as bare `python3` resolves into uv's ephemeral build dir
+      whenever make runs it (same command under bare python3 -> ok:true, 0 violations);
+      (c) check-evidence-freshness reads a runtime report whose presence decides whether
+      MIN_SCORE applies at all, so the same tree passes then fails across two runs.
+      Nothing in the FAIL set may name BET-Y2Q4-T10-214 or a file this batch touched.
+      Readings are in report section 6.1; the two machine-level gaps are registered as
+      G8 and G9 rather than fixed here.
   - cmd: python3 bin/plan/bet-ledger.py show BET-Y2Q4-T10-214
     expect: 'Closeout batch judged by this entry''s own state, not by a diff scope: status done, done_at
         2026-09-29, seven verify items, six write_surfaces, and a completion_evidence block whose overall_state
@@ -38347,28 +38364,28 @@ bets:
               ref: git://origin/main@b24c353c37f1a1b97fc5f562b55f401a0641744f
             tests:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
+              sha256: sha256:acbe4a06c284f0ceae2f449f310c775b95d85dea0d3f4fe9bcada6ac80d63c02
             diff:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
+              sha256: sha256:acbe4a06c284f0ceae2f449f310c775b95d85dea0d3f4fe9bcada6ac80d63c02
             rollback:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
+              sha256: sha256:acbe4a06c284f0ceae2f449f310c775b95d85dea0d3f4fe9bcada6ac80d63c02
       operational:
         status: PROVEN
         evidence:
             live_canary:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
+              sha256: sha256:acbe4a06c284f0ceae2f449f310c775b95d85dea0d3f4fe9bcada6ac80d63c02
             fresh_receipt:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
+              sha256: sha256:acbe4a06c284f0ceae2f449f310c775b95d85dea0d3f4fe9bcada6ac80d63c02
             replay:
               ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-214.md
-              sha256: sha256:37dcdb5ac6da21b04c92ca4d0a26fe7d9a2db68cbba7a48b02bd53c4f1a3a5dc
+              sha256: sha256:985a0457449313f533e55f85c8034a7d218d4cb73cafffd7d08047301d42bf4e
             cleanup:
               ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
-              sha256: sha256:12b626600ede129dc8bdb787c43fd4c45093a8f740f2dcf141dc1c715c818095
+              sha256: sha256:acbe4a06c284f0ceae2f449f310c775b95d85dea0d3f4fe9bcada6ac80d63c02
       value:
         status: NOT_PROVEN
         evidence: {}
