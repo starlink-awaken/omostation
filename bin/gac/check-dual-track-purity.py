@@ -30,7 +30,18 @@ import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 DUALTRACK_YAML = WORKSPACE / ".omo" / "state" / "collab-dualtrack.yaml"
-BRIEF_MD = WORKSPACE / "BRIEF.md"
+sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+from repo_root import projection_read, state_root as runtime_state_root  # noqa: E402
+
+
+def brief_md() -> Path:
+    """本检出该读的 brief 投影 (BRIEF.md 已摘库, canonical 在 .omo/state/runtime/).
+
+    collab-dualtrack.yaml 是 tracked 治理 SSOT, 不是投影 —— 仍按固定路径读。
+    """
+    return projection_read(
+        WORKSPACE, "brief", registry_root=WORKSPACE, state_root=runtime_state_root()
+    )[0]
 
 # Patterns that indicate scenario contamination in throughput track
 SCENARIO_LEAK_PATTERNS = [
@@ -100,12 +111,14 @@ def _check_dualtrack_yaml() -> list[dict]:
 
 
 def _check_brief_throughput() -> list[dict]:
-    """Scan BRIEF.md throughput section for scenario leakage."""
+    """Scan the brief projection's throughput section for scenario leakage."""
     findings: list[dict] = []
-    if not BRIEF_MD.is_file():
+    brief = brief_md()
+    if not brief.is_file():
+        # 未生成 ≠ 违规: brief 是运行态投影, 没跑过 generator 的检出里没有它。
         return findings
 
-    content = BRIEF_MD.read_text(encoding="utf-8")
+    content = brief.read_text(encoding="utf-8")
 
     # Find the throughput section (### 📦 产能轨 to next ## or end)
     tp_match = re.search(
@@ -142,15 +155,25 @@ def main(argv: list[str] | None = None) -> int:
 
     findings: list[dict] = []
     findings.extend(_check_dualtrack_yaml())
-    findings.extend(_check_brief_throughput())
+    brief = brief_md()
+    brief_missing = not brief.is_file()
+    if not brief_missing:
+        findings.extend(_check_brief_throughput())
 
     if args.json:
-        print(json.dumps({"ok": len(findings) == 0, "findings": findings}))
+        print(json.dumps({
+            "ok": len(findings) == 0,
+            "complete": not brief_missing,
+            "status": "skipped" if brief_missing else "fail" if findings else "pass",
+            "findings": findings,
+        }))
     else:
         if findings:
             for f in findings:
                 print(f"  FAIL: [{f['kind']}] {f['message']}")
             print(f"check-dual-track-purity: FAIL ({len(findings)} finding(s))")
+        elif brief_missing:
+            print("check-dual-track-purity: SKIP (brief projection not generated)")
         else:
             print("check-dual-track-purity: PASS")
 

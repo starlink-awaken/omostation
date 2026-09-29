@@ -5,23 +5,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 _CHECKOUT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_CHECKOUT / "bin" / "lib"))
-from repo_root import code_root, state_root
+from repo_root import code_root, projection_name_for, projection_read, state_root
 
 MATRIX_FILE = code_root() / ".omo" / "_truth" / "registry" / "probe-heartbeat-matrix.yaml"
-
-# ADR-0129 Phase 2: the matrix keeps the legacy key for report continuity, but
-# canonical evidence under state/runtime/ wins whenever it exists.
-CANONICAL_FILES: dict[str, str] = {
-    ".omo/state/system_health.yaml": ".omo/state/runtime/system_health.yaml",
-    ".omo/state/health.yaml": ".omo/state/runtime/health.yaml",
-    ".omo/_control/governance-data.json": ".omo/state/runtime/governance-data.json",
-}
 
 
 def _load_yaml_simple(path: Path) -> dict:
@@ -68,30 +61,47 @@ def _read_json_field(path: Path, field: str) -> str | None:
 def _age_hours(ts_str: str) -> float:
     if not ts_str:
         return 9999
+    raw = ts_str.strip()
     try:
-        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-        now = datetime.now(UTC)
-        return (now - ts).total_seconds() / 3600
-    except (ValueError, TypeError):
+        # system_health.yaml 的 last_scan 是 epoch 浮点而不是 ISO 串; 只走
+        # fromisoformat 会把「刚跑过」判成 9999h 老化。口径对齐
+        # meta-doctor._parse_stamp 与 state-freshness-check._parse_iso。
+        if re.fullmatch(r"\d+(\.\d+)?", raw):
+            ts = datetime.fromtimestamp(float(raw), tz=UTC)
+        else:
+            ts = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        return (datetime.now(UTC) - ts).total_seconds() / 3600
+    except (ValueError, TypeError, OSError, OverflowError):
         return 9999
 
 
 def check_heartbeats() -> dict:
     matrix = _load_yaml_simple(MATRIX_FILE)
     heartbeats = matrix.get("heartbeats", [])
-    root = state_root()
+    checkout_root = code_root()
+    runtime_root = state_root()
     results = []
     failed = []
     absent = []
     for hb in heartbeats:
         rel = hb["file"]
-        canonical_rel = CANONICAL_FILES.get(rel)
-        file_path = root / rel
-        if canonical_rel and (root / canonical_rel).is_file():
-            file_path = root / canonical_rel
+        # The matrix keys are legacy paths for report continuity; which file to
+        # read is one question with one answer (repo_root.projection_read), so
+        # no reader keeps a second copy of the canonical mapping.
+        name = projection_name_for(rel, registry_root=checkout_root)
+        if name:
+            file_path, source = projection_read(
+                checkout_root,
+                name,
+                registry_root=checkout_root,
+                state_root=runtime_root,
+            )
+        else:
+            file_path, source = checkout_root / rel, "legacy"
         result = {
             "file": rel,
-            "checked_file": str(file_path.relative_to(root)) if file_path.is_relative_to(root) else str(file_path),
+            "checked_file": str(file_path.relative_to(checkout_root)) if file_path.is_relative_to(checkout_root) else str(file_path),
+            "source": source,
             "sla_hours": hb["sla_hours"],
             "severity": hb.get("severity", "P3"),
             "description": hb.get("description", ""),

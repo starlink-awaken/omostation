@@ -50,6 +50,8 @@ from pathlib import Path
 from typing import Any
 
 WS_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(WS_ROOT / "bin" / "lib"))
+from repo_root import projection_read, state_root as runtime_state_root  # noqa: E402
 
 
 def _read_yaml_field(yaml_path: Path, field: str) -> str | None:
@@ -74,10 +76,12 @@ def _read_yaml_field(yaml_path: Path, field: str) -> str | None:
 
 
 def collect_compass_radar(ws_root: Path) -> dict[str, Any]:
-    """Read .omo/state/health.yaml for the ISC-3 composite score."""
-    health_yaml = ws_root / ".omo" / "state" / "health.yaml"
+    """Read the health projection for the ISC-3 composite score."""
+    health_yaml, source = projection_read(
+        ws_root, "health", registry_root=ws_root, state_root=runtime_state_root()
+    )
     fields = ("health_score", "governance_anomaly_score", "freshness_score", "drift_score", "staleness_score")
-    out: dict[str, Any] = {"source": "compass_radar", "path": str(health_yaml)}
+    out: dict[str, Any] = {"source": "compass_radar", "path": str(health_yaml), "projection_source": source}
     for field in fields:
         raw = _read_yaml_field(health_yaml, field)
         if raw is None:
@@ -206,7 +210,11 @@ def compute_reconciliation(
 
     drift_detected = False
     warnings: list[str] = []
-    if state_values:
+    # 一致性是**两个**观测之间的性质: 只剩一个来源可测时 spread 恒为 0, 那不是
+    # "完全一致"而是"无从比较"。旧写法把两者都记成 100.0, 于是投影缺失 (常见于
+    # 新检出) 会把一致性抬成满分再乘权重进健康分 —— 没测量冒充了最好的测量。
+    comparable = len(state_values) >= 2
+    if comparable:
         spread = max(state_values) - min(state_values)
         # > 30 points spread on a 0-100 scale = meaningful disagreement
         if spread > 30:
@@ -215,9 +223,6 @@ def compute_reconciliation(
                 f"same-scope score spread = {spread:.0f} "
                 f"(compass {c_norm}, scorecard {s_norm})"
             )
-
-    # Reconciliation = 100 - spread (perfect = 100, max disagreement = 0)
-    if state_values:
         reconciliation_score = round(100.0 - spread, 1)
     else:
         reconciliation_score = None
@@ -343,13 +348,16 @@ def main() -> int:
             print("   unavailable:", ledger.get("error", "tool missing"))
         print()
         print("=" * 72)
-        print(f"对齐结果:  reconciliation_score = {alignment['reconciliation_score']}/100")
+        if alignment["reconciliation_score"] is None:
+            print("对齐结果:  reconciliation_score = 无从比较 (同口径来源不足两个)")
+        else:
+            print(f"对齐结果:  reconciliation_score = {alignment['reconciliation_score']}/100")
         if alignment["drift_detected"]:
             print(f"⚠️  DRIFT DETECTED — {len(alignment['warnings'])} warning(s):")
             for w in alignment["warnings"]:
                 print(f"   - {w}")
         else:
-            print("✅ 三方口径一致 (drift < 30)")
+            print("✅ 无同口径分歧 (drift < 30)" if alignment["reconciliation_score"] is not None else "✅ 无可比分歧 (未测)")
         if alignment["high_dimension"] and alignment["low_dimension"]:
             print(f"   high: {alignment['high_dimension']}  |  low: {alignment['low_dimension']}")
         print("=" * 72)

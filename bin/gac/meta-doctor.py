@@ -27,20 +27,20 @@ from pathlib import Path
 from typing import TypedDict
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+# cron 与 CI 用裸 python3 跑这里，解析器必须仍是标准库（无 pyyaml）。
+from repo_root import projection_read, projection_rels, state_root as runtime_state_root
 
-# M1 心跳登记: 相对路径 → (时间戳字段, SLA 小时)
+# M1 心跳登记: 投影名 (或未登记投影的相对路径) → (时间戳字段, SLA 小时)
+# 登记为投影的那两行, 报告键与读取路径一律由 runtime-projections.yaml 解析:
+# ADR-0129 Phase 2 之后 legacy 那份已摘库, 写死它等于在新检出里恒报缺失、
+# 在生产机上读一份冻结的旧值。
 HEARTBEATS: dict[str, tuple[str, int]] = {
-    ".omo/state/system_health.yaml": ("last_scan", 48),
-    ".omo/state/health.yaml": ("generated_at", 72),
+    "system_health": ("last_scan", 48),
+    "health": ("generated_at", 72),
+    "governance_data": ("generated_at", 24 * 7),
     # 周更 debt-audit 节奏配套的 dashboard 投影
     ".omo/_control/debt-dashboard/current.yaml": ("generated_at", 24 * 14),
-}
-
-# runtime-projections.yaml moves these derived snapshots under state/runtime/.
-# Keep the legacy key for report compatibility, but prefer canonical evidence.
-CANONICAL_HEARTBEATS: dict[str, str] = {
-    ".omo/state/system_health.yaml": ".omo/state/runtime/system_health.yaml",
-    ".omo/state/health.yaml": ".omo/state/runtime/health.yaml",
 }
 
 LAUNCHD_PREFIXES = ("com.omostation.", "com.opencode.", "com.l4.", "com.aetherforge.", "com.omlxc.")
@@ -103,20 +103,55 @@ def _parse_stamp(raw: str) -> datetime | None:
         return None
 
 
-def check_heartbeats(ws_root: Path, now: datetime | None = None) -> list[dict]:
+def _stamp_field(path: Path, field: str) -> datetime | None:
+    """取一个时间戳字段: JSON 投影按 json 解析, 其余按行扫 (纯标准库)。
+
+    governance-data.json 的键是带引号的 `"generated_at":`，行扫描匹配不到它，
+    于是 probe-heartbeat（用 json 读）判新鲜、这里判陈旧 —— 同一个证据不能有
+    两个口径。
+    """
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if path.suffix == ".json":
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            return None
+        value = data.get(field) if isinstance(data, dict) else None
+        return _parse_stamp(str(value)) if value is not None else None
+    for line in text.splitlines():
+        s = line.strip()
+        if s.startswith(field):
+            return _parse_stamp(s.split(":", 1)[1])
+    return None
+
+
+def check_heartbeats(
+    ws_root: Path,
+    now: datetime | None = None,
+    state_root: Path | None = None,
+) -> list[dict]:
     now = now or _now()
+    if state_root is None:
+        # 默认根就是本仓 —— 写根按 profile 解析；显式 --workspace 覆盖时调用者
+        # 指哪读哪，不再叠加 profile。
+        state_root = runtime_state_root() if ws_root == WORKSPACE else ws_root
     out = []
-    for rel, (field, sla_h) in HEARTBEATS.items():
-        canonical_rel = CANONICAL_HEARTBEATS.get(rel)
-        canonical_f = ws_root / canonical_rel if canonical_rel else None
-        f = canonical_f if canonical_f and canonical_f.is_file() else ws_root / rel
-        checked_rel = (
-            canonical_rel if canonical_f and canonical_f.is_file() else rel
-        )
+    for hb_key, (field, sla_h) in HEARTBEATS.items():
+        try:
+            entry_rel = projection_rels(hb_key, registry_root=ws_root)[1]
+            f, source = projection_read(
+                ws_root,
+                hb_key,
+                registry_root=ws_root,
+                state_root=state_root,
+            )
+        except KeyError:
+            entry_rel, f, source = hb_key, ws_root / hb_key, "legacy"
+        checked_rel = str(f.relative_to(ws_root)) if f.is_relative_to(ws_root) else str(f)
         entry = {
-            "file": rel, "field": field, "sla_hours": sla_h,
+            "file": entry_rel, "field": field, "sla_hours": sla_h,
             "checked_file": checked_rel,
-            "source": "canonical" if checked_rel != rel else "legacy",
+            "source": source,
             "exists": f.exists(), "age_hours": None, "ok": False,
             # Absent means the generator has not run in this checkout — a
             # runtime product, not a lapsed heartbeat. Tracked heartbeats always
@@ -124,12 +159,7 @@ def check_heartbeats(ws_root: Path, now: datetime | None = None) -> list[dict]:
             "absent": not f.exists(),
         }
         if f.exists():
-            m = None
-            for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
-                s = line.strip()
-                if s.startswith(field):
-                    m = _parse_stamp(s.split(":", 1)[1])
-                    break
+            m = _stamp_field(f, field)
             if m:
                 age = (now - m).total_seconds() / 3600.0
                 entry["age_hours"] = round(age, 1)
