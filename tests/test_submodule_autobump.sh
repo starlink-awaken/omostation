@@ -6,6 +6,11 @@
 # read, write, or log the real Workspace submodules.  Historical RED evidence
 # from the pre-fix implementation was 20 pass / 8 fail; this harness replaces
 # its contaminated fixture with reproducible, isolated evidence.
+#
+# Scenarios run in PARALLEL (see the runner block at the bottom): they share no
+# state, and the wall time is almost entirely fixture git-IO rather than the
+# script under test.  Serial runs took 161s (measured 2026-09-29), which exceeds
+# run-shell-suites.sh's 120s per-suite timeout; running all 9 at once takes 30s.
 
 set -u
 
@@ -311,7 +316,51 @@ EOF
 }
 
 echo '=== submodule-autobump contract tests ==='
-test_t0; test_t1; test_t2; test_t3; test_t4; test_t5; test_t6; test_t6b; test_t7
+# Each scenario builds its own mktemp fixture, so they share no state and may run
+# concurrently.  Why parallel: measured 2026-09-29, T0/T1 -- "build fixture, run the
+# script once" no-ops -- cost 25s each, while T3 does four extra advance_remote rounds
+# in 18s ⇒ the fixture git-IO dominates, not the script under test.  Scaling with 9
+# scenarios: JOBS=1 161s | JOBS=4 106s | JOBS=8 45s | JOBS=9 30s (CPU stayed under
+# 1.6 cores, i.e. these are concurrency-friendly waits).  Default is all-at-once;
+# `SAB_JOBS=1` restores the old serial behaviour for single-scenario debugging.
+#
+# bash 3.2 (macOS /bin/bash) has no `wait -n`, so each scenario writes its own output
+# and rc file, and the parent re-reads them after `wait`.  Output is printed in
+# SCENARIOS order so the report stays deterministic despite concurrent execution.
+SCENARIOS="test_t0 test_t1 test_t2 test_t3 test_t4 test_t5 test_t6 test_t6b test_t7"
+JOBS="${SAB_JOBS:-9}"
+RESULTS="$(mktemp -d "${TMPDIR:-/tmp}/submodule-autobump-results.XXXXXX")"
+trap 'rm -rf "${RESULTS:-}"' EXIT
+
+started=0
+for scenario in $SCENARIOS; do
+  (
+    "$scenario" >"$RESULTS/$scenario.out" 2>&1
+    printf '%s' $? >"$RESULTS/$scenario.rc"
+  ) &
+  started=$((started + 1))
+  if [ "$started" -ge "$JOBS" ]; then
+    wait
+    started=0
+  fi
+done
+wait
+
+# Aggregate. PASS/FAIL/FAILED live in this shell (the scenarios ran in subshells),
+# so they are rebuilt here from each scenario's captured output.
+for scenario in $SCENARIOS; do
+  cat "$RESULTS/$scenario.out"
+  while IFS= read -r line; do
+    case "$line" in
+      "  PASS "*) PASS=$((PASS + 1)) ;;
+      "  FAIL "*) FAIL=$((FAIL + 1)); FAILED+=("${line#  FAIL }") ;;
+    esac
+  done <"$RESULTS/$scenario.out"
+  scenario_rc="$(cat "$RESULTS/$scenario.rc" 2>/dev/null || printf '?')"
+  if [ "$scenario_rc" != "0" ]; then
+    bad "$scenario exited rc=$scenario_rc (scenario crashed)"
+  fi
+done
 printf '=== RESULT: PASS=%s FAIL=%s ===\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
   printf 'failed: %s\n' "${FAILED[*]}"

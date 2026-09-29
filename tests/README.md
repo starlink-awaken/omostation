@@ -21,6 +21,10 @@ Run all: `uv run pytest tests/ -q`
 
 Run all: `bash tests/integration/run-all.sh`
 
+**Shell suites actually run in CI** via `bash tests/run-shell-suites.sh` (aggregates every
+`tests/**/*.sh` minus `tests/shell-suites.exclude`; per-suite timeout 120s). That is the
+entry point wired into the `gac-gate` workflow — `run-all.sh` is legacy and is itself excluded.
+
 | File | What It Tests |
 |------|---------------|
 | `run-all.sh` | Unified test harness — runs all integration tests in sequence |
