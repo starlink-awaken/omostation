@@ -9,7 +9,10 @@ RESOLVE_SCRIPT="$SCRIPT_DIR/../../bin/gac/resolve-root-remote.sh"
 
 assert_in() {  # $1=label $2=file $3=pattern
   local label="$1" file="$2" pattern="$3"
-  if rg -q --fixed-strings "$pattern" "$file"; then
+  # 用 `grep -F` 而非 `rg`: CI runner 上**没有 ripgrep** —— 2026-09-29 首次把本测试接入 CI 时
+  # 实测 `rg: command not found`, 该测试因此在 CI 里根本跑不起来 (本机有 rg 才一直"绿")。
+  # grep 到处都有; 脚本内不会命中本机交互式的 `grep→rg` 别名。
+  if grep -qF -- "$pattern" "$file"; then
     printf '  ✅ %s\n' "$label"
   else
     printf '  ❌ %s (missing in %s: %s)\n' "$label" "$(basename "$file")" "$pattern"

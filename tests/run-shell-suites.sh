@@ -24,42 +24,52 @@ list_only=0
 [ "${1:-}" = "--list" ] && list_only=1
 
 # ── 收集 ────────────────────────────────────────────────────────────────
+# 兼容 bash 3.2 (macOS 自带 /bin/bash): 不用 mapfile / 关联数组。
 SELF_REL="tests/run-shell-suites.sh"   # 聚合器自身, 必须排除 (否则自递归)
-mapfile -t ALL < <(find tests -name '*.sh' -not -path '*/_archive/*' | LC_ALL=C sort)
+ALL=()
+while IFS= read -r _t; do
+  [ -n "$_t" ] || continue
+  [ "$_t" = "$SELF_REL" ] && continue
+  ALL+=("$_t")
+done < <(find tests -name '*.sh' -not -path '*/_archive/*' | LC_ALL=C sort)
 [ "${#ALL[@]}" -gt 0 ] || { echo "❌ tests/ 下没找到任何 *.sh" >&2; exit 1; }
-_filtered=()
-for _t in "${ALL[@]}"; do [ "$_t" = "$SELF_REL" ] || _filtered+=("$_t"); done
-ALL=("${_filtered[@]}")
 
-declare -A REASON=()
+# 排除名单校验 (§ 不腐烂): 每行 `路径  # 原因`, 路径必须存在。
+EXCLUDE_PATHS=""
 if [ -f "$EXCLUDE_FILE" ]; then
   while IFS= read -r line; do
     case "$line" in ''|'#'*) continue ;; esac
     path="${line%%#*}"
-    reason="${line#*#}"
     path="$(printf '%s' "$path" | tr -d '[:space:]')"
-    reason="$(printf '%s' "$reason" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
     [ -n "$path" ] || continue
-    # 名单不腐烂: 排除项必须真实存在
     if [ ! -f "$path" ]; then
       echo "❌ 排除名单指向不存在的文件: $path (改名/删除后请同步 $EXCLUDE_FILE)" >&2
       exit 1
     fi
-    REASON["$path"]="${reason:-未注明原因}"
+    EXCLUDE_PATHS="${EXCLUDE_PATHS}${path}
+"
   done < "$EXCLUDE_FILE"
 fi
+
+reason_for() {  # 取某条排除的原因 (供 --list 显示)
+  sed -n "s|^[[:space:]]*$1[[:space:]]*#*[[:space:]]*||p" "$EXCLUDE_FILE" 2>/dev/null | head -1
+}
+is_excluded() {
+  [ -n "$EXCLUDE_PATHS" ] || return 1
+  printf '%s' "$EXCLUDE_PATHS" | grep -qxF -- "$1"
+}
 
 INCLUDED=()
 EXCLUDED=()
 for t in "${ALL[@]}"; do
-  if [ -n "${REASON[$t]:-}" ]; then EXCLUDED+=("$t"); else INCLUDED+=("$t"); fi
+  if is_excluded "$t"; then EXCLUDED+=("$t"); else INCLUDED+=("$t"); fi
 done
 
 if [ "$list_only" = "1" ] || [ "${RUN_SHELL_TESTS_ALL:-0}" = "1" ]; then
   echo "== 纳入 (${#INCLUDED[@]}) =="
   printf '   %s\n' "${INCLUDED[@]}"
   echo "== 排除 (${#EXCLUDED[@]}) =="
-  for t in "${EXCLUDED[@]}"; do printf '   %-56s %s\n' "$t" "${REASON[$t]}"; done
+  for t in "${EXCLUDED[@]}"; do printf '   %-56s %s\n' "$t" "$(reason_for "$t")"; done
   [ "$list_only" = "1" ] && exit 0
   INCLUDED=("${ALL[@]}")   # RUN_SHELL_TESTS_ALL: 连排除项一起跑
 fi
