@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: PROPOSED
+status: ACCEPTED
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-09-29
@@ -12,7 +12,7 @@ tags: [clone-lifecycle, provenance, commit-identity, security, threat-model]
 
 # ADR-0460 — provenance 身份校验应只覆盖 clone 自身提交, 而非 frozen_root..HEAD 全区间
 
-- **Status**: PROPOSED（2026-09-29 提案；**本文只定设计与威胁模型, 实现未开始**）
+- **Status**: ACCEPTED（2026-09-29 principal 确认威胁模型取舍并批准实施；已落地于 `60f9e3eb5` / PR #4556）
 - **Date**: 2026-09-29
 - **Related**: ADR-0459（clone-lifecycle 管道三类阻塞，本文是其问题二「与多 agent 并发不兼容」的收敛方案）、
   ADR-0422（escape hatch / fingerprint）、ADR-0457
@@ -88,9 +88,25 @@ clone 绑定的身份**。而 `frozen_root_sha` 是 clone 建立时的 main。
 4. 在 6+ 并发 agent 环境跑通一次完整 `onboard → provenance → snapshot → changeset → integrate`
 5. `transfer_commit_identities_match`（`agent-clone.py:2701`）同源问题一并处理
 
+## 实施记录（2026-09-29）
+
+已按本文方案 A 实施（PR #4556）：
+
+- `commit_identities_match` 区间改为 `rev-list <head> --not <mainline refs>`
+- `_mainline_refs()` 要求 `requested_revision` 与 `refs/remotes/<remote>/main`
+  **全部可解析**，否则 `clone_mainline_ref_unavailable` fail closed；无 remote 同样拒绝
+- 同源修复 `transfer_commit_identities_match`
+- 三项契约测试（`tests/unit/test_clone_provenance_own_commits.py`），已验证有效性：
+  还原为旧行为则契约 2 FAILED
+
+### 落地时发现的约束
+
+`git rebase` 会用**当前 git config** 重写 **committer** 身份。真实 clone 的 clone-local
+`user.name/email` 必须等于绑定身份（`live_author_identity` 的硬性要求），否则 rebase 后
+自身提交的 committer 会变成他人，校验随即失败。方案 A 的正确性依赖这一点。
+
 ## 不做的事
 
-- 不在本文中实施代码改动
 - 不放宽 `provenance_late_binding`
 - 不改 claim 权威、fence 语义、发布栅栏（那是 ADR-0459 问题三）
 - 不用 escape hatch 绕过（`ADR-0422` 明确：provenance 失配不是「门禁误伤」）
