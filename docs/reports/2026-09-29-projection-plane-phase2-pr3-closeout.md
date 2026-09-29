@@ -268,8 +268,10 @@ git 跟踪面：回滚需与 `.gitignore` 同批 revert（PR-2 的摘库与忽�
   path-filter skip，`mergeStateStatus=CLEAN`，squash 合并为 **`ebea1fd18`**。
   合并前对这批 commit 跑过 L3 深度安全评审，两仓均零发现。
 - BET closeout（本 PR 承担，2026-09-29 实测）：
-  1. **台账 `verify` 第 2 条**改为可复跑的真实命令 `python3 bin/gac/meta-doctor.py --workspace .`
-     （`--json` 不存在，§7）。
+  1. **台账 `verify` 的投影行为判据**改为可复跑的定向测试
+     `uv run --with pyyaml python -m pytest tests/unit/test_projection_reader_resolution.py -q`：本次收尾实跑
+     **18 passed**。该套件直接覆盖 absent/stale 分离、外置 state root、JSON `generated_at` 与 epoch
+     老化；裸跑当前工作副本的巡检命令不作为“绿色”证据，因为这里仍有历史生成态和旧债务快照（见第 8 条）。
   2. **`write_surfaces` 去掉计划期预填的 phantom report 路径**。`bet-ledger.py lint` 自带
      `PHANTOM_REPORT_PATH` 检查（lint 里的 warning 段，非阻断），它抓到台账注册时写下的
      `docs/reports/2026-09-28-projection-plane-phase2-closeout.md` 从未落盘 —— 实测
@@ -306,4 +308,11 @@ git 跟踪面：回滚需与 `.gitignore` 同批 revert（PR-2 的摘库与忽�
   7. **done-transition 的 CI 侧实测**：`bet-ledger.py lint` 在置 `done` 之后 =
      `OK -- 506 bets, 16 tracks, no errors`（bet 总数未变，故 `META_TOTAL_BETS_DRIFT` 不触发；
      `BET_DONE_*` 零命中；残留的 WARN 全是历史 BET 的 squash-merge ancestry 提示，非本 BET）。
-
+  8. **收尾工作副本的原始命令结果（2026-09-29）**：`bet-ledger.py verify --execute` 原样运行
+     返回 1，不能记作全绿。`state-freshness-check.py` 返回 2：该副本已有 `.omo/state/system_health.yaml`
+     缺 `generated_at`，以及 `debt-dashboard/current.yaml` 超 SLA（312h）；`meta-doctor.py --workspace .`
+     返回 1：同一份旧投影不可解析并另有 `ritual_lapsed=1`。这些检查没有把 canonical 缺席当作 stale；
+     fresh/absent 分支由上面的 18 项测试覆盖。其余本次实跑：`current-state-coherence --json` 为
+     `ok=true`，三件摘除路径 `git ls-files` 输出为空，`test_omo_ingress_state.py` **1 passed**，
+     `make gac-local-gate` **68 checks PASS**、另有 **6 个已知不可用检查被跳过**。此处将原始失败原样
+     留档，不把它们改写成成功，也不把已知旧状态归因成本 BET 的回归。
