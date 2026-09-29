@@ -38142,6 +38142,69 @@ bets:
             价值门槛 = principal 采纳（审阅意见被用于修订报送稿/清单被实际复用）。
             最高单点价值已即时兑现：避免了带四个空章节报送的事故。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-213
+  title: Closeout report chronology erratum — BET-212 PR-3 workflow timeline
+  goal: Correct one factual sentence in the BET-212 PR-3 closeout report using immutable
+    workflow-run records and PR merge metadata; preserve all BET-212 status, evidence,
+    spec, and retrospective content.
+  status: candidate
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: Stop if any target other than §9 bullet 6 of the PR-3 closeout report
+    is needed, if source timestamps disagree, or if BET-212/spec/retro/run records would
+    need modification.
+  non_goals:
+  - Do not alter BET-Y2Q4-T10-212 status, completion evidence, accepted spec bytes/digest,
+    or retrospective conclusions.
+  - Do not alter historical workflow run records or other report sections.
+  - Do not introduce new workflow policy or rewrite prior closeout conclusions.
+  done_when:
+  - The report identifies the code run as blocked at 2026-09-29T07:21:24Z, before PR
+  - The report identifies the documentation run as ok at 2026-09-29T08:16:23Z, after
+    PR
+  - The report statements match the authoritative run records and GitHub merge metadata.
+  - BET-212's ledger status/evidence, accepted spec bytes/digest, and retrospective
+    are unchanged.
+  verify:
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: BET ledger schema and accepted-spec bindings pass without introducing errors.
+  - cmd: git diff --check
+    expect: no whitespace errors.
+  - cmd: make gac-local-gate
+    expect: no new hard failures.
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-29-bet-213-closeout-chronology-erratum.md
+  - docs/operations/workflow-waiver-2026-09-29-bet-213-registration.md
+  - docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-213.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-29-bet-213-closeout-chronology-erratum.md
+    spec_version: 1.0.0
+    content_digest: sha256:de32f0dfb34673d0fb7d3ea3bd89cdfff8cac9e235eb0fae56b6dfc9e5459d2a
+    decision_ref: decision://accepted/BET-Y2Q4-T10-213
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -38280,7 +38343,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 507
+  total_bets: 508
   windows:
   - Y1Q1
   - Y1Q2
