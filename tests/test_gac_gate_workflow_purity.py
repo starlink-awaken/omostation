@@ -171,6 +171,24 @@ def test_no_blocking_step_lives_outside_the_required_gate_job() -> None:
     assert not {job: names for job, names in offenders.items() if names}
 
 
+def test_shell_test_suites_have_a_ci_entry_point() -> None:
+    """shell 测试套件必须有执行入口 —— 否则就是「死测试」。
+
+    2026-09-29 实测: `tests/**/*.sh` 此前 **没有任何入口** (CI 不跑 / pytest 不收集 /
+    Makefile 不调), 其中 4 个早已变红却长期无人知。入口为 `tests/run-shell-suites.sh`,
+    纳入/排除规则见该脚本与 `tests/shell-suites.exclude`。
+    (本断言只要求"某处接了", 不锁具体 job —— 从 aux 提升为 required 时不必改它。)
+    """
+    hits = [
+        job
+        for job, spec in _jobs().items()
+        for step in (spec.get("steps") or [])
+        if "tests/run-shell-suites.sh" in str(step.get("run", ""))
+    ]
+    assert len(hits) == 1, hits
+    assert (ROOT / "tests" / "run-shell-suites.sh").is_file()
+
+
 def test_advisory_job_still_runs_every_moved_step() -> None:
     """搬迁不能顺手丢步骤：原 28 个 advisory 步应逐个出现在 aux job 里。
 

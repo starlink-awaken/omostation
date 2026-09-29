@@ -1,0 +1,14 @@
+# 未纳入 CI 的 shell 测试 —— 每行 `路径  # 原因`
+#
+# 由 tests/run-shell-suites.sh 读取:
+#   · 名单不腐烂: runner 会校验每个路径**确实存在** (改名/删除不同步即报错);
+#   · 新加的测试**默认被纳入**, 只有显式列在这里才排除 ⇒ 不会再出现无人执行的死测试;
+#   · 修好/加速后请把该行删掉, 它会自动回到 CI。
+#
+# 排序无关。原因请写「为什么现在不能纳入」+ 「怎样才可纳入」。
+
+tests/integration/run-all.sh                  # 聚合器: 自己会跑其它套件, 再被聚合会重复执行/递归
+tests/test_submodule_autobump.sh              # 慢 (>40s, 2026-09-29 实测): 瘦身或拆分后可纳入
+tests/bin/test_pasw_coverage.sh               # 预存红 (rc=1, 2026-09-29 实测): 待排查 (未纳入故长期无人知)
+tests/integration/e2e-smoke.sh                # 预存红 (rc=1, 2026-09-29 实测): 疑似需运行环境, 待排查
+tests/integration/test-sandbox-timemachine.sh # 预存红 (rc=1, 2026-09-29 实测): 疑似需运行环境, 待排查
