@@ -269,9 +269,14 @@ git 跟踪面：回滚需与 `.gitignore` 同批 revert（PR-2 的摘库与忽�
   合并前对这批 commit 跑过 L3 深度安全评审，两仓均零发现。
 - BET closeout（本 PR 承担，2026-09-29 实测）：
   1. **台账 `verify` 的投影行为判据**改为可复跑的定向测试
-     `uv run --with pyyaml python -m pytest tests/unit/test_projection_reader_resolution.py -q`：本次收尾实跑
-     **18 passed**。该套件直接覆盖 absent/stale 分离、外置 state root、JSON `generated_at` 与 epoch
-     老化；裸跑当前工作副本的巡检命令不作为“绿色”证据，因为这里仍有历史生成态和旧债务快照（见第 8 条）。
+     `uv run --with pyyaml --with pytest python -m pytest tests/unit/test_projection_reader_resolution.py -q`
+     ：本次收尾实跑 **18 passed**。该套件直接覆盖 absent/stale 分离、外置 state root、JSON `generated_at` 与 epoch
+     老化。**可复跑有前置**：其中 3 条用例（`test_omo_projection_path_resolves_registry_and_legacy_fallback`、
+     `test_omo_projection_path_does_not_fallback_when_registry_omits_name`、
+     `test_omo_doctor_does_not_fail_when_health_projection_is_not_generated`）经 `monkeypatch.syspath_prepend`
+     取 `projects/omo/src`，子模块未 init 时 `FileNotFoundError`（未 init 的工作副本实测 3 failed / 15 passed）——
+     不是回归，但把不写前置就不可原样复跑的命令记进台账就是假绿。裸跑当前工作副本的巡检命令同样不作为
+     "绿色"证据，因为这里仍有历史生成态和旧债务快照（见第 8 条）。
   2. **`write_surfaces` 去掉计划期预填的 phantom report 路径**。`bet-ledger.py lint` 自带
      `PHANTOM_REPORT_PATH` 检查（lint 里的 warning 段，非阻断），它抓到台账注册时写下的
      `docs/reports/2026-09-28-projection-plane-phase2-closeout.md` 从未落盘 —— 实测
@@ -317,3 +322,49 @@ git 跟踪面：回滚需与 `.gitignore` 同批 revert（PR-2 的摘库与忽�
      `ok=true`，三件摘除路径 `git ls-files` 输出为空，`test_omo_ingress_state.py` **1 passed**，
      `make gac-local-gate` **68 checks PASS**、另有 **6 个已知不可用检查被跳过**。此处将原始失败原样
      留档，不把它们改写成成功，也不把已知旧状态归因成本 BET 的回归。
+  9. **本节主体由并发 PR #4544 入库，本批只修证据完整性（2026-09-29 实测）**：closeout 内容
+     （本报告 + 台账 `status: done`/`done_at` + retro）由并发 PR **#4544** 于 `08:14:47Z` 合入 main
+     `3748c6798`。原 closeout 分支的 PR **#4552** 用只读 `git merge-tree --write-tree` 定位到冲突就在
+     台账与本报告两处，且其第 6 条会**回退** #4544 已入库的时间线更正 —— 按 PITFALL-GAT-006
+     （"已合入则放弃分支，勿开 PR"）关闭为 superseded，残值拆到最新 main 重做。main 上当时仍成立、
+     本批修掉的三处：
+     1. 台账 6 条指向本报告的 receipt 摘要**全部陈旧** —— `0fd5034b…`×5（tests/diff/rollback/
+        live_canary/fresh_receipt）+ `0e3c4bcb…`×1（cleanup），而 main 上实际文件内容摘要为
+        `bd2ed573…`（本批编辑前）；本批把 6 条全部重算为本报告编辑后的实际内容摘要。
+     2. `verify` 命令缺 `--with pytest`：`uv run --with pyyaml python -m pytest` 原样跑报
+        `No module named pytest`；同时未记 `projects/omo` 已 init 的前置（见第 1 条）。
+     3. `expect` 引用 `report §10`，而本报告终节就是本节（§9），不存在 §10 —— 正确锚点是**本节第 8 条**。
+     本批修复后的实测（同一工作副本）：台账 6 条 report receipt 与 1 条 retro receipt 逐条对比文件内容摘要
+     **6+1 全 match**；`verify` 命令按台账原样复跑 **18 passed**；`bet-ledger.py lint` =
+     `OK -- 509 bets, 16 tracks, no errors`。第 7 条的 506 是 closeout 分支基线（PR-3 `ebea1fd18`）上的
+     读数，main 之后各新增一条台账条目（`BET-Y2Q4-T4-05` 随 #4544、`BET-Y2Q4-T10-213` 在其后）。本批
+     交付 diff 里 `- id:` 行 **+1 / 删除 0** —— 新增的是承载本批修复的 `BET-Y2Q4-T10-214`（`in_progress`，
+     不是 done 态），`meta.total_bets` 由 `ledger-safe-insert.py` 按插入后 `len(bets)` **绝对派生**为 509
+     （脚本注释明令禁止 old+1 式自增，否则会把既有漂移平移一位），声明值与实际条数一致，故
+     `META_TOTAL_BETS_DRIFT` 与 `BET_DONE_*` 都不触发。
+     **检测缺口（与第 3 条 D0 空档同批登记）—— 缺的是接线，不是检测器**：`bet-ledger.py lint` 对
+     receipt 只查路径存在性（`PHANTOM_REPORT_PATH`，warning 非阻断）与未来日期
+     （`FUTURE_DATED_REPORT_PATH`，error），`bet-done-gate.yml` 的硬失败集合也不含摘要核对；但本仓
+     **已有**逐条比对摘要的工具 `bin/ssot/sync-bet-digests.py`（读 `accepted_specifications[].content_digest`
+     与 `completion_evidence.axes.*.evidence.*.sha256`，`--check/--report/--apply`；`git://` ref 按其
+     `resolve_ref()` 直接跳过）。`--apply` 只做 `sha256:[0-9a-f]{64}` 字面量替换并拒绝冲突替换，
+     docstring 明写禁整文件 `yaml.dump`（"it previously corrupted the ledger"），行为由
+     `tests/test_sync_bet_digests_integrity.py` 钉住（只改摘要 / status 会变即拒 / bet 被删即拒，
+     本批实测 **3 passed**）。它不构成门禁的证据：registry 条目
+     `bin/_registry/scripts/governance/sync-bet-digests.yaml` 的 `triggers: []`，且 `.github/` /
+     `Makefile` / `.omo/_truth/registry/` 对该脚本**零调用点** —— 只有人手动跑才有效果。判据固化：
+     编辑顺序一旦落后于引用写入，就跑 `sync-bet-digests.py --report` 逐条核对 —— 比的是文件字节
+     （等价 `shasum -a 256`），**不是** `git hash-object` 的 blob 值（后者含 `blob <len>\0` 对象头，
+     逐字节不可能相等）。
+     **本批的连带效应（计算而非推测）**：本报告摘要一变，所有指向它的 receipt 同时失效。main 上除本
+     BET 外还有 `BET-Y2Q4-T10-213`（其内容正是修本节第 6 条的时间线，由 #4553 置 done）以 5 条
+     `sha256:bd2ed573…` 引用本报告，合并后这 5 条需重算为本报告的新摘要才与内容一致。本批**不动它** ——
+     T10-212 的 `circuit_breaker` 把"backfill of lifecycle evidence for any other bet"列为停止条件，
+     越界改别人的 evidence 比留一条可复现的陈旧指针更贵；登记为后续项。真正的根因不是"忘了重算"，而是
+     **receipt 用可变文档的内容摘要当证据锚**：一份报告被 N 个 BET 引用时，每次编辑都要重算 N×（最多 4）
+     个键。存量债必须先量再接线：本批在同一副本跑 `--report`，全库 **1,882 条 mismatch / 329 个 BET**
+     （本 BET 与 T10-213 各 **0** 条）。因此把它直接做成仓级硬门禁会让 CI 第一天就红，等于把存量债
+     转嫁成阻断。可行的两条（同批登记，不在本 BET 范围内动 CI）：① 按 diff 范围核对 —— 只查本次 PR
+     触及的 receipt 键，另把 1,882 条存量登记进 `.omo/_truth/registry/gate-known-debt.yaml`（owner +
+     过期日）；② 把 receipt 钉到不可变 ref（`git://<commit>:<path>`）而非工作树内容摘要 —— 该路径
+     `sync-bet-digests.py` 本来就跳过，不会制造新的比对债。

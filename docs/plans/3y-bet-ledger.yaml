@@ -37997,10 +37997,12 @@ bets:
   - .gitignore:295 的死规则 !.omo/state/system_health.yaml（被 :395 精确忽略覆盖）删除。
   - projects/omo/tests/test_omo_ingress_state.py 断言改为「legacy 不再被写」并绿。
   verify:
-  - cmd: uv run --with pyyaml python -m pytest tests/unit/test_projection_reader_resolution.py -q
-    expect: 三件投影 absent≠stale、外置 state_root、epoch 老化与 JSON generated_at 均通过；当前
-      工作副本中的 state-freshness/meta-doctor 原始命令另有既存 stale 投影与 ritual 警告，不能用其
-      非零退出码替代 fresh-clone 行为断言，详见 PR-3 closeout report §10
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/test_projection_reader_resolution.py -q
+    expect: 18 passed；三件投影 absent≠stale、外置 state_root、epoch 老化与 JSON generated_at 均通过。
+      前置是 projects/omo 须已 init（3 条 omo 侧用例把 syspath 指向 projects/omo/src，未 init 时
+      FileNotFoundError，非回归）。当前工作副本中的 state-freshness/meta-doctor 原始命令另有既存 stale
+      投影与 ritual 警告，不能用其非零退出码替代 fresh-clone 行为断言，详见 PR-3 closeout report
+      §9 第 8 条
   - cmd: python3 bin/gac/check-dual-track-purity.py
     expect: exit 0（collab-dualtrack.yaml 仍 tracked，本轮不碰）
   - cmd: python3 bin/ssot/current-state-coherence.py --json
@@ -38031,28 +38033,28 @@ bets:
               ref: git://origin/main@ebea1fd187dad6266c0aecbba528f240a8da9a62
             tests:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:15ba278f44b1fb1e6aba5ba3a884db987bd1a602ef54481b1af22ad56c32dd69
             diff:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:15ba278f44b1fb1e6aba5ba3a884db987bd1a602ef54481b1af22ad56c32dd69
             rollback:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:15ba278f44b1fb1e6aba5ba3a884db987bd1a602ef54481b1af22ad56c32dd69
       operational:
         status: PROVEN
         evidence:
             live_canary:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:15ba278f44b1fb1e6aba5ba3a884db987bd1a602ef54481b1af22ad56c32dd69
             fresh_receipt:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+              sha256: sha256:15ba278f44b1fb1e6aba5ba3a884db987bd1a602ef54481b1af22ad56c32dd69
             replay:
               ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-212.md
               sha256: sha256:61d1de905285fdd3ecb6821a2d8c2d692620ef0e811a973b3579cc1d26dfc128
             cleanup:
               ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
-              sha256: sha256:0e3c4bcbbbd09a4df0d35a0334534b78464adf31786b16ef22f9b14572f68a9b
+              sha256: sha256:15ba278f44b1fb1e6aba5ba3a884db987bd1a602ef54481b1af22ad56c32dd69
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -38205,6 +38207,111 @@ bets:
         status: NOT_PROVEN
         evidence: {}
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-214
+  title: BET-212 closeout evidence integrity repair - stale receipt digests, unrunnable
+    verify command, dead section anchor
+  goal: 'Make the accepted BET-Y2Q4-T10-212 closeout evidence usable by the next reader,
+    without touching its lifecycle. Three measured defects on main after #4544 / #4553:
+    (1) all six ledger receipts pointing at docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+    are stale (sha256:0fd5034b... x5 plus sha256:0e3c4bcb... x1 against the committed
+    content digest); (2) verify[0].cmd omits --with pytest so it fails with ''No module
+    named pytest'' and omits the projects/omo initialization prerequisite that three
+    omo-side cases need; (3) verify[0].expect cites report section 10 which does not
+    exist (the report ends at section 9, intended anchor is section 9 bullet 8). The
+    repair also records how the closeout actually landed (PR #4544, superseded PR #4552)
+    and corrects the detection-gap claim in that bullet: bin/ssot/sync-bet-digests.py
+    already compares these digests and is tested, but is unwired, so the follow-up is
+    wiring plus debt registration against the measured repo-wide backlog, not writing
+    a new detector.'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: 'Stop on any edit to BET-Y2Q4-T10-212 status, done_at, accepted_specifications
+    bytes or digest, or its retrospective; on any change to section 9 bullet 6 of the
+    closeout report (the chronology corrected by #4544); on any edit to another bet''s
+    completion_evidence, including BET-Y2Q4-T10-213''s five report receipts; on any
+    new or modified CI check, any edit under .github/workflows/**, any change to bin/plan/bet-ledger.py
+    or bin/ssot/sync-bet-digests.py; on any write to .omo/state/** or BRIEF.md; and
+    on any whole-file yaml.dump of the ledger (literal text replacement scoped to the
+    target segment only).'
+  non_goals:
+  - Do not close or re-open BET-Y2Q4-T10-212; its lifecycle state is already correct
+    and this bet only repairs the pointers into it.
+  - Do not backfill lifecycle evidence for any other bet; T10-213's stale receipts are
+    registered as a follow-up with exact values instead of being re-pointed here.
+  - Do not wire sync-bet-digests.py into any gate in this bet; the 1,882-mismatch measured
+    backlog must be registered and scoped before it can gate.
+  - Do not add a new detector, linter rule, or CI workflow.
+  done_when:
+  - All six report receipts in BET-Y2Q4-T10-212.completion_evidence equal the SHA-256
+    of the report file bytes as committed in this PR, verified per-key against shasum
+    -a 256 output.
+  - verify[0].cmd of BET-Y2Q4-T10-212 runs verbatim from a checkout with submodules
+    initialized and reports 18 passed, and its expect states the projects/omo initialization
+    prerequisite.
+  - No textual reference in the ledger points at a report section that does not exist.
+  - The closeout report gains a section 9 bullet recording the actual merge path, the
+    three repaired defects, the post-repair measurements, and that the receipt-digest
+    detector exists but is unwired.
+  - Section 9 bullet 6 of the report is byte-identical to origin/main, and T10-212 status,
+    done_at, spec binding and retrospective are unchanged.
+  - BET-Y2Q4-T10-213's five report receipts remain untouched and are registered as follow-up
+    G2 with the exact target digest.
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_sync_bet_digests_integrity.py
+      -q
+    expect: 3 passed - the detector that performs this bet's per-key digest comparison
+      is tested and unchanged here; its registry entry has triggers [] and no call site
+      in .github/, Makefile or .omo/_truth/registry/, which is why the gap is wiring
+      rather than capability.
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/test_projection_reader_resolution.py
+      -q
+    expect: '18 passed - proves the repaired BET-Y2Q4-T10-212 verify[0].cmd is runnable
+      verbatim. Prerequisite: projects/omo must be initialized, else three omo-side
+      cases raise FileNotFoundError.'
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: OK -- 509 bets, 16 tracks, no errors (the inserted bet and meta.total_bets
+      stay consistent; no new error).
+  - cmd: git diff HEAD --numstat -- docs/plans/3y-bet-ledger.yaml
+    expect: Only the BET-Y2Q4-T10-212 verify block, its six report receipt sha256 lines,
+      and the inserted BET-Y2Q4-T10-214 entry appear; zero added or deleted '- id:'
+      lines besides the insertion.
+  - cmd: git diff --check
+    expect: no whitespace errors.
+  - cmd: make gac-local-gate
+    expect: no new hard failures relative to baseline.
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-29-bet-214-closeout-evidence-integrity.md
+  - docs/operations/workflow-waiver-2026-09-29-bet-214-registration.md
+  - docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-29-bet-214-closeout-evidence-integrity.md
+    spec_version: 1.0.0
+    content_digest: sha256:497d0134dd3fd6e0573eb020ba7bfdb142648a9bb88807f19f2d5521cb887a33
+    decision_ref: decision://accepted/BET-Y2Q4-T10-214
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -38343,7 +38450,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 508
+  total_bets: 509
   windows:
   - Y1Q1
   - Y1Q2
