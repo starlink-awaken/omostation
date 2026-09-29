@@ -6,8 +6,10 @@
 #   2. 沙箱创建后主工作区 git status 不受影响 (隔离性)
 #   3. 沙箱内失败 → 回滚后主工作区 git status 干净度 100% (时光机)
 #   4. 沙箱内禁止 push/merge → 拦截
-#   5. 熔断仍可被触发 → 非 0 且零残留 (2026-09-29 增: 阈值改为可 env 覆盖后, 用 SANDBOX_TIMEOUT_S=1
-#      构造超时。这条同时是「熔断器没被提阈值提废」的负控制 —— 若哪天阈值提得让 1s 也能过, 它会红)
+#   5. 熔断 + locked 残留清理 (2026-09-29 增): 用**与 runner 速度无关**的两条确定性构造 ——
+#      SANDBOX_TIMEOUT_S=0 (0 秒预算必然熔断) 与 手工 `git worktree lock` (熔断被 kill 在
+#      register+lock 之后的真实形态)。早先版本用 SANDBOX_TIMEOUT_S=1, 但 CI runner 上
+#      `git worktree add` < 1s 完成 ⇒ 构造不成立 (PR #4555 首跑实证), 故弃用时间型构造。
 #
 # 用法: bash tests/integration/test-sandbox-timemachine.sh
 
@@ -22,6 +24,10 @@ FAIL=0
 
 ok()  { echo "✅ $1"; PASS=$((PASS + 1)); }
 bad() { echo "❌ $1"; FAIL=$((FAIL + 1)); }
+
+# 兜底清理: 任何中途退出 (含断言失败提前退出) 都不给主仓留沙箱。rollback 幂等。
+cleanup() { bash "$SCRIPT" rollback "$SESSION" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
 
 echo "=== [1/5] --help exit 0 ==="
 if bash "$SCRIPT" --help >/dev/null 2>&1; then ok "--help exit 0"; else bad "--help exit 0"; fi
@@ -72,27 +78,54 @@ else
 fi
 bash "$SCRIPT" rollback "$SESSION" >/dev/null 2>&1 || true
 
-echo "=== [5/5] 熔断可触发 (SANDBOX_TIMEOUT_S=1) → 非 0 且零残留 ==="
-if SANDBOX_TIMEOUT_S=1 bash "$SCRIPT" create "$SESSION" >/dev/null 2>&1; then
-  bad "1s 预算下创建应熔断 (返回非 0), 却成功了"
+echo "=== [5/5] 熔断与 locked 残留 (确定性构造) ==="
+# 判据统一为「目录 + worktree 注册」两级 —— 只查目录会漏掉幽灵注册, 只查注册会漏掉 locked 目录。
+residual_of() {
+  local wt="$1" out=""
+  if [ -d "$wt" ]; then out="目录仍在"; fi
+  if git -C "$ROOT" worktree list --porcelain | command grep -qxF "worktree $wt"; then
+    out="${out:+$out; }worktree 注册仍在"
+  fi
+  printf '%s' "$out"
+}
+
+# (a) 0 秒预算 ⇒ 必然熔断 (与 runner 速度无关), 且零残留
+#     判别力边界 (实测): 0s 预算下 git 通常还来不及 register+lock 就被 kill ⇒ 本段守的是
+#     「熔断后不留残留」这一**结果**(防回归), 而不是 create 失败分支里 unlock 的必要性
+#     (回退该分支的 unlock 后本段仍绿)。create 分支的 unlock 与 (b) 段 rollback 的 unlock
+#     是同一规律的两个入口, 判别力由 (b) 段提供。
+if SANDBOX_TIMEOUT_S=0 bash "$SCRIPT" create "$SESSION" >/dev/null 2>&1; then
+  bad "0s 预算下创建应熔断, 却成功了"
+  bash "$SCRIPT" rollback "$SESSION" >/dev/null 2>&1 || true
 else
-  ok "熔断返回非 0 (circuit_breaker 生效)"
+  ok "0s 预算 ⇒ 熔断返回非 0 (circuit_breaker 生效)"
 fi
-# 零残留: 目录 + worktree 注册。超时时 git 被 kill 在半途并**持有 lock**, 只 prune 清不掉 (locked 被跳过),
-# 故判据必须两级都查 —— 只查目录会漏掉幽灵注册, 只查注册会漏掉 locked 目录。
-residual=""
-# 用 if 而非 `[ -d x ] && var=...`: 后者在这行侥幸安全 (set -e 豁免 `&&` 列表中非末条命令的失败,
-# 已实测: 条件为假时脚本继续), 但那份豁免很隐晦 —— 一旦把该行挪进函数/子 shell, 或在末尾追加命令,
-# 就会变成静默退出。if 无歧义, 不必依赖读者记得这条规则。
-if [ -d "$SANDBOX_WT" ]; then residual="目录仍在: $SANDBOX_WT"; fi
-if git -C "$ROOT" worktree list | command grep -qF "$SANDBOX_WT"; then
-  residual="${residual:+$residual; }worktree 注册仍在"
-fi
-if [ -n "$residual" ]; then
-  bad "熔断后残留 ($residual)"
-  SANDBOX_TIMEOUT_S=1 bash "$SCRIPT" rollback "$SESSION" >/dev/null 2>&1 || true
+res="$(residual_of "$SANDBOX_WT")"
+if [ -n "$res" ]; then
+  bad "熔断后残留 ($res)"
+  bash "$SCRIPT" rollback "$SESSION" >/dev/null 2>&1 || true
 else
   ok "熔断后零残留 (目录 + worktree 注册)"
+fi
+
+# (b) locked 沙箱 ⇒ rollback 能清掉 (locked 会让 `worktree remove` 与 `prune` 都跳过)
+if bash "$SCRIPT" create "$SESSION" >/dev/null 2>&1; then
+  git -C "$ROOT" worktree lock "$SANDBOX_WT" >/dev/null 2>&1 || true
+  # 构造有效性断言: 没锁上 ⇒ 本段失去判别力, 必须红而不是假绿
+  if git -C "$ROOT" worktree list | command grep -F "$SANDBOX_WT" | command grep -q locked; then
+    ok "构造有效: 沙箱处于 locked"
+  else
+    bad "构造无效: 未能锁定 (本段失去判别力)"
+  fi
+  bash "$SCRIPT" rollback "$SESSION" >/dev/null 2>&1 || true
+  res="$(residual_of "$SANDBOX_WT")"
+  if [ -n "$res" ]; then
+    bad "locked 沙箱回滚后残留 ($res)"
+  else
+    ok "locked 沙箱可被 rollback 清干净"
+  fi
+else
+  bad "前置: 创建沙箱失败 (无法构造 locked)"
 fi
 
 echo ""

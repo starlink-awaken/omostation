@@ -150,7 +150,7 @@ cmd_rollback() {
     # 兜底: 目录级删除 (worktree 注册残留时)
     rm -rf "$wt" 2>/dev/null || true
     git -C "$WS_ROOT" worktree prune
-    echo "⚠️ worktree remove 失败，已目录级兜底清理: $wt"
+    echo "⚠️ worktree remove 失败，已目录级兜底清理 (worktree 注册可能仍残留): $wt"
   fi
 }
 
