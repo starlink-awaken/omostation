@@ -13,7 +13,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import UTC, datetime, timezone
@@ -50,7 +53,7 @@ SOURCES = [
         "id": "arxiv-healph",
         "kind": "paper",
         "name": "arXiv heal-ph",
-        "url": "http://export.arxiv.org/rss/heal-ph",
+        "url": "http://export.arxiv.org/rss/q-bio.PM",
         "lang": "en",
     },
     {
@@ -138,6 +141,37 @@ def _fetch(url: str, timeout: int = 15) -> str:
         return resp.read().decode("utf-8", errors="replace")
 
 
+def _internal_signals() -> dict:
+    """本人业务信号: 督办台账超期/临期 + 当日邮件简报 + 当日健康干预卡(只读本机文件)。"""
+    today = time.strftime("%Y-%m-%d")
+    out: dict = {"overdue": [], "due_soon": [], "mail_briefing": None}
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ssot"))
+        import deadline_tracker as _dt_mod  # noqa: E402
+
+        if os.environ.get("OMO_TRACKED_TASKS"):  # 模块可能早于环境变量被导入, 调用时再套一遍
+            _dt_mod.TASKS_FILE = Path(os.environ["OMO_TRACKED_TASKS"])
+        load_tasks = _dt_mod.load_tasks
+
+        import datetime as _dt  # noqa: E402
+
+        for t in load_tasks():
+            if t.get("status") != "pending" or not t.get("deadline"):
+                continue
+            item = {"subject": t.get("subject", "")[:40], "deadline": t["deadline"], "owner": t.get("owner", "")}
+            if t["deadline"] < today:
+                out["overdue"].append(item)
+            elif (_dt.date.fromisoformat(t["deadline"]) - _dt.date.today()).days <= 3:
+                out["due_soon"].append(item)
+        out["overdue"], out["due_soon"] = out["overdue"][:5], out["due_soon"][:5]
+    except Exception as exc:  # 内部信号缺失不该毁晨报, 但也不能无声
+        print(f"policy_radar: 内部信号读取失败: {exc}", file=sys.stderr)
+    mb = Path.home() / "Documents" / "_inbox" / f"{today}-mail-briefing.md"
+    if mb.exists():
+        out["mail_briefing"] = mb.name
+    return out
+
+
 def collect(now: datetime | None = None) -> dict:
     """抓取→打标→评分→每源 top3（总量 ≤15）。失败源走缓存降级。"""
     now = now or datetime.now(UTC)
@@ -172,13 +206,23 @@ def collect(now: datetime | None = None) -> dict:
                     items.append({"title": title, "score": score, "tags": tags})
             items.sort(key=lambda x: -x["score"])
             items = items[:3]
-            fresh_snapshot[src["id"]] = {"items": items, "fetched_at": now.isoformat()}
+            # 200 但解析 0 条 ≈ 页面改版/被软墙: 用缓存降级, 不拿空结果覆盖有效缓存
+            if not items:
+                snap = cached.get("sources", {}).get(src["id"])
+                if snap and snap.get("items"):
+                    degraded_sources.append(src["id"])
+                    items = snap["items"]
+                else:
+                    degraded_sources.append(src["id"])
+            else:
+                fresh_snapshot[src["id"]] = {"items": items, "fetched_at": now.isoformat()}
         for it in items:
             brief_items.append({"source": src["name"], "source_id": src["id"], "kind": src["kind"], **it})
 
     brief_items.sort(key=lambda x: -x["score"])
     brief_items = brief_items[:15]
 
+    internal = _internal_signals()
     result = {
         "schema": SCHEMA,
         "generated_at": now.isoformat(),
@@ -186,6 +230,7 @@ def collect(now: datetime | None = None) -> dict:
         "degraded_sources": degraded_sources,
         "is_degraded": bool(degraded_sources),
         "items": brief_items,
+        "internal": internal,
     }
     if fresh_snapshot:
         STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -199,7 +244,17 @@ def render_markdown(brief: dict) -> str:
     if brief.get("is_degraded"):
         lines.append(f"> ⚠ 缓存快照降级版（源不可达：{', '.join(brief['degraded_sources'])}）")
         lines.append("")
+    internal = brief.get("internal") or {}
+    if internal.get("overdue") or internal.get("due_soon"):
+        lines.append("## 我的督办")
+        for it in internal.get("overdue", []):
+            lines.append(f"- 🔴 已超期: {it['subject']}（{it['deadline']}，{it.get('owner') or '未指派'}）")
+        for it in internal.get("due_soon", []):
+            lines.append(f"- 🟡 三日内到期: {it['subject']}（{it['deadline']}）")
+        lines.append("")
     if not brief["items"]:
+        if internal.get("overdue") or internal.get("due_soon"):
+            return "\n".join(lines)
         lines.append("今日无高价值条目（白名单零命中）。")
         return "\n".join(lines)
     by_tag: dict[str, list[dict]] = {}
