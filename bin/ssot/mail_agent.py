@@ -96,14 +96,18 @@ def classify_mail(mail: Mail) -> dict[str, Any]:
         for h in hist
     )
     prompt = (
-        "你是邮件分类助手。请将以下邮件分类为:\n"
-        "- 通知 (上级通知/政策文件/会议通知)\n- 任务 (需要执行: 收集数据/提交报告/转发文件)\n"
+        # 按「是否要求收件方做事」分类: 公文任务几乎都以「关于…的通知」下发,
+        # 按体裁分会把报送/填报类任务判成通知(2026-09-29 实测 7-9/12 → 12/12)
+        "你是邮件分类助手。按「收件方是否被要求做事」分类, 不看文件体裁"
+        "(公文标题常为「关于…的通知」, 体裁不决定类别):\n"
+        "- 任务: 要求收件方执行动作, 如报送/填报/上报/提交/转发/组织/收集/参会, 通常带截止时间\n"
+        "- 通知: 仅告知信息(印发政策/值班安排/结果公示), 收件方只需知悉\n"
         "- 参考 (资讯/学术)\n- 垃圾 (广告)\n- 个人\n\n"
         + (f"该发件人历史分类(保持一致性):\n{hist_lines}\n\n" if hist_lines else "")
         + f"标题: {mail.subject}\n发件人: {mail.sender}\n正文: {mail.body[:300]}\n\n"
         f'输出 JSON: {{"category":"...","priority":"high/medium/low","summary":"摘要","action_needed":"动作或空"}}'
     )
-    response = llm_ask(prompt, timeout=30.0, model="qwen-3.8-27b")
+    response = llm_ask(prompt, timeout=30.0, model="triage")
     if not response:
         result = {
             "category": "未分类",
@@ -144,7 +148,7 @@ def extract_task(mail: Mail, classification: dict) -> dict[str, Any] | None:
         f"这封邮件需要执行什么任务?\n标题: {mail.subject}\n发件人: {mail.sender}\n正文: {mail.body[:400]}\n\n"
         f'输出 JSON: {{"task_type":"转发通知/收集数据/提交报告/其他","deadline":"截止时间","target":"对象","required_docs":"文档","steps":"步骤"}}'
     )
-    response = llm_ask(prompt, timeout=30.0, model="qwen-3.8-27b")
+    response = llm_ask(prompt, timeout=30.0, model="triage")
     if not response:
         return None
     m = re.search(r"\{.*\}", response, re.DOTALL)
@@ -203,7 +207,8 @@ def generate_briefing(mails: list[Mail], classifications: list[dict]) -> str:
             lines.append("")
 
     if by_cat.get("任务"):
-        advice = llm_ask(f"今天有{len(by_cat['任务'])}个任务，给出优先排序建议(一句话)。", model="qwen-3.8-27b")
+        subjects = "\n".join(f"- {m.subject[:60]}" for m, _ in by_cat["任务"])
+        advice = llm_ask(f"今天有以下任务:\n{subjects}\n给出优先排序建议(一句话)。", model="fast")
         if advice:
             lines += ["## 💡 AI 建议", advice[:200], ""]
 
