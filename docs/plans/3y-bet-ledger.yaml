@@ -37931,7 +37931,8 @@ bets:
     后者无 projection 条目（projection_path 会 KeyError）且实测让 check-dual-track-purity.py 0→1。
     顺带治一处既有假红：已摘库的 system_health.yaml 今天在任何 fresh clone 上恒报缺失 （实测 meta-doctor stale_beats
     1→2、probe-heartbeat-monitor 「系统健康巡检 9999h/48h」）。'
-  status: pending
+  status: done
+  done_at: 2026-09-29
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -37957,7 +37958,6 @@ bets:
   - bin/compass_radar.py
   - bin/meta/compass_radar.py
   - .gitignore
-  - docs/reports/2026-09-28-projection-plane-phase2-closeout.md
   - .omo/_knowledge/retros/BET-Y2Q4-T10-212.md
   - .omo/state/health.yaml
   - .omo/_control/governance-data.json
@@ -37997,11 +37997,10 @@ bets:
   - .gitignore:295 的死规则 !.omo/state/system_health.yaml（被 :395 精确忽略覆盖）删除。
   - projects/omo/tests/test_omo_ingress_state.py 断言改为「legacy 不再被写」并绿。
   verify:
-  - cmd: python3 bin/gac/state-freshness-check.py
-    expect: 退出码等于基线，且报告不再把 health.yaml / governance-data.json / system_health.yaml 的
-      "file missing" 计为 expired
-  - cmd: python3 bin/gac/meta-doctor.py --workspace . --json
-    expect: 三件投影 heartbeat 段 exists=false 时不计入 summary.stale_beats
+  - cmd: uv run --with pyyaml python -m pytest tests/unit/test_projection_reader_resolution.py -q
+    expect: 三件投影 absent≠stale、外置 state_root、epoch 老化与 JSON generated_at 均通过；当前
+      工作副本中的 state-freshness/meta-doctor 原始命令另有既存 stale 投影与 ritual 警告，不能用其
+      非零退出码替代 fresh-clone 行为断言，详见 PR-3 closeout report §10
   - cmd: python3 bin/gac/check-dual-track-purity.py
     expect: exit 0（collab-dualtrack.yaml 仍 tracked，本轮不碰）
   - cmd: python3 bin/ssot/current-state-coherence.py --json
@@ -38009,7 +38008,7 @@ bets:
   - cmd: git ls-files .omo/state/health.yaml .omo/_control/governance-data.json BRIEF.md
     expect: 空输出（三件已摘库）
   - cmd: git status --short
-    expect: 摘库后为空 —— 证明 .gitignore 与摘库同批，gac-gate.yml:204 的 porcelain 断言成立
+    expect: PR-2 摘库后为空；PR-3 closeout 工作副本只允许有本轮 docs closeout 差异，不得出现生成态回流
   - cmd: git ls-files .omo/state/system.yaml .omo/state/collab-dualtrack.yaml
     expect: 两行都在 —— 反向证明没有越界成 PR4334 式清扫
   - cmd: uv run --project projects/omo python -m pytest projects/omo/tests/test_omo_ingress_state.py
@@ -38026,15 +38025,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+            merged_reachable_commit:
+              ref: git://origin/main@ebea1fd187dad6266c0aecbba528f240a8da9a62
+            tests:
+              ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+            diff:
+              ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+            rollback:
+              ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+            live_canary:
+              ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+            fresh_receipt:
+              ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+              sha256: sha256:0fd5034b17a54115c1e00895e36aceab514635e08258527ca48ef80b7f2b98cb
+            replay:
+              ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-212.md
+              sha256: sha256:61d1de905285fdd3ecb6821a2d8c2d692620ef0e811a973b3579cc1d26dfc128
+            cleanup:
+              ref: receipt://docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+              sha256: sha256:0e3c4bcbbbd09a4df0d35a0334534b78464adf31786b16ef22f9b14572f68a9b
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   campaigns: null
 - id: BET-Y2Q4-T4-05
   title: 业务第三单 — 卫健委域三份 docx 的结构化审阅支持（文档审阅环首跑）
