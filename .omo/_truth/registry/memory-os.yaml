@@ -208,6 +208,14 @@ adapters:
     notes:
     - Scene-only; no global graph truth
     - Production graph path is Neo4j Cypher FACT, not full graphiti-core
+  hindsight:
+    status: stub_optional
+    default: false
+    production_ready: false
+    notes:
+    - PoC 占位 (2026-09-29 调研, docs/reports/2026-09-29-hindsight-memory-research.md)
+    - 未接入任何调用面; 若推进 PoC 必须走 bos://memory/mos/*, 禁止裸 MCP (ARCHITECTURE.md:103)
+    - 自托管 MIT 干净; 上游 pre-1.0 (retain/reflect 正确性 bug), MCP+PG 默认无鉴权
   gbrain_dream:
     status: production_engine
     default: orchestration_only
