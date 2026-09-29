@@ -368,7 +368,8 @@ release_diagnose() {
   local diagnose_session="$1"
   validate_session "$diagnose_session"
   local diagnose_wt="$WS_PARENT/ws-$diagnose_session"
-  local finding=0 line path sub_path sub_status sub_name pasw_wt
+  local finding=0 record path status_code index_record index_mode
+  local sub_path sub_status sub_name pasw_wt status_tmp configured_pasw_names
 
   if [ ! -d "$diagnose_wt" ] || ! git -C "$diagnose_wt" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "release-diagnose: unable to inspect worktree: $diagnose_wt" >&2
@@ -378,26 +379,65 @@ release_diagnose() {
 
   classify_diagnose_path() {
     local diagnose_path="$1"
-    case "$diagnose_path" in
-      .omo/*|docs/generated/*|docs/cli/*)
-        printf '[generated] path=%s recommendation=review-generated\n' "$diagnose_path"
-        ;;
-      projects/*)
-        printf '[pointer] path=%s recommendation=review-pointer\n' "$diagnose_path"
-        ;;
-      *)
-        printf '[dirty-root] path=%s recommendation=preserve-and-review\n' "$diagnose_path"
-        ;;
+    index_record="$(git -C "$diagnose_wt" ls-files --stage -- "$diagnose_path" 2>/dev/null || true)"
+    index_mode="${index_record%% *}"
+    if [ "$index_mode" = "160000" ]; then
+      printf '[gitlink] path=%s recommendation=review-pointer\n' "$diagnose_path"
+    elif case "$diagnose_path" in
+      .omo/*|docs/generated/*|docs/cli/*) true ;;
+      *) false ;;
     esac
+    then
+      printf '[generated] path=%s recommendation=review-generated\n' "$diagnose_path"
+    else
+      printf '[dirty-root] path=%s recommendation=preserve-and-review\n' "$diagnose_path"
+    fi
+  }
+  is_valid_pasw_worktree() {
+    local candidate="$1" candidate_top expected_top
+    [ -d "$candidate" ] || return 1
+    candidate_top="$(git -C "$candidate" rev-parse --show-toplevel 2>/dev/null)" || return 1
+    expected_top="$(cd "$candidate" 2>/dev/null && pwd -P)" || return 1
+    [ "$candidate_top" = "$expected_top" ]
   }
 
-  while IFS= read -r line; do
-    [ -z "$line" ] && continue
-    path="${line:3}"
-    [ -n "$path" ] || continue
+
+  if ! status_tmp=$(mktemp "${TMPDIR:-/tmp}/gac-release-diagnose.XXXXXX"); then
+    echo "release-diagnose: unable to allocate status buffer" >&2
+    return 2
+  fi
+  if ! git -C "$diagnose_wt" status --porcelain=v1 -z --untracked-files=all >"$status_tmp" 2>/dev/null; then
+    rm -f "$status_tmp"
+    echo "release-diagnose: unable to inspect root status" >&2
+    return 2
+  fi
+  while IFS= read -r -d '' record; do
+    [ -n "$record" ] || continue
+    status_code="${record:0:2}"
+    path="${record:3}"
+    [ -n "$path" ] || {
+      rm -f "$status_tmp"
+      echo "release-diagnose: unsafe empty status path" >&2
+      return 2
+    }
+    case "$path" in
+      "$PASW_SUBTREE_DIR"|"$PASW_SUBTREE_DIR"/*)
+        continue
+        ;;
+    esac
     classify_diagnose_path "$path"
     finding=1
-  done < <(git -C "$diagnose_wt" status --porcelain --untracked-files=all)
+    case "${status_code:0:1}" in
+      R|C)
+        if ! IFS= read -r -d '' path; then
+          rm -f "$status_tmp"
+          echo "release-diagnose: unsafe rename status record" >&2
+          return 2
+        fi
+        ;;
+    esac
+  done <"$status_tmp"
+  rm -f "$status_tmp"
 
   if ! sub_paths=$(git -C "$diagnose_wt" submodule foreach --quiet --recursive 'printf "%s\n" "$displaypath"' 2>/dev/null); then
     echo "release-diagnose: unable to enumerate submodules" >&2
@@ -415,12 +455,28 @@ release_diagnose() {
     fi
   done <<< "$sub_paths"
 
+  PASW_ISOLATED_SUBS_ARRAY=()
+  if [ -f "$diagnose_wt/.gitmodules" ]; then
+    if ! pasw_resolve_isolated_subs "$diagnose_wt" >/dev/null 2>&1; then
+      echo "release-diagnose: unable to enumerate configured PASW paths" >&2
+      return 2
+    fi
+  fi
+  configured_pasw_names=""
+  for sub_path in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
+    [ -n "$sub_path" ] || continue
+    if [ -n "$configured_pasw_names" ]; then
+      configured_pasw_names+=$'\n'
+    fi
+    configured_pasw_names+="$(basename "$sub_path")"
+  done
+
   for sub_path in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
     [ -n "$sub_path" ] || continue
     sub_name=$(basename "$sub_path")
     pasw_wt="$diagnose_wt/$PASW_SUBTREE_DIR/$sub_name"
     [ -d "$pasw_wt" ] || continue
-    if ! git -C "$pasw_wt" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    if ! is_valid_pasw_worktree "$pasw_wt"; then
       printf '[invalid-pasw] path=%s recommendation=remove-stale-metadata\n' "$pasw_wt"
       finding=1
     fi
@@ -429,8 +485,12 @@ release_diagnose() {
   if [ -d "$diagnose_wt/$PASW_SUBTREE_DIR" ]; then
     for pasw_wt in "$diagnose_wt/$PASW_SUBTREE_DIR"/*; do
       [ -d "$pasw_wt" ] || continue
-      if ! git -C "$pasw_wt" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        printf '[invalid-pasw] path=%s recommendation=remove-stale-metadata\n' "$pasw_wt"
+      sub_name=$(basename "$pasw_wt")
+      if printf '%s\n' "$configured_pasw_names" | grep -Fqx "$sub_name"; then
+        continue
+      fi
+      if ! is_valid_pasw_worktree "$pasw_wt"; then
+        printf '[orphan-pasw] path=%s recommendation=preserve-and-review\n' "$pasw_wt"
         finding=1
       fi
     done
