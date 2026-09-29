@@ -37962,6 +37962,15 @@ bets:
   - .omo/state/health.yaml
   - .omo/_control/governance-data.json
   - BRIEF.md
+  - bin/lib/repo_root.py
+  - bin/gac/unified-health-score.py
+  - bin/ssot/health-predict.py
+  - bin/gac/maturity-align.py
+  - bin/gac/check-dual-track-purity.py
+  - projects/omo/src/omo/omo_paths.py
+  - projects/omo/src/omo/omo_doctor.py
+  - tests/unit/test_projection_reader_resolution.py
+  - docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
   non_goals:
   - 不动 .omo/state/system.yaml 与 .omo/state/collab-dualtrack.yaml 的跟踪状态 —— §1 判据判定不摘，理由写进契约。
   - 不做 PR4334 式整片清扫：.omo/_control/ 下的真 SSOT 一个都不碰，.gitignore 反向豁免只撤销本轮摘掉的那几行。
