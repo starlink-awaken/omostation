@@ -38045,7 +38045,8 @@ bets:
     ×1）， 仓库零正文。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-09-29
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
@@ -38088,17 +38089,36 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T4-05
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@56e17089d1a8e64ffa0fe091641de8dd57ec888a
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-05.md
+          tests:
+            ref: receipt://docs/reports/business-3rd-doc-review-2026-09-28.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-05.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-05.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-05.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-05.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-05.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值门槛 = principal 采纳（审阅意见被用于修订报送稿/清单被实际复用）。
+            最高单点价值已即时兑现：避免了带四个空章节报送的事故。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
