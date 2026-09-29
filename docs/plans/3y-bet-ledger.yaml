@@ -38247,7 +38247,8 @@ bets:
     already compares these digests and is tested, but is unwired, so the follow-up is
     wiring plus debt registration against the measured repo-wide backlog, not writing
     a new detector.'
-  status: in_progress
+  status: done
+  done_at: 2026-09-29
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -38302,21 +38303,61 @@ bets:
       verbatim. Prerequisite: projects/omo must be initialized, else three omo-side
       cases raise FileNotFoundError.'
   - cmd: python3 bin/plan/bet-ledger.py lint
-    expect: OK -- 509 bets, 16 tracks, no errors (the inserted bet and meta.total_bets
-      stay consistent; no new error).
-  - cmd: git diff HEAD --numstat -- docs/plans/3y-bet-ledger.yaml
-    expect: Only the BET-Y2Q4-T10-212 verify block, its six report receipt sha256 lines,
-      and the inserted BET-Y2Q4-T10-214 entry appear; zero added or deleted '- id:'
-      lines besides the insertion.
+    expect: 'No ERROR line names BET-Y2Q4-T10-212 or BET-Y2Q4-T10-214, and meta.total_bets == len(bets).
+        The judgement is per-owner on purpose, because lint''s ERROR set is a property of the checkout
+        it runs in, not of this entry: measured on a branch based at b24c353c3 (whose tree lacks the
+        three files #4564 landed), lint reports 10 ERRORs all owned by BET-Y2Q4-T4-06, while comparing
+        the same refs and digests against origin/main''s own blobs gives that bet zero stale and zero
+        unresolvable keys. A repo-wide ''OK -- <N> bets, no errors'' claim can thus be falsified by
+        checkout scope or by any concurrent mint (<N> was 509 at #4561 and 510 after #4564) without
+        this batch being wrong. Beyond the three checkout scopes there is a fourth one no local run
+        reproduces: the PR merge tree. Measured on PR #4569 -- lint there reported
+        ''duplicate BET id: BET-Y2Q4-T4-06'' while both the head blob and origin/main hold exactly
+        one copy (see the duplicate-id item below and report section 6.2).'
+  - cmd: git show --numstat --format= b24c353c3 -- docs/plans/3y-bet-ledger.yaml
+    expect: 'Registration batch (landed as b24c353c3): only the BET-Y2Q4-T10-212 verify block,
+      its six report receipt sha256 lines, and the inserted BET-Y2Q4-T10-214 entry appear; zero
+      added or deleted ''- id:'' lines besides the insertion.'
   - cmd: git diff --check
     expect: no whitespace errors.
   - cmd: make gac-local-gate
-    expect: no new hard failures relative to baseline.
+    expect: 'Run on base 1d3fabd8d (origin/main after #4562 through #4568 landed): the FAIL set is
+      exactly three entries -- governance-semantic-gate, service-config-validate, service-config-drift --
+      and all three are one registry entry, com.omostation.morning-brief: that service is declared
+      enabled+generate yet has no plist under ~/Library/LaunchAgents, no launchctl entry and no
+      ~/.local/log/morning-brief.log on this machine, and its interpreter, declared as bare python3,
+      resolves into uv''s ephemeral build dir whenever make runs it (the same command under bare
+      python3 returns ok true with 0 violations). On this base bet-retro-due-check and
+      check-evidence-freshness both PASS, while the same two content FAILED on the older base
+      b24c353c3 -- retro-due because that checkout predated the three files #4564 landed, freshness
+      because it reads a runtime report whose presence decides whether MIN_SCORE applies at all (that
+      run also rewrote the tracked .omo/state/system.yaml, which was restored before commit). Nothing
+      in the FAIL set may name BET-Y2Q4-T10-214 or a file this batch touched. Readings are in report
+      sections 6.1 and 6.2; the two machine-level gaps are registered as G8 and G9 rather than fixed
+      here.'
+  - cmd: python3 bin/plan/bet-ledger.py show BET-Y2Q4-T10-214
+    expect: 'Closeout batch judged by this entry''s own state, not by a diff scope: status done, done_at
+        2026-09-29, eight verify items, six write_surfaces, and a completion_evidence block whose overall_state
+        evaluates to delivery_accepted. The previous wording was ''git diff --numstat b24c353c3..HEAD
+        -- <ledger>'' and claimed only this entry changes; that is unverifiable after merge, because
+        main accumulates concurrent work between the batch base and the merged tree (measured: BET-Y2Q4-T4-06
+        minted by #4564), so the numstat legitimately carries lines this batch did not write.'
+  - cmd: git show origin/main:docs/plans/3y-bet-ledger.yaml | awk '/^- id:/{print $3}' | sort | uniq -d
+    expect: 'Empty -- no duplicated ''- id:'' line on the merged tree. This is the check that would
+      have caught PR #4569 before it landed: its merge tree carried BET-Y2Q4-T4-06 twice while
+      merge-base b24c353c3 held 0 copies, origin/main held 1 and the head blob held 1 (reproduced
+      with git merge-tree --write-tree --merge-base=b24c353c3 65eee25cd origin/main). Mechanism:
+      re-aligning a drifting ledger onto main turns an entry main already has into an addition on
+      both sides at the same insertion point, and the 3-way merge keeps both silently instead of
+      conflicting. Prevention is not to re-align the whole file but to branch from current main and
+      carry only this entry''s hunks.'
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-29-bet-214-closeout-evidence-integrity.md
   - docs/operations/workflow-waiver-2026-09-29-bet-214-registration.md
   - docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md
+  - docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-214.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-29-bet-214-closeout-evidence-integrity.md
     spec_version: 1.0.0
@@ -38324,17 +38365,40 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-214
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+            merged_reachable_commit:
+              ref: git://origin/main@b24c353c37f1a1b97fc5f562b55f401a0641744f
+            tests:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:c443db703bf6ba32d808d088833f35f57d6153c40d38aa1e48f1ba34ad5d1c5f
+            diff:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:c443db703bf6ba32d808d088833f35f57d6153c40d38aa1e48f1ba34ad5d1c5f
+            rollback:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:c443db703bf6ba32d808d088833f35f57d6153c40d38aa1e48f1ba34ad5d1c5f
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+            live_canary:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:c443db703bf6ba32d808d088833f35f57d6153c40d38aa1e48f1ba34ad5d1c5f
+            fresh_receipt:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:c443db703bf6ba32d808d088833f35f57d6153c40d38aa1e48f1ba34ad5d1c5f
+            replay:
+              ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-214.md
+              sha256: sha256:ecde97b8f1ab62a2a9e09695810031871a56f9004d6841cbccb769401041f751
+            cleanup:
+              ref: receipt://docs/reports/2026-09-29-bet-214-evidence-integrity-closeout.md
+              sha256: sha256:c443db703bf6ba32d808d088833f35f57d6153c40d38aa1e48f1ba34ad5d1c5f
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
   value_indicator_policy: false
 - id: BET-Y2Q4-T4-06
   title: 业务第四单 — 五年总结四节补写建议稿（网络安全/统计/正版化/视频会议）
