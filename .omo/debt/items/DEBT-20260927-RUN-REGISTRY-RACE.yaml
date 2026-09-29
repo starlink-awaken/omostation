@@ -36,3 +36,13 @@ history:
     前一 PR #4497 因本会话 grep -c 链断只含 GRAPHQL 补强, 两个登记文件丢失,
     本 run 为恢复重铸。
   actor: governance-agent
+- at: '2026-09-28T00:00:00+00:00'
+  action: investigate
+  note: >-
+    首轮排查: run 写盘点位于 projects/omo/src/omo/workflow/lifecycle.py:1128
+    （标注 "single-writer under run_update_lock"——锁机制已存在但覆写仍发生,
+    说明锁未覆盖全部写路径或锁粒度不含跨 run 文件场景）。原子写加固
+    (tmp+os.replace) 与 per-session 目录改造触及 omo 子模块核心工具链,
+    需独立 BET（复现先行: 两个并发会话各 start 一个 run 后互查对方文件）。
+    本债务保持 identified。
+  actor: governance-agent
