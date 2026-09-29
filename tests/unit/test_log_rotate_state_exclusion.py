@@ -190,3 +190,41 @@ def test_state_check_precedes_skip_names(tmp_path: Path, monkeypatch) -> None:
 
     assert state_file not in candidates
     assert state_file in excluded, "被 SKIP_NAMES 先拦下时不得从 state 报告中消失"
+
+
+def test_watermark_state_is_excluded_even_if_json_pattern_added(tmp_path: Path, monkeypatch) -> None:
+    """watermark.json 当前不被扫到, 但若 LOG_PATTERNS 加了 *.json 必须仍受保护.
+
+    这三个 watermark.json 是去重水位 (last event id / 已处理文件 hash), 清零会导致
+    重复摄入或重复处理。它们已登记为 class=state 做防御 —— 本用例证明该防御在
+    pattern 变化后依然生效。
+    """
+    scanned = tmp_path / "delivery" / "event-ingest"
+    scanned.mkdir(parents=True)
+    watermark = scanned / "watermark.json"
+    watermark.write_text('{"workflow_mesh_last_event_id": "abc"}\n')
+    cron_log = scanned / "cron.log"
+    cron_log.write_text("tick\n")
+
+    registry = tmp_path / ".omo" / "_truth" / "registry" / "log-surfaces.yaml"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text(
+        "schema: log-surfaces/v1\n"
+        "surfaces:\n"
+        f"  - path: {watermark}\n"
+        "    class: state\n"
+        f"  - path: {scanned}\n"
+        "    class: log\n",
+        encoding="utf-8",
+    )
+    # 危险改动: pattern 里加 *.json
+    monkeypatch.setattr(log_rotate, "LOG_PATHS", [scanned])
+    monkeypatch.setattr(log_rotate, "LOG_PATTERNS", (*log_rotate.LOG_PATTERNS, "*.json"))
+    monkeypatch.setattr(log_rotate, "SKIP_NAMES", set())
+    monkeypatch.setattr(log_rotate, "WORKSPACE", tmp_path)
+
+    candidates, excluded = log_rotate._candidate_files()
+
+    assert watermark not in candidates, "pattern 加了 *.json 后去重水位会被清零"
+    assert watermark in excluded
+    assert cron_log in candidates, "同目录的真日志仍应正常进入候选"
