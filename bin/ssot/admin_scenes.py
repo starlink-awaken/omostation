@@ -27,7 +27,21 @@ sys.path.insert(0, str(Path(__file__).parent))
 def dispatch_admin_inbox(input_data: dict, token: dict) -> dict[str, Any]:
     """State: received → 读邮件 + LLM分类."""
     from mail_agent import classify_mail
-    from mail_reader import read_netease_mail
+    from mail_reader import Mail, read_netease_mail
+
+    # mail-daemon 触发时带着那封邮件: 处理它本身, 不去重读邮箱
+    # (此前一律重读网易工作邮箱, 处理的是邮箱里最新的别的邮件)
+    if input_data.get("subject"):
+        mail = Mail(
+            subject=input_data["subject"],
+            sender=input_data.get("sender", ""),
+            body=input_data.get("body", ""),
+        )
+        cls = {"category": input_data["category"]} if input_data.get("category") else classify_mail(mail)
+        entry = {"subject": mail.subject, "sender": mail.sender, "category": cls.get("category"),
+                 "priority": cls.get("priority"), "summary": cls.get("summary", "")}
+        return {"status": "succeeded", "mails": [entry], "has_task": entry["category"] == "任务",
+                "latest_subject": mail.subject}
 
     # 读最近工作邮件
     mails = read_netease_mail("work", limit=5, unread_only=True)
@@ -78,11 +92,15 @@ def dispatch_admin_classify(input_data: dict, token: dict) -> dict[str, Any]:
         }
 
     # LLM 任务分解
+    body = input_data.get("body", "")[:400]
+    schema = (
+        '{"requires_forwarding": true/false, "task_type": "转发通知/收集数据/提交报告", '
+        '"deadline": "预估截止时间", "target": "转发对象", "required_docs": "需要什么文档"}'
+    )
     response = llm_ask(
-        f"分析这个工作任务, 输出 JSON:\n标题: {subject}\n\n"
-        f'{{"requires_forwarding": true/false, "task_type": "转发通知/收集数据/提交报告", '
-        f'"deadline": "预估截止时间", "target": "转发对象", "required_docs": "需要什么文档"}}',
+        f"分析这个工作任务, 输出 JSON:\n标题: {subject}\n" + (f"正文: {body}\n" if body else "") + "\n" + schema,
         timeout=30.0,
+        model="triage",
     )
 
     result = {

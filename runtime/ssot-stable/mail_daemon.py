@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -53,7 +54,16 @@ def _trigger_journey_live(mail: Any, cls: dict) -> dict[str, Any] | None:
     key = (mail.subject or "")[:80]
     if key in seen:
         return None
-    payload = json.dumps({"subject": key, "sender": (mail.sender or "")[:30]}, ensure_ascii=False)
+    # 带上正文与已判定类别: admin-inbox 据此处理触发邮件本身, 不再重读邮箱
+    payload = json.dumps(
+        {
+            "subject": key,
+            "sender": (mail.sender or "")[:30],
+            "body": (mail.body or "")[:500],
+            "category": cls.get("category", ""),
+        },
+        ensure_ascii=False,
+    )
     try:
         r = subprocess.run(
             [
@@ -66,7 +76,9 @@ def _trigger_journey_live(mail: Any, cls: dict) -> dict[str, Any] | None:
             timeout=300,
             check=False,
         )
-        ok = r.returncode == 0 and '"status": "completed"' in (r.stdout or "")
+        # 只走完入口一步就结束(has_task=false 等)不算成功, 否则事件里 journey_triggered 是假绿
+        steps = re.search(r'"steps": (\d+)', r.stdout or "")
+        ok = r.returncode == 0 and '"status": "completed"' in (r.stdout or "") and bool(steps and int(steps.group(1)) > 1)
         rec = {"ts": utc_now(), "ok": ok}
         seen[key] = rec
         JOURNEY_TRIGGERED.parent.mkdir(parents=True, exist_ok=True)
