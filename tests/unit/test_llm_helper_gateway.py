@@ -82,3 +82,14 @@ def test_journey_counts_as_triggered_only_past_entry_step(src_dir, steps, ok, mo
     )
     res = mail_daemon._trigger_journey_live(Mail(subject="s", sender="x", body="b"), {"category": "任务"})
     assert res["ok"] is ok
+
+
+@pytest.mark.parametrize("src_dir", ["bin/ssot", "runtime/ssot-stable"])
+def test_mail_history_path_can_be_redirected(src_dir, monkeypatch, tmp_path):
+    """OMO_MAIL_HISTORY 重定向分类历史(沙箱/测试不写真实历史)。"""
+    monkeypatch.syspath_prepend(str(ROOT / src_dir))
+    monkeypatch.setenv("OMO_MAIL_HISTORY", str(tmp_path / "h.jsonl"))
+    sys.modules.pop("mail_agent", None)
+    import mail_agent
+
+    assert mail_agent.HISTORY == tmp_path / "h.jsonl"

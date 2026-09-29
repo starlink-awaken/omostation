@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import sys
@@ -26,7 +27,8 @@ INBOX = Path.home() / "Documents" / "_inbox"
 
 # 积累回路 (2026-08-26, P0 数字大脑红线: 分类不能是无状态直连 LLM):
 # 每次分类落库 jsonl, 后续同发件人分类注入最近历史 → 一致性 + 可统计。
-HISTORY = ROOT / ".omo" / "state" / "mail-classification-history.jsonl"
+# OMO_MAIL_HISTORY: 沙箱/测试重定向(全链路场景实测: 公文 journey 的分类会写进真实历史)
+HISTORY = Path(os.environ.get("OMO_MAIL_HISTORY") or (ROOT / ".omo" / "state" / "mail-classification-history.jsonl"))
 
 # 规则预分类 (2026-08-26, 首批积累数据实证: github 通知占 16/20 = 80% 的
 # LLM 调用花在固定模式上 — 机器通知发件人无需 LLM, 直接短路省钱省时)。
