@@ -327,3 +327,99 @@ def test_missing_tool_detected(cs, tmp_path) -> None:
     report = cs.check_ci_surfaces()
     missing = [e for e in report["errors"] if e.startswith("missing-tool")]
     assert len(missing) == 1 and "scripts/check-gone.py" in missing[0]
+
+
+# ── 2026-09-29: `_discover_wiring` 的跨行贪婪回归 ─────────────────────────────
+# 旧式 `uv run[^|]*` 的 `[^|]` **会匹配换行**且贪婪 ⇒ 一处 `uv run pytest src/...`
+# 吞掉其后所有 step 的 `bin/*.py`(只捕获最后一个) ⇒ unregistered-check 长期失明。
+# 注: `[^|\n]*` 只作用于 `uv run` 那一支; 单行 `python3 bin/x.py` 由第三条备选整体匹配。
+
+
+def test_cross_line_uv_run_does_not_hide_later_steps(cs) -> None:
+    """回归: 更早的 `uv run ...` 不得吞掉**后续 step** 里的单行检查调用.
+
+    判别性设计: 被吞的那个(`hidden`)后面**还有一个** ref(`visible`) —— 旧式贪婪会
+    回溯到最后一个, 于是 `hidden` 消失; 现式同行则两者都在。
+    实证对应: `gac-gate.yml` 的 `bin/gac/check-l0-constraints.py`(步骤名标注 `(required)`,
+    blocking) 单行执行, 却被同文件更早的 `uv run ...` 吞掉 ⇒ 本检查器对它长期失明。
+    """
+    _write(
+        cs.WORKFLOWS_DIR / "w.yml",
+        "jobs:\n"
+        "  j:\n"
+        "    steps:\n"
+        "      - run: uv run --with pytest pytest src/tests -q\n"
+        "      - run: python3 bin/gac/hidden.py\n"
+        "      - run: python3 bin/gac/visible.py\n",
+    )
+
+    wiring = cs._discover_wiring()
+
+    assert {"bin/gac/hidden.py", "bin/gac/visible.py"} <= set(wiring), sorted(wiring)
+
+
+def test_wired_regex_is_a_single_line_predicate() -> None:
+    """白盒判别性断言: 同一段文本, 旧式跨行正则会匹配、现式不匹配; 并含两支正控制.
+
+    `uv run pytest x` 换行后跟一个**没有解释器前缀**的路径(折叠块的典型形态),
+    不属于「执行该工具」。正控制覆盖 `python3 <path>` 与 `uv run ... python <path>` 两支。
+    """
+    mod = _load(ROOT / "bin" / "gac" / "check-ci-surfaces.py", "check_ci_surfaces_regex")
+
+    assert mod.WIRED_COMMAND_RE.search("uv run pytest x\n  bin/gac/y.py") is None
+    assert mod.WIRED_COMMAND_RE.search("python3 bin/gac/y.py") is not None
+    assert mod.WIRED_COMMAND_RE.search("uv run --with pyyaml python bin/gac/y.py") is not None
+    # `uv run` 备选的独立价值: 不经 `python` 而直接跑脚本 (`uv run --with x bin/tool.py`)
+    assert mod.WIRED_COMMAND_RE.search("uv run --with x bin/gac/y.py") is not None
+    assert mod.WIRED_COMMAND_RE.search("bash bin/ssot/y.sh --json") is not None
+
+
+def test_uv_run_picks_the_tool_adjacent_to_the_interpreter(cs) -> None:
+    """`uv run ... python <tool> <arg>` 要取**紧邻解释器**的那个路径 (非贪婪).
+
+    取行内最后一个(贪婪)会把**参数**误认成被执行的检查。
+    """
+    _write(
+        cs.WORKFLOWS_DIR / "w.yml",
+        "jobs:\n  j:\n    steps:\n      - run: uv run --with x python bin/gac/tool.py bin/gac/arg.py\n",
+    )
+
+    wiring = cs._discover_wiring()
+
+    assert "bin/gac/tool.py" in wiring, sorted(wiring)
+
+
+def test_folded_argument_list_is_not_treated_as_executed(cs) -> None:
+    """`run: >-` 折叠块里逐行的文件列表是**参数**(如 ruff 的 lint 目标), 不是执行.
+
+    否则 `uv run --with ruff ruff check` + 一串 `bin/*.py` 会产出 9 条假的
+    unregistered-check (2026-09-29 实测: 取消同行约束后 error 11 条, 其中 9 条为假阳)。
+    """
+    _write(
+        cs.WORKFLOWS_DIR / "w.yml",
+        "jobs:\n  j:\n    steps:\n"
+        "      - run: >-\n"
+        "          uv run --with ruff ruff check\n"
+        "          bin/gac/linted-only.py\n",
+    )
+
+    wiring = cs._discover_wiring()
+
+    assert "bin/gac/linted-only.py" not in wiring, sorted(wiring)
+
+
+def test_required_l0_check_is_discovered_and_registered() -> None:
+    """具体回归锚: gac-gate 里那个 required 的 L0 检查必须可见且已登记."""
+    import yaml
+
+    mod = _load(ROOT / "bin" / "gac" / "check-ci-surfaces.py", "check_ci_surfaces_l0")
+    l0 = "bin/gac/check-l0-constraints.py"
+
+    wiring = mod._discover_wiring()
+    assert l0 in wiring, sorted(wiring)
+    assert "gac-gate.yml" in wiring[l0]["workflows"]
+
+    payload = yaml.safe_load(
+        (ROOT / ".omo/_truth/registry/ci-surfaces.yaml").read_text(encoding="utf-8")
+    )
+    assert l0 in {str(s.get("tool")) for s in payload["surfaces"]}

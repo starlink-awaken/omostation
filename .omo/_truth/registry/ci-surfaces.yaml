@@ -196,6 +196,16 @@ surfaces:
   - per_pr
   - push
   status: active
+- id: bin-gac-check-l0-constraints-py
+  tool: bin/gac/check-l0-constraints.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: gac-gate 内 named '(required)' 的 L0 协议约束校验; 2026-09-29 修发现正则前本检查器对其失明
 - id: bin-gac-check-llm-advisory-only-py
   tool: bin/gac/check-llm-advisory-only.py
   workflow: gac-gate.yml
