@@ -86,6 +86,15 @@ def _env_timeout_seconds(name: str, default: float) -> float:
 # without changing call sites.
 GIT_TIMEOUT_LOCAL_SECONDS = _env_timeout_seconds("AGENT_CLONE_GIT_LOCAL_TIMEOUT", 30.0)
 GIT_TIMEOUT_NETWORK_SECONDS = _env_timeout_seconds("AGENT_CLONE_GIT_NETWORK_TIMEOUT", 60.0)
+# 2026-09-30: 整仓克隆此前复用 GIT_TIMEOUT_NETWORK_SECONDS(60s), 而该常量的语义是
+# 「一次网络操作」(ls-remote / 单 revision fetch) —— 对整仓 `git clone --no-local`
+# 而言结构性不足。实测该命令 26.73s / 118MB .git / 10054 文件检出 (负载 ~120);
+# 负载 250-400 时同样的命令超过 60s, 导致 onboard 在真正开工前就失败
+# (2026-09-30 连续三次)。注意其中大头是 **checkout 10054 个文件** 而非对象传输,
+# 因此负载敏感。300s 约为实测值的 11 倍, 且与逐子模块克隆后的单次预算同量级。
+GIT_CLONE_ROOT_TIMEOUT_SECONDS = _env_timeout_seconds(
+    "AGENT_CLONE_GIT_CLONE_ROOT_TIMEOUT", 300.0
+)
 # MEDIUM: best-effort uv reinstall per package; a stale local path wheel must
 # not stall clone publication longer than this per package.
 UV_REINSTALL_TIMEOUT_SECONDS = _env_timeout_seconds("AGENT_CLONE_UV_TIMEOUT", 120.0)
@@ -1866,7 +1875,9 @@ def cmd_create(args: argparse.Namespace) -> dict:
     failure = None
     cleanup_failure = None
     try:
-        proc = git(None, *clone_args, timeout=GIT_TIMEOUT_NETWORK_SECONDS)
+        # 整仓克隆有独立预算(见 GIT_CLONE_ROOT_TIMEOUT_SECONDS); 同一常量族里其余
+        # 两处 60s 是 ls-remote 探针与单 revision fetch, 语义不同, 保持不变。
+        proc = git(None, *clone_args, timeout=GIT_CLONE_ROOT_TIMEOUT_SECONDS)
         if proc.returncode != 0:
             raise ToolError(
                 "clone_failed",
