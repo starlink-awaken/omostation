@@ -57,10 +57,11 @@ def _repo(tmp_path: Path) -> Path:
     return work
 
 
-def _identity(work: Path, base: str) -> dict:
+def _identity(work: Path, base: str, working_branch: str = "deliver") -> dict:
     return {
         "agent_id": "test-agent",
         "requested_revision": "refs/heads/main",
+        "working_branch": working_branch,
         "frozen_root_sha": base,
     }
 
@@ -146,30 +147,47 @@ def test_mainline_foreign_commits_do_not_block(tmp_path: Path) -> None:
     )
 
 
-def test_unresolvable_mainline_ref_fails_closed(tmp_path: Path) -> None:
-    """契约 3: 主线 ref 不可解析 -> fail closed, 不得静默放行。"""
+def test_working_branch_remote_ref_is_excluded_and_no_remote_degrades(tmp_path: Path) -> None:
+    """交付分支自身的远端引用必须被排除, 否则身份校验退化为空转。
+
+    2026-09-30 端到端验收实测: 若把 origin/<交付分支> 也计为主线 ref, 待校验的
+    提交本身就是它可达的, own-commit 集恒为空 → 校验空转通过 (橡皮章)。
+    """
+    work = _repo(tmp_path)
+    base = _git(work, "rev-parse", "HEAD")
+    _add_own_commit(work, *OTHER)                 # 身份不符的自身提交
+    subprocess.run(["git", "-C", str(work), "push", "-q", "origin", "deliver"],
+                   check=True, capture_output=True)
+
+    digest = ac.author_identity_digest(*SELF)
+    refs = ac._mainline_refs(str(work), _identity(work, base))
+    assert "refs/remotes/origin/deliver" not in refs, "交付分支自身的远端引用不得计为主线"
+    assert ac.commit_identities_match(str(work), base, digest, "HEAD", mainline_refs=refs) is False, \
+        "自身提交身份不符却通过了校验 —— 收窄削弱了核心保证"
+
+    # 完全无 remote 的仓: 返回空列表, 由调用方按「不可判定」降级
+    noremote = tmp_path / "noremote"
+    noremote.mkdir()
+    subprocess.run(["git", "init", "-q", str(noremote)], check=True, capture_output=True)
+    assert ac._mainline_refs(str(noremote), {"requested_revision": "refs/heads/main"}) == []
+
+
+def test_missing_local_main_branch_does_not_fail_closed(tmp_path: Path) -> None:
+    """本地 main 分支不存在时**不得** fail-closed (2026-09-30 端到端验收抓到)。
+
+    独立 clone 常处于 detached HEAD 或特性分支, 根本没有 refs/heads/main。
+    把 identity.requested_revision 当必需 ref 会让 integrate 100% 阻塞 ——
+    而本地分支存不存在与 gitlink 对主线的可达性无关。
+    """
     work = _repo(tmp_path)
     base = _git(work, "rev-parse", "HEAD")
     _add_own_commit(work, *SELF)
     subprocess.run(["git", "-C", str(work), "push", "-q", "origin", "deliver"], check=True, capture_output=True)
+    # 删掉本地 main, 只留远端跟踪 ref
+    subprocess.run(["git", "-C", str(work), "checkout", "-q", "--detach"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(work), "branch", "-qD", "main"], check=True, capture_output=True)
 
-    identity = _identity(work, base)
-    identity["requested_revision"] = "refs/heads/does-not-exist"
-
-    raised = False
-    try:
-        ac._mainline_refs(str(work), identity)
-    except ac.ToolError as exc:
-        raised = "clone_mainline_ref_unavailable" in str(exc.reason)
-    assert raised, "主线 ref 不可解析时必须 fail closed"
-
-    # 无 remote 的仓同样 fail closed
-    noremote = tmp_path / "noremote"
-    noremote.mkdir()
-    subprocess.run(["git", "init", "-q", str(noremote)], check=True, capture_output=True)
-    try:
-        ac._mainline_refs(str(noremote), {"requested_revision": "refs/heads/main"})
-    except ac.ToolError as exc:
-        assert "clone_mainline_ref_unavailable" in str(exc.reason)
-    else:
-        raise AssertionError("无 remote 的仓必须 fail closed")
+    digest = ac.author_identity_digest(*SELF)
+    refs = ac._mainline_refs(str(work), _identity(work, base))
+    assert "refs/heads/main" not in refs, "本地 main 不该被当作主线 ref"
+    assert ac.commit_identities_match(str(work), base, digest, "HEAD", mainline_refs=refs) is True

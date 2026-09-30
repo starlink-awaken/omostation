@@ -1367,26 +1367,36 @@ def write_json_exclusive_or_match(output_path: str, payload: dict, failure_reaso
 
 
 def _mainline_refs(repo_root: str, identity: dict) -> list[str]:
-    """Resolve the mainline refs that bound "this clone's own commits" (ADR-0460).
+    """Resolve the remote-tracking refs that bound "this clone's own commits" (ADR-0460).
 
     Returns ref names that MUST all resolve; raises ToolError (fail closed) otherwise.
-    `requested_revision` is typically a local ref such as refs/heads/main, which a
-    fetch does NOT advance — so the remote-tracking ref is required as well, or the
-    own-commit set would keep absorbing mainline commits after a fetch.
+    Returns an empty list when the clone has no remote-tracking ref at all — the
+    caller then treats it as undecidable rather than unreachable.
+
+    2026-09-30: 原实现把 ``identity.requested_revision`` (通常 refs/heads/main) 也列为
+    **必需**。这是错的: 独立 clone 可能根本没有本地 main 分支 (常处于 detached HEAD
+    或特性分支), 而本地分支是否存在与 gitlink 对主线的可达性毫无关系。把一个合法状态
+    判成 fail-closed, 会让 integrate 100% 阻塞。修正为: 可达性只以远端跟踪 ref
+    (refs/remotes/*) 为准 —— 那才是主线的真实载体。
     """
     refs: list[str] = []
-    requested = identity.get("requested_revision")
-    if isinstance(requested, str) and requested:
-        refs.append(requested)
-    remote_names = git(repo_root, "remote").stdout.split()
-    if not remote_names:
-        raise ToolError(
-            "clone_mainline_ref_unavailable",
-            "no git remote is configured; cannot bound the clone's own commits",
-            EXIT_POLICY,
-        )
-    for name in remote_names:
-        refs.append(f"refs/remotes/{name}/main")
+    # 排除本 clone 自己的工作分支对应的远端引用: 它承载的正是待校验的提交本身,
+    # 若计入则 own-commit 集恒为空, 身份校验退化为空转 (2026-09-30 端到端验收抓到)。
+    working = str(identity.get("working_branch") or "")
+    working_leaf = working.rsplit("/", 1)[-1] if working else ""
+    for name in git(repo_root, "remote").stdout.split():
+        listed = git(
+            repo_root, "for-each-ref", "--format=%(refname)", f"refs/remotes/{name}/"
+        ).stdout.splitlines()
+        for line in listed:
+            ref = line.strip()
+            if not ref or ref.endswith("/HEAD"):
+                continue
+            if working_leaf and ref.rsplit("/", 1)[-1] == working_leaf:
+                continue
+            refs.append(ref)
+    if not refs:
+        return []
     for ref in refs:
         probe = git(repo_root, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}")
         if probe.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", probe.stdout.strip()):
@@ -1999,23 +2009,31 @@ def cmd_create(args: argparse.Namespace) -> dict:
                             EXIT_POLICY,
                         )
             else:
-                proc = git(
-                    staging_clone,
-                    "-c",
-                    "protocol.file.allow=always",
-                    "submodule",
-                    "update",
-                    "--init",
-                    "--",
-                    *initialize_paths,
-                    timeout=GIT_TIMEOUT_NETWORK_SECONDS,
-                )
-                if proc.returncode != 0:
-                    raise ToolError(
-                        "submodule_init_failed",
-                        f"submodule init failed: {proc.stderr.strip()}",
-                        EXIT_POLICY,
+                # 2026-09-30: 原先把全部 initialize_paths 塞进**一条** submodule update,
+                # 却只给 GIT_TIMEOUT_NETWORK_SECONDS (默认 60s) 的预算 —— 而该常量原本是
+                # 给单次网络操作 (ls-remote / 单个 clone) 用的。governance 剖面一次要克隆
+                # agora+cockpit+ecos+omo 共约 834MB / 2755 commits, 单机 60s 必然超时,
+                # 实测导致 onboard 间歇性失败 (2026-09-28 两次、09-29 两次)。
+                # 改为逐个子模块克隆: 每个都有独立预算, 且失败时能精确归因到具体路径 ——
+                # 与上方 transport 映射分支的既有范式一致。
+                for path in initialize_paths:
+                    proc = git(
+                        staging_clone,
+                        "-c",
+                        "protocol.file.allow=always",
+                        "submodule",
+                        "update",
+                        "--init",
+                        "--",
+                        path,
+                        timeout=GIT_TIMEOUT_NETWORK_SECONDS,
                     )
+                    if proc.returncode != 0:
+                        raise ToolError(
+                            "submodule_init_failed",
+                            f"submodule init failed for {path}: {proc.stderr.strip()}",
+                            EXIT_POLICY,
+                        )
             for path in initialize_paths:
                 pinned_sha = all_gitlinks[path]
                 initialized, child_head, child_origin, clean = submodule_state(staging_clone, path)
