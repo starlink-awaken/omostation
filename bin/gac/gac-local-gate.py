@@ -169,7 +169,9 @@ DEFAULT_POLICY = {
         {
             "id": "governance-semantic-gate",
             "command": ["bin/gac/governance-semantic-gate.py", "--json"],
-            "timeout": 60,
+            # 2026-09-30: 60 -> 180, 与被它覆盖的默认值同步。实测该检查 30-56s,
+            # 60s 上限周期性 TIMEOUT 并翻转 gate。详见 _DEFAULT_CHECK_TIMEOUTS 同名条目。
+            "timeout": 180,
         },
         {"id": "adr-coverage", "command": ["bin/adr/adr-coverage.py", "--json"]},
         # ADR-0373 (C5): sweep history drift gate (CR-SWEEP-INDEX-AUTO)
@@ -557,7 +559,14 @@ _DEFAULT_CHECK_TIMEOUTS = {
     # The default doctor runs 23 registered checks plus its AGCP drift probe
     # sequentially and exceeded 60s; use a finite 120s end-to-end boundary.
     "agent-workflow-doctor": 120,
-    "governance-semantic-gate": 60,
+    # 2026-09-30: 60s 预算结构性不可能满足 —— governance-semantic-gate.py 内部
+    # `_run_json` 每个子检查就允许 180s, 一次要跑 8 个子检查。实测同机三次
+    # 56.26s / 38.36s / 30.47s (2 倍方差, 6+ 并发 agent), 三次语义全 PASS
+    # (ok=true blocking_failures=0), 但 60s 硬顶只有 3.7s 余量, 于是周期性
+    # TIMEOUT 并被当成 blocking ERROR 翻转整个 gate —— 阻断交付却不代表任何
+    # 语义问题。这与上方 agent-workflow-doctor 60s→120s 是**同一个病**。
+    # 预算提到 180s, 与内部单子检查上限对齐, 留约 3 倍于实测最大值的余量。
+    "governance-semantic-gate": 180,
     "execution-chain": 45,
     "layer-call-direction-check": 45,
     "gac-drift": 45,

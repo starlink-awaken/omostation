@@ -89,6 +89,12 @@ GIT_TIMEOUT_NETWORK_SECONDS = _env_timeout_seconds("AGENT_CLONE_GIT_NETWORK_TIME
 # MEDIUM: best-effort uv reinstall per package; a stale local path wheel must
 # not stall clone publication longer than this per package.
 UV_REINSTALL_TIMEOUT_SECONDS = _env_timeout_seconds("AGENT_CLONE_UV_TIMEOUT", 120.0)
+# 2026-09-30 实测: 该检查在 6+ 并发 agent 的机器上耗时 5.1s(clone) ~ 18.5s(主工作区) ——
+# 因为 managed-python 每次都要做一次 uv 解析, 不是 <1s 的廉价探针。原 30s 预算在并发
+# 负载下只是勉强够用, 因此默认值提到 60s (与 GIT_TIMEOUT_NETWORK_SECONDS 一致);
+# 且即使仍然超时, 也只记 unverified 不阻断 (见 workflow_entrypoint_check)。
+ENTRYPOINT_TIMEOUT_SECONDS = _env_timeout_seconds("AGENT_CLONE_ENTRYPOINT_TIMEOUT", 60.0)
+MANAGED_PYTHON_TIMEOUT_SECONDS = _env_timeout_seconds("AGENT_CLONE_MANAGED_PYTHON_TIMEOUT", 30.0)
 
 
 _account_home_cache: str | None = None
@@ -736,7 +742,14 @@ def reinstall_path_dependencies(
             return False, f"uv not available (exit {proc.returncode})"
     except FileNotFoundError:
         return False, "uv command not found"
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    except subprocess.TimeoutExpired as exc:
+        # 2026-09-30 系统性审计: 这里**刻意不**套用「超时即不可判定 -> 不阻断」。
+        # 与上面两处探针不同, 本函数的失败后果有真实安全内容: 跳过 reinstall 就
+        # 可能带着陈旧 wheel 发布 clone, 正是 E8 (2026-08-15 实证) 的失效模式。
+        # 所以此处拆分异常只为让诊断信息不谎称「uv 探针失败」, 而门禁语义
+        # 保持 required 不变 —— 见 tests/unit/test_clone_indeterminate_gate.py。
+        return False, f"uv availability probe timed out after {budget:g}s (cannot confirm uv): {exc}"
+    except OSError as exc:
         return False, f"uv probe failed: {exc}"
 
     # 逐个 reinstall
@@ -2205,9 +2218,28 @@ def managed_python_probe(repo_root: str, profile: str) -> tuple[dict, dict | Non
             capture_output=True,
             text=True,
             check=False,
-            timeout=30,
+            timeout=MANAGED_PYTHON_TIMEOUT_SECONDS,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    except subprocess.TimeoutExpired as exc:
+        # 2026-09-30 系统性审计 (第 5 例): 与 workflow_entrypoint_check **同一个错误**,
+        # 且就在其上方 40 行 —— TimeoutExpired 与 OSError 被合并成 required:True。
+        # 超时同样是「机器忙」而非「运行时坏了」; 它写入
+        # checks["managed_python_stdlib"|"_pyyaml"] (required:True), 于是同一条路径复现
+        # 同一个后果: readiness=degraded -> claim 校验拒绝 (clone_identity_required)
+        # -> integrate 阻塞。
+        return (
+            {
+                "status": "unverified",
+                "required": False,
+                "detail": (
+                    f"managed-python probe timed out after {MANAGED_PYTHON_TIMEOUT_SECONDS}s "
+                    f"(indeterminate, not a failure): {str(exc)[:160]}"
+                ),
+            },
+            None,
+        )
+    except OSError as exc:
+        # 进程根本起不来 —— 运行时真的缺失, 保留 required
         return ({"status": "degraded", "required": True, "detail": str(exc)[:240]}, None)
     if proc.returncode != 0:
         detail = proc.stderr.strip() or proc.stdout.strip() or f"exit {proc.returncode}"
@@ -2246,9 +2278,25 @@ def workflow_entrypoint_check(repo_root: str) -> dict:
             capture_output=True,
             text=True,
             check=False,
-            timeout=30,
+            timeout=ENTRYPOINT_TIMEOUT_SECONDS,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    except subprocess.TimeoutExpired as exc:
+        # 2026-09-30 系统性审计 (第 4 例): **超时是「不可判定」, 不是「坏了」**。
+        # 该检查实测 5.1s(clone) ~ 18.5s(主工作区, 6+ 并发 agent), 负载更高时会超过预算,
+        # 于是被记为 degraded -> identity.ready=False -> claim 校验拒绝
+        # (clone_identity_required) -> integrate 阻塞。即「机器忙」被当成了「clone 坏」。
+        # 与 submodule-reachability-gate 的 _fetch_verdict 同一哲学: 不可判定不得阻断。
+        # 预算同时改为可调 (AGENT_CLONE_ENTRYPOINT_TIMEOUT), 与本文件其他超时一致。
+        return {
+            "status": "unverified",
+            "required": False,
+            "detail": (
+                f"entrypoint check timed out after {ENTRYPOINT_TIMEOUT_SECONDS}s "
+                f"(indeterminate, not a failure): {str(exc)[:160]}"
+            ),
+        }
+    except OSError as exc:
+        # 连进程都起不来 —— 这是真的坏了, 保留 required
         return {"status": "degraded", "required": True, "detail": str(exc)[:240]}
     if proc.returncode == 0:
         try:

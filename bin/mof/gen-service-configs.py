@@ -58,6 +58,34 @@ def services_yaml_path() -> Path:
     return workspace() / ".omo" / "_truth" / "registry" / "services.yaml"
 
 
+def _is_transient_uv_path(p: str) -> bool:
+    """uv 拥有生命周期的路径: GC 后失效或会切版本, 不能作为服务解释器落进 plist。"""
+    return ".cache/uv" in p or "/.tmp" in p or "/.venv/bin" in p or "/.venv/" in p
+
+
+def _which_stable(name: str) -> str | None:
+    """在**过滤掉 uv 临时目录**的 PATH 上解析可执行名。
+
+    2026-09-30: `resolve_interpreter` 的裸名分支原先用裸 `shutil.which(spec)`,
+    而 `make gac-local-gate` 展开为 `uv run --with pyyaml python ...` —— uv 会把
+    临时 venv 提到 PATH 最前, 于是 `shutil.which("python3")` 返回
+    `/Users/xiamingxing/.cache/uv/builds-v0/.tmpXXXX/bin/python3`, 随即被本模块
+    自己的守卫判为违规。表现为 `service-config-validate` / `service-config-drift`
+    双双 FAIL, 且因为 service-config-drift 是 governance-semantic 的子检查,
+    连带把整个治理门禁翻转 —— **门禁用自身临时运行时污染了它要校验的产物**。
+
+    这不是配置漂移: 用稳定解释器直接跑同一命令 `violation_count=0`。
+    """
+    for path in os.environ.get("PATH", "").split(os.pathsep):
+        # 跳过 uv 临时目录 / uv 管理的 .venv 入口 (uv run 会把 .venv/bin 提到 PATH 最前)
+        if _is_transient_uv_path(path):
+            continue
+        p = shutil.which(name, path=path)
+        if p and not _is_transient_uv_path(p):
+            return p
+    return None
+
+
 def _stable_python3() -> str:
     # Prefer machine-stable installations before scanning PATH.  `uv run`
     # prepends temporary/venv directories and, after those are skipped, can
@@ -68,15 +96,7 @@ def _stable_python3() -> str:
         if Path(candidate).is_file():
             return candidate
 
-    for path in os.environ.get("PATH", "").split(os.pathsep):
-        # 跳过 uv 临时目录、uv 管理的 .venv 入口 (uv run 会把 .venv/bin 提到 PATH 最前),
-        # 这些都是 uv 拥有生命周期的 Python, GC 后会失效或切版本 — 不属于 "stable" 锚点.
-        if ".cache/uv" in path or "/.tmp" in path or "/.venv/bin" in path or "/.venv/" in path:
-            continue
-        p = shutil.which("python3", path=path)
-        if p and not (".cache/uv" in p or "/.tmp" in p or "/.venv/bin" in p):
-            return p
-    return "/opt/homebrew/bin/python3"
+    return _which_stable("python3") or "/opt/homebrew/bin/python3"
 
 
 INTERPRETERS = {"stable-python3": _stable_python3}
@@ -177,7 +197,9 @@ def resolve_interpreter(spec: str) -> str:
     else:
         # 未知别名原样落进 ProgramArguments[0] 会生成 "shell"、"uv" 这种
         # 不存在的程序名, launchd 静默起不来。宁可在生成期炸, 不要写坏 plist。
-        resolved = shutil.which(spec)
+        # 2026-09-30: 必须走 _which_stable 而非裸 shutil.which —— 裸 which 在
+        # `uv run` 下会解析到 uv 临时解释器, 见 _which_stable 的 docstring。
+        resolved = _which_stable(spec)
         if not resolved:
             raise ValueError(
                 f"未知 interpreter {spec!r} — 请用 {sorted(INTERPRETERS)} "
