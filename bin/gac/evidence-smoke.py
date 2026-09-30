@@ -47,6 +47,11 @@ AGORA_SRC = WORKSPACE / "projects" / "agora" / "src"
 if str(AGORA_SRC) not in sys.path:
     sys.path.insert(0, str(AGORA_SRC))
 
+# ADR-0456 C6 — 本脚本会写 system.yaml, 写侧根由 profile 声明而不是 __file__ 反推
+# (cron 与 CI 用裸 python3 跑这里，repo_root 仍是标准库解析器)。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_root as runtime_state_root
+
 # ADR-0217: agora 已声明 pydantic; ADR-0219: 优先注入 projects/agora/.venv site-packages
 # 使根 python3 也能跑全量 BOS (无需手动 PYTHONPATH)
 _AGORA_VENV = WORKSPACE / "projects" / "agora" / ".venv"
@@ -101,7 +106,6 @@ def _bootstrap_agora_venv() -> bool:
 _inject_agora_venv_site()
 
 OUTPUT_DIR = WORKSPACE / ".omo" / "_delivery" / "evidence-smoke"
-SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
 EVENTS_LOG = (
     WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"
@@ -203,6 +207,16 @@ def _today() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
+def _system_yaml() -> Path:
+    """system.yaml 的写目标 (ADR-0456 C6, 原 `SYSTEM_YAML` 模块常量)。
+
+    投影的写侧已经翻到 state_root；本函数与它写的是同一个逻辑文件，不同根就会让
+    health_score_evidence 和投影落在两处。解析放在调用时，常量会在 import 后冻住 env。
+    未声明 profile 时 state_root() == code_root()，路径字符串与旧常量逐字节相同。
+    """
+    return runtime_state_root() / ".omo" / "state" / "system.yaml"
+
+
 def _write_health_score_evidence(score: float) -> tuple[bool, str]:
     """Write evidence_health_score into system.yaml::health_score_evidence (R-GOV-2).
 
@@ -216,16 +230,17 @@ def _write_health_score_evidence(score: float) -> tuple[bool, str]:
     if os.environ.get("GITHUB_ACTIONS", "").lower() == "true":
         return False, "CI env: health_score_evidence 落盘跳过 (immutable checkout)"
 
+    system_yaml = _system_yaml()
     try:
         import yaml
 
-        if not SYSTEM_YAML.is_file():
-            return False, f"system.yaml missing: {SYSTEM_YAML}"
-        data = yaml.safe_load(SYSTEM_YAML.read_text(encoding="utf-8")) or {}
+        if not system_yaml.is_file():
+            return False, f"system.yaml missing: {system_yaml}"
+        data = yaml.safe_load(system_yaml.read_text(encoding="utf-8")) or {}
         data["health_score_evidence"] = round(float(score), 2)
         data["health_score_evidence_source"] = "bin/gac/evidence-smoke.py"
         data["health_score_evidence_generated_at"] = datetime.now(UTC).isoformat()
-        with open(SYSTEM_YAML, "w", encoding="utf-8") as fh:
+        with open(system_yaml, "w", encoding="utf-8") as fh:
             yaml.safe_dump(data, fh, allow_unicode=True, sort_keys=False)
         return True, f"health_score_evidence={data['health_score_evidence']} written"
     except Exception as exc:  # defensive: 写失败不阻断 smoke

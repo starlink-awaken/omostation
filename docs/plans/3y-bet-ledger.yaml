@@ -38483,6 +38483,124 @@ bets:
             价值门槛 = principal 采纳合并进 docx。直接解决了 T4-05 发现的
             最大报送事故风险（四空章节）。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-215
+  title: ADR-0456 F1 — omo 写入侧统一挂 state_root（四件投影 + runtime/omo 镜像根）
+  goal: ADR-0456 的两个根只覆盖到根侧工具：repo_root.py 已给出 code_root()/state_root()，omo_paths.py:31
+    也有同 env 的 STATE_ROOT，且 STATE_SYSTEM_YAML 的读者已接上。但唯一的投影写入者 omo_ingress_state.py:208
+    sync_state_projection() 仍从入参根重建写出路径（:221 omo_dir、:226 runtime_state_dir、:234 system_path），调用方
+    omo_state.py:439 传的是检出根；delivery/audit/trail/lock/mutation 镜像根同理由 omo_ingress_paths.py:39
+    从 omo_dir.parent 反推，而 repo_root 的契约把它定义为 state_root()/runtime/omo（tests/unit/test_repo_root_profile.py
+    实测断言）。后果是 dev profile 声明后 omo 照旧把 health/brief/governance-data/system 四件写进开发检出 ——
+    本轮 G9 实测到的「跑一次门禁就改写跟踪 system.yaml」正是这条路径。本 BET 把写侧翻到 state_root，读侧一律不动，并钉住「未声明 profile
+    时路径字符串逐字节不变」。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-29-bet-215-omo-write-side-single-root.md
+  - projects/omo/src/omo/omo_ingress_state.py
+  - projects/omo/src/omo/omo_ingress_paths.py
+  - projects/omo/tests/test_omo_ingress_state.py
+  - bin/gac/evidence-smoke.py
+  - tests/test_evidence_smoke_paths.py
+  - docs/reports/2026-09-30-bet-215-omo-write-side-single-root-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-215.md
+  - projects/omo
+  non_goals:
+  - 不搬 .omo/tasks/（709 个跟踪文件）、.omo/debt/（73）、.omo/workers/ —— 那是跟踪的治理状态面，翻根等于摘库，属 B5
+    残留判据。本轮实测的形态：真实 sync 后检出剩的两个脏文件都出自这一面（omo_state.py:449 在主 sync 内跑
+    sync-tasks，重写 system.yaml 的 task 计数字段与 tasks/registry/INDEX.md 的 Updated 行），
+    脏量是纯时间戳、计数逐字未变。
+  - 不改 .omo/state/system.yaml 的跟踪状态；本轮只改它写到哪。
+  - 不新增 runtime-projections.yaml 条目，不改 .gitignore，不碰 bin/lib/repo_root.py。
+  - 不启停任何 launchd/cron 服务，不改 plist。
+  - 不给 omo CLI 加 --state-root 旗标：profile 只有 OMOSTATION_STATE_ROOT 一个入口。
+  circuit_breaker: Stop on any write that lands under the checkout while OMOSTATION_STATE_ROOT
+    is declared, except the two timestamp stamps of the tasks plane named in non_goals
+    (system.yaml task counts and tasks/registry/INDEX.md, both written by omo_state.py
+    sync-tasks), on any edit outside this bet write_surfaces, on any change to .gitignore
+    or .omo/_truth/registry/runtime-projections.yaml tracking state, on any untracking
+    of .omo/state/system.yaml, on any move of .omo/tasks, .omo/debt or .omo/workers,
+    on any edit under .github/workflows, and on backfill of lifecycle evidence for any
+    other bet.
+  done_when:
+  - omo_ingress_state.py 内不再出现由入参根派生的写出路径；四件投影与镜像根一律经 state_root 解析（写根按
+    spec C2 优先级：显式 state_root 入参 > env OMOSTATION_STATE_ROOT > 检出根）。
+  - 读侧不动：_build_health_projection / _build_brief_content / build_governance_data 与 .omo
+    存在性检查仍跟随检出根。
+  - projects/omo/tests/test_omo_ingress_state.py 新增 dev-profile 用例：写出全落 state 根，检出的
+    .omo/state 与 runtime/omo 零新增文件。
+  - 同文件新增无-profile 不变量用例：OMOSTATION_STATE_ROOT 未设时写出路径字符串与本轮之前逐字节一致。
+  - artifact changed_paths 在 dev profile 下为绝对路径字符串（_workspace_relative 既有回退），由测试钉住而非另造规则。
+  - omo 全量测试绿，且根侧 tests/unit/test_repo_root_profile.py 与 test_projection_reader_resolution.py
+    读数不变。
+  - 写面在调用图内闭合（spec C6）：声明 profile 跑真实 CLI --dry-run 后，检出的 git status 与运行前逐行相同
+    —— 本轮实测残留作者是 compass_radar subprocess 起来的 evidence-smoke，其 system.yaml 写目标
+    现经 repo_root.state_root() 解析。真实（非 --dry-run）sync 的边界另写：它仍脏两个 tasks 面时间戳
+    （non_goals 第 1 条），投影面字段零脏。
+  - 真实 sync 的正向落点（spec 判据 9）：state 根的 system.yaml 含 health_score_evidence 三行且检出副本不含，
+    四件投影与 runtime/omo 镜像根全部落在 state 根 —— 写落点由「写到哪」正面证明，不靠「检出没脏」反证。
+  - C6 另有正向用例钉住（spec 判据 8）：tests/test_evidence_smoke_paths.py 断言声明 profile 时 evidence 写进
+    state 根、检出跟踪副本逐字节不变，未声明时目标字符串逐字节同旧值 —— 否定式的「无 diff」不算证明。
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/test_repo_root_profile.py
+      -q
+    expect: Same pass count as before this bet (the guard is the no-profile invariant
+      and the read plane; F1 must not move it). A changed count here means the omo-side
+      change leaked into the root resolver.
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/test_projection_reader_resolution.py
+      -q
+    expect: 18 passed -- reader resolution is unchanged by F1; projection_path() canonical-then-legacy
+      order belongs to the read plane (spec C5).
+  - cmd: ST=$(mktemp -d) && git status --short > /tmp/before.txt && OMOSTATION_STATE_ROOT=$ST
+      uv run --directory projects/omo omo state sync --dry-run --json && git status
+      --short > /tmp/after.txt && diff /tmp/before.txt /tmp/after.txt
+    expect: 'diff exit 0 -- the declared state root absorbs every projection-plane write
+      of the sync call graph, including the evidence-smoke subprocess (spec C6). Before
+      C6 this diff showed `M .omo/state/system.yaml` carrying health_score_evidence_generated_at.'
+  - cmd: 'ST=$(mktemp -d) && mkdir -p $ST/.omo/state && printf ''health_score: 83.1\n''
+      > $ST/.omo/state/system.yaml && OMOSTATION_STATE_ROOT=$ST uv run --directory
+      projects/omo omo state sync --json && grep -c health_score_evidence $ST/.omo/state/system.yaml
+      && git diff --stat .omo/state/system.yaml'
+    expect: 'Warm state root, real (non-dry) run: the state-root copy gains the three
+      health_score_evidence lines written by evidence-smoke (spec 判据 9), and the checkout
+      copy is dirty only in updated_at plus tasks/registry/INDEX.md -- the tasks plane
+      of non_goals 1, never an evidence or projection field. A health_score_evidence*
+      key appearing in the checkout diff means C6 leaked back.'
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_evidence_smoke_paths.py
+      -q
+    expect: 'Pass count grows by the two C6 cases and none of the three pre-existing
+      _check_stdio cases changes -- evidence-smoke keeps reading the checkout and only
+      its system.yaml write target moves.'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-29-bet-215-omo-write-side-single-root.md
+    spec_version: 1.0.0
+    content_digest: sha256:f1fac56c79377e23da16c1f00969211107ea47d063d6ec4bd386c49f4484005d
+    decision_ref: decision://accepted/BET-Y2Q4-T10-215
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  campaigns: null
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -38621,7 +38739,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 510
+  total_bets: 511
   windows:
   - Y1Q1
   - Y1Q2
