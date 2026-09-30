@@ -326,7 +326,7 @@ services:
   calendar: {Hour: 7, Minute: 0}
   label: com.omostation.morning-brief
   program:
-    interpreter: python3
+    interpreter: stable-python3
     entrypoint: bin/bc-os/policy_radar.py
     args: [--generate-morning-brief]
   notes: 每日业务与技术早报(BET-Y1Q4-T7-03); 2026-09-29 起含督办台账超期/临期与当日邮件简报
