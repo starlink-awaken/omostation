@@ -95,6 +95,19 @@ GIT_TIMEOUT_NETWORK_SECONDS = _env_timeout_seconds("AGENT_CLONE_GIT_NETWORK_TIME
 GIT_CLONE_ROOT_TIMEOUT_SECONDS = _env_timeout_seconds(
     "AGENT_CLONE_GIT_CLONE_ROOT_TIMEOUT", 300.0
 )
+# 2026-09-30: 逐子模块克隆(PR #4572 把整批拆成单路径以精确归因)此前仍复用
+# GIT_TIMEOUT_NETWORK_SECONDS(60s), 但那不是「一次网络操作」—— 实测在**空闲**机器
+# (负载 ~30) 上单个子模块就要几十秒, 因为 module 目录本身是 96-108MB 的完整历史:
+#     projects/l4-kernel  96M   52.52s  <- 吃掉 60s 预算的 87.5%
+#     projects/ecos      103M  47.34s
+#     projects/agora     108M  25.97s
+#     projects/omo             14.90s
+#     projects/cockpit   6.1M  14.17s
+# 最差的一个在空闲时就只剩 7.5s 余量, 负载 250+ 时必然超时 —— 2026-09-30 在负载
+# 200-400 区间连续三次复现。300s 约为实测最差值的 5.7 倍, 与整仓预算同量级。
+GIT_SUBMODULE_TIMEOUT_SECONDS = _env_timeout_seconds(
+    "AGENT_CLONE_GIT_SUBMODULE_TIMEOUT", 300.0
+)
 # MEDIUM: best-effort uv reinstall per package; a stale local path wheel must
 # not stall clone publication longer than this per package.
 UV_REINSTALL_TIMEOUT_SECONDS = _env_timeout_seconds("AGENT_CLONE_UV_TIMEOUT", 120.0)
@@ -2024,7 +2037,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                         "--init",
                         "--",
                         path,
-                        timeout=GIT_TIMEOUT_NETWORK_SECONDS,
+                        timeout=GIT_SUBMODULE_TIMEOUT_SECONDS,
                     )
                     if proc.returncode != 0:
                         raise ToolError(
@@ -2050,7 +2063,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
                         "--init",
                         "--",
                         path,
-                        timeout=GIT_TIMEOUT_NETWORK_SECONDS,
+                        timeout=GIT_SUBMODULE_TIMEOUT_SECONDS,
                     )
                     if proc.returncode != 0:
                         raise ToolError(
