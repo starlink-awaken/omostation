@@ -38643,7 +38643,8 @@ bets:
     claim 一律 WORK_PACKET_SOURCE_DRIFT（bet-ledger.py:2336，T10-214 retro §6 已记过一次复发），而
     refresh-packet（agent-workflow.py:1031）要求源已在 origin/main（:770），新建 BET 首轮用不上。本 BET
     把这四类「做的时候才知道」的事实写成后续 agent 读得到、门禁查得到的文字，不新增代码。
-  status: pending
+  status: done
+  done_at: 2026-09-30
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
