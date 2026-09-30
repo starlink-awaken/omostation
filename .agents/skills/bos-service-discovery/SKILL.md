@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: history
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-30
 type: ssot
 name: bos-service-discovery
 description: "Browse and call BOS URI services in the omostation workspace. Lists available domains, services, and transports. Use when an agent needs to find a service by domain, understand BOS URI routing, or resolve a URI for the first time."
@@ -51,11 +51,11 @@ Routing chain (9 steps, see `docs/I0-AGORA-CALLCHAIN.md`):
 # Via MCP tool
 # Call list_bos_domains()
 
-# Via cockpit
-uv run --project projects/cockpit cockpit bos capability --list-domains
+# Via cockpit (route table grouped by domain)
+uv run --project projects/cockpit cockpit bos list
 
-# Via agora
-uv run --project projects/agora agora bos domains --json
+# Via agora (registry stats: per-domain counts, transports, unimplemented)
+uv run --project projects/agora agora bos info --json
 ```
 
 ### List Services in a Domain
@@ -64,36 +64,43 @@ uv run --project projects/agora agora bos domains --json
 # Via MCP tool
 # Call list_bos_resources(prefix="bos://memory/")
 
-# Via cockpit
-uv run --project projects/cockpit cockpit bos capability --domain memory
+# Via cockpit — output is already grouped by domain; there is NO --domain
+# filter (`--domain` is silently ignored by argparse, so it never filters)
+uv run --project projects/cockpit cockpit bos list
 
-# Read the SSOT directly
+# Read the SSOT directly (authoritative, filterable)
 cat projects/agora/etc/bos-services.yaml | grep -A10 "domain: memory"
 ```
 
 ### Get Service Schema
 
+There is no `cockpit bos schema` subcommand. Use one of these instead:
+
 ```bash
 # Via MCP tool
 # Call get_bos_schema(uri="bos://memory/kos/search")
 
-# Via cockpit
-uv run --project projects/cockpit cockpit bos schema "bos://memory/kos/search"
+# Via cockpit — route/execution metadata (domain, action, transport, command)
+uv run --project projects/cockpit cockpit bos resolve "bos://memory/kos/search"
+
+# Via agora — machine-readable registry entry (command, description, transport)
+uv run --project projects/agora agora bos export --pretty
 ```
 
-### Resolve a URI (Execute)
+### Resolve / Execute a URI
 
 ```bash
 # Via MCP tool
 # Call resolve_bos_uri(uri="bos://memory/kos/search", arguments={"query": "test"})
 
-# Via cockpit
-uv run --project projects/cockpit cockpit bos resolve "bos://memory/kos/search" \
+# cockpit `bos resolve` = ROUTE METADATA ONLY (no execution, no --args)
+uv run --project projects/cockpit cockpit bos resolve "bos://memory/kos/search"
+
+# cockpit `bos read` = execute the URI with arguments
+uv run --project projects/cockpit cockpit bos read "bos://memory/kos/search" \
   --args '{"query": "test"}'
 
-# Via agora CLI
-uv run --project projects/agora agora bos resolve "bos://memory/kos/search" \
-  --args '{"query": "test"}'
+# NOTE: `agora bos resolve` does not exist — agora bos = list|info|validate|export
 ```
 
 ## Known BOS Domains
@@ -151,8 +158,11 @@ uv --directory projects/ecos run mof-contract-lint \
 # Reload M1 routes (hot, no restart)
 # Via MCP: call bos_reload_m1()
 
-# Verify the service appears
-uv run --project projects/cockpit cockpit bos capability --domain <domain>
+# Verify the service appears (output grouped by domain — read your domain group;
+# there is no `--domain` filter on `bos list` / `bos capability`)
+uv run --project projects/cockpit cockpit bos list
+# Capability-domain services only:
+uv run --project projects/cockpit cockpit bos capability list
 ```
 
 ## Middleware Status
@@ -161,8 +171,8 @@ Check rate limiting, circuit breaker, and cache health:
 
 ```bash
 # Via MCP: call bos_middleware_status()
-# Via cockpit:
-uv run --project projects/cockpit cockpit bos middleware-status
+# Via cockpit (BOS metrics + cache stats; no `bos middleware-status` subcommand):
+uv run --project projects/cockpit cockpit bos status
 ```
 
 ## Common Patterns
@@ -173,7 +183,7 @@ uv run --project projects/cockpit cockpit bos middleware-status
 # Status / recall (preferred over raw kos/gbrain for general memory)
 cockpit memory status --json
 cockpit memory recall "agent workflow governance" --json
-cockpit bos resolve bos://memory/mos/status
+cockpit bos read bos://memory/mos/status      # execute (resolve only shows route metadata)
 # MCP: resolve_bos_uri("bos://memory/mos/recall", {query, intent?, as_of?})
 ```
 

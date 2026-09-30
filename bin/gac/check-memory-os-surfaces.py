@@ -7,6 +7,8 @@ Exit 0 = pass; exit 1 = hard fail (CI / make memory-os-check).
 
 from __future__ import annotations
 
+import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -131,25 +133,71 @@ def check_help_catalog_mentions_memory() -> list[str]:
     return errs
 
 
-def main() -> int:
-    hard: list[str] = []
+def _collect() -> tuple[list[tuple[str, str]], list[str]]:
+    """Run every check once.
+
+    Returns (hard, soft): hard = [(check_id, message), ...] in the exact order
+    the text output has always printed them; soft = human-readable warnings.
+    """
+    hard: list[tuple[str, str]] = []
     soft: list[str] = []
 
     missing = check_required_paths()
-    if missing:
-        hard.extend(f"missing required path: {m}" for m in missing)
+    hard.extend(("required_paths", f"missing required path: {m}") for m in missing)
 
-    hard.extend(check_env_example())
-    hard.extend(check_ports())
-    hard.extend(check_registry_ssot())
-    hard.extend(check_help_catalog_mentions_memory())
+    for check_id, check in (
+        ("env_example", check_env_example),
+        ("ports", check_ports),
+        ("registry_ssot", check_registry_ssot),
+        ("help_catalog", check_help_catalog_mentions_memory),
+    ):
+        hard.extend((check_id, msg) for msg in check())
 
     cockpit_env = check_cockpit_env_example()
     # cockpit env is required when submodule is present
     if (REPO_ROOT / "projects/cockpit").is_dir():
-        hard.extend(cockpit_env)
+        hard.extend(("cockpit_env", msg) for msg in cockpit_env)
     else:
         soft.extend(cockpit_env)
+
+    return hard, soft
+
+
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="check-memory-os-surfaces.py",
+        description="Memory OS light gate (CR-X4-MEMORY-OS-SURFACE-INTEGRITY). "
+        "Exit 0 = pass; exit 1 = hard fail (CI / make memory-os-check).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit a machine-readable JSON result (status + failed checks) instead of text",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
+    hard, soft = _collect()
+
+    if args.json:
+        # Machine-readable contract: status + failed checks (+ soft warnings).
+        # Exit code stays identical to the text mode (0 pass / 1 hard fail).
+        print(
+            json.dumps(
+                {
+                    "status": "fail" if hard else "pass",
+                    "failed_checks": [
+                        {"check": check_id, "message": msg} for check_id, msg in hard
+                    ],
+                    "warnings": list(soft),
+                    "required_paths": len(REQUIRED_PATHS),
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 1 if hard else 0
 
     print("Memory OS light gate (CR-X4-MEMORY-OS-SURFACE-INTEGRITY)")
     print(f"  required_paths: {len(REQUIRED_PATHS)}")
@@ -159,8 +207,8 @@ def main() -> int:
             print(f"    WARN {s}")
     if hard:
         print(f"  HARD FAIL ({len(hard)}):")
-        for h in hard:
-            print(f"    FAIL {h}")
+        for _check_id, msg in hard:
+            print(f"    FAIL {msg}")
         print("  fix: restore SSOT/ops surfaces listed in .omo/standards/memory-os-ops.md")
         return 1
 

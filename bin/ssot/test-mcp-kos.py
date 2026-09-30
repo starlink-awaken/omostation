@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""TDD test script for validation of mcp-server-kos.py protocol compliance."""
+"""TDD test script for validation of mcp-server-kos.py protocol compliance.
+
+Exit contract:
+    0  = all checks passed
+    1  = a check failed
+    78 = CONDITIONAL SKIP (runtime artifact absent). gac-local-gate maps 78 to a
+         non-blocking [SKIP] — a skip must never be reported as PASS/ok
+         (false-green), but it also must not block CI (DB is gitignored).
+"""
 
 import json
 import subprocess
@@ -8,7 +16,10 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 MCP_SERVER = WORKSPACE / "bin" / "gac" / "mcp-server-kos.py"
-KOS_DB = WORKSPACE / "kos" / "kos-index.sqlite"
+# Canonical runtime location (kos/kos-index.sqlite is the pre-migration layout
+# and no longer exists; see .gitignore data/kos/ and mcp-server-kos.py).
+KOS_DB = WORKSPACE / "data" / "kos" / "kos-index.sqlite"
+SKIP_EXIT_CODE = 78
 
 
 def run_mcp_query(request_payloads: list[dict]) -> list[dict]:
@@ -47,8 +58,13 @@ def main() -> int:
         return 1
 
     if not KOS_DB.is_file():
-        print(f"⏭️  Skip: KOS database not found at {KOS_DB} (runtime artifact, not in git)")
-        return 0
+        # Not exit 0: a silent skip that reports ok is a false-green.
+        print(
+            f"⚠️  WARN SKIP: KOS database not found at {KOS_DB} "
+            "(runtime artifact, not in git) — protocol checks NOT executed "
+            f"(exit {SKIP_EXIT_CODE} = skipped, not passed)"
+        )
+        return SKIP_EXIT_CODE
 
     # 测试 Payload 1: initialize
     reqs = [

@@ -7,7 +7,10 @@ import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-SQLITE_DB = WORKSPACE / "kos" / "kos-index.sqlite"
+# 真实索引在 data/kos/ (kos/ 布局已迁移; kos/kos-index.sqlite 不复存在,
+# .gitignore:147 data/kos/ — 运行时产物不进 git). 根解析沿用本脚本既有约定
+# (__file__ parents[2]), 不硬编码绝对路径 (AGENTS.md 根目录是参数不是事实).
+SQLITE_DB = WORKSPACE / "data" / "kos" / "kos-index.sqlite"
 
 
 def get_db_connection():
