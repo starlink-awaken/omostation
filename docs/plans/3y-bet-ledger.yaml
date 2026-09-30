@@ -38493,7 +38493,8 @@ bets:
     实测断言）。后果是 dev profile 声明后 omo 照旧把 health/brief/governance-data/system 四件写进开发检出 ——
     本轮 G9 实测到的「跑一次门禁就改写跟踪 system.yaml」正是这条路径。本 BET 把写侧翻到 state_root，读侧一律不动，并钉住「未声明 profile
     时路径字符串逐字节不变」。
-  status: in_progress
+  status: done
+  done_at: 2026-09-30
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -38548,10 +38549,14 @@ bets:
     —— 本轮实测残留作者是 compass_radar subprocess 起来的 evidence-smoke，其 system.yaml 写目标
     现经 repo_root.state_root() 解析。真实（非 --dry-run）sync 的边界另写：它仍脏两个 tasks 面时间戳
     （non_goals 第 1 条），投影面字段零脏。
-  - 真实 sync 的正向落点（spec 判据 9）：state 根的 system.yaml 含 health_score_evidence 三行且检出副本不含，
-    四件投影与 runtime/omo 镜像根全部落在 state 根 —— 写落点由「写到哪」正面证明，不靠「检出没脏」反证。
-  - C6 另有正向用例钉住（spec 判据 8）：tests/test_evidence_smoke_paths.py 断言声明 profile 时 evidence 写进
-    state 根、检出跟踪副本逐字节不变，未声明时目标字符串逐字节同旧值 —— 否定式的「无 diff」不算证明。
+  - C6 另有正向用例钉住（spec 判据 8）：tests/test_evidence_smoke_paths.py 断言声明 profile 后
+    _write_health_score_evidence() 把 health_score_evidence 三行写进 <state_root>/.omo/state/system.yaml，
+    且 _system_yaml() 的解析路径不在检出根 WORKSPACE 的 parents 之下；未声明时写目标字符串与旧值
+    逐字节相同 —— 否定式的「无 diff」不算证明，检出副本的字节由下一条判据的 diff 钉。
+  - 真实 sync 的正向落点（spec 判据 9）：state 根的 system.yaml 里 health_score_evidence 三行的值在滚，
+    而检出的跟踪副本本来就有这三行（它们是上一次生产运行留下的读数），所以正确判据不是「检出里没有」而是
+    「检出的这三行逐字未变」—— git diff -U0 只出现 updated_at 一处在滚；四件投影与 runtime/omo 镜像根
+    全部落在 state 根。写落点由「同一字段的值只在 state 根滚动」正面证明，不靠「检出没脏」反证。
   verify:
   - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/test_repo_root_profile.py
       -q
@@ -38585,21 +38590,44 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-29-bet-215-omo-write-side-single-root.md
     spec_version: 1.0.0
-    content_digest: sha256:f1fac56c79377e23da16c1f00969211107ea47d063d6ec4bd386c49f4484005d
+    content_digest: sha256:4dafbac67adce96ef9bcde62f3d2046475c29783a1f0eedbfbd7f4dfa83c9408
     decision_ref: decision://accepted/BET-Y2Q4-T10-215
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+            merged_reachable_commit:
+              ref: git://origin/main@6b2776535c0e399969d8cd9cebf0c9bdb7fde844
+            tests:
+              ref: receipt://docs/reports/2026-09-30-bet-215-omo-write-side-single-root-closeout.md
+              sha256: sha256:48ad8ad83e50dbeed6ce73bafb7bed314a3557d57f4a4752416c3eb3a944100a
+            diff:
+              ref: receipt://docs/reports/2026-09-30-bet-215-omo-write-side-single-root-closeout.md
+              sha256: sha256:48ad8ad83e50dbeed6ce73bafb7bed314a3557d57f4a4752416c3eb3a944100a
+            rollback:
+              ref: receipt://docs/reports/2026-09-30-bet-215-omo-write-side-single-root-closeout.md
+              sha256: sha256:48ad8ad83e50dbeed6ce73bafb7bed314a3557d57f4a4752416c3eb3a944100a
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+            live_canary:
+              ref: receipt://docs/reports/2026-09-30-bet-215-omo-write-side-single-root-closeout.md
+              sha256: sha256:48ad8ad83e50dbeed6ce73bafb7bed314a3557d57f4a4752416c3eb3a944100a
+            fresh_receipt:
+              ref: receipt://docs/reports/2026-09-30-bet-215-omo-write-side-single-root-closeout.md
+              sha256: sha256:48ad8ad83e50dbeed6ce73bafb7bed314a3557d57f4a4752416c3eb3a944100a
+            replay:
+              ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-215.md
+              sha256: sha256:7347e5f4db65ed51c1c973bad131e5fb870ba829579d2b7366ae7a55a0100551
+            cleanup:
+              ref: receipt://docs/reports/2026-09-30-bet-215-omo-write-side-single-root-closeout.md
+              sha256: sha256:48ad8ad83e50dbeed6ce73bafb7bed314a3557d57f4a4752416c3eb3a944100a
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
   campaigns: null
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH

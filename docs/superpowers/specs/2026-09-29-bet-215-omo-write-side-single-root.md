@@ -146,14 +146,21 @@ subprocess 起来的根侧脚本）在声明 profile 时不得留下第二个写
    两者都是 §3 第一条点名的 tasks 面时间戳（`system.yaml` 的 `updated_at` 与
    `tasks/registry/INDEX.md` 的 `Updated:`），**不是**投影面字段；「dev 跑一次就脏检出」
    这句话里属于投影面的那一半由本判据关掉，属于 `.omo/tasks/` 的那一半是登记在案的非目标。
+8. C6 的正向用例（`tests/test_evidence_smoke_paths.py`）：声明 profile 后
+   `_write_health_score_evidence()` 把 `health_score_evidence` / `_source` 三行写进
+   `<state_root>/.omo/state/system.yaml`，且 `_system_yaml()` 的解析路径**不在** `WORKSPACE`
+   的 parents 之下；未声明时写目标字符串与旧值逐字节相同。
+   本判据钉的是「写目标的解析」，检出副本的字节由判据 9 的 diff 钉。
+   负向证据（判据 7 的「无 diff」）不能替代它。
 9. 真实 sync 的正向落点读数：`<tmp>/.omo/state/system.yaml` 同时含
    `health_score_evidence` / `health_score_evidence_source: bin/gac/evidence-smoke.py` /
    `health_score_evidence_generated_at`（evidence 面），以及四件投影与 `runtime/omo/**`
    镜像根（`_delivery/ingress/{ingress-audit.jsonl,ingress-trail.jsonl,ingress.lock,state/*.yaml}`、
-   `change-log/mutations.jsonl`）；检出的 `system.yaml` 那份**不含**这三行 evidence 字段 ——
-   即 C6 的写落点由「写到了哪」正面证明，而非仅由「检出没脏」反证。
-   （2026-09-29 实测：state 根 `health_score_evidence: 100.0`，检出副本只多了 `updated_at`。）
-8. C6 的正向用例（`tests/test_evidence_smoke_paths.py`）：声明 profile 后
-   `_write_health_score_evidence()` 写进 `<state_root>/.omo/state/system.yaml`，
-   检出的跟踪副本逐字节不变；未声明时写目标字符串与旧值逐字节相同。
-   负向证据（判据 7 的「无 diff」）不能替代它。
+   `change-log/mutations.jsonl`）。检出的 `system.yaml` **本来就有**这三行（它们是跟踪态里
+   上一次生产运行的读数），所以正确的判据不是「检出里没有」，而是**检出的这三行逐字未变**
+   —— `git diff -U0` 只出现 `updated_at` 一处在滚（tasks 面，见 §3 与判据 7），
+   `_generated_at` 的新时刻只落在 state 根。写落点由「同一字段的值只在 state 根滚动」正面证明，
+   而非仅由「检出没脏」反证。
+   （2026-09-30 串行复跑实测：state 根 `health_score_evidence: 100.0` +
+   `_generated_at: '2026-09-30T01:43:58.014449+00:00'`；检出副本 evidence 三行仍是
+   `2026-09-27T08:42:13.059879+00:00`，diff 仅 `updated_at` 一行。）
