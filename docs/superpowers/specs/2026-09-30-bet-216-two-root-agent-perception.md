@@ -69,11 +69,13 @@ AGENTS.md 新增段落里所有 `path:NN` 形式的指针，在本检出必须�
 - 判据 3（文档治理）：`doc-governance-check.py --no-new-warnings --scope tracked` 绿，
   新 spec frontmatter 含 `owner`（`accepted-specifications` 桶未基线告警 = error，
   本轮 T10-215 实测过一次）。
-- 判据 4（不重复真值）：`AGENTS.md` 里不出现 `OMO_EVENT_LEDGER_DB → OMOSTATION_STATE_ROOT →
-  code_root()` 这条优先级链的第二次表述；`bin/README.md:222` 与 `ARCHITECTURE.md:18`
-  两处一字未动。
-- 判据 5（纯文档）：`git diff --name-only origin/main..HEAD` 只含 `AGENTS.md`、
+- 判据 4（不重复真值）：`git diff origin/main...HEAD` 对 `bin/README.md:222` 与
+  `ARCHITECTURE.md:18` 为空；`AGENTS.md` 里不出现 `OMO_EVENT_LEDGER_DB → OMOSTATION_STATE_ROOT →
+  code_root()` 这条优先级链的第二次表述。
+- 判据 5（纯文档）：`git diff --name-only origin/main...HEAD` 只含 `AGENTS.md`、
   本 spec、台账、closeout report、retro 五类路径，出现任何 `.py` 即越界。
+  用三点式不用两点式：两点式在 base 漂移下把主仓自己的前进读成本分支删了那些文件
+  （本轮实测多报 6 个 `.py` 与 1 个 gitlink，而分支只含文档）。
 - 判据 6（不动他人在跑的面）：不碰 `.github/workflows/**`、`.omo/_truth/registry/**`、
   `bin/**`；不改 `.gitignore`。
 

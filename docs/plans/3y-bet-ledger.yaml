@@ -38679,13 +38679,14 @@ bets:
     与主区 locks/ 同一 inode 的 stat 读数、prune-locks --scan-only 在 29 条锁里判 22 条 zombie 而三个 run 状态全为 active
     的扫描输出、T10-215 真实 sync 脏出 system.yaml updated_at 与 tasks/registry/INDEX.md 两处的 git status
     读数；WORK_PACKET_SOURCE_DRIFT 一条另由已合并的 BET-Y2Q4-T10-214 retro §6 与 closeout 报告 G5 背书。
-  - env 优先级表不出现第二份：git diff origin/main..HEAD 对 bin/README.md 与 ARCHITECTURE.md 为空，
+  - env 优先级表不出现第二份：git diff origin/main...HEAD 对 bin/README.md 与 ARCHITECTURE.md 为空，
     新增文字只给指针与后果（判据 4）。
-  - 纯文档交付：origin/main..HEAD 的改动文件名里不出现 .py（判据 5）。
+  - 纯文档交付：origin/main...HEAD 的改动文件名里不出现 .py（判据 5；两点式 origin/main..HEAD 在 base
+    漂移下会把主仓自己的前进读成本分支删了那些文件，2026-09-30 实测多报 6 个 .py 与 1 个 gitlink）。
   - 新 spec 与新增文档面通过 doc-governance --no-new-warnings --scope tracked（frontmatter 含 owner/lifecycle/last-reviewed；accepted-specifications
     桶未基线告警即 error，T10-215 实测过一次）。
   verify:
-  - cmd: uv run --with pyyaml python3 -c "import re,subprocess,pathlib; d=subprocess.run(['git','diff','origin/main..HEAD','--','AGENTS.md'],capture_output=True,text=True).stdout;
+  - cmd: uv run --with pyyaml python3 -c "import re,subprocess,pathlib; d=subprocess.run(['git','diff','origin/main...HEAD','--','AGENTS.md'],capture_output=True,text=True).stdout;
       add=[l[1:] for l in d.splitlines() if l.startswith('+') and not l.startswith('+++')];
       pts=sorted(set(re.findall(r'([A-Za-z0-9_./-]*\.(?:py|md|yaml|json|sh|asset|gitignore)):([0-9]+)',
       ' '.join(add)))); bad=[f'{p}:{l}' for p,l in pts if not pathlib.Path(p).exists()
@@ -38699,16 +38700,18 @@ bets:
     expect: PASS — the new spec and report carry owner / lifecycle / last-reviewed frontmatter
       (owner 取 governance-team, lifecycle 取 contract) with a UTC last-reviewed; an unbaselined
       warning in the accepted-specifications bucket is an error, not a notice.
-  - cmd: git diff --name-only origin/main..HEAD | /usr/bin/grep -E '\.py$' || true
+  - cmd: git diff --name-only origin/main...HEAD | /usr/bin/grep -E '\.py$' || true
     expect: empty output — this bet is documentation only; any .py path here is out
-      of bounds and trips the circuit breaker.
-  - cmd: git diff --stat origin/main..HEAD -- bin/README.md ARCHITECTURE.md
+      of bounds and trips the circuit breaker. Three-dot not two-dot because under base
+      drift the two-dot form reports main's own advances as deletions on this branch
+      (measured 2026-09-30 — 6 spurious .py paths plus one gitlink for a docs-only branch).
+  - cmd: git diff --stat origin/main...HEAD -- bin/README.md ARCHITECTURE.md
     expect: empty — the env precedence table keeps a single owner; AGENTS.md links to
       it instead of restating it.
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-30-bet-216-two-root-agent-perception.md
     spec_version: 1.0.0
-    content_digest: sha256:61bfe1995f65a6fac8e777289be7947810ef401d7163148d9ddf088fd36e1f04
+    content_digest: sha256:4293ff60de2e4135ad76f100cbfbe84cb0ad0358f55588b0be25eb955e703dbc
     decision_ref: decision://accepted/BET-Y2Q4-T10-216
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
