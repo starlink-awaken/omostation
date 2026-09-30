@@ -39,7 +39,10 @@ last_updated: 2026-09-27
    `None` on machines without it — a locator, it moves nothing). Ask "which root am I in?"
    with `python3 bin/lib/repo_root.py --json` or `make runtime-install-root`.
    Inside `projects/omo/` use `omo.omo_paths` instead.
-   Contract: `ADR-0456`, guard: `tests/unit/test_repo_root_profile.py`.
+   Contract: `.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md`（按**文件名**引用：
+   `id` 字段为 ADR-0456 的文件有两份，另一份
+   `.omo/_knowledge/decisions/ADR-0456-governance-downshift-closeout-grading.md` 是别的决定，
+   且那份 `ACCEPTED`、这份仍 `PROPOSED`），guard: `tests/unit/test_repo_root_profile.py`.
 
 ### Key SSOT Registries
 
@@ -272,6 +275,40 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   / `--bootstrap`，入口 `make runtime-state-snapshot`（`--dest` 已存在即拒绝，不静默覆盖）；
   契约 `docs/superpowers/specs/2026-09-27-event-ledger-state-snapshot.md`。
   把权威真正翻过去属 B4b 批次 2+，需逐批授权。
+- **两个根的写面收敛，靠的是一条没人复述的沉默契约**（2026-09-30, ADR-0456 F1 / BET-Y2Q4-T10-215）：
+  声明 `OMOSTATION_STATE_ROOT` 后，四件投影与 `runtime/omo/**` 镜像根确实落在 state 根 ——
+  但链节能闭合的前提是 `bin/compass_radar.py:482` 的 `subprocess.run` **不传 `env=`**
+  （`:482-492` 实测参数只有 `cwd` / `capture_output` / `text` / `timeout` / `check`），
+  子进程 `bin/gac/evidence-smoke.py` 因此靠**继承**拿到 profile。谁给它加一个 env 白名单，
+  写面就断在子进程边界、投影回写检出，而且**没有任何测试会红**。改这行前先跑正向落点判据。
+- **声明 profile 后跑真实 sync，检出照旧脏两个文件 —— 那不是回归**（同上，实测读数）：
+  脏的是 tasks 面时间戳（`.omo/state/system.yaml` 的 `updated_at` 与
+  `.omo/tasks/registry/INDEX.md` 的 `Updated:`），投影面与 evidence 面字段零脏。判别量不是
+  「检出里没有」，而是**同一字段的值只在 state 根滚动**（检出的 `health_score_evidence` 三行逐字未变，
+  新时刻只出现在 state 根）。据此两条纪律：别把这两处脏读成写面回归而白跑一轮；别用「脏检出」
+  这一个否定式当验收 —— 每条"移走某个写目标"的契约都要配一条正向落点断言，**且先跑一次再写进契约**
+  （本轮就有一句「检出不含这三行」被自己的 receipt 否证）。
+- **治理协调面是全机共享面，`gitignore` 不等于本地化**（2026-09-30, ADR-0456 F1 / BET-Y2Q4-T10-215 实证）：
+  `.gitignore:12` 忽略 `.omo/_delivery/*`，说的是这一面**不进 git**，不是说每个检出各一份 ——
+  `ensure_delivery_anchor()`（`projects/omo/src/omo/workflow/delivery_anchor.py:87`）把每个 worktree 的
+  `.omo/_delivery/agent-workflows/` 做成指向 canonical 检出的 **symlink**（实测 worktree 与主区的 `locks/`
+  同一 inode），所以并发会话的 run / scope 锁**互相可见**。两个后果：① `closeout --status ok` 的前置
+  `heartbeat_run()`（`projects/omo/src/omo/workflow/lifecycle.py:1592` → 逐锁校验 `:1017`）会在锁被
+  并发 run 接管时**直接拒绝整条 closeout**，此时用 `close --status ok --evidence <note>`
+  （`release_locks()` 只 unlink `run_id` 等于自己的锁）；② **别用 `prune-locks` 绕** —— 阈值
+  `_HEARTBEAT_STALE_SECONDS = 3600`（`projects/omo/src/omo/workflow/lifecycle_locks.py:27`）只看心跳时间，
+  实测一次 `--scan-only` 把共享面 29 条锁里的 22 条判成 zombie，而这三个 run 的
+  `status` **全是 active**（只是会话闲置过一小时），prune 会当场拆掉别人的活锁。
+- **新跟踪文档的 frontmatter 必填 `owner`**（同上）：`doc-governance-check.py --no-new-warnings
+  --scope tracked` 里 `accepted-specifications` 桶的**未基线告警等于 error**，而 `bet-closeout-chain`
+  的"七件套"没列 `owner` —— 照清单抄就会红一轮。判据：新文档 frontmatter 抄同批已绿的邻居，不抄 checklist。
+- **WorkPacket 只 gate claim，不 gate 状态翻转**（2026-09-30, BET-Y2Q4-T10-216 本轮实测）：
+  `verify` / `done_when` / `scope` 这些字段进了 packet 投影，所以 `start` 之后再改台账条体会让后续
+  `claim` 报 `WORK_PACKET_SOURCE_DRIFT`（`bin/plan/bet-ledger.py:2336`）；而 `refresh-packet`
+  （`bin/agent-workflow.py:1031`）要求 ledger+spec **已在 `origin/main`**（`:770` 逐源比对字节），
+  新建 BET 的首轮用不了它。顺序纪律：**台账定稿 → `start` → claim 完 → 才改非投影字段**
+  （`status` / `done_at` / `completion_evidence` 不在投影里，所以 `complete` 照常能跑；
+  packet 校验的调用点只有 claim 与子 run 继承 `projects/omo/src/omo/workflow/lifecycle.py:1307`）。
 - **ci-surfaces 不加自引用路径**：严格匹配 workflow `on.paths`
 - **生成态会被交付动作扫进 commit**（2026-09-26 实证）：commit / claim 期间 hook 会重写
   `.omo/state/system.yaml` 的 `health_score_evidence_generated_at`（纯时间戳），一次文档 PR

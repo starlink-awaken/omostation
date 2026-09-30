@@ -38629,6 +38629,100 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
   campaigns: null
+- id: BET-Y2Q4-T10-216
+  title: ADR-0456 F2 — 两个根的行为后果固化进 agent 感知面（沉默契约 / 脏检出语义 / 协调面边界）
+  goal: ADR-0456 的静态 env 表已在三处感知面（ARCHITECTURE.md:18、bin/README.md:222、CLAUDE.md:143-144），
+    但 B5（#4570）与 F1（#4571）落地后才出现的运行后果一条都不在：声明 profile 后真实 sync 仍脏检出两个 tasks 面时间戳（会被误读成写面回归，或反过来被当豁免放掉真回归）；写面闭合的
+    前提是 bin/compass_radar.py:482 的 subprocess.run 不传 env=（加一个 env 白名单就断在子进程边界， 且没有测试会红）；治理协调面
+    .omo/_delivery/* 被 .gitignore:12 忽略只是「不进 git」，worktree 的 agent-workflows 目录实测是指向
+    canonical 的 symlink（delivery_anchor.py:87），于是并发会话的 run 与 scope 锁互相可见，closeout 的前置
+    heartbeat（lifecycle.py:1592-1593 → :1017-1020）在锁被并发 run 接管时直接拒绝收尾，而 prune-locks 的
+    _HEARTBEAT_STALE_SECONDS = 3600（lifecycle_locks.py:27）只看心跳时刻——本轮实测一次 --scan-only 把共享面
+    29 条锁里的 22 条判成 zombie，而这三个 run 的 status 全是 active，拿它绕自己的锁问题会连带删掉并发会话的活锁；
+    WorkPacket 在 start 时从 ledger+spec 编译且 verify/done_when/scope 都在投影里，中途改这些字段就令后续
+    claim 一律 WORK_PACKET_SOURCE_DRIFT（bet-ledger.py:2336，T10-214 retro §6 已记过一次复发），而
+    refresh-packet（agent-workflow.py:1031）要求源已在 origin/main（:770），新建 BET 首轮用不上。本 BET
+    把这四类「做的时候才知道」的事实写成后续 agent 读得到、门禁查得到的文字，不新增代码。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  value_indicator_policy: false
+  write_surfaces:
+  - AGENTS.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-30-bet-216-two-root-agent-perception.md
+  - docs/reports/2026-09-30-bet-216-two-root-agent-perception-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-216.md
+  non_goals:
+  - 不翻 ADR-0456 的 status（PROPOSED → ACCEPTED 属 principal 决定），也不处理它与 ADR-0456-governance-downshift-closeout-grading.md
+    的 id 重号（两份文件同时声明 id 字段为 ADR-0456，一份 PROPOSED 一份 ACCEPTED）；本轮只把「按 id 引用会命中另一份决定」写进感知面。
+  - 不复制 env 优先级表：该表的唯一表述在 bin/README.md:222 与 ARCHITECTURE.md:18，本轮两处一字未动。
+  - 不修 .omo/state/system.yaml 的跟踪状态，不修 B5 残留的六个检出侧读者与 tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path（另立
+    BET）。
+  - 不给 .omo/_delivery/* 新增 git 跟踪，也不改动它既有的 symlink 桥接语义（delivery_anchor 已把它做成全机共享面），
+    不 prune 任何并发会话的锁。
+  circuit_breaker: Stop on any change to a .py file, to .gitignore, to .github/workflows/**,
+    to .omo/_truth/registry/**, or to bin/README.md / ARCHITECTURE.md (the env-table
+    owners), on any AGENTS.md pointer that does not resolve in this checkout, and on
+    backfill of lifecycle evidence for any other bet.
+  done_when:
+  - AGENTS.md §7 新增条目里每个 path:NN 指针在本检出可解析（文件存在且行号在行数内），由判据 1 的 逐条测量钉住 —— 不是「我写的时候看着对」。
+  - 四条新断言各有一条已合并 receipt 里的实测读数支撑（判据 2）：compass_radar.py:482 无 env= 的 :482-492 参数清单、worktree
+    与主区 locks/ 同一 inode 的 stat 读数、prune-locks --scan-only 在 29 条锁里判 22 条 zombie 而三个 run 状态全为 active
+    的扫描输出、T10-215 真实 sync 脏出 system.yaml updated_at 与 tasks/registry/INDEX.md 两处的 git status
+    读数；WORK_PACKET_SOURCE_DRIFT 一条另由已合并的 BET-Y2Q4-T10-214 retro §6 与 closeout 报告 G5 背书。
+  - env 优先级表不出现第二份：git diff origin/main..HEAD 对 bin/README.md 与 ARCHITECTURE.md 为空，
+    新增文字只给指针与后果（判据 4）。
+  - 纯文档交付：origin/main..HEAD 的改动文件名里不出现 .py（判据 5）。
+  - 新 spec 与新增文档面通过 doc-governance --no-new-warnings --scope tracked（frontmatter 含 owner/lifecycle/last-reviewed；accepted-specifications
+    桶未基线告警即 error，T10-215 实测过一次）。
+  verify:
+  - cmd: uv run --with pyyaml python3 -c "import re,subprocess,pathlib; d=subprocess.run(['git','diff','origin/main..HEAD','--','AGENTS.md'],capture_output=True,text=True).stdout;
+      add=[l[1:] for l in d.splitlines() if l.startswith('+') and not l.startswith('+++')];
+      pts=sorted(set(re.findall(r'([A-Za-z0-9_./-]*\.(?:py|md|yaml|json|sh|asset|gitignore)):([0-9]+)',
+      ' '.join(add)))); bad=[f'{p}:{l}' for p,l in pts if not pathlib.Path(p).exists()
+      or int(l)>sum(1 for _ in open(p,encoding='utf-8',errors='replace'))]; print(f'{len(pts)}
+      pointers, bad={bad}'); raise SystemExit(1 if bad else 0)"
+    expect: bad=[] and exit 0 — every file:line pointer newly written into AGENTS.md
+      resolves in this checkout. A non-empty bad list means the contract cites a line
+      that does not exist, which is exactly how the B5-era prose drifted.
+  - cmd: uv run --with pyyaml python3 bin/ssot/doc-governance-check.py --no-new-warnings
+      --scope tracked
+    expect: PASS — the new spec and report carry owner / lifecycle / last-reviewed frontmatter
+      (owner 取 governance-team, lifecycle 取 contract) with a UTC last-reviewed; an unbaselined
+      warning in the accepted-specifications bucket is an error, not a notice.
+  - cmd: git diff --name-only origin/main..HEAD | /usr/bin/grep -E '\.py$' || true
+    expect: empty output — this bet is documentation only; any .py path here is out
+      of bounds and trips the circuit breaker.
+  - cmd: git diff --stat origin/main..HEAD -- bin/README.md ARCHITECTURE.md
+    expect: empty — the env precedence table keeps a single owner; AGENTS.md links to
+      it instead of restating it.
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-30-bet-216-two-root-agent-perception.md
+    spec_version: 1.0.0
+    content_digest: sha256:61bfe1995f65a6fac8e777289be7947810ef401d7163148d9ddf088fd36e1f04
+    decision_ref: decision://accepted/BET-Y2Q4-T10-216
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -38767,7 +38861,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 511
+  total_bets: 512
   windows:
   - Y1Q1
   - Y1Q2
