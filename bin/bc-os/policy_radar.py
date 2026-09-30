@@ -84,11 +84,26 @@ TAG_RULES = [
         "数据要素互联互通",
         ["数据要素", "互联互通", "数据共享", "互认", "data.*interoperab", "interoperab", "FHIR", "health.*data.*exchange"],
     ),
-    ("医保支付", ["医保支付", "支付范围", "报销", "医保目录", "DRG", "DIP", "reimburse", "insurance.*coverage"]),
+    (
+        "医保支付",
+        [
+            "医保支付",
+            "支付范围",
+            "报销",
+            "医保目录",
+            "DRG",
+            "DIP",
+            "reimburse",
+            "insurance.*coverage",
+            "医保",  # nhsa 指标栏目标题用全称「医疗保险」(2026-09-30 实测: 20 条提取全 0 分)
+            "医疗保险",
+            "生育保险",
+        ],
+    ),
     ("政务数字化", ["政务", "数字政府", "一网通办", "电子证照", "数字化改革", "e-?government", "digital.*governance"]),
     ("文献前沿", ["arxiv", "biorxiv", "preprint", "benchmark", "dataset", "survey", "综述"]),
 ]
-GENERIC_POLICY = ("通知", "公告", "意见", "方案", "办法", "指南", "标准")
+GENERIC_POLICY = ("通知", "公告", "意见", "方案", "办法", "指南", "标准", "指标")
 
 TITLE_PENALTY = re.compile(r"招标|采购|中标|招聘|会议报名|培训通知")
 
