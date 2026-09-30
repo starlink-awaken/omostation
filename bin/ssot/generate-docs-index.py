@@ -28,7 +28,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # --- 配置 ---
-ROOT = Path(os.environ.get("WORKSPACE_ROOT", Path(__file__).resolve().parents[2]))
+# 产物 docs/generated/doc-inventory.md 是入库文档 ⇒ 落 code_root；CI 在
+# doc-gov-check.yml:26,29 直接跑本脚本且从不设 WORKSPACE_ROOT。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root
+
+ROOT = code_root()
 DOCS_DIR = ROOT / "docs"
 GENERATED_DIR = DOCS_DIR / "generated"
 OUTPUT_FILE = GENERATED_DIR / "doc-inventory.md"
