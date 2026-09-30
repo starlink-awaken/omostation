@@ -1,6 +1,9 @@
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -398,23 +401,168 @@ def test_value_evidence_validation_uses_runtime_paths_and_fail_closed(tmp_path, 
     assert report["ok"] is True
 
 
-def test_write_site_emits_data_and_agent_brief(tmp_path, monkeypatch) -> None:
-    module = _module()
-    out_dir = tmp_path / "dashboard"
-    monkeypatch.setattr(module, "OUT_DIR", out_dir)
-    monkeypatch.setattr(module, "DATA_JSON", out_dir / "data.json")
-    monkeypatch.setattr(module, "AGENT_BRIEF_JSON", out_dir / "agent-brief.json")
-    monkeypatch.setattr(module, "INDEX_HTML", out_dir / "index.html")
+# ---------------------------------------------------------------------------
+# 投影 revision 发布契约 (2026-09-30)
+#
+# 取代已失效的 `test_write_site_emits_data_and_agent_brief`:
+# `write_site` 在投影 revision 重构中被 `publish_projection_revision` 取代, 而该测试
+# 未被登记为 known-broken —— 它稳定失败却长期未被发现, 说明全量单测其实并不卡合并。
+#
+# 新旧写出契约的**产物集其实没变** (仍是 index.html / data.json / agent-brief.json),
+# 变的是落位与绑定方式:
+#     旧: write_site(payload) -> <OUT_DIR>/{三个产物}
+#     新: publish_projection_revision(payload, state_root=R)
+#           -> R/revisions/<revision_id>/{三个产物 + manifest.json}
+#           -> R/current-revision.json  (指针: revision_id + manifest_sha256)
+#
+# 新协议的不可变性(只创建不覆盖)、hash 绑定、原子指针切换、幂等重放, 正是原测试
+# 完全没覆盖、而实际会出问题的地方。
+#
+# 取舍: 只 stub 依赖真实 claims root / event ledger / git / dashboard 的**外部采集器**,
+# revision 组装 / manifest 计算 / sha256 绑定 / 指针切换全部走真实实现。把这些也 mock
+# 掉的话测试会「通过」却什么都没证明。
+# ---------------------------------------------------------------------------
 
+
+def _publishable_payload(module):
+    """补齐 `_validate_payload_claims_binding` 要求的 claims 投影字段。
+
+    刻意**不** mock 掉该校验 —— 它是「payload 里的 claims 状态必须与真实
+    source_binding 一致」的唯一执行点。mock 掉就等于把这条契约一起测没了。
+    """
     payload = _payload()
     payload["agent_visibility"] = module.collect_agent_visibility(payload)
-    module.write_site(payload)
+    authority = payload["claims_authority"]
+    authority["available"] = True
+    authority["sequence"] = 7
+    authority["status"] = {"last_receipt_digest": "sha256:STUB-RECEIPT"}
+    return payload
 
-    data = json.loads((out_dir / "data.json").read_text())
-    brief = json.loads((out_dir / "agent-brief.json").read_text())
+
+def _expected_claims(payload) -> dict:
+    projected = payload["claims_authority"]
+    return {
+        "sequence": projected.get("sequence"),
+        "last_receipt": projected["status"].get("last_receipt_digest"),
+        "activation": projected.get("activation_state"),
+        "effective_authority": projected.get("effective_claim_authority"),
+        "instruction_capable": projected.get("instruction_capable"),
+    }
+
+
+def _stub_external_collectors(module, monkeypatch, payload, *, ledger_sha: str = "sha256:STUB-LEDGER"):
+    monkeypatch.setattr(
+        module,
+        "collect_projection_source_binding",
+        lambda **kw: {
+            "source_hashes": {"event_ledger_sha256": ledger_sha},
+            "claims": _expected_claims(payload),
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "collect_personal_value_truth",
+        lambda **kw: {"event_ledger_sha256": ledger_sha, "available": True},
+    )
+    monkeypatch.setattr(
+        module, "collect_projection_producer_identity", lambda **kw: {"producer": "stub"}
+    )
+    monkeypatch.setattr(
+        module, "collect_projection_dashboard_identity", lambda **kw: {"dashboard": "stub"}
+    )
+
+
+def _publish(module, monkeypatch, tmp_path, payload):
+    """在干净 state_root 上发布一次, 返回 (result, revision_dir)。"""
+    # 固定模板来源: 不指向真实 dashboard 仓, 退回内嵌 TEMPLATE, 避免受本机环境影响
+    monkeypatch.setenv("ZHIXING_DASHBOARD_CODE_ROOT", str(tmp_path / "no-dashboard"))
+    _stub_external_collectors(module, monkeypatch, payload)
+    state_root = tmp_path / "projection-state"
+    result = module.publish_projection_revision(payload, state_root=state_root)
+    return result, state_root / module.PROJECTION_REVISIONS_NAME / result["revision_id"]
+
+
+def test_publish_projection_revision_emits_data_and_agent_brief(tmp_path, monkeypatch) -> None:
+    module = _module()
+    _, revision = _publish(module, monkeypatch, tmp_path, _publishable_payload(module))
+
+    assert revision.is_dir()
+    data = json.loads((revision / "data.json").read_text(encoding="utf-8"))
+    brief = json.loads((revision / "agent-brief.json").read_text(encoding="utf-8"))
     assert data["agent_visibility"]["schema"] == "panorama-agent-brief/v1"
     assert brief["schema"] == "panorama-agent-brief/v1"
-    assert (out_dir / "index.html").is_file()
+    assert (revision / "index.html").is_file()
+    # agent-brief.json 就是 agent_visibility 本身, 不是整个 payload
+    assert brief == data["agent_visibility"]
+
+
+def test_manifest_binds_every_artifact_by_sha256(tmp_path, monkeypatch) -> None:
+    """没有这条, 产物可以在不自知的情况下被改, 而指针仍指向它。"""
+    module = _module()
+    _, revision = _publish(module, monkeypatch, tmp_path, _publishable_payload(module))
+
+    manifest = json.loads((revision / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["artifacts"], "manifest 必须登记产物"
+    for name, meta in manifest["artifacts"].items():
+        body = (revision / meta["filename"]).read_bytes()
+        assert meta["sha256"] == hashlib.sha256(body).hexdigest(), name
+
+
+def test_pointer_points_at_published_revision(tmp_path, monkeypatch) -> None:
+    module = _module()
+    result, revision = _publish(module, monkeypatch, tmp_path, _publishable_payload(module))
+
+    pointer = json.loads(
+        (revision.parent.parent / module.PROJECTION_POINTER_NAME).read_text(encoding="utf-8")
+    )
+    assert pointer["schema_version"] == module.PROJECTION_POINTER_SCHEMA
+    assert pointer["revision_id"] == result["revision_id"]
+    assert pointer["manifest_sha256"] == result["manifest_sha256"]
+    body = (revision / "manifest.json").read_bytes()
+    assert pointer["manifest_sha256"] == hashlib.sha256(body).hexdigest()
+
+
+def test_republish_same_payload_is_idempotent_not_collision(tmp_path, monkeypatch) -> None:
+    module = _module()
+    payload = _publishable_payload(module)
+    first, first_rev = _publish(module, monkeypatch, tmp_path, payload)
+    second, second_rev = _publish(module, monkeypatch, tmp_path, payload)
+
+    assert first["revision_id"] == second["revision_id"]
+    assert first["manifest_sha256"] == second["manifest_sha256"]
+    assert first_rev == second_rev
+    revisions = first_rev.parent
+    assert len([p for p in revisions.iterdir() if p.is_dir()]) == 1
+    assert not [p for p in revisions.iterdir() if p.name.startswith(".staging-")]
+
+
+def test_claims_binding_mismatch_fails_closed(tmp_path, monkeypatch) -> None:
+    """payload 的 claims 与 source_binding 不一致时必须拒发 —— 不得写出半真 revision。"""
+    module = _module()
+    payload = _publishable_payload(module)
+    # binding 必须用**未篡改**的快照冻结, 否则它跟着 payload 一起变, 永远自洽
+    _stub_external_collectors(module, monkeypatch, _publishable_payload(module))
+    monkeypatch.setenv("ZHIXING_DASHBOARD_CODE_ROOT", str(tmp_path / "no-dashboard"))
+    payload["claims_authority"]["activation_state"] = "shadow-active"  # 与冻结的 binding 不符
+    state_root = tmp_path / "projection-state"
+
+    with pytest.raises(RuntimeError, match="projection_payload_claims_mismatch"):
+        module.publish_projection_revision(payload, state_root=state_root)
+    assert not (state_root / module.PROJECTION_POINTER_NAME).exists(), "拒发时不得留下指针"
+
+
+def test_missing_agent_visibility_publishes_explicit_unavailable_brief(tmp_path, monkeypatch) -> None:
+    """没有 agent_visibility 时必须显式产出 available:false 的 brief, 而不是空文件。"""
+    module = _module()
+    payload = _publishable_payload(module)
+    payload.pop("agent_visibility")
+    _, revision = _publish(module, monkeypatch, tmp_path, payload)
+    brief = json.loads((revision / "agent-brief.json").read_text(encoding="utf-8"))
+    assert brief["schema"] == "panorama-agent-brief/v1"
+    assert brief["available"] is False
+    # 发布器仍会补上 value_proof 绑定, 因此不是空壳
+    assert isinstance(brief["authority"]["value_proof"], str)
+    assert brief["authority"]["value_proof"]
 
 
 def test_template_has_agent_brief_human_surface() -> None:
