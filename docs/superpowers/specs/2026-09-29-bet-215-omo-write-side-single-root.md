@@ -5,6 +5,7 @@ title: ADR-0456 F1 — omo 写入侧统一挂 state_root（投影与 runtime 镜
 bet_id: BET-Y2Q4-T10-215
 status: accepted
 lifecycle: contract
+owner: governance-team
 last-reviewed: 2026-09-29
 ---
 

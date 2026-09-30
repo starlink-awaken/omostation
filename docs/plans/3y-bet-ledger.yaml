@@ -38585,7 +38585,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-29-bet-215-omo-write-side-single-root.md
     spec_version: 1.0.0
-    content_digest: sha256:238c5acd2f54277f0b54c257c194dde7d0f5c504c2af5e683973db9a0d9809d4
+    content_digest: sha256:f1fac56c79377e23da16c1f00969211107ea47d063d6ec4bd386c49f4484005d
     decision_ref: decision://accepted/BET-Y2Q4-T10-215
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
