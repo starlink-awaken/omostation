@@ -321,6 +321,31 @@ EOF
   fixture_teardown
 }
 
+test_t8() {
+  # 浅检出下 no-rewind 判据不可用: 浅片段之间没有共同祖先, `merge-base --is-ancestor`
+  # 恒假, 合法的 bump 会被误报成 ahead/diverged。本机/PASW worktree 的子模块常是
+  # 1-commit 浅检出 (CI 用 fetch-depth:0, 不受影响)。
+  # 期望: 脚本自行补全历史后仍能完成 bump, 而不是拒绝。
+  fixture_init
+  advance_remote alpha
+  "$REAL_GIT" -C "$SUPER/alpha" fetch -q --depth=1 origin main
+  if [ "$("$REAL_GIT" -C "$SUPER/alpha" rev-parse --is-shallow-repository)" != "true" ]; then
+    bad 'T8 fixture is not shallow (scenario would have no discriminating power)'
+    fixture_teardown
+    return
+  fi
+  local out rc before
+  before="$(parent_head)"
+  out="$(run_script)"; rc=$?
+  expect_rc 'T8 shallow submodule still bumps (history completed)' "$rc" 0
+  [ "$(parent_sha alpha)" = "$(remote_sha alpha)" ] \
+    && ok 'T8 alpha points to exact remote SHA after unshallow' || bad 'T8 alpha wrong SHA'
+  [ "$("$REAL_GIT" -C "$SUPER" rev-list --count "$before..HEAD")" -eq 1 ] \
+    && ok 'T8 creates one commit' || bad 'T8 commit count is not one'
+  logs_are_isolated "$out" && ok 'T8 logs fixture-only paths' || bad 'T8 log isolation'
+  fixture_teardown
+}
+
 echo '=== submodule-autobump contract tests ==='
 # Each scenario builds its own mktemp fixture, so they share no state and may run
 # concurrently.  Why parallel: measured 2026-09-29, T0/T1 -- "build fixture, run the
@@ -333,7 +358,7 @@ echo '=== submodule-autobump contract tests ==='
 # bash 3.2 (macOS /bin/bash) has no `wait -n`, so each scenario writes its own output
 # and rc file, and the parent re-reads them after `wait`.  Output is printed in
 # SCENARIOS order so the report stays deterministic despite concurrent execution.
-SCENARIOS="test_t0 test_t1 test_t2 test_t3 test_t4 test_t5 test_t6 test_t6b test_t7"
+SCENARIOS="test_t0 test_t1 test_t2 test_t3 test_t4 test_t5 test_t6 test_t6b test_t7 test_t8"
 JOBS="${SAB_JOBS:-9}"
 RESULTS="$(mktemp -d "${TMPDIR:-/tmp}/submodule-autobump-results.XXXXXX")"
 trap 'rm -rf "${RESULTS:-}"' EXIT

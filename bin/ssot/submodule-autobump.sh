@@ -116,6 +116,20 @@ EOF
     continue
   fi
 
+  # C4 前置: 浅检出下 `merge-base --is-ancestor` 不可用 —— 浅片段之间没有共同祖先, 判据
+  # 恒假, 会把**合法**的 bump 误报成 "ahead/diverged" 而拒绝。本机 / PASW worktree 的子模块
+  # 常是 1-commit 浅检出 (CI 的 submodule-autobump.yml 用 fetch-depth:0, 不受影响)。
+  # 2026-09-30 实证: worktree 里 projects/cockpit 深度为 1, 脚本报 "current (4790398b) 不是
+  # 远端 main (ddba24e4) 的祖先"; 同一仓库 `fetch --unshallow` (7s) 后该判据立刻为真。
+  if [ "$(git -C "$sub" rev-parse --is-shallow-repository 2>/dev/null)" = "true" ]; then
+    if ! git -C "$sub" fetch --unshallow --no-tags --quiet 2>/dev/null; then
+      echo "❌ $sub: 浅检出需补全历史才能做 no-rewind 校验, 但 fetch --unshallow 失败 (fail-closed)" >&2
+      errors=$((errors + 1))
+      continue
+    fi
+    echo "ℹ️  $sub: 浅检出已补全历史 (fetch --unshallow), 继续 no-rewind 校验"
+  fi
+
   # C4: no-rewind — current 必须是 latest 的祖先, 否则 ahead/diverged → 拒绝
   if ! git -C "$sub" merge-base --is-ancestor "$current_sha" "$latest_sha" 2>/dev/null; then
     echo "❌ $sub: current ($current_sha) 不是远端 main ($latest_sha) 的祖先 (ahead/diverged), 拒绝 bump" >&2
