@@ -39,18 +39,18 @@ from collections import Counter
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-# CI 可移植: 用 __file__ 定位 workspace, 不硬编码 (CLAUDE.md CI 治本机制)
-WORKSPACE = Path(__file__).resolve().parents[2]
+# ADR-0456 — 读侧根 = 当前检出，写侧根 = profile 声明，两者都经 repo_root 取，
+# 不在本模块用 __file__ 反推 (cron 与 CI 用裸 python3 跑这里，repo_root 仍是标准库解析器)。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root
+from repo_root import state_root as runtime_state_root
+
+WORKSPACE = code_root()
 AGORA_SRC = WORKSPACE / "projects" / "agora" / "src"
 
 # 让脚本能 import agora.mcp.resolver.services
 if str(AGORA_SRC) not in sys.path:
     sys.path.insert(0, str(AGORA_SRC))
-
-# ADR-0456 C6 — 本脚本会写 system.yaml, 写侧根由 profile 声明而不是 __file__ 反推
-# (cron 与 CI 用裸 python3 跑这里，repo_root 仍是标准库解析器)。
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
-from repo_root import state_root as runtime_state_root
 
 # ADR-0217: agora 已声明 pydantic; ADR-0219: 优先注入 projects/agora/.venv site-packages
 # 使根 python3 也能跑全量 BOS (无需手动 PYTHONPATH)
@@ -105,7 +105,9 @@ def _bootstrap_agora_venv() -> bool:
 
 _inject_agora_venv_site()
 
-OUTPUT_DIR = WORKSPACE / ".omo" / "_delivery" / "evidence-smoke"
+# 写面跟 profile；下面两个 jsonl 保持 WORKSPACE —— 它们仍被 git 跟踪且有 15+ 检出侧读者，
+# 只翻写者会让读者静默读旧数据 (spec §0.5 的写/读同移规则)。
+OUTPUT_DIR = runtime_state_root() / ".omo" / "_delivery" / "evidence-smoke"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
 EVENTS_LOG = (
     WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"

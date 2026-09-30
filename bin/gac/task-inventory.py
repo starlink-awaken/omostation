@@ -27,10 +27,17 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
-WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", Path(__file__).resolve().parents[2]))
+# ADR-0456 — 读侧根 = 当前检出，写侧根 = profile 声明；不在本模块用 __file__ 反推。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root
+from repo_root import state_root as runtime_state_root
+
+WORKSPACE = code_root()
 REGISTRY = WORKSPACE / ".omo" / "state" / "task-registry.yaml"
-SNAP_DIR = WORKSPACE / "runtime" / "task-inventory" / "snapshots"
-DRIFTS = WORKSPACE / "runtime" / "task-inventory" / "drifts.jsonl"
+# 只翻本脚本自己的产物：REGISTRY 留在检出侧 —— 它全仓查不到写者，而
+# panorama-collect.py:3198 是另一个读它的读者，翻读者不翻写者只会制造错位。
+SNAP_DIR = runtime_state_root() / "runtime" / "task-inventory" / "snapshots"
+DRIFTS = runtime_state_root() / "runtime" / "task-inventory" / "drifts.jsonl"
 
 STALE_FACTOR = 3
 
