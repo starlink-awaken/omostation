@@ -8,22 +8,35 @@ import argparse
 import errno
 import gzip
 import hashlib
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
-from pathlib import Path
 import re
 import stat
+import subprocess
 from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from observatory_query import SnapshotStore, QueryError, integer, json_bytes
+from collectors.personal_value import project_panel_value
+from observatory_query import (
+    ObservationIndex,
+    QueryError,
+    SnapshotStore,
+    integer,
+    json_bytes,
+)
+from runtime_paths import (
+    CODE_ROOT,
+    STATE_ROOT,
+    ProjectionRevisionStore,
+    ProjectionStateError,
+)
 import subprocess
 import threading
 import time
 from http.client import HTTPConnection, HTTPException
 import yaml as _yaml
-
 
 DEFAULT_PORT = 43191
 AETHERFORGE_PROXY = os.environ.get("ZHIXING_AI_PROXY", "http://127.0.0.1:9290")
@@ -185,11 +198,28 @@ MAX_DOCUMENT_BYTES = 1024 * 1024
 POLL_INTERVAL_SECONDS = 5
 SERVER_CODE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 QUERY_CODE_SHA256 = hashlib.sha256(Path(__file__).with_name('observatory_query.py').read_bytes()).hexdigest()
-REPO_DIST_PAGE = Path(__file__).resolve().parent / "dist" / "index.html"
-REPO_ROOT_PAGE = Path(__file__).resolve().parent / "index.html"
+RUNTIME_PATHS_CODE_SHA256 = hashlib.sha256(
+    Path(__file__).with_name("runtime_paths.py").read_bytes()
+).hexdigest()
+CODE_BUNDLE_SHA256 = hashlib.sha256(
+    (
+        f"live_server.py:{SERVER_CODE_SHA256}\n"
+        f"observatory_query.py:{QUERY_CODE_SHA256}\n"
+        f"runtime_paths.py:{RUNTIME_PATHS_CODE_SHA256}\n"
+    ).encode("ascii")
+).hexdigest()
+_DASHBOARD_CODE_FILES = (
+    "live_server.py",
+    "observatory_query.py",
+    "runtime_paths.py",
+)
+REPO_DIST_PAGE = STATE_ROOT / "dist" / "index.html"
+REPO_ROOT_PAGE = STATE_ROOT / "index.html"
 LEGACY_DOC_PAGE = Path("/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库/40-验收与运营/Agent体系全景总览-2026-09-08.html")
 
 def resolve_default_page_path() -> Path:
+    if STATE_ROOT != CODE_ROOT:
+        return REPO_DIST_PAGE
     if REPO_DIST_PAGE.is_file():
         return REPO_DIST_PAGE
     if REPO_ROOT_PAGE.is_file():
@@ -197,9 +227,7 @@ def resolve_default_page_path() -> Path:
     return LEGACY_DOC_PAGE
 
 PAGE_PATH = resolve_default_page_path()
-SNAPSHOT_PATH = Path("/Users/xiamingxing/.local/share/zhixing-dashboard/current.json")
-RUNTIME_AGENT_BRIEF = Path("/Users/xiamingxing/Workspace/runtime/dashboard/agent-brief.json")
-RUNTIME_DATA_JSON = Path("/Users/xiamingxing/Workspace/runtime/dashboard/data.json")
+SNAPSHOT_PATH = STATE_ROOT / "current.json"
 DOCUMENT_ROOT = Path("/Users/xiamingxing/Documents/学习进化/基建架构")
 DEFAULT_SOURCES = {
     "resident_heartbeats": Path("/Users/xiamingxing/Workspace/.omo/state/resident-heartbeat.jsonl"),
@@ -212,7 +240,7 @@ DEFAULT_SOURCES = {
     "swarm_conflicts": Path("/Users/xiamingxing/Workspace/.omo/_delivery/swarm-conflicts/events.jsonl"),
     "workflow_mesh": Path("/Users/xiamingxing/Workspace/.omo/_knowledge/workflow-mesh/events.jsonl"),
     "workflows_workspace": Path("/Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/events.jsonl"),
-    "dashboard_refresh": Path("/Users/xiamingxing/.local/share/zhixing-dashboard/refresh.jsonl"),
+    "dashboard_refresh": STATE_ROOT / "refresh.jsonl",
     "workflows_recovery": Path("/Users/xiamingxing/agents/codex-agent-os-recovery/attempts/readiness-20260908-01/ws/.omo/_delivery/agent-workflows/events.jsonl"),
 }
 ALIASES = {
@@ -229,6 +257,47 @@ SENSITIVE = re.compile(r"(?:gh[pousr]_|sk[-_]|bearer|password|secret|api[-_]?key
 
 def utc_now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def resolve_dashboard_code_identity(code_root=CODE_ROOT):
+    """Prove the running reader is one clean, exact Git tree."""
+    root = Path(code_root).resolve()
+
+    def git_bytes(*args):
+        completed = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+        if completed.returncode != 0:
+            raise ProjectionStateError(
+                "IDENTITY_UNBOUND", "projection_identity_unbound"
+            )
+        return completed.stdout
+
+    code_oid = git_bytes("rev-parse", "HEAD").decode("ascii").strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", code_oid):
+        raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound")
+    if git_bytes("status", "--porcelain=v1", "--untracked-files=all"):
+        raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+    tree_listing = git_bytes("ls-tree", "-r", "--full-tree", "HEAD")
+    tree_sha256 = hashlib.sha256(tree_listing).hexdigest()
+    file_hashes = []
+    for name in _DASHBOARD_CODE_FILES:
+        bound = git_bytes("show", f"HEAD:{name}")
+        executing = (root / name).read_bytes()
+        if bound != executing:
+            raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+        file_hashes.append(f"{name}:{hashlib.sha256(bound).hexdigest()}\n")
+    code_bundle_sha256 = hashlib.sha256(
+        "".join(file_hashes).encode("ascii")
+    ).hexdigest()
+    return {
+        "code_oid": code_oid,
+        "tree_sha256": tree_sha256,
+        "code_bundle_sha256": code_bundle_sha256,
+    }
 
 
 def safe_identifier(value):
@@ -555,70 +624,73 @@ def build_resident_status() -> dict:
 
 
 def value_proof_readiness_payload(snapshot):
-    """Project v2-qualifying business value without counting legacy records."""
+    """Project business value solely from the OMO causal Event Ledger."""
     source = snapshot if isinstance(snapshot, dict) else {}
-    panel = source.get("panel_value") if isinstance(source.get("panel_value"), dict) else {}
-    validation = (
-        source.get("value_evidence_validation")
-        if isinstance(source.get("value_evidence_validation"), dict) else {}
+    previous_panel = (
+        source.get("panel_value") if isinstance(source.get("panel_value"), dict) else {}
     )
-    samples = panel.get("samples") if isinstance(panel.get("samples"), dict) else {}
-    validation_ready = (
-        validation.get("ok") is True
-        and validation.get("available") is not False
-        and validation.get("schema") == "value-evidence-validation/v2"
+    envelope = (
+        source.get("personal_value_truth")
+        if isinstance(source.get("personal_value_truth"), dict) else {}
     )
-    qualifying = int(validation.get("qualifying") or 0) if validation_ready else 0
-    target = int(validation.get("target") or 30) if validation_ready else 30
-    thresholds = []
-    for item in (panel.get("thresholds") or []):
-        if not isinstance(item, dict):
-            continue
-        corrected = dict(item)
-        if corrected.get("key") == "samples":
-            corrected["current"] = qualifying
-            corrected["met"] = qualifying >= target
-            if not corrected["met"]:
-                corrected["gate"] = f"样本 {qualifying}/{target} 不足, 比率不可判定"
-            else:
-                corrected["gate"] = None
-        thresholds.append(corrected)
+    truth = envelope.get("value_truth") if isinstance(envelope.get("value_truth"), dict) else {}
+    advisory_panel = previous_panel.get("advisory", previous_panel)
+    panel = project_panel_value(truth, advisory_panel)
+    metrics = truth.get("metrics") if isinstance(truth.get("metrics"), dict) else {}
+    weeks = [item for item in (metrics.get("weekly_samples") or []) if isinstance(item, dict)]
+    qualifying = panel["samples"]["qualifying"]
+    target = 30
+    truth_valid = (
+        envelope.get("available") is True
+        and truth.get("schema") == "value-truth-snapshot/v1"
+    )
+    personal_value = str((truth.get("truth_axes") or {}).get("personal_value") or "")
+    if not truth_valid:
+        state = "UNPROVABLE"
+        reasons = ["ledger_value_truth_unavailable"]
+        qualifying = 0
+    elif truth.get("status") == "proven" and personal_value == "passed":
+        state = "PROVEN"
+        reasons = []
+    elif truth.get("status") == "unprovable" or personal_value == "unprovable":
+        state = "UNPROVABLE"
+        reasons = [str(truth.get("reason") or "ledger_value_truth_unprovable")]
+    else:
+        state = "NOT_PROVEN"
+        reasons = [str(item) for item in (metrics.get("gate_gaps") or []) if item]
+    panel_samples = panel["samples"]
+    validation = source.get("value_evidence_validation") if isinstance(source.get("value_evidence_validation"), dict) else {}
     payload = {
-        "schema_version": "agent-value-proof-readiness/v2",
-        "available": True,
+        "schema_version": "agent-value-proof-readiness/v3",
+        "available": truth_valid,
         "authorization_mode": "single-user-loopback",
         "read_only": True,
         "instruction_capable": False,
-        "state": str(panel.get("state") or "UNKNOWN").upper(),
-        "state_reason": panel.get("state_reason") or [],
+        "state": state,
+        "state_reason": reasons,
         "samples": {
-            "records": int(samples.get("records") or 0),
+            "records": int(metrics.get("total_episodes") or 0) if truth_valid else 0,
             "qualifying": qualifying,
             "target": target,
             "remaining": max(0, target - qualifying),
-            "v2_records": int(validation.get("v2_records") or 0),
-            "legacy_records": int(validation.get("legacy_records") or 0),
-            "legacy_qualifying": int(validation.get("legacy_qualifying") or 0),
-            "accepted": int(samples.get("accepted") or 0),
-            "adjudicated": int(samples.get("adjudicated") or 0),
-            "net_saved_seconds": int(samples.get("net_saved_seconds") or 0),
+            "accepted": int(panel_samples.get("accepted") or 0),
+            "adjudicated": int(panel_samples.get("adjudicated") or 0),
+            "net_saved_seconds": int(panel_samples.get("net_saved_seconds") or 0),
         },
-        "revision_baseline": panel.get("revision_baseline"),
-        "thresholds": thresholds,
-        "validation": validation,
+        "thresholds": panel.get("thresholds") or [],
+        "value_truth": truth,
+        "advisory": {
+            "panel": panel.get("advisory") if isinstance(panel.get("advisory"), dict) else {},
+            "validation": validation,
+        },
         "operator_contract": {
-            "helper_path": "/Users/xiamingxing/.local/share/zhixing-dashboard/bin/value-operator.py",
-            "canonical_evidence": "/Users/xiamingxing/Workspace/.omo/_delivery/ingress/value-evidence.jsonl",
-            "baseline": "/Users/xiamingxing/Workspace/.omo/state/value-baselines/value-recorder-baseline-20260919-unique-exec.json",
-            "execution": "local operator CLI only; no HTTP write API",
-            "required_confirm": "--confirm-real-human-post-baseline",
-            "minimum_net_saved_seconds": 60,
-            "authority": "fresh receipt with matching deterministic digest and expiry",
-            "replay_identity": ["run_id", "scene_id", "decision_id"],
+            "canonical_source": "OMO causal Event Ledger",
+            "meter": "bin/bc-os/north_star_meter_v2.py",
+            "read_only": True,
         },
         "evidence_rule": (
-            "Only post-baseline qualifying value-evidence/v2 records count; "
-            "legacy, synthetic, duplicate, and backfilled records are forbidden."
+            "Only complete principal-bound Episodes validated from the OMO causal Event Ledger count; "
+            "legacy JSONL, attestations, synthetic runs, and backfills are advisory only."
         ),
         "generated_at": source.get("generated_at")
             or source.get("observed_at")
@@ -986,13 +1058,52 @@ def collect_logs(sources=None, limit=100, source="all"):
     }
 
 
+def projection_logs(snapshot, *, limit=100, source="all"):
+    """Serve only the event stream captured in the bound projection revision."""
+    if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 200:
+        raise ValueError("limit must be an integer between 1 and 200")
+    recent = snapshot.get("recent_events") if isinstance(snapshot, dict) else None
+    if not isinstance(recent, dict):
+        raise ValueError("revision event stream unavailable")
+    raw_sources = recent.get("sources")
+    sources = raw_sources if isinstance(raw_sources, list) else []
+    allowed = {
+        item.get("name")
+        for item in sources
+        if isinstance(item, dict) and isinstance(item.get("name"), str)
+    }
+    if source != "all" and source not in allowed:
+        raise ValueError("unknown source")
+    raw_events = recent.get("events_all", recent.get("events"))
+    if not isinstance(raw_events, list) or any(not isinstance(item, dict) for item in raw_events):
+        raise ValueError("revision event stream unavailable")
+    selected = [dict(item) for item in raw_events if source == "all" or item.get("source") == source]
+    result = dict(recent)
+    result.update(
+        {
+            "service": "zhixing-dashboard-live",
+            "schema_version": 1,
+            "read_only": True,
+            "transport": "projection",
+            "event_scope": "revision_bound",
+            "limit": limit,
+            "events": selected[:limit],
+            "sources": sources,
+        }
+    )
+    result.pop("events_all", None)
+    return result
+
+
 class DocumentError(Exception):
     def __init__(self, status, reason):
         self.status = status
         self.reason = reason
 
 
-def registered_document(snapshot_path, document_root, document_id):
+def registered_document(
+    snapshot_path, document_root, document_id, *, require_digest=False
+):
     """Resolve a registered id, then open each child relative to a nofollow dir fd."""
     try:
         descriptor = os.open(snapshot_path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
@@ -1007,10 +1118,17 @@ def registered_document(snapshot_path, document_root, document_id):
         raise DocumentError(503, "document_registry_unavailable") from None
     if not isinstance(snapshot, dict):
         raise DocumentError(503, "document_registry_unavailable")
-    return document_from_registry(snapshot, document_root, document_id)
+    return document_from_registry(
+        snapshot,
+        document_root,
+        document_id,
+        require_digest=require_digest,
+    )
 
 
-def document_from_registry(snapshot, document_root, document_id):
+def document_from_registry(
+    snapshot, document_root, document_id, *, require_digest=False
+):
     """Open only a registered document using the caller's captured generation."""
     if document_id == "current-envelope":
         envelope = snapshot.get("envelope")
@@ -1024,9 +1142,16 @@ def document_from_registry(snapshot, document_root, document_id):
         raise DocumentError(404, "document_not_registered")
     if len(matches) != 1:
         raise DocumentError(409, "document_registration_ambiguous")
-    path = matches[0].get("path")
+    record = matches[0]
+    path = record.get("path")
     if not isinstance(path, str) or len(path) > 4096 or "\x00" in path:
         raise DocumentError(403, "document_path_denied")
+    expected_digest = record.get("sha256")
+    if require_digest and (
+        not isinstance(expected_digest, str)
+        or not re.fullmatch(r"[0-9a-f]{64}", expected_digest)
+    ):
+        raise DocumentError(409, "document_digest_unbound")
     candidate = Path(path)
     try:
         relative = candidate.relative_to(document_root)
@@ -1064,6 +1189,8 @@ def document_from_registry(snapshot, document_root, document_id):
         body.decode("utf-8", errors="strict")
     except UnicodeDecodeError:
         raise DocumentError(415, "document_not_utf8") from None
+    if require_digest and hashlib.sha256(body).hexdigest() != expected_digest:
+        raise DocumentError(409, "document_digest_mismatch")
     return body
 
 
@@ -1231,6 +1358,162 @@ class DashboardServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
+    def projection_revision(self):
+        if self.projection_store is None:
+            return None
+        revision = self.projection_store.load(require_fresh=True)
+        if self.dashboard_identity_resolver is not None:
+            current_identity = self.dashboard_identity_resolver()
+            self.dashboard_code_oid = current_identity["code_oid"]
+            self.dashboard_tree_sha256 = current_identity["tree_sha256"]
+            self.dashboard_code_sha256 = current_identity["code_bundle_sha256"]
+        code_oid = self.dashboard_code_oid
+        tree_sha256 = self.dashboard_tree_sha256
+        code_bundle_sha256 = self.dashboard_code_sha256
+        if (
+            not re.fullmatch(r"[0-9a-f]{40}", code_oid or "")
+            or not re.fullmatch(r"[0-9a-f]{64}", tree_sha256 or "")
+            or not re.fullmatch(r"[0-9a-f]{64}", code_bundle_sha256 or "")
+        ):
+            raise ProjectionStateError(
+                "IDENTITY_UNBOUND", "projection_identity_unbound"
+            )
+        if (
+            code_oid != revision.dashboard_code_oid
+            or tree_sha256 != revision.dashboard_tree_sha256
+            or code_bundle_sha256 != revision.dashboard_code_bundle_sha256
+            or CODE_BUNDLE_SHA256 != revision.dashboard_code_bundle_sha256
+        ):
+            raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+        return revision
+
+    @property
+    def page_path(self):
+        revision = self.projection_revision()
+        return revision.page_path if revision is not None else self._page_path
+
+    @page_path.setter
+    def page_path(self, value):
+        self._page_path = Path(value)
+
+    @property
+    def snapshot_path(self):
+        revision = self.projection_revision()
+        return revision.data_path if revision is not None else self._snapshot_path
+
+    @snapshot_path.setter
+    def snapshot_path(self, value):
+        self._snapshot_path = Path(value)
+
+    @property
+    def snapshot_store(self):
+        return SnapshotStore(self.snapshot_path)
+
+    @property
+    def data_path(self):
+        return self.snapshot_path
+
+    @property
+    def agent_brief_path(self):
+        revision = self.projection_revision()
+        if revision is None:
+            raise ProjectionStateError(
+                "IDENTITY_UNBOUND", "projection_identity_unbound"
+            )
+        return revision.agent_brief_path
+
+    def projection_health(self):
+        if self.projection_store is None:
+            return {
+                "projection_status": "LEGACY_TEST_INJECTION",
+                "state_revision": None,
+                "producer_root_oid": None,
+                "producer_root_tree_sha256": None,
+                "producer_omo_gitlink_oid": None,
+                "producer_ecos_gitlink_oid": None,
+                "producer_collector_sha256": None,
+                "producer_value_meter_sha256": None,
+                "source_hashes": None,
+                "claims_sequence": None,
+                "claims_last_receipt": None,
+                "claims_activation": None,
+                "claims_effective_authority": None,
+                "claims_instruction_capable": None,
+                "projection_generated_at": None,
+                "projection_fresh_until": None,
+                "projection_manifest_sha256": None,
+                "projection_error": None,
+            }
+        try:
+            revision = self.projection_revision()
+        except ProjectionStateError as exc:
+            if exc.status == "STALE":
+                try:
+                    revision = self.projection_store.load(require_fresh=False)
+                except ProjectionStateError:
+                    revision = None
+                if revision is not None:
+                    return {
+                        "projection_status": exc.status,
+                        "state_revision": revision.revision_id,
+                        "producer_root_oid": revision.producer_root_oid,
+                        "producer_root_tree_sha256": revision.producer_root_tree_sha256,
+                        "producer_omo_gitlink_oid": revision.omo_gitlink_oid,
+                        "producer_ecos_gitlink_oid": revision.ecos_gitlink_oid,
+                        "producer_collector_sha256": revision.collector_sha256,
+                        "producer_value_meter_sha256": revision.value_meter_sha256,
+                        "source_hashes": revision.source_hashes,
+                        "claims_sequence": revision.claims_sequence,
+                        "claims_last_receipt": revision.claims_last_receipt,
+                        "claims_activation": revision.claims_activation,
+                        "claims_effective_authority": revision.claims_effective_authority,
+                        "claims_instruction_capable": revision.claims_instruction_capable,
+                        "projection_generated_at": revision.generated_at,
+                        "projection_fresh_until": revision.fresh_until,
+                        "projection_manifest_sha256": revision.manifest_sha256,
+                        "projection_error": exc.public_error,
+                    }
+            return {
+                "projection_status": exc.status,
+                "state_revision": None,
+                "producer_root_oid": None,
+                "producer_root_tree_sha256": None,
+                "producer_omo_gitlink_oid": None,
+                "producer_ecos_gitlink_oid": None,
+                "producer_collector_sha256": None,
+                "producer_value_meter_sha256": None,
+                "source_hashes": None,
+                "claims_sequence": None,
+                "claims_last_receipt": None,
+                "claims_activation": None,
+                "claims_effective_authority": None,
+                "claims_instruction_capable": None,
+                "projection_generated_at": None,
+                "projection_fresh_until": None,
+                "projection_manifest_sha256": None,
+                "projection_error": exc.public_error,
+            }
+        return {
+            "projection_status": "BOUND_FRESH",
+            "state_revision": revision.revision_id,
+            "producer_root_oid": revision.producer_root_oid,
+            "producer_root_tree_sha256": revision.producer_root_tree_sha256,
+            "producer_omo_gitlink_oid": revision.omo_gitlink_oid,
+            "producer_ecos_gitlink_oid": revision.ecos_gitlink_oid,
+            "producer_collector_sha256": revision.collector_sha256,
+            "producer_value_meter_sha256": revision.value_meter_sha256,
+            "source_hashes": revision.source_hashes,
+            "claims_sequence": revision.claims_sequence,
+            "claims_last_receipt": revision.claims_last_receipt,
+            "claims_activation": revision.claims_activation,
+            "claims_effective_authority": revision.claims_effective_authority,
+            "claims_instruction_capable": revision.claims_instruction_capable,
+            "projection_generated_at": revision.generated_at,
+            "projection_fresh_until": revision.fresh_until,
+            "projection_manifest_sha256": revision.manifest_sha256,
+            "projection_error": None,
+        }
+
     def get_request(self):
         request, address = super().get_request()
         request.settimeout(30)
@@ -1273,6 +1556,27 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def _json(self, status, value):
         self._send(status, json_bytes(value))
+
+    def _request_revision(self):
+        return getattr(self, "_bound_projection_revision", None)
+
+    def _snapshot_json(self):
+        revision = self._request_revision()
+        if revision is not None:
+            return json.loads(revision.artifact_bodies["data"])
+        return json.loads(self.server.snapshot_path.read_text(encoding="utf-8"))
+
+    def _snapshot_index(self):
+        revision = self._request_revision()
+        if revision is not None:
+            return ObservationIndex(self._snapshot_json())
+        return self.server.snapshot_store.load()
+
+    def _snapshot_parent(self):
+        revision = self._request_revision()
+        if revision is not None:
+            return revision.revision_root
+        return self.server.snapshot_path.parent
 
     def _allowed(self):
         hosts = self.headers.get_all("Host", [])
@@ -1416,12 +1720,19 @@ class DashboardHandler(BaseHTTPRequestHandler):
                          "usage": usage, "elapsed_ms": elapsed_ms})
 
     def do_GET(self):
+        self._bound_projection_revision = None
         if not self._allowed():
             return
         route = urlsplit(self.path)
         if route.scheme or route.netloc or route.fragment:
             self._json(400, {"error": "invalid_request_target"})
             return
+        if self.server.projection_store is not None and route.path != "/health":
+            try:
+                self._bound_projection_revision = self.server.projection_revision()
+            except ProjectionStateError as exc:
+                self._json(503, {"error": exc.public_error, "read_only": True})
+                return
         if route.path in ("/", "/index.html"):
             if route.query:
                 allowed_query_keys = {"persona", "mode", "view", "probe", "target_path"}
@@ -1430,14 +1741,28 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     self._json(400, {"error": "unexpected_query"})
                     return
             try:
-                target_page_path = REPO_DIST_PAGE if REPO_DIST_PAGE.is_file() else getattr(self.server, "page_path", resolve_default_page_path())
-                descriptor = os.open(target_page_path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
-                with os.fdopen(descriptor, "rb") as stream:
-                    if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
-                        raise OSError("not a regular page")
-                    page = stream.read(MAX_PAGE_BYTES + 1)
+                revision = self._request_revision()
+                if revision is not None:
+                    page = revision.artifact_bodies["page"]
+                else:
+                    target_page_path = getattr(
+                        self.server, "page_path", resolve_default_page_path()
+                    )
+                    descriptor = os.open(
+                        target_page_path,
+                        os.O_RDONLY
+                        | os.O_NONBLOCK
+                        | getattr(os, "O_NOFOLLOW", 0),
+                    )
+                    with os.fdopen(descriptor, "rb") as stream:
+                        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                            raise OSError("not a regular page")
+                        page = stream.read(MAX_PAGE_BYTES + 1)
                 if len(page) > MAX_PAGE_BYTES:
                     raise OSError("page too large")
+            except ProjectionStateError as exc:
+                self._json(503, {"error": exc.public_error, "read_only": True})
+                return
             except OSError:
                 self._json(503, {"error": "dashboard_page_unavailable"})
                 return
@@ -1454,17 +1779,38 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 page = page[:body_close_idx] + DYNAMIC_HASH_ROUTE_SCRIPT + page[body_close_idx:]
             self._send(200, page, "text/html; charset=utf-8")
         elif route.path in ("/agent-brief.json", "/data.json") and not route.query:
-            source = RUNTIME_AGENT_BRIEF if route.path == "/agent-brief.json" else RUNTIME_DATA_JSON
             try:
-                descriptor = os.open(source, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
-                with os.fdopen(descriptor, "rb") as stream:
-                    if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
-                        raise OSError("not a regular file")
-                    body = stream.read(MAX_DOCUMENT_BYTES + 1)
+                revision = self._request_revision()
+                if revision is not None:
+                    artifact = (
+                        "agent_brief"
+                        if route.path == "/agent-brief.json"
+                        else "data"
+                    )
+                    body = revision.artifact_bodies[artifact]
+                else:
+                    source = (
+                        self.server.agent_brief_path
+                        if route.path == "/agent-brief.json"
+                        else self.server.data_path
+                    )
+                    descriptor = os.open(
+                        source,
+                        os.O_RDONLY
+                        | os.O_NONBLOCK
+                        | getattr(os, "O_NOFOLLOW", 0),
+                    )
+                    with os.fdopen(descriptor, "rb") as stream:
+                        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                            raise OSError("not a regular file")
+                        body = stream.read(MAX_DOCUMENT_BYTES + 1)
                 if len(body) > MAX_DOCUMENT_BYTES:
                     raise OSError("projection too large")
+            except ProjectionStateError as exc:
+                self._json(503, {"error": exc.public_error, "read_only": True})
+                return
             except OSError:
-                self._json(503, {"error": "agent_projection_unavailable"})
+                self._json(503, {"error": "agent_projection_unavailable", "read_only": True})
                 return
             self._send(200, body, "application/json; charset=utf-8")
         elif route.path == "/manifest.json" and not route.query:
@@ -1484,16 +1830,51 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif route.path == "/health" and not route.query:
             disk_server = Path(__file__).read_bytes()
             disk_query = Path(__file__).with_name("observatory_query.py").read_bytes()
+            disk_runtime_paths = Path(__file__).with_name("runtime_paths.py").read_bytes()
             disk_server_sha = hashlib.sha256(disk_server).hexdigest()
             disk_query_sha = hashlib.sha256(disk_query).hexdigest()
-            code_drift = disk_server_sha != SERVER_CODE_SHA256 or disk_query_sha != QUERY_CODE_SHA256
+            disk_runtime_paths_sha = hashlib.sha256(disk_runtime_paths).hexdigest()
+            projection_health = self.server.projection_health()
+            code_oid = self.server.dashboard_code_oid
+            tree_sha = self.server.dashboard_tree_sha256
+            expected_code_sha = self.server.dashboard_code_sha256
+            expected_code_sha_valid = bool(
+                re.fullmatch(r"[0-9a-f]{64}", expected_code_sha or "")
+            )
+            code_identity_bound = bool(
+                re.fullmatch(r"[0-9a-f]{40}", code_oid or "")
+                and re.fullmatch(r"[0-9a-f]{64}", tree_sha or "")
+                and expected_code_sha_valid
+                and expected_code_sha == CODE_BUNDLE_SHA256
+            )
+            code_drift = (
+                disk_server_sha != SERVER_CODE_SHA256
+                or disk_query_sha != QUERY_CODE_SHA256
+                or disk_runtime_paths_sha != RUNTIME_PATHS_CODE_SHA256
+                or (
+                    self.server.projection_store is not None
+                    and (
+                        projection_health["projection_status"] != "BOUND_FRESH"
+                        or not code_identity_bound
+                    )
+                )
+            )
             self._json(200, {
-                "service": "zhixing-dashboard-live", "schema_version": 1,
-                "read_only": True, "bind": "127.0.0.1", "port": self.server.server_port,
+                "service": "zhixing-dashboard-live", "schema_version": 2,
+                "read_only": self.server.projection_store is not None,
+                "bind": "127.0.0.1", "port": self.server.server_port,
                 "pid": os.getpid(), "script_sha256": SERVER_CODE_SHA256,
                 "query_code_sha256": QUERY_CODE_SHA256, "observer_api_version": 1,
                 "disk_script_sha256": disk_server_sha, "disk_query_code_sha256": disk_query_sha,
+                "disk_runtime_paths_sha256": disk_runtime_paths_sha,
                 "code_drift": code_drift,
+                "dashboard_code_oid": code_oid if code_identity_bound else None,
+                "dashboard_tree_sha256": tree_sha if code_identity_bound else None,
+                "dashboard_code_sha256": CODE_BUNDLE_SHA256,
+                "expected_dashboard_code_sha256": (
+                    expected_code_sha if expected_code_sha_valid else None
+                ),
+                **projection_health,
                 "observed_at": utc_now(), "poll_interval_seconds": POLL_INTERVAL_SECONDS,
                 "sources": list(self.server.sources),
             })
@@ -1509,12 +1890,34 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(400, {"error": "registered_document_id_required"})
                 return
             try:
-                body = registered_document(self.server.snapshot_path, self.server.document_root, document_id)
+                if self._request_revision() is not None:
+                    body = document_from_registry(
+                        self._snapshot_json(),
+                        self.server.document_root,
+                        document_id,
+                        require_digest=True,
+                    )
+                else:
+                    body = registered_document(
+                        self.server.snapshot_path,
+                        self.server.document_root,
+                        document_id,
+                    )
             except DocumentError as error:
                 self._json(error.status, {"error": error.reason})
                 return
             # HTML and other active content are deliberately rendered as source text.
-            self._send(200, body, "text/plain; charset=utf-8", {'X-Observer-Read-Mode': 'legacy-unpinned'})
+            read_mode = (
+                "revision-bound"
+                if self.server.projection_store is not None
+                else "legacy-unpinned"
+            )
+            self._send(
+                200,
+                body,
+                "text/plain; charset=utf-8",
+                {"X-Observer-Read-Mode": read_mode},
+            )
         elif route.path in ('/api/v1/events/stream', '/events/stream'):
             self.send_response(200)
             self.send_header('Content-Type', 'text/event-stream; charset=utf-8')
@@ -1525,35 +1928,45 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.end_headers()
             import time
             try:
-                snapshot_candidates = [
-                    Path(__file__).resolve().parent / "dist/current.json",
-                    getattr(self.server, "snapshot_path", None),
-                    SNAPSHOT_PATH,
-                ]
+                active_revision = self._request_revision()
                 active_snap_file = None
-                for c in snapshot_candidates:
-                    if c and Path(c).is_file():
-                        active_snap_file = Path(c)
-                        break
-
-                last_mtime = active_snap_file.stat().st_mtime_ns if active_snap_file else 0
-                last_gen_id = None
-                if active_snap_file:
-                    try:
-                        snap = json.loads(active_snap_file.read_text(encoding="utf-8"))
-                        last_gen_id = snap.get("generation_id")
-                    except Exception:
-                        pass
+                last_mtime = 0
+                last_revision_id = (
+                    active_revision.revision_id if active_revision is not None else None
+                )
+                if active_revision is not None:
+                    snap = json.loads(active_revision.artifact_bodies["data"])
+                else:
+                    snapshot_candidates = [
+                        getattr(self.server, "snapshot_path", None),
+                        STATE_ROOT / "dist/current.json",
+                    ]
+                    for candidate in snapshot_candidates:
+                        if candidate and Path(candidate).is_file():
+                            active_snap_file = Path(candidate)
+                            break
+                    if active_snap_file is not None:
+                        last_mtime = active_snap_file.stat().st_mtime_ns
+                        snap = json.loads(
+                            active_snap_file.read_text(encoding="utf-8")
+                        )
+                    else:
+                        snap = {}
+                last_gen_id = snap.get("generation_id")
+                stream_projection_status = (
+                    "BOUND_FRESH"
+                    if active_revision is not None
+                    else "LEGACY_TEST_INJECTION"
+                )
+                stream_projection_error = None
 
                 now_str = utc_now()
                 init_evt = {
                     'type': 'connected',
                     'timestamp': now_str,
                     'service': 'zhixing-living-telemetry',
-                    'guardian_cadence_seconds': 74,
-                    'active_loops': 4,
-                    'vram_usage': '43.2GB / 152GB',
-                    'status': 'STREAM_ONLINE',
+                    'status': stream_projection_status,
+                    'state_revision': last_revision_id,
                     'generation_id': last_gen_id,
                 }
                 self.wfile.write(f"event: connected\ndata: {json.dumps(init_evt)}\n\n".encode('utf-8'))
@@ -1564,12 +1977,47 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     cycle += 1
                     time.sleep(1)
 
-                    if active_snap_file and active_snap_file.is_file():
+                    if self.server.projection_store is not None:
+                        try:
+                            current_revision = self.server.projection_revision()
+                            stream_projection_status = "BOUND_FRESH"
+                            stream_projection_error = None
+                            if current_revision.revision_id != last_revision_id:
+                                snap = json.loads(
+                                    current_revision.artifact_bodies["data"]
+                                )
+                                cur_gen_id = snap.get("generation_id")
+                                last_revision_id = current_revision.revision_id
+                                last_gen_id = cur_gen_id
+                                update_evt = {
+                                    'type': 'snapshot_updated',
+                                    'timestamp': utc_now(),
+                                    'generation_id': cur_gen_id,
+                                    'state_revision': last_revision_id,
+                                    'observed_at': snap.get("observed_at")
+                                    or snap.get("generated_at"),
+                                    'status': snap.get("status") or "OK",
+                                }
+                                self.wfile.write(
+                                    f"event: snapshot_updated\ndata: {json.dumps(update_evt)}\n\n".encode(
+                                        'utf-8'
+                                    )
+                                )
+                                self.wfile.flush()
+                        except ProjectionStateError as exc:
+                            stream_projection_status = exc.status
+                            stream_projection_error = exc.public_error
+                        except (ValueError, TypeError):
+                            stream_projection_status = "ARTIFACT_INVALID"
+                            stream_projection_error = "projection_artifact_invalid"
+                    elif active_snap_file and active_snap_file.is_file():
                         try:
                             cur_mtime = active_snap_file.stat().st_mtime_ns
                             if cur_mtime != last_mtime:
                                 last_mtime = cur_mtime
-                                snap = json.loads(active_snap_file.read_text(encoding="utf-8"))
+                                snap = json.loads(
+                                    active_snap_file.read_text(encoding="utf-8")
+                                )
                                 cur_gen_id = snap.get("generation_id")
                                 if cur_gen_id != last_gen_id or not last_gen_id:
                                     last_gen_id = cur_gen_id
@@ -1577,12 +2025,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
                                         'type': 'snapshot_updated',
                                         'timestamp': utc_now(),
                                         'generation_id': cur_gen_id,
-                                        'observed_at': snap.get("observed_at") or snap.get("generated_at"),
+                                        'state_revision': None,
+                                        'observed_at': snap.get("observed_at")
+                                        or snap.get("generated_at"),
                                         'status': snap.get("status") or "OK",
                                     }
-                                    self.wfile.write(f"event: snapshot_updated\ndata: {json.dumps(update_evt)}\n\n".encode('utf-8'))
+                                    self.wfile.write(
+                                        f"event: snapshot_updated\ndata: {json.dumps(update_evt)}\n\n".encode(
+                                            'utf-8'
+                                        )
+                                    )
                                     self.wfile.flush()
-                        except Exception:
+                        except (OSError, ValueError, TypeError):
                             pass
 
                     if cycle % 4 == 0:
@@ -1590,26 +2044,40 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             'type': 'telemetry_pulse',
                             'cycle': cycle // 4,
                             'timestamp': utc_now(),
-                            'sentinel': 'ResidentGuardian-74s',
-                            'status': 'ARMED_HEALTHY',
-                            'circuit_pulses': [
-                                {'loop': 'value_reinforcement', 'status': 'ACTIVE', 'adherence': '89.8%'},
-                                {'loop': 'execution_control', 'status': 'ARMED', 'compliance': '100%'},
-                                {'loop': 'meta_governance', 'status': 'ARMED', 'rules': '7720+'},
-                                {'loop': 'physical_isolation', 'status': 'ENFORCED', 'mode': 'PASW'}
-                            ]
+                            'status': stream_projection_status,
+                            'state_revision': last_revision_id,
                         }
+                        if stream_projection_error is not None:
+                            pulse['error'] = stream_projection_error
                         self.wfile.write(f"event: pulse\ndata: {json.dumps(pulse)}\n\n".encode('utf-8'))
                         self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError, OSError):
                 pass
             return
         elif route.path == '/api/v1/value/metrics':
-            self._json(200, compute_value_metrics())
+            if self.server.projection_store is not None:
+                snapshot = self._snapshot_json()
+                revision = self._request_revision()
+                self._json(200, {
+                    "service": "zhixing-value-metrics",
+                    "schema_version": "value-loop/v4",
+                    "observed_at": snapshot.get("generated_at")
+                        or snapshot.get("observed_at")
+                        or utc_now(),
+                    "read_only": True,
+                    "authority": "revision_bound_event_ledger_projection",
+                    "state_revision": revision.revision_id,
+                    "generation_id": snapshot.get("generation_id"),
+                    "event_ledger_sha256": revision.source_hashes["event_ledger_sha256"],
+                    "value_proof_readiness": value_proof_readiness_payload(snapshot),
+                    "legacy_metrics_excluded": True,
+                })
+            else:
+                self._json(200, compute_value_metrics())
             return
         elif route.path == '/api/v1/agent/objective-coverage':
             try:
-                snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+                snapshot = self._snapshot_json()
                 payload = {
                     "schema_version": "agent-objective-coverage/v1",
                     "authorization_mode": "single-user-loopback",
@@ -1641,7 +2109,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         elif route.path == '/api/v1/agent/strategic-gaps':
             try:
-                snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+                snapshot = self._snapshot_json()
                 strategic = snapshot.get("strategic") if isinstance(snapshot.get("strategic"), dict) else {}
                 trace = strategic.get("trace") if isinstance(strategic.get("trace"), dict) else {}
                 gaps = trace.get("gaps") if isinstance(trace.get("gaps"), list) else []
@@ -1741,12 +2209,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         elif route.path == '/api/v1/agent/brief':
             try:
-                snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+                snapshot = self._snapshot_json()
                 objective = snapshot.get("objective_coverage") if isinstance(snapshot.get("objective_coverage"), dict) else {}
                 pending = snapshot.get("pending_publications") if isinstance(snapshot.get("pending_publications"), dict) else {}
-                panel_value = snapshot.get("panel_value") if isinstance(snapshot.get("panel_value"), dict) else {}
-                samples = panel_value.get("samples") if isinstance(panel_value.get("samples"), dict) else {}
-                qualifying = int(samples.get("qualifying") or 0)
+                value_readiness = value_proof_readiness_payload(snapshot)
                 payload = {
                     "schema_version": "agent-unified-brief/v1",
                     "authorization_mode": "single-user-loopback",
@@ -1777,24 +2243,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     },
                     "pending_publications": pending,
                     "reconciliation_candidates": snapshot.get("reconciliation_candidates", {}),
-                    "value_proof_readiness": {
-                        "state": str(panel_value.get("state") or "UNKNOWN").upper(),
-                        "samples": {
-                            "qualifying": qualifying,
-                            "target": 30,
-                            "remaining": max(0, 30 - qualifying),
-                        },
-                        "revision_baseline": panel_value.get("revision_baseline"),
-                        "thresholds": panel_value.get("thresholds") or [],
-                        "validation": snapshot.get("value_evidence_validation", {}),
-                        "operator_contract": {
-                            "helper_path": "/Users/xiamingxing/.local/share/zhixing-dashboard/bin/value-operator.py",
-                            "canonical_evidence": "/Users/xiamingxing/Workspace/.omo/_delivery/ingress/value-evidence.jsonl",
-                            "minimum_net_saved_seconds": 60,
-                            "required_confirm": "--confirm-real-human-post-baseline",
-                            "no_synthetic_backfill": True,
-                        },
-                    },
+                    "value_proof_readiness": value_readiness,
                     "read_interfaces": snapshot.get("agent_read_interfaces", {}),
                     "safety_boundaries": [
                         "OMO is the single control plane and dispatcher.",
@@ -1839,7 +2288,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         elif route.path == '/api/v1/agent/value-proof-readiness':
             try:
-                snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+                snapshot = self._snapshot_json()
                 payload = value_proof_readiness_payload(snapshot)
                 self._json(200, payload)
             except (OSError, ValueError, TypeError) as exc:
@@ -1851,7 +2300,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         elif route.path == '/api/v1/agent/authorization-desk':
             try:
-                snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+                snapshot = self._snapshot_json()
                 pending = snapshot.get("pending_publications") if isinstance(snapshot.get("pending_publications"), dict) else {}
                 claims = snapshot.get("claims_activation_request") if isinstance(snapshot.get("claims_activation_request"), dict) else {}
                 publication_items = actionable_publication_items(pending)
@@ -1883,10 +2332,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             f"one unique PR, and squash merge after required contexts pass."
                         ),
                     })
-                lifecycle_draft_path = SNAPSHOT_PATH.parent / "claims-observation" / "lifecycle-authorization-request-draft.json"
-                lifecycle_review_path = SNAPSHOT_PATH.parent / "claims-observation" / "lifecycle-authorization-review.md"
-                lifecycle_runbook_path = SNAPSHOT_PATH.parent / "claims-observation" / "lifecycle-execution-runbook.md"
-                lifecycle_gap_path = SNAPSHOT_PATH.parent / "claims-observation" / "authority-lifecycle-gap-audit.json"
+                snapshot_parent = self._snapshot_parent()
+                lifecycle_draft_path = snapshot_parent / "claims-observation" / "lifecycle-authorization-request-draft.json"
+                lifecycle_review_path = snapshot_parent / "claims-observation" / "lifecycle-authorization-review.md"
+                lifecycle_runbook_path = snapshot_parent / "claims-observation" / "lifecycle-execution-runbook.md"
+                lifecycle_gap_path = snapshot_parent / "claims-observation" / "authority-lifecycle-gap-audit.json"
 
                 def _sha256_file(path):
                     digest = hashlib.sha256()
@@ -2029,7 +2479,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         elif route.path == '/api/v1/agent/pending-authorizations':
             try:
-                snapshot = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+                snapshot = self._snapshot_json()
                 projection = pending_publication_projection(snapshot.get("pending_publications"))
                 payload = {
                     "schema_version": "agent-pending-authorizations/v2",
@@ -2073,7 +2523,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(400, {'error': 'INVALID_QUERY', 'read_only': True})
                 return
             try:
-                index = self.server.snapshot_store.load()
+                index = self._snapshot_index()
                 result = pinned_document(index, self.server.document_root, params) if operation == 'document' else index.query(operation, params)
                 self._json(200, result)
             except QueryError as error:
@@ -2087,7 +2537,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     raise ValueError("invalid query")
                 limit = int(params.get("limit", ["100"])[0])
                 source = params.get("source", ["all"])[0]
-                result = collect_logs(self.server.sources, limit=limit, source=source)
+                if self._request_revision() is not None:
+                    result = projection_logs(self._snapshot_json(), limit=limit, source=source)
+                else:
+                    result = collect_logs(self.server.sources, limit=limit, source=source)
             except ValueError:
                 self._json(400, {"error": "invalid_query", "allowed_sources": list(self.server.sources), "limit_range": [1, 200]})
                 return
@@ -2097,8 +2550,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             # panorama_cache.json only when it is not older than CURRENT.
             try:
                 import json as _json
-                from pathlib import Path as _Path
                 from datetime import datetime as _dt
+                from pathlib import Path as _Path
 
                 def _parse_ts(value):
                     if not isinstance(value, str) or not value:
@@ -2108,18 +2561,25 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     except ValueError:
                         return None
 
-                snap_candidates = [
-                    _Path(__file__).resolve().parent / "dist/current.json",
-                    _Path(__file__).resolve().parent / "current.json",
-                ]
-                snap_path = next((p for p in snap_candidates if p.exists()), None)
-                cache_path = _Path(__file__).resolve().parent / "panorama_cache.json"
-                if snap_path and snap_path.exists():
-                    full = _json.loads(snap_path.read_text())
+                revision = self._request_revision()
+                snap_path = None
+                if revision is not None:
+                    full = self._snapshot_json()
+                    source_name = revision.revision_id
+                else:
+                    snap_candidates = [
+                        _Path(self.server.snapshot_path),
+                        _Path(STATE_ROOT) / "dist/current.json",
+                    ]
+                    snap_path = next((p for p in snap_candidates if p.exists()), None)
+                    full = _json.loads(snap_path.read_text()) if snap_path else None
+                    source_name = snap_path.name if snap_path else None
+                cache_path = _Path(STATE_ROOT) / "panorama_cache.json"
+                if isinstance(full, dict):
                     embed = {
                         "generated_at": full.get("generated_at") or full.get("observed_at") or "",
                         "generation_id": full.get("generation_id"),
-                        "source": snap_path.name,
+                        "source": source_name,
                         "knowledge_health": full.get("knowledge_health", {}),
                         "knowledge_growth": full.get("knowledge_growth", {}),
                         "experience_network": full.get("experience_network", {}),
@@ -2140,7 +2600,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     }
                     self._json(200, embed)
                     return
-                if cache_path.exists():
+                if revision is None and cache_path.exists():
                     cached = _json.loads(cache_path.read_text())
                     self._json(200, {**cached, "source": "panorama_cache.json", "stale_warning": "current_json_missing"})
                     return
@@ -2150,14 +2610,17 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif route.path == "/api/snapshot":
             # Lightweight endpoint for incremental refresh - returns only essential data
             try:
-                candidates = [
-                    Path(__file__).resolve().parent / "dist/current.json",
-                    Path(__file__).resolve().parent / "current.json",
-                ]
-                snap_path = next((p for p in candidates if p.exists()), None)
-                if snap_path and snap_path.exists():
-                    import json as _json
-                    full = _json.loads(snap_path.read_text())
+                revision = self._request_revision()
+                if revision is not None:
+                    full = self._snapshot_json()
+                else:
+                    candidates = [
+                        Path(self.server.snapshot_path),
+                        STATE_ROOT / "dist/current.json",
+                    ]
+                    snap_path = next((p for p in candidates if p.exists()), None)
+                    full = json.loads(snap_path.read_text()) if snap_path else None
+                if isinstance(full, dict):
                     # Return lightweight version for polling
                     lightweight = {
                         "observed_at": full.get("observed_at"),
@@ -2195,6 +2658,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self._allowed():
             return
+        if self.server.projection_store is not None:
+            self._json(405, {"error": "read_only_get_only"})
+            return
         route = urlsplit(self.path)
         if route.path == "/api/v1/compute/infer":
             self._handle_compute_infer()
@@ -2215,7 +2681,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     self._json(400, {'error': 'INVALID_JSON_PAYLOAD'})
                     return
                 try:
-                    index = self.server.snapshot_store.load()
+                    index = self._snapshot_index()
                     result = index.query(operation, params)
                     self._json(200, result)
                 except QueryError as error:
@@ -2232,13 +2698,53 @@ class DashboardHandler(BaseHTTPRequestHandler):
     do_PUT = do_DELETE = do_PATCH = do_OPTIONS = do_HEAD = do_TRACE = _reject_method
 
 
-def make_server(port=DEFAULT_PORT, page_path=PAGE_PATH, sources=None,
-                snapshot_path=SNAPSHOT_PATH, document_root=DOCUMENT_ROOT):
+def make_server(port=DEFAULT_PORT, page_path=None, sources=None,
+                snapshot_path=None, document_root=DOCUMENT_ROOT,
+                projection_state_root=None, dashboard_code_oid=None,
+                dashboard_tree_sha256=None, dashboard_code_sha256=None):
     server = DashboardServer(("127.0.0.1", port), DashboardHandler)
-    server.page_path = Path(page_path)
+    projection_mode = projection_state_root is not None or (
+        page_path is None and snapshot_path is None
+    )
+    server.projection_store = (
+        ProjectionRevisionStore(projection_state_root or STATE_ROOT)
+        if projection_mode
+        else None
+    )
+    auto_code_identity = projection_mode and all(
+        value is None
+        for value in (
+            dashboard_code_oid,
+            dashboard_tree_sha256,
+            dashboard_code_sha256,
+        )
+    )
+    server.dashboard_identity_resolver = (
+        resolve_dashboard_code_identity if auto_code_identity else None
+    )
+    if auto_code_identity:
+        code_identity = resolve_dashboard_code_identity()
+        dashboard_code_oid = code_identity["code_oid"]
+        dashboard_tree_sha256 = code_identity["tree_sha256"]
+        dashboard_code_sha256 = code_identity["code_bundle_sha256"]
+    server.page_path = Path(page_path or PAGE_PATH)
     server.sources = dict(DEFAULT_SOURCES if sources is None else sources)
-    server.snapshot_path = Path(snapshot_path)
-    server.snapshot_store = SnapshotStore(snapshot_path)
+    server.snapshot_path = Path(snapshot_path or SNAPSHOT_PATH)
+    server.dashboard_code_oid = (
+        dashboard_code_oid
+        if dashboard_code_oid is not None
+        else ""
+    )
+    server.dashboard_code_sha256 = (
+        dashboard_code_sha256
+        if dashboard_code_sha256 is not None
+        else ""
+    )
+    server.dashboard_tree_sha256 = (
+        dashboard_tree_sha256
+        if dashboard_tree_sha256 is not None
+        else ""
+    )
     server.document_root = Path(document_root)
     return server
 
