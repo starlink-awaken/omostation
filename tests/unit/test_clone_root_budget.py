@@ -178,3 +178,83 @@ def test_submodule_clone_still_bounded_per_path() -> None:
     assert "for path in initialize_paths:" in body, "未找到逐子模块克隆循环"
     # 循环体内不得再出现「一次性 initialize_paths 列表 + 单条 submodule update」
     assert body.count('"submodule"') >= 2, "逐子模块循环体应含 submodule 调用"
+
+
+# ---------------------------------------------------------------------------
+# 逐子模块克隆的预算 (2026-09-30 第二处)
+# ---------------------------------------------------------------------------
+
+
+def _submodule_update_timeouts() -> list[str | None]:
+    """AST 取出所有 `git(..., "submodule", ..., "update", ...)` 调用点的 timeout 常量。"""
+    tree = ast.parse(SOURCE)
+    found: list[str | None] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)):
+            continue
+        if node.func.id != "git":
+            continue
+        strs = [a.value for a in node.args if isinstance(a, ast.Constant) and isinstance(a.value, str)]
+        if "submodule" not in strs or "update" not in strs:
+            continue
+        name = None
+        for kw in node.keywords:
+            if kw.arg == "timeout":
+                if isinstance(kw.value, ast.Name):
+                    name = kw.value.id
+                elif isinstance(kw.value, ast.Constant):
+                    name = repr(kw.value.value)
+                break
+        found.append(name)
+    return found
+
+
+def test_all_submodule_update_calls_use_submodule_budget() -> None:
+    """两处 submodule update(transport 映射分支 + 逐路径循环)都必须用子模块专用预算。
+
+    实测(空闲机器, 负载 ~30)单个子模块 module 目录是 96-108MB 的完整历史:
+        l4-kernel 52.52s · ecos 47.34s · agora 25.97s · omo 14.90s · cockpit 14.17s
+    最差的吃掉原 60s 预算的 87.5%, 负载 200+ 时连续三次复现超时。
+    """
+    used = _submodule_update_timeouts()
+    assert used, "AST 中未找到 submodule update 调用点"
+    for name in used:
+        assert name == "GIT_SUBMODULE_TIMEOUT_SECONDS", (
+            f"某处 submodule update 仍用 {name!r} —— 实测最差子模块需 52.52s, "
+            f"而网络预算只有 60s"
+        )
+
+
+def test_submodule_budget_exceeds_network_budget() -> None:
+    assert ac.GIT_SUBMODULE_TIMEOUT_SECONDS > ac.GIT_TIMEOUT_NETWORK_SECONDS, (
+        f"子模块预算 {ac.GIT_SUBMODULE_TIMEOUT_SECONDS}s 未大于网络预算 "
+        f"{ac.GIT_TIMEOUT_NETWORK_SECONDS}s"
+    )
+
+
+def test_submodule_budget_covers_worst_measured_submodule() -> None:
+    """预算必须覆盖实测最差的 l4-kernel(52.52s)并留负载余量。
+
+    60s 门槛挡不住 60s(它确实 >60 一点点但毫无余量); 150s 对应约 2.9 倍余量。
+    """
+    assert ac.GIT_SUBMODULE_TIMEOUT_SECONDS >= 60.0, "低于实测最差值 52.52s 的安全下限"
+    assert ac.GIT_SUBMODULE_TIMEOUT_SECONDS >= 150.0, (
+        f"{ac.GIT_SUBMODULE_TIMEOUT_SECONDS}s 对实测 52.52s 的最差子模块余量不足"
+    )
+
+
+def test_submodule_budget_is_env_configurable(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_CLONE_GIT_SUBMODULE_TIMEOUT", "321.0")
+    reloaded = _reload()
+    assert reloaded.GIT_SUBMODULE_TIMEOUT_SECONDS == 321.0
+
+
+def test_single_network_operations_untouched_by_submodule_budget() -> None:
+    """反向护栏: 放大子模块预算不得波及 ls-remote / 单 revision fetch。"""
+    found = _timeout_by_subcommand()
+    for subcommand in ("ls-remote", "fetch"):
+        for used in found.get(subcommand, []):
+            assert used != "GIT_SUBMODULE_TIMEOUT_SECONDS", (
+                f"git {subcommand} 被误用子模块预算 {used!r} —— "
+                "单次网络操作不该拿到搬 100MB 历史的预算"
+            )
