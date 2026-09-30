@@ -38711,21 +38711,44 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-30-bet-216-two-root-agent-perception.md
     spec_version: 1.0.0
-    content_digest: sha256:4293ff60de2e4135ad76f100cbfbe84cb0ad0358f55588b0be25eb955e703dbc
+    content_digest: sha256:dc305c57770a9d060ce2fe54c74bc4c6f35fefbeaf11c8ed280f8f438ed38188
     decision_ref: decision://accepted/BET-Y2Q4-T10-216
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ec2f142524b0082cb61769f744c26ac3063f0560
+          tests:
+            ref: receipt://docs/reports/2026-09-30-bet-216-two-root-agent-perception-closeout.md
+            sha256: sha256:57e21ae7ad404849c16eb090b8c24e4f7dd81e31fd1adc12b26fbc6b6fefe524
+          diff:
+            ref: receipt://docs/reports/2026-09-30-bet-216-two-root-agent-perception-closeout.md
+            sha256: sha256:57e21ae7ad404849c16eb090b8c24e4f7dd81e31fd1adc12b26fbc6b6fefe524
+          rollback:
+            ref: receipt://docs/reports/2026-09-30-bet-216-two-root-agent-perception-closeout.md
+            sha256: sha256:57e21ae7ad404849c16eb090b8c24e4f7dd81e31fd1adc12b26fbc6b6fefe524
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-09-30-bet-216-two-root-agent-perception-closeout.md
+            sha256: sha256:57e21ae7ad404849c16eb090b8c24e4f7dd81e31fd1adc12b26fbc6b6fefe524
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-09-30-bet-216-two-root-agent-perception-closeout.md
+            sha256: sha256:57e21ae7ad404849c16eb090b8c24e4f7dd81e31fd1adc12b26fbc6b6fefe524
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-216.md
+            sha256: sha256:29915736fddb9a6f451def68da6c257aa30c5c7db0633ef28ded7473737a6d9f
+          cleanup:
+            ref: receipt://docs/reports/2026-09-30-bet-216-two-root-agent-perception-closeout.md
+            sha256: sha256:57e21ae7ad404849c16eb090b8c24e4f7dd81e31fd1adc12b26fbc6b6fefe524
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2

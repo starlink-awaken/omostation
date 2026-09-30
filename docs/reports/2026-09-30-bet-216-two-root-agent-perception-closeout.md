@@ -56,7 +56,16 @@ commit 后按它跑，返回 12 条路径含 6 个 `.py` —— 一度读成"越
 三点式 `origin/main...HEAD` 返回正好 5 条文档路径（读数见 §3 判据 5）。判据 4/5 与两条 verify
 命令一并改为三点式，spec 重算 digest（`18d6ebb9…` → `61bfe199…` → 本轮末值）。
 
-三处都是判据 1 与判据 2 存在的理由：先跑一次，再写进契约 —— 包括"怎么跑"这一层。
+第四处是**从别处借来的一个计数**：spec §3 与本报告 §4 都写"B5 残留的六个检出侧读者"，而那个"六"
+是从 B5 自己的 closeout 报告抄的 —— `docs/reports/2026-09-29-projection-plane-phase2-pr3-closeout.md:251`
+原文是"暂存 `bin/compass_radar.py` + 六个 `bin/gac/*.py`"，它数的是**那一笔 governance_code lane
+里被转换掉的文件**，不是剩余未转换的读者。合并后要复核才发现：我手上没有任何一个仪器能复现"六"——
+按"文件里出现 registry 登记的 17 条 canonical/legacy 字面路径、且全文不含 seam 词"数得 **26**（把
+`tests/**` 和 `check-dead-path-tool-fallback.py` 这类专门扫字面路径的检查器也算进来了，人群不同）；
+按"提到 `.omo/state` 且不用 `repo_root`"数得 **62**（其中 13 条落在 `bin/_archive/**`）。两个都不等于契约里的"六"，所以本轮**不替换成
+一个新数字**，只把计数的归属交还给 B5 侧（spec 与本报告同步去掉该数，spec 再算一次 digest）。
+
+四处都是判据 1 与判据 2 存在的理由：先跑一次，再写进契约 —— 包括"怎么跑"和"这个数是谁的"这一层。
 
 ## 3 四条判据的读数
 
@@ -87,5 +96,43 @@ commit 后按它跑，返回 12 条路径含 6 个 `.py` —— 一度读成"越
 未启停任何服务、未改 `.py`、未改 `.gitignore`、未动 registry 与 workflow —— 台账 `circuit_breaker`
 列出的越界面全部为空。`BET-Y2Q4-T10-216` 完成后，ADR-0456 的感知面即为
 「静态表（三处）+ 行为后果（本五则）」。仍未闭合的两件已在台账另立：
-`ADR-0456` 的 `status` 翻转与 id 重号（principal），B5 残留的六个检出侧读者与
+`ADR-0456` 的 `status` 翻转与 id 重号（principal），B5 侧残留的检出侧读者（其清单与计数归 B5 拥有，
+本轮未复算，见 §2 第四处）与
 `tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path`。
+
+## 5 合并路径：同一批内容、换 base 即绿
+
+首轮交付是 **PR #4583**（base `ff9070d55`）。它只有一个红：`governance-verify → Submodule pointer
+drift check`，`check-submodule-pointer-drift.py --json` 报 `diverged: 2` —— `projects/agora` 分支
+gitlink `85003b315ae7` vs 子模块自己的 `origin/main` `46f84b12791f`，`projects/knowledge/kairon`
+`2c07c5ecc117` vs `11a48bf2067a`，detail `gitlink NOT on origin/main - code may be invisible from root`。
+
+三条读数说明红不在我的改动里：
+
+1. 分支那两个 gitlink 与 base `ff9070d55` **逐字节相同**（`git rev-parse HEAD:<path>` 两侧对比），
+   本轮一个指针都没碰；
+2. `main` 自己在 `ff9070d55` 上就是 **success**（run 36692174674），随后 #4580 / #4582 / #4584
+   把两个指针都对齐了 —— 被评的是"旧 base 的树"，不是"本分支的 delta"；
+3. `governance-check.yml:169` 的 `governance-verify` 显式 `ref: github.event.pull_request.head.sha`
+   （`:176`）、`fetch-depth: 0`（`:177`），评的是**分支自己的 head tree** 而非 merge tree ——
+   这正是 `AGENTS.md` 那条"别据 base 漂移推论 CI 无所谓"的反面用例。
+
+分支内补救两条都不成立：`submodule-guard` 拒绝 kairon 的非 fast-forward 移动
+（`❌ projects/knowledge/kairon 不是 fast-forward (base=2c07c5ecc117, staged=11a48bf2067a)`），
+而 `--fix` 选的是 kairon 自己的 tip `3e3189cc3396`（≠ 当时主仓钉的 `11a48bf2067a`）；gitlink bump
+本身也超出本 BET 的 `write_surfaces`（只有这 5 个文档），且 `AGENTS.md` 明令不由交付分支去吸收上游。
+
+**处置**：`claim t10-216-recast` 从 `da35d6563`（已含 `agora=46f84b12` / `kairon=3e3189cc`）重落，
+五个文件用 `git show <旧 HEAD>:<path>` 逐字节复用（sha256 全等，不是重写）。读数：
+
+- 新 base 上 `check-submodule-pointer-drift.py --json`：**`diverged: 0, behind: 0`**（红那条门禁的前置检查）；
+- 台账 4 条 verify 在新 base 复跑，读数与旧 base 一致：**8 pointers `bad=[]`**、
+  **PASS (4527 files, 145 warnings)**、纯文档与单一 owner 两条**均空**、D0 **5×[OK]**；
+- #4586 CI **20 pass / 0 fail**（含 `bet-done-transition`、`evidence-gate`、`interface-check`），
+  squash 合并为 `ec2f142524b0082cb61769f744c26ac3063f0560`；#4583 关闭并在评论里留下上面的证据链。
+
+**同一个协调面还多送一条副产品读数**：新 run 第一次 `claim` 报
+`A2A Path Lock Collision: path '.omo/_knowledge/retros/BET-Y2Q4-T10-216.md' overlaps with active
+claim … in run 20260930T090837Z-project-doc-change-fd1910bb` —— 旧 run 的路径锁跨 worktree 挡住了
+新 run，这是 §1 第 3 行"协调面全机共享"的第二次独立实证（本轮撞出来的，不是回忆）。
+`closeout <旧 run> --status blocked` 释放锁之后 claim 才通过。
