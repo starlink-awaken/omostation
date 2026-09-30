@@ -8,5 +8,4 @@
 # 排序无关。原因请写「为什么现在不能纳入」+ 「怎样才可纳入」。
 
 tests/integration/run-all.sh                  # 聚合器: 自己会跑其它套件, 再被聚合会重复执行/递归
-tests/test_submodule_autobump.sh              # 慢 (>40s, 2026-09-29 实测): 瘦身或拆分后可纳入
 tests/integration/e2e-smoke.sh                # 全量模式仍需环境 (2026-09-29 复核): 段 1 要 :7431/:7450 在线, 段 3 要先 uv sync kairon monorepo。**CLI 入口子集已拆出并纳入 CI** ⇒ tests/integration/e2e-cli-smoke.sh; 本文件保留全量语义, 供人工或有服务时使用

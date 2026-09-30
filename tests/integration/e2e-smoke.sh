@@ -63,6 +63,9 @@ fi
 # 4. cockpit CLI
 echo ""
 echo "── 2. CLI 入口 ──"
+# 不要用 `uv run --frozen`: 那要求 uv.lock 存在, 而各子项目的 uv.lock 是
+# **本地生成物、不在 git 里** ⇒ 全新检出 (本机 worktree / CI) 上 `--frozen` 直接报
+# "Unable to find lockfile at `uv.lock`" 而失败。2026-09-29 实测证伪, 已回退为默认解析。
 # 断言口径: rc=0 **且** 输出含该工具名 —— 即「入口可达 + 打出来的是它自己的 help」。
 # 早先三处都断言输出含 `usage:`, 但那只对 argparse 风格成立; cockpit 是自定义富文本 help
 # (实测 rc=0, 输出 `╭─── 🚀 快速入口 ───╮`, 含 "cockpit" 不含 "usage:") ⇒ 该断言从一开始就是错的,
@@ -72,19 +75,19 @@ assert_help() {  # $1=tool $2=help-output
   return 1
 }
 
-if COCKPIT_HELP=$(cd "$ROOT/projects/cockpit" && uv run --frozen cockpit --help 2>&1) && assert_help cockpit "$COCKPIT_HELP"; then
+if COCKPIT_HELP=$(cd "$ROOT/projects/cockpit" && uv run cockpit --help 2>&1) && assert_help cockpit "$COCKPIT_HELP"; then
   green "cockpit --help 输出 (含自身标识)"
 else
   red "cockpit --help 失败"
 fi
 
-if AGORA_CLI=$(cd "$ROOT/projects/agora" && uv run --frozen agora --help 2>&1) && assert_help agora "$AGORA_CLI"; then
+if AGORA_CLI=$(cd "$ROOT/projects/agora" && uv run agora --help 2>&1) && assert_help agora "$AGORA_CLI"; then
   green "agora --help 输出 (含自身标识)"
 else
   red "agora --help 失败"
 fi
 
-if RUNTIME_CLI=$(cd "$ROOT/projects/runtime" && uv run --frozen runtime --help 2>&1) && assert_help runtime "$RUNTIME_CLI"; then
+if RUNTIME_CLI=$(cd "$ROOT/projects/runtime" && uv run runtime --help 2>&1) && assert_help runtime "$RUNTIME_CLI"; then
   green "runtime --help 输出 (含自身标识)"
 else
   red "runtime --help 失败"
