@@ -2,7 +2,10 @@
 # Memory OS end-to-end smoke via real cockpit memory CLI (ADR-0372 phase10+).
 # Usage: bash bin/memory-os-smoke.sh
 # Exit 0: all steps produced structured success (or honest neo4j degrade on status only).
-# Exit 1: crash / invalid JSON / write or recall hard-failed without payload.
+# Exit 1: crash / invalid JSON / write or recall hard-failed without payload,
+#         or recall latency > 2x policy.recall_budget_ms_default.
+# Warnings: labeled `WARN:` lines, accumulated in $warn, surfaced at the end;
+#           never change the exit code unless SMOKE_STRICT_LATENCY=1.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
@@ -22,6 +25,44 @@ echo "ROOT=$ROOT"
 echo "NEO4J_URI=${NEO4J_URI:-<unset>}"
 
 fail=0
+warn=0
+
+now_ms() {
+  python3 -c 'import time; print(int(time.time() * 1000))'
+}
+
+# Recall latency budget — parsed at runtime from the registry SSOT
+# (.omo/_truth/registry/memory-os.yaml :: policy.recall_budget_ms_default).
+# Never hardcode the number here (doc-ssot contract: volatile facts live in SSOT).
+RECALL_BUDGET_MS="$(python3 - "$ROOT/.omo/_truth/registry/memory-os.yaml" <<'PY'
+import re
+import sys
+
+try:
+    text = open(sys.argv[1], encoding="utf-8").read()
+except OSError:
+    sys.exit(0)
+try:
+    import yaml  # optional: exact structured parse when PyYAML is available
+
+    policy = (yaml.safe_load(text) or {}).get("policy") or {}
+    value = policy.get("recall_budget_ms_default")
+    if isinstance(value, int) and value > 0:
+        print(value)
+        sys.exit(0)
+except Exception:
+    pass
+m = re.search(r"(?m)^[ \t]*recall_budget_ms_default:[ \t]*(\d+)", text)
+if m:
+    print(m.group(1))
+PY
+)"
+if [[ -z "$RECALL_BUDGET_MS" ]]; then
+  echo "WARN: policy.recall_budget_ms_default unreadable in .omo/_truth/registry/memory-os.yaml — recall latency will not be judged"
+  warn=$((warn + 1))
+else
+  echo "recall budget: ${RECALL_BUDGET_MS}ms (policy.recall_budget_ms_default)"
+fi
 
 run_json() {
   local label="$1"
@@ -96,10 +137,29 @@ if ! run_json "write" "${COCKPIT[@]}" memory write \
   fail=1
 fi
 
-# 3) recall (current)
+# 3) recall (current) — timed against policy.recall_budget_ms_default
+RECALL_STARTED_MS="$(now_ms)"
 if ! run_json "recall" "${COCKPIT[@]}" memory recall "Alice SmokeCo" --intent temporal_fact --limit 5 --json; then
   echo "FAIL: recall"
   fail=1
+fi
+RECALL_ELAPSED_MS=$(( $(now_ms) - RECALL_STARTED_MS ))
+if [[ -n "$RECALL_BUDGET_MS" ]]; then
+  RECALL_HARD_MS=$(( RECALL_BUDGET_MS * 2 ))
+  echo "recall latency: ${RECALL_ELAPSED_MS}ms (budget ${RECALL_BUDGET_MS}ms, hard-fail > ${RECALL_HARD_MS}ms)"
+  if (( RECALL_ELAPSED_MS > RECALL_HARD_MS )); then
+    echo "FAIL: recall latency ${RECALL_ELAPSED_MS}ms exceeds 2x budget ${RECALL_HARD_MS}ms"
+    fail=1
+  elif (( RECALL_ELAPSED_MS > RECALL_BUDGET_MS )); then
+    echo "WARN: recall latency ${RECALL_ELAPSED_MS}ms over budget ${RECALL_BUDGET_MS}ms (non-blocking; cold-start tolerated up to ${RECALL_HARD_MS}ms)"
+    warn=$((warn + 1))
+    if [[ "${SMOKE_STRICT_LATENCY:-0}" == "1" ]]; then
+      echo "FAIL: SMOKE_STRICT_LATENCY=1 promotes latency WARN to failure"
+      fail=1
+    fi
+  else
+    echo "recall latency OK: ${RECALL_ELAPSED_MS}ms <= budget ${RECALL_BUDGET_MS}ms"
+  fi
 fi
 
 # 4) recall with as_of (must pass flag; tolerate empty hits if no historical edges)
@@ -131,13 +191,21 @@ else
     fail=1
   else
     echo "WARN: as_of returned non-JSON but flag accepted; counting as soft pass"
+    warn=$((warn + 1))
   fi
 fi
 
 echo ""
+if [[ "$warn" -gt 0 ]]; then
+  echo "=== memory-os-smoke: ${warn} non-blocking WARN(s) accumulated (see WARN lines above) ==="
+fi
 if [[ "$fail" -eq 0 ]]; then
-  echo "=== memory-os-smoke PASS ==="
+  if [[ "$warn" -gt 0 ]]; then
+    echo "=== memory-os-smoke PASS (warn=${warn}) ==="
+  else
+    echo "=== memory-os-smoke PASS ==="
+  fi
   exit 0
 fi
-echo "=== memory-os-smoke FAIL (exit=$fail) ==="
+echo "=== memory-os-smoke FAIL (exit=$fail, warn=$warn) ==="
 exit 1

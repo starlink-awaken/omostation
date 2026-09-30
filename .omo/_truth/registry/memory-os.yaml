@@ -13,7 +13,7 @@ env_example: docs/operations/memory-os.env.example
 skill: .agents/skills/memory-recall/SKILL.md
 package_readme: projects/knowledge/kairon/packages/mos/README.md
 surface_check: bin/gac/check-memory-os-surfaces.py
-last_reviewed: '2026-08-05'
+last_reviewed: '2026-09-30'
 phase10:
   neo4j_as_of: true
   live_kos: MOS_LIVE_KOS=1 → HTTP KOS_API_URL
@@ -319,7 +319,7 @@ tables:
 - world_snapshot
 - capability_calibration
 - decision_outcome
-as_of: '2026-08-20T03:15:39Z'
+as_of: '2026-09-30T01:19:37Z'
 total_beliefs: 13
 total_world_snapshots: 93
 total_capability_calibrations: 9116

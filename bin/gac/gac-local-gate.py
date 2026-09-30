@@ -583,6 +583,12 @@ _CHECK_TIMEOUTS = {g["id"]: g.get("timeout", _DEFAULT_CHECK_TIMEOUTS.get(g["id"]
 # 与 sgf-policy.yaml 对其 "阻断性" 的声明自相矛盾。实证: ADR 一致性缺陷
 # (重复编号 / INDEX 失配) 曾因此零成本进入 main (#4113 事后修复)。
 # 移除后交回脚本自身退出码 (0 if not blocking_failures else 1) 决定。
+# 退出码约定 (skip ≠ pass): check 脚本以 78 (sysexits 风格) 表示「条件性跳过」
+# —— 依赖的运行时产物 (gitignored) 不在本机, 检查没跑. gate 把它算作 not-ok
+# 但**不阻断**: 报 [SKIP] 而非 PASS (否则就是假绿), 也不翻转 gate (产物缺失
+# 在 CI/新 worktree 是常态). 消费方: bin/ssot/test-mcp-kos.py (KOS 索引缺失).
+CHECK_SKIP_EXIT_CODE = 78
+
 SOFT_CHECKS = {
     "brief-protect",  # BRIEF.md protect 提示手工修改, 非门禁阻断
     "current-state-coherence",  # 运行态动态推导软信号
@@ -1023,6 +1029,9 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             "command": " ".join(command),
             "ok": result.returncode == 0,
             "returncode": result.returncode,
+            # CONDITIONAL SKIP (exit 78): 运行时产物缺失导致无法执行 —— 不是
+            # 通过, 也不是失败. 不翻转 gate, 但必须以 [SKIP] 显形 (假绿防线).
+            "skipped": result.returncode == CHECK_SKIP_EXIT_CODE,
             "stdout": result.stdout.strip(),
             "stderr": result.stderr.strip(),
             "duration_ms": duration_ms,
@@ -1034,6 +1043,7 @@ def run_check(name: str, command: list[str]) -> dict[str, object]:
             "command": " ".join(command),
             "ok": False,
             "returncode": -1,
+            "skipped": False,
             "stdout": "",
             "stderr": f"TIMEOUT after {timeout}s",
             "duration_ms": duration_ms,
@@ -1175,9 +1185,14 @@ def run_gate(
     results = run_checks(checks)
     finding_topics = extract_finding_topics(results)
 
-    # HARD/SOFT 分离: soft checks 不翻转 gate
-    hard_fails = [r for r in results if not r["ok"] and r["name"] not in SOFT_CHECKS]
-    soft_warns = [r for r in results if not r["ok"] and r["name"] in SOFT_CHECKS]
+    # HARD/SOFT 分离: soft checks 不翻转 gate. 条件性 SKIP (exit 78) 同样不阻断,
+    # 但被归入 soft_warns —— 让它以 [SKIP]/SOFT WARN 显形, 而不是算作 PASS.
+    hard_fails = [
+        r for r in results if not r["ok"] and r["name"] not in SOFT_CHECKS and not r.get("skipped")
+    ]
+    soft_warns = [
+        r for r in results if not r["ok"] and (r["name"] in SOFT_CHECKS or r.get("skipped"))
+    ]
     ok = len(hard_fails) == 0
 
     # Concurrent-write isolation: 比对所有 check 跑完后的 fingerprint
@@ -1205,14 +1220,27 @@ def print_human(
     terminal_mode = output_cfg.get("terminal_mode", "slim")
 
     checks_list: list[dict] = report["checks"]  # type: ignore[assignment]
-    change_lane: list[str] = report["change_lane_files"]  # type: ignore[assignment]
+    change_lane: list[dict] = report["change_lane_files"]  # type: ignore[assignment]
     is_ok: bool = report["ok"]  # type: ignore[assignment]
     checks_count = len(checks_list)
+    soft_list: list[dict] = report.get("soft_warns") or []  # type: ignore[assignment]
 
     if is_ok and terminal_mode == "slim" and not verbose:
         print("═══ GaC local gate ═══")
         print(f"scope={report['scope']} change_lane_files={len(change_lane)}")
-        print(f"GaC local gate: PASS ({checks_count} checks executed, ALL GREEN)")
+        if soft_list:
+            # 跳过/软警告不能被 "ALL GREEN" 吞掉 (条件性 SKIP = 假绿).
+            for item in soft_list:
+                status = "SKIP" if item.get("skipped") else "WARN"
+                print(f"[{status}] {item['name']} :: {item['command']}")
+                if item.get("stdout"):
+                    print(item["stdout"])
+                if item.get("stderr"):
+                    print(item["stderr"], file=sys.stderr)
+            tail = f"{len(soft_list)} SOFT WARN"
+        else:
+            tail = "ALL GREEN"
+        print(f"GaC local gate: PASS ({checks_count} checks executed, {tail})")
         if BROKEN_CHECKS:
             print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
         if emit_events:
@@ -1224,6 +1252,8 @@ def print_human(
     for item in checks_list:
         if item["ok"]:
             status = "PASS"
+        elif item.get("skipped"):
+            status = "SKIP"
         elif item["name"] in SOFT_CHECKS:
             status = "WARN"
         else:
