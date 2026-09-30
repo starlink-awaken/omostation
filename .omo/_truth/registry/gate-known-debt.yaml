@@ -383,3 +383,18 @@ entries:
     child main tip; c91b203e IS omo origin/main
   recorded_at: '2026-09-26T14:34:02.129410+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|62fe36549bdc7574
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 62fe36549bdc7574
+  kind: gitlink-regress
+  reason: submodule projects/agora pointer 46f84b12791f rewinds 85003b315ae7
+  range: origin/main..ca19a85f31fe6fbcc3dcac57f01fd50ed5f366fc
+  base_sha: 687d289aa1872ae5b7ad12507bf37b20ebbcbe88
+  head_sha: ca19a85f31fe6fbcc3dcac57f01fd50ed5f366fc
+  merge_base: 687d289aa1872ae5b7ad12507bf37b20ebbcbe88
+  exempt_reason: 指针 85003b31 → 46f84b12 是 squash re-OID 造成的等价前进而非回退 —— tree SHA 完全相同
+    (b0cca1118ebe128d8f2ac8855673fdbbaac76833), 文件级 diff 为 0 行; agent/mos-fix-agora
+    的内容已由 omostation-agora#115 合入 main, 指针因此落回 main 线以满足 autobump 的 no-rewind 契约
+  recorded_at: '2026-09-30T09:53:40.859695+00:00'
+  active: true
