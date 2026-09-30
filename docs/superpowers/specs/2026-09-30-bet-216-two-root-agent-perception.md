@@ -84,7 +84,8 @@ AGENTS.md 新增段落里所有 `path:NN` 形式的指针，在本检出必须�
 - 不翻 `ADR-0456` 的 `status`（PROPOSED → ACCEPTED 属 principal），也不处理它与
   `ADR-0456-governance-downshift-closeout-grading.md` 的 `id` 重号 —— 本 BET 只把
   "按 id 引用会命中另一份决定"这一条写进感知面。
-- 不修 `.omo/state/system.yaml` 的跟踪状态、不修 B5 残留的六个检出侧读者（另立 BET）。
+- 不修 `.omo/state/system.yaml` 的跟踪状态、不修 B5 侧残留的检出侧读者 —— 那份清单与它的计数
+  归 B5 侧另立的 BET 拥有，本轮没有复算过，故不在此处引用任何条数。
 - 不给 `.omo/_delivery/*` 新增 git 跟踪，也不改动它既有的 symlink 桥接语义 ——
   `ensure_delivery_anchor()` 已经把它做成全机共享面；本 BET 只描述现状，不动机制。
 - 不 prune 任何并发会话的锁。
