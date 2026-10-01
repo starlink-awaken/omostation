@@ -108,17 +108,37 @@ env 读点 1 行）。
    **都不存在**；`load_registry()`(`:61-69`) 用 `except Exception` 把缺文件压成 `[]` 后继续。
    ⇒ 本轮把 SNAP_DIR/DRIFTS 改挂 state root 在结构上是对的，但今天零运行流量；
    "改根"不能替代"这条链本来就没在跑"。
-2. **`agent-presence` 的协调面边界自相矛盾。** 它写的 `runtime/agents/*.json` 有仓外读者
-   `bin/gac/ci-local-fast.py:539`（实测该行 `presence = WORKSPACE / "runtime" / "agents"`），
-   而准入面两份清单互斥：`bin/gac/omo-runtime-stamp-policy.py:34-45` 的 `ALLOW_PATHS` 收
-   `runtime/coordination/handoffs/**`（`:38`）却对 `runtime/agents` **零条命中**，
-   `runtime/runtime-space-boundary.yaml:4-6` 的 `allowed_runtime_roots` 只列
-   `runtime/run-continuation` 与 `runtime/logs` —— 两个目录一份承认一份不承认、另一份两个都不承认。
-   写者、读者、白名单必须同移，否则门禁变瞎 —— 另立 BET（会话任务 #101）。
+2. **`agent-presence` 的协调面：初稿写的"两份准入清单自相矛盾"是类别错误，改判如下。**
+   它写的 `runtime/agents/*.json` 确有仓外读者 `bin/gac/ci-local-fast.py:539`（实测该行
+   `presence = WORKSPACE / "runtime" / "agents"`，紧邻的 `:540` 是
+   `if not presence.is_dir(): return` —— fail-open，目录不存在就静默跳过在场检测）。
+   但我原先拿来对数的 `allowed_runtime_roots` **不是目录白名单**：全仓唯一读者是
+   `projects/omo/src/omo/omo_rollout.py:38`，校验对象是 rollout envelope **自己声明的**
+   `rollout_context.runtime_residue_paths`（`:37`），经 `_is_allowed_runtime_path`（`:22-24`）
+   前缀匹配后产出 `disallowed_runtime_paths`（`:40`）参与 `decision` —— 它是"单次 rollout 的
+   残留准入"，不扫文件系统，因而与 stamp-policy 的 runtime 孤儿审计**不是同一个谓词的两个声明**。
+   真实缺口在 stamp-policy 一侧，一次探针即可复现：在检出里放 `runtime/agents/probe-scratch.json`
+   后 `bin/gac/omo-runtime-stamp-policy.py --json` 报 `ok: false` +
+   `orphan_paths: [{path: runtime/agents/probe-scratch.json, size: 30}]`（探针随即删除，
+   `git status --short` 只剩回填 receipt 一条）。三条通道对 `runtime/agents` 全部零命中 ——
+   `ALLOW_PATHS`（`:34-45`，其中 `:38` 恰收 `runtime/coordination/handoffs/**`）无该条、
+   `.gitignore` 无该条（`runtime/**` 侧只忽略 `*.log` / `*.jsonl` / `*.pid` / `runtime/data/` 等，
+   `:60-72`）、projection registry 的 17 条不含它。⇒ `agent-presence.py register` 只要真跑一次，
+   第一次落盘就把 `gac-gate` 变红。
+   再看这条链今天有没有流量：本机 **7 个检出**（主仓 + 6 worktree，`git worktree list | wc -l`）
+   里 `runtime/agents` **零存在**；`runtime/coordination/handoffs/` 每个检出只有 1 个文件，就是
+   tracked fixture `test-run-001.json`（`run_id: test-run-001`、`agent_id: sisyphus`）—— 那也就是
+   初稿"git 跟踪目录"那句话的全部实质；除自身 registry 条目
+   `bin/_registry/scripts/governance/agent-presence.yaml` 与文档叙述外**零调用者**；
+   `crontab -l | /usr/bin/grep -c agent-presence` = **0**；`.githooks` 零引用。
+   ⇒ #101 的前置不是"先定边界再改根"，而是两件按序的事：先决定这条**注册在案却从未被调用**的链
+   要不要活，若要活就再给 `runtime/agents` 一个合法准入（projection registry 或 `.gitignore`），
+   写者与读者（`ci-local-fast.py:539`）同移。这是"注册即事实"的第三次同类复发
+   （§4.1 task-inventory、会话任务 #97 morning-brief）。
 3. **三个 jsonl/生成态 cohort 未摘库**（`governance-history.jsonl`、`omo-events.jsonl`、
    `system.yaml`）。摘库属 ADR-0129 的收尾（#98），本轮只保证不改它们的根。
 
-## 5 本轮写错并被自己的测量改掉的两处
+## 5 本轮写错并被自己的测量改掉的三处
 
 - verify 第 3 条初稿把整串 `python3 -c "…"` 赋给 `P` 再喂给 `-c`，程序文本被当源码解析，
   `SyntaxError: invalid syntax`。修法是 `P` 只装 python 程序；这条已写进该判据的 `expect`，
@@ -127,6 +147,13 @@ env 读点 1 行）。
   补 6 条时又连撞两处 YAML 结构事实：`- id:` 起始块 `yaml.safe_load` 返回 **list**（要 `[0]`），
   且 T10-217 是 `bets:` 序列的**最后一个**条目 —— 条目边界是第一个 column-0 行（`campaigns:`），
   不是下一个 `- id:`，按后者切片会把顶层键吃进块里报 `expected <block end>`。
+- **§4.2 初稿的"两份清单互斥"。** 它在交付 PR #4591 合并前就进了台账 `non_goals` 与 spec §2，
+  回填阶段按判据 1 逐行去核 `allowed_runtime_roots` 的读者时才发现那是 envelope 级残留准入
+  （`omo_rollout.py:37-40` 的对象来自 envelope 自己声明的 `runtime_residue_paths`），
+  我拿两个不同谓词的**条目**对了一次差就写成"矛盾"。改判后本节以探针读数为准。
+  判据补一条：**要说"两份声明矛盾"，先证明它们校验同一个对象**（同一批路径、同一方向的动作），
+  否则只是两句话看起来不一致。本轮的三处里前两处是"跑一次就知道"，第三处是"读一次读者就知道"——
+  都属同一类错误：把没验过的机制写进契约。
 
 ## 6 回填阶段撞出来的协调面读数（第三次独立实证）
 
@@ -151,3 +178,13 @@ env 读点 1 行）。
 未摘任何跟踪状态、未删任何并发会话的锁。`OMO_WORKSPACE_ROOT` 在 `bin/` 只剩 2 处
 （1 处 env 读 + 1 处字面量正则），`OMOSTATION_WORKSPACE_ROOT` 的脚本侧读点归零。
 ADR-0456 的 `status` 翻转与 id 重号仍属 principal（claim 打印的下一个空闲编号是 ADR-0461）。
+
+本回填 PR 还多做了两件，都限定在已登记面内：
+
+1. **改判两处已合并文本**（spec §2 非目标第 ② 条、台账 T10-217 `non_goals` 第 1 条）——
+   它们随 #4591 进了 main，内容就是 §5 第三处那个类别错误。决定本身（不移 `agent-presence.py`）
+   不变，只把理由换成可复现读数。spec 属 `lifecycle: contract` 且被台账按 `content_digest` 绑定，
+   所以本 PR 同时重算 spec 与本 receipt、retro 三份 sha256 并回写绑定值；
+2. **一次瞬时探针**：在 worktree 里建 `runtime/agents/probe-scratch.json` 供
+   `omo-runtime-stamp-policy.py` 判定后立刻删除（读数见 §4.2）。产物未提交、
+   `runtime/` 下 `git status` 干净。写代码面零变更 —— 本 PR 的 diff 只含 4 个文档路径。

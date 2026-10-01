@@ -5,7 +5,7 @@ title: BET-Y2Q4-T10-217 — bin/ 侧根写手挂 state_root，消灭仓根 env �
 bet_id: BET-Y2Q4-T10-217
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-09-30
+last-reviewed: 2026-10-01
 owner: governance-team
 ---
 
@@ -138,13 +138,18 @@ claim 后跑 `python3 bin/lib/repo_root.py --json` 得 `code_root == state_root 
 ## 2 非目标
 
 - **不移 `agent-presence.py`。** 实测三个理由：① 它写的 `runtime/agents/*.json` 有仓外读者
-  `bin/gac/ci-local-fast.py:539`（`WORKSPACE / "runtime" / "agents"`，`__file__` 反推），只移写者
-  即断在场检测；② 它写的 `runtime/coordination/handoffs/` 是 **git 跟踪目录**，其准入由
-  `bin/gac/omo-runtime-stamp-policy.py:34-45` 的 `ALLOW_PATHS` 白名单管，而
-  `runtime/runtime-space-boundary.yaml` / `runtime/system-runtime-boundary.yaml` 两个
-  `allowed_runtime_roots` 只声明 `runtime/run-continuation` 与 `runtime/logs` —— 白名单与边界
-  声明本身就不一致，改根前得先定这个；③ `OMO_WORKSPACE_ROOT` 零 setter ⇒ 移它没有当下收益。
-  ⇒ 协调面属于「先定边界、再改根」，另立 BET。
+  `bin/gac/ci-local-fast.py:539`（`WORKSPACE / "runtime" / "agents"`，`__file__` 反推；`:540`
+  用 `if not presence.is_dir(): return` fail-open），只移写者即断在场检测；② 它的落盘位
+  `runtime/agents` 在三条准入通道上**全部零命中** —— `bin/gac/omo-runtime-stamp-policy.py:34-45`
+  的 `ALLOW_PATHS` 无该条、`.gitignore` 无该条、projection registry 17 条不含它，探针实测
+  （放一个 `runtime/agents/*.json` 后 `--json` 报 `ok:false` 且把它列进 `orphan_paths`）
+  ⇒ `register` 第一次落盘就把 `gac-gate` 变红，本轮更不可能替它定准入；
+  ③ `OMO_WORKSPACE_ROOT` 零 setter ⇒ 移它没有当下收益。
+  ⇒ 前置是"这条链要不要活 + 给它一个合法准入"，不是"先定边界再改根"；另立 BET。
+  （本条 ② 的初稿写作"`ALLOW_PATHS` 与 `allowed_runtime_roots` 自相矛盾"，是类别错误 ——
+  后者的唯一读者 `projects/omo/src/omo/omo_rollout.py:38` 校验的是 envelope 自己声明的
+  `runtime_residue_paths`（`:37`），不是目录白名单。读数与判据见
+  `docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md` §4.2、§5。）
 - **不移 `GOV_LOG` / `EVENTS_LOG`**（§0.5 的 15+ 读者），不 `git rm --cached` 任何文件，
   不改 `.gitignore`；`system.yaml` 与这两个 jsonl 的摘库属 #98 cohort（已有一份 system.yaml
   读者穷尽清单，CI 硬阻塞项唯一是 `.github/workflows/state-goals-enforce.yml:28` 的

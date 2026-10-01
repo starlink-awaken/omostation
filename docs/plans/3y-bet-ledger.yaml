@@ -38789,7 +38789,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-09-30-bet-217-root-side-writers-state-root.md
     spec_version: 1.0.0
-    content_digest: sha256:046312f6ea322cf7890c6743020acddbcbd906fbf303ec4687fdf5b57692006a
+    content_digest: sha256:e6e9da84647bcb2510ae80933163c26cbfc93e10cbbcd250f6a63846d26ba9bd
     decision_ref: decision://accepted/BET-Y2Q4-T10-217
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -38801,28 +38801,28 @@ bets:
             ref: git://origin/main@ff6e45a7479242e655373314d53d9bdc05e7800d
           tests:
             ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
-            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+            sha256: sha256:a68f4726864aff34968dfce7973d17aa47214c1f11908b49da2027abc156c1f6
           diff:
             ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
-            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+            sha256: sha256:a68f4726864aff34968dfce7973d17aa47214c1f11908b49da2027abc156c1f6
           rollback:
             ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
-            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+            sha256: sha256:a68f4726864aff34968dfce7973d17aa47214c1f11908b49da2027abc156c1f6
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
-            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+            sha256: sha256:a68f4726864aff34968dfce7973d17aa47214c1f11908b49da2027abc156c1f6
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
-            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+            sha256: sha256:a68f4726864aff34968dfce7973d17aa47214c1f11908b49da2027abc156c1f6
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-217.md
-            sha256: sha256:344eb2337899824977cb4c7d0c9e553313fcce4c9a6b20a1008b8b1086e61653
+            sha256: sha256:33a70463d5c87359d53a9aa6e30a2ae5881946fce836df02a53600bb3ba6541e
           cleanup:
             ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
-            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+            sha256: sha256:a68f4726864aff34968dfce7973d17aa47214c1f11908b49da2027abc156c1f6
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -38839,9 +38839,16 @@ bets:
   - docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
   - .omo/_knowledge/retros/BET-Y2Q4-T10-217.md
   non_goals:
-  - 不移 bin/gac/agent-presence.py —— 它写的 runtime/agents/*.json 有仓外读者 bin/gac/ci-local-fast.py:539，runtime/coordination/handoffs/
-    是 git 跟踪目录且其准入 （omo-runtime-stamp-policy.py:34-45 ALLOW_PATHS）与 runtime/runtime-space-boundary.yaml
-    声明的 allowed_runtime_roots 自相矛盾；OMO_WORKSPACE_ROOT 全仓零 setter ⇒ 先定边界再改根，另立 BET。
+  - 不移 bin/gac/agent-presence.py —— 它写的 runtime/agents/*.json 有仓外读者 bin/gac/ci-local-fast.py:539
+    （目录不存在时该读者 fail-open 静默跳过在场检测），且落盘位 runtime/agents 在三条准入通道全部零命中
+    —— stamp-policy ALLOW_PATHS(:34-45) 无该条、.gitignore 无该条、projection registry 17 条不含它；探针实测：
+    在检出里放一个 runtime/agents/*.json 后 omo-runtime-stamp-policy.py --json 报 ok:false 并把它列进 orphan_paths。
+    流量侧同样为零：本机 7 个检出里 runtime/agents 不存在、runtime/coordination/handoffs/ 每检出只有 tracked fixture
+    test-run-001.json、除自身 registry 条目与文档外零调用者、crontab -l 零命中、.githooks 零引用 ⇒ 注册在案却从未被调用
+    （与 task-inventory、morning-brief 同类第三次复发）。OMO_WORKSPACE_ROOT 全仓零 setter ⇒ 改根零收益；前置是先决定这条链
+    要不要活、要活就给它一个合法准入并写者读者同移，另立 BET。（初稿把 ALLOW_PATHS 与 allowed_runtime_roots 的条目对数后
+    写成"两份清单自相矛盾"是类别错误 —— 后者唯一读者 projects/omo/src/omo/omo_rollout.py:38 校验的是 envelope 自声明的
+    runtime_residue_paths，不是目录白名单；读数与判据见 closeout 报告 §4.2、§5）
   - 不移 evidence-smoke 的 GOV_LOG/EVENTS_LOG，不 git rm --cached、不改 .gitignore —— 这两个 jsonl
     实测仍被 git 跟踪且有 15+ 读者，与 .omo/state/system.yaml 同属未摘库生成态 cohort。
   - 不动 bin/ssot/agent-tick-daemon.py:36,55（它把该值写进机器级配置，语义是配置项不是本脚本的根）、 不动 projects/omo/**、projects/ecos/**、.github/workflows/**、crontab.new、
