@@ -13,8 +13,12 @@ from repo_root import code_root
 from repo_root import state_root as runtime_state_root
 
 WORKSPACE = code_root()
-# system.yaml 的三个写者 (evidence-smoke.py:217、unified-health-score.py:396、
-# omo_ingress_state.py:244) 已全部挂 state_root，读者必须同根，否则永远看最后一次提交的快照。
+# system.yaml 的写者清单不在这里枚举（这里曾长期写"三个写者"，而实测是 8 个写者模块、
+# 34 条键-写者边）。真源 = .omo/_truth/registry/write-owners.yaml 的 fields 段，
+# 由 bin/gac/omo-state-write-guard.py check_field_ownership() 校验；复算：
+#   python3 bin/gac/omo-state-write-guard.py --json   # declared/present/ownership 计数
+# 其中 3 个（compass_radar、harness-omo-bridge、self-evolution-loop）仍钉在检出根上
+# （见 spec §1 与 T10-220），读者按 profile 声明的 state_root 走，否则永远看最后一次提交的快照。
 SYSTEM_YAML = runtime_state_root() / ".omo" / "state" / "system.yaml"
 BRIEF_MD = Path(os.environ.get("OMOSTATION_BRIEF_OUTPUT", WORKSPACE / "BRIEF.md")).expanduser().resolve()
 
