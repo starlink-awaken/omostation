@@ -165,38 +165,51 @@ echo "── D: print_dirty_worktree_hints 报错即给解法 ──"
   || fail "release + merge 两处守卫都应接线 print_dirty_worktree_hints"
 echo "  ✅ 接线: release + merge 两处"
 
-# 夹具: 带一个**真实子模块**的 superproject (脏项只有子模块层才会出现)
+# 夹具: 带**两个**真实子模块的 superproject.
+# 两个(而非一个)是刻意的: `git submodule foreach` 在任一子模块非零返回处**直接中止**,
+# 旧写法 `[ -n "$p" ] && printf …` 会让**干净**子模块返回 1 ⇒ 在它那里就停, 后面脏项全被吞。
+# 单子模块夹具覆盖不到这条路径 (2026-10-01 实测漏判实例: aetherforge 干净 ⇒ kairon 的脏项没报出来)。
+# 故夹具固定为「先干净、后脏」, 且名字排序保证 aaa 先于 zzz。
 WS_D="$TMP/ws-hint"
-git init -q --bare -b main "$TMP/hint-child.git"
-git init -q -b main "$TMP/hint-child"
-printf 'x\n' > "$TMP/hint-child/f.txt"
-git -C "$TMP/hint-child" add f.txt
-git -C "$TMP/hint-child" -c user.email=t@example.invalid -c user.name=t commit -qm c
-git -C "$TMP/hint-child" push -q "$TMP/hint-child.git" main
+for n in aaa-clean zzz-dirty; do
+  git init -q --bare -b main "$TMP/hint-$n.git"
+  git init -q -b main "$TMP/hint-$n"
+  printf 'x\n' > "$TMP/hint-$n/f.txt"
+  git -C "$TMP/hint-$n" add f.txt
+  git -C "$TMP/hint-$n" -c user.email=t@example.invalid -c user.name=t commit -qm c
+  git -C "$TMP/hint-$n" push -q "$TMP/hint-$n.git" main
+done
 git init -q -b main "$WS_D"
-git -C "$WS_D" -c protocol.file.allow=always submodule add -q "$TMP/hint-child.git" child
+git -C "$WS_D" -c protocol.file.allow=always submodule add -q "$TMP/hint-aaa-clean.git" aaa-clean
+git -C "$WS_D" -c protocol.file.allow=always submodule add -q "$TMP/hint-zzz-dirty.git" zzz-dirty
 git -C "$WS_D" -c user.email=t@example.invalid -c user.name=t commit -qm add-sub
 
 # D1 干净态: 不得误报
 outd="$(call_fn "$WS_D" 'print_dirty_worktree_hints "$FIXTMP/ws-hint"; printf "rc=%d\n" $?')"
 printf '%s' "$outd" | grep -q "rc=0" || { printf '%s\n' "$outd" | tail -8; fail "helper 非零退出"; }
+# 先查 fatal: 循环体返回码错时它会最先出现, 报这条比「误报脏项」更能指出真因。
+printf '%s' "$outd" | grep -q "fatal:" \
+  && { printf '%s\n' "$outd" | tail -8; fail "foreach 在干净子模块处中止 (循环体返回码非 0)"; }
 printf '%s' "$outd" | grep -q "(无; 脏项在主仓 tracked 层" || fail "干净态误报子模块脏项"
 echo "  ✅ 干净态: rc=0 且不误报"
 
-# D2 脏态: 必须带子模块名 (--quiet 缺陷的回归守卫)
-printf 'changed\n' >> "$WS_D/child/f.txt"
+# D2 脏态: 必须带子模块名 (--quiet 缺陷的回归守卫) + **不得被前面的干净子模块中止**
+printf 'changed\n' >> "$WS_D/zzz-dirty/f.txt"
 git -C "$WS_D" diff --quiet \
   && fail "夹具无效: 未构造出子模块脏态 (本用例将失去判别力)"
-git -C "$WS_D" status --porcelain --untracked-files=no | grep -q '^ M child' \
+git -C "$WS_D" status --porcelain --untracked-files=no | grep -q '^ M zzz-dirty' \
   || fail "夹具无效: 主仓层面看不到子模块脏项"
 outd2="$(call_fn "$WS_D" 'print_dirty_worktree_hints "$FIXTMP/ws-hint"; printf "rc=%d\n" $?')"
-printf '%s' "$outd2" | grep -q "child: " \
-  || { printf '%s\n' "$outd2" | tail -8; fail "脏项未带子模块名 —— --quiet 缺陷回归"; }
+# 这条是本类 bug 的直接守卫: 循环在第一个(干净)子模块处中止时, 这里必然失败。
+printf '%s' "$outd2" | grep -q "fatal:" \
+  && { printf '%s\n' "$outd2" | tail -8; fail "foreach 在干净子模块处中止 (脏项被吞)"; }
+printf '%s' "$outd2" | grep -q "zzz-dirty: " \
+  || { printf '%s\n' "$outd2" | tail -8; fail "脏项未带子模块名 —— --quiet 缺陷或 foreach 中止"; }
 printf '%s' "$outd2" | grep -q " M f.txt" || fail "缺子模块层脏项明细"
 printf '%s' "$outd2" | grep -q "五类可自清的脏项" || fail "缺『五类』计数"
 printf '%s' "$outd2" | grep -q "checkout -- uv.lock" || fail "缺『uv.lock』自清命令"
 printf '%s' "$outd2" | grep -q "submodule update --init" || fail "缺『未同步检出』自清命令"
-# 第 4 类 (主仓生成态) 与第 5 类 (坏 index) 都必须给出, 且第 4 类须带「勿提交」警示.
+# 第 4 类 (主仓生成态) 与第 5 类 (坏 index) 都必须给出, 且第 4 类须带「勿提交」警示。
 printf '%s' "$outd2" | grep -q "\.omo/state/system\.yaml" || fail "缺『生成态』自清命令 (本地门禁刷新)"
 printf '%s' "$outd2" | grep -q "chore(state)" || fail "缺『生成态勿提交』警示"
 printf '%s' "$outd2" | grep -q "reset --hard -q" || fail "缺『坏 index』自清命令"

@@ -577,12 +577,19 @@ post_merge_release() {
 #
 # 明细用 $displaypath 带出子模块名: `submodule foreach --quiet` 会把 `Entering '<name>'`
 # 一起压掉, 只留 ` M f` ⇒ 能报「某处脏」但不能定位, 故显式补名。
+#
+# ⚠️ 循环体必须**恒返回 0**: `git submodule foreach` 在任一子模块的非零返回处**直接中止**
+# 并打 `fatal: run_command returned non-zero status for <sub>`。写成 `[ -n "$p" ] && printf …`
+# 时, 干净子模块会让整条返回 1 ⇒ **在第一个干净子模块就停, 后面的脏项全被吞掉**
+# (2026-10-01 实测: aetherforge 干净 ⇒ kairon 的脏项根本没报出来; 若再 `2>/dev/null`, 
+#  连 fatal 都看不见 ⇒ 完全静默的假阴性)。故用 `if` (条件为假时 if 也返回 0)。
 print_dirty_worktree_hints() {
   local wt="$1" found=""
   echo "   子模块层脏项 (带路径):" >&2
+  # stderr 一并捕获(不丢 fatal): 真出意外要看得见, 而不是静默变成「无脏项」。
   found="$(git -C "$wt" submodule foreach --quiet \
-    'p=$(git status --porcelain); [ -n "$p" ] && printf "%s\n" "$p" | sed "s|^|   $displaypath: |"' \
-    2>/dev/null | head -8)" || true
+    'p=$(git status --porcelain); if [ -n "$p" ]; then printf "%s\n" "$p" | sed "s|^|   $displaypath: |"; fi' \
+    2>&1 | head -8)" || true
   if [ -n "$found" ]; then
     printf '%s\n' "$found" >&2
   else
