@@ -7,8 +7,15 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-WORKSPACE = Path(os.environ.get("OMOSTATION_WORKSPACE_ROOT", Path(__file__).resolve().parents[2])).expanduser().resolve()
-SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
+# ADR-0456 — 读侧根 = 当前检出，写侧根 = profile 声明；不在本模块用 __file__ 反推。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root
+from repo_root import state_root as runtime_state_root
+
+WORKSPACE = code_root()
+# system.yaml 的三个写者 (evidence-smoke.py:217、unified-health-score.py:396、
+# omo_ingress_state.py:244) 已全部挂 state_root，读者必须同根，否则永远看最后一次提交的快照。
+SYSTEM_YAML = runtime_state_root() / ".omo" / "state" / "system.yaml"
 BRIEF_MD = Path(os.environ.get("OMOSTATION_BRIEF_OUTPUT", WORKSPACE / "BRIEF.md")).expanduser().resolve()
 
 
@@ -213,7 +220,9 @@ def _x3_work_delivery_row() -> str:
     记录 (scene-outcome/v1), 由 scene-outcome-recorder.py 写入.
     """
     import json as _json
-    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    from datetime import datetime as _dt
+    from datetime import timedelta as _td
+    from datetime import timezone as _tz
 
     outcomes_path = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "scene-outcomes.jsonl"
     if not outcomes_path.is_file():

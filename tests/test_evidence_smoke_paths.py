@@ -6,13 +6,21 @@ from pathlib import Path
 STATE_ROOT_ENV = "OMOSTATION_STATE_ROOT"
 
 
-def _load_evidence_smoke():
+def _load(module_name: str, relative_path: str):
     root = Path(__file__).resolve().parents[1]
-    spec = importlib.util.spec_from_file_location("evidence_smoke_under_test", root / "bin/gac/evidence-smoke.py")
+    spec = importlib.util.spec_from_file_location(module_name, root / relative_path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _load_evidence_smoke():
+    return _load("evidence_smoke_under_test", "bin/gac/evidence-smoke.py")
+
+
+def _load_task_inventory():
+    return _load("task_inventory_under_test", "bin/gac/task-inventory.py")
 
 
 def test_stdio_script_is_resolved_relative_to_declared_directory(tmp_path, monkeypatch):
@@ -84,3 +92,49 @@ def test_undeclared_profile_keeps_the_legacy_system_yaml_path_string(tmp_path, m
     monkeypatch.delenv(STATE_ROOT_ENV, raising=False)
 
     assert str(module._system_yaml()) == str(module.WORKSPACE / ".omo" / "state" / "system.yaml")
+
+
+# ── ADR-0456 B5 残留: bin/ 侧其余写手 (evidence-smoke OUTPUT_DIR / task-inventory 产物) ──
+# 判据形状同上：写面跟 profile，读面只有写者已翻根时才跟着翻 —— 所以每一对断言都是
+# 「这个常量移了 + 那个常量没移」，只测其一都能被半改骗过去。
+
+
+def test_declared_profile_moves_evidence_smoke_output_dir_off_the_checkout(tmp_path, monkeypatch):
+    state_root = tmp_path / "state"
+    monkeypatch.setenv(STATE_ROOT_ENV, str(state_root))
+    module = _load_evidence_smoke()
+
+    assert module.OUTPUT_DIR == state_root / ".omo" / "_delivery" / "evidence-smoke"
+    assert module.WORKSPACE not in module.OUTPUT_DIR.parents
+
+
+def test_evidence_smoke_jsonl_logs_stay_on_the_checkout(tmp_path, monkeypatch):
+    """GOV_LOG / EVENTS_LOG 被 git 跟踪且有 15+ 检出侧读者，只翻写者会让读者读旧数据。"""
+    state_root = tmp_path / "state"
+    monkeypatch.setenv(STATE_ROOT_ENV, str(state_root))
+    module = _load_evidence_smoke()
+
+    assert module.GOV_LOG == module.WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
+    assert module.EVENTS_LOG == module.WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"
+
+
+def test_declared_profile_moves_task_inventory_artifacts_off_the_checkout(tmp_path, monkeypatch):
+    state_root = tmp_path / "state"
+    monkeypatch.setenv(STATE_ROOT_ENV, str(state_root))
+    module = _load_task_inventory()
+
+    assert module.SNAP_DIR == state_root / "runtime" / "task-inventory" / "snapshots"
+    assert module.DRIFTS == state_root / "runtime" / "task-inventory" / "drifts.jsonl"
+    # REGISTRY 没有可追的写者，panorama-collect.py:3198 又读同一个文件 ⇒ 保持检出侧
+    assert module.REGISTRY == module.WORKSPACE / ".omo" / "state" / "task-registry.yaml"
+
+
+def test_undeclared_profile_keeps_legacy_root_side_writer_paths(tmp_path, monkeypatch):
+    """未声明 profile 时路径字符串逐字节等于改前 —— 本轮对今天的运行态无效应。"""
+    monkeypatch.delenv(STATE_ROOT_ENV, raising=False)
+    smoke = _load_evidence_smoke()
+    inventory = _load_task_inventory()
+
+    assert str(smoke.OUTPUT_DIR) == str(smoke.WORKSPACE / ".omo" / "_delivery" / "evidence-smoke")
+    assert str(inventory.SNAP_DIR) == str(inventory.WORKSPACE / "runtime" / "task-inventory" / "snapshots")
+    assert str(inventory.DRIFTS) == str(inventory.WORKSPACE / "runtime" / "task-inventory" / "drifts.jsonl")

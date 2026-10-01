@@ -38750,6 +38750,95 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-217
+  title: ADR-0456 B5 残留 — bin/ 侧根写手挂 state_root，消灭仓根 env 私有别名
+  goal: ADR-0456 的双根契约（code_root 读 / state_root 写）在 bin/lib/repo_root.py 已落，omo 写入侧由
+    T10-215 收敛，但 plan 决策 2「待消灭的重复定义」与决策 4「把剩余消费者接进去」在 bin/ 侧仍有实测残留：bin/gac/evidence-smoke.py:108
+    的 OUTPUT_DIR、bin/gac/task-inventory.py:32-33 的快照与 drifts 由 WORKSPACE（__file__ 反推）拼出，声明
+    profile 后照样写进检出； bin/mof/generate-brief.py:11 读 system.yaml，而它的三个写者（evidence-smoke.py:217、
+    unified-health-score.py:396、omo_ingress_state.py:244）已全部挂 state_root —— 读者不跟上就永远看
+    最后一次提交的快照。四个模块还各自私有一个「仓根」env 别名（OMOSTATION_WORKSPACE_ROOT / OMO_WORKSPACE_ROOT /
+    WORKSPACE_ROOT×2），全仓 setter 实测只喂得到 crontab.new:76 一条已经失效的 死路径。本 BET 按「写面可独移、读面须与它的写者同移」这条实测出来的规则收这批写手，并把别名折进
+    规范名；改动在未声明 profile 时逐字节无效应。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_evidence_smoke_paths.py tests/test_generate_brief_workspace_output.py tests/unit/mof/test_generate_brief_no_host_paths.py -q
+    expect: 16 passed (9 + 5 + 2)。判据 1/2/4 的断言体在这三个文件里，不在这段的叙述里 —— 每条 moved 断言都配一条 kept 断言，防止「只翻写者、读者静默读旧数据」。
+  - cmd: env -u OMOSTATION_BRIEF_OUTPUT OMOSTATION_STATE_ROOT=$(mktemp -d) python3 -c "import importlib.util as U,os;st=os.environ['OMOSTATION_STATE_ROOT'];L=lambda p,n:(lambda s:(s.loader.exec_module(m:=U.module_from_spec(s)),m)[1])(U.spec_from_file_location(n,p));e=L('bin/gac/evidence-smoke.py','e');t=L('bin/gac/task-inventory.py','t');g=L('bin/mof/generate-brief.py','g');mv=[str(e.OUTPUT_DIR),str(t.SNAP_DIR),str(t.DRIFTS),str(g.SYSTEM_YAML)];kp=[str(x) for x in (e.WORKSPACE,e.GOV_LOG,e.EVENTS_LOG,t.WORKSPACE,t.REGISTRY,g.WORKSPACE,g.BRIEF_MD)];assert all(c.startswith(st+os.sep) for c in mv) and not any(c.startswith(st+os.sep) for c in kp);print('MOVED');print(*mv,sep=os.linesep);print('KEPT');print(*kp,sep=os.linesep)"
+    expect: exit 0 且 MOVED 恰 4 项 (evidence-smoke.OUTPUT_DIR、task-inventory.SNAP_DIR+DRIFTS、generate-brief.SYSTEM_YAML)、KEPT 恰 7 项 (WORKSPACE×3、两个 jsonl、REGISTRY、BRIEF_MD)。断言失败即非零退出，不需要读输出判断。
+  - cmd: T=$(mktemp -d) && mkdir -p "$T/bin/lib" "$T/bin/gac" "$T/bin/mof" "$T/bin/ssot" && for f in bin/lib/repo_root.py bin/gac/evidence-smoke.py bin/gac/task-inventory.py bin/mof/generate-brief.py bin/ssot/generate-docs-index.py; do git show "origin/main:$f" > "$T/$f" || exit 1; done && P='import importlib.util as U,os,sys;k=os.path.realpath(os.environ["K"]);sys.path.insert(0,k+"/bin/lib");L=lambda p,n:(lambda s:(s.loader.exec_module(m:=U.module_from_spec(s)),m)[1])(U.spec_from_file_location(n,p));e=L(k+"/bin/gac/evidence-smoke.py","e");t=L(k+"/bin/gac/task-inventory.py","t");g=L(k+"/bin/mof/generate-brief.py","g");d=L(k+"/bin/ssot/generate-docs-index.py","d");print(" | ".join([str(v).replace(k,"<ROOT>") for v in (e.WORKSPACE,e.OUTPUT_DIR,e.GOV_LOG,e.EVENTS_LOG,t.WORKSPACE,t.REGISTRY,t.SNAP_DIR,t.DRIFTS,g.WORKSPACE,g.SYSTEM_YAML,g.BRIEF_MD,d.ROOT)]))' && A=$(env -u OMOSTATION_STATE_ROOT -u OMOSTATION_WORKSPACE_ROOT -u OMO_WORKSPACE_ROOT -u OMOSTATION_BRIEF_OUTPUT K="$T" python3 -c "$P") && B=$(env -u OMOSTATION_STATE_ROOT -u OMOSTATION_WORKSPACE_ROOT -u OMO_WORKSPACE_ROOT -u OMOSTATION_BRIEF_OUTPUT K="$PWD" python3 -c "$P") && test "$A" = "$B" && printf 'IDENTICAL %s\n' "$B"
+    expect: IDENTICAL + 一行 12 个常量的 <ROOT> 归一字符串 —— 未声明 profile 时 HEAD 与 origin/main 逐字节同值，即本轮对今天的运行态无效应。两个进程都显式 env -u 四个别名：origin/main 的 generate-docs-index 读 WORKSPACE_ROOT、generate-brief 读 OMOSTATION_WORKSPACE_ROOT，宿主残留 env 会让这行假红。P 必须是**纯 python 程序**，不能再包一层 python3 -c —— 那样程序文本被当成源码解析，SyntaxError。
+  - cmd: 'test "$(/usr/bin/grep -rnE ''environ\.get\("(OMOSTATION_WORKSPACE_ROOT|OMO_WORKSPACE_ROOT|WORKSPACE_ROOT)"|getenv\("(OMOSTATION_WORKSPACE_ROOT|OMO_WORKSPACE_ROOT|WORKSPACE_ROOT)"'' bin --include=''*.py'' | /usr/bin/grep -v /_archive/ | /usr/bin/awk -F: ''{print $1 ":" $2}'' | /usr/bin/sort | /usr/bin/tr ''\n'' '' '')" = "bin/gac/agent-presence.py:23 bin/ssot/agent-tick-daemon.py:36 bin/ssot/agent-tick-daemon.py:55 " && echo ALIAS-SURVIVORS-3'
+    expect: ALIAS-SURVIVORS-3，且 env-read 命中恰 3 行 = 两个非目标 (agent-presence §2、agent-tick-daemon 配置项语义)。另有 documents-zcode-config.py:196 与 documents-claude-desktop-config.py:167 出现字面量 "WORKSPACE_ROOT"，但它们是配置键的**写方**不是 env 读方，故不计入 —— 用 env-read 式 grep 而不是裸串 grep，否则这两处会假红。
+  - cmd: test -z "$(git diff --name-only origin/main...HEAD | /usr/bin/grep -E '^\.omo/state/|^BRIEF\.md$')" && git diff --name-only origin/main...HEAD
+    expect: 空匹配则 exit 0，随后打印本 BET 的文件清单 (应恰 8 项，全在 write_surfaces 内)。生成态不随本轮走 —— 这条判据同时挡住 hook 重写 system.yaml 时间戳的老坑。
+  - cmd: make gac-local-gate
+    expect: 相对基线无新增 hard fail。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-30-bet-217-root-side-writers-state-root.md
+    spec_version: 1.0.0
+    content_digest: sha256:046312f6ea322cf7890c6743020acddbcbd906fbf303ec4687fdf5b57692006a
+    decision_ref: decision://accepted/BET-Y2Q4-T10-217
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  write_surfaces:
+  - bin/gac/evidence-smoke.py
+  - bin/mof/generate-brief.py
+  - bin/gac/task-inventory.py
+  - bin/ssot/generate-docs-index.py
+  - tests/test_generate_brief_workspace_output.py
+  - tests/test_evidence_smoke_paths.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-30-bet-217-root-side-writers-state-root.md
+  non_goals:
+  - 不移 bin/gac/agent-presence.py —— 它写的 runtime/agents/*.json 有仓外读者 bin/gac/ci-local-fast.py:539，runtime/coordination/handoffs/
+    是 git 跟踪目录且其准入 （omo-runtime-stamp-policy.py:34-45 ALLOW_PATHS）与 runtime/runtime-space-boundary.yaml
+    声明的 allowed_runtime_roots 自相矛盾；OMO_WORKSPACE_ROOT 全仓零 setter ⇒ 先定边界再改根，另立 BET。
+  - 不移 evidence-smoke 的 GOV_LOG/EVENTS_LOG，不 git rm --cached、不改 .gitignore —— 这两个 jsonl
+    实测仍被 git 跟踪且有 15+ 读者，与 .omo/state/system.yaml 同属未摘库生成态 cohort。
+  - 不动 bin/ssot/agent-tick-daemon.py:36,55（它把该值写进机器级配置，语义是配置项不是本脚本的根）、 不动 projects/omo/**、projects/ecos/**、.github/workflows/**、crontab.new、
+    bin/collab/export-dualtrack.py、bin/panorama/panorama-collect.py。
+  - 不删 ~/.local/share/omostation/accepted-20260908 僵尸检出，不 prune 任何并发会话的锁。
+  circuit_breaker: Stop on any change outside the five write_surfaces above, on any
+    move of a read target whose writer is still checkout-rooted (collab-dualtrack.yaml,
+    task-registry.yaml), on any edit to .gitignore / .github/workflows/** / .omo/_truth/registry/**
+    / projects/**, on deleting the zombie checkout, and on any change to the name module.WORKSPACE
+    (two existing tests monkeypatch it as their anchor).
+  done_when:
+  - 设 OMOSTATION_STATE_ROOT=<tmp> 后 import 两个模块实测：evidence-smoke.OUTPUT_DIR、 task-inventory.SNAP_DIR
+    与 DRIFTS 三项均在 <tmp> 下，而 WORKSPACE / task-inventory.REGISTRY / generate-brief.BRIEF_MD（未设
+    output 时）均不在 <tmp> 下 —— 即「只移写面」由读数钉住，不是由叙述钉住。
+  - 未设 OMOSTATION_STATE_ROOT 时，上述常量 str() 与 origin/main 版本逐字节一致（本轮对今天的运行态 无效应）；由判据 2
+    的 git show + import 双读实测支撑。
+  - /usr/bin/grep -rn 'environ.get("OMOSTATION_WORKSPACE_ROOT"\|environ.get("OMO_WORKSPACE_ROOT"\|
+    environ.get("WORKSPACE_ROOT"' bin/ --include=*.py 的存活命中只剩两处：bin/gac/agent-presence.py:23（§2 非目标）与 bin/ssot/agent-tick-daemon.py:36,55
+    两行（bin/_archive/** 除外）。
+  - tests/test_generate_brief_workspace_output.py 已改为正面断言「输出覆盖不得把根一起拖走」，且它与 tests/test_evidence_smoke_paths.py、tests/unit/mof/test_generate_brief_no_host_paths.py
+    三 file pytest 全绿（实跑输出在 receipt 里）。
+  - make gac-local-gate 绿，且 git diff --name-only origin/main...HEAD 不含 .omo/state/**
+    与 BRIEF.md。
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -38888,7 +38977,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 512
+  total_bets: 513
   windows:
   - Y1Q1
   - Y1Q2
