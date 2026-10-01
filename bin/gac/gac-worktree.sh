@@ -588,11 +588,13 @@ print_dirty_worktree_hints() {
   else
     echo "     (无; 脏项在主仓 tracked 层 —— 见上面 git status)" >&2
   fi
-  echo "   ⇒ 四类可自清的脏项 (均无需 submit / 新 PR):" >&2
+  echo "   ⇒ 五类可自清的脏项 (均无需 submit / 新 PR):" >&2
   echo "     1) uv run 改写被跟踪的 uv.lock      → git -C <sub> checkout -- uv.lock" >&2
   echo "     2) bump gitlink 后未同步子模块检出  → git submodule update --init <path>" >&2
   echo "     3) 子模块内生成物 (如 CAPABILITY-MAP.md) → git -C <sub> checkout -- <file>" >&2
-  echo "     4) init 半途失败留下成批 'D ' 的坏 index (先确认无非 D 项):" >&2
+  echo "     4) 本地门禁/测试刷新的生成态 (如 .omo/state/system.yaml 的时间戳):" >&2
+  echo "        git checkout -- <file>   # ⚠️ 勿提交: 生成态走专门 chore(state) 通道" >&2
+  echo "     5) init 半途失败留下成批 'D ' 的坏 index (先确认无非 D 项):" >&2
   echo "        git status --porcelain | awk '\$1!=\"D\"'    # 须为空" >&2
   echo "        git submodule foreach --quiet 'git reset --hard -q'" >&2
   echo "   ⇒ 只有「真有在制工作」才该走 submit / stash." >&2

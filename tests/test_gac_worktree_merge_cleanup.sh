@@ -16,7 +16,7 @@
 #   B   镜像同步成功路径: rc=0 且静默.
 #   B2  镜像同步失败路径: rc≠0 + 诊断, 且**本地 main 逐字节不变** (禁止 reset/merge).
 #   D   守卫提示: merge/release 两处接线 print_dirty_worktree_hints, 且该 helper
-#             (a) 干净态不误报 (b) 脏态**带子模块名**报明细 + 给出四类自清命令.
+#             (a) 干净态不误报 (b) 脏态**带子模块名**报明细 + 给出五类自清命令.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -193,10 +193,16 @@ outd2="$(call_fn "$WS_D" 'print_dirty_worktree_hints "$FIXTMP/ws-hint"; printf "
 printf '%s' "$outd2" | grep -q "child: " \
   || { printf '%s\n' "$outd2" | tail -8; fail "脏项未带子模块名 —— --quiet 缺陷回归"; }
 printf '%s' "$outd2" | grep -q " M f.txt" || fail "缺子模块层脏项明细"
+printf '%s' "$outd2" | grep -q "五类可自清的脏项" || fail "缺『五类』计数"
 printf '%s' "$outd2" | grep -q "checkout -- uv.lock" || fail "缺『uv.lock』自清命令"
 printf '%s' "$outd2" | grep -q "submodule update --init" || fail "缺『未同步检出』自清命令"
+# 第 4 类 (主仓生成态) 与第 5 类 (坏 index) 都必须给出, 且第 4 类须带「勿提交」警示.
+printf '%s' "$outd2" | grep -q "\.omo/state/system\.yaml" || fail "缺『生成态』自清命令 (本地门禁刷新)"
+printf '%s' "$outd2" | grep -q "chore(state)" || fail "缺『生成态勿提交』警示"
 printf '%s' "$outd2" | grep -q "reset --hard -q" || fail "缺『坏 index』自清命令"
-echo "  ✅ 脏态: 带子模块名 + 四类自清命令齐全"
+# 第 4 类必须是**主仓**层面可清的 (本用例的脏项在子模块, 故这两条只证清单完整性)
+grep -qF 'git checkout -- <file>' "$SCRIPT" || fail "缺主仓生成态的清法字面量"
+echo "  ✅ 脏态: 带子模块名 + 五类自清命令齐全"
 
 echo ""
 echo "✅ merge 清理加固回归: PASS"
