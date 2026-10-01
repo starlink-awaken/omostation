@@ -5745,6 +5745,28 @@ services:
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
   disabled_reason: "与 mail.daemon (com.l4.mail.daemon) 重复: 同一邮件任务每 30min 各跑一次; 保留生成器管理且代码更新(事件发射/cockpit 投影)的 com.l4.mail.daemon; 本机 plist 已 bootout 并移入 ~/Library/LaunchAgents/disabled/ (TASK-F54F176A, 2026-09-28)"
+- id: omostation.omo-health-refresh
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.omo-health-refresh.plist
+  scheduler: launchd
+  trigger: calendar
+  label: com.omostation.omo-health-refresh
+  program:
+    interpreter: /bin/bash
+    entrypoint: -c
+    args:
+    - 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/projects/omo/.venv/bin/omo state refresh'
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/omo-health-refresh.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/omo-health-refresh.log
+  run_at_load: true
+  notes: >-
+    2026-09-30 补登 SSOT 授权: 本服务由 PR #4519 为修 system_health.yaml 的
+    stale_beat 根因而注册到 launchd(每小时 :17), 但此前只有 .omo/cron/registry.yaml
+    登记、services.yaml 无对应条目, 导致 #4585 的「services.yaml 为 SSOT」判据把它
+    误判为未授权并降级。observe-only 形态(generate: false): plist 由本机侧维护,
+    本仓不生成 —— 与同批 T10-206 回填一致。
 - id: omostation.omo-debt-refresh
   enabled: true
   generate: false
