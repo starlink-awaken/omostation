@@ -38760,7 +38760,8 @@ bets:
     最后一次提交的快照。四个模块还各自私有一个「仓根」env 别名（OMOSTATION_WORKSPACE_ROOT / OMO_WORKSPACE_ROOT /
     WORKSPACE_ROOT×2），全仓 setter 实测只喂得到 crontab.new:76 一条已经失效的 死路径。本 BET 按「写面可独移、读面须与它的写者同移」这条实测出来的规则收这批写手，并把别名折进
     规范名；改动在未声明 profile 时逐字节无效应。
-  status: pending
+  status: done
+  done_at: 2026-10-01
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -38792,17 +38793,40 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-217
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ff6e45a7479242e655373314d53d9bdc05e7800d
+          tests:
+            ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
+            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+          diff:
+            ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
+            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+          rollback:
+            ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
+            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
+            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
+            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-217.md
+            sha256: sha256:344eb2337899824977cb4c7d0c9e553313fcce4c9a6b20a1008b8b1086e61653
+          cleanup:
+            ref: receipt://docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
+            sha256: sha256:9b8dc8897db206ea76994a3ec84a8b422343811aaec245e7853d0ef0a781061e
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
   write_surfaces:
   - bin/gac/evidence-smoke.py
   - bin/mof/generate-brief.py
@@ -38812,6 +38836,8 @@ bets:
   - tests/test_evidence_smoke_paths.py
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-30-bet-217-root-side-writers-state-root.md
+  - docs/reports/2026-10-01-bet-217-root-side-writers-state-root-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-217.md
   non_goals:
   - 不移 bin/gac/agent-presence.py —— 它写的 runtime/agents/*.json 有仓外读者 bin/gac/ci-local-fast.py:539，runtime/coordination/handoffs/
     是 git 跟踪目录且其准入 （omo-runtime-stamp-policy.py:34-45 ALLOW_PATHS）与 runtime/runtime-space-boundary.yaml
