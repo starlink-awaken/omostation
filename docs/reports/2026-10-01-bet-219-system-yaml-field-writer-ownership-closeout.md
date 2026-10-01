@@ -131,7 +131,10 @@ SPLIT-OK write=/var/folders/…/tmp.QMynGJdTN6/.omo/state/system.yaml
 - 判据 4 初稿读 `json['system_yaml']`，而 guard 的 JSON 把它放在 `targets` 下 →
   永远 `KeyError`，exit 1。修正为 `['targets']['system_yaml']` 后同一条命令 exit 0（§4 读数）。
 - 判据 6 与 done_when-6 写"交付文件清单恰为 **6 项**"，那是 receipt + retro 进 `write_surfaces`
-  **之前**的草稿数（T10-217 的教训就是把这两行提前写进 scope）。实为 **8 项**，两处一起改。
+  **之前**的草稿数（T10-217 的教训就是把这两行提前写进 scope）。改成"8 项"后跑真实读数仍是错的 ——
+  `write_surfaces` 有 8 项，但台账那项被并发 run 的路径锁挡住要走 PR-2，**PR-1 交付清单是 7 项**。
+  最终措辞按实测的拆分写（7 + 台账 1 走 PR-2），而不是按 scope 集合大小写。
+  判据：**文件数类判据要按"这一次交付实际携带什么"写**，`write_surfaces` 是权限集合、不是交付集合。
 - **spec 的 frontmatter 少 `owner`**，而这条只在文件被 git 跟踪之后才现形：
   `doc-governance-check.py --scope tracked` 在文件 untracked 时报
   `PASS (4530 files, 145 warnings)`；`git add` 之后同一条命令报
@@ -157,7 +160,7 @@ SPLIT-OK write=/var/folders/…/tmp.QMynGJdTN6/.omo/state/system.yaml
 | 3 | 注入探针 | exit 1，`undeclared-key / probe_undeclared_key`（§2） |
 | 4 | 双根拆分 | `SPLIT-OK`，exit 0（修正后，§6） |
 | 5 | HEAD 键集 vs registry 双向相等 | `missing []` `ghost []`，exit 0 |
-| 6 | 交付清单 | 提交后跑：`.omo/state/**` 与 `BRIEF.md` 零命中，清单恰 8 项 |
+| 6 | 交付清单 | exit 0：`.omo/state/**` 与 `BRIEF.md` 零命中，PR-1 打印 **7 项**（台账是第 8 项，走 PR-2） |
 | 7 | `make gac-local-gate` | `GaC local gate: PASS (68 checks executed, 1 SOFT WARN)`，另 6 条 known-unavailable 跳过；无新增 hard fail |
 
 判据 2 的三个 0 **就是交付物本身**：不是"门禁没响"，而是"响过、且现在没有可响的"。
