@@ -569,6 +569,35 @@ post_merge_release() {
   return 0
 }
 
+# merge / release 守卫共用: 报错即给解法.
+#
+# 守卫判据是 `git diff --quiet`（**不含 untracked**），但**子模块状态会让它报非 0**。
+# 实测四类脏项**全部可自清**，都不需要 submit / 新 PR —— 早先守卫只打 `先 submit 或 stash`，
+# 于是每次都要回头查记忆才知道怎么清（2026-09-30 四次撞同一类后固化为 harness）。
+#
+# 明细用 $displaypath 带出子模块名: `submodule foreach --quiet` 会把 `Entering '<name>'`
+# 一起压掉, 只留 ` M f` ⇒ 能报「某处脏」但不能定位, 故显式补名。
+print_dirty_worktree_hints() {
+  local wt="$1" found=""
+  echo "   子模块层脏项 (带路径):" >&2
+  found="$(git -C "$wt" submodule foreach --quiet \
+    'p=$(git status --porcelain); [ -n "$p" ] && printf "%s\n" "$p" | sed "s|^|   $displaypath: |"' \
+    2>/dev/null | head -8)" || true
+  if [ -n "$found" ]; then
+    printf '%s\n' "$found" >&2
+  else
+    echo "     (无; 脏项在主仓 tracked 层 —— 见上面 git status)" >&2
+  fi
+  echo "   ⇒ 四类可自清的脏项 (均无需 submit / 新 PR):" >&2
+  echo "     1) uv run 改写被跟踪的 uv.lock      → git -C <sub> checkout -- uv.lock" >&2
+  echo "     2) bump gitlink 后未同步子模块检出  → git submodule update --init <path>" >&2
+  echo "     3) 子模块内生成物 (如 CAPABILITY-MAP.md) → git -C <sub> checkout -- <file>" >&2
+  echo "     4) init 半途失败留下成批 'D ' 的坏 index (先确认无非 D 项):" >&2
+  echo "        git status --porcelain | awk '\$1!=\"D\"'    # 须为空" >&2
+  echo "        git submodule foreach --quiet 'git reset --hard -q'" >&2
+  echo "   ⇒ 只有「真有在制工作」才该走 submit / stash." >&2
+}
+
 # 单元测试/复用入口: 只装载函数与环境, 不执行命令分发.
 #   GAC_WORKTREE_LIB_ONLY=1 source bin/gac/gac-worktree.sh
 # (各 case 分支都以显式 exit 结束, 故默认无法 source; 正常执行不受此开关影响.)
@@ -1012,6 +1041,7 @@ except Exception: print('')" 2>/dev/null || true)"
     if ! git diff --quiet || ! git diff --cached --quiet; then
       echo "⚠️  worktree 有未提交改动, 先 submit 或 stash" >&2
       git status --short | head -5
+      print_dirty_worktree_hints "$wt"
       exit 1
     fi
     cd "$WS_ROOT"
@@ -1059,6 +1089,7 @@ except Exception: print('')" 2>/dev/null || true)"
     if ! git diff --quiet || ! git diff --cached --quiet; then
       echo "⚠️  worktree 有未提交改动, 先 submit" >&2
       git status --short | head -5
+      print_dirty_worktree_hints "$wt"
       exit 1
     fi
     cd "$WS_ROOT"

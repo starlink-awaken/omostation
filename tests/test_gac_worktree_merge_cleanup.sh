@@ -15,6 +15,8 @@
 #   A2  收尾失败路径 (worktree 移除失败): 必须**保留** claim (不谎报成功).
 #   B   镜像同步成功路径: rc=0 且静默.
 #   B2  镜像同步失败路径: rc≠0 + 诊断, 且**本地 main 逐字节不变** (禁止 reset/merge).
+#   D   守卫提示: merge/release 两处接线 print_dirty_worktree_hints, 且该 helper
+#             (a) 干净态不误报 (b) 脏态**带子模块名**报明细 + 给出四类自清命令.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -155,6 +157,46 @@ printf '%s' "$outc" | grep -q "不会 reset" || fail "缺『不会 reset』承�
 echo "  ✅ rc≠0 + 诊断齐全"
 [ "$MAIN_BEFORE" = "$(git -C "$WS_C" rev-parse main)" ] || fail "本地 main 被改动 —— 禁止破坏性回退"
 echo "  ✅ 本地 main 逐字节未变"
+
+# ── D: 守卫提示 helper (release/merge 共用) ──────────────────────────────
+echo ""
+echo "── D: print_dirty_worktree_hints 报错即给解法 ──"
+[ "$(grep -cF 'print_dirty_worktree_hints "$wt"' "$SCRIPT")" = "2" ] \
+  || fail "release + merge 两处守卫都应接线 print_dirty_worktree_hints"
+echo "  ✅ 接线: release + merge 两处"
+
+# 夹具: 带一个**真实子模块**的 superproject (脏项只有子模块层才会出现)
+WS_D="$TMP/ws-hint"
+git init -q --bare -b main "$TMP/hint-child.git"
+git init -q -b main "$TMP/hint-child"
+printf 'x\n' > "$TMP/hint-child/f.txt"
+git -C "$TMP/hint-child" add f.txt
+git -C "$TMP/hint-child" -c user.email=t@example.invalid -c user.name=t commit -qm c
+git -C "$TMP/hint-child" push -q "$TMP/hint-child.git" main
+git init -q -b main "$WS_D"
+git -C "$WS_D" -c protocol.file.allow=always submodule add -q "$TMP/hint-child.git" child
+git -C "$WS_D" -c user.email=t@example.invalid -c user.name=t commit -qm add-sub
+
+# D1 干净态: 不得误报
+outd="$(call_fn "$WS_D" 'print_dirty_worktree_hints "$FIXTMP/ws-hint"; printf "rc=%d\n" $?')"
+printf '%s' "$outd" | grep -q "rc=0" || { printf '%s\n' "$outd" | tail -8; fail "helper 非零退出"; }
+printf '%s' "$outd" | grep -q "(无; 脏项在主仓 tracked 层" || fail "干净态误报子模块脏项"
+echo "  ✅ 干净态: rc=0 且不误报"
+
+# D2 脏态: 必须带子模块名 (--quiet 缺陷的回归守卫)
+printf 'changed\n' >> "$WS_D/child/f.txt"
+git -C "$WS_D" diff --quiet \
+  && fail "夹具无效: 未构造出子模块脏态 (本用例将失去判别力)"
+git -C "$WS_D" status --porcelain --untracked-files=no | grep -q '^ M child' \
+  || fail "夹具无效: 主仓层面看不到子模块脏项"
+outd2="$(call_fn "$WS_D" 'print_dirty_worktree_hints "$FIXTMP/ws-hint"; printf "rc=%d\n" $?')"
+printf '%s' "$outd2" | grep -q "child: " \
+  || { printf '%s\n' "$outd2" | tail -8; fail "脏项未带子模块名 —— --quiet 缺陷回归"; }
+printf '%s' "$outd2" | grep -q " M f.txt" || fail "缺子模块层脏项明细"
+printf '%s' "$outd2" | grep -q "checkout -- uv.lock" || fail "缺『uv.lock』自清命令"
+printf '%s' "$outd2" | grep -q "submodule update --init" || fail "缺『未同步检出』自清命令"
+printf '%s' "$outd2" | grep -q "reset --hard -q" || fail "缺『坏 index』自清命令"
+echo "  ✅ 脏态: 带子模块名 + 四类自清命令齐全"
 
 echo ""
 echo "✅ merge 清理加固回归: PASS"
