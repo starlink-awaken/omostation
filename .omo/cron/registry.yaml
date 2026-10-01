@@ -344,10 +344,8 @@ jobs:
       PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
       /Users/xiamingxing/.local/share/zhixing-dashboard/refresh.py
     planes: [launchd]
-    reality: pending
-    status: proposed
-    ssot_conflict: >-
-      2026-09-30 launchd 覆写事故后复核: 本条在 registry.yaml 标 status=active + planes 含 launchd, 隐含「应已安装」; 但 services.yaml(launchd 服务 SSOT) 中 services.yaml 声明 generate=false (com.omostation.zhixing-dashboard-refresh), 且 runtime/cron 下无受控产物。受控产物与已安装 agent 均不存在, 故降级为 proposed。
+    reality: installed
+    status: active
     owner: agent-experience-steward
     sfop_slot: S
     reconciliation_note: >
@@ -530,10 +528,8 @@ jobs:
     schedule: "23 * * * *"
     command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py protect && python3 bin/gac/zhixing-host-sync.py check'
     planes: [launchd]
-    reality: pending
-    status: proposed
-    ssot_conflict: >-
-      2026-09-30 launchd 覆写事故后复核: 本条在 registry.yaml 标 status=active + planes 含 launchd, 隐含「应已安装」; 但 services.yaml(launchd 服务 SSOT) 中 services.yaml 声明 generate=false (com.omostation.zhixing-host-drift), 且 runtime/cron 下无受控产物。受控产物与已安装 agent 均不存在, 故降级为 proposed。
+    reality: installed
+    status: active
     owner: governance-team
     sfop_slot: S
     reconciliation_note: "织星宿主漂移 + 未推送提交钉扎 每小时巡检 (2026-09-19)。**历史事实**: 当时 crontab 写入在系统层失败 (原样重写返回 Interrupted system call; /var/at/tabs 为 root:wheel 且仅 root 可读写), 故改用 launchd 承载 —— plist 源 bin/ops/launchd/com.omostation.zhixing-host-drift.plist, 日志 runtime/cron/zhixing-host-drift.log。**2026-09-28 更正**: 该 crontab 故障已不成立, 实测原样回写 rc=0, 且惰性注释探针写入后 74→75 行真实生效 (仅原样回写不足以证明, 因回读内容本就一致)。故 crontab 现已可写, 退役或登记 crontab 侧条目不再受系统层阻挡。**launchd 承载的结论不变, 但理由改为架构性**: registry.yaml 为调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面是遗留面, 不应再新增。引用本条时勿再以「crontab 已坏」为据。"
@@ -542,10 +538,8 @@ jobs:
     schedule: "17 * * * *"
     command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/projects/omo/.venv/bin/omo state refresh >> runtime/cron/omo-health-refresh.log 2>&1'
     planes: [launchd]
-    reality: pending
-    status: proposed
-    ssot_conflict: >-
-      2026-09-30 launchd 覆写事故后复核: 本条在 registry.yaml 标 status=active + planes 含 launchd, 隐含「应已安装」; 但 services.yaml(launchd 服务 SSOT) 中 services.yaml 无 label com.omostation.omo-health-refresh 的授权条目, 且 runtime/cron 下无受控产物。受控产物与已安装 agent 均不存在, 故降级为 proposed。
+    reality: installed
+    status: active
     owner: governance-team
     sfop_slot: S
     reconciliation_note: >-
@@ -609,7 +603,10 @@ jobs:
       /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-serve.py --port 43910 --no-refresh
     planes: [launchd]
     reality: declared_only
-    status: active
+    status: proposed
+    reality: pending
+    ssot_conflict: >-
+      2026-09-30 复核: 本条 active 且 runtime/cron 有受控产物, 但 services.yaml (launchd 服务 SSOT) 声明 enabled=false —— 授权只看 enabled, 故降级。
     owner: agent-experience-steward
     sfop_slot: S
     reconciliation_note: >
@@ -631,7 +628,10 @@ jobs:
       /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py
     planes: [launchd]
     reality: installed
-    status: active
+    status: proposed
+    reality: pending
+    ssot_conflict: >-
+      2026-09-30 复核: 本条 active 且 runtime/cron 有受控产物, 但 services.yaml (launchd 服务 SSOT) 声明 enabled=false —— 授权只看 enabled, 故降级。
     owner: agent-experience-steward
     sfop_slot: S
     reconciliation_note: >-

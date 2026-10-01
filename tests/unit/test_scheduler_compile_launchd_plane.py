@@ -93,11 +93,25 @@ def test_active_launchd_entries_are_authorized_by_services_registry() -> None:
       - `.omo/cron/registry.yaml` 把 17 个服务标为 `status: active` + `planes: [launchd]`,
         隐含「应该已就位」;
       - 其中 6 个在 `.omo/_truth/registry/services.yaml`(launchd 服务 SSOT) 里是
-        `enabled: false` / `generate: false` / 无此条目, 即**本就不该存在**;
-      - 另有 5 个是「受控观测」, 形态是仓内 `runtime/cron/<label>.plist` 而非已安装 agent。
+        `enabled: false` 或 services.yaml 无此 label, 即**本就不该存在**。
 
-    原测试只查已安装 agent, 于是受控观测被误判, 真正的 6 个未授权项则一直失败。
-    本测试锁死判据, 避免「降级」只成为一次性数据修改。
+    ## 2026-09-30 语义更正(本测试原实现是错的)
+
+    原实现把 `generate: false` 也算作「未授权」。这是**误读字段语义**:
+
+      - `enabled` 决定**服务该不该存在/该在跑**
+      - `generate` 只决定**谁来写这个 plist**(本仓生成 vs 本机手写/外部工具安装)
+
+    ADR-0456 B3 / BET-Y2Q4-T10-206 那批 observe-only 回填写得很清楚:
+    `enabled: true` + `generate: false`, notes 里明写
+    「plist 由本机手写/外部工具安装, 本仓不生成; **登记是为了让「已装 label == 注册表」可证**」。
+    也就是说这批服务**本就该装在 LaunchAgents 上**, 只是不由本仓生成。
+
+    按原实现把这批判成「未授权 → 应降级」, 实际后果是: 本机 27 个 `enabled: true`
+    的真实服务被误删(它们同时满足 `generate: false` + 无 `runtime/cron` 受控产物)。
+    其中包括 `com.omostation.zhixing-dashboard-refresh` / `zhixing-host-drift`。
+
+    现按正确语义: **授权只看 `enabled`**; `generate: false` 是合法形态, 不减授权。
     """
     import yaml
 
@@ -120,18 +134,16 @@ def test_active_launchd_entries_are_authorized_by_services_registry() -> None:
         if job.get("status", "active") != "active":
             continue
         label = job.get("label") or f"com.omostation.{job['name']}"
-        if label in controlled:
-            continue  # 受控观测形态
         svc = services.get(label)
+        # 授权只看 enabled: `generate: false` 是 observe-only 合法形态
+        # (本仓不生成该 plist, 但它本就该被安装), 不得据此判未授权。
         if svc is None:
-            unauthorized.append(f"{job['name']} -> {label} (services.yaml 无此 label, 且无受控产物)")
+            unauthorized.append(f"{job['name']} -> {label} (services.yaml 无此 label)")
         elif not svc.get("enabled", True):
-            unauthorized.append(f"{job['name']} -> {label} (enabled=false, 且无受控产物)")
-        elif not svc.get("generate", True):
-            unauthorized.append(f"{job['name']} -> {label} (generate=false, 且无受控产物)")
+            unauthorized.append(f"{job['name']} -> {label} (services.yaml enabled=false)")
     assert not unauthorized, (
-        "以下 active launchd 登记缺少 services.yaml 授权也无受控产物 —— 以 services.yaml "
-        "为准, 应降级为 proposed:\n" + "\n".join("  " + u for u in unauthorized)
+        "以下 active launchd 登记在 services.yaml 里未获授权(缺条目或 enabled=false)"
+        " —— 应降级为 proposed:\n" + "\n".join("  " + u for u in unauthorized)
     )
 
 
