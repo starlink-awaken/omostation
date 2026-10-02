@@ -1,24 +1,35 @@
 #!/usr/bin/env python3
 """GaC #38: OMO state write guard — detect multi-writer conflicts in .omo/ state plane.
 
-Checks two things:
+Checks three things:
 1. Duplicate top-level keys in system.yaml (multi-writer conflict)
 2. Unauthorized writes per write-owners.yaml (write protocol violations)
+3. Field-level write ownership coverage (undeclared / ghost / unresolvable owner)
 
 Usage:
-  python3 bin/gac/omo-state-write-guard.py
+  python3 bin/gac/omo-state-write-guard.py [--json]
 """
 
 from __future__ import annotations
 
+import argparse
+import json
 import sys
 from pathlib import Path
 
 import yaml
 
-WORKSPACE = Path(__file__).resolve().parents[2]
-SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
+# ADR-0456 — 本 guard 自己也在被检查的两个根上: system.yaml 是写面 (profile 声明),
+# write-owners.yaml 是读面 (治理 SSOT, 跟随检出)。两者都经 repo_root 取, 不反推 __file__。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root, state_root  # noqa: E402
+
+SYSTEM_YAML_REL = ".omo/state/system.yaml"
+WORKSPACE = code_root()
+STATE_ROOT = state_root()
+SYSTEM_YAML = STATE_ROOT / ".omo" / "state" / "system.yaml"
 WRITE_OWNERS_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "write-owners.yaml"
+OWNER_LEXICON = ("script:", "daemon:", "human:", "broker:")
 
 
 # ── Check 1: Duplicate top-level keys ──
@@ -102,13 +113,155 @@ def check_unauthorized_writes() -> list[dict]:
     return findings
 
 
+# ── Check 3: Field-level write ownership coverage ──
+
+
+def top_level_keys(text: str) -> list[str]:
+    """Column-0 keys of a YAML mapping, order-preserving and de-duplicated."""
+    keys = []
+    for line in text.splitlines():
+        raw = line.split("#")[0]
+        if not raw.strip() or raw[0] in (" ", "\t"):
+            continue
+        if ":" in raw:
+            keys.append(raw.split(":")[0].strip())
+    return list(dict.fromkeys(keys))
+
+
+def owner_tokens(owner: object) -> list[str]:
+    if isinstance(owner, str):
+        return [owner]
+    if isinstance(owner, list):
+        return [str(item) for item in owner]
+    return []
+
+
+def resolve_owner(owner: str) -> tuple[bool, str]:
+    """Validate one owner token against the C1 lexicon. (ok, detail)."""
+    if owner == "anyone":
+        return True, ""
+    if not owner.startswith(OWNER_LEXICON):
+        return False, f"owner '{owner}' has no lexicon prefix"
+    if owner.startswith("script:"):
+        rel = owner[len("script:") :].strip()
+        candidate = Path(rel)
+        if not rel or candidate.is_absolute() or ".." in candidate.parts:
+            return False, f"script path '{rel}' is not a repo-relative path"
+        target = code_root() / candidate
+        if not target.is_file():
+            return False, f"declared writer script does not exist: {rel}"
+    return True, ""
+
+
+def check_field_ownership() -> list[dict]:
+    """Every top-level system.yaml key must have a resolvable declared owner."""
+    findings: list[dict] = []
+    if not SYSTEM_YAML.exists():
+        return findings
+
+    declared = load_write_owners().get(SYSTEM_YAML_REL)
+    if declared is None:
+        declared = {}
+    if not isinstance(declared, dict):
+        return [
+            {
+                "check": "unresolvable-owner",
+                "key": SYSTEM_YAML_REL,
+                "message": f"fields['{SYSTEM_YAML_REL}'] must be a mapping of key → owner",
+            }
+        ]
+
+    present = top_level_keys(SYSTEM_YAML.read_text(encoding="utf-8"))
+    present_set = set(present)
+
+    for key in present:
+        if key not in declared:
+            findings.append(
+                {
+                    "check": "undeclared-key",
+                    "key": key,
+                    "message": f"Top-level key '{key}' is written into {SYSTEM_YAML_REL} but has no owner in write-owners.yaml",
+                }
+            )
+    for key in sorted(set(declared) - present_set):
+        findings.append(
+            {
+                "check": "ghost-declaration",
+                "key": key,
+                "message": f"write-owners.yaml declares '{key}' but {SYSTEM_YAML_REL} has no such top-level key",
+            }
+        )
+    for key in sorted(declared):
+        tokens = owner_tokens(declared[key])
+        if not tokens:
+            findings.append(
+                {
+                    "check": "unresolvable-owner",
+                    "key": key,
+                    "message": f"'{key}' declares no owner",
+                }
+            )
+            continue
+        for owner in tokens:
+            ok, detail = resolve_owner(owner)
+            if not ok:
+                findings.append(
+                    {
+                        "check": "unresolvable-owner",
+                        "key": key,
+                        "owner": owner,
+                        "message": f"'{key}' declares {detail}",
+                    }
+                )
+    return findings
+
+
 # ── Main ──
 
 
-def main() -> int:
+def ownership_summary(findings: list[dict]) -> dict[str, int]:
+    counts = {"undeclared-key": 0, "ghost-declaration": 0, "unresolvable-owner": 0}
+    for f in findings:
+        if f["check"] in counts:
+            counts[f["check"]] += 1
+    return counts
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="GaC #38 OMO state write guard")
+    parser.add_argument("--json", action="store_true", dest="as_json")
+    args = parser.parse_args(argv)
+
     findings = []
     findings.extend(check_duplicate_keys())
     findings.extend(check_unauthorized_writes())
+    ownership = check_field_ownership()
+    findings.extend(ownership)
+
+    if args.as_json:
+        present = (
+            top_level_keys(SYSTEM_YAML.read_text(encoding="utf-8"))
+            if SYSTEM_YAML.exists()
+            else []
+        )
+        declared = load_write_owners().get(SYSTEM_YAML_REL)
+        print(
+            json.dumps(
+                {
+                    "targets": {
+                        "system_yaml": str(SYSTEM_YAML),
+                        "write_owners_yaml": str(WRITE_OWNERS_YAML),
+                    },
+                    "declared": len(declared) if isinstance(declared, dict) else 0,
+                    "present": len(present),
+                    "ownership": ownership_summary(ownership),
+                    "findings": findings,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 1 if findings else 0
 
     if not findings:
         print("[OMO-STATE-WRITE-GUARD] ✅ All checks passed — no conflicts detected")

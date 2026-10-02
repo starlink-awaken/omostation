@@ -1,20 +1,12 @@
 # write-owners.yaml — .omo/ 状态平面写权限定义 (GaC #38)
 #
-# 每个文件中每个关键字段的授权写入方。
-# 非授权写入被 GaC #38 omo-state-write-guard 检测为违规。
-#
-# 格式:
-#   path: { field: owner }
-#   owner 取值:
-#     runtime-scan   — cron 健康扫描 (system_health.yaml → system.yaml)
-#     strategy-sync  — c2g.strategy 策略同步 (health.yaml / system.yaml)
-#     omo-debt       — OMO 债务系统 (debt.yaml / debt/items/)
-#     agent-workflow — Agent 工作流 (phase/next_milestone)
-#     omo-broker     — OMO state sync broker (governance-data / 状态投影)
-#     anyone         — 不限制 (允许任何写入方)
+# 两个独立段，两套 owner 约定：
+#   write_owners: 路径级规则，消费者 bin/ssot/write-owner-audit.py (pre-commit G-CONV.5)
+#   fields:       字段级归属，消费者 bin/gac/omo-state-write-guard.py (check_field_ownership)
+# 段内 owner 词法见各自的注释块。
 
 version: 1
-last_updated: "2026-07-17"
+last_updated: "2026-10-01"
 
 # Path-level rules for bin/ssot/write-owner-audit.py (pre-commit G-CONV.5).
 # owner format: "script:<name>" | "daemon:<name>" | "human:<name>"
@@ -33,23 +25,61 @@ write_owners:
   - path: ".omo/debt/**"
     owner: "script:omo-debt"
 
+# fields: 段 — system.yaml 的字段级归属 (ADR-0456 B5 / BET-Y2Q4-T10-219)
+# owner 词法 (OMO_STATE_FIELD_LEXICON，由 omo-state-write-guard.py check_field_ownership 校验):
+#   "script:<repo 相对路径>" — 该路径必须在 code_root() 下真实存在
+#   "daemon:<name>" | "human:<name>" | "broker:<name>" | "anyone"
+# 多写者用列表；列表项逐一校验。
+# 只声明**当前文件里真实存在**的顶层键：有代码写路径但当前缺席的键
+# (next_milestone / health_score_raw / debt_watchlist_count / debt_gate_count / phase28_status)
+# 故意不声明 —— 它们第一次落盘时会以 undeclared-key 触发门禁，由写入方补声明。
 fields:
-  # system.yaml — 运行时 + 治理状态
+  # system.yaml — 运行时 + 治理状态（23 个顶层键，实测写者图见
+  # docs/superpowers/specs/2026-10-01-bet-219-system-yaml-field-writer-ownership.md §4）
   .omo/state/system.yaml:
-    current_phase: agent-workflow
-    phase41_status: agent-workflow
-    phase42_status: agent-workflow
-    phase43_status: agent-workflow
-    phase44_status: agent-workflow
-    health_score: strategy-sync          # 顶部复合健康分
-    health_score_generated_at: strategy-sync
-    runtime_health_summary: runtime-scan  # 运行时扫描结果 (内含 health_score)
-    next_milestone: strategy-sync
-    debt_adjusted_health_score: omo-debt
-    debt_items_total: omo-debt
-    debt_items_resolved: omo-debt
-    governance_anomaly_score: omo-broker
-    service_online_ratio: runtime-scan
+    active_tasks:
+      - "script:projects/omo/src/omo/omo_audit_sync.py"
+      - "script:projects/omo/src/omo/omo_state.py"
+    blocked_tasks:
+      - "script:projects/omo/src/omo/omo_audit_sync.py"
+      - "script:projects/omo/src/omo/omo_state.py"
+    completed_tasks:
+      - "script:projects/omo/src/omo/omo_audit_sync.py"
+      - "script:projects/omo/src/omo/omo_state.py"
+    current_phase: "script:projects/omo/src/omo/omo_audit_sync.py"
+    current_wave: "script:projects/omo/src/omo/omo_audit_sync.py"
+    governance_anomaly_score: "script:bin/compass_radar.py"
+    governance_feedback_last_run: "script:projects/omo/src/omo/omo_ingress_state.py"
+    harness: "script:bin/gac/harness-omo-bridge.py"
+    health_score:                     # 顶部复合健康分（三个写者，同键覆写）
+      - "script:bin/compass_radar.py"
+      - "script:bin/gac/unified-health-score.py"
+      - "script:projects/omo/src/omo/omo_audit_sync.py"
+    health_score_evidence:
+      - "script:bin/gac/evidence-smoke.py"
+      - "script:bin/compass_radar.py"    # :1420 覆写成自己的 health_score
+    health_score_evidence_generated_at: "script:bin/gac/evidence-smoke.py"
+    health_score_evidence_source:
+      - "script:bin/gac/evidence-smoke.py"
+      - "script:bin/compass_radar.py"
+    health_score_generated_at: "script:bin/compass_radar.py"
+    health_score_source: "script:bin/compass_radar.py"
+    next_active_tasks: "script:projects/omo/src/omo/omo_state.py"
+    next_planned_tasks: "script:projects/omo/src/omo/omo_state.py"
+    planned_tasks:
+      - "script:projects/omo/src/omo/omo_audit_sync.py"
+      - "script:projects/omo/src/omo/omo_state.py"
+    runtime_health_summary: "script:bin/compass_radar.py"  # 内含 health_score (ISC-3 同口径)
+    self_evolution: "script:bin/gac/self-evolution-loop.py"
+    service_online_ratio: "script:bin/compass_radar.py"
+    total_tasks:
+      - "script:projects/omo/src/omo/omo_audit_sync.py"
+      - "script:projects/omo/src/omo/omo_state.py"
+    updated_at:
+      - "script:projects/omo/src/omo/omo_audit_sync.py"
+      - "script:projects/omo/src/omo/omo_state.py"
+      - "script:projects/omo/src/omo/omo_ingress_state.py"
+    workflow_mesh_health: "script:bin/compass_radar.py"
 
   # health.yaml — 健康分 SSOT
   .omo/state/health.yaml:
