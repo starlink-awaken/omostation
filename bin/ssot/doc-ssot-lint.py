@@ -33,7 +33,6 @@ from pathlib import Path
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = WORKSPACE_ROOT / "docs" / "project-registry.yaml"
-SYSTEM_YAML = WORKSPACE_ROOT / ".omo" / "state" / "system.yaml"
 GENERATED_GAC_DIGEST = WORKSPACE_ROOT / "docs/generated/agent-gac-rules.md"
 GENERATED_LAYER_DIGEST = WORKSPACE_ROOT / "docs/generated/project-layer-index.md"
 

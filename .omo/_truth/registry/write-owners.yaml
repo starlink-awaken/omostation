@@ -49,19 +49,17 @@ fields:
     current_phase: "script:projects/omo/src/omo/omo_audit_sync.py"
     current_wave: "script:projects/omo/src/omo/omo_audit_sync.py"
     governance_anomaly_score: "script:bin/compass_radar.py"
-    governance_feedback_last_run: "script:projects/omo/src/omo/omo_ingress_state.py"
+    governance_feedback_last_run:
+      - "script:projects/omo/src/omo/omo_ingress_state.py"
+      - "script:projects/runtime/src/runtime/scheduler.py"  # :518 休眠写者，未安装（BET-Y2Q4-T10-220 D7）
     harness: "script:bin/gac/harness-omo-bridge.py"
     health_score:                     # 顶部复合健康分（三个写者，同键覆写）
       - "script:bin/compass_radar.py"
       - "script:bin/gac/unified-health-score.py"
       - "script:projects/omo/src/omo/omo_audit_sync.py"
-    health_score_evidence:
-      - "script:bin/gac/evidence-smoke.py"
-      - "script:bin/compass_radar.py"    # :1420 覆写成自己的 health_score
+    health_score_evidence: "script:bin/gac/evidence-smoke.py"  # 独立实测分 (BET-Y2Q4-T10-220 D2 拆掉 compass_radar 的跨键复制)
     health_score_evidence_generated_at: "script:bin/gac/evidence-smoke.py"
-    health_score_evidence_source:
-      - "script:bin/gac/evidence-smoke.py"
-      - "script:bin/compass_radar.py"
+    health_score_evidence_source: "script:bin/gac/evidence-smoke.py"
     health_score_generated_at: "script:bin/compass_radar.py"
     health_score_source: "script:bin/compass_radar.py"
     next_active_tasks: "script:projects/omo/src/omo/omo_state.py"
@@ -69,9 +67,13 @@ fields:
     planned_tasks:
       - "script:projects/omo/src/omo/omo_audit_sync.py"
       - "script:projects/omo/src/omo/omo_state.py"
-    runtime_health_summary: "script:bin/compass_radar.py"  # 内含 health_score (ISC-3 同口径)
+    runtime_health_summary:
+      - "script:bin/compass_radar.py"  # 内含 health_score (ISC-3 同口径)
+      - "script:projects/runtime/src/runtime/scheduler.py"  # :518 休眠写者，未安装（BET-Y2Q4-T10-220 D7）
     self_evolution: "script:bin/gac/self-evolution-loop.py"
-    service_online_ratio: "script:bin/compass_radar.py"
+    service_online_ratio:
+      - "script:bin/compass_radar.py"
+      - "script:projects/runtime/src/runtime/scheduler.py"  # :518 休眠写者，未安装（BET-Y2Q4-T10-220 D7）
     total_tasks:
       - "script:projects/omo/src/omo/omo_audit_sync.py"
       - "script:projects/omo/src/omo/omo_state.py"
@@ -79,6 +81,7 @@ fields:
       - "script:projects/omo/src/omo/omo_audit_sync.py"
       - "script:projects/omo/src/omo/omo_state.py"
       - "script:projects/omo/src/omo/omo_ingress_state.py"
+      - "script:projects/runtime/src/runtime/scheduler.py"  # :518 休眠写者，未安装（BET-Y2Q4-T10-220 D7）
     workflow_mesh_health: "script:bin/compass_radar.py"
 
   # health.yaml — 健康分 SSOT

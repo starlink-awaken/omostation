@@ -39013,6 +39013,150 @@ bets:
   - 写者清单不再靠注释：bin/mof/generate-brief.py 的枚举换成指向真源 + 复算命令，因为「三个写者」这句叙述与实测（8 模块 / 34 边）背离了整整一轮。
   - 七条 verify 全部逐条实跑 exit 0（读数表在 receipt §7），make gac-local-gate PASS 且无新增 hard fail，doc-governance-check
     --no-new-warnings --scope tracked = PASS (4533 files, 145 warnings)。
+- id: BET-Y2Q4-T10-220
+  title: ADR-0456 B5 收尾 — system.yaml 写面与读面收敛到 state_root + 拆掉 R-GOV-2 的同义反复
+  goal: plan B5（决策 4 生成态摘库）的完成判据是「一次 dev 运行后 `git status --short .omo/state` 为空」。T10-219
+    把「谁写哪个键」变成门禁后，本轮实测剩下的事实是：声明 `OMOSTATION_STATE_ROOT` 的检出里跑 `omo state sync-tasks`（rc=0），state
+    根拿到了投影四件 + `runtime/omo/**` 镜像，**检出的 `.omo/state/system.yaml` 仍被改写一行 `updated_at`**（2026-09-27T08:22:42Z
+    → 本次时刻），判据路径当场不成立。写者普查（`git grep` 构造式 23 处命中逐条定性）给出四个仍在用检出根的写点：`bin/compass_radar.py:1400`（`ws_root
+    = omo_dir.parent`）、`bin/gac/harness-omo-bridge.py:30`（`__file__.parents[2]`）、`bin/gac/self-evolution-loop.py:230`（`REPO`）、`projects/omo/src/omo/omo_state.py:320`/`:474`（`find_omo_dir()`
+    → `OMO_ROOT`）；而正确常量 `omo_paths.STATE_SYSTEM_YAML`（`:69`）与 `evidence-smoke._system_yaml()`（`:219`）早已存在并被四处使用
+    —— 这不是缺机制，是机制有四处被绕过。读者同病：8 个读点钉检出根（6 个在 ci-surfaces 接线），于是门禁读上次提交的快照、越跑越 stale。双口径判定同时落定：`bin/compass_radar.py:1420-1421`
+    把自己的 `health_score` 复制进 `health_score_evidence`（source "compass_radar (synced)"）使
+    R-GOV-2 的交叉核对自我实现，`evidence-smoke.py:242` 才是独立测量的 evidence 分 —— 删前者，该三键归 evidence-smoke
+    独占，R-GOV-2 阈值 5 与 WARN-only 分级不动（实测 `errors` 恒空，`:163` 只 append warning ⇒ 诚实化不会把门禁变红）。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python3 -m pytest tests/unit/test_system_yaml_write_plane.py
+      -q
+    expect: 全绿。四条落点各一条：① 声明 profile 后 import `bin/compass_radar.py` 直调 `sync_system_yaml(code_root(),
+      …)`，写出目标 == `repo_root.state_root()/.omo/state/system.yaml` 且检出的跟踪 blob 逐字节未变（D1
+      的「同一处」是可比断言，不是注释）；② `harness-omo-bridge.sync_harness_closeout()` / `self-evolution-loop.sync_evolution_state()`
+      同探针 ⇒ `harness` / `self_evolution` 只出现在 state 根那份；③ `governance-convergence-lint.py`
+      的 divergence 取自 state 根那份，删掉它则回退读检出且不报错（D3 兜底）；④ 规范化不变式扫描：把 `".omo" / "state"
+      / "system.yaml"` 与 `".omo/state/system.yaml"` 两种拼法归一后，`bin/**/*.py` 里由检出根变量拼出的
+      system.yaml 路径只剩 `bin/meta/`（D6 死副本）与 `bin/_archive/`。判据初稿是裸 `git grep` 单形态，实测只命中
+      4 处、漏掉分引号写法与 `omo_dir / "state"` 写法 —— 那会让一条判据在写者没改完时就变绿。
+  - cmd: D=$(mktemp -d) && mkdir -p "$D/.omo/state" && cp .omo/state/system.yaml "$D/.omo/state/system.yaml"
+      && export OMOSTATION_STATE_ROOT="$D" && uv run --project projects/omo python -m
+      omo.cli state sync-tasks >/dev/null && git status --short -- .omo/state > /tmp/t10220.dirty;
+      python3 -c "import yaml,os,sys;s=os.environ['OMOSTATION_STATE_ROOT'];a=yaml.safe_load(open(s+'/.omo/state/system.yaml'))['updated_at'];b=yaml.safe_load(open('.omo/state/system.yaml'))['updated_at'];dirty=open('/tmp/t10220.dirty').read().strip();assert
+      dirty=='' and a!=b,(dirty[:120],a,b);print('LANDED',a,b)"
+    expect: plan B5 判据原文 + 正向落点，两断言并列。本轮前实测：`M .omo/state/system.yaml` 且 state 根仍是旧时刻
+      ⇒ 这条命令本身就是复现命令，改前必须为假。改后：`.omo/state` 空 **且** state 根的 `updated_at` 是本次新时刻 （只用否定式会被自己的
+      receipt 否证，T10-215 教训）。tasks 面 `.omo/tasks/registry/INDEX.md` 的 `Updated:` 不在判据路径内
+      —— D5 判定它是真源的派生缓存、按设计跟踪。
+  - cmd: 'python3 -c "import json,subprocess,yaml;d=json.loads(subprocess.run([''python3'',''bin/gac/omo-state-write-guard.py'',''--json''],capture_output=True,text=True).stdout);o=d[''ownership''];assert
+      d[''findings'']==[] and d[''present'']==d[''declared'']==23 and all(v==0 for v
+      in o.values()),d;f=yaml.safe_load(open(''.omo/_truth/registry/write-owners.yaml''))[''fields''][''.omo/state/system.yaml''];L=lambda
+      v: v if isinstance(v,list) else [v];assert L(f[''health_score_evidence''])==[''script:bin/gac/evidence-smoke.py''],f[''health_score_evidence''];assert
+      L(f[''health_score_evidence_source''])==[''script:bin/gac/evidence-smoke.py''],f[''health_score_evidence_source''];assert
+      ''script:projects/runtime/src/runtime/scheduler.py'' in L(f[''runtime_health_summary'']),f[''runtime_health_summary''];print(''OWNERSHIP-CLEAN'',d[''declared''],d[''present''])"'
+    expect: OWNERSHIP-CLEAN 23 23。四断言并列：守卫三类计数 0（约束实测在案 —— 守卫判据是 `present == declared`
+      双向，而 `worktree_dirty_count`（`omo_workspace.py:39` 写的键）不在 HEAD 的 23 键里 ⇒ 声明它当场造出一条幽灵声明、把
+      T10-219 的绿判据变红，所以本轮只给已存在的键补归属）；`health_score_evidence` / `_source` 收成单写者（D2）；`runtime_health_summary`
+      补上 D7 那个未改道的写者（普查完整性优先于「改了才算数」）。
+  - cmd: test -z "$(git grep -n 'data\["health_score_evidence"\] = updates\[' -- bin/compass_radar.py)"
+      && python3 bin/gac/governance-convergence-lint.py --rule R-GOV-2 --json | python3
+      -c "import json,sys;d=json.load(sys.stdin);assert d.get('errors',[])==[],d;print('NO-TAUTOLOGY','warnings=%d'%len(d.get('warnings',[])))"
+    expect: NO-TAUTOLOGY 且 warnings 计数可打印。两半都是实测前提：`errors` 恒空 ⇒ 删复制不会变红；`--rule R-GOV-2`
+      仍可单独跑 ⇒ 拆同义反复没把规则拆没。
+  - cmd: python3 bin/ssot/script-registry.py validate && python3 -c "import yaml;d=yaml.safe_load(open('bin/_registry/scripts/state/compass_radar.yaml'));assert
+      d['maturity']=='deprecated' and 'bin/compass_radar.py' in d['description'],d;print('REGISTRY-HONEST',d['id'])"
+    expect: 'validate 仍 PASSED（基线实测 713 scripts registered），登记条目 maturity=deprecated
+      且 description 点名活入口。这条是本轮把初稿判据推翻的一处：`script-registry.py validate()` 用 `registered=set(ids)`
+      + `missing = git ls-tree HEAD bin 的全部 *.py/*.sh − registered`，所以「把 id 改指活副本」会让
+      `bin/meta/compass_radar.py` 从 registered 消失 ⇒ `Missing registrations: 1` ⇒ 判据自否证。顺带实测：validate
+      不校验 schema，57 个条目的 maturity 取值（active 46 / shadow 6 / alpha 4 / production 1）全在枚举
+      [draft,stable,deprecated,archived] 外且无告警。'
+  - cmd: uv run --project projects/omo python -m pytest projects/omo/tests/test_omo_cli_modules.py
+      -q
+    expect: 基线实测 64 passed / 2.18s（子模块侧 `cmd_state_sync_tasks` 的既有问责面）。改 `omo_state.py`
+      两处落点后必须仍 64 passed；若用例本身要改，改的是断言的根，不是把用例删窄。
+  - cmd: make gac-local-gate
+    expect: GaC local gate PASS，无新增 hard fail（读者 8 点改解析、写者 4 点改根都在门禁问责面上；这是「读者不再读快照」的总闸）。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-02-bet-220-system-yaml-state-root-write-plane.md
+    spec_version: 1.0.0
+    content_digest: sha256:0b95f16607d78310eeed714bb685e6be20fb23eb22c8644d54c0fef6ebd36d3e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-220
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  write_surfaces:
+  - bin/lib/repo_root.py
+  - bin/compass_radar.py
+  - bin/gac/harness-omo-bridge.py
+  - bin/gac/self-evolution-loop.py
+  - bin/gac/governance-convergence-lint.py
+  - bin/gac/check-project-health-freshness.py
+  - bin/gac/governance-alert-dispatch.py
+  - bin/gac/architecture-check.py
+  - bin/ssot/current-state-coherence.py
+  - bin/ssot/doc-ssot-lint.py
+  - bin/ssot/sema-distill.py
+  - bin/reports/quarterly-report.py
+  - .omo/_truth/registry/write-owners.yaml
+  - bin/_registry/scripts/state/compass_radar.yaml
+  - tests/unit/test_system_yaml_write_plane.py
+  - docs/superpowers/specs/2026-10-02-bet-220-system-yaml-state-root-write-plane.md
+  - projects/omo
+  - docs/plans/3y-bet-ledger.yaml
+  non_goals:
+  - 不把 `.omo/state/system.yaml` 摘出 git，也不抽任何键进 `.omo/state/runtime/*` —— D1 判定它是「跟踪的快照
+    + state 根的运行态镜像」，检出那份继续作为 CI / 无 profile 机器的兜底读源。B5 的字面判据是「运行后 `.omo/state` 为空」，把摘库与改根混成一件事是初稿的另一处偏差。
+  - 不改 `projects/runtime/src/runtime/scheduler.py:22` 的检出根（D7）：实测它未安装（LaunchAgents 与
+    crontab.new 无条目，唯一命中是 `.corrupted-json-backup-20260930/com.omo.model-scheduler.plist`
+    这个别的服务）、它已有 `OMO_STATE_FILE` env 出口、且该 submodule 在本 worktree 是 shallow 并有 `tests/unit/test_scheduler_compile_launchd_plane.py`
+    / `test_gate_health_roots.py` 问责其根 ⇒ 第三个 gitlink bump 与测试面留在本轮之外，归属仍补进 registry。
+  - 不动 tasks 面（D5）：`.omo/tasks/registry/INDEX.md` 的 `Updated:` 继续脏，因为 `.omo/tasks/**`
+    是任务真源、INDEX 是按设计跟踪的派生缓存。
+  - '不删 `bin/meta/compass_radar.py`、不改它的登记 `id`（D6 实测：改 id 使 `validate` 报 Missing registrations:
+    1）。删除要同时移文件与登记两面，另立。'
+  - 不引入 `OMO_ALLOW_GIT_WRITE=0`（决策 3，属 B4b 批次 2，需逐批授权）；不改 R-GOV-2 阈值与 WARN 分级；不动 `health_score`
+    的三写者结构；不合并 `projects/omo` 其余 `WORKSPACE_ROOT` 消费者（`omo_compass.py:104` / `omo_dashboard.py:31`
+    / `omo_doctor.py:20`，B1 既有 deferred debt）。
+  - 不动 `.gitignore`、`projects/runtime/**`、`.github/workflows/**`、crontab.new、launchd
+    plist；不剪任何并发会话的锁。
+  circuit_breaker: 'Stop on any change outside the eighteen write_surfaces above, on
+    untracking `.omo/state/system.yaml` or declaring a key absent from HEAD''s 23 keys
+    (that is a ghost-declaration and turns T10-219 red), on touching `projects/runtime/**`
+    (D7), on repointing the `compass_radar.yaml` id (D6 — measured: `validate` then
+    reports Missing registrations: 1), on moving a reader without its writer or vice
+    versa, on editing `.gitignore` / `.github/**` / crontab.new / plists, and on pruning
+    another session''s locks. 判据文本在落台账前逐条实跑过：C1 的初稿是裸 `git grep` 单形态（漏两处写法）、D6 的初稿是「改指活副本」（会让
+    `script-registry validate` 变红）、`bin/gac/state-freshness-check.py` 曾被误列进读者名单（它 `:52-53`
+    明写 system.yaml 不在检查范围）—— 三处都是跑一遍才发现的，不是推出来的。'
+  done_when:
+  - 声明 profile 的检出里跑真实 `state sync-tasks` 后 `git status --short .omo/state` 为空，**且**
+    `<state>/.omo/state/system.yaml` 的 `updated_at` 是本次新时刻（plan B5 判据 + 正向落点）。
+  - 四个检出根写点（`compass_radar.py:1400`、`harness-omo-bridge.py:30`、`self-evolution-loop.py:230`、`omo_state.py:320`/`:474`）一律经
+    state 根解析；八个检出根读者（含 2 个未接线的）一律经 `repo_root.state_file_read()`，未声明 profile 时与历史布局逐字节一致。
+  - '`health_score_evidence` / `_source` 单写者（evidence-smoke），`compass_radar.py` 的跨键复制消失；守卫三类计数
+    0、`present == declared == 23`；R-GOV-2 阈值与分级未动。'
+  - '`bin/` 里「检出根拼 system.yaml」形态清零（除 D6 死副本与 `_archive`），`script-registry validate`
+    仍 PASSED，`make gac-local-gate` 无新增 hard fail。'
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -39151,7 +39295,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 514
+  total_bets: 515
   windows:
   - Y1Q1
   - Y1Q2

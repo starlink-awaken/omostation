@@ -25,20 +25,25 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_file_read, state_root as runtime_state_root  # noqa: E402
+
 WORKSPACE = Path(__file__).resolve().parents[2]
 
-OMO_STATE = WORKSPACE / ".omo" / "state" / "system.yaml"
 OMO_GOVERNANCE_DATA = WORKSPACE / ".omo" / "_control" / "governance-data.json"
 OMO_DRIFT_LOG = WORKSPACE / ".omo" / "_truth" / "registry" / "drift-log.yaml"
 HARNESS_POLICY = WORKSPACE / ".omo" / "_truth" / "registry" / "harness-policy.yaml"
 GOVERNANCE_CHECKS = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
 
-# ── OMO 同步目标 ──
-OMO_TARGETS = {
-    "system_state": OMO_STATE,
-    "governance_data": OMO_GOVERNANCE_DATA,
-    "drift_log": OMO_DRIFT_LOG,
-}
+
+def _system_yaml() -> Path:
+    """system.yaml 的读写目标 (ADR-0456 D1 / BET-Y2Q4-T10-220)。
+
+    解析放在调用时：模块常量会在 import 后冻住 env，声明 profile 的运行就会改写
+    检出里那份跟踪快照。未声明 profile 时 state_root() == code_root()，
+    路径与历史常量的检出根拼法逐字节相同。
+    """
+    return runtime_state_root() / ".omo" / "state" / "system.yaml"
 
 
 def _load_yaml(path: Path) -> dict | list | None:
@@ -85,9 +90,10 @@ def sync_harness_state() -> tuple[list[str], list[str]]:
     if not data:
         return ["harness-policy.yaml 无法解析"], []
 
-    # 检查 OMO 状态文件
-    if not OMO_STATE.exists():
-        warnings.append("OMO state/system.yaml 不存在，跳过状态同步")
+    # 检查 OMO 状态文件 (state 根优先、检出兜底 —— 这是一次读判定，不是写点)
+    state_yaml = state_file_read(".omo/state/system.yaml", root=WORKSPACE)
+    if not state_yaml.exists():
+        warnings.append(f"OMO state/system.yaml 不存在，跳过状态同步: {state_yaml}")
         return errors, warnings
 
     # 检查 Harness 状态同步字段
@@ -181,17 +187,26 @@ def sync_harness_closeout(run_id: str = "") -> tuple[list[str], list[str]]:
     # 更新 system.yaml 中的 harness 状态
     try:
         import yaml
-        state_data = _load_yaml(OMO_STATE) or {}
-        harness_state = state_data.get("harness", {})
+        system_yaml = _system_yaml()
+        # state 根那份不存在时跳过, 与 evidence-smoke / compass_radar 同口径:
+        # 凭空写一份只有 harness 键的镜像, 会让 state_file_read 的读者读到一份缺字段的"新"状态。
+        if not system_yaml.is_file():
+            warnings.append(f"system.yaml 不存在，跳过 harness 同步: {system_yaml}")
+        else:
+            state_data = _load_yaml(system_yaml) or {}
+            harness_state = state_data.get("harness", {})
 
-        # 更新运行统计
-        harness_state["last_run"] = run_id or "unknown"
-        harness_state["last_status"] = "completed"
-        harness_state["total_runs"] = harness_state.get("total_runs", 0) + 1
-        harness_state["compliance_passed"] = harness_state.get("compliance_passed", 0) + 1
+            # 更新运行统计
+            harness_state["last_run"] = run_id or "unknown"
+            harness_state["last_status"] = "completed"
+            harness_state["total_runs"] = harness_state.get("total_runs", 0) + 1
+            harness_state["compliance_passed"] = harness_state.get("compliance_passed", 0) + 1
 
-        state_data["harness"] = harness_state
-        OMO_STATE.write_text(yaml.dump(state_data, default_flow_style=False, allow_unicode=True), encoding="utf-8")
+            state_data["harness"] = harness_state
+            system_yaml.write_text(
+                yaml.dump(state_data, default_flow_style=False, allow_unicode=True),
+                encoding="utf-8",
+            )
     except Exception as e:
         warnings.append(f"同步 system.yaml 失败: {e}")
 

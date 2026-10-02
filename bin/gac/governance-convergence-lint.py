@@ -27,9 +27,11 @@ from datetime import UTC
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_file_read  # noqa: E402
+
 DECISIONS_DIR = WORKSPACE / ".omo/_knowledge/decisions"
 GOV_CHECKS_YAML = WORKSPACE / ".omo/_truth/registry/governance-checks.yaml"
-SYSTEM_YAML = WORKSPACE / ".omo/state/system.yaml"
 AGENTS_MD = WORKSPACE / "AGENTS.md"
 
 
@@ -126,7 +128,10 @@ def _read_system_yaml() -> dict:
     try:
         import yaml
 
-        return yaml.safe_load(SYSTEM_YAML.read_text(encoding="utf-8")) or {}
+        # state 根那份优先、检出快照兜底 —— 写者已经翻到 state 根，读者留在检出会
+        # 让门禁量到上次提交的快照（越跑越 stale）。解析放在调用时，不在 import 冻住 env。
+        path = state_file_read(".omo/state/system.yaml", root=WORKSPACE)
+        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     except Exception:
         return {}
 

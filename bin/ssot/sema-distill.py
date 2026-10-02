@@ -23,13 +23,14 @@ import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_file_read  # noqa: E402
 SKILLS_DIR = WORKSPACE / ".agents" / "skills"
 AUTO_SKILLS_DIR = SKILLS_DIR / "auto-crystallized"
 GOV_HISTORY = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
-ERR_LOGS = [
-    WORKSPACE / "runtime" / "agora-daemon.err",
-    WORKSPACE / ".omo" / "state" / "system.yaml",
-]
+# 扫描源的**相对**路径：绝对路径会在 import 后冻住 profile env（ADR-0456 D4），
+# 而 system.yaml 的运行态那份可能在 state 根 —— 解析推迟到扫描时。
+SCAN_REL_LOGS = ["runtime/agora-daemon.err", ".omo/state/system.yaml"]
 
 
 # 内置已知的核心反模式与自愈 SOP 模板库
@@ -81,7 +82,8 @@ def scan_traces() -> list[dict]:
     if GOV_HISTORY.is_file():
         collected_text += GOV_HISTORY.read_text(encoding="utf-8", errors="replace") + "\n"
 
-    for log_path in ERR_LOGS:
+    for rel in SCAN_REL_LOGS:
+        log_path = state_file_read(rel, root=WORKSPACE)
         if log_path.is_file():
             collected_text += log_path.read_text(encoding="utf-8", errors="replace") + "\n"
 
@@ -160,7 +162,7 @@ def main() -> int:
 
     report = {
         "status": "PASS",
-        "scanned_sources": len(ERR_LOGS) + 1,
+        "scanned_sources": len(SCAN_REL_LOGS) + 1,
         "patterns_found": len(matches),
         "skills_crystallized": crystallized,
         "dry_run": args.dry_run,

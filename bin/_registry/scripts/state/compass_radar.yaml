@@ -3,7 +3,7 @@ id: bin/meta/compass_radar.py
 name: Compass Radar
 category: state
 owner: governance-team
-description: ""
+description: "死副本（无调用者）：services.yaml 的 compass_radar entrypoint 是 bin/compass_radar.py，活副本登记在 bin/_registry/scripts/state/compass_radar-bin.yaml。两份已分叉，登记本条只为让 id 与实际文件逐一对应；删除文件是另一个动作（BET-Y2Q4-T10-220 D6）。"
 inputs: []
 outputs:
   - type: exit_code
@@ -11,5 +11,5 @@ outputs:
 dependencies: []
 triggers: []
 related: []
-maturity: draft
-last_reviewed: "2026-08-24"
+maturity: deprecated
+last_reviewed: "2026-10-02"
