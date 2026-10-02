@@ -90,9 +90,10 @@ fence 在签发时**已经做现场新鲜双读**：`build_remote_observation_pa
 **结论**：fence context **不带** `expected_remote_oid`；抗漂移完全交给现场双读。
 若保留该字段，等于把一个必然陈旧的量钉进凭证，重新引入双读本要消除的失效模式。
 
-> 顺带：这不是我第一次遇到"契约已定义并强制、但生产侧无生产者"的形状 ——
-> `gh_json`（`#4596` 修）、`claims_authority_fence_context`（本 ADR 的起因）同构。
-> 建议在实现时以 lint 形式确认每个 authority 必填字段都有生产侧生产者。
+> 顺带：`gh_json`（`#4596` 修）与本 ADR 的起因 `claims_authority_fence_context`
+> 确属"契约已定义并强制、但生产侧无生产者"的形状，值得在实现时以 lint 形式确认
+> authority 必填字段都有生产者。**但不要把这条推论套到 `requested_paths_digest`
+> 上——它是有生产者的**，见下节更正。
 
 ### 设计点 2：`path_digest` 的算子 —— **复用 ADR-0455 已强制的公式**
 
@@ -107,18 +108,36 @@ if scope.get("paths_digest") != request.get("requested_paths_digest"):
 配套约束同样已强制：`changed_paths` 非空、元素为非绝对路径字符串、无重复；
 `canonical_digest(v) = "sha256:" + sha256(canonical_json(v))`。
 
-**数据源已在手**：claim 记录本身就存 `paths` 与 `surfaces`，changeset 在做
-`claim_verification` 时已经读它们。因此
+**数据源与算子都已在生产中就位**（2026-10-02 更正）。claim 记录本身存 `paths` 与
+`surfaces`，而 `projects/omo/src/omo/workflow/lifecycle.py:480` 在构造
+`observe-claim` envelope 时**已经计算**了它：
+
+```python
+"requested_paths_digest": _authority_digest(
+    {
+        "paths": sorted(str(item) for item in claim.get("paths", [])),
+        "surfaces": sorted(str(item) for item in claim.get("surfaces", [])),
+    }
+)
+```
+
+这正是 ADR-0455 注释所述的公式。且两个 digest 函数对该载荷产出**同一个值**（实测）：
 
 ```
-path_digest = canonical_digest({"paths": sorted(claim["paths"]),
-                                 "surfaces": sorted(claim["surfaces"])})
+lifecycle._authority_digest : sha256:afa31c8ee794a0cd4c91cea7a9e3a2368f413607ea924364ab9e109aded6a58f
+claims.canonical_digest    : sha256:afa31c8ee794a0cd4c91cea7a9e3a2368f413607ea924364ab9e109aded6a58f
+同值: True
 ```
 
-不需要新规范、不需要新数据源、也不需要新的规范化规则 —— `sorted()` 与 `surfaces`
-集合就是既有规格。实现时只需保证 changeset 的 `path_digest` 与
-observe-claim 请求的 `requested_paths_digest` 是**同一个值**（authority 侧会校验相等，
-不一致即 `CLAIM_SCOPE_VIOLATION`）。
+因此 fence context 的 `path_digest` **不需要新算、不需要新规范化规则**：直接沿用
+observe-claim 请求里已算好的 `requested_paths_digest`。实现时保证两者是**同一个值**
+——authority 侧 `_validate_publication_scoped_allow` 会校验
+`paths_digest == requested_paths_digest`，不一致即 `CLAIM_SCOPE_VIOLATION`。
+
+> **更正**：本 ADR 早前版本称「`requested_paths_digest` 只出现在校验器、桥测试，
+> 以及没有任何生产代码计算它」。**该判断有误** —— 是 grep 输出被 `head` 截断所致。
+> 生产者一直存在于 `lifecycle.py:480`。此更正同时把设计点 2 从「需定算子」收窄为
+> 「沿用既有值」。
 
 ### 仍未决
 
@@ -169,6 +188,8 @@ observe-claim 请求的 `requested_paths_digest` 是**同一个值**（authority
   context 是绑定引用而非授权，故 projection 契约无需改动。
 - **2026-10-02（第二次）**: 对两个设计点做溯源，结论均复用既有契约 ——
   `expected_remote_oid` 不由 changeset 携带（fence 已有现场双读抗漂移），
-  `path_digest` 复用 ADR-0455 已强制的
-  `canonical_digest({"paths": sorted, "surfaces": sorted})`。未决项收窄为「绑定由
-  changeset 计算还是由 fence 反查」。
+  `path_digest` 沿用 `lifecycle.py:480` 已算好的 `requested_paths_digest`。
+  未决项收窄为「绑定由 changeset 计算还是由 fence 反查」。
+- **2026-10-02（第三次, 更正）**: 撤回「`requested_paths_digest` 无生产者」的错误
+  判断(grep 被 `head` 截断所致), 并补实测: `lifecycle._authority_digest` 与
+  `canonical_digest` 对该载荷同值, 故 fence 可直接沿用。
