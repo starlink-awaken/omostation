@@ -38988,8 +38988,10 @@ bets:
     ⇒ 一行修复，另立。
   - 不统一 health_score_evidence 的双口径：bin/compass_radar.py:1420 把 health_score 的原值同步进去（source="compass_radar
     (synced)"、不写 _generated_at），bin/gac/evidence-smoke.py:242 写 round(score,2) 并写时间戳，同键覆写、后写者赢。实测
-    origin/main@a0cbf446e 的 system.yaml：health_score=73 而 health_score_evidence=100.0（source=evidence-smoke），governance-convergence-lint
-    R-GOV-2 的阈值是 5。这是 T10-220 抽取之前必须先定的判定。
+    origin/main@a0cbf446e 的 system.yaml（用 git show 取，不是工作副本）：health_score=46 而 health_score_evidence=100.0（source=evidence-smoke），
+    R-GOV-2 阈值 5 ⇒ 跟踪态就已越界 54。同一条目在本仓刚跑完门禁的工作副本里 health_score=71、R-GOV-2
+    报 divergence 29.0，说明 health_score 是运行态浮值，只有按 ref 取才可比 —— 初稿写的 73 就是把工作副本当成了
+    ref（与判据 5 用 git show 而非读文件是同一条纪律，只不过这次漏在非目标措辞里）。这是 T10-220 抽取之前必须先定的判定。
   - 不移 3 个仍钉在检出根上的写者（bin/gac/harness-omo-bridge.py:28/181、bin/gac/self-evolution-loop.py:28、bin/compass_radar.py
     的 ws_root，另含 bin/meta/compass_radar.py 那份副本）—— 它们的根改道与读者同移属 T10-220。
   - 不删任何并发会话的锁，不动 projects/**、.gitignore、.github/workflows/**、crontab.new。
