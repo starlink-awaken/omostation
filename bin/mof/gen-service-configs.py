@@ -485,6 +485,41 @@ def reality_check(
     dangling_exempt = sorted({i for i in exempt_items} - installed)
     if dangling_exempt:
         findings.append(f"E4 exempt 项已不在本机 (登记陈旧, 需删): {dangling_exempt}")
+    # E5 = E2 的反方向。E2 只查「装了但没声明」(孤儿); 若不同时查「声明了但没装」,
+    # 则一次批量误删可以完全静默 —— 2026-09-30 曾按 `generate: false` 误删 27 个
+    # enabled 服务, E2 一声未响(它只看多出来的, 不看少掉的)。
+    # 判据: `enabled` 决定「该不该在跑」, `generate` 只决定「谁写这个 plist」。
+    #   enabled=true   -> 必须已装(无论 generate true/false: 后者是 observe-only,
+    #                      ADR-0456 B3 登记它们正是为了「已装 label == 注册表」可证)
+    #   enabled=false  -> 不得已装(保留条目是历史归档, 见 disabled_reason)
+    enabled_labels = {
+        str(svc.get("label"))
+        for svc in services
+        if isinstance(svc, dict)
+        and svc.get("scheduler") == "launchd"
+        and svc.get("label")
+        and svc.get("enabled", True)
+    }
+    disabled_labels = {
+        str(svc.get("label"))
+        for svc in services
+        if isinstance(svc, dict)
+        and svc.get("scheduler") == "launchd"
+        and svc.get("label")
+        and not svc.get("enabled", True)
+    }
+    e5_missing = sorted(enabled_labels - installed)
+    e5_residual = sorted(disabled_labels & installed)
+    if e5_missing:
+        findings.append(
+            f"E5 注册表声明 enabled=true 但本机未安装 {len(e5_missing)} 条 "
+            f"(服务在声明在跑却没装): {e5_missing}"
+        )
+    if e5_residual:
+        findings.append(
+            f"E5 注册表声明 enabled=false 但本机仍装着 {len(e5_residual)} 条 "
+            f"(已禁用服务残留, 应移入 archived/ 或删除): {e5_residual}"
+        )
     if e2_gap:
         findings.append(f"E2 本机已装但注册表未声明 {len(e2_gap)} 条: {e2_gap}")
     if e1["status"] == "drift":
@@ -502,6 +537,10 @@ def reality_check(
         "e3_lint_debt": len(e3_debt),
         "e3_malformed_labels": e3_debt,
         "e4_prefix_ok": not any(f.startswith("E4") for f in findings),
+        "e5_enabled_missing": len(e5_missing),
+        "e5_enabled_missing_labels": e5_missing,
+        "e5_disabled_residual": len(e5_residual),
+        "e5_disabled_residual_labels": e5_residual,
         "installed_total": len(rows),
         "workspace_scoped": len(scoped),
         "workspace_scoped_labels": sorted(row["label"] for row in scoped),
