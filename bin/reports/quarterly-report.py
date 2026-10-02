@@ -36,7 +36,8 @@ except ImportError:
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
 BET_LEDGER = WORKSPACE / "docs" / "plans" / "3y-bet-ledger.yaml"
 HEALTH_YAML = WORKSPACE / ".omo" / "state" / "health.yaml"
-SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_file_read  # noqa: E402
 WEEKLY_SNAPSHOTS = WORKSPACE / "docs" / "reports" / "weekly-value-snapshots.jsonl"
 RETROS_DIR = WORKSPACE / ".omo" / "_knowledge" / "retros"
 REPORTS_DIR = WORKSPACE / "docs" / "reports"
@@ -358,7 +359,7 @@ def main():
     # 加载数据
     bet_data = load_yaml(BET_LEDGER)
     health_data = load_yaml(HEALTH_YAML)
-    system_data = load_yaml(SYSTEM_YAML)
+    system_data = load_yaml(state_file_read(".omo/state/system.yaml", root=WORKSPACE))
     snapshots = load_jsonl(WEEKLY_SNAPSHOTS)
 
     if args.list_quarters:

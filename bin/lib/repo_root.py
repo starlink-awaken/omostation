@@ -201,6 +201,25 @@ def projection_read(
     return base / legacy_rel, "legacy"
 
 
+def state_file_read(relative: str | Path, *, root: Path | str | None = None) -> Path:
+    """同一个相对路径在两根都有份时的读取侧解析: state 根优先, 检出兜底。
+
+    与 projection_read() 的区别是这里没有 canonical/legacy 两个名字 —— 它是同一个文件的
+    "最后提交快照 + 运行态镜像" (.omo/state/system.yaml 这一类)。
+
+    **只有 profile 显式声明了 `OMOSTATION_STATE_ROOT` 才去探 state 根**：未声明时
+    state_root() == code_root()，历史行为就是 `root / relative`，直接返回它才与历史
+    布局逐字节相同。这一条不是简化，是隔离测试的前提 —— 传给 `root=` 的 tmp 检出跟
+    state_root()（真实检出）是两个不同目录，无条件优先 state 根会把 fixture 的读取
+    劫持到宿主仓库那份文件上。
+    """
+    base = Path(root) if root is not None else code_root()
+    if not os.environ.get(STATE_ROOT_ENV):
+        return base / relative
+    candidate = state_root() / relative
+    return candidate if candidate.is_file() else base / relative
+
+
 def roots_report() -> dict[str, object]:
     """回答"我现在在哪个根" —— CLI 与测试共用这一份, 不在两处各算各的。"""
     cwd = Path.cwd()
@@ -254,6 +273,7 @@ __all__ = (
     "projection_read",
     "projection_rels",
     "roots_report",
+    "state_file_read",
     "state_root",
 )
 

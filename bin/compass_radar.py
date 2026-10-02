@@ -1135,6 +1135,16 @@ def build_health_projection(omo_dir: Path, output: Path) -> tuple[dict[str, Any]
     return report, runtime_summary, age_desc
 
 
+def _system_yaml() -> Path:
+    """system.yaml 的写目标 (ADR-0456 D1 / BET-Y2Q4-T10-220)。
+
+    解析放在调用时：模块常量会在 import 后冻住 env，声明 profile 的运行就会改写
+    检出里那份跟踪快照。未声明 profile 时 state_root() == code_root()，
+    路径与 `--omo-dir` 推出来的读根历史拼法逐字节相同。
+    """
+    return runtime_state_root() / ".omo" / "state" / "system.yaml"
+
+
 def build_system_projection_updates(workspace_root: Path, report: dict[str, Any]) -> dict[str, Any]:
     """Build the whitelisted system.yaml projection fields for health sync.
 
@@ -1391,13 +1401,17 @@ def sync_system_yaml(
     generated_at: str,
     runtime_summary: dict | None = None,
 ) -> None:
-    """把复合 health_score + governance_anomaly_score + service_online_ratio 写回 .omo/state/system.yaml.
+    """把复合 health_score + governance_anomaly_score + service_online_ratio 写回 system.yaml.
 
     ISC-3: top-level ratio 与 runtime_health_summary.ratio 同口径 (daemon 去假阳性).
+    写目标是 state 根那份 (ADR-0456 D1 / BET-Y2Q4-T10-220): `ws_root` 是从 `--omo-dir`
+    推出来的**读**根, 拿它拼写路径会让声明 profile 后的运行改写检出的跟踪快照。
+    state 根那份不存在时跳过, 与 evidence-smoke `_write_health_score_evidence` 同口径 ——
+    不在这里凭空造一份镜像。
     """
     import yaml
 
-    system_yaml = ws_root / ".omo" / "state" / "system.yaml"
+    system_yaml = _system_yaml()
     if not system_yaml.is_file():
         print(f"⚠️  system.yaml 不存在: {system_yaml}, 跳过同步")
         return
@@ -1415,10 +1429,6 @@ def sync_system_yaml(
             },
         )
         data.update(updates)
-        # Sync health_score_evidence to match health_score (R-GOV-2 convergence)
-        if "health_score" in updates:
-            data["health_score_evidence"] = updates["health_score"]
-            data["health_score_evidence_source"] = "compass_radar (synced)"
         payload = yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False)
         changed = _write_text_if_changed(
             system_yaml,

@@ -39,9 +39,19 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_file_read  # noqa: E402
+
 ALERTS_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-alerts.yaml"
-SYSTEM_YAML = WORKSPACE / ".omo" / "state" / "system.yaml"
 DEBT_REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "debt.yaml"
+
+
+def _system_yaml() -> Path:
+    """system.yaml 的读目标: state 根那份优先、检出快照兜底 (ADR-0456 D3/D4)。
+
+    解析放在调用时 —— 模块常量会在 import 后冻住 profile env。
+    """
+    return state_file_read(".omo/state/system.yaml", root=WORKSPACE)
 
 
 def _utc_now() -> str:
@@ -106,7 +116,7 @@ def _load_alert_rules(path: Path) -> list[dict]:
 
 def _eval_debt_weight(op: str, rhs: float, _ws: Path) -> tuple[object, str]:
     """debt_weight < X → system.yaml::debt_weight (顶层)."""
-    data = _load_yaml(SYSTEM_YAML) or {}
+    data = _load_yaml(_system_yaml()) or {}
     val = data.get("debt_weight")
     if not isinstance(val, (int, float)):
         return (None, "unsupported: debt_weight missing in system.yaml")
@@ -115,7 +125,7 @@ def _eval_debt_weight(op: str, rhs: float, _ws: Path) -> tuple[object, str]:
 
 def _eval_debt_health(op: str, rhs: float, _ws: Path) -> tuple[object, str]:
     """debt_health < X → system.yaml::debt_metrics.debt_health."""
-    data = _load_yaml(SYSTEM_YAML) or {}
+    data = _load_yaml(_system_yaml()) or {}
     val = (data.get("debt_metrics") or {}).get("debt_health")
     if not isinstance(val, (int, float)):
         return (None, "unsupported: debt_metrics.debt_health missing")

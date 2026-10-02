@@ -9,21 +9,24 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SYSTEM_YAML = REPO_ROOT / ".omo/state/system.yaml"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_file_read  # noqa: E402
 
 # 健康分新鲜度阈值 (小时)
 FRESHNESS_THRESHOLD_HOURS = 48
 
 
 def main() -> int:
-    if not SYSTEM_YAML.exists():
+    # 读 state 根那份（写者已翻过去），检出快照兜底 —— 解析放在调用时，不冻在 import。
+    system_yaml = state_file_read(".omo/state/system.yaml", root=REPO_ROOT)
+    if not system_yaml.exists():
         print("OK 未发现 system.yaml")
         return 0
 
     try:
         import yaml
 
-        data = yaml.safe_load(SYSTEM_YAML.read_text(encoding="utf-8"))
+        data = yaml.safe_load(system_yaml.read_text(encoding="utf-8"))
     except Exception as e:
         print(f"WARN 无法读取 system.yaml: {e}")
         return 0

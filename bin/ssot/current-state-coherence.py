@@ -15,6 +15,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_file_read  # noqa: E402
+
 SCHEMA = "current-state-coherence/v1"
 ACTIVE_GOAL_STATUSES = frozenset({"active", "in_progress"})
 _SCENE_CANDIDATES_PATH = Path(__file__).with_name("scene-card-candidates.py")
@@ -166,7 +169,8 @@ def _stored_count_mismatches(state: dict[str, Any], counts: dict[str, int]) -> l
 def build_report(root: Path) -> dict[str, Any]:
     root = root.resolve()
     omo_dir = root / ".omo"
-    state_path = omo_dir / "state" / "system.yaml"
+    # system.yaml 读 state 根那份、检出兜底 (ADR-0456 D3/D4)；goals/tasks 仍是检出真源。
+    state_path = state_file_read(".omo/state/system.yaml", root=root)
     goals_path = omo_dir / "goals" / "current.yaml"
     state = _merged_yaml(state_path)
     goals = _merged_yaml(goals_path)

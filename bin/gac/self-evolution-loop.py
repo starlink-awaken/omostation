@@ -25,8 +25,21 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_root as runtime_state_root  # noqa: E402
+
 REPO = Path(__file__).resolve().parents[2]
 STATE_FILE = REPO / ".omo" / "state" / "self-evolution-loop.json"
+
+
+def _system_yaml() -> Path:
+    """system.yaml 的写目标 (ADR-0456 D1 / BET-Y2Q4-T10-220)。
+
+    解析放在调用时：模块常量会在 import 后冻住 env，声明 profile 的运行就会改写
+    检出里那份跟踪快照。未声明 profile 时 state_root() == code_root()，
+    路径与检出根的历史拼法逐字节相同。
+    """
+    return runtime_state_root() / ".omo" / "state" / "system.yaml"
 
 
 def _load_state() -> dict:
@@ -227,7 +240,9 @@ def sync_evolution_state() -> dict:
     # 更新 OMO state
     try:
         import yaml
-        state_file = REPO / ".omo" / "state" / "system.yaml"
+        # 写目标是 state 根那份 (ADR-0456 D1)；REPO 是读根，用它拼写路径会让声明
+        # profile 的运行改写检出的跟踪快照。
+        state_file = _system_yaml()
         if state_file.exists():
             data = yaml.safe_load(state_file.read_text(encoding="utf-8")) or {}
             data["self_evolution"] = {
