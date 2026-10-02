@@ -110,7 +110,9 @@ def _count_adoption_signals(since: dt.datetime) -> dict[str, int]:
     out = {"proposal": 0, "adopted_draft": 0, "adopted_task": 0}
     try:
         for e in _read_jsonl_events(WORKFLOW_MESH_EVENTS, since):
-            if str(e.get("event_type", "")) == "SignalIngressed" and e.get("category") == "任务":  # 字段是顶层平铺
+            # 排除 E2E 测试事件(全链路场景产生, 不是真实建议产出 —— 排除 self-data 原则)
+            if str(e.get("event_type", "")) == "SignalIngressed" and e.get("category") == "任务" \
+                    and "【E2E】" not in str(e.get("subject", "")):
                 out["proposal"] += 1
     except Exception:
         pass
