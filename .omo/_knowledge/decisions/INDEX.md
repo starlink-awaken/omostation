@@ -469,6 +469,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0458: 日志面分类 SSOT — 轮转资格登记驱动，不由文件名与人工名单决定 — **ACCEPTED** | 2026-09-28 | Log surface classification SSOT: registry-driven rotation eligibility | 0458-log-surface-classification-ssot.md
 - ADR-0459: clone-lifecycle 交付管道的两处阻塞 — wrapper 丢 actor + 与多 agent 并发不兼容 — **PROPOSED** | 2026-09-28 | clone-lifecycle pipeline blockers: wrapper drops actor, concurrency incompatibility | 0459-clone-lifecycle-pipeline-blockers.md
 - ADR-0460: provenance 身份校验应只覆盖 clone 自身提交，而非 frozen_root..HEAD 全区间 — **ACCEPTED** | 2026-09-29 | Provenance identity check: narrow to clone-owned commits | 0460-provenance-own-commits-only.md
+- ADR-0461: changeset 侧携带 claim 绑定，使 legacy publish fence 可被满足 — **PROPOSED** | 2026-10-02 | changeset carries claim binding so the legacy publish fence becomes satisfiable (context is a binding reference, not a grant) | 0461-changeset-claim-binding-for-legacy-fence.md
 
 - ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
 - ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成) — **ACCEPTED** | 2026-08-08 | DoD gate | 0400-definition-of-done-task-verify.md
