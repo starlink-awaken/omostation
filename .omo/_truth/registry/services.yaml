@@ -6104,3 +6104,10 @@ launchd_namespace:
     - label: com.opencode.quota-monitor
       classification: unclassified
       reason: 本仓作者写的脚本, 但装在 ~/.config/opencode 下, 归属未裁定
+
+    - label: com.amazon.codewhisperer.launcher
+      classification: external
+      reason: 'Kiro CLI / Amazon Q 桌面端自注册的启动项(第三方应用自有生命周期), 本仓不生成也不接管; 2026-09-30 launchd plist 批量覆写事故后按其残留 ProgramArguments 重建为合法 XML, 未 load'
+    - label: com.macpaw.CleanMyMac5.Updater
+      classification: external
+      reason: 'CleanMyMac 5 自有更新器(第三方商业应用自行注册), 本仓不生成也不接管; 2026-09-30 同上按残留 ProgramArguments 重建, 未 load'

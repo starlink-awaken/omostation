@@ -39,6 +39,24 @@ def _module():
     return module
 
 
+def _mark_disabled(registry: Path, label: str) -> None:
+    """在该 label 的 service 条目里补 `enabled: false`。
+
+    `_write_registry` 用 yaml.safe_dump 展开成多行, 所以只能在 label 行之后
+    定位其 `generate:` 行并续写 —— 不能靠单行字符串替换。
+    """
+    lines = registry.read_text(encoding="utf-8").split("\n")
+    start = next(i for i, l in enumerate(lines) if l.strip() == f"label: {label}")
+    for i in range(start, min(start + 6, len(lines))):
+        if lines[i].strip() == "generate: false":
+            indent = " " * (len(lines[i]) - len(lines[i].lstrip()))
+            lines.insert(i + 1, f"{indent}enabled: false")
+            break
+    else:
+        raise AssertionError(f"未在 {label} 条目里找到 generate: false 行")
+    registry.write_text("\n".join(lines), encoding="utf-8")
+
+
 def _write_registry(tmp_path: Path, labels: list[str], policy: dict, *, split_docs: bool = False) -> Path:
     """services 与 launchd_namespace 同文档 —— load_services() 取 docs[-1] 的硬约束。
 
@@ -331,3 +349,64 @@ def test_workspace_scoped_is_report_only(tmp_path, run) -> None:
     assert report["ok"], report["findings"]
     assert report["installed_total"] == report["owned_installed"] == 2
     assert report["workspace_scoped"] == 1
+
+
+# ---------------------------------------------------------------------------
+# E5: E2 的反方向 —— 「声明了但没装」
+# ---------------------------------------------------------------------------
+
+
+def test_e5_red_when_enabled_service_is_not_installed(tmp_path, run) -> None:
+    """注册表声明 enabled=true(在跑)而本机没装 ⇒ 必须红。
+
+    这是 E2 的反方向。E2 只查「装了但没声明」(孤儿); 没有 E5 时, 一次批量误删
+    可以完全静默 —— 2026-09-30 按 `generate: false` 误删 27 个 enabled 服务时,
+    E2 一声未响, 因为它只看多出来的, 不看少掉的。
+    """
+    declared = ["com.omostation.autopilot", "com.omostation.sig-poller"]
+    registry = _write_registry(
+        tmp_path, declared, {"workspace_prefixes": PREFIXES, "exempt_labels": []}
+    )
+
+    # 只装其中一个 —— 另一个「声明在跑却没装」
+    report = run(_install(tmp_path / "launchd", declared[:1]), registry)
+
+    assert report["ok"] is False, report["findings"]
+    assert report["e5_enabled_missing"] == 1
+    assert report["e5_enabled_missing_labels"] == ["com.omostation.sig-poller"]
+    assert any("E5" in f and "sig-poller" in f for f in report["findings"])
+
+
+def test_e5_red_when_disabled_service_is_still_installed(tmp_path, run) -> None:
+    """注册表声明 enabled=false(已退役)而本机仍装着 ⇒ 必须红(应移入 archived/)。
+
+    2026-10-02: E5 首次运行即抓到本会话自己留下的一处残留
+    (com.omo.model-scheduler 声明 disabled 却仍装着)。
+    """
+    label = "com.omostation.autopilot"
+    registry = _write_registry(
+        tmp_path, [label], {"workspace_prefixes": PREFIXES, "exempt_labels": []}
+    )
+    _mark_disabled(registry, label)
+
+    report = run(_install(tmp_path / "launchd", [label]), registry)
+
+    assert report["ok"] is False, report["findings"]
+    assert report["e5_disabled_residual"] == 1
+    assert report["e5_disabled_residual_labels"] == [label]
+
+
+def test_e5_zero_when_registry_and_host_agree(tmp_path, run) -> None:
+    """enabled=true 全装、enabled=false 全不装 ⇒ E5 必须静默, 不得制造假阳性。"""
+    live = ["com.omostation.autopilot"]
+    dead = "com.omostation.retired"
+    registry = _write_registry(
+        tmp_path, live + [dead], {"workspace_prefixes": PREFIXES, "exempt_labels": []}
+    )
+    _mark_disabled(registry, dead)
+
+    report = run(_install(tmp_path / "launchd", live), registry)
+
+    assert report["e5_enabled_missing"] == 0
+    assert report["e5_disabled_residual"] == 0
+    assert not any(f.startswith("E5") for f in report["findings"]), report["findings"]
