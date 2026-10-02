@@ -39248,9 +39248,9 @@ bets:
   - cmd: ADR=.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md && uv run --with
       pyyaml python3 -c "import re,subprocess,pathlib; d=subprocess.run(['git','diff','origin/main...HEAD','--','AGENTS.md','$ADR'],capture_output=True,text=True).stdout;
       add=[l[1:] for l in d.splitlines() if l.startswith('+') and not l.startswith('+++')];
-      pts=sorted(set(re.findall(r'([A-Za-z0-9_./-]*\.(?:py|md|yaml|json|sh|asset|gitignore)):[0-9]+','
-      '.join(add)))); bad=[p for p in pts if not pathlib.Path(p.split(':')[0]).exists()
-      or int(p.split(':')[1])>sum(1 for _ in open(p.split(':')[0],encoding='utf-8',errors='replace'))];
+      pts=sorted(set(re.findall(r'([A-Za-z0-9_./-]*\.(?:py|md|yaml|yml|json|sh|asset|gitignore)):([0-9]+)',
+      ' '.join(add)))); bad=[f'{p}:{l}' for p,l in pts if not pathlib.Path(p).exists()
+      or int(l)>sum(1 for _ in open(p,encoding='utf-8',errors='replace'))];
       print(f'{len(pts)} pointers, bad={bad}'); raise SystemExit(1 if bad else 0)"
     expect: bad=[] and exit 0 — 本轮新写进 AGENTS.md §7 与 ADR-0456 附录的每个 file:line 指针都在本检出解析得到。非空
       bad 意味着契约引了一个不存在的行，正是 B5 期文字漂移的形状。
