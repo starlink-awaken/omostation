@@ -250,6 +250,7 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 
 ## 7. Common Pitfalls（2026-09-12 实证）
 
+- **Bash 工具跑的是 zsh：多值列表禁止 `VAR="a b c"; for x in $VAR`（2026-10-02 固化，同日复发两次）**：zsh 对**参数展开不做 word splitting**（只有**命令替换**会）⇒ 该循环**只迭代 1 次**、`$x` 是**整串**。危险形态是「静默少迭代 + 输出看着正常」（`basename "$x"` 恰好返回整串的**最后一段**，于是单条输出看着像一条正常记录 —— 曾据此误判「worktree 被删」）；**在「批量删除前的逐项安全检查」里最致命** —— 四列全有值、格式完全正常，却在描述一个**不存在的路径** ⇒ 会得出「都干净、可删」并真去删（**安全检查的塌缩 = 安全网本身失效**，不是少查一项）。**三种正确写法**：① 字面量列表 `for d in a b c; do …; done`（首选，零心智负担）② 命令替换 `for d in $(printf '%s\n' a b c); do …; done` ③ 数组 `arr=(a b c); for d in $arr; do …; done`。**并且**：任何「批量操作前逐项校验」的脚本，收尾**必打 `echo "expect=$N got=$n"`** —— 这是当下唯一能发现塌缩的手段。⚠️ 该条只发生在 Agent 临时写的一次性 Bash 命令里（不进仓、不过 hook）⇒ **无法 harness 化**，只能靠本条协议。同源变体（同一 zsh 根因）：`${PIPESTATUS[0]}` 在 zsh **恒为空串**（zsh 用 `$pipestatus`，小写、1-based）⇒ **取退出码不要经过管道**；`date +%s%3N` 在 macOS/BSD date 无 `%N` ⇒ 毫秒计时改用 Python。
 - **frontmatter UTC 时区**：`last-reviewed` 必须用 UTC 当天或更早，否则 gac-gate FAIL（PITFALL-004）
 - **根目录是参数，不是事实**（2026-09-26, ADR-0456 / BET-Y2Q4-T10-203）：写机器级配置、launchd plist、
   cron 或任何指向仓内路径的工具，一律经 `bin/lib/repo_root.py`（`code_root()` / `state_root()` /
