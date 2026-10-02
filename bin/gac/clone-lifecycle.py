@@ -33,6 +33,14 @@ import tempfile
 import time
 from pathlib import Path
 
+# 2026-10-02: `gh_json` 在本文件被调用(集成后的 PR 查询段)却从未 import, 而它定义在
+# bin/lib/gh_query.py。后果是 integrate 一旦越过 legacy fence, 到 PR 查询阶段即
+# NameError 崩溃 —— 长期不可见, 因为 fence 先拦住了。因 fence 不可满足(见
+# docs/architecture/clone-lifecycle-pipeline-gates.md 第 4 节), 这条崩溃路径从未被走通。
+# 导入方式与同目录其余 5 个脚本一致。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from gh_query import gh_json  # noqa: E402  (需先补 sys.path)
+
 ROOT = Path(__file__).resolve().parents[2]  # workspace root
 AGENT_CLONE = ROOT / "bin" / "gac" / "agent-clone.py"
 AGENT_WORKFLOW = ROOT / "bin" / "agent-workflow.py"
@@ -1295,7 +1303,23 @@ def _legacy_fence_context(verification: dict) -> dict:
     """Broker observation receipt bindings required to mint a legacy publish fence."""
     context = verification.get("claims_authority_fence_context")
     if not isinstance(context, dict):
-        raise RuntimeError("LEGACY_FENCE_CONTEXT_UNAVAILABLE")
+        # 2026-10-02 (ADR-0459 问题三④ 验收 5): 原实现只抛一个标识符, 是名副其实的
+        # 「无法诊断的墙」—— 现场只看到 LEGACY_FENCE_CONTEXT_UNAVAILABLE, 无从知道
+        # 触发条件、上下文来源、恢复路径。改为在错误里直接答完这三问。
+        # **只改错误文本, 不改 fail-closed 语义**: 仍然拒绝, 只是让拒绝可诊断。
+        raise RuntimeError(
+            "LEGACY_FENCE_CONTEXT_UNAVAILABLE: "
+            "触发: claims authority 处于 shadow-active 时 integrate 强制进入 legacy publish "
+            "fence, 而 changeset 的 verification 不含 claims_authority_fence_context。 "
+            "成因: 该键全仓只有读取方没有写入方 —— changeset 侧 "
+            "build_claims_authority_shadow_projection() 的契约是 'never authority and never "
+            "publication grant', 即管道只有观测投影、没有发布授权通道。 "
+            "恢复: (1) 本状态下走常规 PR 流程(ADR-0459 结论); "
+            "(2) 要恢复管道能力需先补观测→授权的桥并评审其契约; "
+            "(3) 不要修改 authority 的 activation 表或删除 store —— ADR-0455 forbidden "
+            "列表含 no historical receipt mutation。 "
+            "详见 docs/architecture/clone-lifecycle-pipeline-gates.md 第 4 节"
+        )
     claim_id = context.get("claim_id")
     if not isinstance(claim_id, str) or not claim_id:
         raise RuntimeError("LEGACY_FENCE_CONTEXT_INVALID:claim_id")
