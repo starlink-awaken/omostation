@@ -12,7 +12,7 @@ tags: [claims-authority, legacy-publish-fence, changeset, bind, plumbing]
 
 # ADR-0461 — changeset 侧携带 claim 绑定, 使 legacy publish fence 可被满足
 
-- **Status**: PROPOSED（2026-10-02 提案；未实施）
+- **Status**: PROPOSED（2026-10-02 提案；两个设计点已由溯源结论收窄，未实施）
 - **Date**: 2026-10-02
 - **Owner**: architecture-governance
 - **Related**: ADR-0455（allow receipt 的可满足性，方案 A 已 ACCEPTED 且已实现）、
@@ -72,15 +72,65 @@ context = _legacy_fence_context(verification)   # 读 verification["claims_autho
 - authority 仍是唯一授权点，方案 B 把查询权下放给 integrate，与 ADR-0455
   "authority 独占判定" 的方向相反。
 
-## 待定的两个设计点（评审必须先答）
+## 2026-10-02 溯源结论：两个设计点均已有答案，无需新发明
 
-1. **`expected_remote_oid` 的新鲜度**。fence 签发时会做双读并要求
-   `observed_remote_oid == expected_remote_oid`，否则 `REMOTE_OID_DRIFT`。
-   changeset 生成时读到的 OID 到 integrate 时可能已变。三个候选：
-   (a) changeset 不带 OID，fence 现场读；(b) 带 OID 并接受"过期即要求重生成 changeset"；
-   (c) 带 OID 但允许在 drift 时以新 OID 重新签发一次（**需明确防重放**）。
-2. **绑定摘要的算子**。`path_digest` 必须覆盖 `changed_paths` 全集且有序规范化，
-   否则同一 claim 可被复用于扩大后的变更集。需规定序列化形式与排序规则。
+实施前对两个设计点各做一轮溯源（查 ADR / pitfalls / 已合并代码），结论是
+**两者都已有既定契约，本 ADR 只需复用，不需新设计**。
+
+### 设计点 1：`expected_remote_oid` —— **不由 changeset 携带**
+
+fence 在签发时**已经做现场新鲜双读**：`build_remote_observation_pair()` 取两次独立观测，
+任一字段不一致即 `REMOTE_OID_DRIFT`（`clone-lifecycle.py:1278-1290`），并校验
+`second.monotonic_ns >= first.monotonic_ns`。这已经是该机制自己的抗漂移手段。
+
+`expected_remote_oid` 是第三道**跨检**，而它来自调用方（若由 changeset 携带则必然
+可能陈旧）。换言之，`_legacy_fence_context` 要求调用方提供 callee 随后自己重算的量 ——
+**这本身就是契约设计问题，而非缺失能力**。
+
+**结论**：fence context **不带** `expected_remote_oid`；抗漂移完全交给现场双读。
+若保留该字段，等于把一个必然陈旧的量钉进凭证，重新引入双读本要消除的失效模式。
+
+> 顺带：这不是我第一次遇到"契约已定义并强制、但生产侧无生产者"的形状 ——
+> `gh_json`（`#4596` 修）、`claims_authority_fence_context`（本 ADR 的起因）同构。
+> 建议在实现时以 lint 形式确认每个 authority 必填字段都有生产侧生产者。
+
+### 设计点 2：`path_digest` 的算子 —— **复用 ADR-0455 已强制的公式**
+
+`_validate_publication_scoped_allow()`（ADR-0455 方案 A，已在生产并被测试覆盖）已写死：
+
+```python
+# production uses canonical_digest({"paths": sorted, "surfaces": sorted})
+if scope.get("paths_digest") != request.get("requested_paths_digest"):
+    raise AuthorityError("CLAIM_SCOPE_VIOLATION", "publication_scope_bound")
+```
+
+配套约束同样已强制：`changed_paths` 非空、元素为非绝对路径字符串、无重复；
+`canonical_digest(v) = "sha256:" + sha256(canonical_json(v))`。
+
+**数据源已在手**：claim 记录本身就存 `paths` 与 `surfaces`，changeset 在做
+`claim_verification` 时已经读它们。因此
+
+```
+path_digest = canonical_digest({"paths": sorted(claim["paths"]),
+                                 "surfaces": sorted(claim["surfaces"])})
+```
+
+不需要新规范、不需要新数据源、也不需要新的规范化规则 —— `sorted()` 与 `surfaces`
+集合就是既有规格。实现时只需保证 changeset 的 `path_digest` 与
+observe-claim 请求的 `requested_paths_digest` 是**同一个值**（authority 侧会校验相等，
+不一致即 `CLAIM_SCOPE_VIOLATION`）。
+
+### 仍未决
+
+两点的**实现归属**待定：由 `verify-changeset` 计算并写入绑定，还是由
+`enter_legacy_publish_fence` 在调用 authority 前按 claim 反查。倾向前者
+（保持"先有可审计绑定、再动"的次序，与 ADR-0455 的方向一致），但这属实施细节，
+需在评审中一并确认。
+
+### 由此收窄的执行门
+
+原执行门第 1 条要求"上述两点有明确结论"——**该条件现已满足**，可进入第 2 条
+（实现 + focused tests）。
 
 ## 非目标
 
@@ -117,3 +167,8 @@ context = _legacy_fence_context(verification)   # 读 verification["claims_autho
 - **2026-10-02**: 提案。核实过程中修正了先前判断——原以为需推翻 observation 投影的
   "never publication grant" 契约，实测 `issue_req` 的 7 项绑定在 integrate 前全部已知，
   context 是绑定引用而非授权，故 projection 契约无需改动。
+- **2026-10-02（第二次）**: 对两个设计点做溯源，结论均复用既有契约 ——
+  `expected_remote_oid` 不由 changeset 携带（fence 已有现场双读抗漂移），
+  `path_digest` 复用 ADR-0455 已强制的
+  `canonical_digest({"paths": sorted, "surfaces": sorted})`。未决项收窄为「绑定由
+  changeset 计算还是由 fence 反查」。
