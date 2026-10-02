@@ -97,6 +97,53 @@ def _count_health_runs(since: dt.datetime) -> int:
                "drift_sweep" in str(e.get("event", "")))
 
 
+LORA_REPLAY = WS_ROOT / ".omo" / "state" / "lora-replay-buffer.jsonl"
+TRACKED_TASKS = WS_ROOT / ".omo" / "state" / "tracked-tasks.json"
+
+
+def _count_adoption_signals(since: dt.datetime) -> dict[str, int]:
+    """真实采纳信号(2026-10-02 复盘: 手动 decisions.md 30 天 0 条, 真信号散在三处):
+    - proposal: mesh SignalIngressed(category=任务) —— 系统产出的可采纳建议
+    - adopted_draft: lora-replay-buffer 窗口内新样本 —— 用户署名修订(=采纳+改造)
+    - adopted_task: tracked-tasks status=compiled —— 督办走完闭环
+    """
+    out = {"proposal": 0, "adopted_draft": 0, "adopted_task": 0}
+    try:
+        for e in _read_jsonl_events(WORKFLOW_MESH_EVENTS, since):
+            if str(e.get("event_type", "")) == "SignalIngressed" and e.get("category") == "任务":  # 字段是顶层平铺
+                out["proposal"] += 1
+    except Exception:
+        pass
+    try:
+        if LORA_REPLAY.is_file():
+            for line in LORA_REPLAY.read_text(encoding="utf-8").splitlines():
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                ts = r.get("captured_at") or r.get("ts")
+                if isinstance(ts, (int, float)):
+                    t = dt.datetime.fromtimestamp(ts, dt.timezone.utc)
+                    if t >= since:
+                        out["adopted_draft"] += 1
+    except OSError:
+        pass
+    try:
+        if TRACKED_TASKS.is_file():
+            for t in json.loads(TRACKED_TASKS.read_text(encoding="utf-8")):
+                if t.get("status") == "compiled":
+                    ra = t.get("registered_at", "")
+                    try:
+                        t0 = dt.datetime.fromisoformat(ra.replace("Z", "+00:00"))
+                    except ValueError:
+                        continue
+                    if t0 >= since:
+                        out["adopted_task"] += 1
+    except (OSError, ValueError):
+        pass
+    return out
+
+
 def _count_decision_inbox(since: dt.datetime) -> int:
     """Count decision entries in delegation-guardrails/decisions.md since <since>."""
     if not DECISIONS_LOG.is_file():
@@ -190,8 +237,10 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
     total_minutes = sum(TIME_PER_EVENT_MIN[k] * v for k, v in counts.items())
     a_score = min(100, round(100 * total_minutes / 1800))
 
-    # B-axis: decision throughput
-    decision_count = _count_decision_inbox(since)
+    adoption = _count_adoption_signals(since)
+    # B-axis: decision throughput = 手动决策日志 + 真实采纳信号(署名修订/督办闭环)
+    # —— 手动日志 30 天 0 条不等于系统没产出采纳(2026-10-02 复盘行动#1)
+    decision_count = _count_decision_inbox(since) + adoption["adopted_draft"] + adoption["adopted_task"]
     days = max(since_days, 1)
     decisions_per_month = decision_count * (30 / days)
     b_score = min(100, round(10 * decisions_per_month))
@@ -268,6 +317,7 @@ def compute_axes(since_days: int = 30) -> dict[str, Any]:
                 "decisions_in_window": decision_count,
                 "decisions_per_month": round(decisions_per_month, 2),
                 "cadence": b_cadence,
+                "adoption": adoption,
             },
             "C": {
                 "name": "BET done rate (advisory, 0.00)",
