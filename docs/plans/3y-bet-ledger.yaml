@@ -38872,6 +38872,147 @@ bets:
     三 file pytest 全绿（实跑输出在 receipt 里）。
   - make gac-local-gate 绿，且 git diff --name-only origin/main...HEAD 不含 .omo/state/**
     与 BRIEF.md。
+- id: BET-Y2Q4-T10-219
+  title: ADR-0456 B5 前置 — system.yaml 字段写者归属从叙述改为可校验（fields 段零消费者 → 接进门禁）
+  goal: '.omo/_truth/registry/write-owners.yaml 有两段独立声明：write_owners:（路径级，消费者 bin/ssot/write-owner-audit.py:54
+    → pre-commit G-CONV.5）与 fields:（字段级）。实测 fields 段**零消费者** —— 全仓没有任何脚本读它，于是声明可以与事实任意偏离而不报错：.omo/state/system.yaml
+    的 fields 只覆盖 23 个实际顶层键中的 6 个，另有 8 条声明的键在文件里根本不存在（幽灵）。bin/mof/generate-brief.py 的注释因此长期写着「三个写者」，而实测是
+    8 个写者模块、34 条键-写者边。本 BET 把校验器建在**已经接进门禁的那支脚本**里（gac-local-gate.py:218-223 已调 omo-state-write-guard.py，不新增门禁步、不占
+    bin/ 净新增脚本配额），定义三类违规（undeclared-key / ghost-declaration / unresolvable-owner）与 owner
+    词典（script: | daemon: | human: | broker: | anyone，script: 目标须实测存在），再把 fields 段追平到
+    23 个真键。这一步是 B5（决策 4 生成态摘库）的前置：摘库之前必须先知道每个键谁在写，否则抽取会静默改掉一个正在被覆写的键。'
+  status: done
+  done_at: 2026-10-02
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  value_indicator_policy: false
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python3 -m pytest tests/unit/gac/test_omo_state_write_guard.py
+      -q
+    expect: '11 passed。负例覆盖未声明键、幽灵声明、script: 目标不存在、owner 无前缀、绝对路径与 .. 段、缺 system.yaml
+      时 fail-open、--json 出口形状；全部用 tmp 目录跑，不读宿主状态。'
+  - cmd: python3 bin/gac/omo-state-write-guard.py --json | python3 -c "import json,sys;d=json.load(sys.stdin);o=d['ownership'];assert
+      d['findings']==[] and d['declared']==d['present'] and all(v==0 for v in o.values()),d;print('CLEAN',d['declared'],d['present'],o)"
+    expect: exit 0，CLEAN 23 23，三类计数全 0，findings=[]。这三个 0 就是交付物本身 —— 不是「门禁没响」，而是「响过且现在没有可响的」。这条对运行态敏感：将来任何写者新写一个未登记键，它会当场变红。
+  - cmd: 'D=$(mktemp -d) && mkdir -p "$D/.omo/state" && cp .omo/state/system.yaml
+      "$D/.omo/state/system.yaml" && printf ''probe_undeclared_key: 1\n'' >> "$D/.omo/state/system.yaml"
+      && export OMOSTATION_STATE_ROOT="$D" && python3 bin/gac/omo-state-write-guard.py
+      --json | python3 -c "import json,os,sys;d=json.load(sys.stdin);st=os.environ[''OMOSTATION_STATE_ROOT''];assert
+      d[''present'']==d[''declared'']+1,d;assert d[''ownership''][''undeclared-key'']==1
+      and [f[''key''] for f in d[''findings'']]==[''probe_undeclared_key''],d;assert
+      d[''targets''][''system_yaml''].startswith(st+os.sep);print(''PROBE-OK'',d[''present''],d[''declared''])"'
+    expect: PROBE-OK 24 23。探针把 probe_undeclared_key 注进 state root 副本的**守卫解析位** `<state>/.omo/state/system.yaml`，只断言 present-declared==1、违规类别与键名，不依赖守卫的打印措辞。两处自缺陷实测踩满才落地：① env 必须 `export` —— 初稿写 `OMOSTATION_STATE_ROOT="$D" … --json | python3 -c "os.environ[…]"`，命令前缀赋值只作用于管道左端进程，右端读不到 ⇒ KeyError（第 4 次同类自缺陷）；② 副本必须放在 `<state>/.omo/state/` 下 —— 初稿 cp 到 `<state>/system.yaml`，守卫按 fail-open 返回 present=0 而不是报错，只有 `present==declared+1` 这条断言把它钉住。
+  - cmd: export OMOSTATION_STATE_ROOT=$(mktemp -d) && python3 bin/gac/omo-state-write-guard.py
+      --json | python3 -c "import json,os,sys;d=json.load(sys.stdin)['targets'];st=os.environ['OMOSTATION_STATE_ROOT'];assert
+      d['system_yaml'].startswith(st+os.sep) and not d['write_owners_yaml'].startswith(st+os.sep),d;print('SPLIT-OK',d['system_yaml'].replace(st,'<state>'))"
+    expect: SPLIT-OK，且 system_yaml 在 <state> 下而 write_owners_yaml 不在 —— 守卫自己符合 ADR-0456
+      双根（读 registry 跟检出、写校验目标跟 profile）。JSON 把它放在 targets 下，不在顶层：初稿写 json['system_yaml']
+      直接 KeyError，判据自身跑不通（见 receipt §6）。
+  - cmd: python3 -c "import subprocess,yaml;t=subprocess.run(['git','show','HEAD:.omo/state/system.yaml'],capture_output=True,text=True).stdout;present=set(yaml.safe_load(t));declared=set(((yaml.safe_load(open('.omo/_truth/registry/write-owners.yaml'))['fields']
+      or {}).get('.omo/state/system.yaml') or {}));assert present==declared,(sorted(present-declared),sorted(declared-present));print('KEYSET-EQUAL',len(present))"
+    expect: KEYSET-EQUAL 23。键集比对读 HEAD 的工作副本以外来源（git show），因为门禁与 cron 会重写.omo/state/system.yaml
+      的时间戳；比对 working copy 会让这条判据随交付动作漂移。
+  - cmd: test -z "$(git diff --name-only origin/main...HEAD | /usr/bin/grep -E '^\.omo/state/|^BRIEF\.md$')"
+      && echo GENERATED-STATE-CLEAN
+    expect: GENERATED-STATE-CLEAN。不断言文件条目数：本 BET 的 8 个 write_surfaces 跨两个 PR 落（PR-1
+      = 7 项已合并为 a0cbf446e，台账本身是第 8 项、走 PR-2），条目数随 PR 拆分漂移，写死会造成假红。
+  - cmd: make gac-local-gate
+    expect: 'GaC local gate: PASS (68 checks executed, 1 SOFT WARN)，另 6 条 known-unavailable
+      跳过，无新增 hard fail。校验器是挂在既有门禁步里跑的，所以这条同时证明它真的接上了。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-01-bet-219-system-yaml-field-writer-ownership.md
+    spec_version: 1.0.0
+    content_digest: sha256:30c50e4c138dcd27f2a1175869c1b5f3ca6237c79a381a141a27e8682d5c2cfb
+    decision_ref: decision://accepted/BET-Y2Q4-T10-219
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a0cbf446ebffe41e97eb917edb760a222202de9f
+          tests:
+            ref: receipt://docs/reports/2026-10-01-bet-219-system-yaml-field-writer-ownership-closeout.md
+            sha256: sha256:64b03c948bb46420bb6390c59401853aec8f6402aa553ac8f017a110d76493bb
+          diff:
+            ref: receipt://docs/reports/2026-10-01-bet-219-system-yaml-field-writer-ownership-closeout.md
+            sha256: sha256:64b03c948bb46420bb6390c59401853aec8f6402aa553ac8f017a110d76493bb
+          rollback:
+            ref: receipt://docs/reports/2026-10-01-bet-219-system-yaml-field-writer-ownership-closeout.md
+            sha256: sha256:64b03c948bb46420bb6390c59401853aec8f6402aa553ac8f017a110d76493bb
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-01-bet-219-system-yaml-field-writer-ownership-closeout.md
+            sha256: sha256:64b03c948bb46420bb6390c59401853aec8f6402aa553ac8f017a110d76493bb
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-01-bet-219-system-yaml-field-writer-ownership-closeout.md
+            sha256: sha256:64b03c948bb46420bb6390c59401853aec8f6402aa553ac8f017a110d76493bb
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-219.md
+            sha256: sha256:eed7bb11e5ae948a32272fd80c5847fa04a5ebd98b6a5f84444ca888e4346c14
+          cleanup:
+            ref: receipt://docs/reports/2026-10-01-bet-219-system-yaml-field-writer-ownership-closeout.md
+            sha256: sha256:64b03c948bb46420bb6390c59401853aec8f6402aa553ac8f017a110d76493bb
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  write_surfaces:
+  - bin/gac/omo-state-write-guard.py
+  - .omo/_truth/registry/write-owners.yaml
+  - bin/mof/generate-brief.py
+  - tests/unit/gac/test_omo_state_write_guard.py
+  - docs/superpowers/specs/2026-10-01-bet-219-system-yaml-field-writer-ownership.md
+  - docs/reports/2026-10-01-bet-219-system-yaml-field-writer-ownership-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-219.md
+  - docs/plans/3y-bet-ledger.yaml
+  non_goals:
+  - 不把 .omo/state/system.yaml 摘出库，也不抽任何波动键 —— 那是 B5 本体（T10-220：把 health_score_evidence_generated_at
+    这类只写时间戳的键抽进 ADR-0128 Phase 3 的投影面 .omo/state/runtime/*，该目录已在 .gitignore 内）。本轮只把「谁在写哪个键」变成可校验事实，作为抽取的前置。
+  - '不动 write_owners: 段（路径级，消费者 bin/ssot/write-owner-audit.py:54 → pre-commit G-CONV.5）。两段是两套约定，本轮只给
+    fields 段造消费者；把两者合并是另一件事。'
+  - 不修 G-CONV.5 的悬空引用：m1-closeout-report.py:218 仍指 bin/ssot/write-owner-repair-draft.py，而该脚本被
+    bca29b64e（#1839）归档到 bin/_archive/ 时留下了死路径。实测 m1-closeout-report 该条 detail = {write_owners:true,
+    repair_draft:false, pre_commit_wired:true}，且 phase-gate-enforce.yml:3 使它不在 CI 可达面上
+    ⇒ 一行修复，另立。
+  - 不统一 health_score_evidence 的双口径：bin/compass_radar.py:1420 把 health_score 的原值同步进去（source="compass_radar
+    (synced)"、不写 _generated_at），bin/gac/evidence-smoke.py:242 写 round(score,2) 并写时间戳，同键覆写、后写者赢。实测
+    origin/main@a0cbf446e 的 system.yaml（用 git show 取，不是工作副本）：health_score=46 而 health_score_evidence=100.0（source=evidence-smoke），
+    R-GOV-2 阈值 5 ⇒ 跟踪态就已越界 54。同一条目在本仓刚跑完门禁的工作副本里 health_score=71、R-GOV-2
+    报 divergence 29.0，说明 health_score 是运行态浮值，只有按 ref 取才可比 —— 初稿写的 73 就是把工作副本当成了
+    ref（与判据 5 用 git show 而非读文件是同一条纪律，只不过这次漏在非目标措辞里）。这是 T10-220 抽取之前必须先定的判定。
+  - 不移 3 个仍钉在检出根上的写者（bin/gac/harness-omo-bridge.py:28/181、bin/gac/self-evolution-loop.py:28、bin/compass_radar.py
+    的 ws_root，另含 bin/meta/compass_radar.py 那份副本）—— 它们的根改道与读者同移属 T10-220。
+  - 不删任何并发会话的锁，不动 projects/**、.gitignore、.github/workflows/**、crontab.new。
+  circuit_breaker: 'Stop on any change outside the eight write_surfaces above, on untracking
+    .omo/state/system.yaml (that is T10-220), on any edit to the write_owners: path-level
+    section, on moving a writer whose reader is still checkout-rooted, on editing .gitignore
+    / projects/** / .github/** / crontab.new, and on pruning another session''s locks.
+    判据文本本身在落台账前必须逐条 --execute 跑一遍：本轮初稿有两条（verify 4 的 JSON 嵌套、verify 6 的文件计数）是我自己的错，跑一遍才发现
+    —— 未跑过的判据是一条永远不会绿的条文，下一个人会把它读成「交付有问题」。'
+  done_when:
+  - fields 段有真实消费者：bin/gac/omo-state-write-guard.py --json 输出 declared/present/ownership/findings
+    四元组，且该脚本已在 gac-local-gate.py:218-223 的门禁步里（不新增步、不新增脚本）。
+  - 声明与事实追平：HEAD 的 system.yaml 顶层键集与 registry fields 段双向相等 —— missing=[] ghost=[]，present=declared=23（8
+    条幽灵声明按实测理由删除，读数在 receipt §1/§3）。
+  - 三类违规各有一个 tmp 注入负例并在 11 条测试里钉住；缺 system.yaml 时三条检查一律无发现（fresh dev state root 的诚实
+    fail-open），因此键集比对读 HEAD 而非工作副本。
+  - 守卫自己符合 ADR-0456：声明 OMOSTATION_STATE_ROOT 后 SYSTEM_YAML 跟 profile、WRITE_OWNERS_YAML
+    跟检出（SPLIT-OK）；未声明时与 origin/main 逐字节同值。
+  - 写者清单不再靠注释：bin/mof/generate-brief.py 的枚举换成指向真源 + 复算命令，因为「三个写者」这句叙述与实测（8 模块 / 34 边）背离了整整一轮。
+  - 七条 verify 全部逐条实跑 exit 0（读数表在 receipt §7），make gac-local-gate PASS 且无新增 hard fail，doc-governance-check
+    --no-new-warnings --scope tracked = PASS (4533 files, 145 warnings)。
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -39010,7 +39151,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 513
+  total_bets: 514
   windows:
   - Y1Q1
   - Y1Q2
