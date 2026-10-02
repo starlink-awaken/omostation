@@ -39181,6 +39181,128 @@ bets:
     0、`present == declared == 23`；R-GOV-2 阈值与分级未动。'
   - '`bin/` 里「检出根拼 system.yaml」形态清零（除 D6 死副本与 `_archive`），`script-registry validate`
     仍 PASSED，`make gac-local-gate` 无新增 hard fail。'
+- id: BET-Y2Q4-T10-221
+  title: ADR-0456 F3 — 写面收敛轮的仓库事实与判定装置性质固化进 agent 感知面
+  goal: T10-220 把 system.yaml 的写者与读者收敛到 state_root（#4606）、T10-219 把字段归属变成门禁（#4571），两轮的代码后果已进台账；但只有做的时候才知道的仓库事实与判定装置性质一条都不在感知面。本基线
+    978aadf02 重跑实测给出五类。一、runtime-projections.yaml 声明的 17 条投影路径里只有 1 条在 origin/main 上被跟踪，且那条是
+    .omo/_truth/registry/memory-os.yaml（权限面，不是生成态）；其余 8 canonical + 8 legacy 生成态全部既未跟踪又被
+    gitignore，包括 tests/unit/test_repo_root_profile.py:146 断言要兜回去的 .omo/state/health.yaml（.gitignore:411）。于是「已提交的
+    legacy 兜底」不是这份仓库的性质 —— 干净检出两面皆无，兜底只在跑过写者的这个检出里存在；该用例本基线实测 FAILED，而对面的 tests/unit/test_projection_reader_resolution.py:42
+    PASS 是因为 fixture 自己造出 legacy 文件（测兜底必须先物化）。同族事实是 .gitignore:294 那条 !.omo/state/system.yaml
+    反选：检出里那份从 T10-220 起是设计上的陈旧快照，读者不得当现值。二、四个写者改成调用时刻解析缝（bin/compass_radar.py:1138、bin/gac/harness-omo-bridge.py:39、bin/gac/self-evolution-loop.py:35、bin/gac/evidence-smoke.py:212）的根因是模块常量在
+    import 时冻结 env，profile 晚声明就被冻在旧根上且没有测试会红；缝的另一半是 bin/gac/harness-omo-bridge.py:193
+    的 skip-if-absent（不许写半份镜像），它才是 state_file_read 能整文件偏向 state 根的前提。三、扫源码的判定装置要按源码顺序展平（tests/unit/test_system_yaml_write_plane.py:254）并拿合成违规自证（projects/omo/tests/test_omo_system_yaml_state_root.py:99），空绿的代价是一条判据在写者没改完时就变绿；允许清单由
+    tests/unit/test_system_yaml_write_plane.py:240/:293/:296 三处钉成集合相等才不会被稀释。四、三个门禁的真实语义：bin/ssot/script-registry.py
+    validate() 用 id 的 set（:119/:124）⇒ 重复 id 静默折叠，missing = git ls-tree HEAD − registered（:133/:147）⇒
+    把一个 id 改指活副本会当场报 Missing registrations，判据自否证；bin/gac/omo-state-write-guard.py 的归属检查是
+    present == declared 双向（:156/:181/:189/:256）⇒ 只声明已存在的键；bin/gac/governance-convergence-lint.py
+    的 check_score_convergence（:159）在 :161 初始化 errors、:176 原样返回 ⇒ R-GOV-2 结构上只能 WARN，拆同义反复不需要先立
+    known-debt；而 .github/workflows/governance-check.yml:118-127 是显式文件白名单、不含 tests/unit/**
+    ⇒ 第一类那个红用例 CI 永远看不见。五、交付机制四条：bet-ledger complete 要求 merged_reachable_commit 本地可达（bin/plan/bet-ledger.py:1682）⇒
+    squash-merge 后先 fetch，否则连带报 OVERALL_STATE_MISMATCH；WORK_PACKET_SOURCE_DRIFT（bin/plan/bet-ledger.py:2336）只
+    gate claim，retro/receipt 实测可未 claim 提交，而 refresh-packet（bin/agent-workflow.py:1031
+    → :814 → :738/:772）要求检出字节 == origin/main，故新建 BET 首轮用不上；GitHub 对 squash-merge 自动删
+    head 分支，同名再 push 复活整条 stack，二次交付必须起新分支加 cherry-pick 并查 D 行。本 BET 把这些写成后续 agent 读得到、判据查得到的文字，不新增代码。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  value_indicator_policy: false
+  write_surfaces:
+  - AGENTS.md
+  - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-02-bet-221-two-root-write-plane-perception.md
+  - docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-221.md
+  non_goals:
+  - 不翻 ADR-0456 的 status（PROPOSED → ACCEPTED 属 principal 决定），也不处理两份文件同时声明 id 字段为 ADR-0456
+    的重号；本轮只在原文件末尾追加一节带日期的执行期实测（与 §7 及 Addendum 同体例）。
+  - '不修 tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path
+    的红，也不动 tests/**（另立 BET，task #105）；本轮只把它的前提为何不成立与判别方法写进感知面。'
+  - 不复制 env 优先级表：该表唯一表述在 bin/README.md 与 ARCHITECTURE.md，本轮两处一字不动。
+  - 不改 bin/**/*.py、.gitignore、.github/workflows/**、.omo/_truth/registry/**；本轮也不新写检测脚本（新脚本会进
+    script-registry 的 missing 面，属另一轮）。
+  circuit_breaker: Stop on any change to a .py file, to .gitignore, to .github/workflows/**,
+    to .omo/_truth/registry/**, to bin/README.md / ARCHITECTURE.md (the env-table owners),
+    on any AGENTS.md or ADR-0456 pointer that does not resolve in this checkout, and
+    on backfill of lifecycle evidence for any other bet.
+  done_when:
+  - AGENTS.md §7 与 ADR-0456 新增文字里每个 file:line 指针在本检出可解析（文件存在且行号在行数内），由判据 1 逐条测量钉住 ——
+    不是「写的时候看着对」。
+  - 五类断言各有本检出重跑的读数支撑（判据 2/3/4），不引用记忆也不引用上一轮 receipt 的转述：投影面跟踪/忽略矩阵、两个兜底用例的一 FAILED 一
+    PASSED、R-GOV-2 分支 errors 恒空。
+  - 纯文档交付：git diff --name-only origin/main...HEAD（三点式）不含 .py（判据 6；两点式在 base 漂移下会把主仓自己的前进读成本分支删除）。
+  - env 优先级表不出现第二份：git diff origin/main...HEAD 对 bin/README.md 与 ARCHITECTURE.md 为空（判据
+    5）。
+  - 新 spec 与新增文档面通过 doc-governance --no-new-warnings --scope tracked（frontmatter 含 owner/lifecycle/last-reviewed；accepted-specifications
+    桶未基线告警即 error）。
+  verify:
+  - cmd: ADR=.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md && uv run --with
+      pyyaml python3 -c "import re,subprocess,pathlib; d=subprocess.run(['git','diff','origin/main...HEAD','--','AGENTS.md','$ADR'],capture_output=True,text=True).stdout;
+      add=[l[1:] for l in d.splitlines() if l.startswith('+') and not l.startswith('+++')];
+      pts=sorted(set(re.findall(r'([A-Za-z0-9_./-]*\.(?:py|md|yaml|json|sh|asset|gitignore)):[0-9]+','
+      '.join(add)))); bad=[p for p in pts if not pathlib.Path(p.split(':')[0]).exists()
+      or int(p.split(':')[1])>sum(1 for _ in open(p.split(':')[0],encoding='utf-8',errors='replace'))];
+      print(f'{len(pts)} pointers, bad={bad}'); raise SystemExit(1 if bad else 0)"
+    expect: bad=[] and exit 0 — 本轮新写进 AGENTS.md §7 与 ADR-0456 附录的每个 file:line 指针都在本检出解析得到。非空
+      bad 意味着契约引了一个不存在的行，正是 B5 期文字漂移的形状。
+  - cmd: uv run --with pyyaml python3 -c "import re,pathlib,subprocess; t=pathlib.Path('.omo/_truth/registry/runtime-projections.yaml').read_text();
+      ps=set(re.findall(r'^\s*(?:canonical|legacy):\s*(\S+)$',t,re.M)); tr=set(subprocess.run(['git','ls-tree','-r','origin/main','--name-only'],capture_output=True,text=True).stdout.split());
+      ig=[p for p in ps if subprocess.run(['git','check-ignore','-q',p],capture_output=True).returncode==0];
+      hit=sorted(p for p in ps if p in tr); gen=[p for p in hit if not p.startswith('.omo/_truth/registry/')];
+      print('paths=%d tracked=%s ignored=%d generated_tracked=%s'%(len(ps),hit,len(ig),gen));
+      assert len(ps)>=16 and len(ig)>=16 and hit==['.omo/_truth/registry/memory-os.yaml']
+      and gen==[]"
+    expect: paths=17 tracked=['.omo/_truth/registry/memory-os.yaml'] generated_tracked=[]
+      — 声明的投影路径里唯一被跟踪的那条是权限面 registry，生成态两面（canonical 与 legacy）在 origin/main 上一条都没有
+      ⇒「已提交的 legacy 兜底」不是仓库性质。断言失败即说明有人开始把生成态提交回仓，那要同步改本轮文字。
+  - cmd: python3 -m pytest tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path
+      tests/unit/test_projection_reader_resolution.py::test_projection_read_prefers_canonical_then_legacy_and_reports_absent
+      -q 2>&1 | tail -4
+    expect: 1 failed, 1 passed — 两个方向都必须是这个读数：红的那个按构造不可满足（期望目标 .omo/state/health.yaml
+      在 .gitignore:411 被显式忽略、origin/main 未跟踪，且被测的 projection_path() 是写侧解析器、本就不做读兜底），绿的那个之所以绿是
+      fixture 自己写出了 legacy 文件。据此立纪律：测兜底先物化；别把 CI 绿当 tests/unit 的证据。本轮不修它。
+  - cmd: uv run --with pyyaml python3 -c "s=open('bin/gac/governance-convergence-lint.py').read().splitlines();
+      i=[n for n,l in enumerate(s) if l.startswith('def check_score_convergence')][0];
+      body=''.join(s[i:i+20]); assert body.count('errors.append')==0 and body.count('warnings.append')>=2;
+      assert 'return errors, warnings' in body; print('R-GOV2-WARN-ONLY',i+1)"
+    expect: R-GOV2-WARN-ONLY 159 — R-GOV-2 的处理函数结构上只 append warnings，所以拆掉跨键复制不会把门禁变红，不需要先登记
+      known-debt；而 --rule R-GOV-2 仍可单跑 ⇒ 规则没被拆没。这条读数把「诚实化有风险」的错觉关掉。
+  - cmd: git diff --stat origin/main...HEAD -- bin/README.md ARCHITECTURE.md
+    expect: empty — env 优先级表保持单一所有者，AGENTS.md 与 ADR-0456 只给指针不复述。
+  - cmd: git diff --name-only origin/main...HEAD | /usr/bin/grep -E '\.py$' || true
+    expect: empty output — 本 BET 纯文档，任何 .py 路径都出界并触发 circuit_breaker。三点式不是两点式：base 漂移下两点式会把主仓自己的前进报成本分支的删除。
+  - cmd: uv run --with pyyaml python3 bin/ssot/doc-governance-check.py --no-new-warnings
+      --scope tracked
+    expect: PASS — 新 spec 与 closeout report 带 owner=governance-team / lifecycle=contract
+      / status=accepted（spec）或 history（report）与 UTC 当天或更早的 last-reviewed；accepted-specifications
+      桶里的未基线告警等于 error。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-02-bet-221-two-root-write-plane-perception.md
+    spec_version: 1.0.0
+    content_digest: sha256:feae56363371fb7a07b2a662b575b5106823204b2da29cd38d49752497a00ccd
+    decision_ref: decision://accepted/BET-Y2Q4-T10-221
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -39319,7 +39441,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 515
+  total_bets: 516
   windows:
   - Y1Q1
   - Y1Q2
