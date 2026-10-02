@@ -3,7 +3,7 @@ schema: md/v1
 status: PROPOSED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-09-27
+last-reviewed: 2026-10-02
 type: ssot
 id: ADR-0456
 related:
@@ -298,3 +298,49 @@ events 一并归集，包含性检查是 resolve-both-sides）。同 scope 的�
 **禁止操作**：`rm -rf <link>/`（带尾斜杠）—— 尾斜杠使 rm 跟随 symlink 删除**目标目录的内容**
 （= canonical 侧交付运行态全灭）。删除桥本身用 `unlink <link>`；worktree remove 只 unlink、
 不跟随，这正是 symlink 桥在移除路径上安全的原因。
+
+## Addendum — 两根读面的命名不对称，与 `system.yaml` 那条反选（BET-Y2Q4-T10-221，2026-10-02）
+
+B1 立的两个读取缝**不是同一条契约**，后续判"读没读对根"不能拿一套的语义推另一套：
+
+- **`projection_read()`（`bin/lib/repo_root.py:180`）兜底 = 换文件名。** 它返回
+  `(路径, 标签)`，标签只有 `canonical`/`legacy` 两个值 —— 一个投影在两根上是 registry 里的
+  **两行不同路径**（`.omo/_truth/registry/runtime-projections.yaml:17-18` health 的
+  `canonical: .omo/state/runtime/health.yaml` 与 `legacy: .omo/state/health.yaml`）。canonical
+  存在就读 canonical，否则退回 legacy；docstring `:193` 明写"**文件不存在不是错误**"，调用方
+  自己判 absent，从而把"没生成"和"跑过但老化"分开计。
+- **`state_file_read()`（`:204`）兜底 = 换根不换名。** 它没有 canonical/legacy 两个名字，
+  而是同一个相对路径在两根各一份副本，state 根优先（`:219-220`）。它管的是 `.omo/state/system.yaml`
+  这一类"最后提交快照 + 运行态镜像"，实测 7 个读者：
+  `bin/gac/governance-convergence-lint.py:133`、`bin/gac/governance-alert-dispatch.py:54`、
+  `bin/gac/check-project-health-freshness.py:21`、`bin/gac/harness-omo-bridge.py:94`、
+  `bin/ssot/current-state-coherence.py:173`、`bin/reports/quarterly-report.py:362`、
+  `bin/ssot/sema-distill.py:86`。
+
+**`:217` 那条 env 闸门不是简化。** `state_file_read()` 只在 `OMOSTATION_STATE_ROOT` 显式声明时
+才去探 state 根，未声明时直接返回 `base / relative` —— 因为未声明时 `state_root() == code_root()`，
+历史行为就是那一个路径。docstring `:212` 给了真实理由：传给 `root=` 的 tmp 检出与 `state_root()`
+（真实检出）是两个不同目录，**无条件优先 state 根会把 fixture 的读取劫持到宿主仓库那份文件上**。
+§决策 4 里"dev 侧回退到最后一次提交的快照"就是这条兜底，不是另一套机制。
+
+**`.gitignore:294` 的 `!.omo/state/system.yaml` 决定了这块比投影面难做。** `:281` 已经把投影
+canonical 面 `.omo/state/runtime/*` 整目录忽略，`:294` 却把 system.yaml **反选回跟踪** ——
+于是"既是 git 跟踪文件、又被运行时改写"这个 §决策 4 要消灭的形状，在 system.yaml 上一直成立。
+D1（BET-Y2Q4-T10-220）把**写者的根**翻过去后，evidence 面三行不再改写检出副本
+（`bin/gac/evidence-smoke.py:212-219` 写 `state_root()/.omo/state/system.yaml`），仍在滚的只有
+tasks 面的 `updated_at`。**没有把这条反选摘掉** —— 摘它要连带 7 个读侧读者与 R-GOV-2 门禁，
+属独立一轮，不在 220/221 范围内。
+
+**缝的另一半是"不许凭空造镜像"，三个写者同口径。** state 根副本只在"某个写者带着已声明 profile
+跑过一次 `evidence-smoke` / `state sync`"之后才存在；否则**跳过**：`bin/gac/evidence-smoke.py:239`、
+`bin/compass_radar.py:1415`（措辞在 `:1409` "state 根那份不存在时跳过，与 evidence-smoke 同口径 ——
+不在这里凭空造一份镜像"）、`bin/gac/harness-omo-bridge.py:193`（注释 `:192` "凭空写一份只有 harness
+键的镜像，会让 `state_file_read` 的读者读到一份缺字段的新状态"）。正是这条兜底让"整份文件优先
+state 根"成立 —— 一旦有人把它改成 `mkdir + 写子集`，读侧会静默读到残缺状态而**没有任何测试会红**。
+
+**因此两根的判据都要写成正向落点断言，且先跑一次再进契约。** 否定式判据（"检出的
+`git status` 干净"）在本轮被自己的 receipt 否证过一次；能区分两根是否真收敛的读数是
+**同一字段的值只在 state 根滚动**。同理，新增读者一律在**调用时刻**经缝解析
+（`bin/compass_radar.py:1138`、`bin/gac/harness-omo-bridge.py:39`、
+`bin/gac/self-evolution-loop.py:35`、`bin/gac/evidence-smoke.py:212` 四处为此从模块常量改成函数），
+模块常量会在 import 后冻住 env，晚声明的 profile 被静默忽略。
