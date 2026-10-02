@@ -3291,7 +3291,22 @@ def test_b1_unactivated_adapter_preserves_v1_and_does_not_require_fence(tmp_path
             return subprocess.CompletedProcess(cmd, 0, "https://example.test/pr/b1\n", "")
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
+    def fake_gh_json(*args, **kwargs):
+        """PR 查询走的是 bin/lib/gh_query.gh_json, 不经过 lc.run。
+
+        原测试只 stub 了 lc.run, 而代码用的是 gh_json —— 该 stub 从未生效。
+        叠加 gh_json 未被 import(2026-10-02 修), 这条 unactivated 路径其实一直是
+        NameError 红的。两条都要补, 测试才真正覆盖它声称覆盖的语义。
+        """
+        calls.append(["gh", *args])
+        if args[:2] == ("pr", "list"):
+            return []
+        if args[:2] == ("pr", "create"):
+            return {"url": "https://example.test/pr/b1"}
+        raise AssertionError(f"未预期的 gh_json 调用: {args}")
+
     monkeypatch.setattr(lc, "run", fake_run)
+    monkeypatch.setattr(lc, "gh_json", fake_gh_json)
     monkeypatch.setattr(lc, "claims_authority_activation_mode", lambda: "unactivated")
 
     rc = lc.cmd_integrate(
@@ -3850,3 +3865,43 @@ if __name__ == "__main__":
     import pytest
 
     sys.exit(pytest.main([__file__, "-v"]))
+
+
+# ---------------------------------------------------------------------------
+# ADR-0459 问题三④ 验收 5: 发布栅栏必须可诊断
+# ---------------------------------------------------------------------------
+
+
+def test_legacy_fence_error_carries_trigger_and_recovery() -> None:
+    """`LEGACY_FENCE_CONTEXT_UNAVAILABLE` 必须在错误文本里自带触发条件与恢复路径。
+
+    原实现只抛一个标识符, 是 ADR-0459 点名的「无法诊断的墙」—— 现场无从知道
+    触发条件、上下文来源、恢复步骤。本测试锁住「可诊断」这个契约本身,
+    防止后续有人把说明挪走后又退化回裸标识符。
+    """
+    import pytest as _pytest
+
+    with _pytest.raises(RuntimeError) as excinfo:
+        lc._legacy_fence_context({})
+    message = str(excinfo.value)
+    assert "LEGACY_FENCE_CONTEXT_UNAVAILABLE" in message, "标识符本身不能丢"
+    for marker, why in (
+        ("触发", "触发条件"),
+        ("恢复", "恢复路径"),
+        ("shadow-active", "触发前提(authority 激活态)"),
+        ("PR 流程", "本状态下的可行动作"),
+        ("historical receipt mutation", "明确的禁止项"),
+        ("clone-lifecycle-pipeline-gates", "可跳转的详细文档"),
+    ):
+        assert marker in message, f"错误文本缺少{why}: 缺 {marker!r}"
+
+
+def test_gh_json_is_importable() -> None:
+    """`gh_json` 必须在本模块命名空间可解析。
+
+    2026-10-02: 它定义在 bin/lib/gh_query.py, 本文件却在集成后的 PR 查询段调用它
+    却从未 import —— 一旦越过 legacy fence 就会 `NameError: name 'gh_json' is not
+    defined` 崩溃。该路径长期不可见, 只因 fence 不可满足而从未被走通。
+    """
+    assert hasattr(lc, "gh_json"), "gh_json 未被导入 —— 越过 fence 后会在 PR 查询段崩溃"
+    assert callable(lc.gh_json)
