@@ -39025,7 +39025,8 @@ bets:
     把自己的 `health_score` 复制进 `health_score_evidence`（source "compass_radar (synced)"）使
     R-GOV-2 的交叉核对自我实现，`evidence-smoke.py:242` 才是独立测量的 evidence 分 —— 删前者，该三键归 evidence-smoke
     独占，R-GOV-2 阈值 5 与 WARN-only 分级不动（实测 `errors` 恒空，`:163` 只 append warning ⇒ 诚实化不会把门禁变红）。
-  status: in_progress
+  status: done
+  done_at: 2026-10-02
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -39095,15 +39096,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ece7a604897cfbd656fb9092c828e901ec5c1bff
+          tests:
+            ref: receipt://docs/reports/2026-10-02-bet-220-system-yaml-state-root-write-plane-closeout.md
+            sha256: sha256:c90b6cfc5a87d991f3a92e27c54ae6be9b550911932dbd9eb4819e046b0c39ee
+          diff:
+            ref: receipt://docs/reports/2026-10-02-bet-220-system-yaml-state-root-write-plane-closeout.md
+            sha256: sha256:c90b6cfc5a87d991f3a92e27c54ae6be9b550911932dbd9eb4819e046b0c39ee
+          rollback:
+            ref: receipt://docs/reports/2026-10-02-bet-220-system-yaml-state-root-write-plane-closeout.md
+            sha256: sha256:c90b6cfc5a87d991f3a92e27c54ae6be9b550911932dbd9eb4819e046b0c39ee
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-02-bet-220-system-yaml-state-root-write-plane-closeout.md
+            sha256: sha256:c90b6cfc5a87d991f3a92e27c54ae6be9b550911932dbd9eb4819e046b0c39ee
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-02-bet-220-system-yaml-state-root-write-plane-closeout.md
+            sha256: sha256:c90b6cfc5a87d991f3a92e27c54ae6be9b550911932dbd9eb4819e046b0c39ee
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-220.md
+            sha256: sha256:e4d73c865c451086974b5cb736d8880839864bf4db481cb8e39643aa2082795c
+          cleanup:
+            ref: receipt://docs/reports/2026-10-02-bet-220-system-yaml-state-root-write-plane-closeout.md
+            sha256: sha256:c90b6cfc5a87d991f3a92e27c54ae6be9b550911932dbd9eb4819e046b0c39ee
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   write_surfaces:
   - bin/lib/repo_root.py
   - bin/compass_radar.py
