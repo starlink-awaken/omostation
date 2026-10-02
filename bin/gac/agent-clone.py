@@ -1443,14 +1443,37 @@ def _mainline_refs(repo_root: str, identity: dict) -> list[str]:
     return refs
 
 
-def own_commit_shas(repo_root: str, head_sha: str, mainline_refs: list[str]) -> list[str]:
+def own_commit_shas(
+    repo_root: str,
+    head_sha: str,
+    mainline_refs: list[str],
+    *,
+    exclude_shas: list[str] | None = None,
+) -> list[str]:
     """Commits reachable from head but not from any mainline ref (ADR-0460).
 
     Replaces the former `<base>..<head>` window, which silently included every
     commit other agents merged into main after the clone was created — and thus
     made the identity check fail in any concurrently active repository.
+
+    ## 2026-10-02 修正: mainline 收窄丢了 `identity_base` 下界
+
+    收窄只按 mainline refs 划窗, 于是**平台在 agent 开工前自己推进 base 时产生的
+    提交会落进「自身提交」集合** —— 它们不是 clone 的提交, 作者也不是 clone 身份,
+    于是 `commit_identities_match` 判 False, 报 `clone_provenance_mismatch`。
+
+    这是 #4556(ADR-0460 收窄) 引入的回归, 由
+    `test_platform_provenance_accepts_exact_github_merge_wrapper` 等三项用例持续报出。
+    原实现里 `base_sha`(`platform_base_sha` 或 `frozen_sha`)正是这个下界, 收窄时被丢掉。
+
+    `exclude_shas` 把该下界重新纳入 `--not`, 语义是**收窄**而非放宽: 被排除的
+    提交在 agent 开工前就存在, 不可能是 clone 加的, 本就不该按 clone 身份校验。
+    平台路径下 `platform_base_sha` 已被 `frozen→base` 与 `base→head` 两处祖先校验
+    约束在 frozen..head 之内, 故排除它不构成绕过。
     """
-    args = ["rev-list", head_sha, "--not", *mainline_refs]
+    # `--not` 在 git rev-list 里是**切换**而非标志: `A --not B C --not D` 等于
+    # 包含 A、排除 B/C、**再切回包含 D**。故排除项必须共用同一个 `--not`。
+    args = ["rev-list", head_sha, "--not", *mainline_refs, *(exclude_shas or [])]
     listed = git(repo_root, *args)
     if listed.returncode != 0:
         raise ToolError(
@@ -1471,7 +1494,11 @@ def commit_identities_match(
 ) -> bool:
     if mainline_refs is not None:
         try:
-            commit_shas = own_commit_shas(repo_root, head_sha, mainline_refs)
+            # base_sha 是「自身提交」的下界, 收窄后必须显式带回, 否则平台在 agent
+            # 开工前推进 base 产生的提交会被误算成 clone 自己的提交。
+            commit_shas = own_commit_shas(
+                repo_root, head_sha, mainline_refs, exclude_shas=[base_sha]
+            )
         except ToolError:
             return False
     else:

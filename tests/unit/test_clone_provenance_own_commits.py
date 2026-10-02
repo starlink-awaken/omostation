@@ -191,3 +191,111 @@ def test_missing_local_main_branch_does_not_fail_closed(tmp_path: Path) -> None:
     refs = ac._mainline_refs(str(work), _identity(work, base))
     assert "refs/heads/main" not in refs, "本地 main 不该被当作主线 ref"
     assert ac.commit_identities_match(str(work), base, digest, "HEAD", mainline_refs=refs) is True
+
+
+# ---------------------------------------------------------------------------
+# 2026-10-02: mainline 收窄丢了 identity_base 下界, 造成平台提交被误算成自身提交
+# ---------------------------------------------------------------------------
+
+
+def _platform_base_advanced_repo(tmp_path: Path) -> tuple[Path, str, str, str]:
+    """origin/main 上先有「他人提交」再推进一次, 模拟平台在 agent 开工前推进 base。
+
+    返回 (work, platform_base, platform_advance, source_head):
+      platform_base    —— 平台 base 推进前(agent 的起点下界)
+      platform_advance —— 平台自己产生的提交(作者是 OTHER, 不是 clone 身份)
+      source_head      —— clone 自身的提交
+    """
+    origin = tmp_path / "origin.git"
+    origin.mkdir()
+    subprocess.run(["git", "init", "--bare", "-b", "main", str(origin)], check=True, capture_output=True)
+
+    work = tmp_path / "work"
+    work.mkdir()
+    for cmd in (
+        ["git", "init", "-b", "main", str(work)],
+        ["git", "-C", str(work), "config", "user.name", OTHER[0]],
+        ["git", "-C", str(work), "config", "user.email", OTHER[1]],
+        ["git", "-C", str(work), "remote", "add", "origin", str(origin)],
+    ):
+        subprocess.run(cmd, check=True, capture_output=True)
+    (work / "a.txt").write_text("a\n")
+    subprocess.run(["git", "-C", str(work), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(work), "commit", "-m", "mainline base"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(work), "push", "origin", "main"], check=True, capture_output=True)
+
+    platform_base = _git(work, "rev-parse", "HEAD")
+    # 平台在 agent 开工前又推进了一次 base —— 该提交不属于 clone
+    subprocess.run(
+        ["git", "-C", str(work), "-c", f"user.name={OTHER[0]}", "-c", f"user.email={OTHER[1]}",
+         "commit", "-q", "--allow-empty", "-m", "platform advance"],
+        check=True, capture_output=True,
+    )
+    platform_advance = _git(work, "rev-parse", "HEAD")
+    subprocess.run(["git", "-C", str(work), "push", "origin", "main"], check=True, capture_output=True)
+
+    # clone 自己的提交(用 clone 身份)
+    subprocess.run(["git", "-C", str(work), "checkout", "-q", "-b", "deliver"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(work), "-c", f"user.name={SELF[0]}", "-c", f"user.email={SELF[1]}",
+         "commit", "-q", "--allow-empty", "-m", "clone delivery"],
+        check=True, capture_output=True,
+    )
+    return work, platform_base, platform_advance, _git(work, "rev-parse", "HEAD")
+
+
+def test_platform_advance_is_excluded_when_base_is_passed(tmp_path: Path) -> None:
+    """带 exclude_shas=base 时, 平台在 base 之后产生的提交必须被排除。
+
+    这是 #4556(ADR-0460 收窄)引入的回归: 收窄只按 mainline refs 划窗,
+    `identity_base`(= platform_base / frozen_sha)这个下界被静默丢掉。
+    """
+    work, platform_base, platform_advance, source_head = _platform_base_advanced_repo(tmp_path)
+    refs = ac._mainline_refs(str(work), _identity(work, platform_base))
+
+    shas = ac.own_commit_shas(str(work), source_head, refs, exclude_shas=[platform_base])
+    assert platform_advance not in shas, "平台在 base 之后产生的提交不该算作 clone 自身提交"
+    assert source_head in shas, "clone 自身提交必须保留"
+
+
+def test_commit_identities_match_passes_with_platform_advanced_base(tmp_path: Path) -> None:
+    """端到端: base 之后有平台提交时, 合法交付仍应通过身份校验。
+
+    回归前此处报 clone_provenance_mismatch。
+    """
+    work, platform_base, _platform_advance, source_head = _platform_base_advanced_repo(tmp_path)
+    digest = ac.author_identity_digest(*SELF)
+    refs = ac._mainline_refs(str(work), _identity(work, platform_base))
+    assert ac.commit_identities_match(
+        str(work), platform_base, digest, source_head, mainline_refs=refs
+    ) is True
+
+
+def test_exclude_and_mainline_share_one_not_flag(tmp_path: Path) -> None:
+    """`--not` 在 git rev-list 里是**切换**: `A --not B C --not D` 会把 D 切回包含。
+
+    排除项必须与 mainline refs 共用同一个 `--not`, 否则 platform_base 被**反向包含**,
+    区间反而变大。2026-10-02 的修复初版就踩了这个坑, 用本测试钉死。
+    """
+    work, platform_base, platform_advance, source_head = _platform_base_advanced_repo(tmp_path)
+    refs = ac._mainline_refs(str(work), _identity(work, platform_base))
+
+    captured: list[list[str]] = []
+    original = ac.git
+
+    def spy(repo_root: str, *args: str, **kwargs):  # noqa: ANN202
+        if args and args[0] == "rev-list":
+            captured.append(list(args))
+        return original(repo_root, *args, **kwargs)
+
+    ac.git = spy
+    try:
+        ac.own_commit_shas(str(work), source_head, refs, exclude_shas=[platform_base])
+    finally:
+        ac.git = original
+
+    assert captured, "未捕获到 rev-list 调用"
+    argv = captured[-1]
+    assert argv.count("--not") == 1, f"排除项必须共用单个 --not(切换语义), 实得: {argv}"
+    # 且 base 必须在该 --not 之后
+    assert argv.index("--not") < argv.index(platform_base)
