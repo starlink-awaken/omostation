@@ -67,6 +67,40 @@ def git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProces
     return proc
 
 
+def _gh_json_stub(monkeypatch, *, pr_list, pr_create, calls=None):
+    """给 `lc.gh_json` 造桩。
+
+    PR 查询走的是 `bin/lib/gh_query.gh_json`, **不经过** `lc.run`。本文件里多个
+    integrate/retire 用例只 stub 了 `lc.run`, 于是该 stub 从未生效, 真实 `gh` 被调用,
+    打到 fixture 的假仓 `owner/repository` 上报
+    `GhQueryFailed: Could not resolve to a Repository`。
+
+    2026-09-30: 同一个 fixture 缺陷在 5 个用例里各出现一次, #4596 只修了 1 个。
+    统一用本辅助补齐, 避免每个用例各写一份。
+
+    - `pr_list` : `gh pr list` 的返回值(list); None 表示"不该被调用"。
+    - `pr_create`: `gh pr create` 的返回值(dict); None 表示"不该被调用"。
+    - `calls`   : 可选。用例常用 `next(c for c in calls if c[:3] == ["gh","pr","list"])`
+                   断言调用形状, 因此桩必须把调用也记进同一列表。
+    """
+    def _stub(*args, **kwargs):
+        if calls is not None:
+            calls.append(["gh", *[str(a) for a in args]])
+        verb = args[0] if args else kwargs.get("verb")
+        sub = args[1] if len(args) > 1 else kwargs.get("subcommand")
+        if (verb, sub) == ("pr", "list"):
+            if pr_list is None:
+                raise AssertionError("本用例不应调用 gh pr list")
+            return pr_list
+        if (verb, sub) == ("pr", "create"):
+            if pr_create is None:
+                raise AssertionError("既有 PR 必须被复用, 不应新建")
+            return pr_create
+        raise AssertionError(f"未预期的 gh_json 调用: {(verb, sub)}")
+
+    monkeypatch.setattr(lc, "gh_json", _stub)
+
+
 def make_retirable_clone(tmp_path: Path) -> tuple[Path, Path, str]:
     remote = tmp_path / "remote.git"
     import shutil
@@ -1350,6 +1384,7 @@ def test_integrate_apply_is_reachable_and_creates_pr(tmp_path, monkeypatch, caps
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
     monkeypatch.setattr(lc, "run", fake_run)
+    _gh_json_stub(monkeypatch, calls=calls, pr_list=[], pr_create={"url": "https://example.test/pr/8"})
     wrong_attempt = lc.cmd_integrate(
         argparse.Namespace(
             clone=str(clone),
@@ -1425,6 +1460,7 @@ def test_attempt_changeset_and_integrate_bind_exact_pr_head(tmp_path, monkeypatc
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
     monkeypatch.setattr(lc, "run", fake_run)
+    _gh_json_stub(monkeypatch, calls=calls, pr_list=[], pr_create={"url": "https://example.test/pr/9"})
     wrong_attempt = lc.cmd_integrate(
         argparse.Namespace(
             clone=str(clone),
@@ -1598,6 +1634,7 @@ def test_integrate_reuses_only_exact_owner_branch_and_head_pr(tmp_path, monkeypa
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
     monkeypatch.setattr(lc, "run", fake_run)
+    _gh_json_stub(monkeypatch, calls=calls, pr_list=[{"url": "https://example.test/pr/8", "headRefName": "agent/agent-1--attempt-001", "headRefOid": head, "headRepositoryOwner": {"login": "owner"}}], pr_create=None)
     rc = lc.cmd_integrate(
         argparse.Namespace(
             clone=str(clone),
@@ -3387,6 +3424,7 @@ def test_b1_activated_green_path_one_canonical_push_argv(tmp_path, monkeypatch, 
         return subprocess.run(cmd, capture_output=True, text=True, check=False, **kwargs)
 
     monkeypatch.setattr(lc, "run", fake_run)
+    _gh_json_stub(monkeypatch, calls=calls, pr_list=[], pr_create={"url": "https://example.test/pr/b1-green"})
     monkeypatch.setattr(lc, "claims_authority_activation_mode", lambda: "shadow-active")
     monkeypatch.setattr(
         lc,
