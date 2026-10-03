@@ -12,6 +12,7 @@ import ast
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -25,6 +26,9 @@ import repo_root  # noqa: E402
 
 LEDGER_BASENAME = "event-ledger.sqlite3"
 OMO_PATHS_SRC = REPO / "projects" / "omo" / "src" / "omo" / "omo_paths.py"
+RUNTIME_PROJECTIONS_SRC = (
+    REPO / ".omo" / "_truth" / "registry" / "runtime-projections.yaml"
+)
 
 
 def _ledger_path_joins(path: Path) -> list[int]:
@@ -108,24 +112,48 @@ def test_bin_ledger_defaults_route_through_seam(script: Path) -> None:
 # ── omo_paths 的读侧必须留在 code_root ───────────────────
 
 
-_PROBE = (
+_PROBE_TMPL = (
     "import sys; sys.path.insert(0, %r);"
     "from omo import omo_paths as p;"
     "print(p.STATE_ROOT);print(p.OMO_ROOT);print(p.TRUTH_DIR);"
     "print(p.RUNTIME_OMO_ROOT);print(p.projection_path('health'))"
-) % str(REPO / "projects" / "omo" / "src")
+)
 
 
-def _probe(state_root: str) -> list[str]:
+def _probe(state_root: str, checkout: Path | None = None) -> list[str]:
+    """在假 profile 下问 kernel 它把每面解析到哪个根。
+
+    `checkout=None` 用本检出 (读侧断言); 传假检出是为了量 legacy 侧 ——
+    omo_paths.WORKSPACE_ROOT 由 __file__ 推导 (omo_paths.py:27), OMOSTATION_ROOT
+    对它无效, 所以只有让模块物理落在假检出里, "检出的 legacy 面"才是可造的东西。
+    """
+    src = (REPO if checkout is None else checkout) / "projects" / "omo" / "src"
     env = {**os.environ, "OMOSTATION_STATE_ROOT": state_root}
     out = subprocess.run(
-        [sys.executable, "-c", _PROBE],
+        [sys.executable, "-c", _PROBE_TMPL % str(src)],
         capture_output=True,
         text=True,
         env=env,
         check=True,
     )
     return out.stdout.splitlines()
+
+
+def _fake_checkout(root: Path) -> Path:
+    """造一个自带 omo 包的检出: 模块副本 + 投影登记表, 源字节全部复制不手抄。
+
+    复制登记表是为了走 registry 那条解析分支 (omo_paths.projection_rels 优先读
+    TRUTH_DIR 下那份), 映射一旦漂移, 被测模块自己会跟上 —— 手写期望路径只会把漂移
+    伪装成通过。
+    """
+    pkg = root / "projects" / "omo" / "src" / "omo"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    shutil.copyfile(OMO_PATHS_SRC, pkg / "omo_paths.py")
+    registry = root / ".omo" / "_truth" / "registry"
+    registry.mkdir(parents=True)
+    shutil.copyfile(RUNTIME_PROJECTIONS_SRC, registry / "runtime-projections.yaml")
+    return root
 
 
 def test_kernel_read_plane_stays_on_checkout(tmp_path: Path) -> None:
@@ -144,10 +172,41 @@ def test_kernel_read_plane_stays_on_checkout(tmp_path: Path) -> None:
 
 
 def test_projection_falls_back_to_committed_legacy_path(tmp_path: Path) -> None:
-    """空 state root 下读者退回仓内已提交的 legacy 文件 — dev profile 不因缺状态而失明。"""
-    (tmp_path / ".omo" / "state" / "runtime").mkdir(parents=True)
-    _, _, _, _, health = _probe(str(tmp_path))
-    assert health == str(REPO / ".omo" / "state" / "health.yaml")
+    """兜底成立的条件是"检出里真有 legacy 那份文件", 不是这台机器跑过写者。
+
+    B5 (T10-212) 之后 legacy 面在 origin/main 上既不存在也不被跟踪, 生成态只落
+    canonical (.omo/state/runtime/**, 被 gitignore)。所以旧写法 —— 期望解析到
+    REPO/.omo/state/health.yaml —— 在干净检出里按构造不可满足, 只在残留着历史文件的
+    开发机上才会绿; 那是把 host 状态当被测性质。两侧都在 tmp_path 下物化, 量的才是
+    projection_path() 的解析规则本身。
+    """
+    checkout = _fake_checkout(tmp_path / "checkout")
+    legacy = checkout / ".omo" / "state" / "health.yaml"
+    legacy.parent.mkdir(parents=True)
+    legacy.write_text("score: 0\n", encoding="utf-8")
+
+    state_root = tmp_path / "state"
+    canonical = state_root / ".omo" / "state" / "runtime" / "health.yaml"
+    (canonical.parent).mkdir(parents=True)
+
+    _, _, _, _, health = _probe(str(state_root), checkout=checkout)
+    assert health == str(legacy)
+    assert not canonical.exists()  # 兜底不是因为 canonical 也有值
+
+
+def test_projection_without_legacy_reports_missing_canonical(tmp_path: Path) -> None:
+    """两面皆无时返回 canonical 原样 (给写者的落点), 不静默兜到别处。
+
+    与上一条合起来才是完整的解析表; 也钉住"读方应当报 absent 而不是计为 fail/expired"
+    这个契约 —— 路径不存在不等于解析失败。
+    """
+    checkout = _fake_checkout(tmp_path / "checkout")
+    state_root = tmp_path / "state"
+    (state_root / ".omo" / "state" / "runtime").mkdir(parents=True)
+
+    _, _, _, _, health = _probe(str(state_root), checkout=checkout)
+    assert health == str(state_root / ".omo" / "state" / "runtime" / "health.yaml")
+    assert not Path(health).exists()
 
 
 # ── B4a (BET-Y2Q4-T10-207): 安装位是定位器, 不是开关 ──────

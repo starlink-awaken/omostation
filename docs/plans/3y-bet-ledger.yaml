@@ -39327,6 +39327,136 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-222
+  title: ADR-0456 B5 残留 — tests/unit 两根投影用例去 host/时钟依赖（物化两侧 + 时间戳相对 now）
+  goal: 'tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path
+    在本基线 cbbfbcc44 的**干净 worktree** 里 FAILED（实测 `1 failed, 859 passed`，2026-10-03）。
+    它断言读者会兜底到 `.omo/state/health.yaml`，而该文件在 origin/main 上既不存在也未被跟踪 （B5/T10-212 已把生成态移到被
+    gitignore 的 canonical 面 `.omo/state/runtime/health.yaml`， 那份实测存在）。于是用例按构造不可满足，只在"跑过写者、旧
+    legacy 文件还留在检出里"的机器上 才会绿 —— 这是 hermeticity 泄漏：测试结果依赖 host 状态，而 `.github/workflows/governance-check.yml:118-127`
+    是显式文件白名单、不含 tests/unit/**，所以 CI 永远看不见它（BET-Y2Q4-T10-221 判据 3 已记录）。 第二处根因决定它不能靠 env
+    修：`projects/omo/src/omo/omo_paths.py:27` 的 `WORKSPACE_ROOT = _MODULE_DIR.parents[3]`
+    由 `__file__` 推导（ADR-0456 契约：读侧跟随当前检出）， `OMOSTATION_ROOT` 对它无效 ⇒ 想伪造 legacy 侧的根，假检出必须自带一份
+    omo_paths。 对面 `tests/unit/test_projection_reader_resolution.py:42` 之所以 PASS，正因为它的
+    fixture 自己物化了 legacy 文件 —— 即"测兜底先物化"是同一仓里已证过的形状，本 BET 照它改。 具体：在 tmp_path 下造 `<fake>/projects/omo/src/omo/{__init__.py,omo_paths.py}`（源字节取自本仓
+    OMO_PATHS_SRC，不手抄）与 `<fake>/.omo/_truth/registry/runtime-projections.yaml`，只在假检出里
+    写出 legacy 文件、state 根留空，断言 `projection_path(''health'')` 落在假检出的 legacy 路径上； 并补正向落点断言（canonical
+    侧不存在、legacy 侧存在），使"兜底发生"这件事两侧都可指认。 BET-Y2Q4-T10-221 的 verify 3 曾以 `1 failed, 1 passed`
+    钉住这个红并明说"本轮不修"（其文字里的 "task 105" 即本 BET 的前身），本 BET 就是那句的兑现。
+
+    同一轮实测又量出第二类不可复现：tests/unit/test_projection_reader_resolution.py::test_probe_heartbeat_monitor_reports_absent_projections_without_failure
+    在本基线 **FAILED**（断言 `health["ok"] is True`），根因不是 host 而是**日历** —— fixture 写死 `generated_at:
+    2026-09-29T00:00:00Z` 配矩阵里 `sla_hours: 72`，于是 2026-10-02 起它无条件变红， 被测代码一行没动。同文件同形状的另两处今天恰好没断言
+    ok 才没红，属同一枚没拆的雷；而正确写法就写在 下方 26 行处（`datetime.now(UTC)`）。本 BET 把三处统一改为相对 now 的 `_fresh_ts()`，并全仓扫过
+    tests/unit：**只有这两个文件**属于"投影新鲜度 × 相对 SLA"这一类（其余静态 `generated_at` 字面量 不与 now 比较，见下）。交付前跑了全量枚举（`python3
+    -m pytest tests/unit -q`，839s， **16 failed / 1848 passed**）来钉死范围：本 BET 处置的 2 条已绿，可指认的
+    14 个用例名分属三类 本 BET 范围外根因 —— ① 8 条 `No module named ''collectors''` 加 1 条 sys.path
+    缺 `projects/agora/src`，是本 claim 用 SKIP_SUBMODULE_INIT=1 建工作树造成的**装置性红** （`git submodule
+    status` 显示 `projects/agora` 未 init，canonical 工作区同用例是绿的）； ② 2 条 `test_panorama_runtime_scheduler.py`
+    断言 `.omo/cron/registry.yaml` 里 panorama job 的 status 为 active，而登记表实测 proposed，且
+    origin/main 逐字节同状态 —— 基线红、CI 看不见 （tests/unit 不在 governance-check.yml 白名单）；③ 2 条
+    `test_reporting_reads_ledger.py` 单跑 6 passed、全量跑红 —— 顺序依赖污染。16 与 14 的差额是后台输出文件被截断，只有
+    14 个名字可指认。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  write_surfaces:
+  - tests/unit/test_repo_root_profile.py
+  - tests/unit/test_projection_reader_resolution.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-03-bet-222-hermetic-projection-fallback.md
+  - docs/reports/2026-10-03-bet-222-hermetic-projection-fallback-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-222.md
+  non_goals:
+  - 不动 projects/omo/**，也不改 omo_paths.WORKSPACE_ROOT 的推导方式：`__file__` 推导正是 ADR-0456 "读侧跟随当前检出"
+    的契约，把它改成 env 可控会让 tests/unit/test_repo_root_profile.py::test_kernel_read_plane_stays_on_checkout
+    失效，也把本轮要修的 host 依赖换成另一种 host 依赖。
+  - '不摘 .gitignore:294 的 `!.omo/state/system.yaml`、不 untrack system.yaml（属 task #98；本基线实测
+    仍有 ≥9 个 checkout-rooted 消费者：bin/arch-health-meter.py:142、bin/meta/compass_radar.py:1073、
+    bin/check_health_ssot.py:83、bin/gac/architecture-check.py:47、bin/gac/m1-closeout-report.py:137/:171、
+    bin/gac/session-recovery.py:40、bin/ssot-watcher.py:59、bin/gac/state-freshness-check.py:11、
+    bin/gac/codex-worker-adapter.py:50、bin/gac/omo-state-write-guard.py:27）。'
+  - 不新增检测脚本（新脚本会进 bin/ssot/script-registry.py 的 missing 面，属另一轮），也不往 .github/workflows/**
+    加 tests/unit 路径。
+  - 不碰 CI 白名单本身、不修 governance-check.yml 的 paths 段。
+  - '不修本 BET 范围外的 tests/unit 其余红（分类见 goal 末段）：装置性子模块红应在 canonical 工作区 或 claim --full
+    下复测，不是代码问题；panorama 的 status=active 断言与 proposed 登记分歧要的是 launchd 现实核对（与 #86、#104
+    相邻），把断言改成迁就登记表等于放弃那条契约； test_reporting_reads_ledger 的顺序依赖是另一枚 hermeticity 缺陷，需要独立定位污染源。'
+  circuit_breaker: Stop on any change outside the surfaces listed in write_surfaces,
+    on any change to projects/** (submodule pointers), .gitignore, .github/workflows/**,
+    .omo/_truth/registry/**, on making OMOSTATION_ROOT influence omo_paths.WORKSPACE_ROOT,
+    and on untracking or gitignoring any .omo/state/** file (that round is the system.yaml
+    untrack).
+  done_when:
+  - 本检出的 tests/unit/test_repo_root_profile.py 全绿（failed=0），且新增/修改的用例里不出现 `/Users/` 或
+    `xiamingxing` 字面量 —— 期望路径一律由 tmp_path 派生。
+  - 新用例带一条负向对照：抽掉 legacy 文件的物化后它必须失败（判据 3 实测），否则"兜底"这个断言 其实什么都没测。
+  - 投影 fixture 的**写点**上不再有绝对时间戳（判据 5），新鲜度一律经 `_fresh_ts()` 相对 now 取； 并把含 generated_at
+    的 9 个 tests/unit 文件逐个分类 —— 绝对值只有在与 datetime.now 或 SLA 窗口比较时才是雷，显式注入 now 的静态 fixture（如
+    test_panorama_objective_coverage.py 的 `now=datetime(2026, 9, 24, 3, 30, ...)`）不算，不能为了绿灯一并改掉。
+  - 改动只收紧不放宽断言语义：投影解析用例仍断言具体落点路径（不是"存在即可"），心跳用例仍断言 `ok is True` —— 换的是输入的时间戳来源，不是换掉的断言。
+  - 交付面通过 doc-governance 与本地门禁（判据 5/6）。
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_repo_root_profile.py -q 2>&1 | tail -3
+    expect: failed=0（本基线该文件收集到 861 项，其中绝大多数来自按 bin/** 参数化的 ledger-seam 扫描）。修复前实测 `1
+      failed, 859 passed`；修复后 `861 passed`（新增一条"两面皆无 → 返回缺失的 canonical"用例）。
+  - cmd: python3 -m pytest "tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path"
+      -q 2>&1 | tail -3
+    expect: 1 passed — 单跑也绿，不依赖同文件其他用例先创建过目录。
+  - cmd: 'python3 -c "import pathlib,subprocess,sys; p=pathlib.Path(''tests/unit/test_repo_root_profile.py'');
+      orig=p.read_text(encoding=''utf-8''); lines=orig.splitlines(True); hit=[i for
+      i,l in enumerate(lines) if l.startswith(''    legacy.write_text('')]; assert len(hit)==1,
+      hit; lines[hit[0]]=''    pass # mutated\n''; p.write_text(''''.join(lines), encoding=''utf-8'');
+      r=subprocess.run([sys.executable,''-m'',''pytest'',''-q'',''tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path''],capture_output=True,text=True);
+      print(''MUTATION_EXIT'',r.returncode)"; git checkout -- tests/unit/test_repo_root_profile.py;
+      echo "restored=$(git status --porcelain tests/unit/test_repo_root_profile.py |
+      /usr/bin/wc -l | tr -d '' '')"'
+    expect: MUTATION_EXIT 非 0 且 restored=0 — 负向对照：抽掉 legacy 文件的物化后该用例必须失败（否则它 并没有断言"兜底"这件事），并且收尾把源文件还原成零脏项（`git
+      checkout --` 无条件执行，不留 mutated 残留）。
+  - cmd: python3 -m pytest tests/unit/test_projection_reader_resolution.py -q 2>&1 |
+      tail -3
+    expect: failed=0（本基线实测该文件 18 项）。修复前它红在 test_probe_heartbeat_monitor_reports_absent_projections_without_failure；
+      改的是 fixture 时间戳的来源，`ok is True` 这条断言本身保留 —— 换输入不是换断言。
+  - cmd: /usr/bin/grep -rn "write_text.*generated_at:[ ]20" tests/unit --include="*.py"
+      || echo CLEAN
+    expect: CLEAN — 投影 fixture 的写点上"绝对时间戳"形态清零（本轮改掉的 3 处都在写点上）。原写法 `grep "generated_at:[
+      ]202"` 实测命中 `_fresh_ts()` docstring 里那句事故描述（那行不含 _fresh_ts 字样，排除不掉），故改为锚在 write_text
+      上。这条是**必要而非充分**：多行 fixture 里的 generated_at 可以不在 write_text 同一行，语义面由 done_when-3
+      的逐文件分类覆盖。
+  - cmd: git diff --name-only origin/main...HEAD | /usr/bin/grep -E '^(projects/|\.gitignore$|\.github/|\.omo/_truth/)'
+      || true
+    expect: empty output — 出界即触发 circuit_breaker；尤其 projects/** 出现意味着误动了子模块指针。
+  - cmd: uv run --with pyyaml python3 bin/ssot/doc-governance-check.py --no-new-warnings
+      --scope tracked
+    expect: PASS — 新 spec 带 owner/lifecycle/status/last-reviewed（UTC 当天或更早），accepted-specifications
+      桶里的未基线告警等于 error。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-03-bet-222-hermetic-projection-fallback.md
+    spec_version: 1.0.0
+    content_digest: sha256:943322b6825c1f19c8c470a4fb9234a95b9c5ca22aefd588989a37c748914caf
+    decision_ref: decision://accepted/BET-Y2Q4-T10-222
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -39465,7 +39595,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 516
+  total_bets: 517
   windows:
   - Y1Q1
   - Y1Q2
