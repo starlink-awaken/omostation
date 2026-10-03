@@ -12,7 +12,7 @@ tags: [claims-authority, legacy-publish-fence, changeset, bind, plumbing]
 
 # ADR-0461 — changeset 侧携带 claim 绑定, 使 legacy publish fence 可被满足
 
-- **Status**: PROPOSED（2026-10-02 提案；两个设计点已由溯源结论收窄，未实施）
+- **Status**: PROPOSED（2026-10-02 提案；2026-10-03 实施前发现 authority 无读动词，方案 A 前提不成立，待裁定；未实施）
 - **Date**: 2026-10-02
 - **Owner**: architecture-governance
 - **Related**: ADR-0455（allow receipt 的可满足性，方案 A 已 ACCEPTED 且已实现）、
@@ -87,8 +87,18 @@ fence 在签发时**已经做现场新鲜双读**：`build_remote_observation_pa
 可能陈旧）。换言之，`_legacy_fence_context` 要求调用方提供 callee 随后自己重算的量 ——
 **这本身就是契约设计问题，而非缺失能力**。
 
-**结论**：fence context **不带** `expected_remote_oid`；抗漂移完全交给现场双读。
-若保留该字段，等于把一个必然陈旧的量钉进凭证，重新引入双读本要消除的失效模式。
+> **2026-10-03 更正**：本条早前结论「fence context **不带** `expected_remote_oid`」**有误**。
+> 现场双读只保证**两次读之间**没动（`build_remote_observation_pair` 内部两观测逐字段比对），
+> **不保证 changeset 生成到 integrate 之间没动** —— 那是 TOCTOU 防护。去掉期望值后，
+> fence 会接受一个在期间被别人创建的 remote ref，正是 `delivery_attempt_reused`
+> （`clone-lifecycle.py:1686`）要防的场景。
+>
+> 且该字段**不是**「分支在哪」而是「推之前该 ref 应处于什么状态」：
+> `build_remote_observation_pair` 在 ref 不存在时取哨兵 `_ABSENT_REMOTE_OID = "0"*40`，
+> 而 validate 处 `re.fullmatch(r"[0-9a-f]{40}")` 接受它。integrate 首次推送 delivery
+> 分支时远端该 ref 尚不存在，故 `expected_remote_oid` 正常取值就是哨兵 —— **不是陈旧值**。
+>
+> **更正结论**：`expected_remote_oid` 应当携带，由 changeset 阶段观察并写入。
 
 > 顺带：`gh_json`（`#4596` 修）与本 ADR 的起因 `claims_authority_fence_context`
 > 确属"契约已定义并强制、但生产侧无生产者"的形状，值得在实现时以 lint 形式确认
@@ -139,12 +149,31 @@ observe-claim 请求里已算好的 `requested_paths_digest`。实现时保证�
 > 生产者一直存在于 `lifecycle.py:480`。此更正同时把设计点 2 从「需定算子」收窄为
 > 「沿用既有值」。
 
-### 仍未决
+### 2026-10-03 实施前发现：方案 A 的前提不成立
 
-两点的**实现归属**待定：由 `verify-changeset` 计算并写入绑定，还是由
-`enter_legacy_publish_fence` 在调用 authority 前按 claim 反查。倾向前者
-（保持"先有可审计绑定、再动"的次序，与 ADR-0455 的方向一致），但这属实施细节，
-需在评审中一并确认。
+原写「`verify-changeset` 在 `claim_verification` 已通过时，**向 authority 查询**并写入
+`claims_authority_fence_context`」。核实后：**authority 没有任何能返回该绑定的读动词。**
+
+`issue-legacy-fence` 的校验要求（`claims_authority.py:2627-2643`）：
+
+| 字段 | 实际来源 |
+|---|---|
+| `claim_id` / `claim_version` / `lease_epoch` / `v1_snapshot_digest` | authority 库 `claims` 表（`observe-claim` 写入） |
+| `v1_allow_receipt_digest` | authority 库 `receipts` 表中 observe-claim 回执的摘要 |
+| `path_digest` | 该回执的 `publication_scope.paths_digest` |
+
+而：
+- claim 记录（`runs/<run>.yaml`）只存 `actor` / `claimed_at` / `paths`，**不含**上述任一项；
+- `_DISPATCH_METHODS` 的全部动词为 `status` / `observe-claim` / `begin|settle-claim-mutation`
+  / `activate-shadow` / `issue|enter|settle-legacy-*` / `evaluate-graduation`，
+  **没有任何只读动词**能取出 claim 绑定。
+
+因此方案 A 实际需要一个**新增的 authority 读动词**（如 `describe-claim`）。这不是管道
+接线，而是**给安全边界加一个新能力**，且自带待决问题：谁能读绑定？读取是否需要 operator
+授权？是否泄漏 claim 存在性？它一旦可读，任何能触达 authority 的调用方就具备了满足
+fence 所需的全部材料。
+
+**故本 ADR 的实现门必须先回答这一条**，否则方案 A/B 都无法落地。
 
 ### 由此收窄的执行门
 
@@ -160,7 +189,7 @@ observe-claim 请求里已算好的 `requested_paths_digest`。实现时保证�
 
 ## 执行门
 
-1. 本 ADR → ACCEPTED（独立 human review），且第「待定的两个设计点」有明确结论
+1. 本 ADR → ACCEPTED（独立 human review），且**「是否新增 authority 读动词」有明确结论**（见「实施前发现」）
 2. 实现 + focused tests：
    - RED：`claim_verification.all_covered` 为假时，**不得**写入绑定
    - RED：`path_digest` 不覆盖 `changed_paths` 全集时拒绝
