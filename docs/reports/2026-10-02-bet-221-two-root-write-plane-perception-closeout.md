@@ -101,7 +101,8 @@ ADR-0456 那节记录的是另一族：`projection_read()` 兜底**换文件名*
 
 ## 7 回滚
 
-单个 PR、纯文档，无运行时副作用（不改脚本、不改 plist/cron、不改任何写落点）：
+两个 PR、纯文档，无运行时副作用（不改脚本、不改 plist/cron、不改任何写落点）。感知与 ADR 面
+先合并（`#4608` → `origin/main@3225290e9`），证据链面随后（本 closeout PR）：
 
 ```bash
 git revert --no-edit 3225290e9cdadd01d3435e06f2cecca9621dc6f5   # 感知面 + ADR + spec
@@ -118,3 +119,28 @@ git revert --no-edit 3225290e9cdadd01d3435e06f2cecca9621dc6f5   # 感知面 + AD
 - **没登记 known-debt** —— §3-3 的读数说明 R-GOV-2 结构上只会 WARN，没有可登记的债。
 - 8 个 out-of-surface 读者、`OMO_GOVERNANCE_DATA` 仍钉检出根、`projects/runtime/scheduler.py`
   的 D7 一条，均未触碰。
+
+## 9 补记 — 工作树在 commit 之后从磁盘消失（2026-10-03，本 PR 推出前实测）
+
+观测（两条时间戳同一会话）：`2026-10-03T01:49` 两个 lane-clean commit 落库、`git status` 只剩
+scratch；`2026-10-03T12:39` 恢复会话时 `/Users/xiamingxing/ws-t10-221-perception` **不存在**，
+`git worktree list` 不再列它，`.git/worktrees/` 只剩 `Workspace` / `Workspace1`。
+
+没丢的三样，各自的落点不同（这是恢复能零成本成立的原因）：
+
+| 东西 | 真实位置 | 判据 |
+|---|---|---|
+| commit 对象 | 主仓共享 object DB（worktree 不持有自己的对象库） | `git cat-file -t 52a3e7b0e` → `commit` |
+| 分支 ref | `.git/refs/heads/agent/governance-agent/t10-221-closeout` | 删工作树不删分支；`git branch --list` 仍在 |
+| 文件内容 | commit 的 tree 里 | 恢复后 `shasum -a 256` 与门禁通过时逐字节一致 |
+
+恢复与交付：`git worktree add /Users/xiamingxing/worktrees/t10-221-closeout <branch>`
+（新路径**故意避开** `$HOME/ws-*` / `$HOME/workspace-*`）→ 核对 digest → L3 评审 0 findings → push → 本 PR。
+
+判据一条：**交付的边界是远端，不是 `git commit` 成功**。commit 与 push 之间那段时间里，工作树是
+机器级清理例程的暴露面；长间隔前先 push，别让"已提交"被读成"已存在"。
+
+诚实边界两点：① 未定位执行者 —— `bin/gac/worktree-hygiene-audit.py --auto-clean` 的候选面按
+AGENTS.md 记载含 `$HOME/ws-*`，但本轮没有留下日志证据，不复跑它取证；②
+`.codex/worktrees/t10-221-verify/Workspace` 是另一处 detached 检出、指向同一 commit，非本轮所建，未触碰。
+

@@ -39301,28 +39301,28 @@ bets:
             ref: git://origin/main@3225290e9cdadd01d3435e06f2cecca9621dc6f5
           tests:
             ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
-            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+            sha256: sha256:c438fec03368f854b0d25f142411c718e7afaf7029eea02f8fcb52e2cf02d3e6
           diff:
             ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
-            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+            sha256: sha256:c438fec03368f854b0d25f142411c718e7afaf7029eea02f8fcb52e2cf02d3e6
           rollback:
             ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
-            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+            sha256: sha256:c438fec03368f854b0d25f142411c718e7afaf7029eea02f8fcb52e2cf02d3e6
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
-            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+            sha256: sha256:c438fec03368f854b0d25f142411c718e7afaf7029eea02f8fcb52e2cf02d3e6
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
-            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+            sha256: sha256:c438fec03368f854b0d25f142411c718e7afaf7029eea02f8fcb52e2cf02d3e6
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-221.md
-            sha256: sha256:4281f9f6c72a93b3df61eca3340a7ed1c8fecac0c6ef61e87ed29c6d5a6db4f0
+            sha256: sha256:8d66a97c7513dc4b9edd52f9a00e8b0e11f28af458fb0256f12025403ce18121
           cleanup:
             ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
-            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+            sha256: sha256:c438fec03368f854b0d25f142411c718e7afaf7029eea02f8fcb52e2cf02d3e6
       value:
         status: NOT_PROVEN
         evidence: {}
