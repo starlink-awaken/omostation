@@ -15,7 +15,7 @@ totals:
   bos_services: 325
   bos_domains: 23
   cli_commands: 200
-  skills: 42
+  skills: 43
   workflows: 26
 mcp_servers:
 - id: omo
@@ -2756,6 +2756,9 @@ skills:
   exists: true
 - id: worktree-ci-isolate
   file: .agents/skills/worktree-ci-isolate/SKILL.md
+  exists: true
+- id: zsh-split-audit
+  file: .agents/skills/zsh-split-audit/SKILL.md
   exists: true
 workflows:
 - id: agent-onboarding
