@@ -39203,7 +39203,8 @@ bets:
     gate claim，retro/receipt 实测可未 claim 提交，而 refresh-packet（bin/agent-workflow.py:1031
     → :814 → :738/:772）要求检出字节 == origin/main，故新建 BET 首轮用不上；GitHub 对 squash-merge 自动删
     head 分支，同名再 push 复活整条 stack，二次交付必须起新分支加 cherry-pick 并查 D 行。本 BET 把这些写成后续 agent 读得到、判据查得到的文字，不新增代码。
-  status: pending
+  status: done
+  done_at: 2026-10-02
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -39294,15 +39295,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@3225290e9cdadd01d3435e06f2cecca9621dc6f5
+          tests:
+            ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
+            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+          diff:
+            ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
+            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+          rollback:
+            ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
+            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
+            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
+            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-221.md
+            sha256: sha256:4281f9f6c72a93b3df61eca3340a7ed1c8fecac0c6ef61e87ed29c6d5a6db4f0
+          cleanup:
+            ref: receipt://docs/reports/2026-10-02-bet-221-two-root-write-plane-perception-closeout.md
+            sha256: sha256:6f7932c8c7958bb70fd6bf76580ed14b1970bb627d9d2073d861fdab0ab25e8b
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
