@@ -302,10 +302,17 @@ def generate(now: datetime | None = None) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--generate-morning-brief", action="store_true")
+    parser.add_argument("--force", action="store_true", help="当天已存在也重新生成")
     args = parser.parse_args(argv)
     if not args.generate_morning_brief:
         parser.print_help()
         return 2
+    # 当天已生成则跳过(RunAtLoad 补跑模式下防重复; launchd 不补跑睡眠中错过的
+    # Calendar 触发, 由 RunAtLoad 在唤醒后补 —— 2026-10-03 首日实测错过)
+    brief_today = STATE_DIR / f"brief-{time.strftime('%Y%m%d')}.md"
+    if brief_today.exists() and not args.force:
+        print(f"今日晨报已存在, 跳过: {brief_today}")
+        return 0
     return generate()
 
 

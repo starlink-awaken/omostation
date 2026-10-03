@@ -321,6 +321,7 @@ services:
 - id: omostation.morning-brief
   enabled: true
   generate: true
+  run_at_load: true  # launchd 不补跑睡眠中错过的 Calendar 触发, 唤醒后由本属性补跑(脚本幂等跳过)
   scheduler: launchd
   trigger: calendar
   calendar: {Hour: 7, Minute: 0}
