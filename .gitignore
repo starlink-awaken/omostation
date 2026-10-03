@@ -297,6 +297,10 @@ data/cards/
 !.omo/state/bos-stdio-migrate-candidates.yaml
 !.omo/state/m2-ssot-batch-1.yaml
 
+# 运行时状态目录 (resident agent 持续写入, 不入库)
+.omo/tasks/
+.omo/_knowledge/retros/resident/
+
 # ADR-0137 (M4 派生面范式强化): 派生面应跟随 SSOT 源所在子模块,
 # 不再在主仓根 .omo/_derived/ 写派生. example:
 # projects/ecos/.omo/_derived/ (gitignored in projects/ecos/.gitignore)
