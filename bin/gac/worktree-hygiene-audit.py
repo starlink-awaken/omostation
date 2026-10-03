@@ -5,9 +5,20 @@ Scans both `git worktree list` (registered worktrees) and the filesystem
 (`~/ws-*`, `~/workspace-*`) to find:
 
 - registered worktrees that are clean and whose branch is merged to origin/main
+  *of their own checkout*
 - registered worktrees with dirty state but no recent activity
 - directories that look like former worktrees but are no longer registered
 - independent clones or directories with source files that need human review
+
+Repo-aware merge rule: every ancestry question is asked of the repo that owns
+the worktree, never of the superproject. A `git worktree` shares refs and objects
+with the superproject, but each worktree carries its own submodule checkouts,
+each with its own gitdir and its own remote-tracking refs — so "merged" has to be
+decided per repo. `safe_to_remove` additionally requires every initialized
+submodule to be merged into its own `origin/main`; a submodule that is unmerged,
+has no `origin/main`, or cannot be inspected is reported as
+`unmerged_submodule` (fail safe: unknown is never merged). An uninitialized
+submodule (`-` in `git submodule status`) holds no local commits and is skipped.
 
 Output: exit 0 = audit completed and no unsafe state remains (when --fail-on-unsafe);
         exit 1 = error or unsafe state detected.
@@ -17,11 +28,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -33,9 +45,12 @@ STALE_DAYS = 2
 # Filenames that are safe to drop in an abandoned worktree dir.
 SAFE_LOG_PATTERNS = ("watch_stderr.log", "watch_stdout.log")
 
-UNSAFE_WORKTREE_CATEGORIES = frozenset({"merged_with_dirty", "stale_dirty", "stale_clean"})
+UNSAFE_WORKTREE_CATEGORIES = frozenset({"merged_with_dirty", "stale_dirty", "stale_clean", "unmerged_submodule"})
 UNSAFE_DIR_CATEGORIES = frozenset({"dirty_repo", "small_clean_repo", "needs_review"})
 AUTO_DIR_CATEGORIES = frozenset({"empty_abandoned", "log_only_abandoned"})
+
+# `git submodule status` line: status flag, then the 40/64-hex gitlink sha, then path.
+_SUBMODULE_STATUS_RE = re.compile(r"^(?P<flag>[-+ U])(?P<sha>[0-9a-f]{40,64})\s+(?P<path>\S+)")
 
 
 @dataclass
@@ -49,6 +64,7 @@ class WorktreeInfo:
     upstream: str
     category: str
     reason: str
+    unmerged_submodules: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -108,9 +124,95 @@ def _worktree_status(path: Path) -> tuple[int, str]:
     return dirty, upstream
 
 
-def _is_merged_to_origin_main(head: str) -> bool:
-    rc = _run(["git", "merge-base", "--is-ancestor", head, "origin/main"]).returncode
+def _is_merged_to_origin_main(head: str, path: Path) -> bool:
+    """Is `head` an ancestor of `origin/main` **in the repo that owns `path`**?
+
+    `cwd=path` is deliberate: a `git worktree` shares refs with its superproject,
+    but its submodules do not — each worktree gets its own
+    `.git/worktrees/<name>/modules/<path>` gitdir, with its own remote-tracking
+    refs. Asking the superproject answers a question about a different repo.
+
+    Unknown is never merged: no `origin/main` in this repo, or an ancestry check
+    that cannot run, both yield False so the caller fails safe.
+    """
+    if not head:
+        return False
+    if _run(["git", "rev-parse", "--verify", "-q", "origin/main"], cwd=path).returncode != 0:
+        return False
+    rc = _run(["git", "merge-base", "--is-ancestor", head, "origin/main"], cwd=path).returncode
     return rc == 0
+
+
+def _head_detail(sub_dir: Path) -> str:
+    """Describe an unresolvable HEAD precisely enough for a human to act on.
+
+    `git symbolic-ref` is no help here: a half-initialized clone leaves
+    `HEAD -> ref: refs/heads/.invalid`, and git rejects that as an illegal refname
+    (rc=128), so the gitdir's HEAD file is read directly.
+    """
+    git_dir = _run(["git", "rev-parse", "--git-dir"], cwd=sub_dir).stdout.strip()
+    content = ""
+    if git_dir:
+        head_file = Path(git_dir)
+        if not head_file.is_absolute():
+            head_file = sub_dir / head_file
+        try:
+            content = (head_file / "HEAD").read_text(encoding="utf-8").strip()
+        except OSError:
+            content = ""
+    has_branch = bool(_run(["git", "for-each-ref", "--count=1", "refs/heads"], cwd=sub_dir).stdout.strip())
+    if not has_branch:
+        return f"empty checkout, HEAD -> {content or 'unresolved'}"
+    return f"unresolvable HEAD ({content or 'detached, unknown commit'})"
+
+
+def _submodule_merge_gap(sub_dir: Path, sub_path: str) -> list[str]:
+    """Why `sub_dir` cannot be proven merged into its own origin/main ([] = proven merged).
+
+    HEAD is resolved *inside the submodule*, never taken from the gitlink sha printed
+    by `git submodule status`: that sha comes from the index and is reported even when
+    the checkout itself is empty — a half-initialized clone reports a matching status
+    flag while `HEAD -> ref: refs/heads/.invalid` and no refs exist at all.
+    """
+    if not (sub_dir / ".git").exists():
+        return [f"{sub_path} (not a checkout)"]
+    head = _run(["git", "rev-parse", "--verify", "-q", "HEAD"], cwd=sub_dir)
+    if head.returncode != 0:
+        return [f"{sub_path} ({_head_detail(sub_dir)})"]
+    if _run(["git", "rev-parse", "--verify", "-q", "origin/main"], cwd=sub_dir).returncode != 0:
+        return [f"{sub_path} (no origin/main ref)"]
+    sha = head.stdout.strip()
+    rc = _run(["git", "merge-base", "--is-ancestor", sha, "origin/main"], cwd=sub_dir).returncode
+    if rc != 0:
+        return [f"{sub_path} (HEAD {sha[:8]} not in its origin/main)"]
+    return []
+
+
+def _unmerged_submodules(path: Path) -> list[str]:
+    """Initialized submodules of `path` that are not provably merged to their own origin/main.
+
+    Scoped to the worktree at `path` (its own gitdir, its own submodule clones).
+    Uninitialized submodules (`-` flag) are skipped: there are no local commits
+    there to lose. Anything else we cannot inspect is reported as a gap so the
+    caller refuses to auto-clean.
+    """
+    if not path.is_dir():
+        return []
+    out = _run(["git", "submodule", "status"], cwd=path)
+    if out.returncode != 0:
+        return ["<git submodule status unavailable>"]
+    gaps: list[str] = []
+    for line in out.stdout.splitlines():
+        # Match the raw line: the leading status flag is part of the record, so
+        # stripping the line would turn a matched " " flag into a non-match.
+        match = _SUBMODULE_STATUS_RE.match(line.rstrip())
+        if not match:
+            continue
+        if match.group("flag") == "-":
+            continue
+        sub_path = match.group("path")
+        gaps.extend(_submodule_merge_gap(path / sub_path, sub_path))
+    return gaps
 
 
 def _mtime_days(path: Path) -> float:
@@ -125,18 +227,26 @@ def _categorize_worktree(wt: dict[str, str]) -> WorktreeInfo:
     branch = wt.get("branch", "UNKNOWN")
     head = wt.get("head", "")
     dirty, upstream = _worktree_status(path)
-    merged = _is_merged_to_origin_main(head) if head else False
+    merged = _is_merged_to_origin_main(head, path) if head else False
+    unmerged_submodules = _unmerged_submodules(path)
     mtime_days = _mtime_days(path)
 
-    if dirty == 0 and merged:
+    if merged and unmerged_submodules:
+        # The superproject really is merged, yet unpushed history survives in a
+        # submodule checkout. Reported on its own category: `merged_with_dirty`
+        # would blame uncommitted changes for what is actually unmerged history
+        # (and would hide it entirely on a clean tree).
+        category = "unmerged_submodule"
+        reason = "submodule work not merged to its own origin/main: " + ", ".join(unmerged_submodules)
+    elif dirty == 0 and merged:
         category = "safe_to_remove"
         reason = "clean and merged to origin/main"
-    elif dirty == 0 and not merged and mtime_days > STALE_DAYS:
-        category = "stale_clean"
-        reason = f"clean but unmerged and inactive for {mtime_days:.1f} days"
     elif dirty > 0 and merged:
         category = "merged_with_dirty"
         reason = f"merged to origin/main but has {dirty} uncommitted changes"
+    elif dirty == 0 and not merged and mtime_days > STALE_DAYS:
+        category = "stale_clean"
+        reason = f"clean but unmerged and inactive for {mtime_days:.1f} days"
     elif dirty > 0 and mtime_days > STALE_DAYS:
         category = "stale_dirty"
         reason = f"inactive for {mtime_days:.1f} days with {dirty} uncommitted changes"
@@ -154,6 +264,7 @@ def _categorize_worktree(wt: dict[str, str]) -> WorktreeInfo:
         upstream=upstream,
         category=category,
         reason=reason,
+        unmerged_submodules=unmerged_submodules,
     )
 
 
