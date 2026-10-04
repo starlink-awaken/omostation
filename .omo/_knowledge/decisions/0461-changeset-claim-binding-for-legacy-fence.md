@@ -187,6 +187,51 @@ fence 所需的全部材料。
 - 不启用 instruction capability / 不把 v2 提升到 shadow 之上（ADR-0455 明列为非目标）
 - 不改任何历史 receipt
 
+## 实施计划（2026-10-04 增补，PROPOSED，未实施）
+
+读动词 `describe-claim` 已交付（`omostation-omo#206` / `c909bd6fc`，父仓指针
+`#4615` / `0a63b4969`）。但它**只是让绑定可被读出**——要真正让
+`integrate --apply` 跑通，还差一条从 claim 到 changeset 的传导链。
+
+实测：`bin/gac/agent-clone.py` 中 `claim_id` 出现 **0 次**。changeset 当前只带
+`claim_verification`（`all_covered` / `enabled` / `claimed_paths` /
+`authority_binding`），**不携带任何 claim 身份**；而 claim 记录
+（`runs/<run>.yaml`）也只存 `actor` / `claimed_at` / `paths` / `scopes` /
+`locks` / `affected_graph`。
+
+故剩余工作不是一步，而是**四处有严格先后依赖的改动，跨两个仓，全部在安全边界上**：
+
+| # | 改动 | 位置 | 前置 |
+|---|---|---|---|
+| 1 | `lifecycle.py` 建 claim 时把 `claim_id`（连同 `claim_version` / `lease_epoch`）持久化进 claim 记录 | `projects/omo` | — |
+| 2 | `changeset` 从 claim 记录读取并记录 `claim_id` | `bin/gac/agent-clone.py` | 1 |
+| 3 | `verify-changeset` 用 `claim_id` 调 `describe-claim`，把绑定写进 `claims_authority_fence_context` | `bin/gac/agent-clone.py` | 2 |
+| 4 | changeset 阶段观察远端 delivery ref，得出 `expected_remote_oid` | `bin/gac/agent-clone.py` | 3 |
+
+### 每步的验证契约
+
+- **1**：`claim` 记录出现 `claim_id` 且与 `describe-claim` 返回的一致；既有读者
+  （`bin/agent-workflow.py`、`swarm_discipline`、`panorama-collect` 等）不受影响
+  —— 均为加法式字段
+- **2**：`change_id` 的计算输入**不得**包含 `claim_id`，否则同内容 changeset 的
+  标识会随 claim 漂移（既有注释已声明 `claims_authority_shadow` 不得进 `change_id`
+  权威，同理适用）
+- **3**：RED —— `claim_verification.all_covered` 为假时**不得**写入绑定；
+  GREEN —— 绑定齐备时 `issue-legacy-fence` 可签发并完成一次 canonical push
+- **4**：RED —— ref 状态在两次观察间变化时拒发；GREEN —— 稳定时带哨兵
+  `_ABSENT_REMOTE_OID` 正常发
+
+### 排期理由
+
+四步有严格拓扑序，任一步未验证就推进会把"看起来对、实际必然失败"的中间态
+写进主线。建议作为**一个实施批次**推进，每步独立 RED/GREEN，而不是零散提交。
+
+### 前置条件（不因实施而改变）
+
+即便 1–4 全部完成，**端到端 `integrate --apply` 仍需 principal 签发新的授权窗口**
+（前次 `DEC-20260923-CLAIMS-LIFECYCLE-R0-01` 已于 `2026-09-25T01:47:16Z` 到期）。
+实施只能解除"绑定不可得"这一结构性阻塞，不能替代授权。
+
 ## 执行门
 
 1. 本 ADR → ACCEPTED（独立 human review），且**「是否新增 authority 读动词」有明确结论**（见「实施前发现」）
