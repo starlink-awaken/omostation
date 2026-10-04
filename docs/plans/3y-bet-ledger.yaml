@@ -39805,6 +39805,182 @@ bets:
     expect: 'exit 0 —— 必填字段含 verify + 本 BET spec 绑定 digest 校验'
   - cmd: 'python3 -m pytest tests/unit/test_cron_registry_reality_invariants.py -q'
     expect: 'exit 0 (9 passed) —— E1 判据形状在检出内是活的'
+- id: BET-Y2Q4-T10-226
+  title: 看门狗分级恢复（先 kickstart republisher 再重启 dashboard）+ deploy↔workspace host 资产漂移回同步
+  goal: T10-223 根治 projection_stale 后, 看门狗 (deploy 侧 liveness-watchdog.sh) 仍是「探活失败×2
+    → 直接 kickstart -k dashboard 服务」。但最常见故障模式是投影租约过期 (republisher 卡住/调度错过), 重启 dashboard
+    服务对 stale projection 完全无效 (读端仍 503), 反而制造无谓抖动与服务重启风险。 本 BET 把恢复链改分级： 探活失败×2 → 先
+    kickstart com.omostation.zhixing-projection-republisher, 等待 ≤90s 内每 10s 重探 → 恢复记
+    recovered_via=republisher 并退出; 仍失败才 kickstart com.omostation.zhixing-dashboard 服务;
+    再失败才系统通知人工介入。同时 host-drift 巡检持续报警的 3 个漂移文件 (template.html / copilot_service.py /
+    rag_engine.py — deploy 侧为 2026-09-24~10-04 多轮 UI hotfix 有意变更, 全部已提交在 deploy 仓 origin/main)
+    经 zhixing-host-sync capture 回同步至 workspace bin/panorama/assets/host/, 消除恒红报警与「并发覆盖丢失」风险敞口。
+  status: active
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: dashboard-evolution
+  objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-04-bet-226-watchdog-tiered-recovery-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:ff2d49f69a34f14fc757bc4be97f11924aab025e0640bbf3357a075adfbf5268
+    decision_ref: decision://accepted/BET-Y2Q4-T10-226
+  write_surfaces:
+  - bin/panorama/assets/host/
+  - docs/superpowers/specs/2026-10-04-bet-226-watchdog-tiered-recovery-spec.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-226.md
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: PENDING
+        evidence: {}
+      operational:
+        status: PENDING
+        evidence: {}
+      value:
+        status: PENDING
+        evidence: {}
+    overall_state: PENDING
+  non_goals:
+  - 不改读端 runtime_paths.py 的 15min 新鲜度上限 (安全约束不动);
+  - 不动 republisher 本体逻辑与调度参数;
+  - 不回滚 deploy 侧任何有意变更 (本轮只做 capture 回同步, 不做 restore);
+  - 不迁移看门狗脚本进 workspace (它属 zhixing-dashboard 独立仓, 按该仓惯例直接 commit+push)。
+  done_when:
+  - liveness-watchdog.sh 分级恢复版在 zhixing-dashboard 仓 origin/main 且 launchd 加载生效;
+  - 恢复链顺序经审阅/演练确认： 任何场景下 republisher kickstart 先于 dashboard 服务重启;
+  - zhixing-host-sync check (workspace 侧) exit 0, 7 个受管 host 文件全部 in_sync;
+  - workspace bin/panorama/assets/host/ 与 deploy 对应文件 sha256 逐字节一致;
+  - com.omostation.zhixing-host-drift 连续 2 个周期退出码 0。
+- id: BET-Y2Q4-T10-227
+  title: 全量投影数据周期刷新通道 — 专用洁净 publisher 检出 + launchd 周期全量发布
+  goal: T10-223 republisher 只续租约, 投影数据观测龄期 (data_observed_at) 随时间单调增长 (collector 数据：
+    workflow runs / 台账 / 探针 / 事件会越来越旧, 页面上「最后观测」时间戳老化)。 全量 publisher bin/panorama/panorama-collect.py
+    受「检出==origin/main 且完全洁净」强身份校验 + 5~14min 采集耗时约束, 主树常年有 WIP/运行时脏文件 → 生产自动刷新通道不存在。本
+    BET 建持久专用检出 ~/.local/opt/omostation-publisher (GitHub origin 浅克隆 + 浅子模块, 机器属主, 不进
+    ws-* 卫生面), driver bin/panorama/projection-full-refresh.py： 文件锁防重入 → git fetch +
+    reset --hard origin/main (含 remote 卫生校验) → submodule sync/update --init --depth
+    1 → 以该检出为 PANORAMA_CODE_ROOT 执行 检出内 panorama-collect.py 全量发布 (自带 workspace 身份 +
+    deploy 身份双校验, fail-closed) → 成功后 republisher 自动接续续期新 revision。发布期间 republisher 续旧
+    revision (读端全程可用), pointer 原子切换。 services.yaml generate:true 注册, plist 由 gen-service-configs
+    生成, StartInterval=6h + RunAtLoad。
+  status: active
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: dashboard-evolution
+  objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-04-bet-227-full-refresh-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:ca28bbf167af18cc7277a752b118b13b6112872255c0e7ab1afbb5f4ea5b24e1
+    decision_ref: decision://accepted/BET-Y2Q4-T10-227
+  write_surfaces:
+  - bin/panorama/projection-full-refresh.py
+  - .omo/_truth/registry/services.yaml
+  - docs/superpowers/specs/2026-10-04-bet-227-full-refresh-spec.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-227.md
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: PENDING
+        evidence: {}
+      operational:
+        status: PENDING
+        evidence: {}
+      value:
+        status: PENDING
+        evidence: {}
+    overall_state: PENDING
+  non_goals:
+  - 不放松 panorama-collect.py 的强身份校验 (一字不改);
+  - 不改动 projection-republisher.py;
+  - 不从主树 ~/Workspace 跑全量发布 (主树只读纪律不动);
+  - 不动 deploy 仓代码与读端逻辑;
+  - 不做多 publisher 并发/负载均衡 (单通道顺序执行, 锁防重入)。
+  done_when:
+  - launchd label com.omostation.zhixing-projection-fullrefresh 已加载且 gen-service-configs
+    --check 判定无漂移;
+  - 首次全量发布成功： 新 revision 的 data_observed_at 为当时时刻, :43191 / 与 /api/v1/manifest 全 200;
+  - 第二次调度触达时锁防重入实证 (运行中跳过, 日志可查);
+  - 失败注入演练 fail-closed： 身份校验失败时退出非零、旧 revision 仍被 republisher 续期、无半成品 revision;
+  - publisher 检出常年 == origin/main (每次运行后核验)。
+- id: BET-Y2Q4-T10-228
+  title: launchd 登记 E4 存量 findings 清理 — magpie 归属补登 / codewhisperer 陈旧豁免移除 / 4 个 unclassified
+    裁定
+  goal: 2026-09-27 service-registry-reality closeout (docs/reports/2026-09-27-service-registry-reality-closeout.md)
+    遗留三类存量 finding, 本轮按 2026-10-04 实测现状一次性清理： ① com.yetone.magpie — 实测 plist 已安装且加载
+    (launchctl PID 1980, 第三方划词翻译应用 Magpie.app 自注册), 属 external 域, 补登 exempt_labels +
+    reason (归属主体 = Magpie.app, 非本仓可管理面); ② com.amazon.codewhisperer.launcher 陈旧豁免 —
+    该 plist 为 2026-09-30 事故后按残留 ProgramArguments 重建、未 load, 2026-10-04 实测 LaunchAgents
+    已无此 plist (launchctl 仅剩输入法应用实例, 不同 label), 豁免记录按实移除; ③ 4 个 unclassified plist (com.learningevolution.concept-weave.monthly
+    / com.lifeos.pulse / com.local.decision-svc / com.opencode.quota-monitor — 全部已安装,
+    lifeos.pulse 运行中 PID 94325) 当时只记证据待 principal 裁定 — 本轮获 principal 全局授权, 裁定为 owned
+    (principal 个人工具/ 本地服务域), 写入 services.yaml launchd_namespace 归属 + reason, unclassified
+    清零。 目标： gen-service-configs --reality-check E1-E4 全绿, 登记面与现实零漂移。
+  status: active
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P3
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: governance-state-mutation
+  objective_ref: OBJ-CONTINUITY
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-04-bet-228-launchd-e4-cleanup-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:cebe3e24ae142763b6eee81e0809466787b3a85f5570ca925bc72d697cdcf79d
+    decision_ref: decision://accepted/BET-Y2Q4-T10-228
+  write_surfaces:
+  - .omo/_truth/registry/services.yaml
+  - docs/reports/2026-09-27-service-registry-reality-closeout.md
+  - docs/superpowers/specs/2026-10-04-bet-228-launchd-e4-cleanup-spec.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-228.md
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: PENDING
+        evidence: {}
+      operational:
+        status: PENDING
+        evidence: {}
+      value:
+        status: PENDING
+        evidence: {}
+    overall_state: PENDING
+  non_goals:
+  - 不 load/unload/bootout 任何 launchd 任务 (只动登记面);
+  - 不改动 generate:true 面与任何在跑任务的 plist 内容;
+  - 不增删 plist 文件 (本轮只做归属裁定与登记核销);
+  - 不动 owned 49 条的现有登记与 label。
+  done_when:
+  - bin/mof/gen-service-configs.py --reality-check E1/E2/E3/E4 全绿 (unclassified=0);
+  - services.yaml 中 magpie 已按 external 补登 reason、codewhisperer.launcher 豁免已移除;
+  - 4 个 plist 归属写入 launchd_namespace 且带 reason;
+  - closeout 报告增补本轮裁决段落 (含 2026-10-04 实测证据： launchctl/ls 输出)。
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -39943,7 +40119,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 520
+  total_bets: 523
   windows:
   - Y1Q1
   - Y1Q2
