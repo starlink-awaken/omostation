@@ -39495,7 +39495,8 @@ bets:
     内避开读端启动洁净校验; 配套 --gc 清理孤儿 revision (实证 631 个占 9.9GB → keep 48 ≈ 920MB)。调度走 services.yaml
     generate:true 注册, plist 由 bin/mof/gen-service-configs.py 生成 (launchd StartInterval=480s
     + RunAtLoad 覆盖 睡眠唤醒), 不手写。数据内容刷新职责仍归全量 publisher, 本工具只续服务租约, 观测龄期显示 保持诚实。
-  status: in_progress
+  status: done
+  done_at: 2026-10-04
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -39506,11 +39507,14 @@ bets:
   retro: required
   workflow: dashboard-evolution
   objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
   write_surfaces:
   - bin/panorama/projection-republisher.py
   - .omo/_truth/registry/services.yaml
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-10-03-bet-223-projection-autorepublish-spec.md
+  - docs/reports/2026-10-04-bet-223-projection-autorepublish-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-223.md
   non_goals:
   - 不修改读端 runtime_paths.py 的 15min 新鲜度上限 (安全约束不动);
   - 不替代全量 publisher 的数据刷新职责, 观测数据更新仍由 panorama-collect 承担;
@@ -39547,18 +39551,41 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
+        status: VERIFIED
         evidence:
-          stopgap_overnight:
-            ref: receipt:///Users/xiamingxing/.local/log/projection-republisher.log
-            note: stopgap cron 2026-10-03 22:00 → 10-04 08:56 整夜 8min 滚动续期零 503; GC 631→48 (9.9GB→920MB); 代码 PR 待合并后转 VERIFIED
+          merged_reachable_commit:
+            ref: git://origin/main@35bd5595bda708348364846b898f32a8d33b07a9
+          tests:
+            ref: receipt://docs/reports/2026-10-04-bet-223-projection-autorepublish-closeout.md
+            sha256: sha256:c2e71de47409d199bf8dca6c3b170b84c3b2f7fc74bad28c573e5a449e3c8d09
+          diff:
+            ref: receipt://docs/reports/2026-10-04-bet-223-projection-autorepublish-closeout.md
+            sha256: sha256:c2e71de47409d199bf8dca6c3b170b84c3b2f7fc74bad28c573e5a449e3c8d09
+          rollback:
+            ref: receipt://docs/reports/2026-10-04-bet-223-projection-autorepublish-closeout.md
+            sha256: sha256:c2e71de47409d199bf8dca6c3b170b84c3b2f7fc74bad28c573e5a449e3c8d09
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-223.md
+            sha256: sha256:0042d6df7fba193769cda6772ad9a6de6f62a73252ad81fb71cc3db3c51ae90d
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-04-bet-223-launchd-canary.json
+            sha256: sha256:084cf09e0fee44767342be4a1ab5d4e2a7ff27ac5eb165a23fe4d688434f753b
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-04-bet-223-launchd-canary.json
+            sha256: sha256:084cf09e0fee44767342be4a1ab5d4e2a7ff27ac5eb165a23fe4d688434f753b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-223.md
+            sha256: sha256:0042d6df7fba193769cda6772ad9a6de6f62a73252ad81fb71cc3db3c51ae90d
+          cleanup:
+            ref: receipt://docs/reports/2026-10-04-bet-223-projection-autorepublish-closeout.md
+            sha256: sha256:c2e71de47409d199bf8dca6c3b170b84c3b2f7fc74bad28c573e5a449e3c8d09
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2

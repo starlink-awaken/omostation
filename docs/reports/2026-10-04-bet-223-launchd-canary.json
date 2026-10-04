@@ -1,0 +1,22 @@
+{
+  "schema": "bet-canary-receipt/v1",
+  "bet_id": "BET-Y2Q4-T10-223",
+  "captured_at": "2026-10-04T09:17:45Z",
+  "endpoints": {
+    "/": 200,
+    "/api/v1/manifest": 200,
+    "/api/v1/summary": 200,
+    "/api/v1/search?q=x&limit=1": 200
+  },
+  "projection_status": {
+    "status": "fresh",
+    "revision_id": "ca6d76c4218d8676940a60cf74cc8e161e0edf8f40486f560d4c56f7e3ec762b",
+    "generated_at": "2026-10-04T09:11:12Z",
+    "fresh_until": "2026-10-04T09:21:12Z",
+    "seconds_left": 206
+  },
+  "launchd_label": "com.omostation.zhixing-projection-republisher",
+  "launchd_interval_sec": 480,
+  "service_registry_check": "gen-service-configs --check: 0 drift (65 services)",
+  "revision_count_after_gc": 48
+}
