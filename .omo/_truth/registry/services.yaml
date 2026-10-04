@@ -5772,7 +5772,7 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist
-  content_digest: sha256:3b920d105a7aa364aa3b74a4288d536dff0253baa7b1dbd2c6acc59a25ac5402
+  content_digest: sha256:bebd759d37895fdb4c990c8ec94fa231ffbd227ff711628ce56d53deb1b650eb
   scheduler: launchd
   trigger: calendar
   label: com.omostation.omo-debt-refresh
@@ -5780,7 +5780,7 @@ services:
     interpreter: /bin/bash
     entrypoint: -c
     args:
-    - cd /Users/xiamingxing/Workspace/projects/omo && NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ) && PYTHONPATH=src python3 -m omo.omo_debt_cli refresh --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW && PYTHONPATH=src python3 -m omo.omo_debt_cli dispatch --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW && PYTHONPATH=src python3 -m omo.omo_debt_cli campaign --omo-dir /Users/xiamingxing/Workspace/.omo && PYTHONPATH=src python3 -m omo.omo_debt_cli report --omo-dir /Users/xiamingxing/Workspace/.omo
+    - cd /Users/xiamingxing/Workspace/projects/omo && NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ) && PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli refresh --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW && PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli dispatch --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW && PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli campaign --omo-dir /Users/xiamingxing/Workspace/.omo && PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli report --omo-dir /Users/xiamingxing/Workspace/.omo
   run_at_load: true
   outputs:
     stdout: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
