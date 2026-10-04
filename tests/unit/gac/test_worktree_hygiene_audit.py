@@ -10,6 +10,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 _MODULE_PATH = Path(__file__).resolve().parents[3] / "bin" / "gac" / "worktree-hygiene-audit.py"
 _spec = importlib.util.spec_from_file_location("worktree_hygiene_audit", _MODULE_PATH)
 wha = importlib.util.module_from_spec(_spec)
@@ -36,7 +38,7 @@ class FakeGit:
 
     def __init__(
         self,
-        wt_path: Path,
+        wt_path: Path | None = None,
         *,
         dirty: int = 0,
         upstream: str = "origin/feature",
@@ -45,11 +47,10 @@ class FakeGit:
         submodule_status: str = "",
         sub_has_origin_main: bool = True,
         sub_head_resolves: bool = True,
-        sub_empty_checkout: bool = False,
         sub_git_dir: Path | None = None,
         sub_merged: bool = True,
     ) -> None:
-        self.wt_path = Path(wt_path)
+        self.wt_path = Path(wt_path) if wt_path is not None else None
         self.dirty = dirty
         self.upstream = upstream
         self.super_has_origin_main = super_has_origin_main
@@ -57,7 +58,6 @@ class FakeGit:
         self.submodule_status = submodule_status
         self.sub_has_origin_main = sub_has_origin_main
         self.sub_head_resolves = sub_head_resolves
-        self.sub_empty_checkout = sub_empty_checkout
         self.sub_git_dir = sub_git_dir
         self.sub_merged = sub_merged
         self.calls: list[tuple[list[str], Path | None]] = []
@@ -76,21 +76,22 @@ class FakeGit:
             ref = cmd[-1]
             if ref == "HEAD@{upstream}":
                 return _completed(0, self.upstream + "\n") if self.upstream else _completed(1)
-            if ref == "origin/main":
-                has = self.sub_has_origin_main if in_submodule else self.super_has_origin_main
-                return _completed(0, "0" * 40 + "\n") if has else _completed(128)
+            if ref == "HEAD" and cmd[-2] == "--git-path":
+                # Only reached on the unresolvable-HEAD diagnosis path.
+                return _completed(0, f"{self.sub_git_dir / 'HEAD'}\n") if self.sub_git_dir else _completed(128)
             if ref == "HEAD":
-                # `--git-dir` is only reached on the unresolvable-HEAD path.
-                return _completed(0, "a" * 40 + "\n") if self.sub_head_resolves else _completed(128)
-            if ref == "--git-dir":
-                return _completed(0, f"{self.sub_git_dir}\n") if self.sub_git_dir else _completed(128)
-        if cmd[:2] == ["git", "for-each-ref"]:
-            return _completed(1 if self.sub_empty_checkout else 0)
+                return _completed(0, "a" * 40 + "\n") if self.sub_head_resolves else _completed(1)
         if cmd[:2] == ["git", "submodule"]:
             return _completed(0, self.submodule_status)
         if cmd[:2] == ["git", "merge-base"]:
-            merged = self.sub_merged if in_submodule else self.super_merged
-            return _completed(0) if merged else _completed(1)
+            # Real exit codes: 0 ancestor, 1 not an ancestor, 128 a side unresolvable.
+            if in_submodule:
+                if not (self.sub_head_resolves and self.sub_has_origin_main):
+                    return _completed(128)
+                return _completed(0 if self.sub_merged else 1)
+            if not self.super_has_origin_main:
+                return _completed(128)
+            return _completed(0 if self.super_merged else 1)
         raise AssertionError(f"unexpected git command: {cmd} (cwd={cwd})")
 
     def cwds_for(self, *prefix: str) -> list[Path | None]:
@@ -115,6 +116,7 @@ def _fake_worktree(fake: FakeGit, sub_checkout: bool = True):
             git_dir.mkdir()
             (git_dir / "HEAD").write_text("ref: refs/heads/.invalid\n")
             fake.sub_git_dir = git_dir
+        fake.wt_path = wt
         with mock.patch.object(wha, "_run", fake):
             yield wt
 
@@ -126,6 +128,12 @@ def _wt_entry(wt: Path) -> dict[str, str]:
 _KAIRON_MERGED = " " + "c" * 40 + " projects/knowledge/kairon (remotes/origin/HEAD)"
 _KAIRON_UNMERGED = "+" + "c" * 40 + " projects/knowledge/kairon (remotes/origin/main-13-gc0ffee)"
 _KAIRON_UNINITIALIZED = "-" + "c" * 40 + " projects/knowledge/kairon"
+
+
+def _categorize(fake: FakeGit, *, mtime_days: float = 0.1, sub_checkout: bool = True) -> wha.WorktreeInfo:
+    with _fake_worktree(fake, sub_checkout=sub_checkout) as wt:
+        with mock.patch.object(wha, "_mtime_days", return_value=mtime_days):
+            return wha._categorize_worktree(_wt_entry(wt))
 
 
 class TestCategorizeWorktree:
@@ -288,12 +296,17 @@ class TestRepoAwareAncestry:
             assert wha._is_merged_to_origin_main("b" * 40, wt) is False
 
     def test_missing_origin_main_is_not_merged(self):
-        """Unknown must never read as merged — and must not be guessed from a stale ref."""
+        """Unknown must never read as merged: merge-base exits 128 without origin/main."""
         wt = Path("/tmp/ws-ancestry-no-ref")
         fake = FakeGit(wt, super_has_origin_main=False, super_merged=True)
         with mock.patch.object(wha, "_run", fake):
             assert wha._is_merged_to_origin_main("b" * 40, wt) is False
-        assert not fake.cwds_for("git", "merge-base"), "ancestry ran despite a missing origin/main"
+
+    def test_empty_head_is_not_merged_and_runs_nothing(self):
+        fake = FakeGit(Path("/tmp/ws-ancestry-empty"))
+        with mock.patch.object(wha, "_run", fake):
+            assert wha._is_merged_to_origin_main("", Path("/tmp/ws-ancestry-empty")) is False
+        assert fake.calls == []
 
 
 class TestSubmoduleGate:
@@ -305,113 +318,80 @@ class TestSubmoduleGate:
     """
 
     def test_unmerged_submodule_is_unsafe_even_when_superproject_merged_and_clean(self):
-        fake = FakeGit(Path("/unused"), dirty=0, super_merged=True, submodule_status=_KAIRON_UNMERGED, sub_merged=False)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
+        info = _categorize(FakeGit(dirty=0, super_merged=True, submodule_status=_KAIRON_UNMERGED, sub_merged=False))
         assert info.merged_to_origin_main is True
         assert info.dirty == 0
         assert info.category == "unmerged_submodule"
         assert "unmerged_submodule" in wha.UNSAFE_WORKTREE_CATEGORIES
         assert "kairon" in info.reason
+        assert "not in its origin/main" in info.reason
 
     def test_submodule_without_origin_main_ref_is_unsafe(self):
-        fake = FakeGit(Path("/unused"), submodule_status=_KAIRON_MERGED, sub_has_origin_main=False)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
+        info = _categorize(FakeGit(submodule_status=_KAIRON_MERGED, sub_has_origin_main=False))
         assert info.category == "unmerged_submodule"
         assert "origin/main" in info.reason
 
-    def test_unresolved_submodule_head_is_unsafe(self):
-        fake = FakeGit(Path("/unused"), submodule_status=_KAIRON_MERGED, sub_head_resolves=False)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
-        assert info.category == "unmerged_submodule"
-
-    def test_empty_submodule_checkout_is_named_as_such(self):
+    def test_unresolved_submodule_head_is_unsafe_and_shows_head_file(self):
         """Half-initialized clones report a *matching* status flag; only HEAD tells the truth."""
-        fake = FakeGit(
-            Path("/unused"),
-            submodule_status=_KAIRON_MERGED,
-            sub_head_resolves=False,
-            sub_empty_checkout=True,
-        )
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
+        info = _categorize(FakeGit(submodule_status=_KAIRON_MERGED, sub_head_resolves=False))
         assert info.category == "unmerged_submodule"
-        assert "empty checkout" in info.reason
+        assert "unresolvable HEAD" in info.reason
+        assert "refs/heads/.invalid" in info.reason
 
     def test_dirty_worktree_with_unpushed_submodule_is_not_blamed_on_uncommitted_changes(self):
         """The gitlink dirtiness is a symptom; unpushed history is the finding."""
-        fake = FakeGit(Path("/unused"), dirty=1, super_merged=True, submodule_status=_KAIRON_UNMERGED, sub_merged=False)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
+        info = _categorize(FakeGit(dirty=1, super_merged=True, submodule_status=_KAIRON_UNMERGED, sub_merged=False))
         assert info.category == "unmerged_submodule"
         assert "uncommitted changes" not in info.reason
 
     def test_uninitialized_submodule_is_skipped_and_tree_stays_safe(self):
         """`-` prefix means no local commits to lose — must not crash, must not block."""
-        fake = FakeGit(Path("/unused"), submodule_status=_KAIRON_UNINITIALIZED)
-        with _fake_worktree(fake, sub_checkout=False) as wt:
-            fake.wt_path = wt
-            assert not (wt / "projects" / "knowledge" / "kairon").exists()
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
+        fake = FakeGit(submodule_status=_KAIRON_UNINITIALIZED)
+        info = _categorize(fake, sub_checkout=False)
         assert info.category == "safe_to_remove"
+        assert not any(cwd != fake.wt_path for cwd in fake.cwds_for("git", "merge-base"))
 
     def test_merged_submodule_leaves_worktree_safe(self):
-        fake = FakeGit(Path("/unused"), submodule_status=_KAIRON_MERGED, sub_merged=True)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
+        info = _categorize(FakeGit(submodule_status=_KAIRON_MERGED, sub_merged=True))
         assert info.category == "safe_to_remove"
 
     def test_submodule_probe_reads_this_worktree_only(self):
-        fake = FakeGit(Path("/unused"), submodule_status=_KAIRON_MERGED, sub_merged=True)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                wha._categorize_worktree(_wt_entry(wt))
+        fake = FakeGit(submodule_status=_KAIRON_MERGED, sub_merged=True)
+        _categorize(fake)
+        wt = fake.wt_path
         assert fake.cwds_for("git", "submodule") == [wt]
         assert set(fake.cwds_for("git", "merge-base")) == {wt, wt / "projects" / "knowledge" / "kairon"}
+
+    def test_merged_submodule_costs_one_subprocess(self):
+        """Happy path: a single merge-base per submodule, diagnosis only on a gap."""
+        fake = FakeGit(submodule_status=_KAIRON_MERGED, sub_merged=True)
+        _categorize(fake)
+        sub = fake.wt_path / "projects" / "knowledge" / "kairon"
+        assert [cmd for cmd, cwd in fake.calls if cwd == sub] == [
+            ["git", "merge-base", "--is-ancestor", "HEAD", "origin/main"]
+        ]
+
+    def test_unmerged_superproject_skips_the_submodule_probe(self):
+        """The probe can only change a merged verdict, so it must not run otherwise."""
+        fake = FakeGit(super_merged=False, submodule_status=_KAIRON_UNMERGED, sub_merged=False)
+        info = _categorize(fake, mtime_days=5.0)
+        assert info.category == "stale_clean"
+        assert fake.cwds_for("git", "submodule") == []
 
 
 class TestSafeToRemoveConjunction:
     """safe_to_remove == clean AND superproject merged AND no unmerged submodule."""
 
     def test_safe_to_remove_requires_clean_and_merged(self):
-        fake = FakeGit(Path("/unused"), dirty=0, super_merged=True)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
-        assert info.category == "safe_to_remove"
+        assert _categorize(FakeGit(dirty=0, super_merged=True)).category == "safe_to_remove"
 
     def test_not_safe_when_superproject_unmerged(self):
-        fake = FakeGit(Path("/unused"), dirty=0, super_merged=False)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
+        info = _categorize(FakeGit(dirty=0, super_merged=False))
         assert info.category == "active"
         assert info.category not in wha.UNSAFE_WORKTREE_CATEGORIES
 
     def test_not_safe_when_dirty(self):
-        fake = FakeGit(Path("/unused"), dirty=2, super_merged=True)
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=0.1):
-                info = wha._categorize_worktree(_wt_entry(wt))
+        info = _categorize(FakeGit(dirty=2, super_merged=True))
         assert info.category == "merged_with_dirty"
         assert info.category in wha.UNSAFE_WORKTREE_CATEGORIES
 
@@ -425,50 +405,20 @@ class TestSafeToRemoveConjunction:
 class TestPreExistingCategoryMeanings:
     """The submodule gate must not silently re-label the existing categories."""
 
-    def _categorize(self, *, dirty, super_merged, submodule_status, sub_merged, mtime_days):
-        fake = FakeGit(
-            Path("/unused"),
-            dirty=dirty,
-            super_merged=super_merged,
-            submodule_status=submodule_status,
-            sub_merged=sub_merged,
-        )
-        with _fake_worktree(fake) as wt:
-            fake.wt_path = wt
-            with mock.patch.object(wha, "_mtime_days", return_value=mtime_days):
-                return wha._categorize_worktree(_wt_entry(wt))
-
-    def test_merged_with_dirty_unchanged_when_submodules_are_merged(self):
-        info = self._categorize(
-            dirty=3, super_merged=True, submodule_status=_KAIRON_MERGED, sub_merged=True, mtime_days=0.1
-        )
-        assert info.category == "merged_with_dirty"
-        assert info.dirty == 3
-
-    def test_stale_clean_unchanged(self):
-        info = self._categorize(dirty=0, super_merged=False, submodule_status="", sub_merged=True, mtime_days=5.0)
-        assert info.category == "stale_clean"
-
-    def test_stale_dirty_unchanged(self):
-        info = self._categorize(dirty=3, super_merged=False, submodule_status="", sub_merged=True, mtime_days=5.0)
-        assert info.category == "stale_dirty"
-
-    def test_active_unchanged(self):
-        info = self._categorize(dirty=1, super_merged=False, submodule_status="", sub_merged=True, mtime_days=0.1)
-        assert info.category == "active"
-
-    def test_unmerged_submodule_does_not_hijack_stale_categories(self):
-        """A stale worktree with unpushed submodules is still `stale_*` — already unsafe.
-
-        The new category only speaks for superproject-merged worktrees, so an
-        operator scanning `stale_*` keeps seeing the staleness signal.
-        """
-        info = self._categorize(
-            dirty=0,
-            super_merged=False,
-            submodule_status=_KAIRON_UNMERGED,
-            sub_merged=False,
-            mtime_days=5.0,
-        )
-        assert info.category == "stale_clean"
-        assert info.category in wha.UNSAFE_WORKTREE_CATEGORIES
+    @pytest.mark.parametrize(
+        ("dirty", "super_merged", "submodule_status", "sub_merged", "mtime_days", "expected"),
+        [
+            pytest.param(3, True, _KAIRON_MERGED, True, 0.1, "merged_with_dirty", id="merged_with_dirty"),
+            pytest.param(0, False, "", True, 5.0, "stale_clean", id="stale_clean"),
+            pytest.param(3, False, "", True, 5.0, "stale_dirty", id="stale_dirty"),
+            pytest.param(1, False, "", True, 0.1, "active", id="active"),
+            # A stale worktree with unpushed submodules stays `stale_*` (already unsafe):
+            # the new category only speaks for superproject-merged worktrees.
+            pytest.param(0, False, _KAIRON_UNMERGED, False, 5.0, "stale_clean", id="no_hijack_of_stale"),
+        ],
+    )
+    def test_category_unchanged(self, dirty, super_merged, submodule_status, sub_merged, mtime_days, expected):
+        fake = FakeGit(dirty=dirty, super_merged=super_merged, submodule_status=submodule_status, sub_merged=sub_merged)
+        info = _categorize(fake, mtime_days=mtime_days)
+        assert info.category == expected
+        assert info.dirty == dirty
