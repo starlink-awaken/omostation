@@ -159,6 +159,41 @@ $ python3 bin/gac/auto-fix-loop.py --json | jq '.drifts[].kind'
 "FRONTMATTER-MISSING"                  # ← 非 retro 仍正常修复
 ```
 
+## 3.6 台账 tail-append 冲突重建配方（2026-10-04, BET-Y2Q4-T10-225）
+
+`docs/plans/3y-bet-ledger.yaml` 是多 agent 并发的**唯一共享追加大文件**，冲突形态固定：
+
+- 两侧都在 `bets:` 序列**尾段**追加条目；
+- 或两侧都改**相邻**条目的 `completion_evidence`（本文件只有一份 bets 序列，被顶层键
+  `campaigns/disciplines/gates/meta/milestones/objectives` 切断，所以按行号盲插本身也是错的 —— 用
+  `bin/gac/ledger-safe-insert.py`）。
+
+**最危险的不是冲突，是「没冲突」**：`meta.total_bets` 是**派生值**，两侧都把它写成同一个数字时
+git 静默合并成功，于是声明开始说谎而 diff 一片干净。先例：`BET-Y2Q3-T10-202.md:82-84`。
+
+因此 Step 4.2 里那句「冲突处理: 优先保留 main 版（并行 agent 权威, PITFALL-GAT-006）」**不适用于台账**
+—— 照做会把自己的条目整段丢掉。台账的正确解法是**重建**，不是选择某一边：
+
+1. 以**最新** `origin/main` 的整份文件为底（`git show origin/main:docs/plans/3y-bet-ledger.yaml`），
+   不要用本地旧版做三方合并；
+2. 只把自己那一段（本 BET 条目或自己的 transition hunk）插到**唯一锚点**之前 —— 尾段追加的锚点是
+   文件中最后一个 `campaigns:` 顶层键；插入前断言该锚点 `count == 1`；
+3. `meta.total_bets` 只加**自己这一条**的量（不是取两侧里"更大的那个"，那正是说谎的来源）；
+4. 跑完立刻三条断言，**缺一不可**：
+   - `meta.total_bets == len(bets)`；
+   - `len(set(ids)) == len(ids)`（重复 id 为 0）；
+   - main 侧已有的 `status: done` 转换与 `completion_evidence` **逐条存活**（挑 main 最近合并的
+     几个 BET，逐条比对 `status` / `done_at` / `overall_state` 三个字段）；
+5. 复核 diff 形状：`git diff --numstat` 应该是**小加法**（自己的条目 + total_bets 一行）。
+   出现删除别人条目、或整文件重排，立刻丢弃重来。
+
+禁止：用 `yaml.safe_dump` 整文件重排（会按 key 重排别人条目，真实改动被淹没，且丢掉所有注释与
+锚点前的段前注释）；在共享主工作区用 merge/rebase 吸收上游（见 AGENTS.md §6）。
+
+配方来源：BET-Y2Q4-T10-224 双 PR 交付实录 —— 首个 PR 报「no checks reported」实为
+`CONFLICTING`/`DIRTY`（见 AGENTS.md §7 ④），rebase 时台账冲突按本配方重建，断言读数
+`total_bets 519 == len(bets) 519, dupes 0`，added 85 / deleted 1。
+
 ## 4. 常见坑速查
 
 | 症状 | 根因 | 修复 |
@@ -195,6 +230,7 @@ $ python3 bin/gac/auto-fix-loop.py --json | jq '.drifts[].kind'
 - [ ] retro 落 `.omo/_knowledge/retros/<bet-id>.md`, frontmatter 七件套齐
 - [ ] 台账 `status: done` + `done_at` + `completion_evidence`
 - [ ] `python3 bin/plan/bet-ledger.py lint` PASS
+- [ ] 台账若发生 tail-append 冲突：三条断言全绿（`total_bets == len(bets)`、重复 id 为 0、main 侧 `done` 转换逐条存活）—— 见 §3.6
 - [ ] `make gac-local-gate` PASS
 - [ ] `gh pr create` 成功
 - [ ] CI 全绿 (gac-gate / governance-verify / interface-check / test)
