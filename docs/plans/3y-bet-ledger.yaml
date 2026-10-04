@@ -39815,7 +39815,8 @@ bets:
     再失败才系统通知人工介入。同时 host-drift 巡检持续报警的 3 个漂移文件 (template.html / copilot_service.py /
     rag_engine.py — deploy 侧为 2026-09-24~10-04 多轮 UI hotfix 有意变更, 全部已提交在 deploy 仓 origin/main)
     经 zhixing-host-sync capture 回同步至 workspace bin/panorama/assets/host/, 消除恒红报警与「并发覆盖丢失」风险敞口。
-  status: pending
+  status: done
+  done_at: 2026-10-05
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -39841,15 +39842,48 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: PENDING
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@52a6cf192dfcb96cc28082c4fdbd7bddc8e2a8ee
+          tests:
+            ref: receipt://docs/reports/2026-10-05-bet-226-canary.json
+            sha256: sha256:f524722607cb7faffc8649f536f2f98d61c56fd1b87d426b0b43705aa18f305f
+          diff:
+            ref: receipt://docs/reports/2026-10-05-bet-226-watchdog-host-closeout.md
+            sha256: sha256:64cdaaf10e094b198b93fa9c470788239747f2ed53ec31ce13793010cd6d9633
+          rollback:
+            ref: receipt://docs/reports/2026-10-05-bet-226-watchdog-host-closeout.md
+            sha256: sha256:64cdaaf10e094b198b93fa9c470788239747f2ed53ec31ce13793010cd6d9633
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-226.md
+            sha256: sha256:032167b390784e4c1fb48df399abc785312f37189b08f095c48ab57c5dd8ffa3
       operational:
-        status: PENDING
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-05-bet-226-canary.json
+            sha256: sha256:f524722607cb7faffc8649f536f2f98d61c56fd1b87d426b0b43705aa18f305f
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-05-bet-227-canary.json
+            sha256: sha256:bc852bcac1b95dd770a2ef5d55942edabf548d4e43ad7b3715c84a45a4403d62
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-226.md
+            sha256: sha256:032167b390784e4c1fb48df399abc785312f37189b08f095c48ab57c5dd8ffa3
+          cleanup:
+            ref: receipt://docs/reports/2026-10-05-bet-226-watchdog-host-closeout.md
+            sha256: sha256:64cdaaf10e094b198b93fa9c470788239747f2ed53ec31ce13793010cd6d9633
       value:
-        status: PENDING
+        status: NOT_PROVEN
         evidence: {}
-    overall_state: PENDING
+    overall_state: delivery_accepted
+  verify:
+  - cmd: launchctl list | grep com.omostation.zhixing-dashboard-watchdog
+    expect: 有输出 (watchdog 已加载)
+  - cmd: python3 bin/gac/zhixing-host-sync.py status
+    expect: ok=true, drifted=0 (7 文件 in_sync)
+  - cmd: curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:43191/api/v1/manifest
+    expect: 200
   non_goals:
   - 不改读端 runtime_paths.py 的 15min 新鲜度上限 (安全约束不动);
   - 不动 republisher 本体逻辑与调度参数;
@@ -39873,7 +39907,8 @@ bets:
     deploy 身份双校验, fail-closed) → 成功后 republisher 自动接续续期新 revision。发布期间 republisher 续旧
     revision (读端全程可用), pointer 原子切换。 services.yaml generate:true 注册, plist 由 gen-service-configs
     生成, StartInterval=6h + RunAtLoad。
-  status: pending
+  status: done
+  done_at: 2026-10-05
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -39900,15 +39935,48 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: PENDING
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@288601ef4b5761a0d9fef46080d6e697713c4e73
+          tests:
+            ref: receipt://docs/reports/2026-10-05-bet-227-canary.json
+            sha256: sha256:bc852bcac1b95dd770a2ef5d55942edabf548d4e43ad7b3715c84a45a4403d62
+          diff:
+            ref: receipt://docs/reports/2026-10-05-bet-227-full-refresh-closeout.md
+            sha256: sha256:f12c5a3bd86a91ab97188833207136de6961eb3326eec0b5a09169172851add4
+          rollback:
+            ref: receipt://docs/reports/2026-10-05-bet-227-full-refresh-closeout.md
+            sha256: sha256:f12c5a3bd86a91ab97188833207136de6961eb3326eec0b5a09169172851add4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-227.md
+            sha256: sha256:7baf96bf8649cf34d4f1ba45a24940e484f71a26c5bb14779d0b64c1f528d097
       operational:
-        status: PENDING
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-05-bet-227-canary.json
+            sha256: sha256:bc852bcac1b95dd770a2ef5d55942edabf548d4e43ad7b3715c84a45a4403d62
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-05-bet-227-canary.json
+            sha256: sha256:bc852bcac1b95dd770a2ef5d55942edabf548d4e43ad7b3715c84a45a4403d62
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-227.md
+            sha256: sha256:7baf96bf8649cf34d4f1ba45a24940e484f71a26c5bb14779d0b64c1f528d097
+          cleanup:
+            ref: receipt://docs/reports/2026-10-05-bet-227-full-refresh-closeout.md
+            sha256: sha256:f12c5a3bd86a91ab97188833207136de6961eb3326eec0b5a09169172851add4
       value:
-        status: PENDING
+        status: NOT_PROVEN
         evidence: {}
-    overall_state: PENDING
+    overall_state: delivery_accepted
+  verify:
+  - cmd: launchctl list | grep com.omostation.zhixing-projection-fullrefresh
+    expect: 有输出 (fullrefresh 已加载)
+  - cmd: python3 bin/mof/gen-service-configs.py --check --json
+    expect: ok=true, drift=0
+  - cmd: curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:43191/api/v1/manifest
+    expect: 200
   non_goals:
   - 不放松 panorama-collect.py 的强身份校验 (一字不改);
   - 不改动 projection-republisher.py;
@@ -39935,7 +40003,8 @@ bets:
     lifeos.pulse 运行中 PID 94325) 当时只记证据待 principal 裁定 — 本轮获 principal 全局授权, 裁定为 owned
     (principal 个人工具/ 本地服务域), 写入 services.yaml launchd_namespace 归属 + reason, unclassified
     清零。 目标： gen-service-configs --reality-check E1-E4 全绿, 登记面与现实零漂移。
-  status: pending
+  status: done
+  done_at: 2026-10-05
   window: Y2Q4
   track: T10-TOOLING
   priority: P3
@@ -39962,15 +40031,44 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: PENDING
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a8bce067183f62241fa1f5152d2b205ba23dfcc5
+          tests:
+            ref: receipt://docs/reports/2026-10-05-bet-228-canary.json
+            sha256: sha256:92f489e7b4694c5b1c72757dfc0069a7cbf25178997aae02b9a75ff1cb2a8a18
+          diff:
+            ref: receipt://docs/reports/2026-10-05-bet-228-e4-closeout.md
+            sha256: sha256:e1cf1f71d519e1dab29187a5ce71a49bcbd5012d27d8dc86d060bfef75b56421
+          rollback:
+            ref: receipt://docs/reports/2026-10-05-bet-228-e4-closeout.md
+            sha256: sha256:e1cf1f71d519e1dab29187a5ce71a49bcbd5012d27d8dc86d060bfef75b56421
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-228.md
+            sha256: sha256:6593c4f6aca0c72876b80086652005bd9780744a2e17f0282e5348a71ddf16b3
       operational:
-        status: PENDING
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-05-bet-228-canary.json
+            sha256: sha256:92f489e7b4694c5b1c72757dfc0069a7cbf25178997aae02b9a75ff1cb2a8a18
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-05-bet-228-canary.json
+            sha256: sha256:92f489e7b4694c5b1c72757dfc0069a7cbf25178997aae02b9a75ff1cb2a8a18
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-228.md
+            sha256: sha256:6593c4f6aca0c72876b80086652005bd9780744a2e17f0282e5348a71ddf16b3
+          cleanup:
+            ref: receipt://docs/reports/2026-10-05-bet-228-e4-closeout.md
+            sha256: sha256:e1cf1f71d519e1dab29187a5ce71a49bcbd5012d27d8dc86d060bfef75b56421
       value:
-        status: PENDING
+        status: NOT_PROVEN
         evidence: {}
-    overall_state: PENDING
+    overall_state: delivery_accepted
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check
+    expect: E1/E2/E3/E4 全绿, unclassified=0
   non_goals:
   - 不 load/unload/bootout 任何 launchd 任务 (只动登记面);
   - 不改动 generate:true 面与任何在跑任务的 plist 内容;
