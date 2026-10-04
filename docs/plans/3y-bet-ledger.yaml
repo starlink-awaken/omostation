@@ -39805,7 +39805,7 @@ bets:
     expect: 'exit 0 —— 必填字段含 verify + 本 BET spec 绑定 digest 校验'
   - cmd: 'python3 -m pytest tests/unit/test_cron_registry_reality_invariants.py -q'
     expect: 'exit 0 (9 passed) —— E1 判据形状在检出内是活的'
-- id: BET-Y2Q4-T10-226
+- id: BET-Y2Q4-T10-229
   title: ADR-0456 B4b 前置 — deadline_tracker 督办台账路径改调用时解析，消灭 import 时冻结的 OMO_TRACKED_TASKS
   goal: tests/unit 全量红里的 4 条 (test_reporting_reads_ledger) 单跑绿、全量红，根因不是用例写错而是 bin/ssot/deadline_tracker.py:31
     把 OMO_TRACKED_TASKS 求值成模块级常量：任何早于该 env 声明被导入的进程 （或先被 collect 的兄弟用例）会把 TASKS_FILE
@@ -39859,8 +39859,8 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-04-deadline-tracker-call-time-tasks-file.md
     spec_version: 1.0.0
-    content_digest: sha256:083e862966592f83c08e18f8016d0670b89037cfb807aba13baf003164e8f50e
-    decision_ref: decision://accepted/BET-Y2Q4-T10-226
+    content_digest: sha256:16689019d207d22ed70d9a012ee4d36ffc464ffc8c0ab2c67e5e381f95b33b6c
+    decision_ref: decision://accepted/BET-Y2Q4-T10-229
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1

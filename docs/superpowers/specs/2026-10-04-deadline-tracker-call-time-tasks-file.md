@@ -2,7 +2,7 @@
 schema_version: specification/v1
 spec_version: 1.0.0
 title: Deadline Tracker Resolves Its Tasks File at Call Time (ADR-0456 B4b precondition)
-bet_id: BET-Y2Q4-T10-226
+bet_id: BET-Y2Q4-T10-229
 status: accepted
 lifecycle: contract
 owner: governance-team
