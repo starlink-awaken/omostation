@@ -8,9 +8,9 @@ type: ephemeral
 ---
 # Skills Index
 
-> 自动生成，共 44 个 skills
+> 自动生成，共 45 个 skills
 
-最后更新: 2026-09-25
+最后更新: 2026-10-03
 
 使用 `agent-workflow.py suggest` 或 `grill-me` 技能进行智能推荐
 
@@ -56,6 +56,7 @@ type: ephemeral
 | delegation-guardrails | Delegation Guardrails | general | .agents/skills/delegation-guardrails/SKILL.md |
 | external-agent-attach | External Agent Attach | general | .agents/skills/external-agent-attach/SKILL.md |
 | nextgen-cognitive-mesh | Nextgen Cognitive Mesh | general | .agents/skills/nextgen-cognitive-mesh/SKILL.md |
+| zsh-split-audit | zsh Split Audit | zsh 分词违规事后审计, 批量删前检查塌缩复盘, session 转写合规量化 | .agents/skills/zsh-split-audit/SKILL.md |
 
 ## BOS
 
