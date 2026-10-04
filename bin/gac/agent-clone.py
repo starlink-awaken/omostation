@@ -215,6 +215,46 @@ class ToolError(Exception):
         self.details = details or {}
 
 
+# 2026-10-04 (ADR-0461 第 5 步): changeset 阶段观察远端 delivery ref, 得出
+# `expected_remote_oid` —— 即「推之前这个 ref 应处于什么状态」。
+#
+# 关键: 它**不是**「分支当前在哪」的快照, 而是**推送前置条件**。integrate 首次推送
+# delivery 分支时, 远端该 ref 尚不存在, 正常取值就是哨兵 `_ABSENT_REMOTE_OID`
+# ("0"*40) —— 故本函数对「不存在」返回哨兵而非报错, 也不把它当作陈旧值。
+# 语义与 fence 侧的 `build_remote_observation_pair` 对齐 (clone-lifecycle.py:1266)。
+ABSENT_REMOTE_OID = "0" * 40
+_REMOTE_OID_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
+def observe_remote_ref(clone: str, remote_ref: str) -> str:
+    """读一次远端 ref 的 OID; 不存在则返回 `_ABSENT_REMOTE_OID` 哨兵。
+
+    只读。**不把超时/不可达伪装成「不存在」** —— 那正是本轮反复修的
+    「不可判定 ≠ 不可用」同一族缺陷: 网络抖动被当成「ref 缺失」会让
+    fence 的前置条件失去意义。故 rc!=0 且 stderr 非「ref 不存在」时直接抛错。
+    """
+    probe = git(clone, "ls-remote", "--exit-code", "origin", remote_ref,
+                timeout=GIT_TIMEOUT_NETWORK_SECONDS)
+    # ls-remote --exit-code: ref 存在 rc=0 且输出一行; 不存在 rc=2 且无输出。
+    if probe.returncode == 2 and not probe.stdout.strip():
+        return ABSENT_REMOTE_OID
+    if probe.returncode != 0:
+        raise ToolError(
+            "remote_ref_observation_unavailable",
+            f"cannot observe {remote_ref} (exit {probe.returncode}): "
+            f"{(probe.stderr or probe.stdout).strip()[:200]}",
+            EXIT_USAGE,
+        )
+    rows = [line.split() for line in probe.stdout.splitlines() if line.strip()]
+    if len(rows) != 1 or not _REMOTE_OID_RE.match(rows[0][0] or ""):
+        raise ToolError(
+            "remote_ref_observation_malformed",
+            f"unexpected ls-remote output for {remote_ref}: {probe.stdout.strip()[:200]}",
+            EXIT_USAGE,
+        )
+    return str(rows[0][0])
+
+
 # ---------------------------------------------------------------------------
 # git helpers
 # ---------------------------------------------------------------------------
