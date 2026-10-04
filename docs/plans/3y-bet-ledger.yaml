@@ -39586,6 +39586,90 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-224
+  title: launchd 任务登记实测双向纠偏 + tests/unit 去 13 处 host 字面量（ADR-0456 B4b 批次 2 前置）
+  goal: ADR-0456 B4b 批次 2 要把 43 个 plist / 40 条 cron 的根从 ~/Workspace 改道，而改道前缺少两样前置： 可信的
+    launchd 现实登记，和不会因换根而变红的断言。实测（origin/main@540783376，2026-10-04） .omo/cron/registry.yaml
+    70 条 job 里有 3 条与本机 launchd 状态双向失配—— panorama-dashboard-refresh 声明 proposed/pending
+    而实测已加载已装机（低报， 用例 test_panorama_runtime_scheduler.py:42 反而是对的）；knowledge-foundry-6h
+    声明 reality=installed 而实测未加载未装机（高报，是唯一一条 I2 违规）；panorama-dashboard 声明 pending 而 services.yaml:5813
+    记着它已退役（sunset-redirector 接管 :43910），于是 test_panorama_runtime_scheduler.py:25 断言它
+    status=active 属用例错。三条若按"谁能让 pytest 绿" 收敛，第一条会把不存在的安装写进 SSOT、第三条会把退役服务说成待装。另一半是同两个文件里
+    13 处 "/Users/xiamingxing" 字面量（panorama 8 / agent-cell 5），它们今天绿的原因正是逐字复述 plist 里的
+    host 根（green-by-literal），只在改道那天准时变红。本 BET 交付：registry 逐条向实测纠偏（含退役事实 经 reality=declared_only
+    + reconciliation_note 表达，不扩 status/reality 枚举）、两条文件内部一致性 不变式 I1/I2、13 处字面量换成从 plist
+    自身 WorkingDirectory 派生的根 + registry↔plist 跨源字符串逐字 相等、以及混合根与假 installed 两个变异对照用例（自证检测器非空转）+
+    两测试文件自锁断言自身源码不含 "/Users/"。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  write_surfaces:
+  - tests/unit/test_panorama_runtime_scheduler.py
+  - tests/unit/test_agent_cell_scheduler.py
+  - tests/unit/test_cron_registry_reality_invariants.py
+  - .omo/cron/registry.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-04-bet-224-launchd-reality-and-derived-root-assertions.md
+  - docs/reports/2026-10-04-bet-224-launchd-reality-derived-root-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-224.md
+  non_goals:
+  - 不修改 runtime/cron/** 任何 plist（改道属 B4b 批次 2，需逐批授权）；
+  - 不装/卸/launchctl 任何 job，registry 单向向实测靠拢；
+  - 不扩 status/reality 枚举，不跨 services.yaml 面合并登记（20~25 条跨面漂移另立 BET）；
+  - 不修 test_scheduler_compile_launchd_plane.py 基线预存红（登记为后续 BET，不静默修不静默 skip）；
+  - 不动 bin/**、.github/workflows/**、projects/**。
+  done_when:
+  - 3 条失配记录纠偏为实测值（refresh→active/installed、foundry→declared_only、dashboard→proposed/declared_only+退役
+    reconciliation_note），每条附三条独立探针读数；
+  - I1/I2 在全部 70 条 job 上违规归零，且 I2 的基线违规数=1 被写进 closeout（否则无法证明 gate 有效过）；
+  - tests/unit 两个目标文件内 "/Users/xiamingxing" 字面量计数从 13 降为 0，且两文件各自断言自身源码不含 "/Users/"；
+  - 两个变异对照用例（混合根 payload、假 installed job）在真实基例上注入违规后确实报不一致；
+  - 目标用例集本地 pytest 实跑全绿（CI 白名单不含 tests/unit/**，CI 绿不作证据）。
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_panorama_runtime_scheduler.py tests/unit/test_agent_cell_scheduler.py
+      -q
+    expect: 全部 passed、0 failed（基线实测为 2 failed, 5 passed）
+  - cmd: python3 -m pytest tests/unit/test_cron_registry_reality_invariants.py -q
+    expect: passed，含 I1/I2 归零与两个变异对照各自独立用例
+  - cmd: /usr/bin/grep -c '/Users/xiamingxing' tests/unit/test_panorama_runtime_scheduler.py
+      tests/unit/test_agent_cell_scheduler.py
+    expect: 两个文件计数均为 0（基线实测 8 与 5）
+  - cmd: python3 -c "import yaml;jc=yaml.safe_load(open('.omo/cron/registry.yaml'))['jobs'];print(sum(1
+      for j in jc if j.get('reality') in ('installed','crontab_installed') and j.get('status')!='active'))"
+    expect: 输出 0（基线实测 1，为 knowledge-foundry-6h）
+  - cmd: git diff --name-only origin/main...HEAD
+    expect: 仅 write_surfaces 列出的路径；出现 runtime/cron/** 或 services.yaml 即越界
+  circuit_breaker: Stop on any edit to runtime/cron/**, .omo/_truth/registry/services.yaml,
+    bin/**, .github/workflows/** or projects/**; stop on any install/uninstall/launchctl
+    mutation of a job; stop on extending the status/reality enums; stop on making a
+    tests/unit case probe the host (launchctl, ~/Library/LaunchAgents, real crontab)
+    instead of asserting file-internal consistency; stop on silencing the pre-existing
+    test_scheduler_compile_launchd_plane red by skip/xfail.
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-04-bet-224-launchd-reality-and-derived-root-assertions.md
+    spec_version: 1.0.0
+    content_digest: sha256:aae565f29013d63ab8fb95dff0c1ee2a28711ce0eaa737294c09070fc12f6b13
+    decision_ref: decision://accepted/BET-Y2Q4-T10-224
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_PROVEN
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -39724,7 +39808,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 518
+  total_bets: 519
   windows:
   - Y1Q1
   - Y1Q2
