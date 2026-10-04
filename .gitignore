@@ -411,3 +411,6 @@ live-server.pid
 .omo/state/health.yaml
 .omo/_control/governance-data.json
 /BRIEF.md
+
+# zvec-grep 本地语义索引 (zg 工具运行时产物, 不入库)
+.zvec-grep/
