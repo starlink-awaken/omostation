@@ -6152,6 +6152,12 @@ launchd_namespace:
     - label: com.opencode.quota-monitor
       classification: owned
       reason: principal 个人 opencode 配额监控 (2026-10-04 裁定; 本仓作者写的脚本, 装在 ~/.config/opencode 下)
+    - label: com.local.funes-index
+      classification: owned
+      reason: principal 个人 funes 索引工具 (2026-10-05 裁定; 跑 ~/local-ops/bin/funes-index-all.sh, 源码不在检出内)
+    - label: com.local.funes-push
+      classification: owned
+      reason: principal 个人 funes 推送工具 (2026-10-05 裁定; 跑 ~/local-ops/bin/funes-push.sh, 源码不在检出内)
 
     - label: com.macpaw.CleanMyMac5.Updater
       classification: external
