@@ -6019,6 +6019,28 @@ services:
     stdout: ~/.local/log/projection-republisher.log
     stderr: ~/.local/log/projection-republisher.log
   depends_on: [omostation.zhixing-dashboard]
+- id: omostation.zhixing-projection-fullrefresh
+  enabled: true
+  generate: true
+  run_at_load: true  # 睡眠唤醒后 launchd 不补跑错过的 interval —— RunAtLoad 立即跑一次
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 21600  # 6h: 全量采集典型 5~14min, 4 次/天足够压住观测龄期
+  label: com.omostation.zhixing-projection-fullrefresh
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/panorama/projection-full-refresh.py
+    args: []
+  notes: '全量投影数据周期刷新 (BET-Y2Q4-T10-227): T10-223 republisher 只续租约, 数据观测龄期
+    (data_observed_at) 单调增长。本服务维护专用洁净检出 ~/.local/opt/omostation-publisher
+    (GitHub origin 浅克隆+浅子模块, 机器属主, 不进 ws-* 卫生面), 每 6h fetch+reset --hard
+    origin/main 后以该检出跑检出内 panorama-collect.py 全量发布 (workspace+deploy 双身份
+    校验一字不改, fail-closed); 发布期间 republisher 续旧 revision, pointer 原子切换后接新,
+    读端全程可用。锁文件在 revisions/ 内 (state root 顶层会触发读端 CODE_DRIFT)。'
+  outputs:
+    stdout: ~/.local/log/projection-fullrefresh.log
+    stderr: ~/.local/log/projection-fullrefresh.log
+  depends_on: []
 - id: omostation.zhixing-dashboard-watchdog
   enabled: true
   generate: false
@@ -6115,22 +6137,22 @@ launchd_namespace:
     - label: com.local.phosphene
       classification: external
       reason: pinokio 拉取的第三方 app (~/pinokio/api/phosphene.git); aetherforge 以外部服务适配它, 不接管其生命周期
-    - label: com.learningevolution.concept-weave.monthly
-      classification: unclassified
-      reason: ProgramArguments=/usr/bin/true 空转占位, 无实际执行体
-    - label: com.lifeos.pulse
-      classification: unclassified
-      reason: 跑 ~/.claude/LIFEOS/PULSE, 个人 PAI 域, 生命周期未裁定
-    - label: com.local.decision-svc
-      classification: unclassified
-      reason: 跑 ~/.local/share/decision-svc 自带 venv, 源码不在检出内
-    - label: com.opencode.quota-monitor
-      classification: unclassified
-      reason: 本仓作者写的脚本, 但装在 ~/.config/opencode 下, 归属未裁定
-
-    - label: com.amazon.codewhisperer.launcher
+    - label: com.yetone.magpie
       classification: external
-      reason: 'Kiro CLI / Amazon Q 桌面端自注册的启动项(第三方应用自有生命周期), 本仓不生成也不接管; 2026-09-30 launchd plist 批量覆写事故后按其残留 ProgramArguments 重建为合法 XML, 未 load'
+      reason: 第三方划词翻译应用 Magpie.app 自注册启动项 (2026-10-04 实测已安装且加载, launchctl PID 1980); 本仓不生成也不接管
+    - label: com.learningevolution.concept-weave.monthly
+      classification: owned
+      reason: principal 个人工具 (2026-10-04 裁定; 原 ProgramArguments=/usr/bin/true 空转占位)
+    - label: com.lifeos.pulse
+      classification: owned
+      reason: principal 个人 PAI 域工具 (2026-10-04 裁定; 实测运行中 PID 94325)
+    - label: com.local.decision-svc
+      classification: owned
+      reason: principal 本地决策服务 (2026-10-04 裁定; 跑 ~/.local/share/decision-svc 自带 venv, 源码不在检出内)
+    - label: com.opencode.quota-monitor
+      classification: owned
+      reason: principal 个人 opencode 配额监控 (2026-10-04 裁定; 本仓作者写的脚本, 装在 ~/.config/opencode 下)
+
     - label: com.macpaw.CleanMyMac5.Updater
       classification: external
       reason: 'CleanMyMac 5 自有更新器(第三方商业应用自行注册), 本仓不生成也不接管; 2026-09-30 同上按残留 ProgramArguments 重建, 未 load'

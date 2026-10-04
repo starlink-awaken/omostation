@@ -1,0 +1,28 @@
+schema: script-registry/v1
+id: bin/panorama/projection-full-refresh.py
+name: Projection Full Refresh (全量投影数据周期刷新)
+category: governance
+owner: governance-team
+description: 维护持久专用洁净检出 (~/.local/opt/omostation-publisher, GitHub origin
+  浅克隆+浅子模块) 并周期执行全量发布——flock 防重入 → remote 卫生校验 → fetch+reset
+  --hard origin/main → 浅子模块对齐 → 以该检出为 PANORAMA_CODE_ROOT 跑检出内
+  panorama-collect.py (自带 workspace+deploy 双身份校验, 一字不改)。发布成功后
+  republisher 自动接续续期新 revision; 任何步骤失败 fail-closed, 旧 revision 仍被
+  续期, 读端全程可用。解决 T10-223 republisher 只续租约导致的数据观测龄期单调增长
+  (BET-Y2Q4-T10-227)。
+inputs:
+  - name: OMOSTATION_PUBLISHER_CHECKOUT (env)
+    type: path
+    required: false
+  - name: ZHIXING_DASHBOARD_STATE_ROOT (env)
+    type: path
+    required: false
+outputs:
+  - type: exit_code
+  - type: jsonl
+dependencies: [bin/panorama/panorama-collect.py, bin/panorama/projection-republisher.py]
+triggers: [launchd]
+related: [bin/panorama/panorama-collect.py, bin/mof/gen-service-configs.py]
+tags: [panorama, dashboard, projection, data-freshness]
+maturity: active
+last_reviewed: "2026-10-04"

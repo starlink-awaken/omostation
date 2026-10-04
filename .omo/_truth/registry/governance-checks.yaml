@@ -179,7 +179,10 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 714 # 2026-10-04 712→714: PR #4619 projection-republisher
+    script_baseline: 715 # 2026-10-05 714→715: PR (T10-227) projection-full-refresh
+      # (+ bin/panorama/projection-full-refresh.py, BET-Y2Q4-T10-227 全量投影数据
+      # 周期刷新通道); 上一行注释:
+      # 2026-10-04 712→714: PR #4619 projection-republisher
       # (+ bin/panorama/projection-republisher.py, BET-Y2Q4-T10-223 投影租约续期,
       # 根治 :43191 周期性 503 projection_stale); 上一行注释:
       # 2026-09-28 705→712: PR #4512 content-model Phase 2-5 工具注册
