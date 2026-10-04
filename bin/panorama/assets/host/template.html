@@ -33,7 +33,7 @@ source_digests:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0f172a">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'self'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; manifest-src 'self'">
 <title>织星 · 体系全景</title>
 <style>
 :root{
@@ -526,8 +526,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 
 /* Tooltip */
 [data-tooltip]{position:relative;cursor:help}
-[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:6px 10px;border-radius:4px;font-size:10px;white-space:nowrap;z-index:100;border:1px solid rgba(255,255,255,0.15)}
-[data-theme="dark"] [data-tooltip]:hover::after{background:#334155;color:#f1f5f9;border:1px solid rgba(255,255,255,0.25);box-shadow:0 4px 16px rgba(0,0,0,0.5)}
+[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:6px 10px;border-radius:4px;font-size:10px;white-space:nowrap;z-index:100}
 
 /* Section Transitions */
 .section{opacity:0;transform:translateY(8px);transition:opacity .25s ease,transform .25s ease}
@@ -912,31 +911,11 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   font-weight: bold;
 }
 
-/* --- Horizon Active Focus Styles (无界通透与层深升级) --- */
+/* --- Horizon Active Focus Styles --- */
 .horizon-active-focus {
-  border-color: rgba(59, 130, 246, 0.38) !important;
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.18), 
-              0 10px 28px -4px rgba(59, 130, 246, 0.12), 
-              0 2px 8px -1px rgba(0, 0, 0, 0.04) !important;
+  border: 1.5px solid var(--blue) !important;
+  box-shadow: 0 0 14px rgba(58,100,179,.18) !important;
   position: relative;
-  transition: border-color .3s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow .3s cubic-bezier(0.16, 1, 0.3, 1), 
-              opacity .25s ease;
-}
-
-/* 左侧灵动微光聚焦指示胶囊 */
-.horizon-active-focus::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 14px;
-  bottom: 14px;
-  width: 4px;
-  border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, #3b82f6 0%, #60a5fa 100%);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-  pointer-events: none;
-  z-index: 5;
 }
 .horizon-dimmed-card {
   opacity: 0.45;
@@ -1331,22 +1310,12 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
 .ssds-legend-strip {
   display: none;
 }
-/* P2-9 门禁/详情展开动画 — details[open] 内容淡入滑入 */
-@keyframes zxDetailsIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-details[open] > summary ~ *{animation:zxDetailsIn .22s cubic-bezier(.16,1,.3,1)}
-summary{list-style:none;position:relative}
-summary::-webkit-details-marker{display:none}
-summary::after{content:'▸';position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--muted);transition:transform .2s cubic-bezier(.16,1,.3,1)}
-details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">跳到内容</a>
 <aside>
 <div class="brand"><strong>织星</strong><small>SOVEREIGN INTELLIGENCE</small></div>
-<a href="http://localhost:5173/" target="_blank" rel="noopener noreferrer" class="btn" style="margin-bottom:12px;font-size:11.5px;justify-content:center;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.3);color:var(--sovereign);font-weight:600;">
-  🪐 业务主权驾驶舱 (5173) ↗
-</a>
 <div class="nav-cognitive-filter">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
     <span style="font-size:10px;font-weight:700;letter-spacing:0.8px;color:var(--muted)">视界导航</span>
@@ -1539,7 +1508,6 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
     </div>
   </div>
 </header>
-<div data-role="banner" id="zx-source-banner-host"></div>
 
 <!-- Layer 2: Horizon Dock Capsule Bar (五大战略视界切换坞 - 高度 38px) -->
 <div class="horizon-dock-bar" id="horizon-dock-bar">
@@ -1559,7 +1527,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   </div>
 </div>
 <div id="sovereign-posture-bar" class="posture-bar"><div style="padding:8px 12px;display:flex;align-items:center;gap:8px"><span class="loading-spinner" style="width:12px;height:12px;border-width:1.5px"></span><span style="font-size:11px;color:var(--muted)">加载主权态势感知...</span></div></div>
-<!-- persona-guidance-bar: removed (empty div occupying layout) -->
+<div id="persona-guidance-bar" style="margin-bottom:20px"></div>
 <div id="refresh-health-container" class="refresh-health-compact" style="margin-bottom:18px">
   <div id="refresh-health" style="display:none"></div>
   <div class="health-summary-pill" id="health-summary-pill" onclick="toggleHealthDiagnosticDrawer()">
@@ -1648,8 +1616,8 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
     <div id="orient-assets-map" class="viz-card" style="margin:0"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载资产星图...</span></div></div>
   </div>
 
-  <div id="orient-value-pipeline"></div>
-  <div id="vectors" class="vector"></div>
+  <div id="orient-value-pipeline" style="display:none"></div>
+  <div id="vectors" class="vector" style="display:none"></div>
 
   <!-- 第四层：执行推进与交付契约 (Bento Row 3) -->
   <div class="grid two gap" style="margin-bottom:14px">
@@ -1716,7 +1684,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   <a href="#gov">恢复准入</a>
   <a href="#mof-grid">MOF 元模型</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-ARCH · 物理架构</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">目标架构</span></div><h1 id="title-arch">体系如何连成一体</h1><p class="lead">持久的是职责、合同、队列和证据；Agent 只在一次 assignment 中承担角色。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-ARCH · 物理架构</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Target Architecture</span></div><h1 id="title-arch">体系如何连成一体</h1><p class="lead">持久的是职责、合同、队列和证据；Agent 只在一次 assignment 中承担角色。</p></div>
 <div id="sovereign-hex-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载九面星环...</span></div></div>
 <div id="panoramic-architecture-container" class="panoramic-container"></div>
 <div class="grid two"><article class="card"><h2>物理分层与唯一执行脊柱</h2>
@@ -1732,10 +1700,6 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
 <article class="loop"><h3>执行控制回路</h3><p class="small">期望合同 → 实际运行 → 偏差观测 → fence / 调和 / 回滚 → 再验证。</p></article>
 <article class="loop"><h3>元治理慢回路</h3><p class="small">制度使用与失效证据 → 提案 → 独立审议 → 修订或减法 → 冷启动复验。</p></article></div>
 <div class="card gap"><h2>一次交付的完整路径</h2><div class="flow"><span>意图 / 信号</span><i>→</i><span>BET + Spec</span><i>→</i><span>Capsule + Admission</span><i>→</i><span>claim / assignment</span><i>→</i><span>执行</span><i>→</i><span>独立验证</span><i>→</i><span>child-first 合并</span><i>→</i><span>运行与价值验收</span><i>→</i><span>复盘 / 退役</span></div><p class="small muted">Context Pack：C0 宪法指针＋C1 角色＋C2 当前任务＋C3 按需知识。claim、首次写入、首次副作用、closeout 时重新校验。</p></div>
-<div class="card gap" style="background:var(--bluewash);border-color:rgba(37,99,235,0.2)">
-  <b>📎 参见相关板块</b>
-  <div class="flow" style="margin-top:8px"><a href="#gov" class="chip" style="text-decoration:none">🛡️ 治理门禁</a><a href="#topology" class="chip" style="text-decoration:none">☵ 架构拓扑</a><a href="#ledger" class="chip" style="text-decoration:none">▤ 路线 BET</a><a href="#panorama" class="chip" style="text-decoration:none">📐 白皮书</a></div>
-</div>
 </section>
 <section id="gov" data-system="S6" data-plane="CP-SEC" class="section" aria-labelledby="title-gov">
 <div class="section-breadcrumb">
@@ -1747,9 +1711,8 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   <a href="#loops">回路观测</a>
   <a href="#next">接下来做什么</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-GOV · 治理平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">恢复与准入</span></div><h1 id="title-gov">先让每个门可证明</h1><p class="lead">A1–A5 恢复基础环境；Core 与 Direct Local 建立后，继续 A8、A6/A7 和 A9。每项分别显示既有设计基线与最新观测。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-GOV · 治理平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Recovery & Admission</span></div><h1 id="title-gov">先让每个门可证明</h1><p class="lead">A1–A5 恢复基础环境；Core 与 Direct Local 建立后，继续 A8、A6/A7 和 A9。每项分别显示既有设计基线与最新观测。</p></div>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div class="note" id="freshness" style="margin:0;flex:1"></div><div id="gov-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="gate-pipeline-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载门禁流水线...</span></div></div><div id="gate-list" class="gates gap"></div>
-<div id="zx-harness-runs" class="viz-card gap"><div class="loading-center" style="padding:14px"><span class="loading-spinner"></span><span class="loading-text">加载 Harness 8 阶段运行...</span></div></div>
 </section>
 <section id="ledger" data-system="S4" class="section" aria-labelledby="title-ledger">
 <div class="section-breadcrumb">
@@ -1761,7 +1724,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   <a href="#value">价值验收</a>
   <a href="#next">接下来做什么</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-LEDGER · 账本平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">组合与路线图</span></div><h1 id="title-ledger">结果、阶段与最小交付</h1><p class="lead">全周期覆盖到 Milestone，近端滚动细化到 leaf BET。下面同时保留当前 Ledger 与待落盘路线的边界。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-LEDGER · 账本平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Portfolio & Roadmap</span></div><h1 id="title-ledger">结果、阶段与最小交付</h1><p class="lead">全周期覆盖到 Milestone，近端滚动细化到 leaf BET。下面同时保留当前 Ledger 与待落盘路线的边界。</p></div>
 <div class="card"><div class="row"><h2>当前主线 Ledger</h2><span class="chip">固定提交读取</span></div><div class="row" style="margin-bottom:12px"><span></span><div id="ledger-freshness" style="font-size:11px;color:var(--muted)"></div></div><div id="ledger-stats" class="statline"></div><div id="ledger-visuals"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载台账分布...</span></div></div><div id="ledger-source" class="source"></div></div>
 <div class="grid two gap"><article class="card"><h2>阶段依赖</h2><div id="stages"></div></article><article class="card"><h2>目标与 Campaign</h2><div id="objectives"></div><h3 class="gap">下一批候选</h3><div id="candidates"></div><div class="note gap">候选键尚未分配新 BET ID。写面、依赖、Spec、baseline、kill criteria 与 verifier 齐备后，再进入受管执行。</div></article></div>
 <div class="card gap"><h2>容量计划 · 滚动排期</h2><p class="small muted">来自 3Y-BET-LEDGER 动态台账排期，时间范围随台账实时滚动。前置门未通过时顺延，执行完成率以最新依赖为准。</p><div class="timeline"><div id="gantt" class="gantt"></div></div></div>
@@ -1777,8 +1740,8 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   <a href="#value">价值验收</a>
   <a href="#next">接下来做什么</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">角色与智能体</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
-<div class="note" id="agent-coverage"></div><div id="zx-resident-bar" class="viz-card" style="margin-bottom:10px"><div class="loading-center" style="padding:14px"><span class="loading-spinner"></span><span class="loading-text">加载居民执行环境状态...</span></div></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-SWARM · 蜂群平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Roles & Agents</span></div><h1 id="title-swarm">谁在做，谁能接续</h1><p class="lead">角色负责长期义务，Agent 承担一次有身份、有租约、有边界的工作。</p></div>
+<div class="note" id="agent-coverage"></div><div id="swarm-mesh-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载蜂群协同拓扑...</span></div></div><div id="agent-capability-mesh-viz" class="viz-card gap"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载能力图谱...</span></div></div><div class="grid gap two" id="runtime-cards"></div>
 <div class="card gap"><h2>当前核心协作实体与运行角色</h2><p class="small muted">包含人类主权决策者、常驻自治守护者、AetherForge 本地算力网关与受管工程智能体，数据实时保持最新。</p><div class="table-wrap"><table><thead><tr><th>协作实体 / Agent</th><th>当前职责</th><th>运行状态 / 算力与范围</th></tr></thead><tbody id="team-rows"></tbody></table></div></div>
 <div class="card gap"><h2>目标 Reference Cell</h2><div class="flow"><span>1 总控</span><i>→</i><span>1 执行</span><i>→</i><span>1 独立验证</span><i>↔</i><span>1 运行观察</span></div><p class="small muted">默认 Direct Local；每波最多两个不重叠 writer。Orca R0、Multica AS0、Ruflo RF0 各有准入门。Ruflo 原生 swarm 可以在获准 Cell 内协调，外层任务、权限与完成证据由 OMO 持有。</p><h3>token 不足或 Agent 掉线</h3><div class="flow"><span>drain / checkpoint</span><i>→</i><span>校验副作用</span><i>→</i><span>fence 旧 attempt</span><i>→</i><span>deputy 接续</span><i>→</i><span>独立重放</span></div><p class="small">结果未知时先 reconcile。第二次 failover 进入 HOLD 与根因分析。接续必须保留未完成义务、最后安全版本、权限边界与证据。</p></div>
 <div class="card gap"><h2>当前可见 Agent / Runtime</h2><p class="small muted">名单来自 Multica inventory 和 OMO Workflow；尚未统一 assignment identity。Ruflo 仅采集版本，运行清单待安全只读适配。</p><div class="table-wrap"><table><thead><tr><th>来源 / Agent</th><th>状态</th><th>模型 / 角色 / 运行关联</th></tr></thead><tbody id="live-agent-rows"></tbody></table></div></div><h2 class="gap">持久角色合同 · 待实施</h2><div id="roles" class="role-grid"></div>
@@ -2098,7 +2061,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
 </div>
 <div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
   <div>
-    <div class="eyebrow"><span class="eyebrow-text">健康诊断</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">健康诊断</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">健康诊断</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Health Diagnosis</span></div>
     <h1 id="title-health">系统健康诊断</h1>
     <p class="lead" style="margin-bottom:0">综合评估系统运行状态 · 数据源健康 · 门禁态势 · Agent 活跃度</p>
   </div>
@@ -2157,7 +2120,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
 </div>
 <div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
   <div>
-    <div class="eyebrow"><span class="eyebrow-text">⟳ 回路观测</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">控制回路与反馈</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">⟳ 回路观测</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Control Loops & Feedback</span></div>
     <h1 id="title-loops">控制回路与反馈观测</h1>
     <p class="lead" style="margin-bottom:0">价值循环 · 规则活跃度 · 自动循环追踪 · 异常事件流</p>
   </div>
@@ -2248,7 +2211,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   <a href="#learning">经验与结晶</a>
   <a href="#scene-system">场景系统</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-KNOW · 知识平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">受管文档与知识入口</span></div><h1 id="title-know">共享知识有入口，也有边界</h1><p class="lead">从纲领、架构到实施、验收、运营和复盘，每个文档保留身份、owner 与审阅状态。新 Agent 按任务加载必要部分。<span style="display:block;margin-top:6px;font-size:11px;color:var(--muted)">📌 受管文档索引 · 检索与阅读 · 相关：<a href="#learning" style="color:var(--blue)">经验与结晶</a></span></p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-KNOW · 知识平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Shared Context</span></div><h1 id="title-know">共享知识有入口，也有边界</h1><p class="lead">从纲领、架构到实施、验收、运营和复盘，每个文档保留身份、owner 与审阅状态。新 Agent 按任务加载必要部分。</p></div>
 <div id="knowledge-stats-viz" class="viz-card"><div class="loading-center" style="padding:20px"><span class="loading-spinner"></span><span class="loading-text">加载知识库统计...</span></div></div>
 <div class="toolbar"><label class="sr-only" for="doc-search">搜索文档</label><input id="doc-search" type="search" placeholder="搜索白皮书、架构、共享知识、验收…"><label class="sr-only" for="doc-status">筛选审阅状态</label><select id="doc-status"><option value="">全部文档</option><option value="in-review">审阅中</option><option value="not-requested">导航 / 观察</option><option value="accepted">已接受</option></select></div><p id="doc-count" class="small muted" aria-live="polite"></p><div id="documents" class="docgrid"></div>
 </section>
@@ -2262,7 +2225,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   <a href="#swarm">Agent 协同</a>
   <a href="#personal">主权中心</a>
 </div>
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-NEXT · 行动中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">法定行动</span></div><h1 id="title-next">战役演进雷达与下一步法定行动中枢</h1><p class="lead">先处理证据和写面，再逐步建设控制合同。每一步都有责任人、进入条件、验收和停止条件。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-NEXT · 行动中枢</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Next Legal Action</span></div><h1 id="title-next">战役演进雷达与下一步法定行动中枢</h1><p class="lead">先处理证据和写面，再逐步建设控制合同。每一步都有责任人、进入条件、验收和停止条件。</p></div>
 
 <!-- 快速穿透协同中枢 -->
 <div id="next-penetration-bar"></div>
@@ -2340,14 +2303,14 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
 </div>
 </section>
 <section id="topology" data-system="META" class="section" aria-labelledby="title-topology">
-<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-TOPOLOGY · 拓扑平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">架构与接口</span></div><h1 id="title-topology">全项目架构拓扑与接口全景</h1><p class="lead">全景透视 16 个核心子模块仓库、八层架构流动分工、项目级上下游调用链与跨域接口契约 (CLI / MCP / HTTP / BOS)。</p></div>
+<div class="section-head"><div class="eyebrow"><span class="eyebrow-text">P-TOPOLOGY · 拓扑平面</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Architecture & Interfaces</span></div><h1 id="title-topology">全项目架构拓扑与接口全景</h1><p class="lead">全景透视 16 个核心子模块仓库、八层架构流动分工、项目级上下游调用链与跨域接口契约 (CLI / MCP / HTTP / BOS)。</p></div>
 <div id="topology-content-root"></div>
 </section>
 <footer class="foot">织星 · 人类可持有的个人智能操作系统。除全局头部条的提案审议（approve/reject）外，本视图无其他派工、审批、写回、自动重试或外部网络请求能力。<span id="foot-source"></span></footer>
 <noscript>本地交互需要 JavaScript。请打开同目录说明文档或下载 JSON 查看原始快照。</noscript>
 
 <section id="knowledge-memory" data-system="S3" class="section" aria-labelledby="title-km">
-<div class="section-head"><div class="eyebrow">P-KM · 知识记忆</div><h1 id="title-km">知识记忆经验建模</h1><button onclick="refreshPanorama()" style="float:right;padding:6px 14px;background:#5b9dff;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">⟳ 刷新</button><span id="panorama-refresh-status" style="float:right;margin-right:10px;font-size:11px;color:var(--muted)"></span><div style="clear:both"></div><p class="lead">知识健康度、增长曲线、记忆双轨、经验网络、经验图谱。</p><div id="km-freshness" style="margin-top:8px;font-size:11px;color:var(--muted)"></div></div>
+<div class="section-head"><div class="eyebrow">P-KM / KNOWLEDGE & MEMORY</div><h1 id="title-km">知识记忆经验建模</h1><button onclick="refreshPanorama()" style="float:right;padding:6px 14px;background:#5b9dff;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">⟳ 刷新</button><span id="panorama-refresh-status" style="float:right;margin-right:10px;font-size:11px;color:var(--muted)"></span><div style="clear:both"></div><p class="lead">知识健康度、增长曲线、记忆双轨、经验网络、经验图谱。</p><div id="km-freshness" style="margin-top:8px;font-size:11px;color:var(--muted)"></div></div>
 <div class="grid three gap" id="km-kpi"><div class="loading-center" style="padding:16px;grid-column:1/-1"><span class="loading-spinner"></span><span class="loading-text">加载知识记忆 KPI...</span></div></div>
 <div class="grid two gap" style="margin-top:14px">
   <div class="card"><h3>近 30 天知识增长</h3><div id="km-growth" style="display:flex;align-items:flex-end;gap:3px;height:60px;padding-top:10px"></div></div>
@@ -2356,10 +2319,6 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
 <div class="grid two gap" style="margin-top:14px">
   <div class="card"><h3>经验图谱</h3><div id="km-graph"></div></div>
   <div class="card"><h3>知识入链 Top 10 <a href="#know" style="float:right;font-size:11px;font-weight:normal">→ 查看全部</a><div style="clear:both"></div></h3><table id="km-inbound"><thead><tr><th>文档</th><th>入链数</th></tr></thead><tbody></tbody></table></div>
-</div>
-<div class="card gap" style="background:var(--bluewash);border-color:rgba(37,99,235,0.2)">
-  <b>📎 参见相关板块</b>
-  <div class="flow" style="margin-top:8px"><a href="#know" class="chip" style="text-decoration:none">📚 文档知识</a><a href="#learning" class="chip" style="text-decoration:none">🧬 经验结晶</a><a href="#swarm" class="chip" style="text-decoration:none">🤖 Agent 协同</a></div>
 </div>
 </section>
 <section id="scene-system" data-system="S2" class="section" aria-labelledby="title-ss">
@@ -2391,7 +2350,7 @@ details[open] > summary::after{transform:translateY(-50%) rotate(90deg)}
   <a href="#loops">回路观测</a>
 </div>
 <div class="section-head">
-  <div class="eyebrow"><span class="eyebrow-text">📐 战略架构纲领</span> <span style="margin-left:6px;font-size:11px;color:var(--amber);font-weight:600">🎯 目标态设计（非当前系统实况）</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">白皮书参考架构</span></div>
+  <div class="eyebrow"><span class="eyebrow-text">📐 战略架构纲领</span> <span style="margin-left:6px;font-size:11px;color:var(--amber);font-weight:600">🎯 目标态设计（非当前系统实况）</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Whitepaper Reference Architecture</span></div>
   <h1 id="title-panorama">1—2—8—5—1 总体架构与八大核心体系（目标态）</h1>
   <p class="lead">来自织星主权智能操作系统白皮书 v2 的纲领性<strong>目标态</strong>设计：一个人类主权、两个主闭环、八个核心体系、五个横切平面、一套元体系约束。<strong style="color:var(--amber)">此板块描述系统"要成为什么"，而非当前已实现的运行时状态</strong>。内容源自静态文档，不随运行时数据刷新变化。</p>
 </div>
@@ -2529,10 +2488,7 @@ Constitution / Vision / Values / Risk / Revocation
   <div class="flow"><span>道 · 本体/原则</span><i>→</i><span>法 · 约束/门禁</span><i>→</i><span>术 · 编排/旅程</span><i>→</i><span>器 · 工具/算力</span></div>
   <p class="small muted gap">详见 <code>docs/architecture/dao-fa-shu-qi.md</code> 与 <code>docs/architecture/os-operating-pattern-v1.md</code>。</p>
 </div>
-<div class="card gap" style="background:var(--bluewash);border-color:rgba(37,99,235,0.2)">
-  <b>📎 参见相关板块</b>
-  <div class="flow" style="margin-top:8px"><a href="#arch" class="chip" style="text-decoration:none">↕ 体系流程</a><a href="#atlas" class="chip" style="text-decoration:none">🏛️ 架构模型</a><a href="#gov" class="chip" style="text-decoration:none">🛡️ 治理门禁</a><a href="#orient" class="chip" style="text-decoration:none">◎ 全景总览</a></div>
-</div>
+
 </section>
 <!-- Placeholder anchors for dynamically-mounted sections (created at runtime by
      workbench_ui.js / strategy_ui.js / ui_extensions.js via document.createElement).
@@ -2559,7 +2515,7 @@ Constitution / Vision / Values / Risk / Revocation
     <a href="#topology">架构拓扑</a>
   </div>
   <div class="section-head">
-    <div class="eyebrow"><span class="eyebrow-text">因果追溯 · 跨面图谱</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">因果依赖图谱</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">因果追溯 · 跨面图谱</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Causal Dependency Graph</span></div>
     <h1 id="title-trace">全域因果拓扑与跨面依存图谱</h1>
     <p class="lead">覆盖 8 大主权意志面（意志/决策/感知/知识/元模/资产/交付/进化），贯通 5,808 实体节点与 6,499 因果边，提供上下游穿透溯源与最短因果路径探针。</p>
   </div>
@@ -2594,10 +2550,6 @@ Constitution / Vision / Values / Risk / Revocation
       <span class="chip" style="background:#EC4899;color:#fff">🧬 进化 (Evolution)</span>
     </div>
   </div>
-<div class="card gap" style="background:var(--bluewash);border-color:rgba(37,99,235,0.2)">
-  <b>📎 参见相关板块</b>
-  <div class="flow" style="margin-top:8px"><a href="#swarm" class="chip" style="text-decoration:none">🤖 Agent 协同</a><a href="#topology" class="chip" style="text-decoration:none">☵ 架构拓扑</a><a href="#mof-grid" class="chip" style="text-decoration:none">⚖️ MOF 元模型</a><a href="#orient" class="chip" style="text-decoration:none">◎ 全景总览</a></div>
-</div>
 </section>
 
 <!-- 2. Capability & BOS Registry Section -->
@@ -2611,7 +2563,7 @@ Constitution / Vision / Values / Risk / Revocation
     <a href="#topology">架构拓扑</a>
   </div>
   <div class="section-head">
-    <div class="eyebrow"><span class="eyebrow-text">能力中枢 · 统一网关</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">能力与 BOS 注册</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">能力中枢 · 统一网关</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Capability & BOS Registry</span></div>
     <h1 id="title-capabilities">全域能力发现与 BOS 服务资产目录</h1>
     <p class="lead">织星操作系统能力注册中枢：统合 306+ 项 BOS 服务路由、451+ 项 MCP 智能体工具与 33 项 Cockpit CLI 操作指令，基于 Unified Capability Registry 进行标准寻址与调用审计。</p>
   </div>
@@ -2660,9 +2612,9 @@ Constitution / Vision / Values / Risk / Revocation
     <a href="#gov">恢复准入</a>
   </div>
   <div class="section-head">
-    <div class="eyebrow"><span class="eyebrow-text">自进化 · 知识结晶</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">经验与 SEMA 结晶</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">自进化 · 知识结晶</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Experience & SEMA Crystallization</span></div>
     <h1 id="title-learning">经验自进化与 SEMA 踩坑信念结晶</h1>
-    <p class="lead">从历史 390+ 篇复盘战报（Retros）与夏明星主权署名 Diff 中逆向萃取智能体信念，实现「踩坑即沉淀、沉淀即固化为不可违背规则」的闭环进化系统。<span style="display:block;margin-top:6px;font-size:11px;color:var(--muted)">📌 复盘 / 模式 / 教训的结构化沉淀 · 相关：<a href="#know" style="color:var(--blue)">文档知识</a></span></p>
+    <p class="lead">从历史 390+ 篇复盘战报（Retros）与夏明星主权署名 Diff 中逆向萃取智能体信念，实现「踩坑即沉淀、沉淀即固化为不可违背规则」的闭环进化系统。</p>
   </div>
   <div class="grid three gap" style="margin-bottom:14px">
     <div class="card" style="background:var(--paper)">
@@ -2691,7 +2643,7 @@ Constitution / Vision / Values / Risk / Revocation
   </div>
 </section>
 
-<!-- 4. 架构图谱与模型板块 -->
+<!-- 4. Architecture Atlas & Model Section -->
 <section id="atlas" data-system="S1" class="section" aria-labelledby="title-atlas">
   <div class="section-breadcrumb">
     <span>📍 架构与模型</span>
@@ -2702,7 +2654,7 @@ Constitution / Vision / Values / Risk / Revocation
     <a href="#panorama">白皮书指导</a>
   </div>
   <div class="section-head">
-    <div class="eyebrow"><span class="eyebrow-text">微内核 · 模型驱动</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">架构图谱与模型</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">微内核 · 模型驱动</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Architecture Atlas & Models</span></div>
     <h1 id="title-atlas">织星微内核架构全景与模型映射 (Atlas)</h1>
     <p class="lead">以「道法术器 (DFSQ/v1)」为总纲，以「5 业务域 + 4 治理层 + 1 自我层 + 1 扩展层」构筑织星操作系统稳固基石，支撑 M3 元模型 ➔ M2 领域模型 ➔ M1 运行时实例的贯通演进。</p>
   </div>
@@ -2728,65 +2680,6 @@ Constitution / Vision / Values / Risk / Revocation
       </div>
     </div>
   </div>
-
-  <!-- DFSQ 架构图谱可视化 -->
-  <div class="card gap" style="background:var(--paper)">
-    <b>🗺️ DFSQ/v1 道法术器架构图谱</b>
-    <p class="small muted" style="margin:4px 0 10px">道 (L0) → 法 (L2) → 术 (L1/L3) → 器 (I0/X) · 四层解耦 · 标准总线互联</p>
-    <svg viewBox="0 0 800 360" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
-      <!-- 背景层 -->
-      <rect x="10" y="10" width="780" height="340" rx="12" fill="var(--surface-subtle)" stroke="var(--border-subtle)" stroke-width="1"/>
-      <!-- L0 道 - 协议层 -->
-      <rect x="30" y="30" width="740" height="68" rx="8" fill="#f5f5ff" stroke="#6366f1" stroke-width="1.5" opacity="0.9"/>
-      <text x="50" y="55" font="600 13px var(--display)" fill="#6366f1">道 (L0) · 协议契约层</text>
-      <text x="50" y="75" font="11px var(--body)" fill="var(--muted)">eCOS 协议契约</text>
-      <rect x="200" y="48" width="120" height="28" rx="14" fill="#6366f1" opacity="0.12"/>
-      <text x="260" y="67" font="600 10px var(--body)" fill="#6366f1" text-anchor="middle">MOF 元模型</text>
-      <rect x="340" y="48" width="120" height="28" rx="14" fill="#6366f1" opacity="0.12"/>
-      <text x="400" y="67" font="600 10px var(--body)" fill="#6366f1" text-anchor="middle">SSB 签名链</text>
-      <rect x="480" y="48" width="140" height="28" rx="14" fill="#6366f1" opacity="0.12"/>
-      <text x="550" y="67" font="600 10px var(--body)" fill="#6366f1" text-anchor="middle">SSDS 设计规范</text>
-      <!-- L2 法 - 规则层 -->
-      <rect x="30" y="110" width="740" height="68" rx="8" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" opacity="0.9"/>
-      <text x="50" y="135" font="600 13px var(--display)" fill="#0891b2">法 (L2) · 规则治理层</text>
-      <text x="50" y="155" font="11px var(--body)" fill="var(--muted)">门控决策中枢</text>
-      <rect x="200" y="128" width="130" height="28" rx="14" fill="#0891b2" opacity="0.12"/>
-      <text x="265" y="147" font="600 10px var(--body)" fill="#0891b2" text-anchor="middle">69 场景卡约束</text>
-      <rect x="350" y="128" width="120" height="28" rx="14" fill="#0891b2" opacity="0.12"/>
-      <text x="410" y="147" font="600 10px var(--body)" fill="#0891b2" text-anchor="middle">KEMS 质量控制</text>
-      <rect x="490" y="128" width="130" height="28" rx="14" fill="#0891b2" opacity="0.12"/>
-      <text x="555" y="147" font="600 10px var(--body)" fill="#0891b2" text-anchor="middle">GaC 治理规则</text>
-      <!-- L1/L3 术 - 编排层 -->
-      <rect x="30" y="190" width="740" height="68" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5" opacity="0.9"/>
-      <text x="50" y="215" font="600 13px var(--display)" fill="#2563eb">术 (L1/L3) · 编排入口层</text>
-      <text x="50" y="235" font="11px var(--body)" fill="var(--muted)">KEI 沙箱 · 多智能体协同</text>
-      <rect x="200" y="208" width="120" height="28" rx="14" fill="#2563eb" opacity="0.12"/>
-      <text x="260" y="227" font="600 10px var(--body)" fill="#2563eb" text-anchor="middle">Cockpit 控制台</text>
-      <rect x="340" y="208" width="120" height="28" rx="14" fill="#2563eb" opacity="0.12"/>
-      <text x="400" y="227" font="600 10px var(--body)" fill="#2563eb" text-anchor="middle">OMO 编排内核</text>
-      <rect x="480" y="208" width="120" height="28" rx="14" fill="#2563eb" opacity="0.12"/>
-      <text x="540" y="227" font="600 10px var(--body)" fill="#2563eb" text-anchor="middle">Resident 守护</text>
-      <!-- I0/X 器 - 算力层 -->
-      <rect x="30" y="270" width="740" height="68" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" opacity="0.9"/>
-      <text x="50" y="295" font="600 13px var(--display)" fill="#059669">器 (I0/X) · 算力工具层</text>
-      <text x="50" y="315" font="11px var(--body)" fill="var(--muted)">Agora MCP 路由 · AetherForge 算力织网</text>
-      <rect x="200" y="288" width="130" height="28" rx="14" fill="#059669" opacity="0.12"/>
-      <text x="265" y="307" font="600 10px var(--body)" fill="#059669" text-anchor="middle">Agora MCP 路由</text>
-      <rect x="350" y="288" width="140" height="28" rx="14" fill="#059669" opacity="0.12"/>
-      <text x="420" y="307" font="600 10px var(--body)" fill="#059669" text-anchor="middle">AetherForge 推理</text>
-      <rect x="510" y="288" width="130" height="28" rx="14" fill="#059669" opacity="0.12"/>
-      <text x="575" y="307" font="600 10px var(--body)" fill="#059669" text-anchor="middle">Omni-Bus 总线</text>
-      <!-- 连接线 -->
-      <line x1="400" y1="98" x2="400" y2="110" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
-      <line x1="400" y1="178" x2="400" y2="190" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
-      <line x1="400" y1="258" x2="400" y2="270" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
-      <!-- 右侧标注 -->
-      <text x="720" y="65" font="600 10px var(--mono)" fill="#6366f1" text-anchor="middle">5 业务域</text>
-      <text x="720" y="145" font="600 10px var(--mono)" fill="#0891b2" text-anchor="middle">4 治理层</text>
-      <text x="720" y="225" font="600 10px var(--mono)" fill="#2563eb" text-anchor="middle">1 自我层</text>
-      <text x="720" y="305" font="600 10px var(--mono)" fill="#059669" text-anchor="middle">1 扩展层</text>
-    </svg>
-  </div>
 </section>
 <section id="mof-grid" data-system="META" class="section" aria-labelledby="title-mof">
 <div class="section-breadcrumb">
@@ -2799,7 +2692,7 @@ Constitution / Vision / Values / Risk / Revocation
 </div>
 <div class="section-head" style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px">
   <div>
-    <div class="eyebrow"><span class="eyebrow-text">MOF · 元模型内核</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">元模型与约束</span></div>
+    <div class="eyebrow"><span class="eyebrow-text">MOF · 元模型内核</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Metamodel & Constraints</span></div>
     <h1 id="title-mof">MOF 元模型与全域约束中枢</h1>
     <p class="lead" style="margin-bottom:0">M0-M3 四层元模型 · 规则门禁覆盖 · 阶段解锁状态 · CI 平面健康</p>
   </div>
@@ -3094,6 +2987,22 @@ document.addEventListener('DOMContentLoaded',function(){renderPanorama(PANORAMA_
 <script>
 'use strict';
 const D=JSON.parse(document.getElementById('snapshot').textContent);
+// Global defaults: ensure all D.* fields are at least defined
+D.roadmap=D.roadmap||{gates:[],milestones:[],current_as_of:''};
+D.contract=D.contract||{first_materialization_wave:{candidate_keys:[]}};
+D.presentation=D.presentation||{runtime_freshness_seconds:600,global_agent_coverage:''};
+D.gantt=D.gantt||{first_100_days:{window:{start:'',end:''},lanes:[]}};
+D.portfolio=D.portfolio||{actual:0,declared:0,counts:{done:0,blocked:0,in_progress:0,candidate:0},nonterminal:[],bet_records:[]};
+D.catalog=D.catalog||{counts:{by_kind:{}},projects:[],capabilities:[],bos_services:[],sources:[]};
+D.metrics_kpi=D.metrics_kpi||{health_score:0,freshness_score:0,drift_score:null,alignment_score:0,staleness_score:0,total_events_24h:0,events_per_hour_24h:0};
+D.refresh=D.refresh||{failed_sources:[]};
+D.recent_events=D.recent_events||{events:[]};
+D.envelope=D.envelope||{path:'',sha256:''};
+D.library=D.library||'';
+D.documents=D.documents||{documents:[]};
+D.agents=D.agents||[];
+D.gates=D.gates||[];
+D.runtime=D.runtime||{};
 window.D=D;
 if(!window.__zxLiveData) window.__zxLiveData=D;
 const $=id=>document.getElementById(id);
@@ -3101,7 +3010,7 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fileLink=p=>{if(location.protocol==='http:'){const docList = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);const doc=docList.find(d=>d.path===p);if(doc)return '/document?id='+encodeURIComponent(doc.document_id);if(p===(D.envelope&&D.envelope.path))return '/document?id=current-envelope';}return 'file://'+encodeURI(p).replace(/#/g,'%23').replace(/\?/g,'%3F');};
 const dt=x=>x?new Date(x).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):'未观测';
 const chip=(s,t='')=>'<span class="chip '+t+'">'+esc(s)+'</span>';
-const p=D.portfolio||{}, R=D.runtime||{};
+const p=D.portfolio, R=D.runtime||{};
 window.esc=esc; window.chip=chip; window.dt=dt;
 
 function updateOmniIndexCounts(data){
@@ -3191,45 +3100,14 @@ function go(name){
    } else if(name==='orient'){
      if(typeof renderOrientLoopsPulse==='function') renderOrientLoopsPulse();
      if(typeof renderSovereignPostureBar==='function') renderSovereignPostureBar();
-	   } else if(name==='scene-system'){
-	     if(typeof renderSceneSystem==='function') renderSceneSystem(D);
-	   } else if(name==='value'){
-	     if(typeof zxRenderValue==='function') zxRenderValue();
-	   } else if(name==='metrics'){
-	     if(typeof zxRenderMetrics==='function') zxRenderMetrics();
-	   } else if(name==='swarm'){
-	     if(typeof renderSwarmGalaxy==='function') renderSwarmGalaxy();
-	   } else if(name==='gov'){
-	     if(typeof renderGatePipeline==='function') renderGatePipeline();
-	   } else if(name==='health'){
-	     if(typeof refreshHealth==='function') refreshHealth();
-	     if(typeof populateHealth==='function') populateHealth();
-	   } else if(name==='workbench'){
-	     if(typeof renderBetsTab==='function') renderBetsTab();
-	     if(typeof renderSceneFunnel==='function') renderSceneFunnel();
-	   } else if(name==='personal'){
-	     if(typeof renderPersonalSummary==='function') renderPersonalSummary();
-	     if(typeof renderPersonalNextActions==='function') renderPersonalNextActions();
-	   } else if(name==='ledger'){
-	     if(typeof renderLedgerVisuals==='function') renderLedgerVisuals();
-	     if(typeof renderBets==='function') renderBets();
-	   } else if(name==='capabilities'){
-	     if(typeof renderCaps==='function') renderCaps();
-	     if(typeof renderBOSTab==='function') renderBOSTab();
-	   } else if(name==='know'){
-	     if(typeof renderKnowledgeStats==='function') renderKnowledgeStats();
-	   } else if(name==='atlas'){
-	     if(typeof renderAgentCapabilityMesh==='function') renderAgentCapabilityMesh();
-	   } else if(name==='logs'){
-	     if(typeof zxRenderLogs==='function') zxRenderLogs();
-	   }
-	 } catch(e){ console.warn('section activate render failed', name, e); }
+   }
+ } catch(e){ console.warn('section activate render failed', name, e); }
 }
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)));go(location.hash.slice(1));
 renderSceneSystem(D);
 try{refreshPanorama();}catch(e){console.warn('live panorama refresh failed:',e);}
-$('snapshot-time').textContent='主线 '+dt(p.observed_at)+' · 运行 '+dt(R.observed_at)+' · 生成 '+dt(D.generated_at)+' CST';
-$('foot-source').textContent=' 主线来源 '+(p.sha||'不可用').slice(0,12)+' · 本地时间 '+dt(D.observed_at);
+$('snapshot-time').textContent='主线 '+dt(p?.observed_at)+' · 运行 '+dt(R.observed_at)+' · 生成 '+dt(D.generated_at)+' CST';
+$('foot-source').textContent=' 主线来源 '+((p&&p.sha)||'不可用').slice(0,12)+' · 本地时间 '+dt(D.observed_at);
 $('download').onclick=function(){
   // Create export menu
   var menu = document.getElementById('export-menu');
@@ -3260,21 +3138,12 @@ $('download').onclick=function(){
       var blob = new Blob([csv], {type: 'text/csv'});
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'agent-os-events-' + (D.generated_at || 'current').slice(0, 10) + '.csv';
+      a.dashboard = 'agent-os-events-' + (D.generated_at || 'current').slice(0, 10) + '.csv';
       a.click();
       setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
       menu.remove();
     };
     $('#exp-close').onclick = function() { menu.remove(); };
-    // 点击菜单外部自动关闭 (P2-8)
-    setTimeout(function() {
-      document.addEventListener('click', function expOutside(e) {
-        if (menu.parentNode && !menu.contains(e.target) && e.target.id !== 'download') {
-          menu.remove();
-          document.removeEventListener('click', expOutside);
-        }
-      });
-    }, 0);
   } else {
     menu.remove();
   }
@@ -3283,16 +3152,15 @@ $('print').onclick=()=>window.print();
 var betDone = p.counts && p.counts.done ? p.counts.done : 0;
 var betTotal = p.actual || 0;
 var betRate = betTotal > 0 ? Math.round(betDone / betTotal * 100) + '%' : '—';
-var healthScore = (D.metrics_kpi && D.metrics_kpi.health_score) || 0;
-var covComplete=(p.coverage?.canonical_complete??0), covNonTerminal=(p.coverage?.nonterminal??0);
-var totalBet=betTotal||covComplete+covNonTerminal;
-const vectors=[['目标覆盖',(covComplete||totalBet)+' BET','共 '+totalBet+' 个已注册 BET',(totalBet > 0 ? 'good' : 'neutral')],['可执行',(p.nonterminal?.length || 0) + ' 进行中','全部 '+betTotal+' BET 已推进至终态',((p.nonterminal?.length || 0) > 0 ? 'warn' : 'good')],['交付',betRate + ' 闭环',betDone+' / '+betTotal+' BET 已完成',(betRate !== '—' && parseInt(betRate) > 80 ? 'good' : 'warn')],['运行',healthScore + ' 健康分','系统综合健康度',(healthScore >= 70 ? 'good' : healthScore >= 50 ? 'warn' : 'bad')],['价值',(D.metrics_kpi?.total_events_24h || 0) + ' 事件/24h','系统运行活跃度 · '+(D.metrics_kpi?.events_per_hour_24h?.toFixed(1)||0)+'/时',((D.metrics_kpi?.total_events_24h || 0) > 50 ? 'good' : 'warn')],['验收',(D.gates?.length || 0) + ' 门禁','治理与准入 · '+(D.gates||[]).filter(g=>gateChipClass(g.verdict||g.status)==='good').length+' 通过',((D.gates||[]).filter(g=>gateChipClass(g.verdict||g.status)==='good').length > 5 ? 'good' : ((D.gates||[]).some(g=>gateChipClass(g.verdict||g.status)==='bad') ? 'bad' : 'neutral'))]];
+var healthScore = (D.metrics_kpi && typeof D.metrics_kpi.health_score==='number' && isFinite(D.metrics_kpi.health_score)) ? D.metrics_kpi.health_score : null;
+const vectors=[['目标覆盖',(p.coverage?.canonical_complete??'—')+' / '+(p.coverage?.nonterminal??'—'),'canonical BET 绑定完整',(p.coverage?.canonical_complete > 0 ? 'good' : 'bad')],['可执行',(p.nonterminal?.length || 0) + ' 活跃','写面重叠与恢复门待满足',((p.nonterminal?.length || 0) > 0 ? 'warn' : 'good')],['交付',betRate + ' 闭环',betDone+' / '+betTotal+' BET 完成',(betRate !== '—' && parseInt(betRate) > 80 ? 'good' : 'warn')],['运行',(healthScore==null?'—':healthScore) + ' 健康分','系统综合健康度',(healthScore==null?'neutral':healthScore >= 70 ? 'good' : healthScore >= 50 ? 'warn' : 'bad')],['价值',(D.metrics_kpi?.total_events_24h || 0) + ' 事件/24h','系统运行活跃度',((D.metrics_kpi?.total_events_24h || 0) > 50 ? 'good' : 'warn')],['验收',(D.gates?.length || 0) + ' 门禁','治理与准入 live PASS',((D.gates||[]).filter(g=>gateChipClass(g.verdict||g.status)==='good').length > 5 ? 'good' : ((D.gates||[]).some(g=>gateChipClass(g.verdict||g.status)==='bad') ? 'bad' : 'neutral'))]];
 $('vectors').innerHTML=vectors.map(v=>'<div><span class="small muted">'+esc(v[0])+'</span><strong>'+esc(v[1])+'</strong>'+chip(v[2],v[3])+'</div>').join('');
 $('current-findings').innerHTML=(D.current_findings||[]).map(x=>'<li><strong>'+esc(x[0])+'</strong><div class="small muted">'+esc(x[1])+'</div></li>').join('');
-$('summary-source').textContent='Portfolio '+(p.observed_at?dt(p.observed_at):'本轮快照')+' · Runtime '+(R.observed_at?dt(R.observed_at):'未采集')+' · 结论均限定于本轮采样范围';
+$('summary-source').textContent='Portfolio '+dt(p?.observed_at)+' · Runtime '+dt(R.observed_at)+' · 结论均限定于本轮采样范围';
 function ageLabel(){
  const age=Math.max(0,Math.floor((Date.now()-Date.parse(R.observed_at||D.observed_at))/1000));
- $('freshness').textContent='运行观测距今 '+Math.floor(age/60)+' 分钟。'+(age>D.presentation.runtime_freshness_seconds?'已超过本页 10 分钟提示阈值；运行状态应视为 STALE，操作前重新读取。':'此时间仅说明快照年龄；不能证明运行持续健康。')+' 每 5 分钟计划采样；页面每 60 秒检查新快照，阅读中提示更新。';
+ var freshThreshold=(D.presentation&&typeof D.presentation.runtime_freshness_seconds==='number')?D.presentation.runtime_freshness_seconds:600;
+ $('freshness').textContent='运行观测距今 '+Math.floor(age/60)+' 分钟。'+(age>freshThreshold?'已超过本页 10 分钟提示阈值；运行状态应视为 STALE，操作前重新读取。':'此时间仅说明快照年龄；不能证明运行持续健康。')+' 每 5 分钟计划采样；页面每 60 秒检查新快照，阅读中提示更新。';
  var govFresh=document.getElementById('gov-freshness');
  if(govFresh) govFresh.innerHTML=freshnessIndicator(R.observed_at||D.observed_at);
 }
@@ -3307,16 +3175,16 @@ function gateChipClass(v){
  if(s.includes('PARTIAL')||s.includes('DEGRADED')||s.includes('未准入')||s.includes('待')||s.includes('另验'))return 'warn';
  return 'neutral';
 }
-$('gate-list').innerHTML=D.roadmap.gates.map(g=>{
+$('gate-list').innerHTML=(D.roadmap&&D.roadmap.gates||[]).map(g=>{
  const idx=liveGateIndex();
  const live=idx[g.id];
  const verdict=live?(live.verdict||live.status):'未充分验证';
  const body=live?(live.detail||live.summary||verdict):'本轮未获得足够的运行证明，保留待验证状态。';
  const srcTag=live?(live._source==='live'?'live D.gates':'runtime historical'):'no live sample';
- return '<article class="card"><div class="gate-title"><span class="gate-id">'+esc(g.id)+'</span>'+chip(verdict,gateChipClass(verdict))+'</div><h3>'+esc(gateNames[g.id]||g.title||g.id)+'</h3><p class="small muted">'+esc(g.owner_role||'')+'</p><div class="gate-body">'+esc(body)+'</div><div class="gate-evidence"><b class="small">设计基线 · '+esc(g.state)+' · '+esc(srcTag)+'</b><div class="small muted">'+dt(D.roadmap.current_as_of)+'</div><div class="small">'+esc((live&&live.next)||'按下方退出门取得直接证据')+'</div></div><details><summary>退出门与来源</summary><ul class="exit-list">'+(g.exit||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><div class="source">'+esc((live&&live.source)||'roadmap.gates + D.gates')+'<br>'+dt((live&&live.observed_at)||R.observed_at)+'</div></details></article>';
+ return '<article class="card"><div class="gate-title"><span class="gate-id">'+esc(g.id)+'</span>'+chip(verdict,gateChipClass(verdict))+'</div><h3>'+esc(gateNames[g.id]||g.title||g.id)+'</h3><p class="small muted">'+esc(g.owner_role||'')+'</p><div class="gate-body">'+esc(body)+'</div><div class="gate-evidence"><b class="small">设计基线 · '+esc(g.state)+' · '+esc(srcTag)+'</b><div class="small muted">'+dt((D.roadmap&&D.roadmap.current_as_of)||'')+'</div><div class="small">'+esc((live&&live.next)||'按下方退出门取得直接证据')+'</div></div><details><summary>退出门与来源</summary><ul class="exit-list">'+(g.exit||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><div class="source">'+esc((live&&live.source)||'roadmap.gates + D.gates')+'<br>'+dt((live&&live.observed_at)||R.observed_at)+'</div></details></article>';
 }).join('');
 $('ledger-stats').innerHTML=[['实际 BET',p.actual],['declared total',p.declared],['已记 done',p.counts?.done],['非终态',p.nonterminal?.length],['Objectives',p.objectives?.length],['Campaigns',p.campaigns?.length]].map(x=>'<div><strong>'+esc(x[1]??'—')+'</strong><span>'+esc(x[0])+'</span></div>').join('');
-$('ledger-source').innerHTML='GitHub 主线固定提交 <span class="mono">'+esc(p.sha)+'</span><br>Ledger SHA-256 <span class="mono">'+esc(p.ledger_sha256)+'</span><br>'+dt(p.observed_at)+'；done 数量是台账事实，不用来计算愿景完成率。';
+$('ledger-source').innerHTML='GitHub 主线固定提交 <span class="mono">'+esc(p&&p.sha||'')+'</span><br>Ledger SHA-256 <span class="mono">'+esc(p&&p.ledger_sha256||'')+'</span><br>'+dt(p?.observed_at)+'；done 数量是台账事实，不用来计算愿景完成率。';
 const stageNames={G0:'设计审阅与组合闭环',G1:'A1–A5 恢复基础环境',G2:'Role / Queue / Capsule 等核心合同',G3:'Direct Local Reference Cell',G4:'A8 外部 Adapter Transaction',G5:'A6 Orca R0 与 A7 Multica AS0',G6:'A9 ASD 与 Cockpit 全景观测',G7:'可逆交付与 4 周 Golden Slice',G8:'第二场景与持续证明'};
 const stageStateChip=function(m){
   const st=String(m.state||'').toLowerCase();
@@ -3327,25 +3195,25 @@ const stageStateChip=function(m){
   if(st==='planned') return chip('计划待入轨', 'neutral');
   return chip(m.state||'NO_DATA', 'neutral');
 };
-$('stages').innerHTML=D.roadmap.milestones.map(g=>'<div class="stage-row"><span class="stage-id">'+esc(g.id)+'</span><div><strong>'+esc(stageNames[g.id]||g.title||g.id)+'</strong><div class="stage-details">前置：'+esc((g.depends_on||[]).join(' + ')||'设计准备')+' · writer 上限 '+esc(g.writer_limit)+((g.gate_members&&g.gate_members.length)?' · 关卡 '+(g.gate_members.join(', ')):'')+'<details><summary>工作与退出条件</summary><ul>'+(g.candidate_bets||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><ul>'+(g.exit||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></details></div></div>'+stageStateChip(g)+'</div>').join('');
+$('stages').innerHTML=(D.roadmap&&D.roadmap.milestones||[]).map(g=>'<div class="stage-row"><span class="stage-id">'+esc(g.id)+'</span><div><strong>'+esc(stageNames[g.id]||g.title||g.id)+'</strong><div class="stage-details">前置：'+esc((g.depends_on||[]).join(' + ')||'设计准备')+' · writer 上限 '+esc(g.writer_limit)+((g.gate_members&&g.gate_members.length)?' · 关卡 '+(g.gate_members.join(', ')):'')+'<details><summary>工作与退出条件</summary><ul>'+(g.candidate_bets||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><ul>'+(g.exit||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></details></div></div>'+stageStateChip(g)+'</div>').join('');
 $('objectives').innerHTML=(p.objectives||[]).map(o=>'<div class="list"><h3>'+esc(o.id)+'</h3><p class="small">'+esc(o.statement)+'</p><p class="small muted">'+(o.key_results||[]).map(k=>esc(k.id)+'：'+esc(k.status)+'（Ledger 记录）').join('<br>')+'</p></div>').join('')+'<h3 class="gap">当前 Campaign</h3>'+(p.campaigns||[]).map(c=>'<p class="small"><b>'+esc(c.title)+'</b><br><span class="mono">'+esc(c.id)+'</span></p>').join('')+'<div class="source">KR proven 为现有台账值；本页未重演历史价值验收，不自动推广为全组合通过。</div>';
-$('candidates').innerHTML=D.contract.first_materialization_wave.candidate_keys.map(x=>'<p class="small mono">'+esc(x)+'</p>').join('');
-const start=Date.parse(D.gantt.first_100_days.window.start),end=Date.parse(D.gantt.first_100_days.window.end);
+$('candidates').innerHTML=(D.contract&&D.contract.first_materialization_wave&&D.contract.first_materialization_wave.candidate_keys||[]).map(x=>'<p class="small mono">'+esc(x)+'</p>').join('');
+const start=Date.parse((D.gantt&&D.gantt.first_100_days||{}).window?.start||''),end=Date.parse((D.gantt&&D.gantt.first_100_days||{}).window?.end||'');
 const sDate=new Date(start),eDate=new Date(end);
-const monthSpans=['<span>'+esc(D.gantt.first_100_days.window.start.slice(5))+'</span>'];
+const monthSpans=['<span>'+esc((D.gantt&&D.gantt.first_100_days||{}).window?.start?.slice(5))+'</span>'];
 let curM=new Date(sDate.getFullYear(),sDate.getMonth()+1,1);
 while(curM<eDate){monthSpans.push('<span>'+(curM.getMonth()+1)+' 月</span>');curM.setMonth(curM.getMonth()+1);}
-monthSpans.push('<span>'+esc(D.gantt.first_100_days.window.end.slice(5))+'</span>');
+monthSpans.push('<span>'+esc((D.gantt&&D.gantt.first_100_days||{}).window?.end?.slice(5))+'</span>');
 const todayTime=Date.now();
 const todayPos=Math.max(0,Math.min(100,(todayTime-start)/(end-start)*100));
 const todayLine='<div class="gantt-today" style="left:'+todayPos+'%" title="当前基准：'+(new Date()).toISOString().slice(0,10)+'"></div>';
-$('gantt').innerHTML='<div class="gantt-axis"><span class="small muted">责任角色 / 条件性排期</span><div class="months">'+monthSpans.join('')+'</div></div>'+D.gantt.first_100_days.lanes.map(l=>l.items.map(i=>{
+$('gantt').innerHTML='<div class="gantt-axis"><span class="small muted">责任角色 / 条件性排期</span><div class="months">'+monthSpans.join('')+'</div></div>'+(D.gantt&&D.gantt.first_100_days&&D.gantt.first_100_days.lanes||[]).map(l=>l.items.map(i=>{
  const left=Math.max(0,(Date.parse(i.start)-start)/(end-start)*100),width=Math.min(100-left,(Date.parse(i.end)-Date.parse(i.start)+864e5)/(end-start)*100);
  return '<div class="gantt-row"><div class="gantt-label" title="'+esc(l.owner_role+' / '+i.title)+'">'+esc(i.key)+'<div class="gantt-date">'+esc(i.start.slice(5)+' → '+i.end.slice(5))+' · '+esc(l.lane_id)+'</div></div><div class="gantt-track">'+todayLine+'<span class="bar '+(i.status==='evidence-window'?'evidence':'')+'" style="left:'+left+'%;width:'+width+'%" title="'+esc(i.title+'；前置 '+i.depends_on.join(', '))+'"></span></div></div>';
 }).join('')).join('');
 function bets(){const q=$('bet-search').value.trim().toLowerCase(),state=$('bet-status').value;const items=(p.nonterminal||[]).filter(b=>(!state||b.status===state)&&JSON.stringify(b).toLowerCase().includes(q));$('bet-count').textContent='显示 '+items.length+' / '+(p.nonterminal||[]).length+' 个 BET';$('bet-rows').innerHTML=items.length?items.map(b=>'<tr><td><strong>'+esc(b.title||b.id)+'</strong><div class="mono">'+esc(b.id)+'</div><span class="small muted">'+esc(b.goal||'')+'</span></td><td>'+chip(b.status,b.status==='blocked'?'bad':b.status==='in_progress'?'warn':'neutral')+'</td><td class="mono">'+esc((b.depends_on||[]).join(' · ')||'无声明依赖')+'</td></tr>').join(''):'<tr><td colspan="3" class="empty">没有符合条件的 BET。</td></tr>'}
 $('bet-search').oninput=bets;$('bet-status').onchange=bets;bets();
-$('agent-coverage').textContent=D.presentation.global_agent_coverage;
+$('agent-coverage').textContent=(D.presentation&&D.presentation.global_agent_coverage)||'—';
 $('runtime-cards').innerHTML=(R.runtime_cards||[]).map(x=>'<article class="card"><div class="row"><h3>'+esc(x.title)+'</h3>'+chip(x.status,'warn')+'</div><p>'+esc(x.summary)+'</p><div class="source">'+esc(x.source)+'<br>'+dt(x.observed_at||R.observed_at)+'</div></article>').join('');
 // Build team rows from current_team + agents worktree data
 var teamRows = (D.current_team || []).map(a=>'<tr><td><strong>'+esc(a.name)+'</strong><br><span class="small muted">'+esc(a.runtime)+'</span></td><td>'+esc(a.role)+'</td><td>'+esc(a.status)+'<br><span class="small muted">'+esc(a.scope)+'</span></td></tr>');
@@ -3359,7 +3227,7 @@ if (D.agents && D.agents.length) {
   });
 }
 $('team-rows').innerHTML = teamRows.join('') || '<tr><td colspan="3" class="empty">无团队数据</td></tr>';
-$('roles').innerHTML=D.role_design.map(x=>'<article class="role"><h3>'+esc(x[0])+'</h3><p class="small">'+esc(x[1])+'</p><small>权限：'+esc(x[2])+'<br>约束：'+esc(x[3])+'</small></article>').join('');
+$('roles').innerHTML=(D.role_design||[]).map(x=>'<article class="role"><h3>'+esc(x[0])+'</h3><p class="small">'+esc(x[1])+'</p><small>权限：'+esc(x[2])+'<br>约束：'+esc(x[3])+'</small></article>').join('');
 function documents(){const allDocs = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);const q=$('doc-search').value.trim().toLowerCase(),status=$('doc-status').value;const ds=allDocs.filter(d=>(!status||d.approval_state===status)&&(d.title+' '+d.document_id+' '+d.authority_scope).toLowerCase().includes(q));$('doc-count').textContent=ds.length+' / '+allDocs.length+' 份已登记文档；审阅状态来自 Documents registry';$('documents').innerHTML=ds.length?ds.map(d=>'<article class="doc"><a href="'+esc(fileLink(d.path))+'">'+esc(d.title)+'</a><div class="doc-id">'+esc(d.document_id)+'</div><div class="small muted">'+esc(d.owner)+'</div><div class="doc-tags">'+chip(d.approval_state,d.approval_state==='accepted'?'good':'neutral')+chip(d.exists?'本地文件存在':'路径缺失',d.exists?'neutral':'bad')+'</div><details><summary>来源与摘要</summary><div class="source">'+esc(d.path)+'<br><span class="mono">'+esc(d.sha256)+'</span></div></details></article>').join(''):'<div class="empty">没有匹配文档。试试“白皮书”“Agent”或“验收”。</div>'}
 const docFilterList = Array.isArray(D.documents) ? D.documents : (D.documents && Array.isArray(D.documents.documents) ? D.documents.documents : []);
 $('doc-status').querySelector('option[value="accepted"]').textContent='已接受（'+docFilterList.filter(d=>d.approval_state==='accepted').length+'）';
@@ -3399,8 +3267,8 @@ var observationCheckpoints=(claimsObservation.checkpoints||[]).map(function(c){
 }).join('')||'<tr><td colspan="4" class="empty">NO_CHECKPOINTS</td></tr>';
 $('claims-observation-progress').innerHTML='<article class="loop"><h3>观察窗进度 · '+esc(claimsObservation.state||'UNAVAILABLE')+'</h3><div class="small mono">samples '+esc(claimsObservation.sample_count||0)+' / '+esc(claimsObservation.minimum_samples||1440)+' · elapsed '+esc(observationDuration(claimsObservation.elapsed_seconds))+' / '+esc(observationDuration(claimsObservation.duration_seconds||86400))+'</div><div class="small mono">max gap '+esc(claimsObservation.observed_max_gap_seconds??'—')+'s / '+esc(claimsObservation.maximum_gap_seconds||120)+'s · errors '+esc(claimsObservation.errors??'—')+' · receipts '+esc(claimsObservation.receipts_match===true?'MATCH':'UNVERIFIED')+'</div><div style="overflow-x:auto;margin-top:10px"><table class="table"><thead><tr><th>checkpoint</th><th>state</th><th>duration</th><th>scope</th></tr></thead><tbody>'+observationCheckpoints+'</tbody></table></div><p class="small muted">前三个 checkpoint 只用于提前发现问题；毕业必须连续满足 24h / 1440 samples，不可补样或拼接窗口。</p></article>';
 $('claims-authorization').innerHTML='<article class="loop"><h3>'+esc(claimsActivationRequest.authority_id||'omo-claims-authority-r0')+' · '+esc(claimsActivationRequest.operation||'activate-shadow')+'</h3><p class="small mono">request '+esc(claimsActivationRequest.request_id||'—')+'</p><p class="small mono">request digest '+esc(claimsActivationRequest.request_digest||'—')+'</p><p class="small mono">descriptor '+esc(claimsActivationRequest.descriptor_digest||'—')+'</p><p class="small">state '+esc(claimsActivationRequest.status||'—')+' · authorization '+esc(claimsActivationRequest.human_authorization_status||'UNPROVEN')+' · activation '+esc(claimsActivationRequest.activation||'NOT_AUTHORIZED')+'</p></article>';
-$('proposal-link').href=fileLink(D.library+'/30-实施与协同/Workspace组合闭环绑定实施准备-v1.md');
-$('envelope-link').href=fileLink(D.envelope.path);$('envelope-hash').textContent='SHA-256 '+D.envelope.sha256;
+$('proposal-link').href=fileLink((D.library||'')+'/30-实施与协同/Workspace组合闭环绑定实施准备-v1.md');
+$('envelope-link').href=fileLink(D.envelope&&D.envelope.path||'');if(D.envelope&&D.envelope.sha256)$('envelope-hash').textContent='SHA-256 '+D.envelope.sha256;else $('envelope-hash').textContent='';
 
 $('reload-page').onclick=()=>window.ZhixingViewState?window.ZhixingViewState.reload():location.reload();
 const failures=Object.entries(D.source_states||{}).filter(([k,v])=>v.status!=='OK');
@@ -3471,6 +3339,20 @@ function ensureNavVisibleForSection(sectionId){
   }
 }
 
+function switchHorizonFilter(filter){
+  // Show/hide nav groups based on horizon filter
+  document.querySelectorAll('.nav-horizon-group').forEach(function(g){
+    var h=g.getAttribute('data-horizon');
+    if(filter==='all'||h===filter){g.style.display='';}
+    else{g.style.display='none';}
+  });
+  // Update active button state
+  document.querySelectorAll('.horizon-dock-btn').forEach(function(b){
+    var match=b.getAttribute('onclick');
+    if(match&&match.includes("'"+filter+"'")){b.classList.add('active');}
+    else if(match&&match.includes("switchHorizonFilter")){b.classList.remove('active');}
+  });
+}
 function toggleNavGroup(el){
   // Toggle collapsed state
   el.classList.toggle('collapsed');
@@ -3864,9 +3746,9 @@ function renderGatePipeline(){
 
   const checkpoints = `
     <line x1="442" y1="8" x2="442" y2="100" stroke="#cbd9e5" stroke-dasharray="3 3"/>
-    <text x="442" y="98" font-size="8" fill="#60778c" text-anchor="middle" font-family="monospace">核心就绪</text>
+    <text x="442" y="98" font-size="8" fill="#60778c" text-anchor="middle" font-family="monospace">CORE READY</text>
     <line x1="708" y1="8" x2="708" y2="100" stroke="#cbd9e5" stroke-dasharray="3 3"/>
-    <text x="708" y="98" font-size="8" fill="#60778c" text-anchor="middle" font-family="monospace">蜂群正常</text>
+    <text x="708" y="98" font-size="8" fill="#60778c" text-anchor="middle" font-family="monospace">SWARM OK</text>
   `;
 
   const gateDenom = Math.max(gates.length, Object.keys(coords).length, 1);
@@ -3908,7 +3790,7 @@ function renderGatePipeline(){
 function renderLedgerVisuals(){
   const el = $('ledger-visuals'); if(!el) return;
   const ledgerFresh = $('ledger-freshness');
-  if(ledgerFresh) ledgerFresh.innerHTML=freshnessIndicator(p.observed_at);
+  if(ledgerFresh) ledgerFresh.innerHTML=freshnessIndicator(p?.observed_at);
   const total = Number(p.actual || 0);
   const done = Number((p.counts && p.counts.done) || 0);
   const inProg = (p.nonterminal||[]).filter(b => b.status === 'in_progress' || b.status === 'active').length;
@@ -3961,7 +3843,7 @@ function renderLedgerVisuals(){
     if (st === 'planned') return { pct: 0, basis: 'state=planned', color: '#60778c' };
     return { pct: 0, basis: 'NO_DATA', color: '#9fb5c5' };
   };
-  const mDefs = (D.roadmap.milestones || []).map(m => {
+  const mDefs = (D.roadmap && D.roadmap.milestones || []).map(m => {
     const derived = milestonePct(m);
     return {
       id: m.id,
@@ -3980,7 +3862,7 @@ function renderLedgerVisuals(){
     </div>
   `).join('') : '<div class="empty">本轮无 roadmap.milestones，里程碑进度 = NO_DATA</div>';
 
-  const crit = (((D.roadmap.dashboard_projection||{}).current)||{}).critical_path || '—';
+  const crit = (((D.roadmap&&D.roadmap.dashboard_projection)||{}).current||{}).critical_path || '—';
   el.innerHTML = `
     <div class="viz-head">
       <h3>📊 3Y-BET 台账状态分布与 G0–G8 里程碑达成度</h3>
@@ -4012,14 +3894,13 @@ function renderSwarmGalaxy(){
   const ls = D.live_sources || {};
   const gatePass = (D.gates || []).filter(g => gateChipClass(g.verdict || g.status) === 'good').length;
   const gateTotal = (D.gates || []).length;
-  // 节点 → 点击跳转的板块 + 详细 tooltip
   const nodes = [
-    { id: 'compute', label: 'AetherForge', sub: (cmp.status || 'NO_DATA') + (cmp.model_count != null ? (' · ' + cmp.model_count + ' 模型') : ''), tone: (cmp.status === 'healthy' || cmp.status === 'ok') ? 'good' : 'warn', goto: '#logs', tip: '本地推理网关 · 显存 ' + (cmp.current_model_memory_gb != null ? cmp.current_model_memory_gb : '—') + '/' + (cmp.final_ceiling_gb != null ? cmp.final_ceiling_gb : '—') + ' GB · 点击查看运行态' },
-    { id: 'agents', label: 'Live Agents', sub: agents.length + ' 观测', tone: agents.length ? 'good' : 'warn', goto: '#swarm', tip: '当前观测到 ' + agents.length + ' 个 Agent · 点击查看协同详情' },
-    { id: 'bos', label: 'BOS Services', sub: cat.bos_services != null ? (cat.bos_services + '') : 'NO_DATA', tone: cat.bos_services ? 'good' : 'neutral', goto: '#capabilities', tip: 'BOS 服务注册 · ' + (cat.bos_services != null ? cat.bos_services : 'NO_DATA') + ' 项已登记 · 点击查看能力全景' },
-    { id: 'caps', label: 'Capabilities', sub: cat.capabilities != null ? (cat.capabilities + '') : 'NO_DATA', tone: cat.capabilities ? 'good' : 'neutral', goto: '#capabilities', tip: '能力注册 · ' + (cat.capabilities != null ? cat.capabilities : 'NO_DATA') + ' 项能力 · 点击查看' },
-    { id: 'gates', label: 'Live Gates', sub: gateTotal ? (gatePass + '/' + gateTotal + ' PASS') : 'NO_DATA', tone: gateTotal && gatePass === gateTotal ? 'good' : 'warn', goto: '#gov', tip: '实时门禁 · ' + gatePass + '/' + gateTotal + ' 通过 · 点击查看准入状态' },
-    { id: 'sources', label: 'Live Sources', sub: Object.keys(ls).length ? (Object.keys(ls).length + ' 源') : 'NO_DATA', tone: Object.keys(ls).length ? 'good' : 'warn', goto: '#health', tip: '数据源 · ' + Object.keys(ls).length + ' 个实时在线 · 点击查看健康诊断' },
+    { id: 'compute', label: 'AetherForge', sub: (cmp.status || 'NO_DATA') + (cmp.model_count != null ? (' · ' + cmp.model_count + ' 模型') : ''), tone: (cmp.status === 'healthy' || cmp.status === 'ok') ? 'good' : 'warn' },
+    { id: 'agents', label: 'Live Agents', sub: agents.length + ' 观测', tone: agents.length ? 'good' : 'warn' },
+    { id: 'bos', label: 'BOS Services', sub: cat.bos_services != null ? (cat.bos_services + '') : 'NO_DATA', tone: cat.bos_services ? 'good' : 'neutral' },
+    { id: 'caps', label: 'Capabilities', sub: cat.capabilities != null ? (cat.capabilities + '') : 'NO_DATA', tone: cat.capabilities ? 'good' : 'neutral' },
+    { id: 'gates', label: 'Live Gates', sub: gateTotal ? (gatePass + '/' + gateTotal + ' PASS') : 'NO_DATA', tone: gateTotal && gatePass === gateTotal ? 'good' : 'warn' },
+    { id: 'sources', label: 'Live Sources', sub: Object.keys(ls).length ? (Object.keys(ls).length + ' 源') : 'NO_DATA', tone: Object.keys(ls).length ? 'good' : 'warn' },
   ];
   const sourceRows = Object.keys(ls).slice(0, 8).map(k => {
     const s = ls[k] || {};
@@ -4034,8 +3915,8 @@ function renderSwarmGalaxy(){
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px">
       ${nodes.map(n => `
-        <div onclick="go('${n.goto.slice(1)}')" title="${esc(n.tip)}" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;border-top:3px solid ${n.tone==='good'?'#2e7e79':(n.tone==='warn'?'#ac721a':'#9fb5c5')};cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--card-hover-shadow)';this.style.borderColor='var(--border-focus)'" onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--line)'">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start"><strong style="font-size:12px">${esc(n.label)}</strong><span style="font-size:9px;color:var(--blue)">→</span></div>
+        <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;border-top:3px solid ${n.tone==='good'?'#2e7e79':(n.tone==='warn'?'#ac721a':'#9fb5c5')}">
+          <strong style="font-size:12px">${esc(n.label)}</strong>
           <div class="small muted" style="margin-top:4px">${esc(n.sub)}</div>
         </div>`).join('')}
     </div>
@@ -4053,72 +3934,6 @@ function renderSwarmGalaxy(){
       </div>
     </div>
   `;
-}
-
-/* === Harness 8 阶段 DAG 运行面板 === */
-function zxRenderHarnessRuns(){
-  const el=document.getElementById('zx-harness-runs'); if(!el) return;
-  fetch('/api/v1/harness/runs?limit=10',{cache:'no-store'}).then(r=>r.json()).then(function(d){
-    if(!el) return;
-    const runs=d.runs||[];
-    const stageNames=['admission','spec','grill','dispatch','execute','verify','audit','accept'];
-    const stageLabels={admission:'准入',spec:'规格',grill:'质询',dispatch:'派发',execute:'执行',verify:'验证',audit:'审计',accept:'验收'};
-    let h='<div class="viz-head"><h3>⚙️ Harness 8 阶段 DAG 运行</h3><span class="small">'+esc(String(d.total||0))+' 次 · 成功 '+esc(String(d.ok||0))+' · 失败 '+esc(String(d.failed||0))+'</span></div>';
-    if(!runs.length){ el.innerHTML=h+'<div class="empty" style="padding:12px">暂无 harness 运行记录</div>'; return; }
-    h+='<div style="display:grid;gap:8px;margin-top:8px">';
-    runs.slice(0,6).forEach(function(run){
-      const ok=run.ok;
-      const stages=run.stages||{};
-      const stageDots=stageNames.map(function(sn){
-        const s=stages[sn];
-        const c=s===true?'#10b981':s===false?'#ef4444':'#c3cfdb';
-        return '<span title="'+esc(stageLabels[sn]||sn)+': '+(s===true?'PASS':s===false?'FAIL':'未执行')+'" style="width:8px;height:8px;border-radius:50%;background:'+c+';display:inline-block"></span>';
-      }).join('');
-      h+='<details style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;background:var(--surface)"><summary style="display:flex;align-items:center;gap:8px;font-size:11.5px;cursor:pointer;list-style:none"><span style="color:'+(ok?'#10b981':'#ef4444')+'">●</span><span style="font-family:var(--mono);font-weight:600">'+esc(run.bet_id||'—')+'</span><span style="flex:1"></span><span style="display:flex;gap:3px">'+stageDots+'</span><span class="small muted">'+esc((run.started_at||'').slice(0,16).replace('T',' '))+'</span></summary>'+
-        '<div style="margin-top:8px;font-size:11px;color:var(--muted)">'+
-        '<div>run_id: <span class="mono" style="font-size:10px">'+esc(run.run_id||'—')+'</span></div>'+
-        '<div>profile: '+esc(run.profile||'—')+' · 结果: <span style="color:'+(ok?'#10b981':'#ef4444')+'">'+(ok?'COMPLETE':'FAILED')+'</span></div>'+
-        '<div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">'+stageNames.map(function(sn){const s=stages[sn];return '<span class="chip '+(s===true?'good':s===false?'bad':'neutral')+'" style="font-size:9px">'+esc(stageLabels[sn]||sn)+'</span>';}).join('')+'</div>'+
-        '</div></details>';
-    });
-    h+='</div>';
-    el.innerHTML=h;
-  }).catch(function(){if(el) el.innerHTML='<div class="note" style="font-size:11px;margin:0">Harness 运行记录拉取失败。</div>';});
-}
-
-/* === 居民执行环境活性条 (功能 2 前端) === */
-function zxRenderResidentBar(){
-  const el=document.getElementById('zx-resident-bar'); if(!el) return;
-  el.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:12px"><span class="loading-spinner"></span><span class="small muted">正在拉取 /api/v1/resident …</span></div>';
-  fetch('/api/v1/resident',{cache:'no-store'}).then(r=>r.json()).then(function(d){
-    if(!el) return;
-    const roles=d.roles||[];
-    const tone={active:'#10b981',stale:'#f59e0b',idle:'#94a3b8',unknown:'#94a3b8'};
-    const label={active:'活跃',stale:'滞后',idle:'待命',unknown:'未知'};
-    const roleDots=roles.map(function(r){
-      const c=tone[r.status]||'#94a3b8';
-      const lag=(r.lag_seconds!=null)?(' · '+r.lag_seconds+'s'):'';
-      return '<div style="display:flex;align-items:center;gap:5px;font-size:11px" title="'+esc(r.status)+' · '+esc(r.last_seen||'无')+'"><span style="width:9px;height:9px;border-radius:50%;background:'+c+';display:inline-block"></span><span>'+esc(r.role)+'</span><span style="color:var(--muted)">'+(label[r.status]||r.status)+lag+'</span></div>';
-    }).join('');
-    const recv=d.receipts||{};
-    const daemonStr=(d.daemon_running?'<span class="chip good" style="font-size:10px">运行中 PID '+esc(String(d.daemon_pid||'?'))+'</span>':'<span class="chip bad" style="font-size:10px">未运行</span>');
-    var recentHtml='';
-    (d.recent_receipts||[]).slice(-5).reverse().forEach(function(r){
-      var c=(r.status==='ok')?'#10b981':(r.status==='error'||r.status==='blocked')?'#ef4444':'#94a3b8';
-      var line='<div style="display:flex;gap:6px;font-size:10px;padding:2px 0"><span style="color:'+c+'">●</span><span style="font-family:var(--mono);color:var(--muted)">'+esc(r.ts||'')+'</span><span style="font-family:var(--mono)">'+esc(r.action||r.handler||'')+'</span><span style="color:'+c+'">'+esc(r.status)+'</span>';
-      if(r.err){line=line+'<span style="color:#92400e"> '+esc(r.err)+'</span>';}
-      recentHtml=line+'</div>';
-    });
-    if(!recentHtml){recentHtml='<div class="small muted" style="padding:4px 0">暂无 receipt</div>';}
-    el.innerHTML='<div style="padding:10px 12px">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">'+
-      '<div><h3 style="margin:0;font-size:13px">🏠 居民执行环境 (Resident Orchestrator)</h3>'+
-      '<div class="small muted" style="margin-top:2px">守护进程 '+daemonStr+' · 事件 '+esc(String((d.heartbeat&&d.heartbeat.events_total)||0))+' · 收据 '+esc(String(recv.total||0))+' (ok '+esc(String(recv.ok||0))+')</div></div>'+
-      '<button onclick="zxRenderResidentBar()" style="background:none;border:1px solid var(--border-subtle);border-radius:5px;font-size:10px;padding:3px 8px;cursor:pointer">刷新</button></div>'+
-      '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px">'+roleDots+'</div>'+
-      '<details><summary style="font-size:11px;cursor:pointer;color:var(--muted)">最近 5 条 receipt</summary><div style="margin-top:6px;padding:6px;background:var(--surface-subtle);border-radius:6px;max-height:160px;overflow-y:auto">'+recent+'</div></details>'+
-      '</div>';
-  }).catch(function(){if(el) el.innerHTML='<div class="note" style="font-size:11px;margin:0">居民状态拉取失败。</div>';});
 }
 
 function renderKnowledgeStats(){
@@ -4985,163 +4800,11 @@ safeRender(renderOrientAssetsMap, 'renderOrientAssetsMap failed');
 safeRender(renderOrientValuePipeline, 'renderOrientValuePipeline failed');
 safeRender(renderDynamicLoopsDashboard, 'renderDynamicLoopsDashboard failed');
 safeRender(renderGatePipeline, 'renderGatePipeline failed');
-safeRender(zxRenderHarnessRuns, 'zxRenderHarnessRuns failed');
 safeRender(renderLedgerVisuals, 'renderLedgerVisuals failed');
 safeRender(renderSwarmGalaxy, 'renderSwarmGalaxy failed');
-safeRender(zxRenderResidentBar, 'zxRenderResidentBar failed');
 safeRender(renderAgentCapabilityMesh, 'renderAgentCapabilityMesh failed');
 safeRender(renderKnowledgeStats, 'renderKnowledgeStats failed');
 safeRender(renderGuidanceHub, 'renderGuidanceHub failed');
-
-/* === P2-5 数据源降级横幅 === */
-function zxRenderSourceBanner(){
-  try{
-    var D=zxData();
-    var ss=D.source_states||{};
-    var refresh=D.refresh||{};
-    var failing=[];
-    Object.keys(ss).forEach(function(k){ if(ss[k]&&ss[k].status&&ss[k].status!=='OK'){ failing.push({key:k,st:ss[k].status,err:ss[k].error}); } });
-    if(!failing.length) return;
-    var host=document.getElementById('zx-source-banner-host');
-    if(!host) return;
-    var lastRefresh=refresh.attempted_at?refresh.attempted_at.replace('T',' ').slice(0,19):'未知';
-    var items=failing.map(function(f){return '<li style="margin:2px 0;font-size:11px"><b style="color:#b45309">'+esc(f.key)+'</b> '+esc(f.st)+(f.err?': '+esc(String(f.err).slice(0,80)):'')+'</li>';}).join('');
-    host.innerHTML='<div style="margin:8px 0;border-left:3.5px solid var(--amber);background:var(--amberwash);padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;color:#92400e">'+
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'+
-      '<div style="flex:1"><b>⚠ '+failing.length+' 个数据源降级</b><span class="small muted" style="margin-left:8px">最近刷新 '+esc(lastRefresh)+'</span>'+
-      '<ul style="margin:6px 0 0;padding-left:18px">'+items+'</ul></div>'+
-      '<button onclick="this.closest(\'[data-role=banner]\').remove()" style="background:none;border:none;cursor:pointer;font-size:14px;color:inherit;opacity:0.6" title="关闭">✕</button>'+
-      '</div></div>';
-    host.querySelector('[data-js]') ; // noop
-  }catch(_){}
-}
-
-safeRender(zxRenderSourceBanner, 'zxRenderSourceBanner failed');
-
-/* === 知行主权副驾抽屉 (Sovereign Cockpit Copilot Drawer) === */
-window.openSovereignCopilot = function(tab){
-  var backdrop = document.getElementById('sovereign-cockpit-drawer-modal');
-  var content = document.getElementById('sovereign-cockpit-drawer-content');
-  if(!backdrop || !content) return;
-  backdrop.style.display = 'flex';
-  window._zx_copilot_tab = (tab)||window._zx_copilot_tab||'compute';
-  window._zx_copilot_log = window._zx_copilot_log || [];
-  renderCopilot();
-  if(window._zx_copilot_refresh){ clearInterval(window._zx_copilot_refresh); }
-  window._zx_copilot_refresh = setInterval(function(){ if(window._zx_copilot_tab==='compute') loadComputeLive(false); }, 30000);
-};
-window.closeSovereignCockpitDrawer = function(){
-  var b = document.getElementById('sovereign-cockpit-drawer-modal');
-  if(b) b.style.display = 'none';
-  if(window._zx_copilot_refresh){ clearInterval(window._zx_copilot_refresh); window._zx_copilot_refresh=null; }
-};
-document.addEventListener('keydown', function(e){
-  if((e.metaKey || e.ctrlKey) && e.key === 'j'){ e.preventDefault(); window.openSovereignCopilot(); }
-});
-
-function renderCopilot(){
-  var content = document.getElementById('sovereign-cockpit-drawer-content');
-  if(!content) return;
-  var tab = window._zx_copilot_tab || 'compute';
-  var tabs=[['compute','⚡','算力状态'],['infer','🧪','本地推理']];
-  var bar='<div style="display:flex;gap:4px;padding:10px 16px;border-bottom:1px solid var(--border-subtle)">';
-  tabs.forEach(function(t){
-    var active=t[0]===tab;
-    bar+='<button onclick="window._zx_copilot_tab=\''+t[0]+'\';renderCopilot()" style="flex:1;padding:7px 8px;border-radius:6px;border:1px solid '+(active?'var(--blue)':'var(--border-subtle)')+';background:'+(active?'var(--bluewash)':'transparent')+';color:'+(active?'var(--blue)':'var(--muted)')+';font-size:11.5px;cursor:pointer;font-weight:'+(active?'600':'400')+'">'+t[1]+' '+t[2]+'</button>';
-  });
-  bar+='</div>';
-  if(tab==='compute') content.innerHTML=bar+renderComputeTab();
-  else content.innerHTML=bar+renderInferTab();
-}
-
-function fmtTime(ts){ if(!ts) return '—'; var d=new Date(ts); if(isNaN(d.getTime()))return String(ts); return d.toLocaleTimeString('zh-CN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
-function modelRow(m){
-  var cls = m.loaded ? 'good' : (m.available ? 'neutral' : 'dim');
-  var label = m.loaded ? '已加载' : (m.available ? '可用' : '离线');
-  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface-subtle);border-radius:6px;font-size:11.5px"><span style="font-family:var(--mono);font-size:10.5px;word-break:break-all">'+esc(m.id)+'</span><span style="font-size:10px;color:'+(m.loaded?'var(--teal)':'var(--muted)')+'">'+label+'</span></div>';
-}
-function renderComputeTab(){
-  var D=zxData(); var c=D.compute||{};
-  var h='<div style="padding:14px 16px;overflow-y:auto;max-height:60vh">';
-  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="chip good" style="font-size:10px">'+esc((c.status)||'local')+'</span><span class="small muted">'+esc(c.default_model||'')+'</span><span style="flex:1"></span><button onclick="loadComputeLive(true)" style="background:none;border:1px solid var(--border-subtle);border-radius:5px;font-size:11px;padding:3px 8px;cursor:pointer">刷新</button></div>';
-  h+='<div style="font-size:11px;color:var(--muted);margin-bottom:6px">模型 '+esc(String(c.loaded_count||0))+' / '+esc(String(c.model_count||0))+' 已加载 · 显存 '+esc(String(c.current_model_memory_gb||'?'))+' / '+esc(String(c.final_ceiling_gb||'?'))+' GB · '+esc(fmtTime(c.observed_at))+'</div>';
-  h+='<div id="zx-copilot-live-detail" style="font-size:11.5px"></div></div>';
-  setTimeout(function(){ window._zx_copilot_tab==='compute' && loadComputeLive(false); },0);
-  return h;
-}
-
-function loadComputeLive(force){
-  var el=document.getElementById('zx-copilot-live-detail'); if(!el) return;
-  el.innerHTML='<span class="small muted">正在从 omlxc 拉取实时算力…</span>';
-  var url='/api/v1/compute/live'+(force?'?t='+Date.now():'');
-  fetch(url,{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
-    if(!el||window._zx_copilot_tab!=='compute') return;
-    if(d.live){
-      var models=(d.models||[]);
-      var loaded=models.filter(function(m){return m.loaded;});
-      var up='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="color:var(--teal)">●</span><span style="font-size:11px">daemon '+(d.daemon&&d.daemon.status||'?')+' · '+(d.degraded===false?'健康':'降级')+'</span><span style="flex:1"></span><span class="small muted">'+esc(fmtTime(d.observed_at))+'</span></div>';
-      up+='<div class="small muted" style="margin-bottom:8px">'+esc(String(loaded.length))+' 个模型已加载：</div>';
-      up+='<div style="display:grid;gap:4px;max-height:34vh;overflow-y:auto">';
-      models.forEach(function(m){ if(m.loaded) up+=modelRow(m); });
-      up+='</div>';
-      el.innerHTML=up;
-    } else {
-      el.innerHTML='<div class="note" style="font-size:11px">实时端点未就绪'+((d.error&&d.error.length)?'：'+esc(d.error.join(' / ')):'')+'。'+(d.fallback?'显示静态快照数据。':'')+'</div>';
-      if(d.fallback){ el.innerHTML+='<div class="small muted" style="margin-top:6px">模型 '+esc(String((d.fallback.loaded_count)||0))+' / '+esc(String((d.fallback.model_count)||0))+' 已加载 · '+esc(fmtTime(d.fallback.observed_at))+'</div>'; }
-    }
-  }).catch(function(){ if(el) el.innerHTML='<div class="note" style="font-size:11px">拉取失败，稍后重试。</div>'; });
-}
-
-function renderInferTab(){
-  var log=(window._zx_copilot_log||[]);
-  var h='<div style="padding:14px 16px;overflow-y:auto;max-height:60vh">';
-  h+='<div style="margin-bottom:10px"><textarea id="zx-infer-prompt" placeholder="输入问题，本地模型作答…" style="width:100%;height:70px;border-radius:8px;border:1px solid var(--border-subtle);padding:8px;font-size:12px;resize:vertical;background:var(--surface);color:var(--ink)"></textarea></div>';
-  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><select id="zx-infer-model" style="flex:1;font-size:11px;padding:6px;border-radius:6px;border:1px solid var(--border-subtle);background:var(--surface);color:var(--ink)"><option value="">获取可用模型中…</select><button id="zx-infer-send" onclick="runInfer()" style="padding:6px 14px;border-radius:6px;border:none;background:var(--blue);color:white;font-size:12px;cursor:pointer">发送</button></div>';
-  h+='<div class="small muted" style="margin-bottom:6px;display:flex;justify-content:content:space-between"><span id="zx-infer-status"></span><button onclick="window._zx_copilot_log=[];renderCopilot()" style="background:none;border:none;color:var(--blue);font-size:10px;cursor:pointer">清空记录</button></div>';
-  h+='<div id="zx-infer-log" style="display:grid;gap:8px">';
-  if(!log.length) h+='<div class="empty" style="padding:16px;text-align:center"><span class="small muted">本轮暂无推理记录，发送提问开始本地推理。</span></div>';
-  log.slice().reverse().forEach(function(item){
-    h+='<div style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:4px"><span>'+esc(item.model)+'</span><span>'+esc(item.time)+'</span></div><div style="font-size:11px;color:var(--ink);white-space:pre-wrap">'+esc(item.output||item.error||'')+'</div></div>';
-  });
-  h+='</div></div>';
-  setTimeout(function(){ window._zx_copilot_tab==='infer' && loadInferModels(); },0);
-  return h;
-}
-
-function loadInferModels(){
-  var sel=document.getElementById('zx-infer-model'); if(!sel) return;
-  fetch('/api/v1/compute/live',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
-    var models=(d.models||[]).filter(function(m){return m.loaded;}).map(function(m){return m.id;});
-    if(!models.length){ sel.innerHTML='<option value="">无已加载模型</option>'; return; }
-    sel.innerHTML=models.map(function(m){return '<option value="'+esc(m)+'">'+esc(m)+'</option>'; }).join('');
-  }).catch(function(){ sel.innerHTML='<option value="">获取失败</option>'; });
-}
-
-function runInfer(){
-  var promptEl=document.getElementById('zx-infer-prompt');
-  var modelEl=document.getElementById('zx-infer-model');
-  var statusEl=document.getElementById('zx-infer-status');
-  var sendBtn=document.getElementById('zx-infer-send');
-  if(!promptEl||!modelEl) return;
-  var prompt=promptEl.value.trim(), model=modelEl.value;
-  if(!prompt){ statusEl.textContent='请先输入问题'; return; }
-  if(!model){ statusEl.textContent='请选择模型'; return; }
-  if(sendBtn) sendBtn.disabled=true;
-  statusEl.textContent='推理中… (本地 '+model+')';
-  fetch('/api/v1/compute/infer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:model,prompt:prompt})})
-   .then(function(r){ return r.json().then(function(j){return {ok:r.ok,status:r.status,body:j};}); })
-   .then(function(res){
-     var item={model:model,time:new Date().toLocaleTimeString('zh-CN',{hour12:false})};
-     if(res.ok&&res.body.ok){ item.output=res.body.output+'  ('+res.body.elapsed_ms+'ms)'; }
-     else { item.error=(res.body&&res.body.error)||('HTTP '+res.status); }
-     window._zx_copilot_log.push(item);
-     if(window._zx_copilot_log.length>10) window._zx_copilot_log=window._zx_copilot_log.slice(-10);
-     renderCopilot();
-   }).catch(function(e){
-     window._zx_copilot_log.push({model:model,time:new Date().toLocaleTimeString('zh-CN',{hour12:false}),error:String(e)});
-     renderCopilot();
-   }).finally(function(){ if(sendBtn) sendBtn.disabled=false; });
-}
 
 if(typeof initPersonaSystem === 'function') initPersonaSystem();
 if(typeof renderMofGrid === 'function') renderMofGrid();
@@ -5516,15 +5179,15 @@ function populateHealth(){
     }
 
     /* Health score ring */
-    var score=mkpi.health_score||0;
-    var cls=score>=75?'#10b981':score>=50?'#f59e0b':'#ef4444';
+    var score=(typeof mkpi.health_score==='number'&&isFinite(mkpi.health_score))?mkpi.health_score:null;
+    var cls=score==null?'#94a3b8':score>=75?'#10b981':score>=50?'#f59e0b':'#ef4444';
     var ring=document.getElementById('health-score-ring');
     if(ring){
       ring.innerHTML='<svg width="140" height="140" viewBox="0 0 140 140">'+
         '<circle cx="70" cy="70" r="58" fill="none" stroke="#edf2f7" stroke-width="12"/>'+
         '<circle cx="70" cy="70" r="58" fill="none" stroke="'+cls+'" stroke-width="12" '+
-          'stroke-dasharray="'+(score/100*364)+' 364" transform="rotate(-90 70 70)" stroke-linecap="round"/>'+
-        '<text x="70" y="65" text-anchor="middle" font-family="var(--mono)" font-size="28" font-weight="bold" fill="'+cls+'">'+score+'</text>'+
+          'stroke-dasharray="'+((score||0)/100*364)+' 364" transform="rotate(-90 70 70)" stroke-linecap="round"/>'+
+        '<text x="70" y="65" text-anchor="middle" font-family="var(--mono)" font-size="28" font-weight="bold" fill="'+cls+'">'+(score==null?'—':score)+'</text>'+
         '<text x="70" y="82" text-anchor="middle" font-size="10" fill="var(--muted)">健康分</text>'+
       '</svg>';
     }
@@ -5532,10 +5195,11 @@ function populateHealth(){
     /* Score breakdown */
     var bd=document.getElementById('health-score-breakdown');
     if(bd){
-      bd.innerHTML='<span style="color:#10b981">保鲜:'+(mkpi.freshness_score||0)+'</span> · '+
-        '<span style="color:#3a64b3">漂移:'+(mkpi.drift_score||0)+'</span> · '+
-        '<span style="color:#f59e0b">对齐:'+(mkpi.alignment_score||0)+'</span> · '+
-        '<span style="color:#8b5cf6">时效:'+(mkpi.staleness_score||0)+'</span>';
+      var zxS=function(x){return (typeof x==='number'&&isFinite(x))?x:'—';};
+      bd.innerHTML='<span style="color:#10b981">保鲜:'+zxS(mkpi.freshness_score)+'</span> · '+
+        '<span style="color:#3a64b3">漂移:'+zxS(mkpi.drift_score)+'</span> · '+
+        '<span style="color:#f59e0b">对齐:'+zxS(mkpi.alignment_score)+'</span> · '+
+        '<span style="color:#8b5cf6">时效:'+zxS(mkpi.staleness_score)+'</span>';
     }
 
     /* Health summary */
@@ -5728,28 +5392,20 @@ function zxRenderMetrics(){
     var hs=hist.series||{}, es=ev.series||{};
     var cov=hist.coverage||{};
 
-    /* ── KPI: 数值 + 单位 + 真实 sparkline + 真实环比 + 说明 + 关联面板 ── */
+    /* ── KPI: 数值 + 单位 + 真实 sparkline + 真实环比 ── */
     var cards=[
-      {v:kpi.total_events_24h||0,u:'',l:'24h 事件',pts:es.hourly_24h,c:'#3a64b3',
-       tip:'过去 24 小时事件流中记录的全部事件数（含 workflow 生命周期、心跳、告警）',goto:'#logs'},
-      {v:kpi.events_per_hour_24h||0,u:'/h',l:'事件速率',pts:es.hourly_24h,c:'#2e7e79',
-       tip:'事件流平均产出速率；持续为 0 表示事件生产中断',goto:'#logs'},
-      {v:(kpi.failure_rate_24h==null?'—':kpi.failure_rate_24h),u:kpi.failure_rate_24h==null?'':'%',l:'失败/阻塞率',pts:((hs.heartbeat_degraded_hourly||{}).points),c:'#ef4444',
-       tip:'失败或阻塞事件占比；>5% 需关注 resident decision 角色是否生成提案',goto:'#gov'},
-      {v:(kpi.health_score==null?'—':kpi.health_score),u:'',l:'健康总分',pts:null,c:'#10b981',
-       tip:'基于保鲜/时效/漂移/对齐/治理五维的综合健康度 (0-100)',goto:'#health'},
-      {v:((hs.tick_ok_hourly||{}).points?((hs.tick_ok_hourly||{}).points).reduce(function(s,p){return s+p[1]},0):0),u:'',l:'24h Tick 成功',pts:((hs.tick_ok_hourly||{}).points),c:'#8b5cf6',
-       tip:'五类角色（心跳/监控/沉淀/决策/执行）在 24 小时内的成功 tick 总数',goto:'#swarm'},
-      {v:(kpi.sources_live||0),u:'/'+((kpi.sources_live||0)+(kpi.sources_missing||0)),l:'存活事件源',pts:null,c:'#2e7e79',
-       tip:'已声明且文件系统可达的事件源数量；缺失源不计入统计',goto:'#health'}
+      {v:kpi.total_events_24h||0,u:'',l:'24h 事件',pts:es.hourly_24h,c:'#3a64b3'},
+      {v:kpi.events_per_hour_24h||0,u:'/h',l:'事件速率',pts:es.hourly_24h,c:'#2e7e79'},
+      {v:(kpi.failure_rate_24h==null?'—':kpi.failure_rate_24h),u:kpi.failure_rate_24h==null?'':'%',l:'失败/阻塞率',pts:((hs.heartbeat_degraded_hourly||{}).points),c:'#ef4444'},
+      {v:(kpi.health_score==null?'—':kpi.health_score),u:'',l:'健康总分',pts:null,c:'#10b981'},
+      {v:((hs.tick_ok_hourly||{}).points?((hs.tick_ok_hourly||{}).points).reduce(function(s,p){return s+p[1]},0):0),u:'',l:'24h Tick 成功',pts:((hs.tick_ok_hourly||{}).points),c:'#8b5cf6'},
+      {v:(kpi.sources_live||0),u:'/'+((kpi.sources_live||0)+(kpi.sources_missing||0)),l:'存活事件源',pts:null,c:'#2e7e79'}
     ];
     host.innerHTML=cards.map(function(c){
       var d=zxMDelta(c.pts);
       var dcls=d==null?'flat':(d>0?'up':'down');
       var dtxt=d==null?'环比 —':(d>0?'▲ +':'▼ ')+d+'%';
-      var tipAttr=c.tip?' title="'+zxMEsc(c.tip)+'"':'';
-      var clickAttr=c.goto?' onclick="go(\''+(c.goto.slice(1))+'\')" style="cursor:pointer"':'';
-      return '<div class="zx-m-kpi"'+clickAttr+tipAttr+'><div class="zx-m-top"><div>'+
+      return '<div class="zx-m-kpi"><div class="zx-m-top"><div>'+
         '<div class="zx-m-v">'+c.v+'<span class="zx-m-u">'+c.u+'</span></div>'+
         '<div class="zx-m-l">'+c.l+'</div></div>'+
         '<span class="zx-m-d '+dcls+'" title="与相邻等长窗口的真实比较">'+dtxt+'</span></div>'+
@@ -6172,23 +5828,14 @@ function zxRenderValue(){
     if(chip) chip.textContent=okN+' / '+stages.length+' 阶段有数据';
     var numerals=['①','②','③','④','⑤'];
     var palette=['#3a64b3','#2e7e79','#ac721a','#2e7e79','#8b5cf6'];
-    /* 阶段 → 关联面板跳转 (跨面板钻取) */
-    var stageLinks=[{goto:'#health',tip:'查看原始信号源与健康上下文'},
-                    {goto:'#workbench',tip:'查看意图分流的 BET 路线'},
-                    {goto:'#scene-system',tip:'查看旅程执行与场景卡'},
-                    {goto:'#value',tip:'查看价值记录门槛与证据'},
-                    {goto:'#swarm',tip:'查看进化反馈如何驱动角色迭代'}];
     host.innerHTML=stages.length?stages.map(function(stg,i){
       var has=stg.count>0;
-      var lnk=stageLinks[i]||{};
-      var clickAttr=lnk.goto?' onclick="go(\''+(lnk.goto.slice(1))+'\')" style="cursor:pointer"':'';
-      var tipAttr=lnk.tip?' title="'+zxMEsc(lnk.tip)+'"':'';
-      return '<div class="zx-v-stage'+(has?'':' nodata')+'"'+clickAttr+tipAttr+'>'+
+      return '<div class="zx-v-stage'+(has?'':' nodata')+'">'+
         '<span class="zx-v-edge" style="background:'+(has?palette[i%5]:'#dde5ee')+'"></span>'+
         '<div class="zx-v-n">'+(numerals[i]||'')+'</div>'+
         '<div class="zx-v-name">'+zxVEsc(stg.name)+'</div>'+
         '<div class="zx-v-count" style="color:'+(has?'inherit':'#a8b8c8')+'">'+(has?stg.count:'—')+'</div>'+
-        '<div class="zx-v-src">'+(has?'':'NO_DATA · ')+zxVEsc(stg.source)+(lnk.goto?'<span style="color:#3a64b3;font-size:9px"> →</span>':'')+'</div></div>';
+        '<div class="zx-v-src">'+(has?'':'NO_DATA · ')+zxVEsc(stg.source)+'</div></div>';
     }).join(''):'<div class="zx-nodata">无阶段数据</div>';
 
     /* ── 门槛进度：真实 current / target, 不可判定显示 UNKNOWN ── */
@@ -6254,29 +5901,10 @@ safeRender(populateHealth, 'populateHealth failed');
 
   // Search data index
   var searchIndex = [];
-  // P2-7 搜索历史 (localStorage)
-  function zxLoadSearchHistory(){
-    try{ return JSON.parse(localStorage.getItem('zx.search.history')||'[]'); }catch(_){ return []; }
-  }
-  function zxSaveSearchHistory(term){
-    if(!term) return;
-    var h=zxLoadSearchHistory().filter(function(t){return t!==term;});
-    h.unshift(term); h=h.slice(0,8);
-    try{ localStorage.setItem('zx.search.history', JSON.stringify(h)); }catch(_){}
-  }
-  function zxRenderSearchHistory(){
-    var h=zxLoadSearchHistory();
-    if(!h.length){ searchResults.innerHTML = emptyState('🔍', '输入关键词搜索', '搜索板块、Agent、门禁、事件'); return; }
-    searchResults.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:4px 8px 6px;display:flex;justify-content:space-between"><span>最近搜索</span><button id="zx-clear-sh" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:10px">清空</button></div>'+
-      h.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="searchInput.value='+JSON.stringify(t)+';zxSaveSearchHistory('+JSON.stringify(t)+');performSearch('+JSON.stringify(t)+')"><span style="font-size:11px;color:var(--muted)">↺</span><span style="flex:1;font-size:12px">'+esc(t)+'</span></div>'; }).join('');
-    var btn=document.getElementById('zx-clear-sh');
-    if(btn) btn.onclick=function(){ try{localStorage.removeItem('zx.search.history');}catch(_){} zxRenderSearchHistory(); };
-  }
-
   function buildSearchIndex() {
     searchIndex = [];
     // Sections
-    var sectionNames = {'orient':'全景总览', 'arch':'体系与流程', 'gov':'恢复与准入', 'ledger':'路线与BET', 'swarm':'Agent协同', 'value':'价值中枢', 'logs':'事件与运行态', 'metrics':'指标度量', 'health':'健康诊断', 'loops':'回路观测', 'know':'文档与知识', 'knowledge-memory':'知识记忆', 'skills-inventory':'技能清单', 'mof-grid':'MOF元模型', 'scene-system':'场景系统', 'next':'接下来做什么', 'topology':'架构拓扑', 'panorama':'白皮书指导', 'ecosystem-map':'全域能力地图', 'trace':'因果拓扑图谱', 'capabilities':'能力与BOS', 'learning':'经验结晶', 'atlas':'架构与模型', 'personal':'主权中心', 'workbench':'中枢工作台', 'main':'主线入口'};
+    var sectionNames = {'orient':'全景总览', 'arch':'体系与流程', 'gov':'恢复与准入', 'ledger':'路线与BET', 'swarm':'Agent协同', 'value':'价值中枢', 'logs':'事件与运行态', 'metrics':'指标度量', 'health':'健康诊断', 'know':'文档与知识', 'knowledge-memory':'知识记忆', 'skills-inventory':'技能清单', 'mof-grid':'MOF元模型', 'scene-system':'场景系统', 'next':'接下来做什么', 'topology':'架构拓扑'};
     Object.keys(sectionNames).forEach(function(id) {
       searchIndex.push({type:'板块', name:sectionNames[id], action:function(){go(id)}});
     });
@@ -6319,18 +5947,13 @@ safeRender(populateHealth, 'populateHealth failed');
     searchOverlay.style.display = 'flex';
     searchInput.focus();
     searchInput.value = '';
-    zxRenderSearchHistory();
-  }
-  function runSearch(q){
-    if(!q) { zxRenderSearchHistory(); return; }
-    zxSaveSearchHistory(q.trim());
-    performSearch(q);
+    searchResults.innerHTML = emptyState('🔍', '输入关键词搜索', '搜索板块、Agent、门禁、事件');
   }
   function closeSearch() { searchOverlay.style.display = 'none'; }
   window.closeSearch = closeSearch;
 
   if (searchToggle) searchToggle.onclick = openSearch;
-  if (searchInput) searchInput.oninput = function() { runSearch(this.value); };
+  if (searchInput) searchInput.oninput = function() { performSearch(this.value); };
 
   // Keyboard shortcuts
   document.addEventListener('keydown', function(e) {
@@ -6365,12 +5988,9 @@ safeRender(populateHealth, 'populateHealth failed');
   var sectionNames = {
     'orient':'全景总览', 'arch':'体系流程', 'gov':'恢复准入', 'ledger':'路线BET',
     'swarm':'Agent协同', 'value':'价值中枢', 'logs':'事件运行态', 'metrics':'指标度量',
-    'health':'健康诊断', 'loops':'回路观测', 'know':'文档知识', 'knowledge-memory':'知识记忆',
+    'health':'健康诊断', 'know':'文档知识', 'knowledge-memory':'知识记忆',
     'skills-inventory':'技能清单', 'mof-grid':'MOF元模型', 'scene-system':'场景系统',
-    'next':'接下来', 'topology':'架构拓扑', 'panorama':'白皮书指导',
-    'ecosystem-map':'全域能力地图', 'trace':'因果拓扑图谱', 'capabilities':'能力与BOS',
-    'learning':'经验结晶', 'atlas':'架构与模型', 'personal':'主权中心',
-    'workbench':'中枢工作台', 'main':'主线入口'
+    'next':'接下来', 'topology':'架构拓扑'
   };
 
   // Load saved preferences
@@ -6485,8 +6105,56 @@ safeRender(populateHealth, 'populateHealth failed');
   };
 })();
 
-/* === Incremental Refresh (no full page reload) === */
+/* === Graceful Reload (preserve state across page reloads) === */
 var _lastObservedAt = D.observed_at;
+var _reloadPending = false;
+
+function _saveState() {
+  try {
+    var state = {
+      hash: location.hash,
+      scrollY: window.scrollY,
+      timestamp: Date.now()
+    };
+    var selects = document.querySelectorAll('select');
+    state.filters = {};
+    selects.forEach(function(s) {
+      if (s.id) state.filters[s.id] = s.value;
+    });
+    sessionStorage.setItem('_zx_state', JSON.stringify(state));
+  } catch(e) {}
+}
+
+function _restoreState() {
+  try {
+    var raw = sessionStorage.getItem('_zx_state');
+    if (!raw) return;
+    var state = JSON.parse(raw);
+    if (Date.now() - state.timestamp > 30000) return;
+    if (state.scrollY > 0) {
+      setTimeout(function() { window.scrollTo(0, state.scrollY); }, 100);
+    }
+    if (state.filters) {
+      Object.keys(state.filters).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = state.filters[id];
+      });
+    }
+    sessionStorage.removeItem('_zx_state');
+  } catch(e) {}
+}
+
+function _gracefulReload() {
+  if (_reloadPending) return;
+  _reloadPending = true;
+  _saveState();
+  var indicator = document.createElement('div');
+  indicator.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1e293b;color:#f1f5f9;padding:8px 16px;border-radius:8px;font-size:12px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.3);';
+  indicator.textContent = '⟳ 检测到新版本，正在刷新...';
+  document.body.appendChild(indicator);
+  setTimeout(function() { location.reload(); }, 500);
+}
+
 function checkForUpdates() {
   if (document.hidden || document.querySelector('dialog[open]')) {
     setTimeout(checkForUpdates, 10000);
@@ -6494,28 +6162,33 @@ function checkForUpdates() {
   }
   fetch('/api/snapshot').then(function(r) { return r.json(); }).then(function(data) {
     if (data.observed_at && data.observed_at !== _lastObservedAt) {
-      // Data changed - update freshness indicators
+      // New snapshot published — graceful reload to pick up new HTML/JS
       _lastObservedAt = data.observed_at;
-      // Update metrics if changed
-      if (data.metrics_kpi) {
-        var mkpi = D.metrics_kpi || {};
-        if (mkpi.health_score !== data.metrics_kpi.health_score) {
-          var el = document.getElementById('health-score-ring');
-          if (el) populateHealth();
-        }
+      _gracefulReload();
+      return;
+    }
+    // Update metrics if changed (no reload needed)
+    if (data.metrics_kpi) {
+      var mkpi = D.metrics_kpi || {};
+      if (mkpi.health_score !== data.metrics_kpi.health_score) {
+        var el = document.getElementById('health-score-ring');
+        if (el) populateHealth();
       }
-      // Update source states if changed
-      if (data.source_states) {
-        var failed = data.failed_sources || [];
-        var statusEl = document.getElementById('metrics-freshness');
-        if (statusEl && failed.length > 0) {
-          statusEl.innerHTML = '<span style="color:#f59e0b">●</span> ' + failed.length + ' 源降级';
-        }
+    }
+    // Update source states if changed
+    if (data.source_states) {
+      var failed = data.failed_sources || [];
+      var statusEl = document.getElementById('metrics-freshness');
+      if (statusEl && failed.length > 0) {
+        statusEl.innerHTML = '<span style="color:#f59e0b">●</span> ' + failed.length + ' 源降级';
       }
     }
   }).catch(function(e) { console.warn('Update check failed:', e); });
   setTimeout(checkForUpdates, 30000); // Check every 30 seconds
 }
+
+// Restore state after page load
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){_restoreState();});}else{_restoreState();}
 setTimeout(checkForUpdates, 30000);
 
 </script>
@@ -6695,13 +6368,6 @@ setTimeout(checkForUpdates, 30000);
     </div>
   </div>
 </div>
-
-<!-- External UI JS modules -->
-<script src="/workbench_ui.js"></script>
-<script src="/next_ui.js"></script>
-<script src="/topology_ui.js"></script>
-<script src="/mof_ui.js"></script>
-<script src="/panoramic_ui.js"></script>
 
 <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="返回顶部">↑</button>
 </body>
