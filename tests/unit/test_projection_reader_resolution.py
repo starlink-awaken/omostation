@@ -18,6 +18,16 @@ REPO_ROOT_MODULE = ROOT / "bin" / "lib" / "repo_root.py"
 REGISTRY = ROOT / ".omo" / "_truth" / "registry" / "runtime-projections.yaml"
 
 
+def _fresh_ts() -> str:
+    """新鲜时间戳必须相对 now 取。
+
+    绝对字面量配相对 SLA 是定时炸弹: "generated_at: 2026-09-29T00:00:00Z" 配
+    `sla_hours: 72` 让同一个用例在 2026-10-02 起无条件变红 —— 被测代码没动,
+    是日历走到了。
+    """
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
+
+
 def _load_repo_root():
     spec = importlib.util.spec_from_file_location("projection_repo_root", REPO_ROOT_MODULE)
     assert spec and spec.loader
@@ -323,7 +333,7 @@ def test_state_freshness_marks_absent_runtime_projection_optional(tmp_path, monk
     runtime = tmp_path.parent / f"{tmp_path.name}-probe-state"
     canonical = runtime / "state/new/health.yaml"
     canonical.parent.mkdir(parents=True)
-    canonical.write_text("generated_at: 2026-09-29T00:00:00Z\n", encoding="utf-8")
+    canonical.write_text(f"generated_at: {_fresh_ts()}\n", encoding="utf-8")
     report = checker.run_check(file_filter="health", state_root=runtime)
     assert report["results"][0]["exists"] is True
     assert report["results"][0]["source"] == "canonical"
@@ -346,7 +356,7 @@ def test_meta_doctor_does_not_count_absent_projections_as_stale(tmp_path):
     runtime = tmp_path.parent / f"{tmp_path.name}-meta-state"
     runtime_health = runtime / "state/new/health.yaml"
     runtime_health.parent.mkdir(parents=True)
-    runtime_health.write_text("generated_at: 2026-09-29T00:00:00Z\n", encoding="utf-8")
+    runtime_health.write_text(f"generated_at: {_fresh_ts()}\n", encoding="utf-8")
     rows = doctor.check_heartbeats(tmp_path, state_root=runtime)
     external_absent = [row for row in rows if row["file"] in {
         ".omo/state/health.yaml",
@@ -372,7 +382,7 @@ def test_meta_doctor_reads_generated_at_out_of_json_projection(tmp_path):
             if r["file"] == ".omo/_control/governance-data.json"
         )
 
-    fresh = datetime.now(UTC).replace(microsecond=0).isoformat()
+    fresh = _fresh_ts()
     target.write_text(json.dumps({"schema": "governance-data/v1", "generated_at": fresh}), encoding="utf-8")
     row = _row()
     assert not row["absent"] and row["exists"]
@@ -412,7 +422,7 @@ def test_probe_heartbeat_monitor_reports_absent_projections_without_failure(tmp_
     runtime = tmp_path.parent / f"{tmp_path.name}-probe-state"
     canonical = runtime / "state/new/health.yaml"
     canonical.parent.mkdir(parents=True)
-    canonical.write_text("generated_at: 2026-09-29T00:00:00Z\n", encoding="utf-8")
+    canonical.write_text(f"generated_at: {_fresh_ts()}\n", encoding="utf-8")
     monkeypatch.setattr(monitor, "state_root", lambda: runtime)
     report = monitor.check_heartbeats()
     health = next(row for row in report["results"] if row["file"].endswith("health.yaml"))
