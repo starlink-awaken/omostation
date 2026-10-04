@@ -39600,7 +39600,8 @@ bets:
     + reconciliation_note 表达，不扩 status/reality 枚举）、两条文件内部一致性 不变式 I1/I2、13 处字面量换成从 plist
     自身 WorkingDirectory 派生的根 + registry↔plist 跨源字符串逐字 相等、以及混合根与假 installed 两个变异对照用例（自证检测器非空转）+
     两测试文件自锁断言自身源码不含 "/Users/"。
-  status: pending
+  status: done
+  done_at: 2026-10-04
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -39610,6 +39611,7 @@ bets:
   pasw_required: false
   retro: required
   workflow: project-code-change
+  value_indicator_policy: false
   write_surfaces:
   - tests/unit/test_panorama_runtime_scheduler.py
   - tests/unit/test_agent_cell_scheduler.py
@@ -39661,15 +39663,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_PROVEN
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@d8ab0aa580536b62f78a4a6982e8ee76bbf7e032
+          tests:
+            ref: receipt://docs/reports/2026-10-04-bet-224-launchd-reality-derived-root-closeout.md
+            sha256: sha256:f79e58331871dc4f9251abecac51db3a931f8cd6d0c6c4e851c7908ff7d582ff
+          diff:
+            ref: receipt://docs/reports/2026-10-04-bet-224-launchd-reality-derived-root-closeout.md
+            sha256: sha256:f79e58331871dc4f9251abecac51db3a931f8cd6d0c6c4e851c7908ff7d582ff
+          rollback:
+            ref: receipt://docs/reports/2026-10-04-bet-224-launchd-reality-derived-root-closeout.md
+            sha256: sha256:f79e58331871dc4f9251abecac51db3a931f8cd6d0c6c4e851c7908ff7d582ff
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-04-bet-224-launchd-reality-derived-root-closeout.md
+            sha256: sha256:f79e58331871dc4f9251abecac51db3a931f8cd6d0c6c4e851c7908ff7d582ff
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-04-bet-224-launchd-reality-derived-root-closeout.md
+            sha256: sha256:f79e58331871dc4f9251abecac51db3a931f8cd6d0c6c4e851c7908ff7d582ff
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-224.md
+            sha256: sha256:44618817c3a2bcbabc8063bb59551261ab1f33ea331a1ab676375a366144a3c7
+          cleanup:
+            ref: receipt://docs/reports/2026-10-04-bet-224-launchd-reality-derived-root-closeout.md
+            sha256: sha256:f79e58331871dc4f9251abecac51db3a931f8cd6d0c6c4e851c7908ff7d582ff
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
