@@ -28,24 +28,32 @@ from mail_reader import Mail, read_netease_mail
 DRAFTS_DIR = Path.home() / "Documents" / "@工作文档" / "卫健委" / "_drafts"
 INBOX = Path.home() / "Documents" / "_inbox"
 # OMO_TRACKED_TASKS: 沙箱/测试重定向(与 value-evolution-connector 的 OMO_* 写面同约定)
-TASKS_FILE = Path(os.environ.get("OMO_TRACKED_TASKS") or (ROOT / ".omo" / "state" / "tracked-tasks.json"))
+DEFAULT_TASKS_FILE = ROOT / ".omo" / "state" / "tracked-tasks.json"
+TASKS_FILE: Path | None = None  # 显式覆盖位; 未赋值时由 tasks_file() 在调用时解析
 HEARTBEAT = ROOT / ".omo" / "state" / "deadline-tracker.jsonl"
+
+
+def tasks_file() -> Path:
+    """台账路径在调用时解析: 覆盖位 → OMO_TRACKED_TASKS → 默认。import 时求值会把 env 冻在旧根上。"""
+    return TASKS_FILE or Path(os.environ.get("OMO_TRACKED_TASKS") or DEFAULT_TASKS_FILE)
 
 
 def load_tasks() -> list[dict[str, Any]]:
     """加载追踪中的任务."""
-    if not TASKS_FILE.exists():
+    path = tasks_file()
+    if not path.exists():
         return []
     try:
-        return json.loads(TASKS_FILE.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return []
 
 
 def save_tasks(tasks: list[dict[str, Any]]) -> None:
     """保存任务列表."""
-    TASKS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    TASKS_FILE.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
+    path = tasks_file()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def register_task(subject: str, deadline: str, target: str, task_type: str, owner: str = "") -> None:

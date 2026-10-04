@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 import time
@@ -164,8 +163,6 @@ def _internal_signals() -> dict:
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ssot"))
         import deadline_tracker as _dt_mod  # noqa: E402
 
-        if os.environ.get("OMO_TRACKED_TASKS"):  # 模块可能早于环境变量被导入, 调用时再套一遍
-            _dt_mod.TASKS_FILE = Path(os.environ["OMO_TRACKED_TASKS"])
         load_tasks = _dt_mod.load_tasks
 
         import datetime as _dt  # noqa: E402

@@ -37,8 +37,14 @@ def test_meeting_task_skips_reply_matching(ledger: Path, monkeypatch: pytest.Mon
 
 
 def test_env_redirect(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """env 晚于 import 声明也必须生效——不 reload，路径在调用时解析。"""
     monkeypatch.setenv("OMO_TRACKED_TASKS", str(tmp_path / "x.json"))
-    import importlib
+    assert deadline_tracker.tasks_file() == tmp_path / "x.json"
+    assert deadline_tracker.load_tasks() == []  # 缺失文件按空台账，不炸
 
-    importlib.reload(deadline_tracker)
-    assert str(deadline_tracker.TASKS_FILE) == str(tmp_path / "x.json")
+
+def test_explicit_override_wins_over_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """既有 monkeypatch.setattr(TASKS_FILE) 用例的语义不变：覆盖位优先于 env。"""
+    monkeypatch.setenv("OMO_TRACKED_TASKS", str(tmp_path / "env.json"))
+    monkeypatch.setattr(deadline_tracker, "TASKS_FILE", tmp_path / "override.json")
+    assert deadline_tracker.tasks_file() == tmp_path / "override.json"
