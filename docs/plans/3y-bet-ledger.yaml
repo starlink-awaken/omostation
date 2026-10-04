@@ -39695,6 +39695,92 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-225
+  title: ADR-0456 B4b 前置感知轮 — 六类会静默失效的判定/测量形状固化进 agent 感知面
+  goal: 'T10-222 的 closeout report §5 把自身收益的持续性显式挂在本轮上：「是否转化为持续收益，取决于任务 #107（把时钟炸弹这一类补进
+    AGENTS.md §7 的 hermetic 条目）」。T10-224 收尾又暴露四类同族形状， 全部只在做的时候才知道。准入判据沿用 T10-221（复发
+    ≥2 次或当场让安全网静默失效，且有不依赖本机状态的指认方式）， 达标的恰六条。一、YAML 重复键静默 last-wins —— yaml.safe_load
+    不抛异常、构造 mapping 时保留最后一个； .omo/cron/registry.yaml 实测两条记录各带两个 reality 键（全文件 dup-aware
+    扫描 2 处、其余 68 条干净）， 文件同时印着已装机与待装而所有读者只看到 pending，故修复形状只能是删被遮蔽的键而非改一行， 且检测器必须自带 dup-aware
+    MappingNode 构造器并拿注入违规自证（tests/unit/test_cron_registry_reality_invariants.py 的 test_duplicate_key_detector_is_not_a_no_op
+    与 test_safe_load_alone_would_have_missed_that_violation 是标准形状）。 二、时钟炸弹 —— fixture
+    写绝对 generated_at 而断言用相对新鲜度窗口，跑得越晚越红，2026-10-02 起必红且形状与真回归无法用眼景区分； 时间一律相对 now 派生（_fresh_ts()），指认命令
+    grep -rn "write_text.*generated_at:[ ]20" tests/unit 必须 CLEAN。 三、按构造就绿 —— tests/unit/test_projection_reader_resolution.py
+    的 test_projection_read_prefers_canonical_then_legacy_and_reports_absent 绿是因为 fixture
+    自己 write_text 出被测前提， 对面的 test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path
+    按构造不可满足；绿本身不构成证据，必须配变异对照（T10-222 verify-3 把 legacy.write_text( 换成 pass 得 MUTATION_EXIT
+    1）或合成违规自证；同一条错误的另一端是用例/检查器里被检对象的根不得由 __file__ 反推，要走 bin/lib/repo_root.py 显式 resolver。四、GitHub「no
+    checks reported」的第一因是 CONFLICTING/DIRTY 而不是 on.paths 过滤（PR #4623 实测），混淆双向代价：把冲突未解读成
+    CI 放行，或把 paths 当万能解释而忽视 governance-check.yml 的 on.pull_request.paths 不含 tests/unit/**、那批文件本地
+    pytest 是唯一证据。 五、Bash 工具的 shell 是 zsh+别名（实测 type：grep→rg、find→fd、ls→eza、cp→cp -iv），而
+    python subprocess(shell=True) 拿到真实二进制，别名不继承 —— 于是 grep -iE 报 unknown encoding、find
+    -name 报 fd 用法错、ls -lat 报非法 --time、 cp 对已存在文件打印 not overwritten 且 rc=1 目标逐字节未变；「脚本里跑得通」不等于「一行命令里等价」。
+    六、行号指针会随上一轮交付漂移 —— AGENTS.md §7 里 tests/unit/test_projection_reader_resolution.py:42
+    与 tests/unit/test_repo_root_profile.py:146 写在 T10-221 基线上，T10-222 重写这两个文件后 :42 变成
+    registry = next(...)、:146 变成 TRUTH_DIR 注释，断言本体分别在 :61 与 :174，而文档逐字未变、读起来依然权威；本轮把这两条陈旧指针就地修正，并立下「优先写符号名、行号只作辅助、引用前
+    git show 取该行核内容」的纪律。另附台账 tail-append 冲突重建配方：两侧同时在 bets: 尾段追加时 meta.total_bets 作为派生值会被
+    git 静默合并成同一个数字而开始说谎 （先例 .omo/_knowledge/retros/BET-Y2Q3-T10-202.md:82-85 —— 双方都从
+    458 加一写成 459，合并后实际 460 条、声明 459 条，且没有任何残留标记），配方为以最新 origin/main 整份为底 + 单锚点插入 + 三条缺一不可的断言，
+    纠正 docs/SOPs/ledger-closeout-sop.md Step 4.2「冲突处理优先保留 main 版」在台账上的致命误用。本 BET 不新增代码。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  objective_ref: null
+  value_indicator_policy: false
+  write_surfaces:
+  - AGENTS.md
+  - docs/SOPs/ledger-closeout-sop.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-04-bet-225-agent-perception-six-new-pitfall-classes.md
+  - docs/reports/2026-10-04-bet-225-agent-perception-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-225.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-04-bet-225-agent-perception-six-new-pitfall-classes.md
+    spec_version: 1.0.0
+    content_digest: sha256:2b2ec6ae79f41eb75bf468d92a09f702f1f890148a1f405454b213a66063a94e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-225
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - AGENTS.md §7 新增六条的锚点串全部存在（判据 1 逐条测量），每条含 ①可指认证据（ref 或 file:line）②可执行判据或可复制测试形状 ③下一步纪律
+    —— 缺一不算固化。
+  - 六条里的每个 file:line/ref 指针在本检出可解析（判据 2 同时断言该行内容与所claim 的语义相关，陈旧指针按 ⑥ 就地修正：本轮修 :42→:61、:146→:174
+    两条）（文件存在且行号在行数内），由判据 2 逐条钉住；不引用记忆、不引用上一轮 receipt 的转述。
+  - E1 的判据形状是活的而不只是文字：python3 -m pytest tests/unit/test_cron_registry_reality_invariants.py
+    -q 在本检出全绿（判据 6）。
+  - 台账 tail-append 三条断言（total_bets == len(bets)、重复 id 为 0、main 侧 done 转换存活）在本轮插入后全绿（判据
+    5）。
+  - 纯文档交付：git diff --name-only origin/main...HEAD（三点式）不含 .py（判据 4）；docs/architecture/ops-services-health.md
+    与 .omo/cron/registry.yaml 零改动。
+  verify:
+  - cmd: 'python3 -c "import pathlib,sys; L=pathlib.Path(''AGENTS.md'').read_text().splitlines(); n=sum(1 for l in L if l.startswith(''  - **'') and len(l)>6 and l[6] in ''①②③④⑤⑥''); print(''anchors='' + str(n)); sys.exit(0 if n==6 else 1)"'
+    expect: 'anchors=6 (exit 0) —— AGENTS.md §7 六条锚点全部存在'
+  - cmd: 'python3 -c "import pathlib,sys; t=pathlib.Path(''AGENTS.md'').read_text(); i=t.find(''「已提交的 legacy 兜底」''); seg=t[i:t.find(chr(10)+''- **'', i+10)]; need=(''::test_projection_read_prefers_canonical_then_legacy_and_reports_absent'' in seg) and (''::test_projection_falls_back_to_committed_legacy_path'' in seg); stale=(''test_projection_reader_resolution.py:42'' in seg) or (''test_repo_root_profile.py:146'' in seg); print(''symbol='' + str(need) + '' stale='' + str(stale)); sys.exit(0 if need and not stale else 1)"'
+    expect: 'symbol=True stale=False (exit 0) —— 陈旧行号指针已换成符号名'
+  - cmd: 'python3 -c "import pathlib,sys; t=pathlib.Path(''docs/SOPs/ledger-closeout-sop.md'').read_text(); miss=[s for s in (''台账 tail-append 冲突重建配方'', ''meta.total_bets == len(bets)'', ''len(set(ids)) == len(ids)'', ''逐条存活'') if s not in t]; print(''missing='' + str(miss)); sys.exit(0 if not miss else 1)"'
+    expect: 'missing=[] (exit 0) —— §3.6 配方与三条断言齐备'
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 'exit 0 —— 必填字段含 verify + 本 BET spec 绑定 digest 校验'
+  - cmd: 'python3 -m pytest tests/unit/test_cron_registry_reality_invariants.py -q'
+    expect: 'exit 0 (9 passed) —— E1 判据形状在检出内是活的'
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -39833,7 +39919,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 519
+  total_bets: 520
   windows:
   - Y1Q1
   - Y1Q2
