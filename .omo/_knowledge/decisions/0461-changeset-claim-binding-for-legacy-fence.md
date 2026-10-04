@@ -203,16 +203,47 @@ fence 所需的全部材料。
 
 | # | 改动 | 位置 | 前置 |
 |---|---|---|---|
-| 1 | `lifecycle.py` 建 claim 时把 `claim_id`（连同 `claim_version` / `lease_epoch`）持久化进 claim 记录 | `projects/omo` | — |
-| 2 | `changeset` 从 claim 记录读取并记录 `claim_id` | `bin/gac/agent-clone.py` | 1 |
-| 3 | `verify-changeset` 用 `claim_id` 调 `describe-claim`，把绑定写进 `claims_authority_fence_context` | `bin/gac/agent-clone.py` | 2 |
-| 4 | changeset 阶段观察远端 delivery ref，得出 `expected_remote_oid` | `bin/gac/agent-clone.py` | 3 |
+| 1 | **把 `_authority_observe_members` 的返回值写进 ledger**（当前在 `lifecycle.py:610` 被直接丢弃） | `projects/omo` | — |
+| 2 | `_build_claim_snapshot` 从 ledger 读出 `claim_id` 并纳入 `claim_verification` | `bin/gac/agent-clone.py` | 1 |
+| 3 | `changeset` 把 `claim_id` 记入 changeset（**但不得进 `change_id` 权威**） | `bin/gac/agent-clone.py` | 2 |
+| 4 | `verify-changeset` 调 `describe-claim`，写 `claims_authority_fence_context` | `bin/gac/agent-clone.py` | 3 |
+| 5 | changeset 阶段观察远端 delivery ref，得 `expected_remote_oid` | `bin/gac/agent-clone.py` | 4 |
+
+### 更正（2026-10-04）：第 1 步原方案与 run 摘要保护直接冲突
+
+本 ADR 早前版本写的是「`lifecycle.py` 建 claim 时把 `claim_id` 持久化进 claim
+记录」。**该方案不成立**，两处实测证据：
+
+1. **observe 只能在 settle 时发生。** `_authority_observe_members(registry, snapshot)`
+   收到的 `snapshot` 就是 settle 前的 `after`（`lifecycle.py:735`）——**已含 claim**。
+   它在语义上无法提前到 claim 落盘之前。
+
+2. **settle 之后回写 run 会静默破坏摘要。** `_authority_snapshot` 只在
+   `:650 / :668 / :682 / :735` 取值，`:735` 之后再无复校；而
+   `run_digest = _authority_file_digest(run_path)` 覆盖 run 文件字节。
+   换言之 settle 之后再写 run，authority 刚认证过的 `resulting_run_digest`
+   会与现实脱节，**且没有任何检查会发现**。
+
+### 正确方案：走 ledger，不动 run 记录
+
+```
+_record_authority_shadow_event → append_ledger_event(registry, payload)   # lifecycle.py:346
+_authority_snapshot             → run_digest = _authority_file_digest(run_path)  # :365
+```
+
+**ledger 与 run 文件是两个存储，`run_digest` 只覆盖后者。** 因此把 observe 结果
+（含 `claim_id` / `claim_version` / `lease_epoch`）追加到 ledger 是安全的，
+而给 claim 记录加字段则不是。
+
+`claim_id` 本来就只在 observe 回执里产生（`_authority_observe_members` 已从
+`receipt` 取出这三个字段），只是调用点在 `:610` 把返回值扔了。**修法是
+「别扔，写进 ledger」，而不是「给 run 记录加字段」** —— 前者一处两行，后者
+会静默破坏已认证摘要。
 
 ### 每步的验证契约
 
-- **1**：`claim` 记录出现 `claim_id` 且与 `describe-claim` 返回的一致；既有读者
-  （`bin/agent-workflow.py`、`swarm_discipline`、`panorama-collect` 等）不受影响
-  —— 均为加法式字段
+- **1**：ledger 追加 `claim_id` / `claim_version` / `lease_epoch`；**`run_digest` 逐字节不变**
+  （这是本步的硬判据 —— 摘要若变化即说明写错了地方）
 - **2**：`change_id` 的计算输入**不得**包含 `claim_id`，否则同内容 changeset 的
   标识会随 claim 漂移（既有注释已声明 `claims_authority_shadow` 不得进 `change_id`
   权威，同理适用）
