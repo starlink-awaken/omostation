@@ -1,3 +1,15 @@
+---
+schema_version: specification/v1
+spec_version: 1.0.0
+title: BET-Y2Q4-T10-227 全量投影数据周期刷新通道
+bet_id: BET-Y2Q4-T10-227
+status: accepted
+lifecycle: contract
+owner: engineering-agent
+last-reviewed: 2026-10-04
+---
+
+
 # BET-Y2Q4-T10-227 Spec — 全量投影数据周期刷新通道
 
 - bet: BET-Y2Q4-T10-227

@@ -39806,7 +39806,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-04-bet-226-watchdog-tiered-recovery-spec.md
     spec_version: 1.0.0
-    content_digest: sha256:1dead5613cc063afef324a26892d68b7280c856720768fa5b2b811bf464a0a4a
+    content_digest: sha256:ff2d49f69a34f14fc757bc4be97f11924aab025e0640bbf3357a075adfbf5268
     decision_ref: decision://accepted/BET-Y2Q4-T10-226
   write_surfaces:
   - bin/panorama/assets/host/
@@ -39864,7 +39864,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-04-bet-227-full-refresh-spec.md
     spec_version: 1.0.0
-    content_digest: sha256:05636da272ab0ee344796510c27a9ee07db2d9a6b843e44ef96636d06c6e7c35
+    content_digest: sha256:ca28bbf167af18cc7277a752b118b13b6112872255c0e7ab1afbb5f4ea5b24e1
     decision_ref: decision://accepted/BET-Y2Q4-T10-227
   write_surfaces:
   - bin/panorama/projection-full-refresh.py
@@ -39926,7 +39926,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-04-bet-228-launchd-e4-cleanup-spec.md
     spec_version: 1.0.0
-    content_digest: sha256:1cd9ea782a60010d2267dfef07f9d1e95d87f1587d4c80c1e0b74490445fd6e8
+    content_digest: sha256:cebe3e24ae142763b6eee81e0809466787b3a85f5570ca925bc72d697cdcf79d
     decision_ref: decision://accepted/BET-Y2Q4-T10-228
   write_surfaces:
   - .omo/_truth/registry/services.yaml

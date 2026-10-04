@@ -1,3 +1,15 @@
+---
+schema_version: specification/v1
+spec_version: 1.0.0
+title: BET-Y2Q4-T10-226 看门狗分级恢复 + host 资产漂移回同步
+bet_id: BET-Y2Q4-T10-226
+status: accepted
+lifecycle: contract
+owner: engineering-agent
+last-reviewed: 2026-10-04
+---
+
+
 # BET-Y2Q4-T10-226 Spec — 看门狗分级恢复 + host 资产漂移回同步
 
 - bet: BET-Y2Q4-T10-226

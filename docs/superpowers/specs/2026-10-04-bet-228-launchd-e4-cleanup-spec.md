@@ -1,3 +1,15 @@
+---
+schema_version: specification/v1
+spec_version: 1.0.0
+title: BET-Y2Q4-T10-228 launchd 登记 E4 存量 findings 清理
+bet_id: BET-Y2Q4-T10-228
+status: accepted
+lifecycle: contract
+owner: governance-agent
+last-reviewed: 2026-10-04
+---
+
+
 # BET-Y2Q4-T10-228 Spec — launchd 登记 E4 存量 findings 清理
 
 - bet: BET-Y2Q4-T10-228
