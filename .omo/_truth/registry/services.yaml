@@ -6008,7 +6008,7 @@ services:
   program:
     interpreter: stable-python3
     entrypoint: bin/panorama/projection-republisher.py
-    args: []
+    args: [--gc]  # 每次续期顺手 GC (keep 48, ~50ms), 防孤儿 revision 无界回涨 (631个/9.9GB 实证)
   notes: '投影租约自动续期 (2026-10-03 第 3 次实证: 全量 publisher panorama-collect 受
     「工作区==origin/main 且完全洁净」强身份校验 + 5~14min 采集耗时约束, 生产长期
     无法自动发布 revision, dashboard :43191 周期性 503 projection_stale, 人工续期 3 次).
