@@ -29,8 +29,8 @@
 
 用法:
   projection-republisher.py                # 续期一次 (幂等; launchd 每 8min 调)
-  projection-republisher.py --status       # 只读诊断 (pointer/revision 新鲜度)
-  projection-republisher.py --gc [--keep N]# 清理旧 revision (保留最近 N 个)
+  projection-republisher.py --status       # 只读诊断 (不续期不 GC)
+  projection-republisher.py --gc [--keep N]# 续期 + 顺带清理旧 revision (保留最近 N 个)
 
 退出码: 0 = 已续期/仍新鲜/skipped; 2 = 无基线 revision (需先跑一次全量 publisher);
         1 = 错误 (fail-closed).
@@ -281,8 +281,8 @@ def status(root: Path) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--state-root", default=str(PROJECTION_STATE_ROOT))
-    ap.add_argument("--status", action="store_true", help="只读诊断")
-    ap.add_argument("--gc", action="store_true", help="清理旧 revision")
+    ap.add_argument("--status", action="store_true", help="只读诊断 (不续期不 GC)")
+    ap.add_argument("--gc", action="store_true", help="续期后顺带清理旧 revision (keep N)")
     ap.add_argument("--keep", type=int, default=DEFAULT_KEEP)
     ap.add_argument("--force", action="store_true", help="即使仍新鲜也强制续期")
     args = ap.parse_args()
@@ -291,9 +291,9 @@ def main() -> int:
     try:
         if args.status:
             result = status(root)
-        elif args.gc:
-            result = gc(root, keep=args.keep)
         else:
+            # 默认动作始终含续期; --gc 作为伴随项在续期后执行 (单次调用原子完成
+            # 租约续期 + 孤儿清理, 防 revision 目录无界回涨 —— 631个/9.9GB 实证)。
             try:
                 result = renew(root, force=args.force)
             except RepublishError as exc:
@@ -302,6 +302,8 @@ def main() -> int:
                     print(json.dumps(result, ensure_ascii=False))
                     return 2
                 raise
+            if args.gc:
+                result = dict(result, gc=gc(root, keep=args.keep))
     except RepublishError as exc:
         result = {"status": "error", "error": str(exc)}
 
