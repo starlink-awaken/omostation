@@ -39844,7 +39844,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@52a6cf192
+            ref: git://origin/main@52a6cf192dfcb96cc28082c4fdbd7bddc8e2a8ee
           tests:
             ref: receipt://docs/reports/2026-10-05-bet-226-canary.json
             sha256: sha256:f524722607cb7faffc8649f536f2f98d61c56fd1b87d426b0b43705aa18f305f
@@ -39876,6 +39876,13 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  verify:
+  - cmd: launchctl list | grep com.omostation.zhixing-dashboard-watchdog
+    expect: 有输出 (watchdog 已加载)
+  - cmd: python3 bin/gac/zhixing-host-sync.py status
+    expect: ok=true, drifted=0 (7 文件 in_sync)
+  - cmd: curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:43191/api/v1/manifest
+    expect: 200
   non_goals:
   - 不改读端 runtime_paths.py 的 15min 新鲜度上限 (安全约束不动);
   - 不动 republisher 本体逻辑与调度参数;
@@ -39929,7 +39936,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@288601ef4
+            ref: git://origin/main@288601ef4b5761a0d9fef46080d6e697713c4e73
           tests:
             ref: receipt://docs/reports/2026-10-05-bet-227-canary.json
             sha256: sha256:bc852bcac1b95dd770a2ef5d55942edabf548d4e43ad7b3715c84a45a4403d62
@@ -39961,6 +39968,13 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  verify:
+  - cmd: launchctl list | grep com.omostation.zhixing-projection-fullrefresh
+    expect: 有输出 (fullrefresh 已加载)
+  - cmd: python3 bin/mof/gen-service-configs.py --check --json
+    expect: ok=true, drift=0
+  - cmd: curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:43191/api/v1/manifest
+    expect: 200
   non_goals:
   - 不放松 panorama-collect.py 的强身份校验 (一字不改);
   - 不改动 projection-republisher.py;
@@ -40017,7 +40031,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@a8bce0671
+            ref: git://origin/main@a8bce067183f62241fa1f5152d2b205ba23dfcc5
           tests:
             ref: receipt://docs/reports/2026-10-05-bet-228-canary.json
             sha256: sha256:92f489e7b4694c5b1c72757dfc0069a7cbf25178997aae02b9a75ff1cb2a8a18
@@ -40049,6 +40063,9 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check
+    expect: E1/E2/E3/E4 全绿, unclassified=0
   non_goals:
   - 不 load/unload/bootout 任何 launchd 任务 (只动登记面);
   - 不改动 generate:true 面与任何在跑任务的 plist 内容;
