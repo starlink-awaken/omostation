@@ -39357,7 +39357,8 @@ bets:
     origin/main 逐字节同状态 —— 基线红、CI 看不见 （tests/unit 不在 governance-check.yml 白名单）；③ 2 条
     `test_reporting_reads_ledger.py` 单跑 6 passed、全量跑红 —— 顺序依赖污染。16 与 14 的差额是后台输出文件被截断，只有
     14 个名字可指认。'
-  status: pending
+  status: done
+  done_at: 2026-10-04
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -39448,15 +39449,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e43d6bc9d638b1cce8715689f7317f57ded58e28
+          tests:
+            ref: receipt://docs/reports/2026-10-03-bet-222-hermetic-projection-fallback-closeout.md
+            sha256: sha256:86c0d6093cccdf7c009fb3c93b09e86fcf8c72589faf8c1eca60244faf78551e
+          diff:
+            ref: receipt://docs/reports/2026-10-03-bet-222-hermetic-projection-fallback-closeout.md
+            sha256: sha256:86c0d6093cccdf7c009fb3c93b09e86fcf8c72589faf8c1eca60244faf78551e
+          rollback:
+            ref: receipt://docs/reports/2026-10-03-bet-222-hermetic-projection-fallback-closeout.md
+            sha256: sha256:86c0d6093cccdf7c009fb3c93b09e86fcf8c72589faf8c1eca60244faf78551e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-03-bet-222-hermetic-projection-fallback-closeout.md
+            sha256: sha256:86c0d6093cccdf7c009fb3c93b09e86fcf8c72589faf8c1eca60244faf78551e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-03-bet-222-hermetic-projection-fallback-closeout.md
+            sha256: sha256:86c0d6093cccdf7c009fb3c93b09e86fcf8c72589faf8c1eca60244faf78551e
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-222.md
+            sha256: sha256:5e2c0f87377a68038f98d9c40e735f240ebe5568f2308fa5468070a175abe6b8
+          cleanup:
+            ref: receipt://docs/reports/2026-10-03-bet-222-hermetic-projection-fallback-closeout.md
+            sha256: sha256:86c0d6093cccdf7c009fb3c93b09e86fcf8c72589faf8c1eca60244faf78551e
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-223
   title: 投影租约自动续期与孤儿 revision 治理 — dashboard :43191 周期性 503 projection_stale 根治
   goal: revision-bound 读端 (deploy 侧 runtime_paths.py) 要求 fresh_until - generated_at
