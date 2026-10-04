@@ -37,6 +37,9 @@ LOG_PATH = Path("~/.local/log/projection-fullrefresh.log").expanduser()
 EXPECTED_ORIGIN_SUFFIX = "starlink-awaken/omostation.git"
 CLONE_URL = "https://github.com/starlink-awaken/omostation.git"
 PUBLISHER_TIMEOUT_SEC = 3600  # 全量采集典型 5~14min, 留足裕量
+# event_ledger 是运行时文件（不在检出内）—— publisher 检出里没有，必须显式指向主树那份
+WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+EVENT_LEDGER_DB = WORKSPACE_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
 
 
 def log(event: str, **kw) -> None:
@@ -104,6 +107,7 @@ def main() -> int:
         env["PANORAMA_ROOT"] = str(CHECKOUT)
         env["PANORAMA_CODE_ROOT"] = str(CHECKOUT)
         env["ZHIXING_DASHBOARD_STATE_ROOT"] = str(DEPLOY_DIR)
+        env["OMO_EVENT_LEDGER_DB"] = str(EVENT_LEDGER_DB)
         env["ZHIXING_DASHBOARD_CODE_ROOT"] = str(DEPLOY_DIR)
         r = subprocess.run(
             [sys.executable, "-B", str(CHECKOUT / "bin/panorama/panorama-collect.py")],
