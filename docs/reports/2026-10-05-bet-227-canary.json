@@ -1,0 +1,33 @@
+{
+  "schema": "canary-receipt/v1",
+  "bet": "BET-Y2Q4-T10-227",
+  "checked_at": "2026-10-05T00:40:00Z",
+  "checks": {
+    "driver_registered": {
+      "ref": "repo://bin/panorama/projection-full-refresh.py",
+      "status": "pass",
+      "detail": "driver 在 origin/main（PR #4636 + 修复 #4638）"
+    },
+    "service_registered": {
+      "ref": "repo://.omo/_truth/registry/services.yaml",
+      "status": "pass",
+      "detail": "omostation.zhixing-projection-fullrefresh generate:true interval 21600"
+    },
+    "plist_installed": {
+      "ref": "launchctl://com.omostation.zhixing-projection-fullrefresh",
+      "status": "pass",
+      "detail": "launchd 已加载，gen-service-configs --check drift=0"
+    },
+    "first_full_publish": {
+      "ref": "receipt://docs/reports/2026-10-05-bet-227-full-refresh-closeout.md",
+      "status": "pass",
+      "detail": "revision c4328205 data_observed_at=2026-10-04T18:27:15Z，dashboard 200"
+    },
+    "republisher_continues": {
+      "ref": "launchctl://com.omostation.zhixing-projection-republisher",
+      "status": "pass",
+      "detail": "republisher 接续续期全量发布的新 revision"
+    }
+  },
+  "overall": "pass"
+}

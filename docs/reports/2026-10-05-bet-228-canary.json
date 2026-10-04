@@ -1,0 +1,28 @@
+{
+  "schema": "canary-receipt/v1",
+  "bet": "BET-Y2Q4-T10-228",
+  "checked_at": "2026-10-05T00:40:00Z",
+  "checks": {
+    "reality_check_e4": {
+      "ref": "receipt://docs/reports/2026-10-05-bet-228-e4-closeout.md",
+      "status": "pass",
+      "detail": "E1/E2/E3/E4 全绿，unclassified=0，注册表与本机 launchd 现实闭合"
+    },
+    "magpie_classified": {
+      "ref": "repo://.omo/_truth/registry/services.yaml",
+      "status": "pass",
+      "detail": "com.yetone.magpie 补登 external"
+    },
+    "codewhisperer_removed": {
+      "ref": "repo://.omo/_truth/registry/services.yaml",
+      "status": "pass",
+      "detail": "com.amazon.codewhisperer.launcher 豁免移除"
+    },
+    "four_owned": {
+      "ref": "repo://.omo/_truth/registry/services.yaml",
+      "status": "pass",
+      "detail": "4 个 unclassified → owned（concept-weave/lifeos.pulse/decision-svc/quota-monitor）"
+    }
+  },
+  "overall": "pass"
+}
