@@ -2,8 +2,10 @@
 # bin/kos — KOS (Knowledge Operating System) 主仓便捷入口
 # 自动注入环境变量与项目运行环境 (BOS-v6 治理标准)
 
-export KOS_HOME="/Users/xiamingxing/Workspace/kos"
-WORKSPACE="/Users/xiamingxing/Workspace"
+# KOS_HOME 跟随 kairon 默认 (kos/config.py: Path.home()/".kos"); 原写死的 Workspace/kos 并不存在
+export KOS_HOME="${KOS_HOME:-$HOME/.kos}"
+# 仓库根由脚本位置推算 (bin/gac/kos → ../..), 不写死; 可用 WORKSPACE 覆盖
+WORKSPACE="${WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)}"
 
 # 支持 --help
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ]; then
