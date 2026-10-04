@@ -50,7 +50,7 @@ UNSAFE_DIR_CATEGORIES = frozenset({"dirty_repo", "small_clean_repo", "needs_revi
 AUTO_DIR_CATEGORIES = frozenset({"empty_abandoned", "log_only_abandoned"})
 
 # `git submodule status` line: status flag, then the 40/64-hex gitlink sha, then path.
-_SUBMODULE_STATUS_RE = re.compile(r"^(?P<flag>[-+ U])(?P<sha>[0-9a-f]{40,64})\s+(?P<path>\S+)")
+_SUBMODULE_STATUS_RE = re.compile(r"^(?P<flag>[-+ U])[0-9a-f]{40,64}\s+(?P<path>\S+)")
 
 
 @dataclass
@@ -132,38 +132,28 @@ def _is_merged_to_origin_main(head: str, path: Path) -> bool:
     `.git/worktrees/<name>/modules/<path>` gitdir, with its own remote-tracking
     refs. Asking the superproject answers a question about a different repo.
 
-    Unknown is never merged: no `origin/main` in this repo, or an ancestry check
-    that cannot run, both yield False so the caller fails safe.
+    Unknown is never merged: `merge-base --is-ancestor` exits 1 for "not an
+    ancestor" and 128 when either side cannot be resolved (no `origin/main`, bad
+    HEAD), so only a clean 0 reads as merged and the caller fails safe.
     """
     if not head:
         return False
-    if _run(["git", "rev-parse", "--verify", "-q", "origin/main"], cwd=path).returncode != 0:
-        return False
-    rc = _run(["git", "merge-base", "--is-ancestor", head, "origin/main"], cwd=path).returncode
-    return rc == 0
+    return _run(["git", "merge-base", "--is-ancestor", head, "origin/main"], cwd=path).returncode == 0
 
 
-def _head_detail(sub_dir: Path) -> str:
-    """Describe an unresolvable HEAD precisely enough for a human to act on.
+def _head_file_content(sub_dir: Path) -> str:
+    """Raw HEAD file of `sub_dir`, for diagnostics.
 
-    `git symbolic-ref` is no help here: a half-initialized clone leaves
-    `HEAD -> ref: refs/heads/.invalid`, and git rejects that as an illegal refname
-    (rc=128), so the gitdir's HEAD file is read directly.
+    Read directly because git refuses to resolve what a half-initialized clone
+    leaves behind (`ref: refs/heads/.invalid` is an illegal refname).
     """
-    git_dir = _run(["git", "rev-parse", "--git-dir"], cwd=sub_dir).stdout.strip()
-    content = ""
-    if git_dir:
-        head_file = Path(git_dir)
-        if not head_file.is_absolute():
-            head_file = sub_dir / head_file
-        try:
-            content = (head_file / "HEAD").read_text(encoding="utf-8").strip()
-        except OSError:
-            content = ""
-    has_branch = bool(_run(["git", "for-each-ref", "--count=1", "refs/heads"], cwd=sub_dir).stdout.strip())
-    if not has_branch:
-        return f"empty checkout, HEAD -> {content or 'unresolved'}"
-    return f"unresolvable HEAD ({content or 'detached, unknown commit'})"
+    head_path = _run(["git", "rev-parse", "--git-path", "HEAD"], cwd=sub_dir).stdout.strip()
+    if not head_path:
+        return "unreadable"
+    try:
+        return (sub_dir / head_path).read_text(encoding="utf-8").strip() or "empty"
+    except OSError:
+        return "unreadable"
 
 
 def _submodule_merge_gap(sub_dir: Path, sub_path: str) -> list[str]:
@@ -173,19 +163,20 @@ def _submodule_merge_gap(sub_dir: Path, sub_path: str) -> list[str]:
     by `git submodule status`: that sha comes from the index and is reported even when
     the checkout itself is empty — a half-initialized clone reports a matching status
     flag while `HEAD -> ref: refs/heads/.invalid` and no refs exist at all.
+
+    The happy path costs one subprocess; the diagnosis calls only run on a gap.
     """
     if not (sub_dir / ".git").exists():
         return [f"{sub_path} (not a checkout)"]
+    rc = _run(["git", "merge-base", "--is-ancestor", "HEAD", "origin/main"], cwd=sub_dir).returncode
+    if rc == 0:
+        return []
     head = _run(["git", "rev-parse", "--verify", "-q", "HEAD"], cwd=sub_dir)
     if head.returncode != 0:
-        return [f"{sub_path} ({_head_detail(sub_dir)})"]
-    if _run(["git", "rev-parse", "--verify", "-q", "origin/main"], cwd=sub_dir).returncode != 0:
-        return [f"{sub_path} (no origin/main ref)"]
-    sha = head.stdout.strip()
-    rc = _run(["git", "merge-base", "--is-ancestor", sha, "origin/main"], cwd=sub_dir).returncode
-    if rc != 0:
-        return [f"{sub_path} (HEAD {sha[:8]} not in its origin/main)"]
-    return []
+        return [f"{sub_path} (unresolvable HEAD: {_head_file_content(sub_dir)})"]
+    if rc == 1:
+        return [f"{sub_path} (HEAD {head.stdout.strip()[:8]} not in its origin/main)"]
+    return [f"{sub_path} (ancestry against origin/main unavailable, e.g. no origin/main ref)"]
 
 
 def _unmerged_submodules(path: Path) -> list[str]:
@@ -203,9 +194,8 @@ def _unmerged_submodules(path: Path) -> list[str]:
         return ["<git submodule status unavailable>"]
     gaps: list[str] = []
     for line in out.stdout.splitlines():
-        # Match the raw line: the leading status flag is part of the record, so
-        # stripping the line would turn a matched " " flag into a non-match.
-        match = _SUBMODULE_STATUS_RE.match(line.rstrip())
+        # Never strip the line: its leading " " is the status flag itself.
+        match = _SUBMODULE_STATUS_RE.match(line)
         if not match:
             continue
         if match.group("flag") == "-":
@@ -227,8 +217,10 @@ def _categorize_worktree(wt: dict[str, str]) -> WorktreeInfo:
     branch = wt.get("branch", "UNKNOWN")
     head = wt.get("head", "")
     dirty, upstream = _worktree_status(path)
-    merged = _is_merged_to_origin_main(head, path) if head else False
-    unmerged_submodules = _unmerged_submodules(path)
+    merged = _is_merged_to_origin_main(head, path)
+    # Only a merged superproject can reach `safe_to_remove`, so only then can the
+    # submodule probe change the verdict; skip ~1+N subprocesses otherwise.
+    unmerged_submodules = _unmerged_submodules(path) if merged else []
     mtime_days = _mtime_days(path)
 
     if merged and unmerged_submodules:
