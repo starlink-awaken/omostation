@@ -1,0 +1,26 @@
+schema: script-registry/v1
+id: bin/panorama/projection-republisher.py
+name: Projection Republisher (投影租约自动续期)
+category: governance
+owner: governance-team
+description: dashboard :43191 revision-bound 读端的纯续期工具。继承上一 revision
+  工件与 provenance 仅重打 generated_at/fresh_until (+10min), 原子换 pointer,
+  fail-closed; 不刷新数据内容 (数据刷新归 panorama-collect)。配套 --gc 清理孤儿
+  revision (默认 keep 48)。2026-10-03 实证——全量 publisher 受强身份校验约束生产
+  不可用, 本工具根治周期性 503 projection_stale (BET-Y2Q4-T10-223)。
+inputs:
+  - name: --state-root
+    type: path
+    required: false
+  - name: --status / --gc / --force / --keep N
+    type: flag
+    required: false
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: [launchd]
+related: [bin/panorama/panorama-collect.py, bin/mof/gen-service-configs.py]
+tags: [panorama, dashboard, projection, reliability]
+maturity: active
+last_reviewed: "2026-10-04"

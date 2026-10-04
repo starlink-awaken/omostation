@@ -179,7 +179,10 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 712 # 2026-09-28 705→712: PR #4512 content-model Phase 2-5 工具注册
+    script_baseline: 714 # 2026-10-04 712→714: PR #4619 projection-republisher
+      # (+ bin/panorama/projection-republisher.py, BET-Y2Q4-T10-223 投影租约续期,
+      # 根治 :43191 周期性 503 projection_stale); 上一行注释:
+      # 2026-09-28 705→712: PR #4512 content-model Phase 2-5 工具注册
       # (+ rule_engine.py, coverage_report.py, content-model-check.py,
       # + incremental-check.py, schema-ref-check.py, fm_schema_migrate.py,
       # + pydantic-to-json-schema.py); 值取自 gac-validate

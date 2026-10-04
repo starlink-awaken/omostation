@@ -5997,6 +5997,28 @@ services:
     stderr: /Users/xiamingxing/.local/share/zhixing-dashboard/launchd-refresh.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
   depends_on: []
+- id: omostation.zhixing-projection-republisher
+  enabled: true
+  generate: true
+  run_at_load: true  # 睡眠唤醒后 launchd 不补跑错过的 interval —— RunAtLoad 立即续期一次
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 480
+  label: com.omostation.zhixing-projection-republisher
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/panorama/projection-republisher.py
+    args: []
+  notes: '投影租约自动续期 (2026-10-03 第 3 次实证: 全量 publisher panorama-collect 受
+    「工作区==origin/main 且完全洁净」强身份校验 + 5~14min 采集耗时约束, 生产长期
+    无法自动发布 revision, dashboard :43191 周期性 503 projection_stale, 人工续期 3 次).
+    本服务每 8min 续期一次 (租约 10min < 读端 15min 硬上限, 续点时剩余 90~180s 裕量);
+    仅重打 generated_at/fresh_until, 数据内容与 provenance 逐字继承, 观测龄期显示保持诚实.
+    配套 GC: 保留最近 48 个 revision (实证 631 个孤儿占 9.9GB). 应急可 --force / --status / --gc.'
+  outputs:
+    stdout: ~/.local/log/projection-republisher.log
+    stderr: ~/.local/log/projection-republisher.log
+  depends_on: [omostation.zhixing-dashboard]
 - id: omostation.zhixing-dashboard-watchdog
   enabled: true
   generate: false
