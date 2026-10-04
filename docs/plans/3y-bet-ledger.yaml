@@ -39816,6 +39816,7 @@ bets:
     rag_engine.py — deploy 侧为 2026-09-24~10-04 多轮 UI hotfix 有意变更, 全部已提交在 deploy 仓 origin/main)
     经 zhixing-host-sync capture 回同步至 workspace bin/panorama/assets/host/, 消除恒红报警与「并发覆盖丢失」风险敞口。
   status: done
+  done_at: 2026-10-05
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -39907,6 +39908,7 @@ bets:
     revision (读端全程可用), pointer 原子切换。 services.yaml generate:true 注册, plist 由 gen-service-configs
     生成, StartInterval=6h + RunAtLoad。
   status: done
+  done_at: 2026-10-05
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -40002,6 +40004,7 @@ bets:
     (principal 个人工具/ 本地服务域), 写入 services.yaml launchd_namespace 归属 + reason, unclassified
     清零。 目标： gen-service-configs --reality-check E1-E4 全绿, 登记面与现实零漂移。
   status: done
+  done_at: 2026-10-05
   window: Y2Q4
   track: T10-TOOLING
   priority: P3
