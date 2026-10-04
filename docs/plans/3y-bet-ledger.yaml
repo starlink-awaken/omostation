@@ -39722,7 +39722,8 @@ bets:
     git 静默合并成同一个数字而开始说谎 （先例 .omo/_knowledge/retros/BET-Y2Q3-T10-202.md:82-85 —— 双方都从
     458 加一写成 459，合并后实际 460 条、声明 459 条，且没有任何残留标记），配方为以最新 origin/main 整份为底 + 单锚点插入 + 三条缺一不可的断言，
     纠正 docs/SOPs/ledger-closeout-sop.md Step 4.2「冲突处理优先保留 main 版」在台账上的致命误用。本 BET 不新增代码。'
-  status: pending
+  status: done
+  done_at: 2026-10-04
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -39748,17 +39749,40 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-225
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b0f9b497cb3f4d57738485f45550dca1fefdec84
+          tests:
+            ref: receipt://docs/reports/2026-10-04-bet-225-agent-perception-closeout.md
+            sha256: sha256:c1076bc9178a52967e683455875b5d8f41c623c2aec895d957988c7acc5995b1
+          diff:
+            ref: receipt://docs/reports/2026-10-04-bet-225-agent-perception-closeout.md
+            sha256: sha256:c1076bc9178a52967e683455875b5d8f41c623c2aec895d957988c7acc5995b1
+          rollback:
+            ref: receipt://docs/reports/2026-10-04-bet-225-agent-perception-closeout.md
+            sha256: sha256:c1076bc9178a52967e683455875b5d8f41c623c2aec895d957988c7acc5995b1
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-04-bet-225-agent-perception-closeout.md
+            sha256: sha256:c1076bc9178a52967e683455875b5d8f41c623c2aec895d957988c7acc5995b1
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-04-bet-225-agent-perception-closeout.md
+            sha256: sha256:c1076bc9178a52967e683455875b5d8f41c623c2aec895d957988c7acc5995b1
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-225.md
+            sha256: sha256:8ff793418adc27608df0e4911f87a7fb5079edbab45fbab776743920a1d887b6
+          cleanup:
+            ref: receipt://docs/reports/2026-10-04-bet-225-agent-perception-closeout.md
+            sha256: sha256:c1076bc9178a52967e683455875b5d8f41c623c2aec895d957988c7acc5995b1
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
   done_when:
   - AGENTS.md §7 新增六条的锚点串全部存在（判据 1 逐条测量），每条含 ①可指认证据（ref 或 file:line）②可执行判据或可复制测试形状 ③下一步纪律
     —— 缺一不算固化。
