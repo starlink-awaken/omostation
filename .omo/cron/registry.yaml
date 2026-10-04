@@ -355,7 +355,8 @@ jobs:
       PAUSED, 建议后续正式归档删除, 避免和这条重复。
 
   # ── knowledge-foundry-6h: P76 Phase6 治理编排 (14 子任务) ──
-  # plist 已随仓安装且与 repo 一致, 但从未 launchctl load (无 foundry.log 历史),
+  # 2026-10-04 三探针实测: 未装机 (~/Library/LaunchAgents 无该 plist) 且未加载,
+  # 只有 runtime/cron/ 那份仓库骨架; 早期"已随仓安装"的副本已不在。
   # spec (docs/architecture/knowledge-foundry-cron.md) 仍为 draft。
   # 不激活原因: brief-gen 子任务每 6h 写 BRIEF.md (tracked) 到主树,
   # 与 ADR-4443 v8/P96 主树只读纪律冲突; 激活前需先解决输出落点
@@ -369,17 +370,24 @@ jobs:
       cd $WORKSPACE && uv run python bin/gac/knowledge-foundry-cron.py
       >> $HOME/.local/state/omostation/foundry.log 2>&1
     planes: [launchd]
-    reality: installed
+    reality: declared_only
     status: proposed
     owner: governance-team
     sfop_slot: S
     reconciliation_note: >
-      plist ~/Library/LaunchAgents/com.omostation.knowledge-foundry.plist
-      与 runtime/cron/ 版本一致 (2026-09-12 校验), 但 launchctl 未 load,
-      无运行日志。14 子任务 (omo-sync/compliance/p74/mof-drift/m4-health/
-      debt/bootloader/submodule-bump/gitlink/swarm-window/brief-gen/port-governance/
-      memory-os-consolidate) 全 dormant。激活阻塞: brief-gen 写 tracked BRIEF.md
-      违反主树只读 (ADR-4443 v8); 需先改输出落点。meta-doctor 2026-09-12 发现。
+      2026-10-04 三探针实测: launchctl list com.omostation.knowledge-foundry
+      = "Could not find service", ~/Library/LaunchAgents/ 下无该 plist,
+      只有 runtime/cron/com.omostation.knowledge-foundry.plist —— 即从未装机。
+      故 reality 由 installed 降级 declared_only (installed 无据)。
+      2026-09-12 那次"plist 已随仓安装且与 repo 一致"的装机副本现已不在,
+      该 note 的装机断言随之失效。14 子任务 (omo-sync/compliance/p74/mof-drift/
+      m4-health/debt/bootloader/submodule-bump/gitlink/swarm-window/brief-gen/
+      port-governance/memory-os-consolidate) 全 dormant。激活阻塞: brief-gen 写
+      tracked BRIEF.md 违反主树只读 (ADR-4443 v8); 需先改输出落点。
+      meta-doctor 2026-09-12 发现。另一条装机前必修的偏差: 本条 name 为
+      knowledge-foundry-6h 而真实 plist Label 为 com.omostation.knowledge-foundry
+      (无 -6h), 且本条缺显式 label 字段 —— bin/scheduler-compile.py:147
+      会按 com.omostation.{name} 合成, 激活当天即成 label 不匹配。
 
   # ── 孤儿 crontab 补登 (2026-09-12): 实际运行但 registry 未登记 ──
   - name: worktree-hygiene-daily
@@ -604,21 +612,25 @@ jobs:
     planes: [launchd]
     reality: declared_only
     status: proposed
-    reality: pending
-    ssot_conflict: >-
-      2026-09-30 复核: 本条 active 且 runtime/cron 有受控产物, 但 services.yaml (launchd 服务 SSOT) 声明 enabled=false —— 授权只看 enabled, 故降级。
     owner: agent-experience-steward
     sfop_slot: S
     reconciliation_note: >
-      plist ~/Library/LaunchAgents/com.omostation.panorama-dashboard.plist
-      (runtime/cron/ 同源) 已卸载、文件保留。2026-09-25 日落 (BET-Y2Q2-T6-02):
-      :43910 由 com.omostation.sunset-redirector 持有, 本 serve job 未加载 ——
-      2026-09-27 launchctl print 确认 "Could not find service", 故 reality 由
-      installed 降级为 declared_only (原声明与 launchd 实际状态不符)。
-      status 保持 active 表示条目仍是受治理的契约登记; 是否重新加载属 owner 决策。
-      常驻 serve(KeepAlive=true) 只负责静态站点；刷新由 panorama-dashboard-refresh
-      独立执行，避免共享主仓旧 collector 覆盖最新运行态投影。
+      已退役，不是"待装": :43910 由 com.omostation.sunset-redirector 持有
+      (302 → 织星驾驶舱), 依据 services.yaml 那条 disabled_reason
+      (omostation.panorama-dashboard: enabled=false, lifecycle=retired,
+      TASK-F54F176A, 2026-09-28)。2026-09-25 日落 (BET-Y2Q2-T6-02) 起
+      plist 从用户域卸载、文件保留; 2026-09-27 launchctl print 确认不可见,
+      reality 由 installed 降级为 declared_only。2026-10-04 三探针复核一致:
+      launchctl 无该 label, ~/Library/LaunchAgents 无该 plist,
+      runtime/cron/ 有 —— 只剩仓库骨架, 两面已无冲突故撤 ssot_conflict。
+      本条此前带两个 reality 键 (declared_only 与 pending), PyYAML last-wins
+      使读者只看到 pending; 重复键已删, 唯一真值 declared_only。
+      status 取 proposed (本文件 status 词表实测只有 {active, proposed},
+      无 retired 值; reality=declared_only 配 status=active 会被 I1 拦下,
+      故退役只能这样表达)。常驻 serve(KeepAlive=true) 若重新加载只负责静态站点;
+      数据采集由 panorama-dashboard-refresh 独立承担。
       产物 runtime/dashboard/(gitignored)。
+      B4b 批次 2 注意: 这份 plist 是退役残留, 不该跟着改道。
 
   - name: panorama-dashboard-refresh
     schedule: "*/4 * * * *"
@@ -628,13 +640,20 @@ jobs:
       /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py
     planes: [launchd]
     reality: installed
-    status: proposed
-    reality: pending
-    ssot_conflict: >-
-      2026-09-30 复核: 本条 active 且 runtime/cron 有受控产物, 但 services.yaml (launchd 服务 SSOT) 声明 enabled=false —— 授权只看 enabled, 故降级。
+    status: active
     owner: agent-experience-steward
     sfop_slot: S
     reconciliation_note: >-
+      2026-10-04 三探针实测: launchctl list 有 com.omostation.panorama-dashboard-refresh,
+      ~/Library/LaunchAgents/ 有同名 plist, runtime/cron/ 有受控产物 —— 已装已加载。
+      services.yaml (omostation.panorama-dashboard-refresh) enabled=true,
+      授权面与机器面同向。故 status 由 proposed 上修为 active、
+      reality 唯一真值为 installed。本条此前也带两个 reality 键
+      (installed 与 pending), PyYAML last-wins 让读者只看到 pending;
+      重复键已删。撤除 ssot_conflict: 2026-10-04 复核 services.yaml 该条
+      实为 enabled=true, 2026-09-30 那次以"enabled=false"为由的降级是误读,
+      机器面证据也独立否证它。下游效应: status=active 使本条进入
+      bin/scheduler-compile.py:147 的 launchd 登记集 (registered_count 12→13)。
       部署版 collector 显式通过 PANORAMA_ROOT 指向 canonical Workspace，
       避免共享主仓本地 checkout 落后时覆盖 Agent Cell 等 origin/main 投影。
       PANORAMA_CODE_ROOT 指向受管 fresh-main 引用根，分离运行态真值与
