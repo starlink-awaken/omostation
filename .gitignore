@@ -286,6 +286,7 @@ data/cards/
 # 两个session同时操作时必然冲突 → git pull永久ABORT
 .omo/state/*.jsonl
 .omo/state/*.json
+.omo/state/policy-radar/
 .omo/state/agent-beliefs/
 .omo/state/agent-cards/
 .omo/state/swarm/

@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from collections import Counter
 from datetime import UTC, date, datetime, timedelta, timezone
 from pathlib import Path
@@ -27,6 +28,18 @@ SIGNALS = ROOT / ".omo/_knowledge/signals"
 DEBT_ITEMS = ROOT / ".omo/debt/items"
 STATE_DIR = ROOT / ".omo/state"
 TOP_N = 10
+
+
+def _brief_dir() -> Path:
+    """晨报产物目录: 与写者同一接缝解析, 不在模块级反推 ROOT (ADR-0456 B5)。
+
+    写侧 (bin/bc-os/policy_radar.py) 改挂 state 根后, 这里若继续拼检出路径, 探针会在新根
+    上看不见产物并把 `morning_brief` 判成 stale —— 把写面收敛做成一次假断更。
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+    from repo_root import state_dir_read  # noqa: E402
+
+    return state_dir_read(Path(".omo") / "state" / "policy-radar")
 
 
 def _week_key(today: date) -> str:
@@ -176,7 +189,7 @@ def collect_health(until: date) -> dict[str, object]:
         state["tailscale"] = "missing"
         alerts.append("tailscale 心跳产物缺失 (LaunchAgent 未跑?)")
 
-    brief = ROOT / ".omo" / "state" / "policy-radar" / f"brief-{until.strftime('%Y%m%d')}.json"
+    brief = _brief_dir() / f"brief-{until.strftime('%Y%m%d')}.json"
     now_h = datetime.now(UTC).hour + datetime.now(UTC).minute / 60
     if now_h >= 8.0:  # 晨报预算 07:30, 08:00 后缺产物即断更
         state["morning_brief"] = "ok" if brief.is_file() else "stale"

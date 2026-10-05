@@ -220,6 +220,30 @@ def state_file_read(relative: str | Path, *, root: Path | str | None = None) -> 
     return candidate if candidate.is_file() else base / relative
 
 
+def state_dir_write(relative: str | Path) -> Path:
+    """生成态**目录**的写侧解析: 一律挂 state 根 (未声明 profile 时 state_root()==code_root())。
+
+    存在的理由是把「写面在调用时刻取根」这件事变成有名字的接缝 —— 写者一旦把路径写成
+    模块级常量, 它就冻结在导入时刻的 env 上, 且没有任何测试会红 (ADR-0456 B5)。
+    与 state_file_read() 的"缺副本不写"不同: 这里 mkdir 一份目录副本不会造出半份镜像。
+    """
+    return state_root() / Path(relative)
+
+
+def state_dir_read(relative: str | Path, *, root: Path | str | None = None) -> Path:
+    """生成态**目录**的读取侧解析: state 根该目录存在则优先, 否则退回当前检出。
+
+    state_file_read() 的同族, 区别是这类面的文件名带日期 (brief-YYYYMMDD.json), 无法按
+    单文件比对是否存在, 只能按**目录**定优先级。未声明 profile 时直接返回检出侧, 于是与
+    历史布局逐字节相同 —— 同 state_file_read(): 这是隔离测试的前提, 不是简化。
+    """
+    base = Path(root) if root is not None else code_root()
+    if not os.environ.get(STATE_ROOT_ENV):
+        return base / Path(relative)
+    candidate = state_root() / Path(relative)
+    return candidate if candidate.is_dir() else base / Path(relative)
+
+
 def roots_report() -> dict[str, object]:
     """回答"我现在在哪个根" —— CLI 与测试共用这一份, 不在两处各算各的。"""
     cwd = Path.cwd()
