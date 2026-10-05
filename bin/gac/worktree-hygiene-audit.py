@@ -49,8 +49,10 @@ UNSAFE_WORKTREE_CATEGORIES = frozenset({"merged_with_dirty", "stale_dirty", "sta
 UNSAFE_DIR_CATEGORIES = frozenset({"dirty_repo", "small_clean_repo", "needs_review"})
 AUTO_DIR_CATEGORIES = frozenset({"empty_abandoned", "log_only_abandoned"})
 
-# `git submodule status` line: status flag, then the 40/64-hex gitlink sha, then path.
-_SUBMODULE_STATUS_RE = re.compile(r"^(?P<flag>[-+ U])[0-9a-f]{40,64}\s+(?P<path>\S+)")
+# `git submodule status` line: status flag, 40/64-hex gitlink sha, path, optional " (describe)".
+# The path runs to the end of the line and may contain spaces; `\S+` once cut "modules/space dir"
+# to "modules/space", which then read as "not a checkout" and blocked a clean removal.
+_SUBMODULE_STATUS_RE = re.compile(r"^(?P<flag>[-+ U])[0-9a-f]{40,64} (?P<path>.+?)(?: \([^()]*\))?$")
 
 
 @dataclass
@@ -179,17 +181,50 @@ def _submodule_merge_gap(sub_dir: Path, sub_path: str) -> list[str]:
     return [f"{sub_path} (ancestry against origin/main unavailable, e.g. no origin/main ref)"]
 
 
+def _submodule_push_gap(sub_dir: Path, sub_path: str) -> list[str]:
+    """Why deleting `sub_dir` could lose its HEAD commit ([] = HEAD is on some remote branch).
+
+    The deletion gates (worktree-janitor, gac-worktree.sh release/merge) ask this, not the
+    audit's merged-into-origin/main rule: what removal must protect is commits that exist
+    nowhere else. "Merged" would block the normal cross-repo flow, where the superproject
+    PR lands while the submodule PR is still open — pushed, unmerged, and safe to delete.
+
+    Reads this clone's remote-tracking refs without fetching, so a commit pushed from
+    another clone reads as unpushed until fetched — the safe direction.
+    """
+    if not (sub_dir / ".git").exists():
+        return [f"{sub_path} (not a checkout)"]
+    out = _run(["git", "branch", "-r", "--contains", "HEAD"], cwd=sub_dir)
+    if out.returncode == 0 and out.stdout.strip():
+        return []
+    head = _run(["git", "rev-parse", "--verify", "-q", "HEAD"], cwd=sub_dir)
+    if head.returncode != 0:
+        return [f"{sub_path} (unresolvable HEAD: {_head_file_content(sub_dir)})"]
+    return [f"{sub_path} (HEAD {head.stdout.strip()[:8]} not on any remote branch)"]
+
+
 def _unmerged_submodules(path: Path) -> list[str]:
-    """Initialized submodules of `path` that are not provably merged to their own origin/main.
+    """Initialized submodules of `path` that are not provably merged to their own origin/main."""
+    return _submodule_gaps(path, _submodule_merge_gap)
+
+
+def _unpushed_submodules(path: Path) -> list[str]:
+    """Initialized submodules of `path` whose HEAD is not on any remote branch."""
+    return _submodule_gaps(path, _submodule_push_gap)
+
+
+def _submodule_gaps(path: Path, probe) -> list[str]:
+    """Run `probe(sub_dir, sub_path)` over every initialized submodule of `path`.
 
     Scoped to the worktree at `path` (its own gitdir, its own submodule clones).
     Uninitialized submodules (`-` flag) are skipped: there are no local commits
     there to lose. Anything else we cannot inspect is reported as a gap so the
-    caller refuses to auto-clean.
+    caller refuses to remove.
     """
     if not path.is_dir():
         return []
-    out = _run(["git", "submodule", "status"], cwd=path)
+    # --recursive: nested submodules hold their own commits too; paths print relative to `path`
+    out = _run(["git", "submodule", "status", "--recursive"], cwd=path)
     if out.returncode != 0:
         return ["<git submodule status unavailable>"]
     gaps: list[str] = []
@@ -201,7 +236,7 @@ def _unmerged_submodules(path: Path) -> list[str]:
         if match.group("flag") == "-":
             continue
         sub_path = match.group("path")
-        gaps.extend(_submodule_merge_gap(path / sub_path, sub_path))
+        gaps.extend(probe(path / sub_path, sub_path))
     return gaps
 
 
@@ -422,7 +457,19 @@ def _main() -> int:
         action="store_true",
         help="Exit with code 1 if any unsafe state remains after audit/cleanup",
     )
+    parser.add_argument(
+        "--check-submodules",
+        metavar="PATH",
+        help="Deletion gate: exit 1 and list initialized submodules of PATH whose HEAD is on no remote branch",
+    )
     args = parser.parse_args()
+
+    if args.check_submodules:
+        # Shared gate for worktree-janitor.py and gac-worktree.sh: one rule, one implementation.
+        gaps = _unpushed_submodules(Path(args.check_submodules))
+        for gap in gaps:
+            print(gap)
+        return 1 if gaps else 0
 
     STALE_DAYS = args.stale_days
 

@@ -173,6 +173,7 @@ def _run_verify(wt_path: Path, tmp_path: Path) -> subprocess.CompletedProcess[st
         "set -euo pipefail\n"
         'export PASW_SUBTREE_DIR=".subtrees"\n'
         'export PASW_ISOLATED_SUBS=""\n'
+        f'export WORKTREE_HYGIENE_AUDIT="{SCRIPT.parent / "worktree-hygiene-audit.py"}"\n'
         f"{func_src}\n"
         f'verify_clean_for_force_removal "{wt_path}"\n'
     )
