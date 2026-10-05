@@ -1,0 +1,64 @@
+{
+  "schema": "canary-receipt/v1",
+  "bet": "BET-Y2Q4-T10-229",
+  "checked_at": "2026-10-05T10:28:00Z",
+  "checked_on": "git://origin/main@bb762fe0b",
+  "checks": {
+    "merged_reachable_commit": {
+      "ref": "github://starlink-awaken/omostation/pull/4641",
+      "status": "pass",
+      "detail": "PR #4641 squash 合并为 bb762fe0b；CI 21 pass / 2 skipping / 0 fail，mergeStateStatus CLEAN"
+    },
+    "minimal_repro_green": {
+      "ref": "pytest://tests/unit/test_deadline_tracker_ledger.py+test_reporting_reads_ledger.py?flags=-p+no:randomly",
+      "status": "pass",
+      "detail": "10 passed（修复前 4 failed / 5 passed）；tasks_file() 在调用时解析，晚声明 env 生效"
+    },
+    "consumer_set_no_order_dependency": {
+      "ref": "pytest://tests/unit/{deadline_tracker_ledger,reporting_reads_ledger,mail_daemon_resident_loop,policy_radar_internal}?flags=-p+no:randomly",
+      "status": "pass",
+      "detail": "17 passed；两文件任意顺序均绿"
+    },
+    "single_file_still_green": {
+      "ref": "pytest://tests/unit/test_reporting_reads_ledger.py",
+      "status": "pass",
+      "detail": "6 passed（修复前在全量顺序里其中 4 条红）"
+    },
+    "import_time_env_freeze_removed": {
+      "ref": "grep://TASKS_FILE%20=%20Path(os.environ?scope=bin,runtime",
+      "status": "pass",
+      "detail": "0 hits —— 两份副本都不再于 import 时求值 OMO_TRACKED_TASKS"
+    },
+    "ssot_mirror_identical": {
+      "ref": "diff://bin/ssot/deadline_tracker.py:runtime/ssot-stable/deadline_tracker.py",
+      "status": "pass",
+      "detail": "diff exit 0，0 字节"
+    },
+    "bypass_removed": {
+      "ref": "grep://_dt_mod.TASKS_FILE?scope=bin/bc-os/policy_radar.py",
+      "status": "pass",
+      "detail": "0 hits —— 拆除「调用时再套一遍」绕过及随之无用的 import os"
+    },
+    "local_gate_no_new_hard_failure": {
+      "ref": "receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md",
+      "status": "pass",
+      "detail": "68 checks，ok=true，hard_fails=[]；1 项软跳过 test-mcp-kos(exit 78, KOS 为运行态产物不在 git)。⚠️ 命令替换：make gac-local-gate 在新 claim worktree 里 uv 环境性 Error 2，改跑 gac-local-gate.py --scope run"
+    },
+    "ledger_triple_assertion": {
+      "ref": "file://docs/plans/3y-bet-ledger.yaml",
+      "status": "pass",
+      "detail": "total_bets 524 == len(bets) 524；重复 id 0；main 侧 523 条逐条存活（done 519→519）；lint OK 524 bets / 16 tracks / no errors"
+    },
+    "residual_red_not_order_dependency": {
+      "ref": "pytest://tests/unit?head=f07659fc4",
+      "status": "info",
+      "detail": "独占单次全量跑 10 failed / 1903 passed (522s)；残余 10 条逐文件单跑同样全红 (5/3/1/1，同一集合) → 顺序依赖在本集合内清零，残余是各自独立缺陷：test_panorama_pending_authorizations×5 / test_live_server_value_readiness×3 (ModuleNotFoundError: collectors, 环境类) / gac/test_omp_worker_adapter×1 / gac/test_gac_local_gate_timeouts×1。会话中途的 11 failed / 1901 passed 读数属另一棵树 (总用例 1912 vs 1913) 且当时有两个 pytest 并发，已作废。不在本 BET 边界。"
+    },
+    "profile_clean": {
+      "ref": "file://bin/ssot/_shared.py:34",
+      "status": "not_in_scope",
+      "detail": "ROOT = Path(__file__).resolve().parents[2] 的 __file__ 缝刻意留在边界外（属 B4b 批次 2+，需逐批授权）→ 本 BET 不等于 deadline_tracker 已 profile-clean"
+    }
+  },
+  "overall": "pass"
+}
