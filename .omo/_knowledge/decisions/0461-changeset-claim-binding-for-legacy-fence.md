@@ -12,7 +12,7 @@ tags: [claims-authority, legacy-publish-fence, changeset, bind, plumbing]
 
 # ADR-0461 — changeset 侧携带 claim 绑定, 使 legacy publish fence 可被满足
 
-- **Status**: PROPOSED（2026-10-02 提案；2026-10-03 实施前发现 authority 无读动词，方案 A 前提不成立，待裁定；未实施）
+- **Status**: PROPOSED（2026-10-02 提案；2026-10-05 ADR-0463 裁定后，**第 2–4 步作废**，仅第 1/5 步实施）
 - **Date**: 2026-10-02
 - **Owner**: architecture-governance
 - **Related**: ADR-0455（allow receipt 的可满足性，方案 A 已 ACCEPTED 且已实现）、
@@ -187,7 +187,32 @@ fence 所需的全部材料。
 - 不启用 instruction capability / 不把 v2 提升到 shadow 之上（ADR-0455 明列为非目标）
 - 不改任何历史 receipt
 
-## 实施计划（2026-10-04 增补，PROPOSED，未实施）
+## 2026-10-05 裁定：**第 2–4 步作废**
+
+principal 就 [ADR-0463](0463-contract-without-production-producer.md) 裁定：生产的
+`observe-claim` **不应**带 `publication_scope`。即 ADR-0455 方案 A
+（v2 上的 publication-scoped allow）**从未在生产被使用过** ——
+`_validate_publication_scoped_allow` 是一条从未被走通的分支，
+测试里能过是因为夹具**手工**塞入了该字段。
+
+故本 ADR 的第 2–4 步（`_build_claim_snapshot` 读回 `claim_id` →
+`changeset` 记入 → `verify-changeset` 写 fence 绑定）**不再实施**：
+继续接线等于照着一份从未在生产运行过的契约施工。
+
+**已落地并保留的两步**：
+
+- 第 1 步（omo#207）：observe 绑定写入 ledger。**无害** —— 只读 + 追加 ledger，
+  不改任何既有语义；硬判据「run_digest 逐字节不变」已由测试守住。
+- 第 5 步（#4630）：`observe_remote_ref`。**无害** —— 纯只读工具函数。
+
+但二者**不构成完整链路**，须与 ADR-0463 一并阅读，避免产生
+「fence 即将可用」的错误印象。
+
+**机器态不变**：`integrate --apply` 仍走常规 PR 流程（ADR-0459 既有结论）。
+
+---
+
+## 实施计划（2026-10-04 增补；**第 2–4 步已于 2026-10-05 作废**，第 1/5 步已实施）
 
 读动词 `describe-claim` 已交付（`omostation-omo#206` / `c909bd6fc`，父仓指针
 `#4615` / `0a63b4969`）。但它**只是让绑定可被读出**——要真正让
