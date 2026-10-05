@@ -40147,31 +40147,31 @@ bets:
             ref: git://origin/main@bb762fe0bef793c2c6cda35efe00b5e67cb6355c
           tests:
             ref: receipt://docs/reports/2026-10-05-bet-229-canary.json
-            sha256: sha256:4bda2887e7352422cad085a76b24f86180a1fd2294a96037938abc918ffc71ce
+            sha256: sha256:4a531286397437aa64eaf112433d5b9ccf44b5a0ddb679af1bec5fe073351e02
           diff:
             ref: receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md
-            sha256: sha256:36e4a9332e1f1ff5dcce5c90d15f734f76c8d7e6ef663dcfe36f36db9aad060b
+            sha256: sha256:ca6c0310efd1fea45976a57f37bf4cda22f65f49487b0ae8b61ea5b20b0b4f21
           rollback:
             ref: receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md
-            sha256: sha256:36e4a9332e1f1ff5dcce5c90d15f734f76c8d7e6ef663dcfe36f36db9aad060b
+            sha256: sha256:ca6c0310efd1fea45976a57f37bf4cda22f65f49487b0ae8b61ea5b20b0b4f21
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-229.md
-            sha256: sha256:b9ed09405e0e67ab77f0873b0e28df8f9e040e86a24a7ad0986138c98f755209
+            sha256: sha256:3ec944e31e8c4e289b03ea1de19efed98c918be63d11ed3c520f0158702a739d
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-05-bet-229-canary.json
-            sha256: sha256:4bda2887e7352422cad085a76b24f86180a1fd2294a96037938abc918ffc71ce
+            sha256: sha256:4a531286397437aa64eaf112433d5b9ccf44b5a0ddb679af1bec5fe073351e02
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md
-            sha256: sha256:36e4a9332e1f1ff5dcce5c90d15f734f76c8d7e6ef663dcfe36f36db9aad060b
+            sha256: sha256:ca6c0310efd1fea45976a57f37bf4cda22f65f49487b0ae8b61ea5b20b0b4f21
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-229.md
-            sha256: sha256:b9ed09405e0e67ab77f0873b0e28df8f9e040e86a24a7ad0986138c98f755209
+            sha256: sha256:3ec944e31e8c4e289b03ea1de19efed98c918be63d11ed3c520f0158702a739d
           cleanup:
             ref: receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md
-            sha256: sha256:36e4a9332e1f1ff5dcce5c90d15f734f76c8d7e6ef663dcfe36f36db9aad060b
+            sha256: sha256:ca6c0310efd1fea45976a57f37bf4cda22f65f49487b0ae8b61ea5b20b0b4f21
       value:
         status: NOT_PROVEN
         evidence: {}

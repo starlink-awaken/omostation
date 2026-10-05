@@ -57,10 +57,15 @@
 
 ## 残余与遗留（不在本 BET 边界）
 
-- **顺序依赖在本集合内清零**：合并后 `tests/unit` 全量 **11 failed / 1901 passed**，本轮修掉的 4 条
-  `test_reporting_reads_ledger` 已不在失败名单；残余 11 条**逐文件单跑同样全红**（5 / 3 / 1 / 1 / 1），
-  即不能再拿「顺序污染」当解释。分类：panorama 投影 ×5、`collectors` 环境缺失 ×3、worker adapter ×2、
-  gac-gate timeout ×1。
+- **顺序依赖在本集合内清零**：在 closeout 检出（`bb762fe0b` + 本报告 commit，独占单次跑，522s）
+  `tests/unit` 全量 **10 failed / 1903 passed**，本轮修掉的 4 条 `test_reporting_reads_ledger`
+  已不在失败名单；残余 10 条**逐文件单跑同样全红**（5 / 3 / 1 / 1，恰为同一集合），
+  即不能再拿「顺序污染」当解释。分类：`test_panorama_pending_authorizations` ×5、
+  `test_live_server_value_readiness` ×3（`ModuleNotFoundError: collectors`，环境类）、
+  `gac/test_omp_worker_adapter` ×1、`gac/test_gac_local_gate_timeouts` ×1。
+  ⚠️ 会话中途曾有一版 `11 failed / 1901 passed` 读数被写进交付说明，事后核对是**另一棵树**的跑次
+  （总用例 1912 vs 1913），且当时同一 worktree 里有**两个 `pytest tests/unit` 并发** —— 全部杀掉重跑后
+  才是上面的数。教训（retro 教训 6）：残余读数必须同时绑 `HEAD` + `failed+passed` 总数 + 独占检查。
 - `bin/ssot/_shared.py:34` 的 `ROOT = Path(__file__).resolve().parents[2]` 仍是 `__file__` 反推的缝，
   **刻意留在本轮边界外**（改它等于改真实守护进程的写入落点，属 ADR-0456 B4b 批次 2+，需逐批授权）。
   因此本 BET **不等于**「`deadline_tracker` 已 profile-clean」。

@@ -1,7 +1,7 @@
 {
   "schema": "canary-receipt/v1",
   "bet": "BET-Y2Q4-T10-229",
-  "checked_at": "2026-10-05T02:04:00Z",
+  "checked_at": "2026-10-05T10:28:00Z",
   "checked_on": "git://origin/main@bb762fe0b",
   "checks": {
     "merged_reachable_commit": {
@@ -50,9 +50,9 @@
       "detail": "total_bets 524 == len(bets) 524；重复 id 0；main 侧 523 条逐条存活（done 519→519）；lint OK 524 bets / 16 tracks / no errors"
     },
     "residual_red_not_order_dependency": {
-      "ref": "pytest://tests/unit",
+      "ref": "pytest://tests/unit?head=f07659fc4",
       "status": "info",
-      "detail": "全量 11 failed / 1901 passed；残余 11 条逐文件单跑同样全红（5/3/1/1/1）→ 顺序依赖在本集合内清零，残余是各自独立缺陷（panorama×5 / collectors 环境×3 / worker adapter×2 / gac-gate timeout×1），不在本 BET 边界"
+      "detail": "独占单次全量跑 10 failed / 1903 passed (522s)；残余 10 条逐文件单跑同样全红 (5/3/1/1，同一集合) → 顺序依赖在本集合内清零，残余是各自独立缺陷：test_panorama_pending_authorizations×5 / test_live_server_value_readiness×3 (ModuleNotFoundError: collectors, 环境类) / gac/test_omp_worker_adapter×1 / gac/test_gac_local_gate_timeouts×1。会话中途的 11 failed / 1901 passed 读数属另一棵树 (总用例 1912 vs 1913) 且当时有两个 pytest 并发，已作废。不在本 BET 边界。"
     },
     "profile_clean": {
       "ref": "file://bin/ssot/_shared.py:34",
