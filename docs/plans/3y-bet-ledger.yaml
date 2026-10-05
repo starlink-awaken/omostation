@@ -40176,6 +40176,96 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-230
+  title: ADR-0456 B5 第二批 — policy-radar 产物改挂 state root 并出跟踪（.omo/state 判据前置）
+  goal: B5 的完成判据是「一次 dev 运行后 `git status --short .omo/state` 为空」，而 policy-radar 一面单独卡住它：bin/bc-os/policy_radar.py:24-25
+    从不询问根解析器，直接用 `__file__` 反推写面，于是 cache.json 与 brief-YYYYMMDD.{json,md} 无论声明什么 profile
+    都写进检出侧；3 个产物已被 git 跟踪（实测 origin/main 上 brief-20261003.json/.md + cache.json），而 date
+    命名的新产物未跟踪也未 ignore，每天净增一条 `??`。本轮把该面改为调用时解析（与 BET-Y2Q4-T10-229 同条纪律）、摘出跟踪、并同步读者接缝
+    bin/gac/convergence-pulse.py:179，使 `.omo/state/policy-radar/` 在两个 profile 下都结构性地不产生
+    git 脏项。保留 tests/unit/test_policy_radar_internal.py:20 对 `STATE_DIR` 的显式覆盖语义。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 'Stop if the state-root write plane requires editing a consumer outside
+    bin/ (the omo pipeline_supervisor and cockpit brief readers are deliberately deferred),
+    if registering this face in runtime-projections.yaml turns out to be structurally
+    required (spec I4 forbids it: omo-state-projection-guard demands every registered
+    canonical path exist and parse, which a date-suffixed generated directory cannot
+    do on a clean CI checkout), or if any CI workflow turns out to consume the tracked
+    artifacts (measured none at start).'
+  non_goals:
+  - Do not change policy-radar's scoring, degrade logic, or brief content — only where
+    its artifacts land and whether git tracks them.
+  - Do not rewire the two submodule readers (projects/omo/src/omo/pipeline_supervisor.py:129,185
+    and projects/cockpit/src/cockpit/commands/brief.py:73) in this batch; they stay
+    on the checkout copy, which is provably the same path because no installed job declares
+    a profile (measured 24 plists + 39 crontab lines, zero profile env).
+  - Do not add a policy_radar entry to .omo/_truth/registry/runtime-projections.yaml
+    (spec I4).
+  - Do not introduce OMO_ALLOW_GIT_WRITE or touch launchd/cron routing (B4b batch 2+,
+    per-batch authorization).
+  - Do not untrack .omo/state/system.yaml in this BET (separate batch, gated on its
+    own reader inventory).
+  done_when:
+  - '判据-1 出跟踪: `git ls-files .omo/state/policy-radar` 空, 且 `git check-ignore -q .omo/state/policy-radar/cache.json`
+    退出 0。'
+  - '判据-2 调用时解析 + 正向落点: 声明 `OMOSTATION_STATE_ROOT=<tmp>` 真实跑一次生成, cache.json 与当日 brief
+    两件只落在该 root 下, 检出的 `.omo/state/policy-radar/` 跑后仍不含当日文件（不是「检出不脏」单一条否定式）。'
+  - '判据-3 无 __file__ 反推常量: `rg -n "STATE_DIR = ROOT" bin/bc-os/policy_radar.py` 无命中,
+    且 tests/unit/test_policy_radar_internal.py 的 STATE_DIR 显式覆盖不 reload 仍绿。'
+  - '判据-4 未声明 profile 时逐字节沿用历史布局: 不设 env 跑一次, 落点与本轮之前一致（state_root()==code_root()）。'
+  - '判据-5 读者同缝: bin/gac/convergence-pulse.py 的晨报断更探针经 repo_root.state_dir_read() 取目录,
+    state 根目录存在则优先、否则退回检出, 不在模块级反推 ROOT。'
+  - '判据-6 边界钉住: 新用例断言 `git ls-files` 不含 .omo/state/policy-radar/ 与 .omo/state/runtime/policy-radar/
+    下任何路径。'
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_policy_radar_state_root.py tests/unit/test_policy_radar_internal.py
+      tests/unit/test_projection_reader_resolution.py tests/unit/test_repo_root_profile.py
+      -q -p no:randomly
+    expect: all pass.
+  - cmd: git ls-files .omo/state/policy-radar
+    expect: empty output (zero tracked artifacts).
+  - cmd: rg -n "STATE_DIR = ROOT" bin/bc-os/policy_radar.py bin/gac/convergence-pulse.py
+    expect: no match.
+  - cmd: python3 bin/gac/omo-state-projection-guard.py --json
+    expect: same pass/fail set as before this BET (no new registered path ⇒ guard cannot
+      newly fail).
+  - cmd: make gac-local-gate
+    expect: no new hard failures.
+  write_surfaces:
+  - bin/bc-os/policy_radar.py
+  - bin/gac/convergence-pulse.py
+  - bin/lib/repo_root.py
+  - .gitignore
+  - tests/unit/test_policy_radar_state_root.py
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-05-policy-radar-artifacts-state-root-untrack.md
+    spec_version: 1.0.0
+    content_digest: sha256:ae3d0586d6fe1cb252cba431a34bd0f89b409674c0d74806e40a6e266ed3344e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-230
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -40314,7 +40404,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 524
+  total_bets: 525
   windows:
   - Y1Q1
   - Y1Q2

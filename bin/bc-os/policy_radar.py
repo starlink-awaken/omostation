@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -21,9 +22,26 @@ import urllib.request
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-STATE_DIR = ROOT / ".omo/state/policy-radar"
+STATE_DIR_REL = Path(".omo") / "state" / "policy-radar"
+STATE_DIR: Path | None = None  # 显式覆盖位; 未赋值时由 state_dir() 在调用时解析
 SCHEMA = "bcos.policy-radar.v1"
+
+
+def state_dir() -> Path:
+    """产物目录在**调用时刻**解析: 覆盖位 → OMO_POLICY_RADAR_STATE_DIR → state 根。
+
+    写成模块级常量 (本轮之前是 `ROOT = Path(__file__)...`) 就把写面钉死在源码位置,
+    profile 声明与否都不参与 —— ADR-0456 B5 摘的就是这一面。
+    """
+    if STATE_DIR is not None:
+        return STATE_DIR
+    env = os.environ.get("OMO_POLICY_RADAR_STATE_DIR")
+    if env:
+        return Path(env).expanduser()
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+    from repo_root import state_dir_write  # noqa: E402
+
+    return state_dir_write(STATE_DIR_REL)
 
 # ── 信源白名单（无自媒体，BET non_goal）────────────────────────────
 SOURCES = [
@@ -187,7 +205,7 @@ def _internal_signals() -> dict:
 def collect(now: datetime | None = None) -> dict:
     """抓取→打标→评分→每源 top3（总量 ≤15）。失败源走缓存降级。"""
     now = now or datetime.now(UTC)
-    cache_path = STATE_DIR / "cache.json"
+    cache_path = state_dir() / "cache.json"
     cached: dict = {}
     if cache_path.exists():
         try:
@@ -245,7 +263,7 @@ def collect(now: datetime | None = None) -> dict:
         "internal": internal,
     }
     if fresh_snapshot:
-        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        state_dir().mkdir(parents=True, exist_ok=True)
         merged = {**(cached.get("sources") or {}), **fresh_snapshot}
         cache_path.write_text(json.dumps({"sources": merged}, ensure_ascii=False, indent=1), encoding="utf-8")
     return result
@@ -283,11 +301,12 @@ def render_markdown(brief: dict) -> str:
 
 def generate(now: datetime | None = None) -> int:
     brief = collect(now)
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = state_dir()
+    out_dir.mkdir(parents=True, exist_ok=True)
     day = brief["date"].replace("-", "")
-    (STATE_DIR / f"brief-{day}.json").write_text(json.dumps(brief, ensure_ascii=False, indent=1), encoding="utf-8")
+    (out_dir / f"brief-{day}.json").write_text(json.dumps(brief, ensure_ascii=False, indent=1), encoding="utf-8")
     md = render_markdown(brief)
-    (STATE_DIR / f"brief-{day}.md").write_text(md, encoding="utf-8")
+    (out_dir / f"brief-{day}.md").write_text(md, encoding="utf-8")
     print(
         f"policy-radar: brief-{day} | {len(brief['items'])} items"
         f"{' | degraded: ' + ','.join(brief['degraded_sources']) if brief['is_degraded'] else ''}"
@@ -306,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     # 当天已生成则跳过(RunAtLoad 补跑模式下防重复; launchd 不补跑睡眠中错过的
     # Calendar 触发, 由 RunAtLoad 在唤醒后补 —— 2026-10-03 首日实测错过)
-    brief_today = STATE_DIR / f"brief-{time.strftime('%Y%m%d')}.md"
+    brief_today = state_dir() / f"brief-{time.strftime('%Y%m%d')}.md"
     if brief_today.exists() and not args.force:
         print(f"今日晨报已存在, 跳过: {brief_today}")
         return 0
