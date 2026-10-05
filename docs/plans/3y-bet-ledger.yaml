@@ -40079,6 +40079,76 @@ bets:
   - services.yaml 中 magpie 已按 external 补登 reason、codewhisperer.launcher 豁免已移除;
   - 4 个 plist 归属写入 launchd_namespace 且带 reason;
   - closeout 报告增补本轮裁决段落 (含 2026-10-04 实测证据： launchctl/ls 输出)。
+- id: BET-Y2Q4-T10-229
+  title: ADR-0456 B4b 前置 — deadline_tracker 督办台账路径改调用时解析，消灭 import 时冻结的 OMO_TRACKED_TASKS
+  goal: tests/unit 全量红里的 4 条 (test_reporting_reads_ledger) 单跑绿、全量红，根因不是用例写错而是 bin/ssot/deadline_tracker.py:31
+    把 OMO_TRACKED_TASKS 求值成模块级常量：任何早于该 env 声明被导入的进程 （或先被 collect 的兄弟用例）会把 TASKS_FILE
+    永久冻结在 ROOT/.omo/state/tracked-tasks.json 上， 之后设置的沙箱重定向静默失效。bin/bc-os/policy_radar.py:167-168
+    已用「调用时再套一遍」的改写绕过同一缺陷， 其注释即为自证。本轮把读面/写面统一到调用时解析，并拆掉 policy_radar 的绕过。与 AGENTS.md
+    §7 「写路径要在调用时刻解析」同条纪律，属 ADR-0456 B4b 批次 2 的测量装置前置（tests/unit 必须可信才可逐批核对）。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop if the fix requires changing a caller other than load_tasks/save_tasks
+    consumers, if any of the five existing monkeypatch sites patching deadline_tracker.TASKS_FILE
+    must be rewritten to a new attribute name, or if the minimal two-file reproduction
+    stops reproducing before the edit (diagnosis invalid).
+  non_goals:
+  - Do not change the tracked-tasks.json on-disk schema or any task lifecycle semantics.
+  - Do not restructure the five tests that patch TASKS_FILE as an explicit override.
+  - Do not touch launchd plist/cron routing (that is B4b batch 2+ and requires per-batch
+    authorization).
+  done_when:
+  - '最小复现转绿: `python3 -m pytest tests/unit/test_deadline_tracker_ledger.py tests/unit/test_reporting_reads_ledger.py
+    -q -p no:randomly` 从 4 failed / 5 passed 变为 9 passed。'
+  - '调用时解析生效且无需 reload: test_env_redirect 在未 importlib.reload 的情况下断言 deadline_tracker.tasks_file()
+    等于 OMO_TRACKED_TASKS 所指路径。'
+  - '两份副本同形: bin/ssot/deadline_tracker.py 与 runtime/ssot-stable/deadline_tracker.py
+    的 TASKS_FILE 解析段逐字一致。'
+  - '绕过拆除: bin/bc-os/policy_radar.py 不再对 _dt_mod.TASKS_FILE 赋值。'
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_deadline_tracker_ledger.py tests/unit/test_reporting_reads_ledger.py
+      tests/unit/test_mail_daemon_resident_loop.py tests/unit/test_policy_radar_internal.py
+      -q -p no:randomly
+    expect: all pass (no order dependency among the deadline_tracker consumers).
+  - cmd: python3 -m pytest tests/unit/test_reporting_reads_ledger.py -q
+    expect: 'single-file run stays green: 6 passed.'
+  - cmd: rg -n "TASKS_FILE = Path\(os.environ" bin/ssot runtime/ssot-stable
+    expect: no match (import-time env freeze removed from both copies).
+  - cmd: make gac-local-gate
+    expect: no new hard failures.
+  write_surfaces:
+  - bin/ssot/deadline_tracker.py
+  - runtime/ssot-stable/deadline_tracker.py
+  - bin/bc-os/policy_radar.py
+  - tests/unit/test_deadline_tracker_ledger.py
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-04-deadline-tracker-call-time-tasks-file.md
+    spec_version: 1.0.0
+    content_digest: sha256:16689019d207d22ed70d9a012ee4d36ffc464ffc8c0ab2c67e5e381f95b33b6c
+    decision_ref: decision://accepted/BET-Y2Q4-T10-229
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -40217,7 +40287,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 523
+  total_bets: 524
   windows:
   - Y1Q1
   - Y1Q2
