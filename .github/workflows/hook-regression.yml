@@ -1,0 +1,63 @@
+name: Hook Regression
+
+# .githooks/ 三个 hook 的回归测试（PITFALL-GAT-012 要求的「补 pre-rebase 回归测试」）。
+#
+# 为什么需要独立 workflow：governance-check.yml 的 pytest 是**显式文件白名单**
+# （见该文件 :118 起），不含 tests/unit/** ⇒ 放在那里本地能跑、CI 永远看不见。
+# 本 workflow 以 on.pull_request.paths 精确接线（不加自引用路径）。
+#
+# 为什么值得接线：这三个 hook 曾在 origin/main 上以 100644（不可执行）存在了
+# 约两周，脚本自身两个缺陷（逃生口写死失效 / onto 取错参数）从未被任何测试覆盖。
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".githooks/pre-rebase"
+      - ".githooks/pre-merge-commit"
+      - ".githooks/post-merge"
+      - "tests/unit/gac/test_pre_rebase_hook.py"
+      - ".github/workflows/hook-regression.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".githooks/pre-rebase"
+      - ".githooks/pre-merge-commit"
+      - ".githooks/post-merge"
+      - "tests/unit/gac/test_pre_rebase_hook.py"
+      - ".github/workflows/hook-regression.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hook-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Assert hook exec bits are committed as 100755
+        # 与测试里的 TestHookIsExecutable 呼应：模式是 git 的元数据，
+        # 工作区 chmod 不会改 index，必须查 ls-files 才算数。
+        run: |
+          set -euo pipefail
+          fail=0
+          for h in pre-rebase pre-merge-commit post-merge; do
+            mode=$(git ls-files -s ".githooks/$h" | awk '{print $1}')
+            echo "  .githooks/$h = $mode"
+            [ "$mode" = "100755" ] || { echo "❌ $h 模式应为 100755（实际 $mode）"; fail=1; }
+          done
+          exit $fail
+
+      - name: Install pytest
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run hook regression tests
+        run: python3 -m pytest tests/unit/gac/test_pre_rebase_hook.py -v
