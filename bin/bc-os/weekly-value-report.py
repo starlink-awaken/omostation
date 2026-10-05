@@ -35,7 +35,12 @@ REPORT_FILE = STATE_DIR / "weekly-review.json"
 sys.path.insert(0, str(WS_ROOT / "bin" / "lib"))
 from repo_root import event_ledger_path
 
-DEFAULT_EVENT_LEDGER = event_ledger_path()
+
+def _default_event_ledger() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return event_ledger_path()
+
+
 SNAPSHOT_LOG = WS_ROOT / "docs" / "reports" / "weekly-value-snapshots.jsonl"
 SNAPSHOT_SCHEMA = "weekly-value-snapshot/v1"
 THRESHOLD_GREEN = 3
@@ -141,12 +146,13 @@ def _append_snapshot(snapshot: dict[str, Any], log_path: Path = SNAPSHOT_LOG) ->
 
 def measure_weekly_snapshot(
     *,
-    db_path: Path = DEFAULT_EVENT_LEDGER,
+    db_path: Path | None = None,
     week_iso: str | None = None,
     append: bool = False,
 ) -> dict[str, Any]:
+    ledger_path = _default_event_ledger() if db_path is None else db_path
     week_key, start, end = _iso_week_bounds(week_iso)
-    signals, accepted, blockers = _query_event_ledger(db_path, start, end)
+    signals, accepted, blockers = _query_event_ledger(ledger_path, start, end)
     status = _derive_weekly_status(signals, accepted)
     rate = (accepted / signals) if signals > 0 else 0.0
     snapshot = {
@@ -175,14 +181,14 @@ def argparse_init() -> Any:
     p.add_argument("--week", type=str, default=None, help="ISO week (e.g., 2026-W36)")
     p.add_argument("--json", action="store_true", help="Output JSON")
     p.add_argument("--append", action="store_true", help="Append snapshot to weekly-value-snapshots.jsonl")
-    p.add_argument("--db-path", type=str, default=str(DEFAULT_EVENT_LEDGER))
+    p.add_argument("--db-path", type=str, default=None)
     return p
 
 
 def _snapshot_main(parser: Any) -> int:
     args = parser.parse_args()
     snapshot = measure_weekly_snapshot(
-        db_path=Path(args.db_path),
+        db_path=Path(args.db_path) if args.db_path else None,
         week_iso=args.week,
         append=args.append,
     )

@@ -27,7 +27,12 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
 from repo_root import event_ledger_path
 
-DEFAULT_LEDGER = event_ledger_path()
+
+def _default_ledger() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return event_ledger_path()
+
+
 DEFAULT_EVENTS_JSONL = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
 PID_FILE = WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "daemon.pid"
 LOG_FILE = WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "daemon.log"
@@ -337,7 +342,7 @@ def run_daemon(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ledger", type=Path, default=DEFAULT_LEDGER)
+    parser.add_argument("--ledger", type=Path, default=None)
     parser.add_argument("--events-jsonl", type=Path, default=DEFAULT_EVENTS_JSONL)
     parser.add_argument("--interval", type=float, default=30.0)
     parser.add_argument("--once", action="store_true", help="run a single tick and exit")
@@ -354,7 +359,7 @@ def main() -> int:
         _APPROVAL_REQUIRED = False
     topic_filter = {t.strip() for t in args.topic_filter.split(",") if t.strip()} or None
     return run_daemon(
-        ledger=args.ledger,
+        ledger=args.ledger if args.ledger is not None else _default_ledger(),
         events_jsonl=args.events_jsonl,
         interval=args.interval,
         once=args.once,

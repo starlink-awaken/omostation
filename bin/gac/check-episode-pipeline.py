@@ -51,7 +51,12 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
 from repo_root import event_ledger_path
 
-DEFAULT_DB = event_ledger_path()
+
+def _default_db() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return event_ledger_path()
+
+
 PRODUCER = "omo-personal-episode"
 # Discriminator the closeout→scene bridge stamps on every event it writes.
 # Not the producer: the producer is omo-personal-episode by design (SH-5.2).
@@ -61,7 +66,7 @@ BRIDGE_SOURCE = "scene-outcome-bridge"
 def _resolve_db(explicit: str | None) -> Path:
     if explicit:
         return Path(explicit).resolve()
-    return DEFAULT_DB.resolve()
+    return _default_db().resolve()
 
 
 def check(db_path: Path) -> dict:

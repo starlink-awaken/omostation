@@ -138,7 +138,7 @@ def _query_revisions(
 
 def measure_revision_rate(
     *,
-    db_path: Path | str = None,
+    db_path: Path | str | None = None,
     window_days: int = MIN_REVISION_WINDOW_DAYS,
 ) -> dict[str, Any]:
     """Compute principal revision rate baseline. Projection only, never writes.
@@ -148,7 +148,7 @@ def measure_revision_rate(
     Circuit breaker: returns unmeasured + gap inventory when data insufficient.
     """
     if db_path is None:
-        db_path = DEFAULT_EVENT_LEDGER
+        db_path = _default_event_ledger()
     path = Path(db_path)
     end = dt.datetime.now(dt.UTC)
     start = end - dt.timedelta(days=window_days)
@@ -187,7 +187,12 @@ def measure_revision_rate(
 sys.path.insert(0, str(WS_ROOT / "bin" / "lib"))
 from repo_root import event_ledger_path
 
-DEFAULT_EVENT_LEDGER = event_ledger_path()
+
+def _default_event_ledger() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return event_ledger_path()
+
+
 MIN_JOURNEY_WINDOW_DAYS = 7
 
 
@@ -287,7 +292,7 @@ def _query_journey_completion(
 
 def measure_journey_completion(
     *,
-    db_path: Path | str = DEFAULT_EVENT_LEDGER,
+    db_path: Path | str | None = None,
     window_days: int = MIN_JOURNEY_WINDOW_DAYS,
 ) -> dict[str, Any]:
     """Compute journey completion baseline. Projection only, never writes.
@@ -295,7 +300,7 @@ def measure_journey_completion(
     Metric: completed_work_journeys / entered_work_journeys
     Circuit breaker: returns unmeasured + gap inventory when data insufficient.
     """
-    path = Path(db_path)
+    path = _default_event_ledger() if db_path is None else Path(db_path)
     end = dt.datetime.now(dt.UTC)
     start = end - dt.timedelta(days=window_days)
     start_str = start.isoformat().replace("+00:00", "Z")
@@ -790,7 +795,7 @@ def main() -> int:
     parser.add_argument("--journey-window", type=int, default=MIN_JOURNEY_WINDOW_DAYS, help=f"旅程基线窗口天数 (默认 {MIN_JOURNEY_WINDOW_DAYS})")
     parser.add_argument("--revision-rate", action="store_true", help="仅输出修订率基线 (revision-rate-baseline/v1, BET-Y1Q4-T4-04)")
     parser.add_argument("--revision-window", type=int, default=MIN_REVISION_WINDOW_DAYS, help=f"修订率窗口天数 (默认 {MIN_REVISION_WINDOW_DAYS})")
-    parser.add_argument("--db-path", type=str, default=str(DEFAULT_EVENT_LEDGER), help="事件台账 SQLite 路径")
+    parser.add_argument("--db-path", type=str, default=None, help="事件台账 SQLite 路径 (默认在调用时刻解析 profile 台账)")
     args = parser.parse_args()
 
     if args.journey:

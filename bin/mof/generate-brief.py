@@ -19,7 +19,13 @@ WORKSPACE = code_root()
 #   python3 bin/gac/omo-state-write-guard.py --json   # declared/present/ownership 计数
 # 其中 3 个（compass_radar、harness-omo-bridge、self-evolution-loop）仍钉在检出根上
 # （见 spec §1 与 T10-220），读者按 profile 声明的 state_root 走，否则永远看最后一次提交的快照。
-SYSTEM_YAML = runtime_state_root() / ".omo" / "state" / "system.yaml"
+
+
+def _system_yaml() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return runtime_state_root() / ".omo" / "state" / "system.yaml"
+
+
 BRIEF_MD = Path(os.environ.get("OMOSTATION_BRIEF_OUTPUT", WORKSPACE / "BRIEF.md")).expanduser().resolve()
 
 
@@ -385,9 +391,10 @@ def generate_brief_content() -> str:
     gov_anomaly = 100
     online_ratio = 1.0
 
-    if SYSTEM_YAML.is_file():
+    system_yaml = _system_yaml()
+    if system_yaml.is_file():
         try:
-            data = yaml.safe_load(SYSTEM_YAML.read_text(encoding="utf-8")) or {}
+            data = yaml.safe_load(system_yaml.read_text(encoding="utf-8")) or {}
             health_score = data.get("health_score", 90)
             gov_anomaly = data.get("governance_anomaly_score", 100)
             # daemon 在线率不读此死字段 — 改为下方实时探测 (消除快照幻影)
