@@ -100,6 +100,26 @@ def test_undeclared_key_is_flagged(guard, checkout, monkeypatch):
     assert findings[0]["check"] == "undeclared-key"
 
 
+def test_list_items_with_colon_are_not_misread_as_keys(guard, checkout, monkeypatch):
+    """List items (``- ...``) are values, not mapping keys.
+
+    A list item containing ``:`` (e.g. a task description) must NOT be
+    misinterpreted as a top-level key — else the guard emits false
+    undeclared-key positives on every such system.yaml.
+    """
+    _wire(
+        guard,
+        monkeypatch,
+        checkout,
+        "next_planned_tasks:\n"
+        "- 'TASK-9BFD0422 (R4 回归泄漏: 高负载降级路径绕过沙箱台账重定向)'\n"
+        "- 'TASK-B7086225 (断言分层改造: 21 场景断言按业务谓词分类重写)'\n"
+        "health_score: 95\n",
+        {"next_planned_tasks": "script:bin/gac/writer.py", "health_score": "anyone"},
+    )
+    assert guard.check_field_ownership() == []
+
+
 def test_ghost_declaration_is_flagged(guard, checkout, monkeypatch):
     _wire(
         guard,
