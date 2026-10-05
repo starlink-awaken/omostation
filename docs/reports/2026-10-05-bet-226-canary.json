@@ -1,0 +1,28 @@
+{
+  "schema": "canary-receipt/v1",
+  "bet": "BET-Y2Q4-T10-226",
+  "checked_at": "2026-10-05T00:40:00Z",
+  "checks": {
+    "watchdog_deploy_commit": {
+      "ref": "github://starlink-awaken/zhixing-dashboard@6c678f02e2e26c678f02e2",
+      "status": "pass",
+      "detail": "liveness-watchdog.sh 分级恢复版在 deploy 仓 origin/main"
+    },
+    "watchdog_launchd_loaded": {
+      "ref": "launchctl://com.omostation.zhixing-dashboard-watchdog",
+      "status": "pass",
+      "detail": "launchctl list 显示 watchdog 已加载并运行"
+    },
+    "host_sync_status": {
+      "ref": "receipt://docs/reports/2026-10-05-bet-226-host-sync-status.json",
+      "status": "pass",
+      "detail": "7 受管 host 文件全部 in_sync（drifted=0）"
+    },
+    "dashboard_live": {
+      "ref": "http://127.0.0.1:43191/api/v1/manifest",
+      "status": "pass",
+      "detail": "GET /api/v1/manifest → 200"
+    }
+  },
+  "overall": "pass"
+}

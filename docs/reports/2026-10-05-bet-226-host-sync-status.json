@@ -1,0 +1,16 @@
+{
+  "schema": "host-sync-status/v1",
+  "checked_at": "2026-10-05T00:35:00Z",
+  "tool": "bin/gac/zhixing-host-sync.py status",
+  "ok": true,
+  "drifted": 0,
+  "files": [
+    {"name": "template.html", "state": "in_sync"},
+    {"name": "refresh.py", "state": "in_sync"},
+    {"name": "live_server.py", "state": "in_sync"},
+    {"name": "observatory_query.py", "state": "in_sync"},
+    {"name": "panorama-collect-main.py", "state": "in_sync"},
+    {"name": "copilot_service.py", "state": "in_sync"},
+    {"name": "rag_engine.py", "state": "in_sync"}
+  ]
+}
