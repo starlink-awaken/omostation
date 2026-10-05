@@ -40407,7 +40407,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-05-b1-import-time-ledger-constants-call-time.md
     spec_version: 1.0.0
-    content_digest: sha256:1422a04d1fc19bf2c26bae7215c5754530a187314e5987c42ff69eb0d568f3b2
+    content_digest: sha256:f323a2c0452b017f5455915d671ab3a6982cba663984f890c106c53747a75ed1
     decision_ref: decision://accepted/BET-Y2Q4-T10-231
   value_indicator_policy: false
   completion_evidence:

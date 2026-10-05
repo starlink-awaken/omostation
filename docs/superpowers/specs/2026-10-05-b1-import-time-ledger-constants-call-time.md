@@ -204,7 +204,7 @@ T10-203 把字面量换成 `event_ledger_path()` 之后，第一段命中的行�
 |---|---|
 | 判据-1 字面 grep | 本分支 `bin/` **0** 命中；`origin/main` 同时刻 **6** 命中（四个判据里唯一带反基线的：证明这条 grep 不是恒 0 的装饰） |
 | 判据-1 AST 扫描 | 模块级根依赖绑定 `34 → 20`，剩余 20 处全部 code 面（`code_root()`/`canonical_root()`） |
-| 判据-2 正向落点 | `test_check_ledger_run_opens_the_db_declared_after_import` 等 5 个落点用例；在**未修复的树**上跑本门禁文件 ⇒ 41 个用例里 **34 红**（按构造能红的实证） |
+| 判据-2 正向落点 | `test_check_ledger_run_opens_the_db_declared_after_import` 等 5 个落点用例；`git checkout origin/main -- bin`（门禁文件保持 HEAD 版）后跑本门禁文件 ⇒ **35 failed / 7 passed**；`git checkout HEAD -- bin` 还原后 **42 passed**，工作树逐字节回到 HEAD（`git status` clean）。按构造能红是在**同一环境、同一门禁文件**上测的，不是历史读数 |
 | 判据-3 等价 | `LEGACY_SUFFIXES` 13 条逐字节断言全过；verify-1 三文件合计 **914 passed** |
 | 判据-4 自证/反查/基线 | 合成违规点名文件+行+变量名；17 处 code 面反向不被命中；`test_detector_counts_the_14_prefix_baseline_violations` 用 `git show origin/main:` 抄出的 13 条直接 + 1 条传递赋值 = **14** 断言基线，同函数在真实树上断言 **∅** |
 | 判据-5 显式优先 | 计数断言：显式传参时解析器调用次数为 0 |
