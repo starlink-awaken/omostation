@@ -40184,7 +40184,8 @@ bets:
     命名的新产物未跟踪也未 ignore，每天净增一条 `??`。本轮把该面改为调用时解析（与 BET-Y2Q4-T10-229 同条纪律）、摘出跟踪、并同步读者接缝
     bin/gac/convergence-pulse.py:179，使 `.omo/state/policy-radar/` 在两个 profile 下都结构性地不产生
     git 脏项。保留 tests/unit/test_policy_radar_internal.py:20 对 `STATE_DIR` 的显式覆盖语义。
-  status: pending
+  status: done
+  done_at: 2026-10-05
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -40257,15 +40258,41 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@094906507562ce7bfbcc749da960d2d58baeb82e
+          tests:
+            ref: receipt://docs/reports/2026-10-05-bet-230-canary.json
+            sha256: sha256:45821c53250c1159e715cf3a746e2ac904d5d0de2d405a9abd3e5e818824a154
+          diff:
+            ref: receipt://docs/reports/2026-10-05-policy-radar-artifacts-state-root-untrack-closeout.md
+            sha256: sha256:54363dbcdfc006f88f2450ef9089d8185bd07203251d54a476a6d2ddbb4cdbb3
+          rollback:
+            ref: receipt://docs/reports/2026-10-05-policy-radar-artifacts-state-root-untrack-closeout.md
+            sha256: sha256:54363dbcdfc006f88f2450ef9089d8185bd07203251d54a476a6d2ddbb4cdbb3
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-230.md
+            sha256: sha256:787386d6d391cf84304a869ac08f0c147643a0a912727a87259222b9840a5695
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-05-bet-230-canary.json
+            sha256: sha256:45821c53250c1159e715cf3a746e2ac904d5d0de2d405a9abd3e5e818824a154
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-05-policy-radar-artifacts-state-root-untrack-closeout.md
+            sha256: sha256:54363dbcdfc006f88f2450ef9089d8185bd07203251d54a476a6d2ddbb4cdbb3
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-230.md
+            sha256: sha256:787386d6d391cf84304a869ac08f0c147643a0a912727a87259222b9840a5695
+          cleanup:
+            ref: receipt://docs/reports/2026-10-05-policy-radar-artifacts-state-root-untrack-closeout.md
+            sha256: sha256:54363dbcdfc006f88f2450ef9089d8185bd07203251d54a476a6d2ddbb4cdbb3
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
