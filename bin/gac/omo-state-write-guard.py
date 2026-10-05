@@ -117,11 +117,18 @@ def check_unauthorized_writes() -> list[dict]:
 
 
 def top_level_keys(text: str) -> list[str]:
-    """Column-0 keys of a YAML mapping, order-preserving and de-duplicated."""
+    """Column-0 keys of a YAML mapping, order-preserving and de-duplicated.
+
+    List items (``- ...``) are values, not mapping keys — skip them, else a
+    list item containing ``:`` is misread as a top-level key (false
+    undeclared-key positive).
+    """
     keys = []
     for line in text.splitlines():
         raw = line.split("#")[0]
         if not raw.strip() or raw[0] in (" ", "\t"):
+            continue
+        if raw.startswith("- "):
             continue
         if ":" in raw:
             keys.append(raw.split(":")[0].strip())
