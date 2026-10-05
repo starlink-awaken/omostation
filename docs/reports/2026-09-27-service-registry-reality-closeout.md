@@ -141,3 +141,23 @@ git revert --no-edit 02f4dfee3446757884562be83001f518408fc0bd
   `20260927T041158Z-project-doc-change-67b83ff9` 承载（该 run 于交付 run `closeout` 关闭、路径锁释放后接管 `docs/plans/3y-bet-ledger.yaml`）。
 - 未伪造项：其他 bet 的 lifecycle 状态未代其回写；`value` 轴诚实为 `NOT_PROVEN`
   （本 bet `value_indicator_policy: false`，30 条 value 记录未回填）；2 条 plist 良构债未按"已修复"叙述。
+
+## 10. 2026-10-04 裁决（BET-Y2Q4-T10-228）
+
+2026-10-04 实测现状复核，三类存量 finding 一次性清理：
+
+1. **com.yetone.magpie** — 实测 plist 已安装且加载（launchctl PID 1980），第三方划词翻译应用
+   Magpie.app 自注册启动项 → 补登 `exempt_labels`（classification: external）。
+2. **com.amazon.codewhisperer.launcher** — 2026-09-30 事故后按残留 ProgramArguments 重建、
+   未 load；2026-10-04 实测 LaunchAgents 已无此 plist（launchctl 仅剩输入法应用实例，
+   label 不同）→ 豁免记录移除。
+3. **4 个 unclassified**（concept-weave.monthly / lifeos.pulse / decision-svc /
+   opencode.quota-monitor，全部已安装，lifeos.pulse 运行中 PID 94325）— 获 principal
+   全局授权，裁定为 **owned**（principal 个人工具/本地服务服务域），写入归属 + reason。
+
+配套代码变更：`bin/mof/gen-service-configs.py` 的 `EXEMPT_CLASSES` 扩展 `owned` 分类
+（原仅 external/unclassified），`reality_check` 的 buckets 初始化同步加 `owned` 键。
+
+验证：`gen-service-configs.py --reality-check` → E1/E2/E3/E4 全绿（unclassified=0，
+external=5，owned=4，分区闭合 48=48）；E5 仅剩 fullrefresh plist 未安装（待 PR 合并后
+`--write` 安装，属预期）。

@@ -6,8 +6,6 @@ to provide sovereign, zero-leakage, grounded Q&A and governance insights.
 from __future__ import annotations
 
 import json
-import os
-import subprocess
 import logging
 import hashlib
 from pathlib import Path
@@ -18,10 +16,8 @@ import urllib.request
 
 logger = logging.getLogger("copilot_service")
 
-# 2026-09-26: 经 aetherforge 门面(原直连 oMLX :8000, 无鉴权; coder-precise 已不存在 → 恒兜底 mythos-fast)
-AETHERFORGE_URL = (os.environ.get("LLM_GATEWAY_URL") or os.environ.get("AETHERFORGE_URL") or "http://127.0.0.1:4000").rstrip("/")
-DEFAULT_CHAT_MODEL = "coder"
-_GATEWAY_KEY: Optional[str] = None
+AETHERFORGE_URL = "http://127.0.0.1:8000"
+DEFAULT_CHAT_MODEL = "coder-precise"
 FALLBACK_CHAT_MODEL = "mythos-fast"
 REQUEST_TIMEOUT_SECONDS = 3.5
 
@@ -52,25 +48,6 @@ PRESETS = [
     }
 ]
 
-
-
-def _gateway_headers() -> Dict[str, str]:
-    """门面鉴权头: 环境变量优先, 否则 Keychain(aetherforge-gateway)。结果缓存。"""
-    global _GATEWAY_KEY
-    if _GATEWAY_KEY is None:
-        key = os.environ.get("LLM_GATEWAY_KEY") or os.environ.get("AETHERFORGE_API_KEY") or ""
-        if not key:
-            try:
-                out = subprocess.run(["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
-                                     capture_output=True, text=True, timeout=5)
-                key = out.stdout.strip() if out.returncode == 0 else ""
-            except (OSError, subprocess.TimeoutExpired):
-                key = ""
-        _GATEWAY_KEY = key
-    h = {"Content-Type": "application/json"}
-    if _GATEWAY_KEY:
-        h["Authorization"] = f"Bearer {_GATEWAY_KEY}"
-    return h
 
 class SovereignCopilot:
     """Sovereign Copilot communicating with local AetherForge and RAG."""
@@ -130,7 +107,7 @@ class SovereignCopilot:
         req = urllib.request.Request(
             f"{self.base_url}/v1/chat/completions",
             data=json.dumps(payload).encode("utf-8"),
-            headers=_gateway_headers()
+            headers={"Content-Type": "application/json"}
         )
         try:
             with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:

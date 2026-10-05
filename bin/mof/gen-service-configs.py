@@ -301,7 +301,7 @@ def gen_launchd_plist(svc: dict) -> str:
 
 
 NAMESPACE_KEY = "launchd_namespace"
-EXEMPT_CLASSES = {"external", "unclassified"}
+EXEMPT_CLASSES = {"external", "unclassified", "owned"}
 
 
 def _registry_docs(path: Path) -> list[dict]:
@@ -444,7 +444,7 @@ def reality_check(
     e1 = e1 if e1 is not None else run_e1_drift()
     root_str = str(workspace_root or workspace())
 
-    buckets: dict[str, list[str]] = {"workspace": [], "external": [], "unclassified": [], "unmanaged_unknown": []}
+    buckets: dict[str, list[str]] = {"workspace": [], "external": [], "unclassified": [], "owned": [], "unmanaged_unknown": []}
     for row in rows:
         buckets[classify_label(row["label"], policy)].append(row["label"])
     scoped = [row for row in rows if root_str in row["blob"]]

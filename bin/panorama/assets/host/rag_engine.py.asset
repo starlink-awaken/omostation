@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
-import subprocess
 import math
 from pathlib import Path
 import re
@@ -24,11 +22,9 @@ APP_DIR = Path(__file__).resolve().parent
 CACHE_DIR = APP_DIR / "cache"
 CACHE_FILE = CACHE_DIR / "embeddings.json"
 
-# 2026-09-26: 经 aetherforge 门面(原直连 oMLX :8000)。embed-bge 与原 embed-bge-m3 同一模型(1024 维), 已缓存向量兼容。
-AETHERFORGE_BASE = (os.environ.get("LLM_GATEWAY_URL") or os.environ.get("AETHERFORGE_URL") or "http://127.0.0.1:4000").rstrip("/")
-EMBEDDING_MODEL = "embed-bge"
-_GATEWAY_KEY: Optional[str] = None
-RERANK_MODEL = "rerank"
+AETHERFORGE_BASE = "http://127.0.0.1:8000"
+EMBEDDING_MODEL = "embed-bge-m3"
+RERANK_MODEL = "baai-bge-reranker-v2-m3-mlx-fp16"
 
 
 def _tokenize(text: str) -> List[str]:
@@ -43,25 +39,6 @@ def _tokenize(text: str) -> List[str]:
         cjk_tokens.append(cjk_chars[i] + cjk_chars[i + 1])
     return words + cjk_tokens
 
-
-
-def _gateway_headers() -> Dict[str, str]:
-    """门面鉴权头: 环境变量优先, 否则 Keychain(aetherforge-gateway)。结果缓存。"""
-    global _GATEWAY_KEY
-    if _GATEWAY_KEY is None:
-        key = os.environ.get("LLM_GATEWAY_KEY") or os.environ.get("AETHERFORGE_API_KEY") or ""
-        if not key:
-            try:
-                out = subprocess.run(["security", "find-generic-password", "-s", "aetherforge-gateway", "-w"],
-                                     capture_output=True, text=True, timeout=5)
-                key = out.stdout.strip() if out.returncode == 0 else ""
-            except (OSError, subprocess.TimeoutExpired):
-                key = ""
-        _GATEWAY_KEY = key
-    h = {"Content-Type": "application/json"}
-    if _GATEWAY_KEY:
-        h["Authorization"] = f"Bearer {_GATEWAY_KEY}"
-    return h
 
 class BM25Index:
     """Lightweight in-memory BM25 index with zero external dependencies."""
@@ -239,7 +216,7 @@ class HybridRAGEngine:
             req = urllib.request.Request(
                 f"{AETHERFORGE_BASE}/v1/embeddings",
                 data=json.dumps({"model": EMBEDDING_MODEL, "input": texts}).encode("utf-8"),
-                headers=_gateway_headers()
+                headers={"Content-Type": "application/json"}
             )
             with urllib.request.urlopen(req, timeout=4) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
@@ -259,7 +236,7 @@ class HybridRAGEngine:
                     "query": query,
                     "documents": candidate_texts[:30]
                 }).encode("utf-8"),
-                headers=_gateway_headers()
+                headers={"Content-Type": "application/json"}
             )
             with urllib.request.urlopen(req, timeout=4) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
