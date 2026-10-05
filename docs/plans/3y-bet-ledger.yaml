@@ -40086,7 +40086,8 @@ bets:
     永久冻结在 ROOT/.omo/state/tracked-tasks.json 上， 之后设置的沙箱重定向静默失效。bin/bc-os/policy_radar.py:167-168
     已用「调用时再套一遍」的改写绕过同一缺陷， 其注释即为自证。本轮把读面/写面统一到调用时解析，并拆掉 policy_radar 的绕过。与 AGENTS.md
     §7 「写路径要在调用时刻解析」同条纪律，属 ADR-0456 B4b 批次 2 的测量装置前置（tests/unit 必须可信才可逐批核对）。
-  status: pending
+  status: done
+  done_at: 2026-10-05
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -40140,15 +40141,41 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bb762fe0bef793c2c6cda35efe00b5e67cb6355c
+          tests:
+            ref: receipt://docs/reports/2026-10-05-bet-229-canary.json
+            sha256: sha256:4bda2887e7352422cad085a76b24f86180a1fd2294a96037938abc918ffc71ce
+          diff:
+            ref: receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md
+            sha256: sha256:36e4a9332e1f1ff5dcce5c90d15f734f76c8d7e6ef663dcfe36f36db9aad060b
+          rollback:
+            ref: receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md
+            sha256: sha256:36e4a9332e1f1ff5dcce5c90d15f734f76c8d7e6ef663dcfe36f36db9aad060b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-229.md
+            sha256: sha256:b9ed09405e0e67ab77f0873b0e28df8f9e040e86a24a7ad0986138c98f755209
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-05-bet-229-canary.json
+            sha256: sha256:4bda2887e7352422cad085a76b24f86180a1fd2294a96037938abc918ffc71ce
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md
+            sha256: sha256:36e4a9332e1f1ff5dcce5c90d15f734f76c8d7e6ef663dcfe36f36db9aad060b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-229.md
+            sha256: sha256:b9ed09405e0e67ab77f0873b0e28df8f9e040e86a24a7ad0986138c98f755209
+          cleanup:
+            ref: receipt://docs/reports/2026-10-05-deadline-tracker-call-time-tasks-file-closeout.md
+            sha256: sha256:36e4a9332e1f1ff5dcce5c90d15f734f76c8d7e6ef663dcfe36f36db9aad060b
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
