@@ -40293,6 +40293,136 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-231
+  title: ADR-0456 B1 残留 — 14 处 import 时求值的 profile 根常量改为调用时刻解析 (8 ledger + 6 state_root)
+  goal: '方案 line 138 的 B1 判据 `grep -rE "DEFAULT_(EVENT_)?LEDGER\s*=" bin/` 实测未满足: 8
+    处模块级 `= event_ledger_path()` (north_star_meter_v2.py:66, north_star_meter_v3.py:190,
+    weekly-value-report.py:38, compound-attribution-report.py:49, resident-orchestrator-daemon.py:30,
+    episode-source-aggregator.py:38, check-episode-pipeline.py:54 DEFAULT_DB, bin/ssot/system-health-check.py:30
+    LEDGER — 方案记的 bin/gac/ 路径实测在 bin/ssot/) 在 import 时求值一次并冻结; 其中 5 处进一步成为函数默认参数 (v2:361,
+    v2:401, v3:290, weekly:144, compound:218), Python 默认参数在 def 执行时求值 ⇒ 冻结发生在两次之上。同族还有
+    6 处 profile 根派生的写面常量 (evidence-smoke.py:110 OUTPUT_DIR, task-inventory.py:39 SNAP_DIR
+    / :40 DRIFTS, generate-brief.py:22 SYSTEM_YAML, omo-state-write-guard.py:29 STATE_ROOT
+    及传递依赖 :30 SYSTEM_YAML)。判别式不是「读还是写」而是**是否依赖 profile 根**: 本轮对 bin/ 全量做 AST 不动点度量 (模块级赋值
+    + 其传递依赖), 命中 34 处模块级常量, 其中 14 处依赖 event_ledger_path()/state_root() (随 profile 移动,
+    冻结即错), 17 处依赖 code_root()/canonical_root() (ADR-0456 读面契约本应跟随当前检出, 不属违规)。后果: import
+    之后才声明 OMOSTATION_STATE_ROOT / OMO_EVENT_LEDGER_DB 的调用方 (daemon、库式复用、env seam 测试)
+    仍读到声明前的根, dev profile 下这 8 个入口打开生产台账、6 个 state 根入口读写生产 system.yaml / 证据目录 / 快照。现有
+    profile 用例一律 setenv 之后才 exec_module, 恰好绕开冻结窗口, 且 db_path/--db-path/--ledger 在全部用例里显式传值
+    ⇒ 没有任何测试会红 (AGENTS.md §7「写路径要在调用时刻解析」)。残留能活 9 天的根因是 BET-Y2Q4-T10-203 的 verify-3
+    第二段过滤 `event-ledger` (连字符) 而代码是 `event_ledger_path` (下划线) ⇒ 判据按构造恒 0 且 `|| true`
+    吃掉退出码。本轮把 14 处 (32 个使用点, 实测全在函数体内; 12 个定义文件实测零跨模块 importer) 改为调用时刻解析, 并按 §7「扫源码的门禁必须自证」补一条按
+    resolver (而非变量名) 匹配的结构性源码门禁, 使 B1 判据字面成立且下次不再假绿。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 'Stop if any of the 32 usage sites turns out to be reachable at module
+    import (measured: all inside functions), if an external module reads one of the
+    14 names (measured: none — only tests/test_evidence_smoke_paths.py reads OUTPUT_DIR/SNAP_DIR/DRIFTS
+    as attributes, which this BET adapts), if making a default None changes any report''s
+    output on the undeclared-profile path (spec I3 forbids it), or if the fix requires
+    touching repo_root.py resolution order, the omo submodule''s resident/daemon.py
+    fork, or launchd/cron routing (all non-goals; the last needs per-batch authorization).'
+  non_goals:
+  - Do not change any metering logic, SQL, or report content — only the moment the default
+    is evaluated.
+  - Do not touch projects/omo/src/omo/resident/daemon.py:29 (literal DEFAULT_LEDGER
+    fork, asserted by projects/omo/tests/unit/test_resident_daemon.py:363 and tests/integration/test_resident_roles.py:207)
+    — same defect, second repository; separate BET.
+  - Do not touch the 17 code-face module-level bindings (evidence-smoke.py:48/49/57/111/112,
+    install-watch-agent.py:24/27, omo-state-write-guard.py:28/31, probe-heartbeat-monitor.py:17,
+    task-inventory.py:35/36, generate-brief.py:15/23, generate-docs-index.py:36-40)
+    — they derive from code_root()/canonical_root(), and following the current checkout
+    is ADR-0456's read-plane rule, not a defect.
+  - Do not touch bin/panorama/panorama-collect.py:87 EVENT_LEDGER (PANORAMA_ROOT / ZHIXING_DASHBOARD_*
+    external dashboard contract, spec non-goals) nor bin/gac/kos-seed-import.py:26 (not
+    the event ledger, /kos/ gitignored) nor resident-orchestrator-daemon.py:31-32 (coordination
+    faces).
+  - Do not modify bin/lib/repo_root.py resolution order or env priority.
+  - Do not rewrite BET-Y2Q4-T10-203's already-`done` verify command (history); record
+    the false-green lesson in this BET's retro and in AGENTS.md §7.
+  - Do not introduce OMO_ALLOW_GIT_WRITE or reroute launchd/cron (B4b batch 2+, per-batch
+    authorization).
+  - Do not re-do OMO_PRINCIPAL_ID convergence (already canonicalized via bin/ssot/_principal_id.py).
+  done_when:
+  - '判据-1 时机: `grep -rE "DEFAULT_(EVENT_)?LEDGER\s*=" bin/` 零命中 (方案 line 138 字面判据),
+    且 14 处 profile 根常量不再于模块级求值。'
+  - '判据-2 正向落点 (spec I5): 模块 **import 之后**才声明 `OMO_EVENT_LEDGER_DB=<tmp db>`, 不传参数调用
+    north_star_meter_v2.measure_value_truth / evidence-smoke OUTPUT_DIR / task-inventory
+    SNAP_DIR+DRIFTS / generate-brief SYSTEM_YAML / omo-state-write-guard STATE_ROOT,
+    实测落在 <tmp db> 与 state 根 (冻结常量按构造做不到; 现有用例都是 setenv 后才 exec_module, 覆盖不到这个窗口)。断言由一次真实运行产出,
+    不是改窄用例。'
+  - '判据-3 等价 (spec I3): `env -u OMOSTATION_STATE_ROOT -u OMOSTATION_PROFILE -u OMOSTATION_ROOT
+    -u OMO_EVENT_LEDGER_DB` 时 14 个解析点得到的路径字符串与改前逐字节一致 (用例断言)。'
+  - '判据-4 自证 (spec I4): 结构性源码扫描按 resolver 匹配 (`event_ledger_path(` / `state_root(` /
+    `runtime_state_root(`) 而非变量名; 先用合成违规样本证明检测器点名文件+行+变量名, 再断言真实扫描集合为空 (空绿不等于通过 — 正是
+    T10-203 那条判据失效的方式); ② 反向断言 17 处 code 面**不被**命中 (防过宽 detector 靠豁免清单蒙混); ③ 本轮基线读数断言为
+    14 处违规 (改前), 修复后为 0。'
+  - '判据-5 显式优先 (spec I2): 显式传 db_path/--db-path/--ledger 时解析器不被调用 (计数断言)。'
+  - '判据-6 读面不动 (spec I6): evidence-smoke GOV_LOG/EVENTS_LOG、task-inventory REGISTRY
+    与 WORKSPACE 类绑定仍在检出侧, 由既有成对断言继续钉住 (一个移 + 一个不移)。'
+  - '判据-7 判据可红 (spec I7): AGENTS.md §7「扫源码的门禁必须自证」下新增子形状 —— 管道式判据每一段的匹配词都必须能在被检对象实际文本上命中一次
+    (本轮实证: 第一段产出 `event_ledger_path` 下划线, 第二段过滤 `event-ledger` 连字符 ⇒ 恒 0), 且 `| grep
+    -c` 后不接 `|| true`。'
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_b1_ledger_call_time.py tests/test_evidence_smoke_paths.py
+      tests/unit/test_repo_root_profile.py -q -p no:randomly
+    expect: all pass.
+  - cmd: grep -rE "DEFAULT_(EVENT_)?LEDGER\s*=" bin/ | wc -l
+    expect: '0 — 方案 line 138 的 B1 字面判据 (注意: 不得再管道过滤字符串, 那正是 T10-203 假绿的成因)。'
+  - cmd: python3 -m pytest tests/unit -q -p no:randomly -k "north_star or weekly_value
+      or episode_source or compound_attribution or resident_orchestrator or health_check
+      or evidence_smoke or task_inventory or generate_brief"
+    expect: no regression versus pre-BET baseline.
+  - cmd: make gac-local-gate
+    expect: no new hard failures.
+  write_surfaces:
+  - bin/bc-os/north_star_meter_v2.py
+  - bin/bc-os/north_star_meter_v3.py
+  - bin/bc-os/weekly-value-report.py
+  - bin/gac/compound-attribution-report.py
+  - bin/gac/check-episode-pipeline.py
+  - bin/ssot/resident-orchestrator-daemon.py
+  - bin/ssot/episode-source-aggregator.py
+  - bin/ssot/system-health-check.py
+  - bin/gac/evidence-smoke.py
+  - bin/gac/omo-state-write-guard.py
+  - bin/gac/task-inventory.py
+  - bin/mof/generate-brief.py
+  - tests/test_evidence_smoke_paths.py
+  - tests/unit/test_b1_ledger_call_time.py
+  - AGENTS.md
+  - tests/test_generate_brief_workspace_output.py
+  - tests/unit/gac/test_omo_state_write_guard.py
+  - tests/unit/mof/test_generate_brief_no_host_paths.py
+  - .github/workflows/governance-check.yml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-05-b1-import-time-ledger-constants-call-time.md
+    spec_version: 1.0.0
+    content_digest: sha256:1422a04d1fc19bf2c26bae7215c5754530a187314e5987c42ff69eb0d568f3b2
+    decision_ref: decision://accepted/BET-Y2Q4-T10-231
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -40431,7 +40561,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 525
+  total_bets: 526
   windows:
   - Y1Q1
   - Y1Q2
