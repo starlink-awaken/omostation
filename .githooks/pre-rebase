@@ -2,9 +2,14 @@
 # pre-rebase — 危险 rebase 检测.
 #
 # 机制 22c (2026-09-05): 阻止 rebase onto main, 检测危险 rebase.
-# 参数:
-#   $1 = base (rebase 的底)
-#   $2 = onto (rebase 的目标, 可选)
+#
+# 参数 (PITFALL-GAT-012 实证修正):
+#   git rebase <upstream>            → $1 = upstream
+#   git rebase --onto <newbase> <upstream> <branch>
+#                                     → $1 = upstream, $2 = 被 rebase 的 branch
+#   ⇒ **onto 只出现在 $1**（无 --onto 时就是 upstream 本身）；
+#     旧版把 $2 当 onto 读取，因 $2 恒为 branch 名 ⇒ 拒绝逻辑从不触发。
+#   实测见 tests/unit/gac/test_pre_rebase_hook.py::test_onto_comes_from_arg1。
 
 set -euo pipefail
 
@@ -14,16 +19,24 @@ if [ -z "$ROOT" ]; then
 fi
 
 BASE="${1:-}"
-ONTO="${2:-}"
+# $2 是被 rebase 的分支名（`git rebase --onto` 形态才有），**不是 onto**。
+# 保留下来仅用于提示，让用户知道自己 rebase 的是哪个分支。
+BRANCH="${2:-}"
 
-# 检查 rebase 目标是否为 main
-if [ -n "$ONTO" ] && [[ "$ONTO" =~ ^(main|origin/main|upstream/main)$ ]]; then
-  echo "[pre-rebase] ❌ 拒绝 rebase onto $ONTO" >&2
+# 逃生口：`[[ ]]` 内的 `!=` 才做 glob 模式匹配；单引号 `[ ]` 内是字面串比较，
+# 会让 `SWARM_ESCAPE_ID=rebase-ci` 恒判「不等」⇒ 逃生口永失效（PITFALL-GAT-012 缺陷①）。
+escaped() { [[ "${SWARM_ESCAPE_ID:-}" != rebase-* ]]; }
+
+# 检查 rebase 目标是否为 main（onto = $1）
+if [ -n "$BASE" ] && [[ "$BASE" =~ ^(main|origin/main|upstream/main)$ ]]; then
+  echo "[pre-rebase] ❌ 拒绝 rebase onto $BASE" >&2
+  [ -n "$BRANCH" ] && echo "   （被 rebase 的分支: $BRANCH）" >&2
   echo "   应走 merge/PR 合流，而非 rebase" >&2
   echo "   逃生: SWARM_ESCAPE_ID=rebase-<reason> git rebase ..." >&2
-  if [ "${SWARM_ESCAPE_ID:-}" != rebase-* ]; then
+  if escaped; then
     exit 1
   fi
+  echo "[pre-rebase] ⚠️ 已放行（SWARM_ESCAPE_ID=${SWARM_ESCAPE_ID}）" >&2
 fi
 
 # 检查 base 是否为 HEAD 的祖先
@@ -31,9 +44,11 @@ if [ -n "$BASE" ]; then
   if ! git merge-base --is-ancestor "$BASE" HEAD 2>/dev/null; then
     echo "[pre-rebase] ❌ base $BASE 不是 HEAD 的祖先" >&2
     echo "   rebase 会重写历史，请先确认" >&2
-    if [ "${SWARM_ESCAPE_ID:-}" != rebase-* ]; then
+    echo "   逃生: SWARM_ESCAPE_ID=rebase-<reason> git rebase ..." >&2
+    if escaped; then
       exit 1
     fi
+    echo "[pre-rebase] ⚠️ 已放行（SWARM_ESCAPE_ID=${SWARM_ESCAPE_ID}）" >&2
   fi
 fi
 
