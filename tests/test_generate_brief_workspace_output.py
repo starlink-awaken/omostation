@@ -56,8 +56,8 @@ def test_declared_profile_moves_the_system_yaml_read_off_the_checkout(tmp_path: 
 
     module = _load(monkeypatch, state_root=state_root)
 
-    assert module.SYSTEM_YAML == state_root / ".omo" / "state" / "system.yaml"
-    assert module.WORKSPACE not in module.SYSTEM_YAML.parents
+    assert module._system_yaml() == state_root / ".omo" / "state" / "system.yaml"
+    assert module.WORKSPACE not in module._system_yaml().parents
     # 反面判据：collab-dualtrack.yaml 的写者 (bin/collab/export-dualtrack.py:31) 仍是检出侧，
     # 读者不许独移 —— 把读者的检出根挪走后只在 state root 放一份，渲染必须为空。
     code_root = tmp_path / "code"
@@ -76,7 +76,9 @@ def test_declared_profile_moves_the_system_yaml_read_off_the_checkout(tmp_path: 
 def test_undeclared_profile_keeps_the_legacy_system_yaml_path_string(monkeypatch) -> None:
     module = _load(monkeypatch)
 
-    assert str(module.SYSTEM_YAML) == str(module.WORKSPACE / ".omo" / "state" / "system.yaml")
+    assert str(module._system_yaml()) == str(module.WORKSPACE / ".omo" / "state" / "system.yaml")
+    # 本文件的 _load 在 exec_module **之前** setenv, 冻结常量也能绿 ⇒ 晚声明的时机判据在
+    # tests/unit/test_b1_ledger_call_time.py (同一入口, 参数化覆盖)
 
 
 def test_explicit_output_never_targets_documents(monkeypatch, tmp_path: Path) -> None:
