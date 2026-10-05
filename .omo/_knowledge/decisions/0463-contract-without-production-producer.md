@@ -12,7 +12,7 @@ tags: [claims-authority, producer-gap, publication-scope, fail-closed, observabi
 
 # ADR-0463 — 「契约已定义并测试，但生产侧无生产者」的三例缺口
 
-- **Status**: PROPOSED（2026-10-05 提案；记录事实与待裁定项，**未实施任何修复**）
+- **Status**: ACCEPTED（2026-10-05 principal 裁定取「不应带」一支；见文末决策记录）
 - **Date**: 2026-10-05
 - **Owner**: architecture-governance
 - **Related**: ADR-0455（publication-scoped allow）、ADR-0461（fence 绑定）、
@@ -105,8 +105,40 @@ projects/omo/src/omo/workflow/claims_authority.py:440
 - `bin/gac/clone-lifecycle.py:1296` fence context 唯一读取方
 - 父仓 #4596（`gh_json`）、omo#206（`describe-claim`）、omo#207（ledger 绑定）
 
+## 2026-10-05 裁定与实施结果
+
+**principal 裁定**：生产的 `observe-claim` **不应**带 `publication_scope`。
+即上列第 2 支成立 —— shadow 态下 observe 本就应 deny，ADR-0455 方案 A
+（v2 上的 publication-scoped allow）**从未在生产被使用过**，
+`_validate_publication_scoped_allow` 是一条**从未被走通**的分支。
+
+**据此**：
+
+1. **ADR-0461 第 2–4 步作废**（已回写该 ADR）。若继续接线，等于照着一份
+   从未在生产运行过的契约施工。
+2. **第 1 例（`gh_json`）与第 2 例（`claims_authority_fence_context`）的修复予以保留**。
+   `describe-claim`（omo#206）与 ledger 绑定（omo#207）本身无害 —— 只读 + 追加
+   ledger，不改任何既有语义；它们只是**不构成完整链路**，须与本 ADR 一并阅读，
+   避免产生「fence 即将可用」的错误印象。
+3. **机器态不变**：`integrate --apply` 仍走常规 PR 流程（ADR-0459 既有结论）。
+
+### 关于「根治方向」的可行性（实测后收窄）
+
+原建议是「对 authority 每个校验字段断言生产侧存在生产者」。实测该判据**可用但不够**：
+
+- 以 `request.get("...")` / `request["..."]` 从 `claims_authority.py` 提取到 56 个字段，
+  在 `lifecycle.py` + `clone-lifecycle.py` + `agent-clone.py` 三个生产调用方中
+  查找「完全无人构造」的 —— 命中 7 项。
+- 但 **`publication_scope` 落在漏网里**：omo#207 新增的 `receipt.get("publication_scope")`
+  让该字符串出现在 `lifecycle.py` 中，尽管那是**读取回执**而非**构造请求**。
+
+**结论**：检查必须限定到**请求构造点**（如「`request = {` 字面量内的键」），
+全文件字符串搜索会产生假阴性。留待后续专项。
+
 ## 决策记录
 
 - **2026-10-05**：提案。记录三例同构缺口；第 1、2 例已修，第 3 例（`publication_scope`）
-  未解并阻塞 ADR-0461 第 2–4 步。待 principal 裁定「observe-claim 生产该不该带
-  publication_scope」。
+  未解并阻塞 ADR-0461 第 2–4 步。待 principal 裁定。
+- **2026-10-05（裁定）**：取「不应带」一支。ADR-0455 方案 A 判定为**从未在生产使用**；
+  ADR-0461 第 2–4 步作废；omo#206 / omo#207 保留但须与本 ADR 一并阅读。
+  根治方向经实测后收窄为「限定到请求构造点」。
