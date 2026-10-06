@@ -40749,7 +40749,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-06-omo-resident-write-plane-state-root.md
     spec_version: 1.0.0
-    content_digest: sha256:fcb1dbb3a121a11ca5739f832f4e6cd29cc4c7f4f305a11f5b95e1c63086eea0
+    content_digest: sha256:f79250206c4d5c20cb504722df4ba953825c7541f622759b3382fd6878815732
     decision_ref: decision://accepted/BET-Y2Q4-T10-233
   value_indicator_policy: false
   completion_evidence:
