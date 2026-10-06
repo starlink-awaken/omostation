@@ -40674,7 +40674,8 @@ bets:
     与 I3 跨仓读写同根检测器 (允许清单钉成集合相等)。安全性论证: state_root() 未声明 profile 时等于 WORKSPACE_ROOT,
     launchd/crontab 都不声明该 env, 所以现役 43 个 plist 解析结果逐字节不变 —— 本轮不需要碰 install-resident-cron.sh
     (方案 line 145 划给 B4 的 launchctl 换路径, B4b 批次 2+ 需逐批授权)。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-06
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -40756,15 +40757,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2124b9d82d3925515743d028caf4e4fb7d69bbda
+          tests:
+            ref: receipt://docs/reports/2026-10-06-b1-omo-resident-write-plane-closeout.md
+            sha256: sha256:f3e2252cea83d5e233d062af512bba64f6ff354bac386ac5030b494520d5b123
+          diff:
+            ref: receipt://docs/reports/2026-10-06-b1-omo-resident-write-plane-closeout.md
+            sha256: sha256:f3e2252cea83d5e233d062af512bba64f6ff354bac386ac5030b494520d5b123
+          rollback:
+            ref: receipt://docs/reports/2026-10-06-b1-omo-resident-write-plane-closeout.md
+            sha256: sha256:f3e2252cea83d5e233d062af512bba64f6ff354bac386ac5030b494520d5b123
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-06-b1-omo-resident-write-plane-closeout.md
+            sha256: sha256:f3e2252cea83d5e233d062af512bba64f6ff354bac386ac5030b494520d5b123
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-06-b1-omo-resident-write-plane-closeout.md
+            sha256: sha256:f3e2252cea83d5e233d062af512bba64f6ff354bac386ac5030b494520d5b123
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-233.md
+            sha256: sha256:82de20a3fbf98460b7bccb0fb917e6f7d928ac944c2edff56ee84ab80d8da647
+          cleanup:
+            ref: receipt://docs/reports/2026-10-06-b1-omo-resident-write-plane-closeout.md
+            sha256: sha256:f3e2252cea83d5e233d062af512bba64f6ff354bac386ac5030b494520d5b123
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
