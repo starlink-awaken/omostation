@@ -445,10 +445,18 @@ def run_lint(fix: bool = False, single_file: str | None = None, as_json: bool = 
             "files_scanned": len(files),
             "findings": [
                 {
+                    # fp may be Path (real .md) or sentinel string
+                    # (e.g. check_l0_mapping's "<l0-mapping>" used when the L0
+                    # mapping tool itself is missing or errored). Guard both
+                    # cases — mirror the human-readable branch below.
                     "file": (
-                        str(fp.relative_to(WORKSPACE_ROOT))
-                        if fp.is_absolute() and WORKSPACE_ROOT in fp.parents
-                        else str(fp)
+                        fp
+                        if isinstance(fp, str)
+                        else (
+                            str(fp.relative_to(WORKSPACE_ROOT))
+                            if fp.is_absolute() and WORKSPACE_ROOT in fp.parents
+                            else str(fp)
+                        )
                     ),
                     "line": line_num,
                     "label": label,

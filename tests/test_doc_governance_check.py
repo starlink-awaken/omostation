@@ -53,7 +53,6 @@ def _registry(*, index: str = "docs/SYSTEM-INDEX.md") -> dict:
             "malformed_frontmatter": {"severity": "error"},
             "invalid_metadata": {"severity": "error"},
             "stale_review": {"severity": "warning"},
-            "orphan_document": {"severity": "warning"},
             "missing_index": {"severity": "error"},
         },
     }
@@ -90,7 +89,6 @@ def test_frontmatter_and_freshness_are_reported(tmp_path: Path) -> None:
         doc,
         tmp_path,
         _registry(),
-        {},
         date(2026, 7, 31),
     )
     rules = {finding["rule"] for finding in result}
@@ -116,7 +114,7 @@ def test_surface_specific_statuses_accept_canonical_spec_state(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    result = CHECKER.check_file(spec, tmp_path, registry, {}, date(2026, 8, 24))
+    result = CHECKER.check_file(spec, tmp_path, registry, date(2026, 8, 24))
 
     assert not [finding for finding in result if finding["rule"] == "invalid_metadata"]
 
@@ -144,7 +142,6 @@ def test_metadata_only_review_state_records_migration_without_content_review(
         doc,
         tmp_path,
         _registry(),
-        {},
         date(2026, 7, 31),
     )
     assert not [finding for finding in result if finding["rule"] == "invalid_metadata"]
@@ -170,7 +167,6 @@ def test_content_review_state_requires_content_review_date(tmp_path: Path) -> No
         doc,
         tmp_path,
         _registry(),
-        {},
         date(2026, 7, 31),
     )
     assert any(

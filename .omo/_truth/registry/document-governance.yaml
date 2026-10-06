@@ -90,7 +90,7 @@ surfaces:
     metadata: frontmatter
     required_frontmatter: [status, lifecycle, owner, last-reviewed]
     review_days: 180
-    discoverability: directory-index
+    discoverability: index-exists  # M2 (2026-10-06): orphan_document 已退役 (R2), directory-index 语义不再由任何检查实现; 该字段现只驱动 missing_index (index 文件存在性) 检查
     index: docs/SYSTEM-INDEX.md
     workflow: project-doc-change
 
@@ -106,7 +106,7 @@ surfaces:
     valid_statuses: [accepted, draft, superseded, deprecated, active]
     valid_lifecycles: [spec, contract]
     review_days: 180
-    discoverability: directory-index
+    discoverability: index-exists  # M2 (2026-10-06): 同上 — 只驱动 missing_index, 不再声称 orphan 检测
     index: docs/SYSTEM-INDEX.md
     workflow: project-doc-change
 
@@ -134,8 +134,11 @@ rules:
     severity: warning
   stale_review:
     severity: warning
-  orphan_document:
-    severity: warning
+  # orphan_document REMOVED 2026-10-06 (ADR-0464 治理门禁覆盖审计修复波 R2):
+  # _is_discoverable() 以无条件 return True 结尾, finding 永不触发, 声明即假覆盖。
+  # 不重建规则: docs/-prefix 口径反复 (2026-08-27) 证明"可发现性"语义没有
+  # 明确的机检定义前重建只会继续 whack-a-mole (见 ADR-0464 盲区二/审计修复波 R2)。
+  # 相应的 warning_exceptions 条目 concurrent-plans-orphan-docs 也已删除。
   missing_index:
     severity: error
 
@@ -144,15 +147,6 @@ warning_exceptions:
   generated: 2026-07-31
   policy: no-new-warnings
   entries:
-    - id: concurrent-plans-orphan-docs
-      rule: orphan_document
-      surface: docs-discoverable
-      max_findings: 8
-      expires: 2026-10-31
-      owner: governance-team
-      reason: >
-        ADR-0384 concurrent docs/plans migration plus BET-Y1Q1-T6-01 deferred
-        Phase-numbering rewrite. One budget per rule/surface. Revisit 2026-10-31.
     - id: legacy-omo-knowledge-frontmatter
       rule: missing_frontmatter
       surface: omo-knowledge

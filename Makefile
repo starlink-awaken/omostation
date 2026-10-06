@@ -130,6 +130,12 @@ check-layers:  ## 分层依赖检查 (docs/layer-contract.yaml)
 	$(PY) bin/layer-dependency-check.py
 
 gate-reachability: governance-release-gate
+# governance-release-gate 有意不带 --require-main (与 gac-gate.yml 的 PASW 步一致):
+# #4209 (2026-09-22) 移除该 flag 时记录的跨仓 PR 模式 —— 父仓 PR 可合法指向
+# 已 push 但尚未合并到子仓 main 的分支提交 ("ahead" 在 check-submodule-pointer-drift
+# 中是非阻塞状态)。release 演练同样可能处在子仓 PR 未合并的时间窗; 加上
+# --require-main 会把这些合法状态误杀成 hard-fail。真实不可达 (dangling pin,
+# ADR-0464 盲区三) 仍被本 gate 的任意远端 ref 祖先判定捕获。
 governance-release-gate:  ## 子模块可达性门禁
 	$(PY) bin/ssot/submodule-reachability-gate.py --source head --fetch
 
