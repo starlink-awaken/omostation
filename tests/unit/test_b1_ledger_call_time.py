@@ -2,7 +2,7 @@
 
 契约: `.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md`
 方案判据: `grep -rE "DEFAULT_(EVENT_)?LEDGER\\s*=" bin/` → 0 命中
-BET: BET-Y2Q4-T10-231
+BET: BET-Y2Q4-T10-232
 spec: `docs/superpowers/specs/2026-10-05-b1-import-time-ledger-constants-call-time.md`
 
 判据分四层, 缺一层就留下"测试绿着但写面冻结"的缝 (T10-203 的假绿正是缺第 4 层):

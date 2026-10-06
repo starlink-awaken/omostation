@@ -2,7 +2,7 @@
 schema_version: specification/v1
 spec_version: 1.0.0
 title: B1 残留收口 — bin/ 写面常量的调用时刻解析
-bet_id: BET-Y2Q4-T10-231
+bet_id: BET-Y2Q4-T10-232
 status: accepted
 lifecycle: contract
 owner: governance-team

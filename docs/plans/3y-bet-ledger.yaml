@@ -40293,7 +40293,7 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
-- id: BET-Y2Q4-T10-231
+- id: BET-Y2Q4-T10-232
   title: ADR-0456 B1 残留 — 14 处 import 时求值的 profile 根常量改为调用时刻解析 (8 ledger + 6 state_root)
   goal: '方案 line 138 的 B1 判据 `grep -rE "DEFAULT_(EVENT_)?LEDGER\s*=" bin/` 实测未满足: 8
     处模块级 `= event_ledger_path()` (north_star_meter_v2.py:66, north_star_meter_v3.py:190,
@@ -40407,8 +40407,8 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-05-b1-import-time-ledger-constants-call-time.md
     spec_version: 1.0.0
-    content_digest: sha256:1826cfa767f00b1f48f6136435bf2f1e1413a4dfc18726d5f18dfbea673fffc1
-    decision_ref: decision://accepted/BET-Y2Q4-T10-231
+    content_digest: sha256:179df14371177d7cdfd80112c2f94b1eff8ab7adcf8a68a42d605818075730f9
+    decision_ref: decision://accepted/BET-Y2Q4-T10-232
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
