@@ -1436,8 +1436,7 @@ PYEOF
 
       # PASW 隔离状态
       pasw=""
-      for sub in $ISOLATED_SUBS; do
-        sub_name=$(basename "$sub")
+      for sub_name in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
         [ -d "$wt_path/$PASW_SUBTREE_DIR/$sub_name" ] && pasw="$pasw $sub_name"
       done
       pasw=$(echo "$pasw" | xargs)
@@ -1529,12 +1528,11 @@ PYEOF
         continue
       fi
       # PASW: 先清理子模块 worktree
-      for sub in $ISOLATED_SUBS; do
-        sub_name=$(basename "$sub")
+      for sub_name in "${PASW_ISOLATED_SUBS_ARRAY[@]-}"; do
         sub_wt="$wt_path/$PASW_SUBTREE_DIR/$sub_name"
         if [ -d "$sub_wt" ]; then
           (git -C "$wt_path/$sub" worktree remove "$sub_wt" 2>/dev/null) || rm -rf "$sub_wt" 2>/dev/null || true
-          echo "   🧹 已清理 $sub worktree"
+          echo "   🧹 已清理 $sub_name worktree"
         fi
       done
       rmdir "$wt_path/$PASW_SUBTREE_DIR" 2>/dev/null || true
@@ -1571,7 +1569,7 @@ PYEOF
     echo "  onboard <session>    新 Agent 入职引导 (claim + 环境 + 引导)"
     echo "  cleanup              回收 TTL 过期 worktree (PASW_TTL_HOURS, 默认 24h)"
     echo ""
-    echo "PASW 隔离子模块: ${ISOLATED_SUBS:-}"
+    echo "PASW 隔离子模块: ${PASW_ISOLATED_SUBS_ARRAY[*]-}"
     echo "session 命名: 只允许 [a-z0-9-] (如 fix-route-bug)"
     exit 1
     ;;
