@@ -3,7 +3,7 @@ id: bin/ssot/auto-bump-doc-governance-budget.py
 name: Auto-Bump Doc-Governance Budget
 category: governance
 owner: governance-team
-description: "T10-125 + A1 (本会话沉淀) — 当 doc-governance-check --no-new-warnings FAIL with warning_budget_exceeded 时, 自动定位对应 (rule, surface) 的 budget exception, bump max_findings (默认 +20, ABSOLUTE_MAX_BUMP=50), 更新 reason 注释 + UTC 日期标记. v2 通用化: 按 (rule, surface) 二元组定位, 兼容全部 9 个 budget exception (legacy-*-enums/frontmatter + concurrent-plans-orphan-docs + accepted-specs-invalid-metadata). circuit_breaker: 单 PR ≤ 50, 超额必人工审批."
+description: "T10-125 + A1 (本会话沉淀) — 当 doc-governance-check --no-new-warnings FAIL with warning_budget_exceeded 时, 自动定位对应 (rule, surface) 的 budget exception, bump max_findings (默认 +20, ABSOLUTE_MAX_BUMP=50), 更新 reason 注释 + UTC 日期标记. v2 通用化: 按 (rule, surface) 二元组定位, 兼容全部现有 budget exception (legacy-*-enums/frontmatter 等; concurrent-plans-orphan-docs 已随 orphan_document 规则于 2026-10-06 退役删除). circuit_breaker: 单 PR ≤ 50, 超额必人工审批."
 inputs:
   - name: "--dry-run (只打印不修改)"
   - name: "--amount N (bump 幅度, 默认 20, 上限 50)"

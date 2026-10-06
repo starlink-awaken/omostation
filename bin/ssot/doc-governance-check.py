@@ -690,29 +690,10 @@ def write_warning_baseline(
     )
 
 
-def _is_discoverable(rel: str, surface: dict[str, Any], index_text: str) -> bool:
-    if rel == surface.get("index"):
-        return True
-    if rel in index_text or Path(rel).name in index_text:
-        return True
-    if surface.get("discoverability") == "directory-index":
-        parent = PurePosixPath(rel).parent.as_posix()
-        if parent != "." and f"{parent}/" in index_text:
-            return True
-        # SYSTEM-INDEX.md 惯用相对路径 (无 docs/ 前缀), 两种口径都认
-        # (2026-08-27 复盘 R1 根因: 路径口径不匹配导致 replay.md 等长期误报 orphan)
-        if parent.startswith("docs/"):
-            rel_parent = parent[len("docs/"):]
-            if rel_parent != "." and f"{rel_parent}/" in index_text:
-                return True
-    return True
-
-
 def check_file(
     path: Path,
     root: Path,
     registry: dict[str, Any],
-    index_cache: dict[Path, str],
     today: date,
 ) -> list[dict[str, Any]]:
     rel = _relative(path, root)
@@ -932,20 +913,11 @@ def check_file(
                     message="registered discoverability index does not exist",
                 )
             )
-        else:
-            index_text = index_cache.setdefault(index_path, index_path.read_text(encoding="utf-8", errors="replace"))
-            if not _is_discoverable(rel, surface, index_text):
-                findings.append(
-                    _finding(
-                        path=rel,
-                        rule="orphan_document",
-                        surface=surface,
-                        severity=_severity(registry, "orphan_document", surface),
-                        workflow=workflow,
-                        evidence=f"index={surface.get('index')}",
-                        message="document is not discoverable from its registered index",
-                    )
-                )
+        # R2 (2026-10-06 治理门禁覆盖审计修复波): orphan_document 规则已退役。
+        # _is_discoverable() 原先以无条件 return True 结尾, 该 finding 永不触发,
+        # 属「声明了规则但没人能执行」的假覆盖; registry 声明已随之移除。
+        # 不重建规则: docs/-prefix 口径反复 (2026-08-27) 证明"可发现性"语义
+        # 未定义清楚前重建只会继续 whack-a-mole。
     return findings
 
 
@@ -965,14 +937,12 @@ def run(
     registry = load_registry(registry_path)
     files = collect_markdown_files(root, scope=scope, paths=paths)
     findings = validate_registry(registry, root, registry_path)
-    index_cache: dict[Path, str] = {}
     for path in files:
         findings.extend(
             check_file(
                 path,
                 root,
                 registry,
-                index_cache,
                 current_date,
             )
         )

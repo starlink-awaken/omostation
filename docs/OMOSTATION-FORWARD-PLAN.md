@@ -36,7 +36,7 @@ grep -E "  - id: legacy" .omo/_truth/registry/document-governance.yaml
 # legacy-omo-knowledge-frontmatter (rule: missing_frontmatter, surface: omo-knowledge)
 # legacy-omo-truth-frontmatter (rule: missing_frontmatter, surface: omo-truth-docs)
 # legacy-omo-standards-frontmatter (rule: missing_frontmatter, surface: omo-standards)
-# concurrent-plans-orphan-docs (rule: orphan_document, surface: docs-discoverable)
+# (concurrent-plans-orphan-docs removed 2026-10-06 with orphan_document rule retirement)
 ```
 
 **完成判据**:

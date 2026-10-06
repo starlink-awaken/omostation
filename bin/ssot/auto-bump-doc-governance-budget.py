@@ -13,7 +13,8 @@ circuit_breaker: 单次 PR 仅允许 +20 (ABSOLUTE_MAX_BUMP=50, 强制覆盖)
 通用化 (v1 → v2):
   - 不依赖 exception_id 硬编码
   - 按 (rule, surface) 二元组定位 budget
-  - 兼容 8 种 budget exception (legacy-*-enums/frontmatter + concurrent-plans-orphan-docs)
+  - 兼容剩余 budget exception (legacy-*-enums/frontmatter 等; concurrent-plans-orphan-docs
+    已于 2026-10-06 随 orphan_document 规则退役删除)
 
 用法:
   python3 bin/ssot/auto-bump-doc-governance-budget.py [--dry-run] [--amount N] [--strict]

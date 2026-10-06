@@ -503,9 +503,17 @@ surfaces:
 - id: bin-gac-governance-convergence-lint-py
   tool: bin/gac/governance-convergence-lint.py
   workflow: (none)
-  gate: true
+  gate: false
   triggers: []
   status: active
+  note: >-
+    R3 (2026-10-06, ADR-0464 治理门禁覆盖审计修复波): 本工具不是 gate ——
+    R-GOV-2 结构上只能 WARN (check_score_convergence 从不产生 errors), 且 live
+    health_score/health_score_evidence 已 diverged > 5; 把它接进 blocking gate
+    只加表面积、无捕获力, 也不得把 R-GOV-2 提升为 error。它是报告探针
+    (被 bin/gac/governance-health-monitor.py 消费), 登记为 active but not gate。
+    CR-L0-SSOT-PATH-NORM 声称的实现入口 --rule ssot-path-norm 从未实现,
+    该登记同样不构成执行事实。
 - id: bin-gac-governance-evolution-py
   tool: bin/gac/governance-evolution.py
   workflow: (none)

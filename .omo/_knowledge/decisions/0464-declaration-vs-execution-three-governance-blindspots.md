@@ -93,12 +93,28 @@ owner 存在性、review 日期新鲜度（见 `doc-governance-check.py` / `doc-
 
 **证据**：kairon PR #97 以 **squash** 合并后，kairon main 新 tip 为 `35f2ab77`；
 原 commit `86c485c9`（父仓 gitlink 所指向）不再是 kairon `origin/main` 的祖先。
-`bin/ssot/submodule-reachability-gate.py` **只接受 `refs/remotes/origin/main` 的祖先**
-（显式不认 feature 分支："只认远端跟踪 ref，不认 refs/heads/main"）。GitHub 的
-"rebase and merge" **不是 fast-forward**，它总是重写 SHA；kairon main 又
+GitHub 的 "rebase and merge" **不是 fast-forward**，它总是重写 SHA；kairon main 又
 `required_linear_history`（merge commit 被禁）。因此该失效是**结构性的**，不是
 偶发。实测 `git merge-base --is-ancestor 86c485c9 origin/main` 退出码为 1；
 修复为根 gitlink re-point（commit `bf2fbdac1` → `35f2ab77`）后 root CI 才绿。
+
+**门禁机制（2026-10-06 更正，ADR-0464 修复波实施时实证）**：`bin/ssot/submodule-reachability-gate.py`
+有两种模式，本 ADR 早期文本把两者混为一谈，且该混淆直接导致了一次错误的"补 flag"
+修复（R4 曾向 CI 重加 `--require-main`，被 #4209 的 purity 测试拦截后撤回）：
+- **默认（PR admission）模式**：接受**任意 `refs/remotes/*` 远端跟踪 ref** 的祖先。
+  代码注释"只认远端跟踪 ref，不认 refs/heads/main"指的是**排除本地 main**（防本地
+  main 领先/孤立提交当主线），**不是**排除 feature 分支。跨仓 PR 合法地把指针指向
+  **已 push 但尚未合并**到子仓 main 的 feature 分支提交，`--require-main` 会误杀这种
+  合法状态 —— PR #4209（commit `86b61b84e`，2026-09-22）因此从 gac-gate CI **有意移除**
+  该 flag，并由 purity 测试冻结为策略。
+- **`--require-main`（governed re-point / bump）模式**：只接受 `refs/remotes/origin/main`
+  的祖先，语义是"当前 pin 必须已在子仓主线"。该模式**仍保留**在
+  `bin/ssot/submodule-pointer-transaction.sh`（受控 re-point 路径）—— 这才是顺序判据
+  的执行点，不用于 PR admission。
+- 本盲区真正命中的缺陷类是：**任意 ref 祖先判定看不到"后来的一次子仓 squash 使一个
+  已 push 过的 pin 失效"**。修复是 **re-point 这一步**，不是更严的 admission gate。
+- pre-push 侧同样不加 `--require-main`：pre-push + `--require-main` 会自我阻断
+  （shallow worktree → unshallow fetch 预算耗尽 → 硬失败 → **修复 push 永远被挡在门外**）。
 
 **为什么现有门禁抓不到**：父仓的 pre-push `submodule-reachability` hook 在**交付时**
 就拦 —— 但那是在"已经踩进错误顺序、且被单独一次 push 拦下"时才显现；门禁看的是
