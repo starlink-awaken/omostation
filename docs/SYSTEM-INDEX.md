@@ -69,6 +69,8 @@ last_updated: 2026-09-17
 
 ## 分类索引
 
+→ [新人指南](ONBOARDING.md) — 阅读顺序与路由表（新 Agent 入口文档）
+
 → [项目索引](INDEX-PROJECTS.md) — 项目按层/栈/状态分类（见 `docs/project-registry.yaml`）
 
 → [跨包 API 地图](overview/cross-package-api-map.md) — Kairon BOS 路由与跨包接口（生成物）
