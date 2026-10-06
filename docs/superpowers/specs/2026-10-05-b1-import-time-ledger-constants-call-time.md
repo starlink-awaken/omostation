@@ -159,13 +159,13 @@ T10-203 把字面量换成 `event_ledger_path()` 之后，第一段命中的行�
 | 面 | 文件 |
 |---|---|
 | 写面代码（12 个） | `bin/bc-os/north_star_meter_v2.py` `north_star_meter_v3.py` `weekly-value-report.py`、`bin/gac/compound-attribution-report.py` `check-episode-pipeline.py` `evidence-smoke.py` `omo-state-write-guard.py` `task-inventory.py`、`bin/mof/generate-brief.py`、`bin/ssot/episode-source-aggregator.py` `resident-orchestrator-daemon.py` `system-health-check.py` |
-| 新门禁 | `tests/unit/test_b1_ledger_call_time.py`（I1–I6 可执行化，42 个用例） |
+| 新门禁 | `tests/unit/test_b1_ledger_call_time.py`（I1–I6 可执行化，44 个用例） |
 | CI 接线 | `.github/workflows/governance-check.yml` 的 `governance-verify` job 新增一步显式点名该文件 |
 | 适配既有断言（4 个） | `tests/test_evidence_smoke_paths.py`、`tests/test_generate_brief_workspace_output.py`、`tests/unit/gac/test_omo_state_write_guard.py`、`tests/unit/mof/test_generate_brief_no_host_paths.py` |
 | 感知固化 | `AGENTS.md` §7 三条（I7 + 判别式 + setattr 缝） |
 | 台账与本 spec | `docs/plans/3y-bet-ledger.yaml`、本文件 |
 
-## 交付期实测（写这份 spec 时还不知道的四件事）
+## 交付期实测（写这份 spec 时还不知道的事）
 
 1. **把常量改成函数会打断测试侧的 `setattr` 缝** —— 既有用例用
    `monkeypatch.setattr(module, "SYSTEM_YAML", tmp)` 换路径，改名成
@@ -197,18 +197,38 @@ T10-203 把字面量换成 `event_ledger_path()` 之后，第一段命中的行�
    `pyyaml pydantic pytest` 的最小 venv 里 42 passed（复刻 CI 依赖面，防 `ModuleNotFoundError`）。
    另：该 workflow 的 `on` 含 `schedule: 0 */6 * * *` ⇒ 即使后续 PR 只改 `bin/**`
    （不在 `on.paths` 里），门禁仍每 6 小时在 main 上跑一次。
+6. **CI 这一步真的抓到了东西：门禁的探测依赖 host 检出** —— PR #4651 首次 push 后
+   `governance-verify` 报 `5 failed / 37 passed`，而本地与第 5 条那个最小 venv 都是
+   42 全绿。根因不是随机顺序、也不是缺依赖：`_profile_resolvers()` 对
+   `repo_root.__all__` 里每个零参可调用对象都试调用，其中 `canonical_root()` 在未声明
+   `OMOSTATION_ROOT` 时兜底 `~/Workspace`，runner 上该目录不存在 ⇒
+   `bin/lib/repo_root.py:80` 抛 `RuntimeError`。本地绿是因为**这台机器恰好有规范检出**。
+   本地复现（把 `HOME` 指向空目录、`OMOSTATION_ROOT` 不设）逐字重现同 5 条红，
+   修复后同条件 44 全绿。
+   处置的**不是**给 CI 步骤加特例、也不是把 `canonical_root` 从探测里摘掉（改窄断言），
+   而是探测两侧都钉 `OMOSTATION_ROOT=<被测检出>`（它按构造含 `MARKER`），于是
+   `canonical_root` 同值不入集合、profile 位移仍由 sentinel 观测。
+   ⚠️ 第 5 条的方法论要补一半：**复刻依赖面不等于复刻 host 面** —— 判据是同一文件在
+   `HOME=<空目录>` 下再跑一次。这条现在由两条用例自己钉住：
+   `test_resolver_probe_survives_a_machine_without_canonical_checkout`（变异对照：把
+   `_profile_resolvers` 装回改前版本 ⇒ 该用例当场 `RuntimeError` 红，实测 1 failed /
+   1 passed）与 `test_resolver_probe_notifies_when_a_code_face_root_starts_reading_profile`
+   （把 `canonical_root` 改成读 `state_root()` ⇒ 必须被探测点名，证明"同值所以不入集合"
+   不是按构造就绿）。用例数 42 → **44**。
 
 ## 合并前读数（逐条对应 done_when）
 
 | 判据 | 读数 |
 |---|---|
-| 判据-1 字面 grep | 本分支 `bin/` **0** 命中；`origin/main` 同时刻 **6** 命中（四个判据里唯一带反基线的：证明这条 grep 不是恒 0 的装饰） |
+| 判据-1 字面 grep | 本分支 `bin/` **0** 命中；`origin/main` 同时刻 **6** 命中（四个判据里唯一带反基线的：证明这条 grep 不是恒 0 的装饰）。读数由 `git archive origin/main bin \| tar -x` 后用 **`/usr/bin/grep -rE`**（BSD grep, GNU compatible 2.6.0）在同一棵树上逐字复算：`\s` 与 `[[:space:]]` 两种写法都给 main=6 / 分支=0。⚠️ 同一判据换成 **`git grep -E` 在 main 上也是 0** —— git 的 ERE 引擎不认 `\s`，用它跑这条判据会造出一个恒绿的假门禁，装置必须写进判据 |
 | 判据-1 AST 扫描 | 模块级根依赖绑定 `34 → 20`，剩余 20 处全部 code 面（`code_root()`/`canonical_root()`） |
-| 判据-2 正向落点 | `test_check_ledger_run_opens_the_db_declared_after_import` 等 5 个落点用例；`git checkout origin/main -- bin`（门禁文件保持 HEAD 版）后跑本门禁文件 ⇒ **35 failed / 7 passed**；`git checkout HEAD -- bin` 还原后 **42 passed**，工作树逐字节回到 HEAD（`git status` clean）。按构造能红是在**同一环境、同一门禁文件**上测的，不是历史读数 |
-| 判据-3 等价 | `LEGACY_SUFFIXES` 13 条逐字节断言全过；verify-1 三文件合计 **914 passed** |
+| 判据-2 正向落点 | `test_check_ledger_run_opens_the_db_declared_after_import` 等 5 个落点用例；`git checkout origin/main -- bin`（门禁文件保持 HEAD 版）后跑本门禁文件 ⇒ **35 failed / 9 passed**；`git checkout HEAD -- bin` 还原（12 个文件逐 sha 复核，mismatch=0）后 **44 passed**。按构造能红是在**同一环境、同一门禁文件**上测的，不是历史读数 |
+| 判据-3 等价 | `LEGACY_SUFFIXES` 13 条逐字节断言全过；verify-1 三文件合计 **916 passed** |
 | 判据-4 自证/反查/基线 | 合成违规点名文件+行+变量名；17 处 code 面反向不被命中；`test_detector_counts_the_14_prefix_baseline_violations` 用 `git show origin/main:` 抄出的 13 条直接 + 1 条传递赋值 = **14** 断言基线，同函数在真实树上断言 **∅** |
 | 判据-5 显式优先 | 计数断言：显式传参时解析器调用次数为 0 |
 | 判据-6 读面不动 | 既有「一个移 + 一个不移」成对断言继续通过 |
+| 判据-7 门禁在 CI 上可见 | `governance-verify` 首跑（PR #4651）即 **5 failed / 37 passed** —— 抓出的正是本文件实测 6 的 host 依赖（探测调 `canonical_root()`，runner 无 `~/Workspace`）。修复后同一文件在**两种 host**下复跑：真实 HOME 与 `HOME=<空目录>`+`env -u OMOSTATION_ROOT`，各 **44 passed**；合并判据 = 该步在 CI 转绿 |
+| 判据-7b 探测本身可红 | 变异对照：把 `_profile_resolvers()` 装回改前版本 ⇒ `test_resolver_probe_survives_a_machine_without_canonical_checkout` 当场红（实测 **1 failed / 1 passed**）；把 `canonical_root` 改读 `state_root()` ⇒ 探测必须点名它（`test_resolver_probe_notifies_when_a_code_face_root_starts_reading_profile`）⇒ 「钉 `OMOSTATION_ROOT` 后 canonical_root 同值不入集合」不是按构造就绿 |
 | verify-3 回归集 | `-k "north_star or … or generate_brief"`：**20 passed**，无新增红 |
 | 零回归总判据 | 以 `git apply -R`（sha256 逐字节复核后恢复）构造同环境基线对比 `bin`+`tests` 全量：基线与 HEAD 的失败集合**相同**（24 failed / 5 errors 全部归因于未初始化的 `projects/agora` 与缺失的 `runtime/omo/`）⇒「我的 diff 造成的新增红：无」 |
 

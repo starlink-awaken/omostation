@@ -108,20 +108,28 @@ def _profile_resolvers() -> set[str]:
 
     手写名单正是 T10-203 假绿的形状: 判据与被检对象共享同一个失效方式 (变量名 /
     连字符-下划线拼写), 于是改名或漏一个就静默变绿。
+
+    ⚠️ 探测不得依赖 host 状态: `canonical_root()` 在没有 `~/Workspace` 的机器 (CI
+    干净检出) 上抛 RuntimeError —— 实测让本文件 5 个用例在 `governance-verify` 里红
+    而本地 42 全绿。两侧都把规范检出钉成**被测检出** (它按构造含 MARKER), 于是
+    canonical_root 同值不入集合, 而 profile 声明面的位移仍由 SENTINELS 观测。
     """
-    saved = {key: os.environ.get(key) for key in SENTINELS}
+    probed = (*SENTINELS, "OMOSTATION_ROOT")
+    saved = {key: os.environ.get(key) for key in probed}
     resolvers: set[str] = set()
     try:
         for name in repo_root.__all__:
             fn = getattr(repo_root, name, None)
             if not callable(fn):
                 continue
+            os.environ["OMOSTATION_ROOT"] = str(CHECKOUT)
             os.environ.update(SENTINELS)
             try:
                 declared = fn()
             except TypeError:
                 continue  # 需要参数的 API 不参与零参探测
             _restore(saved)
+            os.environ["OMOSTATION_ROOT"] = str(CHECKOUT)
             try:
                 undeclared = fn()
             except TypeError:
@@ -198,6 +206,35 @@ def test_profile_resolver_list_is_derived_from_repo_root_behaviour():
     # 读根跟随当前检出是 ADR-0456 的规则, 不是缺陷 ⇒ 检测器只许盯 profile 根
     for code_face in ("code_root", "canonical_root", "install_root"):
         assert code_face not in resolvers, code_face
+
+
+def test_resolver_probe_survives_a_machine_without_canonical_checkout(
+    tmp_path, monkeypatch
+):
+    """探测不得依赖 host 状态: CI 干净检出没有 `~/Workspace`。
+
+    实证 (PR #4651, `governance-verify`): 本文件本地 42 全绿、CI 5 红, 根因是探测
+    调 `canonical_root()` 而它抛 `RuntimeError`。这类"本地绿/CI 红"若只靠改窄断言或
+    给 CI 步骤加特例处置, 门禁就退化成对某台机器的记忆。
+    """
+    baseline = _profile_resolvers()
+    for key in PROFILE_ENVS:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    assert not (Path.home() / repo_root.MARKER).is_file(), "fixture 没造出 CI 那台机器"
+    assert _profile_resolvers() == baseline
+    for key in PROFILE_ENVS:
+        assert os.environ.get(key) is None, (key, "探测结束必须把环境还原干净")
+
+
+def test_resolver_probe_notifies_when_a_code_face_root_starts_reading_profile(monkeypatch):
+    """变异对照: 钉住 `OMOSTATION_ROOT` 不得把探测变成"按构造就绿"。
+
+    若有人把 `canonical_root()` 翻成读 profile 写根 (正是 B4b 要避免的静默改道),
+    探测仍要点名它 —— 否则"读根不入集合"这条断言只是构造出来的绿。
+    """
+    monkeypatch.setattr(repo_root, "canonical_root", lambda: repo_root.state_root() / "moved")
+    assert "canonical_root" in _profile_resolvers()
 
 
 def test_freeze_detector_names_file_line_and_variable_on_synthetic_violation(tmp_path):
