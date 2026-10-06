@@ -218,3 +218,58 @@ def test_cron_enabled_missing_entrypoint_rejected() -> None:
 
     assert len(violations) == 1
     assert "requires program.entrypoint" in violations[0]
+
+
+def test_json_array_pseudo_plist_is_enumerated_not_crashed(tmp_path: Path) -> None:
+    """非 dict payload 不得让枚举器崩溃, 必须照样落进 E4 unparseable。
+
+    背景 (2026-10-06): 某个外部 Go 程序把「启动命令数组」用 json.Marshal
+    (会转义斜杠) 写进了 47 个 ~/Library/LaunchAgents/*.plist。plutil 对 JSON 数组
+    返回 rc=0 (它是合法 JSON), 于是旧代码走进 `payload.get(...)` 分支抛
+    AttributeError —— reality-check 崩溃退出且 rc=0, 门禁在真正需要报警的那一刻
+    反而失效。修复: 非 dict 一律归一为 {}, 让 plutil_ok=False 把它交给 E4。
+    """
+    module = _module()
+
+    launchd = tmp_path / "LaunchAgents"
+    launchd.mkdir()
+    # Go json.Marshal 形态: 转义斜杠的 JSON 数组, 而非 plist 字典。
+    (launchd / "com.example.rogue.plist").write_text(
+        '["\\/bin\\/bash","\\/tmp\\/guard"]', encoding="utf-8"
+    )
+
+    rows = module.enumerate_launchd_plists(launchd)
+
+    assert len(rows) == 1
+    row = rows[0]
+    # 不崩溃, 且被标成不可解析 —— E4 据此报警。
+    assert row["plutil_ok"] is False
+    # Label 取不到时退回文件名, 便于在 findings 里定位到具体文件。
+    assert row["label"] == "com.example.rogue"
+    assert row["program_arguments"] == []
+
+
+def test_well_formed_plist_still_enumerates(tmp_path: Path) -> None:
+    """反向护栏: 修复不能把合法 plist 误判为损坏。"""
+    module = _module()
+
+    launchd = tmp_path / "LaunchAgents"
+    launchd.mkdir()
+    (launchd / "com.example.good.plist").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
+        '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
+        '<plist version="1.0"><dict>'
+        "<key>Label</key><string>com.example.good</string>"
+        "<key>ProgramArguments</key><array><string>/bin/bash</string>"
+        "<string>/tmp/run.sh</string></array>"
+        "</dict></plist>",
+        encoding="utf-8",
+    )
+
+    rows = module.enumerate_launchd_plists(launchd)
+
+    assert len(rows) == 1
+    assert rows[0]["plutil_ok"] is True
+    assert rows[0]["label"] == "com.example.good"
+    assert rows[0]["program_arguments"] == ["/bin/bash", "/tmp/run.sh"]

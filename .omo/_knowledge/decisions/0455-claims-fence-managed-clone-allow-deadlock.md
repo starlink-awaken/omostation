@@ -72,3 +72,17 @@ lifecycle Op B/C 无法完成（2026-09-23 执行实证：Op A 成功，B/C stop
   **绑定 exact `changed_paths` + 单次 fence 效果上限** 的 `v1 allow` observe receipt；
   通用 allow 仍禁。实现后在有效授权窗 `DEC-20260923-CLAIMS-LIFECYCLE-R0-01`
   （至 2026-09-25T01:47:16Z）内重跑 Op B/C。
+- **2026-10-06（溯源核实，推翻「方案 A 是 dead code」的判断）**:
+  方案 A **已实现且在生产调用链上**，不得标注 dead code。证据:
+  - 实现 `cf712b7 feat(claims): ADR-0455 option A — publication-scoped v2 allow (#192)`
+  - 函数 `claims_authority.py:440 _validate_publication_scoped_allow`
+  - 调用点 `claims_authority.py:567`（位于 `_validate_observe_request` 路径）
+  - ADR 状态维持 ACCEPTED / lifecycle: spec。
+
+  此前把它记作「从未在生产使用」是**溯源不足导致的错误结论**：只看了
+  ADR 正文与执行状态文件，未直接grep 生产源码的函数定义与调用点。
+  正确表述是「Op B/C 未在授权窗内跑完（BLOCKED_PROTOCOL）」，这与
+  「方案 A 代码存在且被调用」是两件事 —— 前者是流程未完成，后者是代码状态。
+
+- **待办（非 dead code 问题）**: Op B/C 的重跑仍需有效授权窗。若授权窗已过期，
+  需要新授权才能推进；这是**流程/授权缺口**，不是代码缺口。
