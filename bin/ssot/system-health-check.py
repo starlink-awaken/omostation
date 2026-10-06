@@ -27,7 +27,13 @@ from repo_root import event_ledger_path
 DELIVERY = WORKSPACE / ".omo" / "_delivery"
 DAEMON_WATERMARKS = DELIVERY / "resident-orchestrator" / "watermarks"
 EVENTS_JSONL = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
-LEDGER = event_ledger_path()
+
+
+def _default_ledger() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return event_ledger_path()
+
+
 # 阈值: 组件状态文件超过该时长视为 stale
 STALE_THRESHOLD_SECONDS = 1800  # 30min
 
@@ -83,13 +89,14 @@ def _check_events_active() -> tuple[bool, str]:
 
 
 def _check_ledger() -> tuple[bool, str]:
-    if not LEDGER.is_file():
+    ledger = _default_ledger()
+    if not ledger.is_file():
         return False, "event-ledger.sqlite3 missing"
     try:
         sys.path.insert(0, str(WORKSPACE / "projects" / "omo" / "src"))
         from omo.event_ledger.broker import LedgerBroker  # noqa: PLC0415
 
-        broker = LedgerBroker.connect(str(LEDGER))
+        broker = LedgerBroker.connect(str(ledger))
         try:
             chain = broker.verify_chain()
             ok = bool(chain.get("ok"))

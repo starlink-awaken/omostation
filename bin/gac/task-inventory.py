@@ -36,8 +36,17 @@ WORKSPACE = code_root()
 REGISTRY = WORKSPACE / ".omo" / "state" / "task-registry.yaml"
 # 只翻本脚本自己的产物：REGISTRY 留在检出侧 —— 它全仓查不到写者，而
 # panorama-collect.py:3198 是另一个读它的读者，翻读者不翻写者只会制造错位。
-SNAP_DIR = runtime_state_root() / "runtime" / "task-inventory" / "snapshots"
-DRIFTS = runtime_state_root() / "runtime" / "task-inventory" / "drifts.jsonl"
+
+
+def _snap_dir() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return runtime_state_root() / "runtime" / "task-inventory" / "snapshots"
+
+
+def _drifts_path() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return runtime_state_root() / "runtime" / "task-inventory" / "drifts.jsonl"
+
 
 STALE_FACTOR = 3
 
@@ -172,12 +181,14 @@ def main() -> int:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
 
     if as_json:
-        SNAP_DIR.mkdir(parents=True, exist_ok=True)
+        snap_dir = _snap_dir()
+        snap_dir.mkdir(parents=True, exist_ok=True)
         snap = {"ts": _now(), "counts": counts, "results": results}
-        path = SNAP_DIR / f"{datetime.now().strftime('%Y%m%d-%H%M')}.json"
+        path = snap_dir / f"{datetime.now().strftime('%Y%m%d-%H%M')}.json"
         path.write_text(json.dumps(snap, ensure_ascii=False, indent=1))
-        DRIFTS.parent.mkdir(parents=True, exist_ok=True)
-        with DRIFTS.open("a") as f:
+        drifts_path = _drifts_path()
+        drifts_path.parent.mkdir(parents=True, exist_ok=True)
+        with drifts_path.open("a") as f:
             f.write(json.dumps({"event": "task_inventory", "ts": _now(), "counts": counts,
                                 "drifts": drifts}, ensure_ascii=False) + "\n")
         if not quiet:

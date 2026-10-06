@@ -55,7 +55,7 @@ def _wire(guard, monkeypatch, checkout, system_yaml_text=None, owners=None):
         yaml.safe_dump({"fields": {".omo/state/system.yaml": owners or {}}}, allow_unicode=True),
         encoding="utf-8",
     )
-    monkeypatch.setattr(guard, "SYSTEM_YAML", registry)
+    monkeypatch.setattr(guard, "_system_yaml", lambda: registry)
     monkeypatch.setattr(guard, "WRITE_OWNERS_YAML", owners_file)
     monkeypatch.setattr(guard, "WORKSPACE", code)
     monkeypatch.setattr(guard, "code_root", lambda: code)

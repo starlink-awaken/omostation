@@ -105,9 +105,14 @@ def _bootstrap_agora_venv() -> bool:
 
 _inject_agora_venv_site()
 
-# 写面跟 profile；下面两个 jsonl 保持 WORKSPACE —— 它们仍被 git 跟踪且有 15+ 检出侧读者，
+
+def _output_dir() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return runtime_state_root() / ".omo" / "_delivery" / "evidence-smoke"
+
+
+# 写面跟 profile（见 _output_dir()）；下面两个 jsonl 保持 WORKSPACE —— 它们仍被 git 跟踪且有 15+ 检出侧读者，
 # 只翻写者会让读者静默读旧数据 (spec §0.5 的写/读同移规则)。
-OUTPUT_DIR = runtime_state_root() / ".omo" / "_delivery" / "evidence-smoke"
 GOV_LOG = WORKSPACE / ".omo" / "_knowledge" / "governance-history.jsonl"
 EVENTS_LOG = (
     WORKSPACE / ".omo" / "_knowledge" / "omo-events.jsonl"
@@ -801,8 +806,9 @@ def run_smoke(spawn_n: int = 0, consumers: bool = False) -> dict:
     # 防 503/505 Path.mkdir/.write_text 违规; 同 advisory_lock._write_meta 模式)
     import os
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    out_path = OUTPUT_DIR / f"{_today()}.json"
+    output_dir = _output_dir()
+    os.makedirs(output_dir, exist_ok=True)
+    out_path = output_dir / f"{_today()}.json"
     payload = json.dumps(report, ensure_ascii=False, indent=2)
     tmp = out_path.with_name(f".{out_path.name}.tmp")
     # audit-exempt: non-atomic-write — 已用 tmp+os.replace 模式实现原子写, audit engine 误报
@@ -867,7 +873,7 @@ def print_summary(report: dict, quiet: bool = False) -> None:
         print("── L3 抽样 spawn (执行验证) ──")
         print(f"  采样: {ss['sampled']} | 可 spawn: {ss['spawnable']} | 率: {ss['rate']}")
     print()
-    print(f"📁 报告: {OUTPUT_DIR}/{_today()}.json")
+    print(f"📁 报告: {_output_dir()}/{_today()}.json")
 
 
 def main() -> int:

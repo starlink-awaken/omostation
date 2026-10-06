@@ -187,6 +187,10 @@ jobs:
         run: pip install pyyaml pydantic pytest
       - name: BET spec binding lint contract tests
         run: python3 -m pytest tests/test_spec_binding_lint.py -q
+      - name: ADR-0456 B1 call-time write-plane gate
+        # tests/unit/** 不在任何 CI 白名单里 (verify-omo.sh 只跑 projects/omo 与 .omo/tests),
+        # 结构性源码扫描必须显式点名, 否则「CI 绿」不构成这条门禁的证据 (BET-Y2Q4-T10-232)。
+        run: python3 -m pytest tests/unit/test_b1_ledger_call_time.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
