@@ -19,7 +19,10 @@ phase10:
   live_kos: MOS_LIVE_KOS=1 → HTTP KOS_API_URL
   live_gbrain: MOS_LIVE_GBRAIN=1 → gbrain search/query subprocess
   live_gbrain_write: MOS_LIVE_GBRAIN_WRITE=1 → best-effort gbrain put on write
-  notes: capability deepen; defaults remain fixture-safe
+  notes: capability deepen; defaults remain fixture-safe — NO env default changed.
+    status/recall now expose `data_mode` (live|mixed|fixture) + `fixture_backends`
+    so a fixture/stub recall can never be mistaken for production data
+    (BET-Y2Q4-T3-04).
 phase6:
   neo4j_writer: projects/knowledge/kairon/packages/mos/src/mos/neo4j_writer.py
   cockpit_panel: /memory

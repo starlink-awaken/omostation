@@ -40293,6 +40293,165 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T3-04
+  title: KOS/MOS P0 四项修复 — SQL 授权器、CJK 意图路由、默认后端真值、FTS body 分词
+  track: T3-COGNI
+  window: Y2Q4
+  status: pending
+  priority: P1
+  appetite: 2 days
+  risk_level: L2
+  human_gate: false
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  goal: 修复 KOS/MOS 四项已实测的 P0 缺陷，覆盖父仓与 kairon 子模块。(1) bin/gac/mcp-server-kos.py:216-237
+    的 query_custom_sql 用子串黑名单（insert/update/delete/create…）拒绝任何含该子串的合法读（如 SELECT created_at
+    FROM documents），须改以 :26-64/:64 已在 get_db_connection() 挂载的 sqlite3 authorizer 为唯一守卫。(2)
+    mos/src/mos/routing.py:32-40 六条意图 pattern 把含 CJK 分支的整个 alternation 包进 \b(...)\b；CJK
+    串内部处处是词字符，故 \b文档\b 不成立、六条 CJK 分支全部不可达（:41 注释规则只被 _TEMPORAL_RE 遵守）。pin 测试 test_routing_matrix.py:756-792
+    当前断言缺陷仍活，须改为修复后通过的真测试。 (3) live_backends.py:28-38 的 _flag 默认 \"0\" 使 MOS_LIVE_KOS
+    / MOS_LIVE_GBRAIN 默认关闭，service.py:155-177 默认装配内存/fixture 后端，neo4j 由 NEO4J_URI 门控，故默认
+    recall 静默返回 fixture/stub；须默认启用真实后端 或在 status/recall 输出显式标注 fixture 模式，并让 memory-os.yaml
+    的 env_defaults 与代码默认一致。 (4) kos/indexer/engine.py:714 把 d[\"body\"] 原样写入 documents_fts（title
+    走 _tokenize_cn），违反 tokenize.py:8 的不变量「任何写 documents_fts 的地方都用 fts_text()」；且 tokenize.py:43-44
+    在 jieba 缺失时 静默返回原文、不可观测。须先穷举全部 documents_fts 写入路径再统一接入 fts_text()，并让 jieba 缺失可观测。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-06-kos-mos-p0-fix-design.md
+    spec_version: 1.0.0
+    content_digest: sha256:c5e98ea5d9a2e40d6c0af785bcc67dd830de2d54bd9a7a184585a79df8943b79
+    decision_ref: decision://accepted/BET-Y2Q4-T3-04
+  write_surfaces:
+  - bin/gac/mcp-server-kos.py
+  - projects/knowledge/kairon/packages/kos/**
+  - projects/knowledge/kairon/packages/mos/**
+  - .omo/_truth/registry/memory-os.yaml
+  - docs/superpowers/specs/2026-10-06-kos-mos-p0-fix-design.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T3-04.md
+  non_goals:
+  - 不重排 classify_intent 的检查顺序（另见 BET-Y2Q4-T10-TEMPORAL-PRECEDENCE）
+  - 不增删或改写任何既有路由关键字（本次只改 \b 断言位置与可达性）
+  - 不扩展路由表 / 不新增意图 / 不改 backend 集合
+  - 不把 KOS/MOS 两个子模块与父仓改动混作一次提交（子模块提交 + 父仓 gitlink bump 分开）
+  - 不新增第三方依赖（jieba 已是既有可选依赖）
+  - 不启动任务记录 BET-Y2Q4-T10-CJK-ROUTING 本身；其范围 reconcile 进本 BET
+  circuit_breaker: 若发现仅靠调整 \b 断言位置无法让六条中文意图正确路由、必须重排检查顺序，立即停止 item 2 并转 BET-Y2Q4-T10-TEMPORAL-PRECEDENCE（人工决策）；不得在本
+    BET 内自行重排。 若 item 3 的「默认启用真实后端」在干净环境不可复现或引入网络依赖，退回「显式标注 fixture 模式」分支。
+  verify:
+  - cmd: cd projects/knowledge/kairon/packages/mos && env -u MOS_LIVE_GBRAIN env -u
+      MOS_LIVE_KOS uv run --with pytest python -m pytest tests/ -q
+    expect: MOS 全量套件绿；六条中文意图分类正确；ASCII 形式与 eval_harness 分类零漂移
+  - cmd: cd projects/knowledge/kairon/packages/kos && env -u MOS_LIVE_GBRAIN uv run
+      --with pytest python -m pytest tests/ -q
+    expect: KOS 索引/分词套件绿；body 经 fts_text 的写入路径一致；jieba 缺失可观测
+  - cmd: python3 -c "import ast; ast.parse(open('bin/gac/mcp-server-kos.py',encoding='utf-8').read())"
+    expect: mcp-server-kos.py 语法有效；子串黑名单已移除、authorizer 仍是唯一守卫
+  - cmd: make gac-local-gate
+    expect: exit 0
+  done_when:
+  - 'item 1: SELECT created_at FROM documents 不再被拒；INSERT/UPDATE/DELETE/DROP/ALTER/CREATE
+    仍被 authorizer 阻断'
+  - 'item 2: 六条意图各对一句代表性中文完整问句分类正确（code_structure/task_debt/preference_self/entity_relation/card_ops/file_note）'
+  - 'item 2: 六条 ASCII 形式分类不变（taskforce/recard/vaulted 等更长词仍不匹配）'
+  - 'item 2: test_routing_matrix.py 的 pin 断言改为修复后通过，且在修复前代码上先失败（防空绿）'
+  - 'item 3: 默认（无 live 环境变量）recall 不再静默返回 fixture/stub —— 或真实后端启用，或输出显式标注 fixture 模式'
+  - 'item 3: memory-os.yaml 的 env_defaults 与代码实际默认一致（声明=事实）'
+  - 'item 4: 先穷举所有 documents_fts 写入路径（非仅 engine.py:714），title 与 body 统一经 fts_text()'
+  - 'item 4: jieba 缺失导致的原文退化在运行时可观测，不再静默'
+  - 干净环境（MOS_LIVE_GBRAIN/MOS_LIVE_KOS 未设置）下 MOS + KOS 全量套件绿
+  depends_on: []
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  note: 'Reconciled from task record .omo/tasks/active/BET-Y2Q4-T10-CJK-ROUTING.yaml
+    (status pending, no accepted_specifications) — that record covers only item 2 and
+    cannot be started as-is; its scope is folded into this single cross-repo BET. Track
+    T3-COGNI declares primary_write_surfaces projects/knowledge/kairon/packages/mos/**
+    and default_workflow project-code-change. Baseline: worktree ws-kos-mos-p0 root
+    2ae225751, kairon submodule 915fc76 (2026-10-06). test_routing_matrix.py currently
+    exists only as an UNTRACKED file in the canonical workspace; it is absent from the
+    worktree submodule checkout and must be re-landed under version control.'
+- id: BET-Y2Q4-T10-231
+  title: M1 门禁测试对账 — bin/ssot/test-mcp-kos.py 写面登记与 D3 偏差收口
+  track: T10-TOOLING
+  window: Y2Q4
+  status: pending
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  goal: BET-Y2Q4-T3-04 的 M1 修复修改了 bin/ssot/test-mcp-kos.py（断言改为 isError+非读载荷+拒绝词汇，并新增
+    default-deny authorizer 子测试），但该文件不在 T3-04 的 write_surfaces 内，claim 被拒（WORK_PACKET_SCOPE_MISMATCH
+    实测 2026-10-06）。 human decision：记为 T3-04 上的 D3 越权偏差（复盘已落盘），另开本 BET 让 bin/ssot/test-mcp-kos.py
+    获得正式写面，可 claim/verify/close。父仓工作树已有 该改动（未 stage）；本 BET 做写面登记、claim 与门禁验收并正式交付。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-06-m1-gate-test-reconciliation.md
+    spec_version: 1.0.0
+    content_digest: sha256:93aae7432a1ab8e244cbf014f683629e905860b8fc4e9d81338cf292cb6b44fc
+    decision_ref: decision://accepted/BET-Y2Q4-T10-231
+  write_surfaces:
+  - bin/ssot/test-mcp-kos.py
+  - docs/superpowers/specs/2026-10-06-m1-gate-test-reconciliation.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-231.md
+  non_goals:
+  - 不修改 BET-Y2Q4-T3-04 的 spec 或 accepted_specifications（sha256 content_digest 绑定不可破坏）
+  - 不修改 .omo/tasks/active/BET-Y2Q4-T10-CJK-ROUTING.yaml
+  - 不使用任何 gate waiver
+  - 本 BET 不触碰 kairon 子模块
+  - 不重写 test-mcp-kos.py 的既有断言意图（M1 修复已由 T3-04 review 拍板）
+  circuit_breaker: 若 bin/ssot/test-mcp-kos.py 需要落入 T3-04 的 spec 面才能通过门禁，停止并回到 human
+    decision；本 BET 只做写面登记与正式交付。
+  verify:
+  - cmd: python3 bin/ssot/test-mcp-kos.py
+    expect: default-deny authorizer 子测试恒 PASS；无 data/kos 时其余协议检查 exit 78（软跳过）
+  - cmd: make gac-local-gate
+    expect: exit 0
+  - cmd: uv run --with ruff ruff check bin/ssot/test-mcp-kos.py bin/gac/mcp-server-kos.py
+    expect: All checks passed!
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: OK
+  done_when:
+  - agent-workflow claim 对 bin/ssot/test-mcp-kos.py 成功（携带 affected-graph receipt）
+  - test-mcp-kos.py 的 default-deny authorizer 子测试恒运行并通过（无需 data/kos）
+  - 存在 data/kos/ 的主机上 test-mcp-kos gate 为 PASS（exit 0）；无 DB 时 exit 78 软跳过
+  - T3-04 复盘记录 D3 偏差并引用本 BET
+  - 台账 lint 保持 OK
+  depends_on: []
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  note: 派生自 BET-Y2Q4-T3-04（adversarial review M1 blocker + Task A 递归 CTE 允许）。 D3 偏差记录见
+    .omo/_knowledge/retros/BET-Y2Q4-T3-04.md；本 BET 为对账 bet。 bin/gac/mcp-server-kos.py
+    与 T3-04 共享该文件的改动（authorizer default-deny + SQLITE_RECURSIVE=33 允许），本 BET 不重复实现，仅在验收中引用。
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -40431,7 +40590,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 525
+  total_bets: 527
   windows:
   - Y1Q1
   - Y1Q2

@@ -13,54 +13,55 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 SQLITE_DB = WORKSPACE / "data" / "kos" / "kos-index.sqlite"
 
 
+# ── SQLite authorizer (ADR-0127 Finding 3.1) ─────────────────────────────
+# DEFAULT-DENY. Action codes: https://sqlite.org/c3ref/c_alter_table.html
+_SQLITE_PRAGMA = 19
+_SQLITE_READ = 20
+_SQLITE_SELECT = 21
+_SQLITE_FUNCTION = 31
+# 33 = SQLITE_RECURSIVE: raised for recursive CTEs. Legitimate read on a
+# graph-shaped knowledge DB, so it is permitted alongside SELECT/READ.
+_SQLITE_RECURSIVE = 33
+# The only PRAGMAs the tool may run (all read-only).
+_ALLOWED_READ_PRAGMAS = frozenset({"table_info", "index_list", "index_info", "database_list"})
+# Functions that touch the filesystem / load code / are trigger- or FTS-internal.
+_FORBIDDEN_FUNCS = frozenset(
+    {"load_extension", "readfile", "writefile", "edit", "uuid", "fts5", "json_each", "json_tree"}
+)
+
+
+def _authorizer(action, arg1, arg2, dbname, trigger):
+    """SQLite authorizer callback — allow-list only, everything else DENIED.
+
+    Passes: SQLITE_SELECT, SQLITE_READ, SQLITE_RECURSIVE (recursive CTEs), the four
+    allow-listed read-only PRAGMAs, and non-forbidden SQLITE_FUNCTION calls. Every
+    other action is denied here — INSERT/UPDATE/DELETE, every CREATE_*/DROP_*
+    (tables, indexes, views, triggers, virtual tables), ALTER_TABLE, REINDEX,
+    ANALYZE, SAVEPOINT, TRANSACTION, ATTACH/DETACH, and any unknown/forward-compat
+    code. This is the primary guard; `mode=ro` is kept as a second, independent
+    layer. Protocol requires 5 params;
+    only action + arg1 are read (arg2/dbname/trigger are callback scaffolding).
+    """
+    if action in (_SQLITE_SELECT, _SQLITE_READ, _SQLITE_RECURSIVE):
+        return sqlite3.SQLITE_OK
+    if action == _SQLITE_PRAGMA:
+        pragma = (arg1 or "").lower() if arg1 else ""
+        return sqlite3.SQLITE_OK if pragma in _ALLOWED_READ_PRAGMAS else sqlite3.SQLITE_DENY
+    if action == _SQLITE_FUNCTION:
+        func = (arg1 or "").lower() if arg1 else ""
+        if any(f in func for f in _FORBIDDEN_FUNCS):
+            return sqlite3.SQLITE_DENY
+        return sqlite3.SQLITE_OK
+    return sqlite3.SQLITE_DENY
+
+
 def get_db_connection():
     if not SQLITE_DB.is_file():
         raise FileNotFoundError(f"KOS SQLite database not found at: {SQLITE_DB}")
-    # 以只读模式且支持 URI 打开数据库以确保线程和进程安全
+    # Read-only URI is the second layer; the default-deny authorizer above is the
+    # primary gate and stops DDL even if the handle were writable.
     conn = sqlite3.connect(f"file:{SQLITE_DB}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
-
-    # ADR-0127 Finding 3.1 (P1 安全): SQLite set_authorizer 拦截写/危险操作
-    # 仅 SELECT / PRAGMA (read-only 子集) / 函数调用, 拒 INSERT/UPDATE/DELETE/
-    # ATTACH/load_extension/写 PRAGMA 等. 配合关键词黑名单做双层防御.
-    def _authorizer(action, arg1, arg2, dbname, trigger):
-        # SQLite authorizer callback 协议要求 5 个参数 (action code, 2 args, dbname, trigger).
-        # 本实现只用 action + arg1 (PRAGMA / function 名检查). arg2 / dbname / trigger 不读
-        # 属正常回调接口预留.
-        # SQLite authorizer action codes: SQLITE_INSERT=18, UPDATE=23, DELETE=9, ATTACH=24, DETACH=25,
-        #                PRAGMA=19 (19=read, 20=write -- arg1 是 pragma name)
-        if action in (18, 23, 9, 24, 25):  # INSERT/UPDATE/DELETE/ATTACH/DETACH
-            return sqlite3.SQLITE_DENY
-        if action == 19:  # PRAGMA
-            # 仅允许 read-only PRAGMA (table_info / index_list / index_info / database_list)
-            pragma = (arg1 or "").lower() if arg1 else ""
-            allowed_pragmas = {
-                "table_info",
-                "index_list",
-                "index_info",
-                "database_list",
-            }
-            if pragma not in allowed_pragmas:
-                return sqlite3.SQLITE_DENY
-            return sqlite3.SQLITE_OK
-        # SQLITE_FUNCTION 31: 拒 load_extension / readfile / writefile 等敏感函数,
-        # 但允许多数常用聚合/字符函数 (COUNT / SUM / GROUP_CONCAT / SUBSTR / LIKE 等).
-        if action == 31:  # SQLITE_FUNCTION
-            func = (arg1 or "").lower() if arg1 else ""
-            forbidden_funcs = {
-                "load_extension",
-                "readfile",
-                "writefile",
-                "edit",
-                "uuid",
-                "fts5",
-                "json_each",
-                "json_tree",  # 写 OS / 触发器相关
-            }
-            if any(f in func for f in forbidden_funcs):
-                return sqlite3.SQLITE_DENY
-        return sqlite3.SQLITE_OK  # SELECT 及其余读操作允许
-
     conn.set_authorizer(_authorizer)
     return conn
 
@@ -212,30 +213,12 @@ def handle_query_custom_sql(arguments):
             "isError": True,
         }
 
-    # 严格的写拦截安全校验
-    forbidden_keywords = {
-        "insert",
-        "update",
-        "delete",
-        "drop",
-        "alter",
-        "create",
-        "replace",
-        "vacuum",
-    }
-    sql_lower = sql.lower()
-    for kw in forbidden_keywords:
-        if kw in sql_lower:
-            return {
-                "content": [
-                    {
-                        "type": "text",
-                        "text": f"Security violation: Write operation '{kw}' is prohibited.",
-                    }
-                ],
-                "isError": True,
-            }
-
+    # 写操作由 get_db_connection() 内挂载的 SQLite authorizer 拦截
+    # (ADR-0127 Finding 3.1, 2026-10-06 改为 default-deny): 只放行 SELECT / READ /
+    # 四个只读 PRAGMA / 非敏感函数; 其余全部拒绝 —— 含 INSERT/UPDATE/DELETE 与
+    # 所有 CREATE_*/DROP_*/ALTER_TABLE/REINDEX/ANALYZE/SAVEPOINT/TRANSACTION/
+    # ATTACH/DETACH。`mode=ro` 仅作第二层。这里不再做子串黑名单 —— 它按文本子串
+    # 匹配, 会把 SELECT created_at FROM documents 这类合法读误判为写操作。
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
