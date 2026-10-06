@@ -225,7 +225,52 @@ FileNotFoundError: .../ws-omo-resident-stateroot/.subtrees/.omo/_knowledge/bos-r
 `test_bos_40_uri_smoke.py:32`）。在 `projects/omo` 布局下 `parents[3]` 命中工作区根，
 在 PASW 的 `.subtrees/omo` 布局下命中 `<wt>/.subtrees` —— **差一层，与 diff 无关**。
 可核验的三条：① `git diff --name-only` 不含这两个文件；② 同一份文件在
-`projects/omo`（改前基线检出）单跑这 11 个用例 → **11 passed**；③ 本轮没有改
+`projects/omo`（当时的改前基线检出 `55ef431`）单跑这 11 个用例 → **11 passed**；③ 本轮没有改
 `WORKSPACE_ROOT` 的推导（§2 明确保留）。⇒ 判据-6 的「相对基线无回归」按此成立；
 它同时是 AGENTS.md §7「用例/检查器里被检对象的根不得由 `__file__` 反推」的又一实例，
 登记为残留而非本轮修复（这两个文件在 22 个 `write_surfaces` 之外）。
+
+②那条读数是**在 `projects/omo` 仍指 `55ef431` 时取的**；§9.3 的 re-pin 之后该路径已在
+改后树（`8f5c052`）上，复现②需要显式 `git -C projects/omo checkout 55ef431`，不是照抄本节。
+
+### 9.3 首跑 CI 红：基线用例被自己的交付动作判红（三处同源）
+
+| 位置 | 失败 |
+|---|---|
+| omo PR #208 `test` / `test-cov` | `FAILED tests/unit/test_omo_resident_state_root.py::test_prechange_baseline_is_not_zero - AssertionError: 改前 receipt.py 必含冻结写点; 没命中说明检测器失效 / assert []` |
+| 根 PR `cascading_test` | 同一用例、同一行 —— 它评的是 pinned gitlink 指向的那份代码，不是分支上的修复 |
+
+根因与 §9.2 的 `parents[3]` 不同族，是**第三种形态**：该用例用
+`git show HEAD:src/omo/resident/receipt.py` 取「改前」文本。本地绿是因为跑它时改动**尚未提交**，
+那时 HEAD 确实等于改前；`ba69696` 一落地，HEAD 就是改后的树，冻结写点按构造归零 ⇒ 判据自红。
+CI 侧历史深浅不定（worktree 子模块可能只有 1 个 commit，AGENTS.md §6）是同一错误的第二端。
+
+修法与读数（`b594032`，只改测试文件）：
+
+- 改前文本**由 fixture 自己物化** —— 逐字嵌进用例（模板定义 + 那 6 处文件动作），
+  与 #4606「测兜底必须先物化」、§9.2/AGENTS.md「已提交的 legacy 兜底不是仓库保证」同源。
+- 断言从「非空」加强为「恰 6 处且形状计数一致」：`.mkdir()×1 / .open()×1 / .is_file()×2 / .read_text()×2`，
+  基线实测 6 处命中在改前的 `receipt.py` 第 52/53/63/66/85/87 行。
+- **变异对照**：把 fixture 里那 6 处包成 `write_path(...)` 后单跑该用例 → `FAILED`，
+  证明断言真依赖该前提，而不是检测器没命中。
+- 顺带删掉 `_git_show_head()` 与它唯一依赖的 `import subprocess` / `REPO_ROOT`；
+  原先那句 `print(f"expect=0 got=0 …")` 是假的 expect/got（真数量在字符串里），换成 `expect=6 got=6`。
+- 复跑：`test_omo_resident_state_root.py` **93 passed**；三文件联跑 **130 passed**；
+  根侧 `test_resident_write_plane_split.py`（pinned 到 `8f5c052` 后）**21 passed**；
+  `ruff check` 与 `ruff format --check` 干净。
+
+### 9.4 squash 之后必须 re-pin，且 `bump-pointer` 的可达性守卫会失明
+
+- omo PR #208 squash 合并产生 `8f5c052`；根侧 gitlink 从 `ba69696` re-pin 到它
+  （`440398047`，单独一个 `submodule_pointer` lane commit）。两者 **tree 逐字节相同**
+  （`5358a5a`），差异只在历史 —— 判据：`git -C projects/omo rev-parse <a>^{tree} <b>^{tree}`，
+  不是「看起来是同一个改动」。
+- 四个 commit 各占一条 lane 才过得去 `bin/change-lane-check.py --staged`：
+  一次 `git add` 四件交付物时它报 `FAIL mixed lanes=code,docs,docs_data,submodule_pointer`，
+  而 `make gac-local-gate` 的失败项**只有这一条**（其余 68 项全 PASS）。
+- `bump-pointer` 的前置检查是 `git -C projects/omo branch -r --contains <sha>`，而该检出的
+  `remote.origin.fetch` 只有 `+refs/heads/main:refs/remotes/origin/main` ⇒ `git fetch origin <branch>`
+  只产生 `FETCH_HEAD`，**看不见一个确实已 push 成功的 commit**，守卫报
+  `❌ SHA … 不在子模块 remote 上 / 请先 push 子模块分支`。本轮用显式 refspec
+  （`+refs/heads/<b>:refs/remotes/origin/<b>`）造出 remote-tracking ref 后才放行。
+  这是工具缺陷不是流程缺陷，登记为残留（修法：守卫改探 `git ls-remote` 或 fetch 时用显式 refspec）。
