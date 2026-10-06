@@ -27,7 +27,7 @@ def _load_module() -> object:
 
 def _render_one_decision(monkeypatch: pytest.MonkeyPatch) -> tuple[str, object]:
     module = _load_module()
-    monkeypatch.setattr(module, "SYSTEM_YAML", Path("/nonexistent/system.yaml"))
+    monkeypatch.setattr(module, "_system_yaml", lambda: Path("/nonexistent/system.yaml"))
     monkeypatch.setattr(
         module,
         "scan_decision_inbox",

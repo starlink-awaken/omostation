@@ -63,7 +63,11 @@ def _sys_path_principal_id() -> str:
     return principal_id_from_env()
 from repo_root import event_ledger_path
 
-DEFAULT_LEDGER = event_ledger_path()
+
+def _default_ledger() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return event_ledger_path()
+
 
 # Kept only so callers can prove the legacy state writer is retired. No
 # production path writes this file anymore.
@@ -358,7 +362,7 @@ def _observe_personal_value(db_path: Path, principal_id: str) -> tuple[dict[str,
 
 def measure_value_truth(
     *,
-    db_path: Path | str = DEFAULT_LEDGER,
+    db_path: Path | str | None = None,
     principal_id: str,
     observed_at: str | None = None,
 ) -> dict[str, Any]:
@@ -367,7 +371,7 @@ def measure_value_truth(
     principal = str(principal_id or "").strip()
     if not principal:
         return _unprovable("principal_id_required", observed_at=observed)
-    path = Path(db_path)
+    path = _default_ledger() if db_path is None else Path(db_path)
     if not path.is_file():
         return _unprovable("event_ledger_missing", observed_at=observed)
     try:
@@ -398,7 +402,7 @@ def measure_completion_rate() -> float:
 
 
 def weekly_report(
-    *, db_path: Path | str = DEFAULT_LEDGER, principal_id: str = "", observed_at: str | None = None
+    *, db_path: Path | str | None = None, principal_id: str = "", observed_at: str | None = None
 ) -> dict[str, Any]:
     return measure_value_truth(db_path=db_path, principal_id=principal_id, observed_at=observed_at)
 
@@ -456,9 +460,11 @@ def main() -> int:
     parser.add_argument("--consumer", default="human")
     parser.add_argument("--journey-id")
     parser.add_argument("--principal-id", default=_sys_path_principal_id())
-    parser.add_argument("--db-path", type=Path, default=DEFAULT_LEDGER)
+    parser.add_argument("--db-path", type=Path, default=None)
     parser.add_argument("--observed-at")
     args = parser.parse_args()
+    if args.db_path is None:
+        args.db_path = _default_ledger()
 
     if args.record:
         result = record_consumption(args.scene or "", args.action or "", args.consumer, journey_id=args.journey_id)

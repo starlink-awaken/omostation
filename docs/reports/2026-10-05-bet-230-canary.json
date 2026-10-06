@@ -1,0 +1,69 @@
+{
+  "schema": "canary-receipt/v1",
+  "bet": "BET-Y2Q4-T10-230",
+  "checked_at": "2026-10-05T12:13:00Z",
+  "checked_on": "git://origin/main@094906507",
+  "checks": {
+    "merged_reachable_commit": {
+      "ref": "github://starlink-awaken/omostation/pull/4646",
+      "status": "pass",
+      "detail": "PR #4646 squash 合并为 094906507；CI 21 pass / 2 skipping / 0 fail，mergeStateStatus CLEAN；L3 深度安全评审 0 findings"
+    },
+    "live_write_plane_canary_post_merge": {
+      "ref": "cmd://OMOSTATION_STATE_ROOT=/tmp/t10230-canary python3 bin/bc-os/policy_radar.py --generate-morning-brief",
+      "status": "pass",
+      "detail": "在合并后的 094906507 上做真实生成。state 根落三件：brief-20261005.json 980B / brief-20261005.md 417B / cache.json 590B，rc=0。检出的 .omo/state/policy-radar/ 跑前跑后都不存在（checkout_dir_exists_before=false, _after=false），git status --short 该路径为空 —— 写面完全离开检出。"
+    },
+    "reader_resolves_same_seam": {
+      "ref": "cmd://convergence-pulse._brief_dir()",
+      "status": "pass",
+      "detail": "声明 profile 时 → /tmp/t10230-canary/.omo/state/policy-radar 且当日 brief-20261005.json is_file=true（不误报断更）；未声明时 → 检出路径 is_dir=false（逐字节保持历史行为，不凭空造目录）"
+    },
+    "tracking_boundary": {
+      "ref": "cmd://git ls-files .omo/state/policy-radar && git check-ignore -q .omo/state/policy-radar/cache.json",
+      "status": "pass",
+      "detail": "ls-files 空 + check-ignore rc=0（.gitignore:289 新增 .omo/state/policy-radar/）。刻意不进 runtime-projections.yaml：该面是日期后缀目录，omo-state-projection-guard 要求每条登记的 canonical 路径存在且可解析，登记会在 fresh clone/CI 上结构性变红（spec I4）。"
+    },
+    "core_suites_post_merge": {
+      "ref": "pytest://tests/unit/{test_policy_radar_state_root,test_policy_radar_internal,test_projection_reader_resolution,test_repo_root_profile}.py?flags=-p+no:randomly",
+      "status": "pass",
+      "detail": "893 passed in 1.88s"
+    },
+    "consumer_set": {
+      "ref": "pytest://tests/test_policy_radar.py+tests/unit/{test_policy_radar_internal,test_policy_radar_state_root}.py?flags=-p+no:randomly",
+      "status": "pass",
+      "detail": "19 passed in 0.17s —— policy_radar 的三个消费方全绿"
+    },
+    "late_declaration_without_reload": {
+      "ref": "pytest://tests/unit/test_policy_radar_state_root.py::test_state_dir_follows_late_declared_state_root",
+      "status": "pass",
+      "detail": "不 importlib.reload 即断言 state_dir() 随 env 改变 —— 这一条是本轮缺陷形状的直接反证（import 时冻结会让它静默失效）"
+    },
+    "source_scanner_self_proved": {
+      "ref": "pytest://tests/unit/test_policy_radar_state_root.py::test_write_plane_source_scan_fires_on_a_synthetic_violation",
+      "status": "pass",
+      "detail": "合成违规样本命中 3 条（检测器非空跑），两份被测源码命中 0 条。判据来自 AGENTS.md §7「扫源码的门禁必须自证」：不自证的绿可能只是检测器压根没命中。"
+    },
+    "local_gate_no_new_hard_failure": {
+      "ref": "receipt://docs/reports/2026-10-05-policy-radar-artifacts-state-root-untrack-closeout.md",
+      "status": "pass",
+      "detail": "GaC local gate: PASS (69 checks executed, 1 SOFT WARN)；软 WARN 为 KOS 库缺失（运行态产物不在 git，exit 78 = skipped 非 passed）。hook 改写的 .omo/state/system.yaml 时间戳已从交付 commit 剔除，未随 PR 走。"
+    },
+    "ledger_triple_assertion": {
+      "ref": "file://docs/plans/3y-bet-ledger.yaml",
+      "status": "pass",
+      "detail": "ledger-contract 解析：len(bets) 525 == meta.total_bets 525，唯一 id 525（重复 0），BET-Y2Q4-T10-230 为末条"
+    },
+    "present_day_effect_zero": {
+      "ref": "file://bin/bc-os/policy_radar.py:25-44",
+      "status": "info",
+      "detail": "24 个 launchd plist + 39 行 crontab 全部不声明 profile env ⇒ 在这些进程里 state_root()==code_root()，落点与改前逐字节相同；没有任何 cron 跑 policy_radar，也没有任何 CI workflow 引用 policy-radar/convergence-pulse —— 因此落点判据只能本地实测，CI 绿不构成它的证据（spec §4）。本轮不等于 plist/cron 已改道（B4b 批次 2+，需逐批授权）。"
+    },
+    "deferred_readers": {
+      "ref": "file://projects/omo/src/omo/pipeline_supervisor.py:129",
+      "status": "not_in_scope",
+      "detail": "两个 submodule 侧读者（projects/omo/src/omo/pipeline_supervisor.py:129,185、projects/cockpit/src/cockpit/commands/brief.py:73）仍在检出侧硬路径：跨仓 gitlink，另开 BET。本机 profile 未声明时二者行为不变，故不构成当前故障。"
+    }
+  },
+  "overall": "pass"
+}

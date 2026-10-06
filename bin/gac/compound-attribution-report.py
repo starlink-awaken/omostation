@@ -46,7 +46,13 @@ from repo_root import event_ledger_path
 REPORT_SCHEMA = "compound-attribution-report/v2"
 VALUE_SCHEMA = "value-truth-snapshot/v1"
 VALUE_METER = REPO_ROOT / "bin" / "bc-os" / "north_star_meter_v2.py"
-DEFAULT_LEDGER = event_ledger_path()
+
+
+def _default_ledger() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return event_ledger_path()
+
+
 UNPROVEN_METRICS = (
     "parallel_acceleration_ratio",
     "local_tokens_substituted",
@@ -215,14 +221,14 @@ def generate_attribution_data(
     *,
     bet_summary: Mapping[str, Any],
     value_truth_receipt: Path | None = None,
-    db_path: Path = DEFAULT_LEDGER,
+    db_path: Path | None = None,
     principal_id: str = "",
     observed_at: str | None = None,
 ) -> dict[str, Any]:
     """Remeasure a receipt and build the report behind one public boundary."""
     verified_value = _load_verified_value_truth(
         value_truth_receipt,
-        db_path=db_path,
+        db_path=_default_ledger() if db_path is None else Path(db_path),
         principal_id=principal_id,
     )
     return _project_attribution_data(
@@ -282,7 +288,7 @@ def render_markdown_report(data: Mapping[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--value-truth-receipt", type=Path)
-    parser.add_argument("--db-path", type=Path, default=DEFAULT_LEDGER)
+    parser.add_argument("--db-path", type=Path, default=None)
     parser.add_argument("--principal-id", default=principal_id_from_env())
     parser.add_argument(
         "--bet-ledger",

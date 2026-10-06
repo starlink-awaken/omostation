@@ -26,8 +26,13 @@ from repo_root import code_root, state_root  # noqa: E402
 
 SYSTEM_YAML_REL = ".omo/state/system.yaml"
 WORKSPACE = code_root()
-STATE_ROOT = state_root()
-SYSTEM_YAML = STATE_ROOT / ".omo" / "state" / "system.yaml"
+
+
+def _system_yaml() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return state_root() / ".omo" / "state" / "system.yaml"
+
+
 WRITE_OWNERS_YAML = WORKSPACE / ".omo" / "_truth" / "registry" / "write-owners.yaml"
 OWNER_LEXICON = ("script:", "daemon:", "human:", "broker:")
 
@@ -38,10 +43,11 @@ OWNER_LEXICON = ("script:", "daemon:", "human:", "broker:")
 def check_duplicate_keys() -> list[dict]:
     """Scan system.yaml for duplicate top-level keys (multi-writer conflict)."""
     findings: list[dict] = []
-    if not SYSTEM_YAML.exists():
+    system_yaml = _system_yaml()
+    if not system_yaml.exists():
         return findings
 
-    text = SYSTEM_YAML.read_text(encoding="utf-8")
+    text = system_yaml.read_text(encoding="utf-8")
     seen: dict[str, list[int]] = {}
 
     for i, line in enumerate(text.splitlines(), 1):
@@ -163,7 +169,8 @@ def resolve_owner(owner: str) -> tuple[bool, str]:
 def check_field_ownership() -> list[dict]:
     """Every top-level system.yaml key must have a resolvable declared owner."""
     findings: list[dict] = []
-    if not SYSTEM_YAML.exists():
+    system_yaml = _system_yaml()
+    if not system_yaml.exists():
         return findings
 
     declared = load_write_owners().get(SYSTEM_YAML_REL)
@@ -178,7 +185,7 @@ def check_field_ownership() -> list[dict]:
             }
         ]
 
-    present = top_level_keys(SYSTEM_YAML.read_text(encoding="utf-8"))
+    present = top_level_keys(system_yaml.read_text(encoding="utf-8"))
     present_set = set(present)
 
     for key in present:
@@ -246,9 +253,10 @@ def main(argv: list[str] | None = None) -> int:
     findings.extend(ownership)
 
     if args.as_json:
+        system_yaml = _system_yaml()
         present = (
-            top_level_keys(SYSTEM_YAML.read_text(encoding="utf-8"))
-            if SYSTEM_YAML.exists()
+            top_level_keys(system_yaml.read_text(encoding="utf-8"))
+            if system_yaml.exists()
             else []
         )
         declared = load_write_owners().get(SYSTEM_YAML_REL)
@@ -256,7 +264,7 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(
                 {
                     "targets": {
-                        "system_yaml": str(SYSTEM_YAML),
+                        "system_yaml": str(system_yaml),
                         "write_owners_yaml": str(WRITE_OWNERS_YAML),
                     },
                     "declared": len(declared) if isinstance(declared, dict) else 0,

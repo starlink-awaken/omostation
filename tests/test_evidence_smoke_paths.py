@@ -94,7 +94,7 @@ def test_undeclared_profile_keeps_the_legacy_system_yaml_path_string(tmp_path, m
     assert str(module._system_yaml()) == str(module.WORKSPACE / ".omo" / "state" / "system.yaml")
 
 
-# ── ADR-0456 B5 残留: bin/ 侧其余写手 (evidence-smoke OUTPUT_DIR / task-inventory 产物) ──
+# ── ADR-0456 B5 残留: bin/ 侧其余写手 (evidence-smoke _output_dir() / task-inventory 产物) ──
 # 判据形状同上：写面跟 profile，读面只有写者已翻根时才跟着翻 —— 所以每一对断言都是
 # 「这个常量移了 + 那个常量没移」，只测其一都能被半改骗过去。
 
@@ -104,8 +104,8 @@ def test_declared_profile_moves_evidence_smoke_output_dir_off_the_checkout(tmp_p
     monkeypatch.setenv(STATE_ROOT_ENV, str(state_root))
     module = _load_evidence_smoke()
 
-    assert module.OUTPUT_DIR == state_root / ".omo" / "_delivery" / "evidence-smoke"
-    assert module.WORKSPACE not in module.OUTPUT_DIR.parents
+    assert module._output_dir() == state_root / ".omo" / "_delivery" / "evidence-smoke"
+    assert module.WORKSPACE not in module._output_dir().parents
 
 
 def test_evidence_smoke_jsonl_logs_stay_on_the_checkout(tmp_path, monkeypatch):
@@ -123,8 +123,8 @@ def test_declared_profile_moves_task_inventory_artifacts_off_the_checkout(tmp_pa
     monkeypatch.setenv(STATE_ROOT_ENV, str(state_root))
     module = _load_task_inventory()
 
-    assert module.SNAP_DIR == state_root / "runtime" / "task-inventory" / "snapshots"
-    assert module.DRIFTS == state_root / "runtime" / "task-inventory" / "drifts.jsonl"
+    assert module._snap_dir() == state_root / "runtime" / "task-inventory" / "snapshots"
+    assert module._drifts_path() == state_root / "runtime" / "task-inventory" / "drifts.jsonl"
     # REGISTRY 没有可追的写者，panorama-collect.py:3198 又读同一个文件 ⇒ 保持检出侧
     assert module.REGISTRY == module.WORKSPACE / ".omo" / "state" / "task-registry.yaml"
 
@@ -135,6 +135,6 @@ def test_undeclared_profile_keeps_legacy_root_side_writer_paths(tmp_path, monkey
     smoke = _load_evidence_smoke()
     inventory = _load_task_inventory()
 
-    assert str(smoke.OUTPUT_DIR) == str(smoke.WORKSPACE / ".omo" / "_delivery" / "evidence-smoke")
-    assert str(inventory.SNAP_DIR) == str(inventory.WORKSPACE / "runtime" / "task-inventory" / "snapshots")
-    assert str(inventory.DRIFTS) == str(inventory.WORKSPACE / "runtime" / "task-inventory" / "drifts.jsonl")
+    assert str(smoke._output_dir()) == str(smoke.WORKSPACE / ".omo" / "_delivery" / "evidence-smoke")
+    assert str(inventory._snap_dir()) == str(inventory.WORKSPACE / "runtime" / "task-inventory" / "snapshots")
+    assert str(inventory._drifts_path()) == str(inventory.WORKSPACE / "runtime" / "task-inventory" / "drifts.jsonl")

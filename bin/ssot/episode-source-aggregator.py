@@ -35,7 +35,12 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
 from repo_root import event_ledger_path
 
-DEFAULT_LEDGER = event_ledger_path()
+
+def _default_ledger() -> Path:
+    """ADR-0456 B1: resolve at call time — a module constant freezes the pre-profile root."""
+    return event_ledger_path()
+
+
 DEFAULT_DEBT_DIR = WORKSPACE / ".omo" / "debt" / "items"
 DEFAULT_STATE_DIR = WORKSPACE / ".omo" / "state"
 NEGATIVE_SAMPLES_FILE = "attest-negative-samples.json"
@@ -431,7 +436,7 @@ def main() -> None:
         print(f"Added negative sample: {args.add_negative}", file=sys.stderr)
         return
 
-    ledger_path = Path(args.ledger) if args.ledger else DEFAULT_LEDGER
+    ledger_path = Path(args.ledger) if args.ledger else _default_ledger()
     debt_dir = Path(args.debt_dir) if args.debt_dir else DEFAULT_DEBT_DIR
     state_dir = Path(args.state_dir) if args.state_dir else DEFAULT_STATE_DIR
     repo = Path(args.repo) if args.repo else WORKSPACE
