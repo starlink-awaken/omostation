@@ -40413,7 +40413,8 @@ bets:
   title: M1 门禁测试对账 — bin/ssot/test-mcp-kos.py 写面登记与 D3 偏差收口
   track: T10-TOOLING
   window: Y2Q4
-  status: pending
+  status: done
+  done_at: 2026-10-06
   priority: P1
   appetite: 0.5 day
   risk_level: L1
@@ -40463,17 +40464,41 @@ bets:
   depends_on: []
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b26697f8a544d1e8cc7c5adb554541237b14abf3
+          tests:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
+          diff:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
+          rollback:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-231.md
+            sha256: sha256:d9944b9a62f99ed2a9345f67fd00a5dd6da2a1c10b1f8efcbbdd8b1e94ff168b
+          cleanup:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
       value:
         status: NOT_PROVEN
         evidence: {}
+
   note: 派生自 BET-Y2Q4-T3-04（adversarial review M1 blocker + Task A 递归 CTE 允许）。 D3 偏差记录见
     .omo/_knowledge/retros/BET-Y2Q4-T3-04.md；本 BET 为对账 bet。 bin/gac/mcp-server-kos.py
     与 T3-04 共享该文件的改动（authorizer default-deny + SQLITE_RECURSIVE=33 允许），本 BET 不重复实现，仅在验收中引用。

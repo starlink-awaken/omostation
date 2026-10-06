@@ -63,8 +63,9 @@ created: 2026-10-06
 
 ## Q5 下一个认领本 track 的 agent 需要知道什么？
 
-- `bin/ssot/test-mcp-kos.py` 的改动由 `BET-Y2Q4-T10-231` 认领并 closeout（本文件
-  末尾于 T10-231 收口后更新指向其 closure）。
+- `bin/ssot/test-mcp-kos.py` 的改动已由 `BET-Y2Q4-T10-231` 认领并 closeout
+  （run `20261006T040738Z-bet-execution-ab85640c`，见
+  `.omo/_knowledge/retros/BET-Y2Q4-T10-231.md`）；本 BET 的 D3 偏差已正式收口。
 - gate 的 test-mcp-kos 已拆分：default-deny authorizer 子测试不依赖 `data/kos/` 恒跑；
   DB 协议检查无 runtime DB 时 exit 78 软跳过。
 - **子模块合并 → 父 gitlink re-point 流程**：合并前先确认子模块 main 的最终 SHA；
