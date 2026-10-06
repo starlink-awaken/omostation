@@ -287,7 +287,6 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
 | 0443 | 产出/收敛平衡框架 | ACCEPTED | 2026-08-30 | xiamingxing | 0443-production-convergence-balance-framework.md |
 | 0444 | 自进化 Harness 异构生态收束 | ACCEPTED | 2026-08-31 | xiamingxing | 0444-self-evolving-harness.md |
-| 0464 | 声明已达但执行未达：三类治理盲区与判据 | PROPOSED | 2026-10-06 | governance-agent | 0464-declaration-vs-execution-three-governance-blindspots.md |
 
 ---
 
@@ -473,6 +472,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0461: changeset 侧携带 claim 绑定，使 legacy publish fence 可被满足 — **PROPOSED** | 2026-10-02 | changeset carries claim binding so the legacy publish fence becomes satisfiable (context is a binding reference, not a grant) | 0461-changeset-claim-binding-for-legacy-fence.md
 - ADR-0462: mainline 收窄不得丢弃 identity_base 下界 — 修正 ADR-0460 引入的 provenance 回归 — **ACCEPTED** | 2026-10-02 | own-commit range must keep the identity_base lower bound; rev-list --not is a toggle, not a flag | 0462-provenance-own-commits-base-bound.md
 - ADR-0463: 「契约已定义并测试，但生产侧无生产者」的三例缺口 — **PROPOSED** | 2026-10-05 | gh_json / claims_authority_fence_context / publication_scope: contract defined and tested, never produced in production | 0463-contract-without-production-producer.md
+- ADR-0464: 声明已达但执行未达：三类治理盲区与判据 — **PROPOSED** | 2026-10-06 | Declaration vs execution: three governance blindspots and their criteria | 0464-declaration-vs-execution-three-governance-blindspots.md
 
 - ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
 - ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成) — **ACCEPTED** | 2026-08-08 | DoD gate | 0400-definition-of-done-task-verify.md

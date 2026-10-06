@@ -12,9 +12,17 @@ allowed_ignored_dirs:
   - .artifacts
   - .codebase-memory
   - .claude
+  # AI CLI 工具的工作目录 (与 .claude / .crush / .qoder 同性质)。
+  # .claude-flow 放 harness-active-policy.json 与 policy/, 属本机策略面。
+  - .claude-flow
+  - .commandcode
   - .crush
   - .deepeval
   - .idea
+  # .kilo 是 Kilo CLI 的工作树根 (61MB, 含 node_modules + worktrees)。
+  - .kilo
+  # LADS 是 agora 的缓存面 (agora_cache/), 与 .omc 同性质。
+  - LADS
   - .omc
   - .openclaude
   - .pytest_cache
@@ -24,6 +32,12 @@ allowed_ignored_dirs:
   - .subtrees
   - .venv
   - .worktrees
+  # zvec_grep MCP server 的本地缓存与 daemon 日志 (Claude Code 的 mcp server,
+  # 配置在 ~/.claude.json 的 "zvec_grep" 条目下)。是活跃服务: 日志实时写入
+  # (healthz 轮询约 5.2 次/秒), 不能删。与 .codebase-memory / .serena / .claude
+  # 同性质 —— 外部工具产物但在本仓根下运行, 故显式注册, 否则被判
+  # "ignored-unregistered" 目录卫生违规。2026-10-06 纳入。
+  - .zvec-grep
   - agent-runtime
   - artifacts
   - archive-*
