@@ -40297,7 +40297,8 @@ bets:
   title: KOS/MOS P0 四项修复 — SQL 授权器、CJK 意图路由、默认后端真值、FTS body 分词
   track: T3-COGNI
   window: Y2Q4
-  status: pending
+  status: done
+  done_at: 2026-10-06
   priority: P1
   appetite: 2 days
   risk_level: L2
@@ -40365,17 +40366,41 @@ bets:
   depends_on: []
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b26697f8a544d1e8cc7c5adb554541237b14abf3
+          tests:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
+          diff:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
+          rollback:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T3-04.md
+            sha256: sha256:af7b5482c6d3b9feb154f85832b1cdfb12b49696e315b916e98496722dd53c0b
+          cleanup:
+            ref: receipt://docs/reports/2026-10-06-kos-mos-p0-closeout.md
+            sha256: sha256:24e543d5981ca8152fd3dcea00363b3d48eda6d450a2a64fd75dbb3e3c1cd151
       value:
         status: NOT_PROVEN
         evidence: {}
+
   note: 'Reconciled from task record .omo/tasks/active/BET-Y2Q4-T10-CJK-ROUTING.yaml
     (status pending, no accepted_specifications) — that record covers only item 2 and
     cannot be started as-is; its scope is folded into this single cross-repo BET. Track
