@@ -287,6 +287,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 | STRAT-P77 | P77 战略 12 周 5 phase: 跨仓一致性 + 演化护栏 | DRAFT | 2026-07-07 | governance-team | STRAT-P77-strategic-roadmap.md |
 | 0443 | 产出/收敛平衡框架 | ACCEPTED | 2026-08-30 | xiamingxing | 0443-production-convergence-balance-framework.md |
 | 0444 | 自进化 Harness 异构生态收束 | ACCEPTED | 2026-08-31 | xiamingxing | 0444-self-evolving-harness.md |
+| 0464 | 声明已达但执行未达：三类治理盲区与判据 | PROPOSED | 2026-10-06 | governance-agent | 0464-declaration-vs-execution-three-governance-blindspots.md |
 
 ---
 
