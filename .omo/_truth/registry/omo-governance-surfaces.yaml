@@ -2,7 +2,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-09-21
+last-reviewed: 2026-10-06
 ---
 
 # 2026-09-21 复审 (X2-C05 ≤14d; 上次 2026-09-06 已 15d → 该 L0 检查今日对所有 PR 失败)
@@ -20,6 +20,57 @@ last-reviewed: 2026-09-21
 #     本次**不删除**这些条目: 静默改 SSOT 注册表会让缺口继续不可见。
 #     已登记为债务项 .omo/debt/items/OMO-SURFACES-ZOMBIE-ASSETS.yaml, 待 owner
 #     决策 (补齐写入方 vs 正式摘除声明)。
+# 2026-10-06 复审 (X2-C05 <=14d; 上次 2026-09-21 => 今天 15d)。该检查是 required `gac-gate` 的一条,
+#   它把人工维护的 `last-reviewed` 与 `datetime.now()` 比较, 因此每 14 天对**所有** PR 失败,
+#   包括 main 自己的树 —— 判据实测: 用 origin/main 的 bin/gac/check-l0-constraints.py + 本文件
+#   blob 执行 check_x2_c05() => ok=False ("last-reviewed 15d ago")。在案的上一轮同类拆弹是
+#   2026-09-21 的 f035d1cfd(#4109) 与 4be3baea8(#4111) —— 同一次复发的两个 PR, 都只动本文件;
+#   本轮是**在案第二次复发**(14 天周期与复核戳的实际间隔决定了它必然再次发生)。
+# 复审方法: 逐条核对声明 ref 与文件系统实况 + 引用者**语义**(写者 / 排除名单 / 迁移注记)。
+#   三条测量纪律(每条都是本轮自查出来的盲点, 都会把读数推向"看着更干净"):
+#     a) 内容搜索用**去尾斜杠**字面量 —— 按带斜杠形式 grep 会漏掉脚本里 `.omo/tests`(无斜杠)的引用者,
+#        bin/ssot/verify-omo.sh 就是这么漏的;
+#     b) gitignore 判定用**原样声明路径**传 `git check-ignore` —— 传去斜杠路径则目录专用模式
+#        `.omo/tests/` 不命中, 会误报"未忽略";
+#     c) 行号一律取自 **origin/main blob**(`git show origin/main:<path>` / `git grep -n <lit> origin/main`),
+#        引用者同理不用本机工作树(并发 agent 会脏它)。实测本机 `.gitignore` 与 main 差 1 行:
+#        `projects/c2g/` 本机 342 / main **343**, `.omo/locks/` 本机 363 / main **364**; CI 读 main。
+#   - 声明项 46 = governance_stack 3 + assets 43 (自证: YAML 结构抽取 46 == 正则抽取 46)。
+#   - 实况: 存在 41 (git 跟踪 32 / gitignored 运行时面 9), 不存在 5; 存在项零活引用者 = 0。
+#   - 不存在的 5 条**全部命中 .gitignore**, 且**没有一条有写入方** —— "零写者"不复用引用计数
+#     (那把 registry 声明/任务归档等纯提及也算进来), 而是另用只扫**代码面**(bin/**、
+#     projects/omo/src/**、projects/ecos/src/**)的探针取引用行原文逐行分类, 命中 3/4/3/4/3 行,
+#     构造类(mkdir/write_text/makedirs/touch/open) = **0 处**, 余下全是排除名单/skip/注记:
+#       ingress_plane  projects/c2g/  .gitignore:343; 不在 origin/main `.gitmodules`(16 段)也不是
+#                               main 树 gitlink(14 个) => 外部工具的本地检出。另记一个可修缺陷:
+#                               bin/compass_radar.py:712(副本 bin/meta/compass_radar.py:503)在目录缺失时
+#                               打印 `git submodule update --init projects/c2g`, 而 c2g **未注册为子模块**
+#                               => 该修复提示在干净检出上不可能成功。引用面另有 5 份 agent-workflows
+#                               (实测 `git grep -l projects/c2g origin/main` 限该目录) 与多份 registry(纯声明)。
+#       OMO-LOCKS        .omo/locks/        .gitignore:364; 代码侧引用全是**排除名单**:
+#                               bin/gac/check-runtime-artifacts.py:32(黑名单) ·
+#                               bin/gac/ci-local-fast.py:383(同) · bin/ops/cold-backup-drill.sh:96(`:!:` 排除)
+#       OMO-WORKERS      .omo/workers/      .gitignore:44;  bin/ssot/check-cross-refs.py:94 明写
+#                               "已迁移到 .omo/tasks/, 旧路径在 standards 中残留"; 备份演练:102 排除;
+#                               bin/_archive/migrated_low_value/omo-state-cleanup.py:66 属归档面非写者
+#       OMO-TESTS        .omo/tests/        .gitignore:43;  bin/ssot/verify-omo.sh:45-48 显式 skip
+#                               并注明 "legacy tests 迁移到 projects/omo/tests"; 备份演练:99 排除
+#       OMO-CAPABILITIES .omo/capabilities/ .gitignore:29;  bin/change-lane-check.py:96 只是 lane
+#                               映射里的遗留别名(同集合已含新路径 .omo/_truth/registry/agent-clis.yaml);
+#                               备份演练:103 排除; 归档 cleanup:45
+#   - 对上一条(2026-09-21)记录的三处订正 —— 原文保留以便追溯, 以今天的树为准:
+#       1 "5 项不存在但**有活跃写入方**" => 今天这 5 项零写者, 引用清一色是排除名单/迁移注记;
+#          且其中 OMO-RUN-CONTINUATION (.omo/run-continuation/) 今天**存在**(gitignored 运行时面)。
+#       2 "本次**不删除**这些条目" => OMO-REPORTS-RUNTIME / OMO-BETS-INDEX / OMO-TASKS-INDEX-JSON
+#          今天已不在 assets 列表内(OMO-GENERATED / OMO-PITCHES 于 2026-09-27 摘除)。
+#       3 债务项 .omo/debt/items/OMO-SURFACES-ZOMBIE-ASSETS.yaml 已 lifecycle_state=resolved,
+#          closed_at=2026-09-27 —— 不再是"待 owner 决策"的开口。
+#   - 本轮不代 owner 决策: 4 条迁移遗留声明(LOCKS/WORKERS/TESTS/CAPABILITIES)与 ingress_plane
+#     该摘除还是改指新路径, 留给 governance-team; 本轮只刷新复核戳并把实况与指认证据写在案上。
+#   - 遗留(本轮**未**处理, 避免把复核夹带成门禁改造): X2-C05 本身是 required `gac-gate` 上的
+#     墙钟硬失败项 —— 复核戳一旦隔了 >14 天, 它就在**每一个** PR(含 main 的树)上失败, 且拆弹
+#     本身只能靠再提交一次戳记。把它改成"过期降为 warning + 全景可见"或纳入 expiry-radar
+#     是 owner 决策, 应另开 BET, 不在本戳记 PR 里顺手做。
 
 version: "1.1"
 status: active
