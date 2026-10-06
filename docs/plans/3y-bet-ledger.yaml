@@ -40522,7 +40522,8 @@ bets:
     第二段过滤 `event-ledger` (连字符) 而代码是 `event_ledger_path` (下划线) ⇒ 判据按构造恒 0 且 `|| true`
     吃掉退出码。本轮把 14 处 (32 个使用点, 实测全在函数体内; 12 个定义文件实测零跨模块 importer) 改为调用时刻解析, 并按 §7「扫源码的门禁必须自证」补一条按
     resolver (而非变量名) 匹配的结构性源码门禁, 使 B1 判据字面成立且下次不再假绿。'
-  status: pending
+  status: done
+  done_at: 2026-10-06
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -40623,15 +40624,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@317bc031541076b286b16bf6dd1049da8ab27564
+          tests:
+            ref: receipt://docs/reports/2026-10-06-b1-import-time-call-time-closeout.md
+            sha256: sha256:50f2af1221473ddb33709ad95eb3f6c132a7feae2f56922d7c5fd86308e591d0
+          diff:
+            ref: receipt://docs/reports/2026-10-06-b1-import-time-call-time-closeout.md
+            sha256: sha256:50f2af1221473ddb33709ad95eb3f6c132a7feae2f56922d7c5fd86308e591d0
+          rollback:
+            ref: receipt://docs/reports/2026-10-06-b1-import-time-call-time-closeout.md
+            sha256: sha256:50f2af1221473ddb33709ad95eb3f6c132a7feae2f56922d7c5fd86308e591d0
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-06-b1-import-time-call-time-closeout.md
+            sha256: sha256:50f2af1221473ddb33709ad95eb3f6c132a7feae2f56922d7c5fd86308e591d0
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-06-b1-import-time-call-time-closeout.md
+            sha256: sha256:50f2af1221473ddb33709ad95eb3f6c132a7feae2f56922d7c5fd86308e591d0
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-232.md
+            sha256: sha256:4c809a34321ebaaef9def587b422de28e7c36fe5e41617c06f70f9700d6029e1
+          cleanup:
+            ref: receipt://docs/reports/2026-10-06-b1-import-time-call-time-closeout.md
+            sha256: sha256:50f2af1221473ddb33709ad95eb3f6c132a7feae2f56922d7c5fd86308e591d0
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
