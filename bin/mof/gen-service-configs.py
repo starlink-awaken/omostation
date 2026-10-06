@@ -380,6 +380,14 @@ def enumerate_launchd_plists(launchd_dir: Path) -> list[dict]:
                 payload = json.loads(result.stdout)
             except ValueError:
                 payload = {}
+        # plutil 对 JSON 数组同样返回 rc=0 (它是合法 JSON), 所以 payload 不保证是
+        # dict。此前直接 `payload.get(...)` 会在非 dict 上抛 AttributeError,
+        # 使 reality-check 崩溃退出而非产出 findings —— 门禁在真正需要它报警的
+        # 那一刻反而失效(2026-10-06 实测: 注入 JSON 数组后 rc=0 + traceback)。
+        # 这类文件正是被外部程序把"启动命令数组"写进 .plist 的产物, 必须照样
+        # 被枚举出来交给 E4 判为 unparseable, 而不是让枚举器先崩。
+        if not isinstance(payload, dict):
+            payload = {}
         args = payload.get("ProgramArguments") or []
         if isinstance(args, str):
             args = [args]
@@ -388,6 +396,8 @@ def enumerate_launchd_plists(launchd_dir: Path) -> list[dict]:
                 "file": path.name,
                 "path": path,
                 "label": str(payload.get("Label") or path.stem),
+                # 非 dict payload (JSON 数组伪 plist) 已归一为 {}, bool({}) 为
+                # False → 落进 E4 unparseable, 正是我们要的判定。
                 "plutil_ok": result.returncode == 0 and bool(payload),
                 "blob": json.dumps(payload, ensure_ascii=False),
                 "program_arguments": [str(a) for a in args],
