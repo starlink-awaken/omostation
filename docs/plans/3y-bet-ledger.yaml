@@ -40656,6 +40656,115 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-233
+  title: ADR-0456 B1 的 omo 侧收口 — omo.resident 写面按 profile 落到 state 根 (机制先于搬家)
+  goal: '方案 line 138 的 B1 第二条判据是行为判据 `OMOSTATION_PROFILE=dev … resident daemon --once`
+    只写 dev state root, BET-Y2Q4-T10-232 的 circuit_breaker 已把 omo 侧分叉显式列为非目标。本轮实测 (import
+    之前声明 OMOSTATION_STATE_ROOT=<tmp> + OMO_EVENT_LEDGER_DB=<tmp db> 再读模块级常量): daemon.DEFAULT_LEDGER
+    / PID_FILE / LOG_FILE / receipt.RECEIPTS_FILE / status.LEDGER / heartbeat.HEARTBEAT_LEDGER
+    6/6 仍落检出, 而对照的 omo_paths.STATE_ROOT 落 <tmp> —— 同一个包里两套根口径。AST 全量度量 (模块级赋值且右值含 WORKSPACE/STATE_ROOT):
+    15 模块 / 32 常量 = 17 WRITE + 14 AMBIG + 2 read。但根因低一层: omo/resident/__init__.py:16
+    的 `WORKSPACE = Path(__file__).resolve().parents[5]` 既不读 OMOSTATION_STATE_ROOT 也不读
+    OMOSTATION_ROOT, 更不是 omo_paths.STATE_ROOT ⇒ 只把 32 个常量改成函数是零行为变化的翻动。本轮按「机制先于搬家」做:
+    ① omo_paths 增调用时刻 state_root() 与 event_ledger_path() (与 bin/lib/repo_root.py 同契约同优先级,
+    OMO_EVENT_LEDGER_DB > state_root()/runtime/omo/event-ledger.sqlite3), STATE_ROOT
+    常量不动 (实测 120 refs / 16 files, 与判据无关); ② resident 写面改挂其上、在调用时刻取路径, 读面留 WORKSPACE
+    (ADR-0456 读面契约); ③ 显式适配两处把常量当属性读的 omo 用例 (test_resident_daemon.py:363, test_resident_roles.py:207/212)
+    —— BET-232 同款教训: 常量改函数会打断属性/monkeypatch 缝; ④ 补 I4 自证源码门禁 (按 resolver 匹配、合成违规先点名、反向断言读面不命中)
+    与 I3 跨仓读写同根检测器 (允许清单钉成集合相等)。安全性论证: state_root() 未声明 profile 时等于 WORKSPACE_ROOT,
+    launchd/crontab 都不声明该 env, 所以现役 43 个 plist 解析结果逐字节不变 —— 本轮不需要碰 install-resident-cron.sh
+    (方案 line 145 划给 B4 的 launchctl 换路径, B4b 批次 2+ 需逐批授权)。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: true
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop if 未声明 profile 时任何一个迁移点的路径字符串与改前不同 (spec I1 禁止它 — 那会把 dev 机制变成生产搬家,
+    未经 B4b 授权); 如果 omo 侧出现第三个 ledger 解析口径 (本轮实测只有 daemon.DEFAULT_LEDGER 与 status.LEDGER
+    两处, root 侧已由 BET-232 收口到 event_ledger_path()); 如果 I3 检测器点名的跨仓读者数量超出 §5 实测表 (10 个路径族)
+    以致需要改 bin/ 读者才能不产生 split — 那说明本轮范围判断错, 停下登记而不是扩大 PR; 如果修复要求改 install-resident-cron.sh
+    / plist / crontab (B4b 逐批授权面) 或宣布 B1 完成 (spec §8 非目标)。
+  non_goals:
+  - 不改任何 resident 业务逻辑、事件语义、checkpoint 算法或 handler 路由 —— 只改路径在什么时刻、按哪个根解析。
+  - 不改 bin/ssot/install-resident-cron.sh、launchd plist、crontab (方案 line 145 = B4; B4b
+    批次 2+ 需逐批授权)。
+  - 不把 omo_paths.STATE_ROOT 常量翻成函数 (实测 120 refs / 16 files 消费, 与 B1 判据无关的翻动)。
+  - '不把 .omo/_knowledge/** 生成态摘库 (task #112 的独立 BET); 不碰 bin/panorama/panorama-collect.py
+    EVENT_LEDGER (PANORAMA_ROOT / ZHIXING_DASHBOARD_* 外部 dashboard 契约)。'
+  - '不在本轮宣布 B1 完成: B1 需要 §5 的跨仓读者结论落地后才能判定。'
+  done_when:
+  - '判据-1 时机: OMOSTATION_STATE_ROOT 与 OMO_EVENT_LEDGER_DB 在 **import 之后**声明, 不传参调用 daemon
+    的 ledger 解析点、status.LEDGER、receipt.RECEIPTS_FILE、_watermark_path()、PID_FILE/LOG_FILE,
+    实测全部落在声明位置 (冻结常量按构造做不到)。'
+  - '判据-2 行为: `OMOSTATION_STATE_ROOT=<tmp> omo resident daemon --once` 真实跑一次, 断言检出目录零新增文件且
+    mtime 集合不变, state 根里出现 pid/log/receipt/watermark; 收尾打印 `expect=N got=N`。'
+  - '判据-3 等价 (spec I1): `env -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB` 时每个迁移点的路径字符串与改前逐字节一致
+    (用例断言)。'
+  - '判据-4 自证 (spec I4): 扫描按 resolver 匹配 (state_root( / event_ledger_path() 而非变量名; 合成违规样本先证明检测器点名文件+行+变量名,
+    再断言真实扫描集合为空; 反向断言 2 处纯读面不被命中; 基线读数断言为改前 N 处违规。'
+  - '判据-5 读写同根 (spec I3): 跨仓检测器逐路径输出「写者解析根 vs 读者解析根」对照, 允许的不对称钉成集合相等且每条附理由文件 —— 本轮实测的
+    evidence-smoke SPLIT=True 形状不得在 resident 面上复发。'
+  - '判据-6: omo 两处属性读取用例适配后, `pytest projects/omo/tests -q` 相对基线无回归; make gac-local-gate
+    无新增硬失败。'
+  verify:
+  - cmd: python3 -m pytest projects/omo/tests/unit/test_omo_resident_state_root.py -q
+      -p no:randomly
+    expect: all pass (I2 正向落点 + I1 等价 + I4 自证三段)。
+  - cmd: python3 -m pytest tests/unit/test_resident_write_plane_split.py -q -p no:randomly
+    expect: all pass; 检测器先对合成违规点名再对真实扫描为空。
+  - cmd: python3 -m pytest projects/omo/tests/unit/test_resident_daemon.py projects/omo/tests/integration/test_resident_roles.py
+      -q -p no:randomly
+    expect: all pass — 两处把 DEFAULT_LEDGER/DEFAULT_EVENTS_JSONL 当属性读的用例已显式适配。
+  - cmd: make gac-local-gate
+    expect: no new hard failures.
+  write_surfaces:
+  - projects/omo/src/omo/omo_paths.py
+  - projects/omo/src/omo/resident/__init__.py
+  - projects/omo/src/omo/resident/daemon.py
+  - projects/omo/src/omo/resident/status.py
+  - projects/omo/src/omo/resident/receipt.py
+  - projects/omo/src/omo/resident/ledger_trace.py
+  - projects/omo/src/omo/resident/ingest.py
+  - projects/omo/src/omo/resident/heartbeat.py
+  - projects/omo/src/omo/resident/monitor.py
+  - projects/omo/src/omo/resident/signals.py
+  - projects/omo/src/omo/resident/alert.py
+  - projects/omo/src/omo/resident/inbox.py
+  - projects/omo/src/omo/resident/sediment.py
+  - projects/omo/src/omo/resident/promote.py
+  - projects/omo/src/omo/resident/decision.py
+  - projects/omo/src/omo/resident/execute.py
+  - projects/omo/tests/unit/test_omo_resident_state_root.py
+  - projects/omo/tests/unit/test_resident_daemon.py
+  - projects/omo/tests/integration/test_resident_roles.py
+  - tests/unit/test_resident_write_plane_split.py
+  - docs/superpowers/specs/2026-10-06-omo-resident-write-plane-state-root.md
+  - docs/plans/3y-bet-ledger.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-06-omo-resident-write-plane-state-root.md
+    spec_version: 1.0.0
+    content_digest: sha256:fcb1dbb3a121a11ca5739f832f4e6cd29cc4c7f4f305a11f5b95e1c63086eea0
+    decision_ref: decision://accepted/BET-Y2Q4-T10-233
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -40794,7 +40903,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 528
+  total_bets: 529
   windows:
   - Y1Q1
   - Y1Q2
