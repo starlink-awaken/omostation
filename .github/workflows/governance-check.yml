@@ -191,6 +191,13 @@ jobs:
         # tests/unit/** 不在任何 CI 白名单里 (verify-omo.sh 只跑 projects/omo 与 .omo/tests),
         # 结构性源码扫描必须显式点名, 否则「CI 绿」不构成这条门禁的证据 (BET-Y2Q4-T10-232)。
         run: python3 -m pytest tests/unit/test_b1_ledger_call_time.py -q
+      - name: ADR-0456 B5 system.yaml materializer gate
+        # 创建者 I1–I4 + 摘库接线; 未点名则 §7 验收-5 的「pytest 全绿」只是本地证据 (T10-235)。
+        run: python3 -m pytest tests/unit/test_system_yaml_materializer.py -q
+      - name: ADR-0456 B5 materializer consumer wiring gate
+        # 第二次交付: 读者接线顺序 (创建者先跑) + 登记面 (ci-surfaces/_registry) + 正向落点。
+        # 判据只吃已提交的 workflow/registry 文本, 因此在干净检出里同样成立 (BET-Y2Q4-T10-235 判据-6)。
+        run: python3 -m pytest tests/unit/test_system_yaml_consumer_inputs.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check

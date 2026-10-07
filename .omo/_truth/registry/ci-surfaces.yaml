@@ -1073,6 +1073,22 @@ surfaces:
   - pull_request
   status: active
   note: 架构约束检查 (main 预存未登记, CI 面补登)
+- id: bin-gac-materialize-system-state-py
+  tool: bin/gac/materialize-system-state.py
+  workflow: architecture-check.yml
+  also_in:
+  - gac-gate.yml
+  - state-goals-enforce.yml
+  gate: false
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: ADR-0456 B5 (BET-Y2Q4-T10-235) 创建者前置步 —— 在 architecture gate、strict gac-gate
+    与 current-state-coherence 之前从已提交真源物化已摘库的 .omo/state/system.yaml,
+    让三个按存在性判定的读者 (doc-link-check / architecture-check core_documents /
+    current-state-coherence) 有输入; 本步不是门禁 (gate false), 削弱读者判据即 circuit_breaker
 - id: bin-gac-harness-compliance-check-py
   tool: bin/gac/harness-compliance-check.py
   workflow: harness-ci.yml

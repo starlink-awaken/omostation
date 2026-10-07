@@ -25,4 +25,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.13"}
       - run: pip install pyyaml
+      # ADR-0456 B5 (BET-Y2Q4-T10-235) — .omo/state/system.yaml 已摘库, 干净检出里它根本不存在,
+      # 而下面的检查对缺失输入抛 CoherenceInputError 返回 rc 2. 先由创建者从已提交真源物化一次.
+      - run: python3 bin/gac/materialize-system-state.py --json
       - run: python3 bin/ssot/current-state-coherence.py

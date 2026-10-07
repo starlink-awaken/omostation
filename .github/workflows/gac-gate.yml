@@ -134,6 +134,13 @@ jobs:
           python3 bin/gac/gac-drift.py
       - name: check-layers (跨层依赖检查)
         run: python3 bin/layer-dependency-check.py
+      # ADR-0456 B5 (BET-Y2Q4-T10-235) — .omo/state/system.yaml 已摘库, 干净检出里没有这份生成态,
+      # 而下面 strict gate 的两个消费者按存在性判定 (doc-link-check 的 16 处 `[system.yaml](…)` 链接、
+      # current-state-coherence 的输入)。先由创建者从已提交真源物化一次, 判据语义一律不动。
+      # CI 未声明 OMOSTATION_STATE_ROOT ⇒ state_root()==code_root(), 落点是 .gitignore:297 忽略的路径,
+      # 所以 immutable postcondition (git status --porcelain 为空) 不受影响。
+      - name: Materialize generated state input for the strict gate
+        run: python3 bin/gac/materialize-system-state.py --json
       - name: gac-local-gate (strict)
         # H1a: the strict full-workspace gate is merge-blocking after the R1 canary.
         env:

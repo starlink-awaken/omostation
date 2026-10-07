@@ -1,0 +1,34 @@
+schema: script-registry/v1
+id: bin/gac/materialize-system-state.py
+name: System State Materializer (.omo/state/system.yaml 创建者)
+category: governance
+owner: governance-team
+description: 从**已提交真源** (.omo/goals/current.yaml + .omo/tasks/** + .omo/_truth/registry/write-owners.yaml)
+  物化 `.omo/state/system.yaml`。该文件经 BET-Y2Q4-T10-235 摘库后在干净检出里不存在, 而
+  doc-link-check / architecture-check --gate (core_documents.STATE.md) /
+  current-state-coherence 三个读者按存在性判定, 缺失即红 (coherence 退化为软 WARN = 门禁变瞎)。
+  因此 CI 在 strict gate 之前先跑本脚本一次, 判据语义一律不动。落点经
+  `repo_root.state_root()` 在**调用时刻**解析 (I2, 非模块级常量); 目标已存在即 skipped
+  不覆盖 (I3, 生产机那份是活运行态); 原子写入 tempfile+os.replace (I4); 输出键集合必须
+  与 write-owners.yaml 声明集合双向相等 (I1), 否则 rc 1 且不写。生成者所有的 13 个健康度
+  键给空形 (标量 null / 结构 {}), 不写 0 —— 0 会被健康度门禁读成"测了, 是零分"。
+inputs:
+  - name: --root (arg)
+    type: path
+    required: false
+  - name: OMOSTATION_STATE_ROOT (env)
+    type: path
+    required: false
+  - name: --json / --dry-run / --force (flags)
+    type: string
+    required: false
+outputs:
+  - type: file
+  - type: exit_code
+  - type: json
+dependencies: [bin/lib/repo_root.py, .omo/_truth/registry/write-owners.yaml, .omo/goals/current.yaml]
+triggers: [ci, manual]
+related: [bin/ssot/current-state-coherence.py, bin/gac/architecture-check.py, bin/ssot/doc-link-check.py]
+tags: [state-root, adr-0456, generated-state, materializer]
+maturity: active
+last_reviewed: "2026-10-04"

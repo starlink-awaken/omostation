@@ -35,6 +35,9 @@ from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
+from repo_root import state_file_read  # noqa: E402
+
 UTC = UTC
 
 DEFAULT_RATIO_MIN = 0.9
@@ -134,7 +137,7 @@ def check_g_conv_1_isolation(root: Path) -> dict[str, Any]:
 
 def check_g_conv_2_daemon(ssot_root: Path, *, ratio_min: float = DEFAULT_RATIO_MIN) -> dict[str, Any]:
     """service_online_ratio ≥ 0.9 from system.yaml (single-source preferred)."""
-    system = _load_yaml(ssot_root / ".omo/state/system.yaml")
+    system = _load_yaml(state_file_read(".omo/state/system.yaml", root=ssot_root))
     health = _load_yaml(ssot_root / ".omo/state/health.yaml")
     ratio = system.get("service_online_ratio")
     if ratio is None:
@@ -168,7 +171,7 @@ def check_g_conv_2_daemon(ssot_root: Path, *, ratio_min: float = DEFAULT_RATIO_M
 
 def check_g_conv_3_health(ssot_root: Path) -> dict[str, Any]:
     """ISC-3 composite present (weights + source marker)."""
-    system = _load_yaml(ssot_root / ".omo/state/system.yaml")
+    system = _load_yaml(state_file_read(".omo/state/system.yaml", root=ssot_root))
     health_path = ssot_root / ".omo/state/health.yaml"
     health_raw = health_path.read_text(encoding="utf-8") if health_path.is_file() else ""
     health = _load_yaml(health_path)

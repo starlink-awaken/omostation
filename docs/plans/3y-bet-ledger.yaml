@@ -40876,6 +40876,157 @@ bets:
             （纪要区级项用治理通道准备）。实际消费效果待 5 份准备文件
             转办后由科室反馈计量。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-235
+  title: ADR-0456 B5 Phase 2b — 给 .omo/state/system.yaml 一个只靠已提交真源的创建者，然后摘出库
+  goal: '方案 nimble-bay-asp.md 的 B5 交付是「走 ADR-0129 canonical 路径 + untrack；dev 禁 git 写」，
+    判据「一次 dev 运行后 `git status --short .omo/state` 为空」。决策 4 点名的四件生成态里 health.yaml / brief.md
+    / governance-data.json 已由 BET-Y2Q4-T10-212 摘库、resident retros 由 T10-230 摘库，只剩 .omo/state/system.yaml。本轮把它测实并收尾。实测
+    (2026-10-07): ① `git ls-files .omo/state` 仍返回 collab-dualtrack.yaml + system.yaml，跑一次
+    `make gac-local-gate` 即得 `M .omo/state/system.yaml` (单键 health_score_evidence_generated_at
+    时间戳) ⇒ B5 判据当场不成立，且该文件 30 天 47 commits 的 churn 就是决策 4 说的「生成态随文档 PR 漂移」; ② `.gitignore`
+    的 `!.omo/state/system.yaml` 是**空操作** —— 其上游只有 `.omo/state/*.json` 与 `*.jsonl` 两条模式，没有任何
+    `.yaml` 否定式，所以它被跟踪不是反选 救回来的，摘库时只删这行没用，必须补正向忽略，否则 fresh clone 从 `M` 变 `??`; ③ **没有任何脚本创建这个文件**:
+    8 个写者全部「存在才改、缺席即跳」—— compass_radar.py:1415 / evidence-smoke.py:244 / harness-omo-bridge.py:193
+    / self-evolution-loop.py:246 / unified-health-score.py:397 / omo_state.py:322 /
+    omo_ingress.py:127 (raise FileNotFoundError) / omo_audit_sync.py:585，全仓 对该文件的 open(...,"w")
+    只命中被守卫的那一处与一个测试 ⇒ 直接 `git rm --cached` 不是「移到 state 根」， 是把整块面板关黑 (这正是 T10-212 把它列为「先决条件不存在，另立
+    Phase 2b」的原因); ④ profile state 根今天 就没有这块面板 —— `~/.local/state/omostation/{prod,dev}/.omo/state/`
+    两个目录都不存在，所以「声明 profile 后写面落 state 根」对 system.yaml 是空的，state_file_read() 兜回检出、八个写者继续改检出的跟踪文件;
+    ⑤ CI 唯一硬消费面实测: current-state-coherence.py:35-36 对缺失输入抛 CoherenceInputError、:281-283
+    返回 rc 2，被 .github/workflows/state-goals-enforce.yml:28 直接调用 (该 workflow 刻意 `submodules:
+    false`， 所以 `make state-sync` 这条 omo 通道在 CI 里不可用)，沙箱实测 rc=2 复现; c2g-radar-daily.yml:39
+    与 gac-gate.yml:272 是写方且非阻塞; projects/omo/tests/ 提到该路径的用例全用 tmp_path 或只断言文档字符串， 不读主仓真文件。于是缺的不是摘库动作而是**创建者**:
+    一个只依赖 stdlib+pyyaml、从 .omo/tasks/** 与 .omo/goals/current.yaml 派生的 root 侧物化器。派生可复算已实测对拍
+    —— 同一棵树上 active/planned/blocked/completed/total 与 phase/wave 逐键等于真源读数 —— 判据是树相对的
+    (.gitignore 按路径忽略 tasks/done 与 tasks/planned（实测现值 :391/:392） ⇒ 不得写死某组绝对数字)。 ⑥ 复刻实测 (git archive
+    origin/main 解包，非 symlink 拼树): 带该跟踪文件时 current-state-coherence.py rc=0、删掉它 rc=2 且打印
+    missing input、物化后回 rc=0 ⇒ 危险不是「CI 已经红着」而是摘库这一刀会自己把绿的 CI 砍红，「先补创建者再摘库」是前置条件而不是可选项。键集合受门禁约束:
+    omo-state-write-guard.py:check_field_ownership() 对 present vs write-owners.yaml
+    声明做双向检查 (:181 undeclared-key、:200 ghost-declaration，都进 findings ⇒ 非 0)，所以物化器必须产出**恰好**等于声明集
+    的键集合 (10 个真源派生 + 13 个生成者所有的空形)。canonical 改名 (.omo/state/runtime/system.yaml) 本轮**不做**:
+    omo-state-projection-guard.py:87-110 要求 `state: active` 的 canonical 必须存在且可解析，而 `.omo/state/runtime/*`
+    被 .gitignore:281 忽略 ⇒ fresh CI 即红 (T10-230 的 circuit_breaker 已因此拒绝过注册)，且改名要同时动 omo
+    侧 omo_paths.STATE_SYSTEM_YAML / find_omo_dir() 与 guard:33 ⇒ 写面出现两个身份; ADR-0456 已为这一类落地
+    state_file_read() (repo_root.py:204-220 文档串自己点名 system.yaml)，本轮把「创建者 + 摘库 + 读者接入」做实。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 days
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: 'Stop if 摘库后 `make gac-local-gate` 或任一 CI workflow 需要**改判定语义** (而非补创建者)
+    才能不红 —— 那说明缺失是真实需求而不是缺装置，停下登记而不是削弱门禁; Stop if 物化器必须读 projects/omo 才能产出一个合法键集合 (spec
+    I1 键集合 == write-owners 声明集合，且 state-goals-enforce.yml:24 在 CI 里 `submodules: false`，依赖子模块即结构性做不到);
+    Stop if 为了摘库需要改 plist / crontab / install-resident-cron.sh (B4b 批次 2+ 逐批授权面) 或引入
+    OMO_ALLOW_GIT_WRITE (决策 3，同一授权面); Stop if 需要动 .omo/state/collab-dualtrack.yaml 才能清空
+    `git status --short .omo/state` (spec §8 判它另立 BET， 三个 check-* 门禁会当场报 not found);
+    Stop if 任何一步要求宣布 B1 或 B5 完成 —— 本轮只交付 B5 的最后一件生成态。'
+  non_goals:
+  - 不改任何键的语义与取值口径，不碰 health_score 三口径判定 (T10-220 已定)，不改 R-GOV-2 阈值与 WARN 分级。
+  - 不引入 OMO_ALLOW_GIT_WRITE (决策 3 属 B4b 批次 2，需逐批授权)；不改 plist/cron 指向 (B4b 批次 2+)。
+  - '不摘 .omo/state/collab-dualtrack.yaml —— 它本轮实测自相矛盾: check-dual-track-purity.py:40
+    自称 「tracked 治理 SSOT, 不是投影」，而 generate-brief.py:342 写明数据源由 bin/collab/export-dualtrack.py
+    产出。有产出者就不是 SSOT，但该切分另立判据。'
+  - 不做 canonical .omo/state/runtime/system.yaml 改名 (理由见 spec §4，另立 BET)；不新增 runtime-projections.yaml
+    条目，因此不改 _PROJECTION_FALLBACK_RELS 与 test_projection_reader_resolution.py 的注册表对拍。
+  - 不动 projects/omo 侧写者 (omo_paths.system_yaml_for(omo_dir) 已参数化) —— 除非验收-5 实跑证明 omo
+    写者 打不开 state 根，那时才作为同 BET 的第二条 PR 并 re-pin 指针。
+  done_when:
+  - '判据-1 创建者存在且可复算: `python3 bin/gac/materialize-system-state.py --dry-run --json`
+    返回 key_set_equals_declared=true，且派生的 phase/wave 与五个 task 计数逐键等于 `.omo/goals/current.yaml`
+    + `.omo/tasks/**` 在**同一棵树**上的读数 (.gitignore 按路径忽略 tasks/done 与 tasks/planned（实测现值 :391/:392）
+    ⇒ 判据树相对，不得写死某组绝对数字；origin/main 复刻树实测 1/0/0/303/304 与 29/W1，活检出 3/6/0/331/340)。'
+  - '判据-2 缺失复活 (本 BET 的核心): 沙箱 `--root` 指向一棵不含 system.yaml 的树时 current-state-coherence.py
+    由 rc=2 变 rc=0 且不再打印 `missing input` —— 即「缺失」重新变成真错误 而不是新检出的常态。'
+  - '判据-3 摘库: `git ls-files .omo/state/system.yaml` 为空 且 `git status --short .omo/state`
+    为空 且 摘库后的检出里跑一次 `make gac-local-gate` 之后仍为空 (B5 判据 1 字面成立；正向忽略规则已加，故不是 从 M 变 ??)。'
+  - '判据-4 正向落点 (AGENTS.md §7 要求每条「移走写目标」的契约配一条): 声明 `OMOSTATION_STATE_ROOT=<tmp>` 跑物化器
+    ⇒ `<tmp>/.omo/state/system.yaml` 出现，且检出那份逐字节未变； 二次运行报 skipped 且字节不变 (幂等，不覆盖生产运行态)。'
+  - '判据-5 门禁不瞎: `python3 bin/gac/omo-state-write-guard.py --json` 的 ownership 三类计数全
+    0，`python3 -m pytest tests/unit/test_system_yaml_materializer.py tests/unit/test_projection_reader_resolution.py
+    tests/unit/test_system_yaml_write_plane.py -q` 全绿，且 `tests/unit/test_system_yaml_materializer.py`
+    被 `.github/workflows/governance-check.yml` 显式点名 —— 指认命令 `git grep -n test_system_yaml_materializer
+    -- .github/workflows/` 必须命中一行 pytest 调用 (`tests/unit/**` 不在任何 CI 白名单里: 该 workflow
+    :191-192 自证，先例见 T10-232 的 :193)。'
+  - "判据-6 消费方面不瞎 (二次交付): 在一棵不含 .omo/state/system.yaml 的 origin/main 复刻树上, 按 CI 步骤顺序
+    先跑 bin/gac/materialize-system-state.py, 再跑 bin/ssot/doc-link-check.py、bin/gac/architecture-check.py --gate
+    与 bin/ssot/current-state-coherence.py —— 三者 rc=0 且 doc-link-check 报 0 broken links。判据只允许「补创建者」
+    这一侧的改动: 削弱任一检查器的判定语义 (跳过链接目标、去掉 core_documents 存在性断言) 即 circuit_breaker 命中。
+    连带登记面: bin/_registry/scripts/ 有该脚本条目、governance-checks.yaml script_baseline 已 +1、
+    ci-surfaces.yaml 登记其 workflow + also_in (否则 CR-CI-SURFACE-SSOT 报 unregistered-check)。"
+  verify:
+  - cmd: python3 bin/gac/materialize-system-state.py --dry-run --json
+    expect: key_set_equals_declared=true; derived 的五个 task 计数与 phase/wave 等于同一棵树上 bin/ssot/current-state-coherence.py
+      的 _task_counts 读数 (树相对判据，禁止写死绝对数字) 在 origin/main 复刻树上实测为 1/0/0/303/304 与 29/W1。
+  - cmd: python3 -m pytest tests/unit/test_system_yaml_materializer.py -q -p no:randomly
+    expect: all pass — I1 键集合相等 (含合成多写/少写键必须被点名)、I2 落点在调用时刻 state 根、I3 幂等不覆盖、I4 原子写。
+  - cmd: python3 -m pytest tests/unit/test_projection_reader_resolution.py tests/unit/test_system_yaml_write_plane.py
+      -q -p no:randomly
+    expect: all pass — 注册表对拍与写面判据不得因本轮回归 (本轮不新增投影条目，故对拍集合不变)。
+  - cmd: python3 bin/gac/omo-state-write-guard.py --json
+    expect: ownership.{"undeclared-key","ghost-declaration","unresolvable-owner"} 全
+      0 且 exit 0。
+  - cmd: python3 bin/gac/materialize-system-state.py --json && python3 bin/ssot/current-state-coherence.py
+      --root <sandbox-without-file>; echo RC=$?
+    expect: 物化前该 coherence 调用 rc=2 (实测已复现)，物化后 rc=0 (三段式 0→2→0 已在 git archive 复刻树上实测)
+      且 stderr 无 `missing input`。
+  - cmd: make gac-local-gate
+    expect: PASS；收尾 `git status --short .omo/state` 必须为空 (摘库判据)。
+  - cmd: git grep -n test_system_yaml_materializer -- .github/workflows/
+    expect: 命中 governance-check.yml 里一步 pytest —— 否则 §5 第 6 条未交付，本地全绿不算证据。
+  write_surfaces:
+  - bin/gac/materialize-system-state.py
+  - bin/lib/repo_root.py
+  - .gitignore
+  - .github/workflows/state-goals-enforce.yml
+  - Makefile
+  - tests/unit/test_system_yaml_materializer.py
+  - bin/meta/compass_radar.py
+  - bin/arch-health-meter.py
+  - bin/check_health_ssot.py
+  - bin/ssot/ssot-guardian.py
+  - bin/ssot-watcher.py
+  - bin/gac/architecture-check.py
+  - bin/gac/session-recovery.py
+  - bin/gac/state-freshness-check.py
+  - bin/gac/m1-closeout-report.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-07-system-yaml-materializer-untrack.md
+  - .github/workflows/governance-check.yml
+  - AGENTS.md
+  - bin/panorama/panorama-collect.py
+  - tests/unit/test_system_yaml_write_plane.py
+  - .omo/state/system.yaml
+  - .github/workflows/gac-gate.yml
+  - .github/workflows/architecture-check.yml
+  - .omo/_truth/registry/ci-surfaces.yaml
+  - .omo/_truth/registry/governance-checks.yaml
+  - bin/_registry/scripts/governance/materialize-system-state.yaml
+  - tests/unit/test_system_yaml_consumer_inputs.py
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-07-system-yaml-materializer-untrack.md
+    spec_version: 1.0.0
+    content_digest: sha256:cf4fc22dcfc5e27f2d7266044e73dc91f34eb6e2e5ff75811914158095f6dfb5
+    decision_ref: decision://accepted/BET-Y2Q4-T10-235
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -41014,7 +41165,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 530
+  total_bets: 531
   windows:
   - Y1Q1
   - Y1Q2

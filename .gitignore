@@ -291,8 +291,11 @@ data/cards/
 .omo/state/agent-cards/
 .omo/state/swarm/
 .omo/state/system.yaml.bak-*
+# BET-Y2Q4-T10-235: system.yaml 是运行态投影 —— 现值在 state 根 (ADR-0456), 干净检出里
+# 由 bin/gac/materialize-system-state.py 从已提交真源 (.omo/goals + .omo/tasks) 物化。
+# 跟踪它只会造出一份设计上的陈旧快照; 原来的 `!.omo/state/system.yaml` 反选无人忽略, 是死行。
+.omo/state/system.yaml
 # 保留tracked的配置/快照类文件
-!.omo/state/system.yaml
 !.omo/state/collab-dualtrack.yaml
 !.omo/state/provider-plane.yaml
 !.omo/state/bos-stdio-migrate-candidates.yaml

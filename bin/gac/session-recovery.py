@@ -13,7 +13,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
+from repo_root import state_file_read  # noqa: E402
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def run(cmd: str, cwd=None) -> tuple[int, str, str]:
@@ -38,7 +41,7 @@ def get_code_changes(since: str) -> dict:
 def get_state_changes() -> dict:
     changes = []
     for f in [".omo/state/health.yaml", ".omo/state/system.yaml"]:
-        p = REPO_ROOT / f
+        p = state_file_read(f, root=REPO_ROOT)
         if p.exists():
             import time
             age_hours = (time.time() - p.stat().st_mtime) / 3600

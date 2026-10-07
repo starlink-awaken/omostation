@@ -18,6 +18,9 @@ import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from repo_root import state_file_read  # noqa: E402
+
 
 def _parse_ts(s: object) -> datetime | None:
     """容忍 ISO 字符串 / datetime 对象."""
@@ -80,7 +83,7 @@ def main() -> int:
     args = parser.parse_args()
 
     ws = args.workspace.resolve()
-    system_yaml = ws / ".omo" / "state" / "system.yaml"
+    system_yaml = state_file_read(".omo/state/system.yaml", root=ws)
     if not system_yaml.is_file():
         print(f"⚠️  system.yaml 不存在: {system_yaml}", file=sys.stderr)
         return 1

@@ -38,13 +38,24 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import state_file_read  # noqa: E402
+
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 OMO_DIR = WORKSPACE_ROOT / ".omo"
 OMO_PROJECT_DIR = WORKSPACE_ROOT / "projects" / "omo"
-SYSTEM_YAML = OMO_DIR / "state" / "system.yaml"
 GOALS_YAML = OMO_DIR / "goals" / "current.yaml"
 INDEX_MD = OMO_DIR / "tasks" / "registry" / "INDEX.md"
 TASKS_DIR = OMO_DIR / "tasks"
+
+
+def system_yaml_path() -> Path:
+    """system.yaml 的读取目标在**调用时刻**解析 (ADR-0456 §7)。
+
+    它不再做成模块常量: import 时求值会把读取冻结在旧根上, 而声明 profile 后现值在
+    state 根、检出那份是设计上的陈旧快照。
+    """
+    return state_file_read(".omo/state/system.yaml", root=WORKSPACE_ROOT)
 
 
 def _utc_now() -> str:
@@ -86,7 +97,7 @@ def _load_yaml_docs(path: Path) -> list[dict]:
 
 
 def _load_system_value(key: str) -> object | None:
-    text = SYSTEM_YAML.read_text(encoding="utf-8")
+    text = system_yaml_path().read_text(encoding="utf-8")
     for line in text.splitlines():
         m = re.match(rf"^{re.escape(key)}:\s*(.*?)\s*$", line)
         if m:
@@ -389,8 +400,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if not SYSTEM_YAML.exists():
-        print("❌ system.yaml not found", file=sys.stderr)
+    target = system_yaml_path()
+    if not target.is_file():
+        print(f"❌ system.yaml not found: {target}", file=sys.stderr)
+        print("   该文件已摘库 (运行态产物); 缺失时先跑一次物化器:", file=sys.stderr)
+        print("   python3 bin/gac/materialize-system-state.py", file=sys.stderr)
         return 2
 
     issues: list[dict] = []

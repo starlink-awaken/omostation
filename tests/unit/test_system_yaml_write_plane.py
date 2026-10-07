@@ -240,21 +240,50 @@ def test_reader_falls_back_to_checkout_snapshot(repo_root, declared_state_root, 
 CHECKOUT_PINNED_ALLOWLIST = {
     "bin/_archive/migrated_low_value/omo-health.py": "归档副本，不在调用面",
     "bin/_archive/omo-health.py": "归档副本，不在调用面",
-    "bin/arch-health-meter.py": "读侧，在本 BET 18 个 write_surfaces 之外",
-    "bin/check_health_ssot.py": "读侧，在本 BET 18 个 write_surfaces 之外",
-    "bin/gac/architecture-check.py": "CORE_DOCS 常量零消费者（死码第三类）",
-    "bin/gac/m1-closeout-report.py": "读侧，参数名 ssot_root 指向读根",
-    "bin/meta/compass_radar.py": "已登记 deprecated 的副本，活副本是 bin/compass_radar.py",
-    "bin/panorama/panorama-collect.py": "读侧，显式 CODE_ROOT",
+    "bin/gac/architecture-check.py": "CORE_DOCS 常量零消费者（死码第三类，T10-220 已决定不为它造判据）",
 }
 
 STATE_ROOTED_ANCHORS = {"runtime_state_root", "state_root", "state_file_read", "STATE_ROOT"}
+# 相对路径常量 (`Path(".omo") / "state" / "system.yaml`) 的锚点 —— 它不带根，
+# 由调用方拼接, 所以不是检出根钉死。
+RELATIVE_PATH_ANCHORS = {"Path"}
 
 
 def _path_segments(node: ast.AST) -> list[ast.AST]:
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
         return _path_segments(node.left) + _path_segments(node.right)
     return [node]
+
+
+def _is_checkout_pinned_source(source: str) -> bool:
+    """这份源码是否用检出根锚点拼出 system.yaml —— 判据内核, 供逐文件扫描与自证用例共用。
+
+    两种形状都要抓, 缺一种就是假绿:
+      * `ws / ".omo" / "state" / "system.yaml"` —— 完整相对面在字面量里
+      * `OMO_DIR / "state" / "system.yaml"` —— 根变量已经含 `.omo`, 尾段只剩 `state/…`
+        (T10-235 实测: `bin/ssot/ssot-guardian.py:44` 正是这一形, 旧的"整尾"匹配看不见它)
+    """
+    tree = ast.parse(source)
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div)):
+            continue
+        segs = _path_segments(node)
+        if len(segs) < 2 or not isinstance(segs[0], ast.Name | ast.Call):
+            continue
+        tail = " / ".join(
+            str(s.value) for s in segs[1:] if isinstance(s, ast.Constant) and isinstance(s.value, str)
+        )
+        normalized = tail.replace(" ", "").strip("/")
+        if not normalized.endswith("state/system.yaml"):
+            continue
+        anchor = segs[0]
+        name = anchor.id if isinstance(anchor, ast.Name) else getattr(anchor.func, "id", "")
+        if name in STATE_ROOTED_ANCHORS or any(m in name for m in STATE_ROOTED_ANCHORS):
+            continue
+        if name in RELATIVE_PATH_ANCHORS:
+            continue
+        return True
+    return False
 
 
 def _checkout_pinned_sites() -> set[str]:
@@ -265,27 +294,29 @@ def _checkout_pinned_sites() -> set[str]:
         if rel == "bin/lib/repo_root.py":  # 解析器自身
             continue
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError):
+            source = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
             continue
-        for node in ast.walk(tree):
-            if not (isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div)):
-                continue
-            segs = _path_segments(node)
-            if len(segs) < 2 or not isinstance(segs[0], ast.Name | ast.Call):
-                continue
-            tail = " / ".join(
-                str(s.value) for s in segs[1:] if isinstance(s, ast.Constant) and isinstance(s.value, str)
-            )
-            normalized = tail.replace(" ", "").strip("/")
-            if not normalized.endswith(".omo/state/system.yaml"):
-                continue
-            anchor = segs[0]
-            name = anchor.id if isinstance(anchor, ast.Name) else getattr(anchor.func, "id", "")
-            if name in STATE_ROOTED_ANCHORS or any(m in name for m in STATE_ROOTED_ANCHORS):
-                continue
-            found.add(rel)
+        try:
+            if _is_checkout_pinned_source(source):
+                found.add(rel)
+        except SyntaxError:
+            continue
     return found
+
+
+def test_checkout_pinned_detector_fires_on_both_pinned_shapes():
+    """检测器须自证: 空绿会让判据在写者没改完时就变绿 (#4606 同族纪律)。"""
+    assert _is_checkout_pinned_source('p = ws / ".omo" / "state" / "system.yaml"')
+    assert _is_checkout_pinned_source('p = OMO_DIR / "state" / "system.yaml"')
+    assert _is_checkout_pinned_source('p = CODE_ROOT / ".omo/state/system.yaml"')
+
+
+def test_checkout_pinned_detector_does_not_fire_on_seam_or_relative_constant():
+    assert not _is_checkout_pinned_source('p = state_file_read(".omo/state/system.yaml", root=ws)')
+    assert not _is_checkout_pinned_source('p = state_root() / ".omo" / "state" / "system.yaml"')
+    assert not _is_checkout_pinned_source('p = runtime_state_root() / ".omo" / "state" / "system.yaml"')
+    assert not _is_checkout_pinned_source('SYSTEM_YAML_REL = Path(".omo") / "state" / "system.yaml"')
 
 
 def test_checkout_pinned_system_yaml_sites_are_the_reviewed_list():

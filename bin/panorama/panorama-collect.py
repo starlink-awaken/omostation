@@ -47,6 +47,11 @@ assert _pid_spec.loader is not None
 _pid_spec.loader.exec_module(_pid_module)
 principal_id_from_env = _pid_module.principal_id_from_env
 
+_LIB_DIR = str(Path(__file__).resolve().parents[1] / "lib")
+if _LIB_DIR not in sys.path:
+    sys.path.insert(0, _LIB_DIR)
+from repo_root import state_file_read  # noqa: E402
+
 _CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
 ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
 _CONFIGURED_CODE_ROOT = os.environ.get("PANORAMA_CODE_ROOT")
@@ -4508,7 +4513,7 @@ def collect_harness_policy() -> dict:
 def collect_phase_verdict() -> dict:
     """Collect phase verdict data from governance state."""
     try:
-        state_path = CODE_ROOT / ".omo" / "state" / "system.yaml"
+        state_path = state_file_read(".omo/state/system.yaml", root=CODE_ROOT)
         if state_path.exists():
             import yaml
             state = yaml.safe_load(state_path.read_text()) or {}

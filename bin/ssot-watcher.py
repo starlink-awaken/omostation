@@ -33,6 +33,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from repo_root import state_file_read  # noqa: E402
+
 # 工作区根目录
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 
@@ -70,7 +73,11 @@ class SSOTFile:
 
     def __init__(self, name: str, path: str):
         self.name = name
-        self.path = WORKSPACE_ROOT / path
+        # 运行态面追踪 state 根那份现值, 检出的陈旧快照只在未声明 profile 时兜底
+        if path.startswith(".omo/state/"):
+            self.path = state_file_read(path, root=WORKSPACE_ROOT)
+        else:
+            self.path = WORKSPACE_ROOT / path
         self._cached_hash: str | None = None
 
     def exists(self) -> bool:
