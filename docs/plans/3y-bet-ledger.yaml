@@ -40789,6 +40789,72 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T4-07
+  title: L1+L2 — KOS 检索前置机制 + 纪要 144 号区级 5 项落实准备
+  goal: '联动地图第一梯队两项落地。L1: KOS 检索前置——CLAUDE.md 增补 BET spec 起草前 KOS 检索强制步骤，agent-workflow.py
+    start 输出追加 KOS 检索提示行，BET spec 模板增补 KOS 先例节。L2: 纪要 144 号区级 5 项落实准备——产出 5 份准备文件 （进度跟踪模板/产品比选框架/治理方案框架/试点方案框架/政策分析笔记），
+    每份带 144 号原文锚点+转办科室，落 principal Documents _drafts/。仓库零正文 （5 份准备文件只落 Documents 域）。
+
+    '
+  status: pending
+  window: Y2Q4
+  track: T4-OUTCOME
+  priority: P1
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  circuit_breaker: 'agent-workflow.py 修改仅追加 echo 行不改逻辑；CLAUDE.md 修改最小化追加； 5 份准备文件只落
+    Documents 域仓库零正文；零外发。
+
+    '
+  non_goals:
+  - 不实现 kos-mcp 挂载（config 层另案）
+  - 不自动派发 5 份准备文件（principal 决定）
+  - 不改 agent-workflow.py 核心逻辑
+  done_when:
+  - CLAUDE.md 含 KOS 检索强制步骤
+  - agent-workflow.py start 输出含 KOS 提示
+  - 5 份准备文件落 _drafts/（各带锚点+转办科室）
+  - lint 0 / gac-local-gate PASS
+  - retro 固化
+  verify:
+  - cmd: grep "KOS" CLAUDE.md
+    expect: 命中检索步骤
+  - cmd: python3 bin/agent-workflow.py start --help
+    expect: exit 0（模块未被破坏）
+  - cmd: ls ~/Documents/@工作文档/卫健委/_drafts/*落实准备*
+    expect: 5 份
+  - cmd: make gac-local-gate
+    expect: exit 0
+  write_surfaces:
+  - CLAUDE.md
+  - bin/agent-workflow.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-09-28-kos-precedent-and-district-bets.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T4-07.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-09-28-kos-precedent-and-district-bets.md
+    spec_version: 1.0.0
+    content_digest: sha256:1511a1103645a03228068a11508bdea8bfef53f819288b4de9cf3d7cc8bbd195
+    decision_ref: decision://accepted/BET-Y2Q4-T4-07
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -40927,7 +40993,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 529
+  total_bets: 530
   windows:
   - Y1Q1
   - Y1Q2
