@@ -38,7 +38,10 @@ fi
 # The gate must sit BEFORE the first `git -C "$wt_path"` in the cleanup loop,
 # otherwise the dirty-probe would already have run against a foreign repo.
 GATE_LINE=$(grep -n 'worktree_is_owned "\$wt_path"' "$SCRIPT" | head -1 | cut -d: -f1)
-DIRTY_LINE=$(grep -n 'git -C "\$wt_path" diff --quiet' "$SCRIPT" | head -1 | cut -d: -f1)
+# 脏项闸门改用 porcelain（覆盖 untracked），判据随之更新。
+# 注意: 脚本里有多处同串（release 路径 :175 等），必须取 **gate 之后** 的那处，
+# 否则会与 cleanup 循环外的检查比行号（本轮实测 gate=1621 dirty=175 的假红）。
+DIRTY_LINE=$(awk -v g="$GATE_LINE" 'NR>g && /status --porcelain --untracked-files=all/ {print NR; exit}' "$SCRIPT")
 if [ -n "$GATE_LINE" ] && [ -n "$DIRTY_LINE" ] && [ "$GATE_LINE" -lt "$DIRTY_LINE" ]; then
   pass "闸门在脏项探测之前 (gate L$GATE_LINE < dirty L$DIRTY_LINE)"
 else
@@ -159,6 +162,73 @@ if echo "$OUT_SHIM" | grep -q 'ws-owned'; then
   pass "GNU stat 语义下仍能给出 ws-owned 判定 (证明数字校验生效)"
 else
   fail "GNU stat 语义下 ws-owned 未被处理: $(echo "$OUT_SHIM" | tr '\n' '|' | head -c 120)"
+fi
+
+echo "=== G. claim 闸门: 有活跃 claim 的 worktree 必须跳过 ==="
+# 缺陷 (2026-10-07): cleanup 只看 TTL/归属/脏项, 不读 claim 台账 ⇒ 把
+# ws-kos-mos-p0(claim 33h) / ws-onboarding-deliver(claim 29h) 判为可回收.
+# 台账在 canonical 检出 (worktree 里 .omo/_delivery 是空的) ⇒ 判据必须经
+# repo_root.py 的 canonical_root 解析, 否则在 worktree 里跑时恒找不到 claim.
+if grep -q 'branch_has_active_claim()' "$SCRIPT"; then
+  pass "branch_has_active_claim() 已定义"
+else
+  fail "branch_has_active_claim() 未定义"
+fi
+if grep -q 'canonical_root' "$SCRIPT"; then
+  pass "台账路径经 canonical_root 解析（worktree 里也能找到主区台账）"
+else
+  fail "台账路径未做 canonical 解析 ⇒ worktree 里会静默找不到 claim"
+fi
+# 造带 claim 的本仓 worktree
+mkdir -p "$NESTED/.omo/_delivery/branch-claims"
+git -C "$NESTED" worktree add -q --detach "$FAKE_PARENT/ws-claimed" HEAD 2>/dev/null || true
+CLAIM_BRANCH="$(git -C "$FAKE_PARENT/ws-claimed" rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)"
+# detached HEAD ⇒ 用显式分支名建一个正常分支的 worktree
+git -C "$NESTED" branch -f claim-target HEAD 2>/dev/null
+git -C "$NESTED" worktree add -q "$FAKE_PARENT/ws-claimed2" claim-target 2>/dev/null || true
+cat > "$NESTED/.omo/_delivery/branch-claims/claimed2.json" <<JSON
+{"branch": "claim-target", "session": "claimed2", "claimed_at": "2026-01-01T00:00:00Z", "gate": "d2_branch_occupancy"}
+JSON
+touch -t 202001010000 "$FAKE_PARENT/ws-claimed2" 2>/dev/null || true
+OUT_CLAIM="$(cd "$NESTED" && WS_ROOT="$NESTED" WS_PARENT="$FAKE_PARENT" PASW_TTL_HOURS=1 \
+  bash "$SCRIPT" cleanup --dry-run 2>&1)"
+if echo "$OUT_CLAIM" | grep 'ws-claimed2' | grep -q '活跃 claim'; then
+  pass "ws-claimed2 被 claim 闸门跳过（真造 claim json，判别力来自真实台账）"
+else
+  fail "ws-claimed2 未被 claim 闸门拦下: $(echo "$OUT_CLAIM" | grep ws-claimed2 | head -1 | head -c 100)"
+fi
+if echo "$OUT_CLAIM" | grep 'ws-claimed2' | grep -q '将回收'; then
+  fail "★ws-claimed2 被列为将回收 —— claim 闸门失效"
+else
+  pass "ws-claimed2 未出现在'将回收'中"
+fi
+# 无 claim 的对照（ws-owned 应仍能走到回收判定）
+if echo "$OUT_CLAIM" | grep 'ws-owned' | grep -q '将回收'; then
+  pass "无 claim 的 ws-owned 仍可回收（防过度拦截）"
+else
+  fail "ws-owned 被误拦: $(echo "$OUT_CLAIM" | grep ws-owned | head -1 | head -c 100)"
+fi
+
+echo "=== H. untracked 闸门: 只留 ?? 新文件的 worktree 不得被删 ==="
+# 缺陷 (2026-10-07): 脏项闸门用 diff/diff --cached, **不覆盖 untracked**
+# ⇒ ws-kos-mos-p0 的 3 个 ?? 文件被判为干净, 整目录 --force 删除.
+mkdir -p "$FAKE_PARENT/ws-untracked"
+# 用**独立分支** (同一分支不能同时 checkout 到两个 worktree)
+git -C "$NESTED" branch -f untracked-target HEAD 2>/dev/null
+git -C "$NESTED" worktree add -q "$FAKE_PARENT/ws-untracked" untracked-target 2>/dev/null || true
+echo "keep me" > "$FAKE_PARENT/ws-untracked/NEW_UNTRACKED_FILE.yaml"
+touch -t 202001010000 "$FAKE_PARENT/ws-untracked" 2>/dev/null || true
+OUT_UNTRACKED="$(cd "$NESTED" && WS_ROOT="$NESTED" WS_PARENT="$FAKE_PARENT" PASW_TTL_HOURS=1 \
+  bash "$SCRIPT" cleanup --dry-run 2>&1)"
+if echo "$OUT_UNTRACKED" | grep 'ws-untracked' | grep -q '未提交改动'; then
+  pass "ws-untracked 因 untracked 文件被跳过（porcelain 覆盖 ??）"
+else
+  fail "ws-untracked 未被拦下 ⇒ untracked 文件会被 --force 删掉: $(echo "$OUT_UNTRACKED" | grep ws-untracked | head -1 | head -c 100)"
+fi
+if [ -f "$FAKE_PARENT/ws-untracked/NEW_UNTRACKED_FILE.yaml" ]; then
+  pass "untracked 文件仍在（dry-run 未实删）"
+else
+  fail "★untracked 文件消失"
 fi
 
 echo "=== E. bash -n 语法 ==="

@@ -107,6 +107,58 @@ worktree_is_owned() {
   return 1
 }
 
+# ── Active branch-claim check (skip worktrees held by a concurrent agent) ──
+# Bug: cleanup's reclaim decision had only TTL / ownership / dirty gates and
+# never consulted the claim ledger, so a worktree whose branch is actively
+# claimed (`.omo/_delivery/branch-claims/<session>.json`, gate=d2_branch_occupancy)
+# was reported as reclaimable and `git worktree remove --force`d.
+# Real instance (2026-10-07): ws-kos-mos-p0 (claim 33h) and ws-onboarding-deliver
+# (claim 29h) both had live claim files yet appeared under "将回收".
+#
+# Note the canonical pruner does NOT cover this: prune-zombie-worktrees.py reads
+# a DIFFERENT marker (~/.ws-<session>.claiming), which neither session had.
+#
+# The ledger's key is the BRANCH name, so the worktree's own HEAD branch is used.
+# The ledger lives in the CANONICAL checkout, not in the invoking worktree:
+# when cleanup runs from a worktree, WS_ROOT points at that worktree (whose
+# .omo/_delivery/branch-claims is absent/empty), so resolving via WS_ROOT would
+# silently find zero claims — measured 2026-10-07 (main区 15 个 vs worktree 0 个).
+# bin/lib/repo_root.py's canonical_root is the authoritative read plane (ADR-0456).
+# Lookup is fail-open (unreadable ledger ⇒ allow), matching resolve_branch_for's
+# style and _cleanup_guard's "guard failure must not block cleanup" contract —
+# but the decision itself is fail-closed: a claim found ⇒ always skip.
+branch_claims_dir() {
+  local rr="$WS_ROOT/bin/lib/repo_root.py"
+  if [ -f "$rr" ] && command -v python3 >/dev/null 2>&1; then
+    local cr
+    cr="$(python3 "$rr" --json 2>/dev/null | python3 -c 'import json,sys
+try: print(json.load(sys.stdin).get("canonical_root",""))
+except Exception: print("")' 2>/dev/null || true)"
+    if [ -n "$cr" ] && [ -d "$cr/.omo/_delivery/branch-claims" ]; then
+      printf '%s' "$cr/.omo/_delivery/branch-claims"
+      return 0
+    fi
+  fi
+  printf '%s' "$WS_ROOT/.omo/_delivery/branch-claims"
+}
+
+branch_has_active_claim() {
+  local branch="$1"
+  [ -n "$branch" ] || return 1
+  local claims_dir
+  claims_dir="$(branch_claims_dir)"
+  [ -d "$claims_dir" ] || return 1
+  local f b
+  for f in "$claims_dir"/*.json; do
+    [ -f "$f" ] || continue
+    b="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('branch',''))" "$f" 2>/dev/null || true)"
+    if [ "$b" = "$branch" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 # ── Fail-closed verification before --force worktree removal ──────────────
 # Bug: git worktree remove (without --force) returns exit 128 on worktrees
 # with initialized submodules even when everything is clean; --force succeeds.
@@ -1570,8 +1622,21 @@ PYEOF
         echo "  ⏭️  $wt_name 非本仓 worktree, 跳过 (归属校验)"
         continue
       fi
+      # claim 闸门: 该 worktree 的分支若有活跃 claim 登记, 跳过。
+      # 分支名是台账的键 (不是 session 名), 且 worktree 自己能报出它。
+      # detached HEAD 下 rev-parse 返回字面量 "HEAD" ⇒ 排除 (否则拿它去查台账).
+      wt_branch=$(git -C "$wt_path" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+      if [ -n "$wt_branch" ] && [ "$wt_branch" != "HEAD" ] && branch_has_active_claim "$wt_branch"; then
+        echo "  ⏭️  $wt_name 有活跃 claim, 跳过 (branch=$wt_branch)"
+        continue
+      fi
       # 有未提交改动则跳过 (防丢工作)
-      if ! git -C "$wt_path" diff --quiet 2>/dev/null || ! git -C "$wt_path" diff --cached --quiet 2>/dev/null; then
+      # 用 porcelain 而非 diff/diff --cached: 后者**不覆盖 untracked**, 于是
+      # 「只留了 ?? 新文件」的 worktree 会被判为干净并整目录 --force 删除。
+      # 实证 (2026-10-07): ws-kos-mos-p0 的 3 个脏项全是 `??` (runtime/*.yaml,
+      # runtime/affected/), diff 报 clean ⇒ 旧闸门放行。release 路径早已改用
+      # porcelain (见 verify_clean_for_force_removal 的注释), cleanup 侧漏了。
+      if [ -n "$(git -C "$wt_path" status --porcelain --untracked-files=all 2>/dev/null)" ]; then
         echo "  ⏭️  $wt_name 有未提交改动, 跳过 (age=${age_hours}h)"
         continue
       fi
