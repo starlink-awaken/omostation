@@ -118,6 +118,49 @@ else
   fi
 fi
 
+echo "=== F. 跨平台 mtime: GNU stat -f 是 filesystem 模式, 不得被当数字求值 ==="
+# GNU `stat -f %m <path>` 不报错却打印多行 filesystem 信息; 旧写法
+# `stat -f %m ... || stat -c %Y ...` 在 Linux 上因此把 "File:" 之类喂给 $(( )),
+# 在 set -u 下报 `File: unbound variable` 并整段退出 ⇒ cleanup 在 CI 上不可用。
+# 判据: 用 PATH 前置一个假 `stat` 模拟 GNU 语义 (对 -f 返回 filesystem 文本),
+#       此时脚本必须仍能跑完并给出回收判定 (证明已按平台选对分支 + 校验数字)。
+SHIM="$TMP/shim"; mkdir -p "$SHIM"
+cat > "$SHIM/stat" <<'SHIMEOF'
+#!/bin/bash
+# 模拟 GNU stat 语义, 不依赖宿主 /usr/bin/stat:
+#   -c %Y <path>  → 打印 epoch (纯数字, rc=0)
+#   -f %m <path>  → filesystem 模式: rc=0 但输出多行非数字文本
+#   -f %m 之外    → 退回 BSD 形态
+case "$1" in
+  -c)
+    # -c %Y <path>: 用 python 取 mtime, 纯数字
+    python3 -c "import os,sys;print(int(os.stat(sys.argv[1]).st_mtime))" "$3" 2>/dev/null && exit 0
+    echo 0; exit 0 ;;
+  -f)
+    if [ "$2" = "%m" ]; then
+      echo "  File: \"$3\""
+      echo "    ID: 0 Namelen: 255     Type: apfs"
+      echo "Block Size: 4096       Fundamental block size: 4096"
+      exit 0
+    fi
+    echo 0; exit 0 ;;
+esac
+echo 0; exit 0
+SHIMEOF
+chmod +x "$SHIM/stat"
+OUT_SHIM="$(cd "$NESTED" && PATH="$SHIM:$PATH" WS_ROOT="$NESTED" WS_PARENT="$FAKE_PARENT" \
+  PASW_TTL_HOURS=1 bash "$SCRIPT" cleanup --dry-run 2>&1)"
+if echo "$OUT_SHIM" | grep -q 'unbound variable'; then
+  fail "GNU stat 语义下报 unbound variable ⇒ 跨平台 mtime 取值未修"
+else
+  pass "GNU stat 语义下无 unbound variable"
+fi
+if echo "$OUT_SHIM" | grep -q 'ws-owned'; then
+  pass "GNU stat 语义下仍能给出 ws-owned 判定 (证明数字校验生效)"
+else
+  fail "GNU stat 语义下 ws-owned 未被处理: $(echo "$OUT_SHIM" | tr '\n' '|' | head -c 120)"
+fi
+
 echo "=== E. bash -n 语法 ==="
 if bash -n "$SCRIPT" 2>/dev/null; then
   pass "bash -n 通过"

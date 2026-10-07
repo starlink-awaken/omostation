@@ -1544,8 +1544,20 @@ PYEOF
     for wt_path in "$WS_PARENT"/ws-*/; do
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
-      # 用 mtime (stat -f %m on macOS / %Y on Linux)
-      last_mtime=$(stat -f %m "$wt_path" 2>/dev/null || stat -c %Y "$wt_path" 2>/dev/null || echo 0)
+      # 用 mtime (GNU: stat -c %Y / BSD: stat -f %m)
+      # 两个坑必须同时避开:
+      #   1) GNU 的 `stat -f` 是 filesystem 模式 —— 不报错却打印多行 filesystem 信息,
+      #      其输出喂给 $(( )) 会被当变量名 ⇒ `File: unbound variable` (set -u 下整段退出).
+      #      旧写法 `stat -f %m ... || stat -c %Y ...` 在 Linux 上正好踩中.
+      #   2) 命令替换失败会触发 set -e ⇒ 必须 `|| true`, 否则先试的那个在异平台
+      #      失败时脚本直接退出, fallback 永远跑不到 (本机实测).
+      last_mtime=$(stat -c %Y "$wt_path" 2>/dev/null || true)
+      case "$last_mtime" in
+        ''|*[!0-9]*) last_mtime=$(stat -f %m "$wt_path" 2>/dev/null || true) ;;
+      esac
+      case "$last_mtime" in
+        ''|*[!0-9]*) last_mtime=0 ;;
+      esac
       age_hours=$(( (now - last_mtime) / 3600 ))
       if [ "$age_hours" -lt "$TTL_HOURS" ]; then
         continue
