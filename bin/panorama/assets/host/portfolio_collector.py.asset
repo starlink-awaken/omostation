@@ -1,0 +1,320 @@
+"""Portfolio collector — fixed remote objects or a proven bound baseline."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import selectors
+import subprocess
+import time
+from collections import Counter
+from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
+
+from collectors.base import DataCollector, CollectionError
+from collectors.registry import register
+
+GH = "/opt/homebrew/bin/gh"
+GIT = "/Library/Developer/CommandLineTools/usr/bin/git"
+REPOSITORY = "starlink-awaken/omostation"
+LEDGER_PATH = "docs/plans/3y-bet-ledger.yaml"
+MAX_LEDGER_BYTES = 8 * 1024 * 1024
+SOURCE_DEADLINE_SECONDS = 44
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _redact_secrets(text: str) -> str:
+    """Simple secret redaction — replace with shared probe_utils if available."""
+    try:
+        from probe_utils import redact_secrets
+        return redact_secrets(text)
+    except ImportError:
+        return text
+
+
+def _text(value) -> str | None:
+    if not isinstance(value, str):
+        return None
+    return _redact_secrets(value[:2048])
+
+
+def _refs(value, limit: int = 100) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [safe for item in value[:limit] if (safe := _text(item)) is not None]
+
+
+def _number(value):
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+class _SourceFailure(Exception):
+    def __init__(self, phase, reason, *, rc=None, timeout=False, kind=None):
+        self.diagnostic = {"phase": phase, "type": kind or type(self).__name__,
+                           "reason": _redact_secrets(str(reason))[:400]}
+        if rc is not None:
+            self.diagnostic["rc"] = rc
+        if timeout:
+            self.diagnostic["timeout"] = True
+        super().__init__(self.diagnostic["reason"])
+
+
+def _read_cmd(argv, *, phase, deadline, timeout, maximum):
+    """Bound bytes while reading, rather than after an unbounded communicate()."""
+    end = min(deadline, time.monotonic() + timeout)
+    if end <= time.monotonic():
+        raise _SourceFailure(phase, "source deadline exhausted", timeout=True)
+    env = dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_TERMINAL_PROMPT="0",
+               GH_PROMPT_DISABLED="1", PYTHONDONTWRITEBYTECODE="1")
+    output, errors = bytearray(), bytearray()
+    process = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+    try:
+        with selectors.DefaultSelector() as selector:
+            selector.register(process.stdout, selectors.EVENT_READ, "stdout")
+            selector.register(process.stderr, selectors.EVENT_READ, "stderr")
+            while selector.get_map():
+                remaining = end - time.monotonic()
+                if remaining <= 0:
+                    raise _SourceFailure(phase, "source command timed out", timeout=True)
+                for key, _ in selector.select(remaining):
+                    size = min(65536, maximum + 1 - len(output)) if key.data == "stdout" else 4096
+                    chunk = os.read(key.fileobj.fileno(), size)
+                    if not chunk:
+                        selector.unregister(key.fileobj)
+                    elif key.data == "stdout":
+                        output.extend(chunk)
+                        if len(output) > maximum:
+                            raise _SourceFailure(phase, "source byte budget exceeded")
+                    else:
+                        errors.extend(chunk[:max(0, 1024 - len(errors))])
+            try:
+                rc = process.wait(timeout=max(0.001, end - time.monotonic()))
+            except subprocess.TimeoutExpired as exc:
+                raise _SourceFailure(phase, "source command timed out", timeout=True) from exc
+        if rc:
+            raise _SourceFailure(phase, errors.decode("utf-8", errors="replace") or "command failed", rc=rc)
+        return bytes(output)
+    finally:
+        if process.poll() is None:
+            process.kill()
+        process.wait()
+        process.stdout.close()
+        process.stderr.close()
+
+
+def _ledger(raw, phase):
+    if len(raw) > MAX_LEDGER_BYTES:
+        raise _SourceFailure(phase, "source byte budget exceeded")
+    try:
+        decoded = raw.decode("utf-8")
+        ledger = yaml.load(decoded, Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader))
+        if (not isinstance(ledger, dict) or not isinstance(ledger.get("bets"), list)
+                or not isinstance(ledger.get("meta"), dict)):
+            raise ValueError("Ledger requires mapping meta and list bets")
+    except (UnicodeError, yaml.YAMLError, ValueError) as exc:
+        raise _SourceFailure(phase, str(exc), kind=type(exc).__name__) from exc
+    return ledger
+
+
+def _diagnostic(exc, phase):
+    return exc.diagnostic if isinstance(exc, _SourceFailure) else {
+        "phase": phase, "type": type(exc).__name__,
+        "reason": _redact_secrets(str(exc))[:400],
+    }
+
+
+def read_portfolio_source():
+    """Return exact bytes, parsed ledger, and one coherent source identity."""
+    attempt = _now()
+    deadline = time.monotonic() + SOURCE_DEADLINE_SECONDS
+    phase = "remote_main_oid"
+    try:
+        ref = _read_cmd([GH, "api", f"repos/{REPOSITORY}/commits/main", "--jq", ".sha"],
+                        phase=phase, deadline=deadline, timeout=10, maximum=256).decode("ascii").strip()
+        if not re.fullmatch(r"[a-f0-9]{40}", ref):
+            raise _SourceFailure(phase, "invalid main commit identity")
+        phase = "remote_ledger_blob"
+        raw = _read_cmd([GH, "api", f"repos/{REPOSITORY}/contents/{LEDGER_PATH}?ref={ref}",
+                         "-H", "Accept: application/vnd.github.raw+json"],
+                        phase=phase, deadline=deadline, timeout=25, maximum=MAX_LEDGER_BYTES)
+        ledger = _ledger(raw, phase)
+        if time.monotonic() >= deadline:
+            raise _SourceFailure(phase, "source deadline exhausted", timeout=True)
+        stamp = _now()
+        return raw, ledger, {"state": "OBSERVED", "source_lane": "REMOTE_MAIN",
+            "source": f"github://{REPOSITORY}@{ref}/{LEDGER_PATH}", "sha": ref,
+            "ledger_sha256": _digest(raw), "ledger_digest_kind": "raw_bytes",
+            "observed_at": stamp, "fetched_at": stamp, "attempt_at": attempt}
+    except Exception as exc:
+        remote_error = _diagnostic(exc, phase)
+
+    phase = "bound_configuration"
+    try:
+        from runtime_paths import ProjectionRevisionStore, resolve_state_root
+        configured = os.environ.get("PANORAMA_CODE_ROOT", "")
+        code_root = Path(configured)
+        if not configured or not code_root.is_absolute() or not code_root.is_dir():
+            raise _SourceFailure(phase, "trusted absolute PANORAMA_CODE_ROOT required")
+        code_root = code_root.resolve()
+        def git(*args, maximum=4096):
+            return _read_cmd([GIT, "-C", str(code_root), *args], phase=phase,
+                             deadline=deadline, timeout=5, maximum=maximum)
+        phase = "bound_repository_identity"
+        top = git("rev-parse", "--show-toplevel").decode("utf-8").strip()
+        origin = git("remote", "get-url", "origin").decode("utf-8").strip()
+        if Path(top).resolve() != code_root or origin not in {
+            f"https://github.com/{REPOSITORY}.git", f"https://github.com/{REPOSITORY}",
+            f"git@github.com:{REPOSITORY}.git", f"ssh://git@github.com/{REPOSITORY}.git",
+        }:
+            raise _SourceFailure(phase, "configured producer repository identity mismatch")
+        phase = "bound_revision"
+        revision = ProjectionRevisionStore(resolve_state_root()).load(require_fresh=False)
+        ref = revision.producer_root_oid
+        phase = "bound_ledger_blob"
+        raw = git("show", f"{ref}:{LEDGER_PATH}", maximum=MAX_LEDGER_BYTES)
+        ledger = _ledger(raw, phase)
+        phase = "bound_content_clock"
+        body = json.loads(revision.artifact_bodies["data"]).get("portfolio")
+        source = f"github://{REPOSITORY}@{ref}/{LEDGER_PATH}"
+        if not isinstance(body, dict) or body.get("sha") != ref or body.get("source") != source:
+            raise _SourceFailure(phase, "bound portfolio OID/source does not match pinned object")
+        raw_digest = _digest(raw)
+        kind = body.get("ledger_digest_kind")
+        if kind == "raw_bytes" and body.get("ledger_sha256") == raw_digest:
+            binding_kind = "raw_bytes"
+        elif (kind is None and body.get("state") == "OBSERVED"
+              and body.get("source_lane") is None and body.get("normalization") is None
+              and body.get("ledger_sha256") == _digest(raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").strip().encode("utf-8"))):
+            # Only the identifiable pre-raw remote projection receives this migration.
+            binding_kind = "legacy_normalized"
+        else:
+            raise _SourceFailure(phase, "bound portfolio digest/algorithm mismatch")
+        stamp = body.get("observed_at")
+        if not isinstance(stamp, str):
+            raise _SourceFailure(phase, "bound source observation clock unavailable")
+        observed = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        published = datetime.fromisoformat(revision.generated_at.replace("Z", "+00:00"))
+        if observed.tzinfo is None or observed > published:
+            raise _SourceFailure(phase, "bound source observation clock not provable")
+        if time.monotonic() >= deadline:
+            raise _SourceFailure(phase, "source deadline exhausted", timeout=True)
+        fetched = _now()
+        return raw, ledger, {"state": "PARTIAL", "source_lane": "BOUND_BASELINE",
+            "source": source, "sha": ref, "ledger_sha256": raw_digest,
+            "ledger_digest_kind": "raw_bytes", "binding_digest_kind": binding_kind,
+            "binding_ledger_sha256": body.get("ledger_sha256"),
+            "revision_id": revision.revision_id, "manifest_sha256": revision.manifest_sha256,
+            "binding_generated_at": revision.generated_at, "binding_fresh_until": revision.fresh_until,
+            "binding_expired": datetime.now(timezone.utc) > datetime.fromisoformat(revision.fresh_until.replace("Z", "+00:00")),
+            "observed_at": stamp, "fetched_at": fetched, "attempt_at": attempt,
+            "remote_error": remote_error}
+    except Exception as exc:
+        reason = json.dumps({"remote_error": remote_error, "fallback_error": _diagnostic(exc, phase)},
+                            ensure_ascii=False, separators=(",", ":"))
+        raise CollectionError("portfolio", reason, cause=exc) from exc
+
+
+@register("portfolio", timeout=48)
+class PortfolioCollector(DataCollector):
+    """Collects BET portfolio data from a fixed, proven Git object."""
+
+    name = "portfolio"
+
+    def collect(self) -> dict:
+        raw, ledger, source = read_portfolio_source()
+        bets = ledger["bets"]
+
+        projected_bets = [self._project_bet(b) for b in bets if isinstance(b, dict)]
+        open_bets = [b for b in projected_bets if b.get("status") not in ("done", "failed")]
+
+        return {
+            **source,
+            "actual": len(projected_bets),
+            "declared": ledger.get("meta", {}).get("total_bets"),
+            "counts": dict(Counter(b.get("status", "unknown") for b in projected_bets)),
+            "nonterminal": open_bets,
+            "bet_records": projected_bets,
+            "vision": self._project_vision(ledger.get("vision")),
+            "objectives": [o for o in [self._project_objective(i) for i in (ledger.get("objectives") or [])[:30]] if o is not None],
+            "campaigns": [c for c in [self._project_campaign(i) for i in (ledger.get("campaigns") or [])[:30]] if c is not None],
+            "milestones": [m for m in [self._project_milestone(i) for i in (ledger.get("milestones") or [])[:100]] if m is not None],
+            "coverage": {
+                "nonterminal": len(open_bets),
+                "canonical_complete": sum(1 for b in open_bets if self._is_complete(b)),
+                "sha256": _digest(raw),
+            },
+        }
+
+    def validate(self, data: dict) -> bool:
+        """Validate portfolio data has required structure."""
+        if not isinstance(data.get("actual"), int):
+            return False
+        if not isinstance(data.get("bet_records"), list):
+            return False
+        if data.get("actual") != len(data.get("bet_records", [])):
+            return False
+        return True
+
+    @staticmethod
+    def _project_bet(bet: dict) -> dict:
+        if not isinstance(bet, dict):
+            return {}
+        return {
+            "id": bet.get("id"),
+            "title": bet.get("title"),
+            "status": bet.get("status", "unknown"),
+            "track": bet.get("track"),
+            "appetite": bet.get("appetite"),
+        }
+
+    @staticmethod
+    def _project_vision(value) -> dict:
+        if not isinstance(value, dict):
+            return {}
+        return {k: _text(value.get(k)) for k in ("id", "horizon_end", "owner", "statement", "strategy_ref")}
+
+    @staticmethod
+    def _project_objective(value) -> dict | None:
+        if not isinstance(value, dict):
+            return None
+        return {
+            "id": value.get("id"),
+            "owner": value.get("owner"),
+            "statement": value.get("statement"),
+        }
+
+    @staticmethod
+    def _project_campaign(value) -> dict | None:
+        if not isinstance(value, dict):
+            return None
+        return {
+            "id": value.get("id"),
+            "title": value.get("title"),
+            "status": value.get("status"),
+        }
+
+    @staticmethod
+    def _project_milestone(value) -> dict | None:
+        if not isinstance(value, dict):
+            return None
+        return {
+            "id": value.get("id"),
+            "campaign_ref": value.get("campaign_ref"),
+            "status": value.get("status"),
+        }
+
+    @staticmethod
+    def _is_complete(bet: dict) -> bool:
+        binding = bet.get("portfolio_binding", {})
+        return bool(binding.get("campaign_ref") and binding.get("objective_refs"))
