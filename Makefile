@@ -14,7 +14,7 @@
 	agent-workflows agent-workflow-bootstrap agent-workflow-lint agent-workflow-verify agent-workflow-compliance agent-workflow-closeout agent-workflow-doctor agent-workflow-observe agent-workflow-agents agent-workflow-integrations agent-workflow-adapters agent-workflow-status \
 	mof-bootstrap m4-health m4-health-compare registry-drift service-registry-reality runtime-install-root runtime-state-snapshot gac-healthcheck gac-drift gac-validate \
 	bridge-runtime corrosion-pipeline scene-journey value-tracker self-evolution weekly-review monthly-healthcheck probe-heartbeat goal-mode-test \
-	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll \
+	evidence-smoke governance-check governance-verify governance-audit debt-check doc-lint scene-feedback scene-outcome signal-poll state-materialize \
 	resident-status resident-roles resident-daemon resident-signals resident-alert resident-decision resident-execute resident-sediment resident-memory resident-promote resident-resources resident-ingest \
 	bcos-evolve bcos-signals bcos-north-star \
 	swarm-status swarm-chaos swarm-decide swarm-audit swarm-demo \
@@ -251,6 +251,11 @@ runtime-install-root:  ## 三层根 + 运行时安装位只读报告 (ADR-0456 B
 		echo "# 安装位内自报 (code_root 应等于安装位, canonical_root 仍是 ~/Workspace):"; \
 		printf '%s\n' "$$out"; \
 	fi
+
+state-materialize:  ## 从已提交真源物化 .omo/state/system.yaml (ADR-0456 B5; 已存在即跳过, I3)
+	# 入口放这里而不是再加一个 bin 脚本: bin/ 有净增配额 (check-bin-quota-diff.py), Makefile 不受限。
+	@$(PY) bin/gac/materialize-system-state.py --json
+	@echo "# 落点 = 调用时刻的 state 根; 未声明 profile 时即当前检出 (make runtime-install-root 看三根)"
 
 # ── 🔗 链路闭环工具 (Phase 1-3) ──────────────────────────────────────────────
 
@@ -668,11 +673,18 @@ governance-audit: governance-check debt-check doc-lint
 
 debt-check:
 	@echo "=== 债务状态检查 ==="
-	@if [ -f .omo/state/system.yaml ]; then \
-		echo "--- debt_weight ---"; grep "debt_weight:" .omo/state/system.yaml | head -1; \
-		echo "--- debt_health ---"; grep "debt_health:" .omo/state/system.yaml | head -1; \
-		echo "--- resolved_count ---"; grep "resolved_count:" .omo/state/system.yaml | head -1; \
-		echo "--- unresolved_count ---"; grep "unresolved_count:" .omo/state/system.yaml | head -1; \
+	@state_root="$$($(PYTHON) bin/lib/repo_root.py --json | $(PYTHON) -c 'import json,sys; print(json.load(sys.stdin)["state_root"])')"; \
+	f="$$state_root/.omo/state/system.yaml"; \
+	if [ ! -f "$$f" ]; then \
+		echo "缺 $$f —— 该生成态自 ADR-0456 B5 起不在检出里 (摘库), 跑 make state-materialize 供一份"; \
+	else \
+		echo "读数根: $$f"; \
+		for k in debt_weight debt_health resolved_count unresolved_count; do \
+			line="$$(grep -m1 "^$$k:" "$$f" || true)"; \
+			if [ -n "$$line" ]; then echo "  $$line"; else \
+				echo "  $$k: 不在 write-owners 声明面 —— 债务现值看 .omo/debt/ 与 make debt-audit"; \
+			fi; \
+		done; \
 	fi
 	@echo "=== 债务检查完成 ==="
 

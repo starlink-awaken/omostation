@@ -40953,6 +40953,12 @@ bets:
     被 `.github/workflows/governance-check.yml` 显式点名 —— 指认命令 `git grep -n test_system_yaml_materializer
     -- .github/workflows/` 必须命中一行 pytest 调用 (`tests/unit/**` 不在任何 CI 白名单里: 该 workflow
     :191-192 自证，先例见 T10-232 的 :193)。'
+  - "判据-6 消费方面不瞎 (二次交付): 在一棵不含 .omo/state/system.yaml 的 origin/main 复刻树上, 按 CI 步骤顺序
+    先跑 bin/gac/materialize-system-state.py, 再跑 bin/ssot/doc-link-check.py、bin/gac/architecture-check.py --gate
+    与 bin/ssot/current-state-coherence.py —— 三者 rc=0 且 doc-link-check 报 0 broken links。判据只允许「补创建者」
+    这一侧的改动: 削弱任一检查器的判定语义 (跳过链接目标、去掉 core_documents 存在性断言) 即 circuit_breaker 命中。
+    连带登记面: bin/_registry/scripts/ 有该脚本条目、governance-checks.yaml script_baseline 已 +1、
+    ci-surfaces.yaml 登记其 workflow + also_in (否则 CR-CI-SURFACE-SSOT 报 unregistered-check)。"
   verify:
   - cmd: python3 bin/gac/materialize-system-state.py --dry-run --json
     expect: key_set_equals_declared=true; derived 的五个 task 计数与 phase/wave 等于同一棵树上 bin/ssot/current-state-coherence.py
@@ -40996,6 +41002,12 @@ bets:
   - bin/panorama/panorama-collect.py
   - tests/unit/test_system_yaml_write_plane.py
   - .omo/state/system.yaml
+  - .github/workflows/gac-gate.yml
+  - .github/workflows/architecture-check.yml
+  - .omo/_truth/registry/ci-surfaces.yaml
+  - .omo/_truth/registry/governance-checks.yaml
+  - bin/_registry/scripts/governance/materialize-system-state.yaml
+  - tests/unit/test_system_yaml_consumer_inputs.py
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-07-system-yaml-materializer-untrack.md
     spec_version: 1.0.0

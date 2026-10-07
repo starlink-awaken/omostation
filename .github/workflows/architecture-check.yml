@@ -28,5 +28,9 @@ jobs:
           python-version: '3.13'
       - name: Install dependencies
         run: pip install pyyaml
+      # ADR-0456 B5 (BET-Y2Q4-T10-235) — core_documents.STATE.md 声明的就是这份已摘库的生成态;
+      # --gate 的 ssot_index 存在性断言保持不变, 由创建者在检查之前把它供上。
+      - name: Materialize generated state input for the architecture gate
+        run: python3 bin/gac/materialize-system-state.py --json
       - name: Run architecture check
         run: python3 bin/gac/architecture-check.py --gate

@@ -179,7 +179,12 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 715 # 2026-10-05 714→715: PR (T10-227) projection-full-refresh
+    script_baseline: 716 # 2026-10-07 715→716: PR (T10-235) materialize-system-state
+      # (+ bin/gac/materialize-system-state.py, BET-Y2Q4-T10-235 `.omo/state/system.yaml`
+      # 创建者 —— 摘库后干净检出里三个按存在性判定的读者 (doc-link-check /
+      # architecture-check --gate core_documents.STATE.md / current-state-coherence)
+      # 失去输入, 由创建者在消费之前供上, 判据语义不动); 上一行注释:
+      # 2026-10-05 714→715: PR (T10-227) projection-full-refresh
       # (+ bin/panorama/projection-full-refresh.py, BET-Y2Q4-T10-227 全量投影数据
       # 周期刷新通道); 上一行注释:
       # 2026-10-04 712→714: PR #4619 projection-republisher
