@@ -79,6 +79,34 @@ validate_session() {
 # 核心函数在根 lib/pasw-core.sh (脚本在 bin/gac/, 需 ../../lib/ 到仓库根)
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/pasw-core.sh"
 
+# ── Worktree ownership check (fail-closed before any --force removal) ─────
+# Bug: cleanup enumerates "$WS_PARENT"/ws-*/ by directory name only, so a
+# directory that is a worktree of a DIFFERENT repository gets collected and
+# then `git worktree remove --force`d from this repo's perspective.
+# Real instance (2026-10-06): ~/ws-zhixing-dash-main is a worktree of
+# ~/.local/share/zhixing-dashboard (remote starlink-awaken/zhixing-dashboard),
+# is absent from this repo's `git worktree list`, yet cleanup reported it as
+# reclaimable and would have rm -force'd it.
+#
+# Membership is decided by `git worktree list --porcelain` (git's own registry)
+# rather than by the .git file's gitdir: prefix — that also covers the main
+# worktree, whose .git is a directory rather than a file, and needs no
+# assumption about which layout a foreign repo uses.
+worktree_is_owned() {
+  local candidate="$1"
+  local real_path reg_path
+  [ -d "$candidate" ] || return 1
+  real_path=$(cd "$candidate" 2>/dev/null && pwd -P) || return 1
+  [ -n "$real_path" ] || return 1
+  while IFS= read -r reg_path; do
+    [ -n "$reg_path" ] || continue
+    if [ "$reg_path" = "$real_path" ]; then
+      return 0
+    fi
+  done < <(git -C "$WS_ROOT" worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p')
+  return 1
+}
+
 # ── Fail-closed verification before --force worktree removal ──────────────
 # Bug: git worktree remove (without --force) returns exit 128 on worktrees
 # with initialized submodules even when everything is clean; --force succeeds.
@@ -1516,10 +1544,30 @@ PYEOF
     for wt_path in "$WS_PARENT"/ws-*/; do
       [ -d "$wt_path" ] || continue
       wt_name=$(basename "$wt_path")
-      # 用 mtime (stat -f %m on macOS / %Y on Linux)
-      last_mtime=$(stat -f %m "$wt_path" 2>/dev/null || stat -c %Y "$wt_path" 2>/dev/null || echo 0)
+      # 用 mtime (GNU: stat -c %Y / BSD: stat -f %m)
+      # 两个坑必须同时避开:
+      #   1) GNU 的 `stat -f` 是 filesystem 模式 —— 不报错却打印多行 filesystem 信息,
+      #      其输出喂给 $(( )) 会被当变量名 ⇒ `File: unbound variable` (set -u 下整段退出).
+      #      旧写法 `stat -f %m ... || stat -c %Y ...` 在 Linux 上正好踩中.
+      #   2) 命令替换失败会触发 set -e ⇒ 必须 `|| true`, 否则先试的那个在异平台
+      #      失败时脚本直接退出, fallback 永远跑不到 (本机实测).
+      last_mtime=$(stat -c %Y "$wt_path" 2>/dev/null || true)
+      case "$last_mtime" in
+        ''|*[!0-9]*) last_mtime=$(stat -f %m "$wt_path" 2>/dev/null || true) ;;
+      esac
+      case "$last_mtime" in
+        ''|*[!0-9]*) last_mtime=0 ;;
+      esac
       age_hours=$(( (now - last_mtime) / 3600 ))
       if [ "$age_hours" -lt "$TTL_HOURS" ]; then
+        continue
+      fi
+      # 归属闸门: 只操作 git worktree list 登记在本仓的目录。
+      # 放在此处（TTL 判定后、任何 `git -C "$wt_path"` 之前）意味着连脏项探测
+      # 都不会跑在别仓目录上 —— 否则非 git 目录会静默穿过脏项探测的
+      # `2>/dev/null` 直达 `worktree remove --force`。
+      if ! worktree_is_owned "$wt_path"; then
+        echo "  ⏭️  $wt_name 非本仓 worktree, 跳过 (归属校验)"
         continue
       fi
       # 有未提交改动则跳过 (防丢工作)
