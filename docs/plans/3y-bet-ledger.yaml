@@ -41027,6 +41027,120 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-234
+  title: ADR-0464 盲区一 (inert-by-default) — MOS 默认配置真实执行观测缝 + surface gate 去 phase10
+    活性代理
+  goal: 'Memory OS 控制面在 registry 登记 status: phase10、六条 bos://memory/mos/* 路由齐全、ADR-0372
+    ACCEPTED，但其生产后端默认关闭 (MOS_LIVE_KOS/GBRAIN 默认 off、NEO4J_URI 门控且默认无服务)，默认 recall 返回
+    fixture 数据 —— 而门禁 bin/gac/check-memory-os-surfaces.py:117 (改前) 只要求 registry 文本含字面量
+    "phase10" 即放行 (实测连一个文档路径 phase10_retro 都能满足)，属"声明即活性"代理判据。 两次独立审计结论：无任何门禁观测默认环境的真实执行，且先建门禁只会得到绿染的结构检查。本轮先建观测缝：
+    kairon 子模块新增 mos/observations.py，把已计算却被丢弃的 data_mode/live_backends 真实执行事实 追加写入 <state-root>/runtime/mos/observations.jsonl
+    (追加式 JSONL + 时间戳水印；只记 data_mode in {live,mixed} 且有 live backend 的执行，fixture-only
+    不写；MOS_SEAM_MIN_INTERVAL 默认 300s 限流；写根 在调用时刻解析，镜像 repo_root 的 OMOSTATION_STATE_ROOT→ECOS_WORKSPACE/WORKSPACE_ROOT→标记上溯契约；
+    全程 fail-soft，不改 recall 任何行为)。再改门禁：删除 check_registry_ssot 的 "phase10" 字面量 needle
+    (保留其余 needle 与 path/port/env-key/help-catalog 检查)，新增 check_default_execution_seam()
+    用 repo_root.state_root() 调用时刻读观测缝，判定是否存在默认环境 (default_env=true) 下的真实执行；发布为 WARN
+    advisory (缝新，hard error 会假红)，docstring 写明升级路径。'
+  status: done
+  done_at: 2026-10-07
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop if the seam changes any recall() return value or branch (it
+    must be pure telemetry); if a fixture-only recall ever writes an observation; if
+    the observation write root is evaluated at import time (must be call-time); if the
+    gate loses any path/port/env-key/help-catalog check; if the gate becomes blocking/error;
+    if kairon MOS suite drops below the 93-passed baseline in a clean env; or if any
+    change requires editing .omo/tasks/active/BET-Y2Q4-T10-CJK-ROUTING.yaml or re-adding
+    --require-main to CI.
+  non_goals:
+  - Do not change any MOS_LIVE_* or NEO4J_URI default (keep fixture-safe).
+  - Do not make the new gate blocking/ERROR (that is a follow-up BET with a committed
+    baseline record).
+  - Do not add third-party dependencies or import-time-resolved profile-root constants.
+  - Do not touch the path/port/env-key/help-catalog checks in check-memory-os-surfaces.py.
+  - Do not edit .omo/tasks/active/BET-Y2Q4-T10-CJK-ROUTING.yaml or re-add --require-main
+    to any CI workflow.
+  done_when:
+  - '判据-1 不假成功 (I1): fixture-only recall 不写观测记录; 显式 live backend 的 recall 追加一条 kind=mos.real_execution
+    记录 (test_observations.py 两条用例钉住)。'
+  - '判据-2 调用时刻解析 (I2): 模块 import 之后才声明 OMOSTATION_STATE_ROOT, 仍解析到 <state-root>/runtime/mos/observations.jsonl。'
+  - '判据-3 有界写入 (I3): MOS_SEAM_MIN_INTERVAL 窗口内重复真实执行只写一条。'
+  - '判据-4 fail soft (I4): 写路径不可建/无根可解析时 recall() 照常返回、缝返回 False、不抛异常。'
+  - '判据-5 门禁去代理 (I5): registry 删除全部 phase10 后门禁不再 hard-fail (旧规则会失败); path/env/port
+    检查保持。'
+  - '判据-6 门禁不假红 (I6): 无观测文件 exit 0 + 一条 WARN; 存在默认环境真实执行记录 WARN 清空; 仅 fixture 或仅显式覆盖记录
+    WARN 保留。'
+  - '判据-7 回归 (I7): kairon MOS 套件干净 env 下 ≥ 93 passed; ruff check 干净; make gac-local-gate
+    无新增 hard failure。'
+  verify:
+  - cmd: cd projects/knowledge/kairon && env -u MOS_LIVE_GBRAIN -u MOS_LIVE_KOS -u MOS_LIVE_GBRAIN_WRITE
+      -u NEO4J_URI -u NEO4J_USER -u NEO4J_PASSWORD -u MOS_RBAC -u MOS_TEMPORAL uv run
+      --package mos pytest packages/mos/tests -q
+    expect: all pass (>= 93; this round measured 101).
+  - cmd: ruff check bin/gac/check-memory-os-surfaces.py
+    expect: clean.
+  - cmd: python3 bin/gac/check-memory-os-surfaces.py --json
+    expect: pass, failed_checks empty; advisory WARN when no default-env observation
+      yet.
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: OK.
+  - cmd: python3 bin/ssot/doc-ssot-lint.py --json
+    expect: ok / 0 findings.
+  - cmd: make gac-local-gate
+    expect: no new hard failures.
+  write_surfaces:
+  - bin/gac/check-memory-os-surfaces.py
+  - .omo/_truth/registry/memory-os.yaml
+  - docs/superpowers/specs/2026-10-07-mos-observability-seam-spec.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-234.md
+  - projects/knowledge/kairon/packages/mos/src/mos/observations.py
+  - projects/knowledge/kairon/packages/mos/src/mos/service.py
+  - projects/knowledge/kairon/packages/mos/tests/conftest.py
+  - projects/knowledge/kairon/packages/mos/tests/test_observations.py
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-07-mos-observability-seam-spec.md
+    spec_version: 1.0.0
+    content_digest: sha256:efa33034dad1903e29917ae8b313a7defe93837139e3cd057b295ad7babdd11c
+    decision_ref: decision://accepted/BET-Y2Q4-T10-234
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e6f40f6a66e7085758bbe8a739f7f1c923e3217a
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-234.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-234.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-234.md
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-234.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-234.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-234.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-234.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -41165,7 +41279,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 531
+  total_bets: 532
   windows:
   - Y1Q1
   - Y1Q2
