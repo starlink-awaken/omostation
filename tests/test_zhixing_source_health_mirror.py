@@ -33,6 +33,7 @@ def _refresh(monkeypatch):
     assert spec is not None
     module = importlib.util.module_from_spec(spec)
     loader.exec_module(module)
+    monkeypatch.setitem(sys.modules, "refresh", module)
     return module
 
 
@@ -112,8 +113,8 @@ def test_legacy_success_timestamp_from_failed_body_is_unknown(monkeypatch):
 # These digests name the reviewed Dashboard Git objects, rather than whichever
 # files happen to be running on this machine. A new mirror delivery updates them.
 PORTFOLIO_FREEZE = {
-    "portfolio_collector.py.asset": "992f9719873dd9f58493d00cb06dc34e193e08ec4b193f82c04e6050759bd00c",
-    "refresh.py.asset": "295c0af997547c0ed2f1eb3bf8c900b81ef0fff89d0aefe52c915248af942047",
+    "portfolio_collector.py.asset": "74b3a1d1e1c6f56c21ced5886915fe8688475516aa528873b92cd767f97f63e7",
+    "refresh.py.asset": "0806df9851d873db3004c692fe045206d99eb38d5a0f125b6e8198ed40051b0e",
     "strategy_projection.py.asset": "ad9123da7a58f10394df493b6ab6172866dd1056ff82f9ee7b76dd9ec4298648",
 }
 

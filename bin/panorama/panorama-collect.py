@@ -607,7 +607,8 @@ def publish_projection_revision(
             != source_binding["source_hashes"]["event_ledger_sha256"]
         ):
             raise RuntimeError("projection_value_ledger_mismatch")
-        published_payload = dict(payload)
+        import copy
+        published_payload = copy.deepcopy(payload)
         published_payload["personal_value_truth"] = personal_value_truth
         value_readiness = _ledger_bound_value_readiness(personal_value_truth)
         published_payload["value_proof_readiness"] = value_readiness
@@ -631,6 +632,7 @@ def publish_projection_revision(
         fresh_until = generated + timedelta(minutes=10)
         generated_at = generated.isoformat().replace("+00:00", "Z")
         fresh_until_at = fresh_until.isoformat().replace("+00:00", "Z")
+        _finalize_bound_agent_brief(published_payload, generated_at, value_readiness)
         # Use the dashboard repo's template (kept in sync with the orchestrator)
         # instead of the embedded legacy TEMPLATE, so published revisions serve
         # the same page the orchestrator produces.
@@ -4044,7 +4046,80 @@ def collect_recent_features() -> dict:
     return {"total": len(features), "recent": features[:10]}
 
 
-def collect_agent_visibility(payload: dict) -> dict:
+def _brief_bet_source(payload: dict) -> tuple[dict, dict]:
+    """Use this cohort's Portfolio, never another Ledger read for the Brief."""
+    portfolio = payload.get("portfolio")
+    source_states = payload.get("source_states") if isinstance(payload.get("source_states"), dict) else {}
+    source_state = source_states.get("portfolio") if isinstance(source_states.get("portfolio"), dict) else {}
+    if isinstance(portfolio, dict) and isinstance(portfolio.get("bet_records"), list):
+        records = [b for b in portfolio["bet_records"] if isinstance(b, dict)]
+        if (portfolio.get("sha") and portfolio.get("ledger_sha256") and portfolio.get("observed_at")
+                and len(records) == portfolio.get("actual")):
+            from collections import Counter
+            counts = dict(Counter(b.get("status", "unknown") for b in records))
+            if isinstance(portfolio.get("counts"), dict) and counts != portfolio["counts"]:
+                return {}, {"state": "UNPROVABLE", "reason": "portfolio_counts_conflict",
+                            "observed_at": portfolio["observed_at"], "proof_scope": "rejected-portfolio-cohort"}
+            windows = {}
+            for bet in records:
+                row = windows.setdefault(bet.get("window") or "UNKNOWN", {"total": 0, "done": 0})
+                row["total"] += 1
+                row["done"] += bet.get("status") == "done"
+            return {"total": len(records), "counts": counts,
+                "in_progress": [b for b in records if b.get("status") == "in_progress"],
+                "blocked": [b for b in records if b.get("status") == "blocked"], "windows": windows}, {
+                "state": source_state.get("status") or portfolio.get("state", "UNKNOWN"), "source": portfolio.get("source"),
+                "sha": portfolio["sha"], "ledger_sha256": portfolio["ledger_sha256"],
+                "observed_at": portfolio["observed_at"], "proof_scope": "same-portfolio-cohort-declarations",
+                **{key: source_state[key] for key in ("error", "reason", "last_attempt_at", "last_success_at") if key in source_state}}
+    if isinstance(portfolio, dict):
+        return {}, {"state": "UNPROVABLE", "reason": "portfolio_identity_incomplete",
+                    "observed_at": portfolio.get("observed_at"), "proof_scope": "rejected-portfolio-cohort"}
+    # Compatibility for readers without Portfolio is explicitly advisory.
+    bets = payload.get("bets") if isinstance(payload.get("bets"), dict) else {}
+    return bets, {"state": "UNPROVABLE", "source": "payload.bets-advisory",
+                  "observed_at": None, "proof_scope": "legacy-unbound-advisory-only"}
+
+
+def _finalize_bound_agent_brief(payload: dict, generated_at: str, value_readiness: dict) -> None:
+    """Finalize all Brief bytes before recording their external digest."""
+    import copy
+    import hashlib
+    previous = payload.setdefault("source_states", {}).get("agent_brief")
+    if isinstance(previous, dict) and previous.get("proof_scope") != "producer-derived-brief-only":
+        payload["source_states"]["agent_brief_feedback"] = copy.deepcopy(previous)
+    # Publication clock is distinct from the retained source observations.
+    payload["assembled_at"] = payload.get("generated_at")
+    payload["generated_at"] = generated_at
+    previous_visibility = payload.get("agent_visibility")
+    brief = collect_agent_visibility(payload, bound_value_readiness=value_readiness)
+    if not isinstance(previous_visibility, dict) or previous_visibility.get("available") is False:
+        brief["available"] = False
+    brief["generated_at"] = generated_at
+    brief["generation_id"] = payload.get("generation_id")
+    cohort_bets, source = _brief_bet_source(payload)
+    if source.get("proof_scope") == "same-portfolio-cohort-declarations":
+        payload["bets"] = cohort_bets
+    brief["input_sources"] = {"portfolio": source, "gantt": {
+        key: (payload.get("gantt") or {}).get(key)
+        for key in ("state", "sha", "ledger_sha256", "observed_at")}}
+    brief["authority"]["value_proof"] = value_readiness["status"]
+    brief["authority"]["value_proof_readiness"] = value_readiness
+    for action in brief.get("next_actions", []):
+        action["execution_authority"] = "native Workflow admission and exact Claim required"
+    body = json.dumps(brief, ensure_ascii=False, indent=1).encode("utf-8")
+    payload["agent_visibility"] = brief
+    payload["agent_brief"] = copy.deepcopy(brief)
+    payload["next_actions"] = copy.deepcopy(brief.get("next_actions", []))
+    payload["source_states"]["agent_brief"] = {
+        "status": "OK" if brief.get("available") is True else "UNAVAILABLE", "observed_at": generated_at,
+        "last_success_at": generated_at if brief.get("available") is True else None,
+        "sha256": hashlib.sha256(body).hexdigest(), "generation_id": payload.get("generation_id"),
+        "proof_scope": "producer-derived-brief-only", "input_source": source,
+        "upstream_health_independent": True}
+
+
+def collect_agent_visibility(payload: dict, *, bound_value_readiness: dict | None = None) -> dict:
     """Project a bounded, machine-readable overview for every agent.
 
     The human HTML remains the panoramic view.  This projection is deliberately
@@ -4082,7 +4157,9 @@ def collect_agent_visibility(payload: dict) -> dict:
     reference_cell = payload.get("reference_cell") if isinstance(payload.get("reference_cell"), dict) else {}
     agent_cell_semantic = payload.get("agent_cell_semantic") if isinstance(payload.get("agent_cell_semantic"), dict) else {}
     value_metrics = payload.get("value_metrics") if isinstance(payload.get("value_metrics"), dict) else {}
-    bets = payload.get("bets") if isinstance(payload.get("bets"), dict) else {}
+    bets, bet_source = _brief_bet_source(payload)
+    bets_current = (bet_source.get("proof_scope") == "same-portfolio-cohort-declarations"
+                    and bet_source.get("state") in {"OK", "OBSERVED"})
     raw_windows = bets.get("windows") if isinstance(bets.get("windows"), dict) else {}
     window_rows = []
     for window_id in sorted(raw_windows):
@@ -4170,6 +4247,14 @@ def collect_agent_visibility(payload: dict) -> dict:
             )
         ),
     }
+
+    # The native publisher alone supplies this observer-derived readiness.
+    # It must govern both authority and actions before either is serialized.
+    if bound_value_readiness is not None:
+        value_readiness = dict(bound_value_readiness)
+        qualifying = value_readiness.get("qualifying_samples", 0)
+        qualifying = qualifying if type(qualifying) is int and qualifying >= 0 else 0
+        value_proof_flag = str(value_readiness.get("status") or "UNPROVABLE")
 
     activation_allowed = claims_task16.get("activation_allowed") is True
     blockers = []
@@ -4339,6 +4424,7 @@ def collect_agent_visibility(payload: dict) -> dict:
         "work_state": {
             "bets": {
                 "available": bool(bets),
+                "source_binding": bet_source,
                 "total": bets.get("total", 0),
                 "counts": bets.get("counts", {}),
                 "in_progress": bets.get("in_progress", []),
@@ -4416,12 +4502,12 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "source": "panorama.claims_authority",
             },
             *([
-                {"id": "continue-active-bets", "state": "ready",
-                 "detail": f"Continue active BETs: {len(bets.get('in_progress', []))}",
+                {"id": "continue-active-bets", "state": "admission_required" if bets_current else "advisory",
+                 "detail": f"BET snapshot has {len(bets.get('in_progress', []))} active records; verify fresh source and native admission before acting.",
                  "source": "panorama.bets"}
             ] if bets.get("in_progress") else []),
             *([
-                {"id": "plan-candidate-bets", "state": "ready",
+                {"id": "plan-candidate-bets", "state": "admission_required" if bets_current else "advisory",
                  "detail": f"Advance {bets.get('counts', {}).get('candidate', 0)} candidate BET(s) through accepted Spec, plan, and verification gates.",
                  "source": "panorama.bets"}
             ] if bets.get("counts", {}).get("candidate", 0) else []),
@@ -4433,7 +4519,7 @@ def collect_agent_visibility(payload: dict) -> dict:
             *([
                 {
                     "id": "collect-qualifying-value-evidence", "state": "required",
-                    "detail": value_readiness["next_action"],
+                    "detail": value_readiness.get("next_action") or f"Collect {max(0, 30 - qualifying)} more qualifying real-use records and satisfy the ledger-bound full value window; do not backfill.",
                     "source": "panorama.value_proof_readiness",
                 }
             ] if qualifying < 30 or value_proof_flag != "PROVEN" else []),
@@ -4658,24 +4744,6 @@ def build_payload() -> dict:
     }
     # logs / metrics / value 三板块真实数据（同时统合事件指标口径）
     payload.update(_collect_panels(payload))
-    # objective_coverage must run AFTER panel_value is attached so BUSINESS_VALUE
-    # can follow the signed full-window attestation state.
-    payload["objective_coverage"] = collect_objective_coverage(payload)
-    payload["agent_visibility"] = collect_agent_visibility(payload)
-    # Agent Brief owns action derivation; mirror it to the top level so all
-    # agents and the Next panel can consume one stable contract without
-    # discovering the nested envelope.
-    visibility = payload.get("agent_visibility")
-    if isinstance(visibility, dict):
-        authority = visibility.get("authority") if isinstance(visibility.get("authority"), dict) else {}
-        payload["next_actions"] = visibility.get("next_actions") or []
-        payload["unfinished_objectives"] = [
-            item
-            for item in (visibility.get("objective_coverage") or {}).get("items", [])
-            if isinstance(item, dict) and item.get("status") not in {"PASS", "DELIVERY_ACCEPTED_RUNTIME_VERIFIED"}
-        ]
-        payload["value_proof_readiness"] = authority.get("value_proof_readiness") or {"schema": "panorama-value-proof-readiness/v1", "available": False, "status": "UNKNOWN"}
-        payload["claims_activation_readiness"] = authority.get("claims_activation_readiness") or {"schema": "claims-activation-readiness/v1", "available": False, "readiness": "UNKNOWN"}
     # Revision-bound generation + strategic projection — required by
     # observatory_query.ObservationIndex (generation_id + strategic.trace).
     import hashlib as _hashlib
@@ -4732,6 +4800,33 @@ def build_payload() -> dict:
     except Exception:
         _strategic = None
     payload["strategic"] = _strategic or _build_strategic_projection(payload)
+    # objective_coverage must run AFTER panel_value is attached so BUSINESS_VALUE
+    # can follow the signed full-window attestation state.
+    payload["objective_coverage"] = collect_objective_coverage(payload)
+    cohort_bets, cohort_source = _brief_bet_source(payload)
+    if cohort_source.get("proof_scope") == "same-portfolio-cohort-declarations":
+        payload["bets"] = cohort_bets
+        portfolio, gantt = payload["portfolio"], payload.get("gantt") or {}
+        if any(gantt.get(key) != portfolio.get(key) for key in ("sha", "ledger_sha256", "observed_at")):
+            payload["gantt"] = {"state": "UNPROVABLE", "reason": "gantt_portfolio_source_mismatch",
+                                "first_100_days": {"window": {"start": None, "end": None}, "lanes": []}}
+            payload.setdefault("source_states", {})["gantt"] = {"status": "UNPROVABLE", "observed_at": None,
+                                                                 "reason": "gantt_portfolio_source_mismatch"}
+    payload["agent_visibility"] = collect_agent_visibility(payload)
+    # Agent Brief owns action derivation; mirror it to the top level so all
+    # agents and the Next panel can consume one stable contract without
+    # discovering the nested envelope.
+    visibility = payload.get("agent_visibility")
+    if isinstance(visibility, dict):
+        authority = visibility.get("authority") if isinstance(visibility.get("authority"), dict) else {}
+        payload["next_actions"] = visibility.get("next_actions") or []
+        payload["unfinished_objectives"] = [
+            item
+            for item in (visibility.get("objective_coverage") or {}).get("items", [])
+            if isinstance(item, dict) and item.get("status") not in {"PASS", "DELIVERY_ACCEPTED_RUNTIME_VERIFIED"}
+        ]
+        payload["value_proof_readiness"] = authority.get("value_proof_readiness") or {"schema": "panorama-value-proof-readiness/v1", "available": False, "status": "UNKNOWN"}
+        payload["claims_activation_readiness"] = authority.get("claims_activation_readiness") or {"schema": "claims-activation-readiness/v1", "available": False, "readiness": "UNKNOWN"}
     return payload
 
 

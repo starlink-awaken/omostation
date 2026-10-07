@@ -251,7 +251,8 @@ class RefreshOrchestrator:
                                  for row in data["documents"]]
         if isinstance(data.get("documents_meta"), dict):
             data["documents_meta"] = dict(data["documents_meta"], generation_id=data["generation_id"])
-        from refresh import integrate_strategy, publish_strategy_artifacts
+        from refresh import integrate_gantt, integrate_strategy, publish_strategy_artifacts
+        integrate_gantt(data, previous)
         integrate_strategy(data, previous)
         publish_strategy_artifacts(data)
         return data
