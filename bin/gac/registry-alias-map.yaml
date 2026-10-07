@@ -31,14 +31,14 @@ aliases:
     evidence:
       governance-checks: ".omo/_truth/registry/governance-checks.yaml"
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml"
-      note: "check_type field reference; executor in archive (gac-execution-gap.py)"
+      note: "check_type field reference; 实际接线是 alias mof-bootstrap → bin/mof/mof-bootstrap.py (live, gac-local-gate.py:137 与 m4-health-score.py:82 调用); 旧说明曾指向 bin/_archive/gac-execution-gap.py (archive), 该路径不构成接线"
 
   # ── L0 (protocol layer) ──
   - canonical: CR-L0-BOS-RESOLVE
     aliases: [bos_resolve, bos-resolve]
     evidence:
       governance-checks: ".omo/_truth/registry/governance-checks.yaml"
-      bin_executor: "bin/_archive/gac-execution-gap.py"
+      bin_executor: "projects/agora/src/agora/mcp/tools/bos_resolve.py (live) + bin/gac/evidence-smoke.py:634 bos_resolve 评分; 旧引用 bin/_archive/gac-execution-gap.py 已归档, 不构成接线"
 
   - canonical: CR-L0-PROTOCOLS-SSOT
     aliases: [protocols_ssot, protocols-ssot]
@@ -224,7 +224,7 @@ aliases:
     aliases: [age_bos]
     evidence:
       governance-checks: ".omo/_truth/registry/governance-checks.yaml"
-      bin_executor: "bin/_archive/gac-execution-gap.py"
+      bin_executor: "bin/_archive/gac-execution-gap.py (已归档; 该规则已 retired, 见下方 retired 列表)"
 
   - canonical: CR-AGE-EVENT-01
     aliases: [age_event]
