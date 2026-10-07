@@ -1062,6 +1062,16 @@ def main() -> int:
     return 0
 
 
+def _system_yaml() -> Path:
+    """写目标在调用时刻解析 (ADR-0456 D1 / BET-Y2Q4-T10-220 的漏网副本)。
+
+    这份是 bin/compass_radar.py 的旧拷贝, 活副本 T10-220 已接 seam、这份漏了: 用
+    `ws_root` 拼路径会把现值写回检出里那份设计上的陈旧快照。未声明 profile 时
+    state_root() == code_root(), 与历史拼法逐字节相同。
+    """
+    return runtime_state_root() / ".omo" / "state" / "system.yaml"
+
+
 def sync_system_yaml(
     ws_root: Path,
     health_score: int,
@@ -1076,7 +1086,7 @@ def sync_system_yaml(
     """
     import yaml
 
-    system_yaml = ws_root / ".omo" / "state" / "system.yaml"
+    system_yaml = _system_yaml()
     if not system_yaml.is_file():
         print(f"⚠️  system.yaml 不存在: {system_yaml}, 跳过同步")
         return

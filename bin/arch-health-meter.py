@@ -32,6 +32,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 WS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(WS / "bin" / "lib"))
+from repo_root import state_file_read  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -139,7 +141,7 @@ def dim_evolution() -> dict:
 # ---------------------------------------------------------------------------
 def dim_operations() -> dict:
     """runtime 在线率 (从 system.yaml 的 runtime 块)."""
-    sys_yaml = WS / ".omo" / "state" / "system.yaml"
+    sys_yaml = state_file_read(".omo/state/system.yaml", root=WS)
     if not sys_yaml.exists():
         return {"online": 0, "total": 0, "ratio": 0.0, "error": "system.yaml missing"}
     try:
