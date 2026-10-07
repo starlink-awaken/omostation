@@ -53,10 +53,28 @@ ALIAS_MAP = _ROOT / "bin" / "gac" / "registry-alias-map.yaml"
 EXEC_CORPUS_GLOBS = [
     "bin/**/*.py",
     "bin/**/*.sh",
+    # F4: 子模块源码树也是执行面 (ecos 的 L0 registry 与自身执行栈、agora/omo/runtime/cockpit
+    # 等全部落在这里)。此前只扫根仓 bin/, 使 submodule 里实现的规则 id 结构性不可见。
+    "projects/*/src/**/*.py",
+    "projects/*/src/**/*.sh",
     ".githooks/*",
     ".github/workflows/*.yml",
 ]
+# F4: bin/ 下无扩展名的可执行体 (e.g. bin/ssot/mypy-baseline-gate 实现的 mypy-truth 规则)。
+# bin/**/*.py + bin/**/*.sh 结构性抓不到它们; 这里按 "无扩展名 + (可执行位 || shebang)" 收录。
+EXTENSIONLESS_EXEC_GLOBS = ["bin/**"]
 EXEC_MANIFEST = _ROOT / ".omo" / "_truth" / "registry" / "hook-manifest.yaml"
+
+# F3: 豁免/遗留清单数据 (exemption DATA) — 不是执行面。
+# LEGACY_CR_IDS (governance-convergence-lint.py:65) 是 R-GOV-1 准入豁免白名单;
+# 规则 id 出现在其中 ≠ 被执行。接线判定必须把这些块剥掉, 否则"豁免数据"会被
+# 当成"接线证据"。
+EXEMPTION_BLOCKS: list[tuple[str, re.Pattern]] = [
+    (
+        "bin/gac/governance-convergence-lint.py",
+        re.compile(r"LEGACY_CR_IDS\s*=\s*\{(?:[^}]|\n)*?\n\}", re.S),
+    ),
+]
 
 _ID_RE = re.compile(r"^CR-[A-Z0-9-]+$|^X[1-4]-C\d{2}$|^CS-\d+$")
 
@@ -118,6 +136,43 @@ def _load_retired() -> set[str]:
     return {str(x).strip() for x in (data.get("retired") or []) if str(x).strip()}
 
 
+def _is_extensionless_exec(f: Path) -> bool:
+    """bin/ 下无扩展名的可执行体: (可执行位 || shebang 头) 且非目录."""
+    if not f.is_file():
+        return False
+    if f.suffix:
+        return False
+    try:
+        mode = f.stat().st_mode
+        if mode & 0o111:
+            return True
+    except OSError:
+        pass
+    try:
+        with f.open("r", encoding="utf-8", errors="ignore") as fh:
+            return fh.read(2).startswith("#!")
+    except OSError:
+        return False
+
+
+def _exemption_block_pattern(path: Path) -> re.Pattern | None:
+    """若该文件是豁免数据来源, 返回需要剥离的块正则; 否则 None."""
+    rel = path.relative_to(_ROOT).as_posix()
+    for rel_path, pat in EXEMPTION_BLOCKS:
+        if rel == rel_path:
+            return pat
+    return None
+
+
+def _read_cleaned(f: Path) -> str:
+    """读取文件文本; 若是豁免数据来源, 剥离其中的豁免块 (F3)."""
+    text = f.read_text(encoding="utf-8", errors="ignore")
+    pat = _exemption_block_pattern(f)
+    if pat is not None:
+        text = pat.sub("", text)
+    return text
+
+
 def _exec_corpus() -> str:
     parts = []
     for pat in EXEC_CORPUS_GLOBS:
@@ -127,7 +182,17 @@ def _exec_corpus() -> str:
             if "_archive" in f.parts or "_registry" in f.parts:
                 continue
             try:
-                parts.append(f.read_text(encoding="utf-8", errors="ignore"))
+                parts.append(_read_cleaned(f))
+            except OSError:
+                continue
+    for pat in EXTENSIONLESS_EXEC_GLOBS:
+        for f in _ROOT.glob(pat):
+            if "_archive" in f.parts or "_registry" in f.parts:
+                continue
+            if not _is_extensionless_exec(f):
+                continue
+            try:
+                parts.append(_read_cleaned(f))
             except OSError:
                 continue
     if EXEC_MANIFEST.is_file():
@@ -188,12 +253,39 @@ def inventory() -> dict:
         aliases = alias_map[canon]
         return any(a in corpus for a in aliases)
 
+    # F3: exemption-only 判定 — id 出现在豁免清单 (LEGACY_CR_IDS 等) 但不在
+    # 执行面语料里。我们把"接线"分成两桶: wired (执行面) vs exemption-only
+    # (豁免数据引用)。豁免数据 ≠ 执行面, 不计入 wired。
+    def exemption_only(rule_id: str) -> bool:
+        # 先按执行面判定; 命中执行面则不是 exemption-only
+        if is_wired(rule_id):
+            return False
+        # 只在其 id 出现于豁免块/清单数据, 且执行面语料里查不到时才算
+        # 豁免-only 引用 (输出层将归入 unreferenced 候选, 但带豁免标记)
+        # 实现: 无法从已剥离语料反查豁免块 — 直接看原始全局豁免清单 id。
+        for rel_path, pat in EXEMPTION_BLOCKS:
+            f = _ROOT / rel_path
+            if not f.is_file():
+                continue
+            try:
+                raw = f.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            block = pat.search(raw)
+            if block and rule_id in block.group(0):
+                return True
+        return False
+
     def unreferenced(ids):
         return [i for i in ids if not is_wired(i)]
 
     gov_un = [i for i in unreferenced(gov) if i not in retired]
     l0_un = unreferenced(l0)
     impl = _implemented_ids(corpus)
+
+    # government exemption-only ids (declared but only in exemption lists)
+    gov_exempt_only = sorted({i for i in gov if exemption_only(i)})
+    l0_exempt_only = sorted({i for i in l0 if exemption_only(i)})
 
     # also: IDs implemented but not declared (alias-resolved count)
     declared_all = set(gov) | set(l0)
@@ -210,6 +302,8 @@ def inventory() -> dict:
             "governance-checks": {
                 "declared": len(gov),
                 "unreferenced": len(gov_un),
+                "wired": len(gov) - len(gov_un) - len(retired & set(gov)),
+                "exemption_only_referenced": len(gov_exempt_only),
                 "retired": sorted(retired & set(gov)),
                 "retired_count": len(retired & set(gov)),
                 "alias_map_loaded": bool(alias_map),
@@ -217,6 +311,8 @@ def inventory() -> dict:
             },
             "L0-constraints(submodule)": {
                 "declared": len(l0), "unreferenced": len(l0_un),
+                "wired": len(l0) - len(l0_un),
+                "exemption_only_referenced": len(l0_exempt_only),
                 "available": l0_available,
                 "note": None if l0_available else
                 "子模块未初始化 → 该源跳过 (CI 里有); 本地不得据此判全貌",
@@ -227,12 +323,22 @@ def inventory() -> dict:
             "governance-checks": gov_un,
             "L0-constraints": l0_un,
         },
+        "exemption_only_ids": {
+            "governance-checks": gov_exempt_only,
+            "L0-constraints": l0_exempt_only,
+        },
         "implemented_via_alias": impl_resolved,
         "caveat": (
             "无法区分『真未接线』与『已实现但换了名字』—— 三个注册表 id 词汇互异, "
             "且 check-l0-constraints.py 对 governance-checks 的 id 零引用 (用自己的 "
             "X2-C05 等命名)。建立 id 别名映射是前置的人工工作, 在此之前本清单"
-            "**不作为门禁**。"
+            "**不作为门禁**。\n"
+            "F3 (2026-10-07): 接线判定已把豁免/遗留清单数据 (LEGACY_CR_IDS 等) 从"
+            "执行面语料中剥离 —— exception data ≠ execution surface。exemption_only_referenced "
+            "列出仅被豁免清单引用的 id, 它们计入 unreferenced 候选。\n"
+            "F4 (2026-10-07): 语料扩展到子模块源码树 (projects/*/src) 与 bin/ 无扩展名"
+            "可执行体 (如 bin/ssot/mypy-baseline-gate)。submodule 里实现的规则 id 不再"
+            "结构性不可见; 相应地, 之前靠 'wired via same id' 误判的 id 会重新计为 wired。"
         ),
     }
 
@@ -257,12 +363,22 @@ def main(argv: list[str] | None = None) -> int:
     print("规则接线覆盖率清单 (报告型, **非门禁**)")
     print(f"  执行体语料里出现的规则 id: {inv['executed_ids_in_corpus']} 个")
     print(f"  governance-checks:  声明 {s['governance-checks']['declared']} / "
-          f"未引用候选 {s['governance-checks']['unreferenced']}")
+          f"未引用候选 {s['governance-checks']['unreferenced']}"
+          f" (wired {s['governance-checks']['wired']}, 仅豁免清单引用 "
+          f"{s['governance-checks']['exemption_only_referenced']})")
     l0s = s["L0-constraints(submodule)"]
     if l0s["available"]:
-        print(f"  L0-constraints(子仓): 声明 {l0s['declared']} / 未引用候选 {l0s['unreferenced']}")
+        print(f"  L0-constraints(子仓): 声明 {l0s['declared']} / 未引用候选 {l0s['unreferenced']}"
+              f" (wired {l0s['wired']}, 仅豁免清单引用 {l0s['exemption_only_referenced']})")
     else:
         print(f"  L0-constraints(子仓): {l0s['note']}")
+    ex = inv["exemption_only_ids"]
+    if ex["L0-constraints"] or ex["governance-checks"]:
+        print("\n  仅被豁免/遗留清单引用 (F3: 不再计为 wired):")
+        for i in ex["L0-constraints"]:
+            print(f"    ! {i} (L0, 豁免-only)")
+        for i in ex["governance-checks"]:
+            print(f"    ! {i} (governance-checks, 豁免-only)")
     cand = inv["candidates_unwired"]["governance-checks"]
     if cand:
         print(f"\n  候选 (governance-checks, 前 {args.top}):")
@@ -270,6 +386,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"    ? {i}")
         if len(cand) > args.top:
             print(f"    … 另 {len(cand) - args.top} 个")
+    l0_cand = inv["candidates_unwired"]["L0-constraints"]
+    if l0s["available"] and l0_cand:
+        print(f"\n  候选 (L0-constraints, 前 {args.top}):")
+        for i in l0_cand[:args.top]:
+            print(f"    ? {i}")
+        if len(l0_cand) > args.top:
+            print(f"    … 另 {len(l0_cand) - args.top} 个")
     print(f"\n  ⚠️ 已知假阳边界: {inv['caveat']}")
     return 0
 
