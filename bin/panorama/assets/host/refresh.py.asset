@@ -335,41 +335,15 @@ def probe_portfolio():
             "exit_gate": {"all_required_bets_terminal": gate.get("all_required_bets_terminal") if isinstance(gate.get("all_required_bets_terminal"), bool) else None,
                 "all_required_krs_proven": gate.get("all_required_krs_proven") if isinstance(gate.get("all_required_krs_proven"), bool) else None,
                 "p0_guardrail_breaches": number(gate.get("p0_guardrail_breaches"))}}
-    local_ledger_path = WORKSPACE / "docs/plans/3y-bet-ledger.yaml"
-    ref = None
-    raw = None
-    source_uri = None
-    try:
-        ref = run_cmd([GH, "api", "repos/starlink-awaken/omostation/commits/main", "--jq", ".sha"], timeout=10, json_output=False)
-        if not re.fullmatch(r"[a-f0-9]{40}", ref):
-            raise ValueError("invalid main commit identity")
-        raw = run_cmd([GH, "api", "repos/starlink-awaken/omostation/contents/docs/plans/3y-bet-ledger.yaml?ref=" + ref,
-                       "-H", "Accept: application/vnd.github.raw+json"], timeout=25, json_output=False, strip=False)
-        source_uri = "github://starlink-awaken/omostation@" + ref + "/docs/plans/3y-bet-ledger.yaml"
-    except Exception:
-        if local_ledger_path.is_file():
-            try:
-                head_ref = run_cmd(["git", "rev-parse", "HEAD"], json_output=False, allow_nonzero=True)
-                if head_ref and re.fullmatch(r"[a-f0-9]{40}", head_ref.strip()):
-                    ref = head_ref.strip()
-                else:
-                    ref = "0" * 40
-            except Exception:
-                ref = "0" * 40
-            raw = local_ledger_path.read_text(encoding="utf-8")
-            source_uri = "workspace://docs/plans/3y-bet-ledger.yaml@" + ref[:12]
-        else:
-            raise
-    ledger = yaml.safe_load(raw)
+    from collectors.portfolio import read_portfolio_source
+    raw, ledger, source = read_portfolio_source()
     bets = ledger["bets"]
     projected_bets = [project_bet(b) for b in bets if isinstance(b, dict)]
     open_bets = [b for b in projected_bets if b.get("status") not in ("done", "failed")]
     def complete(b):
         x = b.get("portfolio_binding") if isinstance(b.get("portfolio_binding"), dict) else {}
         return bool(x.get("campaign_ref") and x.get("objective_refs") and x.get("kr_refs"))
-    raw_bytes = raw.encode()
-    return {"state": "OBSERVED", "source": source_uri,
-            "sha": ref, "ledger_sha256": digest(raw_bytes), "actual": len(projected_bets),
+    return {**source, "actual": len(projected_bets),
             "declared": ledger["meta"].get("total_bets"), "counts": dict(Counter(b.get("status", "unknown") for b in projected_bets)),
             "nonterminal": open_bets, "bet_records": projected_bets,
             "vision": project_vision(ledger.get("vision")),
@@ -381,7 +355,7 @@ def probe_portfolio():
                            if (safe := project_milestone(item)) is not None],
             "coverage": {"nonterminal": len(open_bets), "canonical_complete": sum(complete(b) for b in open_bets),
                          "canonical_path": "bets[].portfolio_binding.{campaign_ref,objective_refs,kr_refs}",
-                         "sha256": digest(raw_bytes)}, "observed_at": now()}
+                         "sha256": digest(raw)} }
 
 def probe_workflow():
     import yaml
@@ -1006,6 +980,8 @@ def bounded_probe(name):
         else:
             timeout = 48
         result = run_cmd([PYTHON, "-B", str(Path(__file__).resolve()), "--probe", name], timeout=timeout)
+        if name == "portfolio" and isinstance(result, dict) and "_portfolio_collection_error" in result:
+            return name, None, result["_portfolio_collection_error"]
         # 缓存 strategy 成功结果
         if name == "strategy" and isinstance(result, dict) and result.get("source_states"):
             try:
@@ -1861,7 +1837,14 @@ def main():
     parser.add_argument("--probe", choices=SOURCES)
     args = parser.parse_args()
     if args.probe:
-        print(json.dumps(PROBES[args.probe](), ensure_ascii=False, default=str))
+        try:
+            value = PROBES[args.probe]()
+        except Exception as exc:
+            from collectors.base import CollectionError
+            if args.probe != "portfolio" or not isinstance(exc, CollectionError):
+                raise
+            value = {"_portfolio_collection_error": exc.reason}
+        print(json.dumps(value, ensure_ascii=False, default=str))
         return 0
     return refresh()
 

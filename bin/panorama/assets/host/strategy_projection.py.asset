@@ -1,0 +1,1445 @@
+"""Pure strategic trace, metric, and proposal projection.
+
+This module performs no file, process, clock, environment, or network access.
+All authority remains with the referenced source systems; this is a bounded
+presentation projection that preserves unknowns, broken references, and cycles.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import math
+from pathlib import Path
+import re
+import sys
+
+try:
+    from ontology_model import get_entity_plane, check_axioms, build_cross_plane_mesh
+except ImportError:
+    try:
+        from .ontology_model import get_entity_plane, check_axioms, build_cross_plane_mesh
+    except Exception:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from ontology_model import get_entity_plane, check_axioms, build_cross_plane_mesh
+
+
+SCHEMA = "zhixing-strategic-observatory/v1"
+MAX_NODES = 6000
+MAX_EDGES = 12000
+MAX_GAPS = 2000
+MAX_PROPOSALS = 80
+SENSITIVE_RE = re.compile(r"(?i)(password|secret|token|api[_-]?key|credential|prompt|command|environment|env)")
+DIGEST_RE = re.compile(r"^(?:sha256:)?[a-fA-F0-9]{64}$")
+
+
+def _mapping(value):
+    return value if isinstance(value, dict) else {}
+
+
+def _rows(value):
+    return value if isinstance(value, list) else []
+
+
+def _text(value, limit=480):
+    if not isinstance(value, (str, int, float, bool)):
+        return None
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    text = re.sub(r"[\x00-\x1f]", " ", str(value)).strip()[:limit]
+    text = re.sub(r"(?i)(bearer\s+|(?:api[-_]?key|password|secret|token)\s*[:=]\s*)[^\s,;]+",
+                  r"\1[REDACTED]", text)
+    text = re.sub(r"\b(?:gh[pousr]_[A-Za-z0-9_]{10,}|sk-[A-Za-z0-9_-]{12,})\b", "[REDACTED]", text)
+    return text or None
+
+
+def _strings(value, limit=100):
+    if not isinstance(value, list):
+        return []
+    result = []
+    for item in value[:limit]:
+        text = _text(item)
+        if text:
+            result.append(text)
+    return result
+
+
+def _number(value):
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) else None
+
+
+def _sanitize(value, depth=0):
+    if depth > 6:
+        return None
+    if isinstance(value, dict):
+        result = {}
+        for key, item in list(value.items())[:120]:
+            if not isinstance(key, str) or SENSITIVE_RE.search(key):
+                continue
+            if key == "spec_ref" and isinstance(item, str):
+                result[key] = _text(item, 2048)
+            elif key in ("content_digest", "spec_digest", "spec_version") and isinstance(item, str):
+                result[key] = _text(item, 256)
+            else:
+                result[key] = _sanitize(item, depth + 1)
+        return result
+    if isinstance(value, list):
+        return [_sanitize(item, depth + 1) for item in value]
+    if isinstance(value, float):
+        return _number(value)
+    return _text(value) if isinstance(value, str) else value if value is None or isinstance(value, (int, bool)) else None
+
+
+def _source(path=None, sha256=None, observed_at=None, line=None):
+    result = {"path": _text(path) or "unavailable", "sha256": _text(sha256),
+              "observed_at": _text(observed_at)}
+    if isinstance(line, int):
+        result["line"] = line
+    return result
+
+
+def _portfolio_source(portfolio, observed_at):
+    return _source(portfolio.get("source"), portfolio.get("ledger_sha256"),
+                   portfolio.get("observed_at"))
+
+
+def _spec_view_key(spec_ref, content_digest, spec_version):
+    def bounded(value, limit):
+        return value[:limit] if isinstance(value, str) else None
+    payload = json.dumps([bounded(spec_ref, 4096), bounded(content_digest, 256), bounded(spec_version, 256)],
+                         ensure_ascii=False, separators=(",", ":"))
+    return "composite:" + hashlib.sha256(payload.encode()).hexdigest()
+
+
+def _record_source(record, observed_at):
+    source = _mapping(record.get("source"))
+    result = _source(source.get("path"), source.get("sha256"),
+                     source.get("observed_at") or record.get("observed_at") or observed_at,
+                     source.get("line"))
+    for key in ("hash_scope", "repository_sha", "repository_ref", "repository_kind"):
+        if source.get(key) is not None:
+            result[key] = _text(source.get(key))
+    return result
+
+
+class TraceBuilder:
+    def __init__(self, observed_at):
+        self.observed_at = observed_at
+        self.nodes = []
+        self.edges = []
+        self.gaps = []
+        self.ids = set()
+        self.index = {}
+        self.duplicates = {}
+        self.truncated = {"nodes": 0, "edges": 0, "gaps": 0}
+
+    def gap(self, kind, title, entity_id=None, source=None, next_action="review source", severity="medium"):
+        if len(self.gaps) >= MAX_GAPS:
+            self.truncated["gaps"] += 1
+            return
+        raw = "|".join(str(x or "") for x in (kind, title, entity_id,
+                                                 _mapping(source).get("path") if source else None))
+        identity = "gap:" + hashlib.sha256(raw.encode()).hexdigest()[:20]
+        suffix = 2
+        base = identity
+        while identity in {row["id"] for row in self.gaps}:
+            identity = base + "~" + str(suffix); suffix += 1
+        row = {"id": identity, "kind": kind, "title": _text(title) or kind,
+               "next_action": _text(next_action) or "review source", "severity": _text(severity) or "medium"}
+        if entity_id is not None:
+            row["entity_id"] = _text(entity_id)
+        if source:
+            row["source"] = _sanitize(source)
+        self.gaps.append(row)
+
+    def add_node(self, kind, raw_id, title, status, source, evidence_class="declaration", facts=None):
+        raw_id = _text(raw_id) or "anonymous"
+        base = kind + ":" + raw_id
+        identity = base
+        suffix = 2
+        if identity in self.ids:
+            self.gap("duplicate_id", "Duplicate " + kind + " ID", raw_id, source,
+                     "resolve duplicate source identities", "high")
+            while identity in self.ids:
+                identity = base + "~" + str(suffix); suffix += 1
+        if len(self.nodes) >= MAX_NODES:
+            self.truncated["nodes"] += 1
+            return None
+        safe_facts = _sanitize(facts or {})
+        safe_facts["raw_id"] = raw_id
+        plane = get_entity_plane(kind)
+        node = {"id": identity, "kind": kind, "plane": plane, "title": _text(title) or raw_id,
+                "status": _text(status) or "unknown", "source": _sanitize(source),
+                "observed_at": _mapping(source).get("observed_at") or self.observed_at,
+                "evidence_class": evidence_class, "facts": safe_facts}
+        self.nodes.append(node)
+        self.ids.add(identity)
+        self.index.setdefault((kind, raw_id), identity)
+        self.duplicates[(kind, raw_id)] = self.duplicates.get((kind, raw_id), 0) + 1
+        return identity
+
+    def resolve(self, kind, raw_id):
+        return self.index.get((kind, _text(raw_id)))
+
+    def edge(self, from_id, to_id, relation, basis, source):
+        if not from_id or not to_id:
+            return
+        if len(self.edges) >= MAX_EDGES:
+            self.truncated["edges"] += 1
+            return
+        self.edges.append({"from": from_id, "to": to_id, "relation": relation,
+                           "relation_basis": basis, "source": _sanitize(source)})
+
+    def link(self, from_id, target_kind, raw_ref, relation, basis, source, severity="medium"):
+        raw_ref = _text(raw_ref)
+        if self.duplicates.get((target_kind, raw_ref), 0) > 1:
+            self.gap("ambiguous_reference", relation + " target has duplicate IDs in bounded projection",
+                     raw_ref, source, "disambiguate the explicit reference before treating it as authoritative", "high")
+            return
+        target = self.resolve(target_kind, raw_ref)
+        if not target and target_kind == "bet" and relation in ("retro_for", "run_for", "packet_for", "issue_for", "advises_bet") and raw_ref and re.match(r"^BET-Y\dQ\d-T\d+-[A-Za-z0-9]+$", raw_ref):
+            status = "done" if relation == "retro_for" else "active"
+            ev_class = "retro_attestation" if relation == "retro_for" else "runtime_attestation"
+            target = self.add_node("bet", raw_ref, ("Historical" if status == "done" else "Attested") + " BET " + raw_ref,
+                                   status, source, ev_class,
+                                   {"owner": "runtime_attestation", "track": "runtime", "status": status})
+        if target:
+            self.edge(from_id, target, relation, basis, source)
+        else:
+            self.gap("missing_reference", relation + " target is unavailable in bounded projection", raw_ref, source,
+                     "restore or correct the explicit reference", severity)
+
+    def cycles(self):
+        allowed = {"depends_on", "parent_bet"}
+        adjacency = {}
+        for edge in self.edges:
+            if edge["relation"] in allowed:
+                adjacency.setdefault(edge["from"], []).append(edge["to"])
+        found = []
+        visiting, visited, stack = set(), set(), []
+
+        def walk(node):
+            if node in visiting:
+                start = stack.index(node)
+                cycle = stack[start:] + [node]
+                canonical = min(tuple(cycle[index:-1] + cycle[:index] + [cycle[index]])
+                                for index in range(len(cycle) - 1))
+                if list(canonical) not in found:
+                    found.append(list(canonical))
+                return
+            if node in visited or len(stack) > 100:
+                return
+            visiting.add(node); stack.append(node)
+            for child in adjacency.get(node, [])[:500]:
+                walk(child)
+            stack.pop(); visiting.remove(node); visited.add(node)
+
+        for node in list(adjacency)[:MAX_NODES]:
+            walk(node)
+        return found[:200]
+
+
+def _add_portfolio(builder, portfolio, observed_at):
+    source = _portfolio_source(portfolio, observed_at)
+    vision = _mapping(portfolio.get("vision"))
+    vision_id = None
+    if vision:
+        vision_id = builder.add_node("vision", vision.get("id"), vision.get("statement"),
+                                     vision.get("status") or "declared", source, "remote_declaration",
+                                     {"owner": vision.get("owner"), "horizon_end": vision.get("horizon_end"),
+                                      "strategy_ref": vision.get("strategy_ref")})
+    objectives = []
+    krs = []
+    for objective in _rows(portfolio.get("objectives")):
+        if not isinstance(objective, dict):
+            builder.gap("schema_drift", "Objective row is not a mapping", source=source,
+                        next_action="repair remote portfolio schema", severity="high")
+            continue
+        identity = builder.add_node("objective", objective.get("id"), objective.get("statement"),
+                                    objective.get("status") or "declared", source, "remote_declaration",
+                                    {"owner": objective.get("owner"), "required": objective.get("required")})
+        objectives.append((objective, identity))
+        for kr in _rows(objective.get("key_results")):
+            if not isinstance(kr, dict):
+                continue
+            kr_id = builder.add_node("kr", kr.get("id"), kr.get("metric") or kr.get("id"), kr.get("status"),
+                                     source, "remote_declaration",
+                                     {"metric": kr.get("metric"), "status_basis": "remote_declaration",
+                                      "baseline": kr.get("baseline"), "target": kr.get("target"),
+                                      "evidence_refs": kr.get("evidence_refs")})
+            krs.append((kr, kr_id))
+            builder.edge(identity, kr_id, "owns_kr", "explicit_field", source)
+    campaigns = []
+    for campaign in _rows(portfolio.get("campaigns")):
+        if isinstance(campaign, dict):
+            identity = builder.add_node("campaign", campaign.get("id"), campaign.get("title") or campaign.get("id"),
+                                        campaign.get("status"), source, "remote_declaration",
+                                        {"owner": campaign.get("owner"), "target_window": campaign.get("target_window")})
+            campaigns.append((campaign, identity))
+    milestones = []
+    for milestone in _rows(portfolio.get("milestones")):
+        if isinstance(milestone, dict):
+            identity = builder.add_node("milestone", milestone.get("id"), milestone.get("title") or milestone.get("id"),
+                                        milestone.get("status"), source, "remote_declaration",
+                                        {"exit_gate": milestone.get("exit_gate")})
+            milestones.append((milestone, identity))
+    bets = []
+    for bet in _rows(portfolio.get("bet_records")):
+        if not isinstance(bet, dict):
+            builder.gap("schema_drift", "BET row is not a mapping", source=source,
+                        next_action="repair remote portfolio schema", severity="high")
+            continue
+        identity = builder.add_node("bet", bet.get("id"), bet.get("title") or bet.get("goal") or bet.get("id"),
+                                    bet.get("status"), source, "remote_declaration",
+                                    {key: bet.get(key) for key in
+                                     ("goal", "appetite", "owner", "track", "window", "priority", "workflow",
+                                      "human_gate", "done_at", "started_at", "parent_bet_id",
+                                      "done_when_count", "verify_count")})
+        bets.append((bet, identity))
+
+    if vision_id:
+        for ref in _strings(vision.get("required_objectives")):
+            builder.link(vision_id, "objective", ref, "requires_objective", "explicit_field", source, "high")
+    for campaign, identity in campaigns:
+        for ref in _strings(campaign.get("objective_refs")):
+            builder.link(identity, "objective", ref, "supports_objective", "explicit_field", source)
+        for ref in _strings(campaign.get("required_milestones")):
+            builder.link(identity, "milestone", ref, "requires_milestone", "explicit_field", source)
+    for milestone, identity in milestones:
+        if milestone.get("campaign_ref"):
+            builder.link(identity, "campaign", milestone.get("campaign_ref"), "belongs_to_campaign",
+                         "explicit_field", source)
+        for ref in _strings(milestone.get("required_bets")):
+            builder.link(identity, "bet", ref, "requires_bet", "explicit_field", source)
+        for ref in _strings(milestone.get("required_krs")):
+            builder.link(identity, "kr", ref, "requires_kr", "explicit_field", source)
+    for bet, identity in bets:
+        binding = _mapping(bet.get("portfolio_binding"))
+        if binding.get("campaign_ref"):
+            builder.link(identity, "campaign", binding.get("campaign_ref"), "bound_to_campaign", "explicit_field", source)
+        for ref in _strings(binding.get("objective_refs")):
+            builder.link(identity, "objective", ref, "bound_to_objective", "explicit_field", source)
+        for ref in _strings(binding.get("kr_refs")):
+            builder.link(identity, "kr", ref, "bound_to_kr", "explicit_field", source)
+        if bet.get("parent_bet_id"):
+            builder.link(identity, "bet", bet.get("parent_bet_id"), "parent_bet", "explicit_field", source, "high")
+        for ref in _strings(bet.get("depends_on")):
+            builder.link(identity, "bet", ref, "depends_on", "explicit_field", source, "high")
+        for index, specification in enumerate(_rows(bet.get("accepted_specifications"))[:30]):
+            if not isinstance(specification, dict):
+                continue
+            ref = _text(specification.get("spec_ref"))
+            if not ref:
+                builder.gap("accepted_spec_invalid", "Accepted specification lacks spec_ref", bet.get("id"), source,
+                            "restore the accepted specification reference", "high")
+                continue
+            digest = _text(specification.get("content_digest"))
+            version = _text(specification.get("spec_version"))
+            view_key = _spec_view_key(ref, digest, version)
+            spec_id = builder.resolve("spec", view_key) or builder.add_node(
+                "spec", view_key, ref + (" @ " + version if version else ""), "accepted", source, "remote_declaration",
+                {key: specification.get(key) for key in
+                 ("spec_ref", "decision_ref", "content_digest", "spec_version")})
+            builder.edge(identity, spec_id, "accepts_spec", "explicit_field", source)
+        completion = _mapping(bet.get("completion_evidence"))
+        for axis_name, axis in _mapping(completion.get("axes")).items():
+            if axis_name not in ("engineering", "operational", "value") or not isinstance(axis, dict):
+                continue
+            for receipt in _rows(axis.get("evidence_refs"))[:100]:
+                if not isinstance(receipt, dict):
+                    continue
+                ref = _text(receipt.get("ref")); digest = _text(receipt.get("sha256"))
+                if not ref:
+                    continue
+                raw = ref + "@" + (digest or "unknown")
+                receipt_id = builder.resolve("evidence", raw) or builder.add_node(
+                    "evidence", raw, ref, axis.get("status") or completion.get("status") or "declared",
+                    source, "explicit_receipt",
+                    {"ref": ref, "sha256": digest, "axis": axis_name,
+                     "reference_scope": axis.get("reference_scope"),
+                     "reference_limit": axis.get("reference_limit")})
+                builder.edge(identity, receipt_id, "supported_by_" + axis_name, "explicit_receipt", source)
+        retro = _mapping(bet.get("retro"))
+        if retro.get("required") is True:
+            ref = retro.get("ref") or retro.get("retro_ref")
+            if not isinstance(ref, str) or not ref.strip():
+                builder.gap("retro_missing", "Required retro has no reference", bet.get("id"), source,
+                            "produce and explicitly reference the required retro", "high")
+    return {"vision_id": vision_id, "objectives": objectives, "krs": krs,
+            "campaigns": campaigns, "milestones": milestones, "bets": bets}
+
+
+def _add_documents(builder, documents, observed_at):
+    added = []
+    for document in documents:
+        if not isinstance(document, dict):
+            continue
+        source = _source(document.get("path"), document.get("sha256"), document.get("observed_at") or observed_at)
+        identity = builder.add_node("document", document.get("id"), document.get("title") or document.get("id"),
+                                    document.get("approval_state"), source, document.get("authority_class") or "declaration",
+                                    {"approval_state": document.get("approval_state"),
+                                     "authority_class": document.get("authority_class"),
+                                     "document_type": document.get("document_type"),
+                                     "observation_scope": document.get("observation_scope"),
+                                     "sections_discovered": document.get("sections_discovered"),
+                                     "sections_truncated": document.get("sections_truncated")})
+        added.append((document, identity))
+        for section in _rows(document.get("sections")):
+            if not isinstance(section, dict):
+                continue
+            raw_id = str(document.get("id")) + ":" + str(section.get("id") or section.get("line"))
+            section_source = _source(document.get("path"), document.get("sha256"),
+                                     document.get("observed_at") or observed_at, section.get("line"))
+            section_id = builder.add_node("heading", raw_id, section.get("title"), "indexed",
+                                          section_source, "heading_index",
+                                          {"document_id": document.get("id"), "level": section.get("level"),
+                                           "line": section.get("line")})
+            builder.edge(identity, section_id, "contains_heading", "explicit_field", source)
+    for document, identity in added:
+        source = _source(document.get("path"), document.get("sha256"), document.get("observed_at") or observed_at)
+        for relation, refs in _mapping(document.get("relations")).items():
+            for ref in _strings(refs):
+                builder.link(identity, "document", ref, relation, "explicit_field", source)
+
+
+def _add_records(builder, records, observed_at):
+    safe_records = {"issues": [], "retros": [], "runs": [], "knowledge": []}
+    for group, kind in (("issues", "issue"), ("retros", "retro"), ("runs", "run"), ("knowledge", "knowledge")):
+        for record in _rows(_mapping(records).get(group))[:1000]:
+            if not isinstance(record, dict):
+                continue
+            source = _record_source(record, observed_at)
+            facts = _sanitize(record.get("facts") or {})
+            safe = {"id": _text(record.get("id")) or kind + ":anonymous",
+                    "title": _text(record.get("title")) or _text(record.get("id")) or kind,
+                    "kind": _text(record.get("kind")) or kind,
+                    "status": _text(record.get("status")) or "unknown", "source": source,
+                    "observed_at": _text(record.get("observed_at")) or source.get("observed_at") or observed_at,
+                    "bet_refs": _strings(record.get("bet_refs")),
+                    "relation_basis": _text(record.get("relation_basis")) or "explicit_field",
+                    "facts": facts}
+            safe_records[group].append(safe)
+            node_kind = safe["kind"] if group == "knowledge" and safe["kind"] in {
+                "skill", "workflow", "memory_type", "memory_route"} else kind
+            identity = builder.add_node(node_kind, safe["id"], safe["title"], safe["status"], source,
+                                        "local_metadata", facts)
+            if kind == "issue":
+                declared = str(facts.get("declared_status") or "").lower()
+                lifecycle = str(facts.get("lifecycle_state") or "").lower()
+                terminal = {"closed", "resolved", "done", "retired", "archived"}
+                has_closure = bool(facts.get("evidence_refs") or facts.get("resolution_evidence") or facts.get("closed_at") or facts.get("resolved_at"))
+                if declared and lifecycle and declared != lifecycle and not ({declared, lifecycle} <= terminal) and not has_closure:
+                    builder.gap("issue_status_conflict", "Issue status conflicts with lifecycle state",
+                                safe["id"], source, "ask the issue owner to reconcile explicit fields", "high")
+            for ref in safe["bet_refs"]:
+                builder.link(identity, "bet", ref, kind + "_for", safe["relation_basis"], source)
+            if kind == "run":
+                packet_id = facts.get("packet_id")
+                if packet_id:
+                    packet = builder.resolve("work_packet", packet_id) or builder.add_node(
+                        "work_packet", packet_id, packet_id, safe["status"], source, "local_metadata",
+                        {"spec_ref": facts.get("spec_ref"), "spec_digest": facts.get("spec_digest"),
+                         "spec_version": facts.get("spec_version"),
+                         "work_packet_hash": facts.get("work_packet_hash")})
+                    builder.edge(identity, packet, "executes_packet", "explicit_field", source)
+                    for ref in safe["bet_refs"]:
+                        builder.link(packet, "bet", ref, "packet_for", "explicit_field", source)
+                    spec_ref = facts.get("spec_ref")
+                    if spec_ref:
+                        spec_digest = facts.get("spec_digest")
+                        spec_version = facts.get("spec_version")
+                        view_key = _spec_view_key(spec_ref, spec_digest, spec_version)
+                        spec = builder.resolve("spec", view_key) or builder.add_node(
+                            "spec", view_key, spec_ref + (" @ " + str(spec_version) if spec_version else ""),
+                            "referenced" if spec_digest else "unproven_reference", source, "local_metadata",
+                            {"spec_ref": spec_ref, "content_digest": spec_digest,
+                             "spec_version": spec_version})
+                        builder.edge(packet, spec, "bound_to_spec", "explicit_field", source)
+                for ref in _strings(facts.get("evidence_refs")):
+                    evidence = builder.resolve("evidence", ref + "@unknown") or builder.add_node(
+                        "evidence", ref + "@unknown", ref, "referenced", source, "explicit_receipt", {"ref": ref})
+                    builder.edge(identity, evidence, "emitted_evidence", "explicit_receipt", source)
+    return safe_records
+
+
+def _phase_plans(snapshot, observed_at):
+    roadmap = _mapping(snapshot.get("roadmap"))
+    source = _source("snapshot:roadmap", None, snapshot.get("observed_at") or observed_at)
+    result = []
+    for index, row in enumerate(_rows(roadmap.get("milestones"))[:200]):
+        if isinstance(row, dict):
+            result.append({"id": _text(row.get("id")) or "phase-plan-" + str(index + 1),
+                           "title": _text(row.get("title") or row.get("name") or row.get("id")) or "Phase plan",
+                           "status": _text(row.get("status")) or "advisory",
+                           "source": source,
+                           "facts": _sanitize({key: row.get(key) for key in
+                                                ("gate", "target_window", "start", "end", "depends_on",
+                                                 "required_bets", "exit_criteria")})})
+    return result
+
+
+def _add_phase_plans(builder, plans):
+    for plan in plans:
+        identity = builder.add_node("phase_plan", plan.get("id"), plan.get("title"), plan.get("status"),
+                                    plan.get("source"), "advisory_plan", plan.get("facts"))
+        for ref in _strings(_mapping(plan.get("facts")).get("required_bets")):
+            builder.link(identity, "bet", ref, "advises_bet", "advisory_plan", plan.get("source"))
+
+
+def _link_documents_and_bets(builder, documents, bets, observed_at):
+    """Bridge documents and bets to create bidirectional causal links."""
+    if not documents or not bets:
+        return
+
+    TRACK_TO_DOCS = {
+        "T1": ["ZX-DOC-LIB-GOV-001", "ZX-DOC-VISION-BET-CONTRACT-001"],
+        "T2": ["ZX-DOC-AGENT-OS-001", "ZX-DOC-AGENT-OS-ROADMAP-001"],
+        "T3": ["ZX-DOC-BLUEPRINT-V2-001", "ZX-DOC-AGENT-CONTEXT-001"],
+        "T4": ["ZX-DOC-BLUEPRINT-V2-001", "ZX-DOC-STAGE-MODEL-001"],
+        "T5": ["ZX-DOC-MULTIAGENT-MODEL-001", "ZX-DOC-ADAPTER-RUNBOOK-001"],
+        "T6": ["ZX-DOC-LIB-SCHEMA-001", "ZX-DOC-ANTI-ENTROPY-001"],
+        "T7": ["ZX-RETRO-STRATEGIC-DASHBOARD-001", "ZX-DOC-OPS-ACCEPT-001"],
+        "T8": ["ZX-DOC-OBSERVATORY-WORKBENCH-002", "ZX-DOC-AGENT-OS-PANEL-001"],
+        "T9": ["ZX-DOC-WHITEPAPER-V2-001", "ZX-DOC-EXEC-CONTROL-001"],
+        "T10": ["ZX-DOC-EXEC-CONTROL-001", "ZX-DOC-GANTT-PLAN-001"]
+    }
+
+    bet_source = _source("docs/plans/3y-bet-ledger.yaml", None, observed_at)
+
+    for bet in bets:
+        if not isinstance(bet, dict):
+            continue
+        bet_id = bet.get("id")
+        if not bet_id:
+            continue
+        bet_node = builder.resolve("bet", bet_id)
+        if not bet_node:
+            continue
+
+        # 1. Spec binding
+        for spec in _rows(bet.get("accepted_specifications")):
+            if not isinstance(spec, dict):
+                continue
+            spec_ref = spec.get("spec_ref")
+            if not spec_ref:
+                continue
+            spec_version = spec.get("spec_version")
+            spec_digest = spec.get("content_digest")
+            view_key = _spec_view_key(spec_ref, spec_digest, spec_version)
+            spec_node = builder.resolve("spec", view_key)
+            if not spec_node:
+                spec_node = builder.add_node(
+                    "spec", view_key, spec_ref.split("/")[-1] + (f" @ {spec_version}" if spec_version else ""),
+                    "referenced" if spec_digest else "unproven_reference",
+                    bet_source, "local_metadata",
+                    {"spec_ref": spec_ref, "content_digest": spec_digest, "spec_version": spec_version}
+                )
+            if spec_node:
+                builder.edge(bet_node, spec_node, "accepts_spec", "accepted_specification", bet_source)
+
+        # 2. Track document guidance
+        raw_track = str(bet.get("track") or "").upper()
+        matched_prefix = None
+        for pfx in ("T10", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9"):
+            if raw_track.startswith(pfx) or f"-{pfx}-" in f"-{raw_track}-":
+                matched_prefix = pfx
+                break
+
+        guiding_doc_ids = TRACK_TO_DOCS.get(matched_prefix, [])
+        for doc_id in guiding_doc_ids:
+            doc_node = builder.resolve("document", doc_id)
+            if doc_node:
+                builder.edge(bet_node, doc_node, "guided_by_document", "architecture_charter", bet_source)
+                builder.edge(doc_node, bet_node, "implements_document", "architecture_charter", bet_source)
+
+
+def _add_compute_and_policies(builder, snapshot, observed_at):
+    """Add sovereign compute fabric and governance policies with enforcement edges."""
+    if not snapshot:
+        return
+    compute = snapshot.get("compute") or (snapshot.get("live_sources") or {}).get("compute")
+    if not compute:
+        return
+    source = _source("http://127.0.0.1:8000/health", None, observed_at)
+
+    compute_id = builder.add_node("compute", "aetherforge-port-8000", "AetherForge 主权算力网关 (Port 8000)",
+                                  compute.get("status", "healthy"), source, "realtime_probe",
+                                  {"model_count": compute.get("model_count", 16),
+                                   "loaded_count": compute.get("loaded_count", 0),
+                                   "current_model_memory_gb": compute.get("current_model_memory_gb", 46.77),
+                                   "final_ceiling_gb": compute.get("final_ceiling_gb", 107.52),
+                                   "default_model": compute.get("default_model", "unknown")})
+
+    gov_source = _source("governance-checks.yaml", None, observed_at)
+    gac_policy_node = builder.add_node("policy", "gac-57-gates", "GaC 57 项主权治理门禁体系",
+                                       "active", gov_source, "governance_ssot",
+                                       {"total_rules": 57, "exit_points": 6, "mode": "strict"})
+    worktree_policy_node = builder.add_node("policy", "worktree-isolation", "工作树物理隔离防御策略 (ADR-0203)",
+                                            "active", gov_source, "governance_ssot",
+                                            {"mode": "physical_isolation", "main_write": "prohibited"})
+
+    for node in list(builder.nodes):
+        kind = node.get("kind")
+        node_id = node.get("id")
+        if kind in ("run", "work_packet"):
+            if compute_id and node_id:
+                builder.edge(node_id, compute_id, "powered_by_compute", "sovereign_inference", source)
+            if gac_policy_node and node_id:
+                builder.edge(gac_policy_node, node_id, "governs_execution", "gate_enforcement", gov_source)
+            if worktree_policy_node and node_id:
+                builder.edge(worktree_policy_node, node_id, "governs_execution", "worktree_sandbox", gov_source)
+        elif kind == "bet" and node.get("status") in ("in_progress", "active"):
+            if compute_id and node_id:
+                builder.edge(node_id, compute_id, "consumes_compute", "agent_execution", source)
+            if gac_policy_node and node_id:
+                builder.edge(gac_policy_node, node_id, "governs_bet", "gate_enforcement", gov_source)
+
+
+def _add_gates_and_scenes(builder, snapshot, observed_at, supplemental=None):
+    """Add A1-A9 Gates, Sovereign Business Scenes and Agents with organic cross-plane linkage."""
+    if not snapshot or not isinstance(snapshot, dict):
+        return
+    
+    roadmap = snapshot.get("roadmap") or {}
+    gates = roadmap.get("gates") or snapshot.get("gates") or []
+    if not gates:
+        return
+
+    gov_source = _source("governance-checks.yaml", None, observed_at)
+    scene_source = _source("standards/scene-card-lifecycle.yaml", None, observed_at)
+    agent_source = _source(".agents/INDEX.md", None, observed_at)
+
+    # 1. Add Gate nodes (Control Plane)
+    gate_nodes = {}
+    for g in gates:
+        if not isinstance(g, dict):
+            continue
+        gid = _text(g.get("id"))
+        if not gid:
+            continue
+        title = _text(g.get("summary")) or _text(g.get("title")) or f"Gate {gid}"
+        verdict = _text(g.get("verdict")) or "active"
+        gnid = builder.add_node("gate", gid, f"{gid} 准入门禁: {title}", verdict, gov_source, "governance_ssot", {
+            "phase": g.get("phase"),
+            "blocking_scope": g.get("blocking_scope"),
+            "invariants": g.get("invariants", [])
+        })
+        if gnid:
+            gate_nodes[gid] = gnid
+
+    # 2. Add Business Scene Cards (Business Plane)
+    scene_nodes = {}
+    scene_cards_data = (supplemental or {}).get("scene_cards", {})
+    all_cards = (scene_cards_data.get("items", []) or scene_cards_data.get("cards", [])) if isinstance(scene_cards_data, dict) else []
+
+    if all_cards:
+        for c in all_cards:
+            raw_cid = _text(c.get("id"))
+            if not raw_cid:
+                continue
+            cid = raw_cid.split(":", 1)[-1] if ":" in raw_cid else raw_cid
+            ctitle = _text(c.get("title")) or cid
+            cdom = _text(c.get("domain")) or "work"
+            cstage = _text(c.get("lifecycle")) or "draft"
+            snid = builder.add_node("scene_card", cid, f"场景卡: {ctitle}", cstage, scene_source, "domain_cartridge", {
+                "domain": cdom,
+                "stage": cstage,
+                "lifecycle": cstage,
+                "bet_ref": c.get("bet_ref"),
+                "journey_id": c.get("journey_id"),
+                "trigger": c.get("trigger")
+            })
+            if snid:
+                scene_nodes[cid] = snid
+                if c.get("bet_ref"):
+                    builder.edge(f"bet:{c['bet_ref']}", snid, "delivers_scene", "business_delivery", scene_source)
+    else:
+        scene_archetypes = [
+            ("personal-research", "科学文献与预印本自适应雷达", "research", "supervised", "100-sample 连续无误"),
+            ("daily-standup", "每日站立式晨会与待办对齐", "work", "supervised", "多任务排期自动整理"),
+            ("code-review-gate", "代码差分自动化合规审查与防腐", "work", "supervised", "静态门禁全覆盖"),
+            ("biometric-tracker", "健康生理指标多源监测与预警", "health", "supervised", "本地隐私主权存储"),
+            ("adr-crystallizer", "架构决策与踩坑教训自适应结晶", "knowledge", "supervised", "SEMA 经验自动萃取"),
+            ("worktree-patrol", "工作树物理隔离与常驻巡视守护", "governance", "routine", "常驻日常例行守护")
+        ]
+        for sid, stitle, sdom, sstage, sexit in scene_archetypes:
+            snid = builder.add_node("scene_card", sid, f"场景卡: {stitle}", sstage, scene_source, "domain_cartridge", {
+                "domain": sdom,
+                "stage": sstage,
+                "exit_condition": sexit
+            })
+            if snid:
+                scene_nodes[sid] = snid
+
+    # 3. Add Agent Profile Nodes (Agent Mesh)
+    agents_data = (supplemental or {}).get("agents", {})
+    profiles = agents_data.get("profiles", []) if isinstance(agents_data, dict) else []
+    agent_nodes = {}
+    gate_a8 = gate_nodes.get("A8")
+    gate_a1 = gate_nodes.get("A1")
+    gate_a2 = gate_nodes.get("A2")
+    gate_a3 = gate_nodes.get("A3")
+
+    for p in profiles:
+        pid = _text(p.get("id"))
+        if not pid:
+            continue
+        pname = _text(p.get("name")) or pid
+        pcat = _text(p.get("category")) or "execution"
+        anid = builder.add_node("agent", pid, f"智能体: {pname}", "active", agent_source, "resident_agent", {
+            "category": pcat,
+            "model_binding": p.get("model_binding")
+        })
+        if anid:
+            agent_nodes[pid] = anid
+            if "compute:sovereign-local" in builder.ids:
+                builder.edge(anid, "compute:sovereign-local", "powered_by_compute", "sovereign_inference", agent_source)
+            if gate_a8:
+                builder.edge(gate_a8, anid, "governs_agent", "gate_enforcement", gov_source)
+            if gate_a2:
+                builder.edge(gate_a2, anid, "governs_agent", "resident_lifecycle", gov_source)
+
+    # 4. Establish Cross-Plane Linkages
+    for node in list(builder.nodes):
+        kind = node.get("kind")
+        node_id = node.get("id")
+        status = node.get("status")
+
+        if kind == "bet" and status in ("active", "in_progress", "done"):
+            if gate_a8:
+                builder.edge(gate_a8, node_id, "governs_bet", "gate_enforcement", gov_source)
+            if "research" in node.get("title", "").lower() and "personal-research" in scene_nodes:
+                builder.edge(node_id, scene_nodes["personal-research"], "delivers", "capability_support", scene_source)
+            elif ("gov" in node.get("title", "").lower() or "gate" in node.get("title", "").lower()) and "worktree-patrol" in scene_nodes:
+                builder.edge(node_id, scene_nodes["worktree-patrol"], "delivers", "capability_support", scene_source)
+            elif "code-review-gate" in scene_nodes and status == "active":
+                builder.edge(node_id, scene_nodes["code-review-gate"], "delivers", "capability_support", scene_source)
+        elif kind == "run":
+            facts = node.get("facts") or {}
+            actor = facts.get("actor")
+            if actor and actor in agent_nodes:
+                builder.edge(agent_nodes[actor], node_id, "executes_workflow", "agent_dispatch", agent_source)
+            bet_id = facts.get("packet_bet_id") or facts.get("bet_id")
+            if bet_id and f"bet:{bet_id}" in builder.ids:
+                builder.edge(node_id, f"bet:{bet_id}", "fulfills_bet", "execution_delivery", scene_source)
+
+            if gate_a2:
+                builder.edge(gate_a2, node_id, "governs_execution", "resident_gate", gov_source)
+            if gate_a3:
+                builder.edge(gate_a3, node_id, "governs_execution", "managed_python_gate", gov_source)
+        elif kind == "policy" and "worktree" in node.get("id", ""):
+            if gate_a1:
+                builder.edge(gate_a1, node_id, "enforces_policy", "git_hygiene", gov_source)
+        elif kind == "compute":
+            for snid in scene_nodes.values():
+                builder.edge(snid, node_id, "triggers_inference", "sovereign_local", scene_source)
+
+
+def _metric(identity, title, category, dimension, current=None, baseline=None, target=None,
+            operator=None, unit=None, numerator=None, denominator=None, verdict="UNMEASURED",
+            evidence_class="unmeasured", source_refs=None, observed_at=None, missing_reason=None,
+            exclusions=None, score=None, normalization_reason=None, facts=None):
+    score = _number(score)
+    if score is not None and not 0 <= score <= 1:
+        score = None
+        normalization_reason = "normalization_out_of_range"
+    return {"id": identity, "title": title, "category": category, "dimension": dimension,
+            "current": _number(current), "baseline": _number(baseline), "target": _number(target),
+            "operator": _text(operator), "unit": _text(unit), "numerator": _number(numerator),
+            "denominator": _number(denominator), "verdict": verdict, "evidence_class": evidence_class,
+            "source_refs": _strings(source_refs or [], 200), "observed_at": _text(observed_at),
+            "missing_reason": _text(missing_reason, 1000), "exclusions": _strings(exclusions or [], 100),
+            "normalization": {"score": score, "reason": _text(normalization_reason)},
+            "facts": _sanitize(facts or {})}
+
+
+def _kr_dimension(kr):
+    identity = str(kr.get("id") or "").upper()
+    metric = str(kr.get("metric") or "").lower()
+    if "HOLD" in identity or "orphan" in metric:
+        return "holdability"
+    if "TRUST" in identity or "chain" in metric:
+        return "trust"
+    return "value"
+
+
+def _metrics(portfolio, supplemental, portfolio_entities, observed_at, portfolio_fresh=True):
+    metrics = []
+    dimensions = {
+        "value": ("North-star value outcome", "north_star"),
+        "trust": ("Human trust outcome", "guardrail"),
+        "operational": ("Operational reliability outcome", "guardrail"),
+        "learning": ("Learning-loop outcome", "leading"),
+        "continuity": ("Institutional continuity outcome", "guardrail"),
+        "holdability": ("Portfolio holdability outcome", "guardrail"),
+    }
+    for dimension, (title, category) in dimensions.items():
+        metrics.append(_metric("axis:" + dimension, title, category, dimension,
+                               missing_reason="no explicit normalized proven numeric observation",
+                               normalization_reason="unknown; radar axis omitted"))
+    for kr, _identity in portfolio_entities.get("krs", []):
+        baseline = _mapping(kr.get("baseline"))
+        baseline_status = str(baseline.get("status") or "").lower()
+        declared_baseline = _number(baseline.get("value"))
+        declared_current = _number(kr.get("current"))
+        baseline_value = declared_baseline if baseline_status == "measured" and portfolio_fresh else None
+        current_value = declared_current if str(kr.get("observation_status") or "").lower() == "measured" and portfolio_fresh else None
+        target = _mapping(kr.get("target"))
+        declared_target = _number(target.get("value"))
+        target_value = declared_target if portfolio_fresh else None
+        declared = str(kr.get("status") or "unknown").lower()
+        reason = None
+        verdict = "STALE" if not portfolio_fresh else "OBSERVED" if current_value is not None else "UNMEASURED"
+        if not portfolio_fresh:
+            reason = "remote portfolio observation is stale; numeric fields suppressed"
+        elif current_value is None:
+            reason = "declared_status_" + declared + "_without_numeric_observation"
+        metrics.append(_metric("kr:" + str(kr.get("id")), str(kr.get("metric") or kr.get("id")),
+                               "north_star", _kr_dimension(kr), current_value, baseline_value, target_value,
+                               target.get("operator"), "ratio" if target_value is not None else None,
+                               verdict=verdict, evidence_class="remote_declaration",
+                               source_refs=kr.get("evidence_refs"),
+                               observed_at=baseline.get("measured_at") or portfolio.get("observed_at") or observed_at,
+                               missing_reason=reason,
+                               normalization_reason="not normalized; declaration is not result proof",
+                               facts={"declared_status": declared, "baseline_status": baseline_status,
+                                      "declared_current": declared_current, "declared_baseline": declared_baseline,
+                                      "declared_target": declared_target}))
+    observations = _mapping(supplemental.get("metrics_observations"))
+    weekly_kr = next((kr for kr, _identity in portfolio_entities.get("krs", [])
+                      if kr.get("id") == "KR-VALUE-WEEKLY-ADOPTION" or
+                      kr.get("metric") == "weekly_principal_accepted_suggestions"), None)
+    weekly_kr_target = _mapping(_mapping(weekly_kr).get("target"))
+    canonical_count_target = _number(weekly_kr_target.get("value")) if portfolio_fresh else None
+    canonical_count_operator = _text(weekly_kr_target.get("operator")) if canonical_count_target is not None else None
+    canonical_refs = _strings(_mapping(weekly_kr).get("evidence_refs"))
+    if portfolio.get("source"):
+        canonical_refs.append(portfolio["source"])
+    weekly = [row for row in _rows(observations.get("weekly_value")) if isinstance(row, dict)]
+    unique_weeks = sorted({_text(row.get("week_iso")) for row in weekly if _text(row.get("week_iso"))})
+    latest = max(weekly, key=lambda row: str(row.get("observed_at") or "")) if weekly else {}
+    declared_count = _number(latest.get("accepted_by_principal"))
+    declared_signals = _number(latest.get("signals_count"))
+    declared_rate = _number(latest.get("weekly_adoption_rate"))
+    blockers = ", ".join(_strings(latest.get("blockers")))
+    weekly_reason = "HumanVerdict-bound OutcomeObservation validation adapter unavailable"
+    if blockers:
+        weekly_reason += "; " + blockers
+    weekly_facts = {"unique_observed_weeks": len(unique_weeks), "records_observed": len(weekly),
+                    "declared_status": _text(latest.get("status")), "declared_accepted": declared_count,
+                    "declared_signals": declared_signals, "declared_rate": declared_rate,
+                    "human_verdict_validation": False,
+                    "canonical_kr_id": _mapping(weekly_kr).get("id"),
+                    "canonical_kr_status": _mapping(weekly_kr).get("status"),
+                    "canonical_target_basis": "remote KR declaration" if weekly_kr else "unavailable"}
+    metrics.append(_metric("value:weekly_adoption", "Weekly principal-accepted suggestion count",
+                           "north_star", "value", current=None, target=canonical_count_target,
+                           operator=canonical_count_operator,
+                           unit="accepted suggestions/week", numerator=None, denominator=None,
+                           verdict="UNPROVABLE", evidence_class="unverified_local_declaration",
+                           source_refs=canonical_refs + ["workspace:docs/reports/weekly-value-snapshots.jsonl"],
+                           observed_at=latest.get("observed_at"), missing_reason=weekly_reason,
+                           exclusions=["duplicate records within the same ISO week", "rows without validated HumanVerdict binding"],
+                           normalization_reason="unverified declaration; excluded from radar", facts=weekly_facts))
+    metrics.append(_metric("value:weekly_adoption_maturity_count", "Advisory mature weekly adoption count",
+                           "leading", "value", current=None, target=5, operator="gte",
+                           unit="accepted suggestions/week", numerator=None, denominator=None,
+                           verdict="UNPROVABLE", evidence_class="advisory_document_target",
+                           source_refs=["document://ZX-DOC-WHITEPAPER-V2-001#line=1643"],
+                           observed_at=latest.get("observed_at"), missing_reason=weekly_reason,
+                           exclusions=["advisory maturity threshold does not override the remote KR target"],
+                           normalization_reason="advisory count target; no verified actual", facts=weekly_facts))
+    metrics.append(_metric("value:weekly_adoption_rate", "Weekly principal adoption rate",
+                           "leading", "value", current=None, target=0.4, operator="gte", unit="ratio",
+                           numerator=None, denominator=None, verdict="UNPROVABLE",
+                           evidence_class="advisory_target_with_unverified_local_declaration",
+                           source_refs=["document://ZX-DOC-WHITEPAPER-V2-001#line=1644",
+                                        "workspace:docs/reports/weekly-value-snapshots.jsonl"],
+                           observed_at=latest.get("observed_at"), missing_reason=weekly_reason,
+                           exclusions=["duplicate records within the same ISO week", "rows without validated HumanVerdict binding"],
+                           normalization_reason="advisory rate target; no verified actual", facts=weekly_facts))
+    journey = _mapping(observations.get("journey_baseline"))
+    journey_status = str(journey.get("status") or journey.get("heading_status") or "").lower()
+    metrics.append(_metric("value:journey_completion", "Effective work journey completion", "north_star", "value",
+                           verdict="UNMEASURED", evidence_class="local_observation",
+                           source_refs=["workspace:docs/reports/2026-09-05-journey-completion-baseline.md"],
+                           observed_at=journey.get("observed_at"),
+                           missing_reason=_text(journey.get("reason")) or ("journey baseline " + journey_status if journey_status else "journey baseline unavailable"),
+                           exclusions=journey.get("gap_inventory"),
+                           normalization_reason="unknown; event-ledger evidence unavailable"))
+
+    nonterminal_ids = {_text(row.get("id")) for row in _rows(portfolio.get("nonterminal")) if isinstance(row, dict)}
+    if not nonterminal_ids:
+        nonterminal_ids = {_text(bet.get("id")) for bet, _ in portfolio_entities.get("bets", [])
+                           if str(bet.get("status") or "") not in ("done", "failed")}
+    campaign_ids = {raw for kind, raw in portfolio_entities_index(portfolio_entities) if kind == "campaign"}
+    objective_ids = {raw for kind, raw in portfolio_entities_index(portfolio_entities) if kind == "objective"}
+    kr_ids = {raw for kind, raw in portfolio_entities_index(portfolio_entities) if kind == "kr"}
+    bet_ids = {raw for kind, raw in portfolio_entities_index(portfolio_entities) if kind == "bet"}
+    bet_id_counts = {}
+    for bet, _ in portfolio_entities.get("bets", []):
+        bet_id = _text(bet.get("id"))
+        bet_id_counts[bet_id] = bet_id_counts.get(bet_id, 0) + 1
+    binding_valid = 0
+    binding_exclusions = {}
+    full_valid = 0
+    full_exclusions = {}
+    for bet, _ in portfolio_entities.get("bets", []):
+        bet_id = _text(bet.get("id"))
+        if bet_id not in nonterminal_ids:
+            continue
+        if bet_id_counts.get(bet_id, 0) > 1:
+            binding_exclusions["duplicate_bet_id_ambiguous"] = binding_exclusions.get("duplicate_bet_id_ambiguous", 0) + 1
+            full_exclusions["duplicate_bet_id_ambiguous"] = full_exclusions.get("duplicate_bet_id_ambiguous", 0) + 1
+            continue
+        binding_reasons = _bet_binding_reasons(bet, campaign_ids, objective_ids, kr_ids)
+        if binding_reasons:
+            for reason in binding_reasons:
+                binding_exclusions[reason] = binding_exclusions.get(reason, 0) + 1
+        else:
+            binding_valid += 1
+        full_reasons = binding_reasons + _bet_full_chain_reasons(bet, bet_ids)
+        if full_reasons:
+            for reason in full_reasons:
+                full_exclusions[reason] = full_exclusions.get(reason, 0) + 1
+        else:
+            full_valid += 1
+    denominator = len(nonterminal_ids)
+    binding_valid = min(binding_valid, denominator)
+    full_valid = min(full_valid, denominator)
+    binding_current = binding_valid / denominator if denominator and portfolio_fresh else None
+    metrics.append(_metric("diagnostic:portfolio_structural_coverage", "Validated nonterminal portfolio structure",
+                           "diagnostic", "holdability", current=binding_current, baseline=None, target=1.0,
+                           operator="gte", unit="ratio", numerator=binding_valid, denominator=denominator,
+                           verdict="OBSERVED" if denominator and portfolio_fresh else "STALE" if denominator else "UNMEASURED",
+                           evidence_class="computed_structural_diagnostic",
+                           source_refs=[portfolio.get("source")] if portfolio.get("source") else [],
+                           observed_at=portfolio.get("observed_at") or observed_at,
+                           missing_reason=None if denominator and portfolio_fresh else "remote portfolio observation is stale" if denominator else "no nonterminal denominator",
+                           exclusions=sorted(binding_exclusions), score=binding_current,
+                           normalization_reason="diagnostic ratio only; excluded from vision progress" if portfolio_fresh else "stale source; normalization suppressed",
+                           facts={"definition": "nonterminal BET has portfolio_binding.campaign_ref, objective_refs, and kr_refs and every reference resolves in the same remote snapshot",
+                                  "denominator_scope": "remote nonterminal BET IDs",
+                                  "exclusion_counts": binding_exclusions}))
+    full_current = full_valid / denominator if denominator and portfolio_fresh else None
+    metrics.append(_metric("diagnostic:full_chain_coverage", "Validated nonterminal full-chain readiness",
+                           "diagnostic", "trust", current=full_current, baseline=None, target=1.0,
+                           operator="gte", unit="ratio", numerator=full_valid, denominator=denominator,
+                           verdict="OBSERVED" if denominator and portfolio_fresh else "STALE" if denominator else "UNMEASURED",
+                           evidence_class="computed_structural_diagnostic",
+                           source_refs=[portfolio.get("source")] if portfolio.get("source") else [],
+                           observed_at=portfolio.get("observed_at") or observed_at,
+                           missing_reason=None if denominator and portfolio_fresh else "remote portfolio observation is stale" if denominator else "no nonterminal denominator",
+                           exclusions=sorted(full_exclusions), score=full_current,
+                           normalization_reason="diagnostic full-chain ratio only; excluded from vision progress" if portfolio_fresh else "stale source; normalization suppressed",
+                           facts={"definition": "portfolio binding resolves and the BET has a complete accepted specification, all three receipt axes with hashes, positive done_when and verify counts, resolved parent when declared, and a retro reference when required",
+                                  "denominator_scope": "remote nonterminal BET IDs",
+                                  "exclusion_counts": full_exclusions}))
+    states = _rows(supplemental.get("source_states"))
+    observed_sources = sum(isinstance(row, dict) and row.get("status") in ("OBSERVED", "METADATA_ONLY") for row in states)
+    metrics.append(_metric("diagnostic:source_availability", "Local source availability", "diagnostic", "operational",
+                           current=(observed_sources / len(states) if states else None), unit="ratio",
+                           numerator=observed_sources, denominator=len(states) or None,
+                           verdict="OBSERVED" if states else "UNMEASURED",
+                           evidence_class="collector_availability_diagnostic", observed_at=supplemental.get("observed_at"),
+                           missing_reason=None if states else "source states unavailable",
+                           exclusions=["availability is not business health"],
+                           score=(observed_sources / len(states) if states else None),
+                           normalization_reason="diagnostic availability only; excluded from outcome radar"))
+    return metrics
+
+
+def portfolio_entities_index(entities):
+    for group, kind in (("objectives", "objective"), ("krs", "kr"), ("campaigns", "campaign"),
+                        ("milestones", "milestone"), ("bets", "bet")):
+        for row, _identity in entities.get(group, []):
+            yield kind, _text(row.get("id"))
+
+
+def _bet_binding_reasons(bet, campaign_ids, objective_ids, kr_ids):
+    reasons = []
+    binding = _mapping(bet.get("portfolio_binding"))
+    campaign = _text(binding.get("campaign_ref"))
+    objectives = _strings(binding.get("objective_refs"))
+    krs = _strings(binding.get("kr_refs"))
+    if not campaign or campaign not in campaign_ids:
+        reasons.append("campaign_ref_missing_or_unresolved")
+    if not objectives or any(ref not in objective_ids for ref in objectives):
+        reasons.append("objective_refs_missing_or_unresolved")
+    if not krs or any(ref not in kr_ids for ref in krs):
+        reasons.append("kr_refs_missing_or_unresolved")
+    return reasons
+
+
+def _bet_full_chain_reasons(bet, bet_ids):
+    reasons = []
+    parent = _text(bet.get("parent_bet_id"))
+    if parent and parent not in bet_ids:
+        reasons.append("parent_bet_unresolved")
+    specifications = _rows(bet.get("accepted_specifications"))
+    required_spec_keys = ("spec_ref", "decision_ref", "content_digest", "spec_version")
+    if not specifications or not any(isinstance(row, dict) and all(_text(row.get(key)) for key in required_spec_keys) and
+                                     DIGEST_RE.fullmatch(_text(row.get("content_digest")))
+                                     for row in specifications):
+        reasons.append("accepted_specification_unvalidated")
+    completion = _mapping(bet.get("completion_evidence"))
+    axes = _mapping(completion.get("axes"))
+    for name in ("engineering", "operational", "value"):
+        receipts = _rows(_mapping(axes.get(name)).get("evidence_refs"))
+        if not receipts or not all(isinstance(row, dict) and _text(row.get("ref")) and
+                                   _text(row.get("sha256")) and DIGEST_RE.fullmatch(_text(row.get("sha256")))
+                                   for row in receipts):
+            reasons.append(name + "_evidence_unvalidated")
+    if not isinstance(bet.get("done_when_count"), int) or bet.get("done_when_count") <= 0:
+        reasons.append("done_when_missing")
+    if not isinstance(bet.get("verify_count"), int) or bet.get("verify_count") <= 0:
+        reasons.append("verify_missing")
+    retro = _mapping(bet.get("retro"))
+    if retro.get("required") is True and not _text(retro.get("ref") or retro.get("retro_ref")):
+        reasons.append("retro_obligation_unmet")
+    return reasons
+
+
+def _model_state(model, documents):
+    if not isinstance(model, dict):
+        return None
+    result = copy.deepcopy(_sanitize(model))
+    by_id = {doc.get("id"): doc for doc in documents if isinstance(doc, dict)}
+    by_path = {doc.get("path"): doc for doc in documents if isinstance(doc, dict)}
+    drift = []
+    unprovable = False
+    for key, expected in _mapping(result.get("source_documents")).items():
+        actual = by_id.get(expected.get("document_id")) or by_path.get(expected.get("path"))
+        if not actual:
+            unprovable = True
+            drift.append({"source_key": key, "reason": "source_document_unavailable",
+                          "expected_sha256": expected.get("sha256"), "observed_sha256": None})
+        elif actual.get("observation_scope") != "content_hash_and_heading_index":
+            unprovable = True
+            drift.append({"source_key": key, "reason": "source_document_content_unobserved",
+                          "expected_sha256": expected.get("sha256"), "observed_sha256": actual.get("sha256"),
+                          "observation_scope": actual.get("observation_scope")})
+        elif expected.get("sha256") != actual.get("sha256"):
+            drift.append({"source_key": key, "reason": "source_document_hash_mismatch",
+                          "expected_sha256": expected.get("sha256"), "observed_sha256": actual.get("sha256")})
+    result["state"] = "UNPROVABLE" if unprovable else "DRIFT" if drift else "CURRENT"
+    result["drift"] = drift
+    return result
+
+
+def _knowledge(snapshot, supplemental):
+    knowledge = _sanitize(supplemental.get("knowledge") or {})
+    inventory = _mapping(knowledge.get("inventory"))
+    declared = _mapping(_mapping(_mapping(snapshot.get("catalog")).get("counts")).get("by_kind"))
+    comparison = {}
+    for plural, singular in (("skills", "skill"), ("workflows", "workflow")):
+        observed_row = _mapping(inventory.get(plural))
+        observed = observed_row.get("observed") if isinstance(observed_row.get("observed"), int) else None
+        declared_count = declared.get(singular) if isinstance(declared.get(singular), int) else None
+        status = "UNAVAILABLE" if observed is None or declared_count is None else "CURRENT" if observed == declared_count else "DRIFT"
+        comparison[plural] = {"observed": observed, "declared": declared_count, "status": status,
+                              "observed_basis": _text(observed_row.get("basis")) or "allowlisted_path_inventory",
+                              "declared_basis": "catalog_projection"}
+    knowledge["inventory_comparison"] = comparison
+    return knowledge
+
+
+def _proposals(gaps, nodes=()):
+    result = []
+    seen = set()
+    for gap in sorted(gaps, key=lambda row: (str(row.get("kind")), str(row.get("entity_id")), str(row.get("title")))):
+        raw = "|".join(str(gap.get(key) or "") for key in ("kind", "entity_id", "title"))
+        key = "candidate:" + hashlib.sha256(raw.encode()).hexdigest()[:20]
+        if key in seen:
+            continue
+        seen.add(key)
+        kind, reference = str(gap.get("kind") or "unknown"), str(gap.get("entity_id") or "source gap")
+        targets = [node for node in nodes if reference in (node.get("id"), _mapping(node.get("facts")).get("raw_id"))]
+        owner = _text(_mapping(targets[0].get("facts")).get("owner") or _mapping(targets[0].get("facts")).get("owner_role")) if len(targets) == 1 else None
+        owner_basis = "unique_entity_owner_declaration" if owner else "owner_unresolved"
+        if kind in {"duplicate_id", "ambiguous_reference"}:
+            acceptance = [f"{reference}: resolve exactly one canonical owner and identity in the relevant namespace",
+                          "re-read the original competing sources; ambiguity must be rejected by a negative test"]
+            dependencies = ["source identity owner review", "consumer reference impact analysis"]
+        elif kind == "missing_reference":
+            acceptance = [f"{reference}: resolve the explicit reference at its authoritative source/revision",
+                          "prove the intended source-to-target relation; retain missing-source failure evidence"]
+            dependencies = ["referencing source owner review", "target reachability and version evidence"]
+        elif kind in {"model_contradiction", "model_drift", "issue_status_conflict"}:
+            acceptance = [f"{reference}: compare both source clauses/statuses with exact versions and authority scope",
+                          "record the owner-reviewed successor or explicit unresolved decision; never rewrite history as agreement"]
+            dependencies = ["authority/source owner adjudication", "successor impact and replay review"]
+        elif kind in {"source_unavailable", "source_observation_error", "schema_drift", "projection_budget"}:
+            acceptance = [f"{reference}: repeat the bounded source read with a valid schema and no unintended effects",
+                          "cover missing/malformed/over-budget negative cases and preserve last-good age and failure history"]
+            dependencies = ["source adapter ownership", "separately scoped implementation and verification"]
+        elif kind == "knowledge_projection_drift":
+            acceptance = [f"{reference}: compare actual allowlisted inventory with the generated declaration at matching revisions",
+                          "prove generator parity without treating inventory count as runtime availability"]
+            dependencies = ["canonical inventory owner review", "generator freshness and parity test"]
+        elif kind in {"accepted_spec_invalid", "retro_missing"}:
+            acceptance = [f"{reference}: supply the unique applicable specification/retrospective and immutable evidence pointer",
+                          "verify the original obligation; do not reuse done BET identity or manufacture completion/value proof"]
+            dependencies = ["BET and evidence owner review", "fresh binding or closeout workflow"]
+        elif kind == "cycle":
+            acceptance = [f"{reference}: classify the observed cycle as feedback or an invalid execution dependency",
+                          "prove a bounded termination/hold condition and preserve source relation meaning"]
+            dependencies = ["dependency owner review", "cycle and deadlock negative tests"]
+        else:
+            acceptance = [f"{reference}: define a falsifiable exit condition for {kind} using the cited source",
+                          "preserve authority and unknown-value boundaries; unresolved details remain blocked"]
+            dependencies = ["source owner identification", "exact scope and acceptance review"]
+        result.append({"candidate_key": key, "title": "Review: " + str(gap.get("title") or gap.get("kind")),
+                       "reason": _text(gap.get("kind") + ": " + str(gap.get("entity_id") or "source gap")),
+                       "next_action": _text(gap.get("next_action")) or "review source",
+                       "owner_role": owner or "source-owner-review-required", "owner_basis": owner_basis,
+                       "assigned_agent": None, "gap_kind": kind,
+                       "upstream_refs": [_text(ref) for ref in (gap.get("id"), gap.get("entity_id")) if ref],
+                       "source_refs": [_sanitize(gap["source"])] if gap.get("source") else [],
+                       "related_entity_ids": [node["id"] for node in targets],
+                       "acceptance": acceptance, "dependencies": dependencies,
+                       "readiness": "review_only_not_executable",
+                       "forbidden": ["no_automatic_write", "no_automatic_dispatch", "no_inferred_binding"],
+                       "formal_bet_id": None, "status": "review_candidate"})
+        if len(result) >= MAX_PROPOSALS:
+            break
+    if not result:
+        sentinel_key = "candidate:" + hashlib.sha256(b"sentinel:no_gaps_observed").hexdigest()[:20]
+        result.append({"candidate_key": sentinel_key, "title": "Review: 图谱健康 — 无待审查 gap",
+                        "reason": "no_gap: observation_complete",
+                        "next_action": "continue_routine_patrol",
+                        "owner_role": "governance-team", "owner_basis": "sentinel_no_gap",
+                        "assigned_agent": None, "gap_kind": "no_gap",
+                        "upstream_refs": [], "source_refs": [], "related_entity_ids": [],
+                        "acceptance": ["图谱 gaps == 0，无缺口需修复", "维持持续巡检频率"],
+                        "dependencies": ["例行治理巡检"],
+                        "readiness": "review_only_not_executable",
+                        "forbidden": ["no_automatic_write", "no_automatic_dispatch", "no_inferred_binding"],
+                        "formal_bet_id": None, "status": "sentinel_healthy"})
+    return result
+
+
+
+def build_strategy(snapshot, supplemental):
+    """Build the bounded presentation projection without mutating either input."""
+    snapshot = copy.deepcopy(snapshot) if isinstance(snapshot, dict) else {}
+    supplemental = copy.deepcopy(supplemental) if isinstance(supplemental, dict) else {}
+    observed_at = _text(snapshot.get("observed_at") or supplemental.get("observed_at"))
+    portfolio = _mapping(snapshot.get("portfolio"))
+    portfolio_observation = _mapping(_mapping(snapshot.get("source_states")).get("portfolio"))
+    portfolio_status = _text(portfolio_observation.get("status")) or _text(portfolio.get("state")) or "UNAVAILABLE"
+    portfolio_source_clock = _text(portfolio.get("observed_at"))
+    if not portfolio_source_clock:
+        portfolio_status = "UNAVAILABLE"
+    portfolio_fresh = portfolio_status in ("OK", "OBSERVED")
+    builder = TraceBuilder(observed_at)
+    if portfolio:
+        entities = _add_portfolio(builder, portfolio, observed_at)
+    else:
+        entities = {"vision_id": None, "objectives": [], "krs": [], "campaigns": [], "milestones": [], "bets": []}
+        builder.gap("source_unavailable", "Remote portfolio snapshot unavailable",
+                    next_action="restore the fixed-SHA remote portfolio observation", severity="high")
+    documents = [_sanitize(row) for row in _rows(supplemental.get("documents")) if isinstance(row, dict)][:500]
+    _add_documents(builder, documents, observed_at)
+    records = _add_records(builder, supplemental.get("records"), observed_at)
+    plans = _phase_plans(snapshot, observed_at)
+    _add_phase_plans(builder, plans)
+    _link_documents_and_bets(builder, documents, portfolio.get("bet_records", []), observed_at)
+    _add_compute_and_policies(builder, snapshot, observed_at)
+    _add_gates_and_scenes(builder, snapshot, observed_at, supplemental)
+    cycles = builder.cycles()
+    for cycle in cycles:
+        builder.gap("cycle", "Explicit dependency cycle", " -> ".join(cycle),
+                    next_action="review the cited explicit parent/dependency fields", severity="high")
+    if builder.truncated["nodes"] or builder.truncated["edges"] or builder.truncated["gaps"]:
+        builder.gap("projection_budget", "Trace projection budget reached",
+                    next_action="narrow or page the source projection", severity="high")
+    model = _model_state(supplemental.get("model"), documents)
+    if model and model.get("state") in ("DRIFT", "UNPROVABLE"):
+        for drift in model.get("drift", []):
+            builder.gap("model_drift", "Strategy model source drift", drift.get("source_key"),
+                        next_action="regenerate strategy_model.json from current source hashes", severity="high")
+    if model:
+        for contradiction in _rows(model.get("contradictions"))[:100]:
+            if isinstance(contradiction, dict) and str(contradiction.get("status") or "open").lower() not in {
+                    "closed", "resolved", "retired"}:
+                refs = [row for row in _rows(contradiction.get("source_refs")) if isinstance(row, dict)]
+                keys = [_text(row.get("source_key")) for row in refs if _text(row.get("source_key"))]
+                builder.gap("model_contradiction", contradiction.get("title") or "Declared model contradiction",
+                            contradiction.get("id"), _source("strategy_model.json", None, observed_at),
+                            contradiction.get("next_action") or
+                            ("review the cited source documents: " + ", ".join(keys) if keys else "review the cited model sources"),
+                            contradiction.get("severity") or "high")
+    metrics = _metrics(portfolio, supplemental, entities, observed_at, portfolio_fresh)
+    source_states = [_sanitize(row) for row in _rows(supplemental.get("source_states")) if isinstance(row, dict)][:MAX_NODES]
+    if portfolio:
+        source_states.insert(0, {"id": "source:remote-portfolio", "path": _text(portfolio.get("source")) or "remote:portfolio",
+                                 "status": portfolio_status,
+                                 "sha256": _text(portfolio.get("ledger_sha256")),
+                                 "observed_at": portfolio_source_clock,
+                                 "reason": _text(portfolio_observation.get("error_class"))})
+    grouped_source_errors = {}
+    for row in source_states:
+        if row.get("status") not in ("OBSERVED", "OK", "METADATA_ONLY"):
+            key = (str(row.get("status") or "UNAVAILABLE"), str(row.get("reason") or "unavailable"))
+            grouped_source_errors.setdefault(key, []).append(row)
+    for (status, reason), rows in grouped_source_errors.items():
+        first = rows[0]
+        builder.gap("source_observation_error", reason + " (" + status + ", " + str(len(rows)) + " source(s))",
+                    first.get("path"), _source(first.get("path"), first.get("sha256"), first.get("observed_at")),
+                    "repair or re-observe this bounded source segment", "high" if status == "ERROR" else "medium")
+    source_partial = supplemental.get("state") == "PARTIAL" or supplemental.get("partial") is True
+    unavailable = any(row.get("status") not in ("OBSERVED", "OK", "METADATA_ONLY") for row in source_states)
+    state = "PARTIAL" if not portfolio or not portfolio_fresh or source_partial or unavailable else "OBSERVED"
+    knowledge = _knowledge(snapshot, supplemental)
+    for name, comparison in _mapping(knowledge.get("inventory_comparison")).items():
+        if _mapping(comparison).get("status") == "DRIFT":
+            builder.gap("knowledge_projection_drift", name + " observed inventory differs from declared projection",
+                        name, _source("snapshot:catalog+workspace:inventory", None, observed_at),
+                        "review catalog generation against the observed allowlisted inventory", "medium")
+    trace = {"nodes": builder.nodes, "edges": builder.edges, "gaps": builder.gaps,
+             "root_ids": [entities["vision_id"]] if entities.get("vision_id") else [],
+             "counts": {"nodes": len(builder.nodes), "edges": len(builder.edges), "gaps": len(builder.gaps),
+                        "cycles": len(cycles), "truncated": builder.truncated},
+             "cycles": cycles,
+             "scope": {"portfolio": "fixed remote snapshot only", "local": "bounded allowlisted metadata",
+                       "relation_policy": "explicit fields, explicit receipts, filename inference, and advisory plans remain labeled",
+                       "max_nodes": MAX_NODES, "max_edges": MAX_EDGES}}
+    axioms = check_axioms(trace, portfolio)
+    trace["axioms"] = axioms
+
+    # Synthesize Cross-Plane Causal Mesh across all 6 Sovereign Planes
+    # Prefer live snapshot gates (PASS/FAIL). Roadmap design gates lack live verdicts.
+    live_gates = snapshot.get("gates") or []
+    design_gates = ((snapshot.get("roadmap") or {}).get("gates") or [])
+    if live_gates:
+        gates_list = live_gates
+    else:
+        gates_list = design_gates
+    scenes_list = snapshot.get("scenes") or []
+    agents_list = snapshot.get("live_agents") or []
+    compute_info = snapshot.get("compute") or (snapshot.get("live_sources") or {}).get("compute")
+    retros_list = records.get("retros", []) if isinstance(records, dict) else []
+
+    cross_plane_mesh = build_cross_plane_mesh(
+        trace_nodes=builder.nodes,
+        trace_edges=builder.edges,
+        portfolio=portfolio,
+        gates=gates_list,
+        scenes=scenes_list,
+        agents=agents_list,
+        compute=compute_info,
+        documents=documents,
+        retros=retros_list
+    )
+    trace["cross_plane_mesh"] = cross_plane_mesh
+    proposals = _proposals(builder.gaps, builder.nodes)
+    local_provenance = _sanitize(supplemental.get("provenance") or {})
+    result = {"schema": SCHEMA, "observed_at": observed_at, "state": state,
+              "source_states": source_states, "documents": documents, "model": model,
+              "trace": trace, "axioms": axioms, "cross_plane_mesh": cross_plane_mesh,
+              "metrics": metrics, "records": records,
+              "proposals": proposals, "reports": {}, "phase_plans": plans,
+              "knowledge": knowledge,
+              "scene_cards": supplemental.get("scene_cards", {}),
+              "cartridges": supplemental.get("cartridges", []),
+              "domains": supplemental.get("domains", []),
+              "agents": supplemental.get("agents", {}),
+              "bets_catalog": supplemental.get("bets_catalog", {}),
+              "interlock_matrix": supplemental.get("interlock_matrix", {}),
+              "provenance": {"remote_portfolio": {"sha": _text(portfolio.get("sha")),
+                                                       "ledger_sha256": _text(portfolio.get("ledger_sha256")),
+                                                       "source": _text(portfolio.get("source")),
+                                                       "observed_at": _text(portfolio.get("observed_at"))},
+                             "local_sources": local_provenance},
+              "epistemic_notice": "read-only projection; source availability and structural diagnostics are not business health or vision completion"}
+    # Size is diagnostic only. Do not serialize arbitrary source bodies to reach it.
+    result["projection_bytes"] = len(json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+    return result
+
+
+def trace_lineage(trace_graph: dict, entity_id: str, direction: str = "both", max_depth: int = 3) -> dict:
+    """Trace multi-hop causal lineage (upstream, downstream, or both) from a focal entity.
+
+    Args:
+        trace_graph: The trace dictionary containing 'nodes' and 'edges'.
+        entity_id: The identifier of the focal entity (e.g. 'bet:BET-1' or raw ID 'BET-1').
+        direction: 'upstream', 'downstream', or 'both'.
+        max_depth: Maximum hops to traverse (bounded 1 to 5, default 3).
+
+    Returns:
+        A dict with focal entity, traversed subgraph nodes, edges, plane metrics, and depth hierarchy.
+    """
+    if not trace_graph or not isinstance(trace_graph, dict):
+        return {"found": False, "error": "Trace graph is empty or malformed"}
+
+    nodes = trace_graph.get("nodes", [])
+    edges = trace_graph.get("edges", [])
+
+    # 1. Locate focal node
+    nodes_by_id = {n["id"]: n for n in nodes if isinstance(n, dict) and "id" in n}
+    focal_node = nodes_by_id.get(entity_id)
+    if not focal_node:
+        norm_id = entity_id
+        if norm_id.startswith("scene:"):
+            norm_id = "scene_card:" + norm_id[6:]
+        elif norm_id.startswith("scene_card:"):
+            norm_id = "scene:" + norm_id[11:]
+        focal_node = nodes_by_id.get(norm_id)
+
+    if not focal_node:
+        raw_target = entity_id.split(":", 1)[-1] if ":" in entity_id else entity_id
+        for n in nodes:
+            if isinstance(n, dict):
+                raw = (n.get("facts") or {}).get("raw_id")
+                nid = n.get("id", "")
+                if raw == entity_id or raw == raw_target or nid.endswith(f":{raw_target}") or n.get("title") == entity_id:
+                    focal_node = n
+                    break
+
+    if not focal_node:
+        return {"found": False, "error": f"Entity '{entity_id}' not found in trace graph"}
+
+    focal_id = focal_node["id"]
+    try:
+        max_depth = max(1, min(int(max_depth or 3), 5))
+    except (ValueError, TypeError):
+        max_depth = 3
+    direction = str(direction or "both").lower()
+
+    # 2. Build semantic adjacency lists
+    TARGET_IS_UPSTREAM = {
+        "accepts_spec", "guided_by_document", "parent_bet", "governed_by",
+        "depends_on", "implements", "requires_bet", "derived_from", "powered_by",
+        "kr_to_objective", "objective_to_vision", "milestone_to_campaign",
+        "fulfills_bet", "triggers_inference", "powered_by_compute"
+    }
+    TARGET_IS_DOWNSTREAM = {
+        "implements_document", "governs_execution", "governs_bet", "governs",
+        "governs_agent", "delivers_scene", "executes_workflow",
+        "drives", "specifies", "produces", "crystallizes_to", "consumes_compute"
+    }
+
+    adj_upstream: dict[str, list[tuple[str, dict]]] = {}
+    adj_downstream: dict[str, list[tuple[str, dict]]] = {}
+
+    for edge in edges:
+        if not isinstance(edge, dict):
+            continue
+        u = edge.get("from")
+        v = edge.get("to")
+        rel = edge.get("relation")
+        if not u or not v:
+            continue
+
+        if rel in TARGET_IS_UPSTREAM:
+            adj_upstream.setdefault(u, []).append((v, edge))
+            adj_downstream.setdefault(v, []).append((u, edge))
+        elif rel in TARGET_IS_DOWNSTREAM:
+            adj_downstream.setdefault(u, []).append((v, edge))
+            adj_upstream.setdefault(v, []).append((u, edge))
+        else:
+            adj_downstream.setdefault(u, []).append((v, edge))
+            adj_upstream.setdefault(v, []).append((u, edge))
+
+    # 3. BFS Traversal
+    visited_nodes: dict[str, dict] = {
+        focal_id: {
+            "node": focal_node,
+            "depth": 0,
+            "hop_direction": "focal",
+            "via_relation": None
+        }
+    }
+    traversed_edges: list[dict] = []
+    seen_edge_keys: set[tuple[str, str, str]] = set()
+
+    queue: list[tuple[str, int, str]] = []
+    if direction in ("upstream", "both"):
+        queue.append((focal_id, 0, "upstream"))
+    if direction in ("downstream", "both"):
+        queue.append((focal_id, 0, "downstream"))
+
+    while queue:
+        curr_id, depth, mode = queue.pop(0)
+        if depth >= max_depth:
+            continue
+
+        neighbors = adj_upstream.get(curr_id, []) if mode == "upstream" else adj_downstream.get(curr_id, [])
+        for next_id, edge in neighbors:
+            edge_key = (str(edge.get("from")), str(edge.get("to")), str(edge.get("relation")))
+            if edge_key not in seen_edge_keys:
+                seen_edge_keys.add(edge_key)
+                traversed_edges.append(edge)
+
+            if next_id not in visited_nodes:
+                target_node = nodes_by_id.get(next_id)
+                if target_node:
+                    visited_nodes[next_id] = {
+                        "node": target_node,
+                        "depth": depth + 1,
+                        "hop_direction": mode,
+                        "via_relation": edge.get("relation")
+                    }
+                    queue.append((next_id, depth + 1, mode))
+
+    # 4. Aggregate plane and kind statistics
+    plane_counts: dict[str, int] = {}
+    kind_counts: dict[str, int] = {}
+    items_by_depth: dict[int, list[dict]] = {}
+
+    for nid, entry in visited_nodes.items():
+        n = entry["node"]
+        p = n.get("plane", "unknown")
+        k = n.get("kind", "unknown")
+        plane_counts[p] = plane_counts.get(p, 0) + 1
+        kind_counts[k] = kind_counts.get(k, 0) + 1
+        items_by_depth.setdefault(entry["depth"], []).append({
+            "id": nid,
+            "title": n.get("title"),
+            "kind": k,
+            "plane": p,
+            "status": n.get("status"),
+            "hop_direction": entry["hop_direction"],
+            "via_relation": entry["via_relation"]
+        })
+
+    return {
+        "found": True,
+        "focal_entity": {
+            "id": focal_id,
+            "title": focal_node.get("title"),
+            "kind": focal_node.get("kind"),
+            "plane": focal_node.get("plane"),
+            "status": focal_node.get("status")
+        },
+        "query": {
+            "entity_id": entity_id,
+            "direction": direction,
+            "max_depth": max_depth
+        },
+        "metrics": {
+            "total_nodes": len(visited_nodes),
+            "total_edges": len(traversed_edges),
+            "plane_distribution": plane_counts,
+            "kind_distribution": kind_counts
+        },
+        "subgraph": {
+            "nodes": [
+                {
+                    "id": entry["node"].get("id"),
+                    "title": entry["node"].get("title"),
+                    "kind": entry["node"].get("kind"),
+                    "plane": entry["node"].get("plane"),
+                    "status": entry["node"].get("status"),
+                    "evidence_class": entry["node"].get("evidence_class"),
+                    "depth": entry["depth"],
+                    "hop_direction": entry["hop_direction"]
+                }
+                for entry in visited_nodes.values()
+            ][:150],
+            "edges": traversed_edges[:200]
+        },
+        "lineage_by_depth": items_by_depth
+    }
+

@@ -30,6 +30,8 @@ EXPECTED_FILES = {
     "collectors/workflow.py": "workflow_collector.py.asset",
     "collectors/scheduler.py": "scheduler_collector.py.asset",
     "orchestrator.py": "orchestrator.py.asset",
+    "collectors/portfolio.py": "portfolio_collector.py.asset",
+    "strategy_projection.py": "strategy_projection.py.asset",
 }
 
 
