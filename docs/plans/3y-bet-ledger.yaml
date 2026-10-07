@@ -40796,7 +40796,8 @@ bets:
     每份带 144 号原文锚点+转办科室，落 principal Documents _drafts/。仓库零正文 （5 份准备文件只落 Documents 域）。
 
     '
-  status: pending
+  status: done
+  done_at: 2026-10-07
   window: Y2Q4
   track: T4-OUTCOME
   priority: P1
@@ -40843,17 +40844,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T4-07
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7e5949d54dafee7139bd749d0f05ffe54f0eaa61
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-07.md
+          tests:
+            ref: receipt://CLAUDE.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-07.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-07.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-07.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-07.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T4-07.md
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: >-
+            价值 = 知识复利启动按钮（KOS 检索前置）+ 治理与业务首次融合
+            （纪要区级项用治理通道准备）。实际消费效果待 5 份准备文件
+            转办后由科室反馈计量。
   value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
