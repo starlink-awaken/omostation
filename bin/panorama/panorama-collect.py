@@ -4701,7 +4701,8 @@ def build_payload() -> dict:
             # Fill in top-level fields the publisher doesn't collect
             # (portfolio, catalog, etc.) from the orchestrator's data.
             for _key in ("portfolio", "catalog", "bets", "agents", "gates",
-                         "runtime", "docs", "metrics_kpi", "recent_events",
+                         "runtime", "docs", "documents", "documents_meta", "source_states",
+                         "metrics_kpi", "recent_events",
                          "knowledge_health", "knowledge_growth",
                          "experience_network", "skill_inventory",
                          "scene_cards", "journeys", "connectors",
