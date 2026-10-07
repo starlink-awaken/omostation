@@ -193,7 +193,10 @@ WORKBENCH_SCROLL_RESET_WITH_HASH = (
 )
 MAX_TAIL_BYTES = 1024 * 1024
 MAX_LINE_BYTES = 16 * 1024
-MAX_PAGE_BYTES = 16 * 1024 * 1024
+# Published projection artifacts share the bounded 16 MiB revision contract.
+# Keep MAX_DOCUMENT_BYTES below for ordinary registered observations.
+MAX_PROJECTION_ARTIFACT_BYTES = 16 * 1024 * 1024
+MAX_PAGE_BYTES = MAX_PROJECTION_ARTIFACT_BYTES
 MAX_DOCUMENT_BYTES = 1024 * 1024
 POLL_INTERVAL_SECONDS = 5
 SERVER_CODE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
@@ -1788,6 +1791,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         else "data"
                     )
                     body = revision.artifact_bodies[artifact]
+                    limit = MAX_PROJECTION_ARTIFACT_BYTES
                 else:
                     source = (
                         self.server.agent_brief_path
@@ -1804,7 +1808,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
                             raise OSError("not a regular file")
                         body = stream.read(MAX_DOCUMENT_BYTES + 1)
-                if len(body) > MAX_DOCUMENT_BYTES:
+                    # A legacy path has neither a manifest nor a revision
+                    # binding.  It therefore remains an ordinary bounded
+                    # document and must never inherit the larger revision
+                    # artifact allowance.
+                    limit = MAX_DOCUMENT_BYTES
+                if len(body) > limit:
                     raise OSError("projection too large")
             except ProjectionStateError as exc:
                 self._json(503, {"error": exc.public_error, "read_only": True})

@@ -1,0 +1,22 @@
+"""Strategy collector — reads strategy projection data."""
+
+from __future__ import annotations
+
+from collectors.base import CollectionError, DataCollector
+from collectors.registry import register
+from refresh import probe_strategy
+
+
+@register("strategy", timeout=120)
+class StrategyCollector(DataCollector):
+
+    name = "strategy"
+
+    def collect(self) -> dict:
+        try:
+            return probe_strategy()
+        except Exception as exc:
+            raise CollectionError("strategy", str(exc))
+
+    def validate(self, data: dict) -> bool:
+        return isinstance(data, dict) and isinstance(data.get("source_states"), list)

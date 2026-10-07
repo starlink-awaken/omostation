@@ -834,20 +834,21 @@ def probe_environment_evidence():
 
 def probe_documents():
     import yaml
-    reg = yaml.safe_load((LIBRARY / ".library/registry.yaml").read_text())
+    from strategy_sources import collect_registered_documents
+    observation = collect_registered_documents(LIBRARY)
     docs = []
-    for entry in reg["documents"]:
-        if entry["document_id"] in ("ZX-DOC-AGENT-OS-LIVE-001",):
+    for entry in observation["documents"]:
+        if entry["id"] in ("ZX-DOC-AGENT-OS-LIVE-001",):
             continue
-        p = (LIBRARY / ".library" / entry["path"]).resolve()
-        exists = p.is_file()
-        docs.append({k: entry.get(k) for k in ("document_id", "title", "document_type", "approval_state", "authority_scope", "owner")} |
-                    {"path": str(p), "exists": exists, "sha256": get_cached_file_digest(p) if exists else None})
+        docs.append({k: entry.get(k) for k in ("title", "document_type", "approval_state", "authority_class", "authority_scope", "owner", "path", "sha256", "declared_sha256", "observed_sha256", "observed_at", "source_status", "source_reason")} |
+                    {"document_id": entry["id"], "exists": entry["source_status"] in ("OBSERVED", "METADATA_ONLY", "ERROR") and entry.get("sha256") is not None})
     roadmap = yaml.safe_load((LIBRARY / "20-路线与阶段/Agent运行操作系统分阶段路线-v1.yaml").read_text())
     contract = yaml.safe_load((LIBRARY / "20-路线与阶段/Vision到BET闭环机器合同-v1.yaml").read_text())
     gantt = yaml.safe_load((LIBRARY / "20-路线与阶段/执行总控甘特图-v1.yaml").read_text())
     return {"documents": docs, "roadmap": roadmap, "contract": contract, "gantt": gantt,
-            "registry_sha256": digest((LIBRARY / ".library/registry.yaml").read_bytes()), "observed_at": now()}
+            "registry_sha256": observation["registry_sha256"], "observed_at": observation["observed_at"],
+            "state": observation["state"], "source_states": observation["source_states"],
+            "errors": observation["errors"], "budgets": observation["budgets"]}
 
 def probe_catalog():
     from catalog_sources import collect_catalog
@@ -955,9 +956,14 @@ def generate_dynamic_gantt(portfolio):
         }
     }
 
-def probe_strategy():
+def probe_strategy(root_resolver=None):
     from strategy_sources import collect_strategy_sources
-    return collect_strategy_sources()
+    if root_resolver is None:
+        # The trusted process supplies bin/lib on PYTHONPATH. A missing resolver
+        # is a collection failure, never permission to guess a HOME/Workspace root.
+        import repo_root as root_resolver
+    return collect_strategy_sources(workspace=root_resolver.code_root(),
+                                    state_root=root_resolver.state_root(), library=LIBRARY, app=APP)
 
 def probe_compute():
     import urllib.request
@@ -1051,6 +1057,13 @@ def apply_results(previous, results, attempted_at):
         if data.get("source_aliases", {}).get(name) == "/" + name and isinstance(data.get(name), dict):
             values.setdefault(name, data[name])
     for name, value, error in results:
+        if not error and name == "documents" and isinstance(value, dict) and value.get("state") == "PARTIAL":
+            old = states.get(name, {})
+            values[name] = value
+            states[name] = {"status": "PARTIAL", "last_success_at": old.get("last_success_at"),
+                            "last_observed_at": value.get("observed_at"), "last_attempt_at": attempted_at,
+                            "proof_scope": "bounded-registered-documents-with-explicit-source-gaps"}
+            continue
         if not error and name == "strategy":
             # 宽松验证：只要有 source_states 就接受（即使 schema 不完全匹配）
             if not isinstance(value, dict) or not isinstance(value.get("source_states"), list):
