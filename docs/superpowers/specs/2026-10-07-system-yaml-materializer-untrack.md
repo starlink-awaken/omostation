@@ -364,3 +364,91 @@ tests/unit/test_system_yaml_materializer.py tests/unit/test_projection_reader_re
 tests/unit/test_system_yaml_write_plane.py tests/unit/test_repo_root_profile.py -q -p no:randomly`
 ⇒ **933 passed**（与正常 HOME 下同一读数）。**纪律**：跑出 `No module named pytest` 时先疑装置，
 不要把它记成「用例在干净 host 面上红」—— 那是测量工具缺依赖，不是写面回归。
+
+## 10 第二次交付实况：五处红指向同一件事 —— 读者比创建者先跑（2026-10-07 实跑读数）
+
+第一次交付（`1a27f4e45`）把文件摘出库并放上创建者，PR **#4671** 的 CI 当场 5 处红。逐条复现后，
+它们**没有一条**指向「摘库这个动作错了」，全部指向同一件事：**读者先于创建者执行，或创建者没被登记**。
+
+| # | 红 | 实测报错（干净复刻里逐字复现） | 本轮处置（只允许「补创建者」这一侧） |
+|---|---|---|---|
+| 1 | `architecture-check --gate` | `核心文档缺失: .omo/state/system.yaml (声明于 core_documents.STATE.md)` | 在 gate 步骤之前插创建者 |
+| 2 | `doc-link-check` | `README.md:51/:144: broken link .omo/state/system.yaml` | 同上（strict `gac-gate.yml` 面也补一步） |
+| 3 | `current-state-coherence` | `missing input: …/.omo/state/system.yaml` ⇒ **rc 2** | 第一次交付已接步骤，本轮补**登记面** |
+| 4 | `script-registry validate` | `Missing registrations: 1` | 新增 `bin/_registry/scripts/governance/materialize-system-state.yaml` |
+| 5 | `check-bin-quota-diff` | `新增 1 > 删除 0 + baseline_delta 0` | `script_baseline 715 → 716`（§7 计数链保持） |
+
+**circuit_breaker 的边界是实测出来的，不是声明的**：判据只允许补创建者侧，因此本轮**没有**动任何读者的
+判定语义 —— `architecture-check` 的 `core_documents` 存在性断言、`doc-link-check` 的链接目标解析、
+`current-state-coherence` 的 `missing input ⇒ rc 2` 全部逐字保留，上面三条报错正是它们在干净复刻里
+**仍然会报**的证据。反形状要说清代价：把 `system.yaml` 从 `core_documents` 删掉、或让 coherence
+缺输入时返回 0，同样能让这 5 处「消」，但那删掉的恰好是 §2 论证「这份文件不能被直接摘库」的全部理由 ——
+**红消失而判据同时失明，不是修复**。
+
+**接线顺序判据**（新建 `tests/unit/test_system_yaml_consumer_inputs.py`，12 用例）：只吃 YAML 解析后的
+`run:` 内容，按 **(步骤号, 步骤内字符偏移)** 比较 —— 同一步里 `python3 创建者 && python3 读者` 的链式写法
+也是顺序，只比步骤号会把它误判成违规（本轮真实踩过并修）。实测三条 workflow 的落点（0-based，仅 `run:` 步）：
+`gac-gate.yml` 创建者 `(19,8)` / `gac-local-gate.py` `(20,8)`；`architecture-check.yml` `(2,8)` / `(3,8)`；
+`state-goals-enforce.yml` `(1,8)` / `(2,8)`。检测器按 §7「自证」纪律配正反两面：注入「缺创建者」与
+「创建者排在读者之后」必须报违规，「顺序正确」「链式两侧各方向」「读者根本不在该 workflow」必须不报。
+
+**登记六层里本轮补的两层，加一条最贵的静默形状**：
+① `bin/_registry/scripts/governance/materialize-system-state.yaml` 新建后 `script-registry.py validate`
+⇒ `VALIDATION PASSED: 716 scripts registered`（注意 `validate` **不接受 `--json`**；仓库里也**没有**
+`bin/validate-script-registry.py`，按记忆找它只会撞上 §7⑤ 的 `fd` 别名）。
+② `script_baseline 715 → 716`。⚠️ `check-bin-quota-diff.py::_get_baseline_delta` 读的是
+`git show HEAD:` 与 `git show <base>:`，即**已提交的两棵树** ⇒ 工作树里的 bump 在 commit 之前对该检查
+**不可见**（实测：commit 前 `baseline_delta=0` FAIL，commit 后 `added 1 / deleted 0 / delta 1 / ok true`）。
+③ `ci-surfaces.yaml` 登记为 `workflow: architecture-check.yml` + `also_in: [gac-gate.yml, state-goals-enforce.yml]`
+—— 只登记一条会造 `overlap` 违规，判据是 `{workflow} ∪ also_in ⊇ 实际执行它的全部 workflow`（第一次交付已在三条里都接了步骤）。
+④ **本轮最贵的一处**：`note:` 写成裸多行标量且行内含 `: ` ⇒ `ScannerError`，而 `check-ci-surfaces.py` 的
+`_load_yaml` **吞异常返回 `{}`**，整个登记面凭空消失，输出形态是 **129 条 `unregistered-check` error** ——
+与「真漏登记 129 个检查」逐字同形。修法与固化见 AGENTS.md §7「扫源码的门禁」⑨；修好后的稳定读数
+`ok true / errors 0 / warns 5 / surfaces 148 / registered 148 / wired 144`，并钉成
+`test_registry_yaml_parses`（ci-surfaces 与 governance-checks 各解析一次）+ 登记用例里的 surfaces 非空断言。
+
+**第 5 类读者是 Makefile，而它的失效形态是「打印四个空 grep」**：`make debt-check` 对
+`.omo/state/system.yaml` 做 4 次 `grep`（`debt_weight` / `debt_health` / `resolved_count` / `unresolved_count`），
+而 `write-owners.yaml` 为这份文件声明的 **23** 个键里**没有**这四项，`origin/main` 那份跟踪快照的 24 个顶层键里也没有 ⇒
+该目标**永远「检查完成」而不给任何读数**（门禁成功 ≠ 门禁有用）。本轮改为经 `bin/lib/repo_root.py --json`
+取**调用时刻**的 state 根，缺失时显式指路 `make state-materialize`，键不在声明面时明说「不是空 grep，去看
+`.omo/debt/` 与 `make debt-audit`」。实跑读数：`读数根: <checkout>/.omo/state/system.yaml` + 四行如实说明。
+入口新增 `make state-materialize` 而**不是**再加一个 bin 脚本 —— `bin/` 受净增配额约束（本表第 5 行），Makefile 不受限。
+
+**判据-6 的干净复刻实跑**（`git archive HEAD | tar -x`：无 `.git`、无子模块内容、`.omo/state/system.yaml` 按摘库后形状不存在）：
+
+| 阶段 | 读数 |
+|---|---|
+| 创建者**之前** | `doc-link-check` rc=1 / 15 broken（其中 3 行点名 `system.yaml`）；`architecture-check --gate` rc=1 / 1 错「核心文档缺失」；`current-state-coherence` **rc=2** `missing input` |
+| 创建者 | `python3 bin/gac/materialize-system-state.py --json` rc=0，`status: materialized`、`key_count 23 == declared 23`、`key_set_equals_declared true`、落点即复刻的检出路径（CI 未声明 profile ⇒ §4 的 D1 不变量） |
+| 创建者**之后** | 三份读者对 `system.yaml` 的抱怨 **0 行**；`architecture-check` 错误 0；`current-state-coherence` **rc=0**（`phase=29 wave=W1 active=1 …`） |
+
+复刻里剩下 **12 条 broken link + 2 条 registry 警告全部指向未初始化的子模块内容**（`projects/{agora,ecos,omo}/…`，
+逐条 `worktree=True / archive-replica=False`；`.gitmodules` 的 17 条 gitlink 被 `git archive` 结构性排除）⇒
+那是**复刻装置的缺口，不是交付的缺口**。因此「0 broken links」这格判据必须在**子模块齐备**的树上取，本轮也取了
+（同一棵 worktree，先把那份 1446 字节的现值备份并按 sha 还原）：
+
+| 阶段 | 子模块齐备树上的读数 |
+|---|---|
+| 文件不在 | `doc-link-check` rc=1 / **17 broken，其中 16 行点名 `system.yaml`**（`ARCHITECTURE.md:21`、`LAYER-INDEX.md:15` …）；`architecture-check --gate` rc=1 / `❌ 核心文档缺失`；`current-state-coherence` **rc=2** `missing input` |
+| 创建者 | rc=0，`status: materialized` |
+| 创建者之后 | 三者 **rc=0** 且 `doc-link-check: PASS` **0 broken links**；`✅ Architecture Check 通过 (0 error, 0 warning)`；coherence `phase=29 wave=W1` |
+
+**判据**：一条写「0 broken links」的判据，其装置必须**包含被链接的对象**；`git archive` 复刻能证明
+「抱怨被创建者消掉」这一类，但**证不了**「总数为 0」⇒ 两种树各跑一次，缺一格就是空绿。
+
+**B5 的两条判据本轮第一次同时成立**：跑完 `make gac-local-gate`（PASS，68 checks / 1 SOFT WARN = 本机无 KOS 库
+runtime 产物）之后 `git status --short .omo/state` **为空**；`git check-ignore -v` 命中 `.gitignore:297`；
+`git ls-files --error-unmatch` rc=1。分支自身改动面 `git diff --name-status d25b0dcee..HEAD` = **25 个文件**，
+其中 `.omo/` 下只有一条**故意的 `D .omo/state/system.yaml`（摘库本体）**，无生成态夹带。⚠️ 用
+`git diff --name-only origin/main..HEAD` 数会得到 34 并夹带 `D` 行 —— `origin/main` 已前进到 `5dbe543a6`，
+两点式 diff 把上游新增显示为反向删除（AGENTS.md §7「生成态会被交付动作扫进 commit」那条同源的读数陷阱）。
+
+**全量 `tests/unit` 与「预存红必须用基线复刻证明」**：`2033 passed / 11 failed`（575s）。这 11 条本轮不写成
+「不是我引入的」，而是复现了基线：① 涉及的 5 个用例文件对本分支 diff 的 9 个关键词（`materialize-system-state` /
+`ci-surfaces` / `governance-checks.yaml` / `gac-gate.yml` / `architecture-check.yml` / `governance-check.yml` /
+`Makefile` / `T10-235` / `system.yaml`）命中 **0**；② 把**分支基线** `git archive d25b0dcee | tar -x` 到临时目录
+跑同 5 个文件 ⇒ **FAILED 列表逐条 test id 与分支完全相同（11 failed）**，故为预存；③ 这些文件也不在
+`governance-check.yml:118` 起的显式 pytest 白名单里（`tests/unit/**` 不被 CI 采集）⇒ 它们既不会让 CI 红，
+**CI 绿也不构成它们的证据**，本轮因此把新建的两个用例文件都点名进步骤。
+**纪律**：「预存」这一格只能用基线复刻复跑来填，叙述不算证据（AGENTS.md §7 ci-red-triage 的预存判定）。

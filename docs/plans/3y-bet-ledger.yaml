@@ -41011,7 +41011,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-07-system-yaml-materializer-untrack.md
     spec_version: 1.0.0
-    content_digest: sha256:3bc269151ddd5b61a99dc626ebf187676faf56458e5413f136de672137d661ec
+    content_digest: sha256:cf4fc22dcfc5e27f2d7266044e73dc91f34eb6e2e5ff75811914158095f6dfb5
     decision_ref: decision://accepted/BET-Y2Q4-T10-235
   value_indicator_policy: false
   completion_evidence:
