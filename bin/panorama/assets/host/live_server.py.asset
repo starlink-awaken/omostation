@@ -216,6 +216,9 @@ _DASHBOARD_CODE_FILES = (
     "observatory_query.py",
     "runtime_paths.py",
 )
+_IDENTITY_LOCK_TIMEOUT_SECONDS = 2.0
+_IDENTITY_PROOF_TIMEOUT_SECONDS = 3.0
+_MAX_CODE_FILE_BYTES = 2 * 1024 * 1024
 REPO_DIST_PAGE = STATE_ROOT / "dist" / "index.html"
 REPO_ROOT_PAGE = STATE_ROOT / "index.html"
 LEGACY_DOC_PAGE = Path("/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库/40-验收与运营/Agent体系全景总览-2026-09-08.html")
@@ -265,14 +268,21 @@ def utc_now():
 def resolve_dashboard_code_identity(code_root=CODE_ROOT):
     """Prove the running reader is one clean, exact Git tree."""
     root = Path(code_root).resolve()
+    deadline = time.monotonic() + _IDENTITY_PROOF_TIMEOUT_SECONDS
 
     def git_bytes(*args):
-        completed = subprocess.run(
-            ["git", "-C", str(root), *args],
-            capture_output=True,
-            timeout=10,
-            check=False,
-        )
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound")
+        try:
+            completed = subprocess.run(
+                ["git", "-C", str(root), *args],
+                capture_output=True,
+                timeout=remaining,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound") from exc
         if completed.returncode != 0:
             raise ProjectionStateError(
                 "IDENTITY_UNBOUND", "projection_identity_unbound"
@@ -289,7 +299,7 @@ def resolve_dashboard_code_identity(code_root=CODE_ROOT):
     file_hashes = []
     for name in _DASHBOARD_CODE_FILES:
         bound = git_bytes("show", f"HEAD:{name}")
-        executing = (root / name).read_bytes()
+        executing = _read_dashboard_code_file(root / name)
         if bound != executing:
             raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
         file_hashes.append(f"{name}:{hashlib.sha256(bound).hexdigest()}\n")
@@ -301,6 +311,165 @@ def resolve_dashboard_code_identity(code_root=CODE_ROOT):
         "tree_sha256": tree_sha256,
         "code_bundle_sha256": code_bundle_sha256,
     }
+
+
+def probe_dashboard_code_identity(code_root=CODE_ROOT):
+    """Cheaply prove HEAD and a clean tracked/untracked worktree."""
+    root = Path(code_root).resolve()
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "status",
+                "--porcelain=v2",
+                "--branch",
+                "--untracked-files=all",
+            ],
+            capture_output=True,
+            timeout=_IDENTITY_PROOF_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ProjectionStateError(
+            "IDENTITY_UNBOUND", "projection_identity_unbound"
+        ) from exc
+    if completed.returncode != 0:
+        raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound")
+    lines = completed.stdout.splitlines()
+    oid_prefix = b"# branch.oid "
+    oid_lines = [line for line in lines if line.startswith(oid_prefix)]
+    if len(oid_lines) != 1:
+        raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound")
+    try:
+        code_oid = oid_lines[0][len(oid_prefix):].decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise ProjectionStateError(
+            "IDENTITY_UNBOUND", "projection_identity_unbound"
+        ) from exc
+    if not re.fullmatch(r"[0-9a-f]{40}", code_oid):
+        raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound")
+    if any(not line.startswith(b"# ") for line in lines):
+        raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+    return {"code_oid": code_oid}
+
+
+class DashboardCodeIdentityCache:
+    """Single-flight cache for an expensive, revision-bound code identity."""
+
+    def __init__(self, *, resolver=None, probe=None, code_root=CODE_ROOT):
+        self._code_root = Path(code_root).resolve()
+        self._resolver = resolver or (lambda: resolve_dashboard_code_identity(self._code_root))
+        self._probe = probe or (lambda: probe_dashboard_code_identity(self._code_root))
+        self._lock = threading.Lock()
+        self._key = None
+        self._identity = None
+
+    def resolve(self, binding):
+        if not self._lock.acquire(timeout=_IDENTITY_LOCK_TIMEOUT_SECONDS):
+            raise ProjectionStateError("VALIDATION_BUSY", "projection_validation_busy")
+        try:
+            success = False
+            try:
+                files = self._fingerprints()
+                observed = self._probe()
+                observed_oid = observed.get("code_oid")
+                expected_oid = binding[-1] if binding else None
+                if observed_oid != expected_oid:
+                    raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+                key = tuple(binding) + (observed_oid, files)
+                if self._key == key and self._identity is not None:
+                    if self._fingerprints() != files:
+                        raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+                    success = True
+                    return dict(self._identity)
+                identity = self._resolver()
+                if identity.get("code_oid") != observed_oid:
+                    raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+                if self._fingerprints() != files:
+                    raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+                self._key = key
+                self._identity = dict(identity)
+                success = True
+                return dict(identity)
+            finally:
+                if not success:
+                    self._key = None
+                    self._identity = None
+        finally:
+            self._lock.release()
+
+    def _fingerprints(self):
+        return tuple(
+            _regular_file_fingerprint(
+                self._code_root / name,
+                status="CODE_DRIFT",
+                public_error="projection_code_drift",
+            )
+            for name in _DASHBOARD_CODE_FILES
+        )
+
+
+def _regular_file_fingerprint(path, *, status, public_error):
+    try:
+        metadata = Path(path).lstat()
+    except OSError as exc:
+        raise ProjectionStateError(status, public_error) from exc
+    if not stat.S_ISREG(metadata.st_mode):
+        raise ProjectionStateError(status, public_error)
+    return (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
+    )
+
+
+def _read_dashboard_code_file(path):
+    before = _regular_file_fingerprint(
+        path, status="CODE_DRIFT", public_error="projection_code_drift"
+    )
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(fd, "rb") as stream:
+            opened = os.fstat(stream.fileno())
+            identity = (opened.st_dev, opened.st_ino, opened.st_size,
+                        opened.st_mtime_ns, opened.st_ctime_ns)
+            if not stat.S_ISREG(opened.st_mode) or identity != before:
+                raise OSError("code replaced before open")
+            body = stream.read(_MAX_CODE_FILE_BYTES + 1)
+        if len(body) > _MAX_CODE_FILE_BYTES:
+            raise OSError("code file too large")
+    except OSError as exc:
+        raise ProjectionStateError("CODE_DRIFT", "projection_code_drift") from exc
+    if _regular_file_fingerprint(
+        path, status="CODE_DRIFT", public_error="projection_code_drift"
+    ) != before:
+        raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+    return body
+
+
+def projection_code_identity_binding(projection_store, revision):
+    """Bind a cached code proof to the exact pointer and manifest controls."""
+    pointer_fingerprint = _regular_file_fingerprint(
+        projection_store.pointer_path,
+        status="POINTER_UNAVAILABLE",
+        public_error="projection_pointer_unavailable",
+    )
+    manifest_fingerprint = _regular_file_fingerprint(
+        revision.manifest_path,
+        status="MANIFEST_UNAVAILABLE",
+        public_error="projection_manifest_unavailable",
+    )
+    return (
+        revision.revision_id,
+        revision.manifest_sha256,
+        pointer_fingerprint,
+        manifest_fingerprint,
+        revision.dashboard_code_oid,
+    )
 
 
 def safe_identifier(value):
@@ -1365,7 +1534,14 @@ class DashboardServer(ThreadingHTTPServer):
         if self.projection_store is None:
             return None
         revision = self.projection_store.load(require_fresh=True)
-        if self.dashboard_identity_resolver is not None:
+        if self.dashboard_identity_cache is not None:
+            current_identity = self.dashboard_identity_cache.resolve(
+                projection_code_identity_binding(self.projection_store, revision)
+            )
+            self.dashboard_code_oid = current_identity["code_oid"]
+            self.dashboard_tree_sha256 = current_identity["tree_sha256"]
+            self.dashboard_code_sha256 = current_identity["code_bundle_sha256"]
+        elif self.dashboard_identity_resolver is not None:
             current_identity = self.dashboard_identity_resolver()
             self.dashboard_code_oid = current_identity["code_oid"]
             self.dashboard_tree_sha256 = current_identity["tree_sha256"]
@@ -1986,7 +2162,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     cycle += 1
                     time.sleep(1)
 
-                    if self.server.projection_store is not None:
+                    if (
+                        self.server.projection_store is not None
+                        and cycle % POLL_INTERVAL_SECONDS == 0
+                    ):
                         try:
                             current_revision = self.server.projection_revision()
                             stream_projection_status = "BOUND_FRESH"
@@ -2019,7 +2198,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         except (ValueError, TypeError):
                             stream_projection_status = "ARTIFACT_INVALID"
                             stream_projection_error = "projection_artifact_invalid"
-                    elif active_snap_file and active_snap_file.is_file():
+                    elif (
+                        self.server.projection_store is None
+                        and active_snap_file
+                        and active_snap_file.is_file()
+                    ):
                         try:
                             cur_mtime = active_snap_file.stat().st_mtime_ns
                             if cur_mtime != last_mtime:
@@ -2048,10 +2231,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         except (OSError, ValueError, TypeError):
                             pass
 
-                    if cycle % 4 == 0:
+                    if cycle % POLL_INTERVAL_SECONDS == 0:
                         pulse = {
                             'type': 'telemetry_pulse',
-                            'cycle': cycle // 4,
+                            'cycle': cycle // POLL_INTERVAL_SECONDS,
                             'timestamp': utc_now(),
                             'status': stream_projection_status,
                             'state_revision': last_revision_id,
@@ -2062,6 +2245,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError, OSError):
                 pass
+            finally:
+                self.close_connection = True
             return
         elif route.path == '/api/v1/value/metrics':
             if self.server.projection_store is not None:
@@ -2730,6 +2915,9 @@ def make_server(port=DEFAULT_PORT, page_path=None, sources=None,
     )
     server.dashboard_identity_resolver = (
         resolve_dashboard_code_identity if auto_code_identity else None
+    )
+    server.dashboard_identity_cache = (
+        DashboardCodeIdentityCache() if auto_code_identity else None
     )
     if auto_code_identity:
         code_identity = resolve_dashboard_code_identity()
