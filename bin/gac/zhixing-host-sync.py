@@ -71,6 +71,7 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("orchestrator.py", "orchestrator.py.asset"),
     ("collectors/portfolio.py", "portfolio_collector.py.asset"),
     ("strategy_projection.py", "strategy_projection.py.asset"),
+    ("collectors/agent_brief.py", "agent_brief_collector.py.asset"),
 )
 
 # check() 每次运行把漂移结果结构化写入部署目录的此文件 (原子写), 供 launchd

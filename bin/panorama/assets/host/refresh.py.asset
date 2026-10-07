@@ -198,6 +198,8 @@ def run_cmd(argv, timeout=18, json_output=True, allow_nonzero=False, strip=True)
 
 def project_bet(bet):
     """Expose declarations and evidence identities, not commands or free-form proofs."""
+    if not isinstance(bet, dict):
+        return {}
     def ref(value):
         if not isinstance(value, str):
             return None
@@ -214,7 +216,12 @@ def project_bet(bet):
 
     scalar_fields = ("id", "title", "goal", "status", "appetite", "owner", "track", "window", "priority",
                      "workflow", "done_at", "started_at", "parent_bet_id")
+    from datetime import date
     result = {k: ref(bet.get(k)) for k in scalar_fields}
+    for key in ("started_at", "done_at"):
+        if isinstance(bet.get(key), date):
+            result[key] = bet[key].isoformat()
+    result["depends_on_declared"] = "depends_on" in bet
     gate = bet.get("human_gate")
     result["human_gate"] = gate if isinstance(gate, bool) else ref(gate)
     result["depends_on"] = refs(bet.get("depends_on"))
@@ -279,8 +286,7 @@ def project_bet(bet):
                 "reference_scope": "bounded-explicit-ref-fields-only", "reference_limit": 80, "traversal_limit": 1000}
     return result
 
-def probe_portfolio():
-    import yaml
+def project_portfolio_payload(raw, ledger, source):
     def text(value):
         if not isinstance(value, str):
             return None
@@ -335,8 +341,6 @@ def probe_portfolio():
             "exit_gate": {"all_required_bets_terminal": gate.get("all_required_bets_terminal") if isinstance(gate.get("all_required_bets_terminal"), bool) else None,
                 "all_required_krs_proven": gate.get("all_required_krs_proven") if isinstance(gate.get("all_required_krs_proven"), bool) else None,
                 "p0_guardrail_breaches": number(gate.get("p0_guardrail_breaches"))}}
-    from collectors.portfolio import read_portfolio_source
-    raw, ledger, source = read_portfolio_source()
     bets = ledger["bets"]
     projected_bets = [project_bet(b) for b in bets if isinstance(b, dict)]
     open_bets = [b for b in projected_bets if b.get("status") not in ("done", "failed")]
@@ -356,6 +360,11 @@ def probe_portfolio():
             "coverage": {"nonterminal": len(open_bets), "canonical_complete": sum(complete(b) for b in open_bets),
                          "canonical_path": "bets[].portfolio_binding.{campaign_ref,objective_refs,kr_refs}",
                          "sha256": digest(raw)} }
+
+def probe_portfolio():
+    from collectors.portfolio import read_portfolio_source
+    raw, ledger, source = read_portfolio_source()
+    return project_portfolio_payload(raw, ledger, source)
 
 def probe_workflow():
     import yaml
@@ -828,106 +837,86 @@ def probe_catalog():
     return collect_catalog()
 
 def generate_dynamic_gantt(portfolio):
-    """Generate dynamic Gantt chart lanes from real BET ledger records instead of static dead files."""
-    if not isinstance(portfolio, dict):
+    """Project declared Ledger dates; this view never authorizes execution."""
+    if not isinstance(portfolio, dict) or not isinstance(portfolio.get("bet_records"), list):
         return None
-    bets = portfolio.get("bet_records", [])
-    if not bets:
+    if not portfolio.get("sha") or not portfolio.get("ledger_sha256") or not portfolio.get("observed_at"):
         return None
-
-    TRACK_NAMES = {
-        "T1": "T1 治理架构 (Governance)",
-        "T2": "T2 基础设施 (Infra & Runtime)",
-        "T3": "T3 认知OS与知识 (Cognitive & KOS)",
-        "T4": "T4 业务场景与工作流 (Scene & Journey)",
-        "T5": "T5 蜂群智能体 (Swarm & A2A)",
-        "T6": "T6 门禁与安全 (GaC & Guardrails)",
-        "T7": "T7 评估与回溯 (Eval & Retros)",
-        "T8": "T8 交互界面与控制台 (Surface & Cockpit)",
-        "T9": "T9 异构算力网格 (Compute & Fabric)",
-        "T10": "T10 体系总成与演练 (Integration & Drills)"
-    }
-    
-    lanes_dict = {}
-    for bet in bets:
+    from datetime import date
+    def declared_date(value, key, diagnostics):
+        if value is None:
+            return None
+        try:
+            if not isinstance(value, str):
+                raise ValueError("date must be a string")
+            if len(value) == 10:
+                return date.fromisoformat(value).isoformat()
+            if len(value) <= 10 or value[10] not in ("T", "t", " "):
+                raise ValueError("invalid ISO date/datetime")
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).date().isoformat()
+        except ValueError:
+            diagnostics.append("invalid_" + key)
+            return None
+    lanes, dates = {}, []
+    for bet in portfolio["bet_records"]:
         if not isinstance(bet, dict):
             continue
-        raw_track = str(bet.get("track") or "T1-GOV").upper()
-        matched_prefix = "T1"
-        for pfx in ("T10", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9"):
-            if raw_track.startswith(pfx) or f"-{pfx}-" in f"-{raw_track}-":
-                matched_prefix = pfx
-                break
-        
-        lane_id = matched_prefix
-        lane_name = TRACK_NAMES.get(matched_prefix, f"{matched_prefix} 交付泳道")
-        if lane_id not in lanes_dict:
-            lanes_dict[lane_id] = {
-                "lane_id": lane_id,
-                "owner_role": lane_name,
-                "items": []
-            }
-        
-        bet_id = bet.get("id") or "BET-UNKNOWN"
-        status = bet.get("status") or "proposed"
-        started_at = bet.get("started_at")
-        done_at = bet.get("done_at")
-        
-        if started_at and len(str(started_at)) >= 10:
-            start_date = str(started_at)[:10]
-        else:
-            start_date = "2026-09-08"
-            
-        if done_at and len(str(done_at)) >= 10:
-            end_date = str(done_at)[:10]
-        else:
-            if status in ("done", "complete", "resolved"):
-                end_date = start_date
-            else:
-                end_date = "2026-09-30"
-        
-        if start_date > end_date:
-            start_date, end_date = end_date, start_date
-            
-        gantt_status = "evidence-window" if status in ("done", "complete", "resolved") else ("active" if status in ("in_progress", "active") else "proposed")
-        done_count = bet.get("done_when_count", 0)
-        verify_count = bet.get("verify_count", 0)
-        goal = bet.get("goal") or "交付并通过验证"
-        exit_cond = f"{goal} (包含 {done_count} 项验收条件, {verify_count} 项核验步骤)" if done_count or verify_count else goal
-        
-        item = {
-            "key": bet_id,
-            "title": bet.get("title") or bet_id,
-            "start": start_date,
-            "end": end_date,
-            "status": gantt_status,
-            "execution_mode": bet.get("workflow") or "agent_execution",
-            "writer_equivalent": 1,
-            "depends_on": bet.get("depends_on") or [],
-            "readiness_gate": "Gate A1-A8 准入" if bet.get("human_gate") else "直接执行",
-            "exit": exit_cond[:200]
-        }
-        lanes_dict[lane_id]["items"].append(item)
+        track = bet.get("track") or "UNKNOWN"
+        lane = lanes.setdefault(track, {"lane_id": track, "owner_role": "未声明 / Track 分类", "items": []})
+        errors = []
+        started = declared_date(bet.get("started_at"), "started_at", errors)
+        ended = declared_date(bet.get("done_at"), "done_at", errors)
+        if started and ended and started > ended:
+            errors.append("reversed_actual_dates")
+        dates.extend(d for d in (started, ended) if d)
+        status = bet.get("status") or "unknown"
+        lane["items"].append({
+            "key": bet.get("id"), "title": bet.get("title") or bet.get("id"),
+            "start": started, "end": ended, "status": status,
+            "date_semantics": "ledger_actual_date_declarations", "date_diagnostics": errors,
+            "owner": bet.get("owner"), "owner_role": bet.get("owner") or "未声明",
+            "execution_mode": bet.get("workflow"), "writer_equivalent": None,
+            "depends_on": bet.get("depends_on") if bet.get("depends_on_declared") else None,
+            "depends_on_declared": bet.get("depends_on_declared", False),
+            "readiness_gate": "声明需人工门禁；执行准入未核验" if bet.get("human_gate") is True else "执行准入未核验",
+            "exit": bet.get("goal"), "done_when_count": bet.get("done_when_count"),
+            "verify_count": bet.get("verify_count"), "window": bet.get("window"),
+            "appetite": bet.get("appetite"), "portfolio_binding": bet.get("portfolio_binding"),
+        })
+    return {"schema": "ledger-derived-gantt/v1", "state": portfolio.get("state", "UNKNOWN"),
+        "source": portfolio.get("source"), "sha": portfolio["sha"],
+        "ledger_sha256": portfolio["ledger_sha256"], "observed_at": portfolio["observed_at"],
+        "current_as_of": portfolio["observed_at"], "computed_at": now(),
+        "proof_scope": "ledger-declarations-only; not schedule approval or value proof",
+        "total": sum(len(l["items"]) for l in lanes.values()),
+        "first_100_days": {"window": {"start": min(dates) if dates else None,
+                                      "end": max(dates) if dates else None},
+                           "lanes": [lanes[k] for k in sorted(lanes)]}}
 
-    order = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10"]
-    sorted_lanes = []
-    for pfx in order:
-        if pfx in lanes_dict:
-            sorted_lanes.append(lanes_dict[pfx])
-    for k, v in lanes_dict.items():
-        if k not in order:
-            sorted_lanes.append(v)
-            
-    return {
-        "current_as_of": now(),
-        "first_100_days": {
-            "window": {
-                "start": "2026-09-01",
-                "end": "2026-12-31"
-            },
-            "lanes": sorted_lanes
-        }
-    }
+
+def integrate_gantt(data, previous=None):
+    """Bind the derived view to the preserved Portfolio source clock."""
+    portfolio = data.get("portfolio")
+    state = data.setdefault("source_states", {}).get("portfolio", {})
+    gantt = generate_dynamic_gantt(portfolio)
+    if gantt is not None:
+        health = state.get("status") or ("OK" if portfolio.get("state") == "OBSERVED" else "PARTIAL")
+        if health != "OK":
+            gantt["state"] = health
+        data["gantt"] = gantt
+        data["source_states"]["gantt"] = {"status": health,
+            "observed_at": gantt["observed_at"], "computed_at": gantt["computed_at"],
+            "source": gantt.get("source"), "sha": gantt["sha"], "sha256": gantt["ledger_sha256"],
+            "proof_scope": gantt["proof_scope"],
+            "last_success_at": gantt["observed_at"] if health == "OK" else None}
+    else:
+        cached = (previous or {}).get("gantt") or data.get("gantt")
+        if isinstance(cached, dict):
+            data["gantt"] = dict(cached, state="STALE_UNAVAILABLE")
+        data["source_states"]["gantt"] = {"status": "STALE_UNAVAILABLE" if cached else "UNAVAILABLE",
+            "observed_at": (cached or {}).get("observed_at"), "last_success_at": None,
+            "reason": "no coherent Portfolio identity for current Gantt"}
+
 
 def probe_strategy(root_resolver=None):
     from strategy_sources import collect_strategy_sources
@@ -1125,10 +1114,7 @@ def apply_results(previous, results, attempted_at):
         for key in ("roadmap", "contract", "gantt"):
             if key in values["documents"]:
                 data[key] = copy.deepcopy(values["documents"][key])
-    if "portfolio" in values and isinstance(values["portfolio"], dict):
-        dynamic_gantt = generate_dynamic_gantt(values["portfolio"])
-        if dynamic_gantt:
-            data["gantt"] = dynamic_gantt
+    integrate_gantt(data, previous)
     if "catalog" in values:
         data["catalog"] = values["catalog"]
     if "reference_cell" in values:

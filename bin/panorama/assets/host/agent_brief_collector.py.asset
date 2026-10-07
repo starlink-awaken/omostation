@@ -1,0 +1,58 @@
+"""Agent Brief collector — reads the previous bound publication as advisory feedback.
+
+Provides:
+- agent_visibility: Gate pass ratios and system health
+- next_actions: Prioritized next 3 actionable tasks
+- safety_boundaries: Active sovereign safety rails
+"""
+
+from __future__ import annotations
+
+import json
+
+from collectors.base import DataCollector, CollectionError
+from collectors.registry import register
+
+@register("agent_brief", timeout=10)
+class AgentBriefCollector(DataCollector):
+    """Collects hash-verified previous publication feedback, not current authority."""
+
+    name = "agent_brief"
+
+    def collect(self) -> dict:
+        # A previous bound output is an advisory read, never this round's
+        # Ledger facts. The native publisher derives the current Brief after
+        # assembling its coherent Portfolio and final value binding.
+        from runtime_paths import ProjectionRevisionStore, resolve_state_root
+        import hashlib
+        try:
+            revision = ProjectionRevisionStore(resolve_state_root()).load(require_fresh=True)
+            body = revision.artifact_bodies["agent_brief"]
+            raw = json.loads(body)
+            if not isinstance(raw, dict) or raw.get("schema") != "panorama-agent-brief/v1":
+                raise ValueError("bound Agent Brief schema unavailable")
+        except Exception as exc:
+            raise CollectionError("agent_brief", "Bound previous Agent Brief unavailable: " + str(exc)) from exc
+        return {
+            "available": raw.get("available") is True,
+            "agent_visibility": raw.get("health") if isinstance(raw.get("health"), dict) else {},
+            "next_actions": raw.get("next_actions") if isinstance(raw.get("next_actions"), list) else [],
+            "safety_boundaries": raw.get("safety_boundaries") if isinstance(raw.get("safety_boundaries"), list) else [],
+            "observed_at": raw.get("generated_at") or raw.get("observed_at"),
+            "proof_scope": "previous-bound-publication-advisory-only",
+            "current_action_authority": False,
+            "source": "projection://" + revision.revision_id + "/agent_brief",
+            "sha256": hashlib.sha256(body).hexdigest(),
+            "revision_id": revision.revision_id,
+            "producer_root_oid": revision.producer_root_oid,
+        }
+
+    def validate(self, data: dict) -> bool:
+        """Validate well-formed agent brief payload."""
+        if not isinstance(data, dict):
+            return False
+        return (
+            "agent_visibility" in data
+            and isinstance(data.get("next_actions"), list)
+            and isinstance(data.get("safety_boundaries"), list)
+        )

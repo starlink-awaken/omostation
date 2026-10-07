@@ -233,28 +233,8 @@ class PortfolioCollector(DataCollector):
 
     def collect(self) -> dict:
         raw, ledger, source = read_portfolio_source()
-        bets = ledger["bets"]
-
-        projected_bets = [self._project_bet(b) for b in bets if isinstance(b, dict)]
-        open_bets = [b for b in projected_bets if b.get("status") not in ("done", "failed")]
-
-        return {
-            **source,
-            "actual": len(projected_bets),
-            "declared": ledger.get("meta", {}).get("total_bets"),
-            "counts": dict(Counter(b.get("status", "unknown") for b in projected_bets)),
-            "nonterminal": open_bets,
-            "bet_records": projected_bets,
-            "vision": self._project_vision(ledger.get("vision")),
-            "objectives": [o for o in [self._project_objective(i) for i in (ledger.get("objectives") or [])[:30]] if o is not None],
-            "campaigns": [c for c in [self._project_campaign(i) for i in (ledger.get("campaigns") or [])[:30]] if c is not None],
-            "milestones": [m for m in [self._project_milestone(i) for i in (ledger.get("milestones") or [])[:100]] if m is not None],
-            "coverage": {
-                "nonterminal": len(open_bets),
-                "canonical_complete": sum(1 for b in open_bets if self._is_complete(b)),
-                "sha256": _digest(raw),
-            },
-        }
+        from refresh import project_portfolio_payload
+        return project_portfolio_payload(raw, ledger, source)
 
     def validate(self, data: dict) -> bool:
         """Validate portfolio data has required structure."""
@@ -268,15 +248,8 @@ class PortfolioCollector(DataCollector):
 
     @staticmethod
     def _project_bet(bet: dict) -> dict:
-        if not isinstance(bet, dict):
-            return {}
-        return {
-            "id": bet.get("id"),
-            "title": bet.get("title"),
-            "status": bet.get("status", "unknown"),
-            "track": bet.get("track"),
-            "appetite": bet.get("appetite"),
-        }
+        from refresh import project_bet
+        return project_bet(bet)
 
     @staticmethod
     def _project_vision(value) -> dict:
