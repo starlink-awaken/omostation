@@ -63,6 +63,10 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     # 直连 oMLX :8000 且无鉴权; 已改经 aetherforge 门面。
     ("copilot_service.py", "copilot_service.py.asset"),
     ("rag_engine.py", "rag_engine.py.asset"),
+    ("strategy_sources.py", "strategy_sources.py.asset"),
+    ("collectors/strategy.py", "strategy_collector.py.asset"),
+    ("collectors/documents.py", "documents_collector.py.asset"),
+    ("orchestrator.py", "orchestrator.py.asset"),
 )
 
 # check() 每次运行把漂移结果结构化写入部署目录的此文件 (原子写), 供 launchd
