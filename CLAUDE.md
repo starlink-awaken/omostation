@@ -48,6 +48,7 @@ Load context before changing code or governed state. Two phases — run Step A w
 > You are equipped with `mcp-server-kos` as your external read-only hard drive.
 > To align your mental model and avoid historical architectural regressions, run this KOS query sequence:
 >
+> 0. **BET spec 起草前置检索（BET-Y2Q4-T4-07 强制）**：起草任何 BET spec 前，先跑 `kos-cli search <关键词>` 查找先例——如果命中 ≥1 条相关记录，在 spec 的「KOS 先例」节引用（避免重复造轮子和声明/执行鸿沟）。
 > 1. **Query Current Decisions & Goals**:
 >    `mcp-server-kos::query_custom_sql(sql="SELECT doc_id, title, canonical_path FROM documents WHERE canonical_path LIKE '%BRIEF.md%' LIMIT 1")`
 >    Read the resulting BRIEF.md path. It carries active technical debts (needs-human) and X3 metrics.
