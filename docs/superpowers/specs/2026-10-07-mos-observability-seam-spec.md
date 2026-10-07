@@ -2,7 +2,7 @@
 schema_version: specification/v1
 spec_version: 1.0.0
 title: ADR-0464 盲区一观测缝 — MOS 默认配置真实执行观测 + surface gate 去 phase10 活性代理
-bet_id: BET-Y2Q4-T10-233
+bet_id: BET-Y2Q4-T10-234
 status: accepted
 lifecycle: contract
 owner: governance-team
