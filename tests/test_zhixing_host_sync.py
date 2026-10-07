@@ -14,6 +14,24 @@ from pathlib import Path
 
 TOOL = Path(__file__).resolve().parents[1] / "bin/gac/zhixing-host-sync.py"
 
+# The fixture contract is explicit and independent of HOST_FILES, so accidentally
+# dropping a production mapping cannot make capture/restore tests silently pass.
+EXPECTED_FILES = {
+    "template.html": "template.html",
+    "refresh.py": "refresh.py.asset",
+    "live_server.py": "live_server.py.asset",
+    "observatory_query.py": "observatory_query.py.asset",
+    "panorama-collect-main.py": "panorama-collect-main.py.asset",
+    "copilot_service.py": "copilot_service.py.asset",
+    "rag_engine.py": "rag_engine.py.asset",
+    "strategy_sources.py": "strategy_sources.py.asset",
+    "collectors/strategy.py": "strategy_collector.py.asset",
+    "collectors/documents.py": "documents_collector.py.asset",
+    "collectors/workflow.py": "workflow_collector.py.asset",
+    "collectors/scheduler.py": "scheduler_collector.py.asset",
+    "orchestrator.py": "orchestrator.py.asset",
+}
+
 
 def _load():
     spec = importlib.util.spec_from_file_location("zhixing_host_sync", TOOL)
@@ -45,6 +63,11 @@ def _seed_deploy(dash: Path, *, template: str = "<html>live</html>\n",
     (dash / "live_server.py").write_text(live_server, encoding="utf-8")
     (dash / "observatory_query.py").write_text(observatory_query, encoding="utf-8")
     (dash / "panorama-collect-main.py").write_text(panorama_collector, encoding="utf-8")
+    for name in EXPECTED_FILES:
+        target = dash / name
+        if not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(f"# fixture for {name}\n", encoding="utf-8")
 
 
 def _seed_repo(host: Path, *, template: str, refresh: str,
@@ -58,6 +81,10 @@ def _seed_repo(host: Path, *, template: str, refresh: str,
     (host / "live_server.py.asset").write_text(live_server, encoding="utf-8")
     (host / "observatory_query.py.asset").write_text(observatory_query, encoding="utf-8")
     (host / "panorama-collect-main.py.asset").write_text(panorama_collector, encoding="utf-8")
+    for name in EXPECTED_FILES.values():
+        target = host / name
+        if not target.exists():
+            target.write_text(f"# repo fixture for {name}\n", encoding="utf-8")
 
 
 # ── 未版本化检测 ─────────────────────────────────────────
@@ -68,7 +95,7 @@ def test_status_reports_missing_repo_copy(tmp_path):
     _seed_deploy(dash)
     tool = _load()
     info = tool.status(dashboard_dir=dash, host_dir=host)
-    assert info["missing_repo_copy"] == 5
+    assert info["missing_repo_copy"] == len(EXPECTED_FILES)
     assert info["ok"] is False
     assert {f["state"] for f in info["files"]} == {"no_repo_copy"}
     # 仍能报告线上 sha (便于人工确认捕获对象)
@@ -91,13 +118,9 @@ def test_capture_versions_deploy_files(tmp_path):
     tool = _load()
     r = tool.capture(dashboard_dir=dash, host_dir=host)
     assert r["ok"] is True
-    assert {c["name"] for c in r["captured"]} == {
-        "template.html",
-        "refresh.py",
-        "live_server.py",
-        "observatory_query.py",
-        "panorama-collect-main.py",
-    }
+    assert {c["name"] for c in r["captured"]} == set(EXPECTED_FILES)
+    for deploy_name, repo_name in EXPECTED_FILES.items():
+        assert (host / repo_name).read_bytes() == (dash / deploy_name).read_bytes()
     assert (host / "template.html").read_bytes() == (dash / "template.html").read_bytes()
     # refresh.py 以 .asset 后缀纳管 (避开 script-registry 脚本治理面)
     assert (host / "refresh.py.asset").read_bytes() == (dash / "refresh.py").read_bytes()
@@ -221,19 +244,29 @@ def test_host_files_scope_includes_server_and_excludes_data():
     """纳管范围只含宿主文件; 排除数据/产物; 且仓库名不得是 .py/.sh (避开脚本治理面)."""
     tool = _load()
     deploy_names = {d for d, _ in tool.HOST_FILES}
-    assert deploy_names == {
-        "template.html",
-        "refresh.py",
-        "live_server.py",
-        "observatory_query.py",
-        "panorama-collect-main.py",
-    }
+    assert dict(tool.HOST_FILES) == EXPECTED_FILES
+    assert len(tool.HOST_FILES) == len(EXPECTED_FILES)
     for _, repo_name in tool.HOST_FILES:
         assert not repo_name.endswith((".py", ".sh")), (
             f"{repo_name} 会被 script-registry/bin-quota 视为脚本 —— 应加 .asset 后缀"
         )
     for banned in ("index.html", "current.json", "previous-snapshot.json"):
         assert banned not in deploy_names
+
+
+def test_nested_collector_restore_keeps_backup(tmp_path):
+    dash, host = _dirs(tmp_path)
+    _seed_deploy(dash)
+    tool = _load()
+    tool.capture(dashboard_dir=dash, host_dir=host)
+    collector = dash / "collectors/workflow.py"
+    expected = collector.read_bytes()
+    collector.write_text("# changed collector\n", encoding="utf-8")
+    assert tool.status(dashboard_dir=dash, host_dir=host)["drifted"] == 1
+    result = tool.restore(force=True, dashboard_dir=dash, host_dir=host)
+    assert result["restored"] == ["collectors/workflow.py"]
+    assert collector.read_bytes() == expected
+    assert collector.with_name("workflow.py.before-restore").read_text() == "# changed collector\n"
 
 
 def test_real_repo_server_assets_have_no_static_credentials():

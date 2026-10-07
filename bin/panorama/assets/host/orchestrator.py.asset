@@ -11,6 +11,8 @@ This is the new entry point for data collection. It:
 from __future__ import annotations
 
 import copy
+import hashlib
+import subprocess
 import json
 import logging
 import os
@@ -27,7 +29,7 @@ sys.path.insert(0, str(APP))
 from collectors.base import DataCollector, CollectionError
 from collectors.registry import CollectorRegistry, get_registry, COLLECTORS
 from models.schema import validate_data
-from runtime_paths import CODE_ROOT, STATE_ROOT, legacy_doc_publication_enabled
+from runtime_paths import CODE_ROOT, STATE_ROOT, ProjectionRevisionStore, legacy_doc_publication_enabled
 
 # Import all collectors to trigger registration
 import collectors.portfolio  # noqa: F401
@@ -94,7 +96,7 @@ class RefreshOrchestrator:
         collectors = self.registry.all()
         results: list[tuple[str, dict | None, str | None]] = []
         with ThreadPoolExecutor(max_workers=self.max_workers) as pool:
-            futures = {pool.submit(c.run): c for c in collectors}
+            futures = {pool.submit(self._run_collector, c): c for c in collectors}
             for future in as_completed(futures):
                 c = futures[future]
                 try:
@@ -104,19 +106,78 @@ class RefreshOrchestrator:
                     results.append((c.name, None, f"Execution error or timeout: {exc}"))
         return results
 
+    @staticmethod
+    def _run_collector(collector):
+        if collector.name != "personal_value_truth":
+            return collector.run()
+        try:
+            from repo_root import state_root
+            locator = os.environ.get("PANORAMA_CODE_ROOT")
+            if not locator or not Path(locator).expanduser().is_absolute():
+                raise ValueError("managed_code_root_unavailable")
+            producer_root = Path(locator).expanduser().resolve()
+            ledger_root = Path(state_root()).resolve()
+            configured_state = os.environ.get("PANORAMA_ROOT")
+            if configured_state and Path(configured_state).expanduser().resolve() != ledger_root:
+                raise ValueError("managed_state_root_mismatch")
+            # Reload the hash/schema-bound publication each round. Its code pin
+            # is not the current HEAD and remains guarded after producer FF.
+            revision = ProjectionRevisionStore(STATE_ROOT).load()
+            producer_collector = producer_root / "bin/panorama/panorama-collect.py"
+            if hashlib.sha256(producer_collector.read_bytes()).hexdigest() != revision.collector_sha256:
+                raise ValueError("managed_collector_digest_mismatch")
+            cleanliness = subprocess.run(
+                ["git", "-C", str(producer_root), "status", "--porcelain", "--untracked-files=no"],
+                capture_output=True, text=True, timeout=10, check=False,
+            )
+            if cleanliness.returncode != 0:
+                raise ValueError("managed_code_cleanliness_unavailable")
+            if cleanliness.stdout.strip():
+                raise ValueError("managed_code_root_dirty")
+            meter = producer_root / "bin/bc-os/north_star_meter_v2.py"
+            if hashlib.sha256(meter.read_bytes()).hexdigest() != revision.value_meter_sha256:
+                raise ValueError("managed_value_meter_digest_mismatch")
+            pin = subprocess.run(
+                ["git", "-C", str(producer_root), "rev-parse", "HEAD:projects/omo"],
+                capture_output=True, text=True, timeout=10, check=False,
+            )
+            if pin.returncode != 0 or pin.stdout.strip() != revision.omo_gitlink_oid:
+                raise ValueError("managed_omo_gitlink_mismatch")
+            bound = personal_value.PersonalValueCollector(
+                code_root=producer_root, workspace_root=ledger_root,
+                expected_revision=revision.producer_root_oid,
+            )
+            name, value, error = bound.run()
+            if isinstance(value, dict):
+                value["observed_at"] = (value.get("value_truth") or {}).get("observed_at")
+            return name, value, error
+        except Exception as exc:
+            reason = getattr(exc, "public_error", None) or str(exc) or type(exc).__name__
+            return collector.name, personal_value.unavailable_projection(reason), None
+
     def merge_results(self, previous: dict, results: list[tuple[str, dict | None, str | None]]) -> dict:
         """Merge collector results into the data blob."""
-        data = dict(previous)
+        data = copy.deepcopy(previous)
         states = data.setdefault("source_states", {})
         values = data.setdefault("live_sources", {})
         observed_at = now()
+        from refresh import source_health, prior_healthy_success, HEALTH_SEMANTICS
 
         for name, value, error in results:
             previous_state = states.get(name) if isinstance(states.get(name), dict) else {}
-            if name == "personal_value_truth" and (error or value is None):
-                value = personal_value.unavailable_projection(
-                    str(error or "collector returned no value")
-                )
+            prior_success = prior_healthy_success(previous_state, values.get(name))
+            if name == "personal_value_truth" and (error or value is None or value.get("available") is False):
+                cached = values.get(name) or data.get(name)
+                reason = str(error or (value or {}).get("reason") or "collector returned no value")
+                value = personal_value.unavailable_projection(reason)
+                if (isinstance(cached, dict) and isinstance(cached.get("value_truth"), dict)
+                        and cached["value_truth"].get("schema") == "value-truth-snapshot/v1"):
+                    value["value_truth"] = copy.deepcopy(cached["value_truth"])
+                    value["observed_at"] = cached.get("observed_at") or cached["value_truth"].get("observed_at")
+                    value["value_truth_state"] = "STALE_UNAVAILABLE"
+                    value["retained_value_truth"] = True
+                    value["panel_value"] = personal_value.project_panel_value(value["value_truth"])
+                    value["panel_value"]["state_reason"] = [reason, "retained historical ledger observation"]
                 values[name] = value
                 data[name] = value
                 previous_panel = data.get("panel_value")
@@ -130,19 +191,25 @@ class RefreshOrchestrator:
                 )
 
             if error or value is None:
-                state = {"status": "UNAVAILABLE", "error": error, "observed_at": observed_at}
-                if previous_state.get("last_success_at"):
-                    state["status"] = "STALE_UNAVAILABLE"
-                    state["last_success_at"] = previous_state["last_success_at"]
-                states[name] = state
-            else:
-                reported = value.get("state") if isinstance(value, dict) else None
-                incomplete = reported in {"PARTIAL", "DEGRADED", "UNAVAILABLE", "STALE_UNAVAILABLE", "ERROR", "UNPROVABLE", "UNKNOWN"}
+                cached = values.get(name) if isinstance(values.get(name), dict) else {}
                 states[name] = {
-                    "status": reported if incomplete else "OK",
-                    "observed_at": value.get("observed_at", observed_at) if isinstance(value, dict) else observed_at,
-                    "last_attempt_at": observed_at,
-                    "last_success_at": previous_state.get("last_success_at") if incomplete else observed_at,
+                    "status": "STALE_UNAVAILABLE" if cached else "UNAVAILABLE", "error": error,
+                    "observed_at": cached.get("observed_at") or previous_state.get("observed_at"),
+                    "last_attempt_at": observed_at, "last_success_at": prior_success,
+                    "last_success_status": "KNOWN" if prior_success else "UNKNOWN",
+                    "health_semantics": HEALTH_SEMANTICS,
+                }
+                if "last_success_at" not in previous_state:
+                    states[name].pop("last_success_at", None)
+            else:
+                status = source_health(value)
+                source_observed = value.get("observed_at")
+                success = source_observed if status == "OK" else prior_success
+                states[name] = {
+                    "status": status, "observed_at": source_observed,
+                    "last_attempt_at": observed_at, "last_success_at": success,
+                    "last_success_status": "KNOWN" if success else "UNKNOWN",
+                    "health_semantics": HEALTH_SEMANTICS,
                 }
                 values[name] = value
                 if name == "documents" and isinstance(value, dict):
@@ -166,6 +233,12 @@ class RefreshOrchestrator:
                         data["panel_value"] = personal_value.project_panel_value(
                             value.get("value_truth"), advisory
                         )
+
+        current_value = data.get("personal_value_truth")
+        if (isinstance(current_value, dict) and current_value.get("available") is False
+                and isinstance(data.get("panel_value"), dict) and data["panel_value"].get("state") == "proven"):
+            data["panel_value"]["state"] = "unprovable"
+            data["panel_value"].setdefault("state_reason", []).append(current_value.get("reason"))
 
         data["generated_at"] = observed_at
         # Revision-bound generation + strategic projection — both are required by
@@ -292,7 +365,7 @@ class RefreshOrchestrator:
         states = data.get("source_states", {})
         if not states:
             return "UNKNOWN"
-        failed = sum(1 for s in states.values() if s.get("status") in {"UNAVAILABLE", "STALE_UNAVAILABLE", "ERROR", "UNPROVABLE", "UNKNOWN"})
+        failed = sum(1 for s in states.values() if s.get("status") in {"UNAVAILABLE", "STALE_UNAVAILABLE", "ERROR", "FAIL", "FAILED", "UNPROVABLE", "UNKNOWN"})
         total = len(states)
         if failed == 0:
             if any(s.get("status") == "DEGRADED" for s in states.values()):
