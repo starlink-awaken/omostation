@@ -2,6 +2,10 @@
 """CR-X4-MEMORY-OS-SURFACE-INTEGRITY: Memory OS light gate (blocking).
 
 Validates SSOT files, env keys, ports, CLI/smoke surfaces, and help catalog test.
+Also runs an ADVISORY (WARN-only) execution-seam check (ADR-0464 blind spot 1):
+it reads <state-root>/runtime/mos/observations.jsonl to see whether a REAL
+(non-fixture) MOS recall has been observed, instead of trusting the registry's
+`status: phase10` declaration as a liveness proof.
 Exit 0 = pass; exit 1 = hard fail (CI / make memory-os-check).
 """
 
@@ -110,15 +114,70 @@ def check_registry_ssot() -> list[str]:
     text = _read(".omo/_truth/registry/memory-os.yaml")
     if text is None:
         return ["memory-os.yaml unreadable"]
+    # Structural SSOT markers only. The former literal "phase10" needle was a
+    # LIVENESS PROXY: the registry can declare phase10 while every production
+    # backend defaults OFF (ADR-0464 blind spot 1). Liveness is now observed by
+    # the seam check below, not asserted from a declaration marker.
     for needle in (
         "id: memory-os",
         "surface_check:",
         "bos://memory/mos/",
-        "phase10",
     ):
         if needle not in text:
             errs.append(f"memory-os.yaml missing marker: {needle}")
     return errs
+
+
+def check_default_execution_seam() -> list[str]:
+    """ADVISORY (WARN) — ADR-0464 blind spot 1: inert-by-default.
+
+    Asserts observable evidence that the capability has executed a REAL
+    (non-fixture) recall under DEFAULT configuration, read from the append-only
+    seam file <state-root>/runtime/mos/observations.jsonl (written by
+    `mos.observations.record_real_execution`, resolved at call time here via
+    bin/lib/repo_root.py:state_root()).
+
+    Shipped as WARN, never a hard error:
+      - the seam is new, so no real execution may be recorded yet;
+      - a hard error here would be a false red on every clean checkout / CI.
+    Promotion path to ERROR (do NOT enable yet): once a baseline record is
+    observed in production and committed as evidence for the owning BET, flip
+    the "no real execution observed" branch to a hard error AND add a freshness
+    window (last default-env record older than N days => FAIL).
+    """
+    try:
+        lib = Path(__file__).resolve().parents[1] / "lib"
+        if str(lib) not in sys.path:
+            sys.path.insert(0, str(lib))
+        from repo_root import state_root  # noqa: E402 — call-time import by design (ADR-0456)
+
+        seam = state_root() / "runtime" / "mos" / "observations.jsonl"
+    except Exception as exc:  # pragma: no cover - resolver is present in-repo
+        return [f"ADR-0464 execution seam: resolver unavailable ({exc}); advisory skipped"]
+
+    if not seam.is_file():
+        return [
+            "ADR-0464 execution seam: no real (non-fixture) MOS execution has been observed "
+            f"({seam}); registry 'status: phase10' is a declaration, not liveness. "
+            "ADVISORY — promote to ERROR once a baseline record exists."
+        ]
+    try:
+        lines = [ln for ln in seam.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        records = [json.loads(ln) for ln in lines]
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"ADR-0464 execution seam: observation file unreadable ({exc}); advisory skipped"]
+    real = [r for r in records if isinstance(r, dict) and r.get("data_mode") in ("live", "mixed")]
+    if not real:
+        return [
+            "ADR-0464 execution seam: observation file present but contains no real (non-fixture) "
+            "execution; the capability is still inert under default config. ADVISORY."
+        ]
+    if not any(r.get("default_env") is True for r in real):
+        return [
+            "ADR-0464 execution seam: real executions recorded ONLY under explicit live overrides "
+            "(default_env=false); execution under DEFAULT configuration remains unproven. ADVISORY."
+        ]
+    return []
 
 
 def check_help_catalog_mentions_memory() -> list[str]:
@@ -159,6 +218,10 @@ def _collect() -> tuple[list[tuple[str, str]], list[str]]:
         hard.extend(("cockpit_env", msg) for msg in cockpit_env)
     else:
         soft.extend(cockpit_env)
+
+    # ADR-0464 blind spot 1 — advisory only (never hard): the seam is new and a
+    # hard error would be a false red before any real execution is recorded.
+    soft.extend(check_default_execution_seam())
 
     return hard, soft
 

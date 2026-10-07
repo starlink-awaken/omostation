@@ -13,6 +13,13 @@ env_example: docs/operations/memory-os.env.example
 skill: .agents/skills/memory-recall/SKILL.md
 package_readme: projects/knowledge/kairon/packages/mos/README.md
 surface_check: bin/gac/check-memory-os-surfaces.py
+execution_seam:
+  observations: runtime/mos/observations.jsonl
+  writer: projects/knowledge/kairon/packages/mos/src/mos/observations.py
+  reader: bin/gac/check-memory-os-surfaces.py (advisory WARN)
+  note: ADR-0464 blind spot 1 (inert-by-default) — real (non-fixture) MOS
+    executions are appended here as JSONL; liveness is asserted from this file,
+    never from the `status` marker. Fixture-only runs write nothing.
 last_reviewed: '2026-09-30'
 phase10:
   neo4j_as_of: true
@@ -22,7 +29,8 @@ phase10:
   notes: capability deepen; defaults remain fixture-safe — NO env default changed.
     status/recall now expose `data_mode` (live|mixed|fixture) + `fixture_backends`
     so a fixture/stub recall can never be mistaken for production data
-    (BET-Y2Q4-T3-04).
+    (BET-Y2Q4-T3-04). Liveness evidence lives in `execution_seam.observations`,
+    not in this `status` field (ADR-0464 blind spot 1).
 phase6:
   neo4j_writer: projects/knowledge/kairon/packages/mos/src/mos/neo4j_writer.py
   cockpit_panel: /memory
