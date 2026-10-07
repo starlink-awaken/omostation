@@ -66,6 +66,8 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("strategy_sources.py", "strategy_sources.py.asset"),
     ("collectors/strategy.py", "strategy_collector.py.asset"),
     ("collectors/documents.py", "documents_collector.py.asset"),
+    ("collectors/workflow.py", "workflow_collector.py.asset"),
+    ("collectors/scheduler.py", "scheduler_collector.py.asset"),
     ("orchestrator.py", "orchestrator.py.asset"),
 )
 

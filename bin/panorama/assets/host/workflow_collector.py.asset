@@ -1,0 +1,199 @@
+"""Workflow collector — reads agent workflow run data."""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+from collectors.base import DataCollector, CollectionError
+from collectors.registry import register
+
+DEFAULT_WORKSPACE_ROOT = Path("/Users/xiamingxing/Workspace")
+
+
+def workspace_root() -> Path:
+    """Resolve the one OMO workspace used by this collector."""
+    configured = os.environ.get("ZX_DASHBOARD_WORKSPACE_ROOT")
+    return Path(configured).expanduser().resolve() if configured else DEFAULT_WORKSPACE_ROOT
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+READ_ONLY_PROFILE = '(version 1) (allow default) (deny file-write*) (allow file-write* (literal "/dev/null")) (deny network*)'
+READ_ONLY_OBSERVER = r"""import importlib, json, os, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+if not root.is_absolute():
+    raise ValueError("workspace root must be absolute")
+root = root.resolve(strict=True)
+kernel = (root / "projects/omo/src").resolve(strict=True)
+sys.path.insert(0, str(kernel))
+from omo.workflow import core, diagnostics
+if Path(diagnostics.__file__).resolve().parent != kernel / "omo/workflow":
+    raise ValueError("observer kernel identity mismatch")
+registry = core.load_registry(root / ".omo/_truth/registry/agent-workflows")
+runner = dict(registry.get("runner") or {})
+owner = Path(str(runner.get("workspace_root") or root)).expanduser()
+if not owner.is_absolute():
+    owner = root / owner
+if owner.resolve(strict=True) != root:
+    raise ValueError("registry workspace identity mismatch")
+runner["workspace_root"] = str(root)
+for key, default in (("run_state_dir", ".omo/_delivery/agent-workflows/runs"),
+                     ("lock_state_dir", ".omo/_delivery/agent-workflows/locks"),
+                     ("ledger_path", ".omo/_delivery/agent-workflows/events.jsonl")):
+    declared = Path(str(runner.get(key) or default)).expanduser()
+    if not declared.is_absolute():
+        declared = root / declared
+    physical = declared.resolve(strict=True)
+    if (key == "ledger_path" and not physical.is_file()) or (key != "ledger_path" and not physical.is_dir()):
+        raise ValueError("unprovable observer path: " + key)
+    # Keep declared absolute paths, including genuine physical aliases, so
+    # native lock refs and reported source scopes retain their original meaning.
+    runner[key] = str(declared)
+registry["runner"] = runner
+# Temporary child-local seam: missing events remain truthful WARN, never healed.
+diagnostics.heal_ledger_for_run = lambda *args, **kwargs: False
+sys.exit(diagnostics.observe(registry, run_id=None, as_json=True))
+"""
+
+
+def _select_managed_python(root: Path) -> Path:
+    """Probe the trusted selector without loading the business observer."""
+    receipt = subprocess.run(
+        [str(root / "bin/gac/managed-python"), "probe", "--profile", "pyyaml", "--json"],
+        capture_output=True, text=True, timeout=10, cwd=root,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "GIT_OPTIONAL_LOCKS": "0"},
+    )
+    if receipt.returncode != 0:
+        raise CollectionError("workflow", "managed observer runtime probe failed")
+    obj = json.loads(receipt.stdout)
+    if (not isinstance(obj, dict) or obj.get("schema") != "managed-python-runtime-receipt/v1"
+            or obj.get("profile") != "pyyaml" or not isinstance(obj.get("provider"), str)
+            or not obj["provider"] or not isinstance(obj.get("capabilities"), list)
+            or not {"stdlib", "pyyaml"}.issubset(obj["capabilities"])
+            or not isinstance(obj.get("python_version"), list) or len(obj["python_version"]) != 3
+            or any(type(v) is not int for v in obj["python_version"])
+            or obj["python_version"][:2] < [3, 11]
+            or not isinstance(obj.get("executable"), str)):
+        raise CollectionError("workflow", "managed observer runtime receipt invalid")
+    executable = Path(obj["executable"])
+    if not executable.is_absolute() or not executable.is_file() or not os.access(executable, os.X_OK):
+        raise CollectionError("workflow", "managed observer executable unprovable")
+    return executable.resolve(strict=True)
+
+
+def readonly_observe_argv(root: Path) -> list[str]:
+    """Resolve managed Python, then isolate only the actual native observer."""
+    sandbox = Path("/usr/bin/sandbox-exec")
+    if not sandbox.is_file():
+        raise CollectionError("workflow", "read-only sandbox unavailable")
+    root = root.expanduser().resolve(strict=True)
+    executable = _select_managed_python(root)
+    return [str(sandbox), "-p", READ_ONLY_PROFILE, str(executable),
+            "-B", "-c", READ_ONLY_OBSERVER, str(root)]
+
+
+def _run_cmd(argv: list[str], timeout: int = 20, cwd: Path | None = None) -> str:
+    if (len(argv) != 8 or argv[:3] != ["/usr/bin/sandbox-exec", "-p", READ_ONLY_PROFILE]
+            or argv[4:7] != ["-B", "-c", READ_ONLY_OBSERVER]
+            or not Path(argv[3]).is_absolute()
+            or cwd is None or Path(argv[7]).resolve() != cwd.resolve()):
+        raise CollectionError("workflow", "unsupported diagnostic command")
+    result = subprocess.run(
+        argv, capture_output=True, text=True, timeout=timeout, cwd=cwd,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "GIT_OPTIONAL_LOCKS": "0"},
+    )
+    obj = parse_diagnostic(result.stdout, result.returncode)
+    return json.dumps(obj)
+
+
+def parse_diagnostic(raw: str | bytes, returncode: int) -> dict:
+    """Accept only this read-only command's structured health diagnostics."""
+    if returncode not in (0, 1):
+        raise CollectionError("workflow", f"diagnostic command exit {returncode}")
+    obj = json.loads(raw)
+    if not isinstance(obj, dict) or type(obj.get("ok")) is not bool:
+        raise CollectionError("workflow", "diagnostic schema invalid")
+    if (obj.get("decision") not in {"continue", "halt", "escalate"}
+            or obj["ok"] != (obj["decision"] == "continue")
+            or any(type(obj.get(k)) is not int or obj[k] < 0 for k in ("run_count", "lock_count"))
+            or not isinstance(obj.get("findings"), list)
+            or any(not isinstance(item, dict) for item in obj["findings"])):
+        raise CollectionError("workflow", "workflow observe schema invalid")
+    if obj["ok"] != (returncode == 0):
+        raise CollectionError("workflow", "diagnostic exit/health contradiction")
+    return {**obj, "command_exit_code": returncode}
+
+
+
+@register("workflow", timeout=48)
+class WorkflowCollector(DataCollector):
+    """Collects agent workflow run data."""
+
+    name = "workflow"
+
+    def collect(self) -> dict:
+        root = workspace_root()
+        try:
+            raw = _run_cmd(
+                readonly_observe_argv(root),
+                timeout=20,
+                cwd=root,
+            )
+            decoded = json.loads(raw)
+            obj = parse_diagnostic(raw, decoded.get("command_exit_code", 0) if isinstance(decoded, dict) else 0)
+        except Exception as exc:
+            raise CollectionError("workflow", f"workflow observe failed: {exc}")
+
+        run_count = obj["run_count"]
+        lock_count = obj["lock_count"]
+        findings = obj["findings"]
+
+        run_dir = root / ".omo/_delivery/agent-workflows/runs"
+        runs = []
+        if run_dir.is_dir():
+            run_files = sorted(run_dir.glob("*.yaml"))
+            if len(run_files) > 2000:
+                raise CollectionError("workflow", "Workflow run inventory exceeds budget (2000)")
+            for run_file in run_files[:2000]:
+                try:
+                    import yaml
+                    data = yaml.safe_load(run_file.read_text(encoding="utf-8"))
+                    if isinstance(data, dict):
+                        runs.append(
+                            {
+                                "id": data.get("id") or data.get("run_id"),
+                                "status": data.get("status", "unknown"),
+                                "started_at": data.get("started_at"),
+                                "completed_at": data.get("completed_at"),
+                            }
+                        )
+                except Exception:
+                    continue
+
+        return {
+            **obj,
+            "state": "OBSERVED" if obj["ok"] else "DEGRADED",
+            "run_count": run_count,
+            "lock_count": lock_count,
+            "findings": findings if isinstance(findings, list) else [],
+            "runs": runs,
+            "observer_mode": "native-report-no-heal-deny-write",
+            "proof_scope": "single-declared-workspace-storage; process liveness and global worktrees unproved",
+            "observed_at": _now(),
+        }
+
+    def validate(self, data: dict) -> bool:
+        if not isinstance(data.get("run_count"), int):
+            return False
+        if not isinstance(data.get("lock_count"), int):
+            return False
+        if not isinstance(data.get("findings"), list):
+            return False
+        return True

@@ -388,11 +388,8 @@ def probe_workflow():
     # The Dashboard needs the read-only observer plane, not the full status
     # command's Git/claim/health work. The latter is a write-admission check and
     # can exceed the collector budget in a busy shared Workspace.
-    obj = run_cmd([PYTHON, "-B", "bin/agent-workflow.py", "observe", "--json"], timeout=20)
-    if (obj.get("ok") is not True or obj.get("decision") not in {"continue", "halt"}
-            or not all(isinstance(obj.get(k), int) for k in ("run_count", "lock_count"))
-            or not isinstance(obj.get("findings"), list)):
-        raise ValueError("Workflow observe schema changed")
+    from collectors.workflow import _run_cmd, readonly_observe_argv
+    obj = json.loads(_run_cmd(readonly_observe_argv(WORKSPACE), timeout=20, cwd=WORKSPACE))
     run_dir = WORKSPACE / ".omo/_delivery/agent-workflows/runs"
     run_files = sorted(run_dir.glob("*.yaml")) if run_dir.is_dir() else []
     if len(run_files) > 2000:
@@ -435,11 +432,13 @@ def probe_workflow():
             value, kind = {}, "zombie_parse_error"
         locks.append({k: value.get(k) for k in ("run_id", "actor", "scope", "last_heartbeat", "expires_at")} | {"kind": kind})
     stale = sum(item["kind"] != "live" for item in locks)
-    return {"active_runs": runs, "live_locks": len(locks) - stale, "stale_locks": stale,
+    return {**obj, "state": "OBSERVED" if obj["ok"] else "DEGRADED",
+            "active_runs": runs, "live_locks": len(locks) - stale, "stale_locks": stale,
             "compliance_ok": obj.get("decision") == "continue", "locks": locks,
             "inventory_counts": {"runs_reported": obj["run_count"], "runs_read": len(run_files),
                                  "locks_reported": obj["lock_count"], "locks_read": len(lock_files)},
-            "proof_scope": "OMO observe plus bounded run/lock metadata; not write admission",
+            "observer_mode": "native-report-no-heal-deny-write",
+            "proof_scope": "single-declared-workspace-storage; native no-heal report; no process liveness or global idle proof",
             "observed_at": now()}
 
 def probe_resident():
@@ -523,12 +522,12 @@ def probe_resident():
             "observed_at": now(), "proof_scope": "mode=ro canonical chain; watermark point observation; no sustained-health claim"}
 
 def probe_scheduler():
-    obj = run_cmd([PYTHON, "-B", "bin/scheduler-compile.py", "--check"], allow_nonzero=True)
-    if not all(k in obj for k in ("ok", "drift_count", "orphan_count")):
-        raise ValueError("scheduler schema changed")
+    from collectors.scheduler import _run_cmd
+    obj = json.loads(_run_cmd([PYTHON, "-B", "bin/scheduler-compile.py", "--check", "--json"], timeout=15, cwd=WORKSPACE))
     source = (WORKSPACE / "bin/scheduler-compile.py").read_text()
     root_defect = "WORKSPACE = Path(__file__).resolve().parents[2]" in source
-    return {k: obj[k] for k in ("ok", "drift_count", "orphan_count")} | {"observed_at": now(), "known_root_resolution_defect": root_defect}
+    return {**obj, "state": "OBSERVED" if obj["ok"] else "DEGRADED", "observed_at": now(),
+            "known_root_resolution_defect": root_defect}
 
 def probe_references():
     obj = run_cmd([PYTHON, "-B", "bin/gac/meta-doctor.py", "--workspace", ".", "--refs-only"], timeout=25, allow_nonzero=True)
@@ -1049,6 +1048,38 @@ def bounded_probe(name):
                 return name, None, type(retry_exc).__name__
         return name, None, type(exc).__name__
 
+HEALTH_SEMANTICS = "diagnostic-health/v1"
+NONHEALTHY = {"PARTIAL", "DEGRADED", "UNAVAILABLE", "STALE_UNAVAILABLE", "STALE_PARTIAL", "ERROR", "FAIL", "FAILED", "UNPROVABLE", "UNKNOWN"}
+
+
+def source_health(value):
+    """Observation transport success never overrides explicit source failure."""
+    if not isinstance(value, dict):
+        return "UNKNOWN"
+    if value.get("available") is False:
+        return "UNAVAILABLE"
+    for key in ("state", "status"):
+        reported = str(value.get(key) or "").upper()
+        if reported in NONHEALTHY:
+            return reported
+    if value.get("ok") is False:
+        return "DEGRADED"
+    return "OK"
+
+
+def prior_healthy_success(state, cached):
+    stamp = state.get("last_success_at")
+    if state.get("health_semantics") == HEALTH_SEMANTICS:
+        return stamp
+    # Old merge timestamps may describe failed observations. Only retain one
+    # that is independently traceable to an explicitly healthy cached body.
+    if (isinstance(cached, dict) and stamp == cached.get("observed_at")
+            and (cached.get("ok") is True or cached.get("state") in {"OBSERVED", "OK"})
+            and source_health(cached) == "OK"):
+        return stamp
+    return None
+
+
 def apply_results(previous, results, attempted_at):
     data = copy.deepcopy(previous)
     states = data.setdefault("source_states", {})
@@ -1057,6 +1088,9 @@ def apply_results(previous, results, attempted_at):
         if data.get("source_aliases", {}).get(name) == "/" + name and isinstance(data.get(name), dict):
             values.setdefault(name, data[name])
     for name, value, error in results:
+        old = states.get(name, {})
+        old = dict(old, last_success_at=prior_healthy_success(old, values.get(name)))
+        states[name] = old
         if not error and name == "documents" and isinstance(value, dict) and value.get("state") == "PARTIAL":
             old = states.get(name, {})
             values[name] = value
@@ -1094,11 +1128,18 @@ def apply_results(previous, results, attempted_at):
             retained = name in values or (name == "strategy" and isinstance(previous.get("strategic"), dict))
             states[name] = {"status": "STALE_UNAVAILABLE" if retained else "UNAVAILABLE",
                             "last_success_at": old.get("last_success_at"), "last_attempt_at": attempted_at,
-                            "error_class": error}
+                            "observed_at": old.get("observed_at") or old.get("last_observed_at") or (values.get(name) or {}).get("observed_at"),
+                            "last_success_status": "KNOWN" if old.get("last_success_at") else "UNKNOWN",
+                            "health_semantics": HEALTH_SEMANTICS, "error_class": error}
         else:
             values[name] = value
-            states[name] = {"status": "OK", "last_success_at": value.get("observed_at", attempted_at),
-                            "last_attempt_at": attempted_at}
+            status = source_health(value)
+            observed = value.get("observed_at")
+            success = observed if status == "OK" else old.get("last_success_at")
+            states[name] = {"status": status, "observed_at": observed,
+                            "last_observed_at": observed, "last_success_at": success,
+                            "last_success_status": "KNOWN" if success else "UNKNOWN",
+                            "health_semantics": HEALTH_SEMANTICS, "last_attempt_at": attempted_at}
     if "portfolio" in values:
         data["portfolio"] = values["portfolio"]
         data["metadata"]["source_digests"]["ledger"] = values["portfolio"]["ledger_sha256"]
@@ -1126,8 +1167,8 @@ def apply_results(previous, results, attempted_at):
                        "failed_sources": [k for k,v in states.items() if v["status"] != "OK"]}
     data["presentation"]["refresh"] = "Every 5 minutes planned; page reloads every 60 seconds; delayed/stale sources remain visible."
     runtime = data.setdefault("runtime", {})
-    runtime["observed_at"] = max((v["last_success_at"] for k,v in states.items() if k not in ("portfolio", "documents") and v.get("last_success_at")), default=data["observed_at"])
-    data["observed_at"] = max((v["last_success_at"] for v in states.values() if v.get("last_success_at")), default=data["observed_at"])
+    runtime["observed_at"] = max((v.get("observed_at") or v.get("last_observed_at") for k,v in states.items() if k not in ("portfolio", "documents") and (v.get("observed_at") or v.get("last_observed_at"))), default=data["observed_at"])
+    data["observed_at"] = max((v.get("observed_at") or v.get("last_observed_at") for v in states.values() if (v.get("observed_at") or v.get("last_observed_at"))), default=data["observed_at"])
     data["metadata"]["current_as_of"] = data["observed_at"]
     gates = {g["id"]: g for g in runtime.get("gates", [])}
 
@@ -1142,8 +1183,10 @@ def apply_results(previous, results, attempted_at):
         gates[id]["source"] = {"workflow": "bin/agent-workflow.py status --json", "resident": "watermark files + SQLite mode=ro LedgerBroker.verify_chain only",
                                 "scheduler": "bin/scheduler-compile.py --check (known root defect reported)", "references": "bin/gac/meta-doctor.py --workspace . --refs-only",
                                 "orca": "orca status --json", "multica": "multica runtime / agent / squad list --output json"}[source_name]
-        gates[id]["observed_at"] = source_state.get("last_success_at")
-        if source_state.get("status") != "OK":
+        gates[id]["observed_at"] = source_state.get("observed_at") or source_state.get("last_observed_at")
+        if source_state.get("status") == "DEGRADED":
+            gates[id]["verdict"] = "FAIL · 新鲜 DEGRADED 诊断；准入未通过"
+        elif source_state.get("status") != "OK":
             gates[id]["verdict"] = "STALE · 本次采集失败"
         else:
             gates[id]["verdict"] = "已观测 · 准入另验"
@@ -1177,7 +1220,7 @@ def apply_results(previous, results, attempted_at):
     gates["RF0"] = {"id": "RF0", "verdict": "已安装 · RF0 未准入" if ruflo.get("installed") else "安装状态待确认",
                    "summary": f"Ruflo {ruflo.get('version', '未知')}；Workspace initialized={ruflo.get('workspace_initialized', '未知')}；运行 inventory={ruflo.get('inventory', 'UNPROVABLE')}。",
                    "source": "installed package.json and wrapper file reads; no Ruflo CLI initialization",
-                   "observed_at": states.get("ruflo", {}).get("last_success_at"),
+                   "observed_at": states.get("ruflo", {}).get("observed_at"),
                    "next": "建立无副作用 observer；先 RF0，再绑定 OMO driver，普通 status/list 暂不采集。"}
     if states.get("ruflo", {}).get("status") != "OK":
         gates["RF0"]["verdict"] = "STALE · 本次采集失败"
@@ -1215,20 +1258,23 @@ def apply_results(previous, results, attempted_at):
         {"title": "Resident 常驻守护",
          "status": f"在线 · {resident.get('oldest_role_tick_age_seconds', 0)}s tick" if resident.get("chain_ok") else "STALE",
          "summary": f"integrity={resident.get('integrity', '未知')} · events={resident.get('total', '未知')} · 账本哈希链完整",
-         "source": "resident", "observed_at": states.get("resident", {}).get("last_success_at")},
+         "source": "resident", "observed_at": states.get("resident", {}).get("observed_at")},
         {"title": "AetherForge 主权算力",
          "status": f"{compute.get('loaded_count', 0)} loaded / {compute.get('model_count', 0)} models" if compute.get("status") == "healthy" else "STANDBY",
          "summary": f"显存={compute.get('current_model_memory_gb', 0)}G/{compute.get('final_ceiling_gb', 0)}G · 默认模型={compute.get('default_model', '无')}",
-         "source": "compute", "observed_at": states.get("compute", {}).get("last_success_at")},
-        {"title": "OMO / Workflow", "status": f"{active_count} active", "summary": f"{workflow.get('live_locks', '未知')} live locks · {workflow.get('stale_locks', '未知')} stale locks", "source": "workflow", "observed_at": states.get("workflow", {}).get("last_success_at")},
-        {"title": "GaC 自动化治理门禁", "status": "57 项本地门禁", "summary": "工作树隔离 + 防篡改 + 架构合规全链路守门", "source": "references", "observed_at": states.get("references", {}).get("last_success_at")},
+         "source": "compute", "observed_at": states.get("compute", {}).get("observed_at")},
+        {"title": "OMO / Workflow", "status": f"{active_count} active", "summary": f"{workflow.get('live_locks', '未知')} live locks · {workflow.get('stale_locks', '未知')} stale locks", "source": "workflow", "observed_at": states.get("workflow", {}).get("observed_at")},
+        {"title": "GaC 自动化治理门禁", "status": "57 项本地门禁", "summary": "工作树隔离 + 防篡改 + 架构合规全链路守门", "source": "references", "observed_at": states.get("references", {}).get("observed_at")},
         {"title": "Direct Local Reference Cell", "status": "R0 CANARY" if reference_cell.get("latest", {}).get("result") == "PASS" else "NOT-RUN",
          "summary": "三角色 + Mesh receipt 已在 attempt-local canary 验证；正式 Ledger 交付未完成" if reference_cell.get("latest", {}).get("result") == "PASS" else "尚无 digest-bound canary",
-         "source": "reference_cell", "observed_at": states.get("reference_cell", {}).get("last_success_at")},
-        {"title": "Multica runtime", "status": f"{online}/{runtime_count} online", "summary": f"{squad_count} squads · {agent_count} agents；AS0 单独验收", "source": "multica", "observed_at": states.get("multica", {}).get("last_success_at")},
-        {"title": "Orca / Ruflo", "status": "RF0/R0 未准入", "summary": f"Orca running={orca.get('running', '未知')} · Ruflo installed={ruflo.get('installed', '未知')}", "source": "ruflo", "observed_at": states.get("ruflo", {}).get("last_success_at")}]
+         "source": "reference_cell", "observed_at": states.get("reference_cell", {}).get("observed_at")},
+        {"title": "Multica runtime", "status": f"{online}/{runtime_count} online", "summary": f"{squad_count} squads · {agent_count} agents；AS0 单独验收", "source": "multica", "observed_at": states.get("multica", {}).get("observed_at")},
+        {"title": "Orca / Ruflo", "status": "RF0/R0 未准入", "summary": f"Orca running={orca.get('running', '未知')} · Ruflo installed={ruflo.get('installed', '未知')}", "source": "ruflo", "observed_at": states.get("ruflo", {}).get("observed_at")}]
     for card in runtime["runtime_cards"]:
-        if states.get(card["source"], {}).get("status") != "OK":
+        health = states.get(card["source"], {}).get("status")
+        if health == "DEGRADED":
+            card["status"] = "DEGRADED · 新鲜诊断异常"
+        elif health != "OK":
             card["status"] = "STALE / UNAVAILABLE"
     p = data.get("portfolio", {})
     data["current_team"] = [
@@ -1243,8 +1289,10 @@ def apply_results(previous, results, attempted_at):
         for a in agents:
             item = dict(a, source="Multica" if source_name == "multica" else "OMO Workflow",
                         role="原生记录 / 准入另验", source_state=status,
-                        observed_at=states.get(source_name, {}).get("last_success_at"))
-            if status != "OK":
+                        observed_at=states.get(source_name, {}).get("observed_at"))
+            if status == "DEGRADED":
+                item["status"] = "DEGRADED（观测记录：" + str(a.get("status", "unknown")) + "）"
+            elif status != "OK":
                 item["status"] = "STALE（上次记录：" + str(a.get("status", "unknown")) + "）"
             data["live_agents"].append(item)
     p = data["portfolio"]

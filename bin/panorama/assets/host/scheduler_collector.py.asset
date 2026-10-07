@@ -1,0 +1,91 @@
+"""Scheduler collector — reads scheduler compile status."""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+from collectors.base import DataCollector, CollectionError
+from collectors.registry import register
+
+DEFAULT_WORKSPACE_ROOT = Path("/Users/xiamingxing/Workspace")
+
+
+def workspace_root() -> Path:
+    """Resolve the one OMO workspace used by this collector."""
+    configured = os.environ.get("ZX_DASHBOARD_WORKSPACE_ROOT")
+    return Path(configured).expanduser().resolve() if configured else DEFAULT_WORKSPACE_ROOT
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _run_cmd(argv: list[str], timeout: int = 20, cwd: Path | None = None) -> str:
+    if len(argv) < 3 or Path(argv[-3]).name != "scheduler-compile.py" or argv[-2:] != ["--check", "--json"]:
+        raise CollectionError("scheduler", "unsupported diagnostic command")
+    result = subprocess.run(
+        argv,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        cwd=cwd,
+    )
+    obj = parse_diagnostic(result.stdout, result.returncode)
+    return json.dumps(obj)
+
+
+def parse_diagnostic(raw: str | bytes, returncode: int) -> dict:
+    """Accept only this read-only command's structured health diagnostics."""
+    if returncode not in (0, 1):
+        raise CollectionError("scheduler", f"diagnostic command exit {returncode}")
+    obj = json.loads(raw)
+    if not isinstance(obj, dict) or type(obj.get("ok")) is not bool:
+        raise CollectionError("scheduler", "diagnostic schema invalid")
+    if (any(type(obj.get(k)) is not int or obj[k] < 0 for k in ("drift_count", "orphan_count"))
+            or obj["ok"] != (obj["drift_count"] == 0 and obj["orphan_count"] == 0)
+            or ("launchd" in obj and not isinstance(obj["launchd"], dict))):
+        raise CollectionError("scheduler", "scheduler check schema invalid")
+    if obj["ok"] != (returncode == 0):
+        raise CollectionError("scheduler", "diagnostic exit/health contradiction")
+    return {**obj, "command_exit_code": returncode}
+
+
+
+@register("scheduler", timeout=30)
+class SchedulerCollector(DataCollector):
+    name = "scheduler"
+
+    def collect(self) -> dict:
+        root = workspace_root()
+        try:
+            raw = _run_cmd(
+                [
+                    str(root / "bin/gac/managed-python"),
+                    "run",
+                    "--profile",
+                    "pyyaml",
+                    "--",
+                    "bin/scheduler-compile.py",
+                    "--check",
+                    "--json",
+                ],
+                timeout=15,
+                cwd=root,
+            )
+            decoded = json.loads(raw)
+            obj = parse_diagnostic(raw, decoded.get("command_exit_code", 0) if isinstance(decoded, dict) else 0)
+        except Exception as exc:
+            raise CollectionError("scheduler", str(exc))
+
+        return {
+            **obj,
+            "state": "OBSERVED" if obj["ok"] else "DEGRADED",
+            "observed_at": _now(),
+        }
+
+    def validate(self, data: dict) -> bool:
+        return isinstance(data.get("ok"), bool)
