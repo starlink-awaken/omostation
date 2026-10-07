@@ -76,6 +76,12 @@ EXEMPTION_BLOCKS: list[tuple[str, re.Pattern]] = [
     ),
 ]
 
+# F5: 检测器自身的文件不得进入"执行语料" — 本文件的 docstring 会以示例形式
+# 提到真实规则 id (如 CR-X4-HEALTH-SSOT), 若把自己算进语料, "自引用" 会让
+# 只出现在文档示例里的规则看起来已接线 (与 _archive/_registry 排除同一原则:
+# 注册表/文档 ≠ 执行面)。
+SELF_MODULE = Path(__file__).resolve()
+
 _ID_RE = re.compile(r"^CR-[A-Z0-9-]+$|^X[1-4]-C\d{2}$|^CS-\d+$")
 
 # governance-checks has 4 entries using lowercase hyphen form (x1-audit-chain etc.)
@@ -179,6 +185,9 @@ def _exec_corpus() -> str:
         for f in _ROOT.glob(pat):
             if not f.is_file():
                 continue
+            # F5: 检测器自证排除 — 本文件自己 (或其任何 glob 命中形态) 不是执行面
+            if f.resolve() == SELF_MODULE.resolve():
+                continue
             if "_archive" in f.parts or "_registry" in f.parts:
                 continue
             try:
@@ -190,6 +199,9 @@ def _exec_corpus() -> str:
             if "_archive" in f.parts or "_registry" in f.parts:
                 continue
             if not _is_extensionless_exec(f):
+                continue
+            # F5: 同上 — 本文件不进语料 (本文件是 .py, .suffix 非空, 此处为保险)
+            if f.resolve() == SELF_MODULE.resolve():
                 continue
             try:
                 parts.append(_read_cleaned(f))
@@ -338,7 +350,15 @@ def inventory() -> dict:
             "列出仅被豁免清单引用的 id, 它们计入 unreferenced 候选。\n"
             "F4 (2026-10-07): 语料扩展到子模块源码树 (projects/*/src) 与 bin/ 无扩展名"
             "可执行体 (如 bin/ssot/mypy-baseline-gate)。submodule 里实现的规则 id 不再"
-            "结构性不可见; 相应地, 之前靠 'wired via same id' 误判的 id 会重新计为 wired。"
+            "结构性不可见; 相应地, 之前靠 'wired via same id' 误判的 id 会重新计为 wired。\n"
+            "F5 (2026-10-07): 检测器自身的文件 (check-rule-wiring-coverage.py) 不再计入"
+            "执行语料 —— 本文件 docstring 以示例形式提到的规则 id (如 CR-X4-HEALTH-SSOT)"
+            "此前会因自引用被判为 wired, 而它实际上没有任何执行器引用。自证排除后, "
+            "这类只存在于检测器文档里的 id 会如实进入 unreferenced 候选。\n"
+            "注意: registry-alias-map.yaml 的 evidence.* 块 (如 evidence.bin_executor) 是"
+            "人工填写的说明性字段, **本清单不读它们**; 接线判定只依据 alias 字符串在"
+            "执行语料中的出现。alias-map 里指向 bin/_archive/ 的 evidence 引用是历史"
+            "说明, 不代表当前接线。"
         ),
     }
 
