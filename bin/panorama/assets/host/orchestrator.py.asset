@@ -1,0 +1,332 @@
+"""Refresh orchestrator — replaces the monolithic refresh.py.
+
+This is the new entry point for data collection. It:
+1. Loads previous data from current.json
+2. Runs all registered collectors in parallel
+3. Merges results into a single data blob
+4. Validates against schema
+5. Publishes to current.json and renders the HTML page
+"""
+
+from __future__ import annotations
+
+import copy
+import json
+import logging
+import os
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
+from pathlib import Path
+
+# Ensure dashboard dir is on path
+APP = Path(__file__).resolve().parent
+sys.path.insert(0, str(APP))
+
+from collectors.base import DataCollector, CollectionError
+from collectors.registry import CollectorRegistry, get_registry, COLLECTORS
+from models.schema import validate_data
+from runtime_paths import CODE_ROOT, STATE_ROOT, legacy_doc_publication_enabled
+
+# Import all collectors to trigger registration
+import collectors.portfolio  # noqa: F401
+import collectors.workflow  # noqa: F401
+import collectors.resident  # noqa: F401
+import collectors.scheduler  # noqa: F401
+import collectors.compute  # noqa: F401
+import collectors.references  # noqa: F401
+import collectors.orca  # noqa: F401
+import collectors.multica  # noqa: F401
+import collectors.ruflo  # noqa: F401
+import collectors.reference_cell  # noqa: F401
+import collectors.environment  # noqa: F401
+import collectors.documents  # noqa: F401
+import collectors.catalog  # noqa: F401
+import collectors.strategy  # noqa: F401
+import collectors.agent_brief  # noqa: F401
+import collectors.personal_value as personal_value
+
+
+# Paths
+APP = CODE_ROOT
+DIST_DIR = STATE_ROOT / "dist"
+CURRENT = STATE_ROOT / "current.json"
+SEED = APP / "seed.json"
+PAGE = STATE_ROOT / "index.html"
+REFRESH_LOCK = STATE_ROOT / "refresh.lock"
+LEGACY_DOC_PAGE = Path(
+    "/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库/"
+    "40-验收与运营/Agent体系全景总览-2026-09-08.html"
+)
+
+log = logging.getLogger("orchestrator")
+
+
+def now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+
+class RefreshOrchestrator:
+    """Orchestrates data collection and page generation."""
+
+    def __init__(self, registry: CollectorRegistry | None = None, max_workers: int = 5):
+        self.registry = registry or get_registry()
+        self.max_workers = max_workers
+
+    def load_previous(self) -> dict:
+        """Load previous data from current.json or seed."""
+        if CURRENT.exists():
+            try:
+                return json.loads(CURRENT.read_text(encoding="utf-8"))
+            except Exception as exc:
+                log.warning("Failed to load current.json: %s", exc)
+        if SEED.exists():
+            try:
+                return json.loads(SEED.read_text(encoding="utf-8")).get("data", {})
+            except Exception as exc:
+                log.warning("Failed to load seed.json: %s", exc)
+        return {}
+
+    def run_collectors(self) -> list[tuple[str, dict | None, str | None]]:
+        """Run all collectors in parallel with per-collector timeout protection."""
+        collectors = self.registry.all()
+        results: list[tuple[str, dict | None, str | None]] = []
+        with ThreadPoolExecutor(max_workers=self.max_workers) as pool:
+            futures = {pool.submit(c.run): c for c in collectors}
+            for future in as_completed(futures):
+                c = futures[future]
+                try:
+                    timeout_val = getattr(c, "timeout", 48) + 2
+                    results.append(future.result(timeout=timeout_val))
+                except Exception as exc:
+                    results.append((c.name, None, f"Execution error or timeout: {exc}"))
+        return results
+
+    def merge_results(self, previous: dict, results: list[tuple[str, dict | None, str | None]]) -> dict:
+        """Merge collector results into the data blob."""
+        data = dict(previous)
+        states = data.setdefault("source_states", {})
+        values = data.setdefault("live_sources", {})
+        observed_at = now()
+
+        for name, value, error in results:
+            previous_state = states.get(name) if isinstance(states.get(name), dict) else {}
+            if name == "personal_value_truth" and (error or value is None):
+                value = personal_value.unavailable_projection(
+                    str(error or "collector returned no value")
+                )
+                values[name] = value
+                data[name] = value
+                previous_panel = data.get("panel_value")
+                advisory = (
+                    previous_panel.get("advisory", previous_panel)
+                    if isinstance(previous_panel, dict)
+                    else {}
+                )
+                data["panel_value"] = personal_value.project_panel_value(
+                    value.get("value_truth"), advisory
+                )
+
+            if error or value is None:
+                state = {"status": "UNAVAILABLE", "error": error, "observed_at": observed_at}
+                if previous_state.get("last_success_at"):
+                    state["status"] = "STALE_UNAVAILABLE"
+                    state["last_success_at"] = previous_state["last_success_at"]
+                states[name] = state
+            else:
+                reported = value.get("state") if isinstance(value, dict) else None
+                incomplete = reported in {"PARTIAL", "DEGRADED", "UNAVAILABLE", "STALE_UNAVAILABLE", "ERROR", "UNPROVABLE", "UNKNOWN"}
+                states[name] = {
+                    "status": reported if incomplete else "OK",
+                    "observed_at": value.get("observed_at", observed_at) if isinstance(value, dict) else observed_at,
+                    "last_attempt_at": observed_at,
+                    "last_success_at": previous_state.get("last_success_at") if incomplete else observed_at,
+                }
+                values[name] = value
+                if name == "documents" and isinstance(value, dict):
+                    data["documents"] = value.get("documents", [])
+                    data["documents_meta"] = {key: item for key, item in value.items() if key != "documents"}
+                else:
+                    data[name] = value
+
+                # The Ledger-bound collector owns the canonical value panel.
+                # Preserve the previous JSONL panel only inside the explicit
+                # advisory envelope; it must never survive as gate truth.
+                if name == "personal_value_truth" and isinstance(value, dict):
+                    panel = value.get("panel_value")
+                    if isinstance(panel, dict):
+                        previous_panel = data.get("panel_value")
+                        advisory = (
+                            previous_panel.get("advisory", previous_panel)
+                            if isinstance(previous_panel, dict)
+                            else {}
+                        )
+                        data["panel_value"] = personal_value.project_panel_value(
+                            value.get("value_truth"), advisory
+                        )
+
+        data["generated_at"] = observed_at
+        # Revision-bound generation + strategic projection — both are required by
+        # observatory_query.ObservationIndex; without them every /api/v1/* query
+        # fails with SNAPSHOT_SCHEMA_UNAVAILABLE (MOF/loops/search panels blank).
+        import hashlib
+        data["generation_id"] = hashlib.sha256((observed_at + data["generated_at"]).encode()).hexdigest()[:20]
+        if isinstance(data.get("documents"), list):
+            data["documents"] = [dict(row, generation_id=data["generation_id"]) if isinstance(row, dict) else row
+                                 for row in data["documents"]]
+        if isinstance(data.get("documents_meta"), dict):
+            data["documents_meta"] = dict(data["documents_meta"], generation_id=data["generation_id"])
+        from refresh import integrate_strategy, publish_strategy_artifacts
+        integrate_strategy(data, previous)
+        publish_strategy_artifacts(data)
+        return data
+
+    def validate(self, data: dict) -> list[str]:
+        """Validate data against schema. Returns list of errors."""
+        return validate_data(data)
+
+    def render(self, data: dict, template_path: Path | None = None) -> str:
+        """Render the HTML page with embedded data and UI scripts."""
+        template_path = template_path or (APP / "template.html")
+        template = template_path.read_text(encoding="utf-8")
+
+        # Compute metadata
+        result_state = self._compute_result_state(data)
+        source_refs = self._compute_source_refs(data)
+        data.setdefault("metadata", {})["result_state"] = result_state
+        data["metadata"]["source_refs_publication"] = source_refs
+
+        # Slim data for HTML embedding without mutating original data
+        render_data = dict(data)
+        if "strategic" in render_data and isinstance(render_data["strategic"], dict):
+            strat = dict(render_data["strategic"])
+            if "trace" in strat and isinstance(strat["trace"], dict):
+                tr = dict(strat["trace"])
+                nodes = tr.get("nodes")
+                if isinstance(nodes, list) and len(nodes) > 100:
+                    tr["nodes"] = nodes[:100]
+                    tr["nodes_trimmed"] = True
+                edges = tr.get("edges")
+                if isinstance(edges, list) and len(edges) > 100:
+                    tr["edges"] = edges[:100]
+                    tr["edges_trimmed"] = True
+                strat["trace"] = tr
+            render_data["strategic"] = strat
+
+        # Encode data
+        encoded = json.dumps(render_data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
+
+        # Concatenate UI scripts
+        ui_files = [
+            "data_access.js", "ui_extensions.js", "strategy_ui.js", "workbench_ui.js",
+            "panoramic_ui.js", "next_ui.js", "topology_ui.js", "mof_ui.js", "ecosystem_ui.js",
+        ]
+        ui_parts: list[str] = []
+        for fname in ui_files:
+            fpath = APP / fname
+            if fpath.exists():
+                ui_parts.append(fpath.read_text().replace("</script", "<\\/script"))
+        ui = "\n".join(ui_parts)
+
+        # Replace placeholders
+        result = template
+        result = result.replace("__SNAPSHOT_JSON__", encoded)
+        result = result.replace("__OBSERVED_AT__", data.get("observed_at", "unknown"))
+        result = result.replace("__LEDGER_SHA__", data.get("portfolio", {}).get("ledger_sha256", "unknown"))
+        result = result.replace("__RESULT_STATE__", result_state)
+        result = result.replace("__SOURCE_REFS__", source_refs)
+        if ui:
+            result = result.replace("</body>", "<script>" + ui + "</script>\n</body>")
+
+        return result
+
+    @staticmethod
+    def _atomic_write(path: Path, payload: str) -> None:
+        """Atomic replace so concurrent readers never observe a partial snapshot."""
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(payload, encoding="utf-8")
+        os.replace(tmp, path)
+
+    def publish(self, data: dict, page_path: Path | None = None) -> None:
+        """Publish data to dist/ (and root for compat) and render HTML."""
+        DIST_DIR.mkdir(parents=True, exist_ok=True)
+        html = self.render(data)
+        encoded_data = json.dumps(data, ensure_ascii=False, indent=2)
+
+        # 1. Output to isolated dist/ (atomic — readers must never see partial JSON)
+        self._atomic_write(DIST_DIR / "current.json", encoded_data)
+        self._atomic_write(DIST_DIR / "index.html", html)
+
+        # 2. Dual-write to root for transition backwards-compatibility
+        self._atomic_write(CURRENT, encoded_data)
+        target_page = page_path or PAGE
+        self._atomic_write(target_page, html)
+
+        # 3. Legacy publication is an explicit operator capability, never an
+        # implicit side effect of a normal refresh.
+        if legacy_doc_publication_enabled() and LEGACY_DOC_PAGE.parent.is_dir():
+            try:
+                LEGACY_DOC_PAGE.write_text(html, encoding="utf-8")
+            except Exception as exc:
+                log.warning("Could not sync to legacy doc page: %s", exc)
+
+    def refresh(self) -> dict:
+        """Run a full refresh cycle and publish. Returns the data blob."""
+        started = time.monotonic()
+        previous = self.load_previous()
+        results = self.run_collectors()
+        data = self.merge_results(previous, results)
+        errors = self.validate(data)
+        if errors:
+            log.warning("Schema validation warnings: %s", errors)
+        self.publish(data)
+        elapsed = time.monotonic() - started
+        log.info("Refresh complete in %.1fs with %d sources", elapsed, len(results))
+        return data
+
+    @staticmethod
+    def _compute_result_state(data: dict) -> str:
+        """Compute overall result state from source health."""
+        states = data.get("source_states", {})
+        if not states:
+            return "UNKNOWN"
+        failed = sum(1 for s in states.values() if s.get("status") in {"UNAVAILABLE", "STALE_UNAVAILABLE", "ERROR", "UNPROVABLE", "UNKNOWN"})
+        total = len(states)
+        if failed == 0:
+            if any(s.get("status") == "DEGRADED" for s in states.values()):
+                return "DEGRADED"
+            if any(s.get("status") == "PARTIAL" for s in states.values()):
+                return "PARTIAL"
+            return "OBSERVED"
+        elif failed < total / 3:
+            return "PARTIAL"
+        elif failed < total * 2 / 3:
+            return "DEGRADED"
+        else:
+            return "UNAVAILABLE"
+
+    @staticmethod
+    def _compute_source_refs(data: dict) -> str:
+        """Compute source references string."""
+        states = data.get("source_states", {})
+        refs = []
+        for name, state in sorted(states.items()):
+            status = state.get("status", "UNKNOWN")
+            refs.append(f"{name}:{status}")
+        return ", ".join(refs)
+
+
+def main() -> int:
+    """CLI entry point for launchd / cron."""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    orch = RefreshOrchestrator()
+    data = orch.refresh()
+    state = data.get("metadata", {}).get("result_state", "UNKNOWN")
+    print(json.dumps({"status": "ok", "state": state, "sources": len(data.get("source_states", {}))}))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

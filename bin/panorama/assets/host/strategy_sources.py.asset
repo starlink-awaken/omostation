@@ -1,0 +1,1016 @@
+"""Bounded, read-only strategic metadata sources for the Zhixing dashboard.
+
+The collector never executes commands, imports Workspace code, uses the network, or
+writes source state. Only allowlisted fields leave this module. Trusted callers
+explicitly inject resolved code/state roots; fixture roots need no host services.
+"""
+from __future__ import annotations
+
+import hashlib
+import errno
+import json
+import math
+import os
+import re
+import stat
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+import yaml
+
+import probe_utils
+
+
+LIBRARY = Path.home() / "Documents/学习进化/基建架构/织星主权智能操作系统文档库"
+APP = Path.home() / ".local/share/zhixing-dashboard"
+MAX_FILES = 1000
+MAX_FILE_BYTES = 256 * 1024
+MAX_TOTAL_BYTES = 16 * 1024 * 1024
+MAX_RUN_FILES = 250
+MAX_RETRO_FILES = 1000
+MAX_DOCUMENTS = 500
+MAX_HEADINGS = 500
+RETRO_HEADER_BYTES = 8 * 1024
+KNOWLEDGE_HEADER_BYTES = 16 * 1024
+
+BET_RE = re.compile(r"^BET-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$")
+SENSITIVE_RE = re.compile(r"(?i)(password|secret|token|api[_-]?key|credential|prompt|command|environment|env)")
+REFERENCE_RE = re.compile(r"^(?:(?:repo|receipt|decision|evidence|github|file)://|(?:docs|tests|evidence|\.omo)/)[^\s]+$")
+EXTERNAL_DOCUMENT_NAMES = {
+    "2026-09-07-织星主权智能操作系统白皮书-v2.md",
+    "2026-09-07-织星主权智能操作系统全景架构蓝图-v2.md",
+    "2026-09-07-织星主权智能操作系统路线图与里程碑-v2.md",
+    "2026-09-07-织星主权智能操作系统文档导航与权威矩阵-v2.md",
+}
+V21_DOCUMENT_PATHS = {
+    "ZX-DOC-WHITEPAPER-V21-001": "2026-09-26-织星主权智能操作系统v2.1-审阅包/2026-09-26-织星主权智能操作系统白皮书-v2.1.md",
+    "ZX-DOC-BLUEPRINT-V21-001": "2026-09-26-织星主权智能操作系统v2.1-审阅包/2026-09-26-织星主权智能操作系统全景架构蓝图-v2.1.md",
+    "ZX-DOC-ROADMAP-V21-001": "2026-09-26-织星主权智能操作系统v2.1-审阅包/2026-09-26-织星主权智能操作系统路线图与里程碑-v2.1.md",
+    "ZX-DOC-NAV-V21-001": "2026-09-26-织星主权智能操作系统v2.1-审阅包/2026-09-26-织星主权智能操作系统文档导航与权威矩阵-v2.1.md",
+    "ZX-DOC-V21-AUDIT-20260926": "2026-09-26-织星主权智能操作系统v2.1-审阅包/2026-09-26-织星主权智能操作系统v2.1-现状审计与升级报告.md",
+    "ZX-DOC-EXEC-CONTROL-V21-20260926": "2026-09-26-织星v2.1-执行总控审阅包/执行总控方案-v2.1.md",
+    "ZX-DOC-CANDIDATE-BETS-V21-20260926": "2026-09-26-织星v2.1-执行总控审阅包/候选BET台账-v2.1.yaml",
+    "ZX-DOC-GANTT-V21-20260926": "2026-09-26-织星v2.1-执行总控审阅包/条件甘特与里程碑-v2.1.yaml",
+    "ZX-DOC-DASH-MONITOR-V21-20260926": "2026-09-26-织星v2.1-执行总控审阅包/Dashboard与监控合同-v2.1.md",
+}
+
+
+class _UniqueRegistryLoader(yaml.SafeLoader):
+    """A duplicate key cannot silently change the registry's path binding."""
+
+
+def _unique_mapping(loader, node, deep=False):
+    result = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in result:
+            raise yaml.YAMLError("duplicate registry key")
+        result[key] = loader.construct_object(value_node, deep=deep)
+    return result
+
+
+_UniqueRegistryLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _unique_mapping
+)
+
+
+def _registered_target(reader, entry):
+    """The external base locates exact pairs; it grants no directory read scope."""
+    raw_path, identity = entry.get("path"), entry.get("document_id")
+    if (not isinstance(raw_path, str) or not raw_path or len(raw_path) > 4096
+            or any(char in raw_path for char in ("\x00", "\\", ":"))
+            or raw_path.startswith(("/", "~")) or "//" in raw_path):
+        raise ValueError("invalid_document_path")
+    if not isinstance(identity, str) or not identity or identity != _safe_text(identity):
+        raise ValueError("schema_missing_document_id")
+    if identity in V21_DOCUMENT_PATHS:
+        relative = V21_DOCUMENT_PATHS[identity]
+        if raw_path != "../../" + relative:
+            raise ValueError("identity_path_mismatch")
+        return "documents_root", Path(relative)
+    # Legacy library entries retain relative registry syntax and four direct-parent
+    # v2 names. No new external basename or normalized alias is admitted.
+    lexical = Path(os.path.normpath(str(reader.roots["library"] / ".library" / raw_path)))
+    if lexical.is_relative_to(reader.roots["library"]):
+        return "library", lexical.relative_to(reader.roots["library"])
+    external = reader.roots["documents_root"]
+    if lexical.parent == external and lexical.name in EXTERNAL_DOCUMENT_NAMES:
+        return "documents_root", Path(lexical.name)
+    raise ValueError("outside_allowlisted_root")
+
+
+def _read_registered_file(reader, root_name, relative, *, required=False, metadata=False,
+                          declared_sha=None):
+    """Openat/no-follow traversal, stable regular fd, and bounded reads."""
+    relative = Path(relative)
+    if relative.is_absolute() or not relative.parts or ".." in relative.parts:
+        return reader.unavailable(root_name, relative, "invalid_document_path", required)
+    directory_flags = os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = None
+    try:
+        directory_fd = os.open(reader.roots[root_name], directory_flags)
+        try:
+            for part in relative.parts[:-1]:
+                child_fd = os.open(part, directory_flags, dir_fd=directory_fd)
+                os.close(directory_fd)
+                directory_fd = child_fd
+            descriptor = os.open(relative.parts[-1], os.O_RDONLY | os.O_NONBLOCK
+                                 | getattr(os, "O_NOFOLLOW", 0), dir_fd=directory_fd)
+        finally:
+            os.close(directory_fd)
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode):
+            return reader.unavailable(root_name, relative, "non_regular_file", required)
+        with os.fdopen(descriptor, "rb") as stream:
+            descriptor = None
+            if metadata:
+                digest = declared_sha if isinstance(declared_sha, str) and re.fullmatch(r"[a-f0-9]{64}", declared_sha) else None
+                return None, reader._state(root_name, relative, "METADATA_ONLY", digest,
+                                           bytes=info.st_size, digest_basis="registry_declaration" if digest else "unavailable")
+            if reader.files_read >= MAX_FILES:
+                reader.truncated += 1
+                return reader.unavailable(root_name, relative, "file_count_budget", True)
+            if info.st_size > MAX_FILE_BYTES:
+                return reader.unavailable(root_name, relative, "file_size_budget", required)
+            remaining = MAX_TOTAL_BYTES - reader.total_bytes
+            if info.st_size > remaining or remaining < 0:
+                reader.truncated += 1
+                return reader.unavailable(root_name, relative, "total_byte_budget", True)
+            raw = stream.read(min(MAX_FILE_BYTES, remaining) + 1)
+            reader.files_read += 1
+            reader.total_bytes += len(raw)
+            if len(raw) > MAX_FILE_BYTES:
+                return reader.unavailable(root_name, relative, "file_size_budget", required)
+            if len(raw) > remaining:
+                reader.truncated += 1
+                return reader.unavailable(root_name, relative, "total_byte_budget", True)
+            # Detect an enlargement after the first fstat even if it occurs after read.
+            if os.fstat(stream.fileno()).st_size > MAX_FILE_BYTES:
+                return reader.unavailable(root_name, relative, "file_size_budget", required)
+            raw.decode("utf-8", errors="strict")
+            return raw, reader._state(root_name, relative, "OBSERVED", _sha(raw), bytes=len(raw))
+    except OSError as error:
+        reason = ("missing" if error.errno == errno.ENOENT else
+                  "symlink_path_refused" if error.errno in (errno.ELOOP, errno.ENOTDIR) else "read_error")
+        return reader.unavailable(root_name, relative, reason, required)
+    except UnicodeError:
+        return reader.unavailable(root_name, relative, "document_not_utf8", required)
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+def _document_registry(reader):
+    raw, state = _read_registered_file(reader, "library", ".library/registry.yaml", required=True)
+    if raw is None:
+        return None, state
+    try:
+        value = yaml.load(raw, Loader=_UniqueRegistryLoader)
+        if not isinstance(value, dict) or not isinstance(value.get("documents"), list):
+            reader.invalid(state, "schema_invalid_documents", required=True)
+            return None, state
+        return value, state
+    except (yaml.YAMLError, TypeError, UnicodeError):
+        reader.invalid(state, "yaml_parse_error", required=True)
+        return None, state
+
+def _now():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _safe_text(value, limit=480):
+    if isinstance(value, date):
+        value = value.isoformat()
+    if not isinstance(value, (str, int, float, bool)):
+        return None
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    text = re.sub(r"[\x00-\x1f]", " ", str(value)).strip()[:limit]
+    text = probe_utils.redact_secrets(text)
+    return text or None
+
+
+def _safe_strings(value, limit=100):
+    if not isinstance(value, list):
+        return []
+    result = []
+    for item in value[:limit]:
+        text = _safe_text(item)
+        if text:
+            result.append(text)
+    return result
+
+
+def _mapping(value):
+    return value if isinstance(value, dict) else {}
+
+
+def _rows(value):
+    return value if isinstance(value, list) else []
+
+
+def _sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _safe_tree(value, depth=0):
+    if depth > 5:
+        return None
+    if isinstance(value, dict):
+        return {str(key): _safe_tree(item, depth + 1) for key, item in list(value.items())[:100]
+                if isinstance(key, str) and not SENSITIVE_RE.search(key)}
+    if isinstance(value, list):
+        return [_safe_tree(item, depth + 1) for item in value[:200]]
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    return _safe_text(value) if isinstance(value, str) else value if value is None or isinstance(value, (int, bool)) else None
+
+
+class BoundedReader:
+    def __init__(self, roots, observed_at):
+        self.roots = {name: Path(path).resolve() for name, path in roots.items()}
+        self.observed_at = observed_at
+        self.source_states = []
+        self.total_bytes = 0
+        self.files_read = 0
+        self.errors = []
+        self.partial_reasons = []
+        self.blocking_errors = []
+        self.truncated = 0
+        self.segment_counts = {}
+
+    def _display(self, root_name, relative):
+        return root_name + ":" + str(relative).replace("\\", "/")
+
+    def _state(self, root_name, relative, status, sha256=None, reason=None, partial=False, **extra):
+        path = self._display(root_name, relative)
+        row = {"id": "source:" + hashlib.sha256(path.encode()).hexdigest()[:16],
+               "path": path, "status": status, "sha256": sha256,
+               "observed_at": self.observed_at}
+        if reason:
+            row["reason"] = reason
+        if partial:
+            row["partial"] = True
+        row.update(extra)
+        self.source_states.append(row)
+        return row
+
+    def unavailable(self, root_name, relative, reason, required=False):
+        state = self._state(root_name, relative, "UNAVAILABLE", reason=reason, partial=required)
+        self.errors.append({"source": state["path"], "code": reason})
+        if required:
+            self.blocking_errors.append(state["path"] + ":" + reason)
+        else:
+            self.partial_reasons.append(state["path"] + ":" + reason)
+        return None, state
+
+    def invalid(self, state, reason, required=False):
+        state["status"] = "ERROR"
+        state["reason"] = reason
+        state["partial"] = True
+        self.errors.append({"source": state["path"], "code": reason})
+        target = self.blocking_errors if required else self.partial_reasons
+        target.append(state["path"] + ":" + reason)
+
+    def inventory(self, root_name, relative, paths, required=False):
+        normalized = [str(p).replace("\\", "/") for p in paths]
+        raw = "\n".join(normalized).encode()
+        status = "OBSERVED" if normalized else "UNAVAILABLE"
+        reason = None if normalized else "empty_or_missing_directory"
+        state = self._state(root_name, relative, status, _sha(raw) if normalized else None,
+                            reason=reason, partial=required and not normalized,
+                            entries=len(normalized), digest_basis="relative_path_inventory")
+        if not normalized:
+            self.errors.append({"source": state["path"], "code": reason})
+            (self.blocking_errors if required else self.partial_reasons).append(state["path"] + ":" + reason)
+        return state
+
+    def read(self, root_name, relative, required=False):
+        root = self.roots[root_name]
+        relative = Path(relative)
+        try:
+            path = (root / relative).resolve()
+            if not path.is_relative_to(root):
+                return self.unavailable(root_name, relative, "outside_allowlisted_root", required)
+            if self.files_read >= MAX_FILES:
+                self.truncated += 1
+                state = self._state(root_name, relative, "TRUNCATED", reason="file_count_budget", partial=True)
+                self.blocking_errors.append(state["path"] + ":file_count_budget")
+                return None, state
+            size = path.stat().st_size
+            if size > MAX_FILE_BYTES:
+                state = self._state(root_name, relative, "ERROR", reason="file_size_budget", partial=True,
+                                    bytes=size)
+                self.errors.append({"source": state["path"], "code": "file_size_budget"})
+                (self.blocking_errors if required else self.partial_reasons).append(state["path"] + ":file_size_budget")
+                return None, state
+            if self.total_bytes + size > MAX_TOTAL_BYTES:
+                self.truncated += 1
+                state = self._state(root_name, relative, "TRUNCATED", reason="total_byte_budget", partial=True,
+                                    bytes=size)
+                self.blocking_errors.append(state["path"] + ":total_byte_budget")
+                return None, state
+            raw = path.read_bytes()
+            self.files_read += 1
+            self.total_bytes += len(raw)
+            state = self._state(root_name, relative, "OBSERVED", _sha(raw), bytes=len(raw))
+            return raw, state
+        except FileNotFoundError:
+            return self.unavailable(root_name, relative, "missing", required)
+        except (OSError, UnicodeError):
+            return self.unavailable(root_name, relative, "read_error", required)
+
+    def metadata(self, root_name, relative, declared_sha=None):
+        root = self.roots[root_name]
+        relative = Path(relative)
+        try:
+            path = (root / relative).resolve()
+            if not path.is_relative_to(root):
+                return self.unavailable(root_name, relative, "outside_allowlisted_root")
+            size = path.stat().st_size
+            digest = _safe_text(declared_sha)
+            if not digest or not re.fullmatch(r"[a-fA-F0-9]{64}", digest):
+                digest = None
+            return None, self._state(root_name, relative, "METADATA_ONLY", digest, bytes=size,
+                                     digest_basis="registry_declaration" if digest else "unavailable")
+        except FileNotFoundError:
+            return self.unavailable(root_name, relative, "missing")
+        except OSError:
+            return self.unavailable(root_name, relative, "metadata_read_error")
+
+    def prefix(self, root_name, relative, limit=KNOWLEDGE_HEADER_BYTES, required=False):
+        root = self.roots[root_name]
+        relative = Path(relative)
+        try:
+            path = (root / relative).resolve()
+            if not path.is_relative_to(root):
+                return self.unavailable(root_name, relative, "outside_allowlisted_root", required)
+            if self.files_read >= MAX_FILES:
+                self.truncated += 1
+                state = self._state(root_name, relative, "TRUNCATED", reason="file_count_budget", partial=True)
+                self.blocking_errors.append(state["path"] + ":file_count_budget")
+                return None, state
+            size = path.stat().st_size
+            read_size = min(size, limit)
+            if self.total_bytes + read_size > MAX_TOTAL_BYTES:
+                self.truncated += 1
+                state = self._state(root_name, relative, "TRUNCATED", reason="total_byte_budget", partial=True,
+                                    bytes=size, bytes_read=0, hash_scope="unavailable")
+                self.blocking_errors.append(state["path"] + ":total_byte_budget")
+                return None, state
+            with path.open("rb") as stream:
+                chunks = []
+                consumed = 0
+                first = stream.readline(limit)
+                chunks.append(first); consumed += len(first)
+                if first.rstrip(b"\r\n") == b"---":
+                    while consumed < limit:
+                        line = stream.readline(limit - consumed)
+                        if not line:
+                            break
+                        chunks.append(line); consumed += len(line)
+                        if line.rstrip(b"\r\n") == b"---":
+                            break
+                raw = b"".join(chunks)
+            self.files_read += 1
+            self.total_bytes += len(raw)
+            scope = "full" if len(raw) == size else "prefix:" + str(len(raw))
+            state = self._state(root_name, relative, "OBSERVED", _sha(raw), bytes=size,
+                                bytes_read=len(raw), hash_scope=scope)
+            return raw, state
+        except FileNotFoundError:
+            return self.unavailable(root_name, relative, "missing", required)
+        except OSError:
+            return self.unavailable(root_name, relative, "read_error", required)
+
+    def yaml(self, root_name, relative, required=False):
+        raw, state = self.read(root_name, relative, required)
+        if raw is None:
+            return None, state
+        try:
+            value = yaml.safe_load(raw)
+            if value is not None and not isinstance(value, (dict, list)):
+                raise ValueError("mapping_or_list_required")
+            return value, state
+        except (yaml.YAMLError, UnicodeError):
+            self.invalid(state, "yaml_parse_error", required)
+        except ValueError as exc:
+            self.invalid(state, str(exc), required)
+        return None, state
+
+    def json(self, root_name, relative, required=False):
+        raw, state = self.read(root_name, relative, required)
+        if raw is None:
+            return None, state
+        try:
+            value = json.loads(raw)
+            if not isinstance(value, dict):
+                raise ValueError("mapping_required")
+            return value, state
+        except (json.JSONDecodeError, UnicodeError):
+            self.invalid(state, "json_parse_error", required)
+        except ValueError as exc:
+            self.invalid(state, str(exc), required)
+        return None, state
+
+    def discover(self, root_name, relative, pattern, recursive=False, required=False):
+        root = self.roots[root_name]
+        directory = (root / relative).resolve()
+        if not directory.is_relative_to(root):
+            self.unavailable(root_name, relative, "outside_allowlisted_root", required)
+            return []
+        try:
+            paths = directory.rglob(pattern) if recursive else directory.glob(pattern)
+            result = sorted((p.relative_to(root) for p in paths if p.is_file()), key=lambda p: str(p))
+        except OSError:
+            self.unavailable(root_name, relative, "directory_read_error", required)
+            return []
+        self.inventory(root_name, relative, result, required)
+        return result
+
+
+def _source_object(state, line=None):
+    result = {"path": state["path"], "sha256": state.get("sha256"),
+              "observed_at": state["observed_at"]}
+    if isinstance(line, int):
+        result["line"] = line
+    if state.get("hash_scope"):
+        result["hash_scope"] = state["hash_scope"]
+    return result
+
+
+def _extract_refs(value, limit=100):
+    values = value if isinstance(value, list) else [value]
+    result = []
+    for item in values[:limit]:
+        if isinstance(item, dict):
+            item = item.get("ref") or item.get("path") or item.get("evidence_ref")
+        text = _safe_text(item)
+        if text and REFERENCE_RE.match(text) and not SENSITIVE_RE.search(text):
+            result.append(text)
+    return result
+
+
+def _bet_refs(document):
+    values = []
+    for key in ("bet", "bet_id", "bet_ref", "bet_refs"):
+        raw = document.get(key)
+        values.extend(raw if isinstance(raw, list) else [raw])
+    result = []
+    for item in values:
+        text = _safe_text(item)
+        if text and BET_RE.fullmatch(text) and text not in result:
+            result.append(text)
+    return result
+
+
+def _frontmatter(raw):
+    text = raw[:RETRO_HEADER_BYTES].decode("utf-8", "replace")
+    if not text.startswith("---\n"):
+        return {}, text
+    end = text.find("\n---", 4)
+    if end < 0:
+        return {}, text
+    try:
+        value = yaml.safe_load(text[4:end]) or {}
+        return value if isinstance(value, dict) else {}, text
+    except yaml.YAMLError:
+        return {}, text
+
+
+def _heading_index(raw, required_lines=None, required_titles=None):
+    text = raw.decode("utf-8", "replace")
+    sections = []
+    required_lines = set(required_lines or [])
+    required_titles = set(required_titles or [])
+    in_fence = False
+    for line_no, line in enumerate(text.splitlines(), 1):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        match = None if in_fence else re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
+        if match:
+            title = _safe_text(match.group(2), 240)
+            if title:
+                sections.append({"id": "section:" + hashlib.sha256((str(line_no) + ":" + title).encode()).hexdigest()[:16],
+                                 "title": title, "level": len(match.group(1)), "line": line_no})
+    selected = [row for index, row in enumerate(sections)
+                if index < MAX_HEADINGS or row["line"] in required_lines or row["title"] in required_titles]
+    return selected, len(sections)
+
+
+def _git_head(reader):
+    raw, state = reader.read("workspace", ".git/HEAD", required=True)
+    if raw is None:
+        return {"sha": None, "source": _source_object(state)}
+    text = raw.decode("ascii", "replace").strip()
+    if re.fullmatch(r"[a-f0-9]{40}", text):
+        return {"sha": text, "source": _source_object(state)}
+    if text.startswith("ref: ") and re.fullmatch(r"refs/[A-Za-z0-9_./-]+", text[5:]):
+        ref = text[5:]
+        ref_raw, ref_state = reader.read("workspace", ".git/" + ref, required=False)
+        sha = ref_raw.decode("ascii", "replace").strip() if ref_raw else None
+        if not sha:
+            # A branch may be stored exclusively in packed-refs after Git's
+            # periodic ref compaction.  The packed file remains allowlisted,
+            # read-only workspace metadata.
+            packed_raw, packed_state = reader.read(
+                "workspace", ".git/packed-refs", required=False
+            )
+            if packed_raw:
+                for line in packed_raw.decode("ascii", "replace").splitlines():
+                    fields = line.split(None, 1)
+                    if len(fields) == 2 and fields[1].strip() == ref:
+                        sha = fields[0]
+                        break
+                ref_state = packed_state
+        if not sha or not re.fullmatch(r"[a-f0-9]{40}", sha):
+            reader.invalid(ref_state, "invalid_git_ref", required=True)
+            sha = None
+        return {"sha": sha, "ref": ref, "source": _source_object(ref_state)}
+    reader.invalid(state, "invalid_git_head", required=True)
+    return {"sha": None, "source": _source_object(state)}
+
+
+def _collect_runs(reader):
+    paths = reader.discover("state", ".omo/_delivery/agent-workflows/runs", "*.yaml", required=True)
+    selected = list(reversed(paths))[:MAX_RUN_FILES]
+    records = []
+    for relative in selected:
+        document, state = reader.yaml("state", relative)
+        if not isinstance(document, dict):
+            continue
+        run_id = _safe_text(document.get("run_id") or relative.stem)
+        packet = _mapping(document.get("work_packet"))
+        spec = _mapping(packet.get("spec_binding") or document.get("spec_binding"))
+        acceptance = _mapping(packet.get("acceptance"))
+        evidence_refs = _extract_refs(document.get("evidence"))
+        record = {"id": run_id or "run:" + state["id"], "title": run_id or relative.stem,
+                  "kind": "run", "status": _safe_text(document.get("status")) or "unknown",
+                  "source": _source_object(state),
+                  "observed_at": _safe_text(document.get("updated_at") or document.get("created_at")) or state["observed_at"],
+                  "bet_refs": _bet_refs(document) or _bet_refs(packet), "relation_basis": "explicit_field",
+                  "facts": {"workflow_id": _safe_text(document.get("workflow_id")),
+                            "actor": _safe_text(document.get("actor")),
+                            "created_at": _safe_text(document.get("created_at")),
+                            "updated_at": _safe_text(document.get("updated_at")),
+                            "packet_id": _safe_text(packet.get("packet_id")),
+                            "packet_bet_id": _safe_text(packet.get("bet_id")),
+                            "spec_ref": _safe_text(spec.get("spec_ref")),
+                            "spec_digest": _safe_text(spec.get("content_digest")),
+                            "spec_version": _safe_text(spec.get("spec_version")),
+                            "work_packet_hash": _safe_text(document.get("work_packet_hash")),
+                            "evidence_refs": evidence_refs},
+                  "done_when_count": len(_rows(acceptance.get("done_when"))),
+                  "verify_count": len(_rows(acceptance.get("verify")))}
+        records.append(record)
+    return records, {"discovered": len(paths), "read": len(records),
+                     "truncated": max(0, len(paths) - len(selected))}
+
+
+def _collect_retros(reader):
+    paths = reader.discover("workspace", ".omo/_knowledge/retros", "*.md", recursive=True, required=True)
+    exact = [p for p in paths if BET_RE.fullmatch(p.stem)]
+    other = [p for p in paths if p not in exact]
+    selected = list(reversed(exact))[:MAX_RETRO_FILES]
+    if len(selected) < MAX_RETRO_FILES:
+        selected += list(reversed(other))[:MAX_RETRO_FILES - len(selected)]
+    records = []
+    for relative in selected:
+        raw, state = reader.read("workspace", relative)
+        if raw is None:
+            continue
+        header, text = _frontmatter(raw)
+        refs = _bet_refs(header)
+        basis = "explicit_field"
+        if not refs and BET_RE.fullmatch(relative.stem):
+            refs = [relative.stem]
+            basis = "filename_inferred"
+        title = _safe_text(header.get("title"))
+        if not title:
+            heading = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
+            title = _safe_text(heading.group(1)) if heading else relative.stem
+        records.append({"id": "retro:" + relative.stem, "title": title, "kind": "retro",
+                        "status": _safe_text(header.get("status")) or "unknown",
+                        "source": _source_object(state),
+                        "observed_at": _safe_text(header.get("last-reviewed") or header.get("created")) or state["observed_at"],
+                        "bet_refs": refs, "relation_basis": basis,
+                        "facts": {"document_type": _safe_text(header.get("type")),
+                                  "lifecycle": _safe_text(header.get("lifecycle")),
+                                  "owner": _safe_text(header.get("owner"))}})
+    return records, {"discovered": len(paths), "read": len(records),
+                     "truncated": max(0, len(paths) - len(selected))}
+
+
+def _issue_record(document, state, fallback_id, kind="issue"):
+    identity = _safe_text(document.get("id") or document.get("fingerprint") or fallback_id)
+    refs = _bet_refs(document)
+    evidence = _extract_refs(document.get("evidence_refs") or document.get("evidence"))
+    return {"id": kind + ":" + (identity or fallback_id),
+            "title": _safe_text(document.get("title")) or _safe_text(document.get("kind")) or identity or fallback_id,
+            "kind": kind, "status": _safe_text(document.get("lifecycle_state") or document.get("status")) or "unknown",
+            "source": _source_object(state), "observed_at": state["observed_at"],
+            "bet_refs": refs, "relation_basis": "explicit_field",
+            "facts": {"raw_id": identity, "severity": _safe_text(document.get("severity") or document.get("priority")),
+                      "owner": _safe_text(document.get("owner")), "bet_ref": refs[0] if refs else None,
+                      "declared_status": _safe_text(document.get("status")),
+                      "lifecycle_state": _safe_text(document.get("lifecycle_state")),
+                      "evidence_refs": evidence}}
+
+
+def _collect_issues(reader):
+    records = []
+    counts = {}
+    for directory in (".omo/debt/items",):
+        paths = reader.discover("workspace", directory, "*.yaml", required=False)
+        counts[directory] = {"discovered": len(paths), "read": 0, "truncated": 0}
+        for relative in paths:
+            document, state = reader.yaml("workspace", relative)
+            if isinstance(document, dict):
+                records.append(_issue_record(document, state, relative.stem))
+                counts[directory]["read"] += 1
+        counts[directory]["truncated"] = max(0, len(paths) - counts[directory]["read"])
+    # .omo/debt/gap-items and .omo/debt/gap-registry.yaml were the pre-PR#124
+    # debt registry shape, superseded by .omo/debt/items/*.yaml (the current
+    # SSOT, confirmed real and populated). Both were already required=False,
+    # so removing them changes no real data -- it only stops permanently
+    # registering two dead, now-nonexistent paths as UNAVAILABLE noise in the
+    # source diagnostics table.
+    known, known_state = reader.yaml("workspace", ".omo/_truth/registry/gate-known-debt.yaml", required=False)
+    if isinstance(known, dict):
+        for index, row in enumerate(_rows(known.get("entries"))[:100]):
+            if isinstance(row, dict):
+                safe = {"fingerprint": row.get("fingerprint"), "kind": row.get("kind"),
+                        "status": "active" if row.get("active") is True else "unknown",
+                        "priority": row.get("priority"), "surface": row.get("surface")}
+                records.append(_issue_record(safe, known_state, "known-debt-" + str(index), "known_debt"))
+    return records, counts
+
+
+def _knowledge_record(identity, title, kind, status, state, facts):
+    return {"id": identity, "title": title, "kind": kind, "status": status or "declared",
+            "source": _source_object(state), "observed_at": state["observed_at"],
+            "bet_refs": [], "relation_basis": "explicit_field", "facts": facts}
+
+
+def _collect_memory(reader):
+    document, state = reader.yaml("workspace", ".omo/_truth/registry/memory-os.yaml", required=False)
+    if not isinstance(document, dict):
+        return {"memory_types": [], "intent_routes": []}, []
+    memory_types = []
+    records = []
+    for row in _rows(document.get("memory_types"))[:50]:
+        if isinstance(row, dict):
+            identity = _safe_text(row.get("id"))
+            summary = {"id": identity, "description": _safe_text(row.get("description"))}
+            memory_types.append(summary)
+            if identity:
+                records.append(_knowledge_record("memory_type:" + identity, identity, "memory_type", "declared", state,
+                                                 {"name": identity, "description": summary["description"],
+                                                  "registry_id": _safe_text(document.get("id")),
+                                                  "registry_version": _safe_text(document.get("version"))}))
+    routes = []
+    for row in _rows(document.get("intent_routes"))[:100]:
+        if isinstance(row, dict):
+            route = {"intent": _safe_text(row.get("intent")),
+                     "primary": _safe_strings(row.get("primary")),
+                     "secondary": _safe_strings(row.get("secondary")),
+                     "requires_adapter": _safe_text(row.get("requires_adapter"))}
+            routes.append(route)
+            if route["intent"]:
+                records.append(_knowledge_record("memory_route:" + route["intent"], route["intent"],
+                                                 "memory_route", "declared", state,
+                                                 {"name": route["intent"], "primary": route["primary"],
+                                                  "secondary": route["secondary"],
+                                                  "requires_adapter": route["requires_adapter"],
+                                                  "adapter_names": sorted(set(route["primary"] + route["secondary"]))}))
+    return {"memory_types": memory_types, "intent_routes": routes}, records
+
+
+def _collect_inventory(reader):
+    skills = reader.discover("workspace", ".agents/skills", "SKILL.md", recursive=True, required=False)
+    workflows = reader.discover("workspace", ".omo/_truth/registry/agent-workflows/workflows", "*.yaml", required=False)
+    records = []
+    for relative in skills:
+        raw, state = reader.prefix("workspace", relative)
+        if raw is None:
+            continue
+        header, _discarded_body = _frontmatter(raw)
+        name = _safe_text(header.get("name")) or relative.parent.name
+        records.append(_knowledge_record("skill:" + str(relative.parent).replace("/", ":"), name, "skill",
+                                         _safe_text(header.get("status")) or "observed", state,
+                                         {"name": name, "description": _safe_text(header.get("description")),
+                                          "version": _safe_text(header.get("version")),
+                                          "owner": _safe_text(header.get("owner")),
+                                          "last_reviewed": _safe_text(header.get("last-reviewed") or header.get("last_reviewed")),
+                                          "review_due": _safe_text(header.get("review_due") or header.get("review-due")),
+                                          "type": _safe_text(header.get("type"))}))
+    for relative in workflows:
+        document, state = reader.yaml("workspace", relative)
+        if not isinstance(document, dict):
+            continue
+        identity = _safe_text(document.get("id")) or relative.stem
+        agents = _mapping(document.get("agents"))
+        roles = _safe_strings(agents.get("roles"))
+        phase_ids = [_safe_text(key) for key in list(_mapping(document.get("phases")))[:100] if _safe_text(key)]
+        records.append(_knowledge_record("workflow:" + identity, _safe_text(document.get("title")) or identity,
+                                         "workflow", _safe_text(document.get("status")) or "declared", state,
+                                         {"name": identity,
+                                          "description": _safe_text(document.get("description") or document.get("purpose")),
+                                          "version": _safe_text(document.get("version")),
+                                          "owner": _safe_text(document.get("owner")),
+                                          "last_reviewed": _safe_text(document.get("last-reviewed") or document.get("last_reviewed")),
+                                          "review_due": _safe_text(document.get("review_due") or document.get("review-due")),
+                                          "run_frequency": _safe_text(document.get("run_frequency")),
+                                          "roles": roles, "phase_ids": phase_ids}))
+    inventory = {"skills": {"observed": len(skills), "basis": "allowlisted_path_inventory",
+                            "source_path": "workspace:.agents/skills"},
+                 "workflows": {"observed": len(workflows), "basis": "allowlisted_path_inventory",
+                               "source_path": "workspace:.omo/_truth/registry/agent-workflows/workflows"}}
+    return inventory, records
+
+
+def _collect_documents(reader, model=None):
+    registry, registry_state = _document_registry(reader)
+    if not isinstance(registry, dict) or not isinstance(registry.get("documents"), list):
+        if registry is not None:
+            reader.invalid(registry_state, "schema_invalid_documents", required=True)
+        reader.segment_counts["documents"] = {"discovered": 0, "read": 0, "truncated": 0,
+                                               "headings_discovered": 0, "headings_read": 0,
+                                               "headings_truncated": 0}
+        return []
+    result = []
+    candidates = [entry for entry in registry["documents"] if isinstance(entry, dict)]
+    identities = [entry.get("document_id") for entry in candidates]
+    duplicate_ids = {identity for identity in identities if isinstance(identity, str) and identities.count(identity) > 1}
+    prioritized = candidates
+    source_documents = _mapping(_mapping(model).get("source_documents"))
+    key_to_document = {key: _mapping(row).get("document_id") for key, row in source_documents.items()}
+    required_lines = {}
+    required_titles = {}
+    model_macro = _mapping(_mapping(model).get("macro"))
+    model_detail = _mapping(model_macro.get("detail_example"))
+    contradiction_refs = [ref for row in _rows(_mapping(model).get("contradictions")) if isinstance(row, dict)
+                          for ref in _rows(row.get("source_refs")) if isinstance(ref, dict)]
+    model_rows = (_rows(model_macro.get("nodes")) + _rows(model_detail.get("nodes")) +
+                  _rows(model_detail.get("relations")) + _rows(_mapping(model).get("loops")) + contradiction_refs)
+    for row in model_rows:
+        if not isinstance(row, dict):
+            continue
+        document_id = key_to_document.get(row.get("source_key"))
+        if document_id and isinstance(row.get("line"), int):
+            required_lines.setdefault(document_id, set()).add(row["line"])
+        if document_id and isinstance(row.get("section"), str):
+            required_titles.setdefault(document_id, set()).add(row["section"])
+    for index, entry in enumerate(prioritized[:MAX_DOCUMENTS]):
+        if not isinstance(entry, dict):
+            continue
+        if isinstance(entry.get("document_id"), str) and entry["document_id"] in duplicate_ids:
+            reader.unavailable("library", "registry-entry-" + str(index), "duplicate_identity", True)
+            continue
+        try:
+            root_name, relative = _registered_target(reader, entry)
+        except ValueError as error:
+            reader.unavailable("library", "registry-entry-" + str(index), str(error))
+            continue
+        root = reader.roots[root_name]
+        absolute = root / relative
+        identity = entry["document_id"]
+        declared_sha = entry.get("content_sha256")
+        if identity in V21_DOCUMENT_PATHS and (
+                not isinstance(declared_sha, str) or not re.fullmatch(r"[a-f0-9]{64}", declared_sha)):
+            reader.unavailable(root_name, relative, "schema_missing_document_digest", True)
+            continue
+        is_text = absolute.suffix.lower() in {".md", ".yaml", ".yml", ".json", ".txt"}
+        if is_text:
+            raw, state = _read_registered_file(reader, root_name, relative)
+            if raw is not None:
+                sections, section_total = _heading_index(raw, required_lines.get(identity), required_titles.get(identity))
+                digest = state.get("sha256")
+                observation_scope = "content_hash_and_heading_index"
+                if isinstance(declared_sha, str) and re.fullmatch(r"[a-f0-9]{64}", declared_sha) and digest != declared_sha:
+                    reader.invalid(state, "document_hash_mismatch")
+            else:
+                sections, section_total = [], 0
+                digest = None
+                observation_scope = "registry_metadata_source_unavailable"
+        else:
+            _unused, state = _read_registered_file(reader, root_name, relative, metadata=True, declared_sha=declared_sha)
+            sections, section_total = [], 0
+            digest = state.get("sha256")
+            observation_scope = "registry_metadata_only"
+        result.append({"id": identity, "title": _safe_text(entry.get("title")) or identity,
+                       "path": str(absolute), "raw_path": _safe_text(entry.get("path")), "sha256": digest,
+                       "declared_sha256": _safe_text(declared_sha),
+                       "observed_sha256": state.get("sha256") if is_text else None,
+                       "source_status": state["status"], "source_reason": state.get("reason"),
+                       "observed_at": state["observed_at"],
+                       "document_type": _safe_text(entry.get("document_type")),
+                       "owner": _safe_text(entry.get("owner")),
+                       "authority_scope": _safe_text(entry.get("authority_scope")),
+                       "approval_state": _safe_text(entry.get("approval_state")) or "unknown",
+                       "authority_class": _safe_text(entry.get("authority_class")) or "unknown",
+                       "observation_scope": observation_scope,
+                       "sections": sections, "sections_discovered": section_total,
+                       "sections_truncated": max(0, section_total - len(sections)),
+                       "relations": {str(key): _safe_strings(value) for key, value in _mapping(entry.get("relations")).items()
+                                     if isinstance(key, str) and not SENSITIVE_RE.search(key)}})
+    if len(registry["documents"]) > MAX_DOCUMENTS:
+        reader.partial_reasons.append("library:.library/registry.yaml:document_budget")
+    reader.segment_counts["documents"] = {
+        "discovered": len(registry["documents"]), "read": len(result),
+        "truncated": max(0, len(registry["documents"]) - len(result)),
+        "headings_discovered": sum(row["sections_discovered"] for row in result),
+        "headings_read": sum(len(row["sections"]) for row in result),
+        "headings_truncated": sum(row["sections_truncated"] for row in result),
+    }
+    return result
+
+
+def _collect_model(reader):
+    document, _state = reader.json("app", "strategy_model.json", required=False)
+    if not isinstance(document, dict):
+        return None
+    macro = _mapping(document.get("macro"))
+    nodes = []
+    for row in _rows(macro.get("nodes"))[:100]:
+        if isinstance(row, dict):
+            nodes.append({key: row.get(key) for key in
+                          ("id", "label", "band", "description", "source_key", "section", "line", "kind",
+                           "ref_panel", "detail_nodes")
+                          if not SENSITIVE_RE.search(key)})
+    edges = []
+    for row in _rows(macro.get("edges"))[:200]:
+        if isinstance(row, dict):
+            edges.append({key: row.get(key) for key in ("from", "to", "label", "relation_basis")})
+    loops = []
+    allowed_loop = ("id", "declared_id", "label", "type", "sensor", "controller", "actuator", "feedback",
+                    "delay", "brake", "source_key", "line", "section", "proof_state", "variables", "links")
+    for row in _rows(document.get("loops"))[:50]:
+        if isinstance(row, dict):
+            loops.append({key: _safe_tree(row.get(key)) for key in allowed_loop})
+    source_documents = {}
+    for key, row in _mapping(document.get("source_documents")).items():
+        if isinstance(key, str) and isinstance(row, dict):
+            source_documents[key] = {name: _safe_text(row.get(name)) for name in ("document_id", "path", "sha256")}
+    detail = _mapping(macro.get("detail_example"))
+    detail_nodes = []
+    for row in _rows(detail.get("nodes"))[:500]:
+        if isinstance(row, dict):
+            detail_nodes.append({key: _safe_tree(row.get(key)) for key in
+                                 ("id", "label", "kind", "source_key", "section", "line")})
+    detail_relations = []
+    for row in _rows(detail.get("relations"))[:1000]:
+        if isinstance(row, dict):
+            detail_relations.append({key: _safe_tree(row.get(key)) for key in
+                                     ("from", "to", "label", "relation_basis", "source_key", "section", "line")})
+    contradictions = []
+    for row in _rows(document.get("contradictions"))[:50]:
+        if isinstance(row, dict):
+            source_refs = []
+            for ref in _rows(row.get("source_refs"))[:50]:
+                if isinstance(ref, dict):
+                    source_refs.append({key: _safe_tree(ref.get(key)) for key in
+                                        ("source_key", "section", "line", "statement")})
+            contradictions.append({"id": _safe_text(row.get("id")), "title": _safe_text(row.get("title")),
+                                   "severity": _safe_text(row.get("severity")), "source_refs": source_refs,
+                                   "next_action": _safe_text(row.get("next_action")),
+                                   "candidate_key": _safe_text(row.get("candidate_key")),
+                                   "status": _safe_text(row.get("status"))})
+    return {"schema": _safe_text(document.get("schema") or document.get("schema_version")),
+            "macro": {"node_limit": macro.get("node_limit"), "node_count": macro.get("node_count"),
+                      "nodes": nodes, "edges": edges,
+                      "detail_example": {"title": _safe_text(detail.get("title")),
+                                         "note": _safe_text(detail.get("note")),
+                                         "nodes": detail_nodes, "relations": detail_relations}},
+            "source_documents": source_documents,
+            "loops": loops, "contradictions": contradictions}
+
+
+def _collect_metric_observations(reader):
+    result = {"weekly_value": [], "journey_baseline": None}
+    raw, state = reader.read("workspace", "docs/reports/weekly-value-snapshots.jsonl", required=False)
+    if raw is not None:
+        for line in raw.decode("utf-8", "replace").splitlines()[:500]:
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                reader.invalid(state, "jsonl_parse_error")
+                break
+            if isinstance(row, dict):
+                result["weekly_value"].append({key: row.get(key) for key in
+                    ("schema_version", "week_iso", "signals_count", "accepted_by_principal",
+                     "weekly_adoption_rate", "status", "blockers", "observed_at")})
+    raw, state = reader.read("workspace", "docs/reports/2026-09-05-journey-completion-baseline.md", required=False)
+    if raw is not None:
+        text = raw.decode("utf-8", "replace")
+        status_match = re.search(r"Baseline Status:\s*([A-Z_]+)", text)
+        json_match = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
+        observation = {}
+        if json_match:
+            try:
+                value = json.loads(json_match.group(1))
+                if isinstance(value, dict):
+                    observation = {key: value.get(key) for key in
+                                   ("schema_version", "observed_at", "metric", "status", "reason", "gap_inventory")}
+            except json.JSONDecodeError:
+                reader.invalid(state, "embedded_json_parse_error")
+        if status_match:
+            observation["heading_status"] = status_match.group(1)
+        result["journey_baseline"] = observation or None
+    return result
+
+
+def collect_registered_documents(library, observed_at=None):
+    """Shared registry policy for the strategy and legacy Documents probe."""
+    stamp = observed_at or _now()
+    reader = BoundedReader({"library": library, "documents_root": Path(library).parent}, stamp)
+    documents = _collect_documents(reader)
+    registry_state = next((row for row in reader.source_states if row["path"] == "library:.library/registry.yaml"), {})
+    return {"documents": documents, "state": "PARTIAL" if reader.errors else "OBSERVED",
+            "registry_sha256": registry_state.get("sha256"), "observed_at": stamp,
+            "source_states": reader.source_states, "errors": reader.errors,
+            "budgets": {"max_files": MAX_FILES, "max_file_bytes": MAX_FILE_BYTES,
+                        "max_total_bytes": MAX_TOTAL_BYTES, "files_read": reader.files_read,
+                        "bytes_read": reader.total_bytes}}
+
+
+def _collect_strategy_sources(workspace, library, app, observed_at=None, state_root=None):
+    observed_at = observed_at or _now()
+    reader = BoundedReader({"workspace": workspace, "library": library,
+                            "documents_root": Path(library).parent, "app": app,
+                            "state": state_root if state_root is not None else workspace}, observed_at)
+    provenance = {"workspace": _git_head(reader)}
+    knowledge, memory_records = _collect_memory(reader)
+    inventory, inventory_records = _collect_inventory(reader)
+    metrics = _collect_metric_observations(reader)
+    model = _collect_model(reader)
+    documents = _collect_documents(reader, model)
+    issues, issue_counts = _collect_issues(reader)
+    runs, run_counts = _collect_runs(reader)
+    retros, retro_counts = _collect_retros(reader)
+    local_sha = provenance["workspace"].get("sha")
+    local_ref = provenance["workspace"].get("ref")
+    knowledge_records = inventory_records + memory_records
+    for record in issues + runs + retros + knowledge_records:
+        record["source"]["repository_sha"] = local_sha
+        record["source"]["repository_ref"] = local_ref
+        record["source"]["repository_kind"] = "local_workspace_head"
+    truncated = reader.truncated + run_counts["truncated"] + retro_counts["truncated"]
+    truncated += sum(row["truncated"] for row in issue_counts.values())
+    partial_reasons = sorted(set(reader.partial_reasons +
+                                 (["runs:sample_budget"] if run_counts["truncated"] else []) +
+                                 (["retros:sample_budget"] if retro_counts["truncated"] else [])))
+    # Absence of optional historical metadata is evidence, but does not make the
+    # strategy source unavailable.  Blocking reads, budget exhaustion, and other
+    # degraded imports remain PARTIAL and retain their exact reasons.
+    soft_gaps = [
+        reason for reason in partial_reasons
+        if reason.endswith((":missing", ":empty_or_missing_directory"))
+    ]
+    hard_gaps = [
+        reason for reason in partial_reasons
+        if not reason.endswith((":missing", ":empty_or_missing_directory"))
+    ]
+    state = (
+        "PARTIAL"
+        if reader.blocking_errors or truncated or hard_gaps
+        else "OBSERVED"
+    )
+    return {"schema": "zhixing-strategy-sources/v1", "observed_at": observed_at,
+            "state": state, "partial": bool(partial_reasons or reader.blocking_errors),
+            "optional_gaps": soft_gaps, "hard_gaps": hard_gaps,
+            "source_states": reader.source_states,
+            "documents": documents, "model": model,
+            "records": {"issues": issues, "retros": retros, "runs": runs, "knowledge": knowledge_records},
+            "knowledge": knowledge | {"inventory": inventory}, "inventory": inventory,
+            "metrics_observations": metrics, "provenance": provenance,
+            "counts": {"sources": len(reader.source_states), "errors": len(reader.errors),
+                       "truncated": truncated, "documents": len(documents), "issues": len(issues),
+                       "runs": len(runs), "retros": len(retros), "knowledge": len(knowledge_records),
+                       "discovered": {"runs": run_counts, "retros": retro_counts, "issues": issue_counts,
+                                      "documents": reader.segment_counts.get("documents", {})}},
+            "budgets": {"max_files": MAX_FILES, "max_file_bytes": MAX_FILE_BYTES,
+                        "max_total_bytes": MAX_TOTAL_BYTES, "files_read": reader.files_read,
+                        "bytes_read": reader.total_bytes},
+            "errors": reader.errors, "partial_reasons": partial_reasons,
+            "proof_scope": "bounded allowlisted local metadata; no remote portfolio replacement and no runtime health proof"}
+
+
+def collect_strategy_sources(
+    workspace: Path | None = None,
+    library: Path | None = None,
+    app: Path | None = None,
+    state_root: Path | None = None,
+):
+    """Trusted callers supply roots; this reader neither imports nor runs Workspace code."""
+    if workspace is None:
+        raise ValueError("trusted caller must provide the resolved workspace code root")
+    return _collect_strategy_sources(
+        workspace,
+        library or LIBRARY,
+        app or APP,
+        state_root=state_root,
+    )
