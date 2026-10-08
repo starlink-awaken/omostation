@@ -40908,7 +40908,8 @@ bets:
     被 .gitignore:281 忽略 ⇒ fresh CI 即红 (T10-230 的 circuit_breaker 已因此拒绝过注册)，且改名要同时动 omo
     侧 omo_paths.STATE_SYSTEM_YAML / find_omo_dir() 与 guard:33 ⇒ 写面出现两个身份; ADR-0456 已为这一类落地
     state_file_read() (repo_root.py:204-220 文档串自己点名 system.yaml)，本轮把「创建者 + 摘库 + 读者接入」做实。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-07
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -41001,7 +41002,6 @@ bets:
   - AGENTS.md
   - bin/panorama/panorama-collect.py
   - tests/unit/test_system_yaml_write_plane.py
-  - .omo/state/system.yaml
   - .github/workflows/gac-gate.yml
   - .github/workflows/architecture-check.yml
   - .omo/_truth/registry/ci-surfaces.yaml
@@ -41016,7 +41016,127 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bbcb4e2795dce3ec30eec76bc1250e15dc109f7d
+          tests:
+            ref: receipt://docs/reports/2026-10-07-bet-235-canary.json
+            sha256: sha256:23dc6467c9acaee3626197e9afc1dbf6cd6c12ad44c59086f982038849d35635
+          diff:
+            ref: receipt://docs/reports/2026-10-07-system-yaml-materializer-closeout.md
+            sha256: sha256:396cae67c2bc8294ac665c94afd8e296d66e4863e42988af28b62a645dbc11fa
+          rollback:
+            ref: receipt://docs/reports/2026-10-07-system-yaml-materializer-closeout.md
+            sha256: sha256:396cae67c2bc8294ac665c94afd8e296d66e4863e42988af28b62a645dbc11fa
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-235.md
+            sha256: sha256:30c0daf74915e438057bf9d02aae21aeb349a71b5988883b6d3a0ca54473224d
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-07-bet-235-canary.json
+            sha256: sha256:23dc6467c9acaee3626197e9afc1dbf6cd6c12ad44c59086f982038849d35635
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-07-system-yaml-materializer-closeout.md
+            sha256: sha256:396cae67c2bc8294ac665c94afd8e296d66e4863e42988af28b62a645dbc11fa
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-235.md
+            sha256: sha256:30c0daf74915e438057bf9d02aae21aeb349a71b5988883b6d3a0ca54473224d
+          cleanup:
+            ref: receipt://docs/reports/2026-10-07-system-yaml-materializer-closeout.md
+            sha256: sha256:396cae67c2bc8294ac665c94afd8e296d66e4863e42988af28b62a645dbc11fa
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-236
+  title: ADR-0456 B5 补料侧 —— system.yaml 空形的消费侧折叠（present-but-null 不得比缺席更笨）
+  goal: 'T10-235 交付了 .omo/state/system.yaml 的创建者并把它摘库（PR #4671 → bbcb4e279），其 receipt
+    §5 记录了一处由该交付暴露的消费侧红，本 BET 把它做实。实测（2026-10-07，同一棵合并后检出，只换 .omo/state/system.yaml
+    的内容）: ① 缺文件时 `python3 bin/mof/generate-brief.py --protect` rc=0 （脚本 :390 自有默认 90）;
+    ② #4671 之前的跟踪快照（health_score: 46）rc=0; ③ 创建者物化后的空形 rc=1，TypeError: GE 运算符不支持 NoneType
+    与 int，栈顶 :509 ⇒ 失效形状恰好落在两种本来能跑的状态中间。 根因是 dict.get 的第二参数只在键不存在时返回，键存在而值为 null 时返回
+    None（:398-399 两个键）， 所以「未测量」在同一个脚本里有两种读法，而下游 :509 的比较与 :513/:522 的 f-string 只准备了数值
+    —— :513 会把「未测量」直接渲染成 None/100。空形本身是 T10-235 的契约而非缺陷： omo-state-write-guard.py::check_field_ownership()
+    对 present 与 write-owners.yaml declared 做双向比对（:191 undeclared-key / :200 ghost-declaration），生成者不拥有的
+    13 个键只能以空形出现 ⇒ 要改的是消费面。站点面由 AST 装置可复算（正则按引擎与换行写法给过 10/11/13 三种读数）： bin/** 11 处、projects/**
+    13 处、合计 24；root 侧 11 处里行为在空形下改变的只有 generate-brief.py 的 2 处。可见性半边先前被写成「brief-protect
+    在 .github/workflows/ 零调用」，本轮复测否证： gac-gate.yml:144-150 的 gac-local-gate.py --strict
+    确实调它，让它对 CI 失效的是同一文件里的 SOFT_CHECKS（:601-602 收录，:1200 从 blocking 剔除、:1203 归入 warnings）⇒
+    rc=1 也只是 warning， CI 全绿不是这条红的证据。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop if 修复需要动 materialize-system-state.py 的空形语义或键集合（T10-235 的 I1
+    判据是 key_set_equals_declared，改窄它即削弱上一轮交付的判据）; Stop if 需要把 .omo/state/system.yaml
+    放回跟踪或撤 .gitignore:297 来让文件不空; Stop if 折叠写成 data.get(k) or default（那会连带折叠合法的 0，spec
+    I2 正是为排除这种写法）; Stop if 需要把 brief-protect 摘出 SOFT_CHECKS 或改 :1200/:1203 的 blocking/warning
+    划分才能变红（该检查给的命令不带 --write，protect 分支 :576 恒不进入，放大成阻塞等于 放大一条没在做保护的检查）; Stop if 需要为其余
+    9 处站点预先抽 bin/lib 公共装置（spec I3 改法局部化）; Stop if 宣布 B1 或 B5 完成。
+  non_goals:
+  - 不动创建者的空形语义、键集合与 write-owners.yaml 声明集（13 个生成者所有的空形键原样保留）。
+  - 不撤 .gitignore:297 的摘库，不把 system.yaml 放回跟踪。
+  - 不改「未测量」的显示文案 —— 等价性判据要求空形与缺席同读数，而缺席今天显示 90/100； 显示成「未测量」会同时改变缺席侧行为，属另一条判据、另立 BET。
+  - 不碰 projects/** 那 13 处（跨仓，需 re-pin 指针与另一条 CI 面）。
+  - 不接 state-freshness-check 那条红 —— 它在 CI 因 ci_skip 根本不执行，其均分语义归 G9。
+  done_when:
+  - '判据-1 等价性（I1 主判据）: 同一棵检出两侧对照，装置为无 flag 的 stdout 运行 `python3 bin/mof/generate-brief.py`（只打印、不写文件）——
+    移走 system.yaml 取一份， materialize-system-state.py --json 物化空形后再取一份；两侧 rc=0 且两份内容经
+    normalize_brief_content() 后逐字节相等。等价性同时钉住 :509 的崩溃与 :513 的 None/100 渲染， 且不冻结任何具体默认值。'
+  - '判据-2 真值不吞（I2）: 放回 health_score: 46 的快照内容后 rc=0 且输出含 46/100、不含 90/100。'
+  - '判据-3 用例: python3 -m pytest tests/unit/test_brief_null_shape.py -q -p no:randomly
+    全绿， 含三态用例与 I4 的 AST 站点集合相等用例。'
+  - '判据-4 反基线（I5）: 把 :398-399 临时改回 data.get(key, default) 后单跑等价性用例必须 FAILED 且失败消息含 NoneType；改回后绿。'
+  - '判据-5 检测器不自证为空（I4）: 向 AST 扫描喂一棵含新增 health_score 带默认值站点的复刻树， 扫描点名该清单外站点。'
+  - '判据-6 CI 点名（I6）: git grep -n test_brief_null_shape -- .github/workflows/ 命中 governance-check.yml
+    一行 pytest 调用（tests/unit/** 不在任何 CI 白名单，未点名即不算交付）。'
+  - '判据-7 空形语义未动: materialize-system-state.py --dry-run --json 报 key_set_equals_declared=true
+    且 empty_shape_keys=13；omo-state-write-guard.py --json 的 ownership 三类计数全 0。'
+  - '判据-8 摘库未撤: git ls-files .omo/state/system.yaml 为空且 git check-ignore -v 命中 .gitignore:297。'
+  - '判据-9 门禁不瞎: make gac-local-gate 非 strict PASS 且 .omo/state 跑后仍空；T10-235 那四份用例 81
+    passed 不减。'
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_brief_null_shape.py -q -p no:randomly
+    expect: all pass — 三态等价性 + 真值不吞 + AST 站点集合相等（I4/I5）。
+  - cmd: python3 -m pytest tests/unit/test_brief_null_shape.py::test_null_shape_stdout_equals_absent_shape
+      -q -p no:randomly
+    expect: pass —— 该用例即判据-1 的装置：两侧各以 subprocess 跑一次无 flag 的 bin/mof/generate-brief.py
+      取 stdout，再用 importlib 加载 normalize_brief_content 归一后逐字节相等（模块名含连字符， 必须 spec_from_file_location
+      给别名，先例 tests/unit/mof/test_generate_brief_no_host_paths.py:21）。
+  - cmd: git grep -n test_brief_null_shape -- .github/workflows/
+    expect: 命中 governance-check.yml 一步 pytest —— 否则判据-6 未交付，本地全绿不算证据。
+  - cmd: python3 bin/gac/omo-state-write-guard.py --json
+    expect: ownership 三类计数全 0 且 exit 0（创建者侧未被本轮改动）。
+  - cmd: make gac-local-gate
+    expect: PASS；收尾 git status --short .omo/state 仍为空。
+  write_surfaces:
+  - bin/mof/generate-brief.py
+  - tests/unit/test_brief_null_shape.py
+  - .github/workflows/governance-check.yml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-07-brief-null-shape-consumer.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-236.md
+  - docs/reports/2026-10-07-brief-null-shape-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-07-brief-null-shape-consumer.md
+    spec_version: 1.0.0
+    content_digest: sha256:83d1af8d4e322745b63fe9526b8e2c6c7755d4239c59b27fb31c17bb84b88b11
+    decision_ref: decision://accepted/BET-Y2Q4-T10-236
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
         status: NOT_STARTED
@@ -41027,6 +41147,121 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: evaluating
+- id: BET-Y2Q4-T10-237
+  title: ADR-0456 G8 镜像面 —— 本机 launchd 把 projection-full-refresh 的 driver 换成它内部第 3 步的
+    subprocess，service-config-drift 的真实成因
+  goal: 'BET-Y2Q4-T10-235 收尾复跑 `make gac-local-gate` 时由 PASS 转 FAIL，唯一 hard fail 是 `service-config-drift`
+    (`bin/mof/gen-service-configs.py --check` rc=1，1 条: `com.omostation.zhixing-projection-fullrefresh`)。三条实测把它定性成
+    host 面而非该交付引入: ① 该检查 `bin/gac/gac-local-gate.py:198-205` 带 `ci_skip: True`，属 T10-235
+    receipt §4.1 量出的 7 条「本机 strict 才执行」的面，对 PR 的 CI 判定零影响; ② `git diff HEAD origin/main
+    -- .omo/_truth/registry/services.yaml bin/mof/gen-service-configs.py` 空输出 (fetch
+    后实测) ⇒ 真源与生成器一行未动，也不是分支落后; ③ 漂移两侧「不是字段不同，而是不是同一个服务」。 声明侧 (`.omo/_truth/registry/services.yaml:6022`，BET-Y2Q4-T10-227
+    引入): `program.entrypoint = bin/panorama/projection-full-refresh.py`、`trigger: interval`
+    / `interval_sec: 21600`、`generate: true`、无 env。 安装侧 (`~/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist`，mtime
+    2026-10-07T23:34:35，恰在本轮两次门禁之间): ProgramArguments = `[python3.14, -B, ~/.local/opt/omostation-publisher/bin/panorama/panorama-collect.py,
+    --json]`、`StartInterval: 180`、`WorkingDirectory` 与 `PANORAMA_ROOT` / `PANORAMA_CODE_ROOT`
+    / `OMOSTATION_ROOT` / `OMOSTATION_STATE_ROOT` 四者指向 publisher、`OMO_EVENT_LEDGER_DB`
+    回指 `Workspace/runtime/omo/event-ledger.sqlite3`、`ZHIXING_DASHBOARD_CODE_ROOT` =
+    `~/.local/share/zhixing-dashboard-runtime-clean-20261008` (带今天日期，driver 算的是 `str(DEPLOY_DIR)`
+    = `~/.local/share/zhixing-dashboard`，`bin/panorama/projection-full-refresh.py:107`)。
+    ⇒ 装的是 driver 内部第 3 步那个 subprocess 被提成服务本体: `main()` 的 0) `flock` 防重入 (`revisions/.fullrefresh.lock`)、1)
+    remote 卫生校验 (`EXPECTED_ORIGIN_SUFFIX = starlink-awaken/omostation.git`)、2) `fetch
+    + reset --hard origin/main + clean -fdx + 浅子模块对齐` 三步在调度路径上整体消失，频率 6h 变 3min (720
+    次/天)。 装置读数: `gen_launchd_plist(svc)` 内存产物与盘上 `unified_diff` **63 行**，缩进指纹相反 (盘 tab
+    40 行 / 4 空格 0 行，生成侧 tab 0 / 4 空格 15) ⇒ 盘上那份不是这台装置写的; 注册表 371 条里没有一条声明 `interval_sec`
+    属于 {180, 240} (republisher 是 480)，唯一声明 `panorama-collect.py` 的 `omostation.panorama-dashboard-refresh`
+    是 `generate: false` 且指向另一个路径 `~/.local/share/zhixing-dashboard/panorama-collect.py`;
+    仓内 `Library/LaunchAgents` 写入点只有 `gen-service-configs.py:691` / `runtime/cron/install-foundry-cron.sh`
+    / `bin/gac/documents-jobs-scheduler.py` / `projects/omlxc/src/omlxc/service/launchd.py`，无一命中该
+    label; `OMO_MANAGED_PYTHON` 在仓内只被 `bin/gac/managed-python:115` 读，没有装置把它写进 plist。
+    `launchctl list` 侧该 label PID 24697 正在跑，`com.omostation.panorama-dashboard-refresh`
+    PID 23373 同时在跑; 相隔 3 分钟两次读 `~/.local/log/projection-fullrefresh.log`，`projection_revision`
+    从 466002b9 变到 fd1e3834，`out` 恒为同一份 `~/.local/share/zhixing-dashboard/current-revision.json`
+    ⇒ 不是装了没跑，是按 3 分钟节奏真实发布且两条 label 写同一份产物。 措辞纪律: publisher 检出**不是未登记** —— 它声明在该 label
+    自己的 `notes` 里 (T10-227 原话「维护专用洁净检出 `~/.local/opt/omostation-publisher`…机器属主，不进 ws-*
+    卫生面」)，也是 driver 的 `CHECKOUT` 默认值 (env seam `OMOSTATION_PUBLISHER_CHECKOUT`); 缺的是它在
+    ADR-0456 的**根词汇**里没有位置 (`repo_root.install_root()` 只认 `~/.local/opt/omostation`，B4a)
+    ⇒ 真实形状是「双根契约在机器级进程里被部分采用、部分绕过」，不是「多出第三个根」。 与 G8 的关系: G8 是「有声明、无实体」，这条是「有实体、实体说的不是声明」，两面合起来才是
+    launchd 现实面的完整失败模式，所以不并成一条。 本轮不修的理由不是省事: 判哪一侧是真值要问 panorama/dashboard 那条线的作者，改注册表等于替别人裁定;
+    重装 plist 是机器级写操作且落在 B4b 批次 2+ 的逐批授权面上; 削弱该检查让门禁回绿就是把安全网改窄。 判据与全部读数: `docs/superpowers/specs/2026-10-07-launchd-label-collapsed-to-inner-step.md`。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop if 需要改 `bin/mof/gen-service-configs.py` 的判定语义 (放宽字段比对、跳过未登记
+    label、把 drift 降级成 warning) 才能让门禁回绿 —— 那是改窄安全网而不是解漂移; Stop if 在没有 panorama/dashboard
+    线署名裁定的情况下单方面改写 `.omo/_truth/registry/services.yaml` 去贴合本机 plist; Stop if 需要写 `~/Library/LaunchAgents`
+    或 `launchctl bootout` / 重载他人 label —— 属 B4b 批次 2+ 逐批授权面; Stop if 为消除重叠调度而摘掉 `com.omostation.panorama-dashboard-refresh`
+    或那条 collector label —— 谁该留是裁定问题不是清理问题; Stop if 把 publisher 写成 `repo_root.install_root()`
+    的第三个根 —— 那是 ADR-0456 文档与代码面的另一条 BET，须先有本 BET 判据-1 的裁定; Stop if 需要宣布 B4b 或 B5 完成
+    —— 本轮只交付这一条 host 面漂移的定性与裁定请求。
+  non_goals:
+  - 不改 `service-config-drift` 的 blocking 归属，不动 `CI_SKIP_CHECKS` / `SOFT_CHECKS` 两个集合
+    (T10-236 已就 brief-protect 立过同一条判据)。
+  - 不裁定 `projection-full-refresh.py` (sync+publish, 6h) 与 `panorama-collect.py` (publish-only,
+    3min) 哪个是该 label 的真形态 —— 只提交证据并请求署名。
+  - 不把 `~/.local/opt/omostation-publisher` 接进 `repo_root.install_root()` 或 ADR-0456
+    的根词汇 (待判据-1 闭合后另立 BET)。
+  - 不修 G9 (`state-freshness-check` 的 optional-missing 均分语义与 CI 不执行面)，也不修 T10-236 (generate-brief
+    空形折叠)。
+  - 不碰 T10-235 已交付的 `.omo/state/system.yaml` 创建者与摘库，不撤 `.gitignore` 的正向忽略。
+  done_when:
+  - '判据-1 归属有署名 (主判据): 该 label 的最终形态 (driver 或 collector-only) 有**可指认到人的裁定**，写进 `.omo/_truth/registry/services.yaml`
+    该条的 `notes`/`owner` 或本 BET 的 receipt; 判据是「有署名」而不是「本机读数和注册表一致了」—— 后者可以由改窄注册表达成。'
+  - '判据-2 绿由对齐取得: `python3 bin/mof/gen-service-configs.py --check` rc=0 且 `drift_count=0`，同时
+    `git diff origin/main -- bin/mof/gen-service-configs.py` 为空。'
+  - '判据-3 driver 的 0-2 步要么回来、要么被明确废弃: 若留 collector-only，必须写明 `flock` 防重入、remote 卫生校验、`reset
+    --hard origin/main` 三条在新形态里由谁承担; 解释不了即判据-1 未闭合。'
+  - '判据-4 两侧逐字节: `gen_launchd_plist(svc)` 内存产物与盘上文件 `unified_diff` 改前 63 行、改后为空，且缩进指纹一致
+    (判「不是这台装置写的」与「现在是这台装置写的」用同一把尺)。'
+  - '判据-5 重叠调度可见: 两条 label 都调 `panorama-collect.py` 且都写 `~/.local/share/zhixing-dashboard/current-revision.json`
+    (interval 180 / 240) 这一事实留下一条可读记录 + 可指认的只读枚举命令 (不 `launchctl`)。'
+  - '判据-6 日期化 scratch 面不入机器级配置: `ZHIXING_DASHBOARD_CODE_ROOT = ~/.local/share/zhixing-dashboard-runtime-clean-20261008`
+    这类字面量要么被消除，要么在注册表里有对应声明字段 (generator 无法重新产出它，见 spec §3)。'
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --check
+    expect: 改前 rc=1 且点名 com.omostation.zhixing-projection-fullrefresh (本轮实测); 对齐后 rc=0。
+  - cmd: git diff origin/main -- bin/mof/gen-service-configs.py
+    expect: 空输出 —— 判「绿由对齐取得」而非「由改窄装置取得」。
+  - cmd: python3 bin/gac/gac-local-gate.py --json
+    expect: '`hard_fails` 不含 `service-config-drift`，且 executed check 总数不减少 (本轮实测非 strict
+      侧 68 条)。'
+  - cmd: python3 - <<PY (importlib 载 gen-service-configs，gen_launchd_plist(svc) 与盘上
+      plist 做 unified_diff 并分别统计 tab / 4 空格缩进行数)
+    expect: 改前 diff 63 行且两侧缩进指纹相反; 改后 diff 为空且指纹一致。
+  write_surfaces:
+  - .omo/_truth/registry/services.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-07-launchd-label-collapsed-to-inner-step.md
+  - docs/reports/
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-237.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-07-launchd-label-collapsed-to-inner-step.md
+    spec_version: 1.0.0
+    content_digest: sha256:bac401544231e8465bb6d260a6ed009ddc356167271a1013f7e46c5a336f4953
+    decision_ref: decision://accepted/BET-Y2Q4-T10-237
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -41165,7 +41400,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 531
+  total_bets: 533
   windows:
   - Y1Q1
   - Y1Q2
