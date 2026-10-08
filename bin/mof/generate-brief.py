@@ -392,14 +392,20 @@ def generate_brief_content() -> str:
     online_ratio = 1.0
 
     system_yaml = _system_yaml()
+    data: dict = {}
     if system_yaml.is_file():
         try:
             data = yaml.safe_load(system_yaml.read_text(encoding="utf-8")) or {}
-            health_score = data.get("health_score", 90)
-            gov_anomaly = data.get("governance_anomaly_score", 100)
-            # daemon 在线率不读此死字段 — 改为下方实时探测 (消除快照幻影)
         except Exception:
-            pass
+            data = {}
+    # YAML null (物化器初始态) 视同缺省 — data.get 的默认只兜底"键不存在"
+    health_score = data.get("health_score")
+    if health_score is None:
+        health_score = 90
+    gov_anomaly = data.get("governance_anomaly_score")
+    if gov_anomaly is None:
+        gov_anomaly = 100
+    # daemon 在线率不读此死字段 — 改为下方实时探测 (消除快照幻影)
 
     # 治本 (health-daemon-ratio-phantom): daemon 在线率实时复用 compass 探测函数,
     # 不读 system.yaml::service_online_ratio 死字段 (无人刷新→快照幻影 0.6).
