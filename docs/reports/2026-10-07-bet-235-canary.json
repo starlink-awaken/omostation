@@ -1,0 +1,99 @@
+{
+  "bet_id": "BET-Y2Q4-T10-235",
+  "head": "bbcb4e2795dce3ec30eec76bc1250e15dc109f7d",
+  "in_tree": {
+    "architecture_check_gate": {
+      "core_document_failures": 0,
+      "rc": 0
+    },
+    "ci_named_pytest_steps": [
+      ".github/workflows/governance-check.yml:196:        run: python3 -m pytest tests/unit/test_system_yaml_materializer.py -q",
+      ".github/workflows/governance-check.yml:200:        run: python3 -m pytest tests/unit/test_system_yaml_consumer_inputs.py -q"
+    ],
+    "current_state_coherence": {
+      "missing_input": false,
+      "rc": 0
+    },
+    "doc_link_check": {
+      "rc": 0,
+      "system_yaml_broken_lines": 0,
+      "tail": [
+        "doc-link-check: PASS (36 files)"
+      ]
+    },
+    "git_status_short_omo_state_dirty_lines": 0,
+    "git_status_short_omo_state_dirty_lines_after_chain": 0,
+    "gitignore_rule": ".gitignore:297:.omo/state/system.yaml\t.omo/state/system.yaml",
+    "materializer_dry_run": {
+      "ghost": [],
+      "key_set_equals_declared": true,
+      "rc": 0,
+      "status": "dry_run",
+      "target": "/Users/xiamingxing/ws-t10-235-closeout/.omo/state/system.yaml",
+      "undeclared": []
+    },
+    "materializer_run": {
+      "rc": 0
+    },
+    "omo_state_write_guard": {
+      "ownership": {
+        "ghost-declaration": 0,
+        "undeclared-key": 0,
+        "unresolvable-owner": 0
+      },
+      "rc": 0
+    },
+    "pytest_named_files": {
+      "passed": 81,
+      "rc": 0,
+      "tail": [
+        "81 passed in 1.78s"
+      ]
+    },
+    "system_yaml_tracked_lines": 0
+  },
+  "measured_at_utc": "2026-10-07T11:03:45Z",
+  "sandbox": {
+    "coherence_after_materialize": {
+      "missing_input": false,
+      "rc": 0
+    },
+    "coherence_missing_input": {
+      "missing_input": true,
+      "rc": 2
+    },
+    "coherence_pre_untrack_snapshot": {
+      "missing_input": false,
+      "rc": 0,
+      "snapshot_bytes": 1426
+    },
+    "generate_brief_three_state": {
+      "A_absent_none_file": {
+        "err_tail": [],
+        "rc": 0
+      },
+      "B_pre_untrack_snapshot": {
+        "err_tail": [],
+        "rc": 0
+      },
+      "C_materialized": {
+        "err_tail": [
+          "TypeError: '>=' not supported between instances of 'NoneType' and 'int'"
+        ],
+        "rc": 1
+      }
+    },
+    "materialized_null_keys": [
+      "health_score: null",
+      "health_score_source: null",
+      "health_score_generated_at: null",
+      "health_score_evidence: null",
+      "health_score_evidence_source: null",
+      "health_score_evidence_generated_at: null",
+      "governance_anomaly_score: null"
+    ],
+    "system_yaml_present": false
+  },
+  "schema": "canary-reading/v1",
+  "tree_note": "in_tree = claim 于 bbcb4e279 的合并后新检出; sandbox = git archive HEAD 复刻 + OMOSTATION_{ROOT,STATE_ROOT} 指向该复刻"
+}
