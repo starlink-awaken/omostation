@@ -355,6 +355,9 @@ projects/omo-debt/
 .omo/_knowledge/evolution-proposals/
 .omo/reports/
 .omo/_knowledge/sediment/
+.omo/_knowledge/sediment-archive/
+.omo/_inbox/
+data/chain-runs/
 .omo/state/attestations/
 .kb/
 .kb/
