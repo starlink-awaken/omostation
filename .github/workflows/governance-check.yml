@@ -120,6 +120,11 @@ jobs:
           # 但 CI 结构性失明 (如 test_rule_wiring_coverage.py 曾数月红而 CI 从未见)。
           # 按 ADR-0379 E-2 显式白名单惯例逐文件点名, 不转 glob。每文件均须在当前 main 全绿
           # 且为 hermetic 治理断言 (registry/gate 性质), 基线实测 215/239 pass 后挑选。
+          # 2026-10-08 追加 tests/unit/ 两件 (#4671 事故的直接后果: 那两个 sys.path 算错的
+          # 脚本唯一被跑到的用例就在 tests/unit/, 白名单此前不含该平面, 于是"CI 绿"对这类
+          # 交付不构成任何证据)。点名理由逐件: test_bin_syspath_resolution 钉 parents[K] 算数
+          # +  detector 自证; test_system_yaml_write_plane 钉 system.yaml 写面落 state 根 +
+          #  检出副本由用例自己物化。两者实测 7 + 25 pass, 且 replay 原缺陷会当场红 (牙齿验过)。
           uv run pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -140,6 +145,8 @@ jobs:
             ../../tests/test_ssot_guardian.py \
             ../../tests/test_service_registry_reality.py \
             ../../tests/test_yaml_bypass_invariant.py \
+            ../../tests/unit/test_bin_syspath_resolution.py \
+            ../../tests/unit/test_system_yaml_write_plane.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."

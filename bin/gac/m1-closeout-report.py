@@ -35,7 +35,7 @@ from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from repo_root import state_file_read  # noqa: E402
 
 UTC = UTC
