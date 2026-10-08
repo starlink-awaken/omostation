@@ -342,22 +342,49 @@ shasum -a 256 docs/reports/2026-10-07-system-yaml-materializer-closeout.md \
 （`../../tests/unit/test_bin_syspath_resolution.py`、`../../tests/unit/test_system_yaml_write_plane.py`）。
 守卫的实测读数与牙齿：
 
-- 扫描面**不收窄**：`rglob("*.py")` 在完整检出里 descend 进 `.git`/`node_modules`/`.venv`，
-  数出 **151,970** 个文件、5.4 s；改剪枝遍历后同一仓 **1,552** 个文件、0.06 s ⇒ 代价不是收窄的理由。
-- 站点普查（本机检出）：**36 处** = 25 `ok` + 11 `unresolvable-here` + **0 `arith-bug`**；
-  11 处未定全部是子模块未 init 那类（`projects/omo/src` 在本 worktree 里根本不存在，
-  `ls projects/omo` 空），判据把「环境」与「算错」分开：**某个别的 K 可达而当前 K 不可达**才算错。
+- 扫描面**不收窄**：`rglob("*.py")` 会 descend 进 `.git`/`node_modules`/`.venv`/`__pycache__`，
+  canonical 全量检出数出 **151,970** 个文件、5.0 s；改剪枝遍历后同一棵树 **22,073** 个、0.24 s
+  （本 worktree：11,700 → 4,940）⇒ 代价不是收窄的理由。
+- 站点普查**随子模块检出完整度变**，这是本轮最贵的一课（同一棵 worktree 两次读数）:
+
+  | 树的侧面 | 文件 | 站点 | `ok` | `unresolvable-here` | `arith-bug` |
+  |---|---|---|---|---|---|
+  | `projects/omo`/`projects/ecos` 等工作树**空**（claim 半途失败态） | 1,552 | 36 | 25 | 11 | **0** |
+  | `git submodule update --init --force` 对齐后 | 4,940 | 57 | 51 | 5 | **1** |
+
+  也就是说"0 缺陷"里有一部分是**空目录给的假绿**：那条缺陷住在 `projects/omo` 里，面没整时
+  根本扫不到。判据把「环境」与「算错」分开的机制没变（**某个别的 K 可达而当前 K 不可达**才算错），
+  变的是**跑判据前必须先确认扫描面整没整** —— 本轮先把 ②③ 两条 ERROR 归因到空 gitlink 工作树、
+  对齐之后才让守卫上岗。
+- 对齐后点名的**那一条不在 root 平面**：`projects/omo/tests/unit/test_workflow_cli_bet_gate.py:15`
+  写 `parents[1]/"src"`（= `tests/src`，不存在），消费方 `from omo.workflow import cli`。
+  omo 自己那 3 个用例**今天全绿** —— 承载它的是 omo 作为已安装包在 venv 里，不是这条 insert，
+  所以这是 #4671 同形状的**潜伏**算数错。pinned `7942831` == omo 的 `origin/main` ⇒ 上游未自愈。
+  处置是**裁定归 omo、root 只报不判红**，进 `GITLINK_OWNED_ARITH_BUGS` 名单（由
+  `test_dependency_allowlist_cannot_exempt_root_plane` 钉死：名单只能收 `.gitmodules` 声明路径下的
+  站点，且实测集合与名单**相等**才绿 —— 多一条逼下一轮指认归属，少一条逼下一轮删豁免）。
+  这既不是把面收窄，也不是替别人的仓改代码；`.omo/_truth/registry/gate-known-debt.yaml`
+  没收它，因为那条是"跳过门禁"的登记面且 `growth_policy: shrink_only`，而这里门禁一条没跳。
 - detector 自证三轮才立住（每条都是**假绿**，写下来是因为形状各异）：
   `is_dir()` 谓词（目录存在即通过，正是 ① 的失效面）、AST 装置（`checked=0`）、
   exec 前缀 hack（`broken=0`，且 `MUTATION-PROOF: FAIL` —— 谓词只认 `ModuleNotFoundError`，
   对 `IndexError` 视而不见）。最终形状是**执行装置 + 变异对照**：
-  重放 ① 的 `parents[2]` ⇒ 当场 2 红（`..._at_every_site` 与 `..._are_invocable`），还原 ⇒ 7 全绿。
+  重放 ① 的 `parents[2]` ⇒ 当场 2 红（`..._at_every_site` 与 `..._are_invocable`），还原 ⇒ 全绿。
+- 精度另修两轮，都是**宽容侧藏真缺陷**：① 解析器要求 `__init__.py` ⇒ `bin/panorama/sunset-redirector.py`
+  （`parents[2]` = 仓库根，`from bin.panorama.sunset_redirector import main`，`bin/` 与 `bin/panorama/`
+  实测都无 `__init__.py`，`--help` rc=0 真能跑）被算成 unresolvable；② 只取 insert 后**第一条** import
+  ⇒ 拿 `import pytest`/`datetime` 这类与这条 insert 无关的名字去解路径。改成 PEP-420 容忍 +
+  取**全部**绝对 import 后"任一可解即 ok"。四条变异对照实测（每条都改的是判据本体）:
+  中间层要求 `__init__.py` ⇒ `test_namespace_package_sites_are_not_misjudged_as_unreachable` 红；
+  叶子目录两支（去掉 / 要求 `__init__.py`）⇒ `test_namespace_package_dir_leaf_is_reachable` 红
+  （去掉那一支会让 3 处 ok 掉成 unresolvable，实测）；`_consumers` 退回只取第一条 ⇒ 名单等式与
+  名单自检两条一起红；名单清空 / 塞一条 root 站点 / 把 K 从 1 改 2 ⇒ 各红 1、2、2 条。
 - 两条写法级自证：`test_detector_covers_both_join_shapes`（`/"a"` 与 `/"a"/"b"` 都要命中 ——
   旧正则只认单段，多段形状下的算错会**伪装成"没有站点"**）；
   `test_relative_import_sites_are_not_judged`（`from .x import` 不经 `sys.path`，
   拿它当消费方会既漏又假报：3 处 domain-cartridge 被空名判成 bug）。
 - 白名单口径核验：`bash -n` 该 step 的 run 体 rc=0；`yaml.safe_load` 后确认两件在
-  `interface-check` step 5；两件在该 step 的解释器下 **7 + 25 passed**。
+  `interface-check` step 5；两件在该 step 的解释器下 **10 + 25 passed**。
 
 顺带两条本机陷阱在本轮**再次**命中（§7⑤ 的复发，不是新债）：zsh 别名 `cp → cp -iv` 让
 「还原变异」那一步打印 `overwrite …? not overwritten` 后 rc=1 且**文件逐字节未变**，

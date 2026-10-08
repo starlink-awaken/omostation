@@ -41027,13 +41027,13 @@ bets:
             sha256: sha256:23dc6467c9acaee3626197e9afc1dbf6cd6c12ad44c59086f982038849d35635
           diff:
             ref: receipt://docs/reports/2026-10-07-system-yaml-materializer-closeout.md
-            sha256: sha256:65f6155d313b69fb2c58f4d91a14f8c2ac5503785f8a54d00270b4ce116f2332
+            sha256: sha256:9cfd188305969a1faa9349261081cc23ac2a5085a3253459c2ea9acd5e2a984e
           rollback:
             ref: receipt://docs/reports/2026-10-07-system-yaml-materializer-closeout.md
-            sha256: sha256:65f6155d313b69fb2c58f4d91a14f8c2ac5503785f8a54d00270b4ce116f2332
+            sha256: sha256:9cfd188305969a1faa9349261081cc23ac2a5085a3253459c2ea9acd5e2a984e
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-235.md
-            sha256: sha256:dd9fc19c5b9b2a4340930b4484ae4c21514f2b14da5d802407d3077c63650e28
+            sha256: sha256:5ca909d5f273229a9c0e94c15114c67c705a3cb3191cbb279e0c4bbf8a99c5b4
       operational:
         status: PROVEN
         evidence:
@@ -41042,13 +41042,13 @@ bets:
             sha256: sha256:23dc6467c9acaee3626197e9afc1dbf6cd6c12ad44c59086f982038849d35635
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-07-system-yaml-materializer-closeout.md
-            sha256: sha256:65f6155d313b69fb2c58f4d91a14f8c2ac5503785f8a54d00270b4ce116f2332
+            sha256: sha256:9cfd188305969a1faa9349261081cc23ac2a5085a3253459c2ea9acd5e2a984e
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-235.md
-            sha256: sha256:dd9fc19c5b9b2a4340930b4484ae4c21514f2b14da5d802407d3077c63650e28
+            sha256: sha256:5ca909d5f273229a9c0e94c15114c67c705a3cb3191cbb279e0c4bbf8a99c5b4
           cleanup:
             ref: receipt://docs/reports/2026-10-07-system-yaml-materializer-closeout.md
-            sha256: sha256:65f6155d313b69fb2c58f4d91a14f8c2ac5503785f8a54d00270b4ce116f2332
+            sha256: sha256:9cfd188305969a1faa9349261081cc23ac2a5085a3253459c2ea9acd5e2a984e
       value:
         status: NOT_PROVEN
         evidence: {}
