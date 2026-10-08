@@ -11,11 +11,18 @@ BET: BET-Y2Q4-T10-235（收尾轮）
 - 区分**算错**与**环境没检出**。`projects/omo/src` 这类在未 init 子模块的 worktree 里
   任何 K 都不可达 —— 那是环境，不是回归。算错的特征是"某个别的 K 可达而当前 K 不可达"。
 - detector 必须自证: 造一份真实深度的合成违规文件，断言整条扫描点名它。
-- **扫描面是全仓，不收窄**（实测 2026-10-08）: `ROOT.rglob("*.py")` 会 descend 进
-  `.git`/`node_modules`/`.venv`，在完整检出里数出 151,970 个文件、5.4 s；改成**剪枝遍历**
-  （只跳这五个目录名，逐目录剪而不是先收集再过滤）后同一仓只剩 1,552 个文件、0.06 s。
-  代价因此不构成收窄的理由 —— 收窄到 `bin/` 会漏掉别的平面里同形状的 `parents[K]`，
-  而 `test_scan_plane_is_the_whole_checkout` 钉住"面没被收窄"这件事本身。
+- **扫描面是全仓，不收窄**（实测 2026-10-08，同一棵树两侧对照）: `ROOT.rglob("*.py")` 会
+  descend 进 `.git`/`node_modules`/`.venv`/`__pycache__` —— 本检出 11,700 个文件、剪枝遍历
+  4,940 个；canonical 全量检出 151,970 个 / 5.0 s vs 22,073 个 / 0.24 s。改成**剪枝遍历**
+  （只跳这五个目录名，逐目录剪而不是先收集再过滤）省下的代价不构成收窄的理由 ——
+  收窄到 `bin/` 会漏掉别的平面里同形状的 `parents[K]`，而
+  `test_scan_plane_is_the_whole_checkout` 钉住"面没被收窄"这件事本身。
+- **面的大小取决于子模块检出完整度，读数会随对齐而变**（同一轮实测）: 子模块未 init 时
+  这棵树只有 1,552 个文件 / 36 个站点 / **0 个 arith-bug**；`git submodule update --init
+  --force` 对齐到全仓后 4,940 个文件 / 57 个站点 / **1 个 arith-bug**（在 `projects/omo`
+  里）。也就是说"绿"完全可能是空目录造成的 —— 判据不许靠记忆里的读数，跑之前先确认
+  扫描面真的整了。gitlink 侧那条按归属**裁定进名单**（见
+  `GITLINK_OWNED_ARITH_BUGS`），不是把面收窄，也不是替别人的仓改代码。
 """
 
 from __future__ import annotations
@@ -44,6 +51,23 @@ SEG = re.compile(r'"([^"]*)"')
 ABS_IMPORT = re.compile(r"^\s*(?:from|import)\s+([A-Za-z_]\w*(?:\.\w*)*)", re.M)
 # 精确目录名匹配 —— 不用 startswith(".git")，那会把 .github/ 一起剪掉。
 SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__"}
+GITMODULES = re.compile(r"^\s*path\s*=\s*(\S+)\s*$", re.M)
+
+# gitlink 依赖里**已裁定归别人修**的算数错站点，逐条 (相对路径, K, 子路径, 消费方名)。
+# 名单只能收**位于 .gitmodules 声明路径之下**的站点（由
+# test_dependency_allowlist_cannot_exempt_root_plane 当场钉住），所以它不构成把
+# root 平面摘出去的后门；而实测集合与名单**相等**才算绿，依赖上游修好后这条会因
+# 名单陈旧而红，逼下一轮删掉它。
+#
+# 2026-10-08 实测这一条: `projects/omo/tests/unit/test_workflow_cli_bet_gate.py:15`
+# 写 parents[1]/"src"（= tests/src，不存在），而该仓 3 个用例**今天全绿** ——
+# 承载它的是 omo 作为已安装包在 venv 里，不是这条 insert。所以它是 #4671 同形状的
+# **潜伏**算数错，归属 omo 仓（pinned 7942831 == 该仓 origin/main，上游未自愈）；
+# root 在此只**报**不**判红**，否则一次子模块 bump 就能让 root CI 因别人的代码红。
+GITLINK_OWNED_ARITH_BUGS: set[tuple[str, int, str, tuple[str, ...]]] = {
+    ("projects/omo/tests/unit/test_workflow_cli_bet_gate.py", 1, "src",
+     ("omo.workflow", "omo.workflow.core")),
+}
 
 
 def _py_files(root: Path = ROOT) -> list[Path]:
@@ -55,38 +79,131 @@ def _py_files(root: Path = ROOT) -> list[Path]:
     return sorted(out)
 
 
-def _reachable(base: Path, sub: str, name: str) -> bool:
+def _gitlink_paths() -> set[str]:
+    """`.gitmodules` 声明的 gitlink 相对路径集合（tracked 文件，不读本机状态）。"""
+    f = ROOT / ".gitmodules"
+    return set(GITMODULES.findall(f.read_text(encoding="utf-8"))) if f.is_file() else set()
+
+
+def _under_gitlink(rel: str) -> bool:
+    return any(rel == p or rel.startswith(p + "/") for p in _gitlink_paths())
+
+
+def _resolves(base: Path, sub: str, parts: list[str]) -> bool:
+    """点号全路径逐项解析，**容忍 PEP-420 命名空间包**（目录在即算可达）。
+
+    旧判据只查 `<name>.py` 或 `<name>/__init__.py`，于是 `from bin.panorama.x import y`
+    这种"中间层无 __init__.py"的真能跑的写法会被算成 unresolvable —— 而 unresolvable
+    是**宽容**的一侧，等于给真缺陷留了藏身处（2026-10-08 实测 bin/panorama/sunset-redirector.py
+    就是这么被放过的，它 --help rc=0 实际可用）。
+    """
     d = base / sub if sub else base
-    return (d / f"{name}.py").is_file() or (d / name / "__init__.py").is_file()
+    for part in parts[:-1]:
+        d = d / part
+        if not d.is_dir():
+            return False
+    leaf = d / parts[-1]
+    return leaf.with_suffix(".py").is_file() or leaf.is_dir()
 
 
-def _sites(root: Path = ROOT) -> list[tuple[Path, int, str, str]]:
+def _reachable(base: Path, sub: str, name: str) -> bool:
+    return _resolves(base, sub, name.split("."))
+
+
+def _consumers(text: str, start: int) -> list[str]:
+    """insert 之后**全部**绝对 import 的点号全路径。
+
+    只取第一条会让判据拿 `import pytest`/`datetime` 这类与这条 insert 无关的名字
+    去解路径（2026-10-08 实测：10 处 unresolvable 里有 4 处是这么来的，包括本文件
+    自己的合成字符串）。取全集后"任一可解即 ok"，判别力不减：算错的基底下
+    **没有一条**可解 —— 那里根本没有对应的模块树，这点由 mutation 复算证明。
+    """
+    return [m.group(1) for m in ABS_IMPORT.finditer(text, start)]
+
+
+def _sites(root: Path = ROOT) -> list[tuple[Path, int, str, tuple[str, ...]]]:
+    """站点 = (文件, K, 拼接子路径, 消费方点号全路径集合)。
+
+    集合按字典序稳定化，好让名单比对与断言消息可复算。
+    """
     out = []
-    for p in _py_files(root):
+    files = [root] if root.is_file() else _py_files(root)
+    for p in files:
         text = p.read_text(encoding="utf-8", errors="replace")
         for m in INSERT.finditer(text):
             idx, sub = int(m.group(1)), "/".join(SEG.findall(m.group(2)))
-            nxt = ABS_IMPORT.search(text[m.end():], )
-            if nxt:
-                out.append((p, idx, sub, nxt.group(1).split(".")[0]))
+            names = tuple(sorted(set(_consumers(text, m.end()))))
+            if names:
+                out.append((p, idx, sub, names))
     return out
 
 
-def _classify(p: Path, idx: int, sub: str, name: str) -> str:
+def _classify(p: Path, idx: int, sub: str, names: tuple[str, ...]) -> str:
+    def hit(base: Path) -> bool:
+        return any(_resolves(base, sub, n.split(".")) for n in names)
+
     if idx >= len(p.parents):
         return "arith-bug"
-    if _reachable(p.parents[idx], sub, name):
+    if hit(p.parents[idx]):
         return "ok"
-    return "arith-bug" if any(_reachable(p.parents[k], sub, name) for k in range(len(p.parents))) else "unresolvable-here"
+    return "arith-bug" if any(hit(p.parents[k]) for k in range(len(p.parents))) else "unresolvable-here"
 
 
 def test_syspath_arith_is_correct_at_every_site():
-    bugs = [
-        f"{p.relative_to(ROOT)}: parents[{idx}]/{sub!r} 引不到 {name}"
-        for p, idx, sub, name in _sites()
-        if _classify(p, idx, sub, name) == "arith-bug"
-    ]
-    assert bugs == [], "\n".join(bugs)
+    bugs, owned = [], []
+    for p, idx, sub, names in _sites():
+        if _classify(p, idx, sub, names) != "arith-bug":
+            continue
+        rel = p.relative_to(ROOT).as_posix()
+        line = f"{rel}: parents[{idx}]/{sub!r} 引不到 {names[0]}"
+        (owned if _under_gitlink(rel) else bugs).append(
+            (rel, idx, sub, names, line))
+    assert [b[4] for b in bugs] == [], "\n".join(b[4] for b in bugs)
+    # gitlink 侧的算数错**必须逐条对上名单**：多一条 = 新缺陷要指认归属，
+    # 少一条 = 上游已修、名单该删。两种情况都不许静默通过。
+    measured = {(b[0], b[1], b[2], b[3]) for b in owned}
+    assert measured == GITLINK_OWNED_ARITH_BUGS, (
+        f"新增未裁定的依赖缺陷: {sorted(measured - GITLINK_OWNED_ARITH_BUGS)}; "
+        f"已消失的陈旧豁免: {sorted(GITLINK_OWNED_ARITH_BUGS - measured)}")
+
+
+def test_dependency_allowlist_cannot_exempt_root_plane():
+    """名单只能收 gitlink 下的站点 —— 否则它就是"把 root 平面摘出去"的后门。
+
+    并且每条都必须**当下仍是缺陷**（在实测站点里命中），防止改成函数式豁免。
+    """
+    gitlinks = _gitlink_paths()
+    assert gitlinks, ".gitmodules 读不到，这条判据会按构造绿"
+    for rel, idx, sub, name in GITLINK_OWNED_ARITH_BUGS:
+        assert _under_gitlink(rel), f"{rel} 不在任何 gitlink 下，不许进名单"
+        site = ROOT / rel
+        assert site.is_file(), f"{rel} 已不存在，名单陈旧"
+        hits = [(i, s, n) for p, i, s, n in _sites(site) if p == site]
+        assert (idx, sub, name) in hits, f"{rel} 的这条站点已变，名单要跟着改"
+        assert _classify(site, idx, sub, name) == "arith-bug", f"{rel} 不再是缺陷"
+
+    # 反向: 把同形状的违规放进 root 平面，必须**不被名单放过**
+    victim = ROOT / "bin" / "gac" / "_synthetic_owned_exempt_probe.py"
+    good = (
+        "import sys\n"
+        "from pathlib import Path\n"
+        'sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))\n'
+        "from repo_root import state_file_read  # noqa: E402, F401\n"
+    )
+    try:
+        victim.write_text(good.replace("parents[1]", "parents[2]"), encoding="utf-8")
+        rel = victim.relative_to(ROOT).as_posix()
+        assert not _under_gitlink(rel), "root 站点被算成了 gitlink —— 判据失效"
+        assert rel not in GITLINK_OWNED_ARITH_BUGS
+        bugs = [
+            p.relative_to(ROOT).as_posix()
+            for p, idx, sub, name in _sites()
+            if _classify(p, idx, sub, name) == "arith-bug" and not _under_gitlink(
+                p.relative_to(ROOT).as_posix())
+        ]
+        assert rel in bugs, "注入的 root 违规被放过 —— 名单成了后门"
+    finally:
+        victim.unlink(missing_ok=True)
 
 
 def test_the_two_scripts_4671_broke_are_invocable():
@@ -111,8 +228,8 @@ def test_detector_is_not_a_no_op(tmp_path):
         victim.write_text(bad, encoding="utf-8")
         hits = [s for s in _sites() if s[0] == victim and _classify(*s) == "arith-bug"]
         assert hits, "检测器没点名注入的违规 —— 空绿"
-        assert _classify(victim, 2, "lib", "repo_root") == "arith-bug"
-        assert _classify(victim, 1, "lib", "repo_root") == "ok"
+        assert _classify(victim, 2, "lib", ("repo_root",)) == "arith-bug"
+        assert _classify(victim, 1, "lib", ("repo_root",)) == "ok"
 
         victim.write_text(good, encoding="utf-8")
         assert not [s for s in _sites() if s[0] == victim and _classify(*s) == "arith-bug"]
@@ -130,10 +247,72 @@ def test_absent_submodule_is_not_reported_as_arith_bug(tmp_path):
     text = site.read_text(encoding="utf-8")
     m = INSERT.search(text)
     assert m, "锚点变了，判据要跟着改"
-    nxt = ABS_IMPORT.search(text[m.end():])
-    cls = _classify(site, int(m.group(1)), "/".join(SEG.findall(m.group(2))),
-                    nxt.group(1).split(".")[0])
+    names = tuple(sorted(set(_consumers(text, m.end()))))
+    assert names, "取不到消费方，这条判据会按构造绿"
+    cls = _classify(site, int(m.group(1)), "/".join(SEG.findall(m.group(2))), names)
     assert cls in {"ok", "unresolvable-here"}, cls
+
+
+def test_namespace_package_sites_are_not_misjudged_as_unreachable():
+    """`bin/` 这类**无 `__init__.py`** 的命名空间包，`from bin.panorama.x import y` 真能跑。
+
+    2026-10-08 实测 `bin/panorama/sunset-redirector.py:19`（parents[2] = 仓库根）就是这么被
+    旧判据算成 unresolvable 的 —— 而 unresolvable 是宽容侧，真缺陷能藏在里面。这条把
+    "命名空间层也算可达"钉成判据，并对照"要求 `__init__.py`"的严格谓词确实会拒它，
+    否则这条绿只是因为两种实现都给 ok。
+    """
+    site = ROOT / "bin" / "panorama" / "sunset-redirector.py"
+    if not site.is_file():
+        import pytest
+
+        pytest.skip("sunset-redirector 不在此检出")
+    hits = [s for s in _sites() if s[0] == site]
+    assert hits, "锚点变了，判据要跟着改"
+    p, idx, sub, names = hits[0]
+    assert _classify(p, idx, sub, names) == "ok", (idx, sub, names)
+    base = p.parents[idx] / sub if sub else p.parents[idx]
+    for part in names[0].split(".")[:-1]:
+        base = base / part
+    assert base.is_dir() and not (base / "__init__.py").is_file(), \
+        "中间层其实有 __init__.py，这条就没在测命名空间容忍性了"
+    assert (base / (names[0].split(".")[-1] + ".py")).is_file()
+
+    def strict(b: Path, s: str, n: str) -> bool:
+        d = b / s if s else b
+        for part in n.split(".")[:-1]:
+            d = d / part
+            if not (d.is_dir() and (d / "__init__.py").is_file()):
+                return False
+        leaf = d / n.split(".")[-1]
+        return leaf.with_suffix(".py").is_file()
+
+    assert not any(strict(p.parents[idx], sub, n) for n in names), \
+        "严格谓词也给 ok —— 上面那条 ok 不是靠容忍性得到的"
+
+
+def test_namespace_package_dir_leaf_is_reachable():
+    """`import tests` 这种**叶子是目录**的写法也算可达 —— 实测有 3 处 ok 靠它。
+
+    2026-10-08 复算：去掉"叶子是目录"这一支，`projects/cockpit/.../test_cli_dashboard.py`、
+    kairon 两处当场从 ok 掉成 unresolvable；而这一支同时覆盖命名空间包（`tests/` 无
+    `__init__.py`）和普通包。这条用**合成站点**钉它，并断言 witness 目录确实没有
+    `__init__.py` —— 否则"绿"可能只是普通包路径给的，命名空间那一半仍是无主之地。
+    """
+    assert not (ROOT / "tests" / "__init__.py").is_file(), \
+        "tests/ 有了 __init__.py，这条不再测命名空间叶子"
+    assert _resolves(ROOT, "", ["tests"])
+    victim = ROOT / "bin" / "gac" / "_synthetic_ns_leaf_probe.py"
+    try:
+        victim.write_text(
+            "import sys\n"
+            "from pathlib import Path\n"
+            'sys.path.insert(0, str(Path(__file__).resolve().parents[2]))\n'
+            "import tests  # noqa: E402, F401\n", encoding="utf-8")
+        hits = [s for s in _sites() if s[0] == victim]
+        assert len(hits) == 1, hits
+        assert _classify(*hits[0]) == "ok", "叶子目录不可达 → 真能跑的写法被算成缺陷"
+    finally:
+        victim.unlink(missing_ok=True)
 
 
 def test_relative_import_sites_are_not_judged():
@@ -154,7 +333,8 @@ def test_relative_import_sites_are_not_judged():
     inserts = INSERT.findall(site.read_text(encoding="utf-8"))
     assert inserts, "锚点变了，判据要跟着改"
     mine = [s for s in _sites() if s[0] == site]
-    assert all(name != "apple_health_csv" for _, _, _, name in mine), mine
+    assert all("apple_health_csv" not in n
+               for _, _, _, names in mine for n in names), mine
     assert [_classify(*s) for s in mine] == ["unresolvable-here"] * len(mine), mine
 
 
@@ -174,8 +354,8 @@ def test_detector_covers_both_join_shapes():
                               encoding="utf-8")
             hits = [s for s in _sites() if s[0] == victim]
             assert len(hits) == 1, f"{want_sub!r} 形状没被命中（hits={hits}）—— 写法盲区"
-            _, idx, sub, name = hits[0]
-            assert (idx, sub, name) == (want_idx, want_sub, "repo_root"), hits[0]
+            _, idx, sub, names = hits[0]
+            assert (idx, sub, names) == (want_idx, want_sub, ("repo_root",)), hits[0]
     finally:
         victim.unlink(missing_ok=True)
 
