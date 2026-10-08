@@ -115,6 +115,11 @@ jobs:
           # 模型驱动治理闭环 (L0↔MOF, 2026-08-09): 真实数据端到端验证
           # cwd 在 projects/omo (上方 cd), 用 ../.. 回到 workspace root 再跑.
           python3 ../../bin/ssot/governance_closed_loop.py || { echo "❌ 治理闭环验证失败 (governance_closed_loop)"; FAILED=1; }
+          # Root-level governance-invariant tests (CI visibility closure, 2026-10-08):
+          # 此前 root tests/ 仅 test_agent_workflow.py 被点名; 其余治理不变量测试本地可红
+          # 但 CI 结构性失明 (如 test_rule_wiring_coverage.py 曾数月红而 CI 从未见)。
+          # 按 ADR-0379 E-2 显式白名单惯例逐文件点名, 不转 glob。每文件均须在当前 main 全绿
+          # 且为 hermetic 治理断言 (registry/gate 性质), 基线实测 215/239 pass 后挑选。
           uv run pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -124,6 +129,17 @@ jobs:
             tests/test_omo_task_policy.py \
             tests/test_opc_p5_p7_runtime.py \
             ../../tests/test_agent_workflow.py \
+            ../../tests/test_rule_wiring_coverage.py \
+            ../../tests/test_adr_coverage_exit_contract.py \
+            ../../tests/test_gac_gate_workflow.py \
+            ../../tests/test_gac_gate_workflow_purity.py \
+            ../../tests/test_doc_ssot_lint_json.py \
+            ../../tests/test_doc_governance_check.py \
+            ../../tests/test_check_cross_refs.py \
+            ../../tests/test_cron_registry_contract.py \
+            ../../tests/test_ssot_guardian.py \
+            ../../tests/test_service_registry_reality.py \
+            ../../tests/test_yaml_bypass_invariant.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
