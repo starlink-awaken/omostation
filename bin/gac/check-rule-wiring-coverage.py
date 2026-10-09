@@ -292,7 +292,7 @@ def inventory() -> dict:
         return [i for i in ids if not is_wired(i)]
 
     gov_un = [i for i in unreferenced(gov) if i not in retired]
-    l0_un = unreferenced(l0)
+    l0_un = [i for i in unreferenced(l0) if i not in retired]
     impl = _implemented_ids(corpus)
 
     # government exemption-only ids (declared but only in exemption lists)
@@ -323,7 +323,7 @@ def inventory() -> dict:
             },
             "L0-constraints(submodule)": {
                 "declared": len(l0), "unreferenced": len(l0_un),
-                "wired": len(l0) - len(l0_un),
+                "wired": len(l0) - len(l0_un) - len(retired & set(l0)),
                 "exemption_only_referenced": len(l0_exempt_only),
                 "available": l0_available,
                 "note": None if l0_available else
@@ -355,6 +355,11 @@ def inventory() -> dict:
             "执行语料 —— 本文件 docstring 以示例形式提到的规则 id (如 CR-X4-HEALTH-SSOT)"
             "此前会因自引用被判为 wired, 而它实际上没有任何执行器引用。自证排除后, "
             "这类只存在于检测器文档里的 id 会如实进入 unreferenced 候选。\n"
+            "F6 (2026-10-09): retired 清单 (registry-alias-map.yaml::retired) 现在同时"
+            "过滤 L0-constraints 的接线候选 —— 前提不再成立且已在注册表标注 "
+            "lifecycle: removed 的规则不再被当作『待接线新人』。L0 debt closeout 把 20 条"
+            "(OPC 7 + eCOS-v6 3 + AGT 10) 标为 removed (superseded_by 逐条可查), 并为 27 条"
+            "『实现但换了名字』的 L0 规则补 alias 映射 (evidence 指向真实宿主文件)。\n"
             "注意: registry-alias-map.yaml 的 evidence.* 块 (如 evidence.bin_executor) 是"
             "人工填写的说明性字段, **本清单不读它们**; 接线判定只依据 alias 字符串在"
             "执行语料中的出现。alias-map 里指向 bin/_archive/ 的 evidence 引用是历史"
