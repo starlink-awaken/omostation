@@ -70,11 +70,10 @@ last-reviewed: 2026-09-26
 
 > ⚠️ 前缀不一 (`check-god-module` vs `god-module-*`), 待渐进统一.
 
-### 5. 证据与反馈 (2) — BOS 鸿沟 + 回路存活
+### 5. 证据与反馈 (1) — BOS 鸿沟 + 回路存活
 | 脚本 | 功能 |
 |:-----|:-----|
 | `evidence-smoke.py` | BOS 声明/执行鸿沟量化 + 反馈回路维度 (综合 smoke) |
-| `feedback-loop-guard.py` | 自反馈回路存活监控 + escalation (专精, cron 友好) |
 
 ### 5b. 模型驱动治理闭环 (10) — L0↔MOF 模型驱动 (2026-08-09)
 | 脚本 | 功能 |

@@ -40,8 +40,18 @@ def test_dry_run_never_sets_physical_gate(tmp_path: Path):
     assert body["meets_physical_gate"] is False
 
 
-def test_shell_wrapper_exists():
-    sh = DELIVERY / "physical-recovery.sh"
-    assert sh.is_file()
-    text = sh.read_text(encoding="utf-8")
-    assert "physical_recovery.py" in text
+def test_live_entry_point_is_registered_python_module() -> None:
+    """Live entry point is the registered Python module.
+
+    The former shell wrapper ``bin/delivery/physical-recovery.sh`` was
+    deliberately retired 2026-09-25 (commit 2363c8f46, SH-1 bin-quota offset #2)
+    in favour of the Python implementation. The live surface is the registered
+    ``physical_recovery.py`` — assert it exists and is the registered entry.
+    """
+    py = DELIVERY / "physical_recovery.py"
+    assert py.is_file()
+
+    registry = ROOT / "bin" / "_registry" / "scripts" / "governance" / "physical_recovery.yaml"
+    assert registry.is_file()
+    text = registry.read_text(encoding="utf-8")
+    assert "bin/delivery/physical_recovery.py" in text
