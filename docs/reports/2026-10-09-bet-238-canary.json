@@ -251,5 +251,63 @@
       },
       "lane_preview": "change-lane-check: PASS (3 files, lanes=docs,docs_data) rc=0"
     }
+  },
+  "post_merge_pin_and_ci": {
+    "merged_pr_4690": {
+      "pr": 4690,
+      "head_branch": "agent/governance-agent/t10-238-closeout",
+      "base_commit": "08c177b2c37955b69ea0798be676d54e973f9484",
+      "commits_merged": 7,
+      "merge_sha": "10fc057220d46fa7092d3783e8b78c26bb600b10",
+      "merged_at_utc": "2026-10-09T03:01:09Z",
+      "method": "squash（无 admin merge、无 --no-verify）",
+      "landed_files": 7,
+      "diffstat_check": "git show --stat 10fc05722 ⇒ 7 files changed, 579 insertions(+), 11 deletions(-)，无 D 行"
+    },
+    "ci_rollup": {
+      "measured_at_utc": "2026-10-09T03:00:17Z",
+      "total_checks": 23,
+      "failing": [],
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "skipping_not_failing": ["doc-freshness", "Documents domain projects"],
+      "note": "两条 skipping 是 workflow on.paths 过滤，不是失败；判「CI 绿」时逐条读 conclusion，不读 job 总数"
+    },
+    "ci_interface_check": {
+      "run_id": 37876865178,
+      "job_id": 113647344929,
+      "summary": "321 passed, 9 skipped in 121.31s (0:02:01)",
+      "argv_names_the_file": true,
+      "argv_log_line": "  ../../tests/unit/test_evidence_freshness_reader_plane.py \\",
+      "positive_evidence_that_my_tests_ran": "#4689 的同一 job 读数是 320 passed；本轮分支只新增 1 条用例（钉时钟的那条），321 = 320 + 1 ⇒ 用例数增量与交付一致，且工作树里该文件 10 条 def test_ 对得上。`-q` 不打印用例名，所以这条差分是唯一正面证据。",
+      "device": "gh run view <run> --log → 存文件 → python 逐行剥 ANSI 后匹配；Bash 工具的 grep 别名到 rg，-E 被读成编码（AGENTS.md §7⑤ 本轮再次命中，改用 /usr/bin/grep 与 python）"
+    },
+    "l3_security_review": {
+      "covers_commits": 7,
+      "findings_count": 0,
+      "ran_before_push": true,
+      "note": "本轮 push 前经用户授权跑 L3 深度审查，覆盖收尾分支全部 7 个 commit，无发现项 ⇒ 无修复门。此前 receipt §6 写的「二次交付的 L3 读数仍须以独立验证证据为准」在此闭合。"
+    },
+    "merged_reachable_commit_pin": {
+      "measured_at_utc": "2026-10-09T03:04:08Z",
+      "device": "git show <sha>:<path> 取树内容（不信工作树）；reachable 判据 git merge-base --is-ancestor <sha> origin/main",
+      "field": "ledger.completion_evidence.axes.engineering.merged_reachable_commit",
+      "bound_before": {
+        "ref_sha": "08c177b2c",
+        "call_site": "        score, age_days = _read_report(report_path, now)",
+        "test_count": 9,
+        "reachable_on_origin_main": true,
+        "contains_final_fix": false,
+        "test_count_expected": 10
+      },
+      "bound_after": {
+        "ref_sha": "10fc05722",
+        "call_site": "        score, age_days = _read_report(report_path, datetime.now(UTC))",
+        "test_count": 10,
+        "reachable_on_origin_main": true,
+        "contains_final_fix": true
+      },
+      "why_the_guard_missed_it": "bet-ledger 对 merged_reachable_commit 只校验 reachability（`bin/plan/bet-ledger.py:1682`），所以指向「更早的那次合并」永远绿 —— 可达不等于含我担保的改动。这是本 BET 主题（证据描述的树必须等于它担保的那棵树）在台账侧的自身实例，retro §4-9 记为第 9 条教训。"
+    }
   }
 }
