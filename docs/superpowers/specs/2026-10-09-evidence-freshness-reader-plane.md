@@ -1,6 +1,6 @@
 ---
 schema_version: specification/v1
-spec_version: 1.0.0
+spec_version: 1.1.0
 title: ADR-0456 B5 残留 — evidence-freshness 读侧根分裂与「生成即豁免分数」
 bet_id: BET-Y2Q4-T10-238
 status: accepted
@@ -55,6 +55,12 @@ dev-profile  SPLIT=True   read=<checkout>/.omo/_delivery/evidence-smoke
   `tests/unit/test_repo_root_profile.py` 钉住，本轮在其消费者侧再加一条。
 - **ISC-5 检测器自证**。新增用例必须包含一条「向真实代码注入违规形状、当场点名」的对照，
   否则「绿」只说明装置没命中（AGENTS.md §7 ④）。
+- **ISC-6 新鲜度读数在读取时刻取时钟**。生成支路里 `evidence-smoke` 落盘**晚于**本次运行开始，
+  若沿用运行开始时拍的 `now` 快照，`(now - mtime).days` 会对负数**向下取整**。
+  伪证（实测 2026-10-09，merged main `08c177b2c`，prod profile）：`age_days=-1`。
+  钉住它的用例：`test_generated_report_age_is_measured_at_read_time`。
+  注意这条**不能**由冻结的改造前副本发现 —— 那份在生成支路硬写 `age_days = 0`，
+  只有「如实测量」之后才暴露，所以它的证据只能是真实读数，不是变异对照。
 
 ## 3 约束
 

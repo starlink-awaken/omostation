@@ -273,6 +273,27 @@ def test_generation_failure_is_reported_once(tmp_path, capsys):
     assert _violation_types(payload) == ["generation_failed"]
 
 
+def test_generated_report_age_is_measured_at_read_time(tmp_path, capsys):
+    """写者与读者同树时的生成支路：刚落的盘不得读出负龄。
+
+    实测 2026-10-09 (merged main, prod profile): 读数 age_days=-1 —— 时钟在 main() 开始
+    拍快照，而 evidence-smoke 在之后才落盘，(now - mtime).days 对负的 timedelta 向下取整。
+    改造前那份冻结副本在此处硬写 0，所以这个形状只能由重测发现，不能靠变异对照发现。
+    """
+    checkout = (tmp_path / "checkout").resolve()
+    state = tmp_path / "state"
+    with _fixture(checkout, state) as checker:
+        def writer() -> dict:
+            _materialize(state / EVIDENCE_REL, score=99.0, age=timedelta(0))
+            return {"evidence_health_score": 99.0, "ok": True}
+
+        checker._run_evidence_smoke = writer
+        rc, payload = _run_json(checker, capsys)
+    assert rc == 0
+    assert payload["age_days"] == 0, f"刚生成的报告读出负龄: {payload['age_days']}"
+    assert payload["report_path"] == str(state / EVIDENCE_REL / "2026-01-01.json")
+
+
 def test_no_profile_resolves_the_historical_path_byte_for_byte(tmp_path):
     """ISC-4：未声明 profile 时读侧字符串 == <checkout>/.omo/_delivery/evidence-smoke。"""
     checkout = (tmp_path / "checkout").resolve()

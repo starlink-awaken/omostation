@@ -87,7 +87,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
-    now = datetime.now(UTC)
     violations: list[dict] = []
     score = 0.0
     age_days = -1
@@ -118,7 +117,9 @@ def main(argv: list[str] | None = None) -> int:
                 age_days = 0
 
     if report_path is not None:
-        score, age_days = _read_report(report_path, now)
+        # 时钟在**读取时刻**取：生成支路里 evidence-smoke 落盘晚于本次运行开始，
+        # 用运行开始的快照相减会得到负数 (实测 age_days=-1)。
+        score, age_days = _read_report(report_path, datetime.now(UTC))
 
     if measured:
         if age_days > MAX_AGE.days:

@@ -1,0 +1,255 @@
+{
+  "schema": "closeout-canary/v1",
+  "bet_id": "BET-Y2Q4-T10-238",
+  "title": "evidence-freshness 读侧根分裂 — 判据实测读数（机器可读）",
+  "measured_on_branch": "agent/governance-agent/t10-238-closeout",
+  "base_commit": "08c177b2c37955b69ea0798be676d54e973f9484",
+  "measurement_device": "python3 subprocess 直接调用 bin/gac/check-evidence-freshness.py --json；profile 用 OMOSTATION_STATE_ROOT 注入独立空根，报告 mtime 用 os.utime 物化",
+  "note": "isc8 首次读数 identical=false 是探针误差（一侧带 grep -n 行号前缀），已用同一装置两侧对拍修正；isc_profile_prod 首次 age_days=-1 是真实缺陷读数，见 isc6_followup",
+  "isc5_tests": {
+    "rc": 0,
+    "tail": "10 passed in 0.12s",
+    "count": 10
+  },
+  "isc4_noprofile": {
+    "rc": 0,
+    "ok": true,
+    "score": 100.0,
+    "age_days": 0,
+    "evidence_dir": "/Users/xiamingxing/ws-t10-238-evidence-freshness/.omo/_delivery/evidence-smoke",
+    "equals_checkout_path": true
+  },
+  "isc_profile_prod": {
+    "rc": 0,
+    "ok": true,
+    "score": 100.0,
+    "age_days": 0,
+    "evidence_dir": "/Users/xiamingxing/.local/state/omostation/prod/.omo/_delivery/evidence-smoke",
+    "under_state_root": true
+  },
+  "isc_profile_dev": {
+    "rc": 0,
+    "ok": true,
+    "score": 100.0,
+    "age_days": 0,
+    "evidence_dir": "/Users/xiamingxing/.local/state/omostation/dev/.omo/_delivery/evidence-smoke",
+    "under_state_root": true
+  },
+  "isc1_stale_in_state_root": {
+    "rc": 1,
+    "ok": false,
+    "age_days": 8,
+    "violations": [
+      "stale_report"
+    ],
+    "report_path": "/var/folders/2s/pr52f6ys76v__sm_q1fkv_n40000gn/T/isc1-jycep1e_/.omo/_delivery/evidence-smoke/2026-09-01.json"
+  },
+  "isc7_ci_grep": {
+    "rc": 0,
+    "hits": [
+      "128:          # 2026-10-09 追加第三件: test_evidence_freshness_reader_plane 钉 evidence-freshness",
+      "153:            ../../tests/unit/test_evidence_freshness_reader_plane.py \\"
+    ]
+  },
+  "isc8_constants": {
+    "pre_merge": [
+      "MAX_AGE = timedelta(days=7)",
+      "MIN_SCORE = 90.0"
+    ],
+    "post_merge": [
+      "MAX_AGE = timedelta(days=7)",
+      "MIN_SCORE = 90.0"
+    ],
+    "identical": true,
+    "diff_hunks_touching_constants": [],
+    "note": "同一装置(git show + 无前缀 strip)两侧对拍；首次读数 identical=false 是探针把 grep -n 的行号前缀一侧带进比较，装置误差已修正"
+  },
+  "merged_commit": "08c177b2c37955b69ea0798be676d54e973f9484",
+  "measured_at_utc": "2026-10-09T02:10:29.632142+00:00",
+  "final_branch_readings": {
+    "generate_then_read": {
+      "rc": 0,
+      "ok": true,
+      "score": 100.0,
+      "age_days": 0,
+      "violations": []
+    },
+    "read_existing": {
+      "rc": 0,
+      "ok": true,
+      "score": 100.0,
+      "age_days": 0,
+      "violations": []
+    },
+    "stale_8d": {
+      "rc": 1,
+      "ok": false,
+      "score": 100.0,
+      "age_days": 8,
+      "violations": [
+        "stale_report"
+      ]
+    },
+    "stale_8d_and_low_42": {
+      "rc": 1,
+      "ok": false,
+      "score": 42.0,
+      "age_days": 8,
+      "violations": [
+        "stale_report",
+        "low_score"
+      ]
+    },
+    "noprofile": {
+      "rc": 0,
+      "ok": true,
+      "score": 100.0,
+      "age_days": 0,
+      "evidence_dir": "/Users/xiamingxing/ws-t10-238-evidence-freshness/.omo/_delivery/evidence-smoke",
+      "equals_checkout_path": true
+    },
+    "measured_at_utc": "2026-10-09T02:31:11.864621+00:00",
+    "note": "在最终树上（含本轮 5 个 commit）重跑同一装置：判据-1/-2/-4 与生成→读取双支路全部复现。首次复测把分数写成 score=42 未命中 low_score —— 读支路取的是 evidence_health_score，装置误差，已按源码 `bin/gac/check-evidence-freshness.py:55` 修正后重测。"
+  },
+  "gate_scoped": {
+    "measured_at_utc": "2026-10-09T02:29:49Z",
+    "device": "uv run --with pyyaml python bin/gac/gac-local-gate.py --scope files --file <本轮 7 个写面> --json",
+    "scope": "files",
+    "checks": 68,
+    "ok": false,
+    "hard_fails": [
+      {
+        "name": "change-lane-check",
+        "returncode": 1,
+        "stdout_first_line": "change-lane-check: FAIL mixed lanes=code,docs,docs_data,governance_code,governance_state"
+      },
+      {
+        "name": "service-config-drift",
+        "returncode": 1,
+        "stdout_first_line": "❌ 1 drift:"
+      }
+    ],
+    "soft_warns": [
+      {
+        "name": "test-mcp-kos",
+        "returncode": 78,
+        "skipped": true,
+        "note": "🧪 Running TDD tests for mcp-server-kos.py..."
+      },
+      {
+        "name": "current-state-coherence",
+        "returncode": 2,
+        "skipped": false,
+        "note": "current-state-coherence: missing input: /Users/xiamingxing/ws-t10-238-evidence-freshness/.omo/state/system.yaml"
+      }
+    ],
+    "own_checks": {
+      "check-evidence-honest-closure": {
+        "ok": true,
+        "returncode": 0,
+        "stdout": "check-evidence-honest-closure: PASS (135 runs, 0 violations, 369 evidence entries)"
+      },
+      "check-evidence-freshness": {
+        "ok": true,
+        "returncode": 0,
+        "stdout": "check-evidence-freshness: PASS (score=100.0, age=0d)"
+      }
+    },
+    "attribution": {
+      "change-lane-check": "测量装置的面，非回归：--scope files 把 5 个 lane 并成一次检查（本轮 7 文件 lanes=code,docs,docs_data,governance_code,governance_state）；真实执行面是 pre-commit 的 --staged 逐 commit —— 见 per_commit_lanes，五个 commit 各自 rc=0。在同一并集读法下跑已合并的历史 commit bbcb4e279…(25 文件) 与 d56ff1540(11 文件) 同样 FAIL mixed lanes。",
+      "service-config-drift": "机器面预存债：com.omostation.zhixing-projection-fullrefresh 的 plist 与 services.yaml 不一致；在主工作区用稳定解释器复现同样读数，且不在本 BET 任何写面上。修法 bin/mof/gen-service-configs.py --write 属授权门，本轮未执行，未改窄任何判据。",
+      "current-state-coherence": "环境面，非 hard fail：本检出没有 .omo/state/system.yaml；用 git archive origin/main 导出的干净树复现同样 rc=2 missing input，且该文件在 origin/main 上未被跟踪（git ls-files --error-unmatch rc=1）。"
+    }
+  },
+  "isc6_followup": {
+    "isc6_negative_age_before_fix": {
+      "observed": "prod profile 生成支路 age_days=-1",
+      "captured_at": "2026-10-09T02:06:04Z",
+      "cause": "main() 在运行开始拍 now 快照，evidence-smoke 之后落盘，(now - mtime).days 对负 timedelta 向下取整",
+      "fix": "读取时刻取时钟：_read_report(report_path, datetime.now(UTC))"
+    },
+    "isc6_after_fix": {
+      "generate_then_read_age_days": 0,
+      "tests": "10 passed in 0.12s"
+    }
+  },
+  "per_commit_lanes": {
+    "device": "python3 bin/change-lane-check.py --file <该 commit 的文件> （逐 commit，等价 pre-commit 的 --staged 执行面）",
+    "measured_at_utc": "2026-10-09T02:30:12Z",
+    "commits": [
+      {
+        "commit": "2cf72d97a",
+        "rc": 0,
+        "result": "change-lane-check: PASS (1 files, lanes=governance_code)"
+      },
+      {
+        "commit": "26576e75d",
+        "rc": 0,
+        "result": "change-lane-check: PASS (1 files, lanes=code)"
+      },
+      {
+        "commit": "9e0d92a2b",
+        "rc": 0,
+        "result": "change-lane-check: PASS (4 files, lanes=docs,docs_data)"
+      },
+      {
+        "commit": "c6d1f5691",
+        "rc": 0,
+        "result": "change-lane-check: PASS (1 files, lanes=governance_state)"
+      },
+      {
+        "commit": "608dd5fe2",
+        "rc": 0,
+        "result": "change-lane-check: PASS (1 files, lanes=docs_data)"
+      }
+    ]
+  },
+  "bet_ledger_complete": {
+    "command": "python3 bin/plan/bet-ledger.py complete BET-Y2Q4-T10-238",
+    "rc": 0,
+    "output": "[complete] ✅ BET-Y2Q4-T10-238 → done",
+    "measured_at_utc": "≤ 2026-10-09T02:23:20Z（该次运行的结果由 commit 608dd5fe2 记录；时刻取该 commit 的 committer date 2026-10-09T10:23:20+08:00，不给无法证实的秒级精度）",
+    "guards_that_ran": [
+      "accepted_specifications 的 content_digest 与 spec 现算逐字节相符",
+      "completion_evidence 矩阵推导 = delivery_accepted（value_indicator_policy=false 要求的那一态）",
+      "D0：7 个 write_surfaces 全部 tracked",
+      "vision→retro 链闭合（run.bet_id 绑定 + 北极星 + retro 文件）"
+    ],
+    "note": "台账终态由机制自己写：先把手写的 status/done_at 退回 pending 再跑 complete，否则 :3261 的「已是 done」短路会跳过全部校验（代理绿）。"
+  },
+  "post_rebind_validation": {
+    "measured_at_utc": "2026-10-09T02:36:49Z",
+    "why": "本轮把 canary/receipt/retro 三份内容都改了 ⇒ 台账里 8 处 sha256 绑定全部重算。重绑后不能只用手算 sha 自证，要用写台账的那套机制自己的谓词再判一次。",
+    "device": "importlib 载入 bin/plan/bet-ledger.py，直接调它自己的 resolve_value_indicator_policy / validate_accepted_specification / validate_completion_evidence；链节用 bin/plan/chain_bind.evaluate_complete（同一谓词，不重写）",
+    "readings": {
+      "value_indicator_policy": false,
+      "spec_binding_errors": [],
+      "completion_evidence_derived_state": "delivery_accepted",
+      "completion_evidence_errors": [],
+      "chain_bind_evaluate_complete_ok": true,
+      "chain_bind_reasons": [],
+      "ledger_yaml_parse": "ok（535 bets）",
+      "bound_digest_check": {
+        "checked": 8,
+        "stale": 0
+      }
+    },
+    "bet_ledger_verify_rc": 0,
+    "bet_ledger_verify_note": "python3 bin/plan/bet-ledger.py verify BET-Y2Q4-T10-238：D0 七条 write_surfaces 全部 [OK] (root index)，rc=0；未加 --execute（那会去跑 make gac-local-gate，其两条红的归属见 gate_scoped.attribution）",
+    "device_error_this_round": "同一轮里第三次装置误差：核对绑定用的检查式取 split('sha256:',2)[-1]，得到的是裸 hex，却又和 'sha256:'+actual 比 ⇒ 8 条全报 STALE。第一次检查用 (bound=='sha256:'+actual) or (bound==actual) 侥幸对，第二次只留前一支就当场自否证。改成锚定正则 sha256:([0-9a-f]{64}) 复核 ⇒ 8/8 OK。与 §3 判据-8、§2.1 分数键同族：读数在两次之间变了，先疑装置。",
+    "final_revalidation": {
+      "measured_at_utc": "2026-10-09T02:39:21Z",
+      "why": "receipt 在首次复验之后又改了一次措辞 ⇒ digest 再变。重绑不能只绑一次就宣布过，最后一次改写后必须用同一套谓词再判。",
+      "bindings_rewritten": 4,
+      "spec_binding_errors": [],
+      "derived_state": "delivery_accepted",
+      "completion_evidence_errors": [],
+      "chain_bind_ok": true,
+      "bound_digest_check": {
+        "checked": 8,
+        "stale": 0
+      },
+      "lane_preview": "change-lane-check: PASS (3 files, lanes=docs,docs_data) rc=0"
+    }
+  }
+}

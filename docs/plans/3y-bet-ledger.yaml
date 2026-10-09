@@ -41386,7 +41386,8 @@ bets:
     在该路径上被永久豁免；age_days=0（:97）是硬写的不是测出来的。 交付面边界: CI 的 CR-X2-EVIDENCE-FRESHNESS （.github/workflows/gac-gate.yml:292-296）带
     continue-on-error: true 属 advisory，CI 全绿不是这条红的证据；本轮只让它在本地门禁面（bin/gac/gac-local-gate.py:296
     / :937）说得真话。'
-  status: pending
+  status: done
+  done_at: 2026-10-09
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -41451,23 +41452,49 @@ bets:
   - docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-09-evidence-freshness-reader-plane.md
-    spec_version: 1.0.0
-    content_digest: sha256:370b75a0de8b096370a7dd7a44dae191977ea78e73e231545f05fbd916742fc4
+    spec_version: 1.1.0
+    content_digest: sha256:a5413500cb10fc789f5ba10920fe8ae49ac4c241529ec3227c0ab219a19ba574
     decision_ref: decision://accepted/BET-Y2Q4-T10-238
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@08c177b2c37955b69ea0798be676d54e973f9484
+          tests:
+            ref: receipt://docs/reports/2026-10-09-bet-238-canary.json
+            sha256: sha256:64da761ee5cbae1628fde0015b06c87526271e8b03107b924c0e06f9a48dce07
+          diff:
+            ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+            sha256: sha256:e9d646703b75d223fdc7a956f6fd0b6a33e7cb6304c1228fa6d559a4a5275d9d
+          rollback:
+            ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+            sha256: sha256:e9d646703b75d223fdc7a956f6fd0b6a33e7cb6304c1228fa6d559a4a5275d9d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-238.md
+            sha256: sha256:2f313c220fe3c943d5649e396f5b8282944c9c24d9a92889d07bc8c13be92711
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-09-bet-238-canary.json
+            sha256: sha256:64da761ee5cbae1628fde0015b06c87526271e8b03107b924c0e06f9a48dce07
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+            sha256: sha256:e9d646703b75d223fdc7a956f6fd0b6a33e7cb6304c1228fa6d559a4a5275d9d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-238.md
+            sha256: sha256:2f313c220fe3c943d5649e396f5b8282944c9c24d9a92889d07bc8c13be92711
+          cleanup:
+            ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+            sha256: sha256:e9d646703b75d223fdc7a956f6fd0b6a33e7cb6304c1228fa6d559a4a5275d9d
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
