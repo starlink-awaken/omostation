@@ -125,6 +125,10 @@ jobs:
           # 交付不构成任何证据)。点名理由逐件: test_bin_syspath_resolution 钉 parents[K] 算数
           # +  detector 自证; test_system_yaml_write_plane 钉 system.yaml 写面落 state 根 +
           #  检出副本由用例自己物化。两者实测 7 + 25 pass, 且 replay 原缺陷会当场红 (牙齿验过)。
+          # 2026-10-09 追加第三件: test_evidence_freshness_reader_plane 钉 evidence-freshness
+          # 读侧根 == 写侧根 + 生成支路不豁免 MIN_SCORE (BET-Y2Q4-T10-238)。实测 9 pass;
+          # 把被测脚本换回改造前本体 → 6 failed (变异对照跑过, 牙齿验过), 且 HOME=<空目录>
+          # + env -u OMOSTATION_ROOT 下同样 9 pass (不读 host profile)。
           uv run pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -146,6 +150,7 @@ jobs:
             ../../tests/test_service_registry_reality.py \
             ../../tests/test_yaml_bypass_invariant.py \
             ../../tests/unit/test_bin_syspath_resolution.py \
+            ../../tests/unit/test_evidence_freshness_reader_plane.py \
             ../../tests/unit/test_system_yaml_write_plane.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
