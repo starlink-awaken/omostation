@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-27
+last_updated: 2026-10-09
 ---
 
 # AGENTS.md — Workspace Development Guide
@@ -360,6 +360,8 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   - **④ GitHub「no checks reported」的第一因是 CONFLICTING，不是 `on.paths` 过滤**：`gh pr checks` 零输出时先跑 `gh pr view --json mergeable,mergeStateStatus` —— PR #4623 实测是 `CONFLICTING` / `DIRTY`，**冲突未解的 PR 根本不排队**。**判据搞混双向有代价**：把「冲突未解」读成「CI 放过我了」，或反过来把 `on.paths` 当万能解释 —— 注意 `.github/workflows/governance-check.yml` 的 `on.pull_request.paths` **不含 `tests/unit/**`**，那批文件**本地 pytest 是唯一证据**（与 §7「三个治理门禁」条里 `:118-127` 的显式白名单是同一事实的两个面），这是独立于冲突的第二件事。
   - **⑤ Bash 工具的 shell 是 zsh + 别名，Python 子进程拿的是另一套二进制**：实测 `type` 读数 `grep → rg`、`find → fd`、`ls → eza`、`cp → cp -iv`；而 `subprocess.run(..., shell=True)` 里是 `/usr/bin/grep`、`/bin/cp`（**别名不继承**）。四个已踩形状：`grep -iE "a|b"` 报 `unknown encoding`（rg 的 `-E` 是编码、`-r` 是 replace，都不是你以为是的那个）、`find … -name` 报 fd 用法错、`ls -lat` 报 `--time` 非法值、`cp` 对已存在文件打印 `overwrite …? not overwritten` 后 **rc=1 且目标逐字节未变**（不是静默成功，但那行消息看着像提示，容易被当成跑过了）。**纪律**：脚本化文件操作一律走 Python 或绝对路径二进制；**「脚本里跑得通」不等于「一行命令里等价」**；凡改动后断言没变，先用 sha 逐字节复核，再怀疑逻辑。零匹配计数断链另见 §11「管道计数命令零匹配断链」。
   - **⑥ 行号指针会随上一轮交付漂移，固化感知前先重跑解析**：本文件此前有两条指针写在 T10-221 基线上 —— `tests/unit/test_projection_reader_resolution.py:42` 与 `tests/unit/test_repo_root_profile.py:146`；T10-222 重写这两个文件后，`:42` 变成一行 `registry = next(...)`、`:146` 变成一段 TRUTH_DIR 注释，**断言本体分别移到 `:61` 与 `:174`**，而文档逐字未变、读起来依然权威。**纪律**：**优先写符号名（测试函数名 / YAML 键名 / 函数名），行号只作辅助**；引用行号前用 `git show origin/main:<path>` 取该行内容核一遍再落笔；交付时顺手修正发现的陈旧指针（本轮修正上述两条）。
+- **「算完即弃」的派生事实 = 免费的观测点（2026-10-07, BET-Y2Q4-T10-234 实测）**：`service.py` 早已计算 `data_mode`/`live_backends` 只是没持久化 —— 给**已有计算点**挂一个 fail-soft 的 telemetry 钩子，比从零造探针便宜得多。判据：要观测某个事实时先找「它是不是已经在哪个计算点算出来了」，而不是新开一条探测路径。纪律：观测缝必须是纯 telemetry（不改 recall/branch 行为）、缺席即诚实信号（fixture-only 不写记录）。
+- **子模块无法 import 父仓 bin/lib 时，用「同 env 契约镜像」而非复制路径逻辑（2026-10-07, BET-Y2Q4-T10-234 实测）**：kairon 子模块的 observation 写根无法复用父仓 `repo_root.state_root()`（子模块 import 不到父仓 bin/lib），正确做法是**镜像同一 env 契约**（显式覆盖 → `OMOSTATION_STATE_ROOT` → workspace env → marker 上溯），两侧对同一契约、写法各自落位，后续根逻辑变动只需各改一处。判据：跨仓/子模块需要父仓能力时，复制契约而非复制路径解析代码；同根原理见「写路径要在调用时刻解析」条。
 - **门禁 flag 语义是决策不是默认：`--require-main` 曾两度差点复辟（2026-10-06, ADR-0464 修复波固化；源头 PR #4209 / commit `86b61b84e`）**：**证据** —— #4209 (2026-09-22) 从 gac-gate CI **有意移除** `--require-main`，因为跨仓 PR 模式下父仓指针合法指向**已 push 但尚未合并**到子仓 main 的 feature 分支提交，`--require-main` 会误杀（`check-submodule-pointer-drift` 同批把 `ahead` 定为非阻塞）。本修复波把它的缺失读成"漏接的参数"，重加了 flag、造了合成 proof，直到 `tests/test_gac_gate_workflow_purity.py:79-84` 这个冻结决策的 purity 测试拦住才撤回。**判据** —— 一个当前 OFF 的 gate flag 常常是故意的：`git log -S'<flag>' -- <path>` + 读移除 commit 的 message；且**当改动与已有测试矛盾时，测试是对意图的证据，先查历史再改测试**（#4517 就是把 purity 测试同步到 #4209 现状的先例）。**纪律** —— 任何"缺接线/漏 flag"修复前：① `git log -S'<flag>' --oneline -- <path>` 找移除 commit；② `grep -rn '<flag>' tests/` 看有没有断言其**缺席**的 purity 测试（存在即决策记录）；③ 区分两语义：PR admission = 任意远端 ref 祖先正确（#4209）；governed re-point/bump（`bin/ssot/submodule-pointer-transaction.sh`）= `--require-main` 正确。ADR-0464 盲区三的机制描述已于 2026-10-06 按此更正。
 
 ---
