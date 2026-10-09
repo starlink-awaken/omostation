@@ -41466,31 +41466,31 @@ bets:
             ref: git://origin/main@08c177b2c37955b69ea0798be676d54e973f9484
           tests:
             ref: receipt://docs/reports/2026-10-09-bet-238-canary.json
-            sha256: sha256:02079b3dc6f1b1b22a8515d8a7b2188d8888c7c2721e5fcffa8273eb88ede691
+            sha256: sha256:64da761ee5cbae1628fde0015b06c87526271e8b03107b924c0e06f9a48dce07
           diff:
             ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
-            sha256: sha256:8bdf10d83deb5efa877cbe80eff698e597faaf40aa644e7bc472bdfe7d1184c4
+            sha256: sha256:e9d646703b75d223fdc7a956f6fd0b6a33e7cb6304c1228fa6d559a4a5275d9d
           rollback:
             ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
-            sha256: sha256:8bdf10d83deb5efa877cbe80eff698e597faaf40aa644e7bc472bdfe7d1184c4
+            sha256: sha256:e9d646703b75d223fdc7a956f6fd0b6a33e7cb6304c1228fa6d559a4a5275d9d
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-238.md
-            sha256: sha256:0165c16e9f6acbd4cc3bbd3bbd2582e8f02d2a81e6aef1a46012502f2c590447
+            sha256: sha256:2f313c220fe3c943d5649e396f5b8282944c9c24d9a92889d07bc8c13be92711
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-09-bet-238-canary.json
-            sha256: sha256:02079b3dc6f1b1b22a8515d8a7b2188d8888c7c2721e5fcffa8273eb88ede691
+            sha256: sha256:64da761ee5cbae1628fde0015b06c87526271e8b03107b924c0e06f9a48dce07
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
-            sha256: sha256:8bdf10d83deb5efa877cbe80eff698e597faaf40aa644e7bc472bdfe7d1184c4
+            sha256: sha256:e9d646703b75d223fdc7a956f6fd0b6a33e7cb6304c1228fa6d559a4a5275d9d
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-238.md
-            sha256: sha256:0165c16e9f6acbd4cc3bbd3bbd2582e8f02d2a81e6aef1a46012502f2c590447
+            sha256: sha256:2f313c220fe3c943d5649e396f5b8282944c9c24d9a92889d07bc8c13be92711
           cleanup:
             ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
-            sha256: sha256:8bdf10d83deb5efa877cbe80eff698e597faaf40aa644e7bc472bdfe7d1184c4
+            sha256: sha256:e9d646703b75d223fdc7a956f6fd0b6a33e7cb6304c1228fa6d559a4a5275d9d
       value:
         status: NOT_PROVEN
         evidence: {}
