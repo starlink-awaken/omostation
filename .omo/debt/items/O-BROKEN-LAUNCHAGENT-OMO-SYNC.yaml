@@ -1,0 +1,27 @@
+id: O-BROKEN-LAUNCHAGENT-OMO-SYNC
+title: com.l4.omo.sync LaunchAgent uv 传参错误崩溃循环 — 判删（职能被 ADR-0465 dotfiles 同步层取代）
+dimension: governance
+subdimension: consistency
+domain: system
+scope: host
+severity: low
+weight: 0.1
+entropy_class: low
+lifecycle_state: open
+owner: governance-team
+affected_roots:
+- ~/Library/LaunchAgents/com.l4.omo.sync.plist
+evidence_refs:
+- "launchd 日志: uv 把 plist ProgramArguments 中的目录路径当子命令, 持续 exit 非 0 崩溃循环"
+- "实读 projects/omo/src/omo/omo_sync.py: 语义为治理状态自记录 (读 system.yaml + audit + 写 JSONL), 非文件同步"
+- "ADR-0465 §6: 职能由 dotfiles 仓 bin/sync-drift.py + com.local.dotfiles-drift launchd 巡检取代 (2026-10-09 已两机落地)"
+mitigation_refs:
+- "launchctl bootout gui/$(id -u)/com.l4.omo.sync && rm ~/Library/LaunchAgents/com.l4.omo.sync.plist"
+description: |-
+  com.l4.omo.sync LaunchAgent 的 ProgramArguments 把目录当 uv 子命令传, 自安装起
+  处于崩溃循环; 且其封装的 omo sync 语义是治理状态自记录而非用户配置文件同步,
+  与用户期望的"配置同步"无交集。2026-10-09 ADR-0465 落地 dotfiles 同步层后职能
+  完全重叠。判定: 删除本机坏件 (bootout + rm plist), 不在本仓重建等价物。
+created: 2026-10-09
+related:
+- ADR-0465

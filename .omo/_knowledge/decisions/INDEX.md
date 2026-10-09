@@ -473,6 +473,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0462: mainline 收窄不得丢弃 identity_base 下界 — 修正 ADR-0460 引入的 provenance 回归 — **ACCEPTED** | 2026-10-02 | own-commit range must keep the identity_base lower bound; rev-list --not is a toggle, not a flag | 0462-provenance-own-commits-base-bound.md
 - ADR-0463: 「契约已定义并测试，但生产侧无生产者」的三例缺口 — **PROPOSED** | 2026-10-05 | gh_json / claims_authority_fence_context / publication_scope: contract defined and tested, never produced in production | 0463-contract-without-production-producer.md
 - ADR-0464: 声明已达但执行未达：三类治理盲区与判据 — **PROPOSED** | 2026-10-06 | Declaration vs execution: three governance blindspots and their criteria | 0464-declaration-vs-execution-three-governance-blindspots.md
+- ADR-0465: mbp ↔ Mac mini 配置同步架构（git dotfiles + rsync 单向 + launchd 巡检 + SwiftBar 出口；magpie 边界契约）— **PROPOSED** | 2026-10-09 | supersedes hw-05; secrets/keychain policy; 3 stale tailscale IP refs fixed | 0465-mbp-mini-config-sync-architecture.md
 
 - ADR-0402: 门禁后移与自主审查架构 — DoD 联动 + 自主 review 分级 — **ACCEPTED** | 2026-08-08 | Gate shift autonomous review | 0402-gate-shift-autonomous-review.md
 - ADR-0400: Definition of Done — 任务完成验证门禁 (防虚假完成) — **ACCEPTED** | 2026-08-08 | DoD gate | 0400-definition-of-done-task-verify.md
