@@ -41376,6 +41376,98 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+- id: BET-Y2Q4-T10-238
+  title: ADR-0456 B5 残留 —— evidence-freshness 读侧根分裂把「首跑必绿」放大成「每跑必绿」，且生成支路从不比分数
+  goal: 'T10-232 §5 与 T10-214 retro #:12 各自记过这条门禁的一半，本 BET 把两半合实。实测（2026-10-09，同一棵 T10-238
+    worktree，只换 OMOSTATION_STATE_ROOT）: 无 profile 时 SPLIT=False，声明 dev profile 后 SPLIT=True
+    —— 写者 bin/gac/evidence-smoke.py:111 _output_dir() 在调用时刻解析 state_root() 落盘，读者 bin/gac/check-evidence-freshness.py:21-22
+    在 import 时刻由 Path(__file__).resolve().parents[2] 反推检出根，于是声明 profile 后 _latest_report()
+    永远命中不到写者刚落盘的报告。后果是结构性的而非偶发: 每次运行都走 :93-99 的生成支路，而那条支路只查 error 键，score 在 :96 被赋值却没有任何判据消费它，MIN_SCORE(:24)
+    在该路径上被永久豁免；age_days=0（:97）是硬写的不是测出来的。 交付面边界: CI 的 CR-X2-EVIDENCE-FRESHNESS （.github/workflows/gac-gate.yml:292-296）带
+    continue-on-error: true 属 advisory，CI 全绿不是这条红的证据；本轮只让它在本地门禁面（bin/gac/gac-local-gate.py:296
+    / :937）说得真话。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop if 需要调低 MIN_SCORE 或 MAX_AGE 才能让新判据过（spec §3：收紧判据不是放宽判据）; Stop
+    if 需要删除生成支路（CI 干净检出没有报告是真实需求，要移除的是它对分数的豁免）; Stop if 需要改 bin/gac/evidence-smoke.py
+    的写侧落盘或 --gate 语义（spec §3 限定只改读侧）; Stop if 需要把 gac-gate.yml:294-296 的 continue-on-error
+    翻成阻断才能交付（门禁强度政策变更，另案需署名）; Stop if 需要给 CI 步骤注入 OMOSTATION_STATE_ROOT 或改 gac-gate.yml
+    的 profile 声明来消除 SPLIT （那是环境侧改写判据，不在读侧修复范围内）; Stop if 新用例在未声明 profile 的 host 上依赖
+    ~/Workspace 兜底（AGENTS.md §7 host 泄漏条）; Stop if 宣布 B1 或 B5 完成。
+  non_goals:
+  - 不动写侧 evidence-smoke.py 的落盘路径、_system_yaml() 与 --gate 语义。
+  - 不把 CR-X2-EVIDENCE-FRESHNESS 从 advisory 翻成 blocking（强度政策另案）。
+  - 不降低 MIN_SCORE=90.0 / MAX_AGE=7d 任一阈值。
+  - 不碰 .github/workflows/gac-gate.yml 的 profile 与环境声明。
+  - 不修 projects/** 侧的同族分裂（跨仓，需 re-pin 指针）。
+  done_when:
+  - '判据-1 正向落点（ISC-1）: 声明 OMOSTATION_STATE_ROOT=<X>，且只在 <X>/.omo/_delivery/evidence-smoke
+    物化一份 mtime 为 8 天前的报告 ⇒ 检查器 exit 1、violations 含 stale_report 且 age_days=8（不是硬写的 0）。断言绑定「读数来自那棵树」，不是「那个路径读得到」。'
+  - '判据-2 生成支路不比分数豁免（ISC-2）: 空证据目录 + 生成得到 evidence_health_score < MIN_SCORE ⇒ exit 1
+    且 violations 含 low_score；变异对照：同一注入下改造前的 check-evidence-freshness.py 必须 exit 0（证明该形状此前被结构性豁免）。'
+  - '判据-3 分裂可见（ISC-3）: 注入「生成 rc=0 且返回合法 JSON，但读路径上没有那份产物」⇒ ok=false 且 violations 含 evidence_unreadable，不再静默
+    PASS。'
+  - '判据-4 未声明 profile 逐字节等于历史（ISC-4）: env -u OMOSTATION_STATE_ROOT 下解析出的证据目录字符串 与 <checkout>/.omo/_delivery/evidence-smoke
+    完全相同，脚本路径与 cwd 仍取 code_root()。'
+  - '判据-5 用例: python3 -m pytest tests/unit/test_evidence_freshness_reader_plane.py -q
+    -p no:randomly 全绿，含 ISC-1..ISC-5 与变异对照。'
+  - '判据-6 检测器自证（ISC-5）: 向被测代码副本注入违规形状（import 时刻反推检出根）后，扫描/用例当场点名它，而不是空绿。'
+  - '判据-7 CI 点名: git grep -n test_evidence_freshness_reader_plane -- .github/workflows/
+    命中 governance-check.yml 的一步 pytest —— tests/unit/** 不在任何 CI 白名单，未点名即不算交付。'
+  - '判据-8 阈值未放宽: git diff origin/main..HEAD -- bin/gac/check-evidence-freshness.py 中
+    MIN_SCORE 与 MAX_AGE 两行零改动（-U0 对拍常量行）。'
+  - '判据-9 门禁不瞎且不带生成态: make gac-local-gate PASS；git status --short 为空，.omo/state/** 与
+    .omo/_delivery/** 不随本轮 commit 走。'
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_evidence_freshness_reader_plane.py -q -p
+      no:randomly
+    expect: all pass —— ISC-1 正向落点 + ISC-2 低分不豁免 + ISC-3 evidence_unreadable + ISC-4
+      无 profile 逐字节等值 + ISC-5 变异对照。
+  - cmd: git grep -n test_evidence_freshness_reader_plane -- .github/workflows/
+    expect: 命中 governance-check.yml 一步 pytest —— 否则判据-7 未交付，本地全绿不算证据。
+  - cmd: git diff origin/main..HEAD -- bin/gac/check-evidence-freshness.py
+    expect: 无 -MIN_SCORE / -MAX_AGE 行，生成支路仍在（移除的只是分数豁免）。
+  - cmd: OMOSTATION_STATE_ROOT=$HOME/.local/state/omostation/dev python3 bin/gac/check-evidence-freshness.py
+      --json
+    expect: SPLIT 消除后该运行读到 state 根的报告并据其真实 age/score 判定；未声明 profile 时路径与历史逐字节相同。
+  - cmd: make gac-local-gate
+    expect: PASS；收尾 git status --short 为空。
+  write_surfaces:
+  - bin/gac/check-evidence-freshness.py
+  - tests/unit/test_evidence_freshness_reader_plane.py
+  - .github/workflows/governance-check.yml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-09-evidence-freshness-reader-plane.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-238.md
+  - docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-09-evidence-freshness-reader-plane.md
+    spec_version: 1.0.0
+    content_digest: sha256:370b75a0de8b096370a7dd7a44dae191977ea78e73e231545f05fbd916742fc4
+    decision_ref: decision://accepted/BET-Y2Q4-T10-238
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -41514,7 +41606,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 534
+  total_bets: 535
   windows:
   - Y1Q1
   - Y1Q2
