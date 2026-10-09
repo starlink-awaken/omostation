@@ -1,0 +1,113 @@
+{
+  "schema": "closeout-canary/v1",
+  "bet_id": "BET-Y2Q4-T10-238",
+  "title": "evidence-freshness 读侧根分裂 — 判据实测读数（机器可读）",
+  "measured_on_branch": "agent/governance-agent/t10-238-closeout",
+  "base_commit": "08c177b2c37955b69ea0798be676d54e973f9484",
+  "measurement_device": "python3 subprocess 直接调用 bin/gac/check-evidence-freshness.py --json；profile 用 OMOSTATION_STATE_ROOT 注入独立空根，报告 mtime 用 os.utime 物化",
+  "note": "isc8 首次读数 identical=false 是探针误差（一侧带 grep -n 行号前缀），已用同一装置两侧对拍修正；isc_profile_prod 首次 age_days=-1 是真实缺陷读数，见 isc6_followup",
+  "isc5_tests": {
+    "rc": 0,
+    "tail": "10 passed in 0.12s",
+    "count": 10
+  },
+  "isc4_noprofile": {
+    "rc": 0,
+    "ok": true,
+    "score": 100.0,
+    "age_days": 0,
+    "evidence_dir": "/Users/xiamingxing/ws-t10-238-evidence-freshness/.omo/_delivery/evidence-smoke",
+    "equals_checkout_path": true
+  },
+  "isc_profile_prod": {
+    "rc": 0,
+    "ok": true,
+    "score": 100.0,
+    "age_days": 0,
+    "evidence_dir": "/Users/xiamingxing/.local/state/omostation/prod/.omo/_delivery/evidence-smoke",
+    "under_state_root": true
+  },
+  "isc_profile_dev": {
+    "rc": 0,
+    "ok": true,
+    "score": 100.0,
+    "age_days": 0,
+    "evidence_dir": "/Users/xiamingxing/.local/state/omostation/dev/.omo/_delivery/evidence-smoke",
+    "under_state_root": true
+  },
+  "isc1_stale_in_state_root": {
+    "rc": 1,
+    "ok": false,
+    "age_days": 8,
+    "violations": [
+      "stale_report"
+    ],
+    "report_path": "/var/folders/2s/pr52f6ys76v__sm_q1fkv_n40000gn/T/isc1-jycep1e_/.omo/_delivery/evidence-smoke/2026-09-01.json"
+  },
+  "isc7_ci_grep": {
+    "rc": 0,
+    "hits": [
+      "128:          # 2026-10-09 追加第三件: test_evidence_freshness_reader_plane 钉 evidence-freshness",
+      "153:            ../../tests/unit/test_evidence_freshness_reader_plane.py \\"
+    ]
+  },
+  "isc8_constants": {
+    "pre_merge": [
+      "MAX_AGE = timedelta(days=7)",
+      "MIN_SCORE = 90.0"
+    ],
+    "post_merge": [
+      "MAX_AGE = timedelta(days=7)",
+      "MIN_SCORE = 90.0"
+    ],
+    "identical": true,
+    "diff_hunks_touching_constants": [],
+    "note": "同一装置(git show + 无前缀 strip)两侧对拍；首次读数 identical=false 是探针把 grep -n 的行号前缀一侧带进比较，装置误差已修正"
+  },
+  "merged_commit": "08c177b2c37955b69ea0798be676d54e973f9484",
+  "measured_at_utc": "2026-10-09T02:10:29.632142+00:00",
+  "final_branch_readings": {
+    "generate_then_read": {
+      "rc": 0,
+      "ok": true,
+      "age_days": 0,
+      "violations": []
+    },
+    "read_existing": {
+      "rc": 0,
+      "ok": true,
+      "age_days": 0
+    },
+    "stale_8d": {
+      "rc": 1,
+      "ok": false,
+      "age_days": 8,
+      "violations": [
+        "stale_report"
+      ]
+    },
+    "stale_8d_and_low_42": {
+      "rc": 1,
+      "ok": false,
+      "age_days": 8,
+      "score": 42.0,
+      "violations": [
+        "stale_report",
+        "low_score"
+      ]
+    }
+  },
+  "gate_scoped": null,
+  "isc6_followup": {
+    "isc6_negative_age_before_fix": {
+      "observed": "prod profile 生成支路 age_days=-1",
+      "captured_at": "2026-10-09T02:06:04Z",
+      "cause": "main() 在运行开始拍 now 快照，evidence-smoke 之后落盘，(now - mtime).days 对负 timedelta 向下取整",
+      "fix": "读取时刻取时钟：_read_report(report_path, datetime.now(UTC))"
+    },
+    "isc6_after_fix": {
+      "generate_then_read_age_days": 0,
+      "tests": "10 passed in 0.12s"
+    }
+  }
+}

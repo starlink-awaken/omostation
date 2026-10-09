@@ -41451,23 +41451,49 @@ bets:
   - docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-09-evidence-freshness-reader-plane.md
-    spec_version: 1.0.0
-    content_digest: sha256:370b75a0de8b096370a7dd7a44dae191977ea78e73e231545f05fbd916742fc4
+    spec_version: 1.1.0
+    content_digest: sha256:a5413500cb10fc789f5ba10920fe8ae49ac4c241529ec3227c0ab219a19ba574
     decision_ref: decision://accepted/BET-Y2Q4-T10-238
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@08c177b2c37955b69ea0798be676d54e973f9484
+          tests:
+            ref: receipt://docs/reports/2026-10-09-bet-238-canary.json
+            sha256: sha256:02079b3dc6f1b1b22a8515d8a7b2188d8888c7c2721e5fcffa8273eb88ede691
+          diff:
+            ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+            sha256: sha256:8bdf10d83deb5efa877cbe80eff698e597faaf40aa644e7bc472bdfe7d1184c4
+          rollback:
+            ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+            sha256: sha256:8bdf10d83deb5efa877cbe80eff698e597faaf40aa644e7bc472bdfe7d1184c4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-238.md
+            sha256: sha256:0165c16e9f6acbd4cc3bbd3bbd2582e8f02d2a81e6aef1a46012502f2c590447
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-09-bet-238-canary.json
+            sha256: sha256:02079b3dc6f1b1b22a8515d8a7b2188d8888c7c2721e5fcffa8273eb88ede691
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+            sha256: sha256:8bdf10d83deb5efa877cbe80eff698e597faaf40aa644e7bc472bdfe7d1184c4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-238.md
+            sha256: sha256:0165c16e9f6acbd4cc3bbd3bbd2582e8f02d2a81e6aef1a46012502f2c590447
+          cleanup:
+            ref: receipt://docs/reports/2026-10-09-evidence-freshness-reader-plane-closeout.md
+            sha256: sha256:8bdf10d83deb5efa877cbe80eff698e597faaf40aa644e7bc472bdfe7d1184c4
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
