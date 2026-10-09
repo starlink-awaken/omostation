@@ -140,6 +140,7 @@ jobs:
             ../../tests/test_agent_workflow.py \
             ../../tests/test_rule_wiring_coverage.py \
             ../../tests/test_l0_wiring_exemptions.py \
+            ../../tests/test_l0_wiring_enforcement.py \
             ../../tests/test_adr_coverage_exit_contract.py \
             ../../tests/test_gac_gate_workflow.py \
             ../../tests/test_gac_gate_workflow_purity.py \

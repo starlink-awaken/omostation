@@ -329,6 +329,7 @@ aliases:
 
   - canonical: CR-DEBT-GATE-ENUM-01
     aliases: [check-debt-closure-discipline]
+    anchor: scan_gate_level_enum
     evidence:
       governance-checks: "标准 debt-gate-level-enum.md §4（原'实现位置: 待补'）"
       bin_executor: "bin/gac/check-debt-closure-discipline.py scan_gate_level_enum（2026-09-27 实现 + 20 条迁移）"
@@ -358,171 +359,163 @@ aliases:
       governance-checks: "声明: 禁止 def f(x=[])"
       bin_executor: "pyproject ruff select 增 B006 (2026-09-27 基线零违规实测)"
 
-  # ── L0 debt closeout (2026-10-09): 有真实执行宿主但 id 串未出现在执行语料 ──
-  # 每条 alias 指向实现其谓词的真实宿主文件 (evidence.bin_executor 逐条可验);
+  # ── L0 debt closeout (2026-10-09/10): 有真实执行宿主但 id 串未出现在执行语料 ──
   # 判定语义: "实现但换了名字" (check-rule-wiring-coverage.py caveat 第 (b) 类)。
+  # 2026-10-10 审计收敛 (adversarial audit F1-F6):
+  #   - 每条保留 alias 现在带 anchor: (宿主文件里真实存在的符号), 并移除"仅概念相关"
+  #     的弱 alias (CR-TRIGGER-01..06, CR-STRATEGY-02 已取下, 退回候选集, 见
+  #     L0-constraints.yaml wiring_note 与 test_l0_wiring_exemptions.py).
+  #   - CR-OMO-DIRECT-IO-01 重指向真实宿主 (contract_gatekeeper via omo.cli lint
+  #     direct-omo-io; 合成违规实测 exit 1), 编译器 direct_omo_io 分支标注无数据源.
+  #   - CR-OMNIBUS-01 强化 plane 合取 (envelope.py 拒绝非枚举 plane, 新增测试).
+  #   - CR-KOS-CONSENSUS-RAG-01 强化门禁 (_gate_injection: RAG AND savings>=50,
+  #     违规不落盘 exit 1).
+  #   - CR-GOV-FRONTMATTER-SCHEMA-01 双宿主标注 (omo lint doc-lifecycle +
+  #     doc-governance-check.py required_frontmatter 逐字段).
   - canonical: CR-CI-01
     aliases: [CR-CI-01, CR-CI-SURFACE-SSOT]
+    anchor: check_ci_surfaces
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (CR-CI-01)"
       governance-checks: ".omo/_truth/registry/governance-checks.yaml (CR-CI-SURFACE-SSOT, ADR-0379 E-1)"
-      bin_executor: "bin/gac/check-ci-surfaces.py (CR-CI-SURFACE-SSOT 接线: missing-tool/gate-parity, ecos-ci.yml + omo_audit 执行)"
+      bin_executor: "bin/gac/check-ci-surfaces.py (check_ci_surfaces / check_workflow_trigger_drift: missing-tool/gate-parity; CI governance-check + omo_audit 执行)"
 
   - canonical: CR-OMO-DIRECT-IO-01
-    aliases: [CR-OMO-DIRECT-IO-01, direct_omo_io]
+    aliases: [CR-OMO-DIRECT-IO-01, cmd_lint_direct_omo_io, contract_gatekeeper]
+    anchor: cmd_lint_direct_omo_io
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (CR-OMO-DIRECT-IO-01)"
-      bin_executor: "projects/ecos/src/ecos/ssot/tools/ecos-constraint-compiler.py (non_broker.python_mutation elif 分支, ecos-ci.yml:42 --enforce 执行)"
+      bin_executor: "projects/omo/src/omo/omo_lint.py::cmd_lint_direct_omo_io → projects/ecos/scripts/contract_gatekeeper.py (omo.cli lint direct-omo-io; CI governance-check.yml interface-check 执行; 合成违规 .write_text(\".omo/...\") 实测 exit 1)"
+      note: "2026-10-10 audit F1/F2: 编译器 direct_omo_io 分支无数据源恒绿 (ecos-constraint-compiler.py 已标注); 真实执行为 contract_gatekeeper AST 扫描. 旧引用 ecos-ci.yml:42 指代模糊 (ecos 子仓无该 workflow), 已改指 .github/workflows/ecos-ci.yml:42 + contract_gatekeeper."
 
   - canonical: CR-C2G-INGRESS-01
     aliases: [CR-C2G-INGRESS-01, create_planned_task_via_broker]
+    anchor: create_planned_task_via_broker
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (CR-C2G-INGRESS-01)"
-      bin_executor: "projects/omo/src/omo/_vendored/c2g/bridge_import.py + omo_client.py (create_planned_task_via_broker 只落 planned/)"
+      bin_executor: "projects/omo/src/omo/_vendored/c2g/omo_client.py::create_planned_task_via_broker + bridge_import.py (c2g 物化只落 .omo/tasks/planned/, 经 broker)"
 
   - canonical: X4-C02
     aliases: [X4-C02, governance_refs]
+    anchor: _governance_refs
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (X4-C02)"
-      bin_executor: "projects/omo/src/omo/_vendored/c2g/task_builder.py + adapters.py (governance_refs 注入 planned task)"
-
-  - canonical: CR-TRIGGER-01
-    aliases: [CR-TRIGGER-01, trigger_registry]
-    evidence:
-      l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (trigger_constraints)"
-      bin_executor: "projects/model-driven/src/model_driven/toolchain/trigger_registry.py (从 M1 trigger 节点加载注册)"
-
-  - canonical: CR-TRIGGER-02
-    aliases: [CR-TRIGGER-02, trigger_registry]
-    evidence:
-      l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (trigger_constraints)"
-      bin_executor: "projects/model-driven/src/model_driven/toolchain/trigger_registry.py (status/derive/heal/dashboard 全生命周期)"
-
-  - canonical: CR-TRIGGER-03
-    aliases: [CR-TRIGGER-03, trigger_registry]
-    evidence:
-      l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (trigger_constraints)"
-      bin_executor: "projects/model-driven/src/model_driven/toolchain/trigger_registry.py (TriggerInfo.dependencies 从 M1 声明加载)"
-
-  - canonical: CR-TRIGGER-04
-    aliases: [CR-TRIGGER-04, trigger_registry]
-    evidence:
-      l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (trigger_constraints)"
-      bin_executor: "projects/model-driven/src/model_driven/toolchain/trigger_registry.py (集成 OMOBridge 记录 Audit/创建 Task)"
-
-  - canonical: CR-TRIGGER-05
-    aliases: [CR-TRIGGER-05, TriggerM0Manager]
-    evidence:
-      l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (trigger_constraints)"
-      bin_executor: "projects/model-driven/src/model_driven/toolchain/trigger_m0.py (TriggerM0Manager 健康状态集成)"
-
-  - canonical: CR-TRIGGER-06
-    aliases: [CR-TRIGGER-06, TriggerRuntimeSnapshot, TriggerM0Manager]
-    evidence:
-      l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (trigger_constraints)"
-      bin_executor: "projects/model-driven/src/model_driven/toolchain/trigger_m0.py (TriggerRuntimeSnapshot + TriggerM0Manager M0 快照)"
+      bin_executor: "projects/omo/src/omo/_vendored/c2g/task_builder.py::build_ecos_task + _governance_refs (所有经 omo_bridge 的计划任务单点构造, 恒注入 governance_refs)"
 
   - canonical: CR-MOF-ALIAS-01
     aliases: [CR-MOF-ALIAS-01, mof-schema-validate]
+    anchor: get_m2_type_aliases
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (mof_schema_validate_constraints)"
-      bin_executor: "projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py + mof-validate.py (m2_type/section_key 双向匹配; ecos .githooks/pre-commit --staged --strict)"
+      bin_executor: "projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py (get_m2_type_aliases: m2_type ∪ section_key 双向匹配; ecos .githooks/pre-commit --staged --strict + m4-health-score 消费)"
 
   - canonical: CR-MOF-BIDIR-01
     aliases: [CR-MOF-BIDIR-01, mof-validate]
+    anchor: validate_node
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (mof_schema_validate_constraints)"
-      bin_executor: "projects/ecos/src/ecos/ssot/tools/mof-validate.py (requiredProperties 在 properties ∪ top-level 双向查找)"
+      bin_executor: "projects/ecos/src/ecos/ssot/tools/mof-validate.py (validate_node: requiredProperties 在 properties ∪ top-level 双向查找) + mof-schema-validate.py 消费"
 
   - canonical: CR-MOF-BRIDGE-01
     aliases: [CR-MOF-BRIDGE-01, mof-bridge-sync.py]
+    anchor: diff_stages
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (mof_schema_validate_constraints, enforcement=ci_pre_commit)"
-      bin_executor: "projects/ecos/.githooks/pre-commit (mof-bridge-sync.py --strict + mof-derive.py --strict) + projects/ecos/src/ecos/ssot/tools/mof-bridge-sync.py"
+      bin_executor: "projects/ecos/src/ecos/ssot/tools/mof-bridge-sync.py (diff_stages/diff_gates --strict) + projects/ecos/.githooks/pre-commit (mof-bridge-sync.py --strict + mof-derive.py --strict)"
 
   - canonical: CR-MOF-STATE-BRIDGE-01
     aliases: [CR-MOF-STATE-BRIDGE-01, mof-state-bridge.py]
+    anchor: diff_m1_vs_omo
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (mof_schema_validate_constraints, enforcement=ci_pre_commit)"
-      bin_executor: "projects/ecos/.githooks/pre-commit (mof-state-bridge.py --strict) + projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py"
+      bin_executor: "projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py (diff_m1_vs_omo --strict) + projects/ecos/.githooks/pre-commit (mof-state-bridge.py --strict)"
 
   - canonical: CR-C2G-V3-02
     aliases: [CR-C2G-V3-02, _fast_track_compaction]
+    anchor: _fast_track_compaction
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (c2g_v3_constraints)"
-      bin_executor: "projects/omo/src/omo/omo_worker_dispatch.py:1073 (_fast_track_compaction, GC 聚变+归档)"
+      bin_executor: "projects/omo/src/omo/omo_worker_dispatch.py::_fast_track_compaction (GC 聚变 + FAST-* 归档)"
 
   - canonical: CR-C2G-V3-03
     aliases: [CR-C2G-V3-03, yield_task, omo_yield_task]
+    anchor: yield_task
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (c2g_v3_constraints)"
-      bin_executor: "projects/omo/src/omo/omo_worker_dispatch.py:973 (yield_task) + projects/omo/src/omo/mcp_server.py:176 (omo_yield_task)"
-
-  - canonical: CR-STRATEGY-02
-    aliases: [CR-STRATEGY-02, bet.vector]
-    evidence:
-      l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (c2g_v4_constraints)"
-      bin_executor: "projects/omo/src/omo/_vendored/c2g/adapters.py:68 (save_bet 携带 vector 权重)"
+      bin_executor: "projects/omo/src/omo/omo_worker_dispatch.py::yield_task + projects/omo/src/omo/mcp_server.py::omo_yield_task (阻塞时显式退让)"
 
   - canonical: CR-STRATEGY-03
     aliases: [CR-STRATEGY-03, Entropy GC]
+    anchor: strategy_gc
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (c2g_v4_constraints)"
-      bin_executor: "projects/omo/src/omo/_vendored/c2g/strategy.py (Entropy GC 扫描 Sandbox 超期 Pitch → decayed/) + cli.py gc 子命令"
+      bin_executor: "projects/omo/src/omo/_vendored/c2g/strategy.py::strategy_gc (对所有超期 Sandbox Pitch 执行熵减归档, 不检查 status==Draft —— 覆盖规则所有关切情形, audit 判定 REAL superset) + cli.py gc 子命令"
 
   - canonical: CR-OMNIBUS-01
     aliases: [CR-OMNIBUS-01, OmniEnvelope]
+    anchor: _coerce_plane
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (omni_bus_constraints)"
-      bin_executor: "projects/bus-foundation/src/bus_foundation/envelope.py (OmniEnvelope 统一协议, plane/topic/source_uri)"
+      bin_executor: "projects/bus-foundation/src/bus_foundation/envelope.py (OmniEnvelope; 2026-10-10 强化 _coerce_plane: plane 非枚举 → ValueError; topic/source_uri 由模型必填; audit F3 校验测试 test_plane_invalid_value_rejected)"
 
   - canonical: CR-OMNIBUS-02
     aliases: [CR-OMNIBUS-02, control_plane]
+    anchor: ControlPlaneBackend
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (omni_bus_constraints)"
-      bin_executor: "projects/bus-foundation/src/bus_foundation/backends/control_plane.py (SQLite WAL + ACK/NACK + MAX_RETRIES/DLQ)"
+      bin_executor: "projects/bus-foundation/src/bus_foundation/backends/control_plane.py (ControlPlaneBackend: SQLite WAL 持久化 + ACK/NACK + MAX_RETRIES/DLQ)"
 
   - canonical: CR-OMNIBUS-03
     aliases: [CR-OMNIBUS-03, DataPlaneBackend, ring_buffer]
+    anchor: DataPlaneBackend
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (omni_bus_constraints)"
       bin_executor: "projects/bus-foundation/src/bus_foundation/backends/data_plane.py (DataPlaneBackend 无锁 ring buffer, 满载 drop-count 不阻塞)"
 
   - canonical: CR-DEBT-CLOSURE-EVIDENCE-01
     aliases: [CR-DEBT-CLOSURE-EVIDENCE-01, governance_check_debt_integrity]
+    anchor: governance_check_debt_integrity
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (debt_constraints)"
-      bin_executor: "projects/omo/src/omo/omo_audit_checks.py:121 (governance_check_debt_integrity, resolution_evidence 检查)"
+      bin_executor: "projects/omo/src/omo/omo_audit_checks.py::governance_check_debt_integrity (终态债务 resolution_evidence 检查; omo audit 由 task-schema-enforce.yml CI 执行)"
 
   - canonical: CR-CROSS-PROJECT-LINT-01
     aliases: [CR-CROSS-PROJECT-LINT-01, governance_check_lint]
+    anchor: governance_check_lint
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (debt_constraints)"
-      bin_executor: "projects/omo/src/omo/omo_audit_checks.py:26 (governance_check_lint, ruff check 0 errors 基线)"
+      bin_executor: "projects/omo/src/omo/omo_audit_checks.py::governance_check_lint (ruff check 0 errors 基线; omo audit 由 task-schema-enforce.yml CI 执行)"
 
   - canonical: CR-GOV-FRONTMATTER-SCHEMA-01
     aliases: [CR-GOV-FRONTMATTER-SCHEMA-01, cmd_lint_doc_lifecycle]
+    anchor: cmd_lint_doc_lifecycle
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (governance_closure_constraints)"
-      bin_executor: "projects/omo/src/omo/omo_lint.py (cmd_lint_doc_lifecycle: frontmatter 4 字段覆盖检查)"
+      bin_executor: "projects/omo/src/omo/omo_lint_doc.py::cmd_lint_doc_lifecycle (frontmatter 存在 + status 有效集 + 死文档) + bin/ssot/doc-governance-check.py (required_frontmatter=[status, lifecycle, owner, last-reviewed] 逐字段, 见 .omo/_truth/registry/document-governance.yaml; audit F3 判 1/4 → 双宿主补齐)"
+      note: "2026-10-10 audit F3: omo_lint 单宿主只覆盖 1/4 字段; doc-governance-check.py:741-753 逐字段检查补齐其余 3 字段 (owner/lifecycle/last-reviewed)"
 
   - canonical: CR-GOV-DOC-CATEGORY-01
     aliases: [CR-GOV-DOC-CATEGORY-01, cmd_lint_doc_lifecycle]
+    anchor: cmd_lint_doc_lifecycle
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (governance_closure_constraints)"
-      bin_executor: "projects/omo/src/omo/omo_lint.py (cmd_lint_doc_lifecycle: 4 类分类检查)"
+      bin_executor: "projects/omo/src/omo/omo_lint_doc.py::cmd_lint_doc_lifecycle (4 类分类 + status 有效集 + 死文档检查; CI governance-check.yml 执行)"
 
   - canonical: CR-GAC-M1-INSTANCE-DRIFT-01
     aliases: [CR-GAC-M1-INSTANCE-DRIFT-01, gac-m1-sync]
+    anchor: compute_diff
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (governance_closure_constraints)"
-      bin_executor: "bin/gac/gac-m1-sync.py (missing/orphan/stale drift 检测) + gac-healthcheck.py 第13项 + CI gate"
+      bin_executor: "bin/gac/gac-m1-sync.py (compute_diff: missing/orphan/stale drift) + gac-healthcheck.py 第13项 + CI gate"
 
   - canonical: CR-KOS-CONSENSUS-RAG-01
     aliases: [CR-KOS-CONSENSUS-RAG-01, gac-consensus-inject]
+    anchor: _gate_injection
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (governance_closure_constraints)"
-      bin_executor: "bin/gac/gac-consensus-inject.py (RAG Top-2 按需注入, Token 节省 ≥50%)"
+      bin_executor: "bin/gac/gac-consensus-inject.py (RAG Top-2 按需激活 + 2026-10-10 强化 _gate_injection: token_savings_pct>=50 门禁, 违规不落盘 exit 1)"
+      note: "2026-10-10 audit F3: 阈值此前只报告不门禁; 现改为写 CLAUDE.md 之前门禁"
+
 
 cross_walks:
   - from: governance-checks
@@ -568,13 +561,13 @@ open_decisions:
 # retired — 弃用/收窄/并入决策条目 (批次四 T10-07, principal 批准): 从接线候选统计分离, 注册表条目保留
 retired:
   - CR-AGE-BOS-01                  # AGE-v2 descope (principal 批准): 现存仅 smoke 无 gate
-  - CR-AGE-POLICY-01
-  - CR-AGE-MEMORY-01
-  - CR-AGE-REPLAY-01
-  - CR-AGE-EVENT-01
+  - CR-AGE-POLICY-01               # AGE-v2 descope (principal 批准): 同 AGE 族, 现仅 smoke 无 gate
+  - CR-AGE-MEMORY-01               # AGE-v2 descope (principal 批准): 同 AGE 族
+  - CR-AGE-REPLAY-01               # AGE-v2 descope (principal 批准): 同 AGE 族
+  - CR-AGE-EVENT-01                # AGE-v2 descope (principal 批准): 同 AGE 族
   - CR-P76-6-5-LLM-DEFERRAL        # 原则族不入 GaC 机器清单 (批次二弃用标注)
-  - CR-P77-2-1-PRINCIPLE-FORMALIZATION
-  - CR-P77-2-2-CATALOG-SSOT
+  - CR-P77-2-1-PRINCIPLE-FORMALIZATION  # 原则族不入 GaC 机器清单 (批次二弃用标注)
+  - CR-P77-2-2-CATALOG-SSOT        # 原则族不入 GaC 机器清单 (批次二弃用标注)
   - CR-BIN-RETIREMENT-CHECKLIST    # 收窄: 机器面仅 quota-diff 层
   - CR-L2-TASK-DELIVERABLE         # 待决: 任务卡机制去留 owner 定
   - CR-L0-SSOT-PATH-NORM           # 弃用候选: 契约文档已消失
@@ -585,28 +578,31 @@ retired:
   - CR-GIT-STAGE-SUBMODULE-PIN     # 收窄: gitlink-ancestry push 期覆盖核心风险
   - CR-L4-DOMAIN-REGISTRY-FRESHNESS  # 待决: 需 macOS CI lane (launchd)
   - CR-X3-DEBT-TIER                # 待决: 债务口径 x3_tier 由 omo_debt_weight 内部消费, 注册表校验未实现 (owner 定去留)
-  # ── L0 debt closeout (2026-10-09): 20 条已标 lifecycle: removed (L0-constraints.yaml), 前提不再成立 ──
-  # 依据逐条见 L0-constraints.yaml 的 superseded_by / superseded_reason 字段:
-  #   OPC 7 条: commit 14ad94e5e (#1932) 退役 OPC closeout cron + scripts/ 断链
-  #   eCOS-v6 3 条: ADR-0423/commit c19365fba (#2093) + commit d00c4b97f (#1209) 归档工具
-  #   AGT 10 条: ADR-0415 拒绝 AGT 整体接入 (对齐参照, 非活跃约束)
-  - CR-CADENCE-01
-  - CR-INDEX-LOCK-01
-  - CR-MODE-ENV-01
-  - CR-TIME-ENV-01
-  - CR-MODE-COPY-01
-  - CR-DRIFT-LOOP-01
-  - CR-AUDIT-5REPOS-01
-  - CR-OMLX-MESH-GATE-01            # ADR-0423: mesh-router 归档
-  - CR-C2G-INGRESS-PRECHECK-01      # commit d00c4b97f: gac-ingress-check.py 归档
-  - CR-KOS-ONTOLOGY-DRIFT-01        # commit d00c4b97f: gac-kos-sync.py 归档
-  - CR-AGT-ASI-01                   # ADR-0415: AGT 接入被拒, capability-parity 对齐参照
-  - CR-AGT-ASI-02
-  - CR-AGT-ASI-03
-  - CR-AGT-ASI-04
-  - CR-AGT-ASI-05
-  - CR-AGT-ASI-06
-  - CR-AGT-ASI-07
-  - CR-AGT-ASI-08
-  - CR-AGT-ASI-09
-  - CR-AGT-ASI-10
+  # ── L0 debt closeout (2026-10-09/10): 20 条关键前提失效, 逐条生命周期标注 ──
+  # 依据逐条见 L0-constraints.yaml 的 suspended_* / rejected_* / superseded_* 字段:
+  #   OPC 7 条 lifecycle=suspended: commit 14ad94e5e (#1932) 退役 OPC closeout cron (ADR-0394
+  #     记录 scripts/ 工具迁移, 非作废; audit F4: suspended 保留再接线义务)
+  #   CR-C2G-INGRESS-PRECHECK-01 / CR-KOS-ONTOLOGY-DRIFT-01 lifecycle=suspended:
+  #     commit d00c4b97f (#1209) 批次 bulk 归档 (T6-03 复盘自陈误归档, BET-Y1Q2-T6-03)
+  #   CR-OMLX-MESH-GATE-01 lifecycle=removed: ADR-0423 + commit c19365fba (#2093) 显式归档 + 移除 gate
+  #   AGT 10 条 lifecycle=rejected: ADR-0415 拒绝 AGT 整体接入 (对齐参照, 非活跃约束)
+  - CR-CADENCE-01                   # suspended: OPC cron 退役, 工具迁移非作废
+  - CR-INDEX-LOCK-01                # suspended: OPC cron 退役
+  - CR-MODE-ENV-01                  # suspended: OPC cron 退役
+  - CR-TIME-ENV-01                  # suspended: OPC cron 退役
+  - CR-MODE-COPY-01                 # suspended: OPC cron 退役
+  - CR-DRIFT-LOOP-01                # suspended: OPC cron 退役
+  - CR-AUDIT-5REPOS-01              # suspended: OPC cron 退役
+  - CR-OMLX-MESH-GATE-01            # removed: ADR-0423 显式归档 + gate 移除
+  - CR-C2G-INGRESS-PRECHECK-01      # suspended: T6 批次 bulk 归档 (误归档风险自陈)
+  - CR-KOS-ONTOLOGY-DRIFT-01        # suspended: T6 批次 bulk 归档 (误归档风险自陈)
+  - CR-AGT-ASI-01                   # rejected: ADR-0415 AGT 接入被拒, capability-parity 对齐参照
+  - CR-AGT-ASI-02                   # rejected: ADR-0415
+  - CR-AGT-ASI-03                   # rejected: ADR-0415
+  - CR-AGT-ASI-04                   # rejected: ADR-0415
+  - CR-AGT-ASI-05                   # rejected: ADR-0415
+  - CR-AGT-ASI-06                   # rejected: ADR-0415
+  - CR-AGT-ASI-07                   # rejected: ADR-0415
+  - CR-AGT-ASI-08                   # rejected: ADR-0415
+  - CR-AGT-ASI-09                   # rejected: ADR-0415
+  - CR-AGT-ASI-10                   # rejected: ADR-0415

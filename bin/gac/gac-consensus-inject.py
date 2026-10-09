@@ -238,6 +238,23 @@ def _select_consensus_entities(conn: sqlite3.Connection, *, full: bool) -> list:
     ).fetchall()
 
 
+def _gate_injection(*, rag_mode: bool, injected: int, total: int, min_savings_pct: int = 50) -> tuple[bool, str]:
+    """CR-KOS-CONSENSUS-RAG-01 门禁谓词 (audit F3, 2026-10-10).
+
+    predicate: mode in ['RAG Top-2 按需激活'] AND token_savings_pct >= min_savings_pct.
+    Returns (ok, reason). main() 在写 CLAUDE.md 之前调用; 违规 → 不落盘 exit 1.
+    """
+    if not rag_mode:
+        return False, "mode!=RAG Top-2 按需激活 (全量注入被禁止)"
+    saved_pct = int((1 - injected / max(total, 1)) * 100)
+    if saved_pct < min_savings_pct:
+        return (
+            False,
+            f"token_savings_pct={saved_pct}% < {min_savings_pct}% (injected {injected}/{total})",
+        )
+    return True, f"token_savings_pct={saved_pct}%"
+
+
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--check":
         if not db_path.is_file():
@@ -348,6 +365,22 @@ def main() -> int:
 
         db_conn.close()
 
+        # 4.0 CR-KOS-CONSENSUS-RAG-01 门禁 (audit F3, 2026-10-10 收敛):
+        #     此前 saved_pct 只报告不门禁, 且无上下文时走全量注入 (trivially green);
+        #     现在在**写 CLAUDE.md 之前**计算并门禁, 违规 → exit 1 且不落盘.
+        injected_count = len(selected_consensuses)
+        total_count = len(consensuses)
+        ok_gate, gate_reason = _gate_injection(
+            rag_mode=rag_mode, injected=injected_count, total=total_count
+        )
+        if not ok_gate:
+            print(
+                f"❌ CR-KOS-CONSENSUS-RAG-01: {gate_reason}; 拒绝写入 CLAUDE.md",
+                file=sys.stderr,
+            )
+            return 1
+        saved_pct = int((1 - injected_count / max(total_count, 1)) * 100)
+
         # 4. 拼接共识基因 MD 内容
         mode_tag = "RAG Top-2 按需激活" if rag_mode else "全量注入"
         consensus_lines = [
@@ -388,9 +421,6 @@ def main() -> int:
         with open(claude_md_path, "w", encoding="utf-8") as f:
             f.write(new_claude_content)
 
-        injected_count = len(selected_consensuses)
-        total_count = len(consensuses)
-        saved_pct = int((1 - injected_count / max(total_count, 1)) * 100)
         print(
             f"🧬 KOS RAG Consensus Injection: injected {injected_count}/{total_count} genes "
             f"into CLAUDE.md (Token saved ~{saved_pct}%, mode={mode_tag})"
