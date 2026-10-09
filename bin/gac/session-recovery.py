@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from repo_root import state_file_read  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

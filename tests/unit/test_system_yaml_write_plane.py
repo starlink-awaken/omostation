@@ -4,10 +4,15 @@
 BET: BET-Y2Q4-T10-220
 
 判据分三层，缺一层就会留下"测试绿着但写面断裂"的缝:
-- **落点**: 声明 profile 后写者真正落在 state 根，且检出的跟踪快照逐字节未变
-  (C1/C3/C4)。只断言"解析结果等于某路径"不够 —— 那测的是字符串，不是写面。
+- **落点**: 声明 profile 后写者真正落在 state 根，且检出的那份未被触碰 (C1/C3/C4)。
+  只断言"解析结果等于某路径"不够 —— 那测的是字符串，不是写面。
 - **兜底**: 未声明 profile 时路径与历史布局逐字节相同 (D1 不变量)。
 - **边界**: 检出根拼法的残留点必须是一份**看过眼**的清单，不能靠记忆 (C8)。
+
+**检出侧那份不是仓库保证**（BET-Y2Q4-T10-235 / #4671 摘库后 `.omo/state/system.yaml`
+既不入库也被 gitignore）: 它只在"这个检出曾经跑过写者"时才存在。所以本文件的用例
+一律**自己物化**需要读的那份（"测兜底必须先物化"），不得继承宿主机状态；"检出没被动"
+也要能表达"仍然不存在"，`read_bytes()` 在缺失时抛错会把这条判据变成运行噪声。
 """
 
 from __future__ import annotations
@@ -24,6 +29,25 @@ ROOT = Path(__file__).resolve().parents[2]
 STATE_REL = ".omo/state/system.yaml"
 CHECKOUT_SNAPSHOT = ROOT / STATE_REL
 STATE_ROOT_ENV = "OMOSTATION_STATE_ROOT"
+
+
+def _checkout_state() -> bytes | None:
+    """检出侧那份的当前状态: 内容字节，或 None 表示不存在。
+
+    用于"写者不得碰检出"的对照量 —— 用 None 而不是抛错，摘库后的 fresh 检出才是常态。
+    """
+    try:
+        return CHECKOUT_SNAPSHOT.read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def _materialize_checkout_copy(root: Path, payload: dict) -> Path:
+    """在给定检出根物化一份 system.yaml（读者用例的前提由 fixture 自己写出）。"""
+    target = root / STATE_REL
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(yaml.dump(payload, allow_unicode=True), encoding="utf-8")
+    return target
 
 
 def _load(name: str, rel: str):
@@ -88,13 +112,23 @@ def test_state_file_read_prefers_state_root_copy_then_falls_back(repo_root, decl
     assert repo_root.state_file_read(STATE_REL, root=checkout) == checkout / STATE_REL
 
 
-def test_state_file_read_never_hijacks_a_foreign_checkout(repo_root, tmp_path, undeclared):
-    """未声明 profile 时，即使 host state 根真的存在同名文件也不得劫持 tmp 检出。
+def test_state_file_read_never_hijacks_a_foreign_checkout(
+    repo_root, tmp_path, undeclared, monkeypatch
+):
+    """未声明 profile 时，即使 state 根真的有同名文件也不得劫持 tmp 检出。
 
     这是 `state_file_read` 只在 env 显式声明时才去探 state 根的全部理由 ——
-    fixture 传的 tmp root 和 state_root()（真实检出）是两个不同目录。
+    fixture 传的 tmp root 和 state_root() 是两个不同目录，无条件优先 state 根会把
+    fixture 的读取劫持到另一份文件上。
+
+    同名文件由本用例**物化**在假 state 根里（摘库后宿主检出那份可能根本不存在，
+    拿它当"确有可劫持对象"的见证等于继承 host 状态）。正确实现不看这个目录，
+    所以它是无副作用的前提；无条件优先 state 根的实现会当场指到它。
     """
-    assert (ROOT / STATE_REL).is_file()  # host 上确实有那份跟踪快照
+    fake_state_root = tmp_path / "host-state"
+    _materialize_checkout_copy(fake_state_root, {"health_score": 99})
+    monkeypatch.setattr(repo_root, "state_root", lambda: fake_state_root)
+    monkeypatch.setattr(repo_root, "code_root", lambda: fake_state_root)
     victim = tmp_path / "foreign"
     assert repo_root.state_file_read(STATE_REL, root=victim) == victim / STATE_REL
 
@@ -142,7 +176,7 @@ def test_compass_sync_lands_in_state_root_and_leaves_checkout_untouched(
     monkeypatch.setattr(
         module, "build_system_projection_updates", lambda _ws, _report: {"health_score": 77}
     )
-    before = CHECKOUT_SNAPSHOT.read_bytes()
+    before = _checkout_state()
 
     module.sync_system_yaml(
         ws_root=ROOT,
@@ -154,14 +188,14 @@ def test_compass_sync_lands_in_state_root_and_leaves_checkout_untouched(
 
     data = yaml.safe_load((declared_state_root / STATE_REL).read_text(encoding="utf-8"))
     assert data["health_score"] == 77  # 正向落点断言，不是"检出里没有"
-    assert CHECKOUT_SNAPSHOT.read_bytes() == before
+    assert _checkout_state() == before  # 含"缺失即保持缺失"，不凭空造检出侧副本
 
 
 def test_compass_skips_absent_mirror_without_fabricating_one(tmp_path, monkeypatch, undeclared):
     """state 根那份不存在时跳过: 凭空造一份缺字段镜像会让读者读到"新"状态。"""
     monkeypatch.setenv(STATE_ROOT_ENV, str(tmp_path / "empty-state"))
     module = _load("cr_skip", "bin/compass_radar.py")
-    before = CHECKOUT_SNAPSHOT.read_bytes()
+    before = _checkout_state()
 
     module.sync_system_yaml(
         ws_root=ROOT,
@@ -172,33 +206,33 @@ def test_compass_skips_absent_mirror_without_fabricating_one(tmp_path, monkeypat
     )
 
     assert not (tmp_path / "empty-state" / STATE_REL).exists()
-    assert CHECKOUT_SNAPSHOT.read_bytes() == before
+    assert _checkout_state() == before  # 含"缺失即保持缺失"，不凭空造检出侧副本
 
 
 def test_harness_closeout_skips_absent_mirror(tmp_path, monkeypatch, undeclared):
     monkeypatch.setenv(STATE_ROOT_ENV, str(tmp_path / "empty-state"))
     module = _load("hob_skip", "bin/gac/harness-omo-bridge.py")
     monkeypatch.setattr(module, "OMO_GOVERNANCE_DATA", tmp_path / "gd.json")
-    before = CHECKOUT_SNAPSHOT.read_bytes()
+    before = _checkout_state()
 
     _errors, warnings = module.sync_harness_closeout(run_id="r")
 
     assert any("system.yaml" in w for w in warnings)
     assert not (tmp_path / "empty-state" / STATE_REL).exists()
-    assert CHECKOUT_SNAPSHOT.read_bytes() == before
+    assert _checkout_state() == before  # 含"缺失即保持缺失"，不凭空造检出侧副本
 
 
 def test_harness_closeout_lands_in_state_root(tmp_path, declared_state_root, monkeypatch):
     module = _load("hob_landing", "bin/gac/harness-omo-bridge.py")
     monkeypatch.setattr(module, "OMO_GOVERNANCE_DATA", tmp_path / "gd.json")
-    before = CHECKOUT_SNAPSHOT.read_bytes()
+    before = _checkout_state()
 
     errors, _warnings = module.sync_harness_closeout(run_id="r")
 
     assert errors == []
     data = yaml.safe_load((declared_state_root / STATE_REL).read_text(encoding="utf-8"))
     assert data["harness"]["last_run"] == "r"
-    assert CHECKOUT_SNAPSHOT.read_bytes() == before
+    assert _checkout_state() == before  # 含"缺失即保持缺失"，不凭空造检出侧副本
 
 
 # ── R-GOV-2 去同义反复: 证据键不再被复制 ───────────────────────────────
@@ -218,20 +252,29 @@ def test_compass_no_longer_copies_health_score_into_evidence_keys():
 # ── 读者偏好: 门禁读到运行态，不是上次提交快照 ─────────────────────────
 
 
-def test_reader_prefers_the_state_root_copy(declared_state_root):
+def test_reader_prefers_the_state_root_copy(declared_state_root, tmp_path, monkeypatch):
+    checkout = tmp_path / "checkout"
+    _materialize_checkout_copy(checkout, {"health_score": 42})
     (declared_state_root / STATE_REL).write_text(
         yaml.dump({"health_score": 91}, allow_unicode=True), encoding="utf-8"
     )
     module = _load("gcl_reader", "bin/gac/governance-convergence-lint.py")
-    checkout_value = yaml.safe_load(CHECKOUT_SNAPSHOT.read_text(encoding="utf-8")).get("health_score")
+    monkeypatch.setattr(module, "WORKSPACE", checkout)
 
     assert module._read_system_yaml()["health_score"] == 91
-    assert checkout_value != 91  # 检出快照确实还是旧值 —— 读者若留在检出就会量到它
+    # 检出那份确实还是旧值 —— 读者若留在检出就会量到它
+    assert yaml.safe_load((checkout / STATE_REL).read_text(encoding="utf-8"))["health_score"] == 42
 
 
-def test_reader_falls_back_to_checkout_snapshot(repo_root, declared_state_root, undeclared):
+def test_reader_falls_back_to_checkout_snapshot(
+    repo_root, declared_state_root, undeclared, tmp_path, monkeypatch
+):
+    checkout = tmp_path / "checkout"
+    _materialize_checkout_copy(checkout, {"health_score": 42})
     module = _load("gcl_fallback", "bin/gac/governance-convergence-lint.py")
-    assert module._read_system_yaml() == yaml.safe_load(CHECKOUT_SNAPSHOT.read_text(encoding="utf-8"))
+    monkeypatch.setattr(module, "WORKSPACE", checkout)
+    # env 未声明 → 不探 state 根，读的就是检出那份（此处由 fixture 物化，非继承宿主）
+    assert module._read_system_yaml() == {"health_score": 42}
 
 
 # ── C8: 检出根拼法的残留面是一份看过眼的清单 ──────────────────────────
@@ -352,9 +395,9 @@ def test_module_load_is_side_effect_free(name, rel, declared_state_root):
     """import 写者不得创建/改写任何 system.yaml（env 冻在 import 的旧坑）。"""
     state_target = declared_state_root / STATE_REL
     before_bytes = state_target.read_bytes()
-    checkout_bytes = CHECKOUT_SNAPSHOT.read_bytes()
+    checkout_bytes = _checkout_state()
 
     _load(f"side_{name}", rel)
 
     assert state_target.read_bytes() == before_bytes
-    assert CHECKOUT_SNAPSHOT.read_bytes() == checkout_bytes
+    assert _checkout_state() == checkout_bytes
