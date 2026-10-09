@@ -29,7 +29,11 @@ Retro：`.omo/_knowledge/retros/BET-Y2Q4-T10-238.md`
 - 主交付：**PR #4689** → squash 合并为 `08c177b2c37955b69ea0798be676d54e973f9484`。
   CI 终态 29 pass / 2 skipping（`Documents domain projects`、`doc-freshness` 由 `on.paths` 过滤，非本轮写面），
   `mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`。
-- 追加交付（ISC-6，见 §3）与本轮 receipt/retro/ledger 同 PR 走 lane-pure commit。
+- 追加交付（ISC-6，见 §3）与本轮 receipt/retro/ledger 同 PR 走 lane-pure commit：
+  **PR #4690** → squash 合并为 `10fc057220d46fa7092d3783e8b78c26bb600b10`（7 commits），
+  23 条检查逐条 conclusion 全 `SUCCESS`、两条 `skipping` 属 `on.paths` 过滤，
+  `mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`；push 前 L3 深度审查 0 findings（见 §7）。读数见 §2.2 与 canary `post_merge_pin_and_ci`。
+- 合并后回查发现台账 `merged_reachable_commit` 绑在 `08c177b2c`（不含终态），已改绑 `10fc05722` —— 见 §6。
 - 台账 done 翻转由机制本身放行，不是手写：`python3 bin/plan/bet-ledger.py complete BET-Y2Q4-T10-238`
   实跑 **RC=0**（spec binding digest 校验 + evidence matrix 派生 `delivery_accepted` +
   7 条 `write_surfaces` 全部入库的 D0 守卫 + vision→retro 链闭合），它写出的只有
@@ -70,6 +74,19 @@ CI 侧的独立证据：`interface-check` 日志 `320 passed, 9 skipped in 126.1
 读数仍是 `score=100.0`。读支路取的是 `evidence_health_score`（`bin/gac/check-evidence-freshness.py:55`），
 不是 `score`。按源码修正注入键后才有上面那行。教训与判据-8 那条同源：**两次读数不同，先疑装置**——
 差别在于这次是装置**少**报了一个违规，若直接采信会得到「生成支路只比龄不比分」的假结论。
+
+### 2.2 合并侧的 CI 读数（PR #4690，2026-10-09T03:00Z）
+
+分支 push 后 23 条检查逐条 conclusion 全 `SUCCESS`（两条 `skipping` 是 `on.paths` 过滤，不是失败），
+`mergeable=MERGEABLE`、`mergeStateStatus=CLEAN`，squash 合并为 `10fc05722`，无 admin merge、无 `--no-verify`。
+
+`interface-check` 的读数从 #4689 的 `320 passed` 变成 **`321 passed, 9 skipped in 121.31s`**。
+这条差分正是「CI 跑了我的用例」的正面证据：本分支相对 #4689 只新增 1 条用例（钉时钟的那条），
+`320 + 1 = 321`，且 argv 里逐字点名 `../../tests/unit/test_evidence_freshness_reader_plane.py`，
+工作树该文件 `grep -c "^def test_"` = 10。`-q` 不打印用例名，所以**计数差分**是唯一不靠肉眼读日志的手段。
+
+⚠️ 取这条读数时又撞了 AGENTS.md §7⑤ 那个别名坑：Bash 工具里 `grep -E` 命中的是 `rg`，报
+`unknown encoding`；改 `/usr/bin/grep` 与 python 剥 ANSI 后才拿到那行 summary。
 
 ## 3 ISC-6：负龄读数（合并后重测才暴露的一条）
 
@@ -137,10 +154,27 @@ ISC-6 的约束力由 spec `1.1.0` + 重算的 `content_digest` 承载（台账 
 - 交付 worktree 的门禁还报告 `.omo/state/system.yaml` 缺失；该隐藏运行态在此 worktree 没有物化。没有复制或伪造这类状态文件，也没有执行 plist 重装、LaunchAgent reload、工作树同步或清理来掩盖门禁结果。
 - 因实现已由 PR #4689 合并，但正式 closeout 的 required `gac-local-gate` 尚未 PASS，本次 Run 只按 `blocked` 记录并释放原锁；这不改变代码 PR 已合并的事实，也不把门禁判作通过。后续应在带齐权威运行态、消除 service-config drift 的新鲜工作树中重跑完整门禁，再单独裁决该门是否可关闭。
 
-## 6 安全与清理
+## 6 合并后回查：`merged_reachable_commit` 指向的树不含终态
+
+合并 `10fc05722` 之后回查台账 `engineering.merged_reachable_commit`，它绑的是 `08c177b2c`。逐棵树实测（装置：`git show <sha>:<path>`，不信工作树）：
+
+| 绑定 | `check-evidence-freshness.py` 调用点 | 用例数 | 在 main 上可达 | 含本轮终态 |
+|---|---|---|---|---|
+| 改前 `08c177b2c` | `_read_report(report_path, now)` | 9 | 是 | **否** |
+| 改后 `10fc05722` | `_read_report(report_path, datetime.now(UTC))` | 10 | 是 | 是 |
+
+`bet-ledger.py` 对这一字段只校验 **reachability**（`bin/plan/bet-ledger.py:1682`），所以「指针指向更早的那次合并」
+在它自己身上永远绿 —— 可达不等于含我担保的改动。这正是本 BET 的主题（证据必须描述它担保的那棵树）
+落到台账侧的一次自身实例，retro 记为第 9 条教训。改绑与 8 处 digest 的重绑在同一批交付里做，fixpoint 用
+`chain_bind.evaluate_complete` + `bet-ledger.py verify` 复判。
+
+## 7 安全与清理
 
 - 推送前 L3 deep security review 覆盖 **PR #4689 的 3 个 commit：0 findings**。
   本轮二次交付（ISC-6 + 收尾文档）的 L3 复核读数仍须以独立验证证据为准；本报告不以先前 PR 的安全审查替代本轮审查。
+- **该句已在 #4690 push 前闭合**：用户授权后对收尾分支全部 **7 个 commit** 跑 L3 深度审查，
+  `findings_count: 0`，无发现项因此无修复门；随后才 push、开 PR、squash 合并。读数进 canary
+  `post_merge_pin_and_ci.l3_security_review`。
 - 生成态未随本轮走：`git status --short` 交付前后为空；`.omo/state/**`、`.omo/_delivery/**`、
   `BRIEF.md`、子模块 gitlink 一条未入 commit。
 - affected-graph receipt 落 `runtime/affected/`（真实目录、非 symlink），用毕删除，未提交。
