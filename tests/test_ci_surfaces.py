@@ -140,12 +140,21 @@ def test_removed_mutators_are_not_bound_to_gac_gate() -> None:
 
 
 def test_unregistered_check_detected(cs, tmp_path) -> None:
-    """workflow 执行未登记 check 工具 → unregistered-check error."""
+    """workflow 执行未登记 check 工具 → unregistered-check error.
+
+    The referenced script must exist on disk: check-ci-surfaces.py's
+    gate-parity file-existence gate (added 3147e32eb, 2026-09-24) emits
+    ``gate-parity: … 文件不存在`` and ``continue``s before the
+    unregistered-check branch when the file is missing. Materializing the
+    script lets the intended branch be reached (and keeps the test able to
+    catch a ghost tool — see negative check in commit/PR notes).
+    """
     _write(tmp_path / "ci-surfaces.yaml", "version: 1\nsurfaces: []\n")
     _write(
         tmp_path / "workflows" / "test.yml",
         "on: [push, pull_request]\njobs:\n  t:\n    steps:\n      - run: python3 scripts/check-foo.py\n",
     )
+    _write(tmp_path / "scripts" / "check-foo.py", "print('live check tool')\n")
     report = cs.check_ci_surfaces()
     assert any("unregistered-check" in e for e in report["errors"]), report["errors"]
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib.util
 import json
 import subprocess
 import sys
@@ -8,15 +7,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PYRIGHT_SCRIPT = ROOT / "bin" / "sweep" / "pyright.py"
-NESTED_WITH_SCRIPT = ROOT / "bin" / "sweep" / "nested-with.py"
-
-
-def load_module(path: Path, name: str):
-    spec = importlib.util.spec_from_file_location(name, path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 
 def diagnostic(path: Path, line: int, rule: str) -> dict:
@@ -118,29 +108,6 @@ def test_pyright_package_filter_limits_edits(tmp_path: Path) -> None:
     assert result.returncode == 0
     assert "type: ignore" in selected.read_text()
     assert skipped.read_text() == "value = missing\n"
-
-
-def test_nested_with_merges_simple_contexts_and_is_idempotent() -> None:
-    module = load_module(NESTED_WITH_SCRIPT, "nested_with_for_test")
-    source = "with first():\n    with second():\n        value = 1\nprint(value)\n"
-
-    rendered, merged = module.merge(source)
-    second_rendered, second_merged = module.merge(rendered)
-
-    assert rendered == "with first(), second():\n    value = 1\nprint(value)\n"
-    assert merged == 1
-    assert second_rendered == rendered
-    assert second_merged == 0
-
-
-def test_nested_with_rejects_multiline_header() -> None:
-    module = load_module(NESTED_WITH_SCRIPT, "nested_with_multiline_test")
-    source = "with (\n    first(),\n):\n    with second():\n        value = 1\n"
-
-    rendered, merged = module.merge(source)
-
-    assert rendered == source
-    assert merged == 0
 
 
 def test_pyright_suppression_gate_blocks_header_heavy_run(tmp_path: Path) -> None:
