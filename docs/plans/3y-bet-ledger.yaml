@@ -41386,7 +41386,8 @@ bets:
     在该路径上被永久豁免；age_days=0（:97）是硬写的不是测出来的。 交付面边界: CI 的 CR-X2-EVIDENCE-FRESHNESS （.github/workflows/gac-gate.yml:292-296）带
     continue-on-error: true 属 advisory，CI 全绿不是这条红的证据；本轮只让它在本地门禁面（bin/gac/gac-local-gate.py:296
     / :937）说得真话。'
-  status: pending
+  status: done
+  done_at: 2026-10-09
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
