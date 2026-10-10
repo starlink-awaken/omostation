@@ -20,6 +20,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from collectors.personal_value import project_panel_value
 from observatory_query import (
+    EXECUTION_OPERATIONS,
     ObservationIndex,
     QueryError,
     SnapshotStore,
@@ -37,6 +38,24 @@ import threading
 import time
 from http.client import HTTPConnection, HTTPException
 import yaml as _yaml
+
+# Independent HTTP GET allowlist. Keep this separate from the query module's
+# operation registry so an added operation cannot become GET-callable by default.
+GET_READ_OPERATIONS = frozenset({
+    'manifest', 'summary', 'catalog', 'search', 'entity', 'neighbors', 'brief',
+    'controls', 'changes', 'ontology', 'lineage', 'context_pack',
+    'agent/panorama', 'panorama', 'agent/capabilities', 'capabilities',
+    'agent/next-actions', 'next-actions', 'agent/entity', 'agent/loops', 'loops',
+    'agent/quickstart', 'quickstart', 'agent/readiness', 'readiness',
+    'agent/preflight', 'preflight', 'copilot/presets', 'proposals/list',
+    'health/radar', 'evolution/timeline', 'evolution/diff', 'bos/services',
+    'tokenomics/stats', 'swarm/topology', 'loops/telemetry', 'loops/dag',
+    'topology/overview', 'topology/graph', 'topology/projects',
+    'topology/interfaces', 'topology/sentinel', 'topology/workspace-agents',
+    'topology/callchains', 'topology/compute-models', 'topology/models',
+    'topology/compute', 'mof/overview', 'mof/constraints', 'entity/hologram',
+    'document',
+})
 
 DEFAULT_PORT = 43191
 AETHERFORGE_PROXY = os.environ.get("ZHIXING_AI_PROXY", "http://127.0.0.1:9290")
@@ -2708,6 +2727,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._handle_compute_live()
         elif route.path.startswith('/api/v1/'):
             operation = route.path[len('/api/v1/'):]
+            if operation not in GET_READ_OPERATIONS:
+                self._json(405, {'error': 'GET_OPERATION_NOT_ALLOWED', 'read_only': True})
+                return
             try:
                 values = parse_qs(route.query, keep_blank_values=True, strict_parsing=True, max_num_fields=12) if route.query else {}
                 if any(len(items) != 1 for items in values.values()) or len(route.query) > 8192:
@@ -2861,7 +2883,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         if route.path.startswith('/api/v1/'):
             operation = route.path[len('/api/v1/'):]
-            if operation in ('copilot/ask', 'proposals/submit', 'proposals/adjudicate', 'health/auto-heal', 'health/execute-heal', 'bos/invoke', 'loops/step'):
+            if operation in EXECUTION_OPERATIONS:
                 try:
                     content_len = int(self.headers.get('Content-Length', 0))
                     if content_len > 65536:
@@ -2876,7 +2898,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     return
                 try:
                     index = self._snapshot_index()
-                    result = index.query(operation, params)
+                    result = index.execute(operation, params)
                     self._json(200, result)
                 except QueryError as error:
                     self._json(error.status, {'error': error.code})
