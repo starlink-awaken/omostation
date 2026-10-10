@@ -27,6 +27,7 @@ last-reviewed: 2026-08-18
 | **`PITFALL-COO-004`** | `MEDIUM` | PR CI lint fail 不一定是本 PR 引入 — 子模块 pre-existing violation 触发 | 看到 lint fail 第一反应是改自己代码, 但 fail 文件都在 gitlink 子模块里 (projects/cockpit 等) | 1) 看 PR diff 文件清单排除 gitlink 后是否触发; 2) 查近 5-10 个 PR 同 lint 状态, 都在 fail = pre-existing; 3) 改 rebase 到含子模块 bump 的 main |
 | **`PITFALL-COO-005`** | `HIGH` | cherry-pick commit 跨 base 重放带 parent 的 reverse 到 target | cherry-pick 一个 commit 到新 base, PR diff 含 200+ 行反向删除 (parent 引入但 main 已合入的内容) | 跨 base 重放改动: `git show <old>:<path>` 拿文件内容 + 在新 base 重做改动, 不用 cherry-pick 当 commit |
 | **`PITFALL-COO-006`** | `MEDIUM` | 本地工作树 ≠ origin/main 状态 | fetch 后没 reset, 工作树停留在 fetch 前的快照, 误以为 PR 没合 | 任何 "main 是不是这样" 判断, 先 `git fetch origin main` + `git reset --hard origin/main`; 不信本地工作树, 用 `git show origin/main:<path>` |
+| **`PITFALL-ENV-005`** | `MEDIUM` | npm 默认镜像 (npmmirror) 缺新包 tarball 致 install 404 | registry 指向镜像时, 镜像元数据与 tarball 同步存在窗口缺口, 报 404 | 装包前 `curl -sI <dist.tarball>` 探活; 失败即 `npm install <pkg> --registry=https://registry.npmjs.org` 走官方源 |
 
 ---
 
