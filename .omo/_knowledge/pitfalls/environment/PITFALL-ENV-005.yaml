@@ -1,0 +1,20 @@
+schema: agent-error/v1
+id: PITFALL-ENV-005
+category: environment
+severity: medium
+title: npmmirror 镜像缺新包 tarball, npm install 404
+symptom: npm install @metaharness/turn-credit@~0.1.0 在默认 registry.npmmirror.com 报
+  404, 但 npm view 可见元数据且官方源 tarball 200
+root_cause: '用户 npm 默认 registry 配置为 registry.npmmirror.com, 镜像对部分新发布包
+  (如 @metaharness/turn-credit@0.1.0) 存在元数据已同步但 tarball 缺失的窗口期, npm
+  报 404; 官方源同一 tarball 实测 200。'
+solution: '临时指定官方源: npm install <pkg> --registry=https://registry.npmjs.org
+  (2026-10-10 实证)。注意 2026-10 期间用 npm 安装时, 加 --registry 官方源可绕过镜像缺口。'
+prevention: '治理链路装包前先 curl -sI 探一次 dist.tarball 是否 200; 失败即切官方源。
+  已登记入 error-knowledge, 后续 agent 自动执行。'
+tags: [npm, registry, mirror, ruflo]
+discovered_by: unknown
+discovered_at: '2026-10-10'
+times_encountered: 1
+last_confirmed_at: '2026-10-10'
+status: active
