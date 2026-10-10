@@ -41582,12 +41582,12 @@ bets:
   - 运行根与 LaunchAgent 实际 PID/参数绑定后完成受控发布；独立复核确认运行代码 SHA、健康状态和 GET 拒绝行为。
   - 更新本 BET 的 completion evidence 与复盘；未满足 G0/M0 时保持部署状态 BLOCKED，不标为完成。
   verify:
-  - cmd: uv run --with pytest pytest tests/test_zhixing_host_sync.py tests/unit/test_zhixing_get_method_safety.py
+  - cmd: uv run --with pytest --with pyyaml pytest tests/test_zhixing_host_sync.py tests/unit/test_zhixing_get_method_safety.py
       -q
     expect: 目标目录/文件选择、备份回滚、operation×method 和零副作用用例全部通过。
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: Ledger schema、accepted spec digest、BET binding 通过。
-  - cmd: python3 bin/gac/zhixing-host-sync.py --json status
+  - cmd: python3 bin/gac/zhixing-host-sync.py status --json
     expect: 先记录当前实际 host drift；发布必须明确指向 LaunchAgent 代码根并核对逐文件 SHA。
   write_surfaces:
   - bin/panorama/assets/host/live_server.py.asset
