@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""织星驾驶舱（:43191）宿主文件 — 版本化、漂移检测与恢复.
+"""织星驾驶舱（:43191）宿主资产的只读漂移检查。
 
 问题（docs/DASHBOARDS.md §3.1，2026-09-17 实证）:
 主入口 `:43191` 的部署目录 `~/.local/share/zhixing-dashboard/` **不在任何 git
@@ -15,20 +15,22 @@
 
 | 子命令    | 作用 |
 |----------|------|
-| `capture` | 部署目录 → 仓库（把当前线上态版本化; 人工确认后用） |
 | `status`  | 逐文件 sha 对比（仓库 vs 部署）+ 漂移汇总 |
-| `check`   | 有漂移 → exit 1（供 cron/patrol/门禁调用）; 每次运行把结构化报告原子写入 `~/.local/share/zhixing-dashboard/host-drift-report.json`（launchd 下比翻 stderr 系统日志易查） |
-| `restore` | 仓库 → 部署（默认 dry-run; `--force` 才写） |
+| `plan`    | 从登记的 LaunchAgent 解析实际运行根，并只读计算明确选择资产的漂移 |
+| `check`   | `plan` 的全受管资产兼容别名；漂移或身份不符时 exit 1 |
 
 **为什么捕获"注入后"的态**: panels 由 `zhixing-panel-sync.py ensure` 幂等注入
 （有 marker 则跳过），`refresh.py` 亦补丁幂等。故线上稳定态 = 已注入/已补丁态，
 捕获它则不产生伪漂移。
 
+当前 G0=PARTIAL/HOLD、M0=FAIL/HOLD。生产 CLI 只提供不写入的 `status` 与
+`plan`（以及只读的兼容别名 `check`）；`apply`、`capture`、`publish`、`restore`
+均明确返回 BLOCKED，直到后续 release BET 获得独立准入。
+
 用法:
-    python3 bin/gac/zhixing-host-sync.py status
-    python3 bin/gac/zhixing-host-sync.py check          # 漂移 → exit 1; 报告: ~/.local/share/zhixing-dashboard/host-drift-report.json
-    python3 bin/gac/zhixing-host-sync.py capture        # 线上 → 仓库
-    python3 bin/gac/zhixing-host-sync.py restore --force
+    python3 bin/gac/zhixing-host-sync.py status --json
+    python3 bin/gac/zhixing-host-sync.py plan --file live_server.py --json
+    python3 bin/gac/zhixing-host-sync.py check --json
 """
 
 from __future__ import annotations
@@ -37,14 +39,20 @@ import argparse
 import hashlib
 import json
 import os
-import shutil
+import plistlib
+import re
+import shlex
+import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
 HOST_DIR = _ROOT / "bin" / "panorama" / "assets" / "host"
 DASHBOARD_DIR = Path.home() / ".local" / "share" / "zhixing-dashboard"
+LAUNCH_AGENT_LABEL = "com.omostation.zhixing-dashboard"
+LAUNCH_AGENT_PLIST = (
+    Path.home() / "Library" / "LaunchAgents" / f"{LAUNCH_AGENT_LABEL}.plist"
+)
 
 # 纳管范围: 宿主模板 + 采集器。数据/产物 (index.html, current.json, caches) 不入仓。
 # 映射: (部署目录中的文件名, 仓库资产的相对名)。
@@ -74,9 +82,8 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("collectors/agent_brief.py", "agent_brief_collector.py.asset"),
 )
 
-# check() 每次运行把漂移结果结构化写入部署目录的此文件 (原子写), 供 launchd
-# 巡检后判读 —— exit 1 时详情只在 stderr (进系统日志不便查阅), 报告永远新鲜。
-REPORT_NAME = "host-drift-report.json"
+BLOCKED_REASON = "g0_m0_hold_release_bet_required"
+BLOCKED_COMMANDS = frozenset({"apply", "capture", "publish", "restore"})
 
 
 def _sha(path: Path) -> str | None:
@@ -91,6 +98,115 @@ def _size(path: Path) -> int:
         return path.stat().st_size
     except OSError:
         return 0
+
+
+def _resolved(path: Path) -> Path:
+    """Resolve a user supplied path without requiring that it already exists."""
+    return path.expanduser().resolve()
+
+
+def _registered_runtime() -> dict:
+    """Read the single installed Zhixing LaunchAgent registration.
+
+    The production read plane has no path or plist override: a caller can inspect
+    only the machine's registered runtime, never nominate a target of its own.
+    """
+    plist_path = _resolved(LAUNCH_AGENT_PLIST)
+    try:
+        with plist_path.open("rb") as handle:
+            payload = plistlib.load(handle)
+    except (OSError, plistlib.InvalidFileException) as exc:
+        return {"ok": False, "reason": "launch_agent_plist_unreadable", "detail": str(exc)}
+
+    if payload.get("Label") != LAUNCH_AGENT_LABEL:
+        return {"ok": False, "reason": "launch_agent_label_mismatch"}
+    arguments = payload.get("ProgramArguments")
+    working_directory = payload.get("WorkingDirectory")
+    if not isinstance(arguments, list):
+        return {"ok": False, "reason": "launch_agent_program_missing"}
+
+    scripts = [argument for argument in arguments if isinstance(argument, str)
+               and Path(argument).name == "live_server.py"]
+    if len(scripts) != 1:
+        return {"ok": False, "reason": "launch_agent_live_server_ambiguous"}
+
+    script = Path(scripts[0]).expanduser()
+    if not script.is_absolute():
+        if not isinstance(working_directory, str):
+            return {"ok": False, "reason": "launch_agent_relative_entrypoint_without_root"}
+        script = _resolved(Path(working_directory)) / script
+    script = _resolved(script)
+    root = script.parent
+    if isinstance(working_directory, str) and _resolved(Path(working_directory)) != root:
+        return {
+            "ok": False,
+            "reason": "launch_agent_root_mismatch",
+            "runtime_root": str(root),
+            "entrypoint": str(script),
+        }
+    if script.name != "live_server.py":
+        return {"ok": False, "reason": "launch_agent_entrypoint_mismatch"}
+    return {
+        "ok": True,
+        "label": LAUNCH_AGENT_LABEL,
+        "plist": str(plist_path),
+        "runtime_root": str(root),
+        "entrypoint": str(script),
+    }
+
+
+def _running_registered_runtime() -> dict:
+    """Bind read-only planning to the registered LaunchAgent's current process."""
+    registration = _registered_runtime()
+    if not registration.get("ok"):
+        return registration
+
+    domain = f"gui/{os.getuid()}/{LAUNCH_AGENT_LABEL}"
+    try:
+        launchctl = subprocess.run(
+            ["launchctl", "print", domain],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:
+        return {"ok": False, "reason": "launch_agent_pid_unavailable", "detail": str(exc),
+                "registration": registration}
+    matched = re.search(r"(?m)^\s*pid = (\d+)\s*$", launchctl.stdout) if launchctl.returncode == 0 else None
+    if matched is None:
+        return {"ok": False, "reason": "launch_agent_pid_unavailable", "registration": registration}
+
+    pid = int(matched.group(1))
+    try:
+        process = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "command="],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:
+        return {"ok": False, "reason": "launch_agent_pid_command_unavailable", "detail": str(exc),
+                "pid": pid, "registration": registration}
+    command = process.stdout.strip() if process.returncode == 0 else ""
+    try:
+        arguments = shlex.split(command)
+    except ValueError:
+        arguments = []
+    entrypoint = registration["entrypoint"]
+    try:
+        port_index = arguments.index("--port")
+        port_matches = arguments[port_index + 1] == "43191"
+    except (ValueError, IndexError):
+        port_matches = False
+    if entrypoint not in arguments or not port_matches:
+        return {
+            "ok": False,
+            "reason": "launch_agent_pid_command_mismatch",
+            "pid": pid,
+            "command": command,
+            "registration": registration,
+        }
+    return {"ok": True, "pid": pid, "command": command, **registration}
 
 
 def status(dashboard_dir: Path | None = None, host_dir: Path | None = None) -> dict:
@@ -126,137 +242,135 @@ def status(dashboard_dir: Path | None = None, host_dir: Path | None = None) -> d
     }
 
 
-def capture(dashboard_dir: Path | None = None, host_dir: Path | None = None) -> dict:
-    dash = dashboard_dir or DASHBOARD_DIR
-    host = host_dir or HOST_DIR
-    host.mkdir(parents=True, exist_ok=True)
-    captured, skipped = [], []
-    for deploy_name, repo_name in HOST_FILES:
-        live = dash / deploy_name
-        if not live.is_file():
-            skipped.append({"name": deploy_name, "reason": "deploy_missing"})
-            continue
-        dest = host / repo_name
-        if _sha(dest) == _sha(live):
-            skipped.append({"name": deploy_name, "reason": "already_same"})
-            continue
-        shutil.copy2(live, dest)
-        captured.append({"name": deploy_name, "bytes": _size(dest), "sha": _sha(dest)})
-    return {"ok": True, "captured": captured, "skipped": skipped}
+def _selected_assets(files: list[str] | tuple[str, ...] | None) -> tuple[tuple[str, str], ...]:
+    if not files:
+        raise ValueError("必须至少指定一个 --file；禁止隐式全量检查")
+    mapping = dict(HOST_FILES)
+    requested = tuple(files)
+    if len(requested) != len(set(requested)):
+        raise ValueError("--file 不能重复")
+    unknown = [name for name in requested if name not in mapping]
+    if unknown:
+        raise ValueError("未登记的宿主资产: " + ", ".join(unknown))
+    return tuple((name, mapping[name]) for name in requested)
 
 
-def restore(force: bool = False, dashboard_dir: Path | None = None,
-            host_dir: Path | None = None) -> dict:
-    dash = dashboard_dir or DASHBOARD_DIR
-    host = host_dir or HOST_DIR
-    if not host.is_dir():
-        print(f"❌ 仓库无宿主副本: {host}")
-        return {"ok": False, "reason": "no_repo_copy"}
-    planned, missing = [], []
-    for deploy_name, repo_name in HOST_FILES:
-        repo = host / repo_name
-        if not repo.is_file():
-            missing.append(deploy_name)
-            continue
-        live = dash / deploy_name
-        if _sha(repo) == _sha(live):
-            continue
-        planned.append(deploy_name)
-        if force:
-            if live.is_file():
-                shutil.copy2(live, dash / (deploy_name + ".before-restore"))
-            shutil.copy2(repo, live)
-    if not force and planned:
-        print(f"（dry-run）将恢复 {len(planned)} 个文件; 加 --force 执行: {', '.join(planned)}")
-    elif force:
-        print(f"✅ 已从仓库恢复 {len(planned)} 个文件 (原文件留 .before-restore)")
-    else:
-        print("ℹ️  无差异, 无需恢复")
-    return {"ok": True, "dry_run": not force, "restored": planned, "missing_repo": missing}
-
-
-def _write_drift_report(info: dict, dashboard_dir: Path) -> None:
-    """把每次 check 的结果原子写入部署目录的 host-drift-report.json。
-
-    launchd 下 stderr 进系统日志不便查阅，结构化 JSON 可由 dashboard 读取展示，
-    也可被 grep/告警脚本消费。始终写入（含无漂移），以便观察"最近一次检测时间"。
-    """
-    report = {
-        "checked_at": datetime.now(timezone.utc).isoformat(),
-        "ok": bool(info.get("ok")),
-        "drifted": int(info.get("drifted", 0)),
-        "missing_repo_copy": int(info.get("missing_repo_copy", 0)),
-        "missing_deploy_copy": int(info.get("missing_deploy_copy", 0)),
-        "files": [
-            {
-                "name": f["name"],
-                "state": f["state"],
-                "repo_sha": f.get("repo_sha"),
-                "deploy_sha": f.get("deploy_sha"),
-                "repo_bytes": int(f.get("repo_bytes") or 0),
-                "deploy_bytes": int(f.get("deploy_bytes") or 0),
-            }
-            for f in info.get("files", [])
-        ],
+def _blocked(operation: str) -> dict:
+    return {
+        "ok": False,
+        "state": "BLOCKED",
+        "operation": operation,
+        "reason": BLOCKED_REASON,
+        "detail": "G0=PARTIAL/HOLD and M0=FAIL/HOLD; a separately admitted release BET is required.",
     }
-    out = dashboard_dir / "host-drift-report.json"
-    tmp = out.with_suffix(".json.tmp")
+
+
+def capture(*_args: object, **_kwargs: object) -> dict:
+    """Legacy programmatic entry point: production capture is unavailable."""
+    return _blocked("capture")
+
+
+def publish(*_args: object, **_kwargs: object) -> dict:
+    """Legacy programmatic entry point: production publish is unavailable."""
+    return _blocked("publish")
+
+
+def restore(*_args: object, **_kwargs: object) -> dict:
+    """Legacy programmatic entry point: production restore is unavailable."""
+    return _blocked("restore")
+
+
+def _asset_plan(runtime_root: Path,
+                files: list[str] | tuple[str, ...] | None,
+                host_dir: Path) -> dict:
     try:
-        out.parent.mkdir(parents=True, exist_ok=True)
-        tmp.write_text(json.dumps(report, ensure_ascii=False, indent=2),
-                       encoding="utf-8")
-        os.replace(tmp, out)
-    except OSError as exc:
-        # 报告写入失败绝不能阻断 check 的 exit 语义；仅 stderr 提示。
-        print(f"⚠️  漂移报告写入失败 ({exc}); check 结论仍按文件对比",
-              file=sys.stderr)
+        assets = _selected_assets(files)
+    except ValueError as exc:
+        return {"ok": False, "reason": "invalid_asset_selection", "detail": str(exc)}
+
+    planned: list[dict] = []
+    for deploy_name, repo_name in assets:
+        source = host_dir / repo_name
+        destination = runtime_root / deploy_name
+        source_sha = _sha(source)
+        runtime_sha = _sha(destination)
+        if source_sha is None:
+            state = "versioned_asset_missing"
+        elif runtime_sha is None:
+            state = "runtime_asset_missing"
+        elif source_sha == runtime_sha:
+            state = "in_sync"
+        else:
+            state = "drifted"
+        planned.append({
+            "name": deploy_name,
+            "state": state,
+            "source": str(source),
+            "runtime": str(destination),
+            "source_sha": source_sha,
+            "runtime_sha": runtime_sha,
+        })
+    return {
+        "ok": all(item["state"] == "in_sync" for item in planned),
+        "target_root": str(runtime_root),
+        "files": planned,
+        "write_performed": False,
+    }
 
 
-def check(dashboard_dir: Path | None = None, host_dir: Path | None = None) -> int:
-    info = status(dashboard_dir, host_dir)
-    dash = Path(info["dashboard_dir"])
-    if not dash.is_dir():
-        return 0  # 非本机 / 未部署 → 天然跳过
-    # 始终写报告（含无漂移），让 dashboard/告警能读"最近一次检测"。
-    _write_drift_report(info, dash)
-    if info["missing_repo_copy"]:
-        print("⚠️  织星宿主文件未版本化: "
-              + ", ".join(f["name"] for f in info["files"] if f["state"] == "no_repo_copy"),
-              file=sys.stderr)
-        print("   版本化: python3 bin/gac/zhixing-host-sync.py capture", file=sys.stderr)
-    drifted = [f for f in info["files"] if f["state"] == "drifted"]
-    if drifted:
-        print("🔴 织星宿主文件漂移 (部署目录被直接编辑, 有被并发覆盖丢失的风险):",
-              file=sys.stderr)
-        for f in drifted:
-            print(f"   - {f['name']}: 仓库 {f['repo_sha']} ({f['repo_bytes']}B) "
-                  f"≠ 部署 {f['deploy_sha']} ({f['deploy_bytes']}B)", file=sys.stderr)
-        print("   有意变更 → capture (版本化); 意外覆盖 → restore (从仓库回滚)", file=sys.stderr)
-    return 0 if info["ok"] else 1
+def plan(files: list[str] | tuple[str, ...] | None) -> dict:
+    """Read selected asset drift after binding the live PID to its plist entrypoint."""
+    runtime = _running_registered_runtime()
+    if not runtime.get("ok"):
+        return {"ok": False, "reason": "launch_agent_identity_unverified", "runtime": runtime}
+    result = _asset_plan(Path(runtime["runtime_root"]), files, HOST_DIR)
+    result["registration"] = runtime
+    return result
+
+
+def check() -> int:
+    """Read-only compatibility check for registered assets; no report is written."""
+    result = plan([deploy_name for deploy_name, _ in HOST_FILES])
+    return 0 if result.get("ok") else 1
+
+
+def _registered_status() -> dict:
+    registration = _running_registered_runtime()
+    if not registration.get("ok"):
+        return {"ok": False, "reason": "launch_agent_identity_unverified", "registration": registration}
+    result = status(Path(registration["runtime_root"]), HOST_DIR)
+    result["registration"] = registration
+    result["write_performed"] = False
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
+    arguments = sys.argv[1:] if argv is None else argv
+    if arguments and arguments[0] in BLOCKED_COMMANDS:
+        result = _blocked(arguments[0])
+        print(json.dumps(result, ensure_ascii=False, indent=1))
+        return 2
+
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command")
-    for name, helptext in (("status", "仓库 vs 部署 漂移摘要"),
-                           ("capture", "部署 → 仓库 (版本化)"),
-                           ("check", "有漂移 → exit 1")):
-        sub.add_parser(name, help=helptext)
-    rp = sub.add_parser("restore", help="仓库 → 部署 (默认 dry-run)")
-    rp.add_argument("--force", action="store_true")
-    ap.add_argument("--json", action="store_true")
-    args = ap.parse_args(argv)
+    status_parser = sub.add_parser("status", help="登记 LaunchAgent 实际运行根的只读漂移摘要")
+    status_parser.add_argument("--json", action="store_true")
+    plan_parser = sub.add_parser("plan", help="登记运行根中明确选择资产的只读差异计划")
+    plan_parser.add_argument("--file", dest="files", action="append", required=True,
+                             help="受管宿主文件名；可重复指定")
+    plan_parser.add_argument("--json", action="store_true")
+    check_parser = sub.add_parser("check", help="所有受管资产的只读兼容检查；漂移时 exit 1")
+    check_parser.add_argument("--json", action="store_true")
+    args = ap.parse_args(arguments)
     command = args.command or "status"
 
-    if command == "capture":
-        result = capture()
-    elif command == "restore":
-        result = restore(force=args.force)
+    if command == "plan":
+        result = plan(args.files)
     elif command == "check":
-        return check()
+        result = plan([deploy_name for deploy_name, _ in HOST_FILES])
     else:
-        result = status()
+        result = _registered_status()
     print(json.dumps(result, ensure_ascii=False, indent=1, default=str))
     return 0 if result.get("ok", True) else 1
 

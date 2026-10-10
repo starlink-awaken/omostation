@@ -77,6 +77,16 @@ OPERATIONS = {
     'mof/constraints': set(),
     'entity/hologram': {'id'},
 }
+EXECUTION_OPERATIONS = frozenset({
+    'copilot/ask',
+    'proposals/submit',
+    'proposals/adjudicate',
+    'health/auto-heal',
+    'health/execute-heal',
+    'bos/invoke',
+    'loops/step',
+})
+READ_OPERATIONS = frozenset(OPERATIONS) - EXECUTION_OPERATIONS
 SOURCE_KEYS = {'path', 'sha256', 'hash_scope', 'sha256_scope', 'digest_basis', 'line',
                'observed_at', 'repository_sha', 'repository_ref', 'repository_kind',
                'status', 'state', 'reason', 'partial', 'document_id'}
@@ -523,7 +533,7 @@ class ObservationIndex:
                  'next_action': '核对原有准入与操作合同；本机只可准备审议，不能执行。'}
                 for identity, title, owner, needs in controls]
 
-    def query(self, operation, params):
+    def _validate_operation_params(self, operation, params):
         if operation not in OPERATIONS or not isinstance(params, dict):
             raise QueryError(400, 'UNKNOWN_OPERATION')
         if set(params) - (OPERATIONS[operation] | {'generation'}):
@@ -532,9 +542,16 @@ class ObservationIndex:
             raise QueryError(400, 'INVALID_QUERY')
         if 'generation' in params and params['generation'] != self.generation:
             raise QueryError(409, 'GENERATION_EXPIRED')
+
+    def query(self, operation, params):
+        if operation in EXECUTION_OPERATIONS:
+            raise QueryError(405, 'READ_ONLY_OPERATION')
+        if operation not in READ_OPERATIONS:
+            raise QueryError(400, 'UNKNOWN_OPERATION')
+        self._validate_operation_params(operation, params)
         stamp = self._now()
         if operation == 'manifest':
-            data = {'service': 'zhixing-observer-read', 'operations': sorted(OPERATIONS),
+            data = {'service': 'zhixing-observer-read', 'operations': sorted(READ_OPERATIONS),
                     'api_base': '/api/v1/', 'execution_enabled': False,
                     'documentation': {'api': str(Path(__file__).with_name('API.md')),
                                       'agent_reading': str(Path(__file__).with_name('AGENT-READING.md')),
@@ -1044,13 +1061,6 @@ class ObservationIndex:
                 'recommended_action': '起隔离工作树' if is_main else '按 ADR-0203 绑定工作流后正常编辑',
                 'guidance': guidance
             }
-        elif operation == 'copilot/ask':
-            from copilot_service import SovereignCopilot
-            copilot = getattr(self, '_copilot', None)
-            if copilot is None:
-                copilot = SovereignCopilot()
-                self._copilot = copilot
-            data = copilot.ask(params.get('query', ''), model=params.get('model'))
         elif operation == 'copilot/presets':
             from copilot_service import SovereignCopilot
             copilot = getattr(self, '_copilot', None)
@@ -1063,31 +1073,6 @@ class ObservationIndex:
             store = ProposalStore()
             props = store.list_proposals(status=params.get('status'), limit=integer(params, 'limit', 50, 1, 100))
             data = {'proposals': props, 'summary': store.get_summary()}
-        elif operation == 'proposals/submit':
-            from proposals_store import ProposalStore
-            store = ProposalStore()
-            payload = params.get('payload') or {}
-            if isinstance(payload, str):
-                try:
-                    payload = json.loads(payload)
-                except Exception:
-                    payload = {'raw': payload}
-            data = store.submit(
-                agent_id=str(params.get('agent_id', 'agent')),
-                proposal_type=str(params.get('proposal_type', 'general')),
-                title=str(params.get('title', '未命名提案')),
-                description=str(params.get('description', '')),
-                payload=payload
-            )
-        elif operation == 'proposals/adjudicate':
-            from proposals_store import ProposalStore
-            store = ProposalStore()
-            data = store.adjudicate(
-                proposal_id=str(params.get('id', '')),
-                verdict=str(params.get('verdict', 'approved')),
-                reviewer_note=str(params.get('reviewer_note', 'Approved by sovereign')),
-                adjudicator=str(params.get('adjudicator', '夏明星'))
-            )
         elif operation == 'health/radar':
             import health_radar
             importlib.reload(health_radar)
@@ -1098,14 +1083,6 @@ class ObservationIndex:
         elif operation == 'evolution/diff':
             from evolution_diff import EvolutionDiffEngine
             data = EvolutionDiffEngine().compute_diff(baseline_type=str(params.get('baseline', 'previous')))
-        elif operation == 'health/auto-heal':
-            import auto_healer
-            importlib.reload(auto_healer)
-            data = auto_healer.AutoHealer().heal(drift_id=params.get('drift_id'))
-        elif operation == 'health/execute-heal':
-            import auto_healer
-            importlib.reload(auto_healer)
-            data = auto_healer.AutoHealer().execute_healing_sandbox(proposal_id=str(params.get('proposal_id', '')))
         elif operation == 'bos/services':
             from bos_gateway import BOSGateway
             gw = BOSGateway()
@@ -1118,10 +1095,6 @@ class ObservationIndex:
                 ),
                 'summary': gw.get_domains_summary()
             }
-        elif operation == 'bos/invoke':
-            from bos_gateway import BOSGateway
-            gw = BOSGateway()
-            data = gw.resolve_and_invoke(uri=str(params.get('uri', '')), payload=params.get('payload', {}), query_engine=self)
         elif operation == 'tokenomics/stats':
             import tokenomics_engine
             importlib.reload(tokenomics_engine)
@@ -1134,10 +1107,6 @@ class ObservationIndex:
             import loop_engine
             importlib.reload(loop_engine)
             data = loop_engine.LoopEngine().get_telemetry()
-        elif operation == 'loops/step':
-            import loop_engine
-            importlib.reload(loop_engine)
-            data = loop_engine.LoopEngine().step_circuit(loop_id=str(params.get('loop_id', 'loop_strategic')), context=params)
         elif operation == 'loops/dag':
             import loop_engine
             importlib.reload(loop_engine)
@@ -1211,6 +1180,69 @@ class ObservationIndex:
                     'source_coverage_comparable': bool(self.sources) and set(previous.sources) == set(self.sources)
                         and all(self.sources[k].get('status') == previous.sources[k].get('status') == 'OK' for k in self.sources)
                         and previous.scope == self.scope}
+        return self._envelope(data, stamp)
+
+    def execute(self, operation, params):
+        """Run one explicitly effectful operation; HTTP POST is its only caller."""
+        if operation not in EXECUTION_OPERATIONS:
+            raise QueryError(405, 'EXECUTION_OPERATION_NOT_ALLOWED')
+        self._validate_operation_params(operation, params)
+        stamp = self._now()
+        if operation == 'copilot/ask':
+            from copilot_service import SovereignCopilot
+            copilot = getattr(self, '_copilot', None)
+            if copilot is None:
+                copilot = SovereignCopilot()
+                self._copilot = copilot
+            data = copilot.ask(params.get('query', ''), model=params.get('model'))
+        elif operation in ('proposals/submit', 'proposals/adjudicate'):
+            from proposals_store import ProposalStore
+            store = ProposalStore()
+            if operation == 'proposals/submit':
+                payload = params.get('payload') or {}
+                if isinstance(payload, str):
+                    try:
+                        payload = json.loads(payload)
+                    except Exception:
+                        payload = {'raw': payload}
+                data = store.submit(
+                    agent_id=str(params.get('agent_id', 'agent')),
+                    proposal_type=str(params.get('proposal_type', 'general')),
+                    title=str(params.get('title', '未命名提案')),
+                    description=str(params.get('description', '')),
+                    payload=payload,
+                )
+            else:
+                data = store.adjudicate(
+                    proposal_id=str(params.get('id', '')),
+                    verdict=str(params.get('verdict', 'approved')),
+                    reviewer_note=str(params.get('reviewer_note', 'Approved by sovereign')),
+                    adjudicator=str(params.get('adjudicator', '夏明星')),
+                )
+        elif operation in ('health/auto-heal', 'health/execute-heal'):
+            import auto_healer
+            importlib.reload(auto_healer)
+            healer = auto_healer.AutoHealer()
+            if operation == 'health/auto-heal':
+                data = healer.heal(drift_id=params.get('drift_id'))
+            else:
+                data = healer.execute_healing_sandbox(
+                    proposal_id=str(params.get('proposal_id', '')),
+                )
+        elif operation == 'bos/invoke':
+            from bos_gateway import BOSGateway
+            data = BOSGateway().resolve_and_invoke(
+                uri=str(params.get('uri', '')),
+                payload=params.get('payload', {}),
+                query_engine=self,
+            )
+        else:  # loops/step
+            import loop_engine
+            importlib.reload(loop_engine)
+            data = loop_engine.LoopEngine().step_circuit(
+                loop_id=str(params.get('loop_id', 'loop_strategic')),
+                context=params,
+            )
         return self._envelope(data, stamp)
 
     def _applicable_gaps(self, identity):

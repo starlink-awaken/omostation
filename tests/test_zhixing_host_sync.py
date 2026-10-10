@@ -1,21 +1,22 @@
-"""织星宿主文件版本化/漂移检测回归测试.
+"""织星宿主资产只读状态、漂移计划与发布封锁测试.
 
 对应 docs/DASHBOARDS.md §3.1 (2026-09-17 实证): :43191 部署目录不在版本控制,
 多 agent 并发编辑 template.html/refresh.py 互相覆盖 —— 场景面板丢失、已修 bug
-被回退。本工具把宿主文件纳管并提供漂移检测/恢复。
+被回退。本工具报告已版本化资产的运行漂移；生产写入保持封锁。
 """
 
 from __future__ import annotations
 
 import hashlib
 import importlib.util
+import plistlib
 import sys
 from pathlib import Path
 
 TOOL = Path(__file__).resolve().parents[1] / "bin/gac/zhixing-host-sync.py"
 
 # The fixture contract is explicit and independent of HOST_FILES, so accidentally
-# dropping a production mapping cannot make capture/restore tests silently pass.
+# dropping a production mapping cannot make drift-plan tests silently pass.
 EXPECTED_FILES = {
     "template.html": "template.html",
     "refresh.py": "refresh.py.asset",
@@ -90,6 +91,42 @@ def _seed_repo(host: Path, *, template: str, refresh: str,
             target.write_text(f"# repo fixture for {name}\n", encoding="utf-8")
 
 
+def _align_repo_to_deploy(dash: Path, host: Path) -> None:
+    host.mkdir(parents=True, exist_ok=True)
+    for deploy_name, repo_name in EXPECTED_FILES.items():
+        target = host / repo_name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((dash / deploy_name).read_bytes())
+
+
+def _bind_running_agent(tool, monkeypatch, dash: Path, host: Path, *, command: str | None = None,
+                        with_working_directory: bool = True) -> None:
+    entrypoint = dash / "live_server.py"
+    payload = {
+        "Label": "com.omostation.zhixing-dashboard",
+        "ProgramArguments": ["/opt/homebrew/bin/python3", "-B", str(entrypoint), "--port", "43191"],
+    }
+    if with_working_directory:
+        payload["WorkingDirectory"] = str(dash)
+    plist = dash.parent / "com.omostation.zhixing-dashboard.plist"
+    plist.write_bytes(plistlib.dumps(payload))
+    monkeypatch.setattr(tool, "LAUNCH_AGENT_PLIST", plist)
+    monkeypatch.setattr(tool, "HOST_DIR", host)
+
+    class Result:
+        def __init__(self, returncode: int, stdout: str):
+            self.returncode = returncode
+            self.stdout = stdout
+
+    def runner(arguments, **_kwargs):
+        if arguments[0] == "launchctl":
+            return Result(0, "\tpid = 4321\n")
+        assert arguments[:3] == ["ps", "-p", "4321"]
+        return Result(0, command or f"/opt/homebrew/bin/python3 -B {entrypoint} --port 43191\n")
+
+    monkeypatch.setattr(tool.subprocess, "run", runner)
+
+
 # ── 未版本化检测 ─────────────────────────────────────────
 
 
@@ -109,44 +146,7 @@ def test_check_exits_nonzero_when_unversioned(tmp_path):
     dash, host = _dirs(tmp_path)
     _seed_deploy(dash)
     tool = _load()
-    assert tool.check(dashboard_dir=dash, host_dir=host) == 1
-
-
-# ── capture ──────────────────────────────────────────────
-
-
-def test_capture_versions_deploy_files(tmp_path):
-    dash, host = _dirs(tmp_path)
-    _seed_deploy(dash)
-    tool = _load()
-    r = tool.capture(dashboard_dir=dash, host_dir=host)
-    assert r["ok"] is True
-    assert {c["name"] for c in r["captured"]} == set(EXPECTED_FILES)
-    for deploy_name, repo_name in EXPECTED_FILES.items():
-        assert (host / repo_name).read_bytes() == (dash / deploy_name).read_bytes()
-    assert (host / "template.html").read_bytes() == (dash / "template.html").read_bytes()
-    # refresh.py 以 .asset 后缀纳管 (避开 script-registry 脚本治理面)
-    assert (host / "refresh.py.asset").read_bytes() == (dash / "refresh.py").read_bytes()
-    assert (host / "live_server.py.asset").read_bytes() == (dash / "live_server.py").read_bytes()
-    assert (host / "observatory_query.py.asset").read_bytes() == (dash / "observatory_query.py").read_bytes()
-    assert (host / "panorama-collect-main.py.asset").read_bytes() == (
-        dash / "panorama-collect-main.py"
-    ).read_bytes()
-
-    info = tool.status(dashboard_dir=dash, host_dir=host)
-    assert info["ok"] is True
-    assert info["drifted"] == 0
-    assert tool.check(dashboard_dir=dash, host_dir=host) == 0
-
-
-def test_capture_is_idempotent(tmp_path):
-    dash, host = _dirs(tmp_path)
-    _seed_deploy(dash)
-    tool = _load()
-    tool.capture(dashboard_dir=dash, host_dir=host)
-    second = tool.capture(dashboard_dir=dash, host_dir=host)
-    assert second["captured"] == []
-    assert {s["reason"] for s in second["skipped"]} == {"already_same"}
+    assert tool.status(dashboard_dir=dash, host_dir=host)["ok"] is False
 
 
 # ── 漂移检测（核心）──────────────────────────────────────
@@ -156,9 +156,9 @@ def test_detects_drift_after_direct_deploy_edit(tmp_path):
     """核心: 部署被直接编辑 (即"被并发覆盖"的形态) → 必须检出漂移."""
     dash, host = _dirs(tmp_path)
     _seed_deploy(dash)
+    _align_repo_to_deploy(dash, host)
     tool = _load()
-    tool.capture(dashboard_dir=dash, host_dir=host)
-    assert tool.check(dashboard_dir=dash, host_dir=host) == 0
+    assert tool.status(dashboard_dir=dash, host_dir=host)["ok"] is True
 
     # 模拟另一 agent 直接改部署目录
     (dash / "template.html").write_text("<html>HACKED by other agent</html>\n",
@@ -168,67 +168,19 @@ def test_detects_drift_after_direct_deploy_edit(tmp_path):
     drifted = [f for f in info["files"] if f["state"] == "drifted"]
     assert drifted[0]["name"] == "template.html"
     assert drifted[0]["repo_sha"] != drifted[0]["deploy_sha"]
-    assert tool.check(dashboard_dir=dash, host_dir=host) == 1
+    assert tool.status(dashboard_dir=dash, host_dir=host)["ok"] is False
     # 未被漂移的文件仍应为 in_sync
     assert [f["state"] for f in info["files"] if f["name"] == "refresh.py"] == ["in_sync"]
 
 
-def test_check_skips_when_not_deployed(tmp_path):
-    """非本机/未部署 → 天然跳过, 不误报."""
+def test_status_reports_absent_runtime_without_writing(tmp_path):
+    """状态读取不会把未部署目录或报告文件创建出来。"""
     _, host = _dirs(tmp_path)
+    missing_runtime = tmp_path / "nope"
     tool = _load()
-    assert tool.check(dashboard_dir=tmp_path / "nope", host_dir=host) == 0
-
-
-# ── restore ──────────────────────────────────────────────
-
-
-def test_restore_dry_run_does_not_write(tmp_path):
-    dash, host = _dirs(tmp_path)
-    _seed_deploy(dash)
-    tool = _load()
-    tool.capture(dashboard_dir=dash, host_dir=host)
-    (dash / "template.html").write_text("drift\n", encoding="utf-8")
-
-    r = tool.restore(force=False, dashboard_dir=dash, host_dir=host)
-    assert r["dry_run"] is True
-    assert r["restored"] == ["template.html"]
-    assert (dash / "template.html").read_text() == "drift\n", "dry-run 不得写入"
-
-
-def test_restore_force_reverts_and_keeps_backup(tmp_path):
-    dash, host = _dirs(tmp_path)
-    _seed_deploy(dash)
-    tool = _load()
-    tool.capture(dashboard_dir=dash, host_dir=host)
-    expected = (host / "template.html").read_text()
-    (dash / "template.html").write_text("HACKED\n", encoding="utf-8")
-
-    r = tool.restore(force=True, dashboard_dir=dash, host_dir=host)
-    assert r["restored"] == ["template.html"]
-    assert (dash / "template.html").read_text() == expected, "应回滚为仓库版本"
-    bak = dash / "template.html.before-restore"
-    assert bak.is_file() and bak.read_text() == "HACKED\n", "原文件必须留备份"
-    assert tool.check(dashboard_dir=dash, host_dir=host) == 0
-
-
-def test_restore_reports_missing_repo_copy(tmp_path):
-    """两种缺失形态: 整目录缺失 → no_repo_copy; 单文件缺失 → missing_repo 列表."""
-    dash, host = _dirs(tmp_path)
-    _seed_deploy(dash)
-    tool = _load()
-
-    # (a) 仓库宿主目录整体不存在
-    r = tool.restore(force=True, dashboard_dir=dash, host_dir=host)
-    assert r["ok"] is False and r["reason"] == "no_repo_copy"
-
-    # (b) 目录存在但只纳管了部分文件
-    _seed_repo(host, template="repo template\n", refresh="repo refresh\n")
-    (host / "refresh.py.asset").unlink()
-    r2 = tool.restore(force=True, dashboard_dir=dash, host_dir=host)
-    assert r2["ok"] is True
-    assert r2["missing_repo"] == ["refresh.py"]
-    assert r2["restored"][0] == "template.html"
+    info = tool.status(dashboard_dir=missing_runtime, host_dir=host)
+    assert info["missing_repo_copy"] == len(EXPECTED_FILES)
+    assert missing_runtime.exists() is False
 
 
 # ── 真实仓库的纳管副本 ───────────────────────────────────
@@ -257,19 +209,122 @@ def test_host_files_scope_includes_server_and_excludes_data():
         assert banned not in deploy_names
 
 
-def test_nested_collector_restore_keeps_backup(tmp_path):
+def test_plan_only_uses_registered_launch_agent_root(tmp_path, monkeypatch):
     dash, host = _dirs(tmp_path)
     _seed_deploy(dash)
+    _align_repo_to_deploy(dash, host)
     tool = _load()
-    tool.capture(dashboard_dir=dash, host_dir=host)
-    collector = dash / "collectors/workflow.py"
-    expected = collector.read_bytes()
-    collector.write_text("# changed collector\n", encoding="utf-8")
-    assert tool.status(dashboard_dir=dash, host_dir=host)["drifted"] == 1
-    result = tool.restore(force=True, dashboard_dir=dash, host_dir=host)
-    assert result["restored"] == ["collectors/workflow.py"]
-    assert collector.read_bytes() == expected
-    assert collector.with_name("workflow.py.before-restore").read_text() == "# changed collector\n"
+    _bind_running_agent(tool, monkeypatch, dash, host)
+    (dash / "template.html").write_text("runtime drift\n", encoding="utf-8")
+
+    result = tool.plan(["template.html"])
+    assert result["registration"]["runtime_root"] == str(dash.resolve())
+    assert result["target_root"] == str(dash.resolve())
+    assert result["files"] == [{
+        "name": "template.html",
+        "state": "drifted",
+        "source": str(host / "template.html"),
+        "runtime": str(dash / "template.html"),
+        "source_sha": _sha(host / "template.html"),
+        "runtime_sha": _sha(dash / "template.html"),
+    }]
+    assert result["write_performed"] is False
+    assert result["registration"]["pid"] == 4321
+
+
+def test_plan_derives_root_from_registered_absolute_entrypoint(tmp_path, monkeypatch):
+    dash, host = _dirs(tmp_path)
+    _seed_deploy(dash)
+    _align_repo_to_deploy(dash, host)
+    tool = _load()
+    _bind_running_agent(tool, monkeypatch, dash, host, with_working_directory=False)
+
+    result = tool.plan(["live_server.py"])
+    assert result["registration"]["runtime_root"] == str(dash.resolve())
+    assert result["files"][0]["state"] == "in_sync"
+    assert result["write_performed"] is False
+
+
+def test_cli_status_binds_the_live_pid_and_command(tmp_path, monkeypatch, capsys):
+    dash, host = _dirs(tmp_path)
+    _seed_deploy(dash)
+    _align_repo_to_deploy(dash, host)
+    tool = _load()
+    _bind_running_agent(tool, monkeypatch, dash, host)
+
+    assert tool.main(["status", "--json"]) == 0
+    import json
+    result = json.loads(capsys.readouterr().out)
+    assert result["registration"]["pid"] == 4321
+    assert str(dash / "live_server.py") in result["registration"]["command"]
+    assert result["write_performed"] is False
+
+
+def test_plan_rejects_pid_command_mismatch_without_writing(tmp_path, monkeypatch):
+    dash, host = _dirs(tmp_path)
+    _seed_deploy(dash)
+    _align_repo_to_deploy(dash, host)
+    tool = _load()
+    before = {path.relative_to(dash): _sha(path) for path in dash.rglob("*") if path.is_file()}
+    _bind_running_agent(
+        tool,
+        monkeypatch,
+        dash,
+        host,
+        command="/opt/homebrew/bin/python3 -B /tmp/other-live_server.py --port 43191\n",
+    )
+
+    result = tool.plan(["live_server.py"])
+    assert result["ok"] is False
+    assert result["reason"] == "launch_agent_identity_unverified"
+    assert result["runtime"]["reason"] == "launch_agent_pid_command_mismatch"
+    after = {path.relative_to(dash): _sha(path) for path in dash.rglob("*") if path.is_file()}
+    assert after == before
+
+
+def test_all_public_functions_are_read_only_or_blocked(tmp_path, monkeypatch):
+    dash, host = _dirs(tmp_path)
+    _seed_deploy(dash)
+    _align_repo_to_deploy(dash, host)
+    tool = _load()
+    _bind_running_agent(tool, monkeypatch, dash, host)
+    before = {
+        path.relative_to(tmp_path): _sha(path)
+        for path in tmp_path.rglob("*") if path.is_file()
+    }
+
+    assert tool.status(dashboard_dir=dash, host_dir=host)["ok"] is True
+    assert tool.plan(["live_server.py"])["ok"] is True
+    assert tool.check() == 0
+    for operation in ("capture", "publish", "restore"):
+        result = getattr(tool, operation)()
+        assert result["state"] == "BLOCKED"
+        assert result["reason"] == tool.BLOCKED_REASON
+    after = {
+        path.relative_to(tmp_path): _sha(path)
+        for path in tmp_path.rglob("*") if path.is_file()
+    }
+    assert after == before
+
+
+def test_cli_write_commands_are_blocked_and_check_remains_read_only(tmp_path, monkeypatch, capsys):
+    dash, host = _dirs(tmp_path)
+    _seed_deploy(dash)
+    _align_repo_to_deploy(dash, host)
+    tool = _load()
+    _bind_running_agent(tool, monkeypatch, dash, host)
+    before = {path.relative_to(tmp_path): _sha(path) for path in tmp_path.rglob("*") if path.is_file()}
+
+    for command in ("apply", "capture", "publish", "restore"):
+        assert tool.main([command, "--target-root", str(dash)]) == 2
+        out = capsys.readouterr().out
+        assert '"state": "BLOCKED"' in out
+        assert '"operation": "' + command + '"' in out
+    assert tool.main(["check", "--json"]) == 0
+    assert '"write_performed": false' in capsys.readouterr().out
+    assert "--target-root" not in tool.__doc__
+    after = {path.relative_to(tmp_path): _sha(path) for path in tmp_path.rglob("*") if path.is_file()}
+    assert after == before
 
 
 def test_real_repo_server_assets_have_no_static_credentials():
