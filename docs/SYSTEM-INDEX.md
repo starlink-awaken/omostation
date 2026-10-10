@@ -243,6 +243,8 @@ last_updated: 2026-09-17
 ## 关联文档
 
 → [ARCHITECTURE.md](../ARCHITECTURE.md) — 架构契约
+→ [ecos-overview.html](architecture/ecos-overview.html) — 架构全景块图(展示层,生成物)
+→ [ecos-architecture.md](architecture/ecos-architecture.md) — 架构块图图源 Mermaid(生成物)
 → [AGENTS.md](../AGENTS.md) — Agent 操作指南
 → [CLAUDE.md](../CLAUDE.md) — 会话上下文加载
 → [README.md](../README.md) — 项目快速开始
