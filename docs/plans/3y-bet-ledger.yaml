@@ -41552,6 +41552,71 @@ bets:
         status: NOT_PROVEN
         evidence: {}
   depends_on: []
+- id: BET-Y2Q4-T10-240
+  title: DCP-20 P0 Zhixing GET 方法安全与受管宿主发布
+  goal: 关闭 Zhixing 通用 GET 路由中的执行型副作用，建立 route × method × operation 纯读取证明，并通过可回滚、精确选择的
+    host-sync 发布到 LaunchAgent 实际代码根。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P0
+  appetite: 2 days
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  circuit_breaker: 任一 GET 负测触发写入/执行、纯读路由回归、未知 operation 未默认拒绝、目标运行根或 LaunchAgent PID/SHA
+    不匹配、原子发布/回滚不能证明，或 G0/身份绑定门拒绝发布时立即停止。
+  non_goals:
+  - 不实现 DCP-21 Principal/Agent/业务人员身份、session、CSRF、资源 scope 或角色授权。
+  - 不开放 Decision Graph 或其他缺少来源证明的业务数据，不宣称白皮书整体验收完成。
+  - 不更改其他宿主资产、LaunchAgent、Run、Lock，不重发 projection。
+  done_when:
+  - 所有读取型 GET operation 在独立 allowlist 中，未知 operation 与执行型 operation 一律拒绝。
+  - 六个执行型 operation 与 copilot/ask 的 GET 逐项负测通过，且查询层防御拒绝它们。
+  - 临时 loopback 测试证明 GET 前后文件与业务状态摘要一致，投影模式全部 POST 继续拒绝。
+  - health、snapshot、静态页面及登记只读 API 回归通过。
+  - host-sync 仅发布显式选择资产到指定运行根，逐文件备份、原子替换、SHA 校验和失败回滚测试通过。
+  - 运行根与 LaunchAgent 实际 PID/参数绑定后完成受控发布；独立复核确认运行代码 SHA、健康状态和 GET 拒绝行为。
+  - 更新本 BET 的 completion evidence 与复盘；未满足 G0/M0 时保持部署状态 BLOCKED，不标为完成。
+  verify:
+  - cmd: uv run --with pytest pytest tests/test_zhixing_host_sync.py tests/unit/test_zhixing_get_method_safety.py
+      -q
+    expect: 目标目录/文件选择、备份回滚、operation×method 和零副作用用例全部通过。
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: Ledger schema、accepted spec digest、BET binding 通过。
+  - cmd: python3 bin/gac/zhixing-host-sync.py --json status
+    expect: 先记录当前实际 host drift；发布必须明确指向 LaunchAgent 代码根并核对逐文件 SHA。
+  write_surfaces:
+  - bin/panorama/assets/host/live_server.py.asset
+  - bin/panorama/assets/host/observatory_query.py.asset
+  - bin/gac/zhixing-host-sync.py
+  - tests/test_zhixing_host_sync.py
+  - tests/unit/test_zhixing_get_method_safety.py
+  - docs/superpowers/specs/2026-10-08-dashboard-dcp20-get-method-safety-v1.1.0.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/governance-evidence/waiver-2026-10-08-dashboard-dcp20-bootstrap.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-08-dashboard-dcp20-get-method-safety-v1.1.0.md
+    spec_version: 1.1.0
+    content_digest: sha256:6cd451a934cadce4e5b94a5192056ebe48328cb535eb596c6c899695d3f05ef7
+    decision_ref: decision://accepted/BET-Y2Q4-T10-240
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -41690,7 +41755,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 536
+  total_bets: 537
   windows:
   - Y1Q1
   - Y1Q2
