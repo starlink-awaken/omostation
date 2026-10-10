@@ -63,3 +63,21 @@ evidence_paths:
 - .omo/_knowledge/retros/TASK-B3229A65-evidence.md
 - .omo/cron/registry.yaml
 completed_at: '2026-09-16T07:54:59Z'
+
+ssot_writeback_hist:
+  annotated_at: '2026-10-10'
+  rule: CR-C2G-V3-01
+  completed_at: '2026-09-16T07:54:59Z'
+  context_uri: bos://governance/tasks/planned/TASK-B3229A65
+  reason: >-
+    completed before read-side enforcement existed (2026-10-10); writeback target
+    source_docs[0]=.omo/cron/registry.yaml is a YAML FILE - the markdown writeback
+    append would corrupt it; deliverable preserved: registry v2 consolidated with
+    reconciliation_note (2026-09-11), scheduler-compile --check ok drift=0.
+  content_preserved_at: >-
+    .omo/cron/registry.yaml (v2 consolidation);
+    bin/scheduler-compile.py --check (ok drift=0)
+  note: >-
+    backdated historical exemption per l0-always-green (2026-10-10): task completed
+    before read-side enforcement existed; writeback append would corrupt a non-markdown
+    file. NOT a silent skip - the gate reports this bucket explicitly.
