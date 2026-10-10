@@ -745,14 +745,14 @@ health-trend:  ## 终端 ASCII 健康趋势图 (compass_radar history)
 health-trend-json:  ## 输出 health trend JSON (供其他工具消费)
 	uv run --with pyyaml python bin/gac/health-trend-chart.py --json
 
-cockpit-dashboard-start:  ## 后台启动 cockpit Web 控制台 (port 8090, 默认) — 单实例, 状态在 runtime/cockpit-dashboard.{pid,log}
-	bash bin/runtime/start-cockpit-dashboard.sh
+cockpit-dashboard-start:  ## 启动受管 Cockpit Dashboard LaunchAgent
+	bash bin/runtime/manage-cockpit-dashboard.sh start
 
-cockpit-dashboard-stop:  ## 停止后台 cockpit Web 控制台
-	bash bin/runtime/start-cockpit-dashboard.sh stop
+cockpit-dashboard-stop:  ## 停止受管 Cockpit Dashboard LaunchAgent
+	bash bin/runtime/manage-cockpit-dashboard.sh stop
 
-cockpit-dashboard-status:  ## 查看 cockpit Web 控制台状态 (running / not running)
-	bash bin/runtime/start-cockpit-dashboard.sh status
+cockpit-dashboard-status:  ## 查看受管 Cockpit Dashboard LaunchAgent 状态
+	bash bin/runtime/manage-cockpit-dashboard.sh status
 
 cockpit-install:  ## 安装 cockpit 软链接至 ~/.local/bin/cockpit (全局免路径调用)
 	@mkdir -p $(HOME)/.local/bin

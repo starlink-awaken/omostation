@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-09-26T12:40:03Z
+generated_at: 2026-10-10T02:07:16Z
 status: candidate
 counts:
-  runs: 35
+  runs: 72
   failures: 0
-  total: 35
+  total: 72
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-26T12:40:03Z
+- generated_at: 2026-10-10T02:07:16Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 35 成功运行 + 0 失败模式 = 35 草稿
+- sediment 覆盖: 72 成功运行 + 0 失败模式 = 72 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -56,6 +56,43 @@ failure_breakdown:
 - 20260925T014237Z-project-code-change-44d6eaf9.md
 - 20260925T031109Z-project-code-change-769a4583.md
 - 20260926T060655Z-project-code-change-ef18f46f.md
+- 20260927T215413Z-project-code-change-a7670509.md
+- 20260927T223906Z-project-code-change-4753ef01.md
+- 20260927T230315Z-project-code-change-b4efea8b.md
+- 20260927T233852Z-project-code-change-01eec67b.md
+- 20260928T010427Z-project-code-change-88e8b653.md
+- 20260928T072649Z-project-code-change-c866254d.md
+- 20260928T075046Z-project-code-change-175d7af3.md
+- 20260928T081048Z-project-code-change-d60cbf51.md
+- 20260928T092358Z-project-code-change-e9b50269.md
+- 20260928T095337Z-project-code-change-817cd79e.md
+- 20260928T112501Z-project-code-change-dcbf18a3.md
+- 20260928T134842Z-project-code-change-9fff0b63.md
+- 20260929T024353Z-project-code-change-7ba91e90.md
+- 20260929T025840Z-project-code-change-a694c2a9.md
+- 20260929T030130Z-project-code-change-4e24050b.md
+- 20260929T044531Z-project-code-change-e23ad439.md
+- 20260929T074047Z-project-code-change-94c2fcb5.md
+- 20260929T075217Z-project-code-change-dc95fd2d.md
+- 20260929T080729Z-project-code-change-ce124d54.md
+- 20260929T105440Z-project-code-change-970e11eb.md
+- 20260929T112412Z-project-code-change-59906d82.md
+- 20261003T141319Z-project-code-change-ee0aa19d.md
+- 20261004T112741Z-project-code-change-aa14ef9f.md
+- 20261004T142358Z-project-code-change-a9eaa0f7.md
+- 20261005T130234Z-project-code-change-b338bd88.md
+- 20261006T122008Z-project-code-change-ba10c1ac.md
+- 20261006T122121Z-project-code-change-aadae7a5.md
+- 20261006T122238Z-project-code-change-5aa12618.md
+- 20261006T122348Z-project-code-change-eaaa69f3.md
+- 20261006T122456Z-project-code-change-93f1d1e0.md
+- 20261006T122628Z-project-code-change-270ae955.md
+- 20261006T122745Z-project-code-change-ffc1e501.md
+- 20261006T122858Z-project-code-change-78c0bf55.md
+- 20261006T123004Z-project-code-change-1e05ade2.md
+- 20261006T123117Z-project-code-change-6a9e2b13.md
+- 20261006T123240Z-project-code-change-cd51fd55.md
+- 20261006T123407Z-project-code-change-7ca0b817.md
 
 ## 失败模式 (failures/)
 
@@ -299,6 +336,207 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=3
   - 指标: event_count=6, duration_s=1398.632
+- **20260927T215413Z-project-code-change-a7670509**
+  - 计划 (objective): TASK-F54F176A launchd 服务体检(运维修复, 无对应 BET, 记录豁免): mail-daemon no_unread KeyError, log-rotate copytruncate
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=2391.465
+- **20260927T223906Z-project-code-change-4753ef01**
+  - 计划 (objective): 修 main interface-check 红: check-cross-repo-consistency 读 bos-pending-registrations 作已知积压基线, 仅新增未登记 URI 阻断(运维修复, BET-Y2Q4-T10-06 已 done, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=891.906
+- **20260927T230315Z-project-code-change-b4efea8b**
+  - 计划 (objective): BOS 待登记积压清理: 可解析服务登记进 agora SSOT + legacy 别名 + 死 fallback 删除 + 检查器改为字面量引用/别名覆盖 (运维修复, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1946.041
+- **20260927T233852Z-project-code-change-01eec67b**
+  - 计划 (objective): TASK-CF1EABDA: check-mcp-bos-uri-completeness 收窄扫描范围+不再以 pending 清单为域白名单 (运维修复, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=586.052
+- **20260928T010427Z-project-code-change-88e8b653**
+  - 计划 (objective): CI 去重: post-merge-validate 可达性兜底空转修复(子模块未检出全 unverified) + 删与 gac-gate 重复的 workspace.yml + overlap 告警认 also_in (运维修复, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=22281.777
+- **20260928T072649Z-project-code-change-c866254d**
+  - 计划 (objective): ci-surfaces 登记工具文件必须存在 (新规则 missing-tool) (运维修复, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1054.769
+- **20260928T075046Z-project-code-change-175d7af3**
+  - 计划 (objective): omo-autopilot 恢复私有子仓 checkout token (运维修复, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=905.636
+- **20260928T081048Z-project-code-change-d60cbf51**
+  - 计划 (objective): TASK-2E059177: BOS 17 条非 active 登记处置 — AGT 退役(ADR-0415)/pool submit 复活/死声明删除 (principal 授权, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1496.086
+- **20260928T092358Z-project-code-change-e9b50269**
+  - 计划 (objective): 网关 mini-chat 别名改指本机 LM Studio google/gemma-4-e2b (macmini 外出暂停, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1729.917
+- **20260928T095337Z-project-code-change-817cd79e**
+  - 计划 (objective): gatekeeper push 触发软化 warning、schedule/dispatch 保留 fail-closed (CI 告警降噪运维修复, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=701.375
+- **20260928T112501Z-project-code-change-dcbf18a3**
+  - 计划 (objective): 修 gac-gate 可达性陈旧测试 + agora pool/status 重复 description (运维修复, 无对应 BET, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=433.684
+- **20260928T134842Z-project-code-change-9fff0b63**
+  - 计划 (objective): publication-effect 测试显式豁免 CROSS_REPO_TOKEN 只读凭证（#4231/#4501 私有子仓 checkout 刻意保留），保留全部发布禁令与无 contents:write 断言；dispatch 软硬保持不动
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=3
+  - 指标: event_count=6, duration_s=1612.025
+- **20260929T024353Z-project-code-change-7ba91e90**
+  - 计划 (objective): mail 闭环实测修复: llm_ask 改走网关门面 + 邮件分类用 triage 别名与按动作分类的提示词 (运维修复, 无对应 BET, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=657.066
+- **20260929T025840Z-project-code-change-a694c2a9**
+  - 计划 (objective): [BET-Y2Q4-T10-212] ADR-0129 Phase 2 — 投影面停止 legacy 双写并把三件生成态摘出 git（ADR-0456 B5） (Appetite: 1 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=48.486
+- **20260929T030130Z-project-code-change-4e24050b**
+  - 计划 (objective): [BET-Y2Q4-T10-212] ADR-0129 Phase 2 — 投影面停止 legacy 双写并把三件生成态摘出 git（ADR-0456 B5） (Appetite: 1 day)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=6759.381
+- **20260929T044531Z-project-code-change-e23ad439**
+  - 计划 (objective): [BET-Y2Q4-T10-212] ADR-0129 Phase 2 — 投影面停止 legacy 双写并把三件生成态摘出 git（ADR-0456 B5） (Appetite: 1 day)
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20260929T074047Z-project-code-change-94c2fcb5**
+  - 计划 (objective): 全链路场景实测修复: journey 兜底转移回边保护/误标降级/公文标题重复关于 + 价值日志可重定向 + bump 5 子仓(运维修复, 无对应 BET, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=297.125
+- **20260929T075217Z-project-code-change-dc95fd2d**
+  - 计划 (objective): 全链路场景实测修复(续): 公文拟办截止日期读取正文明确期限(运维修复, 无对应 BET, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=910.96
+- **20260929T080729Z-project-code-change-ce124d54**
+  - 计划 (objective): 全链路场景实测修复(续2): 邮件分类历史可重定向 + bump cockpit(卡带如实报告/打包不覆盖源清单)(运维修复, 无对应 BET, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=464.864
+- **20260929T105440Z-project-code-change-970e11eb**
+  - 计划 (objective): F2 督办台账统一: 会议督办与邮件任务落 tracked-tasks(唯一台账), 去掉零读取的 cockpit 投影 (运维修复, 无对应 BET, 记录豁免)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=1366.601
+- **20260929T112412Z-project-code-change-59906d82**
+  - 计划 (objective): [BET-Y2Q3-T9-01] 织星驾驶舱 P2 体验迭代、漂移可观测与真实算力副驾 (Appetite: 3 days)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=163609.51
+- **20261003T141319Z-project-code-change-ee0aa19d**
+  - 计划 (objective): worktree-hygiene-audit safe_to_remove fail-open 修复: 子仓逐仓合并判定+unmerged_submodule (续上个会话, 33测试绿)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=67636.808
+- **20261004T112741Z-project-code-change-aa14ef9f**
+  - 计划 (objective): /simplify 跟进 PR#4616: worktree-hygiene-audit 单次 merge-base + 子仓按需探测 + 修假绿测试
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=10095.845
+- **20261004T142358Z-project-code-change-a9eaa0f7**
+  - 计划 (objective): bin/gac/kos: KOS_HOME 写死不存在的 Workspace/kos → 跟随 kairon 默认 ~/.kos + 环境变量覆盖; WORKSPACE 由脚本位置推算
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=589.513
+- **20261005T130234Z-project-code-change-b338bd88**
+  - 计划 (objective): TASK-263EF9EC: worktree 删除闸门补子仓推送检查 (hygiene-audit --check-submodules 共享; janitor + gac-worktree.sh 接入; 顺修 janitor is-ancestor 恒假)
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=262197.235
+- **20261006T122008Z-project-code-change-ba10c1ac**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T122121Z-project-code-change-aadae7a5**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T122238Z-project-code-change-5aa12618**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T122348Z-project-code-change-eaaa69f3**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T122456Z-project-code-change-93f1d1e0**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T122628Z-project-code-change-270ae955**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T122745Z-project-code-change-ffc1e501**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T122858Z-project-code-change-78c0bf55**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T123004Z-project-code-change-1e05ade2**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T123117Z-project-code-change-6a9e2b13**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T123240Z-project-code-change-cd51fd55**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261006T123407Z-project-code-change-7ca0b817**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

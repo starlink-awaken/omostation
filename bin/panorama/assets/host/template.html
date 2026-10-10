@@ -3384,8 +3384,12 @@ function toggleNavGroup(el){
 })();
 
 function refreshHealth(){
-  const lastAttempt = D.generated_at || D.observed_at;
-  const old = Date.now() - Date.parse(lastAttempt) > 600000;
+  // Republishers may advance generated_at while preserving the source observation.
+  // Freshness must follow the observed data time, never the lease publication time.
+  const lastAttempt = D.observed_at || D.generated_at;
+  const observedMs = Date.parse(lastAttempt || '');
+  const ageMs = Date.now() - observedMs;
+  const old = !Number.isFinite(observedMs) || ageMs < 0 || ageMs > 600000;
   const fullText = '采集计划：每 5 分钟 · 新快照检查：每 60 秒 · 最近尝试 ' + dt(lastAttempt) + '。' + 
     (old ? '采集已经超过 10 分钟，当前数据应视为 STALE。 ' : '') + 
     (failures.length ? ' 降级来源：' + failures.map(([k,v]) => k + '（' + v.status + '；最后成功 ' + dt(v.last_success_at) + '）').join('、') : ' 本次来源读取完成；准入和业务健康仍分别判定。');
@@ -3400,7 +3404,17 @@ function refreshHealth(){
 
   if(chip) chip.textContent = '最近快照: ' + dt(lastAttempt);
 
-  if(failures.length > 0){
+  if(old){
+    if(dot){
+      dot.style.background = '#f59e0b';
+      dot.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.25)';
+    }
+    if(headline){
+      headline.textContent = Number.isFinite(observedMs)
+        ? `数据快照已过期 · 最后观测 ${dt(lastAttempt)}`
+        : '数据快照时间未知 · 当前健康状态不可确认';
+    }
+  } else if(failures.length > 0){
     if(dot){
       dot.style.background = '#f59e0b';
       dot.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.25)';

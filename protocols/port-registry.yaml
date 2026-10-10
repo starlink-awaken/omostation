@@ -137,7 +137,7 @@ ports:
     transport: redis
   43191:
     name: zhixing-observatory
-    note: 织星驾驶舱 HTTP 入口 (advisory endpoint; compare_43191_fidelity 拉取)
+    note: Zhixing 只读来源投影与兼容诊断页；由 Cockpit BFF 服务端读取，不是独立的人类主入口
     owner: cockpit
     status: active
     transport: http

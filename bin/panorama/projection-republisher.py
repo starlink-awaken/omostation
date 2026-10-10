@@ -25,7 +25,8 @@
   - 复制工件后逐一复核 sha256 == manifest.artifacts.*.sha256 才允许换指针
   - ``--gc`` 仅保留最近 N 个 revision (默认 48, ≈6.4h 回滚窗)
     (2026-10-03 实证: 631 个孤儿 revision 占用 9.9GB)
-  - 距离过期 >180s 时跳过续期, 避免每 8min 白造一个 revision 目录
+  - 距离过期 >540s 时跳过续期. 8min 调度加 60s 裕量保证被跳过的一轮后
+    下一次仍先于 10min 租约过期; 避免发布相位导致服务进入 STALE
 
 用法:
   projection-republisher.py                # 续期一次 (幂等; launchd 每 8min 调)
@@ -61,9 +62,10 @@ PROJECTION_POINTER_SCHEMA = "zhixing-projection-pointer/v1"
 PROJECTION_MANIFEST_SCHEMA = "zhixing-projection-manifest/v1"
 
 LEASE = timedelta(minutes=10)        # 与 panorama-collect publisher 一致
-# 剩余租约 ≤3min 即续期. 配合 480s 调度间隔: 每次续期时剩余 90~180s 裕量,
-# 单次调度抖动/延迟不会穿透租约; 若整轮 missed, 看门狗会 --force 兜底。
-RENEW_THRESHOLD = timedelta(seconds=180)
+# 480s launchd 调度可能与全量发布错相: 当剩余 180s 时跳过会让下一轮越过
+# 600s lease。阈值必须覆盖一个调度间隔并留抖动裕量，故用 540s。
+RENEWAL_JITTER_MARGIN = timedelta(seconds=60)
+RENEW_THRESHOLD = timedelta(seconds=540)
 MAX_FRESHNESS = timedelta(minutes=15)  # 读端 runtime_paths._MAX_FRESHNESS 硬上限
 CLOCK_SKEW = timedelta(seconds=60)
 

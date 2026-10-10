@@ -81,6 +81,8 @@ PROJECTION_ROOT_CODE_FILES = (
 PROJECTION_REVISIONS_NAME = "revisions"
 PROJECTION_POINTER_NAME = "current-revision.json"
 PROJECTION_LOCK_NAME = ".projection-publisher.lock"
+PROJECTION_SOURCE_SNAPSHOT_NAME = "current.json"
+MAX_PROJECTION_SOURCE_SNAPSHOT_BYTES = 16 * 1024 * 1024
 CLAIMS_AUTHORITY_ROOT = (
     Path.home() / "agents/_shared/runtime/omo-claims-authority-r0"
 )
@@ -559,6 +561,301 @@ def _atomic_replace_bytes(path: Path, body: bytes) -> None:
         raise
 
 
+def _valid_source_timestamp(value: object) -> str | None:
+    """Return an RFC 3339-ish source timestamp only when it is parseable.
+
+    This collector must never substitute its own collection or publication
+    time for a source observation.  Returning ``None`` retains the source's
+    absence as an explicit fail-closed condition for the downstream reader.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return value
+
+
+def _parse_source_timestamp(value: object) -> tuple[str, datetime] | None:
+    """Return a source timestamp together with its normalized UTC instant."""
+    normalized = _valid_source_timestamp(value)
+    if normalized is None:
+        return None
+    try:
+        return normalized, datetime.fromisoformat(
+            normalized.replace("Z", "+00:00")
+        ).astimezone(UTC)
+    except (OverflowError, ValueError):
+        return None
+
+
+def _unknown_source_provenance(reason: str) -> list[dict]:
+    """Emit an explicit, non-fresh provenance entry without inventing time."""
+    return [{
+        "source": "orchestrator-current-json",
+        "status": "UNKNOWN",
+        "state": "UNKNOWN",
+        "observed_at": None,
+        "last_success_at": None,
+        "reason": reason,
+    }]
+
+
+def collect_projection_source_provenance(
+    snapshot: object,
+    *,
+    strategic: object,
+    now: datetime | None = None,
+) -> list[dict]:
+    """Project provenance from one aligned orchestrator snapshot.
+
+    ``current.json`` is the only source for these records.  Its root
+    generation and the strategic projection generation must agree before any
+    per-source observation can be represented in a published revision.  This
+    prevents a republish from making an old or unrelated source snapshot look
+    current merely because the revision itself was published recently.
+    """
+    if not isinstance(snapshot, dict):
+        return _unknown_source_provenance("source_snapshot_missing")
+    if not isinstance(strategic, dict):
+        return _unknown_source_provenance("source_snapshot_strategic_missing")
+
+    generation_id = snapshot.get("generation_id")
+    strategic_generation_id = strategic.get("generation_id")
+    snapshot_generated = _parse_source_timestamp(snapshot.get("generated_at"))
+    if not isinstance(generation_id, str) or not generation_id:
+        return _unknown_source_provenance("source_snapshot_generation_missing")
+    if snapshot_generated is None:
+        return _unknown_source_provenance("source_snapshot_generated_at_invalid")
+    snapshot_generated_at, snapshot_generated_time = snapshot_generated
+    observed_now = (now or datetime.now(UTC)).astimezone(UTC)
+    if snapshot_generated_time > observed_now:
+        return _unknown_source_provenance("source_snapshot_generated_in_future")
+    if strategic_generation_id != generation_id:
+        return _unknown_source_provenance("source_snapshot_generation_unaligned")
+
+    source_states = snapshot.get("source_states")
+    if not isinstance(source_states, dict) or not source_states:
+        return _unknown_source_provenance("source_snapshot_states_missing")
+
+    projected: list[dict] = []
+    fresh_states = {"OK", "FRESH", "OBSERVED"}
+    for name in sorted(source_states):
+        raw = source_states.get(name)
+        if not isinstance(name, str) or not name or not isinstance(raw, dict):
+            return _unknown_source_provenance("source_snapshot_state_invalid")
+        status = raw.get("status")
+        if not isinstance(status, str) or not status:
+            return _unknown_source_provenance("source_snapshot_status_missing")
+        observed = _parse_source_timestamp(raw.get("observed_at"))
+        last_success = _parse_source_timestamp(raw.get("last_success_at"))
+        observed_at = observed[0] if observed else None
+        last_success_at = last_success[0] if last_success else None
+        # The Cockpit adapter gates on observed_at.  A source that only exposes
+        # last_success_at remains visible but deliberately cannot become LIVE.
+        observed_time = observed[1] if observed else None
+        reason = None
+        if observed_time is None:
+            state = "UNKNOWN"
+            reason = "source_observation_timestamp_invalid_or_missing"
+        elif observed_time > observed_now:
+            state = "UNKNOWN"
+            reason = "source_observation_in_future"
+        elif observed_time > snapshot_generated_time:
+            state = "UNKNOWN"
+            reason = "source_observation_after_snapshot"
+        else:
+            state = "OBSERVED" if status.upper() in fresh_states else status.upper()
+        projected.append({
+            "source": name,
+            "status": status,
+            "state": state,
+            "observed_at": observed_at,
+            "last_success_at": last_success_at,
+            "snapshot_generation_id": generation_id,
+            "snapshot_generated_at": snapshot_generated_at,
+            **({"reason": reason} if reason else {}),
+        })
+    return projected
+
+
+def bind_agent_visibility_projection(payload: dict) -> None:
+    """Bind the agent summary to the final projection generation and source evidence."""
+    visibility = payload.get("agent_visibility")
+    generation_id = payload.get("generation_id")
+    generated = _parse_source_timestamp(payload.get("generated_at"))
+    if not isinstance(visibility, dict) or not isinstance(generation_id, str) or not generation_id or generated is None:
+        return
+    generated_at = generated[1].isoformat().replace("+00:00", "Z")
+    source_states = payload.get("source_states")
+    input_sources: dict[str, dict] = {}
+    if isinstance(source_states, list):
+        for item in source_states:
+            if not isinstance(item, dict) or not isinstance(item.get("source"), str):
+                continue
+            source = item["source"]
+            evidence = {
+                key: item[key]
+                for key in ("status", "state", "observed_at", "last_success_at", "reason")
+                if key in item
+            }
+            evidence["provenance"] = {
+                "kind": "projection-source-snapshot",
+                "source_ref": source,
+                "snapshot_generation_id": item.get("snapshot_generation_id"),
+            }
+            input_sources[source] = evidence
+    visibility["generation_id"] = generation_id
+    visibility["generated_at"] = generated_at
+    visibility["input_sources"] = input_sources or {
+        "projection_source_snapshot": {
+            "status": "UNKNOWN",
+            "state": "UNKNOWN",
+            "provenance": {"kind": "projection-source-snapshot", "source_ref": "source_states"},
+        }
+    }
+
+
+def _is_unknown_source_provenance(value: object) -> bool:
+    """Recognize the one explicit fail-closed provenance shape."""
+    return (
+        isinstance(value, list)
+        and len(value) == 1
+        and isinstance(value[0], dict)
+        and value[0].get("source") == "orchestrator-current-json"
+        and value[0].get("state") == "UNKNOWN"
+        and value[0].get("observed_at") is None
+    )
+
+
+def _read_authoritative_projection_source_snapshot(state_root: Path) -> dict | None:
+    """Read the publisher's sole authoritative provenance input.
+
+    The snapshot lives at a fixed name under the revision state root.  It is
+    deliberately not supplied by the caller and the read is bounded,
+    regular-file-only, and no-follow, so an arbitrary payload cannot invent
+    an OBSERVED source record.
+    """
+    snapshot_path = state_root / PROJECTION_SOURCE_SNAPSHOT_NAME
+    try:
+        if snapshot_path.is_symlink():
+            return None
+        descriptor = os.open(
+            snapshot_path,
+            os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0),
+        )
+        try:
+            metadata = os.fstat(descriptor)
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_size > MAX_PROJECTION_SOURCE_SNAPSHOT_BYTES
+            ):
+                return None
+            with os.fdopen(descriptor, "rb", closefd=False) as stream:
+                body = stream.read(MAX_PROJECTION_SOURCE_SNAPSHOT_BYTES + 1)
+        finally:
+            os.close(descriptor)
+        if len(body) > MAX_PROJECTION_SOURCE_SNAPSHOT_BYTES:
+            return None
+        return _read_json_object(body, error="projection_source_snapshot_invalid")
+    except (OSError, RuntimeError):
+        return None
+
+
+def _validated_projection_source_provenance(
+    payload: dict,
+    *,
+    state_root: Path,
+    now: datetime,
+) -> list[dict]:
+    """Publish provenance only when it is bound to one source snapshot.
+
+    ``source_states`` is presentation data, not an authority input.  The
+    publisher reloads the snapshot only from ``state_root/current.json`` and
+    recomputes the record list before comparing it with the candidate.  A
+    direct caller cannot promote an arbitrary non-empty list or a self-made
+    envelope into OBSERVED: absent, mismatched, malformed, cross-generation,
+    or time-inverted input is represented as one explicit UNKNOWN record.
+    """
+    candidate = payload.get("source_states")
+    snapshot = _read_authoritative_projection_source_snapshot(state_root)
+    if snapshot is None:
+        return _unknown_source_provenance("source_provenance_snapshot_unavailable")
+    recomputed = collect_projection_source_provenance(
+        snapshot, strategic=snapshot.get("strategic"), now=now
+    )
+    if _is_unknown_source_provenance(recomputed):
+        return recomputed
+    if candidate != recomputed:
+        return _unknown_source_provenance("source_provenance_snapshot_mismatch")
+
+    generation_id = payload.get("generation_id")
+    if not isinstance(generation_id, str) or not generation_id:
+        return _unknown_source_provenance("source_provenance_payload_generation_missing")
+
+    canonical: list[dict] = []
+    seen_sources: set[str] = set()
+    fresh_states = {"OK", "FRESH", "OBSERVED"}
+    for entry in recomputed:
+        if not isinstance(entry, dict):
+            return _unknown_source_provenance("source_provenance_entry_schema_invalid")
+        source = entry.get("source")
+        status = entry.get("status")
+        state = entry.get("state")
+        snapshot_generation_id = entry.get("snapshot_generation_id")
+        if (
+            not isinstance(source, str)
+            or not source
+            or source in seen_sources
+            or not isinstance(status, str)
+            or not status
+            or not isinstance(state, str)
+            or not state
+            or not isinstance(snapshot_generation_id, str)
+            or snapshot_generation_id != generation_id
+        ):
+            return _unknown_source_provenance("source_provenance_entry_schema_invalid")
+        seen_sources.add(source)
+
+        observed = _parse_source_timestamp(entry.get("observed_at"))
+        snapshot_generated = _parse_source_timestamp(entry.get("snapshot_generated_at"))
+        last_success_at = entry.get("last_success_at")
+        last_success = (
+            _parse_source_timestamp(last_success_at)
+            if last_success_at is not None
+            else None
+        )
+        if observed is None or snapshot_generated is None:
+            return _unknown_source_provenance("source_provenance_timestamp_invalid")
+        if snapshot_generated[1] > now:
+            return _unknown_source_provenance("source_provenance_snapshot_in_future")
+        if observed[1] > snapshot_generated[1]:
+            return _unknown_source_provenance("source_provenance_timestamp_order_invalid")
+        if last_success_at is not None and (
+            last_success is None or last_success[1] > snapshot_generated[1]
+        ):
+            return _unknown_source_provenance("source_provenance_last_success_invalid")
+        if state.upper() == "OBSERVED" and status.upper() not in fresh_states:
+            return _unknown_source_provenance("source_provenance_state_status_invalid")
+
+        normalized = {
+            "source": source,
+            "status": status,
+            "state": state,
+            "observed_at": observed[0],
+            "last_success_at": last_success[0] if last_success else None,
+            "snapshot_generation_id": snapshot_generation_id,
+            "snapshot_generated_at": snapshot_generated[0],
+        }
+        if isinstance(entry.get("reason"), str) and entry["reason"]:
+            normalized["reason"] = entry["reason"]
+        canonical.append(normalized)
+    return canonical
+
+
 def publish_projection_revision(
     payload: dict,
     *,
@@ -570,9 +867,10 @@ def publish_projection_revision(
 ) -> dict:
     """Publish one immutable, hash-bound revision then swap one pointer.
 
-    The legacy ``current.json`` is intentionally outside this protocol and is
-    never opened here.  A failed build or pointer swap leaves the last-good
-    pointer intact; revision directories remain available for rollback.
+    The source provenance snapshot is read only from the fixed
+    ``state_root/current.json`` boundary; caller-supplied envelopes are never
+    trusted. A failed build or pointer swap leaves the last-good pointer
+    intact; revision directories remain available for rollback.
     """
     root = Path(state_root).expanduser().resolve()
     if Path(state_root).expanduser().is_symlink():
@@ -602,7 +900,15 @@ def publish_projection_revision(
             != source_binding["source_hashes"]["event_ledger_sha256"]
         ):
             raise RuntimeError("projection_value_ledger_mismatch")
-        published_payload = dict(payload)
+        published_payload = {
+            key: value
+            for key, value in payload.items()
+            if key != "_source_provenance_binding"
+        }
+        generated = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)
+        published_payload["source_states"] = _validated_projection_source_provenance(
+            payload, state_root=root, now=generated
+        )
         published_payload["personal_value_truth"] = personal_value_truth
         value_readiness = _ledger_bound_value_readiness(personal_value_truth)
         published_payload["value_proof_readiness"] = value_readiness
@@ -622,10 +928,16 @@ def publish_projection_revision(
         published_payload["agent_visibility"] = visibility
         producer = collect_projection_producer_identity(code_root=Path(code_root))
         dashboard = collect_projection_dashboard_identity()
-        generated = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)
         fresh_until = generated + timedelta(minutes=10)
         generated_at = generated.isoformat().replace("+00:00", "Z")
         fresh_until_at = fresh_until.isoformat().replace("+00:00", "Z")
+        published_payload["generated_at"] = generated_at
+        published_payload.setdefault(
+            "generation_id", hashlib.sha256(generated_at.encode("utf-8")).hexdigest()[:20]
+        )
+        # Rebind after reading and validating the authoritative snapshot so the
+        # embedded input states cannot outlive or contradict the published ones.
+        bind_agent_visibility_projection(published_payload)
         # Use the dashboard repo's template (kept in sync with the orchestrator)
         # instead of the embedded legacy TEMPLATE, so published revisions serve
         # the same page the orchestrator produces.
@@ -1637,6 +1949,129 @@ def collect_launchd_health() -> dict:
         "loaded": sum(1 for job in projections if job["loaded"]),
         "failed": len(failed),
         "jobs": projections,
+    }
+
+
+def collect_launchd_health_observation(
+    *,
+    registry_path: Path | None = None,
+    uid: int | None = None,
+    runner=None,
+    now: datetime | None = None,
+) -> dict:
+    """Collect auditable launchd results with separate stdout/stderr evidence."""
+    registry_path = registry_path or (ROOT / ".omo/cron/registry.yaml")
+    try:
+        import yaml
+        registry = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+        jobs = registry.get("jobs") or []
+    except Exception as exc:  # noqa: BLE001 - report inability as unknown
+        return {"error": type(exc).__name__}
+
+    uid = os.getuid() if uid is None else uid
+    selected = [
+        job for job in jobs
+        if isinstance(job, dict)
+        and job.get("status") == "active"
+        and job.get("reality") == "installed"
+        and "launchd" in (job.get("planes") or [])
+    ]
+    normalized_registry = [
+        {
+            "name": str(job.get("name") or ""),
+            "label": f"com.omostation.{job.get('name') or ''}",
+            "schedule": str(job.get("schedule") or ""),
+            "uid": uid,
+        }
+        for job in selected
+    ]
+    canonical = json.dumps(
+        normalized_registry, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"), allow_nan=False,
+    ).encode("utf-8")
+    registry_sha256 = hashlib.sha256(canonical).hexdigest()
+    if not normalized_registry:
+        return {"error": "no_registered_jobs"}
+
+    if runner is None:
+        def runner(label: str, selected_uid: int):
+            try:
+                completed = subprocess.run(
+                    ["/bin/launchctl", "print", f"gui/{selected_uid}/{label}"],
+                    capture_output=True, text=True, timeout=5,
+                )
+                return completed.returncode, completed.stdout, completed.stderr
+            except Exception as exc:  # noqa: BLE001 - classify every command failure
+                return 1, "", f"{type(exc).__name__}: {exc}"
+
+    observed_at = (now or datetime.now(UTC)).astimezone(UTC).isoformat().replace("+00:00", "Z")
+    results: list[dict] = []
+    for job in normalized_registry:
+        label = job["label"]
+        try:
+            code, stdout, stderr = runner(label, uid)
+        except Exception as exc:  # noqa: BLE001 - one unreadable job must not imply unloaded
+            code, stdout, stderr = 1, "", f"{type(exc).__name__}: {exc}"
+        parsed = _parse_launchctl_print(stdout if code == 0 else "")
+        if code == 0 and parsed.get("loaded") is True and parsed.get("state"):
+            result_class = "loaded"
+        elif (
+            code == 113
+            and "Could not find service" in stderr
+            and label in stderr
+        ):
+            result_class = "confirmed_unloaded"
+        else:
+            result_class = "unknown"
+        last_exit = parsed.get("last_exit_code") if result_class == "loaded" else None
+        semantic_verdict = (
+            "FAILED" if result_class == "confirmed_unloaded"
+            else "FAILED" if last_exit not in {None, "0", "(never exited)"}
+            else "PASS" if result_class == "loaded"
+            else "UNKNOWN"
+        )
+        parsed_pid = parsed.get("pid") if result_class == "loaded" else None
+        try:
+            parsed_pid = int(parsed_pid) if parsed_pid not in {None, ""} else None
+        except (TypeError, ValueError):
+            parsed_pid = None
+        last_exit_ok = (
+            result_class == "loaded" and last_exit in {"0", "(never exited)"}
+        )
+        results.append({
+            **job,
+            "observed_at": observed_at,
+            "command_result_class": result_class,
+            "command_exit_code": code if isinstance(code, int) else None,
+            "stdout": stdout if isinstance(stdout, str) else "",
+            "stderr": stderr if isinstance(stderr, str) else "",
+            "parsed": parsed if result_class == "loaded" else None,
+            "semantic_verdict": semantic_verdict,
+            # Compatibility fields consumed by the existing Deep Telemetry view.
+            "loaded": result_class == "loaded",
+            "state": parsed.get("state") if result_class == "loaded" else "unloaded" if result_class == "confirmed_unloaded" else "unknown",
+            "pid": parsed_pid,
+            "last_exit_code": last_exit,
+            "last_exit_ok": last_exit_ok,
+            "verdict": semantic_verdict,
+        })
+
+    known = [job for job in results if job["command_result_class"] != "unknown"]
+    if not known:
+        return {"error": "all_jobs_unknown"}
+    facet_state = "PARTIAL" if len(known) != len(results) else "LIVE"
+    verdicts = {job["semantic_verdict"] for job in results}
+    verdict = "FAILED" if "FAILED" in verdicts else "DEGRADED" if "UNKNOWN" in verdicts else "PASS"
+    loaded = sum(job["command_result_class"] == "loaded" for job in results)
+    return {
+        "schema": "launchd-health-observation/v1",
+        "available": True,
+        "facet_state": facet_state,
+        "verdict": verdict,
+        "loaded": loaded,
+        "failed": sum(job["semantic_verdict"] == "FAILED" for job in results),
+        "registry_sha256": registry_sha256,
+        "jobs": results,
     }
 
 
@@ -2714,26 +3149,31 @@ def collect_journeys() -> dict:
 
 
 def collect_workspace_hygiene() -> dict:
-    """工作区卫生：陈旧 worktree / 僵尸锁 / 遗留目录。"""
+    """只枚举 worktree 和 workflow lock 文件，不判断是否陈旧或孤儿。"""
     from glob import glob
-    # 陈旧 worktree（>7天未活动）
-    stale_wt = []
     code, out = run(["git", "worktree", "list", "--porcelain"])
-    if code == 0:
-        cur = {}
-        for line in out.splitlines():
-            if line.startswith("worktree "):
-                if cur.get("path"):
-                    stale_wt.append(cur)
-                cur = {"path": line.split(None, 1)[1]}
-            elif line.startswith("branch "):
-                cur["branch"] = line.split(None, 1)[1]
-        if cur.get("path"):
-            stale_wt.append(cur)
-    # 僵尸锁
-    locks = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/locks/*.yaml")))
-    return {"worktrees": stale_wt, "total_worktrees": len(stale_wt),
-            "orphan_locks": locks[:10], "total_locks": len(locks)}
+    if code != 0:
+        return {"error": "worktree_list_failed"}
+    worktrees = []
+    current: dict[str, str] = {}
+    for line in (*out.splitlines(), ""):
+        if line.startswith("worktree "):
+            if current.get("path"):
+                worktrees.append(current)
+            current = {"path": line.split(None, 1)[1]}
+        elif line.startswith("branch "):
+            current["branch"] = line.split(None, 1)[1]
+        elif not line.strip() and current.get("path"):
+            worktrees.append(current)
+            current = {}
+    absolute_locks = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/locks/*.yaml")))
+    lock_files = [Path(path).relative_to(ROOT).as_posix() for path in absolute_locks]
+    return {
+        "worktrees": worktrees,
+        "total_worktrees": len(worktrees),
+        "lock_files": lock_files,
+        "total_lock_files": len(lock_files),
+    }
 
 
 def collect_ci() -> dict:
@@ -3671,11 +4111,16 @@ def collect_bos_verifier() -> dict:
 
 
 def collect_evolution() -> dict:
-    """进化提案。"""
+    """只观察 evolution proposal 路径，不推断其生命周期或价值。"""
     from glob import glob
     files = sorted(glob(str(ROOT / ".omo/state/evolution-proposals/*")))
-    proposals = [Path(f).stem[:50] for f in files[-15:]]
-    return {"total": len(files), "recent_proposals": proposals}
+    proposal_paths = [Path(path).relative_to(ROOT).as_posix() for path in files]
+    proposals = [Path(path).stem[:50] for path in files[-15:]]
+    return {
+        "total": len(proposal_paths),
+        "proposal_paths": proposal_paths,
+        "recent_proposals": proposals,
+    }
 
 
 def collect_predictive() -> dict:
@@ -4684,12 +5129,14 @@ def build_payload() -> dict:
         str(Path.home() / ".local/share/zhixing-dashboard"),
     )) / "current.json"
     _strategic = None
+    _orchestrator_snapshot = None
     try:
         if _orch_current.is_file():
             _orch_data = _json.loads(_orch_current.read_text(encoding="utf-8"))
             _orch_strat = _orch_data.get("strategic")
             if isinstance(_orch_strat, dict) and isinstance(_orch_strat.get("trace"), dict):
                 _strategic = _orch_strat
+                _orchestrator_snapshot = _orch_data
                 # Keep generation_id consistent with the orchestrator's
                 if isinstance(_orch_data.get("generation_id"), str):
                     payload["generation_id"] = _orch_data["generation_id"]
@@ -4726,6 +5173,11 @@ def build_payload() -> dict:
     except Exception:
         _strategic = None
     payload["strategic"] = _strategic or _build_strategic_projection(payload)
+    payload["source_states"] = collect_projection_source_provenance(
+        _orchestrator_snapshot,
+        strategic=_strategic,
+    )
+    bind_agent_visibility_projection(payload)
     return payload
 
 

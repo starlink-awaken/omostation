@@ -122,6 +122,130 @@ def test_observer_unavailable_does_not_mask_malformed_declarations(
     assert any("requires label" in e for e in report["validation_errors"])
 
 
+def test_service_id_write_only_generates_the_selected_launchd_service(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    module = _module()
+    root = tmp_path / "workspace"
+    (root / "bin" / "panorama").mkdir(parents=True)
+    (root / "bin" / "panorama" / "compact-observation.py").write_text("# worker\n")
+    (root / ".omo").mkdir()
+    (root / ".omo" / "services.yaml").write_text("services: []\n")
+    launchd_dir = tmp_path / "LaunchAgents"
+    launchd_dir.mkdir()
+    other_plist = launchd_dir / "com.example.other.plist"
+    other_plist.write_text("preserve this unrelated service\n")
+    services = [
+        {
+            "id": "omostation.panorama-compact-observation",
+            "enabled": True,
+            "generate": True,
+            "run_at_load": True,
+            "scheduler": "launchd",
+            "trigger": "interval",
+            "interval_sec": 240,
+            "label": "com.omostation.panorama-compact-observation",
+            "program": {
+                "interpreter": "/opt/homebrew/bin/python3",
+                "entrypoint": "bin/panorama/compact-observation.py",
+                "args": [],
+            },
+        },
+        {
+            "id": "example.other",
+            "enabled": True,
+            "generate": True,
+            "scheduler": "launchd",
+            "label": "com.example.other",
+            "program": {
+                "interpreter": "/opt/homebrew/bin/python3",
+                "entrypoint": "bin/other.py",
+            },
+        },
+    ]
+    monkeypatch.setattr(module, "workspace", lambda: root)
+    monkeypatch.setattr(module, "services_yaml_path", lambda: root / ".omo/services.yaml")
+    monkeypatch.setattr(module, "load_services", lambda path=None: services)
+    monkeypatch.setattr(module, "_launchd_dir", lambda: launchd_dir)
+    monkeypatch.setattr(
+        module.sys,
+        "argv",
+        [
+            "gen-service-configs.py",
+            "--write",
+            "--service-id",
+            "omostation.panorama-compact-observation",
+        ],
+    )
+
+    assert module.main() == 0
+    assert "生成" in capsys.readouterr().out
+    selected_plist = launchd_dir / "com.omostation.panorama-compact-observation.plist"
+    generated = selected_plist.read_text()
+    assert "<key>StartInterval</key>\n    <integer>240</integer>" in generated
+    assert "compact-observation.py" in generated
+    assert other_plist.read_text() == "preserve this unrelated service\n"
+
+
+def test_service_id_rejects_unknown_service(capsys, monkeypatch) -> None:
+    module = _module()
+    monkeypatch.setattr(module, "load_services", lambda path=None: [])
+    monkeypatch.setattr(
+        module.sys,
+        "argv",
+        ["gen-service-configs.py", "--write", "--service-id", "unknown.service"],
+    )
+
+    assert module.main() == 1
+    assert "不存在服务: unknown.service" in capsys.readouterr().err
+
+
+def test_service_id_check_ignores_unselected_malformed_service(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    module = _module()
+    selected = {
+        "id": "selected.service",
+        "enabled": True,
+        "generate": True,
+        "scheduler": "launchd",
+        "label": "com.example.selected",
+        "program": {"interpreter": "/opt/homebrew/bin/python3", "entrypoint": "bin/selected.py"},
+    }
+    monkeypatch.setattr(module, "load_services", lambda path=None: [selected, {"id": "other.invalid", "enabled": True, "scheduler": "launchd"}])
+    monkeypatch.setattr(module, "_launchd_dir", lambda: tmp_path / "missing-launchagents")
+    monkeypatch.setattr(module.sys, "argv", ["gen-service-configs.py", "--check", "--json", "--service-id", "selected.service"])
+
+    assert module.main() == 0
+    assert json.loads(capsys.readouterr().out) == {
+        "ok": True,
+        "skipped": True,
+        "reason": "launchd_observer_unavailable",
+        "validation_errors": [],
+    }
+
+
+def test_service_id_validate_ignores_unselected_invalid_service(monkeypatch, capsys) -> None:
+    module = _module()
+    selected = {
+        "id": "selected.service",
+        "enabled": True,
+        "generate": True,
+        "scheduler": "launchd",
+        "label": "com.example.selected",
+        "program": {"interpreter": "stable-python3", "entrypoint": "bin/selected.py"},
+    }
+    monkeypatch.setattr(module, "load_services", lambda path=None: [selected, {"id": "other.invalid", "enabled": True, "scheduler": "launchd"}])
+    monkeypatch.setattr(module.sys, "argv", ["gen-service-configs.py", "--validate", "--json", "--service-id", "selected.service"])
+
+    assert module.main() == 0
+    assert json.loads(capsys.readouterr().out) == {"ok": True, "violation_count": 0, "violations": []}
+
+
 # ── BET-Y1Q4-T16: cron 准入 ──
 
 

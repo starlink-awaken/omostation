@@ -77,6 +77,34 @@ OPERATIONS = {
     'mof/constraints': set(),
     'entity/hologram': {'id'},
 }
+READ_ONLY_GET_OPERATIONS = frozenset({
+    'manifest', 'summary', 'catalog', 'search', 'entity', 'neighbors', 'brief',
+    'controls', 'changes', 'ontology', 'lineage', 'context_pack', 'agent/panorama',
+    'panorama', 'agent/capabilities', 'capabilities', 'agent/next-actions',
+    'next-actions', 'agent/entity', 'agent/loops', 'loops', 'agent/quickstart',
+    'quickstart', 'agent/readiness', 'readiness', 'copilot/presets',
+    'proposals/list', 'health/radar', 'evolution/timeline', 'evolution/diff',
+    'bos/services', 'tokenomics/stats', 'swarm/topology', 'loops/telemetry',
+    'loops/dag', 'topology/overview', 'topology/graph', 'topology/projects',
+    'topology/interfaces', 'topology/sentinel', 'topology/workspace-agents',
+    'topology/callchains', 'topology/compute-models', 'topology/models',
+    'topology/compute', 'mof/overview', 'mof/constraints', 'entity/hologram',
+})
+DISABLED_OPERATIONS = frozenset({
+    'copilot/ask',
+    'proposals/submit',
+    'proposals/adjudicate',
+    'health/auto-heal',
+    'health/execute-heal',
+    'bos/invoke',
+    'loops/step',
+    'preflight',
+    'agent/preflight',
+})
+if READ_ONLY_GET_OPERATIONS & DISABLED_OPERATIONS or (
+    READ_ONLY_GET_OPERATIONS | DISABLED_OPERATIONS
+) != frozenset(OPERATIONS):
+    raise RuntimeError('operation method classification is incomplete or overlapping')
 SOURCE_KEYS = {'path', 'sha256', 'hash_scope', 'sha256_scope', 'digest_basis', 'line',
                'observed_at', 'repository_sha', 'repository_ref', 'repository_kind',
                'status', 'state', 'reason', 'partial', 'document_id'}
@@ -524,6 +552,8 @@ class ObservationIndex:
                 for identity, title, owner, needs in controls]
 
     def query(self, operation, params):
+        if operation in DISABLED_OPERATIONS:
+            raise QueryError(405, 'OPERATION_DISABLED')
         if operation not in OPERATIONS or not isinstance(params, dict):
             raise QueryError(400, 'UNKNOWN_OPERATION')
         if set(params) - (OPERATIONS[operation] | {'generation'}):
@@ -534,7 +564,12 @@ class ObservationIndex:
             raise QueryError(409, 'GENERATION_EXPIRED')
         stamp = self._now()
         if operation == 'manifest':
-            data = {'service': 'zhixing-observer-read', 'operations': sorted(OPERATIONS),
+            data = {'service': 'zhixing-observer-read',
+                    'operations': sorted(READ_ONLY_GET_OPERATIONS),
+                    'disabled_operations': [
+                        {'operation': operation, 'callable': False}
+                        for operation in sorted(DISABLED_OPERATIONS)
+                    ],
                     'api_base': '/api/v1/', 'execution_enabled': False,
                     'documentation': {'api': str(Path(__file__).with_name('API.md')),
                                       'agent_reading': str(Path(__file__).with_name('AGENT-READING.md')),

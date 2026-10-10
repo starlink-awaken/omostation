@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-09-26T12:40:03Z
+generated_at: 2026-10-10T02:07:16Z
 status: candidate
 counts:
-  runs: 2
+  runs: 4
   failures: 0
-  total: 2
+  total: 4
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,15 +14,17 @@ failure_breakdown:
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-26T12:40:03Z
+- generated_at: 2026-10-10T02:07:16Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 2 成功运行 + 0 失败模式 = 2 草稿
+- sediment 覆盖: 4 成功运行 + 0 失败模式 = 4 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
 - 20260921T065903Z-bet-execution-5d3ba2b1.md
 - 20260923T110523Z-bet-execution-3d555b07.md
+- 20261008T103743Z-bet-execution-44db6b6a.md
+- 20261008T151600Z-bet-execution-a02668d4.md
 
 ## 失败模式 (failures/)
 
@@ -44,6 +46,20 @@ failure_breakdown:
   - 计划 (objective): [BET-Y2Q2-T4-01] North-star recovery and first real Decision Episode proof (Appetite: 13 weeks)
   - workflow: bet-execution
   - 指标: event_count=1, duration_s=0.0
+- **20261008T103743Z-bet-execution-44db6b6a**
+  - 计划 (objective): [BET-Y2Q4-T10-236] DCP-20 P0 Zhixing GET 方法安全与受管宿主发布 (Appetite: 2 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=10202.024
+- **20261008T151600Z-bet-execution-a02668d4**
+  - 计划 (objective): [BET-Y2Q4-T10-236] DCP-20 P0 Zhixing GET 方法安全与受管宿主发布 (Appetite: 2 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=4064.302
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

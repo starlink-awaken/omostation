@@ -109,6 +109,14 @@ surfaces:
     owner: governance-team
     note: 个人信号 cron 日志 (cron.log, 200KB)
 
+  - path: .omo/_delivery/agent-workflows
+    class: log
+    owner: governance-team
+    note: >-
+      第四日志目录的非递归扫描登记, 不将整个目录视为业务日志。
+      events.jsonl 的精确 state 登记优先; runs/locks 等子目录不递归。
+      隐藏文件仅在精确文件路径登记为 log 时纳入候选, 不能继承本目录登记。
+
   - path: .omo/_delivery/agent-workflows/.delivery-anchor-conflicts.log
     class: log
     owner: governance-team

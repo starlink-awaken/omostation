@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-audit
-generated_at: 2026-09-26T12:40:03Z
+generated_at: 2026-10-10T02:07:16Z
 status: candidate
 counts:
-  runs: 36
+  runs: 49
   failures: 0
-  total: 36
+  total: 49
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # observer-audit 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-26T12:40:03Z
+- generated_at: 2026-10-10T02:07:16Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 36 成功运行 + 0 失败模式 = 36 草稿
+- sediment 覆盖: 49 成功运行 + 0 失败模式 = 49 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -57,6 +57,19 @@ failure_breakdown:
 - 20260926T061439Z-observer-audit-c1afc52d.md
 - 20260926T062653Z-observer-audit-2e2228fe.md
 - 20260926T062654Z-observer-audit-e5c83181.md
+- 20260930T025918Z-observer-audit-1a3c6957.md
+- 20260930T025919Z-observer-audit-9b3bd13a.md
+- 20260930T030224Z-observer-audit-9f3396f4.md
+- 20260930T030226Z-observer-audit-c346e7a5.md
+- 20260930T033539Z-observer-audit-9e3008a3.md
+- 20260930T033542Z-observer-audit-71c888a9.md
+- 20260930T034047Z-observer-audit-23476e8d.md
+- 20260930T034050Z-observer-audit-cb1fc7b0.md
+- 20260930T034920Z-observer-audit-1af706a3.md
+- 20260930T034922Z-observer-audit-6db2f092.md
+- 20261002T013043Z-observer-audit-f7d660cd.md
+- 20261002T013044Z-observer-audit-be0713f7.md
+- 20261008T074344Z-observer-audit-f4630f29.md
 
 ## 失败模式 (failures/)
 
@@ -170,6 +183,49 @@ failure_breakdown:
 - **20260926T062654Z-observer-audit-e5c83181**
   - workflow: observer-audit
   - 指标: event_count=1, duration_s=0.0
+- **20260930T025918Z-observer-audit-1a3c6957**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T025919Z-observer-audit-9b3bd13a**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T030224Z-observer-audit-9f3396f4**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T030226Z-observer-audit-c346e7a5**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T033539Z-observer-audit-9e3008a3**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T033542Z-observer-audit-71c888a9**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T034047Z-observer-audit-23476e8d**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T034050Z-observer-audit-cb1fc7b0**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T034920Z-observer-audit-1af706a3**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T034922Z-observer-audit-6db2f092**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20261002T013043Z-observer-audit-f7d660cd**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20261002T013044Z-observer-audit-be0713f7**
+  - workflow: observer-audit
+  - 指标: event_count=1, duration_s=0.0
+- **20261008T074344Z-observer-audit-f4630f29**
+  - 计划 (objective): 复核Dashboard交付门禁、活动run与锁状态，明确安全修复的正式执行路径
+  - workflow: observer-audit
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=176.626
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

@@ -20,8 +20,10 @@ from urllib.parse import parse_qs, urlsplit
 
 from collectors.personal_value import project_panel_value
 from observatory_query import (
+    DISABLED_OPERATIONS,
     ObservationIndex,
     QueryError,
+    READ_ONLY_GET_OPERATIONS,
     SnapshotStore,
     integer,
     json_bytes,
@@ -40,6 +42,37 @@ import yaml as _yaml
 
 DEFAULT_PORT = 43191
 AETHERFORGE_PROXY = os.environ.get("ZHIXING_AI_PROXY", "http://127.0.0.1:9290")
+
+READ_ONLY_GET_ROUTES = frozenset({
+    "/api/v1/document",
+    "/api/v1/events/stream",
+    "/api/v1/value/metrics",
+    "/api/v1/agent/objective-coverage",
+    "/api/v1/agent/strategic-gaps",
+    "/api/v1/agent/brief",
+    "/api/v1/agent/reconciliation-candidates",
+    "/api/v1/agent/value-proof-readiness",
+    "/api/v1/agent/authorization-desk",
+    "/api/v1/agent/pending-authorizations",
+    "/api/v1/harness/runs",
+    "/api/v1/resident",
+})
+READ_ONLY_STATIC_JS_ROUTES = frozenset({
+    "/data_access.js",
+    "/ui_extensions.js",
+    "/strategy_ui.js",
+    "/workbench_ui.js",
+    "/panoramic_ui.js",
+    "/next_ui.js",
+    "/topology_ui.js",
+    "/mof_ui.js",
+    "/ecosystem_ui.js",
+})
+MAX_STATIC_JS_BYTES = 1024 * 1024
+DISABLED_GET_ROUTES = frozenset({
+    "/api/v1/compute/live",
+    "/api/v1/compute/infer",
+})
 
 # ── 算力端点: 缓存 / 限流 / 模型白名单 ──────────────────────
 _compute_cache: dict = {"live": None, "live_until": 0.0, "models_whitelist": None,
@@ -193,7 +226,10 @@ WORKBENCH_SCROLL_RESET_WITH_HASH = (
 )
 MAX_TAIL_BYTES = 1024 * 1024
 MAX_LINE_BYTES = 16 * 1024
-MAX_PAGE_BYTES = 16 * 1024 * 1024
+# Published projection artifacts share the bounded 16 MiB revision contract.
+# Keep MAX_DOCUMENT_BYTES below for ordinary registered observations.
+MAX_PROJECTION_ARTIFACT_BYTES = 16 * 1024 * 1024
+MAX_PAGE_BYTES = MAX_PROJECTION_ARTIFACT_BYTES
 MAX_DOCUMENT_BYTES = 1024 * 1024
 POLL_INTERVAL_SECONDS = 5
 SERVER_CODE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
@@ -298,6 +334,195 @@ def resolve_dashboard_code_identity(code_root=CODE_ROOT):
         "tree_sha256": tree_sha256,
         "code_bundle_sha256": code_bundle_sha256,
     }
+
+
+def probe_dashboard_code_identity(code_root=CODE_ROOT):
+    """Cheaply prove HEAD and a clean tracked/untracked worktree."""
+    root = Path(code_root).resolve()
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "status",
+                "--porcelain=v2",
+                "--branch",
+                "--untracked-files=all",
+            ],
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ProjectionStateError(
+            "IDENTITY_UNBOUND", "projection_identity_unbound"
+        ) from exc
+    if completed.returncode != 0:
+        raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound")
+    lines = completed.stdout.splitlines()
+    oid_prefix = b"# branch.oid "
+    oid_lines = [line for line in lines if line.startswith(oid_prefix)]
+    if len(oid_lines) != 1:
+        raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound")
+    try:
+        code_oid = oid_lines[0][len(oid_prefix):].decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise ProjectionStateError(
+            "IDENTITY_UNBOUND", "projection_identity_unbound"
+        ) from exc
+    if not re.fullmatch(r"[0-9a-f]{40}", code_oid):
+        raise ProjectionStateError("IDENTITY_UNBOUND", "projection_identity_unbound")
+    if any(not line.startswith(b"# ") for line in lines):
+        raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+    return {"code_oid": code_oid}
+
+
+class DashboardCodeIdentityCache:
+    """Single-flight cache for an expensive, revision-bound code identity."""
+
+    def __init__(self, *, resolver=None, probe=None):
+        self._resolver = resolver or resolve_dashboard_code_identity
+        self._probe = probe or probe_dashboard_code_identity
+        self._condition = threading.Condition(threading.Lock())
+        self._resolving = False
+        self._generation = 0
+        self._last_failure_key = None
+        self._last_failure_generation = None
+        self._last_failure = None
+        self._key = None
+        self._identity = None
+
+    def _fingerprints(self):
+        return tuple(
+            _regular_file_fingerprint(
+                CODE_ROOT / name,
+                status="CODE_DRIFT",
+                public_error="projection_code_drift",
+            )
+            for name in _DASHBOARD_CODE_FILES
+        )
+
+    def resolve(self, binding):
+        try:
+            files = self._fingerprints()
+        except Exception:
+            with self._condition:
+                self._key = None
+                self._identity = None
+            raise
+        expected_oid = binding[-1] if binding else None
+        request_key = tuple(binding) + (expected_oid, files)
+
+        # Coalesce overlapping page/API requests into one Git probe and one
+        # full identity resolution. Waiters may reuse that proof only when the
+        # exact projection binding and protected-file fingerprints still match.
+        with self._condition:
+            if self._resolving:
+                waiting_generation = self._generation
+                self._condition.wait_for(lambda: not self._resolving)
+                try:
+                    waited_files = self._fingerprints()
+                except Exception:
+                    self._key = None
+                    self._identity = None
+                    raise
+                if waited_files != files:
+                    self._key = None
+                    self._identity = None
+                    raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+                if (
+                    self._last_failure_generation == waiting_generation
+                    and self._last_failure_key == request_key
+                    and self._last_failure is not None
+                ):
+                    status, public_error = self._last_failure
+                    raise ProjectionStateError(status, public_error)
+                if self._key == request_key and self._identity is not None:
+                    return dict(self._identity)
+            self._generation += 1
+            generation = self._generation
+            self._last_failure_key = None
+            self._last_failure_generation = None
+            self._last_failure = None
+            self._resolving = True
+
+        try:
+            observed = self._probe()
+            observed_oid = observed.get("code_oid")
+            if observed_oid != expected_oid:
+                raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+            if self._fingerprints() != files:
+                raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+
+            key = tuple(binding) + (observed_oid, files)
+            with self._condition:
+                if self._key == key and self._identity is not None:
+                    if self._fingerprints() != files:
+                        raise ProjectionStateError(
+                            "CODE_DRIFT", "projection_code_drift"
+                        )
+                    return dict(self._identity)
+
+            identity = self._resolver()
+            if identity.get("code_oid") != observed_oid:
+                raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+            if self._fingerprints() != files:
+                raise ProjectionStateError("CODE_DRIFT", "projection_code_drift")
+            with self._condition:
+                self._key = key
+                self._identity = dict(identity)
+            return dict(identity)
+        except Exception as exc:
+            with self._condition:
+                self._key = None
+                self._identity = None
+                if isinstance(exc, ProjectionStateError):
+                    self._last_failure_key = request_key
+                    self._last_failure_generation = generation
+                    self._last_failure = (exc.status, exc.public_error)
+            raise
+        finally:
+            with self._condition:
+                self._resolving = False
+                self._condition.notify_all()
+
+
+def _regular_file_fingerprint(path, *, status, public_error):
+    try:
+        metadata = Path(path).lstat()
+    except OSError as exc:
+        raise ProjectionStateError(status, public_error) from exc
+    if not stat.S_ISREG(metadata.st_mode):
+        raise ProjectionStateError(status, public_error)
+    return (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
+    )
+
+
+def projection_code_identity_binding(projection_store, revision):
+    """Bind a cached code proof to the exact pointer and manifest controls."""
+    pointer_fingerprint = _regular_file_fingerprint(
+        projection_store.pointer_path,
+        status="POINTER_UNAVAILABLE",
+        public_error="projection_pointer_unavailable",
+    )
+    manifest_fingerprint = _regular_file_fingerprint(
+        revision.manifest_path,
+        status="MANIFEST_UNAVAILABLE",
+        public_error="projection_manifest_unavailable",
+    )
+    return (
+        revision.revision_id,
+        revision.manifest_sha256,
+        pointer_fingerprint,
+        manifest_fingerprint,
+        revision.dashboard_code_oid,
+    )
 
 
 def safe_identifier(value):
@@ -1362,7 +1587,14 @@ class DashboardServer(ThreadingHTTPServer):
         if self.projection_store is None:
             return None
         revision = self.projection_store.load(require_fresh=True)
-        if self.dashboard_identity_resolver is not None:
+        if self.dashboard_identity_cache is not None:
+            current_identity = self.dashboard_identity_cache.resolve(
+                projection_code_identity_binding(self.projection_store, revision)
+            )
+            self.dashboard_code_oid = current_identity["code_oid"]
+            self.dashboard_tree_sha256 = current_identity["tree_sha256"]
+            self.dashboard_code_sha256 = current_identity["code_bundle_sha256"]
+        elif self.dashboard_identity_resolver is not None:
             current_identity = self.dashboard_identity_resolver()
             self.dashboard_code_oid = current_identity["code_oid"]
             self.dashboard_tree_sha256 = current_identity["tree_sha256"]
@@ -1727,6 +1959,20 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if route.scheme or route.netloc or route.fragment:
             self._json(400, {"error": "invalid_request_target"})
             return
+        if route.path in DISABLED_GET_ROUTES:
+            self._json(405, {"error": "operation_disabled", "read_only": True})
+            return
+        if route.path.startswith('/api/v1/'):
+            operation = route.path[len('/api/v1/'):]
+            if operation in DISABLED_OPERATIONS:
+                self._json(405, {"error": "operation_disabled", "read_only": True})
+                return
+            if (
+                operation not in READ_ONLY_GET_OPERATIONS
+                and route.path not in READ_ONLY_GET_ROUTES
+            ):
+                self._json(404, {"error": "unknown_operation", "read_only": True})
+                return
         if self.server.projection_store is not None and route.path != "/health":
             try:
                 self._bound_projection_revision = self.server.projection_revision()
@@ -1788,6 +2034,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         else "data"
                     )
                     body = revision.artifact_bodies[artifact]
+                    limit = MAX_PROJECTION_ARTIFACT_BYTES
                 else:
                     source = (
                         self.server.agent_brief_path
@@ -1804,7 +2051,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
                             raise OSError("not a regular file")
                         body = stream.read(MAX_DOCUMENT_BYTES + 1)
-                if len(body) > MAX_DOCUMENT_BYTES:
+                    # A legacy path has neither a manifest nor a revision
+                    # binding.  It therefore remains an ordinary bounded
+                    # document and must never inherit the larger revision
+                    # artifact allowance.
+                    limit = MAX_DOCUMENT_BYTES
+                if len(body) > limit:
                     raise OSError("projection too large")
             except ProjectionStateError as exc:
                 self._json(503, {"error": exc.public_error, "read_only": True})
@@ -1977,7 +2229,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     cycle += 1
                     time.sleep(1)
 
-                    if self.server.projection_store is not None:
+                    if (
+                        self.server.projection_store is not None
+                        and cycle % POLL_INTERVAL_SECONDS == 0
+                    ):
                         try:
                             current_revision = self.server.projection_revision()
                             stream_projection_status = "BOUND_FRESH"
@@ -2010,7 +2265,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         except (ValueError, TypeError):
                             stream_projection_status = "ARTIFACT_INVALID"
                             stream_projection_error = "projection_artifact_invalid"
-                    elif active_snap_file and active_snap_file.is_file():
+                    elif (
+                        self.server.projection_store is None
+                        and active_snap_file
+                        and active_snap_file.is_file()
+                    ):
                         try:
                             cur_mtime = active_snap_file.stat().st_mtime_ns
                             if cur_mtime != last_mtime:
@@ -2039,10 +2298,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         except (OSError, ValueError, TypeError):
                             pass
 
-                    if cycle % 4 == 0:
+                    if cycle % POLL_INTERVAL_SECONDS == 0:
                         pulse = {
                             'type': 'telemetry_pulse',
-                            'cycle': cycle // 4,
+                            'cycle': cycle // POLL_INTERVAL_SECONDS,
                             'timestamp': utc_now(),
                             'status': stream_projection_status,
                             'state_revision': last_revision_id,
@@ -2053,6 +2312,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError, OSError):
                 pass
+            finally:
+                self.close_connection = True
             return
         elif route.path == '/api/v1/value/metrics':
             if self.server.projection_store is not None:
@@ -2643,13 +2904,39 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif route.path.startswith('/api/v1/'):
             # Stub API endpoints for UI extensions - return valid empty responses
             self._json(200, {"_stub": True, "endpoint": route.path, "status": "ok", "data": []})
-        elif route.path.endswith('.js') and not route.query:
-            # Serve external UI JS files (workbench, next, topology, mof, panoramic)
-            js_name = Path(route.path).name
-            js_file = Path(__file__).resolve().parent / js_name
-            if js_file.exists() and js_file.parent == Path(__file__).resolve().parent:
-                self._send(200, js_file.read_bytes(), "application/javascript; charset=utf-8")
-            else:
+        elif route.path in READ_ONLY_STATIC_JS_ROUTES and not route.query:
+            # Serve only statically registered UI JavaScript assets.
+            js_name = route.path[1:]
+            asset_root = Path(__file__).resolve().parent
+            js_file = asset_root / js_name
+            try:
+                if not hasattr(os, "O_NOFOLLOW"):
+                    self._json(503, {"error": "js_unavailable"})
+                    return
+                flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+                flags |= os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0)
+                fd = os.open(js_file, flags)
+                with os.fdopen(fd, "rb") as js_stream:
+                    before = os.fstat(js_stream.fileno())
+                    if not stat.S_ISREG(before.st_mode):
+                        raise OSError(errno.EINVAL, "static asset is not a regular file")
+                    if before.st_size > MAX_STATIC_JS_BYTES:
+                        self._json(413, {"error": "js_too_large"})
+                        return
+                    body = js_stream.read(MAX_STATIC_JS_BYTES + 1)
+                    after = os.fstat(js_stream.fileno())
+                stable_identity = (
+                    before.st_dev, before.st_ino, before.st_size,
+                    before.st_mtime_ns, before.st_ctime_ns,
+                ) == (
+                    after.st_dev, after.st_ino, after.st_size,
+                    after.st_mtime_ns, after.st_ctime_ns,
+                )
+                if len(body) > MAX_STATIC_JS_BYTES or not stable_identity:
+                    self._json(503, {"error": "js_unavailable"})
+                else:
+                    self._send(200, body, "application/javascript; charset=utf-8")
+            except OSError:
                 self._json(404, {"error": "js_not_found"})
             return
         else:
@@ -2658,37 +2945,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self._allowed():
             return
+        route = urlsplit(self.path)
+        if route.path.startswith('/api/v1/'):
+            self._json(405, {"error": "operation_disabled", "read_only": True})
+            return
         if self.server.projection_store is not None:
             self._json(405, {"error": "read_only_get_only"})
             return
-        route = urlsplit(self.path)
-        if route.path == "/api/v1/compute/infer":
-            self._handle_compute_infer()
-            return
-        if route.path.startswith('/api/v1/'):
-            operation = route.path[len('/api/v1/'):]
-            if operation in ('copilot/ask', 'proposals/submit', 'proposals/adjudicate', 'health/auto-heal', 'health/execute-heal', 'bos/invoke', 'loops/step'):
-                try:
-                    content_len = int(self.headers.get('Content-Length', 0))
-                    if content_len > 65536:
-                        self._json(413, {'error': 'PAYLOAD_TOO_LARGE'})
-                        return
-                    body = self.rfile.read(content_len) if content_len > 0 else b'{}'
-                    params = json.loads(body.decode('utf-8')) if body else {}
-                    if not isinstance(params, dict):
-                        raise ValueError('payload must be dict')
-                except Exception:
-                    self._json(400, {'error': 'INVALID_JSON_PAYLOAD'})
-                    return
-                try:
-                    index = self._snapshot_index()
-                    result = index.query(operation, params)
-                    self._json(200, result)
-                except QueryError as error:
-                    self._json(error.status, {'error': error.code})
-                except Exception as err:
-                    self._json(500, {'error': str(err)})
-                return
         self._reject_method()
 
     def _reject_method(self):
@@ -2721,6 +2984,9 @@ def make_server(port=DEFAULT_PORT, page_path=None, sources=None,
     )
     server.dashboard_identity_resolver = (
         resolve_dashboard_code_identity if auto_code_identity else None
+    )
+    server.dashboard_identity_cache = (
+        DashboardCodeIdentityCache() if auto_code_identity else None
     )
     if auto_code_identity:
         code_identity = resolve_dashboard_code_identity()

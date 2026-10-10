@@ -7,6 +7,7 @@
 用法:
   python3 bin/mof/gen-service-configs.py              # dry-run 打印 plist
   python3 bin/mof/gen-service-configs.py --write      # 生成写盘
+  python3 bin/mof/gen-service-configs.py --write --service-id <id>  # 只生成一个服务
   python3 bin/mof/gen-service-configs.py --check      # drift 检测 (plist vs services.yaml)
   python3 bin/mof/gen-service-configs.py --reality-check  # 注册表 vs 本机 launchd 现实 (E1-E4, 只读)
 """
@@ -592,6 +593,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument(
+        "--service-id",
+        help="只处理指定的 services.yaml id；与 --write/--check 一起用于单服务生命周期操作",
+    )
     parser.add_argument("--json", action="store_true", help="JSON 输出 (--check/--validate)")
     parser.add_argument("--validate", action="store_true", help="验注册自洽 (CI, 不依赖本机 plist)")
     parser.add_argument(
@@ -617,6 +622,11 @@ def main() -> int:
         print(f"❌ 注册不存在: {registry_path}", file=sys.stderr)
         return 1
     services = load_services(registry_path)
+    if args.service_id:
+        services = [service for service in services if service.get("id") == args.service_id]
+        if not services:
+            print(f"❌ services.yaml 中不存在服务: {args.service_id}", file=sys.stderr)
+            return 1
     if args.validate:
         # 验注册自洽 (CI 可验, 不依赖本机 plist). 治 service-config-drift gate 在 CI 无本机 plist 的设计问题.
         violations: list[str] = []

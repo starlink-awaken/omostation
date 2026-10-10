@@ -1,0 +1,288 @@
+id: BET-Y2Q4-T10-TEMPORAL-PRECEDENCE
+title: 待决 — _TEMPORAL_RE 实际持有的时间词是否应压过文档/卡片类名词（classify_intent precedence）
+status: pending
+task_type: decision
+priority: P2
+owner: agent
+source: BET-Y2Q4-T10-CJK-ROUTING 修复过程中测得的 precedence 读数
+source_ref: .omo/tasks/active/BET-Y2Q4-T10-CJK-ROUTING.yaml
+window: Y2Q4
+track: T10
+appetite: 决策会，不含实现
+desc: >-
+  这是一条**待决问题**记录，不是进行中的修复。先说清一件本记录上一版搞错的事：
+  **待决问题按原措辞无法成立**。上一版把它写成「年份相对词（去年/今年/明年/前年/后年）
+  是否应当压过文档/卡片类名词」，但 _TEMPORAL_RE 里根本没有这些词 —— 它的词表是
+  时效/有效期/何时生效/过期，加 ASCII 的 valid_from/valid_to/expired/as-of/until/
+  effective/before YYYY/after YYYY（routing.py:42-45）；git log -S 证明该 pattern 自
+  bf5c02db 起逐字节未变、从未持有过年份或月份相对词。所以「去年写的文档」这类查询今天
+  压根到不了 TEMPORAL 分支：它落 general 是因为**没有任何 pattern 匹配**，不是因为
+  TEMPORAL 短路赢了。可复现的版本是同一个问题的另一组词 —— _TEMPORAL_RE **实际持有**的
+  那些时间词与文档/卡片/偏好/实体类名词同时出现在一条查询里时谁该胜出。
+  classify_intent 的检查顺序是 CODE → TASK → TEMPORAL → PREF → ENTITY → CARD → FILE，
+  一个查询同时命中两三个 pattern 时胜者纯由检查顺序决定，与用户真实意图无关 ——
+  这条性质是真的，且今天可测。决策本身仍然成立，只是必须按实际词表重新提问。
+non_goals:
+- 本记录不实施任何重排
+- 不改动 _TEMPORAL_RE 的关键字集合
+- 不假定「当前行为正确」，只如实记录当前行为
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs:
+- .omo/tasks/active/BET-Y2Q4-T10-CJK-ROUTING.yaml
+source_docs:
+- projects/knowledge/kairon/packages/mos/src/mos/routing.py
+- projects/knowledge/kairon/packages/mos/tests/test_routing.py
+- projects/knowledge/kairon/packages/mos/tests/test_routing_matrix.py
+- docs/operations/memory-os-epic-retro.md
+depends_on:
+- BET-Y2Q4-T10-CJK-ROUTING
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+entry_gate:
+- 需人类就「时间词 vs 文档名词」优先级给出明确选择并记录
+- 若选择重排，重排须自带独立基线（before/after 探测表 + eval_harness 对照），不得搭载本 BET
+decision_to_make: >-
+  （2026-10-04 按实际词表重述）_TEMPORAL_RE 持有的时间词 —— 时效 / 有效期 / 何时生效 /
+  过期 / effective / expired / until / as-of / valid_from / valid_to / before YYYY /
+  after YYYY —— 是否应在 classify_intent 中压过文档类名词（ADR / 文档 / 笔记 / 哪个文件）
+  与卡片类名词（card / 知识卡片）？即 _TEMPORAL_RE 保持排在 _FILE_RE / _CARD_RE 之前，
+  还是下移。原措辞「年份相对词（去年/今年/…）是否压过文档名词」**不可回答**：那些词不在
+  _TEMPORAL_RE 里，该竞争在今天的代码上不存在。若人类认为「中文年份相对词本就该路由到
+  temporal_fact」，那是一个**新增词表**的决策（应另开 BET），不是重排决策 ——
+  先加词，重排才有对象。
+affected_queries_measured:
+- block: live-precedence
+  query: effective call graph
+  before: code_structure
+  after: code_structure
+  changed: false
+  matched_patterns: [CODE, TEMPORAL]
+  note: 实测于 origin/main @ 915fc76b。CODE 排在 TEMPORAL 之前 → 时间词**输给**代码词。证明 temporal 检查不是第一个。
+- block: live-precedence
+  query: expired task
+  before: task_debt
+  after: task_debt
+  changed: false
+  matched_patterns: [TASK, TEMPORAL]
+  note: 实测于 915fc76b。TASK 排在 TEMPORAL 之前 → 时间词输给任务词。与上一行一起把顺序的上界钉在位置 3。
+- block: live-precedence
+  query: effective ADR
+  before: temporal_fact
+  after: temporal_fact
+  changed: false
+  matched_patterns: [TEMPORAL, FILE]
+  note: 实测于 915fc76b。TEMPORAL 早于 FILE → 时间词胜出，查询被交给时间线而非文档。这是本决策的正面样本。
+- block: live-precedence
+  query: 过期 ADR
+  before: temporal_fact
+  after: temporal_fact
+  changed: false
+  matched_patterns: [TEMPORAL, FILE]
+  note: 实测于 915fc76b。中文时间词 过期 是活的（_TEMPORAL_RE 不包 \b），而 ADR 是 ASCII 名词 —— 这行证明 CJK 时间 token 与 ASCII 名词之间的竞争今天真实存在。
+- block: live-precedence
+  query: 有效期 ADR
+  before: temporal_fact
+  after: temporal_fact
+  changed: false
+  matched_patterns: [TEMPORAL, FILE]
+  note: 实测于 915fc76b。同上，第二个中文时间 token。
+- block: live-precedence
+  query: effective card
+  before: temporal_fact
+  after: temporal_fact
+  changed: false
+  matched_patterns: [TEMPORAL, CARD]
+  note: 实测于 915fc76b。TEMPORAL 早于 CARD → 时间词胜出。名词用 ASCII 的 card，因为中文的 卡片/知识卡片 被 \b 缺陷杀死、无法参与竞争。
+- block: live-precedence
+  query: effective preference
+  before: temporal_fact
+  after: temporal_fact
+  changed: false
+  matched_patterns: [TEMPORAL, PREF]
+  note: 实测于 915fc76b。TEMPORAL 早于 PREF → 时间词胜出。
+- block: live-precedence
+  query: effective relation
+  before: temporal_fact
+  after: temporal_fact
+  changed: false
+  matched_patterns: [TEMPORAL, ENTITY]
+  note: 实测于 915fc76b。TEMPORAL 早于 ENTITY → 时间词胜出。
+- block: token-gap
+  query: 去年的文档
+  before: general
+  after: general
+  changed: false
+  matched_patterns: []
+  note: 实测于 915fc76b，temporal_match=False。matched_patterns 为空 —— 落 general 是**零命中**，不是 TEMPORAL 短路。上一版记为 temporal_fact。
+- block: token-gap
+  query: 去年写的文档在哪
+  before: general
+  after: general
+  changed: false
+  matched_patterns: []
+  note: 实测于 915fc76b，零命中。文档 是 _FILE_RE 的 CJK token，被 \b 杀死；去年 不是 _TEMPORAL_RE 的 token。两个缺陷叠加，不是 precedence。
+- block: token-gap
+  query: 去年写的知识卡片
+  before: general
+  after: general
+  changed: false
+  matched_patterns: []
+  note: 实测于 915fc76b，零命中。上一版记为 temporal_fact。
+- block: token-gap
+  query: 去年的过敏信息
+  before: general
+  after: general
+  changed: false
+  matched_patterns: []
+  note: 实测于 915fc76b，零命中。上一版据此推出「被时间修饰词拽走的偏好查询在修复前就已如此」—— 该查询从未被任何时间修饰词拽走。
+- block: token-gap
+  query: 谁投资了去年的卡片
+  before: general
+  after: general
+  changed: false
+  matched_patterns: []
+  note: 实测于 915fc76b，零命中。上一版称「三重命中，TEMPORAL 胜出」—— 实际零命中。
+- block: token-gap
+  query: 去年的任务
+  before: general
+  after: general
+  changed: false
+  matched_patterns: []
+  note: 实测于 915fc76b，零命中。上一版称「TASK 恢复活就抢走了时间词、temporal_fact→task_debt」—— 今天的 TASK 也被 \b 杀死，该迁移只存在于已丢失的 worktree。
+- block: token-gap
+  query: 函数在哪个文件
+  before: general
+  after: general
+  changed: false
+  matched_patterns: []
+  note: 实测于 915fc76b，零命中。上一版称「general→code_structure」—— 函数 与 哪个文件 都是 CJK 且都被 \b 包裹，故谁也匹配不上。这是 CJK \b 缺陷的纯样本，与本决策无关。
+- block: token-gap
+  query: 谁调用了去年的任务
+  before: general
+  after: general
+  changed: false
+  matched_patterns: []
+  note: 实测于 915fc76b，零命中。上一版称「三重命中，CODE 最先检查因而胜出、落到代码图」—— 实际零命中，落 general。
+measurement_correction: >-
+  （2026-10-04 重写）上一版的「修正」建立在一条假推断上：它说「因为 _TEMPORAL_RE 是六个里
+  唯一本就合规的 pattern，且排在 _CARD_RE/_PREF_RE/_ENTITY_RE/_FILE_RE 之前，
+  任何含年份词的查询在修复前就已经在 TEMPORAL 短路」。**年份词不在 _TEMPORAL_RE 里，
+  没有任何短路发生** —— 这 8 条查询在 915fc76b 上 matched_patterns 全为空，落 general 是
+  「零命中」而非「TEMPORAL 胜出」。纠正后的读数分三层：
+  (1) 无时间词的查询确实受 \b 缺陷支配，但方向与上一版相反 —— 它们今天**全部**落 general
+  （函数在哪个文件 general、谁调用了去年的任务 general），不是「变成了 code_structure」。
+  上一版声称的迁移来自已丢失的 worktree，无法复跑。
+  (2) 含年份词的查询今天对本决策**完全不可观察** —— 不是「读数相同所以看起来没问题」，
+  而是根本没有竞争发生。
+  (3) 唯一可观察 precedence 的是 _TEMPORAL_RE 实际持有的词，即上表 live-precedence 8 行。
+  本决策真正的影响面是 (3)。(2) 要变成 (3) 的对象，前提是有人先把年份词加进词表。
+options:
+- option: A — 接受 temporal 优先，维持现状
+  consequence: >-
+    零行为改动、零回归风险，探测表与 pin 断言原样保留。代价：_TEMPORAL_RE 持有的时间词
+    会吞掉文档 / 卡片 / 偏好 / 实体查询 —— 实测 有效期 ADR / 过期 ADR 去查时间线而非文档，
+    effective card / effective preference / effective relation 同理。这是**今天真实发生**的
+    召回损失，且与中文年份词无关。
+- option: B — 把 _TEMPORAL_RE 下移到 _FILE_RE / _CARD_RE 之后
+  consequence: >-
+    文档/卡片优先，名词成为主意图、时间词降为修饰。按 live-precedence 8 行精确推算影响面：
+    TEMPORAL 当前赢的 6 行（effective ADR / 过期 ADR / 有效期 ADR / effective card /
+    effective preference / effective relation）会全部翻到名词侧；effective call graph 与
+    expired task 两行不变（CODE / TASK 本来就排在 TEMPORAL 之前）。token-gap 8 行不受影响 ——
+    它们今天零命中，将来仍零命中，除非同时新增年份词表。须重跑全部探测表 + eval_harness，
+    并更新 pin 断言。
+- option: C — 收窄时间词作用域
+  consequence: >-
+    例如要求时间词与查询其余部分构成「时间限定 + 载体名词」时才让 TEMPORAL 胜出，或把
+    时效 / 有效期 / 何时生效 / 过期 降到只在无其他 pattern 命中时才生效。代价：规则复杂度
+    上升，需要新的判定函数与更完整的基线；收益是同时保住两类查询的召回。**注意**：本选项
+    上一版写成「收窄年份词作用域」，而年份词不在 _TEMPORAL_RE 里，无从收窄 —— 已按实际
+    持有的词重述。若人类的真实意图是让中文年份词参与路由，那是新增词表，须另开 BET。
+no_reorder_applied: >-
+  本轮**未做任何重排**，检查顺序仍为 CODE, TASK, TEMPORAL, PREF, ENTITY, CARD, FILE
+  （origin/main @ 915fc76b 实测确认）。理由：重排是独立的行为决策，需要自己的基线与人工
+  签署。上一版把这条理由写成「本次修复的授权范围明确只含让六条路由对中文生效」—— 该修复
+  已随 commit 2976f20 丢失，从未落地，所以这条授权事实已不存在；但结论不变，且现在多一条
+  更硬的理由：本决策影响的是 live-precedence 8 行，而承载它们的 pin 断言只存在于一个
+  **未跟踪**的工作树文件 tests/test_routing_matrix.py（21 passed，尚未提交），把它当作已落地
+  的安全网是不成立的。任何重排必须先让该文件进入版本库并重取基线。
+done_when:
+- 一个人类决策被记录在本文件（选 A / B / C，并写明理由）
+- 若选择重排（B 或 C）：重排自带独立基线 —— 重排前后的完整探测对照表、
+  eval_harness 15 条用例分类对照、以及随之更新的 pin 测试断言，且不搭载在
+  BET-Y2Q4-T10-CJK-ROUTING 内
+- 若选择 A（维持现状）：pin 测试原样保留，并在本文件记录「已知代价」即可收口
+evidence:
+- '本决策的影响面按 live-precedence 8 行精确界定，全部实测于 origin/main @ 915fc76b：TEMPORAL 当前赢 6 行（effective ADR / 过期 ADR / 有效期 ADR / effective card / effective preference / effective relation），当前输 2 行（effective call graph / expired task）'
+- 'token-gap 8 行实测零命中（matched_patterns 为空）：_TEMPORAL_RE 不含任何年份或月份相对词，落 general 是零命中而非 TEMPORAL 短路。git log -S去年/今年/上个月 -- packages/mos/src/mos/routing.py 全部为空，该 pattern 自 bf5c02db 起逐字节未变'
+- 'eval_harness 15 条用例实测匹配 _TEMPORAL_RE 的 0 条 —— 现有回归网无法为本决策提供任何信号，重排必须自带新基线。这条上一版就写对了，且是本决策唯一原样保留下来的判断'
+- 'tests/test_routing_matrix.py 的 live-precedence 8 行 + test_live_precedence_pins_the_implemented_check_order + test_temporal_outranks_nouns_exactly_where_check_order_says 是本决策当前唯一的可复现观测面。该文件 21 passed，但**尚未进入版本库**（git status 显示为未跟踪）'
+note: >-
+  status 为 pending 表示「一个待人决策的问题」，不是「一个正在执行的修复」。
+  human_approval_required: true。owner 暂记 agent，实际裁决需人类。
+  追加（2026-10-04）：本记录上一版把待决问题按「年份相对词 vs 文档名词」提问，而那些词不在
+  _TEMPORAL_RE 里，该问题在今天的代码上无法回答。已按实际持有的词重述，并重测全部受影响查询。
+corrections:
+- date: '2026-10-04'
+  field: title / desc / decision_to_make
+  retracted: 待决问题是「年份相对词（去年/今年/明年/前年/后年）是否应当压过文档/卡片类名词」，且「今天这类查询一律走 temporal_fact」
+  measured: _TEMPORAL_RE 的词表是 时效/有效期/何时生效/过期 加 ASCII 的 valid_from/valid_to/expired/as-of/until/effective/before YYYY/after YYYY，不含任何年份月份相对词。16 条年份月份查询实测全落 general、temporal_match=False。原问题不可回答；已重述为「_TEMPORAL_RE 实际持有的时间词 vs 文档/卡片名词」
+  method: 读 routing.py:42-45 + classify_intent 实测 + git log -S（去年/今年/上个月 均空）
+- date: '2026-10-04'
+  field: desc
+  retracted: 「CJK \b 缺陷修好之后（kairon commit 2976f20），原本不可观察的 precedence 决策变成了活的」
+  measured: commit 2976f20 已丢失、不是有效 git 对象，\b 缺陷**从未**在 origin/main 上被修好，今天仍活在 routing.py:32-40。该决策之所以可观察，不是因为缺陷被修好，而是因为 live-precedence 8 行用的是 _TEMPORAL_RE 真正持有的词，与 \b 缺陷无关
+- date: '2026-10-04'
+  field: affected_queries_measured（全部 8 行）
+  retracted: '8 行均记 before/after 为 temporal_fact，其中 3 行记 changed 为 true（去年的任务 → task_debt、函数在哪个文件 → code_structure、谁调用了去年的任务 → code_structure），并各自标注 matched_patterns 非空'
+  measured: 8 行在 915fc76b 上全部为 general，matched_patterns 全部为空，changed 全为 false。没有一条发生过分类迁移 —— 声称的迁移只存在于已丢失的 worktree。已用实测值整表替换，并按 live-precedence / token-gap 分块标注
+  method: classify_intent + 逐 pattern search 实测 16 条查询
+- date: '2026-10-04'
+  field: measurement_correction
+  retracted: 「任何含年份词的查询在修复前就已经在 TEMPORAL 短路」，并据此推出「本决策影响的是分类未变的那批查询」
+  measured: 前提为假 —— 年份词不在 _TEMPORAL_RE 里，没有任何短路发生。含年份词的查询对本决策**完全不可观察**（零命中），不是「读数相同所以看着没问题」。本决策真正的影响面是 _TEMPORAL_RE 实际持有词构成的 live-precedence 8 行。已重写为三层读数
+- date: '2026-10-04'
+  field: options（B / C）
+  retracted: 选项 B 的影响面以「去年做过什么 这类纯时间查询不含文档词，不受影响」论证；选项 C 为「收窄年份词作用域」，并以 去年/今年 为例
+  measured: 年份词不在 _TEMPORAL_RE 里，无从「不受影响」也无从「收窄」。选项 B 已按 live-precedence 8 行精确推算影响面（6 翻 2 不变，token-gap 8 行不变）；选项 C 已重述为收窄 时效/有效期/何时生效/过期 的作用域，并注明「新增年份词表」是另一件事、须另开 BET
+- date: '2026-10-04'
+  field: evidence（第 1 条）
+  retracted: 'kairon commit 2976f20：六条路由的 CJK 分支修复；本决策未在该提交中实施'
+  measured: commit 2976f20 不存在（git cat-file -t → fatal），该修复从未落地。本决策从未被实施过，这一点现在改由 live-precedence 实测证据支撑，而不是由一个丢失的提交支撑
+- date: '2026-10-04'
+  field: evidence（第 2 条）/ no_reorder_applied / done_when（选项 A 分支）
+  retracted: 「受影响查询的实测分类来自同一提交的 pin 测试 test_mixed_cjk_temporal_precedence_is_pinned_not_endorsed」，并称该 pin 测试「已落地」
+  measured: test_mixed_cjk_temporal_precedence_is_pinned_not_endorsed 在当前 tests/ 下不存在（随丢失的 commit 一起没了），「已落地」不成立。当前承担该职能的是 tests/test_routing_matrix.py 的 test_live_precedence_pins_the_implemented_check_order 与 test_temporal_outranks_nouns_exactly_where_check_order_says，但该文件**未跟踪**，同样不构成已落地的安全网
+  method: grep -rn 'def test_mixed_cjk_temporal_precedence_is_pinned_not_endorsed' tests/ → 0 命中；git status --short（kairon）→ ?? packages/mos/tests/test_routing_matrix.py
+- date: '2026-10-04'
+  field: evidence（第 3 条）
+  retracted: 'eval_harness 15 条用例分类零变化 —— 现有回归网无法为本决策提供任何信号'
+  measured: 结论正确且复现 —— EVAL_CASES 实测 15 条，匹配 _TEMPORAL_RE 的 0 条。予以保留，并补上实测数字
+- date: '2026-10-04'
+  field: source_docs
+  change: 新增 projects/knowledge/kairon/packages/mos/tests/test_routing_matrix.py
+  measured: 本决策影响面的全部实测读数都来自该文件，缺了它本记录无法核验
+evidence_required:
+- 人类决策及其理由写入本文件
+- 若重排：独立基线（前后探测对照 + eval_harness 对照 + pin 测试更新）
+test_plan:
+- 'cd projects/knowledge/kairon/packages/mos && env -u MOS_LIVE_GBRAIN uv run --with pytest python -m pytest tests/test_routing.py -q'
+- 'cd projects/knowledge/kairon/packages/mos && env -u MOS_LIVE_GBRAIN uv run --with pytest python -m pytest tests/test_eval_harness.py -q'
+- '重排若实施：先取 before 探测表，再改，再取 after 探测表，逐条对照'
+workflow: bet-execution
+write_surfaces: []
+pasw_required: true
+circuit_breaker: 决策未落定前不得改动 classify_intent 的检查顺序
+retro_required: false
+retro_path: null
+agent_profile_hint: engineering-agent
+started_at: '2026-10-03T00:00:00Z'
+completed_at: null
+blocked_by: null
+retry_count: 0

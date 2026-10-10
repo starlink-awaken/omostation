@@ -1,10 +1,10 @@
 import hashlib
 import importlib.util
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "bin/panorama/panorama-collect.py"
@@ -138,6 +138,28 @@ def _payload():
             "issues": [],
         },
     }
+
+
+def test_agent_visibility_binds_final_generation_and_source_states() -> None:
+    module = _module()
+    payload = {
+        "generated_at": "2026-10-09T00:00:00+00:00",
+        "generation_id": "generation-final",
+        "agent_visibility": {"available": True, "input_sources": {"stale": "prior"}},
+        "source_states": [{
+            "source": "claims", "status": "UNPROVABLE", "state": "UNKNOWN",
+            "observed_at": None, "last_success_at": None,
+            "snapshot_generation_id": "generation-final", "reason": "no_field_proof",
+        }],
+    }
+
+    module.bind_agent_visibility_projection(payload)
+
+    visibility = payload["agent_visibility"]
+    assert visibility["generation_id"] == "generation-final"
+    assert visibility["generated_at"] == "2026-10-09T00:00:00Z"
+    assert visibility["input_sources"]["claims"]["status"] == "UNPROVABLE"
+    assert visibility["input_sources"]["claims"]["provenance"]["snapshot_generation_id"] == "generation-final"
 
 
 def test_agent_visibility_projects_authority_health_and_interfaces() -> None:
@@ -472,12 +494,23 @@ def _stub_external_collectors(module, monkeypatch, payload, *, ledger_sha: str =
     )
 
 
-def _publish(module, monkeypatch, tmp_path, payload):
+def _write_authoritative_source_snapshot(state_root, snapshot, strategic) -> None:
+    state_root.mkdir(parents=True, exist_ok=True)
+    authoritative = dict(snapshot)
+    authoritative["strategic"] = strategic
+    (state_root / "current.json").write_text(
+        json.dumps(authoritative), encoding="utf-8"
+    )
+
+
+def _publish(module, monkeypatch, tmp_path, payload, *, source_snapshot=None, strategic=None):
     """在干净 state_root 上发布一次, 返回 (result, revision_dir)。"""
     # 固定模板来源: 不指向真实 dashboard 仓, 退回内嵌 TEMPLATE, 避免受本机环境影响
     monkeypatch.setenv("ZHIXING_DASHBOARD_CODE_ROOT", str(tmp_path / "no-dashboard"))
     _stub_external_collectors(module, monkeypatch, payload)
     state_root = tmp_path / "projection-state"
+    if source_snapshot is not None:
+        _write_authoritative_source_snapshot(state_root, source_snapshot, strategic)
     result = module.publish_projection_revision(payload, state_root=state_root)
     return result, state_root / module.PROJECTION_REVISIONS_NAME / result["revision_id"]
 
@@ -490,10 +523,294 @@ def test_publish_projection_revision_emits_data_and_agent_brief(tmp_path, monkey
     data = json.loads((revision / "data.json").read_text(encoding="utf-8"))
     brief = json.loads((revision / "agent-brief.json").read_text(encoding="utf-8"))
     assert data["agent_visibility"]["schema"] == "panorama-agent-brief/v1"
+    assert data["agent_visibility"]["generation_id"] == data["generation_id"]
+    assert {entry["state"] for entry in data["agent_visibility"]["input_sources"].values()} == {"UNKNOWN"}
     assert brief["schema"] == "panorama-agent-brief/v1"
     assert (revision / "index.html").is_file()
     # agent-brief.json 就是 agent_visibility 本身, 不是整个 payload
     assert brief == data["agent_visibility"]
+
+
+def test_publish_projection_carries_aligned_source_observations_without_retimestamping(
+    tmp_path, monkeypatch
+) -> None:
+    """The revision preserves actual source timestamps from one generation."""
+    module = _module()
+    observed_at = "2026-10-05T13:58:30Z"
+    snapshot = {
+        "generation_id": "orchestrator-generation-1",
+        "generated_at": "2026-10-05T13:58:31Z",
+        "source_states": {
+            "governance": {
+                "status": "OK",
+                "observed_at": observed_at,
+                "last_success_at": observed_at,
+            },
+        },
+    }
+    strategic = {"generation_id": "orchestrator-generation-1", "trace": {}}
+    payload = _publishable_payload(module)
+    payload["source_states"] = module.collect_projection_source_provenance(
+        snapshot, strategic=strategic
+    )
+    payload["generation_id"] = "orchestrator-generation-1"
+
+    _, revision = _publish(
+        module,
+        monkeypatch,
+        tmp_path,
+        payload,
+        source_snapshot=snapshot,
+        strategic=strategic,
+    )
+    published = json.loads((revision / "data.json").read_text(encoding="utf-8"))
+
+    assert published["source_states"] == [{
+        "source": "governance",
+        "status": "OK",
+        "state": "OBSERVED",
+        "observed_at": observed_at,
+        "last_success_at": observed_at,
+        "snapshot_generation_id": "orchestrator-generation-1",
+        "snapshot_generated_at": "2026-10-05T13:58:31Z",
+    }]
+    assert published["agent_visibility"]["generation_id"] == published["generation_id"]
+    assert published["agent_visibility"]["input_sources"]["governance"]["state"] == "OBSERVED"
+    assert published["agent_visibility"]["input_sources"]["governance"]["provenance"]["source_ref"] == "governance"
+
+
+def _source_snapshot(*, generation_id: str, generated_at: str, observed_at: str) -> dict:
+    return {
+        "generation_id": generation_id,
+        "generated_at": generated_at,
+        "source_states": {
+            "governance": {
+                "status": "OK",
+                "observed_at": observed_at,
+                "last_success_at": observed_at,
+            },
+        },
+    }
+
+
+def _published_source_states(
+    module,
+    monkeypatch,
+    tmp_path,
+    payload,
+    *,
+    now,
+    source_snapshot=None,
+    strategic=None,
+):
+    monkeypatch.setenv("ZHIXING_DASHBOARD_CODE_ROOT", str(tmp_path / "no-dashboard"))
+    _stub_external_collectors(module, monkeypatch, payload)
+    state_root = tmp_path / "projection-state"
+    if source_snapshot is not None:
+        _write_authoritative_source_snapshot(state_root, source_snapshot, strategic)
+    result = module.publish_projection_revision(
+        payload, state_root=state_root, now=now
+    )
+    revision = state_root / module.PROJECTION_REVISIONS_NAME / result["revision_id"]
+    return json.loads((revision / "data.json").read_text(encoding="utf-8"))
+
+
+def test_direct_publisher_cannot_promote_fully_forged_provenance_envelope(tmp_path, monkeypatch) -> None:
+    module = _module()
+    now = datetime(2026, 10, 6, 12, tzinfo=UTC)
+    payload = _publishable_payload(module)
+    payload["generation_id"] = "authoritative-generation"
+    payload["source_states"] = [{
+        "source": "forged-source",
+        "status": "OK",
+        "state": "OBSERVED",
+        "observed_at": "2026-10-06T11:59:00Z",
+        "last_success_at": "2026-10-06T11:59:00Z",
+        "snapshot_generation_id": "authoritative-generation",
+        "snapshot_generated_at": "2026-10-06T12:00:00Z",
+    }]
+
+    forged_snapshot = _source_snapshot(
+        generation_id="authoritative-generation",
+        generated_at="2026-10-06T12:00:00Z",
+        observed_at="2026-10-06T11:59:00Z",
+    )
+    forged_strategic = {"generation_id": "authoritative-generation", "trace": {}}
+    payload["_source_provenance_binding"] = {
+        "snapshot": forged_snapshot,
+        "strategic": forged_strategic,
+    }
+    controlled_snapshot = _source_snapshot(
+        generation_id="controlled-generation",
+        generated_at="2026-10-06T12:00:00Z",
+        observed_at="2026-10-06T11:58:00Z",
+    )
+    controlled_strategic = {"generation_id": "controlled-generation", "trace": {}}
+
+    published = _published_source_states(
+        module,
+        monkeypatch,
+        tmp_path,
+        payload,
+        now=now,
+        source_snapshot=controlled_snapshot,
+        strategic=controlled_strategic,
+    )
+    states = published["source_states"]
+
+    assert states[0]["state"] == "UNKNOWN"
+    assert states[0]["observed_at"] is None
+    assert states[0]["reason"] == "source_provenance_snapshot_mismatch"
+    assert "_source_provenance_binding" not in published
+
+
+@pytest.mark.parametrize(
+    ("generation_id", "snapshot_generation_id", "generated_at", "observed_at", "reason"),
+    [
+        ("expected-generation", "wrong-generation", "2026-10-06T12:00:00Z", "2026-10-06T11:59:00Z", "source_provenance_entry_schema_invalid"),
+        ("expected-generation", "expected-generation", "2026-10-06T11:59:00Z", "2026-10-06T12:00:00Z", "source_provenance_timestamp_order_invalid"),
+        ("expected-generation", "expected-generation", "2026-10-06T12:01:00Z", "2026-10-06T12:00:00Z", "source_snapshot_generated_in_future"),
+    ],
+)
+def test_publisher_degrades_misaligned_or_temporally_invalid_bound_provenance(
+    tmp_path,
+    monkeypatch,
+    generation_id,
+    snapshot_generation_id,
+    generated_at,
+    observed_at,
+    reason,
+) -> None:
+    module = _module()
+    now = datetime(2026, 10, 6, 12, tzinfo=UTC)
+    snapshot = _source_snapshot(
+        generation_id=snapshot_generation_id,
+        generated_at=generated_at,
+        observed_at=observed_at,
+    )
+    strategic = {"generation_id": snapshot_generation_id, "trace": {}}
+    payload = _publishable_payload(module)
+    payload["generation_id"] = generation_id
+    payload["source_states"] = module.collect_projection_source_provenance(
+        snapshot, strategic=strategic, now=now
+    )
+    published = _published_source_states(
+        module,
+        monkeypatch,
+        tmp_path,
+        payload,
+        now=now,
+        source_snapshot=snapshot,
+        strategic=strategic,
+    )
+    states = published["source_states"]
+
+    assert states[0]["state"] == "UNKNOWN"
+    assert states[0]["observed_at"] is None
+    assert states[0]["reason"] == reason
+
+
+def test_projection_source_provenance_preserves_stale_status_and_time() -> None:
+    module = _module()
+    stale_at = "2026-10-04T07:37:49.150691+00:00"
+    snapshot = {
+        "generation_id": "orchestrator-generation-2",
+        "generated_at": stale_at,
+        "source_states": {
+            "scheduler": {
+                "status": "STALE_UNAVAILABLE",
+                "observed_at": stale_at,
+                "last_success_at": "2026-10-03T15:28:05.945805+00:00",
+            },
+        },
+    }
+
+    provenance = module.collect_projection_source_provenance(
+        snapshot,
+        strategic={"generation_id": "orchestrator-generation-2", "trace": {}},
+    )
+
+    assert provenance[0]["status"] == "STALE_UNAVAILABLE"
+    assert provenance[0]["state"] == "STALE_UNAVAILABLE"
+    assert provenance[0]["observed_at"] == stale_at
+    assert provenance[0]["last_success_at"] == "2026-10-03T15:28:05.945805+00:00"
+
+
+def test_projection_source_provenance_is_unknown_without_aligned_snapshot() -> None:
+    module = _module()
+
+    provenance = module.collect_projection_source_provenance(
+        {
+            "generation_id": "orchestrator-generation-3",
+            "generated_at": "2026-10-05T13:58:31Z",
+            "source_states": {"governance": {"status": "OK", "observed_at": "2026-10-05T13:58:30Z"}},
+        },
+        strategic={"generation_id": "different-generation", "trace": {}},
+    )
+
+    assert provenance == [{
+        "source": "orchestrator-current-json",
+        "status": "UNKNOWN",
+        "state": "UNKNOWN",
+        "observed_at": None,
+        "last_success_at": None,
+        "reason": "source_snapshot_generation_unaligned",
+    }]
+
+
+def test_projection_source_provenance_rejects_future_missing_and_invalid_times() -> None:
+    module = _module()
+    now = datetime.now(UTC)
+    snapshot_generated_at = now.isoformat()
+    fresh_observed_at = (now - timedelta(seconds=30)).isoformat()
+    future_observed_at = (now + timedelta(seconds=30)).isoformat()
+    snapshot = {
+        "generation_id": "orchestrator-generation-4",
+        "generated_at": snapshot_generated_at,
+        "source_states": {
+            "fresh": {"status": "OK", "observed_at": fresh_observed_at},
+            "future": {"status": "OK", "observed_at": future_observed_at},
+            "invalid": {"status": "OK", "observed_at": "not-a-timestamp"},
+            "missing": {"status": "OK"},
+        },
+    }
+
+    provenance = module.collect_projection_source_provenance(
+        snapshot,
+        strategic={"generation_id": "orchestrator-generation-4", "trace": {}},
+    )
+    by_source = {item["source"]: item for item in provenance}
+
+    assert by_source["fresh"]["state"] == "OBSERVED"
+    assert by_source["future"]["state"] == "UNKNOWN"
+    assert by_source["future"]["reason"] == "source_observation_in_future"
+    assert by_source["invalid"]["state"] == "UNKNOWN"
+    assert by_source["invalid"]["reason"] == "source_observation_timestamp_invalid_or_missing"
+    assert by_source["missing"]["state"] == "UNKNOWN"
+    assert by_source["missing"]["observed_at"] is None
+
+
+def test_projection_source_provenance_rejects_snapshot_generated_in_future() -> None:
+    module = _module()
+    now = datetime.now(UTC)
+    future = (now + timedelta(minutes=1)).isoformat()
+    provenance = module.collect_projection_source_provenance(
+        {
+            "generation_id": "orchestrator-generation-5",
+            "generated_at": future,
+            "source_states": {"fresh": {"status": "OK", "observed_at": now.isoformat()}},
+        },
+        strategic={"generation_id": "orchestrator-generation-5", "trace": {}},
+    )
+
+    assert provenance == [{
+        "source": "orchestrator-current-json",
+        "status": "UNKNOWN",
+        "state": "UNKNOWN",
+        "observed_at": None,
+        "last_success_at": None,
+        "reason": "source_snapshot_generated_in_future",
+    }]
 
 
 def test_manifest_binds_every_artifact_by_sha256(tmp_path, monkeypatch) -> None:

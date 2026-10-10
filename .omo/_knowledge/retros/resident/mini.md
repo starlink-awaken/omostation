@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-09-26T12:40:03Z
+generated_at: 2026-10-10T02:07:16Z
 status: candidate
 counts:
-  runs: 36
+  runs: 48
   failures: 0
-  total: 36
+  total: 48
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-26T12:40:03Z
+- generated_at: 2026-10-10T02:07:16Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 36 成功运行 + 0 失败模式 = 36 草稿
+- sediment 覆盖: 48 成功运行 + 0 失败模式 = 48 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -57,6 +57,18 @@ failure_breakdown:
 - 20260926T061540Z-mini-539a101a.md
 - 20260926T062732Z-mini-86d00b37.md
 - 20260926T062733Z-mini-3c48c664.md
+- 20260930T030017Z-mini-4d5acc61.md
+- 20260930T030018Z-mini-ac466e41.md
+- 20260930T030322Z-mini-43edc08b.md
+- 20260930T030323Z-mini-7cc5bbe4.md
+- 20260930T033716Z-mini-3b37aac1.md
+- 20260930T033718Z-mini-689276c3.md
+- 20260930T034211Z-mini-78a93192.md
+- 20260930T034213Z-mini-41428cdf.md
+- 20260930T035045Z-mini-79c7b288.md
+- 20260930T035047Z-mini-f21b62e2.md
+- 20261002T013115Z-mini-b3335646.md
+- 20261002T013115Z-mini-fe577678.md
 
 ## 失败模式 (failures/)
 
@@ -289,6 +301,84 @@ failure_breakdown:
   - 结果与证据: ok=False, status=failed, evidence_count=0
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=0.201
+- **20260930T030017Z-mini-4d5acc61**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.381
+- **20260930T030018Z-mini-ac466e41**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.323
+- **20260930T030322Z-mini-43edc08b**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.45
+- **20260930T030323Z-mini-7cc5bbe4**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.385
+- **20260930T033716Z-mini-3b37aac1**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.871
+- **20260930T033718Z-mini-689276c3**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=1.144
+- **20260930T034211Z-mini-78a93192**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.622
+- **20260930T034213Z-mini-41428cdf**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.877
+- **20260930T035045Z-mini-79c7b288**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.55
+- **20260930T035047Z-mini-f21b62e2**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.477
+- **20261002T013115Z-mini-b3335646**
+  - 计划 (objective): real run test
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=0.215
+- **20261002T013115Z-mini-fe577678**
+  - 计划 (objective): evidence gate
+  - workflow: mini
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=0
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=0.202
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

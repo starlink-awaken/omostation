@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-mini
-generated_at: 2026-09-26T12:40:03Z
+generated_at: 2026-10-10T02:07:16Z
 status: candidate
 counts:
-  runs: 18
+  runs: 24
   failures: 0
-  total: 18
+  total: 24
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # observer-mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-26T12:40:03Z
+- generated_at: 2026-10-10T02:07:16Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 18 成功运行 + 0 失败模式 = 18 草稿
+- sediment 覆盖: 24 成功运行 + 0 失败模式 = 24 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -39,6 +39,12 @@ failure_breakdown:
 - 20260926T061113Z-observer-mini-e7816027.md
 - 20260926T061556Z-observer-mini-17227890.md
 - 20260926T062740Z-observer-mini-6fe109f9.md
+- 20260930T030029Z-observer-mini-5d4deaf8.md
+- 20260930T030334Z-observer-mini-d7d1d0d8.md
+- 20260930T033735Z-observer-mini-56e8f35a.md
+- 20260930T034235Z-observer-mini-52a276e7.md
+- 20260930T035103Z-observer-mini-ca63e0d2.md
+- 20261002T013122Z-observer-mini-216ed7af.md
 
 ## 失败模式 (failures/)
 
@@ -115,6 +121,30 @@ failure_breakdown:
   - workflow: observer-mini
   - 指标: event_count=1, duration_s=0.0
 - **20260926T062740Z-observer-mini-6fe109f9**
+  - 计划 (objective): read only claim exempt
+  - workflow: observer-mini
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T030029Z-observer-mini-5d4deaf8**
+  - 计划 (objective): read only claim exempt
+  - workflow: observer-mini
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T030334Z-observer-mini-d7d1d0d8**
+  - 计划 (objective): read only claim exempt
+  - workflow: observer-mini
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T033735Z-observer-mini-56e8f35a**
+  - 计划 (objective): read only claim exempt
+  - workflow: observer-mini
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T034235Z-observer-mini-52a276e7**
+  - 计划 (objective): read only claim exempt
+  - workflow: observer-mini
+  - 指标: event_count=1, duration_s=0.0
+- **20260930T035103Z-observer-mini-ca63e0d2**
+  - 计划 (objective): read only claim exempt
+  - workflow: observer-mini
+  - 指标: event_count=1, duration_s=0.0
+- **20261002T013122Z-observer-mini-216ed7af**
   - 计划 (objective): read only claim exempt
   - workflow: observer-mini
   - 指标: event_count=1, duration_s=0.0

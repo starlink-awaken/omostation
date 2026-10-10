@@ -1,0 +1,151 @@
+id: BET-Y2Q4-T10-CJK-ROUTING
+title: 修复 Memory OS 六条意图路由对中文查询失效 (CJK \b 边界缺陷)
+status: pending
+task_type: bet
+priority: P1
+owner: agent
+source: kairon mos routing audit (D5 follow-up)
+source_ref: projects/knowledge/kairon (submodule) origin/main @ 915fc76b, packages/mos/src/mos/routing.py:32-45
+window: Y2Q4
+track: T10
+appetite: 1 day
+desc: >-
+  packages/mos/src/mos/routing.py 第 32-40 行的 _CODE_RE / _PREF_RE / _ENTITY_RE /
+  _TASK_RE / _CARD_RE / _FILE_RE 各自把**整个 alternation** 包在 \b(...)\b 里，
+  包括 CJK 分支。失效机制不是「CJK 不是词字符」—— Python 的 \b 定义在 \w 之上，
+  而 str pattern 的 \w 是 Unicode 感知的、**包含 CJK**；真正的机制是 CJK 串内部
+  **处处都是词字符**：在 文档路径 里 文档 后面紧跟 路，两侧都不存在边界，
+  \b文档\b 因此不成立。第 41 行的注释早已写明该规则（"avoid \b for CJK tokens
+  (Python word-boundary is ASCII-oriented)"），且**只有 _TEMPORAL_RE 遵守**。
+  但遵守规则 ≠「中文时间表达今天能路由」：_TEMPORAL_RE 的词表是
+  时效/有效期/何时生效/过期，加 ASCII 的 valid_from/valid_to/expired/as-of/until/
+  effective/before YYYY/after YYYY，**不含任何年份或月份相对词** ——
+  词表里没有 去年/今年/明年/前年/后年/上个月/本月/上月/下月。
+  所以今天只有上述那几个中文时间词能路由，年份月份相对词全部落 general。
+  第 41-44 行注释是「已记录但未执行」的典型：规则在案，执行缺失。
+non_goals:
+- 重排 classify_intent 的检查顺序（另开 BET-Y2Q4-T10-TEMPORAL-PRECEDENCE，需人工签署）
+- 增删或改写任何既有路由关键字（本次只改 \b 断言位置）
+- 扩展路由表 / 新增意图 / 改 backend 集合
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs:
+- .omo/tasks/active/BET-Y2Q4-T10-TEMPORAL-PRECEDENCE.yaml
+source_docs:
+- projects/knowledge/kairon/packages/mos/src/mos/routing.py
+- projects/knowledge/kairon/packages/mos/tests/test_routing.py
+- projects/knowledge/kairon/packages/mos/tests/test_eval_harness.py
+- projects/knowledge/kairon/packages/mos/tests/test_routing_matrix.py
+- docs/operations/memory-os-epic-retro.md
+depends_on: []
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+entry_gate:
+- 变更限定在 kairon 子模块内，主仓仅新增本任务记录
+- 交付前先取行为基线（before probe），再改代码
+done_when:
+- 六条意图各自对一句代表性中文自然语句分类正确（code_structure / task_debt /
+  preference_self / entity_relation / card_ops / file_note），且用的是完整问句而非裸关键词
+- 六条 ASCII 形式分类不变（含 \b 语义：taskforce / recard / vaulted 之类更长词仍不匹配）
+- tests/test_eval_harness.py 的 15 条用例分类不变，或任何变化被显式接受并记录
+- 干净环境（MOS_LIVE_GBRAIN 未设置）下全量套件绿
+- 新增测试已在修复前代码上验证失败（防空绿）
+evidence:
+- '缺陷仍活在 origin/main（kairon @ 915fc76b）：第 32-40 行六条 pattern 仍把 CJK 分支包进 \b(...)\b。第 41 行的规则写在注释里，六条全部违反。本 BET 不改动 kairon 子模块，只记录缺陷与待重做范围'
+- '可复现的缺陷读数（origin/main @ 915fc76b 实测 classify_intent）：纯名词控制句 11 条中 10 条落 general —— 谁调用了这个函数 general、函数在哪个文件 general、任务列表 general、文档路径 general、过敏信息 general、知识卡片在哪里 general、谁投资了这家公司 general、具体的调用关系是什么 general、打开任务和债务 general、我的偏好是素食 general'
+- '唯一命中的名词控制句是 哪个文件记录了 ADR file_note，靠 ASCII 的 ADR 绕过 \b，与 哪个文件 无关。该对照现由 tests/test_routing_matrix.py 的 test_cjk_word_boundary_defect_is_pinned 以合成样本（前缀X后缀）钉住，21 passed'
+- '_TEMPORAL_RE 确实合规（唯一遵守第 41 行规则的 pattern），且它持有的词真能路由：时效是什么时候 / 有效期到什么时候 / 何时生效 / 这个过期了吗 / valid_from 是什么时候 / valid_to / expired 了吗 / effective date / after 2020 的任务 全部 temporal_fact'
+- '_TEMPORAL_RE 不持有的词一律落 general：去年做过什么 / 去年写的文档在哪 / 去年的文档 / 去年写的知识卡片 / 去年的过敏信息 / 谁投资了去年的卡片 / 去年的任务 / 谁调用了去年的任务 全部 general，temporal_match 均为 False'
+- 'eval_harness 现状可复现：EVAL_CASES 15 条，其中匹配 _TEMPORAL_RE 的 0 条 —— 现有回归网对本 BET 与 precedence 决策均零信号，重做时必须自带基线'
+note: >-
+  代码改动**已丢失**，不是「已完成待 closeout」。承载它的 commit 2976f20 随 worktree
+  一起销毁，不是有效 git 对象（git cat-file -t 2976f20 → fatal），因此本 BET 的修复
+  必须从 origin/main @ 915fc76b 重新实现，并自带 before/after 基线。status 仍为 pending：
+  既有 closeout 链未走（见 .agents/skills/bet-closeout-chain），也有一个尚未成立的前置
+  ——修复本身不存在。混合查询的 precedence 问题未在本 BET 内处理，另开
+  BET-Y2Q4-T10-TEMPORAL-PRECEDENCE 记录为待决项。
+corrections:
+- date: '2026-10-04'
+  field: source_ref
+  retracted: source_ref 引用 kairon 分支 agent/mos-acl-fix commit 2976f20（base 777a3ce）作为来源
+  measured: 2976f20 与 777a3ce 均不是有效 git 对象；分支 agent/mos-acl-fix 不存在；git log --all 中 0 处命中。唯一可引用的基线是 origin/main @ 915fc76b
+  method: git cat-file -t / git rev-parse --verify / git log --all
+- date: '2026-10-04'
+  field: desc
+  retracted: 「只有 _TEMPORAL_RE 遵守，这正是中文时间表达今天能路由、另外六条不能的原因」
+  measured: _TEMPORAL_RE 遵守规则，但它不含任何年份或月份相对词。今天能路由的中文时间词只有 时效 / 有效期 / 何时生效 / 过期；去年 / 今年 / 明年 / 前年 / 后年 / 上个月 / 本月 / 上月 / 下月 全部落 general
+  method: 读 routing.py:42-45 词表 + 实测 classify_intent（16 条年份月份句全 general、temporal_match=False）
+- date: '2026-10-04'
+  field: desc
+  retracted: 「Python 的 \b 以 [a-zA-Z0-9_] 判定词字符，CJK 表意文字不在其中，因此 CJK 分支两侧的边界永远无法成立」
+  measured: str pattern 的 \w 是 Unicode 感知的、包含 CJK。失效机制是 CJK 串内部处处是词字符 —— 文档路径 里 文档 后紧跟 路，该处无边界。结论（\b 包裹使 CJK 分支失效）不变，机制解释是错的
+  method: tests/test_routing_matrix.py test_cjk_word_boundary_defect_is_pinned 的合成样本（前缀X后缀）实测
+- date: '2026-10-04'
+  field: depends_on
+  retracted: 'depends_on: [BET-Y2Q4-T10-D5-TEMPORAL-NL]'
+  measured: BET-Y2Q4-T10-D5-TEMPORAL-NL 在 .omo/tasks/ 下不存在任何任务记录 —— 全目录仅剩本文件第 38 行这一处自引用。active/planned/blocked/done/closed/archived/remediation 八个目录均无同名文件
+  method: grep -rn D5-TEMPORAL-NL .omo/ + ls .omo/tasks/*/（唯一名字含 D5 的文件是 .omo/tasks/done/TASK-91D5DF3A.yaml，KOS GBK 错码清理，与时间词无关）
+  resolution: '置为 depends_on: []（空）。本 BET 派生自一次 routing 审计而非某条任务记录；这一对记录里唯一真实的方向约束是反的（TEMPORAL-PRECEDENCE 的 depends_on 指向本 BET），已在对侧记录。保留一个不存在的 id 会让任务计数器报出一条虚构的依赖'
+- date: '2026-10-04'
+  field: evidence（第 1 条）
+  retracted: 「路由改动 + 测试已提交：kairon 子模块 commit 2976f20」
+  measured: 该 commit 不存在，交付物不存在。原条目作为「已交付」证据整体撤回
+- date: '2026-10-04'
+  field: evidence（第 2 条，探测集 12 条中 9 条改变分类）
+  retracted: 谁调用了这个函数 general→code_structure 等 9 条 before→after 迁移
+  measured: 9 条的 before 一侧（general）可复现；after 一侧不可复现 —— origin/main 就是未修复状态，修复 commit 已丢失，无法复跑 after。这 9 条不是被证伪，而是无法核验
+  method: 实测 classify_intent 11 条名词控制句，现值全为 general
+- date: '2026-10-04'
+  field: evidence（第 3 条，3 条未变）
+  retracted: 「去年做过什么 temporal_fact→temporal_fact（_TEMPORAL_RE 本就合规）」「去年写的文档在哪 temporal_fact→temporal_fact」
+  measured: 两条都被证伪 —— 实测均为 general，temporal_match=False。_TEMPORAL_RE 合规不等于它认识这些词；它根本没有年份词可短路。该条目同一行里的第三个分句（哪个文件记录了 ADR 靠 ASCII 的 ADR 命中、与 哪个文件 无关）经实测为 file_note，予以保留
+  method: classify_intent 实测 + git log -S去年 -- packages/mos/src/mos/routing.py（空；该 pattern 自 bf5c02db 起逐字节未变）
+- date: '2026-10-04'
+  field: evidence（关键字机械核对零增删零改词）
+  retracted: 7 个 pattern 新旧命中集合完全一致；唯一结构性改动是把 which (file|doc) 的捕获组改为 (?:file|doc)
+  measured: 不可核验 —— 该核对的新旧两侧都需要已丢失的 commit。当前 _FILE_RE 仍含捕获组 which (file|doc)（routing.py:40），说明该改动确未进入 origin/main
+- date: '2026-10-04'
+  field: evidence（防空绿验证）
+  retracted: 「还原修复前 routing.py 后全量 2 failed / 87 passed，失败项为 test_chinese_intents_route_correctly 与 test_mixed_cjk_temporal_precedence_is_pinned_not_endorsed；恢复修复后 89 passed / 0 failed」
+  measured: 两个测试名在当前 tests/ 下均不存在（它们随丢失的 commit 一起没了），失败/通过计数因此不可核验。但同一条证据里的观察「谁调用了这个函数 -> general、函数在哪个文件 -> general」经实测完全复现，予以保留 —— 它现在由 test_routing_matrix.py 的 test_cjk_word_boundary_defect_is_pinned 从另一侧独立钉住
+  method: grep -rn 'def test_(chinese_intents_route_correctly|mixed_cjk_temporal_precedence_is_pinned_not_endorsed)' tests/ → 0 命中；实测两条查询 → general
+- date: '2026-10-04'
+  field: evidence（ruff check + format --check 通过）
+  retracted: 针对改名后文件的 ruff 读数
+  measured: 不可核验（针对的是已丢失的版本）。当前 origin/main 的 routing.py 实测 ruff check 通过，与本条无矛盾
+- date: '2026-10-04'
+  field: note
+  retracted: 「代码改动本身已完成并提交（2976f20）」
+  measured: 代码改动已丢失，不是已完成待 closeout。status 保持 pending，但理由里必须包含「修复本身不存在、需重做」这一层，而不只是 closeout 未走
+- date: '2026-10-04'
+  field: source_docs
+  change: 新增 projects/knowledge/kairon/packages/mos/tests/test_routing_matrix.py
+  measured: 该文件已存在于工作树（未跟踪，21 passed），是本缺陷当前唯一可复现的观测面，缺了它本 BET 无法核验
+evidence_required:
+- 每个中文意图一句代表性问句分类正确
+- ASCII 形式与 eval_harness 分类零漂移
+- 干净环境全量套件绿
+test_plan:
+- 'cd projects/knowledge/kairon/packages/mos && env -u MOS_LIVE_GBRAIN uv run --with pytest python -m pytest tests/ -q'
+- 'cd projects/knowledge/kairon && uv run --with ruff ruff check packages/mos/src/mos/routing.py packages/mos/tests/test_routing.py'
+- 'cd projects/knowledge/kairon && uv run --with ruff ruff format --check packages/mos/src/mos/routing.py packages/mos/tests/test_routing.py'
+- '防空绿：git checkout -- packages/mos/src/mos/routing.py 还原修复前版本，重跑新测试观察失败，再恢复'
+- 'cd projects/knowledge/kairon && env -u MOS_LIVE_GBRAIN uv run --with pytest python -m pytest tests/test_eval_harness.py -q'
+workflow: bet-execution
+write_surfaces:
+- projects/knowledge/kairon/packages/mos/src/mos/routing.py
+- projects/knowledge/kairon/packages/mos/tests/test_routing.py
+pasw_required: false
+circuit_breaker: 若发现需要重排检查顺序才能让中文路由正确，停下并转 BET-Y2Q4-T10-TEMPORAL-PRECEDENCE
+retro_required: true
+retro_path: .omo/_knowledge/retros/BET-Y2Q4-T10-CJK-ROUTING.md
+agent_profile_hint: engineering-agent
+started_at: '2026-10-03T00:00:00Z'
+completed_at: null
+blocked_by: null
+retry_count: 0

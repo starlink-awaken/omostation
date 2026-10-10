@@ -27,7 +27,7 @@ services:
   environment:
     PATH: /opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
   resilience:
-    keepalive: crashed
+    keepalive: always
     throttle_interval: 10
   run_at_load: true
   outputs:
@@ -265,39 +265,37 @@ services:
     endpoint: http://localhost:7431/health
     max_stale_hours: 24
 - id: cockpit.dashboard
-  enabled: false
-  generate: false
-  config_source: 手写 plist (~/Library/LaunchAgents/com.cockpit.dashboard.plist)
+  enabled: true
+  generate: true
+  config_source: generated from services.yaml
   scheduler: launchd
   trigger: keepalive
   label: com.cockpit.dashboard
   program:
-    interpreter: uv
-    entrypoint: projects/cockpit
-    args:
-    - python
-    - -m
-    - cockpit.dashboard_server
-    - --host
-    - 127.0.0.1
-    - --port
-    - '8090'
+    interpreter: /bin/bash
+    entrypoint: bin/runtime/run-cockpit-dashboard.sh
   resilience:
-    keepalive: crashed
+    keepalive: always
+    throttle_interval: 10
   run_at_load: true
+  environment:
+    WORKSPACE: /Users/xiamingxing/Workspace
+    COCKPIT_DASHBOARD_PORT: '8090'
+    COCKPIT_UI_ROOT: /Users/xiamingxing/Workspace/projects/cockpit-ui
+    PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
   ports:
   - 8090
   outputs:
     stdout: .omo/_delivery/cockpit-dashboard-stdout.log
     stderr: .omo/_delivery/cockpit-dashboard-stderr.log
-  notes: Cockpit Web 面板 :8090 (含 /api/svc/* 服务控制面)。 注意 8090 会自增占用 809x, 本地模型端口已避让到
-    818x/819x 段。
+  notes: Cockpit Web 面板 :8090 (含 /api/svc/* 服务控制面)；8090 会自增占用 809x, 本地模型端口已避让到 818x/819x
+    段。本机 /panorama 受管产品入口，仅绑定回环地址；三类主体的服务端角色、能力与资源范围授权仍是开放门禁，不得据此宣称 DCP-20/21
+    完成。
   liveness:
     signal: http
-    endpoint: http://localhost:8090/health
+    endpoint: http://127.0.0.1:8090/api/health
     max_stale_hours: 24
   depends_on: []
-  disabled_reason: "刻意不加载: BET 台账约束「不切换人类 UI 入口」, 待 ADR-0456; 解释器 venv cockpit-dashboard-py314 亦不存在 (TASK-F54F176A, 2026-09-28)"
 - id: docker.observability-db
   enabled: false
   generate: false
@@ -6012,13 +6010,32 @@ services:
   notes: '投影租约自动续期 (2026-10-03 第 3 次实证: 全量 publisher panorama-collect 受
     「工作区==origin/main 且完全洁净」强身份校验 + 5~14min 采集耗时约束, 生产长期
     无法自动发布 revision, dashboard :43191 周期性 503 projection_stale, 人工续期 3 次).
-    本服务每 8min 续期一次 (租约 10min < 读端 15min 硬上限, 续点时剩余 90~180s 裕量);
+    本服务每 8min 检查一次 (租约 10min, 续租阈值 9min, 相对 8min 调度保留至少 1min 裕量);
     仅重打 generated_at/fresh_until, 数据内容与 provenance 逐字继承, 观测龄期显示保持诚实.
     配套 GC: 保留最近 48 个 revision (实证 631 个孤儿占 9.9GB). 应急可 --force / --status / --gc.'
   outputs:
     stdout: ~/.local/log/projection-republisher.log
     stderr: ~/.local/log/projection-republisher.log
   depends_on: [omostation.zhixing-dashboard]
+- id: omostation.panorama-compact-observation
+  enabled: true
+  generate: true
+  run_at_load: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 240
+  label: com.omostation.panorama-compact-observation
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/panorama/compact-observation.py
+    args: []
+  environment:
+    PATH: /opt/homebrew/bin:/usr/local/bin:/Users/xiamingxing/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+  outputs:
+    stdout: ~/.local/log/panorama-compact-observation.log
+    stderr: ~/.local/log/panorama-compact-observation.log
+  notes: '每 4 分钟从规范 Workspace 直接采集 knowledge_health、experience_graph、connectors、bos_verifier、evolution、workspace、launchd_health 七个限界 facet；总预算 240 秒，Cockpit 5 分钟 freshness 窗口下保留实际运行余量。使用独立子进程超时、单飞锁、原子 last-good 文件；workspace 只枚举 worktree 与 lock 文件，不诊断孤儿/陈旧状态；launchd 观察保留 registry digest、label、uid、stdout/stderr 与命令结果分类；不发布 Zhixing 投影。'
+  depends_on: []
 - id: omostation.zhixing-projection-fullrefresh
   enabled: true
   generate: true

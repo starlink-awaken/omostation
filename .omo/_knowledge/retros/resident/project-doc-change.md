@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-doc-change
-generated_at: 2026-09-26T12:40:03Z
+generated_at: 2026-10-10T02:07:16Z
 status: candidate
 counts:
-  runs: 7
+  runs: 10
   failures: 0
-  total: 7
+  total: 10
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-doc-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-09-26T12:40:03Z
+- generated_at: 2026-10-10T02:07:16Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 7 成功运行 + 0 失败模式 = 7 草稿
+- sediment 覆盖: 10 成功运行 + 0 失败模式 = 10 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -28,6 +28,9 @@ failure_breakdown:
 - 20260919T174616Z-project-doc-change-546d5464.md
 - 20260924T021135Z-project-doc-change-db6d7446.md
 - 20260926T060829Z-project-doc-change-4bc4d727.md
+- 20260926T232821Z-project-doc-change-73c44026.md
+- 20261001T120104Z-project-doc-change-3b7db458.md
+- 20261004T165017Z-project-doc-change-e17bbeb9.md
 
 ## 失败模式 (failures/)
 
@@ -84,6 +87,24 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=3
   - 指标: event_count=6, duration_s=1528.465
+- **20260926T232821Z-project-doc-change-73c44026**
+  - 计划 (objective): [BET-Y2Q4-T10-01] 规则接线收口批次一 — 42 条 CR-* 零引用的四态判定与别名映射 (Appetite: 2 days)
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=1
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=26073.85
+- **20261001T120104Z-project-doc-change-3b7db458**
+  - 计划 (objective): [BET-Y2Q4-T10-218 registration only] record the principal-authorized one-time requirement-iteration waiver, register BET/spec for retro.run_id same-BET workflow binding; no implementation in this run
+  - workflow: project-doc-change
+  - 指标: event_count=1, duration_s=0.0
+- **20261004T165017Z-project-doc-change-e17bbeb9**
+  - 计划 (objective): Add docs/ONBOARDING.md pointers-only newcomer orientation
+  - workflow: project-doc-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=blocked, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=65898.653
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 
