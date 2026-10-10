@@ -50,9 +50,12 @@ last_updated: 2026-09-17
 | 需要什么 | 去哪里读 | 维度 |
 |----------|---------|------|
 | 项目元数据 | `docs/project-registry.yaml` | 事实层 |
+| 项目按层分类 | [`generated/project-layer-index.md`](generated/project-layer-index.md) | 事实层 |
 | 运行时状态 | `.omo/state/system.yaml` | 事实层 |
 | 架构契约 | `ARCHITECTURE.md` | 架构层 |
 | 端口分配 | `protocols/port-registry.yaml` | 边界层 |
+| Vault 路径 | `protocols/vault-paths.yaml` | 边界层 |
+| X 轴保证 | `protocols/x-axis-registry.yaml` | 边界层 |
 | 治理规则 | `.omo/_truth/registry/governance-checks.yaml` | 事实层 |
 | 文档治理 | `.omo/_truth/registry/document-governance.yaml` | 事实层 |
 | 文档模板 | [`templates/`](templates/) (ssot/derived/ephemeral 三类) | 架构层 |
@@ -268,6 +271,12 @@ last_updated: 2026-09-17
 -→ [CLI 分册](cli/) — `docs/cli/` CLI 命令参考分类分册 (`bin/ssot/gen-help-docs.py` 生成)
 -→ [superpowers 计划](superpowers/plans/) — `docs/superpowers/plans/` 增强工作流计划
 -→ [superpowers 规格](superpowers/specs/) — `docs/superpowers/specs/` 增强工作流设计规格
+-→ [业务域文档](business/) — `docs/business/` 业务与知识增长类文档
+-→ [架构分册](architecture/) — `docs/architecture/` 架构演进、CI、可观测性设计
+-→ [设计分册](design/) — `docs/design/` content-model 各阶段设计
+-→ [运维分册](operations/) — `docs/operations/` 执行计划、健康巡检、CI 变更
+-→ [报告分册](reports/) — `docs/reports/` 阶段性报告与状态纪要
+-→ [SOP 分册](SOPs/) — `docs/SOPs/` 标准作业流程
 ## docs/ 根目录平铺文档
 
 历史专题与顶层参考 (架构/战略/治理/G-DEL 系列等) 平铺于 docs/ 目录下,
