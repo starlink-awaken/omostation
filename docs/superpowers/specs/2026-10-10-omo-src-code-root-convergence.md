@@ -216,6 +216,17 @@ sync 再生**的 registry，两个都归 `code_root()`；② `omo_observability.
      ⇒ `PASS (1 gitlinks, source=worktree, mode=changed-from 75cb6f5bf)` rc=0。单 lane、零生成态、零他人 gitlink。
    - 孤儿 `upstream` ref 是全机共享面（这台机器上每个 agent 的 pointer transaction 都会同样 bail），
      属他人状态 ⇒ **本轮不删**，作为待授权项上报。
+   - **push 时该 gitlink 又被上游反超（同日二次实测）**：`git fetch origin main` 后
+     `origin/main:projects/omo` = `e8c7aa0ed`（omo #211，`EMBED_NODE_URL` 改 MagicDNS 名），
+     本分支仍记 `5befe6ad` ⇒ pre-push `gitlink-ancestry` 判为**指针回退**并阻断（push rc=1，
+     同批还打出 `submodule-reachability` 129s 慢读数）。处置走**前进**不走豁免标签：
+     `git -C projects/omo checkout e8c7aa0ed002` + 单独 commit（`83667fcd8`），三条前置判据 ——
+     `merge-base --is-ancestor 5befe6ad7530 e8c7aa0ed002` 为真（中间只这 1 个 commit，与本 BET 面无关）、
+     三个新检测器用例在 `e8c7aa0ed` 上 `git cat-file -e` 逐个 PRESENT、`omo_paths.code_root()` 存在。
+     不打 `[gitlink-regress: …]`：那会把别人的前进登记成自己的债，而 `gate-known-debt.yaml`
+     是 `shrink_only` 面，只增不减。该 worktree 的 `projects/omo` 实测
+     `--is-shallow-repository=false` ⇒ ancestry 判据在此有意义（§6 worktree 深浅取决于 claim 路径，
+     1-commit 检出里这类判据无意义）。
 5. `bet-ledger.py complete BET-Y2Q4-T10-239` 通过（evidence matrix + `merged_reachable_commit`
    **须含终态** —— 判据见 BET-Y2Q4-T10-238 第 9 条：可达 ≠ 含终态，用
    `git show <sha>:<path>` 数站点，不数 `^def test_`）。

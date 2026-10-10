@@ -41736,7 +41736,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-10-omo-src-code-root-convergence.md
     spec_version: 1.0.0
-    content_digest: sha256:0dfc6eef0daedb8bdd48f18c4ffa29fa06bf604b7687c6ccad1c7b0125d415b2
+    content_digest: sha256:e2ba808690283faca17e38ad3b51e009b7e3107ec48155696031ecd869dc5de5
     decision_ref: decision://accepted/BET-Y2Q4-T10-239
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
