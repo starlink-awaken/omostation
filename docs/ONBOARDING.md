@@ -16,7 +16,7 @@ type: ssot
 | 我想… | 去读 | 为什么是这份 |
 |---|---|---|
 | 理解系统是什么 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 稳定架构契约的唯一权威 |
-| 找到我的路 | [SYSTEM-INDEX.md](SYSTEM-INDEX.md) | 导航枢纽，按层索引全仓（根级另有一份 [SYSTEM-INDEX.md](../SYSTEM-INDEX.md)） |
+| 找到我的路 | [SYSTEM-INDEX.md](SYSTEM-INDEX.md) | 导航枢纽，按层索引全仓 |
 | 知道操作规则 | [AGENTS.md](../AGENTS.md) | 工作区运行规则与红线 |
 | 加载运行时事实 / SSOT | [agent-workflow bootstrap](../bin/agent-workflow.py) | 单一入口把当前运行态与 SSOT 注入会话 |
 | 做第一次受管改动 | [agent-quickstart/SKILL.md](../.agents/skills/agent-quickstart/SKILL.md) | 5 分钟跑通 gate → claim → edit → PR |
