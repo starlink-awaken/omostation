@@ -1,0 +1,21 @@
+{
+  "schema": "test-receipt/v1",
+  "bet_id": "BET-Y2Q4-T10-240",
+  "title": "BET-Y2Q4-T10-240 tests — 36 passed on origin/main baseline",
+  "command": "uv run --with pytest --with pyyaml pytest tests/test_zhixing_host_sync.py tests/unit/test_zhixing_get_method_safety.py -q",
+  "result": "36 passed",
+  "duration_seconds": 23.37,
+  "observed_at": "2026-10-10T09:05:00Z",
+  "environment": {
+    "python": "3.14.8",
+    "pytest": "9.1.1",
+    "base": "origin/main@75cb6f5bf96b742ddecb4aab96c9a3f45a3daf27"
+  },
+  "coverage": {
+    "read_only_get_operations_allowlist": "pass",
+    "execution_operations_rejected": "pass (6 operations × GET)",
+    "query_layer_defense": "pass",
+    "zero_side_effect_loopback": "pass",
+    "projection_mode_post_rejected": "pass"
+  }
+}
