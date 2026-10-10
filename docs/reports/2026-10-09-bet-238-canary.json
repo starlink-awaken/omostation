@@ -270,7 +270,10 @@
       "failing": [],
       "mergeable": "MERGEABLE",
       "mergeStateStatus": "CLEAN",
-      "skipping_not_failing": ["doc-freshness", "Documents domain projects"],
+      "skipping_not_failing": [
+        "doc-freshness",
+        "Documents domain projects"
+      ],
       "note": "两条 skipping 是 workflow on.paths 过滤，不是失败；判「CI 绿」时逐条读 conclusion，不读 job 总数"
     },
     "ci_interface_check": {
@@ -308,6 +311,37 @@
         "contains_final_fix": true
       },
       "why_the_guard_missed_it": "bet-ledger 对 merged_reachable_commit 只校验 reachability（`bin/plan/bet-ledger.py:1682`），所以指向「更早的那次合并」永远绿 —— 可达不等于含我担保的改动。这是本 BET 主题（证据描述的树必须等于它担保的那棵树）在台账侧的自身实例，retro §4-9 记为第 9 条教训。"
+    },
+    "doc_numbering_defect_and_fixpoint": {
+      "measured_at_utc": "2026-10-10T01:23:00Z",
+      "defect": "合并后回查 receipt 时发现两个 `## 7`：`171:## 7 安全与清理` 与 `182:## 7 rollback`。起因是上一轮把安全节改名到 §7 时没把 rollback 顺移。",
+      "found_by": "不依赖工具的复核：`grep -n '^## '` 逐节打印再数一遍。",
+      "no_gate_catches_it": "markdownlint 默认只查 H1 唯一（MD025），重复 H2 不在射程；doc-governance 查 frontmatter 与引用有效性、不查编号连续；PR #4690 的 23 条 checks 全 SUCCESS 也没看见。⇒ 该缺陷结构性躲过全部现有门。",
+      "fix": "rollback 节改为 `## 8`；改后 `^## ` 计数 8 且逐行编号 1..8 无重复（实测打印核对）。",
+      "cross_reference_audit": {
+        "internal_refs_to_7": 1,
+        "text": "第 1 节『push 前 L3 深度审查 0 findings（见 §7）』语义仍指安全节，无需改动",
+        "excluded": "第 2.2 节的 `AGENTS.md §7⑤` 引的是外部文档节号，不计入本文编号",
+        "self_correction": "初稿写『三处交叉引用』，`grep §` 实测为 1 处，已订正 —— 与 AGENTS.md『凡断言先量一次』同族"
+      },
+      "lesson": "retro §4 第 10 条：改一处编号 = 文档版的「改一个定义点没顺着改引用」，没有门会替你查",
+      "fixpoint_after_heading_fix": {
+        "device": "python3 importlib（sys.modules 先注册再 exec_module）直调 bet-ledger / chain_bind",
+        "spec_errors": [],
+        "bindings": 9,
+        "stale": 0,
+        "missing": 0,
+        "chain_bind_evaluate_complete": "ok=True reasons=[]",
+        "bet_ledger_verify": "见下条独立读数",
+        "receipt_digest_rebound_occurrences": 4,
+        "retro_digest_rebound_occurrences": "见 retro 第 10 条落地后重算",
+        "note": "ledger / receipt 之外零文件变动；canary 本轮改动只此一块"
+      },
+      "device_defects_corrected_in_this_run": [
+        "digest 校验器未剥 `receipt://` scheme ⇒ 8 条全报 missing（假信号）。剥 scheme 后 9 绑定全 OK。",
+        "test_count 从 `bin/gac/check-evidence-freshness.py` 那棵树里数 `^def test_` ⇒ 恒 0（那是被测脚本，不是用例文件）。改指 `tests/unit/test_evidence_freshness_reader_plane.py` 后 before=9 / after=10。",
+        "retro 上两次误操作（删/补 `## 5` 后空行）净为零：`git diff --quiet` 证实该文件未变，其 digest 无需重绑。"
+      ]
     }
   }
 }
