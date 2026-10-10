@@ -1,9 +1,10 @@
 ---
 schema: md/v1
 status: active
-lifecycle: governance-evidence
+lifecycle: history
 owner: dashboard-convergence
 created: 2026-10-08
+last-reviewed: 2026-10-08
 type: workflow-waiver
 value_indicator_policy: false
 ---

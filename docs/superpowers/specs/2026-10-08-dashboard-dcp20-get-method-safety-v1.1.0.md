@@ -4,8 +4,9 @@ schema_version: specification/v1
 status: draft
 lifecycle: spec
 owner: dashboard-convergence
-bet_id: BET-Y2Q4-T10-236
+bet_id: BET-Y2Q4-T10-240
 spec_version: 1.1.0
+last-reviewed: 2026-10-08
 title: DCP-20 P0 Zhixing GET 方法安全与发布边界
 implementation_authorized: false
 value_indicator_policy: false
