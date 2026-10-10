@@ -45,3 +45,18 @@ metadata:
 completed_at: '2026-09-04T10:52:54Z'
 evidence_paths:
 - sqlite://family-hub/quests/27
+
+ssot_writeback_hist:
+  annotated_at: '2026-10-10'
+  rule: CR-C2G-V3-01
+  completed_at: '2026-09-04T10:52:54Z'
+  context_uri: bos://governance/tasks/planned/QUEST-27
+  reason: >-
+    test fixture from cockpit quest API; the reference SSOT doc
+    .omo/tasks/planned/quest_template.yaml never existed (planned/ dir absent);
+    evidence sqlite://family-hub/quests/27; no writeback target exists to append to.
+  content_preserved_at: sqlite://family-hub/quests/27
+  note: >-
+    backdated historical exemption per l0-always-green (2026-10-10): task completed
+    before read-side enforcement existed; writeback append target missing. NOT a
+    silent skip - the gate reports this bucket explicitly.
