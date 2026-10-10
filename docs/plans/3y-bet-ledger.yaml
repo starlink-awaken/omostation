@@ -41495,6 +41495,63 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T16-03
+  title: Panorama CODE_ROOT 指向陈旧检出导致门禁与台账读数失真 — 立独立单并给出修复决策矩阵
+  track: T16-DRIFT-GUARD
+  window: Y2Q4
+  status: pending
+  priority: P2
+  appetite: 1 week
+  risk_level: L1
+  human_gate: true
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  workflow: bet-execution
+  underlying_workflow: project-doc-change
+  goal: Panorama launchd 作业 com.omostation.panorama-dashboard-refresh 的 PANORAMA_CODE_ROOT
+    指向一次性手工克隆 code-main，该副本自 2026-09-26 起从未 fetch，导致 runtime/dashboard/data.json 内同一文件自相矛盾：gates/bets
+    等字段取自陈旧副本（bets=482），runtime.* 取自当前工作区（bets=535）。 collect_code_root_health() 拿 CODE_ROOT
+    的 HEAD 与它自己克隆时的 refs/remotes/origin/main 自比， 结构上不可能发现自身陈旧，恒报 verdict=PASS。本单立独立单、给出
+    A/B/C/D 修复决策矩阵供 principal 裁定，不代决、不改 plist、不执行 launchctl。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-10-panorama-code-root-staleness.md
+    spec_version: 1.0.0
+    content_digest: sha256:a0f14f5c356f237dc96b22c046366450d0548421f046992062b9967d4c370941
+    decision_ref: decision://accepted/BET-Y2Q4-T16-03
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-10-panorama-code-root-staleness.md
+  - docs/plans/3y-bet-ledger.yaml
+  non_goals:
+  - 不自动改任何 plist，不执行任何 launchctl 子命令（需 principal 单独授权）
+  - 不对任何克隆执行 reset --hard / merge / pull
+  - 不把 crontab 平面的 6 条 orphan 纳入本单
+  - 不把本单内容塞进 T16-01（其范围是 launchd 平面 shadow 校验）
+  done_when:
+  - collect_code_root_health() 的 verdict 从假 PASS 变为 STALE，behind_origin_main 反映真实差距
+  - data.json 内 gates[*] 与 runtime.scheduler 不再出现来自不同代码副本的互斥数值
+  - 修复方案由 principal 从决策矩阵 (A/B/C/D) 裁定并落地追踪
+  verify:
+  - cmd: git -C /Users/xiamingxing/.local/share/zhixing-dashboard/code-main rev-list --count HEAD..refs/remotes/origin/main
+    expect: fetch 后返回大于 0（实测 279），不再因 remote-tracking ref 是克隆快照而恒为 0
+  - cmd: "python3 -c \"import json;d=json.load(open('runtime/dashboard/data.json'));h=d.get('code_root_health',{});print(h.get('verdict'),h.get('behind_origin_main'))\""
+    expect: 修复后 code_root_health.verdict 不再是陈旧自比产生的假 PASS，且 behind_origin_main 反映真实差距
+  - cmd: "python3 -c \"import json;d=json.load(open('runtime/dashboard/data.json'));print(d.get('runtime',{}).get('scheduler',{}))\""
+    expect: data.json 内 gates[*] 与 runtime.scheduler 不再出现来自不同代码副本的互斥数值
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  depends_on: []
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -41633,7 +41690,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 535
+  total_bets: 536
   windows:
   - Y1Q1
   - Y1Q2
