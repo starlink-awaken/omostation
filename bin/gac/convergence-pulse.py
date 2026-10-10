@@ -214,7 +214,7 @@ def collect_health(until: date) -> dict[str, object]:
     try:
         import urllib.request
 
-        req = urllib.request.Request("http://100.99.210.78:18700/health", headers={"User-Agent": "convergence-pulse/1.0"})
+        req = urllib.request.Request("http://100.64.110.118:18700/health", headers={"User-Agent": "convergence-pulse/1.0"})
         with urllib.request.urlopen(req, timeout=5) as resp:
             state["embed_node"] = "ok" if resp.status == 200 else f"http_{resp.status}"
     except Exception as exc:

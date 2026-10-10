@@ -16,7 +16,7 @@ TS_SOCKET="--socket=/var/run/tailscale.brew.sock"  # 8/25+9/1 双案教训: CLI 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WS_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"  # bin/health/ → workspace root
 STATE_FILE="$WS_ROOT/.omo/state/tailscale-heartbeat.json"
-MACMINI_IP="100.99.210.78"
+MACMINI_IP="100.64.110.118"
 
 mkdir -p "$(dirname "$STATE_FILE")"
 
