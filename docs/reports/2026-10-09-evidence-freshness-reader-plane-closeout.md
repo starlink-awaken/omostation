@@ -168,6 +168,14 @@ ISC-6 的约束力由 spec `1.1.0` + 重算的 `content_digest` 承载（台账 
 落到台账侧的一次自身实例，retro 记为第 9 条教训。改绑与 8 处 digest 的重绑在同一批交付里做，fixpoint 用
 `chain_bind.evaluate_complete` + `bet-ledger.py verify` 复判。
 
+同一轮回查也逮到了本报告自己的一处结构缺陷：把安全节改名 `## 7 安全与清理` 时，没把原先的 `## 7 rollback`
+顺移，于是 `origin/main` 上这份文档有两个 `## 7`。它不过任何 linter（markdownlint 默认只查 H1 唯一，
+重复 H2 不在射程），所以只能靠**逐节打印 `^## ` 再数一遍**这种不依赖工具的复核发现。本轮改为 `## 8 rollback`，
+交叉引用改前逐处 `grep §` 核对：指向 `§7` 的内部引用只有一处（第 1 节「push 前 L3 深度审查 0 findings（见 §7）」），
+语义仍指安全节、无需改动；第 2.2 节的 `AGENTS.md §7⑤` 引的是外部文档节号，与本文编号无关。
+教训同上一条同族：**改了节号就要把整份文档的节号与交叉引用一起过一遍**，且这类「看不见错误的门」不存在时，
+复核装置必须自己造。
+
 ## 7 安全与清理
 
 - 推送前 L3 deep security review 覆盖 **PR #4689 的 3 个 commit：0 findings**。
@@ -179,7 +187,7 @@ ISC-6 的约束力由 spec `1.1.0` + 重算的 `content_digest` 承载（台账 
   `BRIEF.md`、子模块 gitlink 一条未入 commit。
 - affected-graph receipt 落 `runtime/affected/`（真实目录、非 symlink），用毕删除，未提交。
 
-## 7 rollback
+## 8 rollback
 
 单条反向即可，读侧与被它替换的历史行为等价：
 
