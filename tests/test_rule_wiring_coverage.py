@@ -114,6 +114,80 @@ def test_missing_file_returns_empty(tmp_path):
     assert mod._rule_ids(tmp_path / "none.yaml") == []
 
 
+# ── F3/P4: 豁免清单 (suppression list) 不被当成接线证据 ──
+
+
+def _plant_suppression_tree(tmp_path, lint_text):
+    """构造最小树: bin/gac/governance-convergence-lint.py (豁免清单) + 注册表."""
+    lint = tmp_path / "bin" / "gac" / "governance-convergence-lint.py"
+    lint.parent.mkdir(parents=True)
+    lint.write_text(lint_text, encoding="utf-8")
+    reg = tmp_path / ".omo" / "_truth" / "registry"
+    reg.mkdir(parents=True)
+    (reg / "governance-checks.yaml").write_text(
+        "gac:\n  rules:\n  - id: CR-GOV-CLOSED-LOOP-01\n", encoding="utf-8")
+    (reg / "hook-manifest.yaml").write_text("# none\n", encoding="utf-8")
+    return lint, reg
+
+
+def test_legacy_cr_ids_mention_alone_is_not_wired(tmp_path, monkeypatch):
+    """P4: LEGACY_CR_IDS (纯豁免清单) 里的 id 不得判为 wired.
+
+    这正是 read-only 调查指出的假阳性: 清单的整个作用是声明规则 NOT active,
+    但接线判定曾把『它在语料里出现』当成『它被执行』。现在剥块后它必须出现在
+    unreferenced 候选 + exemption-only, 而不是 wired。
+    """
+    mod = _load()
+    lint, reg = _plant_suppression_tree(
+        tmp_path,
+        'LEGACY_CR_IDS = {"CR-GOV-CLOSED-LOOP-01", "UNRELATED"}\nprint("x")\n')
+    monkeypatch.setattr(mod, "_ROOT", tmp_path)
+    monkeypatch.setattr(mod, "GOV_CHECKS", reg / "governance-checks.yaml")
+    monkeypatch.setattr(mod, "L0_SUBMODULE", tmp_path / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml")
+    monkeypatch.setattr(mod, "EXEC_MANIFEST", reg / "hook-manifest.yaml")
+    inv = mod.inventory()
+    got = set(inv["candidates_unwired"]["governance-checks"])
+    assert "CR-GOV-CLOSED-LOOP-01" in got, f"豁免清单提及不得计为 wired: got={sorted(got)}"
+    assert "CR-GOV-CLOSED-LOOP-01" in inv["exemption_only_ids"]["governance-checks"]
+
+
+def test_ast_strip_survives_inline_and_comment_brace(tmp_path, monkeypatch):
+    """P4: 旧 regex 要求块以 `\\n}` 结尾; 单行清单或注释含 `}` 会让它静默失效。
+    AST 剥离必须覆盖这些排版 —— 否则豁免清单又会变回 wired (与测量同源的失败模式)。
+    """
+    mod = _load()
+    for i, lint_text in enumerate((
+        'LEGACY_CR_IDS = {"CR-GOV-CLOSED-LOOP-01", "X"}\n',
+        'LEGACY_CR_IDS = {\n    "CR-GOV-CLOSED-LOOP-01",  # }\n}\n',
+    )):
+        sub = tmp_path / f"v{i}"
+        lint, reg = _plant_suppression_tree(sub, lint_text)
+        monkeypatch.setattr(mod, "_ROOT", sub)
+        monkeypatch.setattr(mod, "GOV_CHECKS", reg / "governance-checks.yaml")
+        monkeypatch.setattr(mod, "L0_SUBMODULE", sub / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml")
+        monkeypatch.setattr(mod, "EXEC_MANIFEST", reg / "hook-manifest.yaml")
+        inv = mod.inventory()
+        assert not ("CR-GOV-CLOSED-LOOP-01" in mod._exec_corpus()), "AST 剥离后不能出现在语料"
+
+
+def test_genuine_implementation_still_detected(tmp_path, monkeypatch):
+    """P4: 豁免清单存在 ≠ 真实实现不存在。同一 id 出现在真实执行体时必须仍 wired."""
+    mod = _load()
+    lint, reg = _plant_suppression_tree(
+        tmp_path,
+        'LEGACY_CR_IDS = {"UNRELATED"}\nprint("x")\n')
+    impl = tmp_path / "bin" / "gac" / "real-host.py"
+    impl.write_text('def check():  # CR-GOV-CLOSED-LOOP-01\n    return True\n', encoding="utf-8")
+    monkeypatch.setattr(mod, "_ROOT", tmp_path)
+    monkeypatch.setattr(mod, "GOV_CHECKS", reg / "governance-checks.yaml")
+    monkeypatch.setattr(mod, "L0_SUBMODULE", tmp_path / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml")
+    monkeypatch.setattr(mod, "EXEC_MANIFEST", reg / "hook-manifest.yaml")
+    inv = mod.inventory()
+    got = set(inv["candidates_unwired"]["governance-checks"])
+    assert "CR-GOV-CLOSED-LOOP-01" not in got, f"真实实现必须仍被检测为 wired: got={sorted(got)}"
+    assert "CR-GOV-CLOSED-LOOP-01" not in inv["exemption_only_ids"]["governance-checks"]
+
+
 # ── 真实仓库 ─────────────────────────────────────────────
 
 
