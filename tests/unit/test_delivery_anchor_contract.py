@@ -143,7 +143,8 @@ def test_public_api_exports_documented_callables_with_signatures() -> None:
         assert callable(getattr(delivery_anchor, name)), name
 
     locate_sig = inspect.signature(delivery_anchor.locate_anchor)
-    assert list(locate_sig.parameters) == []
+    assert list(locate_sig.parameters) == ["ws"]
+    assert locate_sig.parameters["ws"].default is None
     assert locate_sig.return_annotation == "Path | None"
 
     worktree_sig = inspect.signature(delivery_anchor.is_worktree_of)
@@ -174,6 +175,7 @@ def test_env_names_and_marker_are_pinned_across_anchor_and_repo_root() -> None:
 
 def test_anchor_resolution_order_is_pure_fallback(tmp_path: Path, monkeypatch) -> None:
     canonical = _fake_canonical(tmp_path)
+    ws = _fake_worktree(tmp_path)
     state_root = tmp_path / "state-root"
     state_root.mkdir()
     home = tmp_path / "home"
@@ -184,29 +186,34 @@ def test_anchor_resolution_order_is_pure_fallback(tmp_path: Path, monkeypatch) -
     # ① declared profile env wins, marker not required
     monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state_root))
     monkeypatch.setenv("OMOSTATION_ROOT", str(canonical))
-    assert locate_anchor() == state_root
+    assert locate_anchor(ws) == state_root
 
     # ② no declared state root → OMOSTATION_ROOT + marker
     monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
-    assert locate_anchor() == canonical
+    assert locate_anchor(ws) == canonical
 
-    # ②b an OMOSTATION_ROOT without the marker is rejected, not trusted
+    # ②b an OMOSTATION_ROOT without the marker is rejected, not trusted;
+    # the checkout that owns ws takes over (a different root, so this is not a no-op)
     unmarked = tmp_path / "unmarked-root"
     unmarked.mkdir()
     monkeypatch.setenv("OMOSTATION_ROOT", str(unmarked))
-    assert locate_anchor() == home / "Workspace"
+    assert locate_anchor(ws) == canonical
 
-    # ③ ~/Workspace + marker
+    # ③ no env at all → the owning root read from ws's own gitdir pointer, never a
+    # guessed machine path: the marked ~/Workspace in this fixture is NOT trusted
     monkeypatch.delenv("OMOSTATION_ROOT", raising=False)
-    assert locate_anchor() == home / "Workspace"
+    assert locate_anchor(ws) == canonical
+    assert locate_anchor(ws) != home / "Workspace"
+    assert locate_anchor() is None
 
     # ④ nothing locatable → None (CI-safe no-op, never __file__ fallback)
     monkeypatch.setenv("HOME", str(tmp_path / "empty-home"))
     assert locate_anchor() is None
+    assert locate_anchor(tmp_path / "no-such-checkout") is None
 
     # ④b a declared-but-missing state root is a hard None, not a silent fallthrough
     monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(tmp_path / "missing-state-root"))
-    assert locate_anchor() is None
+    assert locate_anchor(ws) is None
 
 
 def test_anchor_resolution_matches_repo_root_cross_boundary(tmp_path: Path, monkeypatch) -> None:
@@ -281,7 +288,12 @@ def test_noop_gate_foreign_worktree_leaves_target_byte_identical(tmp_path: Path,
 
 def test_noop_gate_missing_anchor_leaves_target_byte_identical(tmp_path: Path, monkeypatch) -> None:
     canonical = _fake_canonical(tmp_path)
-    ws = _fake_worktree(tmp_path)  # a worktree *of* canonical, but no anchor locatable
+    # A worktree whose owning root carries no marker: unlocatable by every branch
+    # (BET-Y2Q4-T10-239 — the machine path guess is gone, so the pointer's target
+    # must be marker-verified like every other candidate).
+    unmarked = tmp_path / "unmarked"
+    (unmarked / ".git" / "worktrees" / "wt").mkdir(parents=True)
+    ws = _fake_worktree(tmp_path, gitdir=unmarked / ".git" / "worktrees" / "wt")
     monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
     monkeypatch.delenv("OMOSTATION_ROOT", raising=False)
     monkeypatch.setenv("HOME", str(tmp_path / "empty-home"))
@@ -290,11 +302,27 @@ def test_noop_gate_missing_anchor_leaves_target_byte_identical(tmp_path: Path, m
     (delivery / "runs" / "run.yaml").write_text("run_id: run\n", encoding="utf-8")
 
     assert locate_anchor() is None
+    assert locate_anchor(ws) is None
     before_ws, before_canonical = _tree_hash(ws), _tree_hash(canonical)
     assert ensure_delivery_anchor(ws) is None
     assert not delivery.is_symlink()
     assert _tree_hash(ws) == before_ws
     assert _tree_hash(canonical) == before_canonical
+
+
+def test_anchor_located_from_checkout_pointer_without_env(tmp_path: Path, monkeypatch) -> None:
+    """BET-Y2Q4-T10-239: no profile env and no machine literal — the owning root is
+    read from ws's ``gitdir:`` pointer, which is what git itself resolves."""
+    canonical = _fake_canonical(tmp_path)
+    ws = _fake_worktree(tmp_path)
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
+    monkeypatch.delenv("OMOSTATION_ROOT", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path / "empty-home"))
+
+    assert locate_anchor(ws) == canonical
+    assert ensure_delivery_anchor(ws) == canonical / DELIVERY_RELATIVE
+    assert (ws / DELIVERY_RELATIVE).is_symlink()
+    assert not (canonical / DELIVERY_RELATIVE).is_symlink()
 
 
 # ── 4. production layout is the only trigger ─────────────────────────────────
