@@ -58,8 +58,9 @@ def run(cmd: list[str], *, cwd: Path | None = None, timeout: int | None = None) 
     )
 
 
-def fail(step: str, **kw) -> int:
-    log("failed", step=step, **kw)
+def fail(kind: str, **kw) -> int:
+    # kind 而非 step: 调用方会传 step=<子步名> 关键字, 同名会 TypeError 掩盖真实错误
+    log("failed", step=kind, **kw)
     return 1
 
 
@@ -98,7 +99,7 @@ def main() -> int:
         for cmd, timeout in steps:
             r = run(cmd, cwd=CHECKOUT, timeout=timeout)
             if r.returncode != 0:
-                return fail("sync_step", step=cmd[1], stderr=(r.stderr or "")[-500:])
+                return fail("sync_step", sub=cmd[1], stderr=(r.stderr or "")[-500:])
         head = run(["git", "rev-parse", "HEAD"], cwd=CHECKOUT).stdout.strip()
         log("checkout_synced", head=head)
 
