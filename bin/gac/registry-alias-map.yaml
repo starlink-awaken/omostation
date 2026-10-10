@@ -138,6 +138,13 @@ aliases:
       bin_executor: "bin/ssot/debt-dashboard.py"
 
   # ── X4 (consistency) ──
+  - canonical: CR-X4-HEALTH-SSOT
+    aliases: [check_health_ssot, check-health-ssot, health-ssot-consistency]
+    anchor: main
+    evidence:
+      governance-checks: ".omo/_truth/registry/governance-checks.yaml (CR-X4-HEALTH-SSOT ssot_pointer: health_score 唯一源 system.yaml, 文档用指针不复制)"
+      bin_executor: "bin/check_health_ssot.py (main: system.yaml health_score_ref 存在 + health.yaml 数值一致 + 24h 保鲜 + README/CLAUDE/CHANGELOG 硬编码 health 扫描) + .pre-commit-config.yaml health-ssot-consistency hook"
+      note: "2026-10-10 核验: 注册表 source_ref 写 bin/mof/m4-health-score.py, 但该脚本只算 M4 元模型派生分 (docstring『与 OMO health_score (system.yaml) 平行, 不替代』), 不执行 ssot_pointer 谓词; 真实执行宿主是 bin/check_health_ssot.py (pre-commit health-ssot-consistency, 合成违规 exit 1 已验). 旧 source_ref 不改, alias 指向真宿主."
   - canonical: CR-X4-CONSISTENCY-SSOT
     aliases: [x4-consistency]
     evidence:

@@ -117,10 +117,18 @@ def test_missing_file_returns_empty(tmp_path):
 # ── 真实仓库 ─────────────────────────────────────────────
 
 
-def test_real_repo_has_declared_rules_and_candidates():
+def test_real_repo_has_declared_rules_and_exact_candidate_set():
     mod = _load()
     inv = mod.inventory()
     assert inv["sources"]["governance-checks"]["declared"] > 0
     assert inv["executed_ids_in_corpus"] > 0, "语料为空说明取法错了"
-    # 本仓确有未接线候选 (CR-DEBT-GATE-ENUM-01 一类) —— 清单的价值所在
-    assert inv["sources"]["governance-checks"]["unreferenced"] > 0
+    # 精确候选集 (2026-10-10): CR-X4-HEALTH-SSOT 已接线 (alias → check_health_ssot
+    # 真宿主, 见 registry-alias-map.yaml), 故 governance-checks 候选为**空集**。
+    # 不等 "> 0" —— 旧断言钉死"必须永远存在未接线规则", 使诚实收尾无法发生;
+    # 精确断言 = 恰好为空, 任何一侧漂移 (新候选出现 / 接线被移除) 都会红。
+    # 注意: 本断言依赖 projects/*/src 子模块检出 (与 L0 候选断言同前提, CI 里递归检出)。
+    got = set(inv["candidates_unwired"]["governance-checks"])
+    assert got == set(), (
+        f"governance-checks 候选漂移: got={sorted(got)} expected=[] "
+        f"(接线 CR-X4-HEALTH-SSOT 后应为空; 新候选须逐条接线或更新本评审)"
+    )
