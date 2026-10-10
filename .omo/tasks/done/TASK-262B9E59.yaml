@@ -64,3 +64,21 @@ metadata:
 evidence_paths:
 - projects/ecos/src/ecos/ssot/README.md
 completed_at: '2026-09-07T00:04:35Z'
+
+ssot_writeback_hist:
+  annotated_at: '2026-10-10'
+  rule: CR-C2G-V3-01
+  completed_at: '2026-09-07T00:04:35Z'
+  context_uri: bos://governance/tasks/planned/TASK-262B9E59
+  reason: >-
+    completed before read-side enforcement existed (2026-10-10); writeback target
+    source_docs[0]=mof-model.py is a PYTHON FILE - the markdown writeback append
+    would corrupt it; deliverable preserved: mof-model.py marked 已弃用,
+    docs/CLI-REFERENCE.md no longer lists mof-model (removed).
+  content_preserved_at: >-
+    projects/ecos/src/ecos/ssot/tools/mof-model.py (已弃用);
+    docs/CLI-REFERENCE.md (mof-model removed)
+  note: >-
+    backdated historical exemption per l0-always-green (2026-10-10): task completed
+    before read-side enforcement existed; writeback append would corrupt a non-markdown
+    file. NOT a silent skip - the gate reports this bucket explicitly.

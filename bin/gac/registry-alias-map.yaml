@@ -393,7 +393,7 @@ aliases:
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (CR-OMO-DIRECT-IO-01)"
       bin_executor: "projects/omo/src/omo/omo_lint.py::cmd_lint_direct_omo_io → projects/ecos/scripts/contract_gatekeeper.py (omo.cli lint direct-omo-io; CI governance-check.yml interface-check 执行; 合成违规 .write_text(\".omo/...\") 实测 exit 1)"
-      note: "2026-10-10 audit F1/F2: 编译器 direct_omo_io 分支无数据源恒绿 (ecos-constraint-compiler.py 已标注); 真实执行为 contract_gatekeeper AST 扫描. 旧引用 ecos-ci.yml:42 指代模糊 (ecos 子仓无该 workflow), 已改指 .github/workflows/ecos-ci.yml:42 + contract_gatekeeper."
+      note: "2026-10-10 audit F1/F2: 编译器 direct_omo_io 分支无数据源 (恒绿 → 2026-10-10 P2 修复: 无 state 时全部 not_evaluated, 不再假 pass); 真实执行为 contract_gatekeeper AST 扫描. 旧引用 ecos-ci.yml:42 指代模糊 (ecos 子仓无该 workflow), 已改指 .github/workflows/ecos-ci.yml:42 + contract_gatekeeper."
 
   - canonical: CR-C2G-INGRESS-01
     aliases: [CR-C2G-INGRESS-01, create_planned_task_via_broker]

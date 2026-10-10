@@ -75,3 +75,23 @@ metadata:
 # (admitted→dispatched→running→...), 不是按后端类型(Cell/aetherforge/
 # omlxc/metaos)命名分发的, 具体怎么让 cell.py 的 plan/execute/verify
 # 接入这套 admission/dispatch 语义, 需要专门设计, 不是搬运几行代码。
+
+ssot_writeback_hist:
+  annotated_at: '2026-10-10'
+  rule: CR-C2G-V3-01
+  completed_at: '2026-09-12'
+  context_uri: bos://governance/tasks/planned/TASK-117310A1
+  reason: >-
+    completed before read-side enforcement existed (2026-10-10); deliverables
+    preserved in repo: cli.py dispatch_backend (:69,:74), workflow_mesh.py
+    dispatch_backend (:574), check-sfop-slots.py CR-SFOP-03,
+    projects/omo/tests/test_mesh_backend_dispatch.py; the ADR-0401 decision SSOT
+    doc carries the architecture design but not the task's closing note.
+  content_preserved_at: >-
+    projects/omo/src/omo/cli.py; projects/omo/src/omo/workflow_mesh.py;
+    bin/gac/check-sfop-slots.py; projects/omo/tests/test_mesh_backend_dispatch.py;
+    completion_evidence in the task yaml
+  note: >-
+    backdated historical exemption per l0-always-green (2026-10-10): task completed
+    before read-side enforcement existed; content verified present. NOT a silent
+    skip - the gate reports this bucket explicitly.

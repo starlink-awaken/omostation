@@ -149,3 +149,134 @@ def test_omnibus_plane_rejects_bogus():
     except ValueError:
         return  # plane="BOGUS" 被拒 = 可红 ✓
     raise AssertionError("plane='BOGUS' 必须被拒绝 (CR-OMNIBUS-01 plane 合取)")
+
+
+# ── P1/P3 (2026-10-10): 拆除三个 always-green 桩, 换真谓词 + 真数据 ──
+# 每个桩必须: (a) 合成违规 → ok=False; (b) 真仓库 → ok=True (可红才是强制, 见 audit F2)。
+
+
+def _load_l0_checker():
+    spec = importlib.util.spec_from_file_location("l0_checker", ROOT / "bin/gac/check-l0-constraints.py")
+    m = importlib.util.module_from_spec(spec)
+    sys.modules["l0_checker"] = m
+    spec.loader.exec_module(m)
+    return m
+
+
+def test_omo_surface_registration_red_on_unregistered_asset(tmp_path, monkeypatch):
+    """P1: CR-OMO-SURFACE-01 —— 注册表缺一个真实 .omo 顶层资产 → red."""
+    m = _load_l0_checker()
+    surf = tmp_path / "surfaces.yaml"
+    surf.write_text(
+        "assets:\n  - id: OMO-TRUTH\n    ref: .omo/_truth/\n  - id: OMO-CONTROL\n    ref: .omo/_control/\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(m, "OMO_SURFACES", surf)
+    ok, msg = m.check_omo_surface_registration()
+    assert not ok, f"未登记资产必须 FAIL: {msg}"
+
+
+def test_omo_surface_02_red_without_kernel_plane(tmp_path, monkeypatch):
+    """P1: CR-OMO-SURFACE-02 —— 无 kernel_plane 条目 → red."""
+    m = _load_l0_checker()
+    surf = tmp_path / "surfaces2.yaml"
+    surf.write_text(
+        "governance_stack:\n  - id: state_plane\n    ref: .omo/\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(m, "OMO_SURFACES", surf)
+    ok, msg = m.check_omo_surface_02()
+    assert not ok, f"缺 kernel_plane 必须 FAIL: {msg}"
+
+
+def test_x3_c01_red_on_missing_value_tier(tmp_path, monkeypatch):
+    """P1: X3-C01 —— 域缺 value_tier 声明 → red (不再 advisory)."""
+    m = _load_l0_checker()
+    vs = tmp_path / "x3.yaml"
+    vs.write_text(
+        "domains:\n  OMO:\n    value_tier: 1\n    cost_attribution: implemented\n  Vault:\n    cost_attribution: planned\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(m, "VALUE_STACK", vs)
+    ok, msg = m.check_x3_c01()
+    assert not ok, f"缺 value_tier 必须 FAIL: {msg}"
+
+
+def test_x3_c02_red_on_tier1_no_cost_attribution(tmp_path, monkeypatch):
+    """P3: X3-C02 —— tier-1 域 cost_attribution=none → red (真谓词, 非 X3-C01)."""
+    m = _load_l0_checker()
+    vs = tmp_path / "x3.yaml"
+    vs.write_text(
+        "domains:\n  OMO:\n    value_tier: 1\n    cost_attribution: none\n  CARDS:\n    value_tier: 2\n    cost_attribution: planned\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(m, "VALUE_STACK", vs)
+    ok, msg = m.check_x3_c02()
+    assert not ok, f"tier-1 cost_attribution=none 必须 FAIL: {msg}"
+
+
+def test_x3_c02_green_when_tier1_has_attribution():
+    """P3: X3-C02 真仓库 (ecos governance/x3-value-stack.yaml) 必须绿."""
+    m = _load_l0_checker()
+    ok, msg = m.check_x3_c02()
+    assert ok, f"真仓库必须绿: {msg}"
+
+
+def test_c2g_v3_01_red_on_done_task_without_writeback(tmp_path, monkeypatch):
+    """P5: CR-C2G-V3-01 —— done+context_uri 任务无 ssot_written_back → red.
+
+    旧注记『无 ssot write-back 实现』错: 写侧存在, 缺的是读侧/调度; 本检查就是读侧."""
+    m = _load_l0_checker()
+    done = tmp_path / "done"
+    done.mkdir(parents=True)
+    (done / "TASK-X.yaml").write_text(
+        "id: TASK-X\nstatus: done\ncontext_uri: bos://governance/tasks/planned/TASK-X\n",
+        encoding="utf-8",
+    )
+    (done / "TASK-Y.yaml").write_text(
+        "id: TASK-Y\nstatus: done\ncontext_uri: bos://governance/tasks/planned/TASK-Y\nssot_written_back: true\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(m, "DONE_TASKS", done)
+    ok, msg = m.check_c2g_v3_01()
+    assert not ok, f"未回写任务必须 FAIL: {msg}"
+
+
+def test_c2g_v3_01_hist_exemption_is_loud_not_silent(tmp_path, monkeypatch):
+    """P5 consequence resolution (2026-10-10): 历史豁免必须显式 dated 注解且被报告,
+    不允许静默跳过; 未注解的违规任务依旧 FAIL (门禁不被削弱)."""
+    m = _load_l0_checker()
+    done = tmp_path / "done"
+    done.mkdir(parents=True)
+    # 带合法历史注解的任务 -> 通过, 但出现在输出 (HIST 桶)
+    (done / "HIST.yaml").write_text(
+        "id: HIST\nstatus: done\ncontext_uri: bos://governance/tasks/planned/HIST\n"
+        "ssot_writeback_hist:\n  annotated_at: '2026-10-01'\n  reason: predates enforcement\n",
+        encoding="utf-8",
+    )
+    # 未注解违规任务 -> 仍 FAIL
+    (done / "FRESH.yaml").write_text(
+        "id: FRESH\nstatus: done\ncontext_uri: bos://governance/tasks/planned/FRESH\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(m, "DONE_TASKS", done)
+    ok, msg = m.check_c2g_v3_01()
+    assert not ok, f"未注解违规任务必须仍 FAIL: {msg}"
+    assert "FRESH" in msg, "违规任务必须出现在输出里"
+    assert "HIST" in msg and "annotated" in msg, "历史豁免必须被显式报告, 不得静默"
+
+
+def test_c2g_v3_01_hist_annotation_without_reason_still_fails(tmp_path, monkeypatch):
+    """P5 consequence resolution: 只有 annotated_at 而无 reason 的注解不得豁免 (防 skip-list 滥用)."""
+    m = _load_l0_checker()
+    done = tmp_path / "done"
+    done.mkdir(parents=True)
+    (done / "BADHIST.yaml").write_text(
+        "id: BADHIST\nstatus: done\ncontext_uri: bos://governance/tasks/planned/BADHIST\n"
+        "ssot_writeback_hist:\n  annotated_at: '2026-10-01'\n  reason: ''\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(m, "DONE_TASKS", done)
+    ok, msg = m.check_c2g_v3_01()
+    assert not ok, f"无 reason 的历史注解不得豁免: {msg}"
+    assert "BADHIST" in msg

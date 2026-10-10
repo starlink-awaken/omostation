@@ -38,7 +38,12 @@ jobs:
         # which are .gitignore'd. Skip them in CI; the unit tests still cover SSB auth and core flows.
         run: cd projects/ecos && uv run pytest tests/ -q --ignore=tests/test_e2e_baseline.py -k "not PerformanceBenchmarks"
       - name: L0 constraint compiler (enforce)
-        # 编译 L0-constraints.yaml 为可执行模块, 违反 required 约束则 CI 红
+        # 编译 L0-constraints.yaml 为可执行模块, 违反 required 约束则 CI 红。
+        # 2026-10-10 (P2 truth-telling): 本步无 caller 喂 state → 有分支的 required 规则
+        # 处于 NOT EVALUATED。普通 --enforce 在这些规则未评估时 exit 0 (只有真 FAIL 才红),
+        # 报告里用 NOT EVALUATED 桶区分, 不假绿。若要求"标为 enforce 就必须 enforce",
+        # 改用 --enforce-strict (未评估 required → exit 3) —— 那会使本步在 producer 接入前
+        # 恒红, 是 owner 决策, 不默认启用 (见 compiler --help)。
         run: cd projects/ecos && uv run python3 src/ecos/ssot/tools/ecos-constraint-compiler.py --enforce
       - name: MOF M1 status compliance
         # 校验 1400 个 M1 实例 status 枚举合规
