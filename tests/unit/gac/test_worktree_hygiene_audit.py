@@ -422,3 +422,74 @@ class TestPreExistingCategoryMeanings:
         info = _categorize(fake, mtime_days=mtime_days)
         assert info.category == expected
         assert info.dirty == dirty
+
+
+def _git(cwd: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-c", "protocol.file.allow=always", *args], cwd=cwd, check=True, capture_output=True, text=True
+    ).stdout.strip()
+
+
+@pytest.fixture
+def superproject_with_submodule(tmp_path):
+    """Real repos: a superproject whose submodule has its own bare remote.
+
+    Returns (super_dir, sub_dir). The submodule HEAD starts out pushed.
+    """
+    env_id = ["-c", "user.name=t", "-c", "user.email=t@t"]
+    sub_remote = tmp_path / "sub.git"
+    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(sub_remote))
+    seed = tmp_path / "seed"
+    _git(tmp_path, "clone", "-q", str(sub_remote), str(seed))
+    (seed / "f").write_text("1")
+    _git(seed, "add", "f")
+    _git(seed, *env_id, "commit", "-q", "-m", "seed")
+    _git(seed, "push", "-q", "origin", "HEAD:main")
+    sup = tmp_path / "super"
+    _git(tmp_path, "init", "-q", "-b", "main", str(sup))
+    _git(sup, "submodule", "add", "-q", str(sub_remote), "kairon")
+    _git(sup, *env_id, "commit", "-q", "-m", "add submodule")
+    return sup, sup / "kairon"
+
+
+def _commit(repo: Path, msg: str) -> None:
+    (repo / "f").write_text(msg)
+    _git(repo, "add", "f")
+    _git(repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", msg)
+
+
+def _run_gate(path: Path) -> subprocess.CompletedProcess[str]:
+    script = Path(__file__).resolve().parents[3] / "bin" / "gac" / "worktree-hygiene-audit.py"
+    return subprocess.run(
+        [sys.executable, str(script), "--check-submodules", str(path)], capture_output=True, text=True
+    )
+
+
+class TestSubmodulePushGate:
+    """Deletion gate (TASK-263EF9EC): removal must not destroy commits that exist only in this clone."""
+
+    def test_pushed_submodule_lets_removal_through(self, superproject_with_submodule):
+        sup, _ = superproject_with_submodule
+        result = _run_gate(sup)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert result.stdout == ""
+
+    def test_unpushed_submodule_commit_blocks_removal(self, superproject_with_submodule):
+        sup, sub = superproject_with_submodule
+        _commit(sub, "local only")
+        result = _run_gate(sup)
+        assert result.returncode == 1
+        assert "kairon" in result.stdout
+        assert "not on any remote branch" in result.stdout
+
+    def test_pushing_to_any_branch_clears_the_gate(self, superproject_with_submodule):
+        """Pushed but unmerged is safe to delete — the cross-repo PR flow depends on it."""
+        sup, sub = superproject_with_submodule
+        _commit(sub, "feature work")
+        _git(sub, "push", "-q", "origin", "HEAD:refs/heads/feature")
+        result = _run_gate(sup)
+        assert result.returncode == 0, result.stdout
+        assert wha._unmerged_submodules(sup), "audit's stricter merged rule must still flag it"
+
+    def test_missing_path_has_nothing_to_lose(self, tmp_path):
+        assert _run_gate(tmp_path / "gone").returncode == 0

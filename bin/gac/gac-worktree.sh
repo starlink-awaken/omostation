@@ -31,6 +31,8 @@ source "$SCRIPT_DIR/resolve-root-remote.sh"
 
 # WS_ROOT/WS_PARENT 可注入 (测试隔离用); 默认从 cwd 解析
 WS_ROOT="${WS_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null)}"
+# 删除闸门共享检查(与 worktree-janitor.py 同一实现); 随本脚本走, 不随 WS_ROOT —— 测试/外部仓可把 WS_ROOT 指向别处
+WORKTREE_HYGIENE_AUDIT="${WORKTREE_HYGIENE_AUDIT:-$SCRIPT_DIR/worktree-hygiene-audit.py}"
 if [ -z "$WS_ROOT" ]; then
   echo "❌ 不在 git 仓库" >&2
   exit 1
@@ -201,6 +203,17 @@ verify_clean_for_force_removal() {
       dirty="${dirty}submodule $sub_path has changes; "
     fi
   done <<< "$sub_paths"
+
+  # Clean is not enough: a clean submodule can sit on commits that exist only in
+  # this clone (gitlink bumped to an unpushed commit). --force removal deletes
+  # them for good. Shared gate with worktree-janitor.py (rule: HEAD on some remote
+  # branch). Deliberately abandoning that work: GAC_ALLOW_UNPUSHED_SUBMODULES=1.
+  if [ "${GAC_ALLOW_UNPUSHED_SUBMODULES:-0}" != "1" ]; then
+    local unpushed
+    if ! unpushed=$(python3 "$WORKTREE_HYGIENE_AUDIT" --check-submodules "$wt" 2>&1); then
+      dirty="${dirty}submodule commits on no remote branch: ${unpushed//$'\n'/, } (GAC_ALLOW_UNPUSHED_SUBMODULES=1 to discard); "
+    fi
+  fi
 
   # PASW worktrees live under an ignored root directory, so git status at the
   # root cannot protect them.  Check each existing PASW worktree explicitly.

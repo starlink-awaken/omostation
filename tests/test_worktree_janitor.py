@@ -229,3 +229,63 @@ def test_branch_merge_status(temp_repo):
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+def _load_janitor():
+    import importlib.util
+    import sys
+
+    path = Path(__file__).resolve().parents[1] / "bin" / "gac" / "worktree-janitor.py"
+    spec = importlib.util.spec_from_file_location("worktree_janitor", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _git(cwd, *args):
+    return subprocess.run(
+        ["git", "-c", "protocol.file.allow=always", "-c", "user.name=t", "-c", "user.email=t@t", *args],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def test_deleted_remote_branch_merged_to_main_is_recognised(tmp_path):
+    """run_git returns stdout and --is-ancestor prints nothing: the old check never passed."""
+    j = _load_janitor()
+    repo = tmp_path / "r"
+    _git(tmp_path, "init", "-q", "-b", "main", str(repo))
+    (repo / "f").write_text("1")
+    _git(repo, "add", "f")
+    _git(repo, "commit", "-q", "-m", "c")
+    _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    info = j.WorktreeInfo(path=repo, session="s", branch="already-deleted", mtime=0.0)
+    ok, reason = j.check_branch_merged_or_deleted(info, repo)
+    assert (ok, reason) == (True, "deleted and ancestor")
+
+
+def test_unpushed_submodule_commit_blocks_janitor(tmp_path):
+    j = _load_janitor()
+    remote = tmp_path / "sub.git"
+    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(remote))
+    seed = tmp_path / "seed"
+    _git(tmp_path, "clone", "-q", str(remote), str(seed))
+    (seed / "f").write_text("1")
+    _git(seed, "add", "f")
+    _git(seed, "commit", "-q", "-m", "seed")
+    _git(seed, "push", "-q", "origin", "HEAD:main")
+    sup = tmp_path / "super"
+    _git(tmp_path, "init", "-q", "-b", "main", str(sup))
+    _git(sup, "submodule", "add", "-q", str(remote), "kairon")
+    _git(sup, "commit", "-q", "-m", "add submodule")
+    info = j.WorktreeInfo(path=sup, session="s", branch="b", mtime=0.0)
+    assert j.check_submodules_pushed(info) == (True, "all pushed")
+
+    (sup / "kairon" / "f").write_text("local only")
+    _git(sup / "kairon", "commit", "-q", "-am", "local only")
+    ok, reason = j.check_submodules_pushed(info)
+    assert not ok
+    assert "kairon" in reason and "not on any remote branch" in reason

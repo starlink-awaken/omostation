@@ -6,6 +6,8 @@ worktree-janitor.py — PR-C worktree 三条件安全清理
 1. 无活跃 claim：claim 文件不存在或对应 run 已 close
 2. 无未推送变更：git status clean + 本地分支已 push 或远程已删
 3. 分支已 merge 或已删：origin/main 包含该分支，或远程已删且 HEAD 可达
+4. 已初始化子仓的 HEAD 都在各自远端某分支上（worktree-hygiene-audit.py --check-submodules）：
+   超仓 status 只看得见「子仓 HEAD ≠ gitlink」，看不见 gitlink 本身指向一个从未推送的子仓提交
 
 补充规则：worktree mtime 超过 24h 未活动
 
@@ -49,6 +51,11 @@ def run_git(cwd: Path, *args: str) -> str:
     if result.returncode != 0:
         return ""
     return result.stdout.strip()
+
+
+def git_ok(cwd: Path, *args: str) -> bool:
+    """执行 git 命令，只看退出码 —— merge-base --is-ancestor 这类命令不输出, 只用退出码表达结果"""
+    return subprocess.run(["git", "-C", str(cwd), *args], capture_output=True, check=False).returncode == 0
 
 
 def get_file_mtime(path: Path) -> float:
@@ -158,8 +165,8 @@ def check_branch_merged_or_deleted(wt_info: WorktreeInfo, root_repo: Path) -> tu
     ls_remote = run_git(root_repo, "ls-remote", "--heads", "origin", wt_info.branch)
     if not ls_remote:
         # 远程已删，检查 HEAD 是否可达
-        is_ancestor = run_git(wt_info.path, "merge-base", "--is-ancestor", "HEAD", "origin/main")
-        if is_ancestor:
+        # 曾用 run_git(返回 stdout) 判断: --is-ancestor 不输出, 恒为假, 这条路径从未放行过
+        if git_ok(wt_info.path, "merge-base", "--is-ancestor", "HEAD", "origin/main"):
             return True, "deleted and ancestor"
         return False, "deleted but not ancestor"
 
@@ -169,6 +176,28 @@ def check_branch_merged_or_deleted(wt_info: WorktreeInfo, root_repo: Path) -> tu
         return True, "merged"
 
     return False, "not merged"
+
+
+HYGIENE_AUDIT = Path(__file__).with_name("worktree-hygiene-audit.py")
+
+
+def check_submodules_pushed(wt_info: WorktreeInfo) -> tuple[bool, str]:
+    """
+    条件4：每个已初始化子仓的 HEAD 都在其远端某分支上
+    规则与实现只在 worktree-hygiene-audit.py 一处(gac-worktree.sh 也调它); 跑不了即保留
+    """
+    if not HYGIENE_AUDIT.exists():
+        return False, f"gate missing: {HYGIENE_AUDIT.name}"
+    result = subprocess.run(
+        [sys.executable, str(HYGIENE_AUDIT), "--check-submodules", str(wt_info.path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return True, "all pushed"
+    detail = "; ".join(result.stdout.split("\n")[:3]).strip("; ") or result.stderr.strip()[:120]
+    return False, detail or f"gate exit {result.returncode}"
 
 
 def judge_worktree(wt_info: WorktreeInfo, root_repo: Path, min_age_hours: float = 24.0) -> tuple[bool, str]:
@@ -197,6 +226,11 @@ def judge_worktree(wt_info: WorktreeInfo, root_repo: Path, min_age_hours: float 
     merged_ok, merged_reason = check_branch_merged_or_deleted(wt_info, root_repo)
     if not merged_ok:
         return False, f"branch: {merged_reason}"
+
+    # 条件4：子仓无仅存于本地的提交
+    subs_ok, subs_reason = check_submodules_pushed(wt_info)
+    if not subs_ok:
+        return False, f"submodule: {subs_reason}"
 
     return (
         True,
