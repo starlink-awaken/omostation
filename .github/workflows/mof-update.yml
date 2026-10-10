@@ -67,6 +67,13 @@ jobs:
         env:
           WORKSPACE_ROOT: ${{ github.workspace }}
         run: |
+          # 注 (2026-10-10, ssot-writeback 修复): mof-extract 内部的
+          # extract_ssot_writeback() 会向 WORKSPACE_ROOT/.omo/tasks/done 写入
+          # ssot_written_back —— 但本工作流是 throwaway checkout (permissions:
+          # contents: read, 无 commit/push 步骤), 这些写入随 job 结束即丢弃,
+          # 不落库。回写的**持久**入口是仓内 `bin/ssot/ssot-writeback.py`
+          # (本地手动运行后提交, 与读侧门禁 CR-C2G-V3-01 同一棵树)。
+          # 因此这里不作为 gate 的 remediation; 不要在本 CI 加 commit/push。
           uv run python3 src/ecos/ssot/tools/mof-extract.py | tee ../../mof-extract.txt
           echo "## mof-extract" >> $GITHUB_STEP_SUMMARY
           cat ../../mof-extract.txt >> $GITHUB_STEP_SUMMARY

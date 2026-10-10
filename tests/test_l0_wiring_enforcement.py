@@ -280,3 +280,105 @@ def test_c2g_v3_01_hist_annotation_without_reason_still_fails(tmp_path, monkeypa
     ok, msg = m.check_c2g_v3_01()
     assert not ok, f"无 reason 的历史注解不得豁免: {msg}"
     assert "BADHIST" in msg
+
+
+# ── P5 (2026-10-10): 写侧修复 —— extract_ssot_writeback 必须能真正回写 ──
+# 旧实现默认 parents[2]/projects/omo → projects/omo/.omo/tasks/done 不存在,
+# 静默早退, 读侧门禁 CR-C2G-V3-01 的 remediation 指向一个无法工作的写者。
+# 修复: 根解析走 bin/lib/repo_root.code_root() (与门禁同一棵树), 并加三防
+# (idempotent / hist 豁免 / 非 Markdown 目标不损坏)。
+
+
+def _load_writeback():
+    spec = importlib.util.spec_from_file_location(
+        "ssot_writeback_mod", ROOT / "bin/ssot/ssot-writeback.py"
+    )
+    m = importlib.util.module_from_spec(spec)
+    sys.modules["ssot_writeback_mod"] = m
+    spec.loader.exec_module(m)
+    return m
+
+
+def test_writeback_root_resolution_follows_code_root():
+    """P5: 写侧根解析必须跟随当前检出 (code_root), 与门禁同一棵树.
+
+    旧实现的默认目标是 parents[2]/projects/omo —— .omo/tasks/done 不存在,
+    于是 extract_ssot_writeback 恒早退 (2026-10-10 实证 0 回写)。回归守卫:
+    (a) 源码里不再出现 projects/omo 默认路径;
+    (b) main() 入口确实调用 code_root() 而不是硬编码 OMO_ROOT。
+    """
+    m = _load_writeback()
+    source = Path(m.__file__).read_text(encoding="utf-8")
+    # 代码形式的旧默认 (parents[2] / "projects/omo") 不得再出现 —— 文档字符串里
+    # 的 prose 提历史不算 (那是诚实的记录)。
+    assert 'parents[2] / "projects/omo"' not in source, (
+        "写侧不得把 projects/omo/.omo 当目标树"
+    )
+    assert 'os.environ.get("OMO_ROOT"' not in source, "旧 env 默认 (OMO_ROOT) 已移除"
+    assert "from repo_root import code_root" in source
+    assert 'root = code_root()' in source
+    assert 'extract_ssot_writeback(root / ".omo")' in source
+
+
+def test_writeback_actually_marks_task_and_appends_md(tmp_path, monkeypatch):
+    """P5: 修复后的写侧能真正回写 —— md 目标被追加且任务被标 ssot_written_back."""
+    m = _load_writeback()
+    omo_dir = tmp_path / ".omo"
+    done = omo_dir / "tasks" / "done"
+    done.mkdir(parents=True)
+    src = tmp_path / "docs" / "source.md"
+    src.parent.mkdir()
+    src.write_text("# source\n", encoding="utf-8")
+    (done / "TASK-X.yaml").write_text(
+        "id: TASK-X\nstatus: done\ncontext_uri: bos://governance/tasks/planned/TASK-X\n"
+        "source_docs:\n- docs/source.md\n",
+        encoding="utf-8",
+    )
+    written = m.extract_ssot_writeback(omo_dir)
+    assert written == 1
+    assert "SSOT Write-back: TASK-X" in src.read_text(encoding="utf-8")
+    task = yaml.safe_load((done / "TASK-X.yaml").read_text(encoding="utf-8"))
+    assert task["ssot_written_back"] is True
+    # 门禁会同树放行: 直接复用读侧检查函数 (monkeypatch 由 pytest fixture 提供).
+    gate_mod = _load_l0_checker()
+    monkeypatch.setattr(gate_mod, "DONE_TASKS", done)
+    ok, _msg = gate_mod.check_c2g_v3_01()
+    assert ok
+
+
+def test_writeback_idempotent_and_respects_hist_and_skips_non_md(tmp_path):
+    """P5: 写侧三防 —— 已标记跳过 / hist 豁免跳过 / 非 Markdown 目标不损坏."""
+    m = _load_writeback()
+    omo_dir = tmp_path / ".omo"
+    done = omo_dir / "tasks" / "done"
+    done.mkdir(parents=True)
+    md_src = tmp_path / "docs" / "a.md"
+    md_src.parent.mkdir()
+    md_src.write_text("# a\n", encoding="utf-8")
+    py_src = tmp_path / "bin" / "tool.py"
+    py_src.parent.mkdir()
+    py_src.write_text("def main():\n    pass\n", encoding="utf-8")
+    done_tasks = {
+        "MARKED.yaml": (
+            "id: MARKED\nstatus: done\ncontext_uri: bos://x\nsource_docs:\n- docs/a.md\n"
+            "ssot_written_back: true\n"
+        ),
+        "HIST.yaml": (
+            "id: HIST\nstatus: done\ncontext_uri: bos://x\nsource_docs:\n- docs/a.md\n"
+            "ssot_writeback_hist:\n  annotated_at: '2026-10-01'\n  reason: predates enforcement\n"
+        ),
+        "NONMD.yaml": (
+            "id: NONMD\nstatus: done\ncontext_uri: bos://x\nsource_docs:\n- bin/tool.py\n"
+        ),
+    }
+    for name, body in done_tasks.items():
+        (done / name).write_text(body, encoding="utf-8")
+
+    written = m.extract_ssot_writeback(omo_dir)
+    assert written == 0  # 三个都不该被写回
+    assert "def main():\n    pass\n" == py_src.read_text(encoding="utf-8"), (
+        "非 Markdown 目标不得追加 markdown 段落"
+    )
+    assert "### OMO SSOT Write-back" not in py_src.read_text(encoding="utf-8")
+    # 已标记与 hist 豁免的都不该被改写
+    assert "ssot_written_back" not in (done / "HIST.yaml").read_text(encoding="utf-8")
