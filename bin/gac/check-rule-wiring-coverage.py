@@ -38,6 +38,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import subprocess
@@ -69,11 +70,24 @@ EXEC_MANIFEST = _ROOT / ".omo" / "_truth" / "registry" / "hook-manifest.yaml"
 # LEGACY_CR_IDS (governance-convergence-lint.py:65) 是 R-GOV-1 准入豁免白名单;
 # 规则 id 出现在其中 ≠ 被执行。接线判定必须把这些块剥掉, 否则"豁免数据"会被
 # 当成"接线证据"。
+#
+# 2026-10-10 harden (P4): 原先用正则 `\{(?:[^}]|\n)*?\n\}` 剥块 —— 它要求块以
+# `\n}` 结尾; 一旦 LEGACY_CR_IDS 被重排成单行或注释里出现 `}`, regex 静默不匹配,
+# 清单里的 id 会被当成"接线证据"。这正与"接线判定"共享同一个失败模式 (同为
+# 原始文本子串匹配)。现在改用 AST 定位赋值块 (文件可解析时), 覆盖单行/多行/
+# 注释内花括号等一切排版; 解析失败的兜底仍是 regex 剥块。
 EXEMPTION_BLOCKS: list[tuple[str, re.Pattern]] = [
     (
         "bin/gac/governance-convergence-lint.py",
         re.compile(r"LEGACY_CR_IDS\s*=\s*\{(?:[^}]|\n)*?\n\}", re.S),
     ),
+]
+
+# F3/P4: 采用"文件路径 -> 豁免清单变量名"的显式注册表。判定"接线"时:
+#   变量是豁免清单 (suppression data) ⇔ 该变量被赋值为集合/列表字面量,
+#   清单里的所有 token 都不得计入接线证据。
+EXEMPTION_VARS: list[tuple[str, str]] = [
+    ("bin/gac/governance-convergence-lint.py", "LEGACY_CR_IDS"),
 ]
 
 # F5: 检测器自身的文件不得进入"执行语料" — 本文件的 docstring 会以示例形式
@@ -170,9 +184,51 @@ def _exemption_block_pattern(path: Path) -> re.Pattern | None:
     return None
 
 
+def _exemption_var_name(path: Path) -> str | None:
+    """若该文件是豁免数据来源, 返回其豁免清单变量名; 否则 None (P4)."""
+    rel = path.relative_to(_ROOT).as_posix()
+    for rel_path, var in EXEMPTION_VARS:
+        if rel == rel_path:
+            return var
+    return None
+
+
+def _ast_strip_var(text: str, var_name: str) -> str | None:
+    """用 AST 去掉 `VAR = {...}` 赋值块 (P4).
+
+    返回剥掉该块后的文本; 文件不可解析或变量不存在时返回 None (调用方回退
+    到 regex)。AST 覆盖单行/多行/注释内花括号, 与"接线判定"不同源 ⇒ 不与
+    被测量物共享同一失败模式。
+    """
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return None
+    spans: list[tuple[int, int]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        for t in node.targets:
+            if isinstance(t, ast.Name) and t.id == var_name:
+                spans.append((node.lineno, node.end_lineno or node.lineno))
+    if not spans:
+        return None
+    lines = text.splitlines(keepends=True)
+    for start, end in sorted(spans, reverse=True):
+        # 用等量空行替换, 保持后续行号稳定
+        for i in range(start - 1, min(end, len(lines))):
+            lines[i] = "\n" if lines[i].endswith("\n") else ""
+    return "".join(lines)
+
+
 def _read_cleaned(f: Path) -> str:
-    """读取文件文本; 若是豁免数据来源, 剥离其中的豁免块 (F3)."""
+    """读取文件文本; 若是豁免数据来源, 剥离其中的豁免块 (F3), 优先 AST (P4)."""
     text = f.read_text(encoding="utf-8", errors="ignore")
+    var = _exemption_var_name(f)
+    if var is not None:
+        stripped = _ast_strip_var(text, var)
+        if stripped is not None:
+            return stripped
     pat = _exemption_block_pattern(f)
     if pat is not None:
         text = pat.sub("", text)
@@ -274,7 +330,7 @@ def inventory() -> dict:
             return False
         # 只在其 id 出现于豁免块/清单数据, 且执行面语料里查不到时才算
         # 豁免-only 引用 (输出层将归入 unreferenced 候选, 但带豁免标记)
-        # 实现: 无法从已剥离语料反查豁免块 — 直接看原始全局豁免清单 id。
+        # 实现: 无法从已剥离语料反查豁免块 — 直接看原始豁免清单 (AST + regex 双轨)。
         for rel_path, pat in EXEMPTION_BLOCKS:
             f = _ROOT / rel_path
             if not f.is_file():
@@ -283,6 +339,13 @@ def inventory() -> dict:
                 raw = f.read_text(encoding="utf-8", errors="ignore")
             except OSError:
                 continue
+            var = _exemption_var_name(f)
+            if var is not None:
+                stripped = _ast_strip_var(raw, var)
+                if stripped is not None:
+                    # 若剥掉后 id 消失 => id 只在豁免块里
+                    if rule_id in raw and rule_id not in stripped:
+                        return True
             block = pat.search(raw)
             if block and rule_id in block.group(0):
                 return True
@@ -368,6 +431,12 @@ def inventory() -> dict:
             "CR-STRATEGY-02 退回候选集), 并为 CR-OMO-DIRECT-IO-01 / CR-OMNIBUS-01 / "
             "CR-KOS-CONSENSUS-RAG-01 强化宿主。因此: 数字下降 ≠ 规则已强制执行; "
             "未接线候选数只说明『还没有任何文本引用』, 接线数只说明『有宿主引用』。\n"
+            "F8 (2026-10-10, adversarial audit): 豁免清单剥离改为 AST 优先 (EXEMPTION_VARS), "
+            "不再依赖要求块以 `\\n}` 结尾的 regex —— 旧 regex 在 LEGACY_CR_IDS 被重排成"
+            "单行或注释含 `}` 时会静默不匹配, 使豁免清单里的 id 变回『wired』, 与接线判定"
+            "共享同一失败模式 (同为原始文本子串匹配)。AST 单行/多行/注释内花括号都覆盖; "
+            "AST 不可解析或变量不存在时回退 regex。判定『豁免-only』同样双轨 (AST 剥离后 id "
+            "消失 ⇒ 只在豁免块里)。\n"
             "注意: registry-alias-map.yaml 的 evidence.* 块 (如 evidence.bin_executor) 是"
             "人工填写的说明性字段, **本清单不读它们**; 接线判定只依据 alias 字符串在"
             "执行语料中的出现。alias-map 里指向 bin/_archive/ 的 evidence 引用是历史"
