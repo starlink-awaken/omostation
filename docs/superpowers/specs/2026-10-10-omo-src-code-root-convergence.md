@@ -194,6 +194,28 @@ sync 再生**的 registry，两个都归 `code_root()`；② `omo_observability.
    不能据此断言 45s 上限结构性偏小 —— 只能说「在无负载复测前，该 FAIL 是内容 PASS 被计时杀掉」。
    该 cap 未登记 `gate-known-debt.yaml`（`grep` 零命中），属未登记的债 ⇒ 记为独立一轮，本轮不放宽 cap、不改判据。
 4. gitlink bump 经 `bin/ssot/submodule-pointer-transaction.sh`，根仓 PR CI 全绿后 squash 合并。
+   **本轮该脚本结构性不可用（实测，不是绕门禁）**，三条读数：
+   - 默认基线走 `:47` 的 `upstream/main` 优先分支，而本机有一个**孤儿 ref**
+     `refs/remotes/upstream/main` = `6330e8202`（`git remote -v` 里根本没有 `upstream`）。
+     它比 HEAD 的 `.gitmodules` 少 50 行（`git diff --numstat HEAD refs/remotes/upstream/main -- .gitmodules`
+     ⇒ `0 50`），于是 `:69` 的安全 bail 命中：打印
+     `.gitmodules changed; incremental staging is unsafe (rerun with --all)`，**真实 rc=2**
+     （无管道复测拿到 2；套 `| tail` 时 `$?` 是 tail 的 0 —— zsh 里 `${PIPESTATUS[0]}` 恒空）。
+     对面 `git diff --stat HEAD origin/main -- .gitmodules` **为空** ⇒ 触发的是 ref 陈旧，不是真实治理面变化。
+   - 换 `--changed-from origin/main --dry-run`：`统计: 待push=0 失败=0 无上游=0 缺失=16` +
+     `submodule-reachability: PASS (0 gitlinks, ...)` ⇒ 可暂存集为空。原因是**上游已自行 bump 到同一值**
+     （base `75cb6f5bf` 的 `projects/omo` = `d8ca1a250`，`origin/main` = `5befe6ad7` = 本分支 HEAD），
+     而脚本按 `git diff --quiet <base> -- <path>` 判差异，所以结构上**造不出**「分支记录的指针落后于上游现值」
+     这一形态的 bump commit。该形态仍必须落到分支上：`governance-verify` 检出 PR **head tree**
+     （`governance-check.yml:176`），head 上没有这个 gitlink，`verify-omo.sh [4/5]` 的文件表就解析不到。
+   - `--all` 会 stage 全部 16 个子模块（含另一会话未提交的 `projects/knowledge/kairon`），**不用**；
+     非 dry 路径 `:113` 的 `sync-submodules-push.sh` 会真推子模块，**不跑**。
+   - **替代做法**：只手工执行该脚本 `:120-137` 的校验语义（不含 push），提交后仍可用无副作用的形式复现：
+     `python3 bin/change-lane-check.py --file projects/omo` ⇒ `PASS (1 files, lanes=submodule_pointer)` rc=0；
+     `python3 bin/ssot/submodule-reachability-gate.py --source worktree --require-main --changed-from 75cb6f5bf`
+     ⇒ `PASS (1 gitlinks, source=worktree, mode=changed-from 75cb6f5bf)` rc=0。单 lane、零生成态、零他人 gitlink。
+   - 孤儿 `upstream` ref 是全机共享面（这台机器上每个 agent 的 pointer transaction 都会同样 bail），
+     属他人状态 ⇒ **本轮不删**，作为待授权项上报。
 5. `bet-ledger.py complete BET-Y2Q4-T10-239` 通过（evidence matrix + `merged_reachable_commit`
    **须含终态** —— 判据见 BET-Y2Q4-T10-238 第 9 条：可达 ≠ 含终态，用
    `git show <sha>:<path>` 数站点，不数 `^def test_`）。
