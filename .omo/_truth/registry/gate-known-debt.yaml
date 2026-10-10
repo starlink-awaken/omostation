@@ -398,3 +398,17 @@ entries:
     的内容已由 omostation-agora#115 合入 main, 指针因此落回 main 线以满足 autobump 的 no-rewind 契约
   recorded_at: '2026-09-30T09:53:40.859695+00:00'
   active: true
+- fingerprint: gitlink-ancestry|submodule-ancestry-gate|026d374f6a94b6cc
+  surface: gitlink-ancestry
+  check_id: submodule-ancestry-gate
+  signature: 026d374f6a94b6cc
+  kind: gitlink-regress
+  reason: submodule projects/omo pointer 5befe6ad7530 rewinds d8ca1a2505d1
+  range: origin/main..ca2831d53334
+  base_sha: 28f7a0a6e37d0d8c0f870c004ddaf1a91b19aa72
+  head_sha: ca2831d53334488413c7b66b610744d8489e2b21
+  merge_base: 28f7a0a6e37d0d8c0f870c004ddaf1a91b19aa72
+  exempt_reason: d8ca1a2 是 T10-239 车道 agent 分支提交 (tailscale IP 修复), 不在 omo origin/main;
+    正确指针是 omo origin/main 5befe6ad (#210 已含 paths 重构)
+  recorded_at: '2026-10-10T09:40:00Z'
+  active: true
