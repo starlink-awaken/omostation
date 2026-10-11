@@ -227,6 +227,22 @@ sync 再生**的 registry，两个都归 `code_root()`；② `omo_observability.
      是 `shrink_only` 面，只增不减。该 worktree 的 `projects/omo` 实测
      `--is-shallow-repository=false` ⇒ ancestry 判据在此有意义（§6 worktree 深浅取决于 claim 路径，
      1-commit 检出里这类判据无意义）。
+   - **台账面与上游相撞（同一 push 前置窗口实测）**：`git merge-tree --write-tree --name-only
+     origin/main HEAD` rc=1，唯一冲突文件是 `docs/plans/3y-bet-ledger.yaml`。上游 #4706（T10-240 收口包）
+     改写了 `bets:` 段尾（`@@ -41618,3 +41636,3 @@` ⇒ `overall_state: evaluating → delivery_accepted`
+     与 engineering `status: NOT_STARTED → VERIFIED`），而本 BET 的 135 行条目插在紧邻的下一行
+     （`@@ -41619,0 +41620,135 @@`）—— 两侧都碰同一段尾，所以「只改文档就必然与上游无交集」的假设在这里不成立。
+     **处置不用 merge/rebase/pull 吸收上游**（本仓 §6 禁止），改为「上游字节为底 + 我的条目逐字重放」：
+     `git show origin/main:docs/plans/3y-bet-ledger.yaml` 作底稿，插入点取
+     `bin/gac/ledger-safe-insert.py --show-bounds` 在**该底稿上**算出的 `insert before 1-based line 41638`
+     （即 `bets:` 段末、`campaigns:` 之前）；写出仍由我逐字插入，因为该工具 `:199-202` 会把条目
+     `format_entry_as_list_item()` 重新 dump，逐字面会漂移 —— **只用它的定界与校验语义，不用它的写出**。
+     `meta.total_bets` 按该工具 `:220-230` 的纪律由插入后 `len(bets)` **绝对派生**（537→538，禁止 old+1）。
+     五条复核读数：`bets=538 == total_bets=538`、末条 `id=BET-Y2Q4-T10-239`、id 集合无重复、
+     `BET-Y2Q4-T10-240` 与上游逐字段相等（含它新写入的 `overall_state: delivery_accepted`）⇒ 无回流、
+     无反向删除、条目行数增量恰为 135（`rebuilt 42267 − main 42132 = 135`）；
+     `git diff --numstat origin/main -- docs/plans/3y-bet-ledger.yaml` = `136 1`（135 行条目 + 1 行 meta）。
+     判据：该 numstat 里出现任何「删掉上游既有内容」的形态即按 PITFALL-COO-005 立即回退。
 5. `bet-ledger.py complete BET-Y2Q4-T10-239` 通过（evidence matrix + `merged_reachable_commit`
    **须含终态** —— 判据见 BET-Y2Q4-T10-238 第 9 条：可达 ≠ 含终态，用
    `git show <sha>:<path>` 数站点，不数 `^def test_`）。

@@ -41608,15 +41608,33 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@75cb6f5bf96b742ddecb4aab96c9a3f45a3daf27
+          tests:
+            ref: receipt://docs/reports/2026-10-10-bet-240-tests.json
+            sha256: sha256:af3cef8162255ae26a01b4d0247ddeffbe0442f30f9edd1b6bf28c77e532470c
+          diff:
+            ref: receipt://docs/reports/2026-10-10-bet-240-closeout.md
+            sha256: sha256:ceb7fcd21d71f0e84771f58102f0b86413b5eaaa3aab4868307ad2990fc33322
+          rollback:
+            ref: receipt://docs/reports/2026-10-10-bet-240-closeout.md
+            sha256: sha256:ceb7fcd21d71f0e84771f58102f0b86413b5eaaa3aab4868307ad2990fc33322
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-240.md
+            sha256: sha256:094c40e86446300ff07d3ca1f0e6388e97844e09eff7d401154eda4799f880c4
       operational:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          deployment_state:
+            ref: receipt://docs/reports/2026-10-10-bet-240-closeout.md
+            sha256: sha256:ceb7fcd21d71f0e84771f58102f0b86413b5eaaa3aab4868307ad2990fc33322
+            note: BLOCKED_G0_M0 per spec v1.1.0 — LaunchAgent identity chain unbound; release BET T10-241 pending
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-239
   title: ADR-0456 残留（omo 侧）— src/ 32 处仓根字面量折进 code_root()/state_root() 单一缝
   goal: BET-Y2Q4-T10-217 把 bin/ 侧的四个仓根私有别名折进 ADR-0456 规范名并把 12 个 import-time 常量改调用时刻解析，其扫描范围与判据
@@ -41736,7 +41754,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-10-omo-src-code-root-convergence.md
     spec_version: 1.0.0
-    content_digest: sha256:e2ba808690283faca17e38ad3b51e009b7e3107ec48155696031ecd869dc5de5
+    content_digest: sha256:37942fc03e17b2f013f18ffce8cd7309180a13857cdf09e6e3d668da00b8f54f
     decision_ref: decision://accepted/BET-Y2Q4-T10-239
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
