@@ -41727,7 +41727,7 @@ bets:
     六子命令 (sync-rare/manifest/snapshot-links/verify/daily-report/rebuild)、
     掉线感知链升级 (keepalive 桌面通知节流)、T3 盘死重建剧本 (软链 manifest + 稀有回灌
     + 公开源重下清单)。RPO 承诺: P0+P1 完成即恢复 ≈4.5h。'
-  status: in_progress
+  status: done
   window: Y2Q4
   track: T10-TOOLING
   priority: P0
@@ -41775,6 +41775,26 @@ bets:
     content_digest: sha256:4daf19781c83f833c280052950979a2ca56ea1a2a766ea8e52733bc3ae76f9e7
     decision_ref: decision://accepted/BET-Y2Q4-T10-243
   value_indicator_policy: false
+  done_at: '2026-10-11'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    # 交付实测 (receipt 见 .omo/_delivery/agent-workflows/runs/):
+    # shellcheck 0 findings; script-registry PASSED 719; snapshot-links 28 链固化;
+    # daily-report 产出; gac-local-gate PASS; 半演练 P0 软链重建 28链/2ms (路径
+    # 替换正确, 注释行 bug 发现并修复), P1 抽样回灌 16G/137s≈119MB/s; MBP 异机
+    # 副本 hash 一致 (afd25311..., 3-2-1 闭环)。evidence 轴待 push 后跑
+    # `bet-ledger.py complete BET-Y2Q4-T10-243` 升级 delivery_accepted。
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2

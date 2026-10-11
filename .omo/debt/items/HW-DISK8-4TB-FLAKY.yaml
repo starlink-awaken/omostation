@@ -15,6 +15,8 @@ evidence_refs:
 - Plans/macmini-7t-ancient-twilight.md
 mitigation_refs:
 - ~/bin/disk-keepalive.sh
+- bin/ops/hot-tier-resilience.sh
+- docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
 last_reviewed_at: '2026-10-11'
 next_review_at: '2026-10-18'
@@ -30,4 +32,13 @@ history:
     10-10 23:07~10-11 08:13 (9.1h, SHAREDWORK 卷)。disk-keepalive
     UUID 自愈三次均自动挂回成功, 但掉线窗口内 IO 任务 (rclone 迁移)
     承担静默损坏风险——rclone check 校验为必须项。
+  actor: "engineering-agent"
+- at: '2026-10-11T09:55:00+00:00'
+  action: mitigate
+  note: >-
+    BET-Y2Q4-T10-243 兜底体系落地: P0-P4 数据分层保护 (稀有发布者 225G
+    →Lex 副本进行中, 公开源 545G 清单化), keepalive 升级 macOS 桌面通知
+    (节流防刷屏), hot-tier-resilience.sh 六子命令 + T3 重建剧本实测,
+    MBP 异机副本 hash 一致 (3-2-1 闭环)。掉线感知从"只写日志"升级为
+    "日志+通知+日报"。换线/换盘决策仍待硬件观察期。
   actor: "engineering-agent"
