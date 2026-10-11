@@ -41796,6 +41796,41 @@ bets:
         evidence: {}
     overall_state: evaluating
 campaigns:
+- id: BET-Y2Q4-T10-244
+  title: 贾维斯感知面 — observer 日报 + SwiftBar 常驻/待办域 + CI 信号闭环
+  goal: '常驻 agent 的可感知化 (2026-10-11 贾维斯会话交付, 补户口立项): (1) observer-daily.py
+    每日 07:30 cron 聚合 resident 五件套/aictl/P74/CI 面 → .omo/_delivery/observability/daily/,
+    经 personal-signals 通道喂活 (signals-poll 10min); (2) SwiftBar agent-live 域 (心跳/事件/沉淀/
+    端口探活/能力目录入口) + todo/提醒域 (todo.jsonl + reminders.json, agent-喂入面); (3) CI 失败
+    自动提醒 (gh run list FAIL → reminders, 幂等); (4) 双机 todo-sync (mini 主节点 5min)。'
+  status: active
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 days
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: optional
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  circuit_breaker: 感知面只读采集不回写治理状态; reminders 面不清除非本源条目; cron 故障不阻塞
+    menubar 渲染 (parts 独立容错)。
+  non_goals:
+  - 不改 resident 运行时本体 (感知层只读)
+  - 不做 BCOS 信号路由大架子接线 (另行走后续 bet)
+  - observer 日报不直接发 workflow start 事件 (ADR-0203 bet 门禁满足前走 personal-signals)
+  done_when:
+  - observer 日报连续 7 天自动生成 (cron 证据)
+  - SwiftBar agent-live + todo 域双机 bar-lint PASS
+  - CI FAIL → reminders 闭环实测一次 (真实 FAIL 或演练)
+  - todo-sync 双机一致且幂等
+  verify:
+  - cmd: bash ~/.config/menubar/bar-lint.sh
+    expect: PASS 双机
+  - cmd: python3 ~/local-ops/bin/observer-daily.py --no-workflow
+    expect: 日报生成 exit 0
+
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
   objective_refs:
