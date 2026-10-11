@@ -41634,7 +41634,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: delivery_accepted
+    overall_state: blocked
 - id: BET-Y2Q4-T10-242
   title: P1 存储收敛 — Model 卷排空到 SHAREDMODEL/~/omlx + vault-paths/BOS 逻辑命名统一
   goal: 'Model 1T 卷角色退役为 TM 专用卷：LMStudio 独有模型 (~195G) rsync 迁 SHAREDMODEL；
@@ -41727,7 +41727,7 @@ bets:
     六子命令 (sync-rare/manifest/snapshot-links/verify/daily-report/rebuild)、
     掉线感知链升级 (keepalive 桌面通知节流)、T3 盘死重建剧本 (软链 manifest + 稀有回灌
     + 公开源重下清单)。RPO 承诺: P0+P1 完成即恢复 ≈4.5h。'
-  status: done
+  status: in_progress
   window: Y2Q4
   track: T10-TOOLING
   priority: P0
@@ -41802,7 +41802,13 @@ bets:
     经 personal-signals 通道喂活 (signals-poll 10min); (2) SwiftBar agent-live 域 (心跳/事件/沉淀/
     端口探活/能力目录入口) + todo/提醒域 (todo.jsonl + reminders.json, agent-喂入面); (3) CI 失败
     自动提醒 (gh run list FAIL → reminders, 幂等); (4) 双机 todo-sync (mini 主节点 5min)。'
-  status: active
+  status: in_progress
+  write_surfaces: ['docs/plans/3y-bet-ledger.yaml', 'docs/superpowers/specs/2026-10-11-jarvis-perception-plane-v1.0.0.md']
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-11-jarvis-perception-plane-v1.0.0.md
+    spec_version: 1.0.0
+    content_digest: sha256:bf022bca467d43be586688656557fbf4e730068a738374f4686a9c13870aa93a
+    decision_ref: decision://accepted/BET-Y2Q4-T10-244
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -41813,6 +41819,13 @@ bets:
   retro: optional
   workflow: bet-execution
   underlying_workflow: project-code-change
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering: {status: IN_PROGRESS, evidence: {}}
+      operational: {status: NOT_PROVEN, evidence: {}}
+      value: {status: NOT_PROVEN, evidence: {}}
   circuit_breaker: 感知面只读采集不回写治理状态; reminders 面不清除非本源条目; cron 故障不阻塞
     menubar 渲染 (parts 独立容错)。
   non_goals:
