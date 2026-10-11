@@ -38,7 +38,12 @@ jobs:
         # which are .gitignore'd. Skip them in CI; the unit tests still cover SSB auth and core flows.
         run: cd projects/ecos && uv run pytest tests/ -q --ignore=tests/test_e2e_baseline.py -k "not PerformanceBenchmarks"
       - name: L0 constraint compiler (enforce)
-        # 编译 L0-constraints.yaml 为可执行模块, 违反 required 约束则 CI 红
+        # 编译 L0-constraints.yaml 为可执行模块, 违反 required 约束则 CI 红。
+        # 2026-10-10 (P2 truth-telling): 本步无 caller 喂 state → 有分支的 required 规则
+        # 处于 NOT EVALUATED。普通 --enforce 在这些规则未评估时 exit 0 (只有真 FAIL 才红),
+        # 报告里用 NOT EVALUATED 桶区分, 不假绿。若要求"标为 enforce 就必须 enforce",
+        # 改用 --enforce-strict (未评估 required → exit 3) —— 那会使本步在 producer 接入前
+        # 恒红, 是 owner 决策, 不默认启用 (见 compiler --help)。
         run: cd projects/ecos && uv run python3 src/ecos/ssot/tools/ecos-constraint-compiler.py --enforce
       - name: MOF M1 status compliance
         # 校验 1400 个 M1 实例 status 枚举合规
@@ -67,19 +72,32 @@ jobs:
         continue-on-error: true
         run: python3 bin/gac/alert-check.py 2>/dev/null || true
       - name: Observability metrics + health
-        run: 'cd projects/ecos && uv run python3 -c "
-import sys; sys.path.insert(0, ''src'')
-from ecos.observability.metrics import report
-print(report())
-"'
+        run: cd projects/ecos && uv run python3 src/ecos/observability/metrics.py
       - name: P0/P1 tools smoke test
         run: cd projects/ecos && uv run pytest tests/test_tool_smoke.py -q
       - name: P2 tools batch CI
         run: |
           cd projects/ecos
           OK=0; FAIL=0
-          for tool in mof-bootstrap mof-compile mof-bos mof-bos-watch mof-entity mof-generate mof-skills mof-trail mof-audit mof-doc-governance mof-gen-l0 mof-m2-coverage mof-mof-validate mof-owl-adapter mof-reason mof-workflow; do
-            if uv run python3 src/ecos/ssot/tools/$tool.py --help > /dev/null 2>&1; then OK=$((OK+1)); else FAIL=$((FAIL+1)); echo "FAIL: $tool"; fi
-          done
+          check() {
+            tool="$1"; shift
+            if uv run python3 "src/ecos/ssot/tools/$tool.py" "$@" > /dev/null 2>&1; then OK=$((OK+1)); else FAIL=$((FAIL+1)); echo "FAIL: $tool"; fi
+          }
+          # P2 工具集 (11 个): 仅列实际存在的工具 — mof-doc-governance / mof-gen-l0 /
+          # mof-m2-coverage / mof-mof-validate / mof-owl-adapter 在本仓从未存在
+          # (全历史 0 commits), 保留会让本步恒红、断言失效。
+          # mof-reason / mof-workflow 契约是位置参数/子命令 (非 --help), 与
+          # tests/test_tool_smoke.py 的 P0/P1 规范调用保持一致。
+          check mof-bootstrap --help
+          check mof-compile --help
+          check mof-bos --help
+          check mof-bos-watch --help
+          check mof-entity --help
+          check mof-generate --help
+          check mof-skills --help
+          check mof-trail --help
+          check mof-audit --help
+          check mof-reason impact ACTION-ACP-IMPLEMENT
+          check mof-workflow
           echo "P2 tools: OK=$OK FAIL=$FAIL"
           [ $FAIL -eq 0 ]

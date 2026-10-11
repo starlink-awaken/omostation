@@ -45,12 +45,20 @@ L0_NORMS = ROOT / "projects/ecos/src/ecos/ssot/registry/L0-norms.yaml"
 REVIEWED_L0_UNREFERENCED = {
     # (b) 真实不变量 — 谓词可验但无执行宿主
     "CR-MCP-LAZY-01",        # 无宿主
-    "CR-VIBEOPS-01",         # 无实现
-    "CR-VIBEOPS-02",         # 无宿主 (target 已并入 aetherforge)
-    "X2-C02",                # compiler 无协议老化分支
+    "CR-VIBEOPS-01",         # marker @pytest.mark.vibeops 真实被使用 (kairon-observability 集成测试),
+                             #   但无 pyproject marker 配置、无"混合测试必须带该 marker"的检查 (P5 更正, 2026-10-10)。
+                             #   注: 旧注记"零 live hits"错误 —— 有真实用例, 缺的是配置与检查, 不是用例。
+    "CR-VIBEOPS-02",         # 无宿主 (premise 漂移: AgoraGatewayLLM.generate() 仍是返回 mock 字符串的
+                             #   stub, 无任何路由到 bos://capability/llm-gateway; P6 标注, 2026-10-10)
+    "X2-C02",                # dead premise (P6, 2026-10-10): 字段 age_major_versions 只出现在
+                             #   本注册表两条规则副本, 代码与数据模型零引用; protocol_registry 无 MAJOR 版本史
     "X2-C04",                # compiler 无 half_life 分支
-    "X3-C02",                # compiler value_tier 分支缺 cost_attribution
-    "CR-C2G-V3-01",          # 无 ssot write-back 实现
+    # X3-C02 已于 2026-10-10 (P3) 在 check-l0-constraints.py 实现真谓词
+    # (value_tier==1 ⇒ cost_attribution != 'none', 读 ecos governance/x3-value-stack.yaml),
+    # 并从本候选集移除 —— 它现在是 wired, 不再是未接线候选。
+    # CR-C2G-V3-01 已于 2026-10-10 (P5) 在 check-l0-constraints.py 实现读侧门禁
+    # (done+context_uri ⇒ ssot_written_back), 并从本候选集移除 —— 它现在是 wired。
+    # 注: 该检查在当前仓库会红 (5 条既有 done 任务未回写), 是真实强制而非描写。
     "CR-MOF-VERSION-COUPLED-01",  # 无 4 路径耦合检查
     "CR-GOV-CLOSED-LOOP-01",      # 无 post-commit 校验宿主
     # (ii) 审计取下退回候选集 — 有管理面/数据流但无强制检查 (wiring_note 在注册表)
@@ -196,7 +204,7 @@ def _validate_alias_group(group: dict) -> list[str]:
 
 
 def test_l0_unreferenced_set_matches_reviewed_list():
-    """覆盖率工具的真实 L0 候选 == 评审清单 (16 条)."""
+    """覆盖率工具的真实 L0 候选 == 评审清单 (14 条)."""
     mod = _load_tool()
     inv = mod.inventory()
     got = set(inv["candidates_unwired"]["L0-constraints"])
