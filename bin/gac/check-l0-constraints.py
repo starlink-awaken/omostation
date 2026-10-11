@@ -4,12 +4,14 @@
 读取 .omo/_truth/registry/.../L0-constraints.yaml (通过 ecos 子模块),
 校验可自动化验证的 required 约束. 任一 FAIL 则 exit 1.
 
-验证项 (13 项):
+验证项 (15 项):
   X1-C01: port-registry 有注册条目
   X1-C03: agora register 是唯一写入口
+  CR-MCP-LAZY-01: Agora 代理调用点显式 lazy=True (E-L0-011)
   CS-10:  BOS active 服务含 domain + realized_by
   X2-C01: port-registry 条目含 name
   X2-C03: CLAUDE.md 保鲜 ≤60 天
+  X2-C04: 协议半衰期 (protocol.age_days ≤ half_life_days, W-L0-005)
   X2-C05: omo-surfaces 复核 ≤14 天
   X3-C01: 功能域声明 value_tier (ecos governance/x3-value-stack.yaml)
   X3-C02: value_tier=1 的域必须有 cost_attribution != 'none'
@@ -20,12 +22,15 @@
   CR-C2G-V3-01: done+context_uri 任务必须有 ssot_written_back (P5 读侧门禁)
 """
 
+import re
 import sys
 import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 PORT_REGISTRY = REPO / "protocols/port-registry.yaml"
+# X2-C04 / CR-MCP-LAZY-01 的真实数据源 (ecos 子模块协议注册表 + agora 代理调用点)
+L0_REGISTRY = REPO / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml"
 BOS_SERVICES = REPO / "projects/agora/etc/bos-services.yaml"
 OMO_SURFACES = REPO / ".omo/_truth/registry/omo-governance-surfaces.yaml"
 CLAUDE_MD = REPO / "CLAUDE.md"
@@ -35,6 +40,25 @@ CLAUDE_MD = REPO / "CLAUDE.md"
 # missing 全部域且从不 gate (always True, 见 P1 audit)。
 VALUE_STACK = REPO / "projects/ecos/src/ecos/ssot/registry/governance/x3-value-stack.yaml"
 DONE_TASKS = REPO / ".omo" / "tasks" / "done"
+# CR-MCP-LAZY-01 (E-L0-011): Agora 跨层 MCP 代理必须 lazy 初始化, 否则触发循环
+# 依赖锁死。两个真实调用点都在 agora: bootstrap 的 proxy_manager.start(...) 与
+# swarm 的 proxy.add_service(...)。每项 = (仓内相对路径, 必需形态, 禁止形态, 描述)。
+# fail-closed: 调用点缺失或翻成 lazy=False 都算违规 (2026-08-06 plan 的
+# AGORA_PROXY_EAGER env 翻转会移除字面 lazy=True, 必须在此拦下)。
+LAZY_PROXY_SITES = [
+    (
+        "projects/agora/src/agora/mcp/mcp_bootstrap.py",
+        r"proxy_manager\.start\([^)]*lazy\s*=\s*True",
+        r"proxy_manager\.start\([^)]*lazy\s*=\s*False",
+        "mcp_bootstrap.py proxy_manager.start(lazy=True)",
+    ),
+    (
+        "projects/agora/src/agora/mcp/swarm.py",
+        r"add_service\([\s\S]*?lazy\s*=\s*True",
+        r"add_service\([\s\S]*?lazy\s*=\s*False",
+        "swarm.py proxy.add_service(lazy=True)",
+    ),
+]
 
 
 def check_x1_c01() -> tuple[bool, str]:
@@ -130,6 +154,52 @@ def check_x2_c03() -> tuple[bool, str]:
     if age_days > 60:
         return False, f"CLAUDE.md is {age_days:.0f} days old (max 60)"
     return True, f"CLAUDE.md: {age_days:.0f} days old (fresh)"
+
+
+def check_x2_c04() -> tuple[bool, str]:
+    """X2-C04: 协议引入超过 half_life_days 后应触发老化审查 (W-L0-005).
+
+    谓词: protocol.age_days <= protocol.half_life_days。
+    数据源: ecos 子模块 L0 注册表的 protocol_registry 段 —— 每条协议携带
+    `introduced` (ISO 日期) 与 `half_life_days`, 故 age_days **由 introduced 派生**
+    (`today - introduced`, 单位天)。这是 protocol_registry 的唯一时间字段, 也是
+    编译器 compute_decay 的既定口径 (intro = strptime(p["introduced"]), age =
+    now - intro); 只有像 CLAUDE.md 那样**无 introduced 字段**的对象才退化为文件
+    mtime (见 X2-C03)。half_life_days 缺失或 introduced 非法一并计入违规。
+    """
+    if not L0_REGISTRY.is_file():
+        return False, f"L0 registry not found: {L0_REGISTRY}"
+    try:
+        from datetime import date, datetime
+
+        import yaml
+        data = yaml.safe_load(L0_REGISTRY.read_text()) or {}
+        protocols = data.get("protocol_registry") or []
+        if not protocols:
+            return False, "protocol_registry 为空 (producer 无数据, 不可绿)"
+        today = date.today()
+        bad = []
+        for p in protocols:
+            if not isinstance(p, dict):
+                continue
+            pid = str(p.get("id", "?"))
+            half = p.get("half_life_days")
+            intro = str(p.get("introduced") or "")
+            if half is None or not intro:
+                bad.append(f"{pid}(缺 introduced/half_life_days)")
+                continue
+            try:
+                age = (today - datetime.strptime(intro[:10], "%Y-%m-%d").date()).days
+            except ValueError:
+                bad.append(f"{pid}(introduced 非法: {intro})")
+                continue
+            if age > half:
+                bad.append(f"{pid}({age}d > {half}d)")
+        if bad:
+            return False, f"W-L0-005: {len(bad)} 协议超半衰期: {'; '.join(bad)}"
+        return True, f"protocol shelf-life: all {len(protocols)} protocols within half_life"
+    except Exception as e:
+        return False, f"X2-C04 check error: {e}"
 
 
 def check_x4_c01() -> tuple[bool, str]:
@@ -228,6 +298,33 @@ def check_x1_c03():
         return (True, "agora register: entry point exists") if has_register else (False, "agora register: no entry point")
     except Exception as e:
         return True, f"agora parse error: {e}"
+
+
+def check_cr_mcp_lazy_01() -> tuple[bool, str]:
+    """CR-MCP-LAZY-01: Agora 跨层 MCP 代理必须 lazy 初始化 (E-L0-011).
+
+    规则: proxy.initialization == 'lazy'。防止 eager 初始化触发循环依赖锁死。
+    本仓把这类不变量表达为 follow-CI 的 check-l0-constraints 检查 (本文件), 而
+    非运行期 assert —— 因为 (a) Agora bootstrap 在 SSE/stdio 服务器进程里才跑,
+    CI 不会执行它; (b) `python -O` 会剥掉 assert。故在此对两个真实调用点做
+    源码形态断言 (fail-closed)。
+    """
+    problems = []
+    seen = 0
+    for rel, req_re, bad_re, desc in LAZY_PROXY_SITES:
+        f = REPO / rel
+        if not f.is_file():
+            problems.append(f"{desc}: 调用点文件缺失 ({rel})")
+            continue
+        seen += 1
+        text = f.read_text(encoding="utf-8")
+        if re.search(bad_re, text):
+            problems.append(f"{desc}: 检出 lazy=False (eager 初始化)")
+        elif not re.search(req_re, text):
+            problems.append(f"{desc}: 未找到显式 lazy=True 调用 (疑似 eager/改写)")
+    if problems:
+        return False, "E-L0-011: " + "; ".join(problems)
+    return True, f"lazy proxy: {seen}/{len(LAZY_PROXY_SITES)} call sites keep explicit lazy=True"
 
 
 def check_x3_c01():
@@ -390,9 +487,11 @@ def main() -> int:
     checks = [
         ("X1-C01", check_x1_c01),
         ("X1-C03", check_x1_c03),
+        ("CR-MCP-LAZY-01", check_cr_mcp_lazy_01),
         ("CS-10", check_cs10),
         ("X2-C01", check_x2_c01),
         ("X2-C03", check_x2_c03),
+        ("X2-C04", check_x2_c04),
         ("X2-C05", check_x2_c05),
         ("X3-C01", check_x3_c01),
         ("X3-C02", check_x3_c02),

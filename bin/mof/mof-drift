@@ -7,6 +7,13 @@ from pathlib import Path
 
 import yaml
 
+# ADR-0456: 新代码经 repo_root 取根, 不用 __file__ 反推。注: 本文件其余历史路径
+# 常量仍沿用 `Path(__file__).parent.parent` (自 bin/ 迁到 bin/mof/ 后少退一层,
+# 属既存 off-by-one; 已单独记录待评审, 不在本次改动范围)。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root  # noqa: E402
+
+REPO_ROOT = code_root()
 M1_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
 PROJECTS_DIR = Path(__file__).parent.parent / "projects"
 
@@ -234,9 +241,12 @@ def count_commit_closure() -> tuple[int, int, int]:
         uncommitted = 0
     try:
         # 最近 mof-version bump 数量 (24h)
+        # 修复 (2026-10-11): 原命令 ["bin/mof-version", "show"] 路径不存在
+        # (真实脚本在 bin/mof/mof-version) 且 cwd 曾是 bin/, 双重错位 →
+        # FileNotFoundError → bumps_24h 恒 0。改用绝对路径 + 检出根 cwd。
         r2 = subprocess.run(
-            ["bin/mof-version", "show"],
-            capture_output=True, text=True, cwd=Path(__file__).parent.parent, timeout=10
+            [str(REPO_ROOT / "bin/mof/mof-version"), "show"],
+            capture_output=True, text=True, cwd=REPO_ROOT, timeout=10
         )
         # 简化: 数 history 条目
         bumps_24h = sum(1 for l in r2.stdout.splitlines() if l.startswith("  v0.0."))
@@ -254,6 +264,28 @@ def count_commit_closure() -> tuple[int, int, int]:
     except Exception:
         last_age_h = 999
     return uncommitted, bumps_24h, int(last_age_h)
+
+
+def check_mof_version_committed() -> list[str]:
+    """CR-GOV-CLOSED-LOOP-01 (强制闭环): mof-version 记录必须已随 commit 落地。
+
+    谓词: `mof_version_record implies git_commit_within_same_session`。
+    可观测形式: `.omo/_truth/mof-version.yaml` 不得停留在**未提交**的工作树改动上
+    —— 一旦未提交, 说明最近一次 `mof-version record` 没进 commit, post-commit 知识
+    萃取引擎空转 (P59 类失闭环)。返回未提交证据行 (空 = 已闭环)。
+
+    与同文件 CR-GOV-COMMIT-FREQUENCY-01 是**不同规则**: 后者看工作树累积**文件数**
+    阈值 (>100 warn / >500 error), 本规则只看**版本记录是否落 commit** 的相关性。
+    """
+    rel = ".omo/_truth/mof-version.yaml"
+    try:
+        r = subprocess.run(
+            ["git", "status", "--porcelain", "--", rel],
+            capture_output=True, text=True, cwd=REPO_ROOT, timeout=10,
+        )
+    except Exception as e:
+        return [f"git status 失败: {e}"]
+    return [l for l in r.stdout.splitlines() if l.strip()]
 
 
 def count_stale_governance() -> dict[str, int]:
@@ -432,6 +464,20 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "severity": "low",
                 "count": uncommitted,
                 "message": f"工作树累积 {uncommitted} 文件 (≤100 健康, bumps_24h={bumps_24h}, last_commit={last_age_h}h ago)",
+            })
+
+        # CR-GOV-CLOSED-LOOP-01: mof-version 记录 ↔ commit 相关性 (P59 强制闭环)
+        version_gap = check_mof_version_committed()
+        if version_gap:
+            drifts.append({
+                "project": "governance",
+                "type": "commit_closure_gap",
+                "severity": "medium",
+                "count": len(version_gap),
+                "message": (
+                    "CR-GOV-CLOSED-LOOP-01: mof-version 记录未落 commit "
+                    f"({'; '.join(version_gap)}) — 强制闭环破坏, 知识萃取空转"
+                ),
             })
 
         # P61 增: governance_score_history — 最近 N 次 audit 趋势
