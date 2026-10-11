@@ -232,17 +232,35 @@ sync 再生**的 registry，两个都归 `code_root()`；② `omo_observability.
      改写了 `bets:` 段尾（`@@ -41618,3 +41636,3 @@` ⇒ `overall_state: evaluating → delivery_accepted`
      与 engineering `status: NOT_STARTED → VERIFIED`），而本 BET 的 135 行条目插在紧邻的下一行
      （`@@ -41619,0 +41620,135 @@`）—— 两侧都碰同一段尾，所以「只改文档就必然与上游无交集」的假设在这里不成立。
-     **处置不用 merge/rebase/pull 吸收上游**（本仓 §6 禁止），改为「上游字节为底 + 我的条目逐字重放」：
-     `git show origin/main:docs/plans/3y-bet-ledger.yaml` 作底稿，插入点取
-     `bin/gac/ledger-safe-insert.py --show-bounds` 在**该底稿上**算出的 `insert before 1-based line 41638`
-     （即 `bets:` 段末、`campaigns:` 之前）；写出仍由我逐字插入，因为该工具 `:199-202` 会把条目
-     `format_entry_as_list_item()` 重新 dump，逐字面会漂移 —— **只用它的定界与校验语义，不用它的写出**。
-     `meta.total_bets` 按该工具 `:220-230` 的纪律由插入后 `len(bets)` **绝对派生**（537→538，禁止 old+1）。
-     五条复核读数：`bets=538 == total_bets=538`、末条 `id=BET-Y2Q4-T10-239`、id 集合无重复、
-     `BET-Y2Q4-T10-240` 与上游逐字段相等（含它新写入的 `overall_state: delivery_accepted`）⇒ 无回流、
-     无反向删除、条目行数增量恰为 135（`rebuilt 42267 − main 42132 = 135`）；
+     **处置不用 merge/rebase/pull 吸收上游**（本仓 §6 禁止），改为「上游字节为底 + 我的条目逐字重放」。
+     **但「逐字采纳上游字节」本身不消冲突**（一次错误假设，实测否证）：插在 `bets:` 段末后复探
+     `git merge-tree --write-tree --name-only origin/main HEAD` 仍 **rc=1**（tree `cae25c8a8`，
+     冲突 blob 42283 行），且**不是**一个冲突区而是两个 —— 标记行 `41627 <<<<<<< / 41628 ||||||| /
+     41631 ======= / 41771 >>>>>>>` 与 `41782 / 41784 / 41786 / 41788`。
+     用 `difflib` 对 base(`75cb6f5bf`)→origin/main 逐行取改动区间才看清根因：上游在 `bets:` 段的
+     改动区间是 **main 41611-41626、41629-41633、41637**（即最后一行也在改），而 `--show-bounds`
+     给的 `insert before 1-based line 41638` 紧贴其下；再加上我的条目**尾部三行与 T10-240 的尾部
+     逐字相同**（`      value:` / `        status: NOT_PROVEN` / `        evidence: {}`），xdiff 把我的
+     条目对齐到 T10-240 的尾部上，于是把一处纯插入拆成两个内容冲突区。
+     **改插上游未触碰位**：`- id: BET-Y2Q4-T10-240`（main 41555）之前，距上游首条改动行 56 行。
+     这是对 `ledger-safe-insert.py` `:213-218`「插入后须为 `bets:` 末条」断言的**刻意偏离** ——
+     那条是 append-only 纪律而非 schema 约束；此处为消除段尾重叠改插 T10-240 之前，
+     id 数值序反而归位（`[... T10-238, T10-16-03, T10-239, T10-240]`）。写出仍逐字插入，因为该工具
+     `:199-202` 会把条目 `format_entry_as_list_item()` 重新 dump，逐字面会漂移 ——
+     **只用它的定界与校验语义，不用它的写出**。
+     `meta.total_bets` 按该工具 `:220-230` 的纪律由插入后 `len(bets)` **绝对派生**（537→538，禁止 old+1）；
+     该行在 base 与 main 都是 537 ⇒ 只有我这侧改，结构上不可能进冲突区。
+     五条复核读数：`bets=538 == total_bets=538`、id 集合无重复、`BET-Y2Q4-T10-240` 的 83 行块与上游
+     **逐字节相等**（含它新写入的 `overall_state: delivery_accepted`）⇒ 无回流、无反向删除；
+     行数增量恰 135（`rebuilt 42267 − origin/main 42132 = 135`，插入位改变不影响增量）；
      `git diff --numstat origin/main -- docs/plans/3y-bet-ledger.yaml` = `136 1`（135 行条目 + 1 行 meta）。
      判据：该 numstat 里出现任何「删掉上游既有内容」的形态即按 PITFALL-COO-005 立即回退。
+     **终态读数**（commit `662d5f0d4`）：`git merge-tree --write-tree --name-only origin/main HEAD`
+     **rc=0**，merged tree `704776348`；对 merged blob 直接跑结构契约 ⇒ `len(bets)=538 ==
+     declared total_bets=538`、id 唯一、T10-240 `engineering.status=VERIFIED`（上游那半边在合并后
+     仍在）、T10-239 在位、`<<<<<<<`/`>>>>>>>` 零命中。判据：合并**干净**不等于**内容对** ——
+     rc=0 只说明没有重叠，仍要解析 merged tree 的 blob 数两侧条目，否则「上游把我的插入吃掉了」
+     这类自动合并结果也是 rc=0。
 5. `bet-ledger.py complete BET-Y2Q4-T10-239` 通过（evidence matrix + `merged_reachable_commit`
    **须含终态** —— 判据见 BET-Y2Q4-T10-238 第 9 条：可达 ≠ 含终态，用
    `git show <sha>:<path>` 数站点，不数 `^def test_`）。
