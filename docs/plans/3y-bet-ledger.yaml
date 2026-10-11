@@ -41869,7 +41869,8 @@ bets:
     overall_state: evaluating
 - id: BET-Y2Q4-T10-243
   title: 4.1T 掉线盘兜底与恢复体系 — 热层数据分层保护 + T3 重建剧本 + 掉线感知链
-  goal: 'disk8 (4.1T, 硬件层持续掉线 9 天 3 次大规模+会话内高频, 无解待换线/换盘) 上
+  goal: 'disk8 (4.1T, 硬件层可疑: 9/7 厂家故障说明 + 10-11 实测整链掉线, 频次待实测;
+    原"持续掉线 9 天 3 次大规模"为 keepalive 误报, 已订正) 上
     SHAREDMODEL 热层 847G 唯一 SSOT 的兜底: 按 P0 配置(git)/P1 稀有发布者(Lex 副本
     225G)/P2 公开源(清单重下 545G)/P3 冷层/P4 可丢 分层保护。交付 hot-tier-resilience.sh
     六子命令 (sync-rare/manifest/snapshot-links/verify/daily-report/rebuild)、
@@ -41919,8 +41920,8 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
-    spec_version: 1.0.0
-    content_digest: sha256:4daf19781c83f833c280052950979a2ca56ea1a2a766ea8e52733bc3ae76f9e7
+    spec_version: 1.0.1
+    content_digest: sha256:58491dd5b0acc1aa866c23b67b8d154b834508e0c9552e91ef7362d3f95046fc
     decision_ref: decision://accepted/BET-Y2Q4-T10-243
   value_indicator_policy: false
   done_at: '2026-10-11'

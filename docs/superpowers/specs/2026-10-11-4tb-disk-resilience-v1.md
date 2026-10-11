@@ -4,7 +4,7 @@ type: spec
 schema_version: specification/v1
 status: accepted
 lifecycle: spec
-spec_version: 1.0.0
+spec_version: 1.0.1
 bet_id: BET-Y2Q4-T10-243
 owner: engineering-agent
 last-reviewed: '2026-10-11'
@@ -12,17 +12,22 @@ last-reviewed: '2026-10-11'
 
 # 4.1T 掉线盘兜底与恢复体系设计 (disk-resilience)
 
-> 背景: 4.1T 盘 (disk8: MOVESPEED/SHAREDWORK/SHAREDMODEL) 硬件层持续异常,
-> 2026-10-03~11 期间大规模掉线 3 次 + 会话内高频掉线 ~10 次 (间隔缩至 3 分钟,
-> 全部与持续高 IO 相关)。用户决策: **短期不换线/不换盘**, 本设计兜住风险。
+> 背景: 4.1T 盘 (disk8: MOVESPEED/SHAREDWORK/SHAREDMODEL) 硬件层可疑——用户 9/7 厂家故障说明
+> (mini/MBP/Y7000P 三台主机、多根线、带电 hub、两种桥接芯片均复现, 指向 SSD 主控 RTS5772DL 或固件);
+> 2026-10-11 14:47:44 实测一次整条 hub 链路一起掉线 (3 个 SuperSpeed 设备 6 毫秒内同时消失, 约 1 秒后恢复)。
+>
+> **订正 (2026-10-11 晚, spec 1.0.1)**: 初版写的"大规模掉线 3 次 + 会话内高频掉线 ~10 次 (间隔缩至 3 分钟,
+> 与高 IO 相关)"来自 disk-keepalive 的误报日志——launchd 下 `/bin/bash` 无『可移动卷』TCC 授权, `ls` 被拒,
+> 于是每个检测周期 (恰为 3 分钟) 都把卷误判成"未挂载"。统一日志留存期内 (约 18 小时) 真实掉线仅 1 次;
+> 真实频次待 `disk-keepalive.drops` 积累。用户决策: 先不换盘; 2026-10-11 起做直连对照实验 (摘掉 hub)。
 
 ## 1. 威胁模型 (三档)
 
 | 档 | 场景 | 频率 | 现有防线 | 缺口 |
 |---|---|---|---|---|
-| T1 瞬时掉线 | 卷消失 3~10 分钟, 自动挂回 | **每日常态** (10-11 当天 ~10 次) | keepalive UUID 自愈 100% 成功率 | 掉线窗口内 mini 推理全灭; 无人知晓 (已补 macOS 通知) |
-| T2 长时间离线 | 卷消失数小时 (夜間 8.5h/9.1h 两次) | 每周 ~2 次 | keepalive 持续重试; 最终挂回 | 夜间批任务 (备份/迁移) 静默失败无人知 |
-| T3 盘体死亡 | 4.1T 三卷全灭不可恢复 | 概率递增中 (频率恶化趋势) | 无 | **本设计主攻**: 重建剧本 + 备份闭环 |
+| T1 瞬时掉线 | 卷消失数秒~数分钟, 由 macOS 自动挂回 (10-11 14:47 实测约 5 秒) | **待实测** (日志留存期内真实 1 次/约 18h; 初版"每日常态"为误报) | keepalive v3: `diskutil` 判定挂载, 真实掉线采集到 `.drops`; 不再声称"自愈 100%" | 掉线窗口内 mini 推理全灭; 靠 `.drops` 与日报暴露, 真掉时有桌面通知 |
+| T2 长时间离线 | 卷消失数小时 | **未证实** (初版"夜间 8.5h/9.1h 两次"来自误报日志) | keepalive 探测 + 桌面通知 (现仅在卷真未挂载时触发) | 夜间批任务 (备份/迁移) 静默失败: 以 `.drops`/日报为准 |
+| T3 盘体死亡 | 4.1T 三卷全灭不可恢复 | 趋势未知; 9/7 厂家故障说明指向主控/固件, 仍按可能发生设计 | 无 | **本设计主攻**: 重建剧本 + 备份闭环 |
 
 ## 2. 数据分层保护矩阵 (按可重建性)
 
@@ -87,7 +92,18 @@ launchctl bootout gui/$(id -u)/com.local.hot-tier-resilience
 
 ## 8. 未决项 (依赖用户/硬件决策)
 
-- 换线/换盘/换口 — 频率恶化时重估 (HW-DISK8-4TB-FLAKY 债务跟踪)
+- 换线/换盘 — 以直连对照实验为准 (2026-10-11 起: 摘掉 hub、直插后置雷电口, 观察 3~7 天看 `.drops` 的 `ss_removed`;
+  不再掉 → 问题在 hub 或其上游线, 仍掉且 `ss_removed=1` → 走厂家售后); 结果记入 HW-DISK8-4TB-FLAKY 债务
 - Model 1T 卷终态 (TM error 45 未解) — 排空后删卷重建可一并解决
 - SHAREDWORK 空卷用途 (P2 SMB 跨机共享) — 硬件不稳期间不启用新负载
 - MBP HDD 冷备镜像自动推送 (现手动 rsync --partial; drill 尾部可挂自动)
+
+## 9. 订正记录
+
+- **1.0.1 (2026-10-11 晚)**: 订正威胁模型的频率数据。初版把 disk-keepalive 的"未挂载 / REMOUNT / NEEDS_ATTENTION"计数当作真实掉线,
+  而该计数在 launchd 下因 TCC 误判失真 (根因与复现见 `Plans/macmini-7t-ancient-twilight.md` 的「综合存储架构 v2」)。
+  数据分层、重建剧本、备份闭环的设计结论不依赖掉线频率, 保持有效; 与频率相关的优先级与"短期不换线"的决策按 `.drops` 实测重估。
+  同批修复: `hot-tier-resilience.sh verify` 对直接放在 `lmstudio/` 下的平铺模型目录被静默当成已校验 (两边 `cd` 都失败, `diff` 判一致);
+  `daily-report` 改为同时报告真实掉线, 并修掉 `grep -c … || echo 0` 在 0 命中时输出两行的折行问题。
+- 附带后果: 守卫 `guard_hot_online` 读 keepalive 的 `state` 计数 (≥5 退避); 误报期间 `state` 恒为百位数, 周日 04:00 的定时 `sync-rare` 会被静默拦下。
+  v3 修复后计数归零, 该守卫才恢复正常。
