@@ -6000,11 +6000,13 @@ services:
 - id: omostation.zhixing-projection-republisher
   enabled: true
   generate: true
-  run_at_load: true  # 睡眠唤醒后 launchd 不补跑错过的 interval —— RunAtLoad 立即续期一次
+  run_at_load: false  # 2026-10-10 热修现实: 未设 RunAtLoad
   scheduler: launchd
   trigger: interval
-  interval_sec: 480
+  interval_sec: 300  # 2026-10-10 热修调参: 480→300 (5min 高频续期)
   label: com.omostation.zhixing-projection-republisher
+  environment:
+    ZHIXING_DASHBOARD_STATE_ROOT: /Users/xiamingxing/.local/share/zhixing-dashboard
   program:
     interpreter: stable-python3
     entrypoint: bin/panorama/projection-republisher.py
@@ -6022,14 +6024,14 @@ services:
 - id: omostation.zhixing-projection-fullrefresh
   enabled: true
   generate: true
-  run_at_load: true  # 睡眠唤醒后 launchd 不补跑错过的 interval —— RunAtLoad 立即跑一次
+  run_at_load: false  # 2026-10-10 热修现实: 未设 RunAtLoad (mini 常驻不睡, 影响可忽略)
   scheduler: launchd
   trigger: interval
-  interval_sec: 21600  # 6h: 全量采集典型 5~14min, 4 次/天足够压住观测龄期
+  interval_sec: 1800  # 2026-10-10 热修: 30min。claims 权威在 MBP, 高频全刷对齐 (取代 T10-227 的 6h 洁净检出设计)
   label: com.omostation.zhixing-projection-fullrefresh
   program:
-    interpreter: stable-python3
-    entrypoint: bin/panorama/projection-full-refresh.py
+    interpreter: /bin/bash
+    entrypoint: ~/dotfiles/bin/zhixing-refresh.sh  # rsync MBP claims 权威 → exec projection-full-refresh.py (主工作区检出)
     args: []
   notes: '全量投影数据周期刷新 (BET-Y2Q4-T10-227): T10-223 republisher 只续租约, 数据观测龄期
     (data_observed_at) 单调增长。本服务维护专用洁净检出 ~/.local/opt/omostation-publisher

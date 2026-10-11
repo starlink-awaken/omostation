@@ -41635,8 +41635,203 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-242
+  title: P1 存储收敛 — Model 卷排空到 SHAREDMODEL/~/omlx + vault-paths/BOS 逻辑命名统一
+  goal: 'Model 1T 卷角色退役为 TM 专用卷：LMStudio 独有模型 (~195G) rsync 迁 SHAREDMODEL；
+    /Volumes/Model/omlx 运行面按 launchd TCC 约束拆解 —— bin/conf (~1G) 复制到 ~/omlx（内置盘，
+    launchd 可执行），weights-local (18G) 归档 MOVESPEED 冷层；models-active 软链农场重建指向
+    SHAREDMODEL。vault-paths.yaml 修正 sharedwork_root/shareddisk_root 指真实卷；BOSROUTE/
+    DOMAIN model-volume storage 字段对齐实况。38 处 /Volumes/Model 硬编码收敛为 OMLX_ROOT/
+    vault-paths 解析。前置 P0 已完成（冷备验证、231G 清理、keepalive UUID 化）。'
+  # 2026-10-11 gate 修复: 4 项既有 FAIL 已修 3 类(6a63b4fa1/01528b1d6), 剩 service-config-drift 为声明(T10-227 6h)/现实(10-10 热修 30min+claims对齐)真分歧待 owner 决策
+  status: blocked
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 days
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  circuit_breaker: SHAREDMODEL 掉线(launchd keepalive 状态≠0)即暂停 rsync；任一alias 实跑失败即回查软链；
+    Model 卷源数据在 rclone check 全量校验 + 观察期前不删。
+  non_goals:
+  - 不合并 disk10 双容器、不改物理卷名(见 Plans/macmini-7t-ancient-twilight.md 拓扑规划节)
+  - 不动 MBP 侧任何盘
+  - 不做 SHAREDMODEL 全量镜像(P2/后续 BET)
+  - 不重装/重构 LM Studio app 本体配置(只对齐 downloadsFolder 已指向的事实)
+  done_when:
+  - Model/LMStudio 独有模型全部在 SHAREDMODEL 且 rclone check 差异=0
+  - ~/omlx 有 bin/conf/models-active, omlx CLI 在内置盘可用
+  - vault-paths.yaml 四卷路径与实况一致, check-vault-paths 通过
+  - rg "/Volumes/Model" 在 bin/ projects/(活码)仅剩历史注释/兼容注释
+  verify:
+  - cmd: rclone check /Volumes/Model/LMStudio /Volumes/SHAREDMODEL/lmstudio --one-way
+    expect: 差异 = 0 (Model 侧全部已迁)
+  - cmd: ~/omlx/bin/omlx --version
+    expect: 正常输出版本号(内置盘二进制可执行)
+  - cmd: uv run --with "pyyaml" python scripts/check-vault-paths.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: 通过
+  write_surfaces:
+  - protocols/vault-paths.yaml
+  - projects/ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-model-volume.yaml
+  - projects/omlxc/conf/models.json
+  - projects/omlxc/bin/omlx
+  - projects/omlxc/bin/omlx-node-setup.sh
+  - projects/omlxc/bin/omlx-autostart
+  - projects/omlxc/bin/omlx-dashboard
+  - projects/omlxc/bin/omlx-gw-guard
+  - projects/omlxc/scripts/full-status.sh
+  - projects/omlxc/scripts/pipeline-watchdog.sh
+  - projects/omlxc/conf/launchd-proposal.md
+  - projects/ecos/src/ecos/ssot/mof/m1/bosroute/BOSROUTE-*.yaml
+  - projects/ecos/src/ecos/l0/constraints.yaml
+  - projects/cockpit/src/cockpit/web/api_compute.py
+  - projects/ecos/scripts/catalog-daemon.py
+  - bin/delegation-alias-check.py
+  - docs/plans/3y-bet-ledger.yaml
+  - /Volumes/Model/INDEX.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
+    spec_version: 1.0.0
+    content_digest: sha256:febf0c038dd7e4d8dcb342417c4dfbe306c4c933f3932c7a90425b7000628cf0
+    decision_ref: decision://accepted/BET-Y2Q4-T10-242
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    # 交付工作已完成 (evidence 全文见 receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-242.md):
+    # rclone check 0差异/231、omlx 冒烟 dim=1024 http200、gac-gate PASS 68、
+    # weights 18G→MOVESPEED、稀有发布者 225G→Lex。evidence 轴待 push 后跑
+    # `bet-ledger.py complete BET-Y2Q4-T10-242` 升级 delivery_accepted
+    # (merged_reachable_commit 硬校验 origin/main 可达, 本地未推送暂不可达)。
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+- id: BET-Y2Q4-T10-243
+  title: 4.1T 掉线盘兜底与恢复体系 — 热层数据分层保护 + T3 重建剧本 + 掉线感知链
+  goal: 'disk8 (4.1T, 硬件层持续掉线 9 天 3 次大规模+会话内高频, 无解待换线/换盘) 上
+    SHAREDMODEL 热层 847G 唯一 SSOT 的兜底: 按 P0 配置(git)/P1 稀有发布者(Lex 副本
+    225G)/P2 公开源(清单重下 545G)/P3 冷层/P4 可丢 分层保护。交付 hot-tier-resilience.sh
+    六子命令 (sync-rare/manifest/snapshot-links/verify/daily-report/rebuild)、
+    掉线感知链升级 (keepalive 桌面通知节流)、T3 盘死重建剧本 (软链 manifest + 稀有回灌
+    + 公开源重下清单)。RPO 承诺: P0+P1 完成即恢复 ≈4.5h。'
+  status: done
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P0
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: optional
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  circuit_breaker: sync-rare 限速 40MB/s 且掉线守卫 (keepalive state>=5 退避); Lex 副本
+    只增不删; 不动热层源数据; launchd plist 人工安装制不自动注册。
+  non_goals:
+  - 不修硬件层掉线根因 (无解, 换线/换盘另行走 HW-DISK8-4TB-FLAKY 债务)
+  - 不做 P2 公开源数据备份 (545G 可重下, 只做重建清单)
+  - 不自动安装 launchd plist
+  - 不动 MOVESPEED 冷层 / SHAREDWORK 卷内容
+  done_when:
+  - hot-tier-resilience.sh 六子命令实测可用, shellcheck 干净, script-registry 注册通过
+  - P1 稀有发布者全量 Lex 副本完成且 verify 抽样 exit 0 (后台 rsync 完成后)
+  - models-active 软链 manifest 固化到 ~/omlx/conf (29 链实测)
+  - 公开源重建清单双写 (仓内 docs/generated + Lex)
+  - keepalive NEEDS_ATTENTION 升级为 macOS 桌面通知 (节流防刷屏)
+  verify:
+  - cmd: shellcheck bin/ops/hot-tier-resilience.sh
+    expect: 0 findings
+  - cmd: python3 bin/ssot/script-registry.py validate
+    expect: "VALIDATION PASSED: 719 scripts registered"
+  - cmd: bash bin/ops/hot-tier-resilience.sh snapshot-links
+    expect: 软链清单固化 >0 链
+  - cmd: bash bin/ops/hot-tier-resilience.sh daily-report
+    expect: 日报追加 ~/Library/Logs/disk-keepalive.daily
+  - cmd: make gac-local-gate
+    expect: 通过
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
+  - bin/ops/hot-tier-resilience.sh
+  - bin/_registry/scripts/ops/hot-tier-resilience.yaml
+  - .omo/_truth/registry/governance-checks.yaml
+  - docs/generated/public-models-manifest.md
+  - docs/plans/3y-bet-ledger.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
+    spec_version: 1.0.0
+    content_digest: sha256:4daf19781c83f833c280052950979a2ca56ea1a2a766ea8e52733bc3ae76f9e7
+    decision_ref: decision://accepted/BET-Y2Q4-T10-243
+  value_indicator_policy: false
+  done_at: '2026-10-11'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    # 交付实测 (receipt 见 .omo/_delivery/agent-workflows/runs/):
+    # shellcheck 0 findings; script-registry PASSED 719; snapshot-links 28 链固化;
+    # daily-report 产出; gac-local-gate PASS; 半演练 P0 软链重建 28链/2ms (路径
+    # 替换正确, 注释行 bug 发现并修复), P1 抽样回灌 16G/137s≈119MB/s; MBP 异机
+    # 副本 hash 一致 (afd25311..., 3-2-1 闭环)。evidence 轴待 push 后跑
+    # `bet-ledger.py complete BET-Y2Q4-T10-243` 升级 delivery_accepted。
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+- id: BET-Y2Q4-T10-244
+  title: 贾维斯感知面 — observer 日报 + SwiftBar 常驻/待办域 + CI 信号闭环
+  goal: '常驻 agent 的可感知化 (2026-10-11 贾维斯会话交付, 补户口立项): (1) observer-daily.py
+    每日 07:30 cron 聚合 resident 五件套/aictl/P74/CI 面 → .omo/_delivery/observability/daily/,
+    经 personal-signals 通道喂活 (signals-poll 10min); (2) SwiftBar agent-live 域 (心跳/事件/沉淀/
+    端口探活/能力目录入口) + todo/提醒域 (todo.jsonl + reminders.json, agent-喂入面); (3) CI 失败
+    自动提醒 (gh run list FAIL → reminders, 幂等); (4) 双机 todo-sync (mini 主节点 5min)。'
+  status: active
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 days
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: optional
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  circuit_breaker: 感知面只读采集不回写治理状态; reminders 面不清除非本源条目; cron 故障不阻塞
+    menubar 渲染 (parts 独立容错)。
+  non_goals:
+  - 不改 resident 运行时本体 (感知层只读)
+  - 不做 BCOS 信号路由大架子接线 (另行走后续 bet)
+  - observer 日报不直接发 workflow start 事件 (ADR-0203 bet 门禁满足前走 personal-signals)
+  done_when:
+  - observer 日报连续 7 天自动生成 (cron 证据)
+  - SwiftBar agent-live + todo 域双机 bar-lint PASS
+  - CI FAIL → reminders 闭环实测一次 (真实 FAIL 或演练)
+  - todo-sync 双机一致且幂等
+  verify:
+  - cmd: bash ~/.config/menubar/bar-lint.sh
+    expect: PASS 双机
+  - cmd: python3 ~/local-ops/bin/observer-daily.py --no-workflow
+    expect: 日报生成 exit 0
+
 campaigns:
-- id: CMP-W0-PORTFOLIO-TRUTH
+- id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
   objective_refs:
   - OBJ-TRUST
@@ -41773,7 +41968,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 537
+  total_bets: 540
   windows:
   - Y1Q1
   - Y1Q2

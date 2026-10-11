@@ -85,9 +85,10 @@ if [[ -z "${!PASS_ENV:-}" ]]; then
 fi
 # 只校验变量名长度, 不校验口令长度 (避免口令落到 stderr/审计日志)
 
-# ---- 源清单: git 追踪 + 默认排除高 churn 路径 ----
+# ---- 源清单: git 追踪面 (主仓 + 全部子仓) + 默认排除高 churn 路径 ----
 GIT_FILE_LIST="$(mktemp -t cold-backup-files.XXXXXX)"
-trap 'rm -f "$GIT_FILE_LIST" "$PRE_DIGEST_FILE" "$POST_DIGEST_FILE" /tmp/cold-backup.tar.err /tmp/cold-backup.gpg.err' EXIT
+SUBMODULE_PATHS="$(mktemp -t cold-backup-subs.XXXXXX)"
+trap 'rm -f "$GIT_FILE_LIST" "$SUBMODULE_PATHS" "$PRE_DIGEST_FILE" "$POST_DIGEST_FILE" /tmp/cold-backup.tar.err /tmp/cold-backup.gpg.err' EXIT
 
 GIT_PATHSPEC_EXCLUDES=(
   ':!:.omo/_archive'
@@ -108,6 +109,17 @@ GIT_PATHSPEC_EXCLUDES=(
   ':!:**/__pycache__'
   ':!:node_modules'
 )
+
+# 子仓内高 churn 排除(子仓相对路径); 不存在的 pathspec 无害
+SUB_PATHSPEC_EXCLUDES=(
+  ':!:.venv'
+  ':!:**/__pycache__'
+  ':!:node_modules'
+  ':!:.omo/_archive'
+  ':!:.omo/_log'
+  ':!:.artifacts'
+)
+
 if [[ "$INCLUDE_RUNTIME" -eq 0 ]]; then
   GIT_PATHSPEC_EXCLUDES+=(
     ':!:.omo/_knowledge/workflow-mesh'
@@ -115,8 +127,40 @@ if [[ "$INCLUDE_RUNTIME" -eq 0 ]]; then
   )
 fi
 
-git -C "$WS_ROOT" ls-files -z "${GIT_PATHSPEC_EXCLUDES[@]}" \
-  | tr '\0' '\n' > "$GIT_FILE_LIST"
+# 递归收集每仓 git 追踪面(前缀化为工作区相对路径);
+# 本仓 gitlink 全部剔除, 其内容由递归进入子仓覆盖
+emit_repo_files() {
+  local rel_parent="$1" abs_root="$2" sub prefix=""
+  local -a excl subs=()
+  if [[ "$abs_root" == "$WS_ROOT" ]]; then
+    excl=("${GIT_PATHSPEC_EXCLUDES[@]}")
+  else
+    excl=("${SUB_PATHSPEC_EXCLUDES[@]}")
+  fi
+  # gitlink 先快照进数组: 递归会覆盖共享 tmp 文件, while read 绑 fd 会被 truncate 截断
+  git -C "$abs_root" submodule status 2>/dev/null \
+    | awk '$1 !~ /^-/ {print $2}' > "$SUBMODULE_PATHS"
+  local -a subs=()
+  while IFS= read -r sub; do
+    [[ -n "$sub" ]] && subs+=("$sub")
+  done < "$SUBMODULE_PATHS"
+  [[ "$abs_root" == "$WS_ROOT" ]] || prefix="${rel_parent}/"
+  if [[ -s "$SUBMODULE_PATHS" ]]; then
+    { git -C "$abs_root" ls-files -z "${excl[@]}" \
+        | tr '\0' '\n' \
+        | grep -vxF -f "$SUBMODULE_PATHS" || true; } \
+      | { [[ -n "$prefix" ]] && sed "s|^|$prefix/|" || cat; } >> "$GIT_FILE_LIST"
+  else
+    git -C "$abs_root" ls-files -z "${excl[@]}" \
+      | tr '\0' '\n' \
+      | { [[ -n "$prefix" ]] && sed "s|^|$prefix/|" || cat; } >> "$GIT_FILE_LIST"
+  fi
+  for sub in ${subs[@]+"${subs[@]}"}; do
+    emit_repo_files "${rel_parent:+${rel_parent}/}${sub#./}" "$abs_root/$sub"
+  done
+}
+emit_repo_files "" "$WS_ROOT"
+
 FILE_COUNT="$(wc -l <"$GIT_FILE_LIST" | tr -d ' ')"
 [[ "$FILE_COUNT" -gt 0 ]] || die "git ls-files 输出为空 — 工作区异常" 1
 
@@ -125,13 +169,14 @@ PRE_DIGEST_FILE="$(mktemp -t cold-backup-pre.XXXXXX)"
 POST_DIGEST_FILE="$(mktemp -t cold-backup-post.XXXXXX)"
 
 compute_workspace_digest() {
-  ( cd "$WS_ROOT" && find . \
-      -type d \( -name '.git' -o -name '.venv' -o -name 'node_modules' \) -prune -o \
-      -type f -print 2>/dev/null \
-      | LC_ALL=C sort \
-      | xargs -I{} "$SHA_TOOL" {} 2>/dev/null \
-      | "$SHA_TOOL"
-  )
+  # 校验面 = 备份清单文件的 mtime+size 签名, 而非全仓内容 hash:
+  # mini 有常驻 daemon 持续写 .omo/state 等运行时面, 全仓 hash 会把无关的
+  # 预期写入误判为 read-only 失败 (2026-10-10 实证 exit 2, tar/gpg 均成功)
+  local f
+  while IFS= read -r f; do
+    [[ -e "$WS_ROOT/$f" ]] && stat -f '%m %z %N' "$WS_ROOT/$f" 2>/dev/null \
+      || echo "MISSING $f"
+  done < "$GIT_FILE_LIST" | "$SHA_TOOL" | awk '{print $1}'
 }
 
 say "════════ 零知识冷备份 drill ════════"
@@ -143,7 +188,7 @@ say "files:     $FILE_COUNT (git ls-files)"
 if [[ "$DRY_RUN" -eq 1 ]]; then
   T0=$(date +%s)
   while IFS= read -r f; do
-    [[ -f "$WS_ROOT/$f" ]] || say "  ⚠️ missing: $f"
+    [[ -f "$WS_ROOT/$f" || -L "$WS_ROOT/$f" ]] || say "  ⚠️ missing: $f"
   done < "$GIT_FILE_LIST"
   T1=$(date +%s)
   say "✅ dry-run 完成: 源清单可枚举, 耗时 $((T1 - T0))s (秒级 ✓)"
@@ -166,6 +211,7 @@ if tar -cf "$TAR_FILE" -C "$WS_ROOT" \
   say "  tar: 成功 ($FILE_COUNT files)"
 else
   ERR_TAIL="$(tail -5 /tmp/cold-backup.tar.err 2>/dev/null || true)"
+  rm -f "$TAR_FILE"   # 半成品未加密, 不留盘
   die "tar 失败: ${ERR_TAIL:-unknown}" 2
 fi
 

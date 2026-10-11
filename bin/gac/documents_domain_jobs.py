@@ -39,7 +39,11 @@ _RUNTIME_STATE = {
     "environment_override": "OMOSTATION_RUNTIME_STATE_ROOT",
     "default_home_relative": ".local/state/omostation/runtime",
 }
-_FACTS_AUDIT_READS = ["@工作文档/卫健委/_entities/facts"]
+_FACTS_AUDIT_DOMAIN_READS: dict[str, str] = {
+    # 2026-10-09: 泛化支持多域 facts 审计（原硬编码 work-weijian 单域）
+    "work-weijian": "@工作文档/卫健委/_entities/facts",
+    "vault": "@学习进化/_entities/facts",
+}
 _FACTS_AUDIT_SCHEMA = "runtime.documents-facts-audit.evidence.v1"
 _CONTROLLER_SHADOW_READS = [
     "@工作文档/卫健委/_control",
@@ -164,10 +168,14 @@ def _validate_facts_audit_job(value: dict[str, object], label: str) -> list[str]
         errors.append(f"runtime facts job {label} owner must be runtime-facts")
     if value.get("action") != "audit_structured_facts":
         errors.append(f"runtime facts job {label} action must be audit_structured_facts")
-    if value.get("domain_id") != "work-weijian":
-        errors.append(f"runtime facts job {label} domain_id must be work-weijian")
-    if value.get("reads") != _FACTS_AUDIT_READS:
-        errors.append(f"runtime facts job {label} reads must be @工作文档/卫健委/_entities/facts")
+    domain_id = value.get("domain_id")
+    expected_reads = _FACTS_AUDIT_DOMAIN_READS.get(domain_id) if isinstance(domain_id, str) else None
+    if expected_reads is None:
+        errors.append(
+            f"runtime facts job {label} domain_id must be one of: {', '.join(sorted(_FACTS_AUDIT_DOMAIN_READS))}"
+        )
+    elif value.get("reads") != [expected_reads]:
+        errors.append(f"runtime facts job {label} reads must be {expected_reads}")
     if not _safe_relative_path(value.get("evidence_relative_path")):
         errors.append(f"runtime facts job {label} evidence_relative_path must be relative and non-traversing")
     if value.get("evidence_schema") != _FACTS_AUDIT_SCHEMA:
