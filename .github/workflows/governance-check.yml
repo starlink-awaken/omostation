@@ -228,6 +228,11 @@ jobs:
         # 第二次交付: 读者接线顺序 (创建者先跑) + 登记面 (ci-surfaces/_registry) + 正向落点。
         # 判据只吃已提交的 workflow/registry 文本, 因此在干净检出里同样成立 (BET-Y2Q4-T10-235 判据-6)。
         run: python3 -m pytest tests/unit/test_system_yaml_consumer_inputs.py -q
+      - name: ADR-0456 delivery-anchor cross-boundary contract gate
+        # 本仓 tests/unit/** 不在任何 CI 白名单里, 而这条契约的两端分属两棵树 (根仓读者 +
+        # gitlink 一侧的 omo 写者); 未点名则「locate_anchor(ws) 去掉机器路径猜测」只有本地证据
+        # (同上一条 "ADR-0456 B1 call-time write-plane gate" 的先例, BET-Y2Q4-T10-239)。
+        run: python3 -m pytest tests/unit/test_delivery_anchor_contract.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check

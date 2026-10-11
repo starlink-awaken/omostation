@@ -41552,11 +41552,147 @@ bets:
         status: NOT_PROVEN
         evidence: {}
   depends_on: []
+- id: BET-Y2Q4-T10-239
+  title: ADR-0456 残留（omo 侧）— src/ 32 处仓根字面量折进 code_root()/state_root() 单一缝
+  goal: BET-Y2Q4-T10-217 把 bin/ 侧的四个仓根私有别名折进 ADR-0456 规范名并把 12 个 import-time 常量改调用时刻解析，其扫描范围与判据
+    `ALIAS-SURVIVORS-3` 都只约束 `bin`；`projects/omo/src/**` 从未进入那一轮，于是两仓对同一个概念用两套名字。实测基线（omo
+    `d8ca1a2`， `git grep -En 'Path\.home\(\)[[:space:]]*/[[:space:]]*"Workspace"' HEAD
+    -- 'src/**'``）= **32 站点 / 18 文件**（逐文件：omo_agent_host 7、omo_self_healing 4、omo_cards
+    3、omo_bos 2、 omo_alert 2、cli 2，其余 12 个各 1），形状上 10 处模块级常量 + 22 处函数内求值。 别名面更宽（`git
+    grep -c 'WORKSPACE_ROOT"'` on src = 28），其中 21 处读 env `WORKSPACE_ROOT` 且默认值是 host
+    字面量、1 处读 `OMO_DIR` 同样默认 host 字面量、10 处无任何 env 缝。 定性依据：那条 env 缝在本机是 illusory 的，三条实测都是
+    0 —— `crontab -l` 命中 0、 `~/Library/LaunchAgents` 26 个 plist 命中文件 0、进程 env 探测 False。⇒
+    21 处 os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")) 在生产里恒取 host
+    字面量兜底， 而在 CI 干净检出与非本机安装位（`~/.local/opt/omostation`）该兜底指向一个不存在的路径。 两类后果各自独立：缝名不对（profile
+    声明进不来）+ 兜底值不对（钉死本机）。 本轮只交机制不做搬家：① `omo_paths` 补与 `state_root()` 对称的调用时刻入口 `code_root()`
+    （`__file__` 反推、**不**读 `OMOSTATION_ROOT`，与 `bin/lib/repo_root.py:code_root()` 同语义；
+    读 `OMOSTATION_ROOT` 的是 `canonical_root()`，本 BET 不接）；② 32 处按 spec §3 逐站点定性折进 `code_root()`
+    / `state_root()` / `event_ledger_path()` / 既有 helper（`find_omo_dir()`、 `projection_path()`、`OMO_ROOT`），`OMO_DIR`
+    作为显式覆盖名保留、只换掉它的 host 字面量默认值； ③ 按 spec §4 实测表迁走 5 处注入本轮被迁站点的测试 env + 1 处 setattr
+    缝，其余 10 处模块自有 同名常量不动；④ 补检测器用例：先对合成违规点名（no-op 反证）、同一把尺同时产出改前 N / 改后 0、 反向断言 4 个已正确定义点不被命中。判据按「读该
+    env 名 **且** 默认值含 host 字面量」的组合命中， 不按名字命中 —— 禁止 `WORKSPACE_ROOT` 这个名字会砸掉 `mcp_server.py`
+    对外部 MCP host 的已发布 契约名，且不解决任何站点。安全性论证：未声明 profile 时 `code_root() == WORKSPACE_ROOT`，
+    32 个站点的解析结果逐字节不变（ISC-4），现役 43 个 plist 与 crontab 一行未改。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: true
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  circuit_breaker: Stop if 未声明 profile 时任何一个迁移站点的解析路径与改前不同（ISC-4 按构造禁止它 —— 那会把 dev 机制变成生产搬家，属
+    B4b 逐批授权面）；如果混合面（`omo_logs` / `omo_observability` 的 `KNOWLEDGE_DIR` 既读已跟踪内容又追加写日志、`omo_cards`
+    的两处 `.omo` 是检出内已跟踪治理面） 需要统一到一个根才能通过，说明本轮的逐消费者判据站不住 —— 停下登记而不是统一目录名；如果把读已跟踪内容的站点错挂
+    `state_root()` 后 dev profile 会读到空目录而**没有任何测试会红**，则该站点必须拆成两个局部而不是换根； 如果收敛要求改 `bin/**`、`repo_root.py`
+    解析序、plist / crontab / `install-resident-cron.sh` 或从 ecos 侧删 `WORKSPACE_ROOT`（CI
+    仍为 `projects/ecos` 注入它）；如果宣布 B1/B5 完成。
+  non_goals:
+  - 不改 `bin/**`（BET-Y2Q4-T10-217 已收口）；不改 `bin/lib/repo_root.py` 的解析序。
+  - 不在本轮声明任何 profile、不启停服务、不动 launchd plist / crontab / `install-resident-cron.sh`（那是
+    B4b 批次 2+，逐批授权）。本轮只交机制，未声明 profile 时对今天的运行态无效应（ISC-4 钉住）。
+  - 不把 `WORKSPACE_ROOT` env 从 ecos 侧删掉（`.github/workflows/ecos-ci.yml` 仍为 `projects/ecos`
+    注入它，那是另一个仓的公开 env 面）；omo 侧停止读它 ≠ 全仓禁止这个名字。
+  - 不动 `mcp_server.py` 对外部 MCP host 的 `WORKSPACE_ROOT` 契约名（其兜底已是 `__file__` 反推， 不在缺陷组合里）；不动
+    `RUNTIME_HOME` / `USER` 的 5+4 处 env 读（非仓根锚点，纳入会稀释判据）。
+  - 不在本轮宣布 B1 或 B5 完成（spec §8 非目标；B5 的生成态摘库是独立 BET）。
+  done_when:
+  - 'ISC-1 缝存在: `omo_paths.code_root()` 存在且与 `bin/lib/repo_root.py:code_root()` 同语义
+    （`__file__` 反推跟随当前检出、不读 `OMOSTATION_ROOT`）；用例双向对拍：两者对同一检出返回同值， 且声明 `OMOSTATION_ROOT=<假路径>`
+    时 `code_root()` 的返回值**不变**（证明它不是 `canonical_root()`）。'
+  - 'ISC-2 字面量清零: `git grep -En ''Path\.home\(\)[[:space:]]*/[[:space:]]*"Workspace"''
+    -- ''src/**''` 的读数由 32 → 0，且改前 N=32 与改后 0 由**同一次扫描**产出并断言（对照树用 `git archive` 造，
+    判据文本写明用哪把尺）。'
+  - 'ISC-3 假缝清零: 「读 `WORKSPACE_ROOT` 或 `OMO_DIR` **且** 默认值含 `Path.home()`」的组合由 21+1
+    → 0； 反向断言 4 个已正确定义点（`omo_paths.py` / `omo_scene_cli.py` / `mcp_server.py` / `omo_audit.py`）
+    不被命中 —— 检测器按组合命中而不是按名字命中。'
+  - 'ISC-4 逐字节无效应: `env -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB -u OMOSTATION_ROOT`
+    下 32 个站点的解析结果字符串与改前逐字节相同（用例断言）。'
+  - 'ISC-5 正向落点: 声明 `OMOSTATION_STATE_ROOT=<tmp>` 后，被收敛的写面站点（`omo_trail` / `omo_event`
+    / `omo_sync` / `omo_logs` / `omo_observability` / `omo_alert` / `omo_bos_metrics`
+    / `omo_bos` / `omo_phase16` / a2a inbox）解析到 `<tmp>` 之下；`sovereignty/enforcement.py`
+    与 `event_ledger/surface.py` 的台账路径 == `omo_paths.event_ledger_path()`，且 `OMO_EVENT_LEDGER_DB`
+    优先级保持。判据是正向落点断言，不是「检出不含旧路径」的否定式。'
+  - 'ISC-6 检测器自证 + 双 profile 绿: 新扫描用例注入合成违规样本必点名它（no-op 反证）； `pytest projects/omo/tests
+    -q` 在「未声明 profile」与「声明 dev profile」两种 env 下各跑一遍， 相对基线无回归；根仓 `make gac-local-gate`
+    无新增硬失败。'
+  - '测试侧缝连带面: spec §4 表的 5 处注入 + 1 处 setattr 全部迁到规范通道（台账 → `OMO_EVENT_LEDGER_DB`、 a2a
+    inbox → `OMOSTATION_STATE_ROOT`），且收尾打印 `expect=N got=N`；其余 10 处模块自有同名常量逐条确认未动。'
+  verify:
+  - cmd: python3 -m pytest projects/omo/tests/unit/test_omo_src_root_literal_scan.py
+      -q -p no:randomly
+    expect: all pass — 同一扫描先对 `git archive` 对照树报出 32 / 21+1，再对修好的 src/ 报 0；合成违规被点名；
+      4 个已正确定义点出现在反向断言里。
+  - cmd: python3 -m pytest projects/omo/tests/unit/test_omo_code_root_parity.py -q -p
+      no:randomly
+    expect: all pass — ISC-1 与 `repo_root.code_root()` 同值且对 `OMOSTATION_ROOT` 不敏感；ISC-4
+      逐字节等价。
+  - cmd: python3 -m pytest projects/omo/tests/unit/test_omo_root_plane_landing.py -q
+      -p no:randomly
+    expect: all pass — ISC-5 写面正向落 `<tmp>`、台账两处 == `event_ledger_path()`。
+  - cmd: python3 -m pytest projects/omo/tests -q -p no:randomly
+    expect: 无相对基线的新增失败（未声明 profile 与 dev profile 各跑一遍）。
+  - cmd: make gac-local-gate
+    expect: no new hard failures.
+  write_surfaces:
+  - projects/omo/src/omo/omo_paths.py
+  - projects/omo/src/omo/cli.py
+  - projects/omo/src/omo/event_ledger/surface.py
+  - projects/omo/src/omo/omo_agent_host.py
+  - projects/omo/src/omo/omo_alert.py
+  - projects/omo/src/omo/omo_bos.py
+  - projects/omo/src/omo/omo_bos_metrics.py
+  - projects/omo/src/omo/omo_cards.py
+  - projects/omo/src/omo/omo_dashboard.py
+  - projects/omo/src/omo/omo_event.py
+  - projects/omo/src/omo/omo_logs.py
+  - projects/omo/src/omo/omo_observability.py
+  - projects/omo/src/omo/omo_phase16.py
+  - projects/omo/src/omo/omo_self_healing.py
+  - projects/omo/src/omo/omo_state.py
+  - projects/omo/src/omo/omo_sync.py
+  - projects/omo/src/omo/omo_trail.py
+  - projects/omo/src/omo/sovereignty/enforcement.py
+  - projects/omo/src/omo/workflow/delivery_anchor.py
+  - projects/omo/tests/unit/test_omo_src_root_literal_scan.py
+  - projects/omo/tests/unit/test_omo_code_root_parity.py
+  - projects/omo/tests/unit/test_omo_root_plane_landing.py
+  - projects/omo/tests/test_omo_logs_baseline.py
+  - projects/omo/tests/test_event_ledger_jsonl.py
+  - projects/omo/tests/test_event_ledger_snapshot.py
+  - projects/omo/tests/test_event_ledger_surface.py
+  - projects/omo/tests/test_omo_agent_host.py
+  - projects/omo/tests/test_sovereignty_replay.py
+  - docs/superpowers/specs/2026-10-10-omo-src-code-root-convergence.md
+  - docs/plans/3y-bet-ledger.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-10-omo-src-code-root-convergence.md
+    spec_version: 1.0.0
+    content_digest: sha256:034de8cbbcb49cafe3c69e3eb58b98114bafaeece29eef89fcfca020e6c35095
+    decision_ref: decision://accepted/BET-Y2Q4-T10-239
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
 - id: BET-Y2Q4-T10-240
   title: DCP-20 P0 Zhixing GET 方法安全与受管宿主发布
   goal: 关闭 Zhixing 通用 GET 路由中的执行型副作用，建立 route × method × operation 纯读取证明，并通过可回滚、精确选择的
     host-sync 发布到 LaunchAgent 实际代码根。
-  status: pending
+  status: done
+  done_at: 2026-10-11
   window: Y2Q4
   track: T10-TOOLING
   priority: P0
@@ -41625,8 +41761,20 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-240.md
             sha256: sha256:094c40e86446300ff07d3ca1f0e6388e97844e09eff7d401154eda4799f880c4
       operational:
-        status: NOT_PROVEN
+        status: PROVEN
         evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-10-bet-240-live-canary.json
+            sha256: sha256:14e3838ee9adad51e28b8770090f0c55e2a2daf4480f0068ca944b44713f55df
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-10-bet-240-fresh.json
+            sha256: sha256:416be7b38cd168e982e4d4f8fcfb90978ebfc2e2087731a21fef1de1c62e343d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-240.md
+            sha256: sha256:094c40e86446300ff07d3ca1f0e6388e97844e09eff7d401154eda4799f880c4
+          cleanup:
+            ref: receipt://docs/reports/2026-10-10-bet-240-cleanup.md
+            sha256: sha256:2400227965991a167838ada14c074c5a16b424c3fb7431ba90dbf9ae3e9b458b
           deployment_state:
             ref: receipt://docs/reports/2026-10-10-bet-240-closeout.md
             sha256: sha256:ceb7fcd21d71f0e84771f58102f0b86413b5eaaa3aab4868307ad2990fc33322
@@ -41981,7 +42129,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 540
+  total_bets: 539
   windows:
   - Y1Q1
   - Y1Q2
