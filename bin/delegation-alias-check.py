@@ -199,8 +199,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--litellm-config",
-        default="/Volumes/Model/omlx/gateway/litellm-config.yaml",
-        help="litellm-config.yaml 路径 (默认 /Volumes/Model/omlx/gateway/litellm-config.yaml)",
+        default="~/omlx/gateway/litellm-config.yaml",
+        help="litellm-config.yaml 路径 (默认 ~/omlx/gateway/litellm-config.yaml, OMLX_ROOT 约定)",
     )
     args = parser.parse_args()
 

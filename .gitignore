@@ -421,3 +421,8 @@ live-server.pid
 
 # zvec-grep 本地语义索引 (zg 工具运行时产物, 不入库)
 .zvec-grep/
+/external/
+/apps/
+/_archive/
+/logs/
+/runtime/logs/

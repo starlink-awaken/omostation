@@ -1,0 +1,18 @@
+schema: agent-error/v1
+id: PITFALL-GAT-014
+category: gate
+severity: medium
+title: closeout verify 被既有 gate FAIL 阻塞 (非本次引入)
+symptom: 'BET-Y2Q4-T10-242 closeout: gac-local-gate 4 FAIL (concept-weave 未注册脚本=本地
+  main 已提交未推送 756fd155f, plist 漂移, 根目录治理, bin 配额) + ssot-guardian 子模块指针登记滞后, 全部先于
+  run start 存在'
+root_cause: ''
+solution: 按 write_surfaces 边界不抢他人面; closeout --status blocked + evidence 归因; 待 owner
+  推送 concept-weave/补注册/同步 services.yaml 后 gate 自愈
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-10-11'
+times_encountered: 1
+last_confirmed_at: '2026-10-11'
+status: active

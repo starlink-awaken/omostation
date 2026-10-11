@@ -1,0 +1,32 @@
+id: "STORAGE-SHAREDMODEL-NO-BACKUP"
+title: "SHAREDMODEL 热层 ~847G 模型资产零备份 (Model 卷并轨后)"
+dimension: "operations"
+subdimension: "backup"
+domain: "storage"
+scope: "host"
+severity: "high"
+weight: 0.2
+entropy_class: "high"
+lifecycle_state: "identified"
+owner: "xiamingxing"
+affected_roots: []
+evidence_refs:
+- protocols/vault-paths.yaml
+- docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
+mitigation_refs: []
+opened_at: "2026-10-11"
+last_reviewed_at: '2026-10-11'
+next_review_at: '2026-10-18'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "Model→SHAREDMODEL 迁移观察期后, 评估用 Model 1T 卷做 SHAREDMODEL 增量镜像或纳入 Lex 冷备排程 (体积已超单卷, 需分批/增量方案)"
+history:
+- at: '2026-10-11T08:20:00+00:00'
+  action: identify
+  note: >-
+    BET-Y2Q4-T10-242 模型域并轨后 SHAREDMODEL 达 ~847G used,
+    是全机唯一零备份的大体量资产 (Lex 冷备只覆盖 workspace 226M
+    + 模型归档 7.4G; MBP HDD 副本同)。叠加 disk8 硬件嫌疑
+    (见 HW-DISK8-4TB-FLAKY), 风险敞口最大的一项。
+  actor: "engineering-agent"

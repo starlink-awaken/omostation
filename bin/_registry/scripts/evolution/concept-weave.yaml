@@ -1,0 +1,29 @@
+schema: script-registry/v1
+id: bin/concept-weave.py
+name: Concept Weave (概念孤岛编织)
+category: evolution
+owner: learningevolution-team
+description: >-
+  概念孤岛编织工具, 2026-10-09 按 MAINTENANCE-概念孤岛编织.md 规格重建
+  (原工具丢失)。四子命令全部幂等: detect 扫描零入链概念(只读),
+  mesh 同域全互链(clique 刷新), bridge 应用人工策展 bridge-map.json,
+  exec-bridge 连接 30-execution 笔记与概念。另有 report 出报告。
+inputs:
+  - name: subcommand
+    type: positional
+    required: true
+    description: "detect | mesh | bridge | exec-bridge | report"
+  - name: bridge-map.json
+    type: path
+    required: false
+    description: 人工策展的跨域桥接映射 (bridge/exec-bridge 子命令读取)。
+outputs:
+  - type: stdout_report
+dependencies:
+  - python3
+triggers:
+  - cron: monthly (经 bin/run-monthly-weave.sh 封装, launchd com.learningevolution.concept-weave.monthly)
+related:
+  - bin/run-monthly-weave.sh
+maturity: stable
+last_reviewed: "2026-10-11"

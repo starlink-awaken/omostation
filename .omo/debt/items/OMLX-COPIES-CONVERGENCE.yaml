@@ -1,0 +1,36 @@
+id: "OMLX-COPIES-CONVERGENCE"
+title: "omlx 三份漂移副本收敛 (git SSOT / ~/omlx 运行时 / Model 旧副本)"
+dimension: "architecture"
+subdimension: "ssot"
+domain: "tooling"
+scope: "repo"
+severity: "medium"
+weight: 0.1
+entropy_class: "medium"
+lifecycle_state: "in_progress"
+owner: "xiamingxing"
+affected_roots:
+- projects/omlxc
+evidence_refs:
+- docs/superpowers/specs/2026-09-23-omlxc-health-cli-fix-design.md
+- docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
+mitigation_refs: []
+opened_at: "2026-09-23"
+last_reviewed_at: '2026-10-11'
+next_review_at: '2026-10-25'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "观察期 (~2026-10-18) 后删除 /Volumes/Model/omlx 与 LMStudio/ 源, 收敛到两份: projects/omlxc (git SSOT) + ~/omlx (运行时落地)"
+history:
+- at: '2026-09-23T00:00:00+00:00'
+  action: identify
+  note: "健康 CLI 修复设计时发现三份副本漂移。"
+  actor: "engineering-agent"
+- at: '2026-10-11T08:20:00+00:00'
+  action: mitigation
+  note: >-
+    BET-Y2Q4-T10-242: 运行时重建到 ~/omlx (bin/conf/gateway/run
+    466M + models-active 28 软链指向 SHAREDMODEL); weights-local
+    18G 移 MOVESPEED 冷层; Model/omlx 待观察期后删除。
+  actor: "engineering-agent"

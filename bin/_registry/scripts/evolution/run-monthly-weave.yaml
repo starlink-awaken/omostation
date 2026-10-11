@@ -1,0 +1,27 @@
+schema: script-registry/v1
+id: bin/run-monthly-weave.sh
+name: Monthly Concept Weave Wrapper (月度编织封装)
+category: evolution
+owner: learningevolution-team
+description: >-
+  概念孤岛编织月度维护封装 (MAINTENANCE-概念孤岛编织.md §六之一)。
+  链路: detect → mesh → bridge → exec-bridge → report + Workspace decay
+  只读扫描。2026-08-01 起从 ~/Documents 迁至 bin/ (macOS TCC 拦截
+  launchd 执行 Documents 内脚本, Operation not permitted)。
+inputs:
+  - name: DOCUMENTS_DOMAIN_PROJECTS_REGISTRY
+    type: env
+    required: false
+    description: 文档域项目注册表路径 (默认 $HOME/Workspace/.omo/_truth/registry/documents-domain-projects.yaml)。
+outputs:
+  - type: exit_code
+  - type: stdout_report
+dependencies:
+  - bash
+  - python3
+triggers:
+  - cron: monthly (launchd com.learningevolution.concept-weave.monthly, plist 于 ~/Library/LaunchAgents)
+related:
+  - bin/concept-weave.py
+maturity: stable
+last_reviewed: "2026-10-11"

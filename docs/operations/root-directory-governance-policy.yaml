@@ -1,5 +1,5 @@
 ---
-last-reviewed: 2026-08-26
+last-reviewed: 2026-10-11
 ---
 
 version: 1
@@ -38,6 +38,13 @@ allowed_ignored_dirs:
   # 同性质 —— 外部工具产物但在本仓根下运行, 故显式注册, 否则被判
   # "ignored-unregistered" 目录卫生违规。2026-10-06 纳入。
   - .zvec-grep
+  # 2026-10-11 补登: 2e3e270d1 已将下列数据/产物目录加入 .gitignore (防误入库),
+  # 但未同步本政策 → 被判 ignored-unregistered 目录卫生违规。同日补齐。
+  - _archive
+  - .benchmarks
+  - apps
+  - external
+  - logs
   - agent-runtime
   - artifacts
   - archive-*
@@ -98,6 +105,31 @@ local_surfaces:
     class: compatibility-checkout
     lifecycle: transient
     reason: Legacy local checkout surface; canonical code lives in projects/ecos
+  _archive:
+    owner: workspace-tooling
+    class: archive
+    lifecycle: local
+    reason: Root-level archive of retired data (gitignored by 2e3e270d1 to prevent accidental commits)
+  .benchmarks:
+    owner: workspace-tooling
+    class: benchmark-output
+    lifecycle: local
+    reason: Local benchmark run outputs (pytest-benchmark and similar tooling artifacts)
+  apps:
+    owner: workspace-tooling
+    class: local-app-surface
+    lifecycle: local
+    reason: Local app data/checkouts not meant for the main repo (gitignored by 2e3e270d1)
+  external:
+    owner: workspace-tooling
+    class: external-surface
+    lifecycle: local
+    reason: External/third-party data surfaces kept out of git (gitignored by 2e3e270d1)
+  logs:
+    owner: workspace-tooling
+    class: runtime-logs
+    lifecycle: local
+    reason: Root-level runtime log output (gitignored by 2e3e270d1; canonical logs live in runtime/logs)
 
 rules:
   untracked_non_ignored: fail
