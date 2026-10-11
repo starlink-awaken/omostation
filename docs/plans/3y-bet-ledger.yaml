@@ -41601,7 +41601,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-08-dashboard-dcp20-get-method-safety-v1.1.0.md
     spec_version: 1.1.0
-    content_digest: sha256:6cd451a934cadce4e5b94a5192056ebe48328cb535eb596c6c899695d3f05ef7
+    content_digest: sha256:3368b5a37d53547b070d0d20bad68e1cb9048b0676b8eb45f3118e9a524f8a2e
     decision_ref: decision://accepted/BET-Y2Q4-T10-240
   value_indicator_policy: false
   completion_evidence:
