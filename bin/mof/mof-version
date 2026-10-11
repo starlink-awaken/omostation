@@ -8,8 +8,16 @@ from pathlib import Path
 
 import yaml
 
-M1_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
-VERSION_FILE = Path(__file__).parent.parent / ".omo/_truth/mof-version.yaml"
+# ADR-0456: 根是参数, 不是字面量。经 repo_root.code_root() 取当前检出根, 不用
+# __file__ 反推 —— 本脚本从 bin/ 迁到 bin/mof/ 后, 原 `Path(__file__).parent.parent`
+# 少退一层, 解析到 bin/.omo/_truth/mof-version.yaml (不存在), 使 record/show 静默
+# 作用于一份空版本。code_root() 对路径位置不敏感, 迁移不再复发。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root  # noqa: E402
+
+REPO = code_root()
+M1_DIR = REPO / "projects/ecos/src/ecos/ssot/mof/m1"
+VERSION_FILE = REPO / ".omo/_truth/mof-version.yaml"
 
 
 def get_current_version() -> dict:
