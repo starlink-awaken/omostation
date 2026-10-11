@@ -41795,7 +41795,6 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
-campaigns:
 - id: BET-Y2Q4-T10-244
   title: 贾维斯感知面 — observer 日报 + SwiftBar 常驻/待办域 + CI 信号闭环
   goal: '常驻 agent 的可感知化 (2026-10-11 贾维斯会话交付, 补户口立项): (1) observer-daily.py
@@ -41831,6 +41830,7 @@ campaigns:
   - cmd: python3 ~/local-ops/bin/observer-daily.py --no-workflow
     expect: 日报生成 exit 0
 
+campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
   objective_refs:
