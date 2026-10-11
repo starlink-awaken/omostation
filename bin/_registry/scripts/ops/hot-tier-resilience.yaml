@@ -4,20 +4,25 @@ name: Hot Tier Resilience Toolbox (4.1T 掉线盘兜底/恢复)
 category: ops
 owner: engineering-agent
 description: >-
-  4.1T 外接盘 (SHAREDMODEL/MOVESPEED) 硬件层持续掉线下的兜底与恢复工具箱
-  (BET-Y2Q4-T10-243)。子命令: sync-rare (稀有发布者→Lex 增量, 限速+掉线守卫),
-  manifest (公开源重建清单双写), snapshot-links (models-active 软链固化),
-  verify (副本抽样校验+清单新鲜度), daily-report (keepalive 掉线日报),
-  rebuild (T3 盘死重建剧本)。排程 launchd 人工安装制。
+  4.1T 外接盘 (SHAREDMODEL/MOVESPEED) 硬件层可疑 (厂家故障说明 + 实测整链掉线,
+  频次待实测) 情形下的兜底与恢复工具箱 (BET-Y2Q4-T10-243)。子命令: sync-rare
+  (稀有发布者→Lex 增量, 限速+掉线守卫), manifest (公开源重建清单双写),
+  snapshot-links (models-active 软链固化), verify (副本抽样校验+清单新鲜度,
+  平铺模型目录整目录比对), daily-report (掉线日报: 真实掉线 + keepalive 探测计数,
+  可选日期参数), rebuild (T3 盘死重建剧本)。排程 launchd 人工安装制。
 inputs:
   - name: subcommand
     type: positional
     required: true
-    description: "sync-rare | manifest | snapshot-links | verify | daily-report | rebuild <mnt>"
+    description: "sync-rare | manifest | snapshot-links | verify | daily-report [YYYY-MM-DD] | rebuild <mnt>"
   - name: SHAREDMODEL/lmstudio
     type: path
     required: true
-    description: "热层源 (掉线守卫: state>=5 退避 exit 1)"
+    description: "热层源 (掉线守卫: state>=5 退避 exit 1); 路径可用环境变量 HOT_TIER_HOT / HOT_TIER_LEX 覆盖, 仅用于测试"
+  - name: KEEPALIVE_DROPS
+    type: path
+    required: false
+    description: "真实掉线记录 (disk-keepalive v3 从统一日志采集, daily-report 读取); 默认 ~/Library/Logs/disk-keepalive.drops"
 outputs:
   - type: Lex 副本 + 重建清单 + 软链 manifest
 dependencies:

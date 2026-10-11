@@ -8,8 +8,8 @@
 #   sync-rare         稀有发布者 → Lex 增量同步 (限速, 掉线守卫)
 #   manifest          刷新公开源重建清单 (Lex + 仓内双写)
 #   snapshot-links    models-active 软链清单固化
-#   verify            Lex 副本抽样校验 + 清单新鲜度
-#   daily-report      keepalive 掉线日报 (昨日汇总)
+#   verify            Lex 副本抽样校验 + 清单新鲜度 (平铺模型目录整目录比对)
+#   daily-report      掉线日报 (昨日): 真实掉线(disk-keepalive.drops) + keepalive 探测计数
 #   rebuild <mnt>     T3 盘死重建剧本 (稀有回灌 + 重下清单 + 软链重建)
 #
 # 定时 (人工安装制, 不自动注册 — 沿用 cold-backup-drill 约定):
@@ -26,14 +26,18 @@
 #     <key>StandardErrorPath</key><string>/Users/xiamingxing/.local/log/hot-tier-resilience.log</string></dict>
 set -uo pipefail
 
-HOT="/Volumes/SHAREDMODEL/lmstudio"
+# 路径均可用环境变量覆盖 (默认值不变; 覆盖仅用于测试)
+HOT="${HOT_TIER_HOT:-/Volumes/SHAREDMODEL/lmstudio}"
 COLD="/Volumes/MOVESPEED/cold-models"
-LEX="/Volumes/Lex/cold-backup/sharemodel-hot-tier"
+LEX="${HOT_TIER_LEX:-/Volumes/Lex/cold-backup/sharemodel-hot-tier}"
 OMLX="$HOME/omlx"
 WS="$HOME/Workspace"
-KEEPALIVE_LOG="$HOME/Library/Logs/disk-keepalive.log"
-KEEPALIVE_STATE="$HOME/Library/Logs/disk-keepalive.state"
-KEEPALIVE_DAILY="$HOME/Library/Logs/disk-keepalive.daily"
+KEEPALIVE_LOG="${KEEPALIVE_LOG:-$HOME/Library/Logs/disk-keepalive.log}"
+KEEPALIVE_STATE="${KEEPALIVE_STATE:-$HOME/Library/Logs/disk-keepalive.state}"
+KEEPALIVE_DAILY="${KEEPALIVE_DAILY:-$HOME/Library/Logs/disk-keepalive.daily}"
+# 真实掉线记录: disk-keepalive v3 从统一日志采集 (设备从 USB 总线消失), 带"同刻消失的 SS 设备数"。
+# 与 KEEPALIVE_LOG 里的"未挂载"探测计数是两回事 —— v3 之前后者在 launchd 下含大量 TCC 误报
+KEEPALIVE_DROPS="${KEEPALIVE_DROPS:-$HOME/Library/Logs/disk-keepalive.drops}"
 LOGTS() { date '+%Y-%m-%d %H:%M:%S'; }
 
 # 公开源 (可从 HF 重下, 不做数据备份; 增改时同步更新设计文档 P2 行)
@@ -115,13 +119,17 @@ cmd_verify() {
     while IFS= read -r d; do
         [ -z "$d" ] && continue
         # 每发布者抽 1 个模型: 热层 vs Lex 同名文件 size+抽查 hash
-        local m
+        local m rel
         m=$(ls "$HOT/$d" 2>/dev/null | head -1)
         [ -z "$m" ] && continue
+        # 直接放在 lmstudio/ 下的平铺模型目录 (如 Qwen3-Embedding-…) 里第一个条目是文件而不是模型目录:
+        # 此时目录本身就是模型, 比对整个目录。否则两边的 cd 都失败、输出都为空、diff 判"一致",
+        # 这类目录就被静默地当成已校验 (2026-10-11 实测: "cd: …/added_tokens.json: Not a directory")
+        if [ -d "$HOT/$d/$m" ]; then rel="$d/$m"; else rel="$d"; fi
         sampled=$((sampled + 1))
-        if ! diff <(cd "$HOT/$d/$m" && find . -type f -exec stat -f "%z %N" {} \; | sort) \
-                 <(cd "$LEX/rare-publishers/$d/$m" 2>/dev/null && find . -type f -exec stat -f "%z %N" {} \; | sort) >/dev/null 2>&1; then
-            echo "[$(LOGTS)] MISMATCH: $d/$m"
+        if ! diff <(cd "$HOT/$rel" && find . -type f -exec stat -f "%z %N" {} \; | sort) \
+                 <(cd "$LEX/rare-publishers/$rel" 2>/dev/null && find . -type f -exec stat -f "%z %N" {} \; | sort) >/dev/null 2>&1; then
+            echo "[$(LOGTS)] MISMATCH: $rel"
             failed=$((failed + 1))
         fi
     done < <(rare_dirs)
@@ -134,15 +142,21 @@ cmd_verify() {
 }
 
 cmd_daily_report() {
-    local yesterday
-    yesterday=$(date -v-1d '+%Y-%m-%d')
-    local total remount needs
-    total=$(grep -c "^\[$yesterday" "$KEEPALIVE_LOG" 2>/dev/null || echo 0)
-    remount=$(grep "^\[$yesterday" "$KEEPALIVE_LOG" 2>/dev/null | grep -c "REMOUNT OK" || true)
-    needs=$(grep "^\[$yesterday" "$KEEPALIVE_LOG" 2>/dev/null | grep -c "NEEDS_ATTENTION" || true)
-    {
-        echo "[$(LOGTS)] $yesterday 掉线日报: 异常事件行=$total REMOUNT_OK=$remount NEEDS_ATTENTION=$needs"
-    } >> "$KEEPALIVE_DAILY"
+    local day="${1:-$(date -v-1d '+%Y-%m-%d')}"
+    local total unmounted remount needs maint drops_n drops_detail note=""
+    # grep -c 0 命中时自己会打印 0 且退出 1; 别再接 `|| echo 0`, 否则变量是 "0\n0" 把日报行折断
+    total=$(grep -c "^\[$day" "$KEEPALIVE_LOG" 2>/dev/null || true)
+    unmounted=$(grep "^\[$day" "$KEEPALIVE_LOG" 2>/dev/null | grep -c "未挂载" || true)
+    remount=$(grep "^\[$day" "$KEEPALIVE_LOG" 2>/dev/null | grep -c "REMOUNT OK" || true)
+    needs=$(grep "^\[$day" "$KEEPALIVE_LOG" 2>/dev/null | grep -c "NEEDS_ATTENTION" || true)
+    maint=$(grep "^\[$day" "$KEEPALIVE_LOG" 2>/dev/null | grep -c "MAINT:" || true)
+    # 真实掉线 = 设备从 USB 总线消失 (disk-keepalive v3 从统一日志采集), 附"同刻消失的 SS 设备数":
+    # >1 为整条 hub 链路一起掉, =1 为只有盘自己
+    drops_n=$(grep -c "^$day .*REAL_DROP" "$KEEPALIVE_DROPS" 2>/dev/null || true)
+    drops_detail=$(grep "^$day .*REAL_DROP" "$KEEPALIVE_DROPS" 2>/dev/null | sed -E 's/.*ss_removed=([0-9]+).*/\1/' | paste -sd, - || true)
+    # v3 (2026-10-11 16:07) 之前, keepalive 在 launchd 下因缺『可移动卷』TCC 授权把每个周期都判成"未挂载"
+    [[ "$day" < "2026-10-12" ]] && note=" [2026-10-11 16:07 前的 keepalive 计数含 TCC 误报, 以真实掉线为准]"
+    echo "[$(LOGTS)] $day 掉线日报: 真实掉线=${drops_n:-0}${drops_detail:+ (同刻消失SS设备数: $drops_detail)} | keepalive 日志行=${total:-0} 未挂载探测=${unmounted:-0} REMOUNT_OK=${remount:-0} NEEDS_ATTENTION=${needs:-0} MAINT=${maint:-0}$note" >> "$KEEPALIVE_DAILY"
     echo "[$(LOGTS)] 日报已追加 $KEEPALIVE_DAILY"
 }
 
@@ -174,7 +188,7 @@ case "${1:-}" in
     manifest)       cmd_manifest ;;
     snapshot-links) cmd_snapshot_links ;;
     verify)         cmd_verify ;;
-    daily-report)   cmd_daily_report ;;
+    daily-report)   shift; cmd_daily_report "$@" ;;   # 可选参数: YYYY-MM-DD (默认昨天), 用于补报
     rebuild)        shift; cmd_rebuild "$@" ;;
     *) sed -n '2,30p' "$0"; exit 64 ;;
 esac
