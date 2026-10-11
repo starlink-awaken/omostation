@@ -41556,7 +41556,8 @@ bets:
   title: DCP-20 P0 Zhixing GET 方法安全与受管宿主发布
   goal: 关闭 Zhixing 通用 GET 路由中的执行型副作用，建立 route × method × operation 纯读取证明，并通过可回滚、精确选择的
     host-sync 发布到 LaunchAgent 实际代码根。
-  status: pending
+  status: done
+  done_at: 2026-10-11
   window: Y2Q4
   track: T10-TOOLING
   priority: P0
@@ -41601,7 +41602,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-08-dashboard-dcp20-get-method-safety-v1.1.0.md
     spec_version: 1.1.0
-    content_digest: sha256:6cd451a934cadce4e5b94a5192056ebe48328cb535eb596c6c899695d3f05ef7
+    content_digest: sha256:3368b5a37d53547b070d0d20bad68e1cb9048b0676b8eb45f3118e9a524f8a2e
     decision_ref: decision://accepted/BET-Y2Q4-T10-240
   value_indicator_policy: false
   completion_evidence:
@@ -41625,8 +41626,20 @@ bets:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-240.md
             sha256: sha256:094c40e86446300ff07d3ca1f0e6388e97844e09eff7d401154eda4799f880c4
       operational:
-        status: NOT_PROVEN
+        status: PROVEN
         evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-10-bet-240-live-canary.json
+            sha256: sha256:14e3838ee9adad51e28b8770090f0c55e2a2daf4480f0068ca944b44713f55df
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-10-bet-240-fresh.json
+            sha256: sha256:416be7b38cd168e982e4d4f8fcfb90978ebfc2e2087731a21fef1de1c62e343d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-240.md
+            sha256: sha256:094c40e86446300ff07d3ca1f0e6388e97844e09eff7d401154eda4799f880c4
+          cleanup:
+            ref: receipt://docs/reports/2026-10-10-bet-240-cleanup.md
+            sha256: sha256:2400227965991a167838ada14c074c5a16b424c3fb7431ba90dbf9ae3e9b458b
           deployment_state:
             ref: receipt://docs/reports/2026-10-10-bet-240-closeout.md
             sha256: sha256:ceb7fcd21d71f0e84771f58102f0b86413b5eaaa3aab4868307ad2990fc33322
