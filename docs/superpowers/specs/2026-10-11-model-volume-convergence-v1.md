@@ -2,6 +2,7 @@
 type: spec
 schema_version: specification/v1
 status: accepted
+lifecycle: spec
 spec_version: 1.0.0
 bet_id: BET-Y2Q4-T10-242
 owner: governance-team
