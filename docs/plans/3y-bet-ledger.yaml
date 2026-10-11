@@ -41807,7 +41807,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-11-jarvis-perception-plane-v1.0.0.md
     spec_version: 1.0.0
-    content_digest: sha256:bf022bca467d43be586688656557fbf4e730068a738374f4686a9c13870aa93a
+    content_digest: sha256:84ad6de546ef26f2c0f96d53e7250424fde06164313238d9e40aa710f2dc1e7f
     decision_ref: decision://accepted/BET-Y2Q4-T10-244
   window: Y2Q4
   track: T10-TOOLING

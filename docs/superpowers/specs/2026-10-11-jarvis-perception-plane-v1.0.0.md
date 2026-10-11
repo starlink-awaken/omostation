@@ -4,6 +4,7 @@ schema_version: specification/v1
 status: accepted
 lifecycle: spec
 owner: jarvis-seat
+last-reviewed: '2026-10-11'
 bet_id: BET-Y2Q4-T10-244
 spec_version: 1.0.0
 ---
