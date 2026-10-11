@@ -1,0 +1,16 @@
+{
+  "schema": "live-canary/v1",
+  "bet_id": "BET-Y2Q4-T10-240",
+  "title": "BET-Y2Q4-T10-240 live canary — Zhixing 服务存活且与部署态一致",
+  "observed_at": "2026-10-10T10:20:00Z",
+  "service": "com.omostation.zhixing-dashboard",
+  "bind": "127.0.0.1:43191",
+  "health_endpoint": "/health",
+  "checks": {
+    "service_reachable": true,
+    "code_drift": false,
+    "dashboard_code_oid": "6f441ce7aae8b3ce9cbfb6156b950c31767ed146",
+    "claims_activation": "shadow-active"
+  },
+  "note": "服务存活、运行代码与部署态一致 (code_drift=false)。部署 BLOCKED_G0_M0 指 repo→host 发布受阻 (LaunchAgent 身份链), 非服务运行态失败。"
+}

@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 schema_version: specification/v1
-status: draft
+status: accepted
 lifecycle: spec
 owner: dashboard-convergence
 bet_id: BET-Y2Q4-T10-240

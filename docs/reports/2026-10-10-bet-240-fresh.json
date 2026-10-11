@@ -1,0 +1,17 @@
+{
+  "schema": "fresh-receipt/v1",
+  "bet_id": "BET-Y2Q4-T10-240",
+  "title": "BET-Y2Q4-T10-240 fresh receipt — 漂移报告新鲜度实测 (DCP-20 两文件待部署)",
+  "observed_at": "2026-10-10T10:27:07.941247+00:00",
+  "command": "python3 bin/gac/zhixing-host-sync.py status --json",
+  "result": {
+    "ok": false,
+    "dashboard_dir": "/Users/xiamingxing/.local/share/zhixing-dashboard",
+    "total_files": 16,
+    "drifted_files": [
+      "live_server.py",
+      "observatory_query.py"
+    ]
+  },
+  "note": "漂移报告新鲜 (刚生成)。drifted = live_server.py + observatory_query.py = DCP-20 修复文件已在 repo (#4705) 但部署受阻 (BLOCKED_G0_M0), 属预期阻断态, 非运行故障。"
+}
