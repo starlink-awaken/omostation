@@ -41643,6 +41643,7 @@ bets:
     SHAREDMODEL。vault-paths.yaml 修正 sharedwork_root/shareddisk_root 指真实卷；BOSROUTE/
     DOMAIN model-volume storage 字段对齐实况。38 处 /Volumes/Model 硬编码收敛为 OMLX_ROOT/
     vault-paths 解析。前置 P0 已完成（冷备验证、231G 清理、keepalive UUID 化）。'
+  # 2026-10-11 gate 修复: 4 项既有 FAIL 已修 3 类(6a63b4fa1/01528b1d6), 剩 service-config-drift 为声明(T10-227 6h)/现实(10-10 热修 30min+claims对齐)真分歧待 owner 决策
   status: blocked
   window: Y2Q4
   track: T10-TOOLING
