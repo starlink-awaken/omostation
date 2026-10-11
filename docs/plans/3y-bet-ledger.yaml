@@ -41719,8 +41719,64 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+- id: BET-Y2Q4-T10-243
+  title: 4.1T 掉线盘兜底与恢复体系 — 热层数据分层保护 + T3 重建剧本 + 掉线感知链
+  goal: 'disk8 (4.1T, 硬件层持续掉线 9 天 3 次大规模+会话内高频, 无解待换线/换盘) 上
+    SHAREDMODEL 热层 847G 唯一 SSOT 的兜底: 按 P0 配置(git)/P1 稀有发布者(Lex 副本
+    225G)/P2 公开源(清单重下 545G)/P3 冷层/P4 可丢 分层保护。交付 hot-tier-resilience.sh
+    六子命令 (sync-rare/manifest/snapshot-links/verify/daily-report/rebuild)、
+    掉线感知链升级 (keepalive 桌面通知节流)、T3 盘死重建剧本 (软链 manifest + 稀有回灌
+    + 公开源重下清单)。RPO 承诺: P0+P1 完成即恢复 ≈4.5h。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P0
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: optional
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  circuit_breaker: sync-rare 限速 40MB/s 且掉线守卫 (keepalive state>=5 退避); Lex 副本
+    只增不删; 不动热层源数据; launchd plist 人工安装制不自动注册。
+  non_goals:
+  - 不修硬件层掉线根因 (无解, 换线/换盘另行走 HW-DISK8-4TB-FLAKY 债务)
+  - 不做 P2 公开源数据备份 (545G 可重下, 只做重建清单)
+  - 不自动安装 launchd plist
+  - 不动 MOVESPEED 冷层 / SHAREDWORK 卷内容
+  done_when:
+  - hot-tier-resilience.sh 六子命令实测可用, shellcheck 干净, script-registry 注册通过
+  - P1 稀有发布者全量 Lex 副本完成且 verify 抽样 exit 0 (后台 rsync 完成后)
+  - models-active 软链 manifest 固化到 ~/omlx/conf (29 链实测)
+  - 公开源重建清单双写 (仓内 docs/generated + Lex)
+  - keepalive NEEDS_ATTENTION 升级为 macOS 桌面通知 (节流防刷屏)
+  verify:
+  - cmd: shellcheck bin/ops/hot-tier-resilience.sh
+    expect: 0 findings
+  - cmd: python3 bin/ssot/script-registry.py validate
+    expect: "VALIDATION PASSED: 719 scripts registered"
+  - cmd: bash bin/ops/hot-tier-resilience.sh snapshot-links
+    expect: 软链清单固化 >0 链
+  - cmd: bash bin/ops/hot-tier-resilience.sh daily-report
+    expect: 日报追加 ~/Library/Logs/disk-keepalive.daily
+  - cmd: make gac-local-gate
+    expect: 通过
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
+  - bin/ops/hot-tier-resilience.sh
+  - bin/_registry/scripts/ops/hot-tier-resilience.yaml
+  - .omo/_truth/registry/governance-checks.yaml
+  - docs/generated/public-models-manifest.md
+  - docs/plans/3y-bet-ledger.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
+    spec_version: 1.0.0
+    content_digest: sha256:4daf19781c83f833c280052950979a2ca56ea1a2a766ea8e52733bc3ae76f9e7
+    decision_ref: decision://accepted/BET-Y2Q4-T10-243
+  value_indicator_policy: false
 campaigns:
-- id: CMP-W0-PORTFOLIO-TRUTH
+- id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
   objective_refs:
   - OBJ-TRUST
@@ -41857,7 +41913,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 538
+  total_bets: 539
   windows:
   - Y1Q1
   - Y1Q2

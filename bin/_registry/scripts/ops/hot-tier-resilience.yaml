@@ -1,0 +1,32 @@
+schema: script-registry/v1
+id: bin/ops/hot-tier-resilience.sh
+name: Hot Tier Resilience Toolbox (4.1T 掉线盘兜底/恢复)
+category: ops
+owner: engineering-agent
+description: >-
+  4.1T 外接盘 (SHAREDMODEL/MOVESPEED) 硬件层持续掉线下的兜底与恢复工具箱
+  (BET-Y2Q4-T10-243)。子命令: sync-rare (稀有发布者→Lex 增量, 限速+掉线守卫),
+  manifest (公开源重建清单双写), snapshot-links (models-active 软链固化),
+  verify (副本抽样校验+清单新鲜度), daily-report (keepalive 掉线日报),
+  rebuild (T3 盘死重建剧本)。排程 launchd 人工安装制。
+inputs:
+  - name: subcommand
+    type: positional
+    required: true
+    description: "sync-rare | manifest | snapshot-links | verify | daily-report | rebuild <mnt>"
+  - name: SHAREDMODEL/lmstudio
+    type: path
+    required: true
+    description: "热层源 (掉线守卫: state>=5 退避 exit 1)"
+outputs:
+  - type: Lex 副本 + 重建清单 + 软链 manifest
+dependencies:
+  - rsync
+  - launchd (人工安装排程)
+triggers:
+  - cron: 周日 04:00 (sync-rare 链) / 每日 23:50 (daily-report), plist 模板见脚本头注释
+related:
+  - bin/ops/cold-backup-drill.sh
+  - ~/bin/disk-keepalive.sh
+maturity: stable
+last_reviewed: "2026-10-11"

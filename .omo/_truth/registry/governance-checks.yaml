@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 718 # 2026-10-11 716→718: concept-weave.py + run-monthly-weave.sh 重建补登 (756fd155f, TCC 规避)
+    script_baseline: 719 # 2026-10-11 718→719: hot-tier-resilience.sh 兜底工具箱 (T10-243)
       # (+ bin/gac/materialize-system-state.py, BET-Y2Q4-T10-235 `.omo/state/system.yaml`
       # 创建者 —— 摘库后干净检出里三个按存在性判定的读者 (doc-link-check /
       # architecture-check --gate core_documents.STATE.md / current-state-coherence)
