@@ -41668,6 +41668,9 @@ bets:
   - projects/omo/tests/test_sovereignty_replay.py
   - docs/superpowers/specs/2026-10-10-omo-src-code-root-convergence.md
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-239.md
+  - docs/reports/2026-10-11-omo-src-code-root-convergence-closeout.md
+  - docs/reports/2026-10-11-bet-239-closeout-canary.json
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-10-omo-src-code-root-convergence.md
     spec_version: 1.0.0
