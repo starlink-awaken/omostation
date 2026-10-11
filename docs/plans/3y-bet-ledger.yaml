@@ -41698,14 +41698,19 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
     spec_version: 1.0.0
-    content_digest: sha256:95bee156f773ccfdc6e73daddaf69d2d5994b14a43d9e3fbca008b9b6b22528b
+    content_digest: sha256:febf0c038dd7e4d8dcb342417c4dfbe306c4c933f3932c7a90425b7000628cf0
     decision_ref: decision://accepted/BET-Y2Q4-T10-242
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    # 交付工作已完成 (evidence 全文见 receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-242.md):
+    # rclone check 0差异/231、omlx 冒烟 dim=1024 http200、gac-gate PASS 68、
+    # weights 18G→MOVESPEED、稀有发布者 225G→Lex。evidence 轴待 push 后跑
+    # `bet-ledger.py complete BET-Y2Q4-T10-242` 升级 delivery_accepted
+    # (merged_reachable_commit 硬校验 origin/main 可达, 本地未推送暂不可达)。
     axes:
       engineering:
-        status: NOT_PROVEN
+        status: IN_PROGRESS
         evidence: {}
       operational:
         status: NOT_PROVEN
@@ -41713,7 +41718,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: in_delivery
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
@@ -41852,7 +41857,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 537
+  total_bets: 538
   windows:
   - Y1Q1
   - Y1Q2
