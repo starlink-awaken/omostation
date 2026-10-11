@@ -1,0 +1,21 @@
+schema: agent-error/v1
+id: PITFALL-ENV-007
+category: environment
+severity: medium
+title: 用正则匹配进程命令行做清理会匹配到执行它的 shell 自己, kill 把自己杀了 (退出码 144, 无任何输出)
+symptom: 'ps | grep -E ''gpg .*-d .*mini-internal'' 后 kill: 工具 shell 的命令行文本里同时含有这些词,
+  被自己匹配并杀掉, 命令无输出; 同类: grep -c 的计数把自己也算进去, 误报残留进程 1 个'
+root_cause: 匹配对象包含当前命令自身的命令行 (命令文本本身就带着模式)
+solution: 清理只按明确的 PID 或 pgrep -x <精确进程名>; 先列出再动手, 不在同一条命令里匹配即杀
+prevention: kill 之前先打印将要杀的 PID 与命令行并排除当前 shell 的 PID/PPID; 计数类检查用 pgrep -x 或 [x] 括号技巧
+tags:
+- shell
+- kill
+- pgrep
+- self-match
+- diagnosis-trap
+discovered_by: claude
+discovered_at: '2026-10-11'
+times_encountered: 1
+last_confirmed_at: '2026-10-11'
+status: active
