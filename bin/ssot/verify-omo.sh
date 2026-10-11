@@ -29,6 +29,9 @@ uv run --project projects/omo python -m omo.omo_worker task validate --all-activ
 uv run --project projects/omo python -m omo.omo_worker task validate --all-planned
 
 echo "[4/5] Running governance regression tests"
+# omo/tests/unit/** 不在任何 CI 白名单里, 仓根字面量扫描必须显式点名,
+# 否则「CI 绿」不构成它的证据 (同 governance-check.yml 里 "ADR-0456 B1 call-time write-plane
+# gate" 那条 step 的先例, BET-Y2Q4-T10-239)。
 pushd projects/omo >/dev/null
 uv run pytest \
   tests/test_omo_ingress.py \
@@ -38,6 +41,9 @@ uv run pytest \
   tests/test_omo_direct_io_gate.py \
   tests/test_omo_task_policy.py \
   tests/test_opc_p5_p7_runtime.py \
+  tests/unit/test_omo_src_root_literal_scan.py \
+  tests/unit/test_omo_code_root_parity.py \
+  tests/unit/test_omo_root_plane_landing.py \
   -q
 popd >/dev/null
 
