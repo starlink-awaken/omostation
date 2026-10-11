@@ -1,0 +1,168 @@
+{
+  "schema": "closeout-canary/v1",
+  "bet_id": "BET-Y2Q4-T10-239",
+  "title": "ADR-0456 残留（omo 侧）仓根字面量折进单一缝 — 判据实测读数（机器可读）",
+  "measured_on_branch": "agent/governance-agent/t10-239-closeout",
+  "base_commit": "ffb24573b",
+  "tree_pin": {
+    "root": "46062f7df",
+    "projects/omo": "e8c7aa0ed002b7217ee9d0f4061a2aeea00923fd",
+    "measured_at_utc": "2026-10-11T06:22:04Z"
+  },
+  "delivery_merged": {
+    "pr": 4718,
+    "state": "MERGED",
+    "base": "main",
+    "head": "agent/governance-agent/t10-239-omo-root-seam",
+    "merge_commit": "a682300faa02dd5f0c38f2506210a1eafb150974",
+    "merged_at_utc": "2026-10-11T06:03:00Z",
+    "method": "squash（无 admin merge、无 --no-verify、无空提交）",
+    "device": "gh pr view 4718 --json number,state,mergedAt,mergeCommit,baseRefName,headRefName",
+    "measured_at_utc": "2026-10-11T06:21:21Z",
+    "pre_merge_checks": "29 pass / 2 skipping / 0 fail / 0 pending, mergeable=MERGEABLE, mergeStateStatus=CLEAN"
+  },
+  "literal_convergence": {
+    "ruler": "git grep -En 'Path\\.home\\(\\)[[:space:]]*/[[:space:]]*\"Workspace\"' <ref> -- 'src/**' 计数用 /usr/bin/grep -c .",
+    "why_this_checkout": "计数在深历史检出 /Users/xiamingxing/Workspace/projects/omo 做（shallow=false, 776 commits）；本收尾 worktree 的 omo 实测 shallow=true，祖先/历史类判据在那儿没有意义（AGENTS.md §6 浅历史条）",
+    "before": {
+      "ref": "d8ca1a2",
+      "sites": 32,
+      "files": 18
+    },
+    "after": {
+      "ref": "e8c7aa0ed",
+      "sites": 0,
+      "files": 0
+    },
+    "same_scan_both_sides": true,
+    "worktree_residual_check": {
+      "device": "/usr/bin/grep -rEn 'os\\.environ\\.get\\(\"WORKSPACE_ROOT\", *str\\(Path\\.home\\(\\)' projects/omo/src | /usr/bin/grep -c .",
+      "count": 0,
+      "measured_at_utc": "2026-10-11T06:19:48Z"
+    }
+  },
+  "detector_canary": {
+    "files": [
+      "tests/unit/test_omo_src_root_literal_scan.py",
+      "tests/unit/test_omo_code_root_parity.py",
+      "tests/unit/test_omo_root_plane_landing.py"
+    ],
+    "device": "cd projects/omo && uv run --project . pytest <三件> -q",
+    "default_face": {
+      "rc": 0,
+      "tail": "35 passed in 3.90s",
+      "measured_at_utc": "2026-10-11T06:19:29Z"
+    },
+    "ambient_profile_face": {
+      "env": "OMOSTATION_STATE_ROOT=/tmp/t10239-ambient-state",
+      "rc": 0,
+      "tail": "35 passed in 4.07s",
+      "measured_at_utc": "2026-10-11T06:19:48Z"
+    },
+    "earlier_readings_this_bet": [
+      {
+        "file": "/tmp/t10239_canary2.out",
+        "tail": "35 passed in 4.45s",
+        "rc": 0
+      },
+      {
+        "file": "/tmp/t10239_canary3.out",
+        "tail": "35 passed in 3.92s",
+        "rc": 0
+      }
+    ],
+    "dependency_face_defect": {
+      "observed": "3 failed / 32 passed",
+      "cause": "uv run --no-project --with pyyaml --with pydantic --with pytest 的 venv 里没有兄弟包 ecos，导入 omo.sovereignty.__init__:21 → ModuleNotFoundError: ecos.ssot.mof.generated.control.mof_control_models（/tmp/t10239_canary_pytest.out）",
+      "attribution": "测量装置的依赖面，不是回归；正确面是 uv run --project projects/omo（该面 35 passed，工作树保持干净）",
+      "fixed_by": "换装置重测，未改窄任何断言"
+    }
+  },
+  "ci_proof_my_cases_ran": {
+    "log_artifact": "/tmp/t10239_ci_log.txt (568 KB, run 38116259510, job governance-verify)",
+    "step": "Run full governance verification → bin/ssot/verify-omo.sh [4/5] Running governance regression tests",
+    "ci_reading": "147 passed, 9 skipped in 11.98s",
+    "argv_in_log": false,
+    "argv_in_log_reason": "该步骤的命令是 bash bin/ssot/verify-omo.sh，十个文件名在脚本内部，日志不含它们（interface-check job 的 argv 才有文件名，命中的是 tests/test_omo_ingress.py）。`-q` 也不打印用例名 ⇒ 正面证据只能是同表读数差分",
+    "local_full_table": "147 passed, 9 skipped（本轮十文件表，/tmp/t10239_s4_all.out）",
+    "local_old_seven": "112 passed, 9 skipped（去掉本轮三件的七文件表，/tmp/t10239_s4_old7.out）",
+    "differential": "147 − 112 = 35 = 本轮三件检测器的本地用例数 ⇒ CI 的 [4/5] 用的就是含我三件的那张表",
+    "progress_bar_crosscheck": "CI 点阵 72 + 72 + 12 = 156 项 = 147 passed + 9 skipped",
+    "named_ci_gates": [
+      {
+        "gate": "BET spec binding lint contract tests",
+        "reading": "71 passed in 38.94s"
+      },
+      {
+        "gate": "ADR-0456 B1 call-time write-plane gate",
+        "reading": "44 passed in 6.62s"
+      },
+      {
+        "gate": "ADR-0456 B5 system.yaml materializer gate",
+        "reading": "26 passed in 0.63s"
+      },
+      {
+        "gate": "ADR-0456 B5 materializer consumer wiring gate",
+        "reading": "12 passed in 1.51s"
+      },
+      {
+        "gate": "ADR-0456 delivery-anchor cross-boundary contract gate",
+        "reading": "11 passed in 0.24s"
+      },
+      {
+        "gate": "interface-check → Run governance checks",
+        "reading": "352 passed, 9 skipped in 133.45s"
+      }
+    ]
+  },
+  "work_packet_two_run_ordering": {
+    "law": "packet 的 scope.write_surfaces 在 start 时投影、在每次 claim 时从活台账重导并逐字节比 hash（bin/plan/bet-ledger.py:2333-2337），所以「声明 closeout 面」与「写那三面」不能共用一个 run",
+    "run1": {
+      "run_id": "20261011T061611Z-project-code-change-7c093da1",
+      "claimed": [
+        "docs/plans/3y-bet-ledger.yaml"
+      ],
+      "packet_hash_before": "sha256:ce7a1ef88982503482aedfcfd194b6f2f55f783071fa7637b9149949329e4f36",
+      "commit": "46062f7df",
+      "closed_at": "2026-10-11T06:18:41Z",
+      "released_locks": 3
+    },
+    "run2": {
+      "run_id": "20261011T061856Z-project-code-change-a746ab2f",
+      "packet_hash_after": "sha256:65a2f77b14ac7c189b65c8f00fe044f13d27b302159571dd0d6971915db8beaf",
+      "surfaces": 33,
+      "newly_declared": [
+        ".omo/_knowledge/retros/BET-Y2Q4-T10-239.md",
+        "docs/reports/2026-10-11-omo-src-code-root-convergence-closeout.md",
+        "docs/reports/2026-10-11-bet-239-closeout-canary.json"
+      ],
+      "claimed": [
+        "上述三件 + docs/plans/3y-bet-ledger.yaml"
+      ],
+      "proof": "两个 packet hash 不同且 run2 的 33 面含三件新声明 ⇒ 台账增补确实进了投影，run2 才有权写它们"
+    },
+    "affected_graph_receipts": {
+      "run1": "runtime/affected/t10239-r1.json (receipt_hash 79c09ea5…)",
+      "run2": "runtime/affected/t10239-r2.json (同一 receipt_hash，claims 路径集不同)",
+      "note": "receipt 落真实目录 runtime/affected/，不落 .omo/_delivery/**（那面是 symlink 桥，bin/gac/affected-graph.py:121/125 拒 symlink 父目录）；用完即删，不进 commit"
+    }
+  },
+  "merge_path_shared_workspace": {
+    "why_not_gac_worktree_merge": "bin/gac/gac-worktree.sh:1098 的 `! git diff --quiet` 守卫会被本 lane 之外的脏项挡住（kairon gitlink 由并发会话持有），且 :1151 sync_local_main_best_effort 在共享主工作区执行 `git checkout main`——那儿脏且在别人的分支上",
+    "what_was_run": "脚本自己的 GitHub 侧调用 `gh pr merge <n> --repo starlink-awaken/omostation --squash --delete-branch`（:1143），它不动任何本地工作树；收尾用 gac-worktree.sh release",
+    "guarantee": "主工作区 /Users/xiamingxing/Workspace 全程只读，未替并发会话切分支或 stash"
+  },
+  "fresh_worktree_generated_state": {
+    "file": ".omo/state/system.yaml",
+    "state": "untracked 638 bytes",
+    "device": "python3 bin/gac/materialize-system-state.py --json → rc=0, status=materialized",
+    "measured_at_utc": "2026-10-11T06:11Z",
+    "why": "该文件在 origin/main 已不被跟踪（BET-Y2Q4-T10-235），CI 由 gac-gate.yml:143 / state-goals-enforce.yml:30 各自物化，本地新 worktree 没有 ⇒ current-state-coherence rc=2 missing input 是环境面"
+  },
+  "open_items": [
+    "service-config-drift 1 条（zhixing-projection-fullrefresh plist vs services.yaml）— 机器级授权面，ci_skip=True 不阻断 CI",
+    "check-work-landed 45s cap 未登记 gate-known-debt — 独立一轮",
+    "孤儿 refs/remotes/upstream/main — 机器级动作，需授权，本轮只留证据",
+    "spec §7 八项读面残留（含 _MANAGER 别名复位缺陷）— 另立 BET"
+  ]
+}
