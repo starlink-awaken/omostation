@@ -37,10 +37,10 @@ paths:
   icloud-sharedconf_root: ~/SharedConf
   bin_root: ~/bin
   toolbox-tools_root: ~/ToolBox
-  sharedwork_root: /Users/SharedWork
-  shareddisk_root: /Volumes/SharedDisk
-  model-volume_root: /Volumes/Model
-  sharedmodel_root: /Volumes/SharedModel
+  sharedwork_root: /Volumes/SHAREDWORK      # 2026-10-11 修正: 原声明 /Users/SharedWork 不存在 (BET-Y2Q4-T10-242)
+  shareddisk_root: /Volumes/SHAREDMODEL    # 共享盘域主锚点(4.1T 盘双卷: SHAREDMODEL+SHAREDWORK)
+  model-volume_root: /Volumes/Model        # Model 1T — P1 后转 TM 专用卷; 模型存储已并轨 SHAREDMODEL
+  sharedmodel_root: /Volumes/SHAREDMODEL   # 模型热/温层 SSOT (LM Studio/Ollama/mlx 权重)
   minerva_root: ~/minerva
   knowledge-engine_root: ~/knowledge
   l4-kernel_root: ~/Workspace/projects/l4-kernel

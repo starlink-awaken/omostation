@@ -1,0 +1,33 @@
+id: "HW-DISK8-4TB-FLAKY"
+title: "4.1T 外接盘 (MOVESPEED/SHAREDWORK/SHAREDMODEL) 9 天内 3 次异常消失"
+dimension: "operations"
+subdimension: "hardware"
+domain: "storage"
+scope: "host"
+severity: "high"
+weight: 0.25
+entropy_class: "high"
+lifecycle_state: "identified"
+owner: "xiamingxing"
+affected_roots: []
+evidence_refs:
+- ~/Library/Logs/disk-keepalive.log
+- Plans/macmini-7t-ancient-twilight.md
+mitigation_refs:
+- ~/bin/disk-keepalive.sh
+opened_at: "2026-10-11"
+last_reviewed_at: '2026-10-11'
+next_review_at: '2026-10-18'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "换 USB 线/换口观察数日; 若仍复现则换盘 (盘上 ~940G 数据需先解决备份再动)。配额再平衡 (SHAREDWORK 976G→300G) 同样挂起在此硬件验证之后"
+history:
+- at: '2026-10-11T08:20:00+00:00'
+  action: identify
+  note: >-
+    三次异常: 10-07~10-10 (三天)、10-10 夜~10-11 晨 (8.5h)、
+    10-10 23:07~10-11 08:13 (9.1h, SHAREDWORK 卷)。disk-keepalive
+    UUID 自愈三次均自动挂回成功, 但掉线窗口内 IO 任务 (rclone 迁移)
+    承担静默损坏风险——rclone check 校验为必须项。
+  actor: "engineering-agent"

@@ -41635,6 +41635,84 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-242
+  title: P1 存储收敛 — Model 卷排空到 SHAREDMODEL/~/omlx + vault-paths/BOS 逻辑命名统一
+  goal: 'Model 1T 卷角色退役为 TM 专用卷：LMStudio 独有模型 (~195G) rsync 迁 SHAREDMODEL；
+    /Volumes/Model/omlx 运行面按 launchd TCC 约束拆解 —— bin/conf (~1G) 复制到 ~/omlx（内置盘，
+    launchd 可执行），weights-local (18G) 归档 MOVESPEED 冷层；models-active 软链农场重建指向
+    SHAREDMODEL。vault-paths.yaml 修正 sharedwork_root/shareddisk_root 指真实卷；BOSROUTE/
+    DOMAIN model-volume storage 字段对齐实况。38 处 /Volumes/Model 硬编码收敛为 OMLX_ROOT/
+    vault-paths 解析。前置 P0 已完成（冷备验证、231G 清理、keepalive UUID 化）。'
+  status: blocked
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 days
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  circuit_breaker: SHAREDMODEL 掉线(launchd keepalive 状态≠0)即暂停 rsync；任一alias 实跑失败即回查软链；
+    Model 卷源数据在 rclone check 全量校验 + 观察期前不删。
+  non_goals:
+  - 不合并 disk10 双容器、不改物理卷名(见 Plans/macmini-7t-ancient-twilight.md 拓扑规划节)
+  - 不动 MBP 侧任何盘
+  - 不做 SHAREDMODEL 全量镜像(P2/后续 BET)
+  - 不重装/重构 LM Studio app 本体配置(只对齐 downloadsFolder 已指向的事实)
+  done_when:
+  - Model/LMStudio 独有模型全部在 SHAREDMODEL 且 rclone check 差异=0
+  - ~/omlx 有 bin/conf/models-active, omlx CLI 在内置盘可用
+  - vault-paths.yaml 四卷路径与实况一致, check-vault-paths 通过
+  - rg "/Volumes/Model" 在 bin/ projects/(活码)仅剩历史注释/兼容注释
+  verify:
+  - cmd: rclone check /Volumes/Model/LMStudio /Volumes/SHAREDMODEL/lmstudio --one-way
+    expect: 差异 = 0 (Model 侧全部已迁)
+  - cmd: ~/omlx/bin/omlx --version
+    expect: 正常输出版本号(内置盘二进制可执行)
+  - cmd: uv run --with "pyyaml" python scripts/check-vault-paths.py
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: 通过
+  write_surfaces:
+  - protocols/vault-paths.yaml
+  - projects/ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-model-volume.yaml
+  - projects/omlxc/conf/models.json
+  - projects/omlxc/bin/omlx
+  - projects/omlxc/bin/omlx-node-setup.sh
+  - projects/omlxc/bin/omlx-autostart
+  - projects/omlxc/bin/omlx-dashboard
+  - projects/omlxc/bin/omlx-gw-guard
+  - projects/omlxc/scripts/full-status.sh
+  - projects/omlxc/scripts/pipeline-watchdog.sh
+  - projects/omlxc/conf/launchd-proposal.md
+  - projects/ecos/src/ecos/ssot/mof/m1/bosroute/BOSROUTE-*.yaml
+  - projects/ecos/src/ecos/l0/constraints.yaml
+  - projects/cockpit/src/cockpit/web/api_compute.py
+  - projects/ecos/scripts/catalog-daemon.py
+  - bin/delegation-alias-check.py
+  - docs/plans/3y-bet-ledger.yaml
+  - /Volumes/Model/INDEX.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
+    spec_version: 1.0.0
+    content_digest: sha256:95bee156f773ccfdc6e73daddaf69d2d5994b14a43d9e3fbca008b9b6b22528b
+    decision_ref: decision://accepted/BET-Y2Q4-T10-242
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_PROVEN
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: in_delivery
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUTH
   max_parallel_writers: 2
