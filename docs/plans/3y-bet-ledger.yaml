@@ -42094,7 +42094,8 @@ bets:
     字面量分布在 3 个文件 (test_meta_doctor / test_agent_cell_semantic_scheduler / test_reference_cell_direct_local_schedule)。plist
     镜像断言的期望值改由 .omo/_truth/registry/services.yaml 声明值与 Path.home() 组合给出 (非同源)，检出根锚定改由
     repo_root.code_root() 给出；另 3 处命中属脱敏用例 与 docstring 叙述 (合法)，新增反向钉住断言挡住「顺手清理」。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-12
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-10-12-tests-unit-host-anchor-convergence.md
