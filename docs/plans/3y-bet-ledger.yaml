@@ -41813,7 +41813,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: blocked
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-242
   title: P1 存储收敛 — Model 卷排空到 SHAREDMODEL/~/omlx + vault-paths/BOS 逻辑命名统一
   goal: 'Model 1T 卷角色退役为 TM 专用卷：LMStudio 独有模型 (~195G) rsync 迁 SHAREDMODEL；
