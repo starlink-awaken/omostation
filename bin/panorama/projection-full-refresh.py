@@ -64,6 +64,25 @@ def fail(kind: str, **kw) -> int:
     return 1
 
 
+def clear_stale_git_lock(checkout: Path, *, max_age_s: float = 600.0) -> None:
+    """git 的 index.lock 是秒级短锁; 龄超限且无进程持有 → 必是 crash 残留, 清掉再对齐。
+    2026-10-10 14:58 一枚 0 字节锁卡死投影链 43h (每 30min reset 撞锁), 加这道自愈。"""
+    lock = checkout / ".git" / "index.lock"
+    if not lock.exists():
+        return
+    age_s = time.time() - lock.stat().st_mtime
+    if age_s <= max_age_s:
+        return  # 可能属于活 git, 不误杀
+    r = subprocess.run(["/usr/sbin/lsof", "--", str(lock)],
+                       capture_output=True, text=True)
+    if r.stdout.strip():
+        log("stale_lock_held", age_s=round(age_s),
+            holder=r.stdout.strip().splitlines()[-1][:120])
+        return  # 有进程持有 (如长跑 gc), 留给它
+    lock.unlink()
+    log("stale_lock_cleared", age_s=round(age_s))
+
+
 def main() -> int:
     # 0) 防重入锁
     LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -88,7 +107,8 @@ def main() -> int:
                 return fail("remote_hygiene", url=url, expected_suffix=EXPECTED_ORIGIN_SUFFIX)
             log("remote_hygiene_ok", url=url)
 
-        # 2) 对齐 origin/main (检出内无在制工作, clean -fdx 安全)
+        # 2) 清 crash 残留的 stale git 锁, 再对齐 origin/main (检出内无在制工作, clean -fdx 安全)
+        clear_stale_git_lock(CHECKOUT)
         steps = [
             (["git", "fetch", "origin"], 1800),
             (["git", "reset", "--hard", "origin/main"], 300),

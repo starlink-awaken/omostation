@@ -1,0 +1,315 @@
+"""Read-only, Ledger-bound personal value collector.
+
+The OMO causal Event Ledger is the only value truth.  Legacy JSONL and panel
+records are retained as advisory display data, but they never influence the
+canonical counters or verdict produced here.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+from collectors.base import DataCollector
+from collectors.registry import register
+
+VALUE_TRUTH_SCHEMA = "value-truth-snapshot/v1"
+PANEL_SCHEMA = "panel-value/v2"
+TARGET_EPISODES = 30
+TARGET_WEEKS = 4
+_OID_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
+def _nonnegative_int(value) -> int:
+    return value if type(value) is int and value >= 0 else 0
+
+
+def _number(value) -> float:
+    return float(value) if type(value) in (int, float) and value >= 0 else 0.0
+
+
+def _unprovable_truth(reason: str) -> dict:
+    return {
+        "schema": VALUE_TRUTH_SCHEMA,
+        "status": "unprovable",
+        "reason": reason,
+        "truth_axes": {
+            "engineering_delivery": "not_measured",
+            "operational_proof": "unprovable",
+            "personal_value": "unprovable",
+        },
+        "metrics": {
+            "total_episodes": 0,
+            "weekly_samples": [],
+            "verdict_distribution": {},
+            "gate_gaps": [],
+        },
+    }
+
+
+def unavailable_projection(reason: str) -> dict:
+    """Return a valid fail-closed collector envelope for an observation failure."""
+    truth = _unprovable_truth(reason)
+    return {
+        "schema": "zhixing-personal-value-projection/v1",
+        "available": False,
+        "reason": reason,
+        "value_truth": truth,
+        "panel_value": project_panel_value(truth),
+    }
+
+
+def project_panel_value(value_truth: dict, advisory_panel: dict | None = None) -> dict:
+    """Project the display panel from Ledger truth, preserving legacy as advisory."""
+    truth = (
+        value_truth
+        if isinstance(value_truth, dict)
+        else _unprovable_truth("ledger_value_truth_unavailable")
+    )
+    if truth.get("schema") != VALUE_TRUTH_SCHEMA:
+        truth = _unprovable_truth("ledger_value_truth_schema_invalid")
+
+    metrics = truth.get("metrics") if isinstance(truth.get("metrics"), dict) else {}
+    weeks = [
+        item for item in (metrics.get("weekly_samples") or []) if isinstance(item, dict)
+    ]
+    total = _nonnegative_int(metrics.get("total_episodes"))
+    qualifying = sum(
+        _nonnegative_int(item.get("qualifying_episodes")) for item in weeks
+    )
+    qualifying_weeks = sum(1 for item in weeks if item.get("gate_met") is True)
+    distribution = (
+        metrics.get("verdict_distribution")
+        if isinstance(metrics.get("verdict_distribution"), dict)
+        else {}
+    )
+    accepted = _nonnegative_int(distribution.get("accept"))
+    adjudicated = sum(_nonnegative_int(value) for value in distribution.values())
+    saved_seconds = sum(_number(item.get("summed_saved_seconds")) for item in weeks)
+
+    personal_value = str((truth.get("truth_axes") or {}).get("personal_value") or "")
+    if truth.get("status") == "proven" and personal_value == "passed":
+        state = "proven"
+    elif truth.get("status") == "unprovable" or personal_value == "unprovable":
+        state = "unprovable"
+    else:
+        state = "not_proven"
+
+    reasons: list[str] = []
+    if truth.get("reason"):
+        reasons.append(str(truth["reason"]))
+    for item in metrics.get("gate_gaps") or []:
+        reason = str(item)
+        if reason and reason not in reasons:
+            reasons.append(reason)
+
+    advisory = advisory_panel if isinstance(advisory_panel, dict) else {}
+    stages = [
+        dict(item) for item in (advisory.get("stages") or []) if isinstance(item, dict)
+    ]
+    for item in stages:
+        if item.get("key") == "record":
+            item.update(
+                {
+                    "count": qualifying,
+                    "source": "omo_causal_event_ledger",
+                    "state": "OK" if qualifying else "NO_DATA",
+                }
+            )
+
+    return {
+        "schema": PANEL_SCHEMA,
+        "state": state,
+        "state_reason": reasons,
+        "authority_source": {
+            "kind": "omo_causal_event_ledger",
+            "snapshot_schema": truth.get("schema"),
+            "observed_at": truth.get("observed_at"),
+            "source": truth.get("source")
+            if isinstance(truth.get("source"), dict)
+            else {},
+        },
+        "samples": {
+            "records": total,
+            "qualifying": qualifying,
+            "accepted": accepted,
+            "adjudicated": adjudicated,
+            "net_saved_seconds": saved_seconds,
+        },
+        "stages": stages,
+        "thresholds": [
+            {
+                "key": "samples",
+                "label": "Ledger-bound real Episodes",
+                "target": TARGET_EPISODES,
+                "unit": "episodes",
+                "comparator": "gte",
+                "current": qualifying,
+                "met": qualifying >= TARGET_EPISODES,
+                "gate": None
+                if qualifying >= TARGET_EPISODES
+                else (f"Ledger-bound Episodes {qualifying}/{TARGET_EPISODES}"),
+            },
+            {
+                "key": "weeks",
+                "label": "Consecutive qualifying weeks",
+                "target": TARGET_WEEKS,
+                "unit": "weeks",
+                "comparator": "gte",
+                "current": qualifying_weeks,
+                "met": qualifying_weeks >= TARGET_WEEKS,
+                "gate": None
+                if qualifying_weeks >= TARGET_WEEKS
+                else (f"Qualifying weeks {qualifying_weeks}/{TARGET_WEEKS}"),
+            },
+        ],
+        "vision_thresholds": [],
+        "evidence": [],
+        "advisory": {
+            "schema": advisory.get("schema"),
+            "state": advisory.get("state"),
+            "samples": advisory.get("samples")
+            if isinstance(advisory.get("samples"), dict)
+            else {},
+            "thresholds": advisory.get("thresholds")
+            if isinstance(advisory.get("thresholds"), list)
+            else [],
+            "revision_baseline": advisory.get("revision_baseline"),
+            "evidence_count": len(advisory.get("evidence") or []),
+            "rule": "Legacy JSONL and attestations are display-only and never affect value truth.",
+        },
+    }
+
+
+@register("personal_value_truth", timeout=90)
+class PersonalValueCollector(DataCollector):
+    """Run the root meter against the runtime Ledger without writing either."""
+
+    name = "personal_value_truth"
+    timeout = 90
+
+    def __init__(
+        self,
+        *,
+        code_root: Path | None = None,
+        workspace_root: Path | None = None,
+        principal_id: str | None = None,
+        expected_revision: str | None = None,
+        **collector_options: object,
+    ):
+        super().__init__(**collector_options)
+        configured_code = os.environ.get("PANORAMA_CODE_ROOT")
+        self.code_root = code_root or (
+            Path(configured_code).resolve() if configured_code else None
+        )
+        self.workspace_root = (
+            workspace_root
+            or Path(
+                os.environ.get("PANORAMA_ROOT", "/Users/xiamingxing/Workspace")
+            ).resolve()
+        )
+        self.principal_id = principal_id or os.environ.get(
+            "OMO_PRINCIPAL_ID", "principal:xiamingxing"
+        )
+        self.expected_revision = expected_revision or os.environ.get(
+            "PANORAMA_CODE_REVISION"
+        )
+
+    def _failed(self, reason: str) -> dict:
+        return unavailable_projection(reason)
+
+    def collect(self) -> dict:
+        if self.code_root is None or not self.code_root.is_dir():
+            return self._failed("managed_code_root_unavailable")
+        meter = self.code_root / "bin/bc-os/north_star_meter_v2.py"
+        omo_project = self.code_root / "projects/omo"
+        ledger = self.workspace_root / "runtime/omo/event-ledger.sqlite3"
+        if not meter.is_file() or not omo_project.is_dir():
+            return self._failed("meter_or_omo_runtime_unavailable")
+        if (
+            not isinstance(self.expected_revision, str)
+            or _OID_RE.fullmatch(self.expected_revision) is None
+        ):
+            return self._failed("managed_code_revision_unbound")
+        if not ledger.is_file():
+            return self._failed("event_ledger_missing")
+
+        try:
+            revision_run = subprocess.run(
+                ["git", "-C", str(self.code_root), "rev-parse", "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            revision = revision_run.stdout.strip()
+            if revision_run.returncode != 0 or _OID_RE.fullmatch(revision) is None:
+                return self._failed("managed_code_revision_unavailable")
+            if revision != self.expected_revision:
+                return self._failed("managed_code_revision_mismatch")
+            cleanliness_run = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(self.code_root),
+                    "status",
+                    "--porcelain",
+                    "--untracked-files=no",
+                    "--",
+                    "bin/bc-os/north_star_meter_v2.py",
+                    "projects/omo",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if cleanliness_run.returncode != 0:
+                return self._failed("managed_code_cleanliness_unavailable")
+            if cleanliness_run.stdout.strip():
+                return self._failed("managed_code_root_dirty")
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(meter),
+                    "--principal-id",
+                    self.principal_id,
+                    "--db-path",
+                    str(ledger),
+                    "--json",
+                ],
+                cwd=self.code_root,
+                capture_output=True,
+                text=True,
+                timeout=80,
+                check=False,
+                env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            )
+            truth = json.loads(completed.stdout)
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError, TypeError):
+            return self._failed("ledger_value_truth_observation_failed")
+
+        if not isinstance(truth, dict) or truth.get("schema") != VALUE_TRUTH_SCHEMA:
+            return self._failed("ledger_value_truth_schema_invalid")
+        return {
+            "schema": "zhixing-personal-value-projection/v1",
+            "available": True,
+            "code_revision": revision,
+            "expected_code_revision": self.expected_revision,
+            "principal_ref": truth.get("principal_ref"),
+            "value_truth": truth,
+            "panel_value": project_panel_value(truth),
+        }
+
+    def validate(self, data: dict) -> bool:
+        return (
+            isinstance(data, dict)
+            and data.get("schema") == "zhixing-personal-value-projection/v1"
+            and isinstance(data.get("value_truth"), dict)
+            and isinstance(data.get("panel_value"), dict)
+        )
