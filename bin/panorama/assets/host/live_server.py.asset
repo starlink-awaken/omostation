@@ -47,7 +47,7 @@ GET_READ_OPERATIONS = frozenset({
     'agent/panorama', 'panorama', 'agent/capabilities', 'capabilities',
     'agent/next-actions', 'next-actions', 'agent/entity', 'agent/loops', 'loops',
     'agent/quickstart', 'quickstart', 'agent/readiness', 'readiness',
-    'agent/preflight', 'preflight', 'copilot/presets', 'proposals/list',
+    'copilot/presets', 'proposals/list',
     'health/radar', 'evolution/timeline', 'evolution/diff', 'bos/services',
     'tokenomics/stats', 'swarm/topology', 'loops/telemetry', 'loops/dag',
     'topology/overview', 'topology/graph', 'topology/projects',
@@ -2723,8 +2723,6 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._handle_harness_runs()
         elif route.path == "/api/v1/resident":
             self._handle_resident_status()
-        elif route.path == "/api/v1/compute/live":
-            self._handle_compute_live()
         elif route.path.startswith('/api/v1/'):
             operation = route.path[len('/api/v1/'):]
             if operation not in GET_READ_OPERATIONS:

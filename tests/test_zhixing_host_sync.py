@@ -112,6 +112,9 @@ def _bind_running_agent(tool, monkeypatch, dash: Path, host: Path, *, command: s
     plist.write_bytes(plistlib.dumps(payload))
     monkeypatch.setattr(tool, "LAUNCH_AGENT_PLIST", plist)
     monkeypatch.setattr(tool, "HOST_DIR", host)
+    monkeypatch.setattr(tool, "DASHBOARD_DIR", dash)
+    monkeypatch.setattr(tool, "CURRENT_LINK", dash / "current")
+    monkeypatch.setattr(tool, "RELEASES_DIR", dash / "releases")
 
     class Result:
         def __init__(self, returncode: int, stdout: str):
@@ -296,10 +299,15 @@ def test_all_public_functions_are_read_only_or_blocked(tmp_path, monkeypatch):
     assert tool.status(dashboard_dir=dash, host_dir=host)["ok"] is True
     assert tool.plan(["live_server.py"])["ok"] is True
     assert tool.check() == 0
-    for operation in ("capture", "publish", "restore"):
-        result = getattr(tool, operation)()
-        assert result["state"] == "BLOCKED"
-        assert result["reason"] == tool.BLOCKED_REASON
+
+    blocked = tool.capture()
+    assert blocked["state"] == "BLOCKED"
+    assert blocked["reason"] == tool.BLOCKED_REASON
+
+    for result in (tool.publish(["live_server.py"]), tool.restore()):
+        assert result["ok"] is False
+        assert result["reason"] in ("plist_not_migrated", "no_previous_version")
+
     after = {
         path.relative_to(tmp_path): _sha(path)
         for path in tmp_path.rglob("*") if path.is_file()
@@ -315,11 +323,16 @@ def test_cli_write_commands_are_blocked_and_check_remains_read_only(tmp_path, mo
     _bind_running_agent(tool, monkeypatch, dash, host)
     before = {path.relative_to(tmp_path): _sha(path) for path in tmp_path.rglob("*") if path.is_file()}
 
-    for command in ("apply", "capture", "publish", "restore"):
+    for command in ("apply", "capture"):
         assert tool.main([command, "--target-root", str(dash)]) == 2
         out = capsys.readouterr().out
         assert '"state": "BLOCKED"' in out
         assert '"operation": "' + command + '"' in out
+    for command, extra in (("publish", ["--file", "live_server.py"]), ("restore", [])):
+        assert tool.main([command, "--json", *extra]) == 1
+        out = capsys.readouterr().out
+        assert '"ok": false' in out
+        assert '"reason":' in out
     assert tool.main(["check", "--json"]) == 0
     assert '"write_performed": false' in capsys.readouterr().out
     assert "--target-root" not in tool.__doc__

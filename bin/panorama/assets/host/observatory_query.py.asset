@@ -85,6 +85,8 @@ EXECUTION_OPERATIONS = frozenset({
     'health/execute-heal',
     'bos/invoke',
     'loops/step',
+    'agent/preflight',
+    'preflight',
 })
 READ_OPERATIONS = frozenset(OPERATIONS) - EXECUTION_OPERATIONS
 SOURCE_KEYS = {'path', 'sha256', 'hash_scope', 'sha256_scope', 'digest_basis', 'line',
