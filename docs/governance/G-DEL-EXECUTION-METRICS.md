@@ -82,7 +82,7 @@ python3 bin/delivery/measure_physical.py --auto-default-lan --start \
 - G-DEL.1 在 2 机下 **BLOCKED**（min=4）。
 证据：`.omo/_knowledge/audits/2026-07-19-g-del3-*-large-n.json`。
 
-有线复测清单：[`docs/G-DEL-3-WIRED-REMEASURE.md`](G-DEL-3-WIRED-REMEASURE.md)  
+有线复测清单：[`docs/G-DEL-3-WIRED-REMEASURE.md`](../G-DEL-3-WIRED-REMEASURE.md)  
 链路探测：`python3 bin/delivery/network_path.py 192.168.31.210`（写入 measure_physical env_evidence）。
 
-看板：[`docs/G-DEL-PHASE2-BOARD.md`](G-DEL-PHASE2-BOARD.md) · 2b/5b 运维：[`docs/G-DEL-2b5b-OPS.md`](G-DEL-2b5b-OPS.md)
+看板：[`docs/G-DEL-PHASE2-BOARD.md`](../G-DEL-PHASE2-BOARD.md) · 2b/5b 运维：[`docs/G-DEL-2b5b-OPS.md`](../G-DEL-2b5b-OPS.md)

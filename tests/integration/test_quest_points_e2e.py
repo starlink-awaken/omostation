@@ -8,6 +8,17 @@ Validates the full E2E loop:
 
 from __future__ import annotations
 
+# 2026-10-12: 此测试连真 family-hub DB + 真 ecos 事件总线, 是手动 E2E;
+# 曾在全量跑里 poll 死 socket 挂死 22h (0% CPU)。默认跳过, 显式 RUN_E2E=1 才跑。
+import os
+
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    os.environ.get("RUN_E2E") != "1",
+    reason="手动 E2E (真 DB + 真事件总线): RUN_E2E=1 uv run pytest tests/integration/test_quest_points_e2e.py",
+)
+
 import sqlite3
 import sys
 from pathlib import Path
@@ -22,23 +33,18 @@ sys.path.insert(0, str(WORKSPACE_ROOT / "projects" / "ecos" / "src"))
 sys.path.insert(0, str(WORKSPACE_ROOT / "projects" / "omo" / "src"))
 sys.path.insert(0, str(WORKSPACE_ROOT / "projects" / "bus-foundation" / "src"))
 
-# 强行清除已加载的 ecos 缓存以防 sys.modules 错配
-import sys
-
-for mod in list(sys.modules.keys()):
-    if mod == "ecos" or mod.startswith("ecos."):
-        del sys.modules[mod]
-
-from cockpit.dashboard_server import app
-from fastapi.testclient import TestClient
-
-
 def test_quest_e2e_flow():
+    # 强行清除已加载的 ecos 缓存以防 sys.modules 错配
+    for mod in list(sys.modules.keys()):
+        if mod == "ecos" or mod.startswith("ecos."):
+            del sys.modules[mod]
+
+    from cockpit.dashboard_server import app
+    from fastapi.testclient import TestClient
+
     db_path = WORKSPACE_ROOT / "projects" / "ecos" / "projects" / "family-hub" / "family_hub.db"
     if not db_path.exists():
         pytest.skip(f"family-hub DB not found: {db_path}")
-    from cockpit.dashboard_server import app
-    from fastapi.testclient import TestClient
     client = TestClient(app)
 
     # 1. 查询现有任务与积分，记录初始值

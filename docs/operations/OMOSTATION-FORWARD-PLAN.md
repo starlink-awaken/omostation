@@ -11,7 +11,7 @@ superseded-by: docs/OMOSTATION-FORWARD-PLAN-v2.md
 
 # OMOSTATION-FORWARD-PLAN — 后 3 年路线图 (2026H2 - 2029H1) [SUPERSEDED]
 
-> **Status**: SUPERSEDED by [v2](OMOSTATION-FORWARD-PLAN-v2.md) (2026-09-20)
+> **Status**: SUPERSEDED by [v2](../OMOSTATION-FORWARD-PLAN-v2.md) (2026-09-20)
 > v1 完成度: §A 短期 3/3 (A1/A2/A3), §B 中期 4/4 (B1.1/1.2/1.3/B2), §C 3/4 (C2.2 done, C3 done, C1 持续监测)
 > 本文档保留作历史快照; 新方向看 v2.
 
@@ -36,7 +36,7 @@ grep -E "  - id: legacy" .omo/_truth/registry/document-governance.yaml
 # legacy-omo-knowledge-frontmatter (rule: missing_frontmatter, surface: omo-knowledge)
 # legacy-omo-truth-frontmatter (rule: missing_frontmatter, surface: omo-truth-docs)
 # legacy-omo-standards-frontmatter (rule: missing_frontmatter, surface: omo-standards)
-# (concurrent-plans-orphan-docs removed 2026-10-06 with orphan_document rule retirement)
+# concurrent-plans-orphan-docs (rule: orphan_document, surface: docs-discoverable)
 ```
 
 **完成判据**:

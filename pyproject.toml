@@ -14,6 +14,23 @@ requires-python = ">=3.13"
 # [project] 最小表: 消 uv "No requires-python" warning (CI test_agent_workflow
 # doctor 断言被该 warning 击穿, #1640/#1633/#1647 三轮实证)。不定义 dependencies,
 # 各子模块各自 pyproject 不受影响。
+[dependency-groups]
+# 2026-10-10: 根仓 tests/ 的真实运行依赖(此前靠手工 uv pip install, 环境重建即崩——
+# pytest 基线 6 个 collection error 的根因)。与 [project] 刻意零依赖的决策正交:
+# dependency-groups 只影响 uv sync --group test 的开发环境, 不进发布依赖。
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "pyyaml",
+    "rich",
+    "pydantic",
+    "httpx",
+    "fastapi",
+    "fastmcp",
+    "openai",  # tests/integration mock openai.OpenAI 需模块可导入
+    "pytest-timeout",  # 挂死兜底: 2026-10-12 quest_points e2e 永挂 22h 的教训
+]
+
 [tool.ruff]
 exclude = ["bin/_archive", "projects", "tools"]
 target-version = "py313"

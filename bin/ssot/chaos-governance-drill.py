@@ -99,7 +99,7 @@ facts:
             "drill_name": "Corrupted & Stale Fact Mutation",
             "category": "Facts SSOT",
             "passed": success,
-            "detail": "Fact validator successfully blocked corrupted & 60-day stale mutations",
+            "detail": "Fact validator blocked corrupted & stale mutations" if success else f"drill subprocess rc={rc}, tail={out[-200:]!r}",
         }
 
 
@@ -154,7 +154,7 @@ print(vram_ok and compaction_ok and thermal_ok)
         "drill_name": "Compute Fabric VRAM Shock & Thermal Chaos",
         "category": "Compute Fabric",
         "passed": success,
-        "detail": "VRAM compaction triggered (>40% ratio) and thermal throttle penalized correctly",
+        "detail": "VRAM compaction & thermal penalty verified" if success else f"drill subprocess rc={rc}, tail={out[-200:]!r}",
     }
 
 
@@ -194,7 +194,7 @@ print(intent_ok and shadow_ok and cartridge_ok)
         "drill_name": "Intent Spec, Shadow Challenger & Broken Cartridge Defense",
         "category": "Cognitive Mesh",
         "passed": success,
-        "detail": "Intent grounded correctly, Shadow red-team auto-patched flaws, and broken cartridge blocked",
+        "detail": "Intent grounding / Shadow patch / cartridge block verified" if success else f"drill subprocess rc={rc}, tail={out[-200:]!r}",
     }
 
 
@@ -245,7 +245,7 @@ print(f"RESULT:{tampered_blocked and distill_ok and roam_ok}")
         "drill_name": "Merkle Ledger, Memory Distillation & Edge Compute Roaming",
         "category": "Next-Gen OS",
         "passed": success,
-        "detail": "Merkle tamper blocked: True, Distillation contradiction resolved: True, Edge compute roamed: True",
+        "detail": "Merkle tamper blocked, Distillation resolved, Edge roamed" if success else f"drill subprocess rc={rc}, tail={out[-200:]!r}",
     }
 
 

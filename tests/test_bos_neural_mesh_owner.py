@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # 根仓 lib/
 
 from lib.bos_neural_mesh_owner import inspect_bos_owner
 

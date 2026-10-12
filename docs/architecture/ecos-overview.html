@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>eCOS v6 架构全景 — 架构块图</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:0 0 80px;background:#f8fafc;color:#0f172a;
+ font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+ line-height:1.65}
+header{background:#0f172a;color:#fff;padding:36px 40px}
+header h1{margin:0 0 8px;font-size:24px;font-weight:650}
+header .meta{font-size:12px;opacity:.72}
+main{max-width:1180px;margin:0 auto;padding:28px 24px}
+nav{position:sticky;top:0;z-index:10;background:#f8fafc;padding:12px 0;
+ border-bottom:1px solid #e2e8f0;margin-bottom:24px}
+nav a{color:#2563eb;text-decoration:none;font-size:13px;margin-right:16px;white-space:nowrap}
+nav a:hover{text-decoration:underline}
+section{background:#fff;border:1px solid #e2e8f0;border-radius:12px;
+ padding:22px 24px;margin-bottom:24px}
+section h2{margin:0 0 4px;font-size:18px;font-weight:650}
+section .hint{color:#64748b;font-size:12px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.diagram{overflow:auto;border:1px solid #eef2f7;border-radius:10px;background:#fff;padding:10px}
+.takeaways{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px}
+.takeaways h3{margin:0 0 10px;font-size:13px;font-weight:700;color:#334155;letter-spacing:.04em}
+.takeaways ul{margin:0;padding-left:18px}
+.takeaways li{font-size:13px;margin-bottom:8px;color:#475569}
+.warn{background:#fffbeb;border-left:3px solid #f59e0b;padding:12px 16px;
+ border-radius:6px;margin-bottom:24px;font-size:13px}
+.warn code{background:#fef3c7;padding:1px 5px;border-radius:4px}
+footer{max-width:1180px;margin:0 auto;padding:0 24px;color:#64748b;font-size:12px}
+table.src{border-collapse:collapse;font-size:12px;margin-top:10px}
+table.src td,table.src th{border:1px solid #e2e8f0;padding:5px 10px;text-align:left}
+table.src th{background:#f1f5f9}
+</style></head><body>
+<header>
+  <h1>eCOS v6 架构全景 · 架构块图</h1>
+  <div class="meta">生成于 2026-10-10 15:56:46 · 由 <code>bin/ssot/gen-architecture-diagrams.py</code> 生成,请勿手改</div>
+</header>
+<main>
+<nav><a href="#layers">全景分层</a><a href="#bos">BOS 服务域</a><a href="#entries">入口收敛</a><a href="#flows">核心流程</a><a href="#fabric">外部接入织物</a><a href="#spine">脊柱价值管道</a><a href="#governance">治理面</a></nav>
+<div class="warn"><strong>输入数据告警</strong><ul style="margin:6px 0 0;padding-left:18px"><li>project-registry.yaml 中 `gbrain` 缺 layer 字段;已按外部证据补为 L2(来源: docs/PANORAMA.md §二 项目全景表 + docs/generated/project-layer-index.md (L2 引擎面 knowledge{gbrain,kairon}))</li><li>project-registry.yaml 中 `kairon` 缺 layer 字段;已按外部证据补为 L2(来源: docs/PANORAMA.md §二 项目全景表 + docs/generated/project-layer-index.md (L2 引擎面 knowledge{gbrain,kairon}))</li></ul></div>
+<section id="ssot">
+  <h2>数据来源</h2>
+  <div class="hint">本页所有数字均可追溯到下列机器可读事实源</div>
+  <table class="src">
+    <tr><th>文件</th><th>角色</th><th>规模</th></tr>
+    <tr><td><code>docs/project-registry.yaml</code></td><td>项目元数据 SSOT(layer/stack/role/port)</td>
+        <td>19 个条目</td></tr>
+    <tr><td><code>projects/agora/etc/bos-services.yaml</code></td><td>BOS 服务地图 SSOT</td>
+        <td>325 个服务 / 23 个域</td></tr>
+    <tr><td><code>.omo/_truth/registry/external-connection-fabric.yaml</code></td>
+        <td>外部接入契约</td><td>9 个 truth_owner</td></tr>
+    <tr><td><code>ARCHITECTURE.md</code> / <code>LAYER-INDEX.md</code></td>
+        <td>稳定架构契约(层模型/入口/流程)</td><td>人工维护</td></tr>
+  </table>
+  <table class="src" style="margin-top:18px">
+    <tr><th>层</th><th>定义</th><th>子模块数</th><th>成员</th></tr>
+    <tr><td><code>L0</code></td><td>协议层 (ecos)</td><td>1</td><td>ecos</td></tr><tr><td><code>L1</code></td><td>运行时 (runtime / omlxc)</td><td>2</td><td>omlxc, runtime</td></tr><tr><td><code>L2</code></td><td>引擎面 (knowledge{gbrain,kairon} / omo / metaos)</td><td>5</td><td>family-hub, gbrain, kairon, metaos, omo</td></tr><tr><td><code>L3</code></td><td>入口层 (cockpit 控制面; cockpit-ui 表现面, layer=L3)</td><td>2</td><td>cockpit, cockpit-ui</td></tr><tr><td><code>L4</code></td><td>自我层 (l4-kernel)</td><td>1</td><td>l4-kernel</td></tr><tr><td><code>I0</code></td><td>织层 (agora)</td><td>1</td><td>agora</td></tr><tr><td><code>M0</code></td><td>横切框架 (model-driven)</td><td>1</td><td>model-driven</td></tr><tr><td><code>X</code></td><td>横切扩展 (bus-foundation / observability / family-hub; aetherforge/c2g/omo-debt 已内包 runtime+omo, ADR-0412+T6-01+Y1Q4-T6-01)</td><td>3</td><td>aetherforge, bus-foundation, observability</td></tr>
+  </table>
+</section>
+
+<section id="layers">
+  <h2>全景分层</h2>
+  <div class="hint">回答:子模块在各层的分布与依赖方向</div>
+  <div class="grid">
+    <div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 654" width="100%" role="img" aria-label="全景分层图">
+<rect width="1240" height="654" fill="#ffffff"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<text x="24" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#0f172a" text-anchor="start" font-weight="600">eCOS v6 全景分层 — 5+4+1+1</text>
+<rect x="20" y="54" width="1200" height="96" rx="12" fill="#0b3d5c" stroke="#0b3d5c" stroke-width="1.2" opacity="0.09"/>
+<text x="36" y="88" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#0b3d5c" text-anchor="start" font-weight="700">L0</text>
+<text x="36" y="108" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">协议层 (ecos)</text>
+<rect x="150" y="74" width="190" height="54" rx="8" fill="#ffffff" stroke="#0b3d5c" stroke-width="1.2" opacity="1.0"/>
+<text x="162" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">ecos</text>
+<text x="162" y="113" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">Python (uv, pytest)</text>
+<rect x="20" y="166" width="1200" height="96" rx="12" fill="#14507a" stroke="#14507a" stroke-width="1.2" opacity="0.09"/>
+<text x="36" y="200" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#14507a" text-anchor="start" font-weight="700">L1</text>
+<text x="36" y="220" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">运行时 (runtime / o</text>
+<rect x="150" y="186" width="190" height="54" rx="8" fill="#ffffff" stroke="#14507a" stroke-width="1.2" opacity="1.0"/>
+<text x="162" y="208" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">omlxc</text>
+<text x="162" y="225" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">Python (uv, pytest, Textu…</text>
+<rect x="356" y="186" width="190" height="54" rx="8" fill="#ffffff" stroke="#14507a" stroke-width="1.2" opacity="1.0"/>
+<text x="368" y="208" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">runtime</text>
+<text x="368" y="225" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">Python (uv, pytest)</text>
+<rect x="20" y="278" width="1200" height="96" rx="12" fill="#1f6f9c" stroke="#1f6f9c" stroke-width="1.2" opacity="0.09"/>
+<text x="36" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#1f6f9c" text-anchor="start" font-weight="700">L2</text>
+<text x="36" y="332" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">引擎面 (knowledge{g</text>
+<rect x="150" y="298" width="190" height="54" rx="8" fill="#ffffff" stroke="#1f6f9c" stroke-width="1.2" opacity="1.0"/>
+<text x="162" y="320" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">family-hub</text>
+<text x="162" y="337" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">Python (FastMCP)</text>
+<rect x="356" y="298" width="190" height="54" rx="8" fill="#ffffff" stroke="#1f6f9c" stroke-width="1.2" opacity="1.0"/>
+<text x="368" y="320" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">gbrain</text>
+<text x="368" y="337" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">—</text>
+<rect x="562" y="298" width="190" height="54" rx="8" fill="#ffffff" stroke="#1f6f9c" stroke-width="1.2" opacity="1.0"/>
+<text x="574" y="320" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">kairon</text>
+<text x="574" y="337" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">—</text>
+<rect x="768" y="298" width="190" height="54" rx="8" fill="#ffffff" stroke="#1f6f9c" stroke-width="1.2" opacity="1.0"/>
+<text x="780" y="320" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">metaos</text>
+<text x="780" y="337" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">Python (uv, pytest)</text>
+<rect x="974" y="298" width="190" height="54" rx="8" fill="#ffffff" stroke="#1f6f9c" stroke-width="1.2" opacity="1.0"/>
+<text x="986" y="320" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">omo</text>
+<text x="986" y="337" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">Python (uv, pytest)</text>
+<rect x="20" y="390" width="1200" height="96" rx="12" fill="#2e93bd" stroke="#2e93bd" stroke-width="1.2" opacity="0.09"/>
+<text x="36" y="424" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#2e93bd" text-anchor="start" font-weight="700">L3</text>
+<text x="36" y="444" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">入口层 (cockpit 控制面</text>
+<rect x="150" y="410" width="190" height="54" rx="8" fill="#ffffff" stroke="#2e93bd" stroke-width="1.2" opacity="1.0"/>
+<text x="162" y="432" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">cockpit</text>
+<text x="162" y="449" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">Python (uv, pytest)</text>
+<rect x="356" y="410" width="190" height="54" rx="8" fill="#ffffff" stroke="#2e93bd" stroke-width="1.2" opacity="1.0"/>
+<text x="368" y="432" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">cockpit-ui</text>
+<text x="368" y="449" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">TypeScript (Vite, React)</text>
+<rect x="20" y="502" width="1200" height="96" rx="12" fill="#45b8d6" stroke="#45b8d6" stroke-width="1.2" opacity="0.09"/>
+<text x="36" y="536" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#45b8d6" text-anchor="start" font-weight="700">L4</text>
+<text x="36" y="556" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">自我层 (l4-kernel)</text>
+<rect x="150" y="522" width="190" height="54" rx="8" fill="#ffffff" stroke="#45b8d6" stroke-width="1.2" opacity="1.0"/>
+<text x="162" y="544" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="600">l4-kernel</text>
+<text x="162" y="561" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">Python (uv, pytest)</text>
+<line x1="271" y1="150" x2="322" y2="162" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arrow)" stroke-dasharray="4 3"/>
+<line x1="374" y1="262" x2="631" y2="274" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arrow)" stroke-dasharray="4 3"/>
+<line x1="683" y1="374" x2="322" y2="386" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arrow)" stroke-dasharray="4 3"/>
+<line x1="374" y1="486" x2="219" y2="498" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arrow)" stroke-dasharray="4 3"/>
+<text x="24" y="638" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">依赖方向:上层依赖下层;外部资源沿同一方向进入</text>
+</svg></div>
+    <div class="takeaways"><h3>读图要点</h3><ul><li>已登记子模块 16 个,分布于 5 个数字层 与 3 个横切层。</li><li>依赖方向自上而下:入口面 → 路由网格 → 引擎/运行时/协议 → 受治理状态与证据。</li><li>⚠️ 以下子模块在 project-registry.yaml 中缺 layer 字段,已按外部 SSOT 证据补齐:gbrain, kairon。</li></ul></div>
+  </div>
+</section>
+<section id="bos">
+  <h2>BOS 服务域</h2>
+  <div class="hint">回答:服务域如何跨层分布</div>
+  <div class="grid">
+    <div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1134 476" width="100%" role="img" aria-label="BOS 服务域图">
+<rect width="1134" height="476" fill="#ffffff"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<text x="28" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#0f172a" text-anchor="start" font-weight="600">BOS 服务域分布</text>
+<text x="28" y="52" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b" text-anchor="start" font-weight="400">契约层声明 5 域,服务地图实际登记见 projects/agora/etc/bos-services.yaml</text>
+<rect x="28" y="96" width="168" height="66" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<rect x="28" y="157" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="28" y="157" width="168" height="5" rx="2.5" fill="#2563eb"/>
+<text x="38" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">governance</text>
+<text x="38" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">65 服务</text>
+<text x="186" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤29 包</text>
+<text x="186" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#2563eb" text-anchor="end" font-weight="400">契约域</text>
+<rect x="210" y="96" width="168" height="66" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<rect x="210" y="157" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="210" y="157" width="129" height="5" rx="2.5" fill="#2563eb"/>
+<text x="220" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">memory</text>
+<text x="220" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">50 服务</text>
+<text x="368" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤24 包</text>
+<text x="368" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#2563eb" text-anchor="end" font-weight="400">契约域</text>
+<rect x="392" y="96" width="168" height="66" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<rect x="392" y="157" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="392" y="157" width="118" height="5" rx="2.5" fill="#2563eb"/>
+<text x="402" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">capability</text>
+<text x="402" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">46 服务</text>
+<text x="550" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤26 包</text>
+<text x="550" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#2563eb" text-anchor="end" font-weight="400">契约域</text>
+<rect x="574" y="96" width="168" height="66" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<rect x="574" y="157" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="574" y="157" width="72" height="5" rx="2.5" fill="#2563eb"/>
+<text x="584" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">analysis</text>
+<text x="584" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">28 服务</text>
+<text x="732" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤7 包</text>
+<text x="732" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#2563eb" text-anchor="end" font-weight="400">契约域</text>
+<rect x="756" y="96" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="756" y="157" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="756" y="157" width="51" height="5" rx="2.5" fill="#2563eb"/>
+<text x="766" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">agent-cell</text>
+<text x="766" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">20 服务</text>
+<text x="914" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤8 包</text>
+<rect x="938" y="96" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="938" y="157" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="938" y="157" width="41" height="5" rx="2.5" fill="#2563eb"/>
+<text x="948" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">compute</text>
+<text x="948" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">16 服务</text>
+<text x="1096" y="135" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤2 包</text>
+<rect x="28" y="176" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="28" y="237" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="28" y="237" width="38" height="5" rx="2.5" fill="#2563eb"/>
+<text x="38" y="198" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">mof</text>
+<text x="38" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">15 服务</text>
+<text x="186" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<rect x="210" y="176" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="210" y="237" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="210" y="237" width="36" height="5" rx="2.5" fill="#2563eb"/>
+<text x="220" y="198" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">system</text>
+<text x="220" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">14 服务</text>
+<text x="368" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤9 包</text>
+<rect x="392" y="176" width="168" height="66" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<rect x="392" y="237" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="392" y="237" width="28" height="5" rx="2.5" fill="#2563eb"/>
+<text x="402" y="198" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">persona</text>
+<text x="402" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">11 服务</text>
+<text x="550" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤6 包</text>
+<text x="550" y="198" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#2563eb" text-anchor="end" font-weight="400">契约域</text>
+<rect x="574" y="176" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="574" y="237" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="574" y="237" width="23" height="5" rx="2.5" fill="#2563eb"/>
+<text x="584" y="198" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">cockpit</text>
+<text x="584" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">9 服务</text>
+<text x="732" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤3 包</text>
+<rect x="756" y="176" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="756" y="237" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="756" y="237" width="23" height="5" rx="2.5" fill="#2563eb"/>
+<text x="766" y="198" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">harness</text>
+<text x="766" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">9 服务</text>
+<text x="914" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤6 包</text>
+<rect x="938" y="176" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="938" y="237" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="938" y="237" width="20" height="5" rx="2.5" fill="#2563eb"/>
+<text x="948" y="198" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">meta</text>
+<text x="948" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">8 服务</text>
+<text x="1096" y="215" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<rect x="28" y="256" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="28" y="317" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="28" y="317" width="20" height="5" rx="2.5" fill="#2563eb"/>
+<text x="38" y="278" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">resident</text>
+<text x="38" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">8 服务</text>
+<text x="186" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<rect x="210" y="256" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="210" y="317" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="210" y="317" width="15" height="5" rx="2.5" fill="#2563eb"/>
+<text x="220" y="278" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">agora</text>
+<text x="220" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">6 服务</text>
+<text x="368" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<rect x="392" y="256" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="392" y="317" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="392" y="317" width="10" height="5" rx="2.5" fill="#2563eb"/>
+<text x="402" y="278" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">documents</text>
+<text x="402" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">4 服务</text>
+<text x="550" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤2 包</text>
+<rect x="574" y="256" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="574" y="317" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="574" y="317" width="10" height="5" rx="2.5" fill="#2563eb"/>
+<text x="584" y="278" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">omo</text>
+<text x="584" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">4 服务</text>
+<text x="732" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤2 包</text>
+<rect x="756" y="256" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="756" y="317" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="756" y="317" width="7" height="5" rx="2.5" fill="#2563eb"/>
+<text x="766" y="278" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">bcos</text>
+<text x="766" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">3 服务</text>
+<text x="914" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤3 包</text>
+<rect x="938" y="256" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="938" y="317" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="938" y="317" width="7" height="5" rx="2.5" fill="#2563eb"/>
+<text x="948" y="278" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">perception</text>
+<text x="948" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">3 服务</text>
+<text x="1096" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤3 包</text>
+<rect x="28" y="336" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="28" y="397" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="28" y="397" width="5" height="5" rx="2.5" fill="#2563eb"/>
+<text x="38" y="358" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">ecos</text>
+<text x="38" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">2 服务</text>
+<text x="186" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<rect x="210" y="336" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="210" y="397" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="210" y="397" width="3" height="5" rx="2.5" fill="#2563eb"/>
+<text x="220" y="358" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">fabric</text>
+<text x="220" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">1 服务</text>
+<text x="368" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<rect x="392" y="336" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="392" y="397" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="392" y="397" width="3" height="5" rx="2.5" fill="#2563eb"/>
+<text x="402" y="358" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">forge</text>
+<text x="402" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">1 服务</text>
+<text x="550" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<rect x="574" y="336" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="574" y="397" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="574" y="397" width="3" height="5" rx="2.5" fill="#2563eb"/>
+<text x="584" y="358" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">runtime</text>
+<text x="584" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">1 服务</text>
+<text x="732" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<rect x="756" y="336" width="168" height="66" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<rect x="756" y="397" width="168" height="5" rx="2.5" fill="#e2e8f0"/>
+<rect x="756" y="397" width="3" height="5" rx="2.5" fill="#2563eb"/>
+<text x="766" y="358" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">swarm</text>
+<text x="766" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">1 服务</text>
+<text x="914" y="375" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="end" font-weight="400">≤1 包</text>
+<text x="28" y="454" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b" text-anchor="start" font-weight="400">蓝框 = ARCHITECTURE.md §4 声明的契约域;灰框 = 服务地图中出现的实现域</text>
+</svg></div>
+    <div class="takeaways"><h3>读图要点</h3><ul><li>服务地图登记 325 个服务,分布在 23 个域。</li><li>契约层(`ARCHITECTURE.md` §4)声明 5 个域;服务地图另有 18 个未在契约中列出的域。</li><li>两种解释:(a) 契约层为稳定抽象、实现层为细化,属合理落差;(b) 域扩张未经契约同步,属治理漂移。需治理方判定。</li><li>服务量 Top5:governance 65、memory 50、capability 46、analysis 28、agent-cell 20。</li></ul></div>
+  </div>
+</section>
+<section id="entries">
+  <h2>入口收敛</h2>
+  <div class="hint">回答:入口是否收敛、下游链路是什么</div>
+  <div class="grid">
+    <div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 620" width="100%" role="img" aria-label="入口收敛图">
+<rect width="920" height="620" fill="#ffffff"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<text x="28" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#0f172a" text-anchor="start" font-weight="600">入口收敛 — 4 类受众面与下游链路</text>
+<rect x="28" y="68" width="210" height="88" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2" opacity="1.0"/>
+<text x="44" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#1e3a8a" text-anchor="start" font-weight="700">人类操作员</text>
+<text x="44" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#1d4ed8" text-anchor="start" font-weight="400">cockpit</text>
+<text x="44" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">CLI + Web 统一入口</text>
+<rect x="250" y="90" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="311" y="116.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">L3 控制面</text>
+<rect x="384" y="90" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="445" y="116.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">cockpit-ui …</text>
+<rect x="518" y="90" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="579" y="116.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">治理全景控制舱</text>
+<line x1="238" y1="112" x2="242" y2="112" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="28" y="196" width="210" height="88" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2" opacity="1.0"/>
+<text x="44" y="224" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#1e3a8a" text-anchor="start" font-weight="700">AI Agent</text>
+<text x="44" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#1d4ed8" text-anchor="start" font-weight="400">agora</text>
+<text x="44" y="266" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">MCP via bos://</text>
+<rect x="250" y="218" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="311" y="244.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">I0 路由网格</text>
+<rect x="384" y="218" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="445" y="244.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">325 服务注册面</text>
+<rect x="518" y="218" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="579" y="244.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">凭证无关回执</text>
+<line x1="238" y1="240" x2="242" y2="240" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="28" y="324" width="210" height="88" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2" opacity="1.0"/>
+<text x="44" y="352" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#1e3a8a" text-anchor="start" font-weight="700">治理自动化</text>
+<text x="44" y="374" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#1d4ed8" text-anchor="start" font-weight="400">omo</text>
+<text x="44" y="394" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">CLI/MCP broker</text>
+<rect x="250" y="346" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="311" y="372.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">L2 治理中枢</text>
+<rect x="384" y="346" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="445" y="372.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">审计化状态变更</text>
+<rect x="518" y="346" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="579" y="372.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">c2g 入口</text>
+<line x1="238" y1="368" x2="242" y2="368" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="28" y="452" width="210" height="88" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2" opacity="1.0"/>
+<text x="44" y="480" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#1e3a8a" text-anchor="start" font-weight="700">Web/API 消费方</text>
+<text x="44" y="502" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#1d4ed8" text-anchor="start" font-weight="400">cockpit</text>
+<text x="44" y="522" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">挂载 HTTP 面</text>
+<rect x="250" y="474" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="311" y="500.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">L3 公共入口</text>
+<rect x="384" y="474" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="445" y="500.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">事件广播</text>
+<rect x="518" y="474" width="122" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" opacity="1.0"/>
+<text x="579" y="500.0" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">知识写入通道</text>
+<line x1="238" y1="496" x2="242" y2="496" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+</svg></div>
+    <div class="takeaways"><h3>读图要点</h3><ul><li>四类受众面对应四个声明入口,人类与 Web 消费方均收敛到 cockpit。</li><li>Agent 走 agora 的 `bos://` 网格,返回凭证无关回执。</li><li>治理自动化走 omo broker,所有状态变更留审计。</li><li>ARCHITECTURE.md §3 明确:新增顶层入口须同步注册表、边界文档与治理检查。</li></ul></div>
+  </div>
+</section>
+<section id="flows">
+  <h2>核心流程</h2>
+  <div class="hint">回答:跨层调用路径</div>
+  <div class="grid">
+    <div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 574" width="100%" role="img" aria-label="核心流程图">
+<rect width="1000" height="574" fill="#ffffff"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<text x="28" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#0f172a" text-anchor="start" font-weight="600">核心流程 — 跨层调用路径</text>
+<text x="28" y="94" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">统一调用</text>
+<rect x="150" y="64" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="225" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">user/agent</text>
+<rect x="326" y="64" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="401" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">cockpit|agora</text>
+<line x1="302" y1="91" x2="323" y2="91" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="502" y="64" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="577" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">bos:// route</text>
+<line x1="478" y1="91" x2="499" y2="91" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="678" y="64" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="753" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">target service</text>
+<line x1="654" y1="91" x2="675" y2="91" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="854" y="64" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="929" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">audited response</text>
+<line x1="830" y1="91" x2="851" y2="91" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="28" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">知识检索</text>
+<rect x="150" y="160" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="225" y="192" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">external/local</text>
+<rect x="326" y="160" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="401" y="192" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">kairon ingestion</text>
+<line x1="302" y1="187" x2="323" y2="187" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="502" y="160" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="577" y="192" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">gbrain/local substr…</text>
+<line x1="478" y1="187" x2="499" y2="187" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="678" y="160" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="753" y="192" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">retrieval</text>
+<line x1="654" y1="187" x2="675" y2="187" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="28" y="286" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">意图到任务</text>
+<rect x="150" y="256" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="225" y="288" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">intent/pitch</text>
+<rect x="326" y="256" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="401" y="288" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">c2g|OMO broker</text>
+<line x1="302" y1="283" x2="323" y2="283" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="502" y="256" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="577" y="288" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">task/debt/audit reg…</text>
+<line x1="478" y1="283" x2="499" y2="283" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="678" y="256" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="753" y="288" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">validation</text>
+<line x1="654" y1="283" x2="675" y2="283" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="854" y="256" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="929" y="288" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">evidence</text>
+<line x1="830" y1="283" x2="851" y2="283" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="28" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">服务编排</text>
+<rect x="150" y="352" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="225" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">service definition</text>
+<rect x="326" y="352" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="401" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">runtime scheduler</text>
+<line x1="302" y1="379" x2="323" y2="379" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="502" y="352" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="577" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">sandbox</text>
+<line x1="478" y1="379" x2="499" y2="379" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="678" y="352" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="753" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">health observation</text>
+<line x1="654" y1="379" x2="675" y2="379" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="854" y="352" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="929" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">alert/recovery</text>
+<line x1="830" y1="379" x2="851" y2="379" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="28" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="600">外部资源接入</text>
+<rect x="150" y="448" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="225" y="480" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">external resource</text>
+<rect x="326" y="448" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="401" y="480" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">descriptor</text>
+<line x1="302" y1="475" x2="323" y2="475" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="502" y="448" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="577" y="480" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">scene-bound admissi…</text>
+<line x1="478" y1="475" x2="499" y2="475" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="678" y="448" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="753" y="480" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">capability route</text>
+<line x1="654" y1="475" x2="675" y2="475" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="854" y="448" width="150" height="54" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="929" y="480" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">receipt</text>
+<line x1="830" y1="475" x2="851" y2="475" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+</svg></div>
+    <div class="takeaways"><h3>读图要点</h3><ul><li>五条主流程均从「入口」出发,经路由或注册表,落到审计化响应。</li><li>工作流执行的唯一控制面事实源是 OMO 事件流;worker 派发产物只是运维材料,不推进 WorkflowRun 状态。</li></ul></div>
+  </div>
+</section>
+<section id="fabric">
+  <h2>外部接入织物</h2>
+  <div class="hint">回答:外部资源责任如何切分</div>
+  <div class="grid">
+    <div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 952 518" width="100%" role="img" aria-label="外部接入织物图">
+<rect width="952" height="518" fill="#ffffff"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<text x="28" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#0f172a" text-anchor="start" font-weight="600">外部接入织物 — 资源种类 × 真相归属</text>
+<text x="28" y="50" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">凭证只被引用,永不存储于描述符;不可用或陈旧资源必须保持可见,不得投影为成功态</text>
+<text x="28" y="104" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="700">资源种类</text>
+<rect x="28" y="118" width="168" height="58" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.2" opacity="1.0"/>
+<text x="38" y="142" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#92400e" text-anchor="start" font-weight="600">knowledge_source</text>
+<text x="38" y="159" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#a16207" text-anchor="start" font-weight="400">{&#x27;owner&#x27;: &#x27;kairon.iris&#x27;, …</text>
+<rect x="210" y="118" width="168" height="58" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.2" opacity="1.0"/>
+<text x="220" y="142" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#92400e" text-anchor="start" font-weight="600">data_source</text>
+<text x="220" y="159" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#a16207" text-anchor="start" font-weight="400">{&#x27;owner&#x27;: &#x27;kairon&#x27;, &#x27;allo…</text>
+<rect x="392" y="118" width="168" height="58" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.2" opacity="1.0"/>
+<text x="402" y="142" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#92400e" text-anchor="start" font-weight="600">resource_provider</text>
+<text x="402" y="159" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#a16207" text-anchor="start" font-weight="400">{&#x27;owner&#x27;: &#x27;agora&#x27;, &#x27;allow…</text>
+<rect x="574" y="118" width="168" height="58" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.2" opacity="1.0"/>
+<text x="584" y="142" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#92400e" text-anchor="start" font-weight="600">method_pack</text>
+<text x="584" y="159" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#a16207" text-anchor="start" font-weight="400">{&#x27;owner&#x27;: &#x27;kairon.sophia&#x27;…</text>
+<rect x="756" y="118" width="168" height="58" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.2" opacity="1.0"/>
+<text x="766" y="142" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#92400e" text-anchor="start" font-weight="600">tool_capability</text>
+<text x="766" y="159" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#a16207" text-anchor="start" font-weight="400">{&#x27;owner&#x27;: &#x27;agora&#x27;, &#x27;allow…</text>
+<rect x="28" y="190" width="168" height="58" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.2" opacity="1.0"/>
+<text x="38" y="214" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#92400e" text-anchor="start" font-weight="600">channel</text>
+<text x="38" y="231" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#a16207" text-anchor="start" font-weight="400">{&#x27;owner&#x27;: &#x27;runtime&#x27;, &#x27;all…</text>
+<rect x="210" y="190" width="168" height="58" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.2" opacity="1.0"/>
+<text x="220" y="214" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#92400e" text-anchor="start" font-weight="600">model_provider</text>
+<text x="220" y="231" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#a16207" text-anchor="start" font-weight="400">{&#x27;owner&#x27;: &#x27;aetherforge&#x27;, …</text>
+<rect x="392" y="190" width="168" height="58" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.2" opacity="1.0"/>
+<text x="402" y="214" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#92400e" text-anchor="start" font-weight="600">asset_source</text>
+<text x="402" y="231" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#a16207" text-anchor="start" font-weight="400">{&#x27;owner&#x27;: &#x27;runtime&#x27;, &#x27;all…</text>
+<text x="28" y="276" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="700">真相归属 (truth_owners)</text>
+<rect x="28" y="288" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="38" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">contract</text>
+<text x="38" y="329" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">ecos</text>
+<rect x="210" y="288" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="220" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">admission_and_evidence</text>
+<text x="220" y="329" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">omo</text>
+<rect x="392" y="288" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="402" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">discovery_and_routing</text>
+<text x="402" y="329" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">agora</text>
+<rect x="574" y="288" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="584" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">source_adapters</text>
+<text x="584" y="329" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">kairon.iris</text>
+<rect x="756" y="288" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="766" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">method_compilation_an…</text>
+<text x="766" y="329" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">kairon.sophia</text>
+<rect x="28" y="360" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="38" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">execution_and_delivery</text>
+<text x="38" y="401" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">runtime</text>
+<rect x="210" y="360" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="220" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">compute_and_credentia…</text>
+<text x="220" y="401" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">aetherforge</text>
+<rect x="392" y="360" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="402" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">canonical_memory</text>
+<text x="402" y="401" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">kairon.kos-gbrain</text>
+<rect x="574" y="360" width="168" height="58" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.2" opacity="1.0"/>
+<text x="584" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#312e81" text-anchor="start" font-weight="600">human_catalog</text>
+<text x="584" y="401" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9" fill="#4338ca" text-anchor="start" font-weight="400">cockpit</text>
+</svg></div>
+    <div class="takeaways"><h3>读图要点</h3><ul><li>外部知识/数据/资源/方法/工具/模型/渠道共享同一描述符与生命周期契约。</li><li>它是横切能力,不是新的顶层项目。</li><li>凭证只被引用,永不写入描述符;不可用资源必须保持可见,不得投影为成功态。</li></ul></div>
+  </div>
+</section>
+<section id="spine">
+  <h2>脊柱价值管道</h2>
+  <div class="hint">回答:单人操作闭环怎么转</div>
+  <div class="grid">
+    <div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1056 262" width="100%" role="img" aria-label="脊柱价值管道图">
+<rect width="1056" height="262" fill="#ffffff"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<text x="28" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#0f172a" text-anchor="start" font-weight="600">脊柱价值管道 — 单人操作闭环 (ADR-0439)</text>
+<text x="28" y="52" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">路由: bos://cockpit/spine/{sign,distill,replay};LoRA 在空闲算力节点训练并动态挂载至主权模型</text>
+<rect x="40" y="92" width="168" height="74" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<text x="124" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#0f172a" text-anchor="middle" font-weight="600">1. ingress signal</text>
+<text x="124" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">信号进入</text>
+<rect x="242" y="92" width="168" height="74" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<text x="326" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#0f172a" text-anchor="middle" font-weight="600">2. triage</text>
+<text x="326" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">分流判别</text>
+<line x1="212" y1="129" x2="238" y2="129" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="444" y="92" width="168" height="74" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<text x="528" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#0f172a" text-anchor="middle" font-weight="600">3. sovereign draft</text>
+<text x="528" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">主权草稿生成</text>
+<line x1="414" y1="129" x2="440" y2="129" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="646" y="92" width="168" height="74" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<text x="730" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#0f172a" text-anchor="middle" font-weight="600">4. cockpit review + HI…</text>
+<text x="730" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">Cockpit 复审与人工签名</text>
+<line x1="616" y1="129" x2="642" y2="129" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="848" y="92" width="168" height="74" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" opacity="1.0"/>
+<text x="932" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#0f172a" text-anchor="middle" font-weight="600">5. diff extraction + i…</text>
+<text x="932" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">差异提取与空闲算力微调</text>
+<line x1="818" y1="129" x2="844" y2="129" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+<line x1="932" y1="170" x2="124" y2="170" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arrow)" stroke-dasharray="5 4"/>
+<text x="528" y="192" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle" font-weight="400">replay 回放形成闭环</text>
+</svg></div>
+    <div class="takeaways"><h3>读图要点</h3><ul><li>五段闭环:信号 → 分流 → 主权草稿 → Cockpit 复审签名 → 差异提取与空闲算力微调。</li><li>人工签名(HITL)不可跳过,是这条管道与普通自动化流程的关键区别。</li><li>Persona LoRA 在空闲算力节点训练,动态挂载到主权模型。</li></ul></div>
+  </div>
+</section>
+<section id="governance">
+  <h2>治理面</h2>
+  <div class="hint">回答:治理工具与门禁的作用域</div>
+  <div class="grid">
+    <div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 490" width="100%" role="img" aria-label="治理面图">
+<rect width="900" height="490" fill="#ffffff"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<text x="28" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#0f172a" text-anchor="start" font-weight="600">治理面 — 三个平面与边界规则</text>
+<text x="28" y="50" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#b91c1c" text-anchor="start" font-weight="400">直接写 .omo/ 或 spaces/ 属违规,除非经已审计路径路由</text>
+<rect x="40" y="92" width="250" height="76" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="56" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="700">状态面</text>
+<text x="56" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569" text-anchor="start" font-weight="400">.omo/</text>
+<text x="56" y="157" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">目标、状态、证据、任务、审计</text>
+<rect x="40" y="198" width="250" height="76" rx="8" fill="#eef2ff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="56" y="226" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="700">内核面</text>
+<text x="56" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569" text-anchor="start" font-weight="400">projects/omo/</text>
+<text x="56" y="263" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">schema、broker、audit/lint/sync…</text>
+<line x1="165" y1="194" x2="165" y2="218" stroke="#cbd5e1" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="40" y="304" width="250" height="76" rx="8" fill="#ecfeff" stroke="#94a3b8" stroke-width="1.2" opacity="1.0"/>
+<text x="56" y="332" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#0f172a" text-anchor="start" font-weight="700">协议面</text>
+<text x="56" y="352" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569" text-anchor="start" font-weight="400">projects/ecos/</text>
+<text x="56" y="369" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">MOF 元模型与 L0 约束</text>
+<line x1="165" y1="300" x2="165" y2="324" stroke="#cbd5e1" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="40" y="426" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#0f172a" text-anchor="start" font-weight="700">边界规则</text>
+<text x="56" y="446" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">· 新增治理面需同时具备运行时行为、注册表登记与校验门禁 — 仅文档不算实现</text>
+<text x="56" y="463" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">· 外部能力激活前需注册描述符、场景绑定、健康证据与可逆生命周期</text>
+<text x="56" y="480" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">· worker 执行需持久派发上下文 + ACK/租约证据 + 显式回收路径</text>
+<text x="56" y="497" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="10" fill="#64748b" text-anchor="start" font-weight="400">· 生成的 dispatch packet 不构成完成证据</text>
+</svg></div>
+    <div class="takeaways"><h3>读图要点</h3><ul><li>三平面:状态面(.omo/)、内核面(omo)、协议面(ecos)。</li><li>`.omo/` 是数据与证据,不是新的长期执行逻辑落点。</li><li>新增治理面须同时有运行时行为 + 注册表登记 + 校验门禁;仅写文档不算实现。</li></ul></div>
+  </div>
+</section>
+</main>
+<footer>此页为生成物。事实源变更后重跑 <code>python3 bin/ssot/gen-architecture-diagrams.py</code>。
+图源(Mermaid)见 <code>docs/architecture/ecos-architecture.md</code>。</footer>
+</body></html>

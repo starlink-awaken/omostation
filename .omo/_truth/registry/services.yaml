@@ -6023,15 +6023,17 @@ services:
   depends_on: [omostation.zhixing-dashboard]
 - id: omostation.zhixing-projection-fullrefresh
   enabled: true
-  generate: true
-  run_at_load: false  # 2026-10-10 热修现实: 未设 RunAtLoad (mini 常驻不睡, 影响可忽略)
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist
+  content_digest: sha256:76eea0a155fab770981861af42698d23ff08f2ad703984d1be51c0836e695171
+  run_at_load: true
   scheduler: launchd
   trigger: interval
   interval_sec: 1800  # 2026-10-10 热修: 30min。claims 权威在 MBP, 高频全刷对齐 (取代 T10-227 的 6h 洁净检出设计)
   label: com.omostation.zhixing-projection-fullrefresh
   program:
     interpreter: /bin/bash
-    entrypoint: ~/dotfiles/bin/zhixing-refresh.sh  # rsync MBP claims 权威 → exec projection-full-refresh.py (主工作区检出)
+    entrypoint: /Users/xiamingxing/dotfiles/bin/zhixing-refresh-mbp.sh
     args: []
   notes: '全量投影数据周期刷新 (BET-Y2Q4-T10-227): T10-223 republisher 只续租约, 数据观测龄期
     (data_observed_at) 单调增长。本服务维护专用洁净检出 ~/.local/opt/omostation-publisher

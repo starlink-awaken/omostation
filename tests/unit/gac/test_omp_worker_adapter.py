@@ -13,6 +13,21 @@ from pathlib import Path
 
 import pytest
 
+_BUN_OMP = Path.home() / ".bun/bin/omp"
+
+
+def _bun_omp_alive() -> bool:
+    # adapter 契约只认 pinned bun omp(~/.bun/bin/omp); 本机可能装了
+    # ~/.local/bin/omp 之类的替身, which() 会误判可用
+    try:
+        _BUN_OMP.resolve(strict=True)
+        return True
+    except OSError:
+        return False
+
+
+pytestmark = pytest.mark.skipif(not _bun_omp_alive(), reason="本机未安装 pinned bun omp(~/.bun/bin/omp)")
+
 SCRIPT = Path(__file__).parents[3] / "bin/gac/omp-worker-adapter.py"
 SPEC = importlib.util.spec_from_file_location("omp_worker_adapter", SCRIPT)
 assert SPEC and SPEC.loader
