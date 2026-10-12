@@ -1,0 +1,19 @@
+schema: agent-error/v1
+id: PITFALL-COO-007
+category: coordination
+severity: medium
+title: '需要人在场的物理操作: 先握手再动盘, 别让维护窗口先于人到期'
+symptom: 为直连对照实验先卸载了 4.1T 盘并开 2 小时维护窗口, 用户没有马上换线; 窗口到期后 keepalive 自动重挂, MOVESPEED
+  没起来, 需要手动 diskutil mountDisk 恢复; 期间卷全部不可用
+root_cause: 把『卸载生产磁盘』排在『确认人已在机器旁并开始动手』之前, 窗口时长按乐观预期设定
+solution: '两段式握手: 先问『你在机器旁、准备好了吗』得到明确答复 (如『准备直连』) 再卸载并开窗口; 窗口建议 3 小时并在 HANDOFF 里写明到期后的自动行为与恢复命令'
+prevention: 任何会让生产卷不可用的操作都需要用户明确的开始信号; 开维护开关时同时写下到期恢复路径并在到期后复核卷状态
+tags:
+- handshake
+- maintenance-window
+- physical-ops
+discovered_by: claude
+discovered_at: '2026-10-12'
+times_encountered: 1
+last_confirmed_at: '2026-10-12'
+status: active

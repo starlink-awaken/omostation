@@ -1,0 +1,22 @@
+schema: agent-error/v1
+id: PITFALL-MEA-007
+category: measurement
+severity: high
+title: '空输入当通过: 校验抽样为 0 或读不到源时仍 exit 0, 与『无差异』无法区分'
+symptom: hot-tier-resilience verify 在 launchd 下读不到热层时输出『抽样 0 个模型, 不一致 0』并 exit 0;
+  此前平铺模型目录两侧 cd 都失败, 两个空输出 diff 判一致, 同样被静默当成已校验; manifest 读不到热层时用只有标题的空壳覆盖 Lex 上的好清单
+root_cause: 检查只统计发现的不一致, 不统计实际校验了多少; 读失败被 2>/dev/null 吞掉, 输入为空时 0 个不一致等于通过
+solution: '校验类命令同时断言: 样本数大于 0、源侧非空、读失败显式报错; 抽样为 0 与读不到判失败并用不同退出码 (75 不在线 / 77 权限被拒);
+  写备份清单先写临时文件并校验非空再覆盖旧的'
+prevention: '写校验/对账脚本时先问『输入全空时它会说什么』并写成测试; 做变异检查: 把新测试对着修复前的版本跑一遍必须变红 (本案 57 条断言对旧版红
+  38 条)'
+tags:
+- vacuous-pass
+- verify
+- backup
+- false-negative
+discovered_by: claude
+discovered_at: '2026-10-12'
+times_encountered: 1
+last_confirmed_at: '2026-10-12'
+status: active
