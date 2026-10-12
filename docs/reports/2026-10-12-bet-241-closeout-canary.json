@@ -1,0 +1,61 @@
+{
+  "schema": "closeout-canary/v1",
+  "bet_id": "BET-Y2Q4-T10-241",
+  "observed_at": "2026-10-12T07:20:00Z",
+  "service": {
+    "label": "com.omostation.zhixing-dashboard",
+    "url": "http://127.0.0.1:43191",
+    "pid": 45998,
+    "argv": "/opt/homebrew/bin/python3 -B /Users/xiamingxing/.local/share/zhixing-dashboard/current/live_server.py --port 43191",
+    "cwd": "/Users/xiamingxing/.local/share/zhixing-dashboard/releases/8eddcbf552c1916a598631134e9ecefb9b9fe52b",
+    "health": {
+      "code_drift": false,
+      "projection_status": "BOUND_FRESH",
+      "dashboard_code_oid": "8eddcbf552c1916a598631134e9ecefb9b9fe52b",
+      "dashboard_tree_sha256": "a5bee8d09dc31d7e",
+      "dashboard_code_sha256": "53496d86e10a12580b2e42914bbf4b7bc30cab6a72635bf9eedbc43ab70b01b4",
+      "read_only": true
+    }
+  },
+  "behavior_matrix": {
+    "GET /": 200,
+    "GET /api/v1/manifest": 200,
+    "GET /api/v1/proposals/submit": 405,
+    "GET /api/v1/copilot/ask": 405,
+    "GET /api/v1/bos/invoke": 405,
+    "GET /api/v1/loops/step": 405,
+    "GET /api/v1/bogus-op": 405,
+    "POST /api/v1/manifest": 405
+  },
+  "tests": {
+    "cmd": "python3 -m pytest tests/unit/test_zhixing_get_method_safety.py tests/test_zhixing_host_sync.py -q",
+    "result": "34 passed, 2 failed",
+    "get_method_safety": "23 passed",
+    "host_sync_failures": {
+      "count": 2,
+      "tests": [
+        "tests/test_zhixing_host_sync.py::test_all_public_functions_are_read_only_or_blocked",
+        "tests/test_zhixing_host_sync.py::test_cli_write_commands_are_blocked_and_check_remains_read_only"
+      ],
+      "classification": "pre-existing on origin/main (worktree at 5895db390, 与本轮改动无关)",
+      "cause": "#4724 给 publish 增加 required --file 参数后测试未同步更新 (T10-236 写面, 该 BET 仍 pending)",
+      "evidence": "publish: error: the following arguments are required: --file (bin/gac/zhixing-host-sync.py:554 required=True)"
+    }
+  },
+  "identity_chain": {
+    "deploy_repo_head": "8eddcbf552c1916a598631134e9ecefb9b9fe52b",
+    "deploy_repo_origin_main": "8eddcbf552c1916a598631134e9ecefb9b9fe52b",
+    "release_worktree": "releases/8eddcbf552c1916a598631134e9ecefb9b9fe52b",
+    "bundle_sha256": "53496d86e10a12580b2e42914bbf4b7bc30cab6a72635bf9eedbc43ab70b01b4",
+    "manifest_revision": "ae0339291e65c12237ab9bb5ebec1bb07c7caccfe43cb4b893b54ea488660828",
+    "manifest_bundle_matches": true
+  },
+  "observation_gate": {
+    "watcher": "~/.local/bin/observe-zhixing-promotion.py",
+    "log": "~/.local/log/zhixing-promotion-observe-20261012.jsonl",
+    "samples": 1440,
+    "interval_sec": 60,
+    "one_shot_cron_id": "01M4QE9GTPJHHP257TF6YRJDFS",
+    "one_shot_fires": "2026-10-13T15:07:00+08:00"
+  }
+}
