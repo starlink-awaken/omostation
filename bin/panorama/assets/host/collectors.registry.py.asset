@@ -1,0 +1,55 @@
+"""Collector registry — discovers and manages all data collectors."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from collectors.base import DataCollector
+
+# Registry of (name, class, kwargs) tuples.
+# Populated by importing collector modules.
+COLLECTORS: list[tuple[str, type[DataCollector], dict[str, Any]]] = []
+
+
+def register(name: str, **kwargs) -> None:
+    """Register a collector class. Call from each collector module."""
+    def decorator(cls: type[DataCollector]) -> type[DataCollector]:
+        cls.name = name
+        COLLECTORS.append((name, cls, kwargs))
+        return cls
+    return decorator
+
+
+class CollectorRegistry:
+    """Manages the set of registered collectors."""
+
+    def __init__(self, collectors: list[tuple[str, type[DataCollector], dict[str, Any]]] | None = None):
+        self._collectors = list(collectors or COLLECTORS)
+
+    def names(self) -> list[str]:
+        return [name for name, _, _ in self._collectors]
+
+    def get(self, name: str) -> DataCollector | None:
+        for n, cls, kwargs in self._collectors:
+            if n == name:
+                return cls(**kwargs)
+        return None
+
+    def all(self) -> list[DataCollector]:
+        return [cls(**kwargs) for _, cls, kwargs in self._collectors]
+
+    def run_all(self, max_workers: int = 5) -> list[tuple[str, dict | None, str | None]]:
+        """Run all collectors in parallel. Returns list of (name, data, error)."""
+        import concurrent.futures
+        collectors = self.all()
+        results: list[tuple[str, dict | None, str | None]] = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(c.run): c.name for c in collectors}
+            for future in concurrent.futures.as_completed(futures):
+                results.append(future.result())
+        return results
+
+
+def get_registry() -> CollectorRegistry:
+    """Get the default registry with all registered collectors."""
+    return CollectorRegistry()

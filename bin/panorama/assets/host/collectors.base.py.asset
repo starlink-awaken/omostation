@@ -1,0 +1,79 @@
+"""Base class for data collectors.
+
+Example:
+    class MyCollector(DataCollector):
+        name = "my_source"
+        timeout = 30
+
+        def collect(self) -> dict:
+            return {"key": "value"}
+
+        def validate(self, data: dict) -> bool:
+            return "key" in data
+"""
+
+from __future__ import annotations
+
+import time
+from typing import Any
+
+
+class CollectionError(Exception):
+    """Raised when a collector fails to gather data."""
+
+    def __init__(self, source: str, reason: str, cause: Exception | None = None):
+        self.source = source
+        self.reason = reason
+        self.cause = cause
+        super().__init__(f"Collection failed for '{source}': {reason}")
+
+
+class DataCollector:
+    """Base class for all data collectors.
+
+    Subclasses must define:
+        - name: str — unique identifier for this collector
+        - collect() -> dict — gather data from the source
+
+    Subclasses may override:
+        - timeout: int — max seconds before the collector is killed (default 48)
+        - validate(data: dict) -> bool — check data integrity
+    """
+
+    name: str = ""
+    timeout: int = 48
+
+    def __init__(self, **kwargs):
+        """Accept extra kwargs for registry compatibility. Raises on unknown keys."""
+        for key, value in kwargs.items():
+            if not hasattr(self, key):
+                raise TypeError(f"{self.__class__.__name__} got unexpected keyword argument '{key}'")
+            setattr(self, key, value)
+
+    def collect(self) -> dict:
+        """Gather data from the source. Return a dict or raise CollectionError."""
+        raise NotImplementedError(f"{self.__class__.__name__} must implement collect()")
+
+    def validate(self, data: dict) -> bool:
+        """Check that collected data is well-formed. Default: always True."""
+        return isinstance(data, dict)
+
+    def run(self) -> tuple[str, dict | None, str | None]:
+        """Execute the collector with timing and error handling.
+
+        Returns:
+            (name, data, error) — data is None on failure, error is None on success.
+        """
+        if not self.name:
+            return self.name, None, "Collector has no name"
+        started = time.monotonic()
+        try:
+            data = self.collect()
+            elapsed = time.monotonic() - started
+            if not self.validate(data):
+                return self.name, None, f"Validation failed ({elapsed:.1f}s)"
+            return self.name, data, None
+        except CollectionError as exc:
+            return self.name, None, exc.reason
+        except Exception as exc:
+            return self.name, None, f"{type(exc).__name__}: {exc}"
