@@ -164,7 +164,7 @@ MBP 1T HDD    异机副本目的地（冷备档案镜像 → 3-2-1 灾备闭环�
 | 冷备口令离线副本 | 待用户 | 口令只在登录钥匙串；内置盘损坏则所有 gpg 冷备不可解 |
 | 仓库内误报数据订正（HW-DISK8 债务、T10-243 spec、T10-242 retro、T10-243 账本 goal） | 完成，PR 待合并 | omostation#4720（分支 `agent/governance-agent/storage-p1`）；spec 升 1.0.1 并同步绑定摘要 |
 | `hot-tier-resilience.sh` 的 `daily-report` 纳入 `.drops`、`verify` 修平铺目录 | 完成，PR 待合并 | 同上；已用构造场景验证（原版确实误判通过） |
-| **周同步排程的 TCC 缺口**（10-12 复盘新发现） | 代码完成，待用户安装 | launchd 直启的 `/bin/bash` 对外接卷读写全被拒（`selftest-launchd` 实测 `hot=77 lex_write=77`），原周任务 plist 装上后 `runs = 0` 从未运行。改为 launchd → `open -a iTerm` 启动器（实测 `hot=0 lex_write=0`）；新增 `weekly` / `selftest-launchd` / `install-schedule`，日报带周任务心跳与补跑；回归测试 57 条。装排程是人工步骤，且必须先让主工作区含 `weekly` 的版本 |
+| **周同步排程的 TCC 缺口**（10-12 复盘新发现） | 代码完成，待用户安装 | launchd 直启的 `/bin/bash` 对外接卷读写全被拒（`selftest-launchd` 实测 `hot=77 lex_write=77`），原周任务 plist 装上后 `runs = 0` 从未运行。改为 launchd → `open -a iTerm` 启动器（实测 `hot=0 lex_write=0`）；新增 `weekly` / `selftest-launchd` / `install-schedule`，日报带周任务心跳与补跑；回归测试全过。装排程是人工步骤，且必须先让主工作区含 `weekly` 的版本 |
 | `verify` / `manifest` 的静默假通过（10-12 复盘新发现） | 代码完成 | 读不到热层时 `verify` 曾 exit 0（抽样 0、不一致 0）、`manifest` 曾用空壳覆盖 Lex 上的旧清单；现在抽样为 0 / 读不到 / 清单缺失或超期一律失败，空清单不覆盖 |
 | Time Machine（10-12 实测） | 待用户 | `tmutil destinationinfo` 为 "No destinations configured"，偏好 `AutoBackup = 0`、`LastBackupActivity = 2026-03-16`：内置盘近 7 个月无 TM 备份，现仅靠 10-11 的加密归档。Model 排空（10-18 观察期后）并重建卷后需用户 `sudo tmutil setdestination` |
 | ecos 存储并轨改动（`DOMAIN-model-volume.yaml`、`constraints.yaml`、`catalog-daemon.py`） | PR 待合并 | #4716 合并时 `projects/ecos` 指针取了上游值，该改动实际未生效；omostation-ecos#93，本地测试 1388 通过。其 CI 红在 `ecos-constraint-compiler.py:226` 的 F841（ecos 主分支自 10-10 起即红，与本改动无关） |
