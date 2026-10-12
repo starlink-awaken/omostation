@@ -41573,7 +41573,8 @@ bets:
     env 名 **且** 默认值含 host 字面量」的组合命中， 不按名字命中 —— 禁止 `WORKSPACE_ROOT` 这个名字会砸掉 `mcp_server.py`
     对外部 MCP host 的已发布 契约名，且不解决任何站点。安全性论证：未声明 profile 时 `code_root() == WORKSPACE_ROOT`，
     32 个站点的解析结果逐字节不变（ISC-4），现役 43 个 plist 与 crontab 一行未改。
-  status: pending
+  status: done
+  done_at: 2026-10-11
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -41668,6 +41669,9 @@ bets:
   - projects/omo/tests/test_sovereignty_replay.py
   - docs/superpowers/specs/2026-10-10-omo-src-code-root-convergence.md
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-239.md
+  - docs/reports/2026-10-11-omo-src-code-root-convergence-closeout.md
+  - docs/reports/2026-10-11-bet-239-closeout-canary.json
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-10-omo-src-code-root-convergence.md
     spec_version: 1.0.0
@@ -41675,17 +41679,44 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-239
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a682300faa02dd5f0c38f2506210a1eafb150974
+          tests:
+            ref: receipt://docs/reports/2026-10-11-bet-239-closeout-canary.json
+            sha256: sha256:4aff53bf472b10def3bc618b4a41012494ebad82f9b5ae029773301040adb1d5
+          diff:
+            ref: receipt://docs/reports/2026-10-11-omo-src-code-root-convergence-closeout.md
+            sha256: sha256:7c8458c4f26f5fd942e95b2ee2e98e6d07cfbe05088f946b017ecf3c6e451518
+          rollback:
+            ref: receipt://docs/reports/2026-10-11-omo-src-code-root-convergence-closeout.md
+            sha256: sha256:7c8458c4f26f5fd942e95b2ee2e98e6d07cfbe05088f946b017ecf3c6e451518
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-239.md
+            sha256: sha256:fcde76a10b5ff0d86f98e37826284ac2e57207d323c73dfbf2a1fb1dd9fdef1b
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-11-bet-239-closeout-canary.json
+            sha256: sha256:4aff53bf472b10def3bc618b4a41012494ebad82f9b5ae029773301040adb1d5
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-11-omo-src-code-root-convergence-closeout.md
+            sha256: sha256:7c8458c4f26f5fd942e95b2ee2e98e6d07cfbe05088f946b017ecf3c6e451518
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-239.md
+            sha256: sha256:fcde76a10b5ff0d86f98e37826284ac2e57207d323c73dfbf2a1fb1dd9fdef1b
+          cleanup:
+            ref: receipt://docs/reports/2026-10-11-omo-src-code-root-convergence-closeout.md
+            sha256: sha256:7c8458c4f26f5fd942e95b2ee2e98e6d07cfbe05088f946b017ecf3c6e451518
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          {}
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-240
   title: DCP-20 P0 Zhixing GET 方法安全与受管宿主发布
