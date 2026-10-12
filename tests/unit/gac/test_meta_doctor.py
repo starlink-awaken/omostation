@@ -3,11 +3,16 @@ import importlib.util
 import json
 import re
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-MD = Path(__file__).resolve().parents[3] / "bin" / "gac" / "meta-doctor.py"
-REAL_WS = Path("/Users/xiamingxing/Workspace")
+REPO = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO / "bin" / "lib"))
+import repo_root  # noqa: E402
+
+MD = REPO / "bin" / "gac" / "meta-doctor.py"
+REAL_WS = repo_root.code_root()
 
 
 def _load():
