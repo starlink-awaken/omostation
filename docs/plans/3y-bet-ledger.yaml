@@ -42294,6 +42294,144 @@ bets:
       == 1; e4/e5 与基线逐字一致
   - cmd: python3 bin/mof/gen-service-configs.py --validate --json
     expect: ok true, violation_count 0
+- id: BET-Y2Q4-T10-247
+  title: ADR-0456 B4b 前置 — projection-full-refresh driver 的 ledger 根由 __file__ 反推改为调用时刻
+    profile/canonical 解析
+  goal: 'publisher driver 的 ledger 落点是模块级常量 (`bin/panorama/projection-full-refresh.py:41-42`
+    `WORKSPACE_ROOT = Path(__file__).resolve().parents[2]`), 而紧邻注释 (`:40`) 写明「必须显式指向主树那份」——
+    代码与自己的注释相反。在这个部署里 `__file__` 就是 publisher 克隆自己: 实测 `:131` 注入子进程的路径为 `~/.local/opt/omostation-publisher/runtime/omo/event-ledger.sqlite3`,
+    该路径不存在; 权威 ledger 在 `~/Workspace/runtime/omo/event-ledger.sqlite3`; 而同一 driver 第
+    3 步是 `git clean -fdx` —— 未跟踪文件每轮抹掉。后果不是「读不到」而是「写进去的活不过下一次刷新」(服务每 30 min 触发)。 裁决规则三行:
+    ① `OMO_EVENT_LEDGER_DB` 已声明 → 原样采用; ② `OMOSTATION_STATE_ROOT` 已声明 → `state_root()/runtime/omo/event-ledger.sqlite3`;
+    ③ 两者皆未声明 → `canonical_root()/…` **而不是** `code_root()` (常驻执行位置是运行时克隆, 不是任何 profile
+    的权威)。 `canonical_root()` 定位不到规范检出时抛 `RuntimeError` 属规定行为, 但必须被转成 driver fail-closed
+    契约的 一条 `failed step="ledger_root"` JSON 日志, 不能是裸 traceback。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  depends_on:
+  - BET-Y2Q4-T10-227
+  circuit_breaker: 若把落点改成 `code_root()` / `__file__` 任一变体才能通过测试, 或需要放宽 `tests/unit/test_resident_write_plane_split.py`
+    的读者分类断言本体 (而非由测量产出新期望值) → 停止并保留原判据。不改任何 plist, 不动 `~/.local/share/zhixing-dashboard`,
+    不动 publisher 检出的 git 状态。
+  non_goals:
+  - 不改 `bin/panorama/panorama-collect.py:92-97` 的子进程侧默认值 (env 已由父进程注入)
+  - 不做 plist/cron 改道 (B4b 批次 2+, 机器级需逐批授权)
+  - 不修 `--check` 的 E1 fleet 每主机变体 entrypoint 冲突 (需署名裁定) 与 E4 12 条未分区
+  - 不替并发线登记 `com.omostation.panorama-compact-observation` (driver 只在主工作区未推 `ccecdd571`)
+  - 不推 `~/.local/share/zhixing-dashboard` 上别线的未推 commit `3403d4e` (现网 publish 失败的根因,
+    只报告)
+  - 不动主工作区 11 条未 push commit (只读, 禁动)
+  - 不放宽 `service-config-drift`, 不登记它的债
+  done_when:
+  - 'ISC-1 落点正确: 在 publisher 克隆位置执行解析函数, 未声明 profile 时返回值 == `canonical_root()/LEDGER_RELATIVE`
+    且不在 `CHECKOUT` 之下'
+  - 'ISC-2 profile 优先不被破坏: 声明 `OMO_EVENT_LEDGER_DB` 或 `OMOSTATION_STATE_ROOT` 时逐字采用声明值
+    (与 `repo_root.event_ledger_path()` 同读数)'
+  - 'ISC-3 无 import 时冻结: 解析发生在调用时刻, 模块级不存在任何由 `__file__` 导出的常量 (含传递导出: 右侧引用了另一个 `__file__`
+    系模块级名)'
+  - 'ISC-4 检测器自证: ISC-3 的扫描器对合成违规样本必须逐个点名 (含传递件), 且「改前 = 2 / 改后 = 0」由同一次扫描产出并同时断言'
+  - 'ISC-5 子进程同读数在可分辨的面上比: ① import 后声明 `OMOSTATION_STATE_ROOT` 时注入值 == 解析器的 state 根读数
+    ② 同一次用例内断言注入值 ≠ `__file__` 反推 ≠ canonical 读数 ≠ publisher 检出读数 ③ 克隆树内未声明 profile
+    时落 canonical。 未声明 profile 时按构造两侧相同 —— 变异体 M5 曾让全套用例全绿 (07:03Z 实测), 所以比较面也是判据。'
+  - 'ISC-6 现网零扰动: `--reality-check` 六桶读数与改前逐字段相同; 任一 plist 字节未变'
+  - 'ISC-7 既有测量面诚实跟进 (四项, 逐条由测量产出, 不手改期望值): 本文件在 reader_pairs 里由 1 行 CHECKOUT 变 2 行
+    -- state_root() 分支记 STATE, canonical_root() 分支记 CALLER (06:31:59Z 用本仓 reader_pairs
+    在 /tmp 假树实测)。① SPLIT_EXACT 里本文件的类 CHECKOUT→CALLER; ② CALLER_EVIDENCE 新增 (本文件, canonical_root),
+    且走新增的 checkout_resolver 证据模式, 其判据是 AST 谓词而非子串: 该名在 bin/lib/repo_root.py 是公开 callable,
+    函数体五条齐备 —— ① 体内既不存在 ast.Name id==__file__ 也不存在 Attribute(value=Name __file__) ②
+    不引用也不调用 _STATE_MARKERS 里任何名字 ③ 体内引用 MARKER (以「这份检出是不是规范检出」定位) ④ 存在 ast.Raise (定位不到即失败关闭)
+    ⑤ 零必填参数。禁用子串判定的理由是实测: __file__ in ast.unparse(fn) 对 canonical_root 为 True, 只因它的
+    RuntimeError 文案里写着 __file__; 反向同源失误是 code_root (Path(__file__) 是 Name 作实参, Attribute
+    判据对它恒 False)。 为什么是五条而不是三条: 原三条判据的通过集实测是 {canonical_root, projection_rels} (07:15:56Z
+    在本仓真树逐个跑) —— projection_rels 无 __file__、只调 _projection_registry、体内有 raise KeyError,
+    三条全过; 它是投影路径查询器而非 检出根定位器, 当证据就是橡皮章, ③⑤ 正是把它否掉的两条 (实测原因 ③no-MARKER-identity-check、⑤takes-args)。
+    判别对照 (同一棵树、同一份谓词, 按 __all__ 全集求交而非手写名单): 通过集恰为 {canonical_root}; 逐名实测**被违反的 条款集**而非笼统拒绝
+    —— code_root ①③④ / state_root ③④ / event_ledger_path ②③④ / install_root ④ / is_worktree
+    ③④⑤ / projection_name_for ③④⑤ / projection_read ②③④⑤ / projection_rels ③⑤ / state_file_read
+    ②③④⑤。 install_root 只中 ④ 不是它有误 (无安装位的机器上它按设计返回 None), 而是**可能静默给 None 的定位器不能当检出根 的证据**。检测器自证由一件合法最小体
+    _LEGIT_RESOLVER 派生: 每次**只**破坏一条 ⇒ _violated_clauses 必须**恰等于** 那一条 (5 件逐条); 合法体本身
+    violated == [] (只断言「全拒绝」时谓词恒假也是绿); 另加一件同时破坏 ③④⑤ 的合体样本, 断言谓词**逐条全报**而不是只报第一条。**五条各有活线** (08:28Z 在本仓真树复测, 命名 selection 15 件 = 新增 11 条 + predicate_is_discriminating
+    + predicate_names_each_synthetic_violation + evidence_mode_is_not_a_rubber_stamp + caller_class_anchors;
+    基线 1 failed / 14 passed, 唯一红 test_caller_class_anchors_are_checkout_anchored **在 origin/main 上按构造即为红**
+    —— main 的 CALLER_EVIDENCE 只有 5 个 rel, bin/_archive/** (175 个被跟踪 .py) 等全不在册, 而 tests/unit/** 不在
+    CI 白名单故 CI 看不见; 本轮不代偿其余陈旧名单, 已报告主责人并落 retro)。 在本仓 bin/lib/repo_root.py
+    ::canonical_root 逐个破坏一条, 每次由同一谓词指名**恰一条** violated 且红集合相对基线只增不减、每次都含
+    predicate_is_discriminating: R1 改道 state_root() -> no-state-marker 6 failed (新增 5) / R2 __file__ 反推
+    -> no-file-anchor 6 failed (新增 5) / R3 去 ast.Raise 给 Path.home() -> raises 4 failed (新增 3) /
+    R4 去 MARKER 验真 -> refs-marker 4 failed (新增 3) / R5 加必填参数 -> zero-required-args 7 failed (新增 6)。
+    逐字节还原后回到 1 failed / 14 passed 且红集合与基线逐项相等 (还原 sha 37c5b2746939)。
+    ⚠️ 作废措辞 (诚实记录, 不悄悄换): 此前写作「每次 … 均 2 failed; 还原后 4 passed」, 那读数在 /tmp
+    最小合成树上量, 在本仓真树不可复现 —— 合同读数必须由被测树产出。 含反橡皮章件
+    test_checkout_resolver_evidence_mode_is_not_a_rubber_stamp (在 selection 内且为绿)。 既有 checkout
+    / checkout_via 两条路径逐字不动 (这一项是**加强**判据, 不是放宽)。 禁止用恰好含 parents[ 的无关表达式走 checkout:
+    True 橡皮章; ③ test_no_bin_reader_resolves_to_state_root 的 _state_readers == [] 转为「在册
+    STATE 读者恰为这一条」的评审集, 并保留「新增第二条未在册即红」的反向哨兵 (新常量 REVIEWED_STATE_READERS, 键 rel 值在册理由)。
+    **用例随之改名** test_bin_state_readers_are_the_reviewed_set —— 旧名 断言的是「bin/ 侧零 STATE
+    读者」, 本轮之后它按事实为假, 留一个说谎的用例名比留一个旧断言更糟。**评审集按 rel 归合, 不钉行号** —— _state_readers 返回 (rel,
+    line) 对, 06:53:17Z 实测该行 line=58 而行号随 driver 自身后续改动 漂移, 钉行号会让判据在无关改动当天假红; ④ test_ledger_family_has_a_single_root_contract_in_bin
+    的读者文件集合不变 (仍两个文件) —— 它变红意味着读者消失而非改类。任一判据绿而无对应测量记录 → ISC-7 失败。'
+  verify:
+  - cmd: uv run pytest tests/unit/test_projection_fullrefresh_ledger_root.py -q
+    expect: '11 passed / exit 0 (08:56:38Z 本仓真树, 在 env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT
+      -u OMO_EVENT_LEDGER_DB 下跑)。 `tests/unit/**` 不在 `governance-check.yml:118-127` 显式白名单 ——
+      CI 绿不是这批用例的证据, 本地留 receipt。'
+  - cmd: uv run pytest tests/unit/test_resident_write_plane_split.py -q
+    expect: '4 failed / 20 passed / exit 1 (08:56:58Z 同树同装置)。 四条红逐条为 origin/main 预存的陈旧在册名单:
+      test_scan_loads_the_real_omo_surface / test_state_reached_families_are_the_declared_set /
+      test_exact_root_split_pairs_are_the_reviewed_list / test_caller_class_anchors_are_checkout_anchored,
+      本轮新增 11 条全绿。 期望是**非回退对拍**而非全绿: HEAD 版该文件 5 failed / 16 passed, 本版 4 failed / 20 passed,
+      NEW_RED = [] 且本版红集合 ⊆ HEAD 红集合 —— 本轮只减不增。 不得为凑「全绿」代偿他线的陈旧名单、
+      放宽读者分类断言本体, 或把这条 exit 1 读成本轮回归。'
+  - cmd: make gac-local-gate
+    expect: '硬失败集不得新增。 实测 2 条 (08:51:28Z warm 复跑): service-config-drift = 1 drift
+      `com.omostation.zhixing-projection-fullrefresh`; check-work-landed = 2 条 2026-10-04 异主 run
+      missing_landing:blocking。 二者在**规范检出** `~/Workspace` 上跑同两条命令的读数逐字节相同 (08:46Z / 08:52Z 双树对拍),
+      且 `--check` 按构造读 `canonical_root()` 那份注册表, 与本 worktree 的改动无关 (P75 D8 同源的面: 读数不属于这台机器,
+      属于你站在哪个检出里)。 首跑 (08:44Z) 的第三条 check-evidence-freshness 是冷 env TIMEOUT 假红 —— 已计时定性:
+      evidence-smoke 直跑 196.95s > 60s 预算, warm 后该检查 6.15s PASS (score=100.0, age=0d), 二跑 gate 内该条转 PASS。
+      本轮不放宽该门禁, 也不替 E1 fleet 变体登记债 (非 goals 已列)。'
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json
+    expect: 'e1_drift == 1 且仍为 zhixing-projection-fullrefresh; e2_undeclared == 1 且仍为
+
+      panorama-compact-observation; e3/e4/e5/installed_total 与改前逐字段一致'
+  - cmd: /usr/bin/grep -cE 'WORKSPACE_ROOT *= *Path\(__file__\)' bin/panorama/projection-full-refresh.py
+    expect: 零命中 (exit 1, 不得接 `|| true`)
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-12-projection-fullrefresh-ledger-root-seam.md
+  - bin/panorama/projection-full-refresh.py
+  - tests/unit/test_projection_fullrefresh_ledger_root.py
+  - tests/unit/test_resident_write_plane_split.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-247.md
+  - docs/reports/2026-10-12-projection-fullrefresh-ledger-root-seam-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-12-projection-fullrefresh-ledger-root-seam.md
+    spec_version: 1.0.0
+    content_digest: sha256:6d3edd72c387b3576728083cd191e1e98d49ca9628dbc5045d62609ade1c242f
+    decision_ref: decision://accepted/BET-Y2Q4-T10-247
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -42432,7 +42570,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 544
+  total_bets: 545
   windows:
   - Y1Q1
   - Y1Q2
