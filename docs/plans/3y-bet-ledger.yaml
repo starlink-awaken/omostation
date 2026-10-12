@@ -41809,11 +41809,11 @@ bets:
           deployment_state:
             ref: receipt://docs/reports/2026-10-10-bet-240-closeout.md
             sha256: sha256:ceb7fcd21d71f0e84771f58102f0b86413b5eaaa3aab4868307ad2990fc33322
-            note: BLOCKED_G0_M0 per spec v1.1.0 — LaunchAgent identity chain unbound; release BET T10-241 pending
+            note: PROMOTED_CLEAN_REVISION via T10-241 (2026-10-12) — service running fix code, code_drift=false, BOUND_FRESH
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: blocked
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-242
   title: P1 存储收敛 — Model 卷排空到 SHAREDMODEL/~/omlx + vault-paths/BOS 逻辑命名统一
   goal: 'Model 1T 卷角色退役为 TM 专用卷：LMStudio 独有模型 (~195G) rsync 迁 SHAREDMODEL；
