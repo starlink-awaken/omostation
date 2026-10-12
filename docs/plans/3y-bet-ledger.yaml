@@ -42102,6 +42102,9 @@ bets:
   - tests/unit/test_agent_cell_semantic_scheduler.py
   - tests/unit/test_reference_cell_direct_local_schedule.py
   - tests/unit/test_tests_unit_host_anchors.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-245.md
+  - docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+  - docs/reports/2026-10-12-bet-245-closeout-canary.json
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-12-tests-unit-host-anchor-convergence.md
     spec_version: 1.0.0
