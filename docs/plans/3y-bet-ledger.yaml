@@ -41929,7 +41929,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
     spec_version: 1.0.2
-    content_digest: sha256:1dc362ca5fb499c653fd53ab0b5224cfc967d7a8bca5c8646599a1f8eca9edbe
+    content_digest: sha256:d8d3c3dd38b58f56488360f15949936b97fdb3ada4edcd740d25ab23d68a7156
     decision_ref: decision://accepted/BET-Y2Q4-T10-243
   value_indicator_policy: false
   done_at: '2026-10-11'
@@ -41943,7 +41943,7 @@ bets:
     # `bet-ledger.py complete BET-Y2Q4-T10-243` 升级 delivery_accepted。
     # 2026-10-12 复盘补充: 周任务 plist 装上后 runs=0 从未运行, 且 launchd 直启的 /bin/bash 读写外接卷全被 TCC 拒
     # (selftest-launchd 实测 hot=77 lex_write=77) —— operational 轴因此保持 NOT_PROVEN, 直到周任务由 launchd 经
-    # 终端 App 启动器首次真实触发并整链成功 (done_when 末两条)。engineering 轴: 57 条回归断言 + 真实卷 weekly 跑通。
+    # 终端 App 启动器首次真实触发并整链成功 (done_when 末两条)。engineering 轴: 回归测试全过 + 真实卷 weekly 跑通。
     axes:
       engineering:
         status: IN_PROGRESS

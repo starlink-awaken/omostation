@@ -53,8 +53,8 @@ last-reviewed: '2026-10-12'
 
 ## 4. 工具箱: bin/ops/hot-tier-resilience.sh (单脚本多子命令)
 
-新增 1 个 bin/ 脚本 (baseline 718→720, 注册 script-registry); 回归测试 `tests/bin/test_hot_tier_resilience.sh`
-(macOS 专用, 其它系统跳过; 每条断言对应一个实测踩过的坑, 对着旧版脚本跑会红 38 条):
+新增 1 个 bin/ 脚本 (注册 script-registry); 回归测试 `tests/bin/test_hot_tier_resilience.sh`
+(macOS 专用, 其它系统跳过; 每条断言对应一个实测踩过的坑, 并做过变异检查: 对着修复前的脚本跑会大面积变红):
 
 | 子命令 | 功能 | 排程 |
 |---|---|---|
@@ -146,4 +146,4 @@ launchctl bootout gui/$(id -u)/com.local.hot-tier-resilience
   3. `manifest` 在热层读不到时会用只有标题的空壳覆盖 Lex 上的好清单 (`ls` 静默失败)。现在先写临时文件, 清单为空则保留旧的。
   4. 守卫头注释写"exit 75 = TEMPFAIL"而代码是 `exit 1` (声明与执行不一致)。现在卷不在线 75、权限被拒 77。
   5. 日报新增周任务心跳与补跑 (§5), 防止周任务再次"装上却从未运行"而无人知晓。
-  验证: `tests/bin/test_hot_tier_resilience.sh` 57 条断言 (对旧版脚本跑会红 38 条); 真实 launchd 与真实卷上的 `selftest-launchd`、`weekly` 见 §7。
+  验证: `tests/bin/test_hot_tier_resilience.sh` 全过, 且对着修复前的脚本跑 (`HOT_TIER_SCRIPT=<旧版路径>`) 大面积变红; 真实 launchd 与真实卷上的 `selftest-launchd`、`weekly` 见 §7。
