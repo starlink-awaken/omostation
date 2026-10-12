@@ -42195,7 +42195,8 @@ bets:
     结构上不通 (gen-service-configs.py:478-480 把被 workspace 前缀遮蔽的 exempt 判为 E4 死数据)。第 3 条
     com.omostation.panorama-compact-observation 由主工作区未 push 的 ccecdd571 持有, 本 BET 不重复登记;
     全程不碰本机 launchd (两条 plist 的 mtime+digest+launchctl state 交付前后逐字节一致)。'
-  status: pending
+  status: done
+  done_at: 2026-10-12
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-10-12-services-e2-observe-only-backfill.md
@@ -42219,14 +42220,23 @@ bets:
   underlying_workflow: governance-state-mutation
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit: {ref: git://origin/main@94ef45831dfe7b5e3f20bc7844f3c5ef5be011b9}
+          tests: {ref: receipt://docs/reports/2026-10-12-services-e2-observe-only-backfill-closeout.md, sha256: sha256:151ce1440b6a8f31e916fa9ff42d9985ebbf13b5ca2f7acce67aee7d91174553}
+          diff: {ref: receipt://docs/reports/2026-10-12-services-e2-observe-only-backfill-closeout.md, sha256: sha256:151ce1440b6a8f31e916fa9ff42d9985ebbf13b5ca2f7acce67aee7d91174553}
+          rollback: {ref: receipt://docs/reports/2026-10-12-services-e2-observe-only-backfill-closeout.md, sha256: sha256:151ce1440b6a8f31e916fa9ff42d9985ebbf13b5ca2f7acce67aee7d91174553}
+          replay: {ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-246.md, sha256: sha256:7952bb1886a6d5fb4f613b6e1f1ffa08d2d2c6b3821b4f6fbc2cde2b2d7751a0}
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary: {ref: receipt://docs/reports/2026-10-12-services-e2-observe-only-backfill-closeout.md, sha256: sha256:151ce1440b6a8f31e916fa9ff42d9985ebbf13b5ca2f7acce67aee7d91174553}
+          fresh_receipt: {ref: receipt://docs/reports/2026-10-12-services-e2-observe-only-backfill-closeout.md, sha256: sha256:151ce1440b6a8f31e916fa9ff42d9985ebbf13b5ca2f7acce67aee7d91174553}
+          replay: {ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-246.md, sha256: sha256:7952bb1886a6d5fb4f613b6e1f1ffa08d2d2c6b3821b4f6fbc2cde2b2d7751a0}
+          cleanup: {ref: receipt://docs/reports/2026-10-12-services-e2-observe-only-backfill-closeout.md, sha256: sha256:151ce1440b6a8f31e916fa9ff42d9985ebbf13b5ca2f7acce67aee7d91174553}
       value:
         status: NOT_PROVEN
         evidence: {}
