@@ -6,32 +6,46 @@ owner: engineering-agent
 description: >-
   4.1T 外接盘 (SHAREDMODEL/MOVESPEED) 硬件层可疑 (厂家故障说明 + 实测整链掉线,
   频次待实测) 情形下的兜底与恢复工具箱 (BET-Y2Q4-T10-243)。子命令: sync-rare
-  (稀有发布者→Lex 增量, 限速+掉线守卫), manifest (公开源重建清单双写),
-  snapshot-links (models-active 软链固化), verify (副本抽样校验+清单新鲜度,
-  平铺模型目录整目录比对), daily-report (掉线日报: 真实掉线 + keepalive 探测计数,
-  可选日期参数), rebuild (T3 盘死重建剧本)。排程 launchd 人工安装制。
+  (稀有发布者→Lex 增量, 限速+卷预检), manifest (公开源重建清单双写, 空清单不覆盖旧的),
+  snapshot-links (models-active 软链固化), verify (副本抽样校验+清单新鲜度;
+  抽样为 0/热层读不到/清单缺失或超期一律判失败), weekly (周任务四步按序, 记状态戳, 失败桌面通知),
+  daily-report (掉线日报: 真实掉线 + keepalive 计数 + 周任务心跳, 心跳超期则通知并补跑; 可选日期参数),
+  rebuild (T3 盘死重建剧本), selftest-launchd (在 launchd 里实测直启与经终端 App 中转两种启动方式),
+  install-schedule (生成启动器与 plist 到暂存目录并打印安装命令, 不执行)。排程 launchd 人工安装制;
+  周任务必须经终端 App 启动 —— launchd 直启的 /bin/bash 缺『可移动卷』TCC 授权, 对外接卷读写全部被拒 (2026-10-12 实测)。
 inputs:
   - name: subcommand
     type: positional
     required: true
-    description: "sync-rare | manifest | snapshot-links | verify | daily-report [YYYY-MM-DD] | rebuild <mnt>"
+    description: "sync-rare | manifest | snapshot-links | verify | weekly | daily-report [YYYY-MM-DD] | rebuild <mnt> | selftest-launchd | install-schedule"
   - name: SHAREDMODEL/lmstudio
     type: path
     required: true
-    description: "热层源 (掉线守卫: state>=5 退避 exit 1); 路径可用环境变量 HOT_TIER_HOT / HOT_TIER_LEX 覆盖, 仅用于测试"
+    description: "热层源 (卷预检: 不在线 exit 75, 权限被拒 exit 77; 掉线守卫 state>=5 退避 exit 75); 路径可用环境变量 HOT_TIER_HOT / HOT_TIER_LEX / HOT_TIER_OMLX / HOT_TIER_WS 覆盖, 仅用于测试"
   - name: KEEPALIVE_DROPS
     type: path
     required: false
     description: "真实掉线记录 (disk-keepalive v3 从统一日志采集, daily-report 读取); 默认 ~/Library/Logs/disk-keepalive.drops"
+  - name: HOT_TIER_STATE
+    type: path
+    required: false
+    description: "周任务状态目录 (last-weekly.status / last-weekly.ok / last-sync-rare.ok …, 日报的心跳读它); 默认 ~/.local/state/hot-tier-resilience, 不在外接卷上所以 launchd 直启的日报也读得到"
+  - name: HOT_TIER_TERM_APP
+    type: string
+    required: false
+    description: "周任务的 TCC 载体终端 App, 必须已获『可移动卷』授权; 默认 iTerm。HOT_TIER_LAUNCH_MODE=terminal|direct 选启动方式 (默认 terminal); HOT_TIER_STALE_DAYS 心跳超期天数 (默认 8); HOT_TIER_AUTO_CATCHUP=0 关闭补跑; HOT_TIER_NO_NOTIFY=1 关闭桌面通知"
 outputs:
-  - type: Lex 副本 + 重建清单 + 软链 manifest
+  - type: Lex 副本 + 重建清单 + 软链 manifest + 状态戳 (~/.local/state/hot-tier-resilience) + 日报
 dependencies:
   - rsync
   - launchd (人工安装排程)
+  - 终端 App (默认 iTerm; 需已获『可移动卷』授权, 用 selftest-launchd 验证)
+  - osascript (桌面通知)
 triggers:
-  - cron: 周日 04:00 (sync-rare 链) / 每日 23:50 (daily-report), plist 模板见脚本头注释
+  - cron: 周日 04:00 (weekly, 经终端 App 启动器) / 每日 23:50 (daily-report, launchd 直启); 用 install-schedule 生成启动器与 plist
 related:
   - bin/ops/cold-backup-drill.sh
   - ~/bin/disk-keepalive.sh
+  - tests/bin/test_hot_tier_resilience.sh
 maturity: stable
-last_reviewed: "2026-10-11"
+last_reviewed: "2026-10-12"
