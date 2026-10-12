@@ -42094,7 +42094,8 @@ bets:
     字面量分布在 3 个文件 (test_meta_doctor / test_agent_cell_semantic_scheduler / test_reference_cell_direct_local_schedule)。plist
     镜像断言的期望值改由 .omo/_truth/registry/services.yaml 声明值与 Path.home() 组合给出 (非同源)，检出根锚定改由
     repo_root.code_root() 给出；另 3 处命中属脱敏用例 与 docstring 叙述 (合法)，新增反向钉住断言挡住「顺手清理」。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-12
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-10-12-tests-unit-host-anchor-convergence.md
@@ -42102,6 +42103,9 @@ bets:
   - tests/unit/test_agent_cell_semantic_scheduler.py
   - tests/unit/test_reference_cell_direct_local_schedule.py
   - tests/unit/test_tests_unit_host_anchors.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-245.md
+  - docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+  - docs/reports/2026-10-12-bet-245-closeout-canary.json
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-12-tests-unit-host-anchor-convergence.md
     spec_version: 1.0.0
@@ -42119,14 +42123,40 @@ bets:
   underlying_workflow: project-code-change
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@84d8b91e8005a5c03c9d6cd08c5585ec10c8f6e6
+          tests:
+            ref: receipt://docs/reports/2026-10-12-bet-245-closeout-canary.json
+            sha256: sha256:c268981730acb2eb85ffab8486afd28dd47b40f93e5795c1af27f3354e00124f
+          diff:
+            ref: receipt://docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+            sha256: sha256:23d2fab5152b6d1f220c1cd5cc2308adc71fa6b34a89c1bb87dbffb5293a3ef7
+          rollback:
+            ref: receipt://docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+            sha256: sha256:23d2fab5152b6d1f220c1cd5cc2308adc71fa6b34a89c1bb87dbffb5293a3ef7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-245.md
+            sha256: sha256:95cef45555415c3da801fad90abdc91a73a8cc5c5737601a424e96ea2895bf2e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-12-bet-245-closeout-canary.json
+            sha256: sha256:c268981730acb2eb85ffab8486afd28dd47b40f93e5795c1af27f3354e00124f
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+            sha256: sha256:23d2fab5152b6d1f220c1cd5cc2308adc71fa6b34a89c1bb87dbffb5293a3ef7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-245.md
+            sha256: sha256:95cef45555415c3da801fad90abdc91a73a8cc5c5737601a424e96ea2895bf2e
+          cleanup:
+            ref: receipt://docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+            sha256: sha256:23d2fab5152b6d1f220c1cd5cc2308adc71fa6b34a89c1bb87dbffb5293a3ef7
       value:
         status: NOT_PROVEN
         evidence: {}

@@ -1,0 +1,109 @@
+{
+  "schema": "bet-closeout-canary/v1",
+  "bet_id": "BET-Y2Q4-T10-245",
+  "measured_at_utc": "2026-10-12T02:40:00Z",
+  "worktree": "ws-t10-245-closeout",
+  "delivery": {
+    "pr": 4723,
+    "merge_sha": "84d8b91e8",
+    "merge_mode": "squash",
+    "ci": { "pass": 16, "skipping": 1, "fail": 0 },
+    "admin_merge": false,
+    "no_verify": false,
+    "force_push": false,
+    "swarm_escape_used": false
+  },
+  "isc_1_same_ruler_differential": {
+    "ruler": "/usr/bin/grep -rn \"/Users/xiamingxing\" tests/unit --include=\"*.py\" | wc -l",
+    "scan_scope": "tests/unit/** (全量，非三个文件名)",
+    "before": { "ref": "386ff8b92", "count": 16, "files": 5 },
+    "after": { "ref": "84d8b91e8", "count": 3, "files": 2 },
+    "after_sites": [
+      "tests/unit/test_spine_diff_adaptation.py:35",
+      "tests/unit/test_spine_diff_adaptation.py:42",
+      "tests/unit/test_service_interpreter_stability.py:11"
+    ],
+    "note": "after 由 merged main 的实际树量得，非工作树推断；差分目标为 3（合法残留）不是 0"
+  },
+  "isc_3_mutation_proof": [
+    {
+      "entry": "omostation.agent-cell-semantic-smoke",
+      "mutation": "program.args 首元素改 1 字节 (...-smoke.py -> ...-smokeX.py)",
+      "target": "tests/unit/test_agent_cell_semantic_scheduler.py",
+      "rc": 1,
+      "reading": "2 failed"
+    },
+    {
+      "entry": "omostation.reference-cell-direct-local-smoke",
+      "mutation": "program.args 首元素改 1 字节 (...-smoke.py -> ...-smokeX.py)",
+      "target": "tests/unit/test_reference_cell_direct_local_schedule.py",
+      "rc": 1,
+      "reading": "2 failed, 1 passed"
+    }
+  ],
+  "isc_3_restore": {
+    "path": ".omo/_truth/registry/services.yaml",
+    "sha256": "ddfd5d0d270f067c5cb9e534ffea5723d4ef4dc7e37341d2400f71b9784a71d5",
+    "byte_identical_before_after": true,
+    "git_status_after_restore": "clean"
+  },
+  "isc_4_reverse_pin": {
+    "falsifier": "删 1 处合法 host 命中 (test_service_interpreter_stability.py:11)",
+    "rc": 1,
+    "red_tests": [
+      "test_tests_unit_host_anchors.py::test_host_literals_are_confined_to_declared_legitimate_sites",
+      "test_tests_unit_host_anchors.py::test_legitimate_sites_still_present_and_in_the_right_shape"
+    ],
+    "restore_sha256": "eee1b04c3ec31ee0c4aa45f0f07e5c4c9536f6d79285a30094bf6428f37211ea",
+    "restored_clean": true
+  },
+  "isc_5_three_environment_readings": {
+    "command": "uv run --with pyyaml --with pytest python -m pytest tests/unit/test_tests_unit_host_anchors.py tests/unit/test_agent_cell_semantic_scheduler.py tests/unit/test_reference_cell_direct_local_schedule.py tests/unit/gac/test_meta_doctor.py -q",
+    "env_1_default": { "rc": 0, "reading": "25 passed" },
+    "env_2_state_root_profile": {
+      "env": "OMOSTATION_STATE_ROOT=/tmp/t10245-ambient-state",
+      "rc": 0,
+      "reading": "25 passed"
+    },
+    "env_3_hostile_home": {
+      "env": "HOME=/tmp/t10245-emptyhome + env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT",
+      "rc": 1,
+      "reading": "1 failed, 24 passed",
+      "failed_at_declared_site_only": "test_reference_cell_smoke_plist_uses_fresh_main_and_attempt_evidence",
+      "why_this_is_the_honest_reading": "基线（host 字面量烧进断言）在此环境反而全绿＝假绿；去 host 后唯一红点是声明过的 str(HOME/…) 组合面，其点数由 test_home_composition_is_confined_to_declared_sites 钉成 {agent-cell:0, reference-cell:3}"
+    }
+  },
+  "isc_6_gate_differential": {
+    "command": "make gac-local-gate",
+    "exit": 2,
+    "hard_failures": ["service-config-drift", "check-work-landed"],
+    "baseline_hard_failures": ["service-config-drift", "check-work-landed"],
+    "new_hard_failures": [],
+    "soft_warns": 2,
+    "preexistence_proof": "check-work-landed blocking=2 报的是 2026-10-04 两条别的会话 run（missing_landing），主工作区 origin/main 检出读数逐字节相同；ISC-6 明令不得为这两条登记债或改窄判据"
+  },
+  "ledger_after_closeout": {
+    "total_bets": 543,
+    "len_bets": 543,
+    "id_unique": true,
+    "upstream_T10_241_block_byte_identical": true,
+    "write_surfaces": 9,
+    "packet_hashes": {
+      "round_1_ledger_declaration": "sha256:3126663fa2d34a9261042ccc756e4da72b8dfd5f63b9c45b5d8e5440c8acc430",
+      "round_1_surfaces": 6,
+      "round_2_closeout_writes": "sha256:f73cfc8087d22f47496804d6899af4ef593709c28c15b4a515bbc950248799e9",
+      "round_2_surfaces": 9
+    },
+    "two_round_proof": "round 2 的 packet 含 9 面且 hash 与 round 1 不同 ⇒ 台账增补进了投影（bin/plan/bet-ledger.py:2333-2337）"
+  },
+  "spec_digest": "sha256:97b6ce98ff51ed203aec1e169b13c0fd552ba21e18d36eeac405bc171587e6d7",
+  "zero_touch": [
+    "projects/omo/**",
+    "runtime/cron/*.plist",
+    ".omo/_truth/registry/services.yaml（本体）",
+    "tests/unit/test_service_interpreter_stability.py",
+    "tests/unit/test_spine_diff_adaptation.py",
+    "gate-known-debt.yaml",
+    "submodule gitlinks"
+  ]
+}
