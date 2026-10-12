@@ -1,10 +1,11 @@
 ---
 schema: md/v1
 schema_version: specification/v1
-status: draft
+status: accepted
 lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-10-12
+accepted: "2026-10-12 Principal 批准迁移 + 独立复核通过 (身份链/发布 manifest/回滚证明/部署状态)"
 bet_id: BET-Y2Q4-T10-241
 spec_version: 1.0.0
 ---

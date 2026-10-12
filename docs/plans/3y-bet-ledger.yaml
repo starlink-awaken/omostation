@@ -42029,7 +42029,8 @@ bets:
     直指 ~/.local/share/zhixing-dashboard-runtime-clean-20261008/live_server.py, 不经稳定版本指针,
     代码身份门必失败。然后: 创建晋升 commit、原子发布 (逐文件备份 / SHA 校验 / 回滚证明)、过 24h 观测门。终态 deployment_state:
     PROMOTED_CLEAN_REVISION; 身份链未过前保持 BLOCKED_G0_M0, 不得绕门。'
-  status: pending
+  status: done
+  done_at: 2026-10-12
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -42072,22 +42073,48 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/zhixing-dcp20-release-promotion.md
     spec_version: 1.0.0
-    content_digest: sha256:4bf333600fccf0f1c6e0507f1f6e985a03a2c44efd399c484b2b0db801c32b9b
+    content_digest: sha256:65bc941233d0dacf69489d0206e645b649636fb271a39bef25d088b68f86f909
     decision_ref: decision://accepted/BET-Y2Q4-T10-241
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@75cb6f5bf96b742ddecb4aab96c9a3f45a3daf27
+          tests:
+            ref: receipt://docs/reports/2026-10-12-bet-241-closeout-canary.json
+            sha256: sha256:7d9905a8ed92ddd29aaa1ec41b7c7c8844a51c218a7e63a17dfe739ea8920075
+          diff:
+            ref: receipt://docs/reports/2026-10-12-bet-241-release-promotion-closeout.md
+            sha256: sha256:eed6083440068909f7ab50e84d339295c2393fb76cc224bb163c1d2ff45e91a7
+          rollback:
+            ref: receipt://docs/reports/2026-10-12-bet-241-release-promotion-closeout.md
+            sha256: sha256:eed6083440068909f7ab50e84d339295c2393fb76cc224bb163c1d2ff45e91a7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-241.md
+            sha256: sha256:56e59a3e1b796a0818c9061d4bcb405f43048df2154af97825c28893c78c9f09
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-12-bet-241-closeout-canary.json
+            sha256: sha256:7d9905a8ed92ddd29aaa1ec41b7c7c8844a51c218a7e63a17dfe739ea8920075
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-12-bet-241-release-promotion-closeout.md
+            sha256: sha256:eed6083440068909f7ab50e84d339295c2393fb76cc224bb163c1d2ff45e91a7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-241.md
+            sha256: sha256:56e59a3e1b796a0818c9061d4bcb405f43048df2154af97825c28893c78c9f09
+          cleanup:
+            ref: receipt://docs/reports/2026-10-12-bet-241-release-promotion-closeout.md
+            sha256: sha256:eed6083440068909f7ab50e84d339295c2393fb76cc224bb163c1d2ff45e91a7
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
 - id: BET-Y2Q4-T10-245
   title: ADR-0456 B4b 前置 — tests/unit 残留 13 处 host 字面量按 registry/home 派生
   goal: '去 host 化测试面 (B4b 改道批次的前置, 2026-10-12 实测立项): tests/unit 尚余 13 处 /Users/xiamingxing
