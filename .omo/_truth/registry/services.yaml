@@ -6061,6 +6061,50 @@ services:
     stderr: /Users/xiamingxing/Workspace/runtime/dashboard/watchdog-launchd.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
   depends_on: []
+- id: omostation.eg2-embeddings
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.eg2-embeddings.plist
+  content_digest: sha256:5b79483fded24b45d81b812cd2e18a8ab71508e1dcf03847510a1990eaf8ba4f
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.eg2-embeddings
+  program:
+    interpreter: /Users/xiamingxing/.local/share/eg2-runtime/venv/bin/python
+    entrypoint: /Users/xiamingxing/.local/share/eg2-runtime/eg2_server.py
+    args: []
+  run_at_load: true
+  resilience:
+    keepalive: always
+    throttle_interval: 10
+  environment:
+    HF_HUB_DISABLE_TELEMETRY: '1'
+    HF_HUB_OFFLINE: '1'
+    TOKENIZERS_PARALLELISM: '0'
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/eg2-embeddings.log
+    stderr: /Users/xiamingxing/.local/log/eg2-embeddings.log
+  notes: 'BET-Y2Q4-T10-246 observe-only 登记: plist 由外部运行时 ~/.local/share/eg2-runtime 自行安装与维护, 本仓不生成 (generate: false); 登记是为了让「本机已装 label == 注册表」可证 (E2 归零)。 键面 KeepAlive true + ThrottleInterval 10 + 3 个环境变量, 生成器可表达, 但本轮不接管内容也不动本机 launchd。 登记时 (2026-10-12) 状态 running。'
+  depends_on: []
+- id: omostation.zhixing-brief-watchdog
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.zhixing-brief-watchdog.plist
+  content_digest: sha256:16794d1ff99a86c6c9c39067c3ff00088895a817fabdabae0a24cfbb6dc632b6
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 120
+  label: com.omostation.zhixing-brief-watchdog
+  program:
+    interpreter: /bin/bash
+    entrypoint: /Users/xiamingxing/dotfiles/bin/zhixing-brief-watchdog.sh
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/brief-watchdog-launchd.out.log
+    stderr: /Users/xiamingxing/.local/log/brief-watchdog-launchd.err.log
+  notes: 'BET-Y2Q4-T10-246 observe-only 登记: plist 由 ~/dotfiles (commit a63eb64) 安装, 本仓不生成 (generate: false)。 plist 含 ProcessType: Background 而生成器不输出该键 —— 改 generate: true 会立即产生 E1 漂移, 所以必须保持 observe-only。 登记时 (2026-10-12) 状态 not running。'
+  depends_on: []
 - id: omostation.zhixing-host-drift
   enabled: true
   generate: false
