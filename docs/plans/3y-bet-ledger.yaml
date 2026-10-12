@@ -42122,14 +42122,40 @@ bets:
   underlying_workflow: project-code-change
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@84d8b91e8005a5c03c9d6cd08c5585ec10c8f6e6
+          tests:
+            ref: receipt://docs/reports/2026-10-12-bet-245-closeout-canary.json
+            sha256: sha256:c268981730acb2eb85ffab8486afd28dd47b40f93e5795c1af27f3354e00124f
+          diff:
+            ref: receipt://docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+            sha256: sha256:23d2fab5152b6d1f220c1cd5cc2308adc71fa6b34a89c1bb87dbffb5293a3ef7
+          rollback:
+            ref: receipt://docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+            sha256: sha256:23d2fab5152b6d1f220c1cd5cc2308adc71fa6b34a89c1bb87dbffb5293a3ef7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-245.md
+            sha256: sha256:95cef45555415c3da801fad90abdc91a73a8cc5c5737601a424e96ea2895bf2e
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-12-bet-245-closeout-canary.json
+            sha256: sha256:c268981730acb2eb85ffab8486afd28dd47b40f93e5795c1af27f3354e00124f
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+            sha256: sha256:23d2fab5152b6d1f220c1cd5cc2308adc71fa6b34a89c1bb87dbffb5293a3ef7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-245.md
+            sha256: sha256:95cef45555415c3da801fad90abdc91a73a8cc5c5737601a424e96ea2895bf2e
+          cleanup:
+            ref: receipt://docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md
+            sha256: sha256:23d2fab5152b6d1f220c1cd5cc2308adc71fa6b34a89c1bb87dbffb5293a3ef7
       value:
         status: NOT_PROVEN
         evidence: {}
