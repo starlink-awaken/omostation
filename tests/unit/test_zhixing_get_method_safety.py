@@ -172,6 +172,29 @@ def test_execution_operations_are_denied_on_get_without_query_or_side_effects(
     } == before
 
 
+@pytest.mark.parametrize("operation", ("agent/preflight", "preflight", "compute/live"))
+def test_suspended_get_operations_return_405_without_subprocess_or_query(
+    dashboard_modules, tmp_path, monkeypatch, operation
+):
+    _, live_server = dashboard_modules
+    index = _SpyIndex()
+    subprocess_calls = []
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: subprocess_calls.append(a))
+    server, thread = _start_server(live_server, tmp_path, index)
+    try:
+        status, payload = _request(server, f"/api/v1/{operation}")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+    assert status == 405
+    assert payload["error"] == "GET_OPERATION_NOT_ALLOWED"
+    assert index.queries == []
+    assert index.executions == []
+    assert subprocess_calls == []
+
+
 @pytest.mark.parametrize("operation", EXECUTION_OPERATIONS)
 def test_projection_mode_denies_all_execution_posts_before_body_dispatch(
     dashboard_modules, tmp_path, operation
