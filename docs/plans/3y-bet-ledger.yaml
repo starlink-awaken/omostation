@@ -42088,6 +42088,73 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+- id: BET-Y2Q4-T10-245
+  title: ADR-0456 B4b 前置 — tests/unit 残留 13 处 host 字面量按 registry/home 派生
+  goal: '去 host 化测试面 (B4b 改道批次的前置, 2026-10-12 实测立项): tests/unit 尚余 13 处 /Users/xiamingxing
+    字面量分布在 3 个文件 (test_meta_doctor / test_agent_cell_semantic_scheduler / test_reference_cell_direct_local_schedule)。plist
+    镜像断言的期望值改由 .omo/_truth/registry/services.yaml 声明值与 Path.home() 组合给出 (非同源)，检出根锚定改由
+    repo_root.code_root() 给出；另 3 处命中属脱敏用例 与 docstring 叙述 (合法)，新增反向钉住断言挡住「顺手清理」。'
+  status: in_progress
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-12-tests-unit-host-anchor-convergence.md
+  - tests/unit/gac/test_meta_doctor.py
+  - tests/unit/test_agent_cell_semantic_scheduler.py
+  - tests/unit/test_reference_cell_direct_local_schedule.py
+  - tests/unit/test_tests_unit_host_anchors.py
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-12-tests-unit-host-anchor-convergence.md
+    spec_version: 1.0.0
+    content_digest: sha256:97b6ce98ff51ed203aec1e169b13c0fd552ba21e18d36eeac405bc171587e6d7
+    decision_ref: decision://accepted/BET-Y2Q4-T10-245
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 days
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+  circuit_breaker: 判据若要求放宽既有 == 断言才转绿 → 停止并保留原断言；不改 services.yaml 与 runtime/cron/*.plist
+    本体 (B4b 需授权批次)。
+  non_goals:
+  - 不做 plist/cron 改道 (B4b 批次 2+, 机器级需授权)
+  - 不改 services.yaml 里的 host 字面量本体
+  - 不动 test_service_interpreter_stability / test_spine_diff_adaptation 的 3 处合法命中
+  - 不放宽 service-config-drift，不登记它的债
+  done_when:
+  - ISC-1 同尺差分 /usr/bin/grep -rn 扫 tests/unit 全量：改前 13 → 改后 0，由同一次扫描产出
+  - ISC-2 13 处全部转为关系断言 (== 保留，不降强度)
+  - ISC-3 变异对照：改 services.yaml 该 entry 的 program.args 一字节 → 两条用例当场红
+  - ISC-4 反向钉住断言：删 3 处合法命中 → 当场红
+  - ISC-5 三环境实测：①未声明 profile 与 ②OMOSTATION_STATE_ROOT=<tmp> 各 25 passed 同判；③HOME=<空目录>
+    下只允许 §2 第 2 类 3 处 str(HOME/…) 组合断言转红（实测 1 failed/24 passed，基线字面量在该环境是假绿），点数由 test_home_composition_is_confined_to_declared_sites
+    钉成 reference-cell 3 / agent-cell 0
+  - ISC-6 make gac-local-gate 硬失败集合等于基线（零新增）；基线预存 2 条：service-config-drift 与 check-work-landed（后者在主工作区
+    origin/main 检出读数逐字相同 blocking=2，非本轮引入，不得为此登记债或改窄它）
+  verify:
+  - cmd: /usr/bin/grep -rn "/Users/xiamingxing" tests/unit --include="*.py" | wc -l
+    expect: 3 (仅剩 §1 表 2 个非锚点文件的合法命中)
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/unit/test_tests_unit_host_anchors.py
+      tests/unit/test_agent_cell_semantic_scheduler.py tests/unit/test_reference_cell_direct_local_schedule.py
+      tests/unit/gac/test_meta_doctor.py -q
+    expect: 全绿 exit 0
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -42226,7 +42293,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 542
+  total_bets: 543
   windows:
   - Y1Q1
   - Y1Q2
