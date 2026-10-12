@@ -104,15 +104,21 @@ def _source_commit_oid() -> str:
     return _dashboard_git("rev-parse", "HEAD")
 
 
-def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str) -> dict:
-    """在 releases/<OID>/ 下准备版本目录 (普通目录, 无内部 symlink, SHA 对齐主仓资产)。"""
+def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
+                    source_dir: Path | None = None) -> dict:
+    """在 releases/<OID>/ 下准备版本目录 (普通目录, 无内部 symlink, SHA 对齐来源)。
+
+    source_dir 缺省取 HOST_DIR (主仓资产 —— publish 用)。migrate 传 DASHBOARD_DIR
+    (当前部署态 —— 作为回滚基线, 不是修复后代码)。
+    """
+    src = source_dir or HOST_DIR
     version_dir = RELEASES_DIR / oid
     if version_dir.exists() and not version_dir.is_dir():
         return {"ok": False, "reason": "version_path_not_dir", "path": str(version_dir)}
     version_dir.mkdir(parents=True, exist_ok=True)
     manifest = []
     for deploy_name, repo_name in assets:
-        source = HOST_DIR / repo_name
+        source = src / repo_name
         destination = version_dir / deploy_name
         source_sha = _sha(source)
         if source_sha is None:
@@ -233,8 +239,13 @@ def migrate() -> dict:
         return {"ok": False, "reason": "plist_backup_failed", "detail": str(exc)}
     # 以当前部署态建立基线版本 (releases/<baseline-OID>/)
     baseline = f"baseline-{_source_commit_oid()[:12]}"
-    assets = tuple((name, repo) for name, repo in HOST_FILES)
-    prepared = _prepare_version(assets, baseline)
+    # 基线 = 当前部署态中实际存在的文件 (回滚目标), 不是主仓修复后资产。
+    # 部署目录里是 deploy_name (如 live_server.py), 不是 repo_name (.asset)。
+    assets = tuple((name, name) for name, _ in HOST_FILES
+                   if (DASHBOARD_DIR / name).exists())
+    if not assets:
+        return {"ok": False, "reason": "baseline_no_deployed_files"}
+    prepared = _prepare_version(assets, baseline, source_dir=DASHBOARD_DIR)
     if not prepared.get("ok"):
         return prepared
     switched = _switch_current(Path(prepared["version_dir"]))
