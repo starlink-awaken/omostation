@@ -42185,6 +42185,78 @@ bets:
       tests/unit/test_agent_cell_semantic_scheduler.py tests/unit/test_reference_cell_direct_local_schedule.py
       tests/unit/gac/test_meta_doctor.py -q
     expect: 全绿 exit 0
+- id: BET-Y2Q4-T10-246
+  title: ADR-0456 B4b 前置 — 2 条占用 com.omostation 命名空间的异主服务登记为 observe-only (E2 归零)
+  goal: '异主 label 回填 (B4b 中止判据「每批 E2 = 0」的前置, 2026-10-12 实测立项): `--reality-check` 在
+    origin/main@b884e2919 上 E2=3 / 在主工作区 d06571798 上 E2=2, 本 BET 只登记两侧都零引用的 2 条 —— com.omostation.eg2-embeddings
+    (执行体 ~/.local/share/eg2-runtime, KeepAlive) 与 com.omostation.zhixing-brief-watchdog
+    (执行体 ~/dotfiles/bin/zhixing-brief-watchdog.sh, StartInterval 120)。机制沿用 BET-Y2Q4-T10-206
+    的 observe-only (generate: false ⇒ --check 不做字节比较, 不可能新增 E1 drift); 走 exempt_labels
+    结构上不通 (gen-service-configs.py:478-480 把被 workspace 前缀遮蔽的 exempt 判为 E4 死数据)。第 3 条
+    com.omostation.panorama-compact-observation 由主工作区未 push 的 ccecdd571 持有, 本 BET 不重复登记;
+    全程不碰本机 launchd (两条 plist 的 mtime+digest+launchctl state 交付前后逐字节一致)。'
+  status: pending
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-12-services-e2-observe-only-backfill.md
+  - .omo/_truth/registry/services.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-246.md
+  - docs/reports/2026-10-12-services-e2-observe-only-backfill-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-12-services-e2-observe-only-backfill.md
+    spec_version: 1.0.0
+    content_digest: sha256:3ae89d69061f4a730d4a0a0b0bed5f0d8ebde9fa49a7d5aabfbd4208706d5971
+    decision_ref: decision://accepted/BET-Y2Q4-T10-246
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  value_indicator_policy: false
+  circuit_breaker: '若 E2 归零需要把异主服务声明成 generate: true, 或需要动 exempt_labels / workspace_prefixes
+    / 任一判据本体 → 停止并保留原判据。本机 launchd 一律不动。'
+  non_goals:
+  - 不做 plist/cron 改道 (B4b 批次 2+, 机器级需授权)
+  - 不登记 com.omostation.panorama-compact-observation (并发工作线 ccecdd571 持有)
+  - 不修 E1 那 1 条 drift (--write + LaunchAgent 重载需授权)
+  - 不碰 BET-Y2Q4-T10-237 (同门禁相邻) 与 BET-Y2Q4-T16-01 (另一装置 scheduler-compile)
+  - 不主工作区 11 条未 push commit (只报告, 禁动)
+  - 不放宽 service-config-drift, 不登记它的债
+  done_when:
+  - 'ISC-1 候选 registry 的 --reality-check: e2_undeclared_labels == [''com.omostation.panorama-compact-observation'']
+    (我拥有的 2 条从 E2 消失)'
+  - 'ISC-1b 把候选 2 条叠加到主工作区那份 services.yaml (/tmp 投影件, 不提交) 再跑 --reality-check: e2_undeclared
+    == 0'
+  - ISC-2 E1 drift 仍恰为 1 且仍是 zhixing-projection-fullrefresh (不新增不消失)
+  - ISC-3 E4 / E5 读数逐字未变 (不得为 E2 造新分类问题)
+  - ISC-4 --validate 绿 (CI 可验面, 不依赖本机 plist)
+  - 'ISC-5 本机 launchd 零改动: 2 条 plist 的 mtime + sha256 + launchctl state 交付前后逐字节一致'
+  - ISC-6 登记内容与 plutil 转出 JSON 逐项一致, content_digest = 安装 plist 的 sha256
+  - ISC-7 make gac-local-gate 硬失败集合等于基线 (零新增)
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json --registry .omo/_truth/registry/services.yaml
+    expect: e2_undeclared == 1 且唯一项为 com.omostation.panorama-compact-observation; e1_drift
+      == 1; e4/e5 与基线逐字一致
+  - cmd: python3 bin/mof/gen-service-configs.py --validate --json
+    expect: ok true, violation_count 0
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -42323,7 +42395,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 543
+  total_bets: 544
   windows:
   - Y1Q1
   - Y1Q2
