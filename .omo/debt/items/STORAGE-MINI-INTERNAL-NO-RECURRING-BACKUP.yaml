@@ -1,0 +1,34 @@
+id: "STORAGE-MINI-INTERNAL-NO-RECURRING-BACKUP"
+title: "mac mini 内置盘没有持续备份 (Time Machine 无目的地, 上次备份 2026-03-16; 加密归档仅一次性)"
+dimension: "operations"
+subdimension: "backup"
+domain: "storage"
+scope: "host"
+severity: "high"
+weight: 0.2
+entropy_class: "high"
+lifecycle_state: "identified"
+owner: "xiamingxing"
+affected_roots: []
+evidence_refs:
+- Plans/macmini-7t-ancient-twilight.md
+- .omo/_knowledge/retros/BET-Y2Q4-T10-243.md
+mitigation_refs:
+- docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
+opened_at: "2026-10-12"
+last_reviewed_at: '2026-10-12'
+next_review_at: '2026-10-19'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "两件事需要用户: (1) Model 卷在 10-18 观察期后排空并重建, 然后 sudo tmutil setdestination 设为 Time Machine 目的地并确认 AutoBackup 开启 (设目的地需要 sudo, 代理不能代做; 此前 error 45 未解); (2) 是否把内置盘的 gpg 加密归档 (Lex + NAS) 做成定期任务, 以及保留策略与定期还原演练。口令 (钥匙串 cold-backup) 的离线副本仍未确认, 是所有加密归档的单点"
+history:
+- at: '2026-10-12T00:20:00+00:00'
+  action: identify
+  note: >-
+    2026-10-12 实测: tmutil destinationinfo = "No destinations configured"; Time Machine 偏好
+    AutoBackup = 0, LastBackupActivity = 2026-03-16-215302, 即内置盘近 7 个月没有 TM 备份。
+    2026-10-11 做过一次性的内置盘加密归档 (must-keep 76.8 GiB + 补充 1.05 GiB, Lex 与 NAS 两处,
+    解密列表 / 还原抽样 / sha256 / NAS 回读均已校验), 脚本在仓库外的 ~/.local/share/mini-internal-backup/,
+    没有排程、保留策略和定期还原演练, 不是持续机制。
+  actor: "governance-agent"

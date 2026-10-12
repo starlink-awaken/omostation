@@ -13,9 +13,11 @@ affected_roots: []
 evidence_refs:
 - protocols/vault-paths.yaml
 - docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
-mitigation_refs: []
+mitigation_refs:
+- bin/ops/hot-tier-resilience.sh
+- docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
-last_reviewed_at: '2026-10-11'
+last_reviewed_at: '2026-10-12'
 next_review_at: '2026-10-18'
 gate_level: none
 x1_policy_ref: ""
@@ -30,3 +32,12 @@ history:
     + 模型归档 7.4G; MBP HDD 副本同)。叠加 disk8 硬件嫌疑
     (见 HW-DISK8-4TB-FLAKY), 风险敞口最大的一项。
   actor: "engineering-agent"
+- at: '2026-10-12T00:20:00+00:00'
+  action: mitigate
+  note: >-
+    部分缓解, 未关闭。稀有发布者权重 (232.4 GiB) 已有 Lex 副本, 2026-10-12 08:06 手动跑通整链
+    (sync-rare 16 目录 / verify 抽样 15 不一致 0); 公开源权重 (约 545G) 可由 36 条重建清单重下,
+    不做数据备份。剩余缺口: 周同步排程装上后从未运行过 (launchd 直启 /bin/bash 缺『可移动卷』TCC 授权,
+    runs = 0), 已改为经终端 App 启动器并加心跳补跑, 但需用户人工安装并由 launchd 真实触发成功一次后
+    才算持续机制; Lex 与 4.1T 盘之外没有第三份稀有权重。
+  actor: "governance-agent"

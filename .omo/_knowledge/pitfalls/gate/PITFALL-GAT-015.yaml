@@ -1,0 +1,23 @@
+schema: agent-error/v1
+id: PITFALL-GAT-015
+category: gate
+severity: low
+title: 'change-lane-check: 按 run 汇总的 gate 会因混合车道必红, 要按车道拆提交'
+symptom: gac-local-gate --scope run 对一个 run 汇总全部改动文件, change-lane-check 报 FAIL mixed
+  lanes=code,docs,docs_data,governance_state,other; staged 范围的 gate 却通过
+root_cause: '车道规则按单个提交约束: code 车道不能与其它车道同提交, governance_state (.omo/**) 不能与任何其它车道混,
+  只有 docs+docs_data 等少数组合被允许; run 范围把所有 claim 的文件放在一起评估'
+solution: 按车道拆成多个提交 (code / docs+docs_data / governance_state / other 各一个), 每个提交单独过钩子;
+  不需要也不应该绕过钩子
+prevention: 动手前用 bin/change-lane-check.py 的分类规则规划提交边界; 台账与 spec 因 digest 绑定必须同提交 (docs+docs_data
+  允许); .omo 下的债务/retro/pitfall 单独一个 governance_state 提交且走 governance-state-mutation
+  工作流
+tags:
+- change-lane
+- gate
+- commit-split
+discovered_by: claude
+discovered_at: '2026-10-12'
+times_encountered: 1
+last_confirmed_at: '2026-10-12'
+status: active

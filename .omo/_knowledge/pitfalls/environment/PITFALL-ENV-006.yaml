@@ -1,0 +1,32 @@
+schema: agent-error/v1
+id: PITFALL-ENV-006
+category: environment
+severity: high
+title: 'launchd 下 bash 无『可移动卷』TCC 授权: 监控外接卷的脚本把 ls/写入被拒误判为未挂载, 持续误报并被放大成桌面通知'
+symptom: 'disk-keepalive 每个 3 分钟检测周期都把已挂载的外接卷判为未挂载并重挂, 一天累积数百条 REMOUNT/NEEDS_ATTENTION
+  与每小时桌面通知; 终端里手测同一检测通过; 同时段读该卷的 rsync 连续两小时无中断; StorageKit 重挂时记录 Mounted: Yes; 守卫读
+  state 计数, 定时备份链被静默拦下。同一根因的执行侧表现 (2026-10-12): 装上的周同步 plist 从未运行 (launchctl runs = 0); 在 launchd
+  里复现时 ls / find / mkdir 全是 Operation not permitted, 而 [ -d ] 与 stat 成功, 守卫放行后 rsync 才失败'
+root_cause: launchd 作业的负责进程是 /bin/bash, tccd 对 kTCCServiceSystemPolicyRemovableVolumes
+  判定为拒绝或未决定, ls 与写入返回 Operation not permitted; 脚本把读不了当成没挂载
+solution: 监控侧：挂载状态用 diskutil info <UUID> 的 Mounted 字段 (DiskArbitration, 不读卷内容); 对卷的读写降为尽力而为且失败不计异常。
+  执行侧 (需要真读写外接卷的定时任务, 如周同步)：不让 launchd 直接拉 /bin/bash, 改为 launchd -> open -g -j -a iTerm <启动器.command>,
+  由已获『可移动卷』授权的终端 App 作为负责进程 (2026-10-12 用 hot-tier-resilience.sh selftest-launchd 实测：直启 hot=77 lex_write=77,
+  经 iTerm 通过)。给 /bin/bash 开完全磁盘访问权限也能解, 但范围过大 (所有 launchd 下的 bash 脚本都获权), 不推荐
+prevention: 监控与定时脚本上线前必须在 launchd 环境内复现 (launchctl kickstart 后看日志), 不能只在交互终端手测; 异常计数的告警必须能与独立证据
+  (统一日志里的设备移除事件) 对账; 把无权限与不存在分开判定 (stat 判挂载, ls/写探针判可用, 退出码 75/77 区分);
+  每个排程都要有独立于它自己的心跳 (日报读状态戳, 超期告警并补跑), 否则『装上却从未运行』无人知晓
+tags:
+- launchd
+- tcc
+- removable-volumes
+- monitoring
+- false-positive
+- diagnosis-trap
+- scheduling
+- heartbeat
+discovered_by: claude
+discovered_at: '2026-10-11'
+times_encountered: 2
+last_confirmed_at: '2026-10-12'
+status: active

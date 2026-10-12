@@ -101,11 +101,77 @@ MBP 1T HDD    异机副本目的地（冷备档案镜像 → 3-2-1 灾备闭环�
 
 | 动作 | 命令 | 前置条件 |
 |---|---|---|
-| 配额再平衡：SHAREDWORK 976G→300G、SHAREDMODEL 1000G→1650G（同容器总量守恒，在线调整） | `diskutil apfs resizeVolume disk10s1 300g`<br>`diskutil apfs resizeVolume disk10s2 1650g` | 4.1T 盘换线/换口后稳定数日（9 天掉线 2 次） |
+| 配额再平衡：SHAREDWORK 976G→300G、SHAREDMODEL 1000G→1650G（同容器总量守恒，在线调整） | `diskutil apfs resizeVolume disk10s1 300g`<br>`diskutil apfs resizeVolume disk10s2 1650g` | 直连对照实验后稳定数日（见下节「综合存储架构 v2」；原"9 天掉线 2 次"出自 keepalive 误报日志，已作废） |
 | MOVESPEED 定位固化：冷层+数据集增长空间（1.9T 闲置即余量，不再切卷） | 写入 vault-paths（P1） | — |
 | Model 终态：P1 迁完 LMStudio 独有模型后转 TM 独占卷 | `tmutil setdestination /Volumes/Model`（P1） | 迁移验证 + 观察期 |
 
-遗留风险登记：SHAREDMODEL 热层 663G 无备份（P1 用 Model 排空后空间做镜像或轮换）；4.1T 盘硬件层可疑（两次异常消失：10-07~10-10 三天、10-10 夜~10-11 晨 8.5h，keepalive 日志为证）。
+遗留风险登记：SHAREDMODEL 热层无备份的风险已部分缓解——稀有权重 232.4 GiB 已在 Lex 有校验过的副本，公开源权重可由清单重下（见下节）；4.1T 盘硬件层可疑，依据是 9/7 厂家故障说明与 10-11 14:47 的一次实测整链掉线（见下节）。此前写在这里的"两次异常消失：10-07~10-10 三天、10-10 夜~10-11 晨 8.5h，keepalive 日志为证"来自 keepalive 误报日志，**已作废**。
+
+## 综合存储架构 v2（2026-10-11 实测：内置盘备份 / NAS / Y7000P / 4.1T 盘）
+
+> 关联：BET-Y2Q4-T10-242（存储收敛）、BET-Y2Q4-T10-243（4.1T 兜底体系）。本节数字均为 2026-10-11 当天实测。
+
+**目标**：每类不可重建的数据至少两份、其中一份异机或异介质，且每一份都经过解密或回读校验；监控只在真出问题时报警。
+
+### 实测事实
+
+| 资产 | 实测 | 角色 |
+|---|---|---|
+| 小米 NAS（MINAS） | 仅暴露一个 SMB 共享，7.2T、剩 3.5T；写入 9.8 与 24.9 MB/s（两次采样，波动大）；不响应 ICMP；RAID 级别未确认（用户称双盘） | 只放加密归档的在线副本；不放热数据，不做几百 GB 级搬运 |
+| Y7000P | Wi-Fi 6E（链路 2.4 Gbps），rclone+sftp 传 256 MiB 用 13~15 秒（约 18~21 MB/s）；E:（内置 990 PRO 2T NVMe）空闲 1764G，H:（4T USB）仅剩 273G，F:（T7 2T USB）仅剩 105G；无 rsync，有 tar/wsl/git | 如需放置，只放稀有权重 232G 到 E:（源取 Lex 副本）；848G 全量镜像不做 |
+| mini 内置盘 | 460Gi，已用 294Gi；Documents 56.6G（Finder 的 iCloud 桌面与文档开关为开，同步是否完成未验证）、Library 50.5G、Workspace 9.1G | 备份清单见下 |
+| `~/.claude` | git 报告它不是仓库、无远端（LifeOS 文档称有私有远端，与现场不符） | 此前零备份，已纳入内置盘备份 |
+
+### 对原假设的订正
+
+| 原假设 | 实测 | 处理 |
+|---|---|---|
+| 小米 NAS 可作主力归档 | 写入 10~25 MB/s | 降为加密归档的在线副本 |
+| Y7000P 局域网回灌 SHAREDMODEL 约 1 小时 | 走 Wi-Fi，约 20 MB/s，848G 要 12 小时以上，恢复同样久 | 不做全量镜像 |
+| Y7000P 的 4T 盘有约 1T 空闲 | H: 仅剩 273G，空闲在 E: | 如需放置用 E: |
+| keepalive 日志反映 4.1T 盘频繁掉线（"9 天 3 次大规模""间隔缩至 3 分钟""三天""8.5h"） | **误报**（见下） | 作废；T10-243 设计文档与 HW-DISK8 债务中的相关数字待订正 |
+
+### 备份矩阵
+
+| 资产 | 位置 | 加密 | 校验 | 状态 |
+|---|---|---|---|---|
+| mini 内置盘 must-keep 清单（76.8 GiB、849,110 条目：Documents、Workspace、`.claude`、`.codex`、`.config`、Pictures、钥匙串文件等） | Lex `cold-backup/mini-internal/20261011T025545Z/` | gpg AES-256，口令在登录钥匙串（service `cold-backup`） | 整包解密+列表 rc=0/0；还原抽样 2/2 逐字节一致；sha256 记入 manifest | 完成 |
+| 同上 | NAS `_backups-from-mini/mini-internal/20261011T025545Z/` | 归档本身已加密 | NAS 回读 sha256 与 manifest 一致 | 完成 |
+| 补充小归档（1.05 GiB、7,478 条目：`.kems-pilot`、`.lmstudio` 对话与设置、`.cherrystudio` 配置、omlx-embed 脚本） | Lex `…/20261011T082143Z/` 与 NAS 同路径 | 同上 | 解密+列表 rc=0/0；还原抽样 2/2 一致；NAS 回读 sha256 一致 | 完成 |
+| 稀有发布者权重（232.4 GiB） | Lex `cold-backup/sharemodel-hot-tier/rare-publishers/` | 否（公开模型权重） | 与源端逐目录大小、文件数一致 | Lex 完成；第 3 份未做 |
+| 公开源权重（约 545G） | 无副本 | — | — | 可由清单重下 |
+| 工作区 git 追踪面冷备（8.05G） | Lex 与 MBP | gpg AES-256 | Lex 原件与 MBP 回传 sha256 一致 | 完成（10-10） |
+
+未覆盖：`Library/Application Support`（如 Claude 10.98G、Google 6.76G，多为应用本体或云同步）与缓存类目录；iCloud 托管的 Documents 同步完成度未验证。
+
+### 4.1T 盘（MOVESPEED mini M4 4TB 扩展坞，DK5A1-4T）调查结论
+
+- **接入方式**：不是直连 mini。链路是 mini 后置雷电口（以 USB 3.2 10 Gb/s 模式工作，雷电总线显示"无设备"属正常）→ VIA VL822 hub（带 Genesys 二级 hub 与一个 MCP01 设备）→ 盘。
+- **9/7 厂家故障说明**（用户整理，存 NAS 根目录）：mini、MBP、Y7000P 三台主机、多根线、带电 hub、两种桥接芯片（RTL9210VB、RTL9220）均复现；首次超时稳定在约 10.4 秒；指向 SSD 主控 RTS5772DL 或固件；购于 2025-10-15。
+- **keepalive 误报根因**（已在 launchd 内复现）：launchd 下的 `/bin/bash` 无「可移动卷」TCC 授权，`ls` 与写入均报 `Operation not permitted`。旧脚本用 `ls` 判挂载，于是每 3 分钟误判一次「未挂载」并"重挂"。佐证：StorageKit 在重挂时记录 `Mounted: Yes`；rsync 从该卷连读约两小时无中断。
+- **真实掉线**：统一日志只留约 18 小时（至 10-10 22:03），期间仅 1 次——2026-10-11 14:47:44，该口上 3 个 SuperSpeed 设备在 6 毫秒内一起消失、约 1 秒后链路恢复，三个卷（含未被监控的 MOVESPEED）被系统卸载。这是整条 hub 链路一起掉，与 9/7"只有盘自己掉"的特征不同。
+- **已修**：`~/bin/disk-keepalive.sh` v3.2（仓库外脚本）：挂载判定改用 `diskutil info`；保活写入降为尽力而为，被拒不计异常；真实掉线按小时从统一日志采集到 `~/Library/Logs/disk-keepalive.drops`，附"同刻消失的 SS 设备数"，回看窗口随距上次采集的间隔自适应；v3.1 增加维护开关（`disk-keepalive.maintenance`，人为拔线或卸载期间暂停检测，2 小时自动失效）。保活写入在 launchd 下仍被拒，恢复需给 `/bin/bash` 完全磁盘访问权限（范围大，暂不做；也没有证据显示空闲会致掉线）。同批在仓库内修了 `hot-tier-resilience.sh` 的 `verify`（平铺模型目录被静默当成已校验）与 `daily-report`（纳入 `.drops`）。
+- **误报的连带后果**：脚本守卫 `guard_hot_online` 读 keepalive 的 `state` 计数（≥5 退避）。误报期间 `state` 恒为百位数，周日 04:00 的定时 `sync-rare` 会被静默拦下；v3 归零后该守卫才恢复正常。
+- **直连对照实验的判定规则**：把盘从 hub 摘下，直插 mini 后置雷电口，观察 3~7 天，看 `.drops` 里的 `ss_removed`。直连后不再掉 → 问题在 hub 或 mini 到 hub 的那段线；仍掉且 `ss_removed=1` → 回到 9/7 结论，走售后换盘。拔线本身会产生一条 Removed 记录，需标注为人为。
+
+### 状态与里程碑
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| 内置盘加密备份（Lex + NAS） | 完成 | 见备份矩阵 |
+| keepalive 误判修复（v3 / v3.1 / v3.2） | 完成 | launchd 内已验证。v3 自 10-11 16:07 起，除 20:46~22:46 的人为维护窗口及其到期后一次真实重挂外无异常；14:47 之后统一日志没有新的 USB 移除事件。每小时增量采集已自然运行；v3.2 修了"维护窗口后回看窗口过短会漏记空档里的掉线"的盲区 |
+| 4.1T 直连对照实验 | 待用户 | 10-11 20:51 已演练卸载（不需停应用，只有 CleanMyMac 监控进程持有一个目录句柄）；2 小时维护窗口到期未换线，已完全恢复；需用户在 mini 旁时重开窗口 |
+| 冷备口令离线副本 | 待用户 | 口令只在登录钥匙串；内置盘损坏则所有 gpg 冷备不可解 |
+| 仓库内误报数据订正（HW-DISK8 债务、T10-243 spec、T10-242 retro、T10-243 账本 goal） | 完成，PR 待合并 | omostation#4720（分支 `agent/governance-agent/storage-p1`）；spec 升 1.0.1 并同步绑定摘要 |
+| `hot-tier-resilience.sh` 的 `daily-report` 纳入 `.drops`、`verify` 修平铺目录 | 完成，PR 待合并 | 同上；已用构造场景验证（原版确实误判通过） |
+| **周同步排程的 TCC 缺口**（10-12 复盘新发现） | 代码完成，待用户安装 | launchd 直启的 `/bin/bash` 对外接卷读写全被拒（`selftest-launchd` 实测 `hot=77 lex_write=77`），原周任务 plist 装上后 `runs = 0` 从未运行。改为 launchd → `open -a iTerm` 启动器（实测 `hot=0 lex_write=0`）；新增 `weekly` / `selftest-launchd` / `install-schedule`，日报带周任务心跳与补跑；回归测试全过。装排程是人工步骤，且必须先让主工作区含 `weekly` 的版本 |
+| `verify` / `manifest` 的静默假通过（10-12 复盘新发现） | 代码完成 | 读不到热层时 `verify` 曾 exit 0（抽样 0、不一致 0）、`manifest` 曾用空壳覆盖 Lex 上的旧清单；现在抽样为 0 / 读不到 / 清单缺失或超期一律失败，空清单不覆盖 |
+| Time Machine（10-12 实测） | 待用户 | `tmutil destinationinfo` 为 "No destinations configured"，偏好 `AutoBackup = 0`、`LastBackupActivity = 2026-03-16`：内置盘近 7 个月无 TM 备份，现仅靠 10-11 的加密归档。Model 排空（10-18 观察期后）并重建卷后需用户 `sudo tmutil setdestination` |
+| ecos 存储并轨改动（`DOMAIN-model-volume.yaml`、`constraints.yaml`、`catalog-daemon.py`） | PR 待合并 | #4716 合并时 `projects/ecos` 指针取了上游值，该改动实际未生效；omostation-ecos#93，本地测试 1388 通过。其 CI 红在 `ecos-constraint-compiler.py:226` 的 F841（ecos 主分支自 10-10 起即红，与本改动无关） |
+| 稀有权重第 3 份（NAS 约 4 小时，或 Y7000P E: 约 3.5 小时） | 待定 | 232G |
+| 本地 main 与 origin/main 分叉 | 已解决 | PR #4716 于 10-11 21:51 合并，两者重新一致 |
+
+**交付现状（10-12 起）**：本地积压的 21 个提交已由 PR #4716「sync: 本地主树积压合并」交付，本地 main 与 origin/main 一致（`7591a2a93`），先前写在这里的"双向分叉、需拆 PR"的结论随之作废。10-12 已推送并开 PR：omostation#4720（订正误报数据 + `hot-tier-resilience` 修复）与 omostation-ecos#93（存储并轨），均待合并；ecos 的 PR 合并后还要更新主仓的 `projects/ecos` 指针，T10-242（账本状态 `blocked`）才能解封。另有 6 个文件里还留着 `/Volumes/SharedDisk` 旧引用（`ecos-health-check.py`、`check-disk-usage.py` 等监控脚本盯着一个不存在的卷；`check-disk-usage.py` 在挂载点不存在时 `return 0`，等于永远通过），该卷是退役、离线还是改名需要用户定，改之前不动。另发现 origin/main 账本 lint 当前有一条别的 BET 的错误：T10-240 `OVERALL_STATE_MISMATCH`（declared=`blocked`，derived=`delivery_accepted`），#4716 合并后即存在，与本文件改动无关。
 
 ## 披露与假设
 
@@ -113,3 +179,7 @@ MBP 1T HDD    异机副本目的地（冷备档案镜像 → 3-2-1 灾备闭环�
 - Model↔SHAREDMODEL 重复体积按元数据估算（df），精确去重清单待 P1 `rclone check` 产出。
 - 全部破坏性/不可逆操作（tmutil removedestination、Lex 重建加密卷、mdutil、删除 Model 存量、SMB 开放）执行前逐项向用户确认，本计划批准 ≠ 逐项授权。
 - 假设：三块盘常驻 mini（用户 2026-10-10 确认；2026-10-11 进一步确认**放弃**原"某盘给 MBP 在家时用"的拔插计划——SHAREDWORK 跨机角色固化为网络共享，MBP 侧另有一块独立 2T Model 盘不在本规划范围）。
+- 2026-10-11 订正：本文件此前引用的 4.1T 盘掉线频次来自 keepalive 误报日志，已作废（见「综合存储架构 v2」）。真实掉线的长期频次目前无数据：统一日志只留约 18 小时，`disk-keepalive.drops` 刚开始积累。
+- NAS 速度只有两次采样、RAID 级别未确认；Y7000P 速度含 rclone 启动开销，且走 Wi-Fi，随信号波动。
+- 内置盘备份、小归档与 NAS 副本均为一次性手工作业（脚本在仓库外的 `~/.local/share/mini-internal-backup/`），尚无排程、保留策略与定期还原演练，不是持续机制。稀有权重的周同步在用 `install-schedule` 人工安装并由 launchd 真实触发成功一次之前，同样只是"设计 + 手工跑通"，不是持续机制。
+- 2026-10-12 复盘：本文件和相关治理文档在 10-11 之前出现过两层"声明与执行不一致"——监控的输出在 launchd 里是假的（误报），执行端的周任务在 launchd 里根本跑不了（TCC）。两者同根（launchd 下的 `/bin/bash` 没有『可移动卷』授权），都是在交互终端里手测不出来、只有在 launchd 里复现才暴露。见 `.omo/_knowledge/retros/BET-Y2Q4-T10-243.md`。

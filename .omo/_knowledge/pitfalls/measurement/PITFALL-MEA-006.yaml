@@ -1,0 +1,25 @@
+schema: agent-error/v1
+id: PITFALL-MEA-006
+category: measurement
+severity: high
+title: zsh 内置 log 命令遮蔽 /usr/bin/log, 且丢弃 stderr 或首行把执行失败读成 0 条命中; ls/ps/df 的别名同理让列解析取错
+symptom: '在 Bash 工具 (zsh) 里 log show 报 too many arguments (调用的是 zsh 内置 log), 但 2>/dev/null
+  或 tail -n +2 把报错丢掉, 得出内核日志对该设备命中 0 条的假结论并据此推断没有 USB 事件; 同类: ls/ps/df 被别名为 eza/procs/duf,
+  列位置与系统命令不同, awk 取错列显示 0 字节'
+root_cause: zsh 的 log 是 shell 内置命令, 优先于 PATH 中的 /usr/bin/log; 结果为空时没有做阳性对照; 别名在交互
+  shell 生效而脚本里不生效
+solution: 统一日志一律写 /usr/bin/log; 脚本里用 /bin/ls /bin/ps /bin/df 的绝对路径; 取文件大小用 stat -f
+  %z 而不是解析 ls 输出
+prevention: 对 0 命中先跑一个必定命中的阳性对照查询; 不丢弃 stderr 与首行; 先用 type 确认命令到底是谁; 结论里写明查询是否真的执行过
+tags:
+- zsh
+- log
+- builtin
+- alias
+- measurement
+- false-negative
+discovered_by: claude
+discovered_at: '2026-10-11'
+times_encountered: 1
+last_confirmed_at: '2026-10-11'
+status: active
