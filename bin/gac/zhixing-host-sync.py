@@ -267,6 +267,8 @@ def migrate() -> dict:
             replaced = True
     if not replaced:
         return {"ok": False, "reason": "plist_entrypoint_not_found"}
+    # WorkingDirectory 对齐迁移后的运行根 (版本目录), 否则 root_mismatch
+    payload["WorkingDirectory"] = str(prepared["version_dir"])
     try:
         with plist_path.open("wb") as handle:
             plistlib.dump(payload, handle)

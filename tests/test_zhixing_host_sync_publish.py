@@ -161,4 +161,6 @@ def test_migrate_backs_up_plist(zhs_env):
     assert Path(m["backup"]).exists()
     payload = plistlib.load(zhs_env["plist"].open("rb"))
     assert str(zhs.CURRENT_ENTRYPOINT) in payload["ProgramArguments"]
+    # WorkingDirectory 对齐迁移后的运行根 (版本目录)
+    assert payload.get("WorkingDirectory") == str(zhs.RELEASES_DIR / m["baseline_version"])
     assert (deploy / "current").is_symlink()
