@@ -18,19 +18,19 @@
 | `status`  | 逐文件 sha 对比（仓库 vs 部署）+ 漂移汇总 |
 | `plan`    | 从登记的 LaunchAgent 解析实际运行根，并只读计算明确选择资产的漂移 |
 | `check`   | `plan` 的全受管资产兼容别名；漂移或身份不符时 exit 1 |
+| `migrate` | plist 迁移: entrypoint → current/live_server.py (建立基线版本) |
+| `publish` | 受管发布: 版本目录 + 原子切换 current + SHA 校验 + 回滚 |
+| `restore` | 回滚: current 切回上一版本 |
 
-**为什么捕获"注入后"的态**: panels 由 `zhixing-panel-sync.py ensure` 幂等注入
-（有 marker 则跳过），`refresh.py` 亦补丁幂等。故线上稳定态 = 已注入/已补丁态，
-捕获它则不产生伪漂移。
-
-当前 G0=PARTIAL/HOLD、M0=FAIL/HOLD。生产 CLI 只提供不写入的 `status` 与
-`plan`（以及只读的兼容别名 `check`）；`apply`、`capture`、`publish`、`restore`
-均明确返回 BLOCKED，直到后续 release BET 获得独立准入。
+**稳定入口契约** (DCP-20 spec v1.1.0): plist entrypoint 指向 `current/live_server.py`；
+`current` 是唯一允许的 symlink，目标落在 `releases/<40位commit-OID>/`；版本目录是
+普通目录、无内部 symlink、SHA 对齐主仓资产。`apply`/`capture` 仍 BLOCKED。
 
 用法:
     python3 bin/gac/zhixing-host-sync.py status --json
-    python3 bin/gac/zhixing-host-sync.py plan --file live_server.py --json
-    python3 bin/gac/zhixing-host-sync.py check --json
+    python3 bin/gac/zhixing-host-sync.py migrate --json
+    python3 bin/gac/zhixing-host-sync.py publish --file live_server.py --file observatory_query.py --json
+    python3 bin/gac/zhixing-host-sync.py restore --json
 """
 
 from __future__ import annotations
@@ -83,7 +83,192 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
 )
 
 BLOCKED_REASON = "g0_m0_hold_release_bet_required"
-BLOCKED_COMMANDS = frozenset({"apply", "capture", "publish", "restore"})
+BLOCKED_COMMANDS = frozenset({"apply", "capture"})
+
+# 稳定入口契约 (DCP-20 spec v1.1.0): plist entrypoint 必须指向 current/live_server.py,
+# 唯一允许的 current symlink 目标落在 releases/<40位commit-OID>/ 下。
+CURRENT_LINK = DASHBOARD_DIR / "current"
+RELEASES_DIR = DASHBOARD_DIR / "releases"
+CURRENT_ENTRYPOINT = CURRENT_LINK / "live_server.py"
+
+
+def _dashboard_git(*args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(DASHBOARD_DIR), *args],
+        check=False, capture_output=True, text=True,
+    ).stdout.strip()
+
+
+def _source_commit_oid() -> str:
+    """主仓 HEAD (DCP-20 修复所在 commit) —— 待晋升版本的来源 OID。"""
+    return _dashboard_git("rev-parse", "HEAD")
+
+
+def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str) -> dict:
+    """在 releases/<OID>/ 下准备版本目录 (普通目录, 无内部 symlink, SHA 对齐主仓资产)。"""
+    version_dir = RELEASES_DIR / oid
+    if version_dir.exists() and not version_dir.is_dir():
+        return {"ok": False, "reason": "version_path_not_dir", "path": str(version_dir)}
+    version_dir.mkdir(parents=True, exist_ok=True)
+    manifest = []
+    for deploy_name, repo_name in assets:
+        source = HOST_DIR / repo_name
+        destination = version_dir / deploy_name
+        source_sha = _sha(source)
+        if source_sha is None:
+            return {"ok": False, "reason": "source_asset_missing", "asset": str(source)}
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(source.read_bytes())
+        written_sha = _sha(destination)
+        if written_sha != source_sha:
+            return {"ok": False, "reason": "version_sha_drift", "asset": deploy_name}
+        manifest.append({"name": deploy_name, "source": str(source),
+                         "version": str(destination), "sha": source_sha})
+    return {"ok": True, "version_dir": str(version_dir), "oid": oid, "manifest": manifest}
+
+
+def _switch_current(target_version_dir: Path) -> dict:
+    """原子切换 current symlink → 目标版本目录 (temp symlink + rename)。"""
+    if not target_version_dir.is_dir():
+        return {"ok": False, "reason": "version_dir_missing", "path": str(target_version_dir)}
+    temp_link = DASHBOARD_DIR / f".current.tmp.{os.getpid()}"
+    try:
+        if temp_link.exists() or temp_link.is_symlink():
+            temp_link.unlink()
+        temp_link.symlink_to(target_version_dir, target_is_directory=True)
+        os.replace(temp_link, CURRENT_LINK)
+    except OSError as exc:
+        if temp_link.exists() or temp_link.is_symlink():
+            try:
+                temp_link.unlink()
+            except OSError:
+                pass
+        return {"ok": False, "reason": "current_switch_failed", "detail": str(exc)}
+    return {"ok": True, "current": str(CURRENT_LINK), "target": str(target_version_dir)}
+
+
+def _previous_version() -> str | None:
+    """解析当前 current symlink 指向的版本 OID (回滚目标)。"""
+    try:
+        resolved = CURRENT_LINK.resolve()
+    except OSError:
+        return None
+    if RELEASES_DIR in resolved.parents:
+        return resolved.name
+    return None
+
+
+def publish(files: list[str] | tuple[str, ...] | None) -> dict:
+    """受管发布: 版本目录准备 → 原子切换 current → SHA 校验 → 失败回滚。
+
+    前置: plist entrypoint 必须已迁移到 current/live_server.py (先跑 migrate)。
+    """
+    runtime = _running_registered_runtime()
+    if not runtime.get("ok"):
+        return {"ok": False, "reason": "launch_agent_identity_unverified", "runtime": runtime}
+    # 身份链: 解析后的 entrypoint 必须落在 RELEASES_DIR 下 (current symlink → releases/<OID>/)
+    entry = Path(runtime["entrypoint"])
+    if RELEASES_DIR not in entry.parents:
+        return {
+            "ok": False, "reason": "plist_not_migrated",
+            "detail": "先跑 migrate 将 plist entrypoint 指向 current/live_server.py",
+            "entrypoint": runtime["entrypoint"],
+        }
+    try:
+        assets = _selected_assets(files)
+    except ValueError as exc:
+        return {"ok": False, "reason": "invalid_asset_selection", "detail": str(exc)}
+    oid = _source_commit_oid()
+    if not re.fullmatch(r"[0-9a-f]{40}", oid):
+        return {"ok": False, "reason": "source_oid_unresolved", "oid": oid}
+    previous = _previous_version()
+    prepared = _prepare_version(assets, oid)
+    if not prepared.get("ok"):
+        return prepared
+    switched = _switch_current(Path(prepared["version_dir"]))
+    if not switched.get("ok"):
+        return switched
+    # SHA 校验: 新版本目录中已发布资产与主仓一致
+    deployed = _asset_plan(Path(prepared["version_dir"]), files, HOST_DIR)
+    if not deployed.get("ok"):
+        if previous:
+            _switch_current(RELEASES_DIR / previous)
+        return {"ok": False, "reason": "deploy_verify_failed",
+                "detail": "发布后校验失败, 已尝试回滚", "deploy": deployed}
+    return {
+        "ok": True, "oid": oid, "version_dir": prepared["version_dir"],
+        "previous_version": previous, "write_performed": True,
+        "manifest": prepared["manifest"], "deploy": deployed,
+    }
+
+
+def restore() -> dict:
+    """回滚: 将 current symlink 切回上一版本。"""
+    previous = _previous_version()
+    if not previous:
+        return {"ok": False, "reason": "no_previous_version"}
+    target = RELEASES_DIR / previous
+    if not target.is_dir():
+        return {"ok": False, "reason": "previous_version_missing", "version": previous}
+    return _switch_current(target)
+
+
+def migrate() -> dict:
+    """plist 迁移: entrypoint → current/live_server.py (先以当前部署态建立基线版本)。
+
+    前置: 当前部署态可捕获 (host 文件与 repo 资产对齐或接受为基线)。
+    """
+    registration = _registered_runtime()
+    if not registration.get("ok"):
+        return {"ok": False, "reason": "launch_agent_identity_unverified", "registration": registration}
+    current_entry = registration["entrypoint"]
+    if current_entry == str(CURRENT_ENTRYPOINT):
+        return {"ok": True, "already_migrated": True, "entrypoint": current_entry}
+    # 备份 plist
+    plist_path = _resolved(LAUNCH_AGENT_PLIST)
+    backup = plist_path.with_suffix(".plist.bak")
+    try:
+        backup.write_bytes(plist_path.read_bytes())
+    except OSError as exc:
+        return {"ok": False, "reason": "plist_backup_failed", "detail": str(exc)}
+    # 以当前部署态建立基线版本 (releases/<baseline-OID>/)
+    baseline = f"baseline-{_source_commit_oid()[:12]}"
+    assets = tuple((name, repo) for name, repo in HOST_FILES)
+    prepared = _prepare_version(assets, baseline)
+    if not prepared.get("ok"):
+        return prepared
+    switched = _switch_current(Path(prepared["version_dir"]))
+    if not switched.get("ok"):
+        return switched
+    # 改写 plist entrypoint → current/live_server.py
+    try:
+        with plist_path.open("rb") as handle:
+            payload = plistlib.load(handle)
+    except (OSError, plistlib.InvalidFileException) as exc:
+        return {"ok": False, "reason": "plist_read_failed", "detail": str(exc)}
+    arguments = payload.get("ProgramArguments")
+    if not isinstance(arguments, list):
+        return {"ok": False, "reason": "launch_agent_program_missing"}
+    replaced = False
+    for idx, value in enumerate(arguments):
+        if isinstance(value, str) and Path(value).name == "live_server.py":
+            arguments[idx] = str(CURRENT_ENTRYPOINT)
+            replaced = True
+    if not replaced:
+        return {"ok": False, "reason": "plist_entrypoint_not_found"}
+    try:
+        with plist_path.open("wb") as handle:
+            plistlib.dump(payload, handle)
+    except OSError as exc:
+        return {"ok": False, "reason": "plist_write_failed", "detail": str(exc)}
+    # 迁移后校验: 解析后的 entrypoint 必须落在 RELEASES_DIR 下
+    migrated = _registered_runtime()
+    if not migrated.get("ok") or RELEASES_DIR not in Path(migrated["entrypoint"]).parents:
+        return {"ok": False, "reason": "migrate_verify_failed", "runtime": migrated}
+    return {
+        "ok": True, "baseline_version": baseline, "entrypoint": str(CURRENT_ENTRYPOINT),
+        "backup": str(backup), "write_performed": True,
+    }
 
 
 def _sha(path: Path) -> str | None:
@@ -270,16 +455,6 @@ def capture(*_args: object, **_kwargs: object) -> dict:
     return _blocked("capture")
 
 
-def publish(*_args: object, **_kwargs: object) -> dict:
-    """Legacy programmatic entry point: production publish is unavailable."""
-    return _blocked("publish")
-
-
-def restore(*_args: object, **_kwargs: object) -> dict:
-    """Legacy programmatic entry point: production restore is unavailable."""
-    return _blocked("restore")
-
-
 def _asset_plan(runtime_root: Path,
                 files: list[str] | tuple[str, ...] | None,
                 host_dir: Path) -> dict:
@@ -362,6 +537,12 @@ def main(argv: list[str] | None = None) -> int:
     plan_parser.add_argument("--json", action="store_true")
     check_parser = sub.add_parser("check", help="所有受管资产的只读兼容检查；漂移时 exit 1")
     check_parser.add_argument("--json", action="store_true")
+    publish_parser = sub.add_parser("publish", help="受管发布: 版本目录 + 原子切换 current + SHA 校验")
+    publish_parser.add_argument("--file", dest="files", action="append", required=True,
+                                help="受管宿主文件名；可重复指定")
+    publish_parser.add_argument("--json", action="store_true")
+    sub.add_parser("restore", help="回滚: current 切回上一版本").add_argument("--json", action="store_true")
+    sub.add_parser("migrate", help="plist 迁移: entrypoint → current/live_server.py").add_argument("--json", action="store_true")
     args = ap.parse_args(arguments)
     command = args.command or "status"
 
@@ -369,6 +550,12 @@ def main(argv: list[str] | None = None) -> int:
         result = plan(args.files)
     elif command == "check":
         result = plan([deploy_name for deploy_name, _ in HOST_FILES])
+    elif command == "publish":
+        result = publish(args.files)
+    elif command == "restore":
+        result = restore()
+    elif command == "migrate":
+        result = migrate()
     else:
         result = _registered_status()
     print(json.dumps(result, ensure_ascii=False, indent=1, default=str))
