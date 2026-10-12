@@ -14,7 +14,7 @@ last_updated: 2026-09-03
 # 剩余债务清理专项 (DEBT-CLEANUP-2026-07-01)
 
 > **建立**: 2026-07-01 · **状态**: 📋 专项建立, 启动中
-> **关联**: 路径 A ([AGENT-ISOLATION-ROLLOUT](AGENT-ISOLATION-ROLLOUT.md)) · auto-PR ([AUTO-PR-REVIEW-ISA](AUTO-PR-REVIEW-ISA.md)) · [GOVERNANCE-MATURITY-ISA](GOVERNANCE-MATURITY-ISA.md)
+> **关联**: 路径 A ([AGENT-ISOLATION-ROLLOUT](../AGENT-ISOLATION-ROLLOUT.md)) · auto-PR ([AUTO-PR-REVIEW-ISA](../AUTO-PR-REVIEW-ISA.md)) · [GOVERNANCE-MATURITY-ISA](../GOVERNANCE-MATURITY-ISA.md)
 > **源头**: 2026-07-01 综合 ISA session (ISC-3f→2c→auto-PR ISA→bot治本→路径A→F2 generated治) 后的剩余债盘点
 
 ---

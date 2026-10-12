@@ -12,7 +12,7 @@ last_updated: 2026-09-03
 
 # metaos × ecos 方案 C 路线图
 
-> ADR: [0181](../.omo/_knowledge/decisions/0181-metaos-ecos-scheme-c-planes.md)
+> ADR: [0181](../../.omo/_knowledge/decisions/0181-metaos-ecos-scheme-c-planes.md)
 
 ## 三平面
 
@@ -91,7 +91,7 @@ uv run --directory projects/agora python bin/gac/evidence-smoke.py --gate 95
 
 ## Phase 5b 命令（容器执行面）
 
-> ADR: [0184](../.omo/_knowledge/decisions/0184-scheme-c-5b-container-executor.md)
+> ADR: [0184](../../.omo/_knowledge/decisions/0184-scheme-c-5b-container-executor.md)
 
 ```bash
 # 默认 local（与 5b 前行为等价，CI 零 Docker 依赖）
@@ -121,7 +121,7 @@ SSOT: `projects/agora/etc/container-executor-profiles.yaml`
 
 ## Phase 5c（设计已冻结，实现未做）
 
-> ADR: [0186](../.omo/_knowledge/decisions/0186-scheme-c-5c-os-acl-design.md)
+> ADR: [0186](../../.omo/_knowledge/decisions/0186-scheme-c-5c-os-acl-design.md)
 
 | 层 | 内容 | 状态 |
 |----|------|------|
@@ -130,7 +130,7 @@ SSOT: `projects/agora/etc/container-executor-profiles.yaml`
 | L2 可选 host ACL | `omo acl plan` / `apply`（ADR-0189，`OMO_OS_ACL=1`） | ✅ |
 | L3 容器 | 5b spawn 不 RW mount `.omo` | ✅ 5b |
 
-#运维 Runbook: [`docs/operations/omo-path-acl-runbook.md`](../.omo/_archive/operations-2026H1/omo-path-acl-runbook.md) (doctor 日常节奏 ADR-0199)
+#运维 Runbook: [`docs/operations/omo-path-acl-runbook.md`](../../.omo/_archive/operations-2026H1/omo-path-acl-runbook.md) (doctor 日常节奏 ADR-0199)
 
 ## Phase 5c L1/L2 命令
 

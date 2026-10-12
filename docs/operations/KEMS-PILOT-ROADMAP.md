@@ -16,7 +16,7 @@ last_updated: 2026-09-03
 
 > 对应业务输入：卫健委《KEMS场景分析与需求描述》2026-07-30。本文记录可交付的工程边界，不把需求文档中的目标指标冒充为当前能力。
 
-生产化实施方案见 [`docs/KEMS-PRODUCTION-PLAN.md`](KEMS-PRODUCTION-PLAN.md)，其中定义 OCR 质量治理、正式 UI、持久化图谱、OMO 派发、真实评测集和预测模型的 M0～M7 交付顺序与放行门。
+生产化实施方案见 [`docs/KEMS-PRODUCTION-PLAN.md`](../KEMS-PRODUCTION-PLAN.md)，其中定义 OCR 质量治理、正式 UI、持久化图谱、OMO 派发、真实评测集和预测模型的 M0～M7 交付顺序与放行门。
 
 ## 当前判断
 
@@ -89,4 +89,4 @@ KEMS 的正确落地顺序是“先证据闭环，再扩大场景，再接模型
 
 ## 仍未完成的业务能力
 
-当前仍未完成的是生产验收而非全部工程能力：真实数据集尚未完成双人 adjudication，PostgreSQL 恢复演练证据尚未提供，企业 ReachBridge endpoint/token 尚未配置，真实 OMO approved task 尚未产生，业务表单/通知/报告模板仍需按试点场景扩展。已有代码能力、远端 PR 和当前上线闸门以 [KEMS 生产计划](KEMS-PRODUCTION-PLAN.md) 及外部验收报告为准；任何缺少真实证据的项目不得标记为生产完成。
+当前仍未完成的是生产验收而非全部工程能力：真实数据集尚未完成双人 adjudication，PostgreSQL 恢复演练证据尚未提供，企业 ReachBridge endpoint/token 尚未配置，真实 OMO approved task 尚未产生，业务表单/通知/报告模板仍需按试点场景扩展。已有代码能力、远端 PR 和当前上线闸门以 [KEMS 生产计划](../KEMS-PRODUCTION-PLAN.md) 及外部验收报告为准；任何缺少真实证据的项目不得标记为生产完成。

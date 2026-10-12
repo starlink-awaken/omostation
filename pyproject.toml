@@ -27,6 +27,8 @@ test = [
     "httpx",
     "fastapi",
     "fastmcp",
+    "openai",  # tests/integration mock openai.OpenAI 需模块可导入
+    "pytest-timeout",  # 挂死兜底: 2026-10-12 quest_points e2e 永挂 22h 的教训
 ]
 
 [tool.ruff]
