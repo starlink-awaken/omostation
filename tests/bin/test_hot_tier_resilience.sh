@@ -130,6 +130,8 @@ if can_chmod_block; then
     check "状态记为 FAIL sync-rare 77" grep -q '^FAIL sync-rare 77 ' "$T/state/last-weekly.status"
     check "没有记整链成功戳" test ! -f "$T/state/last-weekly.ok"
     chmod 755 "$T/lex"
+    : > "$T/keepalive.daily"; run daily-report 2026-10-13
+    check "日报把失败写成人话: FAIL sync-rare rc=77 @ <时间>" grep -Eq 'FAIL sync-rare rc=77 @ [0-9]{4}-[0-9]{2}-[0-9]{2} ' "$T/keepalive.daily"
 fi
 
 echo "== 6. daily-report: 不折行、带真实掉线、带周任务心跳"
@@ -146,6 +148,7 @@ echo "== 6b. 心跳新鲜时不告警、不补跑"
 new_fixture; run weekly >/dev/null; : > "$T/keepalive.daily"
 run daily-report 2026-10-13
 check "心跳显示 上次整链成功 0d 前" grep -q '上次整链成功 0d 前' "$T/keepalive.daily"
+check "最近一次状态写成人话: OK @ <时间>" grep -Eq '最近一次: OK @ [0-9]{4}-[0-9]{2}-[0-9]{2} ' "$T/keepalive.daily"
 check "新鲜心跳不触发补跑" test ! -f "$T/open.log"
 
 echo "== 7. 周任务超期 → 补跑: 经终端 App 拉起启动器, 且 20 小时内不重复"

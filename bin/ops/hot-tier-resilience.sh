@@ -284,6 +284,15 @@ cmd_weekly() {
     echo "[$(LOGTS)] weekly 全部完成"
 }
 
+# last-weekly.status (STATE STEP RC EPOCH) → 人话, 如 "FAIL sync-rare rc=77 @ 2026-10-18 04:00:03"
+fmt_status() {
+    local st step rc ts
+    read -r st step rc ts <<< "${1:-}"
+    case "${ts:-}" in ''|*[!0-9]*) printf '%s' "${1:-无记录}"; return 0 ;; esac
+    if [ "$st" = FAIL ]; then printf '%s %s rc=%s @ %s' "$st" "$step" "$rc" "$(date -r "$ts" '+%F %T')"
+    else printf '%s @ %s' "$st" "$(date -r "$ts" '+%F %T')"; fi
+}
+
 # 周任务心跳: 距上次整链成功的天数, 从未成功打印 -1。只读状态目录, 不碰外接卷
 weekly_age_days() {
     local f="$STATE_DIR/last-weekly.ok" ts
@@ -331,7 +340,7 @@ cmd_daily_report() {
     echo "[$(LOGTS)] $day 掉线日报: 真实掉线=${drops_n:-0}${drops_detail:+ (同刻消失SS设备数: $drops_detail)} | keepalive 日志行=${total:-0} 未挂载探测=${unmounted:-0} REMOUNT_OK=${remount:-0} NEEDS_ATTENTION=${needs:-0} MAINT=${maint:-0}$note" >> "$KEEPALIVE_DAILY"
     # 周任务心跳: 周任务本身在终端 App 里跑、可能根本没起来 (装上后从未跑过的排程曾无人知晓), 由日报兜底发现
     age=$(weekly_age_days)
-    status=$(cat "$STATE_DIR/last-weekly.status" 2>/dev/null || echo "无记录")
+    status=$(fmt_status "$(cat "$STATE_DIR/last-weekly.status" 2>/dev/null)")
     if [ "$age" -lt 0 ]; then hb="从未整链成功"; stale=1
     elif [ "$age" -gt "$STALE_DAYS" ]; then hb="上次整链成功 ${age}d 前 (超过 ${STALE_DAYS}d)"; stale=1
     else hb="上次整链成功 ${age}d 前"; fi
