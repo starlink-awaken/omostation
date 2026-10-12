@@ -297,6 +297,84 @@ def _state_readers(rows):
     return sorted({(rel, line) for _f, _k, rel, line, _a, klass in rows if klass == "STATE"})
 
 
+# ── checkout_resolver 谓词: 「某个 repo_root 公开 callable 是不是检出根定位器」──────────
+#
+# 五条**全部**由 AST 判定，不 import repo_root（import 会把 host 状态带进探测面，
+# 见 AGENTS.md §7「hermetic 测试泄漏 host 状态」），不做子串比较。为什么不能用子串（本轮实测）：
+# `"__file__" in ast.unparse(canonical_root)` 读数为 **True**，只因它那句 RuntimeError 的
+# **文案**里写着 `__file__`；反向同源失误是 `code_root` —— `Path(__file__)` 里 `__file__` 是
+# Name 作实参，只查 `X.__file__` 的 Attribute 判据对它**恒 False**。两种形状都要查。
+#
+# 为什么是五条而不是三条：三条（原 spec 草案）的通过集实测是 `{canonical_root, projection_rels}`
+# —— projection_rels 是投影路径查询器，不是检出根定位器，被当证据就是橡皮章。
+
+_CHECKOUT_CLAUSES = ("no-file-anchor", "no-state-marker", "refs-marker", "raises", "zero-required-args")
+
+
+def _violated_clauses(fn: ast.FunctionDef) -> list[str]:
+    """返回 fn 违反的条款；空列表 = 五条齐备 = 合格定位器。"""
+    out: list[str] = []
+    names = {n.id for n in ast.walk(fn) if isinstance(n, ast.Name)}
+    attrs = [a for a in ast.walk(fn) if isinstance(a, ast.Attribute)]
+    file_anchored = "__file__" in names or any(
+        isinstance(a.value, ast.Name) and a.value.id == "__file__" for a in attrs
+    )
+    if file_anchored:
+        out.append("no-file-anchor")
+    if (names | {a.attr for a in attrs}) & set(_STATE_MARKERS):
+        out.append("no-state-marker")
+    if "MARKER" not in names and "MARKER" not in {a.attr for a in attrs}:
+        out.append("refs-marker")
+    if not any(isinstance(r, ast.Raise) for r in ast.walk(fn)):
+        out.append("raises")
+    a = fn.args
+    required = len(a.posonlyargs) + len(a.args) - len(a.defaults)
+    if required > 0 or any(d is None for d in a.kw_defaults):
+        out.append("zero-required-args")
+    return out
+
+
+def _all_names(tree: ast.AST) -> set[str]:
+    """从 AST 取 `__all__` 字面量，不 import 被测模块。"""
+    for node in tree.body:
+        # Assign 是 targets（复数、可链式解包），AnnAssign 才是 target；先按类型筛再取属性 ——
+        # 直接 getattr 会让模块级 docstring(Expr) 也走一遍，当场 AttributeError。
+        if isinstance(node, ast.Assign):
+            names = list(node.targets)
+        elif isinstance(node, ast.AnnAssign):
+            names = [node.target]
+        else:
+            continue
+        for t in names:
+            if isinstance(t, ast.Name) and t.id == "__all__":
+                return set(ast.literal_eval(node.value))
+    raise AssertionError("repo_root.py 没有 __all__ 字面量")
+
+
+def _checkout_anchored_resolver(name: str, *, src: Path = REPO_ROOT_PY) -> tuple[bool, list[str], str]:
+    """name 必须是 src 里 `__all__` 声明的模块级 callable；返回 (合格, 违反条款, 函数体)。"""
+    tree = _parse(src)
+    assert tree is not None, src
+    defs = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == name]
+    if name not in _all_names(tree) or not defs:
+        return False, ["not-a-public-callable"], ""
+    fn = defs[0]
+    return (not (violated := _violated_clauses(fn)), violated, ast.unparse(fn))
+
+
+# 合法最小体（等价于 canonical_root 的形状）—— 只断言「全拒绝」时谓词恒假也是绿，
+# 所以合格面必须由这条自己写出一个该合格的对象。
+_LEGIT_RESOLVER = """
+def root() -> Path:
+    env = os.environ.get("OMOSTATION_ROOT")
+    if env and (Path(env) / MARKER).is_file():
+        return Path(env)
+    home = Path.home() / "Workspace"
+    if (home / MARKER).is_file():
+        return home
+    raise RuntimeError("定位不到规范检出")
+"""
+
 # ── 钉住的实测现状 (bump 前跑 `.subtrees/omo` 得到的读数) ──────────────────
 
 STATE_FAMILIES = frozenset(
@@ -396,7 +474,7 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
     },
     "runtime/omo/event-ledger.sqlite3": {
         ("bin/panorama/panorama-collect.py", "CHECKOUT"),
-        ("bin/panorama/projection-full-refresh.py", "CHECKOUT"),
+        ("bin/panorama/projection-full-refresh.py", "CALLER"),
     },
 }
 
@@ -453,8 +531,26 @@ CALLER_EVIDENCE: dict[tuple[str, str], dict[str, object]] = {
         "exprs": ["root = Path(args.batch)", 'parser.add_argument(\n        "--batch",\n        metavar="ROOT",'],
         "checkout": False,
     },
+    # T10-247: ledger 根在**调用时刻**解析。读取点写成 `canonical_root() / "runtime" / ...`，
+    # 静态类别是 CALLER（函数调用，扫不出模块级根定义），所以证据必须来自**那个 resolver 自己**。
+    # 不用 `checkout: True`：它判的是 `exprs` 拼接文本里有没有 `__file__` / `parents[` / `code_root`
+    # 子串 —— 而本文件第 43 行的 `sys.path.insert(... parents[1] ...)` 足以让任何 exprs 凑出标记，
+    # 那是橡皮章。改由 `checkout_resolver` 拿 repo_root.py 的 AST 谓词作证（见 _violated_clauses）。
+    ("bin/panorama/projection-full-refresh.py", "canonical_root"): {
+        "exprs": [
+            "from repo_root import canonical_root, state_root",
+            'return canonical_root() / "runtime" / "omo" / "event-ledger.sqlite3"',
+        ],
+        "checkout_resolver": "canonical_root",
+    },
 }
 CHECKOUT_MARKERS = ("__file__", "parents[", "code_root")
+
+# 在册 STATE 读者评审集 —— 键**只有 rel**，不钉行号：`_state_readers` 返回 (rel, line) 对，
+# 行号随该读者自身后续改动漂移 (T10-247 实测 line=58)，钉行号会让判据在无关改动当天假红。
+REVIEWED_STATE_READERS = {
+    "bin/panorama/projection-full-refresh.py": "T10-247: ledger_db_path() 第②支 state_root() 落 profile 根",
+}
 
 # 已知**不对称** (不是 bug 清单的终点，是本轮登记): 台账 DB 覆盖名给了相对路径时，
 # omo 侧 `.absolute()` 而 root 侧不 —— root 仓不在本轮 22 个 write_surfaces 内。
@@ -653,15 +749,24 @@ def test_every_pinned_reader_names_a_real_file():
                 assert (ROOT / rel).is_file(), (fam, rel)
 
 
-def test_no_bin_reader_resolves_to_state_root(measured):
-    """本轮的决定性读数: bin/ 侧零 STATE 读者 ⇒ 「读写同根」不可能靠改 omo 达成。
+def test_bin_state_readers_are_the_reviewed_set(measured):
+    """bin/ 侧的 STATE 读者**恰为在册那一条**，多一条未在册即红。
 
-    这条不是「已经收敛」的证据，是**登记**：它说明 I3 的后半必须落在 bin/ 侧一轮，
-    而台账 circuit_breaker 禁止本轮扩面。若将来有 bin 读者改到 state 根，本用例**转绿的方向
-    是红** —— 那时要同步缩小 SPLIT_* 两张表。
+    改前（T10-233 基线）这条断言是 `_state_readers(rows) == []`，其含义是「bin/ 里没有任何读者
+    解析到 state 根」，因而「读写同根」不可能靠改 omo 达成。T10-247 让 projection-full-refresh 的
+    ledger 第②支落到 state 根，于是「零读者」这句**按事实不再成立** —— 用例随之改名并把
+    否定式换成评审集，避免留着一条说谎的用例名。
+
+    双向钉：① 实测集合 == REVIEWED_STATE_READERS（少了是读者消失，见
+    test_ledger_family_has_a_single_root_contract_in_bin）；② 每个在册 rel **恰有一行**，
+    新增第二条未在册的 STATE 读者当场红。行号不进判据（见 REVIEWED_STATE_READERS 注释）。
     """
     _fams, rows, _ex, _an = measured
-    assert _state_readers(rows) == []
+    pairs = _state_readers(rows)
+    rels = {rel for rel, _line in pairs}
+    assert rels == set(REVIEWED_STATE_READERS), rels ^ set(REVIEWED_STATE_READERS)
+    counts = {rel: sum(1 for r, _ in pairs if r == rel) for rel in rels}
+    assert all(n == 1 for n in counts.values()), counts
 
 
 def test_caller_class_anchors_are_checkout_anchored(measured):
@@ -675,10 +780,98 @@ def test_caller_class_anchors_are_checkout_anchored(measured):
         assert exprs, (rel, _param)
         for expr in exprs:
             assert expr in source, (rel, expr)
-        if via := spec.get("checkout_via"):
+        if resolver := spec.get("checkout_resolver"):
+            ok, violated, body = _checkout_anchored_resolver(resolver)
+            assert ok, (rel, resolver, violated)
+            assert body, (rel, resolver)
+            assert f"{resolver}()" in source, (rel, resolver)
+        elif via := spec.get("checkout_via"):
             assert _module_classes(ROOT / rel, {})[via] == "CHECKOUT", (rel, via)
         elif spec.get("checkout"):
             assert any(marker in " ".join(exprs) for marker in CHECKOUT_MARKERS), (rel, exprs)
+
+
+def test_checkout_resolver_predicate_is_discriminating():
+    """谓词的判别面: 通过集**恰为 {canonical_root}**，逐个拒绝指名条款，谓词非常真也非常假。
+
+    名单不得手写：被检对象由 `repo_root.__all__` ∩ 模块级 def 导出 (AGENTS.md §7 ④ ——
+    手写 resolver 名单有两处静默逃逸)。期望的拒绝理由由本轮实测填，改动 repo_root 后
+    本用例红是**要求重算**，不是要求把期望改成新读数。
+    """
+    tree = _parse(REPO_ROOT_PY)
+    assert tree is not None
+    public = sorted(
+        _all_names(tree)
+        & {n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    )
+    assert public, "谓词失去被检对象"
+    accepted = {n for n in public if _checkout_anchored_resolver(n)[0]}
+    assert accepted == {"canonical_root"}, (sorted(accepted), public)
+
+    expect = {
+        "code_root": {"no-file-anchor", "refs-marker", "raises"},
+        "state_root": {"refs-marker", "raises"},
+        "event_ledger_path": {"no-state-marker", "refs-marker", "raises"},
+        # install_root 按设计可返回 None（没有安装位的机器），④ 拒它不是它有误，
+        # 而是「可能静默给 None」的定位器不能当检出根的证据。
+        "install_root": {"raises"},
+        "is_worktree": {"refs-marker", "raises", "zero-required-args"},
+        "projection_name_for": {"refs-marker", "raises", "zero-required-args"},
+        "projection_read": {"no-state-marker", "refs-marker", "raises", "zero-required-args"},
+        # 三条判据草案的原通过集成员 —— 它是投影路径查询器，不是检出根定位器。
+        "projection_rels": {"refs-marker", "zero-required-args"},
+        "state_file_read": {"no-state-marker", "refs-marker", "raises", "zero-required-args"},
+    }
+    for name, want in expect.items():
+        assert name in public, name
+        ok, violated, _body = _checkout_anchored_resolver(name)
+        assert not ok and set(violated) == want, (name, violated, want)
+
+
+def test_checkout_resolver_predicate_names_each_synthetic_violation():
+    """合成违规自证 (AGENTS.md §7 ②): 每Clause 单独破坏 → violated **恰为**那一条。"""
+    legit = ast.parse(_LEGIT_RESOLVER).body[0]
+    assert _violated_clauses(legit) == [], _violated_clauses(legit)
+
+    bodies = {
+        "no-file-anchor": _LEGIT_RESOLVER.replace(
+            '    raise RuntimeError', '    base = Path(__file__).resolve().parents[2]\n    raise RuntimeError'
+        ),
+        "no-state-marker": _LEGIT_RESOLVER.replace(
+            "    raise RuntimeError", "    return state_root()\n    raise RuntimeError"
+        ),
+        "refs-marker": _LEGIT_RESOLVER.replace(' / MARKER)', ' / "docs/project-registry.yaml")'),
+        "raises": _LEGIT_RESOLVER.replace(
+            '    raise RuntimeError("定位不到规范检出")', "    return None"
+        ),
+        "zero-required-args": _LEGIT_RESOLVER.replace(
+            "def root() -> Path:", "def root(kind: str) -> Path:"
+        ),
+    }
+    assert set(bodies) == set(_CHECKOUT_CLAUSES), set(bodies) ^ set(_CHECKOUT_CLAUSES)
+    for clause, text in bodies.items():
+        fn = ast.parse(text).body[0]
+        assert _violated_clauses(fn) == [clause], (clause, _violated_clauses(fn))
+    # 反向: 全破坏的体必须被五条同时指名（谓词不是「只报第一条」）
+    everything = bodies["zero-required-args"].replace(
+        ' / MARKER)', ' / "x")').replace('    raise RuntimeError("定位不到规范检出")', "    return None")
+    assert set(_violated_clauses(ast.parse(everything).body[0])) == {
+        "refs-marker", "raises", "zero-required-args"
+    }, _violated_clauses(ast.parse(everything).body[0])
+
+
+def test_checkout_resolver_evidence_mode_is_not_a_rubber_stamp():
+    """`checkout_resolver` 不得被 `checkout: True` 替代：本文件的 parents[ 让子串判据恒过。
+
+    这正是新增该模式的原因，所以把它钉成可测的事实而不是措辞。
+    """
+    rel, resolver = "bin/panorama/projection-full-refresh.py", "canonical_root"
+    source = (ROOT / rel).read_text(encoding="utf-8", errors="ignore")
+    spec = CALLER_EVIDENCE[(rel, resolver)]
+    assert "checkout" not in spec and spec.get("checkout_resolver") == resolver
+    joined = " ".join(spec["exprs"])
+    assert not any(marker in joined for marker in CHECKOUT_MARKERS), joined
+    assert any(marker in source for marker in CHECKOUT_MARKERS), source
 
 
 def test_derived_class_readers_are_archived_only():

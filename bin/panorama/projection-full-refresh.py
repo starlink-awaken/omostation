@@ -37,9 +37,25 @@ LOG_PATH = Path("~/.local/log/projection-fullrefresh.log").expanduser()
 EXPECTED_ORIGIN_SUFFIX = "starlink-awaken/omostation.git"
 CLONE_URL = "https://github.com/starlink-awaken/omostation.git"
 PUBLISHER_TIMEOUT_SEC = 3600  # 全量采集典型 5~14min, 留足裕量
-# event_ledger 是运行时文件（不在检出内）—— publisher 检出里没有，必须显式指向主树那份
-WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
-EVENT_LEDGER_DB = WORKSPACE_ROOT / "runtime" / "omo" / "event-ledger.sqlite3"
+# event_ledger 是运行时文件（不在检出内）—— publisher 检出每轮 clean -fdx，那份按构造不存在。
+# 根只能在调用时刻解析：import 时冻结会把 ledger 钉在一次性的 publisher 克隆上 (ADR-0456 B4b 前置, T10-247)。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import canonical_root, state_root  # noqa: E402
+
+
+def ledger_db_path() -> Path:
+    """事件 ledger 的 DB 路径 (三行裁决, spec §2)。
+
+    ① OMO_EVENT_LEDGER_DB 原样; ② 声明了 profile → state 根; ③ 都没声明 → canonical 检出。
+    ③ 不是 code_root(): 本 driver 常驻执行位置是被 clean -fdx 的 publisher 克隆。
+    canonical_root() 定位不到时抛 RuntimeError, 由调用方转成 fail-closed 的 JSON 日志行。
+    """
+    env = os.environ.get("OMO_EVENT_LEDGER_DB")
+    if env:
+        return Path(env).expanduser()
+    if os.environ.get("OMOSTATION_STATE_ROOT"):
+        return state_root() / "runtime" / "omo" / "event-ledger.sqlite3"
+    return canonical_root() / "runtime" / "omo" / "event-ledger.sqlite3"
 
 
 def log(event: str, **kw) -> None:
@@ -93,7 +109,14 @@ def main() -> int:
             log("skip_already_running")
             return 0
 
-        # 1) 确保专用检出存在
+        # 1) 定位 ledger 根 —— fail-closed: 定位不到就退出, 别跑完同步才发现
+        try:
+            ledger_db = ledger_db_path()
+        except RuntimeError as exc:
+            return fail("ledger_root", error=str(exc)[:300])
+        log("ledger_root_resolved", path=str(ledger_db))
+
+        # 2) 确保专用检出存在
         if not (CHECKOUT / ".git").exists():
             CHECKOUT.parent.mkdir(parents=True, exist_ok=True)
             r = run(["git", "clone", "--depth", "200", CLONE_URL, str(CHECKOUT)], timeout=1800)
@@ -128,7 +151,7 @@ def main() -> int:
         env["PANORAMA_ROOT"] = str(CHECKOUT)
         env["PANORAMA_CODE_ROOT"] = str(CHECKOUT)
         env["ZHIXING_DASHBOARD_STATE_ROOT"] = str(DEPLOY_DIR)
-        env["OMO_EVENT_LEDGER_DB"] = str(EVENT_LEDGER_DB)
+        env["OMO_EVENT_LEDGER_DB"] = str(ledger_db)
         env["ZHIXING_DASHBOARD_CODE_ROOT"] = str(DEPLOY_DIR)
         r = subprocess.run(
             [sys.executable, "-B", str(CHECKOUT / "bin/panorama/panorama-collect.py")],
