@@ -41222,7 +41222,8 @@ bets:
     在 .github/workflows/ 零调用」，本轮复测否证： gac-gate.yml:144-150 的 gac-local-gate.py --strict
     确实调它，让它对 CI 失效的是同一文件里的 SOFT_CHECKS（:601-602 收录，:1200 从 blocking 剔除、:1203 归入 warnings）⇒
     rc=1 也只是 warning， CI 全绿不是这条红的证据。'
-  status: pending
+  status: done
+  done_at: 2026-10-13
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -41293,15 +41294,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9e13a6355516187a5a1e907f9c84bc335a097f1f
+          tests:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
+          diff:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
+          rollback:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-236.md
+            sha256: sha256:55b15489d65c8b2dbc440b95ba90b9d1b0418eabd171c793f36bb2a21acc272b
+          cleanup:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-237
   title: ADR-0456 G8 镜像面 —— 本机 launchd 把 projection-full-refresh 的 driver 换成它内部第 3 步的
     subprocess，service-config-drift 的真实成因
@@ -42494,6 +42518,273 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-248
+  title: ADR-0456 §风险与检测 —— 双 profile verify 腿进 CI（STATE_ROOT 双根 + install_root 落后即告警）
+  goal: §风险与检测 有一行检测至今没接线：「dev 能跑」退化成 dev/prod 漂移 → B1–B5 的 verify 在**两个 profile 上各跑一遍**进
+    CI。本轮实测把这句话拆成可实现的一半与按字面不可实现的一半（四条前提读数见 spec §0 表）：① `OMOSTATION_PROFILE` 零消费者 ——
+    `bin/lib/repo_root.py` 只认 `OMOSTATION_STATE_ROOT`(:48)/`OMOSTATION_ROOT`/`OMO_EVENT_LEDGER_DB`/`OMOSTATION_INSTALL_ROOT`，全仓唯一提到该
+    env 的 `bin/ssot/check-hardcoded-ports.py:239` 刻意不读它（注释写明首个消费者本应是 B3）；以它建 CI 腿 =
+    造一个按构造就绿、不改变任何解析结果的假门禁。② 本仓 487 个 tag 但无 release 序列，`git describe --tags` 在 code
+    root 给 `…-596-gdf9457d1d`、在 install root 给 `…-284-g1b5f02cb3` —— 今天就不一致，且原因与 profile
+    漂移无关，按字面「describe 不一致即告警」接上线就是永久噪声。③ `~/.local/opt/omostation` 在 `1b5f02cb3`，是 `origin/main`
+    的祖先（`merge-base --is-ancestor` rc=0）落后 312 个 commit —— 这正是同一节另一行「漏改的 plist 永远跑旧代码」的现实实例，可用
+    git 祖先关系测。主用户 2026-10-13 裁定：落 **STATE_ROOT 双根 + install_root 落后即告警** —— 忠于检测意图（抓
+    dev/prod 漂移与陈旧运行时），仪表换成实际被消费的旋钮与被 git 证明的关系，不改发布基建、不打 tag、不动 launchd。交付 `bin/gac/dual-profile-verify.py`：对
+    `--profiles` 声明的每个标签解析**互不相同**的 state 根（默认脚本自建 scratch，见 spec §1 的三级解析顺序），剥掉 `OMOSTATION_ROOT`/`OMO_EVENT_LEDGER_DB`
+    后注入 `OMOSTATION_STATE_ROOT`，各跑一遍声明写生成器，并对每条腿做**正向落点断言**：报出实际写出的绝对路径，落在本腿声明 root
+    之外（含检出、含另一 profile 的 root）即 FAIL；「检出不脏」只作隔离副判据，绝不单独构成通过证据 —— 否则「writer 根本没跑」与「writer
+    正确改道」两者同绿（§7 已固化的形状）。
+  status: done
+  done_at: 2026-10-13
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  depends_on:
+  - BET-Y2Q4-T10-247
+  circuit_breaker: 若为凑绿需要以下任一条 → 停止并保留原判据：① 读 `OMOSTATION_PROFILE` 当开关（它零消费者，这样造出来的门禁按构造就绿）；②
+    把落点判据写成「检出里没有」这类否定式；③ 让 install root 缺席记成 pass 而不是 deferred；④ 打 tag 或改发布基建来凑「describe
+    一致」；⑤ 把生成态写进 `~/.local/state/omostation/{prod,dev}`（那里住着 B4b 批次 1 的备份快照与 `*.provenance.json`，写进去是污染机器级状态面）。不动
+    43 个 plist、不动 crontab、不推进 `~/.local/opt/omostation` 的 checkout、不改 `materialize-system-state.py`
+    的写面语义。
+  non_goals:
+  - 不改 `~/.local/opt/omostation` 的代码、不推进其 checkout、不动 43 个 plist 与 crontab（B4b 批次 2+，需逐批授权）
+  - 不 mint release tag、不建版本序列（前提修正由主用户裁定绕开，不是推迟）
+  - 不把 `OMOSTATION_PROFILE` 变成真 env（B3/端口的首个消费者归属是另案）
+  - 不新增第五个 dispatcher 或第四层本体（AGENTS.md 绑定架构约束）
+  - 不放宽任何既有门禁，不替 `bet-ledger.py lint` 的 T10-240 预存红做代偿
+  - 不代偿 `tests/unit/test_resident_write_plane_split.py` 里别线的陈旧在册名单（已报告主责人）
+  done_when:
+  - ISC-1 双根各跑一遍：脚本对 `--profiles` 声明的每个标签解析出互不相同的 state 根并各跑一遍声明腿；两个 root 相同 → exit≠0（防「一个
+    root 假装两个 profile」）。反证：`--profiles prod` 单元素必须非零退出。
+  - ISC-2 正向落点：每条腿的 `landing` 字段是本腿实际写出文件的**绝对路径**，且必须在本腿声明的 root 之下；文件不存在于该 root →
+    该腿 FAIL。判据不得写成「检出里没有」。
+  - ISC-3 假门禁防护：脚本一律不读 `OMOSTATION_PROFILE`；测试断言「设/不设该 env 时 `repo_root` 的解析逐字节相同」，把「以未消费
+    env 为开关」这条路钉死。
+  - ISC-4 隔离且不污染真权威面：双腿跑完后检出的声明写目标保持未出现（`git status --short` 对相关路径为空），dev root 的文件不在
+    prod root 内（反向亦然）；默认解析出的 leg root 必须是脚本自建 scratch 目录，断言它既不在检出根之下、也不在 `~/.local/state/omostation/**`
+    之下。
+  - ISC-5 install_root 落后即告警：探到 `install_root()` 时报告 `head`/`is_ancestor`/`behind`；`behind
+    > 0` 或非祖先 → `warn`（exit 0，语义是告警不是中止）；探不到 install root（CI 干净检出）→ `deferred`，**不得记为
+    pass**。
+  - ISC-6 host-only 腿一律 DEFER：需要 launchd/真实服务/本机端口的判据在无该面的环境记 `deferred` + 原因，不计入通过数。
+  - ISC-7 CI 接线：workflow 内新增一步以两个 profile 调用本脚本（CI 日志即证据），并把 `tests/unit/test_dual_profile_verify.py`
+    加进 `governance-check.yml` 的显式 pytest 白名单（`:118-127` 不含 `tests/unit/**`，不加则「CI 绿」不构成这些用例的证据）。
+  - ISC-8 牙齿（变异对照，同一次运行产出「改前 = N 绿 / 变异后 = 红」两读数并同时断言）：把 ISC-2 的落点断言替换为 `pass` → 测试必须当场变红；把
+    `--profiles` 名单收成单元素 → ISC-1 那件必须变红。变异未致死 = 断言没牙齿，本轮不交付这种绿。
+  - ISC-9 注册面：新脚本登记进 script registry（`bin/_registry/scripts/**`），`validate()` 的 missing/extra
+    保持零（登记面只能加不能挪，见 §7 三个治理门禁条）。
+  verify:
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB uv run
+      pytest tests/unit/test_dual_profile_verify.py -q
+    expect: 全绿 / exit 0；ISC-8 的两条变异对照各产一次红且红集合相对基线只增不减，逐字节还原后回到全绿且红集合与基线逐项相等。 `tests/unit/**`
+      只有加进 `governance-check.yml:118-127` 白名单后 CI 才看得见（ISC-7）。
+  - cmd: env -u OMOSTATION_ROOT -u OMO_EVENT_LEDGER_DB python3 bin/gac/dual-profile-verify.py
+      --profiles prod,dev --json
+    expect: exit 0；两条 leg 的 root 互不相同、`landing` 均在本 leg root 之下且文件真实存在；install_root
+      探针读数只能是 `warn` 或 `deferred`，出现 `pass` 即为假绿。
+  - cmd: env -u OMOSTATION_ROOT -u OMO_EVENT_LEDGER_DB python3 bin/gac/dual-profile-verify.py
+      --profiles prod --json
+    expect: exit≠0（ISC-1 反证：单 profile 不得被当成「两个 profile 各跑一遍」）。
+  - cmd: python3 bin/ssot/script-registry.py validate
+    expect: missing = 0 且 extra = 0（ISC-9）。
+  - cmd: make gac-local-gate
+    expect: 硬失败集合等于本 BET 起手的基线读数，零新增；预存红逐条注明归属，不为其做代偿也不把它读成本轮回归。
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-13-dual-profile-verify-leg.md
+  - bin/gac/dual-profile-verify.py
+  - tests/unit/test_dual_profile_verify.py
+  - .github/workflows/governance-check.yml
+  - bin/_registry/scripts/governance/dual-profile-verify.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-248.md
+  - docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+  # 2026-10-13 主控授权追加：本 BET 新增 bin/gac/dual-profile-verify.py 触发 bin 变更守恒
+  # （check-bin-quota-diff: 净增 1 > baseline_delta 0），script_baseline 只能写在 governance-checks.yaml。
+  - .omo/_truth/registry/governance-checks.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-13-dual-profile-verify-leg.md
+    spec_version: 1.0.0
+    content_digest: sha256:420714d04b0f2e611d8db1a1f4dcbfc53810356c0fe1cfcd3d41aa63a5f5f595
+    decision_ref: decision://accepted/BET-Y2Q4-T10-248
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b59797e6d7ba4e18b33d4ab8d1329aec0e4d8b64
+          tests:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          diff:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          rollback:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-248.md
+            sha256: sha256:36fecb8ed1d9305f1dc840890c6c37dfa37cacac43c500f5fe2a27280e28450f
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-248.md
+            sha256: sha256:36fecb8ed1d9305f1dc840890c6c37dfa37cacac43c500f5fe2a27280e28450f
+          cleanup:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-250
+  title: ADR-0456 B1 残留 —— bin/ 154 处写面路径钉在 __file__ 检出根，收成 shrink_only 基线门禁
+  goal: 'B1 的完成判据（bin/ 内 `DEFAULT_(EVENT_)?LEDGER` 常量归零）已达成，但它只覆盖常量命名形状，
+
+    覆盖不到 B1 的意图「写目标跟随 profile 声明的根」。本轮用将要发布的判据自身实测出残留：
+
+    bin/ 内路径由 `__file__` 反推的检出根拼出、尾段落在 `.omo/state/**` 或 `runtime/**` 的站点
+
+    = 154 行级站点 / 144 个 (文件,路径) 对 / 95 文件（全 marker 460 处，其余四类 marker 按 ADR-0456
+
+    的读/写分界与 AGENTS.md §7「gitignore ≠ 本地化」明确排除，理由见 spec §1 表）。这些站点从未调用过
+
+    缝，所以双根契约在它们身上不是被违反而是没到达；既有 `tests/unit/test_system_yaml_write_plane.py`
+
+    只按 system.yaml 的字面量匹配，结构上看不见其余 143 处（与本判据重叠实测 1 处，且该处在邻居门禁里已判死码）。
+
+    交付一条同源判据的 shrink_only 门禁：基线是显式 (文件,路径) 集合、与实测集合双向相等，配自证
+
+    （注入命中形状必被点名）与反过宽对照（`state_root()` 取根与 `.omo/_truth/**` 读面不得命中），
+
+    并接进 `governance-check.yml` 的显式 pytest 白名单。本轮不改任何真实写目标 —— 把 81 处改道到
+
+    profile 根是与 B4b 同类的分批授权工作，不在这一轮顺手动。'
+  status: done
+  done_at: 2026-10-13
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  depends_on:
+  - BET-Y2Q4-T10-248
+  circuit_breaker: '若为凑绿需要以下任一条 → 停止并保留原判据：① 把基线写成「只断言实测 ⊆ 基线」这类单向判据
+
+    （改掉一处不缩名单也能绿，债就从账上静默消失）；② 省略自证用例 —— 没有合成违规注入的「绿」
+
+    可能只是检测器压根没命中（AGENTS.md §7②）；③ 放宽 marker 匹配去吃 `.omo/_truth/**` 读面或
+
+    `.omo/_delivery/**` 协调桥，以「显得覆盖更广」来凑数；④ 按路径首段匹配（那是上一轮漏认
+
+    `.omo/state/**` 的缺陷形状，读数会与本次发布判据不同源）；⑤ 顺带把任何一处真实写目标改道到
+
+    `state_root()`，或动 `.omo/_delivery` 的 symlink 语义。不动 95 个在账文件的任何一个字节。'
+  non_goals:
+  - 不改道 spec §1 表内任何一处写目标（每处需回答「该不该跟随 profile」「改后读者在哪读」，按 B4b 方式分批授权）
+  - 不动 launchd plist / crontab / `.omo/_truth/registry/**` 内容 / 权威 event ledger
+  - 不新增 `bin/` 脚本（判据落 tests/unit，与既有同形门禁一致），因此不触发 `check-bin-quota-diff`，`script_baseline`
+    不动
+  - 不放宽任何既有门禁，不为预存红做代偿
+  done_when:
+  - ISC-1 覆盖性：判据对 `.omo/state/**` 与 `runtime/**` 的读数为 154 个行级站点 / 144 个 (文件,路径) 对 /
+    95 文件，且「改前 = N」与「新增 = 0」由同一次扫描产出并同时断言。反证：砍掉 marker 表里的 `.omo/state` → 基线对拍件当场红。
+  - ISC-2 自证：注入三条命中形状 —— ① 名字派生（`W = Path(__file__).resolve().parents[2]` 再 `W / ".omo/state/x.json"`）②
+    内联派生（`Path(__file__).resolve().parents[2] / "runtime/y.json"`） ③ 分段拼法（`W / ".omo"
+    / "state" / "history.json"`，渲染必须是整条 `.omo/state/history.json`）—— 检测器必须点名三条。反证：无此件则「绿」可能只是检测器没命中（AGENTS.md
+    §7②）；只注入 ① 则内联 拼法的漏认看不见（第二次作废读数即此），不注入 ③ 则「链截到只剩第一段」也能绿（第三次作废读数即此）。
+  - ISC-3 反过宽：同一注入里放三条不该命中的形状 —— ① 经 `state_root()` 取根 ② 拼 `.omo/_truth/registry/**`
+    读面 ③ 拼 `.omo/_knowledge/**` —— 三条均不得进入门禁集合，且 ②③ 必须由同一次扫描分类出来（可见但不计）。 反证：宽到把读面也吞掉的检测器，可以靠「往基线塞几百条读面」自证通过
+    ISC-1（§7④）。
+  - ISC-4 shrink_only：基线为显式 (文件,路径) 集合且与实测集合双向相等；新增一处 → 红，改掉一处不缩基线 → 红。反证：单向 `⊆` 让已清干净的债从账上静默消失。
+  - ISC-5 零运行时效应：本轮不改任何真实写目标；`git diff --name-only origin/main...HEAD`（三点，取 merge base）
+    不得出现 §1 表列 95 个在账文件中的任何一个。
+  - ISC-6 CI 可见：`tests/unit/test_writeplane_root_pin.py` 进 `.github/workflows/governance-check.yml`
+    显式 pytest 白名单（该名单按文件逐一点名、无 `tests/unit/**` glob，不加则「CI 绿」不构成这些用例的证据）。
+  verify:
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录>
+      uv run --no-project --with pytest --with pyyaml python -m pytest tests/unit/test_writeplane_root_pin.py
+      -q -p no:randomly
+    expect: 全绿 / exit 0（实测 8 passed；宿主面与 HOME=<空目录> 各一遍）。依赖面必须由最小 venv 供给 —— 同一命令换成宿主
+      `python3 -m pytest` 会当场 `No module named pytest`，那是装置没搭对，不是回归 （AGENTS.md §7 hermetic
+      补记）。须含自证件（三条命中形状被点名）、反过宽件（缝取根不得分类、两类读面 可见但不计）、双向相等件。变异对照已验（两次独立，每次先证变异落地 —— git diff --numstat 非空 —— 再取读数）：从基线删一行 → 1 failed（双向相等件）；GATED_MARKERS 剥掉 .omo/state → 3 failed（同源读数件 + 双向相等件 + 新增破基线件）。⚠️ 作废措辞（诚实记录，不悄悄换）：此前写作「从基线删一行 → 2 failed」，那是假变异读数 —— 第一次改基线的脚本自身 NameError 当场崩、文件逐字节未改，我把「pytest 跑过了」读成了「变异跑过了」。
+  - cmd: git diff --name-only origin/main...HEAD
+    expect: 三点尺（merge base），不是两点 —— 两点式在 base 落后时把 main 的新增读成自己的删除。 出现文件集合逐项落在 write_surfaces
+      内，且 spec §1 表列的 95 个在账文件一个都不出现（ISC-5 零运行时效应）。
+  - cmd: grep -n test_writeplane_root_pin .github/workflows/governance-check.yml
+    expect: 至少 1 处命中（ISC-6：不加这行则「CI 绿」不是这些用例的证据）。
+  - cmd: make gac-local-gate
+    expect: 硬失败集合等于本 BET 起手的基线读数，零新增；预存红逐条注明归属，不为其做代偿也不读成本轮回归。
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-13-writeplane-root-pin-gate.md
+  - tests/unit/test_writeplane_root_pin.py
+  - .github/workflows/governance-check.yml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-250.md
+  - docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-13-writeplane-root-pin-gate.md
+    spec_version: 1.0.0
+    content_digest: sha256:80576531c58904db215fccb8bd0f8145f6278c98c096bc44b131ceaaa183d724
+    decision_ref: decision://accepted/BET-Y2Q4-T10-250
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@cdee6ca3fe05b034cca2e5a5c7bba265d1932b27
+          tests:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+          diff:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+          rollback:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-250.md
+            sha256: sha256:874ab48152f364742b9fd0afa0021152d14eefd32aa99ec302ce74f510ba4c54
+          cleanup:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -42632,7 +42923,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 545
+  total_bets: 547
   windows:
   - Y1Q1
   - Y1Q2
