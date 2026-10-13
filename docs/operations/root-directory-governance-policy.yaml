@@ -38,6 +38,11 @@ allowed_ignored_dirs:
   # 同性质 —— 外部工具产物但在本仓根下运行, 故显式注册, 否则被判
   # "ignored-unregistered" 目录卫生违规。2026-10-06 纳入。
   - .zvec-grep
+  # playwright CLI 的 page dump 工作目录 (Interceptor 浏览器自动化的
+  # page-*.yml 产物, 会话级临时数据)。与 .pytest_cache / .ruff_cache 同性质
+  # —— 外部工具缓存面, 非治理对象。2026-10-13 纳入 (gac-local-gate
+  # root-directory-governance FAIL 后注册)。
+  - .playwright-cli
   # 2026-10-11 补登: 2e3e270d1 已将下列数据/产物目录加入 .gitignore (防误入库),
   # 但未同步本政策 → 被判 ignored-unregistered 目录卫生违规。同日补齐。
   - _archive
