@@ -129,7 +129,12 @@ jobs:
           # 读侧根 == 写侧根 + 生成支路不豁免 MIN_SCORE (BET-Y2Q4-T10-238)。实测 9 pass;
           # 把被测脚本换回改造前本体 → 6 failed (变异对照跑过, 牙齿验过), 且 HOME=<空目录>
           # + env -u OMOSTATION_ROOT 下同样 9 pass (不读 host profile)。
-          # 2026-10-13 追加第四件: test_writeplane_root_pin 钉 ADR-0456「写目标跟随 profile 根」
+          # 2026-10-13 追加第四件: test_dual_profile_verify 钉双 profile 腿的正向落点
+          # (落别人 root / 一个字节没写 都必须红) + install_root 探不到只能 deferred
+          # (BET-Y2Q4-T10-248)。实测 22 pass; 剥掉落点断言 → 2 failed、把 profile 名单
+          # 收成单元素 → 1 failed (变异对照跑过, 复原后逐字节一致), 且 HOME=<空目录>
+          # + env -u OMOSTATION_ROOT 下同样 22 pass。
+          # 2026-10-13 追加第五件: test_writeplane_root_pin 钉 ADR-0456「写目标跟随 profile 根」
           # 在 bin/ 的覆盖面 —— 由 __file__ 反推检出根再拼 `.omo/state/**` 或 `runtime/**` 的站点
           # 收成 shrink_only 基线 (154 站点 / 144 对 / 95 文件), 新增一处即红 (BET-Y2Q4-T10-250)。
           # 实测 8 pass; 变异对照跑过 —— 从基线删一行 → 2 failed (双向相等件 + marker 承重件);
@@ -159,6 +164,7 @@ jobs:
             ../../tests/unit/test_bin_syspath_resolution.py \
             ../../tests/unit/test_evidence_freshness_reader_plane.py \
             ../../tests/unit/test_system_yaml_write_plane.py \
+            ../../tests/unit/test_dual_profile_verify.py \
             ../../tests/unit/test_writeplane_root_pin.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then

@@ -42494,6 +42494,114 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-248
+  title: ADR-0456 §风险与检测 —— 双 profile verify 腿进 CI（STATE_ROOT 双根 + install_root 落后即告警）
+  goal: §风险与检测 有一行检测至今没接线：「dev 能跑」退化成 dev/prod 漂移 → B1–B5 的 verify 在**两个 profile 上各跑一遍**进
+    CI。本轮实测把这句话拆成可实现的一半与按字面不可实现的一半（四条前提读数见 spec §0 表）：① `OMOSTATION_PROFILE` 零消费者 ——
+    `bin/lib/repo_root.py` 只认 `OMOSTATION_STATE_ROOT`(:48)/`OMOSTATION_ROOT`/`OMO_EVENT_LEDGER_DB`/`OMOSTATION_INSTALL_ROOT`，全仓唯一提到该
+    env 的 `bin/ssot/check-hardcoded-ports.py:239` 刻意不读它（注释写明首个消费者本应是 B3）；以它建 CI 腿 =
+    造一个按构造就绿、不改变任何解析结果的假门禁。② 本仓 487 个 tag 但无 release 序列，`git describe --tags` 在 code
+    root 给 `…-596-gdf9457d1d`、在 install root 给 `…-284-g1b5f02cb3` —— 今天就不一致，且原因与 profile
+    漂移无关，按字面「describe 不一致即告警」接上线就是永久噪声。③ `~/.local/opt/omostation` 在 `1b5f02cb3`，是 `origin/main`
+    的祖先（`merge-base --is-ancestor` rc=0）落后 312 个 commit —— 这正是同一节另一行「漏改的 plist 永远跑旧代码」的现实实例，可用
+    git 祖先关系测。主用户 2026-10-13 裁定：落 **STATE_ROOT 双根 + install_root 落后即告警** —— 忠于检测意图（抓
+    dev/prod 漂移与陈旧运行时），仪表换成实际被消费的旋钮与被 git 证明的关系，不改发布基建、不打 tag、不动 launchd。交付 `bin/gac/dual-profile-verify.py`：对
+    `--profiles` 声明的每个标签解析**互不相同**的 state 根（默认脚本自建 scratch，见 spec §1 的三级解析顺序），剥掉 `OMOSTATION_ROOT`/`OMO_EVENT_LEDGER_DB`
+    后注入 `OMOSTATION_STATE_ROOT`，各跑一遍声明写生成器，并对每条腿做**正向落点断言**：报出实际写出的绝对路径，落在本腿声明 root
+    之外（含检出、含另一 profile 的 root）即 FAIL；「检出不脏」只作隔离副判据，绝不单独构成通过证据 —— 否则「writer 根本没跑」与「writer
+    正确改道」两者同绿（§7 已固化的形状）。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  depends_on:
+  - BET-Y2Q4-T10-247
+  circuit_breaker: 若为凑绿需要以下任一条 → 停止并保留原判据：① 读 `OMOSTATION_PROFILE` 当开关（它零消费者，这样造出来的门禁按构造就绿）；②
+    把落点判据写成「检出里没有」这类否定式；③ 让 install root 缺席记成 pass 而不是 deferred；④ 打 tag 或改发布基建来凑「describe
+    一致」；⑤ 把生成态写进 `~/.local/state/omostation/{prod,dev}`（那里住着 B4b 批次 1 的备份快照与 `*.provenance.json`，写进去是污染机器级状态面）。不动
+    43 个 plist、不动 crontab、不推进 `~/.local/opt/omostation` 的 checkout、不改 `materialize-system-state.py`
+    的写面语义。
+  non_goals:
+  - 不改 `~/.local/opt/omostation` 的代码、不推进其 checkout、不动 43 个 plist 与 crontab（B4b 批次 2+，需逐批授权）
+  - 不 mint release tag、不建版本序列（前提修正由主用户裁定绕开，不是推迟）
+  - 不把 `OMOSTATION_PROFILE` 变成真 env（B3/端口的首个消费者归属是另案）
+  - 不新增第五个 dispatcher 或第四层本体（AGENTS.md 绑定架构约束）
+  - 不放宽任何既有门禁，不替 `bet-ledger.py lint` 的 T10-240 预存红做代偿
+  - 不代偿 `tests/unit/test_resident_write_plane_split.py` 里别线的陈旧在册名单（已报告主责人）
+  done_when:
+  - ISC-1 双根各跑一遍：脚本对 `--profiles` 声明的每个标签解析出互不相同的 state 根并各跑一遍声明腿；两个 root 相同 → exit≠0（防「一个
+    root 假装两个 profile」）。反证：`--profiles prod` 单元素必须非零退出。
+  - ISC-2 正向落点：每条腿的 `landing` 字段是本腿实际写出文件的**绝对路径**，且必须在本腿声明的 root 之下；文件不存在于该 root →
+    该腿 FAIL。判据不得写成「检出里没有」。
+  - ISC-3 假门禁防护：脚本一律不读 `OMOSTATION_PROFILE`；测试断言「设/不设该 env 时 `repo_root` 的解析逐字节相同」，把「以未消费
+    env 为开关」这条路钉死。
+  - ISC-4 隔离且不污染真权威面：双腿跑完后检出的声明写目标保持未出现（`git status --short` 对相关路径为空），dev root 的文件不在
+    prod root 内（反向亦然）；默认解析出的 leg root 必须是脚本自建 scratch 目录，断言它既不在检出根之下、也不在 `~/.local/state/omostation/**`
+    之下。
+  - ISC-5 install_root 落后即告警：探到 `install_root()` 时报告 `head`/`is_ancestor`/`behind`；`behind
+    > 0` 或非祖先 → `warn`（exit 0，语义是告警不是中止）；探不到 install root（CI 干净检出）→ `deferred`，**不得记为
+    pass**。
+  - ISC-6 host-only 腿一律 DEFER：需要 launchd/真实服务/本机端口的判据在无该面的环境记 `deferred` + 原因，不计入通过数。
+  - ISC-7 CI 接线：workflow 内新增一步以两个 profile 调用本脚本（CI 日志即证据），并把 `tests/unit/test_dual_profile_verify.py`
+    加进 `governance-check.yml` 的显式 pytest 白名单（`:118-127` 不含 `tests/unit/**`，不加则「CI 绿」不构成这些用例的证据）。
+  - ISC-8 牙齿（变异对照，同一次运行产出「改前 = N 绿 / 变异后 = 红」两读数并同时断言）：把 ISC-2 的落点断言替换为 `pass` → 测试必须当场变红；把
+    `--profiles` 名单收成单元素 → ISC-1 那件必须变红。变异未致死 = 断言没牙齿，本轮不交付这种绿。
+  - ISC-9 注册面：新脚本登记进 script registry（`bin/_registry/scripts/**`），`validate()` 的 missing/extra
+    保持零（登记面只能加不能挪，见 §7 三个治理门禁条）。
+  verify:
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB uv run
+      pytest tests/unit/test_dual_profile_verify.py -q
+    expect: 全绿 / exit 0；ISC-8 的两条变异对照各产一次红且红集合相对基线只增不减，逐字节还原后回到全绿且红集合与基线逐项相等。 `tests/unit/**`
+      只有加进 `governance-check.yml:118-127` 白名单后 CI 才看得见（ISC-7）。
+  - cmd: env -u OMOSTATION_ROOT -u OMO_EVENT_LEDGER_DB python3 bin/gac/dual-profile-verify.py
+      --profiles prod,dev --json
+    expect: exit 0；两条 leg 的 root 互不相同、`landing` 均在本 leg root 之下且文件真实存在；install_root
+      探针读数只能是 `warn` 或 `deferred`，出现 `pass` 即为假绿。
+  - cmd: env -u OMOSTATION_ROOT -u OMO_EVENT_LEDGER_DB python3 bin/gac/dual-profile-verify.py
+      --profiles prod --json
+    expect: exit≠0（ISC-1 反证：单 profile 不得被当成「两个 profile 各跑一遍」）。
+  - cmd: python3 bin/ssot/script-registry.py validate
+    expect: missing = 0 且 extra = 0（ISC-9）。
+  - cmd: make gac-local-gate
+    expect: 硬失败集合等于本 BET 起手的基线读数，零新增；预存红逐条注明归属，不为其做代偿也不把它读成本轮回归。
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-13-dual-profile-verify-leg.md
+  - bin/gac/dual-profile-verify.py
+  - tests/unit/test_dual_profile_verify.py
+  - .github/workflows/governance-check.yml
+  - bin/_registry/scripts/governance/dual-profile-verify.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-248.md
+  - docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+  # 2026-10-13 主控授权追加：本 BET 新增 bin/gac/dual-profile-verify.py 触发 bin 变更守恒
+  # （check-bin-quota-diff: 净增 1 > baseline_delta 0），script_baseline 只能写在 governance-checks.yaml。
+  - .omo/_truth/registry/governance-checks.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-13-dual-profile-verify-leg.md
+    spec_version: 1.0.0
+    content_digest: sha256:420714d04b0f2e611d8db1a1f4dcbfc53810356c0fe1cfcd3d41aa63a5f5f595
+    decision_ref: decision://accepted/BET-Y2Q4-T10-248
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 - id: BET-Y2Q4-T10-250
   title: ADR-0456 B1 残留 —— bin/ 154 处写面路径钉在 __file__ 检出根，收成 shrink_only 基线门禁
   goal: 'B1 的完成判据（bin/ 内 `DEFAULT_(EVENT_)?LEDGER` 常量归零）已达成，但它只覆盖常量命名形状，
