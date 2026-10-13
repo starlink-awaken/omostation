@@ -50,7 +50,7 @@ principal_id_from_env = _pid_module.principal_id_from_env
 _LIB_DIR = str(Path(__file__).resolve().parents[1] / "lib")
 if _LIB_DIR not in sys.path:
     sys.path.insert(0, _LIB_DIR)
-from repo_root import state_file_read  # noqa: E402
+from repo_root import canonical_root, state_file_read, state_root  # noqa: E402
 
 _CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
 ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
@@ -2745,27 +2745,118 @@ def collect_journeys() -> dict:
     return {"journeys": journeys, "total": len(journeys)}
 
 
-def collect_workspace_hygiene() -> dict:
-    """工作区卫生：陈旧 worktree / 僵尸锁 / 遗留目录。"""
-    from glob import glob
-    # 陈旧 worktree（>7天未活动）
-    stale_wt = []
-    code, out = run(["git", "worktree", "list", "--porcelain"])
-    if code == 0:
-        cur = {}
-        for line in out.splitlines():
+def _collect_workspace_hygiene_observation(
+    *,
+    code_root: Path | None = None,
+    runtime_root: Path | None = None,
+) -> dict:
+    """Read one bounded workspace inventory and retain its actual provenance."""
+    started = time.monotonic()
+    resolved_code_root: Path | None = None
+    resolved_runtime_root: Path | None = None
+    try:
+        resolved_code_root = Path(code_root or canonical_root()).expanduser().resolve(strict=True)
+        if runtime_root is not None:
+            runtime_source = runtime_root
+        elif os.environ.get("OMOSTATION_STATE_ROOT"):
+            runtime_source = state_root()
+        else:
+            runtime_source = canonical_root()
+        resolved_runtime_root = Path(runtime_source).expanduser().resolve(strict=True)
+        lock_root = resolved_runtime_root / ".omo/_delivery/agent-workflows/locks"
+        if not resolved_code_root.is_dir() or not resolved_runtime_root.is_dir() or lock_root.is_symlink():
+            raise RuntimeError("workspace_source_unavailable")
+
+        completed = subprocess.run(
+            ["git", "-C", str(resolved_code_root), "worktree", "list", "--porcelain"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if completed.returncode != 0:
+            raise RuntimeError("workspace_worktree_read_failed")
+
+        worktrees: list[dict[str, str]] = []
+        current: dict[str, str] = {}
+        for line in completed.stdout.splitlines() + [""]:
             if line.startswith("worktree "):
-                if cur.get("path"):
-                    stale_wt.append(cur)
-                cur = {"path": line.split(None, 1)[1]}
+                if current.get("path"):
+                    worktrees.append(current)
+                current = {"path": line.split(None, 1)[1]}
             elif line.startswith("branch "):
-                cur["branch"] = line.split(None, 1)[1]
-        if cur.get("path"):
-            stale_wt.append(cur)
-    # 僵尸锁
-    locks = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/locks/*.yaml")))
-    return {"worktrees": stale_wt, "total_worktrees": len(stale_wt),
-            "orphan_locks": locks[:10], "total_locks": len(locks)}
+                current["branch"] = line.split(None, 1)[1]
+            elif not line.strip() and current.get("path"):
+                worktrees.append(current)
+                current = {}
+        worktrees = sorted(
+            {item["path"]: item for item in worktrees}.values(),
+            key=lambda item: item["path"],
+        )
+        if not worktrees:
+            raise RuntimeError("workspace_worktree_inventory_empty")
+
+        if not lock_root.is_dir():
+            raise RuntimeError("workspace_lock_inventory_unavailable")
+        lock_files: list[str] = []
+        for path in lock_root.iterdir():
+            if path.suffix != ".yaml":
+                continue
+            metadata = path.lstat()
+            if not stat.S_ISREG(metadata.st_mode):
+                raise RuntimeError("workspace_lock_inventory_invalid_entry")
+            lock_files.append(str(path))
+
+        value = {
+            "worktrees": worktrees,
+            "total_worktrees": len(worktrees),
+            "lock_files": sorted(lock_files),
+            "total_lock_files": len(lock_files),
+        }
+        observed_at = datetime.now(UTC).isoformat()
+        source_digest = _sha256_bytes(_canonical_json_bytes(value))
+        collector_sha = _sha256_bytes(_read_regular_bytes(Path(__file__).resolve()))
+        status = "OBSERVED"
+        error_class = None
+    except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as exc:
+        value = None
+        observed_at = None
+        source_digest = None
+        collector_sha = _sha256_bytes(_read_regular_bytes(Path(__file__).resolve()))
+        status = "UNKNOWN"
+        error_class = str(exc) if str(exc).startswith("workspace_") else "workspace_source_unavailable"
+
+    finished_at = datetime.now(UTC).isoformat()
+    return {
+        "status": status,
+        "observation_status": status,
+        "value": value,
+        "source_digest": source_digest,
+        "observed_at": observed_at,
+        "last_attempt_at": finished_at,
+        "last_success_at": observed_at,
+        "error_class": error_class,
+        "duration_ms": max(0, round((time.monotonic() - started) * 1000)),
+        "overrun": False,
+        "provenance": {
+            "kind": "direct-read",
+            "source_ref": "bin/panorama/panorama-collect.py::collect_workspace_hygiene",
+            "collector_sha256": collector_sha,
+            "source_digest": source_digest,
+            "scope": {
+                "code_root": str(resolved_code_root) if resolved_code_root else None,
+                "state_root": str(resolved_runtime_root) if resolved_runtime_root else None,
+            },
+        },
+    }
+
+
+def collect_workspace_hygiene() -> dict:
+    """工作区与锁文件清单；仅列出实际查询的代码根和运行态根。"""
+    observation = _collect_workspace_hygiene_observation()
+    if observation["status"] == "OBSERVED":
+        return observation["value"]
+    return {"status": "UNKNOWN", "error_class": observation["error_class"]}
 
 
 def collect_ci() -> dict:
@@ -4676,6 +4767,7 @@ def collect_autoloop_traces() -> dict:
 def build_payload() -> dict:
     ci_data = collect_ci()
     asd = collect_asd()
+    workspace_observation = _collect_workspace_hygiene_observation()
     payload = {
         "generated_at": datetime.now(UTC).isoformat(),
         "mode": "read-only-ssot-aggregation",
@@ -4702,7 +4794,11 @@ def build_payload() -> dict:
         "resident_agents": collect_resident_agents(),
         "scene_cards": collect_scene_cards(),
         "journeys": collect_journeys(),
-        "workspace": collect_workspace_hygiene(),
+        "workspace": workspace_observation["value"],
+        "direct_observation_envelope": {
+            "schema": "panorama-compact-observation/v1",
+            "facets": {"workspace": workspace_observation},
+        },
         "ci": ci_data,
         "cron": collect_cron(),
         "submodules": collect_submodules(),
@@ -4821,6 +4917,7 @@ def build_payload() -> dict:
                         pass
     except Exception:
         _strategic = None
+    payload["direct_observation_envelope"]["generation_id"] = payload["generation_id"]
     payload["strategic"] = _strategic or _build_strategic_projection(payload)
     # objective_coverage must run AFTER panel_value is attached so BUSINESS_VALUE
     # can follow the signed full-window attestation state.
