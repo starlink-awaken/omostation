@@ -42703,7 +42703,7 @@ bets:
       -q -p no:randomly
     expect: 全绿 / exit 0（实测 8 passed；宿主面与 HOME=<空目录> 各一遍）。依赖面必须由最小 venv 供给 —— 同一命令换成宿主
       `python3 -m pytest` 会当场 `No module named pytest`，那是装置没搭对，不是回归 （AGENTS.md §7 hermetic
-      补记）。须含自证件（三条命中形状被点名）、反过宽件（缝取根不得分类、两类读面 可见但不计）、双向相等件。变异对照已验：从基线删一行 → 2 failed 当场红。
+      补记）。须含自证件（三条命中形状被点名）、反过宽件（缝取根不得分类、两类读面 可见但不计）、双向相等件。变异对照已验（两次独立，每次先证变异落地 —— git diff --numstat 非空 —— 再取读数）：从基线删一行 → 1 failed（双向相等件）；GATED_MARKERS 剥掉 .omo/state → 3 failed（同源读数件 + 双向相等件 + 新增破基线件）。⚠️ 作废措辞（诚实记录，不悄悄换）：此前写作「从基线删一行 → 2 failed」，那是假变异读数 —— 第一次改基线的脚本自身 NameError 当场崩、文件逐字节未改，我把「pytest 跑过了」读成了「变异跑过了」。
   - cmd: git diff --name-only origin/main...HEAD
     expect: 三点尺（merge base），不是两点 —— 两点式在 base 落后时把 main 的新增读成自己的删除。 出现文件集合逐项落在 write_surfaces
       内，且 spec §1 表列的 95 个在账文件一个都不出现（ISC-5 零运行时效应）。
