@@ -1,0 +1,42 @@
+schema: script-registry/v1
+id: bin/gac/dual-profile-verify.py
+name: Dual Profile Verify (STATE_ROOT 双根 verify 腿)
+category: governance
+owner: governance-team
+description: >-
+  把方案 `§风险与检测` 里「『dev 能跑』退化成 dev/prod 漂移」这条检测做成可跑的一腿 ——
+  对 `--profiles` 声明的每个标签解析出**互不相同**的 state 根 (解析顺序 `--root` 覆盖 →
+  已声明 `OMOSTATION_STATE_ROOT/<label>` → 脚本自建 scratch), 在每根下各跑一次声明的写面
+  生成器, 并对每条腿做**正向落点断言** —— 报告实际写出的绝对路径, 落在本 profile 声明 root
+  之外 (含检出、含另一 profile 的 root) 即 FAIL。默认 scratch 而非 `~/.local/state/omostation/{prod,dev}`,
+  因为那两个面住着 B4b 批次 1 的备份快照, 写进去就是污染机器级状态面。腿一律不读
+  `OMOSTATION_PROFILE` (实测零消费者, 以它为开关即假门禁), 只注入 `OMOSTATION_STATE_ROOT`
+  并剥掉父 env 的 `OMOSTATION_ROOT` / `OMO_EVENT_LEDGER_DB`。附带两个仪表: install_root 的
+  git 祖先关系 + 落后计数 (`behind > 0` 或非祖先 → warn, 探不到 → deferred, 不得记 pass),
+  以及需要 launchd / 本机端口的 host-only 腿一律 deferred。契约
+  `docs/superpowers/specs/2026-10-13-dual-profile-verify-leg.md` (I1–I9)。
+inputs:
+  - name: --profiles (arg, 逗号分隔标签)
+    type: string
+    required: false
+  - name: --root LABEL=ABS_PATH (arg, 可重复)
+    type: path
+    required: false
+  - name: --workspace / --generator (arg, 默认 code_root / materialize-system-state.py)
+    type: path
+    required: false
+  - name: OMOSTATION_STATE_ROOT (env, 未给 --root 时的父根)
+    type: path
+    required: false
+  - name: --keep-roots / --json (flags)
+    type: string
+    required: false
+outputs:
+  - type: json
+  - type: exit_code
+dependencies: [bin/lib/repo_root.py, bin/gac/materialize-system-state.py]
+triggers: [ci, manual]
+related: [bin/gac/materialize-system-state.py, bin/lib/repo_root.py, bin/ssot/check-hardcoded-ports.py]
+tags: [state-root, adr-0456, dev-prod-drift, verify-leg, ci]
+maturity: active
+last_reviewed: "2026-10-13"
