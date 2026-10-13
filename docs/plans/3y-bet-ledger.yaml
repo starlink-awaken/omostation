@@ -42318,7 +42318,8 @@ bets:
     ③ 两者皆未声明 → `canonical_root()/…` **而不是** `code_root()` (常驻执行位置是运行时克隆, 不是任何 profile
     的权威)。 `canonical_root()` 定位不到规范检出时抛 `RuntimeError` 属规定行为, 但必须被转成 driver fail-closed
     契约的 一条 `failed step="ledger_root"` JSON 日志, 不能是裸 traceback。'
-  status: pending
+  status: done
+  done_at: 2026-10-13
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -42433,17 +42434,26 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit: {ref: git://origin/main@df9457d1d7925fb06adc48ff66f5c0818959e740}
+          tests: {ref: receipt://docs/reports/2026-10-12-projection-fullrefresh-ledger-root-seam-closeout.md, sha256: sha256:0c201828ed7e4c5acab4794218133f1ce6efd3dfb740aa5444ccab4841e43484}
+          diff: {ref: receipt://docs/reports/2026-10-12-projection-fullrefresh-ledger-root-seam-closeout.md, sha256: sha256:0c201828ed7e4c5acab4794218133f1ce6efd3dfb740aa5444ccab4841e43484}
+          rollback: {ref: receipt://docs/reports/2026-10-12-projection-fullrefresh-ledger-root-seam-closeout.md, sha256: sha256:0c201828ed7e4c5acab4794218133f1ce6efd3dfb740aa5444ccab4841e43484}
+          replay: {ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-247.md, sha256: sha256:cb03dbdd206d008d4466293ff75c79252c9ca31a7c5854182c6f7ca6d60fc1d0}
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary: {ref: receipt://docs/reports/2026-10-12-projection-fullrefresh-ledger-root-seam-closeout.md, sha256: sha256:0c201828ed7e4c5acab4794218133f1ce6efd3dfb740aa5444ccab4841e43484}
+          fresh_receipt: {ref: receipt://docs/reports/2026-10-12-projection-fullrefresh-ledger-root-seam-closeout.md, sha256: sha256:0c201828ed7e4c5acab4794218133f1ce6efd3dfb740aa5444ccab4841e43484}
+          replay: {ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-247.md, sha256: sha256:cb03dbdd206d008d4466293ff75c79252c9ca31a7c5854182c6f7ca6d60fc1d0}
+          cleanup: {ref: receipt://docs/reports/2026-10-12-projection-fullrefresh-ledger-root-seam-closeout.md, sha256: sha256:0c201828ed7e4c5acab4794218133f1ce6efd3dfb740aa5444ccab4841e43484}
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
