@@ -248,7 +248,9 @@ DEFAULT_POLICY = {
         {
             "id": "check-work-landed",
             "command": ["bin/gac/check-work-landed.py"],
-            "timeout": 45,
+            # 全量 run 扫描 (closed 170+, 每 ref 一次 git 查询) 实测 ~100s;
+            # 45s 会超时被杀误报 FAIL (2026-10-14 实证: 直接跑 PASS 97s, gate 内 FAIL)
+            "timeout": 240,
         },
         # ADR-0424 配套: 校验错误知识库 (pitfalls yaml) 一致性 — 解析/必填字段/id 唯一
         {

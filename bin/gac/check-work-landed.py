@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import bisect
 import subprocess
 import sys
 from datetime import UTC, datetime, timedelta, timezone
@@ -49,7 +50,7 @@ def _load_baseline() -> set[str]:
 
 
 PR_RE = re.compile(r"#(\d+)\b")
-SHA_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
+SHA_RE = re.compile(r"\b(?!\d{8}\b)[0-9a-f]{7,40}\b")  # 排除 YYYYMMDD 日期串: 8 位纯数字也是合法 hex, 会被误捕为 sha (2026-10-14 blocking 误报实证)
 
 
 def _parse_ts(value: str) -> datetime | None:
@@ -99,65 +100,101 @@ def _extract_landing_refs(run: dict[str, Any]) -> set[str]:
     return refs
 
 
-def _sha_landed(sha: str) -> bool:
-    """Check if a SHA is landed in origin/main or any submodule on origin/main.
+def _load_landed_shas() -> set[str]:
+    """One rev-list per repo (root + git-backed projects/*) → union of commit SHAs
+    reachable from origin/main, indexed at full length and 7-char prefix.
 
-    P78 fix: SHA may exist in a submodule (submodule-pointer-close runs)
-    or in the root repo. Try root first, then walk all submodules.
+    Replaces per-SHA `merge-base --is-ancestor` probes: same ancestry semantics
+    (reachable-from-origin/main) in 1 subprocess per repo instead of 1 per
+    (SHA × repo). Full-scan cost dropped 97s → seconds (2026-10-14; the per-probe
+    shape scaled linearly with closed-run count and blew the gate's 45s budget).
     """
-    candidates: list[Path] = [WORKSPACE]
-    # 遍历项目目录本体，而不是其父目录（修复子模块落地校验误判）
-    candidates.extend(p for p in WORKSPACE.glob("projects/*") if p.is_dir())
+    landed: set[str] = set()
+    repos = [WORKSPACE]
+    repos.extend(
+        p for p in WORKSPACE.glob("projects/*") if p.is_dir() and (p / ".git").exists()
+    )
+    for cwd in repos:
+        try:
+            cp = subprocess.run(
+                ["git", "rev-list", "origin/main"],
+                cwd=str(cwd),
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except subprocess.TimeoutExpired:
+            continue  # 与单探测路径的 fail-open-for-this-repo 语义一致
+        if cp.returncode != 0:
+            continue  # 无 origin/main 的仓 (与旧 rc!=0 continue 等价)
+        landed.update(cp.stdout.split())
+    return landed
 
-    for cwd in candidates:
-        # 1. Verify it's a valid object in this repo
-        vp = subprocess.run(
-            ["git", "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}"],
-            cwd=str(cwd),
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
-        if vp.returncode != 0:
-            continue
-        # 2. Check if ancestor of origin/main in the same repo
-        cp = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", sha, "origin/main"],
-            cwd=str(cwd),
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
-        if cp.returncode == 0:
-            return True
-    return False
+
+_LANDED_SHAS: set[str] | None = None
+_LANDED_SORTED: list[str] | None = None
+
+
+def _sha_landed(sha: str) -> bool:
+    """SHA reachable from origin/main in the root repo or any project checkout.
+
+    P78 fix preserved: SHAs landing only in a submodule count as landed.
+    Full-length refs hit the set; abbreviated refs (7-39 hex, as captured by
+    SHA_RE) hit via sorted-prefix bisect — exact for any abbrev length, unlike
+    a fixed [:7] index which silently drops 8+-char refs (94→92 settled on
+    2026-10-14).
+    """
+    global _LANDED_SHAS, _LANDED_SORTED
+    if _LANDED_SHAS is None:
+        _LANDED_SHAS = _load_landed_shas()
+        _LANDED_SORTED = sorted(_LANDED_SHAS)
+    if sha in _LANDED_SHAS:
+        return True
+    i = bisect.bisect_left(_LANDED_SORTED, sha)
+    return i < len(_LANDED_SORTED) and _LANDED_SORTED[i].startswith(sha)
 
 
 def _refs_landed(refs: set[str]) -> dict[str, bool]:
-    """For each ref, ask git log origin/main whether it is present.
-    PR#:  `git log origin/main --grep=#N`
-    SHA:  `git merge-base --is-ancestor <sha> origin/main`
-          (P78: --grep only searches commit messages, not hashes)
+    """For each ref, decide presence on origin/main (batched).
+
+    PR#: one `git log origin/main --oneline` cached, `#N\b` matched in-memory
+         (word boundary keeps #12 from matching #123 — same semantics as
+         --grep=#N).
+    SHA: set membership against the per-repo rev-list union built by
+         _load_landed_shas (prefix-exact for abbreviated refs via bisect).
     """
     landed: dict[str, bool] = {}
     if not refs:
         return landed
-    for ref in refs:
-        if ref.startswith("pr:"):
-            n = ref.split(":", 1)[1]
-            try:
-                cp = subprocess.run(
-                    ["git", "log", "origin/main", f"--grep=#{n}", "--oneline"],
-                    cwd=str(WORKSPACE),
-                    capture_output=True,
-                    text=True,
-                    timeout=20,
-                )
-                landed[ref] = cp.returncode == 0 and cp.stdout.strip() != ""
-            except Exception as exc:  # K3: 不静默 (pipe-mask 同族)
-                print(f"[warn] _refs_landed pr {ref}: {exc}", file=sys.stderr)
+    # 一次 git log 拿全量 message, pr# 在缓存里判 (替代每 ref 一次全历史 grep;
+    # #N 需词边界防 #12 误命中 #123 —— 与 --grep=#N 的精确语义对齐)
+    pr_refs = [r for r in refs if r.startswith("pr:")]
+    log_blob = ""
+    if pr_refs:
+        try:
+            cp = subprocess.run(
+                ["git", "log", "origin/main", "--oneline"],
+                cwd=str(WORKSPACE),
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if cp.returncode == 0:
+                log_blob = cp.stdout
+            else:
+                for ref in pr_refs:
+                    landed[ref] = False
+        except Exception as exc:  # K3: 不静默 (pipe-mask 同族)
+            print(f"[warn] _refs_landed git log: {exc}", file=sys.stderr)
+            for ref in pr_refs:
                 landed[ref] = False
-        elif ref.startswith("sha:"):
+    for ref in pr_refs:
+        if ref in landed:
+            continue
+        n = ref.split(":", 1)[1]
+        landed[ref] = re.search(rf"#{n}\b", log_blob) is not None
+    for ref in refs:
+        if ref.startswith("sha:"):
             sha = ref.split(":", 1)[1]
             try:
                 landed[ref] = _sha_landed(sha)
