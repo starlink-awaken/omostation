@@ -41222,7 +41222,8 @@ bets:
     在 .github/workflows/ 零调用」，本轮复测否证： gac-gate.yml:144-150 的 gac-local-gate.py --strict
     确实调它，让它对 CI 失效的是同一文件里的 SOFT_CHECKS（:601-602 收录，:1200 从 blocking 剔除、:1203 归入 warnings）⇒
     rc=1 也只是 warning， CI 全绿不是这条红的证据。'
-  status: pending
+  status: done
+  done_at: 2026-10-13
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -41293,15 +41294,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9e13a6355516187a5a1e907f9c84bc335a097f1f
+          tests:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
+          diff:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
+          rollback:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-236.md
+            sha256: sha256:55b15489d65c8b2dbc440b95ba90b9d1b0418eabd171c793f36bb2a21acc272b
+          cleanup:
+            ref: receipt://docs/reports/2026-10-07-brief-null-shape-closeout.md
+            sha256: sha256:52eca978b0540809d8ed67781827bb9f18c9b3200c96724ddad11839c188f05a
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-237
   title: ADR-0456 G8 镜像面 —— 本机 launchd 把 projection-full-refresh 的 driver 换成它内部第 3 步的
     subprocess，service-config-drift 的真实成因
