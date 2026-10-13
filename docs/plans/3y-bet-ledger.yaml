@@ -42559,7 +42559,8 @@ bets:
     读面 ③ 拼 `.omo/_knowledge/**` —— 三条均不得进入门禁集合，且 ②③ 必须由同一次扫描分类出来（可见但不计）。
     反证：宽到把读面也吞掉的检测器，可以靠「往基线塞几百条读面」自证通过 ISC-1（§7④）。
   - ISC-4 shrink_only：基线为显式 (文件,路径) 集合且与实测集合双向相等；新增一处 → 红，改掉一处不缩基线 → 红。反证：单向 `⊆` 让已清干净的债从账上静默消失。
-  - ISC-5 零运行时效应：本轮不改任何真实写目标；`git diff --name-only origin/main..HEAD` 不得出现 §1 表列 95
+  - ISC-5 零运行时效应：本轮不改任何真实写目标；`git diff --name-only origin/main...HEAD`（三点，取 merge base）
+    不得出现 §1 表列 95
     个在账文件中的任何一个。
   - ISC-6 CI 可见：`tests/unit/test_writeplane_root_pin.py` 进 `.github/workflows/governance-check.yml`
     显式 pytest 白名单（该名单按文件逐一点名、无 `tests/unit/**` glob，不加则「CI 绿」不构成这些用例的证据）。
@@ -42571,8 +42572,9 @@ bets:
       同一命令换成宿主 `python3 -m pytest` 会当场 `No module named pytest`，那是装置没搭对，不是回归
       （AGENTS.md §7 hermetic 补记）。须含自证件（三条命中形状被点名）、反过宽件（缝取根不得分类、两类读面
       可见但不计）、双向相等件。变异对照已验：从基线删一行 → 2 failed 当场红。
-  - cmd: git diff --name-only origin/main..HEAD
-    expect: 出现文件集合逐项落在 write_surfaces 内，且 spec §1 表列的 95 个在账文件一个都不出现（ISC-5 零运行时效应）。
+  - cmd: git diff --name-only origin/main...HEAD
+    expect: 三点尺（merge base），不是两点 —— 两点式在 base 落后时把 main 的新增读成自己的删除。
+      出现文件集合逐项落在 write_surfaces 内，且 spec §1 表列的 95 个在账文件一个都不出现（ISC-5 零运行时效应）。
   - cmd: grep -n test_writeplane_root_pin .github/workflows/governance-check.yml
     expect: 至少 1 处命中（ISC-6：不加这行则「CI 绿」不是这些用例的证据）。
   - cmd: make gac-local-gate
@@ -42587,7 +42589,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-13-writeplane-root-pin-gate.md
     spec_version: 1.0.0
-    content_digest: sha256:c926c4d53ec998a93ea4be07703ded4ad6db0275a46ff5a4949bde0036068fc4
+    content_digest: sha256:d98365f34dda16690782f9e5b76ce57e86a4182594145b979749d4620073dd1c
     decision_ref: decision://accepted/BET-Y2Q4-T10-250
   value_indicator_policy: false
   completion_evidence:

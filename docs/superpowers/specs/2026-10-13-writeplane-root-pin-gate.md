@@ -78,7 +78,9 @@ ISC-2 自证用例在写完后第一次运行时抓到，判据已改为「凡 `
   新增一处 ⇒ 红；改掉一处不缩基线 ⇒ 红。
   反证：只断言「实测 ⊆ 基线」则清完的债可以从名单里悄悄消失而无人记账。
 - **ISC-5 零运行时效应**：本轮**不改任何真实写目标**，一条路径的落点都不动。
-  反证：`git diff --name-only origin/main..HEAD` 里不得出现 §1 表列的 95 个文件中的任何一个。
+  反证：`git diff --name-only origin/main...HEAD`（**三点**，取 merge base）里不得出现 §1 表列的 95 个文件中的任何一个。
+  尺必须是指名那把：两点式 `origin/main..HEAD` 在 base 落后时把「main 新增而我这棵树没有」
+  也读成自己的改动（本轮实测：main 落了 #4741 后，两点式多报 5 个 `D` 行，全是别人的交付）。
 - **ISC-6 CI 可见**：用例进 `.github/workflows/governance-check.yml` 的显式 pytest 白名单
   （该名单按文件逐一点名、无 `tests/unit/**` glob，不加这行则「CI 绿」不是它的证据）。
 
