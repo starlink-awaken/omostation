@@ -42889,12 +42889,14 @@ bets:
     为铁律, 判不清一律视为未合并): (a) 分支 tree 与 origin/main 上对应 squash 提交的 tree 无差异 (git diff
     --quiet <branch> origin/main -- <changed paths>, 或 git cherry 判 patch-id 等价),
     或 (b) gh 查到该分支 PR 状态 MERGED 且本地无超出 PR head 的新提交。子仓判定 逻辑 (#4649) 不受影响。'
-  status: pending
+  status: done
+  done_at: 2026-10-13
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
   appetite: 1 day
   risk_level: L2
+  value_indicator_policy: false
   human_gate: false
   pasw_required: false
   retro: required
@@ -42918,6 +42920,35 @@ bets:
   write_surfaces:
   - bin/gac/worktree-hygiene-audit.py
   - tests/**
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-251.md
+          merged_reachable_commit:
+            ref: git://origin/main@1043b6e8e69ddee4be80d6e33836f0344077f22a
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-251.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-251.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-251.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-251.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-251.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-251.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
