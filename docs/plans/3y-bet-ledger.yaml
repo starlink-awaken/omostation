@@ -42318,7 +42318,8 @@ bets:
     ③ 两者皆未声明 → `canonical_root()/…` **而不是** `code_root()` (常驻执行位置是运行时克隆, 不是任何 profile
     的权威)。 `canonical_root()` 定位不到规范检出时抛 `RuntimeError` 属规定行为, 但必须被转成 driver fail-closed
     契约的 一条 `failed step="ledger_root"` JSON 日志, 不能是裸 traceback。'
-  status: pending
+  status: done
+  done_at: 2026-10-13
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
