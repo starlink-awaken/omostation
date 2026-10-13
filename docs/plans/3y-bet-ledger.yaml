@@ -42652,7 +42652,8 @@ bets:
     并接进 `governance-check.yml` 的显式 pytest 白名单。本轮不改任何真实写目标 —— 把 81 处改道到
 
     profile 根是与 B4b 同类的分批授权工作，不在这一轮顺手动。'
-  status: pending
+  status: done
+  done_at: 2026-10-13
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -42728,15 +42729,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@cdee6ca3fe05b034cca2e5a5c7bba265d1932b27
+          tests:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+          diff:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+          rollback:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-250.md
+            sha256: sha256:874ab48152f364742b9fd0afa0021152d14eefd32aa99ec302ce74f510ba4c54
+          cleanup:
+            ref: receipt://docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+            sha256: sha256:8eb36cdb4153d6893bbebf8dfc738db275d535e33c439a0533b8f71b9da5f42d
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
