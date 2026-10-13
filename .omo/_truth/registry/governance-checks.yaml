@@ -179,7 +179,12 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 720 # 2026-10-12 719→720: gen-architecture-diagrams.py (架构块图双轨产出)
+    script_baseline: 721 # 2026-10-13 720→721: dual-profile-verify (ADR-0456 双 profile verify 腿)
+      # (+ bin/gac/dual-profile-verify.py, BET-Y2Q4-T10-248 —— prod/dev 两条 leg 各跑一遍 +
+      # install_root 落后即告警; gac-gate job 115127578239 实测「净增 1 > baseline_delta 0」,
+      # 主控 2026-10-13 授权把本文件追加进该 BET write_surfaces 后才落这一行,
+      # 不使用 SCRIPT_BASELINE_SYNC=1 绕过); 上一行注释:
+      # 2026-10-12 719→720: gen-architecture-diagrams.py (架构块图双轨产出)
       # (+ bin/gac/materialize-system-state.py, BET-Y2Q4-T10-235 `.omo/state/system.yaml`
       # 创建者 —— 摘库后干净检出里三个按存在性判定的读者 (doc-link-check /
       # architecture-check --gate core_documents.STATE.md / current-state-coherence)
