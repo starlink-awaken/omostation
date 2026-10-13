@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-type: documentation
+type: derived
 last-reviewed: 2026-09-28
 ---
 
