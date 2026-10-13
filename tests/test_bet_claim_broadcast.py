@@ -172,14 +172,14 @@ def test_start_guard_scenarios(tmp_path: Path, monkeypatch) -> None:
         sub.build_status_report = lambda *a, **k: {}
         sub.print_status_report = lambda *a, **k: None
         setattr(workflow_pkg, name, sub)
-        sys.modules[f"omo.workflow.{name}"] = sub
+        monkeypatch.setitem(sys.modules, f"omo.workflow.{name}", sub)
     omo_pkg.workflow = workflow_pkg
     chain_bind_mod = _types.ModuleType("chain_bind")
-    sys.modules.update({
-        "omo": omo_pkg,
-        "omo.workflow": workflow_pkg,
-        "chain_bind": chain_bind_mod,
-    })
+    # monkeypatch.setitem 而非裸 sys.modules.update: 假的 omo 包若留在
+    # sys.modules, 会毒害后续 import omo.* 的测试 (test_agent_cell_pool_live_smoke
+    # 曾因此报 "No module named 'omo.resident'; 'omo' is not a package")
+    for name, mod in (("omo", omo_pkg), ("omo.workflow", workflow_pkg), ("chain_bind", chain_bind_mod)):
+        monkeypatch.setitem(sys.modules, name, mod)
 
     claims = tmp_path / "bet-claims"
     claims.mkdir(parents=True)

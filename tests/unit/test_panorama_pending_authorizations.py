@@ -11,7 +11,7 @@ from pathlib import Path
 
 HOST_DIR = Path(__file__).resolve().parents[2] / "bin/panorama/assets/host"
 
-from panorama_host_stubs import install_host_stubs
+from panorama_host_stubs import deploy_collectors, install_host_stubs
 
 
 def _module():
@@ -20,14 +20,9 @@ def _module():
         shutil.copy2(HOST_DIR / "observatory_query.py.asset", deployed / "observatory_query.py")
         server_path = deployed / "live_server_under_test.py"
         shutil.copy2(HOST_DIR / "live_server.py.asset", server_path)
-        # asset 模块级对部署代码包算哈希; runtime_paths 无 asset 由 stub 补符号,
-        # collectors 三件(base/registry/personal_value)从仓内 asset 部署成包
-        (deployed / "runtime_paths.py").write_text("# placeholder\n")
-        pkg = deployed / "collectors"
-        pkg.mkdir()
-        (pkg / "__init__.py").write_text("")
-        for name in ("base", "registry", "personal_value"):
-            shutil.copy2(HOST_DIR / f"collectors.{name}.py.asset", pkg / f"{name}.py")
+        # asset 模块级对部署代码包算哈希; collectors 包 + runtime_paths 占位
+        # 统一走 deploy_collectors (与 value_readiness 共用), runtime_paths 符号由 stub 补
+        deploy_collectors(HOST_DIR, deployed)
         install_host_stubs(deployed)
         query_loader = SourceFileLoader(
             "zhixing_observatory_query_pending_auth_test",

@@ -106,8 +106,11 @@ class FrontmatterCoverageTests(unittest.TestCase):
         self.assertEqual(added, [])
         # foo still preserved
         self.assertIn("foo: bar", new_text)
-        # last-reviewed bumped to today (2026-09-25), yaml may quote
-        self.assertIn("2026-09-25", new_text)
+        # last-reviewed bumped to today (动态断言, 与实现同源取 UTC now —
+        # 原写死 2026-09-25 的时间炸弹在次日必红, #4208 批量修复漏网)
+        from datetime import datetime, timezone
+
+        self.assertIn(datetime.now(timezone.utc).strftime("%Y-%m-%d"), new_text)
 
     def test_coverage_one_basic(self):
         # write 3 files with various FM states

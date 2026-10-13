@@ -13,11 +13,16 @@ HOST_DIR = Path(__file__).resolve().parents[2] / "bin/panorama/assets/host"
 
 
 def _module():
+    from panorama_host_stubs import deploy_collectors, install_host_stubs
+
     with tempfile.TemporaryDirectory(prefix="live-server-value-readiness-") as directory:
         deployed = Path(directory)
         shutil.copy2(HOST_DIR / "observatory_query.py.asset", deployed / "observatory_query.py")
         server_path = deployed / "live_server_under_test.py"
         shutil.copy2(HOST_DIR / "live_server.py.asset", server_path)
+        # live_server 2026-10-13 起模块级 import collectors — 部署包 + stub 宿主符号
+        deploy_collectors(HOST_DIR, deployed)
+        install_host_stubs(deployed)
         query_loader = SourceFileLoader(
             "zhixing_observatory_query_value_readiness_test",
             str(deployed / "observatory_query.py"),

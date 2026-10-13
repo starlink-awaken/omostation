@@ -44,3 +44,5 @@ quote-style = "double"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+addopts = "--timeout=300 --timeout-method=signal"  # 挂死兜底: signal 法才能杀 C 层 poll (2026-10-12 教训)
+faulthandler_timeout = 600  # C 级挂死 600s dump 所有线程栈, CLI flag 不存在只能走 ini
