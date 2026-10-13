@@ -42510,7 +42510,8 @@ bets:
     后注入 `OMOSTATION_STATE_ROOT`，各跑一遍声明写生成器，并对每条腿做**正向落点断言**：报出实际写出的绝对路径，落在本腿声明 root
     之外（含检出、含另一 profile 的 root）即 FAIL；「检出不脏」只作隔离副判据，绝不单独构成通过证据 —— 否则「writer 根本没跑」与「writer
     正确改道」两者同绿（§7 已固化的形状）。
-  status: pending
+  status: done
+  done_at: 2026-10-13
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -42591,17 +42592,43 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b59797e6d7ba4e18b33d4ab8d1329aec0e4d8b64
+          tests:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          diff:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          rollback:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-248.md
+            sha256: sha256:36fecb8ed1d9305f1dc840890c6c37dfa37cacac43c500f5fe2a27280e28450f
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-248.md
+            sha256: sha256:36fecb8ed1d9305f1dc840890c6c37dfa37cacac43c500f5fe2a27280e28450f
+          cleanup:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
