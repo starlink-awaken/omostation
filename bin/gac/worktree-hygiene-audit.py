@@ -137,10 +137,71 @@ def _is_merged_to_origin_main(head: str, path: Path) -> bool:
     Unknown is never merged: `merge-base --is-ancestor` exits 1 for "not an
     ancestor" and 128 when either side cannot be resolved (no `origin/main`, bad
     HEAD), so only a clean 0 reads as merged and the caller fails safe.
+
+    Squash-merge aware (TASK-152D15B1 / BET-Y2Q4-T10-251): this repo merges PRs
+    by squash, so a merged branch's commits are never ancestors of origin/main
+    and the ancestry probe alone parked every landed worktree in active/stale_*.
+    Two follow-up probes close that gap without loosening fail-safe:
+      (a) cumulative tree equivalence — the diff (merge-base..head) equals the
+          diff (merge-base..origin/main) restricted to the paths the branch
+          touched. Survives multi-commit squash and rebase-before-merge; any
+          later edit on main to those paths breaks equality → unmerged.
+      (b) PR-state fallback — `gh` reports the branch's PR MERGED and local
+          history has no commits beyond the PR head. gh unavailable/unsigned →
+          probe returns False, never raises, never widens the verdict.
     """
     if not head:
         return False
-    return _run(["git", "merge-base", "--is-ancestor", head, "origin/main"], cwd=path).returncode == 0
+    if _run(["git", "merge-base", "--is-ancestor", head, "origin/main"], cwd=path).returncode == 0:
+        return True
+    return _squash_equivalent_to_origin_main(head, path)
+
+
+def _squash_equivalent_to_origin_main(head: str, path: Path) -> bool:
+    """Squash-landing probes (a) tree equivalence, (b) PR MERGED. Fails safe."""
+    # (a) cumulative tree equivalence
+    mb = _run(["git", "merge-base", head, "origin/main"], cwd=path)
+    if mb.returncode == 0:
+        merge_base = mb.stdout.strip()
+        paths = _run(["git", "diff", "--name-only", merge_base, head], cwd=path)
+        if paths.returncode == 0 and paths.stdout.strip():
+            touched = [p for p in paths.stdout.splitlines() if p.strip()]
+            ours = _run(["git", "diff", merge_base, head, "--", *touched], cwd=path)
+            theirs = _run(["git", "diff", merge_base, "origin/main", "--", *touched], cwd=path)
+            if (
+                ours.returncode == 0
+                and theirs.returncode == 0
+                and ours.stdout == theirs.stdout
+            ):
+                return True
+    # (b) PR-state fallback: only when gh answers and local history ≤ PR head.
+    try:
+        head_ref = _run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=path)
+        if head_ref.returncode != 0:
+            return False
+        branch = head_ref.stdout.strip()
+        if not branch or branch == "DETACHED" or "/" not in branch:
+            return False
+        pr = _run(
+            ["gh", "pr", "view", "--json", "state,headRefOid", "--head", branch],
+            cwd=path,
+        )
+        if pr.returncode != 0:
+            return False
+        import json
+
+        try:
+            payload = json.loads(pr.stdout)
+        except ValueError:
+            return False
+        if payload.get("state") != "MERGED" or not payload.get("headRefOid"):
+            return False
+        beyond = _run(
+            ["git", "rev-list", "--count", f"{payload['headRefOid']}..{head}"], cwd=path
+        )
+        return beyond.returncode == 0 and beyond.stdout.strip() == "0"
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def _head_file_content(sub_dir: Path) -> str:

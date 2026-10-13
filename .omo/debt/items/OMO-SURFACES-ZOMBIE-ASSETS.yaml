@@ -22,6 +22,7 @@ affected_roots:
   - ".omo/bets.json"
   - ".omo/tasks.json"
 evidence_refs:
+  - .omo/_truth/registry/omo-governance-surfaces.yaml
   - "2026-09-21 复审 omo-governance-surfaces.yaml 的 47 项 assets: 逐项核对 ref
     与文件系统 + 写入方 + 消费者。37 项 ref 存在; 5 项不存在但有活跃写入方
     (OMO-LOCKS/OMO-WORKERS/OMO-TESTS/OMO-CAPABILITIES/OMO-RUN-CONTINUATION,

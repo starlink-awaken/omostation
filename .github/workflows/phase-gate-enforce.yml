@@ -78,7 +78,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       - name: Focused tests
         run: >-
-          uv run --with pytest --with pyyaml python -m pytest
+          uv run --with pytest --with pytest-timeout --with pyyaml python -m pytest
           tests/test_documents_claude_desktop_config.py
           tests/test_documents_codex_profile.py
           tests/test_documents_zed_profile.py

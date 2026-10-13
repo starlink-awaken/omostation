@@ -53,7 +53,7 @@ mitigation_refs: []
 decision_needed: "建立 governance-checks↔L0-constraints↔bin executors↔hook-manifest 的 ID 别名映射 (owner 语义判定; 完成后本项关闭, check-rule-wiring-coverage --strict 入门禁)"
 resolution_evidence: null
 opened_at: '2026-09-20T00:00:00Z'
-last_reviewed_at: '2026-09-20'
+last_reviewed_at: '2026-10-13'
 next_review_at: '2027-01-20'
 gate_level: none
 history:
@@ -105,4 +105,21 @@ history:
     B006 启用（基线零违规）、retired 统计口径分离（18 条弃用/收窄/并入条目,
     注册表保留）。--strict shadow 起跑; 关单待 shadow 一周无回归 + retired
     清单 owner 复核维持。
+  actor: governance-agent
+- at: '2026-10-13T00:00:00+00:00'
+  action: m1-alignment-axis-evidence
+  note: >-
+    存量债战役全量终验暴露 test_gac_m1_tracked_truth 2F: gac-m1-sync --tracked
+    报 registry=86 / m1_instances=136 (ADR-0374 G3 root-pointer 对齐断言失守)。
+    本债项此前四批次治的是 registry↔执行语料接线轴; 本次是 M1 层↔registry
+    对齐轴, 三桶: 对齐 68 / registry-only 18 / m1-only 68。registry-only 18 中
+    CR-AGE-*×5 已在本债项 retired 清单 (M1 缺位=退役后未同步), CR-HARNESS-×3
+    在 implemented_via_alias 有 canonical 对应。m1-only 68 与执行语料 (bin/+
+    .githooks/+workflows+projects/*/src 的 py/ts/sh/yml, 排除 M1 声明 yaml) 求交:
+    39 有宿主引用 (registry 漏登记候选) / 29 零引用 (ghost 候选, 其中 CR-X3-*×18
+    疑为指标类换名实现 —— compass_radar/health 以非 id 字符串实现, 属本债项既知
+    假阳边界)。裁决问题 (owner): (a) registry-only 18 逐条判 M1 补节点 or
+    registry 收窄; (b) m1-only 68 判 registry 登记接管 or M1 删除 (幽灵声明);
+    (c) CR-X3-* 需别名映射后才能定性。锚点: bin/gac/gac-m1-sync.py --tracked
+    --json (2026-10-13 run) + bin/gac/check-rule-wiring-coverage.py --json。
   actor: governance-agent

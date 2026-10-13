@@ -57,7 +57,7 @@ jobs:
           exit $fail
 
       - name: Install pytest
-        run: python3 -m pip install --quiet pytest
+        run: python3 -m pip install --quiet pytest pytest-timeout
 
       - name: Run hook regression tests
         run: python3 -m pytest tests/unit/gac/test_pre_rebase_hook.py -v
