@@ -480,6 +480,24 @@ def collect_projection_producer_identity(*, code_root: Path = CODE_ROOT) -> dict
     }
 
 
+def resolve_projection_dashboard_code_root(environ=None) -> Path:
+    env = os.environ if environ is None else environ
+    raw = str(env.get("ZHIXING_DASHBOARD_CODE_ROOT", "")).strip()
+    root = Path(raw).expanduser()
+    if not raw or not root.is_absolute():
+        raise RuntimeError("projection_dashboard_identity_unbound")
+    root = root.resolve()
+    link = root / "current"
+    if link.is_symlink():
+        target = link.resolve()
+        if (target.parent != (root / "releases").resolve()
+                or re.fullmatch(r"[0-9a-f]{40}", target.name) is None
+                or not target.is_dir()):
+            raise RuntimeError("projection_dashboard_release_invalid")
+        return target
+    return root
+
+
 def collect_projection_dashboard_identity(*, environ=None) -> dict:
     """Recompute the exact dashboard release identity from one clean Git root."""
     env = os.environ if environ is None else environ
@@ -487,7 +505,20 @@ def collect_projection_dashboard_identity(*, environ=None) -> dict:
     candidate = Path(raw_root).expanduser()
     if not raw_root or not candidate.is_absolute():
         raise RuntimeError("projection_dashboard_identity_unbound")
-    root = candidate.resolve()
+    root = resolve_projection_dashboard_code_root(env)
+    manifest = root / ".zhixing-host-release.json"
+    if manifest.exists() or manifest.is_symlink():
+        import importlib.util
+        helper = root / "release_identity.py"
+        if helper.is_symlink() or not helper.is_file():
+            raise RuntimeError("projection_release_identity_helper_missing")
+        try:
+            import types
+            module = types.ModuleType("zhixing_producer_release_identity")
+            exec(compile(helper.read_bytes(), str(helper), "exec"), module.__dict__)
+            return module.managed_release_identity(root)
+        except (OSError, ValueError, ImportError, AttributeError) as exc:
+            raise RuntimeError("projection_release_identity_invalid") from exc
     code_oid = _git_stdout(root, "rev-parse", "HEAD")
     origin_main = _git_stdout(root, "rev-parse", "refs/remotes/origin/main")
     if code_oid != origin_main or re.fullmatch(r"[0-9a-f]{40}", code_oid) is None:
@@ -627,7 +658,9 @@ def publish_projection_revision(
         visibility["authority"] = authority
         published_payload["agent_visibility"] = visibility
         producer = collect_projection_producer_identity(code_root=Path(code_root))
-        dashboard = collect_projection_dashboard_identity()
+        dashboard_root = resolve_projection_dashboard_code_root()
+        dashboard_env = dict(os.environ, ZHIXING_DASHBOARD_CODE_ROOT=str(dashboard_root))
+        dashboard = collect_projection_dashboard_identity(environ=dashboard_env)
         generated = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)
         fresh_until = generated + timedelta(minutes=10)
         generated_at = generated.isoformat().replace("+00:00", "Z")
@@ -636,12 +669,7 @@ def publish_projection_revision(
         # Use the dashboard repo's template (kept in sync with the orchestrator)
         # instead of the embedded legacy TEMPLATE, so published revisions serve
         # the same page the orchestrator produces.
-        _dash_template_path = Path(
-            os.environ.get(
-                "ZHIXING_DASHBOARD_CODE_ROOT",
-                str(Path.home() / ".local/share/zhixing-dashboard"),
-            )
-        ) / "template.html"
+        _dash_template_path = dashboard_root / "template.html"
         _page_template = (
             _dash_template_path.read_text(encoding="utf-8")
             if _dash_template_path.is_file()
@@ -651,10 +679,7 @@ def publish_projection_revision(
         # Concatenate UI scripts into the page (matching orchestrator behavior),
         # so published revisions have the same interactive panels as the
         # orchestrator-produced dist/index.html.
-        _dash_root = Path(os.environ.get(
-            "ZHIXING_DASHBOARD_CODE_ROOT",
-            str(Path.home() / ".local/share/zhixing-dashboard"),
-        ))
+        _dash_root = dashboard_root
         _ui_files = [
             "data_access.js", "ui_extensions.js", "strategy_ui.js", "workbench_ui.js",
             "panoramic_ui.js", "next_ui.js", "topology_ui.js", "mof_ui.js", "ecosystem_ui.js",
@@ -4752,10 +4777,7 @@ def build_payload() -> dict:
     # Prefer the orchestrator's full strategic projection from current.json
     # (produced every 300s with integrate_strategy). Fall back to the
     # minimal local projection only when current.json is unavailable.
-    _orch_current = Path(os.environ.get(
-        "ZHIXING_DASHBOARD_CODE_ROOT",
-        str(Path.home() / ".local/share/zhixing-dashboard"),
-    )) / "current.json"
+    _orch_current = PROJECTION_STATE_ROOT / "current.json"
     _strategic = None
     try:
         if _orch_current.is_file():

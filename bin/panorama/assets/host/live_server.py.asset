@@ -240,7 +240,7 @@ _IDENTITY_PROOF_TIMEOUT_SECONDS = 3.0
 _MAX_CODE_FILE_BYTES = 2 * 1024 * 1024
 REPO_DIST_PAGE = STATE_ROOT / "dist" / "index.html"
 REPO_ROOT_PAGE = STATE_ROOT / "index.html"
-LEGACY_DOC_PAGE = Path("/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库/40-验收与运营/Agent体系全景总览-2026-09-08.html")
+LEGACY_DOC_PAGE = Path.home() / ("Documents/@学习进化/_archive/基建架构-织星系统文档库/织星主权智能操作系统文档库/40-验收与运营/Agent体系全景总览-2026-09-08.html")
 
 def resolve_default_page_path() -> Path:
     if STATE_ROOT != CODE_ROOT:
@@ -253,7 +253,7 @@ def resolve_default_page_path() -> Path:
 
 PAGE_PATH = resolve_default_page_path()
 SNAPSHOT_PATH = STATE_ROOT / "current.json"
-DOCUMENT_ROOT = Path("/Users/xiamingxing/Documents/学习进化/基建架构")
+DOCUMENT_ROOT = Path.home() / ("Documents/@学习进化/_archive/基建架构-织星系统文档库")
 DEFAULT_SOURCES = {
     "resident_heartbeats": Path("/Users/xiamingxing/Workspace/.omo/state/resident-heartbeat.jsonl"),
     "rule_vitality": Path("/Users/xiamingxing/Workspace/.omo/state/rule-vitality.jsonl"),
@@ -284,9 +284,30 @@ def utc_now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
+def managed_dashboard_identity(code_root):
+    root = Path(code_root).resolve()
+    manifest = root / ".zhixing-host-release.json"
+    if not manifest.exists() and not manifest.is_symlink():
+        return None
+    try:
+        import importlib.util
+        helper = root / "release_identity.py"
+        if helper.is_symlink() or not helper.is_file():
+            raise ValueError("release_identity_helper_missing")
+        import types
+        module = types.ModuleType("zhixing_bound_release_identity")
+        exec(compile(helper.read_bytes(), str(helper), "exec"), module.__dict__)
+        return module.managed_release_identity(root)
+    except (OSError, ValueError, ImportError, AttributeError) as exc:
+        raise ProjectionStateError("CODE_DRIFT", "projection_code_drift") from exc
+
+
 def resolve_dashboard_code_identity(code_root=CODE_ROOT):
     """Prove the running reader is one clean, exact Git tree."""
     root = Path(code_root).resolve()
+    managed = managed_dashboard_identity(root)
+    if managed is not None:
+        return managed
     deadline = time.monotonic() + _IDENTITY_PROOF_TIMEOUT_SECONDS
 
     def git_bytes(*args):
@@ -333,8 +354,11 @@ def resolve_dashboard_code_identity(code_root=CODE_ROOT):
 
 
 def probe_dashboard_code_identity(code_root=CODE_ROOT):
-    """Cheaply prove HEAD and a clean tracked/untracked worktree."""
+    """Prove the complete managed release or legacy clean Git checkout."""
     root = Path(code_root).resolve()
+    managed = managed_dashboard_identity(root)
+    if managed is not None:
+        return {"code_oid": managed["code_oid"]}
     try:
         completed = subprocess.run(
             [
@@ -1545,6 +1569,45 @@ def compute_value_metrics():
     }
 
 
+def bound_payload_freshness(revision, *, max_age_seconds=300):
+    """Classify the data artifact already verified and bound to a revision."""
+    payload_generated_at = None
+    payload_age_seconds = None
+    payload_status = "UNKNOWN"
+    payload_error = "projection_payload_timestamp_invalid"
+    try:
+        payload = json.loads(revision.artifact_bodies["data"])
+        if not isinstance(payload, dict):
+            raise ValueError("payload must be an object")
+        timestamp = payload.get("generated_at")
+        if timestamp is None:
+            payload_error = "projection_payload_timestamp_missing"
+        elif isinstance(timestamp, str) and timestamp:
+            payload_generated_at = timestamp
+            generated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            if generated.tzinfo is None or generated.utcoffset() is None:
+                raise ValueError("payload timestamp must have a timezone")
+            payload_age_seconds = (
+                datetime.now(timezone.utc) - generated
+            ).total_seconds()
+            if payload_age_seconds < 0:
+                payload_error = "projection_payload_timestamp_future"
+            elif payload_age_seconds > max_age_seconds:
+                payload_status = "STALE"
+                payload_error = "projection_payload_stale"
+            else:
+                payload_status = "BOUND_FRESH"
+                payload_error = None
+    except (KeyError, TypeError, ValueError, OverflowError):
+        pass
+    return {
+        "projection_status": payload_status,
+        "projection_error": payload_error,
+        "payload_generated_at": payload_generated_at,
+        "payload_age_seconds": payload_age_seconds,
+    }
+
+
 class DashboardServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
@@ -1697,37 +1760,10 @@ class DashboardServer(ThreadingHTTPServer):
                 "payload_generated_at": None,
                 "payload_age_seconds": None,
             }
-        # Read only the bytes already verified and bound to this revision.
-        # Renewing its lease does not refresh the data embedded in those bytes.
-        payload_generated_at = None
-        payload_age_seconds = None
-        payload_status = "UNKNOWN"
-        payload_error = "projection_payload_timestamp_invalid"
-        try:
-            payload = json.loads(revision.artifact_bodies["data"])
-            if not isinstance(payload, dict):
-                raise ValueError("payload must be an object")
-            timestamp = payload.get("generated_at")
-            if timestamp is None:
-                payload_error = "projection_payload_timestamp_missing"
-            elif isinstance(timestamp, str) and timestamp:
-                payload_generated_at = timestamp
-                generated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-                if generated.tzinfo is None or generated.utcoffset() is None:
-                    raise ValueError("payload timestamp must have a timezone")
-                payload_age_seconds = (datetime.now(timezone.utc) - generated).total_seconds()
-                if payload_age_seconds < 0:
-                    payload_error = "projection_payload_timestamp_future"
-                elif payload_age_seconds > 300:
-                    payload_status = "STALE"
-                    payload_error = "projection_payload_stale"
-                else:
-                    payload_status = "BOUND_FRESH"
-                    payload_error = None
-        except (KeyError, TypeError, ValueError, OverflowError):
-            pass
+        # Read only bytes already verified and bound to this revision. Renewing
+        # the lease does not refresh the data embedded in those bytes.
+        payload_freshness = bound_payload_freshness(revision)
         return {
-            "projection_status": payload_status,
             "state_revision": revision.revision_id,
             "producer_root_oid": revision.producer_root_oid,
             "producer_root_tree_sha256": revision.producer_root_tree_sha256,
@@ -1744,9 +1780,7 @@ class DashboardServer(ThreadingHTTPServer):
             "projection_generated_at": revision.generated_at,
             "projection_fresh_until": revision.fresh_until,
             "projection_manifest_sha256": revision.manifest_sha256,
-            "projection_error": payload_error,
-            "payload_generated_at": payload_generated_at,
-            "payload_age_seconds": payload_age_seconds,
+            **payload_freshness,
         }
 
     def get_request(self):
@@ -2177,6 +2211,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 )
                 if active_revision is not None:
                     snap = json.loads(active_revision.artifact_bodies["data"])
+                    payload_freshness = bound_payload_freshness(active_revision)
                 else:
                     snapshot_candidates = [
                         getattr(self.server, "snapshot_path", None),
@@ -2193,13 +2228,17 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         )
                     else:
                         snap = {}
+                    payload_freshness = {
+                        "projection_status": "LEGACY_TEST_INJECTION",
+                        "projection_error": None,
+                        "payload_generated_at": None,
+                        "payload_age_seconds": None,
+                    }
                 last_gen_id = snap.get("generation_id")
-                stream_projection_status = (
-                    "BOUND_FRESH"
-                    if active_revision is not None
-                    else "LEGACY_TEST_INJECTION"
-                )
-                stream_projection_error = None
+                stream_projection_status = payload_freshness["projection_status"]
+                stream_projection_error = payload_freshness["projection_error"]
+                stream_payload_generated_at = payload_freshness["payload_generated_at"]
+                stream_payload_age_seconds = payload_freshness["payload_age_seconds"]
 
                 now_str = utc_now()
                 init_evt = {
@@ -2209,7 +2248,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     'status': stream_projection_status,
                     'state_revision': last_revision_id,
                     'generation_id': last_gen_id,
+                    'payload_generated_at': stream_payload_generated_at,
+                    'payload_age_seconds': stream_payload_age_seconds,
                 }
+                if stream_projection_error is not None:
+                    init_evt['error'] = stream_projection_error
                 self.wfile.write(f"event: connected\ndata: {json.dumps(init_evt)}\n\n".encode('utf-8'))
                 self.wfile.flush()
                 
@@ -2224,8 +2267,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     ):
                         try:
                             current_revision = self.server.projection_revision()
-                            stream_projection_status = "BOUND_FRESH"
-                            stream_projection_error = None
+                            payload_freshness = bound_payload_freshness(current_revision)
+                            stream_projection_status = payload_freshness["projection_status"]
+                            stream_projection_error = payload_freshness["projection_error"]
+                            stream_payload_generated_at = payload_freshness["payload_generated_at"]
+                            stream_payload_age_seconds = payload_freshness["payload_age_seconds"]
                             if current_revision.revision_id != last_revision_id:
                                 snap = json.loads(
                                     current_revision.artifact_bodies["data"]
@@ -2238,6 +2284,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                                     'timestamp': utc_now(),
                                     'generation_id': cur_gen_id,
                                     'state_revision': last_revision_id,
+                                    'projection_status': stream_projection_status,
+                                    'projection_error': stream_projection_error,
+                                    'payload_generated_at': stream_payload_generated_at,
+                                    'payload_age_seconds': stream_payload_age_seconds,
                                     'observed_at': snap.get("observed_at")
                                     or snap.get("generated_at"),
                                     'status': snap.get("status") or "OK",
@@ -2251,9 +2301,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         except ProjectionStateError as exc:
                             stream_projection_status = exc.status
                             stream_projection_error = exc.public_error
+                            stream_payload_generated_at = None
+                            stream_payload_age_seconds = None
                         except (ValueError, TypeError):
                             stream_projection_status = "ARTIFACT_INVALID"
                             stream_projection_error = "projection_artifact_invalid"
+                            stream_payload_generated_at = None
+                            stream_payload_age_seconds = None
                     elif (
                         self.server.projection_store is None
                         and active_snap_file
@@ -2294,6 +2348,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             'timestamp': utc_now(),
                             'status': stream_projection_status,
                             'state_revision': last_revision_id,
+                            'payload_generated_at': stream_payload_generated_at,
+                            'payload_age_seconds': stream_payload_age_seconds,
                         }
                         if stream_projection_error is not None:
                             pulse['error'] = stream_projection_error

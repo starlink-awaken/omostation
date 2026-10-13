@@ -1,0 +1,86 @@
+"""Bounded verification of immutable managed dashboard release bytes.
+
+The source commit is provenance, not a synthetic Git checkout identity.
+"""
+from pathlib import Path
+import hashlib
+import json
+import os
+import re
+
+MANIFEST = ".zhixing-host-release.json"
+CODE_FILES = ("live_server.py", "observatory_query.py", "runtime_paths.py")
+MAX_FILES = 2048
+MAX_FILE_BYTES = 8 * 1024 * 1024
+MAX_TOTAL_BYTES = 64 * 1024 * 1024
+
+
+class ReleaseIdentityError(ValueError):
+    pass
+
+
+def managed_release_identity(code_root):
+    """Return manifest identity, or None only when no managed manifest exists.
+
+    Any present invalid manifest fails closed. No Git fallback is permitted.
+    """
+    root = Path(code_root).resolve()
+    manifest = root / MANIFEST
+    if not manifest.exists() and not manifest.is_symlink():
+        return None
+    try:
+        if manifest.is_symlink() or not manifest.is_file() or manifest.stat().st_size > 1024 * 1024:
+            raise ReleaseIdentityError("release_manifest_invalid")
+        raw = manifest.read_bytes()
+        data = json.loads(raw)
+        if not isinstance(data, dict) or data.get("schema") != "zhixing-host-release-manifest/v1":
+            raise ReleaseIdentityError("release_manifest_schema_invalid")
+        version = data.get("version_id")
+        oid = data.get("commit_oid")
+        if (not isinstance(version, str) or re.fullmatch(r"[0-9a-f]{40}", version) is None
+                or root.name != version or root.parent.name != "releases"
+                or data.get("identity_kind") != "git_commit"
+                or oid != version):
+            raise ReleaseIdentityError("release_manifest_source_invalid")
+        expected = data.get("files")
+        if not isinstance(expected, dict) or not expected or len(expected) > MAX_FILES:
+            raise ReleaseIdentityError("release_manifest_files_invalid")
+        for name, digest in expected.items():
+            relative = Path(name) if isinstance(name, str) else Path("/")
+            if (relative.is_absolute() or relative.as_posix() != name
+                    or any(part in (".", "..", ".git") for part in relative.parts)
+                    or name == MANIFEST or not isinstance(digest, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", digest) is None):
+                raise ReleaseIdentityError("release_manifest_path_invalid")
+        actual = {}
+        total = 0
+        for directory, dirs, files in os.walk(root, followlinks=False):
+            parent = Path(directory)
+            if any((parent / name).is_symlink() or name == ".git" for name in dirs):
+                raise ReleaseIdentityError("release_tree_unsafe")
+            for name in files:
+                path = parent / name
+                relative = path.relative_to(root).as_posix()
+                if path.is_symlink() or not path.is_file() or name == ".git":
+                    raise ReleaseIdentityError("release_tree_unsafe")
+                if relative == MANIFEST:
+                    continue
+                size = path.stat().st_size
+                total += size
+                if size > MAX_FILE_BYTES or total > MAX_TOTAL_BYTES or len(actual) >= MAX_FILES:
+                    raise ReleaseIdentityError("release_tree_limit")
+                actual[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != expected:
+            raise ReleaseIdentityError("release_tree_hash_mismatch")
+        if any(name not in actual for name in CODE_FILES):
+            raise ReleaseIdentityError("release_code_bundle_missing")
+        bundle = "".join(f"{name}:{actual[name]}\n" for name in CODE_FILES)
+        tree = json.dumps(actual, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return {"code_oid": oid, "tree_sha256": hashlib.sha256(tree).hexdigest(),
+                "code_bundle_sha256": hashlib.sha256(bundle.encode("ascii")).hexdigest(),
+                "identity_kind": "managed_release_manifest",
+                "manifest_sha256": hashlib.sha256(raw).hexdigest()}
+    except (OSError, ValueError, TypeError) as exc:
+        if isinstance(exc, ReleaseIdentityError):
+            raise
+        raise ReleaseIdentityError("release_manifest_invalid") from exc

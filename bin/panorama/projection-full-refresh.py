@@ -152,7 +152,17 @@ def main() -> int:
         env["PANORAMA_CODE_ROOT"] = str(CHECKOUT)
         env["ZHIXING_DASHBOARD_STATE_ROOT"] = str(DEPLOY_DIR)
         env["OMO_EVENT_LEDGER_DB"] = str(ledger_db)
-        env["ZHIXING_DASHBOARD_CODE_ROOT"] = str(DEPLOY_DIR)
+        # Bind one immutable release once; mutable projections stay at DEPLOY_DIR.
+        release_link = DEPLOY_DIR / "current"
+        if release_link.is_symlink():
+            dashboard_code_root = release_link.resolve()
+            if (dashboard_code_root.parent != (DEPLOY_DIR / "releases").resolve()
+                    or re.fullmatch(r"[0-9a-f]{40}", dashboard_code_root.name) is None
+                    or not dashboard_code_root.is_dir()):
+                return fail("dashboard_release_invalid")
+        else:
+            dashboard_code_root = DEPLOY_DIR.resolve()
+        env["ZHIXING_DASHBOARD_CODE_ROOT"] = str(dashboard_code_root)
         r = subprocess.run(
             [sys.executable, "-B", str(CHECKOUT / "bin/panorama/panorama-collect.py")],
             cwd=str(CHECKOUT), env=env, text=True, capture_output=True,

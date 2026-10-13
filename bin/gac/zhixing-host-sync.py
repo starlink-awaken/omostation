@@ -84,6 +84,7 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("strategy_projection.py", "strategy_projection.py.asset"),
     ("collectors/agent_brief.py", "agent_brief_collector.py.asset"),
     ("collectors/base.py", "collectors.base.py.asset"),
+    ("release_identity.py", "release_identity.py.asset"),
 )
 RELEASE_ID_RE = re.compile(r"[0-9a-f]{40}\Z")
 RELEASE_MANIFEST = ".zhixing-host-release.json"
@@ -150,10 +151,14 @@ def _release_tree_files(root: Path) -> dict[str, str] | None:
     try:
         for directory, dirnames, filenames in os.walk(root, followlinks=False):
             base = Path(directory)
+            # Git pointers/metadata belong to the old checkout, never the release.
+            dirnames[:] = [name for name in dirnames if name != ".git"]
             for name in dirnames:
                 if (base / name).is_symlink():
                     return None
             for name in filenames:
+                if name == ".git":
+                    continue
                 path = base / name
                 if path.is_symlink() or not path.is_file():
                     return None
@@ -226,6 +231,7 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
         if base_dir is not None:
             for directory, dirnames, filenames in os.walk(base_dir, followlinks=False):
                 source_parent = Path(directory)
+                dirnames[:] = [name for name in dirnames if name != ".git"]
                 relative_parent = source_parent.relative_to(base_dir)
                 target_parent = staging / relative_parent
                 target_parent.mkdir(parents=True, exist_ok=True)
@@ -233,6 +239,8 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
                     if (source_parent / dirname).is_symlink():
                         raise ValueError("release_symlink_rejected")
                 for filename in filenames:
+                    if filename == ".git":
+                        continue
                     source_file = source_parent / filename
                     if source_file.is_symlink() or not source_file.is_file():
                         raise ValueError("release_non_regular_entry_rejected")
@@ -564,7 +572,20 @@ def publish(files: list[str] | tuple[str, ...] | None) -> dict:
     prepared = _prepare_version(assets, oid)
     if not prepared.get("ok"):
         return prepared
-    switched = _switch_current(Path(prepared["version_dir"]))
+    # Validate newly managed bytes before changing the production pointer.
+    release_root = Path(prepared["version_dir"])
+    if (release_root / "release_identity.py").exists():
+        try:
+            import importlib.util
+            import types
+            source_helper = HOST_DIR / "release_identity.py.asset"
+            helper = types.ModuleType("zhixing_publisher_release_identity")
+            exec(compile(source_helper.read_bytes(), str(source_helper), "exec"), helper.__dict__)
+            helper.managed_release_identity(release_root)
+        except (OSError, ValueError, ImportError, AttributeError) as exc:
+            _discard_new_version(release_root, not prepared.get("created", False))
+            return {"ok": False, "reason": "managed_release_identity_invalid", "detail": str(exc)}
+    switched = _switch_current(release_root)
     if not switched.get("ok"):
         return switched
     # SHA 校验: 新版本目录中已发布资产与主仓一致
@@ -949,6 +970,89 @@ def _asset_plan(runtime_root: Path,
     }
 
 
+REFRESH_LABEL = "com.omostation.zhixing-dashboard-refresh"
+
+
+def bind_refresh(*, restore: bool = False) -> dict:
+    """Bind only the already registered refresh service; preserve exact rollback."""
+    plist_path = LAUNCH_AGENT_PLIST.with_name(f"{REFRESH_LABEL}.plist")
+    backup = plist_path.with_name(f"{REFRESH_LABEL}.plist.release-backup")
+    domain = f"gui/{os.getuid()}"
+    service = f"{domain}/{REFRESH_LABEL}"
+    try:
+        if plist_path.is_symlink() or not plist_path.is_file() or backup.is_symlink():
+            raise ValueError("refresh_plist_unsafe")
+        before = plist_path.read_bytes()
+        payload = plistlib.loads(before)
+        loaded = subprocess.run(["launchctl", "print", service], capture_output=True, text=True)
+        if loaded.returncode != 0 or payload.get("Label") != REFRESH_LABEL:
+            raise ValueError("refresh_service_not_registered")
+        args = payload.get("ProgramArguments")
+        if not isinstance(args, list):
+            raise ValueError("refresh_program_invalid")
+        scripts = [(i, arg) for i, arg in enumerate(args)
+                   if isinstance(arg, str) and Path(arg).name == "orchestrator.py"]
+        if len(scripts) != 1:
+            raise ValueError("refresh_entrypoint_invalid")
+        index, old_entry = scripts[0]
+        if str(old_entry) not in loaded.stdout:
+            raise ValueError("refresh_loaded_registration_mismatch")
+        if Path(old_entry).expanduser().resolve().parent not in {
+                DASHBOARD_DIR.resolve(), CURRENT_LINK.resolve()}:
+            raise ValueError("refresh_entrypoint_outside_scope")
+        if restore:
+            if not backup.is_file():
+                raise ValueError("refresh_backup_missing")
+            target = backup.read_bytes()
+            original = plistlib.loads(target)
+            if original.get("Label") != REFRESH_LABEL:
+                raise ValueError("refresh_backup_label_mismatch")
+        else:
+            current = CURRENT_LINK.resolve()
+            if (_current_version() is None or not (current / "orchestrator.py").is_file()):
+                raise ValueError("refresh_current_unavailable")
+            env = payload.get("EnvironmentVariables", {})
+            if not isinstance(env, dict):
+                raise ValueError("refresh_environment_invalid")
+            configured = env.get("ZHIXING_DASHBOARD_STATE_ROOT")
+            if configured and Path(configured).expanduser().resolve() != DASHBOARD_DIR.resolve():
+                raise ValueError("refresh_state_root_mismatch")
+            stable_entry = str(CURRENT_LINK / "orchestrator.py")
+            if old_entry == stable_entry and configured == str(DASHBOARD_DIR):
+                return {"ok": True, "already_bound": True, "write_performed": False}
+            args[index] = stable_entry
+            payload["WorkingDirectory"] = str(CURRENT_LINK)
+            payload["EnvironmentVariables"] = dict(env, ZHIXING_DASHBOARD_STATE_ROOT=str(DASHBOARD_DIR))
+            target = plistlib.dumps(payload)
+            if backup.exists() and backup.read_bytes() != before:
+                raise ValueError("refresh_backup_conflict")
+            _atomic_write_bytes(backup, before)
+        _atomic_write_bytes(plist_path, target)
+        def reload():
+            stopped = subprocess.run(["launchctl", "bootout", service], capture_output=True, text=True)
+            if stopped.returncode != 0:
+                return False
+            started = subprocess.run(["launchctl", "bootstrap", domain, str(plist_path)], capture_output=True, text=True)
+            if started.returncode != 0:
+                return False
+            verify = subprocess.run(["launchctl", "print", service], capture_output=True, text=True)
+            expected = next(arg for arg in plistlib.loads(plist_path.read_bytes())["ProgramArguments"]
+                            if isinstance(arg, str) and Path(arg).name == "orchestrator.py")
+            return verify.returncode == 0 and expected in verify.stdout
+        if not reload():
+            _atomic_write_bytes(plist_path, before)
+            # A failed bootstrap may leave it unloaded; restore only this service.
+            subprocess.run(["launchctl", "bootout", service], capture_output=True, text=True)
+            back = subprocess.run(["launchctl", "bootstrap", domain, str(plist_path)], capture_output=True, text=True)
+            verified = subprocess.run(["launchctl", "print", service], capture_output=True, text=True)
+            return {"ok": False, "reason": "refresh_reload_failed",
+                    "recovery": {"ok": back.returncode == 0 and verified.returncode == 0
+                                 and old_entry in verified.stdout}}
+        return {"ok": True, "write_performed": True, "backup": str(backup), "restored": restore}
+    except (OSError, ValueError, plistlib.InvalidFileException) as exc:
+        return {"ok": False, "reason": "refresh_binding_rejected", "detail": str(exc)}
+
+
 def plan(files: list[str] | tuple[str, ...] | None) -> dict:
     """Read selected asset drift after binding the live PID to its plist entrypoint."""
     runtime = _running_registered_runtime()
@@ -999,10 +1103,16 @@ def main(argv: list[str] | None = None) -> int:
     publish_parser.add_argument("--json", action="store_true")
     sub.add_parser("restore", help="回滚: current 切回上一版本").add_argument("--json", action="store_true")
     sub.add_parser("migrate", help="plist 迁移: entrypoint → current/live_server.py").add_argument("--json", action="store_true")
+    sub.add_parser("bind-refresh", help="仅绑定已登记 refresh 到 current，保留精确回退").add_argument("--json", action="store_true")
+    sub.add_parser("restore-refresh", help="原生恢复 refresh 的精确 plist 备份").add_argument("--json", action="store_true")
     args = ap.parse_args(arguments)
     command = args.command or "status"
 
-    if command == "plan":
+    if command == "bind-refresh":
+        result = bind_refresh()
+    elif command == "restore-refresh":
+        result = bind_refresh(restore=True)
+    elif command == "plan":
         result = plan(args.files)
     elif command == "check":
         result = plan([deploy_name for deploy_name, _ in HOST_FILES])

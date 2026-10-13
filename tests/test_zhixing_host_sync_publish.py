@@ -59,6 +59,72 @@ def _fake_runtime(runtime_root: Path) -> dict:
     }
 
 
+@pytest.fixture
+def refresh_env(zhs_env, monkeypatch):
+    deploy = zhs_env["deploy"]
+    version = deploy / "releases" / ("c" * 40)
+    version.mkdir(parents=True)
+    (version / "orchestrator.py").write_text("# refresh\n")
+    assert zhs._switch_current(version)["ok"]
+    plist = zhs_env["plist"].with_name(f"{zhs.REFRESH_LABEL}.plist")
+    old = {"Label": zhs.REFRESH_LABEL,
+           "ProgramArguments": ["python3", "-B", str(deploy / "orchestrator.py")],
+           "EnvironmentVariables": {"EXISTING": "retained"}}
+    plist.write_bytes(plistlib.dumps(old))
+    calls = []
+
+    def launchctl(args, **kwargs):
+        assert args[0] == "launchctl"
+        calls.append(args)
+        output = plistlib.loads(plist.read_bytes())["ProgramArguments"][-1]
+        return subprocess.CompletedProcess(args, 0, output, "")
+
+    monkeypatch.setattr(zhs.subprocess, "run", launchctl)
+    return plist, plist.read_bytes(), calls
+
+
+def test_native_refresh_binding_and_exact_restore(refresh_env):
+    plist, before, calls = refresh_env
+    result = zhs.bind_refresh()
+    assert result["ok"], result
+    changed = plistlib.loads(plist.read_bytes())
+    assert changed["ProgramArguments"][-1] == str(zhs.CURRENT_LINK / "orchestrator.py")
+    assert changed["EnvironmentVariables"] == {"EXISTING": "retained", "ZHIXING_DASHBOARD_STATE_ROOT": str(zhs.DASHBOARD_DIR)}
+    assert Path(result["backup"]).read_bytes() == before
+    assert zhs.bind_refresh()["already_bound"]
+    assert zhs.bind_refresh(restore=True)["ok"]
+    assert plist.read_bytes() == before
+    assert all(zhs.REFRESH_LABEL in args[-1] for args in calls)
+
+
+def test_native_refresh_failed_bootstrap_restores_exact_plist(refresh_env, monkeypatch):
+    plist, before, calls = refresh_env
+    normal = zhs.subprocess.run
+    attempts = 0
+
+    def fail_once(args, **kwargs):
+        nonlocal attempts
+        if args[1] == "bootstrap":
+            attempts += 1
+            if attempts == 1:
+                return subprocess.CompletedProcess(args, 1, "", "failed")
+        return normal(args, **kwargs)
+
+    monkeypatch.setattr(zhs.subprocess, "run", fail_once)
+    result = zhs.bind_refresh()
+    assert result["reason"] == "refresh_reload_failed"
+    assert result["recovery"]["ok"]
+    assert plist.read_bytes() == before
+
+
+def test_native_refresh_does_not_create_unregistered_service(refresh_env, monkeypatch):
+    plist, before, _ = refresh_env
+    monkeypatch.setattr(zhs.subprocess, "run", lambda args, **kwargs: subprocess.CompletedProcess(args, 1, "", "not loaded"))
+    assert not zhs.bind_refresh()["ok"]
+    assert plist.read_bytes() == before
+    assert not plist.with_name(f"{zhs.REFRESH_LABEL}.plist.release-backup").exists()
+
+
 def test_prepare_version_sha_alignment(zhs_env):
     host = zhs_env["host"]
     (host / "live_server.py.asset").write_text("fixed live_server\n")
