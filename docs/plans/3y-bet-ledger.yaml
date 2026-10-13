@@ -42494,6 +42494,115 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-250
+  title: ADR-0456 B1 残留 —— bin/ 154 处写面路径钉在 __file__ 检出根，收成 shrink_only 基线门禁
+  goal: 'B1 的完成判据（bin/ 内 `DEFAULT_(EVENT_)?LEDGER` 常量归零）已达成，但它只覆盖常量命名形状，
+
+    覆盖不到 B1 的意图「写目标跟随 profile 声明的根」。本轮用将要发布的判据自身实测出残留：
+
+    bin/ 内路径由 `__file__` 反推的检出根拼出、尾段落在 `.omo/state/**` 或 `runtime/**` 的站点
+
+    = 154 行级站点 / 144 个 (文件,路径) 对 / 95 文件（全 marker 460 处，其余四类 marker 按 ADR-0456
+
+    的读/写分界与 AGENTS.md §7「gitignore ≠ 本地化」明确排除，理由见 spec §1 表）。这些站点从未调用过
+
+    缝，所以双根契约在它们身上不是被违反而是没到达；既有 `tests/unit/test_system_yaml_write_plane.py`
+
+    只按 system.yaml 的字面量匹配，结构上看不见其余 143 处（与本判据重叠实测 1 处，且该处在邻居门禁里已判死码）。
+
+    交付一条同源判据的 shrink_only 门禁：基线是显式 (文件,路径) 集合、与实测集合双向相等，配自证
+
+    （注入命中形状必被点名）与反过宽对照（`state_root()` 取根与 `.omo/_truth/**` 读面不得命中），
+
+    并接进 `governance-check.yml` 的显式 pytest 白名单。本轮不改任何真实写目标 —— 把 81 处改道到
+
+    profile 根是与 B4b 同类的分批授权工作，不在这一轮顺手动。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  depends_on:
+  - BET-Y2Q4-T10-248
+  circuit_breaker: '若为凑绿需要以下任一条 → 停止并保留原判据：① 把基线写成「只断言实测 ⊆ 基线」这类单向判据
+
+    （改掉一处不缩名单也能绿，债就从账上静默消失）；② 省略自证用例 —— 没有合成违规注入的「绿」
+
+    可能只是检测器压根没命中（AGENTS.md §7②）；③ 放宽 marker 匹配去吃 `.omo/_truth/**` 读面或
+
+    `.omo/_delivery/**` 协调桥，以「显得覆盖更广」来凑数；④ 按路径首段匹配（那是上一轮漏认
+
+    `.omo/state/**` 的缺陷形状，读数会与本次发布判据不同源）；⑤ 顺带把任何一处真实写目标改道到
+
+    `state_root()`，或动 `.omo/_delivery` 的 symlink 语义。不动 95 个在账文件的任何一个字节。'
+  non_goals:
+  - 不改道 spec §1 表内任何一处写目标（每处需回答「该不该跟随 profile」「改后读者在哪读」，按 B4b 方式分批授权）
+  - 不动 launchd plist / crontab / `.omo/_truth/registry/**` 内容 / 权威 event ledger
+  - 不新增 `bin/` 脚本（判据落 tests/unit，与既有同形门禁一致），因此不触发 `check-bin-quota-diff`，`script_baseline`
+    不动
+  - 不放宽任何既有门禁，不为预存红做代偿
+  done_when:
+  - ISC-1 覆盖性：判据对 `.omo/state/**` 与 `runtime/**` 的读数为 154 个行级站点 / 144 个 (文件,路径) 对 / 95
+    文件，且「改前 = N」与「新增 = 0」由同一次扫描产出并同时断言。反证：砍掉 marker 表里的 `.omo/state` → 基线对拍件当场红。
+  - ISC-2 自证：注入三条命中形状 —— ① 名字派生（`W = Path(__file__).resolve().parents[2]` 再
+    `W / ".omo/state/x.json"`）② 内联派生（`Path(__file__).resolve().parents[2] / "runtime/y.json"`）
+    ③ 分段拼法（`W / ".omo" / "state" / "history.json"`，渲染必须是整条 `.omo/state/history.json`）——
+    检测器必须点名三条。反证：无此件则「绿」可能只是检测器没命中（AGENTS.md §7②）；只注入 ① 则内联
+    拼法的漏认看不见（第二次作废读数即此），不注入 ③ 则「链截到只剩第一段」也能绿（第三次作废读数即此）。
+  - ISC-3 反过宽：同一注入里放三条不该命中的形状 —— ① 经 `state_root()` 取根 ② 拼 `.omo/_truth/registry/**`
+    读面 ③ 拼 `.omo/_knowledge/**` —— 三条均不得进入门禁集合，且 ②③ 必须由同一次扫描分类出来（可见但不计）。
+    反证：宽到把读面也吞掉的检测器，可以靠「往基线塞几百条读面」自证通过 ISC-1（§7④）。
+  - ISC-4 shrink_only：基线为显式 (文件,路径) 集合且与实测集合双向相等；新增一处 → 红，改掉一处不缩基线 → 红。反证：单向 `⊆` 让已清干净的债从账上静默消失。
+  - ISC-5 零运行时效应：本轮不改任何真实写目标；`git diff --name-only origin/main..HEAD` 不得出现 §1 表列 95
+    个在账文件中的任何一个。
+  - ISC-6 CI 可见：`tests/unit/test_writeplane_root_pin.py` 进 `.github/workflows/governance-check.yml`
+    显式 pytest 白名单（该名单按文件逐一点名、无 `tests/unit/**` glob，不加则「CI 绿」不构成这些用例的证据）。
+  verify:
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录>
+      uv run --no-project --with pytest --with pyyaml python -m pytest
+      tests/unit/test_writeplane_root_pin.py -q -p no:randomly
+    expect: 全绿 / exit 0（实测 8 passed；宿主面与 HOME=<空目录> 各一遍）。依赖面必须由最小 venv 供给 ——
+      同一命令换成宿主 `python3 -m pytest` 会当场 `No module named pytest`，那是装置没搭对，不是回归
+      （AGENTS.md §7 hermetic 补记）。须含自证件（三条命中形状被点名）、反过宽件（缝取根不得分类、两类读面
+      可见但不计）、双向相等件。变异对照已验：从基线删一行 → 2 failed 当场红。
+  - cmd: git diff --name-only origin/main..HEAD
+    expect: 出现文件集合逐项落在 write_surfaces 内，且 spec §1 表列的 95 个在账文件一个都不出现（ISC-5 零运行时效应）。
+  - cmd: grep -n test_writeplane_root_pin .github/workflows/governance-check.yml
+    expect: 至少 1 处命中（ISC-6：不加这行则「CI 绿」不是这些用例的证据）。
+  - cmd: make gac-local-gate
+    expect: 硬失败集合等于本 BET 起手的基线读数，零新增；预存红逐条注明归属，不为其做代偿也不读成本轮回归。
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-13-writeplane-root-pin-gate.md
+  - tests/unit/test_writeplane_root_pin.py
+  - .github/workflows/governance-check.yml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-250.md
+  - docs/reports/2026-10-13-writeplane-root-pin-gate-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-13-writeplane-root-pin-gate.md
+    spec_version: 1.0.0
+    content_digest: sha256:c926c4d53ec998a93ea4be07703ded4ad6db0275a46ff5a4949bde0036068fc4
+    decision_ref: decision://accepted/BET-Y2Q4-T10-250
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -42632,7 +42741,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 545
+  total_bets: 546
   windows:
   - Y1Q1
   - Y1Q2
