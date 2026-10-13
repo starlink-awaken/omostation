@@ -42697,7 +42697,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-13-writeplane-root-pin-gate.md
     spec_version: 1.0.0
-    content_digest: sha256:d98365f34dda16690782f9e5b76ce57e86a4182594145b979749d4620073dd1c
+    content_digest: sha256:80576531c58904db215fccb8bd0f8145f6278c98c096bc44b131ceaaa183d724
     decision_ref: decision://accepted/BET-Y2Q4-T10-250
   value_indicator_policy: false
   completion_evidence:

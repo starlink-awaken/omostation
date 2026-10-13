@@ -58,6 +58,13 @@ ISC-2 自证用例在写完后第一次运行时抓到，判据已改为「凡 `
 并留 `test_detector_renders_the_whole_chain_not_just_its_first_segment` 钉住渲染方向。
 本 spec 的所有读数由 §3 那条将要发布的判据本身产出，两者同源。
 
+**合并后复测（2026-10-13，`origin/main` @ `b59797e6d` 合入本分支后）**：三个读数逐字不变 ——
+154 / 144 / 95。main 期间落下的 `bin/gac/dual-profile-verify.py`（BET-Y2Q4-T10-248）**不进门禁集合，
+且不是漏认**：它唯一的 `__file__` 用法是 `sys.path.insert(0, … parents[1] / "lib")`（读面），
+写目标走 `state_root()`，而 `SYSTEM_YAML_REL = Path(".omo") / "state" / "system.yaml"`
+是无根的相对常量 —— ISC-3 那条「相对常量不得命中」的反面控制由此有了生产代码里的活样本，
+不只活在 fixture 里。
+
 ## 2 Ideal State Criteria（每条带反证）
 
 - **ISC-1 覆盖性**：判据对 `.omo/state/**` 与 `runtime/**` 两类拼法的读数为 154 行级站点，
