@@ -62,7 +62,9 @@ def _fake_runtime(runtime_root: Path) -> dict:
 def test_prepare_version_sha_alignment(zhs_env):
     host = zhs_env["host"]
     (host / "live_server.py.asset").write_text("fixed live_server\n")
-    result = zhs._prepare_version((("live_server.py", "live_server.py.asset"),), "a" * 40)
+    _git_baseline(host)
+    oid = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=host, text=True).strip()
+    result = zhs._prepare_version((("live_server.py", "live_server.py.asset"),), oid)
     assert result["ok"], result
     version_dir = Path(result["version_dir"])
     assert version_dir.is_dir()
@@ -100,6 +102,11 @@ def test_publish_end_to_end_hermetic(zhs_env):
     (deploy / "observatory_query.py").write_text("old observatory\n")
     (deploy / "template.html").write_text("template\n")
     (deploy / "refresh.py").write_text("refresh\n")
+    (deploy / "runtime_paths.py").write_text("# retained runtime paths\n")
+    (deploy / "collectors").mkdir()
+    (deploy / "collectors" / "__init__.py").write_text("")
+    (deploy / "collectors" / "base.py").write_text("# retained collector base\n")
+    _git_baseline(host)
     _git_baseline(deploy)
     _write_plist(zhs_env["plist"], str(deploy / "live_server.py"))
 
@@ -113,6 +120,8 @@ def test_publish_end_to_end_hermetic(zhs_env):
     assert p.get("ok"), p
     assert (deploy / "current").resolve() == (deploy / "releases" / p["oid"]).resolve()
     assert (deploy / "current" / "live_server.py").read_text() == "fixed live_server v2\n"
+    assert (deploy / "current" / "runtime_paths.py").read_text() == "# retained runtime paths\n"
+    assert (deploy / "current" / "collectors" / "base.py").read_text() == "# retained collector base\n"
 
 
 def test_publish_requires_migration_first(zhs_env):
@@ -134,8 +143,9 @@ def test_restore_switches_back(zhs_env, monkeypatch):
     v2.mkdir(parents=True)
     (v1 / "live_server.py").write_text("v1\n")
     (v2 / "live_server.py").write_text("v2\n")
+    assert zhs._switch_current(v1)["ok"]
     assert zhs._switch_current(v2)["ok"]
-    monkeypatch.setattr(zhs, "_previous_version", lambda: "1" * 40)
+    assert zhs._previous_version() == "1" * 40
     r = zhs.restore()
     assert r.get("ok"), r
     assert (deploy / "current").resolve() == v1.resolve()
@@ -161,6 +171,6 @@ def test_migrate_backs_up_plist(zhs_env):
     assert Path(m["backup"]).exists()
     payload = plistlib.load(zhs_env["plist"].open("rb"))
     assert str(zhs.CURRENT_ENTRYPOINT) in payload["ProgramArguments"]
-    # WorkingDirectory 对齐迁移后的运行根 (版本目录)
-    assert payload.get("WorkingDirectory") == str(zhs.RELEASES_DIR / m["baseline_version"])
+    # WorkingDirectory 使用稳定入口，与后续 current 原子切换一起移动。
+    assert payload.get("WorkingDirectory") == str(zhs.CURRENT_LINK)
     assert (deploy / "current").is_symlink()
