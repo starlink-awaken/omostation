@@ -357,11 +357,16 @@ def test_cli_keeps_python39_compatible_timezone_imports():
     source = SCRIPT.read_text(encoding="utf-8")
 
     assert "from datetime import UTC" not in source
+    # #4442 (SH-9) 后 --principal-id 默认改走 principal_id_from_env() canonical
+    # helper, 仓内无参也能解析出 principal → 不再 fail-closed exit 2;
+    # 断言随迁移: 无参跑必须成功出 JSON 报告 (默认解析生效 = SH-9 语义)。
     completed = subprocess.run(
         [sys.executable, str(SCRIPT), "--json"],
         check=False,
         capture_output=True,
         text=True,
     )
-    assert completed.returncode == 2
-    assert json.loads(completed.stdout)["reason"] == "principal_id_required"
+    assert completed.returncode == 0, completed.stderr
+    report = json.loads(completed.stdout)
+    assert "truth_axes" in report
+    assert report.get("principal_ref") not in (None, "")
