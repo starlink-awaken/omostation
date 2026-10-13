@@ -56,7 +56,7 @@ jobs:
         # 走 uv (命中上面的缓存) 而不是 pip: 免去每次作业重新下载/解析。
         # `--break-system-packages` 是给「解释器带 EXTERNALLY-MANAGED 标记」的保险
         # (本机 Homebrew Python 实测会撞 PEP 668); runner 上该标记通常不存在, 无标记时此参数为空操作。
-        run: uv pip install --system --break-system-packages pyyaml pytest
+        run: uv pip install --system --break-system-packages pyyaml pytest pytest-timeout
       - name: CR-L4-DOCUMENTS-MIGRATION-COVERAGE — Documents 迁移 registry 覆盖
         run: python3 bin/gac/documents-content-plane-migration-check.py --json
       - name: CR-PR-DESCRIPTION-NON-EMPTY — PR 描述非空校验
@@ -203,7 +203,7 @@ jobs:
         # 走 uv (命中上面的缓存) 而不是 pip: 免去每次作业重新下载/解析。
         # `--break-system-packages` 是给「解释器带 EXTERNALLY-MANAGED 标记」的保险
         # (本机 Homebrew Python 实测会撞 PEP 668); runner 上该标记通常不存在, 无标记时此参数为空操作。
-        run: uv pip install --system --break-system-packages pyyaml pytest
+        run: uv pip install --system --break-system-packages pyyaml pytest pytest-timeout
       - name: CR-PRINCIPLE-ENFORCEMENT — 原则执行化校验 (advisory)
         # 验证工程原则是否被工具/流程执行, 非阻塞 advisory
         continue-on-error: true
