@@ -1,0 +1,20 @@
+schema: agent-error/v1
+id: PITFALL-ENV-008
+category: environment
+severity: low
+title: ssh 非交互 shell 的 PATH 不含 Homebrew → 误报远端命令不存在
+symptom: 'ssh mini ''gh auth status'' 报 command not found: gh, 但 mini 上明明装着 gh 2.102.0'
+root_cause: 'ssh 执行远程命令是非交互非登录 shell, 不 source .zshrc 的 brew shellenv; /opt/homebrew/bin
+  不在最小 PATH; 同族: keychain 访问也可能被会话授权挡 (元数据可读但行为差异要单独验)'
+solution: 'ssh 远程探测统一用 login shell: ssh mini ''zsh -lc "which gh"'' 或直接绝对路径 /opt/homebrew/bin/gh'
+prevention: 『远端没有 X』的结论必须先用 zsh -lc 或绝对路径复验过才能下; 探测命令的运行环境≠用户环境
+tags:
+- ssh
+- homebrew
+- path
+- probe
+discovered_by: governance-agent
+discovered_at: '2026-10-13'
+times_encountered: 1
+last_confirmed_at: '2026-10-13'
+status: active

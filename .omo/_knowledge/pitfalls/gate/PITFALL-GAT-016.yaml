@@ -1,0 +1,24 @@
+schema: agent-error/v1
+id: PITFALL-GAT-016
+category: gate
+severity: high
+title: 全量扫描型检查随历史数据单调劣化 → gate 预算超时被杀成 false FAIL (第5例同病)
+symptom: check-work-landed 直接跑 PASS (97s) 但 gate 内 FAIL; gate 总时长 55s 却判了一个需 101s
+  的检查; stderr 有 TIMEOUT after 45s 或无输出即死
+root_cause: '检查实现是 per-item×per-repo 的子进程探测 (840 个 git 调用), 耗时 O(全历史) 随 closed-run
+  数线性增长; gate timeout 固定 45s; 同病前例: agent-workflow-doctor 60→120 (PR #3436 前), governance-semantic-gate
+  60→180, bet-retro-due-check 15→60 (#3436), pitfall-gat006 15→30 (#3518)'
+solution: '先裸跑计时定位 (time bin/gac/xxx.py; echo exit=0 不能接管道); 根治是批量化: 每仓一次 rev-list/log
+  拿全集内存判 (work-landed 97s→30s); 提 timeout 只能续命且真源在 projects/ecos sgf-policy.yaml 子模块'
+prevention: 新写 gate 检查时设计成 O(增量/窗口) 耗时或一次性批量; 发现『本地绿 gate 红』第一反应查 timeout (gac-local-gate.py
+  run_check 的 _CHECK_TIMEOUTS), 不要急着怀疑检查逻辑
+tags:
+- gate
+- timeout
+- performance
+- false-fail
+discovered_by: governance-agent
+discovered_at: '2026-10-13'
+times_encountered: 1
+last_confirmed_at: '2026-10-13'
+status: active

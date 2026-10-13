@@ -1,0 +1,25 @@
+schema: agent-error/v1
+id: PITFALL-GAT-017
+category: gate
+severity: high
+title: 改 pytest addopts/ini 全局配置未盘点全部读取面 → CI 多处 unrecognized arguments
+symptom: 'PR CI governance-verify 报 python -m pytest: error: unrecognized arguments:
+  --timeout=300 --timeout-method=signal; 本地全绿 (test 组装了 pytest-timeout)'
+root_cause: 'pyproject [tool.pytest.ini_options] addopts 是全局契约: 任何以根仓为 rootdir 的 pytest
+  调用 (参数横跨根仓 tests/ 的、cwd 在根仓 pip 裸装的、--collect-only 守卫) 都注入; dependency-groups 只影响
+  uv sync --group, CI 的 uv run/pip 面没装插件; cd projects/* 的调用因子项目自带 [tool.pytest] 不受影响'
+solution: '扫 .github/workflows 全部 pytest 调用点, 按是否读根仓 addopts 分桶: uv 面加 --with pytest-timeout,
+  pip 面加装包 (PR #4755 六处: governance-check:154/242, hook-regression:60, phase-gate-enforce:81,
+  gac-gate:59/206)'
+prevention: 动 pytest 全局配置 (addopts/ini/marker) 前先 rg 'pytest' .github/workflows/ +
+  本地 hooks, 盘点所有会读它的执行面; [project] 零依赖是设计红线, 插件类只能进 dependency-groups 或 CI 侧 --with
+tags:
+- pytest
+- ci
+- addopts
+- dependency-groups
+discovered_by: governance-agent
+discovered_at: '2026-10-13'
+times_encountered: 1
+last_confirmed_at: '2026-10-13'
+status: active
