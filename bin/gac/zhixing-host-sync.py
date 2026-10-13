@@ -42,8 +42,11 @@ import os
 import plistlib
 import re
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
+import uuid
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
@@ -80,7 +83,10 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("collectors/portfolio.py", "portfolio_collector.py.asset"),
     ("strategy_projection.py", "strategy_projection.py.asset"),
     ("collectors/agent_brief.py", "agent_brief_collector.py.asset"),
+    ("collectors/base.py", "collectors.base.py.asset"),
 )
+RELEASE_ID_RE = re.compile(r"[0-9a-f]{40}\Z")
+RELEASE_MANIFEST = ".zhixing-host-release.json"
 
 BLOCKED_REASON = "g0_m0_hold_release_bet_required"
 BLOCKED_COMMANDS = frozenset({"apply", "capture"})
@@ -92,76 +98,435 @@ RELEASES_DIR = DASHBOARD_DIR / "releases"
 CURRENT_ENTRYPOINT = CURRENT_LINK / "live_server.py"
 
 
-def _dashboard_git(*args: str) -> str:
-    return subprocess.run(
-        ["git", "-C", str(DASHBOARD_DIR), *args],
+def _source_identity(source_dir: Path | None = None) -> tuple[str, str]:
+    """Identify the bytes' actual source, rejecting dirty Git worktrees."""
+    source = source_dir or HOST_DIR
+    completed = subprocess.run(
+        ["git", "-C", str(source), "rev-parse", "HEAD"],
         check=False, capture_output=True, text=True,
-    ).stdout.strip()
+    )
+    oid = completed.stdout.strip()
+    if completed.returncode == 0:
+        if not RELEASE_ID_RE.fullmatch(oid):
+            return "", "git_commit"
+        dirty = subprocess.run(
+            ["git", "-C", str(source), "status", "--porcelain", "--untracked-files=all", "--", "."],
+            check=False, capture_output=True, text=True,
+        )
+        if dirty.returncode != 0 or dirty.stdout.strip():
+            return "", "git_commit"
+        return oid, "git_commit"
+    if "not a git repository" not in completed.stderr.lower():
+        return "", "unknown"
+    digest = hashlib.sha1()
+    found = False
+    try:
+        for path in sorted(source.rglob("*")):
+            if path.is_symlink():
+                return "", "content_snapshot"
+            if not path.is_file():
+                continue
+            digest.update(path.relative_to(source).as_posix().encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+            digest.update(b"\0")
+            found = True
+    except OSError:
+        return "", "content_snapshot"
+    return (digest.hexdigest(), "content_snapshot") if found else ("", "content_snapshot")
 
 
-def _source_commit_oid() -> str:
-    """主仓 HEAD (DCP-20 修复所在 commit) —— 待晋升版本的来源 OID。"""
-    return _dashboard_git("rev-parse", "HEAD")
+def _source_commit_oid(source_dir: Path | None = None) -> str:
+    """Return only a real Git commit OID; content snapshots are not commit OIDs."""
+    identity, kind = _source_identity(source_dir)
+    return identity if kind == "git_commit" else ""
+
+
+def _release_tree_files(root: Path) -> dict[str, str] | None:
+    """Hash a release tree while refusing symlinks and non-regular entries."""
+    if root.is_symlink() or not root.is_dir():
+        return None
+    files: dict[str, str] = {}
+    try:
+        for directory, dirnames, filenames in os.walk(root, followlinks=False):
+            base = Path(directory)
+            for name in dirnames:
+                if (base / name).is_symlink():
+                    return None
+            for name in filenames:
+                path = base / name
+                if path.is_symlink() or not path.is_file():
+                    return None
+                relative = path.relative_to(root).as_posix()
+                if relative != RELEASE_MANIFEST:
+                    files[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+    return files
+
+
+def _write_release_manifest(root: Path, *, oid: str, selected: tuple[str, ...],
+                            base_version: str | None, identity_kind: str,
+                            files: dict[str, str]) -> bytes:
+    payload = {
+        "schema": "zhixing-host-release-manifest/v1",
+        "version_id": oid,
+        "identity_kind": identity_kind,
+        "commit_oid": oid if identity_kind == "git_commit" else None,
+        "selected_assets": list(selected),
+        "base_version": base_version,
+        "files": dict(sorted(files.items())),
+    }
+    return (json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
 def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
                     source_dir: Path | None = None) -> dict:
-    """在 releases/<OID>/ 下准备版本目录 (普通目录, 无内部 symlink, SHA 对齐来源)。
+    """Build a complete immutable release in a sibling temp directory.
 
-    source_dir 缺省取 HOST_DIR (主仓资产 —— publish 用)。migrate 传 DASHBOARD_DIR
-    (当前部署态 —— 作为回滚基线, 不是修复后代码)。
+    Publishes start from the current complete release and overlay only selected
+    assets. Migration builds its first baseline from the deployed files passed in.
     """
     src = source_dir or HOST_DIR
-    version_dir = RELEASES_DIR / oid
-    if version_dir.exists() and not version_dir.is_dir():
-        return {"ok": False, "reason": "version_path_not_dir", "path": str(version_dir)}
-    version_dir.mkdir(parents=True, exist_ok=True)
-    manifest = []
-    for deploy_name, repo_name in assets:
-        source = src / repo_name
-        destination = version_dir / deploy_name
-        source_sha = _sha(source)
-        if source_sha is None:
-            return {"ok": False, "reason": "source_asset_missing", "asset": str(source)}
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_bytes(source.read_bytes())
-        written_sha = _sha(destination)
-        if written_sha != source_sha:
-            return {"ok": False, "reason": "version_sha_drift", "asset": deploy_name}
-        manifest.append({"name": deploy_name, "source": str(source),
-                         "version": str(destination), "sha": source_sha})
-    return {"ok": True, "version_dir": str(version_dir), "oid": oid, "manifest": manifest}
-
-
-def _switch_current(target_version_dir: Path) -> dict:
-    """原子切换 current symlink → 目标版本目录 (temp symlink + rename)。"""
-    if not target_version_dir.is_dir():
-        return {"ok": False, "reason": "version_dir_missing", "path": str(target_version_dir)}
-    temp_link = DASHBOARD_DIR / f".current.tmp.{os.getpid()}"
+    if not RELEASE_ID_RE.fullmatch(oid):
+        return {"ok": False, "reason": "version_id_invalid", "oid": oid}
+    if RELEASES_DIR.is_symlink():
+        return {"ok": False, "reason": "releases_dir_symlink", "path": str(RELEASES_DIR)}
     try:
-        if temp_link.exists() or temp_link.is_symlink():
-            temp_link.unlink()
-        temp_link.symlink_to(target_version_dir, target_is_directory=True)
-        os.replace(temp_link, CURRENT_LINK)
+        RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
+        return {"ok": False, "reason": "releases_dir_unavailable", "detail": str(exc)}
+    version_dir = RELEASES_DIR / oid
+    if version_dir.is_symlink():
+        return {"ok": False, "reason": "version_path_symlink", "path": str(version_dir)}
+    if src == HOST_DIR:
+        source_identity, source_kind = _source_identity(src)
+        if not source_identity or source_identity != oid:
+            return {"ok": False, "reason": "source_identity_mismatch",
+                    "identity_kind": source_kind, "version_id": oid}
+    base_version = _current_version() if src == HOST_DIR else None
+    base_dir = RELEASES_DIR / base_version if base_version else None
+    if src == HOST_DIR and CURRENT_LINK.is_symlink() and base_dir is None:
+        return {"ok": False, "reason": "current_release_invalid"}
+    if base_dir is not None and _release_tree_files(base_dir) is None:
+        return {"ok": False, "reason": "current_release_unsafe", "path": str(base_dir)}
+    if base_version == oid and version_dir.is_dir() and not version_dir.is_symlink():
+        try:
+            prior_manifest = json.loads((version_dir / RELEASE_MANIFEST).read_text(encoding="utf-8"))
+            if (isinstance(prior_manifest, dict)
+                    and prior_manifest.get("version_id") == oid
+                    and prior_manifest.get("selected_assets") == [name for name, _ in assets]):
+                base_version = prior_manifest.get("base_version")
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    staging: Path | None = None
+    try:
+        staging = Path(tempfile.mkdtemp(prefix=f".{oid}.stage.", dir=RELEASES_DIR))
+        if base_dir is not None:
+            for directory, dirnames, filenames in os.walk(base_dir, followlinks=False):
+                source_parent = Path(directory)
+                relative_parent = source_parent.relative_to(base_dir)
+                target_parent = staging / relative_parent
+                target_parent.mkdir(parents=True, exist_ok=True)
+                for dirname in dirnames:
+                    if (source_parent / dirname).is_symlink():
+                        raise ValueError("release_symlink_rejected")
+                for filename in filenames:
+                    source_file = source_parent / filename
+                    if source_file.is_symlink() or not source_file.is_file():
+                        raise ValueError("release_non_regular_entry_rejected")
+                    target_file = target_parent / filename
+                    target_file.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(source_file, target_file)
+        selected_manifest: list[dict] = []
+        for deploy_name, repo_name in assets:
+            relative = Path(deploy_name)
+            if relative.is_absolute() or ".." in relative.parts:
+                raise ValueError("asset_destination_invalid")
+            source = src / repo_name
+            if source.is_symlink() or not source.is_file():
+                return {"ok": False, "reason": "source_asset_missing", "asset": str(source)}
+            destination = staging / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, destination)
+            selected_manifest.append({"name": deploy_name, "source": str(source),
+                                      "version": str(version_dir / relative), "sha": _sha(destination)})
+        files = _release_tree_files(staging)
+        if files is None:
+            return {"ok": False, "reason": "release_tree_unsafe", "path": str(staging)}
+        manifest_bytes = _write_release_manifest(
+            staging, oid=oid, selected=tuple(name for name, _ in assets),
+            base_version=base_version,
+            identity_kind=("deployment_baseline" if src != HOST_DIR else _source_identity(src)[1]),
+            files=files,
+        )
+        (staging / RELEASE_MANIFEST).write_bytes(manifest_bytes)
+        if version_dir.exists():
+            existing_files = _release_tree_files(version_dir)
+            try:
+                existing_manifest = (version_dir / RELEASE_MANIFEST).read_bytes()
+            except OSError:
+                existing_manifest = None
+            if (existing_files == files and existing_manifest == manifest_bytes
+                    and not version_dir.is_symlink()):
+                return {"ok": True, "version_dir": str(version_dir), "oid": oid,
+                        "manifest": selected_manifest, "created": False, "already_exists": True}
+            return {"ok": False, "reason": "version_identity_conflict", "path": str(version_dir)}
+        try:
+            os.rename(staging, version_dir)
+        except FileExistsError:
+            return {"ok": False, "reason": "version_identity_conflict", "path": str(version_dir)}
+        staging = None
+        return {"ok": True, "version_dir": str(version_dir), "oid": oid,
+                "manifest": selected_manifest, "created": True, "already_exists": False}
+    except (OSError, ValueError) as exc:
+        return {"ok": False, "reason": "version_prepare_failed", "detail": str(exc)}
+    finally:
+        if staging is not None:
+            shutil.rmtree(staging, ignore_errors=True)
+
+
+def _history_path() -> Path:
+    """Keep switch history outside immutable release directories."""
+    return RELEASES_DIR / ".current-history.json"
+
+
+def _release_version(path: Path) -> str | None:
+    """Accept only a real, direct, 40-hex release child."""
+    try:
+        if path.is_symlink() or RELEASES_DIR.is_symlink():
+            return None
+        resolved_root = RELEASES_DIR.resolve(strict=True)
+        resolved = path.resolve(strict=True)
+        relative = resolved.relative_to(resolved_root)
+    except (OSError, ValueError):
+        return None
+    if len(relative.parts) != 1 or not RELEASE_ID_RE.fullmatch(relative.name):
+        return None
+    return relative.name if resolved.is_dir() else None
+
+
+def _current_version() -> str | None:
+    if not CURRENT_LINK.is_symlink():
+        return None
+    try:
+        return _release_version(CURRENT_LINK.resolve(strict=True))
+    except OSError:
+        return None
+
+
+def _atomic_write_bytes(path: Path, payload: bytes) -> None:
+    """Write one control file atomically, leaving no temp file on failure."""
+    temp = path.with_name(f".{path.name}.tmp.{uuid.uuid4().hex}")
+    try:
+        if temp.exists() or temp.is_symlink():
+            temp.unlink()
+        temp.write_bytes(payload)
+        os.replace(temp, path)
+    finally:
+        if temp.exists() or temp.is_symlink():
+            try:
+                temp.unlink()
+            except OSError:
+                pass
+
+
+def _switch_state_snapshot() -> dict:
+    """Capture pointer and predecessor metadata before a multi-step transition."""
+    history = _history_path()
+    if history.is_symlink() or (history.exists() and not history.is_file()):
+        return {"ok": False, "error": "history_path_not_regular_file"}
+    try:
+        current_target = os.readlink(CURRENT_LINK) if CURRENT_LINK.is_symlink() else None
+        history_bytes = history.read_bytes() if history.is_file() else None
+    except OSError as exc:
+        return {"ok": False, "error": str(exc)}
+    return {"ok": True, "current_target": current_target, "history_bytes": history_bytes}
+
+
+def _restore_switch_state(snapshot: dict) -> dict:
+    """Restore current and its predecessor metadata from a pre-switch snapshot."""
+    errors: list[str] = []
+    current_target = snapshot.get("current_target")
+    temp_link = DASHBOARD_DIR / f".current.restore.tmp.{uuid.uuid4().hex}"
+    try:
+        if current_target is None:
+            if CURRENT_LINK.is_symlink():
+                CURRENT_LINK.unlink()
+            elif CURRENT_LINK.exists():
+                errors.append("current_not_symlink")
+        else:
+            if temp_link.exists() or temp_link.is_symlink():
+                temp_link.unlink()
+            temp_link.symlink_to(current_target, target_is_directory=True)
+            os.replace(temp_link, CURRENT_LINK)
+    except OSError as exc:
+        errors.append(f"current_restore_failed:{exc}")
+    finally:
         if temp_link.exists() or temp_link.is_symlink():
             try:
                 temp_link.unlink()
             except OSError:
                 pass
-        return {"ok": False, "reason": "current_switch_failed", "detail": str(exc)}
-    return {"ok": True, "current": str(CURRENT_LINK), "target": str(target_version_dir)}
+
+    history = _history_path()
+    try:
+        history_bytes = snapshot.get("history_bytes")
+        if history_bytes is None:
+            if history.exists() or history.is_symlink():
+                history.unlink()
+        else:
+            _atomic_write_bytes(history, history_bytes)
+    except OSError as exc:
+        errors.append(f"history_restore_failed:{exc}")
+    return {"ok": not errors, "errors": errors}
+
+
+def _write_previous_version(previous_version: str | None) -> None:
+    payload = json.dumps({"previous_version": previous_version}, sort_keys=True).encode("utf-8")
+    _atomic_write_bytes(_history_path(), payload)
+
+
+def _switch_current(target_version_dir: Path) -> dict:
+    """Atomically switch current and persist the actual prior pointer target."""
+    version = _release_version(target_version_dir)
+    if version is None:
+        return {"ok": False, "reason": "version_dir_missing", "path": str(target_version_dir)}
+    if _release_tree_files(RELEASES_DIR / version) is None:
+        return {"ok": False, "reason": "version_tree_unsafe", "path": str(RELEASES_DIR / version)}
+    if CURRENT_LINK.exists() and not CURRENT_LINK.is_symlink():
+        return {"ok": False, "reason": "current_pointer_not_symlink", "path": str(CURRENT_LINK)}
+    if _history_path().is_symlink():
+        return {"ok": False, "reason": "history_path_symlink", "path": str(_history_path())}
+    previous = _current_version()
+    if CURRENT_LINK.is_symlink() and previous is None:
+        return {"ok": False, "reason": "current_target_invalid", "path": str(CURRENT_LINK)}
+    if previous == version:
+        return {"ok": True, "current": str(CURRENT_LINK),
+                "target": str(RELEASES_DIR / version), "previous_version": _previous_version(),
+                "already_current": True}
+    snapshot = _switch_state_snapshot()
+    if not snapshot.get("ok"):
+        return {"ok": False, "reason": "switch_state_unreadable",
+                "detail": snapshot.get("error")}
+    temp_link = DASHBOARD_DIR / f".current.tmp.{uuid.uuid4().hex}"
+    try:
+        if temp_link.exists() or temp_link.is_symlink():
+            temp_link.unlink()
+        temp_link.symlink_to(RELEASES_DIR / version, target_is_directory=True)
+        os.replace(temp_link, CURRENT_LINK)
+        _write_previous_version(previous)
+    except OSError as exc:
+        recovery = _restore_switch_state(snapshot)
+        return {
+            "ok": False,
+            "reason": "current_switch_failed",
+            "detail": str(exc),
+            "recovery": recovery,
+        }
+    finally:
+        if temp_link.exists() or temp_link.is_symlink():
+            try:
+                temp_link.unlink()
+            except OSError:
+                pass
+    return {
+        "ok": True,
+        "current": str(CURRENT_LINK),
+        "target": str(target_version_dir),
+        "previous_version": previous,
+    }
 
 
 def _previous_version() -> str | None:
-    """解析当前 current symlink 指向的版本 OID (回滚目标)。"""
+    """Read the predecessor recorded when current was actually switched."""
+    if _history_path().is_symlink():
+        return None
     try:
-        resolved = CURRENT_LINK.resolve()
+        payload = json.loads(_history_path().read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    previous = payload.get("previous_version") if isinstance(payload, dict) else None
+    if not isinstance(previous, str) or not RELEASE_ID_RE.fullmatch(previous):
+        return None
+    return previous if _release_version(RELEASES_DIR / previous) == previous else None
+
+
+def _baseline_version_id(assets: tuple[tuple[str, str], ...], source_dir: Path) -> str | None:
+    """Name a deployment-state baseline by the exact bytes copied into it."""
+    digest = hashlib.sha256()
+    for deploy_name, source_name in assets:
+        source = source_dir / source_name
+        try:
+            digest.update(deploy_name.encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(source.read_bytes())
+            digest.update(b"\0")
+        except OSError:
+            return None
+    return digest.hexdigest()[:40]
+
+
+def _runtime_baseline_assets() -> tuple[tuple[str, str], ...] | None:
+    """Capture runtime code and packaged resources, excluding mutable host data."""
+    root_files = {".py", ".js", ".css", ".html"}
+    root_json_files = {"manifest.json"}
+    package_dirs = ("collectors", "models", "schemas", "static", "assets", "templates")
+    excluded_names = {"index.html", "current.json", "previous-snapshot.json"}
+    excluded_py = ("test_", "_test.py", "smoke", "contract_check")
+    selected: set[str] = set()
+    try:
+        for path in DASHBOARD_DIR.iterdir():
+            if path.is_symlink():
+                if path.name in package_dirs or path.suffix.lower() in root_files:
+                    return None
+                continue
+            if path.is_file():
+                if path.name in excluded_names:
+                    continue
+                if path.name in root_json_files or (
+                    path.suffix.lower() in root_files
+                    and not any(marker in path.name.lower() for marker in excluded_py)
+                ):
+                    selected.add(path.name)
+                continue
+            if not path.is_dir() or path.name not in package_dirs:
+                continue
+            for child in path.rglob("*"):
+                relative = child.relative_to(DASHBOARD_DIR)
+                if any(part.startswith(".") or part in {"__pycache__", ".pytest_cache", "tests"}
+                       for part in relative.parts):
+                    continue
+                if child.is_symlink():
+                    return None
+                if not child.is_file():
+                    continue
+                suffix = child.suffix.lower()
+                if suffix not in {".py", ".json", ".yaml", ".yml", ".toml", ".html",
+                                  ".js", ".css", ".svg", ".txt"}:
+                    continue
+                if child.name in excluded_names or any(
+                    marker in child.name.lower() for marker in excluded_py
+                ):
+                    continue
+                selected.add(relative.as_posix())
     except OSError:
         return None
-    if RELEASES_DIR in resolved.parents:
-        return resolved.name
-    return None
+    return tuple((name, name) for name in sorted(selected))
+
+
+def _discard_new_version(version_dir: Path, existed_before: bool) -> None:
+    """Remove only an unreferenced release directory created by this failed attempt."""
+    if existed_before or version_dir.is_symlink() or not version_dir.exists():
+        return
+    version = _release_version(version_dir)
+    if version is None or _current_version() == version or _previous_version() == version:
+        return
+    try:
+        shutil.rmtree(version_dir)
+    except OSError:
+        pass
 
 
 def publish(files: list[str] | tuple[str, ...] | None) -> dict:
@@ -180,14 +545,22 @@ def publish(files: list[str] | tuple[str, ...] | None) -> dict:
             "detail": "先跑 migrate 将 plist entrypoint 指向 current/live_server.py",
             "entrypoint": runtime["entrypoint"],
         }
+    if _current_version() is None:
+        return {"ok": False, "reason": "current_release_invalid",
+                "detail": "publish requires current to resolve to a direct releases/<40-hex> directory"}
     try:
         assets = _selected_assets(files)
     except ValueError as exc:
         return {"ok": False, "reason": "invalid_asset_selection", "detail": str(exc)}
-    oid = _source_commit_oid()
-    if not re.fullmatch(r"[0-9a-f]{40}", oid):
-        return {"ok": False, "reason": "source_oid_unresolved", "oid": oid}
-    previous = _previous_version()
+    oid, identity_kind = _source_identity(HOST_DIR)
+    if identity_kind != "git_commit" or not RELEASE_ID_RE.fullmatch(oid):
+        return {"ok": False, "reason": "source_git_commit_required",
+                "identity_kind": identity_kind, "commit_oid": None, "version_id": None}
+    snapshot = _switch_state_snapshot()
+    if not snapshot.get("ok"):
+        return {"ok": False, "reason": "switch_state_unreadable",
+                "detail": snapshot.get("error")}
+    previous = _current_version()
     prepared = _prepare_version(assets, oid)
     if not prepared.get("ok"):
         return prepared
@@ -197,12 +570,19 @@ def publish(files: list[str] | tuple[str, ...] | None) -> dict:
     # SHA 校验: 新版本目录中已发布资产与主仓一致
     deployed = _asset_plan(Path(prepared["version_dir"]), files, HOST_DIR)
     if not deployed.get("ok"):
-        if previous:
-            _switch_current(RELEASES_DIR / previous)
-        return {"ok": False, "reason": "deploy_verify_failed",
-                "detail": "发布后校验失败, 已尝试回滚", "deploy": deployed}
+        recovery = _restore_switch_state(snapshot)
+        if recovery.get("ok"):
+            _discard_new_version(Path(prepared["version_dir"]), not prepared.get("created", False))
+        return {
+            "ok": False,
+            "reason": "deploy_verify_failed",
+            "detail": "发布后校验失败, 已尝试回滚",
+            "deploy": deployed,
+            "recovery": recovery,
+        }
     return {
-        "ok": True, "oid": oid, "version_dir": prepared["version_dir"],
+        "ok": True, "oid": oid, "version_id": oid, "commit_oid": oid,
+        "identity_kind": identity_kind, "version_dir": prepared["version_dir"],
         "previous_version": previous, "write_performed": True,
         "manifest": prepared["manifest"], "deploy": deployed,
     }
@@ -228,56 +608,109 @@ def migrate() -> dict:
     if not registration.get("ok"):
         return {"ok": False, "reason": "launch_agent_identity_unverified", "registration": registration}
     current_entry = registration["entrypoint"]
-    if current_entry == str(CURRENT_ENTRYPOINT):
+    if (CURRENT_LINK.is_symlink()
+            and _resolved(Path(current_entry)) == _resolved(CURRENT_ENTRYPOINT)):
         return {"ok": True, "already_migrated": True, "entrypoint": current_entry}
-    # 备份 plist
     plist_path = _resolved(LAUNCH_AGENT_PLIST)
     backup = plist_path.with_suffix(".plist.bak")
     try:
-        backup.write_bytes(plist_path.read_bytes())
+        plist_before = plist_path.read_bytes()
+        if backup.is_symlink():
+            return {"ok": False, "reason": "plist_backup_path_symlink", "path": str(backup)}
+        backup_before = backup.read_bytes() if backup.is_file() else None
     except OSError as exc:
         return {"ok": False, "reason": "plist_backup_failed", "detail": str(exc)}
-    # 以当前部署态建立基线版本 (releases/<baseline-OID>/)
-    baseline = f"baseline-{_source_commit_oid()[:12]}"
-    # 基线 = 当前部署态中实际存在的文件 (回滚目标), 不是主仓修复后资产。
-    # 部署目录里是 deploy_name (如 live_server.py), 不是 repo_name (.asset)。
-    assets = tuple((name, name) for name, _ in HOST_FILES
-                   if (DASHBOARD_DIR / name).exists())
+
+    switch_snapshot = _switch_state_snapshot()
+    def rollback(reason: str, *, detail: str | None = None, runtime: dict | None = None,
+                 version_dir: Path | None = None, version_existed: bool = True) -> dict:
+        errors: list[str] = []
+        try:
+            _atomic_write_bytes(plist_path, plist_before)
+        except OSError as exc:
+            errors.append(f"plist_restore_failed:{exc}")
+        if switch_snapshot.get("ok"):
+            switch_recovery = _restore_switch_state(switch_snapshot)
+            errors.extend(switch_recovery["errors"])
+        else:
+            errors.append("switch_state_not_captured")
+        try:
+            if backup_before is None:
+                if backup.exists() or backup.is_symlink():
+                    backup.unlink()
+            else:
+                _atomic_write_bytes(backup, backup_before)
+        except OSError as exc:
+            errors.append(f"backup_restore_failed:{exc}")
+        if version_dir is not None:
+            _discard_new_version(version_dir, version_existed)
+        result = {"ok": False, "reason": reason, "recovery": {"ok": not errors, "errors": errors}}
+        if detail is not None:
+            result["detail"] = detail
+        if runtime is not None:
+            result["runtime"] = runtime
+        return result
+
+    if not switch_snapshot.get("ok"):
+        return {"ok": False, "reason": "switch_state_unreadable",
+                "detail": switch_snapshot.get("error"),
+                "recovery": {"ok": True, "errors": []}}
+    try:
+        _atomic_write_bytes(backup, plist_before)
+    except OSError as exc:
+        return rollback("plist_backup_failed", detail=str(exc))
+
+    # Capture the installed runtime code and packaged resources, not mutable
+    # dashboards, caches, worktrees, history, or other host data.
+    assets = _runtime_baseline_assets()
+    if assets is None:
+        return rollback("baseline_runtime_tree_unsafe")
     if not assets:
-        return {"ok": False, "reason": "baseline_no_deployed_files"}
+        return rollback("baseline_no_deployed_files")
+    baseline = _baseline_version_id(assets, DASHBOARD_DIR)
+    if baseline is None:
+        return rollback("baseline_source_unreadable")
+    version_dir = RELEASES_DIR / baseline
+    version_existed = version_dir.exists()
     prepared = _prepare_version(assets, baseline, source_dir=DASHBOARD_DIR)
     if not prepared.get("ok"):
-        return prepared
+        return rollback(prepared["reason"], detail=prepared.get("detail"),
+                        version_dir=version_dir, version_existed=version_existed)
     switched = _switch_current(Path(prepared["version_dir"]))
     if not switched.get("ok"):
-        return switched
-    # 改写 plist entrypoint → current/live_server.py
+        return rollback(switched["reason"], detail=switched.get("detail"),
+                        version_dir=version_dir, version_existed=version_existed)
+
+    # 入口和执行根必须作为一个配置变化切换到 current。
     try:
-        with plist_path.open("rb") as handle:
-            payload = plistlib.load(handle)
+        payload = plistlib.loads(plist_before)
     except (OSError, plistlib.InvalidFileException) as exc:
-        return {"ok": False, "reason": "plist_read_failed", "detail": str(exc)}
+        return rollback("plist_read_failed", detail=str(exc), version_dir=version_dir,
+                        version_existed=version_existed)
     arguments = payload.get("ProgramArguments")
     if not isinstance(arguments, list):
-        return {"ok": False, "reason": "launch_agent_program_missing"}
+        return rollback("launch_agent_program_missing", version_dir=version_dir,
+                        version_existed=version_existed)
     replaced = False
     for idx, value in enumerate(arguments):
         if isinstance(value, str) and Path(value).name == "live_server.py":
             arguments[idx] = str(CURRENT_ENTRYPOINT)
             replaced = True
     if not replaced:
-        return {"ok": False, "reason": "plist_entrypoint_not_found"}
+        return rollback("plist_entrypoint_not_found", version_dir=version_dir,
+                        version_existed=version_existed)
     # WorkingDirectory 对齐迁移后的运行根 (版本目录), 否则 root_mismatch
-    payload["WorkingDirectory"] = str(prepared["version_dir"])
+    payload["WorkingDirectory"] = str(CURRENT_LINK)
     try:
-        with plist_path.open("wb") as handle:
-            plistlib.dump(payload, handle)
+        _atomic_write_bytes(plist_path, plistlib.dumps(payload))
     except OSError as exc:
-        return {"ok": False, "reason": "plist_write_failed", "detail": str(exc)}
+        return rollback("plist_write_failed", detail=str(exc), version_dir=version_dir,
+                        version_existed=version_existed)
     # 迁移后校验: 解析后的 entrypoint 必须落在 RELEASES_DIR 下
     migrated = _registered_runtime()
     if not migrated.get("ok") or RELEASES_DIR not in Path(migrated["entrypoint"]).parents:
-        return {"ok": False, "reason": "migrate_verify_failed", "runtime": migrated}
+        return rollback("migrate_verify_failed", runtime=migrated, version_dir=version_dir,
+                        version_existed=version_existed)
     return {
         "ok": True, "baseline_version": baseline, "entrypoint": str(CURRENT_ENTRYPOINT),
         "backup": str(backup), "write_performed": True,
@@ -396,7 +829,17 @@ def _running_registered_runtime() -> dict:
         port_matches = arguments[port_index + 1] == "43191"
     except (ValueError, IndexError):
         port_matches = False
-    if entrypoint not in arguments or not port_matches:
+    actual_entrypoints: list[Path] = []
+    for argument in arguments:
+        candidate = Path(argument).expanduser()
+        if candidate.name != "live_server.py":
+            continue
+        if not candidate.is_absolute():
+            candidate = Path(registration["runtime_root"]) / candidate
+        actual_entrypoints.append(candidate.resolve())
+    expected_entrypoint = Path(entrypoint).resolve()
+    if (len(actual_entrypoints) != 1 or actual_entrypoints[0] != expected_entrypoint
+            or not port_matches):
         return {
             "ok": False,
             "reason": "launch_agent_pid_command_mismatch",
