@@ -37,26 +37,42 @@ def get_submodules(root: str) -> list[str]:
 
 
 def get_staged_submodules(root: str) -> list[str]:
-    """获取 staged 的子模块变更 (仅返回真实子模块路径)."""
-    # 获取所有已注册的子模块路径
-    known_submodules = set(get_submodules(root))
-    if not known_submodules:
-        return []
-    result = subprocess.run(
+    """获取 staged 的子模块变更: gitlink(160000) 变更路径 ∪ .gitmodules 登记匹配.
+
+    机制 22c 迁移 (2026-09) 曾缩为"仅 .gitmodules 登记", 忘登记的裸 gitlink
+    漏网 (clone 后 init 不了, 最危险状态) — 2026-10-13 恢复 7d4c83944 老内联
+    的 fail-closed 语义: staged gitlink 一律纳入, 未初始化由 check_submodule 拒。
+    """
+    known = set(get_submodules(root))
+    diff = subprocess.run(
         ["git", "diff", "--cached", "--name-only"],
         capture_output=True, text=True, check=True,
     )
-    # 只返回属于已注册子模块的变更
-    staged = []
-    for line in result.stdout.splitlines():
-        if not line.startswith("projects/"):
-            continue
-        # 匹配精确子模块路径或其子路径
-        for sub in known_submodules:
-            if line == sub or line.startswith(sub + "/"):
-                staged.append(sub)
-                break
-    return list(set(staged))
+    changed = [line for line in diff.stdout.splitlines() if line.startswith("projects/")]
+    # index 中全部 gitlink 路径 (mode 160000), 含未登记 .gitmodules 的裸 gitlink
+    ls = subprocess.run(
+        ["git", "ls-files", "--stage"],
+        capture_output=True, text=True, check=True,
+    )
+    gitlinks = {
+        path
+        for line in ls.stdout.splitlines()
+        if "\t" in line
+        for meta, _, path in (line.partition("\t"),)
+        if meta.startswith("160000 ") and path.startswith("projects/")
+    }
+    staged: set[str] = set()
+    for line in changed:
+        if line in gitlinks:
+            # gitlink 变更 (登记或裸) 一律检查
+            staged.add(line)
+        else:
+            # 登记子模块的内部文件变更 → 检查其所属子模块
+            for sub in known:
+                if line == sub or line.startswith(sub + "/"):
+                    staged.add(sub)
+                    break
+    return sorted(staged)
 
 
 def check_submodule(sub_path: str, root: str, merge_mode: bool) -> tuple[bool, str]:
@@ -65,7 +81,7 @@ def check_submodule(sub_path: str, root: str, merge_mode: bool) -> tuple[bool, s
 
     # 校验 1: 子模块目录必须已初始化
     if not os.path.exists(os.path.join(full_path, ".git")) and not os.path.isdir(os.path.join(full_path, ".git")):
-        return False, f"{sub_path} 未初始化 (请先: git submodule update --init {sub_path})"
+        return False, f"{sub_path} 子模块未初始化 (请先: git submodule update --init {sub_path})"
 
     # merge 模式下跳过祖先检查
     if merge_mode:

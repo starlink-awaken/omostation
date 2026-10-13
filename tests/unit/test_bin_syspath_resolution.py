@@ -50,7 +50,10 @@ SEG = re.compile(r'"([^"]*)"')
 # test_relative_import_sites_are_not_judged 钉住它"不判"而非"误判"。
 ABS_IMPORT = re.compile(r"^\s*(?:from|import)\s+([A-Za-z_]\w*(?:\.\w*)*)", re.M)
 # 精确目录名匹配 —— 不用 startswith(".git")，那会把 .github/ 一起剪掉。
-SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__"}
+# .codebase-memory: codebase-memory MCP 的本地知识图谱缓存 (gitignore 177 行,
+# ~27k 个 .py 快照副本, 1.1G) — 与 .venv 同类的基础设施目录, 不是检出内容;
+# 里面的 omo 测试副本曾以 parents[1]/'src' 断链污染 arith-bug 扫描 (2026-10-13)。
+SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__", ".codebase-memory"}
 GITMODULES = re.compile(r"^\s*path\s*=\s*(\S+)\s*$", re.M)
 
 # gitlink 依赖里**已裁定归别人修**的算数错站点，逐条 (相对路径, K, 子路径, 消费方名)。

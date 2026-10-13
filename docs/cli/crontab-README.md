@@ -3,7 +3,8 @@ schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-type: documentation
+type: derived
+source: crontab.new
 last-reviewed: 2026-09-28
 ---
 

@@ -493,3 +493,144 @@ class TestSubmodulePushGate:
 
     def test_missing_path_has_nothing_to_lose(self, tmp_path):
         assert _run_gate(tmp_path / "gone").returncode == 0
+
+
+class TestSquashMergeAwareness:
+    """TASK-152D15B1 / BET-Y2Q4-T10-251: squash 落地的分支不再是 origin/main
+    祖先, 祖先判定失败后必须由 tree 等价 / PR MERGED 兜底; 判不清一律 False."""
+
+    def test_real_squash_merge_reads_merged(self, tmp_path):
+        """端到端: 真 git 仓, feature 经 squash 合并到 main 后 origin/main 指向
+        squash commit —— (a) tree 等价必须命中 (祖先判定此时必败)."""
+        repo = tmp_path / "r"
+        repo.mkdir()
+        _git(repo, "init", "-q", "-b", "main")
+        _git(repo, "config", "user.email", "t@t")
+        _git(repo, "config", "user.name", "t")
+        _commit(repo, "base")
+        _git(repo, "checkout", "-q", "-b", "feature")
+        _commit(repo, "f1")
+        _commit(repo, "f2")  # 多 commit squash: patch-id 单提交比对必败, 累积 diff 必须成立
+        _git(repo, "checkout", "-q", "main")
+        _git(repo, "merge", "--squash", "feature")
+        _git(repo, "commit", "-q", "-m", "squashed feature")
+        _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+        head = _git(repo, "rev-parse", "feature")
+        assert wha._is_merged_to_origin_main(head, repo) is True
+
+    def test_real_main_moved_on_breaks_equivalence(self, tmp_path):
+        """squash 后 main 又改了分支触碰的文件 → diff 不等价 → 必须判 unmerged."""
+        repo = tmp_path / "r"
+        repo.mkdir()
+        _git(repo, "init", "-q", "-b", "main")
+        _git(repo, "config", "user.email", "t@t")
+        _git(repo, "config", "user.name", "t")
+        _commit(repo, "base")
+        _git(repo, "checkout", "-q", "-b", "feature")
+        _commit(repo, "f1")
+        _git(repo, "checkout", "-q", "main")
+        _git(repo, "merge", "--squash", "feature")
+        _git(repo, "commit", "-q", "-m", "squashed feature")
+        # main 上追加一笔, 触碰 feature 改过的文件 (打破累积 diff 等价)
+        touched = _git(repo, "diff", "--name-only", "feature~1", "feature")
+        assert touched, "fixture 前置: feature 必须有变更"
+        (repo / touched.splitlines()[0]).write_text("changed later\n", encoding="utf-8")
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-q", "-m", "later edit")
+        _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+        head = _git(repo, "rev-parse", "feature")
+        assert wha._is_merged_to_origin_main(head, repo) is False
+
+    def test_pr_merged_and_no_extra_commits_reads_merged(self, tmp_path):
+        """(b) 兜底: tree 不等价但 gh 报 PR MERGED 且本地无超出 PR head 的提交."""
+        wt = tmp_path
+        pr_head = "c" * 40
+        fake = FakeGit(wt, super_merged=False)
+
+        def gh_and_revlist(cmd, cwd=None, check=False):
+            fake.calls.append((list(cmd), cwd))
+            if cmd[:2] == ["git", "merge-base"] and "--is-ancestor" not in cmd:
+                return _completed(0, "a" * 40 + "\n")  # merge-base 可解析
+            if cmd[:3] == ["git", "diff", "--name-only"]:
+                return _completed(0, "src/a.py\n")
+            if cmd[:2] == ["git", "diff"]:
+                ours = cmd[3] == "b" * 40
+                return _completed(0, "--- f\n+++ f\n@@\n-different\n+%s\n" % ("x" if ours else "y"))
+            if cmd[:2] == ["git", "rev-parse"] and cmd[-1] == "HEAD":
+                return _completed(0, "work/pr-branch\n")
+            if cmd[0] == "gh":
+                return _completed(0, '{"state": "MERGED", "headRefOid": "%s"}' % pr_head)
+            if cmd[:2] == ["git", "rev-list"]:
+                return _completed(0, "0\n")  # 无超出 PR head 的提交
+            return fake(cmd, cwd, check)
+
+        with mock.patch.object(wha, "_run", gh_and_revlist):
+            assert wha._is_merged_to_origin_main("b" * 40, wt) is True
+
+    def test_pr_merged_but_extra_local_commits_stay_unmerged(self, tmp_path):
+        """本地超出 PR head (squash 后又加活) → (b) 拒绝, fail-safe."""
+        wt = tmp_path
+        fake = FakeGit(wt, super_merged=False)
+
+        def runner(cmd, cwd=None, check=False):
+            fake.calls.append((list(cmd), cwd))
+            if cmd[:2] == ["git", "merge-base"] and "--is-ancestor" not in cmd:
+                return _completed(0, "a" * 40 + "\n")
+            if cmd[:3] == ["git", "diff", "--name-only"]:
+                return _completed(0, "src/a.py\n")
+            if cmd[:2] == ["git", "diff"]:
+                return _completed(1)  # (a) 探测失败
+            if cmd[:2] == ["git", "rev-parse"] and cmd[-1] == "HEAD":
+                return _completed(0, "work/pr-branch\n")
+            if cmd[0] == "gh":
+                return _completed(0, '{"state": "MERGED", "headRefOid": "%s"}' % ("c" * 40))
+            if cmd[:2] == ["git", "rev-list"]:
+                return _completed(0, "2\n")  # 两笔超出
+            return fake(cmd, cwd, check)
+
+        with mock.patch.object(wha, "_run", runner):
+            assert wha._is_merged_to_origin_main("b" * 40, wt) is False
+
+    def test_gh_unavailable_fails_safe(self, tmp_path):
+        """gh 不存在/未认证 → (b) 静默 False, 不抛错不放宽."""
+        wt = tmp_path
+        fake = FakeGit(wt, super_merged=False)
+
+        def runner(cmd, cwd=None, check=False):
+            fake.calls.append((list(cmd), cwd))
+            if cmd[:2] == ["git", "merge-base"] and "--is-ancestor" not in cmd:
+                return _completed(0, "a" * 40 + "\n")
+            if cmd[:3] == ["git", "diff", "--name-only"]:
+                return _completed(0, "src/a.py\n")
+            if cmd[:2] == ["git", "diff"]:
+                return _completed(1)  # (a) 失败
+            if cmd[:2] == ["git", "rev-parse"] and cmd[-1] == "HEAD":
+                return _completed(0, "work/pr-branch\n")
+            if cmd[0] == "gh":
+                return _completed(1, "")  # gh 未认证
+            return fake(cmd, cwd, check)
+
+        with mock.patch.object(wha, "_run", runner):
+            assert wha._is_merged_to_origin_main("b" * 40, wt) is False
+
+    def test_detached_head_never_asks_gh(self, tmp_path):
+        """DETACHED 分支没法查 PR → 不调 gh, 直接 False."""
+        wt = tmp_path
+        fake = FakeGit(wt, super_merged=False)
+
+        def runner(cmd, cwd=None, check=False):
+            fake.calls.append((list(cmd), cwd))
+            if cmd[:2] == ["git", "merge-base"] and "--is-ancestor" in cmd:
+                return _completed(1)  # 祖先判定必败 (squash 场景)
+            if cmd[:2] == ["git", "merge-base"]:
+                return _completed(0, "a" * 40 + "\n")
+            if cmd[:3] == ["git", "diff", "--name-only"]:
+                return _completed(0, "src/a.py\n")
+            if cmd[:2] == ["git", "diff"]:
+                return _completed(1)
+            if cmd[:2] == ["git", "rev-parse"] and cmd[-1] == "HEAD":
+                return _completed(0, "DETACHED\n")
+            raise AssertionError(f"gh must not be consulted for DETACHED: {cmd}")
+
+        with mock.patch.object(wha, "_run", runner):
+            assert wha._is_merged_to_origin_main("b" * 40, wt) is False

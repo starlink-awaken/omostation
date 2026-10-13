@@ -47,10 +47,19 @@ def _init_repo(repo: Path) -> None:
 
 
 def _install_submodule_hook(repo: Path) -> None:
-    hook_source = ROOT / ".githooks" / "pre-commit"
+    # 机制 22c (2026-09-05) 起 .githooks/pre-commit 是薄委托层: 缺 hook-runner/
+    # hook-manifest 的仓宽容放行 ([ -f ... ] || exit 0), 假仓无法模拟全链。
+    # 本组测试锁的是 submodule-guard 的拒绝语义, hook 直接内联调用真守卫脚本
+    # (bin/gac/submodule-guard.py, 纯 stdlib 自足), 不随分发架构演进再碎。
+    guard = ROOT / "bin" / "gac" / "submodule-guard.py"
     hook_dest = repo / ".git" / "hooks" / "pre-commit"
     hook_dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy(hook_source, hook_dest)
+    hook_dest.write_text(
+        "#!/bin/bash\n"
+        f'python3 "{guard}" --staged\n'
+        "exit $?\n",
+        encoding="utf-8",
+    )
     os.chmod(hook_dest, 0o755)
 
 
@@ -543,11 +552,20 @@ def test_wired_entrypoints_reference_gates():
     assert "swarm-claim-check" in pre
     # install-hooks path must include D3 (skeptic: not only pre-commit framework)
     githook_pre = (ROOT / ".githooks/pre-commit").read_text(encoding="utf-8")
-    # D3 shared-worktree claim retired 2026-08-19; clone-guard remains the writer gate.
-    assert "clone-guard" in githook_pre or "agent-clone.py" in githook_pre
+    # 机制 22c: pre-commit 是薄委托层, clone-guard 移驻 hook-runner.sh (真执行体)。
+    # 断言链: 委托存在 && 终点含 clone-guard; 旧的内联模式仍兼容。
+    if "hook-runner.sh" in githook_pre:
+        runner = (ROOT / "bin/gac/hook-runner.sh").read_text(encoding="utf-8")
+        assert "clone-guard" in runner or "agent-clone.py" in runner
+    else:
+        # 直接内联模式 (旧结构) 仍有效
+        assert "clone-guard" in githook_pre or "agent-clone.py" in githook_pre
     push = (ROOT / ".githooks/pre-push").read_text(encoding="utf-8")
-    assert "escape-check" in push
-    assert "--failures-file" in push or "--failures-json" in push
+    # 机制 22c: pre-push 薄委托; escape-check 与 --failures-json 的语义归宿
+    # 已迁至 swarm-git (下方 swarm_git 断言锁定), 委托模式下 pre-push 只需链路在位。
+    if "hook-runner.sh" not in push:
+        assert "escape-check" in push
+        assert "--failures-file" in push or "--failures-json" in push
     swarm_git = (ROOT / "bin/gac/swarm-git").read_text(encoding="utf-8")
     assert "escape-check" in swarm_git
     assert "emergency-human-hotfix" in swarm_git or "SWARM_ESCAPE_TOKEN" in swarm_git

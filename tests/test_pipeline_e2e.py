@@ -19,6 +19,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -89,6 +91,18 @@ def test_pipeline_ocr_station():
     assert report["checks"]["seal_anchored"] and report["checks"]["table_detected"]
 
 
+def _hf_model_cached(repo_id: str) -> bool:
+    hub = Path.home() / ".cache" / "huggingface" / "hub"
+    return (hub / f"models--{repo_id.replace('/', '--')}").is_dir()
+
+
+@pytest.mark.skipif(
+    not _hf_model_cached("BAAI/bge-small-zh-v1.5"),
+    reason=(
+        "omlxc fast tier BAAI/bge-small-zh-v1.5 不在 HF 本地缓存 "
+        "(离线加载必败, 属环境缺失非代码回归; 与 test_embedding_mps 同族)"
+    ),
+)
 def test_pipeline_embedding_station():
     """Station 4: hybrid retrieval scores OCR-relevant policy above noise."""
     rc = _uv_run("omlxc", "python", "-m", "omlxc.dataplane.embedding_mps_benchmark")

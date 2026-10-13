@@ -42,7 +42,10 @@ def risk_engine():
     return _load("ssot_risk_engine", "risk_engine.py")
 
 
-def test_risk_domain_overrides(risk_engine):
+def test_risk_domain_overrides(risk_engine, tmp_path, monkeypatch):
+    # 隔离宿主 trust 状态: evaluate 第 4 步会按 TRUST_FILE 降/升级,
+    # 本机 submit:superior success=26 会把 L3 压成 L2, 域策略断言就被运行态污染
+    monkeypatch.setattr(risk_engine, "TRUST_FILE", tmp_path / "trust.json")
     engine = risk_engine.RiskEngine()
     cases = [
         # (domain, type, target, expected_level)
@@ -73,7 +76,9 @@ def test_risk_to_level_boundaries(risk_engine):
     assert engine._risk_to_level(99.0) == "L4"
 
 
-def test_risk_high_risk_score_without_override(risk_engine):
+def test_risk_high_risk_score_without_override(risk_engine, tmp_path, monkeypatch):
+    # 同 test_risk_domain_overrides: 隔离宿主 trust, 否则本机记录会动态降级
+    monkeypatch.setattr(risk_engine, "TRUST_FILE", tmp_path / "trust.json")
     engine = risk_engine.RiskEngine()
     d = engine.evaluate(
         risk_engine.Action(

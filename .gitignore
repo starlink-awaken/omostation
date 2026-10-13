@@ -426,3 +426,7 @@ live-server.pid
 /_archive/
 /logs/
 /runtime/logs/
+
+# playwright CLI page dump (Interceptor 浏览器自动化会话产物, 不入库;
+# root-directory-governance-policy allowed_ignored_dirs 已注册)
+.playwright-cli/

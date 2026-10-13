@@ -9,10 +9,26 @@ runtime_paths。测试把 asset 部署到临时目录后:
 """
 from __future__ import annotations
 
+import shutil
 import sys
 import tempfile
 import types
 from pathlib import Path
+
+
+def deploy_collectors(host_dir: Path, deployed: Path) -> None:
+    """从仓内 asset 部署 live_server 的模块级宿主依赖 (collectors 包 + runtime_paths 占位)。
+
+    live_server.py.asset 各版本演进 (如 2026-10-13 起 import collectors) 后,
+    任何按"copy 两个 asset 再 exec"模式部署的测试都缺这几件 — 统一走本 helper,
+    不在各自 _module() 里手抄 (test_live_server_value_readiness 曾因此 ModuleNotFoundError)。
+    """
+    (deployed / "runtime_paths.py").write_text("# placeholder\n")
+    pkg = deployed / "collectors"
+    pkg.mkdir(exist_ok=True)
+    (pkg / "__init__.py").write_text("")
+    for name in ("base", "registry", "personal_value"):
+        shutil.copy2(host_dir / f"collectors.{name}.py.asset", pkg / f"{name}.py")
 
 
 def install_host_stubs(deployed: Path) -> None:

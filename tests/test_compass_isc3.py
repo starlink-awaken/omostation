@@ -62,9 +62,15 @@ def test_governance_zero_surface_stays_at_anomaly_base():
     assert detail["execution_deduction"] == 0
 
 
-def test_healthy_probe_counts_online(tmp_path):
+def test_healthy_probe_counts_online(tmp_path, monkeypatch):
     m = _load()
     import yaml
+
+    # #4534 后 collect_runtime_health 经 projection_read 以真实 state 根解析
+    # canonical 投影, 会把 tmp fixture 的读取劫持到宿主仓的 system_health
+    # (repo_root.py state_file_read 文档警告的同款陷阱) — patch 回 tmp 隔离;
+    # tmp 下无 canonical (runtime/ 子目录) → 投影解析退回 legacy = 本测试写入位。
+    monkeypatch.setattr(m, "runtime_state_root", lambda: tmp_path)
 
     sh = {
         "services": {

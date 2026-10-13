@@ -20,6 +20,7 @@ affected_roots:
   - "~/.kos/kos-index.sqlite"
   - "projects/knowledge/kairon/packages/kos/src/kos/config.py"
 evidence_refs:
+- .omo/standards/kos-home-authority.md
 - "2026-09-27 BET-Y2Q4-T3-03 摄入实证: kos-cli 默认写 ~/.kos（KOS_HOME 默认）,
     首轮 1,038 篇治理语料落错库（'indexed 1,038 但 data/kos 计数不动'暴露）;
     复核后 KOS_HOME 双库同摄, 现两库各 13,588 篇。"

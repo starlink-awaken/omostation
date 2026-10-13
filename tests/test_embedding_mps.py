@@ -24,6 +24,25 @@ EMB = _load("embedding_mps", "projects/omlxc/src/omlxc/dataplane/embedding_mps.p
 RR = _load("reranker", "projects/omlxc/src/omlxc/dataplane/reranker.py")
 
 
+def _hf_model_cached(repo_id: str) -> bool:
+    """HF 本地缓存探测: benchmark 测试在 HF_HUB_OFFLINE=1 下跑真模型,
+    缓存缺模型时 OSError 连接失败属环境缺失而非回归 → skip 而非假失败。"""
+    import os
+
+    hub = Path(
+        os.environ.get("HF_HUB_HOME")
+        or os.environ.get("HF_HOME")
+        or Path.home() / ".cache/huggingface"
+    ) / "hub"
+    return (hub / f"models--{repo_id.replace('/', '--')}").is_dir()
+
+
+requires_fast_model = pytest.mark.skipif(
+    not _hf_model_cached(EMB.MODEL_TIERS["fast"]),
+    reason=f"fast tier 模型 {EMB.MODEL_TIERS['fast']} 不在 HF 本地缓存 (离线模式加载必败, 属环境缺失)",
+)
+
+
 def test_offline_env_enforced():
     import os
 
@@ -69,12 +88,14 @@ def _omlxc_benchmark() -> dict:
     return json.loads(rc.stdout)
 
 
+@requires_fast_model
 def test_engine_hybrid_and_budget():
     report = _omlxc_benchmark()
     assert report["embedding"]["single_encode_ms"] <= EMB.LATENCY_BUDGET_MS["single_encode"]
     assert report["embedding"]["checks"]["hybrid_relevant_ranked"] is True
 
 
+@requires_fast_model
 def test_reranker_orders_and_budget():
     report = _omlxc_benchmark()
     rerank = report["rerank"]

@@ -33,7 +33,14 @@ DEFAULT_OUT_DIR = ROOT / ".omo" / "_knowledge" / "sweeps"
 INDEX_FILE = "INDEX.md"
 
 
-HEADER = """# Sweep 扫描历史归档 (A5, ADR-0367 + ADR-0373)
+HEADER = """---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-10-13
+---
+
+# Sweep 扫描历史归档 (A5, ADR-0367 + ADR-0373)
 
 > 本目录只存**指针与索引**, 不复制数据. 报告本体: `<date>.json` (由 `bin/sweep/scan.py` 落盘).
 > 生成方式: `python3 bin/sweep/scan.py [--projects <p1> <p2>]` ; 索引由 `bin/sweep/sweep_index.py` 自动维护.

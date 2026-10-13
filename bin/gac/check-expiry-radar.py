@@ -81,21 +81,23 @@ def _x2_rules_path(root: Path) -> Path:
     return root / ".omo" / "_truth" / "x2-freshness-rules.yaml"
 
 
-def _surfaces(root: Path = _ROOT) -> list[dict]:
+def _surfaces(root: Path | None = None) -> list[dict]:
     """从**该 root 下**的权威注册表读 surfaces (含 review_days/patterns/excludes).
 
     早期版本忽略 root 直读模块常量, 导致 scan(root=...) 的注入对阈值无效 ——
     测试实测暴露后修正。
     """
+    root = root or _ROOT  # 运行时解析: 默认参数绑定 (root=_ROOT) 会冻结 def 时路径, _ROOT 注入失效
     for d in _load_docs(_doc_gov_path(root)):
         if "surfaces" in d and isinstance(d["surfaces"], list):
             return [s for s in d["surfaces"] if isinstance(s, dict)]
     return []
 
 
-def scan_doc_surfaces(root: Path = _ROOT, horizon: int = 7,
+def scan_doc_surfaces(root: Path | None = None, horizon: int = 7,
                       today: date | None = None) -> list[dict]:
     """按注册表的 patterns/excludes/review_days 扫描, 算每个文档的剩余天数."""
+    root = root or _ROOT  # 运行时解析: 同 _surfaces
     today = today or date.today()
     out: list[dict] = []
     for surface in _surfaces(root):
@@ -142,9 +144,10 @@ def scan_doc_surfaces(root: Path = _ROOT, horizon: int = 7,
     return out
 
 
-def scan_x2_rules(root: Path = _ROOT, horizon: int = 7,
+def scan_x2_rules(root: Path | None = None, horizon: int = 7,
                    today: date | None = None) -> list[dict]:
     """X2 规则的 threshold_days: 对规则自身声明的 target 文件算剩余天数."""
+    root = root or _ROOT  # 运行时解析: 同 _surfaces
     today = today or date.today()
     out: list[dict] = []
     for d in _load_docs(_x2_rules_path(root)):

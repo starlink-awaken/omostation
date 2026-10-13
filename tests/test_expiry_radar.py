@@ -159,11 +159,14 @@ def test_missing_registry_does_not_crash(tmp_path):
 def test_strict_exit_codes(tmp_path, monkeypatch):
     mod = _load()
     root = _fake_registry(tmp_path, review_days=90)
+    # 前置咬合: 必须真有越界文档, strict rc=1 的断言才有效
+    # (原版只造注册表不造文档 → 空扫描恒 rc=0, 断言从未真正咬合过)
+    _doc(root, "docs/a.md", "2026-06-01")  # 09-21 口径 age=112 > 90 → expired
     monkeypatch.setattr(mod, "_ROOT", root)
     monkeypatch.setattr(mod, "DOC_GOV", root / ".omo/_truth/registry/document-governance.yaml")
     monkeypatch.setattr(mod, "X2_RULES", root / ".omo/_truth/x2-freshness-rules.yaml")
 
-    assert mod.main(["--json", "--today", "2026-01-01"]) == 0  # 无 imminent
+    assert mod.main(["--json", "--today", "2026-01-01"]) == 0  # 未来出生的文档 age<0 → ok
     assert mod.main(["--json", "--strict", "--today", "2026-09-21"]) == 1
 
 
