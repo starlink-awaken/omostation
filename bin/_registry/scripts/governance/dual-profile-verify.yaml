@@ -36,7 +36,7 @@ outputs:
   - type: exit_code
 dependencies: [bin/lib/repo_root.py, bin/gac/materialize-system-state.py]
 triggers: [ci, manual]
-related: [bin/gac/materialize-system-state.py, bin/lib/repo_root.py, bin/gac/check-hardcoded-ports.py]
+related: [bin/gac/materialize-system-state.py, bin/lib/repo_root.py, bin/ssot/check-hardcoded-ports.py]
 tags: [state-root, adr-0456, dev-prod-drift, verify-leg, ci]
 maturity: active
 last_reviewed: "2026-10-13"
