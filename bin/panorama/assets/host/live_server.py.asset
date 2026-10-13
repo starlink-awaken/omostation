@@ -1641,6 +1641,8 @@ class DashboardServer(ThreadingHTTPServer):
                 "projection_fresh_until": None,
                 "projection_manifest_sha256": None,
                 "projection_error": None,
+                "payload_generated_at": None,
+                "payload_age_seconds": None,
             }
         try:
             revision = self.projection_revision()
@@ -1670,6 +1672,8 @@ class DashboardServer(ThreadingHTTPServer):
                         "projection_fresh_until": revision.fresh_until,
                         "projection_manifest_sha256": revision.manifest_sha256,
                         "projection_error": exc.public_error,
+                        "payload_generated_at": None,
+                        "payload_age_seconds": None,
                     }
             return {
                 "projection_status": exc.status,
@@ -1690,9 +1694,40 @@ class DashboardServer(ThreadingHTTPServer):
                 "projection_fresh_until": None,
                 "projection_manifest_sha256": None,
                 "projection_error": exc.public_error,
+                "payload_generated_at": None,
+                "payload_age_seconds": None,
             }
+        # Read only the bytes already verified and bound to this revision.
+        # Renewing its lease does not refresh the data embedded in those bytes.
+        payload_generated_at = None
+        payload_age_seconds = None
+        payload_status = "UNKNOWN"
+        payload_error = "projection_payload_timestamp_invalid"
+        try:
+            payload = json.loads(revision.artifact_bodies["data"])
+            if not isinstance(payload, dict):
+                raise ValueError("payload must be an object")
+            timestamp = payload.get("generated_at")
+            if timestamp is None:
+                payload_error = "projection_payload_timestamp_missing"
+            elif isinstance(timestamp, str) and timestamp:
+                payload_generated_at = timestamp
+                generated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                if generated.tzinfo is None or generated.utcoffset() is None:
+                    raise ValueError("payload timestamp must have a timezone")
+                payload_age_seconds = (datetime.now(timezone.utc) - generated).total_seconds()
+                if payload_age_seconds < 0:
+                    payload_error = "projection_payload_timestamp_future"
+                elif payload_age_seconds > 300:
+                    payload_status = "STALE"
+                    payload_error = "projection_payload_stale"
+                else:
+                    payload_status = "BOUND_FRESH"
+                    payload_error = None
+        except (KeyError, TypeError, ValueError, OverflowError):
+            pass
         return {
-            "projection_status": "BOUND_FRESH",
+            "projection_status": payload_status,
             "state_revision": revision.revision_id,
             "producer_root_oid": revision.producer_root_oid,
             "producer_root_tree_sha256": revision.producer_root_tree_sha256,
@@ -1709,7 +1744,9 @@ class DashboardServer(ThreadingHTTPServer):
             "projection_generated_at": revision.generated_at,
             "projection_fresh_until": revision.fresh_until,
             "projection_manifest_sha256": revision.manifest_sha256,
-            "projection_error": None,
+            "projection_error": payload_error,
+            "payload_generated_at": payload_generated_at,
+            "payload_age_seconds": payload_age_seconds,
         }
 
     def get_request(self):
@@ -2058,7 +2095,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 or (
                     self.server.projection_store is not None
                     and (
-                        projection_health["projection_status"] != "BOUND_FRESH"
+                        projection_health["projection_status"] == "CODE_DRIFT"
                         or not code_identity_bound
                     )
                 )
