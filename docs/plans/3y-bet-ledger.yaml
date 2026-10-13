@@ -42510,7 +42510,8 @@ bets:
     后注入 `OMOSTATION_STATE_ROOT`，各跑一遍声明写生成器，并对每条腿做**正向落点断言**：报出实际写出的绝对路径，落在本腿声明 root
     之外（含检出、含另一 profile 的 root）即 FAIL；「检出不脏」只作隔离副判据，绝不单独构成通过证据 —— 否则「writer 根本没跑」与「writer
     正确改道」两者同绿（§7 已固化的形状）。
-  status: pending
+  status: done
+  done_at: 2026-10-13
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -42591,17 +42592,43 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@b59797e6d7ba4e18b33d4ab8d1329aec0e4d8b64
+          tests:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          diff:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          rollback:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-248.md
+            sha256: sha256:36fecb8ed1d9305f1dc840890c6c37dfa37cacac43c500f5fe2a27280e28450f
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-248.md
+            sha256: sha256:36fecb8ed1d9305f1dc840890c6c37dfa37cacac43c500f5fe2a27280e28450f
+          cleanup:
+            ref: receipt://docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+            sha256: sha256:ec7e3c227ce9a6fcf33147da2bb05919f9800b5dff093d8e2518b829ef3f4d46
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-250
   title: ADR-0456 B1 残留 —— bin/ 154 处写面路径钉在 __file__ 检出根，收成 shrink_only 基线门禁
   goal: 'B1 的完成判据（bin/ 内 `DEFAULT_(EVENT_)?LEDGER` 常量归零）已达成，但它只覆盖常量命名形状，
@@ -42656,33 +42683,30 @@ bets:
     不动
   - 不放宽任何既有门禁，不为预存红做代偿
   done_when:
-  - ISC-1 覆盖性：判据对 `.omo/state/**` 与 `runtime/**` 的读数为 154 个行级站点 / 144 个 (文件,路径) 对 / 95
-    文件，且「改前 = N」与「新增 = 0」由同一次扫描产出并同时断言。反证：砍掉 marker 表里的 `.omo/state` → 基线对拍件当场红。
-  - ISC-2 自证：注入三条命中形状 —— ① 名字派生（`W = Path(__file__).resolve().parents[2]` 再
-    `W / ".omo/state/x.json"`）② 内联派生（`Path(__file__).resolve().parents[2] / "runtime/y.json"`）
-    ③ 分段拼法（`W / ".omo" / "state" / "history.json"`，渲染必须是整条 `.omo/state/history.json`）——
-    检测器必须点名三条。反证：无此件则「绿」可能只是检测器没命中（AGENTS.md §7②）；只注入 ① 则内联
-    拼法的漏认看不见（第二次作废读数即此），不注入 ③ 则「链截到只剩第一段」也能绿（第三次作废读数即此）。
+  - ISC-1 覆盖性：判据对 `.omo/state/**` 与 `runtime/**` 的读数为 154 个行级站点 / 144 个 (文件,路径) 对 /
+    95 文件，且「改前 = N」与「新增 = 0」由同一次扫描产出并同时断言。反证：砍掉 marker 表里的 `.omo/state` → 基线对拍件当场红。
+  - ISC-2 自证：注入三条命中形状 —— ① 名字派生（`W = Path(__file__).resolve().parents[2]` 再 `W / ".omo/state/x.json"`）②
+    内联派生（`Path(__file__).resolve().parents[2] / "runtime/y.json"`） ③ 分段拼法（`W / ".omo"
+    / "state" / "history.json"`，渲染必须是整条 `.omo/state/history.json`）—— 检测器必须点名三条。反证：无此件则「绿」可能只是检测器没命中（AGENTS.md
+    §7②）；只注入 ① 则内联 拼法的漏认看不见（第二次作废读数即此），不注入 ③ 则「链截到只剩第一段」也能绿（第三次作废读数即此）。
   - ISC-3 反过宽：同一注入里放三条不该命中的形状 —— ① 经 `state_root()` 取根 ② 拼 `.omo/_truth/registry/**`
-    读面 ③ 拼 `.omo/_knowledge/**` —— 三条均不得进入门禁集合，且 ②③ 必须由同一次扫描分类出来（可见但不计）。
-    反证：宽到把读面也吞掉的检测器，可以靠「往基线塞几百条读面」自证通过 ISC-1（§7④）。
+    读面 ③ 拼 `.omo/_knowledge/**` —— 三条均不得进入门禁集合，且 ②③ 必须由同一次扫描分类出来（可见但不计）。 反证：宽到把读面也吞掉的检测器，可以靠「往基线塞几百条读面」自证通过
+    ISC-1（§7④）。
   - ISC-4 shrink_only：基线为显式 (文件,路径) 集合且与实测集合双向相等；新增一处 → 红，改掉一处不缩基线 → 红。反证：单向 `⊆` 让已清干净的债从账上静默消失。
   - ISC-5 零运行时效应：本轮不改任何真实写目标；`git diff --name-only origin/main...HEAD`（三点，取 merge base）
-    不得出现 §1 表列 95
-    个在账文件中的任何一个。
+    不得出现 §1 表列 95 个在账文件中的任何一个。
   - ISC-6 CI 可见：`tests/unit/test_writeplane_root_pin.py` 进 `.github/workflows/governance-check.yml`
     显式 pytest 白名单（该名单按文件逐一点名、无 `tests/unit/**` glob，不加则「CI 绿」不构成这些用例的证据）。
   verify:
   - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录>
-      uv run --no-project --with pytest --with pyyaml python -m pytest
-      tests/unit/test_writeplane_root_pin.py -q -p no:randomly
-    expect: 全绿 / exit 0（实测 8 passed；宿主面与 HOME=<空目录> 各一遍）。依赖面必须由最小 venv 供给 ——
-      同一命令换成宿主 `python3 -m pytest` 会当场 `No module named pytest`，那是装置没搭对，不是回归
-      （AGENTS.md §7 hermetic 补记）。须含自证件（三条命中形状被点名）、反过宽件（缝取根不得分类、两类读面
-      可见但不计）、双向相等件。变异对照已验：从基线删一行 → 2 failed 当场红。
+      uv run --no-project --with pytest --with pyyaml python -m pytest tests/unit/test_writeplane_root_pin.py
+      -q -p no:randomly
+    expect: 全绿 / exit 0（实测 8 passed；宿主面与 HOME=<空目录> 各一遍）。依赖面必须由最小 venv 供给 —— 同一命令换成宿主
+      `python3 -m pytest` 会当场 `No module named pytest`，那是装置没搭对，不是回归 （AGENTS.md §7 hermetic
+      补记）。须含自证件（三条命中形状被点名）、反过宽件（缝取根不得分类、两类读面 可见但不计）、双向相等件。变异对照已验：从基线删一行 → 2 failed 当场红。
   - cmd: git diff --name-only origin/main...HEAD
-    expect: 三点尺（merge base），不是两点 —— 两点式在 base 落后时把 main 的新增读成自己的删除。
-      出现文件集合逐项落在 write_surfaces 内，且 spec §1 表列的 95 个在账文件一个都不出现（ISC-5 零运行时效应）。
+    expect: 三点尺（merge base），不是两点 —— 两点式在 base 落后时把 main 的新增读成自己的删除。 出现文件集合逐项落在 write_surfaces
+      内，且 spec §1 表列的 95 个在账文件一个都不出现（ISC-5 零运行时效应）。
   - cmd: grep -n test_writeplane_root_pin .github/workflows/governance-check.yml
     expect: 至少 1 处命中（ISC-6：不加这行则「CI 绿」不是这些用例的证据）。
   - cmd: make gac-local-gate
