@@ -42540,6 +42540,9 @@ bets:
   - bin/_registry/scripts/governance/dual-profile-verify.yaml
   - .omo/_knowledge/retros/BET-Y2Q4-T10-248.md
   - docs/reports/2026-10-13-dual-profile-verify-leg-closeout.md
+  # 2026-10-13 主控授权追加：本 BET 新增 bin/gac/dual-profile-verify.py 触发 bin 变更守恒
+  # （check-bin-quota-diff: 净增 1 > baseline_delta 0），script_baseline 只能写在 governance-checks.yaml。
+  - .omo/_truth/registry/governance-checks.yaml
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-13-dual-profile-verify-leg.md
     spec_version: 1.0.0
