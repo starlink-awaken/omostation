@@ -134,6 +134,11 @@ jobs:
           # (BET-Y2Q4-T10-248)。实测 22 pass; 剥掉落点断言 → 2 failed、把 profile 名单
           # 收成单元素 → 1 failed (变异对照跑过, 复原后逐字节一致), 且 HOME=<空目录>
           # + env -u OMOSTATION_ROOT 下同样 22 pass。
+          # 2026-10-13 追加第五件: test_writeplane_root_pin 钉 ADR-0456「写目标跟随 profile 根」
+          # 在 bin/ 的覆盖面 —— 由 __file__ 反推检出根再拼 `.omo/state/**` 或 `runtime/**` 的站点
+          # 收成 shrink_only 基线 (154 站点 / 144 对 / 95 文件), 新增一处即红 (BET-Y2Q4-T10-250)。
+          # 实测 8 pass; 变异对照跑过 —— 从基线删一行 → 2 failed (双向相等件 + marker 承重件);
+          # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时同样 8 pass (不读 host profile)。
           uv run pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -160,6 +165,7 @@ jobs:
             ../../tests/unit/test_evidence_freshness_reader_plane.py \
             ../../tests/unit/test_system_yaml_write_plane.py \
             ../../tests/unit/test_dual_profile_verify.py \
+            ../../tests/unit/test_writeplane_root_pin.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
