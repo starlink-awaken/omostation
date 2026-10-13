@@ -1,0 +1,21 @@
+schema: agent-error/v1
+id: PITFALL-MEA-008
+category: measurement
+severity: medium
+title: 验证命令退出码时接管道 → $? 是管道末端的, 假阴性拖诊断一轮
+symptom: bin/gac/check-work-landed.py | head -6 看到 PASS 以为修复生效, gate 仍 FAIL; 实际 exit
+  code 是 head 的 0
+root_cause: shell 管道默认无 pipefail, $? 只反映最后一个命令; rtk 压缩层叠加上更隐蔽 (ps/diff/branch -d 输出被吞同族)
+solution: '验证退出码裸跑或分步: cmd > /tmp/x.out 2>&1; echo exit=$?; rtk 压缩可疑时 rtk proxy <cmd>
+  取原始输出'
+prevention: 『直接跑 PASS、gate/CI 红』的场景, 先确认自己看到的 exit code 是不是被管道或压缩层换了货, 再进入逻辑排查
+tags:
+- shell
+- exit-code
+- pipe
+- rtk
+discovered_by: governance-agent
+discovered_at: '2026-10-13'
+times_encountered: 1
+last_confirmed_at: '2026-10-13'
+status: active
