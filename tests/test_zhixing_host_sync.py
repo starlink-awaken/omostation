@@ -35,6 +35,7 @@ EXPECTED_FILES = {
     "strategy_projection.py": "strategy_projection.py.asset",
     "collectors/agent_brief.py": "agent_brief_collector.py.asset",
     "collectors/base.py": "collectors.base.py.asset",
+    "release_identity.py": "release_identity.py.asset",
 }
 
 

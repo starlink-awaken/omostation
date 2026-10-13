@@ -15,7 +15,7 @@ from pathlib import Path
 import probe_utils
 
 WORKSPACE = Path("/Users/xiamingxing/Workspace")
-LIBRARY = Path("/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库")
+LIBRARY = Path.home() / ("Documents/@学习进化/_archive/基建架构-织星系统文档库/织星主权智能操作系统文档库")
 APP = Path("/Users/xiamingxing/.local/share/zhixing-dashboard")
 PAGE = LIBRARY / "40-验收与运营/Agent体系全景总览-2026-09-08.html"
 CURRENT = APP / "current.json"

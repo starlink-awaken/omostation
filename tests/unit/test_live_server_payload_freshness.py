@@ -13,9 +13,44 @@ import threading
 from types import ModuleType, SimpleNamespace
 
 import pytest
+from test_zhixing_release_identity import release_env, publish, load
 
 HOST_DIR = Path(__file__).resolve().parents[2] / "bin/panorama/assets/host"
 NOW = datetime(2026, 10, 13, 2, 0, tzinfo=timezone.utc)
+
+
+def test_live_http_uses_actual_managed_release_identity(live_module, release_env, tmp_path):
+    root = publish(release_env)
+    actual = load("http_release_identity", root / "release_identity.py").managed_release_identity(root)
+    revision = _revision(live_module, {"generated_at": NOW.isoformat()})
+    revision.dashboard_code_oid = actual["code_oid"]
+    revision.dashboard_tree_sha256 = actual["tree_sha256"]
+    revision.dashboard_code_bundle_sha256 = actual["code_bundle_sha256"]
+    assert live_module.CODE_BUNDLE_SHA256 == actual["code_bundle_sha256"]
+    server = live_module.make_server(
+        port=0, page_path=tmp_path / "page.html", snapshot_path=tmp_path / "unused.json",
+        sources={}, dashboard_code_oid=actual["code_oid"],
+        dashboard_tree_sha256=actual["tree_sha256"], dashboard_code_sha256=actual["code_bundle_sha256"])
+    server.projection_store = SimpleNamespace(load=lambda **kwargs: revision)
+    server.dashboard_identity_resolver = lambda: live_module.resolve_dashboard_code_identity(root)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    connection = HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+    try:
+        connection.request("GET", "/health")
+        response = connection.getresponse()
+        health = json.loads(response.read())
+        assert response.status == 200
+        assert health["projection_status"] == "BOUND_FRESH"
+        assert health["code_drift"] is False
+        (root / "runtime_paths.py").write_text("tampered dependency")
+        connection.request("GET", "/health")
+        assert json.loads(connection.getresponse().read())["projection_status"] == "CODE_DRIFT"
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
 
 
 def _load(name, path, monkeypatch):
@@ -126,6 +161,46 @@ def _http_health(module, tmp_path, payload, *, expired=False, drift=False, integ
         thread.join(timeout=3)
 
 
+def _http_stream_status(module, tmp_path, payload):
+    revision = _revision(module, payload)
+
+    class RevisionStore:
+        def load(self, require_fresh=True):
+            return revision
+
+    server = module.make_server(
+        port=0, page_path=tmp_path / "page.html", snapshot_path=tmp_path / "fallback.json",
+        sources={}, dashboard_code_oid="5" * 40,
+        dashboard_tree_sha256="6" * 64, dashboard_code_sha256=module.CODE_BUNDLE_SHA256,
+    )
+    server.projection_store = RevisionStore()
+    module.POLL_INTERVAL_SECONDS = 1
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    connection = HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+    try:
+        connection.request("GET", "/events/stream")
+        response = connection.getresponse()
+        assert response.status == 200
+
+        def read_event():
+            event_name = response.fp.readline().decode("utf-8").strip()
+            data_line = response.fp.readline().decode("utf-8").strip()
+            assert response.fp.readline().strip() == b""
+            assert event_name.startswith("event: ")
+            assert data_line.startswith("data: ")
+            return event_name.removeprefix("event: "), json.loads(data_line.removeprefix("data: "))
+
+        connected = read_event()
+        pulse = read_event()
+        return connected, pulse
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
 @pytest.mark.parametrize("age,status", [(0, "BOUND_FRESH"), (299.9, "BOUND_FRESH"), (300, "BOUND_FRESH"), (300.1, "STALE"), (900, "STALE")])
 def test_http_health_uses_bound_payload_age_despite_new_lease(live_module, tmp_path, age, status):
     timestamp = (NOW - timedelta(seconds=age)).isoformat()
@@ -184,3 +259,22 @@ def test_http_health_integrity_error_has_priority_without_false_code_drift(live_
     assert health["projection_error"] == "projection_artifact_mismatch"
     assert health["payload_generated_at"] is None
     assert health["code_drift"] is False
+
+
+@pytest.mark.parametrize("payload,status,error", [
+    ({"generated_at": (NOW - timedelta(seconds=301)).isoformat()}, "STALE", "projection_payload_stale"),
+    ({"generated_at": "bad"}, "UNKNOWN", "projection_payload_timestamp_invalid"),
+    ({"generated_at": (NOW + timedelta(seconds=1)).isoformat()}, "UNKNOWN", "projection_payload_timestamp_future"),
+    ({"generated_at": NOW.isoformat()}, "BOUND_FRESH", None),
+])
+def test_event_stream_uses_bound_payload_freshness_for_connected_and_pulse(
+    live_module, tmp_path, payload, status, error
+):
+    connected, pulse = _http_stream_status(live_module, tmp_path, payload)
+
+    assert connected[0] == "connected"
+    assert connected[1]["status"] == status
+    assert connected[1].get("error") == error
+    assert pulse[0] == "pulse"
+    assert pulse[1]["status"] == status
+    assert pulse[1].get("error") == error

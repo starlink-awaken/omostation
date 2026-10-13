@@ -57,8 +57,8 @@ CURRENT = STATE_ROOT / "current.json"
 SEED = APP / "seed.json"
 PAGE = STATE_ROOT / "index.html"
 REFRESH_LOCK = STATE_ROOT / "refresh.lock"
-LEGACY_DOC_PAGE = Path(
-    "/Users/xiamingxing/Documents/学习进化/基建架构/织星主权智能操作系统文档库/"
+LEGACY_DOC_PAGE = Path.home() / (
+    "Documents/@学习进化/_archive/基建架构-织星系统文档库/织星主权智能操作系统文档库/"
     "40-验收与运营/Agent体系全景总览-2026-09-08.html"
 )
 
