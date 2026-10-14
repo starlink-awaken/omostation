@@ -1,4 +1,6 @@
 ---
+last-reviewed: 2026-10-14
+lifecycle: entry
 id: waiver-2026-09-12-t10-157-spec-exact-blob-recovery
 scope: docs/superpowers/specs/2026-09-12-t10-157-aetherforge-responses-pointer-close.md
 created: 2026-09-12

@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: candidate
+status: archived
 lifecycle: entry
 owner: governance-team
 type: pattern

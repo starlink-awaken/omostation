@@ -1,4 +1,7 @@
 ---
+last-reviewed: 2026-10-14
+owner: governance-team
+lifecycle: entry
 type: ephemeral
 status: archived
 ---

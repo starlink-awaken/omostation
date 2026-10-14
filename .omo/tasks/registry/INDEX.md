@@ -16,16 +16,22 @@ status: archived
 |----|-------|--------|
 | kos-q-growth-rolling | KOS 季度扩量持续监测 (rolling goal 关联 task | active |
 
-## Planned Tasks (0 个)
+## Planned Tasks (7 个)
 | ID | Title | Status |
 |----|-------|--------|
-
+| TASK-019B7FD6 | aetherforge 网关密钥轮换 | candidate |
+| TASK-147D2DA7 | 织星文档迁移后默认输入恢复MVP—维护准入候选 | candidate |
+| TASK-152D15B1 | worktree-hygiene-audit: squash 合并的 worktree 永远判不 | candidate |
+| TASK-263EF9EC | worktree 删除工具补子仓合并闸: janitor + gac-worktree.sh 与 | candidate |
+| TASK-9BFD0422 | R4 回归泄漏: 高负载降级路径绕过沙箱台账重定向(2 条 E2E 入真实台账, 已清 | candidate |
+| TASK-B7086225 | 断言分层改造: 21 场景断言按业务谓词 vs 实现细节分类重写 | candidate |
+| TASK-C20AFD70 | cockpit 实时测试: 战略源 9 条 library 引用越界(治理决策) + 快照比对( | candidate |
 
 > **补充规划**: `.omo/tasks/planned/vision-roadmap/` 子目录保留长期愿景路线图（4 YAML + 5 MD），不纳入标准 planned 任务计数。
 
-## Completed Tasks (303 个)
+## Completed Tasks (331 个)
 
-> `tasks/done/` — 303 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
+> `tasks/done/` — 331 个顶层 YAML 文件，子目录按 Phase/主题分组存放历史任务。
 
 近期关键完成里程碑（done/ 顶层）:
 - P42-W0-W1-COMBO / P42-W2-COMBO — P42 治理面 SSOT 同步
@@ -63,5 +69,5 @@ status: archived
 
 
 ---
-*Updated: 2026-10-08 (依据 `omo state sync-tasks` 与真实目录重算: done=303, planned=0, active=1, blocked=0, archived=6 顶层)*
+*Updated: 2026-10-14 (依据 `omo state sync-tasks` 与真实目录重算: done=331, planned=7, active=1, blocked=0, archived=6 顶层)*
 *Sync command: `omo state sync-tasks`*

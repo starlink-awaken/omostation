@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: milestone
+status: archived
 lifecycle: history
 owner: governance-team
 type: retro

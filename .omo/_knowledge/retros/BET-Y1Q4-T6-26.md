@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: done
+status: archived
 lifecycle: history
 owner: unassigned
 last-reviewed: 2026-09-25

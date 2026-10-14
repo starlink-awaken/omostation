@@ -1,3 +1,11 @@
+---
+schema: md/v1
+status: archived
+lifecycle: entry
+owner: governance-team
+last-reviewed: 2026-10-14
+type: documentation
+---
 # 根仓 Makefile 整理与兼容入口收敛 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

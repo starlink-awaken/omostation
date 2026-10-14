@@ -1,4 +1,8 @@
 ---
+last-reviewed: 2026-10-14
+owner: governance-team
+lifecycle: entry
+status: archived
 schema_version: governance-waiver/v1
 created: '2026-09-22'
 bet_id: unbound

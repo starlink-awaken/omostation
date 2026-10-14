@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: active
-lifecycle: derived
+lifecycle: entry
 owner: governance-team
 type: documentation
 last-reviewed: 2026-10-10

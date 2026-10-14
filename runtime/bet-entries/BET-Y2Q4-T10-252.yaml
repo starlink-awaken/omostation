@@ -1,0 +1,39 @@
+id: BET-Y2Q4-T10-252
+title: guard-submodules 非破坏性对齐 —— 并发 submodule update 周期不得删除既有检出
+goal: 'post-checkout 守卫 `guard-submodules --fix`（bin/gac/gac-worktree.sh）对每个 pin 不一致的子模块执行
+  `git submodule update --init --no-fetch`。该命令把「已存在但 gitdir 布局非标准（检出由外部克隆/链接管理）」的检出
+  当作无效目录：先删除再按 pin 重克隆；重克隆依赖网络，本机网络受限时必然失败并留下空目录。并发 agent 的
+  claim/release 周期在每次 worktree add / checkout 都触发该守卫，于是手动布置的子模块检出被周期性清空——2026-10-14
+  实证：ptr-bump 与 ptr-bump2 两轮 gitlink 交付都被反复打断（.git 条目被删、空目录残留、remote-hygiene 报
+  origin 指向本地路径）。修法（fail-safe）：守卫只对**不存在 .git 条目**的路径执行破坏性 update --init；
+  对已存在且可解析的检出改为非破坏性对齐（本地含 pin 对象时 checkout 到 pin，否则跳过并 advisory），
+  任何情况下不删除既有 .git 条目。claim/release 主流程与 reachability/rewind 语义不变。'
+status: pending
+window: Y2Q4
+track: T10-TOOLING
+priority: P2
+appetite: 1 day
+risk_level: L2
+human_gate: false
+pasw_required: false
+retro: required
+workflow: bet-execution
+underlying_workflow: project-code-change
+accepted_specifications:
+- spec_ref: repo://docs/superpowers/specs/2026-10-14-guard-submodules-nondestructive.md
+  spec_version: 1.0.0
+  content_digest: sha256:5a122b283eedb06bd17b2a675225d098c0e12dd7233502967e761b4315cc5461
+  decision_ref: decision://accepted/BET-Y2Q4-T10-252
+done_when:
+- 'ISC-1 不删除：worktree 内手动布置的有效检出（.git 指向外部 gitdir）在 guard-submodules --fix 后完好（.git 条目与 HEAD 未变）'
+- 'ISC-2 非破坏性对齐：已存在检出且本地含 pin 对象 → --fix 后 HEAD == pin 且 .git 条目仍在'
+- 'ISC-3 空缺仍重建：无 .git 条目的路径仍按 pin 对齐（T10-161 原语义）'
+- 'ISC-4 缺对象跳过：已存在检出但本地无 pin 对象 → 不动检出、advisory 点名、exit 0'
+- 'ISC-5 回归：uv run pytest tests/ -q -k "submodule or guard or worktree" 全绿'
+- 'ISC-6 remote 污染检测不变：origin URL 落入子仓 URL 集合的 fixture 仍报 🚨 且不改写'
+verify:
+- cmd: uv run pytest tests/ -q -k "submodule or guard or worktree"
+  expect: pass
+write_surfaces:
+- bin/gac/gac-worktree.sh
+- tests/**
