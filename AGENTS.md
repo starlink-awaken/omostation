@@ -448,6 +448,7 @@ cockpit harness compliance|full|status
 - **管道计数命令零匹配断链（2026-09-27 会话实证 ×3）**：`cmd | grep -c pattern && next` 在零匹配时 grep exit 1 直接断链（最重一次：两个债务登记文件从未提交、worktree 释放即丢失，#4498 重铸恢复）。纪律：`grep -c` 后接 `|| true`，或用 python 计数断言；**worktree 释放前必查 `git status --short` 确认交付物全部已提交**。
 - **幽灵判定双检（2026-09-27, T10-01/T10-08 实证）**：声明契约的 source_ref 指向不存在脚本 ≠ 脚本不存在——commit-assist 在 `bin/` 根（声明写 `bin/gac/`）、SEC×2 被 `omo.cli lint` 覆盖。纪律：全库 `find bin -name "$(basename <声明脚本>)"` + `omo.cli lint --help` 双检后再定"幻影"，否则误删活测试/漏接线。
 - **验收条款先实证通道行为（2026-09-27 实证）**：done_when 写"doc 指向 X"前先跑一次真实通道——ingest 的 canonical_path 是 `kos::default::<文件名>` 不保目录、gh pr list 分页会静默触顶。想象中的通道行为写进验收 = 埋假红/假绿。
+- **并发 agent 的 submodule update 周期会清空 worktree 内手动布置的检出（2026-10-14, BET-Y2Q4-T10-252 实证）**：post-checkout 守卫 `guard-submodules --fix` 对 pin 不一致的子模块执行 `submodule update --init --no-fetch`，该命令把「已存在但 gitdir 布局非标准」的检出当无效目录**先删后建**；网络受限时重克隆必失败留空目录，而并发 agent 的 claim/release 周期在每次 worktree add/checkout 都触发守卫 → 手动布置的检出被周期性清空（ptr-bump/ptr-bump2 两轮交付实证：`.git` 条目被删、空目录残留、remote-hygiene 报 origin 指向本地路径）。**判据**：worktree 内子模块检出目录被反复清空、且 `git submodule status` 对该路径报 `+` 或 fatal，先怀疑并发守卫而非自己的布置错。**纪律**：① 守卫只对**无 `.git` 条目**的路径执行破坏性 update --init，已存在且可解析的检出改非破坏性 `checkout <pin>`（本地有对象）或跳过 advisory（缺对象），任何情况不删除既有 `.git` 条目（INV-1/2/3/4，`tests/unit/test_gac_guard_submodules.py`）；② 门禁脚本按 `__file__` 解析仓库根，子模块解析走主工作区检出（稳定），gitlink 读 worktree index —— 交付不依赖 worktree 内物理检出；③ 滞留 gitdir 的 origin URL 要改回远端，否则 pre-push remote-hygiene 报「origin 指向本地路径」。
 
 ## 12. 归档/收敛项目说明
 
