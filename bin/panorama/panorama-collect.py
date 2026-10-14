@@ -675,7 +675,6 @@ def publish_projection_revision(
             if _dash_template_path.is_file()
             else TEMPLATE
         )
-        _data_json = json.dumps(published_payload, ensure_ascii=False)
         # Concatenate UI scripts into the page (matching orchestrator behavior),
         # so published revisions have the same interactive panels as the
         # orchestrator-produced dist/index.html.
@@ -690,9 +689,7 @@ def publish_projection_revision(
             if _fpath.is_file():
                 _ui_parts.append(_fpath.read_text(encoding="utf-8").replace("</script", "<\\/script"))
         _ui_block = "\n".join(_ui_parts)
-        _page = _page_template.replace("__SNAPSHOT_JSON__", _data_json).replace("__DATA__", _data_json)
-        if _ui_block:
-            _page = _page.replace("</body>", "<script>" + _ui_block + "</script>\n</body>")
+        _page = render_projection_page(_page_template, published_payload, _ui_block)
         artifact_bodies = {
             "page": _page.encode("utf-8"),
             "data": json.dumps(published_payload, ensure_ascii=False, indent=1).encode("utf-8"),
@@ -3248,14 +3245,135 @@ def collect_debt_registry() -> dict:
                      for i in items[:15] if isinstance(i, dict)]}
 
 
+TASK_PREVIEW_FILE_BYTES = 64 * 1024
+TASK_PREVIEW_TOTAL_BYTES = 64 * 1024
+TASK_PREVIEW_TASKS = 8
+TASK_PREVIEW_FILES = 3
+
+
+def task_artifact_root() -> Path:
+    """Only locally retained controller Markdown deliverables may be previewed."""
+    return Path.home() / ".local/share/zhixing-controller/artifacts"
+
+
+def _task_artifact_preview(raw_path: str, remaining: int) -> dict:
+    """Read via directory descriptors: never follow a symlink or escape the allowlist."""
+    path = Path(raw_path)
+    record = {"path": str(path)[:1000], "status": "outside_allowed_root", "truncated": False}
+    root = task_artifact_root()
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return record
+    if not path.is_absolute() or ".." in relative.parts or path.suffix.lower() != ".md":
+        return record
+    fd = None
+    try:
+        flags = os.O_RDONLY | os.O_NOFOLLOW
+        fd = os.open("/", flags | os.O_DIRECTORY)
+        for part in (*root.parts[1:], *relative.parts[:-1]):
+            next_fd = os.open(part, flags | os.O_DIRECTORY, dir_fd=fd)
+            os.close(fd)
+            fd = next_fd
+        file_fd = os.open(relative.name, flags | os.O_NONBLOCK, dir_fd=fd)
+        with os.fdopen(file_fd, "rb") as stream:
+            before = os.fstat(stream.fileno())
+            if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+                record["status"] = "symlink_or_invalid"
+                return record
+            record["bytes"] = before.st_size
+            if before.st_size > TASK_PREVIEW_FILE_BYTES:
+                record["status"] = "too_large"
+                return record
+            if before.st_size > remaining:
+                record["status"] = "budget_exceeded"
+                return record
+            body = stream.read(TASK_PREVIEW_FILE_BYTES + 1)
+            after = os.fstat(stream.fileno())
+            if (len(body) != before.st_size or before.st_mtime_ns != after.st_mtime_ns
+                    or before.st_size != after.st_size):
+                record["status"] = "changed_during_read"
+                return record
+        record.update(status="ready", preview=body.decode("utf-8"),
+                      sha256=hashlib.sha256(body).hexdigest())
+    except FileNotFoundError:
+        record["status"] = "missing"
+    except PermissionError:
+        record["status"] = "permission_denied"
+    except UnicodeDecodeError:
+        record["status"] = "invalid_utf8"
+    except OSError:
+        record["status"] = "symlink_or_invalid"
+    finally:
+        if fd is not None:
+            os.close(fd)
+    return record
+
+
+def _task_completed_order(task: dict) -> tuple:
+    raw = task.get("completed_at") or task.get("updated_at") or ""
+    try:
+        stamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=UTC)
+        timestamp = stamp.timestamp()
+    except (ValueError, TypeError):
+        timestamp = 0
+    return (-timestamp, task["id"])
+
+
+NATIVE_TASK_UI = r"""
+(function(){
+  const host=document.getElementById('next')||document.getElementById('s-agent-brief')||document.querySelector('main');
+  if(!host)return;
+  const tasks=D.tasks||(D.agent_visibility||{}).work_state?.tasks||{};
+  const card=document.createElement('article');card.className='card gap';card.id='native-completed-tasks';
+  const add=(parent,tag,text)=>{const node=document.createElement(tag);node.textContent=String(text);parent.appendChild(node);return node;};
+  add(card,'h2','最近完成任务与成品');
+  add(card,'p','本地成品只读预览 · 完成状态来自原生任务记录');
+  const source=add(card,'details','');add(source,'summary','查看任务来源');
+  add(source,'p',(tasks.source_kind==='declared_state_root'?'原生运行态':(tasks.source_kind==='code_root'?'代码检出':'未知来源'))+' · '+(tasks.source_root||'未记录'));
+  const statuses={missing:'文件缺失',permission_denied:'无读取权限',too_large:'文件超出预览上限',budget_exceeded:'本次预览预算已用尽',symlink_or_invalid:'路径或文件类型不允许',outside_allowed_root:'不在允许的成品目录内',invalid_utf8:'文件不是 UTF-8 文本',changed_during_read:'读取期间文件发生变化'};
+  const rows=(tasks.recent_done||[]).slice(0,8);
+  if(!rows.length)add(card,'p','没有近期完成任务投影');
+  for(const task of rows){
+    const detail=document.createElement('details');card.appendChild(detail);
+    add(detail,'summary',task.id+' · '+task.status+' · '+(task.title||''));
+    add(detail,'p','目标：'+(task.goal_id||'未关联')+' · 负责人：'+(task.owner||'未指定'));
+    add(detail,'p','完成：'+(task.completed_at||'未记录')+' · 更新：'+(task.updated_at||'未记录'));
+    add(detail,'p','任务记录：'+(task.task_ref||task.path||'未记录'));
+    if(!(task.artifacts||[]).length)add(detail,'p','没有可预览的 Markdown 成品');
+    for(const artifact of (task.artifacts||[]).slice(0,3)){
+      const file=document.createElement('details');detail.appendChild(file);
+      add(file,'summary','查看成品：'+String(artifact.path||'').split('/').pop());
+      if(artifact.status==='ready'){
+        const pre=add(file,'pre',artifact.preview||'');pre.style.whiteSpace='pre-wrap';pre.style.overflowWrap='anywhere';
+        const evidence=add(file,'details','');add(evidence,'summary','证据信息');
+        add(evidence,'p',artifact.path||'');add(evidence,'p','SHA-256：'+artifact.sha256+' · '+artifact.bytes+' bytes');
+      }else{add(file,'p',artifact.path||'');add(file,'p',statuses[artifact.status]||'预览不可用');}
+    }
+  }
+  host.appendChild(card);
+})();
+"""
+
+
+def render_projection_page(template: str, payload: dict, ui_block: str = "") -> str:
+    """Escape HTML parser delimiters even inside application/json script elements."""
+    snapshot = json.dumps(payload, ensure_ascii=False).replace("<", "\\u003c")
+    page = re.sub(r"__SNAPSHOT_JSON__|__DATA__", lambda _match: snapshot, template)
+    return page.replace("</body>", "<script>" + ui_block + "\n" + NATIVE_TASK_UI + "</script>\n</body>")
+
+
 def collect_tasks() -> dict:
     """Project the canonical per-file task queue under ``.omo/tasks``."""
     import yaml
 
+    task_root = state_root() if os.environ.get("OMOSTATION_STATE_ROOT") else CODE_ROOT
     buckets = ("active", "planned", "blocked", "done")
     tasks = []
     for bucket in buckets:
-        task_dir = CODE_ROOT / ".omo" / "tasks" / bucket
+        task_dir = task_root / ".omo" / "tasks" / bucket
         if not task_dir.is_dir():
             continue
         for path in sorted(task_dir.glob("*.yaml")):
@@ -3274,7 +3392,12 @@ def collect_tasks() -> dict:
                 "bucket": bucket,
                 "owner": str(data.get("owner") or data.get("assigned_to") or "unassigned")[:60],
                 "priority": str(data.get("priority") or "unspecified")[:20],
-                "path": str(path.relative_to(CODE_ROOT))[:200],
+                "path": str(path.relative_to(task_root))[:200],
+                "task_ref": str(path),
+                "goal_id": str(data.get("goal_id") or "")[:120],
+                "updated_at": str(data.get("updated_at") or "")[:80],
+                "completed_at": str(data.get("completed_at") or data.get("done_at") or "")[:80],
+                "_evidence_paths": data.get("evidence_paths", []),
             })
 
     by_status = {}
@@ -3302,8 +3425,28 @@ def collect_tasks() -> dict:
         bucket_order.get(task["bucket"], 90),
         task["id"],
     ))
+    recent_done = [dict(task) for task in sorted(
+        (task for task in tasks if task["status"].lower() in closed_statuses),
+        key=_task_completed_order,
+    )[:TASK_PREVIEW_TASKS]]
+    remaining = TASK_PREVIEW_TOTAL_BYTES
+    for task in recent_done:
+        evidence = task.pop("_evidence_paths", [])
+        paths = evidence[:40] if isinstance(evidence, list) else []
+        markdown = [path for path in paths if isinstance(path, str) and Path(path).suffix.lower() == ".md"]
+        task["artifacts"] = []
+        for path in markdown[:TASK_PREVIEW_FILES]:
+            artifact = _task_artifact_preview(path, remaining)
+            task["artifacts"].append(artifact)
+            if artifact["status"] == "ready":
+                remaining -= artifact["bytes"]
+    for task in tasks:
+        task.pop("_evidence_paths", None)
     return {
         "source": ".omo/tasks/{active,planned,blocked,done}/*.yaml",
+        "source_root": str(task_root),
+        "source_kind": "declared_state_root" if os.environ.get("OMOSTATION_STATE_ROOT") else "code_root",
+        "recent_done": recent_done,
         "total": len(tasks),
         "open_count": len(open_tasks),
         "by_status": by_status,
@@ -4571,6 +4714,9 @@ def collect_agent_visibility(payload: dict, *, bound_value_readiness: dict | Non
                 "by_bucket": tasks.get("by_bucket", {}),
                 "duplicates": tasks.get("duplicates", []),
                 "open_recent": tasks.get("open_recent", []),
+                "recent_done": tasks.get("recent_done", []),
+                "source_root": tasks.get("source_root"),
+                "source_kind": tasks.get("source_kind"),
                 "recent": tasks.get("recent", []),
             },
             "services": {
