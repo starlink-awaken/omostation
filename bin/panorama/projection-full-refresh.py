@@ -39,6 +39,7 @@ CLONE_URL = "https://github.com/starlink-awaken/omostation.git"
 PUBLISHER_TIMEOUT_SEC = 3600  # 全量采集典型 5~14min, 留足裕量
 # event_ledger 是运行时文件（不在检出内）—— publisher 检出每轮 clean -fdx，那份按构造不存在。
 # 根只能在调用时刻解析：import 时冻结会把 ledger 钉在一次性的 publisher 克隆上 (ADR-0456 B4b 前置, T10-247)。
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from repo_root import canonical_root, state_root  # noqa: E402
 
@@ -76,6 +77,8 @@ def run(cmd: list[str], *, cwd: Path | None = None, timeout: int | None = None) 
     return subprocess.run(
         cmd, cwd=str(cwd) if cwd else None, timeout=timeout,
         text=True, capture_output=True,
+        env=dict(os.environ, GIT_NO_REPLACE_OBJECTS="1", GIT_NO_LAZY_FETCH="1",
+                 PYTHONDONTWRITEBYTECODE="1"),
     )
 
 
@@ -83,6 +86,78 @@ def fail(kind: str, **kw) -> int:
     # kind 而非 step: 调用方会传 step=<子步名> 关键字, 同名会 TypeError 掩盖真实错误
     log("failed", step=kind, **kw)
     return 1
+
+
+def official_origin(url: str) -> bool:
+    return url in (CLONE_URL, "git@github.com:starlink-awaken/omostation.git",
+                   "ssh://git@github.com/starlink-awaken/omostation.git")
+
+
+def checkout_alignment(checkout: Path, target: str) -> tuple[bool, dict]:
+    """Read exact Git state; never use slow submodule shell traversal as a probe.
+
+    Top-level gitlinks match the existing nonrecursive update contract. Already
+    initialized nested repositories are checked too; absent nested modules are
+    recorded rather than promoted to a claim of complete recursive checkout.
+    """
+    details = {"target_oid": target, "checked_modules": [], "uninitialized_nested": []}
+    started = time.monotonic()
+
+    def probe(args, root):
+        if time.monotonic() - started > 20:
+            raise ValueError("alignment_probe_deadline")
+        result = run(["git", *args], cwd=root, timeout=5)
+        if result.returncode:
+            raise ValueError("git_probe_failed:" + args[0])
+        return result.stdout
+
+    try:
+        if re.fullmatch(r"[0-9a-f]{40}", target) is None:
+            raise ValueError("invalid_target_oid")
+        root = checkout.resolve()
+        if Path(probe(["rev-parse", "--show-toplevel"], root).strip()).resolve() != root:
+            raise ValueError("checkout_top_mismatch")
+        if probe(["rev-parse", "HEAD", "refs/remotes/origin/main"], root).splitlines() != [target, target]:
+            raise ValueError("checkout_oid_changed")
+        # Skipping clean -fdx must also account for ignored residue, which is
+        # invisible to porcelain status. This is a dry-run, never a deletion.
+        if probe(["clean", "-ndx"], root).strip():
+            raise ValueError("checkout_clean_residue")
+        pending = [(root, True)]
+        while pending:
+            current, top_level = pending.pop()
+            if probe(["for-each-ref", "--format=%(refname)", "refs/replace/"], current).strip():
+                raise ValueError("replace_refs_present")
+            if probe(["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"], current).strip():
+                raise ValueError("checkout_or_child_dirty")
+            for entry in probe(["ls-tree", "-rz", "--full-tree", "HEAD"], current).split("\0"):
+                if not entry:
+                    continue
+                meta, path = entry.split("\t", 1)
+                mode, kind, pin = meta.split()
+                if mode != "160000":
+                    continue
+                child = current / path
+                relative = str(child.relative_to(root))
+                if not (child / ".git").exists():
+                    if top_level:
+                        raise ValueError("required_submodule_missing:" + relative)
+                    details["uninitialized_nested"].append(relative)
+                    continue
+                # A missing .git must never let git -C walk upward to the parent.
+                actual = probe(["rev-parse", "--show-toplevel", "HEAD"], child).splitlines()
+                if (len(actual) != 2 or Path(actual[0]).resolve() != child.resolve()
+                        or actual[1] != pin or kind != "commit"):
+                    raise ValueError("submodule_pin_or_top_mismatch:" + relative)
+                details["checked_modules"].append(relative)
+                pending.append((child, False))
+        details["reason"] = "exact_clean_pins"
+        return True, details
+    except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+        details["reason"] = str(exc)
+        return False, details
+    finally:
+        details["duration_seconds"] = round(time.monotonic() - started, 4)
 
 
 def clear_stale_git_lock(checkout: Path, *, max_age_s: float = 600.0) -> None:
@@ -133,31 +208,57 @@ def main() -> int:
             if r.returncode != 0:
                 return fail("clone", stderr=(r.stderr or "")[-500:])
             log("checkout_cloned", path=str(CHECKOUT))
-        else:
-            r = run(["git", "-C", str(CHECKOUT), "remote", "get-url", "origin"])
-            url = (r.stdout or "").strip()
-            if not url.endswith(EXPECTED_ORIGIN_SUFFIX):
-                return fail("remote_hygiene", url=url, expected_suffix=EXPECTED_ORIGIN_SUFFIX)
-            log("remote_hygiene_ok", url=url)
+        # Both transport directions must identify the exact official repository.
+        r = run(["git", "rev-parse", "--show-toplevel"], cwd=CHECKOUT, timeout=5)
+        if r.returncode or Path(r.stdout.strip()).resolve() != CHECKOUT.resolve():
+            return fail("checkout_top_mismatch")
+        for flags in (["--all"], ["--push", "--all"]):
+            r = run(["git", "remote", "get-url", *flags, "origin"], cwd=CHECKOUT, timeout=10)
+            urls = (r.stdout or "").splitlines()
+            if r.returncode or len(urls) != 1 or not official_origin(urls[0]):
+                return fail("remote_hygiene", urls=urls)
+        log("remote_hygiene_ok", url=urls[0])
 
-        # 2) 清 crash 残留的 stale git 锁, 再对齐 origin/main (检出内无在制工作, clean -fdx 安全)
-        clear_stale_git_lock(CHECKOUT)
-        steps = [
-            (["git", "fetch", "origin"], 1800),
+        # Always fetch; a cached origin/main must not masquerade as live authority.
+        started = time.monotonic()
+        try:
+            r = run(["git", "fetch", "--no-recurse-submodules", "origin",
+                     "+refs/heads/main:refs/remotes/origin/main"], cwd=CHECKOUT, timeout=1800)
+        except subprocess.TimeoutExpired:
+            return fail("sync_step", sub="fetch", error="timeout")
+        log("sync_step_complete", step="fetch", seconds=round(time.monotonic() - started, 4), rc=r.returncode)
+        if r.returncode:
+            return fail("sync_step", sub="fetch", stderr=(r.stderr or "")[-500:])
+        r = run(["git", "rev-parse", "refs/remotes/origin/main^{commit}"], cwd=CHECKOUT, timeout=5)
+        target = r.stdout.strip()
+        if r.returncode or re.fullmatch(r"[0-9a-f]{40}", target) is None:
+            return fail("fetched_main_oid_invalid")
+        unchanged, alignment = checkout_alignment(CHECKOUT, target)
+        log("checkout_alignment", route="unchanged" if unchanged else "full", **alignment)
+        steps = [] if unchanged else [
             (["git", "reset", "--hard", "origin/main"], 300),
             (["git", "clean", "-fdx"], 600),
             (["git", "submodule", "sync", "--recursive"], 300),
             (["git", "submodule", "update", "--init", "--depth", "1"], 3600),
         ]
+        if not unchanged:
+            clear_stale_git_lock(CHECKOUT)
         for cmd, timeout in steps:
+            started = time.monotonic()
             r = run(cmd, cwd=CHECKOUT, timeout=timeout)
+            log("sync_step_complete", step=" ".join(cmd[1:3]),
+                seconds=round(time.monotonic() - started, 4), rc=r.returncode)
             if r.returncode != 0:
                 return fail("sync_step", sub=cmd[1], stderr=(r.stderr or "")[-500:])
-        head = run(["git", "rev-parse", "HEAD"], cwd=CHECKOUT).stdout.strip()
-        log("checkout_synced", head=head)
+        if not unchanged:
+            aligned, alignment = checkout_alignment(CHECKOUT, target)
+            if not aligned:
+                return fail("post_sync_alignment", **alignment)
+        log("checkout_synced", head=target, route="unchanged" if unchanged else "full")
 
         # 3) 全量发布 (用检出内 publisher, 与 origin/main 同步演进)
         env = dict(os.environ)
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
         env["PANORAMA_ROOT"] = str(CHECKOUT)
         env["PANORAMA_CODE_ROOT"] = str(CHECKOUT)
         env["ZHIXING_DASHBOARD_STATE_ROOT"] = str(DEPLOY_DIR)
@@ -174,6 +275,7 @@ def main() -> int:
         else:
             dashboard_code_root = DEPLOY_DIR.resolve()
         env["ZHIXING_DASHBOARD_CODE_ROOT"] = str(dashboard_code_root)
+        started = time.monotonic()
         r = subprocess.run(
             [sys.executable, "-B", str(CHECKOUT / "bin/panorama/panorama-collect.py")],
             cwd=str(CHECKOUT), env=env, text=True, capture_output=True,
@@ -184,7 +286,7 @@ def main() -> int:
                 "publish", rc=r.returncode,
                 stderr=(r.stderr or "")[-800:], stdout_tail=(r.stdout or "")[-800:],
             )
-        log("publish_ok", stdout_tail=(r.stdout or "")[-500:])
+        log("publish_ok", seconds=round(time.monotonic() - started, 4), stdout_tail=(r.stdout or "")[-500:])
         return 0
 
 
