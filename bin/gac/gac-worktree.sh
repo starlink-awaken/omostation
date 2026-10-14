@@ -419,11 +419,31 @@ guard_submodules() {
   local fix="${1:-}"
   local root="$WS_ROOT"
   [ -f "$root/.gitmodules" ] || return 0
-  local repaired="" failed="" p
+  local repaired="" failed="" skipped="" p
   while IFS= read -r p; do
     [ -z "$p" ] && continue
     if [ "$fix" = "--fix" ]; then
-      if git -C "$root" submodule update --init --no-fetch -- "$p" >/dev/null 2>&1; then
+      # T252 (INV-1/2/3): 已有 .git 条目且可解析的检出不动其结构（并发 submodule
+      # update 周期曾把外部管理的检出当无效目录先删后建，网络受限时留下空目录）；
+      # 仅当本地含 pin 对象时非破坏性 checkout 对齐，缺对象跳过并 advisory。
+      # 只对完全空缺（无 .git 条目）的路径执行原破坏性 update --init。
+      if [ -e "$root/$p/.git" ] && git -C "$root/$p" rev-parse --git-dir >/dev/null 2>&1; then
+        local pin="" head=""
+        pin="$(git -C "$root" ls-files -s -- "$p" 2>/dev/null | awk '$1==160000{print $2; exit}')"
+        head="$(git -C "$root/$p" rev-parse HEAD 2>/dev/null || true)"
+        if [ -n "$pin" ] && [ -n "$head" ] && [ "$pin" != "$head" ]; then
+          if git -C "$root/$p" cat-file -e "$pin^{commit}" 2>/dev/null; then
+            if git -C "$root/$p" checkout -q "$pin" >/dev/null 2>&1; then
+              repaired="$repaired $p"
+            else
+              failed="$failed $p"
+            fi
+          else
+            # 本地无 pin 对象 → 不动检出（INV-4）
+            skipped="$skipped $p"
+          fi
+        fi
+      elif git -C "$root" submodule update --init --no-fetch -- "$p" >/dev/null 2>&1; then
         repaired="$repaired $p"
       else
         failed="$failed $p"
@@ -434,6 +454,10 @@ guard_submodules() {
   done < <(git -C "$root" submodule status 2>/dev/null | grep -E '^[+-U]' | awk '{print $2}')
   if [ -n "$repaired" ]; then
     echo "   🔧 T10-161 gitlink 已对齐 pin (本地无网络):$repaired"
+  fi
+  if [ -n "$skipped" ]; then
+    echo "   ℹ️ T10-161 检出已存在但本地缺 pin 对象, 未动 (T252 非破坏性):$skipped"
+    echo "      修复: cd $root && git submodule update --init <path> (取网络后)"
   fi
   if [ -n "$failed" ]; then
     echo "   ⚠️ T10-161 子模块与 pin 不一致 (本地缺对象, 需手动):$failed"
