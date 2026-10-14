@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: done
+status: archived
 lifecycle: history
 owner: governance-agent
 type: retro

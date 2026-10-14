@@ -1,6 +1,6 @@
 ---
 type: operations
-status: completed
+status: archived
 lifecycle: history
 owner: governance-agent
 created: 2026-09-29

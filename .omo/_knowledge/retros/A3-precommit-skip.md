@@ -1,7 +1,7 @@
 ---
 schema: bet-retro/v1
 bet_id: A3-precommit-skip
-status: closed
+status: archived
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-19
@@ -42,7 +42,7 @@ completed_at: 2026-09-19
 
 - 当前的 5 个 pattern 是经验值, 后续可让 git-discipline skill 提供权威名单
 - 跳过 retro 是策略性决策 (不让 auto-fix 改 last-reviewed), 但 retro 本身的 doc-governance
-  仍会报错 (status: closed vs lifecycle: history → invalid_metadata drift) — 待 P107 处理
+  仍会报错 (status: archived vs lifecycle: history → invalid_metadata drift) — 待 P107 处理
 - closeout branch 合并后, retro 路径的 frontmatter 仍需 fix-frontmatter.py --batch 修一次
   (脚本提示 "manual: 合并后再统一 batch 处理")
 

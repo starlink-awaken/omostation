@@ -1,4 +1,6 @@
 ---
+lifecycle: entry
+status: archived
 title: clone-lifecycle 交付管道的 fail-closed 门与恢复路径
 type: reference
 owner: governance-team

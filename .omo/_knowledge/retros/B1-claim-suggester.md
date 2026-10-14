@@ -1,7 +1,7 @@
 ---
 schema: bet-retro/v1
 bet_id: B1-claim-suggester
-status: closed
+status: archived
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-20

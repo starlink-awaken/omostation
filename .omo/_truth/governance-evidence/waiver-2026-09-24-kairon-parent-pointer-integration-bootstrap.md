@@ -1,4 +1,8 @@
 ---
+last-reviewed: 2026-10-14
+owner: governance-team
+lifecycle: entry
+status: archived
 waiver_id: waiver-2026-09-24-kairon-parent-pointer-integration-bootstrap
 bet_id: BET-Y2Q2-T11-03
 workflow: submodule-pointer-close

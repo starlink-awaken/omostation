@@ -1,4 +1,6 @@
 ---
+last-reviewed: 2026-10-14
+lifecycle: entry
 id: waiver-2026-09-13-t10-165-workpacket-scope-repair
 scope: BET-Y1Q4-T10-165 final child integration and truth recovery
 created: 2026-09-13

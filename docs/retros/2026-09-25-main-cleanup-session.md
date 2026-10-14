@@ -1,6 +1,8 @@
 ---
+last-reviewed: 2026-10-14
+lifecycle: entry
 schema: session-retro/v1
-status: final
+status: archived
 owner: main-session-agent
 date: 2026-09-25
 type: closeout

@@ -1,7 +1,7 @@
 ---
 id: signal://evolution/2026-08-30-unhealthy-service
 status: draft
-lifecycle: signal
+lifecycle: spec
 owner: evolution-agent
 last-reviewed: 2026-08-31
 source: evolution-proposal
@@ -14,7 +14,7 @@ status: archived
 ---
 id: ADR-0401
 status: draft
-lifecycle: signal
+lifecycle: spec
 owner: evolution-agent
 last-reviewed: 2026-08-30
 ---

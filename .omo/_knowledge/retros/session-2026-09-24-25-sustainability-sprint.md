@@ -2,7 +2,7 @@
 schema: session-retro/v1
 bet_id: __unassigned__
 session_id: "2026-09-24 to 2026-09-25 sustainability-sprint"
-status: closed
+status: archived
 lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-25

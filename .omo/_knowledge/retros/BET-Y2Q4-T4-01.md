@@ -1,7 +1,7 @@
 ---
 schema: md/v1
-status: blocked
-lifecycle: evidence
+status: archived
+lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-26
 type: ephemeral

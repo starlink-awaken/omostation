@@ -1,4 +1,7 @@
 ---
+last-reviewed: 2026-10-14
+owner: governance-team
+lifecycle: entry
 schema: resident-retro-candidate/v1
 topic: mini
 generated_at: 2026-08-31T08:20:01Z

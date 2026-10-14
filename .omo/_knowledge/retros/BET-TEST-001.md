@@ -1,6 +1,6 @@
 ---
 schema: md/v1
-status: closed
+status: archived
 lifecycle: history
 owner: test
 last-reviewed: 2026-09-25
