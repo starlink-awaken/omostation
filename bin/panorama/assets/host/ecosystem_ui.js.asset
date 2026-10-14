@@ -1,0 +1,1765 @@
+/**
+ * ecosystem_ui.js — 双重视界引导舱、主权待办决策池与全域 360° 生态全息穿透中枢
+ */
+(function() {
+  let currentPersona = 'sovereign'; // 'sovereign' | 'agent'
+  let currentAgentRole = 'engineering'; // 'engineering' | 'review' | 'knowledge' | 'governance'
+  let liveProposals = [];
+  let proposalRead = { state: 'loading', observedAt: null };
+  let proposalReadSequence = 0;
+
+  function isRecord(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function requireBusinessResponse(payload) {
+    if (!isRecord(payload) || payload._stub || payload.error || payload.ok === false ||
+        payload.success === false || ['error', 'failed', 'failure'].includes(String(payload.status || '').toLowerCase())) {
+      throw new Error('提案接口未返回可用业务记录');
+    }
+    const data = Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : payload;
+    if (!isRecord(data) || data._stub || data.error || data.ok === false || data.success === false ||
+        ['error', 'failed', 'failure'].includes(String(data.status || '').toLowerCase())) {
+      throw new Error('提案记录结构不可用');
+    }
+    return data;
+  }
+
+  function validateProposal(p) {
+    return isRecord(p) && typeof p.id === 'string' && /^[A-Za-z0-9_-]{1,160}$/.test(p.id) &&
+      typeof p.title === 'string' && ['pending', 'approved', 'rejected'].includes(p.status) &&
+      ['description', 'agent_id', 'proposal_type'].every(key => p[key] === undefined || typeof p[key] === 'string') &&
+      (p.payload === undefined || (isRecord(p.payload) &&
+        ['remediation_cmd', 'diff_summary'].every(key => p.payload[key] === undefined || typeof p.payload[key] === 'string')));
+  }
+
+  function proposalQueueLabel() {
+    if (proposalRead.state === 'loading') return '提案队列读取中';
+    if (proposalRead.state !== 'ready') return '提案队列读取不可用';
+    const count = liveProposals.filter(p => p.status === 'pending').length;
+    return count > 0 ? `${count} 项待决（读取结果）` : '无待决提案（读取结果）';
+  }
+
+  function proposalSourceLabel() {
+    const clock = proposalRead.observedAt;
+    return clock ? `来源时间：${clock}；仅反映提案队列。` : '来源时间未记录；仅反映提案队列。';
+  }
+
+  function refreshProposalViews() {
+    if (currentPersona === 'sovereign') renderPersonaGuidanceBar();
+    const modal = document.getElementById('sovereign-cockpit-drawer-modal');
+    const content = document.getElementById('sovereign-cockpit-drawer-content');
+    if (modal && modal.style.display === 'flex' && content) content.innerHTML = getSovereignFullCardHtml(true);
+  }
+
+  function refreshProposals() {
+    const sequence = ++proposalReadSequence;
+    liveProposals = [];
+    proposalRead = { state: 'loading', observedAt: null };
+    refreshProposalViews();
+    return fetch('/api/v1/proposals/list?status=pending')
+      .then(res => {
+        if (!res.ok) throw new Error('提案读取 HTTP ' + res.status);
+        return res.json();
+      })
+      .then(payload => {
+        const data = requireBusinessResponse(payload);
+        if (!Array.isArray(data.proposals) || !data.proposals.every(validateProposal) ||
+            new Set(data.proposals.map(p => p.id)).size !== data.proposals.length) {
+          throw new Error('提案列表结构不可用');
+        }
+        const clock = payload.generated_at || payload.freshness?.observed_at || null;
+        if (clock !== null && (typeof clock !== 'string' || !Number.isFinite(Date.parse(clock)))) {
+          throw new Error('提案来源时间不可用');
+        }
+        if (payload.freshness !== undefined) {
+          const f = payload.freshness;
+          if (!isRecord(f) || f.state !== 'FRESH' || !clock || !Number.isFinite(f.ttl_seconds) ||
+              f.ttl_seconds <= 0 || (Date.now() - Date.parse(clock)) / 1000 > f.ttl_seconds ||
+              Date.parse(clock) - Date.now() > 60000) throw new Error('提案来源已过期或时间不可用');
+        }
+        if (sequence !== proposalReadSequence) return;
+        liveProposals = data.proposals;
+        proposalRead = { state: 'ready', observedAt: clock };
+        refreshProposalViews();
+      })
+      .catch(err => {
+        if (sequence !== proposalReadSequence) return;
+        liveProposals = [];
+        proposalRead = { state: 'error', observedAt: null };
+        refreshProposalViews();
+        console.warn('Failed to fetch live proposals:', err);
+      });
+  }
+  let swarmTopology = null;
+  let isSovereignPinned = (function() {
+    try {
+      return localStorage.getItem('zhixing_sovereign_pinned') === '1';
+    } catch(e) {
+      return false;
+    }
+  })();
+
+  // === 1. 双重视界引导舱初始化 ===
+  window.initPersonaSystem = function() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const personaParam = (urlParams.get('persona') || urlParams.get('mode') || '').toLowerCase();
+      const hash = (window.location.hash || '').toLowerCase();
+      if (personaParam === 'agent' || personaParam === 'headless' || hash === '#agent' || hash.includes('persona=agent')) {
+        currentPersona = 'agent';
+      } else if (personaParam === 'sovereign' || personaParam === 'exec' || hash === '#sovereign') {
+        currentPersona = 'sovereign';
+      } else {
+        const saved = localStorage.getItem('zhixing_persona');
+        if (saved && (saved === 'sovereign' || saved === 'agent')) {
+          currentPersona = saved;
+        }
+      }
+    } catch (e) {
+      console.warn('URL params parsing failed:', e);
+    }
+    updatePersonaUI();
+    fetchInitialData();
+  };
+
+  function fetchInitialData() {
+    refreshProposals();
+
+    // 拉取蜂群实时遥测
+    fetch('/api/v1/swarm/topology')
+      .then(res => res.json())
+      .then(payload => {
+        swarmTopology = payload.data || payload;
+        if (currentPersona === 'agent') {
+          renderPersonaGuidanceBar();
+        }
+      })
+      .catch(err => console.warn('Failed to fetch swarm topology:', err));
+  }
+
+  window.switchPersona = function(persona) {
+    currentPersona = persona;
+    localStorage.setItem('zhixing_persona', persona);
+    updatePersonaUI();
+  };
+
+  function updatePersonaUI() {
+    const btnSovereign = document.getElementById('btn-persona-sovereign');
+    const btnAgent = document.getElementById('btn-persona-agent');
+    if (btnSovereign && btnAgent) {
+      if (currentPersona === 'sovereign') {
+        btnSovereign.classList.add('active');
+        btnAgent.classList.remove('active');
+      } else {
+        btnAgent.classList.add('active');
+        btnSovereign.classList.remove('active');
+      }
+    }
+    renderPersonaGuidanceBar();
+  }
+
+  function renderPersonaGuidanceBar() {
+    const bar = document.getElementById('persona-guidance-bar');
+    if (!bar) return;
+
+    if (currentPersona === 'sovereign') {
+      const pendingCount = liveProposals.filter(p => p.status === 'pending').length;
+      if (isSovereignPinned) {
+        bar.innerHTML = getSovereignFullCardHtml(false);
+      } else {
+        bar.innerHTML = renderSovereignCapsuleHtml(pendingCount);
+        if (pendingCount > 0) {
+          showSovereignAdjudicationToast(pendingCount);
+        } else {
+          window.dismissSovereignToast();
+        }
+      }
+    } else {
+      // 智能体作业指引舱
+      window.dismissSovereignToast();
+      const summary = swarmTopology?.summary || {};
+      bar.innerHTML = `
+        <div class="persona-guidance-card agent-mode">
+          <div class="row" style="align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px">
+            <div style="flex:1;min-width:320px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:16px">🤖</span>
+                <strong style="font-size:15px;color:#1e40af">智能体作业指引舱 (Agent Task & Compliance Guidance)</strong>
+                <span class="chip good" style="font-weight:600;font-size:10px">ADR-0203 强制工作流合规</span>
+                <span class="chip neutral mono" style="font-size:10px">活跃工作树: ${Number.isInteger(summary.active_worktrees_count) && summary.active_worktrees_count >= 0 ? summary.active_worktrees_count + ' 个（接口记录）' : '未记录'}</span>
+              </div>
+              <p class="small" style="color:#1e3a8a;margin:6px 0 10px;line-height:1.5">
+                检测到您以 AI 智能体身份协同接入。请选择您的专属专业角色，获取强制准入前置清单、受管路径范围、BOS 接口与法定行动信封。
+              </p>
+
+              <!-- 4 类核心 Agent 角色选择器 -->
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+                <button class="btn ${currentAgentRole === 'engineering' ? 'chip good' : ''}" style="font-size:11px;padding:4px 10px" onclick="selectAgentRole('engineering')">
+                  🔨 工程交付 Agent (Delivery)
+                </button>
+                <button class="btn ${currentAgentRole === 'review' ? 'chip good' : ''}" style="font-size:11px;padding:4px 10px" onclick="selectAgentRole('review')">
+                  ⚖️ 架构审议 Agent (Review)
+                </button>
+                <button class="btn ${currentAgentRole === 'knowledge' ? 'chip good' : ''}" style="font-size:11px;padding:4px 10px" onclick="selectAgentRole('knowledge')">
+                  🧠 知识因果 Agent (Knowledge)
+                </button>
+                <button class="btn ${currentAgentRole === 'governance' ? 'chip good' : ''}" style="font-size:11px;padding:4px 10px" onclick="selectAgentRole('governance')">
+                  🛡️ 治理审计 Agent (Audit)
+                </button>
+              </div>
+
+              <!-- 角色引导详情 -->
+              ${renderAgentRoleGuidance()}
+
+              <!-- Agent Preflight 变更前置仿真探针 -->
+              <div style="margin-top:14px;border-top:1px dashed #bfdbfe;padding-top:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <strong style="font-size:13px;color:#1e40af;display:flex;align-items:center;gap:6px">
+                    <span>🛡️</span>
+                    <span>Agent 变更前置仿真探针 (Preflight Sandbox & Probe)</span>
+                  </strong>
+                  <span class="small muted" style="font-size:11px">修改代码前自动核验 Write Owner 归属与 GaC 拦截风险</span>
+                </div>
+
+                <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px">
+                  <!-- 常用快速预设 Pills -->
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+                    <span class="small muted" style="font-size:10.5px">快捷预设:</span>
+                    <button type="button" class="btn" style="font-size:10px;padding:2px 6px;background:white" onclick="setPreflightTarget('projects/omo/kernel.py')">OMO 治理核</button>
+                    <button type="button" class="btn" style="font-size:10px;padding:2px 6px;background:white" onclick="setPreflightTarget('projects/ecos/protocol.py')">eCOS 协议</button>
+                    <button type="button" class="btn" style="font-size:10px;padding:2px 6px;background:white" onclick="setPreflightTarget('docs/plans/3y-bet-ledger.yaml')">3Y 台账</button>
+                    <button type="button" class="btn" style="font-size:10px;padding:2px 6px;background:#fff1f2;border-color:#fecdd3;color:#be123c" onclick="setPreflightTarget('.omo/standards/scene-card-lifecycle.yaml')">受限 SSOT ❌</button>
+                    <button type="button" class="btn" style="font-size:10px;padding:2px 6px;background:white" onclick="setPreflightTarget('template.html')">UI 模板</button>
+                  </div>
+
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+                    <input type="text" id="preflight-path-input" placeholder="输入待修改文件路径，如 projects/omo/kernel.py" value="projects/omo/kernel.py" style="flex:1;min-width:230px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:var(--mono)">
+                    <select id="preflight-branch-select" style="padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px">
+                      <option value="main">分支: main (❌ 保护主仓)</option>
+                      <option value="feat-worktree" selected>分支: feat-worktree (✅ 隔离工作树)</option>
+                    </select>
+                    <button class="btn" style="background:var(--blue);color:white;font-size:12px;padding:6px 12px" onclick="runPreflightSimulation()">
+                      🚀 运行探针仿真
+                    </button>
+                  </div>
+                  <div id="preflight-probe-result" style="display:none;padding:8px 10px;border-radius:6px;font-size:11.5px"></div>
+                </div>
+              </div>
+
+              <!-- 0ms 纯语义 Context Pack 一键复制条 -->
+              <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px">
+                <div style="font-size:11px;color:#1e40af">
+                  <strong>⚡ 0ms 极速自省：</strong>一键复制包含身份、隔离红线、避坑铁律与 BOS 目录的高信息密度 Markdown Context
+                </div>
+                <button class="btn" style="font-size:11px;background:white;color:#1e40af;border-color:#93c5fd;font-weight:600" onclick="copyPureSemanticContextPack()">
+                  📋 复制极速 LLM Context Pack
+                </button>
+              </div>
+            </div>
+
+            <!-- 右侧快捷指令与信封装配 -->
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+              <button class="btn" style="font-size:11.5px;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;font-weight:600" onclick="openContextPackModal()">
+                ⚡ 认领并装配法定任务信封 (Context Pack)
+              </button>
+              <button class="btn" style="font-size:11px;color:var(--muted)" onclick="copyAgentGuidancePrompt()">
+                📋 复制当前角色任务引导 Prompt
+              </button>
+              <div class="small muted" style="font-size:10.5px">
+                法定工作流: <code>bootstrap ➔ start ➔ claim ➔ closeout</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function renderSovereignCapsuleHtml(pendingCount) {
+    return `
+      <div class="sovereign-hud-capsule" role="region" aria-label="主权执掌者态势导读条">
+        <div class="sovereign-hud-title-zone" onclick="openSovereignCockpitDrawer()" title="点击展开夏明星态势导读与署名自进化舱">
+          <span style="font-size:15px">👑</span>
+          <strong style="font-size:12.5px;color:#92400e">夏明星态势导读</strong>
+          <span class="chip warn" style="font-size:9.5px;padding:1px 6px">主权控制</span>
+        </div>
+
+        <div class="sovereign-hud-badges" onclick="openSovereignCockpitDrawer()" style="cursor:pointer">
+          <span class="sovereign-hud-chip" title="模型加载证据">🎯 <b>模型加载：未记录</b></span>
+          <span class="sovereign-hud-chip" title="交付与价值证据">⚡ <b>交付/省时：未记录</b> · 查看周报</span>
+          <span class="sovereign-hud-chip ${proposalRead.state !== 'ready' || pendingCount > 0 ? 'warn' : 'neutral'}" id="sovereign-hud-pending-chip">
+            ${escHtml(proposalQueueLabel())}
+          </span>
+        </div>
+
+        <div class="sovereign-hud-actions">
+          <button class="sovereign-btn-drawer-trigger" onclick="openSovereignCockpitDrawer()">
+            <span>👑 展开自进化舱</span>
+            <span style="font-size:10px">➔</span>
+          </button>
+          <button class="btn btn-pin-toggle" onclick="togglePinSovereignInPage()" title="在页面内平铺展开大卡片">
+            📌 平铺
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function getSovereignFullCardHtml(isDrawerMode) {
+    const pendingCount = liveProposals.filter(p => p.status === 'pending').length;
+    return `
+      <div class="persona-guidance-card sovereign-mode" style="${isDrawerMode ? 'box-shadow:none;border:none;background:transparent;padding:0' : ''}">
+        <div class="row" style="align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px">
+          <div style="flex:1;min-width:320px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:16px">👑</span>
+              <strong style="font-size:15px;color:#92400e">主权执掌者视界 · 夏明星态势导读与署名自进化舱</strong>
+              <span class="chip warn" style="font-weight:600;font-size:10px">人类意志最高控制权 (Human In Command)</span>
+              <span class="chip ${proposalRead.state !== 'ready' || pendingCount > 0 ? 'warn' : 'neutral'} sovereign-pending-badge-item" id="sovereign-pending-badge" style="font-weight:600;font-size:10px">${escHtml(proposalQueueLabel())}</span>
+              ${!isDrawerMode ? `
+                <button class="btn btn-pin-toggle pinned" onclick="togglePinSovereignInPage()" style="margin-left:auto;font-size:10.5px;padding:2px 8px" title="收为轻量微标与抽屉模式">
+                  📥 收为抽屉模式
+                </button>
+              ` : ''}
+            </div>
+            <p class="small" style="color:#78350f;margin:6px 0 10px;line-height:1.5">
+              智能体提案在此供审阅。后端裁决记录不代表真人身份签名、治理验收通过或实际省时。
+            </p>
+            
+            <!-- 执掌者 30 秒态势三问 (Executive HUD) -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:10px 0 12px;background:#fffdf7;border:1px solid #fde68a;border-radius:8px;padding:12px 14px">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:11px;font-weight:700;color:#92400e;display:flex;align-items:center;gap:4px">
+                  <span>🎯</span><span>系统当下在忙什么？</span>
+                </div>
+                <div style="font-size:12px;color:#78350f;line-height:1.45">
+                  模型加载、显存与回路健康：<b>本页未记录</b>。请查看对应观测页的来源与时间。
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="font-size:11px;font-weight:700;color:#92400e;display:flex;align-items:center;gap:4px">
+                  <span>⚡</span><span>今天为我交付/节省了什么？</span>
+                </div>
+                <div style="font-size:12px;color:#78350f;line-height:1.45">
+                  交付数量与省时：<b>本页未记录</b>。<a href="#personal">查看现有周报与价值证据</a>，以各项验收记录为准。
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;background:#fef3c7;padding:6px 10px;border-radius:6px;border:1px solid #f59e0b">
+                <div style="font-size:11px;font-weight:700;color:#b45309;display:flex;align-items:center;gap:4px">
+                  <span>👑</span><span>当下唯一需要我拍板的事？</span>
+                </div>
+                <div id="hud-decision-item" class="hud-decision-item" style="font-size:12px;color:#92400e;line-height:1.45">
+                  ${escHtml(proposalQueueLabel())}。${escHtml(proposalSourceLabel())}
+                </div>
+              </div>
+            </div>
+
+            <!-- 署名自进化 4 步流向链 -->
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;margin-bottom:12px">
+              <span style="background:white;border:1px solid #fde68a;padding:3px 8px;border-radius:5px;color:#92400e">1. 外部信号捕获</span>
+              <span style="color:#b45309">➔</span>
+              <span style="background:white;border:1px solid #fde68a;padding:3px 8px;border-radius:5px;color:#92400e">2. 本地端侧推理草案</span>
+              <span style="color:#b45309">➔</span>
+              <span style="background:#fef3c7;border:1px solid #d97706;padding:3px 8px;border-radius:5px;color:#b45309;font-weight:600">3. 👑 夏明星物理署名裁决</span>
+              <span style="color:#b45309">➔</span>
+              <span style="background:white;border:1px solid #fde68a;padding:3px 8px;border-radius:5px;color:#92400e">4. 知识沉淀与 SEMA 进化</span>
+            </div>
+          </div>
+
+          <!-- 右侧统计与直达指令 -->
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn" style="font-size:11.5px;color:#b45309;border-color:#fde68a;background:#fffbeb" onclick="${isDrawerMode ? 'closeSovereignCockpitDrawer();' : ''}location.hash='#ledger'">
+                📜 待验收 BET 交付台账
+              </button>
+              <button class="btn" style="font-size:11.5px;color:#1e40af;border-color:#bfdbfe;background:#eff6ff" onclick="${isDrawerMode ? 'closeSovereignCockpitDrawer();' : ''}location.hash='#topology'">
+                🌐 巡检架构拓扑与接口
+              </button>
+              <button class="btn" style="font-size:11.5px;color:#047857;border-color:#a7f3d0;background:#ecfdf5" onclick="${isDrawerMode ? 'closeSovereignCockpitDrawer();' : ''}location.hash='#mof-grid'">
+                🛡️ MOF 元规约验真
+              </button>
+            </div>
+            <div class="small muted" style="font-size:10.5px">
+              隔离生效、活跃 Agent 与显存负载：<b>本页未记录</b>
+            </div>
+          </div>
+        </div>
+
+        <!-- 真实待办决策池列表 (Live Adjudication Queue) -->
+        <div style="margin-top:14px;border-top:1px dashed #fde68a;padding-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong style="font-size:13px;color:#92400e;display:flex;align-items:center;gap:6px">
+              <span>📋</span>
+              <span>提案队列读取结果 (Pending Proposals Queue)</span>
+            </strong>
+            <span class="small muted" style="font-size:11px">操作结果以真实后端记录为准，不作为真人签名证明</span>
+          </div>
+
+          <div class="prop-queue-grid" id="sovereign-prop-grid">
+            ${renderProposalCards(liveProposals.slice(0, 4))}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  window.openSovereignCockpitDrawer = function() {
+    const modal = document.getElementById('sovereign-cockpit-drawer-modal');
+    if (!modal) return;
+    const content = document.getElementById('sovereign-cockpit-drawer-content');
+    if (content) {
+      content.innerHTML = getSovereignFullCardHtml(true);
+    }
+    const pinBtn = document.getElementById('btn-pin-sovereign-card');
+    if (pinBtn) {
+      pinBtn.classList.toggle('pinned', isSovereignPinned);
+      pinBtn.textContent = isSovereignPinned ? '📌 已固定在页面' : '📌 固定在页面';
+    }
+    modal.style.display = 'flex';
+    window.dismissSovereignToast();
+  };
+
+  window.closeSovereignCockpitDrawer = function() {
+    const modal = document.getElementById('sovereign-cockpit-drawer-modal');
+    if (modal) modal.style.display = 'none';
+    const pendingCount = liveProposals.filter(p => p.status === 'pending').length;
+    if (!isSovereignPinned && pendingCount > 0 && currentPersona === 'sovereign') {
+      showSovereignAdjudicationToast(pendingCount);
+    }
+  };
+
+  window.togglePinSovereignInPage = function() {
+    isSovereignPinned = !isSovereignPinned;
+    try {
+      localStorage.setItem('zhixing_sovereign_pinned', isSovereignPinned ? '1' : '0');
+    } catch(e) {}
+
+    if (isSovereignPinned) {
+      const modal = document.getElementById('sovereign-cockpit-drawer-modal');
+      if (modal) modal.style.display = 'none';
+      window.dismissSovereignToast();
+    }
+    renderPersonaGuidanceBar();
+  };
+
+  window.dismissSovereignToast = function() {
+    const toast = document.getElementById('sovereign-toast-alert');
+    if (toast) toast.remove();
+  };
+
+  function showSovereignAdjudicationToast(count) {
+    if (count <= 0 || isSovereignPinned) {
+      window.dismissSovereignToast();
+      return;
+    }
+    const modal = document.getElementById('sovereign-cockpit-drawer-modal');
+    if (modal && modal.style.display === 'flex') return;
+
+    let toast = document.getElementById('sovereign-toast-alert');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'sovereign-toast-alert';
+      toast.className = 'sovereign-toast-alert';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `
+      <div class="toast-icon">👑</div>
+      <div class="toast-body" onclick="openSovereignCockpitDrawer()" style="cursor:pointer">
+        <div class="toast-title">主权待办提请 · 等待物理署名</div>
+        <div class="toast-desc">队列中有 <b>${count}</b> 项智能体提炼的草案与自愈提案，点击即刻进入自进化舱批复。</div>
+      </div>
+      <button class="btn" style="padding:4px 10px;font-size:11px;background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:600" onclick="openSovereignCockpitDrawer()">
+        处理 ➔
+      </button>
+      <button class="auth-close-btn" style="margin-left:4px" onclick="event.stopPropagation();dismissSovereignToast()" title="暂缓提醒">✕</button>
+    `;
+  }
+
+  function renderProposalCards(props) {
+    if (proposalRead.state !== 'ready' || !props || !props.length) {
+      return `<div style="grid-column:1/-1;padding:16px;text-align:center;color:var(--muted);background:white;border-radius:6px">${escHtml(proposalQueueLabel())}。${escHtml(proposalSourceLabel())}</div>`;
+    }
+
+    return props.map(p => {
+      const isApproved = p.status === 'approved';
+      const isRejected = p.status === 'rejected';
+      const payload = p.payload || {};
+      const diffSummary = payload.diff_summary || '';
+      return `
+        <div class="prop-card ${isApproved ? 'adjudicated' : ''}" id="card-prop-${p.id}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+            <strong style="font-size:12.5px;color:#92400e;line-height:1.4">${escHtml(p.title)}</strong>
+            <span class="chip ${p.proposal_type === 'self_healing' ? 'warn' : 'neutral'}" style="font-size:10px">
+              ${escHtml(p.proposal_type)}
+            </span>
+          </div>
+
+          <div style="font-size:11.5px;color:#475569">
+            提报 Agent: <code class="mono" style="font-size:10.5px;color:#1e40af">${escHtml(p.agent_id)}</code>
+          </div>
+
+          <div class="small muted" style="font-size:11px;line-height:1.4;background:#fffdfa;border:1px solid #fef3c7;padding:6px 8px;border-radius:4px">
+            <b>建议动作:</b> ${payload.remediation_cmd ? `<code>${escHtml(payload.remediation_cmd)}</code>` : escHtml((p.description || '').slice(0, 100)) + '...'}
+          </div>
+
+          ${diffSummary ? `
+            <details style="font-size:10.5px;color:var(--muted)">
+              <summary style="cursor:pointer;color:var(--blue)">查看拟应用 Diff 变更</summary>
+              <pre class="mono" style="background:#f8fafc;padding:6px;border-radius:4px;overflow-x:auto;margin:4px 0 0">${escHtml(diffSummary)}</pre>
+            </details>
+          ` : ''}
+
+          <!-- 签署印章 -->
+          <div class="signed-stamp ${isApproved ? 'stamped' : isRejected ? 'stamped stamp-rejected' : ''}" id="stamp-${p.id}">
+            ${isApproved ? '后端记录：APPROVED' : isRejected ? '后端记录：REJECTED' : ''}
+          </div>
+
+          <!-- 决策操作条 -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:8px;border-top:1px dashed #fde68a" id="action-bar-${p.id}">
+            <span class="small mono muted" style="font-size:10px">${p.id}</span>
+            ${(!isApproved && !isRejected) ? `
+              <div style="display:flex;gap:6px">
+                <button class="btn" style="padding:3px 8px;font-size:11px;color:#b91c1c;border-color:#fca5a5" onclick="quickAdjudicate('${p.id}', 'rejected')">
+                  驳回
+                </button>
+                <button class="btn" style="padding:3px 10px;font-size:11px;color:#15803d;background:#f0fdf4;border-color:#86efac;font-weight:600" onclick="quickAdjudicate('${p.id}', 'approved')">
+                  👑 提交采纳
+                </button>
+              </div>
+            ` : `
+              <span class="small" style="color:#15803d;font-weight:600">后端已记录此裁决状态（非真人签名证明）</span>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.quickAdjudicate = function(propId, verdict) {
+    if (typeof propId !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(propId) ||
+        !['approved', 'rejected'].includes(verdict)) return;
+    const cards = document.querySelectorAll('#card-prop-' + propId);
+    const stamps = document.querySelectorAll('#stamp-' + propId);
+    const actionBars = document.querySelectorAll('#action-bar-' + propId);
+
+    const note = verdict === 'approved' 
+      ? 'Approved by Sovereign Owner 夏明星 (符合治理准入规范，准予固化)'
+      : 'Rejected by Sovereign Owner 夏明星 (需补充完整因果证据与受管路径)';
+
+    // 发起真实 POST 裁决
+    return fetch('/api/v1/proposals/adjudicate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: propId,
+        verdict: verdict,
+        reviewer_note: note,
+        adjudicator: '夏明星'
+      })
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('裁决提交 HTTP ' + res.status);
+        return res.json();
+      })
+      .then(result => {
+        const record = requireBusinessResponse(result);
+        if (record.id !== propId || record.status !== verdict ||
+            typeof record.adjudicated_at !== 'string' || !Number.isFinite(Date.parse(record.adjudicated_at)) ||
+            typeof record.audit_digest !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(record.audit_digest)) {
+          throw new Error('未收到匹配的后端裁决与审计记录');
+        }
+        stamps.forEach(stamp => {
+          stamp.textContent = verdict === 'approved' ? '后端记录：APPROVED' : '后端记录：REJECTED';
+          stamp.className = 'signed-stamp stamped' + (verdict === 'rejected' ? ' stamp-rejected' : '');
+        });
+        cards.forEach(card => card.classList.add('adjudicated'));
+        actionBars.forEach(actionBar => {
+          actionBar.textContent = `${propId}：后端已记录裁决（非真人签名证明）`;
+        });
+        if (typeof window.logTelemetry === 'function') {
+          window.logTelemetry('ADJUDICATE', `后端返回裁决记录: ${propId} ➔ ${verdict.toUpperCase()}；实际收益未记录`);
+        }
+        // Re-read the queue; a local verdict does not prove its remaining count or value KPIs.
+        refreshProposals();
+
+        // 自动触发实时事件大厅刷新
+        if (typeof window.ZhixingRefreshPersonalEvents === 'function') {
+          setTimeout(() => window.ZhixingRefreshPersonalEvents(), 600);
+        }
+      })
+      .catch(err => {
+        alert('裁决提交未确认成功: ' + err.message);
+      });
+  };
+
+  window.selectAgentRole = function(role) {
+    currentAgentRole = role;
+    renderPersonaGuidanceBar();
+  };
+
+  function renderAgentRoleGuidance() {
+    const roles = {
+      engineering: {
+        title: '工程交付 Agent (Engineering Delivery)',
+        path: 'projects/cockpit/, projects/runtime/, bin/',
+        redlines: '【严禁在 main 分支直写】必须使用 bash bin/gac/gac-worktree.sh claim <session> 起隔离工作树；严禁只叙述不落盘。',
+        mofRule: 'META-CON-04 (自引用边界隔离) & META-CON-03 (输入实体化)',
+        bosUri: 'bos://compute/aetherforge/infer, bos://resident/status',
+        mcpTools: 'mcp_codebase_memory, bash, view_file, replace_file_content',
+        activeRuns: 'run-deliv-0912-t10 (交付驾驶舱全景生态)',
+        activeWorktree: 'projects/cockpit (branch: feat/dashboard-galaxy)'
+      },
+      review: {
+        title: '架构审议 Agent (BDSK Architecture Review)',
+        path: 'projects/ecos/, docs/decisions/, docs/project-registry.yaml',
+        redlines: '【禁止破坏 DFSQ 八层单向依赖】L0 协议层严禁逆向依赖 L3 入口层；重大架构决策须经 BDSK 董事会 4 角审议。',
+        mofRule: 'META-CON-02 (关系合法性矩阵) & DFSQ 八层依赖律',
+        bosUri: 'bos://governance/bdsk/review, bos://ledger/verify',
+        mcpTools: 'view_file, grep_search, ecos-constraint audit',
+        activeRuns: 'run-bdsk-0913-arch (MOF 矩阵与八层依赖单向律审计)',
+        activeWorktree: 'projects/ecos (branch: audit/dfsq-slots)'
+      },
+      knowledge: {
+        title: '知识因果 Agent (KOS Causal Engine)',
+        path: 'projects/knowledge/kairon/, projects/knowledge/gbrain/, kos/',
+        redlines: '【禁止污染 28 个主权业务域实体】概念提取必须保持单义与因果单向可溯源，严禁臆造虚空概念。',
+        mofRule: 'META-CON-01 (类型纯粹性 Type Purity)',
+        bosUri: 'bos://memory/mos/recall, bos://knowledge/causal/trace',
+        mcpTools: 'mcp_codebase_memory_query_graph, bun test',
+        activeRuns: 'run-kairon-0913-kos (KOS 16包因果拓扑增量萃取)',
+        activeWorktree: 'projects/knowledge/kairon (branch: sync/kos-v3)'
+      },
+      governance: {
+        title: '治理审计 Agent (Governance & Compliance)',
+        path: '.omo/, bin/gac/, projects/omo/',
+        redlines: '【严禁篡改运行时证据链】所有门禁核验必须复读本地真实证据文件，禁止绕过 make gac-local-gate。',
+        mofRule: 'META-CON-03 (处理器输入真实性) & 75% 显存治理红线',
+        bosUri: 'bos://governance/audit/all, bos://tokenomics/stats',
+        mcpTools: 'gac-local-gate, ci-check-runner, meta-doctor',
+        activeRuns: 'run-gac-0913-patrol (全域门禁回归与 write-owners 校验)',
+        activeWorktree: 'root (worktree: worktrees/wt-gac-patrol)'
+      }
+    };
+
+    const r = roles[currentAgentRole] || roles.engineering;
+    return `
+      <div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:11.5px;display:grid;gap:6px">
+        <div><strong style="color:#1d4ed8">🚨 核心红线与前置要求:</strong> <span style="color:#b91c1c;font-weight:600">${r.redlines}</span></div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div><b>受管路径范围:</b> <code>${r.path}</code></div>
+          <div><b>核心 MOF 约束:</b> <span class="chip neutral mono" style="font-size:10px">${r.mofRule}</span></div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div><b>挂载工作树:</b> <code class="mono" style="font-size:10.5px">${r.activeWorktree}</code></div>
+          <div><b>活跃 Run:</b> <code class="mono" style="font-size:10.5px;color:#047857">${r.activeRuns}</code></div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div><b>推荐 BOS URI:</b> <code class="mono" style="font-size:10.5px">${r.bosUri}</code></div>
+          <div><b>关键工具:</b> <code class="mono" style="font-size:10.5px">${r.mcpTools}</code></div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 法定任务信封装配弹窗 (Context Pack Modal)
+  window.openContextPackModal = function() {
+    let modal = document.getElementById('context-pack-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'context-pack-modal';
+      modal.className = 'dispatch-modal-backdrop';
+      document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+
+    const roleConfigs = {
+      engineering: { profile: 'delivery-engineer', bet: 'BET-Y1Q4-T10-161', obj: '完善全景驾驶舱主权裁决与 Agent 调度闭环' },
+      review: { profile: 'architecture-reviewer', bet: 'BET-Y1Q1-02', obj: '核验 MOF 协议与 DFSQ 八层单向依赖合规性' },
+      knowledge: { profile: 'knowledge-curator', bet: 'BET-Y1Q3-K01', obj: '增量抽取 KOS 知识因果图谱与经验网络' },
+      governance: { profile: 'compliance-auditor', bet: 'BET-Y1Q4-T7-02', obj: '执行全域 GaC 门禁回归与 write-owners 审计' }
+    };
+    const c = roleConfigs[currentAgentRole] || roleConfigs.engineering;
+    const sessionName = `session-${currentAgentRole}-${Date.now().toString().slice(-4)}`;
+
+    modal.innerHTML = `
+      <div class="dispatch-modal-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <strong style="font-size:16px;color:#1e40af">⚡ 法定任务信封装配器 (Context Pack Dispatcher)</strong>
+          <button class="drawer-close-btn" onclick="closeContextPackModal()">✕</button>
+        </div>
+        <p class="small muted" style="margin:0 0 12px">
+          根据 ADR-0203 规约，任何智能体作业必须严格声明角色、目标 BET 并使用隔离工作树。
+        </p>
+
+        <div style="display:grid;gap:10px;font-size:12px">
+          <div>
+            <b>分配角色 Profile:</b> <code class="mono">${c.profile}</code>
+          </div>
+          <div>
+            <b>绑定 BET 台账:</b> <code class="mono">${c.bet}</code>
+          </div>
+          <div>
+            <b>法定执行目标:</b> <span>${c.obj}</span>
+          </div>
+          <div>
+            <b>建议执行脚本 (一键复制):</b>
+            <pre class="mono" id="context-pack-script" style="background:#f8fafc;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:11px;overflow-x:auto">
+# 1. 物理隔离工作树 Claim
+bash bin/gac/gac-worktree.sh claim ${sessionName}
+
+# 2. 启动受管 Agent 任务信封 (ADR-0203)
+uv run python bin/agent-workflow.py start bet-execution --profile ${c.profile} --bet ${c.bet} --objective "${c.obj}"
+
+# 3. 验收与合规门禁
+python3 bin/gac/harness-compliance-check.py --report</pre>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button class="btn" onclick="closeContextPackModal()">关闭</button>
+          <button class="btn" style="background:var(--blue);color:white" onclick="copyContextPackScript()">
+            📋 复制标准执行脚本
+          </button>
+        </div>
+      </div>
+    `;
+  };
+
+  window.closeContextPackModal = function() {
+    const modal = document.getElementById('context-pack-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.copyContextPackScript = function() {
+    const pre = document.getElementById('context-pack-script');
+    if (pre) {
+      navigator.clipboard.writeText(pre.innerText.trim()).then(() => {
+        alert('📋 法定任务信封执行脚本已复制到剪贴板！');
+        closeContextPackModal();
+      }).catch(() => {
+        prompt('请手动复制脚本:', pre.innerText.trim());
+      });
+    }
+  };
+
+  window.copyAgentGuidancePrompt = function() {
+    const r = {
+      engineering: '我当前担任【工程交付 Agent】。我已核实并承诺遵守 ADR-0203 工作流与 PASW 隔离工作树原则，绝不在 main 分支直写。请分配可交付 Leaf BET 与受管路径。',
+      review: '我当前担任【架构审议 Agent】。我将严格依据 MOF META-CON-02 单向依赖矩阵与 DFSQ 八层空间进行架构合规性审查。',
+      knowledge: '我当前担任【知识因果 Agent】。我将遵循 META-CON-01 类型纯粹性，对 28 个主权业务域进行因果血缘演进与知识蒸馏。',
+      governance: '我当前担任【治理审计 Agent】。我将执行全量 gac-local-gate 与双轨证据链核验，确保 0 违规、0 虚假。'
+    }[currentAgentRole];
+
+    navigator.clipboard.writeText(r).then(() => {
+      alert('📋 当前角色任务引导 Prompt 已成功复制到剪贴板！');
+    }).catch(() => {
+      prompt('请手动复制当前角色 Prompt:', r);
+    });
+  };
+
+  // === 2. 全域 360° 生态血缘与有机穿透抽屉 ===
+  window.initUniversalHologramDrawer = function() {
+    document.addEventListener('click', function(e) {
+      const target = e.target.closest('[data-entity-id]');
+      if (target) {
+        const entityId = target.getAttribute('data-entity-id');
+        if (entityId) {
+          e.preventDefault();
+          window.openUniversalHologramDrawer(entityId);
+        }
+      }
+    });
+  };
+
+  window.openUniversalHologramDrawer = function(entityId) {
+    const backdrop = document.getElementById('universal-hologram-drawer-backdrop');
+    const drawer = document.getElementById('universal-hologram-drawer');
+    const title = document.getElementById('hologram-title');
+    const badge = document.getElementById('hologram-badge');
+    const content = document.getElementById('hologram-content');
+
+    if (!drawer || !backdrop || !content) return;
+
+    backdrop.style.display = 'block';
+    drawer.style.display = 'flex';
+    setTimeout(() => {
+      backdrop.classList.add('active');
+      drawer.classList.add('open');
+    }, 10);
+
+    if (title) title.textContent = `全息血缘: ${entityId}`;
+    if (badge) badge.textContent = 'LOADING';
+    content.innerHTML = `
+      <div style="padding:40px;text-align:center;color:var(--muted)">
+        <div style="font-size:24px;margin-bottom:8px">🌐</div>
+        <div>正在动态穿透计算 [${entityId}] 的六维全息生态血缘图谱...</div>
+      </div>
+    `;
+
+    fetch(`/api/v1/entity/hologram?id=${encodeURIComponent(entityId)}`)
+      .then(res => res.json())
+      .then(payload => {
+        const d = payload.data || payload;
+        renderHologramDrawerContent(d);
+      })
+      .catch(err => {
+        content.innerHTML = `
+          <div style="color:var(--red);padding:20px;background:var(--redwash);border-radius:8px">
+            <strong>全息血缘穿透失败:</strong> ${err.message}
+          </div>
+        `;
+      });
+  };
+
+  window.closeUniversalHologramDrawer = function() {
+    const backdrop = document.getElementById('universal-hologram-drawer-backdrop');
+    const drawer = document.getElementById('universal-hologram-drawer');
+    if (!drawer || !backdrop) return;
+
+    backdrop.classList.remove('active');
+    drawer.classList.remove('open');
+    setTimeout(() => {
+      backdrop.style.display = 'none';
+      drawer.style.display = 'none';
+    }, 280);
+  };
+
+  function renderHologramDrawerContent(data) {
+    const title = document.getElementById('hologram-title');
+    const badge = document.getElementById('hologram-badge');
+    const content = document.getElementById('hologram-content');
+
+    if (title) title.textContent = data.title || data.id;
+    if (badge) badge.textContent = (data.entity_type || 'ENTITY').toUpperCase();
+
+    const lin = data.lineage || {};
+    const jumps = data.quick_jumps || [];
+
+    // 检查是否有待决提案关联
+    const hasPendingProps = liveProposals.some(p => p.description && p.description.includes(data.id));
+
+    content.innerHTML = `
+      <!-- 基础元数据身份证 -->
+      <div class="hologram-dim-card" style="background:#fff;border-left:4px solid var(--blue)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="chip good mono" style="font-weight:700">${data.layer || 'LAYER'}</span>
+              <strong style="font-size:15px">${data.title}</strong>
+              <span class="small muted">(${data.id})</span>
+            </div>
+            <div class="small muted" style="margin-top:4px">${data.layer_name || ''} · ${data.role || ''}</div>
+          </div>
+          <span class="chip ${lin.gates_and_evidence?.status === 'PASS' ? 'good' : 'warn'}">
+            ${lin.gates_and_evidence?.status || 'PASS'}
+          </span>
+        </div>
+        <p class="small muted" style="margin:8px 0 0;line-height:1.4">${data.summary || ''}</p>
+        ${hasPendingProps ? `
+          <div style="margin-top:8px;background:#fffdfa;border:1px solid #fde68a;padding:6px 10px;border-radius:5px;font-size:11.5px;color:#92400e;display:flex;justify-content:space-between;align-items:center">
+            <span>⚠️ 该组件存在待夏明星主权裁决的提案</span>
+            <button class="btn" style="padding:2px 6px;font-size:10.5px;color:#b45309" onclick="roamToAnchor('#personal')">直达决策池 ➔</button>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- 快捷跨板块漫游导航 -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        ${jumps.map(j => `
+          <button class="hologram-jump-btn" onclick="roamToAnchor('${j.hash}', '${j.tab || ''}')">
+            ${j.label} ➔
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- 维度 1: MOF 元模型约束与质量门禁 -->
+      <div class="hologram-dim-card">
+        <div class="hologram-dim-title">
+          <span>🛡️</span>
+          <span>MOF 契约与质量门禁 (MOF Contracts & Gates)</span>
+        </div>
+        <div class="hologram-pill-group">
+          ${(lin.mof_contracts || []).map(c => `
+            <div class="hologram-pill" onclick="roamToAnchor('#mof-grid')">
+              <span style="color:#047857">✓</span>
+              <span>${c}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="small muted" style="margin-top:6px;font-size:10.5px">
+          证据链级别: <b>${lin.gates_and_evidence?.evidence_level || 'Level 3'}</b> · 校验摘要: <code>${lin.gates_and_evidence?.audit_digest || 'sha256:...'}</code>
+        </div>
+      </div>
+
+      <!-- 维度 2: 上下游有机依赖拓扑 -->
+      <div class="hologram-dim-card">
+        <div class="hologram-dim-title">
+          <span>↕</span>
+          <span>上下游有机调用链 (Dependencies & Consumers)</span>
+        </div>
+        <div style="font-size:11.5px;margin-bottom:4px;color:var(--muted)">上游所依赖的基础模块:</div>
+        <div class="hologram-pill-group" style="margin-bottom:10px">
+          ${(lin.upstream_dependencies || []).map(up => `
+            <div class="hologram-pill" onclick="window.openUniversalHologramDrawer('${up}')">
+              <span>↑ ${up}</span>
+            </div>
+          `).join('') || '<span class="small muted">无上游依赖 (属于根基协议层)</span>'}
+        </div>
+        <div style="font-size:11.5px;margin-bottom:4px;color:var(--muted)">下游消费与集成者:</div>
+        <div class="hologram-pill-group">
+          ${(lin.downstream_consumers || []).map(down => `
+            <div class="hologram-pill" onclick="window.openUniversalHologramDrawer('${down}')">
+              <span>↓ ${down}</span>
+            </div>
+          `).join('') || '<span class="small muted">无下游直接调用者</span>'}
+        </div>
+      </div>
+
+      <!-- 维度 3: 承载的三年规划 BET 台账 -->
+      <div class="hologram-dim-card">
+        <div class="hologram-dim-title">
+          <span>▤</span>
+          <span>关联三年规划 BET 台账 (3Y-BET-LEDGER)</span>
+        </div>
+        <div class="hologram-pill-group">
+          ${(lin.associated_bets || []).map(b => `
+            <div class="hologram-pill" onclick="roamToAnchor('#ledger')">
+              <span style="color:#b45309">●</span>
+              <span>${b}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- 维度 4: 本地主权算力与模型星系绑定 -->
+      <div class="hologram-dim-card">
+        <div class="hologram-dim-title">
+          <span>☵</span>
+          <span>主权算力与模型星系 (Compute & Model Galaxy)</span>
+        </div>
+        <div class="hologram-pill-group">
+          ${(lin.compute_and_models || []).map(m => `
+            <div class="hologram-pill" onclick="roamToAnchor('#topology', 'galaxy')">
+              <span style="color:#1d4ed8">⚡</span>
+              <span>${m}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- 维度 5: 活跃 Agent 工作树与并发冲突风险 -->
+      <div class="hologram-dim-card" style="${lin.agent_worktrees?.risk_level === 'CRITICAL' ? 'border-color:var(--red);background:var(--redwash)' : ''}">
+        <div class="hologram-dim-title">
+          <span>↔</span>
+          <span>并发工作树与冲突防御 (Multi-Agent Collision Guard)</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px">
+          <span>当前挂载工作树数: <b>${lin.agent_worktrees?.active_count || 0}</b></span>
+          <span class="chip ${lin.agent_worktrees?.risk_level === 'CLEAN' ? 'good' : lin.agent_worktrees?.risk_level === 'HIGH' ? 'warn' : 'bad'}">
+            风险: ${lin.agent_worktrees?.risk_level || 'CLEAN'}
+          </span>
+        </div>
+        ${lin.agent_worktrees?.branches?.length ? `
+          <div class="small muted" style="margin-top:4px">
+            活跃分支: <code>${lin.agent_worktrees.branches.join(', ')}</code><br>
+            作业 Agent: <code>${lin.agent_worktrees.agents.join(', ')}</code>
+          </div>
+        ` : '<div class="small muted">目前无并发争用，工作树状态干净。</div>'}
+      </div>
+
+      <!-- 维度 6: 开放接口契约全景 -->
+      <div class="hologram-dim-card">
+        <div class="hologram-dim-title">
+          <span>⚙</span>
+          <span>对外开放接口契约 (Exported Interfaces)</span>
+        </div>
+        <div class="statline" style="padding:0">
+          <div><strong>${lin.interfaces_summary?.mcp_tools || 0}</strong><span>MCP Tools</span></div>
+          <div><strong>${lin.interfaces_summary?.bos_services || 0}</strong><span>BOS Services</span></div>
+          <div><strong>${lin.interfaces_summary?.cli_commands || 0}</strong><span>CLI Commands</span></div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Agent 变更前置仿真探针
+  window.runPreflightSimulation = async function() {
+    const pathInput = document.getElementById('preflight-path-input');
+    const branchSelect = document.getElementById('preflight-branch-select');
+    const resultBox = document.getElementById('preflight-probe-result');
+    if (!resultBox) return;
+
+    const path = (pathInput ? pathInput.value : '').trim();
+    const branch = (branchSelect ? branchSelect.value : 'main').trim();
+
+    if (!path) {
+      resultBox.style.display = 'block';
+      resultBox.style.background = '#fef2f2';
+      resultBox.style.border = '1px solid #fecaca';
+      resultBox.style.color = '#991b1b';
+      resultBox.innerHTML = '⚠️ 请先输入拟修改的文件路径。';
+      return;
+    }
+
+    resultBox.style.display = 'block';
+    resultBox.style.background = '#f1f5f9';
+    resultBox.style.border = '1px solid #cbd5e1';
+    resultBox.style.color = '#334155';
+    resultBox.innerHTML = '⏳ 正在向 GaC 守卫与 Write Owners 探针探测...';
+
+    try {
+      const res = await fetch(`/api/v1/agent/preflight?path=${encodeURIComponent(path)}&branch=${encodeURIComponent(branch)}`);
+      const json = await res.json();
+      const data = json.data || {};
+
+      const isSafe = data.safe_to_edit;
+      resultBox.style.background = isSafe ? '#f0fdf4' : '#fef2f2';
+      resultBox.style.border = `1px solid ${isSafe ? '#86efac' : '#fca5a5'}`;
+      resultBox.style.color = isSafe ? '#166534' : '#991b1b';
+
+      resultBox.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong>${isSafe ? '✅ 变更仿真探针：放行 (SAFE TO PROCEED)' : '❌ 变更仿真探针：阻断风险 (BLOCKED)'}</strong>
+          <span class="chip ${isSafe ? 'good' : 'bad'}" style="font-size:10px">${isSafe ? '工作树合规' : '主仓违规'}</span>
+        </div>
+        <div style="font-size:11.5px;line-height:1.5;margin-bottom:6px">
+          <b>模块归属:</b> <code>${data.owner || '未归类'}</code> · <b>建议动作:</b> <code>${data.recommended_action || ''}</code>
+        </div>
+        <div style="font-size:11px;margin-bottom:6px">
+          ${(data.guidance || []).map(g => `<div>${g}</div>`).join('')}
+        </div>
+        ${!isSafe ? `
+          <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #fca5a5">
+            <button class="btn" style="font-size:11px;padding:3px 8px;background:white;color:#991b1b;border-color:#fca5a5" onclick="navigator.clipboard.writeText('bash bin/gac/gac-worktree.sh claim my-session').then(()=>alert('已复制工作树认领命令：bash bin/gac/gac-worktree.sh claim my-session'))">
+              📋 复制隔离工作树起手指令
+            </button>
+          </div>
+        ` : ''}
+      `;
+    } catch (e) {
+      resultBox.style.background = '#fef2f2';
+      resultBox.style.border = '1px solid #fca5a5';
+      resultBox.style.color = '#991b1b';
+      resultBox.innerHTML = `❌ 探针请求异常: ${e.message}`;
+    }
+  };
+
+  // 复制纯语义极速 Context Pack
+  window.copyPureSemanticContextPack = async function() {
+    try {
+      const res = await fetch('/api/v1/agent/readiness');
+      const json = await res.json();
+      const data = json.data || {};
+      const env = data.environment || {};
+      const ident = data.agent_identity || {};
+      const act = data.action_envelope || {};
+      const axioms = data.safeguard_axioms || [];
+      const metrics = data.vital_metrics || {};
+
+      const mdText = `# OMOStation Sovereign OS — Agent Rapid Context Pack
+> Generated at: ${data.timestamp || new Date().toISOString()} | Service: ${data.service} | Status: ${data.status}
+
+## 1. Environment & Physical Isolation
+- Execution Mode: ${env.mode}
+- PASW Enforced: ${env.pasw_enforced} (Main branch is strictly read-only)
+- Mandatory Worktree Bootstrap: \`${env.mandatory_worktree_bootstrap}\`
+- Forbidden Actions: ${(env.forbidden_actions || []).join('; ')}
+
+## 2. Identity & Governance Scope
+- Principal: ${ident.sovereign_principal}
+- Governance: ${ident.governance_mode}
+- Write Surfaces Allowlist: ${(ident.write_surfaces_allowlist || []).join(', ')}
+- Immutable Surfaces: ${(ident.immutable_surfaces || []).join(', ')}
+
+## 3. Recommended Action Envelope
+- Active Action ID: ${act.active_action_id}
+- Recommended Next Task: ${act.recommended_next_task}
+- Bootstrap Command: \`${act.workflow_bootstrap_command}\`
+- Start Command: \`${act.workflow_start_command}\`
+- Compliance Check: \`${act.compliance_check_command}\`
+
+## 4. Five Safeguard Axioms (Avoid Pitfalls)
+${axioms.map((a, i) => `${i + 1}. ${a}`).join('\n')}
+
+## 5. System Vital Metrics
+- Portfolio Completion: ${metrics.portfolio_done_bets}/${metrics.portfolio_total_bets} (${metrics.completion_rate})
+- Active OODA Loops: ${metrics.live_loops_count}
+- GaC Rules Enforced: ${metrics.gac_rules_enforced}
+- Inference Gateway: ${metrics.inference_gateway}
+`;
+
+      await navigator.clipboard.writeText(mdText);
+      alert('✅ 纯语义 LLM Context Pack 已复制到剪贴板！\\n包含物理隔离红线、Write Owners 范围、5 大避坑铁律与法定启动指令，可直接用于 Prompt 注入。');
+    } catch (e) {
+      alert(`复制失败: ${e.message}`);
+    }
+  };
+
+  // 快捷填入并触发 Preflight 仿真
+  window.setPreflightTarget = function(path) {
+    const input = document.getElementById('preflight-path-input');
+    if (input) {
+      input.value = path;
+      if (typeof window.runPreflightSimulation === 'function') {
+        window.runPreflightSimulation();
+      }
+    }
+  };
+
+  // 跨板块与跨 Tab 漫游平滑跳转
+  window.roamToAnchor = function(hash, subtab) {
+    window.closeUniversalHologramDrawer();
+    location.hash = hash;
+    const target = document.querySelector(hash);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+    if (subtab && window.switchTopologyTab) {
+      setTimeout(() => {
+        window.switchTopologyTab(subtab);
+      }, 200);
+    }
+  };
+
+  // === 4. 全域全息指挥罗盘 (Omni-Command Palette) & 实时遥测流 ===
+  let currentOmniFilter = 'all';
+  let omniResults = [];
+  let selectedOmniIndex = 0;
+  let omniDebounceTimer = null;
+  let liveTelemetryEventSource = null;
+
+  window.openCommandPalette = function() {
+    const modal = document.getElementById('omni-command-modal');
+    const input = document.getElementById('omni-palette-input');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+    setOmniFilter('all');
+    performOmniSearch('');
+  };
+
+  window.closeCommandPalette = function() {
+    const modal = document.getElementById('omni-command-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.setOmniFilter = function(filter) {
+    currentOmniFilter = filter;
+    document.querySelectorAll('#omni-category-chips .omni-chip').forEach(chip => {
+      chip.classList.toggle('active', chip.getAttribute('onclick')?.includes(`'${filter}'`));
+    });
+    const input = document.getElementById('omni-palette-input');
+    performOmniSearch(input ? input.value : '');
+  };
+
+  function performOmniSearch(query) {
+    clearTimeout(omniDebounceTimer);
+    omniDebounceTimer = setTimeout(() => {
+      executeOmniSearch(query.trim());
+    }, 120);
+  }
+
+  async function executeOmniSearch(q) {
+    const container = document.getElementById('omni-results-container');
+    const countEl = document.getElementById('omni-results-count');
+    if (!container) return;
+
+    let localMatches = getLocalEntitiesMatches(q, currentOmniFilter);
+    
+    // 如果存在后端搜索接口，拉取补充真实数据
+    try {
+      let url = `/api/v1/search?q=${encodeURIComponent(q)}&limit=30`;
+      if (currentOmniFilter !== 'all') {
+        const kindMap = { bet: 'bet', mof: 'constraint', scene: 'scene', model: 'model', bos: 'service', proposal: 'proposal' };
+        if (kindMap[currentOmniFilter]) {
+          url += `&kind=${kindMap[currentOmniFilter]}`;
+        }
+      }
+      const res = await fetch(url);
+      if (res.ok) {
+        const payload = await res.json();
+        const serverItems = (payload.data && payload.data.items) || [];
+        const seen = new Set(localMatches.map(m => m.id));
+        for (const item of serverItems) {
+          if (!seen.has(item.id)) {
+            localMatches.push({
+              id: item.id,
+              title: item.title || item.id,
+              kind: item.kind || 'entity',
+              status: item.declared_status || item.facts?.status || 'active',
+              desc: item.facts?.raw_id || item.source?.path || item.kind,
+              source: 'api'
+            });
+            seen.add(item.id);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Omni remote search fallback:', e);
+    }
+
+    omniResults = localMatches.slice(0, 40);
+    selectedOmniIndex = 0;
+    if (countEl) {
+      const meshNodes = ((((window.D||{}).strategic||{}).cross_plane_mesh||{}).summary||{}).total_nodes;
+      countEl.dataset.locked = '1';
+      countEl.textContent = meshNodes!=null
+        ? (`匹配到 ${omniResults.length} 项 (全域 ${meshNodes} 节点)`)
+        : (`匹配到 ${omniResults.length} 项 (全域节点 NO_DATA)`);
+    }
+
+    renderOmniResults();
+  }
+
+  function getLocalEntitiesMatches(q, filter) {
+    const results = [];
+    const lowerQ = q.toLowerCase();
+
+    // 1. 静态 Snapshot 中的 entities (如果 window.D 可用)
+    const snapshotD = window.D || (document.getElementById('snapshot') ? JSON.parse(document.getElementById('snapshot').textContent) : null);
+    if (snapshotD) {
+      // BET 台账
+      if ((filter === 'all' || filter === 'bet') && snapshotD.portfolio && snapshotD.portfolio.candidate_bets) {
+        for (const b of snapshotD.portfolio.candidate_bets) {
+          const str = (typeof b === 'string' ? b : (b.id + ' ' + (b.title || ''))).toLowerCase();
+          if (!lowerQ || str.includes(lowerQ)) {
+            const id = typeof b === 'string' ? b : b.id;
+            results.push({
+              id: id.startsWith('bet:') ? id : `bet:${id}`,
+              title: typeof b === 'string' ? b : (b.title || b.id),
+              kind: 'bet',
+              status: 'active',
+              desc: '三年规划战略台账投注项',
+              hash: '#orient'
+            });
+          }
+        }
+      }
+
+      // Next Actions
+      if ((filter === 'all' || filter === 'bet' || filter === 'proposal') && snapshotD.next_actions) {
+        for (const act of snapshotD.next_actions) {
+          const str = `${act.id} ${act.title || ''} ${act.summary || ''}`.toLowerCase();
+          if (!lowerQ || str.includes(lowerQ)) {
+            results.push({
+              id: act.id,
+              title: act.title || act.id,
+              kind: 'action',
+              status: act.status || 'pending',
+              desc: act.summary || '治理自愈与演进动作',
+              hash: '#tasks'
+            });
+          }
+        }
+      }
+
+      // 治理门禁
+      if ((filter === 'all' || filter === 'mof') && snapshotD.roadmap && snapshotD.roadmap.gates) {
+        for (const g of snapshotD.roadmap.gates) {
+          const str = `${g.id} ${g.owner_role || ''}`.toLowerCase();
+          if (!lowerQ || str.includes(lowerQ)) {
+            results.push({
+              id: `gate:${g.id}`,
+              title: `门禁 ${g.id}: ${g.owner_role || '准入核验'}`,
+              kind: 'gate',
+              status: g.state || 'active',
+              desc: `Exit: ${(g.exit || []).join('; ')}`,
+              hash: '#orient'
+            });
+          }
+        }
+      }
+    }
+
+    // 2. liveProposals (真实待决提案)
+    if (filter === 'all' || filter === 'proposal') {
+      for (const p of liveProposals) {
+        const str = `${p.id} ${p.title || ''} ${p.summary || ''}`.toLowerCase();
+        if (!lowerQ || str.includes(lowerQ)) {
+          results.push({
+            id: p.id,
+            title: p.title || p.id,
+            kind: 'proposal',
+            status: p.status,
+            desc: `提出者: ${p.proposer || 'resident-guardian'} · 类型: ${p.type}`,
+            hash: '#workbench'
+          });
+        }
+      }
+    }
+
+    // 3. MOF 核心硬约束
+    if (filter === 'all' || filter === 'mof') {
+      const mofAxioms = [
+        { id: 'META-CON-01', title: '全域单向分层契约 (DFSQ/SFOP)', kind: 'mof', desc: '禁止向上逆向引用，严格遵循道法术器结构', hash: '#mof-matrix' },
+        { id: 'META-CON-04', title: '主权状态自引用边界隔离', kind: 'mof', desc: '严禁向 .omo/ 写入长生命周期运行逻辑', hash: '#mof-matrix' },
+        { id: 'META-CON-08', title: '主权算力路由锁定 (AetherForge)', kind: 'mof', desc: '所有本地推理强制走 bos://compute/aetherforge/infer', hash: '#compute' }
+      ];
+      for (const m of mofAxioms) {
+        const str = `${m.id} ${m.title} ${m.desc}`.toLowerCase();
+        if (!lowerQ || str.includes(lowerQ)) {
+          results.push(m);
+        }
+      }
+    }
+
+    // 4. 业务场景卡与 BOS 服务
+    if (filter === 'all' || filter === 'scene' || filter === 'bos') {
+      const presets = [
+        { id: 'SCENE-001', title: '技术调研与架构决策 (Tech Research)', kind: 'scene', desc: '5阶段价值旅程 · 影子演进中', hash: '#workbench' },
+        { id: 'SCENE-002', title: '代码演化与自动化重构 (Refactor)', kind: 'scene', desc: '5阶段价值旅程 · 严密受控', hash: '#workbench' },
+        { id: 'bos://compute/aetherforge/infer', title: 'AetherForge 本地大模型统一推理网关', kind: 'bos', desc: '主权本地算力调度中心', hash: '#compute' },
+        { id: 'bos://governance/c2g/adjudicate', title: 'C2G 人类意志主权签署裁决服务', kind: 'bos', desc: '夏明星签名核验与自适应强化学习', hash: '#governance' }
+      ];
+      for (const pr of presets) {
+        if (filter === 'scene' && pr.kind !== 'scene') continue;
+        if (filter === 'bos' && pr.kind !== 'bos') continue;
+        const str = `${pr.id} ${pr.title} ${pr.desc}`.toLowerCase();
+        if (!lowerQ || str.includes(lowerQ)) {
+          results.push(pr);
+        }
+      }
+    }
+
+    return results;
+  }
+
+  function renderOmniResults() {
+    const container = document.getElementById('omni-results-container');
+    if (!container) return;
+
+    if (omniResults.length === 0) {
+      container.innerHTML = `
+        <div style="padding:32px;text-align:center;color:var(--muted)">
+          <div style="font-size:24px;margin-bottom:6px">🔍</div>
+          <div>未找到匹配的全域实体</div>
+          <div class="small" style="margin-top:4px">可尝试搜索 BET、MOF、SCENE、aetherforge 或切换筛选分类</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = omniResults.map((item, idx) => {
+      const isSelected = idx === selectedOmniIndex;
+      const kindColor = getKindColor(item.kind);
+      return `
+        <div class="omni-result-item ${isSelected ? 'selected' : ''}" id="omni-item-${idx}" onclick="selectOmniItem(${idx})">
+          <div style="display:flex;align-items:center;gap:10px;overflow:hidden;flex:1">
+            <span class="chip" style="font-size:9.5px;text-transform:uppercase;padding:2px 6px;background:${kindColor.bg};color:${kindColor.text};border-color:${kindColor.border}">
+              ${item.kind}
+            </span>
+            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              <div style="font-weight:600;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:6px">
+                <span>${escHtml(item.title || item.id)}</span>
+                <span class="mono small muted" style="font-size:10.5px">#${escHtml(item.id)}</span>
+              </div>
+              <div class="small muted" style="font-size:11px;overflow:hidden;text-overflow:ellipsis">
+                ${escHtml(item.desc || '')}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <button class="btn" style="padding:3px 8px;font-size:10px;background:var(--bluewash);border-color:var(--blue);color:var(--blue)" onclick="event.stopPropagation(); window.openUniversalHologramDrawer('${item.id}'); closeCommandPalette();">
+              🌐 全息
+            </button>
+            <button class="btn" style="padding:3px 8px;font-size:10px;background:#f8fafc" onclick="event.stopPropagation(); selectOmniItem(${idx});">
+              🧭 穿透 ➔
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function getKindColor(kind) {
+    const k = (kind || '').toLowerCase();
+    if (k.includes('bet')) return { bg: '#e0f2fe', text: '#0369a1', border: '#7dd3fc' };
+    if (k.includes('mof') || k.includes('constraint')) return { bg: '#fee2e2', text: '#b91c1c', border: '#fca5a5' };
+    if (k.includes('scene')) return { bg: '#fef3c7', text: '#b45309', border: '#fde68a' };
+    if (k.includes('model') || k.includes('compute')) return { bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd' };
+    if (k.includes('proposal')) return { bg: '#fdf2f8', text: '#be185d', border: '#fbcfe8' };
+    if (k.includes('bos') || k.includes('service')) return { bg: '#ecfdf5', text: '#047857', border: '#6ee7b7' };
+    return { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
+  }
+
+  window.selectOmniItem = function(idx) {
+    if (idx < 0 || idx >= omniResults.length) return;
+    const item = omniResults[idx];
+    closeCommandPalette();
+    window.openUniversalHologramDrawer(item.id);
+    if (item.hash) {
+      setTimeout(() => {
+        window.roamToAnchor(item.hash, item.tab);
+      }, 300);
+    }
+  };
+
+  // 全局键盘监听 (⌘K / ESC / 上下选择)
+  window.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('omni-command-modal');
+    const isModalOpen = modal && modal.style.display !== 'none';
+
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (isModalOpen) {
+        closeCommandPalette();
+      } else {
+        openCommandPalette();
+      }
+      return;
+    }
+
+    if (!isModalOpen) return;
+
+    if (e.key === 'Escape') {
+      closeCommandPalette();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (omniResults.length > 0) {
+        selectedOmniIndex = (selectedOmniIndex + 1) % omniResults.length;
+        renderOmniResults();
+        const cur = document.getElementById(`omni-item-${selectedOmniIndex}`);
+        if (cur) cur.scrollIntoView({ block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (omniResults.length > 0) {
+        selectedOmniIndex = (selectedOmniIndex - 1 + omniResults.length) % omniResults.length;
+        renderOmniResults();
+        const cur = document.getElementById(`omni-item-${selectedOmniIndex}`);
+        if (cur) cur.scrollIntoView({ block: 'nearest' });
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      selectOmniItem(selectedOmniIndex);
+    }
+  });
+
+  // 绑定输入事件
+  function bindOmniInput() {
+    const input = document.getElementById('omni-palette-input');
+    if (input && !input._bound) {
+      input._bound = true;
+      input.addEventListener('input', (e) => {
+        performOmniSearch(e.target.value);
+      });
+    }
+  }
+
+  // === 5. 实时遥测流 (SSE Client) & 事件浮窗终端 ===
+  window.initLiveTelemetryStream = function() {
+    if (liveTelemetryEventSource) return;
+    try {
+      liveTelemetryEventSource = new EventSource('/api/v1/events/stream');
+      const badge = document.getElementById('telemetry-stream-badge');
+      const dot = badge ? badge.querySelector('.telemetry-pulse-dot') : null;
+      const text = badge ? badge.querySelector('span:last-child') : null;
+
+      liveTelemetryEventSource.onopen = () => {
+        if (text) text.textContent = '实时遥测流: 已连接';
+        if (dot) dot.style.background = '#10b981';
+      };
+
+      liveTelemetryEventSource.addEventListener('connected', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          appendTelemetryLog('SYSTEM', '实时遥测流握手事件已收到；显存与回路健康未记录');
+        } catch (err) {}
+      });
+
+      liveTelemetryEventSource.addEventListener('pulse', (e) => {
+        try {
+          const p = JSON.parse(e.data);
+          const time = new Date(p.timestamp).toLocaleTimeString();
+          appendTelemetryLog('PULSE', `[${time}] 收到周期 #${p.cycle} 心跳事件；回路健康未记录`, '#38bdf8');
+        } catch (err) {}
+      });
+
+      liveTelemetryEventSource.addEventListener('snapshot_updated', (e) => {
+        try {
+          const s = JSON.parse(e.data);
+          const time = new Date(s.timestamp || Date.now()).toLocaleTimeString();
+          appendTelemetryLog('SNAPSHOT', `[${time}] 收到快照更新事件 (代际: ${s.generation_id || '未记录'})；新鲜度请查来源状态`, '#60a5fa');
+          refreshProposals();
+          if (typeof window.requestSnapshotRefresh === 'function') {
+            window.requestSnapshotRefresh(s);
+          }
+        } catch (err) {}
+      });
+
+      liveTelemetryEventSource.onerror = () => {
+        if (text) text.textContent = '实时遥测流: 重连中...';
+        if (dot) dot.style.background = '#f59e0b';
+      };
+    } catch (e) {
+      console.warn('SSE not supported or failed to connect:', e);
+    }
+  };
+
+  window.toggleTelemetryTicker = function() {
+    const drawer = document.getElementById('telemetry-ticker-drawer');
+    if (!drawer) return;
+    if (drawer.style.display === 'none' || !drawer.style.display) {
+      drawer.style.display = 'flex';
+    } else {
+      drawer.style.display = 'none';
+    }
+  };
+
+  window.clearTelemetryLogs = function() {
+    const term = document.getElementById('telemetry-terminal-logs');
+    if (term) term.innerHTML = '<div class="ticker-line"><span class="ticker-time">[CLEARED]</span> <span>终端日志已清空</span></div>';
+  };
+
+  function appendTelemetryLog(source, msg, color = '#38bdf8') {
+    const term = document.getElementById('telemetry-terminal-logs');
+    if (!term) return;
+    const time = new Date().toLocaleTimeString();
+    const row = document.createElement('div');
+    row.className = 'ticker-line';
+    row.innerHTML = `<span class="ticker-time">[${time}]</span> <span class="ticker-source" style="color:${color}">[${source}]</span> <span>${escHtml(msg)}</span>`;
+    term.appendChild(row);
+    if (term.childNodes.length > 80) {
+      term.removeChild(term.firstChild);
+    }
+    term.scrollTop = term.scrollHeight;
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // 自动挂载
+  function mountAll() {
+    window.initPersonaSystem();
+    window.initUniversalHologramDrawer();
+    bindOmniInput();
+    window.initLiveTelemetryStream();
+  }
+
+  document.addEventListener('DOMContentLoaded', mountAll);
+})();
+
+/**
+ * 生态整合追加层 — Phase 2/4 (systemic-integration plan, ~/.claude/plans/dashboard-immutable-possum.md)
+ * 只做加法：本 IIFE 在全部 8 个 *_ui.js 文件执行完毕后运行（脚本拼接顺序中排最后），
+ * 只用 prepend/append 往已存在的 section 里插入新卡片，绝不对任何 section 做 innerHTML=
+ * 覆盖，因此不依赖也不改变各 section 原本由哪个文件、以什么方式写入内容。
+ */
+(function () {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // === Layer 4: cockpit-ui 精选功能深链（诚实标注：需本地先跑 `bun dev` 才可达） ===
+  const COCKPIT_DEV_ORIGIN = 'http://localhost:5173';
+  const cockpitLinks = [
+    { panelId: 'health', route: '/l4-health', label: 'L4 域健康', note: '分层健康度与风险可视化' },
+    { panelId: 'trace', route: '/decision-graph', label: '决策因果图', note: '节点展开与路径高亮交互' },
+    { panelId: 'swarm', route: '/swarm', label: 'Swarm 协同', note: 'Agent 协同实时态卡片' },
+    { panelId: 'value', route: '/bcos', label: 'BCOS 北极星', note: '北极星价值度量（NOT_PROVEN 标注保持不变）' },
+    { panelId: 'gov', route: '/governance-domain', label: '治理域工作台', note: '域治理、合规检查、SSOT 巡检完整表单流' }
+  ];
+  function buildCockpitCard(entry) {
+    const url = COCKPIT_DEV_ORIGIN + entry.route;
+    const wrap = document.createElement('div');
+    wrap.className = 'card gap ecosystem-cockpit-link';
+    wrap.style.cssText = 'border:1px dashed var(--blue);background:var(--bluewash)';
+    wrap.innerHTML = '<div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">' +
+      '<div><b>🧭 cockpit-ui · ' + esc(entry.label || entry.route) + '</b>' +
+      '<div class="small muted" style="margin-top:3px">' + esc(entry.note || '') + '（' + esc(entry.route) + '）</div></div>' +
+      '<a class="btn small" href="' + esc(url) + '" target="_blank" rel="noopener">在 cockpit-ui 中打开 →</a></div>' +
+      '<p class="small muted" style="margin:6px 0 0">深链，非嵌入；需本地先执行 <code>bun dev</code>（cockpit-ui 默认端口 5173）才可达，未启动时链接会打不开。</p>';
+    return wrap;
+  }
+  function mountCockpitLinks() {
+    cockpitLinks.forEach(entry => {
+      const section = byId(entry.panelId);
+      if (!section || section.querySelector('.ecosystem-cockpit-link')) return;
+      const head = section.querySelector('.section-head');
+      const card = buildCockpitCard(entry);
+      if (head && head.nextSibling) head.parentNode.insertBefore(card, head.nextSibling);
+      else section.appendChild(card);
+    });
+  }
+
+  // === Layer 2（简化、零风险版）: 战略/战术/战斗 三态导航目录 ===
+  // 不克隆、不搬移任何现有面板内容（面板内部归属复杂，克隆有 DOM/ID 冲突风险）；
+  // 只提供一张真实存在的板块的三态索引卡片，帮助按"目的高度"而不是按字母/主题重新找到已存在的真实入口。
+  const lensGroups = [
+    { key: 'strategy', label: '🎯 战略视角', desc: '回答"我们要成为什么样的系统" — 纲领、体系地图、目标承诺', ids: ['panorama', 'orient', 'ledger'] },
+    { key: 'tactics', label: '⚔️ 战术视角', desc: '回答"当前在打哪几场仗，下一步法定动作是什么"', ids: ['next', 'ledger', 'gov'] },
+    { key: 'battle', label: '🛰️ 战斗/落地视角', desc: '回答"此刻系统真实在发生什么，证据是什么"', ids: ['swarm', 'metrics', 'health', 'logs'] }
+  ];
+  const panelLabel = {
+    panorama: '白皮书指导', orient: '全景总览', ledger: '3Y台账与甘特', next: '接下来做什么', gov: '恢复准入',
+    swarm: 'Agent 协同', metrics: '指标度量', health: '健康诊断', logs: '事件日志'
+  };
+  function buildStrategyLensCard() {
+    const card = document.createElement('div');
+    card.className = 'card gap ecosystem-lens-card';
+    card.innerHTML = '<h3 style="margin:0 0 4px">🧭 全景总览 · 战略 / 战术 / 战斗三态速览</h3>' +
+      '<p class="small muted" style="margin:0 0 12px">用三个"目的高度"重新进入下面同一套真实板块；此处只做索引跳转，不复制、不合成任何数据 —— 真实数字请在目标板块里看。</p>' +
+      '<div class="grid three gap" style="grid-template-columns:repeat(3,minmax(0,1fr))">' +
+      lensGroups.map(group => '<div class="card" style="background:var(--paper)"><b>' + esc(group.label) + '</b>' +
+        '<div class="small muted gap">' + esc(group.desc) + '</div>' +
+        '<div class="small gap">' + group.ids.map(id => '<a href="#' + esc(id) + '">' + esc(panelLabel[id] || id) + '</a>').join(' · ') + '</div></div>').join('') +
+      '</div>';
+    return card;
+  }
+  function mountStrategyLensCard() {
+    const panoramaNodes = [...document.querySelectorAll('[id="panorama"]')];
+    panoramaNodes.forEach(section => {
+      if (section.querySelector('.ecosystem-lens-card')) return;
+      const head = section.querySelector('.section-head');
+      const card = buildStrategyLensCard();
+      if (head && head.nextSibling) head.parentNode.insertBefore(card, head.nextSibling);
+      else section.insertBefore(card, section.firstChild);
+    });
+  }
+
+  // === 跨板块合成条（镜头卡模式，纯深链不复制数据）===
+  function buildLensCard(title, desc, targets) {
+    const card = document.createElement('div');
+    card.className = 'card gap ecosystem-lens-card';
+    card.setAttribute('data-lens-card', title);
+    card.innerHTML = '<h3 style="margin:0 0 4px">🔍 ' + esc(title) + '</h3>' +
+      '<p class="small muted" style="margin:0 0 10px">' + esc(desc) + ' — 此处只做索引跳转，不复制、不合成任何数据。</p>' +
+      '<div class="small gap" style="display:flex;flex-wrap:wrap;gap:6px">' +
+      targets.map(t => '<a href="#' + esc(t.href) + '" class="chip" style="text-decoration:none;background:var(--bluewash);border-color:var(--blue);color:var(--blue)">' + esc(t.label) + ' <span class="muted">· ' + esc(t.desc) + '</span></a>').join('') +
+      '</div>';
+    return card;
+  }
+  function mountLensCard(title, desc, targets) {
+    const section = byId('orient');
+    if (!section || section.querySelector('[data-lens-card="' + title + '"]')) return;
+    const head = section.querySelector('.section-head') || section.querySelector('.orient-l0');
+    const card = buildLensCard(title, desc, targets);
+    card.setAttribute('data-synthesis-card', 'cross-domain');
+    if (head && head.nextSibling) head.parentNode.insertBefore(card, head.nextSibling);
+    else section.insertBefore(card, section.firstChild);
+  }
+
+  // BET-Y2Q2-T8-04: 跨板块合成镜头卡 — 与 lens-card 不同，合成卡会聚合跨板块数据
+  function buildSynthesisCard(title, desc, targets) {
+    const card = document.createElement('div');
+    card.className = 'card gap ecosystem-lens-card synthesis-card';
+    card.setAttribute('data-synthesis-card', title);
+    card.style.cssText = 'border-left:3px solid var(--teal);background:linear-gradient(135deg, var(--paper) 0%, var(--greenwash) 100%)';
+    card.innerHTML = '<h3 style="margin:0 0 4px">🔗 ' + esc(title) + '</h3>' +
+      '<p class="small muted" style="margin:0 0 10px">' + esc(desc) + ' — 跨板块合成，不复制原始数据。</p>' +
+      '<div class="small gap" style="display:flex;flex-wrap:wrap;gap:6px">' +
+      targets.map(t => '<a href="#' + esc(t.href) + '" class="chip" style="text-decoration:none;background:var(--greenwash);border-color:var(--teal);color:var(--teal)">' + esc(t.label) + ' <span class="muted">· ' + esc(t.desc) + '</span></a>').join('') +
+      '</div>';
+    return card;
+  }
+  function mountSynthesisCard(title, desc, targets) {
+    const section = byId('orient');
+    if (!section || section.querySelector('[data-synthesis-card="' + title + '"]')) return;
+    const head = section.querySelector('.section-head') || section.querySelector('.orient-l0');
+    const card = buildSynthesisCard(title, desc, targets);
+    if (head && head.nextSibling) head.parentNode.insertBefore(card, head.nextSibling);
+    else section.insertBefore(card, section.firstChild);
+  }
+
+  // === 全域能力地图: 织星 25 板块 + cockpit-ui 56 路由，一张页面看全部 ===
+  const _horizons = window.ZHIXING_STRATEGIC_HORIZONS || [
+    { horizonId: 'h-sovereign', title: '👑 主权中心与决策中枢', desc: '最高执掌视野 · 北极星价值 · 中枢决策', subPanels: ['personal', 'orient', 'workbench'] },
+    { horizonId: 'h-strategy', title: '🧭 战略路线与任务推进', desc: '三年台账 · 法定行动 · 体系拓扑', subPanels: ['ledger', 'next', 'arch', 'topology', 'atlas'] },
+    { horizonId: 'h-scenes', title: '🃏 业务场景与价值流转', desc: '场景生命周期 · 伴随验证 · 4大闭环回路', subPanels: ['scene-system', 'loops', 'value', 'metrics'] },
+    { horizonId: 'h-swarm', title: '🤖 智能蜂群与算力织网', desc: 'Agent 状态 · 算力服务 · 因果拓扑', subPanels: ['swarm', 'trace', 'logs'] },
+    { horizonId: 'h-governance', title: '🛡️ 治理防御与知识全景', desc: 'L4 门禁 · MOF 约束 · 知识资产', subPanels: ['gov', 'health', 'mof-grid', 'capabilities', 'know', 'knowledge-memory', 'learning', 'skills-inventory', 'panorama'] }
+  ];
+
+  const _titles = window.ZHIXING_PANEL_TITLES || (window.ZHIXING_NAV_LABELS ? Object.fromEntries(Object.entries(window.ZHIXING_NAV_LABELS).map(function(pair){ return [pair[0], pair[1].replace(/^[^\s]+\s/, '')]; })) : {});
+  const zhixingLabel = Object.assign({ 'ecosystem-map': '全域能力地图' }, panelLabel, _titles);
+  const cockpitGroups = [
+    { label: '总览与导航', items: [['/', '首页'], ['/guide', '驾驶舱指南'], ['/system-map', '系统地图'], ['/capabilities', '能力全景']] },
+    { label: '工作案件', items: [['/cases', '案件']] },
+    { label: '运行与观测', items: [['/overview', '概览中心'], ['/mesh', '网格与 MCP'], ['/topology', '全局拓扑'], ['/compute', '算力调配'], ['/observability', '可观测性'], ['/logs', '日志查看器']] },
+    { label: '治理与合规', items: [['/governance-domain', '治理域'], ['/command-audit', '命令评分卡'], ['/governance-pulse', '治理脉搏'], ['/l4-health', 'L4 域健康'], ['/debt', '债务治理'], ['/alerts', '告警中心'], ['/harness', 'Harness 合规'], ['/intent', 'Intent 编译器'], ['/governance-self-check', '治理自检']] },
+    { label: '知识与研究', items: [['/research', '研究中心'], ['/knowledge', '知识中枢'], ['/knowledge-action', '知识到行动'], ['/engines', '引擎调度'], ['/assets', '技术资产库'], ['/kems', 'KEMS 质量治理'], ['/scene-cards', '场景卡评审'], ['/decision-inbox', '决策收件箱'], ['/decision-graph', '决策因果图'], ['/scenes', '场景总览'], ['/scene-graph', '场景图'], ['/calibration', '校准中心'], ['/external-resources', '外部能力目录']] },
+    { label: 'Agent 与链路', items: [['/commands', '命令全景'], ['/chain', '链路编排'], ['/swarm', 'Swarm 协同'], ['/agents', 'Agent 监控'], ['/bcos', 'BCOS 北极星'], ['/brain', '智能大脑'], ['/gbrain-admin', 'GBrain 管理']] },
+    { label: '开发工具', items: [['/tasks', '任务中心'], ['/performance', '性能监控'], ['/sandbox', '隔离沙箱'], ['/console', '控制台'], ['/workflows', '工作流'], ['/domain-apps', '领域应用']] },
+    { label: '工作台', items: [['/workbench/ecos-workflow', 'eCOS 工作流'], ['/workbench/infrastructure-ops', '基础设施运维'], ['/workbench/knowledge-execution', '知识执行'], ['/workbench/kos', 'KOS 工作台'], ['/workbench/memory-injector', '记忆注入'], ['/workbench/platform-control', '平台控制'], ['/workbench/runtime-ops', '运行时运维'], ['/workbench/system-assurance', '系统保障']] },
+    { label: '系统配置', items: [['/settings', '系统设置']] }
+  ];
+
+  window.filterEcosystemMap = function(query) {
+    query = (query || '').toLowerCase().trim();
+    const items = document.querySelectorAll('.eco-filter-item');
+    let matched = 0;
+    items.forEach(el => {
+      const text = el.getAttribute('data-search') || el.textContent.toLowerCase();
+      if (!query || text.includes(query)) {
+        el.style.display = '';
+        matched++;
+      } else {
+        el.style.display = 'none';
+      }
+    });
+    const countEl = document.getElementById('ecosystem-search-count');
+    if (countEl) {
+      countEl.textContent = query ? ('匹配到 ' + matched + ' 项') : '共 81 个全域功能入口';
+    }
+  };
+
+  function buildEcosystemMap() {
+    const wrap = document.createElement('div');
+    const zhixingCount = _horizons.reduce((n, h) => n + h.subPanels.length, 0);
+    const cockpitCount = cockpitGroups.reduce((n, g) => n + g.items.length, 0);
+    wrap.innerHTML = '<div class="section-head">' +
+      '<div class="eyebrow"><span class="eyebrow-text">🗺️ 全域能力地图</span> <span style="margin-left:6px;font-size:11px;color:var(--muted)">Ecosystem Capability Map</span></div>' +
+      '<h1 id="title-ecosystem-map">一张页面看全部：织星 dashboard + cockpit-ui</h1>' +
+      '<p class="lead">全景规划要求"尽可能覆盖所有相关功能，不遗漏"——逐条核对源码后的真实清单：织星 dashboard 现有 ' + zhixingCount + ' 个核心板块（全部可直接点开并高亮定位），cockpit-ui 现有 ' + cockpitCount + ' 个功能路由（深链，本地 <code>bun dev</code> 跑在 5173 端口即可直通）。</p>' +
+      '<div style="display:flex;align-items:center;gap:12px;margin:14px 0 6px;flex-wrap:wrap">' +
+        '<input type="text" id="ecosystem-search-input" placeholder="🔍 快速过滤板块与路由（输入 loops, mof, agent, 治理, 知识...）" style="flex:1;min-width:280px;max-width:520px;padding:8px 14px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;background:var(--surface);color:var(--ink)" oninput="window.filterEcosystemMap(this.value)">' +
+        '<span id="ecosystem-search-count" style="font-size:12px;font-weight:600;color:var(--blue)">共 ' + (zhixingCount + cockpitCount) + ' 个全域功能入口</span>' +
+      '</div></div>' +
+      '<div class="card gap"><h3 style="margin:0 0 12px">📍 织星 · 5 大战略视界体系（本站，' + zhixingCount + ' 核心板块）</h3>' +
+      '<div class="grid two gap">' +
+      _horizons.map(h => '<div class="card eco-filter-item" data-search="' + esc(h.title + ' ' + h.desc + ' ' + h.subPanels.join(' ')) + '" style="background:var(--paper);border-left:3px solid var(--blue)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>' + esc(h.title) + '</b><span class="chip neutral" style="font-size:10px">' + h.subPanels.length + ' 板块</span></div>' +
+        '<p class="small muted" style="margin:0 0 8px;font-size:11px">' + esc(h.desc) + '</p>' +
+        '<div class="small gap" style="display:flex;flex-wrap:wrap;gap:6px">' +
+        h.subPanels.map(id => '<a href="#' + esc(id) + '" class="chip" style="text-decoration:none;font-size:11px;background:#fff;border:1px solid var(--line);padding:2px 8px;border-radius:4px" onclick="location.hash=\'#' + esc(id) + '\'">' + esc(zhixingLabel[id] || id) + '</a>').join('') +
+        '</div></div>').join('') +
+      '</div></div>' +
+      '<div class="card gap"><h3 style="margin:0 0 12px">🧭 cockpit-ui · 8 大功能域工作台（外部，' + cockpitCount + ' 路由深链）</h3>' +
+      '<p class="small muted" style="margin:0 0 10px">诚实标注：以下链接指向 <code>http://localhost:' + COCKPIT_DEV_ORIGIN.split(':').pop() + '</code>，需在 cockpit-ui 项目里执行 <code>bun dev</code>（未启动时点击不会有响应）。</p>' +
+      '<div class="grid two gap">' +
+      cockpitGroups.map(g => '<div class="card eco-filter-item" data-search="' + esc(g.label + ' ' + g.items.map(x=>x[0]+' '+x[1]).join(' ')) + '" style="background:var(--paper)">' +
+        '<b>' + esc(g.label) + '</b><div class="small gap" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px">' +
+        g.items.map(([path, label]) => '<a href="' + esc(COCKPIT_DEV_ORIGIN + path) + '" target="_blank" rel="noopener" class="chip" style="font-size:11px;text-decoration:none">' + esc(label) + ' <span class="muted" style="font-size:9.5px">' + esc(path) + '</span></a>').join('') + '</div></div>').join('') +
+      '</div></div>';
+    return wrap;
+  }
+  function mountEcosystemMap() {
+    const section = byId('ecosystem-map');
+    if (!section || section.querySelector('[data-mounted="ecosystem-map"]')) return;
+    section.innerHTML = '';
+    const mapEl = buildEcosystemMap();
+    mapEl.setAttribute('data-mounted', 'ecosystem-map');
+    section.appendChild(mapEl);
+  }
+
+  function mountEcosystemIntegration() {
+    try { mountCockpitLinks(); } catch (e) { console.warn('mountCockpitLinks', e); }
+    try { mountStrategyLensCard(); } catch (e) { console.warn('mountStrategyLensCard', e); }
+    try { mountLensCard('我现在卡在哪', '当前系统卡点全景', [{href:'gov',label:'恢复准入',desc:'哪个门没过'},{href:'health',label:'健康诊断',desc:'聚合分数'},{href:'swarm',label:'Agent 协同',desc:'谁卡住了'},{href:'ledger',label:'路线与 BET',desc:'战役进度'},{href:'loops',label:'回路观测',desc:'熔断状态'}]); } catch (e) { console.warn('mountLensCard', e); }
+    try { mountLensCard('价值产出如何', '价值证据与度量趋势', [{href:'value',label:'价值验收',desc:'NOT_PROVEN / PROVEN'},{href:'metrics',label:'指标度量',desc:'趋势'},{href:'personal',label:'主权中心',desc:'事件流'}]); } catch (e) { console.warn('mountLensCard', e); }
+    // BET-Y2Q2-T8-04: 跨板块合成镜头卡 — 价值-治理合成条
+    try { mountSynthesisCard('价值-治理合成条', '写操作诚信与价值证据跨板块合成', [{href:'value',label:'价值验收',desc:'PROVEN 证据'},{href:'gov',label:'治理准入',desc:'写操作合规'},{href:'ledger',label:'BET 台账',desc:'战役诚信'}]); } catch (e) { console.warn('mountSynthesisCard (value-gov)', e); }
+    // BET-Y2Q2-T8-04: 跨板块合成镜头卡 — 健康-执行合成条
+    try { mountSynthesisCard('健康-执行合成条', '系统健康状态与执行回路跨板块合成', [{href:'health',label:'健康诊断',desc:'聚合分数'},{href:'loops',label:'回路观测',desc:'熔断状态'},{href:'swarm',label:'Agent 协同',desc:'执行链路'}]); } catch (e) { console.warn('mountSynthesisCard (health-exec)', e); }
+    try { mountEcosystemMap(); } catch (e) { console.warn('mountEcosystemMap', e); }
+  }
+  // 脚本本身在拼接顺序中排最后、且以内联方式在 body 结束标签前执行，此时全部 section 已挂载完毕，
+  // 无需等待 DOMContentLoaded 即可安全操作 DOM；同时仍监听一次 DOMContentLoaded 作兜底。
+  mountEcosystemIntegration();
+  document.addEventListener('DOMContentLoaded', mountEcosystemIntegration);
+})();
