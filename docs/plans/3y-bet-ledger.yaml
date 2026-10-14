@@ -83,7 +83,38 @@ bets:
     gitlink 交付都被反复打断（.git 条目被删、空目录残留、remote-hygiene 报 origin 指向本地路径）。修法（fail-safe）：守卫只对**不存在
     .git 条目**的路径执行破坏性 update --init； 对已存在且可解析的检出改为非破坏性对齐（本地含 pin 对象时 checkout 到 pin，否则跳过并
     advisory）， 任何情况下不删除既有 .git 条目。claim/release 主流程与 reachability/rewind 语义不变。
-  status: pending
+  status: done
+  done_at: 2026-10-14
+  value_indicator_policy: false
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-252.md
+          merged_reachable_commit:
+            ref: git://origin/main@be62b0e5d5f4e9ea5a5d593416d916be8af316db
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-252.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-252.md
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-252.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-252.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-252.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-252.md
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
