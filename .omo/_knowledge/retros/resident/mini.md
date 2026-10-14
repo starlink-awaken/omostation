@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: mini
-generated_at: 2026-10-14T06:54:23Z
+generated_at: 2026-10-14T09:05:11Z
 status: candidate
 counts:
   runs: 68
@@ -14,7 +14,7 @@ failure_breakdown:
 ---
 # mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T06:54:23Z
+- generated_at: 2026-10-14T09:05:11Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 68 成功运行 + 0 失败模式 = 68 草稿
 - 失败率: 0.00%

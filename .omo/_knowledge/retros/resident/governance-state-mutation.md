@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-10-14T06:54:23Z
+generated_at: 2026-10-14T09:05:11Z
 status: candidate
 counts:
   runs: 31
@@ -14,7 +14,7 @@ failure_breakdown:
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T06:54:23Z
+- generated_at: 2026-10-14T09:05:11Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 31 成功运行 + 0 失败模式 = 31 草稿
 - 失败率: 0.00%
