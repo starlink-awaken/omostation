@@ -16,9 +16,11 @@ import subprocess
 import json
 import logging
 import os
+import math
+import signal
 import sys
+import tempfile
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -190,9 +192,13 @@ def merge_published_tasks(data: dict, previous: dict, attempted_at: str) -> None
 class RefreshOrchestrator:
     """Orchestrates data collection and page generation."""
 
-    def __init__(self, registry: CollectorRegistry | None = None, max_workers: int = 5):
+    def __init__(self, registry: CollectorRegistry | None = None, max_workers: int = 5,
+                 collection_timeout: float = 60):
         self.registry = registry or get_registry()
-        self.max_workers = max_workers
+        if max_workers < 1 or not math.isfinite(collection_timeout) or collection_timeout <= 0:
+            raise ValueError("collector concurrency and collection timeout must be positive")
+        self.max_workers = int(max_workers)
+        self.collection_timeout = collection_timeout
 
     def load_previous(self) -> dict:
         """Load previous data from current.json or seed."""
@@ -209,19 +215,115 @@ class RefreshOrchestrator:
         return {}
 
     def run_collectors(self) -> list[tuple[str, dict | None, str | None]]:
-        """Run all collectors in parallel with per-collector timeout protection."""
-        collectors = self.registry.all()
+        """Bound actual work, including shutdown, instead of timing done futures.
+
+        The host is POSIX. Each collector owns a process session so a blocked
+        Python call or subprocess cannot hold the refresh open. File IPC avoids
+        waiting on a pipe inherited by a collector's descendants. Only these
+        freshly created sessions are killed, on success as well as timeout.
+        """
+        collectors = list(self.registry.all())
         results: list[tuple[str, dict | None, str | None]] = []
-        with ThreadPoolExecutor(max_workers=self.max_workers) as pool:
-            futures = {pool.submit(self._run_collector, c): c for c in collectors}
-            for future in as_completed(futures):
-                c = futures[future]
-                try:
-                    timeout_val = getattr(c, "timeout", 48) + 2
-                    results.append(future.result(timeout=timeout_val))
-                except Exception as exc:
-                    results.append((c.name, None, f"Execution error or timeout: {exc}"))
+        if not hasattr(os, "fork") or not hasattr(os, "setsid"):
+            return [(c.name, None, "Isolated collector execution unavailable on this platform")
+                    for c in collectors]
+        deadline = time.monotonic() + self.collection_timeout
+        active = {}
+        pending = list(enumerate(collectors))
+        with tempfile.TemporaryDirectory(prefix="zhixing-collect-") as directory:
+            try:
+                while pending or active:
+                    while pending and len(active) < self.max_workers and time.monotonic() < deadline:
+                        index, collector = pending.pop(0)
+                        result_path = Path(directory) / f"{index}.json"
+                        try:
+                            timeout = float(getattr(collector, "timeout", 48))
+                            if not math.isfinite(timeout) or timeout < 0:
+                                raise ValueError("invalid collector timeout")
+                            worker_deadline = min(deadline, time.monotonic() + timeout + 2)
+                            pid = os.fork()
+                        except (OSError, TypeError, ValueError) as exc:
+                            results.append((collector.name, None, f"Worker start failed: {exc}"))
+                            continue
+                        if pid == 0:
+                            self._collector_worker(collector, result_path)
+                        active[pid] = (collector, result_path, worker_deadline)
+                    for pid, (collector, result_path, worker_deadline) in list(active.items()):
+                        if result_path.exists():
+                            try:
+                                message = json.loads(result_path.read_text(encoding="utf-8"))
+                                result = message["result"]
+                                completed_at = message["completed_at"]
+                                if not isinstance(completed_at, (float, int)) or not math.isfinite(completed_at):
+                                    raise ValueError("invalid completion clock")
+                                if (not isinstance(result, list) or len(result) != 3
+                                        or result[0] != collector.name
+                                        or (result[1] is not None and not isinstance(result[1], dict))
+                                        or (result[2] is not None and not isinstance(result[2], str))):
+                                    raise ValueError("invalid collector result")
+                                results.append(tuple(result) if completed_at <= worker_deadline else
+                                               (collector.name, None, "Collector deadline exceeded"))
+                            except (OSError, ValueError, TypeError, KeyError) as exc:
+                                results.append((collector.name, None, f"Worker result invalid: {exc}"))
+                        elif time.monotonic() >= worker_deadline:
+                            results.append((collector.name, None, "Collector deadline exceeded"))
+                        else:
+                            continue
+                        self._stop_collector_worker(pid)
+                        del active[pid]
+                    if time.monotonic() >= deadline:
+                        results.extend((c.name, None, "Collection deadline exceeded before start")
+                                       for _, c in pending)
+                        pending.clear()
+                    if active:
+                        time.sleep(min(0.02, max(0, deadline - time.monotonic())))
+            finally:
+                # Exceptions or interrupted refreshes must not strand our workers.
+                for pid in active:
+                    self._stop_collector_worker(pid)
         return results
+
+    def _collector_worker(self, collector, result_path: Path):
+        try:
+            os.setsid()
+            try:
+                result = self._run_collector(collector)
+                payload = json.dumps({"result": result, "completed_at": time.monotonic()},
+                                     ensure_ascii=False, allow_nan=False)
+            except BaseException as exc:
+                payload = json.dumps({"result": (collector.name, None, f"{type(exc).__name__}: {exc}"),
+                                      "completed_at": time.monotonic()})
+            partial = result_path.with_suffix(".part")
+            partial.write_text(payload, encoding="utf-8")
+            os.replace(partial, result_path)
+        finally:
+            # Never run inherited parent cleanup or thread/atexit shutdown.
+            os._exit(0)
+
+    @staticmethod
+    def _stop_collector_worker(pid: int):
+        try:
+            os.killpg(pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            # macOS can report EPERM as the sole leader exits, and a newly
+            # forked worker may not have reached setsid yet. Kill only our own
+            # still-unreaped child, then retry the session for descendants.
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            try:
+                os.killpg(pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
+        while True:
+            try:
+                os.waitpid(pid, 0)
+                break
+            except InterruptedError:
+                continue
+            except ChildProcessError:
+                break
 
     @staticmethod
     def _run_collector(collector):
