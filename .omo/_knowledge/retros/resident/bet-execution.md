@@ -1,20 +1,14 @@
 ---
 schema: resident-retro-candidate/v1
-topic: bet-execution
-generated_at: 2026-10-14T08:14:58Z
-status: candidate
-counts:
-  runs: 5
-  failures: 0
-  total: 5
-failure_rate: 0.0
-failure_breakdown:
-  by_event_type:
-  trace_count: 0
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: '2026-10-14'
+type: ephemeral
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T08:14:58Z
+- generated_at: 2026-10-14T08:55:10Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 5 成功运行 + 0 失败模式 = 5 草稿
 - 失败率: 0.00%
