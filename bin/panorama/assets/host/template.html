@@ -3269,7 +3269,7 @@ $('proposal-link').href=fileLink((D.library||'')+'/30-实施与协同/Workspace�
 $('envelope-link').href=fileLink(D.envelope&&D.envelope.path||'');if(D.envelope&&D.envelope.sha256)$('envelope-hash').textContent='SHA-256 '+D.envelope.sha256;else $('envelope-hash').textContent='';
 
 $('reload-page').onclick=()=>window.ZhixingViewState?window.ZhixingViewState.reload():location.reload();
-const failures=Object.entries(D.source_states||{}).filter(([k,v])=>v.status!=='OK');
+let healthUpdateError = false;
 let isHealthDrawerOpen = false;
 function toggleHealthDiagnosticDrawer(){
   isHealthDrawerOpen = !isHealthDrawerOpen;
@@ -3381,62 +3381,89 @@ function toggleNavGroup(el){
   }catch(e){}
 })();
 
+// Source health uses evidence clocks, never queue counts or process liveness.
+function sourceHealthSummary(snapshot, now){
+  const clockState = value => {
+    const stamp = typeof value === 'string' && value.trim() ? Date.parse(value) : NaN;
+    if(!Number.isFinite(stamp)) return 'UNKNOWN';
+    if(stamp > now) return 'FUTURE';
+    return now - stamp > 600000 ? 'STALE' : 'FRESH';
+  };
+  const snapshotClock = snapshot.generated_at || snapshot.observed_at;
+  const raw = snapshot.source_states;
+  const validMap = raw && typeof raw === 'object' && !Array.isArray(raw);
+  const entries = validMap ? Object.entries(raw).map(([name, value]) => {
+    const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    const status = typeof source.status === 'string' && source.status.trim() ? source.status : 'UNKNOWN';
+    const observation = source.last_observed_at || source.observed_at;
+    return {name, source, status, observation, clock: clockState(observation)};
+  }) : [];
+  const healthy = entries.filter(row => row.status === 'OK' && row.clock === 'FRESH').length;
+  const degraded = entries.filter(row => row.status !== 'OK').length;
+  const unverified = entries.length - healthy - degraded;
+  const snapshotState = clockState(snapshotClock);
+  return {entries, healthy, degraded, unverified, snapshotClock, snapshotState,
+    normal: entries.length > 0 && healthy === entries.length && snapshotState === 'FRESH' && !healthUpdateError};
+}
+
+function updateSourceHealthSnapshot(snapshot){
+  D.source_states = snapshot.source_states;
+  D.generated_at = snapshot.generated_at;
+  D.observed_at = snapshot.observed_at;
+  healthUpdateError = false;
+  refreshHealth();
+}
+
 function refreshHealth(){
-  const lastAttempt = D.generated_at || D.observed_at;
-  const old = Date.now() - Date.parse(lastAttempt) > 600000;
-  const fullText = '采集计划：每 5 分钟 · 新快照检查：每 60 秒 · 最近尝试 ' + dt(lastAttempt) + '。' + 
-    (old ? '采集已经超过 10 分钟，当前数据应视为 STALE。 ' : '') + 
-    (failures.length ? ' 降级来源：' + failures.map(([k,v]) => k + '（' + v.status + '；最后成功 ' + dt(v.last_success_at) + '）').join('、') : ' 本次来源读取完成；准入和业务健康仍分别判定。');
-  
+  const summary = sourceHealthSummary(D, Date.now());
+  const {entries, healthy, degraded, unverified, snapshotClock, snapshotState, normal} = summary;
+  const clockLabel = {FRESH:'时间有效', STALE:'已过期', UNKNOWN:'时间未确认', FUTURE:'时间异常'};
+  const counts = entries.length ? `${healthy}/${entries.length} 项观测正常 · ${degraded} 项降级` +
+    (unverified ? ` · ${unverified} 项观测时间未确认或过期` : '') : '来源状态未确认';
+  const headlineText = `来源快照${clockLabel[snapshotState]} · ${counts}` +
+    (healthUpdateError ? ' · 最新快照读取失败' : '');
+  const fullText = `快照生成/观测时间：${dt(snapshotClock)}（${clockLabel[snapshotState]}；有效窗口 10 分钟）。${counts}。` +
+    (healthUpdateError ? '最新快照读取失败，保留的快照不能代表当前状态。' : '') +
+    '来源状态表示观测结果；准入、业务健康与进程是否在线分别判定。';
   const el = $('refresh-health');
   if(el) el.textContent = fullText;
-
   const dot = $('health-pulse-dot');
-  const headline = $('health-status-headline');
-  const chip = $('health-last-attempt-chip');
-  const drawerContent = $('health-diagnostic-content');
-
-  if(chip) chip.textContent = '最近快照: ' + dt(lastAttempt);
-
-  if(failures.length > 0){
-    if(dot){
-      dot.style.background = '#f59e0b';
-      dot.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.25)';
-    }
-    if(headline){
-      headline.textContent = `系统韧性运行中 · ${failures.length} 个非核心辅助源降级已隔离 (8/11 数据源实时在线)`;
-    }
-  } else {
-    if(dot){
-      dot.style.background = '#10b981';
-      dot.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.2)';
-    }
-    if(headline){
-      headline.textContent = '系统全域绿灯 · 采集源与准入判定 100% 实时对齐';
-    }
+  if(dot){
+    dot.style.background = normal ? '#10b981' : '#f59e0b';
+    dot.style.boxShadow = normal ? '0 0 0 3px rgba(16,185,129,0.2)' : '0 0 0 3px rgba(245,158,11,0.25)';
   }
-
+  const headline = $('health-status-headline');
+  if(headline) headline.textContent = headlineText;
+  const chip = $('health-last-attempt-chip');
+  if(chip) chip.textContent = '快照时间: ' + dt(snapshotClock);
+  const statusEl = $('metrics-freshness');
+  if(statusEl) statusEl.textContent = headlineText;
+  const drawerContent = $('health-diagnostic-content');
   if(drawerContent){
     drawerContent.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong>📡 数据采集源实时诊断与降级隔离清单</strong>
-        <span class="small muted">定时刷新周期: 5min / 快照轮询: 60s</span>
+        <strong>📡 来源观测与采集诊断</strong>
+        <span class="small muted">新快照检查: 30s</span>
       </div>
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">${esc(fullText)}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px">
-        ${Object.entries(D.source_states || {}).map(([k, v]) => `
-          <div style="padding:6px 10px;border-radius:5px;border:1px solid ${v.status === 'OK' ? '#d1fae5' : '#fed7aa'};background:${v.status === 'OK' ? '#f0fdf4' : '#fff7ed'}">
+        ${entries.map(row => `
+          <div style="padding:6px 10px;border-radius:5px;border:1px solid #e5e7eb">
             <div style="display:flex;justify-content:space-between;font-size:11px">
-              <strong>${esc(k)}</strong>
-              <span class="chip ${v.status === 'OK' ? 'good' : 'warn'}" style="font-size:9.5px">${esc(v.status)}</span>
+              <strong>${esc(row.name)}</strong>
+              <span class="chip ${row.status === 'OK' && row.clock === 'FRESH' && snapshotState === 'FRESH' && !healthUpdateError ? 'good' : 'warn'}" style="font-size:9.5px">${esc(row.status)}</span>
             </div>
-            <div class="small muted" style="font-size:10px">最后成功: ${dt(v.last_success_at)}</div>
+            <div class="small muted" style="font-size:10px">来源观测: ${esc(dt(row.observation))}（${esc(clockLabel[row.clock])}）</div>
+            <div class="small muted" style="font-size:10px">最近尝试: ${esc(dt(row.source.last_attempt_at))}</div>
+            <div class="small muted" style="font-size:10px">最后成功: ${esc(dt(row.source.last_success_at))}</div>
           </div>
-        `).join('')}
+        `).join('') || '<div class="small muted">来源状态未确认</div>'}
       </div>
     `;
   }
 }
+// End source health snapshot rendering.
+
 refreshHealth();setInterval(()=>{refreshHealth();window.ZhixingViewState?.updateFreshness();},30000);
 setTimeout(() => {
   if(typeof setNavMode !== 'function') return;
@@ -6158,7 +6185,11 @@ function checkForUpdates() {
     setTimeout(checkForUpdates, 10000);
     return;
   }
-  fetch('/api/snapshot').then(function(r) { return r.json(); }).then(function(data) {
+  fetch('/api/snapshot').then(function(r) {
+    if(!r.ok) throw new Error('snapshot_read_failed');
+    return r.json();
+  }).then(function(data) {
+    updateSourceHealthSnapshot(data);
     if (data.observed_at && data.observed_at !== _lastObservedAt) {
       // New snapshot published — graceful reload to pick up new HTML/JS
       _lastObservedAt = data.observed_at;
@@ -6173,15 +6204,11 @@ function checkForUpdates() {
         if (el) populateHealth();
       }
     }
-    // Update source states if changed
-    if (data.source_states) {
-      var failed = data.failed_sources || [];
-      var statusEl = document.getElementById('metrics-freshness');
-      if (statusEl && failed.length > 0) {
-        statusEl.innerHTML = '<span style="color:#f59e0b">●</span> ' + failed.length + ' 源降级';
-      }
-    }
-  }).catch(function(e) { console.warn('Update check failed:', e); });
+  }).catch(function(e) {
+    healthUpdateError = true;
+    refreshHealth();
+    console.warn('Update check failed:', e);
+  });
   setTimeout(checkForUpdates, 30000); // Check every 30 seconds
 }
 

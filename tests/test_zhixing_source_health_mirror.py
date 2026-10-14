@@ -6,6 +6,10 @@ import ast
 import hashlib
 import importlib.machinery
 import importlib.util
+import json
+import re
+import shutil
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -395,3 +399,148 @@ def test_task_source_uses_exact_core_freshness_boundary(monkeypatch, tmp_path, a
     result = {}; module.merge_published_tasks(result, {}, "attempt")
     assert result["source_states"]["tasks"]["status"] == status
     assert result["source_states"]["tasks"]["payload_age_seconds"] == age
+
+
+# Run the template's real renderer and polling branch, not a Python translation.
+def _source_health_ui(snapshot, actions=()):
+    template = (ASSETS / "template.html").read_text(encoding="utf-8")
+    health = template.split("// Source health uses evidence clocks,", 1)[1].split(
+        "// End source health snapshot rendering.", 1)[0]
+    health = health[health.index("function sourceHealthSummary"):]
+    poll = template.split("function checkForUpdates() {", 1)[1].split(
+        "// Restore state after page load", 1)[0]
+    node = shutil.which("node")
+    assert node, "Node.js is required to execute the shipped UI logic"
+    scripts = [body for attrs, body in re.findall(r"<script([^>]*)>(.*?)</script>", template, re.S)
+               if 'application/json' not in attrs]
+    program = r"""
+const vm = require('node:vm');
+const input = JSON.parse(process.argv[1]);
+for (const script of input.scripts) new vm.Script(script);
+const nodes = {};
+const node = id => nodes[id] ||= {textContent:'', innerHTML:'', style:{}};
+const context = {
+  D:input.snapshot, healthUpdateError:false, _lastObservedAt:input.snapshot.observed_at,
+  Date:{now:()=>Date.parse('2026-10-14T12:00:00Z'),parse:Date.parse},
+  $:node, dt:value=>value || '未观测',
+  esc:value=>String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),
+  document:{hidden:false,querySelector:()=>null,getElementById:node},
+  setTimeout:()=>{}, console:{warn:()=>{}}, _gracefulReload:()=>{}, populateHealth:()=>{}
+};
+vm.createContext(context);
+vm.runInContext(input.health + '\nfunction checkForUpdates() {' + input.poll, context);
+const capture = () => JSON.parse(JSON.stringify(nodes));
+(async()=>{
+  context.refreshHealth(); const results=[capture()];
+  for (const action of input.actions) {
+    if (action.kind==='render') {context.D=action.snapshot; context.refreshHealth();}
+    else {
+      context.fetch=()=>Promise.resolve({ok:action.kind!=='poll_error',json:()=>Promise.resolve(action.snapshot)});
+      context.checkForUpdates(); await new Promise(resolve=>setImmediate(resolve));
+    }
+    results.push(capture());
+  }
+  process.stdout.write(JSON.stringify(results));
+})().catch(error=>{console.error(error);process.exit(1)});
+"""
+    result = subprocess.run([node, "-e", program, json.dumps({"snapshot": snapshot,
+        "actions": list(actions), "health": health, "poll": poll, "scripts": scripts})],
+        text=True, capture_output=True, check=True)
+    return json.loads(result.stdout)
+
+
+def _healthy_ui_snapshot():
+    return {"generated_at": "2026-10-14T11:59:00Z", "observed_at": "same-revision",
+            "source_states": {"tasks": {"status": "OK", "observed_at": "2026-10-14T11:58:00Z",
+                "last_attempt_at": "2026-10-14T11:59:00Z", "last_success_at": "2026-10-14T11:57:00Z"}}}
+
+
+def test_source_ui_counts_actual_twenty_sources_without_global_health_claims():
+    snapshot = _healthy_ui_snapshot()
+    snapshot["source_states"] = {f"source-{i}": {"status": "OK" if i < 15 else "PARTIAL",
+        "observed_at": "2026-10-14T11:59:00Z"} for i in range(20)}
+    nodes = _source_health_ui(snapshot)[0]
+    assert "15/20 项观测正常 · 5 项降级" in nodes["health-status-headline"]["textContent"]
+    assert nodes["health-pulse-dot"]["style"]["background"] == "#f59e0b"
+    assert nodes["health-diagnostic-content"]["innerHTML"].count('class="chip good"') == 15
+    text = json.dumps(nodes, ensure_ascii=False)
+    for unsupported in ["8/11", "100%", "全域绿灯", "已隔离", "实时在线"]:
+        assert unsupported not in text
+
+
+@pytest.mark.parametrize("clock", [None, "not-a-clock", "2026-10-14T11:00:00Z", "2026-10-14T12:01:00Z"])
+def test_source_ui_old_missing_invalid_or_future_snapshot_cannot_turn_green(clock):
+    snapshot = _healthy_ui_snapshot(); snapshot["generated_at"] = clock; snapshot.pop("observed_at")
+    nodes = _source_health_ui(snapshot)[0]
+    assert nodes["health-pulse-dot"]["style"]["background"] != "#10b981"
+    assert "时间有效" not in nodes["health-status-headline"]["textContent"]
+
+
+@pytest.mark.parametrize("sources", [None, {}, [], "OK", {"tasks": None}, {"tasks": {}}])
+def test_source_ui_absent_or_malformed_sources_are_unknown(sources):
+    snapshot = _healthy_ui_snapshot(); snapshot["source_states"] = sources
+    nodes = _source_health_ui(snapshot)[0]
+    assert nodes["health-pulse-dot"]["style"]["background"] != "#10b981"
+    assert "未确认" in json.dumps(nodes, ensure_ascii=False) or "UNKNOWN" in json.dumps(nodes)
+
+
+@pytest.mark.parametrize("clock", [None, "bad", "2026-10-14T11:00:00Z", "2026-10-14T12:01:00Z"])
+def test_fresh_wrapper_does_not_hide_old_or_unknown_source_observation(clock):
+    snapshot = _healthy_ui_snapshot(); snapshot["source_states"]["tasks"]["observed_at"] = clock
+    nodes = _source_health_ui(snapshot)[0]
+    assert "0/1 项观测正常" in nodes["health-status-headline"]["textContent"]
+    assert nodes["health-pulse-dot"]["style"]["background"] != "#10b981"
+
+
+def test_same_revision_poll_recomputes_degradation_and_recovery_and_all_clocks():
+    import copy
+    initial = _healthy_ui_snapshot(); failed = copy.deepcopy(initial)
+    failed["source_states"]["tasks"].update(status="FAIL", observed_at="2026-10-14T11:59:30Z",
+        last_attempt_at="2026-10-14T11:59:40Z")
+    healthy, degraded, recovered = _source_health_ui(initial, [
+        {"kind": "poll", "snapshot": failed}, {"kind": "poll", "snapshot": initial}])
+    assert healthy["health-pulse-dot"]["style"]["background"] == "#10b981"
+    assert "1 项降级" in degraded["health-status-headline"]["textContent"]
+    assert "1 项降级" in degraded["metrics-freshness"]["textContent"]
+    drawer = degraded["health-diagnostic-content"]["innerHTML"]
+    assert "来源观测: 2026-10-14T11:59:30Z" in drawer
+    assert "最近尝试: 2026-10-14T11:59:40Z" in drawer
+    assert "最后成功: 2026-10-14T11:57:00Z" in drawer
+    assert recovered["health-status-headline"]["textContent"] == healthy["health-status-headline"]["textContent"]
+    assert recovered["metrics-freshness"]["textContent"] == healthy["metrics-freshness"]["textContent"]
+    assert recovered["health-pulse-dot"]["style"]["background"] == "#10b981"
+
+
+def test_same_snapshot_direct_source_change_is_recomputed_each_render():
+    import copy
+    initial = _healthy_ui_snapshot(); changed = copy.deepcopy(initial)
+    changed["source_states"]["tasks"]["status"] = "STALE_UNAVAILABLE"
+    nodes = _source_health_ui(initial, [{"kind": "render", "snapshot": changed}])[-1]
+    assert "1 项降级" in nodes["health-status-headline"]["textContent"]
+
+
+def test_latest_snapshot_read_failure_clears_green_then_recovers():
+    initial = _healthy_ui_snapshot()
+    _, failed, recovered = _source_health_ui(initial, [
+        {"kind": "poll_error"}, {"kind": "poll", "snapshot": initial}])
+    assert "最新快照读取失败" in failed["health-status-headline"]["textContent"]
+    assert failed["health-pulse-dot"]["style"]["background"] != "#10b981"
+    assert "最新快照读取失败" not in recovered["health-status-headline"]["textContent"]
+    assert recovered["health-pulse-dot"]["style"]["background"] == "#10b981"
+
+
+def test_source_status_and_name_are_text_and_html_escaped():
+    snapshot = _healthy_ui_snapshot(); attack = '<img src=x onerror="alert(1)">'
+    snapshot["source_states"] = {attack: {"status": attack, "last_success_at": attack}}
+    nodes = _source_health_ui(snapshot)[0]; drawer = nodes["health-diagnostic-content"]["innerHTML"]
+    assert attack not in drawer and "&lt;img" in drawer
+    assert "1 项降级" in nodes["health-status-headline"]["textContent"]
+
+
+@pytest.mark.parametrize("clock,green", [("2026-10-14T11:50:00Z", True),
+                                       ("2026-10-14T11:49:59Z", False)])
+def test_source_ui_respects_existing_ten_minute_window(clock, green):
+    snapshot = _healthy_ui_snapshot(); snapshot["generated_at"] = clock
+    snapshot["source_states"]["tasks"]["observed_at"] = clock
+    nodes = _source_health_ui(snapshot)[0]
+    assert (nodes["health-pulse-dot"]["style"]["background"] == "#10b981") is green
