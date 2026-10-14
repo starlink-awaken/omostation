@@ -305,3 +305,36 @@ def test_injection_point_does_not_follow_the_publisher_clone(monkeypatch, tmp_pa
     env = _run_to_child(monkeypatch, tmp_path, spy, mod)
     assert env[LEDGER_ENV] == str(CHECKOUT / LEDGER_SUFFIX)
     assert env[LEDGER_ENV] != str(clone / LEDGER_SUFFIX)
+
+
+def test_child_task_root_is_canonical_without_profile(driver, spy, monkeypatch, tmp_path):
+    ledger = tmp_path / "separate-ledger" / "events.sqlite3"
+    monkeypatch.setenv(LEDGER_ENV, str(ledger))
+    env = _run_to_child(monkeypatch, tmp_path, spy, driver)
+    assert env[STATE_ENV] == str(CHECKOUT)
+    assert env[STATE_ENV] != str(driver.CHECKOUT)
+    assert env[LEDGER_ENV] == str(ledger)
+
+
+def test_child_task_root_profile_is_resolved_after_import(driver, spy, monkeypatch, tmp_path):
+    assert driver.task_state_root() == CHECKOUT
+    state = tmp_path / "late-state"
+    ledger = tmp_path / "independent" / "ledger.sqlite3"
+    monkeypatch.setenv(STATE_ENV, str(state))
+    monkeypatch.setenv(LEDGER_ENV, str(ledger))
+    env = _run_to_child(monkeypatch, tmp_path, spy, driver)
+    assert env[STATE_ENV] == str(state)
+    assert env[LEDGER_ENV] == str(ledger)
+    assert driver.task_state_root() == state
+    assert [e["path"] for e in _log_events(driver) if e["event"] == "task_root_resolved"] == [str(state)]
+
+
+def test_task_root_failure_stops_git_even_with_valid_ledger_override(driver, spy, monkeypatch, tmp_path):
+    monkeypatch.setenv(LEDGER_ENV, str(tmp_path / "ledger.sqlite3"))
+    monkeypatch.setenv(ROOT_ENV, str(tmp_path / "no-marker"))
+    monkeypatch.setenv("HOME", str(tmp_path / "no-home"))
+    with pytest.raises(RuntimeError):
+        driver.task_state_root()
+    assert driver.main() == 1
+    assert spy == []
+    assert _log_events(driver)[-1]["step"] == "task_root"

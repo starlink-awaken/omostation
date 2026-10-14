@@ -43,6 +43,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from repo_root import canonical_root, state_root  # noqa: E402
 
 
+def task_state_root() -> Path:
+    """Task authority is independent of code/output roots and any ledger override."""
+    return state_root() if os.environ.get("OMOSTATION_STATE_ROOT") else canonical_root()
+
+
 def ledger_db_path() -> Path:
     """事件 ledger 的 DB 路径 (三行裁决, spec §2)。
 
@@ -115,6 +120,11 @@ def main() -> int:
         except RuntimeError as exc:
             return fail("ledger_root", error=str(exc)[:300])
         log("ledger_root_resolved", path=str(ledger_db))
+        try:
+            task_root = task_state_root()
+        except RuntimeError as exc:
+            return fail("task_root", error=str(exc)[:300])
+        log("task_root_resolved", path=str(task_root))
 
         # 2) 确保专用检出存在
         if not (CHECKOUT / ".git").exists():
@@ -152,6 +162,7 @@ def main() -> int:
         env["PANORAMA_CODE_ROOT"] = str(CHECKOUT)
         env["ZHIXING_DASHBOARD_STATE_ROOT"] = str(DEPLOY_DIR)
         env["OMO_EVENT_LEDGER_DB"] = str(ledger_db)
+        env["OMOSTATION_STATE_ROOT"] = str(task_root)
         # Bind one immutable release once; mutable projections stay at DEPLOY_DIR.
         release_link = DEPLOY_DIR / "current"
         if release_link.is_symlink():
