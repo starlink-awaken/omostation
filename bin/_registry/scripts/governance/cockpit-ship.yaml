@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/gac/cockpit-ship.py
+name: Cockpit Ship
+category: governance
+owner: governance-team
+description: omostation 自动化自治交付流水线 (Claim Worktree -> Local Gate -> Commit & Push -> Create PR -> Monitor CI -> AutoMerge & Release)
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-10-14"
