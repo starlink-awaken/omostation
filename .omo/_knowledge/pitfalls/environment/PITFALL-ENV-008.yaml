@@ -3,11 +3,26 @@ id: PITFALL-ENV-008
 category: environment
 severity: low
 title: ssh 非交互 shell 的 PATH 不含 Homebrew → 误报远端命令不存在
-symptom: 'ssh mini ''gh auth status'' 报 command not found: gh, 但 mini 上明明装着 gh 2.102.0'
-root_cause: 'ssh 执行远程命令是非交互非登录 shell, 不 source .zshrc 的 brew shellenv; /opt/homebrew/bin
-  不在最小 PATH; 同族: keychain 访问也可能被会话授权挡 (元数据可读但行为差异要单独验)'
-solution: 'ssh 远程探测统一用 login shell: ssh mini ''zsh -lc "which gh"'' 或直接绝对路径 /opt/homebrew/bin/gh'
-prevention: 『远端没有 X』的结论必须先用 zsh -lc 或绝对路径复验过才能下; 探测命令的运行环境≠用户环境
+symptom: |-
+  两层实证 (同一根因的两种误诊面):
+  1) ssh mini 'gh auth status' 报 command not found: gh, 但 mini 上明明装着 gh 2.102.0
+  2) ssh mini 'zsh -lc "gh auth status"' 报 "The token in default is invalid" + API 401,
+     但用户桌面图形会话实测一切正常 —— 假象: token 没坏, 是 ssh 会话读不到 keychain
+root_cause: |-
+  ssh 执行远程命令是非交互非登录 shell, 两层环境面差异:
+  1) 不 source .zshrc 的 brew shellenv → /opt/homebrew/bin 不在最小 PATH;
+  2) gh 的 token 存 login keychain, keychain 密码字段在无图形会话授权的 ssh
+     会话中被锁 (security find-generic-password -w 被拒) → gh 拿空凭据请求 API → 401;
+     gh auth status 把「读不到」呈现为「invalid」, 是误导性措辞
+solution: |-
+  1) 命令存在性: ssh mini 'zsh -lc "which gh"' 或绝对路径 /opt/homebrew/bin/gh;
+  2) token 有效性不能隔着 ssh 判 (keychain 锁): 判据是桌面图形会话实测, 或
+     security find-generic-password -w -s "gh:github.com" 的可读性 (>/dev/null 只测可读, 禁止打印内容);
+     远程确需 gh API 时在桌面会话操作, SSH git 链路不受 keychain 影响
+prevention: |-
+  『远端没有 X』『远端凭据坏了』的结论必须先用 zsh -lc 或绝对路径复验, 且凭据类
+  结论以桌面图形会话实测为准 (2026-10-14 二次实证: 笔者 ssh 判 token invalid, 用户桌面实测
+  正常); 探测命令的运行环境≠用户环境, keychain 是这条例子的最强形态
 tags:
 - ssh
 - homebrew
@@ -15,6 +30,6 @@ tags:
 - probe
 discovered_by: governance-agent
 discovered_at: '2026-10-13'
-times_encountered: 1
-last_confirmed_at: '2026-10-13'
+times_encountered: 2
+last_confirmed_at: '2026-10-14'
 status: active
