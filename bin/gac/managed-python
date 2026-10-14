@@ -80,7 +80,7 @@ probe_candidate() {
   local provider="$1"
   shift
   local output executable major minor patch has_yaml
-  output="$("$@" -c 'import importlib.util, pathlib, sys; print("|".join((str(pathlib.Path(sys.executable).resolve()), str(sys.version_info.major), str(sys.version_info.minor), str(sys.version_info.micro), "1" if importlib.util.find_spec("yaml") else "0")))' 2>/dev/null)" || return 1
+  output="$("$@" -c 'import importlib.util, sys; print("|".join((sys.executable, str(sys.version_info.major), str(sys.version_info.minor), str(sys.version_info.micro), "1" if importlib.util.find_spec("yaml") else "0")))' 2>/dev/null)" || return 1
   IFS='|' read -r executable major minor patch has_yaml <<EOF
 $output
 EOF
@@ -141,7 +141,6 @@ if [ "$ACTION" = "probe" ]; then
   fi
   "${SELECTED_CMD[@]}" - "$PROFILE" "$SELECTED_PROVIDER" "$capabilities" <<'PY'
 import json
-import pathlib
 import sys
 
 profile, provider, capabilities = sys.argv[1:]
@@ -149,7 +148,7 @@ print(json.dumps({
     "schema": "managed-python-runtime-receipt/v1",
     "profile": profile,
     "provider": provider,
-    "executable": str(pathlib.Path(sys.executable).resolve()),
+    "executable": sys.executable,
     "python_version": list(sys.version_info[:3]),
     "capabilities": json.loads(capabilities),
 }, sort_keys=True))

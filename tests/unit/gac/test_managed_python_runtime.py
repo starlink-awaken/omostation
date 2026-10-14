@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+import venv
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -50,10 +51,66 @@ def test_managed_python_probe_emits_replayable_stdlib_receipt() -> None:
         "schema": "managed-python-runtime-receipt/v1",
         "profile": "stdlib",
         "provider": "explicit",
-        "executable": str(Path(sys.executable).resolve()),
+        "executable": sys.executable,
         "python_version": list(sys.version_info[:3]),
         "capabilities": ["stdlib"],
     }
+
+
+def test_workspace_venv_receipt_and_run_preserve_the_invocation_context(tmp_path: Path) -> None:
+    root = tmp_path / "workspace"
+    runner = root / "bin" / "gac" / "managed-python"
+    runner.parent.mkdir(parents=True)
+    shutil.copy2(RUNNER, runner)
+    runtime = root / ".venv"
+    venv.EnvBuilder(with_pip=False, symlinks=True, system_site_packages=True).create(runtime)
+    executable = runtime / "bin" / "python"
+    assert executable.is_symlink(), "regression requires a real virtualenv symlink"
+    purelib = subprocess.run(
+        [str(executable), "-B", "-c", "import sysconfig; print(sysconfig.get_path('purelib'))"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    Path(purelib, "yaml.py").write_text("# selector capability fixture\n", encoding="utf-8")
+    Path(purelib, "managed_python_venv_dependency.py").write_text(
+        "VALUE = 'venv-only-managed-python-dependency'\n", encoding="utf-8"
+    )
+
+    probe = subprocess.run(
+        [str(runner), "probe", "--profile", "pyyaml", "--json"],
+        cwd=root,
+        env=_env(PATH="/usr/bin:/bin", OMO_MANAGED_PYTHON=""),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert probe.returncode == 0, probe.stderr
+    receipt = json.loads(probe.stdout)
+    assert receipt["provider"] == "workspace-venv"
+    assert receipt["executable"] == str(executable)
+    replay = subprocess.run(
+        [
+            str(runner), "run", "--profile", "pyyaml", "--", "-B", "-c",
+            "import managed_python_venv_dependency as dep; print(dep.VALUE)",
+        ],
+        cwd=root,
+        env=_env(PATH="/usr/bin:/bin", OMO_MANAGED_PYTHON=""),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert replay.returncode == 0, replay.stderr
+    assert replay.stdout.strip() == "venv-only-managed-python-dependency"
+    control = subprocess.run(
+        [str(executable.resolve(strict=True)), "-B", "-c", "import managed_python_venv_dependency"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert control.returncode != 0
+    assert "ModuleNotFoundError" in control.stderr
 
 
 def test_managed_python_run_preserves_script_arguments(tmp_path: Path) -> None:

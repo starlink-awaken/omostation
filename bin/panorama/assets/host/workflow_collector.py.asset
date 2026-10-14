@@ -25,6 +25,13 @@ def _now() -> str:
 
 
 READ_ONLY_PROFILE = '(version 1) (allow default) (deny file-write*) (allow file-write* (literal "/dev/null")) (deny network*)'
+RUNTIME_METADATA = r"""import importlib.util, json, sys
+print(json.dumps({
+    "executable": sys.executable,
+    "python_version": list(sys.version_info[:3]),
+    "has_pyyaml": importlib.util.find_spec("yaml") is not None,
+}, sort_keys=True))
+"""
 READ_ONLY_OBSERVER = r"""import importlib, json, os, sys
 from pathlib import Path
 root = Path(sys.argv[1])
@@ -64,11 +71,13 @@ sys.exit(diagnostics.observe(registry, run_id=None, as_json=True))
 
 
 def _select_managed_python(root: Path) -> Path:
-    """Probe the trusted selector without loading the business observer."""
+    """Prove a selector receipt, then preserve its runnable interpreter context."""
+    selector = root / "bin/gac/managed-python"
+    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "GIT_OPTIONAL_LOCKS": "0"}
     receipt = subprocess.run(
-        [str(root / "bin/gac/managed-python"), "probe", "--profile", "pyyaml", "--json"],
+        [str(selector), "probe", "--profile", "pyyaml", "--json"],
         capture_output=True, text=True, timeout=10, cwd=root,
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "GIT_OPTIONAL_LOCKS": "0"},
+        env=env,
     )
     if receipt.returncode != 0:
         raise CollectionError("workflow", "managed observer runtime probe failed")
@@ -82,10 +91,37 @@ def _select_managed_python(root: Path) -> Path:
             or obj["python_version"][:2] < [3, 11]
             or not isinstance(obj.get("executable"), str)):
         raise CollectionError("workflow", "managed observer runtime receipt invalid")
-    executable = Path(obj["executable"])
+    receipt_executable = Path(obj["executable"])
+    if (not receipt_executable.is_absolute() or not receipt_executable.is_file()
+            or not os.access(receipt_executable, os.X_OK)):
+        raise CollectionError("workflow", "managed observer executable unprovable")
+    runtime = subprocess.run(
+        [str(selector), "run", "--profile", "pyyaml", "--", "-B", "-c", RUNTIME_METADATA],
+        capture_output=True, text=True, timeout=10, cwd=root, env=env,
+    )
+    if runtime.returncode != 0:
+        raise CollectionError("workflow", "managed observer runtime metadata failed")
+    try:
+        metadata = json.loads(runtime.stdout)
+    except json.JSONDecodeError as exc:
+        raise CollectionError("workflow", "managed observer runtime metadata invalid") from exc
+    if (not isinstance(metadata, dict) or not isinstance(metadata.get("executable"), str)
+            or not isinstance(metadata.get("python_version"), list)
+            or len(metadata["python_version"]) != 3
+            or any(type(v) is not int for v in metadata["python_version"])
+            or metadata["python_version"] != obj["python_version"]
+            or metadata.get("has_pyyaml") is not True):
+        raise CollectionError("workflow", "managed observer runtime identity invalid")
+    executable = Path(metadata["executable"])
     if not executable.is_absolute() or not executable.is_file() or not os.access(executable, os.X_OK):
         raise CollectionError("workflow", "managed observer executable unprovable")
-    return executable.resolve(strict=True)
+    try:
+        same_runtime = os.path.samefile(receipt_executable, executable)
+    except OSError:
+        same_runtime = False
+    if not same_runtime:
+        raise CollectionError("workflow", "managed observer runtime identity mismatch")
+    return executable
 
 
 def readonly_observe_argv(root: Path) -> list[str]:
