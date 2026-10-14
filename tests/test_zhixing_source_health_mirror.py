@@ -113,8 +113,8 @@ def test_legacy_success_timestamp_from_failed_body_is_unknown(monkeypatch):
 # These digests name the reviewed Dashboard Git objects, rather than whichever
 # files happen to be running on this machine. A new mirror delivery updates them.
 PORTFOLIO_FREEZE = {
-    "portfolio_collector.py.asset": "74b3a1d1e1c6f56c21ced5886915fe8688475516aa528873b92cd767f97f63e7",
-    "refresh.py.asset": "0806df9851d873db3004c692fe045206d99eb38d5a0f125b6e8198ed40051b0e",
+    "portfolio_collector.py.asset": "6d440d0b6a59dbb8c96cabb58783f0c39e40b8032b4c38bd9799929ca220385d",
+    "refresh.py.asset": "d831e087f2fd65288b7ae039fc2791c062c3206edc2091707021854679ea7a32",
     "strategy_projection.py.asset": "ad9123da7a58f10394df493b6ab6172866dd1056ff82f9ee7b76dd9ec4298648",
 }
 
