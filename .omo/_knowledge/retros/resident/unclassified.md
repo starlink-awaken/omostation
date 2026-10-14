@@ -1,18 +1,21 @@
 ---
 schema: resident-retro-candidate/v1
-status: archived
-lifecycle: history
-owner: governance-team
-last-reviewed: 2026-10-14
-type: ephemeral
 topic: unclassified
-generated_at: 2026-10-14T08:04:57Z
+generated_at: 2026-10-14T08:14:58Z
+status: candidate
+counts:
+  runs: 40
+  failures: 0
+  total: 40
+failure_rate: 0.0
+failure_breakdown:
+  by_event_type:
+  trace_count: 0
 ---
-
 # unclassified 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T08:04:57Z
-- status: archived (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
+- generated_at: 2026-10-14T08:14:58Z
+- status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 40 成功运行 + 0 失败模式 = 40 草稿
 - 失败率: 0.00%
 
