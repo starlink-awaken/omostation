@@ -66,6 +66,7 @@ LAUNCH_AGENT_PLIST = (
 # 既保持与同行 panels 资产相邻 (bin/panorama/assets/), 又不误纳入脚本治理。
 HOST_FILES: tuple[tuple[str, str], ...] = (
     ("template.html", "template.html"),
+    ("ecosystem_ui.js", "ecosystem_ui.js.asset"),
     ("refresh.py", "refresh.py.asset"),
     ("live_server.py", "live_server.py.asset"),
     ("observatory_query.py", "observatory_query.py.asset"),
