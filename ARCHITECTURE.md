@@ -2,6 +2,9 @@
 type: ssot
 owner: governance-team
 last_updated: 2026-09-26
+last-reviewed: 2026-10-14
+lifecycle: entry
+status: active
 ---
 
 # ARCHITECTURE.md — eCOS v6 Architecture Contracts

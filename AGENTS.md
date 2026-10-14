@@ -2,6 +2,9 @@
 type: ssot
 owner: governance-team
 last_updated: 2026-10-09
+last-reviewed: 2026-10-14
+lifecycle: entry
+status: active
 ---
 
 # AGENTS.md — Workspace Development Guide

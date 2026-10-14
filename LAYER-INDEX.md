@@ -2,6 +2,9 @@
 type: ssot
 owner: governance-team
 last_updated: 2026-09-06
+last-reviewed: 2026-10-14
+lifecycle: entry
+status: active
 ---
 # LAYER-INDEX.md — eCOS v6 Layer Index
 
