@@ -5919,87 +5919,161 @@ safeRender(populateHealth, 'populateHealth failed');
 
 /* === Global Search & Keyboard Navigation === */
 (function(){
-  var searchOverlay = document.getElementById('search-overlay');
-  var searchInput = document.getElementById('search-input');
-  var searchResults = document.getElementById('search-results');
-  var searchToggle = document.getElementById('search-toggle');
+  function initSearch() {
+    var searchOverlay = document.getElementById('search-overlay');
+    var searchInput = document.getElementById('search-input');
+    var searchResults = document.getElementById('search-results');
+    var searchToggle = document.getElementById('search-toggle');
+    if (!searchOverlay || !searchInput || !searchResults || !searchToggle) return;
 
-  // Search data index
-  var searchIndex = [];
-  function buildSearchIndex() {
-    searchIndex = [];
-    // Sections
-    var sectionNames = {'orient':'全景总览', 'arch':'体系与流程', 'gov':'恢复与准入', 'ledger':'路线与BET', 'swarm':'Agent协同', 'value':'价值中枢', 'logs':'事件与运行态', 'metrics':'指标度量', 'health':'健康诊断', 'know':'文档与知识', 'knowledge-memory':'知识记忆', 'skills-inventory':'技能清单', 'mof-grid':'MOF元模型', 'scene-system':'场景系统', 'next':'接下来做什么', 'topology':'架构拓扑'};
-    Object.keys(sectionNames).forEach(function(id) {
-      searchIndex.push({type:'板块', name:sectionNames[id], action:function(){go(id)}});
-    });
-    // Agents
-    (D.agents || []).forEach(function(a) {
-      var name = a.worktree ? a.worktree.split('/').pop() : 'unknown';
-      searchIndex.push({type:'Agent', name:name + (a.branch ? ' ('+a.branch.split('/').pop()+')' : ''), meta:a.last_activity_hours+'h前'});
-    });
-    // Gates
-    (D.gates || []).forEach(function(g) {
-      searchIndex.push({type:'门禁', name:g.id+' - '+(g.title||''), meta:g.verdict||g.status||''});
-    });
-    // Events
-    ((D.recent_events||{}).events||[]).slice(0,20).forEach(function(e) {
-      searchIndex.push({type:'事件', name:(e.summary||e.type||'').slice(0,40), meta:e.ts||''});
-    });
-  }
-
-  function performSearch(q) {
-    if (!q) { searchResults.innerHTML = ''; return; }
-    q = q.toLowerCase();
-    var results = searchIndex.filter(function(item) {
-      return (item.name||'').toLowerCase().includes(q) || (item.meta||'').toLowerCase().includes(q);
-    }).slice(0, 15);
-    if (!results.length) {
-      searchResults.innerHTML = emptyState('🔍', '无匹配结果', '尝试其他关键词');
-      return;
+    var historyKey = 'zx-search-history';
+    var history = [];
+    var composing = false;
+    var searchIndex = [];
+    function normalizedHistory(items) {
+      var result = [];
+      items.forEach(function(item) {
+        item = item.trim();
+        if (item && !result.some(function(old){ return old.toLowerCase() === item.toLowerCase(); })) result.push(item);
+      });
+      return result.slice(0, 8);
     }
-    searchResults.innerHTML = results.map(function(r) {
-      return '<div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;cursor:pointer" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="'+r.action+';closeSearch()">' +
-        '<span class="chip '+(r.type==='板块'?'info':r.type==='Agent'?'good':'neutral')+'" style="font-size:9px">'+r.type+'</span>' +
-        '<span style="flex:1;font-size:12px">'+r.name+'</span>' +
-        (r.meta?'<span style="font-size:9px;color:var(--muted)">'+r.meta+'</span>':'') +
-      '</div>';
-    }).join('');
-  }
-
-  function openSearch() {
-    buildSearchIndex();
-    searchOverlay.style.display = 'flex';
-    searchInput.focus();
-    searchInput.value = '';
-    searchResults.innerHTML = emptyState('🔍', '输入关键词搜索', '搜索板块、Agent、门禁、事件');
-  }
-  function closeSearch() { searchOverlay.style.display = 'none'; }
-  window.closeSearch = closeSearch;
-
-  if (searchToggle) searchToggle.onclick = openSearch;
-  if (searchInput) searchInput.oninput = function() { performSearch(this.value); };
-
-  // Keyboard shortcuts
-  document.addEventListener('keydown', function(e) {
-    // Ctrl+K / Cmd+K for search
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-      e.preventDefault();
-      openSearch();
-    }
-    // ESC to close search
-    if (e.key === 'Escape' && searchOverlay && searchOverlay.style.display === 'flex') {
-      closeSearch();
-    }
-    // 1-9 for section navigation
-    if (!e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement.tagName !== 'INPUT') {
-      var sectionIds = ['orient','arch','gov','ledger','swarm','value','logs','metrics','health','know','next','topology'];
-      var num = parseInt(e.key);
-      if (num >= 1 && num <= sectionIds.length) {
-        go(sectionIds[num-1]);
+    try {
+      var saved = JSON.parse(window.localStorage.getItem(historyKey) || '[]');
+      if (Array.isArray(saved) && saved.every(function(item){ return typeof item === 'string'; })) {
+        history = normalizedHistory(saved);
       }
+    } catch (_) { /* Search remains usable without browser storage. */ }
+
+    function rememberQuery(query) {
+      query = query.trim();
+      if (!query) return;
+      history = normalizedHistory([query].concat(history));
+      try { window.localStorage.setItem(historyKey, JSON.stringify(history)); } catch (_) {}
     }
-  });
+    function textNode(parent, tag, text, className) {
+      var node = document.createElement(tag);
+      node.textContent = text;
+      if (className) node.className = className;
+      parent.appendChild(node);
+      return node;
+    }
+    function showHistory() {
+      searchResults.replaceChildren();
+      textNode(searchResults, 'div', '最近搜索', 'small muted');
+      if (!history.length) {
+        textNode(searchResults, 'p', '输入关键词搜索；按 Enter 或点击结果后记入最近搜索。', 'small muted');
+        return;
+      }
+      var clear = textNode(searchResults, 'button', '清空最近搜索', 'btn small zx-search-history-clear');
+      clear.type = 'button';
+      clear.addEventListener('click', function(){
+        history = [];
+        try { window.localStorage.removeItem(historyKey); } catch (_) {}
+        showHistory();
+        searchInput.focus();
+      });
+      history.forEach(function(query){
+        var button = textNode(searchResults, 'button', query, 'btn small zx-search-history-query');
+        button.type = 'button';
+        button.style.margin = '4px';
+        button.addEventListener('click', function(){
+          searchInput.value = query;
+          rememberQuery(query);
+          performSearch(query);
+          searchInput.focus();
+        });
+      });
+    }
+    function buildSearchIndex() {
+      searchIndex = [];
+      var sectionNames = {'orient':'全景总览', 'arch':'体系与流程', 'gov':'恢复与准入', 'ledger':'路线与BET', 'swarm':'Agent协同', 'value':'价值中枢', 'logs':'事件与运行态', 'metrics':'指标度量', 'health':'健康诊断', 'know':'文档与知识', 'knowledge-memory':'知识记忆', 'skills-inventory':'技能清单', 'mof-grid':'MOF元模型', 'scene-system':'场景系统', 'next':'接下来做什么', 'topology':'架构拓扑'};
+      Object.keys(sectionNames).forEach(function(id){
+        searchIndex.push({type:'板块', name:sectionNames[id], meta:id === 'next' ? '周报 · 已完成任务 · 本地成品' : '', action:function(){ go(id); }});
+      });
+      (D.agents || []).forEach(function(a){
+        var name = a.worktree ? a.worktree.split('/').pop() : 'unknown';
+        searchIndex.push({type:'Agent', name:name + (a.branch ? ' ('+a.branch.split('/').pop()+')' : ''), meta:a.last_activity_hours+'h前'});
+      });
+      (D.gates || []).forEach(function(g){
+        searchIndex.push({type:'门禁', name:g.id+' - '+(g.title||''), meta:g.verdict||g.status||''});
+      });
+      ((D.recent_events||{}).events||[]).slice(0,20).forEach(function(e){
+        searchIndex.push({type:'事件', name:(e.summary||e.type||'').slice(0,40), meta:e.ts||''});
+      });
+    }
+    function performSearch(query) {
+      query = query.trim().toLowerCase();
+      if (!query) { showHistory(); return; }
+      searchResults.replaceChildren();
+      var results = searchIndex.filter(function(item){
+        return (item.name||'').toLowerCase().includes(query) || (item.meta||'').toLowerCase().includes(query);
+      }).slice(0,15);
+      if (!results.length) {
+        textNode(searchResults, 'p', '无匹配结果，尝试其他关键词。', 'small muted');
+        return;
+      }
+      results.forEach(function(item){
+        var row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'btn zx-search-result';
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;width:100%;text-align:left;margin:4px 0';
+        textNode(row, 'span', item.type, 'chip neutral');
+        textNode(row, 'span', item.name);
+        if (item.meta) textNode(row, 'span', item.meta, 'small muted');
+        row.addEventListener('click', function(){
+          rememberQuery(searchInput.value);
+          if (typeof item.action === 'function') item.action();
+          closeSearch();
+        });
+        searchResults.appendChild(row);
+      });
+    }
+    function openSearch() {
+      // Cmd-K belongs to this search; the HUD palette keeps its manual entry.
+      if (typeof window.closeCommandPalette === 'function') window.closeCommandPalette();
+      buildSearchIndex();
+      searchOverlay.style.display = 'flex';
+      searchInput.value = '';
+      showHistory();
+      searchInput.focus();
+    }
+    function closeSearch() { searchOverlay.style.display = 'none'; }
+    window.closeSearch = closeSearch;
+    searchToggle.addEventListener('click', openSearch);
+    searchInput.addEventListener('input', function(){ performSearch(this.value); });
+    searchInput.addEventListener('compositionstart', function(){ composing = true; });
+    searchInput.addEventListener('compositionend', function(){ composing = false; });
+    searchInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && !composing && !e.isComposing && e.keyCode !== 229) {
+        e.preventDefault();
+        e.stopPropagation();
+        rememberQuery(this.value);
+        performSearch(this.value);
+      }
+    });
+    // Capture precedes the existing HUD's window bubble listener in either load order.
+    document.addEventListener('keydown', function(e){
+      if (composing || e.isComposing || e.keyCode === 229) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!e.repeat) openSearch();
+        return;
+      }
+      if (e.key === 'Escape' && searchOverlay.style.display === 'flex') {
+        e.stopPropagation();
+        closeSearch();
+      }
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement.tagName !== 'INPUT') {
+        var sectionIds = ['orient','arch','gov','ledger','swarm','value','logs','metrics','health','know','next','topology'];
+        var num = parseInt(e.key);
+        if (num >= 1 && num <= 9) go(sectionIds[num-1]);
+      }
+    }, true);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSearch, {once:true});
+  else initSearch();
 })();
 
 /* === View Customization === */
