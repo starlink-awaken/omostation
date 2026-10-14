@@ -70,6 +70,123 @@ def now() -> str:
 
 
 
+def _task_digest(tasks: dict) -> str:
+    return hashlib.sha256(json.dumps(
+        tasks, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")).hexdigest()
+
+
+def _task_shape(tasks) -> bool:
+    """Validate the published task DTO, which deliberately has no schema field."""
+    if not isinstance(tasks, dict):
+        return False
+    if (tasks.get("source_kind") != "declared_state_root"
+            or not isinstance(tasks.get("source_root"), str)
+            or not Path(tasks["source_root"]).is_absolute()
+            or not isinstance(tasks.get("source"), str)):
+        return False
+    total, open_count = tasks.get("total"), tasks.get("open_count")
+    if type(total) is not int or type(open_count) is not int or not 0 <= open_count <= total:
+        return False
+    for key in ("by_status", "by_bucket"):
+        counts = tasks.get(key)
+        if (not isinstance(counts, dict) or any(
+                not isinstance(name, str) or type(count) is not int or count < 0
+                for name, count in counts.items()) or sum(counts.values()) != total):
+            return False
+    for key in ("open_recent", "recent", "recent_done"):
+        rows = tasks.get(key)
+        if not isinstance(rows, list) or any(
+                not isinstance(row, dict) or not isinstance(row.get("id"), str)
+                or not row["id"] or not isinstance(row.get("status"), str)
+                or not isinstance(row.get("bucket"), str) for row in rows):
+            return False
+    return isinstance(tasks.get("duplicates"), list)
+
+
+def _previous_task_binding(previous: dict) -> bool:
+    state = (previous.get("source_states") or {}).get("tasks")
+    tasks = previous.get("tasks")
+    if not _task_shape(tasks) or not isinstance(state, dict):
+        return False
+    observed = state.get("observed_at")
+    success = state.get("last_success_at")
+    try:
+        for stamp in (observed, success) if success is not None else (observed,):
+            if not isinstance(stamp, str):
+                return False
+            clock = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+            if clock.tzinfo is None or clock.utcoffset() is None or clock > datetime.now(timezone.utc):
+                return False
+    except (ValueError, OverflowError):
+        return False
+    revision_id = state.get("revision_id")
+    digest = state.get("data_sha256")
+    return (
+        state.get("source_lane") == "BOUND_PUBLICATION"
+        and isinstance(revision_id, str) and len(revision_id) == 64
+        and all(char in "0123456789abcdef" for char in revision_id)
+        and isinstance(digest, str) and len(digest) == 64
+        and all(char in "0123456789abcdef" for char in digest)
+        and state.get("source") == f"projection://{revision_id}/data.json#tasks"
+        and state.get("task_sha256") == _task_digest(tasks)
+    )
+
+
+def merge_published_tasks(data: dict, previous: dict, attempted_at: str) -> None:
+    """Consume one verified publication; never query a second task queue or seed."""
+    states = data.setdefault("source_states", {})
+    previous_bound = _previous_task_binding(previous)
+    previous_state = (previous.get("source_states") or {}).get("tasks") if previous_bound else {}
+    previous_success = previous_state.get("last_success_at")
+    try:
+        from live_server import bound_payload_freshness
+        from refresh import HEALTH_SEMANTICS
+        revision = ProjectionRevisionStore(STATE_ROOT).load(require_fresh=True)
+        raw = revision.artifact_bodies["data"]
+        payload = json.loads(raw)
+        tasks = payload.get("tasks") if isinstance(payload, dict) else None
+        if not _task_shape(tasks):
+            raise ValueError("projection_tasks_invalid")
+        # Same 300-second policy as the actual core reader. A renewed manifest
+        # lease never renews the original collection timestamp inside raw bytes.
+        freshness = bound_payload_freshness(revision)
+        if freshness["projection_status"] not in {"BOUND_FRESH", "STALE"}:
+            raise ValueError(freshness["projection_error"] or "projection_tasks_clock_invalid")
+        fresh = freshness["projection_status"] == "BOUND_FRESH"
+        observed = freshness["payload_generated_at"]
+        success = observed if fresh else previous_success
+        data["tasks"] = copy.deepcopy(tasks)
+        states["tasks"] = {
+            "status": "OK" if fresh else "STALE_PARTIAL", "available": True,
+            "observed_at": observed, "last_attempt_at": attempted_at,
+            "last_success_at": success, "last_success_status": "KNOWN" if success else "UNKNOWN",
+            "health_semantics": HEALTH_SEMANTICS, "source_lane": "BOUND_PUBLICATION",
+            "source": f"projection://{revision.revision_id}/data.json#tasks",
+            "source_root": tasks["source_root"], "source_kind": tasks["source_kind"],
+            "revision_id": revision.revision_id, "producer_root_oid": revision.producer_root_oid,
+            "data_sha256": hashlib.sha256(raw).hexdigest(), "task_sha256": _task_digest(tasks),
+            "payload_age_seconds": freshness["payload_age_seconds"],
+            "error": freshness["projection_error"],
+        }
+    except Exception as exc:
+        reason = getattr(exc, "public_error", None)
+        if reason is None:
+            reason = str(exc) if isinstance(exc, ValueError) and str(exc).startswith("projection_") else type(exc).__name__
+        if previous_bound:
+            data["tasks"] = copy.deepcopy(previous["tasks"])
+            states["tasks"] = dict(previous_state, status="STALE_UNAVAILABLE", available=False,
+                                   last_attempt_at=attempted_at, error=reason)
+        else:
+            data.pop("tasks", None)
+            states["tasks"] = {"status": "UNAVAILABLE", "available": False,
+                               "observed_at": None, "last_attempt_at": attempted_at,
+                               "last_success_at": None, "last_success_status": "UNKNOWN", "error": reason}
+    # Metadata is separate from the exact DTO. Any old collector/seed envelope
+    # must not survive as a competing task source.
+    data.setdefault("live_sources", {}).pop("tasks", None)
+
+
 class RefreshOrchestrator:
     """Orchestrates data collection and page generation."""
 
@@ -240,6 +357,8 @@ class RefreshOrchestrator:
             data["panel_value"]["state"] = "unprovable"
             data["panel_value"].setdefault("state_reason", []).append(current_value.get("reason"))
 
+        merge_published_tasks(data, previous, observed_at)
+
         data["generated_at"] = observed_at
         # Revision-bound generation + strategic projection — both are required by
         # observatory_query.ObservationIndex; without them every /api/v1/* query
@@ -371,7 +490,7 @@ class RefreshOrchestrator:
         if failed == 0:
             if any(s.get("status") == "DEGRADED" for s in states.values()):
                 return "DEGRADED"
-            if any(s.get("status") == "PARTIAL" for s in states.values()):
+            if any(s.get("status") in {"PARTIAL", "STALE_PARTIAL"} for s in states.values()):
                 return "PARTIAL"
             return "OBSERVED"
         elif failed < total / 3:

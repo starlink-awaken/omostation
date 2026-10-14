@@ -184,3 +184,214 @@ def test_actual_strategy_mirror_keeps_current_content_clock(monkeypatch):
     source = next(s for s in result["source_states"] if s["id"] == "source:remote-portfolio")
     assert source["observed_at"] == clock and source["sha256"] == "c" * 64
     assert result["state"] == "PARTIAL"
+
+
+def _task_orchestrator(monkeypatch, tmp_path, *, timestamp=None, tasks=None, failure=None):
+    """Execute the mirror; fixture only external collectors and the verified store."""
+    import json
+    from datetime import datetime, timedelta, timezone
+    package = types.ModuleType("collectors"); package.__path__ = []
+    monkeypatch.setitem(sys.modules, "collectors", package)
+    names = ["base", "registry", "portfolio", "workflow", "resident", "scheduler", "compute",
+             "references", "orca", "multica", "ruflo", "reference_cell", "environment",
+             "documents", "catalog", "strategy", "agent_brief", "personal_value"]
+    for name in names:
+        external = types.ModuleType("collectors." + name)
+        monkeypatch.setitem(sys.modules, external.__name__, external)
+        setattr(package, name, external)
+    sys.modules["collectors.base"].DataCollector = object
+    sys.modules["collectors.base"].CollectionError = Exception
+    registry = sys.modules["collectors.registry"]
+    registry.CollectorRegistry = object; registry.get_registry = lambda: object(); registry.COLLECTORS = []
+    schema = types.ModuleType("models.schema"); schema.validate_data = lambda data: []
+    monkeypatch.setitem(sys.modules, "models", types.ModuleType("models"))
+    monkeypatch.setitem(sys.modules, "models.schema", schema)
+    # Run the actual core policy function from its delivered AST; avoid importing
+    # unrelated HTTP endpoints and filesystem identity globals into this unit test.
+    core = types.ModuleType("live_server")
+    core.json = json; core.datetime = datetime; core.timezone = timezone
+    policy = next(node for node in ast.parse((ASSETS / "live_server.py.asset").read_text()).body
+                  if isinstance(node, ast.FunctionDef) and node.name == "bound_payload_freshness")
+    exec(compile(ast.Module(body=[policy], type_ignores=[]), "live_server.py.asset", "exec"), core.__dict__)
+    monkeypatch.setitem(sys.modules, "live_server", core)
+    current = datetime.now(timezone.utc)
+    root = tmp_path / "state"
+    task_dto = tasks if tasks is not None else {
+        "source": ".omo/tasks/{active,planned,blocked,done}/*.yaml",
+        "source_root": "/fixture-authority", "source_kind": "declared_state_root",
+        "total": 50, "open_count": 1, "by_status": {"done": 49, "pending": 1},
+        "by_bucket": {"done": 49, "active": 1}, "duplicates": [],
+        "open_recent": [], "recent": [],
+        "recent_done": [{"id": "WEEKLY", "status": "done", "bucket": "done", "goal_id": "OBJ-VALUE",
+                         "artifacts": [{"preview": "literal <script> and __DATA__"}]}],
+    }
+    class Revision(types.SimpleNamespace):
+        @property
+        def data_path(self):
+            raise AssertionError("retained bytes must not be reopened")
+    revision = Revision(
+        artifact_bodies={"data": json.dumps({"generated_at": timestamp or current.isoformat(),
+                         "tasks": task_dto, "unrelated_producer_field": "DO NOT COPY"}).encode()},
+        revision_id="a" * 64, producer_root_oid="b" * 40,
+        generated_at=(current + timedelta(seconds=1)).isoformat(),
+        fresh_until=(current + timedelta(minutes=10)).isoformat(),
+    )
+    calls = []
+    runtime = types.ModuleType("runtime_paths")
+    runtime.CODE_ROOT = tmp_path / "code"; runtime.STATE_ROOT = root
+    runtime.legacy_doc_publication_enabled = lambda: False
+    class Store:
+        def __init__(self, state): assert state == root
+        def load(self, *, require_fresh=True):
+            calls.append(require_fresh)
+            assert require_fresh is True
+            if failure: raise failure
+            return revision
+    runtime.ProjectionRevisionStore = Store
+    monkeypatch.setitem(sys.modules, "runtime_paths", runtime)
+    refresh = _refresh(monkeypatch)
+    for name in ("integrate_gantt", "integrate_strategy", "publish_strategy_artifacts"):
+        monkeypatch.setattr(refresh, name, lambda *args, **kwargs: None)
+    loader = importlib.machinery.SourceFileLoader("zhixing_task_orchestrator", str(ASSETS / "orchestrator.py.asset"))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec); loader.exec_module(module)
+    return module, revision, task_dto, calls
+
+
+def test_actual_host_merge_replaces_seed_tasks_with_exact_bound_subtree(monkeypatch, tmp_path):
+    import copy
+    import json
+    module, revision, tasks, calls = _task_orchestrator(monkeypatch, tmp_path)
+    previous = {"tasks": {"total": 15}, "custom_host_field": ["preserve"],
+                "live_sources": {"tasks": {"legacy": True}}, "source_states": {}}
+    before = copy.deepcopy(previous); raw = revision.artifact_bodies["data"]
+    result = module.RefreshOrchestrator().merge_results(previous, [
+        ("workflow", {"state": "OBSERVED", "observed_at": "workflow-clock", "run_count": 2}, None)])
+    state = result["source_states"]["tasks"]
+    assert result["tasks"] == tasks and result["tasks"]["total"] == 50
+    assert result["custom_host_field"] == previous["custom_host_field"]
+    assert result["workflow"]["run_count"] == 2
+    assert "unrelated_producer_field" not in result
+    assert "tasks" not in result["live_sources"]
+    assert state["observed_at"] == json.loads(raw)["generated_at"]
+    assert state["last_success_at"] == state["observed_at"]
+    assert state["last_attempt_at"] == result["generated_at"]
+    assert state["data_sha256"] == hashlib.sha256(raw).hexdigest()
+    assert state["task_sha256"] == module._task_digest(tasks)
+    assert state["status"] == "OK" and calls == [True]
+    assert previous == before and revision.artifact_bodies["data"] == raw
+    assert not tmp_path.exists() or not list(tmp_path.iterdir())
+
+
+def test_fresh_lease_never_promotes_old_payload_clock(monkeypatch, tmp_path):
+    import copy
+    from datetime import datetime, timedelta, timezone
+    old = (datetime.now(timezone.utc) - timedelta(seconds=301)).isoformat()
+    module, revision, tasks, calls = _task_orchestrator(monkeypatch, tmp_path, timestamp=old)
+    result = {}; module.merge_published_tasks(result, {}, "new-wrapper-clock")
+    state = result["source_states"]["tasks"]
+    assert result["tasks"] == tasks
+    assert state["status"] == "STALE_PARTIAL"
+    assert state["observed_at"] == old and state["last_attempt_at"] == "new-wrapper-clock"
+    assert state["last_success_at"] is None
+    assert state["payload_age_seconds"] > 300
+    assert state["observed_at"] != revision.generated_at and calls == [True]
+    assert module.RefreshOrchestrator._compute_result_state(result) == "PARTIAL"
+
+
+def test_failed_reader_drops_unbound_seed_instead_of_promoting_it(monkeypatch, tmp_path):
+    module, revision, tasks, calls = _task_orchestrator(monkeypatch, tmp_path, failure=RuntimeError("private diagnostic"))
+    previous = {"tasks": {"total": 15}, "source_states": {"tasks": {
+        "status": "OK", "observed_at": "legacy-wrapper", "last_success_at": "legacy-wrapper"}}}
+    result = module.RefreshOrchestrator().merge_results(previous, [])
+    assert "tasks" not in result
+    state = result["source_states"]["tasks"]
+    assert state["status"] == "UNAVAILABLE" and state["available"] is False
+    assert state["observed_at"] is None and state["last_success_at"] is None
+    assert state["error"] == "RuntimeError" and "private" not in str(state)
+    assert previous["tasks"]["total"] == 15 and calls == [True]
+
+
+def test_only_digest_bound_cache_can_survive_reader_failure(monkeypatch, tmp_path):
+    import copy
+    module, revision, tasks, calls = _task_orchestrator(monkeypatch, tmp_path)
+    bound = {}; module.merge_published_tasks(bound, {}, "first-attempt")
+    class FailedStore:
+        def __init__(self, root): pass
+        def load(self, *, require_fresh): raise RuntimeError("missing revision")
+    monkeypatch.setattr(module, "ProjectionRevisionStore", FailedStore)
+    retained = copy.deepcopy(bound); module.merge_published_tasks(retained, bound, "later-attempt")
+    assert retained["tasks"] == tasks
+    assert retained["source_states"]["tasks"]["status"] == "STALE_UNAVAILABLE"
+    assert retained["source_states"]["tasks"]["observed_at"] == bound["source_states"]["tasks"]["observed_at"]
+    assert retained["source_states"]["tasks"]["last_success_at"] == bound["source_states"]["tasks"]["last_success_at"]
+    mutated = copy.deepcopy(bound); mutated["tasks"]["recent_done"][0]["goal_id"] = "OTHER-GOAL"
+    result = copy.deepcopy(mutated); module.merge_published_tasks(result, mutated, "after-mutation")
+    assert "tasks" not in result and result["source_states"]["tasks"]["status"] == "UNAVAILABLE"
+
+
+@pytest.mark.parametrize("mutation", ["missing", "bad_count", "missing_recent", "unbound_root", "relative_root", "bad_rows", "missing_clock", "naive_clock", "future_clock"])
+def test_malformed_publication_never_becomes_current_tasks(monkeypatch, tmp_path, mutation):
+    import json
+    from datetime import datetime, timedelta, timezone
+    module, revision, tasks, calls = _task_orchestrator(monkeypatch, tmp_path)
+    payload = json.loads(revision.artifact_bodies["data"])
+    if mutation == "missing": payload.pop("tasks")
+    elif mutation == "bad_count": payload["tasks"]["total"] = True
+    elif mutation == "missing_recent": payload["tasks"].pop("recent_done")
+    elif mutation == "unbound_root": payload["tasks"]["source_kind"] = "code_root"
+    elif mutation == "relative_root": payload["tasks"]["source_root"] = "relative"
+    elif mutation == "bad_rows": payload["tasks"]["recent_done"] = ["invalid"]
+    elif mutation == "missing_clock": payload.pop("generated_at")
+    elif mutation == "naive_clock": payload["generated_at"] = "2026-10-14T00:00:00"
+    else: payload["generated_at"] = (datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat()
+    revision.artifact_bodies["data"] = json.dumps(payload).encode()
+    result = {"tasks": {"total": 15}}; module.merge_published_tasks(result, result.copy(), "attempt")
+    assert "tasks" not in result
+    assert result["source_states"]["tasks"]["status"] == "UNAVAILABLE" and calls == [True]
+
+
+def test_stale_bound_source_cannot_become_healthy_on_retry(monkeypatch, tmp_path):
+    import copy
+    from datetime import datetime, timedelta, timezone
+    old = (datetime.now(timezone.utc) - timedelta(minutes=20)).isoformat()
+    module, revision, tasks, calls = _task_orchestrator(monkeypatch, tmp_path, timestamp=old)
+    previous = {}; module.merge_published_tasks(previous, {}, "first-wrapper")
+    result = copy.deepcopy(previous); module.merge_published_tasks(result, previous, "new-wrapper")
+    assert result["source_states"]["tasks"]["status"] == "STALE_PARTIAL"
+    assert result["source_states"]["tasks"]["observed_at"] == old
+    assert result["source_states"]["tasks"]["last_success_at"] is None
+
+
+@pytest.mark.parametrize("field,value", [
+    ("revision_id", "invalid"), ("data_sha256", "invalid"),
+    ("task_sha256", None), ("observed_at", None),
+    ("observed_at", "2026-10-14T00:00:00"), ("observed_at", "9999-01-01T00:00:00Z"),
+])
+def test_invalid_previous_binding_metadata_is_never_retained(monkeypatch, tmp_path, field, value):
+    import copy
+    module, revision, tasks, calls = _task_orchestrator(monkeypatch, tmp_path)
+    previous = {}; module.merge_published_tasks(previous, {}, "first-attempt")
+    previous["source_states"]["tasks"][field] = value
+    class FailedStore:
+        def __init__(self, root): pass
+        def load(self, *, require_fresh): raise RuntimeError("not available")
+    monkeypatch.setattr(module, "ProjectionRevisionStore", FailedStore)
+    result = copy.deepcopy(previous); module.merge_published_tasks(result, previous, "new-attempt")
+    assert "tasks" not in result and result["source_states"]["tasks"]["status"] == "UNAVAILABLE"
+    assert result["source_states"]["tasks"]["observed_at"] is None
+
+
+@pytest.mark.parametrize("age,status", [(300, "OK"), (300.001, "STALE_PARTIAL")])
+def test_task_source_uses_exact_core_freshness_boundary(monkeypatch, tmp_path, age, status):
+    from datetime import datetime, timedelta, timezone
+    clock = datetime.now(timezone.utc)
+    module, revision, tasks, calls = _task_orchestrator(monkeypatch, tmp_path,
+        timestamp=(clock - timedelta(seconds=age)).isoformat())
+    class FixedDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None): return clock
+    monkeypatch.setattr(sys.modules["live_server"], "datetime", FixedDatetime)
+    result = {}; module.merge_published_tasks(result, {}, "attempt")
+    assert result["source_states"]["tasks"]["status"] == status
+    assert result["source_states"]["tasks"]["payload_age_seconds"] == age
