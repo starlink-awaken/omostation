@@ -265,7 +265,21 @@ def _run_to_child(monkeypatch, tmp_path, spy, mod) -> dict:
     (mod.CHECKOUT / ".git").mkdir(parents=True, exist_ok=True)
 
     def responder(cmd, *args, **kwargs):  # 检出已存在 → remote 卫生检查必须放行
-        out = mod.CLONE_URL + "\n" if "get-url" in cmd else ""
+        # External Git fixture now supplies the valid preconditions of the
+        # delivered warm gate, while every existing root-binding assertion stays.
+        if "get-url" in cmd:
+            out = mod.CLONE_URL + "\n"
+        elif "--show-toplevel" in cmd:
+            out = str(mod.CHECKOUT.resolve()) + "\n"
+        elif "remote.origin.fetch" in cmd:
+            out = "+refs/heads/*:refs/remotes/origin/*\n"
+        elif cmd[1:] == ["rev-parse", "HEAD", "refs/remotes/origin/main"]:
+            out = ("a" * 40 + "\n") * 2
+        elif "refs/remotes/origin/main^{commit}" in cmd:
+            out = "a" * 40 + "\n"
+        else:
+            # This fixture tree has no child gitlinks, dirty or ignored files.
+            out = ""
         spy.append((list(cmd), kwargs))
         return subprocess.CompletedProcess(list(cmd), 0, stdout=out, stderr="")
 
