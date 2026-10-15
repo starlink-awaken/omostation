@@ -27,20 +27,35 @@ const document = {getElementById:id=>id==='personal-radar-card'?(nodes.get(id)||
   head:element(), body:element(), querySelectorAll:()=>[], querySelector:()=>null,
   addEventListener(){}};
 const payload = scenario.payload || {};
-const requests=[];
-let eventReply={};
+const requests=[], timers=[];
+let eventReply={}, responseCounts={logs:0,metrics:0};
+function syntheticResponse(reply, fallback) {
+  const status=reply.status??200;
+  const body=Object.hasOwn(reply,'body')?reply.body:fallback;
+  let consumed=false;
+  return {status,ok:status>=200&&status<300,
+    clone(){return syntheticResponse(reply,fallback);},
+    json:async()=>{
+      if(consumed)throw Error('response body consumed twice');
+      consumed=true;
+      if(reply.malformed)throw Error('synthetic invalid JSON');
+      return body;
+    }};
+}
 const sandbox={document, location:{protocol:scenario.eventRefreshes?'http:':'file:',hash:'#personal',pathname:'/'},
   sessionStorage:{getItem(){return null;},setItem(){}}, URLSearchParams, URL,
-  console:{log(){},warn(){},error(){}}, setTimeout(){},clearTimeout(){},
+  console:{log(){},warn(){},error(){}},
+  setTimeout(callback,delay){timers.push(delay);callback();},clearTimeout(){},
   setInterval(){},clearInterval(){}, requestAnimationFrame(){},
-  fetch:async(url,opts={})=>{requests.push({url,method:opts.method||'GET'});
-    if(url.startsWith('/api/logs')){
-      if(eventReply.failure)throw Error('synthetic logs unavailable');
-      return {ok:eventReply.http_ok!==false,json:async()=>({events:[],value_summary:eventReply.summary||{}})};
-    }
-    if(url==='/api/v1/value/metrics'){
-      if(eventReply.failure)throw Error('synthetic metrics unavailable');
-      return {ok:eventReply.http_ok!==false,json:async()=>eventReply.metrics||{}};
+  fetch:async(url,opts={})=>{requests.push({url,method:opts.method||'GET',cache:opts.cache,credentials:opts.credentials});
+    const kind=url.startsWith('/api/logs')?'logs':url==='/api/v1/value/metrics'?'metrics':null;
+    if(kind){
+      const queue=eventReply[kind+'Responses'];
+      const reply=queue?queue[Math.min(responseCounts[kind]++,queue.length-1)]:
+        {status:eventReply.http_ok===false?503:200};
+      if(eventReply.failure||reply.reject)throw Error('synthetic '+kind+' unavailable');
+      const fallback=kind==='logs'?{events:eventReply.events||[],value_summary:eventReply.summary||{}}:eventReply.metrics||{};
+      return syntheticResponse(reply,fallback);
     }
     if(scenario.failure)throw Error('synthetic unavailable');
     return {ok:scenario.http_ok!==false,json:async()=>({data:scenario.radar||{}})};}};
@@ -68,7 +83,7 @@ vm.runInNewContext(source,sandbox,{timeout:3000});
   if(scenario.checkRadar){sandbox.testPersonal.mountHealthRadar();await sandbox.testPersonal.loadRadarData();}
   const eventValues=[];
   for(const reply of scenario.eventRefreshes||[]){
-    eventReply=reply; await sandbox.testPersonal.loadPersonalEvents();
+    eventReply=reply; responseCounts={logs:0,metrics:0}; await sandbox.testPersonal.loadPersonalEvents();
     eventValues.push(Object.fromEntries(['kpi-net-saved','kpi-adjudications','kpi-pr-delivery',
       'kpi-code-lines','kpi-violations','ns-v3-score','personal-event-status'].map(id=>[id,get(id).textContent])));
   }
@@ -76,7 +91,7 @@ vm.runInNewContext(source,sandbox,{timeout:3000});
     status:get('personal-now-status').innerHTML,values,
     radar:get('radar-score-badge').textContent,
     svg:get('radar-svg-container').innerHTML,
-    radarHeader:get('personal-radar-card').innerHTML,requests}));
+    radarHeader:get('personal-radar-card').innerHTML,requests,timers}));
 })().catch(e=>{console.error(e);process.exitCode=1;});
 """
 
@@ -195,3 +210,95 @@ def test_actual_http_event_refresh_clears_previous_positive_values(next_reply):
     assert "90" not in values[1]["ns-v3-score"]
     if next_reply:
         assert "不可用" in values[1]["personal-event-status"]
+
+
+def _busy_reply():
+    return {"status": 503,
+            "body": {"error": "projection_validation_busy", "read_only": True}}
+
+
+def _endpoint_requests(output, endpoint):
+    url = "/api/logs?limit=40&source=all" if endpoint == "logs" else "/api/v1/value/metrics"
+    return [request for request in output["requests"] if request["url"] == url]
+
+
+@pytest.mark.parametrize("endpoint", ["logs", "metrics"])
+@pytest.mark.parametrize("busy_attempts", [1, 2])
+def test_personal_read_busy_recovers_using_real_success(endpoint, busy_attempts):
+    reply = {"events": [{"ts": "2026-10-16T00:00:00Z", "type": "fixture",
+                         "source": "a2a-messages"}],
+             "metrics": {"north_star_v3": {"composite_score": 11,
+                                            "composite_verdict": "OBSERVED"}},
+             endpoint + "Responses": [_busy_reply()] * busy_attempts + [{"status": 200}]}
+    output = run_asset(eventRefreshes=[reply])
+    assert len(_endpoint_requests(output, endpoint)) == busy_attempts + 1
+    assert len(_endpoint_requests(output, "metrics" if endpoint == "logs" else "logs")) == 1
+    assert output["timers"] == [300, 900][:busy_attempts]
+    value = output["eventValues"][-1]
+    assert value["personal-event-status"] == "已读取 1 条来源事件 · 活动记录不等于本人采纳或收益"
+    assert value["ns-v3-score"] == "11 / 100 (OBSERVED)"
+    assert value["kpi-net-saved"] == "NO_DATA"
+    assert all(r["method"] == "GET" and r["cache"] == "no-store"
+               and r["credentials"] == "omit" for r in output["requests"])
+
+
+@pytest.mark.parametrize("endpoint", ["logs", "metrics"])
+def test_personal_read_persistent_busy_stops_after_three_and_clears_old_value(endpoint):
+    previous = {"summary": {"total_net_saved_seconds": 600},
+                "metrics": {"north_star_v3": {"composite_score": 90}}}
+    output = run_asset(eventRefreshes=[previous, {endpoint + "Responses": [_busy_reply()]}])
+    assert len(_endpoint_requests(output, endpoint)) == 4  # one earlier success, then three busy
+    assert output["timers"] == [300, 900]
+    current = output["eventValues"][-1]
+    assert "不可用" in current["personal-event-status"]
+    assert current["kpi-net-saved"] == "NO_DATA"
+    assert current["ns-v3-score"] == "NO_DATA"
+
+
+@pytest.mark.parametrize("endpoint", ["logs", "metrics"])
+@pytest.mark.parametrize("failure", [
+    {"status": 503, "body": {"error": "projection_payload_stale", "read_only": True}},
+    {"status": 503, "body": {"error": "projection_code_drift", "read_only": True}},
+    {"status": 403, "body": {"error": "projection_validation_busy", "read_only": True}},
+    {"status": 500, "body": {"error": "projection_validation_busy", "read_only": True}},
+    {"status": 503, "body": {"error": "projection_validation_busy", "read_only": False}},
+    {"status": 503, "body": {"error": "projection_validation_busy", "read_only": "true"}},
+    {"status": 503, "body": {"error": "projection_validation_busy"}},
+    {"status": 503, "body": None},
+    {"status": 503, "malformed": True},
+    {"reject": True},
+])
+def test_personal_read_other_failures_never_retry(endpoint, failure):
+    output = run_asset(eventRefreshes=[{endpoint + "Responses": [failure, {"status": 200}]}])
+    assert len(_endpoint_requests(output, endpoint)) == 1
+    assert output["timers"] == []
+    assert "不可用" in output["eventValues"][-1]["personal-event-status"]
+    assert output["eventValues"][-1]["ns-v3-score"] == "NO_DATA"
+
+
+@pytest.mark.parametrize("endpoint", ["logs", "metrics"])
+def test_personal_read_busy_then_permanent_error_does_not_try_third(endpoint):
+    permanent = {"status": 503,
+                 "body": {"error": "projection_payload_stale", "read_only": True}}
+    output = run_asset(eventRefreshes=[
+        {endpoint + "Responses": [_busy_reply(), permanent, {"status": 200}]}])
+    assert len(_endpoint_requests(output, endpoint)) == 2
+    assert output["timers"] == [300]
+    assert "不可用" in output["eventValues"][-1]["personal-event-status"]
+
+
+def test_personal_read_busy_then_actual_empty_preserves_zero_without_metrics_value():
+    summary = {"total_net_saved_seconds": 0, "adjudications_count": 0,
+               "adjudications_acceptance_rate": 0}
+    output = run_asset(eventRefreshes=[{
+        "logsResponses": [_busy_reply(), {"status": 200,
+            "body": {"events": [], "value_summary": summary}}],
+        "metricsResponses": [{"status": 403}],
+    }])
+    current = output["eventValues"][-1]
+    assert current["kpi-net-saved"] == "0.0 分钟"
+    assert current["kpi-adjudications"] == "0 次 (0%)"
+    assert current["ns-v3-score"] == "NO_DATA"
+    assert "已读取 0 条" in current["personal-event-status"]
+    assert "价值指标来源不可用" in current["personal-event-status"]
+    assert output["timers"] == [300]
