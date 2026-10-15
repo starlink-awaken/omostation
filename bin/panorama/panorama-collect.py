@@ -3342,6 +3342,16 @@ NATIVE_TASK_UI = r"""
     add(detail,'p','目标：'+(task.goal_id||'未关联')+' · 负责人：'+(task.owner||'未指定'));
     add(detail,'p','完成：'+(task.completed_at||'未记录')+' · 更新：'+(task.updated_at||'未记录'));
     add(detail,'p','任务记录：'+(task.task_ref||task.path||'未记录'));
+    const association=task.goal_association||{};
+    add(detail,'p','任务关联目标：'+(association.state==='declared'?'任务记录已声明，关联未验证':'关联未知（记录缺失、格式或一致性待核对）'));
+    add(detail,'p','阶段目标：以下仅为任务记录声明的目标链编号，不表示阶段效果。');
+    const lineage=add(detail,'details','');add(lineage,'summary','查看目标关联详情');
+    const ids=association.ids||{};
+    for(const [key,label] of [['vision_id','愿景'],['objective_id','目标'],['campaign_id','阶段计划'],['key_result_id','关键结果']]){
+      add(lineage,'p',label+'：'+(typeof ids[key]==='string'&&ids[key]?ids[key]:'未记录'));
+    }
+    add(detail,'p','任务完成不代表目标效果已证明；此处不是 BET 正式组合绑定或关键结果达成证明。');
+    add(detail,'h3','成果证据');
     if(!(task.artifacts||[]).length)add(detail,'p','没有可预览的 Markdown 成品');
     for(const artifact of (task.artifacts||[]).slice(0,3)){
       const file=document.createElement('details');detail.appendChild(file);
@@ -3363,6 +3373,45 @@ def render_projection_page(template: str, payload: dict, ui_block: str = "") -> 
     snapshot = json.dumps(payload, ensure_ascii=False).replace("<", "\\u003c")
     page = re.sub(r"__SNAPSHOT_JSON__|__DATA__", lambda _match: snapshot, template)
     return page.replace("</body>", "<script>" + ui_block + "\n" + NATIVE_TASK_UI + "</script>\n</body>")
+
+
+def _task_declared_id(value) -> str:
+    """Accept a bounded declaration identifier, never arbitrary metadata text."""
+    if isinstance(value, str) and re.fullmatch(r"[A-Za-z][A-Za-z0-9_.:-]{0,119}", value):
+        return value
+    return ""
+
+
+def _task_goal_association(data: dict) -> dict:
+    """Expose task-local declarations without asserting authoritative binding."""
+    metadata = data.get("metadata")
+    issues = []
+    if metadata is None:
+        metadata = {}
+    elif not isinstance(metadata, dict):
+        metadata = {}
+        issues.append("metadata:invalid")
+    ids = {}
+    for key in ("vision_id", "objective_id", "campaign_id", "key_result_id"):
+        value = metadata.get(key)
+        ids[key] = _task_declared_id(value)
+        if value is None or value == "":
+            issues.append(key + ":missing")
+        elif not ids[key]:
+            issues.append(key + ":invalid")
+    goal = _task_declared_id(data.get("goal_id"))
+    if data.get("goal_id") not in (None, "") and not goal:
+        issues.append("goal_id:invalid")
+    if goal and ids["objective_id"] and goal != ids["objective_id"]:
+        issues.append("objective_id:conflict")
+    return {
+        "kind": "task_record_association",
+        "state": "unknown" if issues else "declared",
+        "ids": ids,
+        "issues": issues,
+        "binding_status": "unverified",
+        "effect_status": "unproven",
+    }
 
 
 def collect_tasks() -> dict:
@@ -3394,7 +3443,8 @@ def collect_tasks() -> dict:
                 "priority": str(data.get("priority") or "unspecified")[:20],
                 "path": str(path.relative_to(task_root))[:200],
                 "task_ref": str(path),
-                "goal_id": str(data.get("goal_id") or "")[:120],
+                "goal_id": _task_declared_id(data.get("goal_id")),
+                "goal_association": _task_goal_association(data),
                 "updated_at": str(data.get("updated_at") or "")[:80],
                 "completed_at": str(data.get("completed_at") or data.get("done_at") or "")[:80],
                 "_evidence_paths": data.get("evidence_paths", []),
