@@ -302,3 +302,147 @@ def test_personal_read_busy_then_actual_empty_preserves_zero_without_metrics_val
     assert "已读取 0 条" in current["personal-event-status"]
     assert "价值指标来源不可用" in current["personal-event-status"]
     assert output["timers"] == [300]
+
+
+# Separate export scenarios retain the original fifty event/progress cases unchanged.
+EXPORT_NODE = NODE.replace(
+    "addEventListener(){}, setAttribute(){}, getAttribute(){return null;},",
+    """listeners:{}, addEventListener(type,fn){this.listeners[type]=fn;},
+    click(){if(this.listeners.click)this.listeners.click();else downloads.push({name:this.download,href:this.href});},
+    setAttribute(key,value){this[key]=value;}, getAttribute(){return null;},"""
+).replace(
+    "const requests=[], timers=[];",
+    """const requests=[], timers=[], downloads=[], blobs=[], revoked=[];
+    class LocalBlob {constructor(parts,options){this.content=parts.join('');this.type=options.type;}}
+    const localURL={createObjectURL(blob){blobs.push(blob);return 'blob:local-'+blobs.length;},
+      revokeObjectURL(url){revoked.push(url);}};"""
+).replace(
+    "URLSearchParams, URL,", "URLSearchParams, URL:localURL, Blob:LocalBlob,"
+).replace(
+    "loadPersonalEvents}; return;",
+    "loadPersonalEvents,buildPersonalDeliverySummary,initPersonalDeliveryExport}; return;"
+).replace(
+    "  const values=[];",
+    """  const values=[];
+    const before={preview:get('personal-delivery-preview').value,
+      disabled:get('personal-delivery-download').disabled};
+    for(const snapshot of scenario.exportSnapshots||[payload]){
+      sandbox.D=snapshot;get('personal-delivery-generate').click();
+    }
+    const preview=get('personal-delivery-preview').value;
+    if(scenario.changeBeforeDownload)sandbox.D={portfolio:{actual:999}};
+    get('personal-delivery-download').click();
+    process.stdout.write(JSON.stringify({before,preview,
+      previewHTML:get('personal-delivery-preview').innerHTML,
+      readOnly:get('personal-delivery-preview').readOnly,
+      downloads,blobs,revoked,requests,hero:get('personal').innerHTML}));
+    return;"""
+)
+
+
+def run_delivery_export(**scenario):
+    node = shutil.which("node")
+    assert node
+    asset = Path(os.environ.get("ZHIXING_PERSONAL_TEST_ASSET", ASSET))
+    result = subprocess.run([node, "-e", EXPORT_NODE, str(asset), json.dumps(scenario)],
+                            capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stdout + result.stderr
+    output = json.loads(result.stdout)
+    assert output["requests"] == []
+    return output
+
+
+def delivery_snapshot():
+    return {
+        "generated_at": "2026-10-15T17:49:56Z",
+        "portfolio": {"state": "OBSERVED", "source": "github://official/ledger",
+                      "sha": "a" * 40, "ledger_sha256": "b" * 64,
+                      "observed_at": "2026-10-15T17:48:15Z",
+                      "actual": 12, "counts": {"done": 9, "pending": 2, "blocked": 1},
+                      "bet_records": [{"id": "BET-OPEN", "title": "待处理", "status": "pending",
+                                       "owner": None}, {"id": "BET-CLOSED", "status": "done"}]},
+        "tasks": {"source": ".omo/tasks", "recent_done": [
+            {"id": "TASK-DONE", "title": "真实交付", "status": "done",
+             "completed_at": "2026-10-15T17:45:22Z", "artifacts": [
+                 {"path": "/local/交付.md", "status": "ready", "sha256": "c" * 64,
+                  "bytes": 3120, "preview": "PRIVATE_ARTIFACT_BODY",
+                  "metadata": {"secret": "PRIVATE_METADATA"}}]}]},
+        "source_states": {"tasks": {"status": "OK", "observed_at": "2026-10-15T17:47:00Z"},
+                          "agent_brief": {"status": "PARTIAL", "observed_at": "2026-10-15T17:40:00Z"}},
+        "next_actions": [{"id": "NEXT-ONE", "state": "admission_required", "detail": "先核准入"}]}
+
+
+def test_delivery_export_preview_download_and_source_binding():
+    output = run_delivery_export(payload=delivery_snapshot(), changeBeforeDownload=True)
+    text = output["preview"]
+    assert "# 项目交付摘要（本页快照）" in text
+    for value in ["12", "done=9", "BET-OPEN", "TASK-DONE", "/local/交付.md",
+                  "c" * 64, "a" * 40, "b" * 64, "2026-10-15T17:48:15Z",
+                  "2026-10-15T17:47:00Z", "NEXT-ONE", "草稿", "收益未报告"]:
+        assert value in text
+    assert "BET-CLOSED" not in text
+    assert "任务done不等于BET/KR/HumanOutcome" in text
+    assert "生成交付摘要" in output["hero"] and "下载Markdown" in output["hero"]
+    assert output["before"] == {"preview": "", "disabled": True}
+    assert output["readOnly"] is True and output["previewHTML"] == ""
+    assert len(output["downloads"]) == len(output["blobs"]) == 1
+    assert output["downloads"][0]["name"] == "project-delivery-summary-20261015T174956Z.md"
+    assert output["blobs"][0] == {"content": text, "type": "text/markdown;charset=utf-8"}
+    assert output["revoked"] == [output["downloads"][0]["href"]]
+    assert "999" not in text  # Download freezes the visible preview, not a later snapshot.
+
+
+@pytest.mark.parametrize("bad", [None, [], "bad", {"actual": None, "counts": {"done": None}},
+                                 {"actual": -1, "counts": {"done": "9"}}])
+def test_delivery_export_missing_malformed_is_unknown(bad):
+    output = run_delivery_export(payload={"portfolio": bad, "tasks": {"recent_done": None},
+                                          "next_actions": None})
+    assert "UNKNOWN" in output["preview"]
+    assert "done=0" not in output["preview"] and "0/0" not in output["preview"]
+    assert "project-delivery-summary-unknown.md" == output["downloads"][0]["name"]
+
+
+def test_delivery_export_stale_per_source_not_promoted_by_outer_clock():
+    data = delivery_snapshot()
+    data["portfolio"]["observed_at"] = "2026-09-01T00:00:00Z"
+    data["source_states"]["tasks"] = {"status": "STALE", "observed_at": "2026-09-02T00:00:00Z"}
+    output = run_delivery_export(payload=data)
+    assert "portfolio" in output["preview"] and "STALE" in output["preview"]
+    assert "2026-09-01T00:00:00Z" in output["preview"]
+    assert "2026-09-02T00:00:00Z" in output["preview"]
+    assert "逐源时钟" in output["preview"] and "当前有效性未证明" in output["preview"]
+
+
+def test_delivery_export_allowlist_sanitizes_markdown_and_private_extras():
+    data = delivery_snapshot()
+    unsafe = '<script>[click](https://bad) `code`\n# forged\x00'
+    data["tasks"]["recent_done"][0]["title"] = unsafe
+    data["next_actions"][0]["detail"] = unsafe
+    data["private"] = {"token": "PRIVATE_ROOT_SECRET"}
+    data["portfolio"]["metadata"] = {"token": "PRIVATE_PORTFOLIO_SECRET"}
+    data["tasks"]["recent_done"][0]["prompt"] = "PRIVATE_USER_PROMPT"
+    text = run_delivery_export(payload=data)["preview"]
+    for forbidden in ["PRIVATE_", "<script>", "[click]", "`code`", "\n# forged", "\x00"]:
+        assert forbidden not in text
+    assert "click" in text and "forged" in text
+
+
+def test_delivery_export_bounds_rows_and_refresh_clears_previous_snapshot():
+    data = delivery_snapshot()
+    data["next_actions"] = [{"id": "ACTION-"+str(i)} for i in range(8)]
+    data["tasks"]["recent_done"] *= 30
+    output = run_delivery_export(payload=data)
+    assert "ACTION-2" in output["preview"] and "ACTION-3" not in output["preview"]
+    assert output["preview"].count("TASK-DONE") == 10
+    cleared = run_delivery_export(payload=data, exportSnapshots=[data, {}])
+    assert "TASK-DONE" not in cleared["preview"] and "BET-OPEN" not in cleared["preview"]
+    assert "UNKNOWN" in cleared["preview"]
+
+
+def test_delivery_export_uses_explicit_zero_and_does_not_accept_nested_counter():
+    data = delivery_snapshot()
+    data["portfolio"]["actual"] = 0
+    data["portfolio"]["counts"] = {"done": 0, "pending": {"private": 4}}
+    text = run_delivery_export(payload=data)["preview"]
+    assert "工程BET声明总数=0" in text and "done=0" in text
+    assert "pending=UNKNOWN" in text
