@@ -724,10 +724,12 @@ def collect_value_evidence(root: Path | None = None, now: float | None = None,
 
 
 def collect_all(root: Path | None = None, now: float | None = None,
-                context: dict | None = None, dashboard_dir: Path | None = None) -> dict:
-    """供 panorama-collect 一次调用挂载三个键。"""
+                context: dict | None = None, dashboard_dir: Path | None = None,
+                *, event_root: Path | None = None) -> dict:
+    """供 panorama-collect 一次调用挂载三个键；event_root 只覆盖事件读取。"""
     return {
-        "panel_events": collect_event_stream(root=root, now=now),
+        "panel_events": collect_event_stream(
+            root=root if event_root is None else event_root, now=now),
         "panel_history": collect_metrics_history(root=root, now=now, dashboard_dir=dashboard_dir),
         "panel_value": collect_value_evidence(root=root, now=now, context=context),
     }

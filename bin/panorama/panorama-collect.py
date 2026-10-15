@@ -3656,7 +3656,8 @@ def _collect_panels(payload: dict) -> dict:
         }
     try:
         panels = _load_panel_collect().collect_all(
-            root=ROOT,   # 显式传根: 两模块必须指向同一工作区, 不依赖各自 __file__
+            root=ROOT,   # history/value 保持原根；只有事件读取声明的运行态根。
+            event_root=state_root() if os.environ.get("OMOSTATION_STATE_ROOT") else ROOT,
             context=panel_context)
     except Exception as exc:  # 采集失败不得让整个 payload 崩掉
         import logging

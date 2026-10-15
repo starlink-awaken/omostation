@@ -411,3 +411,128 @@ def test_invalid_revision_baseline_is_not_used(tmp_path):
     burden = next(t for t in result["thresholds"] if t["key"] == "revision_burden")
     assert burden["current"] is None
     assert "unavailable" in burden["gate"]
+
+
+def _load_panel_producer(panel, code_root, dashboard_dir):
+    """Exercise the real orchestration body without importing other collectors."""
+    import ast
+    import os
+    from types import SimpleNamespace
+
+    spec = importlib.util.spec_from_file_location(
+        "panel_test_repo_root", ROOT / "bin/lib/repo_root.py")
+    resolver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(resolver)
+    source = (ROOT / "bin/panorama/panorama-collect.py").read_text()
+    function = next(node for node in ast.parse(source).body
+                    if isinstance(node, ast.FunctionDef)
+                    and node.name == "_collect_panels")
+    namespace = {
+        "os": os,
+        "ROOT": code_root,
+        "EVENT_LEDGER": None,
+        "state_root": resolver.state_root,
+        "collect_personal_value_truth": lambda **kwargs: {},
+        "_load_panel_collect": lambda: SimpleNamespace(
+            collect_all=lambda **kwargs: panel.collect_all(
+                now=NOW, dashboard_dir=dashboard_dir, **kwargs)),
+    }
+    exec(compile(ast.Module(body=[function], type_ignores=[]),
+                 "panorama-collect.py::_collect_panels", "exec"), namespace)
+    return namespace["_collect_panels"]
+
+
+def _seed_root_event(root, event_type):
+    _write(root / ".omo/state/a2a-messages.jsonl", [
+        {"ts": _iso_hours_ago(1), "type": event_type, "from": "fixture"},
+    ])
+
+
+def test_collect_all_event_root_leaves_history_and_value_on_original_root(tmp_path):
+    mod = _load()
+    code, state = tmp_path / "code", tmp_path / "state"
+    _seed_root_event(code, "code-decoy")
+    _seed_root_event(state, "state-event")
+    for root, saved in [(code, 7), (state, 99)]:
+        _write(root / mod.EVENT_SOURCES["resident-heartbeat"]["path"], [
+            {"ts": _iso_hours_ago(1), "health": "ok"},
+        ] * saved)
+        _write(root / ".omo/_delivery/ingress/value-evidence.jsonl", [
+            {"ts": _iso_hours_ago(1), "net_saved_seconds": saved},
+        ])
+    result = mod.collect_all(root=code, event_root=state, now=NOW,
+                             dashboard_dir=tmp_path / "dashboard",
+                             context={"scene_cards": {"active_total": 3}})
+    assert "state-event" in [e["type"] for e in result["panel_events"]["events"]]
+    assert "code-decoy" not in [e["type"] for e in result["panel_events"]["events"]]
+    history = result["panel_history"]["coverage"]["resident_heartbeat"]
+    assert history == {"path": str(code / mod.EVENT_SOURCES["resident-heartbeat"]["path"]),
+                       "lines": 7}
+    assert result["panel_value"]["samples"]["net_saved_seconds"] == 7
+    assert next(s for s in result["panel_value"]["stages"]
+                if s["key"] == "intent")["count"] == 3
+
+
+def test_collect_all_legacy_root_remains_explicit_with_declared_state(tmp_path, monkeypatch):
+    mod = _load()
+    code, state = tmp_path / "code", tmp_path / "state"
+    _seed_root_event(code, "explicit-root")
+    _seed_root_event(state, "other-state")
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state))
+    result = mod.collect_all(root=code, now=NOW, dashboard_dir=tmp_path / "dashboard")
+    assert [e["type"] for e in result["panel_events"]["events"]] == ["explicit-root"]
+
+
+def test_producer_reads_declared_state_and_shares_event_cohort(tmp_path, monkeypatch):
+    mod = _load()
+    code, state = tmp_path / "code", tmp_path / "state"
+    _seed_root_event(code, "code-decoy")
+    _seed_root_event(state, "state-event")
+    produce = _load_panel_producer(mod, code, tmp_path / "dashboard")
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state))
+    payload = {}
+    panels = produce(payload)
+    assert [e["type"] for e in panels["panel_events"]["events"]] == ["state-event"]
+    assert payload["recent_events"]["events"] == panels["panel_events"]["events"]
+    assert payload["metrics_kpi"]["total_events_24h"] == 1
+    assert payload["metrics_kpi"]["events_per_source"]["a2a-messages"] == 1
+    assert payload["recent_events"]["summary"] == panels["panel_events"]["summary"]
+
+
+def test_producer_resolves_declared_state_at_each_call(tmp_path, monkeypatch):
+    mod = _load()
+    code = tmp_path / "code"
+    _seed_root_event(code, "code-decoy")
+    produce = _load_panel_producer(mod, code, tmp_path / "dashboard")
+    for name in ["first-state", "second-state"]:
+        root = tmp_path / name
+        _seed_root_event(root, name)
+        monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(root))
+        assert [e["type"] for e in produce({})["panel_events"]["events"]] == [name]
+
+
+def test_producer_missing_declared_source_never_falls_back_or_masks_real_zero(tmp_path, monkeypatch):
+    mod = _load()
+    code, state = tmp_path / "code", tmp_path / "state"
+    _seed_root_event(code, "code-decoy")
+    state.mkdir()
+    produce = _load_panel_producer(mod, code, tmp_path / "dashboard")
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state))
+    events = produce({})["panel_events"]
+    missing = next(s for s in events["sources"] if s["name"] == "a2a-messages")
+    assert missing["state"] == "MISSING"
+    assert missing["window_count"] is None and missing["total_count"] is None
+    assert events["events"] == []
+    _write(state / mod.EVENT_SOURCES["a2a-messages"]["path"], [])
+    events = produce({})["panel_events"]
+    empty = next(s for s in events["sources"] if s["name"] == "a2a-messages")
+    assert empty["state"] == "EMPTY"
+    assert empty["window_count"] == 0 and empty["total_count"] == 0
+
+
+def test_producer_without_declared_state_keeps_legacy_root(tmp_path, monkeypatch):
+    mod = _load()
+    _seed_root_event(tmp_path, "legacy-root")
+    produce = _load_panel_producer(mod, tmp_path, tmp_path / "dashboard")
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
+    assert [e["type"] for e in produce({})["panel_events"]["events"]] == ["legacy-root"]
