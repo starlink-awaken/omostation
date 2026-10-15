@@ -390,6 +390,22 @@
     loadPersonalEvents();
   };
 
+  async function readPersonalProjection(url) {
+    const delays = [300, 900];
+    for (let attempt = 0; attempt <= delays.length; attempt += 1) {
+      const response = await fetch(url, {method: 'GET', cache: 'no-store', credentials: 'omit'});
+      if (response.status !== 503 || attempt === delays.length) return response;
+      let body;
+      try {
+        body = await response.clone().json();
+      } catch {
+        return response;
+      }
+      if (body?.error !== 'projection_validation_busy' || body?.read_only !== true) return response;
+      await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+    }
+  }
+
   async function loadPersonalEvents() {
     const setKpi = (id, value = 'NO_DATA') => { const el = byId(id); if (el) el.textContent = value; };
     ['kpi-net-saved', 'kpi-adjudications', 'kpi-pr-delivery', 'kpi-code-lines', 'kpi-violations',
@@ -407,8 +423,8 @@
     try {
       initPersonalEventFilters();
       const [logsRes, metricsRes] = await Promise.allSettled([
-        fetch('/api/logs?limit=40&source=all', {method: 'GET', cache: 'no-store', credentials: 'omit'}),
-        fetch('/api/v1/value/metrics', {method: 'GET', cache: 'no-store', credentials: 'omit'})
+        readPersonalProjection('/api/logs?limit=40&source=all'),
+        readPersonalProjection('/api/v1/value/metrics')
       ]);
 
       if (logsRes.status !== 'fulfilled' || !logsRes.value.ok) throw new Error('事件来源不可用');
