@@ -20,6 +20,7 @@ TOOL = Path(__file__).resolve().parents[1] / "bin/gac/zhixing-host-sync.py"
 EXPECTED_FILES = {
     "template.html": "template.html",
     "ecosystem_ui.js": "ecosystem_ui.js.asset",
+    "workbench_ui.js": "workbench_ui.js.asset",
     "refresh.py": "refresh.py.asset",
     "live_server.py": "live_server.py.asset",
     "observatory_query.py": "observatory_query.py.asset",

@@ -67,6 +67,7 @@ LAUNCH_AGENT_PLIST = (
 HOST_FILES: tuple[tuple[str, str], ...] = (
     ("template.html", "template.html"),
     ("ecosystem_ui.js", "ecosystem_ui.js.asset"),
+    ("workbench_ui.js", "workbench_ui.js.asset"),
     ("refresh.py", "refresh.py.asset"),
     ("live_server.py", "live_server.py.asset"),
     ("observatory_query.py", "observatory_query.py.asset"),
