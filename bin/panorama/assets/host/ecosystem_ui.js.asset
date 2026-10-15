@@ -287,7 +287,7 @@
 
         <div class="sovereign-hud-badges" onclick="openSovereignCockpitDrawer()" style="cursor:pointer">
           <span class="sovereign-hud-chip" title="模型加载证据">🎯 <b>模型加载：未记录</b></span>
-          <span class="sovereign-hud-chip" title="交付与价值证据">⚡ <b>交付/省时：未记录</b> · 查看周报</span>
+          <span class="sovereign-hud-chip" title="交付与价值证据">⚡ <b>交付/省时：未记录</b> · <a href="#next" onclick="event.stopPropagation()">查看周报</a></span>
           <span class="sovereign-hud-chip ${proposalRead.state !== 'ready' || pendingCount > 0 ? 'warn' : 'neutral'}" id="sovereign-hud-pending-chip">
             ${escHtml(proposalQueueLabel())}
           </span>
