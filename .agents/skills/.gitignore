@@ -1,0 +1,5 @@
+# Magpie 技能库镜像（symlink farm → ~/.config/magpie/library/skills/）不入仓。
+# 真实技能目录与 INDEX.md 已被 git 跟踪，不受此规则影响。
+# 新增真实技能目录需显式 `git add -f` 或加白名单例外——技能入库应是显式动作。
+*
+!.gitignore

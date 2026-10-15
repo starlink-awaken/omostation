@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/panorama/compact-observation.py
+name: Compact Observation
+category: governance
+owner: agent-experience-steward
+description: 织星驾驶舱紧凑观测器（launchd 驱动，com.omostation.panorama-compact-observation）。
+  各采集面在一次性子进程内执行；超时或失败不推进 observed_at/last_success_at、
+  永不替换 last-good 值。投影发布与租约续期不在契约内。
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: [launchd]
+related: [bin/panorama/panorama-collect.py]
+maturity: draft
+last_reviewed: "2026-10-15"
+tags: [panorama, dashboard, observability, compact]
