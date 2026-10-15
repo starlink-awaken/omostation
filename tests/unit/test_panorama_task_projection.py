@@ -214,6 +214,98 @@ def test_total_preview_budget_is_shared_across_recent_done_tasks(tmp_path, monke
     assert sum(a.get("bytes", 0) for a in artifacts if a["status"] == "ready") == module.TASK_PREVIEW_TOTAL_BYTES
 
 
+def test_task_goal_association_exposes_only_declared_ids(tmp_path, monkeypatch):
+    import yaml
+    module = _module()
+    monkeypatch.setattr(module, "CODE_ROOT", tmp_path)
+    ids = {"vision_id": "VISION-2029", "objective_id": "OBJ-VALUE",
+           "campaign_id": "CMP-Y1-VALUE-PROOF", "key_result_id": "KR-VALUE-WEEKLY-ADOPTION"}
+    _write(tmp_path / ".omo/tasks/done/weekly.yaml", yaml.safe_dump({
+        "id": "WEEKLY", "status": "done", "goal_id": "OBJ-VALUE",
+        "metadata": {**ids, "principal_feedback": "PRIVATE-FEEDBACK",
+                     "secret": "PRIVATE-KEY", "kr_attainment_claimed": True,
+                     "bet_binding_registered": True},
+    }))
+    task = module.collect_tasks()["recent_done"][0]
+    association = task["goal_association"]
+    assert association["state"] == "declared"
+    assert association["ids"] == ids
+    assert association["kind"] == "task_record_association"
+    assert association["binding_status"] == "unverified"
+    assert association["effect_status"] == "unproven"
+    assert association["issues"] == []
+    assert "PRIVATE-" not in json.dumps(task)
+    assert "kr_attainment_claimed" not in json.dumps(task)
+    assert "bet_binding_registered" not in json.dumps(task)
+
+
+@pytest.mark.parametrize("metadata,goal_id,issue", [
+    (None, "OBJ-VALUE", "vision_id:missing"),
+    ([], "OBJ-VALUE", "metadata:invalid"),
+    ({}, "OBJ-VALUE", "vision_id:missing"),
+    ({"vision_id": True}, "OBJ-VALUE", "vision_id:invalid"),
+    ({"vision_id": "V" * 121}, "OBJ-VALUE", "vision_id:invalid"),
+    ({"vision_id": "<img src=x onerror=alert(1)>"}, "OBJ-VALUE", "vision_id:invalid"),
+    ({"objective_id": "OBJ-OTHER"}, "OBJ-VALUE", "objective_id:conflict"),
+    ({"objective_id": "OBJ-VALUE"}, ["OBJ-VALUE"], "goal_id:invalid"),
+])
+def test_task_goal_association_missing_malformed_or_conflicting_is_unknown(
+        tmp_path, monkeypatch, metadata, goal_id, issue):
+    import yaml
+    module = _module()
+    monkeypatch.setattr(module, "CODE_ROOT", tmp_path)
+    _write(tmp_path / ".omo/tasks/done/weekly.yaml", yaml.safe_dump({
+        "id": "LEGACY", "status": "done", "goal_id": goal_id, "metadata": metadata,
+    }))
+    task = module.collect_tasks()["recent_done"][0]
+    association = task["goal_association"]
+    assert association["state"] == "unknown"
+    assert issue in association["issues"]
+    assert association["binding_status"] == "unverified"
+    assert association["effect_status"] == "unproven"
+    if not isinstance(goal_id, str):
+        assert task["goal_id"] == ""
+    assert task["artifacts"] == []
+
+
+@pytest.mark.parametrize("state", ["declared", "unknown"])
+def test_task_goal_ui_uses_safe_text_and_does_not_claim_effect(state):
+    module = _module()
+    malicious = "<img src=x onerror=alert(1)>"
+    task = {"id": "WEEKLY", "status": "done", "goal_id": "OBJ-VALUE",
+            "goal_association": {"state": state, "ids": {
+                "vision_id": malicious, "objective_id": "OBJ-VALUE",
+                "campaign_id": "CMP-DECLARED", "key_result_id": "KR-DECLARED"},
+                "binding_status": "unverified", "effect_status": "unproven"},
+            "artifacts": [{"path": "周报.md", "status": "ready", "preview": "# 原成品",
+                           "sha256": "abc", "bytes": 14}]}
+    script = r"""
+const nodes=[];
+function make(tag){
+  const node={tag,children:[],style:{},textContent:'',
+    appendChild(child){this.children.push(child);return child;}};
+  Object.defineProperty(node,'innerHTML',{set(){throw Error('unsafe HTML rendering');}});
+  nodes.push(node);return node;
+}
+const host=make('section');
+const document={getElementById(id){return id==='next'?host:null;},
+  querySelector(){return null;},createElement:make};
+const D={tasks:{recent_done:[TASK]}};
+UI
+process.stdout.write(JSON.stringify(nodes.map(node=>({tag:node.tag,text:node.textContent}))));
+""".replace("TASK", json.dumps(task, ensure_ascii=False)).replace("UI", module.NATIVE_TASK_UI)
+    result = subprocess.run(["node", "-e", script], text=True, capture_output=True, check=True)
+    nodes = json.loads(result.stdout)
+    text = "\\n".join(node["text"] for node in nodes)
+    assert "任务关联目标" in text and "阶段目标" in text and "成果证据" in text
+    assert "任务完成不代表目标效果已证明" in text
+    assert "不是 BET 正式组合绑定" in text
+    assert malicious in text
+    assert not any(node["tag"] in {"img", "script"} for node in nodes)
+    assert any(node["tag"] == "pre" and node["text"] == "# 原成品" for node in nodes)
+    assert ("关联未知" in text) == (state == "unknown")
+
+
 def test_production_priority_template_gets_safe_native_task_ui():
     from html.parser import HTMLParser
     module = _module()
