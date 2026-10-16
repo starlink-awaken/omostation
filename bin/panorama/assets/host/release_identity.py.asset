@@ -33,15 +33,23 @@ def managed_release_identity(code_root):
             raise ReleaseIdentityError("release_manifest_invalid")
         raw = manifest.read_bytes()
         data = json.loads(raw)
-        if not isinstance(data, dict) or data.get("schema") != "zhixing-host-release-manifest/v1":
+        if not isinstance(data, dict) or data.get("schema") not in (
+                "zhixing-host-release-manifest/v1", "zhixing-host-release-manifest/v2"):
             raise ReleaseIdentityError("release_manifest_schema_invalid")
         version = data.get("version_id")
         oid = data.get("commit_oid")
-        if (not isinstance(version, str) or re.fullmatch(r"[0-9a-f]{40}", version) is None
-                or root.name != version or root.parent.name != "releases"
+        if (not isinstance(version, str) or root.name != version or root.parent.name != "releases"
                 or data.get("identity_kind") != "git_commit"
-                or oid != version):
+                or not isinstance(oid, str) or re.fullmatch(r"[0-9a-f]{40}", oid) is None):
             raise ReleaseIdentityError("release_manifest_source_invalid")
+        if data["schema"] == "zhixing-host-release-manifest/v1":
+            if version != oid:
+                raise ReleaseIdentityError("release_manifest_source_invalid")
+        else:
+            publication = data.get("publication_id")
+            if (not isinstance(publication, str) or re.fullmatch(r"[0-9a-f]{32}", publication) is None
+                    or version != f"{oid}--pub-{publication}"):
+                raise ReleaseIdentityError("release_manifest_source_invalid")
         expected = data.get("files")
         if not isinstance(expected, dict) or not expected or len(expected) > MAX_FILES:
             raise ReleaseIdentityError("release_manifest_files_invalid")

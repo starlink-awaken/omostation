@@ -240,3 +240,38 @@ def test_migrate_backs_up_plist(zhs_env):
     # WorkingDirectory 使用稳定入口，与后续 current 原子切换一起移动。
     assert payload.get("WorkingDirectory") == str(zhs.CURRENT_LINK)
     assert (deploy / "current").is_symlink()
+
+
+@pytest.mark.parametrize("corrupt", [False, True])
+def test_migration_baseline_then_explicit_publication(zhs_env, monkeypatch, corrupt):
+    import json
+    import shutil
+    host, deploy = zhs_env["host"], zhs_env["deploy"]
+    for name in ("live_server.py", "observatory_query.py"):
+        (host / (name + ".asset")).write_text("# selected source " + name + "\n")
+        (deploy / name).write_text("# previous deployed " + name + "\n")
+    shutil.copyfile(_ZHS_FILE.parents[1] / "panorama/assets/host/release_identity.py.asset",
+                    host / "release_identity.py.asset")
+    (deploy / "runtime_paths.py").write_text("# retained runtime dependency\n")
+    _git_baseline(host)
+    _git_baseline(deploy)
+    _write_plist(zhs_env["plist"], str(deploy / "live_server.py"))
+    migrated = zhs.migrate()
+    assert migrated["ok"], migrated
+    baseline = zhs.CURRENT_LINK.resolve()
+    manifest = json.loads((baseline / zhs.RELEASE_MANIFEST).read_text())
+    assert manifest["identity_kind"] == "deployment_baseline"
+    assert manifest["commit_oid"] is None
+    before = zhs._switch_state_snapshot()
+    monkeypatch.setattr(zhs, "_running_registered_runtime", lambda: _fake_runtime(deploy))
+    if corrupt:
+        (baseline / "runtime_paths.py").write_text("# corrupt baseline\n")
+    result = zhs.publish(["live_server.py", "release_identity.py"], publication_id="6" * 32)
+    if corrupt:
+        assert result["reason"] == "current_release_integrity_invalid"
+        assert zhs._switch_state_snapshot() == before
+    else:
+        assert result["ok"], result
+        assert (zhs.CURRENT_LINK / "observatory_query.py").read_bytes() == (baseline / "observatory_query.py").read_bytes()
+        assert zhs.restore()["ok"]
+        assert zhs.CURRENT_LINK.resolve() == baseline
