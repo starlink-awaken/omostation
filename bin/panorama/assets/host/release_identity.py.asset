@@ -13,6 +13,11 @@ CODE_FILES = ("live_server.py", "observatory_query.py", "runtime_paths.py")
 MAX_FILES = 2048
 MAX_FILE_BYTES = 8 * 1024 * 1024
 MAX_TOTAL_BYTES = 64 * 1024 * 1024
+# The refresh/orchestrator jobs run with cwd=<release> and regenerate bytecode in
+# place. Including it would make every release self-invalidate after publish, so
+# it is excluded here exactly as the publisher excludes it when hashing.
+RUNTIME_BYTECODE_DIRS = frozenset({"__pycache__"})
+RUNTIME_BYTECODE_SUFFIX = ".pyc"
 
 
 class ReleaseIdentityError(ValueError):
@@ -64,6 +69,7 @@ def managed_release_identity(code_root):
         total = 0
         for directory, dirs, files in os.walk(root, followlinks=False):
             parent = Path(directory)
+            dirs[:] = [name for name in dirs if name not in RUNTIME_BYTECODE_DIRS]
             if any((parent / name).is_symlink() or name == ".git" for name in dirs):
                 raise ReleaseIdentityError("release_tree_unsafe")
             for name in files:
@@ -71,7 +77,7 @@ def managed_release_identity(code_root):
                 relative = path.relative_to(root).as_posix()
                 if path.is_symlink() or not path.is_file() or name == ".git":
                     raise ReleaseIdentityError("release_tree_unsafe")
-                if relative == MANIFEST:
+                if relative == MANIFEST or name.endswith(RUNTIME_BYTECODE_SUFFIX):
                     continue
                 size = path.stat().st_size
                 total += size
