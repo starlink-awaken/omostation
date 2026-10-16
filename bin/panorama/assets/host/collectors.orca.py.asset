@@ -1,0 +1,70 @@
+"""Orca collector — reads ORCA status."""
+
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+from collectors.base import DataCollector, CollectionError
+from collectors.registry import register
+
+APP = Path(__file__).resolve().parent.parent
+
+# launchd jobs run without a user PATH, so a bare "orca" is not resolvable.
+_ORCA_CANDIDATES = ("/usr/local/bin/orca", "/opt/homebrew/bin/orca")
+
+
+def _orca_binary() -> str:
+    found = shutil.which("orca")
+    if found:
+        return found
+    for candidate in _ORCA_CANDIDATES:
+        if Path(candidate).is_file():
+            return candidate
+    return "orca"
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+@register("orca", timeout=70)
+class OrcaCollector(DataCollector):
+
+    name = "orca"
+
+    def collect(self) -> dict:
+        cache_path = APP / "orca_status_cache.json"
+        if cache_path.exists():
+            try:
+                data = json.loads(cache_path.read_text(encoding="utf-8"))
+                if isinstance(data, dict) and data.get("status"):
+                    data["observed_at"] = _now()
+                    data["source"] = "cache"
+                    return data
+            except Exception:
+                pass
+
+        try:
+            result = subprocess.run(
+                [_orca_binary(), "status", "--json"],
+                capture_output=True, text=True, timeout=60,
+            )
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                data["observed_at"] = _now()
+                data["source"] = "live"
+                # validate() requires a string status; the orca status envelope
+                # carries ok/result instead, so derive one for source_health.
+                data["status"] = "OK" if data.get("ok") else "DEGRADED"
+                return data
+        except Exception:
+            pass
+
+        return {"status": "UNAVAILABLE", "observed_at": _now(), "source": "none"}
+
+    def validate(self, data: dict) -> bool:
+        return isinstance(data.get("status"), str)

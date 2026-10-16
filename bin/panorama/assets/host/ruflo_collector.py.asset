@@ -1,0 +1,65 @@
+"""Ruflo collector — reads Ruflo RF0 verification data."""
+
+from __future__ import annotations
+
+import os
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+from collectors.base import DataCollector
+from collectors.registry import register
+
+# The release checkout has no bin/gac/, so the relative path never resolves.
+# Resolve the verifier from the workspace env roots, then known candidates.
+_SCRIPT_ENV_ROOTS = ("OMOSTATION_STATE_ROOT", "PANORAMA_ROOT", "WORKSPACE")
+_SCRIPT_CANDIDATES = ("/Users/xiamingxing/Workspace/bin/gac/ruflo-rf0-verify.py",)
+
+
+# launchd jobs run without a user PATH; ruflo is a node script whose shebang
+# resolves `node` via PATH, so the subprocess needs a usable PATH.
+_SUBPROCESS_PATH = "/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+
+
+def _ruflo_verify_script() -> str:
+    for env in _SCRIPT_ENV_ROOTS:
+        root = os.environ.get(env)
+        if root:
+            candidate = Path(root) / "bin/gac/ruflo-rf0-verify.py"
+            if candidate.is_file():
+                return str(candidate)
+    for candidate in _SCRIPT_CANDIDATES:
+        if Path(candidate).is_file():
+            return candidate
+    return "bin/gac/ruflo-rf0-verify.py"
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+@register("ruflo", timeout=30)
+class RufloCollector(DataCollector):
+
+    name = "ruflo"
+
+    def collect(self) -> dict:
+        try:
+            env = {**os.environ, "PATH": _SUBPROCESS_PATH + ":" + os.environ.get("PATH", "")}
+            proc = subprocess.run(
+                ["python3", "-B", _ruflo_verify_script(), "--json"],
+                capture_output=True, text=True, timeout=25, env=env,
+            )
+            ok = proc.returncode == 0
+            output = proc.stdout.strip() if ok else proc.stderr.strip()
+        except Exception as exc:
+            return {"status": "UNAVAILABLE", "error": str(exc), "observed_at": _now()}
+
+        return {
+            "status": "OK" if ok else "FAIL",
+            "output": output[:1000],
+            "observed_at": _now(),
+        }
+
+    def validate(self, data: dict) -> bool:
+        return data.get("status") in ("OK", "FAIL", "UNAVAILABLE")
