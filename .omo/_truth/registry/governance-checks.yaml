@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 723 # 2026-10-15 722→723: 新登记 bin/panorama/compact-observation.py (A2/A5 门禁修复)
+    script_baseline: 724 # 2026-10-16 723→724: 新登记 bin/gac/execution-environment-steward.py (A9 B-3)
       # (+ bin/gac/dual-profile-verify.py, BET-Y2Q4-T10-248 —— prod/dev 两条 leg 各跑一遍 +
       # install_root 落后即告警; gac-gate job 115127578239 实测「净增 1 > baseline_delta 0」,
       # 主控 2026-10-13 授权把本文件追加进该 BET write_surfaces 后才落这一行,

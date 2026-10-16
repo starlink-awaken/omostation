@@ -23,7 +23,7 @@ import probe_utils
 
 LIBRARY = Path.home() / "Documents/@学习进化/_archive/基建架构-织星系统文档库/织星主权智能操作系统文档库"
 APP = Path.home() / ".local/share/zhixing-dashboard"
-MAX_FILES = 1000
+MAX_FILES = 2000
 MAX_FILE_BYTES = 256 * 1024
 MAX_TOTAL_BYTES = 16 * 1024 * 1024
 MAX_RUN_FILES = 500
