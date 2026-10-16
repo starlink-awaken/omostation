@@ -18,6 +18,7 @@ import logging
 import os
 import math
 import signal
+import stat
 import sys
 import tempfile
 import time
@@ -69,6 +70,118 @@ log = logging.getLogger("orchestrator")
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+BASE_KEYS = ("bets", "gates", "runtime", "code_root_health")
+BASE_MAX_BYTES = 32 * 1024 * 1024
+BASE_MAX_AGE_SECONDS = 300
+
+
+def _base_digest(data: dict) -> str:
+    return hashlib.sha256(json.dumps(
+        {key: data.get(key) for key in BASE_KEYS}, ensure_ascii=False,
+        sort_keys=True, separators=(",", ":"), allow_nan=False,
+    ).encode()).hexdigest()
+
+
+def _base_clock(value: str) -> datetime:
+    if not isinstance(value, str):
+        raise ValueError("panorama_base_clock_invalid")
+    clock = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if clock.tzinfo is None or clock.utcoffset() is None:
+        raise ValueError("panorama_base_clock_invalid")
+    return clock
+
+
+def _read_panorama_base() -> tuple[dict, bytes, Path]:
+    # The explicit runtime profile is required: a unit test or ad-hoc import
+    # must not silently read the operator's canonical workspace.
+    if not os.environ.get("OMOSTATION_STATE_ROOT"):
+        raise ValueError("panorama_base_profile_unavailable")
+    from repo_root import state_root
+    path = state_root() / "runtime/dashboard/data.json"
+    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
+    with os.fdopen(fd, "rb") as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode) or before.st_size > BASE_MAX_BYTES:
+            raise ValueError("panorama_base_type_or_budget_invalid")
+        raw = stream.read(BASE_MAX_BYTES + 1)
+        after = os.fstat(stream.fileno())
+    identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns)
+    if (len(raw) > BASE_MAX_BYTES or identity(before) != identity(after)
+            or identity(after) != identity(path.stat())):
+        raise ValueError("panorama_base_changed_during_read")
+    payload = json.loads(raw, parse_constant=lambda value: (_ for _ in ()).throw(ValueError("nonfinite")))
+    if (not isinstance(payload, dict) or not isinstance(payload.get("bets"), dict)
+            or not isinstance(payload.get("gates"), list)
+            or any(not isinstance(gate, dict) or not isinstance(gate.get("id"), str)
+                   for gate in payload["gates"])
+            or not isinstance(payload.get("runtime"), dict)
+            or not isinstance(payload.get("code_root_health"), dict)
+            or not isinstance(payload.get("generated_at"), str)):
+        raise ValueError("panorama_base_shape_invalid")
+    return payload, raw, path
+
+
+def _unknown_base_gates(data: dict) -> None:
+    # The real mesh consumes verdict/status, not gate.live or source metadata.
+    # Preserve original diagnostics, but never promote retained PASS to live truth.
+    for gate in data.get("gates", []) if isinstance(data.get("gates"), list) else []:
+        if not isinstance(gate, dict):
+            continue
+        gate.setdefault("source_verdict", gate.get("verdict") or gate.get("status"))
+        gate["verdict"] = "UNKNOWN"
+        if "status" in gate:
+            gate.setdefault("source_status", gate["status"])
+            gate["status"] = "UNKNOWN"
+        gate["live"] = False
+
+
+def merge_panorama_base(data: dict, previous: dict, attempted_at: str) -> None:
+    """Overlay four producer-owned sections; all collector authority stays local."""
+    states = data.setdefault("source_states", {})
+    prior = (previous.get("source_states") or {}).get("panorama_base") or {}
+    bound = False
+    try:
+        prior_clock = _base_clock(prior["observed_at"])
+        bound = (prior_clock <= _base_clock(attempted_at)
+                 and prior.get("source_lane") == "CANONICAL_BASE"
+                 and isinstance(prior.get("data_sha256"), str)
+                 and len(prior["data_sha256"]) == 64
+                 and prior.get("base_sha256") == _base_digest(previous))
+    except (KeyError, TypeError, ValueError):
+        pass
+    try:
+        payload, raw, path = _read_panorama_base()
+        age = (_base_clock(attempted_at) - _base_clock(payload["generated_at"])).total_seconds()
+        if age < 0:
+            raise ValueError("panorama_base_clock_future")
+        # JSON exponent overflow (1e999) is parsed as inf, not parse_constant.
+        # Validate the complete owned cohort before changing the retained cache.
+        _base_digest(payload)
+        for key in BASE_KEYS:
+            data[key] = copy.deepcopy(payload[key])
+        fresh = age <= BASE_MAX_AGE_SECONDS
+        if not fresh:
+            _unknown_base_gates(data)
+        success = payload["generated_at"] if fresh else prior.get("last_success_at") if bound else None
+        states["panorama_base"] = {
+            "status": "OK" if fresh else "STALE_PARTIAL", "available": True,
+            "source_lane": "CANONICAL_BASE", "source": str(path),
+            "observed_at": payload["generated_at"], "last_attempt_at": attempted_at,
+            "last_success_at": success, "last_success_status": "KNOWN" if success else "UNKNOWN",
+            "data_sha256": hashlib.sha256(raw).hexdigest(),
+            "base_sha256": _base_digest(data), "payload_age_seconds": age,
+            "error": None if fresh else "panorama_base_payload_stale",
+        }
+    except Exception as exc:
+        _unknown_base_gates(data)
+        reason = str(exc) if isinstance(exc, ValueError) and str(exc).startswith("panorama_base_") else type(exc).__name__
+        states["panorama_base"] = dict(prior if bound else {},
+            status="STALE_UNAVAILABLE" if bound else "UNAVAILABLE", available=False,
+            observed_at=prior.get("observed_at") if bound else None,
+            last_attempt_at=attempted_at, last_success_at=prior.get("last_success_at") if bound else None,
+            error=reason, base_sha256=_base_digest(data))
 
 
 
@@ -381,6 +494,8 @@ class RefreshOrchestrator:
         values = data.setdefault("live_sources", {})
         observed_at = now()
         from refresh import source_health, prior_healthy_success, HEALTH_SEMANTICS
+
+        merge_panorama_base(data, previous, observed_at)
 
         for name, value, error in results:
             previous_state = states.get(name) if isinstance(states.get(name), dict) else {}
