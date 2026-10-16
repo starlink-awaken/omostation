@@ -97,6 +97,11 @@ RELEASE_ID_RE = re.compile(r"[0-9a-f]{40}\Z")
 PUBLICATION_ID_RE = re.compile(r"[0-9a-f]{32}\Z")
 VERSION_ID_RE = re.compile(r"[0-9a-f]{40}(?:--pub-[0-9a-f]{32})?\Z")
 RELEASE_MANIFEST = ".zhixing-host-release.json"
+# Runtime bytecode is regenerated in place by the refresh/orchestrator jobs that
+# run with cwd=<release>. Hashing it would make every release self-invalidate
+# minutes after publish, so both the publisher and the verifier skip it.
+RUNTIME_BYTECODE_DIRS = frozenset({"__pycache__"})
+RUNTIME_BYTECODE_SUFFIX = ".pyc"
 
 BLOCKED_REASON = "g0_m0_hold_release_bet_required"
 BLOCKED_COMMANDS = frozenset({"apply", "capture"})
@@ -161,12 +166,13 @@ def _release_tree_files(root: Path) -> dict[str, str] | None:
         for directory, dirnames, filenames in os.walk(root, followlinks=False):
             base = Path(directory)
             # Git pointers/metadata belong to the old checkout, never the release.
-            dirnames[:] = [name for name in dirnames if name != ".git"]
+            dirnames[:] = [name for name in dirnames
+                           if name != ".git" and name not in RUNTIME_BYTECODE_DIRS]
             for name in dirnames:
                 if (base / name).is_symlink():
                     return None
             for name in filenames:
-                if name == ".git":
+                if name == ".git" or name.endswith(RUNTIME_BYTECODE_SUFFIX):
                     continue
                 path = base / name
                 if path.is_symlink() or not path.is_file():
@@ -297,7 +303,8 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
         if base_dir is not None:
             for directory, dirnames, filenames in os.walk(base_dir, followlinks=False):
                 source_parent = Path(directory)
-                dirnames[:] = [name for name in dirnames if name != ".git"]
+                dirnames[:] = [name for name in dirnames
+                               if name != ".git" and name not in RUNTIME_BYTECODE_DIRS]
                 relative_parent = source_parent.relative_to(base_dir)
                 target_parent = staging / relative_parent
                 target_parent.mkdir(parents=True, exist_ok=True)
@@ -305,7 +312,7 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
                     if (source_parent / dirname).is_symlink():
                         raise ValueError("release_symlink_rejected")
                 for filename in filenames:
-                    if filename == ".git":
+                    if filename == ".git" or filename.endswith(RUNTIME_BYTECODE_SUFFIX):
                         continue
                     source_file = source_parent / filename
                     if source_file.is_symlink() or not source_file.is_file():

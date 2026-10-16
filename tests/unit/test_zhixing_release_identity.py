@@ -322,6 +322,41 @@ def test_v2_post_switch_failure_restores_exact_history(release_env, monkeypatch)
     assert not (zhs.RELEASES_DIR / (release_env[3] + "--pub-" + "5" * 32)).exists()
 
 
+def test_runtime_bytecode_does_not_invalidate_release(release_env):
+    """Bytecode regenerated in place by the refresh jobs must not break identity.
+
+    Regression: the orchestrator runs with cwd=<release> and rewrites __pycache__,
+    which used to flip the manifest tree hash and make the service refuse to start.
+    """
+    zhs, _, _, oid = release_env
+    root = publish(release_env)
+    cache = root / "__pycache__"
+    cache.mkdir()
+    (cache / "refresh.cpython-315.pyc").write_bytes(b"\x00regenerated")
+    (root / "stray.pyc").write_bytes(b"\x00stray")
+    identity = load("bytecode_tolerant_verifier", root / "release_identity.py").managed_release_identity(root)
+    assert identity["code_oid"] == oid
+    hashed = zhs._release_tree_files(root)
+    assert hashed is not None
+    assert not [name for name in hashed if name.endswith(".pyc")]
+    assert not [name for name in hashed if name.startswith("__pycache__/")]
+    manifest = json.loads((root / zhs.RELEASE_MANIFEST).read_text())
+    assert not [name for name in manifest["files"] if name.endswith(".pyc")]
+
+
+def test_publish_drops_base_runtime_bytecode(release_env):
+    zhs, _, old, oid = release_env
+    cache = old / "__pycache__"
+    cache.mkdir()
+    (cache / "base.cpython-315.pyc").write_bytes(b"\x00bytecode")
+    (old / "stray.pyc").write_bytes(b"\x00stray")
+    root = publish(release_env)
+    assert root.name == oid
+    assert not (root / "__pycache__").exists()
+    assert not list(root.rglob("*.pyc"))
+    assert load("bytecode_free_identity", root / "release_identity.py").managed_release_identity(root)["code_oid"] == oid
+
+
 @pytest.mark.parametrize("bad_name", ["bad", "0" * 40 + "--pub-" + "A" * 32, "../outside"])
 def test_both_root_consumers_reject_invalid_publication_targets(release_env, tmp_path, bad_name):
     zhs, _, _, _ = release_env
