@@ -338,6 +338,17 @@ jobs:
       需单独的人类门禁与对照观察; 该收敛为已知未决项, 不在本单范围。
       queue 侧有 BEGIN IMMEDIATE 保护 (task_queue.py:341), 故重复执行功能安全。
 
+  - name: execution-environment-steward-6h
+    schedule: "0 */6 * * *"
+    command: 'cd "$HOME/Workspace" && python3 bin/gac/execution-environment-steward.py >> "$HOME/Workspace"/runtime/cron/execution-environment-steward.log 2>&1'
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >
+      2026-10-16 补登: execution-environment-steward 每 6h 重生成 A1-A9 证据 + 注册表
+      (A9 B-3), 保持证据新鲜度 <= 24h TTL。
   - name: zhixing-dashboard-refresh
     schedule: "*/5 * * * *"
     command: >-
