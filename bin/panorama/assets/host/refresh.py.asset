@@ -26,7 +26,7 @@ MULTICA = "/Users/xiamingxing/.local/bin/multica"
 ORCA = "/usr/local/bin/orca"
 RUFLO_PACKAGE = Path("/opt/homebrew/lib/node_modules/ruflo/package.json")
 REFERENCE_CELL_ALLOWED_ROOT = Path("/Users/xiamingxing/agents/codex-agent-os-reference-cell/attempts")
-ENVIRONMENT_EVIDENCE_ALLOWED_ROOT = Path("/Users/xiamingxing/agents/codex-agent-os-recovery/attempts")
+ENVIRONMENT_EVIDENCE_ALLOWED_ROOT = APP / "evidence" / "execution-environment"
 SOURCES = ("portfolio", "workflow", "resident", "scheduler", "references", "orca", "multica", "ruflo", "reference_cell", "environment_evidence", "documents", "catalog", "strategy", "compute")
 
 def now():
