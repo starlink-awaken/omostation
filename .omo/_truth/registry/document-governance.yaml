@@ -190,20 +190,6 @@ warning_exceptions:
       expires: 2026-10-31
       owner: governance-team
       reason: Existing standard lifecycle values require controlled normalization.
-    - id: stale-review-omo-truth-docs
-      rule: stale_review
-      surface: omo-truth-docs
-      max_findings: 15  # 2026-09-21 5→15: CI 环境波动零余量项提升至安全水位
-      expires: 2026-10-15
-      owner: governance-team
-      reason: Existing truth docs past their review SLA; batch re-review scheduled under T10-MATURITY, budget is a bounded burn-down window.
-    - id: stale-review-omo-standards
-      rule: stale_review
-      surface: omo-standards
-      max_findings: 50  # 2026-09-21 22→50: CI 环境波动 + PR #4109 新增文档推高计数
-      expires: 2026-10-15
-      owner: governance-team
-      reason: Existing standards past their review SLA; batch re-review scheduled under T10-MATURITY, budget is a bounded burn-down window.
     - id: legacy-docs-enums
       rule: invalid_metadata
       surface: docs-discoverable
