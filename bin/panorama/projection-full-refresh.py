@@ -179,6 +179,19 @@ def clear_stale_git_lock(checkout: Path, *, max_age_s: float = 600.0) -> None:
     log("stale_lock_cleared", age_s=round(age_s))
 
 
+def resolve_dashboard_release_root(deploy_dir: Path) -> Path:
+    """Bind exactly one direct immutable legacy or explicit publication release."""
+    link = deploy_dir / "current"
+    if not link.is_symlink():
+        return deploy_dir.resolve()
+    target = link.resolve()
+    if (target.parent != (deploy_dir / "releases").resolve()
+            or re.fullmatch(r"[0-9a-f]{40}(?:--pub-[0-9a-f]{32})?", target.name) is None
+            or not target.is_dir()):
+        raise ValueError("dashboard_release_invalid")
+    return target
+
+
 def main() -> int:
     # 0) 防重入锁
     LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -265,15 +278,10 @@ def main() -> int:
         env["OMO_EVENT_LEDGER_DB"] = str(ledger_db)
         env["OMOSTATION_STATE_ROOT"] = str(task_root)
         # Bind one immutable release once; mutable projections stay at DEPLOY_DIR.
-        release_link = DEPLOY_DIR / "current"
-        if release_link.is_symlink():
-            dashboard_code_root = release_link.resolve()
-            if (dashboard_code_root.parent != (DEPLOY_DIR / "releases").resolve()
-                    or re.fullmatch(r"[0-9a-f]{40}", dashboard_code_root.name) is None
-                    or not dashboard_code_root.is_dir()):
-                return fail("dashboard_release_invalid")
-        else:
-            dashboard_code_root = DEPLOY_DIR.resolve()
+        try:
+            dashboard_code_root = resolve_dashboard_release_root(DEPLOY_DIR)
+        except ValueError:
+            return fail("dashboard_release_invalid")
         env["ZHIXING_DASHBOARD_CODE_ROOT"] = str(dashboard_code_root)
         started = time.monotonic()
         r = subprocess.run(

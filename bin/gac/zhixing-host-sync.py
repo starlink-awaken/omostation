@@ -23,7 +23,7 @@
 | `restore` | 回滚: current 切回上一版本 |
 
 **稳定入口契约** (DCP-20 spec v1.1.0): plist entrypoint 指向 `current/live_server.py`；
-`current` 是唯一允许的 symlink，目标落在 `releases/<40位commit-OID>/`；版本目录是
+`current` 是唯一允许的 symlink，目标落在 `releases/<40位commit-OID>/` 或显式选择的 `releases/<commit>--pub-<32hex>/`；版本目录是
 普通目录、无内部 symlink、SHA 对齐主仓资产。`apply`/`capture` 仍 BLOCKED。
 
 用法:
@@ -31,6 +31,8 @@
     python3 bin/gac/zhixing-host-sync.py migrate --json
     python3 bin/gac/zhixing-host-sync.py publish --file live_server.py --file observatory_query.py --json
     python3 bin/gac/zhixing-host-sync.py restore --json
+    # 同一 Git 来源补充发布；首次新格式需明确选择新版身份 helper:
+    python3 bin/gac/zhixing-host-sync.py publish --publication-id <32hex> --file live_server.py --file release_identity.py --json
 """
 
 from __future__ import annotations
@@ -92,13 +94,15 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("release_identity.py", "release_identity.py.asset"),
 )
 RELEASE_ID_RE = re.compile(r"[0-9a-f]{40}\Z")
+PUBLICATION_ID_RE = re.compile(r"[0-9a-f]{32}\Z")
+VERSION_ID_RE = re.compile(r"[0-9a-f]{40}(?:--pub-[0-9a-f]{32})?\Z")
 RELEASE_MANIFEST = ".zhixing-host-release.json"
 
 BLOCKED_REASON = "g0_m0_hold_release_bet_required"
 BLOCKED_COMMANDS = frozenset({"apply", "capture"})
 
 # 稳定入口契约 (DCP-20 spec v1.1.0): plist entrypoint 必须指向 current/live_server.py,
-# 唯一允许的 current symlink 目标落在 releases/<40位commit-OID>/ 下。
+# current 只指向直接的 legacy OID 或 <commit>--pub-<publication-id> 版本目录。
 CURRENT_LINK = DASHBOARD_DIR / "current"
 RELEASES_DIR = DASHBOARD_DIR / "releases"
 CURRENT_ENTRYPOINT = CURRENT_LINK / "live_server.py"
@@ -177,21 +181,70 @@ def _release_tree_files(root: Path) -> dict[str, str] | None:
 
 def _write_release_manifest(root: Path, *, oid: str, selected: tuple[str, ...],
                             base_version: str | None, identity_kind: str,
-                            files: dict[str, str]) -> bytes:
+                            files: dict[str, str], version_id: str | None = None,
+                            publication_id: str | None = None) -> bytes:
     payload = {
-        "schema": "zhixing-host-release-manifest/v1",
-        "version_id": oid,
+        "schema": ("zhixing-host-release-manifest/v1" if publication_id is None
+                   else "zhixing-host-release-manifest/v2"),
+        "version_id": version_id or oid,
         "identity_kind": identity_kind,
         "commit_oid": oid if identity_kind == "git_commit" else None,
         "selected_assets": list(selected),
         "base_version": base_version,
         "files": dict(sorted(files.items())),
     }
+    if publication_id is not None:
+        payload["publication_id"] = publication_id
     return (json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
+def _base_manifest_valid(root: Path) -> bool:
+    """Validate an existing manifest before inheriting its bytes, including migration baselines."""
+    manifest = root / RELEASE_MANIFEST
+    if not manifest.exists() and not manifest.is_symlink():
+        return RELEASE_ID_RE.fullmatch(root.name) is not None  # Legacy checkout.
+    try:
+        if manifest.is_symlink() or not manifest.is_file() or manifest.stat().st_size > 1024 * 1024:
+            return False
+        data = json.loads(manifest.read_bytes())
+        if not isinstance(data, dict) or data.get("version_id") != root.name:
+            return False
+        oid, kind, schema = data.get("commit_oid"), data.get("identity_kind"), data.get("schema")
+        if schema == "zhixing-host-release-manifest/v1":
+            if not RELEASE_ID_RE.fullmatch(root.name):
+                return False
+            if not ((kind == "deployment_baseline" and oid is None)
+                    or (kind == "git_commit" and oid == root.name)):
+                return False
+        elif schema == "zhixing-host-release-manifest/v2":
+            token = data.get("publication_id")
+            if (kind != "git_commit" or not isinstance(oid, str) or not RELEASE_ID_RE.fullmatch(oid)
+                    or not isinstance(token, str) or not PUBLICATION_ID_RE.fullmatch(token)
+                    or root.name != f"{oid}--pub-{token}"):
+                return False
+        else:
+            return False
+        files = data.get("files")
+        return isinstance(files, dict) and bool(files) and files == _release_tree_files(root)
+    except (OSError, ValueError, TypeError):
+        return False
+
+
+def _validate_release_helper(root: Path, helper: Path) -> dict:
+    """Run the actual helper at a complete candidate's real release path."""
+    if helper.is_symlink() or not helper.is_file():
+        raise ValueError("release_identity_helper_missing")
+    import types
+    module = types.ModuleType("zhixing_candidate_release_identity")
+    exec(compile(helper.read_bytes(), str(helper), "exec"), module.__dict__)
+    identity = module.managed_release_identity(root)
+    if not isinstance(identity, dict):
+        raise ValueError("managed_release_identity_missing")
+    return identity
+
+
 def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
-                    source_dir: Path | None = None) -> dict:
+                    source_dir: Path | None = None, *, publication_id: str | None = None) -> dict:
     """Build a complete immutable release in a sibling temp directory.
 
     Publishes start from the current complete release and overlay only selected
@@ -206,7 +259,13 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
         RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         return {"ok": False, "reason": "releases_dir_unavailable", "detail": str(exc)}
-    version_dir = RELEASES_DIR / oid
+    version_id = oid if publication_id is None else f"{oid}--pub-{publication_id}"
+    if publication_id is not None and (src != HOST_DIR or not isinstance(publication_id, str)
+                                       or not PUBLICATION_ID_RE.fullmatch(publication_id)):
+        return {"ok": False, "reason": "publication_id_invalid"}
+    if publication_id is not None:
+        assets = tuple(sorted(assets))
+    version_dir = RELEASES_DIR / version_id
     if version_dir.is_symlink():
         return {"ok": False, "reason": "version_path_symlink", "path": str(version_dir)}
     if src == HOST_DIR:
@@ -220,11 +279,13 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
         return {"ok": False, "reason": "current_release_invalid"}
     if base_dir is not None and _release_tree_files(base_dir) is None:
         return {"ok": False, "reason": "current_release_unsafe", "path": str(base_dir)}
-    if base_version == oid and version_dir.is_dir() and not version_dir.is_symlink():
+    if base_dir is not None and not _base_manifest_valid(base_dir):
+        return {"ok": False, "reason": "current_release_integrity_invalid", "path": str(base_dir)}
+    if base_version == version_id and version_dir.is_dir() and not version_dir.is_symlink():
         try:
             prior_manifest = json.loads((version_dir / RELEASE_MANIFEST).read_text(encoding="utf-8"))
             if (isinstance(prior_manifest, dict)
-                    and prior_manifest.get("version_id") == oid
+                    and prior_manifest.get("version_id") == version_id
                     and prior_manifest.get("selected_assets") == [name for name, _ in assets]):
                 base_version = prior_manifest.get("base_version")
         except (OSError, json.JSONDecodeError):
@@ -268,11 +329,15 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
         files = _release_tree_files(staging)
         if files is None:
             return {"ok": False, "reason": "release_tree_unsafe", "path": str(staging)}
+        if src == HOST_DIR and _source_identity(src) != (oid, "git_commit"):
+            return {"ok": False, "reason": "source_identity_mismatch"}
+        if base_dir is not None and not _base_manifest_valid(base_dir):
+            return {"ok": False, "reason": "current_release_integrity_invalid", "path": str(base_dir)}
         manifest_bytes = _write_release_manifest(
             staging, oid=oid, selected=tuple(name for name, _ in assets),
             base_version=base_version,
             identity_kind=("deployment_baseline" if src != HOST_DIR else _source_identity(src)[1]),
-            files=files,
+            files=files, version_id=version_id, publication_id=publication_id,
         )
         (staging / RELEASE_MANIFEST).write_bytes(manifest_bytes)
         if version_dir.exists():
@@ -306,7 +371,7 @@ def _history_path() -> Path:
 
 
 def _release_version(path: Path) -> str | None:
-    """Accept only a real, direct, 40-hex release child."""
+    """Accept only a real direct legacy or explicit publication release child."""
     try:
         if path.is_symlink() or RELEASES_DIR.is_symlink():
             return None
@@ -315,7 +380,7 @@ def _release_version(path: Path) -> str | None:
         relative = resolved.relative_to(resolved_root)
     except (OSError, ValueError):
         return None
-    if len(relative.parts) != 1 or not RELEASE_ID_RE.fullmatch(relative.name):
+    if len(relative.parts) != 1 or not VERSION_ID_RE.fullmatch(relative.name):
         return None
     return relative.name if resolved.is_dir() else None
 
@@ -461,7 +526,7 @@ def _previous_version() -> str | None:
     except (OSError, json.JSONDecodeError):
         return None
     previous = payload.get("previous_version") if isinstance(payload, dict) else None
-    if not isinstance(previous, str) or not RELEASE_ID_RE.fullmatch(previous):
+    if not isinstance(previous, str) or not VERSION_ID_RE.fullmatch(previous):
         return None
     return previous if _release_version(RELEASES_DIR / previous) == previous else None
 
@@ -542,7 +607,7 @@ def _discard_new_version(version_dir: Path, existed_before: bool) -> None:
         pass
 
 
-def publish(files: list[str] | tuple[str, ...] | None) -> dict:
+def publish(files: list[str] | tuple[str, ...] | None, *, publication_id: str | None = None) -> dict:
     """受管发布: 版本目录准备 → 原子切换 current → SHA 校验 → 失败回滚。
 
     前置: plist entrypoint 必须已迁移到 current/live_server.py (先跑 migrate)。
@@ -560,7 +625,7 @@ def publish(files: list[str] | tuple[str, ...] | None) -> dict:
         }
     if _current_version() is None:
         return {"ok": False, "reason": "current_release_invalid",
-                "detail": "publish requires current to resolve to a direct releases/<40-hex> directory"}
+                "detail": "publish requires current to resolve to a direct legacy or explicit publication release directory"}
     try:
         assets = _selected_assets(files)
     except ValueError as exc:
@@ -574,11 +639,21 @@ def publish(files: list[str] | tuple[str, ...] | None) -> dict:
         return {"ok": False, "reason": "switch_state_unreadable",
                 "detail": snapshot.get("error")}
     previous = _current_version()
-    prepared = _prepare_version(assets, oid)
+    if publication_id is not None and (not isinstance(publication_id, str)
+                                       or not PUBLICATION_ID_RE.fullmatch(publication_id)):
+        return {"ok": False, "reason": "publication_id_invalid"}
+    prepared = _prepare_version(assets, oid, publication_id=publication_id)
     if not prepared.get("ok"):
         return prepared
     # Validate newly managed bytes before changing the production pointer.
     release_root = Path(prepared["version_dir"])
+    if publication_id is not None:
+        try:
+            _validate_release_helper(release_root, release_root / "release_identity.py")
+        except (OSError, ValueError, ImportError, AttributeError, SyntaxError, TypeError) as exc:
+            _discard_new_version(release_root, not prepared.get("created", False))
+            return {"ok": False, "reason": "publication_identity_helper_incompatible",
+                    "detail": f"Explicitly select --file release_identity.py from the compatible source: {exc}"}
     if (release_root / "release_identity.py").exists():
         try:
             import importlib.util
@@ -607,7 +682,7 @@ def publish(files: list[str] | tuple[str, ...] | None) -> dict:
             "recovery": recovery,
         }
     return {
-        "ok": True, "oid": oid, "version_id": oid, "commit_oid": oid,
+        "ok": True, "oid": oid, "version_id": release_root.name, "commit_oid": oid,
         "identity_kind": identity_kind, "version_dir": prepared["version_dir"],
         "previous_version": previous, "write_performed": True,
         "manifest": prepared["manifest"], "deploy": deployed,
@@ -1105,6 +1180,8 @@ def main(argv: list[str] | None = None) -> int:
     publish_parser = sub.add_parser("publish", help="受管发布: 版本目录 + 原子切换 current + SHA 校验")
     publish_parser.add_argument("--file", dest="files", action="append", required=True,
                                 help="受管宿主文件名；可重复指定")
+    publish_parser.add_argument("--publication-id", default=None,
+                                help="32位小写十六进制发布标识；创建 <commit>--pub-<id>，Git 来源不变")
     publish_parser.add_argument("--json", action="store_true")
     sub.add_parser("restore", help="回滚: current 切回上一版本").add_argument("--json", action="store_true")
     sub.add_parser("migrate", help="plist 迁移: entrypoint → current/live_server.py").add_argument("--json", action="store_true")
@@ -1122,7 +1199,7 @@ def main(argv: list[str] | None = None) -> int:
     elif command == "check":
         result = plan([deploy_name for deploy_name, _ in HOST_FILES])
     elif command == "publish":
-        result = publish(args.files)
+        result = publish(args.files, publication_id=args.publication_id)
     elif command == "restore":
         result = restore()
     elif command == "migrate":

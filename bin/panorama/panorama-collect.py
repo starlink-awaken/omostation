@@ -491,7 +491,7 @@ def resolve_projection_dashboard_code_root(environ=None) -> Path:
     if link.is_symlink():
         target = link.resolve()
         if (target.parent != (root / "releases").resolve()
-                or re.fullmatch(r"[0-9a-f]{40}", target.name) is None
+                or re.fullmatch(r"[0-9a-f]{40}(?:--pub-[0-9a-f]{32})?", target.name) is None
                 or not target.is_dir()):
             raise RuntimeError("projection_dashboard_release_invalid")
         return target
