@@ -188,6 +188,10 @@ def run_cmd(argv, timeout=18, json_output=True, allow_nonzero=False, strip=True)
     if argv[0] == MULTICA:
         for key in ("NO_PROXY", "no_proxy"):
             env[key] = ",".join(x for x in (env.get(key, ""), "api.multica.ai", ".multica.ai") if x)
+        # The mlkem hybrid TLS handshake is intermittently dropped on this
+        # network path (handshake timeout); disabling it makes the multica
+        # CLI's handshake reliable (verified 5/5 vs 2/5 without).
+        env["GODEBUG"] = ",".join(x for x in (env.get("GODEBUG", ""), "tlsmlkem=0") if x)
     result = subprocess.run(argv, cwd=WORKSPACE, env=env, capture_output=True, timeout=timeout)
     if result.returncode and not allow_nonzero:
         raise RuntimeError("source command returned " + str(result.returncode))
