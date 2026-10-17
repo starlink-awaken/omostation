@@ -13,6 +13,11 @@ from collectors.registry import register
 
 DEFAULT_WORKSPACE_ROOT = Path("/Users/xiamingxing/Workspace")
 
+# The observer is registered with a 48s budget; the sandboxed subprocess gets
+# 40s so a slow host cannot burn the whole worker budget and surface as
+# "Collector deadline exceeded" instead of a real observation.
+OBSERVE_TIMEOUT = 40
+
 
 def workspace_root() -> Path:
     """Resolve the one OMO workspace used by this collector."""
@@ -135,7 +140,7 @@ def readonly_observe_argv(root: Path) -> list[str]:
             "-B", "-c", READ_ONLY_OBSERVER, str(root)]
 
 
-def _run_cmd(argv: list[str], timeout: int = 20, cwd: Path | None = None) -> str:
+def _run_cmd(argv: list[str], timeout: int = OBSERVE_TIMEOUT, cwd: Path | None = None) -> str:
     if (len(argv) != 8 or argv[:3] != ["/usr/bin/sandbox-exec", "-p", READ_ONLY_PROFILE]
             or argv[4:7] != ["-B", "-c", READ_ONLY_OBSERVER]
             or not Path(argv[3]).is_absolute()
@@ -179,7 +184,7 @@ class WorkflowCollector(DataCollector):
         try:
             raw = _run_cmd(
                 readonly_observe_argv(root),
-                timeout=20,
+                timeout=OBSERVE_TIMEOUT,
                 cwd=root,
             )
             decoded = json.loads(raw)

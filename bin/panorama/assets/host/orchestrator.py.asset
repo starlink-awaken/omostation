@@ -305,13 +305,34 @@ def merge_published_tasks(data: dict, previous: dict, attempted_at: str) -> None
 class RefreshOrchestrator:
     """Orchestrates data collection and page generation."""
 
+    # The refresh job runs every 300s, so a round must fit inside that window.
+    # 60s was too tight for ~30 collectors at max_workers=5 under load: later
+    # waves inherited almost no budget and reported "Collector deadline
+    # exceeded", which cascaded into stale derived sources (strategy-projection).
+    DEFAULT_COLLECTION_TIMEOUT = 240.0
+
     def __init__(self, registry: CollectorRegistry | None = None, max_workers: int = 5,
-                 collection_timeout: float = 60):
+                 collection_timeout: float | None = None):
         self.registry = registry or get_registry()
+        if collection_timeout is None:
+            collection_timeout = self._configured_timeout()
         if max_workers < 1 or not math.isfinite(collection_timeout) or collection_timeout <= 0:
             raise ValueError("collector concurrency and collection timeout must be positive")
         self.max_workers = int(max_workers)
         self.collection_timeout = collection_timeout
+
+    @classmethod
+    def _configured_timeout(cls) -> float:
+        raw = os.environ.get("ZHIXING_COLLECTION_TIMEOUT")
+        if raw is None or not raw.strip():
+            return cls.DEFAULT_COLLECTION_TIMEOUT
+        try:
+            value = float(raw)
+        except ValueError:
+            raise ValueError("ZHIXING_COLLECTION_TIMEOUT must be a positive number of seconds")
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError("ZHIXING_COLLECTION_TIMEOUT must be a positive number of seconds")
+        return value
 
     def load_previous(self) -> dict:
         """Load previous data from current.json or seed."""

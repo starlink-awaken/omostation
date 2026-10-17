@@ -168,3 +168,30 @@ def test_missing_cache_is_unavailable_then_real_recovery(orchestrator):
 def test_invalid_bounds_are_rejected(orchestrator, budget, workers):
     with pytest.raises(ValueError):
         orchestrator.RefreshOrchestrator(collection_timeout=budget, max_workers=workers)
+
+
+def test_default_collection_timeout_leaves_room_for_the_refresh_interval(orchestrator, monkeypatch):
+    monkeypatch.delenv("ZHIXING_COLLECTION_TIMEOUT", raising=False)
+    instance = orchestrator.RefreshOrchestrator()
+    # The refresh job runs every 300s; 60s starved later collector waves and
+    # cascaded into stale derived sources.
+    assert instance.collection_timeout >= 180
+
+
+@pytest.mark.parametrize("raw, expected", [("300", 300.0), (" 90 ", 90.0)])
+def test_collection_timeout_env_override(orchestrator, monkeypatch, raw, expected):
+    monkeypatch.setenv("ZHIXING_COLLECTION_TIMEOUT", raw)
+    assert orchestrator.RefreshOrchestrator().collection_timeout == expected
+
+
+@pytest.mark.parametrize("raw", ["", "   "])
+def test_blank_collection_timeout_env_keeps_default(orchestrator, monkeypatch, raw):
+    monkeypatch.setenv("ZHIXING_COLLECTION_TIMEOUT", raw)
+    assert orchestrator.RefreshOrchestrator().collection_timeout == orchestrator.RefreshOrchestrator.DEFAULT_COLLECTION_TIMEOUT
+
+
+@pytest.mark.parametrize("raw", ["abc", "0", "-1", "inf", "nan"])
+def test_invalid_collection_timeout_env_is_rejected(orchestrator, monkeypatch, raw):
+    monkeypatch.setenv("ZHIXING_COLLECTION_TIMEOUT", raw)
+    with pytest.raises(ValueError):
+        orchestrator.RefreshOrchestrator()
