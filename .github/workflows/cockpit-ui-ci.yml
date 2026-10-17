@@ -33,16 +33,16 @@ jobs:
       - id: guard
         name: Detect cockpit-ui presence
         run: echo "present=$([ -d projects/cockpit-ui ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         if: steps.guard.outputs.present == 'true'
         with:
-          node-version: 20
+          bun-version: latest
       - name: Install dependencies
         if: steps.guard.outputs.present == 'true'
-        run: cd projects/cockpit-ui && npm install
+        run: cd projects/cockpit-ui && bun install
       - name: Lint
         if: steps.guard.outputs.present == 'true'
-        run: cd projects/cockpit-ui && npm run lint || true
+        run: cd projects/cockpit-ui && bun run lint || true
       - name: Build
         if: steps.guard.outputs.present == 'true'
-        run: cd projects/cockpit-ui && npm run build
+        run: cd projects/cockpit-ui && bun run build
