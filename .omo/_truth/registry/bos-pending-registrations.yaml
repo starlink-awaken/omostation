@@ -17,3 +17,15 @@ pending_registrations:
   - uri: bos://compute/aetherforge/rerank
     source: cockpit observatory/topology_engine.py 拓扑节点的 bos_uri 标签; 重排实际经网关 /v1/rerank, 无对应 BOS 服务
     kind: ui-label
+
+  - uri: bos://governance/gac/audit
+    source: omo resident/interact.py probe_bos_capabilities 探针服务
+    kind: resident-probe
+
+  - uri: bos://agora/a2a/route
+    source: omo resident/interact.py probe_bos_capabilities 探针服务
+    kind: resident-probe
+
+  - uri: bos://observability/telemetry/stream
+    source: omo resident/interact.py probe_bos_capabilities 探针服务
+    kind: resident-probe
