@@ -6025,22 +6025,26 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist
-  content_digest: sha256:76eea0a155fab770981861af42698d23ff08f2ad703984d1be51c0836e695171
+  content_digest: sha256:d08c1e0e4be2a20cccd45c5892915a70c86c64e11b8a2ef5c3895b21f71430d3
   run_at_load: true
   scheduler: launchd
   trigger: interval
-  interval_sec: 1800  # 2026-10-10 热修: 30min。claims 权威在 MBP, 高频全刷对齐 (取代 T10-227 的 6h 洁净检出设计)
+  interval_sec: 180
   label: com.omostation.zhixing-projection-fullrefresh
   program:
-    interpreter: /bin/bash
-    entrypoint: /Users/xiamingxing/dotfiles/bin/zhixing-refresh-mbp.sh
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: ~/.local/opt/omostation-publisher/bin/panorama/projection-full-refresh.py
     args: []
-  notes: '全量投影数据周期刷新 (BET-Y2Q4-T10-227): T10-223 republisher 只续租约, 数据观测龄期
-    (data_observed_at) 单调增长。本服务维护专用洁净检出 ~/.local/opt/omostation-publisher
-    (GitHub origin 浅克隆+浅子模块, 机器属主, 不进 ws-* 卫生面), 每 6h fetch+reset --hard
-    origin/main 后以该检出跑检出内 panorama-collect.py 全量发布 (workspace+deploy 双身份
-    校验一字不改, fail-closed); 发布期间 republisher 续旧 revision, pointer 原子切换后接新,
-    读端全程可用。锁文件在 revisions/ 内 (state root 顶层会触发读端 CODE_DRIFT)。'
+  notes: 'BET-Y2Q4-T10-237 有限登记维护；保持 observe-only (generate: false)，config_source
+    仍是本机已安装 plist。本条记录已采用的官方 publisher driver / 180 秒形态；实际 Python
+    解释器参数 -B 位于脚本之前，program.args 不将其误记为脚本参数。实际无 WorkingDirectory，
+    根环境观测为 OMOSTATION_STATE_ROOT=~/Workspace（用户目录简写，仅此说明，不新增可执行根配置）。
+    driver 继续承担既有锁、防重入、remote 校验与安全同步；本次不替换运行属主、不写或重载服务。
+    登记维护责任人为 Root 执行主控 codex-zhixing-controller，依据 Principal 已有委托代决，
+    不是 Principal 本人直接署名或 HumanVerdict；裁定与原六判据处置见
+    docs/reports/2026-10-17-t10-237-driver-ownership-receipt.json。
+    generate:false 会跳过生成及 --check 的逐字节比较，零 drift 不能证明本条或整个 T237 完成；
+    本条不宣称生成器能重产实际 ProgramArguments 或 plist 字节。'
   outputs:
     stdout: ~/.local/log/projection-fullrefresh.log
     stderr: ~/.local/log/projection-fullrefresh.log

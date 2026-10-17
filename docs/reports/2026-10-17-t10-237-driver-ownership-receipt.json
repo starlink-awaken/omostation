@@ -1,0 +1,188 @@
+{
+  "schema": "t237-driver-ownership-receipt/v1",
+  "generated_at": "2026-10-17T01:22:03.269020+00:00",
+  "related_bet": "BET-Y2Q4-T10-237",
+  "disposition": "PARTIAL_SOURCE_ALIGNMENT_ONLY",
+  "bet_status": "pending",
+  "bet_done_claim": false,
+  "scope": {
+    "source_files": [
+      ".omo/_truth/registry/services.yaml",
+      "docs/reports/2026-10-17-t10-237-driver-ownership-receipt.json"
+    ],
+    "service_id": "omostation.zhixing-projection-fullrefresh",
+    "runtime_changes": false,
+    "ledger_or_spec_changes": false,
+    "generator_changes": false
+  },
+  "maintenance_decision": {
+    "issuer": "codex-zhixing-controller",
+    "role": "Principal-delegated execution controller",
+    "issued_at": "2026-10-17T01:10:45.178203+00:00",
+    "authority_basis": "Principal standing direct authorization to decide reversible scoped project actions, repeated in this thread heartbeat; not an individual Principal signature on this shape",
+    "maintenance_owner": "Root execution controller under Principal delegation; original runtime owner not replaced or guessed",
+    "principal_direct_signature": false,
+    "HumanVerdict_created": false,
+    "decision_ref": "/Users/xiamingxing/.local/share/zhixing-controller/artifacts/recovery-20261014/monitor-source-recovery-20261017T0106/controller-t237-maintenance-decision.json",
+    "decision_sha256": "aed299aacd67a10e445551b18ddd2a83e4e3b0b280be25679dd2fa9679dbbfc5",
+    "chosen_form": "already adopted official publisher driver / existing single label / 180 seconds",
+    "original_runtime_owner_replaced": false,
+    "original_runtime_owner_inferred": false
+  },
+  "observed_disk_plist": {
+    "at": "2026-10-17T01:16:17.483722+00:00",
+    "path": "/Users/xiamingxing/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist",
+    "sha256": "d08c1e0e4be2a20cccd45c5892915a70c86c64e11b8a2ef5c3895b21f71430d3",
+    "filtered": {
+      "Label": "com.omostation.zhixing-projection-fullrefresh",
+      "ProgramArguments": [
+        "/opt/homebrew/bin/python3",
+        "-B",
+        "/Users/xiamingxing/.local/opt/omostation-publisher/bin/panorama/projection-full-refresh.py"
+      ],
+      "WorkingDirectory": null,
+      "StartInterval": 180,
+      "RunAtLoad": true,
+      "StandardOutPath": "/Users/xiamingxing/.local/log/projection-fullrefresh.log",
+      "StandardErrorPath": "/Users/xiamingxing/.local/log/projection-fullrefresh.log"
+    },
+    "root_environment": {
+      "OMOSTATION_STATE_ROOT": "/Users/xiamingxing/Workspace"
+    },
+    "loaded_state_verified": false
+  },
+  "declaration": {
+    "generate": false,
+    "config_source": "~/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist",
+    "content_digest": "sha256:d08c1e0e4be2a20cccd45c5892915a70c86c64e11b8a2ef5c3895b21f71430d3",
+    "interval_sec": 180,
+    "interpreter": "/opt/homebrew/bin/python3",
+    "entrypoint": "~/.local/opt/omostation-publisher/bin/panorama/projection-full-refresh.py",
+    "script_args": [],
+    "interpreter_flag_observed": "-B before entrypoint; recorded in notes and this receipt, not appended as a script argument",
+    "root_environment_observed_in_notes": "OMOSTATION_STATE_ROOT=~/Workspace is a descriptive home abbreviation; no executable root environment configuration added"
+  },
+  "retained_delivery": [
+    {
+      "pr": 4777,
+      "url": "https://github.com/starlink-awaken/omostation/pull/4777",
+      "state_verified": "MERGED",
+      "merge_commit": "b010c889f273ed4a69511c4d314a57ff0ab4bad7",
+      "merged_at": "2026-10-14T18:39:44Z",
+      "evidence": "official driver core sync delivery; reused historical evidence, no new runtime exercise"
+    },
+    {
+      "pr": 4796,
+      "url": "https://github.com/starlink-awaken/omostation/pull/4796",
+      "state_verified": "MERGED",
+      "merge_commit": "2a11e81b917fcac21f6587b308ede2e3c92c5758",
+      "merged_at": "2026-10-16T10:03:10Z",
+      "evidence": "same Git source explicit supplemental publishing; reused historical evidence"
+    }
+  ],
+  "original_six_criteria": [
+    {
+      "id": 1,
+      "status": "PARTIAL",
+      "finding": "Root now makes an attributable delegated maintenance decision for this limited declaration. This is not a Principal personal signature or an individual human final-shape verdict, so the original person-attributable acceptance criterion remains unproven."
+    },
+    {
+      "id": 2,
+      "status": "UNPROVABLE",
+      "finding": "No gen-service-configs --check or full GaC executed in this unhanded evaluation window. The generator source is unchanged, but rc=0/drift_count=0 is not supplied. generate:false skips this entry even if a later check reports zero drift."
+    },
+    {
+      "id": 3,
+      "status": "PARTIAL",
+      "finding": "Retained PR4777/4796 delivery and Root decision keep the official driver responsible for existing non-reentry locking, remote validation and safe sync. This source-only slice does not rerun or re-attest the runtime steps."
+    },
+    {
+      "id": 4,
+      "status": "UNPROVABLE",
+      "finding": "Program path, interval and installed content digest are aligned as observe-only metadata. gen_launchd_plist constructs interpreter, entrypoint, then script args; the installed -B precedes entrypoint. No generated/disk byte or indentation equality is claimed, no generator normalization attempted."
+    },
+    {
+      "id": 5,
+      "status": "PARTIAL",
+      "finding": "The accepted spec retains the historical overlapping collector labels at 180/240 seconds writing the same current-revision.json. No fresh multi-label enumeration or removal occurred in this slice. The read-only plist enumeration below is retained as a reproducible command, not a newly executed observation.",
+      "historical_source": "docs/superpowers/specs/2026-10-07-launchd-label-collapsed-to-inner-step.md",
+      "read_only_enumeration_command": "python3 -B -c 'import pathlib,plistlib,json; names={\"com.omostation.zhixing-projection-fullrefresh\",\"com.omostation.panorama-dashboard-refresh\"}; print(json.dumps([{k:v.get(k) for k in (\"Label\",\"ProgramArguments\",\"StartInterval\")} for p in (pathlib.Path.home()/\"Library/LaunchAgents\").glob(\"*.plist\") if (v:=plistlib.loads(p.read_bytes())).get(\"Label\") in names],ensure_ascii=False))'",
+      "command_executed_this_slice": false
+    },
+    {
+      "id": 6,
+      "status": "PASS",
+      "finding": "Filtered read-only selected disk plist confirms ProgramArguments/WorkingDirectory/root environment contain no dated runtime-clean scratch path. OMOSTATION_STATE_ROOT points to Workspace. This is disk-config evidence only; no loaded-state attestation."
+    }
+  ],
+  "generator_boundary": {
+    "source": "bin/mof/gen-service-configs.py",
+    "source_sha256": "63f9782dd65a77c936ba7880c97ba4034f73baa0911c6e19e4a9912e8b07b4fe",
+    "observe_only_skip": "main() skips generate:false before generation and --check comparison (current lines 658-659)",
+    "program_argument_order": "gen_launchd_plist: [interpreter, entrypoint, *program.args]",
+    "new_check_result": null,
+    "zero_drift_proves_entry_alignment": false,
+    "generation_or_validation_function_imported": false
+  },
+  "native_admission": {
+    "worktree": "/Users/xiamingxing/.local/share/zhixing-controller/workspaces/ws-t237-declaration-20261017",
+    "branch": "agent/codex/t237-declaration-20261017",
+    "base_oid": "2a11e81b917fcac21f6587b308ede2e3c92c5758",
+    "worktree_wrapper_result": "PARTIAL_INTERRUPTED_EXIT_137: native branch claim and managed worktree created; stopped own guard that downloaded unrelated submodules; not PASW success",
+    "wrapper_first_attempt": "Python 3.9 datetime.UTC ImportError, retried with Homebrew Python PATH; no hook bypass",
+    "minimal_dependency_materialization": "native Git exact pins only for OMO and ecos; retained network curl18/earlyEOF and failed current-revision retry before local-object exact-pin recovery",
+    "native_bootstrap_rc": 0,
+    "native_start_rc": 0,
+    "native_claim_rc": 0,
+    "workflow_id": "project-code-change",
+    "agent_profile": "engineering-agent",
+    "actor": "codex",
+    "run_id": "20261017T012032Z-project-code-change-1ff9e0c8",
+    "no_run_id": false,
+    "bet_bound": true,
+    "maintenance_exception_used": false,
+    "objective_argument_omitted": true,
+    "source_file": "/Users/xiamingxing/.local/share/zhixing-controller/artifacts/recovery-20261014/monitor-source-recovery-20261017T0106/controller-t237-maintenance-decision.json",
+    "claim_paths": [
+      ".omo/_truth/registry/services.yaml",
+      "docs/reports/2026-10-17-t10-237-driver-ownership-receipt.json"
+    ],
+    "claim_scopes": [
+      "path:.omo/_truth/registry/services.yaml",
+      "path:docs/reports/2026-10-17-t10-237-driver-ownership-receipt.json"
+    ],
+    "affected_graph": {
+      "affected_projects": [
+        "workspace-root"
+      ],
+      "changed_projects": [
+        "workspace-root"
+      ],
+      "layer_contract_digest": "39440a4cf42563c093164c1686733fcd893eead4f0734318d6c7d8a23110b3b8",
+      "receipt_hash": "79c09ea53a3836a15e8f2b71d10a664c2af9fa88d8b1d3b4a108f4dcd7b463e7",
+      "schema": "affected-graph-receipt/v1",
+      "receipt_ref": "runtime/affected/t237-declaration-20261017.json"
+    },
+    "full_authority_or_Witness_claim": false,
+    "closure_policy": "Native close --status blocked before waiting for review/CI because full GaC was not run; own locks released. Closure evidence is in the external author-freeze artifact, not an overall acceptance."
+  },
+  "verification_scope": {
+    "performed": "pure YAML/JSON decoding, exact entry diff and unchanged surrounding bytes, reference existence, static source argument/skip inspection, ordinary Git hooks if permitted by their actual code paths",
+    "not_performed": [
+      "full GaC / compilation / full CPU work",
+      "service generator execution or import",
+      "model inference/triage or lifecycle calls",
+      "plist generation/write, launchctl, deployment, restart",
+      "Principal feedback or human verdict creation"
+    ],
+    "independent_review": "pending separate Root reviewer; author does not self-approve"
+  },
+  "source_integrity": {
+    "accepted_spec_ref": "docs/superpowers/specs/2026-10-07-launchd-label-collapsed-to-inner-step.md",
+    "accepted_spec_sha256": "bac401544231e8465bb6d260a6ed009ddc356167271a1013f7e46c5a336f4953",
+    "ledger_ref": "docs/plans/3y-bet-ledger.yaml",
+    "ledger_sha256": "d51e6fd159ebf9dc38408d9523dd96a27bb90d9e331b735d0c3699617d585e8d",
+    "other_services_preserved_byte_for_byte": true
+  },
+  "rollback": "Revert only these scoped source changes in an ordinary subsequent PR. No runtime rollback is required because this slice writes no runtime configuration."
+}
