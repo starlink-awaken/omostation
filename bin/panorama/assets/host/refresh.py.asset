@@ -1020,6 +1020,11 @@ def bounded_probe(name):
 HEALTH_SEMANTICS = "diagnostic-health/v1"
 NONHEALTHY = {"PARTIAL", "DEGRADED", "UNAVAILABLE", "STALE_UNAVAILABLE", "STALE_PARTIAL", "ERROR", "FAIL", "FAILED", "UNPROVABLE", "UNKNOWN"}
 
+# Mirrors orchestrator.DEFERRED_REASON: the runner skipped a collector because the
+# host was overloaded. Kept as a distinct signal so a deferral is never reported
+# as a source failure.
+DEFERRED_REASON = "Deferred: host load above budget"
+
 
 def source_health(value):
     """Observation transport success never overrides explicit source failure."""
@@ -1091,6 +1096,18 @@ def apply_results(previous, results, attempted_at):
             # Preserve a coherent last-good catalog instead of mixing source generations.
             if not has_good:
                 values[name] = value
+            continue
+        if error == DEFERRED_REASON:
+            # Skipped on purpose because the host was overloaded, not because the
+            # source failed. Keeping the last good value and marking the round
+            # deferred lets the gates stay honest instead of reporting a failure
+            # the source did not have.
+            old = states.get(name, {})
+            states[name] = {"status": "DEFERRED", "last_success_at": old.get("last_success_at"),
+                            "last_attempt_at": attempted_at,
+                            "observed_at": old.get("observed_at") or old.get("last_observed_at"),
+                            "last_success_status": "KNOWN" if old.get("last_success_at") else "UNKNOWN",
+                            "health_semantics": HEALTH_SEMANTICS, "error_class": error}
             continue
         if error:
             old = states.get(name, {})

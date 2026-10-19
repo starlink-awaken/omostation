@@ -1300,7 +1300,13 @@ def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None 
         age = age_seconds(last_success)
         if age is not None:
             source_ages.append(age)
-        if not isinstance(state, dict) or not (status == "OK" or (status == "STALE_UNAVAILABLE" and age is not None and age <= 21600)):
+        if not isinstance(state, dict) or not (
+            status == "OK"
+            # Deferred means the round was skipped because the host was overloaded,
+            # not that the source failed; the previous observation still stands.
+            or status == "DEFERRED"
+            or (status == "STALE_UNAVAILABLE" and age is not None and age <= 21600)
+        ):
             bad_sources.append(name)
     if bad_sources:
         missing.append("cockpit_sources")

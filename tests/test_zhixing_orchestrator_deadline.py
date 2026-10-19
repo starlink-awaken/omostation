@@ -195,3 +195,56 @@ def test_invalid_collection_timeout_env_is_rejected(orchestrator, monkeypatch, r
     monkeypatch.setenv("ZHIXING_COLLECTION_TIMEOUT", raw)
     with pytest.raises(ValueError):
         orchestrator.RefreshOrchestrator()
+
+
+@pytest.mark.parametrize("raw, expected", [("50", 50.0), (" 12.5 ", 12.5)])
+def test_max_load_env_override(orchestrator, monkeypatch, raw, expected):
+    monkeypatch.setenv("ZHIXING_MAX_LOAD", raw)
+    assert orchestrator.RefreshOrchestrator._configured_max_load() == expected
+
+
+def test_max_load_default_is_finite(orchestrator, monkeypatch):
+    monkeypatch.delenv("ZHIXING_MAX_LOAD", raising=False)
+    default = orchestrator.RefreshOrchestrator._configured_max_load()
+    assert default == orchestrator.RefreshOrchestrator.DEFAULT_MAX_LOAD > 0
+
+
+@pytest.mark.parametrize("raw", ["abc", "0", "-1", "inf", "nan"])
+def test_invalid_max_load_env_is_rejected(orchestrator, monkeypatch, raw):
+    monkeypatch.setenv("ZHIXING_MAX_LOAD", raw)
+    with pytest.raises(ValueError):
+        orchestrator.RefreshOrchestrator._configured_max_load()
+
+
+def test_host_overloaded_follows_the_threshold(orchestrator, monkeypatch):
+    monkeypatch.setenv("ZHIXING_MAX_LOAD", "10")
+    monkeypatch.setattr(orchestrator.os, "getloadavg", lambda: (9.9, 0.0, 0.0))
+    assert orchestrator.RefreshOrchestrator.host_overloaded() is False
+    monkeypatch.setattr(orchestrator.os, "getloadavg", lambda: (10.1, 0.0, 0.0))
+    assert orchestrator.RefreshOrchestrator.host_overloaded() is True
+
+
+def test_overloaded_host_defers_collectors(orchestrator, monkeypatch):
+    """An overloaded host must defer, not run collectors into a timeout."""
+    monkeypatch.setenv("ZHIXING_MAX_LOAD", "1")
+    monkeypatch.setattr(orchestrator.os, "getloadavg", lambda: (99.0, 0.0, 0.0))
+    value = {"observed_at": "source-clock"}
+    result = run(orchestrator, [collector("any", lambda: ("any", value, None))], budget=0.3)
+    assert result["any"] == (None, orchestrator.DEFERRED_REASON)
+
+
+def test_deferral_keeps_the_last_good_value(orchestrator, monkeypatch):
+    """A deferred round must not turn a healthy source into a failure."""
+    monkeypatch.setenv("ZHIXING_MAX_LOAD", "1")
+    monkeypatch.setattr(orchestrator.os, "getloadavg", lambda: (99.0, 0.0, 0.0))
+    prior = {"portfolio": {"observed_at": "older", "state": "OBSERVED"},
+             "live_sources": {"portfolio": {"observed_at": "older", "state": "OBSERVED"}},
+             "source_states": {"portfolio": {"status": "OK", "observed_at": "older",
+                                             "last_success_at": "older"}}}
+    result = run(orchestrator, [collector("portfolio", forever)], budget=0.2)
+    merged = orchestrator.RefreshOrchestrator().merge_results(
+        prior, [(name, value, error) for name, (value, error) in result.items()])
+    state = merged["source_states"]["portfolio"]
+    assert state["status"] == "DEFERRED"
+    assert state["last_success_at"] == "older"
+    assert merged["portfolio"] == prior["portfolio"]
