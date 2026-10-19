@@ -43294,7 +43294,8 @@ bets:
     结构上不通 :478-480）。cron 侧 reality 与 status 必须同翻（基线 73 条 job 的 I1=I2=0，只翻一个必造 1 条违规），三个受检测试文件均无硬编码计数（本轮实扫）。候选补丁已用检测器
     本身验算：叠加本条后 e2_undeclared 1→0 且 owned_declared==owned_installed==47，E1/E3/E4/E5/
     installed_total 逐字段未变。全程不碰本机 launchd 与 crontab。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-19
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-10-19-services-e2-observe-only-backfill-5.md
@@ -43322,14 +43323,40 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@15a6ad74775d6cf3cba6178a0d00417a4303a230
+          tests:
+            ref: receipt://docs/reports/2026-10-19-services-e2-observe-only-backfill-5-closeout.md
+            sha256: sha256:6652664f642d0b36cc4c36a890c6a2c96ba8d48095bd702f291fea865d56ba73
+          diff:
+            ref: receipt://docs/reports/2026-10-19-services-e2-observe-only-backfill-5-closeout.md
+            sha256: sha256:6652664f642d0b36cc4c36a890c6a2c96ba8d48095bd702f291fea865d56ba73
+          rollback:
+            ref: receipt://docs/reports/2026-10-19-services-e2-observe-only-backfill-5-closeout.md
+            sha256: sha256:6652664f642d0b36cc4c36a890c6a2c96ba8d48095bd702f291fea865d56ba73
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-258.md
+            sha256: sha256:dbdc2e8974763edb9fb1377bfb2c9938106042db80fbbbd99469fb4da7be14a1
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-19-services-e2-observe-only-backfill-5-closeout.md
+            sha256: sha256:6652664f642d0b36cc4c36a890c6a2c96ba8d48095bd702f291fea865d56ba73
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-19-services-e2-observe-only-backfill-5-closeout.md
+            sha256: sha256:6652664f642d0b36cc4c36a890c6a2c96ba8d48095bd702f291fea865d56ba73
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-258.md
+            sha256: sha256:dbdc2e8974763edb9fb1377bfb2c9938106042db80fbbbd99469fb4da7be14a1
+          cleanup:
+            ref: receipt://docs/reports/2026-10-19-services-e2-observe-only-backfill-5-closeout.md
+            sha256: sha256:6652664f642d0b36cc4c36a890c6a2c96ba8d48095bd702f291fea865d56ba73
       value:
         status: NOT_PROVEN
         evidence: {}
