@@ -36,7 +36,25 @@ from pathlib import Path
 # from silently mismatching the recorder's prefix.
 import importlib.util as _importlib_util
 
-_SSOT_DIR = str(Path(__file__).resolve().parents[1] / "ssot")
+def _host_support_dir(name: str) -> str:
+    """Locate a support directory (ssot/ lib/) next to this copy or in the checkout.
+
+    The checkout keeps the collector at <root>/bin/panorama/, so the sibling is
+    <root>/bin/<name>. The managed release puts it at <release>/, where that
+    sibling does not exist, so fall back to the configured checkout root.
+    """
+    sibling = Path(__file__).resolve().parents[1] / name
+    if sibling.is_dir():
+        return str(sibling)
+    configured = os.environ.get("PANORAMA_ROOT")
+    if configured:
+        candidate = Path(configured).resolve() / "bin" / name
+        if candidate.is_dir():
+            return str(candidate)
+    return str(sibling)
+
+
+_SSOT_DIR = _host_support_dir("ssot")
 if _SSOT_DIR not in sys.path:
     sys.path.insert(0, _SSOT_DIR)
 _pid_spec = _importlib_util.spec_from_file_location(
@@ -47,7 +65,7 @@ assert _pid_spec.loader is not None
 _pid_spec.loader.exec_module(_pid_module)
 principal_id_from_env = _pid_module.principal_id_from_env
 
-_LIB_DIR = str(Path(__file__).resolve().parents[1] / "lib")
+_LIB_DIR = _host_support_dir("lib")
 if _LIB_DIR not in sys.path:
     sys.path.insert(0, _LIB_DIR)
 from repo_root import canonical_root, state_file_read, state_root  # noqa: E402
