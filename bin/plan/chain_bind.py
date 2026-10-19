@@ -183,10 +183,42 @@ def write_run_file(path: Path, record: dict[str, Any]) -> None:
     )
 
 
+def runs_dir_for(workspace: Path) -> Path:
+    """The runs plane readable from ``workspace`` — read-only half of ADR-0456's
+    delivery anchor (BET-Y2Q4-T10-257).
+
+    ``.omo/_delivery/agent-workflows/`` is a machine-wide coordination plane: each
+    checkout's copy is a symlink to the canonical one, created *lazily* by
+    ``ensure_delivery_anchor()`` only when that checkout itself runs a workflow state
+    operation. A checkout that never did has no symlink, so reading
+    ``workspace / RUNS_REL`` directly sees zero runs and every chain verdict reports
+    ``missing_bet_binding`` for runs that do exist. Fall back to the canonical
+    checkout through the same locator; when the anchor is not locatable (fresh clone,
+    CI clean checkout, foreign repo) return the local path untouched, which is the
+    pre-seam behaviour byte for byte. This function must never create, repair or
+    migrate the bridge — a reader writing the plane it reads is a different contract.
+    """
+    local = workspace / RUNS_REL
+    if local.is_dir():
+        return local
+    try:
+        from omo.workflow.delivery_anchor import is_worktree_of, locate_anchor
+    except Exception:
+        return local
+    try:
+        anchor = locate_anchor(workspace)
+        if anchor is None or not is_worktree_of(workspace, anchor):
+            return local
+        remote = anchor / RUNS_REL
+    except Exception:
+        return local
+    return remote if remote.is_dir() else local
+
+
 def iter_run_records(workspace: Path) -> list[dict[str, Any]]:
     import yaml
 
-    runs_dir = workspace / RUNS_REL
+    runs_dir = runs_dir_for(workspace)
     if not runs_dir.is_dir():
         return []
     out: list[dict[str, Any]] = []
