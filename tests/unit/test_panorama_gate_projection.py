@@ -477,3 +477,158 @@ def test_code_root_health_bounds_output_and_terminates_own_descendants(tmp_path,
                            capture_output=True, text=True, timeout=2).stdout.strip()
     assert not state or state.startswith("Z")
     assert _health_snapshot(code) == before
+
+
+PROTECTED_HOST_FUNCTIONS = (
+    "collect_a7_gate", "_read_claims_preflight", "collect_claims_observation_progress",
+)
+
+
+def _protected_namespace(source, tmp_path):
+    """Load just the protected functions, without executing a runtime collector."""
+    import ast
+    from datetime import datetime, timezone
+    import subprocess
+    import sys
+    from types import SimpleNamespace
+
+    tree = ast.parse(source.read_text())
+    selected = [node for node in tree.body if (
+        isinstance(node, ast.FunctionDef) and node.name in PROTECTED_HOST_FUNCTIONS
+    ) or (
+        isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id in {
+                "MULTICA_AS0_TIMEOUT_S", "MULTICA_AS0_DIRECT_HOSTS",
+            } for target in node.targets
+        )
+    )]
+    namespace = dict(Path=Path, datetime=datetime, UTC=timezone.utc, json=json,
+                     os=SimpleNamespace(environ={"NO_PROXY": "internal.example", "no_proxy": "internal.example"}),
+                     subprocess=subprocess, sys=sys,
+                     ROOT=tmp_path / "runtime", CODE_ROOT=tmp_path / "code")
+    exec(compile(ast.Module(body=selected, type_ignores=[]), str(source), "exec"), namespace)
+    return namespace
+
+
+@pytest.mark.parametrize("name", PROTECTED_HOST_FUNCTIONS)
+def test_host_protected_function_matches_canonical(name):
+    import ast
+
+    functions = []
+    for source in HEALTH_SOURCES:
+        node = next(node for node in ast.parse(source.read_text()).body
+                    if isinstance(node, ast.FunctionDef) and node.name == name)
+        functions.append(ast.dump(node, include_attributes=False))
+    assert functions[0] == functions[1]
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["canonical", "host-asset"])
+@pytest.mark.parametrize("failure", ["timeout", "invalid-schema", "invalid-json"])
+def test_host_claims_preflight_diagnostics_never_expose_raw_output(tmp_path, source, failure):
+    import subprocess
+    from types import SimpleNamespace
+
+    ns = _protected_namespace(source, tmp_path)
+    verifier = ns["CODE_ROOT"] / "bin/gac/claims-shadow-preflight.py"
+    verifier.parent.mkdir(parents=True)
+    verifier.touch()
+    secret = "fixture-sensitive-output"
+
+    def fake_run(command, **kwargs):
+        if failure == "timeout":
+            raise subprocess.TimeoutExpired(command, 30, output=secret, stderr=secret)
+        return SimpleNamespace(stdout=secret if failure == "invalid-json" else
+                               json.dumps({"schema": "wrong", "private": secret}), stderr=secret)
+
+    ns["subprocess"] = SimpleNamespace(run=fake_run)
+    report, error = ns["_read_claims_preflight"](ns["ROOT"])
+    expected = {"timeout": "TimeoutExpired", "invalid-schema": "invalid_preflight_payload",
+                "invalid-json": "JSONDecodeError"}[failure]
+    assert report is None
+    assert error == expected
+    assert secret not in json.dumps((report, error))
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["canonical", "host-asset"])
+@pytest.mark.parametrize("malformed_current", [False, True])
+def test_host_claims_observation_grades_only_current_attempt(tmp_path, source, malformed_current):
+    from datetime import datetime, timedelta, timezone
+
+    ns = _protected_namespace(source, tmp_path)
+    evidence = tmp_path / "observation"
+    evidence.mkdir()
+    started = datetime.now(timezone.utc) - timedelta(minutes=10)
+    descriptor, receipt = "sha256:" + "1" * 64, "sha256:" + "2" * 64
+    summary = {"started_at_utc": started.isoformat(), "samples": 2,
+               "invalid": False, "errors": 0, "max_gap_seconds": 60,
+               "activation_state": "shadow-active", "descriptor_digest": descriptor,
+               "expected_last_receipt": receipt}
+    old = {"sampled_at_utc": (started - timedelta(minutes=20)).isoformat(),
+           "error": "old-attempt-error", "status": {
+               "descriptor_digest": "old-descriptor", "activation_state": "unactivated",
+               "last_receipt_digest": "old-receipt", "sequence": 99}}
+    records = [old] + [
+        {"sampled_at_utc": (started + timedelta(seconds=seconds)).isoformat(),
+         "status": {"descriptor_digest": descriptor, "activation_state": "shadow-active",
+                    "last_receipt_digest": receipt, "sequence": sequence}}
+        for seconds, sequence in ((1, 1), (61, 2))
+    ]
+    if malformed_current:
+        records.append({"broken-current-record": True})
+    (evidence / "summary.json").write_text(json.dumps(summary))
+    (evidence / "samples.jsonl").write_text("".join(json.dumps(row) + "\n" for row in records))
+    ns["collect_claims_activation_request"] = lambda: {
+        "available": True, "observation": {"evidence_dir": str(evidence),
+            "duration_seconds": 86400, "minimum_samples": 1440, "maximum_gap_seconds": 120},
+        "execution_receipt": {"receipt_digest": receipt},
+    }
+    report = ns["collect_claims_observation_progress"]()
+    assert report["sample_count"] == 2
+    assert report["observed_max_gap_seconds"] == 60
+    assert report["descriptor_variants"] == [descriptor]
+    assert report["activation_variants"] == ["shadow-active"]
+    assert report["receipt_variants"] == [receipt]
+    assert report["first_sample_at_utc"] == (started + timedelta(seconds=1)).isoformat()
+    assert report["sequence_regressions"] == 0
+    assert report["errors"] == int(malformed_current)
+    assert report["state"] == ("INVALID" if malformed_current else "IN_PROGRESS")
+    assert report["graduation_ready"] is False
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["canonical", "host-asset"])
+@pytest.mark.parametrize("timed_out", [False, True])
+def test_host_multica_verifier_preserves_configured_matrix_budget(tmp_path, monkeypatch, source, timed_out):
+    import subprocess
+    from types import SimpleNamespace
+
+    ns = _protected_namespace(source, tmp_path)
+    verifier = ns["CODE_ROOT"] / "bin/gac/multica-as0-verify.py"
+    verifier.parent.mkdir(parents=True)
+    verifier.touch()
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("NO_PROXY", "internal.example")
+    monkeypatch.setenv("no_proxy", "internal.example")
+    (Path.home() / ".local/share/zhixing-dashboard").mkdir(parents=True)
+    assert ns["MULTICA_AS0_TIMEOUT_S"] == 300
+    ns["MULTICA_AS0_TIMEOUT_S"] = 321
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append({"timeout": kwargs["timeout"], "cwd": kwargs["cwd"],
+                      "bypass_hosts": {key: kwargs["env"][key] for key in ("NO_PROXY", "no_proxy")}})
+        if timed_out:
+            raise subprocess.TimeoutExpired(command, kwargs["timeout"])
+        return SimpleNamespace(stdout=json.dumps({"ok": True,
+            "api": {"passed": 30, "total": 30},
+            "topology": {"passed": 7, "total": 7}, "trust": {"passed": 3, "total": 3}}))
+
+    ns["subprocess"] = SimpleNamespace(run=fake_run, TimeoutExpired=subprocess.TimeoutExpired)
+    report = ns["collect_a7_gate"]()
+    assert calls and all(call["timeout"] == 321 for call in calls)
+    assert all(call["cwd"] == ns["ROOT"] for call in calls)
+    for call in calls:
+        for key in ("NO_PROXY", "no_proxy"):
+            assert {"internal.example", "multica.ai", ".multica.ai"} <= set(call["bypass_hosts"][key].split(","))
+    assert report["verdict"] == ("NOT_ADMITTED" if timed_out else "PASS")
+    if timed_out:
+        assert "321s" in report["detail"]
