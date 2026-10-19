@@ -27,3 +27,5 @@ roots:
       - 'tests/test_todo_sync.py'
       - 'bin/observer-daily.py'
       - 'tests/test_observer_daily.py'
+      - 'bin/aictl'
+      - 'tests/test_aictl_status_privacy.py'
