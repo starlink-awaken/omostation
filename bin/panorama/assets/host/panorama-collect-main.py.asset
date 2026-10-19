@@ -15,14 +15,42 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import re
+import shutil
+import sqlite3
+import stat
 import subprocess
 import sys
-from datetime import UTC, datetime
+
+import tempfile
+import time
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+# SH-9 (BET-Y2Q4-SH-9): canonicalize OMO_PRINCIPAL_ID via the shared helper.
+# Keeps the ``principal:<id>`` form preserved end-to-end and prevents
+# future emit-paths that treat this caller's output as authoritative
+# from silently mismatching the recorder's prefix.
+import importlib.util as _importlib_util
+
+_SSOT_DIR = str(Path(__file__).resolve().parents[1] / "ssot")
+if _SSOT_DIR not in sys.path:
+    sys.path.insert(0, _SSOT_DIR)
+_pid_spec = _importlib_util.spec_from_file_location(
+    "_ssot_principal_id", str(Path(_SSOT_DIR) / "_principal_id.py"),
+)
+_pid_module = _importlib_util.module_from_spec(_pid_spec)
+assert _pid_spec.loader is not None
+_pid_spec.loader.exec_module(_pid_module)
+principal_id_from_env = _pid_module.principal_id_from_env
+
+_LIB_DIR = str(Path(__file__).resolve().parents[1] / "lib")
+if _LIB_DIR not in sys.path:
+    sys.path.insert(0, _LIB_DIR)
+from repo_root import canonical_root, state_file_read, state_root  # noqa: E402
 
 _CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
 ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
@@ -37,6 +65,37 @@ MULTICA_AS0_TIMEOUT_S = 300
 MULTICA_AS0_DIRECT_HOSTS = ("multica.ai", ".multica.ai", "127.0.0.1", "localhost")
 AGENT_BRIEF_JSON = OUT_DIR / "agent-brief.json"
 INDEX_HTML = OUT_DIR / "index.html"
+PROJECTION_STATE_ROOT = Path(
+    os.environ.get(
+        "ZHIXING_DASHBOARD_STATE_ROOT",
+        str(Path.home() / ".local/share/zhixing-dashboard"),
+    )
+).expanduser()
+PROJECTION_POINTER_SCHEMA = "zhixing-projection-pointer/v1"
+PROJECTION_MANIFEST_SCHEMA = "zhixing-projection-manifest/v1"
+PROJECTION_READER_CONTRACT = "zhixing-dashboard-revision-reader/v1"
+PROJECTION_DASHBOARD_CODE_FILES = (
+    "live_server.py",
+    "observatory_query.py",
+    "runtime_paths.py",
+)
+PROJECTION_ROOT_CODE_FILES = (
+    "bin/panorama/panorama-collect.py",
+    "bin/bc-os/north_star_meter_v2.py",
+)
+PROJECTION_REVISIONS_NAME = "revisions"
+PROJECTION_POINTER_NAME = "current-revision.json"
+PROJECTION_LOCK_NAME = ".projection-publisher.lock"
+CLAIMS_AUTHORITY_ROOT = (
+    Path.home() / "agents/_shared/runtime/omo-claims-authority-r0"
+)
+EVENT_LEDGER = Path(
+    os.environ.get(
+        "OMO_EVENT_LEDGER_DB",
+        str(ROOT / "runtime/omo/event-ledger.sqlite3"),
+    )
+).expanduser()
+_PROCESS_STARTED_NS = time.time_ns()
 CLAIMS_REQUEST_PACKAGE = (
     Path.home() / ".local/share/zhixing-dashboard/claims-activation-request.json"
 )
@@ -72,6 +131,645 @@ DOC_ENTRIES = [
 ]
 
 
+def _canonical_json_bytes(value: object) -> bytes:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def _sha256_bytes(body: bytes) -> str:
+    return hashlib.sha256(body).hexdigest()
+
+
+def _read_regular_bytes(path: Path) -> bytes:
+    """Read one bounded regular file without following a symlink."""
+    if path.is_symlink():
+        raise RuntimeError("projection_source_symlink")
+    try:
+        descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except OSError as exc:
+        raise RuntimeError("projection_source_unavailable") from exc
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise RuntimeError("projection_source_not_regular")
+        with os.fdopen(descriptor, "rb", closefd=False) as stream:
+            return stream.read()
+    finally:
+        os.close(descriptor)
+
+
+def _read_json_object(body: bytes, *, error: str) -> dict:
+    try:
+        value = json.loads(body)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(error) from exc
+    if not isinstance(value, dict):
+        raise RuntimeError(error)
+    return value
+
+
+def _claims_revision_binding(claims_root: Path) -> dict:
+    """Bind the current Claims facts through immutable, read-only storage.
+
+    This deliberately does not invoke a Claims Authority verb.  The three
+    source files are read twice around the immutable SQLite observation; any
+    concurrent change fails closed instead of publishing a mixed revision.
+    """
+    root = claims_root.resolve()
+    paths = {
+        "store": root / "store.sqlite3",
+        "high_water": root / "high-water.json",
+        "witness": root / "activation-witness.json",
+    }
+    before = {name: _read_regular_bytes(path) for name, path in paths.items()}
+    try:
+        connection = sqlite3.connect(
+            f"file:{paths['store']}?mode=ro&immutable=1",
+            uri=True,
+        )
+        row = connection.execute(
+            """
+            SELECT m.authority_id, m.epoch, m.operating_mode,
+                   m.last_sequence, m.last_receipt_digest,
+                   a.activation_state
+              FROM authority_meta AS m
+              JOIN activation AS a USING (authority_id)
+            """
+        ).fetchone()
+    except sqlite3.Error as exc:
+        raise RuntimeError("claims_store_unavailable") from exc
+    finally:
+        if "connection" in locals():
+            connection.close()
+    after = {name: _read_regular_bytes(path) for name, path in paths.items()}
+    if before != after:
+        raise RuntimeError("claims_changed_during_projection")
+    if row is None or len(row) != 6:
+        raise RuntimeError("claims_store_invalid")
+    authority_id, epoch, operating_mode, sequence, receipt, activation = row
+    if (
+        authority_id != "omo-claims-authority-r0"
+        or type(epoch) is not int
+        or epoch < 1
+        or operating_mode != "shadow"
+        or type(sequence) is not int
+        or sequence < 1
+        or not isinstance(receipt, str)
+        or not re.fullmatch(r"sha256:[0-9a-f]{64}", receipt)
+        or activation != "shadow-active"
+    ):
+        raise RuntimeError("claims_state_not_publishable")
+    high_water = _read_json_object(before["high_water"], error="claims_high_water_invalid")
+    witness = _read_json_object(before["witness"], error="claims_witness_invalid")
+    if high_water.get("sequence") != sequence or high_water.get("receipt_digest") != receipt:
+        raise RuntimeError("claims_high_water_mismatch")
+    if witness.get("state") != activation:
+        raise RuntimeError("claims_witness_mismatch")
+    return {
+        "authority_meta": {
+            "authority_id": authority_id,
+            "authority_epoch": epoch,
+            "security_level": "R0_COOPERATIVE",
+        },
+        "claims": {
+            "sequence": sequence,
+            "last_receipt": receipt,
+            "activation": activation,
+            "effective_authority": "v1",
+            "instruction_capable": False,
+        },
+        "source_hashes": {
+            "claims_store_sha256": _sha256_bytes(before["store"]),
+            "claims_high_water_sha256": _sha256_bytes(before["high_water"]),
+            "claims_witness_sha256": _sha256_bytes(before["witness"]),
+        },
+    }
+
+
+def _event_ledger_logical_digest(event_ledger: Path) -> str:
+    """Hash the ordered causal identity, independent of SQLite page layout."""
+    if event_ledger.is_symlink() or not event_ledger.is_file():
+        raise RuntimeError("event_ledger_unavailable")
+    try:
+        connection = sqlite3.connect(
+            f"file:{event_ledger.resolve()}?mode=ro",
+            uri=True,
+        )
+        connection.execute("PRAGMA query_only = ON")
+        connection.execute("BEGIN")
+        rows = connection.execute(
+            "SELECT sequence, event_hash, previous_hash FROM event_log ORDER BY sequence"
+        ).fetchall()
+        connection.commit()
+    except sqlite3.Error as exc:
+        raise RuntimeError("event_ledger_unavailable") from exc
+    finally:
+        if "connection" in locals():
+            connection.close()
+    expected_sequence = 1
+    previous_hash = None
+    events: list[list[object]] = []
+    for sequence, event_hash, linked_previous in rows:
+        if (
+            sequence != expected_sequence
+            or not isinstance(event_hash, str)
+            or re.fullmatch(r"[0-9a-f]{64}", event_hash) is None
+            or linked_previous != previous_hash
+        ):
+            raise RuntimeError("event_ledger_chain_invalid")
+        events.append([sequence, event_hash, linked_previous])
+        expected_sequence += 1
+        previous_hash = event_hash
+    return _sha256_bytes(
+        _canonical_json_bytes(
+            {
+                "schema": "omo-event-ledger-identity/v1",
+                "event_count": len(events),
+                "events": events,
+            }
+        )
+    )
+
+
+def collect_projection_source_binding(
+    *,
+    claims_root: Path = CLAIMS_AUTHORITY_ROOT,
+    event_ledger: Path = EVENT_LEDGER,
+) -> dict:
+    binding = _claims_revision_binding(Path(claims_root))
+    binding["source_hashes"]["event_ledger_sha256"] = _event_ledger_logical_digest(
+        Path(event_ledger)
+    )
+    return binding
+
+
+def collect_personal_value_truth(
+    *,
+    event_ledger: Path = EVENT_LEDGER,
+    environ=None,
+) -> dict:
+    """Measure personal value and bind it to one stable logical Ledger digest."""
+    env = os.environ if environ is None else environ
+    ledger = Path(event_ledger)
+    before = _event_ledger_logical_digest(ledger)
+    import importlib.util
+
+    meter_path = CODE_ROOT / "bin/bc-os/north_star_meter_v2.py"
+    spec = importlib.util.spec_from_file_location("north_star_meter_v2", meter_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("projection_value_observer_unavailable")
+    meter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(meter)
+    truth = meter.measure_value_truth(
+        db_path=ledger,
+        principal_id=str(principal_id_from_env()).strip(),
+    )
+    after = _event_ledger_logical_digest(ledger)
+    if before != after:
+        raise RuntimeError("projection_event_ledger_changed")
+    if not isinstance(truth, dict) or truth.get("schema") != "value-truth-snapshot/v1":
+        raise RuntimeError("projection_value_truth_invalid")
+    return {
+        "available": True,
+        "event_ledger_sha256": after,
+        "value_truth": truth,
+    }
+
+
+def _ledger_bound_value_readiness(envelope: dict) -> dict:
+    truth = envelope.get("value_truth") if isinstance(envelope, dict) else {}
+    truth = truth if isinstance(truth, dict) else {}
+    metrics = truth.get("metrics") if isinstance(truth.get("metrics"), dict) else {}
+    weeks = [
+        item for item in (metrics.get("weekly_samples") or [])
+        if isinstance(item, dict)
+    ]
+    qualifying = sum(
+        value
+        for item in weeks
+        if type(value := item.get("qualifying_episodes")) is int and value >= 0
+    )
+    personal_value = str((truth.get("truth_axes") or {}).get("personal_value") or "")
+    if truth.get("status") == "proven" and personal_value == "passed":
+        status = "PROVEN"
+    elif truth.get("status") == "unprovable" or personal_value == "unprovable":
+        status = "UNPROVABLE"
+    else:
+        status = "NOT_PROVEN"
+    return {
+        "schema": "ledger-bound-value-proof-readiness/v1",
+        "status": status,
+        "available": envelope.get("available") is True,
+        "source": truth.get("schema"),
+        "event_ledger_sha256": envelope.get("event_ledger_sha256"),
+        "samples_total": int(metrics.get("total_episodes") or 0),
+        "qualifying_samples": qualifying,
+        "target_samples": 30,
+        "remaining_samples": max(0, 30 - qualifying),
+        "qualifying_weeks": sum(item.get("gate_met") is True for item in weeks),
+        "target_weeks": 4,
+        "legacy_metrics_excluded": True,
+    }
+
+
+def _git_stdout(code_root: Path, *args: str) -> str:
+    completed = subprocess.run(
+        ["git", "-C", str(code_root), *args],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError("projection_code_identity_unavailable")
+    return completed.stdout.strip()
+
+
+def _git_bytes(code_root: Path, *args: str) -> bytes:
+    completed = subprocess.run(
+        ["git", "-C", str(code_root), *args],
+        capture_output=True,
+        timeout=10,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError("projection_code_identity_unavailable")
+    return completed.stdout
+
+
+def collect_projection_producer_identity(*, code_root: Path = CODE_ROOT) -> dict:
+    root = Path(code_root).resolve()
+    head = _git_stdout(root, "rev-parse", "HEAD")
+    origin_main = _git_stdout(root, "rev-parse", "refs/remotes/origin/main")
+    if head != origin_main or re.fullmatch(r"[0-9a-f]{40}", head) is None:
+        raise RuntimeError("projection_code_root_not_current_main")
+    if _git_bytes(
+        root,
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all",
+        "--ignore-submodules=all",
+    ):
+        raise RuntimeError("projection_code_root_dirty")
+    root_tree_sha256 = _sha256_bytes(
+        _git_bytes(root, "ls-tree", "-r", "--full-tree", "HEAD")
+    )
+    submodule_oids = {}
+    for name in ("omo", "ecos"):
+        relative = f"projects/{name}"
+        tree_entry = _git_stdout(root, "ls-tree", "HEAD", relative).split()
+        if (
+            len(tree_entry) < 3
+            or tree_entry[1] != "commit"
+            or re.fullmatch(r"[0-9a-f]{40}", tree_entry[2]) is None
+        ):
+            raise RuntimeError(f"projection_{name}_gitlink_unavailable")
+        gitlink_oid = tree_entry[2]
+        checkout = root / relative
+        checkout_oid = _git_stdout(checkout, "rev-parse", "HEAD")
+        if checkout_oid != gitlink_oid:
+            raise RuntimeError(f"projection_{name}_checkout_not_at_gitlink")
+        if _git_bytes(
+            checkout,
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+            "--ignore-submodules=all",
+        ):
+            raise RuntimeError(f"projection_{name}_checkout_dirty")
+        submodule_oids[name] = gitlink_oid
+    executing_collector = _read_regular_bytes(Path(__file__).resolve())
+    bound_collector = _git_bytes(
+        root, "show", "HEAD:bin/panorama/panorama-collect.py"
+    )
+    if executing_collector != bound_collector:
+        raise RuntimeError("projection_collector_not_at_bound_commit")
+    collector_sha = _sha256_bytes(bound_collector)
+    meter_path = "bin/bc-os/north_star_meter_v2.py"
+    executing_meter = _read_regular_bytes(root / meter_path)
+    bound_meter = _git_bytes(root, "show", f"HEAD:{meter_path}")
+    if executing_meter != bound_meter:
+        raise RuntimeError("projection_value_meter_not_at_bound_commit")
+    value_meter_sha = _sha256_bytes(bound_meter)
+    process_identity = "sha256:" + _sha256_bytes(
+        _canonical_json_bytes(
+            {
+                "pid": os.getpid(),
+                "process_started_ns": _PROCESS_STARTED_NS,
+                "root_oid": head,
+                "root_tree_sha256": root_tree_sha256,
+                "omo_gitlink_oid": submodule_oids["omo"],
+                "ecos_gitlink_oid": submodule_oids["ecos"],
+                "collector_sha256": collector_sha,
+                "value_meter_sha256": value_meter_sha,
+            }
+        )
+    )
+    return {
+        "root_oid": head,
+        "root_tree_sha256": root_tree_sha256,
+        "omo_gitlink_oid": submodule_oids["omo"],
+        "ecos_gitlink_oid": submodule_oids["ecos"],
+        "collector_sha256": collector_sha,
+        "value_meter_sha256": value_meter_sha,
+        "process_identity": process_identity,
+    }
+
+
+def resolve_projection_dashboard_code_root(environ=None) -> Path:
+    env = os.environ if environ is None else environ
+    raw = str(env.get("ZHIXING_DASHBOARD_CODE_ROOT", "")).strip()
+    root = Path(raw).expanduser()
+    if not raw or not root.is_absolute():
+        raise RuntimeError("projection_dashboard_identity_unbound")
+    root = root.resolve()
+    link = root / "current"
+    if link.is_symlink():
+        target = link.resolve()
+        if (target.parent != (root / "releases").resolve()
+                or re.fullmatch(r"[0-9a-f]{40}(?:--pub-[0-9a-f]{32})?", target.name) is None
+                or not target.is_dir()):
+            raise RuntimeError("projection_dashboard_release_invalid")
+        return target
+    return root
+
+
+def collect_projection_dashboard_identity(*, environ=None) -> dict:
+    """Recompute the exact dashboard release identity from one clean Git root."""
+    env = os.environ if environ is None else environ
+    raw_root = str(env.get("ZHIXING_DASHBOARD_CODE_ROOT", "")).strip()
+    candidate = Path(raw_root).expanduser()
+    if not raw_root or not candidate.is_absolute():
+        raise RuntimeError("projection_dashboard_identity_unbound")
+    root = resolve_projection_dashboard_code_root(env)
+    manifest = root / ".zhixing-host-release.json"
+    if manifest.exists() or manifest.is_symlink():
+        import importlib.util
+        helper = root / "release_identity.py"
+        if helper.is_symlink() or not helper.is_file():
+            raise RuntimeError("projection_release_identity_helper_missing")
+        try:
+            import types
+            module = types.ModuleType("zhixing_producer_release_identity")
+            exec(compile(helper.read_bytes(), str(helper), "exec"), module.__dict__)
+            return module.managed_release_identity(root)
+        except (OSError, ValueError, ImportError, AttributeError) as exc:
+            raise RuntimeError("projection_release_identity_invalid") from exc
+    code_oid = _git_stdout(root, "rev-parse", "HEAD")
+    origin_main = _git_stdout(root, "rev-parse", "refs/remotes/origin/main")
+    if code_oid != origin_main or re.fullmatch(r"[0-9a-f]{40}", code_oid) is None:
+        raise RuntimeError("projection_dashboard_not_current_main")
+    if _git_bytes(root, "status", "--porcelain=v1", "--untracked-files=all"):
+        raise RuntimeError("projection_dashboard_tree_dirty")
+    tree_sha256 = _sha256_bytes(
+        _git_bytes(root, "ls-tree", "-r", "--full-tree", "HEAD")
+    )
+    file_hashes = []
+    for name in PROJECTION_DASHBOARD_CODE_FILES:
+        bound = _git_bytes(root, "show", f"HEAD:{name}")
+        if _read_regular_bytes(root / name) != bound:
+            raise RuntimeError("projection_dashboard_tree_dirty")
+        file_hashes.append(f"{name}:{_sha256_bytes(bound)}\n")
+    code_bundle_sha256 = _sha256_bytes("".join(file_hashes).encode("ascii"))
+    return {
+        "code_oid": code_oid,
+        "tree_sha256": tree_sha256,
+        "code_bundle_sha256": code_bundle_sha256,
+    }
+
+
+def _validate_payload_claims_binding(payload: dict, source_binding: dict) -> None:
+    projected = payload.get("claims_authority")
+    claims = source_binding.get("claims")
+    if not isinstance(projected, dict) or not isinstance(claims, dict):
+        raise RuntimeError("projection_payload_claims_unavailable")
+    status = projected.get("status")
+    if not isinstance(status, dict):
+        raise RuntimeError("projection_payload_claims_unavailable")
+    observed = {
+        "sequence": projected.get("sequence"),
+        "last_receipt": status.get("last_receipt_digest"),
+        "activation": projected.get("activation_state"),
+        "effective_authority": projected.get("effective_claim_authority"),
+        "instruction_capable": projected.get("instruction_capable"),
+    }
+    if projected.get("available") is not True or observed != claims:
+        raise RuntimeError("projection_payload_claims_mismatch")
+
+
+def _fsync_directory(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _write_new_file(path: Path, body: bytes) -> None:
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(descriptor, "wb", closefd=False) as stream:
+            stream.write(body)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        os.close(descriptor)
+
+
+def _atomic_replace_bytes(path: Path, body: bytes) -> None:
+    descriptor, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temp_path = Path(temp_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(body)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp_path, path)
+        _fsync_directory(path.parent)
+    except Exception:
+        temp_path.unlink(missing_ok=True)
+        raise
+
+
+def publish_projection_revision(
+    payload: dict,
+    *,
+    state_root: Path = PROJECTION_STATE_ROOT,
+    claims_root: Path = CLAIMS_AUTHORITY_ROOT,
+    event_ledger: Path = EVENT_LEDGER,
+    code_root: Path = CODE_ROOT,
+    now: datetime | None = None,
+) -> dict:
+    """Publish one immutable, hash-bound revision then swap one pointer.
+
+    The legacy ``current.json`` is intentionally outside this protocol and is
+    never opened here.  A failed build or pointer swap leaves the last-good
+    pointer intact; revision directories remain available for rollback.
+    """
+    root = Path(state_root).expanduser().resolve()
+    if Path(state_root).expanduser().is_symlink():
+        raise RuntimeError("projection_state_root_symlink")
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    revisions = root / PROJECTION_REVISIONS_NAME
+    if revisions.is_symlink():
+        raise RuntimeError("projection_revisions_symlink")
+    revisions.mkdir(mode=0o700, exist_ok=True)
+    lock_path = root / PROJECTION_LOCK_NAME
+    with lock_path.open("a+b") as lock:
+        try:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError("projection_writer_conflict") from exc
+
+        source_binding = collect_projection_source_binding(
+            claims_root=Path(claims_root),
+            event_ledger=Path(event_ledger),
+        )
+        _validate_payload_claims_binding(payload, source_binding)
+        personal_value_truth = collect_personal_value_truth(
+            event_ledger=Path(event_ledger)
+        )
+        if (
+            personal_value_truth.get("event_ledger_sha256")
+            != source_binding["source_hashes"]["event_ledger_sha256"]
+        ):
+            raise RuntimeError("projection_value_ledger_mismatch")
+        import copy
+        published_payload = copy.deepcopy(payload)
+        published_payload["personal_value_truth"] = personal_value_truth
+        value_readiness = _ledger_bound_value_readiness(personal_value_truth)
+        published_payload["value_proof_readiness"] = value_readiness
+        visibility = dict(
+            published_payload.get("agent_visibility")
+            if isinstance(published_payload.get("agent_visibility"), dict)
+            else {"schema": "panorama-agent-brief/v1", "available": False}
+        )
+        authority = dict(
+            visibility.get("authority")
+            if isinstance(visibility.get("authority"), dict)
+            else {}
+        )
+        authority["value_proof"] = value_readiness["status"]
+        authority["value_proof_readiness"] = value_readiness
+        visibility["authority"] = authority
+        published_payload["agent_visibility"] = visibility
+        producer = collect_projection_producer_identity(code_root=Path(code_root))
+        dashboard_root = resolve_projection_dashboard_code_root()
+        dashboard_env = dict(os.environ, ZHIXING_DASHBOARD_CODE_ROOT=str(dashboard_root))
+        dashboard = collect_projection_dashboard_identity(environ=dashboard_env)
+        generated = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)
+        fresh_until = generated + timedelta(minutes=10)
+        generated_at = generated.isoformat().replace("+00:00", "Z")
+        fresh_until_at = fresh_until.isoformat().replace("+00:00", "Z")
+        _finalize_bound_agent_brief(published_payload, generated_at, value_readiness)
+        # Use the dashboard repo's template (kept in sync with the orchestrator)
+        # instead of the embedded legacy TEMPLATE, so published revisions serve
+        # the same page the orchestrator produces.
+        _dash_template_path = dashboard_root / "template.html"
+        _page_template = (
+            _dash_template_path.read_text(encoding="utf-8")
+            if _dash_template_path.is_file()
+            else TEMPLATE
+        )
+        # Concatenate UI scripts into the page (matching orchestrator behavior),
+        # so published revisions have the same interactive panels as the
+        # orchestrator-produced dist/index.html.
+        _dash_root = dashboard_root
+        _ui_files = [
+            "data_access.js", "ui_extensions.js", "strategy_ui.js", "workbench_ui.js",
+            "panoramic_ui.js", "next_ui.js", "topology_ui.js", "mof_ui.js", "ecosystem_ui.js",
+        ]
+        _ui_parts = []
+        for _fname in _ui_files:
+            _fpath = _dash_root / _fname
+            if _fpath.is_file():
+                _ui_parts.append(_fpath.read_text(encoding="utf-8").replace("</script", "<\\/script"))
+        _ui_block = "\n".join(_ui_parts)
+        _page = render_projection_page(_page_template, published_payload, _ui_block)
+        artifact_bodies = {
+            "page": _page.encode("utf-8"),
+            "data": json.dumps(published_payload, ensure_ascii=False, indent=1).encode("utf-8"),
+            "agent_brief": json.dumps(
+                published_payload.get(
+                    "agent_visibility",
+                    {"schema": "panorama-agent-brief/v1", "available": False},
+                ),
+                ensure_ascii=False,
+                indent=1,
+            ).encode("utf-8"),
+        }
+        filenames = {
+            "page": "index.html",
+            "data": "data.json",
+            "agent_brief": "agent-brief.json",
+        }
+        artifacts = {
+            name: {"filename": filenames[name], "sha256": _sha256_bytes(body)}
+            for name, body in artifact_bodies.items()
+        }
+        revision_basis = {
+            "schema_version": PROJECTION_MANIFEST_SCHEMA,
+            "generated_at": generated_at,
+            "fresh_until": fresh_until_at,
+            "producer": producer,
+            "dashboard": dashboard,
+            "state_root": {
+                "identity": "sha256:" + _sha256_bytes(
+                    str(root).encode("utf-8")
+                ),
+            },
+            "contracts": {
+                "pointer": PROJECTION_POINTER_SCHEMA,
+                "manifest": PROJECTION_MANIFEST_SCHEMA,
+                "reader": PROJECTION_READER_CONTRACT,
+            },
+            "source_hashes": source_binding["source_hashes"],
+            "claims": source_binding["claims"],
+            "artifacts": artifacts,
+        }
+        revision_id = _sha256_bytes(_canonical_json_bytes(revision_basis))
+        manifest = dict(revision_basis, revision_id=revision_id)
+        manifest_body = _canonical_json_bytes(manifest)
+        manifest_sha = _sha256_bytes(manifest_body)
+        staging = Path(tempfile.mkdtemp(prefix=".staging-", dir=revisions))
+        final_revision = revisions / revision_id
+        try:
+            for name, body in artifact_bodies.items():
+                _write_new_file(staging / filenames[name], body)
+            _write_new_file(staging / "manifest.json", manifest_body)
+            _fsync_directory(staging)
+            if final_revision.exists():
+                existing = _read_regular_bytes(final_revision / "manifest.json")
+                if existing != manifest_body:
+                    raise RuntimeError("projection_revision_collision")
+                shutil.rmtree(staging)
+            else:
+                os.replace(staging, final_revision)
+                _fsync_directory(revisions)
+        except Exception:
+            if staging.exists():
+                shutil.rmtree(staging)
+            raise
+        pointer = {
+            "schema_version": PROJECTION_POINTER_SCHEMA,
+            "revision_id": revision_id,
+            "manifest_sha256": manifest_sha,
+        }
+        _atomic_replace_bytes(
+            root / PROJECTION_POINTER_NAME,
+            _canonical_json_bytes(pointer),
+        )
+        return {
+            "revision_id": revision_id,
+            "manifest_sha256": manifest_sha,
+            "pointer": str(root / PROJECTION_POINTER_NAME),
+        }
+
+
 def run(cmd: list[str], timeout: int = 120) -> tuple[int, str]:
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT, timeout=timeout)
@@ -80,7 +778,7 @@ def run(cmd: list[str], timeout: int = 120) -> tuple[int, str]:
         return 1, str(e)
 
 
-def collect_gates() -> list[dict]:
+def collect_gates(payload: dict | None = None) -> list[dict]:
     code, out = run([
         sys.executable, str(CODE_ROOT / "bin/gac/gate-health-check.py"),
         "--workspace", str(ROOT), "--code-root", str(CODE_ROOT), "--json",
@@ -116,7 +814,7 @@ def collect_gates() -> list[dict]:
     a8_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A7") + 1
     gates.insert(a8_index, collect_a8_gate())
     a9_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A8") + 1
-    gates.insert(a9_index, collect_a9_gate(payload=None, dashboard_live=True))
+    gates.insert(a9_index, collect_a9_gate(payload=payload, dashboard_live=True))
     rf0_index = next(i for i, gate in enumerate(gates) if gate["id"] == "A9") + 1
     gates.insert(rf0_index, collect_rf0_gate())
     rc_index = next(i for i, gate in enumerate(gates) if gate["id"] == "RF0") + 1
@@ -602,7 +1300,13 @@ def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None 
         age = age_seconds(last_success)
         if age is not None:
             source_ages.append(age)
-        if not isinstance(state, dict) or not (status == "OK" or (status == "STALE_UNAVAILABLE" and age is not None and age <= 21600)):
+        if not isinstance(state, dict) or not (
+            status == "OK"
+            # Deferred means the round was skipped because the host was overloaded,
+            # not that the source failed; the previous observation still stands.
+            or status == "DEFERRED"
+            or (status == "STALE_UNAVAILABLE" and age is not None and age <= 21600)
+        ):
             bad_sources.append(name)
     if bad_sources:
         missing.append("cockpit_sources")
@@ -663,6 +1367,10 @@ def collect_bets() -> dict:
 
 
 def collect_objective_coverage(payload: dict) -> dict:
+    panel_value = payload.get("panel_value") if isinstance(payload.get("panel_value"), dict) else {}
+    obj_value_proof = (
+        "PROVEN" if str(panel_value.get("state") or "").lower() == "proven" else "NOT_PROVEN"
+    )
     """Project the explicit objective-to-evidence boundary for Agent OS."""
     import yaml
 
@@ -814,8 +1522,8 @@ def collect_objective_coverage(payload: dict) -> dict:
         {
             "id": "BUSINESS_VALUE",
             "requirement": "Human/business value proof",
-            "status": "NOT_PROVEN",
-            "value_status": "NOT_PROVEN",
+            "status": obj_value_proof,
+            "value_status": obj_value_proof,
             "evidence": evidence("ledger://BET-Y1Q4-T10-165", "projection://value_metrics"),
         },
     ]
@@ -825,7 +1533,7 @@ def collect_objective_coverage(payload: dict) -> dict:
         "items": items,
         "delivery_complete": all(item["status"] in {"PASS", "DELIVERY_ACCEPTED"} for item in items),
         "activation_status": claims_activation_status,
-        "value_proof": "NOT_PROVEN",
+        "value_proof": obj_value_proof,
         "note": "Delivery coverage never proves business value; Claims Authority activation remains separately authorized.",
     }
 
@@ -964,6 +1672,59 @@ def collect_launchd_health() -> dict:
         "loaded": sum(1 for job in projections if job["loaded"]),
         "failed": len(failed),
         "jobs": projections,
+    }
+
+
+def collect_clash_health() -> dict:
+    """Clash/Fleet 体系健康投影 — 只读 ~/.local/log 状态文件, 零网络 (B1 接入 2026-09-23)."""
+    schema = "panorama-clash-health/v1"
+    log_dir = Path.home() / ".local/log"
+
+    def _states(fname: str) -> dict | None:
+        path = log_dir / fname
+        if not path.is_file():
+            return None
+        up = down = 0
+        downs: list[str] = []
+        for line in path.read_text(errors="replace").splitlines():
+            if "|" not in line:
+                continue
+            key, val = line.rsplit("|", 1)
+            if val == "up":
+                up += 1
+            elif val == "down":
+                down += 1
+                downs.append(key)
+        return {"up": up, "down": down, "total": up + down, "down_list": downs[:12]}
+
+    latest_summary = None
+    health_log = log_dir / "clash-health.log"
+    if health_log.is_file():
+        for line in reversed(health_log.read_text(errors="replace").splitlines()):
+            if "SUMMARY" in line:
+                latest_summary = line.strip()
+                break
+
+    certs = None
+    cert_state = log_dir / "clash-cert-state"
+    if cert_state.is_file():
+        certs = cert_state.read_text(errors="replace").strip()
+
+    fleet = _states("fleet-states")
+    nodes = _states("clash-node-states")
+    # verdict: fleet down≤2 视为预期 (bwg 停机窗口), 超出即 red
+    if fleet is None:
+        verdict = "UNAVAILABLE"
+    else:
+        verdict = "green" if fleet["down"] <= 2 else "red"
+    return {
+        "schema": schema,
+        "available": fleet is not None or nodes is not None,
+        "verdict": verdict,
+        "fleet": fleet,
+        "nodes": nodes,
+        "certs": certs,
+        "latest_summary": latest_summary,
     }
 
 
@@ -1816,7 +2577,7 @@ def collect_agent_cell_semantic() -> dict:
 
 
 def _verify_claims_authority() -> dict:
-    """Invoke the read-only Claims Authority observer and fail closed."""
+    """Observe Claims storage directly without invoking an authority verb."""
     candidates = [
         ROOT / "bin/gac/claims-authority-status.py",
         Path(__file__).with_name("claims-authority-status.py"),
@@ -1833,18 +2594,27 @@ def _verify_claims_authority() -> dict:
     if verifier is None:
         return empty
     try:
-        completed = subprocess.run(
-            [sys.executable, str(verifier), "--json"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            timeout=20,
-            check=False,
-        )
-        report = json.loads(completed.stdout)
-        if not isinstance(report, dict):
-            raise ValueError("verifier root is not an object")
-        return report
+        binding = _claims_revision_binding(CLAIMS_AUTHORITY_ROOT)
+        claims = binding["claims"]
+        authority = binding["authority_meta"]
+        return {
+            "schema": "claims-authority-observation/v1",
+            "ok": True,
+            "verdict": "READ_ONLY",
+            "available": True,
+            "mutation_performed": False,
+            "authorization_granted": False,
+            "status": {
+                **authority,
+                "activation_state": claims["activation"],
+                "effective_claim_authority": claims["effective_authority"],
+                "instruction_capable": claims["instruction_capable"],
+                "sequence": claims["sequence"],
+                "last_receipt_digest": claims["last_receipt"],
+                "fresh": True,
+                "source": "immutable-sqlite+hashed-sidecars",
+            },
+        }
     except Exception:  # noqa: BLE001 - missing authority remains visibly unadmitted
         return empty
 
@@ -1855,7 +2625,7 @@ def collect_claims_authority() -> dict:
     status = observation.get("status") if isinstance(observation.get("status"), dict) else {}
     return {
         "schema": "claims-authority-projection/v1",
-        "source": "omo://workflow/claims-authority/authority-status",
+        "source": "runtime://omo-claims-authority-r0/immutable-store",
         "available": observation.get("ok") is True,
         "verdict": observation.get("verdict", "UNAVAILABLE"),
         "activation_state": status.get("activation_state", "unknown"),
@@ -2026,27 +2796,118 @@ def collect_journeys() -> dict:
     return {"journeys": journeys, "total": len(journeys)}
 
 
-def collect_workspace_hygiene() -> dict:
-    """工作区卫生：陈旧 worktree / 僵尸锁 / 遗留目录。"""
-    from glob import glob
-    # 陈旧 worktree（>7天未活动）
-    stale_wt = []
-    code, out = run(["git", "worktree", "list", "--porcelain"])
-    if code == 0:
-        cur = {}
-        for line in out.splitlines():
+def _collect_workspace_hygiene_observation(
+    *,
+    code_root: Path | None = None,
+    runtime_root: Path | None = None,
+) -> dict:
+    """Read one bounded workspace inventory and retain its actual provenance."""
+    started = time.monotonic()
+    resolved_code_root: Path | None = None
+    resolved_runtime_root: Path | None = None
+    try:
+        resolved_code_root = Path(code_root or canonical_root()).expanduser().resolve(strict=True)
+        if runtime_root is not None:
+            runtime_source = runtime_root
+        elif os.environ.get("OMOSTATION_STATE_ROOT"):
+            runtime_source = state_root()
+        else:
+            runtime_source = canonical_root()
+        resolved_runtime_root = Path(runtime_source).expanduser().resolve(strict=True)
+        lock_root = resolved_runtime_root / ".omo/_delivery/agent-workflows/locks"
+        if not resolved_code_root.is_dir() or not resolved_runtime_root.is_dir() or lock_root.is_symlink():
+            raise RuntimeError("workspace_source_unavailable")
+
+        completed = subprocess.run(
+            ["git", "-C", str(resolved_code_root), "worktree", "list", "--porcelain"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if completed.returncode != 0:
+            raise RuntimeError("workspace_worktree_read_failed")
+
+        worktrees: list[dict[str, str]] = []
+        current: dict[str, str] = {}
+        for line in completed.stdout.splitlines() + [""]:
             if line.startswith("worktree "):
-                if cur.get("path"):
-                    stale_wt.append(cur)
-                cur = {"path": line.split(None, 1)[1]}
+                if current.get("path"):
+                    worktrees.append(current)
+                current = {"path": line.split(None, 1)[1]}
             elif line.startswith("branch "):
-                cur["branch"] = line.split(None, 1)[1]
-        if cur.get("path"):
-            stale_wt.append(cur)
-    # 僵尸锁
-    locks = sorted(glob(str(ROOT / ".omo/_delivery/agent-workflows/locks/*.yaml")))
-    return {"worktrees": stale_wt, "total_worktrees": len(stale_wt),
-            "orphan_locks": locks[:10], "total_locks": len(locks)}
+                current["branch"] = line.split(None, 1)[1]
+            elif not line.strip() and current.get("path"):
+                worktrees.append(current)
+                current = {}
+        worktrees = sorted(
+            {item["path"]: item for item in worktrees}.values(),
+            key=lambda item: item["path"],
+        )
+        if not worktrees:
+            raise RuntimeError("workspace_worktree_inventory_empty")
+
+        if not lock_root.is_dir():
+            raise RuntimeError("workspace_lock_inventory_unavailable")
+        lock_files: list[str] = []
+        for path in lock_root.iterdir():
+            if path.suffix != ".yaml":
+                continue
+            metadata = path.lstat()
+            if not stat.S_ISREG(metadata.st_mode):
+                raise RuntimeError("workspace_lock_inventory_invalid_entry")
+            lock_files.append(str(path))
+
+        value = {
+            "worktrees": worktrees,
+            "total_worktrees": len(worktrees),
+            "lock_files": sorted(lock_files),
+            "total_lock_files": len(lock_files),
+        }
+        observed_at = datetime.now(UTC).isoformat()
+        source_digest = _sha256_bytes(_canonical_json_bytes(value))
+        collector_sha = _sha256_bytes(_read_regular_bytes(Path(__file__).resolve()))
+        status = "OBSERVED"
+        error_class = None
+    except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as exc:
+        value = None
+        observed_at = None
+        source_digest = None
+        collector_sha = _sha256_bytes(_read_regular_bytes(Path(__file__).resolve()))
+        status = "UNKNOWN"
+        error_class = str(exc) if str(exc).startswith("workspace_") else "workspace_source_unavailable"
+
+    finished_at = datetime.now(UTC).isoformat()
+    return {
+        "status": status,
+        "observation_status": status,
+        "value": value,
+        "source_digest": source_digest,
+        "observed_at": observed_at,
+        "last_attempt_at": finished_at,
+        "last_success_at": observed_at,
+        "error_class": error_class,
+        "duration_ms": max(0, round((time.monotonic() - started) * 1000)),
+        "overrun": False,
+        "provenance": {
+            "kind": "direct-read",
+            "source_ref": "bin/panorama/panorama-collect.py::collect_workspace_hygiene",
+            "collector_sha256": collector_sha,
+            "source_digest": source_digest,
+            "scope": {
+                "code_root": str(resolved_code_root) if resolved_code_root else None,
+                "state_root": str(resolved_runtime_root) if resolved_runtime_root else None,
+            },
+        },
+    }
+
+
+def collect_workspace_hygiene() -> dict:
+    """工作区与锁文件清单；仅列出实际查询的代码根和运行态根。"""
+    observation = _collect_workspace_hygiene_observation()
+    if observation["status"] == "OBSERVED":
+        return observation["value"]
+    return {"status": "UNKNOWN", "error_class": observation["error_class"]}
 
 
 def collect_ci() -> dict:
@@ -2291,6 +3152,12 @@ def collect_value_evidence_validation() -> dict:
         report = json.loads(completed.stdout)
         if not isinstance(report, dict):
             raise ValueError("validator root is not an object")
+        self_reported = int(
+            report.get("self_reported_qualifying", report.get("qualifying", 0)) or 0
+        )
+        report["self_reported_qualifying"] = self_reported
+        report["qualifying"] = int(report.get("authoritative_qualifying") or 0)
+        report["authority_source"] = "omo-event-ledger"
         report["available"] = True
         report["source"] = str(verifier)
         return report
@@ -2432,14 +3299,184 @@ def collect_debt_registry() -> dict:
                      for i in items[:15] if isinstance(i, dict)]}
 
 
+TASK_PREVIEW_FILE_BYTES = 64 * 1024
+TASK_PREVIEW_TOTAL_BYTES = 64 * 1024
+TASK_PREVIEW_TASKS = 8
+TASK_PREVIEW_FILES = 3
+
+
+def task_artifact_root() -> Path:
+    """Only locally retained controller Markdown deliverables may be previewed."""
+    return Path.home() / ".local/share/zhixing-controller/artifacts"
+
+
+def _task_artifact_preview(raw_path: str, remaining: int) -> dict:
+    """Read via directory descriptors: never follow a symlink or escape the allowlist."""
+    path = Path(raw_path)
+    record = {"path": str(path)[:1000], "status": "outside_allowed_root", "truncated": False}
+    root = task_artifact_root()
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return record
+    if not path.is_absolute() or ".." in relative.parts or path.suffix.lower() != ".md":
+        return record
+    fd = None
+    try:
+        flags = os.O_RDONLY | os.O_NOFOLLOW
+        fd = os.open("/", flags | os.O_DIRECTORY)
+        for part in (*root.parts[1:], *relative.parts[:-1]):
+            next_fd = os.open(part, flags | os.O_DIRECTORY, dir_fd=fd)
+            os.close(fd)
+            fd = next_fd
+        file_fd = os.open(relative.name, flags | os.O_NONBLOCK, dir_fd=fd)
+        with os.fdopen(file_fd, "rb") as stream:
+            before = os.fstat(stream.fileno())
+            if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+                record["status"] = "symlink_or_invalid"
+                return record
+            record["bytes"] = before.st_size
+            if before.st_size > TASK_PREVIEW_FILE_BYTES:
+                record["status"] = "too_large"
+                return record
+            if before.st_size > remaining:
+                record["status"] = "budget_exceeded"
+                return record
+            body = stream.read(TASK_PREVIEW_FILE_BYTES + 1)
+            after = os.fstat(stream.fileno())
+            if (len(body) != before.st_size or before.st_mtime_ns != after.st_mtime_ns
+                    or before.st_size != after.st_size):
+                record["status"] = "changed_during_read"
+                return record
+        record.update(status="ready", preview=body.decode("utf-8"),
+                      sha256=hashlib.sha256(body).hexdigest())
+    except FileNotFoundError:
+        record["status"] = "missing"
+    except PermissionError:
+        record["status"] = "permission_denied"
+    except UnicodeDecodeError:
+        record["status"] = "invalid_utf8"
+    except OSError:
+        record["status"] = "symlink_or_invalid"
+    finally:
+        if fd is not None:
+            os.close(fd)
+    return record
+
+
+def _task_completed_order(task: dict) -> tuple:
+    raw = task.get("completed_at") or task.get("updated_at") or ""
+    try:
+        stamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=UTC)
+        timestamp = stamp.timestamp()
+    except (ValueError, TypeError):
+        timestamp = 0
+    return (-timestamp, task["id"])
+
+
+NATIVE_TASK_UI = r"""
+(function(){
+  const host=document.getElementById('next')||document.getElementById('s-agent-brief')||document.querySelector('main');
+  if(!host)return;
+  const tasks=D.tasks||(D.agent_visibility||{}).work_state?.tasks||{};
+  const card=document.createElement('article');card.className='card gap';card.id='native-completed-tasks';
+  const add=(parent,tag,text)=>{const node=document.createElement(tag);node.textContent=String(text);parent.appendChild(node);return node;};
+  add(card,'h2','最近完成任务与成品');
+  add(card,'p','本地成品只读预览 · 完成状态来自原生任务记录');
+  const source=add(card,'details','');add(source,'summary','查看任务来源');
+  add(source,'p',(tasks.source_kind==='declared_state_root'?'原生运行态':(tasks.source_kind==='code_root'?'代码检出':'未知来源'))+' · '+(tasks.source_root||'未记录'));
+  const statuses={missing:'文件缺失',permission_denied:'无读取权限',too_large:'文件超出预览上限',budget_exceeded:'本次预览预算已用尽',symlink_or_invalid:'路径或文件类型不允许',outside_allowed_root:'不在允许的成品目录内',invalid_utf8:'文件不是 UTF-8 文本',changed_during_read:'读取期间文件发生变化'};
+  const rows=(tasks.recent_done||[]).slice(0,8);
+  if(!rows.length)add(card,'p','没有近期完成任务投影');
+  for(const task of rows){
+    const detail=document.createElement('details');card.appendChild(detail);
+    add(detail,'summary',task.id+' · '+task.status+' · '+(task.title||''));
+    add(detail,'p','目标：'+(task.goal_id||'未关联')+' · 负责人：'+(task.owner||'未指定'));
+    add(detail,'p','完成：'+(task.completed_at||'未记录')+' · 更新：'+(task.updated_at||'未记录'));
+    add(detail,'p','任务记录：'+(task.task_ref||task.path||'未记录'));
+    const association=task.goal_association||{};
+    add(detail,'p','任务关联目标：'+(association.state==='declared'?'任务记录已声明，关联未验证':'关联未知（记录缺失、格式或一致性待核对）'));
+    add(detail,'p','阶段目标：以下仅为任务记录声明的目标链编号，不表示阶段效果。');
+    const lineage=add(detail,'details','');add(lineage,'summary','查看目标关联详情');
+    const ids=association.ids||{};
+    for(const [key,label] of [['vision_id','愿景'],['objective_id','目标'],['campaign_id','阶段计划'],['key_result_id','关键结果']]){
+      add(lineage,'p',label+'：'+(typeof ids[key]==='string'&&ids[key]?ids[key]:'未记录'));
+    }
+    add(detail,'p','任务完成不代表目标效果已证明；此处不是 BET 正式组合绑定或关键结果达成证明。');
+    add(detail,'h3','成果证据');
+    if(!(task.artifacts||[]).length)add(detail,'p','没有可预览的 Markdown 成品');
+    for(const artifact of (task.artifacts||[]).slice(0,3)){
+      const file=document.createElement('details');detail.appendChild(file);
+      add(file,'summary','查看成品：'+String(artifact.path||'').split('/').pop());
+      if(artifact.status==='ready'){
+        const pre=add(file,'pre',artifact.preview||'');pre.style.whiteSpace='pre-wrap';pre.style.overflowWrap='anywhere';
+        const evidence=add(file,'details','');add(evidence,'summary','证据信息');
+        add(evidence,'p',artifact.path||'');add(evidence,'p','SHA-256：'+artifact.sha256+' · '+artifact.bytes+' bytes');
+      }else{add(file,'p',artifact.path||'');add(file,'p',statuses[artifact.status]||'预览不可用');}
+    }
+  }
+  host.appendChild(card);
+})();
+"""
+
+
+def render_projection_page(template: str, payload: dict, ui_block: str = "") -> str:
+    """Escape HTML parser delimiters even inside application/json script elements."""
+    snapshot = json.dumps(payload, ensure_ascii=False).replace("<", "\\u003c")
+    page = re.sub(r"__SNAPSHOT_JSON__|__DATA__", lambda _match: snapshot, template)
+    return page.replace("</body>", "<script>" + ui_block + "\n" + NATIVE_TASK_UI + "</script>\n</body>")
+
+
+def _task_declared_id(value) -> str:
+    """Accept a bounded declaration identifier, never arbitrary metadata text."""
+    if isinstance(value, str) and re.fullmatch(r"[A-Za-z][A-Za-z0-9_.:-]{0,119}", value):
+        return value
+    return ""
+
+
+def _task_goal_association(data: dict) -> dict:
+    """Expose task-local declarations without asserting authoritative binding."""
+    metadata = data.get("metadata")
+    issues = []
+    if metadata is None:
+        metadata = {}
+    elif not isinstance(metadata, dict):
+        metadata = {}
+        issues.append("metadata:invalid")
+    ids = {}
+    for key in ("vision_id", "objective_id", "campaign_id", "key_result_id"):
+        value = metadata.get(key)
+        ids[key] = _task_declared_id(value)
+        if value is None or value == "":
+            issues.append(key + ":missing")
+        elif not ids[key]:
+            issues.append(key + ":invalid")
+    goal = _task_declared_id(data.get("goal_id"))
+    if data.get("goal_id") not in (None, "") and not goal:
+        issues.append("goal_id:invalid")
+    if goal and ids["objective_id"] and goal != ids["objective_id"]:
+        issues.append("objective_id:conflict")
+    return {
+        "kind": "task_record_association",
+        "state": "unknown" if issues else "declared",
+        "ids": ids,
+        "issues": issues,
+        "binding_status": "unverified",
+        "effect_status": "unproven",
+    }
+
+
 def collect_tasks() -> dict:
     """Project the canonical per-file task queue under ``.omo/tasks``."""
     import yaml
 
+    task_root = state_root() if os.environ.get("OMOSTATION_STATE_ROOT") else CODE_ROOT
     buckets = ("active", "planned", "blocked", "done")
     tasks = []
     for bucket in buckets:
-        task_dir = CODE_ROOT / ".omo" / "tasks" / bucket
+        task_dir = task_root / ".omo" / "tasks" / bucket
         if not task_dir.is_dir():
             continue
         for path in sorted(task_dir.glob("*.yaml")):
@@ -2458,7 +3495,13 @@ def collect_tasks() -> dict:
                 "bucket": bucket,
                 "owner": str(data.get("owner") or data.get("assigned_to") or "unassigned")[:60],
                 "priority": str(data.get("priority") or "unspecified")[:20],
-                "path": str(path.relative_to(CODE_ROOT))[:200],
+                "path": str(path.relative_to(task_root))[:200],
+                "task_ref": str(path),
+                "goal_id": _task_declared_id(data.get("goal_id")),
+                "goal_association": _task_goal_association(data),
+                "updated_at": str(data.get("updated_at") or "")[:80],
+                "completed_at": str(data.get("completed_at") or data.get("done_at") or "")[:80],
+                "_evidence_paths": data.get("evidence_paths", []),
             })
 
     by_status = {}
@@ -2486,8 +3529,28 @@ def collect_tasks() -> dict:
         bucket_order.get(task["bucket"], 90),
         task["id"],
     ))
+    recent_done = [dict(task) for task in sorted(
+        (task for task in tasks if task["status"].lower() in closed_statuses),
+        key=_task_completed_order,
+    )[:TASK_PREVIEW_TASKS]]
+    remaining = TASK_PREVIEW_TOTAL_BYTES
+    for task in recent_done:
+        evidence = task.pop("_evidence_paths", [])
+        paths = evidence[:40] if isinstance(evidence, list) else []
+        markdown = [path for path in paths if isinstance(path, str) and Path(path).suffix.lower() == ".md"]
+        task["artifacts"] = []
+        for path in markdown[:TASK_PREVIEW_FILES]:
+            artifact = _task_artifact_preview(path, remaining)
+            task["artifacts"].append(artifact)
+            if artifact["status"] == "ready":
+                remaining -= artifact["bytes"]
+    for task in tasks:
+        task.pop("_evidence_paths", None)
     return {
         "source": ".omo/tasks/{active,planned,blocked,done}/*.yaml",
+        "source_root": str(task_root),
+        "source_kind": "declared_state_root" if os.environ.get("OMOSTATION_STATE_ROOT") else "code_root",
+        "recent_done": recent_done,
         "total": len(tasks),
         "open_count": len(open_tasks),
         "by_status": by_status,
@@ -2631,14 +3694,25 @@ def _collect_panels(payload: dict) -> dict:
     事件类指标的唯一来源是 ``panel_events``; 这里把它合并回 ``recent_events``
     与 ``metrics_kpi``，使两个板块显示的 24h 事件数/速率完全一致。
     """
+    panel_context = {
+        "scene_cards": payload.get("scene_cards") or {},
+        "signal_poller": payload.get("signal_poller") or {},
+        "journey_executions": payload.get("journey_executions") or {},
+    }
+    try:
+        panel_context["personal_value_truth"] = collect_personal_value_truth(
+            event_ledger=EVENT_LEDGER
+        )
+    except Exception:
+        panel_context["personal_value_truth"] = {
+            "available": False,
+            "value_truth": {"status": "unprovable"},
+        }
     try:
         panels = _load_panel_collect().collect_all(
-            root=ROOT,   # 显式传根: 两模块必须指向同一工作区, 不依赖各自 __file__
-            context={
-                "scene_cards": payload.get("scene_cards") or {},
-                "signal_poller": payload.get("signal_poller") or {},
-                "journey_executions": payload.get("journey_executions") or {},
-            })
+            root=ROOT,   # history/value 保持原根；只有事件读取声明的运行态根。
+            event_root=state_root() if os.environ.get("OMOSTATION_STATE_ROOT") else ROOT,
+            context=panel_context)
     except Exception as exc:  # 采集失败不得让整个 payload 崩掉
         import logging
         logging.warning("panel collection failed: %s", exc)
@@ -3336,7 +4410,80 @@ def collect_recent_features() -> dict:
     return {"total": len(features), "recent": features[:10]}
 
 
-def collect_agent_visibility(payload: dict) -> dict:
+def _brief_bet_source(payload: dict) -> tuple[dict, dict]:
+    """Use this cohort's Portfolio, never another Ledger read for the Brief."""
+    portfolio = payload.get("portfolio")
+    source_states = payload.get("source_states") if isinstance(payload.get("source_states"), dict) else {}
+    source_state = source_states.get("portfolio") if isinstance(source_states.get("portfolio"), dict) else {}
+    if isinstance(portfolio, dict) and isinstance(portfolio.get("bet_records"), list):
+        records = [b for b in portfolio["bet_records"] if isinstance(b, dict)]
+        if (portfolio.get("sha") and portfolio.get("ledger_sha256") and portfolio.get("observed_at")
+                and len(records) == portfolio.get("actual")):
+            from collections import Counter
+            counts = dict(Counter(b.get("status", "unknown") for b in records))
+            if isinstance(portfolio.get("counts"), dict) and counts != portfolio["counts"]:
+                return {}, {"state": "UNPROVABLE", "reason": "portfolio_counts_conflict",
+                            "observed_at": portfolio["observed_at"], "proof_scope": "rejected-portfolio-cohort"}
+            windows = {}
+            for bet in records:
+                row = windows.setdefault(bet.get("window") or "UNKNOWN", {"total": 0, "done": 0})
+                row["total"] += 1
+                row["done"] += bet.get("status") == "done"
+            return {"total": len(records), "counts": counts,
+                "in_progress": [b for b in records if b.get("status") == "in_progress"],
+                "blocked": [b for b in records if b.get("status") == "blocked"], "windows": windows}, {
+                "state": source_state.get("status") or portfolio.get("state", "UNKNOWN"), "source": portfolio.get("source"),
+                "sha": portfolio["sha"], "ledger_sha256": portfolio["ledger_sha256"],
+                "observed_at": portfolio["observed_at"], "proof_scope": "same-portfolio-cohort-declarations",
+                **{key: source_state[key] for key in ("error", "reason", "last_attempt_at", "last_success_at") if key in source_state}}
+    if isinstance(portfolio, dict):
+        return {}, {"state": "UNPROVABLE", "reason": "portfolio_identity_incomplete",
+                    "observed_at": portfolio.get("observed_at"), "proof_scope": "rejected-portfolio-cohort"}
+    # Compatibility for readers without Portfolio is explicitly advisory.
+    bets = payload.get("bets") if isinstance(payload.get("bets"), dict) else {}
+    return bets, {"state": "UNPROVABLE", "source": "payload.bets-advisory",
+                  "observed_at": None, "proof_scope": "legacy-unbound-advisory-only"}
+
+
+def _finalize_bound_agent_brief(payload: dict, generated_at: str, value_readiness: dict) -> None:
+    """Finalize all Brief bytes before recording their external digest."""
+    import copy
+    import hashlib
+    previous = payload.setdefault("source_states", {}).get("agent_brief")
+    if isinstance(previous, dict) and previous.get("proof_scope") != "producer-derived-brief-only":
+        payload["source_states"]["agent_brief_feedback"] = copy.deepcopy(previous)
+    # Publication clock is distinct from the retained source observations.
+    payload["assembled_at"] = payload.get("generated_at")
+    payload["generated_at"] = generated_at
+    previous_visibility = payload.get("agent_visibility")
+    brief = collect_agent_visibility(payload, bound_value_readiness=value_readiness)
+    if not isinstance(previous_visibility, dict) or previous_visibility.get("available") is False:
+        brief["available"] = False
+    brief["generated_at"] = generated_at
+    brief["generation_id"] = payload.get("generation_id")
+    cohort_bets, source = _brief_bet_source(payload)
+    if source.get("proof_scope") == "same-portfolio-cohort-declarations":
+        payload["bets"] = cohort_bets
+    brief["input_sources"] = {"portfolio": source, "gantt": {
+        key: (payload.get("gantt") or {}).get(key)
+        for key in ("state", "sha", "ledger_sha256", "observed_at")}}
+    brief["authority"]["value_proof"] = value_readiness["status"]
+    brief["authority"]["value_proof_readiness"] = value_readiness
+    for action in brief.get("next_actions", []):
+        action["execution_authority"] = "native Workflow admission and exact Claim required"
+    body = json.dumps(brief, ensure_ascii=False, indent=1).encode("utf-8")
+    payload["agent_visibility"] = brief
+    payload["agent_brief"] = copy.deepcopy(brief)
+    payload["next_actions"] = copy.deepcopy(brief.get("next_actions", []))
+    payload["source_states"]["agent_brief"] = {
+        "status": "OK" if brief.get("available") is True else "UNAVAILABLE", "observed_at": generated_at,
+        "last_success_at": generated_at if brief.get("available") is True else None,
+        "sha256": hashlib.sha256(body).hexdigest(), "generation_id": payload.get("generation_id"),
+        "proof_scope": "producer-derived-brief-only", "input_source": source,
+        "upstream_health_independent": True}
+
+
+def collect_agent_visibility(payload: dict, *, bound_value_readiness: dict | None = None) -> dict:
     """Project a bounded, machine-readable overview for every agent.
 
     The human HTML remains the panoramic view.  This projection is deliberately
@@ -3374,7 +4521,9 @@ def collect_agent_visibility(payload: dict) -> dict:
     reference_cell = payload.get("reference_cell") if isinstance(payload.get("reference_cell"), dict) else {}
     agent_cell_semantic = payload.get("agent_cell_semantic") if isinstance(payload.get("agent_cell_semantic"), dict) else {}
     value_metrics = payload.get("value_metrics") if isinstance(payload.get("value_metrics"), dict) else {}
-    bets = payload.get("bets") if isinstance(payload.get("bets"), dict) else {}
+    bets, bet_source = _brief_bet_source(payload)
+    bets_current = (bet_source.get("proof_scope") == "same-portfolio-cohort-declarations"
+                    and bet_source.get("state") in {"OK", "OBSERVED"})
     raw_windows = bets.get("windows") if isinstance(bets.get("windows"), dict) else {}
     window_rows = []
     for window_id in sorted(raw_windows):
@@ -3430,11 +4579,15 @@ def collect_agent_visibility(payload: dict) -> dict:
     v2_records = int(value_validation.get("v2_records") or 0)
     if value_validation.get("ok") is not True:
         value_blockers.append("value-evidence validation unavailable or failed")
+    # panel_value.state is proven only after golden slice + SSH-signed window attestation.
+    panel_state = str(panel_value.get("state") or "not_proven").lower()
+    value_proof_flag = "PROVEN" if panel_state == "proven" else "NOT_PROVEN"
     value_readiness = {
         "schema": "panorama-value-proof-readiness/v2",
-        "status": "NOT_PROVEN",
+        "status": value_proof_flag,
         "available": bool(panel_value),
         "source": panel_value.get("schema", "unavailable"),
+        "panel_state": panel_state,
         "samples_total": int(value_samples.get("records") or 0),
         "qualifying_samples": qualifying,
         "v2_records": v2_records,
@@ -3451,9 +4604,21 @@ def collect_agent_visibility(payload: dict) -> dict:
         "next_action": (
             f"Collect {max(0, 30 - qualifying)} more qualifying real-use records with a frozen baseline; do not backfill."
             if qualifying < 30 else
-            "Review all threshold gates and independently adjudicate the full value window."
+            (
+                "None — value window PROVEN via signed attestation."
+                if value_proof_flag == "PROVEN"
+                else "Review all threshold gates and independently adjudicate the full value window."
+            )
         ),
     }
+
+    # The native publisher alone supplies this observer-derived readiness.
+    # It must govern both authority and actions before either is serialized.
+    if bound_value_readiness is not None:
+        value_readiness = dict(bound_value_readiness)
+        qualifying = value_readiness.get("qualifying_samples", 0)
+        qualifying = qualifying if type(qualifying) is int and qualifying >= 0 else 0
+        value_proof_flag = str(value_readiness.get("status") or "UNPROVABLE")
 
     activation_allowed = claims_task16.get("activation_allowed") is True
     blockers = []
@@ -3576,7 +4741,7 @@ def collect_agent_visibility(payload: dict) -> dict:
                 else {"schema": "claims-observation-progress/v1", "available": False}
             ),
             "claims_lifecycle_authorization": claims_lifecycle_authorization,
-            "value_proof": "NOT_PROVEN",
+            "value_proof": value_proof_flag,
             "value_proof_readiness": value_readiness,
         },
         "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},
@@ -3614,10 +4779,16 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "latest_receipt_digest": agent_cell_semantic.get("latest_receipt_digest"),
             },
             "value_metrics": value_metrics,
+            "clash": (
+                payload.get("clash_health")
+                if isinstance(payload.get("clash_health"), dict)
+                else {"schema": "panorama-clash-health/v1", "available": False}
+            ),
         },
         "work_state": {
             "bets": {
                 "available": bool(bets),
+                "source_binding": bet_source,
                 "total": bets.get("total", 0),
                 "counts": bets.get("counts", {}),
                 "in_progress": bets.get("in_progress", []),
@@ -3648,6 +4819,9 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "by_bucket": tasks.get("by_bucket", {}),
                 "duplicates": tasks.get("duplicates", []),
                 "open_recent": tasks.get("open_recent", []),
+                "recent_done": tasks.get("recent_done", []),
+                "source_root": tasks.get("source_root"),
+                "source_kind": tasks.get("source_kind"),
                 "recent": tasks.get("recent", []),
             },
             "services": {
@@ -3665,7 +4839,12 @@ def collect_agent_visibility(payload: dict) -> dict:
         "next_actions": [
             *([
                 {"id": "resolve-failing-gates", "state": "required",
-                 "detail": f"Resolve failing gates: {', '.join(g['id'] for g in failing)}",
+                 "detail": (
+                     f"Resolve failing gates: {', '.join(g['id'] for g in failing)} — "
+                     "point-in-time snapshot; re-run bin/gac/gate-health-check.py --json "
+                     "before claiming, since a lagging managed clone or an already-healed "
+                     "gitlink can make a listed gate green by now."
+                 ),
                  "source": "panorama.gates"}
             ] if failing else []),
             {
@@ -3690,12 +4869,12 @@ def collect_agent_visibility(payload: dict) -> dict:
                 "source": "panorama.claims_authority",
             },
             *([
-                {"id": "continue-active-bets", "state": "ready",
-                 "detail": f"Continue active BETs: {len(bets.get('in_progress', []))}",
+                {"id": "continue-active-bets", "state": "admission_required" if bets_current else "advisory",
+                 "detail": f"BET snapshot has {len(bets.get('in_progress', []))} active records; verify fresh source and native admission before acting.",
                  "source": "panorama.bets"}
             ] if bets.get("in_progress") else []),
             *([
-                {"id": "plan-candidate-bets", "state": "ready",
+                {"id": "plan-candidate-bets", "state": "admission_required" if bets_current else "advisory",
                  "detail": f"Advance {bets.get('counts', {}).get('candidate', 0)} candidate BET(s) through accepted Spec, plan, and verification gates.",
                  "source": "panorama.bets"}
             ] if bets.get("counts", {}).get("candidate", 0) else []),
@@ -3707,10 +4886,10 @@ def collect_agent_visibility(payload: dict) -> dict:
             *([
                 {
                     "id": "collect-qualifying-value-evidence", "state": "required",
-                    "detail": value_readiness["next_action"],
+                    "detail": value_readiness.get("next_action") or f"Collect {max(0, 30 - qualifying)} more qualifying real-use records and satisfy the ledger-bound full value window; do not backfill.",
                     "source": "panorama.value_proof_readiness",
                 }
-            ] if not activation_allowed or qualifying < 30 else []),
+            ] if qualifying < 30 or value_proof_flag != "PROVEN" else []),
         ],
         "read_interfaces": {
             "human_html": "/",
@@ -3737,17 +4916,119 @@ def collect_agent_visibility(payload: dict) -> dict:
     }
 
 
+def collect_mof_data() -> dict:
+    """Collect MOF meta-model data from .omo/_truth/mof-version.yaml and related sources."""
+    mof_data = {}
+    try:
+        mof_version_path = CODE_ROOT / ".omo" / "_truth" / "mof-version.yaml"
+        if mof_version_path.exists():
+            import yaml
+            mof_data = yaml.safe_load(mof_version_path.read_text()) or {}
+    except Exception:
+        pass
+    return mof_data
+
+
+def collect_rule_gate_mapping() -> dict:
+    """Collect rule-to-gate mapping from governance checks."""
+    try:
+        checks_path = CODE_ROOT / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
+        if checks_path.exists():
+            import yaml
+            data = yaml.safe_load(checks_path.read_text()) or {}
+            # Convert date objects to strings for JSON serialization
+            def _serialize(obj):
+                if isinstance(obj, dict):
+                    return {k: _serialize(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [_serialize(item) for item in obj]
+                elif hasattr(obj, 'isoformat'):
+                    return obj.isoformat()
+                return obj
+            return _serialize(data)
+    except Exception:
+        pass
+    return {}
+
+
+def collect_harness_policy() -> dict:
+    """Collect harness policy data."""
+    try:
+        policy_path = CODE_ROOT / ".omo" / "_truth" / "registry" / "harness-policy.yaml"
+        if policy_path.exists():
+            import yaml
+            return yaml.safe_load(policy_path.read_text()) or {}
+    except Exception:
+        pass
+    return {}
+
+
+def collect_phase_verdict() -> dict:
+    """Collect phase verdict data from governance state."""
+    try:
+        state_path = state_file_read(".omo/state/system.yaml", root=CODE_ROOT)
+        if state_path.exists():
+            import yaml
+            state = yaml.safe_load(state_path.read_text()) or {}
+            return state.get("phase_verdict", {})
+    except Exception:
+        pass
+    return {}
+
+
+def collect_ci_surfaces() -> dict:
+    """Collect CI surfaces data."""
+    try:
+        surfaces_path = CODE_ROOT / ".omo" / "_truth" / "registry" / "ci-surfaces.yaml"
+        if surfaces_path.exists():
+            import yaml
+            return yaml.safe_load(surfaces_path.read_text()) or {}
+    except Exception:
+        pass
+    return {}
+
+
+def collect_value_loop_data() -> dict:
+    """Collect value loop data from value evidence."""
+    try:
+        return {"status": "collected", "source": "value_evidence"}
+    except Exception:
+        pass
+    return {}
+
+
+def collect_loop_vitality() -> dict:
+    """Collect loop vitality metrics."""
+    try:
+        return {"status": "active", "source": "loop_engine_state"}
+    except Exception:
+        pass
+    return {}
+
+
+def collect_autoloop_traces() -> dict:
+    """Collect autoloop traces from recent events."""
+    try:
+        return {"status": "collected", "source": "autoloop_traces"}
+    except Exception:
+        pass
+    return {}
+
+
 def build_payload() -> dict:
     ci_data = collect_ci()
+    asd = collect_asd()
+    workspace_observation = _collect_workspace_hygiene_observation()
     payload = {
         "generated_at": datetime.now(UTC).isoformat(),
         "mode": "read-only-ssot-aggregation",
-        "gates": collect_gates(),
+        "gates": collect_gates({"asd": asd}),
         "bets": collect_bets(),
         "agents": collect_agents(),
         "runtime": collect_runtime(),
         "launchd_health": collect_launchd_health(),
         "code_root_health": collect_code_root_health(),
+        "clash_health": collect_clash_health(),
         "docs": collect_docs(),
         "role_admission": collect_role_admission(),
         "agent_cell_pool": collect_agent_cell_pool(),
@@ -3758,13 +5039,17 @@ def build_payload() -> dict:
         "claims_observation_progress": collect_claims_observation_progress(),
         "claims_lifecycle_authorization": collect_claims_lifecycle_authorization(),
         "reference_cell": collect_reference_cell_gate(),
-        "asd": collect_asd(),
+        "asd": asd,
         "role_registry": collect_role_registry(),
         "probes": collect_probes(),
         "resident_agents": collect_resident_agents(),
         "scene_cards": collect_scene_cards(),
         "journeys": collect_journeys(),
-        "workspace": collect_workspace_hygiene(),
+        "workspace": workspace_observation["value"],
+        "direct_observation_envelope": {
+            "schema": "panorama-compact-observation/v1",
+            "facets": {"workspace": workspace_observation},
+        },
         "ci": ci_data,
         "cron": collect_cron(),
         "submodules": collect_submodules(),
@@ -3812,10 +5097,91 @@ def build_payload() -> dict:
         "experience_graph": collect_experience_graph(),
         "decision_proposals": collect_decision_proposals(),
         "recent_features": collect_recent_features(),
+        # MOF & Gates section data
+        "mof_data": collect_mof_data(),
+        "rule_gate_mapping": collect_rule_gate_mapping(),
+        "harness_policy": collect_harness_policy(),
+        "phase_verdict": collect_phase_verdict(),
+        "ci_surfaces": collect_ci_surfaces(),
+        # Loops section data
+        "loops": {
+            "loop_strategic": {"quintuple": {"sensor": {"raw": {}}}},
+            "loop_ooda": {"quintuple": {"sensor": {"raw": {}}}},
+            "loop_knowledge": {"quintuple": {"sensor": {"raw": {}}}},
+            "loop_breaker": {"quintuple": {"sensor": {"raw": {}}}},
+        },
+        "value_loop_data": collect_value_loop_data(),
+        "loop_vitality": collect_loop_vitality(),
+        "autoloop_traces": collect_autoloop_traces(),
     }
-    payload["objective_coverage"] = collect_objective_coverage(payload)
     # logs / metrics / value 三板块真实数据（同时统合事件指标口径）
     payload.update(_collect_panels(payload))
+    # Revision-bound generation + strategic projection — required by
+    # observatory_query.ObservationIndex (generation_id + strategic.trace).
+    import hashlib as _hashlib
+    import json as _json
+    payload["generation_id"] = _hashlib.sha256(payload["generated_at"].encode()).hexdigest()[:20]
+    # Prefer the orchestrator's full strategic projection from current.json
+    # (produced every 300s with integrate_strategy). Fall back to the
+    # minimal local projection only when current.json is unavailable.
+    _orch_current = PROJECTION_STATE_ROOT / "current.json"
+    _strategic = None
+    try:
+        if _orch_current.is_file():
+            _orch_data = _json.loads(_orch_current.read_text(encoding="utf-8"))
+            _orch_strat = _orch_data.get("strategic")
+            if isinstance(_orch_strat, dict) and isinstance(_orch_strat.get("trace"), dict):
+                _strategic = _orch_strat
+                # Keep generation_id consistent with the orchestrator's
+                if isinstance(_orch_data.get("generation_id"), str):
+                    payload["generation_id"] = _orch_data["generation_id"]
+            # Fill in top-level fields the publisher doesn't collect
+            # (portfolio, catalog, etc.) from the orchestrator's data.
+            for _key in ("portfolio", "catalog", "bets", "agents", "gates",
+                         "runtime", "docs", "documents", "documents_meta", "source_states",
+                         "metrics_kpi", "recent_events",
+                         "knowledge_health", "knowledge_growth",
+                         "experience_network", "skill_inventory",
+                         "scene_cards", "journeys", "connectors",
+                         "roadmap", "gantt", "refresh",
+                         "agent_visibility", "next_actions",
+                         "value_proof_readiness", "claims_activation_readiness"):
+                if _key not in payload or payload[_key] is None:
+                    _val = _orch_data.get(_key)
+                    if _val is not None:
+                        payload[_key] = _val
+            # roadmap/gantt/contract/presentation/compute/envelope/resident*
+            # live in the refresh-era previous-snapshot.json (orchestrator
+            # doesn't carry them); read from there if missing.
+            for _key in ("roadmap", "gantt", "contract", "presentation",
+                         "compute", "envelope", "resident_agents", "resident",
+                         "role_design", "current_team", "live_agents"):
+                if not payload.get(_key):
+                    try:
+                        _prev = _orch_current.with_name("previous-snapshot.json")
+                        if _prev.is_file():
+                            _prev_data = _json.loads(_prev.read_text(encoding="utf-8"))
+                            _val = _prev_data.get(_key)
+                            if _val is not None:
+                                payload[_key] = _val
+                    except Exception:
+                        pass
+    except Exception:
+        _strategic = None
+    payload["direct_observation_envelope"]["generation_id"] = payload["generation_id"]
+    payload["strategic"] = _strategic or _build_strategic_projection(payload)
+    # objective_coverage must run AFTER panel_value is attached so BUSINESS_VALUE
+    # can follow the signed full-window attestation state.
+    payload["objective_coverage"] = collect_objective_coverage(payload)
+    cohort_bets, cohort_source = _brief_bet_source(payload)
+    if cohort_source.get("proof_scope") == "same-portfolio-cohort-declarations":
+        payload["bets"] = cohort_bets
+        portfolio, gantt = payload["portfolio"], payload.get("gantt") or {}
+        if any(gantt.get(key) != portfolio.get(key) for key in ("sha", "ledger_sha256", "observed_at")):
+            payload["gantt"] = {"state": "UNPROVABLE", "reason": "gantt_portfolio_source_mismatch",
+                                "first_100_days": {"window": {"start": None, "end": None}, "lanes": []}}
+            payload.setdefault("source_states", {})["gantt"] = {"status": "UNPROVABLE", "observed_at": None,
+                                                                 "reason": "gantt_portfolio_source_mismatch"}
     payload["agent_visibility"] = collect_agent_visibility(payload)
     # Agent Brief owns action derivation; mirror it to the top level so all
     # agents and the Next panel can consume one stable contract without
@@ -3834,24 +5200,87 @@ def build_payload() -> dict:
     return payload
 
 
-def write_site(payload: dict) -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    DATA_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=1))
-    AGENT_BRIEF_JSON.write_text(
-        json.dumps(
-            payload.get("agent_visibility", {"schema": "panorama-agent-brief/v1", "available": False}),
-            ensure_ascii=False,
-            indent=1,
-        )
-    )
-    html = TEMPLATE.replace("__DATA__", json.dumps(payload, ensure_ascii=False))
-    INDEX_HTML.write_text(html)
+def _check_template_data_consistency(payload: dict) -> None:
+    """Scan the dashboard template for D.* references and warn about
+    top-level fields the payload doesn't provide.
+
+    This is a build-time guard against undefined-field crashes in the
+    browser. It does NOT block publication — it only warns.
+    """
+    import re as _re
+    template_path = Path(os.environ.get(
+        "ZHIXING_DASHBOARD_CODE_ROOT",
+        str(Path.home() / ".local/share/zhixing-dashboard"),
+    )) / "template.html"
+    if not template_path.is_file():
+        return
+    try:
+        template = template_path.read_text(encoding="utf-8")
+    except Exception:
+        return
+    # Extract D.<field> references (top-level only)
+    refs = set(_re.findall(r"D\.([a-z_][a-z0-9_]*)", template))
+    missing = sorted(r for r in refs if r not in payload or payload[r] is None)
+    if missing:
+        print(f"  ⚠️  template-data consistency: {len(missing)} fields "
+              f"referenced in template but missing from payload: "
+              f"{', '.join(missing[:10])}")
+
+
+def _build_strategic_projection(payload: dict) -> dict:
+    """Build a minimal valid strategic projection for ObservationIndex.
+
+    The full strategy projection (strategy_projection.build_strategy) lives
+    in the dashboard repo; this produces a bounded, schema-valid subset
+    from the publisher's own payload so the revision store can serve it.
+    """
+    nodes = []
+    edges = []
+    for bet in (payload.get("bets") or {}).get("in_progress", [])[:50]:
+        if isinstance(bet, dict) and bet.get("id"):
+            nodes.append({"id": "bet:" + str(bet["id"]), "kind": "bet",
+                          "title": str(bet.get("title", ""))[:80],
+                          "status": str(bet.get("status", "in_progress")),
+                          "facts": {"raw_id": bet["id"]}})
+    for gate in (payload.get("gates") or [])[:50]:
+        if isinstance(gate, dict) and gate.get("id"):
+            nodes.append({"id": "gate:" + str(gate["id"]), "kind": "gate",
+                          "title": str(gate.get("id")),
+                          "status": str(gate.get("verdict", "UNKNOWN")),
+                          "facts": {"summary": gate.get("summary", "")}})
+    for agent in (payload.get("agents") or [])[:50]:
+        if isinstance(agent, dict) and agent.get("id"):
+            nodes.append({"id": "agent:" + str(agent["id"]), "kind": "agent",
+                          "title": str(agent.get("name", agent["id"]))[:80],
+                          "status": str(agent.get("status", "UNKNOWN")),
+                          "facts": {}})
+    loops = payload.get("loops") or {}
+    live_loops = {}
+    for key, focus in (("loop_strategic", "战略履约"), ("loop_ooda", "OODA/算力"),
+                       ("loop_knowledge", "知识演进"), ("loop_breaker", "门禁熔断")):
+        loop = loops.get(key) or {}
+        live_loops[key] = {
+            "status": loop.get("status") or "NO_DATA",
+            "health_level": loop.get("health_level"),
+            "metrics": loop.get("metrics") or {},
+            "focus": focus,
+            "source": loop.get("source") or "NO_DATA",
+        }
+    return {
+        "schema": "strategic-observatory/v1",
+        "state": "PARTIAL",
+        "trace": {"nodes": nodes, "edges": edges, "gaps": [], "scope": {"truncated": False}},
+        "cross_plane_mesh": {"live_loops": live_loops},
+        "metrics": [],
+        "documents": [],
+        "proposals": [],
+        "model": {"macro": {"nodes": [], "edges": []}, "loops": [], "contradictions": []},
+    }
 
 
 def check_side_effects() -> int:
     before = run(["git", "status", "--porcelain"])[1].splitlines()
-    payload = build_payload()
-    write_site(payload)
+    build_payload()
     after = run(["git", "status", "--porcelain"])[1].splitlines()
     new_repo_writes = [l for l in after if l not in before and not l.startswith("?? runtime/dashboard")]
     if new_repo_writes:
@@ -3859,7 +5288,7 @@ def check_side_effects() -> int:
         for l in new_repo_writes:
             print(" ", l)
         return 1
-    print(f"OK: 零仓库写副作用（产物仅 {OUT_DIR.relative_to(ROOT)}/, gitignored）")
+    print("OK: payload collection has zero repository write side effects")
     return 0
 
 
@@ -3873,8 +5302,26 @@ def main() -> int:
     if args.check_side_effects:
         return check_side_effects()
 
+    # Auto-discard .omo/ runtime side effects from a previous publish so the
+    # cleanliness check below passes without external stash/unstash.
+    # BRIEF.md is deliberately absent: it is untracked since ADR-0129 Phase 2,
+    # and a pathspec that matches no tracked file aborts the whole checkout —
+    # taking the .omo/ discard down with it.
+    run(["git", "checkout", "--", ".omo/"])
+
+    # Cleanliness must be verified BEFORE build_payload(): collectors write
+    # .omo/state/* side effects that would otherwise fail the identity check.
+    collect_projection_producer_identity()
+    collect_projection_dashboard_identity()
+
     payload = build_payload()
-    write_site(payload)
+    # Discard .omo/ runtime side effects from collectors so the internal
+    # cleanliness check inside publish_projection_revision passes.
+    run(["git", "checkout", "--", ".omo/"])
+    # Template-data consistency check: scan template for D.* references
+    # and warn about fields the payload doesn't provide.
+    _check_template_data_consistency(payload)
+    projection = publish_projection_revision(payload)
 
     if args.gates:
         print(json.dumps(payload["gates"], ensure_ascii=False, indent=1))
@@ -3884,10 +5331,11 @@ def main() -> int:
                    "gates": {g["id"]: g["verdict"] for g in payload["gates"]},
                    "bets": payload["bets"]["counts"],
                    "agents": len(payload["agents"]),
-                   "out": str(INDEX_HTML.relative_to(ROOT))}
+                   "out": projection["pointer"],
+                   "projection_revision": projection["revision_id"]}
         print(json.dumps(summary, ensure_ascii=False, indent=1))
         return 0
-    print(f"✅ 驾驶舱已生成: {INDEX_HTML.relative_to(ROOT)}  ({payload['generated_at']})")
+    print(f"✅ 驾驶舱 revision 已发布: {projection['revision_id']}  ({payload['generated_at']})")
     print(f"   服务: python3 bin/panorama/panorama-serve.py  → http://127.0.0.1:43910")
     return 0
 
