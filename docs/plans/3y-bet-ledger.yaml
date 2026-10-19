@@ -41694,7 +41694,8 @@ bets:
   title: Panorama CODE_ROOT 指向陈旧检出导致门禁与台账读数失真 — 立独立单并给出修复决策矩阵
   track: T16-DRIFT-GUARD
   window: Y2Q4
-  status: pending
+  status: done
+  done_at: 2026-10-19
   priority: P2
   appetite: 1 week
   risk_level: L1
@@ -41736,14 +41737,37 @@ bets:
     expect: data.json 内 gates[*] 与 runtime.scheduler 不再出现来自不同代码副本的互斥数值
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@93ec8008997539467c1fd2f21260a35aef309e77
+          tests:
+            ref: repo://docs/reports/2026-10-19-t16-03-code-root-closeout.json#engineering.tests
+            sha256: sha256:4fc52a8395741d2632dfe9525c5884253f98173d45f9899385e00139701d4bbe
+          diff:
+            ref: repo://docs/reports/2026-10-19-t16-03-code-root-closeout.json#engineering.diff
+            sha256: sha256:4fc52a8395741d2632dfe9525c5884253f98173d45f9899385e00139701d4bbe
+          rollback:
+            ref: repo://docs/reports/2026-10-19-t16-03-code-root-closeout.json#engineering.rollback
+            sha256: sha256:4fc52a8395741d2632dfe9525c5884253f98173d45f9899385e00139701d4bbe
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: repo://docs/reports/2026-10-19-t16-03-code-root-closeout.json#operational.live_canary
+            sha256: sha256:4fc52a8395741d2632dfe9525c5884253f98173d45f9899385e00139701d4bbe
+          fresh_receipt:
+            ref: repo://docs/reports/2026-10-19-t16-03-code-root-closeout.json#operational.fresh_receipt
+            sha256: sha256:4fc52a8395741d2632dfe9525c5884253f98173d45f9899385e00139701d4bbe
+          replay:
+            ref: repo://docs/reports/2026-10-19-t16-03-code-root-closeout.json#operational.replay
+            sha256: sha256:4fc52a8395741d2632dfe9525c5884253f98173d45f9899385e00139701d4bbe
+          cleanup:
+            ref: repo://docs/reports/2026-10-19-t16-03-code-root-closeout.json#operational.cleanup
+            sha256: sha256:4fc52a8395741d2632dfe9525c5884253f98173d45f9899385e00139701d4bbe
       value:
         status: NOT_PROVEN
         evidence: {}

@@ -1,0 +1,501 @@
+{
+  "schema": "t16-03-completion-source-evidence/v1",
+  "bet_id": "BET-Y2Q4-T16-03",
+  "generated_at": "2026-10-19T05:33:47.459570+00:00",
+  "owner": "governance-team",
+  "purpose": "将已完成的真实源码与有限运行采用证据绑定原合同；本文件本身不置BET done，不签发个人HumanVerdict。",
+  "contract": {
+    "official_base_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+    "spec_ref": "repo://docs/superpowers/specs/2026-10-10-panorama-code-root-staleness.md",
+    "spec_version": "1.0.0",
+    "content_digest": "sha256:a0f14f5c356f237dc96b22c046366450d0548421f046992062b9967d4c370941",
+    "decision_ref": "decision://accepted/BET-Y2Q4-T16-03",
+    "accepted_spec_changed": false,
+    "done_when": [
+      "collect_code_root_health() 的 verdict 从假 PASS 变为 STALE，behind_origin_main 反映真实差距",
+      "data.json 内 gates[*] 与 runtime.scheduler 不再出现来自不同代码副本的互斥数值",
+      "修复方案由 principal 从决策矩阵 (A/B/C/D) 裁定并落地追踪"
+    ],
+    "verify": [
+      {
+        "cmd": "git -C /Users/xiamingxing/.local/share/zhixing-dashboard/code-main rev-list --count HEAD..refs/remotes/origin/main",
+        "expect": "fetch 后返回大于 0（实测 279），不再因 remote-tracking ref 是克隆快照而恒为 0"
+      },
+      {
+        "cmd": "python3 -c \"import json;d=json.load(open('runtime/dashboard/data.json'));h=d.get('code_root_health',{});print(h.get('verdict'),h.get('behind_origin_main'))\"",
+        "expect": "修复后 code_root_health.verdict 不再是陈旧自比产生的假 PASS，且 behind_origin_main 反映真实差距"
+      },
+      {
+        "cmd": "python3 -c \"import json;d=json.load(open('runtime/dashboard/data.json'));print(d.get('runtime',{}).get('scheduler',{}))\"",
+        "expect": "data.json 内 gates[*] 与 runtime.scheduler 不再出现来自不同代码副本的互斥数值"
+      }
+    ],
+    "write_surfaces_unchanged": [
+      "docs/superpowers/specs/2026-10-10-panorama-code-root-staleness.md",
+      "docs/plans/3y-bet-ledger.yaml"
+    ],
+    "value_indicator_policy": false
+  },
+  "authoring_admission": {
+    "run_id": "20261019T053111Z-project-doc-change-289efc06",
+    "workflow_id": "project-doc-change",
+    "actor": "codex",
+    "profile": "governance-agent",
+    "bet_id": null,
+    "scope": "独立Root精确维护，不冒充T16 accepted WorkPacket；只含本报告与原retro增补。",
+    "requirement_iteration_gate": "0: 本次两路径显式受托豁免，真实native gate_bypass；不是默认合规。Stage2必须恢复gate1并新建T16绑定Run。",
+    "native_bootstrap": "原默认bootstrap首次exit1(C2G依赖同步失败)，本WT隔离wheel-only依赖对齐后原声明health和正常bootstrap真实exit0；未skiphealth或降低required。",
+    "stage2_native_completion": "本证据文件不声明已执行；以真实台账状态及后续原生Run/命令收据为准。"
+  },
+  "engineering": {
+    "merged_reachable_commits": [
+      "git://origin/main@a0f5db1dfe9e89c9d7f8468811f768fd3080a57e",
+      "git://origin/main@93ec8008997539467c1fd2f21260a35aef309e77"
+    ],
+    "pull_requests": [
+      "https://github.com/starlink-awaken/omostation/pull/4811",
+      "https://github.com/starlink-awaken/omostation/pull/4812"
+    ],
+    "tests": {
+      "health_frozen": {
+        "run_id": "20261019T035406Z-project-code-change-3ad10a24",
+        "red_formal": "2 failed, 31 deselected in 1.55s; separate real formal log",
+        "red_operational": "2 failed, 26 deselected in 2.34s; separate operational log, not the formal count",
+        "green": "35 passed in25.31s; real Git remote, index bytes/mtime/refs, full/shallow, missing objects, ahead/behind/dirty, origin/top, failed/deleted remote-main with retained tag, invalid/oversized output, replace objects and own descendant kill",
+        "scope": "真实临时bare Git远端推进、不fetch旧tracking；STALE/behind1、缺对象null、shallow/diverged/dirty/origin/replace/精确branch等短合同。"
+      },
+      "compatibility_frozen": {
+        "run_id": "20261019T042348Z-project-code-change-b99da824",
+        "red": "author-compatibility-formal-red-recovered.txt:10 failed,7 passed,35 deselected in1.76s",
+        "green": "author-compatibility-green.txt:17 passed,35 deselected in1.72s",
+        "scope": "保留host原安全错误投影、当前claims-run过滤与A7配置timeout；其余AST/4811函数不改。"
+      },
+      "rerun_in_this_maintenance": false,
+      "local_full_GaC": "NOT_RUN; 既有远端CI成功不等于本地fullGaC通过。"
+    },
+    "diff": {
+      "health_files": {
+        "bin/panorama/panorama-collect.py": "0d5bd485093ce0d8b87c99bc7e860bdd31b80fcd8b9d0e36c1de7700239d20d7",
+        "bin/panorama/assets/host/panorama-collect-main.py.asset": "d882d5d10ae08bad4ee8011f6cc008697f834b41678a8384232970a24f102237",
+        "tests/unit/test_panorama_gate_projection.py": "89756cf5d7d5dabc401d43345060a8ce284edfd5d895f2911c77d3fda3b43add"
+      },
+      "health_patch_sha256": "54801924a7f994f78029520a0cdb76b615b3d4823b2bfa5fd78a20c111632300",
+      "compatibility_files": {
+        "bin/panorama/assets/host/panorama-collect-main.py.asset": "7b361143930285f0448caceded0dd2f2a44bfb46e9952b1215ec2b77df3f3618",
+        "tests/unit/test_panorama_gate_projection.py": "055dda8efd817c03fcb313b403555ae736f9a564f579b9eff3df7d1515f5ea52"
+      },
+      "compatibility_patch_sha256": "39668f1d89b936df01d0fe6e098ed54292d1e32c5313c5af55868f2558f2784c",
+      "initial_independent_review": "REQUEST_CHANGES真实保留，精确branch ref和自有进程组有界清理修复后才SOURCE APPROVE。",
+      "new_source_code_or_deployment_in_this_maintenance": false
+    },
+    "rollback": {
+      "selected_only_version": "93ec8008997539467c1fd2f21260a35aef309e77--pub-0e91f2a75c31465f89efba388dc715bc",
+      "previous_version": "eef5e7f25e8b09fe8ec7d6212a5fd7b8cc8f7c33",
+      "new_selected_asset_sha256": "7b361143930285f0448caceded0dd2f2a44bfb46e9952b1215ec2b77df3f3618",
+      "proof": "原生publication/history restore边界；完整旧包及配置原bytes/stat保留，不能盲restore或覆盖foreign状态。",
+      "preservation_checks": {
+        "selected_single_asset": "PASS: selected manifest仅main；243 payload中仅main变为冻结/正式合并SHA7b361143，另外242保持原字节；实际原生base-manifest和release-helper验证通过。",
+        "old_release_and_protected_controls": "PASS: old release243 payload字节和244个条目stat不变，legacy入口/core plist字节和stat不变；current history的previous_version仍指原eef5。",
+        "panorama_binding": "PASS: plist仅ProgramArguments[2]由legacy改current/main；env/240秒和其余键不变。实际launchd原标签注册新路径，并独立捕获自然runs1/PID49430；wrapper原标签注册/300秒保持。",
+        "registered_core": "PASS: 审阅hostsync实际只读函数后，以python -B/禁字节码调用；native注册PID39333/entrypoint和lsof cwd绑定新完整包，未只凭plist或存在目录认定。"
+      }
+    }
+  },
+  "operational": {
+    "live_canary": {
+      "independent_decision": "APPROVE_BOUNDED_PRODUCTION_ADOPTION",
+      "status": "PASS_ONE_NATURAL_CANONICAL_WRAPPER_COHORT",
+      "publication": {
+        "source_commit": "93ec8008997539467c1fd2f21260a35aef309e77",
+        "publication_id": "0e91f2a75c31465f89efba388dc715bc",
+        "version": "93ec8008997539467c1fd2f21260a35aef309e77--pub-0e91f2a75c31465f89efba388dc715bc",
+        "selected_asset": "panorama-collect-main.py",
+        "selected_sha256": "7b361143930285f0448caceded0dd2f2a44bfb46e9952b1215ec2b77df3f3618"
+      },
+      "readable_product": "PASS: 独立health200/BOUND_FRESH/no drift、正确/agent-brief.json200、root200；均为GET只读。"
+    },
+    "fresh_receipt": {
+      "natural_cohort": [
+        {
+          "at": "2026-10-19T04:48:02.249815+00:00",
+          "canonical": {
+            "path": "/Users/xiamingxing/Workspace/runtime/dashboard/data.json",
+            "stable": true,
+            "raw_sha256": "e1a49612719f611ef7d4e45aefe08bb2aa479a248ca001006ef623a9ad6c3dc8",
+            "generated_at": "2026-10-19T04:46:38.905103+00:00",
+            "health": {
+              "schema": "panorama-code-root-health/v1",
+              "available": true,
+              "managed": true,
+              "verdict": "PASS",
+              "checked_at": "2026-10-19T04:47:26.856724+00:00",
+              "head_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+              "origin_main_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+              "local_origin_main_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+              "local_origin_main_ref": "refs/remotes/origin/main",
+              "remote_main_source": "github://starlink-awaken/omostation/refs/heads/main",
+              "remote_main_observed_at": "2026-10-19T04:47:27.585771+00:00",
+              "comparison_scope": "official_remote_main",
+              "behind_origin_main": 0,
+              "ahead_origin_main": 0,
+              "dirty_count": 0,
+              "auto_update_performed": false
+            },
+            "cohort_sha256": "588b2ed7c6ba3ecb6a117c0a0204cc65a3a8a11fca2048cc037d5d765fd199f8",
+            "source_state": null
+          },
+          "wrapper": {
+            "path": "/Users/xiamingxing/.local/share/zhixing-dashboard/current.json",
+            "stable": true,
+            "raw_sha256": "123683e68d5af28e515335262a8f724634936c2f71a8be7de125069e6af4f0c9",
+            "generated_at": "2026-10-19T04:47:52.135765+00:00",
+            "health": {
+              "schema": "panorama-code-root-health/v1",
+              "available": true,
+              "managed": true,
+              "verdict": "PASS",
+              "checked_at": "2026-10-19T04:47:26.856724+00:00",
+              "head_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+              "origin_main_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+              "local_origin_main_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+              "local_origin_main_ref": "refs/remotes/origin/main",
+              "remote_main_source": "github://starlink-awaken/omostation/refs/heads/main",
+              "remote_main_observed_at": "2026-10-19T04:47:27.585771+00:00",
+              "comparison_scope": "official_remote_main",
+              "behind_origin_main": 0,
+              "ahead_origin_main": 0,
+              "dirty_count": 0,
+              "auto_update_performed": false
+            },
+            "cohort_sha256": "588b2ed7c6ba3ecb6a117c0a0204cc65a3a8a11fca2048cc037d5d765fd199f8",
+            "source_state": {
+              "status": "OK",
+              "available": true,
+              "source_lane": "CANONICAL_BASE",
+              "source": "/Users/xiamingxing/Workspace/runtime/dashboard/data.json",
+              "observed_at": "2026-10-19T04:46:38.905103+00:00",
+              "last_attempt_at": "2026-10-19T04:47:52.135765+00:00",
+              "last_success_at": "2026-10-19T04:46:38.905103+00:00",
+              "last_success_status": "KNOWN",
+              "data_sha256": "e1a49612719f611ef7d4e45aefe08bb2aa479a248ca001006ef623a9ad6c3dc8",
+              "base_sha256": "588b2ed7c6ba3ecb6a117c0a0204cc65a3a8a11fca2048cc037d5d765fd199f8",
+              "payload_age_seconds": 73.230662,
+              "error": null
+            }
+          },
+          "observed_natural_panorama_process": {
+            "pid": 49430,
+            "birth": "",
+            "script_path_bound": false
+          }
+        }
+      ],
+      "managed_remote_truth": "PASS: 新canonical使用managed=true、comparison_scope=official_remote_main及官方heads/main source；完整新remote OID93ec，remote观察时间04:47:27.585在实际采用04:42:36之后。HEAD==freshOID、dirty0、0/0及PASS一致；auto_update=false。",
+      "exact_cohort_check": "PASS: canonical原始字节SHA e1a49612719f611ef7d4e45aefe08bb2aa479a248ca001006ef623a9ad6c3dc8与wrapper source_state.data_sha256精确相等；四键bets/gates/runtime/code_root_health的combined digest同588b2ed7c6ba3ecb6a117c0a0204cc65a3a8a11fca2048cc037d5d765fd199f8，健康对象完全一致。source_state为OK/CANONICAL_BASE，observed/last_success指canonical自身04:46:38.905；wrapper04:47:52.135，age73.230662s。",
+      "clock_scope": "04:48独立采用cohort、core自身revision、05:27合同JSON纯读各自保留时钟；不拼成同一批。"
+    },
+    "replay": {
+      "stale_detection": "4811已冻结真实临时Git负/正对照：旧双消费者假PASS，新函数在远端对象可读时STALE/behind1；缺对象或不可证明时null，不能伪造精确0。",
+      "production_state": "实际健康生产为fresh官方93ec==HEAD、PASS/0/0；没有观察或人为制造production STALE。",
+      "same_source_scheduler": {
+        "canonical_read_at": "2026-10-19T04:59:06.819137+00:00",
+        "canonical_raw_sha256": "456d8448ca32816e44bab5f6053794217ce4afa4593fa29272ebff84ffd69a05",
+        "A4_runtime_scheduler_equal": true,
+        "scheduler": {
+          "ok": true,
+          "drift_count": 0,
+          "orphan_count": 0,
+          "known_orphan_count": 19,
+          "launchd": {
+            "mode": "shadow",
+            "blocks_gate": false,
+            "registered_count": 13,
+            "installed_count": 43,
+            "undeclared_installed_count": 30,
+            "label_match": {
+              "matched": 13,
+              "registered": 13,
+              "rate": 1,
+              "note": "label 取显式 label 字段, 缺省才合成 com.omostation.{name}。2026-09-29 已为全部 17 条登记补齐显式 label, 命中率 17/17 —— 这是本项升 warning 的前置条件 (ADR-0457 阶段门)。"
+            },
+            "unparseable_plists": [],
+            "dead_targets": [],
+            "undeclared_installed_sample": [
+              "com.aetherforge.gateway",
+              "com.l4.bet-claim-gc",
+              "com.l4.mail.daemon",
+              "com.omlxc.daemon",
+              "com.omlxc.ollama-env",
+              "com.omlxc.watchdog",
+              "com.omostation.agent-tick-daemon",
+              "com.omostation.autoloop-daily",
+              "com.omostation.claims-observation-r0",
+              "com.omostation.deadline-tracker",
+              "com.omostation.eg2-embeddings",
+              "com.omostation.evolution-agent",
+              "com.omostation.expiry-radar",
+              "com.omostation.mbp-night-patrol",
+              "com.omostation.morning-brief"
+            ]
+          }
+        },
+        "source_equivalence": {
+          "scheduler_sha256": "b0c83588eafbfa01757f1412fe8d83c121111dbecc87adc861d6c22a90cbd51c",
+          "active_jobs_count_both": 45,
+          "active_jobs_semantic_sha256_both": "16254240a074b3d0c26a9750c317207b970b107d79e6b2628bbcec3d41f01639",
+          "known_orphans_semantic_sha256_both": "6533ac6c16a88524677e539b4c1dfe9d321fe48abcce3f1aad7c0fbd9962f5ea",
+          "full_registry_sha_equal": false,
+          "only_semantic_difference": "publisher额外proposed/launchd panorama-refresh-guard；active过滤排除该条，已静态核实check_launchd_plane及check_drift"
+        }
+      },
+      "scope": "registry整文件并非同字节，差异仅inactive proposed项；有效active输入/known_orphans语义与scheduler代码相等。保留其他gate实际FAIL，不宣称全gate全绿。"
+    },
+    "cleanup": {
+      "prior_source_runs": "上述两个源码维护Run均真实blocked/own0，未升级成ok；本两阶段Run独立留痕。",
+      "prior_source_close_readbacks": [
+        {
+          "ref": "operating://code-root-remote-truth-mvp-20261019/author-close-readback.json",
+          "sha256": "8e3366fd5a26a44ea95ebe2b5b972a42b22fc1c8a44d9a20b5088c9de9ff687d",
+          "snapshot": {
+            "run_id": "20261019T035406Z-project-code-change-3ad10a24",
+            "status": "blocked",
+            "physical_anchor": "/Users/xiamingxing/.local/share/zhixing-controller/workspaces/host-task-source-alignment-20261014/.omo/_delivery/agent-workflows",
+            "released_locks": [
+              ".omo/_delivery/agent-workflows/locks/path_tests_unit_test_panorama_gate_projection.py.lock.yaml",
+              ".omo/_delivery/agent-workflows/locks/path_bin_panorama_assets_host_panorama-collect-main.py.asset.lock.yaml",
+              ".omo/_delivery/agent-workflows/locks/path_bin_panorama_panorama-collect.py.lock.yaml",
+              ".omo/_delivery/agent-workflows/locks/root-gate.lock.yaml",
+              ".omo/_delivery/agent-workflows/locks/project_workspace-root.lock.yaml"
+            ],
+            "own_remaining_locks": [],
+            "global_idle": "UNPROVABLE"
+          }
+        },
+        {
+          "ref": "operating://code-root-remote-truth-adoption-20261019/author-compatibility-close-readback.json",
+          "sha256": "d0087637fb46f9c4386819605f2288ab1d673dd91a0aa039268b4f87ffd0c725",
+          "snapshot": {
+            "run_id": "20261019T042348Z-project-code-change-b99da824",
+            "status": "blocked",
+            "physical_anchor": "/Users/xiamingxing/.local/share/zhixing-controller/workspaces/host-task-source-alignment-20261014/.omo/_delivery/agent-workflows",
+            "released_locks": [
+              ".omo/_delivery/agent-workflows/locks/path_tests_unit_test_panorama_gate_projection.py.lock.yaml",
+              ".omo/_delivery/agent-workflows/locks/path_bin_panorama_assets_host_panorama-collect-main.py.asset.lock.yaml",
+              ".omo/_delivery/agent-workflows/locks/root-gate.lock.yaml",
+              ".omo/_delivery/agent-workflows/locks/project_workspace-root.lock.yaml"
+            ],
+            "own_remaining_workflow_locks": [],
+            "global_idle": "UNPROVABLE"
+          }
+        }
+      ],
+      "runtime_operation_counts": {
+        "author_receipt_normal_publish": 1,
+        "author_receipt_core_kickstart": 1,
+        "author_receipt_panorama_bootout_bootstrap_pair": 1,
+        "conditional_recovery": 0,
+        "independent_runtime_writes": 0,
+        "manual_refresh": 0,
+        "models": 0,
+        "PrincipalPOST": 0
+      },
+      "manual_refresh": 0,
+      "models": 0,
+      "PrincipalPOST": 0,
+      "global_idle": "UNPROVABLE；canonical foreign Run/锁未被释放或接管。"
+    }
+  },
+  "original_requirement_mapping": [
+    {
+      "id": "D1",
+      "original_clause": "collect_code_root_health() 的 verdict 从假 PASS 变为 STALE，behind_origin_main 反映真实差距",
+      "independent_status": "达到",
+      "interpretation": "原意是陈旧可见与差数真实，不是要求修复后健康生产永远STALE。",
+      "evidence": [
+        "旧真实临时bare remote推进且不fetch，两个旧函数仍PASS，正式red2failed/31deselected；PR4811修复后真实Git测试对远端对象已在本地的分支断言STALE/behind1/ahead0，并验证diverged1/1与ahead0/1。",
+        "未fetch且对象缺失时，新函数STALE但counts=null并明确remote_commit_not_local，未虚构0；这种保守未知不能冒充已测得真实behind。",
+        "现生产新canonicalmanaged/fresh官方heads/main OID/clock、HEAD==remote==93ec、PASS/0/0，随后wrapper精确消费同批；这仅证明正确同步路径，不是生产STALE实测。"
+      ],
+      "limits": "UNPROVABLE；本轮从未看到或诱发生产STALE。旧spec的fetch后279是原历史记录，不因现在PASS而重新证明。"
+    },
+    {
+      "id": "D2",
+      "original_clause": "data.json 内 gates[*] 与 runtime.scheduler 不再出现来自不同代码副本的互斥数值",
+      "independent_status": "达到",
+      "interpretation": "原条款要求同一data.json中不再有来自陈旧代码副本的互斥调度数值；不要求所有独立gate整体PASS。",
+      "evidence": [
+        "本次唯一canonical读取的A4.detail JSON与runtime.scheduler完整对象相等，含launchd全部字段；drift0/orphan0/known19，不只比较verdict。",
+        "静态A4走CODE_ROOT/publisher gate-health→绝对publisher scheduler；runtime走ROOT/Workspace相对scheduler。两scheduler脚本SHA相同。",
+        "registry整文件SHA不同，精确语义差仅publisher多proposed/launchd panorama-refresh-guard；两平面都只筛active。45条active jobs及known_orphans语义哈希分别完全相等，解释了本批判据输入与输出相同。"
+      ],
+      "limits": "没有将不同registry整文件冒称同一字节；不证明未来可变工作区与publisher永远一致。A2/A5当前FAIL stale_beats保留，非T16陈旧调度矛盾。"
+    },
+    {
+      "id": "D3",
+      "original_clause": "修复方案由 principal 从决策矩阵 (A/B/C/D) 裁定并落地追踪",
+      "independent_status": "达到",
+      "interpretation": "存在矩阵B的明确受托裁定和可追踪落地；不是Principal本人个人签名。",
+      "evidence": [
+        "2026-10-16 controller-operational-decision明确B_ADOPT_EXISTING_OFFICIAL_MANAGED_PUBLISHER，引用最新直接用户goal的Root受托决策权；没有伪造Principal personal verdict。",
+        "实际原Panorama标签保留publisher CODE_ROOT，后续4811/4812正常PR与准确Root source/runtime decisions、native单资产发布及唯一script token重绑均另有收据。",
+        "独立生产后验核新资产SHA、242其他payload不变、legacy/coreplist不变、原标签/240秒、core实际PID/CWD及自然canonical→wrapper rawSHA/cohort。"
+      ],
+      "limits": null
+    }
+  ],
+  "original_verify_actual_reads": {
+    "V1": {
+      "at": "2026-10-19T05:25:44.136059+00:00",
+      "purpose": "One original-contract legacy rev-list read, not a fresh official remote comparison or a mutation",
+      "path": "/Users/xiamingxing/.local/share/zhixing-dashboard/code-main",
+      "exists": true,
+      "fetch": 0,
+      "worktree_changes": 0,
+      "repeated_source_tests": 0,
+      "head_before": {
+        "exit_code": 0,
+        "stdout": "3b55e3ca79e63c3005d7ebc5e5a82586196a77d0",
+        "stderr_type_only": null
+      },
+      "local_ref_before": {
+        "exit_code": 0,
+        "stdout": "08c177b2c37955b69ea0798be676d54e973f9484",
+        "stderr_type_only": null
+      },
+      "original_verify_result": {
+        "exit_code": 0,
+        "stdout": "279",
+        "stderr_type_only": null
+      },
+      "head_after": {
+        "exit_code": 0,
+        "stdout": "3b55e3ca79e63c3005d7ebc5e5a82586196a77d0",
+        "stderr_type_only": null
+      },
+      "local_ref_after": {
+        "exit_code": 0,
+        "stdout": "08c177b2c37955b69ea0798be676d54e973f9484",
+        "stderr_type_only": null
+      },
+      "refs_unchanged": true,
+      "literal_positive_count": true,
+      "limitation": "No fetch; this count is against the present local tracking ref only. Its observation age is unknown and it is not the current managed publisher. Do not claim fresh-remote freshness or a production STALE episode."
+    },
+    "V2_V3": {
+      "schema": "original-contract-json-read/v1",
+      "results": [
+        {
+          "verify": "V2",
+          "at": "2026-10-19T05:27:09.005647+00:00",
+          "exit_code": 0,
+          "stdout": "PASS 0",
+          "stderr_empty": true,
+          "canonical_stable_during_read": true,
+          "canonical_raw_sha256": "042dbe3e16c0256a08b97b2f02d86ea16c41b891616f9fe09b353a8e7e260b86",
+          "canonical_generated_at": "2026-10-19T05:22:42.215865+00:00",
+          "remote_main_observed_at": "2026-10-19T05:23:32.695328+00:00",
+          "remote_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+          "comparison_scope": "official_remote_main"
+        },
+        {
+          "verify": "V3",
+          "at": "2026-10-19T05:27:09.027001+00:00",
+          "exit_code": 0,
+          "stdout": "{'ok': True, 'drift_count': 0, 'orphan_count': 0, 'known_orphan_count': 19, 'launchd': {'mode': 'shadow', 'blocks_gate': False, 'registered_count': 13, 'installed_count': 43, 'undeclared_installed_count': 30, 'label_match': {'matched': 13, 'registered': 13, 'rate': 1.0, 'note': 'label 取显式 label 字段, 缺省才合成 com.omostation.{name}。2026-09-29 已为全部 17 条登记补齐显式 label, 命中率 17/17 —— 这是本项升 warning 的前置条件 (ADR-0457 阶段门)。'}, 'unparseable_plists': [], 'dead_targets': [], 'undeclared_installed_sample': ['com.aetherforge.gateway', 'com.l4.bet-claim-gc', 'com.l4.mail.daemon', 'com.omlxc.daemon', 'com.omlxc.ollama-env', 'com.omlxc.watchdog', 'com.omostation.agent-tick-daemon', 'com.omostation.autoloop-daily', 'com.omostation.claims-observation-r0', 'com.omostation.deadline-tracker', 'com.omostation.eg2-embeddings', 'com.omostation.evolution-agent', 'com.omostation.expiry-radar', 'com.omostation.mbp-night-patrol', 'com.omostation.morning-brief']}}",
+          "stderr_empty": true,
+          "canonical_stable_during_read": true,
+          "canonical_raw_sha256": "042dbe3e16c0256a08b97b2f02d86ea16c41b891616f9fe09b353a8e7e260b86",
+          "canonical_generated_at": "2026-10-19T05:22:42.215865+00:00",
+          "remote_main_observed_at": "2026-10-19T05:23:32.695328+00:00",
+          "remote_oid": "93ec8008997539467c1fd2f21260a35aef309e77",
+          "comparison_scope": "official_remote_main"
+        }
+      ],
+      "collector_scheduler_execution": false,
+      "file_mutations": 0,
+      "cohort_limit": "This new pure read is separate from 04:48 independent adoption cohort; no old productionSTALE or longSLO claim."
+    },
+    "historical_mapping_note": "旧独立mapping按其冻结时点写未重跑；Root后续各一次原命令纯读另有新收据，未改写旧报告。V1=279只针对旧本地tracking，不是今天fresh官方remote差数且不是现consumer。V2=PASS0与V3完整scheduler来自同05:22:42 canonical读取。"
+  },
+  "delegated_decision": {
+    "choice": "B_ADOPT_EXISTING_OFFICIAL_MANAGED_PUBLISHER",
+    "decision_actor": "Root受用户goal明确委托的低风险精确维护裁定",
+    "principal_personal_signature": false,
+    "HumanVerdict_created": false,
+    "value_status": "NOT_PROVEN",
+    "value_or_quantified_gain_claimed": false
+  },
+  "evidence_sources": [
+    {
+      "ref": "operating://t16-03-closeout-20261019/controller-original-contract.json",
+      "sha256": "de2c2ae0e367ac4122957bb2d62e55c8aee54659f27c74abed1b391ee18115ed"
+    },
+    {
+      "ref": "operating://t16-03-closeout-20261019/independent-original-contract-mapping.json",
+      "sha256": "9f02e44d57f7e4633a8ae6f2fc0064545fa03c96e74e35cb0386fabfa0db638c"
+    },
+    {
+      "ref": "operating://t16-03-closeout-20261019/controller-two-stage-maintenance-decision.json",
+      "sha256": "b13723c8454b5b59defdd322075a632815fc2b955f87b6abf1ea0013d637cd41"
+    },
+    {
+      "ref": "operating://t16-03-closeout-20261019/controller-c2g-environment-decision.json",
+      "sha256": "1603bf0793c5120dc4988b6971fefa42d90a6211d884f646ef3029d184f6a6af"
+    },
+    {
+      "ref": "operating://t16-03-closeout-20261019/controller-original-legacy-verify-read.json",
+      "sha256": "8ba3a76b6ab5674ebab22d9c49f0367bc4059421f425fc2bdfb5ea17cf8d9828"
+    },
+    {
+      "ref": "operating://t16-03-closeout-20261019/controller-original-json-verifies.json",
+      "sha256": "187600428aeef15c067d2a9a73bb1737a3211ac5279d004d6f76becd79190e38"
+    },
+    {
+      "ref": "operating://panorama-code-source-mvp-20261016/controller-operational-decision.json",
+      "sha256": "d280c2d4d1cde35a59fd23816b1168a0b1f6cacfcd87ec5cacade2fe1e5ea383"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-mvp-20261019/controller-source-merged.json",
+      "sha256": "61475a3790ee0033a7d667e1abc763da640a2fc255eba5fdce48f48e9fafd223"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-mvp-20261019/author-freeze.json",
+      "sha256": "08c9a9b9eca867370f059a143a548027c2a625250d18b9b756cd5c7ed0c617f2"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-mvp-20261019/independent-final-source-acceptance.json",
+      "sha256": "44e50f514734a3068f82217ed93b4a75d7321ffa935dab6b8485ae4900cbdaea"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-mvp-20261019/author-close-readback.json",
+      "sha256": "8e3366fd5a26a44ea95ebe2b5b972a42b22fc1c8a44d9a20b5088c9de9ff687d"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-adoption-20261019/controller-compatibility-source-merged.json",
+      "sha256": "97cb0fd76c1e0ce7023ea988a63bb74bf831cf23df8e78e3f2ccf59f04850304"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-adoption-20261019/author-compatibility-freeze.json",
+      "sha256": "d66484131bb84af95ab23c3db0c6156b5c00cd3e7f887b9c7db4773f840559f3"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-adoption-20261019/author-compatibility-close-readback.json",
+      "sha256": "d0087637fb46f9c4386819605f2288ab1d673dd91a0aa039268b4f87ffd0c725"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-adoption-20261019/independent-production-acceptance.json",
+      "sha256": "0800620b34b694513553399df5707fa168e3586abb2b2e9d0e2a761c12af2856"
+    },
+    {
+      "ref": "operating://code-root-remote-truth-adoption-20261019/author-runtime-postreadback.json",
+      "sha256": "45b3e8297704634b270a19e3daca77b0a00748a33962540e00e7691cc2c3f9d4"
+    }
+  ],
+  "limitations": [
+    "不是长期SLO、全BET/战略/KR或真人Outcome证明。",
+    "未重跑既有35/17源码候选、collector、scheduler、部署、模型或完整GaC。",
+    "原code-main未fetch/reset/update；279不能替代新鲜官方远端OID。",
+    "有限采用只覆盖一个真实自然canonical→wrapper cohort，不承诺未来可变源永远等价。",
+    "本报告是准确证据承载文件，不替代native matrix/spec/D0/chain、实际owner准入或普通hooks/CI。"
+  ]
+}
