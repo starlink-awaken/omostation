@@ -579,6 +579,26 @@ jobs:
       (实测 crontab 现已可写, 见 zhixing-host-drift 条目的更正与探针证据)。
       plist 源 bin/ops/launchd/com.omostation.omo-health-refresh.plist。
       效果: meta-doctor stale_beats 1→0, composite health_score 46→73, governance_anomaly 20→0。
+  - name: omo-state-sync
+    schedule: "27 * * * *"
+    command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/projects/omo/.venv/bin/omo state sync >> runtime/cron/omo-state-sync.log 2>&1'
+    planes: [launchd]
+    reality: declared_only
+    status: proposed
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >-
+      2026-10-19 新增。补 health.yaml 唯一写入者的排程缺口: 声明面是活的
+      (runtime-projections.yaml 把 health 列为 active 投影, generator 记为
+      "omo state sync"), 但 `omo state sync` 在 crontab 与 launchd 中均无任何注册
+      —— DECL_EXEC_GAP 的「声明 ✓ / 进程存活 ✓ / 落盘 ✗」第三形态, 与
+      omo-health-refresh 条目记录的 system_health.yaml 同款。实证: 该投影停在
+      2026-10-14 14:11, 相对 72h SLA 已过 120.5h → meta-doctor stale_beats=1,
+      连带驾驶舱 A2/A5 双 FAIL; 手动跑一次 `omo state sync` 即把 health.yaml 归零
+      (stale_beats 1→0), 证明写入器与声明都正常, 缺的确实只是调度。正确修法是让
+      生成器持续跑, 而非删声明或改 SLA。plist 源
+      bin/ops/launchd/com.omostation.omo-state-sync.plist。尚未安装, 故
+      reality=declared_only / status=proposed。
 
   - name: zhixing-panel-sync-hourly-active
     schedule: "23 * * * *"
