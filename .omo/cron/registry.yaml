@@ -583,8 +583,8 @@ jobs:
     schedule: "27 * * * *"
     command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/projects/omo/.venv/bin/omo state sync >> runtime/cron/omo-state-sync.log 2>&1'
     planes: [launchd]
-    reality: declared_only
-    status: proposed
+    reality: installed
+    status: active
     owner: governance-team
     sfop_slot: S
     reconciliation_note: >-
@@ -597,8 +597,17 @@ jobs:
       连带驾驶舱 A2/A5 双 FAIL; 手动跑一次 `omo state sync` 即把 health.yaml 归零
       (stale_beats 1→0), 证明写入器与声明都正常, 缺的确实只是调度。正确修法是让
       生成器持续跑, 而非删声明或改 SLA。plist 源
-      bin/ops/launchd/com.omostation.omo-state-sync.plist。尚未安装, 故
-      reality=declared_only / status=proposed。
+      bin/ops/launchd/com.omostation.omo-state-sync.plist。
+
+      2026-10-19 现实更正 (BET-Y2Q4-T10-258): 「尚未安装」这句在本检出已不成立。
+      该 plist 于 commit 5aa728f90 (07:33:35Z) 入库, 本机 Library/LaunchAgents
+      副本与其逐字节同源 (sha256 相同) 而 mtime 07:35:46Z 晚于入库 2 分钟;
+      log 面有 07:35:49Z 与 08:27:06Z 两次落盘产物, 后者按 Minute 27 命中排程;
+      launchctl print 可读到该 job (rc=0, last exit code 0)。三个表面据此对齐:
+      services.yaml 同 label observe-only 登记 (generate: false), 本条
+      reality=installed / status=active 同步翻转 (I1「active ⇒ installed」与
+      I2「installed ⇒ active」互证, 单翻一个即破另一条)。本轮只登记现实,
+      不动本机 launchd 与 crontab。
 
   - name: zhixing-panel-sync-hourly-active
     schedule: "23 * * * *"

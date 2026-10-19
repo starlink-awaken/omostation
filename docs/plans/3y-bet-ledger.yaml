@@ -43277,6 +43277,106 @@ bets:
     expect: 0 failed (既有链判据与缝本体不回归)
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: rc 0 (条目 schema/digest/id 与 binding 四键合规)
+- id: BET-Y2Q4-T10-258
+  title: ADR-0456 B3 批次 5 — 1 条已装未声明 label observe-only 回填 + cron 现实三面对齐 (E2 归零 + 集合相等重新成立)
+  goal: 'B3 完成判据「已安装 label 集合 == registry 集合」在 T10-253 合并 14 小时后再次破裂，本轮把它重新收口并补上 能拦住复发的那道闸。2026-10-19T08:54Z
+    实测 origin/main@4c6f5d425（隔离检出与该 SHA 逐字相同）： --reality-check 读数 e2_undeclared=1 /
+    owned_declared=46 / owned_installed=47 / e1_drift=0 / e3_lint_debt=0 / e4_prefix_ok
+    False（未分区 18）/ e5 两项 1+1 / installed_total=76。唯一命中的是 com.omostation.omo-state-sync，且它不是单纯漏登记，而是同一服务的三个真值面互相矛盾——launchd
+    已装已跑 （本机 plist mtime 07:35:46Z，与仓内 bin/ops/launchd/com.omostation.omo-state-sync.plist
+    逐字节相同， sha256 191b69e2647d…cf5bff2 / 3033 字节；launchctl print rc=0 且日志显示 08:27:06Z
+    按 Minute:27 真实触发过），services.yaml 零声明，而 .omo/cron/registry.yaml 写着实测为假的 reality=declared_only
+    / status=proposed / note「尚未安装」。这三面由 5aa728f90（PR #4816，07:33:35Z） 造成：该提交加了 plist
+    与 cron 条目共 84 行并在提交信息里预告「declared_only/proposed until installed」， 但同批不产 services.yaml
+    声明——这是 E2 第二次回潮，也是第一个「仓内提交 plist、同批不提交注册表」的实例。 机制沿用 T10-206 / T10-246 / T10-253
+    的 observe-only（generate: false ⇒ validate_service_declaration 早返回 :156-157、--validate
+    跳过解释器解析 :627-628、--check 比对循环 :652-656 显式跳过 ⇒ 对 E1/E3 与 CI 可验面零扰动；exempt_labels
+    结构上不通 :478-480）。cron 侧 reality 与 status 必须同翻（基线 73 条 job 的 I1=I2=0，只翻一个必造 1 条违规），三个受检测试文件均无硬编码计数（本轮实扫）。候选补丁已用检测器
+    本身验算：叠加本条后 e2_undeclared 1→0 且 owned_declared==owned_installed==47，E1/E3/E4/E5/
+    installed_total 逐字段未变。全程不碰本机 launchd 与 crontab。'
+  status: in_progress
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-19-services-e2-observe-only-backfill-5.md
+  - .omo/_truth/registry/services.yaml
+  - .omo/cron/registry.yaml
+  - tests/unit/test_ops_launchd_plist_declared_guard.py
+  - .github/workflows/governance-check.yml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-258.md
+  - docs/reports/2026-10-19-services-e2-observe-only-backfill-5-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-19-services-e2-observe-only-backfill-5.md
+    spec_version: 1.0.0
+    content_digest: sha256:71d8932ffe4c988b182f7a4265b4015fa6386a3271273fd1a5ad1d5c79f02ee4
+    decision_ref: decision://accepted/BET-Y2Q4-T10-258
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  circuit_breaker: '若 E2 归零需要把本条声明成 generate: true, 或需要动 exempt_labels / workspace_prefixes
+    / --reality-check 任一判据本体 → 停止并保留原判据。本机 launchd 与 crontab 一律不动 (不 bootout/bootstrap/kickstart,
+    不写 ~/Library/LaunchAgents, 不改 crontab)。 若必须回写 com.cockpit.dashboard 的 enabled 或补装
+    com.l4.omo.sync 才能归零 → 停止, 那是署名裁定面。若为过 ISC-4 而必须把 com.omostation.arch-health-weekly
+    或 com.omostation.panorama-refresh-guard 也塞进 services.yaml (两条 plist 从未安装, 且后者 XML
+    非法) → 停止, 改用评审清单而不是替它们决定「该不该活」。若 cron 侧必须改动其余 job 才能过 I1/I2 → 停止。 不宣布 ADR-0456 B1/B3/B4/B5
+    或整个 plan 完成。'
+  non_goals:
+  - 不回写 com.cockpit.dashboard 的 enabled, 也不补装/停用 com.l4.omo.sync (E5 两条, 装卸与真值改写均需授权)
+  - 不为 e4_prefix_ok 变 True 手工枚举 18 条 com.local.* 个人 host job 进 exempt_labels (噪声生成器)
+  - 不修 com.omostation.panorama-refresh-guard.plist 的非法 XML (注释体内含 --, plistlib 在 line
+    26 col 48 抛 ExpatError) —— 独立 BET
+  - 不把仓内 plist 里的 /Users/xiamingxing/Workspace 字面量改成缝 (B4b 改道, 逐批授权)
+  - 不收口安装器 (直写 launchd 而不产注册表条目的那 5 个通道是另一条 BET)
+  - 不宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成 (B3 前半判据 --check exit 0 已由 E1=0 满足, 但 --reality-check
+    整体 ok 仍 False, 因 E4/E5 未收口)
+  done_when:
+  - ISC-1 本检出 --reality-check 读数 e2_undeclared == 0 且 owned_declared == owned_installed
+    == 47
+  - ISC-2 反向对照由同一次扫描产出 —— 摘掉本条声明则 e2_undeclared 回 1 且 owned_declared 回 46 (不得只断言 0)
+  - ISC-3 --validate --json ok true 且 violation_count 0；E1/E3/E4/E5 两项/installed_total
+    与基线逐字段相同 (0/0/False/1+1/76)
+  - ISC-4 新增纯仓内结构守卫 tests/unit/test_ops_launchd_plist_declared_guard.py —— 每份 bin/ops/launchd/*.plist
+    的 Label 必须在 services.yaml 有声明, 未声明者恰等于钉成集合相等的评审清单 (基线 8 份 plist / 6 已声明 / 2 未装进清单)；守卫须自证
+    (注入合成未声明 plist 必点名, 本条登记后同形不命中)
+  - ISC-5 cron 侧三面对齐 —— jobs[omo-state-sync].reality == installed 且 status == active,
+    reconciliation_note 不再含「尚未安装」；全文件 I1 == I2 == 0；test_cron_registry_reality_invariants.py
+    + test_cron_registry_contract.py + test_service_registry_reality.py 全绿
+  - ISC-6 本机 launchd 与 crontab 零改动 —— 本机 plist mtime_ns + size + sha256 + launchctl
+    print rc/state 与 crontab -l 交付前后逐字节一致
+  - ISC-7 make gac-local-gate 硬失败集合等于基线 (零新增)，且新测试文件已接进 .github/workflows/governance-check.yml
+    显式白名单 (该白名单不含 tests/unit/**，不接线则 CI 看不见)
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json --registry .omo/_truth/registry/services.yaml
+    expect: e2_undeclared == 0; owned_declared == owned_installed == 47; e1_drift ==
+      0; e3_lint_debt == 0; installed_total == 76; e5_enabled_missing == 1; e5_disabled_residual
+      == 1
+  - cmd: python3 bin/mof/gen-service-configs.py --validate --json
+    expect: ok true, violation_count 0
+  - cmd: python3 bin/mof/gen-service-configs.py --check
+    expect: exit 0, 0 drift
+  - cmd: python3 -m pytest tests/unit/test_ops_launchd_plist_declared_guard.py tests/unit/test_cron_registry_reality_invariants.py
+      tests/test_cron_registry_contract.py tests/test_service_registry_reality.py -q
+    expect: 全部 passed, 0 failed
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -43415,7 +43515,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 551
+  total_bets: 552
   windows:
   - Y1Q1
   - Y1Q2
