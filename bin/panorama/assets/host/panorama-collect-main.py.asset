@@ -968,78 +968,126 @@ def collect_launchd_health() -> dict:
 
 
 def collect_code_root_health() -> dict:
-    """Report whether the managed code root is clean and equal to origin/main.
+    """Compare the managed checkout with one fresh official main observation.
 
-    This is intentionally read-only: Panorama never fetches, rebases, merges or
-    otherwise updates the managed clone. A stale root is visible rather than
-    silently used by admission verifiers.
+    Git reads never refresh the index, fetch missing objects, interpret replace
+    refs, or update tracking refs. A local tracking ref is only local evidence.
     """
+    import selectors
+    import signal
+    import time
+
     checked_at = datetime.now(UTC).isoformat()
-    if CODE_ROOT == ROOT:
-        return {
-            "schema": "panorama-code-root-health/v1",
-            "available": False,
-            "managed": False,
-            "verdict": "UNMANAGED",
-            "checked_at": checked_at,
-            "error": "code_root_matches_runtime_root",
-        }
-
-    def git(args: list[str]) -> tuple[int, str]:
-        return run(["git", "-C", str(CODE_ROOT), *args], timeout=10)
-
-    head_code, head = git(["rev-parse", "HEAD"])
-    origin_code, origin_main = git(["rev-parse", "refs/remotes/origin/main"])
-    status_code, status = git(["status", "--porcelain", "--untracked-files=no"])
-    count_code, counts = git(["rev-list", "--left-right", "--count", "origin/main...HEAD"])
-    if head_code or origin_code or status_code or count_code:
-        return {
-            "schema": "panorama-code-root-health/v1",
-            "available": False,
-            "managed": True,
-            "verdict": "UNAVAILABLE",
-            "checked_at": checked_at,
-            "head_oid": head if head_code == 0 else None,
-            "origin_main_oid": origin_main if origin_code == 0 else None,
-            "error": "git_read_failed",
-        }
-
-    left, _, right = counts.partition("\t")
-    try:
-        behind, ahead = int(left.strip()), int(right.strip())
-    except ValueError:
-        return {
-            "schema": "panorama-code-root-health/v1",
-            "available": False,
-            "managed": True,
-            "verdict": "UNAVAILABLE",
-            "checked_at": checked_at,
-            "head_oid": head,
-            "origin_main_oid": origin_main,
-            "error": "count_parse_failed",
-        }
-
-    dirty_count = sum(1 for line in status.splitlines() if line.strip())
-    synced = head == origin_main and behind == 0 and ahead == 0
-    if dirty_count:
-        verdict = "DIRTY"
-    elif not synced:
-        verdict = "STALE"
-    else:
-        verdict = "PASS"
-    return {
+    report = {
         "schema": "panorama-code-root-health/v1",
-        "available": True,
-        "managed": True,
-        "verdict": verdict,
+        "available": False,
+        "managed": CODE_ROOT != ROOT,
+        "verdict": "UNAVAILABLE",
         "checked_at": checked_at,
-        "head_oid": head,
-        "origin_main_oid": origin_main,
-        "behind_origin_main": behind,
-        "ahead_origin_main": ahead,
-        "dirty_count": dirty_count,
+        "head_oid": None,
+        "origin_main_oid": None,
+        "local_origin_main_oid": None,
+        "local_origin_main_ref": "refs/remotes/origin/main",
+        "remote_main_source": "github://starlink-awaken/omostation/refs/heads/main",
+        "remote_main_observed_at": None,
+        "comparison_scope": "official_remote_main",
+        "behind_origin_main": None,
+        "ahead_origin_main": None,
+        "dirty_count": None,
         "auto_update_performed": False,
     }
+    if CODE_ROOT == ROOT:
+        return {**report, "verdict": "UNMANAGED", "error": "code_root_matches_runtime_root"}
+
+    env = dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_NO_LAZY_FETCH="1",
+               GIT_NO_REPLACE_OBJECTS="1", GIT_TERMINAL_PROMPT="0", GH_PROMPT_DISABLED="1")
+    deadline = time.monotonic() + 10
+
+    def read(command: list[str], maximum: int = 4096) -> tuple[int, str]:
+        """Bound time and stdout bytes; diagnostics never expose subprocess text."""
+        process = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                return 1, ""
+            process = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                       stderr=subprocess.DEVNULL, env=env, start_new_session=True)
+            with selectors.DefaultSelector() as selector:
+                selector.register(process.stdout, selectors.EVENT_READ)
+                while selector.get_map():
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        return 1, ""
+                    for key, _ in selector.select(remaining):
+                        chunk = os.read(key.fileobj.fileno(), min(4096, maximum + 1 - len(output)))
+                        if not chunk:
+                            selector.unregister(key.fileobj)
+                        else:
+                            output.extend(chunk)
+                            if len(output) > maximum:
+                                return 1, ""
+            code = process.wait(timeout=max(0.001, deadline - time.monotonic()))
+            return code, output.decode("utf-8", errors="replace").strip()
+        except (OSError, subprocess.TimeoutExpired):
+            return 1, ""
+        finally:
+            if process is not None:
+                # The new session contains only this read and its descendants.
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                process.wait()
+                process.stdout.close()
+
+    def git(args: list[str], maximum: int = 4096) -> tuple[int, str]:
+        return read(["git", "--no-replace-objects", "-C", str(CODE_ROOT), *args], maximum)
+
+    top_code, top = git(["rev-parse", "--show-toplevel"])
+    origin_code, origin = git(["remote", "get-url", "--all", "origin"])
+    official_origins = {
+        "https://github.com/starlink-awaken/omostation.git",
+        "https://github.com/starlink-awaken/omostation",
+        "git@github.com:starlink-awaken/omostation.git",
+        "ssh://git@github.com/starlink-awaken/omostation.git",
+    }
+    if (top_code or origin_code or Path(top).resolve() != CODE_ROOT.resolve()
+            or origin not in official_origins):
+        return {**report, "error": "repository_identity_mismatch"}
+    head_code, head = git(["rev-parse", "--verify", "HEAD^{commit}"])
+    tracking_code, tracking = git(["rev-parse", "--verify", "refs/remotes/origin/main"])
+    status_code, status = git(["status", "--porcelain", "--untracked-files=no"], 1024 * 1024)
+    if head_code or status_code or not re.fullmatch(r"[a-f0-9]{40}", head):
+        return {**report, "error": "git_read_failed"}
+    report.update(head_oid=head, dirty_count=sum(1 for line in status.splitlines() if line.strip()),
+                  local_origin_main_oid=tracking if tracking_code == 0 else None)
+    remote_code, remote = read([
+        "gh", "api", "--hostname", "github.com",
+        "repos/starlink-awaken/omostation/git/ref/heads/main", "--jq",
+        '. | select(.ref == "refs/heads/main" and .object.type == "commit") | .object.sha',
+    ], 256)
+    if remote_code or not re.fullmatch(r"[a-f0-9]{40}", remote):
+        return {**report, "error": "remote_main_unavailable"}
+    report.update(origin_main_oid=remote, remote_main_observed_at=datetime.now(UTC).isoformat(),
+                  available=True)
+    if head == remote:
+        report.update(behind_origin_main=0, ahead_origin_main=0)
+    else:
+        object_code, _ = git(["cat-file", "-e", f"{remote}^{{commit}}"])
+        shallow_code, shallow = git(["rev-parse", "--is-shallow-repository"])
+        if object_code:
+            report["error"] = "remote_commit_not_local"
+        elif shallow_code or shallow != "false":
+            report["error"] = "ancestry_unavailable"
+        else:
+            count_code, counts = git(["rev-list", "--left-right", "--count", f"{remote}...{head}"])
+            if count_code or not re.fullmatch(r"[0-9]+\s+[0-9]+", counts):
+                report["error"] = "ancestry_unavailable"
+            else:
+                behind, ahead = map(int, counts.split())
+                report.update(behind_origin_main=behind, ahead_origin_main=ahead)
+    report["verdict"] = "DIRTY" if report["dirty_count"] else ("PASS" if head == remote else "STALE")
+    return report
 
 
 def _read_claims_preflight(root: Path) -> tuple[dict | None, dict]:
