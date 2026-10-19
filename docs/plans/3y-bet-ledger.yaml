@@ -43197,14 +43197,40 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@73c848b802389cb1c4972eccd6306beaee371b80
+          tests:
+            ref: receipt://docs/reports/2026-10-19-chain-bind-runs-anchor-seam-closeout.md
+            sha256: sha256:64076ae2a6e3a6f42db953a393f2cb84a009f953d9fc9631c1b0572aeb8ca44a
+          diff:
+            ref: receipt://docs/reports/2026-10-19-chain-bind-runs-anchor-seam-closeout.md
+            sha256: sha256:64076ae2a6e3a6f42db953a393f2cb84a009f953d9fc9631c1b0572aeb8ca44a
+          rollback:
+            ref: receipt://docs/reports/2026-10-19-chain-bind-runs-anchor-seam-closeout.md
+            sha256: sha256:64076ae2a6e3a6f42db953a393f2cb84a009f953d9fc9631c1b0572aeb8ca44a
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-257.md
+            sha256: sha256:6257c70c16cb0e52f9a985e97d47229dc5d68b1feac1df2b7461d7206b9a41e8
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-19-chain-bind-runs-anchor-seam-closeout.md
+            sha256: sha256:64076ae2a6e3a6f42db953a393f2cb84a009f953d9fc9631c1b0572aeb8ca44a
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-19-chain-bind-runs-anchor-seam-closeout.md
+            sha256: sha256:64076ae2a6e3a6f42db953a393f2cb84a009f953d9fc9631c1b0572aeb8ca44a
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-257.md
+            sha256: sha256:6257c70c16cb0e52f9a985e97d47229dc5d68b1feac1df2b7461d7206b9a41e8
+          cleanup:
+            ref: receipt://docs/reports/2026-10-19-chain-bind-runs-anchor-seam-closeout.md
+            sha256: sha256:64076ae2a6e3a6f42db953a393f2cb84a009f953d9fc9631c1b0572aeb8ca44a
       value:
         status: NOT_PROVEN
         evidence: {}
