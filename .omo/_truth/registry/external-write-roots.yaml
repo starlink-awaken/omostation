@@ -18,3 +18,10 @@ roots:
       - 'plugin/team-mailbox/**/*.ts'
       - 'plugin/team-mailbox/*.js'
       - 'plugin/team-mailbox/**/*.js'
+  - id: local-ops-t244
+    path: ~/.local/share/zhixing-controller/workspaces/t244-local-ops-20261019
+    kind: local_git
+    status: admitted
+    patterns:
+      - 'bin/todo-sync'
+      - 'tests/test_todo_sync.py'
