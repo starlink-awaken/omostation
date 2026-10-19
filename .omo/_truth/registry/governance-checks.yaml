@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 725 # 2026-10-19 724→725: 新登记 bin/gac/panorama-refresh-guard.py
+    script_baseline: 726 # 2026-10-19 725→726: 既有运行能力 bin/ops/disk-keepalive.sh 正式源码纳管
       # (A9 P0-4 —— panorama 采集作业存活守护: 作业被 bootout 时 launchd KeepAlive
       # 不覆盖、织星看门狗只探 :43191; 2026-10-16 夜间 data.json 陈旧 10.4h 无告警。
       # 主控 2026-10-19 授权「全面推进落地」后落这一行, 不使用 SCRIPT_BASELINE_SYNC=1
