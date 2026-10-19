@@ -43156,6 +43156,100 @@ bets:
     expect: ok true, violation_count 0
   - cmd: python3 bin/mof/gen-service-configs.py --check
     expect: exit 0, 0 drift
+- id: BET-Y2Q4-T10-257
+  title: ADR-0456 读面缝 — chain_bind 的 runs 面必须经 delivery_anchor 解析 (隔离检出内 complete 假报
+    missing_bet_binding)
+  goal: '消除一类结构性假红 (2026-10-19 实测立项): bin/plan/chain_bind.py:37 定义 RUNS_REL = .omo/_delivery/agent-workflows/runs、:189
+    直接 workspace / RUNS_REL 读 runs 面。runs 面是全机共享面 —— 每个检出的 .omo/_delivery/agent-workflows/
+    由 ensure_delivery_anchor() (projects/omo/src/omo/workflow/delivery_anchor.py:117)
+    做成指向 canonical 的 symlink, 而桥是惰性建的 (唯一生产调用点 omo/workflow/core.py:457 的 _runner_path(),
+    只有在该检出内跑过 workflow 状态类操作才建)。本轮现场: run 20261019T015151Z-bet-execution-8fb82293 在主工作区
+    start/claim、bet_id 已绑、status active、5 条 scope lock 均在, 而在无桥收口 worktree 里跑 bet-ledger.py
+    complete BET-Y2Q4-T10-253 报 missing_bet_binding。同日实测覆盖面 —— 本机 10 个检出: 5 个已建桥、4 个
+    .omo/_delivery/ 存在但无 agent-workflows、1 个 canonical 真目录, 且无任何测试会红。改法 (spec 2026-10-19-chain-bind-runs-anchor-seam
+    §2): 探检出侧路径缺失时经 locate_anchor() + is_worktree_of() 解析到 canonical 的 runs 面; 缝不可达
+    (fresh clone / CI 干净检出 / 该检出的 projects/omo 里没有那份文件) 逐字节退回现行为; 读侧不调 ensure_delivery_anchor
+    (建 symlink 是写面动作, 归 core.py:457); 不新增 env、不新增根、不改缝本体。v1.1.0 实测第三面 —— 出问题的那条调用 python3 bin/plan/bet-ledger.py complete <BET> 的解释器里没有 omo (bet-ledger.py 只把 projects/ecos/src 与 bin/plan 放进 sys.path), 纯 import 型缝当场 ModuleNotFoundError 被降级分支吃掉、读数仍为 0 个 run —— 改动接了但没接上。故缝必须按文件路径加载 delivery_anchor.py 那同一份来源 (不在 chain_bind 复制定位语义), 判据 ISC-7 在 bare python3 装置上成立 —— 本机 3 个无桥检出改前读 0 个 run、改后各读 331 个。'
+  status: in_progress
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-19-chain-bind-runs-anchor-seam.md
+  - bin/plan/chain_bind.py
+  - tests/unit/test_chain_bind_runs_anchor_seam.py
+  - .github/workflows/governance-check.yml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-257.md
+  - docs/reports/2026-10-19-chain-bind-runs-anchor-seam-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-19-chain-bind-runs-anchor-seam.md
+    spec_version: 1.1.0
+    content_digest: sha256:18ef9a0eeae25919198bbe1302efa2f65f9a6c47b377c1ca7cb43eb15ebfe5c8
+    decision_ref: decision://accepted/BET-Y2Q4-T10-257
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  circuit_breaker: 若归零需要动 delivery_anchor.py / omo/workflow/core.py / bin/agent-workflow.py
+    任一行为 → 停止并保留原判据 (那三条是缝本体与既有契约)。若读侧必须调用 ensure_delivery_anchor() 才能命中 → 停止, 那是把写面
+    (建 symlink、可能触发 _merge_migrate) 塞进 reader, 属 spec C4 违例。若需要新增 env 名或第三个根 才能定位 canonical
+    → 停止, ADR-0456 的定位链只有那三条。若 CI 口径 (干净检出、无 canonical) 的读数与改前不同 → 停止, spec C2 是硬约束。本机
+    launchd 一律不动 (不 bootout/bootstrap/kickstart, 不写 ~/Library/LaunchAgents, 不改 crontab)。不宣布
+    ADR-0456 B1/B3/B4/B5 或整个 plan 完成。
+  non_goals:
+  - 不改 spec §5 登记的其余 13 处 runs 面读者 (check-work-landed / ecosystem-doctor / requirement-iteration-gate
+    / gate-evidence-receipt / fix-orphan-locks / check-governance-ratio / gac-local-gate
+    / swarm-activity-dashboard / auto-pruner / drift-face-detector / panorama-collect
+    / panel-collect / claims_authority) —— 逐条判「该读共享面还是本检出」是另一条 BET
+  - 不修 omo/workflow/core.py:43 那条由 __file__ 反推且不受 OMOSTATION_ROOT 影响的 WORKSPACE 常量,
+    也不修 bin/agent-workflow.py:282 对它的再绑定 (spec §1 第二面, 独立 BET, 跨 omo 子模块与 bin/ 两条 lane)
+  - CI 白名单只点名新增的这一个用例文件, 不重排或批量补点既有 tests/ 文件
+  - 不建桥、不迁移、不删除任何检出的 .omo/_delivery/** 内容
+  - 不动本机 launchd / crontab / plist
+  - 不宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成
+  done_when:
+  - ISC-1 正向落点 —— 真 git worktree fixture (git worktree add, 非手搓目录) 且该检出无 .omo/_delivery/agent-workflows、canonical
+    侧有带 bet_id 的 run ⇒ chain_bind.iter_run_records(worktree) 读出该 run, evaluate_complete()
+    不再报 missing_bet_binding
+  - ISC-2 反向对照 —— 同一 fixture 把缝摘掉 (定位不可用) ⇒ 读数与改前逐字节相同 (0 个 run 且 missing_bet_binding),
+    证明 ISC-1 依赖的是缝而不是 fixture
+  - ISC-3 C2 不回归 —— env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT HOME=<空> 的最小依赖面
+    (uv run --no-project --with pytest --with pyyaml) 下 chain_bind 既有全部用例读数与改前一致
+  - ISC-4 文本判据由同一次扫描产出「改前 ≥1 处 workspace / RUNS_REL 直读、改后 0 处」, 且该扫描必须在 未修复树上跑出非零 (检测器自证,
+    防空绿)
+  - ISC-5 新用例已按 governance-check.yml 既有惯例点名进 CI 白名单, 且该文件在 CI 干净检出 (无 canonical) 下全绿
+    —— 即 C2 在真实 CI 装置上成立, 不只是本地推断
+  - ISC-6 make gac-local-gate 硬失败集合等于基线 (零新增) 且 tests/unit/test_delivery_anchor_contract.py
+    全绿 (缝本体未破坏)
+  - ISC-7 缝在生产调用形状上成立 —— bare python3 (omo 不可 import) 下无桥检出仍解析到 canonical runs
+    面并读出该 run; 那份 delivery_anchor.py 也不可达时逐字节退回改前读数。变异对照 —— 换回改前的
+    chain_bind.py 则该一条用例红 (1 failed / 7 passed), 证明绿不是装置凑出来的
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_chain_bind_runs_anchor_seam.py -q -p no:randomly
+    expect: 0 failed; ISC-1 正向与 ISC-2 反向成对存在
+  - cmd: python3 -m pytest tests/test_chain_bind.py tests/unit/gac/test_chain_bind_start_gate.py
+      tests/unit/test_delivery_anchor_contract.py -q -p no:randomly
+    expect: 0 failed (既有链判据与缝本体不回归)
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: rc 0 (条目 schema/digest/id 与 binding 四键合规)
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -43294,7 +43388,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 550
+  total_bets: 551
   windows:
   - Y1Q1
   - Y1Q2
