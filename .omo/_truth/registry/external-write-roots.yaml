@@ -25,3 +25,5 @@ roots:
     patterns:
       - 'bin/todo-sync'
       - 'tests/test_todo_sync.py'
+      - 'bin/observer-daily.py'
+      - 'tests/test_observer_daily.py'
