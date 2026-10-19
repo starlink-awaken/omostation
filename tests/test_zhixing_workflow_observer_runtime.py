@@ -190,3 +190,5 @@ def test_observe_timeout_leaves_room_under_the_collector_budget(
     assert collector.OBSERVE_TIMEOUT >= 30
     assert collector.OBSERVE_TIMEOUT < 48
     assert collector._run_cmd.__defaults__[0] == collector.OBSERVE_TIMEOUT
+    assert collector.SELECTOR_TIMEOUT >= 20
+    assert collector.SELECTOR_TIMEOUT < collector.OBSERVE_TIMEOUT

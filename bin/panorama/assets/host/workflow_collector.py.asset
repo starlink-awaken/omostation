@@ -17,6 +17,11 @@ DEFAULT_WORKSPACE_ROOT = Path("/Users/xiamingxing/Workspace")
 # 40s so a slow host cannot burn the whole worker budget and surface as
 # "Collector deadline exceeded" instead of a real observation.
 OBSERVE_TIMEOUT = 40
+# The managed-python selector probe/run are two more subprocess round trips in
+# front of the observer. A 10s budget fired under host load ("timed out after
+# 10 seconds") even though the selector itself is fast; keep them well under the
+# same 48s worker budget.
+SELECTOR_TIMEOUT = 30
 
 
 def workspace_root() -> Path:
@@ -81,7 +86,7 @@ def _select_managed_python(root: Path) -> Path:
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "GIT_OPTIONAL_LOCKS": "0"}
     receipt = subprocess.run(
         [str(selector), "probe", "--profile", "pyyaml", "--json"],
-        capture_output=True, text=True, timeout=10, cwd=root,
+        capture_output=True, text=True, timeout=SELECTOR_TIMEOUT, cwd=root,
         env=env,
     )
     if receipt.returncode != 0:
@@ -102,7 +107,7 @@ def _select_managed_python(root: Path) -> Path:
         raise CollectionError("workflow", "managed observer executable unprovable")
     runtime = subprocess.run(
         [str(selector), "run", "--profile", "pyyaml", "--", "-B", "-c", RUNTIME_METADATA],
-        capture_output=True, text=True, timeout=10, cwd=root, env=env,
+        capture_output=True, text=True, timeout=SELECTOR_TIMEOUT, cwd=root, env=env,
     )
     if runtime.returncode != 0:
         raise CollectionError("workflow", "managed observer runtime metadata failed")
