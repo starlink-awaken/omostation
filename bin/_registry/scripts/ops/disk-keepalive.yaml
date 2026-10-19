@@ -1,0 +1,28 @@
+schema: script-registry/v1
+id: bin/ops/disk-keepalive.sh
+name: External SSD Keepalive
+category: ops
+owner: engineering-agent
+description: >-
+  将既有独立安装件纳入正式源码管理。按 APFS Volume UUID 检测与安全重挂外接卷，
+  连续异常 10 次升级 NEEDS_ATTENTION；成功桌面通知之间至少间隔 3600 秒，
+  健康恢复保留成功时间戳，通知失败可于下轮重试。保留维护窗口与真实掉线采集。
+  此源码登记不安装脚本或启动排程。
+inputs:
+  - name: KEEPALIVE_LOGDIR
+    type: path
+    required: false
+    description: 日志与状态目录，默认 ~/Library/Logs；隔离测试使用临时目录
+outputs:
+  - type: keepalive 日志、异常计数、人工关注标记、成功通知 epoch 与真实掉线记录
+dependencies:
+  - macOS diskutil
+  - macOS osascript
+  - macOS unified log
+triggers:
+  - manual: 直接执行会探测卷并尝试重挂；排程与运行时采用须单独授权
+related:
+  - bin/ops/hot-tier-resilience.sh
+  - tests/bin/test_disk_keepalive_notify.sh
+maturity: stable
+last_reviewed: "2026-10-19"
