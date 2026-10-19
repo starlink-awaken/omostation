@@ -29,3 +29,5 @@ roots:
       - 'tests/test_observer_daily.py'
       - 'bin/aictl'
       - 'tests/test_aictl_status_privacy.py'
+      - 'config/menubar/parts/ai-stack-collect.sh'
+      - 'tests/test_ai_stack_collect_lock.py'
