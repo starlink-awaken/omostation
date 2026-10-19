@@ -129,6 +129,127 @@ def _guard_source() -> dict[str, Any]:
     }
 
 
+def build_topology(payloads: dict[str, Any]) -> list[dict[str, Any]]:
+    """T1..T7 topology relations over the collected probe payloads."""
+    agents = payloads.get("agent_list") if isinstance(payloads.get("agent_list"), list) else []
+    runtimes = payloads.get("runtime_list") if isinstance(payloads.get("runtime_list"), list) else []
+    squads = payloads.get("squad_list") if isinstance(payloads.get("squad_list"), list) else []
+    projects = payloads.get("project_list") if isinstance(payloads.get("project_list"), list) else []
+    issues_payload = payloads.get("issue_list")
+    if isinstance(issues_payload, dict) and isinstance(issues_payload.get("issues"), list):
+        issues = issues_payload["issues"]
+    elif isinstance(issues_payload, list):
+        issues = issues_payload
+    else:
+        issues = []
+    repos = payloads.get("repo_list") if isinstance(payloads.get("repo_list"), list) else []
+    daemon = payloads.get("daemon_status") if isinstance(payloads.get("daemon_status"), dict) else {}
+
+    runtime_ids = {r.get("id") for r in runtimes if isinstance(r, dict) and r.get("id")}
+    agent_ids = {a.get("id") for a in agents if isinstance(a, dict) and a.get("id")}
+    project_ids = {p.get("id") for p in projects if isinstance(p, dict) and p.get("id")}
+
+    def topo(tid: str, ok: bool, detail: str) -> dict[str, Any]:
+        return {"id": tid, "ok": ok, "status": "PASS" if ok else "FAIL", "detail": detail}
+
+    topology: list[dict[str, Any]] = []
+    bad_runtime_refs = [
+        a.get("id")
+        for a in agents
+        if isinstance(a, dict)
+        and a.get("runtime_id")
+        and a.get("runtime_id") not in runtime_ids
+    ]
+    topology.append(
+        topo(
+            "agent_runtime_refs",
+            not bad_runtime_refs,
+            f"bad={len(bad_runtime_refs)} agents={len(agents)} runtimes={len(runtimes)}",
+        )
+    )
+
+    bad_members: list[str] = []
+    for squad in squads:
+        if not isinstance(squad, dict):
+            continue
+        for key in ("leader_id", "leader_agent_id", "created_by"):
+            val = squad.get(key)
+            if isinstance(val, str) and val and val not in agent_ids and key != "created_by":
+                # created_by may be user id; only enforce leader fields when present
+                pass
+        leader = squad.get("leader_id") or squad.get("leader_agent_id")
+        if isinstance(leader, str) and leader and leader not in agent_ids:
+            bad_members.append(f"leader:{leader}")
+        members = squad.get("members") or squad.get("member_ids") or []
+        if isinstance(members, list):
+            for member in members:
+                mid = member.get("agent_id") if isinstance(member, dict) else member
+                if isinstance(mid, str) and mid and mid not in agent_ids:
+                    bad_members.append(mid)
+    topology.append(
+        topo(
+            "squad_member_refs",
+            not bad_members,
+            f"bad={len(bad_members)} squads={len(squads)} agents={len(agent_ids)}",
+        )
+    )
+
+    bad_issue_projects = [
+        i.get("id")
+        for i in issues
+        if isinstance(i, dict)
+        and i.get("project_id")
+        and i.get("project_id") not in project_ids
+    ]
+    topology.append(
+        topo(
+            "issue_project_refs",
+            not bad_issue_projects,
+            f"bad={len(bad_issue_projects)} issues={len(issues)} projects={len(project_ids)}",
+        )
+    )
+
+    topology.append(
+        topo(
+            "squad_count_readable",
+            isinstance(payloads.get("squad_list"), list),
+            f"count={len(squads)} (soft-expected 7)",
+        )
+    )
+
+    daemon_agents = {str(a) for a in (daemon.get("agents") or []) if a}
+    # The daemon reports CLI slugs ("claude", "codex"); a runtime's `provider` is
+    # that same slug, while `name` is a display label ("Claude (mbp)") and
+    # `custom_name` a device label ("MacbookPro-M5"). Only `provider` joins.
+    runtime_providers = {
+        str(r.get("provider")) for r in runtimes if isinstance(r, dict) and r.get("provider")
+    }
+    overlap = daemon_agents & runtime_providers
+    topology.append(
+        topo(
+            "runtime_daemon_overlap",
+            not daemon_agents or not runtime_providers or bool(overlap),
+            f"daemon_agents={len(daemon_agents)} overlap={len(overlap)}",
+        )
+    )
+
+    topology.append(
+        topo(
+            "workspace_resource_scope",
+            isinstance(payloads.get("workspace_list"), list)
+            and isinstance(payloads.get("agent_list"), list)
+            and isinstance(payloads.get("squad_list"), list),
+            f"workspaces={len(payloads.get('workspace_list') or [])}",
+        )
+    )
+
+    repo_ok = isinstance(repos, list) and all(
+        (isinstance(r, dict) and isinstance(r.get("url"), str)) or isinstance(r, str) for r in repos
+    )
+    topology.append(topo("repo_list_readable", repo_ok, f"repos={len(repos)}"))
+    return topology
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="Emit JSON report")
@@ -281,123 +402,7 @@ def main(argv: list[str] | None = None) -> int:
     api_total = len(api_results)
 
     # --- Topology (7) ---
-    agents = payloads.get("agent_list") if isinstance(payloads.get("agent_list"), list) else []
-    runtimes = payloads.get("runtime_list") if isinstance(payloads.get("runtime_list"), list) else []
-    squads = payloads.get("squad_list") if isinstance(payloads.get("squad_list"), list) else []
-    projects = payloads.get("project_list") if isinstance(payloads.get("project_list"), list) else []
-    issues_payload = payloads.get("issue_list")
-    if isinstance(issues_payload, dict) and isinstance(issues_payload.get("issues"), list):
-        issues = issues_payload["issues"]
-    elif isinstance(issues_payload, list):
-        issues = issues_payload
-    else:
-        issues = []
-    repos = payloads.get("repo_list") if isinstance(payloads.get("repo_list"), list) else []
-    daemon = payloads.get("daemon_status") if isinstance(payloads.get("daemon_status"), dict) else {}
-
-    runtime_ids = {r.get("id") for r in runtimes if isinstance(r, dict) and r.get("id")}
-    agent_ids = {a.get("id") for a in agents if isinstance(a, dict) and a.get("id")}
-    project_ids = {p.get("id") for p in projects if isinstance(p, dict) and p.get("id")}
-
-    def topo(tid: str, ok: bool, detail: str) -> dict[str, Any]:
-        return {"id": tid, "ok": ok, "status": "PASS" if ok else "FAIL", "detail": detail}
-
-    topology: list[dict[str, Any]] = []
-    bad_runtime_refs = [
-        a.get("id")
-        for a in agents
-        if isinstance(a, dict)
-        and a.get("runtime_id")
-        and a.get("runtime_id") not in runtime_ids
-    ]
-    topology.append(
-        topo(
-            "agent_runtime_refs",
-            not bad_runtime_refs,
-            f"bad={len(bad_runtime_refs)} agents={len(agents)} runtimes={len(runtimes)}",
-        )
-    )
-
-    bad_members: list[str] = []
-    for squad in squads:
-        if not isinstance(squad, dict):
-            continue
-        for key in ("leader_id", "leader_agent_id", "created_by"):
-            val = squad.get(key)
-            if isinstance(val, str) and val and val not in agent_ids and key != "created_by":
-                # created_by may be user id; only enforce leader fields when present
-                pass
-        leader = squad.get("leader_id") or squad.get("leader_agent_id")
-        if isinstance(leader, str) and leader and leader not in agent_ids:
-            bad_members.append(f"leader:{leader}")
-        members = squad.get("members") or squad.get("member_ids") or []
-        if isinstance(members, list):
-            for member in members:
-                mid = member.get("agent_id") if isinstance(member, dict) else member
-                if isinstance(mid, str) and mid and mid not in agent_ids:
-                    bad_members.append(mid)
-    topology.append(
-        topo(
-            "squad_member_refs",
-            not bad_members,
-            f"bad={len(bad_members)} squads={len(squads)} agents={len(agent_ids)}",
-        )
-    )
-
-    bad_issue_projects = [
-        i.get("id")
-        for i in issues
-        if isinstance(i, dict)
-        and i.get("project_id")
-        and i.get("project_id") not in project_ids
-    ]
-    topology.append(
-        topo(
-            "issue_project_refs",
-            not bad_issue_projects,
-            f"bad={len(bad_issue_projects)} issues={len(issues)} projects={len(project_ids)}",
-        )
-    )
-
-    topology.append(
-        topo(
-            "squad_count_readable",
-            isinstance(payloads.get("squad_list"), list),
-            f"count={len(squads)} (soft-expected 7)",
-        )
-    )
-
-    daemon_agents = daemon.get("agents") if isinstance(daemon.get("agents"), list) else []
-    runtime_names = {
-        str(r.get("custom_name") or r.get("name") or "")
-        for r in runtimes
-        if isinstance(r, dict)
-    }
-    runtime_names.discard("")
-    overlap = set(map(str, daemon_agents)) & runtime_names
-    topology.append(
-        topo(
-            "runtime_daemon_overlap",
-            (not daemon_agents and not runtime_names) or bool(overlap) or bool(daemon_agents),
-            f"daemon_agents={len(daemon_agents)} overlap={len(overlap)}",
-        )
-    )
-
-    topology.append(
-        topo(
-            "workspace_resource_scope",
-            isinstance(payloads.get("workspace_list"), list)
-            and isinstance(payloads.get("agent_list"), list)
-            and isinstance(payloads.get("squad_list"), list),
-            f"workspaces={len(payloads.get('workspace_list') or [])}",
-        )
-    )
-
-    repo_ok = isinstance(repos, list) and all(
-        (isinstance(r, dict) and isinstance(r.get("url"), str)) or isinstance(r, str) for r in repos
-    )
-    topology.append(topo("repo_list_readable", repo_ok, f"repos={len(repos)}"))
-
+    topology = build_topology(payloads)
     topo_pass = sum(1 for t in topology if t["ok"])
 
     # --- Trust negatives ---
@@ -460,7 +465,10 @@ def main(argv: list[str] | None = None) -> int:
             "passed": topo_pass,
             "total": 7,
             "results": topology,
-            "soft": {"squad_count": len(squads), "expected_squads": 7},
+            "soft": {
+                "squad_count": len(payloads.get("squad_list") or []),
+                "expected_squads": 7,
+            },
         },
         "trust": {"passed": trust_pass, "total": 3, "results": trust},
     }
