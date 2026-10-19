@@ -1,5 +1,7 @@
 import importlib.util
 import json
+
+import pytest
 from pathlib import Path
 
 
@@ -203,30 +205,275 @@ def test_multica_gate_budgets_full_readonly_matrix_and_bypasses_hosts(
         assert ".multica.ai" in hosts
 
 
-def test_code_root_health_reports_synced_and_stale(tmp_path, monkeypatch) -> None:
-    module = _module()
-    runtime_root = tmp_path / "runtime"
-    code_root = tmp_path / "code"
-    monkeypatch.setattr(module, "ROOT", runtime_root)
-    monkeypatch.setattr(module, "CODE_ROOT", code_root)
+HEALTH_SOURCES = [SCRIPT, ROOT / "bin/panorama/assets/host/panorama-collect-main.py.asset"]
 
-    def fake_run(command, timeout=120):
-        assert command[:3] == ["git", "-C", str(code_root)]
-        args = command[3:]
-        if args == ["rev-parse", "HEAD"]:
-            return 0, "head-oid"
-        if args == ["rev-parse", "refs/remotes/origin/main"]:
-            return 0, "origin-oid"
-        if args == ["status", "--porcelain", "--untracked-files=no"]:
-            return 0, ""
-        if args == ["rev-list", "--left-right", "--count", "origin/main...HEAD"]:
-            return 0, "1\t0"
-        raise AssertionError(command)
 
-    monkeypatch.setattr(module, "run", fake_run)
-    report = module.collect_code_root_health()
-    assert report["verdict"] == "STALE"
-    assert report["behind_origin_main"] == 1
-    assert report["ahead_origin_main"] == 0
-    assert report["dirty_count"] == 0
+def _health_git(root, *args):
+    import os
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "--no-replace-objects", "-C", str(root), *args],
+        capture_output=True, text=True, timeout=10,
+        env=dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_TERMINAL_PROMPT="0", GIT_NO_LAZY_FETCH="1"),
+    )
+    assert result.returncode == 0, result.stderr
+    return result.stdout.strip()
+
+
+def _health_fixture(tmp_path, monkeypatch, source, *, shallow=False):
+    import ast
+    import datetime
+    import os
+    import re
+    import subprocess
+    import sys
+    import time
+
+    bare, seed, code = (tmp_path / name for name in ("remote.git", "seed", "code"))
+    for path in (bare, seed):
+        path.mkdir()
+    _health_git(bare, "init", "--bare", "--initial-branch=main")
+    _health_git(seed, "init", "--initial-branch=main")
+    _health_git(seed, "config", "user.name", "Fixture")
+    _health_git(seed, "config", "user.email", "fixture@example.invalid")
+    (seed / "tracked.txt").write_text("initial\n")
+    _health_git(seed, "add", "tracked.txt")
+    _health_git(seed, "commit", "-m", "initial")
+    _health_git(seed, "remote", "add", "origin", str(bare))
+    _health_git(seed, "push", "origin", "main")
+    clone_args = ["clone", *( ["--depth=1"] if shallow else []), bare.as_uri(), str(code)]
+    _health_git(tmp_path, *clone_args)
+    _health_git(code, "config", "user.name", "Fixture")
+    _health_git(code, "config", "user.email", "fixture@example.invalid")
+    _health_git(code, "remote", "set-url", "origin", "https://github.com/starlink-awaken/omostation.git")
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    shim = bindir / "gh"
+    shim.write_text(f"#!{sys.executable}\n" + '''import os, subprocess, sys
+assert sys.argv[1:] == ["api", "--hostname", "github.com", "repos/starlink-awaken/omostation/git/ref/heads/main", "--jq", '. | select(.ref == "refs/heads/main" and .object.type == "commit") | .object.sha']
+for key, value in {"GIT_OPTIONAL_LOCKS":"0", "GIT_NO_LAZY_FETCH":"1", "GIT_NO_REPLACE_OBJECTS":"1", "GIT_TERMINAL_PROMPT":"0", "GH_PROMPT_DISABLED":"1"}.items():
+    assert os.environ.get(key) == value
+mode = os.environ.get("HEALTH_FIXTURE_REMOTE_MODE", "ok")
+if mode == "descendant-overflow":
+    child = subprocess.Popen([sys.executable, "-c", "import os,time;from pathlib import Path;Path(os.environ['HEALTH_FIXTURE_CHILD_PID_FILE']).write_text(str(os.getpid()));print('x'*1024,flush=True);time.sleep(120)"])
+    child.wait()
+    sys.exit(0)
+if mode != "ok":
+    if mode == "failed":
+        print("https://credential:secret@example.invalid", file=sys.stderr)
+        sys.exit(1)
+    print({"invalid": "not-an-oid", "missing": "", "oversized": "x" * 1024}[mode])
+    sys.exit(0)
+result = subprocess.run(["git", "--no-replace-objects", "ls-remote", "--refs", os.environ["HEALTH_FIXTURE_REMOTE"], "refs/heads/main"], capture_output=True, text=True, timeout=5)
+if result.returncode:
+    sys.exit(1)
+print(result.stdout.split()[0] if result.stdout.strip() else "")
+''')
+    shim.chmod(0o755)
+    monkeypatch.setenv("PATH", str(bindir) + os.pathsep + os.environ["PATH"])
+    monkeypatch.setenv("HEALTH_FIXTURE_REMOTE", str(bare))
+    monkeypatch.delenv("HEALTH_FIXTURE_REMOTE_MODE", raising=False)
+    tree = ast.parse(source.read_text())
+    function = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "collect_code_root_health")
+    def legacy_run(command, timeout=120):
+        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+        return result.returncode, result.stdout.strip()
+    namespace = dict(datetime=datetime.datetime, UTC=datetime.timezone.utc, Path=Path,
+                     CODE_ROOT=code, ROOT=tmp_path / "runtime", os=os, re=re,
+                     subprocess=subprocess, time=time, run=legacy_run)
+    exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), "exec"), namespace)
+    return bare, seed, code, namespace
+
+
+def _health_snapshot(code):
+    import hashlib
+
+    index = code / ".git/index"
+    return hashlib.sha256(index.read_bytes()).hexdigest(), index.stat().st_mtime_ns, _health_git(code, "show-ref")
+
+
+def _health_advance(seed):
+    (seed / "tracked.txt").write_text("advanced\n")
+    _health_git(seed, "add", "tracked.txt")
+    _health_git(seed, "commit", "-m", "advance")
+    _health_git(seed, "push", "origin", "main")
+    return _health_git(seed, "rev-parse", "HEAD")
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+@pytest.mark.parametrize("shallow", [False, True], ids=["full", "shallow"])
+def test_code_root_health_equal_remote_is_read_only(tmp_path, monkeypatch, source, shallow):
+    import os
+
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source, shallow=shallow)
+    # Invalidated stat cache would make ordinary status rewrite the index.
+    tracked = code / "tracked.txt"
+    stamp = tracked.stat().st_mtime_ns + 2_000_000_000
+    os.utime(tracked, ns=(stamp, stamp))
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "PASS"
+    assert report["origin_main_oid"] == _health_git(bare, "rev-parse", "main")
+    assert report["local_origin_main_oid"] == report["head_oid"]
+    assert report["behind_origin_main"] == report["ahead_origin_main"] == 0
+    assert report["remote_main_observed_at"] >= report["checked_at"]
+    assert report["comparison_scope"] == "official_remote_main"
     assert report["auto_update_performed"] is False
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+def test_code_root_health_rejects_unfetched_remote_advance(tmp_path, monkeypatch, source):
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source)
+    remote = _health_advance(seed)
+    old = _health_git(code, "rev-parse", "HEAD")
+    assert old == _health_git(code, "rev-parse", "origin/main") != remote
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "STALE"
+    assert report["origin_main_oid"] == remote
+    assert report["local_origin_main_oid"] == old
+    assert report["behind_origin_main"] is report["ahead_origin_main"] is None
+    assert report["error"] == "remote_commit_not_local"
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+def test_code_root_health_counts_real_remote_object_and_dirty_tree(tmp_path, monkeypatch, source):
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source)
+    remote = _health_advance(seed)
+    # Fixture setup explicitly obtains the object, leaving origin/main unchanged.
+    _health_git(code, "fetch", str(bare), "main")
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "STALE"
+    assert report["origin_main_oid"] == remote != report["local_origin_main_oid"]
+    assert (report["behind_origin_main"], report["ahead_origin_main"]) == (1, 0)
+    assert _health_snapshot(code) == before
+    (code / "local.txt").write_text("local\n")
+    _health_git(code, "add", "local.txt")
+    _health_git(code, "commit", "-m", "local branch")
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "STALE"
+    assert (report["behind_origin_main"], report["ahead_origin_main"]) == (1, 1)
+    (code / "tracked.txt").write_text("dirty\n")
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "DIRTY"
+    assert report["dirty_count"] == 1
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+def test_code_root_health_shallow_unequal_counts_unknown(tmp_path, monkeypatch, source):
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source, shallow=True)
+    _health_advance(seed)
+    _health_git(code, "fetch", "--depth=1", str(bare), "main")
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "STALE"
+    assert report["behind_origin_main"] is report["ahead_origin_main"] is None
+    assert report["error"] == "ancestry_unavailable"
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+@pytest.mark.parametrize("mode", ["failed", "missing", "invalid", "oversized"])
+def test_code_root_health_remote_failure_never_falls_back(tmp_path, monkeypatch, source, mode):
+    import json
+
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source)
+    monkeypatch.setenv("HEALTH_FIXTURE_REMOTE_MODE", mode)
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "UNAVAILABLE"
+    assert report["available"] is False
+    assert report["origin_main_oid"] is report["remote_main_observed_at"] is None
+    assert report["behind_origin_main"] is report["ahead_origin_main"] is None
+    assert report["error"] == "remote_main_unavailable"
+    assert "credential" not in json.dumps(report)
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+@pytest.mark.parametrize("mismatch", ["origin", "top"])
+def test_code_root_health_rejects_repository_identity(tmp_path, monkeypatch, source, mismatch):
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source)
+    if mismatch == "origin":
+        _health_git(code, "remote", "set-url", "origin", "https://credential:secret@example.invalid/repo")
+    else:
+        (code / "nested").mkdir()
+        ns["CODE_ROOT"] = code / "nested"
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "UNAVAILABLE"
+    assert report["error"] == "repository_identity_mismatch"
+    assert report["origin_main_oid"] is None
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+def test_code_root_health_missing_tracking_ref_uses_fresh_remote(tmp_path, monkeypatch, source):
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source)
+    _health_git(code, "update-ref", "-d", "refs/remotes/origin/main")
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "PASS"
+    assert report["local_origin_main_oid"] is None
+    assert report["origin_main_oid"] == report["head_oid"]
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+def test_code_root_health_deleted_remote_main_is_unavailable(tmp_path, monkeypatch, source):
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source)
+    _health_git(bare, "tag", "main", "refs/heads/main")
+    _health_git(bare, "update-ref", "-d", "refs/heads/main")
+    assert _health_git(bare, "rev-parse", "refs/tags/main")
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "UNAVAILABLE"
+    assert report["error"] == "remote_main_unavailable"
+    assert report["origin_main_oid"] is None
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+def test_code_root_health_ignores_replace_objects(tmp_path, monkeypatch, source):
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source)
+    initial = _health_git(code, "rev-parse", "HEAD")
+    (code / "local.txt").write_text("local\n")
+    _health_git(code, "add", "local.txt")
+    _health_git(code, "commit", "-m", "ahead")
+    local = _health_git(code, "rev-parse", "HEAD")
+    _health_git(code, "replace", local, initial)
+    before = _health_snapshot(code)
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "STALE"
+    assert (report["behind_origin_main"], report["ahead_origin_main"]) == (0, 1)
+    assert _health_snapshot(code) == before
+
+
+@pytest.mark.parametrize("source", HEALTH_SOURCES, ids=["collector", "host-asset"])
+def test_code_root_health_bounds_output_and_terminates_own_descendants(tmp_path, monkeypatch, source):
+    import os
+    import subprocess
+    import time
+
+    bare, seed, code, ns = _health_fixture(tmp_path, monkeypatch, source)
+    pid_file = tmp_path / "read-child.pid"
+    monkeypatch.setenv("HEALTH_FIXTURE_CHILD_PID_FILE", str(pid_file))
+    monkeypatch.setenv("HEALTH_FIXTURE_REMOTE_MODE", "descendant-overflow")
+    before = _health_snapshot(code)
+    started = time.monotonic()
+    report = ns["collect_code_root_health"]()
+    assert report["verdict"] == "UNAVAILABLE"
+    assert report["error"] == "remote_main_unavailable"
+    assert time.monotonic() - started < 10
+    child_pid = int(pid_file.read_text())
+    # A killed orphan may briefly await reaping; it must never remain running.
+    state = subprocess.run(["ps", "-p", str(child_pid), "-o", "stat="],
+                           capture_output=True, text=True, timeout=2).stdout.strip()
+    assert not state or state.startswith("Z")
+    assert _health_snapshot(code) == before
