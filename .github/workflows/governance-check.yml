@@ -153,10 +153,13 @@ jobs:
           # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时同样 10 pass (不读 host profile)。
           # 2026-10-19 追加第七件: test_chain_bind_runs_anchor_seam 钉 chain_bind 的 runs 读面经
           # delivery_anchor 缝解析 —— 无桥检出里 complete 会假报 missing_bet_binding (BET-Y2Q4-T10-257:
-          # 本机 11 个检出实测 6 个无桥, 其中 2 个改前 0 run / 改后 331 run; 子模块 worktree 与
+          # 本机带 MARKER 的 9 个检出实测 3 个无桥, 三个都是改前 0 run / 改后 331 run; 子模块 worktree 与
           # 外部 clone 必须留在本地读数, 由该文件两条用例分别钉住)。缝摘掉 → ISC-1 当场红,
-          # 检测器反基线由同一次扫描产出 (改前 1 处直读 / 改后 0 处)。实测 6 pass;
-          # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时 34 pass (含既有 chain_bind
+          # 检测器反基线由同一次扫描产出 (改前 1 处直读 / 改后 0 处)。ISC-7 钉第三面 —— 出问题的调用
+          # (python3 bin/plan/bet-ledger.py complete) 解释器里没有 omo, 纯 import 型缝当场 ModuleNotFound 被降级
+          # 分支吃掉、读数仍为 0, 故缝按路径加载 delivery_anchor.py 同一份来源; 换回改前 chain_bind 恰该一条红
+          # (1 failed / 7 passed)。实测 8 pass;
+          # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时 36 pass (含既有 chain_bind
           # 与 delivery_anchor 契约两侧), 即 CI 干净检出路径行为逐字节不变。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \

@@ -258,3 +258,53 @@ def test_clean_checkout_without_anchor_reads_its_own_plane(bridged_pair):
     assert [r["run_id"] for r in BIND.iter_run_records(fresh)] == [
         "20261019T000001Z-bet-execution-cafe1234"
     ]
+
+
+LIBRARY_REL = Path("projects/omo/src/omo/workflow/delivery_anchor.py")
+
+
+def _block_omo_import(monkeypatch) -> None:
+    """Force the ``python3 bin/plan/bet-ledger.py`` interpreter shape.
+
+    That is the invocation the defect was measured on and it has no ``omo`` on ``sys.path``
+    (bet-ledger prepends only ``projects/ecos/src`` and ``bin/plan``). A None entry in
+    ``sys.modules`` raises ImportError for the package import regardless of what else the
+    interpreter could see, so this branch is not decided by the venv layout — in the CI job
+    that runs this file, ``omo`` genuinely IS importable.
+    """
+    for name in ("omo.workflow.delivery_anchor", "omo.workflow", "omo"):
+        monkeypatch.delitem(sys.modules, name, raising=False)
+    monkeypatch.setitem(sys.modules, "omo", None)
+
+
+def test_seam_resolves_when_the_library_is_not_an_importable_package(bridged_pair, monkeypatch):
+    """ISC-7 — the fix must be live in the invocation that produced the false red.
+
+    A version that only tried ``from omo.workflow.delivery_anchor import …`` passes ISC-1 here
+    because the fixture installs the seam, yet does nothing in production: the reading stays 0
+    and ``missing_bet_binding`` keeps firing. This case removes the package import and keeps the
+    library file in the checkout, which is exactly the real shape of a claimed worktree whose
+    ``projects/omo`` is initialized but whose interpreter has no ``omo`` installed.
+    """
+    canonical, worktree, bet = bridged_pair
+    _block_omo_import(monkeypatch)
+    monkeypatch.setattr(BIND, "DEFAULT_WORKSPACE", worktree.parent / "no-code-here")
+    library = worktree / LIBRARY_REL
+    library.parent.mkdir(parents=True, exist_ok=True)
+    library.write_bytes(SEAM_SOURCE.read_bytes())
+    assert BIND.runs_dir_for(worktree) == canonical / BIND.RUNS_REL
+    assert [r["run_id"] for r in BIND.iter_run_records(worktree)] == [FIXTURE_RUN_ID]
+    assert "missing_bet_binding" not in BIND.evaluate_complete(bet, worktree).reasons
+
+
+def test_no_library_copy_anywhere_degrades_to_the_pre_change_reading(bridged_pair, monkeypatch):
+    """ISC-7 reverse — no package import and no library file ⇒ byte-identical old behaviour."""
+    _canonical, worktree, bet = bridged_pair
+    _block_omo_import(monkeypatch)
+    monkeypatch.setattr(BIND, "DEFAULT_WORKSPACE", worktree.parent / "no-code-here")
+    assert not (worktree / LIBRARY_REL).exists()
+    assert BIND.runs_dir_for(worktree) == worktree / BIND.RUNS_REL
+    assert BIND.iter_run_records(worktree) == []
+    verdict = BIND.evaluate_complete(bet, worktree)
+    assert not verdict.ok
+    assert verdict.reasons == ["missing_bet_binding"]

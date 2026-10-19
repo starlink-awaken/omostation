@@ -183,6 +183,48 @@ def write_run_file(path: Path, record: dict[str, Any]) -> None:
     )
 
 
+def _anchor_locator(workspace: Path) -> tuple[Any, Any] | None:
+    """``(locate_anchor, is_worktree_of)`` from the delivery-anchor seam, or None.
+
+    The import comes first because that is the seam's home. It is not sufficient on its own:
+    the invocation that produced the false ``missing_bet_binding`` is
+    ``python3 bin/plan/bet-ledger.py complete <BET>``, and that interpreter has no ``omo`` on
+    ``sys.path`` (``bet-ledger.py`` only prepends ``projects/ecos/src`` and ``bin/plan``). Reading
+    the locator through the package import alone would leave the fix inert exactly where the
+    defect lives. Load the same file by path when the package is absent — the locator stays a
+    single source of truth, and this reader still only asks it about the workspace it was handed.
+    Candidates are the checkout whose code is running, then the checkout being read; neither is
+    present in a fresh clone without ``projects/omo``, which is C2's degrade case.
+    """
+    try:
+        from omo.workflow.delivery_anchor import is_worktree_of, locate_anchor
+
+        return locate_anchor, is_worktree_of
+    except Exception:
+        pass
+
+    import importlib.util
+    import sys
+
+    for root in (DEFAULT_WORKSPACE, workspace):
+        source = root / "projects/omo/src/omo/workflow/delivery_anchor.py"
+        if not source.is_file():
+            continue
+        spec = importlib.util.spec_from_file_location("_chain_bind_delivery_anchor", source)
+        if spec is None or spec.loader is None:
+            continue
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        try:
+            spec.loader.exec_module(module)
+            return module.locate_anchor, module.is_worktree_of
+        except Exception:
+            continue
+        finally:
+            sys.modules.pop(spec.name, None)
+    return None
+
+
 def runs_dir_for(workspace: Path) -> Path:
     """The runs plane readable from ``workspace`` — read-only half of ADR-0456's
     delivery anchor (BET-Y2Q4-T10-257).
@@ -194,17 +236,18 @@ def runs_dir_for(workspace: Path) -> Path:
     ``workspace / RUNS_REL`` directly sees zero runs and every chain verdict reports
     ``missing_bet_binding`` for runs that do exist. Fall back to the canonical
     checkout through the same locator; when the anchor is not locatable (fresh clone,
-    CI clean checkout, foreign repo) return the local path untouched, which is the
-    pre-seam behaviour byte for byte. This function must never create, repair or
-    migrate the bridge — a reader writing the plane it reads is a different contract.
+    CI clean checkout, foreign repo, or no copy of the seam library reachable) return
+    the local path untouched, which is the pre-seam behaviour byte for byte. This
+    function must never create, repair or migrate the bridge — a reader writing the
+    plane it reads is a different contract.
     """
     local = workspace / RUNS_REL
     if local.is_dir():
         return local
-    try:
-        from omo.workflow.delivery_anchor import is_worktree_of, locate_anchor
-    except Exception:
+    locator = _anchor_locator(workspace)
+    if locator is None:
         return local
+    locate_anchor, is_worktree_of = locator
     try:
         anchor = locate_anchor(workspace)
         if anchor is None or not is_worktree_of(workspace, anchor):

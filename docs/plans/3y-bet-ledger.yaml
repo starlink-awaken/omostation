@@ -43167,9 +43167,9 @@ bets:
     start/claim、bet_id 已绑、status active、5 条 scope lock 均在, 而在无桥收口 worktree 里跑 bet-ledger.py
     complete BET-Y2Q4-T10-253 报 missing_bet_binding。同日实测覆盖面 —— 本机 10 个检出: 5 个已建桥、4 个
     .omo/_delivery/ 存在但无 agent-workflows、1 个 canonical 真目录, 且无任何测试会红。改法 (spec 2026-10-19-chain-bind-runs-anchor-seam
-    §2): 探检出侧路径缺失时经 locate_anchor() + is_worktree_of() 解析到 canonical 的 runs 面; 缝不可定位
-    (fresh clone / CI 干净检出 / 库代码不可 import 的最小依赖面) 逐字节退回现行为; 读侧不调 ensure_delivery_anchor
-    (建 symlink 是写面动作, 归 core.py:457); 不新增 env、不新增根、不改缝本体。'
+    §2): 探检出侧路径缺失时经 locate_anchor() + is_worktree_of() 解析到 canonical 的 runs 面; 缝不可达
+    (fresh clone / CI 干净检出 / 该检出的 projects/omo 里没有那份文件) 逐字节退回现行为; 读侧不调 ensure_delivery_anchor
+    (建 symlink 是写面动作, 归 core.py:457); 不新增 env、不新增根、不改缝本体。v1.1.0 实测第三面 —— 出问题的那条调用 python3 bin/plan/bet-ledger.py complete <BET> 的解释器里没有 omo (bet-ledger.py 只把 projects/ecos/src 与 bin/plan 放进 sys.path), 纯 import 型缝当场 ModuleNotFoundError 被降级分支吃掉、读数仍为 0 个 run —— 改动接了但没接上。故缝必须按文件路径加载 delivery_anchor.py 那同一份来源 (不在 chain_bind 复制定位语义), 判据 ISC-7 在 bare python3 装置上成立 —— 本机 3 个无桥检出改前读 0 个 run、改后各读 331 个。'
   status: in_progress
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
@@ -43181,8 +43181,8 @@ bets:
   - docs/reports/2026-10-19-chain-bind-runs-anchor-seam-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-19-chain-bind-runs-anchor-seam.md
-    spec_version: 1.0.0
-    content_digest: sha256:56f47576961e9e14f12c447b70b1a59a449326ec4713ac22f3a12018a308b210
+    spec_version: 1.1.0
+    content_digest: sha256:18ef9a0eeae25919198bbe1302efa2f65f9a6c47b377c1ca7cb43eb15ebfe5c8
     decision_ref: decision://accepted/BET-Y2Q4-T10-257
   window: Y2Q4
   track: T10-TOOLING
@@ -43239,6 +43239,9 @@ bets:
     —— 即 C2 在真实 CI 装置上成立, 不只是本地推断
   - ISC-6 make gac-local-gate 硬失败集合等于基线 (零新增) 且 tests/unit/test_delivery_anchor_contract.py
     全绿 (缝本体未破坏)
+  - ISC-7 缝在生产调用形状上成立 —— bare python3 (omo 不可 import) 下无桥检出仍解析到 canonical runs
+    面并读出该 run; 那份 delivery_anchor.py 也不可达时逐字节退回改前读数。变异对照 —— 换回改前的
+    chain_bind.py 则该一条用例红 (1 failed / 7 passed), 证明绿不是装置凑出来的
   verify:
   - cmd: python3 -m pytest tests/unit/test_chain_bind_runs_anchor_seam.py -q -p no:randomly
     expect: 0 failed; ISC-1 正向与 ISC-2 反向成对存在
