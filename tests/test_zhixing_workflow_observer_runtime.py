@@ -176,3 +176,17 @@ def test_runtime_metadata_must_identify_the_probed_interpreter(
 
     with pytest.raises(collector.CollectionError, match="runtime identity mismatch"):
         collector._select_managed_python(root)
+
+
+def test_observe_timeout_leaves_room_under_the_collector_budget(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The sandboxed observer must not burn the whole worker budget.
+
+    Regression: a hardcoded 20s inner timeout fired under host load and the
+    source reported "timed out after 20 seconds" instead of an observation.
+    """
+    collector = _load_collector(tmp_path, monkeypatch)
+    assert collector.OBSERVE_TIMEOUT >= 30
+    assert collector.OBSERVE_TIMEOUT < 48
+    assert collector._run_cmd.__defaults__[0] == collector.OBSERVE_TIMEOUT

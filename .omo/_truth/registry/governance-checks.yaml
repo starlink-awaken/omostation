@@ -179,7 +179,12 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 724 # 2026-10-16 723→724: 新登记 bin/gac/execution-environment-steward.py (A9 B-3)
+    script_baseline: 725 # 2026-10-19 724→725: 新登记 bin/gac/panorama-refresh-guard.py
+      # (A9 P0-4 —— panorama 采集作业存活守护: 作业被 bootout 时 launchd KeepAlive
+      # 不覆盖、织星看门狗只探 :43191; 2026-10-16 夜间 data.json 陈旧 10.4h 无告警。
+      # 主控 2026-10-19 授权「全面推进落地」后落这一行, 不使用 SCRIPT_BASELINE_SYNC=1
+      # 绕过; 上一行注释:
+      # 2026-10-16 723→724: 新登记 bin/gac/execution-environment-steward.py (A9 B-3)
       # (+ bin/gac/dual-profile-verify.py, BET-Y2Q4-T10-248 —— prod/dev 两条 leg 各跑一遍 +
       # install_root 落后即告警; gac-gate job 115127578239 实测「净增 1 > baseline_delta 0」,
       # 主控 2026-10-13 授权把本文件追加进该 BET write_surfaces 后才落这一行,
