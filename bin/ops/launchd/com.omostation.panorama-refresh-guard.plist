@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.panorama-refresh-guard.plist — 全景采集作业存活守护 (每 2 分钟)
+
+  用途: com.omostation.panorama-dashboard-refresh 负责重发
+    runtime/dashboard/data.json (A9 门与全景驾驶舱的输入)。
+    launchd KeepAlive 只覆盖「进程死掉」, 不覆盖「作业被 bootout」;
+    而织星看门狗只探 :43191, 对本作业完全无感。
+    2026-10-16 夜间实证: 作业 state=uninitialized / runs=0, data.json 陈旧
+    10.4 小时, 期间 :43191 一直健康。
+
+  本守护以**产物**为契约: 快照缺失或超过 PANORAMA_REFRESH_MAX_AGE (默认 1800s,
+  大于最坏情况下的单轮生成耗时) 即 kickstart 该作业并写日志。
+
+  执行 (每 2 分钟):
+    bin/gac/panorama-refresh-guard.py
+
+  安装:
+    cp bin/ops/launchd/com.omostation.panorama-refresh-guard.plist \
+       ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) \
+       ~/Library/LaunchAgents/com.omostation.panorama-refresh-guard.plist
+  卸载:
+    launchctl bootout gui/$(id -u)/com.omostation.panorama-refresh-guard
+  手动触发验证:
+    python3 bin/gac/panorama-refresh-guard.py --json --dry-run
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.panorama-refresh-guard</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/python3</string>
+        <string>-B</string>
+        <string>/Users/xiamingxing/Workspace/bin/gac/panorama-refresh-guard.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>PYTHONDONTWRITEBYTECODE</key>
+        <string>1</string>
+    </dict>
+    <key>StartInterval</key>
+    <integer>120</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/panorama-refresh-guard.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/panorama-refresh-guard.log</string>
+</dict>
+</plist>

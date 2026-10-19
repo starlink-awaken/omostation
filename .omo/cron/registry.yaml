@@ -675,6 +675,24 @@ jobs:
       (registry 仍声明 installed/active, 属 4 天声明漂移)；2026-09-27 已
       launchctl enable + bootstrap + kickstart 复用, 核验 runs>=1、
       last exit code=0、run interval=240s, 扁平三件套 mtime/generated_at 随之刷新。
+  - name: panorama-refresh-guard
+    schedule: "*/2 * * * *"
+    command: >-
+      /opt/homebrew/bin/python3 -B
+      /Users/xiamingxing/Workspace/bin/gac/panorama-refresh-guard.py
+    planes: [launchd]
+    reality: declared_only
+    status: proposed
+    owner: agent-experience-steward
+    sfop_slot: S
+    reconciliation_note: >-
+      2026-10-17 新增。com.omostation.panorama-dashboard-refresh 负责重发
+      runtime/dashboard/data.json, 但 launchd KeepAlive 只覆盖进程死亡, 不覆盖作业被
+      bootout; 织星看门狗只探 :43191, 对本作业无感。2026-10-16 夜间实证: 作业
+      state=uninitialized / runs=0, data.json 陈旧 10.4 小时, 期间 :43191 一直健康。
+      本守护以产物为契约 (快照缺失或超过 PANORAMA_REFRESH_MAX_AGE 默认 1800s 即
+      kickstart), plist 同源: bin/ops/launchd/com.omostation.panorama-refresh-guard.plist。
+      尚未安装, 故 reality=declared_only / status=proposed。
 
   - name: agent-cell-pool-live-smoke
     schedule: "*/4 * * * *"
