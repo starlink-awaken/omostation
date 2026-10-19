@@ -73,12 +73,17 @@ def log(event: str, **kw) -> None:
     print(line, flush=True)
 
 
-def run(cmd: list[str], *, cwd: Path | None = None, timeout: int | None = None) -> subprocess.CompletedProcess:
+def run(cmd: list[str], *, cwd: Path | None = None, timeout: int | None = None,
+        readonly: bool = False) -> subprocess.CompletedProcess:
+    env = dict(os.environ, GIT_NO_REPLACE_OBJECTS="1", GIT_NO_LAZY_FETCH="1",
+               PYTHONDONTWRITEBYTECODE="1")
+    if readonly:
+        # Background probes must not write stat-cache refreshes to the index;
+        # Git's child processes inherit this while still computing full status.
+        env["GIT_OPTIONAL_LOCKS"] = "0"
     return subprocess.run(
         cmd, cwd=str(cwd) if cwd else None, timeout=timeout,
-        text=True, capture_output=True,
-        env=dict(os.environ, GIT_NO_REPLACE_OBJECTS="1", GIT_NO_LAZY_FETCH="1",
-                 PYTHONDONTWRITEBYTECODE="1"),
+        text=True, capture_output=True, env=env,
     )
 
 
@@ -106,7 +111,7 @@ def checkout_alignment(checkout: Path, target: str) -> tuple[bool, dict]:
     def probe(args, root):
         if time.monotonic() - started > 20:
             raise ValueError("alignment_probe_deadline")
-        result = run(["git", *args], cwd=root, timeout=5)
+        result = run(["git", *args], cwd=root, timeout=5, readonly=True)
         if result.returncode:
             raise ValueError("git_probe_failed:" + args[0])
         return result.stdout
