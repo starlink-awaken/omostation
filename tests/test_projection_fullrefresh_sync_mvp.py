@@ -1,5 +1,6 @@
 """Real temporary Git pins; external collect/identity and slow shell are seams."""
 import importlib.util
+import os
 import subprocess
 from pathlib import Path
 
@@ -79,6 +80,75 @@ def expensive(calls):
     return [cmd for cmd, _ in calls if cmd[:2] in (
         ["git", "reset"], ["git", "clean"], ["git", "submodule"])
         and cmd != ["git", "clean", "-ndx"]]
+
+
+def test_alignment_preserves_real_root_and_child_indexes(sandbox, monkeypatch):
+    mod, checkout, _, _, _, _, git = sandbox
+    # Prove the old probe really writes stat-cache updates, regardless of the
+    # caller's optional-lock setting. Resolve indexes through Git for .git files.
+    monkeypatch.setenv("GIT_OPTIONAL_LOCKS", "1")
+    target = git(checkout, "rev-parse", "HEAD")
+    roots = (checkout, checkout / "child")
+    indexes = [Path(git(root, "rev-parse", "--path-format=absolute", "--git-path", "index"))
+               for root in roots]
+
+    def snapshot():
+        return [(index.read_bytes(), index.stat().st_mtime_ns) for index in indexes]
+
+    def invalidate_stat_cache():
+        for root in roots:
+            path = root / "file"
+            contents = path.read_bytes()
+            before = path.stat()
+            os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns - 2_000_000_000))
+            assert path.stat().st_mtime_ns != before.st_mtime_ns
+            assert path.read_bytes() == contents
+
+    invalidate_stat_cache()
+    before = snapshot()
+    for root in roots:
+        result = mod.run(["git", "status", "--porcelain", "--untracked-files=all",
+                          "--ignore-submodules=none"], cwd=root, timeout=5)
+        assert result.returncode == 0 and result.stdout == ""
+    refreshed = snapshot()
+    for previous, current in zip(before, refreshed):
+        assert current[0] != previous[0], "negative control did not refresh index bytes"
+        assert current[1] != previous[1], "negative control did not write the index"
+
+    invalidate_stat_cache()
+    before = snapshot()
+    aligned, details = mod.checkout_alignment(checkout, target)
+    # No ordinary Git command may refresh either index before this comparison.
+    after = snapshot()
+    assert aligned is True and details["reason"] == "exact_clean_pins"
+    assert details["checked_modules"] == ["child"]
+    assert after == before
+
+
+@pytest.mark.parametrize("inherited", [None, "0", "1"])
+def test_optional_locks_override_is_scoped_to_alignment(sandbox, monkeypatch, inherited):
+    mod, checkout, origin, _, calls, _, git = sandbox
+    if inherited is None:
+        monkeypatch.delenv("GIT_OPTIONAL_LOCKS", raising=False)
+    else:
+        monkeypatch.setenv("GIT_OPTIONAL_LOCKS", inherited)
+    (origin / "file").write_text("actual new upstream")
+    git(origin, "add", "file"); git(origin, "commit", "-m", "advance")
+    assert mod.main() == 0
+    assert expensive(calls)
+    probes = [(cmd, kwargs) for cmd, kwargs in calls
+              if cmd[:2] in (["git", "status"], ["git", "ls-tree"], ["git", "for-each-ref"])
+              or cmd == ["git", "clean", "-ndx"]]
+    assert probes
+    for cmd, kwargs in probes:
+        assert kwargs["env"]["GIT_OPTIONAL_LOCKS"] == "0"
+        assert kwargs["timeout"] == 5
+        if cmd[1] == "status":
+            assert "--ignore-submodules=none" in cmd
+    for cmd, kwargs in calls:
+        if cmd in expensive(calls) or cmd[:2] == ["git", "fetch"]:
+            assert kwargs["env"].get("GIT_OPTIONAL_LOCKS") == inherited
+    assert os.environ.get("GIT_OPTIONAL_LOCKS") == inherited
 
 
 def test_real_clean_same_oid_fetches_then_skips_expensive_alignment(sandbox):
