@@ -43170,7 +43170,8 @@ bets:
     §2): 探检出侧路径缺失时经 locate_anchor() + is_worktree_of() 解析到 canonical 的 runs 面; 缝不可达
     (fresh clone / CI 干净检出 / 该检出的 projects/omo 里没有那份文件) 逐字节退回现行为; 读侧不调 ensure_delivery_anchor
     (建 symlink 是写面动作, 归 core.py:457); 不新增 env、不新增根、不改缝本体。v1.1.0 实测第三面 —— 出问题的那条调用 python3 bin/plan/bet-ledger.py complete <BET> 的解释器里没有 omo (bet-ledger.py 只把 projects/ecos/src 与 bin/plan 放进 sys.path), 纯 import 型缝当场 ModuleNotFoundError 被降级分支吃掉、读数仍为 0 个 run —— 改动接了但没接上。故缝必须按文件路径加载 delivery_anchor.py 那同一份来源 (不在 chain_bind 复制定位语义), 判据 ISC-7 在 bare python3 装置上成立 —— 本机 3 个无桥检出改前读 0 个 run、改后各读 331 个。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-19
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-10-19-chain-bind-runs-anchor-seam.md
