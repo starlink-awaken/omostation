@@ -6269,6 +6269,35 @@ services:
     没有写这份 plist 的代码路径, 安装者未归属 (不编造来源), 本仓注册表不生成 (generate: false). 键面 (StartInterval 240 + RunAtLoad + EnvironmentVariables)
     生成器可表达, 但本轮不接管内容也不动本机 launchd. 登记时 (2026-10-19) launchctl state active pid 44438.'
   depends_on: []
+- id: omostation.omo-state-sync
+  enabled: true
+  generate: false
+  config_source: bin/ops/launchd/com.omostation.omo-state-sync.plist
+  content_digest: sha256:191b69e2647d3032b7243da0181bf2e104c4801184189edcd8211a3fdcf5bff2
+  scheduler: launchd
+  trigger: calendar
+  calendar:
+    Minute: 27
+  run_at_load: true
+  label: com.omostation.omo-state-sync
+  program:
+    interpreter: /bin/bash
+    entrypoint: -c
+    args:
+    - /Users/xiamingxing/Workspace/projects/omo/.venv/bin/omo state sync
+  environment:
+    PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+    no_proxy: github.com,api.github.com,localhost,127.0.0.1
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/omo-state-sync.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/omo-state-sync.log
+  notes: 'BET-Y2Q4-T10-258 observe-only 登记: 与前 4 条不同, 本条安装者可归属 —— 本仓 bin/ops/launchd/com.omostation.omo-state-sync.plist
+    与本机已装文件逐字节同源 (host sha256 与 content_digest 同一), 入库 commit 5aa728f90 (2026-10-19T07:33:35Z) 早于 host
+    文件 mtime 07:35:46Z。本仓注册表仍不生成 (generate: false) —— plist 含 WorkingDirectory 而 gen_launchd_plist 从不输出该键,
+    改 generate: true 会立即产生 E1 漂移, 且本轮不动本机 launchd。调度 StartCalendarInterval Minute 27 加 RunAtLoad; 登记时
+    (2026-10-19) launchctl print 可读到该 job, job state exited / last exit code 0。program 与 outputs 里的 Workspace 字面量按现状登记,
+    改道属 ADR-0456 B4b 另一批。'
+  depends_on: []
 
 # ── launchd 命名空间分区 (BET-Y2Q4-T10-206) ─────────────────────────────────
 # 「本机已装 label == 注册表声明」要可证, 前提是先有『哪些 label 归本仓管』的判断。

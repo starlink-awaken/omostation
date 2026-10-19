@@ -161,6 +161,16 @@ jobs:
           # (1 failed / 7 passed)。实测 8 pass;
           # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时 36 pass (含既有 chain_bind
           # 与 delivery_anchor 契约两侧), 即 CI 干净检出路径行为逐字节不变。
+          # 2026-10-19 追加第八件: test_ops_launchd_plist_declared_guard 钉「仓内 plist ⇒ 注册表必须
+          # 声明该 label」这条纯仓内结构不变式 (BET-Y2Q4-T10-258 ISC-4)。它补的正是 E2 在 CI 上的
+          # 结构性失明面 —— test_service_registry_reality.py 的现实侧输入是 ~/Library/LaunchAgents,
+          # 干净检出里没有, 于是「commit plist 却没 commit 注册表条目」这一形只有装过机的机器能发现
+          # (com.omostation.omo-state-sync 是第一例: #4816 入库 plist + 本机在跑, services.yaml 无条目)。
+          # 豁免面按集合相等钉死 (2 条: arch-health-weekly 未装机待署名裁定 / panorama-refresh-guard
+          # plist XML 非法), 还一条债不摘清单即红。实测 9 pass; 变异对照在交付树内做后逐字节复原
+          # (sha256 对拍): 从 services.yaml 摘掉本轮那条声明 → 4 failed 且 reality-check E2 同时回到 1
+          # (owned_declared 46 vs owned_installed 47), 反向证明检测器不是空转。
+          # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时同样 9 pass (不读 host)。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -190,6 +200,7 @@ jobs:
             ../../tests/unit/test_writeplane_root_pin.py \
             ../../tests/unit/test_brief_null_shape.py \
             ../../tests/unit/test_chain_bind_runs_anchor_seam.py \
+            ../../tests/unit/test_ops_launchd_plist_declared_guard.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
