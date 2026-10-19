@@ -67,6 +67,11 @@ LEGACY_DOC_PAGE = Path.home() / (
 
 log = logging.getLogger("orchestrator")
 
+# Error string the runner emits when it skipped a collector because the host was
+# too loaded. Distinct from a timeout so consumers can tell "could not run" from
+# "would not run".
+DEFERRED_REASON = "Deferred: host load above budget"
+
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -310,6 +315,10 @@ class RefreshOrchestrator:
     # waves inherited almost no budget and reported "Collector deadline
     # exceeded", which cascaded into stale derived sources (strategy-projection).
     DEFAULT_COLLECTION_TIMEOUT = 240.0
+    # 2x the logical CPU count on an 18-core host. Above this the collector
+    # budgets cannot be met and the sources fail for load reasons, not source
+    # reasons; deferring keeps the gates honest instead of painting them red.
+    DEFAULT_MAX_LOAD = 36.0
 
     def __init__(self, registry: CollectorRegistry | None = None, max_workers: int = 5,
                  collection_timeout: float | None = None):
@@ -333,6 +342,33 @@ class RefreshOrchestrator:
         if not math.isfinite(value) or value <= 0:
             raise ValueError("ZHIXING_COLLECTION_TIMEOUT must be a positive number of seconds")
         return value
+
+    @classmethod
+    def _configured_max_load(cls) -> float:
+        raw = os.environ.get("ZHIXING_MAX_LOAD")
+        if raw is None or not raw.strip():
+            return cls.DEFAULT_MAX_LOAD
+        try:
+            value = float(raw)
+        except ValueError:
+            raise ValueError("ZHIXING_MAX_LOAD must be a positive number")
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError("ZHIXING_MAX_LOAD must be a positive number")
+        return value
+
+    @classmethod
+    def host_overloaded(cls) -> bool:
+        """Report whether the host is too loaded to run collectors honestly.
+
+        Under sustained overload the per-collector budgets cannot be met, so the
+        sources fail and the cockpit gates go red for reasons that have nothing to
+        do with the source itself. Deferring is the honest signal; a timeout is
+        not.
+        """
+        try:
+            return os.getloadavg()[0] > cls._configured_max_load()
+        except (OSError, AttributeError):  # pragma: no cover - platform without getloadavg
+            return False
 
     def load_previous(self) -> dict:
         """Load previous data from current.json or seed."""
@@ -369,6 +405,9 @@ class RefreshOrchestrator:
                 while pending or active:
                     while pending and len(active) < self.max_workers and time.monotonic() < deadline:
                         index, collector = pending.pop(0)
+                        if self.host_overloaded():
+                            results.append((collector.name, None, DEFERRED_REASON))
+                            continue
                         result_path = Path(directory) / f"{index}.json"
                         try:
                             timeout = float(getattr(collector, "timeout", 48))
@@ -545,7 +584,21 @@ class RefreshOrchestrator:
                     value.get("value_truth"), advisory
                 )
 
-            if error or value is None:
+            if error == DEFERRED_REASON:
+                # The round was skipped because the host was overloaded. Keep the
+                # last good value and mark the source deferred, so a deferral is
+                # never reported as a source failure.
+                cached = values.get(name) if isinstance(values.get(name), dict) else {}
+                states[name] = {
+                    "status": "DEFERRED", "error": error,
+                    "observed_at": cached.get("observed_at") or previous_state.get("observed_at"),
+                    "last_attempt_at": observed_at, "last_success_at": prior_success,
+                    "last_success_status": "KNOWN" if prior_success else "UNKNOWN",
+                    "health_semantics": HEALTH_SEMANTICS,
+                }
+                if "last_success_at" not in previous_state:
+                    states[name].pop("last_success_at", None)
+            elif error or value is None:
                 cached = values.get(name) if isinstance(values.get(name), dict) else {}
                 states[name] = {
                     "status": "STALE_UNAVAILABLE" if cached else "UNAVAILABLE", "error": error,
