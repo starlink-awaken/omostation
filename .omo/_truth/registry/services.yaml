@@ -6156,6 +6156,120 @@ services:
   depends_on: []
   disabled_reason: "macOS 系统设置「允许在后台」已关闭 (sfltool dumpbtm: disallowed), launchd 不加载; 注册表对齐现实, 重新允许后改回 true (TASK-F54F176A, 2026-09-28)"
 
+- id: omostation.resident-agent
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.resident-agent.plist
+  content_digest: sha256:12482c702e5f82b537d51839254d07acf2d67a465d7b4a7fa01f7027f5c7f813
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.resident-agent
+  program:
+    interpreter: /Users/xiamingxing/Workspace/projects/omo/.venv/bin/python
+    entrypoint: -B
+    args:
+    - -m
+    - omo.resident.service_runner
+    - --daemon
+  run_at_load: true
+  resilience:
+    keepalive: always
+  environment:
+    OMOSTATION_ROOT: /Users/xiamingxing/Workspace
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+    PYTHONDONTWRITEBYTECODE: '1'
+    PYTHONPATH: /Users/xiamingxing/Workspace/projects/omo/src:/Users/xiamingxing/Workspace
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/resident-daemon.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/resident-daemon.log
+  notes: 'BET-Y2Q4-T10-253 observe-only 登记: plist 由本仓创建者 projects/omo/src/omo/resident/service_ctl.py:27
+    (PLIST_LABEL) 安装, 本仓注册表不生成 (generate: false). 生成器无法接管内容有两层实测证据: ① plist 含 WorkingDirectory 而 gen_launchd_plist
+    从不输出该键 —— 改 generate: true 会立即产生 E1 漂移; ② interpreter 是 projects/omo/.venv/bin/python, 含 /.venv/bin,
+    被 resolve_interpreter 直接 ValueError 拒绝 (gen-service-configs.py:209), 所以 generate: true 连生成都跑不起来. 登记时
+    (2026-10-19) launchctl state active.'
+  depends_on: []
+- id: omostation.resident-web
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.resident-web.plist
+  content_digest: sha256:3e8eb76a1046634e7ff9b5fc3795ada0f6d7813b76ccb219f438762e2d20a66a
+  scheduler: launchd
+  trigger: keepalive
+  label: com.omostation.resident-web
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - -c
+    - import sys; sys.path.insert(0, '/Users/xiamingxing/Workspace/projects/omo/src'); from omo.resident.cli
+      import main; main(['web', '--port', '43195', '--host', '0.0.0.0'])
+  run_at_load: true
+  resilience:
+    keepalive: always
+  environment:
+    PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+    PYTHONDONTWRITEBYTECODE: '1'
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/resident-web.log
+    stderr: /Users/xiamingxing/.local/log/resident-web.log
+  notes: 'BET-Y2Q4-T10-253 observe-only 登记: 本检出内按 label 全仓 grep 找不到写 com.omostation.resident-web 的代码路径,
+    安装者未归属 (不编造来源), 本仓注册表不生成 (generate: false). plist 含 WorkingDirectory 而 gen_launchd_plist 从不输出该键 —— 改
+    generate: true 会立即产生 E1 漂移, 所以必须保持 observe-only. 端口 43195 只在此记录, 本轮不写 ports 键以免新增耦合面. 登记时 (2026-10-19)
+    launchctl state active.'
+  depends_on: []
+- id: omostation.mbp-night-patrol
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.mbp-night-patrol.plist
+  content_digest: sha256:6a8bf32e5853edf93e9cce5aa5d1a91d3d15278d814085412d9c4cae6c63e209
+  scheduler: launchd
+  trigger: calendar
+  calendar:
+    Hour: 2
+    Minute: 30
+  label: com.omostation.mbp-night-patrol
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: -B
+    args:
+    - -c
+    - import sys; sys.path.insert(0, '/Users/xiamingxing/Workspace/projects/omo/src'); from omo.resident.night_patrol
+      import run_night_patrol; run_night_patrol(force=False, deep=True)
+  environment:
+    PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+    PYTHONDONTWRITEBYTECODE: '1'
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/night-patrol.log
+    stderr: /Users/xiamingxing/.local/log/night-patrol.log
+  notes: 'BET-Y2Q4-T10-253 observe-only 登记: 本检出内按 label 全仓 grep 找不到写 com.omostation.mbp-night-patrol 的代码路径,
+    安装者未归属 (不编造来源), 本仓注册表不生成 (generate: false). plist 含 WorkingDirectory 而 gen_launchd_plist 从不输出该键 —— 改
+    generate: true 会立即产生 E1 漂移. 每日 02:30 (StartCalendarInterval Hour 2 Minute 30), 无 RunAtLoad. 登记时 (2026-10-19)
+    launchctl state active.'
+  depends_on: []
+- id: omostation.panorama-compact-observation
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.omostation.panorama-compact-observation.plist
+  content_digest: sha256:55b300ca260e1bbaaf118ad064b7d49812b790837a18b2c84be382b74e70d9c4
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 240
+  label: com.omostation.panorama-compact-observation
+  program:
+    interpreter: /opt/homebrew/bin/python3
+    entrypoint: /Users/xiamingxing/Workspace/bin/panorama/compact-observation.py
+    args: []
+  run_at_load: true
+  environment:
+    PATH: /opt/homebrew/bin:/usr/local/bin:/Users/xiamingxing/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/panorama-compact-observation.log
+    stderr: /Users/xiamingxing/.local/log/panorama-compact-observation.log
+  notes: 'BET-Y2Q4-T10-253 observe-only 登记: 本检出内按 label 全仓 grep 只命中脚本登记 bin/_registry/scripts/governance/compact-observation.yaml,
+    没有写这份 plist 的代码路径, 安装者未归属 (不编造来源), 本仓注册表不生成 (generate: false). 键面 (StartInterval 240 + RunAtLoad + EnvironmentVariables)
+    生成器可表达, 但本轮不接管内容也不动本机 launchd. 登记时 (2026-10-19) launchctl state active pid 44438.'
+  depends_on: []
+
 # ── launchd 命名空间分区 (BET-Y2Q4-T10-206) ─────────────────────────────────
 # 「本机已装 label == 注册表声明」要可证, 前提是先有『哪些 label 归本仓管』的判断。
 # 这个判断是注册表数据, 不是代码常量: 新服务会增长, 写死在生成器里等于每次判断都改代码。

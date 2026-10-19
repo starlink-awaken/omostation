@@ -43019,6 +43019,92 @@ bets:
         status: NOT_PROVEN
     overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
+- id: BET-Y2Q4-T10-253
+  title: ADR-0456 B3 收口 — 4 条 B4b 期间新装而未登记的 Workspace 命名空间服务登记为 observe-only (E2 归零
+    + 集合相等成立)
+  goal: 'B3 完成判据「已安装 label 集合 == registry 集合」的可证化 (2026-10-19 实测立项): --reality-check
+    在 origin/main@fdb106c9f (与检出逐字节同基线, behind 0 / ahead 0) 上读数 e2_undeclared=4 / owned_declared=42
+    / owned_installed=46。4 条全部 LOADED、全部把 ProgramArguments 钉在 /Users/xiamingxing/Workspace,
+    且 3 条 mtime 晚于 B4a —— 即这是 B4b 期间「安装器直写 launchd 而不写注册表」新造的债, 不是陈旧登记: com.omostation.resident-agent
+    (10-18, omo resident service_ctl.py:27 install)、 com.omostation.resident-web (10-16)、com.omostation.mbp-night-patrol
+    (10-16)、 com.omostation.panorama-compact-observation (10-07, T10-246 §5 遗留项, 其声明方
+    ccecdd571 已进 main)。 机制沿用 BET-Y2Q4-T10-246 / T10-206 的 observe-only (generate: false
+    ⇒ --check 跳过字节比对 :645-652、 validate_service_declaration 早返回 :156-157、--validate
+    跳过解释器解析 :627-629 ⇒ 对 E1/E3 与 CI 可验面零扰动); exempt_labels 结构上不通 (:478-480 把被 workspace
+    前缀遮蔽的 exempt 判为 E4 死数据)。 候选补丁已用检测器本身验算 —— 叠加 4 条后 e2_undeclared 4→0 且 owned_declared==owned_installed==46,
+    E1/E3/E4/E5/installed_total 逐字段未变。全程不碰本机 launchd (4 份 plist 的 mtime+sha256+launchctl
+    state 交付前后逐字节一致)。'
+  status: in_progress
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-19-services-e2-observe-only-backfill-4.md
+  - .omo/_truth/registry/services.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-253.md
+  - docs/reports/2026-10-19-services-e2-observe-only-backfill-4-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-19-services-e2-observe-only-backfill-4.md
+    spec_version: 1.0.0
+    content_digest: sha256:b19b1fec0e1cd7c7de9f44839e3ffbe4690586348cf8945d0573cc51ea638ff9
+    decision_ref: decision://accepted/BET-Y2Q4-T10-253
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: governance-state-mutation
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  circuit_breaker: '若 E2 归零需要把这 4 条声明成 generate: true, 或需要动 exempt_labels / workspace_prefixes
+    / --reality-check 任一判据本体 → 停止并保留原判据。本机 launchd 一律不动 (不 bootout/bootstrap/kickstart,
+    不写 ~/Library/LaunchAgents, 不改 crontab)。若必须回写 com.cockpit.dashboard 的 enabled 或补装
+    com.l4.omo.sync 才能归零 → 停止, 那是署名裁定面 (台账 non_goal「不切换人类 UI 入口」)。'
+  non_goals:
+  - 不回写 com.cockpit.dashboard 的 enabled (本机已 LOADED 且 :8090 承载人类 UI 入口, 翻转真值面等于替 「separately
+    confirmed live action」背书; 属署名裁定)
+  - 不补装也不停用 com.l4.omo.sync (E5 enabled-missing —— 补装是机器侧动作, 停用是真值改写, 两条都需授权)
+  - 不为 e4_prefix_ok 变 True 手工枚举 14 条个人 host job 进 exempt_labels (噪声生成器; 正解是按归属证据派生分类)
+  - 不做 plist/cron 改道 (B4b 批次 2+, 机器级需逐批授权)
+  - 不收口安装器 (service_ctl.py / bin/svc/service_view.py / bin/gac/install-watch-agent.py
+    / documents-jobs-scheduler.py 不产注册表条目是另一条 BET)
+  - 不宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成
+  done_when:
+  - ISC-1 本检出的 --reality-check 读数 e2_undeclared == 0 且 owned_declared == owned_installed
+    == 46 (判据「已装 label 集合 == registry 集合」在 B3 作用域内成立)
+  - ISC-2 E1 / E3 / E4 prefix / E5 两项读数与基线逐字段相同 —— e1_drift 0, e3_lint_debt 0, e4_prefix_ok
+    False, e5_enabled_missing 1, e5_disabled_residual 1, installed_total 71; 不得为 E2
+    造新分类问题
+  - ISC-3 --validate --json ok true 且 violation_count 0 (CI 可验面, 不依赖本机 plist)
+  - ISC-4 本机 launchd 零改动 —— 4 份 plist 的 mtime_ns + size + sha256 + launchctl state/pid
+    与交付前快照逐字节一致
+  - ISC-5 登记内容与 plistlib 转出的实况逐项一致, content_digest 等于安装 plist 的 sha256 (12482c70 / 3e8eb76a
+    / 6a8bf32e / 55b300ca)
+  - ISC-6 make gac-local-gate 硬失败集合等于基线 (零新增)
+  - ISC-7 --check exit 0 且 drift 仍为 0 (registry 改动不引入字节比对面的失败)
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json --registry .omo/_truth/registry/services.yaml
+    expect: e2_undeclared == 0; owned_declared == owned_installed == 46; e1_drift ==
+      0; e3_lint_debt == 0; installed_total == 71; e5_enabled_missing == 1; e5_disabled_residual
+      == 1
+  - cmd: python3 bin/mof/gen-service-configs.py --validate --json
+    expect: ok true, violation_count 0
+  - cmd: python3 bin/mof/gen-service-configs.py --check
+    expect: exit 0, 0 drift
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -43157,7 +43243,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 549
+  total_bets: 550
   windows:
   - Y1Q1
   - Y1Q2
