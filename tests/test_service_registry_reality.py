@@ -434,10 +434,16 @@ def _git(root: Path, *args: str) -> str:
 
 @pytest.fixture
 def git_root(tmp_path) -> Path:
-    """一个有 origin/main 的最小真仓库 —— 测 base_state 三态, 不碰任何真实检出。"""
+    """一个有 origin/main 的最小真仓库 —— 测 base_state 三态, 不碰任何真实检出。
+
+    初始分支名必须钉死, 不能交给 `git init` 决定：`init.defaultBranch` 是 host 配置
+    —— macOS 的 Xcode 系统 gitconfig 给 main, 干净 CI runner 给 master —— 而分叉用例
+    按名字 `checkout main`。本机 `HOME=<空>` 也照不出这条(Xcode 那份系统配置不受 HOME 影响),
+    必须在 `HOME/.gitconfig` 写 master 才复刻得出来。
+    """
     root = tmp_path / "wt"
     root.mkdir()
-    _git(root, "init", "-q")
+    _git(root, "init", "-q", "-b", "main")
     _git(root, "config", "user.email", "t@t")
     _git(root, "config", "user.name", "t")
     (root / "seed").write_text("1\n", encoding="utf-8")
