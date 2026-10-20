@@ -142,6 +142,12 @@ GATE_DECLARED = {
 GATE_MAX_LOAD = 18.0
 GATE_DEFERRED_DETAIL = "deferred: host load above budget"
 
+# 只读门禁矩阵**按祖先关系**读取的子模块（``merge-base --is-ancestor``）。这类判据
+# 需要 pin 之后的历史，depth 1 的检出里结构性不可判 —— A8 就因此在生产里永远
+# ABSENT。publisher 从本常量导出「要给哪些子模块留历史」，所以这里加一条，它
+# 那边就自动多准备一个（见 bin/panorama/projection-full-refresh.py）。
+ANCESTRY_VERIFIED_SUBMODULES = {"A8": "projects/omo"}
+
 
 def _configured_gate_max_load() -> float:
     raw = os.environ.get("ZHIXING_MAX_LOAD")
@@ -1252,8 +1258,9 @@ def collect_a8_gate() -> dict:
     """
     bet_id = "BET-Y1Q4-T10-151"
     merge_commit = "5e1f7eae9b024dccc7a5977139e2de906c25b76c"
-    impl_rel = "projects/omo/src/omo/workflow/external_transaction.py"
-    test_rel = "projects/omo/tests/test_external_transaction.py"
+    omo_rel = ANCESTRY_VERIFIED_SUBMODULES["A8"]
+    impl_rel = f"{omo_rel}/src/omo/workflow/external_transaction.py"
+    test_rel = f"{omo_rel}/tests/test_external_transaction.py"
     missing: list[str] = []
 
     try:
@@ -1284,7 +1291,7 @@ def collect_a8_gate() -> dict:
     if not (ROOT / test_rel).is_file():
         missing.append("tests")
 
-    omo_dir = ROOT / "projects/omo"
+    omo_dir = ROOT / omo_rel
     reachable = subprocess.run(
         ["git", "-C", str(omo_dir), "merge-base", "--is-ancestor", merge_commit, "HEAD"],
         capture_output=True,
