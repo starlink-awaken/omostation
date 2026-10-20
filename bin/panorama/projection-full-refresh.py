@@ -37,6 +37,12 @@ LOG_PATH = Path("~/.local/log/projection-fullrefresh.log").expanduser()
 EXPECTED_ORIGIN_SUFFIX = "starlink-awaken/omostation.git"
 CLONE_URL = "https://github.com/starlink-awaken/omostation.git"
 PUBLISHER_TIMEOUT_SEC = 3600  # 全量采集典型 5~14min, 留足裕量
+# 子模块历史深度。depth 1 的检出里 ``merge-base --is-ancestor <child> HEAD`` 结构性
+# 不可判: 对象根本不在本地, 而 A8 门禁正是用这条判据证明 BET-Y1Q4-T10-151 的
+# omo PR #173 merge (5e1f7eae) 落在当前 pin 上 —— 实测该 merge 距子模块
+# origin/main 60 个 commit, 于是 A8 在生产里永远 ABSENT (2026-10-20 实证)。
+# 200 与本文件上方 clone 自身的深度同值, 对 60 留 3x 裕量。
+SUBMODULE_HISTORY_DEPTH = 200
 # event_ledger 是运行时文件（不在检出内）—— publisher 检出每轮 clean -fdx，那份按构造不存在。
 # 根只能在调用时刻解析：import 时冻结会把 ledger 钉在一次性的 publisher 克隆上 (ADR-0456 B4b 前置, T10-247)。
 sys.dont_write_bytecode = True
@@ -257,7 +263,8 @@ def main() -> int:
             (["git", "reset", "--hard", "origin/main"], 300),
             (["git", "clean", "-fdx"], 600),
             (["git", "submodule", "sync", "--recursive"], 300),
-            (["git", "submodule", "update", "--init", "--depth", "1"], 3600),
+            (["git", "submodule", "update", "--init", "--depth",
+              str(SUBMODULE_HISTORY_DEPTH)], 3600),
         ]
         if not unchanged:
             clear_stale_git_lock(CHECKOUT)
