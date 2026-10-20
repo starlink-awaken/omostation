@@ -43404,6 +43404,148 @@ bets:
   - cmd: python3 -m pytest tests/unit/test_ops_launchd_plist_declared_guard.py tests/unit/test_cron_registry_reality_invariants.py
       tests/test_cron_registry_contract.py tests/test_service_registry_reality.py -q
     expect: 全部 passed, 0 failed
+- id: BET-Y2Q4-T10-259
+  title: ADR-0456 B3 准入评审清单 — E4 未分区 19 条 + E5 双向不一致 2 条逐条取证，把署名裁定摊成一次可答的清单（不改判据本体、不动本机
+    launchd）
+  goal: 'B3 完成判据是「`gen-service-configs.py --check` exit 0 **且**「已安装 label 集合 ==
+
+    registry 集合」」。T10-253 / T10-258 已归零 owned 半边（E2）与 E1/E3，但 `ok` 仍为
+
+    false，剩余全部理由是 21 条需要**署名准入**的 finding。T10-258 的 circuit_breaker
+
+    已明写「改用评审清单而不是替它们决定『该不该活』」，本轮就是那张清单。
+
+
+    2026-10-19T10:08Z 实测 `origin/main@17c0a3286`（隔离检出与该 SHA 逐字相同）：
+
+    `--reality-check --json` 读数 ok=false / e1_drift=0 / e2_undeclared=0 / e3_lint_debt=0
+    /
+
+    unclassified=0 / e4_prefix_ok=false（未分区 18 条，合并前复测 19 条）/ e5_enabled_missing=1 /
+
+    e5_disabled_residual=1 / installed_total=76（复测 77）/ workspace_scoped=38 /
+
+    owned_declared=owned_installed=47 / external=5 / registry_declared_total=75 /
+
+    dev_label_prefix=com.omostation.dev.。
+
+
+    同一命令在主工作区（HEAD `fdb106c9f`，落后三个合并）读数为 e2_undeclared=5 /
+
+    owned_declared=42 / registry_declared_total=70，缺的 5 条正是 T10-253 回填的 4 条 +
+
+    T10-258 回填的 1 条 —— 陈旧检出的读数不是回归，判据必须由 origin/main 那棵树产出
+
+    （PITFALL-COO-006 的治理态变体）。
+
+
+    取证方式：`plistlib.loads` 逐个读 `~/Library/LaunchAgents/<label>.plist`，记
+
+    `ProgramArguments`、RunAtLoad/KeepAlive/StartInterval/StartCalendarInterval、
+
+    `EnvironmentVariables` **条数**（值一律不抄）、字节数、mtime(UTC)、sha256 前 16 位；
+
+    并查仓内 `bin/ops/launchd/<label>.plist` 镜像 —— 19 条镜像全部不存在，这是「本仓
+
+    不拥有这些 plist」的实测依据，也是 `external` 提案不被「仓内自有 plist」反驳的证据。
+
+
+    准入机制只有三条（读 `classify_label` `bin/mof/gen-service-configs.py:345-357`）：
+
+    ① 追加 `workspace_prefixes`（整族拉进本仓管辖，该前缀下任何未登记 plist 立刻进 E2
+
+    而红）；② 追加 `exempt_labels`（classification ∈ external/unclassified/owned，拼错
+
+    fail-closed 落 unmanaged_unknown 并继续计入 E4，故每条都写明拟用值）；③ 改运行面
+
+    （署名面，B4b 批次 2+ 未获逐批授权前不做）。本轮交付的是**清单与选项**，不选任何一条。
+
+
+    两条需单独点名（只陈述，不处置）：`com.localbrain.*` 四条 plist 全部是 2026-10-19
+
+    当天落盘（01:39Z/01:52Z/02:24Z/08:17Z）且指向 `~/Project/work-agent/scripts/`，属主
+
+    意图未确认；`com.localbrain.preseed-http` 以 `--bind 0.0.0.0` 在 8088 常驻暴露静态
+
+    目录服务（KeepAlive）。E5 两条是双向不一致：`com.l4.omo.sync` 声明 enabled=true 而
+
+    本机无 plist；`com.cockpit.dashboard` 声明 enabled=false 而本机仍装着且在跑
+
+    （WD = `~/.local/opt/omostation-cockpit/releases/<40 位 OID>`）。
+
+    '
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md
+    spec_version: 1.0.0
+    content_digest: sha256:f4556ffb6f0f5374c830760f544c78ac683d014a0b2e35a6576c8a0dd27ac630
+    decision_ref: decision://accepted/BET-Y2Q4-T10-259
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  non_goals:
+  - 不改 `launchd_namespace.workspace_prefixes` / `exempt_labels` / `--reality-check`
+    任一判据本体
+  - 不动本机 launchd 与 crontab：不 bootout/bootstrap/kickstart，不写 ~/Library/LaunchAgents
+  - 不替任何 label 决定「该不该活」，不为凑 ok=true 把任何 label 塞进 services.yaml
+  - 不宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成
+  done_when:
+  - spec 落在 docs/superpowers/specs/ canonical 位，frontmatter 九键齐全（含 owner）且 doc-governance
+    tracked 无新告警
+  - 台账 BET-Y2Q4-T10-259 条目存在，accepted_specifications 的 content_digest 与该文件实际 sha256
+    逐字节相等
+  - 清单覆盖度：E4 表内 label 集合与当次 --reality-check findings 报出的集合双向相等（复测口径 19 条，缺一名或多一名均算未达），E5 两条全覆盖
+  - 交付后 --reality-check 的回归敏感字段逐字段相同（e1_drift=0 / e2_undeclared=0 / e3_lint_debt=0 / unclassified=0 / owned_declared=owned_installed=47 / registry_declared_total=75 / e5 两项 1+1）；installed_total 与 E4 集合属运行面自变量，只允许因可指认的外部落盘变动并在 spec §1/§5 记名（本轮 76→77、18→19 即 com.local.magpie-refresh 于两次测量之间落盘）
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json
+    expect: 回归敏感字段与交付前逐字段相同（e1_drift=0 / e2_undeclared=0 / e3_lint_debt=0
+      / unclassified=0 / e4_prefix_ok=false / e5 两项 1+1 / owned_declared=owned_installed=47
+      / registry_declared_total=75）；installed_total=77 与 E4 19 条须与 spec §1 记名的复测读数一致
+  - cmd: python3 -c "import hashlib,pathlib;print(hashlib.sha256(pathlib.Path('docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md').read_bytes()).hexdigest())"
+    expect: f4556ffb6f0f5374c830760f544c78ac683d014a0b2e35a6576c8a0dd27ac630
+  - cmd: python3 bin/ssot/doc-governance-check.py --no-new-warnings --scope tracked
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: 无新增失败项（T10-258 receipt §4 量出的两项预存 FAIL 除外）
+  circuit_breaker: '若归零 E4/E5 需要改 `workspace_prefixes` / `exempt_labels` / `--reality-check`
+    判据本体
+
+    → 停止并保留原判据。若需要动本机 launchd 或 crontab（bootout/bootstrap/kickstart、写
+
+    ~/Library/LaunchAgents、crontab -e）→ 停止，那是运行面署名动作且属 B4b 批次 2+。
+
+    若需要替任何一条 label 决定「该不该活」，或把 `com.l4.omo.sync` / `com.cockpit.dashboard`
+
+    的 enabled 翻掉才能归零 → 停止，那是署名裁定面。
+
+    若需要在 spec 里抄出 EnvironmentVariables 的值（本轮只记条数）→ 停止，值不属于清单。
+
+    若宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成 → 停止。
+
+    '
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -43542,7 +43684,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 552
+  total_bets: 553
   windows:
   - Y1Q1
   - Y1Q2
