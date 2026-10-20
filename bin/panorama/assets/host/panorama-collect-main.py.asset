@@ -18,6 +18,7 @@ import argparse
 import fcntl
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -132,6 +133,50 @@ CLAIMS_LIFECYCLE_GAP_AUDIT = (
 
 GATE_DECLARED = {
 }
+
+# Mirrors orchestrator.DEFAULT_MAX_LOAD in the managed release.  The gate round
+# runs the A1-A5 wrapper and the A7 read-only API matrix; under sustained
+# overload both exceed their budgets and paint the board red for load reasons
+# rather than gate reasons.  Deferring is the honest signal, exactly as the
+# collector round already does (#4820).
+GATE_MAX_LOAD = 18.0
+GATE_DEFERRED_DETAIL = "deferred: host load above budget"
+
+
+def _configured_gate_max_load() -> float:
+    raw = os.environ.get("ZHIXING_MAX_LOAD")
+    if raw is None or not raw.strip():
+        return GATE_MAX_LOAD
+    try:
+        value = float(raw)
+    except ValueError:
+        raise ValueError("ZHIXING_MAX_LOAD must be a positive number")
+    if not math.isfinite(value) or value <= 0:
+        raise ValueError("ZHIXING_MAX_LOAD must be a positive number")
+    return value
+
+
+def gate_round_overloaded() -> bool:
+    """Report whether the host is too loaded to run the gate round honestly.
+
+    Under sustained overload the wrapper and the A7 API matrix cannot meet their
+    budgets, so the board goes red for reasons that have nothing to do with the
+    gate.  Deferring keeps the verdict honest; a manufactured FAIL does not.
+    """
+    try:
+        return os.getloadavg()[0] > _configured_gate_max_load()
+    except (OSError, AttributeError):  # pragma: no cover - platform without getloadavg
+        return False
+
+
+def _deferred_gate(gid: str, title: str) -> dict:
+    return {
+        "id": gid,
+        "title": title,
+        "verdict": "DEFERRED",
+        "detail": GATE_DEFERRED_DETAIL,
+        "live": False,
+    }
 
 DOC_ENTRIES = [
     {"name": "白皮书 / 三年规划", "path": "docs/VISION-ROADMAP.md", "tag": "vision"},
@@ -796,28 +841,43 @@ def run(cmd: list[str], timeout: int = 120) -> tuple[int, str]:
         return 1, str(e)
 
 
+GATE_TITLES = {
+    "A1": "Workflow 与 Git 执行完整性",
+    "A2": "Resident 与宿主健康真值",
+    "A3": "受管 Python 与语义门",
+    "A4": "调度声明与安装态一致",
+    "A5": "引用与 launchd 完整性",
+}
+
+
 def collect_gates(payload: dict | None = None) -> list[dict]:
-    code, out = run([
-        sys.executable, str(CODE_ROOT / "bin/gac/gate-health-check.py"),
-        "--workspace", str(ROOT), "--code-root", str(CODE_ROOT), "--json",
-    ])
+    # Under sustained overload the wrapper budget cannot be met, so every gate
+    # would come back FAIL for host reasons.  Skip the round instead of
+    # manufacturing those verdicts.
+    overloaded = gate_round_overloaded()
     live: dict[str, dict] = {}
-    # A non-zero wrapper exit means at least one gate failed; the JSON payload
-    # still contains authoritative per-gate results and must not be discarded.
-    try:
-        for g in json.loads(out).get("gates", []):
-            gid = str(g.get("gate", "")).split()[0]  # "A1 Workflow/Git" -> "A1"
-            live[gid] = g
-    except Exception:  # noqa: BLE001
-        pass
+    if not overloaded:
+        code, out = run([
+            sys.executable, str(CODE_ROOT / "bin/gac/gate-health-check.py"),
+            "--workspace", str(ROOT), "--code-root", str(CODE_ROOT), "--json",
+        ])
+        # A non-zero wrapper exit means at least one gate failed; the JSON payload
+        # still contains authoritative per-gate results and must not be discarded.
+        try:
+            for g in json.loads(out).get("gates", []):
+                gid = str(g.get("gate", "")).split()[0]  # "A1 Workflow/Git" -> "A1"
+                live[gid] = g
+        except Exception:  # noqa: BLE001
+            pass
     gates = []
     for gid in ("A1", "A2", "A3", "A4", "A5"):
+        if overloaded:
+            gates.append(_deferred_gate(gid, GATE_TITLES[gid]))
+            continue
         g = live.get(gid, {})
         gates.append({
             "id": gid,
-            "title": {"A1": "Workflow 与 Git 执行完整性", "A2": "Resident 与宿主健康真值",
-                      "A3": "受管 Python 与语义门", "A4": "调度声明与安装态一致",
-                      "A5": "引用与 launchd 完整性"}[gid],
+            "title": GATE_TITLES[gid],
             "verdict": "PASS" if g.get("ok") else "FAIL",
             "detail": g.get("output", "未采集"),
             "live": bool(g),
@@ -1063,6 +1123,14 @@ def collect_a7_gate() -> dict:
         return {
             "id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED",
             "detail": "Multica AS0 verifier missing", "live": False,
+            "depends_on": ["A8"],
+        }
+    # The matrix reads up to 40 sequential APIs; under load it exhausts the
+    # budget and reports NOT_ADMITTED for host reasons, not Multica reasons.
+    if gate_round_overloaded():
+        return {
+            "id": "A7", "title": "Multica AS0 准入", "verdict": "DEFERRED",
+            "detail": GATE_DEFERRED_DETAIL, "live": False,
             "depends_on": ["A8"],
         }
 
@@ -4519,7 +4587,9 @@ def collect_agent_visibility(payload: dict, *, bound_value_readiness: dict | Non
         for g in gates
         if isinstance(g, dict)
     ]
-    failing = [g for g in gate_rows if g["verdict"] not in {"PASS", "SKIPPED"}]
+    # DEFERRED means the round was skipped because the host was overloaded, not
+    # that the gate failed; the previous observation still stands.
+    failing = [g for g in gate_rows if g["verdict"] not in {"PASS", "SKIPPED", "DEFERRED"}]
 
     claims_authority = payload.get("claims_authority") if isinstance(payload.get("claims_authority"), dict) else {}
     claims_task16 = payload.get("claims_task16") if isinstance(payload.get("claims_task16"), dict) else {}

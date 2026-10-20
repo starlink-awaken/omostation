@@ -17,10 +17,16 @@ def _module():
     return module
 
 
+def _not_overloaded(module, monkeypatch):
+    """Pin the host load check so a loaded CI/dev host cannot skip the round."""
+    monkeypatch.setattr(module, "gate_round_overloaded", lambda: False)
+
+
 def test_collect_gates_preserves_partial_results_when_wrapper_exits_nonzero(
     tmp_path, monkeypatch
 ) -> None:
     module = _module()
+    _not_overloaded(module, monkeypatch)
     monkeypatch.setattr(module, "ROOT", tmp_path)
     payload = {
         "all_ok": False,
@@ -47,6 +53,7 @@ def test_collect_gates_preserves_partial_results_when_wrapper_exits_nonzero(
 
 def test_collect_gates_fails_closed_on_invalid_health_payload(tmp_path, monkeypatch) -> None:
     module = _module()
+    _not_overloaded(module, monkeypatch)
     monkeypatch.setattr(module, "ROOT", tmp_path)
     monkeypatch.setattr(module, "run", lambda command, timeout=120: (1, "not-json"))
     monkeypatch.setattr(module, "collect_a6_gate", lambda: {"id": "A6", "verdict": "PASS"})
@@ -63,6 +70,7 @@ def test_collect_gates_fails_closed_on_invalid_health_payload(tmp_path, monkeypa
 
 def test_collect_gates_passes_runtime_and_code_roots(tmp_path, monkeypatch) -> None:
     module = _module()
+    _not_overloaded(module, monkeypatch)
     runtime_root = tmp_path / "runtime"
     code_root = tmp_path / "code"
     monkeypatch.setattr(module, "ROOT", runtime_root)
@@ -104,6 +112,7 @@ def test_admission_verifiers_use_code_root_but_runtime_root_cwd(
     tmp_path, monkeypatch
 ) -> None:
     module = _module()
+    _not_overloaded(module, monkeypatch)
     runtime_root = tmp_path / "runtime"
     code_root = tmp_path / "code"
     verifier_dir = code_root / "bin/gac"
@@ -163,6 +172,7 @@ def test_multica_gate_budgets_full_readonly_matrix_and_bypasses_hosts(
     tmp_path, monkeypatch
 ) -> None:
     module = _module()
+    _not_overloaded(module, monkeypatch)
     runtime_root = tmp_path / "runtime"
     code_root = tmp_path / "code"
     verifier = code_root / "bin/gac/multica-as0-verify.py"
@@ -481,12 +491,14 @@ def test_code_root_health_bounds_output_and_terminates_own_descendants(tmp_path,
 
 PROTECTED_HOST_FUNCTIONS = (
     "collect_a7_gate", "_read_claims_preflight", "collect_claims_observation_progress",
+    "gate_round_overloaded", "_configured_gate_max_load",
 )
 
 
 def _protected_namespace(source, tmp_path):
     """Load just the protected functions, without executing a runtime collector."""
     import ast
+    import math
     from datetime import datetime, timezone
     import subprocess
     import sys
@@ -498,11 +510,11 @@ def _protected_namespace(source, tmp_path):
     ) or (
         isinstance(node, ast.Assign) and any(
             isinstance(target, ast.Name) and target.id in {
-                "MULTICA_AS0_TIMEOUT_S", "MULTICA_AS0_DIRECT_HOSTS",
+                "MULTICA_AS0_TIMEOUT_S", "MULTICA_AS0_DIRECT_HOSTS", "GATE_DEFERRED_DETAIL",
             } for target in node.targets
         )
     )]
-    namespace = dict(Path=Path, datetime=datetime, UTC=timezone.utc, json=json,
+    namespace = dict(Path=Path, datetime=datetime, UTC=timezone.utc, json=json, math=math,
                      os=SimpleNamespace(environ={"NO_PROXY": "internal.example", "no_proxy": "internal.example"}),
                      subprocess=subprocess, sys=sys,
                      ROOT=tmp_path / "runtime", CODE_ROOT=tmp_path / "code")
@@ -609,6 +621,7 @@ def test_host_multica_verifier_preserves_configured_matrix_budget(tmp_path, monk
     monkeypatch.setenv("NO_PROXY", "internal.example")
     monkeypatch.setenv("no_proxy", "internal.example")
     (Path.home() / ".local/share/zhixing-dashboard").mkdir(parents=True)
+    ns["gate_round_overloaded"] = lambda: False
     assert ns["MULTICA_AS0_TIMEOUT_S"] == 300
     ns["MULTICA_AS0_TIMEOUT_S"] = 321
     calls = []
