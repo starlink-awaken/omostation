@@ -43,6 +43,12 @@ PUBLISHER_TIMEOUT_SEC = 3600  # 全量采集典型 5~14min, 留足裕量
 # origin/main 60 个 commit, 于是 A8 在生产里永远 ABSENT (2026-10-20 实证)。
 # 200 与本文件上方 clone 自身的深度同值, 对 60 留 3x 裕量。
 SUBMODULE_HISTORY_DEPTH = 200
+# 加深的尝试次数与重试间隔。本机网络实测抖动 (2026-10-20: 连 github.com 的 TLS 握手
+# 约 1/3 概率 SSL_ERROR_SYSCALL), 而一次 sweep 是 16 个子模块各取一次 —— 单次尝试
+# 的失败率约 1-(2/3)^16 ≈ 99.7%, 等于没有修。已加深的子模块再跑是 no-op, 所以整轮
+# 重试是安全且幂等的。
+SUBMODULE_DEEPEN_ATTEMPTS = 5
+STEP_RETRY_DELAY_SEC = 3
 # event_ledger 是运行时文件（不在检出内）—— publisher 检出每轮 clean -fdx，那份按构造不存在。
 # 根只能在调用时刻解析：import 时冻结会把 ledger 钉在一次性的 publisher 克隆上 (ADR-0456 B4b 前置, T10-247)。
 sys.dont_write_bytecode = True
@@ -260,11 +266,11 @@ def main() -> int:
         unchanged, alignment = checkout_alignment(CHECKOUT, target)
         log("checkout_alignment", route="unchanged" if unchanged else "full", **alignment)
         steps = [] if unchanged else [
-            (["git", "reset", "--hard", "origin/main"], 300),
-            (["git", "clean", "-fdx"], 600),
-            (["git", "submodule", "sync", "--recursive"], 300),
+            (["git", "reset", "--hard", "origin/main"], 300, 1),
+            (["git", "clean", "-fdx"], 600, 1),
+            (["git", "submodule", "sync", "--recursive"], 300, 1),
             (["git", "submodule", "update", "--init", "--depth",
-              str(SUBMODULE_HISTORY_DEPTH)], 3600),
+              str(SUBMODULE_HISTORY_DEPTH)], 3600, 1),
             # `--depth` cannot widen an already-shallow checkout: re-running
             # `submodule update --init --depth 200` over a depth-1 submodule
             # leaves it at 1 commit (verified locally). A8's
@@ -272,17 +278,25 @@ def main() -> int:
             # history behind the pin, so fetch it explicitly. `--depth` (not
             # `--deepen`) keeps the boundary bounded and the step idempotent.
             (["git", "submodule", "foreach", "--quiet",
-              f"git fetch --depth {SUBMODULE_HISTORY_DEPTH} origin"], 1800),
+              f"git fetch --depth {SUBMODULE_HISTORY_DEPTH} origin"],
+             1800, SUBMODULE_DEEPEN_ATTEMPTS),
         ]
         if not unchanged:
             clear_stale_git_lock(CHECKOUT)
-        for cmd, timeout in steps:
-            started = time.monotonic()
-            r = run(cmd, cwd=CHECKOUT, timeout=timeout)
-            log("sync_step_complete", step=" ".join(cmd[1:3]),
-                seconds=round(time.monotonic() - started, 4), rc=r.returncode)
+        for cmd, timeout, attempts in steps:
+            r = None
+            for attempt in range(1, attempts + 1):
+                started = time.monotonic()
+                r = run(cmd, cwd=CHECKOUT, timeout=timeout)
+                log("sync_step_complete", step=" ".join(cmd[1:3]), attempt=attempt,
+                    seconds=round(time.monotonic() - started, 4), rc=r.returncode)
+                if r.returncode == 0:
+                    break
+                if attempt < attempts:
+                    time.sleep(STEP_RETRY_DELAY_SEC)
             if r.returncode != 0:
-                return fail("sync_step", sub=cmd[1], stderr=(r.stderr or "")[-500:])
+                return fail("sync_step", sub=cmd[1], attempt=attempt,
+                            stderr=(r.stderr or "")[-500:])
         if not unchanged:
             aligned, alignment = checkout_alignment(CHECKOUT, target)
             if not aligned:
