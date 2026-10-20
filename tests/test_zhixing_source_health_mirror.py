@@ -259,6 +259,13 @@ def _task_orchestrator(monkeypatch, tmp_path, *, timestamp=None, tasks=None, fai
     loader = importlib.machinery.SourceFileLoader("zhixing_task_orchestrator", str(ASSETS / "orchestrator.py.asset"))
     spec = importlib.util.spec_from_loader(loader.name, loader)
     module = importlib.util.module_from_spec(spec); loader.exec_module(module)
+    orchestrator_os = module.os
+    # The delivered orchestrator defers every collector above the load budget.
+    # These tests assert collection policy, not host load, so pin the probe;
+    # otherwise a loaded dev/CI host turns the whole file red for reasons that
+    # have nothing to do with the policy under test.  Pinning getloadavg (rather
+    # than host_overloaded) keeps the overload-path tests able to re-patch it.
+    monkeypatch.setattr(orchestrator_os, "getloadavg", lambda: (0.0, 0.0, 0.0))
     return module, revision, task_dto, calls
 
 

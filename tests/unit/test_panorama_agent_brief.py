@@ -673,3 +673,18 @@ def test_resolve_failing_gates_action_absent_when_all_gates_pass() -> None:
     brief = module.collect_agent_visibility(payload)
 
     assert "resolve-failing-gates" not in {a["id"] for a in brief["next_actions"]}
+
+
+def test_deferred_gate_is_not_counted_as_failing() -> None:
+    """A skipped round is not a failed gate; the previous observation stands."""
+    module = _module()
+    payload = _payload()
+    payload["gates"] = [
+        {"id": "A1", "title": "Workflow", "verdict": "DEFERRED", "live": False},
+        {"id": "A4", "title": "Scheduler", "verdict": "DEFERRED", "live": False},
+        {"id": "A5", "title": "Reference", "verdict": "FAIL", "live": True},
+    ]
+    brief = module.collect_agent_visibility(payload)
+
+    assert brief["health"]["gates_failing"] == ["A5"]
+    assert "resolve-failing-gates" in {a["id"] for a in brief["next_actions"]}
