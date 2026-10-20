@@ -43695,6 +43695,91 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-261
+  title: ADR-0456 §246 未交付缓解 —— 跨安装位 import 错包的启动断言与检出钉面可观测化
+  goal: 把 ADR-0456 Consequences :246—247 记的那条缓解做成可调用、可测、可观测的缝。 bin/lib/repo_root.py
+    新增 assert_import_root() 与 import_root_report()， roots_report() 的 --json 面加一条 import_root
+    字段， 让「这次跑的到底是哪个检出的码」第一次成为一个能被读出来的量。 本轮不把硬断言接到常驻入口，理由与后继顺序见 spec §1。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/lib/repo_root.py
+  - tests/unit/test_repo_root_import_root_assertion.py
+  - docs/superpowers/specs/2026-10-20-import-root-startup-assertion.md
+  - docs/plans/3y-bet-ledger.yaml
+  non_goals:
+  - 不在 omo 或任何常驻守护进程入口调用硬断言。那会让 B4b 批次 2 的改道变成 crash-loop 保险丝， 而改道本身是逐批授权面（spec §1 把它登记为接线轮的前置顺序）。
+  - 不动 launchd、plist、crontab、~/Library/LaunchAgents、services.yaml。
+  - 不修实测到的 39 条 .pth 检出钉。那是各 venv 的 editable 安装产物， 重建属运维动作，且「谁该指向哪棵树」取决于 B4b 的最终拓扑。
+  - 不引入 OMO_ALLOW_GIT_WRITE（属决策 3 与 B4b 批次 2，已有 4 份 spec 一致记为逐批授权）。
+  - 不宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成。
+  done_when:
+  - repo_root.__all__ 含 assert_import_root 与 import_root_report。 正向返回解析后的 root 且不抛；反向抛
+    ImportRootMismatch，异常消息含两侧绝对路径。
+  - 空串、None、相对路径三种输入一律抛，不得静默通过。 「判不了」与「判了且没问题」在读数上必须可分。
+  - roots_report() 的 --json 输出含 import_root 键；未设 OMOSTATION_IMPORT_PROBE_MODULE 时 probed
+    为 false，而不是 ok 为 true。
+  - repo_root.py 的 main() 退出码判据逐字未改（该函数体在 diff 里为空）。
+  - 变异对照：把 under 判定改成恒 True 之后，反向用例与边界用例当场红。
+  - 运行面零效应有改前改后的同值读数（crontab 内容哈希、~/Library/LaunchAgents 的 plist 总数、 本 BET 相关 label
+    命中 0）。
+  verify:
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT HOME=/tmp/emptyhome uv run
+      --no-project --with pytest --with pyyaml python -m pytest tests/unit/test_repo_root_import_root_assertion.py
+      tests/unit/test_repo_root_profile.py -q -p no:randomly
+    expect: 两个文件全绿。新增用例覆盖正反两面，既有双根不变式未被破坏。
+  - cmd: env -u OMOSTATION_ROOT uv run --no-project --with pyyaml python bin/lib/repo_root.py
+      --json
+    expect: 输出含 import_root 键；未设探针 env 时其 probed 为 false。
+  - cmd: git diff --name-only origin/main..HEAD
+    expect: 不含 .omo/state/**、BRIEF.md、子模块 gitlink。
+  - cmd: 'python3 - <<''PY''
+
+      import hashlib, pathlib, subprocess
+
+      cron = subprocess.run(["crontab", "-l"], capture_output=True).stdout
+
+      plists = list((pathlib.Path.home() / "Library/LaunchAgents").glob("*.plist"))
+
+      print("crontab_sha16", hashlib.sha256(cron).hexdigest()[:16])
+
+      print("plist_total", len(plists))
+
+      print("import_root_labels", sum(1 for p in plists if "import-root" in p.name))
+
+      PY'
+    expect: 改前改后逐字节同值。crontab 哈希前 16 位不变、plist 总数不变、命中 0。
+  circuit_breaker: 若接线到常驻入口是完成本契约的前提（而不是 spec §1 登记的接线轮）→ 停止， 那是 B4b 批次 2 的授权面。若需要改
+    repo_root.py main() 的退出码判据、 或需要新增第三个根或新 env 名才能定位导入根 → 停止，ADR-0456 的定位链只有 code_root、state_root、install_root
+    那三条。若需要动那 39 条 .pth 或重建任何 venv 才能过 G2 → 停止并保留原判据。本机 launchd 与 crontab 一律不动。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-20-import-root-startup-assertion.md
+    spec_version: 1.0.0
+    content_digest: sha256:c3da49c055a5cb02ad3289b1c68506aa855d5e267407e926b585c2e17c4bf09e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-261
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -43833,7 +43918,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 554
+  total_bets: 555
   windows:
   - Y1Q1
   - Y1Q2
