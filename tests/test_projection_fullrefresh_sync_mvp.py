@@ -42,6 +42,19 @@ def sandbox(tmp_path, monkeypatch):
     git(origin, "update-index", "--add", "--cacheinfo",
         "160000," + git(child, "rev-parse", "HEAD") + ",child")
     git(origin, "add", "."); git(origin, "commit", "-m", "root base")
+    # The publisher derives its deepen list from the collector's declaration, so
+    # the fixture checkout has to carry one. It must land in `origin` before the
+    # clone, and be committed rather than merely written: an untracked file makes
+    # checkout_alignment report a dirty tree, and a commit made only in the
+    # checkout leaves its HEAD ahead of origin/main — either sends the fast-path
+    # tests down the full-sync route. Keep it in sync with the real collector:
+    # test_publisher_deepen_scope_matches_the_collector_declaration asserts that.
+    collector_dir = origin / "bin/panorama"
+    collector_dir.mkdir(parents=True, exist_ok=True)
+    (collector_dir / "panorama-collect.py").write_text(
+        "ANCESTRY_VERIFIED_SUBMODULES = {'A8': 'projects/omo'}\n", encoding="utf-8")
+    git(origin, "add", "bin/panorama/panorama-collect.py")
+    git(origin, "commit", "-m", "fixture collector declaration")
     checkout = tmp_path / "publisher"
     git(tmp_path, "clone", str(origin), str(checkout))
     git(tmp_path, "clone", str(child), str(checkout / "child"))
@@ -68,15 +81,14 @@ def sandbox(tmp_path, monkeypatch):
             pin = git(checkout, "rev-parse", "HEAD:child")
             return real_run(["git", "checkout", "--detach", pin], cwd=checkout / "child",
                             capture_output=True, text=True)
-        if cmd[:3] == ["git", "submodule", "foreach"]:
+        if cmd[:2] == ["git", "-C"] and "fetch" in cmd:
             # Mirror the real deepen without depending on the sandbox's remote
-            # transport: the emitted depth is what these tests assert on. A
-            # failure injection point models the flaky TLS observed on the host.
+            # transport: the emitted path and depth are what these tests assert
+            # on. A failure injection point models the flaky TLS on the host.
             if transport.get("deepen_fail_times", 0) > 0:
                 transport["deepen_fail_times"] -= 1
                 return subprocess.CompletedProcess(cmd, 128, "", "SSL_ERROR_SYSCALL")
-            return real_run(["git", "-C", str(checkout / "child"), "rev-parse", "HEAD"],
-                            capture_output=True, text=True)
+            return subprocess.CompletedProcess(cmd, 0, "", "")
         if any(str(x).endswith("panorama-collect.py") for x in cmd):
             return subprocess.CompletedProcess(cmd, 0, "fixture collection complete", "")
         return real_run(cmd, *args, **kwargs)
@@ -89,6 +101,10 @@ def expensive(calls):
     return [cmd for cmd, _ in calls if cmd[:2] in (
         ["git", "reset"], ["git", "clean"], ["git", "submodule"])
         and cmd != ["git", "clean", "-ndx"]]
+
+
+def deepen_calls(calls):
+    return [cmd for cmd, _ in calls if cmd[:2] == ["git", "-C"] and "fetch" in cmd]
 
 
 def test_alignment_preserves_real_root_and_child_indexes(sandbox, monkeypatch):
@@ -186,9 +202,10 @@ def test_real_upstream_change_runs_original_alignment_and_new_target(sandbox):
     assert expensive(calls) == [["git", "reset", "--hard", "origin/main"],
         ["git", "clean", "-fdx"], ["git", "submodule", "sync", "--recursive"],
         ["git", "submodule", "update", "--init", "--depth",
-         str(mod.SUBMODULE_HISTORY_DEPTH)],
-        ["git", "submodule", "foreach", "--quiet",
-         f"git fetch --depth {mod.SUBMODULE_HISTORY_DEPTH} origin"]]
+         str(mod.SUBMODULE_HISTORY_DEPTH)]]
+    assert deepen_calls(calls) == [
+        ["git", "-C", str(checkout / "projects/omo"), "fetch", "--depth",
+         str(mod.SUBMODULE_HISTORY_DEPTH), "origin"]]
     assert git(checkout, "rev-parse", "HEAD") == git(origin, "rev-parse", "HEAD")
     assert (checkout / "file").read_text() == "actual new upstream"
 
@@ -289,29 +306,29 @@ def test_real_upstream_change_widens_submodule_history(sandbox):
 
     所以 publisher 必须显式 fetch, 否则 A8 的祖先判据在生产里永不可判。
     """
-    mod, _, origin, _, calls, _, git = sandbox
+    mod, checkout, origin, _, calls, _, git = sandbox
     (origin / "file").write_text("history widening advance")
     git(origin, "add", "file"); git(origin, "commit", "-m", "advance for history")
     assert mod.main() == 0
-    deepens = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "foreach"]]
+    deepens = deepen_calls(calls)
     assert deepens, "publisher 必须显式加深深子模块历史"
     for cmd in deepens:
-        script = cmd[-1]
-        assert script == f"git fetch --depth {mod.SUBMODULE_HISTORY_DEPTH} origin", cmd
+        assert cmd[cmd.index("--depth") + 1] == str(mod.SUBMODULE_HISTORY_DEPTH), cmd
+        assert cmd[-1] == "origin", cmd
+        assert cmd[2] == str(checkout / "projects/omo"), cmd
 
 
 def test_real_submodule_history_deepen_retries_a_flaky_network(sandbox):
-    """一次 sweep 是 16 个子模块各取一次, 网络抖动下单次尝试几乎必然失败。
+    """网络抖动下单次尝试会失败, 不重试就等于没有修。
 
-    本机实测 (2026-10-20) 连 github.com 的 TLS 握手约 1/3 概率 SSL_ERROR_SYSCALL,
-    于是 1-(2/3)^16 ≈ 99.7% 的 sweep 会失败 —— 不重试就等于没有修。
+    本机实测 (2026-10-20) 连 github.com 的 TLS 握手约 1/3 概率 SSL_ERROR_SYSCALL。
     """
     mod, _, origin, _, calls, transport, git = sandbox
     (origin / "file").write_text("flaky network advance")
     git(origin, "add", "file"); git(origin, "commit", "-m", "advance for flaky")
     transport["deepen_fail_times"] = mod.SUBMODULE_DEEPEN_ATTEMPTS - 1
     assert mod.main() == 0
-    deepens = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "foreach"]]
+    deepens = deepen_calls(calls)
     assert len(deepens) == mod.SUBMODULE_DEEPEN_ATTEMPTS, deepens
     assert transport["deepen_fail_times"] == 0
 
@@ -323,6 +340,40 @@ def test_real_submodule_history_deepen_fails_closed_when_retries_are_exhausted(s
     git(origin, "add", "file"); git(origin, "commit", "-m", "advance for permanent flake")
     transport["deepen_fail_times"] = mod.SUBMODULE_DEEPEN_ATTEMPTS + 5
     assert mod.main() == 1
-    deepens = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "foreach"]]
+    deepens = deepen_calls(calls)
     assert len(deepens) == mod.SUBMODULE_DEEPEN_ATTEMPTS, deepens
     assert '"event": "failed"' in mod.LOG_PATH.read_text()
+
+
+def test_publisher_deepen_scope_matches_the_collector_declaration():
+    """单一真源: publisher 加深哪些子模块, 必须等于 collector 声明的那份。
+
+    A8 的祖先判据靠 pin 之后的历史才能评估。若 publisher 的名单与 collector 的
+    声明漂移, A8 会悄悄退回 ABSENT 而无人察觉 —— 所以这条断言是名单的自洽检查。
+    """
+    root = Path(__file__).resolve().parents[1]
+    source = root / "bin/panorama/projection-full-refresh.py"
+    spec = importlib.util.spec_from_file_location("sync_mvp_scope", source)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    declared = module.ancestry_verified_submodules(
+        root / "bin/panorama/panorama-collect.py"
+    )
+    assert declared, "collector 必须声明至少一个按祖先关系被读取的子模块"
+    assert all(not Path(rel).is_absolute() and ".." not in Path(rel).parts for rel in declared)
+    assert "projects/omo" in declared
+
+
+def test_publisher_does_not_deepen_submodules_it_does_not_need(sandbox):
+    """只有被声明按祖先关系读取的子模块才付网络成本, 不是全部 16 个。"""
+    mod, checkout, origin, _, calls, _, git = sandbox
+    (origin / "file").write_text("scope advance")
+    git(origin, "add", "file"); git(origin, "commit", "-m", "advance for scope")
+    assert mod.main() == 0
+    deepens = deepen_calls(calls)
+    targets = {Path(cmd[2]).relative_to(checkout).as_posix() for cmd in deepens}
+    declared = set(mod.ancestry_verified_submodules(
+        checkout / "bin/panorama/panorama-collect.py"))
+    assert targets == declared, (targets, declared)
+    assert targets != set(), "声明非空时必须有加深动作"
+

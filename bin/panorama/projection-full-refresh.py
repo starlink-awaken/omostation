@@ -44,9 +44,9 @@ PUBLISHER_TIMEOUT_SEC = 3600  # 全量采集典型 5~14min, 留足裕量
 # 200 与本文件上方 clone 自身的深度同值, 对 60 留 3x 裕量。
 SUBMODULE_HISTORY_DEPTH = 200
 # 加深的尝试次数与重试间隔。本机网络实测抖动 (2026-10-20: 连 github.com 的 TLS 握手
-# 约 1/3 概率 SSL_ERROR_SYSCALL), 而一次 sweep 是 16 个子模块各取一次 —— 单次尝试
-# 的失败率约 1-(2/3)^16 ≈ 99.7%, 等于没有修。已加深的子模块再跑是 no-op, 所以整轮
-# 重试是安全且幂等的。
+# 约 1/3 概率 SSL_ERROR_SYSCALL), 单次尝试的失败率不可忽略。已加深的子模块再跑是
+# no-op, 所以重试是安全且幂等的。加深范围由 ancestry_verified_submodules() 从
+# collector 导出 —— 只有真正按祖先关系被读取的子模块才付这份网络成本。
 SUBMODULE_DEEPEN_ATTEMPTS = 5
 STEP_RETRY_DELAY_SEC = 3
 # event_ledger 是运行时文件（不在检出内）—— publisher 检出每轮 clean -fdx，那份按构造不存在。
@@ -83,6 +83,34 @@ def log(event: str, **kw) -> None:
     with LOG_PATH.open("a", encoding="utf-8") as f:
         f.write(line + "\n")
     print(line, flush=True)
+
+
+def ancestry_verified_submodules(collector: Path) -> tuple[str, ...]:
+    """读出 collector 声明的「按祖先关系被读取的子模块」，作为加深的唯一范围。
+
+    名单的单一真源是 ``panorama-collect.py`` 的 ``ANCESTRY_VERIFIED_SUBMODULES``：
+    那边加一条，publisher 就自动多准备一个子模块的历史，反之亦然。用 AST 而不是正则
+    读，是为了让改名字面量（`"projects/omo"` → `OMO_REL`）不至于静默失配 —— 那类
+    失配会让 A8 悄悄退回 ABSENT。
+    """
+    import ast
+
+    tree = ast.parse(collector.read_text(encoding="utf-8"), filename=str(collector))
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(isinstance(t, ast.Name) and t.id == "ANCESTRY_VERIFIED_SUBMODULES"
+                   for t in node.targets):
+            continue
+        if not isinstance(node.value, ast.Dict):
+            raise ValueError("ANCESTRY_VERIFIED_SUBMODULES must be a dict literal")
+        paths = []
+        for value in node.value.values:
+            if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
+                raise ValueError("ANCESTRY_VERIFIED_SUBMODULES values must be string literals")
+            paths.append(value.value)
+        return tuple(paths)
+    raise ValueError("ANCESTRY_VERIFIED_SUBMODULES not found in " + str(collector))
 
 
 def run(cmd: list[str], *, cwd: Path | None = None, timeout: int | None = None,
@@ -265,22 +293,30 @@ def main() -> int:
             return fail("fetched_main_oid_invalid")
         unchanged, alignment = checkout_alignment(CHECKOUT, target)
         log("checkout_alignment", route="unchanged" if unchanged else "full", **alignment)
-        steps = [] if unchanged else [
+        # `--depth` cannot widen an already-shallow checkout: re-running
+        # `submodule update --init --depth 200` over a depth-1 submodule leaves
+        # it at 1 commit (verified locally). Ancestry-verified gates need the
+        # real history behind the pin, so fetch it explicitly — and only for the
+        # submodules the collector declares, not all 16: the list is the single
+        # source of truth and today it is one entry, so the failure surface
+        # shrinks with it. `--depth` (not `--deepen`) keeps the boundary
+        # bounded and the step idempotent.
+        ancestry_submodules = () if unchanged else ancestry_verified_submodules(
+            CHECKOUT / "bin/panorama/panorama-collect.py"
+        )
+        deepen_steps = [
+            (["git", "-C", str(CHECKOUT / rel), "fetch", "--depth",
+              str(SUBMODULE_HISTORY_DEPTH), "origin"],
+             600, SUBMODULE_DEEPEN_ATTEMPTS)
+            for rel in ancestry_submodules
+        ]
+        steps = ([] if unchanged else [
             (["git", "reset", "--hard", "origin/main"], 300, 1),
             (["git", "clean", "-fdx"], 600, 1),
             (["git", "submodule", "sync", "--recursive"], 300, 1),
             (["git", "submodule", "update", "--init", "--depth",
               str(SUBMODULE_HISTORY_DEPTH)], 3600, 1),
-            # `--depth` cannot widen an already-shallow checkout: re-running
-            # `submodule update --init --depth 200` over a depth-1 submodule
-            # leaves it at 1 commit (verified locally). A8's
-            # `merge-base --is-ancestor <omo PR #173 merge> HEAD` needs the real
-            # history behind the pin, so fetch it explicitly. `--depth` (not
-            # `--deepen`) keeps the boundary bounded and the step idempotent.
-            (["git", "submodule", "foreach", "--quiet",
-              f"git fetch --depth {SUBMODULE_HISTORY_DEPTH} origin"],
-             1800, SUBMODULE_DEEPEN_ATTEMPTS),
-        ]
+        ]) + deepen_steps
         if not unchanged:
             clear_stale_git_lock(CHECKOUT)
         for cmd, timeout, attempts in steps:
