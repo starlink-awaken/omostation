@@ -43474,7 +43474,8 @@ bets:
     （WD = `~/.local/opt/omostation-cockpit/releases/<40 位 OID>`）。
 
     '
-  status: in_progress
+  status: done
+  done_at: 2026-10-20
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -43488,21 +43489,50 @@ bets:
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-259.md
+  - docs/reports/2026-10-20-b3-admission-review-checklist-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md
     spec_version: 1.0.0
     content_digest: sha256:f4556ffb6f0f5374c830760f544c78ac683d014a0b2e35a6576c8a0dd27ac630
     decision_ref: decision://accepted/BET-Y2Q4-T10-259
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91107174f86fb5d74523c8770c6a48e8a5863861
+          tests:
+            ref: receipt://docs/reports/2026-10-20-b3-admission-review-checklist-closeout.md
+            sha256: sha256:640522d6825fc6d49f2d1f03c3a15f3384cbedffcc787ee2f8c1095d529eb7d4
+          diff:
+            ref: receipt://docs/reports/2026-10-20-b3-admission-review-checklist-closeout.md
+            sha256: sha256:640522d6825fc6d49f2d1f03c3a15f3384cbedffcc787ee2f8c1095d529eb7d4
+          rollback:
+            ref: receipt://docs/reports/2026-10-20-b3-admission-review-checklist-closeout.md
+            sha256: sha256:640522d6825fc6d49f2d1f03c3a15f3384cbedffcc787ee2f8c1095d529eb7d4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-259.md
+            sha256: sha256:6fcdf78927a7fa94364e3d1f757a88704248a3b15cdc4e5e2d6c7287f9acdfa8
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-20-b3-admission-review-checklist-closeout.md
+            sha256: sha256:640522d6825fc6d49f2d1f03c3a15f3384cbedffcc787ee2f8c1095d529eb7d4
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-20-b3-admission-review-checklist-closeout.md
+            sha256: sha256:640522d6825fc6d49f2d1f03c3a15f3384cbedffcc787ee2f8c1095d529eb7d4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-259.md
+            sha256: sha256:6fcdf78927a7fa94364e3d1f757a88704248a3b15cdc4e5e2d6c7287f9acdfa8
+          cleanup:
+            ref: receipt://docs/reports/2026-10-20-b3-admission-review-checklist-closeout.md
+            sha256: sha256:640522d6825fc6d49f2d1f03c3a15f3384cbedffcc787ee2f8c1095d529eb7d4
       value:
         status: NOT_PROVEN
         evidence: {}
