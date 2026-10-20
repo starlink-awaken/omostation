@@ -43576,6 +43576,88 @@ bets:
     若宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成 → 停止。
 
     '
+- id: BET-Y2Q4-T10-260
+  title: ADR-0456 B3 附属债 — 仓内唯一不可解析的 launchd plist 镜像（panorama-refresh-guard）注释含 `--`，argv
+    文档移到 Python 侧而非删除（不碰运行面）
+  goal: '`bin/ops/launchd/com.omostation.panorama-refresh-guard.plist:26` 的注释写了确切命令行
+    `python3 bin/gac/panorama-refresh-guard.py --json --dry-run`。XML 规范禁止注释内出现连续两个半角连字符，
+    于是这份镜像**从未被任何安装器解析成功过**：`plistlib` / expat 报 `ExpatError: line 26, column 48`， 而
+    `~/Library/LaunchAgents/com.omostation.panorama-refresh-guard.plist` 实测不存在 —— 与该文件按注释里
+    `cp` + `launchctl bootstrap` 根本无法安装这件事一致。 检测器已存在且正确报错（`tests/unit/test_launchd_plists_xml_safe.py`
+    两条 FAILED），但 `.github/workflows/governance-check.yml:118-127` 的 pytest 白名单不含 `tests/unit/**`，
+    所以 CI 恒绿、main 恒红而无人可见（AGENTS.md §7 已记该盲区，本 BET 是它的一个具体受害文件）。 本轮要的是**消除非法性且不丢信息**：argv
+    移到 `--` 合法的一侧（脚本模块文档），plist 注释留指针。 基线读数（2026-10-20T02:52Z @ origin/main@0329ceeb3，隔离检出复测）：`2
+    failed, 2 passed` （`test_every_launchd_plist_parses_with_plistlib` + `test_plist_comments_contain_no_double_hyphen`）；
+    offender 唯一一行 line 26。补丁已在临时副本上由检测器自身验算通过：`plistlib parses OK / detector offenders
+    = [] / docstring carries the exact argv: True / ast.parse OK`。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-20-launchd-plist-mirror-xml-legal-argv.md
+  - bin/gac/panorama-refresh-guard.py
+  - bin/ops/launchd/com.omostation.panorama-refresh-guard.plist
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-260.md
+  - docs/reports/2026-10-20-launchd-plist-mirror-xml-legal-argv-closeout.md
+  non_goals:
+  - 不写 ~/Library/LaunchAgents，不 bootout/bootstrap/kickstart，不改 crontab（运行面署名动作）
+  - 不判定 com.omostation.panorama-refresh-guard 该不该活（属 task
+  - 不在本 BET 内扩 CI 的 pytest 白名单（`tests/unit/**` 是否进 CI 是独立问题，另行提出）
+  - 不宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成
+  done_when:
+  - 该镜像文件可被 plistlib 解析（exit 0），且 `tests/unit/test_launchd_plists_xml_safe.py` 全绿
+  - 确切 argv 仍在仓内可 grep 到，且命中在 `bin/gac/panorama-refresh-guard.py` 的模块文档侧（信息未删）
+  - 注释文本中不存在 `--`（检测器 offenders 为空），且未把注释挪到 `<!DOCTYPE` 之后（那是骗检测器不是修非法性）
+  - 运行面零效应：`~/Library/LaunchAgents/com.omostation.panorama-refresh-guard.plist` 仍不存在、
+    `~/Library/LaunchAgents` 仍 77 份 plist、`crontab -l` sha256 前 16 位仍为 `cbf14ddc2fdd972a`
+  - spec 落 canonical 位且 doc-governance tracked 无新告警；台账 lint 仍 `no errors`
+  verify:
+  - cmd: python3 -c "import plistlib,pathlib; d=plistlib.loads(pathlib.Path('bin/ops/launchd/com.omostation.panorama-refresh-guard.plist').read_bytes());
+      print(d['Label'])"
+    expect: com.omostation.panorama-refresh-guard（exit 0，无 ExpatError）
+  - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_launchd_plists_xml_safe.py -q -p no:randomly
+    expect: 0 failed
+  - cmd: git grep -n "panorama-refresh-guard.py --json --dry-run"
+    expect: 命中仅出现在 bin/gac/panorama-refresh-guard.py（不在 plist 内）
+  - cmd: python3 -c "import pathlib; p=pathlib.Path.home()/'Library/LaunchAgents'; print(sum(1
+      for x in p.iterdir() if 'panorama-refresh-guard' in x.name), len(list(p.glob('*.plist'))))"
+    expect: 0 77 —— 该 label 仍未安装且 LaunchAgents 计数未变（用 python 计数而非 ls 管道，因为零匹配会断链且本机
+      ls/grep 是别名）
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: OK，no errors
+  circuit_breaker: '若消除非法性只能靠放宽检测器（改注释判据、把 offender 加豁免、或把注释移到 `<!DOCTYPE` 之后）→ 停止并保留原判据：那三形都只骗过测试，expat
+    仍整份拒。若需要写 `~/Library/LaunchAgents` 或 bootstrap 才能验证 → 停止，那是运行面署名动作且属 B4b 批次 2+。若需要顺带把
+    `tests/unit/**` 接进 CI 白名单才能收口 → 停止并如实登记为独立问题，不在本 BET 夹带 CI 面扩张。若需要判定该 job 该不该活 →
+    停止，那是 task #124 的准入清单。不宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-20-launchd-plist-mirror-xml-legal-argv.md
+    spec_version: 1.0.0
+    content_digest: sha256:922daf45f32cd9aca6d43096e5c1ce35042a580fef4ce97eefdad1e00edbb418
+    decision_ref: decision://accepted/BET-Y2Q4-T10-260
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -43714,7 +43796,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 553
+  total_bets: 554
   windows:
   - Y1Q1
   - Y1Q2
