@@ -265,6 +265,14 @@ def main() -> int:
             (["git", "submodule", "sync", "--recursive"], 300),
             (["git", "submodule", "update", "--init", "--depth",
               str(SUBMODULE_HISTORY_DEPTH)], 3600),
+            # `--depth` cannot widen an already-shallow checkout: re-running
+            # `submodule update --init --depth 200` over a depth-1 submodule
+            # leaves it at 1 commit (verified locally). A8's
+            # `merge-base --is-ancestor <omo PR #173 merge> HEAD` needs the real
+            # history behind the pin, so fetch it explicitly. `--depth` (not
+            # `--deepen`) keeps the boundary bounded and the step idempotent.
+            (["git", "submodule", "foreach", "--quiet",
+              f"git fetch --depth {SUBMODULE_HISTORY_DEPTH} origin"], 1800),
         ]
         if not unchanged:
             clear_stale_git_lock(CHECKOUT)

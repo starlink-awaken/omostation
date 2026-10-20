@@ -68,6 +68,11 @@ def sandbox(tmp_path, monkeypatch):
             pin = git(checkout, "rev-parse", "HEAD:child")
             return real_run(["git", "checkout", "--detach", pin], cwd=checkout / "child",
                             capture_output=True, text=True)
+        if cmd[:3] == ["git", "submodule", "foreach"]:
+            # Mirror the real deepen without depending on the sandbox's remote
+            # transport: the emitted depth is what these tests assert on.
+            return real_run(["git", "-C", str(checkout / "child"), "rev-parse", "HEAD"],
+                            capture_output=True, text=True)
         if any(str(x).endswith("panorama-collect.py") for x in cmd):
             return subprocess.CompletedProcess(cmd, 0, "fixture collection complete", "")
         return real_run(cmd, *args, **kwargs)
@@ -177,7 +182,9 @@ def test_real_upstream_change_runs_original_alignment_and_new_target(sandbox):
     assert expensive(calls) == [["git", "reset", "--hard", "origin/main"],
         ["git", "clean", "-fdx"], ["git", "submodule", "sync", "--recursive"],
         ["git", "submodule", "update", "--init", "--depth",
-         str(mod.SUBMODULE_HISTORY_DEPTH)]]
+         str(mod.SUBMODULE_HISTORY_DEPTH)],
+        ["git", "submodule", "foreach", "--quiet",
+         f"git fetch --depth {mod.SUBMODULE_HISTORY_DEPTH} origin"]]
     assert git(checkout, "rev-parse", "HEAD") == git(origin, "rev-parse", "HEAD")
     assert (checkout / "file").read_text() == "actual new upstream"
 
@@ -267,9 +274,23 @@ def test_real_upstream_change_does_not_emit_a_depth_one_submodule_update(sandbox
     (origin / "file").write_text("another upstream advance")
     git(origin, "add", "file"); git(origin, "commit", "-m", "advance again")
     assert mod.main() == 0
-    emitted = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "update"]]
-    assert emitted, "publisher 必须发出 submodule update"
-    for cmd in emitted:
+    for cmd in (cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "update"]):
         depth = int(cmd[cmd.index("--depth") + 1])
         assert depth > 1, f"depth 1 无法评估 A8 的祖先判据: {cmd}"
         assert depth == mod.SUBMODULE_HISTORY_DEPTH
+
+
+def test_real_upstream_change_widens_submodule_history(sandbox):
+    """`--depth` 加不出历史: 已存在的浅子模块重跑 update 仍是 1 个 commit。
+
+    所以 publisher 必须显式 fetch, 否则 A8 的祖先判据在生产里永不可判。
+    """
+    mod, _, origin, _, calls, _, git = sandbox
+    (origin / "file").write_text("history widening advance")
+    git(origin, "add", "file"); git(origin, "commit", "-m", "advance for history")
+    assert mod.main() == 0
+    deepens = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "foreach"]]
+    assert deepens, "publisher 必须显式加深深子模块历史"
+    for cmd in deepens:
+        script = cmd[-1]
+        assert script == f"git fetch --depth {mod.SUBMODULE_HISTORY_DEPTH} origin", cmd
