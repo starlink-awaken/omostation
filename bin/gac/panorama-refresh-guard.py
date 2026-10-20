@@ -11,6 +11,8 @@ because it only probes :43191.
 
 This guard treats the *artifact* as the contract: if the snapshot is missing
 or older than the budget, kickstart the job and record why.
+
+Manual check: `python3 bin/gac/panorama-refresh-guard.py --json --dry-run`
 """
 
 from __future__ import annotations
