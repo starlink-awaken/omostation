@@ -70,7 +70,11 @@ def sandbox(tmp_path, monkeypatch):
                             capture_output=True, text=True)
         if cmd[:3] == ["git", "submodule", "foreach"]:
             # Mirror the real deepen without depending on the sandbox's remote
-            # transport: the emitted depth is what these tests assert on.
+            # transport: the emitted depth is what these tests assert on. A
+            # failure injection point models the flaky TLS observed on the host.
+            if transport.get("deepen_fail_times", 0) > 0:
+                transport["deepen_fail_times"] -= 1
+                return subprocess.CompletedProcess(cmd, 128, "", "SSL_ERROR_SYSCALL")
             return real_run(["git", "-C", str(checkout / "child"), "rev-parse", "HEAD"],
                             capture_output=True, text=True)
         if any(str(x).endswith("panorama-collect.py") for x in cmd):
@@ -294,3 +298,31 @@ def test_real_upstream_change_widens_submodule_history(sandbox):
     for cmd in deepens:
         script = cmd[-1]
         assert script == f"git fetch --depth {mod.SUBMODULE_HISTORY_DEPTH} origin", cmd
+
+
+def test_real_submodule_history_deepen_retries_a_flaky_network(sandbox):
+    """一次 sweep 是 16 个子模块各取一次, 网络抖动下单次尝试几乎必然失败。
+
+    本机实测 (2026-10-20) 连 github.com 的 TLS 握手约 1/3 概率 SSL_ERROR_SYSCALL,
+    于是 1-(2/3)^16 ≈ 99.7% 的 sweep 会失败 —— 不重试就等于没有修。
+    """
+    mod, _, origin, _, calls, transport, git = sandbox
+    (origin / "file").write_text("flaky network advance")
+    git(origin, "add", "file"); git(origin, "commit", "-m", "advance for flaky")
+    transport["deepen_fail_times"] = mod.SUBMODULE_DEEPEN_ATTEMPTS - 1
+    assert mod.main() == 0
+    deepens = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "foreach"]]
+    assert len(deepens) == mod.SUBMODULE_DEEPEN_ATTEMPTS, deepens
+    assert transport["deepen_fail_times"] == 0
+
+
+def test_real_submodule_history_deepen_fails_closed_when_retries_are_exhausted(sandbox):
+    """重试不是掩盖: 用尽后必须仍然 fail-closed。"""
+    mod, _, origin, _, calls, transport, git = sandbox
+    (origin / "file").write_text("permanently flaky advance")
+    git(origin, "add", "file"); git(origin, "commit", "-m", "advance for permanent flake")
+    transport["deepen_fail_times"] = mod.SUBMODULE_DEEPEN_ATTEMPTS + 5
+    assert mod.main() == 1
+    deepens = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "foreach"]]
+    assert len(deepens) == mod.SUBMODULE_DEEPEN_ATTEMPTS, deepens
+    assert '"event": "failed"' in mod.LOG_PATH.read_text()
