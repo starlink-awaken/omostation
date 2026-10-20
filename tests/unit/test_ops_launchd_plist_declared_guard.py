@@ -28,9 +28,9 @@ SERVICES = ROOT / ".omo" / "_truth" / "registry" / "services.yaml"
 # 补齐一条却不从这里的删掉就应当红，否则豁免面会变成只增不减的暗账。
 # · com.omostation.arch-health-weekly —— 本机从未安装，属 #97 / BET-Y2Q4-T10-237 那条
 #   「注册在案但未装机」的裁定面，归署名决定，不在本轮。
-# · com.omostation.panorama-refresh-guard —— plist 头部说明文字里有 `--dry-run`，
-#   `--` 在 XML 注释内非法 ⇒ 整份文件 plistlib 不可解析（另铸 BET 修文件本体）。
-#   它同时未声明，且未装机；登记与否同样是署名面。
+# · com.omostation.panorama-refresh-guard —— 曾因其 plist 注释含 `--` 而整份不可解析，
+#   该缺陷已由 BET-Y2Q4-T10-260 消除（argv 移到脚本模块文档）。缺口本身不变：它未声明、
+#   且本机未装机 —— 登记与否属署名面（task #124），不因文件变合法而自动放行。
 ALLOWLIST = frozenset(
     {
         "com.omostation.arch-health-weekly",
@@ -40,7 +40,7 @@ ALLOWLIST = frozenset(
 
 _ALLOWLIST_REASON = {
     "com.omostation.arch-health-weekly": "本机从未安装，装机与否属署名裁定（#97）",
-    "com.omostation.panorama-refresh-guard": "plist XML 非法且未装机，文件缺陷另铸 BET",
+    "com.omostation.panorama-refresh-guard": "本机未装机，登记与否属署名裁定（#124）",
 }
 
 
@@ -138,13 +138,46 @@ def test_services_body_doc_carries_the_namespace_partition_too() -> None:
     assert "launchd_namespace" in body, "launchd_namespace 不得另起一份文档"
 
 
-def test_malformed_plist_still_reports_its_label() -> None:
-    """XML 非法的那条不许因为「解析失败」从守卫视野里消失（非目标：修文件本体另铸 BET）。"""
-    name = "com.omostation.panorama-refresh-guard.plist"
-    assert PLIST_LABELS[name] == "com.omostation.panorama-refresh-guard"
+def test_text_fallback_reports_label_of_an_unparseable_plist(tmp_path: Path) -> None:
+    """非法 XML 不许从守卫视野里消失 —— 用合成样本钉，不钉某个真实缺陷还活着。
+
+    本用例原先直接拿真实那份 plist 断言「解析必须失败」，于是它把自己钉在一次性的缺陷上：
+    BET-Y2Q4-T10-260 修好文件本体后该前提按构造消失（AGENTS.md §7②「时钟炸弹」的反面：
+    fixture 写死一个会被授权修掉的真实状态）。换成合成样本之后，回退分支的覆盖与
+    那份 plist 修没修**解耦**，而「不许静默放过」这条不变式仍然有牙齿。
+    """
+    synthetic = tmp_path / "com.example.synthetic-malformed.plist"
+    synthetic.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        "<!-- 手动触发: python3 bin/gac/x.py --json --dry-run —— XML 注释体内禁止连续两个半角连字符 -->\n"
+        '<plist version="1.0"><dict>\n'
+        "<key>Label</key><string>com.example.synthetic-malformed</string>\n"
+        "</dict></plist>\n",
+        encoding="utf-8",
+    )
     try:
-        plistlib.loads((PLIST_DIR / name).read_bytes())
+        plistlib.loads(synthetic.read_bytes())
     except Exception:
-        return
-    raise AssertionError(f"{name} 已可被 plistlib 解析：本用例的前提（XML 非法）已消失，"
-                         "该 label 应同时从 ALLOWLIST 摘除并登记进 services.yaml")
+        pass
+    else:
+        raise AssertionError("合成样本必须不可解析，否则本用例没有验到文本抽取回退分支")
+    assert labels_from_plists([synthetic]) == {
+        "com.example.synthetic-malformed.plist": "com.example.synthetic-malformed"
+    }
+
+
+def test_the_xml_fixed_plist_parses_and_stays_an_open_admission() -> None:
+    """文件本体已合法（BET-Y2Q4-T10-260），但登记与否仍是署名面 —— 两条都得钉住。
+
+    把该 label 登记进 services.yaml 而无人署名 ⇒ `test_allowlist_is_exactly_the_measured_undebt`
+    当场红（UNDECLARED 少一条而清单没少）；豁免理由若还写着「XML 非法」⇒ 本用例红（陈旧指针，
+    AGENTS.md §7⑥）。
+    """
+    name = "com.omostation.panorama-refresh-guard.plist"
+    label = PLIST_LABELS[name]
+    assert label == "com.omostation.panorama-refresh-guard"
+    parsed = plistlib.loads((PLIST_DIR / name).read_bytes())
+    assert parsed["Label"] == label
+    assert label in UNDECLARED, "该机未装且未登记，缺口必须仍然可见"
+    assert label in ALLOWLIST
+    assert "XML 非法" not in _ALLOWLIST_REASON[label], "豁免理由陈旧：该缺陷已由 BET-Y2Q4-T10-260 消除"
