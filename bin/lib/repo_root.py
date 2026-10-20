@@ -15,6 +15,9 @@
                             映射单源自 .omo/_truth/registry/runtime-projections.yaml,
                             不要写死 legacy 路径 —— ADR-0129 Phase 2 之后 legacy 那份
                             在 fresh checkout 里根本不存在, 在生产机上又是冻结的。
+  问"在跑的到底是哪棵树的码" → assert_import_root(<pkg>.__file__) / import_root_report();
+                            venv 的 site-packages/*.pth 会把导入根钉死在某个检出上,
+                            它不跟 cwd 走 —— ADR-0456 :246。
 
 第四条 placement 判据 (BET-Y2Q4-T10-209, 交付运行态):
   机器级、长于单检出的交付运行态 (delivery runs/locks/events, 即
@@ -38,8 +41,10 @@ B4a (2026-09-27) 落了安装位本体 (~/.local/opt/omostation —— 独立 cl
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
+import sys
 from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
 
@@ -51,6 +56,8 @@ LEDGER_RELATIVE = Path("runtime") / "omo" / "event-ledger.sqlite3"
 
 INSTALL_ROOT_ENV = "OMOSTATION_INSTALL_ROOT"
 INSTALL_ROOT_RELATIVE = Path(".local") / "opt" / "omostation"
+
+IMPORT_PROBE_ENV = "OMOSTATION_IMPORT_PROBE_MODULE"
 
 PROJECTIONS_REGISTRY_RELATIVE = Path(".omo") / "_truth" / "registry" / "runtime-projections.yaml"
 
@@ -117,6 +124,112 @@ def install_root() -> Path | None:
     env = os.environ.get(INSTALL_ROOT_ENV)
     candidate = Path(env).expanduser() if env else Path.home() / INSTALL_ROOT_RELATIVE
     return candidate if (candidate / MARKER).is_file() else None
+
+
+class ImportRootMismatch(ValueError):
+    """被检模块的导入根不在期望检出根之下 (ADR-0456 :246 的那次事故形状)。"""
+
+
+def _resolve_or_none(path: Path) -> Path | None:
+    try:
+        return path.resolve()
+    except OSError:
+        return None
+
+
+def import_root_report(
+    module_file: str | Path | None = None,
+    *,
+    root: str | Path | None = None,
+) -> dict[str, object]:
+    """非抛出判定: 这份模块文件落在哪个检出根下 (C2, 供诊断面)。
+
+    `under=None` 表示**无从判定** (空 / 相对 / 解析失败), 不得折叠成 True —— 与
+    AGENTS.md §7⑨「坏了与空同形」同族。`module_file=None` 探的是 repo_root 自己
+    所在的检出 (即 `code_root()`), 按构造恒等, 它的作用是给调用方一个可比的对。
+    """
+    base_raw = code_root() if root is None else Path(str(root))
+    if module_file is None:
+        target_raw: Path | None = Path(__file__)
+    elif str(module_file).strip():
+        target_raw = Path(str(module_file))
+    else:
+        target_raw = None
+    if target_raw is None:
+        return {"expected_root": str(base_raw), "module_file": None, "under": None, "ok": False}
+    base = _resolve_or_none(base_raw) if base_raw.is_absolute() else None
+    if base is None or not target_raw.is_absolute():
+        return {"expected_root": str(base_raw), "module_file": str(target_raw), "under": None, "ok": False}
+    target = _resolve_or_none(target_raw)
+    if target is None:
+        return {"expected_root": str(base), "module_file": str(target_raw), "under": None, "ok": False}
+    # 边界用 relative_to 而不是 parents 交集: /tmp/ir-root 与 /private/tmp/ir-root 两条
+    # resolve 链的父段集合有交集 ({/private, /private/tmp}), 用父段判交会「不在根下」当「在根下」。
+    try:
+        target.relative_to(base)
+    except ValueError:
+        under = False
+    else:
+        under = True
+    return {"expected_root": str(base), "module_file": str(target), "under": under, "ok": under}
+
+
+def assert_import_root(module_file: str | Path | None, *, root: str | Path | None = None) -> Path:
+    """ADR-0456 :246 那条缓解的判据本体: 模块不在期望检出根下就抛, 别让它悄悄跑。
+
+    返回解析后的 root (调用方要的是"确认过的那棵树")。空 / None / 相对路径输入同样抛 ——
+    「读不出来」必须和「读出来没问题」可分。
+    """
+    base_raw = code_root() if root is None else Path(str(root))
+    base = _resolve_or_none(base_raw)
+    if base is None or not base_raw.is_absolute():
+        raise ImportRootMismatch(f"期望检出根必须是可解析的绝对路径, 收到 {base_raw}")
+    if module_file is None or not str(module_file).strip():
+        raise ImportRootMismatch(f"无从判定: module_file 为空 (期望检出根 {base})")
+    target_raw = Path(str(module_file))
+    if not target_raw.is_absolute():
+        raise ImportRootMismatch(f"无从判定: module_file 是相对路径 {target_raw} (期望检出根 {base})")
+    report = import_root_report(target_raw, root=base)
+    if report["under"] is not True:
+        raise ImportRootMismatch(
+            f"导入根不一致: module_file={report['module_file']} 不在 root={base} 之下。"
+            " 在跑的是哪份码由 venv 的 site-packages/*.pth 与 PYTHONPATH 决定, 不跟 cwd 走"
+            " —— 先打 `python -c 'import <pkg>; print(<pkg>.__file__)'` 再看那条 .pth。"
+        )
+    return base
+
+
+def _probe_module_file(value: str) -> str | None:
+    """探针值 → 可判定的模块文件路径。**不执行任何模块本体**。
+
+    三条通道: ① 直接给文件路径; ② 点号名只看已经 import 的 (`sys.modules`, 无副作用);
+    ③ 单层名用 `find_spec` —— 它只走 finder, 不 import 该模块, 所以能回答"哪个副本会赢"
+    而不把被测包执行进诊断进程。带点的名字若尚未 import 则不探 (find_spec 会 import 父包)。
+    """
+    if not value.strip():
+        return None
+    candidate = Path(value).expanduser()
+    if candidate.is_file():
+        return str(candidate)
+    if "." in value:
+        origin = getattr(sys.modules.get(value), "__file__", None)
+        return str(origin) if origin else None
+    try:
+        spec = importlib.util.find_spec(value)
+    except (ImportError, ValueError, AttributeError):
+        return None
+    return str(spec.origin) if spec is not None and spec.origin else None
+
+
+def _import_root_observation(probe: str | None) -> dict[str, object]:
+    """roots_report 的 import_root 字段 (C3)。未设探针 ⇒ `probed: False`, 不得报 `ok: True`。"""
+    if not probe:
+        return {"probed": False, "expected_root": None, "module_file": None, "under": None, "ok": False}
+    target = _probe_module_file(probe)
+    if target is None:
+        return {"probed": True, "expected_root": str(code_root()), "module_file": None, "under": None, "ok": False}
+    report = import_root_report(target)
+    return {"probed": True, **report}
 
 
 def _projection_registry(registry_root: Path | None = None) -> dict[str, tuple[str, str]]:
@@ -262,6 +375,7 @@ def roots_report() -> dict[str, object]:
         "install_root": str(located) if located else None,
         "cwd_is_install_root": bool(located and cwd.resolve() == located.resolve()),
         "cwd_is_canonical_root": bool(canonical and cwd.resolve() == canonical.resolve()),
+        "import_root": _import_root_observation(os.environ.get(IMPORT_PROBE_ENV)),
     }
 
 
@@ -281,6 +395,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 __all__ = (
+    "IMPORT_PROBE_ENV",
+    "ImportRootMismatch",
     "INSTALL_ROOT_ENV",
     "INSTALL_ROOT_RELATIVE",
     "LEDGER_DB_ENV",
@@ -288,9 +404,11 @@ __all__ = (
     "MARKER",
     "PROJECTIONS_REGISTRY_RELATIVE",
     "STATE_ROOT_ENV",
+    "assert_import_root",
     "canonical_root",
     "code_root",
     "event_ledger_path",
+    "import_root_report",
     "install_root",
     "is_worktree",
     "projection_name_for",
