@@ -318,7 +318,9 @@ class RefreshOrchestrator:
     # 2x the logical CPU count on an 18-core host. Above this the collector
     # budgets cannot be met and the sources fail for load reasons, not source
     # reasons; deferring keeps the gates honest instead of painting them red.
-    DEFAULT_MAX_LOAD = 36.0
+    # 1x the logical CPU count. Observed collector timeouts begin around 20-30
+    # on this 18-core host, so a 2x budget (36) never engaged before the failure.
+    DEFAULT_MAX_LOAD = 18.0
 
     def __init__(self, registry: CollectorRegistry | None = None, max_workers: int = 5,
                  collection_timeout: float | None = None):

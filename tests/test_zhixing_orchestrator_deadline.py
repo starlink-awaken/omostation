@@ -248,3 +248,9 @@ def test_deferral_keeps_the_last_good_value(orchestrator, monkeypatch):
     assert state["status"] == "DEFERRED"
     assert state["last_success_at"] == "older"
     assert merged["portfolio"] == prior["portfolio"]
+
+
+def test_default_max_load_tracks_cpu_count(orchestrator, monkeypatch):
+    """The defer threshold must stay at 1x cores; 2x never engaged before failure."""
+    monkeypatch.delenv("ZHIXING_MAX_LOAD", raising=False)
+    assert orchestrator.RefreshOrchestrator.DEFAULT_MAX_LOAD == orchestrator.os.cpu_count()
