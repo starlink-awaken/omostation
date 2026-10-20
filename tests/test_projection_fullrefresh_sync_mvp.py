@@ -68,6 +68,11 @@ def sandbox(tmp_path, monkeypatch):
             pin = git(checkout, "rev-parse", "HEAD:child")
             return real_run(["git", "checkout", "--detach", pin], cwd=checkout / "child",
                             capture_output=True, text=True)
+        if cmd[:3] == ["git", "submodule", "foreach"]:
+            # Mirror the real deepen without depending on the sandbox's remote
+            # transport: the emitted depth is what these tests assert on.
+            return real_run(["git", "-C", str(checkout / "child"), "rev-parse", "HEAD"],
+                            capture_output=True, text=True)
         if any(str(x).endswith("panorama-collect.py") for x in cmd):
             return subprocess.CompletedProcess(cmd, 0, "fixture collection complete", "")
         return real_run(cmd, *args, **kwargs)
@@ -176,7 +181,10 @@ def test_real_upstream_change_runs_original_alignment_and_new_target(sandbox):
     assert mod.main() == 0
     assert expensive(calls) == [["git", "reset", "--hard", "origin/main"],
         ["git", "clean", "-fdx"], ["git", "submodule", "sync", "--recursive"],
-        ["git", "submodule", "update", "--init", "--depth", "1"]]
+        ["git", "submodule", "update", "--init", "--depth",
+         str(mod.SUBMODULE_HISTORY_DEPTH)],
+        ["git", "submodule", "foreach", "--quiet",
+         f"git fetch --depth {mod.SUBMODULE_HISTORY_DEPTH} origin"]]
     assert git(checkout, "rev-parse", "HEAD") == git(origin, "rev-parse", "HEAD")
     assert (checkout / "file").read_text() == "actual new upstream"
 
@@ -242,3 +250,47 @@ def test_real_remote_main_deletion_cannot_reuse_cached_tracking_ref(sandbox):
     assert mod.main() == 1
     assert git(checkout, "rev-parse", "refs/remotes/origin/main") == cached
     assert not any(any(str(x).endswith("panorama-collect.py") for x in cmd) for cmd, _ in calls)
+
+
+# A8 (OMO 外部执行事务) 的判据是
+#   git -C projects/omo merge-base --is-ancestor <omo PR #173 merge> HEAD
+# 对象不在本地时该判据结构性不可判, 与 pin 是否正确无关。depth 1 的检出正是如此,
+# 于是生产里 A8 永远 ABSENT (2026-10-20 实证: publisher 检出的 projects/omo 只有
+# 1 个 commit, 5e1f7eae 不在本地)。下面的断言钉住修复形状: 不许退回 depth 1。
+A8_OMO_MERGE_DISTANCE_AT_2026_10_20 = 60
+
+
+def test_submodule_history_depth_covers_the_a8_ancestry_check(sandbox):
+    mod = sandbox[0]
+    assert isinstance(mod.SUBMODULE_HISTORY_DEPTH, int)
+    assert mod.SUBMODULE_HISTORY_DEPTH >= A8_OMO_MERGE_DISTANCE_AT_2026_10_20, (
+        "A8 的 merge-base --is-ancestor 判据需要这段历史; pin 前移后需重新测量并上调"
+    )
+
+
+def test_real_upstream_change_does_not_emit_a_depth_one_submodule_update(sandbox):
+    """depth 1 是 A8 永久 ABSENT 的直接成因; 任何回退都该让这条断言变红。"""
+    mod, _, origin, _, calls, _, git = sandbox
+    (origin / "file").write_text("another upstream advance")
+    git(origin, "add", "file"); git(origin, "commit", "-m", "advance again")
+    assert mod.main() == 0
+    for cmd in (cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "update"]):
+        depth = int(cmd[cmd.index("--depth") + 1])
+        assert depth > 1, f"depth 1 无法评估 A8 的祖先判据: {cmd}"
+        assert depth == mod.SUBMODULE_HISTORY_DEPTH
+
+
+def test_real_upstream_change_widens_submodule_history(sandbox):
+    """`--depth` 加不出历史: 已存在的浅子模块重跑 update 仍是 1 个 commit。
+
+    所以 publisher 必须显式 fetch, 否则 A8 的祖先判据在生产里永不可判。
+    """
+    mod, _, origin, _, calls, _, git = sandbox
+    (origin / "file").write_text("history widening advance")
+    git(origin, "add", "file"); git(origin, "commit", "-m", "advance for history")
+    assert mod.main() == 0
+    deepens = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "foreach"]]
+    assert deepens, "publisher 必须显式加深深子模块历史"
+    for cmd in deepens:
+        script = cmd[-1]
+        assert script == f"git fetch --depth {mod.SUBMODULE_HISTORY_DEPTH} origin", cmd
