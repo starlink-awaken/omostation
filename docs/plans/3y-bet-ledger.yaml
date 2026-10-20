@@ -43700,7 +43700,8 @@ bets:
   goal: 把 ADR-0456 Consequences :246—247 记的那条缓解做成可调用、可测、可观测的缝。 bin/lib/repo_root.py
     新增 assert_import_root() 与 import_root_report()， roots_report() 的 --json 面加一条 import_root
     字段， 让「这次跑的到底是哪个检出的码」第一次成为一个能被读出来的量。 本轮不把硬断言接到常驻入口，理由与后继顺序见 spec §1。
-  status: in_progress
+  status: done
+  done_at: 2026-10-20
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -43716,6 +43717,8 @@ bets:
   - tests/unit/test_repo_root_import_root_assertion.py
   - docs/superpowers/specs/2026-10-20-import-root-startup-assertion.md
   - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-261.md
+  - docs/reports/2026-10-20-import-root-startup-assertion-closeout.md
   non_goals:
   - 不在 omo 或任何常驻守护进程入口调用硬断言。那会让 B4b 批次 2 的改道变成 crash-loop 保险丝， 而改道本身是逐批授权面（spec §1 把它登记为接线轮的前置顺序）。
   - 不动 launchd、plist、crontab、~/Library/LaunchAgents、services.yaml。
@@ -43769,17 +43772,43 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@79e2b99309f3d7026f5e45619d39a4863786fe79
+          tests:
+            ref: receipt://docs/reports/2026-10-20-import-root-startup-assertion-closeout.md
+            sha256: sha256:561225db32c0c4db4755516d69bd5193c7fc51ad3bb0521ce35c5e530718da23
+          diff:
+            ref: receipt://docs/reports/2026-10-20-import-root-startup-assertion-closeout.md
+            sha256: sha256:561225db32c0c4db4755516d69bd5193c7fc51ad3bb0521ce35c5e530718da23
+          rollback:
+            ref: receipt://docs/reports/2026-10-20-import-root-startup-assertion-closeout.md
+            sha256: sha256:561225db32c0c4db4755516d69bd5193c7fc51ad3bb0521ce35c5e530718da23
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-261.md
+            sha256: sha256:41f7cbe2db16bcdc6027d4f5116669f2742101ada4f9a98cf2a5ffb5e5c24797
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-20-import-root-startup-assertion-closeout.md
+            sha256: sha256:561225db32c0c4db4755516d69bd5193c7fc51ad3bb0521ce35c5e530718da23
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-20-import-root-startup-assertion-closeout.md
+            sha256: sha256:561225db32c0c4db4755516d69bd5193c7fc51ad3bb0521ce35c5e530718da23
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-261.md
+            sha256: sha256:41f7cbe2db16bcdc6027d4f5116669f2742101ada4f9a98cf2a5ffb5e5c24797
+          cleanup:
+            ref: receipt://docs/reports/2026-10-20-import-root-startup-assertion-closeout.md
+            sha256: sha256:561225db32c0c4db4755516d69bd5193c7fc51ad3bb0521ce35c5e530718da23
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
