@@ -43405,13 +43405,13 @@ bets:
       tests/test_cron_registry_contract.py tests/test_service_registry_reality.py -q
     expect: 全部 passed, 0 failed
 - id: BET-Y2Q4-T10-259
-  title: ADR-0456 B3 准入评审清单 — E4 未分区 18 条 + E5 双向不一致 2 条逐条取证，把署名裁定摊成一次可答的清单（不改判据本体、不动本机
+  title: ADR-0456 B3 准入评审清单 — E4 未分区 19 条 + E5 双向不一致 2 条逐条取证，把署名裁定摊成一次可答的清单（不改判据本体、不动本机
     launchd）
   goal: 'B3 完成判据是「`gen-service-configs.py --check` exit 0 **且**「已安装 label 集合 ==
 
     registry 集合」」。T10-253 / T10-258 已归零 owned 半边（E2）与 E1/E3，但 `ok` 仍为
 
-    false，剩余全部理由是 20 条需要**署名准入**的 finding。T10-258 的 circuit_breaker
+    false，剩余全部理由是 21 条需要**署名准入**的 finding。T10-258 的 circuit_breaker
 
     已明写「改用评审清单而不是替它们决定『该不该活』」，本轮就是那张清单。
 
@@ -43421,9 +43421,9 @@ bets:
     `--reality-check --json` 读数 ok=false / e1_drift=0 / e2_undeclared=0 / e3_lint_debt=0
     /
 
-    unclassified=0 / e4_prefix_ok=false（未分区 18 条）/ e5_enabled_missing=1 /
+    unclassified=0 / e4_prefix_ok=false（未分区 18 条，合并前复测 19 条）/ e5_enabled_missing=1 /
 
-    e5_disabled_residual=1 / installed_total=76 / workspace_scoped=38 /
+    e5_disabled_residual=1 / installed_total=76（复测 77）/ workspace_scoped=38 /
 
     owned_declared=owned_installed=47 / external=5 / registry_declared_total=75 /
 
@@ -43445,7 +43445,7 @@ bets:
 
     `EnvironmentVariables` **条数**（值一律不抄）、字节数、mtime(UTC)、sha256 前 16 位；
 
-    并查仓内 `bin/ops/launchd/<label>.plist` 镜像 —— 18 条镜像全部不存在，这是「本仓
+    并查仓内 `bin/ops/launchd/<label>.plist` 镜像 —— 19 条镜像全部不存在，这是「本仓
 
     不拥有这些 plist」的实测依据，也是 `external` 提案不被「仓内自有 plist」反驳的证据。
 
@@ -43491,7 +43491,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md
     spec_version: 1.0.0
-    content_digest: sha256:e6754a315c2bc7a0fceccd07acb2bc75326f5ce815ef7d384982fc34a2514aa3
+    content_digest: sha256:f4556ffb6f0f5374c830760f544c78ac683d014a0b2e35a6576c8a0dd27ac630
     decision_ref: decision://accepted/BET-Y2Q4-T10-259
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -43517,15 +43517,15 @@ bets:
     tracked 无新告警
   - 台账 BET-Y2Q4-T10-259 条目存在，accepted_specifications 的 content_digest 与该文件实际 sha256
     逐字节相等
-  - 清单条数由当次 --reality-check findings 导出：E4 表内 label 集合与 findings 报出的 18 条集合相等，E5 两条全覆盖
-  - 交付后 --reality-check 读数与交付前逐字段相同（本轮未动判据本体的可测后果）
+  - 清单覆盖度：E4 表内 label 集合与当次 --reality-check findings 报出的集合双向相等（复测口径 19 条，缺一名或多一名均算未达），E5 两条全覆盖
+  - 交付后 --reality-check 的回归敏感字段逐字段相同（e1_drift=0 / e2_undeclared=0 / e3_lint_debt=0 / unclassified=0 / owned_declared=owned_installed=47 / registry_declared_total=75 / e5 两项 1+1）；installed_total 与 E4 集合属运行面自变量，只允许因可指认的外部落盘变动并在 spec §1/§5 记名（本轮 76→77、18→19 即 com.local.magpie-refresh 于两次测量之间落盘）
   verify:
   - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json
-    expect: 与交付前逐字段相同（e1_drift=0 / e2_undeclared=0 / e3_lint_debt=0 / unclassified=0
-      / e4_prefix_ok=false / e5 两项 1+1 / installed_total=76 / owned_declared=owned_installed=47
-      / registry_declared_total=75）
+    expect: 回归敏感字段与交付前逐字段相同（e1_drift=0 / e2_undeclared=0 / e3_lint_debt=0
+      / unclassified=0 / e4_prefix_ok=false / e5 两项 1+1 / owned_declared=owned_installed=47
+      / registry_declared_total=75）；installed_total=77 与 E4 19 条须与 spec §1 记名的复测读数一致
   - cmd: python3 -c "import hashlib,pathlib;print(hashlib.sha256(pathlib.Path('docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md').read_bytes()).hexdigest())"
-    expect: e6754a315c2bc7a0fceccd07acb2bc75326f5ce815ef7d384982fc34a2514aa3
+    expect: f4556ffb6f0f5374c830760f544c78ac683d014a0b2e35a6576c8a0dd27ac630
   - cmd: python3 bin/ssot/doc-governance-check.py --no-new-warnings --scope tracked
     expect: exit 0
   - cmd: make gac-local-gate

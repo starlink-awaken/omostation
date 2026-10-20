@@ -1,34 +1,42 @@
 ---
 schema_version: specification/v1
 spec_version: 1.0.0
-title: ADR-0456 B3 准入评审清单 — E4 未分区 18 条 + E5 双向不一致 2 条逐条取证，把署名裁定摊成一次可答的清单
+title: ADR-0456 B3 准入评审清单 — E4 未分区 19 条 + E5 双向不一致 2 条逐条取证，把署名裁定摊成一次可答的清单
 bet_id: BET-Y2Q4-T10-259
 status: accepted
 lifecycle: contract
-last-reviewed: 2026-10-19
+last-reviewed: 2026-10-20
 owner: governance-team
 schema: md/v1
 ---
 
-# B3 准入评审清单（E4 18 条 + E5 2 条）
+# B3 准入评审清单（E4 19 条 + E5 2 条）
 
 > 上游契约：`ADR-0456`（code_root / state_root 双根）。B3 完成判据 =
 > `gen-service-configs.py --check` exit 0 **且**「已安装 label 集合 == 注册表集合」。
 > 本轮交付的是**清单本身**：逐条取证 + 只陈述可用机制与选项，**不替任何一条决定「该不该活」**。
 
-## 1. 实测读数（2026-10-19T10:08Z，`origin/main@17c0a3286`，隔离检出与该内容逐字相同）
+## 1. 实测读数（基线 2026-10-19T10:08Z，`origin/main@17c0a3286`；复测 2026-10-20T01:29Z，同一隔离检出）
 
 ```
 python3 bin/mof/gen-service-configs.py --reality-check --json
 ok=false  e1_drift=0  e2_undeclared=0  e3_lint_debt=0  unclassified=0
-e4_prefix_ok=false（未分区 18 条）  e5=1+1
-installed_total=76  workspace_scoped=38
+e4_prefix_ok=false（未分区 18 条 → 复测 19 条）  e5=1+1
+installed_total=76 → 复测 77  workspace_scoped=38
 owned_declared=owned_installed=47  external=5  registry_declared_total=75
 dev_label_prefix=com.omostation.dev.
 ```
 
 即：T10-253 / T10-258 已把 `--check` 的 E1/E3 与 E2 等式的 owned 半边归零；
-`ok` 仍为 false 的全部剩余理由就是本清单的 20 条。**在那之前 B3 未闭合。**
+`ok` 仍为 false 的全部剩余理由就是本清单的 21 条。**在那之前 B3 未闭合。**
+
+⚠️ **复测读数的变化只落在两个字段上**：`installed_total` 76→77、E4 18→19，新增一条
+`com.local.magpie-refresh`（mtime 2026-10-19T19:26:33Z，即基线测量**之后**才落盘）。
+`e1_drift` / `e2_undeclared` / `e3_lint_debt` / `unclassified` / `workspace_scoped` /
+`owned_declared=owned_installed=47` / `registry_declared_total=75` / `e5` 两项**全部逐字段未变**
+—— 本轮交付没碰判据本体的可测后果正是「只有运行面自己动的字段才动」。
+下表已按复测读数补齐为 **19 行**，见 §5 第 3 条：这张表的效力来自那条命令的**当次重导**，
+不来自本文抄写。
 
 ⚠️ 同一条命令在主工作区（HEAD `fdb106c9f`，落后三个合并）读数不同：`e2_undeclared=5 /
 owned_declared=42 / registry_declared_total=70`，缺的 5 条正是 T10-253 回填的 4 条 +
@@ -45,12 +53,12 @@ T10-258 回填的 1 条。**判据必须由 origin/main 那棵树产出**，陈�
 `classification` 拼错 → 落 `unmanaged_unknown` 并**计入 E4**（fail-closed，不会默认当 external），
 所以下表每条都写明拟用的 classification。
 
-## 3. E4 未分区 18 条
+## 3. E4 未分区 19 条
 
 取证方式：`plistlib.loads` 逐个读 `~/Library/LaunchAgents/<label>.plist`，记 `ProgramArguments`、
 `RunAtLoad`/`KeepAlive`/`StartInterval`/`StartCalendarInterval`、`EnvironmentVariables` **条数**（值一律不抄）、
 字节数、mtime（UTC）、sha256 前 16 位；并查仓内 `bin/ops/launchd/<label>.plist` 镜像是否存在。
-**18 条的仓内镜像全部为不存在**（下表 `镜` 列 = N），这是「本仓不拥有这些 plist」的实测依据。
+**19 条的仓内镜像全部为不存在**（下表 `镜` 列 = N），这是「本仓不拥有这些 plist」的实测依据。
 
 | # | label | 实际执行的东西 | 调度形状 | 环境变量条数 | mtime (UTC) | 字节 | sha256:16 | 镜 | 拟 classification |
 |---|---|---|---|---|---|---|---|---|---|
@@ -72,8 +80,9 @@ T10-258 回填的 1 条。**判据必须由 origin/main 那棵树产出**，陈�
 | 16 | `com.localbrain.preseed-http` | `python3 -m http.server 8088 --bind 0.0.0.0 --directory ~/Project/work-agent/preseed` | RunAtLoad+KeepAlive | 0 | **2026-10-19T08:17:01Z** | 593 | `25aa5b7948eec57c` | N | 待署名，⚠️ 见 §5 |
 | 17 | `com.valvesoftware.steamclean` | Steam `SteamApps/steamclean Public` | RunAtLoad | 0 | 2026-10-14T05:36:44Z | 882 | `b41bbe8ea814613f` | N | external（厂商安装，非本仓） |
 | 18 | `com.xiamingxing.benchq-watch` | `python3 -I ~/mac-local-ai-task-2026-10-12/bin/benchq_watch.py` | RunAtLoad + StartInterval 600 | 1 | 2026-10-16T08:21:43Z | 780 | `a47fca13934ceead` | N | 待署名（一次性任务目录仍在跑） |
+| 19 | `com.local.magpie-refresh` | `/Users/xiamingxing/local-ops/bin/magpie-refresh-cycle` | RunAtLoad + StartInterval | 1 | 2026-10-19T19:26:33Z | 769 | `f85c175180413b0d` | N | external（local-ops 属主，与 #6/#7 同族） |
 
-按前缀成族裁定可以少答 12 次：`com.local.*`（12 条，全部指向 local-ops / dotfiles / magpie / 第三方 .app，
+按前缀成族裁定可以少答 13 次：`com.local.*`（13 条，全部指向 local-ops / dotfiles / magpie / 第三方 .app，
 无一有仓内镜像）拟整族 `external`；`com.localbrain.*`（4 条）同属 `~/Project/work-agent`，
 但落盘时间是**今天**，需先确认属主意图（见 §5）。
 
@@ -93,6 +102,12 @@ T10-258 回填的 1 条。**判据必须由 origin/main 那棵树产出**，陈�
 2. **`com.localbrain.preseed-http` 以 `--bind 0.0.0.0` 在 8088 暴露一个静态目录服务且 `KeepAlive`**。
    本清单只陈述这一事实。若属主确认不需要对外暴露，改 `--bind 127.0.0.1` 或撤掉该 job
    是运行面动作，需单独授权，不在本轮范围内。
+3. **这条清单天然会过期，且已在本轮交付窗口内过期一次**：基线 18 条 → 合并前复测 19 条，
+   多出的 `com.local.magpie-refresh` 是在两次测量之间由本机运行面落盘的。因此本表的权威用法是
+   **先重导再答**：`python3 bin/mof/gen-service-configs.py --reality-check --json` 取 `findings[0]`
+   的 label 集合，与本表逐名对拍；两侧计数相等才可按表作答，否则以重导结果为准（表是快照，
+   命令是判据）。这也解释了台账 `done_when` 为什么把「回归敏感字段」与「运行面自变量」分开断言——
+   对活平面写「逐字段相同」会在交付者什么都没做的情况下自己变红，那种判据不成立。
 
 ## 6. 明确不做（本轮的边界）
 
@@ -106,6 +121,9 @@ T10-258 回填的 1 条。**判据必须由 origin/main 那棵树产出**，陈�
 1. 本文件在 `docs/superpowers/specs/` 下被跟踪，frontmatter 九键齐全且 `doc-governance` 无新告警。
 2. 台账 `BET-Y2Q4-T10-259` 条目存在、`accepted_specifications` 绑定本文件且 `content_digest`
    与该文件实际 sha256 逐字节相等。
-3. 清单覆盖度：E4 18 条与 E5 2 条**全部**出现在表中，条数由当次 `--reality-check` 读数导出，
-   非手抄（`findings` 里的 label 集合 ⊆ 表内 label 集合，且两侧计数相等）。
-4. 交付后 `--reality-check` 读数与交付前**逐字段相同**（本轮不碰判据本体，改了就是违例）。
+3. 清单覆盖度：E4 **19** 条与 E5 2 条**全部**出现在表中，条数由当次 `--reality-check` 读数导出，
+   非手抄（`findings` 里的 label 集合与表内 label 集合**双向相等**，缺一名或多一名都算未达）。
+4. 交付后 `--reality-check` 读数：回归敏感字段 `e1_drift=0` / `e2_undeclared=0` / `e3_lint_debt=0` /
+   `unclassified=0` / `owned_declared=owned_installed=47` / `registry_declared_total=75` / `e5` 1+1
+   **逐字段相同**；运行面自变量（`installed_total` 与 E4 集合）只允许因**可指认的外部落盘**变动，
+   且必须在本文件 §1/§5 记名后才能放行——本轮 76→77、18→19 即为此例。
