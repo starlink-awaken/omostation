@@ -43734,7 +43734,7 @@ bets:
     命中 0）。
   verify:
   - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT HOME=/tmp/emptyhome uv run
-      --no-project --with pytest --with pyyaml python -m pytest tests/unit/test_repo_root_import_root_assertion.py
+      --no-project --with pytest --with pytest-timeout --with pyyaml python -m pytest tests/unit/test_repo_root_import_root_assertion.py
       tests/unit/test_repo_root_profile.py -q -p no:randomly
     expect: 两个文件全绿。新增用例覆盖正反两面，既有双根不变式未被破坏。
   - cmd: env -u OMOSTATION_ROOT uv run --no-project --with pyyaml python bin/lib/repo_root.py
