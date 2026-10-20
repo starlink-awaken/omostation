@@ -43590,7 +43590,8 @@ bets:
     failed, 2 passed` （`test_every_launchd_plist_parses_with_plistlib` + `test_plist_comments_contain_no_double_hyphen`）；
     offender 唯一一行 line 26。补丁已在临时副本上由检测器自身验算通过：`plistlib parses OK / detector offenders
     = [] / docstring carries the exact argv: True / ast.parse OK`。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-20
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -43657,14 +43658,40 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@011f7b953d9a64c97d3f3c20d3432e81c9cd6144
+          tests:
+            ref: receipt://docs/reports/2026-10-20-launchd-plist-mirror-xml-legal-argv-closeout.md
+            sha256: sha256:f3a7aeb4843d10dd8d212495ad6b3b0a3156755a83cb53ab0283f69741a60e78
+          diff:
+            ref: receipt://docs/reports/2026-10-20-launchd-plist-mirror-xml-legal-argv-closeout.md
+            sha256: sha256:f3a7aeb4843d10dd8d212495ad6b3b0a3156755a83cb53ab0283f69741a60e78
+          rollback:
+            ref: receipt://docs/reports/2026-10-20-launchd-plist-mirror-xml-legal-argv-closeout.md
+            sha256: sha256:f3a7aeb4843d10dd8d212495ad6b3b0a3156755a83cb53ab0283f69741a60e78
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-260.md
+            sha256: sha256:60292005e6aa350b0ae3e3fa126949dff2c32cea778b3df0a1a647b014d22d18
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-20-launchd-plist-mirror-xml-legal-argv-closeout.md
+            sha256: sha256:f3a7aeb4843d10dd8d212495ad6b3b0a3156755a83cb53ab0283f69741a60e78
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-20-launchd-plist-mirror-xml-legal-argv-closeout.md
+            sha256: sha256:f3a7aeb4843d10dd8d212495ad6b3b0a3156755a83cb53ab0283f69741a60e78
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-260.md
+            sha256: sha256:60292005e6aa350b0ae3e3fa126949dff2c32cea778b3df0a1a647b014d22d18
+          cleanup:
+            ref: receipt://docs/reports/2026-10-20-launchd-plist-mirror-xml-legal-argv-closeout.md
+            sha256: sha256:f3a7aeb4843d10dd8d212495ad6b3b0a3156755a83cb53ab0283f69741a60e78
       value:
         status: NOT_PROVEN
         evidence: {}
