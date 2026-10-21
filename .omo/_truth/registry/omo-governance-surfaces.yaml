@@ -116,6 +116,41 @@ last-reviewed: 2026-10-21
 #     墙钟硬失败项 —— 复核戳一旦隔了 >14 天, 它就在**每一个** PR(含 main 的树)上失败, 且拆弹
 #     本身只能靠再提交一次戳记。把它改成"过期降为 warning + 全景可见"或纳入 expiry-radar
 #     是 owner 决策, 应另开 BET, 不在本戳记 PR 里顺手做。
+# 2026-10-21 复审 (X2-C05 <=14d; 上次 2026-10-06 => 今天 15d; 在案**第三次**复发: 09-21 → 10-06 → 10-21)。
+#   拆弹判据复现: 用 origin/main 的 bin/gac/check-l0-constraints.py + 本文件 blob 跑 check_x2_c05()
+#   => age=15 > 14, FAIL ("last-reviewed 15d ago")。本轮只刷新复核戳: 不摘除任何条目, 不动门禁本体。
+# 复审方法(同上一轮): 声明项取自 origin/main blob(`git show`), 结构抽取 vs 正则抽取 vs 文件系统/git 实况三面对拍。
+#   - 声明项 46 = governance_stack 3 + assets 43 (自证: YAML 结构抽取 46 == 正则 `^\s*ref:` 抽取 46;
+#     dup-aware MappingNode 全档扫描 = 0 处重复键)。
+#   - 实况: 存在 41 (origin/main 跟踪 32 / 本机检出存在但 gitignored 9), 不存在 5 —— 与上一轮同一批 5 条
+#     (ingress_plane projects/c2g/ · OMO-LOCKS · OMO-WORKERS · OMO-TESTS · OMO-CAPABILITIES), 全部命中 .gitignore。
+#   - 5 条零写者复现: 代码面(bin/** projects/omo/src/** projects/ecos/src/**)引用行数 3/4/3/4/3(同上一轮同值),
+#     构造类(mkdir/write_text/makedirs/touch/open) = 0 处; 余下全是排除名单/skip/迁移注记。
+#   - ingress_plane 仍未注册: `projects/c2g` 不在 origin/main `.gitmodules`(16 段), 也不是 main 树 gitlink(16 个),
+#     而 bin/compass_radar.py:712(副本 bin/meta/compass_radar.py:503) 照旧打印
+#     `git submodule update --init projects/c2g` => 该修复提示在干净检出上不可能成功(在案缺陷, 本轮未处理)。
+#     引用面另有 5 份 agent-workflows(实测复现) 与多份 registry(纯声明)。
+#   - 写明"存在 41"的测量基座: 那 9 条只在**本机检出**存在(gitignored 生成/运行时面), fresh clone 与 CI 只见 32;
+#     命中规则 6 条来自通配 `.gitignore:35 .omo/debt/*`(dashboard/review-queue/reviews/action-packet/owner-routing/
+#     reporting), 3 条来自项特定规则(`:20 .omo/_log/` · `:40 .omo/evidence` · `:42 .omo/run-continuation/`)。
+#   - 订正一(行号随 main 漂移, 一律以今天 main blob 为准): `projects/c2g/` 343→**346**, `.omo/locks/` 364→**370**
+#     (且该模式在 main 出现 3 次: `:27`/`:31`/`:370`); bin/ops/cold-backup-drill.sh 排除项 96/99/102/103 →
+#     **97/100/103/104**; bin/ssot/verify-omo.sh skip 段 45-48 → **51-54**。逐条复核未变:
+#     check-runtime-artifacts.py:32 · ci-local-fast.py:383 · check-cross-refs.py:94 · change-lane-check.py:96 ·
+#     omo-state-cleanup.py:45/:66。
+#   - 订正二(数字): main 树 gitlink 上一轮记 14, 今天实测 **16**。
+#   - 订正三(**判据本身**): 上一轮"存在项零活引用者 = 0"用的是全库引用计数, 而该计数把**本 registry 自己的声明行**
+#     也算进去 => 对 46 项恒真, 是无判别力的尺。换成自斥量尺(排除本文件 + 排除 registry/knowledge/docs 声明面)后:
+#     **7 条存在项没有任何可执行消费者** —— 3 条除本声明外零引用(OMO-CONSTITUTION `.omo/constitution.yaml` ·
+#     OMO-AFFECTED-RECEIPT-MOS-FIX `.omo/affected-mos-fix.json` · OMO-START-WORK `.omo/start-work/`), 4 条只被
+#     registry/knowledge/docs 提及(OMO-DRAFTS · OMO-PATTERNS · OMO-README · OMO-AFFECTED-GRAPH); 7 条在 main 全部
+#     git 跟踪。token 级复核排除了同名词误判: `patterns`/`drafts`/`README` 在代码面的命中是正则变量名与无关 README,
+#     不是这三条路径的消费者。
+#   - 本轮同样不代 owner 决策: 上述 7 条 + 上一轮 4 条迁移遗留声明 + ingress_plane 该摘除还是补写者, 留
+#     governance-team; 静默删声明会让"声明/执行鸿沟"重新不可见, 故只把实况与指认证据写在案上。
+#   - 遗留未处理(与上一轮同): X2-C05 仍是 required `gac-gate` 上的墙钟硬失败项, 复核戳隔了 >14 天就在**每一个** PR
+#     (含 main 的树)上失败, 且拆弹本身只能靠再提交一次戳记。改成"过期降为 warning + 全景可见"或纳入 expiry-radar
+#     属 owner 决策, 应另开 BET。
 
 version: "1.1"
 status: active
