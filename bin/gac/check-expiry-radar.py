@@ -21,7 +21,8 @@
 权威阈值来源 (复用, 不另立):
   - `.omo/_truth/registry/document-governance.yaml` → `surfaces[].review_days`
     (+ patterns/excludes, 决定扫描范围)
-  - `.omo/_truth/x2-freshness-rules.yaml` → `rules[].threshold_days`
+  - `.omo/_truth/x2-freshness-rules.yaml` → `rules[].freshness.threshold_days`
+    (+ `rules[].target`, 决定算哪个文件的剩余天数)
 
 用法:
     python3 bin/gac/check-expiry-radar.py [--horizon 7] [--json] [--strict]
@@ -157,7 +158,13 @@ def scan_x2_rules(root: Path | None = None, horizon: int = 7,
         for r in rules:
             if not isinstance(r, dict):
                 continue
-            days = r.get("threshold_days")
+            # 阈值声明在 `freshness.threshold_days` 下 (注册表实际结构)。读顶层会让
+            # 全部 14 条 X2 规则静默跳过 —— 2026-10-21 实测: 14 条规则的
+            # threshold_days 全在 freshness 里, 顶层 0 条, 于是这个"前瞻"工具对每条
+            # X2 规则都是瞎的, X2-C05 因此炸了三次 (09-21/10-06/10-21)。顶层取值保留
+            # 为兜底, 兼容旧格式。
+            freshness = r.get("freshness") if isinstance(r.get("freshness"), dict) else {}
+            days = freshness.get("threshold_days", r.get("threshold_days"))
             if not isinstance(days, int) or days <= 0:
                 continue
             targets = r.get("targets") or r.get("target") or []
@@ -178,8 +185,11 @@ def scan_x2_rules(root: Path | None = None, horizon: int = 7,
                 # 同上: fail 始于 age = threshold + 1
                 remaining = (days + 1) - age
                 if remaining <= horizon:
+                    # 真实注册表的主键是 `rule_id`; 读 `id`/`title` 会退化成中文标题,
+                    # 让报告无法与 x2-freshness-rules.yaml 对上。
+                    label = r.get("rule_id") or r.get("id") or r.get("title", "?")
                     out.append({
-                        "surface": f"x2:{r.get('id') or r.get('title', '?')}",
+                        "surface": f"x2:{label}",
                         "sla_days": days,
                         "path": str(p.relative_to(root)),
                         "reviewed": reviewed.isoformat(),
