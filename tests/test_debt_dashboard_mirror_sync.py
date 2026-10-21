@@ -192,3 +192,15 @@ def test_refresh_error_is_one_line_not_a_traceback(ws, monkeypatch, capsys):
     assert err.startswith("error: omo venv entry missing"), err
     assert "Traceback" not in err
     assert "run `git submodule update --init projects/omo`" in err
+
+
+def test_untracked_mirror_is_refreshed_but_not_committed(ws, monkeypatch):
+    """2026-10-21: 镜像已 untrack + gitignore —— 只刷新, 不提交不推送。"""
+    module, calls = _load(monkeypatch, ws)
+    monkeypatch.setattr(module, "_git",
+                        lambda w, *a, check=True: _FakeRun(0, "main\n", ""))
+    monkeypatch.setattr(module, "_is_tracked", lambda w, rel: False)
+    assert module.main([]) == 0
+    assert not _git(calls, "add", str(module.MIRROR_REL))
+    assert not _git(calls, "commit", "-q", "-m", module.COMMIT_MESSAGE)
+    assert not _git(calls, "push", "origin", "main")

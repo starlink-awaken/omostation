@@ -54,6 +54,10 @@ def _now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def _is_tracked(ws: Path, rel: Path) -> bool:
+    return _git(ws, "ls-files", "--error-unmatch", str(rel), check=False).returncode == 0
+
+
 def refresh_mirror(ws: Path, now: str) -> None:
     """重生成镜像。omo 的 venv 入口，不经过 uv run 的解析开销。"""
     entry = ws / OMO_BIN
@@ -105,6 +109,14 @@ def main(argv: list[str] | None = None) -> int:
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
+
+    # 2026-10-21: 镜像已不再被任何新鲜度检查读取, 并已 untrack + gitignore。此时
+    # `git add` 会失败 (ignored), 而提交/推送更无意义 —— 分支保护也要求必需检查在
+    # 被推送的 commit 上通过, 新 commit 不可能满足。刷新本身仍有价值 (omo post-hook
+    # 也写同一份), 所以这里保留刷新, 跳过提交/推送。
+    if not _is_tracked(ws, MIRROR_REL):
+        print(f"skip: {MIRROR_REL} is no longer tracked; refreshed only")
+        return 0
 
     _git(ws, "add", str(MIRROR_REL))
 

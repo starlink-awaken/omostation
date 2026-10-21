@@ -34,6 +34,13 @@
 # items/ 例外: canonical SSOT (跟 .omo/tasks/ 同类 lifecycle 数据), 入仓 (修正 c82cbd23 误判).
 .omo/debt/*
 !.omo/debt/items/
+# 2026-10-21: 债务看板镜像曾经 tracked (`.omo/_control/debt-dashboard/current.yaml`),
+# 但它由 omo post-hook 刷新、无人提交 => origin/main 上长期腐烂 (实测 817h vs
+# SLA 336h), 于是每个干净检出都读到陈旧值 => meta-doctor stale_beats=1 => A2/A5
+# 恒红。三个消费方 (meta-doctor / state-freshness-check / drift-face-detector)
+# 已改读真看板 `.omo/debt/dashboard/current.yaml`, 镜像不再被任何检查读取 =>
+# 与 `.omo/debt/*` 同属 gitignored 运行时产物, 一并忽略。
+.omo/_control/debt-dashboard/
 # health trend history (compass_radar JSONL append-only 时间序列)
 # 高 churn, 由 compass_radar 自动生成, 不入仓 (防 working tree 噪声).
 .omo/state/history/

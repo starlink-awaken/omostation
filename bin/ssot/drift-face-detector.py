@@ -2,7 +2,7 @@
 """drift-face-detector.py — 5 类 drift face-wide 检测 (BET-Y2Q4-SH-1).
 
 按 spec docs/superpowers/specs/2026-09-25-self-healing-drifts-foundation.md:
-  1. dashboard 漂移: .omo/_control/debt-dashboard/current.yaml age 超过 SLA
+  1. dashboard 漂移: .omo/debt/dashboard/current.yaml age 超过 SLA
   2. brief 漂移: runtime/dashboard/agent-brief.json generated_at 超过 cadence
   3. ephemeral 漂移: docs/reports/* ephemeral 已 completed 但仍顶层
   4. runs 漂移: .omo/_delivery/agent-workflows/runs/* 状态卡 active 但 lock 缺失
@@ -61,19 +61,17 @@ def _age_hours(iso_ts: str | None) -> float | None:
 
 
 def detect_dashboard() -> list[dict]:
-    """检查 .omo/_control/debt-dashboard/current.yaml 是否超 SLA."""
+    """检查真看板 .omo/debt/dashboard/current.yaml 是否超 SLA。
+
+    读真看板而不是 `.omo/_control/debt-dashboard/` 那份 tracked 镜像: 镜像由 omo
+    post-hook 刷新但无人提交, origin/main 上长期腐烂 (2026-10-21 实测 817h vs
+    SLA 336h)。真看板是 gitignored 的运行时产物 —— 干净检出里不存在属正常,
+    不是 drift, 因此**跳过**而不是报 DASHBOARD-MISSING (旧行为会让每个干净检出
+    都挂一条 high)。
+    """
     findings: list[dict] = []
-    p = WORKSPACE_ROOT / ".omo/_control/debt-dashboard/current.yaml"
+    p = WORKSPACE_ROOT / ".omo/debt/dashboard/current.yaml"
     if not p.is_file():
-        findings.append({
-            "class": "dashboard",
-            "id": "DASHBOARD-MISSING",
-            "path": str(p.relative_to(WORKSPACE_ROOT)),
-            "severity": "high",
-            "age_hours": None,
-            "sla_hours": DASHBOARD_SLA_HOURS,
-            "fix_hint": "run bin/ssot/debt-dashboard-regen.py (TODO: exists?) or manual regen",
-        })
         return findings
     text = p.read_text(encoding="utf-8")
     # extract generated_at

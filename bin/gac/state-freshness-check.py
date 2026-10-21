@@ -11,7 +11,7 @@
 - .omo/state/system.yaml
 - health / system_health / governance_data 三件投影 (经 runtime-projections.yaml 解析)
 - .omo/state/governance.jsonl
-- .omo/_control/debt-dashboard/current.yaml
+- .omo/debt/dashboard/current.yaml (真看板; 不读 _control/ 那份无人提交的 tracked 镜像)
 
 新鲜度阈值 (ISC-1 复合分 freshness 段一致):
 - ≤1h   → 100 (新鲜)
@@ -59,10 +59,14 @@ STATE_FILES = [
     ("system_health", ("last_scan",), {"optional": True}),
     # governance.jsonl: runtime 产物 (非 tracked), fresh checkout 不存在 → optional
     (".omo/state/governance.jsonl", ("timestamp", "generated_at"), {"optional": True}),
-    # debt-dashboard: tracked at _control/debt-dashboard/ (非 gitignored .omo/debt/)
+    # debt-dashboard: 读**真看板** `.omo/debt/dashboard/` (gitignored 运行时产物),
+    # 不读 `.omo/_control/debt-dashboard/` 那份 tracked 镜像 —— 后者无人提交、在
+    # origin/main 上长期腐烂 (2026-10-21 实测 817h vs SLA 336h)。缺失即未生成 =>
+    # optional 放行, 与 governance.jsonl 同语义。
     (
-        ".omo/_control/debt-dashboard/current.yaml",
+        ".omo/debt/dashboard/current.yaml",
         ("generated_at", "last_reconciled_at"),
+        {"optional": True},
     ),
     # ADR-0129 Phase 2: untracked runtime product, absent until first generation.
     ("governance_data", ("generated_at",), {"optional": True}),
