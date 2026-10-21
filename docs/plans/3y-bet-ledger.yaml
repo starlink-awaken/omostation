@@ -43886,7 +43886,8 @@ bets:
   goal: 给 bin/mof/gen-service-configs.py 的 --reality-check 输出加一个 measured_base 对象（注册表路径与字节摘要
     + 测量根 HEAD/origin/main 短 SHA + base_state + behind_count），零判定效应。B4b 分批切换唯一依赖的集合相等检测，此前无法自证它读的是哪一棵树；2026-10-20
     实测同一小时两次读数差出 5 条幽灵 E2。
-  status: pending
+  status: done
+  done_at: 2026-10-21
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -43939,14 +43940,40 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@00cc8bb35e33c48cd6fc2b7653fb6f45d5754b1f
+          tests:
+            ref: receipt://docs/reports/2026-10-20-reality-check-base-provenance-closeout.md
+            sha256: sha256:bc2f6f02df08c9a5f017988e1652ce61ff7444772ab5cbb920174b263877a917
+          diff:
+            ref: receipt://docs/reports/2026-10-20-reality-check-base-provenance-closeout.md
+            sha256: sha256:bc2f6f02df08c9a5f017988e1652ce61ff7444772ab5cbb920174b263877a917
+          rollback:
+            ref: receipt://docs/reports/2026-10-20-reality-check-base-provenance-closeout.md
+            sha256: sha256:bc2f6f02df08c9a5f017988e1652ce61ff7444772ab5cbb920174b263877a917
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-262.md
+            sha256: sha256:ffbb0c261ee474b40cacdb05846fdbadaf433c595f5701190de93ac46896ea1a
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-20-reality-check-base-provenance-closeout.md
+            sha256: sha256:bc2f6f02df08c9a5f017988e1652ce61ff7444772ab5cbb920174b263877a917
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-20-reality-check-base-provenance-closeout.md
+            sha256: sha256:bc2f6f02df08c9a5f017988e1652ce61ff7444772ab5cbb920174b263877a917
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-262.md
+            sha256: sha256:ffbb0c261ee474b40cacdb05846fdbadaf433c595f5701190de93ac46896ea1a
+          cleanup:
+            ref: receipt://docs/reports/2026-10-20-reality-check-base-provenance-closeout.md
+            sha256: sha256:bc2f6f02df08c9a5f017988e1652ce61ff7444772ab5cbb920174b263877a917
       value:
         status: NOT_PROVEN
         evidence: {}
