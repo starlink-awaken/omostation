@@ -20,8 +20,9 @@ last-reviewed: 2026-10-21
 ## 1. 结论（一句）
 
 `install-resident-cron.sh` 从安装位跑一次，会往 crontab **净新增 9 条 resident 作业**（现存 crontab 里
-`omo.cli resident` 计数为 **0**），而这十个角色已由 launchd 持有 —— 那是**双实例抢写同一 ledger**，
-不是改道。且安装位子模块 **16/16 未初始化**，它写出的每一行 `python3 -m omo.cli …` 都当场
+`omo.cli resident` 计数为 **0**），而这 9 条里有 **6 条**的角色已由 launchd 装着（实测见 §2）——
+那 6 条装上即与 launchd **双实例抢写同一 ledger**，不是改道。且安装位子模块 **16/16 未初始化**，
+它写出的每一行 `python3 -m omo.cli …` 都当场
 `ModuleNotFoundError`。因此 B4b 批次 2 的 cron 侧**不能**按「重跑 installer」理解，必须先满足 §5 前置条件。
 
 ## 2. 测量装置（可复现，零运行面效应）
@@ -35,6 +36,7 @@ last-reviewed: 2026-10-21
 | 安装位子模块 | `git -C ~/.local/opt/omostation submodule status --recursive \| /usr/bin/grep -c '^- '` | **16 / 16 未初始化**（`projects/omo` 目录为空） |
 | 安装位可 import | `PYTHONPATH=<opt>/projects/omo/src:<opt>/projects/bus-foundation/src /opt/homebrew/bin/python3 -c "import omo.cli, bus_foundation"` | rc=1 `ModuleNotFoundError: No module named 'omo'`；**对照**同一探针在 `~/Workspace` rc=0 `import OK` |
 | 安装位写目录 | `ls -d <opt>/runtime/omo <opt>/.omo/_delivery/{resident-orchestrator,event-ingest,personal-signals,perception-inbox}` | 5 个全部 MISS（cron 行的重定向目标不存在） |
+| resident 权归属 | 去重读 `.omo/_truth/registry/services.yaml` 的 label 名 vs `launchctl list` 第 3 列 | 声明 **13** 条（`com.l4.resident.*` 10 + `com.omostation.resident-{agent,daemon,web}`），已装 **9** 条；声明未装 **4** 条：heartbeat / monitor / orchestrator / sediment。⚠️ 该文件是**两篇 YAML 文档**，`safe_load` 直接抛 `ComposerError`，须用 `safe_load_all`（本轮实测踩到） |
 
 ## 3. 精确 cron diff（从安装位重装相对现状）
 
@@ -54,10 +56,14 @@ last-reviewed: 2026-10-21
 现状 crontab 里 `omo.cli resident` 命中数为 0 ⇒ 那 9 条按构造**不可能**被识别为已存在，
 而 `:80 cat << EOF | crontab -` 是**无条件重写** ⇒ 净新增必然发生。
 
-同时：这十个角色的常驻权当前在 launchd 侧（`services.yaml` 声明
-`com.l4.resident.{orchestrator,sediment,decision,execute,monitor,heartbeat,event-ingest,signals,inbox,promote}`
-与 `com.omostation.resident-daemon`，`launchctl list` 亦在列）。
-⇒ cron 侧装上即与 launchd 形成**双实例**，两者写同一 ledger 文件。
+逐条交叉核对（§2 的归属行）后，这 9 条**不是同一种危险**：
+
+- **6 条有已装的 launchd 同名作业** —— decision / execute / event-ingest / signals / inbox / promote。
+  cron 装上即与 launchd **同时**跑同一角色、写同一 `--ledger` 文件。
+- **3 条没有已装 twin** —— orchestrator / sediment / monitor（三者都在 `services.yaml` 里声明过但机器上未装）。
+  对这三条，cron 是**首次激活**，属「替它们决定是否该活」，同样不在本轮授权面内。
+
+⇒ 无论哪一类，都不成立「重跑 installer 只是换路径」。
 这正是 plan 风险表「双实例抢写 ledger」的机制实例，**且 `flock` 不能解**（ADR-0456 决策 3 的措辞）。
 
 ## 4. 安装位可执行性（改道的前置物理条件）
@@ -78,8 +84,10 @@ installer 写出的每一行都形如：
 - **P1** 安装位子模块 16/16 已初始化，§2 的 import 探针 rc=0（对照读数须同时给出）。
 - **P2** 安装位存在 `runtime/omo/` 与 `.omo/_delivery/{resident-orchestrator,event-ingest,personal-signals,perception-inbox}/`，
   且 `runtime/omo/event-ledger.sqlite3` 是**显式选定的目标库**（权威还是 `$(state_root())/runtime/omo/event-ledger.sqlite3`，见 §7）。
-- **P3** resident 的常驻权**归属已由 Principal 裁定**：要么 launchd 侧 `bootout` 这些 label，
-  要么 installer 的 role/ingest/signals/inbox/promote 段在 cron 侧**不装**。二者必居其一，不可都活。
+- **P3** resident 的常驻权**归属已由 Principal 裁定**，且需**分两档**答：
+  ① 有已装 twin 的 6 条（decision / execute / event-ingest / signals / inbox / promote）—— 要么 launchd 侧 `bootout` 该 label，
+  要么 installer 的对应段在 cron 侧**不装**，二者必居其一，不可都活；
+  ② 无 twin 的 3 条（orchestrator / sediment / monitor）—— 明确「该不该由 cron 首次激活」，未答即视为不装。
 - **P4** `install-resident-cron.sh` 的幂等判据升级：`managed()` 必须能识别「同一角色已由 launchd 持有」，
   否则任何一次重装都会重放 §3 的 9 条净新增。
 - **P5** 装前用 §2 的 shim 装置做一次 dry-run 并把 diff 交 Principal 过目，**过目通过才允许真 `crontab -`**。

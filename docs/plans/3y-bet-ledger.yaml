@@ -44046,7 +44046,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-21-b4b-cron-cutover-preflight.md
     spec_version: 1.0.0
-    content_digest: sha256:757235ed9a7dc12f6ae7b8a528776b65bf52db1ff1f390dbb2a9f8e357969797
+    content_digest: sha256:b82f0bc6b09f09f49cb8c1c6a3e62c89a23ca48e7fe83f8e4c3c03c5ddbfc7f6
     decision_ref: decision://accepted/BET-Y2Q4-T10-263
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
