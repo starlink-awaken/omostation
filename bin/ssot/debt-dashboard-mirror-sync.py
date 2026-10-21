@@ -56,10 +56,22 @@ def _now() -> str:
 
 def refresh_mirror(ws: Path, now: str) -> None:
     """重生成镜像。omo 的 venv 入口，不经过 uv run 的解析开销。"""
-    result = subprocess.run(
-        [str(ws / OMO_BIN), "debt", "refresh", "--omo-dir", str(ws / ".omo"), "--now", now],
-        cwd=str(ws / "projects" / "omo"), capture_output=True, text=True,
-    )
+    entry = ws / OMO_BIN
+    if not entry.is_file():
+        # 端到端实测 (2026-10-21, 浅克隆未 init 子模块): 入口缺失时 subprocess.run
+        # 抛 FileNotFoundError, 未捕获 => cron 日志里留一整条 traceback, 而不是一句
+        # 可操作的话。缺的就是这个 venv —— 说清楚怎么补。
+        raise RuntimeError(
+            f"omo venv entry missing: {entry} — run "
+            f"`git submodule update --init projects/omo` in {ws}"
+        )
+    try:
+        result = subprocess.run(
+            [str(entry), "debt", "refresh", "--omo-dir", str(ws / ".omo"), "--now", now],
+            cwd=str(ws / "projects" / "omo"), capture_output=True, text=True,
+        )
+    except OSError as exc:
+        raise RuntimeError(f"debt refresh could not start: {exc}") from exc
     if result.returncode != 0:
         raise RuntimeError(
             f"debt refresh failed rc={result.returncode}: {(result.stderr or result.stdout)[-400:]}"

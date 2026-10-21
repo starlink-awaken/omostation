@@ -25,6 +25,10 @@ def _load(monkeypatch, ws: Path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     monkeypatch.setattr(module, "code_root", lambda: ws)
+    # 入口文件必须存在, 否则 refresh_mirror 的缺失分支先触发。
+    venv_entry = ws / module.OMO_BIN
+    venv_entry.parent.mkdir(parents=True, exist_ok=True)
+    venv_entry.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     calls: list[tuple] = []
     monkeypatch.setattr(module, "_git", lambda w, *a, check=True: calls.append(a) or _FakeRun(0, "", ""))
     monkeypatch.setattr(module.subprocess, "run", lambda *a, **k: calls.append(a) or _FakeRun(0, "", ""))
@@ -163,3 +167,17 @@ def test_script_is_invoked_without_uv_run(ws, monkeypatch):
     module, _ = _load(monkeypatch, ws)
     assert module.OMO_BIN == "projects/omo/.venv/bin/omo"
     assert "uv" not in module.OMO_BIN
+
+
+def test_missing_omo_venv_is_actionable_not_a_traceback(ws, monkeypatch):
+    """端到端实测 (2026-10-21): 浅克隆未 init 子模块时入口缺失。
+
+    原实现让 subprocess.run 抛 FileNotFoundError 一路冒到 cron 日志 —— 一条
+    traceback 而不是可操作的话。缺的就是这个 venv, 必须说清怎么补。
+    """
+    module, _ = _load(monkeypatch, ws)
+    monkeypatch.setattr(module, "_git",
+                        lambda w, *a, check=True: _FakeRun(0, "main\n", ""))
+    (ws / module.OMO_BIN).unlink()  # _load 会造一个假的, 这里撤掉
+    with pytest.raises(RuntimeError, match="omo venv entry missing"):
+        module.main([])
