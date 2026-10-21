@@ -2,8 +2,53 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-10-06
+last-reviewed: 2026-10-21
 ---
+
+# 2026-10-21 复审 (X2-C05 ≤14d; 上次 2026-10-06 => 今天 15d)。第三次到期: 2026-09-21
+#   (f035d1cfd/#4109) -> 2026-10-06 (#4652) -> 今天。前两次都只动本文件的复核戳,
+#   14 天周期与人工刷新间隔决定了它必然复发 —— 本轮**同样**不代 owner 拆这道墙
+#   (把 X2-C05 改成过期降 warning / 纳入 expiry-radar 是 governance-team 决策, 见文末)。
+# 复审方法: 同 2026-10-06 —— 逐条核对声明 ref 与文件系统实况 + 写入方 + 消费者。
+#   本轮新增第四条测量纪律(前三条见 2026-10-06 那节), 它是本轮两条订正的来源:
+#     d) 「写入方」不能只在**含路径字面量的行**上找写入构造 —— 写入目标常常在**另一行**
+#        算出。反例(2026-10-06 因此漏判): `accept_rollout_envelope` 的写入是
+#        `write_yaml_atomic(root / acceptance_ref, ...)`(:100), 而 acceptance_ref 在 :67
+#        才由 f-string 拼出。只扫字面量行 => 命中 0 => 误判「零写者」。
+#        本轮改为: 先取提及该路径的文件集合, 再看这些文件里**所有**写入调用的目标表达式,
+#        并把变量赋值回溯到该路径。这条纪律同样是「把读数推向看着更干净」的一类。
+#   - 声明项 46 = governance_stack 3 + assets 43 (与上轮一致)。
+#   - 实况: 存在 41 (git 跟踪 31 / 未跟踪但存在的运行时面 10), 不存在 5。
+#     不存在的 5 条全部命中 .gitignore; 不存在且未忽略 = 0。
+#   - ⚠️ 两条**订正**上轮读数 (原文保留以便追溯, 以今天的树为准):
+#       1 OMO-WORKERS (.omo/workers/) 上轮记「零写者, 引用清一色是排除名单/迁移注记」——
+#         **错**。它有活跃写入方: projects/omo/src/omo/omo_rollout.py:100
+#         `write_yaml_atomic(root / acceptance_ref, acceptance_record)`, acceptance_ref 由
+#         :67 的 `f".omo/workers/runs/{stem}-acceptance.yaml"` 拼出; 调用链
+#         projects/omo/src/omo/omo_worker_cmd_worker.py:115 (worker 命令处理器) 可达。
+#         声明合法 (运行时面, 有写者), 非迁移遗留。
+#       2 OMO-CAPABILITIES (.omo/capabilities/) 上轮记「bin/change-lane-check.py:96 只是
+#         lane 映射里的遗留别名」——**不完整**。它有活跃写入方:
+#         projects/omo/src/omo/omo_capability.py:317 调 write_capability_registry_bundle,
+#         后者 :80 `write_yaml_atomic(capabilities_dir / filename, payload)`,
+#         capabilities_dir = omo_dir / "capabilities" (:60); broker 注册为
+#         `omo-capability capability scan --write` (mutation_target 即 .omo/capabilities/*)。
+#   - 仍无写入方的 3 条 (本轮逐条复核, 含「写入在另一行」视角):
+#       OMO-LOCKS   .omo/locks/        唯一候选 bin/gac/ci-local-fast.py:595 写的是
+#                                 `args.failures_json`(调用方参数), 非本路径 => 无写者。
+#       OMO-TESTS   .omo/tests/        代码面零命中 => 无写者。
+#       ingress_plane projects/c2g/    唯一写构造在 bin/compass_radar.py 的**通用** helper
+#                                 (_write_text_if_changed:908 / _health_history_dir:925),
+#                                 目标是调用方传入的健康历史目录; :712 只是给用户的
+#                                 `git submodule update --init projects/c2g` 提示串。
+#                                 该目录不在 origin/main `.gitmodules`(16 段)也不是 gitlink
+#                                 => 外部工具的本地检出, 本仓无写者。
+#   - 本轮不代 owner 决策: 3 条无写者声明 (LOCKS/TESTS/ingress_plane) 该摘除还是改指,
+#     以及上轮已提出的 compass_radar 提示串指向未注册子模块的可修缺陷, 均留给 governance-team。
+#   - 遗留(同前轮, 本轮**未**处理): X2-C05 是 required `gac-gate` 上的墙钟硬失败项。
+#     本轮是**在案第三次复发**, 且三次都只靠再提交一次戳记 —— 建议 owner 另开 BET 决定
+#     (a) 到期降 warning + 全景可见, 或 (b) 把戳刷新纳入排程 (与 debt-dashboard 镜像
+#     同一范式: bin/ssot/debt-dashboard-mirror-sync.py)。
 
 # 2026-09-21 复审 (X2-C05 ≤14d; 上次 2026-09-06 已 15d → 该 L0 检查今日对所有 PR 失败)
 # 复审方法: 逐项核对 47 项 assets 的 `ref` 与文件系统实况 + 各自写入方 + 消费者。
