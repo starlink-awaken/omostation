@@ -39,8 +39,13 @@ HEARTBEATS: dict[str, tuple[str, int]] = {
     "system_health": ("last_scan", 48),
     "health": ("generated_at", 72),
     "governance_data": ("generated_at", 24 * 7),
-    # 周更 debt-audit 节奏配套的 dashboard 投影
-    ".omo/_control/debt-dashboard/current.yaml": ("generated_at", 24 * 14),
+    # 周更 debt-audit 节奏配套的 dashboard 投影。读**真看板**而不是
+    # `.omo/_control/debt-dashboard/current.yaml` 那份 tracked 镜像: 后者由 omo
+    # post-hook 刷新但无人提交, origin/main 上长期腐烂 (2026-10-21 实测 817h vs
+    # SLA 336h), 于是每个干净检出都读到陈旧值 => stale_beats=1 => A2/A5 恒红。
+    # 真看板是 gitignored 的运行时产物 (`.omo/debt/*`), 干净检出里 absent =>
+    # 本心跳按 absent 放行 (与 system_health/health 同语义)。
+    ".omo/debt/dashboard/current.yaml": ("generated_at", 24 * 14),
 }
 
 LAUNCHD_PREFIXES = ("com.omostation.", "com.opencode.", "com.l4.", "com.aetherforge.", "com.omlxc.")
