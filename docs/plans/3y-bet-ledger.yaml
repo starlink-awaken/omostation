@@ -43982,6 +43982,72 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:7ca247c90594afaea3832fa1aa25b4d3feb2bcabc52a66cda621ed79075e29cf
     decision_ref: decision://accepted/BET-Y2Q4-T10-262
+- id: BET-Y2Q4-T10-263
+  title: B4b 批次 2 的 cron 侧改道预检 —— installer 输出不是纯路径替换且安装位当前不可执行
+  goal: 用零运行面效应的 dry-run 装置量清「从运行时安装位重装 resident cron」的真实差量与可执行性， 把 B4b 批次 2 的 cron
+    侧转成一份前置条件与中止判据清单，使 Principal 一次答复即可授权下一步。 实测两条 hazards，即现存 crontab 内 omo.cli resident
+    命中为 0（角色权在 launchd）， 从安装位重装会净新增 9 条 resident 作业并双实例抢写同一 ledger；安装位子模块 16/16 未初始化，
+    它写出的每一行都会 ModuleNotFoundError。只登记，不改道。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 3h
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: project-doc-change
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-21-b4b-cron-cutover-preflight.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-263.md
+  - docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
+  non_goals:
+  - 不安装、不重写、不改动 crontab；不 bootout/bootstrap/kickstart 任何 label；不写 ~/Library/LaunchAgents；不改
+    services.yaml 任何条目。
+  - 不在安装位 git submodule update --init、不建 venv、不动 39 条 .pth、不在安装位建任何目录。
+  - 不判定任何 resident 角色该不该活，不替 Principal 在 cron 与 launchd 之间选择。
+  - 不把权威 ledger 从 state_root()/runtime/omo/event-ledger.sqlite3 翻到安装位（属 B4b 批次 2+ 逐批授权面）。
+  - 不把本预检注册进 ci-surfaces.yaml / governance-checks.yaml，不动 script_baseline。
+  - 不宣布 ADR-0456 B1/B3/B4/B5/B4b 或整个 plan 完成。
+  done_when:
+  - spec §2 的七行读数全部可由命令复现，且含 crontab 改写前后 shasum -a 256 前 16 位逐字节一致的证据（证明零运行面效应）。
+  - spec §3 给出精确 cron diff 即 2 条路径换 + 9 条净新增，并引 install-resident-cron.sh:63-78 的 awk
+    managed() 谓词本体解释为何幂等块挡不住净新增。
+  - spec §4 给出安装位 import 探针 rc=1 与 Workspace 对照 rc=0 的双侧读数，及 5 个缺失写目录的逐项 MISS。
+  - spec §5 的 P1—P5 与 §6 中止判据齐备，Principal 可在不动运行面的前提下一次答复是否推进批次 2。
+  - 本条 accepted_specifications 的 content_digest 与 spec 文件字节一致；spec 内容若再改必须重算。
+  verify:
+  - cmd: python3 -c "import yaml;d=yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'));e=[b
+      for b in d['bets'] if b['id']=='BET-Y2Q4-T10-263'];print(len(e), e[0]['status'])"
+    expect: 恰好 1 条且 status 为 in_progress（关闭后为 done）。
+  - cmd: python3 -c "import hashlib;print(hashlib.sha256(open('docs/superpowers/specs/2026-10-21-b4b-cron-cutover-preflight.md','rb').read()).hexdigest())"
+    expect: 与本条 accepted_specifications 的 content_digest 后缀逐字节一致。
+  - cmd: crontab -l | /usr/bin/grep -c 'omo\.cli resident' || true
+    expect: 0 —— 交付前后各跑一次，读数不变即证明本轮没有触碰 crontab（本机 grep 别名到 rg，rg -c 零匹配不打印 0，必须用 /usr/bin/grep）。
+  - cmd: git diff --name-only origin/main..HEAD
+    expect: 只含 write_surfaces 里的本轮已交付面；不含 .omo/state/**、BRIEF.md、子模块 gitlink。
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-21-b4b-cron-cutover-preflight.md
+    spec_version: 1.0.0
+    content_digest: sha256:757235ed9a7dc12f6ae7b8a528776b65bf52db1ff1f390dbb2a9f8e357969797
+    decision_ref: decision://accepted/BET-Y2Q4-T10-263
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44120,7 +44186,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 557
+  total_bets: 558
   windows:
   - Y1Q1
   - Y1Q2
