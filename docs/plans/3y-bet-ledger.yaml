@@ -43988,7 +43988,8 @@ bets:
     侧转成一份前置条件与中止判据清单，使 Principal 一次答复即可授权下一步。 实测两条 hazards，即现存 crontab 内 omo.cli resident
     命中为 0（角色权在 launchd）， 从安装位重装会净新增 9 条 resident 作业并双实例抢写同一 ledger；安装位子模块 16/16 未初始化，
     它写出的每一行都会 ModuleNotFoundError。只登记，不改道。
-  status: in_progress
+  status: done
+  done_at: 2026-10-21
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -44032,14 +44033,40 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e5823c0ac99d4e4986b6310a2186ab1af135a9b9
+          tests:
+            ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
+            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+          diff:
+            ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
+            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+          rollback:
+            ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
+            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-263.md
+            sha256: sha256:3a5be71d2e434c19ac6a0d5d707ddf7bb7418d87c5b8aedab9863b385cb678f8
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
+            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
+            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-263.md
+            sha256: sha256:3a5be71d2e434c19ac6a0d5d707ddf7bb7418d87c5b8aedab9863b385cb678f8
+          cleanup:
+            ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
+            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
       value:
         status: NOT_PROVEN
         evidence: {}
