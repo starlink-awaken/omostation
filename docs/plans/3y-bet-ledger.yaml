@@ -43809,6 +43809,78 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-340401
+  title: GOAL-04 FIX-01 场景卡共享解析器与三入口兼容收敛
+  track: T10-TOOLING
+  window: Y2Q4
+  priority: P1
+  appetite: 1 day
+  status: pending
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  goal: 将review/lifecycle/lineage解析收敛到无副作用共享库，保留原生scene字段、完整YAML语义、五档生命周期及写回门禁；不推导运行准入。
+  depends_on: []
+  write_surfaces:
+  - lib/scene_card_document.py
+  - bin/ssot/scene-card-review.py
+  - bin/ssot/scene-card-lifecycle.py
+  - bin/ssot/gen-scene-card-lineage.py
+  - tests/test_scene_card_document.py
+  - tests/test_scene_card_lifecycle_check.py
+  - tests/test_scene_card_parser_callers.py
+  - docs/superpowers/specs/2026-10-20-v34-canonical-scene-parser.md
+  - docs/decisions/accepted/BET-Y2Q4-T10-340401.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-10-20-v34-canonical-scene-parser-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-340401.md
+  non_goals:
+  - 不修改Claims Authority、lease数据库、激活态、WorkPacket/claim协议或子仓gitlink。
+  - 不导入包内SingleWriterLeaseBroker，不新建第二个Broker或状态账本。
+  - 不修改真实SceneCard的业务语义，不自动清洗research-pipeline重复字段。
+  - 不操作生产SceneCard、投影、launchd/crontab或设备，不把catalog状态当运行覆盖。
+  - 不运行攻击链、竞争漏洞复现或此前被拒绝的安全测试。
+  done_when:
+  - 三个工具共用lib/scene_card_document.py，不保留文档选择分支。
+  - 单文档及FrontMatter+Body的v1/v2字段和值类型兼容；支持无缩进列表、URI、嵌套、引号、block scalar、多行文本和JSON mapping。
+  - 空内容/非mapping/空body/重复键/状态冲突/双schema/三文档明确失败并带来源。
+  - 仅更新获准canonical字段及其已有同值frontmatter镜像，内存重验后写回，保留其他字段与文档顺序，不新增镜像。
+  - review验证、lifecycle顺序/readiness/actor保持；lineage解析错误使生成失败。
+  - 纯parser无mkdir/写文件/网络/子进程/authority访问。
+  - 定向回归只使用临时公开fixture，实际模块路径属于当前检出。
+  - 独立核验冻结diff、源码/解释器/依赖/退出码/日志摘要；生产与业务价值不作通过。
+  verify:
+  - cmd: python3 -m pytest tests/test_scene_card_document.py tests/test_scene_card_parser_callers.py
+      tests/test_scene_card_lifecycle_check.py tests/scene_v2/test_scene_card_registry_connector.py
+      -q -p no:randomly
+    expect: exit 0；合法输入兼容，错误明确失败，临时写回可再次解析。
+  - cmd: python3 -c "from pathlib import Path; import lib.scene_card_document as m;
+      p=Path(m.__file__).resolve(); print(p); assert p.is_relative_to(Path.cwd().resolve())"
+    expect: 共享parser实际从当前检出加载。
+  circuit_breaker: 如需改broker/生产authority/真实SceneCard业务语义/子模块gitlink/现有生命周期准入规则，或原生start/affected
+    receipt/claim拒绝，则停止对应实施并保留诊断；不关闭gate，不force，不借done BET。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-20-v34-canonical-scene-parser.md
+    spec_version: 1.0.0
+    content_digest: sha256:b7158773508c9baf659dc3d8bf11f9935c323c04c190304448110ff83d883b2e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-340401
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 - id: BET-Y2Q4-T10-262
   title: launchd 现实核对必须自报测量基座 —— 让「注册表落后」与「检出落后」在 --json 输出上可分
   goal: 给 bin/mof/gen-service-configs.py 的 --reality-check 输出加一个 measured_base 对象（注册表路径与字节摘要
@@ -44021,7 +44093,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 556
+  total_bets: 557
   windows:
   - Y1Q1
   - Y1Q2
