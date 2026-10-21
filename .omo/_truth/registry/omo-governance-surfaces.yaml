@@ -124,8 +124,28 @@ last-reviewed: 2026-10-21
 #     dup-aware MappingNode 全档扫描 = 0 处重复键)。
 #   - 实况: 存在 41 (origin/main 跟踪 32 / 本机检出存在但 gitignored 9), 不存在 5 —— 与上一轮同一批 5 条
 #     (ingress_plane projects/c2g/ · OMO-LOCKS · OMO-WORKERS · OMO-TESTS · OMO-CAPABILITIES), 全部命中 .gitignore。
-#   - 5 条零写者复现: 代码面(bin/** projects/omo/src/** projects/ecos/src/**)引用行数 3/4/3/4/3(同上一轮同值),
-#     构造类(mkdir/write_text/makedirs/touch/open) = 0 处; 余下全是排除名单/skip/迁移注记。
+#   - ⚠️ 订正本块上一条读数(原文保留以便追溯): 「5 条零写者」**错**, 实为 **3 条**。
+#       有活跃写入方的 2 条:
+#         OMO-WORKERS `.omo/workers/` —— projects/omo/src/omo/omo_rollout.py:100
+#           `write_yaml_atomic(root / acceptance_ref, acceptance_record)`, acceptance_ref 由 :67 的
+#           `f".omo/workers/runs/{stem}-acceptance.yaml"` 拼出; 调用链 omo_worker_cmd_worker.py:115 可达。
+#         OMO-CAPABILITIES `.omo/capabilities/` —— omo_capability.py:317 调 write_capability_registry_bundle,
+#           该函数在 omo_ingress_registry_writes.py:`:60 capabilities_dir = omo_dir / "capabilities"` ·
+#           `:74 mkdir` · `:75 write_text_atomic(capabilities_dir / "INDEX.md", …)` ·
+#           `:80 write_yaml_atomic(capabilities_dir / filename, payload)`; broker 为
+#           `omo-capability capability scan --write`。
+#       仍无写者的 3 条: OMO-LOCKS · OMO-TESTS · ingress_plane `projects/c2g/`。两个易误判的候选已排除:
+#       `bin/gac/ci-local-fast.py:595` 写的是 `args.failures_json`(调用方传入参数, 非本路径);
+#       `bin/compass_radar.py` 的通用 helper `_write_text_if_changed:908` / `_health_history_dir:925`
+#       目标锚在 `.omo/state/history`, 而 `:712` 只是给用户的提示串。
+#       **尺缺陷**(为何上轮判成 0): 构造关键词表只列了 `mkdir/write_text/makedirs/touch/open`, **漏了本仓
+#       自己的原子写 helper `write_yaml_atomic` / `write_text_atomic`**(projects/omo/src/omo/omo_io.py:108 /
+#       :71), 且未把写调用的**目标表达式**回推到声明路径 —— 上述两处的目标都由另一行的 f-string / 变量 /
+#       函数返回值拼出, 只在含字面量的行上找构造按构造看不见它们。
+#       本轮以同面重测的引用行数为 c2g/locks/workers/tests/capabilities = **9/4/40/4/20**, 与旧记 3/4/3/4/3
+#       **不可比**(旧读数面未含 `omo_governance_surfaces_snapshots.py` 的声明性字符串; 本轮 omo 检出对齐
+#       pin 36c64babc893f76afaa8a4d9b0ac7d6cf3946315)。
+#       同日另有独立复核(#4844 块)给出同一结论与相同行号; 本条是**对我自己块内错误读数的撤回**, 不是新发现。
 #   - ingress_plane 仍未注册: `projects/c2g` 不在 origin/main `.gitmodules`(16 段), 也不是 main 树 gitlink(16 个),
 #     而 bin/compass_radar.py:712(副本 bin/meta/compass_radar.py:503) 照旧打印
 #     `git submodule update --init projects/c2g` => 该修复提示在干净检出上不可能成功(在案缺陷, 本轮未处理)。
