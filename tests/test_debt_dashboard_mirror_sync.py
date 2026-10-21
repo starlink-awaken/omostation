@@ -151,8 +151,7 @@ def test_refresh_failure_is_an_error(ws, monkeypatch):
         return _FakeRun(1, "", "debt refresh failed rc=1: boom")
 
     monkeypatch.setattr(module.subprocess, "run", _boom)
-    with pytest.raises(RuntimeError, match="debt refresh failed"):
-        module.main([])
+    assert module.main([]) == 1
 
 
 def test_uses_repo_root_not_file_relative(monkeypatch, tmp_path):
@@ -179,5 +178,17 @@ def test_missing_omo_venv_is_actionable_not_a_traceback(ws, monkeypatch):
     monkeypatch.setattr(module, "_git",
                         lambda w, *a, check=True: _FakeRun(0, "main\n", ""))
     (ws / module.OMO_BIN).unlink()  # _load 会造一个假的, 这里撤掉
-    with pytest.raises(RuntimeError, match="omo venv entry missing"):
-        module.main([])
+    assert module.main([]) == 1
+
+
+def test_refresh_error_is_one_line_not_a_traceback(ws, monkeypatch, capsys):
+    """cron 日志里只该有一行可操作的话。"""
+    module, _ = _load(monkeypatch, ws)
+    monkeypatch.setattr(module, "_git",
+                        lambda w, *a, check=True: _FakeRun(0, "main\n", ""))
+    (ws / module.OMO_BIN).unlink()
+    assert module.main([]) == 1
+    err = capsys.readouterr().err.strip()
+    assert err.startswith("error: omo venv entry missing"), err
+    assert "Traceback" not in err
+    assert "run `git submodule update --init projects/omo`" in err
