@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import plistlib
@@ -440,11 +441,93 @@ def run_e1_drift() -> dict:
     }
 
 
+_BASE_STATES = ("equal", "behind", "diverged", "unknown")
+
+
+def _git_field(root: Path, *args: str) -> str | None:
+    """git 事实取值器: 任何失败(非仓库、ref 不存在、超时、空输出)一律 None, 不折算成别的值。
+
+    None 与「取到了」在读数上必须可分 —— `unknown` 不是 `equal`。
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
+def measured_base(registry_path: Path, root: Path | str | None) -> dict:
+    """这份现实核对读数是在**哪棵树**上量出来的 —— 纯观测面, 不进 findings、不影响 ok。
+
+    起因 (2026-10-20 实测): 同一台机同一小时内两次 `--reality-check --json` 读出
+    `e2_undeclared` = 5 与 0。差的 5 条是已合入 `origin/main` 的 observe-only 登记,
+    而第一次的测量根是本地 main (落后 29 个 commit) —— 机器侧零变化, 77 个 plist 前后一致。
+    注册表侧读的是当前检出, 这本身是 ADR-0456 规定的读面; 缺陷在输出面: 22 个键里
+    没有任何字段说明基座, 于是「注册表落后于本机现实(真债)」与「测量装置落后于远端(假债)」
+    不可区分。B4b 分批切换唯一依赖的就是这张门, 所以它必须自报基座。
+
+    git 事实跟着**注册表所在的检出**走, 不是跟着 `root` 走: 基座要说的是「这些数字来自哪棵树」,
+    而注册表就是被量的那半侧。`root` 与注册表可以不同根 —— 在 worktree 里跑 CLI 时
+    `workspace()` 解析到 canonical 检出, 拿它的 HEAD 去标注 worktree 的注册表就是假证词。
+    证不出一棵树(registry 不在任何仓库里)就给 unknown, 不退回任何猜测的根。
+    """
+    root_path = Path(root) if root is not None else None
+    toplevel = _git_field(registry_path.parent, "rev-parse", "--show-toplevel")
+    git_root = Path(toplevel) if toplevel else None
+    for candidate in (git_root, root_path):
+        if candidate is not None:
+            try:
+                shown = str(registry_path.relative_to(candidate))
+                break
+            except ValueError:
+                continue
+    else:
+        shown = str(registry_path)
+
+    try:
+        digest = hashlib.sha256(registry_path.read_bytes()).hexdigest()[:12]
+    except OSError:
+        digest = None
+
+    head = _git_field(git_root, "rev-parse", "--short", "HEAD") if git_root else None
+    origin_main = _git_field(git_root, "rev-parse", "--short", "origin/main") if git_root else None
+    behind_raw = _git_field(git_root, "rev-list", "--count", "HEAD..origin/main") if git_root else None
+    ahead_raw = _git_field(git_root, "rev-list", "--count", "origin/main..HEAD") if git_root else None
+    behind = int(behind_raw) if behind_raw is not None and behind_raw.isdigit() else None
+    ahead = int(ahead_raw) if ahead_raw is not None and ahead_raw.isdigit() else None
+
+    if head is None or origin_main is None:
+        state = "unknown"
+    elif head == origin_main:
+        state = "equal"
+    elif behind and not ahead:
+        state = "behind"
+    else:
+        state = "diverged"
+    assert state in _BASE_STATES
+    return {
+        "registry_file": shown,
+        "registry_sha256": digest,
+        "head": head,
+        "origin_main": origin_main,
+        "base_state": state,
+        "behind_count": behind,
+    }
+
+
 def reality_check(
     registry_path: Path,
     launchd_dir: Path,
     e1: dict | None = None,
     workspace_root: Path | str | None = None,
+    base: dict | None = None,
 ) -> dict:
     """注册表 vs 本机 launchd 现实的双向门禁 (只读)。"""
     services = load_services(registry_path)
@@ -453,6 +536,8 @@ def reality_check(
     declared = declared_labels(services)
     e1 = e1 if e1 is not None else run_e1_drift()
     root_str = str(workspace_root or workspace())
+    # 纯观测面: 下面所有判据都不读它, 它只随返回值一起出去 (spec §2 约束 1)。
+    base = base if base is not None else measured_base(registry_path, workspace_root or workspace())
 
     buckets: dict[str, list[str]] = {"workspace": [], "external": [], "unclassified": [], "owned": [], "unmanaged_unknown": []}
     for row in rows:
@@ -560,6 +645,7 @@ def reality_check(
         "external": len(buckets["external"]),
         "registry_declared_total": len(declared),
         "dev_label_prefix": policy.get("dev_label_prefix", ""),
+        "measured_base": base,
     }
 
 
@@ -580,6 +666,12 @@ def reality_check_main(local_root: Path, registry: Path | None, as_json: bool) -
             f"本机 {report['installed_total']} = workspace {report['owned_installed']} + "
             f"unclassified {report['unclassified']} + external {report['external']}  |  "
             f"Workspace 作用域 {report['workspace_scoped']}"
+        )
+        b = report["measured_base"]
+        print(
+            f"测量基座: {b['base_state']}  HEAD={b['head']}  origin/main={b['origin_main']}"
+            f"{'  behind=' + str(b['behind_count']) if b['behind_count'] else ''}  "
+            f"registry={b['registry_file']}@{b['registry_sha256']}"
         )
         for f in report["findings"]:
             print(f"❌ {f}")
