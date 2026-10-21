@@ -183,3 +183,67 @@ def test_real_repo_reports_forward_risk():
     # 前瞻: 至少报出一个**未来**才越界的对象 (这是本工具存在的理由)
     future = [i for i in r["imminent"] if i["remaining_days"] > 0]
     assert future, "雷达的价值在于前瞻——必须能看到尚未越界的对象"
+
+
+# ── X2 规则的嵌套阈值 (2026-10-21 实证的回归) ────────────
+
+
+def _x2_registry(tmp_path: Path, *, threshold_days=14, nested=True) -> Path:
+    """造 x2-freshness-rules.yaml —— 默认按注册表**真实结构**把阈值嵌在 freshness 下。
+
+    旧 reader 只读顶层 `threshold_days`, 于是本 fixture 下恒返回 []; 这正是
+    2026-10-21 实测的缺陷 (14/14 条规则的阈值都在 freshness 下, 顶层 0 条)。
+    """
+    reg_dir = tmp_path / ".omo" / "_truth"
+    reg_dir.mkdir(parents=True, exist_ok=True)
+    target = tmp_path / ".omo/_truth/registry/omo-governance-surfaces.yaml"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("---\nlast-reviewed: 2026-10-06\n---\n", encoding="utf-8")
+    freshness = (f"    freshness:\n      mechanism: registry-review\n"
+                 f"      threshold_days: {threshold_days}\n") if nested else ""
+    top = "" if nested else f"    threshold_days: {threshold_days}\n"
+    (reg_dir / "x2-freshness-rules.yaml").write_text(
+        "rules:\n"
+        "  - rule_id: X2-FRESH-OMO-GOVERNANCE-SURFACES\n"
+        "    target: .omo/_truth/registry/omo-governance-surfaces.yaml\n"
+        f"{top}{freshness}",
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+def test_x2_rule_reads_nested_threshold_days(tmp_path):
+    """阈值在 `freshness.threshold_days` 下 (注册表真实结构) —— 必须读到。"""
+    mod = _load()
+    _x2_registry(tmp_path, threshold_days=14, nested=True)
+    items = mod.scan_x2_rules(root=tmp_path, horizon=30, today=date(2026, 10, 21))
+    assert [i["surface"] for i in items] == ["x2:X2-FRESH-OMO-GOVERNANCE-SURFACES"], items
+
+
+def test_x2_rule_still_reads_top_level_threshold_days(tmp_path):
+    """旧格式 (顶层 threshold_days) 不能被这次修复打破。"""
+    mod = _load()
+    _x2_registry(tmp_path, threshold_days=14, nested=False)
+    items = mod.scan_x2_rules(root=tmp_path, horizon=30, today=date(2026, 10, 21))
+    assert [i["surface"] for i in items] == ["x2:X2-FRESH-OMO-GOVERNANCE-SURFACES"], items
+
+
+def test_x2_rule_with_no_threshold_anywhere_is_skipped(tmp_path):
+    """两个位置都没有阈值 —— 仍然跳过, 不是崩。"""
+    mod = _load()
+    reg_dir = tmp_path / ".omo" / "_truth"
+    reg_dir.mkdir(parents=True, exist_ok=True)
+    (reg_dir / "x2-freshness-rules.yaml").write_text(
+        "rules:\n  - rule_id: X\n    target: .omo/_truth/registry/nope.yaml\n",
+        encoding="utf-8")
+    assert mod.scan_x2_rules(root=tmp_path, horizon=30, today=date(2026, 10, 21)) == []
+
+
+def test_real_repo_x2_rule_is_covered():
+    """集成: 真实注册表的嵌套阈值必须被读到 —— 这条钉住 X2-C05 不再瞎。"""
+    mod = _load()
+    items = mod.scan_x2_rules(root=mod._ROOT, horizon=30)
+    ids = {i["surface"] for i in items}
+    assert "x2:X2-FRESH-OMO-GOVERNANCE-SURFACES" in ids, (
+        f"真实 x2-freshness-rules.yaml 的嵌套阈值未被读到; 命中 {sorted(ids)}"
+    )
