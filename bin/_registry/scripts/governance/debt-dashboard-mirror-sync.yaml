@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/ssot/debt-dashboard-mirror-sync.py
+name: Debt Dashboard Mirror Sync
+category: governance
+owner: governance-team
+description: "刷新 .omo/_control/debt-dashboard/current.yaml (git-tracked 镜像) 并把它送回 origin/main: 只暂存该镜像 -> chore(auto) 提交 -> push。治 A2/A5 stale_beats: 镜像原由 omo post-hook 刷新但无人提交, origin/main 上那份腐烂 34 天 (817h vs SLA 336h)。"
+inputs: []
+outputs:
+  - type: exit_code
+dependencies:
+  - projects/omo (venv 入口 projects/omo/.venv/bin/omo)
+triggers:
+  - cron
+related:
+  - .omo/_truth/registry/x2-freshness-rules.yaml
+  - .omo/_control/debt-dashboard/current.yaml
+maturity: active
+last_reviewed: "2026-10-21"

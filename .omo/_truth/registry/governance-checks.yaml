@@ -179,7 +179,13 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 726 # 2026-10-19 725→726: 既有运行能力 bin/ops/disk-keepalive.sh 正式源码纳管
+    script_baseline: 727 # 2026-10-21 726→727: 新登记 bin/ssot/debt-dashboard-mirror-sync.py
+      # (治 A2/A5 stale_beats —— .omo/_control/debt-dashboard/current.yaml 是 git-tracked 镜像,
+      # 由 omo post-hook 刷新但无人提交; origin/main 上那份 817h 未更新 (SLA 336h), 于是每个
+      # 干净检出都读到腐烂值 => meta-doctor 恒报 stale_beats=1 => A2/A5 恒红。既有 chore(auto)
+      # cron 只 commit 不 push, fullrefresh 每 180s reset --hard 抹掉本地提交, 故本脚本补 push。
+      # 不使用 SCRIPT_BASELINE_SYNC=1 绕过; 上一行注释:
+      # 2026-10-19 725→726: 既有运行能力 bin/ops/disk-keepalive.sh 正式源码纳管
       # (A9 P0-4 —— panorama 采集作业存活守护: 作业被 bootout 时 launchd KeepAlive
       # 不覆盖、织星看门狗只探 :43191; 2026-10-16 夜间 data.json 陈旧 10.4h 无告警。
       # 主控 2026-10-19 授权「全面推进落地」后落这一行, 不使用 SCRIPT_BASELINE_SYNC=1
