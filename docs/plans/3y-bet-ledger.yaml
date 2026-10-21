@@ -43881,6 +43881,80 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-262
+  title: launchd 现实核对必须自报测量基座 —— 让「注册表落后」与「检出落后」在 --json 输出上可分
+  goal: 给 bin/mof/gen-service-configs.py 的 --reality-check 输出加一个 measured_base 对象（注册表路径与字节摘要
+    + 测量根 HEAD/origin/main 短 SHA + base_state + behind_count），零判定效应。B4b 分批切换唯一依赖的集合相等检测，此前无法自证它读的是哪一棵树；2026-10-20
+    实测同一小时两次读数差出 5 条幽灵 E2。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 4h
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/mof/gen-service-configs.py
+  - tests/test_service_registry_reality.py
+  - docs/superpowers/specs/2026-10-20-launchd-reality-check-base-provenance.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-262.md
+  - docs/reports/2026-10-20-reality-check-base-provenance-closeout.md
+  non_goals:
+  - 不同步任何检出：不调 bin/gac/sync-main.sh、不 fetch、不 reset --hard。主工作区本地 main 落后 29 个 commit
+    是运维事实，处置权属 Principal。
+  - 不动 launchd、plist、crontab、~/Library/LaunchAgents，不改 services.yaml 的任何条目。
+  - 不改 workspace_prefixes / exempt_labels / E1—E5 判据本体；measured_base 不得进 findings、不得影响
+    ok。
+  - 不回填 E4 的 19 条未分区项与 E5 的 2 条署名项（T10-259 准入清单仍待 Principal）。
+  - 不把 --reality-check 注册进 ci-surfaces.yaml / governance-checks.yaml，不动 script_baseline。
+  - 不宣布 ADR-0456 B1/B3/B4/B5 或整个 plan 完成。
+  done_when:
+  - reality_check() 返回值含 measured_base，六字段齐：registry_file / registry_sha256 / head /
+    origin_main / base_state / behind_count。
+  - base_state 四值枚举；ref 不可解析一律 unknown，不得折算成 equal。
+  - 零判定效应由同一次调用的对照证明：注入不同 measured_base 两次，ok 与 findings 逐字相等。
+  - 假债可指认：同一本机现实对「少 N 条登记的旧注册表」与完整注册表各跑一次，e2_undeclared 不同且 registry_sha256 也不同。
+  - 非 git 测量根不抛：head/origin_main/behind_count 为 null，base_state=unknown，ok 不变。
+  - registry_file 相对呈现，输出面不含 /Users/ 字面量。
+  - 变异对照：把 C3 用例的两侧注册表内容改成一致，该用例当场红。
+  verify:
+  - cmd: uv run --no-project --with pytest --with pyyaml python -m pytest tests/test_service_registry_reality.py
+      -q -p no:randomly
+    expect: 全绿，且含本轮新增的 measured_base 用例（既有 E1—E5 用例逐条未被改窄）。
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json | python3 -c
+      "import json,sys; d=json.load(sys.stdin); b=d['measured_base']; print(sorted(b.keys()));
+      print(d['e2_undeclared'], d['owned_declared'], d['owned_installed'])"
+    expect: measured_base 六键齐；e2_undeclared / owned_declared / owned_installed 三键与改前在同一测量根上的读数逐字相同（本轮零判定效应）。
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json | python3 -c
+      "import json,sys; d=json.load(sys.stdin); assert not any('measured_base' in f
+      for f in d['findings']); print('findings', len(d['findings']))"
+    expect: findings 里不出现基座类条目；条数与改前一致。
+  - cmd: git diff --name-only origin/main..HEAD
+    expect: 只含 write_surfaces 里的本轮已交付面；不含 .omo/state/**、BRIEF.md、子模块 gitlink。
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-20-launchd-reality-check-base-provenance.md
+    spec_version: 1.0.0
+    content_digest: sha256:7ca247c90594afaea3832fa1aa25b4d3feb2bcabc52a66cda621ed79075e29cf
+    decision_ref: decision://accepted/BET-Y2Q4-T10-262
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44019,7 +44093,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 556
+  total_bets: 557
   windows:
   - Y1Q1
   - Y1Q2
