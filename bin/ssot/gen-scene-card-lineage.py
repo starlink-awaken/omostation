@@ -22,7 +22,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-import yaml
+from lib.scene_card_document import load_scene_card_document
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 SCENE_CARDS_DIR = WORKSPACE / "docs/scene-cards"
@@ -32,14 +32,8 @@ OUTPUT = WORKSPACE / "docs/generated/scene-card-lineage.yaml"
 
 def _load_scene_card_body(path: Path) -> dict:
     """加载 scene-card YAML (多文档: front matter + body), 返回 body (含 schema 的文档)."""
-    docs = [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if d]
-    if not docs:
-        return {}
-    for d in docs:
-        schema = str(d.get("schema", ""))
-        if schema.startswith("scene-card/"):
-            return d
-    return docs[-1]
+    document = load_scene_card_document(path)
+    return document.body
 
 
 def scan_scene_cards() -> list[dict]:

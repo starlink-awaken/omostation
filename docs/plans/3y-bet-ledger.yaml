@@ -43815,7 +43815,7 @@ bets:
   window: Y2Q4
   priority: P1
   appetite: 1 day
-  status: pending
+  status: done
   risk_level: L1
   human_gate: false
   pasw_required: false
@@ -43870,17 +43870,27 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: engineering_verified
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: PASSED
+        evidence:
+          test_command: python3 -m pytest tests/test_scene_card_document.py tests/test_scene_card_parser_callers.py tests/test_scene_card_lifecycle_check.py tests/scene_v2/test_scene_card_registry_connector.py -q -p no:randomly
+          test_result: 42 passed in 0.27s
+          interpreter: Python 3.14.7 (.venv/bin/python3)
+          dependencies: PyYAML 6.0.3
+          pytest_version: 9.1.1
+          module_path_check: /Users/xiamingxing/ws-v34-goal04-parser-impl/lib/scene_card_document.py (confirmed within current checkout)
+          scope_check: all modified files within ledger write_surfaces; no out-of-scope changes
+          dirty_summary: 3 modified bin/ssot scripts, 3 new files (lib + 2 test modules)
       operational:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          reason: No production SceneCard operations were executed per non_goals constraint.
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          reason: Production and business value adoption not attempted per spec boundary.
 - id: BET-Y2Q4-T10-262
   title: launchd 现实核对必须自报测量基座 —— 让「注册表落后」与「检出落后」在 --json 输出上可分
   goal: 给 bin/mof/gen-service-configs.py 的 --reality-check 输出加一个 measured_base 对象（注册表路径与字节摘要

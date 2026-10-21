@@ -11,20 +11,25 @@ import argparse
 import importlib.util
 import json
 import sys
-from datetime import UTC, datetime
+from pathlib import Path as _PathLib
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+_ROOT_FOR_IMPORT = _PathLib(__file__).resolve().parents[2]
+if str(_ROOT_FOR_IMPORT) not in sys.path:
+    sys.path.insert(0, str(_ROOT_FOR_IMPORT))
+
+from lib.scene_card_document import (
+    load_scene_card_document,
+    sync_declared_mirrors,
+    write_scene_card_document,
+)
+
 
 def _load_yaml_scene_card(path: Path) -> dict[str, Any]:
-    import yaml
-
-    with open(path, encoding="utf-8") as f:
-        docs = list(yaml.safe_load_all(f))
-    body = docs[-1] if len(docs) > 1 else docs[0]
-    if not isinstance(body, dict):
-        raise ValueError(f"scene card YAML must produce an object: {path}")
-    return body
+    document = load_scene_card_document(path)
+    return document.body
 
 
 def _load_module(path: Path, name: str):
@@ -109,15 +114,11 @@ def transition_scene_card(
     root: Path | None = None,
 ) -> dict[str, Any]:
     """Transition a scene card to a new lifecycle tier."""
-    import yaml
-
     if target_tier not in VALID_LIFECYCLE_TIERS:
         return {"ok": False, "error": f"invalid tier: {target_tier}"}
 
-    with open(scene_card_path, encoding="utf-8") as f:
-        docs = list(yaml.safe_load_all(f))
-    body_idx = len(docs) - 1 if len(docs) > 1 else 0
-    body = docs[body_idx]
+    document = load_scene_card_document(scene_card_path)
+    body = document.body
 
     current_tier = _resolve_tier(body.get("lifecycle", "draft"))
     if (current_tier, target_tier) not in VALID_TRANSITIONS:
@@ -138,19 +139,22 @@ def transition_scene_card(
                 "preconditions": readiness["preconditions"],
             }
 
-    body["lifecycle"] = target_tier
-    body["activation"] = TIER_ACTIVATION[target_tier]
+    sync_declared_mirrors(document, {
+        "lifecycle": target_tier,
+        "activation": TIER_ACTIVATION[target_tier],
+    })
+    body = document.body
     if target_tier == "shadow":
         body["activation_blockers"] = []
         body["approval_state"] = body.get("approval_state", "confirmed")
 
     if "notes" not in body:
         body["notes"] = []
-    body["notes"].append(f"Transitioned {current_tier}→{target_tier} at {datetime.now(UTC).isoformat()} by {actor}")
+    body["notes"].append(
+        f"Transitioned {current_tier}→{target_tier} at {datetime.now(timezone.utc).isoformat()} by {actor}"
+    )
 
-    docs[body_idx] = body
-    with open(scene_card_path, "w", encoding="utf-8") as f:
-        yaml.dump_all(docs, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    write_scene_card_document(scene_card_path, document)
 
     return {
         "ok": True,
@@ -319,28 +323,24 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
         # Read, update, write scene card
-        import yaml
+        document = load_scene_card_document(args.scene_card)
+        body = document.body
 
-        with open(args.scene_card, encoding="utf-8") as f:
-            raw = f.read()
-        docs = list(yaml.safe_load_all(raw))
-        body_idx = len(docs) - 1 if len(docs) > 1 else 0
-        body = docs[body_idx]
-
-        body["lifecycle"] = "active"
-        body["activation"] = "allowed"
-        body["approval_state"] = "approved"
+        sync_declared_mirrors(document, {
+            "lifecycle": "active",
+            "activation": "allowed",
+            "approval_state": "approved",
+        })
+        body = document.body
         body["activation_blockers"] = []
         if "notes" not in body:
             body["notes"] = []
         body["notes"].append(
-            f"Activated {datetime.now(UTC).isoformat()} by {args.actor} "
+            f"Activated {datetime.now(timezone.utc).isoformat()} by {args.actor} "
             f"(preconditions verified: {readiness['preconditions']})"
         )
 
-        docs[body_idx] = body
-        with open(args.scene_card, "w", encoding="utf-8") as f:
-            yaml.dump_all(docs, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        write_scene_card_document(args.scene_card, document)
 
         print(f"Activated: {body['scene_id']} by {args.actor}")
         return 0
