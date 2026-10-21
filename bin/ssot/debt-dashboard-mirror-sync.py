@@ -98,7 +98,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"would refresh {ws / MIRROR_REL} and commit {COMMIT_MESSAGE!r}")
         return 0
 
-    refresh_mirror(ws, _now())
+    # cron 的日志里只该有一行可操作的话, 不是一条 traceback —— 所以这里兜住
+    # refresh_mirror 抛的 RuntimeError (缺 venv 入口 / 刷新失败)。
+    try:
+        refresh_mirror(ws, _now())
+    except RuntimeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
     _git(ws, "add", str(MIRROR_REL))
 
     staged = _git(ws, "diff", "--cached", "--quiet", check=False)
