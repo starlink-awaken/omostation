@@ -59,6 +59,17 @@ ADR-0456 B4b 的目标措辞是「把**常驻面**的路径改到运行时安装
 - 本轮注册表增量的隔离实测：对 `origin/main` 那份与"加 6 条 `runtime_root`"的这份各跑一次
   `--reality-check`，上表全部读数**逐项相等**（`git diff --stat origin/main` 对该文件 = 6 insertions, 0 deletions）
   ⇒ 加字段本身不动任何桶。
+- **本 BET 的 selector 只搬 `ProgramArguments`，不搬被 exec 的治理内核（实测边界，2026-10-22）**：
+  常驻族入口是两个 tracked wrapper，其内部各写死一份检出字面量 —— `lib/resident-role-tick.sh:24` 与 `:28`、
+  `lib/resident-event-ingest.sh:11`，三处都是 `uv run --project /Users/xiamingxing/Workspace/projects/omo`。
+  ⇒ 改道后 launchd 的 arguments 落在安装位，但它 exec 的 omo 内核仍解析到检出。
+  两条改道前置实测：① 6 条入口在安装位**全部存在**，且与被变异测试过的那份检出字节相同
+  （`resident-role-tick.sh` sha256 前缀 `772d97c10a7e`、`resident-event-ingest.sh` `48f9659f49ec`）
+  ⇒ `--write` 的路径存在性守卫不会拦；② 安装位 clone detached 在 `1b5f02cb3`（2026-09-27），
+  **落后 `origin/main` 312 commits**（`git -C <install> rev-list --count HEAD..origin/main`，非浅仓）。
+  ⇒ **不要顺手把 wrapper 的字面量也改成自解析**：那会让常驻族当场开始跑落后 312 个 commit 的 omo，
+  正是 plan 把「静默跑旧代码的 daemon」列为 B4b 中止判据的那个形状。wrapper 改道需以
+  「安装位先前进到在案 SHA + 真实 tick 跑通」为前置，属后续独立 BET（见 §6）。
 
 ## 2. 契约
 
@@ -99,11 +110,21 @@ registry 的 `note` 字段一律避免行内 `: `（AGENTS.md §7⑨：`_load_ya
 
 ## 4. 验收
 
-1. 上述用例跑绿，且**变异对照**（两处独立变异，实测读数）：
-   - M1 把 `service_root()` 的 `install` 分支改回 `return workspace()` ⇒ **②③⑦ 红**（3 failed / 6 passed）；
-   - M2 删掉 `validate_service_declaration()` 里 `runtime_root` 那一段 ⇒ **⑤⑥ 红**（2 failed / 7 passed）；
-   - 两次变异后均按 sha 逐字节还原（`32fcd67a0e0c…`）。① ④ 在两次变异下保持绿是**预期**：
-     ① 断言的正是"缺省行为没被改动"，④ 断言的是"没有新的选根缝"，M1/M2 都不引入缝。
+1. 上述用例跑绿，且**变异对照**（实测读数；编号一律用 §3 契约编号 ①—⑦，文件里是 9 个用例，
+   ①=collection①②、②=③、③=④、④=⑤、⑤=⑥、⑥=⑦、⑦=⑧⑨ —— 初稿把两套编号混用过，
+   因此写下过"②③⑦ 红（3 failed / 6 passed）"这种既不等于任何一次实测的读数）：
+
+   | 变异 | 改法 | 实测 | 红的契约项 |
+   |---|---|---|---|
+   | M1 | `service_root()` 的 install 分支里 `return root` 改成 `return workspace()` | 2 failed / 7 passed | ② ⑦ |
+   | M1b | 整段摘掉 install 分支 | 4 failed / 5 passed | ② ③ ④ ⑦ |
+   | M2 | 删掉 `validate_service_declaration()` 里 `runtime_root` 那一段 | 2 failed / 7 passed | ⑤ ⑥ |
+
+   M1 下 ③ 仍绿是**由改法决定的**：`if root is None: raise` 那道检查还在，所以 fail-closed 断言打不到 ——
+   这正是必须补测 M1b 的理由（M1b 下 ③ ④ 一起红，证明"拒绝退回检出根"和"根不可由调用侧选"两条断言各自承重）。
+   ① 在三组下均保持绿是**预期**：它断言的是"缺省行为没被改动"，三组都不碰缺省路径。
+   读数装置：`HOME=<空目录>` + 最小 venv（`uv run --no-project --with pytest --with pytest-timeout --with pyyaml`）
+   + `-p no:randomly`；每组变异后按 sha 逐字节还原并复核为 `32fcd67a0e0c…`。
 2. **E1 保持 0**：合入并执行改道后，`python3 bin/mof/gen-service-configs.py --check --json` 的
    drift 计数为 0（这是本 BET 的存在理由 —— 授权措辞原文即"这是唯一能让 E1 保持 0 的路径"）。
    前置时序见 §1 末条：**先**让 `~/Workspace` 快进到含本改动的 commit，**再**改道；否则造出的是 6 条假 drift。
@@ -129,3 +150,6 @@ registry 的 `note` 字段一律避免行内 `: `（AGENTS.md §7⑨：`_load_ya
 不把权威 ledger 翻到安装位；不迁移常驻族以外的服务；不清理 §1 列出的 5 个 E2 属主 plist（未登记项的
 处置需逐条确认来源）；不改 `services.yaml` 的 `enabled` / `generate` 语义；不动 crontab；
 不做 B4b 批次 2+（决策 3 与逐批授权面仍属 principal 决定）。
+不改 `lib/resident-role-tick.sh` / `lib/resident-event-ingest.sh` 内部写死的
+`--project <检出>/projects/omo` 字面量 —— 理由不是"不在范围所以不做"，是 §1 边界条实测的因果：
+安装位 clone 落后 `origin/main` 312 commits，改自解析等于让常驻面静默跑旧代码。
