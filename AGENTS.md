@@ -2,7 +2,7 @@
 type: ssot
 owner: governance-team
 last_updated: 2026-10-09
-last-reviewed: 2026-10-14
+last-reviewed: 2026-10-22
 lifecycle: entry
 status: active
 ---
@@ -373,6 +373,7 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 - **release worktree 目录必须用 40 位全名，短名导致 `current` 断裂（2026-10-12, c855c4a 部署实证）**：`git worktree add releases/<短名> <sha>` 后 `current` 指向短名但服务按 `releases/<40位OID>` 解析 → 符号链接断裂 → 服务 crash-loop（launchd `runs=N` 反复重启，日志只有启动行）。**纪律**：release 目录名 = 完整 40 位 commit OID；判据：`readlink current` 的指向必须能 `ls` 到 `live_server.py`。
 - **驱动脚本 `sys.executable` 的依赖面要纳入观测（2026-10-13, pyyaml 丢失实证）**：`projection-full-refresh.py` 用 `sys.executable` 跑 `panorama-collect.py`，后者 `import yaml`；系统 python 3.15 的 pyyaml 丢失 → 发布器从某时刻起连续 `failed`（`ModuleNotFoundError: No module named 'yaml'`），投影停止刷新。**纪律**：驱动脚本依赖的系统 python 第三方包要纳入观测；CI/定时任务用的 python 与手动用的可能不同（PEP 668 externally-managed 需 `--break-system-packages` 或 `--user`）。
 - **观测器期望 OID 基线必须跟随当前部署 OID，否则重新部署后产生大量假失败（2026-10-13, T10-241 24h 观测门实证）**：逐分钟观测器把 `dashboard_code_oid` 与固定基线比对；服务被（尤其**并发 agent**）前进部署到新 commit 后，基线过时 ⇒ 每小时约 1 个假失败，24h 窗口实测 303 个失败里 279 个是 OID 不匹配（服务本身健康）。**纪律**：观测器启动时记录基线 OID，**部署变更后必须重设基线或重启观测器**；判读失败时先分「OID 变了（前进部署）」与「OID 未变但 health 异常（真问题）」——前者是基线过时，后者才是观测门该报的。
+- **「目录缺席」与「目录为空」在 glob 兜底下同形，派生器会据此把跟踪文档重写成空面（2026-10-22, BET-Y2Q4-T10-264 实测）**：**证据** —— `projects/omo/src/omo/omo_state.py` 的四任务面读法是 `files = sorted(d.glob("*.yaml")) if d.exists() else []`，缺席面折叠成 `[]`，与「真源说零」逐字同形；`_rebuild_tasks_registry_index()` 拿这份列表把**跟踪文档** `.omo/tasks/registry/INDEX.md` 的 Active/Planned/Blocked 段整段重建。一次在**没有 `tasks/planned/` 的检出**里跑的 `omo state sync-tasks`（`.gitignore:402` 忽略该面 ⇒ 新检出按构造不存在）因此把 `## Planned Tasks (7 个)` 连同 7 行（含 `TASK-019B7FD6`）重写成 `0 个`。**判据**：三条用例两两不共享失效模式 —— 缺席面须逐字节不动（`test_cmd_state_sync_tasks_leaves_index_untouched_when_a_plane_is_absent`）、空面仍须重建为 0（`..._still_rebuilds_index_when_plane_exists_but_empty`，防「四面都可有可无」的放宽）、正反面直调守卫（`test_rebuild_tasks_registry_index_refuses_absent_plane_and_accepts_present_ones`；摘掉守卫 ⇒ 第①③条当场红，实测 2 failed）。**纪律**：① 凡「从目录派生 → 写回跟踪文档」的生成器，动手前先问「面不在这棵树时我写不写」，答案通常是不写（fail-closed），而 `d.exists() else []` 这类三元兜底**没有任何测试会红**（本机 canonical 四面齐全 ⇒ 常绿；CI/新检出缺面 ⇒ 静默毁档）；② 「`git status` 里多了一行 M 跟踪文档」不是回归信号而是**证据被覆盖**，判据用 sha 逐字节对拍而不是 `git diff` 看「改了哪几行」；③ 同一函数里 `system.yaml` 的重算语义**不受该守卫影响**（写面语义与文档重建的准入条件不同），别把它一起收紧。
 
 ---
 
