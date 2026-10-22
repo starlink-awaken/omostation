@@ -72,6 +72,7 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("workbench_ui.js", "workbench_ui.js.asset"),
     ("refresh.py", "refresh.py.asset"),
     ("live_server.py", "live_server.py.asset"),
+    ("runtime_paths.py", "runtime_paths.py.asset"),
     ("observatory_query.py", "observatory_query.py.asset"),
     ("panorama-collect-main.py", "panorama-collect-main.py.asset"),
     # 2026-09-26: 驾驶舱推理引擎(副驾对话 / RAG 向量+重排)纳管 —— 此前不在任何仓库,
