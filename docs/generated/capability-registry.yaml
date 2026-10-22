@@ -15,7 +15,7 @@ totals:
   bos_services: 325
   bos_domains: 23
   cli_commands: 200
-  skills: 43
+  skills: 184
   workflows: 26
 mcp_servers:
 - id: omo
@@ -2631,8 +2631,32 @@ cli_commands:
 - name: write
   description: 双轨写入 (+ Neo4j FACT 若配置)
 skills:
+- id: Browser
+  file: .agents/skills/Browser/SKILL.md
+  exists: true
+- id: ContentAnalysis
+  file: .agents/skills/ContentAnalysis/SKILL.md
+  exists: true
+- id: Investigation
+  file: .agents/skills/Investigation/SKILL.md
+  exists: true
+- id: Media
+  file: .agents/skills/Media/SKILL.md
+  exists: true
+- id: Scraping
+  file: .agents/skills/Scraping/SKILL.md
+  exists: true
+- id: Thinking
+  file: .agents/skills/Thinking/SKILL.md
+  exists: true
+- id: Utilities
+  file: .agents/skills/Utilities/SKILL.md
+  exists: true
 - id: a2a-coordination
   file: .agents/skills/a2a-coordination/SKILL.md
+  exists: true
+- id: agent-browser
+  file: .agents/skills/agent-browser/SKILL.md
   exists: true
 - id: agent-onboarding
   file: .agents/skills/agent-onboarding/SKILL.md
@@ -2640,8 +2664,53 @@ skills:
 - id: agent-quickstart
   file: .agents/skills/agent-quickstart/SKILL.md
   exists: true
+- id: agently-mail
+  file: .agents/skills/agently-mail/SKILL.md
+  exists: true
+- id: agora
+  file: .agents/skills/agora/SKILL.md
+  exists: true
+- id: archify
+  file: .agents/skills/archify/SKILL.md
+  exists: true
 - id: architecture-perception
   file: .agents/skills/architecture-perception/SKILL.md
+  exists: true
+- id: ask-matt
+  file: .agents/skills/ask-matt/SKILL.md
+  exists: true
+- id: autoresearch-agent
+  file: .agents/skills/autoresearch-agent/SKILL.md
+  exists: true
+- id: bailian-cli
+  file: .agents/skills/bailian-cli/SKILL.md
+  exists: true
+- id: bailian-docs-llm-wiki
+  file: .agents/skills/bailian-docs-llm-wiki/SKILL.md
+  exists: true
+- id: bailian-finetune
+  file: .agents/skills/bailian-finetune/SKILL.md
+  exists: true
+- id: bailian-gen
+  file: .agents/skills/bailian-gen/SKILL.md
+  exists: true
+- id: bailian-managed-agent
+  file: .agents/skills/bailian-managed-agent/SKILL.md
+  exists: true
+- id: bailian-model-recommend
+  file: .agents/skills/bailian-model-recommend/SKILL.md
+  exists: true
+- id: bailian-protocol
+  file: .agents/skills/bailian-protocol/SKILL.md
+  exists: true
+- id: bailian-sandbox
+  file: .agents/skills/bailian-sandbox/SKILL.md
+  exists: true
+- id: bailian-train-deploy
+  file: .agents/skills/bailian-train-deploy/SKILL.md
+  exists: true
+- id: bailian-web-search
+  file: .agents/skills/bailian-web-search/SKILL.md
   exists: true
 - id: bdsk-virtual-board
   file: .agents/skills/bdsk-virtual-board/SKILL.md
@@ -2652,17 +2721,50 @@ skills:
 - id: bet-execution
   file: .agents/skills/bet-execution/SKILL.md
   exists: true
+- id: bmad-init
+  file: .agents/skills/bmad-init/SKILL.md
+  exists: true
 - id: bos-service-discovery
   file: .agents/skills/bos-service-discovery/SKILL.md
+  exists: true
+- id: brainstorming
+  file: .agents/skills/brainstorming/SKILL.md
+  exists: true
+- id: caveman
+  file: .agents/skills/caveman/SKILL.md
+  exists: true
+- id: check-work
+  file: .agents/skills/check-work/SKILL.md
+  exists: true
+- id: chronicle
+  file: .agents/skills/chronicle/SKILL.md
   exists: true
 - id: ci-red-triage
   file: .agents/skills/ci-red-triage/SKILL.md
   exists: true
+- id: clonedeps
+  file: .agents/skills/clonedeps/SKILL.md
+  exists: true
 - id: closeout-retro
   file: .agents/skills/closeout-retro/SKILL.md
   exists: true
+- id: codebase-design
+  file: .agents/skills/codebase-design/SKILL.md
+  exists: true
+- id: codebase-memory
+  file: .agents/skills/codebase-memory/SKILL.md
+  exists: true
+- id: codemap
+  file: .agents/skills/codemap/SKILL.md
+  exists: true
 - id: cognitive-governance
   file: .agents/skills/cognitive-governance/SKILL.md
+  exists: true
+- id: computer-use
+  file: .agents/skills/computer-use/SKILL.md
+  exists: true
+- id: cua-driver
+  file: .agents/skills/cua-driver/SKILL.md
   exists: true
 - id: dashboard-component-evolution
   file: .agents/skills/dashboard-component-evolution/SKILL.md
@@ -2670,20 +2772,80 @@ skills:
 - id: dashboard-governance-patrol
   file: .agents/skills/dashboard-governance-patrol/SKILL.md
   exists: true
+- id: deepwork
+  file: .agents/skills/deepwork/SKILL.md
+  exists: true
 - id: delegation-guardrails
   file: .agents/skills/delegation-guardrails/SKILL.md
+  exists: true
+- id: design-mobile-apps
+  file: .agents/skills/design-mobile-apps/SKILL.md
+  exists: true
+- id: desktop-commander-guide
+  file: .agents/skills/desktop-commander-guide/SKILL.md
+  exists: true
+- id: dispatching-parallel-agents
+  file: .agents/skills/dispatching-parallel-agents/SKILL.md
+  exists: true
+- id: document-generation
+  file: .agents/skills/document-generation/SKILL.md
+  exists: true
+- id: docx
+  file: .agents/skills/docx/SKILL.md
+  exists: true
+- id: dogfood
+  file: .agents/skills/dogfood/SKILL.md
   exists: true
 - id: domain-cartridge-governance
   file: .agents/skills/domain-cartridge-governance/SKILL.md
   exists: true
+- id: domain-modeling
+  file: .agents/skills/domain-modeling/SKILL.md
+  exists: true
+- id: ecos-review
+  file: .agents/skills/ecos-review/SKILL.md
+  exists: true
 - id: ecos-test-cycle
   file: .agents/skills/ecos-test-cycle/SKILL.md
+  exists: true
+- id: executing-plans
+  file: .agents/skills/executing-plans/SKILL.md
   exists: true
 - id: external-agent-attach
   file: .agents/skills/external-agent-attach/SKILL.md
   exists: true
+- id: feat
+  file: .agents/skills/feat/SKILL.md
+  exists: true
+- id: find-skills
+  file: .agents/skills/find-skills/SKILL.md
+  exists: true
+- id: finishing-a-development-branch
+  file: .agents/skills/finishing-a-development-branch/SKILL.md
+  exists: true
+- id: frontend-design
+  file: .agents/skills/frontend-design/SKILL.md
+  exists: true
+- id: game-developer
+  file: .agents/skills/game-developer/SKILL.md
+  exists: true
+- id: gepeto
+  file: .agents/skills/gepeto/SKILL.md
+  exists: true
+- id: git-clean-branches
+  file: .agents/skills/git-clean-branches/SKILL.md
+  exists: true
+- id: git-commit
+  file: .agents/skills/git-commit/SKILL.md
+  exists: true
 - id: git-discipline
   file: .agents/skills/git-discipline/SKILL.md
+  exists: true
+- id: git-guardrails-claude-code
+  file: .agents/skills/git-guardrails-claude-code/SKILL.md
+  exists: true
+- id: git-rollback
+  file: .agents/skills/git-rollback/SKILL.md
   exists: true
 - id: git-safety-check
   file: .agents/skills/git-safety-check/SKILL.md
@@ -2694,14 +2856,65 @@ skills:
 - id: governance-ssot-edit
   file: .agents/skills/governance-ssot-edit/SKILL.md
   exists: true
+- id: graphify
+  file: .agents/skills/graphify/SKILL.md
+  exists: true
+- id: grilling
+  file: .agents/skills/grilling/SKILL.md
+  exists: true
+- id: handoff
+  file: .agents/skills/handoff/SKILL.md
+  exists: true
 - id: harness-compliance
   file: .agents/skills/harness-compliance/SKILL.md
+  exists: true
+- id: hatch-pet
+  file: .agents/skills/hatch-pet/SKILL.md
+  exists: true
+- id: help
+  file: .agents/skills/help/SKILL.md
+  exists: true
+- id: implement
+  file: .agents/skills/implement/SKILL.md
+  exists: true
+- id: implement-spec
+  file: .agents/skills/implement-spec/SKILL.md
+  exists: true
+- id: improve-codebase-architecture
+  file: .agents/skills/improve-codebase-architecture/SKILL.md
+  exists: true
+- id: init-project
+  file: .agents/skills/init-project/SKILL.md
+  exists: true
+- id: knowledge-capture-search
+  file: .agents/skills/knowledge-capture-search/SKILL.md
   exists: true
 - id: kos-cold-start
   file: .agents/skills/kos-cold-start/SKILL.md
   exists: true
+- id: lifeos-core
+  file: .agents/skills/lifeos-core/SKILL.md
+  exists: true
+- id: magpie-quota
+  file: .agents/skills/magpie-quota/SKILL.md
+  exists: true
+- id: mcp-builder
+  file: .agents/skills/mcp-builder/SKILL.md
+  exists: true
+- id: mcp-troubleshoot
+  file: .agents/skills/mcp-troubleshoot/SKILL.md
+  exists: true
 - id: memory-recall
   file: .agents/skills/memory-recall/SKILL.md
+  exists: true
+- id: microsoft-foundry
+  file: .agents/skills/microsoft-foundry/SKILL.md
+  exists: true
+- id: migrate-to-shoehorn
+  file: .agents/skills/migrate-to-shoehorn/SKILL.md
+  exists: true
+- id: model-check
+  file: .agents/skills/model-check/SKILL.md
   exists: true
 - id: multica-squad-ops
   file: .agents/skills/multica-squad-ops/SKILL.md
@@ -2709,14 +2922,77 @@ skills:
 - id: nextgen-cognitive-mesh
   file: .agents/skills/nextgen-cognitive-mesh/SKILL.md
   exists: true
+- id: nextjs-app-router-patterns
+  file: .agents/skills/nextjs-app-router-patterns/SKILL.md
+  exists: true
+- id: oh-my-opencode-slim
+  file: .agents/skills/oh-my-opencode-slim/SKILL.md
+  exists: true
+- id: omc-reference
+  file: .agents/skills/omc-reference/SKILL.md
+  exists: true
 - id: omlxc-compute-fabric
   file: .agents/skills/omlxc-compute-fabric/SKILL.md
   exists: true
 - id: omo-audit-baseline
   file: .agents/skills/omo-audit-baseline/SKILL.md
   exists: true
+- id: opencontext-context
+  file: .agents/skills/opencontext-context/SKILL.md
+  exists: true
+- id: opencontext-create
+  file: .agents/skills/opencontext-create/SKILL.md
+  exists: true
+- id: opencontext-help
+  file: .agents/skills/opencontext-help/SKILL.md
+  exists: true
+- id: opencontext-iterate
+  file: .agents/skills/opencontext-iterate/SKILL.md
+  exists: true
+- id: opencontext-search
+  file: .agents/skills/opencontext-search/SKILL.md
+  exists: true
+- id: orca-cli
+  file: .agents/skills/orca-cli/SKILL.md
+  exists: true
+- id: orca-per-workspace-env
+  file: .agents/skills/orca-per-workspace-env/SKILL.md
+  exists: true
+- id: orchestration
+  file: .agents/skills/orchestration/SKILL.md
+  exists: true
+- id: pdf
+  file: .agents/skills/pdf/SKILL.md
+  exists: true
+- id: pinokio
+  file: .agents/skills/pinokio/SKILL.md
+  exists: true
+- id: pptx
+  file: .agents/skills/pptx/SKILL.md
+  exists: true
 - id: project-governance
   file: .agents/skills/project-governance/SKILL.md
+  exists: true
+- id: prototype
+  file: .agents/skills/prototype/SKILL.md
+  exists: true
+- id: receiving-code-review
+  file: .agents/skills/receiving-code-review/SKILL.md
+  exists: true
+- id: reddit-automation
+  file: .agents/skills/reddit-automation/SKILL.md
+  exists: true
+- id: refactoring
+  file: .agents/skills/refactoring/SKILL.md
+  exists: true
+- id: reflect
+  file: .agents/skills/reflect/SKILL.md
+  exists: true
+- id: requesting-code-review
+  file: .agents/skills/requesting-code-review/SKILL.md
+  exists: true
+- id: resolving-merge-conflicts
+  file: .agents/skills/resolving-merge-conflicts/SKILL.md
   exists: true
 - id: round-gate-check
   file: .agents/skills/round-gate-check/SKILL.md
@@ -2724,17 +3000,140 @@ skills:
 - id: round-workflow
   file: .agents/skills/round-workflow/SKILL.md
   exists: true
+- id: scaffold-exercises
+  file: .agents/skills/scaffold-exercises/SKILL.md
+  exists: true
 - id: scene-shadow-activate
   file: .agents/skills/scene-shadow-activate/SKILL.md
+  exists: true
+- id: security-review
+  file: .agents/skills/security-review/SKILL.md
+  exists: true
+- id: setup-matt-pocock-skills
+  file: .agents/skills/setup-matt-pocock-skills/SKILL.md
+  exists: true
+- id: setup-pre-commit
+  file: .agents/skills/setup-pre-commit/SKILL.md
+  exists: true
+- id: setup-ts-deep-modules
+  file: .agents/skills/setup-ts-deep-modules/SKILL.md
+  exists: true
+- id: simplify
+  file: .agents/skills/simplify/SKILL.md
+  exists: true
+- id: skill-pack-cli-tools
+  file: .agents/skills/skill-pack-cli-tools/SKILL.md
+  exists: true
+- id: skill-pack-collaboration
+  file: .agents/skills/skill-pack-collaboration/SKILL.md
+  exists: true
+- id: skill-pack-engineering
+  file: .agents/skills/skill-pack-engineering/SKILL.md
+  exists: true
+- id: skill-pack-knowledge-capture
+  file: .agents/skills/skill-pack-knowledge-capture/SKILL.md
+  exists: true
+- id: skill-pack-project-governance
+  file: .agents/skills/skill-pack-project-governance/SKILL.md
+  exists: true
+- id: skill-pack-roles
+  file: .agents/skills/skill-pack-roles/SKILL.md
+  exists: true
+- id: skill-pack-scenarios
+  file: .agents/skills/skill-pack-scenarios/SKILL.md
+  exists: true
+- id: skill-pack-web-research
+  file: .agents/skills/skill-pack-web-research/SKILL.md
   exists: true
 - id: spine-value-pipeline
   file: .agents/skills/spine-value-pipeline/SKILL.md
   exists: true
+- id: subagent-driven-development
+  file: .agents/skills/subagent-driven-development/SKILL.md
+  exists: true
 - id: swarm-escape
   file: .agents/skills/swarm-escape/SKILL.md
   exists: true
+- id: switch-profile
+  file: .agents/skills/switch-profile/SKILL.md
+  exists: true
+- id: system-architecture-design
+  file: .agents/skills/system-architecture-design/SKILL.md
+  exists: true
+- id: system-connector
+  file: .agents/skills/system-connector/SKILL.md
+  exists: true
 - id: system-index-distill
   file: .agents/skills/system-index-distill/SKILL.md
+  exists: true
+- id: systematic-debugging
+  file: .agents/skills/systematic-debugging/SKILL.md
+  exists: true
+- id: taskobject-bridge
+  file: .agents/skills/taskobject-bridge/SKILL.md
+  exists: true
+- id: taskobject-router
+  file: .agents/skills/taskobject-router/SKILL.md
+  exists: true
+- id: teach
+  file: .agents/skills/teach/SKILL.md
+  exists: true
+- id: test-driven-development
+  file: .agents/skills/test-driven-development/SKILL.md
+  exists: true
+- id: to-questionnaire
+  file: .agents/skills/to-questionnaire/SKILL.md
+  exists: true
+- id: to-spec
+  file: .agents/skills/to-spec/SKILL.md
+  exists: true
+- id: to-tickets
+  file: .agents/skills/to-tickets/SKILL.md
+  exists: true
+- id: triage
+  file: .agents/skills/triage/SKILL.md
+  exists: true
+- id: unity-developer
+  file: .agents/skills/unity-developer/SKILL.md
+  exists: true
+- id: using-git-worktrees
+  file: .agents/skills/using-git-worktrees/SKILL.md
+  exists: true
+- id: using-superpowers
+  file: .agents/skills/using-superpowers/SKILL.md
+  exists: true
+- id: verification-before-completion
+  file: .agents/skills/verification-before-completion/SKILL.md
+  exists: true
+- id: verification-planning
+  file: .agents/skills/verification-planning/SKILL.md
+  exists: true
+- id: wait-what
+  file: .agents/skills/wait-what/SKILL.md
+  exists: true
+- id: wayfinder
+  file: .agents/skills/wayfinder/SKILL.md
+  exists: true
+- id: web-access
+  file: .agents/skills/web-access/SKILL.md
+  exists: true
+- id: web-cli-generation
+  file: .agents/skills/web-cli-generation/SKILL.md
+  exists: true
+- id: weread
+  file: .agents/skills/weread/SKILL.md
+  exists: true
+- id: wiki
+  file: .agents/skills/wiki/SKILL.md
+  exists: true
+- id: wizard
+  file: .agents/skills/wizard/SKILL.md
+  exists: true
+- id: workflow
+  file: .agents/skills/workflow/SKILL.md
+  exists: true
+- id: workflow-orchestration-convergence
+  file: .agents/skills/workflow-orchestration-convergence/SKILL.md
   exists: true
 - id: workflow-silence-detection
   file: .agents/skills/workflow-silence-detection/SKILL.md
@@ -2754,8 +3153,32 @@ skills:
 - id: workflow:project-doc-change
   file: .agents/skills/workflow:project-doc-change/SKILL.md
   exists: true
+- id: workspace-memory
+  file: .agents/skills/workspace-memory/SKILL.md
+  exists: true
 - id: worktree-ci-isolate
   file: .agents/skills/worktree-ci-isolate/SKILL.md
+  exists: true
+- id: writing-beats
+  file: .agents/skills/writing-beats/SKILL.md
+  exists: true
+- id: writing-for-agents
+  file: .agents/skills/writing-for-agents/SKILL.md
+  exists: true
+- id: writing-fragments
+  file: .agents/skills/writing-fragments/SKILL.md
+  exists: true
+- id: writing-plans
+  file: .agents/skills/writing-plans/SKILL.md
+  exists: true
+- id: writing-shape
+  file: .agents/skills/writing-shape/SKILL.md
+  exists: true
+- id: writing-skills
+  file: .agents/skills/writing-skills/SKILL.md
+  exists: true
+- id: xlsx
+  file: .agents/skills/xlsx/SKILL.md
   exists: true
 - id: zsh-split-audit
   file: .agents/skills/zsh-split-audit/SKILL.md
