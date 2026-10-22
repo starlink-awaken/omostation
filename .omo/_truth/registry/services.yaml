@@ -647,6 +647,7 @@ services:
   trigger: interval
   interval_sec: 120
   label: com.l4.resident.decision
+  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -668,6 +669,7 @@ services:
   trigger: interval
   interval_sec: 120
   label: com.l4.resident.execute
+  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -733,6 +735,7 @@ services:
   trigger: interval
   interval_sec: 300
   label: com.l4.resident.event-ingest
+  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-event-ingest.sh
@@ -753,6 +756,7 @@ services:
   trigger: interval
   interval_sec: 300
   label: com.l4.resident.signals
+  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -773,6 +777,7 @@ services:
   trigger: interval
   interval_sec: 300
   label: com.l4.resident.inbox
+  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -793,6 +798,7 @@ services:
   trigger: interval
   interval_sec: 600
   label: com.l4.resident.promote
+  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
