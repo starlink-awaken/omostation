@@ -13,6 +13,7 @@ import json
 import re
 import subprocess
 import sys
+import unittest
 from collections import Counter
 from pathlib import Path
 
@@ -194,3 +195,38 @@ def test_compile_crontab_excludes_non_crontab_plane_jobs() -> None:
         if schedule and schedule[0].startswith("@"):
             continue
         assert len(schedule) == 5, f"非法 schedule 字段数: {line}"
+
+
+def _normalize(cmd: str) -> str:
+    """与 scheduler-compile._normalize_interpreter 同语义的本地副本（避免跨模块 import）。"""
+    import re as _re
+    boundary = _re.compile(r"(?<=[\s;&|])")
+    interp = _re.compile(r"(?:\S*/)?python3(?:\.\d+)?(?=[\s]|$)")
+    out, last = [], 0
+    for b in boundary.finditer(cmd):
+        out.append(interp.sub("python3", cmd[last:b.end()])); last = b.end()
+    out.append(cmd[last:])
+    return "".join(out)
+
+
+class InterpreterNormalizationTests(unittest.TestCase):
+    """声明用 `python3`，安装态可能写绝对路径 —— 语义相同, 不该算 drift。
+
+    2026-10-22: cron 环境里裸 `python3` 解析到 Xcode 的 3.9(缺 `datetime.UTC`),
+    4 条 cron 因此连续失败数周; 修法是让 crontab 写绝对路径, 于是声明与安装态
+    字面不同但语义相同 —— 检查必须归一化。
+    """
+
+    def test_absolute_path_normalizes_to_bare(self) -> None:
+        self.assertEqual(_normalize("cd /x && /opt/homebrew/bin/python3.13 bin/a.py"),
+                         "cd /x && python3 bin/a.py")
+
+    def test_bare_is_unchanged(self) -> None:
+        self.assertEqual(_normalize("cd /x && python3 bin/a.py"), "cd /x && python3 bin/a.py")
+
+    def test_command_start_normalizes(self) -> None:
+        self.assertEqual(_normalize("/opt/homebrew/bin/python3.13 -B bin/a.py --daily"),
+                         "python3 -B bin/a.py --daily")
+
+    def test_non_python_commands_untouched(self) -> None:
+        self.assertEqual(_normalize("cd /x && bash bin/a.sh"), "cd /x && bash bin/a.sh")
