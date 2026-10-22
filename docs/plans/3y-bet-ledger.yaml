@@ -44172,7 +44172,8 @@ bets:
     planned 面物理缺席。真源读取把「目录不存在」与「存在但为空」折叠成同一个 []，结构守卫只校验正则是否匹配、不校验输入面是否存在，于是把 tracked
     文档的 planned 段从 7 收缩为 0（2026-10-21 实测 diff）。本轮让该写者在任一面缺席时不写文档（fail-closed），system.yaml
     计数重算与空形语义一律不动。
-  status: in_progress
+  status: done
+  done_at: 2026-10-22
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -44224,17 +44225,44 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-264
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@76602956f14bdbcfbcdc27c86f108b0706c198b3
+          tests:
+            ref: receipt://docs/reports/2026-10-22-tasks-index-fail-closed-closeout.md
+            sha256: sha256:fd49ccd9c1af62efea0b43b79c91207579c6c11b2a032951cca94cc9fde4b643
+          diff:
+            ref: receipt://docs/reports/2026-10-22-tasks-index-fail-closed-closeout.md
+            sha256: sha256:fd49ccd9c1af62efea0b43b79c91207579c6c11b2a032951cca94cc9fde4b643
+          rollback:
+            ref: receipt://docs/reports/2026-10-22-tasks-index-fail-closed-closeout.md
+            sha256: sha256:fd49ccd9c1af62efea0b43b79c91207579c6c11b2a032951cca94cc9fde4b643
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-264.md
+            sha256: sha256:74feabd57769002f56409ff40eddce351e6bd9b58097fd17127b7a4c88dc33b6
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-22-tasks-index-fail-closed-closeout.md
+            sha256: sha256:fd49ccd9c1af62efea0b43b79c91207579c6c11b2a032951cca94cc9fde4b643
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-22-tasks-index-fail-closed-closeout.md
+            sha256: sha256:fd49ccd9c1af62efea0b43b79c91207579c6c11b2a032951cca94cc9fde4b643
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-264.md
+            sha256: sha256:74feabd57769002f56409ff40eddce351e6bd9b58097fd17127b7a4c88dc33b6
+          cleanup:
+            ref: receipt://docs/reports/2026-10-22-tasks-index-fail-closed-closeout.md
+            sha256: sha256:fd49ccd9c1af62efea0b43b79c91207579c6c11b2a032951cca94cc9fde4b643
       value:
         status: NOT_PROVEN
         evidence: {}
+
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
