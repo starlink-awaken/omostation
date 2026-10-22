@@ -236,6 +236,25 @@ jobs:
         # 修复: make sync-all-docs
         run: |
           python3 bin/ssot/gen-capability-registry.py --check --quiet
+      - name: Self-heal drift on main
+        # 只对 main 的 push 自愈: 重新生成并推回。PR 运行不推 (避免与作者分支打架)。
+        # 生成器的产出依赖检出内容(子模块/已装技能), 本地无法复现 CI 口径, 所以由
+        # CI 自己生成才是唯一可靠来源 —— 2026-10-22 实测本机生成 550 MCP 工具而
+        # CI 口径 643, 任何本地重新生成都会造出一份 CI 必然判漂移的文件。
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && failure() }}
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          python3 bin/ssot/gen-capability-registry.py
+          git config user.name "omostation-ci[bot]"
+          git config user.email "omostation-ci@users.noreply.github.com"
+          git add docs/generated/capability-registry.yaml
+          if git diff --cached --quiet; then
+            echo "no drift after regeneration"
+            exit 0
+          fi
+          git commit -m "chore(auto): capability-registry drift self-heal [skip ci]"
+          git push origin HEAD:main
 
   # ── 7. agent-skills-lint — 智能体技能 frontmatter 静态校验 ────────
   agent-skills-lint:
