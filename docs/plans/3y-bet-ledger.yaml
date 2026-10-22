@@ -44165,6 +44165,76 @@ bets:
         status: NOT_PROVEN
         evidence:
           reason: Production adoption not attempted per spec boundary.
+- id: BET-Y2Q4-T10-264
+  title: tasks/registry/INDEX.md 重建对「真源面缺席」fail-closed —— 跟踪文档不得由忽略面派生的收缩型写者改写
+  goal: 修掉一个收缩型写者。omo state sync-tasks 从 .omo/tasks/{active,planned,blocked,done} 重算并整段重写被跟踪的
+    tasks/registry/INDEX.md，而 planned/ 与 done/ 被 gitignore（.gitignore:401-402），任何干净检出里
+    planned 面物理缺席。真源读取把「目录不存在」与「存在但为空」折叠成同一个 []，结构守卫只校验正则是否匹配、不校验输入面是否存在，于是把 tracked
+    文档的 planned 段从 7 收缩为 0（2026-10-21 实测 diff）。本轮让该写者在任一面缺席时不写文档（fail-closed），system.yaml
+    计数重算与空形语义一律不动。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3h
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-22-tasks-index-rebuild-fail-closed.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-264.md
+  - docs/reports/2026-10-22-tasks-index-fail-closed-closeout.md
+  - AGENTS.md
+  - projects/omo
+  non_goals:
+  - 不改 system.yaml 的计数语义或空形语义（T236 裁定面）；不动 .gitignore；不把 INDEX.md 摘库（B5 决定面）。
+  - 不改 bin/ssot/ssot-guardian.py 的 _count_tasks 判据本体；不新增 bin/ 脚本，不动 script_baseline（721）。
+  - 不 bootout/bootstrap/kickstart，不写 ~/Library/LaunchAgents，不改 crontab，不改 services.yaml。
+  - 不把权威 ledger 翻到安装位；不做 B4b 批次 2 的 plist 改道。
+  - 不宣布 ADR-0456 B1/B3/B4/B5/B4b 或整个 plan 完成。
+  done_when:
+  - omo 侧守卫使 tasks/{active,planned,blocked,done} 任一目录不存在时 _rebuild_tasks_registry_index
+    返回 False 且不写 INDEX.md；目录存在但为 0 个 yaml 时仍按真源重建（正反两面各一条用例，防守卫过宽）。
+  - 事故复刻用例——INDEX.md planned 段有 7 行、planned 面缺席，跑 sync-tasks 后 7 行逐字节存活；把守卫改回 no-op
+    该用例必须当场红（变异对照）。
+  - 同一轮断言守卫只挡文档写——面缺席时 system.yaml 的 active/planned/blocked/completed 计数仍被重算。
+  - 干净 worktree 实跑读数——materialize-system-state.py 后跑 sync-tasks，git diff -- .omo/tasks/registry/INDEX.md
+    为空（本轮改道前同一命令是 7→0 收缩）。
+  - 本条 accepted_specifications 的 content_digest 与 spec 文件字节一致；spec 内容若再改必须重算。
+  verify:
+  - cmd: python3 -c "import yaml;d=yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'));e=[b
+      for b in d['bets'] if b['id']=='BET-Y2Q4-T10-264'];print(len(e), e[0]['status'])"
+    expect: 恰好 1 条且 status 为 in_progress（关闭后为 done）。
+  - cmd: python3 -c "import hashlib;print(hashlib.sha256(open('docs/superpowers/specs/2026-10-22-tasks-index-rebuild-fail-closed.md','rb').read()).hexdigest())"
+    expect: 与本条 accepted_specifications 的 content_digest 后缀逐字节一致。
+  - cmd: uv run --project projects/omo python -m pytest tests/test_omo_cli_modules.py
+      -q -k sync_tasks
+    expect: 全绿，含新增的面缺席反面用例与空面正面用例。
+  - cmd: git diff --name-only origin/main..HEAD
+    expect: 只含 write_surfaces 声明的面；除 projects/omo gitlink 外不含其他子模块指针，不含 .omo/state/**。
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-22-tasks-index-rebuild-fail-closed.md
+    spec_version: 1.0.0
+    content_digest: sha256:685f5519c35bf4e6b9eec8b9bd73b5aa2a02b5e4dae6cf27094fb36afa3d6207
+    decision_ref: decision://accepted/BET-Y2Q4-T10-264
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44294,7 +44364,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 559
+  total_bets: 560
   windows:
   - Y1Q1
   - Y1Q2
