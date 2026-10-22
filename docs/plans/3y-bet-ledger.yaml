@@ -44263,6 +44263,91 @@ bets:
         status: NOT_PROVEN
         evidence: {}
 
+- id: BET-Y2Q4-T10-265
+  title: B4b 批次 2 的 plist 侧前置 —— 服务注册表必须承载 per-service 运行根选择器（runtime_root）
+  goal: 让常驻族能从运行时安装位起跑，同时让 E1（plist 与 services.yaml 的逐字节比较）保持 0。实测否证两条捷径：E1 判据 run_e1_drift()
+    调的是无 flag 无 env 的 --check --json，门禁调用点同样无参（gac-local-gate.py:199/:203、governance-semantic-gate.py:218），所以
+    --root flag 或 env 选根会让 11 条相对入口逐条报 drift；仓内唯一安装位先例（projection-fullrefresh）靠 generate:false
+    跳过比较，零 drift 不能证明任何事。结论：选择器只能是注册表内容。新增 runtime_root ∈ {checkout, install}（缺省 checkout、逐字节等价），由
+    repo_root.install_root() 在调用时刻解析、install 缺席即 fail-closed，并把 com.l4.resident.* 中
+    enabled 的 6 条迁到 install。合入后才执行 bootout/bootstrap 改道。
+  status: in_progress
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-22-b4b-resident-runtime-root.md
+  - docs/plans/3y-bet-ledger.yaml
+  - bin/mof/gen-service-configs.py
+  - .omo/_truth/registry/services.yaml
+  - tests/unit/test_gen_service_runtime_root.py
+  - AGENTS.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-265.md
+  - docs/reports/2026-10-22-b4b-resident-runtime-root-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-22-b4b-resident-runtime-root.md
+    spec_version: 1.0.0
+    content_digest: sha256:fc60a00f4e41f81e411acaf22cd85f70440ac452d225e5aaa7c23691c6729521
+    decision_ref: decision://accepted/BET-Y2Q4-T10-265
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  circuit_breaker: 改道后任一服务 launchctl print 显示未加载、或 ProgramArguments 里的入口不存在 → 立即用改道前留档的
+    plist 快照回滚（复制回 + 同一对 bootout/bootstrap），不回滚不得继续收尾。注册表侧只允许新增 runtime_root 键；任何其它字段（enabled/generate/program/outputs/note）发生变化即视为越界，停手并报告。
+  non_goals:
+  - 不迁移 com.l4.resident.* 之外的任何族：republisher（codex-zhixing-controller 的 lane）、agora.daemon、mail.daemon、bet-claim-gc、morning-brief
+    一律不碰；同族 4 条 enabled:false 保持缺省并记为边界。
+  - 不清理 spec §1 列出的 5 个 E2 未登记 plist、不处置 E5 两条 —— E2/E5 改前已红、与本轮无因果，不作验收。
+  - 不改 bin/lib/repo_root.py 定位链、不新增 env 名、不改 launchd_namespace 命名空间策略。
+  - 不把 --check/--validate 改成带 flag 或读 env 选根；不把常驻族改成 generate:false 来逃避比较。
+  - 不把权威 ledger 从 state_root()/runtime/omo/event-ledger.sqlite3 翻到安装位；不动 crontab；不做
+    B4b 批次 2+ 与决策 3（属逐批授权面）。
+  - 不宣布 ADR-0456 B1/B3/B4/B5/B4b 或整个 plan 完成。
+  done_when:
+  - spec §2 C1—C8 每条有 §3 实现点对应；tests/unit/test_gen_service_runtime_root.py 用例① 证明缺省不写该字段的条目在改道前后生成的
+    plist 逐字节相同（11 条零变化）。
+  - 变异对照（实测三组，逐项读数见 spec §4.1 表；编号用 spec §3 契约项 ①—⑦，非 pytest collection 序号）：M1 把 install 分支的
+    `return root` 改成 `return workspace()` ⇒ ② ⑦ 红（2 failed / 7 passed），M1b 整段摘掉该分支 ⇒ ② ③ ④ ⑦ 红（4 failed / 5 passed），
+    M2 删掉 validate_service_declaration() 里 runtime_root 那一段 ⇒ ⑤ ⑥ 红（2 failed / 7 passed），① 三组均绿是预期
+    （依据 AGENTS.md §7「扫源码的门禁必须自证」，空绿不算证据；每组变异后按 sha 还原为 32fcd67a0e0c…）。
+  - '注册表读数：恰好 6 条 com.l4.resident.* enabled 条目新增 runtime_root: install，其余 372 条零改动（git
+    diff 逐条可指认）。'
+  - E1 保持 0：gen-service-configs.py --validate --json 为 ok=true，--check --json drift
+    计数改道前后各测一次均为 0；且校验路径与写入路径对同一 svc 产出同一字符串（用例④）。
+  - 合入后执行 6 条 bootout+bootstrap（kickstart -k 不重读 plist），launchctl print 的 arguments
+    全部落在install_root() 之下、lsof -p <pid> | grep cwd 复核通过、服务仍可加载；改道前快照留档且回滚命令实测可执行。
+  - 本条 accepted_specifications 的 content_digest 与 spec 文件字节一致；spec 再改必须重算。
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --validate --json
+    expect: ok=true、violation_count=0（新增字段被 validate_service_declaration 接受）。
+  - cmd: python3 bin/mof/gen-service-configs.py --check --json
+    expect: drift 计数 0 —— 这就是 E1，本 BET 的存在理由；非 0 即说明选择器泄漏进了调用侧。
+  - cmd: uv run --with pyyaml python -m pytest tests/unit/test_gen_service_runtime_root.py
+      -q
+    expect: 全部通过；且 tests/unit/** 不在 CI 白名单内，本地这份是唯一证据。
+  - cmd: python3 -c "import yaml,pathlib;d=list(yaml.safe_load_all(pathlib.Path('.omo/_truth/registry/services.yaml').read_text()))[-1];print(sum(1
+      for s in d['services'] if s.get('runtime_root')=='install'))"
+    expect: 6 —— 恰好常驻族 enabled 条数；不是 10、不是 11（该文件是两文档 YAML，safe_load 会在 line 5 的 --- 处 ComposerError）。
+  - cmd: git diff --name-only origin/main...HEAD
+    expect: 只含 write_surfaces 的本轮面；不含 .omo/state/**、BRIEF.md、子模块 gitlink（两点 origin/main..HEAD 会额外列 base 漂移的反向条目，非本 PR 交付面）。
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44392,7 +44477,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 560
+  total_bets: 561
   windows:
   - Y1Q1
   - Y1Q2
