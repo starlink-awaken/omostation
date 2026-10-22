@@ -44,6 +44,14 @@ digest 由 `sha256:757235ed…` 变为 `sha256:b82f0bc6…`，台账 `content_di
 | 2 | `crontab -l \| /usr/bin/grep -c 'omo\.cli resident'` = 0，前后不变 | 交付前 `0`、收口时 `0` ✅ |
 | 3 | `git diff --name-only origin/main..HEAD` 只含本轮交付面 | 工程腿只含 spec + 台账两个文件；无 `.omo/state/**`、无 `BRIEF.md`、无子模块 gitlink ✅ |
 
+**收口腿同一条判据的正确读法（2026-10-22）**：本腿两个 commit 各自的
+`git show --name-only` 只碰 `write_surfaces` 里的 3 个文件（retro / receipt / 台账）。
+而 `git diff --name-only origin/main..HEAD` 此时读回 **13 条**，其中 10 条
+（`.omo/_control/README.md`、`lib/single_writer_lease_broker.py` 等）是上游 `#4854` 已进
+`origin/main`、我的 base 尚未含它们所造成的**反向条目**，非我所为 —— 正是 AGENTS.md §7
+「生成态会被交付动作扫进 commit」那条警告里同一命令的第二种噪声（base 漂移 ⇒ 主仓已改的文件显示为 `D`/`M`）。
+判据据此收窄为可读形式：**逐 commit 看 `git show --name-only`，两点点 diff 只用来看有没有 `.omo/state/**` 与 gitlink**。
+
 spec §2 七行装置读数，收口时**全部逐条复现**（不是引用交付时的快照）：
 
 ```
