@@ -1,0 +1,59 @@
+"""Reference cell collector — reads reference cell verification data."""
+
+from __future__ import annotations
+
+import json
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+from collectors._script_paths import resolve_script
+from collectors.base import DataCollector
+from collectors.registry import register
+
+APP = Path(__file__).resolve().parent.parent
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+@register("reference_cell", timeout=30)
+class ReferenceCellCollector(DataCollector):
+
+    name = "reference_cell"
+
+    def collect(self) -> dict:
+        cache_path = APP / "reference-cell-sources.json"
+        cached = None
+        if cache_path.exists():
+            try:
+                cached = json.loads(cache_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+
+        # 解析不到时保持 FAIL —— 但把原因带出来, 否则只看到一个恒 FAIL 的源。
+        script = resolve_script(
+            "bin/gac/reference-cell-dl-verify.py",
+            "/Users/xiamingxing/Workspace/bin/gac/reference-cell-dl-verify.py",
+        )
+        try:
+            proc = subprocess.run(
+                ["python3", "-B", script, "--json"],
+                capture_output=True, text=True, timeout=25,
+            )
+            ok = proc.returncode == 0
+        except Exception as exc:
+            self._last_error = str(exc)
+            ok = False
+
+        return {
+            "status": "OK" if ok else "FAIL",
+            "verifier": script,
+            "error": None if ok else getattr(self, "_last_error", "verifier exited non-zero"),
+            "cached_sources": cached if isinstance(cached, dict) else {},
+            "observed_at": _now(),
+        }
+
+    def validate(self, data: dict) -> bool:
+        return data.get("status") in ("OK", "FAIL")

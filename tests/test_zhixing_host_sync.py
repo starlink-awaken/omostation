@@ -40,6 +40,8 @@ EXPECTED_FILES = {
     "collectors/orca.py": "collectors.orca.py.asset",
     "collectors/ruflo.py": "ruflo_collector.py.asset",
     "collectors/environment.py": "collectors.environment.py.asset",
+    "collectors/reference_cell.py": "reference_cell_collector.py.asset",
+    "collectors/_script_paths.py": "collectors._script_paths.py.asset",
     "release_identity.py": "release_identity.py.asset",
 }
 

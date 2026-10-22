@@ -91,6 +91,12 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("collectors/orca.py", "collectors.orca.py.asset"),
     ("collectors/ruflo.py", "ruflo_collector.py.asset"),
     ("collectors/environment.py", "collectors.environment.py.asset"),
+    # 2026-10-21: reference_cell 与 ruflo 的 verifier 路径此前是裸相对路径, 在
+    # release 检出里永不解析 (那里没有 bin/gac/) => reference_cell 从未成功过
+    # (last_success_at: null)。两者改为经 collectors/_script_paths.py 解析, 该
+    # helper 随之纳管, 否则部署出去的 reference_cell 仍 import 不到它。
+    ("collectors/reference_cell.py", "reference_cell_collector.py.asset"),
+    ("collectors/_script_paths.py", "collectors._script_paths.py.asset"),
     ("release_identity.py", "release_identity.py.asset"),
 )
 RELEASE_ID_RE = re.compile(r"[0-9a-f]{40}\Z")
