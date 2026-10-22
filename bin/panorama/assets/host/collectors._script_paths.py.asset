@@ -1,0 +1,40 @@
+"""Resolve a workspace verifier script from the roots this process actually has.
+
+The managed release checkout (`~/.local/share/zhixing-dashboard/releases/<oid>/`)
+carries `collectors/` but **no `bin/gac/`** — that lives in the workspace checkout
+(`~/Workspace`). So a bare relative path like `bin/gac/ruflo-rf0-verify.py` never
+resolves, and the collector reports FAIL on every round.
+
+Measured 2026-10-21: `reference_cell` had `last_success_at: null` — it had never
+succeeded once, because its verifier path never resolved. `ruflo` had the same bug
+(fixed locally in 3be136b, never pushed to origin/main, so still broken there).
+
+Resolution order: the env roots launchd jobs actually set, then well-known
+candidates. Falls back to the bare relative path so the failure stays visible
+rather than silently becoming a different command.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+# launchd jobs run without a user PATH and with a small env; these are the roots
+# the release/orchestrator jobs actually set (see bin/panorama/projection-full-refresh.py
+# and the LaunchAgents in ~/Library/LaunchAgents).
+SCRIPT_ENV_ROOTS = ("OMOSTATION_STATE_ROOT", "PANORAMA_ROOT", "WORKSPACE", "PANORAMA_CODE_ROOT")
+
+
+def resolve_script(rel: str, *candidates: str) -> str:
+    """绝对化一个 workspace 内的脚本路径; 解析不到时原样返回相对路径。"""
+    for env in SCRIPT_ENV_ROOTS:
+        root = os.environ.get(env)
+        if not root:
+            continue
+        candidate = Path(root) / rel
+        if candidate.is_file():
+            return str(candidate)
+    for candidate in candidates:
+        if Path(candidate).is_file():
+            return candidate
+    return rel
