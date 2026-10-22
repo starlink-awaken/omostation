@@ -33,6 +33,7 @@ import argparse
 import ast
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -529,11 +530,34 @@ def _skill_frontmatter(path: Path) -> dict:
     return dict(payload) if isinstance(payload, dict) else {}
 
 
+def _tracked_files(relative_dir: Path) -> set[str]:
+    """该目录下被 git 跟踪的文件（相对 WORKSPACE 的 posix 路径）。
+
+    生成器产出必须**可复现**: 它会被 `--check` 在 CI 里逐字节比对, 而每日 cron 要在
+    任意机器上重新生成同一份。把本机装了但未跟踪的技能算进来, 产出就随安装状态漂移
+    —— 2026-10-22 实测: 本机 186 个 SKILL.md / 跟踪 45 个, 生成 184 条, 而干净检出
+    (CI 口径)只有 43 条, 于是注册表在 43↔184 之间反复翻转, 漂移检查持续失败。
+    """
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--", relative_dir.as_posix()],
+        cwd=str(WORKSPACE), capture_output=True, check=False,
+    )
+    if result.returncode != 0:
+        return set()
+    return {e for e in result.stdout.decode("utf-8", "replace").split("\0") if e}
+
+
 def scan_skills() -> list[dict]:
-    """Discover canonical skill markdown by exact name-to-directory identity."""
+    """Discover canonical skill markdown by exact name-to-directory identity.
+
+    只算**被跟踪**的技能 —— 见 `_tracked_files`。
+    """
     directory = WORKSPACE / ".agents" / "skills"
+    tracked = _tracked_files(Path(".agents") / "skills")
     rows: list[dict] = []
     for path in sorted(directory.glob("*/SKILL.md")):
+        if path.relative_to(WORKSPACE).as_posix() not in tracked:
+            continue
         frontmatter = _skill_frontmatter(path)
         skill_id = str(frontmatter.get("name") or "")
         if skill_id and path.parent.name == skill_id:
