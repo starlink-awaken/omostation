@@ -1,0 +1,57 @@
+id: ZX-TASK-147D2DA7-RETIRE-SUPERSEDED-20261015
+title: Retire superseded TASK-147D2DA7 planning candidate without claiming completion
+operation_level: L0
+requested_by: weekly-entry-author
+target:
+  ref: .omo/tasks/planned/TASK-147D2DA7.yaml
+changes:
+  set:
+    status: archived
+    retirement:
+      recorded_at: '2026-10-15T06:26:07Z'
+      original_status: candidate
+      disposition: superseded-not-done
+      reason: 后续正式源码与受管生产已交付文档输入恢复；本未交付维护准入候选不再派发。不是原候选验收、BET完成或业务Outcome。
+      original_task_sha256: f6eb2b63c155ad9db04ca53e6e6af7dc5b6e735dcfe80f99c4154153e1c6aabf
+      replacement_source:
+        pr: https://github.com/starlink-awaken/omostation/pull/4742
+        state: MERGED
+        mergedAt: '2026-10-13T04:11:31Z'
+        oid: 7376a8c1a60500bdf0be0a53e0d1f943f2a0d231
+      current_evidence_refs:
+      - /Users/xiamingxing/.local/share/zhixing-controller/artifacts/recovery-20261014/stale-maintenance-candidate-retirement-20261015/author-execution-plan.json
+      - /Users/xiamingxing/.local/share/zhixing-controller/artifacts/recovery-20261014/stale-maintenance-candidate-retirement-20261015/controller-scope-decision.json
+      - /Users/xiamingxing/.local/share/zhixing-controller/artifacts/recovery-20261014/stale-maintenance-candidate-retirement-20261015/independent-retirement-admission.json
+      original_candidate_evidence_status: UNPROVABLE
+      dispatch_disposition: retired_without_dispatch_or_promotion
+      reversal_boundary: Original bytes retained; native archive to planned inverse
+        move unverified. No generic apply recreation of a second carrier.
+change_summary: Only status archived and separate retirement object; native same-ID
+  archive next; preserve historical candidate fields.
+impact:
+  scope:
+  - .omo/tasks/planned/TASK-147D2DA7.yaml
+  - .omo/tasks/archived/legacy-normalized/TASK-147D2DA7.yaml
+  - .omo/_truth/task-center/proposals/ZX-TASK-147D2DA7-RETIRE-SUPERSEDED-20261015.yaml
+  - .omo/_delivery/task-center/proposals/ZX-TASK-147D2DA7-RETIRE-SUPERSEDED-20261015/apply.yaml
+  - .omo/_delivery/task-center/proposals/ZX-TASK-147D2DA7-RETIRE-SUPERSEDED-20261015/verify.yaml
+  - runtime/omo/_delivery/ingress/tasks/TASK-147D2DA7-legacy-archive-2026-10-15T06-26-07Z.yaml
+  not_done: true
+  no_dispatch: true
+  no_BET_or_Spec_mutation: true
+verification_plan:
+- Exact old SHA precondition; original fields unchanged except status/retirement/nativearchive
+  metadata
+- one sameID archived carrier; planned absent; native proposal/apply/verify/archive/audit
+  readable
+- no own locks after native terminal; original missing evidence remains UNPROVABLE
+rollback_plan: Retain exact original bytes and audit; inverse native move is unverified
+  and needs owner decision before action; no duplicate carrier generic apply.
+secret_refs: []
+trace_id: trace:ZX-TASK-147D2DA7-RETIRE-SUPERSEDED-20261015
+status: verified
+requested_at: '2026-10-15T06:26:44Z'
+approved_at: '2026-10-15T06:26:45Z'
+applied_at: '2026-10-15T06:26:46Z'
+verified_at: '2026-10-15T06:26:46Z'
+approved_by: codex-zhixing-controller

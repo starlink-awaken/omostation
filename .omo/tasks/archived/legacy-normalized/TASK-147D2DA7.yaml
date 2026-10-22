@@ -1,0 +1,89 @@
+id: TASK-147D2DA7
+title: 织星文档迁移后默认输入恢复MVP—维护准入候选
+description: 规划候选 intake：4资产迁移补丁已完成独立验收但尚未应用或部署。本任务仅记录文档输入恢复 MVP 的维护绑定候选，不修改 BET/Ledger，不创建执行
+  Run/Claim，不宣称 accepted、不宣称 T9-01 完成或形成其 binding。T9-01 仅作为关联定位。后续角色边界：控制器维护候选与准入边界；作者在正式
+  native Run 后实施；独立验收者验证；发布 owner 负责受管发布和回退；真实采用需由 Principal/业务消费者另行确认。
+status: archived
+task_type: maintenance
+risk_level: L0
+owner: agent
+depends_on: []
+source_docs:
+- /Users/xiamingxing/ws-zx-doc-input-harness-20261012/.omo/_knowledge/ops/zhixing-collaboration-harness-mvp.md
+- /Users/xiamingxing/ws-zx-doc-input-harness-20261012/.omo/_knowledge/ops/zhixing-document-input-recovery-mvp.md
+- /Users/xiamingxing/ws-zx-doc-input-harness-20261012/.omo/evidence/20261012T015113Z-project-doc-change-89338dcb/migration-candidate.patch
+- /Users/xiamingxing/ws-zx-doc-input-harness-20261012/.omo/evidence/20261012T015113Z-project-doc-change-89338dcb/author-measurement.json
+- BET-Y2Q3-T9-01 (关联定位，不是本任务的完成或 binding 依据)
+- /Users/xiamingxing/ws-zx-doc-input-harness-20261012/.omo/evidence/zhixing-maintenance-intake-20261012/maintenance-spec-candidate.md
+- /Users/xiamingxing/ws-zx-doc-input-harness-20261012/.omo/evidence/zhixing-maintenance-intake-20261012/release-safety-findings.json
+deliverables:
+- 维护绑定候选记录（candidate，不是 accepted Spec/BET binding）
+- 4资产迁移候选的源摘要、边界测试与回退条件清单
+- 后续正式 native Run/Claim 前的 owner 分工和验收输入
+imported_via: omo_task_cli
+context_uri: bos://governance/tasks/planned/zhixing-doc-input-recovery-mvp-maintenance-candidate
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- candidate source refs are readable and hashable
+- no Ledger/BET/root-gate mutation
+- default collector and traversal rejection observations
+- independent verification and controlled publication/rollback plan
+test_plan:
+- 只读确认默认 collector 在无 library override 时使用受控 Documents 输入边界
+- 核对白皮书 v2.1 原件 SHA-256=969fd87cda1fd49d0f81b4515710728167c3c335845657f94a9f99d481f2ea3f
+- 核对 3 个源摘要（白皮书/接受信封/Principal 接受回执）及版本关系
+- 核对迁移候选的 57 个正文资产与 2 个 metadata 资产清单和 SHA
+- 验证 traversal、绝对路径越界、未知 sibling 和非 allowlist 输入均拒绝
+- 对 4 个候选资产执行编译/结构验证，不写入受管发布面
+- 为后续受管发布准备可审阅的 code identity、发布 owner、回退 commit 和独立验收清单
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  priority: P2
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-10-12T02:19:44Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: zx-doc-input-harness:maintenance-binding-candidate:v1
+  legacy_normalized_from: planned
+  legacy_status: archived
+  normalized_at: '2026-10-15T06:26:07Z'
+  normalized_by: weekly-entry-author
+  normalization_source_ref: omo:worker:normalize-planned:TASK-147D2DA7
+  legacy_owner: agent
+retirement:
+  recorded_at: '2026-10-15T06:26:07Z'
+  original_status: candidate
+  disposition: superseded-not-done
+  reason: 后续正式源码与受管生产已交付文档输入恢复；本未交付维护准入候选不再派发。不是原候选验收、BET完成或业务Outcome。
+  original_task_sha256: f6eb2b63c155ad9db04ca53e6e6af7dc5b6e735dcfe80f99c4154153e1c6aabf
+  replacement_source:
+    pr: https://github.com/starlink-awaken/omostation/pull/4742
+    state: MERGED
+    mergedAt: '2026-10-13T04:11:31Z'
+    oid: 7376a8c1a60500bdf0be0a53e0d1f943f2a0d231
+  current_evidence_refs:
+  - /Users/xiamingxing/.local/share/zhixing-controller/artifacts/recovery-20261014/stale-maintenance-candidate-retirement-20261015/author-execution-plan.json
+  - /Users/xiamingxing/.local/share/zhixing-controller/artifacts/recovery-20261014/stale-maintenance-candidate-retirement-20261015/controller-scope-decision.json
+  - /Users/xiamingxing/.local/share/zhixing-controller/artifacts/recovery-20261014/stale-maintenance-candidate-retirement-20261015/independent-retirement-admission.json
+  original_candidate_evidence_status: UNPROVABLE
+  dispatch_disposition: retired_without_dispatch_or_promotion
+  reversal_boundary: Original bytes retained; native archive to planned inverse move
+    unverified. No generic apply recreation of a second carrier.
+archived_at: '2026-10-15T06:26:07Z'
+archived_by: weekly-entry-author

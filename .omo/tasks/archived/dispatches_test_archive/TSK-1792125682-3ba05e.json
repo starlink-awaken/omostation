@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ecos.internal/schemas/task-object-v1.json",
+  "task_id": "TSK-1792125682-3ba05e",
+  "created_at": "2026-10-16T04:41:22.401519+00:00",
+  "initiator": "chief-resident-copilot",
+  "target_agent": "codex",
+  "risk_tier": "R1",
+  "session_id": "task-3ba05e",
+  "objective": "测试Agora任务派发并修复单测",
+  "status": "worktree_ready",
+  "execution_context": {
+    "workspace_root": "/Users/xiamingxing/Workspace",
+    "session": "task-3ba05e",
+    "branch": "work/task-3ba05e",
+    "worktree_path": "/Users/xiamingxing/Workspace-isolation-task-3ba05e"
+  },
+  "constraints": {
+    "main_workspace_read_only": true,
+    "worktree_isolation_required": true,
+    "signoff_required": true
+  },
+  "evidence": {
+    "worktree_log": "[dry-run] 拟创建隔离工作树: /Users/xiamingxing/Workspace-isolation-task-3ba05e"
+  }
+}

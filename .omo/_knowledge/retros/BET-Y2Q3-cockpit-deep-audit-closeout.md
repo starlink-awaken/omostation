@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: active
-lifecycle: entry
+lifecycle: history
 owner: governance-team
 type: retrospective
 last-reviewed: 2026-09-28

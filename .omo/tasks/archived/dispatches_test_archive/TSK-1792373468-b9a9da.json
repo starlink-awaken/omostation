@@ -1,0 +1,57 @@
+{
+  "$schema": "https://ecos.internal/schemas/task-object-v1.json",
+  "task_id": "TSK-1792373468-b9a9da",
+  "created_at": "2026-10-19T01:31:08.963135+00:00",
+  "initiator": "chief-resident-copilot",
+  "target_agent": "codex",
+  "risk_tier": "R0",
+  "session_id": "task-b9a9da",
+  "objective": "自治自愈 [HEAL_STRAY_TEST_SCRIPTS]: 将根目录游离测试脚本安全归档至 projects/omo/tests/scratch/",
+  "status": "ready_for_review",
+  "execution_context": {
+    "workspace_root": "/Users/xiamingxing/Workspace",
+    "session": "task-b9a9da",
+    "branch": "work/task-b9a9da",
+    "worktree_path": "/Users/xiamingxing/Workspace-isolation-task-b9a9da",
+    "target_paths": []
+  },
+  "constraints": {
+    "main_workspace_read_only": true,
+    "worktree_isolation_required": true,
+    "signoff_required": true,
+    "pitfall_rules": [
+      "【严禁】在主工作区 (PASW) 直接修改代码或执行 git commit/push；所有代码交付必须在 `gac-worktree.sh claim` 建立的隔离工作树中完成并通过测试。"
+    ],
+    "pitfall_metadata": [
+      {
+        "id": "pitfall-worktree-isolation",
+        "keywords": [
+          "worktree",
+          "commit",
+          "push",
+          "main",
+          "主树",
+          "隔离",
+          "分支",
+          "git"
+        ],
+        "path_patterns": [
+          ".*"
+        ],
+        "title": "主工作区物理只读与隔离工作树强制",
+        "rule": "【严禁】在主工作区 (PASW) 直接修改代码或执行 git commit/push；所有代码交付必须在 `gac-worktree.sh claim` 建立的隔离工作树中完成并通过测试。",
+        "source": "GOVERNANCE.md & AGENTS.md § 0"
+      }
+    ]
+  },
+  "system_guidance": "【执行守则与防御约束】\n- 【严禁】在主工作区 (PASW) 直接修改代码或执行 git commit/push；所有代码交付必须在 `gac-worktree.sh claim` 建立的隔离工作树中完成并通过测试。",
+  "evidence": {
+    "executed_agent": "codex",
+    "duration_seconds": 0.12,
+    "diff_summary": "1 file changed, 14 insertions(+), 2 deletions(-)",
+    "test_passed": true,
+    "test_log": "collected 5 items\n5 passed in 0.23s",
+    "violations": [],
+    "executed_at": "2026-10-19T01:31:08.972662+00:00"
+  }
+}

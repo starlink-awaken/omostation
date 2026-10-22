@@ -1,0 +1,51 @@
+{
+  "$schema": "https://ecos.internal/schemas/task-object-v1.json",
+  "task_id": "TSK-1792212900-601eff",
+  "created_at": "2026-10-17T04:55:00.921349+00:00",
+  "initiator": "chief-resident-copilot",
+  "target_agent": "codex",
+  "risk_tier": "R1",
+  "session_id": "task-601eff",
+  "objective": "自愈修复: projects/omo/tests · 根因初判: projects/omo/tests 代码逻辑或",
+  "status": "worktree_ready",
+  "execution_context": {
+    "workspace_root": "/Users/xiamingxing/Workspace",
+    "session": "task-601eff",
+    "branch": "work/task-601eff",
+    "worktree_path": "/Users/xiamingxing/Workspace-isolation-task-601eff",
+    "target_paths": []
+  },
+  "constraints": {
+    "main_workspace_read_only": true,
+    "worktree_isolation_required": true,
+    "signoff_required": true,
+    "pitfall_rules": [
+      "【严禁】在主工作区 (PASW) 直接修改代码或执行 git commit/push；所有代码交付必须在 `gac-worktree.sh claim` 建立的隔离工作树中完成并通过测试。"
+    ],
+    "pitfall_metadata": [
+      {
+        "id": "pitfall-worktree-isolation",
+        "keywords": [
+          "worktree",
+          "commit",
+          "push",
+          "main",
+          "主树",
+          "隔离",
+          "分支",
+          "git"
+        ],
+        "path_patterns": [
+          ".*"
+        ],
+        "title": "主工作区物理只读与隔离工作树强制",
+        "rule": "【严禁】在主工作区 (PASW) 直接修改代码或执行 git commit/push；所有代码交付必须在 `gac-worktree.sh claim` 建立的隔离工作树中完成并通过测试。",
+        "source": "GOVERNANCE.md & AGENTS.md § 0"
+      }
+    ]
+  },
+  "system_guidance": "【执行守则与防御约束】\n- 【严禁】在主工作区 (PASW) 直接修改代码或执行 git commit/push；所有代码交付必须在 `gac-worktree.sh claim` 建立的隔离工作树中完成并通过测试。",
+  "evidence": {
+    "worktree_log": "[dry-run] 拟创建隔离工作树: /Users/xiamingxing/Workspace-isolation-task-601eff"
+  }
+}

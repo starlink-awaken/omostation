@@ -1,0 +1,20 @@
+{
+  "scene_id": "scene-inbox-to-decision",
+  "run_id": "exec-0d26d15138e3",
+  "doc_path": "netease_mailmaster",
+  "doc_sha256": null,
+  "status": "partial",
+  "checks": 2,
+  "passed": 1,
+  "issues_count": 1,
+  "issues": [
+    {
+      "kind": "too_short",
+      "detail": "1 行 < 3"
+    }
+  ],
+  "confidence": 0.5,
+  "dry_run": false,
+  "recorded_at": "2026-10-22T08:53:36.798257+00:00",
+  "record_hash": "4ace970d09f0fbcc"
+}

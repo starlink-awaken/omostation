@@ -205,3 +205,4 @@
 {"kind": "state_stale", "payload": "{\"recommended_sync\": \"uv run --project projects/omo omo state sync\", \"surfaces\": [\".omo/_truth/registry\", \"projects/ecos/src/ecos/ssot\"], \"trigger\": \"watchpaths\"}", "source": "launchd-watch", "ts": "2026-10-08T11:44:49Z"}
 {"kind": "state_stale", "payload": "{\"recommended_sync\": \"uv run --project projects/omo omo state sync\", \"surfaces\": [\".omo/_truth/registry\", \"projects/ecos/src/ecos/ssot\"], \"trigger\": \"watchpaths\"}", "source": "launchd-watch", "ts": "2026-10-08T12:19:56Z"}
 {"kind": "state_stale", "payload": "{\"recommended_sync\": \"uv run --project projects/omo omo state sync\", \"surfaces\": [], \"trigger\": \"manual\"}", "source": "post-merge", "ts": "2026-10-14T06:37:46Z"}
+{"kind": "state_stale", "payload": "{\"recommended_sync\": \"uv run --project projects/omo omo state sync\", \"surfaces\": [], \"trigger\": \"manual\"}", "source": "post-merge", "ts": "2026-10-22T12:11:52Z"}

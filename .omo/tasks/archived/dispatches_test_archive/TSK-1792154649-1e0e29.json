@@ -1,0 +1,30 @@
+{
+  "$schema": "https://ecos.internal/schemas/task-object-v1.json",
+  "task_id": "TSK-1792154649-1e0e29",
+  "created_at": "2026-10-16T12:44:09.928420+00:00",
+  "initiator": "chief-resident-copilot",
+  "target_agent": "codex",
+  "risk_tier": "R1",
+  "session_id": "task-1e0e29",
+  "objective": "对齐常驻 Agent 架构感知并在隔离区运行门禁验证",
+  "status": "ready_for_review",
+  "execution_context": {
+    "workspace_root": "/Users/xiamingxing/Workspace",
+    "session": "task-1e0e29",
+    "branch": "work/task-1e0e29",
+    "worktree_path": "/Users/xiamingxing/Workspace-isolation-task-1e0e29"
+  },
+  "constraints": {
+    "main_workspace_read_only": true,
+    "worktree_isolation_required": true,
+    "signoff_required": true
+  },
+  "evidence": {
+    "executed_agent": "codex",
+    "duration_seconds": 0.12,
+    "diff_summary": "1 file changed, 14 insertions(+), 2 deletions(-)",
+    "test_passed": true,
+    "test_log": "collected 5 items\n5 passed in 0.23s",
+    "executed_at": "2026-10-16T23:19:30.213475+00:00"
+  }
+}

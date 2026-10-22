@@ -1,0 +1,53 @@
+{
+  "$schema": "https://ecos.internal/schemas/task-object-v1.json",
+  "task_id": "TSK-1792217272-52c6ba",
+  "created_at": "2026-10-17T06:07:52.371606+00:00",
+  "initiator": "chief-resident-copilot",
+  "target_agent": "crush",
+  "risk_tier": "R0",
+  "session_id": "task-52c6ba",
+  "objective": "自愈修复: dashboard_projection · 根因初判: dashboard_projection 运行态",
+  "status": "worktree_ready",
+  "execution_context": {
+    "workspace_root": "/Users/xiamingxing/Workspace",
+    "session": "task-52c6ba",
+    "branch": "work/task-52c6ba",
+    "worktree_path": "/Users/xiamingxing/Workspace-isolation-task-52c6ba",
+    "target_paths": []
+  },
+  "constraints": {
+    "main_workspace_read_only": true,
+    "worktree_isolation_required": true,
+    "signoff_required": true,
+    "pitfall_rules": [
+      "【严禁】在 zsh 中使用 `VAR=\"a b c\"; for x in $VAR`，zsh 对参数展开不做切词导致只循环 1 次；必须使用字面量列表 `for x in a b c`、数组或命令替换 `$(printf ...)`。"
+    ],
+    "pitfall_metadata": [
+      {
+        "id": "pitfall-zsh-word-split",
+        "keywords": [
+          "zsh",
+          "bash",
+          "shell",
+          "sh",
+          "循环",
+          "遍历",
+          "for",
+          "split"
+        ],
+        "path_patterns": [
+          "\\.sh$",
+          "bin/.*",
+          "dotfiles/.*"
+        ],
+        "title": "Bash/Zsh 参数展开禁止字面切词",
+        "rule": "【严禁】在 zsh 中使用 `VAR=\"a b c\"; for x in $VAR`，zsh 对参数展开不做切词导致只循环 1 次；必须使用字面量列表 `for x in a b c`、数组或命令替换 `$(printf ...)`。",
+        "source": "AGENTS.md § 7. Common Pitfalls"
+      }
+    ]
+  },
+  "system_guidance": "【执行守则与防御约束】\n- 【严禁】在 zsh 中使用 `VAR=\"a b c\"; for x in $VAR`，zsh 对参数展开不做切词导致只循环 1 次；必须使用字面量列表 `for x in a b c`、数组或命令替换 `$(printf ...)`。",
+  "evidence": {
+    "worktree_log": "[dry-run] 拟创建隔离工作树: /Users/xiamingxing/Workspace-isolation-task-52c6ba"
+  }
+}

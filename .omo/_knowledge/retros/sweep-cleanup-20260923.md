@@ -1,7 +1,7 @@
 ---
 schema: md/v1
 status: active
-lifecycle: entry
+lifecycle: history
 owner: auto-fix-loop
 last-reviewed: 2026-09-25
 type: ephemeral
