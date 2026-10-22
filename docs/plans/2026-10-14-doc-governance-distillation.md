@@ -1,3 +1,9 @@
+---
+status: active
+lifecycle: entry
+owner: auto-fix-loop
+last-reviewed: 2026-10-17
+---
 # 文档治理提炼与蒸馏（2026-10-14）
 
 ## 一、背景

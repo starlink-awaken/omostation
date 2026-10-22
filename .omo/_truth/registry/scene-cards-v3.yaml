@@ -1,19 +1,20 @@
 schema: scene-registry/v1
-generated_at: '2026-09-11T10:08:46.167728+00:00'
-total_scenes: 67
+generated_at: '2026-10-22T08:53:47.766614+00:00'
+total_scenes: 65
 domains:
   knowledge: 1
-  work: 66
+  work: 56
+  governance: 2
+  health: 4
+  research: 2
 lifecycles:
-  assisted: 4
-  shadow: 5
-  draft: 6
-  routine: 1
-  supervised: 51
+  routine: 63
+  supervised: 2
 classes:
-  business: 67
+  business: 65
 capabilities:
 - bos://capability/compute/generate
+- bos://governance/omo/audit
 - bos://memory/kos/search
 - doc:generate-draft
 - iris:apple_mail
@@ -28,8 +29,6 @@ capabilities:
 - llm:local-summarize
 - mail:create-draft
 - mail:netease_mailmaster
-- ref://capability/agent-workflow-lifecycle
-- ref://capability/gac-local-gate
 - risk_engine:forward-check
 - risk_engine:send-email-check
 - risk_engine:submit-check
@@ -41,8 +40,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: knowledge
-  lifecycle: assisted
-  activation: controlled
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - bos://memory/kos/search
@@ -58,8 +57,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: shadow
-  activation: preview
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - llm:local-classify
@@ -71,8 +70,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: shadow
-  activation: preview
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - tracker:deadline-register
@@ -84,8 +83,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: shadow
-  activation: preview
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - doc:generate-draft
@@ -97,8 +96,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: shadow
-  activation: preview
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - risk_engine:forward-check
@@ -111,8 +110,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: draft
-  activation: preview
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - mail:netease_mailmaster
@@ -125,8 +124,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: shadow
-  activation: preview
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - risk_engine:send-email-check
@@ -139,8 +138,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: draft
-  activation: preview
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - risk_engine:submit-check
@@ -156,7 +155,8 @@ scenes:
   lifecycle: routine
   activation: allowed
   owner: agora-gateway
-  capability_refs: []
+  capability_refs:
+  - bos://capability/compute/generate
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-agora-bos-gateway.yaml
@@ -165,8 +165,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - bos://capability/compute/generate
@@ -179,8 +179,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -191,8 +191,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -203,8 +203,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -215,8 +215,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -227,8 +227,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -239,8 +239,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -251,8 +251,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -263,8 +263,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -275,8 +275,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -287,8 +287,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -299,8 +299,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -311,8 +311,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -323,8 +323,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -335,8 +335,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -347,8 +347,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -359,8 +359,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -371,8 +371,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -383,8 +383,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -395,8 +395,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -407,8 +407,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -419,8 +419,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -431,8 +431,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -443,8 +443,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -455,8 +455,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -467,8 +467,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -479,8 +479,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -491,8 +491,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -503,8 +503,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -515,8 +515,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -527,8 +527,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -539,8 +539,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -551,8 +551,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -563,8 +563,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -575,8 +575,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -587,8 +587,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -599,8 +599,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -611,8 +611,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -623,8 +623,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -635,8 +635,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -647,8 +647,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -659,8 +659,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -671,8 +671,8 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
@@ -683,32 +683,46 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs: []
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-documents-zcode-state.yaml
-- scene_id: scene-engineering-delivery
-  name: Engineering Delivery
+- scene_id: scene-governance-audit
+  name: 治理合规审计
   scene_class: business
-  scene_type: internal_pipeline
-  domain: work
+  scene_type: inbound
+  domain: governance
   lifecycle: supervised
-  activation: active
-  owner: engineering-delivery
-  capability_refs: []
+  activation: allowed
+  owner: xiamingxing
+  capability_refs:
+  - bos://governance/omo/audit
   upstream: []
   downstream: []
-  source_file: .omo/_truth/scenarios/v3/scene-engineering-delivery.yaml
+  source_file: .omo/_truth/scenarios/v3/scene-governance-audit.yaml
+- scene_id: scene-governance-drift-watch
+  name: 架构漂移监测
+  scene_class: business
+  scene_type: inbound
+  domain: governance
+  lifecycle: supervised
+  activation: allowed
+  owner: xiamingxing
+  capability_refs:
+  - bos://governance/omo/audit
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-governance-drift-watch.yaml
 - scene_id: scene-health-archive
   name: Health Archive
   scene_class: business
   scene_type: inbound
-  domain: work
-  lifecycle: draft
-  activation: preview
+  domain: health
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - storage:local-health-ledger
@@ -719,9 +733,9 @@ scenes:
   name: Health Intake
   scene_class: business
   scene_type: inbound
-  domain: work
-  lifecycle: draft
-  activation: preview
+  domain: health
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - llm:local-classify
@@ -733,9 +747,9 @@ scenes:
   name: Health Visit Prep
   scene_class: business
   scene_type: inbound
-  domain: work
-  lifecycle: draft
-  activation: preview
+  domain: health
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - llm:local-summarize
@@ -747,9 +761,9 @@ scenes:
   name: Health Visit
   scene_class: business
   scene_type: inbound
-  domain: work
-  lifecycle: draft
-  activation: preview
+  domain: health
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - llm:local-classify
@@ -762,10 +776,11 @@ scenes:
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: assisted
-  activation: controlled
+  lifecycle: routine
+  activation: allowed
   owner: governance-team
-  capability_refs: []
+  capability_refs:
+  - bos://capability/compute/generate
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-inbox-to-decision.yaml
@@ -774,8 +789,8 @@ scenes:
   scene_class: business
   scene_type: external_resource
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - iris:wpsnote
@@ -783,67 +798,27 @@ scenes:
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-knowledge-curation.yaml
-- scene_id: scene-meeting-supervision
-  name: Meeting Supervision
-  scene_class: business
-  scene_type: internal_pipeline
-  domain: work
-  lifecycle: supervised
-  activation: active
-  owner: xiamingxing
-  capability_refs:
-  - ref://capability/agent-workflow-lifecycle
-  - ref://capability/gac-local-gate
-  upstream: []
-  downstream: []
-  source_file: .omo/_truth/scenarios/v3/scene-meeting-supervision.yaml
 - scene_id: scene-meeting-to-delivery
   name: Meeting To Delivery
   scene_class: business
   scene_type: inbound
   domain: work
-  lifecycle: assisted
-  activation: controlled
+  lifecycle: routine
+  activation: allowed
   owner: governance-team
-  capability_refs: []
+  capability_refs:
+  - bos://capability/compute/generate
+  - bos://memory/kos/search
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-meeting-to-delivery.yaml
-- scene_id: scene-periodic-reporting
-  name: Periodic Reporting
-  scene_class: business
-  scene_type: internal_pipeline
-  domain: work
-  lifecycle: supervised
-  activation: active
-  owner: xiamingxing
-  capability_refs:
-  - ref://capability/gac-local-gate
-  - ref://capability/agent-workflow-lifecycle
-  upstream: []
-  downstream: []
-  source_file: .omo/_truth/scenarios/v3/scene-periodic-reporting.yaml
-- scene_id: scene-project-supervision
-  name: Project Supervision
-  scene_class: business
-  scene_type: internal_pipeline
-  domain: work
-  lifecycle: supervised
-  activation: active
-  owner: xiamingxing
-  capability_refs:
-  - ref://capability/gac-local-gate
-  - ref://capability/agent-workflow-lifecycle
-  upstream: []
-  downstream: []
-  source_file: .omo/_truth/scenarios/v3/scene-project-supervision.yaml
 - scene_id: scene-research-pipeline
   name: Research Pipeline
   scene_class: business
   scene_type: external_resource
-  domain: work
-  lifecycle: supervised
-  activation: active
+  domain: research
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - iris:rss
@@ -856,11 +831,13 @@ scenes:
   name: Research To Insight
   scene_class: business
   scene_type: inbound
-  domain: work
-  lifecycle: assisted
-  activation: controlled
+  domain: research
+  lifecycle: routine
+  activation: allowed
   owner: governance-team
-  capability_refs: []
+  capability_refs:
+  - bos://memory/kos/search
+  - bos://capability/compute/generate
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-research-to-insight.yaml
@@ -869,8 +846,8 @@ scenes:
   scene_class: business
   scene_type: external_resource
   domain: work
-  lifecycle: supervised
-  activation: active
+  lifecycle: routine
+  activation: allowed
   owner: xiamingxing
   capability_refs:
   - iris:apple_mail

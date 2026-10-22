@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# resident-ctl — eCOS 常驻 Agent 交互控制台 Shim.
+#
+# 完全收敛嵌入 projects/omo/src/omo/resident (WP-Interact SSOT 单源).
+# 兼容所有子命令: ask, chat, tick, distill, status, task, ingest, daemon 等.
+set -euo pipefail
+
+HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+UV_BIN="/opt/homebrew/bin/uv"
+[ -x "$UV_BIN" ] || UV_BIN="uv"
+
+exec "$UV_BIN" run --project "$HERE/projects/omo" python -m omo.resident.cli "${@:-chat}"

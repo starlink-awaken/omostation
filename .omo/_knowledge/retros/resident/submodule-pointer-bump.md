@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: submodule-pointer-bump
-generated_at: 2026-10-14T09:05:11Z
+generated_at: 2026-10-22T12:21:43Z
 status: candidate
 counts:
-  runs: 2
+  runs: 1
   failures: 0
-  total: 2
+  total: 1
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,14 +14,13 @@ failure_breakdown:
 ---
 # submodule-pointer-bump 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T09:05:11Z
+- generated_at: 2026-10-22T12:21:43Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 2 成功运行 + 0 失败模式 = 2 草稿
+- sediment 覆盖: 1 成功运行 + 0 失败模式 = 1 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
-- 20260917T044558Z-submodule-pointer-bump-6452b882.md
 - 20260924T234913Z-submodule-pointer-bump-64fe16d0.md
 
 ## 失败模式 (failures/)
@@ -34,12 +33,6 @@ failure_breakdown:
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
-- **20260917T044558Z-submodule-pointer-bump-6452b882**
-  - workflow: submodule-pointer-bump
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=1689.418
 - **20260924T234913Z-submodule-pointer-bump-64fe16d0**
   - 计划 (objective): bump projects/ecos to fa27e1666 (eCOS CI dashboard CI-guard fix #79) - managed successor delivery
   - workflow: submodule-pointer-bump

@@ -1,0 +1,20 @@
+{
+  "scene_id": "scene-admin-collect",
+  "run_id": "exec-fe627c3c43f0",
+  "doc_path": "apple_mail",
+  "doc_sha256": null,
+  "status": "partial",
+  "checks": 2,
+  "passed": 1,
+  "issues_count": 1,
+  "issues": [
+    {
+      "kind": "too_short",
+      "detail": "1 行 < 3"
+    }
+  ],
+  "confidence": 0.5,
+  "dry_run": false,
+  "recorded_at": "2026-10-22T08:53:29.553249+00:00",
+  "record_hash": "b022c845f36b9510"
+}

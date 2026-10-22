@@ -1,0 +1,20 @@
+{
+  "scene_id": "scene-research-to-insight",
+  "run_id": "exec-7f8242fd2331",
+  "doc_path": "applenotes",
+  "doc_sha256": null,
+  "status": "partial",
+  "checks": 2,
+  "passed": 1,
+  "issues_count": 1,
+  "issues": [
+    {
+      "kind": "too_short",
+      "detail": "1 行 < 3"
+    }
+  ],
+  "confidence": 0.5,
+  "dry_run": false,
+  "recorded_at": "2026-10-22T08:53:42.469521+00:00",
+  "record_hash": "25f7c368771d4f2f"
+}

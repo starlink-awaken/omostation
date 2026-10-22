@@ -1,0 +1,20 @@
+{
+  "scene_id": "scene-unified-inbox",
+  "run_id": "exec-4147946dccb2",
+  "doc_path": "netease_mailmaster",
+  "doc_sha256": null,
+  "status": "partial",
+  "checks": 2,
+  "passed": 1,
+  "issues_count": 1,
+  "issues": [
+    {
+      "kind": "too_short",
+      "detail": "1 行 < 3"
+    }
+  ],
+  "confidence": 0.5,
+  "dry_run": false,
+  "recorded_at": "2026-10-22T08:53:44.680088+00:00",
+  "record_hash": "06d972a0fec0ada9"
+}

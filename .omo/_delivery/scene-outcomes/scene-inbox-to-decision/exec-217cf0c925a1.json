@@ -1,0 +1,20 @@
+{
+  "scene_id": "scene-inbox-to-decision",
+  "run_id": "exec-217cf0c925a1",
+  "doc_path": "apple_mail",
+  "doc_sha256": null,
+  "status": "partial",
+  "checks": 2,
+  "passed": 1,
+  "issues_count": 1,
+  "issues": [
+    {
+      "kind": "too_short",
+      "detail": "1 行 < 3"
+    }
+  ],
+  "confidence": 0.5,
+  "dry_run": false,
+  "recorded_at": "2026-10-22T08:53:40.339282+00:00",
+  "record_hash": "26d3347d8eafcc9b"
+}
