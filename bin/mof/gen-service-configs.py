@@ -27,7 +27,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
-from repo_root import canonical_root
+from repo_root import canonical_root, install_root
 
 _WORKSPACE_CACHE: Path | None = None
 
@@ -57,6 +57,33 @@ def workspace() -> Path:
 
 def services_yaml_path() -> Path:
     return workspace() / ".omo" / "_truth" / "registry" / "services.yaml"
+
+
+RUNTIME_ROOTS = ("checkout", "install")
+
+
+def service_root(svc: dict) -> Path:
+    """这一条服务的树根 —— 只由注册表内容决定，绝不看 env / CLI flag / cwd。
+
+    为什么不做成参数或环境变量：E1 判据 run_e1_drift() 调的是无 flag 无 env 的
+    `--check --json`，门禁调用点同样无参。任何调用侧选根的方式都会让 --write 与
+    --check 走两个根，11 条相对入口当场全报 drift —— 那是测量装置没对齐，不是现实。
+
+    install 缺席时报错而不是退回检出根：一份写着安装位、跑的却是检出的 plist，
+    正是 ADR-0456 B4b 要消灭的那个谎。
+    """
+    selector = svc.get("runtime_root", "checkout")
+    who = str(svc.get("label") or svc.get("id") or "?")
+    if selector == "checkout":
+        return workspace()
+    if selector == "install":
+        root = install_root()
+        if root is None:
+            raise ValueError(
+                f"{who}: runtime_root=install 但运行时安装位不存在 —— 拒绝退回检出根 (ADR-0456 B4b)"
+            )
+        return root
+    raise ValueError(f"{who}: runtime_root 取值非法 {selector!r} (允许: {'|'.join(RUNTIME_ROOTS)})")
 
 
 def _is_transient_uv_path(p: str) -> bool:
@@ -149,6 +176,14 @@ def validate_service_declaration(svc: dict) -> list[str]:
     scheduler = svc.get("scheduler")
     if not scheduler:
         violations.append("service 缺必填 scheduler")
+    if "runtime_root" in svc and scheduler != "launchd":
+        # 本生成器不写 crontab，挂在非 launchd 条目上的 runtime_root 没有消费者 ——
+        # 声明它等于留一条"看着有根、实际没人读"的半镜像。
+        violations.append(f"{service_id}: runtime_root 只适用于 scheduler=launchd 条目")
+    elif svc.get("runtime_root", "checkout") not in RUNTIME_ROOTS:
+        violations.append(
+            f"{service_id}: runtime_root 取值非法 {svc.get('runtime_root')!r} (允许: {'|'.join(RUNTIME_ROOTS)})"
+        )
     if scheduler == "cron":
         violation = _cron_admission_violation(svc)
         if violation:
@@ -176,18 +211,20 @@ def _launchd_dir() -> Path:
     return Path.home() / "Library" / "LaunchAgents"
 
 
-def _resolve_path(p: str) -> str:
-    """~ 展开、绝对路径原样、其余相对规范检出根。
+def _resolve_path(p: str, root: Path | None = None) -> str:
+    """~ 展开、绝对路径原样、其余相对 root（缺省 = 规范检出根）。
 
     原实现无条件 `WORKSPACE / p`, 于是 "~/.local/bin/x" 变成
     "<workspace>/~/.local/bin/x" —— 带字面量 ~ 的死路径。
+
+    root 由 service_root(svc) 传入，不得由调用侧参数或环境变量决定（见该函数 docstring）。
     """
     p = str(p)
     if p.startswith("~"):
         return str(Path(p).expanduser())
     if p.startswith("/"):
         return p
-    return str(workspace() / p)
+    return str((root if root is not None else workspace()) / p)
 
 
 def resolve_interpreter(spec: str) -> str:
@@ -225,12 +262,13 @@ def _plist_program_args(plist_xml: str) -> list[str]:
 
 def gen_launchd_plist(svc: dict) -> str:
     label = svc["label"]
+    root = service_root(svc)
     interp = resolve_interpreter(svc["program"]["interpreter"])
-    entry = _resolve_path(svc["program"]["entrypoint"])
+    entry = _resolve_path(svc["program"]["entrypoint"], root)
     args = [interp, entry, *svc["program"].get("args", [])]
     prog_xml = "".join(f"        <string>{a}</string>\n" for a in args)
     watch = svc.get("watch_paths", [])
-    watch_xml = "".join(f"        <string>{workspace() / w}</string>\n" for w in watch)
+    watch_xml = "".join(f"        <string>{root / w}</string>\n" for w in watch)
     env = svc.get("environment", {})
     env_xml = ""
     if env:
@@ -272,12 +310,12 @@ def gen_launchd_plist(svc: dict) -> str:
     # 拼成 "<workspace>/~/Library/Logs/x.log"(带字面量 ~ 的死路径)。
     # 2026-08-08 修 entrypoint 时漏了这里, 同一个 bug 换了个字段。
     stdout_xml = (
-        f"    <key>StandardOutPath</key>\n    <string>{_resolve_path(out['stdout'])}</string>\n"
+        f"    <key>StandardOutPath</key>\n    <string>{_resolve_path(out['stdout'], root)}</string>\n"
         if out.get("stdout")
         else ""
     )
     stderr_xml = (
-        f"    <key>StandardErrorPath</key>\n    <string>{_resolve_path(out['stderr'])}</string>\n"
+        f"    <key>StandardErrorPath</key>\n    <string>{_resolve_path(out['stderr'], root)}</string>\n"
         if out.get("stderr")
         else ""
     )
@@ -696,6 +734,13 @@ def main() -> int:
         default="",
         help="--reality-check 用: 指定 services.yaml (默认取当前检出的那份)",
     )
+    parser.add_argument(
+        "--only",
+        action="append",
+        default=[],
+        metavar="LABEL",
+        help="--write 用: 只处理这些 launchd label (可重复)。默认全量, 缩小爆炸半径时才指定",
+    )
     args = parser.parse_args()
     local_root = Path(__file__).resolve().parents[2]
     if args.reality_check:
@@ -738,6 +783,19 @@ def main() -> int:
         return 0 if report["ok"] else 1
     launchd_dir = _launchd_dir()
     launchd_observer_available = launchd_dir.is_dir()
+    # --only 拼错的 label 会被循环条件静默吞掉，--write 照样"成功"退出 0 ——
+    # 改道时这正是最坏形状：以为改了 6 条，实际一条没动。当场拒绝。
+    if args.only:
+        generator_owned = {
+            svc.get("label")
+            for svc in services
+            if svc.get("scheduler") == "launchd" and svc.get("enabled", True) and svc.get("generate", True)
+        }
+        unknown = sorted(set(args.only) - generator_owned)
+        if unknown:
+            for label in unknown:
+                print(f"❌ --only {label}: 不是生成器自有 launchd 服务 — 拒绝执行", file=sys.stderr)
+            return 1
     drifts: list[str] = []
     bad_services: list[str] = []
     for svc in services:
@@ -748,6 +806,8 @@ def main() -> int:
         # 生成器会拿注册表里的简化描述去覆盖手写 plist —— 2026-08-08 就是这样
         # 把 omlx 网关等 7 个 plist 写成了死路径。
         if not svc.get("generate", True):
+            continue
+        if args.only and svc.get("label") not in args.only:
             continue
         declaration_errors = validate_service_declaration(svc)
         if declaration_errors:
