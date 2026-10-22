@@ -78,6 +78,11 @@ launchctl 里 resident 类 label 数                    → 9（与 spec §3 归
 `OMO-CAPABILITIES` 同形）会**改动门禁的判定面**，属另一条 lane 的署名决策，本 BET 不夹带。
 `git diff --name-only` 证明本 PR 只碰 2 个文件，与 `.omo/_control`、该 registry 均无交集。
 
+**追加（2026-10-22 收口腿推送前实测）**：上游 `#4854`（`3a1f5617e`）把 `.omo/_control/README.md`
+纳入跟踪 —— `git ls-tree -r --name-only origin/main .omo/_control/` 计数由 **0 → 1**，
+`(omo_dir / "_control").exists()` 在干净检出里重新成立 ⇒ 该非 required 检查按构造自然转绿。
+反向确认了第 3 节的归因：红是基线造成的，本 BET 没有为此改动任何门禁判定面。
+
 ## 3 live canary（运行面零效应的正向证据）
 
 - 真实 crontab 全程未动：`crontab -l` 快照落 `/tmp/crontab.baseline`，收口时与新读数字节相同
@@ -87,6 +92,9 @@ launchctl 里 resident 类 label 数                    → 9（与 spec §3 归
   生成 88 行文本但零次真 `crontab` 调用。
 - launchd 一律未动：不 bootout / bootstrap / kickstart，不写 `~/Library/LaunchAgents`，9 条 resident label 原样。
 - 未初始化任何子模块、未在安装位建目录、未写 `services.yaml`。
+- 推送前第三次复测（2026-10-22 01:51Z，跨日）：`crontab -l | shasum -a 256` 仍是同一全值
+  `d2677b3321a3956895423e56612f1d0f371fb05f43af4ea47ac26059eaa13614`，
+  `crontab -l | /usr/bin/grep -c 'omo\.cli resident'` 仍是 `0` ⇒ 零运行面效应不是交付那一刻的快照断言。
 
 ⇒ 本 BET 的写面严格限于文档与台账；它产出的是**授权问题**，不是授权执行。
 

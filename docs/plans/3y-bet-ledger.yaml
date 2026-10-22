@@ -44042,13 +44042,13 @@ bets:
             ref: git://origin/main@e5823c0ac99d4e4986b6310a2186ab1af135a9b9
           tests:
             ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
-            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+            sha256: sha256:9947de8ff60fa1382c354d83b8b71590b21d0ccb890d54a59e2f4acac33ff1fe
           diff:
             ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
-            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+            sha256: sha256:9947de8ff60fa1382c354d83b8b71590b21d0ccb890d54a59e2f4acac33ff1fe
           rollback:
             ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
-            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+            sha256: sha256:9947de8ff60fa1382c354d83b8b71590b21d0ccb890d54a59e2f4acac33ff1fe
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-263.md
             sha256: sha256:3a5be71d2e434c19ac6a0d5d707ddf7bb7418d87c5b8aedab9863b385cb678f8
@@ -44057,16 +44057,16 @@ bets:
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
-            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+            sha256: sha256:9947de8ff60fa1382c354d83b8b71590b21d0ccb890d54a59e2f4acac33ff1fe
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
-            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+            sha256: sha256:9947de8ff60fa1382c354d83b8b71590b21d0ccb890d54a59e2f4acac33ff1fe
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-263.md
             sha256: sha256:3a5be71d2e434c19ac6a0d5d707ddf7bb7418d87c5b8aedab9863b385cb678f8
           cleanup:
             ref: receipt://docs/reports/2026-10-21-b4b-cron-cutover-preflight-closeout.md
-            sha256: sha256:def9a783a0ca8d1dd6ae4835643120d2fd81481989f93e7524394efa168fcdb3
+            sha256: sha256:9947de8ff60fa1382c354d83b8b71590b21d0ccb890d54a59e2f4acac33ff1fe
       value:
         status: NOT_PROVEN
         evidence: {}
