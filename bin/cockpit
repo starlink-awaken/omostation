@@ -6,8 +6,17 @@ Single unified entrypoint for human operators and AI agents in the workspace.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
+
+# Self-heal interpreter: if running under generic python without rich, re-exec with cockpit's venv python
+_COCKPIT_VENV_PYTHON = Path("/Users/xiamingxing/Workspace/projects/cockpit/.venv/bin/python")
+if _COCKPIT_VENV_PYTHON.is_file() and sys.executable != str(_COCKPIT_VENV_PYTHON):
+    try:
+        import rich
+    except ImportError:
+        os.execv(str(_COCKPIT_VENV_PYTHON), [str(_COCKPIT_VENV_PYTHON)] + sys.argv)
 
 # Ensure cockpit package is discoverable from workspace root
 _ROOT = Path(__file__).resolve().parent.parent
