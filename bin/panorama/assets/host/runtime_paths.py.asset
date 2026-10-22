@@ -1,0 +1,548 @@
+"""Resolve immutable code and mutable runtime paths for the dashboard."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import stat
+import threading
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from types import MappingProxyType
+
+CODE_ROOT = Path(__file__).resolve().parent
+STATE_ROOT_ENV = "ZHIXING_DASHBOARD_STATE_ROOT"
+LEGACY_DOC_PUBLISH_ENV = "ZHIXING_DASHBOARD_LEGACY_DOC_PUBLISH"
+PROJECTION_POINTER_NAME = "current-revision.json"
+PROJECTION_REVISIONS_NAME = "revisions"
+PROJECTION_POINTER_SCHEMA = "zhixing-projection-pointer/v1"
+PROJECTION_MANIFEST_SCHEMA = "zhixing-projection-manifest/v1"
+PROJECTION_READER_CONTRACT = "zhixing-dashboard-revision-reader/v1"
+_HEX_40 = re.compile(r"[0-9a-f]{40}\Z")
+_HEX_64 = re.compile(r"[0-9a-f]{64}\Z")
+_ARTIFACT_FILENAMES = {
+    "page": "index.html",
+    "data": "data.json",
+    "agent_brief": "agent-brief.json",
+}
+_MAX_CONTROL_BYTES = 256 * 1024
+_MAX_ARTIFACT_BYTES = 32 * 1024 * 1024
+_MAX_FRESHNESS = timedelta(minutes=15)
+_MAX_CLOCK_SKEW = timedelta(seconds=60)
+_LOAD_LOCK_TIMEOUT_SECONDS = 2.0
+_SOURCE_HASH_KEYS = {
+    "claims_store_sha256",
+    "claims_high_water_sha256",
+    "claims_witness_sha256",
+    "event_ledger_sha256",
+}
+
+
+class ProjectionStateError(RuntimeError):
+    """A bounded, user-safe projection binding failure."""
+
+    def __init__(self, status: str, public_error: str):
+        super().__init__(status)
+        self.status = status
+        self.public_error = public_error
+
+
+@dataclass(frozen=True)
+class ProjectionRevision:
+    revision_id: str
+    revision_root: Path
+    manifest_path: Path
+    page_path: Path
+    data_path: Path
+    agent_brief_path: Path
+    generated_at: str
+    fresh_until: str
+    producer_root_oid: str
+    producer_root_tree_sha256: str
+    omo_gitlink_oid: str
+    ecos_gitlink_oid: str
+    collector_sha256: str
+    value_meter_sha256: str
+    producer_process_identity: str
+    dashboard_code_oid: str
+    dashboard_tree_sha256: str
+    dashboard_code_bundle_sha256: str
+    source_hashes: dict[str, str]
+    claims_sequence: int
+    claims_last_receipt: str
+    claims_activation: str
+    claims_effective_authority: str
+    claims_instruction_capable: bool
+    manifest_sha256: str
+    state_root_identity: str
+    artifact_bodies: dict[str, bytes]
+
+
+_FileIdentity = tuple[int, int, int, int, int]
+
+
+@dataclass(frozen=True)
+class _ProjectionArtifactCache:
+    revision_id: str
+    manifest_sha256: str
+    identities: Mapping[str, _FileIdentity]
+    bodies: Mapping[str, bytes]
+
+
+def _identity(metadata: os.stat_result) -> _FileIdentity:
+    return (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
+    )
+
+
+def _regular_file_identity(path: Path, *, unavailable: str) -> _FileIdentity:
+    try:
+        metadata = path.lstat()
+    except OSError as exc:
+        raise ProjectionStateError(unavailable, f"projection_{unavailable.lower()}") from exc
+    if not stat.S_ISREG(metadata.st_mode):
+        raise ProjectionStateError(unavailable, f"projection_{unavailable.lower()}")
+    return _identity(metadata)
+
+
+def _read_regular(
+    path: Path,
+    *,
+    maximum: int,
+    unavailable: str,
+    with_identity: bool = False,
+) -> bytes | tuple[bytes, _FileIdentity]:
+    before = _regular_file_identity(path, unavailable=unavailable)
+    try:
+        descriptor = os.open(
+            path,
+            os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0),
+        )
+        with os.fdopen(descriptor, "rb") as stream:
+            opened = os.fstat(stream.fileno())
+            if not stat.S_ISREG(opened.st_mode):
+                raise OSError("not regular")
+            opened_identity = _identity(opened)
+            if opened_identity != before:
+                raise OSError("replaced before open")
+            body = stream.read(maximum + 1)
+        if len(body) > maximum:
+            raise OSError("too large")
+    except OSError as exc:
+        raise ProjectionStateError(unavailable, f"projection_{unavailable.lower()}") from exc
+    after = _regular_file_identity(path, unavailable=unavailable)
+    if after != opened_identity:
+        raise ProjectionStateError(unavailable, f"projection_{unavailable.lower()}")
+    if with_identity:
+        return body, after
+    return body
+
+
+def _json_object(body: bytes, *, status: str) -> dict:
+    try:
+        value = json.loads(body)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ProjectionStateError(status, f"projection_{status.lower()}") from exc
+    if not isinstance(value, dict):
+        raise ProjectionStateError(status, f"projection_{status.lower()}")
+    return value
+
+
+def _utc(value: object, *, status: str) -> datetime:
+    if not isinstance(value, str):
+        raise ProjectionStateError(status, f"projection_{status.lower()}")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ProjectionStateError(status, f"projection_{status.lower()}") from exc
+    if parsed.tzinfo is None:
+        raise ProjectionStateError(status, f"projection_{status.lower()}")
+    return parsed.astimezone(timezone.utc)
+
+
+def _ledger_bound_value_readiness(envelope: dict) -> dict:
+    truth = envelope.get("value_truth") if isinstance(envelope, dict) else {}
+    truth = truth if isinstance(truth, dict) else {}
+    metrics = truth.get("metrics") if isinstance(truth.get("metrics"), dict) else {}
+    weeks = [item for item in (metrics.get("weekly_samples") or []) if isinstance(item, dict)]
+    qualifying = sum(
+        value
+        for item in weeks
+        if type(value := item.get("qualifying_episodes")) is int and value >= 0
+    )
+    personal_value = str((truth.get("truth_axes") or {}).get("personal_value") or "")
+    if truth.get("status") == "proven" and personal_value == "passed":
+        status = "PROVEN"
+    elif truth.get("status") == "unprovable" or personal_value == "unprovable":
+        status = "UNPROVABLE"
+    else:
+        status = "NOT_PROVEN"
+    return {
+        "schema": "ledger-bound-value-proof-readiness/v1",
+        "status": status,
+        "available": envelope.get("available") is True,
+        "source": truth.get("schema"),
+        "event_ledger_sha256": envelope.get("event_ledger_sha256"),
+        "samples_total": int(metrics.get("total_episodes") or 0),
+        "qualifying_samples": qualifying,
+        "target_samples": 30,
+        "remaining_samples": max(0, 30 - qualifying),
+        "qualifying_weeks": sum(item.get("gate_met") is True for item in weeks),
+        "target_weeks": 4,
+        "legacy_metrics_excluded": True,
+    }
+
+
+class ProjectionRevisionStore:
+    """Resolve one immutable, hash-bound projection revision per request."""
+
+    def __init__(self, state_root: Path):
+        self.state_root = Path(state_root).resolve()
+        self.pointer_path = self.state_root / PROJECTION_POINTER_NAME
+        self.revisions_root = self.state_root / PROJECTION_REVISIONS_NAME
+        self._load_lock = threading.Lock()
+        self._artifact_cache: _ProjectionArtifactCache | None = None
+
+    def load(self, *, require_fresh: bool = True) -> ProjectionRevision:
+        """Validate current controls and reuse only identity-stable artifacts."""
+        if not self._load_lock.acquire(timeout=_LOAD_LOCK_TIMEOUT_SECONDS):
+            raise ProjectionStateError("VALIDATION_BUSY", "projection_validation_busy")
+        try:
+            try:
+                return self._load_locked(require_fresh=require_fresh)
+            except Exception:
+                self._artifact_cache = None
+                raise
+        finally:
+            self._load_lock.release()
+
+    def _load_locked(self, *, require_fresh: bool = True) -> ProjectionRevision:
+        pointer_body = _read_regular(
+            self.pointer_path,
+            maximum=_MAX_CONTROL_BYTES,
+            unavailable="POINTER_UNAVAILABLE",
+        )
+        pointer = _json_object(pointer_body, status="POINTER_INVALID")
+        if pointer.get("schema_version") != PROJECTION_POINTER_SCHEMA:
+            raise ProjectionStateError("POINTER_INVALID", "projection_pointer_invalid")
+        revision_id = pointer.get("revision_id")
+        manifest_sha256 = pointer.get("manifest_sha256")
+        if not isinstance(revision_id, str) or not _HEX_64.fullmatch(revision_id):
+            raise ProjectionStateError("POINTER_INVALID", "projection_pointer_invalid")
+        if not isinstance(manifest_sha256, str) or not _HEX_64.fullmatch(manifest_sha256):
+            raise ProjectionStateError("POINTER_INVALID", "projection_pointer_invalid")
+
+        revision_root = self.revisions_root / revision_id
+        try:
+            if self.revisions_root.is_symlink() or not self.revisions_root.is_dir():
+                raise OSError("invalid revisions directory")
+            self.revisions_root.resolve().relative_to(self.state_root)
+            if revision_root.is_symlink() or not revision_root.is_dir():
+                raise OSError("invalid revision directory")
+            revision_root.resolve().relative_to(self.revisions_root.resolve())
+        except (OSError, ValueError) as exc:
+            raise ProjectionStateError(
+                "REVISION_UNAVAILABLE", "projection_revision_unavailable"
+            ) from exc
+
+        manifest_path = revision_root / "manifest.json"
+        manifest_body = _read_regular(
+            manifest_path,
+            maximum=_MAX_CONTROL_BYTES,
+            unavailable="MANIFEST_UNAVAILABLE",
+        )
+        if hashlib.sha256(manifest_body).hexdigest() != manifest_sha256:
+            raise ProjectionStateError(
+                "MANIFEST_HASH_MISMATCH", "projection_manifest_hash_mismatch"
+            )
+        manifest = _json_object(manifest_body, status="MANIFEST_INVALID")
+        if (
+            manifest.get("schema_version") != PROJECTION_MANIFEST_SCHEMA
+            or manifest.get("revision_id") != revision_id
+        ):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+
+        generated_at = manifest.get("generated_at")
+        fresh_until = manifest.get("fresh_until")
+        generated_time = _utc(generated_at, status="MANIFEST_INVALID")
+        fresh_time = _utc(fresh_until, status="MANIFEST_INVALID")
+        current_time = datetime.now(timezone.utc)
+        if (
+            fresh_time <= generated_time
+            or fresh_time - generated_time > _MAX_FRESHNESS
+            or generated_time > current_time + _MAX_CLOCK_SKEW
+        ):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+
+        producer = manifest.get("producer")
+        if not isinstance(producer, dict):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        root_oid = producer.get("root_oid")
+        root_tree_sha256 = producer.get("root_tree_sha256")
+        omo_gitlink_oid = producer.get("omo_gitlink_oid")
+        ecos_gitlink_oid = producer.get("ecos_gitlink_oid")
+        collector_sha256 = producer.get("collector_sha256")
+        value_meter_sha256 = producer.get("value_meter_sha256")
+        producer_process_identity = producer.get("process_identity")
+        if not isinstance(root_oid, str) or not _HEX_40.fullmatch(root_oid):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        if not isinstance(root_tree_sha256, str) or not _HEX_64.fullmatch(root_tree_sha256):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        if not isinstance(omo_gitlink_oid, str) or not _HEX_40.fullmatch(omo_gitlink_oid):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        if not isinstance(ecos_gitlink_oid, str) or not _HEX_40.fullmatch(ecos_gitlink_oid):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        if not isinstance(collector_sha256, str) or not _HEX_64.fullmatch(collector_sha256):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        if not isinstance(value_meter_sha256, str) or not _HEX_64.fullmatch(value_meter_sha256):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        if (
+            not isinstance(producer_process_identity, str)
+            or not producer_process_identity.startswith("sha256:")
+            or not _HEX_64.fullmatch(
+                producer_process_identity.removeprefix("sha256:")
+            )
+        ):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+
+        dashboard = manifest.get("dashboard")
+        if not isinstance(dashboard, dict):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        dashboard_code_oid = dashboard.get("code_oid")
+        dashboard_tree_sha256 = dashboard.get("tree_sha256")
+        dashboard_code_bundle_sha256 = dashboard.get("code_bundle_sha256")
+        if (
+            not isinstance(dashboard_code_oid, str)
+            or not _HEX_40.fullmatch(dashboard_code_oid)
+            or not isinstance(dashboard_tree_sha256, str)
+            or not _HEX_64.fullmatch(dashboard_tree_sha256)
+            or not isinstance(dashboard_code_bundle_sha256, str)
+            or not _HEX_64.fullmatch(dashboard_code_bundle_sha256)
+        ):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+
+        state_root = manifest.get("state_root")
+        expected_state_root_identity = "sha256:" + hashlib.sha256(
+            str(self.state_root).encode("utf-8")
+        ).hexdigest()
+        if (
+            not isinstance(state_root, dict)
+            or state_root.get("identity") != expected_state_root_identity
+        ):
+            raise ProjectionStateError(
+                "IDENTITY_UNBOUND", "projection_identity_unbound"
+            )
+        contracts = manifest.get("contracts")
+        if contracts != {
+            "pointer": PROJECTION_POINTER_SCHEMA,
+            "manifest": PROJECTION_MANIFEST_SCHEMA,
+            "reader": PROJECTION_READER_CONTRACT,
+        }:
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+
+        source_hashes = manifest.get("source_hashes")
+        if not isinstance(source_hashes, dict) or set(source_hashes) != _SOURCE_HASH_KEYS:
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        if any(
+            not isinstance(value, str) or not _HEX_64.fullmatch(value)
+            for value in source_hashes.values()
+        ):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+
+        claims = manifest.get("claims")
+        if not isinstance(claims, dict):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        claims_sequence = claims.get("sequence")
+        claims_last_receipt = claims.get("last_receipt")
+        claims_activation = claims.get("activation")
+        claims_effective_authority = claims.get("effective_authority")
+        claims_instruction_capable = claims.get("instruction_capable")
+        if not isinstance(claims_sequence, int) or isinstance(claims_sequence, bool) or claims_sequence < 0:
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        if (
+            not isinstance(claims_last_receipt, str)
+            or not claims_last_receipt.startswith("sha256:")
+            or not _HEX_64.fullmatch(claims_last_receipt.removeprefix("sha256:"))
+            or not isinstance(claims_activation, str)
+            or not claims_activation
+            or not isinstance(claims_effective_authority, str)
+            or not claims_effective_authority
+            or not isinstance(claims_instruction_capable, bool)
+        ):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+
+        artifact_paths: dict[str, Path] = {}
+        artifact_hashes: dict[str, str] = {}
+        artifacts = manifest.get("artifacts")
+        if not isinstance(artifacts, dict) or set(artifacts) != set(_ARTIFACT_FILENAMES):
+            raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+        for name, expected_filename in _ARTIFACT_FILENAMES.items():
+            entry = artifacts.get(name)
+            if not isinstance(entry, dict) or entry.get("filename") != expected_filename:
+                raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+            expected_sha = entry.get("sha256")
+            if not isinstance(expected_sha, str) or not _HEX_64.fullmatch(expected_sha):
+                raise ProjectionStateError("MANIFEST_INVALID", "projection_manifest_invalid")
+            artifact_path = revision_root / expected_filename
+            artifact_paths[name] = artifact_path
+            artifact_hashes[name] = expected_sha
+
+        cache = self._artifact_cache
+        artifact_cache_miss = (
+            cache is None
+            or cache.revision_id != revision_id
+            or cache.manifest_sha256 != manifest_sha256
+        )
+        if not artifact_cache_miss:
+            current_identities = {
+                name: _regular_file_identity(path, unavailable="ARTIFACT_UNAVAILABLE")
+                for name, path in artifact_paths.items()
+            }
+            if current_identities != cache.identities:
+                artifact_cache_miss = True
+                self._artifact_cache = None
+
+        if artifact_cache_miss:
+            artifact_bodies: dict[str, bytes] = {}
+            artifact_identities: dict[str, _FileIdentity] = {}
+            for name, artifact_path in artifact_paths.items():
+                artifact_body, artifact_identity = _read_regular(
+                    artifact_path,
+                    maximum=_MAX_ARTIFACT_BYTES,
+                    unavailable="ARTIFACT_UNAVAILABLE",
+                    with_identity=True,
+                )
+                if hashlib.sha256(artifact_body).hexdigest() != artifact_hashes[name]:
+                    raise ProjectionStateError(
+                        "ARTIFACT_HASH_MISMATCH", "projection_artifact_hash_mismatch"
+                    )
+                artifact_bodies[name] = artifact_body
+                artifact_identities[name] = artifact_identity
+        else:
+            artifact_bodies = dict(cache.bodies)
+
+        # JSON artifacts are part of the control contract, not opaque files.
+        # Validate the exact bytes retained below so request handlers never need
+        # to reopen a path after its digest has been checked.
+        if artifact_cache_miss:
+            data_artifact = _json_object(
+                artifact_bodies["data"], status="ARTIFACT_INVALID"
+            )
+            brief_artifact = _json_object(
+                artifact_bodies["agent_brief"], status="ARTIFACT_INVALID"
+            )
+            value_envelope = data_artifact.get("personal_value_truth")
+            value_truth = (
+                value_envelope.get("value_truth")
+                if isinstance(value_envelope, dict)
+                else None
+            )
+            if (
+                not isinstance(value_envelope, dict)
+                or value_envelope.get("available") is not True
+                or value_envelope.get("event_ledger_sha256")
+                != source_hashes["event_ledger_sha256"]
+                or not isinstance(value_truth, dict)
+                or value_truth.get("schema") != "value-truth-snapshot/v1"
+            ):
+                raise ProjectionStateError(
+                    "SOURCE_DRIFT", "projection_source_drift"
+                )
+            brief_authority = brief_artifact.get("authority")
+            brief_readiness = (
+                brief_authority.get("value_proof_readiness")
+                if isinstance(brief_authority, dict)
+                else None
+            )
+            if brief_readiness != _ledger_bound_value_readiness(value_envelope):
+                raise ProjectionStateError(
+                    "SOURCE_DRIFT", "projection_source_drift"
+                )
+
+        if require_fresh and current_time > fresh_time:
+            raise ProjectionStateError("STALE", "projection_stale")
+
+        if artifact_cache_miss:
+            self._artifact_cache = _ProjectionArtifactCache(
+                revision_id=revision_id,
+                manifest_sha256=manifest_sha256,
+                identities=MappingProxyType(dict(artifact_identities)),
+                bodies=MappingProxyType(dict(artifact_bodies)),
+            )
+
+        return ProjectionRevision(
+            revision_id=revision_id,
+            revision_root=revision_root,
+            manifest_path=manifest_path,
+            page_path=artifact_paths["page"],
+            data_path=artifact_paths["data"],
+            agent_brief_path=artifact_paths["agent_brief"],
+            generated_at=generated_at,
+            fresh_until=fresh_until,
+            producer_root_oid=root_oid,
+            producer_root_tree_sha256=root_tree_sha256,
+            omo_gitlink_oid=omo_gitlink_oid,
+            ecos_gitlink_oid=ecos_gitlink_oid,
+            collector_sha256=collector_sha256,
+            value_meter_sha256=value_meter_sha256,
+            producer_process_identity=producer_process_identity,
+            dashboard_code_oid=dashboard_code_oid,
+            dashboard_tree_sha256=dashboard_tree_sha256,
+            dashboard_code_bundle_sha256=dashboard_code_bundle_sha256,
+            source_hashes=dict(source_hashes),
+            claims_sequence=claims_sequence,
+            claims_last_receipt=claims_last_receipt,
+            claims_activation=claims_activation,
+            claims_effective_authority=claims_effective_authority,
+            claims_instruction_capable=claims_instruction_capable,
+            manifest_sha256=manifest_sha256,
+            state_root_identity=expected_state_root_identity,
+            artifact_bodies=artifact_bodies,
+        )
+
+
+def resolve_state_root(
+    environ: Mapping[str, str] | None = None,
+    *,
+    code_root: Path = CODE_ROOT,
+) -> Path:
+    """Return the dashboard-owned mutable state root.
+
+    Development remains backwards compatible when the environment variable is
+    absent.  A deployment-provided value must be absolute so a changed working
+    directory can never redirect runtime writes into the checked-out code tree.
+    """
+
+    env = os.environ if environ is None else environ
+    raw = env.get(STATE_ROOT_ENV, "").strip()
+    if not raw:
+        return code_root.resolve()
+    candidate = Path(raw).expanduser()
+    if not candidate.is_absolute():
+        raise RuntimeError(f"{STATE_ROOT_ENV} must be absolute")
+    resolved = candidate.resolve()
+    try:
+        resolved.relative_to(code_root.resolve())
+    except ValueError:
+        return resolved
+    raise RuntimeError(f"{STATE_ROOT_ENV} must be outside the dashboard code root")
+
+
+def legacy_doc_publication_enabled(environ: Mapping[str, str] | None = None) -> bool:
+    """Legacy publication is disabled unless the operator opts in exactly."""
+
+    env = os.environ if environ is None else environ
+    return env.get(LEGACY_DOC_PUBLISH_ENV, "") == "1"
+
+
+STATE_ROOT = resolve_state_root()
+PROJECTION_POINTER = STATE_ROOT / PROJECTION_POINTER_NAME
+PROJECTION_REVISIONS = STATE_ROOT / PROJECTION_REVISIONS_NAME

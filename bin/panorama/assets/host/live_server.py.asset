@@ -212,9 +212,9 @@ WORKBENCH_SCROLL_RESET_WITH_HASH = (
 )
 MAX_TAIL_BYTES = 1024 * 1024
 MAX_LINE_BYTES = 16 * 1024
-# Published projection artifacts share the bounded 16 MiB revision contract.
+# Published projection artifacts share the bounded 32 MiB revision contract.
 # Keep MAX_DOCUMENT_BYTES below for ordinary registered observations.
-MAX_PROJECTION_ARTIFACT_BYTES = 16 * 1024 * 1024
+MAX_PROJECTION_ARTIFACT_BYTES = 32 * 1024 * 1024
 MAX_PAGE_BYTES = MAX_PROJECTION_ARTIFACT_BYTES
 MAX_DOCUMENT_BYTES = 1024 * 1024
 POLL_INTERVAL_SECONDS = 5

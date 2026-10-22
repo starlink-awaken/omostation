@@ -23,6 +23,7 @@ EXPECTED_FILES = {
     "workbench_ui.js": "workbench_ui.js.asset",
     "refresh.py": "refresh.py.asset",
     "live_server.py": "live_server.py.asset",
+    "runtime_paths.py": "runtime_paths.py.asset",
     "observatory_query.py": "observatory_query.py.asset",
     "panorama-collect-main.py": "panorama-collect-main.py.asset",
     "copilot_service.py": "copilot_service.py.asset",
