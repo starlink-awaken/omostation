@@ -484,7 +484,7 @@ jobs:
 
   - name: capability-registry-sync-daily
     schedule: "5 4 * * *"
-    command: 'cd "$HOME/Workspace" && git add docs/generated/capability-registry.yaml docs/INDEX-MCP.md docs/CLI-REFERENCE.md 2>/dev/null && git diff --cached --quiet || git commit -m "chore(auto): capability-registry daily sync [skip ci]" >> runtime/cron/capability-registry-sync.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /opt/homebrew/bin/python3.13 bin/ssot/gen-capability-registry.py >> runtime/cron/capability-registry-sync.log 2>&1 && git add docs/generated/capability-registry.yaml docs/INDEX-MCP.md docs/CLI-REFERENCE.md 2>/dev/null && { git diff --cached --quiet || git commit -m "chore(auto): capability-registry daily sync [skip ci]" >> runtime/cron/capability-registry-sync.log 2>&1 ; }'
     planes: [crontab]
     reality: installed
     status: active

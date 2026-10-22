@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -171,6 +172,29 @@ def check_launchd_plane(registered):
     }
 
 
+_INTERPRETER_RE = re.compile(r"(?:\S*/)?python3(?:\.\d+)?(?=[\s]|$)")
+_INTERPRETER_BOUNDARY = re.compile(r"(?<=[\s;&|])")
+
+
+def _normalize_interpreter(cmd: str) -> str:
+    """把解释器写法归一化成裸 `python3`, 使声明与安装态可比。
+
+    注册表声明用 `python3 …`, 而安装态可能写成 `/opt/homebrew/bin/python3.13 …`
+    (cron 环境里裸 `python3` 解析到 Xcode 的 3.9, 缺 `datetime.UTC`, 2026-10-22
+    有 4 条 cron 因此连续失败数周)。两者语义相同, 不该算 drift。
+
+    只替换**位于命令起始**的解释器 (`cd … &&` 之后也算), 避免把参数里的
+    `python3.x` 误当解释器。
+    """
+    out, last = [], 0
+    for boundary in _INTERPRETER_BOUNDARY.finditer(cmd):
+        seg = cmd[last:boundary.end()]
+        out.append(_INTERPRETER_RE.sub("python3", seg))
+        last = boundary.end()
+    out.append(cmd[last:])
+    return "".join(out)
+
+
 def check_drift():
     """校验登记源 vs crontab 安装态一致性.
 
@@ -188,7 +212,7 @@ def check_drift():
         cmd = cmd.replace('"$HOME/Workspace"', "/Users/xiamingxing/Workspace").replace(
             "$HOME/Workspace", "/Users/xiamingxing/Workspace"
         )
-        reg_set.add(f"{sched} {cmd}"[:120])
+        reg_set.add(f"{sched} {_normalize_interpreter(cmd)}"[:120])
     try:
         r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)
         installed_lines = r.stdout.splitlines() if r.returncode == 0 else []
@@ -200,7 +224,7 @@ def check_drift():
         if s and not s.startswith("#"):
             if "harness-cron.sh" in s:
                 s = '0 */6 * * * cd /Users/xiamingxing/Workspace && bash projects/l4-kernel/scripts/harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1'
-            inst_set.add(s[:120])
+            inst_set.add(_normalize_interpreter(s)[:120])
 
     drift = reg_set - inst_set
     raw_orphan = inst_set - reg_set
