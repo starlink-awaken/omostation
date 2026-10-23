@@ -184,6 +184,16 @@ def validate_service_declaration(svc: dict) -> list[str]:
         violations.append(
             f"{service_id}: runtime_root 取值非法 {svc.get('runtime_root')!r} (允许: {'|'.join(RUNTIME_ROOTS)})"
         )
+    # require_kernel_root_match 是 E6 的准入开关 (缺省 false = 只观测)。它必须挂在
+    # 声明了 runtime_root 的 launchd 条目上 —— 没有声明根就没有「另一个根」可比，
+    # 挂错位置的开关和被它要防的半镜像是同一个形状。
+    if "require_kernel_root_match" in svc:
+        if "runtime_root" not in svc:
+            violations.append(f"{service_id}: require_kernel_root_match 需要条目先声明 runtime_root")
+        if svc.get("require_kernel_root_match") is not True:
+            violations.append(
+                f"{service_id}: require_kernel_root_match 只接受 true (缺省即不声明)"
+            )
     if scheduler == "cron":
         violation = _cron_admission_violation(svc)
         if violation:
@@ -560,12 +570,81 @@ def measured_base(registry_path: Path, root: Path | str | None) -> dict:
     }
 
 
+ENTRYPOINT_SCRIPT_SUFFIXES = (".sh", ".py")
+KERNEL_PIN_STATES = ("ok", "pinned_other_root", "undetermined")
+
+
+def _entrypoint_script(argv: list[str], root: Path) -> Path | None:
+    """argv 中归属于 `root` 的那份入口脚本; 认不出就返回 None —— 不得算通过。"""
+    for token in argv:
+        candidate = Path(token)
+        if not candidate.is_absolute() or not token.endswith(ENTRYPOINT_SCRIPT_SUFFIXES):
+            continue
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            continue
+        if not resolved.is_file():
+            continue
+        try:
+            resolved.relative_to(root)
+        except ValueError:
+            continue
+        return resolved
+    return None
+
+
+def kernel_root_pins(services: list[dict], rows: list[dict], roots: dict[str, Path | None]) -> list[dict]:
+    """E6 —— 入口脚本**内容**里钉住的根, 是否等于注册表声明的 `runtime_root`。
+
+    E1 比较的是 plist 文本与注册表渲染结果, 也就是 argv; argv 指到安装位的 wrapper
+    即算合规。真正决定码面的是 wrapper 里的 `--project` / 字面量路径, 它在 argv 之外,
+    所以 E1=0 对「入口改道了、内核还钉着检出」结构性失明 —— 2026-10-23 实测常驻族
+    6 条 `runtime_root: install` 服务, 两份 lib/resident-role-tick.sh 逐字节相同且都
+    `exec uv run --project <检出>/projects/omo`。
+    """
+    by_label = {row["label"]: row for row in rows}
+    out: list[dict] = []
+    for svc in services:
+        if not isinstance(svc, dict) or svc.get("scheduler") != "launchd":
+            continue
+        declared = svc.get("runtime_root")
+        if declared not in RUNTIME_ROOTS:
+            continue
+        label = str(svc.get("label"))
+        row = {"label": label, "declared_root": declared, "script": None,
+               "state": "undetermined", "pinned_root": None, "pin_count": 0}
+        root = roots.get(declared)
+        other_name = "checkout" if declared == "install" else "install"
+        other = roots.get(other_name)
+        entry_row = by_label.get(label)
+        if root is not None and other is not None and entry_row is not None:
+            script = _entrypoint_script(list(entry_row.get("program_arguments") or []), Path(root))
+            if script is not None:
+                row["script"] = str(script)
+                try:
+                    body = script.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    body = None
+                if body is not None:
+                    needle = str(other)
+                    row["pin_count"] = body.count(needle)
+                    if row["pin_count"]:
+                        row["state"] = "pinned_other_root"
+                        row["pinned_root"] = other_name
+                    else:
+                        row["state"] = "ok"
+        out.append(row)
+    return out
+
+
 def reality_check(
     registry_path: Path,
     launchd_dir: Path,
     e1: dict | None = None,
     workspace_root: Path | str | None = None,
     base: dict | None = None,
+    kernel_roots: dict[str, Path | None] | None = None,
 ) -> dict:
     """注册表 vs 本机 launchd 现实的双向门禁 (只读)。"""
     services = load_services(registry_path)
@@ -660,6 +739,28 @@ def reality_check(
     if e1["status"] == "error":
         findings.append(f"E1 --check 无法解析: {e1.get('detail', '')}")
 
+    # E6 = 入口改道之后, 码面有没有跟着走。缺省只观测: 今日 6 条常驻服务全部命中,
+    # 直接计入 findings 会让门禁翻红却不指向任何修复 (红≠修)。条目声明
+    # require_kernel_root_match: true 才升级 —— 「把内核也改道」与「声明它已改道」
+    # 因而不是两次动作, 而是同一次注册表编辑里的两行, 可逐批、可回退。
+    roots = kernel_roots or {
+        "checkout": Path(workspace_root or workspace()),
+        "install": install_root(),
+    }
+    e6_rows = kernel_root_pins(services, rows, roots)
+    strict_labels = {
+        str(svc.get("label"))
+        for svc in services
+        if isinstance(svc, dict) and svc.get("require_kernel_root_match") is True
+    }
+    e6_blocking = [r for r in e6_rows if r["state"] != "ok" and r["label"] in strict_labels]
+    e6_hits = [r for r in e6_rows if r["state"] != "ok"]
+    if e6_blocking:
+        findings.append(
+            "E6 声明 require_kernel_root_match 但入口脚本内核未落到声明根 "
+            f"{len(e6_blocking)} 条: {[(r['label'], r['state'], r['pinned_root']) for r in e6_blocking]}"
+        )
+
     return {
         "ok": not findings,
         "findings": findings,
@@ -683,6 +784,10 @@ def reality_check(
         "external": len(buckets["external"]),
         "registry_declared_total": len(declared),
         "dev_label_prefix": policy.get("dev_label_prefix", ""),
+        "e6_kernel_pin": e6_rows,
+        "e6_non_ok": len(e6_hits),
+        "e6_non_ok_labels": sorted(r["label"] for r in e6_hits),
+        "e6_blocking": len(e6_blocking),
         "measured_base": base,
     }
 
@@ -706,6 +811,11 @@ def reality_check_main(local_root: Path, registry: Path | None, as_json: bool) -
             f"Workspace 作用域 {report['workspace_scoped']}"
         )
         b = report["measured_base"]
+        print(
+            f"入口内核根 E6: 声明 runtime_root {len(report['e6_kernel_pin'])} 条, "
+            f"未落到声明根 {report['e6_non_ok']} 条 {report['e6_non_ok_labels']} "
+            f"(其中 require_kernel_root_match 阻塞 {report['e6_blocking']} 条)"
+        )
         print(
             f"测量基座: {b['base_state']}  HEAD={b['head']}  origin/main={b['origin_main']}"
             f"{'  behind=' + str(b['behind_count']) if b['behind_count'] else ''}  "
