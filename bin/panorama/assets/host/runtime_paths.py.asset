@@ -30,7 +30,10 @@ _ARTIFACT_FILENAMES = {
     "agent_brief": "agent-brief.json",
 }
 _MAX_CONTROL_BYTES = 256 * 1024
-_MAX_ARTIFACT_BYTES = 32 * 1024 * 1024
+# 2026-10-22: 16 MiB 被 data.json 越过 (16,836,519 字节), 于是 revision 加载整体失败
+# (ARTIFACT_UNAVAILABLE) —— personal_value_truth 报 UNAVAILABLE, A9 转 PARTIAL。
+# 提高到 64 MiB 留裕量; 这是**加载上限**不是裁剪阈值, 超限仍然拒绝。
+_MAX_ARTIFACT_BYTES = 64 * 1024 * 1024
 _MAX_FRESHNESS = timedelta(minutes=15)
 _MAX_CLOCK_SKEW = timedelta(seconds=60)
 _LOAD_LOCK_TIMEOUT_SECONDS = 2.0
