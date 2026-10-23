@@ -44372,6 +44372,81 @@ bets:
   - cmd: git diff --name-only origin/main...HEAD
     expect: 只含 write_surfaces 的本轮面；不含 .omo/state/**、BRIEF.md、子模块 gitlink（两点 origin/main..HEAD 会额外列 base 漂移的反向条目，非本 PR 交付面）。
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-266
+  title: 改道的入口脚本内核仍钉检出根 —— reality-check 需要 E6 让「码面是否跟着入口走」可见（observe-only，缺省不影响 rc）
+  goal: 'B4b 改道的第二半目前没有读数。BET-Y2Q4-T10-265 把常驻族 6 条 plist 的入口 argv 移到 ~/.local/opt/omostation/lib/*.sh，launchd
+    实测 last exit code=0 且 runs 已前进（真实 tick 发生过）；但那两个 wrapper 的本体仍 exec uv run --project
+    <检出>/projects/omo，且两棵树的 lib/resident-role-tick.sh 逐字节相同 —— 入口在安装位、执行的码面在检出。E1 只比
+    plist 文本与注册表渲染，对脚本内容是结构性的盲；plan §「B4b 风险」点名的『静默跑旧代码的 daemon』其缓解 assert_import_root()
+    在生产路径零调用点。本轮在 reality_check 增加 E6：沿本机 argv 找到属于 service_root 的入口脚本，读其内容，判定是否钉住另一个根；缺省只观测不进
+    findings（今日 6 条全命中，计入即翻红而无修复），条目声明 require_kernel_root_match: true 才升级成 finding。本轮不把任何服务改道、不推进安装位、不动
+    wrapper 内容。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3h
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-23-resident-entrypoint-kernel-root.md
+  - docs/plans/3y-bet-ledger.yaml
+  - bin/mof/gen-service-configs.py
+  - tests/unit/test_reality_check_kernel_root_pin.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-266.md
+  - docs/reports/2026-10-23-resident-kernel-root-pin-closeout.md
+  non_goals:
+  - 不改 lib/*.sh 内核（自解析会把 6 条常驻切到落后 438 个 commit 的安装位码面，属生产行为变更且安装位推进归 principal）
+  - 不给任何条目新增 runtime_root 或把 require_kernel_root_match 置真
+  - 不改 E1 判据 run_e1_drift() 本体，不动 --check/--write 语义
+  - 不新增 bin/ 脚本（避开 script-registry 与 bin 配额基线面）
+  done_when:
+  - --reality-check --json 返回 e6_kernel_pin 面，逐条给 label/declared_root/script/state，state
+    取值 ok|pinned_other_root|undetermined；识别不出入口不得算通过。
+  - '真实机器复跑：6 条声明 runtime_root: install 的服务全部 pinned_other_root（本轮 receipt；命中为 0 说明检测器没接上，不接受空绿）。'
+  - '缺省 observe-only：ok 与 rc 与改道前一致（E1 仍 0）；声明 require_kernel_root_match: true 的条目使 state!=ok
+    （pinned_other_root 与 undetermined）进 findings 且 rc=1 —— 两种 state 各一正一反，共 4 条用例。'
+  - 检测器自证：注入命中的合成 wrapper 必须点名它，只含声明根的合法 wrapper 必须不命中（AGENTS.md §7③ 空绿不被接受）。
+  - 变异对照（按改法分别记读数，2026-10-23 实测）：摘掉 pin 计数 ⇒ 5 条红；阻塞不看开关 ⇒ observe-only
+    那条红（1 条）；不追加 finding ⇒ strict 那条红（1 条）；阻塞只认 pinned_other_root ⇒ undetermined-strict
+    那条红（1 条）；摘掉 require_kernel_root_match 校验段 ⇒ 2 条 reject 用例红、accept 用例仍绿（它不承重）。
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json | python3 -c
+      "import json,sys; r=json.load(sys.stdin); print('E1', r['e1_drift'], 'E6', len([x
+      for x in r['e6_kernel_pin'] if x['state']=='pinned_other_root']))"
+    expect: E1 0 / E6 命中 6（本轮 receipt）
+  - cmd: python3 bin/mof/gen-service-configs.py --check --json | python3 -c "import
+      json,sys; d=json.load(sys.stdin); assert d['ok'] and d['drift_count']==0; print('E1
+      OK')"
+    expect: E1 drift_count=0 不变
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT HOME=$TMPDIR/empty-home uv
+      run --no-project --with pytest --with pytest-timeout --with pyyaml python -m pytest tests/unit/test_reality_check_kernel_root_pin.py
+      -q -p no:randomly
+    expect: 全绿；hermetic 面（AGENTS.md §7 装置面补记）。pytest-timeout 必须在 --with 里：rootdir 仍是本检出，
+      pyproject addopts 注入 --timeout=300，缺这个包就当场 unrecognized arguments（2026-10-23 实测）。
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-23-resident-entrypoint-kernel-root.md
+    spec_version: 1.0.0
+    content_digest: sha256:ee6992bd73c7cf17c3121c555df44b24875490165b4fe45800b1e1cf5cd2d7b6
+    decision_ref: decision://accepted/BET-Y2Q4-T10-266
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44501,7 +44576,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 561
+  total_bets: 562
   windows:
   - Y1Q1
   - Y1Q2
