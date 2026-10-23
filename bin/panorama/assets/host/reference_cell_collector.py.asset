@@ -37,20 +37,26 @@ class ReferenceCellCollector(DataCollector):
             "bin/gac/reference-cell-dl-verify.py",
             "/Users/xiamingxing/Workspace/bin/gac/reference-cell-dl-verify.py",
         )
+        verifier_error = None
         try:
             proc = subprocess.run(
                 ["python3", "-B", script, "--json"],
                 capture_output=True, text=True, timeout=25,
             )
             ok = proc.returncode == 0
+            if not ok:
+                # 非零退出时 verifier 的输出才是原因 —— 丢掉它, 板子上只剩一句
+                # "verifier exited non-zero", 分不清是超时、缺文件还是校验失败。
+                # 2026-10-23 实测: 该源长期 FAIL 而无任何可读原因。
+                verifier_error = (proc.stderr or proc.stdout or "").strip()[:300] or None
         except Exception as exc:
-            self._last_error = str(exc)
+            verifier_error = str(exc)
             ok = False
 
         return {
             "status": "OK" if ok else "FAIL",
             "verifier": script,
-            "error": None if ok else getattr(self, "_last_error", "verifier exited non-zero"),
+            "error": verifier_error,
             "cached_sources": cached if isinstance(cached, dict) else {},
             "observed_at": _now(),
         }
