@@ -377,6 +377,23 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 - **「目录缺席」与「目录为空」在 glob 兜底下同形，派生器会据此把跟踪文档重写成空面（2026-10-22, BET-Y2Q4-T10-264 实测）**：**证据** —— `projects/omo/src/omo/omo_state.py` 的四任务面读法是 `files = sorted(d.glob("*.yaml")) if d.exists() else []`，缺席面折叠成 `[]`，与「真源说零」逐字同形；`_rebuild_tasks_registry_index()` 拿这份列表把**跟踪文档** `.omo/tasks/registry/INDEX.md` 的 Active/Planned/Blocked 段整段重建。一次在**没有 `tasks/planned/` 的检出**里跑的 `omo state sync-tasks`（`.gitignore:402` 忽略该面 ⇒ 新检出按构造不存在）因此把 `## Planned Tasks (7 个)` 连同 7 行（含 `TASK-019B7FD6`）重写成 `0 个`。**判据**：三条用例两两不共享失效模式 —— 缺席面须逐字节不动（`test_cmd_state_sync_tasks_leaves_index_untouched_when_a_plane_is_absent`）、空面仍须重建为 0（`..._still_rebuilds_index_when_plane_exists_but_empty`，防「四面都可有可无」的放宽）、正反面直调守卫（`test_rebuild_tasks_registry_index_refuses_absent_plane_and_accepts_present_ones`；摘掉守卫 ⇒ 第①③条当场红，实测 2 failed）。**纪律**：① 凡「从目录派生 → 写回跟踪文档」的生成器，动手前先问「面不在这棵树时我写不写」，答案通常是不写（fail-closed），而 `d.exists() else []` 这类三元兜底**没有任何测试会红**（本机 canonical 四面齐全 ⇒ 常绿；CI/新检出缺面 ⇒ 静默毁档）；② 「`git status` 里多了一行 M 跟踪文档」不是回归信号而是**证据被覆盖**，判据用 sha 逐字节对拍而不是 `git diff` 看「改了哪几行」；③ 同一函数里 `system.yaml` 的重算语义**不受该守卫影响**（写面语义与文档重建的准入条件不同），别把它一起收紧。
 - **运行根选择器必须是注册表内容，不是 flag/env/cwd（2026-10-22, BET-Y2Q4-T10-265 实测）**：**证据** —— `bin/mof/gen-service-configs.py` 的 E1 判据 `run_e1_drift()` 调的是 `[sys.executable, __file__, "--check", "--json"]`，无 flag、`subprocess.run` 不带 `env=`，门禁调用点（`gac-local-gate.py` 的 `--validate` / `--check`）同样无参 ⇒ 任何**调用侧**选根都会让 `--write` 与 `--check` 走两个根，11 条相对入口逐条报 drift。仓里唯一的安装位服务先例 `com.omostation.zhixing-projection-fullrefresh` 靠 `generate: false` **退出比较**拿零 drift，而它自己的 notes 承认那不能证明完成 —— 照抄即假绿。**判据**：① `--check`/`--write` 读的注册表是 `services_yaml_path()` = `canonical_root()`，**不是当前检出**（`--registry` 只喂 `--reality-check`）⇒ 合入后**先**快进主检出、**再**改道；顺序反了会拿"没有新字段的旧注册表"比"已改道的 plist"，当场造出 6 条假 drift。② 桶数基线一律对 `git show origin/main:<registry>` 那一份量 —— 本地落后的 `~/Workspace` 工作树把 E2 读成 5，而 origin/main 的真实读数是 0（PITFALL-COO-006 同形）。**纪律**：新增 per-service 字段一律"缺省 = 今日行为"（378 条里只有 6 条声明），且语义要覆盖该条目**所有**相对路径字段（entrypoint / watch_paths / outputs）—— 只改一处就是 AGENTS.md §7「不许写半份镜像」的同形错误；`install_root()` 返回 `None` 时抛错，绝不静默退回检出根（"plist 写着安装位、跑的却是检出"正是 B4b 要消灭的那个谎）。变异对照须**按改法分别记读数**：只把 install 分支的 `return root` 改成 `return workspace()` ⇒ 2 条红（install 命中 + `--only`），而 **fail-closed 断言仍绿** —— 因为 `install_root() is None` 那道抛错没被删；整段摘掉该分支 ⇒ 4 条红；删校验段 ⇒ 2 条红（T265 三组实测）。「一次变异只红一组」不等于其余断言都承重被验过，改法要对着「这条断言依赖哪一处代码」选。同族自伤：把 spec 的**契约项编号**（①—⑦）与 pytest **collection 序号**（9 个用例）混用，会写出既不等于任何一次实测的数字 —— 编号方案要在写下读数的同一句里指明，并且交付前按同一条命令复算一次。
 
+- **"入口改到安装位"不等于"码面改到安装位"，而 E1=0 对这件事是结构性失明（2026-10-23, ADR-0456 B4b / BET-Y2Q4-T10-266 实测）**：
+  **证据** —— T265 把常驻族 6 条 plist 的入口 argv 改到 `~/.local/opt/omostation/lib/*.sh` 后，launchd 自己证明跑过真实 tick
+  （`last exit code=0`，`runs` 9/9/4/4/4/2），E1 `drift_count=0` 也是真的；但 `lib/resident-role-tick.sh` 在安装位与检出
+  **sha256 逐字节相同**（`772d97c1…`），本体仍 `exec /opt/homebrew/bin/uv run --project <检出>/projects/omo` ——
+  入口在 A 树、执行的 Python 码面在 B 树。`lib/` 面实测 **5 个文件 6 处**检出根字面量。
+  四把现有尺全部看不见它：E1 只比 plist 文本与注册表渲染（ argv 本来就合法地改了）、E2/E5 只管 label 集合、E4 只管可解析+分区闭合、
+  `assert_import_root()` 拿 `omo.__file__` 与**加载它的那棵树**比 ⇒ 参照根与被检对象由同一次 `--project` 钉死，两边同时是检出，恒等成立；
+  而且它**生产路径零代码调用点**（`git grep assert_import_root -- ':!tests' ':!bin/lib/repo_root.py'` 只命中 retro/台账文字；
+  T261 retro 已如实写过「这条缓解仍然没有接线」，别把它读成已存在的保险丝）。
+  **判据** —— 问「改道完成了吗」读 `--reality-check --json` 的 `e6_kernel_pin` 逐条 `state`，不读 E1；本轮真实读数
+  `e6_non_ok=6 / e6_blocking=0`（6 条全 `pinned_other_root→checkout`）。命中为 0 才是检测器没接上的信号（空绿不被接受）。
+  **纪律** —— ① 引用文档/plan 里写的缓解手段前，先 `git grep -n <fn> -- ':!tests'` 确认它被接线；「库函数存在」与「门禁用到它」是两件事。
+  ② 判据必须与被检对象**不共享失效模式**：要证「码面跟着入口走」就得读**脚本内容**，任何只比 argv / plist 文本的检查都不足以支撑该结论。
+  ③ 新判据缺省 observe-only（今天的 6 条命中若直接计入 findings 会当场翻红，而**红本身不构成修复**），升级由**注册表内容**决定
+  （条目声明 `require_kernel_root_match: true`），于是「改过去」与「声明改过去了」仍是同一次编辑里的两件事。
+  ④ 认不出入口必须记 `undetermined` 且**与不合规在阻塞面同形**（promotion 条件写成 `state != "ok"`，不是 `== "pinned_other_root"`）——
+  否则把入口改成检测器认不出的形状就等于关掉这道闸。
 ---
 
 ## 8. Testing Guidance
