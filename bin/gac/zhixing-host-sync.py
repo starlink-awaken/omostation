@@ -98,6 +98,10 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     # helper 随之纳管, 否则部署出去的 reference_cell 仍 import 不到它。
     ("collectors/reference_cell.py", "reference_cell_collector.py.asset"),
     ("collectors/_script_paths.py", "collectors._script_paths.py.asset"),
+    # 2026-10-23: 投影 artifact 上限从 16MiB 提到 64MiB 后必须纳管 —— 它决定
+    # revision 能否加载, 而 release 树与 manifest 必须一致, 否则发布器拒绝发布
+    # (release_tree_hash_mismatch)。
+    ("runtime_paths.py", "runtime_paths.py.asset"),
     ("release_identity.py", "release_identity.py.asset"),
 )
 RELEASE_ID_RE = re.compile(r"[0-9a-f]{40}\Z")
