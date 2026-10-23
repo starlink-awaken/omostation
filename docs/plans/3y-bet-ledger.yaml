@@ -44271,7 +44271,8 @@ bets:
     跳过比较，零 drift 不能证明任何事。结论：选择器只能是注册表内容。新增 runtime_root ∈ {checkout, install}（缺省 checkout、逐字节等价），由
     repo_root.install_root() 在调用时刻解析、install 缺席即 fail-closed，并把 com.l4.resident.* 中
     enabled 的 6 条迁到 install。合入后才执行 bootout/bootstrap 改道。
-  status: in_progress
+  status: done
+  done_at: 2026-10-23
   write_surfaces:
   - docs/superpowers/specs/2026-10-22-b4b-resident-runtime-root.md
   - docs/plans/3y-bet-ledger.yaml
@@ -44298,14 +44299,37 @@ bets:
   underlying_workflow: project-code-change
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@a80d8908e75348b48b671337fd1972af30feb34f
+          tests:
+            ref: receipt://docs/reports/2026-10-22-b4b-resident-runtime-root-closeout.md
+            sha256: sha256:b4b57886af771a9d681b4a04c17fa257f56d18076e1c547cbb6946ed32d3970d
+          diff:
+            ref: receipt://docs/reports/2026-10-22-b4b-resident-runtime-root-closeout.md
+            sha256: sha256:b4b57886af771a9d681b4a04c17fa257f56d18076e1c547cbb6946ed32d3970d
+          rollback:
+            ref: receipt://docs/reports/2026-10-22-b4b-resident-runtime-root-closeout.md
+            sha256: sha256:b4b57886af771a9d681b4a04c17fa257f56d18076e1c547cbb6946ed32d3970d
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-22-b4b-resident-runtime-root-closeout.md
+            sha256: sha256:b4b57886af771a9d681b4a04c17fa257f56d18076e1c547cbb6946ed32d3970d
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-22-b4b-resident-runtime-root-closeout.md
+            sha256: sha256:b4b57886af771a9d681b4a04c17fa257f56d18076e1c547cbb6946ed32d3970d
+          cleanup:
+            ref: receipt://docs/reports/2026-10-22-b4b-resident-runtime-root-closeout.md
+            sha256: sha256:b4b57886af771a9d681b4a04c17fa257f56d18076e1c547cbb6946ed32d3970d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-265.md
+            sha256: sha256:fb1af58b9cf71b39592119928ad0cbcae5e48f4116b501ba043ed54cc2ff29d8
       value:
         status: NOT_PROVEN
         evidence: {}
