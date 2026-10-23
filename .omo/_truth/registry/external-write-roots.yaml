@@ -2,8 +2,17 @@ schema: external-write-root-registry/v1
 roots:
   - id: zhixing-dashboard
     path: ~/.local/share/zhixing-dashboard
+    root_env: ZHIXING_DASHBOARD_ROOT
     kind: local_git
     status: admitted
+    # ADR-0456 决策 5 的三件套 (BET-Y2Q4-T10-267): repo+pinned_sha 是溯源记录, 不是版本守门 ——
+    # 服务经 releases/<40位OID> 前进部署, /health 自报的 OID 与本仓 HEAD 按构造不相等,
+    # 任何代码路径都不得拿 pinned_sha 跟实时读数比较并据此报警 (AGENTS.md §7 OID 基线条)。
+    repo: git@github.com:starlink-awaken/zhixing-dashboard.git
+    pinned_sha: c2a8471b4a222ecc2eef38eecf66e2e2ebe7eb07
+    health:
+      env: ZHIXING_OBSERVATORY_PORT
+      path: /health
     patterns:
       - '*.js'
       - '**/*.js'
