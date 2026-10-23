@@ -44471,6 +44471,99 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-267
+  title: Zhixing 驾驶舱外部依赖契约 —— ADR-0456 决策 5 的三件套（registry 锁 repo+SHA / ZHIXING_DASHBOARD_ROOT
+    / check-signals /health 观测轴）从散文变成可校验对象
+  goal: 'ADR-0456 决策 5 承诺把 ~/.local/share/zhixing-dashboard 声明为外部依赖并给契约（registry 条目锁
+    repo+SHA、ZHIXING_DASHBOARD_ROOT 环境变量、check-signals 里加 /health 探针），但实测三件套至今只在四处散文里被转述，零个代码消费点；该依赖当前唯一的在案声明是
+    external-write-roots.yaml 的 id/path/kind/status 四键 —— 没说锁哪个 repo 的哪个 OID，也没说健康怎么判。主仓另有
+    12 处字面量直接指进该目录，而其 services.yaml 条目 generate: false，E1 的比较按构造覆盖不到它们。本轮把三件套落成型：registry
+    条目补 repo/pinned_sha/health{env,path} 三个 optional 键（缺省零破坏）；repo_root 增加一参解析器 external_root(id)，env
+    → registry → 目录不存在返回 None，语义与 install_root() 同族（只是定位器，什么都不搬）；check-signals 增加 observe-only
+    的 /health 分类面（ok/code_drift/unreachable/undetermined），只有条目声明 require_health: true
+    才计入 drifts。本轮不把任何 plist 改道、不推进安装位、不动 services.yaml。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3h
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-23-zhixing-external-dependency-contract.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_truth/registry/external-write-roots.yaml
+  - bin/lib/repo_root.py
+  - bin/ops/cli.py
+  - tests/unit/test_zhixing_external_root_contract.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-267.md
+  - docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+  non_goals:
+  - 不改 services.yaml 任何条目（那 12 处字面量的收口属 B4b 批次 2+，逐批授权）
+  - 不启停 launchd job、不写 ~/Library/LaunchAgents、不碰 crontab
+  - 不把 zhixing-dashboard 并入主仓、不新增子模块、不改其 gitlink
+  - 不拿 pinned_sha 做版本守门（部署经 releases/<40位OID> 前进是常态，固定 OID 基线会产生大量假失败）
+  - 不新增 bin/ 脚本（受 check-bin-quota-diff.py 净增配额约束），只改 repo_root.py 与 ops/cli.py 两个既有文件
+  done_when:
+  - registry 的 zhixing-dashboard 条目同时含 repo/pinned_sha/health.env/health.path 四键，且 health.env
+    在 protocols/port-registry.yaml 的 env 名单里存在（集合反查，非手抄）
+  - external_root('zhixing-dashboard') 三条解析序各有一条断言：登记表 root_env 指名的 env（本机为
+    ZHIXING_DASHBOARD_ROOT）覆盖即赢；无 env 走 registry path（~ 展开）；registry 路径不存在返回 None
+    且不抛异常。env 名只写在登记表里、代码里没有第二份名单（AGENTS.md §7 T10-239 单一来源条）
+  - ops check-signals --json 输出含 health_checks，本机实测 zhixing-dashboard 分类为 ok（服务在跑、/health
+    200、code_drift=false）
+  - 缺省（无任何条目声明 require_health）下 check-signals 的 drifts 计数与 exit code 与改前逐字节等价
+  - 注入「部署仓 HEAD ≠ registry pinned_sha」时探针分类不变；pinned_sha 不得进任何判定路径，由两台不共享
+    失效模式的装置共同钉住——读该 registry 的源文件（扫描面由 registry 文件名导出，非手抄）内 AST 零
+    pinned_sha 读取点，且全 bin/ 读 pinned_sha 的文件集合与被评审的 4 个 submodule-gitlink 站点集合相等。
+    原措辞「git grep -w pinned_sha -- bin/ 零命中」按实测不可达（那 13 处 / 4 个文件读的是无关的子模块
+    gitlink 概念，不在本契约面上），故按交付装置改写，不是放宽判据
+  - tests/unit/test_zhixing_external_root_contract.py 全绿，并在 HOME=<空目录> + 最小 venv 下复跑同样全绿（探针不得摸真实服务）
+  verify:
+  - cmd: env ZHIXING_OBSERVATORY_PORT=$(uv run --no-project --python 3.12 --with pyyaml python -c
+      "import yaml,pathlib; print([k for k,v in
+      yaml.safe_load(pathlib.Path('protocols/port-registry.yaml').read_text())['env_vars'].items()
+      if v=='ZHIXING_OBSERVATORY_PORT'][0])") uv run --no-project --python 3.12 --with pyyaml python
+      bin/ops/cli.py check-signals --json | uv run --no-project --python 3.12 python -c "import json,sys;
+      r=json.load(sys.stdin); print('drifts', len(r.get('drifts',[])), 'health',
+      [(h['id'],h['state']) for h in r.get('health_checks',[])])"
+    expect: 实测「drifts 0 health [('zhixing-dashboard', 'ok')]」。两处修正——端口由 port-registry 反查得出
+      而不是靠本机 env（原措辞在任何未导出该 env 的 shell 上只会得 undetermined）；解释器由
+      `uv --python 3.12` 指名而不是裸 python3（实测 bash -lc 下裸 python3=/usr/bin/python3 3.9.6，
+      cli.py:21 的 `from datetime import UTC` 当场 ImportError，而 zsh 交互下是 homebrew 3.15；
+      AGENTS.md §7 换装置读数不同条）
+  - cmd: python3 -c "import yaml,pathlib; d=yaml.safe_load(pathlib.Path('.omo/_truth/registry/external-write-roots.yaml').read_text());
+      r=[x for x in d['roots'] if x['id']=='zhixing-dashboard'][0]; print(sorted(k for
+      k in ('repo','pinned_sha','health') if k in r))"
+    expect: '[''health'', ''pinned_sha'', ''repo'']'
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u ZHIXING_DASHBOARD_ROOT HOME=$TMPDIR/empty-home
+      uv run --no-project --with pytest --with pytest-timeout --with pyyaml python -m
+      pytest tests/unit/test_zhixing_external_root_contract.py -q -p no:randomly
+    expect: 全绿；hermetic 复跑（AGENTS.md §7 装置面补记：pytest-timeout 必须在 --with 里，rootdir 仍是本检出、pyproject
+      addopts 注入 --timeout=300）
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-23-zhixing-external-dependency-contract.md
+    spec_version: 1.0.0
+    content_digest: sha256:97d888760ac344c062dfad2dcd6171a6220996398c240009e8dd59a19011bd1a
+    decision_ref: decision://accepted/BET-Y2Q4-T10-267
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44600,7 +44693,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 562
+  total_bets: 563
   windows:
   - Y1Q1
   - Y1Q2

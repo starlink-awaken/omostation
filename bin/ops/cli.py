@@ -938,6 +938,106 @@ def main() -> int:
     return args.func(args)
 
 
+def _external_health_checks(root: Path) -> list[dict[str, Any]]:
+    """外部依赖的 `/health` 观测面 (ADR-0456 决策 5 / BET-Y2Q4-T10-267) —— 纯观测。
+
+    条目缺省只有 `health: {env, path}` 时**不影响 exit code**; 只有同条目再声明
+    `require_health: true` 才让非 ok 分类升级成 drift。理由与 reality-check E6 同形:
+    今天这些依赖本来就处在「前进部署属正常态」的位置, 直接计入会让每日 cron 当场翻红
+    而无从修复。
+
+    `pinned_sha` 在这里**一个读取点都没有**: 服务经 `releases/<40 位 OID>` 前进部署,
+    /health 自报的 OID 与部署仓 HEAD 按构造不相等, 拿固定 OID 当基线必然产生大量假失败
+    (AGENTS.md §7「观测器期望 OID 基线必须跟随当前部署 OID」条, T241 24h 观测门实测)。
+
+    任何异常一律折叠成 `undetermined` 而不向上抛 —— 探测装置不可用与依赖不健康必须
+    同形于「非阻塞」, 一次网络抖动或一个裸 python 环境缺包都不能变成 exit 1。
+    """
+    registry = root / ".omo" / "_truth" / "registry" / "external-write-roots.yaml"
+    try:
+        import yaml
+
+        doc = yaml.safe_load(registry.read_text(encoding="utf-8")) or {}
+    except Exception:  # noqa: BLE001 - 登记表读不了 = 没有可观测条目, 不是失败
+        return []
+
+    out: list[dict[str, Any]] = []
+    for entry in doc.get("roots") or []:
+        if not isinstance(entry, dict):
+            continue
+        rid = str(entry.get("id") or "?")
+        health = entry.get("health")
+        require = entry.get("require_health", False)
+        if require is True and not isinstance(health, dict):
+            out.append({"id": rid, "state": "undetermined", "required": True,
+                        "detail": "require_health: true 但缺 health 块"})
+            continue
+        if require is not False and require is not True:
+            out.append({"id": rid, "state": "undetermined", "required": True,
+                        "detail": f"require_health 只接受 true, 实为 {require!r}"})
+            continue
+        if not isinstance(health, dict):
+            continue
+
+        env = health.get("env")
+        path = health.get("path") or "/health"
+        required = require is True
+        if not isinstance(env, str) or not os.environ.get(env, "").strip().isdigit():
+            out.append({"id": rid, "state": "undetermined", "required": required,
+                        "detail": f"端口 env {env} 未声明或非数字"})
+            continue
+
+        port = os.environ[env].strip()
+        url = f"http://127.0.0.1:{port}{path}"
+        try:
+            import urllib.error
+            import urllib.request
+
+            with urllib.request.urlopen(url, timeout=2) as resp:  # noqa: S310 - 固定 127.0.0.1
+                status = getattr(resp, "status", None) or resp.getcode()
+                payload = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as error:
+            out.append({"id": rid, "state": "undetermined", "required": required,
+                        "detail": f"HTTP {error.code}"})
+            continue
+        except (TimeoutError, OSError, urllib.error.URLError):
+            out.append({"id": rid, "state": "unreachable", "required": required,
+                        "detail": url})
+            continue
+        except Exception as error:  # noqa: BLE001 - 响应体不是 JSON object 等
+            out.append({"id": rid, "state": "undetermined", "required": required,
+                        "detail": f"{type(error).__name__}: {str(error)[:60]}"})
+            continue
+
+        if not isinstance(payload, dict):
+            out.append({"id": rid, "state": "undetermined", "required": required,
+                        "detail": f"{status}: 响应体不是 JSON object"})
+        elif payload.get("code_drift"):
+            out.append({"id": rid, "state": "code_drift", "required": required,
+                        "detail": f"{status}: 自报 code_drift"})
+        else:
+            out.append({"id": rid, "state": "ok", "required": required,
+                        "detail": f"{status}"})
+    return out
+
+
+def _health_drifts(health_checks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """把「条目自己声明了 require_health: true 且分类非 ok」升级成 drift, 其余一律不计数。
+
+    单独成函数是为了让缺省 observe-only 这件事可被直接断言 (cmd_check_signals 会跑
+    `crontab -l`, 那是 host 面, 测试不得依赖 —— AGENTS.md §7 hermetic 条)。
+    """
+    return [
+        {
+            "id": item["id"],
+            "scheduler": "external",
+            "anchor": f"health={item['state']} {item['detail']}",
+        }
+        for item in health_checks
+        if item["required"] and item["state"] != "ok"
+    ]
+
+
 def cmd_check_signals(args: argparse.Namespace) -> int:
     """Drift 检测 (BET-Y1Q4-T16): enabled 条目 anchor 与本机现实核验。
 
@@ -945,6 +1045,7 @@ def cmd_check_signals(args: argparse.Namespace) -> int:
     launchd -> ~/Library/LaunchAgents/<label>.plist 存在
     liveness.signal file 类型 -> 路径存在 (freshness 由 status 负责, 此处只查存在性)
     exit 0 = 零 drift; exit 1 = 有 drift。
+    外部依赖 `/health` 只观测, 非 ok 不计数, 除非同条目声明 require_health: true。
     """
     import re
     import subprocess
@@ -1006,6 +1107,9 @@ def cmd_check_signals(args: argparse.Namespace) -> int:
         if anchor:
             drifts.append({"id": sid, "scheduler": scheduler, "anchor": anchor})
 
+    health_checks = _external_health_checks(WORKSPACE)
+    drifts.extend(_health_drifts(health_checks))
+
     if args.json:
         print(
             json.dumps(
@@ -1014,6 +1118,7 @@ def cmd_check_signals(args: argparse.Namespace) -> int:
                     "drifts": drifts,
                     "drift_count": len(drifts),
                     "crontab_error": crontab_error,
+                    "health_checks": health_checks,
                 },
                 ensure_ascii=False,
                 indent=1,
@@ -1025,6 +1130,11 @@ def cmd_check_signals(args: argparse.Namespace) -> int:
             print(f"  [WARN] crontab 不可读: {crontab_error}")
         for d in drifts:
             print(f"  [DRIFT] {d['id']} ({d['scheduler']}): {d['anchor']}")
+        for item in health_checks:
+            print(
+                f"  [HEALTH] {item['id']}: {item['state']} ({item['detail']})"
+                f"{' — required' if item['required'] else ''}"
+            )
         if not drifts:
             print("  [OK] 所有 enabled 条目 anchor 与本机现实一致")
     return 1 if drifts else 0
