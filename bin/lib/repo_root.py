@@ -10,6 +10,10 @@
   写仓外(机器级)路径      → 必须 canonical_root(), 锚定规范检出
   写运行态(ledger/state)  → state_root(), 由 profile 声明, 未声明时等于 code_root()
   定位运行时安装位        → install_root(), 未落位返回 None; 它只回答"在哪", 不改任何解析结果
+  定位外部依赖代码根      → external_root("<registry id>"): 登记表 root_env 指名的 env →
+                            登记表 path (~ 展开) → None;
+                            单源 .omo/_truth/registry/external-write-roots.yaml (ADR-0456 决策 5),
+                            同样是定位器 —— 不建目录、不搬东西、不拿 pinned_sha 判版本
   读运行态投影(health/brief/governance-data…) →
     projection_read(code_root, name, state_root=state_root()),
                             映射单源自 .omo/_truth/registry/runtime-projections.yaml,
@@ -124,6 +128,78 @@ def install_root() -> Path | None:
     env = os.environ.get(INSTALL_ROOT_ENV)
     candidate = Path(env).expanduser() if env else Path.home() / INSTALL_ROOT_RELATIVE
     return candidate if (candidate / MARKER).is_file() else None
+
+
+EXTERNAL_ROOTS_REGISTRY_RELATIVE = (
+    Path(".omo") / "_truth" / "registry" / "external-write-roots.yaml"
+)
+
+
+def _external_root_decls(
+    registry_root: Path | None = None,
+) -> dict[str, dict[str, str]]:
+    """外部写根登记表: id → {path, root_env} 原始串 (path 可能含 `~`), 缺键即空串。
+
+    不 import yaml —— 与 `_projection_registry` 同一个理由: meta-doctor 与 cron 用裸
+    python3 跑, 依赖一旦变成 pyyaml 就会在那里 ImportError。本函数只需要标量层的
+    `id`/`path`/`root_env`, 所以嵌套段 (`patterns:`、`health:`) 的子键一律不看 —— 尤其
+    `health.path` 与根 `path` 同名, 按缩进区分, 收进来就会把 `/health` 当目录根。
+
+    env 覆盖名写在登记表里而不是代码里, 是为了只有一份来源: 代码侧手抄一张 id→env
+    名单, 就等着登记表改名而名单不跟着改 (AGENTS.md §7「契约名单单一来源」条)。
+    """
+    path = (registry_root or code_root()) / EXTERNAL_ROOTS_REGISTRY_RELATIVE
+    if not path.is_file():
+        return {}
+
+    table: dict[str, dict[str, str]] = {}
+    in_block = False
+    current: str | None = None
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        text = line.strip()
+        if not text:
+            continue
+        indent = len(line) - len(line.lstrip())
+        if indent == 0:
+            in_block = text.partition(":")[0] == "roots"
+            current = None
+            continue
+        if not in_block:
+            continue
+        if indent == 2 and text.startswith("- "):
+            key, sep, value = text[2:].partition(":")
+            if key.strip() == "id" and sep:
+                current = value.strip().strip('"').strip("'")
+                table[current] = {"path": "", "root_env": ""}
+            else:
+                current = None
+            continue
+        if indent == 4 and current is not None:
+            key, sep, value = text.partition(":")
+            name = key.strip()
+            if sep and name in ("path", "root_env"):
+                table[current][name] = value.strip().strip('"').strip("'")
+    return table
+
+
+def external_root(root_id: str, *, registry_root: Path | None = None) -> Path | None:
+    """外部依赖代码根的落位定位器; 未落位返回 None (ADR-0456 决策 5)。
+
+    解析序: 登记表 `root_env` 指名的 env → 登记表声明的 `path` (~ 展开) → 目录不存在
+    返回 None。与 `install_root()` 同族: 只回答"在哪", 既不搬东西也不建目录。
+    未登记的 root_id 抛 KeyError —— 调用方写错 id 是编码缺陷, 静默给 None 会把拼写
+    错误伪装成"这台机器没装"; 登记了却没 path 抛 ValueError —— 登记表自己坏了必须响。
+    """
+    table = _external_root_decls(registry_root)
+    if root_id not in table:
+        raise KeyError(f"external root not declared: {root_id}")
+    decl = table[root_id]
+    if not decl["path"]:
+        raise ValueError(f"external root declared without path: {root_id}")
+    override = os.environ.get(decl["root_env"]) if decl["root_env"] else None
+    candidate = Path(override or decl["path"]).expanduser()
+    return candidate if candidate.is_dir() else None
 
 
 class ImportRootMismatch(ValueError):
@@ -408,6 +484,7 @@ __all__ = (
     "canonical_root",
     "code_root",
     "event_ledger_path",
+    "external_root",
     "import_root_report",
     "install_root",
     "is_worktree",
