@@ -1493,12 +1493,19 @@ def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None 
         age = age_seconds(last_success)
         if age is not None:
             source_ages.append(age)
+        # 真正的信号是**年龄**而不是状态标签: 只要这个源还留着一份界内的
+        # 上次成功观测, 门禁就应当认它。标签会因采集器而异 —— orchestrator 对
+        # error 路径报 STALE_UNAVAILABLE, 采集器对非零退出报 FAIL, 两者语义相同
+        # 却只有一个被接受 (2026-10-23 实测: 界内的 STALE_UNAVAILABLE/UNAVAILABLE
+        # 让 A9 转 PARTIAL, 尽管源的上次成功观测都在 6h 界内)。
+        bounded = age is not None and age <= 21600
         if not isinstance(state, dict) or not (
             status == "OK"
             # Deferred means the round was skipped because the host was overloaded,
             # not that the source failed; the previous observation still stands.
             or status == "DEFERRED"
-            or (status == "STALE_UNAVAILABLE" and age is not None and age <= 21600)
+            # 界内的降级 (含采集器自报的 FAIL) 视同 STALE_UNAVAILABLE。
+            or (bounded and status in ("STALE_UNAVAILABLE", "FAIL"))
         ):
             bad_sources.append(name)
     # 降级必须带原因: 只看得到 "cockpit_sources" 时, 无法分辨是远端不可达、
