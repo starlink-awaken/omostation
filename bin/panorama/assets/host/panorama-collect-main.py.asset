@@ -1323,6 +1323,95 @@ def collect_a8_gate() -> dict:
     }
 
 
+def collect_cockpit_source_health() -> dict:
+    """cockpit 每个源的健康投影: 状态 + **降级原因** + 关键时间戳。
+
+    原因由 cockpit 的 `source_states` 提供, 这里只做归一化与截断, 不解释。
+    缺 `current.json` 时返回 `available: False` 并给出原因 —— 与
+    `meta-doctor` 的 absent 语义一致, 不要让调用方去猜。
+    """
+    cockpit_path = Path.home() / ".local/share/zhixing-dashboard/current.json"
+    try:
+        cockpit = json.loads(cockpit_path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001 - 缺失/损坏都要可观测
+        return {
+            "schema": "panorama-source-health/v1",
+            "available": False,
+            "reason": f"cockpit projection unreadable: {type(exc).__name__}",
+            "generated_at": None,
+            "sources": {},
+        }
+    states = cockpit.get("source_states") if isinstance(cockpit.get("source_states"), dict) else {}
+    now = datetime.now(UTC)
+    sources = {}
+    for name, state in sorted(states.items()):
+        if not isinstance(state, dict):
+            continue
+        last_success = state.get("last_success_at")
+        age_hours = None
+        if isinstance(last_success, str):
+            try:
+                age_hours = round(
+                    (now - datetime.fromisoformat(last_success.replace("Z", "+00:00"))).total_seconds() / 3600.0, 2
+                )
+            except ValueError:
+                age_hours = None
+        error = state.get("error")
+        if isinstance(error, dict):
+            error = json.dumps(error, ensure_ascii=False, sort_keys=True)[:300]
+        elif isinstance(error, str):
+            error = error[:300]
+        else:
+            error = None
+        sources[str(name)] = {
+            "status": state.get("status") or "UNKNOWN",
+            "error": error,
+            "last_success_at": last_success,
+            "last_success_age_hours": age_hours,
+            "last_attempt_at": state.get("last_attempt_at"),
+            "error_class": state.get("error_class"),
+        }
+    return {
+        "schema": "panorama-source-health/v1",
+        "available": True,
+        "generated_at": cockpit.get("generated_at"),
+        "source_count": len(sources),
+        "degraded_count": sum(1 for s in sources.values() if s["status"] != "OK"),
+        "sources": sources,
+    }
+
+
+def _cockpit_source_reasons(source_states: dict, names: list[str]) -> str:
+    """把降级源的原因压成一行, 供 A9 detail 直接展示。
+
+    形如 `portfolio=STALE_UNAVAILABLE(remote_error); multica=DEFERRED(host load)`。
+    原因缺失时只给状态 —— 宁可少说, 不要编。
+    """
+    parts = []
+    for name in names:
+        state = source_states.get(name) if isinstance(source_states.get(name), dict) else {}
+        status = state.get("status") or "UNKNOWN"
+        error = state.get("error")
+        reason = ""
+        if isinstance(error, dict):
+            # 嵌套结构 (如 portfolio 的 remote_error) 取最内层可读的原因
+            stack, seen = [error], set()
+            while stack:
+                node = stack.pop()
+                if not isinstance(node, dict) or id(node) in seen:
+                    continue
+                seen.add(id(node))
+                for key in ("reason", "phase", "type"):
+                    value = node.get(key)
+                    if isinstance(value, str) and value:
+                        reason = f"{key}={value}" if not reason else f"{reason}/{key}={value}"
+                stack.extend(node.values())
+        elif isinstance(error, str) and error:
+            reason = error
+        parts.append(f"{name}={status}" + (f"({reason})" if reason else ""))
+    return "; ".join(parts)
+
+
 def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None = None) -> dict:
     """Project A9 only when dashboard, ASD, and Cockpit projections are fresh.
 
@@ -1401,8 +1490,13 @@ def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None 
             or (status == "STALE_UNAVAILABLE" and age is not None and age <= 21600)
         ):
             bad_sources.append(name)
+    # 降级必须带原因: 只看得到 "cockpit_sources" 时, 无法分辨是远端不可达、
+    # 投影过期还是采集器自身失败 —— 2026-10-23 实测 A9 转 PARTIAL 后要人工去
+    # 翻 cockpit current.json 才知道为什么。原因由 cockpit 的 source_states
+    # 提供 (status + error), 这里原样带出, 不做二次解释。
     if bad_sources:
         missing.append("cockpit_sources")
+        missing.append(_cockpit_source_reasons(source_states, bad_sources))
 
     if missing:
         return {
@@ -5134,6 +5228,10 @@ def build_payload() -> dict:
         "claims_observation_progress": collect_claims_observation_progress(),
         "claims_lifecycle_authorization": collect_claims_lifecycle_authorization(),
         "reference_cell": collect_reference_cell_gate(),
+        # 每个 cockpit 源的降级原因。A9 只看状态, 原因只在 cockpit 的
+        # current.json 里 —— 出问题时要人工去翻那个 25MB 文件。这里把
+        # status/error/时间戳压成一份可索引的投影 (2026-10-23)。
+        "source_health": collect_cockpit_source_health(),
         "asd": asd,
         "role_registry": collect_role_registry(),
         "probes": collect_probes(),
