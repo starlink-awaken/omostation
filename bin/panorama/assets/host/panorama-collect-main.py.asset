@@ -1046,9 +1046,11 @@ def collect_a6_gate() -> dict:
             cached_probes = cached.get("probes", {}) if isinstance(cached.get("probes"), dict) else {}
             cached_r0 = cached.get("r0_transactions", {}) if isinstance(cached.get("r0_transactions"), dict) else {}
             if (
-                cached.get("ok") is True and 0 <= cached_age <= 21600
-                and cached_probes.get("passed") == cached_probes.get("total") and cached_probes.get("total", 0) > 0
+                # runtime_ready 取决于 Orca 桌面窗口是否开着, 不参与准入判定。
+                cached.get("probes", {}).get("passed") == cached.get("probes", {}).get("total")
+                and cached.get("probes", {}).get("total", 0) > 0
                 and cached_r0.get("accepted", 0) >= 1
+                and 0 <= cached_age <= 21600
             ):
                 return {
                     "id": "A6", "title": "Orca R0 准入", "verdict": "PASS",
@@ -1076,15 +1078,9 @@ def collect_a6_gate() -> dict:
     )
     runtime_ready = report.get("runtime_ready") is True
     trust_ok = write_guard.get("ok") is True
-    passed = (
-        report.get("ok") is True
-        and runtime_ready
-        and probe_total > 0
-        and probe_pass == probe_total
-        and accepted >= 1
-        and transactions_pass
-        and trust_ok
-    )
+    probes_ok = probe_total > 0 and probe_pass == probe_total
+    evidence_ok = accepted >= 1 and transactions_pass
+    passed = report.get("ok") is True and probes_ok and evidence_ok and trust_ok
 
     if passed:
         try:
@@ -1095,6 +1091,21 @@ def collect_a6_gate() -> dict:
             ))
         except Exception:
             pass
+
+    if passed and not runtime_ready:
+        # runtime_ready 反映 Orca 桌面窗口是否开着 (关窗时 runtime.state =
+        # graph_not_ready), 不是 R0 准入的本体。探针/R0 证据/写保护都过时,
+        # 门禁应当绿, 但要把窗口状态写在明处 —— 2026-10-23 实测: 窗口一关
+        # A6 立刻 NOT_ADMITTED, 而 6 个探针全过。
+        return {
+            "id": "A6", "title": "Orca R0 准入", "verdict": "PASS",
+            "detail": (
+                f"read-only verifier complete: probes {probe_pass}/{probe_total}, "
+                f"R0 evidence {accepted}/1, write_guard OK; "
+                "orca desktop window closed, runtime not ready"
+            ),
+            "live": False, "depends_on": ["A8"],
+        }
 
     if not passed:
         return {
