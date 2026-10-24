@@ -51,7 +51,10 @@ if [[ "$CHECK_ONLY" = 1 ]]; then
     echo "锚点一致: $cur"
     exit 0
   fi
-  echo "锚点落后: 锚点=$cur 目标=$target — 常驻族将静默跑旧代码, 跑 bin/ssot/anchor-install-root.sh 重锚"
+  lag=$(git -C "$INSTALL_ROOT" rev-list --count "${cur}..${target}" 2>/dev/null || echo "?")
+  days=$(( ( $(date +%s) - $(git -C "$INSTALL_ROOT" log -1 --format=%ct 2>/dev/null || date +%s) ) / 86400 ))
+  echo "锚点落后 ${lag} 个提交 (锚点距今 ${days} 天): 锚点=$cur 目标=$target"
+  echo "  → 常驻族在跑旧代码; 重锚: bin/ssot/anchor-install-root.sh"
   exit 1
 fi
 
