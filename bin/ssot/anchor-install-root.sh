@@ -26,6 +26,7 @@ fi
 
 current_anchor() { git -C "$INSTALL_ROOT" rev-parse HEAD 2>/dev/null || echo "(none)"; }
 
+CHECK_ONLY=0
 case "${1:-}" in
   --status)
     echo "install_root: $INSTALL_ROOT"
@@ -34,20 +35,23 @@ case "${1:-}" in
     echo "checkout_sha: $(git -C "$CHECKOUT" rev-parse HEAD 2>/dev/null || echo '-')"
     exit 0
     ;;
+  --check)
+    CHECK_ONLY=1
+    ;;
 esac
 
 target="${1:-}"
-if [[ -z "$target" ]]; then
+if [[ -z "$target" || "$target" == "--check" ]]; then
   target="$(git -C "$CHECKOUT" rev-parse HEAD)"
 fi
 cur="$(current_anchor)"
 
-if [[ "${2:-}" == "--check" ]]; then
+if [[ "$CHECK_ONLY" = 1 ]]; then
   if [[ "$cur" == "$target" ]]; then
     echo "锚点一致: $cur"
     exit 0
   fi
-  echo "锚点落后: 锚点=$cur 目标=$target"
+  echo "锚点落后: 锚点=$cur 目标=$target — 常驻族将静默跑旧代码, 跑 bin/ssot/anchor-install-root.sh 重锚"
   exit 1
 fi
 
