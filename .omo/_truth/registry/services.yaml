@@ -5,7 +5,7 @@ last-reviewed: 2026-07-03
 ---
 services:
 - id: governance.watch
-  enabled: false
+  enabled: true
   scheduler: launchd
   trigger: watchpaths
   label: com.l4.governance.watch
@@ -40,7 +40,11 @@ services:
   generated_by: bin/mof/gen-service-configs.py
   note: 原 install-watch-agent.py 硬编码 plist (sys.executable 炸弹), 治本后从本注册生成
   depends_on: []
-  disabled_reason: "macOS 系统设置「允许在后台」已关闭 (sfltool dumpbtm: disallowed), launchd 不加载; 注册表对齐现实, 重新允许后改回 true (TASK-F54F176A, 2026-09-28)"
+  disabled_reason: "2026-10-25 recheck: the macOS background authorization
+    that TASK-F54F176A (2026-09-28) recorded as closed is now stale --
+    sfltool dumpbtm shows /opt/homebrew/bin/python3 Disposition =
+    [enabled, allowed, notified], and a manual bootstrap gave runs=1/exit=0
+    with WatchPaths firing (state_stale events written). Flipped to enabled=true."
 - id: evidence-smoke
   enabled: true
   scheduler: gha

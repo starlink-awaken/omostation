@@ -9,6 +9,15 @@ scope: workspace-root
 # cache, generated, or local-machine surfaces. Any other ignored root
 # directory is treated as an unregistered shadow surface.
 allowed_ignored_dirs:
+  # .arxq_work 是外部工具 (arxq) 的一次性分析工作区 (论文 grep 脚本 +
+  # 抽取文本), 会话级临时数据。与 .pytest_cache / .ruff_cache 同性质 ——
+  # 外部工具产物但落在本仓根下, 故显式注册, 否则被判 ignored-unregistered。
+  # 2026-10-25 纳入 (mbp root-directory-governance FAIL 后注册)。
+  - .arxq_work
+  # tokensave serve 的本地 sqlite 库 (~/.local/bin/tokensave serve 常驻,
+  # 实时写入 tokensave.db)。已在 .gitignore, 但未同步本政策 -> 被判
+  # ignored-unregistered 目录卫生违规。2026-10-25 补登。
+  - .tokensave
   - .artifacts
   - .codebase-memory
   - .claude
@@ -65,6 +74,16 @@ allowed_ignored_dirs:
 # explicitly named with an owner and lifecycle. A new ignored root must not
 # be hidden by adding a broad wildcard here.
 local_surfaces:
+  .arxq_work:
+    owner: workspace-tooling
+    class: client-cache
+    lifecycle: disposable
+    reason: arxq external-tool scratch workspace (one-off analysis scripts)
+  .tokensave:
+    owner: workspace-tooling
+    class: runtime-state
+    lifecycle: local
+    reason: tokensave serve local sqlite store (live daemon writes it)
   .claude:
     owner: workspace-tooling
     class: client-metadata

@@ -580,3 +580,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0450: cockpit-ui 以 submodule 形态回归主仓（第 15 子模块，gitlink 版本锚定） — **ACCEPTED** | 2026-09-04 | xiamingxing | 0450-cockpit-ui-submodule-reintegration.md
 - ADR-0451: HITL Proposal System — file-based approval gate for harness stage_execute — **ACCEPTED** | 2026-09-04 | xiamingxing | 0451-hitl-proposal-system.md
 - ADR-0452: Scene System v3 Architecture — BOS-driven execution, 5-tier lifecycle, calibration engine, anti-corrosion layer — **ACCEPTED** | 2026-09-07 | governance-team | 0452-scene-v3-architecture.md
+- ADR-0466: 全系统真实性契约与零 Mock 治理规范 — **ACCEPTED** | 2026-10-19 | governance-team | 0466-system-authenticity-and-zero-mock-contract.md
