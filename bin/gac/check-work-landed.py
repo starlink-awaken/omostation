@@ -326,7 +326,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="dump current blocking run_ids as baseline grace list (for M2 migration).",
     )
-    args = parser.parse_args(argv)
+    args = parser.parse_args()
 
     # M2: --dump-baseline 输出当前 blocking run_ids (生成 grace 清单)
     if args.dump_baseline:
