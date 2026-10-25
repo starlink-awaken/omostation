@@ -383,6 +383,8 @@ data/chain-runs/
 bin/.omo/
 .commandcode/
 runtime/mos/
+# arxq 外部工具的一次性分析工作区 (会话级临时数据, 非治理对象)
+.arxq_work
 .tokensave
 .claude-flow/
 runtime/dashboard/
