@@ -35,7 +35,7 @@ SPEC_MARKER_READINGS = {
     ".omo/state": 103,
     ".omo/_delivery": 82,
     "runtime": 51,
-    ".omo/_knowledge": 62,
+    ".omo/_knowledge": 63,
     "kos": 2,
 }
 SPEC_GATED_SITES = 154
