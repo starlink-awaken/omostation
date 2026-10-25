@@ -40,7 +40,7 @@ python3 bin/gac/kos-seed-import.py --prefer-new --limit 2000 \
   --root ~/Documents/@个人
 
 # 计数（运行时 DB，gitignored）
-python3 -c "import sqlite3; print(sqlite3.connect('kos/kos-index.sqlite').execute('select count(*) from documents').fetchone()[0])"
+python3 -c "import sqlite3; print(sqlite3.connect('data/kos/kos-index.sqlite').execute('select count(*) from documents').fetchone()[0])"
 ```
 
 ### CLI 要点

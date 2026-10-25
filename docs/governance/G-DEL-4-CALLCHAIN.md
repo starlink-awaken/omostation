@@ -24,7 +24,7 @@ agent-A (writer)
     │  cockpit MCP shared_context_read  ──或──  shared-context-cli read
     ▼
 agent-B (reader)  — 可见性：readers 空=全员；非空=白名单
-    │  shared-context-cli export-kos --db kos/kos-index.sqlite
+    │  shared-context-cli export-kos --db data/kos/kos-index.sqlite
     ▼
 KOS documents (canonical_path=gbrain://shared-context/...)
     │  shared-context-cli retrieve-kos --query collab.handoff
@@ -47,10 +47,10 @@ python3 bin/delivery/shared-context-cli.py read \
   --reader agent-B --key collab.handoff --scope bet-b7da
 
 python3 bin/delivery/shared-context-cli.py export-kos \
-  --scope bet-b7da --db kos/kos-index.sqlite
+  --scope bet-b7da --db data/kos/kos-index.sqlite
 
 python3 bin/delivery/shared-context-cli.py retrieve-kos \
-  --query collab.handoff --db kos/kos-index.sqlite
+  --query collab.handoff --db data/kos/kos-index.sqlite
 ```
 
 ## MCP（cockpit）

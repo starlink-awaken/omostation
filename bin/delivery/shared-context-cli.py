@@ -8,9 +8,9 @@ Usage:
     --reader agent-B --key collab.handoff --scope bet-b7da
   python3 bin/delivery/shared-context-cli.py list --reader agent-B --scope bet-b7da
   python3 bin/delivery/shared-context-cli.py export-kos --scope bet-b7da \\
-    --db kos/kos-index.sqlite
+    --db data/kos/kos-index.sqlite
   python3 bin/delivery/shared-context-cli.py retrieve-kos --query collab.handoff \\
-    --db kos/kos-index.sqlite
+    --db data/kos/kos-index.sqlite
 """
 
 from __future__ import annotations
