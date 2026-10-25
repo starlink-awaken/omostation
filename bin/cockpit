@@ -11,12 +11,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin" / "lib"))
-from repo_root import canonical_root  # noqa: E402
+from repo_root import code_root  # noqa: E402
 
 # Self-heal interpreter: if running under generic python without rich, re-exec with cockpit's venv python
-# 解释器路径经 canonical_root() 取 —— 写机器级路径必须锚定规范检出,
-# 不能用 __file__ 反推 (worktree 里跑会把 worktree 路径写死进配置)。
-_COCKPIT_VENV_PYTHON = canonical_root() / "projects/cockpit/.venv/bin/python"
+# 解释器路径经 code_root() 取 —— 这是**读侧** (用它 import cockpit 包), 跟随当前检出即可。
+# 不用 canonical_root(): 那是写机器级配置用的, 在 CI / 临时检出里会因定位不到
+# ~/Workspace 而抛错 (本仓 CI 的检出根不是 ~/Workspace)。原先硬编码
+# /Users/xiamingxing/Workspace 同样不可取 —— 换个检出根就失效。
+_COCKPIT_VENV_PYTHON = code_root() / "projects/cockpit/.venv/bin/python"
 if _COCKPIT_VENV_PYTHON.is_file() and sys.executable != str(_COCKPIT_VENV_PYTHON):
     try:
         import rich
