@@ -3,9 +3,9 @@ id: bin/lib/repo_root.py
 name: Repo Root
 category: governance
 owner: governance-team
-description: "仓库根的唯一解析处（库模块 + 只读 CLI）：code_root() 读侧跟随检出、canonical_root() 锚定写机器级配置、state_root()/event_ledger_path() 承载 profile 声明的写侧、install_root() 定位运行时安装位（B4a 起存在；只定位，不改变任何解析结果）。`--json` 打印各层根，供人与 agent 问一句「我在哪个根」。契约 ADR-0456，护栏 tests/unit/test_repo_root_profile.py。"
+description: "仓库根的唯一解析处（库模块 + 只读 CLI）：code_root() 读侧跟随检出、canonical_root() 锚定写机器级配置、state_root()/event_ledger_path() 承载 profile 声明的写侧、install_root() 定位运行时安装位（B4a 起存在；只定位，不改变任何解析结果）、kos_home()/kos_index_path() 解析 KOS 检索索引位置（KOS_HOME 优先，否则 <code_root>/data/kos；2026-10-25 收口，此前仓内四处各写各的）。`--json` 打印各层根，供人与 agent 问一句「我在哪个根」。契约 ADR-0456，护栏 tests/unit/test_repo_root_profile.py。"
 inputs:
-  - "OMOSTATION_ROOT / OMOSTATION_STATE_ROOT / OMO_EVENT_LEDGER_DB / OMOSTATION_INSTALL_ROOT（全部可选，未设即历史布局）"
+  - "OMOSTATION_ROOT / OMOSTATION_STATE_ROOT / OMO_EVENT_LEDGER_DB / OMOSTATION_INSTALL_ROOT / KOS_HOME（全部可选，未设即历史布局）"
 outputs:
   - type: exit_code
   - type: json

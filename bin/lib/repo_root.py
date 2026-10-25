@@ -57,6 +57,15 @@ MARKER = Path("docs") / "project-registry.yaml"
 STATE_ROOT_ENV = "OMOSTATION_STATE_ROOT"
 LEDGER_DB_ENV = "OMO_EVENT_LEDGER_DB"
 LEDGER_RELATIVE = Path("runtime") / "omo" / "event-ledger.sqlite3"
+# KOS 知识库根 —— 摄入产物 (运行态, gitignored), 与 ledger 同类。
+# 契约: KOS_HOME 环境变量优先, 否则 <code_root>/data/kos。
+# 2026-10-25: 此前仓内 4 处各写各的 (Workspace/kos 旧布局 / ~/.kos /
+# ~/.kos_home / 包安装目录), KOS 包自身的 fallback 三者互不相同, 于是
+# CLI 写一处、仓内检查器读另一处 —— 即
+# docs/reports/kos-governance-ingestion-2026-09-27.md 记的「KOS 双库现实」。
+KOS_HOME_ENV = "KOS_HOME"
+KOS_RELATIVE = Path("data") / "kos"
+KOS_INDEX_FILENAME = "kos-index.sqlite"
 
 INSTALL_ROOT_ENV = "OMOSTATION_INSTALL_ROOT"
 INSTALL_ROOT_RELATIVE = Path(".local") / "opt" / "omostation"
@@ -108,6 +117,28 @@ def event_ledger_path() -> Path:
     if env:
         return Path(env).expanduser()
     return state_root() / LEDGER_RELATIVE
+
+
+def kos_home() -> Path:
+    """KOS 知识库根 (摄入产物所在目录)。
+
+    KOS_HOME 优先; 未声明则落在 <code_root>/data/kos —— 与
+    services.yaml 里 kos.web 服务的声明、以及仓内三个读侧 (mcp-server-kos /
+    test-mcp-kos / generate-brief) 的硬编码逐字节一致。
+
+    为什么不用 KOS 包自己的 fallback: 那是三处互不相同的默认值
+    (~/.kos / ~/.kos_home / 包安装目录), 见 _default_workspace_config.py /
+    ontology/store.py / mcp/server.py。跟随 env 才能让 KOS CLI 与仓内工具读写同源。
+    """
+    env = os.environ.get(KOS_HOME_ENV)
+    if env:
+        return Path(env).expanduser().absolute()
+    return code_root() / KOS_RELATIVE
+
+
+def kos_index_path() -> Path:
+    """KOS 检索索引 (sqlite) 路径。"""
+    return kos_home() / KOS_INDEX_FILENAME
 
 
 def is_worktree(path: Path | str) -> bool:

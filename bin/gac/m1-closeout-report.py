@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
-from repo_root import state_file_read  # noqa: E402
+from repo_root import kos_index_path, state_file_read  # noqa: E402
 
 UTC = UTC
 
@@ -238,14 +238,12 @@ def check_g_conv_5_write_owner(root: Path) -> dict[str, Any]:
 def check_g_conv_6_kos(code_root: Path, ssot_root: Path) -> dict[str, Any]:
     """KOS seed tooling present; index growth is ops (non-blocking if seed exists)."""
     seed = code_root / "bin/gac/kos-seed-import.py"
-    # common kos index locations (best-effort) — prefer live ssot/runtime tree
-    candidates = [
-        ssot_root / "kos" / "kos-index.sqlite",
-        ssot_root / "runtime" / "kos" / "kos-index.sqlite",
-        ssot_root / ".omo" / "kos" / "kos-index.sqlite",
-        code_root / "kos" / "kos-index.sqlite",
-        code_root / "runtime" / "kos" / "kos-index.sqlite",
-    ]
+    # KOS 检索索引位置: 单一解析器 (KOS_HOME 优先, 否则 <code_root>/data/kos)。
+    # 旧候选列表全是 2026-09 前的布局 (kos/ runtime/kos/ .omo/kos/) —— 那些
+    # 目录已 gitignore 且仓内不存在, 于是 index_present 恒 False (声明在跑却
+    # 看不到), 与仓内三个读侧 (mcp-server-kos / test-mcp-kos / generate-brief)
+    # 实际读的库不是同一个。
+    candidates = [kos_index_path()]
     index = next((p for p in candidates if p.is_file()), None)
     ok = seed.is_file()  # hard: seed path exists; index optional
     return _check(

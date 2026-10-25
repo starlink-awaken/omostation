@@ -10,6 +10,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin" / "lib"))
+from repo_root import kos_home  # noqa: E402
+
 SCHEMA = "documents.kos-preflight.v1"
 LEGACY_EXECUTABLE = Path("/usr/local/bin/kos")
 DEFAULT_DOMAINS = (
@@ -90,7 +93,10 @@ def run_kos_ingest(
         print(json.dumps(_unavailable(f"canonical KOS CLI is missing: {kos_cli}"), ensure_ascii=False))
         return 2
     env = os.environ.copy()
-    env["KOS_HOME"] = str(workspace / "kos")
+    # KOS_HOME 指向仓内 canonical 位置 (data/kos), 与 services.yaml 的
+    # kos.web 声明、仓内三个读侧工具一致。旧写法 workspace/kos 是
+    # 2026-09 前的布局 (该目录已 gitignore) => 摄入进一个没人读的库。
+    env["KOS_HOME"] = str(kos_home())
     exit_code = 0
     results: list[dict[str, object]] = []
     for relative in domain_relative:

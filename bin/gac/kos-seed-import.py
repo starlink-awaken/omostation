@@ -22,8 +22,14 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-WORKSPACE = Path(__file__).resolve().parents[2]
-DEFAULT_DB = WORKSPACE / "kos" / "kos-index.sqlite"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root, kos_index_path  # noqa: E402
+
+WORKSPACE = code_root()
+# KOS 检索索引: 单一解析器 (KOS_HOME 优先, 否则 <code_root>/data/kos)。
+# 旧默认值 WORKSPACE/kos/kos-index.sqlite 指向 2026-09 前的布局 ——
+# 该目录已 gitignore, 写入会被静默丢弃 (建了目录也进不了仓内检查器读的库)。
+DEFAULT_DB = kos_index_path()
 
 SKIP_PARTS = {".git", "node_modules", ".venv", "__pycache__", ".tox", "dist", "build"}
 

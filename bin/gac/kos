@@ -2,10 +2,15 @@
 # bin/kos — KOS (Knowledge Operating System) 主仓便捷入口
 # 自动注入环境变量与项目运行环境 (BOS-v6 治理标准)
 
-# KOS_HOME 跟随 kairon 默认 (kos/config.py: Path.home()/".kos"); 原写死的 Workspace/kos 并不存在
-export KOS_HOME="${KOS_HOME:-$HOME/.kos}"
 # 仓库根由脚本位置推算 (bin/gac/kos → ../..), 不写死; 可用 WORKSPACE 覆盖
 WORKSPACE="${WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)}"
+# KOS_HOME 解析: 已有则尊重 (用户显式声明), 否则落在 <WORKSPACE>/data/kos ——
+# 与仓内三个读侧 (mcp-server-kos / test-mcp-kos / generate-brief) 及
+# services.yaml 的 kos.web 声明同源。旧默认 ~/.kos 是 KOS 包自身 fallback 之一
+# (另有 ~/.kos_home / 包安装目录), 三者互不相同 ⇒ CLI 写一处、仓内检查器读
+# 另一处 (docs/reports/kos-governance-ingestion-2026-09-27.md 记的「KOS 双库
+# 现实」)。bin/lib/repo_root.py:kos_home() 是同一判据的 Python 版。
+export KOS_HOME="${KOS_HOME:-$WORKSPACE/data/kos}"
 
 # 支持 --help
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ]; then

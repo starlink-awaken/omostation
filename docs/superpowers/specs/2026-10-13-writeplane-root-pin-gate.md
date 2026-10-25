@@ -31,16 +31,25 @@ code/state 双根；`omo_paths` + 9 处 `DEFAULT_LEDGER` + `OMO_PRINCIPAL_ID` �
 > `.omo/state` + `runtime` 读数与基线**零变化**（仍 154 站点 / 144 对），
 > 仅排除面 `.omo/_knowledge` 62 → 63、全表 460 → 461。
 
+> 2026-10-25 第二次复核（KOS 位置收口）：`gac-consensus-inject.py` 与
+> `kos-seed-import.py` 的 `WORKSPACE / "kos/..."` 是 2026-09 前的旧布局
+> （该目录已 gitignore 且仓内不存在），改走 `repo_root.kos_index_path()`
+> （KOS_HOME 优先，否则 `<code_root>/data/kos`）后：
+> `kos` 桶 2 → **0**（废弃路径彻底消除）；`.omo/_knowledge` 63 → **62**
+> （`kos-seed-import` 的 `WORKSPACE / ".omo" / "_knowledge"` 一处不再是
+> `__file__` 派生名 —— `WORKSPACE` 改由 `code_root()` 提供，根逐字节相同
+> 但拼法收进 SSOT，判据②不再命中）。**门禁管辖面**（`.omo/state` +
+> `runtime`）读数与基线零变化（仍 154 站点 / 144 对）。
+
 | marker | 站点 | 本轮判定 |
 |---|---|---|
 | `.omo/_truth/**` | 160 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
 | `.omo/state/**` | 103 | **纳入** 门禁 |
 | `.omo/_delivery/**` | 82 | 排除 —— 全机 symlink 桥（`delivery_anchor.py:87`），AGENTS.md §7「gitignore ≠ 本地化」；改道它等于改协调面语义 |
-| `.omo/_knowledge/**` | 63 | 排除 —— 署名文档/历史面，随检出 |
+| `.omo/_knowledge/**` | 62 | 排除 —— 署名文档/历史面，随检出 |
 | `runtime/**` | 51 | **纳入** 门禁 |
-| `kos/**` | 2 | 排除 —— 运行时产物但不在 ADR-0456 的写面列举内，另案 |
 
-纳入部分 = **154 个行级站点 / 144 个 (文件, 拼出的整条相对路径) 去重对 / 95 个文件**（全表 461 站点）。
+纳入部分 = **154 个行级站点 / 144 个 (文件, 拼出的整条相对路径) 去重对 / 95 个文件**（全表 460 站点）。
 与既有 `tests/unit/test_system_yaml_write_plane.py` 的重叠 = **1 处**
 （`bin/gac/architecture-check.py:47` 的 `.omo/state/system.yaml`）—— 该文件在邻居门禁里已被判为
 死码（`CORE_DOCS` 常量零消费者，T10-220 决定不为它造判据），本面仍如实登记它一次：

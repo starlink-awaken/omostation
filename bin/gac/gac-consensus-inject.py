@@ -15,8 +15,14 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-WORKSPACE = Path(__file__).resolve().parents[2]
-db_path = WORKSPACE / "kos/kos-index.sqlite"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from repo_root import code_root, kos_index_path  # noqa: E402
+
+WORKSPACE = code_root()
+# KOS 检索索引: 单一解析器 (KOS_HOME 优先, 否则 <code_root>/data/kos)。
+# 旧写法 WORKSPACE/kos/kos-index.sqlite 指向 2026-09 前的布局, 该目录已
+# gitignore 且仓内不存在 —— 读到的永远是空库。
+db_path = kos_index_path()
 claude_md_path = WORKSPACE / "CLAUDE.md"
 
 
