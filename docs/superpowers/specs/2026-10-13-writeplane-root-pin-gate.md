@@ -43,13 +43,13 @@ code/state 双根；`omo_paths` + 9 处 `DEFAULT_LEDGER` + `OMO_PRINCIPAL_ID` �
 
 | marker | 站点 | 本轮判定 |
 |---|---|---|
-| `.omo/_truth/**` | 160 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
+| `.omo/_truth/**` | 161 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
 | `.omo/state/**` | 103 | **纳入** 门禁 |
 | `.omo/_delivery/**` | 82 | 排除 —— 全机 symlink 桥（`delivery_anchor.py:87`），AGENTS.md §7「gitignore ≠ 本地化」；改道它等于改协调面语义 |
 | `.omo/_knowledge/**` | 62 | 排除 —— 署名文档/历史面，随检出 |
 | `runtime/**` | 51 | **纳入** 门禁 |
 
-纳入部分 = **154 个行级站点 / 144 个 (文件, 拼出的整条相对路径) 去重对 / 95 个文件**（全表 460 站点）。
+纳入部分 = **154 个行级站点 / 144 个 (文件, 拼出的整条相对路径) 去重对 / 95 个文件**（全表 461 站点）。
 与既有 `tests/unit/test_system_yaml_write_plane.py` 的重叠 = **1 处**
 （`bin/gac/architecture-check.py:47` 的 `.omo/state/system.yaml`）—— 该文件在邻居门禁里已被判为
 死码（`CORE_DOCS` 常量零消费者，T10-220 决定不为它造判据），本面仍如实登记它一次：

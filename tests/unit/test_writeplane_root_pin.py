@@ -31,7 +31,7 @@ SKIP_SEGMENTS = {"_archive", "_vendored", "__pycache__", ".venv"}
 
 # spec §1 的读数表 —— 与本文件扫描出的分类逐桶相等（同一判据、同一次扫描产出）。
 SPEC_MARKER_READINGS = {
-    ".omo/_truth": 160,
+    ".omo/_truth": 161,
     ".omo/state": 103,
     ".omo/_delivery": 82,
     "runtime": 51,

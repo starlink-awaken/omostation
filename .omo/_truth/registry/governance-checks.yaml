@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 728 # 2026-10-24 727->728: 新登记 bin/ssot/anchor-install-root.sh (ADR-0456 B4b 安装位重锚)
+    script_baseline: 730 # 2026-10-24 727->730: 新登记 bin/ssot/anchor-install-root.sh (ADR-0456 B4b 安装位重锚) # 2026-10-26 728->730: 新登记 ADR-0466 三层防线的两个工具 (bin/gac/check-test-host-hygiene.py 第二道防线 / bin/ops/purge-test-archive-7d.py 第三道防线)
       # (治 A2/A5 stale_beats —— .omo/_control/debt-dashboard/current.yaml 是 git-tracked 镜像,
       # 由 omo post-hook 刷新但无人提交; origin/main 上那份 817h 未更新 (SLA 336h), 于是每个
       # 干净检出都读到腐烂值 => meta-doctor 恒报 stale_beats=1 => A2/A5 恒红。既有 chore(auto)

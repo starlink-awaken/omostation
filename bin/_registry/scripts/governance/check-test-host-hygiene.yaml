@@ -1,0 +1,16 @@
+schema: script-registry/v1
+id: bin/gac/check-test-host-hygiene.py
+name: Test Host Hygiene
+category: governance
+owner: governance-team
+description: "ADR-0466 法条 2 第二道防线: 核验宿主生产目录与主仓数据面无单测残留。判据按法条 1 的伪造执行形态 (派发型卡片声称可签名却无 diff 证据) —— 诚实失败 (execution_failed + patch_ready=false) 不算污染, 必须保留。归档区 (cards_archive/) 的历史存量不计入, 那是待销毁的旧账。"
+inputs: []
+outputs:
+  - type: exit_code
+dependencies: []
+triggers: []
+related:
+  - .omo/_knowledge/decisions/0466-system-authenticity-and-zero-mock-contract.md
+  - bin/ops/purge-test-archive-7d.py
+maturity: draft
+last_reviewed: "2026-10-26"
