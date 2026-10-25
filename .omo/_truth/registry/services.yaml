@@ -648,6 +648,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.decision
   runtime_root: install
+  environment:
+    # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
+    # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -670,6 +674,10 @@ services:
   interval_sec: 120
   label: com.l4.resident.execute
   runtime_root: install
+  environment:
+    # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
+    # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -736,6 +744,10 @@ services:
   interval_sec: 300
   label: com.l4.resident.event-ingest
   runtime_root: install
+  environment:
+    # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
+    # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-event-ingest.sh
@@ -757,6 +769,10 @@ services:
   interval_sec: 300
   label: com.l4.resident.signals
   runtime_root: install
+  environment:
+    # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
+    # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -778,6 +794,10 @@ services:
   interval_sec: 300
   label: com.l4.resident.inbox
   runtime_root: install
+  environment:
+    # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
+    # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -799,6 +819,10 @@ services:
   interval_sec: 600
   label: com.l4.resident.promote
   runtime_root: install
+  environment:
+    # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
+    # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
