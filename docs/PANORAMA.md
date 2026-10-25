@@ -25,12 +25,11 @@ Panorama 同时提供人类站点与机器可读投影。Agent 应优先读取 `
 （HTTP: `/agent-brief.json`）获取权威控制面、门禁摘要、Claims 边界、未完成 BET、里程碑窗口、
 活动/阻塞工作流、任务、告警、下一步事务、读取接口和安全约束；人类站点的 **Agent Brief**
 页签以同一份投影展示这些要点；
-完整字段使用 `runtime/dashboard/data.json`（HTTP: `/data.json`）。两者的**扁平文件唯一写入者**
-是部署版 collector `~/.local/share/zhixing-dashboard/panorama-collect.py`：它经
-`PANORAMA_ROOT` 绑定本 checkout，由 launchd `com.omostation.panorama-dashboard-refresh`
-每 240 秒刷新一次（`PANORAMA_CODE_ROOT` 指向受管 fresh-main 引用根）。仓内
-`bin/panorama/panorama-collect.py` 是 revision 协议变体，只发布 `revisions/` 与
-`current-revision.json`，**不写**扁平三件套。两者都只读聚合，不引入第二个控制面或写入队列。
+完整字段使用 `runtime/dashboard/data.json`（HTTP: `/data.json`）。当前机器可读入口由
+revision 协议生产：仓内 `bin/panorama/panorama-collect.py` 发布不可变 `revisions/` 与
+`current-revision.json`，`com.omostation.zhixing-projection-republisher` 每 300 秒复用最新
+有效 revision 续期服务租约，`com.omostation.zhixing-projection-fullrefresh` 每 1800 秒执行
+全量刷新。两者都只读聚合，不引入第二个控制面或写入队列。
 任务投影只读取 managed code root 下的 `.omo/tasks/{active,planned,blocked,done}/*.yaml`；
 `.omo/state/task-registry.yaml` 单独投影为服务生命周期台账，不与执行任务混淆。
 债务与告警投影同样读取 managed code root，并以 `lifecycle_state` 为闭合真值，
@@ -42,6 +41,9 @@ Dashboard 只展示投影，不写 Role 状态，也不把 external admission re
 Objective Coverage 中的持久语义状态必须同时绑定 Ledger 交付证据与当前
 Role Registry / semantic lifecycle 运行态；历史交付在运行态未验证时显示为
 `DELIVERY_ACCEPTED_RUNTIME_UNVERIFIED`，不会冒充当前 PASS。
+Agent Brief 的 `work_state.readings` 并列展示台账产出量、目标能力达成度和真实使用价值证明。
+三行读数必须各自携带口径、来源、类型、活性、观测时间和可比性；它们语义正交，不得相减，
+也不得用一个读数校验另一个。
 
 ## 全景 SSOT
 
