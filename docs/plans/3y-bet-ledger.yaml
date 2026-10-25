@@ -44559,7 +44559,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@621c7a7d65a3a16ef6b0c7a5c594c434e5a82297
+            ref: git://origin/main@2b424ae9a8f0213c30b0b45fd5492bab7880f87e
           tests:
             ref: receipt://docs/reports/2026-10-26-b1-calibration-closeout.md
             sha256: sha256:ef66c6bbfd4abce5ecbce0517386ebdc84f3c50423099fe645b47620cc47752f
