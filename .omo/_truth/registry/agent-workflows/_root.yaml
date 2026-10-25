@@ -1079,21 +1079,6 @@ diff_checks:
   command:
   - python3
   - bin/gac/gac-consensus-inject.py
-- id: gac-ingress-check
-  description: 'C2G Self-Correcting Ingress Pre-Checker (eCOS v6 Phase B). Detects
-    port conflicts, service name collisions, and runs mini-9b LLM semantic analysis
-    on Pitch documents before task materialization. Moves conflict detection from
-    commit-time to planning-time.
-
-    '
-  required: false
-  paths:
-  - bin/gac/gac-ingress-check.py
-  - protocols/port-registry.yaml
-  - docs/project-registry.yaml
-  command:
-  - python3
-  - bin/gac/gac-ingress-check.py
 - id: mof-capabilities-drift-check
   description: MOF capabilities registry drift (declared entrypoint vs actual).
   required: false
