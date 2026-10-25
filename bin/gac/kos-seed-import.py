@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""G-CONV.6 / KOS-Q-GROWTH seed import — index markdown into kos/kos-index.sqlite.
+"""G-CONV.6 / KOS-Q-GROWTH seed import — index markdown into data/kos/kos-index.sqlite.
 
 Reusable path: workspace docs + personal vaults. Does not require network.
 Safe to re-run (UPSERT by canonical_path).

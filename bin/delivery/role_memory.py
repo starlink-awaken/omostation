@@ -240,7 +240,7 @@ def measure_role_memory_share() -> dict[str, Any]:
                 "agent-A → shared-context-cli write",
                 "file store .omo/_delivery/shared-context/{scope}/{key}.json",
                 "agent-B → shared-context-cli read",
-                "export-kos → kos/kos-index.sqlite documents",
+                "export-kos → data/kos/kos-index.sqlite documents",
                 "retrieve-kos LIKE query",
             ],
         },

@@ -135,6 +135,14 @@ T10-203 把字面量换成 `event_ledger_path()` 之后，第一段命中的行�
   残余风险只在「只声明 `OMOSTATION_STATE_ROOT`」时指向检出侧。
 - **不动** `bin/gac/kos-seed-import.py:26 DEFAULT_DB = WORKSPACE / "kos/kos-index.sqlite"`
   （非事件台账，`/kos/` 已 gitignore，`.gitignore:156`）。
+  > ⚠️ **2026-10-25 已改**（PR #4887）：上一条的「不动」理由是「非事件台账」——
+  > 即它**超出本 spec 的主题范围**（本 spec 收口的是事件台账常量族），不等于该路径正确。
+  > 实测该路径**根本不存在**（`/kos/` 已 gitignore 且仓内无此目录），于是
+  > `gac-consensus-inject.py` 永远读不到库、`kos-seed-import.py` 写进一个没人读的库、
+  > `m1-closeout-report.py` 的 `index_present` 恒 False。KOS 索引位置的正确归属是
+  > `<code_root>/data/kos/`（services.yaml 的 `kos.web` 声明 + 仓内三个读侧工具都用它）。
+  > 现统一走 `bin/lib/repo_root.py:kos_home()` / `kos_index_path()`（KOS_HOME 优先，
+  > 否则 `<code_root>/data/kos`）。**本 spec 的事件台账族不受影响**。
 - **不动** `resident-orchestrator-daemon.py:31 DEFAULT_EVENTS_JSONL` / `:32 PID_FILE`
   （协调面，另有读者清单）。
 - **不改** `bin/lib/repo_root.py` 的解析序或 env 优先级。
