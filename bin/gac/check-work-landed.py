@@ -36,6 +36,9 @@ BLOCK_AFTER = timedelta(days=7)
 # baseline = 本 check 上线时已存在的滞留 run (grace 清单), 新增滞留才 blocking
 # 生成: python3 bin/gac/check-work-landed.py --dump-baseline > baseline-work-landed.txt
 BASELINE_FILE = WORKSPACE / ".omo" / "_truth" / "registry" / "baseline-work-landed.txt"
+# BET retro 是权威落地台账 (git 跟踪, 双机一致): run 自己声明的中间 SHA 常因
+# squash / 被取代而失效, 但交付凭证 (已合并 PR 号) 记在对应 BET 的 retro 里。
+RETROS_DIR = WORKSPACE / ".omo/_knowledge/retros"
 
 
 def _load_baseline() -> set[str]:
@@ -97,6 +100,104 @@ def _extract_landing_refs(run: dict[str, Any]) -> set[str]:
     for m in SHA_RE.findall(blob):
         refs.add(f"sha:{m}")
     # Heuristic: any of these are present, the run "claims" landing.
+    return refs
+
+
+def _bet_id(run: dict[str, Any]) -> str:
+    """run 关联的 BET id (顶层优先, 回落到 context)。"""
+    for key in ("bet_id",):
+        v = run.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    ctx = run.get("context")
+    if isinstance(ctx, dict):
+        v = ctx.get("bet_id")
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
+def _bet_log_refs(bet: str) -> set[str]:
+    """从 main 的提交信息里找该 BET 的已合并 PR 号。
+
+    squash 合并的提交信息带 "标题 (#NNNN)", 按 bet_id 过滤 origin/main 的提交
+    即可拿到已落地 PR 的编号 —— 这是最可靠的凭证 (比 retro 正文更完整: 10/10
+    存量 BET 都能命中)。只取 bet_id 出现在同一行的提交, 避免相邻 BET 串味。
+    """
+    if not bet:
+        return set()
+    try:
+        cp = subprocess.run(
+            ["git", "log", "origin/main", "--oneline", "--grep", bet, "--fixed-strings"],
+            cwd=str(WORKSPACE),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except Exception as exc:  # K3: 不静默
+        print(f"[warn] _bet_log_refs {bet}: {exc}", file=sys.stderr)
+        return set()
+    if cp.returncode != 0:
+        return set()
+    refs: set[str] = set()
+    for line in cp.stdout.splitlines():
+        if bet not in line:
+            continue
+        for m in PR_RE.findall(line):
+            refs.add(f"pr:{m}")
+    return refs
+
+
+def _find_bet_retro(bet: str) -> Path | None:
+    """定位某 BET 的 retro 文件。
+
+    主命名是 {BET}.md, 但实测存在日期前缀变体
+    (2026-09-25-bet-y2q3-t9-01-dashboard.md) —— 只认精确名会漏掉那批,
+    于是「工作已落地」被误判成滞留。命中多个时取 mtime 最新的。
+    """
+    exact = RETROS_DIR / f"{bet}.md"
+    if exact.is_file():
+        return exact
+    if not RETROS_DIR.is_dir():
+        return None
+    # bet_id 大小写不敏感 + 紧凑形式 (BET-Y2Q3-T9-01 -> y2q3-t9-01)
+    needle = bet.lower()
+    compact = needle.replace("bet-", "").replace("-", "")
+    hits: list[Path] = []
+    for path in RETROS_DIR.glob("*.md"):
+        name = path.stem.lower()
+        if needle in name or (compact and compact in name.replace("-", "")):
+            hits.append(path)
+    if not hits:
+        return None
+    return max(hits, key=lambda p: p.stat().st_mtime)
+
+
+def _bet_landed_refs(run: dict[str, Any]) -> set[str]:
+    """从该 BET 的 retro 台账里提取落地凭证 (PR 号 / SHA)。
+
+    retro 被 git 跟踪且双机一致 (对照: runs/ 目录是 .omo/_delivery/*, gitignored,
+    纯机器本地 —— mini 只留 32 个、mbp 留 351 个, 门禁覆盖面因此因机而异)。
+    retro 的 frontmatter 与正文记录了实际交付的 PR 与 squash SHA, 是权威凭证。
+
+    找不到 retro / 提取不到凭证 → 返回空集 (调用方维持原判定, 不掩盖真滞留)。
+    """
+    bet = _bet_id(run)
+    if not bet:
+        return set()
+    retro = _find_bet_retro(bet)
+    if retro is None:
+        return set()
+    try:
+        body = retro.read_text(encoding="utf-8")
+    except OSError as exc:  # K3: 不静默
+        print(f"[warn] _bet_landed_refs {retro.name}: {exc}", file=sys.stderr)
+        return set()
+    refs: set[str] = set()
+    for m in PR_RE.findall(body):
+        refs.add(f"pr:{m}")
+    for m in SHA_RE.findall(body):
+        refs.add(f"sha:{m}")
     return refs
 
 
@@ -225,7 +326,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="dump current blocking run_ids as baseline grace list (for M2 migration).",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # M2: --dump-baseline 输出当前 blocking run_ids (生成 grace 清单)
     if args.dump_baseline:
@@ -305,6 +406,16 @@ def main(argv: list[str] | None = None) -> int:
         if not unlanded or any(landed.values()):
             summary["settled"] += 1
             continue
+        # BET retro 兜底 (2026-10-25): run 自身凭证全失效时, 查该 BET 的 retro
+        # 台账 —— 工作常已通过后续 PR 落地, 凭证 (已合并 PR) 记在那里而非 run 里。
+        # retro 也没有已落地的凭证 → 维持原判定 (真滞留不被掩盖)。
+        bet = _bet_id(run)
+        bet_refs = _bet_landed_refs(run) | _bet_log_refs(bet)
+        if bet_refs:
+            bet_landed = _refs_landed(bet_refs)
+            if any(bet_landed.values()):
+                summary["settled"] += 1
+                continue
         age = now - ts
         kind = "blocking" if age >= BLOCK_AFTER else "warn" if age >= WARN_AFTER else "ok"
         if kind == "ok":
