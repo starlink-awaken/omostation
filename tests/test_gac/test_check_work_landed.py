@@ -153,3 +153,111 @@ def test_main_passes_for_run_with_landed_sha(tmp_path: Path, monkeypatch, capsys
     monkeypatch.setattr(sys, "argv", ["check-work-landed"])
     rc = main([])
     assert rc == 0
+
+# --- BET landing fallback (2026-10-25) ---
+# run's own landing refs (intermediate SHA / superseded PR) expire, the check
+# used to flag 13 already-finished BETs as blocking -- the work landed via
+# later PRs, whose refs live in main's commit messages (squash writes
+# "title (#NNNN)"). The tests below pin the INVERSE criterion: loosening the
+# fallback is the easiest way to turn this gate into "never alarms".
+
+
+def _write_bet_run(runs_dir: Path, run_id: str, bet: str | None, sha: str) -> None:
+    lines = [
+        "run_id: " + run_id,
+        "workflow_id: project-code-change",
+        "status: ok",
+        "agent_profile: governance-agent",
+        "objective: fixture",
+    ]
+    if bet:
+        lines.append("bet_id: " + bet)
+    lines.extend([
+        "evidence:",
+        "- landed as " + sha,
+        "created_at: '2026-01-01T00:00:00Z'",
+        "updated_at: '2026-01-01T00:00:00Z'",
+    ])
+    (runs_dir / f"{run_id}.yaml").write_text(
+        chr(10).join(lines) + chr(10), encoding="utf-8"
+    )
+
+
+def test_fake_bet_with_no_main_trace_stays_blocking(tmp_path: Path, monkeypatch, capsys):
+    """BET id has no trace in main -> must stay blocking (fallback must not mask)."""
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+    _write_bet_run(
+        runs_dir,
+        "20260101T000000Z-project-code-change-fakebet",
+        "BET-Y2Q9-ZZZ-999",
+        "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    )
+    monkeypatch.setattr(_module, "RUNS_DIR", runs_dir)
+    monkeypatch.setattr(sys, "argv", ["check-work-landed", "--window-days", "365"])
+    rc = main([])
+    captured = capsys.readouterr()
+    assert rc == 1, captured.out
+    assert "blocking" in captured.out
+
+
+def test_nonexistent_bet_stays_blocking(tmp_path: Path, monkeypatch, capsys):
+    """Fabricated BET -> still blocking."""
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+    _write_bet_run(
+        runs_dir,
+        "20260101T000001Z-project-code-change-nobet",
+        "BET-NOT-EXIST-12345",
+        "cafecafecafecafecafecafecafecafecafe",
+    )
+    monkeypatch.setattr(_module, "RUNS_DIR", runs_dir)
+    monkeypatch.setattr(sys, "argv", ["check-work-landed", "--window-days", "365"])
+    rc = main([])
+    captured = capsys.readouterr()
+    assert rc == 1, captured.out
+    assert "blocking" in captured.out
+
+
+def test_run_without_bet_id_stays_blocking(tmp_path: Path, monkeypatch, capsys):
+    """Run without bet_id never uses the fallback -> still blocking."""
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+    _write_bet_run(
+        runs_dir,
+        "20260101T000003Z-project-code-change-nobetid",
+        None,
+        "2222222222222222222222222222222222222222",
+    )
+    monkeypatch.setattr(_module, "RUNS_DIR", runs_dir)
+    monkeypatch.setattr(sys, "argv", ["check-work-landed", "--window-days", "365"])
+    rc = main([])
+    captured = capsys.readouterr()
+    assert rc == 1, captured.out
+    assert "blocking" in captured.out
+
+
+def test_real_bet_with_main_commit_is_settled(tmp_path: Path, monkeypatch, capsys):
+    """Real BET with commits in main -> settled (no longer a false positive)."""
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+    # BET-Y2Q3-T9-01 has commits in origin/main (PR #4304), same as production history
+    _write_bet_run(
+        runs_dir,
+        "20260101T000002Z-project-code-change-realbet",
+        "BET-Y2Q3-T9-01",
+        "1111111111111111111111111111111111111111",
+    )
+    monkeypatch.setattr(_module, "RUNS_DIR", runs_dir)
+    monkeypatch.setattr(sys, "argv", ["check-work-landed", "--window-days", "365"])
+    rc = main([])
+    captured = capsys.readouterr()
+    assert rc == 0, captured.out
+    assert "PASS" in captured.out
+
+
+def test_bet_log_refs_extracts_pr_from_main():
+    """_bet_log_refs pulls merged PR numbers out of main's commit messages."""
+    refs = _module._bet_log_refs("BET-Y2Q3-T9-01")
+    assert refs, "expected PR refs from origin/main commit messages"
+    assert any(r.startswith("pr:") for r in refs)
