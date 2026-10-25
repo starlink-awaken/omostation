@@ -667,27 +667,6 @@ services:
   liveness:
     signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.decision.plist
     max_stale_hours: 2
-  enabled: true
-  scheduler: launchd
-  trigger: interval
-  interval_sec: 120
-  label: com.l4.resident.decision
-  runtime_root: install
-  program:
-    interpreter: /bin/bash
-    entrypoint: lib/resident-role-tick.sh
-    args:
-    - decision
-  resilience:
-    keepalive: crashed
-    throttle_interval: 120
-  run_at_load: true
-  depends_on:
-  - resident.orchestrator
-  notes: Resident 大脑决策 — 失败事件→决策提案 (2min)
-  liveness:
-    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.decision.plist
-    max_stale_hours: 2
 - id: resident.execute
   enabled: true
   scheduler: launchd
@@ -699,27 +678,6 @@ services:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
-  program:
-    interpreter: /bin/bash
-    entrypoint: lib/resident-role-tick.sh
-    args:
-    - execute
-  resilience:
-    keepalive: crashed
-    throttle_interval: 120
-  run_at_load: true
-  depends_on:
-  - resident.orchestrator
-  notes: Resident 手执行 — 执行请求→pi-worker (批准门) (2min)
-  liveness:
-    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.execute.plist
-    max_stale_hours: 2
-  enabled: true
-  scheduler: launchd
-  trigger: interval
-  interval_sec: 120
-  label: com.l4.resident.execute
-  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -804,26 +762,6 @@ services:
   liveness:
     signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.event-ingest.plist
     max_stale_hours: 1
-  enabled: true
-  scheduler: launchd
-  trigger: interval
-  interval_sec: 300
-  label: com.l4.resident.event-ingest
-  runtime_root: install
-  program:
-    interpreter: /bin/bash
-    entrypoint: lib/resident-event-ingest.sh
-    args: []
-  resilience:
-    keepalive: crashed
-    throttle_interval: 300
-  run_at_load: true
-  depends_on:
-  - omo.sync_daemon
-  notes: Resident 事件摄入 — workflow-mesh→bus_foundation→event-ledger (5min)
-  liveness:
-    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.event-ingest.plist
-    max_stale_hours: 1
 - id: resident.signals
   enabled: true
   scheduler: launchd
@@ -835,26 +773,6 @@ services:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
-  program:
-    interpreter: /bin/bash
-    entrypoint: lib/resident-role-tick.sh
-    args:
-    - signals
-  resilience:
-    keepalive: crashed
-    throttle_interval: 300
-  run_at_load: true
-  notes: Resident 个人信号 — personal-signals 轮询→事件流 (5min)
-  liveness:
-    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.signals.plist
-    max_stale_hours: 1
-  depends_on: []
-  enabled: true
-  scheduler: launchd
-  trigger: interval
-  interval_sec: 300
-  label: com.l4.resident.signals
-  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -894,26 +812,6 @@ services:
     signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.inbox.plist
     max_stale_hours: 1
   depends_on: []
-  enabled: true
-  scheduler: launchd
-  trigger: interval
-  interval_sec: 300
-  label: com.l4.resident.inbox
-  runtime_root: install
-  program:
-    interpreter: /bin/bash
-    entrypoint: lib/resident-role-tick.sh
-    args:
-    - inbox
-  resilience:
-    keepalive: crashed
-    throttle_interval: 300
-  run_at_load: true
-  notes: Resident 感知 inbox — 感知文件夹轮询→事件流 (5min)
-  liveness:
-    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.inbox.plist
-    max_stale_hours: 1
-  depends_on: []
 - id: resident.promote
   enabled: true
   scheduler: launchd
@@ -925,27 +823,6 @@ services:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
-  program:
-    interpreter: /bin/bash
-    entrypoint: lib/resident-role-tick.sh
-    args:
-    - promote
-  resilience:
-    keepalive: crashed
-    throttle_interval: 600
-  run_at_load: true
-  depends_on:
-  - resident.sediment
-  notes: Resident 知识晋升 — sediment 草稿→主题 retro 候选 (10min)
-  liveness:
-    signal: /Users/xiamingxing/Library/LaunchAgents/com.l4.resident.promote.plist
-    max_stale_hours: 2
-  enabled: true
-  scheduler: launchd
-  trigger: interval
-  interval_sec: 600
-  label: com.l4.resident.promote
-  runtime_root: install
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
