@@ -1139,7 +1139,7 @@ def cmd_list(data: dict, args) -> int:
     if args.claimable:
         rows = [b for b in rows if _claimable(data, b)[0]]
     if args.json:
-        print(json.dumps(rows, ensure_ascii=False, indent=2))
+        print(json.dumps(rows, ensure_ascii=False, indent=2, default=str))
         return 0
     print(f"{'ID':24} {'W':6} {'TRACK':12} {'APPETITE':10} {'ST':11} H  TITLE")
     print("-" * 120)

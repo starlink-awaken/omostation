@@ -239,6 +239,63 @@ def test_agent_visibility_claims_readiness_fails_closed_without_preflight() -> N
     assert readiness["activation_allowed"] is False
 
 
+def test_finalized_agent_brief_projects_three_orthogonal_readings() -> None:
+    module = _module()
+    payload = _payload()
+    payload["portfolio"] = {
+        "sha": "sha-test",
+        "ledger_sha256": "ledger-sha-test",
+        "observed_at": "2026-10-26T00:00:00Z",
+        "actual": 3,
+        "counts": {"done": 2, "candidate": 1},
+        "bet_records": [
+            {"id": "BET-A", "status": "done", "window": "Y1Q1"},
+            {"id": "BET-B", "status": "done", "window": "Y1Q1"},
+            {"id": "BET-C", "status": "candidate", "window": "Y1Q2"},
+        ],
+    }
+    payload["objective_coverage"] = {
+        "schema": "panorama-objective-coverage/v1",
+        "available": True,
+        "source": "producer.derived",
+        "generated_at": "2026-10-26T00:00:00Z",
+        "items": [
+            {"id": "OBJ-A", "status": "PASS"},
+            {"id": "OBJ-B", "status": "NOT_PROVEN"},
+        ],
+    }
+    readiness = {
+        "schema": "panorama-value-proof-readiness/v2",
+        "status": "NOT_PROVEN",
+        "available": True,
+        "source": "value-evidence-validation/v2",
+        "qualifying_samples": 1,
+        "samples_total": 2,
+        "validation": {"ok": True, "observed_at": "2026-10-26T00:00:00Z"},
+    }
+
+    module._finalize_bound_agent_brief(payload, "2026-10-26T00:01:00Z", readiness)
+    readings = payload["agent_visibility"]["work_state"]["readings"]
+
+    assert readings["schema"] == "panorama-brief-readings/v1"
+    assert readings["verdict"] == "ORTHOGONAL_READINGS"
+    assert readings["comparable_pair_count"] == 0
+    assert [row["key"] for row in readings["rows"]] == [
+        "ledger",
+        "objective_coverage",
+        "value_proof",
+    ]
+    assert [row["meaning"] for row in readings["rows"]] == [
+        "engineering output volume",
+        "capability attainment",
+        "real-use value proof",
+    ]
+    assert [row["live"] for row in readings["rows"]] == [True, True, True]
+    assert readings["rows"][0]["value_text"] == "2 / 3 bets done"
+    assert readings["rows"][1]["value_text"] == "1 / 2 objectives passed"
+    assert readings["rows"][2]["value_text"] == "1 / 2 qualifying samples"
+
+
 def test_agent_visibility_isolated_technical_readiness_overrides_canonical_blockers() -> None:
     module = _module()
     payload = _payload()
