@@ -1,0 +1,245 @@
+#!/usr/bin/env python3
+"""um-run — UM870 (AMD Ryzen 7 8745H · 16T · 32G PVE) 专属透明远程执行器
+
+将 CPU 密集型编译、重度测试、耗时脚本从单位 MBP 卸载到局域网 UM870 边缘主机上，
+实现 MBP 前台零发热、零风扇噪音、绝对流畅。
+
+用法:
+  bin/um-run <command...>           # 在 UM870 远程执行命令 (实时流式回传)
+  bin/um-run --sync <command...>    # 先增量 rsync 当前代码至 UM870，再执行命令
+  bin/um-run --job <cmd> [args...]  # 通过 vm-code-01 沙盒 API 提交安全隔离任务
+  bin/um-run --status               # 查看 UM870 CPU负载/内存/虚拟机健康态
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+import urllib.request
+from pathlib import Path
+
+# 配置常量
+UM870_SSH_HOST = os.environ.get("UM870_HOST", "um870")
+UM870_IP = os.environ.get("UM870_IP", "192.168.77.10")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin" / "lib"))
+from repo_root import canonical_root  # noqa: E402
+
+WORKER_HTTP_URL = os.environ.get("UM870_WORKER_URL", "http://192.168.77.11:8080")
+# 鉴权凭证只从环境变量读, **不带默认值** —— 明文 token 进仓即凭证泄露
+# (仓内其余脚本同样零明文凭证先例)。缺失时在使用点显式报错。
+WORKER_TOKEN = os.environ.get("UM870_WORKER_TOKEN", "")
+REMOTE_WORKSPACE_DIR = "/mnt/pve/backup-staging/workspace"
+
+
+def _require_token() -> str:
+    """取 UM870 worker 鉴权 token; 缺失即显式失败 (不静默发空 token)。"""
+    token = WORKER_TOKEN.strip()
+    if not token:
+        print(
+            "❌ 缺少 UM870_WORKER_TOKEN 环境变量 —— UM870 worker 的鉴权凭证\n"
+            "   本机设置: export UM870_WORKER_TOKEN=<token>\n"
+            "   (凭证刻意不入仓; 该仓的 UM870 worker 端也需配同一 token)",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    return token
+
+
+def _repo_root() -> Path:
+    """规范检出根 (canonical_root) —— 机器级路径必须锚定规范检出。
+
+    原实现自己按 marker 文件向上找根, 与 repo_root.canonical_root() 重复实现
+    (两份判据会漂移)。
+    """
+    return canonical_root()
+
+
+def cmd_status() -> int:
+    """输出 UM870 硬件健康度与虚拟机拓扑."""
+    print("=" * 70)
+    print(" 🚀 UM870 (AMD Ryzen 7 8745H · 8C16T · 32G PVE) 实时状态巡检")
+    print("=" * 70)
+    
+    # 1. 检查 SSH 与系统信息
+    ssh_cmd = [
+        "ssh", "-o", "ConnectTimeout=2", UM870_SSH_HOST,
+        "uptime; free -h | grep -E 'Mem|Swap'; qm list 2>/dev/null"
+    ]
+    try:
+        t0 = time.time()
+        res = subprocess.run(ssh_cmd, capture_output=True, text=True, timeout=4)
+        rtt = (time.time() - t0) * 1000
+        if res.returncode == 0:
+            lines = res.stdout.strip().splitlines()
+            uptime_line = lines[0] if len(lines) > 0 else ""
+            print(f" [🟢 链路正常] 局域网 RTT: {rtt:.1f} ms | 主机: {UM870_IP}")
+            print(f" [⚡ 负载概况] {uptime_line}")
+            print("\n【内存配额与余量】")
+            for l in lines[1:]:
+                if "running" not in l and "VMID" not in l:
+                    print(f"   {l}")
+            print("\n【PVE 虚拟化子节点】")
+            for l in lines:
+                if "running" in l or "VMID" in l:
+                    print(f"   {l}")
+        else:
+            print(f" [🔴 SSH 失败] 退出码: {res.returncode}, 错误: {res.stderr.strip()}")
+            return 1
+    except Exception as e:
+        print(f" [🔴 连接异常] 错误: {e}")
+        return 1
+
+    # 2. 检查 Worker API
+    try:
+        req = urllib.request.Request(f"{WORKER_HTTP_URL}/health", headers={"User-Agent": "um-run/1.0"})
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            if resp.status == 200:
+                print(f"\n [🟢 沙盒引擎] local-brain worker 就绪 ({WORKER_HTTP_URL})")
+    except Exception as e:
+        print(f"\n [🟡 沙盒引擎] 8080 API 离线: {e}")
+
+    print("=" * 70)
+    return 0
+
+
+def cmd_sync() -> int:
+    """增量同步当前代码库至 UM870 远程工作区."""
+    root = _repo_root()
+    print(f"📦 正在增量同步本地代码至 UM870 ({REMOTE_WORKSPACE_DIR})...")
+    
+    # 确保远端目录存在
+    mkdir_cmd = ["ssh", UM870_SSH_HOST, f"mkdir -p {REMOTE_WORKSPACE_DIR}"]
+    subprocess.run(mkdir_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # rsync 过滤巨型无用与动态变动目录 (如 rocksdb 索引/日志)
+    rsync_cmd = [
+        "rsync", "-az", "--delete",
+        "--exclude=.git",
+        "--exclude=.zvec-grep",
+        "--exclude=node_modules",
+        "--exclude=.venv",
+        "--exclude=__pycache__",
+        "--exclude=.cache",
+        "--exclude=*.sqlite3*",
+        "--exclude=*.rocksdb*",
+        "--exclude=*.log",
+        "--exclude=.pytest_cache",
+        "--exclude=target",
+        "--exclude=dist",
+        "--exclude=build",
+        f"{root}/",
+        f"{UM870_SSH_HOST}:{REMOTE_WORKSPACE_DIR}/",
+    ]
+    t0 = time.time()
+    res = subprocess.run(rsync_cmd, capture_output=True, text=True)
+    dt = time.time() - t0
+    if res.returncode == 0:
+        print(f"✅ 同步完成 (耗时: {dt:.2f}s)")
+        return 0
+    else:
+        print(f"❌ 同步失败: {res.stderr.strip()}")
+        return res.returncode
+
+
+def cmd_exec(args: list[str], in_workspace: bool = False) -> int:
+    """通过 SSH 在 UM870 宿主机上执行命令并实时流式输出."""
+    cmd_str = " ".join(args)
+    if in_workspace:
+        remote_cmd = f"cd {REMOTE_WORKSPACE_DIR} && {cmd_str}"
+    else:
+        remote_cmd = cmd_str
+        
+    ssh_cmd = ["ssh", "-tt", UM870_SSH_HOST, remote_cmd]
+    try:
+        proc = subprocess.run(ssh_cmd)
+        return proc.returncode
+    except KeyboardInterrupt:
+        print("\n[中断执行]")
+        return 130
+
+
+def cmd_job(cmd_name: str, cmd_args: list[str]) -> int:
+    """通过 vm-code-01 的沙盒 API 提交轻量安全任务."""
+    url = f"{WORKER_HTTP_URL}/jobs"
+    payload = {
+        "cmd": cmd_name,
+        "args": cmd_args,
+        "timeout": 60,
+        "data_class": "internal",
+    }
+    body = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "x-token": _require_token(),
+        },
+    )
+    t0 = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=65) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            dt = time.time() - t0
+            exit_code = data.get("exit_code", 1)
+            stdout = data.get("stdout", "")
+            stderr = data.get("stderr", "")
+            if stdout:
+                sys.stdout.write(stdout)
+            if stderr:
+                sys.stderr.write(stderr)
+            print(f"\n[UM870 沙盒任务完成: 状态={data.get('status')} | 耗时={dt:.2f}s | 退出码={exit_code}]")
+            return exit_code
+    except Exception as e:
+        print(f"❌ 沙盒任务提交失败: {e}", file=sys.stderr)
+        return 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="UM870 (AMD Ryzen 7 8745H 16T) 专属透明远程执行器",
+        add_help=True,
+    )
+    parser.add_argument("--status", action="store_true", help="查看 UM870 状态与硬件指标")
+    parser.add_argument("--sync", "-s", action="store_true", help="先增量 rsync 本地代码到远端工作区再执行")
+    parser.add_argument("--job", "-j", action="store_true", help="使用 vm-code-01 沙盒 HTTP 协议提交执行")
+    parser.add_argument("command", nargs=argparse.REMAINDER, help="要执行的命令与参数")
+
+    args = parser.parse_args()
+
+    if args.status:
+        return cmd_status()
+
+    if not args.command:
+        parser.print_help()
+        return 0
+
+    # 移除开头的 '--'（如果存在）
+    raw_cmd = args.command
+    if raw_cmd and raw_cmd[0] == "--":
+        raw_cmd = raw_cmd[1:]
+
+    if not raw_cmd:
+        parser.print_help()
+        return 0
+
+    if args.job:
+        cmd_name = raw_cmd[0]
+        cmd_args = raw_cmd[1:]
+        return cmd_job(cmd_name, cmd_args)
+
+    if args.sync:
+        rc = cmd_sync()
+        if rc != 0:
+            return rc
+        return cmd_exec(raw_cmd, in_workspace=True)
+
+    return cmd_exec(raw_cmd, in_workspace=False)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

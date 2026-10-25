@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# resident-ctl — eCOS 常驻 Agent 交互控制台 Shim (面向人的入口).
+#
+# 完全收敛嵌入 projects/omo/src/omo/resident (WP-Interact SSOT 单源).
+# 仓内唯一面向人的 resident 交互入口 —— omo 包自己的 `omo` 入口是内部程序接口
+# (加载时即告警「人类用户请使用 cockpit」) 且不透传 resident 子命令;
+# cockpit 也只用到一个内部函数 (api_reflection.triage_component_failure)。
+#
+# 显式映射的子命令: status / ask / chat / tick / distill / task
+# (其余子命令走 `*` 分支原样透传给 omo.resident.cli)
+#
+# ADR-0456: 项目根由 repo_root 取 (code_root 跟随当前检出), 不写死检出根 ——
+# 检出根与安装位两份拷贝因此各自跑各自根下的 projects/omo。
+set -euo pipefail
+
+_HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+CODE_ROOT="$(/opt/homebrew/bin/python3 -c '
+import sys
+sys.path.insert(0, sys.argv[1])
+from repo_root import code_root
+print(code_root())
+' "$_HERE/bin/lib")"
+
+UV_BIN="/opt/homebrew/bin/uv"
+[ -x "$UV_BIN" ] || UV_BIN="uv"
+
+CMD="${1:-chat}"
+
+case "$CMD" in
+  status)
+    exec "$UV_BIN" run --project "$CODE_ROOT/projects/omo" python -m omo.resident.cli status
+    ;;
+  ask)
+    shift
+    exec "$UV_BIN" run --project "$CODE_ROOT/projects/omo" python -m omo.resident.cli ask "$@"
+    ;;
+  chat)
+    shift || true
+    exec "$UV_BIN" run --project "$CODE_ROOT/projects/omo" python -m omo.resident.cli chat "$@"
+    ;;
+  tick)
+    shift
+    exec "$UV_BIN" run --project "$CODE_ROOT/projects/omo" python -m omo.resident.cli interact tick "$@"
+    ;;
+  distill)
+    shift
+    exec "$UV_BIN" run --project "$CODE_ROOT/projects/omo" python -m omo.resident.cli interact distill "$@"
+    ;;
+  task)
+    shift
+    exec "$UV_BIN" run --project "$CODE_ROOT/projects/omo" python -m omo.resident.cli task "$@"
+    ;;
+  *)
+    exec "$UV_BIN" run --project "$CODE_ROOT/projects/omo" python -m omo.resident.cli "$@"
+    ;;
+esac
