@@ -341,3 +341,40 @@ def test_hygiene_sweep_cannot_select_the_install_root(
     candidates = {str(path) for path in audit._candidate_dirs()}
     assert str(fake_home / "ws-example") in candidates  # 候选面确实生效
     assert not any(str(located).startswith(cand) for cand in candidates)
+
+
+# ── KOS 检索索引位置契约 (2026-10-25) ───────────────────────────────
+# kos_home() / kos_index_path() 是 KOS 索引位置的唯一解析处。此前仓内四处各写
+# 各的: bin/gac/mcp-server-kos.py / test-mcp-kos.py / generate-brief.py 读
+# <code_root>/data/kos, 而 gac-consensus-inject.py / kos-seed-import.py 写
+# <code_root>/kos (2026-09 前的旧布局, 该目录已 gitignore 且仓内不存在),
+# lib/documents_kos_preflight.py 设 KOS_HOME=<workspace>/kos, bin/gac/kos
+# wrapper 默认 ~/.kos —— 而 KOS 包自身还有另外两个 fallback (~/.kos_home /
+# 包安装目录)。结果是 CLI 写一处、仓内检查器读另一处 (docs/reports/
+# kos-governance-ingestion-2026-09-27.md 记的「KOS 双库现实」)。
+
+
+def test_kos_home_defaults_to_canonical_data_kos(monkeypatch):
+    """未设 KOS_HOME -> <code_root>/data/kos (与仓内三个读侧逐字节一致)。"""
+    monkeypatch.delenv("KOS_HOME", raising=False)
+    assert repo_root.kos_home() == repo_root.code_root() / "data" / "kos"
+    assert repo_root.kos_index_path() == repo_root.code_root() / "data" / "kos" / "kos-index.sqlite"
+
+
+def test_kos_home_honors_env(monkeypatch, tmp_path):
+    """KOS_HOME 已设 -> 尊重它 (用户显式声明优先)。"""
+    monkeypatch.setenv("KOS_HOME", str(tmp_path))
+    assert repo_root.kos_home() == tmp_path
+    assert repo_root.kos_index_path() == tmp_path / "kos-index.sqlite"
+
+
+def test_kos_home_env_expands_user(monkeypatch):
+    """KOS_HOME 带 ~ -> 展开 (与 state_root/canonical_root 同一处理)。"""
+    monkeypatch.setenv("KOS_HOME", "~/somewhere/kos")
+    assert repo_root.kos_home() == Path.home() / "somewhere" / "kos"
+
+
+def test_kos_index_path_never_points_at_legacy_layout():
+    """解析结果不得是 2026-09 前的旧布局 <code_root>/kos。"""
+    legacy = repo_root.code_root() / "kos" / "kos-index.sqlite"
+    assert repo_root.kos_index_path() != legacy
