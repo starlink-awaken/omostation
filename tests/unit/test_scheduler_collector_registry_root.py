@@ -84,7 +84,11 @@ def test_falls_back_when_the_env_names_a_checkout_without_the_compiler(monkeypat
 
 
 def test_collect_actually_runs_against_the_resolved_root(monkeypatch, tmp_path):
-    """Self-proof: the resolved root must reach the subprocess, not just the resolver."""
+    """Self-proof: the resolved root must reach the subprocess, not just the resolver.
+
+    运行时 (managed-python) 来自工作区, 被检查的脚本来自解析出的 registry 根 ——
+    两者都必须真的到达子进程, 否则「根解析生效」可能只是检测器没接上。
+    """
     synthetic = tmp_path / "publisher"
     (synthetic / "bin/gac").mkdir(parents=True)
     (synthetic / "bin/scheduler-compile.py").write_text("#!/usr/bin/env python3\n", encoding="utf-8")
@@ -98,8 +102,13 @@ def test_collect_actually_runs_against_the_resolved_root(monkeypatch, tmp_path):
     assert seen["cwd"] == synthetic.resolve(), (
         "采集器没有把工作目录切到解析出的根 —— 根解析形同虚设"
     )
-    assert seen["argv"][0] == str(synthetic.resolve() / "bin/gac/managed-python")
-    assert seen["argv"][-3:] == ["bin/scheduler-compile.py", "--check", "--json"]
+    assert seen["argv"][0] == str(module.DEFAULT_WORKSPACE_ROOT / "bin/gac/managed-python"), (
+        "运行时必须来自工作区 —— publisher 检出没有 .venv, managed-python 在那里解析不到解释器"
+    )
+    assert seen["argv"][-3] == str(synthetic.resolve() / "bin/scheduler-compile.py"), (
+        "被检查的脚本必须来自解析出的 registry 根"
+    )
+    assert seen["argv"][-2:] == ["--check", "--json"]
 
 
 def test_stale_flag_is_observe_only_and_reports_the_roots_own_origin_main(monkeypatch, tmp_path):

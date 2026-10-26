@@ -114,16 +114,24 @@ class SchedulerCollector(DataCollector):
     name = "scheduler"
 
     def collect(self) -> dict:
+        # 运行时 (managed-python) 取自工作区 —— 它靠 `$ROOT/.venv/bin/python`
+        # 解析解释器, 而 publisher 检出每 180s 被 `git clean -fdx`, 那里没有
+        # .venv, 于是 `command -v python3.11+` 与 `uv` 都落空, managed-python
+        # 以 exit 2 失败 (2026-10-26 实测: 采集器持续 STALE_UNAVAILABLE)。
+        # 被检查的脚本则取自 registry 根 —— scheduler-compile.py 的 REGISTRY
+        # 由 `Path(__file__).resolve().parents[1]` 导出, 所以脚本路径决定读哪棵
+        # registry, 而解释器决定用什么跑。
         root = registry_root()
+        runtime = workspace_root()
         try:
             raw = _run_cmd(
                 [
-                    str(root / "bin/gac/managed-python"),
+                    str(runtime / "bin/gac/managed-python"),
                     "run",
                     "--profile",
                     "pyyaml",
                     "--",
-                    "bin/scheduler-compile.py",
+                    str(root / "bin/scheduler-compile.py"),
                     "--check",
                     "--json",
                 ],
