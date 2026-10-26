@@ -43913,7 +43913,7 @@ bets:
   window: Y2Q4
   priority: P1
   appetite: 1 day
-  status: pending
+  status: done
   risk_level: L1
   human_gate: false
   pasw_required: false
@@ -43966,16 +43966,40 @@ bets:
     content_digest: sha256:b7158773508c9baf659dc3d8bf11f9935c323c04c190304448110ff83d883b2e
     decision_ref: decision://accepted/BET-Y2Q4-T10-340401
   value_indicator_policy: false
+  done_at: 2026-10-26
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9fbccb54364cb22dffa2658a2ca08054a40ca919
+          tests:
+            ref: receipt://docs/reports/2026-10-20-v34-canonical-scene-parser-closeout.md
+            sha256: sha256:8859698ac78aea8a25698dfb199fe4ccde86e455fde7a2b7afafc08fa5c75739
+          diff:
+            ref: receipt://docs/reports/2026-10-20-v34-canonical-scene-parser-closeout.md
+            sha256: sha256:8859698ac78aea8a25698dfb199fe4ccde86e455fde7a2b7afafc08fa5c75739
+          rollback:
+            ref: receipt://docs/reports/2026-10-20-v34-canonical-scene-parser-closeout.md
+            sha256: sha256:8859698ac78aea8a25698dfb199fe4ccde86e455fde7a2b7afafc08fa5c75739
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-20-v34-canonical-scene-parser-closeout.md
+            sha256: sha256:8859698ac78aea8a25698dfb199fe4ccde86e455fde7a2b7afafc08fa5c75739
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-20-v34-canonical-scene-parser-closeout.md
+            sha256: sha256:8859698ac78aea8a25698dfb199fe4ccde86e455fde7a2b7afafc08fa5c75739
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-340401.md
+            sha256: sha256:9f9dfd8711127818009e399e4b8f6a66769e0573143eb44617b70ed49c612d34
+          cleanup:
+            ref: receipt://docs/reports/2026-10-20-v34-canonical-scene-parser-closeout.md
+            sha256: sha256:8859698ac78aea8a25698dfb199fe4ccde86e455fde7a2b7afafc08fa5c75739
       value:
         status: NOT_PROVEN
         evidence: {}

@@ -19,10 +19,9 @@
 
 from __future__ import annotations
 
+import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
-
-import yaml
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 SCENE_CARDS_DIR = WORKSPACE / "docs/scene-cards"
@@ -30,16 +29,19 @@ CANDIDATES_DIR = SCENE_CARDS_DIR / "candidates"
 OUTPUT = WORKSPACE / "docs/generated/scene-card-lineage.yaml"
 
 
+ROOT = WORKSPACE
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from lib.scene_card_document import SceneCardParseError, load_scene_card_document  # noqa: E402
+
+
 def _load_scene_card_body(path: Path) -> dict:
-    """加载 scene-card YAML (多文档: front matter + body), 返回 body (含 schema 的文档)."""
-    docs = [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if d]
-    if not docs:
-        return {}
-    for d in docs:
-        schema = str(d.get("schema", ""))
-        if schema.startswith("scene-card/"):
-            return d
-    return docs[-1]
+    """加载 scene-card YAML (共享解析器), 解析错误传播给调用者."""
+    try:
+        return load_scene_card_document(path).body
+    except SceneCardParseError:
+        raise
 
 
 def scan_scene_cards() -> list[dict]:

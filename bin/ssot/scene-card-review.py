@@ -29,6 +29,16 @@ from typing import Any
 
 import yaml
 
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from lib.scene_card_document import (  # noqa: E402
+    load_scene_card_document,
+    sync_declared_mirrors,
+    write_scene_card_document,
+)
+
 
 def _now_iso() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -188,7 +198,8 @@ def validate_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
     if not scene_file.exists():
         return {"valid": False, "error": f"Scene card not found: {scene_file}"}
 
-    data = yaml.safe_load(scene_file.read_text())
+    document = load_scene_card_document(scene_file)
+    data = document.body
 
     required = [
         "scene_id", "journey_id", "goal", "trigger",
@@ -221,7 +232,8 @@ def promote_scene_card(workspace_root: Path, scene_id: str, target_lifecycle: st
     if not scene_file.exists():
         return {"success": False, "error": f"Scene card not found: {scene_file}"}
 
-    data = yaml.safe_load(scene_file.read_text())
+    document = load_scene_card_document(scene_file)
+    data = document.body
     current = data.get("lifecycle", "draft")
 
     if valid_order.index(target_lifecycle) <= valid_order.index(current):
@@ -232,8 +244,8 @@ def promote_scene_card(workspace_root: Path, scene_id: str, target_lifecycle: st
     if not validation["valid"]:
         return {"success": False, "error": f"Validation failed: {validation['missing_fields']}"}
 
-    data["lifecycle"] = target_lifecycle
-    scene_file.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True))
+    sync_declared_mirrors(document, {"lifecycle": target_lifecycle})
+    write_scene_card_document(scene_file, document)
     return {"success": True, "scene_id": scene_id, "lifecycle": target_lifecycle}
 
 
@@ -243,7 +255,8 @@ def status_scene_card(workspace_root: Path, scene_id: str) -> dict[str, Any]:
     if not scene_file.exists():
         return {"error": f"Scene card not found: {scene_file}"}
 
-    data = yaml.safe_load(scene_file.read_text())
+    document = load_scene_card_document(scene_file)
+    data = document.body
     return {
         "scene_id": data.get("scene_id", scene_id),
         "lifecycle": data.get("lifecycle", "draft"),
