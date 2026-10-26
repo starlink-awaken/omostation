@@ -6391,3 +6391,13 @@ launchd_namespace:
     - label: com.macpaw.CleanMyMac5.Updater
       classification: external
       reason: 'CleanMyMac 5 自有更新器(第三方商业应用自行注册), 本仓不生成也不接管; 2026-09-30 同上按残留 ProgramArguments 重建, 未 load'
+
+    - label: com.fleetops.logrotate
+      classification: external
+      reason: 'fleet-ops 仓自有的日志轮转 (BET-Y2Q4-T10-271 principal 2026-10-26 署名补登)。argv = /usr/bin/env uv run --script /Users/xiamingxing/Project/fleet-ops/tools/rotate_logs.py；调度 Calendar + RunAtLoad、1 条环境变量（值不抄）、1052 B、mtime 2026-10-24T09:40:28Z、sha256:16 3dfc5058ecb20b4d；仓内 bin/ops/launchd/ 无镜像，本仓既不生成也不接管其生命周期；实测 launchctl 未加载该 job。'
+    - label: com.fleetops.sync
+      classification: external
+      reason: 'fleet-ops 仓自有的状态同步 (BET-Y2Q4-T10-271 principal 2026-10-26 署名补登)。argv = /bin/sh /Users/xiamingxing/Project/fleet-ops/tools/sync_state.sh；调度 StartInterval + RunAtLoad、无环境变量、722 B、mtime 2026-10-23T13:56:08Z、sha256:16 8e761c20773b6720；仓内无 plist 镜像，源码在其它工程线的仓，本仓不生成也不接管；实测 launchctl 未加载该 job。'
+    - label: com.localbrain.ops-engine
+      classification: external
+      reason: 'work-agent 仓自有的运维引擎 (BET-Y2Q4-T10-271 principal 2026-10-26 署名补登，指定按 external 处理，与同前缀 #13—#16 的待署名条目分开)。argv = /usr/bin/python3 /Users/xiamingxing/Project/work-agent/scripts/ops_engine/main.py，WorkingDirectory 同目录；调度 RunAtLoad + KeepAlive、2 条环境变量（值不抄）、2045 B、mtime 2026-10-21T08:45:37Z、sha256:16 3f92fb4459fdadda；仓内无 plist 镜像。⚠️ 与上两条不同，本条实测 launchctl 正在运行 —— 归 external 只表示本仓不生成不接管，不构成对本仓管辖权的裁定。'
