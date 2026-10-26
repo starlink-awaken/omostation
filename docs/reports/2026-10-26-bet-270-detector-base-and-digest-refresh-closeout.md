@@ -87,6 +87,31 @@ python3 bin/gac/gac-local-gate.py --scope files --file <本批每个文件>
 ⚠️ 第 3 行的 `/usr/bin/grep` 不是笔误：本会话 shell 是 zsh 且 `grep` 别名为 `rg`，
 裸 `grep -cE` 会把 `-E` 当编码参数（§7⑤ 同源）。
 
+## 4.5 本腿遇到过的一次硬 FAIL（不是静默失效，如实记）
+
+收口腿 5 个文件一次过 `gac-local-gate --scope files` 时**当场 FAIL**：
+
+```
+[FAIL] change-lane-check :: bin/change-lane-check.py --file …（5 files）
+change-lane-check: FAIL mixed lanes=docs,docs_data,governance_state
+```
+
+定位用逐文件单跑（每条各自 `PASS`，读数 `lanes=docs` / `docs_data` / `governance_state`），
+再读 `bin/change-lane-check.py:196 allowed_for()`：`:207` 是
+`if "governance_state" in lanes and len(lanes) > 1: return False` —— **governance_state 必须独占一次提交**，
+而 `ALLOWED_COMBOS`（`:14-21`）里 `{"docs","docs_data"}` 是合法并集（固化腿正是这一对，所以当时 PASS）。
+处置按规则本身拆两次提交，而不是加 `--allow-lane` 或 `AGENT_WORKFLOW_ALLOWED_LANES` 自我授权：
+`c18e04ea1`（AGENTS.md + spec + receipt + 台账，`lanes=docs,docs_data`，gate `PASS 68 checks / 2 SOFT WARN`）
+与 `154e04151`（retro，`lanes=governance_state`，gate `PASS 68 checks / 2 SOFT WARN`）。
+两条 soft warn 与固化腿逐字同名：`current-state-coherence` 缺 `.omo/state/system.yaml`（T10-235 摘库后的常态）、
+KOS db 缺席（exit 78 = skipped，非 passed）。
+
+同源的一次越界自纠：收口腿驱动脚本按行提取台账条目块时，块尾只找了下一条 `^- id: `，
+而 T10-270 是 `bets:` 的**最后一项**、其后紧跟顶层键 `campaigns:` ⇒ 切片跨过边界，
+`yaml.safe_load` 当场 `ParserError`（不是静默错值）。改为「下一条 `- id:` **或**任意顶层键」后正确。
+这正是 AGENTS.md §6「bets 序列被顶层键切断」那条禁令的镜像面 —— 那条讲的是**插入**不能按行号盲插，
+本轮补的是**提取**同一个块也会犯同样的错。
+
 ## 5 未做的事（与 spec 非目标一致）
 
 - 未修 `check-work-landed.py` 的 `__file__` 定根行为（牵动 22 个本地检查的根语义，需另一次准入）。

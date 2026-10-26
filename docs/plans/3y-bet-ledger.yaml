@@ -44837,28 +44837,28 @@ bets:
             ref: git://origin/main@9c7d2c0fd51c41390ffc0149a62da59044159ed5
           tests:
             ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
-            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+            sha256: sha256:362a586f6f40a16d910c12a39a406b85ce0b9c1de63df4b21ac46d165b4a8fce
           diff:
             ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
-            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+            sha256: sha256:362a586f6f40a16d910c12a39a406b85ce0b9c1de63df4b21ac46d165b4a8fce
           rollback:
             ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
-            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+            sha256: sha256:362a586f6f40a16d910c12a39a406b85ce0b9c1de63df4b21ac46d165b4a8fce
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
-            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+            sha256: sha256:362a586f6f40a16d910c12a39a406b85ce0b9c1de63df4b21ac46d165b4a8fce
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
-            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+            sha256: sha256:362a586f6f40a16d910c12a39a406b85ce0b9c1de63df4b21ac46d165b4a8fce
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-270.md
-            sha256: sha256:c46886f0ec6de003d145a1a62bdd836e6ee4b232d161543e436d869a06ec8235
+            sha256: sha256:a1702b8dc54ff5d2b434b01cf5dd6937ff2c05c5dad4868b58f3c8709a28b70a
           cleanup:
             ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
-            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+            sha256: sha256:362a586f6f40a16d910c12a39a406b85ce0b9c1de63df4b21ac46d165b4a8fce
       value:
         status: NOT_PROVEN
         evidence: {}
