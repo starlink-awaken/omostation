@@ -6342,6 +6342,25 @@ services:
 # 必须与 services 同文档: load_services() 取 docs[-1]['services'], 独立文档会让 services 变空,
 # 于是 --check 在零服务上「漂移 0」通过 —— 门禁自己变成假绿。
 
+- id: omostation.agent-brief-materialize
+  enabled: true
+  generate: true
+  run_at_load: true
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 1800
+  label: com.omostation.agent-brief-materialize
+  program:
+    interpreter: stable-python3
+    entrypoint: bin/panorama/materialize-agent-brief.py
+  notes: '入口层 Agent Brief 真数据物化 (BET-Y2Q4-T1-05): 从活的 projection revision 原样复制,
+    generated_at 逐字保留不重打戳, 附 provenance; 源缺失/哈希不符则不写并以非 0 退出。
+    只在 mini 装 (MBP 没有 zhixing-dashboard state root)。取代 auto-pruner 的 TTL 刷新 —— 那只改时间戳不改内容,
+    是假绿。'
+  outputs:
+    stdout: ~/.local/log/agent-brief-materialize.log
+    stderr: ~/.local/log/agent-brief-materialize.log
+
 launchd_namespace:
   workspace_prefixes:
     - com.aetherforge

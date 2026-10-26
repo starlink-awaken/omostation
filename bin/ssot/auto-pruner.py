@@ -187,19 +187,33 @@ def prune_ritual(dry_run: bool) -> list[dict]:
     return actions
 
 
+def _age_hours(value: object) -> float | None:
+    """ISO 时间戳 ⇒ 距今小时数。读不出来返回 None（不可判 ≠ 0 ≠ 缺失）。"""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - parsed).total_seconds() / 3600.0
+
+
 def prune_brief(dry_run: bool) -> list[dict]:
-    """Brief STALE → bump generated_at to now (heartbeat regen).
+    """Brief 内容年龄**如实报告** —— 不再 bump generated_at（TTL 退役）。
 
-    BET-Y2Q4-SH-6: drift face detector flags
-    ``runtime/dashboard/agent-brief.json`` when ``generated_at`` exceeds
-    BRIEF_CADENCE_HOURS (24h).  The canonical regen path is
-    ``panorama-collect.py``, but it requires a clean code root and is
-    fragile in worktrees.
+    历史 (BET-Y2Q4-SH-6)：本 handler 只会把 ``generated_at`` 改成 now，让
+    drift-face-detector 停止报 BRIEF-STALE；但语义内容（objective coverage /
+    alerts）**一个字都没刷新** ⇒ 那是「把旧快照说成今天」= 假绿。
 
-    This handler takes the cheap path: re-stamp ``generated_at`` so the
-    drift detector stops flagging it.  The semantic content (objective
-    coverage, alerts, etc.) is **not** refreshed — a real panorama run
-    is still required for content.  Think of this as a TTL refresh.
+    2026-10-26 退役（用户裁决 A）：入口层 brief 改由
+    ``bin/panorama/materialize-agent-brief.py`` 从活的 projection revision
+    **原样物化**（generated_at 逐字保留）。两个机制同时写同一文件会让
+    ``generated_at`` 忽真忽假 ⇒ 本 handler 退化为**只读观察者**：报告内容真实年龄，
+    绝不写文件。
+
+    ``dry_run`` 保留是为了不改注册表调用形状；本 handler 已无写操作，两者行为相同。
     """
     actions: list[dict] = []
     p = WORKSPACE_ROOT / "runtime/dashboard/agent-brief.json"
@@ -232,16 +246,20 @@ def prune_brief(dry_run: bool) -> list[dict]:
             "applied": False,
         })
         return actions
-    new_ts = datetime.now(timezone.utc).isoformat()
-    data["generated_at"] = new_ts
-    if not dry_run:
-        p.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    generated_at = data.get("generated_at")
+    age_hours = _age_hours(generated_at)
     actions.append({
         "class": "brief",
-        "id": "BRIEF-REGEN-HEARTBEAT",
+        "id": "BRIEF-CONTENT-AGE",
         "path": str(p.relative_to(WORKSPACE_ROOT)),
-        "note": f"bumped generated_at → {new_ts}",
-        "applied": not dry_run,
+        "note": (
+            f"内容真实年龄 {age_hours:.1f}h (generated_at={generated_at!r}) —— "
+            "TTL 已退役, 本 handler 不改写时间戳; 停更由 drift-face-detector 的 "
+            "BRIEF-STALE 如实报出"
+        ) if age_hours is not None else (
+            f"generated_at 不可解析 ({generated_at!r}) —— TTL 已退役, 本 handler 不改写时间戳"
+        ),
+        "applied": False,
     })
     return actions
 

@@ -1,0 +1,30 @@
+schema: script-registry/v1
+id: bin/panorama/materialize-agent-brief.py
+name: Agent Brief Materializer (入口层真数据物化)
+category: governance
+owner: governance-team
+description: 把活的 projection revision 里的 Agent Brief **原样物化**到 runtime/dashboard/。
+  pointer -> manifest -> artifact 逐层交叉校验 sha256; generated_at 逐字保留 (**不重打戳** ——
+  打戳就是拿旧快照冒充今天); 附 provenance (source_path/revision_id/manifest_sha256/copied_at/
+  data_generated_at); 源缺失/不可解析/哈希不符则 **不写**、退出码非 0; 同目录临时文件 + os.replace。
+  取代 auto-pruner 的 TTL 刷新 (那只改时间戳不改内容 = 假绿); 入口层的唯一写方是本脚本,
+  panorama-collect 只发布 revisions/ 不写 flat brief (BET-Y2Q4-T1-05)。
+inputs:
+  - name: --source-root
+    type: path
+    required: false
+  - name: --target
+    type: path
+    required: false
+  - name: --check
+    type: flag
+    required: false
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: [launchd]
+related: [bin/panorama/projection-republisher.py, bin/mof/gen-service-configs.py, bin/ssot/auto-pruner.py]
+tags: [panorama, dashboard, brief, truth, fail-closed]
+maturity: active
+last_reviewed: "2026-10-26"

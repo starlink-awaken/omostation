@@ -87,8 +87,12 @@ def test_brief_dry_run() -> tuple[bool, str]:
             f"applied={actions[0].get('applied')} ts={after['generated_at']}")
 
 
-def test_brief_apply() -> tuple[bool, str]:
-    """Apply bumps generated_at to current UTC."""
+def test_brief_apply_does_not_bump() -> tuple[bool, str]:
+    """TTL 已退役: 即使 apply 也不改 generated_at (2026-10-26, 用户裁决 A)。
+
+    旧行为是把 generated_at bump 成 now —— 那是把旧快照说成今天 (假绿)。
+    现在入口层 brief 由 materialize-agent-brief.py 原样物化, 本 handler 只报内容年龄。
+    """
     tmp = _make_workspace()
     _patch_workspace_root(tmp)
     p = tmp / "runtime" / "dashboard" / "agent-brief.json"
@@ -101,12 +105,14 @@ def test_brief_apply() -> tuple[bool, str]:
     }))
     actions = auto_pruner.prune_brief(dry_run=False)
     after = json.loads(p.read_text())
-    bumped = not after["generated_at"].startswith("2020-01-01")
+    not_bumped = after["generated_at"].startswith("2020-01-01")
     preserved = (after.get("schema") == "panorama-agent-brief/v1"
                  and after.get("alerts") == [{"id": "x", "severity": "high"}])
+    truthful_id = actions[0].get("id") == "BRIEF-CONTENT-AGE"
     shutil.rmtree(tmp)
-    return (actions[0].get("applied") is True and bumped and preserved,
-            f"applied={actions[0].get('applied')} bumped={bumped} preserved={preserved}")
+    return (actions[0].get("applied") is False and not_bumped and preserved and truthful_id,
+            f"applied={actions[0].get('applied')} not_bumped={not_bumped} "
+            f"preserved={preserved} id={actions[0].get('id')}")
 
 
 def test_prunable_classes_includes_brief() -> tuple[bool, str]:
@@ -120,7 +126,7 @@ def main() -> int:
         ("brief-missing", test_brief_missing),
         ("brief-malformed", test_brief_malformed),
         ("brief-dry-run", test_brief_dry_run),
-        ("brief-apply", test_brief_apply),
+        ("brief-no-bump-on-apply", test_brief_apply_does_not_bump),
         ("prunable-classes", test_prunable_classes_includes_brief),
     ]
     passed = 0
