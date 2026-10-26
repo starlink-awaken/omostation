@@ -44770,6 +44770,113 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-270
+  title: BET-Y2Q4-T10-267 收口腿暴露的三类静默失效形状固化进 agent 感知面（尺基线 / 台账同块重排 / 摘要按字段定位）
+  goal: 'T10-267 收口腿在两天内产出两次矛盾的门禁读数、一次台账块内的结构性冲突、以及一次写进交付文档的错误因果归因，三条都在交付动作内部发生且「当场就错、输出完全正常」。准入判据沿用
+    T10-221 / T10-225（复发 ≥2 次或当场让安全网静默失效，且有不依赖本机状态的指认方式）。一、门禁的**尺本身**会随 base 变 —— bin/gac/check-work-landed.py:31
+    以 WORKSPACE = Path(__file__).resolve().parents[2] 定根，于是每个 worktree 执行的是自己检出里那一份脚本；T10-267
+    初版 receipt 把两棵树读数差（FAIL settled=112 warn=2 blocking=13 对 PASS closed=193 settled=127
+    no_ref=66 warn=0 blocking=0）归因为「并发 agent 与 cron 事后补齐了 landing」，复测否证——两侧 RUNS_DIR
+    经 .omo/_delivery symlink 桥 resolve 到同一份 canonical 目录各 350 个 run 文件、根仓 git rev-list
+    origin/main 同为 8734、被点名 15 条 run 的 16 个 sha 凭证在两棵树任何仓的 landed 集合里都不存在；真因是 git diff
+    --stat 51c9ed62e 26a904504 -- bin/gac/check-work-landed.py = 111 insertions(+)（eb3e48c34
+    / PR #4885，2026-10-25 加 BET 落地兜底），特征符号 RETROS_DIR 与 _bet_log_refs 命中数在两 base 上分别是
+    0 与 7。本地专用检查最容易这样（.omo/_truth/registry/ci-surfaces.yaml:371-376 登记 workflow: (none)
+    + gate: true + triggers: []），因为没有 CI 那份统一检出替所有人对齐尺。二、台账同一 BET 块内的上游排版重排会让并发交付结构性冲突
+    —— PR #4892 实测 mergeable=CONFLICTING / mergeStateStatus=DIRTY 且 gh pr checks 零排队，冲突点不是新增行撞新增行，而是上游对
+    docs/plans/3y-bet-ledger.yaml 做 YAML plain scalar 换行重排、重排范围落在同一个 BET-Y2Q4-T10-267
+    块内；正解是从当前 origin/main 重做受控后继（本轮 #4894），rebase/merge/pull 吸收上游是违令（bin/gac/gac-worktree.sh
+    的 _emit_managed_successor_proposal 定义 :967、打印 MANAGED_SUCCESSOR_REQUIRED :978、exit
+    2 :985）。这是既有条款「no checks reported 第一因是 CONFLICTING」在台账上的特有触发形状，比两侧同时追加尾项更隐蔽，因为两侧
+    diff 语义上毫不相干。三、刷新台账里的文件摘要必须按字段路径定位 —— receipt 改版后其 6 个证据位需同步，本轮自伤的驱动脚本用「块内出现且不等于新
+    receipt/新 retro」反选陈旧值，于是把 accepted_specifications[0].content_digest（规范绑定摘要，与 receipt
+    无关且绝不能变）一并改成了新 receipt 摘要；台账内 sha256: 只有两类且互不相交——completion_evidence.axes.*.evidence.*.sha256（随
+    receipt/retro 变）与 accepted_specifications.*.content_digest（随 spec 正文变，由 bin/plan/bet-ledger.py
+    complete 的绑定校验强制）。写回后必须同时断言两类各自等于磁盘对象，缺一即视为未完成。另附一条就地修正的陈旧指针（§7⑥ 纪律）：AGENTS.md §6
+    把 rebase 禁令、submit proposal-only、merge 查 open PR 三处分别引在 :507 / :683-691 / :780-783，本轮实测真实站点是
+    :966 与 :994（不 rebase 的 typed 指令）、:967-:985（_emit_managed_successor_proposal 定义与
+    exit 2）、:1241-:1244（gh pr list 与「先 submit 开 PR」）；「行号在文件行数内」这种存在性检查结构上检不出这类漂移（三个旧指针当时都指向存在的行），必须按内容断言。撞号改铸记：本
+    BET 原定 BET-Y2Q4-T10-269，在 push 前 fetch 时发现并发 agent 已把 269 用于另一条 BET（#4895 已合入 main），故按
+    T10-234 先例改铸为 270。本 BET 不新增代码、不改 bin/。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: bet-execution
+  value_indicator_policy: false
+  non_goals:
+  - 不修 check-work-landed.py 的 __file__ 定根行为（牵动一批本地检查的根语义，属另一次准入）
+  - 不处理 projects/family-hub 浅克隆深度不一致（AGENTS.md §6 列为 claim 路径属性，不是缺陷）
+  - 不为「no checks reported 第一因是 CONFLICTING」重新立条，只补台账特有触发形状
+  - 不宣告 ADR-0456 任何阶段（B1/B3/B4/B4b/B5）或整个 plan 完成
+  write_surfaces:
+  - AGENTS.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-26-bet-270-detector-base-and-digest-refresh-discipline.md
+  - docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-270.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-26-bet-270-detector-base-and-digest-refresh-discipline.md
+    spec_version: 1.0.0
+    content_digest: sha256:184df6af8d7242d7fe88bf7f4b79172f8397e83d75df261d231e09b4588396a4
+    decision_ref: decision://accepted/BET-Y2Q4-T10-270
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  done_when:
+  - AGENTS.md §7 含三条新固化，每条都带 证据 → 判据 → 纪律 三段，且指认方式不依赖本机状态（verify-1 逐锚点测量）。
+  - AGENTS.md §6 三处陈旧行号指针按内容断言修正且旧号消失（verify-2）；新三条内点名的 file:line 按该行内容命中（verify-3）。
+  - 新增跟踪文档（spec / receipt / retro）frontmatter 齐备且 owner 在场，doc-governance-check --no-new-warnings
+    --scope tracked 对本轮新文件零未基线告警（verify-4）。
+  - bin/plan/bet-ledger.py lint 零 error，且本 BET 的 content_digest 等于 spec 文件字节摘要（verify-5
+    —— 即形状③自身的操作化反证）。
+  - 纯文档交付：git diff --name-only origin/main...HEAD 不含 .py，不碰 projects/*、本机 launchd/crontab/services.yaml（verify-6）。
+  verify:
+  - cmd: python3 -c "import pathlib,sys; t=pathlib.Path('AGENTS.md').read_text(encoding='utf-8');
+      A=('尺本身会随 base 变','同一 BET 块内的上游排版重排','按字段路径定位'); miss=[a for a in A if a not in
+      t]; print('missing=' + str(miss)); sys.exit(0 if not miss else 1)"
+    expect: missing=[] (exit 0) —— §7 三条锚点全部存在
+  - cmd: python3 -c "import pathlib,sys; g=pathlib.Path('bin/gac/gac-worktree.sh').read_text(encoding='utf-8').splitlines();
+      a=pathlib.Path('AGENTS.md').read_text(encoding='utf-8'); need=[('966','禁止 rebase/merge/pull'),('967','_emit_managed_successor_proposal()
+      {'),('985','exit 2'),('1241','gh pr list'),('1244','先 submit 开 PR')]; bad=[n for
+      n,s in need if s not in g[int(n)-1]]; gone=[s for s in ('gac-worktree.sh:507','gac-worktree.sh:683','gac-worktree.sh:780')
+      if s in a]; print('bad=' + str(bad) + ' stale_left=' + str(gone)); sys.exit(0
+      if not bad and not gone else 1)"
+    expect: bad=[] stale_left=[] (exit 0) —— §6 三处指针按内容重钉，旧号消失
+  - cmd: 'python3 -c "import pathlib,sys; c=pathlib.Path(''bin/gac/check-work-landed.py'').read_text(encoding=''utf-8'').splitlines();
+      y=pathlib.Path(''.omo/_truth/registry/ci-surfaces.yaml'').read_text(encoding=''utf-8'').splitlines();
+      ok=(''parents[2]'' in c[30]) and (''bin-gac-check-work-landed-py'' in y[370])
+      and (''triggers: []'' in chr(10).join(y[370:376])); print(''content_hit='' + str(ok));
+      sys.exit(0 if ok else 1)"'
+    expect: content_hit=True (exit 0) —— 新条目点名的行号内容命中
+  - cmd: python3 bin/ssot/doc-governance-check.py --no-new-warnings --scope tracked
+    expect: exit 0 —— 本轮新增跟踪文档无未基线告警
+  - cmd: python3 -c "import yaml,hashlib,sys; d=yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml',encoding='utf-8'));
+      b=[x for x in d['bets'] if x.get('id')=='BET-Y2Q4-T10-270'][0]; bind=b['accepted_specifications'][0];
+      ref=bind['spec_ref'].replace('repo://',''); actual='sha256:'+hashlib.sha256(open(ref,'rb').read()).hexdigest();
+      print('total_bets=' + str(d['meta']['total_bets']) + ' len=' + str(len(d['bets']))
+      + ' digest_ok=' + str(bind['content_digest']==actual)); sys.exit(0 if bind['content_digest']==actual
+      and d['meta']['total_bets']==len(d['bets']) else 1)"
+    expect: digest_ok=True 且 total_bets == len(bets)（配合 bet-ledger.py lint 零 error）
+  - cmd: bash -c "git diff --name-only origin/main...HEAD | /usr/bin/grep -c '\.py$'
+      || true"
+    expect: 0 —— 纯文档交付，零 Python 改动
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44908,7 +45015,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 565
+  total_bets: 566
   windows:
   - Y1Q1
   - Y1Q2

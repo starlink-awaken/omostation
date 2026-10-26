@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-10-25
-last-reviewed: 2026-10-23
+last_updated: 2026-10-26
+last-reviewed: 2026-10-26
 lifecycle: entry
 status: active
 ---
@@ -190,15 +190,16 @@ bash bin/gac/gac-worktree.sh merge <session>     # squash 合并【已存在的�
 bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW 子树
 ```
 
-- **`submit` 自 WP1 Wave B2 起是 proposal-only**：`bin/gac/gac-worktree.sh:683-691` 在跑完门禁/子模块预检后
+- **`submit` 自 WP1 Wave B2 起是 proposal-only**：`bin/gac/gac-worktree.sh` 的 `_emit_managed_successor_proposal()`
+  （定义 `:967`，打印 `MANAGED_SUCCESSOR_REQUIRED` 在 `:978`，`exit 2` 在 `:985`）在跑完门禁/子模块预检后
   只打印 `MANAGED_SUCCESSOR_REQUIRED` + `patch_digest` 然后 **`exit 2`**，**不 push、不开 PR、不调 integrate**。
   实证（2026-09-26，同一分支两次 submit）：两次都 exit 2，远端零效应。
   所以 **`exit 2` 不是拦截，是终态** —— 别把它读成"base 太旧、需要先造一个 successor"而白跑一轮 claim。
-- `merge` 仍然可用，但它查的是"该分支已有 open PR"（`:780-783`，查不到就报 `先 submit 开 PR` 退出）。
+- `merge` 仍然可用，但它查的是"该分支已有 open PR"（`:1241-1244`，查不到就报 `先 submit 开 PR` 退出）。
   由于 submit 不再开 PR，**这句提示已失效**；真实前置条件是上面两行手动 push + `gh pr create`。
 - `origin/main 前进 N commits` 的告警同理：它伴随 proposal 一起打印，不是要求你 rebase
-  （本仓明确禁止用 rebase/merge/pull 吸收上游，见 `:507`）。改动只碰文档且与上游无交集时，
-  直接 push 即可。
+  （本仓明确禁止用 rebase/merge/pull 吸收上游，见 `:966` 的 WP1 Wave B2 注释与 `:994` 的 typed 指令）。
+  改动只碰文档且与上游无交集时，直接 push 即可。
 - **但别据此推论"CI 只评 merge tree、base 漂移无所谓"**（2026-09-27 实测，BET-Y2Q4-T10-210）。
   `.github/workflows/governance-check.yml` 四个 job 的评审对象**不同**：`meta-doctor`(`:51`)、
   `interface-check`(`:64`)、`doc-freshness`(`:146`) 用默认 checkout（PR 事件 = merge commit），
@@ -394,6 +395,47 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   （条目声明 `require_kernel_root_match: true`），于是「改过去」与「声明改过去了」仍是同一次编辑里的两件事。
   ④ 认不出入口必须记 `undetermined` 且**与不合规在阻塞面同形**（promotion 条件写成 `state != "ok"`，不是 `== "pinned_other_root"`）——
   否则把入口改成检测器认不出的形状就等于关掉这道闸。
+- **门禁的尺本身会随 base 变 —— 两次读数不同，动的可能是检测器而不是数据（2026-10-26, BET-Y2Q4-T10-267 收口腿实测）**：
+  **证据** —— `docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md` §5 的初版把
+  `bin/gac/check-work-landed.py` 在两棵 worktree 上的读数差（`FAIL settled=112 warn=2 blocking=13` 对
+  `PASS closed=193 settled=127 no_ref=66 warn=0 blocking=0`）归因为「两天里并发 agent 与 cron 把这些 run 的 landing 补齐了」，
+  该归因**未经测量即随 PR 交付**。复测否证它：两侧 `RUNS_DIR` 经 `.omo/_delivery` symlink 桥 `resolve()` 到同一份 canonical 目录、
+  各 350 个 run 文件；根仓 `git rev-list origin/main` 两侧同为 **8734**；被点名 15 条 run 的 **16 个 sha 凭证在两棵树里都不在**任何仓的
+  landed 集合 —— landing 从未被事后确认。真因是 `bin/gac/check-work-landed.py:31` 以 `WORKSPACE = Path(__file__).resolve().parents[2]` 定根，
+  ⇒ **每个 worktree 执行的是自己检出里那一份脚本**；`git diff --stat 51c9ed62e 26a904504 -- bin/gac/check-work-landed.py` =
+  **111 insertions(+)**（`eb3e48c34`「check-work-landed 加 BET 落地兜底」/ PR #4885，2026-10-25），特征符号 `RETROS_DIR` 与
+  `_bet_log_refs` 命中数在两 base 上分别是 **0** 与 **7**。
+  **判据** —— ① 比较任何两次门禁读数之前先跑 `git diff --stat <baseA> <baseB> -- <该检查脚本路径>`，**非空 ⇒ 两次读数不可比**，
+  必须各带自己 base 分别记录；② 行为化探测（不靠记忆）：对每棵树用 `importlib` 载入该脚本后 `print(hasattr(m, '<特征符号>'))` 各跑一次，
+  缺席 ⇒ 尺不同；③ **本地专用检查最容易这样** —— `.omo/_truth/registry/ci-surfaces.yaml:371-376` 把 `check-work-landed` 登记为
+  `workflow: (none)` + `gate: true` + `triggers: []`，它不进 CI，就没有一份统一检出替所有人对齐尺。
+  **纪律** —— receipt/retro 里任何门禁读数必须写成「读数 + 产出该读数的那份检测器所在的 base」。
+  这是「凡两次探测结果不同，先疑基线动了」的加强版：先前只教人怀疑**数据**基线，本轮证明**动的可以是尺本身**。
+- **台账里「同一 BET 块内的上游排版重排」会让并发交付结构性冲突，而冲突态下 CI 根本不排队（2026-10-26, BET-Y2Q4-T10-267 收口腿实测）**：
+  **证据** —— PR #4892（收口腿第一版，base `51c9ed62e`）实测 `mergeable=CONFLICTING` / `mergeStateStatus=DIRTY`、`gh pr checks` 零排队。
+  冲突点不是新增行撞新增行，而是上游对 `docs/plans/3y-bet-ledger.yaml` 做了 **YAML plain scalar 换行重排**，重排范围**落在同一个
+  `BET-Y2Q4-T10-267` 块内**，于是本轮的 evidence 行与上游的重排行无法自动合并。正解按既有先例 #4745 → #4749：从当前 `origin/main`
+  重做**受控后继**（本轮 #4894），旧 PR 标注 superseded 关闭 —— 本仓禁止用 rebase/merge/pull 吸收上游
+  （`bin/gac/gac-worktree.sh:966` 的 WP1 Wave B2 注释与 `:994` 的 typed 指令）。
+  **判据** —— ① push 后台账类 PR 先看 `gh pr view --json mergeable,mergeStateStatus` 再谈 CI；② 起手与插入前都跑
+  `git diff --name-only <my-base> origin/main -- docs/plans/3y-bet-ledger.yaml`，**非空 ⇒ 高冲突概率**，按最新 `origin/main`
+  整份为底重做，而不是等冲突出现再补救；③ 同一次 fetch 还要查**编号是否已被占** —— 本轮就在 fetch 后发现上游刚把
+  `BET-Y2Q4-T10-269` 用于另一条 BET（#4895 已合入 main），据此按 T10-234 先例改铸为 T10-270，而不是让两条 BET 共用一个 id。
+  **纪律** —— 台账交付的基线新鲜度是**前置条件**而非补救项；受控后继是正解，rebase/merge 是违令。
+  本条补在「GitHub「no checks reported」的第一因是 CONFLICTING」之上，是它在**台账上的特有触发形状**：
+  比两侧同时追加 `bets:` 尾项更隐蔽，因为两侧 diff 语义上毫不相干。
+- **刷新台账里的文件摘要必须按字段路径定位 —— 「值不等于新值」的反选会把规范绑定摘要一起改掉（2026-10-26, BET-Y2Q4-T10-267 收口腿本轮自伤，已检出并回退）**：
+  **证据** —— receipt 正文改版后，其在台账 6 个证据位的 `sha256:` 需同步。驱动脚本用
+  `stale = [d for d in 块内所有 64 位摘要 if d != 新 receipt and d != 新 retro]` 反选「陈旧值」，于是把
+  `accepted_specifications[0].content_digest`（`97d88876…`，**规范绑定摘要，与 receipt 无关且绝不能变**）也一并改成了新 receipt 摘要。
+  脚本自己的成功断言（各 axis 摘要等于磁盘文件）**不覆盖**被误改的那一位，因为它不在被断言的集合里；检出靠的是事后补的一条回读对拍
+  （`content_digest == "sha256:" + sha256(spec 文件字节)`），回退该单行后 `git diff` 恰为 6 处 receipt 摘要位、零其他改动。
+  **判据** —— ① 台账内 `sha256:` 只有两类且**互不相交**：`completion_evidence.axes.*.evidence.*.sha256`（随 receipt/retro 变）与
+  `accepted_specifications.*.content_digest`（随 spec 正文变，由 `bin/plan/bet-ledger.py complete` 的绑定校验强制）；
+  刷新脚本必须按这两类**路径**分别枚举键名，禁止「块内出现即候选」的值匹配替换。② 写回后必须**同时**断言两件事 ——
+  每个 receipt/retro 位等于对应磁盘文件、`content_digest` 等于 spec 文件字节摘要 —— 缺一即视为该次写回未完成。
+  **纪律** —— 把「排除法」用在标识符集合上是危险形状：**本来就不同步**与**已经陈旧**这两种缺席原因在输出里同形。
+  这是「抽样探测的覆盖面上限是它的样本集」与「按构造就绿」的同族第三面。
 ---
 
 ## 8. Testing Guidance
