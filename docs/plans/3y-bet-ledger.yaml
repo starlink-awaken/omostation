@@ -35480,6 +35480,87 @@ bets:
           note: 指标口径校准不新增价值流：它让产能轨如实反映真实 backlog 池（11 done/0 planned， 为 T4-01 业务首单立项提供真实基线），并让知识复用指标从恒
             0 恢复可度量 （12,616，与 sqlite 逐位一致）。价值归属后续消费动作。
   value_indicator_policy: false
+- id: BET-Y2Q4-T1-05
+  title: 口径归一 — 日历 / 台账 / 目标覆盖三读数分离并在 Agent Brief 显式并列
+  track: T1-TRUTH
+  window: Y2Q4
+  status: pending
+  priority: P0
+  appetite: 2 days
+  risk_level: L1
+  human_gate: false
+  retro: required
+  value_indicator_policy: false
+  pasw_required: false
+  workflow: bet-execution
+  underlying_workflow: project-code-change
+  goal: '同一天的三个读数给出三套互相矛盾的答案，且都没有出处。日历层说「今天在 Y1Q1」（蓝图窗口表），台账层说活窗口是
+    Y2Q4（bet-ledger.py surface 的可认领列表首个窗口），目标覆盖层把日历还没到的窗口的 bet 也记成 done（Y2Q1+ 共 189 条，
+    其中 179 条已 done）。2026-10-26 实测两个读数都不可信却都不报错：入口层 Agent Brief 的 generated_at 停在
+    2026-09-21T12:26:20Z（停更 35 天），而台账机读出口 bet-ledger.py list --json 直接崩（TypeError: Object of type date
+    is not JSON serializable）。本单把三个读数分开命名、分别标注出处与截至时间，并在 Agent Brief 里显式并列，不合并成一个数；
+    每个读数带值 / 成色 / 截至时间 / 分母，可比性由消费方判定。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-26-t1-metric-truth-unification.md
+    spec_version: 1.0.0
+    content_digest: sha256:054116c10d6d3a27ac1aa1baf322d97f35652934dafdad0fad718cbbf181acef
+    decision_ref: decision://accepted/BET-Y2Q4-T1-05
+  write_surfaces:
+  - bin/plan/bet-ledger.py
+  - bin/panorama/materialize-agent-brief.py
+  - .omo/_truth/registry/services.yaml
+  - bin/ssot/auto-pruner.py
+  - bin/ssot/test-auto-pruner.py
+  - bin/gac/check-readme-hardcoded.py
+  - docs/operations/repository-health.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-26-t1-metric-truth-unification.md
+  non_goals:
+  - 不改日历层那张 markdown 表（6 个季度错位留下一波；本单只让读数可信）
+  - 不派生新 bet（蓝图 ≤5 条；代码与接线是本单交付内容）
+  - 不碰投影载荷与 driver（BET-Y2Q4-T10-237 是需人工到场的 bet）
+  - 不排 panorama-collect.py（今天不写 brief 且会 git checkout -- .omo/）
+  - 不动 §5.39/43/44/60/80 的小节序号残留
+  circuit_breaker: 本单只让读数可信，不改任何口径的定义 —— 台账出口的日期序列化必须是 ISO-8601（不得用裸 default=str
+    的空格分隔格式）；TTL 刷新退役后若发现入口层 generated_at 不再代表内容新鲜度，不得用重新打戳的方式掩盖；物化源缺失时必须
+    不写并以非 0 退出，绝不写空壳或半截文件。
+  verify:
+  - cmd: python3 bin/plan/bet-ledger.py list --json
+    expect: exit 0、合法 JSON、全部日期字段为 ISO-8601 字符串（date 与 datetime 均走 isoformat），不再出现裸 default=str
+      的空格分隔格式
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: exit 0、no errors、total_bets 与条目数一致
+  - cmd: python3 bin/gac/check-readme-hardcoded.py --update-health
+    expect: docs/operations/repository-health.md 的 BET 台账规模 段为台账真数（不再是 n/a），且该文件被 git 跟踪
+  - cmd: python3 bin/plan/bet-ledger.py list --claimable
+    expect: BET-Y2Q4-T1-05 出现在可认领列表中（Y2Q4 优先，排在列表首行）
+  - cmd: python3 bin/panorama/materialize-agent-brief.py
+    expect: exit 0；runtime/dashboard/agent-brief.json 的 generated_at 逐字等于源 revision 那份的 generated_at（没被打戳），
+      且 provenance.revision_id 非空
+  - cmd: cd ~/Project/work-agent && python3 scripts/planning_probe.py --mode all
+    expect: 入口层 verdict = SCHEDULED_OK、interpreter_verdict = OK，且 age_days 等于数据真实年龄而不是 0
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  done_when:
+  - bet-ledger.py list --json 可被机器消费：exit 0、合法 JSON、全部日期字段为 ISO-8601 字符串
+  - 周报 docs/operations/repository-health.md 的 BET 台账规模 段是台账真数（不再是 n/a），且与同一次 list --json 的读数一致
+  - 入口层 agent-brief.json 由活的 projection revision 原样物化：generated_at 逐字未被打戳，provenance 带 revision_id 与 manifest_sha256
+  - 源 revision 缺失或不可解析时物化作业不写目标文件且退出码非 0
+  - auto-pruner.prune_brief 不再改 agent-brief.json 的 generated_at（停更即如实报停更）
+  - 入口层调度在 launchd 上被登记并实际运行，目标文件 mtime 与内容随真数据前进
+  - work-agent 的 planning_probe 能正确判定 launchd 作业（读 ProgramArguments），入口层读出 SCHEDULED_OK 且 age_days 是真实年龄
+  depends_on: []
 - id: BET-Y2Q4-T10-01
   title: 规则接线收口批次一 — 42 条 CR-* 零引用的四态判定与别名映射
   goal: DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP（2026-09-19 巡查实证）：check-rule-wiring-coverage.py
@@ -45154,7 +45235,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 567
+  total_bets: 568
   windows:
   - Y1Q1
   - Y1Q2
