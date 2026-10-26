@@ -1792,6 +1792,12 @@ def collect_runtime() -> dict:
         rt["scheduler"] = json.loads(out)
     except Exception:  # noqa: BLE001
         rt["scheduler"] = {"ok": code == 0}
+    # Which checkout the check ran in. A4's root is ROOT (the publisher
+    # checkout, synced to origin/main every 180s); the cockpit scheduler
+    # collector must read the same registry or the two verdicts diverge
+    # whenever the shared main workspace lags (BET-Y2Q4-T10-269).
+    if isinstance(rt["scheduler"], dict):
+        rt["scheduler"]["registry_root"] = str(ROOT)
     return rt
 
 
@@ -4650,6 +4656,116 @@ def _brief_bet_source(payload: dict) -> tuple[dict, dict]:
                   "observed_at": None, "proof_scope": "legacy-unbound-advisory-only"}
 
 
+def _brief_reading_row(
+    key: str,
+    meaning: str,
+    source: str,
+    kind: str,
+    *,
+    live: bool,
+    observed_at: str | None,
+    value_text: str,
+) -> dict:
+    """Create one meaning-typed reading row without implying cross-reading equality."""
+    return {
+        "key": key,
+        "meaning": meaning,
+        "source": source,
+        "kind": kind,
+        "live": live,
+        "generated_at": observed_at,
+        "value_text": value_text,
+        "comparability": (
+            "ORTHOGONAL"
+            if key == "ledger" or key == "value_proof"
+            else "SAME_LEDGER_COHORT_SNAPSHOT"
+        ),
+        "usable_as_of_now": live,
+    }
+
+
+def _build_brief_readings(
+    bets: dict,
+    bet_source: dict,
+    objective_coverage: dict,
+    value_readiness: dict,
+) -> dict:
+    """Project three deliberately non-interchangeable readings side by side."""
+    counts = bets.get("counts") if isinstance(bets.get("counts"), dict) else {}
+    total = int(bets.get("total") or 0)
+    done = int(counts.get("done") or 0)
+    ledger_observed_at = (
+        bet_source.get("observed_at")
+        if isinstance(bet_source.get("observed_at"), str)
+        else None
+    )
+    objective_items = (
+        objective_coverage.get("items")
+        if isinstance(objective_coverage.get("items"), list)
+        else []
+    )
+    objective_passed = sum(
+        isinstance(item, dict)
+        and item.get("status") in {"PASS", "DELIVERY_ACCEPTED_RUNTIME_VERIFIED"}
+        for item in objective_items
+    )
+    coverage_live = objective_coverage.get("available") is True
+    coverage_generated_at = (
+        objective_coverage.get("generated_at")
+        if isinstance(objective_coverage.get("generated_at"), str)
+        else None
+    )
+    value_live = bool(value_readiness.get("available")) and value_readiness.get(
+        "validation", {}
+    ).get("ok") is True
+    value_generated_at = (
+        value_readiness.get("validation", {}).get("observed_at")
+        if isinstance(value_readiness.get("validation"), dict)
+        and isinstance(value_readiness["validation"].get("observed_at"), str)
+        else None
+    )
+    rows = [
+        _brief_reading_row(
+            "ledger",
+            "engineering output volume",
+            str(bet_source.get("source") or "portfolio.cohort"),
+            "PORTFOLIO_COHORT" if bets else "UNAVAILABLE",
+            live=bool(bets),
+            observed_at=ledger_observed_at,
+            value_text=f"{done} / {total} bets done",
+        ),
+        _brief_reading_row(
+            "objective_coverage",
+            "capability attainment",
+            str(objective_coverage.get("source") or "producer.derived"),
+            "PRODUCER_DERIVED" if coverage_live else "UNAVAILABLE",
+            live=coverage_live,
+            observed_at=coverage_generated_at,
+            value_text=f"{objective_passed} / {len(objective_items)} objectives passed",
+        ),
+        _brief_reading_row(
+            "value_proof",
+            "real-use value proof",
+            str(value_readiness.get("source") or "unavailable"),
+            "EVIDENCE_VALIDATION" if value_live else "UNAVAILABLE",
+            live=value_live,
+            observed_at=value_generated_at,
+            value_text=(
+                f"{value_readiness.get('qualifying_samples', 0)} / "
+                f"{value_readiness.get('samples_total', 0)} qualifying samples"
+            ),
+        ),
+    ]
+    return {
+        "schema": "panorama-brief-readings/v1",
+        "readable": bool(bets),
+        "comparable_pair_count": 0,
+        "verdict": "ORTHOGONAL_READINGS",
+        "rule": "Rows describe different meanings; never subtract them or use one to validate another.",
+        "rows": rows,
+    }
+
+
 def _finalize_bound_agent_brief(payload: dict, generated_at: str, value_readiness: dict) -> None:
     """Finalize all Brief bytes before recording their external digest."""
     import copy
@@ -4672,6 +4788,13 @@ def _finalize_bound_agent_brief(payload: dict, generated_at: str, value_readines
     brief["input_sources"] = {"portfolio": source, "gantt": {
         key: (payload.get("gantt") or {}).get(key)
         for key in ("state", "sha", "ledger_sha256", "observed_at")}}
+    cohort_bets, cohort_source = _brief_bet_source(payload)
+    brief["work_state"]["readings"] = _build_brief_readings(
+        cohort_bets,
+        cohort_source,
+        brief.get("objective_coverage") if isinstance(brief.get("objective_coverage"), dict) else {},
+        value_readiness,
+    )
     brief["authority"]["value_proof"] = value_readiness["status"]
     brief["authority"]["value_proof_readiness"] = value_readiness
     for action in brief.get("next_actions", []):
