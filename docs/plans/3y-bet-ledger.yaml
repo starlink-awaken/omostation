@@ -44703,6 +44703,73 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-269
+  title: 统一 scheduler 检查的检出 —— A4 与 cockpit 采集器读同一棵 registry
+  goal: 'A4 门禁的 `collect_runtime()` 跑 `python3 bin/scheduler-compile.py --check` 时不带
+    `cwd=`， 继承 publisher 进程的 cwd（= publisher 检出，每 180s 同步 origin/main）；cockpit `scheduler`
+    采集器的 `DEFAULT_WORKSPACE_ROOT = Path("/Users/xiamingxing/Workspace")` （`collectors/scheduler.py:33`）则是硬编码的另一个根。同一个检查被两个消费面以两棵不同的
+    registry 各跑一次 —— A4 PASS 与 cockpit DEGRADED 可以同时为真。实测（2026-10-26）： 主工作区落后 4 commits
+    时 A4=`{"ok":true,"orphan_count":0}` 而 cockpit `scheduler=DEGRADED last_success_at=2026-10-23T14:04:39Z`，A9
+    连带 PARTIAL；推进主工作区 到 origin/main 后两者同时转绿。触发它的是一条真实登记（PR #4893 的 `test-all` 进了 origin/main，主工作区还没前进）。本轮让两条读数同源，并把「读的是陈旧根」变成可见
+    observe-only 读数，而不是让 A9 以「源降级」的形式把主工作区陈旧度再报一次。'
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3h
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - bin/panorama/assets/host/scheduler_collector.py.asset
+  - bin/panorama/panorama-collect.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-26-scheduler-checkout-root-unification.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-269.md
+  - docs/reports/2026-10-26-scheduler-checkout-root-unification-closeout.md
+  non_goals:
+  - 不改 A9 的源判据（`collect_a9_gate` 的 `bounded` 逻辑本轮不动）
+  - 不改主工作区只读策略，不引入任何「自动推进主工作区」的机制
+  - 不给 known_orphans 增减条目（PR
+  - 不新增 bin/ 脚本（受 check-bin-quota-diff.py 净增配额约束）
+  - 不改 scheduler-compile.py 的比对语义（解释器归一化已在 PR
+  done_when:
+  - 同一台机器上 `collect_runtime()` 的 `rt["scheduler"]` 与 cockpit `scheduler` 采集器的 `ok` 恒等；测试钉住该恒等式，且用例自带「注入分歧
+    → 判据必须报出」的自证（AGENTS.md §7③ 不接受空绿）。
+  - registry 根解析三条断言：`PANORAMA_CODE_ROOT` 覆盖即赢；未声明 env 时走 `DEFAULT_WORKSPACE_ROOT`；解析顺序由测试点名（env
+    名只写在测试里，代码里没有第二份名单）。
+  - 缺省 observe-only：`scheduler` 源状态新增的 `registry_root` / `registry_root_oid` / `registry_root_stale`
+    三键不参与任何判定；A9 判据与主工作区策略逐字节未改。
+  verify:
+  - cmd: python3 -c "import yaml,pathlib; d=yaml.safe_load(pathlib.Path('.omo/cron/registry.yaml').read_text());
+      print('known_orphans', len(d.get('known_orphans') or []), 'has_test_all', any('test-all'
+      in str(k) for k in (d.get('known_orphans') or [])))"
+    expect: known_orphans 22 / has_test_all True —— 与 A4 读的是同一棵 registry
+  - cmd: python3 bin/scheduler-compile.py --check --json
+    expect: ok true / drift_count 0 / orphan_count 0（本轮 receipt）
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-26-scheduler-checkout-root-unification.md
+    spec_version: 1.0.0
+    content_digest: sha256:f76d016f9a48270c033c2a72dff89c299c74e87d56a0f0f9cfcc06ca1a792910
+    decision_ref: decision://accepted/BET-Y2Q4-T10-269
+  done_at: null
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44841,7 +44908,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 564
+  total_bets: 565
   windows:
   - Y1Q1
   - Y1Q2
