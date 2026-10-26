@@ -201,13 +201,63 @@ def test_real_upstream_change_runs_original_alignment_and_new_target(sandbox):
     assert mod.main() == 0
     assert expensive(calls) == [["git", "reset", "--hard", "origin/main"],
         ["git", "clean", "-fdx"], ["git", "submodule", "sync", "--recursive"],
-        ["git", "submodule", "update", "--init", "--depth",
+        # ⚠ `--force` 是对齐契约的一半（见脚本里的同一条注释）:
+        #   不带它就复位不了「已在正确 commit 上的脏文件」⇒ 作业永久 exit 1。
+        ["git", "submodule", "update", "--init", "--force", "--depth",
          str(mod.SUBMODULE_HISTORY_DEPTH)]]
     assert deepen_calls(calls) == [
         ["git", "-C", str(checkout / "projects/omo"), "fetch", "--depth",
          str(mod.SUBMODULE_HISTORY_DEPTH), "origin"]]
     assert git(checkout, "rev-parse", "HEAD") == git(origin, "rev-parse", "HEAD")
     assert (checkout / "file").read_text() == "actual new upstream"
+
+
+def test_real_dirty_submodule_is_reset_only_by_forced_update(sandbox):
+    """**子模块脏 ⇒ 对齐守卫判红 ⇒ 复位序列必须能把它复位。**
+
+    生产实测（2026-10-26）：publisher 的 `projects/omlxc` 工作树被手改了一行，
+    而 `git submodule update` **不带 `--force`** 时**不会**复位「已在正确 commit
+    上的脏文件」⇒ ⇒ `post_sync_alignment` 永远报 `checkout_or_child_dirty`
+    ⇒ ⇒ 作业永久 `exit 1` ⇒ ⇒ 入口层数据不更新。
+
+    ⚠⚠ **这条测试故意绕开夹具对 `git submodule update` 的桩** ——
+    夹具把它换成手工 `checkout --detach`（见 fixture 里 `external_run`），
+    ⇒ ⇒ **它测不到真实语义** ⇒ ⇒ 那正是这个 bug 能活下来的原因。
+    ⇒ ⇒ 这里直接用**真 git** 跑三步，把「force 才是那个开关」钉住。
+    """
+    mod, checkout, _, _, _, _, git = sandbox
+    target = git(checkout, "rev-parse", "HEAD")
+    # ① 先把子模块弄脏（**内容脏、commit 不变** —— 正是生产里的形态）
+    (checkout / "child/file").write_text("dirty child")
+    aligned, details = mod.checkout_alignment(checkout, target)
+    assert aligned is False and details["reason"] == "checkout_or_child_dirty"
+
+    # ② 不带 `--force` 的 update **复位不了**它（这正是那个 bug）
+    git(checkout, "submodule", "update", "--init")
+    assert (checkout / "child/file").read_text() == "dirty child"
+    assert mod.checkout_alignment(checkout, target)[0] is False
+
+    # ③ 带 `--force` 的 update **复位得了**它 ⇒ ⇒ 对齐守卫放行
+    git(checkout, "submodule", "update", "--init", "--force")
+    assert (checkout / "child/file").read_text() == "original child"
+    aligned, details = mod.checkout_alignment(checkout, target)
+    assert aligned is True and details["reason"] == "exact_clean_pins"
+
+
+def test_real_submodule_update_emits_force(sandbox):
+    """⚠ **接线层**：脚本真的发出了 `--force`**（否则上面那条行为测试形同虚设）。
+
+    ⚠ **行为测试证明「force 能复位」· 接线测试证明「脚本真的用了它」** ——
+    ⚠ **两件事，缺一不可**（推广规则第二百三十六版的同一条纪律）。
+    """
+    mod, checkout, origin, _, calls, _, git = sandbox
+    (origin / "file").write_text("advance for force wiring")
+    git(origin, "add", "file"); git(origin, "commit", "-m", "advance")
+    assert mod.main() == 0
+    updates = [cmd for cmd, _ in calls if cmd[:3] == ["git", "submodule", "update"]]
+    assert updates, "publisher 必须发出 submodule update"
+    for cmd in updates:
+        assert "--force" in cmd, f"submodule update 缺 --force ⇒ 脏子模块永远复位不了: {cmd}"
 
 
 @pytest.mark.parametrize("residue", ["untracked", "ignored", "__pycache__/cache.pyc"])
