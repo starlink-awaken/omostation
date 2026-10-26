@@ -28,9 +28,14 @@ def _load(monkeypatch, tmp_path, payload):
     spec = importlib.util.spec_from_file_location("panorama_a6_window", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    verifier = module.CODE_ROOT / "bin/gac/orca-r0-verify.py"
+    # Point CODE_ROOT at a scratch tree: the collector only checks
+    # `<CODE_ROOT>/bin/gac/orca-r0-verify.py` for existence and then stubs
+    # subprocess.run, so the stub must never overwrite the real source file.
+    code_root = tmp_path / "code-root"
+    verifier = code_root / "bin/gac/orca-r0-verify.py"
     verifier.parent.mkdir(parents=True, exist_ok=True)
     verifier.write_text("#!/usr/bin/env python3\n", encoding="utf-8")
+    monkeypatch.setattr(module, "CODE_ROOT", code_root)
     # 采集器直接调 subprocess.run, 不经过模块的 run()
     monkeypatch.setattr(module.subprocess, "run",
                         lambda cmd, **kw: _Completed(payload))
@@ -41,13 +46,32 @@ def _load(monkeypatch, tmp_path, payload):
 
 
 def _report(**over):
+    """Mirror the real verifier: `ok` folds runtime_ready into the verdict.
+
+    bin/gac/orca-r0-verify.py emits
+    ``"ok": bool(runtime_ready and probe_ok and accepted == 1 and guard_ok)``.
+    Hand-writing ``ok: True`` here hid that, which is why #4873's relaxation
+    shipped as dead code (2026-10-26: window closed, probes 6/6, A6 still red).
+    """
+    probes = over.get("probes", {"passed": 6, "total": 6})
+    r0 = over.get("r0_transactions", {"accepted": 1, "transactions": [{"ok": True}]})
+    trust = over.get("trust", {"write_argv_guard": {"ok": True}})
+    runtime_ready = over.get("runtime_ready", False)
+    derived_ok = bool(
+        runtime_ready
+        and probes.get("passed") == probes.get("total")
+        and probes.get("total", 0) > 0
+        and r0.get("accepted", 0) >= 1
+        and all(t.get("ok") for t in r0.get("transactions") or [])
+        and trust.get("write_argv_guard", {}).get("ok") is True
+    )
     base = {
         "schema": "orca-r0-verify/v1",
-        "ok": True,
-        "runtime_ready": False,
-        "probes": {"passed": 6, "total": 6},
-        "r0_transactions": {"accepted": 1, "transactions": [{"ok": True}]},
-        "trust": {"write_argv_guard": {"ok": True}},
+        "ok": derived_ok,
+        "runtime_ready": runtime_ready,
+        "probes": probes,
+        "r0_transactions": r0,
+        "trust": trust,
     }
     base.update(over)
     return base
@@ -66,6 +90,32 @@ def test_window_open_passes_without_the_note(monkeypatch, tmp_path):
     gate = module.collect_a6_gate()
     assert gate["verdict"] == "PASS"
     assert "window closed" not in gate["detail"]
+
+
+def test_fixture_does_not_clobber_the_real_verifier(monkeypatch, tmp_path):
+    """用例不得改写仓库里的真实校验器。
+
+    `_load` 曾把桩写进 `module.CODE_ROOT/bin/gac/orca-r0-verify.py` —— 那就是
+    仓库里的真文件, 跑完用例工作树就多一个 governance_code 脏文件。2026-10-26 实测。
+    """
+    real = ROOT / "bin/gac/orca-r0-verify.py"
+    before = real.read_bytes()
+    _load(monkeypatch, tmp_path, _report(runtime_ready=True))
+    assert real.read_bytes() == before
+
+
+def test_report_ok_false_merely_because_the_window_is_closed_still_passes(monkeypatch, tmp_path):
+    """#4873 的放宽分支曾因 report.ok 恒为 False 而永不触发。
+
+    真实校验器把 runtime_ready 折进 ok, 于是「关窗」会让 report.ok=False;
+    若 A6 直接拿 report.ok 当判据, 探针全过也照样红。这条用例把那个形状
+    钉住 —— 判据只认 probes / R0 evidence / write_guard。
+    """
+    report = _report(runtime_ready=False)
+    assert report["ok"] is False, "fixture 必须复现真实校验器的 ok 语义"
+    module = _load(monkeypatch, tmp_path, report)
+    gate = module.collect_a6_gate()
+    assert gate["verdict"] == "PASS", gate
 
 
 def test_probes_failing_still_blocks(monkeypatch, tmp_path):
