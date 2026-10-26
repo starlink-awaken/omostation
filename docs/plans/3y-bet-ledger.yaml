@@ -44798,7 +44798,8 @@ bets:
     exit 2）、:1241-:1244（gh pr list 与「先 submit 开 PR」）；「行号在文件行数内」这种存在性检查结构上检不出这类漂移（三个旧指针当时都指向存在的行），必须按内容断言。撞号改铸记：本
     BET 原定 BET-Y2Q4-T10-269，在 push 前 fetch 时发现并发 agent 已把 269 用于另一条 BET（#4895 已合入 main），故按
     T10-234 先例改铸为 270。本 BET 不新增代码、不改 bin/。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -44824,21 +44825,44 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-26-bet-270-detector-base-and-digest-refresh-discipline.md
     spec_version: 1.0.0
-    content_digest: sha256:184df6af8d7242d7fe88bf7f4b79172f8397e83d75df261d231e09b4588396a4
+    content_digest: sha256:ac69e229b63aabfaa90c2e517da942676dcd44e2a75f3c50464652855176c456
     decision_ref: decision://accepted/BET-Y2Q4-T10-270
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9c7d2c0fd51c41390ffc0149a62da59044159ed5
+          tests:
+            ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
+            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+          diff:
+            ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
+            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+          rollback:
+            ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
+            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
+            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
+            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-270.md
+            sha256: sha256:c46886f0ec6de003d145a1a62bdd836e6ee4b232d161543e436d869a06ec8235
+          cleanup:
+            ref: receipt://docs/reports/2026-10-26-bet-270-detector-base-and-digest-refresh-closeout.md
+            sha256: sha256:b83f36fc3942994342fbc222dd3ec3303e49a8338aa6098c9e52290a1d96b430
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   done_when:
   - AGENTS.md §7 含三条新固化，每条都带 证据 → 判据 → 纪律 三段，且指认方式不依赖本机状态（verify-1 逐锚点测量）。
   - AGENTS.md §6 三处陈旧行号指针按内容断言修正且旧号消失（verify-2）；新三条内点名的 file:line 按该行内容命中（verify-3）。

@@ -75,8 +75,13 @@ T10-267 的收口腿在两天内产出了两次互相矛盾的读数、一次结
 **判据**
 
 - push 后台账类 PR 先看 `gh pr view --json mergeable,mergeStateStatus`，再谈 CI。
-- `git diff --name-only <my-base> origin/main -- docs/plans/3y-bet-ledger.yaml` 非空 ⇒ 视为高冲突概率，
+- `git diff --name-only "$(git merge-base HEAD origin/main)" origin/main -- docs/plans/3y-bet-ledger.yaml` 非空 ⇒ 视为高冲突概率，
   起手就按最新 `origin/main` 整份为底重做，而不是等冲突出现后再补救。
+- **左端必须是 merge-base，不得写成 `HEAD`**（本条判据自身在固化腿提交后被误用过一次）：分支一旦带上自己的 commit，
+  `git diff HEAD origin/main` 会把**自己的交付反向显示成上游改动**。实测：固化腿 `56e675d6e` 提交后该命令返回
+  `docs/plans/3y-bet-ledger.yaml` 与 `AGENTS.md` 两行，而 `git log HEAD..origin/main` 为空、
+  `git merge-base HEAD origin/main` 恰等于 `origin/main`（`f0c5ce934`）—— 上游零漂移。据此误跑一次「受控后继」是纯浪费。
+- **纪律补面**：判据里凡是依赖「当前分支还没有自己的 commit」这类隐含前提，必须把左端 ref 显式写进判据正文。
 
 **纪律**：台账交付的基线新鲜度是**前置条件**而非补救项；受控后继是正解，rebase/merge 是违令。
 
