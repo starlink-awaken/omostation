@@ -44668,14 +44668,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-267
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@51c9ed62e8dde955e73f9158df380a6411650439
+          tests:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+          diff:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+          rollback:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+          cleanup:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-267.md
+            sha256: sha256:f7a21380d5fd48ec6fb748f4ba2265f27c741933f89d300149346bfd65f57275
       value:
         status: NOT_PROVEN
         evidence: {}
