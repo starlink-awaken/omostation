@@ -44678,25 +44678,25 @@ bets:
             ref: git://origin/main@51c9ed62e8dde955e73f9158df380a6411650439
           tests:
             ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
-            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
           diff:
             ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
-            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
           rollback:
             ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
-            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
-            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
-            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
           cleanup:
             ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
-            sha256: sha256:209955ff5dec54a72b87b2ddfc38262a05ef4b503c110a3ccb8410d4c145dbd4
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-267.md
             sha256: sha256:f7a21380d5fd48ec6fb748f4ba2265f27c741933f89d300149346bfd65f57275

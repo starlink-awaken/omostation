@@ -108,14 +108,25 @@ verify-1 现用 `uv run --no-project --python 3.12`（实测 `bash -lc` 下解�
   修它要改的是 meter 的折叠语义 —— 那属于另一次准入。
 - `tests/unit/**` 不在 `governance-check.yml:118-127` 的 pytest 白名单里 ⇒ 这 28 例的**本地运行是唯一证据**，
   CI 绿不构成它们的证据。
-- **收口腿另有一条 hard fail，预存且与本轮无关**：`gac-local-gate --scope files` 对三个交付文件各跑一次，
-  `errors 0 / warns 0`，唯一 hard fail 是 `bin/gac/check-work-landed.py`（读数 `blocking=14`），列出的 16 条
-  全部是 2026-09-22 ~ 2026-10-13 的历史滞留 run，**没有一条指向本轮任何对象**；它在
-  `.omo/_truth/registry/ci-surfaces.yaml:371-376` 登记为 `workflow: (none)` + `triggers: []`，即本地专用、
-  不进 CI（工程腿 #4879 在同样条件下 CI 全绿可反证）。与 canonical 检出对拍时两台读数差 1 条
-  （`settled 111/112`、`blocking 14/13`，差额项 `20260925T014237Z-project-code-change-44d6eaf9`）：脚本与
-  grace 清单在两棵树里逐字节相同（`0040ac00…` / 两份 baseline 均不含该 id），差额只能来自两棵树的 base
-  不同，因此**读成基线漂移而不是自己的回归**（AGENTS.md §7「凡两次探测结果不同，先疑基线动了」）。
+- **收口腿的门禁读数要写明「哪一份检测器」，不只写「哪棵树」**。交付树（base `26a904504`）上
+  `gac-local-gate --scope files` 对三个文件各跑一次：`hard_fails []`、`soft_warns` 仍是上面那两条，
+  `bin/gac/check-work-landed.py` 读数 `PASS closed=193 settled=127 no_ref=66 warn=0 blocking=0`。
+  而**第一版收口腿**（base `51c9ed62e`，PR #4892，已因上游在 T267 块内重排 YAML 纯量而冲突作废）
+  同一条 check 读数 `FAIL settled=112 warn=2 blocking=13`，列出的 15 条全部是 2026-09-22 ~ 2026-10-13
+  的历史滞留 run，没有一条指向本轮任何对象。
+  **归因是量出来的，不是推测**：两次读数由**两份不同的检测器在同一份输入上**产出。该脚本 `:31` 用
+  `Path(__file__).resolve().parents[2]` 定 `WORKSPACE`，所以每个 worktree 跑的是**自己检出里的那份脚本**；
+  `51c9ed62e` 那份 `hasattr(m, "RETROS_DIR")` / `hasattr(m, "_bet_log_refs")` 均为 **False**，`26a904504`
+  那份都有 —— 中间 **PR #4885（`eb3e48c34`，2026-10-25）给这个 check 加了 111 行「BET 落地兜底」**。
+  输入侧已排除：两树的 `RUNS_DIR` 都 resolve 到 canonical 同一份、各 350 个 run 文件（`.omo/_delivery`
+  是 symlink 桥），根仓 `git rev-list origin/main` 两侧同为 8734。那 15 条 run 自己的 16 个 sha 凭证
+  在**两棵树里都不在**任何仓的 landed 集合中（逐个查过），所以让它们从 blocking 变 settled 的正是新加的
+  兜底，而不是「landing 被补齐」。**顺带量到、但不是本次判别量**：`projects/family-hub` 的 rev-list
+  在两树分别是 1 与 75 条（浅克隆深度由 claim 路径决定，AGENTS.md §6）—— 它确实会让 landed 集合按检出变化，
+  但本批 15 条无一落在里面，故与这次读数差无关。
+  **纪律**：`ci-surfaces.yaml:371-376` 把它登记为 `workflow: (none)` + `triggers: []`（本地专用、永不进 CI），
+  于是它的读数**既随基线、也随基线里那份脚本代码**变。写进 receipt 必须带**读数 + 该 check 所在的 base**；
+  这是 AGENTS.md §7「凡两次探测结果不同，先疑基线动了」的加强版 —— **动的可能是尺本身**。
 
 ## 6 回滚
 
