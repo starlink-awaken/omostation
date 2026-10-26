@@ -1098,3 +1098,4 @@ known_orphans:
   - bwg-maint.sh  # 用户本机搬瓦工周检(服务/待重启) (~/.local/bin), 2026-10-10 确认为外部工具
   - plist-integrity-check.sh  # 用户本机 launchd plist 完整性巡检 (~/.local/bin), 2026-10-10 确认为外部工具
   - secretctl scan  # 用户本机 secret 扫描 (~/.local/bin), 2026-10-10 确认为外部工具
+  - test-all  # 用户本机 local-ops 测试门禁 (local-ops/bin), 2026-10-26 确认为外部工具
