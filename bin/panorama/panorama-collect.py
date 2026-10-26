@@ -1080,7 +1080,13 @@ def collect_a6_gate() -> dict:
     trust_ok = write_guard.get("ok") is True
     probes_ok = probe_total > 0 and probe_pass == probe_total
     evidence_ok = accepted >= 1 and transactions_pass
-    passed = report.get("ok") is True and probes_ok and evidence_ok and trust_ok
+    # 准入判据不得包含 runtime_ready: 校验器自己的 ok 是
+    # `bool(runtime_ready and probe_ok and ...)` (bin/gac/orca-r0-verify.py),
+    # 拿它当判据会让「Orca 桌面窗口关着」这个与 R0 无关的条件否掉整条门禁。
+    # 2026-10-26 实证: 关窗时 probes 6/6、R0 evidence 1/1、write_guard OK, A6
+    # 仍 NOT_ADMITTED —— 而 #4873 的 `if passed and not runtime_ready` 分支
+    # 因 report.ok 恒为 False 而**永不触发** (按构造就绿)。
+    passed = probes_ok and evidence_ok and trust_ok
 
     if passed:
         try:
