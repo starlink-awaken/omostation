@@ -20,8 +20,8 @@
 
 用法::
 
-    python3 bin/panorama/materialize-agent-brief.py           # 物化
-    python3 bin/panorama/materialize-agent-brief.py --check   # 只报读数, 不写
+    python3 <本脚本路径>              # 物化
+    python3 <本脚本路径> --check      # 只报读数, 不写
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ import json
 import os
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 _LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
@@ -47,13 +47,24 @@ MANIFEST_SCHEMA = "zhixing-projection-manifest/v1"
 BRIEF_ARTIFACT = "agent_brief"
 BRIEF_FILENAME = "agent-brief.json"
 
+# ⚠⚠▣ **按仓内既有约定声明输出路径** —— 规划层探针的 `script_output_paths()`
+# 只认两条形状：`OUT = Path("...")` 与 `AGENT_BRIEF_JSON = OUT_DIR / "..."`。
+# ⚠ **不按这个形状写 ⇒ 探针认不出本脚本在写 agent-brief.json ⇒ 入口层的调度判定
+# 永远读不出绿**（⚠ 那是假绿，不是「脚本没写对」）。⚠ 这不是新协议，是仓里其它
+# panorama 脚本一直用的形状。
+# ⚠⚠⚥ **别在本文件里写任何 Python 源文件路径** —— 探针的 import 抽取器会把源码里
+# 出现的路径当成 import ⇒ 链上多一跳**指向不存在文件**的假跳（⚠ 2026-10-26 实测：
+# 连「后缀」本身出现在注释里都会被当成路径）。
+OUT_DIR = state_root() / "runtime" / "dashboard"
+AGENT_BRIEF_JSON = OUT_DIR / "agent-brief.json"
+
 
 class MaterializeError(RuntimeError):
     """fail-closed: 任何异常都不得落到「写了半个文件」。"""
 
 
 def default_source_root() -> Path:
-    """projection state root —— 与 panorama-collect / projection-republisher 同一口径。"""
+    """projection state root —— 与仓内其它 projection 工具同一口径。"""
     return Path(
         os.environ.get(
             "ZHIXING_DASHBOARD_STATE_ROOT",
@@ -68,7 +79,7 @@ def default_target() -> Path:
     写面用 ``state_root()``（仓内读面/写面分根约定，ADR-0456），**不用 ``__file__`` 反推**
     —— 反推会把临时 worktree 路径钉进产物。
     """
-    return state_root() / "runtime" / "dashboard" / "agent-brief.json"
+    return AGENT_BRIEF_JSON
 
 
 def _sha256_bytes(body: bytes) -> str:
@@ -133,7 +144,7 @@ def build_payload(pointer: dict, revision_root: Path, body: bytes) -> dict:
         "source_path": str(revision_root / BRIEF_FILENAME),
         "revision_id": str(pointer.get("revision_id") or ""),
         "manifest_sha256": str(pointer.get("manifest_sha256") or ""),
-        "copied_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "copied_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "data_generated_at": generated_at,
     }
     return payload
