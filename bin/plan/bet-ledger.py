@@ -1127,6 +1127,20 @@ def _claimable(data: dict, b: dict) -> tuple[bool, list[str]]:
     return ok, reasons
 
 
+def _json_default(obj: Any) -> str:
+    """JSON 兜底序列化：日期/时间 ⇒ ISO-8601，其余 ⇒ str。
+
+    裸 ``default=str`` 会把 datetime 变成空格分隔的 ``2026-09-06 09:50:00+00:00``
+    —— 那**不是** ISO-8601（缺 'T'），下游按 ISO 解析会静默失败或直接抛错。
+    这里走 ``isoformat()``（沿用本文件既有的 duck-typing 先例
+    ``hasattr(done_at, "isoformat")``）；没有该方法的类型才退回 ``str``。
+    """
+    isoformat = getattr(obj, "isoformat", None)
+    if callable(isoformat):
+        return isoformat()
+    return str(obj)
+
+
 # ── 命令 ──────────────────────────────────────────────────────
 def cmd_list(data: dict, args) -> int:
     rows = data["bets"]
@@ -1139,7 +1153,7 @@ def cmd_list(data: dict, args) -> int:
     if args.claimable:
         rows = [b for b in rows if _claimable(data, b)[0]]
     if args.json:
-        print(json.dumps(rows, ensure_ascii=False, indent=2, default=str))
+        print(json.dumps(rows, ensure_ascii=False, indent=2, default=_json_default))
         return 0
     print(f"{'ID':24} {'W':6} {'TRACK':12} {'APPETITE':10} {'ST':11} H  TITLE")
     print("-" * 120)

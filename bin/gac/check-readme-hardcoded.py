@@ -23,7 +23,10 @@ import sys
 from pathlib import Path
 
 WS_ROOT = Path(__file__).resolve().parents[2]
-HEALTH_MD = WS_ROOT / "docs/repository-health.md"
+# 派生产物按 docs/README.md 的规矩归档到 docs/operations/（不落在 docs/ 顶层）。
+# 2026-10-26 修正：本文件曾被 #4734 改名到 docs/operations/，但生成器的输出路径没跟着改
+# ⇒ 工具写出来的是一份没人读的游离文件，被跟踪的那份永远停在 2026-09-06 的 n/a。
+HEALTH_MD = WS_ROOT / "docs/operations/repository-health.md"
 
 PORT_RE = re.compile(r"(?:port\s*:?\s*|:)(\d{4,5})\b", re.I)
 COUNT_RE = re.compile(r"(\d+)\s*(个|条|项|个 ?BET|agents?|projects?|PRs?|条规则)")
@@ -75,6 +78,15 @@ def update_health_report(issues: list[dict]) -> None:
     except Exception:
         pass
     lines = [
+        "---",
+        "schema: md/v1",
+        "status: active",
+        "lifecycle: entry",
+        "owner: auto-fix-loop",
+        f"last-reviewed: {today}",
+        "type: ephemeral",
+        "---",
+        "",
         "# Repository Health 周报 (自动生成)",
         "",
         f"> 生成: {today} | 工具: check-readme-hardcoded.py --update-health (T10-127)",

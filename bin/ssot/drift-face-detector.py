@@ -138,10 +138,11 @@ def detect_brief() -> list[dict]:
             "age_hours": round(age, 1),
             "sla_hours": BRIEF_CADENCE_HOURS,
             "fix_hint": (
-                "launchctl kickstart gui/$(id -u)/com.omostation.panorama-dashboard-refresh "
-                "(deployed collector ~/.local/share/zhixing-dashboard/panorama-collect.py "
-                "is the sole flat-brief writer; repo bin/panorama/panorama-collect.py "
-                "only publishes revisions/ and never writes the flat trio)"
+                "入口层 brief 的唯一写方是 bin/panorama/materialize-agent-brief.py "
+                "(从活的 projection revision 原样物化, generated_at 不重打戳); "
+                "launchctl kickstart gui/$(id -u)/com.omostation.agent-brief-materialize "
+                "—— repo bin/panorama/panorama-collect.py 与部署的 collector 都只发布 "
+                "revisions/, 不写 runtime/dashboard/ 这份 flat trio"
             ),
         })
     return findings
