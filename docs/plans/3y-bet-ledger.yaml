@@ -44915,7 +44915,8 @@ bets:
     0」通过 —— 门禁自己变假绿。同批连带：清单文件由 T10-259 的 `accepted_specifications[0].content_digest` 绑定，改了正文即按字段路径重算该摘要与那条 verify 期望值（T10-270 纪律）。一处授权文字更正：本轮出选项时把预期写成「E4
     归零」，那是在读 `:773` 之前按「清单 19 + 新增 3」倒推的错话，已在 spec §2.1/§7、准入表 §1.1 与本条 `done_when` 四处同步更正。本 BET 零运行面动作：不 bootstrap/bootout、不翻 enabled、不改 `~/Library/LaunchAgents`
     任何文件、不碰 crontab、不改 `workspace_prefixes`。准入署名由 principal 于 2026-10-26 明确给出（「授权：补登 3 条 + 重签清单」）。
-  status: in_progress
+  status: done
+  done_at: 2026-10-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -44981,17 +44982,40 @@ bets:
     expect: 0 —— 零 Python 改动（本轮只动文档面与注册表面；左端是 merge-base 而非 HEAD，见 T10-270 item ②）
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@63d389ceea932ad5242e992346626318d2f411a5
+          tests:
+            ref: receipt://docs/reports/2026-10-26-bet-271-e4-admission-resign-22-closeout.md
+            sha256: sha256:c530dcd0a6fcc7abffa33518b0d468b097575018d4cdc6f35fac83e67551a44c
+          diff:
+            ref: receipt://docs/reports/2026-10-26-bet-271-e4-admission-resign-22-closeout.md
+            sha256: sha256:c530dcd0a6fcc7abffa33518b0d468b097575018d4cdc6f35fac83e67551a44c
+          rollback:
+            ref: receipt://docs/reports/2026-10-26-bet-271-e4-admission-resign-22-closeout.md
+            sha256: sha256:c530dcd0a6fcc7abffa33518b0d468b097575018d4cdc6f35fac83e67551a44c
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-26-bet-271-e4-admission-resign-22-closeout.md
+            sha256: sha256:c530dcd0a6fcc7abffa33518b0d468b097575018d4cdc6f35fac83e67551a44c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-26-bet-271-e4-admission-resign-22-closeout.md
+            sha256: sha256:c530dcd0a6fcc7abffa33518b0d468b097575018d4cdc6f35fac83e67551a44c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-271.md
+            sha256: sha256:aaaaa1f82c94c82acd0dca13f785e65536002bfebcdc850b7d3453c37c80670d
+          cleanup:
+            ref: receipt://docs/reports/2026-10-26-bet-271-e4-admission-resign-22-closeout.md
+            sha256: sha256:c530dcd0a6fcc7abffa33518b0d468b097575018d4cdc6f35fac83e67551a44c
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
