@@ -13,11 +13,66 @@ from collectors.registry import register
 
 DEFAULT_WORKSPACE_ROOT = Path("/Users/xiamingxing/Workspace")
 
+# A4 (bin/panorama/panorama-collect.py) evaluates this same check with
+# ``cwd=ROOT`` where ROOT = Path(panorama-collect.py).parents[2] — the publisher
+# checkout, synced to origin/main every 180s. The collector has to read the same
+# registry: reading a different checkout let A4 PASS and the cockpit report
+# DEGRADED at the same time, and turned A9 PARTIAL for a root that was merely
+# stale (BET-Y2Q4-T10-269, 2026-10-26).
+PUBLISHER_ROOT_ENV = "PANORAMA_CODE_ROOT"
+
 
 def workspace_root() -> Path:
     """Resolve the one OMO workspace used by this collector."""
     configured = os.environ.get("ZX_DASHBOARD_WORKSPACE_ROOT")
     return Path(configured).expanduser().resolve() if configured else DEFAULT_WORKSPACE_ROOT
+
+
+def registry_root() -> Path:
+    """Resolve the checkout whose scheduler registry is authoritative.
+
+    The publisher checkout is preferred because it is the root A4 already
+    evaluates against; the shared main workspace lags origin/main whenever an
+    agent forgets to sync it, and a lagging root is not a source-health fact.
+    Falls back to the workspace when the env is unset or names a checkout that
+    does not carry the compiler.
+    """
+    configured = os.environ.get(PUBLISHER_ROOT_ENV)
+    if configured:
+        candidate = Path(configured).expanduser().resolve()
+        if (candidate / "bin/scheduler-compile.py").is_file():
+            return candidate
+    return workspace_root()
+
+
+def _git(args: list[str], cwd: Path) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", *args], capture_output=True, text=True, timeout=10, cwd=cwd
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
+def _registry_root_oid(root: Path) -> str | None:
+    return _git(["rev-parse", "HEAD"], root)
+
+
+def _registry_root_stale(root: Path) -> bool | None:
+    """True when the resolved root is behind its own origin/main.
+
+    Observe-only: callers must not feed this into any verdict — it exists so a
+    stale root is visible in the cockpit instead of masquerading as a degraded
+    source.
+    """
+    head = _git(["rev-parse", "HEAD"], root)
+    origin_main = _git(["rev-parse", "origin/main"], root)
+    if head is None or origin_main is None:
+        return None
+    return head != origin_main
 
 
 def _now() -> str:
@@ -54,13 +109,12 @@ def parse_diagnostic(raw: str | bytes, returncode: int) -> dict:
     return {**obj, "command_exit_code": returncode}
 
 
-
 @register("scheduler", timeout=30)
 class SchedulerCollector(DataCollector):
     name = "scheduler"
 
     def collect(self) -> dict:
-        root = workspace_root()
+        root = registry_root()
         try:
             raw = _run_cmd(
                 [
@@ -85,6 +139,12 @@ class SchedulerCollector(DataCollector):
             **obj,
             "state": "OBSERVED" if obj["ok"] else "DEGRADED",
             "observed_at": _now(),
+            # Observe-only: the root the check actually read, its commit, and
+            # whether that commit is behind its own origin/main. They never
+            # participate in `ok`.
+            "registry_root": str(root),
+            "registry_root_oid": _registry_root_oid(root),
+            "registry_root_stale": _registry_root_stale(root),
         }
 
     def validate(self, data: dict) -> bool:

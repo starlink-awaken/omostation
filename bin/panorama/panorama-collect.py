@@ -1792,6 +1792,12 @@ def collect_runtime() -> dict:
         rt["scheduler"] = json.loads(out)
     except Exception:  # noqa: BLE001
         rt["scheduler"] = {"ok": code == 0}
+    # Which checkout the check ran in. A4's root is ROOT (the publisher
+    # checkout, synced to origin/main every 180s); the cockpit scheduler
+    # collector must read the same registry or the two verdicts diverge
+    # whenever the shared main workspace lags (BET-Y2Q4-T10-269).
+    if isinstance(rt["scheduler"], dict):
+        rt["scheduler"]["registry_root"] = str(ROOT)
     return rt
 
 
