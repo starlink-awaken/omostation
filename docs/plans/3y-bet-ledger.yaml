@@ -44598,7 +44598,8 @@ bets:
     → registry → 目录不存在返回 None，语义与 install_root() 同族（只是定位器，什么都不搬）；check-signals 增加
     observe-only 的 /health 分类面（ok/code_drift/unreachable/undetermined），只有条目声明 require_health:
     true 才计入 drifts。本轮不把任何 plist 改道、不推进安装位、不动 services.yaml。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -44668,14 +44669,37 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-267
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@51c9ed62e8dde955e73f9158df380a6411650439
+          tests:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
+          diff:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
+          rollback:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
+          cleanup:
+            ref: receipt://docs/reports/2026-10-23-zhixing-external-dependency-contract-closeout.md
+            sha256: sha256:1d902dee1ca7e95169ea6b0b41b3fe8c898577c80baf8b4058e3967fdc2453f2
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-267.md
+            sha256: sha256:f7a21380d5fd48ec6fb748f4ba2265f27c741933f89d300149346bfd65f57275
       value:
         status: NOT_PROVEN
         evidence: {}
