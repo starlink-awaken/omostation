@@ -43505,7 +43505,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md
     spec_version: 1.0.0
-    content_digest: sha256:f4556ffb6f0f5374c830760f544c78ac683d014a0b2e35a6576c8a0dd27ac630
+    content_digest: sha256:955de80b6ce0ca58c1cb5d54fbe1ef49108c83fe0b76eeac4e01477fb0731804
     decision_ref: decision://accepted/BET-Y2Q4-T10-259
   value_indicator_policy: false
   completion_evidence:
@@ -43570,7 +43570,7 @@ bets:
       / e4_prefix_ok=false / e5 两项 1+1 / owned_declared=owned_installed=47 / registry_declared_total=75）；installed_total=77
       与 E4 19 条须与 spec §1 记名的复测读数一致
   - cmd: python3 -c "import hashlib,pathlib;print(hashlib.sha256(pathlib.Path('docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md').read_bytes()).hexdigest())"
-    expect: f4556ffb6f0f5374c830760f544c78ac683d014a0b2e35a6576c8a0dd27ac630
+    expect: 955de80b6ce0ca58c1cb5d54fbe1ef49108c83fe0b76eeac4e01477fb0731804
   - cmd: python3 bin/ssot/doc-governance-check.py --no-new-warnings --scope tracked
     expect: exit 0
   - cmd: make gac-local-gate
@@ -44901,6 +44901,97 @@ bets:
   - cmd: bash -c "git diff --name-only origin/main...HEAD | /usr/bin/grep -c '\.py$'
       || true"
     expect: 0 —— 纯文档交付，零 Python 改动
+- id: BET-Y2Q4-T10-271
+  title: B3 E4 准入清单重签到 22 条 —— 三条异主线 launchd 服务逐条取证 + exempt_labels 具名补登
+  goal: ADR-0456 B3 的 `--reality-check` 四轴在 2026-10-26 实测为 E1=0 / E2=0 / E3=0 / E4=22 条，E4 是唯一还红着的轴；而 B4b 的中止判据写的是「每批切完 `--reality-check` E2 仍为
+    0」，分区面自己红着的时候，E2 的零没有参照系。本轮做两件被 principal 单独署名的事：一、把 T10-259 署名的准入清单（19 行）重签到 22 行，逐条取证齐备；二、把新增 3 条写进机读豁免面 `launchd_namespace.exempt_labels`（11
+    → 14，classification 全 external）。可测后果是 E4 由 22 降到 19、external 由 5 变 8，而 `e4_prefix_ok` **仍为 false** —— 这是如实终态而非半途：判据本体 `bin/mof/gen-service-configs.py:773`
+    是 `not any(f.startswith("E4"))`，`:684` 在 unmanaged_unknown 非空时必发 finding，故归零要求 22 条全部有名有归处，余下 19 条（#13—#16、#18 明写待署名，`com.local.*` 13 条待整族裁定）属署名面，本轮不代办。三条新增：`com.fleetops.logrotate`（uv
+    run --script ~/Project/fleet-ops/tools/rotate_logs.py，Calendar+RunAtLoad，mtime 2026-10-24T09:40:28Z，1052 B，sha256:16 3dfc5058ecb20b4d，launchctl
+    未加载）、`com.fleetops.sync`（/bin/sh ~/Project/fleet-ops/tools/sync_state.sh，StartInterval+RunAtLoad，2026-10-23T13:56:08Z，722 B，8e761c20773b6720，未加载）、`com.localbrain.ops-engine`（/usr/bin/python3
+    ~/Project/work-agent/scripts/ops_engine/main.py，WD 同目录，RunAtLoad+KeepAlive，2026-10-21T08:45:37Z，2045 B，3f92fb4459fdadda，**运行中**）。三条共同形状是源码在其它工程线的仓、本仓既不生成其
+    plist 也无 registry 声明，逐条实测见 spec §1。机制二选一判据：`workspace_prefixes` 追加前缀会把该前缀下所有 plist 一次性拉进本仓管辖并进 E2 等式（`com.localbrain` 前缀 5 条里 4 条仍待署名），故不采用；采用
+    `exempt_labels` 逐条具名，注册表注释 `:6339-6341` 本身就要求豁免面收窄到具体 label。补登必须保持单文档：`:6342-6343` 记有独立文档会让 `load_services()` 取到空 services，于是 `--check` 在零服务上「漂移
+    0」通过 —— 门禁自己变假绿。同批连带：清单文件由 T10-259 的 `accepted_specifications[0].content_digest` 绑定，改了正文即按字段路径重算该摘要与那条 verify 期望值（T10-270 纪律）。一处授权文字更正：本轮出选项时把预期写成「E4
+    归零」，那是在读 `:773` 之前按「清单 19 + 新增 3」倒推的错话，已在 spec §2.1/§7、准入表 §1.1 与本条 `done_when` 四处同步更正。本 BET 零运行面动作：不 bootstrap/bootout、不翻 enabled、不改 `~/Library/LaunchAgents`
+    任何文件、不碰 crontab、不改 `workspace_prefixes`。准入署名由 principal 于 2026-10-26 明确给出（「授权：补登 3 条 + 重签清单」）。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 0.5 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: bet-execution
+  value_indicator_policy: false
+  non_goals:
+  - 不裁定 com.localbrain.*
+  - 不改 launchd_namespace.workspace_prefixes（§2 已述其把 E2 一次性拉红的代价）
+  - 不动任何运行面：不 bootstrap/bootout、不翻 enabled、不改 ~/Library/LaunchAgents、不碰 crontab
+  - 不宣告 ADR-0456 B3/B4b/B5 或整个 plan 完成
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-26-bet-271-e4-admission-resign-22.md
+  - docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md
+  - .omo/_truth/registry/services.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-10-26-bet-271-e4-admission-resign-22-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-271.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-26-bet-271-e4-admission-resign-22.md
+    spec_version: 1.0.0
+    content_digest: sha256:b418ab63561448f787c439204242b88a9af83d09b332d9f5fe533f2e27254e61
+    decision_ref: decision://accepted/BET-Y2Q4-T10-271
+  done_when:
+  - python3 bin/mof/gen-service-configs.py --reality-check 读数：E4 未分区由 22 条降到 19 条、external 由 5 变 8，E1/E2/E3/unclassified/installed_total/workspace_scoped/owned_declared=owned_installed/registry_declared_total/E5
+    逐字段未变；e4_prefix_ok 保持 false 且原因已在 spec §2.1 从判据本体导出
+  - launchd_namespace.exempt_labels 由 11 条增至 14 条，三条新条目各自含 label/classification/reason 且 classification=external
+  - T10-259 准入表由 19 行补至 22 行，且表内 22 名 = live E4 的 19 名 + 本轮补登的 3 名（双向集合相等，missing=[] extra=[]）
+  - services.yaml 仍是单文档同档（docs[-1] 同时含 services 与 launchd_namespace），门禁不因文档拆分变假绿
+  - 清单文件正文变动同批重算 T10-259 绑定的 content_digest 与其 verify 期望值，二者等于该文件当次 sha256
+  verify:
+  - cmd: python3 -c "import json,subprocess,sys; r=json.loads(subprocess.run(['python3','bin/mof/gen-service-configs.py','--reality-check','--json'],capture_output=True,text=True).stdout);
+      print('e1=' + str(r['e1_drift']) + ' e2=' + str(r['e2_undeclared']) + ' e3=' + str(r['e3_lint_debt']) + ' unclassified=' + str(r['unclassified']) + ' external='
+      + str(r['external']) + ' installed=' + str(r['installed_total']) + ' workspace_scoped=' + str(r['workspace_scoped']) + ' owned=' + str(r['owned_declared']) +
+      '/' + str(r['owned_installed']) + ' declared=' + str(r['registry_declared_total']) + ' prefix_ok=' + str(r['e4_prefix_ok']) + ' e5=' + str(r['e5_enabled_missing'])
+      + '+' + str(r['e5_disabled_residual']) + ' findings=' + str(len(r['findings']))); sys.exit(0 if (r['e1_drift'],r['e2_undeclared'],r['e3_lint_debt'],r['unclassified'])==(0,0,0,0)
+      and r['e4_prefix_ok'] is False and any(f.startswith('E4 未分区') for f in r['findings']) else 1)"
+    expect: rc=0，读数 e1=0 e2=0 e3=0 unclassified=0 external=8 installed=81 workspace_scoped=39 owned=48/48 declared=75 prefix_ok=False e5=1+1 findings=3 —— E4 未归零是本轮的如实终态而非半途（判据本体
+      spec §2.1）
+  - cmd: python3 -c "import yaml,pathlib,sys; ds=[d for d in yaml.safe_load_all(pathlib.Path('.omo/_truth/registry/services.yaml').read_text(encoding='utf-8')) if isinstance(d,dict)];
+      last=ds[-1]; ex=last['launchd_namespace']['exempt_labels']; new=[e for e in ex if e['label'] in ('com.fleetops.logrotate','com.fleetops.sync','com.localbrain.ops-engine')];
+      print('services_in_last_doc=' + str('services' in last) + ' exempt=' + str(len(ex)) + ' new=' + str(len(new)) + ' all_external=' + str(all(e['classification']=='external'
+      and e.get('reason') for e in new))); sys.exit(0 if 'services' in last and len(ex)==14 and len(new)==3 and all(e['classification']=='external' and e.get('reason')
+      for e in new) else 1)"
+    expect: services_in_last_doc=True exempt=14 new=3 all_external=True
+  - cmd: python3 -c "import json,re,subprocess,sys,pathlib; doc=pathlib.Path('docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md').read_text(encoding='utf-8');
+      rows={int(f[1]):f[2].strip(chr(96)) for f in ([x.strip() for x in line.split('|')] for line in doc.splitlines()) if len(f)>3 and re.fullmatch(r'[0-9]+',f[1] or
+      '')}; r=json.loads(subprocess.run(['python3','bin/mof/gen-service-configs.py','--reality-check','--json'],capture_output=True,text=True).stdout); e4={x.strip().strip(chr(39))
+      for fb in r['findings'] if fb.startswith('E4 未分区') for x in fb.split('[',1)[1].rstrip(']').split(',')}; new={'com.fleetops.logrotate','com.fleetops.sync','com.localbrain.ops-engine'};
+      tbl=set(rows.values()); print('rows=' + str(len(rows)) + ' e4=' + str(len(e4)) + ' missing=' + str(sorted(e4-tbl)) + ' extra=' + str(sorted(tbl-e4-new))); sys.exit(0
+      if len(rows)==22 and len(e4)==19 and not (e4-tbl) and not (tbl-e4-new) and tbl&new==new else 1)"
+    expect: rc=0 且 rows=22 e4=19 missing=[] extra=[] —— 表 22 名 = live E4 的 19 名 + 本轮补登的 3 名（双向集合相等）
+  - cmd: python3 -c "import hashlib,pathlib;print(hashlib.sha256(pathlib.Path('docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md').read_bytes()).hexdigest())"
+    expect: 与台账 BET-Y2Q4-T10-259 的 accepted_specifications[0].content_digest 及其 verify 期望值三处一致（本轮重签到 22 行后的当次 sha256）
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: OK -- 567 bets, 16 tracks, no errors
+  - cmd: bash -c "git diff --name-only \"$(git merge-base HEAD origin/main)\" HEAD | /usr/bin/grep -c '\\.py$' || true"
+    expect: 0 —— 零 Python 改动（本轮只动文档面与注册表面；左端是 merge-base 而非 HEAD，见 T10-270 item ②）
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -45039,7 +45130,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 566
+  total_bets: 567
   windows:
   - Y1Q1
   - Y1Q2
