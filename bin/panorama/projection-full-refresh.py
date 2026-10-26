@@ -314,7 +314,14 @@ def main() -> int:
             (["git", "reset", "--hard", "origin/main"], 300, 1),
             (["git", "clean", "-fdx"], 600, 1),
             (["git", "submodule", "sync", "--recursive"], 300, 1),
-            (["git", "submodule", "update", "--init", "--depth",
+            # ⚠ `--force` 是对齐契约的一半: `checkout_alignment` 要求子模块工作树
+            #   与钉住的 commit 逐字一致 (`--ignore-submodules=none`), 而不带
+            #   `--force` 的 `submodule update` **不会复位「已在正确 commit 上的
+            #   脏文件」** ⇒ ⇒ `post_sync_alignment` 永远报
+            #   `checkout_or_child_dirty` ⇒ ⇒ 作业永久 exit 1 ⇒ 入口层数据不更新。
+            #   ⇒ ⇒ 实测 (2026-10-26): publisher 的 projects/omlxc 被手改了一行,
+            #   于是每一轮都对不齐。⇒ ⇒ 复位必须与对齐契约同强度。
+            (["git", "submodule", "update", "--init", "--force", "--depth",
               str(SUBMODULE_HISTORY_DEPTH)], 3600, 1),
         ]) + deepen_steps
         if not unchanged:
