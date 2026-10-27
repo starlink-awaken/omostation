@@ -23,7 +23,7 @@ jobs:
           # 并按 warn 放行 —— 这一步此前在每次 push 上都空转 (2026-09-28 实测)。
           # 指针不可达时 checkout 本身即失败, 下一步再核对 origin/main 祖先关系。
           submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Submodule gitlink reachability
         run: |
