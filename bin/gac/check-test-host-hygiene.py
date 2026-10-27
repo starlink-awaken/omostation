@@ -14,9 +14,10 @@
 
 判据与历史的关系: ADR-0466 §1 记录 2026-10-19 审查发现「常驻单测未隔离, 向宿主
 目录倾倒 79 张假卡片」。那 79 张已于 2026-10-17 前后归档到
-~/.local/share/omostation/cards_archive/ (7 天保留期至 2026-10-26, 到期由
-bin/ops/purge-test-archive-7d.py 物理销毁)。本检查判的是**生产目录里是否又
-长出新的伪造卡片** —— 归档区的不再计入 (它们是待销毁的历史存量)。
+~/.local/share/omostation/cards_archive/, 并在 7 天保留期届满后 (2026-10-26) 由
+bin/ops/purge-test-archive-7d.py 物理销毁 (2026-10-27, 两机各 79 张)。本检查判的是
+**生产目录里是否又长出新的伪造卡片** —— 归档区的不再计入 (归档区只做逐条目保留期
+管理, 归 ADR-0466 §4 生命周期, 不归本门禁)。
 
 注意「诚实失败」不算污染: status=execution_failed + patch_ready=false + diff 键
 存在且为空, 是 worker 忠实报告「worktree missing」的诚实失败记录 (法条 1 要求的
