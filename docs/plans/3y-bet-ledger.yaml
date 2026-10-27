@@ -45210,6 +45210,91 @@ bets:
         evidence: {}
     overall_state: in_progress
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-273
+  title: 'BET-Y2Q4-T10-273 的根因已由并发 #4913 交付，残余缺口是 Agent Brief 物化器的写根「方向」没有尺 —— default_target
+    未登记进 B1 两个既有名单'
+  goal: 'ADR-0456 B1 的门禁 tests/unit/test_b1_ledger_call_time.py 有四层：源码扫描（不许有 import 期 profile 根常量）、I5（晚声明 profile
+    必须生效）、I3（未声明时逐字节等于 legacy 落点）、I4（检测器自证）。后两层只对 STATE_ENTRIES/LEGACY_SUFFIXES 两个既有名单里的 callable 参数化。bin/panorama/materialize-agent-brief.py
+    的 import 期常量由并发 lane PR #4913（合入 4858eb530）删除并改成 default_target() 现算，源码扫描读数 2→0；但它没有登记进那两个名单（实测 grep -c = 0），于是该文件的写根方向无人守。本轮反证给出规模：把
+    default_target() 改成 Path(__file__).resolve().parents[2]/…（退回检出根）后，未登记 base 上 19 passed 全绿、登记后同一变异 1 failed。另一件在本轮记录期间已被上游关闭的事：base
+    4858eb530 的 governance-check.yml 触发面不含 bin/**，所以 #4913 那次 push 没有产生该 workflow run；并发 PR #4915（合入 1917c669b）已把
+    bin/** 补进 push/PR 两侧，其 main run 40442337806 结论 success —— 即预存红在 main 上的第一次复评由 #4915 完成，本轮不据为己有。本轮交付只剩名单登记；本轮不重新实现根因、不动
+    #4913 的实现形状、不写任何运行面。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-27-bet-273-agent-brief-call-time-write-root.md
+  - bin/panorama/materialize-agent-brief.py
+  - tests/unit/test_b1_ledger_call_time.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-273.md
+  - docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
+  non_goals:
+  - '不重新实现 #4913 已交付的根因修复，也不把自己的改法覆盖到它已定型的实现形状上'
+  - 不写 ~/Library/LaunchAgents，不 bootout/bootstrap/kickstart，不改 crontab，不改 services.yaml（运行面与登记面属署名裁定）
+  - 不判定 Agent Brief 物化器该不该活、该不该装
+  - 不放宽 test_b1_ledger_call_time.py 的任何既有判据（检测器、名单语义、`== set()` 三条都不动）
+  - 不在本 BET 夹带「本地 FAIL / CI PASS」环境类分歧的修复，也不夹带 governance-check `bin/**` 触发面缺失的改动（后者属独立准入议题）
+  - 不宣布 ADR-0456 B1/B3/B4/B4b/B5 或整个 plan 完成
+  done_when:
+  - '`default_target` 出现在 `STATE_ENTRIES` 与 `LEGACY_SUFFIXES` 两个既有名单各一条（不新建平行清单、不新建只扫本文件的用例）'
+  - 变异对照：把 `default_target()` 改成 `__file__` 反推检出根 ⇒ `test_state_write_target_follows_profile_declared_after_import[bin/panorama/materialize-agent-brief.py-default_target]`
+    当场红；未登记 base 同一变异全绿（本轮实测 19 passed，即缺口规模）
+  - 写面语义未变：`default_target()` 仍走 `state_root()`，落点逐字节仍是 `<state root>/runtime/dashboard/agent-brief.json`（I3）
+  - '`tests/unit/test_b1_ledger_call_time.py` 全文件在 base `4858eb530` + 本轮改动上全绿（本轮实测 46 passed）'
+  - '本 PR 的 governance-verify 步「ADR-0456 B1 call-time write-plane gate」为 pass，且 collect 数含 materialize-agent-brief.py-default_target
+    两个参数化 —— 该步此前在 main 上连续两次 run 读 2 failed, 42 passed 的预存红，已由 #4913（根因）+ #4915（bin/** 触发面）关闭；本轮只要求它在自己 head tree
+    上不复红，不靠 --no-verify、不靠放宽判据、不靠 admin merge'
+  - spec 落 canonical 位；bet-ledger.py lint 对本 BET 条目零 ERROR —— 整体仍余 5 条，全部点名 BET-Y2Q4-T10-272（main 既成事实，属它自己的收口腿，本轮不夹带）
+  verify:
+  - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_b1_ledger_call_time.py -q -p no:randomly
+    expect: 46 passed（检测器命中数 0；改前 base 读数为 2 条 OUT_DIR/AGENT_BRIEF_JSON）
+  - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_b1_ledger_call_time.py tests/unit/test_panorama_agent_brief.py
+      tests/bin/test_materialize_agent_brief.py -q -p no:randomly
+    expect: 76 passed
+  - cmd: 变异对照：把 default_target() 的 state_root() 换成 Path(__file__).resolve().parents[2]
+      后跑 test_state_write_target_follows_profile_declared_after_import + test_no_module_level_profile_root_constant_left_in_bin
+    expect: 1 failed, 6 passed —— 失败 id 点名 materialize-agent-brief.py-default_target；未登记时同一变异
+      19 passed
+  - cmd: uv run --no-project --with pyyaml python -c "import importlib.util,pathlib;
+      s=importlib.util.spec_from_file_location('mb','bin/panorama/materialize-agent-brief.py');
+      m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(str(m.default_target()).endswith('runtime/dashboard/agent-brief.json'))"
+    expect: True —— 落点逐字节不变
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: '本 BET 条目零 ERROR —— 改前该位是 SPEC_DIGEST_MISMATCH；整体余 5 条 ERROR 全部属 BET-Y2Q4-T10-272'
+  circuit_breaker: '若名单登记只能靠放宽既有判据才绿（把 `state_root` 从 resolver 名单摘掉、给这一对名字加豁免、或把用例改窄）→
+    停止并保留原判据：那三形都是骗过扫描，写根方向仍然无尺。若为了让本 PR 绿而需要把 #4913 的实现改回模块级常量 → 停止，那是 B1 契约的反向。若需要写运行面（plist/bootstrap/crontab）才能验证
+    → 停止，属署名裁定与 B4b 批次 2+。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-27-bet-273-agent-brief-call-time-write-root.md
+    spec_version: 1.0.0
+    content_digest: sha256:050c434e079459084c4b1700750e7e1246019394e5fcbdc346451518175bddc1
+    decision_ref: decision://accepted/BET-Y2Q4-T10-273
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -45348,7 +45433,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 569
+  total_bets: 570
   windows:
   - Y1Q1
   - Y1Q2
