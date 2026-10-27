@@ -45156,7 +45156,8 @@ bets:
     runtime_root 的 launchd 服务把写根分类为 profile|checkout|install|undeclared|undetermined；
     缺省只观测不进 findings（今日注册表声明面 6 条 checkout 命中，host 扫描面 8 条，差额属 B4b 批次 2+ 注册表回填；计入即翻红而无授权修复），条目声明
     require_state_root_partitioned: true 才升级成 finding。 本轮不把任何服务改道、不动任何 plist、不推进安装位。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -45223,15 +45224,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ef5000b5619092473a6336daaaf908b180bcefa0
+          tests:
+            ref: receipt://docs/reports/2026-10-27-bet-272-e7-write-root-reality-axis-closeout.md
+            sha256: sha256:38d632c9c864896d69646add3f659f70ee22e39fe80374e054a649b83f594c5d
+          diff:
+            ref: receipt://docs/reports/2026-10-27-bet-272-e7-write-root-reality-axis-closeout.md
+            sha256: sha256:38d632c9c864896d69646add3f659f70ee22e39fe80374e054a649b83f594c5d
+          rollback:
+            ref: receipt://docs/reports/2026-10-27-bet-272-e7-write-root-reality-axis-closeout.md
+            sha256: sha256:38d632c9c864896d69646add3f659f70ee22e39fe80374e054a649b83f594c5d
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-27-bet-272-e7-write-root-reality-axis-closeout.md
+            sha256: sha256:38d632c9c864896d69646add3f659f70ee22e39fe80374e054a649b83f594c5d
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-27-bet-272-e7-write-root-reality-axis-closeout.md
+            sha256: sha256:38d632c9c864896d69646add3f659f70ee22e39fe80374e054a649b83f594c5d
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-272.md
+            sha256: sha256:98681176d46a0dd95657c5d0fce6a69cc3131c8649ce4b9ffab3108c73c20790
+          cleanup:
+            ref: receipt://docs/reports/2026-10-27-bet-272-e7-write-root-reality-axis-closeout.md
+            sha256: sha256:38d632c9c864896d69646add3f659f70ee22e39fe80374e054a649b83f594c5d
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-273
   title: 'BET-Y2Q4-T10-273 的根因已由并发 #4913 交付，残余缺口是 Agent Brief 物化器的写根「方向」没有尺 —— default_target
