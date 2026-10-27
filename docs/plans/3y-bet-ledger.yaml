@@ -45243,7 +45243,8 @@ bets:
     4858eb530 的 governance-check.yml 触发面不含 bin/**，所以 #4913 那次 push 没有产生该 workflow run；并发 PR #4915（合入 1917c669b）已把
     bin/** 补进 push/PR 两侧，其 main run 40442337806 结论 success —— 即预存红在 main 上的第一次复评由 #4915 完成，本轮不据为己有。本轮交付只剩名单登记；本轮不重新实现根因、不动
     #4913 的实现形状、不写任何运行面。'
-  status: in_progress
+  status: done
+  done_at: 2026-10-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -45307,17 +45308,41 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c2255b477b6e61dbf2ac88ea31d06a89190bfbbb
+          tests:
+            ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
+          diff:
+            ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
+          rollback:
+            ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-273.md
+            sha256: sha256:df741150a2ac76052fed597ab622608f576a4622a935e9259718b8deb733e129
+          cleanup:
+            ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
       value:
         status: NOT_PROVEN
         evidence: {}
+
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
