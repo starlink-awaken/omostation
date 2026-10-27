@@ -3,7 +3,7 @@ id: bin/ops/purge-test-archive-7d.py
 name: Purge Test Archive 7d
 category: ops
 owner: governance-team
-description: "ADR-0466 法条 2 第三道防线: 历史单测遗留脏数据的 7 天生命周期管理与物理销毁 (rm -rf)。本轮保留期至 2026-10-26, 到期后归档区的假卡片与假任务彻底销毁, 不留历史垃圾。"
+description: "ADR-0466 法条 2 第三道防线: 历史单测遗留脏数据的 7 天生命周期管理与物理销毁 (rm -rf)。逐条目判龄 (卡片取 created_at, 否则 mtime), 到期条目销毁、归档目录本身保留。"
 inputs: []
 outputs:
   - type: exit_code
@@ -12,5 +12,6 @@ triggers: []
 related:
   - .omo/_knowledge/decisions/0466-system-authenticity-and-zero-mock-contract.md
   - bin/gac/check-test-host-hygiene.py
+  - tests/unit/gac/test_purge_test_archive_7d.py
 maturity: draft
-last_reviewed: "2026-10-26"
+last_reviewed: "2026-10-27"

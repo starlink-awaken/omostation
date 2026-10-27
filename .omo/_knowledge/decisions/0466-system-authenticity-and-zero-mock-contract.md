@@ -68,3 +68,12 @@ tags: [authenticity, zero-mock, test-isolation, honesty, resident-agent, governa
 
 - **当前归档**：本次清理的 79 张假卡片（`~/.local/share/omostation/cards_archive/`）与 83 个假任务（`.omo/tasks/archived/dispatches_test_archive/`）设立 7 天保留期（至 2026-10-26）；
 - **物理销毁**：到期后由清理工具彻底物理销毁（`rm -rf`），不留任何历史垃圾。
+
+> **2026-10-27 执行登记（本轮销毁已完成）**：
+>
+> - **销毁动作**：保留期到期后（2026-10-26T00:00:00Z 届满，2026-10-27T22:33Z 执行）在 Mac-mini 与 mbp 两机各销毁 79 张归档假卡片，合计 158 条，物理删除（`rm -rf` 归档目录）。两机销毁前批次指纹一致（`9b7dac07b6e8157f7021d37f106d2ba4`），确属同一批历史存量。
+> - **销毁前校验**：79/79 张卡片全部命中法条 1 的伪造执行签名（`type=agora_task`、无 diff 证据、无 `patch_ready`），且全盘检索确认归档区无任何生产者/消费者引用（仅清理脚本自身与门禁注释提及），销毁不触及生产面。
+> - **83 个假任务**：`.omo/tasks/archived/dispatches_test_archive/` 在 main 上从未存在（仅见于未合并分支 `chore/closeout-20261022`），故实际销毁条目为 0，两机均一致。
+> - **销毁后回归**：两机 `bin/gac/check-test-host-hygiene.py` 均 PASS；生产卡片目录 48 张、真值派发目录 18 条生产任务未受影响。
+> - **工具语义修正（登记）**：原 `bin/ops/purge-test-archive-7d.py` 把保留期截止时刻**硬编码为单一批次日期**（2026-10-26）。该批次销毁后 `--auto` 将永远处于「已过期」态 —— 未来任何新归档一落地即被立即销毁，与本节承诺的「7 天保留期」相悖。现改为**逐条目判龄**（卡片取自身 `created_at`，否则取文件 mtime；保留期 7 天），并保留 `--retention-days` 可调。回归见 `tests/unit/gac/test_purge_test_archive_7d.py`（5 例：未到期不销毁 / 到期销毁 / 强制销毁 / `created_at` 优先于 mtime / 归档目录本身保留）。
+> - **未闭合项**：§3 所述第三道防线的「Launchd 与常驻守护进程巡检」当前**无调度接线** —— 清理工具未被任何 launchd/cron 作业引用，`bin/_registry/scripts/ops/purge-test-archive-7d.yaml` 的 `triggers` 为空。工具与语义已就位，周期巡检的安装面待决。
