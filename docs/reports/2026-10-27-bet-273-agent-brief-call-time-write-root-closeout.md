@@ -59,7 +59,7 @@ git show 4858eb530:tests/unit/test_b1_ledger_call_time.py | grep -c materialize-
 - `LEGACY_SUFFIXES` 追加同一键 → `"runtime/dashboard/agent-brief.json"`
 - **未新建**任何平行清单或只扫本文件的用例；**未放宽**检测器、名单语义、`== set()` 三条既有判据。
 
-## 3 验证读数（每条都在 base `4858eb530` + 本轮改动上实测）
+## 3 验证读数（每行**自己标注**产出它的 base —— 工程腿 `4858eb530`，收口腿 `c2255b477`）
 
 | 判据 | 读数 |
 |---|---|
@@ -73,7 +73,7 @@ git show 4858eb530:tests/unit/test_b1_ledger_call_time.py | grep -c materialize-
 | CI：本 PR run `40443945045` job `governance-verify` | `pass`；**step 7「ADR-0456 B1 call-time write-plane gate」= success** |
 | CI：`gac-gate` / `interface-check` / `meta-doctor` | 全 `pass`（16 pass / 0 fail） |
 
-台账 lint 一律按 BET id 分组数 ERROR 行，不 `tail -6`（见 §5.1）。合并后 main 上仍余 **5 条** ERROR，
+台账 lint 一律按 BET id 分组数 ERROR 行，不 `tail -6`（见 §5 第 1–2 项）。合并后 main 上仍余 **5 条** ERROR，
 全部点名 `BET-Y2Q4-T10-272` —— 那是 #4911 合入的既成事实，属它自己的收口腿，本轮不夹带。
 
 ## 4 done_when 六项对账
@@ -87,7 +87,7 @@ git show 4858eb530:tests/unit/test_b1_ledger_call_time.py | grep -c materialize-
 | 5 | 本 PR 的 `governance-verify` B1 步为 pass 且不复红 | ✅ step 7 success（不靠 `--no-verify`／放宽判据／admin merge） |
 | 6 | spec 落 canonical 位；本 BET 条目 lint 零 ERROR | ✅ `docs/superpowers/specs/…`；0 条（整体余 5 条属 T10-272） |
 
-## 5 如实登记：本轮的三次自伤与两处装置限制
+## 5 如实登记（共 8 项：3 次自伤 + 2 处装置限制 + 收口腿 gate 的 3 条读数诊断）
 
 1. **开条模板抄了 lint 必红的形状**。首版 `status: PENDING` × 3 + `overall_state: in_progress` 是从台账里
    `BET-Y2Q4-T10-272` 抄来的，而 `bin/plan/bet-ledger.py:437` 的 `COMPLETION_AXIS_STATUSES` 不含 `PENDING`，

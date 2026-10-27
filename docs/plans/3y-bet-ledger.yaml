@@ -45294,28 +45294,28 @@ bets:
             ref: git://origin/main@c2255b477b6e61dbf2ac88ea31d06a89190bfbbb
           tests:
             ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
-            sha256: sha256:d4c99e09fe759d6cd72dd7bd70ed87c65138933e6323a11f670ebfd5400fe9ce
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
           diff:
             ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
-            sha256: sha256:d4c99e09fe759d6cd72dd7bd70ed87c65138933e6323a11f670ebfd5400fe9ce
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
           rollback:
             ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
-            sha256: sha256:d4c99e09fe759d6cd72dd7bd70ed87c65138933e6323a11f670ebfd5400fe9ce
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
-            sha256: sha256:d4c99e09fe759d6cd72dd7bd70ed87c65138933e6323a11f670ebfd5400fe9ce
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
-            sha256: sha256:d4c99e09fe759d6cd72dd7bd70ed87c65138933e6323a11f670ebfd5400fe9ce
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-273.md
             sha256: sha256:df741150a2ac76052fed597ab622608f576a4622a935e9259718b8deb733e129
           cleanup:
             ref: receipt://docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
-            sha256: sha256:d4c99e09fe759d6cd72dd7bd70ed87c65138933e6323a11f670ebfd5400fe9ce
+            sha256: sha256:b87fbf7719e79091c53b41635022db17325c06ee4b28a5c79705d4daf8afa9c8
       value:
         status: NOT_PROVEN
         evidence: {}
