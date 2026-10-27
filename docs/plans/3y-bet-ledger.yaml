@@ -43975,7 +43975,7 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@9fbccb54364cb22dffa2658a2ca08054a40ca919
+            ref: git://origin/main@616c07338087d98d71fdfc676dc55798bfc7abe0
           tests:
             ref: receipt://docs/reports/2026-10-20-v34-canonical-scene-parser-closeout.md
             sha256: sha256:8859698ac78aea8a25698dfb199fe4ccde86e455fde7a2b7afafc08fa5c75739
