@@ -323,6 +323,16 @@ surfaces:
   - per_pr
   - push
   status: active
+- id: bin-gac-check-runner-cost-py
+  tool: bin/gac/check-runner-cost.py
+  workflow: gac-gate.yml
+  gate: true
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: CR-CI-RUNNER-COST — macOS(10x)/Windows(2x) GitHub-hosted runner 守门；public 仓免费、private 仓按量，未登记即阻塞 (2026-10-27)
 - id: bin-gac-check-severity-registry-py
   tool: bin/gac/check-severity-registry.py
   workflow: (none)

@@ -1,0 +1,26 @@
+schema: script-registry/v1
+id: bin/gac/check-runner-cost.py
+name: Check Runner Cost
+category: governance
+owner: governance-team
+description: "GitHub-hosted runner 成本守门 — macOS(10x)/Windows(2x) 未登记即阻塞"
+inputs:
+  - name: --json
+    type: flag
+  - name: --self-test
+    type: flag
+  - name: --root
+    type: path
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - pyyaml
+triggers:
+  - manual
+  - per_pr
+  - push
+related:
+  - .omo/_truth/registry/ci-surfaces.yaml
+maturity: draft
+last_reviewed: "2026-10-26"
