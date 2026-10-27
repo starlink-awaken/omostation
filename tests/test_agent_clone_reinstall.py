@@ -228,6 +228,26 @@ class TestSubmoduleProfiles:
 
         assert set(agent_clone.GOVERNANCE_SUBMODULES) <= set(live_links)
 
+    def test_aetherforge_profile_is_fixed_sorted_five(self):
+        expected = sorted((*self.ACTIVE_GOVERNANCE_PATHS, "projects/aetherforge"))
+        links = self._links("projects/unrelated", *reversed(expected))
+        assert agent_clone.resolve_submodule_profile("governance-aetherforge", links) == expected
+        assert agent_clone.resolve_submodule_profile("governance", links) == list(
+            self.ACTIVE_GOVERNANCE_PATHS
+        )
+        assert agent_clone.resolve_submodule_profile("root-only", links) == []
+
+    @pytest.mark.parametrize("missing", ["aetherforge", "agora", "cockpit", "ecos", "omo"])
+    def test_aetherforge_profile_requires_each_pin(self, missing):
+        paths = sorted((*self.ACTIVE_GOVERNANCE_PATHS, "projects/aetherforge"))
+        with pytest.raises(agent_clone.ToolError) as caught:
+            agent_clone.resolve_submodule_profile(
+                "governance-aetherforge",
+                self._links(*(path for path in paths if path != f"projects/{missing}")),
+            )
+        assert caught.value.reason == "profile_gitlink_missing"
+        assert caught.value.details["missing_gitlinks"] == [f"projects/{missing}"]
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

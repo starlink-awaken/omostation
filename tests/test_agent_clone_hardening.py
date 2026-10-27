@@ -459,3 +459,313 @@ class TestDegradedReinstallDecision:
         identity = json.loads(Path(identity_file).read_text(encoding="utf-8"))
         assert identity["ready"] is True
         assert identity["dependency_reinstall_status"] == "degraded"
+
+
+AF_PROFILE = "governance-aetherforge"
+AF_PATHS = sorted((*agent_clone.GOVERNANCE_SUBMODULES, "projects/aetherforge"))
+
+
+class NativeProfileFixture:
+    """Real Git/native CLI chain; only remote transport and runtime I/O are local.
+
+    No identity/readiness receipts are invented. The fake GitHub endpoint is
+    transported to one temporary bare repository for clone/ls-remote/fetch;
+    all provenance/config/index/initialized/guard checks use real Git. Runtime
+    executables belong to the fixture and never call the host OMO or services.
+    """
+
+    def __init__(self, base):
+        import shutil
+
+        self.base = base
+        self.source = base / "source"
+        self.clone = base / "clone"
+        self.remote = base / "root.git"
+        self.authority = "https://github.com/fixture-owner/fixture-root.git"
+        self.real_git = shutil.which("git")
+        # Inherit neither shell initialization nor host Git/runtime policy.
+        self.env = {"PATH": os.defpath, "LANG": "C", "LC_ALL": "C"}
+        assert self.real_git is not None, "real Git is required for native fixtures"
+        exec_probe = subprocess.run(
+            [self.real_git, "--exec-path"], env=self.env,
+            capture_output=True, text=True, timeout=20,
+        )
+        assert exec_probe.returncode == 0, exec_probe.stderr
+        exec_path = Path(exec_probe.stdout.strip())
+        assert exec_path.is_absolute() and exec_path.is_dir()
+        for name in ("git", "git-submodule", "git-submodule--helper", "git-sh-setup"):
+            assert (exec_path / name).is_file(), f"Git exec directory lacks {name}"
+        self.env["GIT_EXEC_PATH"] = str(exec_path)
+        self.env["PATH"] = str(exec_path) + os.pathsep + self.env["PATH"]
+        home = base / "home"
+        home.mkdir()
+        config = base / "gitconfig"
+        config.write_text('[user]\n name = Fixture Author\n email = fixture@example.test\n'
+                          '[commit]\n gpgsign = false\n[protocol "file"]\n allow = always\n')
+        self.env.update({
+            "HOME": str(home), "GIT_CONFIG_GLOBAL": str(config), "GIT_CONFIG_NOSYSTEM": "1",
+            "PYTHONDONTWRITEBYTECODE": "1", "AGENT_ID": "fixture-author",
+            "OMOSTATION_ROOT": str(self.source), "OMOSTATION_STATE_ROOT": str(base / "state"),
+            "WORKSPACE_ROOT": str(self.source), "UV_CACHE_DIR": str(base / "cache"),
+            "CLAIMS_AUTHORITY_HERMETIC_UNACTIVATED": "1",
+            "XDG_CONFIG_HOME": str(home / "config"), "XDG_DATA_HOME": str(home / "data"),
+            "XDG_STATE_HOME": str(home / "state"),
+        })
+        self.source.mkdir()
+        self.git(self.source, "init", "-b", "main")
+        (self.source / ".gitignore").write_text(".omo/_delivery/\nruntime/\n")
+        (self.source / "README.md").write_text("fixture root\n")
+        (self.source / ".githooks").mkdir()
+        hook = self.source / ".githooks/pre-commit"
+        hook.write_text("#!/bin/sh\nexit 0\n")
+        hook.chmod(0o755)
+        runner = self.source / "bin/gac/managed-python"
+        runner.parent.mkdir(parents=True)
+        runner.write_text(
+            f"#!{sys.executable}\nimport json,os,subprocess,sys\n"
+            "if sys.argv[1] == 'probe':\n"
+            " p = sys.argv[sys.argv.index('--profile')+1]\n"
+            " if os.environ.get('FIXTURE_FAIL_RUNTIME') == p: raise SystemExit(1)\n"
+            " print(json.dumps({'schema':'managed-python-runtime-receipt/v1','profile':p}))\n"
+            "else:\n"
+            " raise SystemExit(subprocess.call([sys.executable,'-B',*sys.argv[sys.argv.index('--')+1:]]))\n"
+        )
+        runner.chmod(0o755)
+        (self.source / "bin/agent-workflow.py").write_text(
+            "import json,os\nprint(json.dumps({'ok':not bool(os.environ.get('FIXTURE_FAIL_WORKFLOW'))}))\n"
+        )
+        self.children = {}
+        for name in ["aetherforge", "agora", "cockpit", "ecos", "omo", "sixth"]:
+            child = base / f"child-{name}"
+            child.mkdir()
+            self.git(child, "init", "-b", "main")
+            (child / "content.txt").write_text(f"distinct {name}\n")
+            self.git(child, "add", "content.txt")
+            self.git(child, "commit", "-m", f"initial {name}")
+            self.children[f"projects/{name}"] = child
+            self.git(self.source, "-c", "protocol.file.allow=always", "submodule", "add",
+                     str(child), f"projects/{name}")
+        self.git(self.source, "add", ".")
+        self.git(self.source, "commit", "-m", "fixture topology")
+        self.git(base, "clone", "--bare", str(self.source), str(self.remote))
+        # Rewrite only transport invocations. Never rewrite remote/config probes.
+        wrapper_dir = base / "transport-bin"
+        wrapper_dir.mkdir()
+        wrapper = wrapper_dir / "git"
+        wrapper.write_text(
+            f"#!{sys.executable}\nimport os,sys\n"
+            f"real={self.real_git!r}\nauthority={self.authority!r}\n"
+            "args=sys.argv[1:]\n"
+            "if authority in args and any(v in args for v in ('clone','ls-remote','fetch')):\n"
+            f" args=['-c',{('url.' + self.remote.as_uri() + '.insteadOf=' + self.authority)!r},*args]\n"
+            "elif any(v.startswith(('https://','ssh://','git@')) for v in args) and any(v in args for v in ('clone','ls-remote','fetch','push')):\n"
+            " raise SystemExit('fixture forbids external network')\n"
+            "os.execv(real,[real,*args])\n"
+        )
+        wrapper.chmod(0o755)
+        self.env["PATH"] = str(wrapper_dir) + os.pathsep + self.env["PATH"]
+        self.counter = 0
+
+    def git(self, cwd, *args, check=True):
+        proc = subprocess.run([self.real_git, "-C", str(cwd), *args], env=self.env,
+                              capture_output=True, text=True, timeout=20)
+        if check:
+            assert proc.returncode == 0, proc.stderr
+        return proc
+
+    def cli(self, *args, check=True, env=None):
+        proc = subprocess.run([sys.executable, "-B", str(BIN_PATH), *map(str, args)],
+                              cwd=self.base, env={**self.env, **(env or {})},
+                              capture_output=True, text=True, timeout=40)
+        if check:
+            assert proc.returncode == 0, proc.stderr
+        return proc
+
+    def output(self, label):
+        self.counter += 1
+        return self.base / f"{label}-{self.counter}.json"
+
+    def create(self, profile=AF_PROFILE, custom=False):
+        selection = [item for path in AF_PATHS for item in ("--submodule", path)] if custom else ["--profile", profile]
+        return self.cli("create", "--agent-id", "fixture-author", "--delivery-attempt-id", "fixture-attempt",
+                        "--source", self.authority, "--revision", "refs/heads/main",
+                        "--destination", self.clone, *selection, "--json")
+
+    def prepare(self, profile=AF_PROFILE, custom=False):
+        self.create(profile, custom)
+        if not custom and profile in {AF_PROFILE, "governance", "full"}:
+            self.cli("provenance", "--clone", self.clone, "--expected-repository",
+                     "fixture-owner/fixture-root", "--output", self.output("provenance"), "--json")
+        return self.readiness()
+
+    def readiness(self, *, check=True, env=None):
+        manifest = self.output("manifest")
+        self.cli("manifest", "--clone", self.clone, "--output", manifest, "--json")
+        self.cli("verify", "--clone", self.clone, "--manifest", manifest, "--json")
+        return self.cli("readiness", "--clone", self.clone, "--manifest", manifest,
+                        "--output", self.output("readiness"), "--json", check=check, env=env)
+
+    def guard(self, *, check=True, env=None):
+        return self.cli("guard", "--workspace", self.clone, "--integration-root", self.base / "authority",
+                        "--require-clone", "--json", check=check, env=env)
+
+    def initialized(self):
+        return sorted(path for path in self.children if (self.clone / path / ".git").exists())
+
+    def identity(self):
+        return self.clone / ".git/agent-clone-identity.json"
+
+    def rejected(self, proc, reason=None):
+        assert proc.returncode != 0, proc.stdout
+        if reason:
+            assert reason in proc.stdout + proc.stderr
+
+
+class TestAetherforgeNativeProfile:
+    def test_real_chain_initializes_only_five_and_admits_owned_descendant(self, tmp_path):
+        f = NativeProfileFixture(tmp_path)
+        result = json.loads(f.prepare().stdout)
+        assert result["status"] == "ready"
+        assert f.initialized() == AF_PATHS
+        assert not (f.clone / "projects/sixth/.git").exists()
+        identity = json.loads(f.identity().read_text())
+        assert identity["provenance_required"] is True
+        assert json.loads(f.guard().stdout)["state"] == "verified_clone"
+        (f.clone / "README.md").write_text("owned root descendant\n")
+        f.git(f.clone, "add", "README.md")
+        f.git(f.clone, "commit", "-m", "owned descendant")
+        assert json.loads(f.guard().stdout)["state"] == "verified_clone"
+
+    def test_fresh_extra_initialization_rejected_while_root_clean(self, tmp_path):
+        f = NativeProfileFixture(tmp_path)
+        f.prepare()
+        f.git(f.clone, "-c", "protocol.file.allow=always", "submodule", "update", "--init", "--", "projects/sixth")
+        assert f.git(f.clone, "status", "--porcelain").stdout == ""
+        f.rejected(f.guard(check=False), "profile_initialization_mismatch")
+        f.rejected(f.readiness(check=False), "profile_initialization_mismatch")
+
+    @pytest.mark.parametrize("name", ["aetherforge", "agora", "cockpit", "ecos", "omo"])
+    def test_each_child_dirty_rejected(self, tmp_path, name):
+        f = NativeProfileFixture(tmp_path)
+        f.prepare()
+        (f.clone / f"projects/{name}/content.txt").write_text("dirty\n")
+        f.rejected(f.guard(check=False))
+
+    def test_af_origin_metadata_drift_rejected_while_root_clean(self, tmp_path):
+        f = NativeProfileFixture(tmp_path)
+        f.prepare()
+        f.git(f.clone / "projects/aetherforge", "remote", "set-url", "origin", str(f.children["projects/sixth"]))
+        assert f.git(f.clone, "status", "--porcelain").stdout == ""
+        f.rejected(f.guard(check=False), "clone_readiness_mismatch")
+
+    @pytest.mark.parametrize("change", ["missing", "null", "both-markers-missing", "readiness-profile"])
+    def test_af_binding_cannot_fall_back_to_legacy(self, tmp_path, change):
+        f = NativeProfileFixture(tmp_path)
+        f.prepare()
+        assert json.loads(f.guard().stdout)["state"] == "verified_clone"
+        receipt = f.clone / ".git/agent-clone-readiness.json"
+        original_receipt = receipt.read_bytes()
+        data = json.loads(f.identity().read_text())
+        if change in {"missing", "both-markers-missing"}:
+            data.pop("profile")
+            if change == "both-markers-missing":
+                data.pop("readiness_profile")
+        elif change == "null":
+            data["profile"] = None
+        else:
+            data["readiness_profile"] = "governance"
+        assert data["provenance_required"] is True
+        f.identity().write_text(json.dumps(data))
+        assert f.git(f.clone, "status", "--porcelain").stdout == ""
+        clean_guard = f.guard(check=False)
+        (f.clone / "projects/aetherforge/content.txt").write_text("dirty AF\n")
+        dirty_guard = f.guard(check=False)
+        assert receipt.read_bytes() == original_receipt
+        f.rejected(clean_guard, "clone_readiness_mismatch")
+        f.rejected(dirty_guard, "clone_readiness_mismatch")
+
+    @pytest.mark.parametrize("change", ["missing", "head", "index-and-head", "committed-child-pin", "root-dirty", "provenance-flag", "receipt", "actor", "branch", "attempt", "root-origin", "author", "profile"])
+    def test_live_drift_is_rejected(self, tmp_path, change):
+        f = NativeProfileFixture(tmp_path)
+        f.prepare()
+        af = f.clone / "projects/aetherforge"
+        if change == "missing":
+            (af / ".git").rename(af / ".git.hidden")
+        elif change in {"head", "index-and-head", "committed-child-pin"}:
+            (af / "content.txt").write_text("new AF commit\n")
+            f.git(af, "add", "content.txt")
+            f.git(af, "commit", "-m", "new child")
+            if change in {"index-and-head", "committed-child-pin"}:
+                f.git(f.clone, "add", "projects/aetherforge")
+            if change == "committed-child-pin":
+                f.git(f.clone, "commit", "-m", "changed selected pin")
+                assert f.git(f.clone, "status", "--porcelain").stdout == ""
+        elif change == "root-dirty":
+            (f.clone / "README.md").write_text("dirty root\n")
+        elif change in {"provenance-flag", "attempt", "profile"}:
+            data = json.loads(f.identity().read_text())
+            if change == "provenance-flag":
+                data.pop("provenance_required")
+                (f.clone / ".git/agent-clone-provenance.json").unlink()
+            elif change == "attempt":
+                data["delivery_attempt_id"] = "other-attempt"
+            else:
+                data["profile"] = "governance"
+            f.identity().write_text(json.dumps(data))
+        elif change == "receipt":
+            (f.clone / ".git/agent-clone-readiness.json").write_text("{}")
+        elif change == "actor":
+            f.rejected(f.guard(check=False, env={"AGENT_ID": "other-author"}))
+            return
+        elif change == "branch":
+            f.git(f.clone, "switch", "-c", "other-branch")
+        elif change == "root-origin":
+            f.git(f.clone, "remote", "set-url", "--push", "origin", "https://github.com/other/root.git")
+        elif change == "author":
+            f.git(f.clone, "config", "user.email", "different@example.test")
+        f.rejected(f.guard(check=False))
+
+    @pytest.mark.parametrize("seam", ["FIXTURE_FAIL_RUNTIME", "FIXTURE_FAIL_WORKFLOW"])
+    def test_required_runtime_readiness_is_not_bypassed(self, tmp_path, seam):
+        f = NativeProfileFixture(tmp_path)
+        f.create()
+        f.cli("provenance", "--clone", f.clone, "--expected-repository", "fixture-owner/fixture-root",
+              "--output", f.output("provenance"), "--json")
+        proc = f.readiness(check=False, env={seam: "pyyaml" if seam.endswith("RUNTIME") else "1"})
+        assert proc.returncode == 0, proc.stderr
+        result = json.loads(proc.stdout)
+        assert result["status"] == "degraded"
+        expected = "managed_python_pyyaml" if seam.endswith("RUNTIME") else "workflow_entrypoint"
+        assert result["degraded_checks"] == [expected]
+        assert json.loads(f.identity().read_text())["ready"] is False
+        f.rejected(f.guard(check=False))
+
+    def test_same_five_custom_remains_readonly(self, tmp_path):
+        f = NativeProfileFixture(tmp_path)
+        f.create(custom=True)
+        assert f.initialized() == AF_PATHS
+        proc = f.readiness()
+        result = json.loads(proc.stdout)
+        assert result["status"] == "degraded"
+        assert result["degraded_checks"] == ["writer_admission"]
+        assert json.loads(f.identity().read_text())["ready"] is False
+        f.rejected(f.guard(check=False), "not eligible")
+
+    @pytest.mark.parametrize("profile", ["governance", "full"])
+    def test_legacy_writer_profiles_keep_their_existing_sets(self, tmp_path, profile):
+        f = NativeProfileFixture(tmp_path)
+        assert json.loads(f.prepare(profile).stdout)["status"] == "ready"
+        expected = list(agent_clone.GOVERNANCE_SUBMODULES) if profile == "governance" else sorted(f.children)
+        assert f.initialized() == expected
+        assert json.loads(f.guard().stdout)["state"] == "verified_clone"
+
+    def test_root_only_remains_readonly_and_initializes_nothing(self, tmp_path):
+        f = NativeProfileFixture(tmp_path)
+        f.create("root-only")
+        assert f.initialized() == []
+        proc = f.readiness()
+        result = json.loads(proc.stdout)
+        assert result["status"] == "degraded"
+        assert result["degraded_checks"] == ["writer_admission"]
+        assert json.loads(f.identity().read_text())["ready"] is False
+        f.rejected(f.guard(check=False), "not eligible")

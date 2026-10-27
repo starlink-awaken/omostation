@@ -166,7 +166,9 @@ GOVERNANCE_SUBMODULES = (
     "projects/ecos",
     "projects/omo",
 )
-SUBMODULE_PROFILES = ("root-only", "governance", "full")
+GOVERNANCE_AETHERFORGE_PROFILE = "governance-aetherforge"
+GOVERNANCE_AETHERFORGE_SUBMODULES = tuple(sorted((*GOVERNANCE_SUBMODULES, "projects/aetherforge")))
+SUBMODULE_PROFILES = ("root-only", "governance", "full", GOVERNANCE_AETHERFORGE_PROFILE)
 READINESS_PROFILES = (*SUBMODULE_PROFILES, "custom")
 GITHUB_COMPONENT_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 AUTHOR_OVERRIDE_ENV = (
@@ -415,21 +417,26 @@ def resolve_submodule_profile(profile: str, links: dict[str, str]) -> list[str]:
         return []
     if profile == "full":
         return sorted(links)
-    if profile != "governance":
+    if profile not in {"governance", GOVERNANCE_AETHERFORGE_PROFILE}:
         raise ToolError(
             "profile_unknown",
             f"unknown clone submodule profile {profile!r}",
             EXIT_USAGE,
         )
-    missing = sorted(set(GOVERNANCE_SUBMODULES) - set(links))
+    required = (
+        GOVERNANCE_AETHERFORGE_SUBMODULES
+        if profile == GOVERNANCE_AETHERFORGE_PROFILE
+        else GOVERNANCE_SUBMODULES
+    )
+    missing = sorted(set(required) - set(links))
     if missing:
         raise ToolError(
             "profile_gitlink_missing",
-            f"governance profile requires missing root gitlinks: {missing}",
+            f"{profile} profile requires missing root gitlinks: {missing}",
             EXIT_POLICY,
             {"profile": profile, "missing_gitlinks": missing},
         )
-    return list(GOVERNANCE_SUBMODULES)
+    return list(required)
 
 
 def expected_submodule_origins(repo_root: str) -> dict[str, str]:
@@ -2219,7 +2226,7 @@ def cmd_create(args: argparse.Namespace) -> dict:
         if identity_profile:
             identity["profile"] = identity_profile
             identity["required_submodules"] = initialize_paths
-        if identity_profile in {"governance", "full"}:
+        if identity_profile in {"governance", "full", GOVERNANCE_AETHERFORGE_PROFILE}:
             identity["provenance_required"] = True
             identity["provenance_status"] = "unbound"
         if transport_block is not None:
@@ -2405,6 +2412,103 @@ def workflow_entrypoint_check(repo_root: str) -> dict:
     return {"status": "degraded", "required": True, "detail": detail[:240]}
 
 
+def verify_aetherforge_profile(repo_root: str, identity: dict, entries: list[dict]) -> None:
+    """Revalidate fixed-five writers against their frozen Git graph and receipt.
+
+    This opt-in profile cannot inherit the legacy guard's advisory treatment
+    of extra initialized children or accept matching index/child drift. Root
+    commits may advance normally while the selected child identities stay bound.
+    """
+    required = list(GOVERNANCE_AETHERFORGE_SUBMODULES)
+    live_links = gitlinks(repo_root)
+    initialized = sorted(path for path in live_links if submodule_state(repo_root, path)[0])
+    if initialized != required:
+        raise ToolError(
+            "profile_initialization_mismatch",
+            "governance-aetherforge requires exactly its five initialized root gitlinks",
+            EXIT_POLICY,
+        )
+    status = git_isolated(repo_root, "status", "--porcelain", "--untracked-files=all")
+    if status.returncode != 0 or status.stdout.strip():
+        raise ToolError("root_dirty", "fixed-five writer requires a clean root", EXIT_POLICY)
+    frozen = identity.get("frozen_root_sha", "")
+    tree = git_isolated(repo_root, "ls-tree", "-r", "-z", frozen)
+    modules = git_isolated(repo_root, "config", "--blob", f"{frozen}:.gitmodules",
+                           "--get-regexp", r"^submodule\..*\.(path|url)$")
+    frozen_links = {}
+    for row in tree.stdout.split("\0"):
+        meta, sep, path = row.partition("\t")
+        parts = meta.split()
+        if sep and len(parts) == 3 and parts[0] == "160000":
+            frozen_links[path] = parts[2]
+    sections: dict[str, dict[str, str]] = {}
+    for row in modules.stdout.splitlines():
+        key, sep, value = row.partition(" ")
+        if sep and key.startswith("submodule."):
+            section, field = key[len("submodule."):].rsplit(".", 1)
+            sections.setdefault(section, {})[field] = value.strip()
+    frozen_origins = {row["path"]: row["url"] for row in sections.values()
+                      if row.get("path") and row.get("url")}
+    if (tree.returncode != 0 or modules.returncode != 0
+            or identity.get("required_submodules") != required
+            or [entry.get("path") for entry in entries] != required):
+        raise ToolError("clone_readiness_mismatch", "fixed-five profile binding is invalid", EXIT_POLICY)
+    configured = expected_submodule_origins(repo_root)
+    for path, entry in zip(required, entries):
+        expected = frozen_origins.get(path, "")
+        # Fixed authority bindings must be absolute; do not resolve a relative
+        # URL through mutable clone-local config as a new source of authority.
+        absolute_origin = os.path.isabs(expected) or "://" in expected or expected.startswith("git@")
+        initialized_child, head, origin, clean = submodule_state(repo_root, path)
+        if (not absolute_origin or not initialized_child or not clean
+                or not frozen_links.get(path)
+                or live_links.get(path) != frozen_links[path]
+                or head != frozen_links[path]
+                or entry.get("pinned_sha") != frozen_links[path]
+                or entry.get("child_head") != head
+                or normalize_source(entry.get("origin") or "") != normalize_source(expected)
+                or normalize_source(configured.get(path, "")) != normalize_source(expected)
+                or normalize_source(origin or "") != normalize_source(expected)
+                or any(normalize_source(url) != normalize_source(expected)
+                       for push in (False, True) for url in remote_urls(os.path.join(repo_root, path), push=push))):
+            raise ToolError(
+                "clone_readiness_mismatch",
+                f"fixed-five submodule {path} differs from its frozen identity",
+                EXIT_POLICY,
+            )
+
+
+def verify_aetherforge_guard_profile_binding(repo_root: str, identity: dict) -> None:
+    """Reject AF5 selector removal before considering the legacy guard path."""
+    try:
+        with open(readiness_path(repo_root), encoding="utf-8") as fh:
+            receipt = json.load(fh)
+        receipt_profile = receipt.get("profile") if isinstance(receipt, dict) else None
+    except (OSError, json.JSONDecodeError):
+        # Legacy identities do not require a readiness receipt. Any AF5 marker
+        # below still makes an absent or unreadable receipt fail closed.
+        receipt_profile = None
+    bindings = (identity.get("profile"), identity.get("readiness_profile"), receipt_profile)
+    if GOVERNANCE_AETHERFORGE_PROFILE in bindings and bindings != (
+        GOVERNANCE_AETHERFORGE_PROFILE,
+        GOVERNANCE_AETHERFORGE_PROFILE,
+        GOVERNANCE_AETHERFORGE_PROFILE,
+    ):
+        raise ToolError(
+            "clone_readiness_mismatch",
+            "fixed-five profile selectors and readiness binding disagree",
+            EXIT_POLICY,
+        )
+
+
+def profile_provenance_required(identity: dict) -> bool:
+    if identity.get("profile") == GOVERNANCE_AETHERFORGE_PROFILE:
+        if identity.get("provenance_required") is not True:
+            raise ToolError("clone_provenance_missing", "fixed-five writer requires provenance", EXIT_POLICY)
+        return True
+    return identity.get("provenance_required") is True
+
+
 def cmd_readiness(args: argparse.Namespace) -> dict:
     """Verify a named-profile clone and publish a canonical readiness receipt."""
     cmd_verify(argparse.Namespace(clone=args.clone, manifest=args.manifest))
@@ -2471,8 +2575,11 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
         )
 
     provenance_receipt = None
-    if identity.get("provenance_required") is True:
+    if profile_provenance_required(identity):
         provenance_receipt = verify_clone_provenance(args.clone, identity)
+
+    if profile == GOVERNANCE_AETHERFORGE_PROFILE:
+        verify_aetherforge_profile(args.clone, identity, required_submodules)
 
     checks: dict[str, dict] = {
         "root_repository": {"status": "pass", "required": True},
@@ -2500,7 +2607,7 @@ def cmd_readiness(args: argparse.Namespace) -> dict:
     if stdlib_receipt is not None:
         managed_python["stdlib"] = stdlib_receipt
 
-    if profile in {"governance", "full"}:
+    if profile in {"governance", "full", GOVERNANCE_AETHERFORGE_PROFILE}:
         pyyaml_check, pyyaml_receipt = managed_python_probe(args.clone, "pyyaml")
         checks["managed_python_pyyaml"] = pyyaml_check
         if pyyaml_receipt is not None:
@@ -4444,11 +4551,12 @@ def cmd_guard(args: argparse.Namespace) -> dict:
         result["state"] = "legacy_isolated_worktree"
         result["reason"] = "legacy_isolated_worktree_allowed"
         return result
-    if identity.get("provenance_required") is True:
+    verify_aetherforge_guard_profile_binding(ws, identity)
+    if profile_provenance_required(identity):
         verify_clone_provenance(ws, identity)
     if identity.get("profile") is not None:
         profile = identity.get("profile")
-        if profile not in {"governance", "full"}:
+        if profile not in {"governance", "full", GOVERNANCE_AETHERFORGE_PROFILE}:
             raise ToolError(
                 "clone_readiness_mismatch",
                 f"profile {profile!r} is not eligible for writer admission",
@@ -4510,6 +4618,8 @@ def cmd_guard(args: argparse.Namespace) -> dict:
                 "readiness receipt required submodules do not match the named profile",
                 EXIT_POLICY,
             )
+        if profile == GOVERNANCE_AETHERFORGE_PROFILE:
+            verify_aetherforge_profile(ws, identity, receipt["required_submodules"])
         for path in required_paths:
             initialized, child_head, child_origin, clean = submodule_state(ws, path)
             if (
