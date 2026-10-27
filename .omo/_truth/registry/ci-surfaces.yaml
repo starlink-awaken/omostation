@@ -1431,8 +1431,7 @@ workflow_triggers:
   - .pre-commit-config.yaml
   - CLAUDE.md
   - LAYER-INDEX.md
-  - bin/ssot/doc-governance-check.py
-  - bin/ssot/workspace-audit
+  - bin/**
   - docs/**
   - docs/OPC-*.md
   - projects/*

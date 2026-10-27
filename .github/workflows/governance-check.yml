@@ -8,7 +8,7 @@ on:
       - ".omo/**"
       - "docs/OPC-*.md"
       - "docs/**"
-      - "bin/ssot/doc-governance-check.py"
+      - "bin/**"
       - ".omo/_truth/registry/document-governance.yaml"
       - ".omo/standards/document-governance-standard.md"
       - "projects/*"
@@ -16,7 +16,6 @@ on:
       - "projects/*/src/**"
       - "projects/omo/tests/**"
       - "projects/ecos/scripts/contract_gatekeeper.py"
-      - "bin/ssot/workspace-audit"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
   pull_request:
@@ -26,7 +25,7 @@ on:
       - ".omo/**"
       - "docs/OPC-*.md"
       - "docs/**"
-      - "bin/ssot/doc-governance-check.py"
+      - "bin/**"
       - ".omo/_truth/registry/document-governance.yaml"
       - ".omo/standards/document-governance-standard.md"
       - "projects/*"
@@ -34,7 +33,6 @@ on:
       - "projects/*/src/**"
       - "projects/omo/tests/**"
       - "projects/ecos/scripts/contract_gatekeeper.py"
-      - "bin/ssot/workspace-audit"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
   schedule:
