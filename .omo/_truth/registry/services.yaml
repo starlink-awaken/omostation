@@ -6347,6 +6347,7 @@ services:
   generate: true
   run_at_load: true
   scheduler: launchd
+  runtime_root: install
   trigger: interval
   interval_sec: 1800
   label: com.omostation.agent-brief-materialize
@@ -6360,6 +6361,8 @@ services:
   outputs:
     stdout: ~/.local/log/agent-brief-materialize.log
     stderr: ~/.local/log/agent-brief-materialize.log
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
 
 launchd_namespace:
   workspace_prefixes:
