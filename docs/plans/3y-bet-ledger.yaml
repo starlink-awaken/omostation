@@ -45172,6 +45172,12 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - bin/mof/gen-service-configs.py
   - tests/unit/test_reality_check_state_root_axis.py
+  - bin/gac/launchd-workspace-reality-check.py
+  - bin/panorama/materialize-agent-brief.py
+  - bin/storage/storage-resilience-check.py
+  - docs/superpowers/specs/2026-10-27-storage-resilience-t3-playbook.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-272.md
+  - docs/reports/2026-10-27-b4b-reality-check-and-reading-alignment-closeout.md
   non_goals:
   - 不改 ~/Library/LaunchAgents 任何一份 plist，不 bootout/bootstrap，不动 crontab（机器级写面，B4b 批次
     2+ 逐批授权）
@@ -45227,7 +45233,13 @@ bets:
         evidence: {}
       operational:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          receipt:
+            ref: receipt://docs/reports/2026-10-27-b4b-reality-check-and-reading-alignment-closeout.md
+            sha256: sha256:09463852db8b72589cc0a30a1b125c0667098f0925d8489546fc85ccd2e0ee4b
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-272.md
+            sha256: sha256:ef32ce0108c72f0d46af912aade1a1c0a8d06adf54094b5f0dfd7924d12ce33a
       value:
         status: NOT_PROVEN
         evidence: {}
