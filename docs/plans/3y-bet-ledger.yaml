@@ -45210,6 +45210,97 @@ bets:
         evidence: {}
     overall_state: in_progress
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-273
+  title: ADR-0456 B1 回归修复 —— Agent Brief 物化器的 import 期写根常量改调用时刻解析（governance-verify
+    预存红，挡所有基于该 main 的交付）
+  goal: '`bin/panorama/materialize-agent-brief.py:58-59` 在 import 期把 profile 写根冻成模块常量
+    `OUT_DIR = state_root() / "runtime" / "dashboard"` 与 `AGENT_BRIEF_JSON = OUT_DIR
+    / "agent-brief.json"`， 即 BET-Y2Q4-T10-232 已固化禁止的形状；引入点是 #4905 与 #4907。 检测器读数（base
+    `616c07338` 与 `214ad1f42` 各一次，两个隔离检出）：`_frozen_write_targets` 命中 2 条，正是这两行。 CI 侧同读数——main
+    tip `616c07338` 的 run 40428684471 里「ADR-0456 B1 call-time write-plane gate」= `2
+    failed, 42 passed`， 失败两条 `test_no_module_level_profile_root_constant_left_in_bin`(:283)
+    与 `test_detector_counts_the_14_prefix_baseline_violations`(:370)，两处右端是同一次 `== set()`
+    实测 ⇒ **预存红（主仓同红）**， 不是任何在制 PR 引入，但挡住 PR #4911 等全部基于该 main 的交付。 本轮按 B1 既有约定修：绝对路径一律函数现算，模块级只留与根无关的相对段常量（产物落点仍可静态
+    grep， 读者 drift-face-detector 与 auto-pruner 依赖该相对段）；并把 `default_target` 登记进 `STATE_ENTRIES`
+    与 `LEGACY_SUFFIXES`  两个既有名单，让 I5（时机）与 I3（等价）两层自动覆盖，不新建只扫本文件的平行用例。 另更正一处不实措辞：原注释称约束来自「规划层探针
+    script_output_paths()」，全仓实测该名字只命中这段注释本身（含部署 clone 共 0 处实现），不构成可依赖接线；而链检查器的 `_extract_bin_paths`
+    确实存在，故「别写源文件路径」那条警告保留。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-27-bet-273-agent-brief-call-time-write-root.md
+  - bin/panorama/materialize-agent-brief.py
+  - tests/unit/test_b1_ledger_call_time.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-273.md
+  - docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md
+  non_goals:
+  - 不写 ~/Library/LaunchAgents，不 bootout/bootstrap/kickstart，不改 crontab，不改 services.yaml（运行面与登记面属署名裁定）
+  - 不判定 Agent Brief 物化器该不该活、该不该装
+  - 不放宽 test_b1_ledger_call_time.py 的任何判据（检测器、名单语义、`== set()` 三条都不动）
+  - 不在本 BET 夹带「本地 FAIL / CI PASS」那条环境类分歧的修复（spec §5 已如实登记并给出复现读数）
+  - 不宣布 ADR-0456 B1/B3/B4/B4b/B5 或整个 plan 完成
+  done_when:
+  - '`_frozen_write_targets(CHECKOUT/"bin", _profile_resolvers())` 实测为 `set()`（改前 2
+    条命中），且 `test_no_module_level_profile_root_constant_left_in_bin` 与 `test_detector_counts_the_14_prefix_baseline_violations`
+    两条转绿'
+  - 产物落点仍可静态声明——`runtime/dashboard/agent-brief.json` 在本文件内仍可 grep 到（相对段常量 + `BRIEF_FILENAME`），未把信息删掉
+  - 改后 `default_target()` 仍走 `state_root()`（写面语义不变），未退回 `__file__` 反推，也未跟着移到检出根
+  - I5 与 I3 两层自动覆盖本文件——`STATE_ENTRIES` 与 `LEGACY_SUFFIXES` 各 +1 条，未新建平行名单
+  - '预存红消除后 main 自己的 governance-check run 该步转绿（判据：合入后 main 上首次 push/schedule run 的 `governance-verify`
+    步 `ADR-0456 B1 call-time write-plane gate` 读数为 pass；不靠 `--no-verify`、不靠放宽判据、不靠 admin
+    merge。原措辞指向「在制 PR #4911」——该 PR 已带此红合入为 `ef5000b56`，参照对象因此改为 main tip 自己的 run）'
+  - spec 落 canonical 位且 doc-governance tracked 无新告警；台账 lint 仍 `no errors`
+  verify:
+  - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_b1_ledger_call_time.py::test_no_module_level_profile_root_constant_left_in_bin
+      tests/unit/test_b1_ledger_call_time.py::test_detector_counts_the_14_prefix_baseline_violations
+      tests/unit/test_b1_ledger_call_time.py::test_state_write_target_follows_profile_declared_after_import
+      tests/unit/test_b1_ledger_call_time.py::test_undeclared_profile_keeps_the_legacy_path_string
+      -q -p no:randomly
+    expect: 22 passed（改前该四条里前两条红；后两条是新增名单带来的 I5/I3 覆盖）
+  - cmd: python3 -c "import importlib.util; s=importlib.util.spec_from_file_location('t','tests/unit/test_b1_ledger_call_time.py');
+      m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(len(m._frozen_write_targets(m.CHECKOUT/'bin',
+      m._profile_resolvers())))"
+    expect: 0（改前读数为 2）
+  - cmd: python3 -c "import importlib.util; s=importlib.util.spec_from_file_location('mb','bin/panorama/materialize-agent-brief.py');
+      m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(hasattr(m,'OUT_DIR'),
+      hasattr(m,'AGENT_BRIEF_JSON'), str(m.default_target()).endswith('runtime/dashboard/agent-brief.json'))"
+    expect: False False True —— 两个 import 期常量已消失，落点逐字节仍是同一条路径
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: OK，no errors
+  circuit_breaker: '若消除命中只能靠放宽检测器（给这一对名字加豁免、把 `state_root` 从 resolver 名单里摘掉、或把用例改窄）→
+    停止并保留原判据：那三形都只是骗过扫描，写根仍在 import 期冻结。若需要把落点改回检出根才能绿 → 停止，那是 ADR-0456 写面契约的反向。若需要写运行面（plist/bootstrap/crontab）才能验证
+    → 停止，属署名裁定与 B4b 批次 2+。若为了「让 PR #4911 变绿」而直接 admin merge 或 `--no-verify` → 停止，预存红的出口是修根因或按流程登记债，不是绕门禁。不宣布
+    ADR-0456 B1/B3/B4/B4b/B5 或整个 plan 完成。'
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-27-bet-273-agent-brief-call-time-write-root.md
+    spec_version: 1.0.0
+    content_digest: sha256:b118a52bdfa6ebce83b01440e21b739f2474bc3703b136f2dd75374600b2c026
+    decision_ref: decision://accepted/BET-Y2Q4-T10-273
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: in_progress
+    axes:
+      engineering:
+        status: PENDING
+        evidence: {}
+      operational:
+        status: PENDING
+        evidence: {}
+      value:
+        status: PENDING
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -45348,7 +45439,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 569
+  total_bets: 570
   windows:
   - Y1Q1
   - Y1Q2
