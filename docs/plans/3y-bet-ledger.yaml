@@ -45385,7 +45385,8 @@ bets:
     时 :3275-3277 早退「已是 done, 无需操作」并 return 0， 因此台账已 done 时它的 rc=0 不构成任何校验证据。本轮交付 spec
     + 台账条目 + AGENTS.md §7 固化条； 不改 :278/:282-287 的绑定语义（REGISTRY_PATH/RUNS_DIR/cwd= 等
     8 个消费点同受影响，属独立工程腿），不写任何运行面。'
-  status: in_progress
+  status: done
+  done_at: '2026-10-27'
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -45447,19 +45448,43 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:175eea34ba2d6a8f6bf854b704d0cb0a3b00ec2aa5d6f857812294b6511d8530
     decision_ref: decision://accepted/BET-Y2Q4-T10-274
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@de20deb534b358b6a8630db9fafde1a1e0dd393c
+          tests:
+            ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
+            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+          diff:
+            ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
+            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+          rollback:
+            ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
+            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
+            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
+            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-274.md
+            sha256: sha256:1df1ff6872a127b283095f4b3c68f556898ec5f31f00f230248d142b2880becb
+          cleanup:
+            ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
+            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
