@@ -871,7 +871,7 @@ def cmd_onboard(args: argparse.Namespace) -> int:
     except json.JSONDecodeError:
         create_payload = {}
     provenance_payload: dict = {}
-    if effective_profile in {"governance", "full"}:
+    if effective_profile in {"governance", "full", "governance-aetherforge"}:
         expected_repository = getattr(args, "expected_repository", None)
         if not expected_repository:
             origin = run(["git", "-C", str(dest), "remote", "get-url", "origin"])
@@ -982,7 +982,7 @@ def cmd_onboard(args: argparse.Namespace) -> int:
                 "profile": effective_profile,
                 "provenance": (
                     str(provenance_path)
-                    if effective_profile in {"governance", "full"}
+                    if effective_profile in {"governance", "full", "governance-aetherforge"}
                     else None
                 ),
                 "provenance_status": provenance_payload.get("status"),
@@ -2704,7 +2704,7 @@ def build_parser() -> argparse.ArgumentParser:
     onboard_mode = sp.add_mutually_exclusive_group()
     onboard_mode.add_argument(
         "--profile",
-        choices=("root-only", "governance", "full"),
+        choices=("root-only", "governance", "full", "governance-aetherforge"),
         help="named root-gitlink profile (default: governance)",
     )
     onboard_mode.add_argument(

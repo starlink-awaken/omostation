@@ -23,6 +23,46 @@ ac = importlib.import_module("agent-clone")
 REAL_AGENT_CLONE = lc.AGENT_CLONE
 
 
+def test_onboard_aetherforge_profile_real_native_chain(tmp_path):
+    from test_agent_clone_hardening import AF_PATHS, AF_PROFILE, NativeProfileFixture
+
+    fixture = NativeProfileFixture(tmp_path)
+    # This owned checkout supplies code; all authority/state/runtime I/O belongs
+    # to the fixture. No core Git or native admission result is mocked.
+    proc = subprocess.run(
+        [sys.executable, "-B", str(_BIN_GAC / "clone-lifecycle.py"), "onboard",
+         "--agent-id", "fixture-author", "--delivery-attempt-id", "fixture-attempt",
+         "--source", fixture.authority, "--destination", str(fixture.clone),
+         "--profile", AF_PROFILE, "--expected-repository", "fixture-owner/fixture-root"],
+        cwd=fixture.base, env=fixture.env, capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["profile"] == AF_PROFILE
+    assert payload["provenance_status"] == "ready"
+    assert payload["readiness_status"] == "ready"
+    assert Path(payload["provenance"]).is_relative_to(tmp_path)
+    assert fixture.initialized() == AF_PATHS
+    assert json.loads(fixture.guard().stdout)["state"] == "verified_clone"
+
+
+def test_onboard_aetherforge_requires_provenance_authority(tmp_path, monkeypatch):
+    calls = []
+
+    def create_only(command, **kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, "{}", "")
+
+    monkeypatch.setattr(lc, "ROOT", tmp_path)
+    monkeypatch.setattr(lc, "run", create_only)
+    args = lc.build_parser().parse_args([
+        "onboard", "--agent-id", "fixture-author", "--source", str(tmp_path / "local"),
+        "--destination", str(tmp_path / "clone"), "--profile", "governance-aetherforge",
+    ])
+    assert lc.cmd_onboard(args) == lc.EXIT_POLICY
+    assert not any("manifest" in command for command in calls)
+
+
 @pytest.fixture(autouse=True)
 def _hermetic_claims_authority(monkeypatch):
     """Host-independent: never consult the real ~/agents/_shared authority store.
