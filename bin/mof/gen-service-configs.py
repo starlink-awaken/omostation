@@ -61,6 +61,14 @@ def services_yaml_path() -> Path:
 
 RUNTIME_ROOTS = ("checkout", "install")
 
+STATE_ROOT_ENV = "OMOSTATION_STATE_ROOT"
+# 「写根已分区」的定义随声明的码面而不同: 码在检出的服务，写跟检出走是 ADR-0456
+# 未声明 profile 时的合法不变量；码已改到安装位的服务，写留在检出才是本轮要照出来的形状。
+STATE_ROOT_OK_STATES = {
+    "checkout": frozenset({"checkout", "undeclared"}),
+    "install": frozenset({"profile"}),
+}
+
 
 def service_root(svc: dict) -> Path:
     """这一条服务的树根 —— 只由注册表内容决定，绝不看 env / CLI flag / cwd。
@@ -184,16 +192,17 @@ def validate_service_declaration(svc: dict) -> list[str]:
         violations.append(
             f"{service_id}: runtime_root 取值非法 {svc.get('runtime_root')!r} (允许: {'|'.join(RUNTIME_ROOTS)})"
         )
-    # require_kernel_root_match 是 E6 的准入开关 (缺省 false = 只观测)。它必须挂在
-    # 声明了 runtime_root 的 launchd 条目上 —— 没有声明根就没有「另一个根」可比，
-    # 挂错位置的开关和被它要防的半镜像是同一个形状。
-    if "require_kernel_root_match" in svc:
-        if "runtime_root" not in svc:
-            violations.append(f"{service_id}: require_kernel_root_match 需要条目先声明 runtime_root")
-        if svc.get("require_kernel_root_match") is not True:
-            violations.append(
-                f"{service_id}: require_kernel_root_match 只接受 true (缺省即不声明)"
-            )
+    # require_kernel_root_match (E6) 与 require_state_root_partitioned (E7) 是同一形状的
+    # 两个准入开关: 缺省 false = 只观测。它们必须挂在声明了 runtime_root 的 launchd 条目上
+    # —— 没有声明根就没有「另一个根」可比，挂错位置的开关和被它要防的半镜像是同一个形状。
+    for _pin_key in ("require_kernel_root_match", "require_state_root_partitioned"):
+        if _pin_key in svc:
+            if "runtime_root" not in svc:
+                violations.append(f"{service_id}: {_pin_key} 需要条目先声明 runtime_root")
+            if svc.get(_pin_key) is not True:
+                violations.append(
+                    f"{service_id}: {_pin_key} 只接受 true (缺省即不声明)"
+                )
     if scheduler == "cron":
         violation = _cron_admission_violation(svc)
         if violation:
@@ -638,6 +647,64 @@ def kernel_root_pins(services: list[dict], rows: list[dict], roots: dict[str, Pa
     return out
 
 
+def state_root_pins(services: list[dict], rows: list[dict], roots: dict[str, Path | None]) -> list[dict]:
+    """E7 —— plist 自己声明的**写根** (EnvironmentVariables.OMOSTATION_STATE_ROOT), 落在哪个根。
+
+    E1 与 E6 都是码面轴: 一个比 argv, 一个比入口脚本内容。`runtime_root` 的语义覆盖
+    entrypoint / watch_paths / outputs, env 面不在其中 —— 所以「E1 保持 0」对「码已改道、
+    写未改道」结构性失明。2026-10-26 本机实测: 8 条执行根在安装位的 plist, 其
+    OMOSTATION_STATE_ROOT 全部仍钉检出 (com.l4.resident.execute.plist 为代表), 而 ADR-0456
+    B4b 的每批验收「指向 Workspace 的 plist 43 → 0」至今靠人手工数。
+    """
+    profile_base = Path(roots.get("profile_base") or (Path.home() / ".local" / "state" / "omostation"))
+    by_label = {row["label"]: row for row in rows}
+    out: list[dict] = []
+    for svc in services:
+        if not isinstance(svc, dict) or svc.get("scheduler") != "launchd":
+            continue
+        declared = svc.get("runtime_root")
+        if declared not in RUNTIME_ROOTS:
+            continue
+        label = str(svc.get("label"))
+        row = {"label": label, "declared_runtime_root": declared,
+               "declared_state_root": None, "state": "undetermined"}
+        entry_row = by_label.get(label)
+        if entry_row is None:
+            # 未安装 ≠ plist 里没有写根键。两者在输出里必须不同形，否则「这条服务没装」会被
+            # 读成「装了但没分区」，而 E5 已经在报未安装，折叠会让两轴互相掩盖。
+            out.append(row)
+            continue
+        try:
+            payload = json.loads(entry_row["blob"])
+        except ValueError:
+            payload = {}
+        env: dict | None = None
+        if isinstance(payload, dict):
+            candidate = payload.get("EnvironmentVariables")
+            if isinstance(candidate, dict):
+                env = candidate
+        raw = (env or {}).get(STATE_ROOT_ENV)
+        if raw is None:
+            # 键缺席与键存在但为空是两回事: 前者由 code_root() 兜底 (未声明 profile 的
+            # 合法历史形状), 后者不是今日任何一条的形态, 不做折叠。
+            row["state"] = "undeclared"
+        else:
+            resolved = str(Path(str(raw)).expanduser())
+            row["declared_state_root"] = resolved
+            checkout = roots.get("checkout")
+            install = roots.get("install")
+            if profile_base in Path(resolved).parents:
+                row["state"] = "profile"
+            elif checkout is not None and Path(resolved) == Path(checkout):
+                row["state"] = "checkout"
+            elif install is not None and Path(resolved) == Path(install):
+                row["state"] = "install"
+            else:
+                row["state"] = "other"
+        out.append(row)
+    return out
+
+
 def reality_check(
     registry_path: Path,
     launchd_dir: Path,
@@ -761,6 +828,26 @@ def reality_check(
             f"{len(e6_blocking)} 条: {[(r['label'], r['state'], r['pinned_root']) for r in e6_blocking]}"
         )
 
+    # E7 = 入口与内核都改道之后，**写**有没有跟着走。缺省同样只观测 —— 今日 8 条
+    # runtime_root: install 的服务其 OMOSTATION_STATE_ROOT 全部仍钉检出，计入即翻红
+    # 而改 plist 属 principal 的逐批授权面（红≠修，与 E6 同判据）。
+    e7_rows = state_root_pins(services, rows, roots)
+    e7_strict = {
+        str(svc.get("label"))
+        for svc in services
+        if isinstance(svc, dict) and svc.get("require_state_root_partitioned") is True
+    }
+    e7_non_ok = [
+        r for r in e7_rows
+        if r["state"] not in STATE_ROOT_OK_STATES.get(r["declared_runtime_root"], frozenset())
+    ]
+    e7_blocking = [r for r in e7_non_ok if r["label"] in e7_strict]
+    if e7_blocking:
+        findings.append(
+            "E7 声明 require_state_root_partitioned 但写根未落到 profile 状态根 "
+            f"{len(e7_blocking)} 条: {[(r['label'], r['state'], r['declared_state_root']) for r in e7_blocking]}"
+        )
+
     return {
         "ok": not findings,
         "findings": findings,
@@ -788,6 +875,17 @@ def reality_check(
         "e6_non_ok": len(e6_hits),
         "e6_non_ok_labels": sorted(r["label"] for r in e6_hits),
         "e6_blocking": len(e6_blocking),
+        "e7_state_root": e7_rows,
+        "e7_non_ok": len(e7_non_ok),
+        "e7_non_ok_labels": sorted(r["label"] for r in e7_non_ok),
+        "e7_checkout": sum(1 for r in e7_rows if r["state"] == "checkout"),
+        "e7_profile": sum(1 for r in e7_rows if r["state"] == "profile"),
+        "e7_undeclared": sum(1 for r in e7_rows if r["state"] == "undeclared"),
+        "e7_states": {
+            s: sum(1 for r in e7_rows if r["state"] == s)
+            for s in sorted({str(r["state"]) for r in e7_rows})
+        },
+        "e7_blocking": len(e7_blocking),
         "measured_base": base,
     }
 
@@ -816,6 +914,13 @@ def reality_check_main(local_root: Path, registry: Path | None, as_json: bool) -
             f"未落到声明根 {report['e6_non_ok']} 条 {report['e6_non_ok_labels']} "
             f"(其中 require_kernel_root_match 阻塞 {report['e6_blocking']} 条)"
         )
+        print(
+            f"写根 E7: 声明 runtime_root {len(report['e7_state_root'])} 条, "
+            f"写根未分区 {report['e7_non_ok']} 条 "
+            f"(全分类 {report['e7_states']}; "
+            f"其中 require_state_root_partitioned 阻塞 {report['e7_blocking']} 条)"
+        )
+        b = report["measured_base"]
         print(
             f"测量基座: {b['base_state']}  HEAD={b['head']}  origin/main={b['origin_main']}"
             f"{'  behind=' + str(b['behind_count']) if b['behind_count'] else ''}  "

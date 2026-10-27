@@ -45121,6 +45121,95 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-272
+  title: B4b 的验收「指向 Workspace 的 plist 43→0」在仓库里没有尺 —— reality-check 需要 E7 让「写根落在哪」可见（observe-only，缺省不影响
+    rc）
+  goal: 'ADR-0456 B4b 每批切换的判据是「指向 Workspace 的 plist 由 43 → 0」，但六桶里没有任何一桶读 EnvironmentVariables：E1
+    比 plist 文本与注册表渲染（argv），E6 比入口脚本内容钉的根，两者都是码面轴； runtime_root 字段的语义覆盖 entrypoint/watch_paths/outputs（gen-service-configs.py:183），env
+    面不在其中。 2026-10-26 本机实测 81 份 plist：执行根=检出 30、执行根=安装位 8，而后者 8 条的 EnvironmentVariables
+    全部仍把根钉回检出（com.l4.resident.execute.plist 的 OMOSTATION_STATE_ROOT=/Users/xiamingxing/Workspace
+    是代表样本）—— 码在安装位、写在检出， 正是 §Context 要切断的耦合，而「E1 保持 0」对这一轴没有任何含义，B4b 批次 2+ 至今靠人手工数 plist。
+    本轮在 reality_check 增加 E7：从 enumerate_launchd_plists 已有的 row["blob"] 解出 EnvironmentVariables，对声明
+    runtime_root 的 launchd 服务把写根分类为 profile|checkout|install|undeclared|undetermined；
+    缺省只观测不进 findings（今日注册表声明面 6 条 checkout 命中，host 扫描面 8 条，差额属 B4b 批次 2+ 注册表回填；计入即翻红而无授权修复），条目声明
+    require_state_root_partitioned: true 才升级成 finding。 本轮不把任何服务改道、不动任何 plist、不推进安装位。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3h
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: project-code-change
+  write_surfaces:
+  - docs/superpowers/specs/2026-10-26-bet-272-e7-write-root-reality-axis.md
+  - docs/plans/3y-bet-ledger.yaml
+  - bin/mof/gen-service-configs.py
+  - tests/unit/test_reality_check_state_root_axis.py
+  non_goals:
+  - 不改 ~/Library/LaunchAgents 任何一份 plist，不 bootout/bootstrap，不动 crontab（机器级写面，B4b 批次
+    2+ 逐批授权）
+  - 不引入 OMO_ALLOW_GIT_WRITE（决策 3 同一授权面，已有 7 份 spec 一致记为逐批授权）
+  - 不给任何真实条目新增 require_state_root_partitioned（置真是 principal 的改道裁定）
+  - 不改 E1–E6 判据本体，不改 run_e1_drift()，不动 --check/--write 语义
+  - 不新增 bin/ 脚本（避开 script-registry 与 bin 配额基线面）
+  - 不把 6 条 checkout 命中（注册表声明面）登记成 known-debt（它们是 B4b 待执行工作项，不是门禁债）
+  done_when:
+  - --reality-check --json 返回 e7_state_root 面，逐条给 label/declared_runtime_root/declared_state_root/state，state
+    取值 profile|checkout|install|undeclared|undetermined；未安装（本机无该 plist）不得折叠成 undeclared。
+  - 真实机器复跑：注册表声明 runtime_root 的 launchd 条目里 e7_checkout 6 条、e7_profile 0 条（本轮 receipt；两侧都
+    0 说明检测器没接上，不接受空绿）。host 扫描面 8 条与注册表 6 条的差额是覆盖面边界（spec §1），不是漏判。
+  - '缺省 observe-only：ok 与 rc 与改道前一致（E1 仍 0、E4 仍 19）；声明 require_state_root_partitioned:
+    true 的条目使 state==checkout 进 findings 且 rc=1 —— 正反各一条。'
+  - 检测器自证（V1 正向落点）：合成一份 argv 指安装位、env 钉检出的 plist，E7 必须点名它并分类 checkout；env 指 profile
+    根的合法样本必须分类 profile 且不命中（AGENTS.md §7③ 空绿不被接受）。
+  - 全分类穷尽：e7_states 各项之和恒等于 e7_state_root 行数，人读行改为直接打印这份分类，不再只列 checkout/undeclared/profile
+    三个命名项（undetermined 与 install 被算进「未分区」却不出现在分类里 = 同形掩盖）。
+  - schema 准入：require_state_root_partitioned 未声明 runtime_root 时报违规；写 false 时报违规；写 true
+    且已声明 runtime_root 时接受。
+  verify:
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json | python3 -c
+      "import json,sys; r=json.load(sys.stdin); s=[x['state'] for x in r['e7_state_root']];
+      print('E7 checkout', s.count('checkout'), 'profile', s.count('profile'), 'undetermined',
+      s.count('undetermined'), 'non_ok', r['e7_non_ok'], 'blocking', r['e7_blocking'],
+      'e7_finding', any(f.startswith('E7') for f in r['findings']), 'E1', r['e1_drift'],
+      'sum_states', sum(r['e7_states'].values()), 'rows', len(r['e7_state_root']), 'ok',
+      r['ok'])"
+    expect: checkout 6 / profile 0 / undetermined 0 / non_ok 6 / blocking 0 / e7_finding
+      False / E1 0 / sum_states 6 = rows 6 / ok False（ok 由 E4 未分区 label 与 E5 安装缺口决定，与
+      E7 无关； E7 前缀不得出现在 findings 里）
+  - cmd: python3 bin/mof/gen-service-configs.py --check --json | python3 -c "import
+      json,sys; d=json.load(sys.stdin); assert d['ok'] and d['drift_count']==0; print('E1
+      OK')"
+    expect: E1 drift_count=0 不变
+  - cmd: mkdir -p /tmp/empty-home-t272 && env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT
+      -u OMO_EVENT_LEDGER_DB HOME=/tmp/empty-home-t272 uv run --no-project --with pytest
+      --with pytest-timeout --with pyyaml python -m pytest tests/unit/test_reality_check_state_root_axis.py
+      -q -p no:randomly
+    expect: 全绿（17 passed）；hermetic 面（AGENTS.md §7 装置面补记：HOME=<空> 会摘掉 user-site pytest，依赖面必须由
+      uv 供给）。同一批用例在宿主 HOME 下复跑也必须同值（fixture 的安装位根由 tmp 派生，不读真实 wrapper）。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-26-bet-272-e7-write-root-reality-axis.md
+    spec_version: 1.0.0
+    content_digest: sha256:ff6acb4013ca827a68c7a9fc56c8ad21c78a022bb6761a881dcc35d49d73bb1b
+    decision_ref: decision://accepted/BET-Y2Q4-T10-272
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: PENDING
+        evidence: {}
+      operational:
+        status: PENDING
+        evidence: {}
+      value:
+        status: PENDING
+        evidence: {}
+    overall_state: in_progress
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -45259,7 +45348,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 568
+  total_bets: 569
   windows:
   - Y1Q1
   - Y1Q2
