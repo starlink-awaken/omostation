@@ -45367,6 +45367,99 @@ bets:
         status: NOT_PROVEN
         evidence: {}
 
+- id: BET-Y2Q4-T10-274
+  title: BET-Y2Q4-T10-274 收口链判据的尺根缺陷：closeout 读的是「供给 kernel 的那棵树」—— WORKSPACE 在 bin/agent-workflow.py:282
+    被再导入覆盖，异根检出假报 missing_retro
+  goal: 'T10-272 的收口腿（PR #4919，squash 到 14ee5723e）在链实质闭合后连续 4 次被 closeout 拒为 missing_retro。本轮定位装置根因并固化判据：bin/agent-workflow.py:278
+    把 WORKSPACE 绑成执行检出根（parents[1]）， :282-287 随即 `from omo.workflow import (WORKSPACE,
+    ...)` 把它覆盖成 kernel 侧的值，而 kernel 侧是 projects/omo/src/omo/workflow/core.py:43 的 parents[5]
+    —— 含义由「谁供给 omo 包」决定，与命令行在哪个检出执行无关。 探针实测（base 14ee5723e）：kernel 从本检出供给时两侧读数为同一棵树（一致）；把
+    kernel 供给根换成 ~/Workspace/projects/omo/src 时 script-level 仍是 worktree、kernel-level
+    变成 /Users/xiamingxing/Workspace（diverge=True）。 被覆盖的 WORKSPACE 喂给 :1138 的 chain_bind.evaluate_closeout，retro
+    存在性判据（retro_path_for(workspace, bet_id).is_file()） 就落到另一棵树；而 canonical 主检出当时停在 dc67a0f5f（落后
+    2），.omo/_knowledge/retros/BET-Y2Q4-T10-272.md 在该树 ABSENT、 在 origin/main PRESENT
+    —— 所以 missing_retro 是尺换了树，不是交付缺失。同链另两处装置塌缩一并固化： validate_completion_evidence 按磁盘树解析
+    evidence.ref，落后树读出 7 次 COMPLETION_FILE_REF_MISSING + OVERALL_STATE_MISMATCH derived=blocked；chain_bind.iter_run_records
+    在 runs 目录缺席时 return []（缺席 ≡ 空）， 对照树无交付锚桥时 350 条 run 读成 0 条，须调 sanctioned 的 ensure_delivery_anchor()
+    建桥（建桥后 358 条可见）。 还有一条易被误用的语义：bin/plan/bet-ledger.py:3259 cmd_complete 在 status=done
+    时 :3275-3277 早退「已是 done, 无需操作」并 return 0， 因此台账已 done 时它的 rc=0 不构成任何校验证据。本轮交付 spec
+    + 台账条目 + AGENTS.md §7 固化条； 不改 :278/:282-287 的绑定语义（REGISTRY_PATH/RUNS_DIR/cwd= 等
+    8 个消费点同受影响，属独立工程腿），不写任何运行面。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-27-bet-274-closeout-ruler-tree.md
+  - AGENTS.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-274.md
+  - docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
+  non_goals:
+  - 不改 bin/agent-workflow.py:278/:282-287 的双重绑定，也不给 evaluate_closeout 加 workspace flag
+    或 env 开关 —— 绑定语义变更要顺着 :364/:383/:407/:511/:818 等消费点与测试面一起做，属独立工程腿
+  - 不登记「AGENTS.md 幽灵路径 bin/gac/doc-governance-check.py」：该候选项已被否证（AGENTS.md 引的是裸文件名，真实脚本在
+    bin/ssot/）， 把自己的笔误登记成仓库缺陷即伪造溯源
+  - 不动运行面：不写 ~/Library/LaunchAgents，不 bootout/bootstrap/kickstart，不改 services.yaml、crontab，不翻权威
+    ledger
+  - 不用 bin/gac/sync-main.sh 快进共享主区（默认 git reset --hard origin/main；--allow-dirty 内部
+    stash）—— 并发 agent 持有未提交工作时那是销毁而非修复
+  - 不 --no-verify、不 admin merge、不 rebase/merge/pull 吸收上游、不 prune-locks、不翻他人锁
+  - 不宣布 ADR-0456 B1/B3/B4/B4b/B5 或整个 plan 完成
+  done_when:
+  - AGENTS.md §7 有一条固化条，写明 closeout/链判据的读数必须标注「产出该读数的那份 kernel 由哪棵树供给」， 并给出分叉触发面（子模块未初始化而给
+    PYTHONPATH、venv、B4b 安装位）
+  - 该条含取证判据：判 missing_retro / COMPLETION_FILE_REF_MISSING 前，在含本次 receipt 与 retro 的检出里直接复算
+    chain_bind.evaluate_closeout 与 validate_completion_evidence；runs 面缺席折叠用 ensure_delivery_anchor()
+    消除而非手工 ln -s
+  - 该条含记录面判据：链实质闭合而装置看不见时走原生 close --status ok --evidence，把装置原因写进 evidence 本身， 不加豁免、不放宽判据、不改窄断言
+  - 该条含基线判据：需要新鲜基线就另起 worktree 到 origin/main，不动共享主区；sync-main.sh 的默认 reset --hard 明确记为非正解
+  - 该条写明 cmd_complete 在 status=done 时是早退 no-op（:3275-3277），其 rc=0 不得当完成证据
+  - 本轮行号指针经 origin/main blob 复核：bin/agent-workflow.py 的 :278/:282-287/:1138 与 projects/omo/src/omo/workflow/core.py:43
+    在交付基线上指向所述内容
+  - spec 落 canonical 位（docs/superpowers/specs/）且 frontmatter 八项齐（含 owner）；bet-ledger.py
+    lint 对本 BET 零 ERROR
+  verify:
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: OK -- 571 bets, 16 tracks, no errors（交付基线 14ee5723e 上改前读数 570 bets 无 ERROR）
+  - cmd: 尺根分叉探针 —— 复刻 :278 与 :282-287，kernel 供给根分别取本检出与 ~/Workspace/projects/omo/src
+      各跑一次，打印两侧 WORKSPACE 与 diverge
+    expect: 本检出 diverge=False；异树供给 diverge=True 且 kernel-level = /Users/xiamingxing/Workspace
+  - cmd: 取证复算 —— 在含 receipt 与 retro 的检出里直接调 chain_bind.evaluate_closeout 与 validate_completion_evidence（runs
+      面先经 ensure_delivery_anchor 建桥）
+    expect: 链 verdict 不再报 missing_retro，evidence 派生态为 delivery_accepted / errors=[]
+  - cmd: python3 bin/gac/ledger-safe-insert.py --file <entry> --dry-run
+    expect: 定位到 T10-TOOLING 段 bets 序列末项之后，schema/digest/id 校验通过（禁止按行号盲插）
+  - cmd: python3 bin/ssot/doc-governance-check.py --no-new-warnings --scope tracked
+    expect: 本 BET 新增文档零新告警（accepted-specifications 桶未基线告警等于 error）
+  circuit_breaker: 若固化只能靠改写 :278/:282-287 的绑定语义或给 evaluate_closeout 加豁免 flag 才成立 → 停止：那是独立工程腿，
+    且加豁免正是「把判据改窄」。若为了让 closeout 变绿而需要手工 ln -s 造交付锚桥、或把 retro 提前塞进 canonical 落后树 → 停止，
+    那是在制造装置看不见的反面（伪造溯源）。若需要快进共享主区才能取证 → 停止，另起 worktree 到 origin/main。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-27-bet-274-closeout-ruler-tree.md
+    spec_version: 1.0.0
+    content_digest: sha256:175eea34ba2d6a8f6bf854b704d0cb0a3b00ec2aa5d6f857812294b6511d8530
+    decision_ref: decision://accepted/BET-Y2Q4-T10-274
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -45505,7 +45598,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 570
+  total_bets: 571
   windows:
   - Y1Q1
   - Y1Q2
