@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   audit:
-    runs-on: macos-latest  # omo 是 macOS 项目
+    runs-on: ubuntu-latest  # CR-CI-RUNNER-COST: 纯 Python 审计, macOS 10x 无收益
     strategy:
       fail-fast: true
       matrix:
