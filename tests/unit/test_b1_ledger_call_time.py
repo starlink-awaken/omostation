@@ -56,6 +56,7 @@ STATE_ENTRIES = [
     ("bin/gac/task-inventory.py", "_drifts_path"),
     ("bin/mof/generate-brief.py", "_system_yaml"),
     ("bin/gac/omo-state-write-guard.py", "_system_yaml"),
+    ("bin/panorama/materialize-agent-brief.py", "default_target"),
 ]
 
 # 未声明 profile 时的历史布局 (逐字节判据, 与被测解析器的写法无关)
@@ -73,6 +74,7 @@ LEGACY_SUFFIXES = {
     ("bin/gac/task-inventory.py", "_drifts_path"): "runtime/task-inventory/drifts.jsonl",
     ("bin/mof/generate-brief.py", "_system_yaml"): ".omo/state/system.yaml",
     ("bin/gac/omo-state-write-guard.py", "_system_yaml"): ".omo/state/system.yaml",
+    ("bin/panorama/materialize-agent-brief.py", "default_target"): "runtime/dashboard/agent-brief.json",
 }
 
 
