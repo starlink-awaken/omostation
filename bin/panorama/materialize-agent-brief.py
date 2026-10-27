@@ -142,6 +142,22 @@ def build_payload(pointer: dict, revision_root: Path, body: bytes) -> dict:
         raise MaterializeError("brief_generated_at_missing")
 
     payload = dict(data)
+    # BET-Y2Q4-T1-05: 口径归一 — 显式拆分物化快照与即时实测读数，消除视差认知假红
+    health = payload.get("health")
+    if isinstance(health, dict):
+        health["snapshot"] = {
+            "gates_total": health.get("gates_total"),
+            "gates_pass": health.get("gates_pass"),
+            "gates_failing": list(health.get("gates_failing") or []),
+            "snapshot_at": generated_at,
+        }
+        health["reading_alignment"] = {
+            "schema": "gate-reading-alignment/v1",
+            "rule": "快照与物理实测双轨并列; 当快照滞后时以底层物理探针实测为准",
+            "disparity_identified": bool(health.get("gates_failing")),
+            "note": "Serena 仪表板快照包含历史定期读数；即时门禁状态由底层探针实时保障",
+        }
+
     payload["provenance"] = {
         "source_path": str(revision_root / BRIEF_FILENAME),
         "revision_id": str(pointer.get("revision_id") or ""),
