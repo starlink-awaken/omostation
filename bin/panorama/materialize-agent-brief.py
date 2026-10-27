@@ -47,16 +47,14 @@ MANIFEST_SCHEMA = "zhixing-projection-manifest/v1"
 BRIEF_ARTIFACT = "agent_brief"
 BRIEF_FILENAME = "agent-brief.json"
 
-# ⚠⚠▣ **按仓内既有约定声明输出路径** —— 规划层探针的 `script_output_paths()`
-# 只认两条形状：`OUT = Path("...")` 与 `AGENT_BRIEF_JSON = OUT_DIR / "..."`。
-# ⚠ **不按这个形状写 ⇒ 探针认不出本脚本在写 agent-brief.json ⇒ 入口层的调度判定
-# 永远读不出绿**（⚠ 那是假绿，不是「脚本没写对」）。⚠ 这不是新协议，是仓里其它
-# panorama 脚本一直用的形状。
-# ⚠⚠⚥ **别在本文件里写任何 Python 源文件路径** —— 探针的 import 抽取器会把源码里
+# ⚠ **输出落点仍可静态声明，但写根必须在调用时刻解析** —— 仓内读面/写面分根约定
+# （ADR-0456）。在 import 期把 profile 根冻成模块常量，晚声明的根对这份产物不生效，
+# 且没有任何测试会红：仓内的 B1 写面门禁扫的就是这个形状。
+# 所以相对段留常量（产物路径仍可被 grep 到），绝对路径一律现算。
+# ⚠⚠⚥ **别在本文件里写任何 Python 源文件路径** —— 链检查器的路径抽取器会把源码里
 # 出现的路径当成 import ⇒ 链上多一跳**指向不存在文件**的假跳（⚠ 2026-10-26 实测：
 # 连「后缀」本身出现在注释里都会被当成路径）。
-OUT_DIR = state_root() / "runtime" / "dashboard"
-AGENT_BRIEF_JSON = OUT_DIR / "agent-brief.json"
+BRIEF_DIR_REL = Path("runtime") / "dashboard"
 
 
 class MaterializeError(RuntimeError):
@@ -73,13 +71,18 @@ def default_source_root() -> Path:
     ).expanduser()
 
 
+def brief_dir() -> Path:
+    """入口层产物目录 —— 写根在**调用时刻**解析，profile 晚声明一样生效。"""
+    return state_root() / BRIEF_DIR_REL
+
+
 def default_target() -> Path:
     """入口层产物落点。
 
     写面用 ``state_root()``（仓内读面/写面分根约定，ADR-0456），**不用 ``__file__`` 反推**
     —— 反推会把临时 worktree 路径钉进产物。
     """
-    return AGENT_BRIEF_JSON
+    return brief_dir() / BRIEF_FILENAME
 
 
 def _sha256_bytes(body: bytes) -> str:
