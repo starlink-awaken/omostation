@@ -440,6 +440,31 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   每个 receipt/retro 位等于对应磁盘文件、`content_digest` 等于 spec 文件字节摘要 —— 缺一即视为该次写回未完成。
   **纪律** —— 把「排除法」用在标识符集合上是危险形状：**本来就不同步**与**已经陈旧**这两种缺席原因在输出里同形。
   这是「抽样探测的覆盖面上限是它的样本集」与「按构造就绿」的同族第三面。
+- **`closeout` 的链判据读的是「供给 kernel 的那棵树」，不是执行命令的检出 —— 同名 WORKSPACE 在一份脚本里被绑了两次（2026-10-27, BET-Y2Q4-T10-274 收口腿实测）**：
+  **证据** —— `bin/agent-workflow.py:278` 把 `WORKSPACE` 绑成执行检出根（`Path(__file__).resolve().parents[1]`），
+  紧随其后的 `:282-287` `from omo.workflow import (WORKSPACE, …)` **覆盖**它，而 kernel 侧的值不是 profile 解析器，是同一形状的
+  `projects/omo/src/omo/workflow/core.py:43` `parents[5]` ⇒ 含义由**谁供给 `omo` 包**决定。被覆盖的根喂给
+  `:1138` `chain_bind.evaluate_closeout(payload, WORKSPACE, status=status)`，retro 存在性判据（`retro_path_for(workspace, bet_id).is_file()`）
+  就落在另一棵树。探针实测（base `14ee5723e`）：kernel 从本检出供给时两侧同值；把 kernel 供给根换成
+  `~/Workspace/projects/omo/src` 后 script-level 仍是 worktree、kernel-level 变成 `/Users/xiamingxing/Workspace`（diverge=True）。
+  后果（T10-272 实录）：PR #4919 已 squash 到 `14ee5723e`、retro 与 receipt **都在 `origin/main` 上**，
+  而 canonical 主检出停在 `dc67a0f5f`（落后 2），该树里 `BET-Y2Q4-T10-272.md` ABSENT ⇒ 收口连拒 4 次 `missing_retro`。
+  分叉触发面三类：worktree 跳过子模块初始化而显式给 `PYTHONPATH`、venv 里的 omo、ADR-0456 B4b 要搬的运行时代码安装位。
+  **判据** —— ① 任何 `closeout`/链判据读数必须标注「产出该读数的那份 kernel 由哪棵树供给」（问 `omo.workflow.core.__file__`），
+  这是「凡门禁的尺本身会随 base 变」的第二面：尺不是变旧，是**随加载来源换树**。② 判 `missing_retro` /
+  `COMPLETION_FILE_REF_MISSING` 之前，先在**含本次 receipt 与 retro 的检出**里直接复算 `chain_bind.evaluate_closeout` 与
+  `validate_completion_evidence`；两份读数不一致 ⇒ 是装置换了树，不是数据坏（本轮落后树读出 7× `COMPLETION_FILE_REF_MISSING` +
+  `OVERALL_STATE_MISMATCH: derived='blocked'`，含交付物的树读出 `delivery_accepted errors=[]`）。③ runs 面的「目录缺席 ≡ 目录为空」
+  折叠（`iter_run_records`：`if not runs_dir.is_dir(): return []`）要用 sanctioned 的 `ensure_delivery_anchor()` 建桥消除
+  （建桥后 358 条 run 可见），**不要手工 `ln -s`**。④ `bin/plan/bet-ledger.py:3259 cmd_complete` 在 `status=done` 时
+  `:3275-3277` 早退「已是 done, 无需操作」并 return 0 ⇒ 台账已 done 时它的 rc=0 **不构成任何校验证据**，
+  须直接调校验函数取证。
+  **纪律** —— ① 链在事实上闭合而装置看不见时，走原生 `bin/agent-workflow.py close <run> --status ok --evidence "<含装置原因的证据>"`，
+  把「为什么不是 closeout」写进 evidence 本身；不给 `evaluate_closeout` 加豁免 flag、不放宽判据、不改窄断言。
+  ② 需要新鲜基线就**另起 worktree 到 `origin/main`**，绝不用 `bin/gac/sync-main.sh` 快进共享主区 —— 它默认
+  `git reset --hard origin/main`，主区脏于并发 agent 未提交工作时那是销毁而非修复（`--allow-dirty` 内部 stash，同样不擅自用）。
+  另附一条否证记录，防同类自伤：候选项「AGENTS.md 幽灵路径 `bin/gac/doc-governance-check.py`」不成立 ——
+  `git grep -c` = 0，本文件引的是裸文件名，真实脚本在 `bin/ssot/`；**把自身笔误登记成仓库缺陷即伪造溯源**。
 ---
 
 ## 8. Testing Guidance
