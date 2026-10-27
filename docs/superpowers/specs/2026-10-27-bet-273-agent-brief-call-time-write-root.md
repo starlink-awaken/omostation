@@ -95,10 +95,25 @@ PR #4913（合入为 `4858eb530`，仅改 `bin/panorama/materialize-agent-brief.
 | 变异对照（§2 表右列） | 该参数化 id 当场红 | `1 failed, 6 passed` |
 | 反基线（§2 表左列，未登记） | 全绿 ⇒ 证明缺口真实 | `19 passed` |
 | `make gac-local-gate` | PASS | `PASS (68 checks executed, 2 SOFT WARN)` |
-| `bin/plan/bet-ledger.py lint` | no errors | warnings only（含未写 receipt 的前向指针 WARN，属预期） |
+| `bin/plan/bet-ledger.py lint` 中**本 BET 条目**的 ERROR 行数 | 0 | `0`（整体余 5 条属 `BET-Y2Q4-T10-272`，见 §6） |
 
-## 6. 如实登记的分歧与装置注意事项
+## 6. 如实登记的分歧、模板错误与装置注意事项
 
+- **开条模板本身是 lint 必红的形状**（本轮自伤，已检出并修正）：开条时抄了台账里 `BET-Y2Q4-T10-272` 的
+  `status: PENDING` × 3 + `overall_state: in_progress`，而 `bin/plan/bet-ledger.py:437` 的
+  `COMPLETION_AXIS_STATUSES` 合法枚举是 engineering ∈ {NOT_STARTED, IN_PROGRESS, VERIFIED}、
+  operational ∈ {NOT_PROVEN, DEGRADED, PROVEN}、value ∈ {NOT_PROVEN, REJECTED, ACCEPTED}，
+  **不含 `PENDING`**；`:1948-1971` 的派生规则里 (engineering≠VERIFIED 且 operational≠DEGRADED 且
+  value≠REJECTED) ⇒ `derived = "evaluating"`，所以开条形的 `overall_state` 必须是 `evaluating` 而不是 `in_progress`。
+  正确的开条矩阵 = `overall_state: evaluating` + `IN_PROGRESS / NOT_PROVEN / NOT_PROVEN` + 三面 `evidence: {}`。
+  **为什么插条目工具没拦住**：`bin/gac/ledger-safe-insert.py` 只校验 axes **键集**与 `overall_state` 非空，
+  **不校验 status 枚举**，因此它按构造放行 lint 必红的开条形。
+  **判据**：开条后跑 lint 并**按 BET id 分组数 ERROR 行**
+  （`lint | grep '^ERROR' | grep -oE 'BET-[A-Z0-9-]+' | sort | uniq -c`），
+  不要 `tail -6`——本轮第一次就是这样把 5 条 error 读成「warnings only」并写进了台账。
+- **`BET-Y2Q4-T10-272` 的 5 条 error 是 main 上的既成事实**：由 #4911 合入，早于本轮。
+  本轮不替别的 BET 改 evidence 面；它应由 T10-272 自己的收口腿以真实 evidence 覆盖
+  （届时 engineering=VERIFIED + operational=PROVEN + value=NOT_PROVEN ⇒ derived `delivery_accepted`）。
 - **环境类分歧（不夹带修复）**：本地全量跑该文件另见 `test_measure_value_truth_run_uses_the_db_declared_after_import`
   一类失败（host 侧 sqlite/observer 状态泄漏）。已实测：在**不含本轮任何改动**的检出上同样复现，
   而在 CI run 里它们属 42 passed 之一 ⇒ 「本地 FAIL / CI PASS」的环境类分歧，不由放宽断言处理。
@@ -106,3 +121,5 @@ PR #4913（合入为 `4858eb530`，仅改 `bin/panorama/materialize-agent-brief.
   得到 `3 failed`——其中两条是台账/ledger-db 相关用例，因该树**按构造没有** `docs/plans/3y-bet-ledger.yaml`
   等输入而红，与被测改动无关。判据：反基线读数必须在**完整检出**（真实 worktree 或完整 clone）里产出，
   最小 archive 树只可用于纯源码扫描类判据。
+- **`grep -E` 在本机会被别名换成 rg**：`grep -E "^OK"` 报 `unknown encoding: ^OK`（rg 的 `-E` 是编码标志）。
+  脚本化判据一律用 `/usr/bin/grep -E`（AGENTS.md §7「Python 子进程拿的是另一套二进制」同源）。

@@ -45255,7 +45255,7 @@ bets:
     passed）'
   - 本 PR 的 `governance-verify` 步「ADR-0456 B1 call-time write-plane gate」为 pass —— 该步此前在
     main 上连续两次 run 读 `2 failed, 42 passed`，是预存红；本轮不靠 `--no-verify`、不靠放宽判据、不靠 admin merge
-  - spec 落 canonical 位；台账 lint 仍 no errors
+  - 'spec 落 canonical 位；bet-ledger.py lint 对本 BET 条目零 ERROR —— 整体仍余 5 条，全部点名 BET-Y2Q4-T10-272（main 既成事实，属它自己的收口腿，本轮不夹带）'
   verify:
   - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
       -m pytest tests/unit/test_b1_ledger_call_time.py -q -p no:randomly
@@ -45273,28 +45273,28 @@ bets:
       m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(str(m.default_target()).endswith('runtime/dashboard/agent-brief.json'))"
     expect: True —— 落点逐字节不变
   - cmd: python3 bin/plan/bet-ledger.py lint
-    expect: OK，no errors
+    expect: '本 BET 条目零 ERROR —— 改前该位是 SPEC_DIGEST_MISMATCH；整体余 5 条 ERROR 全部属 BET-Y2Q4-T10-272'
   circuit_breaker: '若名单登记只能靠放宽既有判据才绿（把 `state_root` 从 resolver 名单摘掉、给这一对名字加豁免、或把用例改窄）→
     停止并保留原判据：那三形都是骗过扫描，写根方向仍然无尺。若为了让本 PR 绿而需要把 #4913 的实现改回模块级常量 → 停止，那是 B1 契约的反向。若需要写运行面（plist/bootstrap/crontab）才能验证
     → 停止，属署名裁定与 B4b 批次 2+。'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-27-bet-273-agent-brief-call-time-write-root.md
     spec_version: 1.0.0
-    content_digest: sha256:e3f114a919a19b971b1ea163030bd2f0fb3b753c7a2e41b0668b349df115d20a
+    content_digest: sha256:494c3360189bfb56c29e7ecff6b7ebe55de123663ef90fb5484a460bcb4247b8
     decision_ref: decision://accepted/BET-Y2Q4-T10-273
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: in_progress
+    overall_state: evaluating
     axes:
       engineering:
-        status: PENDING
+        status: IN_PROGRESS
         evidence: {}
       operational:
-        status: PENDING
+        status: NOT_PROVEN
         evidence: {}
       value:
-        status: PENDING
+        status: NOT_PROVEN
         evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
