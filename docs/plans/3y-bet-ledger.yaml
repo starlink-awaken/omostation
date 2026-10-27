@@ -44608,7 +44608,7 @@ bets:
     Agent Brief 只单独展示台账与目标覆盖，读数缺少成色、出处、时效与可比性；旧文档仍声明已退役的 panorama-dashboard-refresh
     调度。本轮把机读出口修为可序列化，producer 在同一 portfolio cohort 内生成三读数并列层， 并把 Panorama 调度事实订正为
     zhixing projection 面。'
-  status: in_progress
+  status: done
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -44817,7 +44817,7 @@ bets:
     时 A4=`{"ok":true,"orphan_count":0}` 而 cockpit `scheduler=DEGRADED last_success_at=2026-10-23T14:04:39Z`，A9
     连带 PARTIAL；推进主工作区 到 origin/main 后两者同时转绿。触发它的是一条真实登记（PR #4893 的 `test-all` 进了 origin/main，主工作区还没前进）。本轮让两条读数同源，并把「读的是陈旧根」变成可见
     observe-only 读数，而不是让 A9 以「源降级」的形式把主工作区陈旧度再报一次。'
-  status: pending
+  status: done
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -44861,17 +44861,40 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:f76d016f9a48270c033c2a72dff89c299c74e87d56a0f0f9cfcc06ca1a792910
     decision_ref: decision://accepted/BET-Y2Q4-T10-269
-  done_at: null
+  done_at: '2026-10-26'
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2521b3b0868c4ff708760898100c95a161b475d9
+          tests:
+            ref: receipt://docs/reports/2026-10-26-scheduler-checkout-root-unification-closeout.md
+            sha256: sha256:8c5c7bede5038e5feed155913eb6afcd4b6b893939916f837ec446e54733fa02
+          diff:
+            ref: receipt://docs/reports/2026-10-26-scheduler-checkout-root-unification-closeout.md
+            sha256: sha256:8c5c7bede5038e5feed155913eb6afcd4b6b893939916f837ec446e54733fa02
+          rollback:
+            ref: receipt://docs/reports/2026-10-26-scheduler-checkout-root-unification-closeout.md
+            sha256: sha256:8c5c7bede5038e5feed155913eb6afcd4b6b893939916f837ec446e54733fa02
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-26-scheduler-checkout-root-unification-closeout.md
+            sha256: sha256:8c5c7bede5038e5feed155913eb6afcd4b6b893939916f837ec446e54733fa02
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-26-scheduler-checkout-root-unification-closeout.md
+            sha256: sha256:8c5c7bede5038e5feed155913eb6afcd4b6b893939916f837ec446e54733fa02
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-269.md
+            sha256: sha256:9de531eb48627affea60d3168e9d84f3c9c0f60375180019ddf4278f4bb7ec8d
+          cleanup:
+            ref: receipt://docs/reports/2026-10-26-scheduler-checkout-root-unification-closeout.md
+            sha256: sha256:8c5c7bede5038e5feed155913eb6afcd4b6b893939916f837ec446e54733fa02
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -45200,15 +45223,15 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: PENDING
+        status: IN_PROGRESS
         evidence: {}
       operational:
-        status: PENDING
+        status: NOT_PROVEN
         evidence: {}
       value:
-        status: PENDING
+        status: NOT_PROVEN
         evidence: {}
-    overall_state: in_progress
+    overall_state: evaluating
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-273
   title: 'BET-Y2Q4-T10-273 的根因已由并发 #4913 交付，残余缺口是 Agent Brief 物化器的写根「方向」没有尺 —— default_target
