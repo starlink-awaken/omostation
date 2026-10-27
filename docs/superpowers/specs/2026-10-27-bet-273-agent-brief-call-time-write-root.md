@@ -43,14 +43,25 @@ PR #4913（合入为 `4858eb530`，仅改 `bin/panorama/materialize-agent-brief.
 改法在**essential respect 上等价**。因此本轮不再把自己的实现覆盖上去（那是对已定型的上游实现做拼写churn，
 不增加任何门禁价值），残余工作收缩为 §2 的覆盖面缺口。
 
-### 1.3 一件尚未被任何尺读到的事：该 gate 不被 `bin/**` 触发
+### 1.3 `bin/**` 触发面缺口：本轮记录期间已被上游关闭
 
-`.github/workflows/governance-check.yml` 的 `on.push.paths` 与 `on.pull_request.paths`（实测同文）
-**不含 `bin/**`**——列的是 `.omo/**`、`docs/**`、`projects/*`、若干具名脚本、`CLAUDE.md`、`LAYER-INDEX.md`。
-后果（实测）：`4858eb530` 这次 push 没有产生任何 `Governance Check` run（`gh run list` 最新 main run 仍为
-`ef5000b56` 的 40439736535）。所以「预存红已消除」目前只有**本地检测器读数**（§1.1 表末行 0），
-**没有 CI 复评**。本 lane 因改 `docs/**`（spec + 台账）而触发该 workflow，且 `governance-verify` 评审
-`pull_request.head.sha`——即含 #4913 修复与本 lane 名单登记的 head tree，于是**本 PR 的 run 就是该步修复后的第一次复评**。
+**本轮起手时的实测状态**（base `4858eb530`）：`.github/workflows/governance-check.yml` 的 `on.push.paths`
+与 `on.pull_request.paths` **不含 `bin/**`**（列的是 `.omo/**`、`docs/**`、若干具名脚本、`CLAUDE.md`、
+`LAYER-INDEX.md`），因此 `4858eb530` 那次 push **没有产生任何** `Governance Check` run——当时 `gh run list`
+的 main 最新 run 仍是 `ef5000b56` 的 40439736535（`failure`）。也就是说根因修复落地后，「预存红已消除」
+当时只有**本地检测器读数**（§1.1 表末行 0），没有 CI 复评。
+
+**随后上游补上了它**：并发 PR #4915（合入为 `1917c669b`，措辞
+`fix(ci): governance-check.yml 触发面补 bin/** — 补上 #4913 缺陷潜伏的覆盖缺口`）把 `bin/**` 加进 push/PR
+两侧路径，并从 `.omo/_truth/registry/ci-surfaces.yaml` 的 `workflow_triggers` 删掉被它取代的两条具名条目。
+判据：`git diff 4858eb530 origin/main -- .github/workflows/governance-check.yml` 只有这三行形状的变化。
+
+**该步在 main 上的第一次复评由 #4915 完成，本轮不据为己有**：main run `40442337806`（`headSha=1917c669b`，
+`createdAt=2026-10-27T03:06:54Z`，`event=push`）结论 **`success`**。逐 step 的 API 读数本机取不到
+（`gh api .../runs/40442337806/jobs` 连续 `EOF`），因此该结论由两条证据合成：① run 整体 `success`（实测）；
+② 该步在 `governance-check.yml:265-268` 是无 `continue-on-error` 的普通 `run:` 步
+（`python3 -m pytest tests/unit/test_b1_ledger_call_time.py -q`），失败必然把 job 与 run 一起带红。
+⇒ 本 lane 的 PR run 不再是「第一次复评」，而是**带上 `default_target` 两个参数化后**的复评。
 
 ## 2. 残余缺口（本轮交付物）
 
@@ -96,6 +107,8 @@ PR #4913（合入为 `4858eb530`，仅改 `bin/panorama/materialize-agent-brief.
 | 反基线（§2 表左列，未登记） | 全绿 ⇒ 证明缺口真实 | `19 passed` |
 | `make gac-local-gate` | PASS | `PASS (68 checks executed, 2 SOFT WARN)` |
 | `bin/plan/bet-ledger.py lint` 中**本 BET 条目**的 ERROR 行数 | 0 | `0`（整体余 5 条属 `BET-Y2Q4-T10-272`，见 §6） |
+| main 上该 gate 的复评（§1.3） | 有 run 且不为该步红 | run `40442337806` @ `1917c669b` = `success`（由 #4915 触发，非本轮） |
+| 本 PR 的 `governance-verify` 步「ADR-0456 B1 call-time write-plane gate」 | pass，且 collect 数含新增两个参数化 | 待 CI 读回（合并前不得当作已通过） |
 
 ## 6. 如实登记的分歧、模板错误与装置注意事项
 
