@@ -35,7 +35,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          # Dependabot 触发的运行拿不到仓库 secrets（实测日志 `Secret source: Dependabot`），
+          # 此时 CROSS_REPO_TOKEN 为空 ⇒ actions/checkout 报 "Input required and not supplied: token"，
+          # 于是所有 dependabot PR 恒红。回退到 github.token（对 public 子模块足够）。
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
         # PASW: 子模块 checkout 失败必须 fail fast — 指针不可达说明 bump-pointer 前未 push 子模块
       - uses: actions/setup-python@v5
         with:
@@ -186,7 +189,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          # Dependabot 触发的运行拿不到仓库 secrets（实测日志 `Secret source: Dependabot`），
+          # 此时 CROSS_REPO_TOKEN 为空 ⇒ actions/checkout 报 "Input required and not supplied: token"，
+          # 于是所有 dependabot PR 恒红。回退到 github.token（对 public 子模块足够）。
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
         # PASW: 子模块 checkout 失败必须 fail fast — 指针不可达说明 bump-pointer 前未 push 子模块
       - uses: actions/setup-python@v5
         with:

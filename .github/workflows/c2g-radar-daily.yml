@@ -25,7 +25,7 @@ jobs:
         with:
           # 显式 init c2g (下方步骤), 不 recursive (避免撞 private 子模块)
           submodules: false
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
       - uses: actions/setup-python@v5

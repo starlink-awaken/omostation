@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -44,7 +44,7 @@ jobs:
       - name: 漂移时开 issue 报告登记遗漏
         if: steps.check.outputs.drift_found == 'true'
         env:
-          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           python3 - <<'PYEOF'
           import json, os

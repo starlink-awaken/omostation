@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
         continue-on-error: true
       # cockpit-ui 为独立仓 omostation-cockpit-ui, 以 submodule 挂载主仓 (ADR 见 decisions)。
       # 主仓检出不含该目录时优雅跳过, 不再让主仓 PR 永远挂在 cd 失败上。

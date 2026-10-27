@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
           # 仅跑主仓 bin/ssot/ 脚本, 不拉子模块 (避免 recursive 撞 private 子模块)
           submodules: false
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
         continue-on-error: true
       - uses: actions/setup-python@v5
         with:

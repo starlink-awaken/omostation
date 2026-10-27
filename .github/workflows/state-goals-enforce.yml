@@ -21,7 +21,7 @@ jobs:
           # This check reads only root .omo state/goals/tasks. Recursive checkout
           # can fail on private submodules and leave the root projection absent.
           submodules: false
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with: {python-version: "3.13"}
       - run: pip install pyyaml
