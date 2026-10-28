@@ -45456,31 +45456,31 @@ bets:
         status: VERIFIED
         evidence:
           merged_reachable_commit:
-            ref: git://origin/main@de20deb534b358b6a8630db9fafde1a1e0dd393c
+            ref: git://origin/main@b72705e9f7d2893617c1c53c186976af015315d5
           tests:
             ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
-            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+            sha256: sha256:73552159e45eb274da799bd4ecef9b1926149ec596a52283c04df24ab0e14a4f
           diff:
             ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
-            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+            sha256: sha256:73552159e45eb274da799bd4ecef9b1926149ec596a52283c04df24ab0e14a4f
           rollback:
             ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
-            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+            sha256: sha256:73552159e45eb274da799bd4ecef9b1926149ec596a52283c04df24ab0e14a4f
       operational:
         status: PROVEN
         evidence:
           live_canary:
             ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
-            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+            sha256: sha256:73552159e45eb274da799bd4ecef9b1926149ec596a52283c04df24ab0e14a4f
           fresh_receipt:
             ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
-            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+            sha256: sha256:73552159e45eb274da799bd4ecef9b1926149ec596a52283c04df24ab0e14a4f
           replay:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-274.md
-            sha256: sha256:1df1ff6872a127b283095f4b3c68f556898ec5f31f00f230248d142b2880becb
+            sha256: sha256:9c6635e9e8a19efeb0d2fa8230777110568fba928c674bb00bb016bf3708c410
           cleanup:
             ref: receipt://docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
-            sha256: sha256:ebde1ca744f8c0f56be517b8f039950d10c18bedef6767bd99a4f4aa5094f548
+            sha256: sha256:73552159e45eb274da799bd4ecef9b1926149ec596a52283c04df24ab0e14a4f
       value:
         status: NOT_PROVEN
         evidence: {}
