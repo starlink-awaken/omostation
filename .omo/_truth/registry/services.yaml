@@ -6373,6 +6373,47 @@ services:
     没有写这份 plist 的代码路径, 安装者未归属 (不编造来源), 本仓注册表不生成 (generate: false). 键面 (StartInterval 240 + RunAtLoad + EnvironmentVariables)
     生成器可表达, 但本轮不接管内容也不动本机 launchd. 登记时 (2026-10-19) launchctl state active pid 44438.'
   depends_on: []
+- id: omostation.test-archive-purge-7d
+  enabled: true
+  generate: false
+  config_source: bin/ops/launchd/com.omostation.test-archive-purge-7d.plist
+  content_digest: sha256:189cc38ad622bf1c928a07b0395a016a2f5eb65cda83017d9c99b9251757d6c1
+  scheduler: launchd
+  trigger: calendar
+  calendar:
+    Hour: 2
+    Minute: 7
+  run_at_load: false
+  label: com.omostation.test-archive-purge-7d
+  program:
+    interpreter: /bin/bash
+    entrypoint: -c
+    args:
+    - cd /Users/xiamingxing/Workspace && /opt/homebrew/bin/python3.13 bin/ops/purge-test-archive-7d.py
+      --auto --retention-days 7 >> runtime/cron/purge-test-archive.log 2>&1
+  environment:
+    PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+  outputs:
+    stdout: /Users/xiamingxing/Workspace/runtime/cron/purge-test-archive.log
+    stderr: /Users/xiamingxing/Workspace/runtime/cron/purge-test-archive.log
+  notes: 'ADR-0466 法条 2 第三道防线的落地接线 (2026-10-28)。此前清理工具无任何调度引用
+    (注册表 triggers 为空、无 launchd/cron 作业) => ADR-0466 §3 声明的「周期守护巡检」是纸面防线,
+    保留期只对已发生的那一批成立, 对未来新落位的归档条目不成立。
+    本条为 observe-only 登记 (generate: false): plist 源头在仓内 bin/ops/launchd/, 生成器不接管
+    (plist 含 WorkingDirectory, gen_launchd_plist 从不输出该键, 改 generate: true 会立即产生 E1 漂移)。
+    两机各装一份到 ~/Library/LaunchAgents/ 并 bootstrap gui/$(id -u); 安装副本与仓内源逐字节同源
+    (host sha256 与 content_digest 同一)。实测两机 kickstart 手动触发均实跑成功 (runs=1,
+    last exit code=0), 日志输出 ✅ Total purged: 0 entries (当时归档已空, 符合预期)。
+    命令从检出根 ~/Workspace 运行 (非安装位): 派发归档 .omo/tasks/archived/dispatches_test_archive/
+    是主仓数据面, 安装位那份是独立 clone 的副本, 删错地方等于没删; 卡片归档
+    ~/.local/share/omostation/cards_archive/ 是机器级路径, 与根无关。
+    显式带 retention-days 7 是 fail-closed 护栏: 检出根若回退到旧版脚本 (保留期硬编码为单一批次日期,
+    已过期), 该参数会令 argparse 报错退出, 作业宁可不动也不误删。
+    平面选 launchd 而非 crontab: registry.yaml 是调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面
+    是遗留面不应新增条目; 且 mbp 的 crontab 写入在系统层失败 (原样回写返回 Interrupted system call,
+    惰性注释探针同样失败; /var/at/tabs 最后修改 2026-10-24, 早于本次接线), 该机 crontab 平面客观不可用。'
+  depends_on: []
+
 - id: omostation.omo-state-sync
   enabled: true
   generate: false
