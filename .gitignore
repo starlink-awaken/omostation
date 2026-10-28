@@ -458,3 +458,10 @@ live-server.pid
 # playwright CLI page dump (Interceptor 浏览器自动化会话产物, 不入库;
 # root-directory-governance-policy allowed_ignored_dirs 已注册)
 .playwright-cli/
+
+# 运行时状态目录(2026-10-22 盘点: 从未追踪, 守护进程实时写入, 含 pid 文件)
+.omo/state/compute/
+.omo/state/daemon/
+.omo/state/healer/
+.omo/state/memory/
+.omo/state/notification/
