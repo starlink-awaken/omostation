@@ -459,9 +459,6 @@ live-server.pid
 # root-directory-governance-policy allowed_ignored_dirs 已注册)
 .playwright-cli/
 
-# 运行时状态目录(2026-10-22 盘点: 从未追踪, 守护进程实时写入, 含 pid 文件)
-.omo/state/compute/
-.omo/state/daemon/
-.omo/state/healer/
-.omo/state/memory/
-.omo/state/notification/
+# 注: `.omo/state/{compute,daemon,healer,memory,notification}` 已由上面
+# BET-Y2Q4-T10-276 那段（10 条导出集 + healer）覆盖 —— 那段的判据由
+# tests/unit/test_omo_state_plane_ignore_invariants.py 从源码字面量导出。此处不再单列。
