@@ -1,0 +1,15 @@
+schema: script-registry/v1
+id: bin/ssot/check-interfaces.py
+name: Check Interfaces
+category: governance
+owner: governance-team
+description: ""
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies: []
+triggers: []
+related: []
+maturity: draft
+last_reviewed: "2026-10-28"
