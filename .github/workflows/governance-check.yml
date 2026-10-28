@@ -234,7 +234,10 @@ jobs:
         run: pip install pyyaml
       - name: Check documentation freshness
         run: |
-          # ADR-0379 E-2: check-interfaces 已由独立 workflow interfaces-enforce.yml 覆盖, 移除冗余
+          # ADR-0379 D3: check-interfaces 从这里移除, 声称由 interfaces-enforce.yml 覆盖;
+          # 但那个 workflow 是零信号空 job (ci-check-runner 解析 0 checks), 且其引用的
+          # bin/ssot/check-interfaces.py 从未存在 —— 该能力当前无执行面。
+          # interfaces-enforce.yml 已于 2026-10-28 删除, 缺口见 .github/workflows/README.md。
           python3 bin/ssot/doc-governance-check.py --scope workspace --no-new-warnings --json
 
   # 2026-08-26: bet-done-transition 拆至独立 workflow bet-done-gate.yml —

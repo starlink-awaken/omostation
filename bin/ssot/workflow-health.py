@@ -50,12 +50,9 @@ UNPATHED_DESIGN_EXEMPT = {
     "ai-pr-review.yml",
     "gac-gate.yml",
     "constraint-validation.yml",
-    "cross-deps-enforce.yml",
     "debt-audit.yml",
     "evidence-smoke-gate.yml",
-    "interfaces-enforce.yml",
     "phase-gate-enforce.yml",
-    "port-registry-enforce.yml",
     "state-goals-enforce.yml",
     "task-schema-enforce.yml",
 }
