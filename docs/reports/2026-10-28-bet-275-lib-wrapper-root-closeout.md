@@ -65,24 +65,30 @@ hermetic 复跑要分清「依赖面」与「host 面」（T10-235 装置面补�
 本 PR 改的是 worktree 里的 `lib/*.sh` 与测试，两者都不在这把尺的读面上。
 读数还随时间翻动：10:26 那次 `gac-local-gate` 读 **0 drift / 74 services**，10:29 起稳定读 4。
 
-**成因已指认（不是「大概是并发 agent 写坏了」）**：上游 `758ea5ec8`（PR #4929，
-「B4b Batch 2 物理切道 —— 5 服务改道至安装位」，本轮交付期间合入 main）对注册表恰好新增 5 条
-`runtime_root: install` —— `com.l4.governance.watch`、`com.l4.mail.daemon`、
-`com.omostation.morning-brief`、`com.omostation.sunset-redirector`、
-`com.omostation.zhixing-projection-republisher`（按 `git diff 9de3ba966 origin/main --
-.omo/_truth/registry/services.yaml` 逐条比对 `runtime_root` 字段，改前一律 `None`）。
-E1 报的这 4 条正是那 5 条的子集。所以这是 T10-265 记过的那条**声明与执行跨了两次交付的红窗**：
-注册表已说 install、机器侧 plist 还指检出（那一半的执行属 #4929 自己的运行腿），
-而 sunset-redirector 未落进 drift 说明它的机器侧已跟上。
+**成因与闭合都已实测（方向不是「注册表跑在前面」）**：那 4 份 plist 自 10:26 起内容指向**安装位**
+`~/.local/opt/omostation/…`（`plutil -p` 四条各命中 install 路径，mtime 之后未再变动），而 10:29–10:37
+这段时间 `~/Workspace` 的 HEAD 仍是 `425935f83` —— 注册表里还**没有** `runtime_root: install` 声明。
+那 5 条声明由上游 `758ea5ec8`（PR #4929「B4b Batch 2 物理切道」，本轮交付期间合入 main）新增：
+`com.l4.governance.watch`、`com.l4.mail.daemon`、`com.omostation.morning-brief`、
+`com.omostation.sunset-redirector`、`com.omostation.zhixing-projection-republisher`
+（`git diff 9de3ba966 origin/main -- .omo/_truth/registry/services.yaml` 逐条比对 `runtime_root`，
+改前一律 `None`；E1 报的 4 条是那 5 条的子集）。所以比较器当时是**用旧注册表渲染出检出路径，
+去比已经改道的 plist** —— 正是 T10-265 判据① 记过的**反方向**红窗（「顺序反了会拿没有新字段的旧注册表
+比已改道的 plist，当场造出 N 条假 drift」）。闭合读数：`~/Workspace` 前进到 `758ea5ec8` 之后，
+`--check --json` 在 canonical 与本轮 worktree 两侧都读 `ok=true / drift_count=0`
+（10:46–10:47 各实测一次，两处输入面都没动过一根手指）。
 **不是本分支引入的回归，也不是我的 wrapper 改动所致。**
 
+
 顺带指认一条对本 BET 有直接后果的事实：本轮这三条服务的 label —— `com.agora.daemon`、
-`com.agora.sse`、`com.l4.bet-claim-gc` —— 在 `origin/main` 的注册表里 `runtime_root` **仍是 `None`**
+`com.agora.sse`、`com.l4.bet-claim-gc` —— 在**当前 `origin/main`（`758ea5ec8`）**的注册表里 `runtime_root` **仍是 `None`**
 （同一次逐条比对读出）。所以「仓库里的 wrapper 不再钉根」之后，声明面与机器侧改道**都还没发生**，
 E6/E7 也仍不覆盖这三条；那属 #91 的逐批授权面（receipt §7）。
 
-**未做的事**：没跑 `--write`、没碰 plist、没 `bootout`/`bootstrap`。那 4 条 label 的机器侧处置属
-B4b/#91 与 #4929 的运行腿（另见 #97 / #123 / #150 那几条署名面）。
+**未做的事**：没跑 `--write`、没改 plist、没 `bootout`/`bootstrap` —— 那 4 条的机器侧改道是 #4929
+自己的运行腿做的（`plutil -p` 实测已指 install），本轮只是门禁读数经过了它的红窗。
+本轮这三条服务（`com.agora.daemon` / `com.agora.sse` / `com.l4.bet-claim-gc`）的声明与改道**仍是 #91
+的逐批授权面**，另见 #97 / #123 / #150 那几条署名面。
 
 ## 3. 检测器自证与三组变异对照（C-4）
 
