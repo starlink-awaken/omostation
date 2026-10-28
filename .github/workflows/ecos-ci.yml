@@ -2,10 +2,10 @@ name: eCOS CI
 on:
   push:
     branches: [main]
-    paths: ['projects/ecos/**', '.github/workflows/ecos-ci.yml']
+    paths: ['projects/ecos', 'projects/ecos/**', '.github/workflows/ecos-ci.yml']
   pull_request:
     branches: [main]
-    paths: ['projects/ecos/**', '.github/workflows/ecos-ci.yml']
+    paths: ['projects/ecos', 'projects/ecos/**', '.github/workflows/ecos-ci.yml']
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

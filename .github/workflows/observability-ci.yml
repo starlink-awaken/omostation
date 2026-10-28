@@ -4,10 +4,10 @@ name: observability-ci
 on:
   push:
     branches: [main]
-    paths: ['projects/observability/**', '.github/workflows/observability-ci.yml']
+    paths: ['projects/observability', 'projects/observability/**', '.github/workflows/observability-ci.yml']
   pull_request:
     branches: [main]
-    paths: ['projects/observability/**', '.github/workflows/observability-ci.yml']
+    paths: ['projects/observability', 'projects/observability/**', '.github/workflows/observability-ci.yml']
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

@@ -2,10 +2,10 @@ name: Cockpit CI
 on:
   push:
     branches: [main]
-    paths: ['projects/cockpit/**', '.github/workflows/cockpit-ci.yml']
+    paths: ['projects/cockpit', 'projects/cockpit/**', '.github/workflows/cockpit-ci.yml']
   pull_request:
     branches: [main]
-    paths: ['projects/cockpit/**', '.github/workflows/cockpit-ci.yml']
+    paths: ['projects/cockpit', 'projects/cockpit/**', '.github/workflows/cockpit-ci.yml']
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
