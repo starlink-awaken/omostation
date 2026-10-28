@@ -45785,6 +45785,80 @@ bets:
     content_digest: sha256:d5268f5ade463c4ee983983b0ecf1131a307d7d8a4cc6ab84abbd51d496e8f84
     decision_ref: decision://accepted/BET-Y2Q4-T10-276
   value_indicator_policy: false
+- id: BET-Y2Q4-T10-277
+  title: BET-Y2Q4-T10-277 ADR-0456 B1 剩余阻塞项 —— omo.resident 8 处写者锚点错位，代码子模块内部长出第二棵 .omo/state
+  goal: plan 决策 2 要求所有 STATE_*/RUNTIME_* 写路径改挂 state_root，B1 verify 要求 dev profile 运行只写
+    dev state root。2026-10-28T07:12Z 实测（检测器 base origin/main=bd9e9e62a、源码 base projects/omo=980b9cb）声明
+    OMOSTATION_STATE_ROOT 后，resident/{cell_state,cell_governance,cell_memory_network,memory_pipeline,replay}.py
+    的 ROOT = Path(__file__).resolve().parents[3] 解析到 projects/omo 而非工作区（同包 resident/__init__.py:18
+    用的是 parents[5]，错位两级）；resident/refine_rollback.py:52,155 是 Path(".omo/state/refinements")
+    相对 CWD 且 __init__ 即 mkdir，sema_crystallizer DEFAULT_RULES_REL 同为相对量；pipeline_supervisor.py:30
+    _ws() 沿 parents 找 docs/project-registry.yaml 兜底 cwd，不读 profile。后果实测：projects/omo/.omo/state/
+    存在 10 个文件约 1.07MB，其中 agent-cell/cell_states.json 在该树里 2B 而检出根面同名文件 906816B（同名分叉、读写各读一份），agent-cell-memory/{memories,candidates,conflicts}.jsonl
+    与 agent-cell-replay/{episodes,eval_results}.jsonl 只在代码树里存在（根面 ABSENT，按 state_root
+    解析的读者读不到）。write_path() 缝本身有效（healer 冻结路径经缝正确重定位到 state 根、解析无副作用），这 8 处是绕过缝。对 B4b
+    的因果：两棵 clone（~/.local/opt/omostation 与 ~/Workspace）各带一份代码内状态树，运行时代码一改道就分叉数据，故本轮是
+    B4b 批次 2+ 的正确性前置。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 days
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-28-bet-277-resident-writer-anchor-convergence.md
+  - projects/omo
+  - tests/unit/test_omo_resident_writer_anchor.py
+  non_goals:
+  - 不迁移、不删除 projects/omo/.omo/state/ 下既有 10 个运行时文件；cell_states.json 2B 与检出根面 906816B
+    的合并方向是数据决定，不由代码本轮替人做出（human_gate）
+  - 不碰 plist / launchd / crontab / 权威 ledger（B4b 逐批授权面）
+  - 不改 .gitignore 覆盖面（已结项的 BET-Y2Q4-T10-276 范围），也不宣布 ADR-0456 B1/B2/B3/B4/B4b/B5 或整个
+    plan 完成
+  - 不给 runtime-projections.yaml / write-owners.yaml 加目录型条目 —— 2026-10-28 实测否证：前者 10
+    条投影全是文件级 canonical/legacy 对，后者的消费者 bin/ssot/write-owner-audit.py::audit_staged 只对暂存区做
+    fnmatch，被忽略目录内容按构造永不进暂存区
+  - 不 --no-verify、不 admin merge、不 rebase/merge/pull 吸收上游、不 prune-locks
+  done_when:
+  - 8 处写者的锚点在声明 OMOSTATION_STATE_ROOT=<tmp> 后全部落在 <tmp> 下（正向落点断言，V1）；未声明 profile 时与历史路径逐字节一致（C5）
+  - 从与检出无关的 cwd 实例化 RefinementStore/SnapshotManager 与 sema_crystallizer 默认路径，产物不落 cwd（V2，当前实测会落）
+  - 修后一次运行里 git -C projects/omo status --porcelain --untracked-files=all .omo/state
+    不新增行（V3）
+  - tests/unit/test_omo_resident_writer_anchor.py 含变异对照：改窄任一侧落点断言当场红，绿不得来自检测器没命中（V4）
+  verify:
+  - cmd: env -u OMOSTATION_ROOT HOME=<空> uv run --no-project --with pytest --with pyyaml
+      python -m pytest tests/unit/test_omo_resident_writer_anchor.py -q -p no:randomly
+    expect: 全绿；且 OMOSTATION_STATE_ROOT 指向临时根时落点断言点名 <tmp> 下八条路径
+  - cmd: git -C projects/omo status --porcelain --untracked-files=all .omo/state
+    expect: 改前 15 行 ?? / 修后一次运行不新增行（两个读数由同一条命令产出并记进 receipt）
+  - cmd: python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident
+      import cell_state,memory_pipeline,replay;print(cell_state.STATE_DIR, memory_pipeline.MEMORY_DIR,
+      replay.REPLAY_DIR)"
+    expect: 声明 profile 后三行路径均以 $OMOSTATION_STATE_ROOT 开头；未声明时以检出根开头且不含 projects/omo
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-28-bet-277-resident-writer-anchor-convergence.md
+    spec_version: 1.0.0
+    content_digest: sha256:70fa36e5bc7c64d177708384246a6d8b353d2f4c84c9f339b5e62622399b68f4
+    decision_ref: decision://accepted/BET-Y2Q4-T10-277
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -45923,7 +45997,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 573
+  total_bets: 574
   windows:
   - Y1Q1
   - Y1Q2
