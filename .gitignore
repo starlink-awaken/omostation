@@ -308,6 +308,25 @@ data/cards/
 !.omo/state/bos-stdio-migrate-candidates.yaml
 !.omo/state/m2-ssot-batch-1.yaml
 
+# BET-Y2Q4-T10-276 (ADR-0456 B5 摘库残面): 治理内核包 projects/omo/src/omo/** 写入的
+# .omo/state/<dir>/ 运行态目录, 此前既未跟踪也未忽略 —— 常驻族在真机上产生 15 行
+# untracked 噪声 (daemon 2 / healer 11 / memory 1 / notification 1)。
+# 判据由 tests/unit/test_omo_state_plane_ignore_invariants.py 从源码字面量导出, 不在这里手抄。
+# 导出集为 14 个目录, 其中 agent-cell / agent-beliefs / policy-radar / runtime 此前已有规则,
+# 本轮新增 10 条把它们之外的写面补齐, 再加 healer 一条: healer 的写者 (omo.resident.healer)
+# 本机存在但未提交到 gitlink 钉住的 omo commit, 源码导出看不见它, 按实测单列。
+.omo/state/compute/
+.omo/state/daemon/
+.omo/state/decision-graph/
+.omo/state/im-triage/
+.omo/state/agent-cell-memory/
+.omo/state/agent-cell-replay/
+.omo/state/memory/
+.omo/state/notification/
+.omo/state/refinement-snapshots/
+.omo/state/refinements/
+.omo/state/healer/
+
 # ADR-0137 (M4 派生面范式强化): 派生面应跟随 SSOT 源所在子模块,
 # 不再在主仓根 .omo/_derived/ 写派生. example:
 # projects/ecos/.omo/_derived/ (gitignored in projects/ecos/.gitignore)

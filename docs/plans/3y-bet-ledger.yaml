@@ -45677,6 +45677,90 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:d0d15e64c4df5ff11e3c4ba4a891f2f3b8cbd658e6cd2cc6c084dba903283738
     decision_ref: decision://accepted/BET-Y2Q4-T10-275
+- id: BET-Y2Q4-T10-276
+  title: BET-Y2Q4-T10-276 ADR-0456 B5 摘库残面 —— .omo/state 的 4 个运行时目录既未跟踪也未忽略（daemon/healer/memory/notification）
+  goal: plan B5 的 verify 判据是「一次 dev 运行后 git status --short .omo/state 为空」。2026-10-28T03:45Z
+    在 canonical 检出实测 `git status --porcelain --untracked-files=all .omo/state` 读出 4
+    个目录 / 15 个文件（daemon/resident.pid、daemon/service_state.json、healer/approvals.jsonl
+    与 10 个 heal-*.json、memory/distilled_crystallization.json、notification/history.jsonl），既未被跟踪也未被忽略。同一文件的
+    `.gitignore` 已为同类 9 个 state 目录立有规则（:46 history/、:136 agent-cell/、:138 value-baselines/、:296
+    policy-radar/、:297 agent-beliefs/、:298 agent-cards/、:299 swarm/、:347 observability-adapters/、:368
+    attestations/），所以这 4 个是漏项而不是另一种设计； `git ls-files .omo/state` 只有 1 份被跟踪（collab-dualtrack.yaml，:306
+    显式反选保留）。代价可测：交付期 hook 与 `git add -A` 可把运行时心跳整块扫进 commit，而 merge/release 的脏树守卫与发布器的
+    tree_dirty 判据把它们当在制工作。写者侧本轮实测**不是**缺陷： healer.py:160、service_runner.py:55-56、memory_distiller.py:68/221-222/234、notification.py:199/210/218/221
+    的读用点一律过 `omo.resident.write_path()`，声明 OMOSTATION_STATE_ROOT 后 STATE_ROOT 实测随 env
+    移动；canonical 机器未声明 profile ⇒ state_root == code_root ⇒ 写进检出按契约成立。需要收尾的是「检出里看见了它」。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-28-bet-276-omo-state-ignore-completion.md
+  - .gitignore
+  - tests/unit/test_omo_state_plane_ignore_invariants.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-276.md
+  - docs/reports/2026-10-28-bet-276-omo-state-ignore-closeout.md
+  non_goals:
+  - 不改 omo.resident 任何写者代码与模块级常量（T10-233 spec §2 写明修在读用点、常量钉根是设计，89 处 monkeypatch 测试缝依赖它）
+  - 不删除机器上这 15 个运行时文件，也不 git rm 任何已跟踪文件（运行数据不是本轮清理对象）
+  - 不收紧既有 ignore / re-include 行语义（:294 *.jsonl、:295 *.json、:304 system.yaml、:306-309
+    反选）—— 本轮只加不改
+  - 不覆盖 B5 的「dev 禁 git 写」条款，也不宣布 ADR-0456 B1/B2/B3/B4/B4b/B5 或整个 plan 完成
+  - 不碰 plist / launchd / crontab / 权威 ledger（B4b 逐批授权面）
+  - 不 --no-verify、不 admin merge、不 rebase/merge/pull 吸收上游、不 prune-locks
+  done_when:
+  - '`git check-ignore -v` 对 daemon/ healer/ memory/ notification/ 四条各命中一次并打印规则行号；`.gitignore`
+    新增行与既有 9 条同构（目录级、尾斜杠、不用通配）'
+  - '`git status --porcelain --untracked-files=all .omo/state` 改前 15 行 / 改后 0 行，由同一条命令产出两个读数'
+  - tests/unit/test_omo_state_plane_ignore_invariants.py 含三条：派生集合（从 projects/omo/src/omo/resident/*.py
+    扫出的 .omo/state/<dir> 目录名）全部命中 ignore 规则、合成缺失被点名（检测器自证）、唯一跟踪项 collab-dualtrack.yaml
+    不被吞
+  - 该用例在 HOME=<空目录> + env -u OMOSTATION_ROOT/OMOSTATION_STATE_ROOT 的最小 venv 下复跑得到（hermetic：只读规则面与源码面，不读本机
+    .omo/state 是否存在这些文件）
+  verify:
+  - cmd: git check-ignore -v .omo/state/daemon/resident.pid .omo/state/healer/heal-x.json
+      .omo/state/memory/y.json .omo/state/notification/history.jsonl
+    expect: 四条各命中一条新规则并打印行号；改前同一命令 rc=1（零命中）
+  - cmd: git status --porcelain --untracked-files=all .omo/state
+    expect: 改前 15 行 / 改后 0 行（同一条命令，两侧读数都记进 receipt）
+  - cmd: git ls-files .omo/state
+    expect: 仍为 1（collab-dualtrack.yaml），且 git check-ignore 对它不命中
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录>
+      uv run --no-project --with pytest --with pytest-timeout --with pyyaml python -m
+      pytest tests/unit/test_omo_state_plane_ignore_invariants.py -q -p no:randomly
+    expect: 全部 passed；变异对照按改法分别记读数（摘掉派生扫描 → 自证那条红；把规则写成只匹配本轮那 4 个名字的手抄清单 → 派生集合那条红）
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: T10-276 无 ERROR
+  circuit_breaker: 若守卫用例只能靠手抄目录名清单才绿（不从 omo 源码派生），即「按构造就绿」→ 停止，spec §3 已列为断路条件。若要让 .omo/state
+    干净必须删运行时文件或改既有 re-include 语义 → 停止，属署名裁定。若发现某个写点确实在缝外（不经 write_path 直接落检出）→ 停止并另立
+    BET，不在本轮夹带改者代码。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-28-bet-276-omo-state-ignore-completion.md
+    spec_version: 1.0.0
+    content_digest: sha256:d5268f5ade463c4ee983983b0ecf1131a307d7d8a4cc6ab84abbd51d496e8f84
+    decision_ref: decision://accepted/BET-Y2Q4-T10-276
+  value_indicator_policy: false
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -45815,7 +45899,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 572
+  total_bets: 573
   windows:
   - Y1Q1
   - Y1Q2
