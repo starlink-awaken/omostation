@@ -5562,14 +5562,17 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omlxc.watchdog.plist
-  content_digest: sha256:974dcebb01c034107447f95da3e0636c1463268d04a70f35dc6dc5c9c27ba9cf
+  content_digest: sha256:4297d14deea98f57d37c2f463aed4b6ebd6ff870b0a37af65afb91ba1803305d
   scheduler: launchd
+  runtime_root: install
   trigger: interval
   label: com.omlxc.watchdog
   program:
     interpreter: /bin/bash
-    entrypoint: /Users/xiamingxing/Workspace/projects/omlxc/scripts/pipeline-watchdog.sh
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/projects/omlxc/scripts/pipeline-watchdog.sh
     args: []
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
     stdout: /Users/xiamingxing/.config/omlxc/watchdog-stdout.log
@@ -5641,42 +5644,48 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.agent-tick-daemon.plist
-  content_digest: sha256:4fe15a4725bfcba8b2ad61b3669340217b1ead88f566939d583ac72f0654e493
+  content_digest: sha256:81177587a4531367c7abe53cb2414565daf3fd616626bf7cd3ba3211953d29d8
   scheduler: launchd
+  runtime_root: install
   trigger: keepalive
   label: com.omostation.agent-tick-daemon
   program:
     interpreter: /opt/homebrew/bin/python3
-    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/agent-tick-daemon.py
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/bin/ssot/agent-tick-daemon.py
     args:
     - --run
     - --interval
     - '300'
     - --workspace-root
-    - /Users/xiamingxing/Workspace
+    - /Users/xiamingxing/.local/opt/omostation
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
-    stdout: /Users/xiamingxing/Workspace/.omo/_log/agent-tick-daemon.log
-    stderr: /Users/xiamingxing/Workspace/.omo/_log/agent-tick-daemon.err
+    stdout: /Users/xiamingxing/.local/log/com.omostation.agent-tick-daemon.out.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.agent-tick-daemon.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。'
   depends_on: []
 - id: omostation.autoloop-daily
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.autoloop-daily.plist
-  content_digest: sha256:f9d2811026e6f57cf058babc6fe6af988181e8e085ee5e8cd0618a6a28e83d18
+  content_digest: sha256:c91957903f1ea0772238188579620572ff962776c7b46e2761948d6cb89051ee
   scheduler: launchd
+  runtime_root: install
   trigger: interval
   label: com.omostation.autoloop-daily
   program:
     interpreter: /opt/homebrew/bin/python3
-    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/autoloop-controller.py
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/bin/ssot/autoloop-controller.py
     args:
     - --json
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
-    stdout: /Users/xiamingxing/Workspace/.omo/_log/autoloop-daily.log
-    stderr: /Users/xiamingxing/Workspace/.omo/_log/autoloop-daily.err
+    stdout: /Users/xiamingxing/.local/log/com.omostation.autoloop-daily.out.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.autoloop-daily.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: omostation.claims-observation-r0
@@ -5701,57 +5710,66 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.deadline-tracker.plist
-  content_digest: sha256:f230ead1045047b7394e44ba80d1d779478ecf5387caa1550e7116e27e01fa8b
+  content_digest: sha256:33204ea585b6783b9c7cd463e35997d19ebbd33f0f2f2661cf97cbd237cd1df3
   scheduler: launchd
+  runtime_root: install
   trigger: interval
   label: com.omostation.deadline-tracker
   program:
     interpreter: /opt/homebrew/bin/python3
-    entrypoint: /Users/xiamingxing/Workspace/runtime/ssot-stable/deadline_tracker.py
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/runtime/ssot-stable/deadline_tracker.py
     args:
     - --json
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
-    stdout: /Users/xiamingxing/Workspace/.omo/_log/deadline-tracker.log
-    stderr: /Users/xiamingxing/Workspace/.omo/_log/deadline-tracker.err
+    stdout: /Users/xiamingxing/.local/log/com.omostation.deadline-tracker.out.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.deadline-tracker.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: omostation.evolution-agent
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.evolution-agent.plist
-  content_digest: sha256:3b8b6871af983a504de35a2f4d9d1dfaee28b6c9216e9b184989cc0515770895
+  content_digest: sha256:c69441c79dcb7baedb7dd634a426414fed2c67af60e23eae88c4f85c3f957572
   scheduler: launchd
+  runtime_root: install
   trigger: interval
   label: com.omostation.evolution-agent
   program:
     interpreter: /opt/homebrew/bin/python3
-    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/evolution-agent.py
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/bin/ssot/evolution-agent.py
     args:
     - --json
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
-    stdout: /Users/xiamingxing/Workspace/.omo/_log/evolution-agent.log
-    stderr: /Users/xiamingxing/Workspace/.omo/_log/evolution-agent.err
+    stdout: /Users/xiamingxing/.local/log/com.omostation.evolution-agent.out.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.evolution-agent.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: omostation.expiry-radar
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.expiry-radar.plist
-  content_digest: sha256:d3ae5b1f3ae124a08cc2369111823a84c0bdfaac8bf86263469595c6f35f6657
+  content_digest: sha256:4696c0d4096bc34b7c6d092d53780f25b78bf27ff255311d28eb8e882396f183
   scheduler: launchd
+  runtime_root: install
   trigger: calendar
   label: com.omostation.expiry-radar
   program:
     interpreter: /bin/bash
     entrypoint: -c
     args:
-    - cd /Users/xiamingxing/Workspace && python3 bin/gac/check-expiry-radar.py --horizon 7 --strict
+    - cd /Users/xiamingxing/.local/opt/omostation && python3 bin/gac/check-expiry-radar.py --horizon 7 --strict
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
-    stdout: /Users/xiamingxing/Workspace/runtime/cron/expiry-radar.log
-    stderr: /Users/xiamingxing/Workspace/runtime/cron/expiry-radar.log
+    stdout: /Users/xiamingxing/.local/log/com.omostation.expiry-radar.out.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.expiry-radar.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: omostation.knowledge-foundry
@@ -5882,18 +5900,21 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.problem-detector.plist
-  content_digest: sha256:bdf95e051fd1aed9c318b2b248103ba5bee68d53905cd75d6c0b667fd51ca767
+  content_digest: sha256:51d45066f9bc14cc856bb625f73cf16704b3704d754138ec268f389d99c5d77c
   scheduler: launchd
+  runtime_root: install
   trigger: interval
   label: com.omostation.problem-detector
   program:
     interpreter: /opt/homebrew/bin/python3
-    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/problem-detector.py
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/bin/ssot/problem-detector.py
     args: []
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
-    stdout: /Users/xiamingxing/Workspace/.omo/_log/problem-detector-launchd.log
-    stderr: /Users/xiamingxing/Workspace/.omo/_log/problem-detector-launchd.err
+    stdout: /Users/xiamingxing/.local/log/com.omostation.problem-detector.out.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.problem-detector.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: omostation.reference-cell-direct-local-smoke
@@ -5947,22 +5968,25 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.signal-poller.plist
-  content_digest: sha256:a9fdea0173041782cf1485335582734eb85c4f1f9244c3884307af6ba2f9e414
+  content_digest: sha256:d88644b0d502904ec6f13e6d612a9ae7ef5a1af875c18c7588eed0d53f9a013a
   scheduler: launchd
+  runtime_root: install
   trigger: keepalive
   label: com.omostation.signal-poller
   program:
     interpreter: /opt/homebrew/bin/python3
-    entrypoint: /Users/xiamingxing/Workspace/bin/ssot/signal-poller.py
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/bin/ssot/signal-poller.py
     args:
     - --watch
     - --interval
     - '300'
     - --auto-trigger
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
-    stdout: /Users/xiamingxing/Workspace/.omo/_log/signal-poller-launchd.log
-    stderr: /Users/xiamingxing/Workspace/.omo/_log/signal-poller-launchd.err
+    stdout: /Users/xiamingxing/.local/log/com.omostation.signal-poller.out.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.signal-poller.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 running。'
   depends_on: []
 - id: omostation.sunset-redirector
@@ -6169,19 +6193,22 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.zhixing-host-drift.plist
-  content_digest: sha256:3644b0c8842ea5c4fd7d61a20f320561247387fc04ca88685c36055f1b6efa20
+  content_digest: sha256:264f87a1dbec9af2dc9d327fa731574b43301b278f6cdcb066982f2986125a00
   scheduler: launchd
+  runtime_root: install
   trigger: calendar
   label: com.omostation.zhixing-host-drift
   program:
     interpreter: /bin/bash
     entrypoint: -c
     args:
-    - cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py protect && python3 bin/gac/zhixing-host-sync.py check
+    - cd /Users/xiamingxing/.local/opt/omostation && python3 bin/gac/workspace-wip-guard.py protect && python3 bin/gac/zhixing-host-sync.py check
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   run_at_load: true
   outputs:
-    stdout: /Users/xiamingxing/Workspace/runtime/cron/zhixing-host-drift.log
-    stderr: /Users/xiamingxing/Workspace/runtime/cron/zhixing-host-drift.log
+    stdout: /Users/xiamingxing/.local/log/com.omostation.zhixing-host-drift.out.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.zhixing-host-drift.err.log
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
   depends_on: []
 - id: user.cron-service
@@ -6275,8 +6302,9 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.mbp-night-patrol.plist
-  content_digest: sha256:6a8bf32e5853edf93e9cce5aa5d1a91d3d15278d814085412d9c4cae6c63e209
+  content_digest: sha256:0d7da861584539b17c0ef835a3c3fe4f587ef0dae02b296ded929b9c6ba21b4a
   scheduler: launchd
+  runtime_root: install
   trigger: calendar
   calendar:
     Hour: 2
@@ -6287,11 +6315,12 @@ services:
     entrypoint: -B
     args:
     - -c
-    - import sys; sys.path.insert(0, '/Users/xiamingxing/Workspace/projects/omo/src'); from omo.resident.night_patrol
+    - import sys; sys.path.insert(0, '/Users/xiamingxing/.local/opt/omostation/projects/omo/src'); from omo.resident.night_patrol
       import run_night_patrol; run_night_patrol(force=False, deep=True)
   environment:
     PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     PYTHONDONTWRITEBYTECODE: '1'
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   outputs:
     stdout: /Users/xiamingxing/.local/log/night-patrol.log
     stderr: /Users/xiamingxing/.local/log/night-patrol.log

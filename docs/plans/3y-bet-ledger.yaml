@@ -34168,18 +34168,36 @@ bets:
   appetite: 3 days
   circuit_breaker: 副驾推理调用异常时回退为只读状态展示；页面 JS 语法错误时由 launchd watchdog 重启并可用 zhixing-host-sync.py
     restore 回滚到仓库版本
+  pr_number: 4304
+  merge_sha: 3dcf73a1cc
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/2026-09-25-bet-y2q3-t9-01-dashboard.md
+          merged_reachable_commit:
+            ref: git://origin/main@3dcf73a1ccebf7bb64ad8cbe7bf85eae6af9163d
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/2026-09-25-bet-y2q3-t9-01-dashboard.md
+          tests:
+            ref: receipt://.omo/_knowledge/retros/2026-09-25-bet-y2q3-t9-01-dashboard.md
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/2026-09-25-bet-y2q3-t9-01-dashboard.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/2026-09-25-bet-y2q3-t9-01-dashboard.md
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/2026-09-25-bet-y2q3-t9-01-dashboard.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/2026-09-25-bet-y2q3-t9-01-dashboard.md
+        status: PROVEN
       value:
         evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   done_when:
   - P2-5/11/7/3/10 五项体验优化落地且 26 个板块无 JS 语法错误（node --check 全过）
@@ -34198,7 +34216,9 @@ bets:
   priority: P2
   retro: required
   risk_level: L2
-  status: in_progress
+  status: done
+  done_at: 2026-10-28
+  value_indicator_policy: false
   title: 织星驾驶舱 P2 体验迭代、漂移可观测与真实算力副驾
   track: T9-OBSERV
   underlying_workflow: project-code-change
@@ -34216,6 +34236,7 @@ bets:
   - .omo/_knowledge/ops/
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-09-25-y2q3-t9-01-zhixing-dashboard-p2-compute-copilot.md
+  - .omo/_knowledge/retros/2026-09-25-bet-y2q3-t9-01-dashboard.md
 - id: BET-Y2Q4-SH-1
   title: Self-Healing Drifts Foundation — L2.5 layer introduction
   goal: 引入 L2.5 self-healing layer，自动守护 5 类 drift（dashboard/brief/ephemeral/runs/ritual）
