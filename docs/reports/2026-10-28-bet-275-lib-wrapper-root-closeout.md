@@ -61,14 +61,28 @@ hermetic 复跑要分清「依赖面」与「host 面」（T10-235 装置面补�
 
 **这条硬失败不在本 PR 的输入面上**，判据是复现而不是推理：同一条
 `gen-service-configs.py --check --json` 在 `~/Workspace`（canonical 检出本体）跑，读数**一字不差也是这 4 条**。
-比较器的两份输入是 canonical 注册表 `~/Workspace/.omo/_truth/registry/services.yaml`（sha `56a5c5fbf49f`，
-最后由 `dee5d6356` 改动）与本机 `~/Library/LaunchAgents/*.plist`（那 4 份 mtime = 2026-10-28 10:26，
-由并发 agent 重写）—— 本 PR 改的是 worktree 里的 `lib/*.sh` 与测试，两者都不在这把尺的读面上。
-读数还随时间翻动：10:26 那次 `gac-local-gate` 读 **0 drift / 74 services**，10:29 起稳定读 4，
-所以这是「仓库声明 ↔ 机器实态」之间的红窗（T10-265 记过同形），不是本分支引入的回归。
+比较器的两份输入是 canonical 注册表与本机 `~/Library/LaunchAgents/*.plist`（那 4 份 mtime = 2026-10-28 10:26），
+本 PR 改的是 worktree 里的 `lib/*.sh` 与测试，两者都不在这把尺的读面上。
+读数还随时间翻动：10:26 那次 `gac-local-gate` 读 **0 drift / 74 services**，10:29 起稳定读 4。
+
+**成因已指认（不是「大概是并发 agent 写坏了」）**：上游 `758ea5ec8`（PR #4929，
+「B4b Batch 2 物理切道 —— 5 服务改道至安装位」，本轮交付期间合入 main）对注册表恰好新增 5 条
+`runtime_root: install` —— `com.l4.governance.watch`、`com.l4.mail.daemon`、
+`com.omostation.morning-brief`、`com.omostation.sunset-redirector`、
+`com.omostation.zhixing-projection-republisher`（按 `git diff 9de3ba966 origin/main --
+.omo/_truth/registry/services.yaml` 逐条比对 `runtime_root` 字段，改前一律 `None`）。
+E1 报的这 4 条正是那 5 条的子集。所以这是 T10-265 记过的那条**声明与执行跨了两次交付的红窗**：
+注册表已说 install、机器侧 plist 还指检出（那一半的执行属 #4929 自己的运行腿），
+而 sunset-redirector 未落进 drift 说明它的机器侧已跟上。
+**不是本分支引入的回归，也不是我的 wrapper 改动所致。**
+
+顺带指认一条对本 BET 有直接后果的事实：本轮这三条服务的 label —— `com.agora.daemon`、
+`com.agora.sse`、`com.l4.bet-claim-gc` —— 在 `origin/main` 的注册表里 `runtime_root` **仍是 `None`**
+（同一次逐条比对读出）。所以「仓库里的 wrapper 不再钉根」之后，声明面与机器侧改道**都还没发生**，
+E6/E7 也仍不覆盖这三条；那属 #91 的逐批授权面（receipt §7）。
 
 **未做的事**：没跑 `--write`、没碰 plist、没 `bootout`/`bootstrap`。那 4 条 label 的机器侧处置属
-B4b / #91 与 #97 / #123 / #150 那几条署名面。
+B4b/#91 与 #4929 的运行腿（另见 #97 / #123 / #150 那几条署名面）。
 
 ## 3. 检测器自证与三组变异对照（C-4）
 
