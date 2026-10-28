@@ -1,0 +1,3 @@
+{"category": "style_and_vocabulary", "domain": "work", "action": "replace_expression", "rejected_pattern": "和投机推测解码架构演进，我们经评估建议在", "chosen_pattern": "完成：", "frequency": 1, "last_updated": "2026-10-21T03:28:43.623216+00:00"}
+{"category": "style_and_vocabulary", "domain": "work", "action": "replace_expression", "rejected_pattern": "上挂载DFlash模型", "chosen_pattern": "单机落地投机解码", "frequency": 1, "last_updated": "2026-10-21T03:28:43.623216+00:00"}
+{"category": "style_and_vocabulary", "domain": "work", "action": "replace_expression", "rejected_pattern": "请领导审批", "chosen_pattern": "家中集群夜间闲时跑微调，方案已验证闭环", "frequency": 1, "last_updated": "2026-10-21T03:28:43.623216+00:00"}
