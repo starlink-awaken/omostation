@@ -660,7 +660,7 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
-    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -686,7 +686,7 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
-    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -756,7 +756,7 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
-    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-event-ingest.sh
@@ -781,7 +781,7 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
-    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -806,7 +806,7 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
-    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -831,7 +831,7 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
-    OMOSTATION_STATE_ROOT: /Users/xiamingxing/Workspace
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
@@ -5439,6 +5439,9 @@ services:
   run_at_load: false
   notes: T10-139 四件套的调度补全 (T10-140 迭代); claim 过期清理只删广播文件不动 ledger status
   scheduler: launchd
+  runtime_root: install
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   id: bet-claim-gc
   trigger: interval
   disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
@@ -5446,6 +5449,9 @@ services:
   label: com.agora.daemon
   description: Agora 2.0 A2A 事件总线 daemon (:7432) — I0 服务网格枢纽
   scheduler: launchd
+  runtime_root: install
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   trigger: keepalive
   program:
     interpreter: /bin/bash
@@ -5986,13 +5992,16 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.tailscale-heartbeat.plist
-  content_digest: sha256:3b267608064895ad230b1af3a8d2d9ce69601cb690e0fcfcb916b9df5982a951
+  content_digest: sha256:92a9312ee8d51dcf0280e93f00ed28a4127ca61642e30d9dad4bb36ae5cdea4a
   scheduler: launchd
   trigger: interval
+  runtime_root: install
   label: com.omostation.tailscale-heartbeat
   program:
     interpreter: /bin/bash
-    entrypoint: /Users/xiamingxing/Workspace/bin/health/tailscale-heartbeat.sh
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/bin/health/tailscale-heartbeat.sh
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
     args: []
   run_at_load: true
   outputs:
@@ -6295,18 +6304,20 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.panorama-compact-observation.plist
-  content_digest: sha256:55b300ca260e1bbaaf118ad064b7d49812b790837a18b2c84be382b74e70d9c4
+  content_digest: sha256:4266a1f25994ad437a9ed8f3bfa8ef0bfc6b64456d7b57d33fef5e067eb4b199
   scheduler: launchd
   trigger: interval
   interval_sec: 240
+  runtime_root: install
   label: com.omostation.panorama-compact-observation
   program:
     interpreter: /opt/homebrew/bin/python3
-    entrypoint: /Users/xiamingxing/Workspace/bin/panorama/compact-observation.py
+    entrypoint: /Users/xiamingxing/.local/opt/omostation/bin/panorama/compact-observation.py
     args: []
   run_at_load: true
   environment:
     PATH: /opt/homebrew/bin:/usr/local/bin:/Users/xiamingxing/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   outputs:
     stdout: /Users/xiamingxing/.local/log/panorama-compact-observation.log
     stderr: /Users/xiamingxing/.local/log/panorama-compact-observation.log

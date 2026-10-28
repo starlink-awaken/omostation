@@ -35494,12 +35494,11 @@ bets:
   pasw_required: false
   workflow: bet-execution
   underlying_workflow: project-code-change
-  goal: '同一天的三个读数给出三套互相矛盾的答案，且都没有出处。日历层说「今天在 Y1Q1」（蓝图窗口表），台账层说活窗口是
-    Y2Q4（bet-ledger.py surface 的可认领列表首个窗口），目标覆盖层把日历还没到的窗口的 bet 也记成 done（Y2Q1+ 共 189 条，
-    其中 179 条已 done）。2026-10-26 实测两个读数都不可信却都不报错：入口层 Agent Brief 的 generated_at 停在
-    2026-09-21T12:26:20Z（停更 35 天），而台账机读出口 bet-ledger.py list --json 直接崩（TypeError: Object of type date
-    is not JSON serializable）。本单把三个读数分开命名、分别标注出处与截至时间，并在 Agent Brief 里显式并列，不合并成一个数；
-    每个读数带值 / 成色 / 截至时间 / 分母，可比性由消费方判定。'
+  goal: '同一天的三个读数给出三套互相矛盾的答案，且都没有出处。日历层说「今天在 Y1Q1」（蓝图窗口表），台账层说活窗口是 Y2Q4（bet-ledger.py
+    surface 的可认领列表首个窗口），目标覆盖层把日历还没到的窗口的 bet 也记成 done（Y2Q1+ 共 189 条， 其中 179 条已 done）。2026-10-26
+    实测两个读数都不可信却都不报错：入口层 Agent Brief 的 generated_at 停在 2026-09-21T12:26:20Z（停更 35 天），而台账机读出口
+    bet-ledger.py list --json 直接崩（TypeError: Object of type date is not JSON serializable）。本单把三个读数分开命名、分别标注出处与截至时间，并在
+    Agent Brief 里显式并列，不合并成一个数； 每个读数带值 / 成色 / 截至时间 / 分母，可比性由消费方判定。'
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-26-t1-metric-truth-unification.md
     spec_version: 1.0.0
@@ -35521,24 +35520,25 @@ bets:
   - 不碰投影载荷与 driver（BET-Y2Q4-T10-237 是需人工到场的 bet）
   - 不排 panorama-collect.py（今天不写 brief 且会 git checkout -- .omo/）
   - 不动 §5.39/43/44/60/80 的小节序号残留
-  circuit_breaker: 本单只让读数可信，不改任何口径的定义 —— 台账出口的日期序列化必须是 ISO-8601（不得用裸 default=str
-    的空格分隔格式）；TTL 刷新退役后若发现入口层 generated_at 不再代表内容新鲜度，不得用重新打戳的方式掩盖；物化源缺失时必须
-    不写并以非 0 退出，绝不写空壳或半截文件。
+  circuit_breaker: 本单只让读数可信，不改任何口径的定义 —— 台账出口的日期序列化必须是 ISO-8601（不得用裸 default=str 的空格分隔格式）；TTL
+    刷新退役后若发现入口层 generated_at 不再代表内容新鲜度，不得用重新打戳的方式掩盖；物化源缺失时必须 不写并以非 0 退出，绝不写空壳或半截文件。
   verify:
   - cmd: python3 bin/plan/bet-ledger.py list --json
-    expect: exit 0、合法 JSON、全部日期字段为 ISO-8601 字符串（date 与 datetime 均走 isoformat），不再出现裸 default=str
-      的空格分隔格式
+    expect: exit 0、合法 JSON、全部日期字段为 ISO-8601 字符串（date 与 datetime 均走 isoformat），不再出现裸
+      default=str 的空格分隔格式
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: exit 0、no errors、total_bets 与条目数一致
   - cmd: python3 bin/gac/check-readme-hardcoded.py --update-health
-    expect: docs/operations/repository-health.md 的 BET 台账规模 段为台账真数（不再是 n/a），且该文件被 git 跟踪
+    expect: docs/operations/repository-health.md 的 BET 台账规模 段为台账真数（不再是 n/a），且该文件被
+      git 跟踪
   - cmd: python3 bin/plan/bet-ledger.py list --claimable
     expect: BET-Y2Q4-T1-05 出现在可认领列表中（Y2Q4 优先，排在列表首行）
   - cmd: python3 bin/panorama/materialize-agent-brief.py
-    expect: exit 0；runtime/dashboard/agent-brief.json 的 generated_at 逐字等于源 revision 那份的 generated_at（没被打戳），
-      且 provenance.revision_id 非空
+    expect: exit 0；runtime/dashboard/agent-brief.json 的 generated_at 逐字等于源 revision
+      那份的 generated_at（没被打戳）， 且 provenance.revision_id 非空
   - cmd: cd ~/Project/work-agent && python3 scripts/planning_probe.py --mode all
-    expect: 入口层 verdict = SCHEDULED_OK、interpreter_verdict = OK，且 age_days 等于数据真实年龄而不是 0
+    expect: 入口层 verdict = SCHEDULED_OK、interpreter_verdict = OK，且 age_days 等于数据真实年龄而不是
+      0
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     overall_state: evaluating
@@ -35554,12 +35554,15 @@ bets:
         evidence: {}
   done_when:
   - bet-ledger.py list --json 可被机器消费：exit 0、合法 JSON、全部日期字段为 ISO-8601 字符串
-  - 周报 docs/operations/repository-health.md 的 BET 台账规模 段是台账真数（不再是 n/a），且与同一次 list --json 的读数一致
-  - 入口层 agent-brief.json 由活的 projection revision 原样物化：generated_at 逐字未被打戳，provenance 带 revision_id 与 manifest_sha256
+  - 周报 docs/operations/repository-health.md 的 BET 台账规模 段是台账真数（不再是 n/a），且与同一次 list
+    --json 的读数一致
+  - 入口层 agent-brief.json 由活的 projection revision 原样物化：generated_at 逐字未被打戳，provenance
+    带 revision_id 与 manifest_sha256
   - 源 revision 缺失或不可解析时物化作业不写目标文件且退出码非 0
   - auto-pruner.prune_brief 不再改 agent-brief.json 的 generated_at（停更即如实报停更）
   - 入口层调度在 launchd 上被登记并实际运行，目标文件 mtime 与内容随真数据前进
-  - work-agent 的 planning_probe 能正确判定 launchd 作业（读 ProgramArguments），入口层读出 SCHEDULED_OK 且 age_days 是真实年龄
+  - work-agent 的 planning_probe 能正确判定 launchd 作业（读 ProgramArguments），入口层读出 SCHEDULED_OK
+    且 age_days 是真实年龄
   depends_on: []
 - id: BET-Y2Q4-T10-01
   title: 规则接线收口批次一 — 42 条 CR-* 零引用的四态判定与别名映射
@@ -42199,7 +42202,7 @@ bets:
     副本 225G)/P2 公开源(清单重下 545G)/P3 冷层/P4 可丢 分层保护。交付 hot-tier-resilience.sh 子命令 (sync-rare/manifest/snapshot-links/verify/weekly/daily-report/rebuild/selftest-launchd/install-schedule)、
     掉线感知链升级 (keepalive 桌面通知节流)、T3 盘死重建剧本 (软链 manifest + 稀有回灌 + 公开源重下清单)。周任务经终端 App
     启动 (launchd 直启的 /bin/bash 缺『可移动卷』TCC 授权, 2026-10-12 实测)。RPO 承诺: P0+P1 完成即恢复 ≈4.5h。'
-  status: in_progress
+  status: done
   window: Y2Q4
   track: T10-TOOLING
   priority: P0
@@ -42242,33 +42245,58 @@ bets:
   - cmd: make gac-local-gate
     expect: 通过
   write_surfaces:
-  - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
-  - bin/ops/hot-tier-resilience.sh
-  - bin/_registry/scripts/ops/hot-tier-resilience.yaml
-  - tests/bin/test_hot_tier_resilience.sh
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-243.md
   - .omo/_truth/registry/governance-checks.yaml
+  - bin/_registry/scripts/ops/hot-tier-resilience.yaml
+  - bin/ops/hot-tier-resilience.sh
   - docs/generated/public-models-manifest.md
   - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-10-28-storage-auto-tiering-guard-closeout.md
+  - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
+  - tests/bin/test_hot_tier_resilience.sh
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
     spec_version: 1.0.2
     content_digest: sha256:d8d3c3dd38b58f56488360f15949936b97fdb3ada4edcd740d25ab23d68a7156
     decision_ref: decision://accepted/BET-Y2Q4-T10-243
   value_indicator_policy: false
-  done_at: '2026-10-11'
+  done_at: '2026-10-28'
   completion_evidence:
-    schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-10-28-storage-auto-tiering-guard-closeout.md
+            sha256: sha256:94454a380fad6b71fa3c6d9c6dbf8460e0a368061e7dc1841ee5e33ae5677302
+          merged_reachable_commit:
+            ref: git://origin/main@758ea5ec885061c69a8cb44973cdf77ee54c617b
+          rollback:
+            ref: receipt://docs/reports/2026-10-28-storage-auto-tiering-guard-closeout.md
+            sha256: sha256:94454a380fad6b71fa3c6d9c6dbf8460e0a368061e7dc1841ee5e33ae5677302
+          tests:
+            ref: receipt://docs/reports/2026-10-28-storage-auto-tiering-guard-closeout.md
+            sha256: sha256:94454a380fad6b71fa3c6d9c6dbf8460e0a368061e7dc1841ee5e33ae5677302
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-10-28-storage-auto-tiering-guard-closeout.md
+            sha256: sha256:94454a380fad6b71fa3c6d9c6dbf8460e0a368061e7dc1841ee5e33ae5677302
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-28-storage-auto-tiering-guard-closeout.md
+            sha256: sha256:94454a380fad6b71fa3c6d9c6dbf8460e0a368061e7dc1841ee5e33ae5677302
+          live_canary:
+            ref: receipt://docs/reports/2026-10-28-storage-auto-tiering-guard-closeout.md
+            sha256: sha256:94454a380fad6b71fa3c6d9c6dbf8460e0a368061e7dc1841ee5e33ae5677302
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-243.md
+            sha256: sha256:dd73e9a7f63c3e3311dbc3499f9d481db132118f7a59482149a18be145f0ba36
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
 - id: BET-Y2Q4-T10-244
   title: 贾维斯感知面 — observer 日报 + SwiftBar 常驻/待办域 + CI 信号闭环
   goal: '常驻 agent 的可感知化 (2026-10-11 贾维斯会话交付, 补户口立项): (1) observer-daily.py 每日 07:30
@@ -42276,9 +42304,11 @@ bets:
     通道喂活 (signals-poll 10min); (2) SwiftBar agent-live 域 (心跳/事件/沉淀/ 端口探活/能力目录入口) +
     todo/提醒域 (todo.jsonl + reminders.json, agent-喂入面); (3) CI 失败 自动提醒 (gh run list
     FAIL → reminders, 幂等); (4) 双机 todo-sync (mini 主节点 5min)。'
-  status: in_progress
+  status: done
   write_surfaces:
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-244.md
   - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-10-28-jarvis-perception-plane-closeout.md
   - docs/superpowers/specs/2026-10-11-jarvis-perception-plane-v1.0.0.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-11-jarvis-perception-plane-v1.0.0.md
@@ -42296,18 +42326,41 @@ bets:
   workflow: bet-execution
   underlying_workflow: project-code-change
   completion_evidence:
-    schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-10-28-jarvis-perception-plane-closeout.md
+            sha256: sha256:e84c6385b6240ad52f78f63a798767c746150a395a3a58e3ba995d71a66ce9c4
+          merged_reachable_commit:
+            ref: git://origin/main@758ea5ec885061c69a8cb44973cdf77ee54c617b
+          rollback:
+            ref: receipt://docs/reports/2026-10-28-jarvis-perception-plane-closeout.md
+            sha256: sha256:e84c6385b6240ad52f78f63a798767c746150a395a3a58e3ba995d71a66ce9c4
+          tests:
+            ref: receipt://docs/reports/2026-10-28-jarvis-perception-plane-closeout.md
+            sha256: sha256:e84c6385b6240ad52f78f63a798767c746150a395a3a58e3ba995d71a66ce9c4
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-10-28-jarvis-perception-plane-closeout.md
+            sha256: sha256:e84c6385b6240ad52f78f63a798767c746150a395a3a58e3ba995d71a66ce9c4
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-28-jarvis-perception-plane-closeout.md
+            sha256: sha256:e84c6385b6240ad52f78f63a798767c746150a395a3a58e3ba995d71a66ce9c4
+          live_canary:
+            ref: receipt://docs/reports/2026-10-28-jarvis-perception-plane-closeout.md
+            sha256: sha256:e84c6385b6240ad52f78f63a798767c746150a395a3a58e3ba995d71a66ce9c4
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-244.md
+            sha256: sha256:cfdf38f5cab8d9459a4d20ec527ecee957be72304665fd51543bad19e5031bf3
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   circuit_breaker: 感知面只读采集不回写治理状态; reminders 面不清除非本源条目; cron 故障不阻塞 menubar 渲染 (parts
     独立容错)。
   non_goals:
@@ -42324,6 +42377,8 @@ bets:
     expect: PASS 双机
   - cmd: python3 ~/local-ops/bin/observer-daily.py --no-workflow
     expect: 日报生成 exit 0
+  done_at: '2026-10-28'
+  value_indicator_policy: false
 - id: BET-Y2Q4-T10-241
   title: Zhixing DCP-20 版本晋升 — G0/M0 受管发布 (PROMOTED_CLEAN_REVISION)
   goal: '把 DCP-20 已验收候选 (origin/main 已含 09a459a97 系列) 晋升成不可变、身份已绑定的 PROMOTED_CLEAN_REVISION。前置:
@@ -44842,8 +44897,8 @@ bets:
   - 不新增 bin/ 脚本（受 check-bin-quota-diff.py 净增配额约束）
   - 不改 scheduler-compile.py 的比对语义（解释器归一化已在 PR
   done_when:
-  - 同一台机器上 `collect_runtime()` 的 `rt["scheduler"]` 与 cockpit `scheduler` 采集器的 `ok` 恒等；测试钉住该恒等式，且用例自带「注入分歧
-    → 判据必须报出」的自证（AGENTS.md §7③ 不接受空绿）。
+  - 同一台机器上 `collect_runtime()` 的 `rt["scheduler"]` 与 cockpit `scheduler` 采集器的 `ok`
+    恒等；测试钉住该恒等式，且用例自带「注入分歧 → 判据必须报出」的自证（AGENTS.md §7③ 不接受空绿）。
   - registry 根解析三条断言：`PANORAMA_CODE_ROOT` 覆盖即赢；未声明 env 时走 `DEFAULT_WORKSPACE_ROOT`；解析顺序由测试点名（env
     名只写在测试里，代码里没有第二份名单）。
   - 缺省 observe-only：`scheduler` 源状态新增的 `registry_root` / `registry_root_oid` / `registry_root_stale`
@@ -44901,31 +44956,31 @@ bets:
 - id: BET-Y2Q4-T10-270
   title: BET-Y2Q4-T10-267 收口腿暴露的三类静默失效形状固化进 agent 感知面（尺基线 / 台账同块重排 / 摘要按字段定位）
   goal: 'T10-267 收口腿在两天内产出两次矛盾的门禁读数、一次台账块内的结构性冲突、以及一次写进交付文档的错误因果归因，三条都在交付动作内部发生且「当场就错、输出完全正常」。准入判据沿用
-    T10-221 / T10-225（复发 ≥2 次或当场让安全网静默失效，且有不依赖本机状态的指认方式）。一、门禁的**尺本身**会随 base 变 —— bin/gac/check-work-landed.py:31
-    以 WORKSPACE = Path(__file__).resolve().parents[2] 定根，于是每个 worktree 执行的是自己检出里那一份脚本；T10-267
-    初版 receipt 把两棵树读数差（FAIL settled=112 warn=2 blocking=13 对 PASS closed=193 settled=127
-    no_ref=66 warn=0 blocking=0）归因为「并发 agent 与 cron 事后补齐了 landing」，复测否证——两侧 RUNS_DIR
-    经 .omo/_delivery symlink 桥 resolve 到同一份 canonical 目录各 350 个 run 文件、根仓 git rev-list
-    origin/main 同为 8734、被点名 15 条 run 的 16 个 sha 凭证在两棵树任何仓的 landed 集合里都不存在；真因是 git diff
-    --stat 51c9ed62e 26a904504 -- bin/gac/check-work-landed.py = 111 insertions(+)（eb3e48c34
-    / PR #4885，2026-10-25 加 BET 落地兜底），特征符号 RETROS_DIR 与 _bet_log_refs 命中数在两 base 上分别是
-    0 与 7。本地专用检查最容易这样（.omo/_truth/registry/ci-surfaces.yaml:371-376 登记 workflow: (none)
-    + gate: true + triggers: []），因为没有 CI 那份统一检出替所有人对齐尺。二、台账同一 BET 块内的上游排版重排会让并发交付结构性冲突
-    —— PR #4892 实测 mergeable=CONFLICTING / mergeStateStatus=DIRTY 且 gh pr checks 零排队，冲突点不是新增行撞新增行，而是上游对
-    docs/plans/3y-bet-ledger.yaml 做 YAML plain scalar 换行重排、重排范围落在同一个 BET-Y2Q4-T10-267
-    块内；正解是从当前 origin/main 重做受控后继（本轮 #4894），rebase/merge/pull 吸收上游是违令（bin/gac/gac-worktree.sh
-    的 _emit_managed_successor_proposal 定义 :967、打印 MANAGED_SUCCESSOR_REQUIRED :978、exit
-    2 :985）。这是既有条款「no checks reported 第一因是 CONFLICTING」在台账上的特有触发形状，比两侧同时追加尾项更隐蔽，因为两侧
+    T10-221 / T10-225（复发 ≥2 次或当场让安全网静默失效，且有不依赖本机状态的指认方式）。一、门禁的**尺本身**会随 base 变 ——
+    bin/gac/check-work-landed.py:31 以 WORKSPACE = Path(__file__).resolve().parents[2]
+    定根，于是每个 worktree 执行的是自己检出里那一份脚本；T10-267 初版 receipt 把两棵树读数差（FAIL settled=112 warn=2
+    blocking=13 对 PASS closed=193 settled=127 no_ref=66 warn=0 blocking=0）归因为「并发 agent
+    与 cron 事后补齐了 landing」，复测否证——两侧 RUNS_DIR 经 .omo/_delivery symlink 桥 resolve 到同一份
+    canonical 目录各 350 个 run 文件、根仓 git rev-list origin/main 同为 8734、被点名 15 条 run 的
+    16 个 sha 凭证在两棵树任何仓的 landed 集合里都不存在；真因是 git diff --stat 51c9ed62e 26a904504 --
+    bin/gac/check-work-landed.py = 111 insertions(+)（eb3e48c34 / PR #4885，2026-10-25
+    加 BET 落地兜底），特征符号 RETROS_DIR 与 _bet_log_refs 命中数在两 base 上分别是 0 与 7。本地专用检查最容易这样（.omo/_truth/registry/ci-surfaces.yaml:371-376
+    登记 workflow: (none) + gate: true + triggers: []），因为没有 CI 那份统一检出替所有人对齐尺。二、台账同一
+    BET 块内的上游排版重排会让并发交付结构性冲突 —— PR #4892 实测 mergeable=CONFLICTING / mergeStateStatus=DIRTY
+    且 gh pr checks 零排队，冲突点不是新增行撞新增行，而是上游对 docs/plans/3y-bet-ledger.yaml 做 YAML plain
+    scalar 换行重排、重排范围落在同一个 BET-Y2Q4-T10-267 块内；正解是从当前 origin/main 重做受控后继（本轮 #4894），rebase/merge/pull
+    吸收上游是违令（bin/gac/gac-worktree.sh 的 _emit_managed_successor_proposal 定义 :967、打印
+    MANAGED_SUCCESSOR_REQUIRED :978、exit 2 :985）。这是既有条款「no checks reported 第一因是 CONFLICTING」在台账上的特有触发形状，比两侧同时追加尾项更隐蔽，因为两侧
     diff 语义上毫不相干。三、刷新台账里的文件摘要必须按字段路径定位 —— receipt 改版后其 6 个证据位需同步，本轮自伤的驱动脚本用「块内出现且不等于新
     receipt/新 retro」反选陈旧值，于是把 accepted_specifications[0].content_digest（规范绑定摘要，与 receipt
     无关且绝不能变）一并改成了新 receipt 摘要；台账内 sha256: 只有两类且互不相交——completion_evidence.axes.*.evidence.*.sha256（随
     receipt/retro 变）与 accepted_specifications.*.content_digest（随 spec 正文变，由 bin/plan/bet-ledger.py
-    complete 的绑定校验强制）。写回后必须同时断言两类各自等于磁盘对象，缺一即视为未完成。另附一条就地修正的陈旧指针（§7⑥ 纪律）：AGENTS.md §6
-    把 rebase 禁令、submit proposal-only、merge 查 open PR 三处分别引在 :507 / :683-691 / :780-783，本轮实测真实站点是
+    complete 的绑定校验强制）。写回后必须同时断言两类各自等于磁盘对象，缺一即视为未完成。另附一条就地修正的陈旧指针（§7⑥ 纪律）：AGENTS.md
+    §6 把 rebase 禁令、submit proposal-only、merge 查 open PR 三处分别引在 :507 / :683-691 / :780-783，本轮实测真实站点是
     :966 与 :994（不 rebase 的 typed 指令）、:967-:985（_emit_managed_successor_proposal 定义与
     exit 2）、:1241-:1244（gh pr list 与「先 submit 开 PR」）；「行号在文件行数内」这种存在性检查结构上检不出这类漂移（三个旧指针当时都指向存在的行），必须按内容断言。撞号改铸记：本
-    BET 原定 BET-Y2Q4-T10-269，在 push 前 fetch 时发现并发 agent 已把 269 用于另一条 BET（#4895 已合入 main），故按
-    T10-234 先例改铸为 270。本 BET 不新增代码、不改 bin/。'
+    BET 原定 BET-Y2Q4-T10-269，在 push 前 fetch 时发现并发 agent 已把 269 用于另一条 BET（#4895 已合入
+    main），故按 T10-234 先例改铸为 270。本 BET 不新增代码、不改 bin/。'
   status: done
   done_at: 2026-10-26
   window: Y2Q4
@@ -45001,21 +45056,21 @@ bets:
   - 纯文档交付：git diff --name-only origin/main...HEAD 不含 .py，不碰 projects/*、本机 launchd/crontab/services.yaml（verify-6）。
   verify:
   - cmd: python3 -c "import pathlib,sys; t=pathlib.Path('AGENTS.md').read_text(encoding='utf-8');
-      A=('尺本身会随 base 变','同一 BET 块内的上游排版重排','按字段路径定位'); miss=[a for a in A if a not in
-      t]; print('missing=' + str(miss)); sys.exit(0 if not miss else 1)"
+      A=('尺本身会随 base 变','同一 BET 块内的上游排版重排','按字段路径定位'); miss=[a for a in A if a not
+      in t]; print('missing=' + str(miss)); sys.exit(0 if not miss else 1)"
     expect: missing=[] (exit 0) —— §7 三条锚点全部存在
   - cmd: python3 -c "import pathlib,sys; g=pathlib.Path('bin/gac/gac-worktree.sh').read_text(encoding='utf-8').splitlines();
       a=pathlib.Path('AGENTS.md').read_text(encoding='utf-8'); need=[('966','禁止 rebase/merge/pull'),('967','_emit_managed_successor_proposal()
-      {'),('985','exit 2'),('1241','gh pr list'),('1244','先 submit 开 PR')]; bad=[n for
-      n,s in need if s not in g[int(n)-1]]; gone=[s for s in ('gac-worktree.sh:507','gac-worktree.sh:683','gac-worktree.sh:780')
+      {'),('985','exit 2'),('1241','gh pr list'),('1244','先 submit 开 PR')]; bad=[n
+      for n,s in need if s not in g[int(n)-1]]; gone=[s for s in ('gac-worktree.sh:507','gac-worktree.sh:683','gac-worktree.sh:780')
       if s in a]; print('bad=' + str(bad) + ' stale_left=' + str(gone)); sys.exit(0
       if not bad and not gone else 1)"
     expect: bad=[] stale_left=[] (exit 0) —— §6 三处指针按内容重钉，旧号消失
   - cmd: 'python3 -c "import pathlib,sys; c=pathlib.Path(''bin/gac/check-work-landed.py'').read_text(encoding=''utf-8'').splitlines();
       y=pathlib.Path(''.omo/_truth/registry/ci-surfaces.yaml'').read_text(encoding=''utf-8'').splitlines();
       ok=(''parents[2]'' in c[30]) and (''bin-gac-check-work-landed-py'' in y[370])
-      and (''triggers: []'' in chr(10).join(y[370:376])); print(''content_hit='' + str(ok));
-      sys.exit(0 if ok else 1)"'
+      and (''triggers: []'' in chr(10).join(y[370:376])); print(''content_hit='' +
+      str(ok)); sys.exit(0 if ok else 1)"'
     expect: content_hit=True (exit 0) —— 新条目点名的行号内容命中
   - cmd: python3 bin/ssot/doc-governance-check.py --no-new-warnings --scope tracked
     expect: exit 0 —— 本轮新增跟踪文档无未基线告警
@@ -45031,18 +45086,26 @@ bets:
     expect: 0 —— 纯文档交付，零 Python 改动
 - id: BET-Y2Q4-T10-271
   title: B3 E4 准入清单重签到 22 条 —— 三条异主线 launchd 服务逐条取证 + exempt_labels 具名补登
-  goal: ADR-0456 B3 的 `--reality-check` 四轴在 2026-10-26 实测为 E1=0 / E2=0 / E3=0 / E4=22 条，E4 是唯一还红着的轴；而 B4b 的中止判据写的是「每批切完 `--reality-check` E2 仍为
-    0」，分区面自己红着的时候，E2 的零没有参照系。本轮做两件被 principal 单独署名的事：一、把 T10-259 署名的准入清单（19 行）重签到 22 行，逐条取证齐备；二、把新增 3 条写进机读豁免面 `launchd_namespace.exempt_labels`（11
-    → 14，classification 全 external）。可测后果是 E4 由 22 降到 19、external 由 5 变 8，而 `e4_prefix_ok` **仍为 false** —— 这是如实终态而非半途：判据本体 `bin/mof/gen-service-configs.py:773`
-    是 `not any(f.startswith("E4"))`，`:684` 在 unmanaged_unknown 非空时必发 finding，故归零要求 22 条全部有名有归处，余下 19 条（#13—#16、#18 明写待署名，`com.local.*` 13 条待整族裁定）属署名面，本轮不代办。三条新增：`com.fleetops.logrotate`（uv
-    run --script ~/Project/fleet-ops/tools/rotate_logs.py，Calendar+RunAtLoad，mtime 2026-10-24T09:40:28Z，1052 B，sha256:16 3dfc5058ecb20b4d，launchctl
-    未加载）、`com.fleetops.sync`（/bin/sh ~/Project/fleet-ops/tools/sync_state.sh，StartInterval+RunAtLoad，2026-10-23T13:56:08Z，722 B，8e761c20773b6720，未加载）、`com.localbrain.ops-engine`（/usr/bin/python3
-    ~/Project/work-agent/scripts/ops_engine/main.py，WD 同目录，RunAtLoad+KeepAlive，2026-10-21T08:45:37Z，2045 B，3f92fb4459fdadda，**运行中**）。三条共同形状是源码在其它工程线的仓、本仓既不生成其
-    plist 也无 registry 声明，逐条实测见 spec §1。机制二选一判据：`workspace_prefixes` 追加前缀会把该前缀下所有 plist 一次性拉进本仓管辖并进 E2 等式（`com.localbrain` 前缀 5 条里 4 条仍待署名），故不采用；采用
-    `exempt_labels` 逐条具名，注册表注释 `:6339-6341` 本身就要求豁免面收窄到具体 label。补登必须保持单文档：`:6342-6343` 记有独立文档会让 `load_services()` 取到空 services，于是 `--check` 在零服务上「漂移
-    0」通过 —— 门禁自己变假绿。同批连带：清单文件由 T10-259 的 `accepted_specifications[0].content_digest` 绑定，改了正文即按字段路径重算该摘要与那条 verify 期望值（T10-270 纪律）。一处授权文字更正：本轮出选项时把预期写成「E4
-    归零」，那是在读 `:773` 之前按「清单 19 + 新增 3」倒推的错话，已在 spec §2.1/§7、准入表 §1.1 与本条 `done_when` 四处同步更正。本 BET 零运行面动作：不 bootstrap/bootout、不翻 enabled、不改 `~/Library/LaunchAgents`
-    任何文件、不碰 crontab、不改 `workspace_prefixes`。准入署名由 principal 于 2026-10-26 明确给出（「授权：补登 3 条 + 重签清单」）。
+  goal: ADR-0456 B3 的 `--reality-check` 四轴在 2026-10-26 实测为 E1=0 / E2=0 / E3=0 / E4=22
+    条，E4 是唯一还红着的轴；而 B4b 的中止判据写的是「每批切完 `--reality-check` E2 仍为 0」，分区面自己红着的时候，E2 的零没有参照系。本轮做两件被
+    principal 单独署名的事：一、把 T10-259 署名的准入清单（19 行）重签到 22 行，逐条取证齐备；二、把新增 3 条写进机读豁免面 `launchd_namespace.exempt_labels`（11
+    → 14，classification 全 external）。可测后果是 E4 由 22 降到 19、external 由 5 变 8，而 `e4_prefix_ok`
+    **仍为 false** —— 这是如实终态而非半途：判据本体 `bin/mof/gen-service-configs.py:773` 是 `not any(f.startswith("E4"))`，`:684`
+    在 unmanaged_unknown 非空时必发 finding，故归零要求 22 条全部有名有归处，余下 19 条（#13—#16、#18 明写待署名，`com.local.*`
+    13 条待整族裁定）属署名面，本轮不代办。三条新增：`com.fleetops.logrotate`（uv run --script ~/Project/fleet-ops/tools/rotate_logs.py，Calendar+RunAtLoad，mtime
+    2026-10-24T09:40:28Z，1052 B，sha256:16 3dfc5058ecb20b4d，launchctl 未加载）、`com.fleetops.sync`（/bin/sh
+    ~/Project/fleet-ops/tools/sync_state.sh，StartInterval+RunAtLoad，2026-10-23T13:56:08Z，722
+    B，8e761c20773b6720，未加载）、`com.localbrain.ops-engine`（/usr/bin/python3 ~/Project/work-agent/scripts/ops_engine/main.py，WD
+    同目录，RunAtLoad+KeepAlive，2026-10-21T08:45:37Z，2045 B，3f92fb4459fdadda，**运行中**）。三条共同形状是源码在其它工程线的仓、本仓既不生成其
+    plist 也无 registry 声明，逐条实测见 spec §1。机制二选一判据：`workspace_prefixes` 追加前缀会把该前缀下所有 plist
+    一次性拉进本仓管辖并进 E2 等式（`com.localbrain` 前缀 5 条里 4 条仍待署名），故不采用；采用 `exempt_labels` 逐条具名，注册表注释
+    `:6339-6341` 本身就要求豁免面收窄到具体 label。补登必须保持单文档：`:6342-6343` 记有独立文档会让 `load_services()`
+    取到空 services，于是 `--check` 在零服务上「漂移 0」通过 —— 门禁自己变假绿。同批连带：清单文件由 T10-259 的 `accepted_specifications[0].content_digest`
+    绑定，改了正文即按字段路径重算该摘要与那条 verify 期望值（T10-270 纪律）。一处授权文字更正：本轮出选项时把预期写成「E4 归零」，那是在读
+    `:773` 之前按「清单 19 + 新增 3」倒推的错话，已在 spec §2.1/§7、准入表 §1.1 与本条 `done_when` 四处同步更正。本
+    BET 零运行面动作：不 bootstrap/bootout、不翻 enabled、不改 `~/Library/LaunchAgents` 任何文件、不碰
+    crontab、不改 `workspace_prefixes`。准入署名由 principal 于 2026-10-26 明确给出（「授权：补登 3 条 +
+    重签清单」）。
   status: done
   done_at: 2026-10-26
   window: Y2Q4
@@ -45074,39 +45137,58 @@ bets:
     content_digest: sha256:b418ab63561448f787c439204242b88a9af83d09b332d9f5fe533f2e27254e61
     decision_ref: decision://accepted/BET-Y2Q4-T10-271
   done_when:
-  - python3 bin/mof/gen-service-configs.py --reality-check 读数：E4 未分区由 22 条降到 19 条、external 由 5 变 8，E1/E2/E3/unclassified/installed_total/workspace_scoped/owned_declared=owned_installed/registry_declared_total/E5
+  - python3 bin/mof/gen-service-configs.py --reality-check 读数：E4 未分区由 22 条降到 19 条、external
+    由 5 变 8，E1/E2/E3/unclassified/installed_total/workspace_scoped/owned_declared=owned_installed/registry_declared_total/E5
     逐字段未变；e4_prefix_ok 保持 false 且原因已在 spec §2.1 从判据本体导出
-  - launchd_namespace.exempt_labels 由 11 条增至 14 条，三条新条目各自含 label/classification/reason 且 classification=external
-  - T10-259 准入表由 19 行补至 22 行，且表内 22 名 = live E4 的 19 名 + 本轮补登的 3 名（双向集合相等，missing=[] extra=[]）
+  - launchd_namespace.exempt_labels 由 11 条增至 14 条，三条新条目各自含 label/classification/reason
+    且 classification=external
+  - T10-259 准入表由 19 行补至 22 行，且表内 22 名 = live E4 的 19 名 + 本轮补登的 3 名（双向集合相等，missing=[]
+    extra=[]）
   - services.yaml 仍是单文档同档（docs[-1] 同时含 services 与 launchd_namespace），门禁不因文档拆分变假绿
   - 清单文件正文变动同批重算 T10-259 绑定的 content_digest 与其 verify 期望值，二者等于该文件当次 sha256
   verify:
   - cmd: python3 -c "import json,subprocess,sys; r=json.loads(subprocess.run(['python3','bin/mof/gen-service-configs.py','--reality-check','--json'],capture_output=True,text=True).stdout);
-      print('e1=' + str(r['e1_drift']) + ' e2=' + str(r['e2_undeclared']) + ' e3=' + str(r['e3_lint_debt']) + ' unclassified=' + str(r['unclassified']) + ' external='
-      + str(r['external']) + ' installed=' + str(r['installed_total']) + ' workspace_scoped=' + str(r['workspace_scoped']) + ' owned=' + str(r['owned_declared']) +
-      '/' + str(r['owned_installed']) + ' declared=' + str(r['registry_declared_total']) + ' prefix_ok=' + str(r['e4_prefix_ok']) + ' e5=' + str(r['e5_enabled_missing'])
-      + '+' + str(r['e5_disabled_residual']) + ' findings=' + str(len(r['findings']))); sys.exit(0 if (r['e1_drift'],r['e2_undeclared'],r['e3_lint_debt'],r['unclassified'])==(0,0,0,0)
-      and r['e4_prefix_ok'] is False and any(f.startswith('E4 未分区') for f in r['findings']) else 1)"
-    expect: rc=0，读数 e1=0 e2=0 e3=0 unclassified=0 external=8 installed=81 workspace_scoped=39 owned=48/48 declared=75 prefix_ok=False e5=1+1 findings=3 —— E4 未归零是本轮的如实终态而非半途（判据本体
+      print('e1=' + str(r['e1_drift']) + ' e2=' + str(r['e2_undeclared']) + ' e3='
+      + str(r['e3_lint_debt']) + ' unclassified=' + str(r['unclassified']) + ' external='
+      + str(r['external']) + ' installed=' + str(r['installed_total']) + ' workspace_scoped='
+      + str(r['workspace_scoped']) + ' owned=' + str(r['owned_declared']) + '/' +
+      str(r['owned_installed']) + ' declared=' + str(r['registry_declared_total'])
+      + ' prefix_ok=' + str(r['e4_prefix_ok']) + ' e5=' + str(r['e5_enabled_missing'])
+      + '+' + str(r['e5_disabled_residual']) + ' findings=' + str(len(r['findings'])));
+      sys.exit(0 if (r['e1_drift'],r['e2_undeclared'],r['e3_lint_debt'],r['unclassified'])==(0,0,0,0)
+      and r['e4_prefix_ok'] is False and any(f.startswith('E4 未分区') for f in r['findings'])
+      else 1)"
+    expect: rc=0，读数 e1=0 e2=0 e3=0 unclassified=0 external=8 installed=81 workspace_scoped=39
+      owned=48/48 declared=75 prefix_ok=False e5=1+1 findings=3 —— E4 未归零是本轮的如实终态而非半途（判据本体
       spec §2.1）
-  - cmd: python3 -c "import yaml,pathlib,sys; ds=[d for d in yaml.safe_load_all(pathlib.Path('.omo/_truth/registry/services.yaml').read_text(encoding='utf-8')) if isinstance(d,dict)];
-      last=ds[-1]; ex=last['launchd_namespace']['exempt_labels']; new=[e for e in ex if e['label'] in ('com.fleetops.logrotate','com.fleetops.sync','com.localbrain.ops-engine')];
-      print('services_in_last_doc=' + str('services' in last) + ' exempt=' + str(len(ex)) + ' new=' + str(len(new)) + ' all_external=' + str(all(e['classification']=='external'
-      and e.get('reason') for e in new))); sys.exit(0 if 'services' in last and len(ex)==14 and len(new)==3 and all(e['classification']=='external' and e.get('reason')
+  - cmd: python3 -c "import yaml,pathlib,sys; ds=[d for d in yaml.safe_load_all(pathlib.Path('.omo/_truth/registry/services.yaml').read_text(encoding='utf-8'))
+      if isinstance(d,dict)]; last=ds[-1]; ex=last['launchd_namespace']['exempt_labels'];
+      new=[e for e in ex if e['label'] in ('com.fleetops.logrotate','com.fleetops.sync','com.localbrain.ops-engine')];
+      print('services_in_last_doc=' + str('services' in last) + ' exempt=' + str(len(ex))
+      + ' new=' + str(len(new)) + ' all_external=' + str(all(e['classification']=='external'
+      and e.get('reason') for e in new))); sys.exit(0 if 'services' in last and len(ex)==14
+      and len(new)==3 and all(e['classification']=='external' and e.get('reason')
       for e in new) else 1)"
     expect: services_in_last_doc=True exempt=14 new=3 all_external=True
   - cmd: python3 -c "import json,re,subprocess,sys,pathlib; doc=pathlib.Path('docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md').read_text(encoding='utf-8');
-      rows={int(f[1]):f[2].strip(chr(96)) for f in ([x.strip() for x in line.split('|')] for line in doc.splitlines()) if len(f)>3 and re.fullmatch(r'[0-9]+',f[1] or
-      '')}; r=json.loads(subprocess.run(['python3','bin/mof/gen-service-configs.py','--reality-check','--json'],capture_output=True,text=True).stdout); e4={x.strip().strip(chr(39))
-      for fb in r['findings'] if fb.startswith('E4 未分区') for x in fb.split('[',1)[1].rstrip(']').split(',')}; new={'com.fleetops.logrotate','com.fleetops.sync','com.localbrain.ops-engine'};
-      tbl=set(rows.values()); print('rows=' + str(len(rows)) + ' e4=' + str(len(e4)) + ' missing=' + str(sorted(e4-tbl)) + ' extra=' + str(sorted(tbl-e4-new))); sys.exit(0
-      if len(rows)==22 and len(e4)==19 and not (e4-tbl) and not (tbl-e4-new) and tbl&new==new else 1)"
-    expect: rc=0 且 rows=22 e4=19 missing=[] extra=[] —— 表 22 名 = live E4 的 19 名 + 本轮补登的 3 名（双向集合相等）
+      rows={int(f[1]):f[2].strip(chr(96)) for f in ([x.strip() for x in line.split('|')]
+      for line in doc.splitlines()) if len(f)>3 and re.fullmatch(r'[0-9]+',f[1] or
+      '')}; r=json.loads(subprocess.run(['python3','bin/mof/gen-service-configs.py','--reality-check','--json'],capture_output=True,text=True).stdout);
+      e4={x.strip().strip(chr(39)) for fb in r['findings'] if fb.startswith('E4 未分区')
+      for x in fb.split('[',1)[1].rstrip(']').split(',')}; new={'com.fleetops.logrotate','com.fleetops.sync','com.localbrain.ops-engine'};
+      tbl=set(rows.values()); print('rows=' + str(len(rows)) + ' e4=' + str(len(e4))
+      + ' missing=' + str(sorted(e4-tbl)) + ' extra=' + str(sorted(tbl-e4-new)));
+      sys.exit(0 if len(rows)==22 and len(e4)==19 and not (e4-tbl) and not (tbl-e4-new)
+      and tbl&new==new else 1)"
+    expect: rc=0 且 rows=22 e4=19 missing=[] extra=[] —— 表 22 名 = live E4 的 19 名 +
+      本轮补登的 3 名（双向集合相等）
   - cmd: python3 -c "import hashlib,pathlib;print(hashlib.sha256(pathlib.Path('docs/superpowers/specs/2026-10-19-b3-admission-review-checklist.md').read_bytes()).hexdigest())"
-    expect: 与台账 BET-Y2Q4-T10-259 的 accepted_specifications[0].content_digest 及其 verify 期望值三处一致（本轮重签到 22 行后的当次 sha256）
+    expect: 与台账 BET-Y2Q4-T10-259 的 accepted_specifications[0].content_digest 及其 verify
+      期望值三处一致（本轮重签到 22 行后的当次 sha256）
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: OK -- 567 bets, 16 tracks, no errors
-  - cmd: bash -c "git diff --name-only \"$(git merge-base HEAD origin/main)\" HEAD | /usr/bin/grep -c '\\.py$' || true"
+  - cmd: bash -c "git diff --name-only \"$(git merge-base HEAD origin/main)\" HEAD
+      | /usr/bin/grep -c '\\.py$' || true"
     expect: 0 —— 零 Python 改动（本轮只动文档面与注册表面；左端是 merge-base 而非 HEAD，见 T10-270 item ②）
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
@@ -45151,8 +45233,8 @@ bets:
     比 plist 文本与注册表渲染（argv），E6 比入口脚本内容钉的根，两者都是码面轴； runtime_root 字段的语义覆盖 entrypoint/watch_paths/outputs（gen-service-configs.py:183），env
     面不在其中。 2026-10-26 本机实测 81 份 plist：执行根=检出 30、执行根=安装位 8，而后者 8 条的 EnvironmentVariables
     全部仍把根钉回检出（com.l4.resident.execute.plist 的 OMOSTATION_STATE_ROOT=/Users/xiamingxing/Workspace
-    是代表样本）—— 码在安装位、写在检出， 正是 §Context 要切断的耦合，而「E1 保持 0」对这一轴没有任何含义，B4b 批次 2+ 至今靠人手工数 plist。
-    本轮在 reality_check 增加 E7：从 enumerate_launchd_plists 已有的 row["blob"] 解出 EnvironmentVariables，对声明
+    是代表样本）—— 码在安装位、写在检出， 正是 §Context 要切断的耦合，而「E1 保持 0」对这一轴没有任何含义，B4b 批次 2+ 至今靠人手工数
+    plist。 本轮在 reality_check 增加 E7：从 enumerate_launchd_plists 已有的 row["blob"] 解出 EnvironmentVariables，对声明
     runtime_root 的 launchd 服务把写根分类为 profile|checkout|install|undeclared|undetermined；
     缺省只观测不进 findings（今日注册表声明面 6 条 checkout 命中，host 扫描面 8 条，差额属 B4b 批次 2+ 注册表回填；计入即翻红而无授权修复），条目声明
     require_state_root_partitioned: true 才升级成 finding。 本轮不把任何服务改道、不动任何 plist、不推进安装位。'
@@ -45174,8 +45256,8 @@ bets:
   - bin/mof/gen-service-configs.py
   - tests/unit/test_reality_check_state_root_axis.py
   non_goals:
-  - 不改 ~/Library/LaunchAgents 任何一份 plist，不 bootout/bootstrap，不动 crontab（机器级写面，B4b 批次
-    2+ 逐批授权）
+  - 不改 ~/Library/LaunchAgents 任何一份 plist，不 bootout/bootstrap，不动 crontab（机器级写面，B4b
+    批次 2+ 逐批授权）
   - 不引入 OMO_ALLOW_GIT_WRITE（决策 3 同一授权面，已有 7 份 spec 一致记为逐批授权）
   - 不给任何真实条目新增 require_state_root_partitioned（置真是 principal 的改道裁定）
   - 不改 E1–E6 判据本体，不改 run_e1_drift()，不动 --check/--write 语义
@@ -45192,16 +45274,16 @@ bets:
     根的合法样本必须分类 profile 且不命中（AGENTS.md §7③ 空绿不被接受）。
   - 全分类穷尽：e7_states 各项之和恒等于 e7_state_root 行数，人读行改为直接打印这份分类，不再只列 checkout/undeclared/profile
     三个命名项（undetermined 与 install 被算进「未分区」却不出现在分类里 = 同形掩盖）。
-  - schema 准入：require_state_root_partitioned 未声明 runtime_root 时报违规；写 false 时报违规；写 true
-    且已声明 runtime_root 时接受。
+  - schema 准入：require_state_root_partitioned 未声明 runtime_root 时报违规；写 false 时报违规；写
+    true 且已声明 runtime_root 时接受。
   verify:
   - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json | python3 -c
       "import json,sys; r=json.load(sys.stdin); s=[x['state'] for x in r['e7_state_root']];
       print('E7 checkout', s.count('checkout'), 'profile', s.count('profile'), 'undetermined',
       s.count('undetermined'), 'non_ok', r['e7_non_ok'], 'blocking', r['e7_blocking'],
       'e7_finding', any(f.startswith('E7') for f in r['findings']), 'E1', r['e1_drift'],
-      'sum_states', sum(r['e7_states'].values()), 'rows', len(r['e7_state_root']), 'ok',
-      r['ok'])"
+      'sum_states', sum(r['e7_states'].values()), 'rows', len(r['e7_state_root']),
+      'ok', r['ok'])"
     expect: checkout 6 / profile 0 / undetermined 0 / non_ok 6 / blocking 0 / e7_finding
       False / E1 0 / sum_states 6 = rows 6 / ok False（ok 由 E4 未分区 label 与 E5 安装缺口决定，与
       E7 无关； E7 前缀不得出现在 findings 里）
@@ -45210,8 +45292,8 @@ bets:
       OK')"
     expect: E1 drift_count=0 不变
   - cmd: mkdir -p /tmp/empty-home-t272 && env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT
-      -u OMO_EVENT_LEDGER_DB HOME=/tmp/empty-home-t272 uv run --no-project --with pytest
-      --with pytest-timeout --with pyyaml python -m pytest tests/unit/test_reality_check_state_root_axis.py
+      -u OMO_EVENT_LEDGER_DB HOME=/tmp/empty-home-t272 uv run --no-project --with
+      pytest --with pytest-timeout --with pyyaml python -m pytest tests/unit/test_reality_check_state_root_axis.py
       -q -p no:randomly
     expect: 全绿（17 passed）；hermetic 面（AGENTS.md §7 装置面补记：HOME=<空> 会摘掉 user-site pytest，依赖面必须由
       uv 供给）。同一批用例在宿主 HOME 下复跑也必须同值（fixture 的安装位根由 tmp 派生，不读真实 wrapper）。
@@ -45260,12 +45342,14 @@ bets:
 - id: BET-Y2Q4-T10-273
   title: 'BET-Y2Q4-T10-273 的根因已由并发 #4913 交付，残余缺口是 Agent Brief 物化器的写根「方向」没有尺 —— default_target
     未登记进 B1 两个既有名单'
-  goal: 'ADR-0456 B1 的门禁 tests/unit/test_b1_ledger_call_time.py 有四层：源码扫描（不许有 import 期 profile 根常量）、I5（晚声明 profile
-    必须生效）、I3（未声明时逐字节等于 legacy 落点）、I4（检测器自证）。后两层只对 STATE_ENTRIES/LEGACY_SUFFIXES 两个既有名单里的 callable 参数化。bin/panorama/materialize-agent-brief.py
-    的 import 期常量由并发 lane PR #4913（合入 4858eb530）删除并改成 default_target() 现算，源码扫描读数 2→0；但它没有登记进那两个名单（实测 grep -c = 0），于是该文件的写根方向无人守。本轮反证给出规模：把
-    default_target() 改成 Path(__file__).resolve().parents[2]/…（退回检出根）后，未登记 base 上 19 passed 全绿、登记后同一变异 1 failed。另一件在本轮记录期间已被上游关闭的事：base
-    4858eb530 的 governance-check.yml 触发面不含 bin/**，所以 #4913 那次 push 没有产生该 workflow run；并发 PR #4915（合入 1917c669b）已把
-    bin/** 补进 push/PR 两侧，其 main run 40442337806 结论 success —— 即预存红在 main 上的第一次复评由 #4915 完成，本轮不据为己有。本轮交付只剩名单登记；本轮不重新实现根因、不动
+  goal: 'ADR-0456 B1 的门禁 tests/unit/test_b1_ledger_call_time.py 有四层：源码扫描（不许有 import
+    期 profile 根常量）、I5（晚声明 profile 必须生效）、I3（未声明时逐字节等于 legacy 落点）、I4（检测器自证）。后两层只对 STATE_ENTRIES/LEGACY_SUFFIXES
+    两个既有名单里的 callable 参数化。bin/panorama/materialize-agent-brief.py 的 import 期常量由并发
+    lane PR #4913（合入 4858eb530）删除并改成 default_target() 现算，源码扫描读数 2→0；但它没有登记进那两个名单（实测
+    grep -c = 0），于是该文件的写根方向无人守。本轮反证给出规模：把 default_target() 改成 Path(__file__).resolve().parents[2]/…（退回检出根）后，未登记
+    base 上 19 passed 全绿、登记后同一变异 1 failed。另一件在本轮记录期间已被上游关闭的事：base 4858eb530 的 governance-check.yml
+    触发面不含 bin/**，所以 #4913 那次 push 没有产生该 workflow run；并发 PR #4915（合入 1917c669b）已把 bin/**
+    补进 push/PR 两侧，其 main run 40442337806 结论 success —— 即预存红在 main 上的第一次复评由 #4915 完成，本轮不据为己有。本轮交付只剩名单登记；本轮不重新实现根因、不动
     #4913 的实现形状、不写任何运行面。'
   status: done
   done_at: 2026-10-27
@@ -45298,11 +45382,14 @@ bets:
   - 变异对照：把 `default_target()` 改成 `__file__` 反推检出根 ⇒ `test_state_write_target_follows_profile_declared_after_import[bin/panorama/materialize-agent-brief.py-default_target]`
     当场红；未登记 base 同一变异全绿（本轮实测 19 passed，即缺口规模）
   - 写面语义未变：`default_target()` 仍走 `state_root()`，落点逐字节仍是 `<state root>/runtime/dashboard/agent-brief.json`（I3）
-  - '`tests/unit/test_b1_ledger_call_time.py` 全文件在 base `4858eb530` + 本轮改动上全绿（本轮实测 46 passed）'
-  - '本 PR 的 governance-verify 步「ADR-0456 B1 call-time write-plane gate」为 pass，且 collect 数含 materialize-agent-brief.py-default_target
-    两个参数化 —— 该步此前在 main 上连续两次 run 读 2 failed, 42 passed 的预存红，已由 #4913（根因）+ #4915（bin/** 触发面）关闭；本轮只要求它在自己 head tree
-    上不复红，不靠 --no-verify、不靠放宽判据、不靠 admin merge'
-  - spec 落 canonical 位；bet-ledger.py lint 对本 BET 条目零 ERROR —— 整体仍余 5 条，全部点名 BET-Y2Q4-T10-272（main 既成事实，属它自己的收口腿，本轮不夹带）
+  - '`tests/unit/test_b1_ledger_call_time.py` 全文件在 base `4858eb530` + 本轮改动上全绿（本轮实测
+    46 passed）'
+  - '本 PR 的 governance-verify 步「ADR-0456 B1 call-time write-plane gate」为 pass，且 collect
+    数含 materialize-agent-brief.py-default_target 两个参数化 —— 该步此前在 main 上连续两次 run 读 2
+    failed, 42 passed 的预存红，已由 #4913（根因）+ #4915（bin/** 触发面）关闭；本轮只要求它在自己 head tree 上不复红，不靠
+    --no-verify、不靠放宽判据、不靠 admin merge'
+  - spec 落 canonical 位；bet-ledger.py lint 对本 BET 条目零 ERROR —— 整体仍余 5 条，全部点名 BET-Y2Q4-T10-272（main
+    既成事实，属它自己的收口腿，本轮不夹带）
   verify:
   - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
       -m pytest tests/unit/test_b1_ledger_call_time.py -q -p no:randomly
@@ -45320,7 +45407,7 @@ bets:
       m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(str(m.default_target()).endswith('runtime/dashboard/agent-brief.json'))"
     expect: True —— 落点逐字节不变
   - cmd: python3 bin/plan/bet-ledger.py lint
-    expect: '本 BET 条目零 ERROR —— 改前该位是 SPEC_DIGEST_MISMATCH；整体余 5 条 ERROR 全部属 BET-Y2Q4-T10-272'
+    expect: 本 BET 条目零 ERROR —— 改前该位是 SPEC_DIGEST_MISMATCH；整体余 5 条 ERROR 全部属 BET-Y2Q4-T10-272
   circuit_breaker: '若名单登记只能靠放宽既有判据才绿（把 `state_root` 从 resolver 名单摘掉、给这一对名字加豁免、或把用例改窄）→
     停止并保留原判据：那三形都是骗过扫描，写根方向仍然无尺。若为了让本 PR 绿而需要把 #4913 的实现改回模块级常量 → 停止，那是 B1 契约的反向。若需要写运行面（plist/bootstrap/crontab）才能验证
     → 停止，属署名裁定与 B4b 批次 2+。'
@@ -45366,25 +45453,24 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
-
 - id: BET-Y2Q4-T10-274
   title: BET-Y2Q4-T10-274 收口链判据的尺根缺陷：closeout 读的是「供给 kernel 的那棵树」—— WORKSPACE 在 bin/agent-workflow.py:282
     被再导入覆盖，异根检出假报 missing_retro
   goal: 'T10-272 的收口腿（PR #4919，squash 到 14ee5723e）在链实质闭合后连续 4 次被 closeout 拒为 missing_retro。本轮定位装置根因并固化判据：bin/agent-workflow.py:278
     把 WORKSPACE 绑成执行检出根（parents[1]）， :282-287 随即 `from omo.workflow import (WORKSPACE,
-    ...)` 把它覆盖成 kernel 侧的值，而 kernel 侧是 projects/omo/src/omo/workflow/core.py:43 的 parents[5]
-    —— 含义由「谁供给 omo 包」决定，与命令行在哪个检出执行无关。 探针实测（base 14ee5723e）：kernel 从本检出供给时两侧读数为同一棵树（一致）；把
+    ...)` 把它覆盖成 kernel 侧的值，而 kernel 侧是 projects/omo/src/omo/workflow/core.py:43 的
+    parents[5] —— 含义由「谁供给 omo 包」决定，与命令行在哪个检出执行无关。 探针实测（base 14ee5723e）：kernel 从本检出供给时两侧读数为同一棵树（一致）；把
     kernel 供给根换成 ~/Workspace/projects/omo/src 时 script-level 仍是 worktree、kernel-level
     变成 /Users/xiamingxing/Workspace（diverge=True）。 被覆盖的 WORKSPACE 喂给 :1138 的 chain_bind.evaluate_closeout，retro
-    存在性判据（retro_path_for(workspace, bet_id).is_file()） 就落到另一棵树；而 canonical 主检出当时停在 dc67a0f5f（落后
-    2），.omo/_knowledge/retros/BET-Y2Q4-T10-272.md 在该树 ABSENT、 在 origin/main PRESENT
-    —— 所以 missing_retro 是尺换了树，不是交付缺失。同链另两处装置塌缩一并固化： validate_completion_evidence 按磁盘树解析
-    evidence.ref，落后树读出 7 次 COMPLETION_FILE_REF_MISSING + OVERALL_STATE_MISMATCH derived=blocked；chain_bind.iter_run_records
-    在 runs 目录缺席时 return []（缺席 ≡ 空）， 对照树无交付锚桥时 350 条 run 读成 0 条，须调 sanctioned 的 ensure_delivery_anchor()
-    建桥（建桥后 358 条可见）。 还有一条易被误用的语义：bin/plan/bet-ledger.py:3259 cmd_complete 在 status=done
-    时 :3275-3277 早退「已是 done, 无需操作」并 return 0， 因此台账已 done 时它的 rc=0 不构成任何校验证据。本轮交付 spec
-    + 台账条目 + AGENTS.md §7 固化条； 不改 :278/:282-287 的绑定语义（REGISTRY_PATH/RUNS_DIR/cwd= 等
-    8 个消费点同受影响，属独立工程腿），不写任何运行面。'
+    存在性判据（retro_path_for(workspace, bet_id).is_file()） 就落到另一棵树；而 canonical 主检出当时停在
+    dc67a0f5f（落后 2），.omo/_knowledge/retros/BET-Y2Q4-T10-272.md 在该树 ABSENT、 在 origin/main
+    PRESENT —— 所以 missing_retro 是尺换了树，不是交付缺失。同链另两处装置塌缩一并固化： validate_completion_evidence
+    按磁盘树解析 evidence.ref，落后树读出 7 次 COMPLETION_FILE_REF_MISSING + OVERALL_STATE_MISMATCH
+    derived=blocked；chain_bind.iter_run_records 在 runs 目录缺席时 return []（缺席 ≡ 空）， 对照树无交付锚桥时
+    350 条 run 读成 0 条，须调 sanctioned 的 ensure_delivery_anchor() 建桥（建桥后 358 条可见）。 还有一条易被误用的语义：bin/plan/bet-ledger.py:3259
+    cmd_complete 在 status=done 时 :3275-3277 早退「已是 done, 无需操作」并 return 0， 因此台账已 done
+    时它的 rc=0 不构成任何校验证据。本轮交付 spec + 台账条目 + AGENTS.md §7 固化条； 不改 :278/:282-287 的绑定语义（REGISTRY_PATH/RUNS_DIR/cwd=
+    等 8 个消费点同受影响，属独立工程腿），不写任何运行面。'
   status: done
   done_at: '2026-10-27'
   window: Y2Q4
@@ -45404,8 +45490,8 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q4-T10-274.md
   - docs/reports/2026-10-27-bet-274-closeout-ruler-tree-closeout.md
   non_goals:
-  - 不改 bin/agent-workflow.py:278/:282-287 的双重绑定，也不给 evaluate_closeout 加 workspace flag
-    或 env 开关 —— 绑定语义变更要顺着 :364/:383/:407/:511/:818 等消费点与测试面一起做，属独立工程腿
+  - 不改 bin/agent-workflow.py:278/:282-287 的双重绑定，也不给 evaluate_closeout 加 workspace
+    flag 或 env 开关 —— 绑定语义变更要顺着 :364/:383/:407/:511/:818 等消费点与测试面一起做，属独立工程腿
   - 不登记「AGENTS.md 幽灵路径 bin/gac/doc-governance-check.py」：该候选项已被否证（AGENTS.md 引的是裸文件名，真实脚本在
     bin/ssot/）， 把自己的笔误登记成仓库缺陷即伪造溯源
   - 不动运行面：不写 ~/Library/LaunchAgents，不 bootout/bootstrap/kickstart，不改 services.yaml、crontab，不翻权威
@@ -45421,7 +45507,8 @@ bets:
     chain_bind.evaluate_closeout 与 validate_completion_evidence；runs 面缺席折叠用 ensure_delivery_anchor()
     消除而非手工 ln -s
   - 该条含记录面判据：链实质闭合而装置看不见时走原生 close --status ok --evidence，把装置原因写进 evidence 本身， 不加豁免、不放宽判据、不改窄断言
-  - 该条含基线判据：需要新鲜基线就另起 worktree 到 origin/main，不动共享主区；sync-main.sh 的默认 reset --hard 明确记为非正解
+  - 该条含基线判据：需要新鲜基线就另起 worktree 到 origin/main，不动共享主区；sync-main.sh 的默认 reset --hard
+    明确记为非正解
   - 该条写明 cmd_complete 在 status=done 时是早退 no-op（:3275-3277），其 rc=0 不得当完成证据
   - 本轮行号指针经 origin/main blob 复核：bin/agent-workflow.py 的 :278/:282-287/:1138 与 projects/omo/src/omo/workflow/core.py:43
     在交付基线上指向所述内容
@@ -45440,9 +45527,9 @@ bets:
     expect: 定位到 T10-TOOLING 段 bets 序列末项之后，schema/digest/id 校验通过（禁止按行号盲插）
   - cmd: python3 bin/ssot/doc-governance-check.py --no-new-warnings --scope tracked
     expect: 本 BET 新增文档零新告警（accepted-specifications 桶未基线告警等于 error）
-  circuit_breaker: 若固化只能靠改写 :278/:282-287 的绑定语义或给 evaluate_closeout 加豁免 flag 才成立 → 停止：那是独立工程腿，
-    且加豁免正是「把判据改窄」。若为了让 closeout 变绿而需要手工 ln -s 造交付锚桥、或把 retro 提前塞进 canonical 落后树 → 停止，
-    那是在制造装置看不见的反面（伪造溯源）。若需要快进共享主区才能取证 → 停止，另起 worktree 到 origin/main。
+  circuit_breaker: 若固化只能靠改写 :278/:282-287 的绑定语义或给 evaluate_closeout 加豁免 flag 才成立 →
+    停止：那是独立工程腿， 且加豁免正是「把判据改窄」。若为了让 closeout 变绿而需要手工 ln -s 造交付锚桥、或把 retro 提前塞进 canonical
+    落后树 → 停止， 那是在制造装置看不见的反面（伪造溯源）。若需要快进共享主区才能取证 → 停止，另起 worktree 到 origin/main。
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-27-bet-274-closeout-ruler-tree.md
     spec_version: 1.0.0
@@ -45490,8 +45577,8 @@ bets:
   goal: T10-266 的判据是「入口改到安装位 ≠ 码面改到安装位」，而 E1 对这件事结构性失明。 resident-role-tick.sh:27-29
     已按 BASH_SOURCE 自推根，所以 --reality-check 的 e6_non_ok = 0；同一口径下另有三条因未声明 runtime_root
     而不在 E6/E7 覆盖面内，且把检出的绝对路径烤进了脚本： lib/agora-daemon.sh:7 `cd /Users/xiamingxing/Workspace/projects/agora`、lib/agora-sse.sh:6
-    `--project /Users/xiamingxing/Workspace/projects/agora`、lib/bet-claim-gc.sh:9 `python
-    /Users/xiamingxing/Workspace/bin/plan/bet-ledger.py claim-gc`。后果可测：安装位那份与检出那份逐字节相同，
+    `--project /Users/xiamingxing/Workspace/projects/agora`、lib/bet-claim-gc.sh:9
+    `python /Users/xiamingxing/Workspace/bin/plan/bet-ledger.py claim-gc`。后果可测：安装位那份与检出那份逐字节相同，
     从安装位启动的 daemon 实际 cd 进检出树并跑检出的码面。本轮把这三处的根折进脚本自身位置派生（与 resident-role-tick.sh 同一形态），语义逐字不变，并给该禁令配一条有反基线
     + 自证 + 反面的用例。
   status: in_progress
@@ -45515,7 +45602,7 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q4-T10-275.md
   - docs/reports/2026-10-28-bet-275-lib-wrapper-root-closeout.md
   non_goals:
-  - "不给这三条服务声明 runtime_root: install —— 注册表内容属 B4b 批次 2+ 的 principal 授权面"
+  - '不给这三条服务声明 runtime_root: install —— 注册表内容属 B4b 批次 2+ 的 principal 授权面'
   - 不改 launchd plist、不 bootout/bootstrap/kickstart、不碰 crontab、不翻权威 ledger
   - 不扩 bin/gac/check-services-runtime-root.py 的 E6 准入条件到未声明 runtime_root 的条目（独立工程腿）
   - 不碰 lib/ 之外的绝对路径残留
@@ -45533,19 +45620,20 @@ bets:
   - cmd: bash -n lib/agora-daemon.sh lib/agora-sse.sh lib/bet-claim-gc.sh
     expect: 三条均 rc=0
   - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录>
-      uv run --no-project --with pytest --with pytest-timeout --with pyyaml python -m pytest
-      tests/unit/test_lib_wrapper_root_self_resolution.py -q -p no:randomly
+      uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_lib_wrapper_root_self_resolution.py -q -p no:randomly
     expect: 7 passed（hermetic 复跑；宿主 python3 无 pytest，且 pyproject addopts 要 pytest-timeout）
   - cmd: 变异对照（按改法分别记读数）
-    expect: 'A 把 bet-claim-gc.sh 换回 origin/main 那份 —— 2 failed / 5 passed；B 摘掉 _scan()
-      —— 3 failed / 4 passed 且「改后 0 处」仍绿；C 尺窄化为只匹配本机根 —— 1 failed（自证那条）'
+    expect: A 把 bet-claim-gc.sh 换回 origin/main 那份 —— 2 failed / 5 passed；B 摘掉 _scan()
+      —— 3 failed / 4 passed 且「改后 0 处」仍绿；C 尺窄化为只匹配本机根 —— 1 failed（自证那条）
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: T10-275 无 ERROR（补本字段前实测 2 ERROR：缺 verify、non_goals[0] 是 dict）
   - cmd: make gac-local-gate
-    expect: "66 项 PASS，唯一硬失败 service-config-drift 报 4 条机器侧 plist 与 canonical 注册表 drift（同一命令在 ~/Workspace 本体读数相同，非本 PR 输入面）；1 项 SOFT WARN governance-semantic active_runs=1；未跑 --write、未碰 plist（B4b/#91 署名面）"
-  circuit_breaker: 若用例只能靠把检测器写成「只匹配本机那个 Workspace 根」这类按构造就绿的形状才绿
-    → 停止，spec §5 已列为断路条件；若需要给这三条服务声明 runtime_root、改 plist 或 bootout/bootstrap
-    才能验证 → 停止，属署名裁定与 B4b 批次 2+。
+    expect: 66 项 PASS，唯一硬失败 service-config-drift 报 4 条机器侧 plist 与 canonical 注册表 drift（同一命令在
+      ~/Workspace 本体读数相同，非本 PR 输入面）；1 项 SOFT WARN governance-semantic active_runs=1；未跑
+      --write、未碰 plist（B4b/#91 署名面）
+  circuit_breaker: 若用例只能靠把检测器写成「只匹配本机那个 Workspace 根」这类按构造就绿的形状才绿 → 停止，spec §5 已列为断路条件；若需要给这三条服务声明
+    runtime_root、改 plist 或 bootout/bootstrap 才能验证 → 停止，属署名裁定与 B4b 批次 2+。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
