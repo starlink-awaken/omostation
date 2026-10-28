@@ -45485,6 +45485,86 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-275
+  title: BET-Y2Q4-T10-275 ADR-0456 B4b 码面残差 —— lib/ 三个 launchd wrapper 仍逐字面钉检出根（入口在安装位、跑的却是检出码面）
+  goal: T10-266 的判据是「入口改到安装位 ≠ 码面改到安装位」，而 E1 对这件事结构性失明。 resident-role-tick.sh:27-29
+    已按 BASH_SOURCE 自推根，所以 --reality-check 的 e6_non_ok = 0；同一口径下另有三条因未声明 runtime_root
+    而不在 E6/E7 覆盖面内，且把检出的绝对路径烤进了脚本： lib/agora-daemon.sh:7 `cd /Users/xiamingxing/Workspace/projects/agora`、lib/agora-sse.sh:6
+    `--project /Users/xiamingxing/Workspace/projects/agora`、lib/bet-claim-gc.sh:9 `python
+    /Users/xiamingxing/Workspace/bin/plan/bet-ledger.py claim-gc`。后果可测：安装位那份与检出那份逐字节相同，
+    从安装位启动的 daemon 实际 cd 进检出树并跑检出的码面。本轮把这三处的根折进脚本自身位置派生（与 resident-role-tick.sh 同一形态），语义逐字不变，并给该禁令配一条有反基线
+    + 自证 + 反面的用例。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-28-bet-275-lib-wrapper-root-self-resolution.md
+  - lib/agora-daemon.sh
+  - lib/agora-sse.sh
+  - lib/bet-claim-gc.sh
+  - tests/unit/test_lib_wrapper_root_self_resolution.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-275.md
+  - docs/reports/2026-10-28-bet-275-lib-wrapper-root-closeout.md
+  non_goals:
+  - "不给这三条服务声明 runtime_root: install —— 注册表内容属 B4b 批次 2+ 的 principal 授权面"
+  - 不改 launchd plist、不 bootout/bootstrap/kickstart、不碰 crontab、不翻权威 ledger
+  - 不扩 bin/gac/check-services-runtime-root.py 的 E6 准入条件到未声明 runtime_root 的条目（独立工程腿）
+  - 不碰 lib/ 之外的绝对路径残留
+  - 不 --no-verify、不 admin merge、不 rebase/merge/pull 吸收上游、不 prune-locks
+  - 不宣布 ADR-0456 B1/B3/B4/B4b/B5 或整个 plan 完成
+  done_when:
+  - 三个 wrapper 不再含 /Users/ 字面量（git grep -- 'lib/*.sh' 读数为空）且 bash -n 三条全过
+  - tests/unit/test_lib_wrapper_root_self_resolution.py 含四条：反基线命中 3 处、改后命中 0 处、合成违规被点名、/opt/homebrew/bin/uv
+    不被点名
+  - 该用例在 HOME=<空目录> + env -u OMOSTATION_ROOT 的最小 venv 下跑得到（hermetic 复跑，依赖面由 uv --with
+    供给）
+  verify:
+  - cmd: git grep -c "/Users/" -- 'lib/*.sh'
+    expect: 改后读数为空（rc=1）；同一把尺在 origin/main 上读数为 3（三份各 1）
+  - cmd: bash -n lib/agora-daemon.sh lib/agora-sse.sh lib/bet-claim-gc.sh
+    expect: 三条均 rc=0
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录>
+      uv run --no-project --with pytest --with pytest-timeout --with pyyaml python -m pytest
+      tests/unit/test_lib_wrapper_root_self_resolution.py -q -p no:randomly
+    expect: 7 passed（hermetic 复跑；宿主 python3 无 pytest，且 pyproject addopts 要 pytest-timeout）
+  - cmd: 变异对照（按改法分别记读数）
+    expect: 'A 把 bet-claim-gc.sh 换回 origin/main 那份 —— 2 failed / 5 passed；B 摘掉 _scan()
+      —— 3 failed / 4 passed 且「改后 0 处」仍绿；C 尺窄化为只匹配本机根 —— 1 failed（自证那条）'
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: T10-275 无 ERROR（补本字段前实测 2 ERROR：缺 verify、non_goals[0] 是 dict）
+  - cmd: make gac-local-gate
+    expect: "66 项 PASS，唯一硬失败 service-config-drift 报 4 条机器侧 plist 与 canonical 注册表 drift（同一命令在 ~/Workspace 本体读数相同，非本 PR 输入面）；1 项 SOFT WARN governance-semantic active_runs=1；未跑 --write、未碰 plist（B4b/#91 署名面）"
+  circuit_breaker: 若用例只能靠把检测器写成「只匹配本机那个 Workspace 根」这类按构造就绿的形状才绿
+    → 停止，spec §5 已列为断路条件；若需要给这三条服务声明 runtime_root、改 plist 或 bootout/bootstrap
+    才能验证 → 停止，属署名裁定与 B4b 批次 2+。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-28-bet-275-lib-wrapper-root-self-resolution.md
+    spec_version: 1.0.0
+    content_digest: sha256:d0d15e64c4df5ff11e3c4ba4a891f2f3b8cbd658e6cd2cc6c084dba903283738
+    decision_ref: decision://accepted/BET-Y2Q4-T10-275
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -45623,7 +45703,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 571
+  total_bets: 572
   windows:
   - Y1Q1
   - Y1Q2
