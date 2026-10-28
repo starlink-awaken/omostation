@@ -144,6 +144,7 @@ receipt that can be appended as OMO `EvidenceRecorded` without owning workflow s
 ### 4.2 Spine Value Pipeline & Human-in-the-Loop Evolution (ADR-0439)
 
 The spine value pipeline governs the single-operator operating loop: ingress signal → triage → sovereign draft generation → Cockpit review & HITL signature → diff extraction & idle LoRA adaptation.
+
 - Routing: `bos://cockpit/spine/sign`, `bos://cockpit/spine/distill`, `bos://cockpit/spine/replay`
 - Persona LoRA Adapters are trained in idle compute nodes (Mac mini M4 roaming) and dynamically mounted on sovereign models (`bos://compute/aetherforge/infer`).
 

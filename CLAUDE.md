@@ -197,17 +197,16 @@ For task-level routing (BOS, governance, ports, ADRs, main landing, scene admiss
 
 Rules carry lifecycles (`added_at`/`review_before`/`justification` in `governance-checks.yaml::gac.rules`). Check health: `python3 bin/gac/rules-lifecycle.py` (weekly cron; expired → subtraction candidates). Human authority layers L1-L5 (charter/context/decision/constraints/unknown) are orthogonal — see `.omo/_knowledge/decisions/0431-anti-corrosion-five-layer-framework.md`. BOS: `bos://governance/anti-corrosion/*`. MCP: `rules_lifecycle` tool.
 
-
 ## 6.6 Declaration vs Execution vs Verification (2026-09-19)
 
 今天反复撞上的主题："声明说做了, 执行层是空的, 而没人校验"。以下是该陷阱的**操作化判别与防线**:
 
 1. **`declare ≠ execute` —— 判别锚点落在哪**
    任何标准/规则是否落地, 以**锚定实现**为判据, 而非声明存在。判定路径:
-     - 有声明 (governance-checks.yaml / debt.yaml / component spec) → ✅
-     - 有 `source_ref` / `realized_by` 指向**真实可读**的文件/函数 → ✅
-     - 在 `bin/**`/`.githooks/*`/`.github/workflows/*.yml`/`hook-manifest.yaml` **可执行体语料**里, 该 id/锚点可查 → ✅
-     - 否则 → **DECL_EXEC_GAP**, 不是"执行了却叫不出名字"。
+   - 有声明 (governance-checks.yaml / debt.yaml / component spec) → ✅
+   - 有 `source_ref` / `realized_by` 指向**真实可读**的文件/函数 → ✅
+   - 在 `bin/**`/`.githooks/*`/`.github/workflows/*.yml`/`hook-manifest.yaml` **可执行体语料**里, 该 id/锚点可查 → ✅
+   - 否则 → **DECL_EXEC_GAP**, 不是"执行了却叫不出名字"。
    坏样 (今天被打脸): 我以为 `src/a2a/server/a2a.py`/`transport.py` 实现了
    x1-swarm —— 那两个路径**根本不存在**; x1 的真实现锚是
    `projects/ecos/src/ecos/l0/ssb/ssb_auth.py` +

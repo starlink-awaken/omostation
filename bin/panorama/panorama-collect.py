@@ -5080,7 +5080,6 @@ def collect_agent_visibility(payload: dict, *, bound_value_readiness: dict | Non
             "value_proof": value_proof_flag,
             "value_proof_readiness": value_readiness,
         },
-        "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},
         "health": {
             "gates_total": len(gate_rows),
             "gates_pass": sum(g["verdict"] == "PASS" for g in gate_rows),

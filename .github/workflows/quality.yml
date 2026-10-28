@@ -47,7 +47,11 @@ jobs:
           # 风格/模式类 PLW1510(open encoding 场景OK)/ASYNC221,230(async 模式)/SIM102,115(风格)/TRY004/PYI036(类型签名)/
           # PLW0602/RUF034/RUF012/DTZ005(datetime tz)/PLE1205(logging format) — acknowledge, 非 bug.
           # fixable (类型现代化/import排序/with合并) 已 ruff --fix 真修; dead import 已删. 详见子模块 commit + PR.
-          args: "check --select E4,E7,E9,F --ignore F401,F403,F821,E402,E722,F841,E501,F541"
+          # F405 (2026-10-28 补): ruff 的 F405 **不读 `__all__`** —— 实测对 `__all__` 显式列出的名字仍报。
+          #   cockpit/src/cockpit/cli.py 用 `from ._compat import *` 重导出 68 个 cmd_* (全在 `_compat.__all__`
+          #   内, `python -c "import cockpit.cli as c; c.cmd_research"` 可解析), 因此被报 64 处 F405 假阳。
+          #   F405 是 F821 (未定义名) 的更弱版本 —— 真未定义仍由 F821 拦截, 故抑制 F405 不降低拦截面。
+          args: "check --select E4,E7,E9,F --ignore F401,F403,F405,F821,E402,E722,F841,E501,F541"
 
   prettier:
     name: Pre-commit hooks check
@@ -66,4 +70,16 @@ jobs:
           enable-cache: true
       - name: install ruff
         run: pip install ruff
+      - name: install pyyaml (state materializer input)
+        # 与 gac-gate.yml 的 "install pyyaml and pytest" 同法: 走 uv (命中 setup-uv 缓存)
+        # 而不是 pip, 免去每次作业重新下载/解析。`--break-system-packages` 是给解释器带
+        # EXTERNALLY-MANAGED 标记的保险 (PEP 668); runner 上通常无标记, 无标记时是空操作。
+        run: uv pip install --system --break-system-packages pyyaml
+      # ADR-0456 B5 (BET-Y2Q4-T10-235) — `.omo/state/system.yaml` 已摘库 (gitignore:304), 干净检出里
+      # 没有这份生成态, 而 pre-commit 的 health-ssot-consistency 与 ssot-guardian 按存在性判定。
+      # 与 gac-gate.yml 的 "Materialize generated state input for the strict gate" 同法: 先由创建者
+      # 从已提交真源 (.omo/goals + .omo/tasks) 物化一次, 判据语义不动。
+      # CI 未声明 OMOSTATION_STATE_ROOT ⇒ state_root()==code_root(), 落点是 .gitignore 忽略的路径。
+      - name: Materialize generated state input for pre-commit
+        run: python3 bin/gac/materialize-system-state.py --json
       - uses: pre-commit/action@v3.0.1

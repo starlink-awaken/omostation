@@ -72,7 +72,7 @@ def get_diff_stats(workspace: Path, base_ref: str, head_ref: str) -> Dict:
             "sh": "Shell", "bash": "Shell", "zsh": "Shell", "rb": "Ruby",
             "go": "Go", "rs": "Rust", "java": "Java", "kt": "Kotlin",
             "swift": "Swift", "c": "C", "cpp": "C++", "h": "C/C++",
-            "hpp": "C++", "hpp": "C++", "hpp": "C++",
+            "hpp": "C++",
         }
         lang = lang_map.get(ext, "Other") if ext else "Other"
 
