@@ -45690,7 +45690,8 @@ bets:
     tree_dirty 判据把它们当在制工作。写者侧本轮实测**不是**缺陷： healer.py:160、service_runner.py:55-56、memory_distiller.py:68/221-222/234、notification.py:199/210/218/221
     的读用点一律过 `omo.resident.write_path()`，声明 OMOSTATION_STATE_ROOT 后 STATE_ROOT 实测随 env
     移动；canonical 机器未声明 profile ⇒ state_root == code_root ⇒ 写进检出按契约成立。需要收尾的是「检出里看见了它」。
-  status: in_progress
+  status: done
+  done_at: 2026-10-28
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -45746,15 +45747,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@cad4585a3bb7f459fe30216fe772959aa6835ed0
+          tests:
+            ref: receipt://docs/reports/2026-10-28-bet-276-omo-state-ignore-closeout.md
+            sha256: sha256:2d067f364a0ee9b6cc0cbdc7198c722df29be7a586ba9ff45d7348f6770d6047
+          diff:
+            ref: receipt://docs/reports/2026-10-28-bet-276-omo-state-ignore-closeout.md
+            sha256: sha256:2d067f364a0ee9b6cc0cbdc7198c722df29be7a586ba9ff45d7348f6770d6047
+          rollback:
+            ref: receipt://docs/reports/2026-10-28-bet-276-omo-state-ignore-closeout.md
+            sha256: sha256:2d067f364a0ee9b6cc0cbdc7198c722df29be7a586ba9ff45d7348f6770d6047
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-28-bet-276-omo-state-ignore-closeout.md
+            sha256: sha256:2d067f364a0ee9b6cc0cbdc7198c722df29be7a586ba9ff45d7348f6770d6047
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-28-bet-276-omo-state-ignore-closeout.md
+            sha256: sha256:2d067f364a0ee9b6cc0cbdc7198c722df29be7a586ba9ff45d7348f6770d6047
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-276.md
+            sha256: sha256:4478d5850f50b21036e15ba50d8114a364bfbbc1cad8c1ca56f8835dda45c94d
+          cleanup:
+            ref: receipt://docs/reports/2026-10-28-bet-276-omo-state-ignore-closeout.md
+            sha256: sha256:2d067f364a0ee9b6cc0cbdc7198c722df29be7a586ba9ff45d7348f6770d6047
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-28-bet-276-omo-state-ignore-completion.md
     spec_version: 1.0.0
