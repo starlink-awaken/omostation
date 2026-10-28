@@ -45542,7 +45542,7 @@ bets:
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: T10-275 无 ERROR（补本字段前实测 2 ERROR：缺 verify、non_goals[0] 是 dict）
   - cmd: make gac-local-gate
-    expect: 通过
+    expect: "66 项 PASS，唯一硬失败 service-config-drift 报 4 条机器侧 plist 与 canonical 注册表 drift（同一命令在 ~/Workspace 本体读数相同，非本 PR 输入面）；1 项 SOFT WARN governance-semantic active_runs=1；未跑 --write、未碰 plist（B4b/#91 署名面）"
   circuit_breaker: 若用例只能靠把检测器写成「只匹配本机那个 Workspace 根」这类按构造就绿的形状才绿
     → 停止，spec §5 已列为断路条件；若需要给这三条服务声明 runtime_root、改 plist 或 bootout/bootstrap
     才能验证 → 停止，属署名裁定与 B4b 批次 2+。
