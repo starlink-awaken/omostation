@@ -343,6 +343,25 @@ services:
     stderr: ~/.local/log/morning-brief.log
   environment:
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
+- id: omostation.spine-daily-ingress
+  enabled: true
+  generate: true
+  run_at_load: true
+  scheduler: launchd
+  runtime_root: install
+  trigger: calendar
+  calendar: {Hour: 8, Minute: 0}
+  label: com.omostation.spine-daily-ingress
+  program:
+    interpreter: stable-python3
+    entrypoint: scripts/tools/spine-daily-ingress.py
+    args: [--ingress]
+  notes: 北极星主干真值流业务自进化每日感知与排程 (BET-Y1Q3-T10-105/115/116, ADR-0203)
+  outputs:
+    stdout: ~/.local/log/spine-daily-ingress.log
+    stderr: ~/.local/log/spine-daily-ingress.log
+  environment:
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
 - id: docker.searxng
   enabled: false
   generate: false
