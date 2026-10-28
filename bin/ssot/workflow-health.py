@@ -48,13 +48,21 @@ MANUAL_INTENT_EXEMPT = {"pyright-sweep.yml"}
 # gate/enforce 类 PR workflow 全量跑是设计语义 (低成本规则门禁, paths 过滤反而有漏跑风险)
 UNPATHED_DESIGN_EXEMPT = {
     "ai-pr-review.yml",
-    "gac-gate.yml",
-    "constraint-validation.yml",
     "debt-audit.yml",
     "evidence-smoke-gate.yml",
     "phase-gate-enforce.yml",
     "state-goals-enforce.yml",
     "task-schema-enforce.yml",
+    # gac-gate 是 branch protection 的 required check，且是 `pull_request: null`（所有 PR 必跑）
+    # —— 带 paths 过滤会让非匹配路径的 PR 上它永久悬空卡死合并。
+    "gac-gate.yml",
+    # bet-done-transition 是 branch protection 的 required check。带 paths 过滤会让
+    # 非匹配路径的 PR 上它永久 "Expected — Waiting for status"，反而卡死合并 (#2197
+    # 就是这么发生的，bet-done-gate.yml 自身的注释记录了这次拆分的动机)。
+    "bet-done-gate.yml",
+    # 判据是 commit 形状（tree 从 30+ 掉到 0、或缩水 >50%），不是路径 —— 加 paths
+    # 过滤会让「删掉整个目录但路径不在过滤集里」的 PR 跳过这个安全门。
+    "bulk-deletion-guard.yml",
 }
 
 

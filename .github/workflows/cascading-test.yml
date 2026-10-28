@@ -3,7 +3,20 @@ name: Cascading Topological Tests
 on:
   push:
     branches: [main]
+    # ADR-0386 原则：workflow 要有路径过滤（或属于必要 gate / scheduled / 有文档说明）。
+    # 本 workflow 已经按 changed-files 自筛到「直接改动的项目」，但每次 push/PR 仍要付
+    # checkout + setup + affected-graph 的钱；docs-only 或根级杂项改动根本不会命中任何项目
+    # （内部 `if: steps.changed-files.outputs.projects != ''` 会 skip 测试步）。加 paths 让这些
+    # 改动整条跳过。bin/gac/affected-graph.py 是图逻辑本身，改动它必须重跑。
+    paths:
+      - 'projects/**'
+      - 'bin/gac/affected-graph.py'
+      - '.github/workflows/cascading-test.yml'
   pull_request:
+    paths:
+      - 'projects/**'
+      - 'bin/gac/affected-graph.py'
+      - '.github/workflows/cascading-test.yml'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

@@ -1296,7 +1296,11 @@ workflow_triggers:
   triggers:
   - per_pr
   - push
-  path_filtered: false
+  path_filtered: true
+  paths:
+  - projects/**
+  - bin/gac/affected-graph.py
+  - .github/workflows/cascading-test.yml
 - workflow: ci-lint.yml
   triggers:
   - per_pr
@@ -1365,10 +1369,6 @@ workflow_triggers:
   - projects/knowledge/kairon
   - projects/agora/src/agora-services.json
   - projects/knowledge/kairon/packages/agora/agora-services.json
-- workflow: constraint-validation.yml
-  triggers:
-  - per_pr
-  path_filtered: false
 - workflow: debt-audit.yml
   triggers:
   - per_pr
