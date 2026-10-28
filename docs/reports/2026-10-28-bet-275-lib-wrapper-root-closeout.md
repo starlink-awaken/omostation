@@ -51,6 +51,25 @@ T10-266 记下的判据是：**入口在 A 树、执行的 Python 码面在 B �
 `--timeout=300`，所以最小 venv 必须 `--with pytest-timeout`，否则当场 `unrecognized arguments`。
 hermetic 复跑要分清「依赖面」与「host 面」（T10-235 装置面补记的同一条）。
 
+### 2.1 `make gac-local-gate` 的真实读数（verify-6，交付时刻）
+
+**不是全绿**，如实记录：66 项 PASS，唯一硬失败是 `service-config-drift`
+（`bin/mof/gen-service-configs.py --check`）报 **4 条 drift**：
+`com.l4.governance.watch` / `com.omostation.morning-brief` / `com.l4.mail.daemon` /
+`com.omostation.zhixing-projection-republisher`；另 1 项 SOFT WARN
+`governance-semantic`（`agent-workflow-status: active_runs=1`，并发 run 的存在，非本 PR）。
+
+**这条硬失败不在本 PR 的输入面上**，判据是复现而不是推理：同一条
+`gen-service-configs.py --check --json` 在 `~/Workspace`（canonical 检出本体）跑，读数**一字不差也是这 4 条**。
+比较器的两份输入是 canonical 注册表 `~/Workspace/.omo/_truth/registry/services.yaml`（sha `56a5c5fbf49f`，
+最后由 `dee5d6356` 改动）与本机 `~/Library/LaunchAgents/*.plist`（那 4 份 mtime = 2026-10-28 10:26，
+由并发 agent 重写）—— 本 PR 改的是 worktree 里的 `lib/*.sh` 与测试，两者都不在这把尺的读面上。
+读数还随时间翻动：10:26 那次 `gac-local-gate` 读 **0 drift / 74 services**，10:29 起稳定读 4，
+所以这是「仓库声明 ↔ 机器实态」之间的红窗（T10-265 记过同形），不是本分支引入的回归。
+
+**未做的事**：没跑 `--write`、没碰 plist、没 `bootout`/`bootstrap`。那 4 条 label 的机器侧处置属
+B4b / #91 与 #97 / #123 / #150 那几条署名面。
+
 ## 3. 检测器自证与三组变异对照（C-4）
 
 同一个 `_scan(files)` 函数同时产出 §2 的改前 3 与改后 0（不是两次不同探测），且 `PRE_FIX_WRAPPERS`
