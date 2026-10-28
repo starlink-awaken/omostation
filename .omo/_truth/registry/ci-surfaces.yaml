@@ -1462,6 +1462,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/kairon-ci.yml
+  - projects/knowledge/kairon
   - projects/knowledge/kairon/**
 - workflow: meta-model-check.yml
   triggers:

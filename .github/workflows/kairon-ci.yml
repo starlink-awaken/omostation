@@ -3,10 +3,13 @@ name: kairon-ci
 on:
   push:
     branches: [main]
-    paths: ['projects/knowledge/kairon/**', '.github/workflows/kairon-ci.yml']
+    #  bare `projects/knowledge/kairon` 是 gitlink 本身 —— 只写 `.../**` 时
+    #  子模块指针 bump **不触发**本 workflow（实测 2026-10-28, PR #4931 的 gitlink
+    #  bump 就没跑 kairon-ci），于是子仓修复在 bump 时刻零验证。见 ci-surfaces 同条登记。
+    paths: ['projects/knowledge/kairon', 'projects/knowledge/kairon/**', '.github/workflows/kairon-ci.yml']
   pull_request:
     branches: [main]
-    paths: ['projects/knowledge/kairon/**', '.github/workflows/kairon-ci.yml']
+    paths: ['projects/knowledge/kairon', 'projects/knowledge/kairon/**', '.github/workflows/kairon-ci.yml']
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
