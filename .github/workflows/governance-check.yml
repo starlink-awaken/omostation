@@ -236,8 +236,9 @@ jobs:
         run: |
           # ADR-0379 D3: check-interfaces 从这里移除, 声称由 interfaces-enforce.yml 覆盖;
           # 但那个 workflow 是零信号空 job (ci-check-runner 解析 0 checks), 且其引用的
-          # bin/ssot/check-interfaces.py 从未存在 —— 该能力当前无执行面。
-          # interfaces-enforce.yml 已于 2026-10-28 删除, 缺口见 .github/workflows/README.md。
+          # bin/ssot/check-interfaces.py 从未提交进本仓 —— 能力自 2026-06-06 起无执行面。
+          # interfaces-enforce.yml 已于 2026-10-28 删除; 该能力现由本 workflow 的
+          # ci-check-runner 经 ci-surfaces 登记项 bin-ssot-check-interfaces-py 承接。
           python3 bin/ssot/doc-governance-check.py --scope workspace --no-new-warnings --json
 
   # 2026-08-26: bet-done-transition 拆至独立 workflow bet-done-gate.yml —

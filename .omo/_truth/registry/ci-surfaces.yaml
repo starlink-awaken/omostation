@@ -705,6 +705,19 @@ surfaces:
   - push
   - scheduled
   status: active
+- id: bin-ssot-check-interfaces-py
+  tool: bin/ssot/check-interfaces.py
+  workflow: governance-check.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  - scheduled
+  status: active
+  note: 接口契约表结构检查 —— .omo/standards/interface_contract.md 的模型表由 omo-parser 在运行时
+    解析成 Pydantic 模型, 表坏了模型就坏且静态不可见。该能力自 2026-06-06 起只有悬空引用
+    (scripts/check-interfaces.py 从未提交进本仓); ADR-0379 D3 的移除理由与 2026-10-28 删除的
+    interfaces-enforce.yml 空 job 都没提供执行面 —— 本条是该能力首次真正落地。
 - id: bin-ssot-observability-events-py
   tool: bin/ssot/observability-events.py
   workflow: (none)

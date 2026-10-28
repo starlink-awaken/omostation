@@ -26,13 +26,20 @@
 > `ci-check-runner.py --workflow <self>`，而 runner 只认 ci-surfaces 里
 > `workflow == <name>` 的条目 —— 它们一条都没有（`cross-deps` / `interfaces` 无条目，
 > `port-registry` 的条目挂在 `mof-update.yml` + `also_in`，runner 不认 `also_in`）。
-> 于是每次 push/PR 各起一个 job、跑 ~30s、恒绿、零覆盖。能力均由别处承接：
-> 跨层依赖 → `gac-gate.yml` 的 `check-layers`（`bin/layer-dependency-check.py`）；
-> 端口硬编码 → `mof-update.yml` + `quality.yml` 的 pre-commit hook
-> （`bin/ssot/check-hardcoded-ports.py`）。
-> ⚠️ `interfaces-enforce.yml` 的覆盖缺口见下（ADR-0379 D3 移除了
-> `governance-check.yml` 里的 `check-interfaces`，但替代脚本 `bin/ssot/check-interfaces.py`
-> 从未存在）—— 该能力当前无人执行。
+> 于是每次 push/PR 各起一个 job、跑 ~30s、恒绿、零覆盖。
+>
+> 能力承接：
+> - 跨层依赖 → `gac-gate.yml` 的 `check-layers`（`bin/layer-dependency-check.py`）
+> - 端口硬编码 → `mof-update.yml` + `quality.yml` 的 pre-commit hook
+>   （`bin/ssot/check-hardcoded-ports.py`）
+> - **接口契约 → `governance-check.yml`（`bin/ssot/check-interfaces.py`）** ✅ 已补齐
+>
+> 接口契约的缺口来历：`governance-check.yml` 的注释称 ADR-0379 D3 把 `check-interfaces`
+> 从这里移除、「已由独立 workflow `interfaces-enforce.yml` 覆盖」—— 但那个 workflow 是
+> 空 job，且它引用的 `bin/ssot/check-interfaces.py` **从未提交进本仓**（`git log --all -- '*check-interfaces.py'`
+> 零命中）。该能力自 2026-06-06 起只有悬空引用，被一个恒绿空 job 掩盖至今。
+> `bin/ssot/check-interfaces.py` 是该能力的首次真正实现，注册在
+> `ci-surfaces.yaml` 的 `governance-check.yml` 下。
 | `meta-model-check.yml` | push | MOF meta-model check |
 
 ## Code Quality
