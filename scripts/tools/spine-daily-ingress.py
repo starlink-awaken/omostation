@@ -42,7 +42,6 @@ def _get_buffer_paths() -> tuple[Path, Path]:
     s_root = state_root()
     spine_diff = s_root / ".omo" / "state" / "spine-diff-buffer.jsonl"
     lora_replay = s_root / ".omo" / "state" / "lora-replay-buffer.jsonl"
-    spine_diff.parent.mkdir(parents=True, exist_ok=True)
     return spine_diff, lora_replay
 
 
