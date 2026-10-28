@@ -18,7 +18,6 @@
 |----------|---------|------|
 | `state-goals-enforce.yml` | push + PR | State/goals alignment enforcement |
 | `task-schema-enforce.yml` | push + PR | Task YAML schema enforcement |
-| `constraint-validation.yml` | PR | L0 constraint validation |
 | `config-check.yml` | push | Configuration check |
 
 > 2026-10-28 删除三个**零信号** workflow：`cross-deps-enforce.yml` /
