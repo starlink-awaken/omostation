@@ -5,6 +5,7 @@ on:
     tags:
       - 'v*'
     paths:
+      - 'projects/knowledge/kairon'
       - 'projects/knowledge/kairon/packages/*/pyproject.toml'
   workflow_dispatch:
     inputs:

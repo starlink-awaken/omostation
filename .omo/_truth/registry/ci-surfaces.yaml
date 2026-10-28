@@ -1231,6 +1231,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/aetherforge-ci.yml
+  - projects/aetherforge
   - projects/aetherforge/**
 - workflow: agora-ci.yml
   triggers:
@@ -1239,6 +1240,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/agora-ci.yml
+  - projects/agora
   - projects/agora/**
 - workflow: ai-pr-review.yml
   triggers:
@@ -1298,6 +1300,10 @@ workflow_triggers:
   - bin/ssot/check-agent-skills.py
   - docs/generated/capability-registry.yaml
   - docs/local-compute/**
+  - projects/aetherforge
+  - projects/agora
+  - projects/cockpit
+  - projects/omlxc
   - projects/aetherforge/**
   - projects/agora/etc/bos-services.yaml
   - projects/cockpit/src/cockpit/cli.py
@@ -1311,6 +1317,11 @@ workflow_triggers:
   paths:
   - .github/workflows/ci-python-coverage.yml
   - projects/*/pyproject.toml
+  - projects/aetherforge
+  - projects/bus-foundation
+  - projects/l4-kernel
+  - projects/model-driven
+  - projects/omo
   - projects/aetherforge/**
   - projects/bus-foundation/**
   - projects/l4-kernel/**
@@ -1323,6 +1334,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/cockpit-ci.yml
+  - projects/cockpit
   - projects/cockpit/**
 - workflow: cockpit-ui-ci.yml
   triggers:
@@ -1338,6 +1350,8 @@ workflow_triggers:
   - push
   path_filtered: true
   paths:
+  - projects/agora
+  - projects/knowledge/kairon
   - projects/agora/src/agora-services.json
   - projects/knowledge/kairon/packages/agora/agora-services.json
 - workflow: constraint-validation.yml
@@ -1382,6 +1396,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/ecos-ci.yml
+  - projects/ecos
   - projects/ecos/**
 - workflow: evidence-smoke-gate.yml
   triggers:
@@ -1396,6 +1411,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/family-hub-ci.yml
+  - projects/family-hub
   - projects/family-hub/**
 - workflow: gac-gate.yml
   triggers:
@@ -1439,6 +1455,8 @@ workflow_triggers:
   - projects/*
   - projects/*/pyproject.toml
   - projects/*/src/**
+  - projects/ecos
+  - projects/omo
   - projects/ecos/scripts/contract_gatekeeper.py
   - projects/omo/tests/**
 - workflow: integration.yml
@@ -1449,6 +1467,7 @@ workflow_triggers:
   paths:
   - bin/gac/**
   - projects/*/pyproject.toml
+  - projects/omo
   - projects/omo/**
 - workflow: interfaces-enforce.yml
   triggers:
@@ -1470,6 +1489,7 @@ workflow_triggers:
   - push
   path_filtered: true
   paths:
+  - projects/runtime
   - projects/runtime/protocols/*.md
   - projects/runtime/protocols/*.yaml
 - workflow: metaos-ci.yml
@@ -1479,6 +1499,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/metaos-ci.yml
+  - projects/metaos
   - projects/metaos/**
 - workflow: mof-update.yml
   triggers:
@@ -1492,6 +1513,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/observability-ci.yml
+  - projects/observability
   - projects/observability/**
 - workflow: omlxc-ci.yml
   triggers:
@@ -1500,6 +1522,7 @@ workflow_triggers:
   path_filtered: true
   paths:
   - .github/workflows/omlxc-ci.yml
+  - projects/omlxc
   - projects/omlxc/**
 - workflow: omo-autopilot.yml
   triggers:
@@ -1516,6 +1539,7 @@ workflow_triggers:
   paths:
   - .omo/tasks/planned/**
   - projects/**/pyproject.toml
+  - projects/omo
   - projects/omo/src/omo/omo_*.py
 - workflow: phase-gate-enforce.yml
   triggers:
@@ -1542,6 +1566,7 @@ workflow_triggers:
   - push
   path_filtered: true
   paths:
+  - projects/knowledge/kairon
   - projects/knowledge/kairon/packages/*/pyproject.toml
 - workflow: pyright-sweep.yml
   triggers:
@@ -1555,6 +1580,12 @@ workflow_triggers:
   paths:
   - .github/workflows/quality.yml
   - .pre-commit-config.yaml
+  - projects/aetherforge
+  - projects/agora
+  - projects/cockpit
+  - projects/ecos
+  - projects/omlxc
+  - projects/omo
   - projects/aetherforge/src/**
   - projects/agora/src/**
   - projects/cockpit/src/**

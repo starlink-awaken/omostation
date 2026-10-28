@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
     paths:
+      - 'projects/aetherforge'
+      - 'projects/bus-foundation'
+      - 'projects/l4-kernel'
+      - 'projects/model-driven'
+      - 'projects/omo'
       - 'projects/omo/**'
       - 'projects/model-driven/**'
       - 'projects/l4-kernel/**'
@@ -14,6 +19,11 @@ on:
       - '.github/workflows/ci-python-coverage.yml'
   pull_request:
     paths:
+      - 'projects/aetherforge'
+      - 'projects/bus-foundation'
+      - 'projects/l4-kernel'
+      - 'projects/model-driven'
+      - 'projects/omo'
       - 'projects/omo/**'
       - 'projects/model-driven/**'
       - 'projects/l4-kernel/**'

@@ -4,6 +4,7 @@ on:
     paths:
       - '.omo/tasks/planned/**'
       - 'projects/**/pyproject.toml'
+      - 'projects/omo'
       - 'projects/omo/src/omo/omo_*.py'
   push:
     branches: [main]

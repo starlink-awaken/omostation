@@ -2,10 +2,10 @@ name: MetaOS CI
 on:
   push:
     branches: [main]
-    paths: ['projects/metaos/**', '.github/workflows/metaos-ci.yml']
+    paths: ['projects/metaos', 'projects/metaos/**', '.github/workflows/metaos-ci.yml']
   pull_request:
     branches: [main]
-    paths: ['projects/metaos/**', '.github/workflows/metaos-ci.yml']
+    paths: ['projects/metaos', 'projects/metaos/**', '.github/workflows/metaos-ci.yml']
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
