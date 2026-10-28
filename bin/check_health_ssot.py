@@ -85,8 +85,13 @@ def main() -> int:
     ws = args.workspace.resolve()
     system_yaml = state_file_read(".omo/state/system.yaml", root=ws)
     if not system_yaml.is_file():
-        print(f"⚠️  system.yaml 不存在: {system_yaml}", file=sys.stderr)
-        return 1
+        # 运行态产物 (.gitignore:297/304), 干净检出 / 新 clone 里按构造缺席。
+        # 没有 system.yaml 就没有可校验的 health 一致性 ⇒ 跳过 (与下方"两者皆缺席"分支同义)。
+        print(
+            f"⚠️  SKIP system.yaml 不存在: {system_yaml} "
+            f"(运行态产物, 需要时由 bin/gac/materialize-system-state.py 物化)"
+        )
+        return 0
 
     import yaml
 
@@ -94,6 +99,19 @@ def main() -> int:
     ref = sys_data.get("health_score_ref")
     sys_score = sys_data.get("health_score")
     sys_gen = sys_data.get("health_score_generated_at")
+
+    # 运行态健康数据缺席 (干净检出 / 新 clone / 未跑过 compass_radar 的机器):
+    # health_score 与 health_score_ref 都由 bin/compass_radar.py 在运行时写出, 其引用目标
+    # .omo/state/health.yaml 本身也被 .gitignore:427 忽略 —— 两条被校验的产物都不存在时
+    # 没有可校验的一致性, 跳过而不是失败。
+    # 判据: 只有 health_score_ref 存在却指向坏数据 (缺文件/解析失败/数值不一致/超期) 才判失败;
+    #       两者皆缺席时返回 0, 否则 CI 恒红 —— 而红本身不构成修复。
+    if sys_score is None and not ref:
+        print(
+            f"⚠️  SKIP health 运行态数据缺席 ({system_yaml}): health_score / health_score_ref "
+            f"均由 bin/compass_radar.py 在运行时写出, 无可校验的一致性"
+        )
+        return 0
 
     errors: list[str] = []
     warnings: list[str] = []

@@ -144,8 +144,11 @@ def main() -> int:
 
     path = Path(args.file)
     if not path.exists():
-        print(f"❌ {path} 不存在")
-        return 1
+        # 运行态产物 (gitignore:21 `.omo/_knowledge/*.jsonl`), 由 bin/compass_radar.py 等写者生成。
+        # 干净检出 / 新 clone 里按构造缺席 ⇒ 无数据可报, 不是失败。
+        # 判据：缺席时返回 0（否则 governance-dashboard 的这条在 CI 里恒红, 而红本身不构成修复）。
+        print(f"⚠️  SKIP {path} 不存在 (运行态产物, 由 bin/compass_radar.py 生成)")
+        return 0
 
     entries = parse_entries(path)
     result = analyze(entries, args.days)

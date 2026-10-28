@@ -22,9 +22,12 @@ if str(_LIB_DIR) not in sys.path:
 try:
     from repo_root import canonical_root, code_root, install_root
 except ImportError:
-    canonical_root = lambda: Path("/Users/xiamingxing/Workspace")
-    code_root = lambda: Path("/Users/xiamingxing/Workspace")
-    install_root = lambda: Path.home() / ".local" / "opt" / "omostation"
+    def canonical_root():
+        return Path("/Users/xiamingxing/Workspace")
+    def code_root():
+        return Path("/Users/xiamingxing/Workspace")
+    def install_root():
+        return Path.home() / ".local" / "opt" / "omostation"
 
 
 def scan_launchd_workspace_targets(launchd_dir: Path | None = None) -> dict:
