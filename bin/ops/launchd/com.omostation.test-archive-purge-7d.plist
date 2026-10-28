@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  com.omostation.test-archive-purge-7d.plist — ADR-0466 第三道防线: 七天归档保留期周期巡检
+
+  用途: 销毁 ADR-0466 治下历史单测遗留脏数据的到期归档条目 (每日 02:07)。
+    范围 (与 bin/ops/purge-test-archive-7d.py 一致):
+      1. ~/.local/share/omostation/cards_archive/   (宿主机器级, 与检出根无关)
+      2. .omo/tasks/archived/dispatches_test_archive/  (主仓数据面, 随检出根解析)
+
+  为什么不走 crontab: registry.yaml 是调度 SSOT (ADR-A / ADR-0119 / ADR-0121),
+    crontab 平面是遗留面, 不应再新增条目 (同款结论见
+    com.omostation.zhixing-host-drift.plist)。另: mbp 的 crontab 写入在系统层失败
+    (原样回写返回 Interrupted system call, 惰性注释探针同样失败), 与本作业无关但
+    客观上 crontab 平面在 mbp 不可用。
+
+  执行形态: auto 模式 + retention-days 参数 (值 7)
+    auto 模式     只销毁已过保留期的条目, 未到期者保留
+    retention-days 参数取 7, 显式化保留期。**这是 fail-closed 护栏**: 若检出根回退到
+    旧版脚本 (保留期硬编码为单一批次日期, 已过期), 该参数会令 argparse 报错退出,
+    作业宁可不动也不误删 —— 优于「按过期日期把新归档全销毁」。
+
+  注: 本注释块不得含连续两个半角连字符 (XML 规范禁止, 该序列与本注释的
+    起止定界符同形), 否则 plistlib 解析失败而 plutil/launchd 放过
+    → 被 meta-doctor 静默跳过出 M2 引用校验 (T16-01 C2)。
+
+  安装:
+    cp bin/ops/launchd/com.omostation.test-archive-purge-7d.plist \
+       ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) \
+       ~/Library/LaunchAgents/com.omostation.test-archive-purge-7d.plist
+  卸载:
+    launchctl bootout gui/$(id -u)/com.omostation.test-archive-purge-7d
+  手动触发验证:
+    launchctl kickstart -p gui/$(id -u)/com.omostation.test-archive-purge-7d
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.omostation.test-archive-purge-7d</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>cd /Users/xiamingxing/Workspace &amp;&amp; /opt/homebrew/bin/python3.13 bin/ops/purge-test-archive-7d.py --auto --retention-days 7 &gt;&gt; runtime/cron/purge-test-archive.log 2&gt;&amp;1</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xiamingxing/Workspace</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>2</integer>
+        <key>Minute</key>
+        <integer>7</integer>
+    </dict>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/purge-test-archive.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xiamingxing/Workspace/runtime/cron/purge-test-archive.log</string>
+</dict>
+</plist>

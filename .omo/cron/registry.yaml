@@ -97,6 +97,40 @@ jobs:
     sfop_slot: S
     reconciliation_note: ops check-signals 每日巡检 (每日 06:20, BET-Y1Q4-T16)，已在 crontab -l 运行，补齐登记。
 
+  # ADR-0466 法条 2 第三道防线: 七天归档保留期的**周期巡检**接线。
+  # 2026-10-27 首轮物理销毁 (两机各 79 张) 已完成; 本条让保留期从「一次性事件」
+  # 变成「持续机制」—— 未来任何归档条目落位后, 7 天到期由本作业自动销毁, 不再依赖人工记得跑。
+  #
+  # 平面选 launchd 而非 crontab, 理由有二 (前者是架构性的, 后者是客观故障):
+  #   1. 架构性: registry.yaml 是调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面
+  #      是遗留面, 不应再新增条目 —— 同款结论见 zhixing-host-drift-hourly-active 条目。
+  #   2. 客观故障: mbp 的 crontab 写入在系统层失败 (原样回写返回 Interrupted system call,
+  #      惰性注释探针同样失败; /var/at/tabs 最后修改 2026-10-24, 早于本次接线) ⇒ 该机
+  #      crontab 平面客观不可用。launchd 路径两机均正常。
+  # 槽位 02:07 —— 两机该槽空闲, 且不与任何 */5 类作业重叠。
+  - name: test-archive-purge-7d-daily
+    label: com.omostation.test-archive-purge-7d
+    schedule: "7 2 * * *"
+    command: 'cd "$HOME/Workspace" && /opt/homebrew/bin/python3.13 bin/ops/purge-test-archive-7d.py --auto --retention-days 7 >> runtime/cron/purge-test-archive.log 2>&1'
+    planes: [launchd]
+    reality: installed
+    status: active
+    owner: governance-team
+    sfop_slot: S
+    reconciliation_note: >-
+      ADR-0466 §3 第三道防线的落地接线 (2026-10-28)。此前该工具**无任何调度引用**
+      (注册表 triggers 为空、无 launchd/cron 作业) ⇒ §3 声明的「周期守护巡检」是纸面防线。
+      2026-10-27 首轮保留期到期销毁后, 本条让保留期成为持续机制: 逐条目判龄, 到期即删,
+      未到期保留, 归档目录本身保留 (后续轮次的落位区)。
+      plist 源: bin/ops/launchd/com.omostation.test-archive-purge-7d.plist (仓内自带,
+      两机各装一份到 ~/Library/LaunchAgents/ 并 bootstrap gui/$(id -u))。
+      命令从检出根 ~/Workspace 运行 (非安装位): 派发归档 (.omo/tasks/archived/
+      dispatches_test_archive/) 是**主仓数据面**, 安装位那份是独立 clone 的副本, 删错地方
+      等于没删; 卡片归档 (~/.local/share/omostation/cards_archive/) 是机器级路径, 与根无关。
+      显式带 retention-days 7 是 **fail-closed 护栏**: 旧版脚本 (保留期硬编码为单一批次日期,
+      已过期) 无此参数会 argparse 报错退出 ⇒ 检出根若回退到旧版, 本作业宁可不动也不误删,
+      优于「按过期日期把新归档全销毁」。
+
   # SH-1 daily drift sweep (BET-Y2Q4-SH-1): drift-face-detector daily + auto-pruner
   # 仅 ephemeral + runs 两类自动修, ritual/dashboard 仍 owner 决策.
   # 2026-09-27 核验: `crontab -l` 无任何对应行 → reality: pending 属实, 但原
