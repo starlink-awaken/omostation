@@ -45494,7 +45494,8 @@ bets:
     /Users/xiamingxing/Workspace/bin/plan/bet-ledger.py claim-gc`。后果可测：安装位那份与检出那份逐字节相同，
     从安装位启动的 daemon 实际 cd 进检出树并跑检出的码面。本轮把这三处的根折进脚本自身位置派生（与 resident-role-tick.sh 同一形态），语义逐字不变，并给该禁令配一条有反基线
     + 自证 + 反面的用例。
-  status: in_progress
+  status: done
+  done_at: 2026-10-28
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -45550,15 +45551,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@46bd72d01785bafb1cc176058f0aeaccac07c7b6
+          tests:
+            ref: receipt://docs/reports/2026-10-28-bet-275-lib-wrapper-root-closeout.md
+            sha256: sha256:3de3d24f32f91c4d5ea9327885656e2a9e531bfbb4a2ecc4c20decec1a95df63
+          diff:
+            ref: receipt://docs/reports/2026-10-28-bet-275-lib-wrapper-root-closeout.md
+            sha256: sha256:3de3d24f32f91c4d5ea9327885656e2a9e531bfbb4a2ecc4c20decec1a95df63
+          rollback:
+            ref: receipt://docs/reports/2026-10-28-bet-275-lib-wrapper-root-closeout.md
+            sha256: sha256:3de3d24f32f91c4d5ea9327885656e2a9e531bfbb4a2ecc4c20decec1a95df63
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-28-bet-275-lib-wrapper-root-closeout.md
+            sha256: sha256:3de3d24f32f91c4d5ea9327885656e2a9e531bfbb4a2ecc4c20decec1a95df63
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-28-bet-275-lib-wrapper-root-closeout.md
+            sha256: sha256:3de3d24f32f91c4d5ea9327885656e2a9e531bfbb4a2ecc4c20decec1a95df63
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-275.md
+            sha256: sha256:b633b99daac1dd9a2ea6998e31e95cde3ed4ec4b6da17f370da92ff5c5fa6583
+          cleanup:
+            ref: receipt://docs/reports/2026-10-28-bet-275-lib-wrapper-root-closeout.md
+            sha256: sha256:3de3d24f32f91c4d5ea9327885656e2a9e531bfbb4a2ecc4c20decec1a95df63
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   value_indicator_policy: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-28-bet-275-lib-wrapper-root-self-resolution.md
