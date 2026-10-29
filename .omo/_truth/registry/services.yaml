@@ -1,7 +1,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-07-03
+last-reviewed: 2026-10-29
 ---
 services:
 - id: governance.watch
@@ -6122,7 +6122,7 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist
-  content_digest: sha256:d08c1e0e4be2a20cccd45c5892915a70c86c64e11b8a2ef5c3895b21f71430d3
+  content_digest: sha256:357fa625f7ef8fda919a7123e64605c7210e79d69a2893bba4f356eb43a78c88
   run_at_load: true
   scheduler: launchd
   trigger: interval
@@ -6132,16 +6132,7 @@ services:
     interpreter: /opt/homebrew/bin/python3
     entrypoint: ~/.local/opt/omostation-publisher/bin/panorama/projection-full-refresh.py
     args: []
-  notes: 'BET-Y2Q4-T10-237 有限登记维护；保持 observe-only (generate: false)，config_source
-    仍是本机已安装 plist。本条记录已采用的官方 publisher driver / 180 秒形态；实际 Python
-    解释器参数 -B 位于脚本之前，program.args 不将其误记为脚本参数。实际无 WorkingDirectory，
-    根环境观测为 OMOSTATION_STATE_ROOT=~/Workspace（用户目录简写，仅此说明，不新增可执行根配置）。
-    driver 继续承担既有锁、防重入、remote 校验与安全同步；本次不替换运行属主、不写或重载服务。
-    登记维护责任人为 Root 执行主控 codex-zhixing-controller，依据 Principal 已有委托代决，
-    不是 Principal 本人直接署名或 HumanVerdict；裁定与原六判据处置见
-    docs/reports/2026-10-17-t10-237-driver-ownership-receipt.json。
-    generate:false 会跳过生成及 --check 的逐字节比较，零 drift 不能证明本条或整个 T237 完成；
-    本条不宣称生成器能重产实际 ProgramArguments 或 plist 字节。'
+  notes: 'BET-Y2Q4-T10-237 镜像面收官登记；保持 observe-only (generate: false)，config_source 为本机已安装 plist。最终形态由 Principal（夏明星 xiamingxing）于 2026-10-29 明确署名裁定：采纳官方 publisher driver / 180 秒形态（entrypoint 为 ~/.local/opt/omostation-publisher/bin/panorama/projection-full-refresh.py）。driver 继续承担锁 (revisions/.fullrefresh.lock)、防重入、remote 校验 (starlink-awaken/omostation.git) 与安全同步 (reset --hard origin/main)。盘上环境已于 B4b Batch 5 切道归零，去除临时日期 scratch 路径，绑定 install 代码根与 prod 状态根。结项凭据见 docs/reports/2026-10-29-t10-237-closeout-receipt.json。'
   outputs:
     stdout: ~/.local/log/projection-fullrefresh.log
     stderr: ~/.local/log/projection-fullrefresh.log
