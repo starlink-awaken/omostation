@@ -6,7 +6,7 @@ bet_id: BET-Y2Q4-T10-250
 status: accepted
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-10-13
+last-reviewed: 2026-10-29
 ---
 
 # 写面根钉死门禁 —— 让「新增一处检出根拼法」当场变红
@@ -41,15 +41,26 @@ code/state 双根；`omo_paths` + 9 处 `DEFAULT_LEDGER` + `OMO_PRINCIPAL_ID` �
 > 但拼法收进 SSOT，判据②不再命中）。**门禁管辖面**（`.omo/state` +
 > `runtime`）读数与基线零变化（仍 154 站点 / 144 对）。
 
+> 2026-10-29 第三次复核（ADR-0456 决策 2 / B1 读侧收敛，PR #4966 → `df6b3cc01`）：
+> `bin/ssot/resident-orchestrator-daemon.py` 的 `_pid_file` / `_log_file` / `_wm_path`
+> 与 `bin/ssot/system-health-check.py` 的 `_daemon_watermarks()` 四处，由 import-time
+> `parents[2]` 检出根常量改为调用时刻 `state_root()` 解析，于是
+> **排除面 `.omo/_delivery` 82 → 78**（这四处本就不在门禁管辖面内）。
+> **门禁管辖面**（`.omo/state` + `runtime`）按同一次扫描实测零变化：仍 154 站点 /
+> 144 对 / 95 个文件；其余四桶（161 / 103 / 62 / 51）逐位不变。
+> `tests/unit/test_writeplane_root_pin.py` 的 `SPEC_MARKER_READINGS` 已按实测重签
+> （ISC-1 是「常量 == 当前扫描」的双向相等，不是对本表的历史抄写）。
+> 复核读数出自两棵树各一次：`origin/main` @ `6487b1008` = 82，@ `df6b3cc01` = 78。
+
 | marker | 站点 | 本轮判定 |
 |---|---|---|
 | `.omo/_truth/**` | 161 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
 | `.omo/state/**` | 103 | **纳入** 门禁 |
-| `.omo/_delivery/**` | 82 | 排除 —— 全机 symlink 桥（`delivery_anchor.py:87`），AGENTS.md §7「gitignore ≠ 本地化」；改道它等于改协调面语义 |
+| `.omo/_delivery/**` | 78 | 排除 —— 全机 symlink 桥（`delivery_anchor.py:87`），AGENTS.md §7「gitignore ≠ 本地化」；改道它等于改协调面语义 |
 | `.omo/_knowledge/**` | 62 | 排除 —— 署名文档/历史面，随检出 |
 | `runtime/**` | 51 | **纳入** 门禁 |
 
-纳入部分 = **154 个行级站点 / 144 个 (文件, 拼出的整条相对路径) 去重对 / 95 个文件**（全表 461 站点）。
+纳入部分 = **154 个行级站点 / 144 个 (文件, 拼出的整条相对路径) 去重对 / 95 个文件**（全表 455 站点 —— 2026-10-29 第三次复核实测，与 §1 表逐桶相加一致；原文 461 是 `kos` 桶清零前的旧值，且当时按表相加得 462，差 1 处未复算出处，如实留记不代答）。
 与既有 `tests/unit/test_system_yaml_write_plane.py` 的重叠 = **1 处**
 （`bin/gac/architecture-check.py:47` 的 `.omo/state/system.yaml`）—— 该文件在邻居门禁里已被判为
 死码（`CORE_DOCS` 常量零消费者，T10-220 决定不为它造判据），本面仍如实登记它一次：
