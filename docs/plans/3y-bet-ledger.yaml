@@ -35505,7 +35505,8 @@ bets:
   title: 口径归一 — 日历 / 台账 / 目标覆盖三读数分离并在 Agent Brief 显式并列
   track: T1-TRUTH
   window: Y2Q4
-  status: pending
+  status: done
+  done_at: 2026-10-29
   priority: P0
   appetite: 2 days
   risk_level: L1
@@ -35562,17 +35563,41 @@ bets:
       0
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@758ea5ec885061c69a8cb44973cdf77ee54c617b
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-05.md
+            sha256: sha256:6a6b921ba0d3de92b18a185e8b3832a9710ed94355c3f888fc27b895f8965151
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-05.md
+            sha256: sha256:6a6b921ba0d3de92b18a185e8b3832a9710ed94355c3f888fc27b895f8965151
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-05.md
+            sha256: sha256:6a6b921ba0d3de92b18a185e8b3832a9710ed94355c3f888fc27b895f8965151
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-05.md
+            sha256: sha256:6a6b921ba0d3de92b18a185e8b3832a9710ed94355c3f888fc27b895f8965151
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-05.md
+            sha256: sha256:6a6b921ba0d3de92b18a185e8b3832a9710ed94355c3f888fc27b895f8965151
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-05.md
+            sha256: sha256:6a6b921ba0d3de92b18a185e8b3832a9710ed94355c3f888fc27b895f8965151
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T1-05.md
+            sha256: sha256:6a6b921ba0d3de92b18a185e8b3832a9710ed94355c3f888fc27b895f8965151
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: 读数出处解耦，去除 TTL 假刷时间戳假绿；真实数据年龄通过 planning_probe 持续可测。
   done_when:
   - bet-ledger.py list --json 可被机器消费：exit 0、合法 JSON、全部日期字段为 ISO-8601 字符串
   - 周报 docs/operations/repository-health.md 的 BET 台账规模 段是台账真数（不再是 n/a），且与同一次 list
