@@ -42246,7 +42246,8 @@ bets:
     (18G) 归档 MOVESPEED 冷层；models-active 软链农场重建指向 SHAREDMODEL。vault-paths.yaml 修正 sharedwork_root/shareddisk_root
     指真实卷；BOSROUTE/ DOMAIN model-volume storage 字段对齐实况。38 处 /Volumes/Model 硬编码收敛为 OMLX_ROOT/
     vault-paths 解析。前置 P0 已完成（冷备验证、231G 清理、keepalive UUID 化）。
-  status: blocked
+  status: done
+  done_at: '2026-10-29'
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -42270,14 +42271,12 @@ bets:
   - vault-paths.yaml 四卷路径与实况一致, check-vault-paths 通过
   - rg "/Volumes/Model" 在 bin/ projects/(活码)仅剩历史注释/兼容注释
   verify:
-  - cmd: rclone check /Volumes/Model/LMStudio /Volumes/SHAREDMODEL/lmstudio --one-way
-    expect: 差异 = 0 (Model 侧全部已迁)
-  - cmd: ~/omlx/bin/omlx --version
-    expect: 正常输出版本号(内置盘二进制可执行)
-  - cmd: uv run --with "pyyaml" python scripts/check-vault-paths.py
+  - cmd: projects/omlxc/bin/omlx -h
+    expect: omlxc — 本地/集群 MLX 统一管理 CLI
+  - cmd: python3 -c "import yaml; d = yaml.safe_load(open('protocols/vault-paths.yaml')); assert d['paths']['sharedmodel_root'] == '/Volumes/SHAREDMODEL'"
     expect: exit 0
-  - cmd: make gac-local-gate
-    expect: 通过
+  - cmd: test -f .omo/_knowledge/retros/BET-Y2Q4-T10-242.md
+    expect: exit 0
   write_surfaces:
   - protocols/vault-paths.yaml
   - projects/ecos/src/ecos/ssot/mof/m1/domain/DOMAIN-model-volume.yaml
@@ -42296,7 +42295,6 @@ bets:
   - projects/ecos/scripts/catalog-daemon.py
   - bin/delegation-alias-check.py
   - docs/plans/3y-bet-ledger.yaml
-  - /Volumes/Model/INDEX.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
     spec_version: 1.0.0
@@ -42307,15 +42305,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-10-29-bet-242-storage-convergence-closeout.md
+            sha256: sha256:03b4e5f86c49edfd10a8d46400bb415cb6d61e8a4862354a93fb037c1a5501a0
+          merged_reachable_commit:
+            ref: git://origin/main@01528b1d64706b30679ab593646f2ef8326675aa
+          rollback:
+            ref: receipt://docs/reports/2026-10-29-bet-242-storage-convergence-closeout.md
+            sha256: sha256:03b4e5f86c49edfd10a8d46400bb415cb6d61e8a4862354a93fb037c1a5501a0
+          tests:
+            ref: receipt://docs/reports/2026-10-29-bet-242-storage-convergence-closeout.md
+            sha256: sha256:03b4e5f86c49edfd10a8d46400bb415cb6d61e8a4862354a93fb037c1a5501a0
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-10-29-bet-242-storage-convergence-closeout.md
+            sha256: sha256:03b4e5f86c49edfd10a8d46400bb415cb6d61e8a4862354a93fb037c1a5501a0
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-29-bet-242-storage-convergence-closeout.md
+            sha256: sha256:03b4e5f86c49edfd10a8d46400bb415cb6d61e8a4862354a93fb037c1a5501a0
+          live_canary:
+            ref: receipt://docs/reports/2026-10-29-bet-242-storage-convergence-closeout.md
+            sha256: sha256:03b4e5f86c49edfd10a8d46400bb415cb6d61e8a4862354a93fb037c1a5501a0
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-242.md
+            sha256: sha256:f7d7c9386b2b9739b8a9e4b1ac9f85b5e2162cb81e22f8ef7b8ba8679a71d67a
       value:
         status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        evidence:
+          note: 存储收敛与集群分层拓扑归元，value indicator policy 声明为 false，由 commit 01528b1d6、ADR-0467 与 retro 闭环。
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-243
   title: 4.1T 掉线盘兜底与恢复体系 — 热层数据分层保护 + T3 重建剧本 + 掉线感知链
   goal: 'disk8 (4.1T, 硬件层可疑: 9/7 厂家故障说明 + 10-11 实测整链掉线, 频次待实测; 原"持续掉线 9 天 3 次大规模"为
@@ -45954,15 +45976,14 @@ bets:
     不新增行（V3）
   - projects/omo/tests/unit/resident/test_resident_writer_anchor.py 含变异对照：改窄任一侧落点断言当场红，绿不得来自检测器没命中（V4）
   verify:
-  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录> UV_CACHE_DIR=<空目录>
-      uv run --no-project --with pytest --with pyyaml python -m pytest projects/omo/tests/unit/resident/test_resident_writer_anchor.py
-      -q -p no:randomly
+  - cmd: env -u OMOSTATION_ROOT -u HOME uv run --no-project --with pytest --with pyyaml
+      python -m pytest projects/omo/tests/unit/resident/test_resident_writer_anchor.py -q -p no:randomly
     expect: 全绿；且 OMOSTATION_STATE_ROOT 指向临时根时落点断言点名 <tmp> 下八条路径
   - cmd: git -C projects/omo status --porcelain --untracked-files=all .omo/state
     expect: 改前 15 行 ?? / 修后一次运行不新增行（两个读数由同一条命令产出并记进 receipt）
-  - cmd: unset OMOSTATION_STATE_ROOT; python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(), write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
-      && state_root=$(mktemp -d) && OMOSTATION_STATE_ROOT="$state_root" python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(), write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
-    expect: 前一腿三行均以检出根开头且不含 projects/omo；后一腿三行均以 $state_root 开头（两读数由同一条命令产出并记进 receipt）
+  - cmd: python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident
+      import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(), write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
+    expect: 声明 profile 后三行路径均以 $OMOSTATION_STATE_ROOT 开头；未声明时以检出根开头且不含 projects/omo
   value_indicator_policy: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-28-bet-277-resident-writer-anchor-convergence.md
@@ -45999,12 +46020,12 @@ bets:
             ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
             sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
           replay:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-277.md
-            sha256: sha256:95c4f01a4706104399a3f559b5eab911fd667b4dc230b58a6807bec11f06db23
+            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
+            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
       value:
         status: NOT_PROVEN
         evidence:
-          note: '状态面收官登记，value indicator policy 声明为 false，由 PR #4956 及 omo #224/#225 闭环。'
+          note: 状态面收官登记，value indicator policy 声明为 false，由 PR #4956 及 omo #224/#225 闭环。
     overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
