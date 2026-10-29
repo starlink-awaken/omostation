@@ -45920,7 +45920,8 @@ bets:
     解析的读者读不到）。write_path() 缝本身有效（healer 冻结路径经缝正确重定位到 state 根、解析无副作用），这 8 处是绕过缝。对 B4b
     的因果：两棵 clone（~/.local/opt/omostation 与 ~/Workspace）各带一份代码内状态树，运行时代码一改道就分叉数据，故本轮是
     B4b 批次 2+ 的正确性前置。
-  status: in_progress
+  status: done
+  done_at: '2026-10-29'
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -45953,15 +45954,15 @@ bets:
     不新增行（V3）
   - projects/omo/tests/unit/resident/test_resident_writer_anchor.py 含变异对照：改窄任一侧落点断言当场红，绿不得来自检测器没命中（V4）
   verify:
-  - cmd: env -u OMOSTATION_ROOT HOME=<空> uv run --no-project --with pytest --with pyyaml
+  - cmd: env -u OMOSTATION_ROOT -u HOME uv run --no-project --with pytest --with pyyaml
       python -m pytest projects/omo/tests/unit/resident/test_resident_writer_anchor.py -q -p no:randomly
     expect: 全绿；且 OMOSTATION_STATE_ROOT 指向临时根时落点断言点名 <tmp> 下八条路径
   - cmd: git -C projects/omo status --porcelain --untracked-files=all .omo/state
     expect: 改前 15 行 ?? / 修后一次运行不新增行（两个读数由同一条命令产出并记进 receipt）
   - cmd: python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident
-      import cell_state,memory_pipeline,replay;print(cell_state.STATE_DIR, memory_pipeline.MEMORY_DIR,
-      replay.REPLAY_DIR)"
+      import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(), write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
     expect: 声明 profile 后三行路径均以 $OMOSTATION_STATE_ROOT 开头；未声明时以检出根开头且不含 projects/omo
+  value_indicator_policy: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-28-bet-277-resident-writer-anchor-convergence.md
     spec_version: 1.0.0
@@ -45971,15 +45972,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
+            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
+          merged_reachable_commit:
+            ref: git://origin/main@aaa89b48d369c328a571b8774e03ef891d0f4791
+          rollback:
+            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
+            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
+          tests:
+            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
+            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
+            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
+            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
+          live_canary:
+            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
+            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
+          replay:
+            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
+            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
       value:
         status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        evidence:
+          note: 状态面收官登记，value indicator policy 声明为 false，由 PR #4956 及 omo #224/#225 闭环。
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
