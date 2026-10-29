@@ -473,6 +473,7 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 - **未初始化的子模块路径上 `git -C <sub>` 会静默向上解析到父仓（2026-10-29 实证，#4959）**：`git -C projects/l4-kernel checkout --detach origin/main` 在**子模块未 init 的 worktree** 里**不报错** —— git 把 `<sub>` 当普通目录、向上找到父仓根，于是 `checkout` / `reset` / `clean` / `checkout -b` 全部落在**根仓**上。实测后果：根仓 HEAD 被切成 detached `origin/main`，随后的 `git commit` 提交到**游离 HEAD**，分支 ref 仍停在原处 ⇒ `git push origin <branch>` 推的是**旧 commit**，`gh pr create` 报 `No commits between main and <branch>`（而 `git log --oneline -1` 与 `git status` 看着完全正常、工作树也是对的，只有 `git rev-parse <branch>` 暴露分支没动）。**判据**：`git -C <path> rev-parse --show-toplevel` 必须**等于 `<path>` 本身** —— 子模块未 init 时它返回父仓根（实测返回 worktree 根，而非 `projects/l4-kernel`）。**纪律**：上面那条 gitlink 纪律里的 `git -C projects/<sub> checkout origin/main` **只在已 init 的检出里成立**（主仓检出 `/Users/xiamingxing/Workspace` 永远满足）；在部分检出的 worktree 里先 `git submodule update --init <path>`，否则改用 `git ls-tree` + 显式 gitlink 写法。
 - **main 可能是「绿但已过期」（2026-10-29 omlxc pip-audit 实证）**：安全告警（CVE）晚于 main 上次 CI 运行时，main 显示绿但**任何重跑 CI 的 PR 都会红** —— 这不是 PR 的问题，是 main 自己欠债。纪律：PR CI 红在安全扫描步时，先查 main 上次成功运行的时间 vs 告警发布日期；修 main（如 bump 依赖）而不是让 PR 背锅。
 - **子仓 PR 合并后根 gitlink 立即漂移（2026-10-29 实证）**：在子仓（如 omlxc）合并 PR 后，根仓 `projects/<sub>` 的 gitlink 立刻落后于子仓 main —— 若不当轮 bump，次日 `submodule-freshness-gatekeeper` 的 schedule run 就会报漂移。纪律：处理子仓 open PR 的最后一环是**同轮 bump 根 gitlink**（`git -C projects/<sub> checkout origin/main && git add projects/<sub>`），并跑 `submodule-reachability-gate.py --source worktree --fetch` 验证。
+- **gbrain 的测试只能用 `bun run test`（分片并行），裸 `bun test` 会造出上百个假失败（2026-10-29 实测）**：本仓用例**不隔离跨文件全局态** —— `globalThis.fetch` 的 mock、gateway 配置、embed transport 单例都是模块级全局，`bun test` 把全部文件跑在**同一个进程**里就会互相污染。实测同一棵检出：单进程全量 **195 个失败**，而`bash scripts/run-unit-parallel.sh --shards 4`（N 个进程、hash 分片）与 CI 的`scripts/test-shard.sh N 4` 全绿；把任一「失败」文件单独跑也全绿（实测 `test/ai/` 26 个文件 286/286）。**污染是负载相关的** —— 同一份代码两次单进程全量跑出 29 与 195 两种读数，所以**别拿单进程读数当回归信号**。**纪律**：① 验证 gbrain 改动一律走分片 runner；② `*.serial.test.ts` 必须落在分片后的串行段；③ 文档里写 `bun test` 的地方（本文件 §8 与 `projects/knowledge/gbrain/CLAUDE.md`）都已改成 `bun run test` —— 新写文档时别再退回裸 `bun test`。
 
 ---
 
@@ -483,7 +484,7 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 | Documentation only | `make gac-local-gate` and diff review |
 | Python code | Targeted `uv run pytest` |
 | kairon | `make test-diff` from `projects/knowledge/kairon` |
-| gbrain | `bun test` |
+| gbrain | `bun run test` from `projects/knowledge/gbrain`（分片并行 runner） |
 | Cross-project | Targeted tests on every touched consumer |
 
 If a test cannot run, report why and what risk remains.
