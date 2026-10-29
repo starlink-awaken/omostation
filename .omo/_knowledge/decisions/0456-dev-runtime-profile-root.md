@@ -385,6 +385,28 @@ state 根"成立 —— 一旦有人把它改成 `mkdir + 写子集`，读侧会
 > `.omo/_delivery/evidence-smoke`、`.omo/_knowledge/sediment`、`.omo/debt/dashboard` 等）
 > ⇒ **全部只存在于检出根，状态根下不存在** ⇒ 这些写者尚未切道，门禁读检出根是对的，
 > 不属同类错位。本次错位是**唯一**一处：daemon 水位是唯一已经切到状态根、而读侧未跟上的面。
+>
+> **lane 登记（2026-10-29 补）**：本段登记属 `governance_state` lane，而修复本体
+> （`bin/gac/check-resident-status.py` + `tests/unit/gac/test_check_resident_status.py`）属
+> `governance_code` lane。按 `docs/superpowers/specs/2026-09-26-dev-runtime-profile-root.md`
+> §验收「每个 staged set 一个 lane」与 `bin/change-lane-check.py` 的硬隔离
+> （`governance_state` 与多 lane 组合即拒），二者**必须分开交付**。
+>
+> **本仓实测的装置缺口（须登记，否则下一个人会重犯）**：
+> - `bin/change-lane-check.py` 的 `PUSH_RANGE` 分支（按本次 push 的 commit 范围查 lane）
+>   在 `.githooks/` 里**没有任何导出点** ⇒ 该机制未接线（与
+>   `docs/reports/2026-10-27-bet-273-agent-brief-call-time-write-root-closeout.md` §6
+>   记录的事实一致）。
+> - CI 的 `gac-local-gate --strict` 走 `--scope staged`（默认），而干净检出里**没有 staged
+>   文件** ⇒ lane 检查读到空集（实测 `PASS (0 files, lanes=-)`）⇒ **CI 侧 lane 隔离形同
+>   虚设**，任何 PR 都能自由混合 lane。
+> - 后果：#4976 把 `governance_code` 与 `governance_state` 混在同一个 squash commit 里
+>   合入 main，**没有任何尺拦住**（近 12 个 merge commit 中混 lane 数为 0，本条是唯一例外）。
+>
+> **处置**：本段以**独立 `governance_state` 提交**补记，构成对 #4976 的 lane 登记修正；
+> 代码修复本体不依赖本段内容（判据行为由 `tests/unit/gac/test_check_resident_status.py`
+> 9 例钉住，不解析本文件）。CI 侧 lane 检查空转这一缺口属装置接线面，需单独授权面处理
+> （接线 `PUSH_RANGE` 导出点 或 让 CI 以 `--scope files` 跑 lane 检查），不在本条范围。
 
 经上述实证，本 ADR 核心目标全部达成，正式转为 **ACCEPTED** 权威技术基准。
 
