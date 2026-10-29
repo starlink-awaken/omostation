@@ -136,7 +136,11 @@ def check_daemon_watermark() -> tuple[bool, str]:
     # 时回落检出根 —— 逐字节复现切道前的历史落点。
     def _wm_for(role: str) -> Path | None:
         root = roots.get(role) if roots else None
-        base = (root or REPO) / ".omo" / "_delivery" / "resident-orchestrator" / "watermarks"
+        # 根一律经 Path() 归一: root 来自 YAML (str), REPO 可能是 Path 也可能是 str
+        # (测试以 str 注入), 直接拼接会在 str 上炸 TypeError —— 而那正是判据该报错的
+        # 时刻, 不能让它变成崩溃。
+        base_root = Path(root) if root else Path(REPO)
+        base = base_root / ".omo" / "_delivery" / "resident-orchestrator" / "watermarks"
         candidate = base / f"{role}.json"
         return candidate if candidate.is_file() else None
 
