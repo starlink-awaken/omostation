@@ -172,3 +172,15 @@ def test_shadow_segment_never_blocks_the_gate() -> None:
     ld = res["launchd"]
     assert ld["mode"] == "shadow"
     assert ld["blocks_gate"] is False
+
+
+def test_launchd_bidirectional_drift_structure() -> None:
+    """T16-01: 校验 launchd 平面双向差集完整性 (missing_installed 与 undeclared_installed)."""
+    res = sc.check_drift()
+    ld = res["launchd"]
+    assert "missing_installed_count" in ld
+    assert "missing_installed" in ld
+    assert "undeclared_installed_count" in ld
+    assert "undeclared_installed_sample" in ld
+    assert ld["missing_installed_count"] == 0, f"所有 active 登记均应已安装: {ld['missing_installed']}"
+

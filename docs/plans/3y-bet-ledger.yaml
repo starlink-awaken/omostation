@@ -38010,7 +38010,7 @@ bets:
   title: launchd 平面漂移门 — 补齐登记↔安装校验并三段式收敛 27 条未声明存量
   track: T16-DRIFT-GUARD
   window: Y2Q4
-  status: pending
+  status: done
   priority: P1
   appetite: 1 week
   risk_level: L1
@@ -38055,19 +38055,44 @@ bets:
     expect: 解析失败者被报告而非静默跳过（当前基线 3 例）
   - cmd: python3 bin/ssot/adr-number-check.py
     expect: OK，latest=0457
+  done_at: '2026-10-29'
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@30a35661d340316383d9cac790a36c8f4f16bed4
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-01.md
+            sha256: sha256:bc67c701b464c882e51f88c7a5fb884a1445b87d8aa6641d84c790c16637fa38
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-01.md
+            sha256: sha256:bc67c701b464c882e51f88c7a5fb884a1445b87d8aa6641d84c790c16637fa38
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-01.md
+            sha256: sha256:bc67c701b464c882e51f88c7a5fb884a1445b87d8aa6641d84c790c16637fa38
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-01.md
+            sha256: sha256:bc67c701b464c882e51f88c7a5fb884a1445b87d8aa6641d84c790c16637fa38
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-01.md
+            sha256: sha256:bc67c701b464c882e51f88c7a5fb884a1445b87d8aa6641d84c790c16637fa38
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-01.md
+            sha256: sha256:bc67c701b464c882e51f88c7a5fb884a1445b87d8aa6641d84c790c16637fa38
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-01.md
+            sha256: sha256:bc67c701b464c882e51f88c7a5fb884a1445b87d8aa6641d84c790c16637fa38
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: 本单为只读观测 shadow 阶段，value indicator policy 声明为 false，待 warning/fail 阶段测算漂移捕获率。
   done_when:
   - check_drift() 含 launchd 分支，双向差集（登记有安装无 / 安装有登记无）可复算
   - --generate launchd 不再静默无操作，rc=0 时必有非空 JSON

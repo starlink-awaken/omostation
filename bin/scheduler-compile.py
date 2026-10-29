@@ -151,13 +151,18 @@ def check_launchd_plane(registered):
         explicit = j.get("label")
         reg_labels.add(str(explicit) if explicit else f"com.omostation.{j['name']}")
     matched = {lbl for lbl in reg_labels if lbl in installed}
+    missing_installed = sorted(reg_labels - installed)
+    undeclared_installed = sorted(installed - reg_labels)
 
     return {
         "mode": "shadow",
         "blocks_gate": False,
         "registered_count": len(reg_entries),
         "installed_count": len(installed),
-        "undeclared_installed_count": len(installed - reg_labels),
+        "missing_installed_count": len(missing_installed),
+        "missing_installed": missing_installed,
+        "undeclared_installed_count": len(undeclared_installed),
+        "undeclared_installed_sample": undeclared_installed[:15],
         "label_match": {
             "matched": len(matched),
             "registered": len(reg_labels),
@@ -168,7 +173,6 @@ def check_launchd_plane(registered):
         },
         "unparseable_plists": unparseable,
         "dead_targets": dead_targets,
-        "undeclared_installed_sample": sorted(installed - reg_labels)[:15],
     }
 
 
