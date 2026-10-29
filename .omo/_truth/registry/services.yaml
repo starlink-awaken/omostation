@@ -417,7 +417,7 @@ services:
     endpoint: http://localhost:9290/health
     max_stale_hours: 24
 - id: omo.sync_daemon
-  enabled: true
+  enabled: false
   scheduler: launchd
   trigger: interval
   interval_sec: 1800
@@ -440,7 +440,7 @@ services:
   liveness:
     signal: .omo/state/system.yaml::governance_feedback_last_run
     max_stale_hours: 24
-  notes: OMO sync daemon — 30min tick, audit→history→sync (dry-run), 只读
+  notes: 'OMO sync daemon (sunset) — 历史 L4 守护进程，已被 com.omostation.omo-state-sync 完整承接'
   depends_on: []
 - id: resident.orchestrator
   enabled: false
