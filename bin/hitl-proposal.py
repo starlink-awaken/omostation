@@ -20,9 +20,17 @@ from typing import Any
 
 import yaml
 
+# ADR-0456 B1 读侧锚定 —— 台账属于「读仓内文件」，根是被本脚本所在那棵检出，不是进程 CWD。
+# 修前 `Path("docs/plans/3y-bet-ledger.yaml")` 随 CWD 解析：在 /tmp 或 CI 干净树里调用时
+# 台账不存在 ⇒ check_human_gate_needed() 返回 False ⇒ HITL 审批步静默 fail-open
+# （判据 tests/unit/test_hitl_ledger_read_anchor.py）。
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from repo_root import code_root  # noqa: E402
+
 PROPOSALS_DIR = Path(os.environ.get("HITL_PROPOSALS_DIR", ".omo/_knowledge/hitl-proposals"))
 DEFAULT_TTL_HOURS = 24
 SCHEMA_VERSION = "hitl-proposal/v1"
+LEDGER_RELATIVE_PATH = "docs/plans/3y-bet-ledger.yaml"
 
 # v1.1: distributed lock backend
 LOCK_BACKEND = os.environ.get("HITL_LOCK_BACKEND", "fcntl")
@@ -255,12 +263,17 @@ def wait_for_decision(
         time.sleep(poll_interval)
 
 
+def _ledger_path() -> Path:
+    """调用时刻解析台账路径：锚 code_root()，不锚进程 CWD。"""
+    return code_root() / LEDGER_RELATIVE_PATH
+
+
 def check_human_gate_needed(bet_id: str) -> bool:
     """Check if a BET requires human-in-the-loop approval.
 
     Reads BET definition from bet-ledger to determine if human_gate is set.
     """
-    ledger_path = Path("docs/plans/3y-bet-ledger.yaml")
+    ledger_path = _ledger_path()
     if not ledger_path.exists():
         return False
 
