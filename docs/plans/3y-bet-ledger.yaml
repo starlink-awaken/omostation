@@ -41670,7 +41670,8 @@ bets:
     ⇒ 真实形状是「双根契约在机器级进程里被部分采用、部分绕过」，不是「多出第三个根」。 与 G8 的关系: G8 是「有声明、无实体」，这条是「有实体、实体说的不是声明」，两面合起来才是
     launchd 现实面的完整失败模式，所以不并成一条。 本轮不修的理由不是省事: 判哪一侧是真值要问 panorama/dashboard 那条线的作者，改注册表等于替别人裁定;
     重装 plist 是机器级写操作且落在 B4b 批次 2+ 的逐批授权面上; 削弱该检查让门禁回绿就是把安全网改窄。 判据与全部读数: `docs/superpowers/specs/2026-10-07-launchd-label-collapsed-to-inner-step.md`。'
-  status: pending
+  status: done
+  done_at: '2026-10-29'
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -41739,15 +41740,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-237.md
+            sha256: sha256:709663a413bf6d38df4da33a4353fba3a2878a552fdba1114f85077657a48e9f
+          merged_reachable_commit:
+            ref: git://origin/main@03211176f6a82e9b8137b18b09a9dedc9c9f8bec
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-237.md
+            sha256: sha256:709663a413bf6d38df4da33a4353fba3a2878a552fdba1114f85077657a48e9f
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-237.md
+            sha256: sha256:709663a413bf6d38df4da33a4353fba3a2878a552fdba1114f85077657a48e9f
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-237.md
+            sha256: sha256:709663a413bf6d38df4da33a4353fba3a2878a552fdba1114f85077657a48e9f
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-237.md
+            sha256: sha256:709663a413bf6d38df4da33a4353fba3a2878a552fdba1114f85077657a48e9f
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-237.md
+            sha256: sha256:709663a413bf6d38df4da33a4353fba3a2878a552fdba1114f85077657a48e9f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-237.md
+            sha256: sha256:709663a413bf6d38df4da33a4353fba3a2878a552fdba1114f85077657a48e9f
       value:
         status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        evidence:
+          note: 镜像面收官登记，value indicator policy 声明为 false，由 Principal 直接署名裁定闭环。
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-238
   title: ADR-0456 B5 残留 —— evidence-freshness 读侧根分裂把「首跑必绿」放大成「每跑必绿」，且生成支路从不比分数
   goal: 'T10-232 §5 与 T10-214 retro #:12 各自记过这条门禁的一半，本 BET 把两半合实。实测（2026-10-09，同一棵
