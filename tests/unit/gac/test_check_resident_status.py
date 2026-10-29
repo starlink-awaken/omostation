@@ -177,3 +177,44 @@ def test_real_stall_is_reported_even_when_checkout_root_looks_fresh(tmp_path, mo
     ok, detail = mod.check_daemon_watermark()
     assert not ok, detail
     assert "degraded" in detail
+
+def test_repo_root_injected_as_str_does_not_crash(tmp_path, monkeypatch):
+    """REPO 被注入为 str 时不得崩 (TypeError) —— 判据该报结果, 而不是抛异常。
+
+    根一律经 Path() 归一: root 来自 YAML 是 str, REPO 可能是 Path 也可能是 str。
+    """
+    state_root = tmp_path / "state"
+    _write_watermark(state_root, 5)
+
+    registry = tmp_path / "services.yaml"
+    registry.write_text(_services_yaml(state_root), encoding="utf-8")
+
+    mod = _load()
+    monkeypatch.setattr(mod, "SERVICES_REGISTRY", registry)
+    monkeypatch.setattr(mod, "REPO", str(tmp_path / "checkout"))
+
+    ok, detail = mod.check_daemon_watermark()
+    assert ok, detail
+
+
+def test_declared_state_root_is_read_even_when_checkout_has_frozen_copy(tmp_path, monkeypatch):
+    """切道后检出根留有冻结残留 (无符号链接兜底) 时, 仍须读声明根的活水位。
+
+    这是 mbp 侧手工建的符号链接一旦消失就会出现的形状 —— 门禁不得因此退回
+    检出根那份陈旧水位而误报 degraded。
+    """
+    state_root = tmp_path / "state"
+    _write_watermark(state_root, 5)
+    checkout = tmp_path / "checkout"
+    _write_watermark(checkout, 7200)
+
+    registry = tmp_path / "services.yaml"
+    registry.write_text(_services_yaml(state_root), encoding="utf-8")
+
+    mod = _load()
+    monkeypatch.setattr(mod, "SERVICES_REGISTRY", registry)
+    monkeypatch.setattr(mod, "REPO", checkout)
+
+    ok, detail = mod.check_daemon_watermark()
+    assert ok, detail
+    assert "degraded" not in detail
