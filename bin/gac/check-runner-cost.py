@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-"""CR-CI-RUNNER-COST: GitHub-hosted runner 成本守门 (blocking).
+"""CR-CI-RUNNER-COST: GitHub-hosted runner 付费 OS 守门 (blocking).
 
-背景
-----
-GitHub 对 **public 仓库**的标准托管 runner 免费且无分钟上限；但 **private 仓库**
-按量计费，且单价按 OS 分级（2026 价：Linux 1x / Windows 2x / macOS 10x）。
-一条未经审视的 `runs-on: macos-latest` 落在私有仓上就是 10 倍单价 ——
-而「加一条 macOS 腿验证可移植性」是零成本直觉、有成本后果的动作。
+这道门守的是**覆盖增量**，不是账单 —— 判据不随仓的可见性变化：
+
+* 一条 macOS / Windows 腿必须覆盖**默认 OS 腿覆盖不到的东西**
+  （例：launchd 仅在 darwin 存在；darwin-arm64 二进制只能在 macOS 编译）。
+* 「零增量覆盖」的腿是纯浪费：它增加排队时间、flake 面与维护成本，却不换来
+  任何 Linux 腿拿不到的信号。omlxc 删掉自己的 macOS 腿就是这个理由 ——
+  该条注释写的是「零增量覆盖 —— 删」，**与费用无关**。
+
+成本是**次要**理由，且只在 private 仓上成立。GitHub 对 public 仓的标准托管
+runner 免费且无分钟上限（含 macOS）；private 仓按量计费、单价按 OS 分级
+（Linux 1x / Windows 2x / macOS 10x）。本仓组当前**全部是 public 仓**
+⇒ 加一条 macOS 腿不花钱，但上面的覆盖判据仍然成立。
+
+⇒ 别因为「public 免费」把这道门当冗余删掉：它拦的不是账单，是零增量的腿。
 
 本检查扫描仓内（含子模块检出）的 workflow，把 macOS / Windows 的
 GitHub-hosted runner 用法与**显式允许清单**对拍：
@@ -18,7 +26,9 @@ self-hosted runner 免费，不纳入本检查。
 
 判据出处
 --------
-GitHub Actions 计费（public 免费 / private 按量；macOS 10x、Windows 2x）。
+覆盖增量判据：见上（不随仓的可见性变化）。
+成本口径（次要，仅 private 仓）：GitHub Actions 计费 —— public 免费 / private 按量；
+macOS 10x、Windows 2x、Linux 1x。
 清单口径：`.omo/_truth/registry/ci-surfaces.yaml` 登记本工具（CR-CI-RUNNER-COST）。
 
 用法

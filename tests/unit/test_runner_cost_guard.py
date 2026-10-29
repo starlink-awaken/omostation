@@ -6,8 +6,10 @@
 2. **允许清单双向对拍** —— 实测付费 OS 用法集合 == ALLOWED：漏一名红、留死名也红；
 3. **理由指向真实文件** —— 每条 ALLOWED 的 workflow 路径必须真实存在。
 
-背景：macOS 10x / Windows 2x 单价（Linux 1x）。public 仓标准 runner 免费，
-private 仓按量 —— 一条未登记的 `runs-on: macos-latest` 在私有仓上就是 10 倍单价。
+背景：这道门守的是**覆盖增量**，不是账单 —— 一条 macOS/Windows 腿必须覆盖默认 OS 腿
+拿不到的东西（launchd 仅 darwin、darwin-arm64 二进制只能 macOS 编译），零增量覆盖的腿
+是纯浪费。成本是次要理由且只在 private 仓成立；本仓组全是 public 仓（Actions 分钟免费，
+含 macOS），故「public 免费」不构成删这道门的理由。
 """
 
 from __future__ import annotations
