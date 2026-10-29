@@ -22,11 +22,19 @@ from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
-from repo_root import event_ledger_path
+from repo_root import event_ledger_path, state_root
 
-DELIVERY = WORKSPACE / ".omo" / "_delivery"
-DAEMON_WATERMARKS = DELIVERY / "resident-orchestrator" / "watermarks"
 EVENTS_JSONL = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
+
+
+def _daemon_watermarks() -> Path:
+    """ADR-0456 B1: 与 resident-orchestrator-daemon 的写面对齐 —— 调用时刻解析 state 根。
+
+    改造前这里是 `DAEMON_WATERMARKS = DELIVERY / ...` 两级派生常量，
+    `test_resident_write_plane_split.py` 的 reader_pairs 看不见它（锚点前缀不展平），
+    所以它是登记表之外的第四个读者。
+    """
+    return state_root() / ".omo" / "_delivery" / "resident-orchestrator" / "watermarks"
 
 
 def _default_ledger() -> Path:
@@ -54,7 +62,7 @@ def _check_daemon_alive() -> tuple[bool, str]:
     以最近一次 tick 写入的字节偏移水位文件的新鲜度判定存活:
     水位文件在 STALE_THRESHOLD 内有更新 → daemon 正常轮转。
     """
-    watermarks = list(DAEMON_WATERMARKS.glob("*.json"))
+    watermarks = list(_daemon_watermarks().glob("*.json"))
     if not watermarks:
         return False, "no daemon watermark files (daemon never ticked)"
     newest = min(watermarks, key=lambda p: p.stat().st_mtime)
@@ -66,7 +74,7 @@ def _check_daemon_alive() -> tuple[bool, str]:
 
 def _check_watermarks() -> tuple[bool, str]:
     ages = []
-    for path in list(DAEMON_WATERMARKS.glob("*.json")):
+    for path in list(_daemon_watermarks().glob("*.json")):
         age = _file_age(path)
         if age is not None:
             ages.append((path.name, age))
