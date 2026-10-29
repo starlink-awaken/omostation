@@ -464,7 +464,7 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0453: 声明/执行鸿沟 — 多尺度信号而非缺陷 (关闭 DECL_EXEC_GAP) — **ACCEPTED** | 2026-09-20 | Declaration-execution gap as multiscale signal | 0453-declaration-execution-gap-multiscale-signal.md
 - ADR-0454: 治理脚本无界网络调用审计 — **ACCEPTED** | 2026-09-18 | GAC timeout audit for bounded network calls | 0454-gac-timeout-audit.md
 - ADR-0455: Claims legacy-publication fence 与 managed-clone allow 禁止可满足性 — **ACCEPTED** | 2026-09-24 | Claims fence vs managed-clone allow deadlock | 0455-claims-fence-managed-clone-allow-deadlock.md
-- ADR-0456: 同机双安装位 — code_root / state_root 分离与 profile 收敛 — **PROPOSED** | 2026-09-26 | Same-host dual install: profile-root convergence | 0456-dev-runtime-profile-root.md
+- ADR-0456: 同机双安装位 — code_root / state_root 分离与 profile 收敛 — **ACCEPTED** | 2026-09-26 | Same-host dual install: profile-root convergence | 0456-dev-runtime-profile-root.md
 - ADR-0457: launchd 平面漂移门 — 三段式 shadow → warning → fail — **ACCEPTED** | 2026-09-28 | launchd plane drift gate, three-stage rollout | 0457-launchd-drift-gate-three-stage.md
 - ADR-0458: 日志面分类 SSOT — 轮转资格登记驱动，不由文件名与人工名单决定 — **ACCEPTED** | 2026-09-28 | Log surface classification SSOT: registry-driven rotation eligibility | 0458-log-surface-classification-ssot.md
 - ADR-0459: clone-lifecycle 交付管道的两处阻塞 — wrapper 丢 actor + 与多 agent 并发不兼容 — **PROPOSED** | 2026-09-28 | clone-lifecycle pipeline blockers: wrapper drops actor, concurrency incompatibility | 0459-clone-lifecycle-pipeline-blockers.md
@@ -581,3 +581,4 @@ note: "P45 曾标记 archived, 但 ADR 索引仍活跃维护, 2026-06-29 恢复 
 - ADR-0451: HITL Proposal System — file-based approval gate for harness stage_execute — **ACCEPTED** | 2026-09-04 | xiamingxing | 0451-hitl-proposal-system.md
 - ADR-0452: Scene System v3 Architecture — BOS-driven execution, 5-tier lifecycle, calibration engine, anti-corrosion layer — **ACCEPTED** | 2026-09-07 | governance-team | 0452-scene-v3-architecture.md
 - ADR-0466: 全系统真实性契约与零 Mock 治理规范 — **ACCEPTED** | 2026-10-19 | governance-team | 0466-system-authenticity-and-zero-mock-contract.md
+- ADR-0467: 集群存储拓扑演进与 BET-Y2Q4-T10-242 存储收敛收口 — **ACCEPTED** | 2026-10-29 | governance-team | 0467-cluster-storage-topology-and-bet-242-convergence.md

@@ -1,9 +1,9 @@
 ---
 schema: md/v1
-status: PROPOSED
+status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-10-02
+last-reviewed: 2026-10-29
 type: ssot
 id: ADR-0456
 related:
@@ -15,7 +15,7 @@ tags: [topology, profile, code-root, state-root, launchd, ledger]
 
 # ADR-0456 — 同机双安装位：code_root / state_root 分离与 profile 收敛
 
-- **Status**: PROPOSED（方向经 2026-09-26 plan 批准，本 ADR 待 principal 批准转 ACCEPTED）
+- **Status**: ACCEPTED（2026-10-29 全链路工程验收完毕，经生产实证与 Principal 署名正式晋升）
 - **Date**: 2026-09-26
 
 ## Context
@@ -344,3 +344,19 @@ state 根"成立 —— 一旦有人把它改成 `mkdir + 写子集`，读侧会
 （`bin/compass_radar.py:1138`、`bin/gac/harness-omo-bridge.py:39`、
 `bin/gac/self-evolution-loop.py:35`、`bin/gac/evidence-smoke.py:212` 四处为此从模块常量改成函数），
 模块常量会在 import 后冻住 env，晚声明的 profile 被静默忽略。
+
+## Addendum — 全链路收官验收与终态晋升（2026-10-29）
+
+至 2026-10-29，ADR-0456 规划的全部工程阶段已 100% 生产着陆并通过严格实证闭环：
+
+1. **B1~B3 基础设施与服务注册**: 建立 `bin/lib/repo_root.py` 动态求值双根契约与 `services.yaml` 集中注册表。
+2. **B4a 安装位落位**: 建立只读独立代码安装位 `~/.local/opt/omostation`，通过 `install_root()` 准确定位。
+3. **B4b 批次 1~5 权威切道（PR #4945）**:
+   - `mbp` 主节点 LaunchAgents 指向 Workspace: **43 ➔ 0**；
+   - `mini` 从节点 LaunchAgents 指向 Workspace: **22 ➔ 0**；
+   - 生产后台所有常驻进程写面全面定向至 `~/.local/state/omostation/prod`，彻底消除后台进程与源码开发区的锁冲突与并发写污染。
+4. **G8 镜像面统一（PR #4955，BET-Y2Q4-T10-237）**: 获得 Principal 亲笔署名终审裁定，消解双机历史认知漂移。
+5. **OMO Resident 状态锚点收敛（PR #4956 + #4958，BET-Y2Q4-T10-277）**: 8 处 OMO 内核状态写入面完全绑定 `state_root()` 动态解析。
+
+经上述实证，本 ADR 核心目标全部达成，正式转为 **ACCEPTED** 权威技术基准。
+
