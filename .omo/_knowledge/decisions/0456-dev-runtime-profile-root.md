@@ -358,5 +358,33 @@ state 根"成立 —— 一旦有人把它改成 `mkdir + 写子集`，读侧会
 4. **G8 镜像面统一（PR #4955，BET-Y2Q4-T10-237）**: 获得 Principal 亲笔署名终审裁定，消解双机历史认知漂移。
 5. **OMO Resident 状态锚点收敛（PR #4956 + #4958，BET-Y2Q4-T10-277）**: 8 处 OMO 内核状态写入面完全绑定 `state_root()` 动态解析。
 
+> **2026-10-29 读侧补登记（B4b 切道遗留的判据失明面）**:
+>
+> B4b Batch 3（#4933）把 6 条常驻服务的 `OMOSTATION_STATE_ROOT` 从检出根切到
+> `~/.local/state/omostation/prod`，**写面**随之迁移（daemon 水位改写到该根）。但
+> **读面**有一处未跟着走：`bin/gac/check-resident-status.py` 仍硬解检出根
+> （`Path(__file__).resolve().parents[2]`）找水位 ⇒ 读到切道前冻结的那份 ⇒
+> 判活永久失明（2026-10-28 实测报「stale 5 小时」，而 daemon 实际每 2 分钟在跑，
+> launchd 日志逐条 `service inactive` 证实调度正常）。
+>
+> **为什么这条不能算「小疏漏」**：判据读错根比判据不存在更坏 —— 后者会被看见，
+> 前者会一直绿/一直红地骗人。且该门禁在此之前**无任何测试**，所以无人能发现。
+>
+> **修法**：水位根随**角色自己声明的状态根**走（`services.yaml` 里该服务的
+> `OMOSTATION_STATE_ROOT` 就是 daemon 进程实际的 env，即水位的真实落点）；声明缺失时
+> 回落检出根（逐字节复现切道前的历史落点）。这与仓内既有口径一致：
+> `omo/resident/status.py:80` 的 `write_path(DAEMON_WATERMARKS)` 与
+> `bin/mof/gen-service-configs.py` 的 E7 判据都把注册表声明当权威。
+>
+> **配套**：补 `tests/unit/gac/test_check_resident_status.py`（7 例，钉住「按声明根找
+> 水位」+「陈旧仍 FAIL」+「真停摆时检出根的假新鲜水位不得掩盖停摆」+「CI 干净检出走
+> never_ticked 豁免」）；变异对照实测回退修复后 5 例报红。
+>
+> **已核对同面其余门禁（无同类错位）**：仓内另有 14 个门禁读运行态走
+> `repo_root.state_root()`。逐个核对其所读相对路径（`.omo/state/system.yaml`、
+> `.omo/_delivery/evidence-smoke`、`.omo/_knowledge/sediment`、`.omo/debt/dashboard` 等）
+> ⇒ **全部只存在于检出根，状态根下不存在** ⇒ 这些写者尚未切道，门禁读检出根是对的，
+> 不属同类错位。本次错位是**唯一**一处：daemon 水位是唯一已经切到状态根、而读侧未跟上的面。
+
 经上述实证，本 ADR 核心目标全部达成，正式转为 **ACCEPTED** 权威技术基准。
 
