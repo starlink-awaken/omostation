@@ -30,10 +30,12 @@ ALL_MARKERS = (".omo/state", ".omo/_delivery", ".omo/_knowledge", ".omo/_truth",
 SKIP_SEGMENTS = {"_archive", "_vendored", "__pycache__", ".venv"}
 
 # spec §1 的读数表 —— 与本文件扫描出的分类逐桶相等（同一判据、同一次扫描产出）。
+# 2026-10-29 T10-278 读侧收敛把 resident-orchestrator 的 4 处检出根常量改成 state_root()
+# 调用时刻解析，`.omo/_delivery` 桶按实测 82→78 重签（spec §1 表由 docs lane 同步）。
 SPEC_MARKER_READINGS = {
     ".omo/_truth": 161,
     ".omo/state": 103,
-    ".omo/_delivery": 82,
+    ".omo/_delivery": 78,
     "runtime": 51,
     ".omo/_knowledge": 62,
 }
