@@ -45935,7 +45935,7 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-10-28-bet-277-resident-writer-anchor-convergence.md
   - projects/omo
-  - tests/unit/test_omo_resident_writer_anchor.py
+  - projects/omo/tests/unit/resident/test_resident_writer_anchor.py
   non_goals:
   - 不迁移、不删除 projects/omo/.omo/state/ 下既有 10 个运行时文件；cell_states.json 2B 与检出根面 906816B
     的合并方向是数据决定，不由代码本轮替人做出（human_gate）
@@ -45951,10 +45951,10 @@ bets:
   - 从与检出无关的 cwd 实例化 RefinementStore/SnapshotManager 与 sema_crystallizer 默认路径，产物不落 cwd（V2，当前实测会落）
   - 修后一次运行里 git -C projects/omo status --porcelain --untracked-files=all .omo/state
     不新增行（V3）
-  - tests/unit/test_omo_resident_writer_anchor.py 含变异对照：改窄任一侧落点断言当场红，绿不得来自检测器没命中（V4）
+  - projects/omo/tests/unit/resident/test_resident_writer_anchor.py 含变异对照：改窄任一侧落点断言当场红，绿不得来自检测器没命中（V4）
   verify:
   - cmd: env -u OMOSTATION_ROOT HOME=<空> uv run --no-project --with pytest --with pyyaml
-      python -m pytest tests/unit/test_omo_resident_writer_anchor.py -q -p no:randomly
+      python -m pytest projects/omo/tests/unit/resident/test_resident_writer_anchor.py -q -p no:randomly
     expect: 全绿；且 OMOSTATION_STATE_ROOT 指向临时根时落点断言点名 <tmp> 下八条路径
   - cmd: git -C projects/omo status --porcelain --untracked-files=all .omo/state
     expect: 改前 15 行 ?? / 修后一次运行不新增行（两个读数由同一条命令产出并记进 receipt）
