@@ -286,6 +286,13 @@ jobs:
         # gitlink 一侧的 omo 写者); 未点名则「locate_anchor(ws) 去掉机器路径猜测」只有本地证据
         # (同上一条 "ADR-0456 B1 call-time write-plane gate" 的先例, BET-Y2Q4-T10-239)。
         run: python3 -m pytest tests/unit/test_delivery_anchor_contract.py -q
+      - name: ADR-0456 B1 HITL ledger read-anchor gate
+        # 人在环审批步 (bin/hitl-proposal.py check_human_gate_needed) 原先按**进程 CWD** 取台账,
+        # 于是同一命令在仓根读 HITL_REQUIRED、在 /tmp 读「不需要人审」—— 审批步静默 fail-open。
+        # 同上一条 tests/unit/** 的 CI 不可见问题, 未点名则「CI 绿」不是这条门禁的证据。
+        # 变异对照 (本轮实测, 每次只改一处后逐字节复原): Path.cwd() → 2 failed;
+        # code_root → canonical_root → 5 failed; sys.path 深度写错 (静默 bind 宿主 repo_root) → 5 failed。
+        run: python3 -m pytest tests/unit/test_hitl_ledger_read_anchor.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
