@@ -38104,7 +38104,7 @@ bets:
   title: 日志面分类 SSOT — 轮转资格登记驱动, 消除静默清零证据链的失败模式
   track: T16-DRIFT-GUARD
   window: Y2Q4
-  status: pending
+  status: done
   priority: P1
   appetite: 1 week
   risk_level: L1
@@ -38163,19 +38163,44 @@ bets:
   - 候选数可由注册表复算
   - shadow 段跑满 1 周且主干提交未受阻断
   depends_on: []
+  done_at: '2026-10-29'
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
+    overall_state: delivery_accepted
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@47d07cc151a79f45669d37248a8761c69b88766b
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-02.md
+            sha256: sha256:0042358cc0dad9f8235e94a27f0f01a5fbde2e6ac5c9e00d71d6f7d76185d984
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-02.md
+            sha256: sha256:0042358cc0dad9f8235e94a27f0f01a5fbde2e6ac5c9e00d71d6f7d76185d984
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-02.md
+            sha256: sha256:0042358cc0dad9f8235e94a27f0f01a5fbde2e6ac5c9e00d71d6f7d76185d984
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-02.md
+            sha256: sha256:0042358cc0dad9f8235e94a27f0f01a5fbde2e6ac5c9e00d71d6f7d76185d984
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-02.md
+            sha256: sha256:0042358cc0dad9f8235e94a27f0f01a5fbde2e6ac5c9e00d71d6f7d76185d984
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-02.md
+            sha256: sha256:0042358cc0dad9f8235e94a27f0f01a5fbde2e6ac5c9e00d71d6f7d76185d984
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T16-02.md
+            sha256: sha256:0042358cc0dad9f8235e94a27f0f01a5fbde2e6ac5c9e00d71d6f7d76185d984
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: 本单为只读观测 shadow 阶段，value indicator policy 声明为 false，待 warning/fail 阶段测算未分类捕获率。
 - id: BET-Y2Q4-T10-212
   title: ADR-0129 Phase 2 — 投影面停止 legacy 双写并把三件生成态摘出 git（ADR-0456 B5）
   goal: '开发动作直接打击在跑的系统，根因之一是 ADR-0129 Phase 1 把每个投影写成 canonical + legacy 两份（projects/omo/src/omo/omo_ingress_state.py:234-298

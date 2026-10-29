@@ -2,13 +2,12 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-09-29
+last-reviewed: 2026-10-29
 type: ssot
 schema: log-surfaces/v1
 related:
   - ../../_knowledge/decisions/0458-log-surface-classification-ssot.md
   - ../../_knowledge/decisions/0457-launchd-drift-gate-three-stage.md
----
 
 # 日志面分类注册表 — 轮转资格登记驱动, 不由文件名与人工名单决定
 #
