@@ -1,0 +1,126 @@
+{
+  "schema": "t237-driver-ownership-receipt/v1",
+  "generated_at": "2026-10-29T03:19:30.000000+00:00",
+  "related_bet": "BET-Y2Q4-T10-237",
+  "disposition": "FINAL_CLOSEOUT_ALIGNMENT",
+  "bet_status": "done",
+  "bet_done_claim": true,
+  "scope": {
+    "source_files": [
+      ".omo/_truth/registry/services.yaml",
+      ".omo/_knowledge/retros/BET-Y2Q4-T10-237.md",
+      "docs/reports/2026-10-29-t10-237-closeout-receipt.json",
+      "docs/plans/3y-bet-ledger.yaml"
+    ],
+    "service_id": "omostation.zhixing-projection-fullrefresh",
+    "runtime_changes": false,
+    "ledger_or_spec_changes": true,
+    "generator_changes": false
+  },
+  "maintenance_decision": {
+    "issuer": "xiamingxing",
+    "role": "Principal / System Owner",
+    "issued_at": "2026-10-29T03:14:16+00:00",
+    "authority_basis": "Direct Principal signed confirmation and approval in conversation session c6b2f63c-5abf-4c97-bd9c-e31a02544128",
+    "maintenance_owner": "xiamingxing",
+    "principal_direct_signature": true,
+    "HumanVerdict_created": true,
+    "decision_ref": "conversation://c6b2f63c-5abf-4c97-bd9c-e31a02544128",
+    "chosen_form": "official publisher driver / existing single label / 180 seconds",
+    "original_runtime_owner_replaced": false,
+    "original_runtime_owner_inferred": false
+  },
+  "observed_disk_plist": {
+    "at": "2026-10-29T03:08:33+00:00",
+    "path": "/Users/xiamingxing/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist",
+    "sha256": "357fa625f7ef8fda919a7123e64605c7210e79d69a2893bba4f356eb43a78c88",
+    "filtered": {
+      "Label": "com.omostation.zhixing-projection-fullrefresh",
+      "ProgramArguments": [
+        "/opt/homebrew/bin/python3",
+        "-B",
+        "/Users/xiamingxing/.local/opt/omostation-publisher/bin/panorama/projection-full-refresh.py"
+      ],
+      "WorkingDirectory": null,
+      "StartInterval": 180,
+      "RunAtLoad": true,
+      "StandardOutPath": "/Users/xiamingxing/.local/log/projection-fullrefresh.log",
+      "StandardErrorPath": "/Users/xiamingxing/.local/log/projection-fullrefresh.log"
+    },
+    "root_environment": {
+      "OMOSTATION_ROOT": "/Users/xiamingxing/.local/opt/omostation",
+      "OMOSTATION_STATE_ROOT": "/Users/xiamingxing/.local/state/omostation/prod"
+    },
+    "loaded_state_verified": true
+  },
+  "declaration": {
+    "generate": false,
+    "config_source": "~/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist",
+    "content_digest": "sha256:357fa625f7ef8fda919a7123e64605c7210e79d69a2893bba4f356eb43a78c88",
+    "interval_sec": 180,
+    "interpreter": "/opt/homebrew/bin/python3",
+    "entrypoint": "~/.local/opt/omostation-publisher/bin/panorama/projection-full-refresh.py",
+    "script_args": [],
+    "interpreter_flag_observed": "-B before entrypoint; recorded in notes and this receipt",
+    "root_environment_observed_in_notes": "OMOSTATION_ROOT=~/.local/opt/omostation, OMOSTATION_STATE_ROOT=~/.local/state/omostation/prod"
+  },
+  "original_six_criteria": [
+    {
+      "id": 1,
+      "status": "PASS",
+      "finding": "Principal (夏明星 xiamingxing) directly signs and confirms the official publisher driver shape (180s) on 2026-10-29, closing criterion I1."
+    },
+    {
+      "id": 2,
+      "status": "PASS",
+      "finding": "gen-service-configs.py --check reports rc=0 and 0 drift across 76 services; generator source git diff against origin/main is completely empty."
+    },
+    {
+      "id": 3,
+      "status": "PASS",
+      "finding": "Official driver retains steps 0-2 (revisions/.fullrefresh.lock exclusion, remote origin validation, reset --hard origin/main sync)."
+    },
+    {
+      "id": 4,
+      "status": "PASS",
+      "finding": "services.yaml content_digest updated to match disk plist sha256 357fa625f7ef8fda919a7123e64605c7210e79d69a2893bba4f356eb43a78c88 exactly under observe-only mode."
+    },
+    {
+      "id": 5,
+      "status": "PASS",
+      "finding": "Overlapping scheduling (zhixing-projection-fullrefresh at 180s and panorama-dashboard-refresh at 240s) actively verified and retained in this slice.",
+      "read_only_enumeration_command": "python3 -B -c 'import pathlib,plistlib,json; names={\"com.omostation.zhixing-projection-fullrefresh\",\"com.omostation.panorama-dashboard-refresh\"}; print(json.dumps([{k:v.get(k) for k in (\"Label\",\"ProgramArguments\",\"StartInterval\")} for p in (pathlib.Path.home()/\"Library/LaunchAgents\").glob(\"*.plist\") if (v:=plistlib.loads(p.read_bytes())).get(\"Label\") in names],ensure_ascii=False))'",
+      "command_executed_this_slice": true,
+      "command_output": [
+        {
+          "Label": "com.omostation.panorama-dashboard-refresh",
+          "ProgramArguments": [
+            "/opt/homebrew/bin/python3",
+            "-B",
+            "/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py"
+          ],
+          "StartInterval": 240
+        },
+        {
+          "Label": "com.omostation.zhixing-projection-fullrefresh",
+          "ProgramArguments": [
+            "/opt/homebrew/bin/python3",
+            "-B",
+            "/Users/xiamingxing/.local/opt/omostation-publisher/bin/panorama/projection-full-refresh.py"
+          ],
+          "StartInterval": 180
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "status": "PASS",
+      "finding": "Disk plist contains no dated scratch paths (e.g. -runtime-clean-20261008 eliminated); roots cleanly point to install root and prod state root."
+    }
+  ],
+  "generator_boundary": {
+    "source": "bin/mof/gen-service-configs.py",
+    "source_sha256": "63f9782dd65a77c936ba7880c97ba4034f73baa0911c6e19e4a9912e8b07b4fe",
+    "git_diff_clean": true
+  }
+}
