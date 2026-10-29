@@ -22,7 +22,7 @@ type: ephemeral
 
 ## BET 台账规模
 
-- 总数: 574 | done: 569 (归档另计, 见 3y-bet-ledger-archive.yaml)
+- 总数: 574 | done: 570 (归档另计, 见 3y-bet-ledger-archive.yaml)
 
 ## 分支/worktree 治理
 
