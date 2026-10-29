@@ -45954,14 +45954,15 @@ bets:
     不新增行（V3）
   - projects/omo/tests/unit/resident/test_resident_writer_anchor.py 含变异对照：改窄任一侧落点断言当场红，绿不得来自检测器没命中（V4）
   verify:
-  - cmd: env -u OMOSTATION_ROOT -u HOME uv run --no-project --with pytest --with pyyaml
-      python -m pytest projects/omo/tests/unit/resident/test_resident_writer_anchor.py -q -p no:randomly
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录> UV_CACHE_DIR=<空目录>
+      uv run --no-project --with pytest --with pyyaml python -m pytest projects/omo/tests/unit/resident/test_resident_writer_anchor.py
+      -q -p no:randomly
     expect: 全绿；且 OMOSTATION_STATE_ROOT 指向临时根时落点断言点名 <tmp> 下八条路径
   - cmd: git -C projects/omo status --porcelain --untracked-files=all .omo/state
     expect: 改前 15 行 ?? / 修后一次运行不新增行（两个读数由同一条命令产出并记进 receipt）
-  - cmd: python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident
-      import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(), write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
-    expect: 声明 profile 后三行路径均以 $OMOSTATION_STATE_ROOT 开头；未声明时以检出根开头且不含 projects/omo
+  - cmd: unset OMOSTATION_STATE_ROOT; python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(), write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
+      && state_root=$(mktemp -d) && OMOSTATION_STATE_ROOT="$state_root" python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(), write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
+    expect: 前一腿三行均以检出根开头且不含 projects/omo；后一腿三行均以 $state_root 开头（两读数由同一条命令产出并记进 receipt）
   value_indicator_policy: false
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-28-bet-277-resident-writer-anchor-convergence.md
@@ -45998,12 +45999,12 @@ bets:
             ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
             sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
           replay:
-            ref: receipt://docs/reports/2026-10-29-bet-277-resident-state-plane-closeout.md
-            sha256: sha256:c0a7e1210291dc1b8f5563caa5755a12431ab953c5c9d18fe852bec408078b54
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-277.md
+            sha256: sha256:95c4f01a4706104399a3f559b5eab911fd667b4dc230b58a6807bec11f06db23
       value:
         status: NOT_PROVEN
         evidence:
-          note: 状态面收官登记，value indicator policy 声明为 false，由 PR #4956 及 omo #224/#225 闭环。
+          note: '状态面收官登记，value indicator policy 声明为 false，由 PR #4956 及 omo #224/#225 闭环。'
     overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
