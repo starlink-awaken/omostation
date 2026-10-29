@@ -3,10 +3,11 @@ schema: md/v1
 status: draft
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-27
+last-reviewed: 2026-10-29
 type: ssot
-review-state: metadata-only
+review-state: reconciled
 metadata-migrated-at: 2026-07-31
+reconciled-at: 2026-10-29
 ---
 
 
@@ -28,6 +29,36 @@ metadata-migrated-at: 2026-07-31
 
 扩展域 (`meta` / `omo` / `swarm` / `system` / `toolbox`) 走 `kind: bridge | facet` 标签,
 不与 5 主域混淆.
+
+> **2026-10-29 对账注记**：本节「扩展域」清单此前只列了 5 个名字，实际注册表
+> （`projects/agora/etc/bos-services.yaml`，325 条）里除 5 主域外还有 18 个扩展前缀，
+> 已在下方「扩展域实测清单」补齐。同时实测发现：**注册表 service 条目目前没有
+> `kind` 字段**（schema 为 `uri/domain/package/action/transport/module_path/func_name/
+> description/status`）—— 即「kind 标签」一节是标准先行、实现未跟。补 `kind` 进
+> schema 是待办，不是已完成事实；本节如实标注，不把设计当现状抄。
+
+### 扩展域实测清单 (2026-10-29 从注册表导出)
+
+按 `bos-services.yaml` 的 `domain` 字段统计（仅列 5 主域之外的扩展前缀）：
+
+| 前缀 | 条数 | 归属注记 |
+|------|------|----------|
+| `agent-cell` | 20 | 代理单元运行时，扩展域 |
+| `compute` | 16 | 本地/边缘 LLM 推理（见下方正式登记） |
+| `system` | 14 | 协议/系统面，facet |
+| `ecos` | 10 | L0 协议生态，bridge |
+| `cockpit` | 9 | 入口面，facet |
+| `harness` | 9 | 执行框架面，facet |
+| `resident` | 8 | 常驻代理，bridge |
+| `agora` | 6 | 总线本体，facet |
+| `omo` | 4 | 治理内核面，facet |
+| `documents` | 4 | 文档摄取面，bridge |
+| `bcos` | 3 | 演化引擎，facet |
+| `perception` | 3 | 感知摄取，bridge |
+| `runtime` / `l4-kernel` / `meta` / `swarm` / `forge` / `fabric` | 各 1–2 | 零星面，facet |
+
+> 以上归属是按命名与消费方推断的**建议归类**，尚未逐条核 `kind`（因 schema 里还没有
+> `kind` 字段）。补 `kind` 到 schema 后应以注册表值为准回填本表。
 
 ### 扩展域登记: compute (本地/边缘 LLM 推理)
 
@@ -52,14 +83,16 @@ metadata-migrated-at: 2026-07-31
 
 ## 跨域越界检查 (已知违规, 待跨仓 rename)
 
-以下 URI 域归属不匹配, 需多仓协调 rename (P2-2 计划):
+以下 URI 域归属不匹配, 需多仓协调 rename (P2-2 计划)。**2026-10-29 复核**：
+`brain/events` 已清零（迁往 `memory/events`， Resolved ✓）；`persona/health-profile`
+从 4 条增至 5 条（新增速度快于迁移）；其余未动。
 
-| 当前 URI | 越界 | 建议新 URI | 影响 |
-|----------|------|------------|------|
-| `bos://analysis/iris/*` (6 条) | iris 是摄取连接器, 应在 memory | `bos://memory/iris/*` | 45 处引用 (含 agora consumers + tests) |
-| `bos://ecos/workflow/*` (8 条) | workflow 不属 L0 协议, 应在 system | `bos://system/workflow/*` | 86 处引用 (含 agora + metaos consumers) |
-| `bos://persona/health-profile/*` (4 条) | health-profile 是 L4 域元数据, 不属人格 | `bos://capability/health-profile/*` | 27 处引用 (含 omo consumers) |
-| `bos://brain/events/card_updated` (1 条) | `brain` 非 5 主域, 应在 memory 域 (知识摄取场景) | `bos://memory/events/card_updated` | cockpit api_knowledge.py + knowledge_indexer.py (ADR-0294, PR #740) — **Phase 2 计划迁移** |
+| 当前 URI | 越界 | 建议新 URI | 影响 | 2026-10-29 状态 |
+|----------|------|------------|------|------------------|
+| `bos://analysis/iris/*` (6 条) | iris 是摄取连接器, 应在 memory | `bos://memory/iris/*` | 45 处引用 (含 agora consumers + tests) | 未迁（memory/iris 已出现 1 条，迁移进行中） |
+| `bos://ecos/workflow/*` (8 条) | workflow 不属 L0 协议, 应在 system | `bos://system/workflow/*` | 86 处引用 (含 agora + metaos consumers) | 未迁（system/workflow 仍 0 条） |
+| `bos://persona/health-profile/*` (**5** 条，2026-09 为 4) | health-profile 是 L4 域元数据, 不属人格 | `bos://capability/health-profile/*` | 27 处引用 (含 omo consumers) | 未迁，且新增 1 条 |
+| `bos://brain/events/card_updated` (~~1~~ **0** 条) | `brain` 非 5 主域, 应在 memory 域 | `bos://memory/events/card_updated` | cockpit api_knowledge.py + knowledge_indexer.py (ADR-0294, PR #740) | **Resolved ✓**（2026-10-29 复核 0 条残留） |
 
 
 ### Rename 流程 (跨仓破坏性变更)
