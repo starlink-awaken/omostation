@@ -280,6 +280,34 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   `.omo/state/**` 运行态、projections）跟随 profile。可用 env：`OMOSTATION_ROOT`、
   `OMOSTATION_STATE_ROOT`、`OMO_EVENT_LEDGER_DB`（优先级最高）。未声明 profile 时二者相等，
   即与历史布局逐字节一致 —— 这条不变量由 `tests/unit/test_repo_root_profile.py` 钉住。
+- **根有四类落点，第四类是 CWD，而两把根尺按构造看不见它**（2026-10-29, ADR-0456 B1 读侧收敛轮实测；
+  证据是文件行，不挂台账）：上面的条目把根收敛成 code / state / install，隐含前提是「路径字面量总要挂在
+  一个已解析根上」。存在第四类**不挂任何根**的写法 —— `Path(".omo")` 这类相对锚，落点随**进程 CWD**，
+  且它连 profile 都不读，声明与否不影响它。两例确证：① `projects/omo/src/omo/workflow/lock_graph.py:5`
+  `STATE_DIR = Path(".omo")`，经 `:10` 派生 `state_dir` 后 `:11 mkdir(parents=True)` + `:24 write_text()`
+  ⇒ 写面落 `<CWD>/.omo/state/`，而唯一读者 `bin/gac/swarm-activity-dashboard.py:140` 挂在 import 时求值的
+  `WORKSPACE = Path(__file__).resolve().parents[2]`（检出根）⇒ 生产者 / 消费者 / 契约三方错位；该文件在
+  检出根与 state 根**都不存在**，且 `generate_lock_graph_snapshot` 在生产路径**零调用点**（`git grep` 只命中
+  定义本身与 `tests/projects/omo/workflow/test_lock_graph.py`，plist / `.omo/cron/registry.yaml` /
+  `services.yaml` 各面无命中）⇒ 定性是「**死写面 + 活读者**」（读者 `:141 if not is_file(): return {}`
+  fail-soft，同文件 `:112 _locks()` 直读 locks 面，仪表盘不因缺而坏）。所以**只把 `:5` 换成缝是化妆式修复**
+  —— 今天没有写者，改完不改变任何读数；正解要么接生产者，要么显式降级该面并登记，删代码需授权。
+  ② `bin/notification.py:33` `Path(os.environ.get("HITL_PROPOSALS_DIR", ".omo/_knowledge/hitl-proposals"))`
+  —— env **有默认值即默认生效**，而 `HITL_PROPOSALS_DIR` 在全机任何 plist / registry / yaml / toml / sh 与
+  `crontab -l` 里**从未声明**（命中它只有该文件、`bin/hitl-proposal.py` 和 4 个测试），于是 `:79 mkdir` +
+  `:159` 写的 HITL 人在环提案面落点随调用方 CWD，`:35` 读配置同形。落点面实测：canonical `is_dir()=False`
+  （非 gitignore、0 跟踪文件）、14 个已登记 worktree 全不命中、`~/.omo/_knowledge/hitl-proposals` 也不存在
+  （`~/.omo` 存在但那是 profile 面 `.active-profile`，不是本写者产物）⇒ **缺陷成立但从未发火**，它是准入项
+  而不是事故。**判据**：两把根尺都不认这类形状 —— `tests/unit/test_resident_write_plane_split.py` 的
+  `_classify()` 靠 `parents[` / `__file__` 认 CHECKOUT，`reader_pairs()` 靠 anchor 变量归类，而相对锚
+  **没有 anchor**，于是它既不进 state 族也不进 split 登记；`tests/unit/test_writeplane_root_pin.py` 只统计
+  已登记 resolver 的站点 ⇒ 「不在登记里」不等于「合规」，这是登记面的**类目缺失**，不是漏登记。**纪律**：
+  ① 判某处写面是否仓内相对，不能按常量名，要按**派生变量链**展平（`STATE_DIR → state_dir → mkdir/write_text`；
+  只看常量名会假阴 —— 本轮正是以此漏认了 ①）；② 一次性粗扫的计数一律**不得当契约名单引用**（本轮读数为裸相对
+  `Path()` 字面量 68 处 / 50 文件，按「模块级常量 + 是否被直接施加动作」分类得 standalone 9 / suffix-only 1），
+  因为它两端各有已证实的失效：假阳 `bin/panorama/compact-observation.py:31`（实为 `:514 root / DEFAULT_RELATIVE_OUTPUT`
+  的后缀，命名就叫 RELATIVE）、假阴见 ①；③ 见到 `Path(os.environ.get(NAME, "仓内相对默认"))` 这一形，先查 NAME
+  在机器上**有没有被声明过**，再讨论默认值对不对。
 - **运行时安装位已存在，但它不是第三个可写的根**（2026-09-27, ADR-0456 B4a / BET-Y2Q4-T10-207）：
   `~/.local/opt/omostation` 是运行时代码的**独立 clone**（自有 `.git`，**不是 git worktree**，
   detached 在记录在案的 `origin/main` SHA —— 本仓没有可用的 release-tag 序列）。
