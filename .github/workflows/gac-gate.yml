@@ -115,9 +115,10 @@ jobs:
       - name: CR-HARNESS-MOF — MOF 约束联动检查 (required)
         # 8 条 Agent-MOF 规则接入 Harness 全生命周期
         run: python3 bin/gac/harness-mof-bridge.py --state
-      - name: CR-CI-RUNNER-COST — GitHub-hosted runner 成本守门 (required)
-        # macOS 10x / Windows 2x 单价 (Linux 1x)；public 仓标准 runner 免费、private 仓按量。
-        # 未登记进 bin/gac/check-runner-cost.py 的 ALLOWED 即阻塞 —— 加 macOS 腿前先想单价。
+      - name: CR-CI-RUNNER-COST — GitHub-hosted runner 付费 OS 守门 (required)
+        # 守的是**覆盖增量**，不是账单：macOS/Windows 腿必须覆盖默认 OS 腿拿不到的东西。
+        # 本仓组全是 public 仓 ⇒ Actions 分钟免费（含 macOS），成本不是这里的理由。
+        # 未登记进 bin/gac/check-runner-cost.py 的 ALLOWED 即阻塞 —— 加腿前先答「它覆盖了什么」。
         run: python3 bin/gac/check-runner-cost.py
       - name: shell 测试套件 (tests/**/*.sh)
         # 原本**没有任何执行入口** —— CI 不跑、pytest 不收集、Makefile 不调 ⇒ 回归保护为零
