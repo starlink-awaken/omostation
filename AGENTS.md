@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-10-26
-last-reviewed: 2026-10-26
+last_updated: 2026-10-29
+last-reviewed: 2026-10-29
 lifecycle: entry
 status: active
 ---
@@ -465,6 +465,12 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   `git reset --hard origin/main`，主区脏于并发 agent 未提交工作时那是销毁而非修复（`--allow-dirty` 内部 stash，同样不擅自用）。
   另附一条否证记录，防同类自伤：候选项「AGENTS.md 幽灵路径 `bin/gac/doc-governance-check.py`」不成立 ——
   `git grep -c` = 0，本文件引的是裸文件名，真实脚本在 `bin/ssot/`；**把自身笔误登记成仓库缺陷即伪造溯源**。
+- **glob 字符类陷阱 `\.y[a]ml$` 只匹配 `yaml` 不匹配 `yml`（2026-10-28 扫 workflow 实证）**：`[a]` 是「恰好一个 a」的字符类，所以该模式命中 `.yaml` 但**漏掉全部 55 个 `.yml`**，导致首轮扫描输出为空且无任何报错 —— 与「没有匹配」不可区分。纪律：枚举扩展名用 `\.ya?ml$`（`a?` = 零或一个 a）；扫描结果**计数非零**才算跑过（同 §7「解析失败退回空」一族：空结果和没跑长得一样）。
+- **commit 后必须验「已提交内容」而不是工作树（2026-10-28 actionlint 实证）**：`git add -A` 之后改了 typo 再 `git commit`，提交的是**索引里的旧版本**（工作树是好的但没重新 stage）—— actionlint 在 CI 报 `[syntax-check]` 才发现 `pull_request.paths` 里一项是 `{'…': null}` 而非字符串。纪律：改了文件后**重新 `git add`** 再 commit；提交后用 `git show HEAD:<file>` 复核被改处，不信 `git status` 的「工作树已干净」。
+- **YAML「能 parse」≠ 结构正确（2026-10-28 实证）**：列表项 `- 'x':`（尾冒号）`yaml.safe_load` 解析成功（读成 mapping `{'x': null}`），但语义错且 GitHub/actionlint 拒收 —— 只查「能不能 parse」查不出。纪律：对 workflow/配置里的关键结构做**值类型断言**（如 `on.*.paths` 每项必须是 `str`），且把 actionlint 装进本地 push 前自跑（`brew install actionlint`）。
+- **删 CI leg 必须同步 branch protection，否则 required check 永不满足（2026-10-29 omlxc 实证）**：omlxc 按 CR-CI-RUNNER-COST 删掉 macOS 腿（`os: [ubuntu-latest]`），但 branch protection 仍要求 `macos-latest / Python 3.13` ⇒ **该 check 永不出现，所有 PR 从 2026-10-26 起无法合并**（#107 是最后一个能合的）。纪律：改 workflow 的 matrix/删 job 后，立刻 `gh api repos/{o}/{r}/branches/main/protection` 对账 required contexts；判据是「required check 集合 ⊆ workflow 实际产出的 job 名」。
+- **main 可能是「绿但已过期」（2026-10-29 omlxc pip-audit 实证）**：安全告警（CVE）晚于 main 上次 CI 运行时，main 显示绿但**任何重跑 CI 的 PR 都会红** —— 这不是 PR 的问题，是 main 自己欠债。纪律：PR CI 红在安全扫描步时，先查 main 上次成功运行的时间 vs 告警发布日期；修 main（如 bump 依赖）而不是让 PR 背锅。
+- **子仓 PR 合并后根 gitlink 立即漂移（2026-10-29 实证）**：在子仓（如 omlxc）合并 PR 后，根仓 `projects/<sub>` 的 gitlink 立刻落后于子仓 main —— 若不当轮 bump，次日 `submodule-freshness-gatekeeper` 的 schedule run 就会报漂移。纪律：处理子仓 open PR 的最后一环是**同轮 bump 根 gitlink**（`git -C projects/<sub> checkout origin/main && git add projects/<sub>`），并跑 `submodule-reachability-gate.py --source worktree --fetch` 验证。
 
 ---
 
