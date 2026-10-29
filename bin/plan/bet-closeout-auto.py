@@ -57,7 +57,8 @@ def find_bet_in_ledger(bet_id: str) -> tuple[bool, int]:
         return False, -1
     lines = LEDGER.read_text(encoding="utf-8").splitlines()
     for i, line in enumerate(lines):
-        if line.strip() == f"id: {bet_id}":
+        s = line.strip()
+        if s in (f"id: {bet_id}", f"- id: {bet_id}"):
             return True, i
     return False, -1
 
@@ -70,10 +71,10 @@ def get_current_status(bet_id: str) -> str | None:
     in_bet = False
     for line in lines:
         s = line.strip()
-        if s == f"id: {bet_id}":
+        if s in (f"id: {bet_id}", f"- id: {bet_id}"):
             in_bet = True
             continue
-        if in_bet and s.startswith("id:") and s != f"id: {bet_id}":
+        if in_bet and (s.startswith("id:") or s.startswith("- id:")) and s not in (f"id: {bet_id}", f"- id: {bet_id}"):
             return None
         if in_bet and s.startswith("status:"):
             return s.split(":", 1)[1].strip()
