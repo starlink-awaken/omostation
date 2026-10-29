@@ -25,7 +25,7 @@ from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
-from repo_root import event_ledger_path
+from repo_root import event_ledger_path, state_root
 
 
 def _default_ledger() -> Path:
@@ -34,8 +34,15 @@ def _default_ledger() -> Path:
 
 
 DEFAULT_EVENTS_JSONL = WORKSPACE / ".omo" / "_knowledge" / "workflow-mesh" / "events.jsonl"
-PID_FILE = WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "daemon.pid"
-LOG_FILE = WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "daemon.log"
+
+
+def _pid_file() -> Path:
+    """ADR-0456 B1: PID/log/watermarks are profile write-plane state — resolve at call time."""
+    return state_root() / ".omo" / "_delivery" / "resident-orchestrator" / "daemon.pid"
+
+
+def _log_file() -> Path:
+    return state_root() / ".omo" / "_delivery" / "resident-orchestrator" / "daemon.log"
 PROJECTOR_ID = "resident-sub"
 
 # 主题路由: event_type → handler 名(硬编码主题级;规则级 = YAML 加载预留)
@@ -67,9 +74,10 @@ def register_handler(event_type: str, fn: Callable[[dict[str, Any]], None], *, s
 
 
 def _log(msg: str) -> None:
-    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    log_file = _log_file()
+    log_file.parent.mkdir(parents=True, exist_ok=True)
     try:
-        with LOG_FILE.open("a", encoding="utf-8") as fh:
+        with log_file.open("a", encoding="utf-8") as fh:
             fh.write(f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} {msg}\n")
     except OSError:
         pass
@@ -178,7 +186,7 @@ def _route(event: dict[str, Any]) -> None:
 
 
 def _wm_path(projector: str) -> Path:
-    return WORKSPACE / ".omo" / "_delivery" / "resident-orchestrator" / "watermarks" / f"{projector}.json"
+    return state_root() / ".omo" / "_delivery" / "resident-orchestrator" / "watermarks" / f"{projector}.json"
 
 
 def _load_byte_offset(projector: str) -> int:
@@ -307,8 +315,9 @@ def run_daemon(
     _register_default_handlers()
     _load_routes()  # WP-C: rule-level subscription table (fail-closed)
     broker = _connect_with_retry(ledger)
-    PID_FILE.parent.mkdir(parents=True, exist_ok=True)
-    PID_FILE.write_text(str(os.getpid()), encoding="utf-8")
+    pid_file = _pid_file()
+    pid_file.parent.mkdir(parents=True, exist_ok=True)
+    pid_file.write_text(str(os.getpid()), encoding="utf-8")
 
     if once:
         report = tick_once(broker, events_jsonl, projector=projector, topic_filter=topic_filter)
@@ -335,7 +344,7 @@ def run_daemon(
             stop_event.wait(interval)
     finally:
         broker.close()
-        PID_FILE.unlink(missing_ok=True)
+        pid_file.unlink(missing_ok=True)
         _log("resident_orchestrator_stopped")
     return 0
 

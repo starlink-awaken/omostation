@@ -13,10 +13,18 @@ BET:  BET-Y2Q4-T10-233   spec: `docs/superpowers/specs/2026-06-06-omo-resident-w
   `projects/omo/src/omo/omo_paths.event_ledger_path()` 在每个 env 配置下**逐字节相等** ——
   这条只能靠**执行**验，扫源码扫不出「两个都对但拼法不同」。
 
-⚠️ 本轮实测的决定性结论: bin/ 侧**没有任何读者**解析到 state 根 (类别只有 CHECKOUT /
-CALLER / DERIVED)。因此「读写同根」在不动 `bin/` 的前提下**结构上不可能达成**，本文件把
-这份 split 清单钉成**已登记的现状**而不是「已经收敛」。台账 circuit_breaker 明确
-「需要改 bin/ 读者 → 停下登记而不是扩大 PR」，所以这里是登记，不是豁免的省略。
+⚠️ 现状 (三次移动: T10-233 初判 → T10-247 → 2026-10-29 bin/ 读侧收敛): T10-233 基线上 bin/ 侧**没有
+任何读者**解析到 state 根 (类别只有 CHECKOUT / CALLER / DERIVED)，因此「读写同根」在不动 `bin/` 的
+前提下**结构上不可能达成**；台账 circuit_breaker 明确「需要改 bin/ 读者 → 停下登记而不是扩大 PR」，
+所以当时这里是登记，不是豁免的省略。T10-247 把 projection-full-refresh 的 ledger 第②支落到 state 根，
+2026-10-29 把 `.omo/_delivery/resident-orchestrator/**` 一族两个文件里的四处访问器 (`_pid_file` /
+`_log_file` / `_wm_path` / `_daemon_watermarks`) 改为调用时刻解析 —— 于是
+「零读者」这句**按事实不再成立**，读侧改为钉 `REVIEWED_STATE_READERS` 评审集 (含每个在册文件的
+STATE 行数)。
+**本族已读写同根**；其余族 (workflow-mesh events、observability、retros/resident、event-ingest 等)
+仍是**已登记的 split 现状**，`log-rotate.py` 按设计留在检出根并由
+`tests/unit/test_resident_plane_readers_state_root.py::test_log_rotate_stays_registered` 钉住 ——
+它清的是祖先目录，漏改的后果不是读不到而是旧文件永不清理。
 
 开发期读的是 `projects/omo` (分支 gitlink 的检出)；未 bump-pointer 时那份还没有写面机制，
 `test_omo_checkout_carries_the_write_plane_mechanism` 会当场红并指名原因。用
@@ -416,7 +424,9 @@ DEFERRED_RESIDENT_WRITERS = frozenset(
 )
 COORDINATION_PLANE_WRITERS = frozenset({"resident/execute.py"})
 
-# 12 个族 / 33 对。类别 = 该 bin 文件里锚点的根: CHECKOUT=检出常量, CALLER=函数参数
+# 9 个族 / 30 对 (T10-233 基线为 12 族 / 33 对；resident-orchestrator 的 daemon.log / daemon.pid /
+# watermarks 三行随 2026-10-29 读者改道移出，判据是集合相等，所以改道后**必须**同步删表)。
+# 类别 = 该 bin 文件里锚点的根: CHECKOUT=检出常量, CALLER=函数参数
 # (由 CALLER_EVIDENCE 单独钉住), DERIVED=扫不出模块级定义 (只出现在归档/死码里)。
 SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
     ".omo/_delivery/alert-forwarder/watermark.json": {
@@ -431,15 +441,6 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
         ("bin/panorama/panorama-collect.py", "CHECKOUT"),
         ("bin/ssot/alert-forwarder.py", "CHECKOUT"),
         ("bin/ssot/observability-events.py", "CHECKOUT"),
-    },
-    ".omo/_delivery/resident-orchestrator/daemon.log": {
-        ("bin/ssot/resident-orchestrator-daemon.py", "CHECKOUT"),
-    },
-    ".omo/_delivery/resident-orchestrator/daemon.pid": {
-        ("bin/ssot/resident-orchestrator-daemon.py", "CHECKOUT"),
-    },
-    ".omo/_delivery/resident-orchestrator/watermarks/*": {
-        ("bin/ssot/resident-orchestrator-daemon.py", "CHECKOUT"),
     },
     ".omo/_knowledge/decision-proposals": {
         ("bin/_archive/2026-09-21-bin-quota-offset/real-scenario-runner.py", "DERIVED"),
@@ -478,7 +479,10 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
     },
 }
 
-# 9 个族 / 17 对。log-rotate 是**目录级**清理者，它按祖先路径删日志 —— 写者改道而它没跟上
+# 9 个族 / 17 对 (与 T10-233 基线同数：check-resident-status **仍是**检出根读者 —— 它是 sgf-policy 登记
+# 的 gate 脚本，落 governance_code lane，与本 code lane 腿不能同批交付，见
+# `tests/unit/test_resident_plane_readers_state_root.py::test_check_resident_status_still_registered_checkout`)。
+# log-rotate 是**目录级**清理者，它按祖先路径删日志 —— 写者改道而它没跟上
 # 时，后果不是读不到而是**旧文件永不清理**，所以这一类比 exact 更必须钉住。
 SPLIT_ANCESTOR: dict[str, set[tuple[str, str]]] = {
     ".omo/_delivery/event-ingest/watermark.json": {("bin/ssot/log-rotate.py", "CHECKOUT")},
@@ -548,8 +552,21 @@ CHECKOUT_MARKERS = ("__file__", "parents[", "code_root")
 
 # 在册 STATE 读者评审集 —— 键**只有 rel**，不钉行号：`_state_readers` 返回 (rel, line) 对，
 # 行号随该读者自身后续改动漂移 (T10-247 实测 line=58)，钉行号会让判据在无关改动当天假红。
+# `rows` 钉的是**该文件里有几处调用时刻解析到 state 根的读取点**（一个文件可以有多处，
+# 如 daemon 的三个访问器），所以计数不是恒 1；多一处未登记当场红。
 REVIEWED_STATE_READERS = {
-    "bin/panorama/projection-full-refresh.py": "T10-247: ledger_db_path() 第②支 state_root() 落 profile 根",
+    "bin/panorama/projection-full-refresh.py": {
+        "rows": 1,
+        "why": "T10-247: ledger_db_path() 第②支 state_root() 落 profile 根",
+    },
+    "bin/ssot/resident-orchestrator-daemon.py": {
+        "rows": 3,
+        "why": "2026-10-29 读侧收敛: _pid_file / _log_file / _wm_path 三处调用时刻解析 state_root()",
+    },
+    "bin/ssot/system-health-check.py": {
+        "rows": 1,
+        "why": "2026-10-29 读侧收敛: _daemon_watermarks() 取代两级派生常量 (旧形状对检测器不可见)",
+    },
 }
 
 # 已知**不对称** (不是 bug 清单的终点，是本轮登记): 台账 DB 覆盖名给了相对路径时，
@@ -750,23 +767,26 @@ def test_every_pinned_reader_names_a_real_file():
 
 
 def test_bin_state_readers_are_the_reviewed_set(measured):
-    """bin/ 侧的 STATE 读者**恰为在册那一条**，多一条未在册即红。
+    """bin/ 侧的 STATE 读者**恰为在册那一组**，多一条未在册即红。
 
     改前（T10-233 基线）这条断言是 `_state_readers(rows) == []`，其含义是「bin/ 里没有任何读者
     解析到 state 根」，因而「读写同根」不可能靠改 omo 达成。T10-247 让 projection-full-refresh 的
-    ledger 第②支落到 state 根，于是「零读者」这句**按事实不再成立** —— 用例随之改名并把
-    否定式换成评审集，避免留着一条说谎的用例名。
+    ledger 第②支落到 state 根，2026-10-29 又让 resident-orchestrator 一族的三个 bin 文件改到
+    state 根，于是「零读者」这句**按事实不再成立** —— 用例随之改名并把否定式换成评审集，
+    避免留着一条说谎的用例名。
 
-    双向钉：① 实测集合 == REVIEWED_STATE_READERS（少了是读者消失，见
-    test_ledger_family_has_a_single_root_contract_in_bin）；② 每个在册 rel **恰有一行**，
-    新增第二条未在册的 STATE 读者当场红。行号不进判据（见 REVIEWED_STATE_READERS 注释）。
+    双向钉：① 实测 rel 集合 == REVIEWED_STATE_READERS 的键 (少了是读者消失，见
+    test_ledger_family_has_a_single_root_contract_in_bin)；② 每个在册 rel 的**行数**等于登记的
+    `rows` (一个文件可有多处访问器，daemon 实测 3 处)，所以「新增一处未登记的 STATE 读取」与
+    「少了一处已登记的」都当场红。行号不进判据 (见 REVIEWED_STATE_READERS 注释)。
     """
     _fams, rows, _ex, _an = measured
     pairs = _state_readers(rows)
     rels = {rel for rel, _line in pairs}
     assert rels == set(REVIEWED_STATE_READERS), rels ^ set(REVIEWED_STATE_READERS)
     counts = {rel: sum(1 for r, _ in pairs if r == rel) for rel in rels}
-    assert all(n == 1 for n in counts.values()), counts
+    expect = {rel: spec["rows"] for rel, spec in REVIEWED_STATE_READERS.items()}
+    assert counts == expect, (counts, expect)
 
 
 def test_caller_class_anchors_are_checkout_anchored(measured):
