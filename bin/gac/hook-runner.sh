@@ -189,6 +189,28 @@ run_hook_pre_commit() {
   # submodule-guard (python script, use python to run)
   run_check "submodule-guard" "$py run --profile stdlib -- bin/gac/submodule-guard.py --staged" true 5 || FAILED=1
 
+  # lane 隔离: 每 commit 单 lane (ADR-0122 §46「lane 守门: 每 commit 单 lane,
+  # pre-commit hook 强制」)。
+  #
+  # 这是这道尺的**设计指定执行点** —— 但 2026-10-30 实测发现它此前从未真正生效:
+  # hook-runner 的 pre-commit 清单里没有它, CI 侧走 --staged 读到空集恒 PASS,
+  # PUSH_RANGE 分支在 .githooks/ 无导出点 ⇒ 三条路径全空转, 规则从未被执行过。
+  # CI 侧已在 PR #4979 补上第四条路径 (按 PR base..head 逐 commit 判); 本条补第三条
+  # (本地提交时按**暂存区**判 —— 即这次提交实际要带上的文件集合)。
+  #
+  # 判据粒度: --staged 读 `git diff --cached` ⇒ 天然是**单个 commit 的变更集**,
+  # 与「每 commit 单 lane」的原文语义一致 (不是整段 PR 合并判)。
+  #
+  # profile 必须用 pyyaml: classify() 依赖 sgf-policy.yaml 的 gate→lane 映射,
+  # 缺 yaml 时它会静默降级成空映射 ⇒ 判定偏宽 (漏判), 那比不接线更坏。
+  #
+  # 违规处置: 按规则拆成多次提交 (每个 staged set 单 lane)。仓内既定原则见
+  # docs/reports/2026-10-26-bet-270-...md §4.5 —— 不加 --allow-lane /
+  # AGENT_WORKFLOW_ALLOWED_LANES 自我授权, 而是让规则本身生效。
+  if [ -f "$ROOT/bin/change-lane-check.py" ]; then
+    run_check "change-lane-check" "$py run --profile pyyaml -- bin/change-lane-check.py --staged" true 3 || FAILED=1
+  fi
+
   # advisory: hygiene
   if [ -x "$ROOT/bin/gac/gac-hygiene-check.py" ]; then
     run_check "hygiene" "$py run --profile stdlib -- bin/gac/gac-hygiene-check.py" false 10 || true

@@ -18,6 +18,27 @@ ALLOWED_COMBOS = [
     {"submodule_pointer", "config"},
     {"docs", "docs_data"},
     {"governance_code", "docs", "docs_data"},
+    # 2026-10-30: 放宽「治理面 + 文档面」同交 (pre-commit 接线前的实测依据)。
+    #
+    # 背景: 规则说「每 commit 单 lane」(ADR-0122 §46), 但 lane 隔离在三条路径上
+    # 全部空转 (CI 的 --staged 读到空集 / PUSH_RANGE 无导出点 / pre-commit 不调它)
+    # ⇒ 规则**从未真正生效过**, 仓内积累了大量违规提交。把 pre-commit 真正接上
+    # 之前必须先消化这类**主流模式**的误伤, 否则开发者一提交就被挡住。
+    #
+    # 实测 (近 120 个 commit 的逐 commit 判据):
+    #   基线 (不放宽)                      剩余违规 46/119 = 38%
+    #   放宽 {docs,docs_data,governance_state} 剩余违规 26/119 = 21%
+    # 剩余的 26 个违规**全部**含 code 或 governance_code —— 那些是真该拆的
+    # (代码变更与治理登记混在一个 commit)。
+    #
+    # 为什么这三者可以同交: 它们是同一语义单元 —— 治理记录 (.omo/, 机器读或
+    # 决策记录) + 人读文档 (docs/*.md) + 文档型数据 (docs/*.yaml/json/csv)。
+    # 仓内最常见的收口形态就是「retro + 台账 + 报告」一起交
+    # (实测违规组合分布里 docs+docs_data+governance_state 占 27%)。
+    #
+    # 为什么仍不放宽 code / config / governance_code: 那三个是**机制面**
+    # (可执行代码 / CI 接线 / 治理脚本), 与文档面不同质, 必须独立提交。
+    {"docs", "docs_data", "governance_state"},
 ]
 
 
@@ -273,7 +294,14 @@ def allowed_for(lanes: set[str], allowed_lanes: set[str]) -> bool:
         return False
     if "submodule_pointer" in lanes and not any(lanes <= combo for combo in ALLOWED_COMBOS):
         return False
+    # governance_state 原本是**无条件硬隔离** (与任何 lane 混合即拒)。
+    # 2026-10-30 起: 改为「先问 ALLOWED_COMBOS, 再回落硬隔离」——
+    # 这样 {docs, docs_data, governance_state} 这一组主流收口形态可以同交,
+    # 而含 code / config / governance_code 的混合仍被拒 (那些是真该拆的)。
+    # 放宽的实测依据见 ALLOWED_COMBOS 上方的注释。
     if "governance_state" in lanes and len(lanes) > 1:
+        if any(lanes <= combo for combo in ALLOWED_COMBOS):
+            return True
         return False
     return any(lanes <= combo for combo in ALLOWED_COMBOS)
 

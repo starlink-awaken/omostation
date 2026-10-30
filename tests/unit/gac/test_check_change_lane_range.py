@@ -105,11 +105,13 @@ def test_single_commit_with_mixed_lanes_is_reported(tmp_path):
     """单个 commit 内混 lane => 必须报出 (判据有牙齿)。"""
     repo = _make_repo(tmp_path)
     base = _commit(repo, {"README.md": "base\n"}, "base")
-    # docs 档 + .omo/ 下的治理面 => docs + governance_state 混合
+    # 机制面 (代码) + 治理面 (.omo/) => 仍须判违规
+    # (注: docs + governance_state 已于 2026-10-30 放宽为合法组合, 见
+    #  test_governance_state_may_share_a_commit_with_docs_lane)
     head = _commit(
         repo,
         {
-            "docs/plan.md": "plan\n",
+            "bin/plan/tool.py": "# tool\n",
             ".omo/_knowledge/decisions/0001-x.md": "# decision\n",
         },
         "mixed change",
@@ -120,7 +122,7 @@ def test_single_commit_with_mixed_lanes_is_reported(tmp_path):
     assert not report["ok"], report
     assert report["violations"] == 1
     violation = report["per_commit"][0]
-    assert set(violation["lanes"]) == {"docs", "governance_state"}
+    assert set(violation["lanes"]) == {"code", "governance_state"}
 
 
 def test_default_is_advisory_but_fail_on_violation_blocks(tmp_path):
@@ -134,7 +136,7 @@ def test_default_is_advisory_but_fail_on_violation_blocks(tmp_path):
     head = _commit(
         repo,
         {
-            "docs/plan.md": "plan\n",
+            "bin/plan/tool.py": "# tool\n",
             ".omo/_knowledge/decisions/0001-x.md": "# decision\n",
         },
         "mixed change",
@@ -193,3 +195,47 @@ def test_script_registry_entries_share_the_governance_lane(tmp_path):
     # 二者同 lane => 「改脚本 + 改登记条目」是单 lane 的原子变更
     lanes = {module.classify(registry_entry, submodules=set()), module.classify(script, submodules=set())}
     assert module.allowed_for(lanes, set()) is True
+
+def test_governance_state_may_share_a_commit_with_docs_lane(tmp_path):
+    """治理面 + 文档面可以同交 (2026-10-30 放宽)。
+
+    这是仓内最常见的收口形态 (retro + 台账 + 报告一起交)。实测近 120 个 commit 里,
+    该组合占全部违规的 27% —— 规则**从未生效**期间积累的主流模式。
+    """
+    module = _load(LANE_SCRIPT, "change_lane_check_relaxed")
+    lanes = {"docs", "docs_data", "governance_state"}
+    assert module.allowed_for(lanes, allowed_lanes=set()) is True
+
+
+def test_governance_state_still_isolated_from_code_lanes(tmp_path):
+    """治理面与**机制面** (code / governance_code / config) 仍必须分开提交。
+
+    放宽只针对文档面 —— 代码变更与治理登记混在一个 commit 仍被判违规 (那才是真该拆的)。
+    """
+    module = _load(LANE_SCRIPT, "change_lane_check_isolation")
+    for extra in ("code", "governance_code", "config"):
+        lanes = {"governance_state", extra}
+        assert module.allowed_for(lanes, allowed_lanes=set()) is False, lanes
+
+
+def test_runtime_snapshot_isolation_is_unchanged(tmp_path):
+    """runtime_snapshot 的硬隔离不受本次放宽影响 (ADR-0129 §11.3.2 的硬规则)。"""
+    module = _load(LANE_SCRIPT, "change_lane_check_runtime")
+    assert module.allowed_for({"runtime_snapshot", "docs"}, allowed_lanes=set()) is False
+    assert module.allowed_for({"runtime_snapshot", "governance_state"}, allowed_lanes=set()) is False
+
+
+def test_hook_runner_wires_lane_check_into_pre_commit(tmp_path):
+    """pre-commit hook 必须真的调这道尺 (它是 ADR-0122 §46 指定的执行点)。
+
+    2026-10-30 实锤: hook-runner 的 pre-commit 清单里**没有** change-lane-check
+    ⇒ 这道尺在本地路径上从未触发 ⇒ 规则从未真正生效过。
+    """
+    hook_runner = ROOT / "bin" / "gac" / "hook-runner.sh"
+    text = hook_runner.read_text(encoding="utf-8")
+    assert "change-lane-check" in text, "pre-commit 未接线 lane 尺"
+    # 必须带 --staged (判据输入 = 本次提交实际要带上的文件集合)
+    assert "bin/change-lane-check.py --staged" in text
+    # 必须是 blocking (run_check 第 3 参 = true)
+    assert 'run_check "change-lane-check"' in text
+    assert '"$py run --profile pyyaml -- bin/change-lane-check.py --staged" true' in text
