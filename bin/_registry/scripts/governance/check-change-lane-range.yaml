@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/gac/check-change-lane-range.py
+name: Check Change Lane Range
+category: governance
+owner: governance-team
+description: "CI 侧 lane 隔离判据 (per-commit 粒度): 按 PR 的 base..head 逐 commit 判 lane。补上 lane 尺此前完全空转的第四条路径 —— sgf-policy 的 --staged 在 CI 干净检出里读到空集、PUSH_RANGE 无导出点、本地 pre-commit/pre-push 也不调它。判据粒度是 per-commit (规则原文「每 commit 单 lane」, ADR-0122 §46), 一段范围里多个不同 lane 的 commit 合规, 违规的是单个 commit 内混 lane。默认 advisory (实测 40 个已合并 PR 中 13 个/32.5% 违规, 属该规则从未生效的历史欠账, 直接阻断会炸掉约 1/3 PR); --fail-on-violation 可切为阻断。"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/change-lane-check.py
+triggers:
+  - type: ci
+    workflow: .github/workflows/gac-gate.yml
+    step: CR-CHANGE-LANE-RANGE — lane isolation (per-commit)
+related:
+  - bin/change-lane-check.py
+  - projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml
+  - tests/unit/gac/test_check_change_lane_range.py
+maturity: draft
+last_reviewed: "2026-10-30"
