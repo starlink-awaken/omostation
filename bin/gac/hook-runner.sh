@@ -243,6 +243,40 @@ run_hook_pre_push() {
 
   # remote-hygiene
   run_check "remote-hygiene" "$py run --profile stdlib -- bin/gac/remote-hygiene-check.py" true 3 || FAILED=1
+
+  # lane 隔离 (PUSH_RANGE 导出点 —— ADR-4443 v9 设计的机制, 2026-10-30 补上导出点)
+  #
+  # 为什么需要它: change-lane-check.py 的 PUSH_RANGE 分支自设计起**从无导出点**
+  # (实测 grep -rn PUSH_RANGE .githooks/ = 0 命中; 仓内
+  # docs/reports/2026-10-27-bet-273-...md §6 已记同一事实) ⇒ 该机制从未生效。
+  #
+  # 与 pre-commit 那道尺的分工: pre-commit 拦「本次提交」(暂存区); 本道尺拦
+  # 「本次推送的整个 commit 范围」⇒ 兜住绕过 pre-commit 的路径 (--no-verify /
+  # 从旧检出提交的 commit)。实测: 用 --no-verify 建一个混 lane commit 后,
+  # pre-commit 被绕过而本道尺拦下 (rc=1, 精确指出那个 commit)。
+  #
+  # 范围解析: export-push-range.py 从 stdin 的 ref 对算出
+  # merge-base(origin/<branch>, local_sha)..local_sha —— 精确表示「本地分支相对远端
+  # 多出的 commit」。用 merge-base 而非 origin/<branch> 直接当 base: 分支可能落后
+  # 于远端 (远端有别人推的 commit), 那样算出的范围会含不属于本次推送的变更。
+  #
+  # 判据粒度: PUSH_RANGE 分支已改为复用 check_range() 的 **per-commit** 判据
+  # (原实现走 git diff --name-only <range> = aggregate, 与规则「每 commit 单 lane」
+  # 不符, 且实测会误判「commit A=docs + commit B=子模块指针」那类合法形状)。
+  # 本仓全 squash 合并, 但 pre-push 时分支上的 commit 尚未被压缩 ⇒ 判 per-commit
+  # 看得到「哪个 commit 混了 lane」, 开发者据此拆; squash 之后就无从拆解了。
+  #
+  # 解析不出范围时 (首次 push 新分支且无 origin/HEAD / 历史被重写) ⇒ 显式 SKIP,
+  # 不输出 PUSH_RANGE ⇒ 下游看到「没有范围」而不是「范围是空」。
+  if [ -f "$ROOT/bin/gac/export-push-range.py" ] && [ -f "$ROOT/bin/change-lane-check.py" ]; then
+    _push_range="$(python3 "$ROOT/bin/gac/export-push-range.py" 2>/dev/null || true)"
+    if [ -n "$_push_range" ]; then
+      export PUSH_RANGE="$_push_range"
+      run_check "change-lane-check" "$py run --profile pyyaml -- bin/change-lane-check.py" true 5 || FAILED=1
+    else
+      echo "[hook-runner] ⚠️ [change-lane-check] SKIP 无法解析本次 push 的 commit 范围" >&2
+    fi
+  fi
 }
 
 # ── 解析 manifest 并执行 post-checkout 检查 ─────────────────

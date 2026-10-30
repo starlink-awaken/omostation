@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/gac/export-push-range.py
+name: Export Push Range
+category: governance
+owner: governance-team
+description: "从 pre-push 的 stdin ref 对导出本次 push 的 commit 范围 (PUSH_RANGE)。补上 ADR-4443 v9 设计的导出点 —— 该机制自设计起在 .githooks/ 里无任何导出点, 从未生效 (实测 grep -rn PUSH_RANGE .githooks/ = 0 命中)。base 取 merge-base(origin/<branch>, local_sha) 而非 origin/<branch> 直接当 base: 分支可能落后于远端 (远端有别人推的 commit), 那样算出的范围会含不属于本次推送的变更。新分支首次 push 时 origin/<branch> 还不存在 (git 在 push 成功后才创建 remote-tracking ref, 而 pre-push 跑在 push 之前) ⇒ 退到 origin/HEAD (默认分支) 作 base 候选。解析不出范围时显式 SKIP 并给出原因, 不输出 PUSH_RANGE —— 下游必须看到「没有范围」而不是「范围是空」(后者会被当成无违规而假绿)。"
+inputs:
+  - name: PUSH_REFS_FILE
+    description: pre-push 的 ref 对文件 (hook-runner 从 stdin 落盘)
+outputs:
+  - type: stdout
+    description: PUSH_RANGE=<base>..<head> (仅在可解析时输出)
+dependencies:
+  - bin/change-lane-check.py
+triggers:
+  - type: git_hook
+    hook: pre-push
+related:
+  - bin/change-lane-check.py
+  - bin/gac/hook-runner.sh
+maturity: draft
+last_reviewed: "2026-10-30"

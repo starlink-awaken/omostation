@@ -410,8 +410,24 @@ def main() -> int:
 
     allowed_lanes = parse_allowed_lanes([os.environ.get("AGENT_WORKFLOW_ALLOWED_LANES", ""), *args.allow_lane])
 
-    if args.git_range:
-        range_report = check_range(args.git_range, allowed_lanes=allowed_lanes)
+    # PUSH_RANGE (ADR-4443 v9): pre-push 场景的判据输入。
+    #
+    # 粒度说明 (2026-10-30): 原实现走 changed_paths() -> `git diff --name-only <range>`,
+    # 即把整段范围**合并成一个文件集合**再判 —— 那是 aggregate 粒度, 与规则原文
+    # 「每 commit 单 lane」(ADR-0122 §46) 不符, 且实测会误判: 一个 PR 含
+    # 「commit A = docs」「commit B = 子模块指针」两个 commit 时, 每 commit 单 lane
+    # ⇒ 合规; 合并判却得到 {docs, submodule_pointer} 的假违规 (PR #4974 正是这形状)。
+    #
+    # 这里改为复用 check_range() 的 **per-commit** 判据, 与 --range / CI 侧同口径。
+    #
+    # 为什么 pre-push 阶段判 per-commit 有意义: 本仓全 squash 合并, 但 pre-push 时
+    # 分支上的 commit **尚未被压缩** ⇒ 判据看得到「哪个 commit 混了 lane」,
+    # 开发者据此拆 commit; 而 squash 后的 main 上只剩一个混合 commit, 那时已无从拆解。
+    push_range = os.environ.get("PUSH_RANGE", "").strip()
+    git_range = args.git_range or (push_range if ".." in push_range else "")
+
+    if git_range:
+        range_report = check_range(git_range, allowed_lanes=allowed_lanes)
         if args.json:
             print(json.dumps(range_report, ensure_ascii=False, indent=2))
         elif range_report["ok"]:
@@ -422,7 +438,8 @@ def main() -> int:
         else:
             print(
                 f"change-lane-check: FAIL mixed lanes in "
-                f"{len(range_report['violations'])}/{range_report['commits']} commits"
+                f"{len(range_report['violations'])}/{range_report['commits']} commits "
+                f"(范围 {git_range})"
             )
             for entry in range_report["violations"]:
                 lanes = ",".join(entry["lanes"])
