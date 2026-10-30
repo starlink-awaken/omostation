@@ -3,13 +3,22 @@ id: bin/gac/hook-runner.sh
 name: Hook Runner
 category: governance
 owner: governance-team
-description: ""
+description: "Git hook 调度引擎 —— 所有 git hook 的唯一入口 (.githooks/* → .git/hooks/*)。承载 pre-commit / pre-push / post-checkout 等各阶段的检查清单。2026-10-30 起 pre-commit 阶段接入 lane 隔离判据 (bin/change-lane-check.py --staged, blocking) —— 这是 ADR-0122 §46「lane 守门: 每 commit 单 lane, pre-commit hook 强制」指定但**从未真正生效**的执行点 (此前 hook-runner 的 pre-commit 清单里没有这道尺, 与 CI 的 --staged 空集、PUSH_RANGE 无导出点一起构成三条路径全空转)。"
 inputs: []
 outputs:
   - type: exit_code
   - type: json
-dependencies: []
-triggers: []
-related: []
+dependencies:
+  - bin/change-lane-check.py
+triggers:
+  - type: git_hook
+    hook: pre-commit
+  - type: git_hook
+    hook: pre-push
+  - type: git_hook
+    hook: post-checkout
+related:
+  - bin/change-lane-check.py
+  - .githooks/pre-commit
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: "2026-10-30"

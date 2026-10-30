@@ -177,6 +177,52 @@ P2 (长期)
 - F-3 4701 死链修复 ROI 低(均匀分布, 无单点大贡献)
 - P2 F-7 跨仓 rename 5 阶段需数月, 进度可能慢
 
+## lane 守门实施登记（2026-10-30）
+
+§决策驱动因子「**lane 守门**: 每 commit 单 lane, pre-commit hook 强制」此前**从未真正生效过**
+—— 2026-10-30 实锤三条执行路径全部空转：
+
+1. **pre-commit**：`bin/gac/hook-runner.sh` 的 `run_hook_pre_commit` 检查清单里**没有**
+   `change-lane-check` ⇒ 从未触发。
+2. **CI**：`sgf-policy.yaml` 把它登记为 `--staged`，而 CI 干净检出里没有 staged 文件
+   ⇒ 读到空集 ⇒ 恒 PASS（实测 `PASS (0 files, lanes=-)`）。
+3. **pre-push / PUSH_RANGE**：`change-lane-check.py` 的按-push-commit-范围判定分支，
+   在 `.githooks/` 里**没有任何导出点** ⇒ 从未触发。
+
+⇒ 规则写在 ADR、有实现、有注册，但**没有任何一条路径真正喂过它数据**。
+这类空转比「没有这条规则」更危险：它让人以为 lane 纪律在生效。
+
+### 本次落地
+
+- **pre-commit 接线**（`bin/gac/hook-runner.sh`）：新增
+  `bin/change-lane-check.py --staged`，**blocking**。判据输入 = 暂存区 = 本次提交实际要
+  带上的文件集合 ⇒ 天然是「单个 commit 的变更集」，与本 ADR 的原文语义一致。
+  profile 用 `pyyaml`：`classify()` 依赖 sgf-policy 的 gate→lane 映射，缺 yaml 时它会静默
+  降级成空映射 ⇒ 判定偏宽（漏判），那比不接线更坏。
+- **CI 侧接线**（PR #4979）：`bin/gac/check-change-lane-range.py` + gac-gate.yml 的
+  `CR-CHANGE-LANE-RANGE` 步，按 PR base..head 逐 commit 判（advisory）。
+- **规则放宽**（`ALLOWED_COMBOS` + `allowed_for`）：`governance_state` 原本是**无条件硬隔离**
+  （与任何 lane 混合即拒）。接线前实测（近 120 个 commit 的逐 commit 判据）：
+  基线违规 59%，其中「治理面(.omo/) + 文档面(docs/)」同交是仓内**主流收口形态**
+  （retro + 台账 + 报告一起交），占全部违规的 27%。该组合现予放宽 ⇒ 违规降到 43%；
+  剩余违规**全部**含 code / governance_code / config —— 那些是真该拆的（机制面与治理面
+  不同质）。`runtime_snapshot` 的硬隔离不受影响。
+
+### 实测（接线的真实效果）
+
+- 混 lane 提交：真实 `git commit` 被拦下（rc=1），错误信息列出各 lane 与具体文件。
+- 单 lane 提交：通过（rc=0）。
+- 变异对照：撤销放宽 ⇒ 1 failed；过度放宽 code ⇒ 3 failed；摘掉 hook 接线 ⇒ 命中接线用例。
+
+### 未闭合
+
+- 43% 的红率意味着约一半**新**提交会被拦（历史不改）。这是规则本意（每 commit 单 lane），
+  但若摩擦超出可接受范围，需要的不是放宽规则，而是**消化历史欠账**或分批整改提交形态。
+- `governance_code` 与 `governance_state` 的边界仍偏碎：「改一个治理件 + 登记它」这类
+  原子变更天然跨两个 lane（注册表在 `.omo/_truth/registry/`、ADR 在 `.omo/_knowledge/decisions/`）。
+  本次未扩大 `governance_code` 边界（那会让 120+ 文件的 lane 归属变更），留作后续裁决。
+- `PUSH_RANGE` 分支仍无导出点（pre-push 侧未接线）；CI 侧已由 `--range` 覆盖。
+
 ## Verification
 
 - [x] S0: make gac-local-gate PASS, F-9 规则加, F-10 数字刷
