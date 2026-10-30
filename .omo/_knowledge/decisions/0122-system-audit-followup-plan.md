@@ -223,6 +223,43 @@ P2 (长期)
   本次未扩大 `governance_code` 边界（那会让 120+ 文件的 lane 归属变更），留作后续裁决。
 - `PUSH_RANGE` 分支仍无导出点（pre-push 侧未接线）；CI 侧已由 `--range` 覆盖。
 
+### pre-push 接线补记（2026-10-30 续）
+
+`PUSH_RANGE` 导出点已补上（`bin/gac/export-push-range.py` + `hook-runner.sh` 的 pre-push 段），
+`PUSH_RANGE` 分支的**判据粒度同时被修正**。
+
+**粒度修正（必须记，否则下一个人会以为它本来就是 aggregate）**：
+原 `PUSH_RANGE` 分支走 `changed_paths()` → `git diff --name-only <range>`，即把整段范围
+**合并成一个文件集合**再判 —— 那是 aggregate 粒度，与本节「每 commit 单 lane」不符，
+且实测会**误判**：「commit A = docs」「commit B = 子模块指针」两个 commit 每 commit 单
+lane ⇒ 合规，合并判却得到 `{docs, submodule_pointer}` 的假违规（PR #4974 正是这形状）。
+现已改为复用 `check_range()` 的 **per-commit** 判据，与 `--range` / CI 侧同口径。
+
+**为什么 pre-push 阶段判 per-commit 有意义**：本仓全 squash 合并，但 pre-push 时分支上
+的 commit **尚未被压缩** ⇒ 判据看得到「哪个 commit 混了 lane」，开发者据此拆；
+而 squash 落到 main 之后就只剩一个混合 commit，那时已无从拆解。
+
+**与 pre-commit 那道尺的分工**：pre-commit 拦「本次提交」（暂存区）；pre-push 拦
+「本次推送的整个 commit 范围」⇒ **兜住绕过 pre-commit 的路径**。实测：用 `--no-verify`
+建一个混 lane commit 后，pre-commit 被绕过而 pre-push 那道尺拦下（真实 `git push` rc=1，
+精确指出违规 commit 与各 lane 的文件）。
+
+**范围解析的两个坑**（均已实测并写进合同测试）：
+
+1. **base 不能用 stdin 里的 remote_sha** —— 它是推送**前**远端指向的 commit，该对象在
+   本地通常不存在（实测 `git cat-file -t` 失败）。取 `merge-base(origin/<branch>, local_sha)`：
+   `origin/<branch>` 是 remote-tracking ref，本地必有；与 local_sha 求交即精确表示
+   「本地分支相对远端多出的 commit」。
+   **为什么不用 `origin/<branch>` 直接当 base**：分支可能落后于远端（远端有别人推的
+   commit），那样算出的范围会含**不属于本次推送**的变更。
+2. **新分支首次 push 时 `origin/<branch>` 还不存在** —— git 在 push **成功之后**才创建
+   remote-tracking ref，而 pre-push 跑在 push 之前。此时退到 `origin/HEAD`（默认分支）
+   作 base 候选。解析不出范围时**显式 SKIP 并给出原因**，不输出 `PUSH_RANGE` ⇒ 下游
+   看到「没有范围」而不是「范围是空」（后者会被当成无违规而假绿）。
+
+**实测**（真实 push，非模拟）：混 lane 的 push 被拦（rc=1，报出违规 commit 与各 lane 文件）；
+单 lane 的 push 通过（rc=0）。
+
 ## Verification
 
 - [x] S0: make gac-local-gate PASS, F-9 规则加, F-10 数字刷
