@@ -204,3 +204,15 @@ warning_exceptions:
       expires: 2026-10-31
       owner: governance-team
       reason: Newly created specs may have last-reviewed set to creation date which CI flags as future-dated.
+    - id: stale-omo-truth-docs-review
+      rule: stale_review
+      surface: omo-truth-docs
+      max_findings: 4
+      expires: 2026-11-30
+      owner: governance-team
+      reason: |
+        Two .omo/_truth/*.md documents (omo-audit-rule-map.md, phase-escapes/README.md)
+        crossed their 90-day review SLA on 2026-10-30 (last-reviewed 2026-07-31). Purely
+        calendar-driven, unrelated to any code change. These documents still need a human
+        content review; this budget records the debt explicitly instead of silently
+        refreshing last-reviewed (which would falsely claim the review happened).

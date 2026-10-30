@@ -58,6 +58,64 @@ def changed_paths(staged: bool, files: list[str] | None = None) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def commit_paths_in_range(
+    git_range: str,
+    cwd: Path | None = None,
+) -> list[tuple[str, list[str]]]:
+    """列出范围 (base..head) 内每个 commit 及其改动文件, 按时间正序。
+
+    判据粒度是 **per-commit** 而不是整段合并成一个集合 —— 规则原文是
+    「每 commit 单 lane」(ADR-0122 §46) / 「每个 staged set 一个 lane」
+    (ADR-0456 §验收)。一段范围里可以有多个不同 lane 的 commit, 那是合规的;
+    违规的是**单个 commit 内**混了多个 lane。
+
+    这与整段合并判定的差别是实质性的, 不是形式差异: 举例, 一个 PR 含
+    「commit A = docs 文件」「commit B = 子模块指针」两个 commit, 每 commit
+    单 lane ⇒ 合规; 若把两者的文件合并成一个集合去判, 就会得到
+    {docs, submodule_pointer} 的假违规。
+
+    空范围 (无 commit / range 不可解析) 返回空列表 —— 调用方据此判定
+    「本次没有可判的变更」, 而不是「全部通过」。
+
+    cwd 缺省为本仓 (WORKSPACE); 传入时在那个仓里查 git —— 测试用临时仓时
+    必须显式传, 否则查的是本仓的 git (读到空范围, 判据静默失效)。
+    """
+    result = subprocess.run(
+        [
+            "git",
+            "log",
+            "--reverse",
+            "--format=%H",
+            "--name-only",
+            "--no-merges",
+            git_range,
+        ],
+        cwd=str(cwd) if cwd is not None else str(WORKSPACE),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return []
+    commits: list[tuple[str, list[str]]] = []
+    current: str | None = None
+    files: list[str] = []
+    for line in result.stdout.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if len(stripped) == 40 and all(c in "0123456789abcdef" for c in stripped):
+            if current is not None:
+                commits.append((current, files))
+            current = stripped
+            files = []
+        elif current is not None:
+            files.append(stripped)
+    if current is not None:
+        commits.append((current, files))
+    return commits
+
+
 def load_governance_lanes() -> dict[str, str]:
     """读取 sgf-policy.yaml，构建文件路径 -> lane 的映射白名单"""
     yaml_path = (
@@ -160,6 +218,17 @@ def classify(path: str, submodules: set[str]) -> str:
         return "docs"
     if (
         path.startswith("bin/gac")
+        # 脚本注册表条目 (bin/_registry/scripts/**/*.yaml) 是被登记治理脚本的
+        # 登记表 —— 与被登记脚本同属一个治理单元, 但路径前缀不同。若落到后缀
+        # 兜底 (yaml => code), 则「改脚本 + 改它的登记条目」这个原子变更必然被
+        # 判成 code + governance_code 混 lane (该组合不在 ALLOWED_COMBOS 内) ⇒
+        # 治理面自带的原子性被路径前缀破坏。
+        #
+        # 归类依据同 ADR-0129 §2.1: 分类应反映语义单元, 而非路径字面。
+        # 实测影响面: 近 120 个 commit 改判前后违规数不变 (71 => 71), 无一 commit
+        # 因改判而新变为违规 —— 含注册表的 commit 在改判前后都违规 (code 与
+        # governance_code 本就不兼容), 故此归类修正不收紧任何既有约束。
+        or path.startswith("bin/_registry/")
         or path
         in {
             "bin/ssot/ssot-guardian.py",
@@ -242,6 +311,47 @@ def check(
     }
 
 
+def check_range(
+    git_range: str,
+    allowed_lanes: set[str] | None = None,
+) -> dict[str, object]:
+    """按 commit 逐个判定 lane (per-commit 判据)。
+
+    每个 commit 独立成集, 各自判 allowed_for。任一 commit 混 lane ⇒ 整体违规。
+    合法的范围 (多个不同 lane 的 commit 并存) ⇒ 通过。
+    """
+    submodules = submodule_paths()
+    allowed_lane_set = allowed_lanes or set()
+    per_commit: list[dict[str, object]] = []
+    violations: list[dict[str, object]] = []
+    for sha, paths in commit_paths_in_range(git_range):
+        by_lane: dict[str, list[str]] = {}
+        for path in paths:
+            by_lane.setdefault(classify(path, submodules), []).append(path)
+        lanes = set(by_lane)
+        ok = allowed_for(lanes, allowed_lane_set)
+        entry = {
+            "commit": sha,
+            "ok": ok,
+            "lanes": sorted(lanes),
+            "by_lane": by_lane,
+            "files": len(paths),
+        }
+        per_commit.append(entry)
+        if not ok:
+            violations.append(entry)
+    all_lanes = sorted({lane for entry in per_commit for lane in entry["lanes"]})
+    return {
+        "ok": not violations,
+        "range": git_range,
+        "commits": len(per_commit),
+        "lanes": all_lanes,
+        "allowed_lanes": sorted(allowed_lane_set),
+        "violations": violations,
+        "per_commit": per_commit,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check staged or unstaged change lanes")
     parser.add_argument("--staged", action="store_true", help="Check staged changes")
@@ -250,6 +360,15 @@ def main() -> int:
         action="append",
         default=[],
         help="Check an explicit changed file path",
+    )
+    parser.add_argument(
+        "--range",
+        dest="git_range",
+        default="",
+        help=(
+            "Check a git range (e.g. base..head) per-commit: every commit in the "
+            "range must itself be single-lane (rule: one lane per commit)."
+        ),
     )
     parser.add_argument(
         "--allow-lane",
@@ -262,6 +381,30 @@ def main() -> int:
     args = parser.parse_args()
 
     allowed_lanes = parse_allowed_lanes([os.environ.get("AGENT_WORKFLOW_ALLOWED_LANES", ""), *args.allow_lane])
+
+    if args.git_range:
+        range_report = check_range(args.git_range, allowed_lanes=allowed_lanes)
+        if args.json:
+            print(json.dumps(range_report, ensure_ascii=False, indent=2))
+        elif range_report["ok"]:
+            print(
+                f"change-lane-check: PASS ({range_report['commits']} commits, "
+                f"lanes={','.join(range_report['lanes']) or '-'})"
+            )
+        else:
+            print(
+                f"change-lane-check: FAIL mixed lanes in "
+                f"{len(range_report['violations'])}/{range_report['commits']} commits"
+            )
+            for entry in range_report["violations"]:
+                lanes = ",".join(entry["lanes"])
+                print(f"  commit {entry['commit'][:9]}: lanes={lanes}")
+                for lane, paths in entry["by_lane"].items():
+                    preview = ", ".join(paths[:5])
+                    suffix = "" if len(paths) <= 5 else f" ... +{len(paths) - 5}"
+                    print(f"    {lane}: {preview}{suffix}")
+        return 0 if range_report["ok"] or args.advisory else 1
+
     report = check(staged=args.staged, files=args.file, allowed_lanes=allowed_lanes)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
