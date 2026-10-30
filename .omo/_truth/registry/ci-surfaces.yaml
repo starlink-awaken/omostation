@@ -14,6 +14,17 @@ surfaces:
   triggers:
   - manual
   status: active
+- id: bin-gac-check-change-lane-range-py
+  tool: bin/gac/check-change-lane-range.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - per_pr
+  - push
+  status: active
+  note: lane 隔离判据 (per-commit) — 此前 lane 尺在 CI 上恒 PASS 却没判任何东西 (--staged 读到空集);
+    本条补上第四条路径 (按 PR base..head 逐 commit 判 lane)。advisory 步 (实测 32.5% 红率属历史欠账,
+    阻断与否待独立授权)。2026-10-30
 - id: bin-gac-check-uri-prefix-pattern-py
   tool: bin/gac/check-uri-prefix-pattern.py
   workflow: gac-gate.yml
