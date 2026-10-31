@@ -53,13 +53,19 @@ def test_heartbeat_fresh_vs_stale(tmp_path):
     fresh.parent.mkdir(parents=True)
     fresh.write_text(f"last_scan: {(now - timedelta(hours=1)).timestamp()}\n")
 
-    stale = tmp_path / ".omo/_control/debt-dashboard/current.yaml"
+    # 心跳路径: `.omo/debt/dashboard/current.yaml` (真看板), 而非
+    # `.omo/_control/debt-dashboard/current.yaml` 那份 tracked 镜像 ——
+    # #4852 已把 HEARTBEATS 条目迁到真看板 (镜像无人提交, origin/main 上长期腐烂
+    # => 每个干净检出都读到陈旧值 => stale_beats=1 => A2/A5 恒红)。
+    # 本用例写的是**实现真正读的那个路径**; 写旧路径则该心跳根本不在检查面上,
+    # 用例会因「找不到条目」而误报 (StopIteration), 而非验证新鲜/陈旧语义。
+    stale = tmp_path / ".omo/debt/dashboard/current.yaml"
     stale.parent.mkdir(parents=True, exist_ok=True)
     stale.write_text(f'generated_at: "{(now - timedelta(days=30)).isoformat()}"\n')
 
     res = mod.check_heartbeats(tmp_path, now=now)
     sys_e = next(r for r in res if r["file"].endswith("system_health.yaml"))
-    dash_e = next(r for r in res if "debt-dashboard" in r["file"])
+    dash_e = next(r for r in res if "debt/dashboard" in r["file"])
     assert sys_e["ok"] is True
     assert dash_e["ok"] is False and dash_e["age_hours"] > 24 * 14
 
