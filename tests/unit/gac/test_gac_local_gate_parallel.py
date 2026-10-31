@@ -66,7 +66,10 @@ CENSUS_EXCLUSIVE = frozenset(
     }
 )
 CENSUS_SERIAL = CENSUS_WRITE_WORKSPACE | CENSUS_NETWORK | CENSUS_EXCLUSIVE
-CENSUS_TOTAL_GATES = 87
+# 2026-10-31: 87 -> 88 (ADR-0122 §46 lane 欠账台账自洽 gate 加入, #4990)。
+# 该 gate 的命令是 `lane-debt-ledger.py --check` —— 只读台账 YAML, 不写工作区 /
+# .omo/state / 子模块指针, 不走网络, 不占独占本机资源 ⇒ 属 A 类, 可并行。
+CENSUS_TOTAL_GATES = 88
 
 # ── ② 全量分类账：普查中的 A 类（纯读/verification）逐一复审为「可并行」─────────
 # 维护约定：新增 gate 必须显式加入本账（或 SERIAL_ONLY），否则本文件失败。
@@ -91,6 +94,7 @@ PARALLEL_REVIEWED = frozenset(
     check-index-drift root-directory-governance bin-scripts-convergence-audit
     omo-runtime-final-tree doc-governance check-conflict-markers check-swarm-collision
     bin-quota-diff task-field-governance test-collection
+    lane-debt-ledger
     """.split()
 )
 

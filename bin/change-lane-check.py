@@ -386,6 +386,42 @@ def check_range(
     }
 
 
+def _in_merge_state() -> bool:
+    """当前是否处于 merge 进行中 (MERGE_HEAD 存在) —— 即这次 commit 是 merge commit。
+
+    **为什么需要它**: merge commit 天然含**两侧**的内容 => 必然混多个 lane
+    (实测 40 个 merge commit 里 29 个混 lane, 73%)。这是「合并」这一动作的结构性
+    事实, 不是提交形态缺陷。
+
+    而本仓的合流路径只剩 merge 一条: `pre-rebase` hook 明确拒绝 rebase onto main
+    (「应走 merge/PR 合流」), main 本身又全 squash 合并 ⇒ **merge 是唯一合规的合流
+    路径**。若 lane 尺对它一视同仁, 就把这条路径堵死了 —— 规则与仓库策略直接冲突。
+
+    故 merge 状态下判据**照常计算并报告**, 但**不阻断** (降级为 advisory)。
+    """
+    # 用 --absolute-git-dir 定位, 不用 --git-path:
+    #
+    #   --git-path MERGE_HEAD 返回**相对路径** (.git/MERGE_HEAD), 且该相对路径是相对
+    #   **调用 git 时所在 cwd** 的 —— 换 cwd 结果就不同, 拼到 WORKSPACE 上会指向错的
+    #   仓库 (实测踩过)。
+    #
+    #   --absolute-git-dir 恒返回绝对路径, 且是**该 worktree 私有**的 git dir:
+    #   普通仓 => <repo>/.git; linked worktree => <main>/.git/worktrees/<name>。
+    #   MERGE_HEAD 是 per-worktree 文件 (与 HEAD/MERGE_MSG 同级), 正是落在那里 ——
+    #   所以这个定位方式对 worktree 与普通仓都对。
+    #
+    # 用 run() (cwd=WORKSPACE) 而不是裸 subprocess: 判据读的 index 是 WORKSPACE 的
+    # (changed_paths -> git diff --cached), 那么「正在创建的 commit」就是 WORKSPACE
+    # 那个仓的 commit —— merge 状态必须按**同一个仓**判定, 否则两处可能指向不同的仓。
+    result = run(["git", "rev-parse", "--absolute-git-dir"])
+    if result.returncode != 0:
+        return False
+    git_dir = result.stdout.strip()
+    if not git_dir:
+        return False
+    return (Path(git_dir) / "MERGE_HEAD").exists()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check staged or unstaged change lanes")
     parser.add_argument("--staged", action="store_true", help="Check staged changes")
@@ -454,6 +490,10 @@ def main() -> int:
                     preview = ", ".join(paths[:5])
                     suffix = "" if len(paths) <= 5 else f" ... +{len(paths) - 5}"
                     print(f"    {lane}: {preview}{suffix}")
+        # 范围判据**不适用** merge 豁免: commit_paths_in_range 用 --no-merges,
+        # merge commit 根本不在范围内 => 范围里的混 lane 都不是 merge 造成的。
+        # 若这里也按 MERGE_HEAD 豁免, 就等于给「push 时恰好有未完成 merge」开了后门
+        # (MERGE_HEAD 在 merge 完成前一直存在) —— 豁免范围必须精确。
         return 0 if range_report["ok"] or args.advisory else 1
 
     report = check(staged=args.staged, files=args.file, allowed_lanes=allowed_lanes)
@@ -467,7 +507,15 @@ def main() -> int:
             preview = ", ".join(paths[:5])
             suffix = "" if len(paths) <= 5 else f" ... +{len(paths) - 5}"
             print(f"  {lane}: {preview}{suffix}")
-    return 0 if report["ok"] or args.advisory else 1
+    _merge = _in_merge_state()
+    if _merge and not report["ok"]:
+        # merge commit: 混 lane 是合并动作的结构性事实 => 报告但不阻断
+        print(
+            "change-lane-check: NOTE merge commit (两侧内容并入) => "
+            "混 lane 属结构性, 降级为 advisory 不阻断",
+            file=sys.stderr,
+        )
+    return 0 if report["ok"] or args.advisory or _merge else 1
 
 
 if __name__ == "__main__":

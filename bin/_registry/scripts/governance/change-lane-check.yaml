@@ -3,13 +3,31 @@ id: bin/change-lane-check.py
 name: Change Lane Check
 category: governance
 owner: governance-team
-description: ""
+description: >
+  lane 隔离判据 (规则原文「每 commit 单 lane」, ADR-0122 §46): 判定一个变更集是否混了
+  多个 lane。判据粒度是 per-commit —— 一段范围里多个不同 lane 的 commit 合规, 违规的是
+  **单个 commit 内**混 lane。merge commit 豁免: 合并动作天然把**两侧**内容并入一个
+  commit (实测 40 个 merge commit 里 29 个混 lane, 73%), 这是合并的结构性事实而非提交
+  形态缺陷; 而本仓 `pre-rebase` hook 明确拒绝 rebase onto main (「应走 merge/PR
+  合流」) ⇒ merge 是唯一合规的合流路径 ⇒ 对 merge commit 一视同仁就把这条路径堵死。
+  故 merge 状态下判据**照常计算并报告**, 但降级为 advisory 不阻断; 豁免只作用于 staged
+  路径 (正在创建的 commit), 范围判据 (--range / PUSH_RANGE) 用 --no-merges 排除 merge
+  commit, 不适用该豁免。
 inputs: []
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
-triggers: []
-related: []
+triggers:
+  - type: git_hook
+    hook: pre-commit
+  - type: git_hook
+    hook: pre-push
+related:
+  - bin/gac/check-change-lane-range.py
+  - bin/gac/export-push-range.py
+  - bin/gac/hook-runner.sh
+  - tests/unit/gac/test_change_lane_merge_exemption.py
+  - .omo/_knowledge/decisions/0122-system-audit-followup-plan.md
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: "2026-10-31"
