@@ -36,9 +36,10 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -100,7 +101,7 @@ def resolve_ledger_path(explicit=None, environ=None) -> Path:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def canonical_principal_id() -> str:
@@ -181,26 +182,24 @@ def record_domain_change(
 
         surface = EventLedgerSurface(db_path=Path(db_path).expanduser().absolute())
         # ⚠ **幂等键**＝作业身份 ＋ 开始时刻 ⇒ ⇒ 同一次作业重跑不会重复记
-        idem = "domchange-%s-%s-%s" % (
-            domain_id,
-            job_id,
-            (started_at or "").replace(":", "").replace("-", ""),
-        )
+        #   ⚠⚠⚥ **那行 f-string 必须单行**（⚠ 多行表达式要 Python 3.12+ ⇒ ⇒ 仓里还有 3.9 面）
+        stamp = (started_at or "").replace(":", "").replace("-", "")
+        idem = f"domchange-{domain_id}-{job_id}-{stamp}"
         result = surface.append(
             event_type=EVENT_TYPE,
             producer=PRODUCER,
             principal_id=canonical_principal_id(),
-            correlation_id="domchange-%s" % domain_id,
+            correlation_id=f"domchange-{domain_id}",
             idempotency_key=idem,
             payload=payload,
-            evidence_uri="documents-domain-owner-job://%s" % job_id,
+            evidence_uri=f"documents-domain-owner-job://{job_id}",
         )
         receipt["recorded"] = True
         receipt["sequence"] = result.sequence
         receipt["event_id"] = result.event_id
         receipt["db_path"] = result.db_path
     except Exception as exc:  # noqa: BLE001 —— ⚠ 留痕是旁路 ⇒ ⇒ 写不进去只报
-        receipt["error"] = "%s: %s" % (type(exc).__name__, exc)
+        receipt["error"] = f"{type(exc).__name__}: {exc}"
     return receipt
 
 
