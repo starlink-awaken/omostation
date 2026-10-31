@@ -1,0 +1,25 @@
+schema: script-registry/v1
+id: bin/ops/lane-debt-ledger.py
+name: Lane Debt Ledger
+category: ops
+owner: governance-team
+description: "生成 lane 隔离的历史欠账台账 (.omo/_truth/registry/lane-debt-ledger.yaml) —— ADR-0122 §46 的欠账显形面。背景: lane 隔离规则在 2026-10-30 之前从未真正生效 (三条执行路径全空转), 期间 main 上积累了 126 个混 lane commit。**台账不被任何门禁消费** —— 它是纯记录面, 不是豁免: 历史欠账本来也拦不住人 (pre-commit 判暂存区; pre-push 判 merge-base..HEAD, 历史 commit 在 merge-base 之前; CI 判 PR 的 base..head), 台账补的是**记录缺口** (让后续人能区分「有意为之」与「历史遗留」)。两种校验: --check 只验台账内在自洽 (不依赖完整历史, 适用于 CI 的 depth=1); --verify-history 与实际历史做等值校验 (需完整历史, 本地仓可用)。成因分类: multi-surface / boundary-code-vs-governance-code / classifier-gap-other / boundary-governance-registration / submodule-pointer-mixed / boundary-code-vs-config。"
+inputs:
+  - name: --check
+    description: 校验台账内在自洽 (CI 可用, 不依赖完整历史)
+  - name: --verify-history
+    description: 与实际历史等值校验 (需完整历史)
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/change-lane-check.py
+triggers:
+  - type: gate
+    gate_id: lane-debt-ledger
+related:
+  - bin/change-lane-check.py
+  - .omo/_truth/registry/lane-debt-ledger.yaml
+  - .omo/_knowledge/decisions/0122-system-audit-followup-plan.md
+maturity: draft
+last_reviewed: "2026-10-31"
