@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 735 # 2026-10-28 732->733: 新登记 bin/ssot/check-interfaces.py (接口契约表结构检查 —— 补上自 2026-06-06 起断掉的执行面)
+    script_baseline: 736 # 2026-10-28 732->733: 新登记 bin/ssot/check-interfaces.py (接口契约表结构检查 —— 补上自 2026-06-06 起断掉的执行面)
       # 2026-10-27 731->732: 新登记 CR-CI-RUNNER-COST 守门 bin/gac/check-runner-cost.py (macOS 10x/Windows 2x runner 成本) # 2026-10-26 730->731: 新登记 bin/panorama/materialize-agent-brief.py (BET-Y2Q4-T1-05 入口层真数据物化) #  2026-10-24 727->730: 新登记 bin/ssot/anchor-install-root.sh (ADR-0456 B4b 安装位重锚) # 2026-10-26 728->730: 新登记 ADR-0466 三层防线的两个工具 (bin/gac/check-test-host-hygiene.py 第二道防线 / bin/ops/purge-test-archive-7d.py 第三道防线)
       # (治 A2/A5 stale_beats —— .omo/_control/debt-dashboard/current.yaml 是 git-tracked 镜像,
       # 由 omo post-hook 刷新但无人提交; origin/main 上那份 817h 未更新 (SLA 336h), 于是每个
