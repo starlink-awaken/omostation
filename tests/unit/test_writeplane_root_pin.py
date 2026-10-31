@@ -33,7 +33,9 @@ SKIP_SEGMENTS = {"_archive", "_vendored", "__pycache__", ".venv"}
 # 2026-10-29 T10-278 读侧收敛把 resident-orchestrator 的 4 处检出根常量改成 state_root()
 # 调用时刻解析，`.omo/_delivery` 桶按实测 82→78 重签（spec §1 表由 docs lane 同步）。
 SPEC_MARKER_READINGS = {
-    ".omo/_truth": 161,
+    # 2026-10-31 ADR-0122 历史欠账处置: 新增 .omo/_truth/registry/lane-debt-ledger.yaml
+    # => `.omo/_truth` 桶 161 -> 162 (该桶是排除面, 不影响门禁管辖的 154/144/95)。
+    ".omo/_truth": 162,
     ".omo/state": 103,
     ".omo/_delivery": 78,
     "runtime": 51,
