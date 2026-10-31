@@ -44048,6 +44048,96 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:b82f0bc6b09f09f49cb8c1c6a3e62c89a23ca48e7fe83f8e4c3c03c5ddbfc7f6
     decision_ref: decision://accepted/BET-Y2Q4-T10-263
+- id: BET-Y2Q4-T10-340402
+  title: GOAL-04 F31持久化Lease Broker与F05记忆防复活
+  track: T10-TOOLING
+  window: Y2Q4
+  priority: P1
+  appetite: 1 day
+  status: done
+  done_at: '2026-10-21'
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  underlying_workflow: bet-execution
+  goal: 将GoalHarness的F31/F05生产兼容参考能力移植为主仓共享治理库：SQLite持久化Lease Broker维护每task单调epoch，实现双Clone抢单互斥、过期租约fencing、HMAC能力校验与幂等提交；MemoryTombstoneStore维护8态生命周期、必填溯源字段与WAL持久化Tombstone，重启重放阻止历史快照复活。仅交付共享库与定向测试，不激活生产Authority、不操作记忆资产。
+  depends_on: []
+  write_surfaces:
+  - lib/single_writer_lease_broker.py
+  - lib/memory_tombstone_guard.py
+  - tests/test_single_writer_lease_broker.py
+  - tests/test_memory_tombstone_guard.py
+  - docs/superpowers/specs/2026-10-20-v34-lease-broker-memory-tombstone.md
+  - docs/decisions/accepted/BET-Y2Q4-T10-340402.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-10-21-v34-lease-broker-memory-tombstone-closeout.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-340402.md
+  non_goals:
+  - 不接管生产Claims Authority、不迁移既有lease库、不激活任何生产worker。
+  - 不修改真实个人或家庭记忆数据、不导入导出生产备份、不执行生产恢复。
+  - 不改变既有Scene Card业务语义、子模块gitlink或新增第二个GOAL账本。
+  - 不使用生产HMAC密钥或提交任何secret；测试只用显式公开fixture。
+  done_when:
+  - SQLite持久化Broker支持按task获取租约、跨task写面冲突硬阻断、关闭后重启epoch严格递增。
+  - Broker拦截缺失/篡改/过期HMAC能力、高风险操作缺少approval_ref、stale epoch提交与不同参数幂等冲突。
+  - MemoryTombstoneStore包含8态生命周期与17个必填溯源属性，ingest/withdraw/query语义正确且撤回后内容不可检索。
+  - WAL持久化Tombstone可在新实例启动重放，restore_from_snapshot_with_tombstone_replay将已撤回记录阻断为复活率0。
+  - 定向pytest在当前worktree全部通过；共享库docstring说明用途、持久化格式、生命周期与兼容边界。
+  verify:
+  - cmd: uv run pytest tests/test_single_writer_lease_broker.py tests/test_memory_tombstone_guard.py -q -p no:randomly
+    expect: exit 0；双Clone互斥、重启epoch fencing、伪造签名拦截、幂等冲突与WAL tombstone防复活全部通过。
+  - cmd: python3 -c "from pathlib import Path; import lib.single_writer_lease_broker, lib.memory_tombstone_guard; assert all(Path(m.__file__).resolve().is_relative_to(Path.cwd().resolve()) for m in (lib.single_writer_lease_broker,
+      lib.memory_tombstone_guard))"
+    expect: 两个共享库实际从当前检出加载。
+  circuit_breaker: 如需改生产Authority、真实记忆资产、既有Claim协议、生产lease库或超出write_surfaces，则停止实施并保留诊断；不关闭gate、不force、不借done BET。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-20-v34-lease-broker-memory-tombstone.md
+    spec_version: 1.0.0
+    content_digest: sha256:69127b3176f062ab155d9669f3a1a907c9e19f89879f3a18377f66002a2cc25a
+    decision_ref: decision://accepted/BET-Y2Q4-T10-340402
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e5823c0ac99d4e4986b6310a2186ab1af135a9b9
+          tests:
+            ref: receipt://docs/reports/2026-10-21-v34-lease-broker-memory-tombstone-closeout.md
+            sha256: sha256:04a5d7095214e7b17ece115f5ac63e05ae9749ad20c3e1308888cfdccdbb803c
+          diff:
+            ref: receipt://docs/reports/2026-10-21-v34-lease-broker-memory-tombstone-closeout.md
+            sha256: sha256:04a5d7095214e7b17ece115f5ac63e05ae9749ad20c3e1308888cfdccdbb803c
+          rollback:
+            ref: receipt://docs/reports/2026-10-21-v34-lease-broker-memory-tombstone-closeout.md
+            sha256: sha256:04a5d7095214e7b17ece115f5ac63e05ae9749ad20c3e1308888cfdccdbb803c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-340402.md
+            sha256: sha256:73bf243c0ce3b797912e908374228a59ed59dfecc35a983450044884b0f327d6
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-21-v34-lease-broker-memory-tombstone-closeout.md
+            sha256: sha256:04a5d7095214e7b17ece115f5ac63e05ae9749ad20c3e1308888cfdccdbb803c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-21-v34-lease-broker-memory-tombstone-closeout.md
+            sha256: sha256:04a5d7095214e7b17ece115f5ac63e05ae9749ad20c3e1308888cfdccdbb803c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-340402.md
+            sha256: sha256:73bf243c0ce3b797912e908374228a59ed59dfecc35a983450044884b0f327d6
+          cleanup:
+            ref: receipt://docs/reports/2026-10-21-v34-lease-broker-memory-tombstone-closeout.md
+            sha256: sha256:04a5d7095214e7b17ece115f5ac63e05ae9749ad20c3e1308888cfdccdbb803c
+      value:
+        status: NOT_PROVEN
+        evidence:
+          reason: Production adoption not attempted per spec boundary.
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -44085,10 +44175,8 @@ campaigns:
 concurrency:
   claim_protocol:
   - bash bin/gac/gac-worktree.sh claim <session>
-  - uv run --with pyyaml python bin/agent-workflow.py start <workflow> --profile <profile>
-    --objective <bet-id>
-  - uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <each
-    write surface>
+  - uv run --with pyyaml python bin/agent-workflow.py start <workflow> --profile <profile> --objective <bet-id>
+  - uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <each write surface>
   conflict_pairs:
   - - T3-COGNI
     - T4-OUTCOME
@@ -44105,16 +44193,13 @@ concurrency:
   - projects/agora
   release_protocol:
   - 'git add <所有 deliverable>   # D0 铁律, 先于 verify'
-  - uv run --with pyyaml python bin/agent-workflow.py verify <run-id> --from-diff
-    --execute
+  - uv run --with pyyaml python bin/agent-workflow.py verify <run-id> --from-diff --execute
   - make agent-workflow-closeout RUN_ID=<run-id>
   - bash bin/gac/gac-worktree.sh submit <session>
 disciplines:
   D0_committed_or_undelivered:
     check: git ls-files --error-unmatch <每个 deliverable>
-    origin: '2026-08-06 实测两次事故 — journey-runner.py / scene-card v2 / v10 plans 从未
-      tracked, 工作树在 20 分钟内被并发 agent 清理两次 (847375f0 -> 7d7ffdaa -> 5dff6900), 无 blob
-      可恢复
+    origin: '2026-08-06 实测两次事故 — journey-runner.py / scene-card v2 / v10 plans 从未 tracked, 工作树在 20 分钟内被并发 agent 清理两次 (847375f0 -> 7d7ffdaa -> 5dff6900), 无 blob 可恢复
 
       '
     rule: 任何交付物在 git add 之前不算交付
@@ -44132,8 +44217,7 @@ disciplines:
     rule: 先 claim 后写; 未 claim 的写面视为越权
     severity: red
   D4_workflow_mandatory:
-    check: uv run --with pyyaml python bin/agent-workflow.py start <workflow> --profile
-      <p> --objective <bet-id>
+    check: uv run --with pyyaml python bin/agent-workflow.py start <workflow> --profile <p> --objective <bet-id>
     rule: 走 ADR-0203 需求迭代 workflow, 先 start 再改文件
     severity: red
   D5_retro_before_done:
@@ -44143,10 +44227,8 @@ disciplines:
   D6_metric_not_harmfully_optimizable:
     check: 设指标时人工反问; 已知有害路径写进 non_goals
     corollary: 每个数量目标都要配一个「保护量」, 例如 src 可减但 test 不得降
-    origin: "2026-08-06 复盘发现自设的三个减法指标全部可被有害优化 —— ① 「代码 ≤69万行」不分 src/test, 删测试(占33%)是最便宜路径;\
-      \ ② 表面积扫文件系统, 建/删 PASW worktree(占旧基线33%)就能大幅波动; ③ 「GaC ≤80 条」不分 advisory/required,\
-      \ 删最无害的 105 条 advisory 最容易,\n   而真正有成本的 26 条 required 反而留下。\n三者与本项目最初批评的 X3\
-      \ mtime 指标是同一个病 —— 用代理量冒充真实量。\n"
+    origin: "2026-08-06 复盘发现自设的三个减法指标全部可被有害优化 —— ① 「代码 ≤69万行」不分 src/test, 删测试(占33%)是最便宜路径; ② 表面积扫文件系统, 建/删 PASW worktree(占旧基线33%)就能大幅波动; ③ 「GaC ≤80 条」不分 advisory/required, 删最无害的 105 条 advisory 最容易,\n  \
+      \ 而真正有成本的 26 条 required 反而留下。\n三者与本项目最初批评的 X3 mtime 指标是同一个病 —— 用代理量冒充真实量。\n"
     rule: 任何指标在设立前必须回答「最便宜的达标路径是什么」, 若那条路径有害则指标不成立
     severity: red
 gates:
@@ -44172,8 +44254,7 @@ gates:
     question: 修订率是否较 Y1 基线下降 >= 20%?
   Y3H2:
     on_fail: 收窄至单场景维持
-    pass: weekly_accepted >= 5 AND acceptance_rate >= 0.40 AND edit_rate_drop >= 0.40
-      AND surface <= 0.70
+    pass: weekly_accepted >= 5 AND acceptance_rate >= 0.40 AND edit_rate_drop >= 0.40 AND surface <= 0.70
     question: 三年终局三条是否同时成立?
 meta:
   horizon: 2026H2-2029
@@ -44186,7 +44267,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 558
+  total_bets: 559
   windows:
   - Y1Q1
   - Y1Q2
@@ -44410,8 +44491,7 @@ tracks:
     - bin/ssot/install-resident-cron.sh
     - docs/plans/3y-bet-ledger.yaml
     - projects/omo/src/omo/resident/**
-    scope: 'maturity-scorecard 口径对齐 / 治理 bet 绑定 / resident promote + 事件源管线 / gaC 机制自进化
-      (G10 三方口径: scorecard/health/台账)'
+    scope: 'maturity-scorecard 口径对齐 / 治理 bet 绑定 / resident promote + 事件源管线 / gaC 机制自进化 (G10 三方口径: scorecard/health/台账)'
     title: 成熟度收官 (scorecard 0-10, target 9.0)
   T10-PLATFORM:
     agent_profile_hint: engineering-agent
