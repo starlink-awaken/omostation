@@ -54,7 +54,7 @@ code/state 双根；`omo_paths` + 9 处 `DEFAULT_LEDGER` + `OMO_PRINCIPAL_ID` �
 
 | marker | 站点 | 本轮判定 |
 |---|---|---|
-| `.omo/_truth/**` | 161 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
+| `.omo/_truth/**` | 162 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
 | `.omo/state/**` | 103 | **纳入** 门禁 |
 | `.omo/_delivery/**` | 78 | 排除 —— 全机 symlink 桥（`delivery_anchor.py:87`），AGENTS.md §7「gitignore ≠ 本地化」；改道它等于改协调面语义 |
 | `.omo/_knowledge/**` | 62 | 排除 —— 署名文档/历史面，随检出 |
