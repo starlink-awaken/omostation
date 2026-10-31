@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -109,11 +110,44 @@ def _build_job(
             "--json",
         ),
     )
-    return jobs, spec
+    # ⚠⚠⚥ §5.165：**把 binding 一起带出来** —— ⚠ 域归属 ＋ 声明写入面都在它里面
+    #   ⇒ ⇒ ⚠ 留痕要记的正是这两样（⚠ 而 `spec.writes` 是运行时的空元组）
+    return jobs, spec, binding
+
+
+def _record_change(
+    *,
+    job_id: str,
+    domain_id: object,
+    writes: object,
+    status: str,
+    exit_code: int | None,
+    started_at: str | None,
+) -> None:
+    """⚠ **把这次作业写进事件账本**（⚠ §5.165 · USER-ACTIONS #117）。
+
+    ⚠⚠⚥ **失败不许挡住作业**（⚠ 留痕是旁路）⇒ ⇒ ⚠ 这里连异常都不往外抛。
+    ⚠⚠⚥ **域归属拿不到 ⇒ ⇒ 也要写**（⚠ 用 ``unknown-domain`` 标出来）⇒ ⇒
+    ⚠ **不许因为「不知道是哪个域」就整条丢掉**（⚠ 那正是【不可判】⇒ ⇒ 不许折成「没有账」）。
+    """
+    try:
+        from lib.documents_change_ledger import record_domain_change
+
+        record_domain_change(
+            job_id=str(job_id),
+            domain_id=str(domain_id) if domain_id else "unknown-domain",
+            writes=list(writes) if isinstance(writes, (list, tuple)) else None,
+            status=str(status),
+            exit_code=exit_code,
+            started_at=started_at,
+        )
+    except Exception:  # noqa: BLE001 —— ⚠ 留痕是旁路 ⇒ ⇒ 写不进去也不许挡住作业
+        return
 
 
 def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
+    started_at = datetime.now(timezone.utc).isoformat()
     if arguments and arguments[0] == "learning-control":
         from lib.documents_learning_control import main as learning_control_main
 
@@ -184,8 +218,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", dest="json_output")
     args = parser.parse_args(arguments)
 
+    # ⚠⚠⚥ §5.165：**binding 先置空** —— ⚠ `_build_job` 自己抛异常时
+    #   ⇒ ⇒ except 分支里它还没被绑定 ⇒ ⇒ 不许 NameError
+    binding = None
     try:
-        jobs, spec = _build_job(
+        jobs, spec, binding = _build_job(
             job_id=args.job_id,
             documents_root=args.documents_root,
             domain_registry_path=args.domain_registry,
@@ -203,12 +240,31 @@ def main(argv: list[str] | None = None) -> int:
         )
     except (ContractError, OSError, UnicodeError, TypeError, ValueError) as exc:
         payload = {"status": "failed", "error": str(exc)}
+        # ⚠⚠⚥ §5.165：**失败也要留痕** —— ⚠ 「跑砸了」本身也是一次可追查的事件
+        _record_change(
+            job_id=args.job_id,
+            domain_id=(binding.get("domain_id") if isinstance(binding, dict) else None),
+            writes=(binding.get("writes") if isinstance(binding, dict) else None),
+            status="failed",
+            exit_code=2,
+            started_at=started_at,
+        )
         if args.json_output:
             print(json.dumps(payload, ensure_ascii=False))
         else:
             print(f"documents owner job: {exc}", file=sys.stderr)
         return 2
 
+    # ⚠⚠⚥ §5.165：**作业跑完 ⇒ ⇒ 往事件账本写一条**（⚠ USER-ACTIONS #117）
+    #   ⇒ ⇒ ⚠ 知识域的存量变动**从此有账** ⇒ ⇒ ⚠ 下一次变动**可追查**
+    _record_change(
+        job_id=result.job_id,
+        domain_id=binding.get("domain_id"),
+        writes=binding.get("writes"),
+        status=result.status,
+        exit_code=result.exit_code,
+        started_at=started_at,
+    )
     if args.json_output:
         print(json.dumps(result.as_dict(), ensure_ascii=False, sort_keys=True))
     else:
