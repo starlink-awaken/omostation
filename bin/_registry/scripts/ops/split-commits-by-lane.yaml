@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/ops/split-commits-by-lane.py
+name: Split Commits By Lane
+category: ops
+owner: governance-team
+description: "把混 lane 的 commit 按 lane 拆成多个单 lane commit —— 历史欠账消化工具 (ADR-0122 §46「每 commit 单 lane」)。背景: lane 隔离规则在 2026-10-30 之前从未真正生效 (三条执行路径全空转), 期间 main 上积累了 53 个混 lane commit; 规则接上后新提交被正确拦住, 但历史欠账仍在 git 历史里 (本仓全 squash 合并, 每个 squash commit = 一个 PR 的全部内容)。三个不变量: (1) 树 sha 与原 commit 逐字节等价 (拆分只重新分组, 不改内容) —— 必须用 git ls-tree 读原 commit 的真实 mode, 写死 100644 会把可执行脚本降级为不可执行; (2) commit message 保留原 PR 号 (本仓 120/120 个 commit message 都带 (#NNNN), 是 squash 历史的唯一索引); (3) 作者与日期保留。删除操作 (该文件不在原 commit 树里) 必须用 update-index --force-remove 落到对应 lane 组, 否则中间态树残留该文件 => 最终树不等价。每个 commit (含合规的) 都必须在新链上重建, 否则链会断成两截。"
+inputs:
+  - name: --from
+    description: 区间内最早的 commit (含), 会被一起处理
+  - name: --to
+    description: 区间内最晚的 commit (含), 默认 HEAD
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/change-lane-check.py
+triggers: []
+related:
+  - bin/change-lane-check.py
+  - .omo/_knowledge/decisions/0122-system-audit-followup-plan.md
+maturity: draft
+last_reviewed: "2026-10-30"
