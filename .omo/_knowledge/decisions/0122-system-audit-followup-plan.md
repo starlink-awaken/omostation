@@ -214,6 +214,49 @@ P2 (长期)
 - 单 lane 提交：通过（rc=0）。
 - 变异对照：撤销放宽 ⇒ 1 failed；过度放宽 code ⇒ 3 failed；摘掉 hook 接线 ⇒ 命中接线用例。
 
+### 历史欠账处置结论（2026-10-31）
+
+docs(adr-0122): 历史欠账处置结论 —— 台账显形 + 不改写历史（改写被保护分支拒绝）
+
+本段登记「处理 ADR-0122 历史欠账」的实测结论。三个发现改变了处置形态:
+
+**发现一: 历史欠账不会挡住 push**。push 范围从 `merge-base(origin/<branch>, local_sha)`
+起算 ⇒ 历史 commit 在 merge-base **之前**, 不在范围内。实测: 一个基于 40 个 commit 前 main
+的 stale 分支, 加一个新 commit 后 push 范围只有 1 个 commit。所以历史欠账不是「会挡住
+工作」的障碍, 而是**治理面的记录缺口** ⇒ 处置是**登记显形**, 不是豁免机制。
+(做成豁免就等于给新提交开了逃逸口, 与规则本意相反。)
+
+**发现二: main 上的「混 lane commit」不是欠账指标**。本仓全 squash 合并 => main 的每个
+commit = 一个 PR 的全部内容 => 一个跨多 lane 的 PR 必然产出「混 lane commit」。实测: 全历史
+4895 个 commit 里 2665 个「混 lane」, 但最近 40 个 PR 里**只有 18 个 commit 自身混 lane**
+(在 PR 分支上就是) —— 后者才是真正的提交形态缺陷。逐条登记几千个 squash 产物是登记
+「squash 的记录方式」, 不是登记「欠账」。
+
+**发现三: 改写 main 历史被 GitHub 拒绝**。main 是受保护分支
+(`allow_force_pushes: False` + `enforce_admins: True`), 且这是仓库**明文架构决策**
+(docs/generated/architecture-deep-analysis.md §17.2「main 分支保护 ✅ 已启用 (direct push
+双重拒绝)」+「squash merge ✅ 所有 main 变更」; pre-rebase hook 亦指明授权通道是 merge/PR
+合流)。仓内工具 `gac-branch-protection.sh` 只能改必需检查列表, 无权解除 force push 禁令。
+⇒ 改写需**先解除保护** —— 那是独立的治理决策, 需单独授权。
+
+**处置**:
+
+1. **欠账台账** `.omo/_truth/registry/lane-debt-ledger.yaml` (生成面): 记 main 侧混 lane
+   commit 的**成因分布** —— 用于判断「哪些是分类器边界偏碎」, 「哪些是真正的多面混合」。
+   明确标注 squash 结构性产物**不是欠账指标**。台账**不被任何门禁消费** (纯记录面)。
+2. **改写工具** `bin/ops/split-commits-by-lane.py` 已就绪并验证: 四项不变量全部成立 ——
+   树 sha 逐字节等价、10447 个文件 blob+mode 逐个等价、287 个拆分 commit 全部单 lane、
+   PR 号 100% 保留。待授权解除分支保护后可执行。
+3. **分类器性能修复**: `classify()` 每次都重读解析 sgf-policy.yaml ⇒ 扫全历史跑不完;
+   加 `lru_cache` 后 0.1s。这让全历史口径的统计得以落地。
+
+**留给后续裁决的两项** (本段不夹带):
+- `governance_code` 与 `governance_state` 的边界偏碎: 「改一个治理件 + 登记它」这类原子变更
+  天然跨两个 lane。实测成因分布里 `boundary-governance-registration` + 
+  `boundary-code-vs-governance-code` 合计占多数 ⇒ 分类器侧的边界修正是消化摩擦的主要方向
+  (而非改写历史)。
+- 43% 的红率是「新提交会被拦」的概率, 随规则生效会自然下降 (开发者会按提示拆提交)。
+
 ### 未闭合
 
 - 43% 的红率意味着约一半**新**提交会被拦（历史不改）。这是规则本意（每 commit 单 lane），

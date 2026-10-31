@@ -445,6 +445,14 @@ for _gap_gate in (
         "note": "SFOP/DFSQ: COMP-WS 必须声明 sfop_slot+dao_layer; 活跃 S 槽至多一个且为 COMP-WS-omo; H→B via F or cockpit.adapters; claimed-active cron must declare sfop_slot (CR-SFOP-01/02/05/06 阻断, 非 SOFT)",
     },
     {
+        # lane 隔离历史欠账台账的自洽校验 (ADR-0122 §46)。
+        # --check 只验台账**内在自洽** (不依赖完整历史) —— CI 的 checkout 默认
+        # depth=1, 等值校验在 CI 上必然误报; 完整等值校验用 --verify-history
+        # (本地仓)。台账是纯记录面 (不被消费、不构成豁免), 故列为 SOFT。
+        "id": "lane-debt-ledger",
+        "command": ["bin/ops/lane-debt-ledger.py", "--check"],
+    },
+    {
         "id": "execution-chain",
         "command": ["bin/gac/check-execution-chain.py", "--json"],
         "timeout": 45,
@@ -608,6 +616,7 @@ SOFT_CHECKS = {
     "command-discovery",  # UX-NOISE (S5): 命令密度/重复定位, 非阻断
     "resident-bos-check",  # CR-RESIDENT-BOS-01: agora bos-services.yaml 缺 resident 域, 非阻断
     "pitfall-gat006-check",  # PITFALL-GAT-006: 分支与 main 等价检测, 警告不阻断
+    "lane-debt-ledger",  # lane 隔离历史欠账台账自洽校验, 纯记录面不阻断
 }
 
 

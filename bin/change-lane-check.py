@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[1]
@@ -137,8 +138,13 @@ def commit_paths_in_range(
     return commits
 
 
+@lru_cache(maxsize=1)
 def load_governance_lanes() -> dict[str, str]:
-    """读取 sgf-policy.yaml，构建文件路径 -> lane 的映射白名单"""
+    """读取 sgf-policy.yaml，构建文件路径 -> lane 的映射白名单
+
+    **必须缓存** (lru_cache): classify() 每个文件都调它一次 —— 扫全历史 (10 万+ 文件)
+    时未缓存会做 10 万次 YAML 解析, 实测慢到跑不完。映射来自仓内文件, 单次运行内不变。
+    """
     yaml_path = (
         WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
     )

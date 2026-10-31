@@ -1,0 +1,45 @@
+# lane 隔离欠账台账 (ADR-0122 §46) —— 生成面, 请勿手改
+#
+# 由 bin/ops/lane-debt-ledger.py 生成 (`--write` 重建, `--check` 校验)。
+#
+# **背景**: lane 隔离规则「每 commit 单 lane」(ADR-0122 §46) 在 2026-10-30 之前
+# 从未真正生效过 —— 三条执行路径全空转:
+#   1. CI: sgf-policy 登记 `--staged`, 干净检出无 staged 文件 => 读到空集 => 恒 PASS;
+#   2. PUSH_RANGE 分支: .githooks/ 无导出点 => 从未触发;
+#   3. pre-commit: hook-runner 的检查清单里没有它 => 从未触发。
+# 规则接上后 (PR #4979 CI / #4980 pre-commit / #4981 pre-push) 新提交会被正确拦住。
+#
+# **关键区分: main 上的「混 lane commit」不是欠账指标**。本仓全 squash 合并 => main 的
+# 每个 commit = 一个 PR 的全部内容 => 一个跨多 lane 的 PR 必然产出「混 lane commit」。
+# 那是 squash 的结构性产物, 改写它等于改写历史, 而 main 是受保护分支
+# (allow_force_pushes: False + enforce_admins: True), 且仓库明文决策「main 分支保护
+# 已启用」+「squash merge 所有 main 变更」(docs/generated/architecture-deep-analysis.md
+# §17.2) —— pre-rebase hook 亦指明授权通道是 merge/PR 合流。改写需先解除保护, 那是
+# 治理决策。工具 bin/ops/split-commits-by-lane.py 已就绪 (四项验证: 树/内容逐字节
+# 等价、每 commit 单 lane、PR 号全保留), 待授权后可执行。
+#
+# 实测 (2026-10-31): 全历史 8198 个 commit 里 3939 个「混 lane」, 但最近 40 个 PR 里
+# **只有 18 个 commit 自身混 lane** (在 PR 分支上就是) —— 后者才是真正的提交形态缺陷。
+# 逐 PR 登记需扫 refs/pull/* (每个 PR 多次 git 调用, 4972 个 PR 跑 40 秒以上) => 成本
+# 不适合做常规门禁, 本台账不逐 PR 登记; 专项排查时用 `git log --name-only` 扫 PR 分支的
+# merge-base..head 区间。
+#
+# 本台账**不被任何门禁消费** —— 纯记录面, 不是豁免 (做成豁免就成了新提交的逃逸口)。
+
+version: 3
+ssot_ref: ADR-0122-lane-debt
+generated_by: bin/ops/lane-debt-ledger.py
+advisory_only: true  # 纯记录面, 不被门禁消费, 不构成任何豁免
+
+main_commits_total: 4895
+main_commits_mixed_lane: 2665  # squash 结构性产物, 非欠账指标
+mixed_lane_causes:
+  multi-surface: 1186
+  boundary-code-vs-governance-code: 656
+  submodule-pointer-mixed: 651
+  boundary-code-vs-config: 67
+  boundary-governance-registration: 63
+  classifier-gap-other: 42
+
+# main 上混 lane commit 的成因分布 —— 用于判断「哪些是分类器边界偏碎」,
+# 「哪些是真正的多面混合」。分类器侧的修正方向 (而非改写历史) 见 ADR-0122 未闭合项。
