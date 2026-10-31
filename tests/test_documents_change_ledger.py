@@ -17,6 +17,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -26,6 +28,7 @@ from lib.documents_change_ledger import (  # noqa: E402
     PRODUCER,
     build_payload,
     record_domain_change,
+    resolve_ledger_path,
 )
 
 
@@ -145,3 +148,39 @@ def test_the_real_ledger_is_never_touched_by_this_module() -> None:
     assert "event-ledger.sqlite3" not in source, (
         "⚠⚠ 模块里不许硬写真账本路径 —— ⚠ 真账本是 append-only ⇒ ⇒ 塞测试行就是编造事实"
     )
+
+
+def test_the_ledger_path_is_mandatory() -> None:
+    """⚠ **`db_path` 是必填** —— ⚠ 没有默认落点（⚠ 默认落点＝往真账本塞行的入口）。"""
+    with pytest.raises(TypeError):
+        record_domain_change(  # type: ignore[call-arg]
+            job_id="job-f",
+            domain_id="work-docs",
+            status="succeeded",
+            exit_code=0,
+        )
+
+
+def test_the_explicit_path_wins_over_everything() -> None:
+    """⚠ **点名给的那个最高优先**。"""
+    path = resolve_ledger_path(
+        explicit="/tmp/explicit-ledger.sqlite3",
+        environ={"OMO_EVENT_LEDGER_DB": "/tmp/env-ledger.sqlite3"},
+    )
+    assert str(path) == "/tmp/explicit-ledger.sqlite3"
+
+
+def test_the_isolation_env_is_honoured() -> None:
+    """⚠ **`OMO_EVENT_LEDGER_DB` 是仓内声明过的测试隔离面** ⇒ ⇒ 必须被认。"""
+    path = resolve_ledger_path(
+        environ={"OMO_EVENT_LEDGER_DB": "/tmp/env-ledger.sqlite3"},
+    )
+    assert str(path) == "/tmp/env-ledger.sqlite3"
+
+
+def test_without_an_override_the_state_root_decides() -> None:
+    """⚠ **没点名 ⇒ ⇒ 跟着 state root 走**（⚠ 与仓内那一份同契约）。"""
+    path = resolve_ledger_path(
+        environ={"OMOSTATION_STATE_ROOT": "/tmp/state-root"},
+    )
+    assert str(path) == "/tmp/state-root/runtime/omo/event-ledger.sqlite3"
