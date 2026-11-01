@@ -21,6 +21,13 @@ main 的 stale 分支, 加一个新 commit 后 push 范围只有 1 个 commit)�
 2. **commit message 必须保留原 PR 号** —— 本仓 120/120 个 commit message 都带
    `(#NNNN)`, 拆分后必须仍在 (可追溯性是 squash 历史的唯一索引)。
 3. **作者与日期必须保留** —— 拆出来的 commit 是同一个人的同一份工作。
+4. **中间 commit 不得是「半份镜像」** —— 拆分产出的每个中间 commit 都是一个**真实
+   存在过**的树, 不是原 commit 的别名。若某 commit 同时「登记某文件」与「新增该文件」,
+   而登记方先落地, 中间态就指向仓内**尚不存在**的文件 —— 仓内 AGENTS.md §7 明令
+   禁止 (「不许写半份镜像」)。故组必须**按引用完整性**排序: 被引用的组先落地。
+   实测 (2026-10-31, mbp): 按字母序拆 `fix/collectors-host-managed-20261016` 会产出
+   `missing_repo_copy=2` 的中间态; 按引用完整性排序后全为 0。详见
+   `order_groups_by_reference` 的 docstring。
 
 **用法**:
     # 预览 (不写任何东西)
@@ -38,6 +45,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -71,6 +79,24 @@ def git(*args: str, env: dict | None = None) -> str:
     return result.stdout
 
 
+def git_optional(*args: str) -> str:
+    """跑 git, 失败返回空串 (不抛)。
+
+    用于「失败是正常结果」的场景: 如 `cat-file -p <sha>:<path>` 在该文件
+    已被删除的 commit 上本就取不到内容 —— 那不是错误, 只是没有内容可引用。
+    """
+    result = subprocess.run(
+        ["git", *args],
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return ""
+    return result.stdout
+
+
 def commit_files(sha: str) -> list[str]:
     out = git("show", "--name-only", "--format=", sha)
     return [line.strip() for line in out.splitlines() if line.strip()]
@@ -83,6 +109,116 @@ def lane_groups(sha: str, clc) -> dict[str, list[str]]:
     for path in commit_files(sha):
         groups.setdefault(clc.classify(path, submodules), []).append(path)
     return groups
+
+
+# 组间「引用完整性」判据用的词边界: 文件名两侧不得再接 [A-Za-z0-9_.-]。
+# 为什么需要边界: `collectors.base.py.asset` 里**包含** `base.py.asset` 子串 ——
+# 无边界匹配会让「引用 base.py.asset」误判成「引用 collectors.base.py.asset」
+# => 造出假的依赖边 => 组顺序被错误地重排。
+_NAME_BOUNDARY = r"(?<![A-Za-z0-9_.-])"
+_NAME_BOUNDARY_END = r"(?![A-Za-z0-9_.-])"
+
+# 作为「引用」判据的最小文件名长度 (实测定的, 见 _file_references)。
+_MIN_REFERENCE_NAME_LEN = 6
+
+
+def _file_references(text: str, filename: str) -> bool:
+    """text 里是否**按文件名**引用了 filename (词边界, 精确匹配)。
+
+    判据用**文件名**而不是完整路径: 引用方常写相对路径或裸文件名
+    (如 HOST_FILES 里写 "collectors.orca.py.asset", 而文件在
+    bin/panorama/assets/host/ 下) => 按完整仓内路径匹配会漏掉真正的引用。
+    """
+    if not filename or len(filename) < _MIN_REFERENCE_NAME_LEN:
+        # 太短的名字极易误命中普通单词/散文里的举例 => 不作为依赖判据。
+        # 阈值 6 是**实测**定的: 全仓最短的带扩展名文件名是 6 字符 (bos.md / cli.py /
+        # dag.md / sla.md), 而 4 字符的名字 (a.py / x.py) 在仓内分别出现于 13 / 51 个
+        # 文件 —— 作为依赖判据只会造出大量假边。
+        return False
+    pattern = _NAME_BOUNDARY + re.escape(filename) + _NAME_BOUNDARY_END
+    return re.search(pattern, text) is not None
+
+
+def order_groups_by_reference(
+    sha: str,
+    groups: dict[str, list[str]],
+) -> dict[str, list[str]]:
+    """按**引用完整性**给组排序: 被引用的组先落地。
+
+    **为什么必须排** (2026-10-31 实锤): 拆分后的每个中间 commit 都是一个**真实存在
+    过**的树, 不是原 commit 的别名。若某个 commit 同时「登记某文件」与「新增该文件」,
+    而**登记方先落地**, 中间态就是**半份镜像** —— 登记项指向仓内**尚不存在**的文件。
+
+    仓内 AGENTS.md §7 明令禁止这个形态 (「不许写半份镜像」; T265 条目: 「只改一处
+    就是『不许写半份镜像』的同形错误」)。
+
+    实测 (mbp, fix/collectors-host-managed-20261016): `zhixing-host-sync.py` 的
+    HOST_FILES 登记项引用 `bin/panorama/assets/host/*.asset`。按**字母序**建组时
+    `bin/gac/...` 排在 `bin/panorama/...` 之前 => 拆出的第一个 commit 是「先登记、
+    后有文件」=> `zhixing-host-sync.status()` 读到 missing_repo_copy=2 (半份镜像)。
+    按引用完整性排序后 (`other` 组先落), 5 个中间 commit 的 missing_repo_copy 全为 0。
+
+    **判据**: 若组 A 的文件**内容**引用了组 B 里的某个文件名, 则 B 必须先于 A。
+    用**词边界**匹配文件名而非完整路径 (引用方常写裸文件名/相对路径)。
+
+    **排序稳定性**: 无依赖关系时保持原有相对顺序 (字母序); 有环 (A 引 B 且 B 引 A)
+    时退化为原序的第一项 —— 不崩, 但结果不再保证引用完整性 (报告里会体现)。
+    """
+    lanes = list(groups.keys())
+    if len(lanes) < 2:
+        return groups
+
+    # 每个组的文件内容 (取该 commit 里的内容 —— 拆出的中间态就是这些内容)
+    contents: dict[str, list[str]] = {}
+    for lane, paths in groups.items():
+        parts = []
+        for path in paths:
+            # 文件在该 commit 里可能已被删除 => cat-file 失败, 跳过 (删除不构成引用)
+            blob = git_optional("cat-file", "-p", sha + ":" + path)
+            if blob:
+                parts.append(blob)
+        contents[lane] = parts
+
+    return _order_by_reference(groups, contents)
+
+
+def _order_by_reference(
+    groups: dict[str, list[str]],
+    contents: dict[str, list[str]],
+) -> dict[str, list[str]]:
+    """纯函数: 按引用完整性给组排序 (不读 git —— 内容由调用方给)。
+
+    依赖边: 若组 A 的内容引用了组 B 里的某文件名, 则 B 必须先于 A 落地。
+    拓扑排序: 稳定 (无依赖时保原序); 有环 (互引) 时取原序第一项, 不崩。
+    """
+    lanes = list(groups.keys())
+    if len(lanes) < 2:
+        return groups
+
+    # 依赖边: B 必须在 A 之前 (A 的内容引用了 B 的文件)
+    before: dict[str, set[str]] = {lane: set() for lane in lanes}
+    for a in lanes:
+        text = "\n".join(contents.get(a, []))
+        for b in lanes:
+            if a == b:
+                continue
+            for path in groups[b]:
+                if _file_references(text, os.path.basename(path)):
+                    before[a].add(b)
+                    break
+
+    # 拓扑排序 (稳定: 无依赖时保原序)
+    ordered: list[str] = []
+    remaining = list(lanes)
+    while remaining:
+        ready = [lane for lane in remaining if not (before[lane] & set(remaining))]
+        if not ready:
+            # 有环 (互引) => 退化: 取原序第一个, 保证不崩且结果确定
+            ready = [remaining[0]]
+        pick = next(lane for lane in remaining if lane in ready)
+        ordered.append(pick)
+        remaining.remove(pick)
+    return {lane: groups[lane] for lane in ordered}
 
 
 def split_commit(
@@ -223,14 +359,28 @@ def main() -> int:
             tree = rebuild_commit(sha, tree)
             continue
         if args.dry_run:
+            ordered_groups = order_groups_by_reference(sha, groups)
             report["split_commits"].append(
-                {"commit": sha, "lanes": sorted(groups), "groups": {k: len(v) for k, v in groups.items()}}
+                {
+                    "commit": sha,
+                    "lanes": sorted(groups),
+                    "group_order": list(ordered_groups.keys()),
+                    "groups": {k: len(v) for k, v in groups.items()},
+                }
             )
             continue
         message = git("log", "-1", "--format=%B", sha).strip()
-        created = split_commit(sha, groups, message, parent=tree)
+        # 按**引用完整性**重排组: 被引用的组先落地, 否则中间 commit 是「半份镜像」
+        # (登记项指向仓内尚不存在的文件) —— 见 order_groups_by_reference 的 docstring。
+        ordered_groups = order_groups_by_reference(sha, groups)
+        created = split_commit(sha, ordered_groups, message, parent=tree)
         report["split_commits"].append(
-            {"commit": sha, "lanes": sorted(groups), "new_commits": created}
+            {
+                "commit": sha,
+                "lanes": sorted(groups),
+                "group_order": list(ordered_groups.keys()),
+                "new_commits": created,
+            }
         )
         tree = created[-1]
 
@@ -248,7 +398,12 @@ def main() -> int:
         print(f"区间 {report['range']}: {report['commits_in_range']} 个 commit")
         print(f"  需拆分: {len(report['split_commits'])} | 保持原样: {len(report['kept_commits'])}")
         for item in report["split_commits"]:
-            print(f"    {item['commit'][:9]}: {len(item['lanes'])} lane -> {item['lanes']}")
+            order = item.get("group_order")
+            order_str = f"  组序(按引用完整性)={order}" if order else ""
+            print(
+                f"    {item['commit'][:9]}: {len(item['lanes'])} lane -> "
+                f"{item['lanes']}{order_str}"
+            )
         print(f"  新 tip: {report['new_tip']}")
         print(f"  树等价: {report['tree_equivalent']} ({report['new_tree'][:12]} vs {report['original_tree'][:12]})")
         if args.to_ref and not args.dry_run:
