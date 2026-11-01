@@ -45,7 +45,7 @@ status: active
    Contract: `.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md`（按**文件名**引用：
    `id` 字段为 ADR-0456 的文件有两份，另一份
    `.omo/_knowledge/decisions/ADR-0456-governance-downshift-closeout-grading.md` 是别的决定，
-   且那份 `ACCEPTED`、这份仍 `PROPOSED`），guard: `tests/unit/test_repo_root_profile.py`.
+   两份均为 `ACCEPTED`，但属于不同决定），guard: `tests/unit/test_repo_root_profile.py`.
 
 ### Key SSOT Registries
 
