@@ -1050,8 +1050,8 @@ jobs:
     command: PATH=/Users/xiamingxing/.mimocode/bin:/usr/bin:/bin /Users/xiamingxing/.local/bin/mimo-models-sync.sh > /tmp/mimo-sync.log 2>&1
     planes:
     - crontab
-    reality: crontab_installed
-    status: active
+    reality: declared_only
+    status: proposed
     owner: agent-experience-steward
     sfop_slot: S
     reconciliation_note: '2026-09-22 登记: 此前 crontab 中以 # 待登记外部工具 尾注游离存在,
@@ -1080,6 +1080,178 @@ jobs:
       无条件 git add/commit 会把报告提交进别人的分支 (污染其 PR)。非 main 时整条 job 跳过并记日志。
 
 # ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
+  # ── 2026-11-01 补登记: 10-24 crontab 重写事故后逐条核实的真实在跑调度 ──
+  #    (此前存在于 crontab 但从未入册; 事故恢复时一并补齐登记, 详见 reconciliation_note) ──
+  - name: local-ops-todo-sync
+    schedule: "*/5 * * * *"
+    command: >-
+      /opt/homebrew/bin/python3 /Users/xiamingxing/local-ops/bin/todo-sync >> /Users/xiamingxing/.local/log/todo-sync.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: local-ops
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: local-ops-magpie-quota-patrol
+    schedule: "15 8 * * *"
+    command: >-
+      /opt/homebrew/bin/python3 /Users/xiamingxing/local-ops/bin/magpie-quota-patrol.py >> /Users/xiamingxing/.local/log/magpie-quota-patrol.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: local-ops
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: local-ops-observer-daily
+    schedule: "30 7 * * *"
+    command: >-
+      /usr/bin/python3 /Users/xiamingxing/local-ops/bin/observer-daily.py >> /Users/xiamingxing/.local/log/observer-daily.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: local-ops
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: local-ops-magpie-key-watch
+    schedule: "7 * * * *"
+    command: >-
+      /opt/homebrew/bin/python3 /Users/xiamingxing/local-ops/bin/magpie-key-watch >> /Users/xiamingxing/.local/log/magpie-key-watch.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: local-ops
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: local-ops-test-all
+    schedule: "23 7 * * *"
+    command: >-
+      /opt/homebrew/bin/python3 /Users/xiamingxing/local-ops/bin/test-all >> /Users/xiamingxing/.local/log/test-all.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: local-ops
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: work-agent-sched-health-check
+    schedule: "0 9 * * *"
+    command: >-
+      /opt/homebrew/bin/python3 $HOME/Project/work-agent/scripts/sched_health_check.py >> $HOME/.local/log/sched-health.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: work-agent
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: work-agent-weekly-adjudication
+    schedule: "0 20 * * 0"
+    command: >-
+      /opt/homebrew/bin/python3 $HOME/Project/work-agent/scripts/weekly_adjudication_check.py >> $HOME/.local/log/sched-health.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: work-agent
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: work-agent-kems-reflux-candidates
+    schedule: "10 6 * * 1"
+    command: >-
+      /opt/homebrew/bin/python3 $HOME/Project/work-agent/scripts/kems_reflux_candidates.py >> $HOME/.local/log/kems-daily.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: work-agent
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: work-agent-cards-prune-orphans
+    schedule: "30 5 * * *"
+    command: >-
+      /opt/homebrew/bin/python3 /Users/xiamingxing/Project/work-agent/scripts/cards_prune_orphans.py --apply >> /Users/xiamingxing/.local/log/cards-daily.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: work-agent
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: work-agent-daily-readings
+    schedule: "30 7 * * *"
+    command: >-
+      /opt/homebrew/bin/python3 $HOME/Project/work-agent/scripts/daily_readings.py >> $HOME/.local/log/daily-readings.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: work-agent
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: kems-pipe-accept
+    schedule: "35 4 * * *"
+    command: >-
+      /usr/bin/python3 $HOME/Workspace/projects/runtime/scripts/kems-v3/kems-pipe-accept.py >> $HOME/.local/log/kems-daily.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: runtime-kems-v3
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: kems-follow
+    schedule: "45 4 * * *"
+    command: >-
+      /usr/bin/python3 $HOME/Workspace/projects/runtime/scripts/kems-v3/kems-follow.py --domains all >> $HOME/.local/log/kems-daily.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: runtime-kems-v3
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: kems-frontmatter
+    schedule: "50 4 * * *"
+    command: >-
+      /usr/bin/python3 $HOME/Workspace/projects/runtime/scripts/kems-v3/kems-frontmatter.py --domain work-weijian >> $HOME/.local/log/kems-daily.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: runtime-kems-v3
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: omo-cards-generate
+    schedule: "20 5 * * *"
+    command: >-
+      cd /Users/xiamingxing/Workspace/projects/omo && /opt/homebrew/bin/python3 -c "import sys; sys.path.insert(0,'src'); from omo.omo_cards import main; sys.exit(main(['generate']))" >> /Users/xiamingxing/.local/log/cards-daily.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: omo
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: ecos-mof-enforce
+    schedule: "50 5 * * *"
+    command: >-
+      cd /Users/xiamingxing/Workspace/projects/ecos && /opt/homebrew/bin/python3 src/ecos/ssot/tools/mof-enforce.py >> /Users/xiamingxing/.local/log/cards-daily.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: ecos
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: anchor-install-root-check
+    schedule: "37 8 * * *"
+    command: >-
+      /bin/bash /Users/xiamingxing/Workspace/bin/ssot/anchor-install-root.sh --check >> /Users/xiamingxing/.local/log/anchor-install-root.log 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: ssot
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
+  - name: dotfiles-nightly-patrol
+    schedule: "30 3 * * *"
+    command: >-
+      bash /Users/xiamingxing/dotfiles/menubar/nightly-patrol.sh >/dev/null 2>&1
+    planes: [crontab]
+    reality: installed
+    status: active
+    owner: dotfiles
+    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+
 open_decisions:
   - id: D2
     question: worktree-hygiene 是否要把 --stale-days 3 补回 make 目标? branch-prune 频率日/周哪个对?
@@ -1108,6 +1280,7 @@ open_decisions:
       FAIL)。需要决定: 停用这条 cron、把 harness 巡检挪到 cron 之外的机制、还是
       重新评估 l4-kernel 的 dao_layer 归类。
 
+
 # 外部合法孤儿: 不属于本工作区调度 SSOT、经确认保留在 crontab 的条目
 # (scheduler-compile.py check_drift 用子串匹配豁免)
 known_orphans:
@@ -1132,4 +1305,3 @@ known_orphans:
   - bwg-maint.sh  # 用户本机搬瓦工周检(服务/待重启) (~/.local/bin), 2026-10-10 确认为外部工具
   - plist-integrity-check.sh  # 用户本机 launchd plist 完整性巡检 (~/.local/bin), 2026-10-10 确认为外部工具
   - secretctl scan  # 用户本机 secret 扫描 (~/.local/bin), 2026-10-10 确认为外部工具
-  - test-all  # 用户本机 local-ops 测试门禁 (local-ops/bin), 2026-10-26 确认为外部工具
