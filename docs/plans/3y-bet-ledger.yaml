@@ -46083,6 +46083,65 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-279
+  title: BET-Y2Q4-T10-279 compute-i9-01 Integration —— 受治理 CPU 执行节点接入
+  goal: 将 compute-i9-01 以单一 OMO 控制面纳入受治理 Code/Test/Batch 执行体系；先完成只读发现与提案，再在明确授权后完成隔离
+    Worker 接入和八项验证，不建立第二套任务控制面。
+  status: active
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 5 days
+  risk_level: L3
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-29-compute-i9-01-integration.md
+  - reports/COMPUTE-I9-01-INTEGRATION-DISCOVERY-20261029.md
+  - reports/COMPUTE-I9-01-PHASE0-PHASE1-20261029.md
+  - tasks/PROGRESS.md
+  non_goals:
+  - 不重装 Ubuntu、不格式化磁盘、不改 BIOS、不改防火墙、不部署远端服务，除非另有明确授权。
+  - 不建立第二 Dispatcher/Broker/持久任务数据库，不让 Multica/Orca 产生权威 Task。
+  - 不自动 merge、push main、删除数据或跨家庭/单位网络传输敏感数据。
+  - 不把现有 rootful services/lb-worker SQLite 实现直接宣称为本 BET 的最终集成实现。
+  done_when:
+  - Phase 0 硬件、OS、网络、所有权、授权与现有控制面事实矩阵完成，所有未知项单独列为阻断或待核。
+  - Phase 1 Ubuntu/rootless/Tailscale/工作目录/监控/身份/资源/恢复提案完成，并得到人类部署授权记录。
+  - Phase 2 复用 OMO TaskEnvelope、Claim、Lease、Runtime Adapter 与 Harness，Worker admission、隔离边界、资源预算和回收路径均有实现与测试。
+  - Phase 3 八项验证均有独立回执，含失败恢复/回滚；Golden Slice 有人工验收，不以 Agent 自报成功替代。
+  - 同一仓库写入并发始终 <= 1，首批总运行 Worker <= 2，未授权宿主机/外部访问被拒绝。
+  verify:
+  - cmd: python3 scripts/project_check.py
+    expect: 项目检查通过；仅证明本仓文档/计划/脚本约束，不证明远端节点已部署。
+  - cmd: python3 -B -m unittest discover -s tests -p "test_*.py"
+    expect: 现有合同测试通过；新增接入测试必须在授权后纳入同一套发现规则。
+  - cmd: bash -n scripts/*.sh
+    expect: 所有受影响 shell 脚本语法通过；部署脚本未授权前不得执行。
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-29-compute-i9-01-integration.md
+    spec_version: 1.0.0
+    content_digest: sha256:4edbc03864f086bdef88250691ad9e2725e2d1b5562753befbba1d4d69ff9255
+    decision_ref: decision://accepted/BET-Y2Q4-T10-279
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_STARTED
+        evidence: {}
+      value:
+        status: NOT_STARTED
+        evidence:
+          note: 当前只完成 Phase 0 发现与 Phase 1 阻断/提案登记，未宣称节点已接入。
+    overall_state: planned
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -46221,7 +46280,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 575
+  total_bets: 576
   windows:
   - Y1Q1
   - Y1Q2
