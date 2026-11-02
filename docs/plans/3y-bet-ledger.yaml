@@ -46126,7 +46126,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-29-compute-i9-01-integration.md
     spec_version: 1.0.0
-    content_digest: sha256:5a732d34b4efdb4881a1581e6777e2d583501f8331101b20a0cb7abceca0a655
+    content_digest: sha256:4edbc03864f086bdef88250691ad9e2725e2d1b5562753befbba1d4d69ff9255
     decision_ref: decision://accepted/BET-Y2Q4-T10-279
   completion_evidence:
     schema_version: completion-evidence-matrix/v1

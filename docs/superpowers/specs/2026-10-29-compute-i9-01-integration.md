@@ -1,7 +1,12 @@
 ---
-title: "compute-i9-01 Integration"
+schema_version: specification/v1
+spec_version: 1.0.0
+title: compute-i9-01 Integration —— 受治理 CPU 执行节点接入
+bet_id: BET-Y2Q4-T10-279
+owner: governance-agent
 status: accepted
-version: 1.0.0
+lifecycle: contract
+last-reviewed: 2026-11-02
 decision_ref: decision://accepted/BET-Y2Q4-T10-279
 accepted_by: user
 accepted_at: 2026-10-29
