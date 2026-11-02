@@ -199,3 +199,5 @@ cd projects/knowledge/gbrain && bun test
 ### 许可证
 
 MIT © [starlink-awaken](https://github.com/starlink-awaken)
+
+<!-- dirty probe -->
