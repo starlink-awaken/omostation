@@ -46228,6 +46228,71 @@ bets:
         evidence:
           note: 治理/根缝类任务，value_indicator_policy 声明为 false，由 PR #5014 squash 9f84b7487 闭环。
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-281
+  title: B4b 验收尺的 repo_root 缝可达性修复
+  goal: scripts/tools/launchd-workspace-reality-check.py 的缝算成 parents[1]/"lib" = scripts/lib（实测检出与安装位两侧均不存在），故每次运行都走
+    except ImportError 字面量兜底 —— canonical/code 钉死某台机器检出、install 兜底永不返回 None。改为 parents[2]/"bin"/"lib"
+    并删除静默兜底，使这把 B4b 量具能观察 profile 目标态。
+  status: in_progress
+  window: Y2Q4
+  track: T10-GOVERNANCE
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  write_surfaces:
+  - scripts/tools/launchd-workspace-reality-check.py
+  - tests/unit/test_b4b_ruler_seam_reachability.py
+  - docs/superpowers/specs/2026-11-02-b4b-ruler-seam-reachability.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-281.md
+  - docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+  non_goals:
+  - 不改 scripts/tools/spine-daily-ingress.py 的写落点 —— 修它会移动 spine 数据面，需与 6 处读者（含 cockpit/omlxc
+    两子模块）同批迁移，另案。
+  - 不扩 tests/unit/test_writeplane_root_pin.py 的枚举面到 scripts/** —— 属「尺尺」改造，按 resolver
+    归类单独设计，另案。
+  - 不动 profile_base 的 Path.home() 派生（机器级 profile 基址，不属检出根语义）。
+  - 不改任何 plist、crontab、机器级配置或状态数据。
+  done_when:
+  - 三个 resolver 的 __module__ 均为 repo_root（正向落点断言），且尺源码内无机检出字面路径。
+  - 合成违规自证：把缝改回 parents[1] 后守卫当场 SystemExit「缝不可达」（摘掉守卫则该用例红）。
+  - install_root() 返回 None 时尺显式失败，不得用字面量补假 pin。
+  - 新旧读数逐字段对比写进 receipt —— 实测 9 字段 0 差异，即「值对在巧合不在构造」的证据。
+  verify:
+  - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_b4b_ruler_seam_reachability.py -q -p no:randomly -o
+      addopts=""
+    expect: 4 passed；含合成违规与安装位缺席两条反证
+    note: tests/unit 不在 CI 白名单，本地跑是唯一证据
+  - cmd: python3 scripts/tools/launchd-workspace-reality-check.py --json
+    expect: 9 字段与修复前逐项相等；resolver 来源由局部兜底变为 repo_root
+    note: 读数相等不等于修复无价值 —— 差异在构造上（能否观察 profile 声明）
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若修复需要伪造 install pin、放宽尺的判据，或触及 spine 数据面的写落点迁移，则停止实现并保留可续跑证据。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-02-b4b-ruler-seam-reachability.md
+    spec_version: 1.0.0
+    content_digest: sha256:36c1b617f060c60e9e56fe86c492d5b0b39ef891c3763b088b55bdd7862aaac1
+    decision_ref: decision://accepted/BET-Y2Q4-T10-281
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: planned
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_STARTED
+        evidence: {}
+      value:
+        status: NOT_STARTED
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -46366,7 +46431,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 577
+  total_bets: 578
   windows:
   - Y1Q1
   - Y1Q2
